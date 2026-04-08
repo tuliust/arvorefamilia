@@ -6,6 +6,10 @@ export type TipoRelacionamento = 'conjuge' | 'pai' | 'mae' | 'filho' | 'irmao';
 
 export type SubtipoRelacionamento = 'sangue' | 'adotivo' | 'uniao' | 'casamento' | 'separado';
 
+export type LadoPessoa = 'esquerda' | 'direita';
+
+export type TipoVisualizacaoArvore = 'lados' | 'geracoes';
+
 export interface ArquivoHistorico {
   id: string;
   tipo: 'imagem' | 'pdf';
@@ -24,6 +28,7 @@ export interface Pessoa {
   local_atual?: string;
   foto_principal_url?: string;
   humano_ou_pet: TipoEntidade;
+  lado?: LadoPessoa;
   cor_bg_card?: string;
   minibio?: string;
   curiosidades?: string;

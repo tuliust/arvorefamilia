@@ -3,8 +3,21 @@ import { useNavigate, useParams } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { adicionarPessoa, atualizarPessoa, obterPessoaPorId, adicionarRelacionamento, obterTodasPessoas } from '../../services/dataService';
-import { TipoEntidade, ArquivoHistorico, Pessoa, TipoRelacionamento, SubtipoRelacionamento } from '../../types';
+import {
+  adicionarPessoa,
+  atualizarPessoa,
+  obterPessoaPorId,
+  adicionarRelacionamento,
+  obterTodasPessoas,
+} from '../../services/dataService';
+import {
+  TipoEntidade,
+  ArquivoHistorico,
+  Pessoa,
+  TipoRelacionamento,
+  SubtipoRelacionamento,
+  LadoPessoa,
+} from '../../types';
 import { ArrowLeft, Save, Plus, X, User, Search } from 'lucide-react';
 import { FotoUpload } from '../../components/FotoUpload';
 import { ColorPicker } from '../../components/ColorPicker';
@@ -15,7 +28,6 @@ import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { formatarTelefone } from '../../utils/telefone';
 import { toast } from 'sonner';
 
-// Interface para relacionamentos pendentes (antes de salvar)
 interface RelacionamentoPendente {
   pessoa: Pessoa;
   tipo: TipoRelacionamento;
@@ -36,19 +48,18 @@ export function AdminPessoaForm() {
     local_atual: '',
     foto_principal_url: '',
     humano_ou_pet: 'Humano' as TipoEntidade,
+    lado: 'esquerda' as LadoPessoa,
     cor_bg_card: '',
     minibio: '',
     curiosidades: '',
     telefone: '',
     endereco: '',
     rede_social: '',
-    arquivos_historicos: [] as ArquivoHistorico[]
+    arquivos_historicos: [] as ArquivoHistorico[],
   });
 
   const [initialData, setInitialData] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
-  
-  // Estados para adicionar relacionamentos durante criação
   const [relacionamentosPendentes, setRelacionamentosPendentes] = useState<RelacionamentoPendente[]>([]);
   const [showAddRelDialog, setShowAddRelDialog] = useState(false);
   const [todasPessoas, setTodasPessoas] = useState<Pessoa[]>([]);
@@ -57,143 +68,151 @@ export function AdminPessoaForm() {
   const [subtipoRelSelecionado, setSubtipoRelSelecionado] = useState<SubtipoRelacionamento>('sangue');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Verificar se a pessoa está falecida
   const isFalecido = !!(formData.data_falecimento || formData.local_falecimento);
 
   useEffect(() => {
-    if (isEdit && id) {
-      const loadPessoa = async () => {
-        const pessoa = await obterPessoaPorId(id);
-        if (pessoa) {
-          const data = {
-            nome_completo: pessoa.nome_completo,
-            data_nascimento: pessoa.data_nascimento?.toString() || '',
-            local_nascimento: pessoa.local_nascimento || '',
-            data_falecimento: pessoa.data_falecimento?.toString() || '',
-            local_falecimento: pessoa.local_falecimento || '',
-            local_atual: pessoa.local_atual || '',
-            foto_principal_url: pessoa.foto_principal_url || '',
-            humano_ou_pet: pessoa.humano_ou_pet,
-            cor_bg_card: pessoa.cor_bg_card || '',
-            minibio: pessoa.minibio || '',
-            curiosidades: pessoa.curiosidades || '',
-            telefone: pessoa.telefone || '',
-            endereco: pessoa.endereco || '',
-            rede_social: pessoa.rede_social || '',
-            arquivos_historicos: pessoa.arquivos_historicos || []
-          };
-          setFormData(data);
-          setInitialData(JSON.stringify(data));
+    const init = async () => {
+      if (isEdit && id) {
+        try {
+          const pessoa = await obterPessoaPorId(id);
+
+          if (pessoa) {
+            const data = {
+              nome_completo: pessoa.nome_completo || '',
+              data_nascimento: pessoa.data_nascimento?.toString() || '',
+              local_nascimento: pessoa.local_nascimento || '',
+              data_falecimento: pessoa.data_falecimento?.toString() || '',
+              local_falecimento: pessoa.local_falecimento || '',
+              local_atual: pessoa.local_atual || '',
+              foto_principal_url: pessoa.foto_principal_url || '',
+              humano_ou_pet: pessoa.humano_ou_pet || ('Humano' as TipoEntidade),
+              lado: (pessoa.lado as LadoPessoa) || 'esquerda',
+              cor_bg_card: pessoa.cor_bg_card || '',
+              minibio: pessoa.minibio || '',
+              curiosidades: pessoa.curiosidades || '',
+              telefone: pessoa.telefone || '',
+              endereco: pessoa.endereco || '',
+              rede_social: pessoa.rede_social || '',
+              arquivos_historicos: pessoa.arquivos_historicos || [],
+            };
+
+            setFormData(data);
+            setInitialData(JSON.stringify(data));
+          }
+        } catch (error) {
+          console.error('Erro ao carregar pessoa:', error);
+          toast.error('Erro ao carregar dados da pessoa');
         }
-      };
-      loadPessoa();
-    } else {
-      setInitialData(JSON.stringify(formData));
-      // Carregar todas pessoas para permitir adicionar relacionamentos durante criação
-      loadTodasPessoas();
-    }
+      } else {
+        setInitialData(JSON.stringify(formData));
+        await loadTodasPessoas();
+      }
+    };
+
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, id]);
 
   const loadTodasPessoas = async () => {
     try {
       const pessoas = await obterTodasPessoas();
-      setTodasPessoas(pessoas);
+      setTodasPessoas(Array.isArray(pessoas) ? pessoas : []);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
+      setTodasPessoas([]);
     }
   };
 
-  // Verificar se há mudanças
   useEffect(() => {
     const currentData = JSON.stringify(formData);
     setHasChanges(currentData !== initialData || relacionamentosPendentes.length > 0);
   }, [formData, initialData, relacionamentosPendentes]);
 
-  // Hook para detectar tentativa de sair sem salvar
-  const { showPrompt, confirmNavigation, cancelNavigation } = useUnsavedChanges(hasChanges);
+  const shouldBlockNavigation = hasChanges && !isSubmitting;
+  const { showPrompt, confirmNavigation, cancelNavigation } = useUnsavedChanges(shouldBlockNavigation);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) return;
     setIsSubmitting(true);
-    
+
     try {
-      // Remover arquivos_historicos do payload pois é uma tabela separada
-      const { arquivos_historicos, ...pessoaDadosSemArquivos } = formData;
-      
       const pessoaData = {
-        ...pessoaDadosSemArquivos,
+        ...formData,
         data_nascimento: formData.data_nascimento || undefined,
         data_falecimento: formData.data_falecimento || undefined,
+        lado: formData.lado || 'esquerda',
+        arquivos_historicos: formData.arquivos_historicos || [],
       };
 
       let pessoaCriada: Pessoa | undefined;
 
       if (isEdit && id) {
         pessoaCriada = await atualizarPessoa(id, pessoaData);
-        if (pessoaCriada) {
-          toast.success('Pessoa atualizada com sucesso!');
-        } else {
+
+        if (!pessoaCriada) {
           toast.error('Erro ao atualizar pessoa');
-          setIsSubmitting(false);
           return;
         }
+
+        toast.success('Pessoa atualizada com sucesso!');
       } else {
-        // Criar nova pessoa
         pessoaCriada = await adicionarPessoa(pessoaData);
-        
-        if (pessoaCriada) {
-          toast.success('Pessoa criada com sucesso!');
-          
-          // Se houver relacionamentos pendentes, criar agora
-          if (relacionamentosPendentes.length > 0) {
-            toast.info('Criando relacionamentos...');
-            let relsCriados = 0;
-            
-            for (const relPendente of relacionamentosPendentes) {
-              try {
-                // Criar relacionamento direto
-                await adicionarRelacionamento({
-                  pessoa_origem_id: pessoaCriada.id,
-                  pessoa_destino_id: relPendente.pessoa.id,
-                  tipo_relacionamento: relPendente.tipo,
-                  subtipo_relacionamento: relPendente.subtipo,
-                });
 
-                // Criar relacionamento inverso (bidirecional)
-                let tipoInverso: TipoRelacionamento = relPendente.tipo;
-                
-                if (relPendente.tipo === 'pai' || relPendente.tipo === 'mae') {
-                  tipoInverso = 'filho';
-                } else if (relPendente.tipo === 'filho') {
-                  tipoInverso = 'pai'; // Assumir pai por padrão
-                }
-                // Para cônjuge e irmão, o tipo inverso é o mesmo
-
-                await adicionarRelacionamento({
-                  pessoa_origem_id: relPendente.pessoa.id,
-                  pessoa_destino_id: pessoaCriada.id,
-                  tipo_relacionamento: tipoInverso,
-                  subtipo_relacionamento: relPendente.subtipo,
-                });
-                
-                relsCriados++;
-              } catch (error) {
-                console.error('Erro ao criar relacionamento:', error);
-              }
-            }
-            
-            toast.success(`${relsCriados} relacionamento(s) criado(s)!`);
-          }
-        } else {
+        if (!pessoaCriada) {
           toast.error('Erro ao criar pessoa. Verifique os dados e tente novamente.');
-          setIsSubmitting(false);
           return;
+        }
+
+        toast.success('Pessoa criada com sucesso!');
+
+        if (relacionamentosPendentes.length > 0) {
+          toast.info('Criando relacionamentos...');
+          let relsCriados = 0;
+
+          for (const relPendente of relacionamentosPendentes) {
+            try {
+              await adicionarRelacionamento({
+                pessoa_origem_id: pessoaCriada.id,
+                pessoa_destino_id: relPendente.pessoa.id,
+                tipo_relacionamento: relPendente.tipo,
+                subtipo_relacionamento: relPendente.subtipo,
+              });
+
+              let tipoInverso: TipoRelacionamento = relPendente.tipo;
+
+              if (relPendente.tipo === 'pai' || relPendente.tipo === 'mae') {
+                tipoInverso = 'filho';
+              } else if (relPendente.tipo === 'filho') {
+                tipoInverso = 'pai';
+              }
+
+              await adicionarRelacionamento({
+                pessoa_origem_id: relPendente.pessoa.id,
+                pessoa_destino_id: pessoaCriada.id,
+                tipo_relacionamento: tipoInverso,
+                subtipo_relacionamento: relPendente.subtipo,
+              });
+
+              relsCriados++;
+            } catch (error) {
+              console.error('Erro ao criar relacionamento:', error);
+            }
+          }
+
+          toast.success(`${relsCriados} relacionamento(s) criado(s)!`);
         }
       }
 
-      // Resetar detecção de mudanças antes de navegar
+      const snapshotAtual = JSON.stringify({
+        ...formData,
+        lado: formData.lado || 'esquerda',
+        arquivos_historicos: formData.arquivos_historicos || [],
+      });
+
+      setInitialData(snapshotAtual);
+      setRelacionamentosPendentes([]);
       setHasChanges(false);
       navigate('/admin/pessoas');
     } catch (error) {
@@ -205,7 +224,7 @@ export function AdminPessoaForm() {
   };
 
   const handleChange = (field: string, value: string | ArquivoHistorico[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTelefoneChange = (value: string) => {
@@ -214,30 +233,45 @@ export function AdminPessoaForm() {
   };
 
   const handleAdicionarRelacionamentoPendente = (pessoa: Pessoa) => {
-    // Verificar se já existe
-    const jaExiste = relacionamentosPendentes.some(r => r.pessoa.id === pessoa.id);
+    const jaExiste = relacionamentosPendentes.some(
+      (r) => r.pessoa.id === pessoa.id && r.tipo === tipoRelSelecionado
+    );
+
     if (jaExiste) {
       toast.warning('Esta pessoa já está na lista de relacionamentos');
       return;
     }
 
-    setRelacionamentosPendentes(prev => [...prev, {
-      pessoa,
-      tipo: tipoRelSelecionado,
-      subtipo: subtipoRelSelecionado,
-    }]);
+    if (
+      (tipoRelSelecionado === 'pai' || tipoRelSelecionado === 'mae') &&
+      relacionamentosPendentes.some((r) => r.tipo === tipoRelSelecionado)
+    ) {
+      toast.warning(`Já existe ${tipoRelSelecionado === 'pai' ? 'um pai' : 'uma mãe'} selecionado(a)`);
+      return;
+    }
+
+    setRelacionamentosPendentes((prev) => [
+      ...prev,
+      {
+        pessoa,
+        tipo: tipoRelSelecionado,
+        subtipo: subtipoRelSelecionado,
+      },
+    ]);
 
     setShowAddRelDialog(false);
     setSearchTerm('');
     toast.success(`${pessoa.nome_completo} adicionado(a) à lista`);
   };
 
-  const handleRemoverRelacionamentoPendente = (pessoaId: string) => {
-    setRelacionamentosPendentes(prev => prev.filter(r => r.pessoa.id !== pessoaId));
+  const handleRemoverRelacionamentoPendente = (pessoaId: string, tipo?: TipoRelacionamento) => {
+    setRelacionamentosPendentes((prev) =>
+      prev.filter((r) => !(r.pessoa.id === pessoaId && (!tipo || r.tipo === tipo)))
+    );
   };
 
   const getTipoLabel = (tipo: TipoRelacionamento) => {
-    const labels = {
+    const labels: Record<TipoRelacionamento, string> = {
       pai: 'Pai',
       mae: 'Mãe',
       conjuge: 'Cônjuge',
@@ -247,21 +281,27 @@ export function AdminPessoaForm() {
     return labels[tipo] || tipo;
   };
 
-  const pessoasFiltradas = todasPessoas.filter(p => {
-    // Excluir pessoas já na lista pendente
-    const jaNaLista = relacionamentosPendentes.some(r => r.pessoa.id === p.id);
+  const pessoasFiltradas = todasPessoas.filter((p) => {
+    const jaNaLista = relacionamentosPendentes.some(
+      (r) => r.pessoa.id === p.id && r.tipo === tipoRelSelecionado
+    );
     if (jaNaLista) return false;
 
-    // Filtrar por busca
     if (searchTerm) {
       return p.nome_completo.toLowerCase().includes(searchTerm.toLowerCase());
     }
+
     return true;
   });
 
+  const paiSelecionado = relacionamentosPendentes.find((r) => r.tipo === 'pai');
+  const maeSelecionada = relacionamentosPendentes.find((r) => r.tipo === 'mae');
+  const outrosRelacionamentos = relacionamentosPendentes.filter(
+    (r) => r.tipo !== 'pai' && r.tipo !== 'mae'
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -272,7 +312,7 @@ export function AdminPessoaForm() {
               {isEdit ? 'Editar Pessoa' : 'Nova Pessoa'}
             </h1>
           </div>
-          
+
           <Button form="pessoa-form" type="submit" disabled={isSubmitting}>
             <Save className="w-4 h-4 mr-2" />
             {isSubmitting ? 'Salvando...' : 'Salvar'}
@@ -280,10 +320,8 @@ export function AdminPessoaForm() {
         </div>
       </header>
 
-      {/* Form */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         <form id="pessoa-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* Foto Principal - PRIMEIRO */}
           <Card>
             <CardHeader>
               <CardTitle>Foto Principal</CardTitle>
@@ -296,16 +334,13 @@ export function AdminPessoaForm() {
             </CardContent>
           </Card>
 
-          {/* Informações Básicas */}
           <Card>
             <CardHeader>
               <CardTitle>Informações Básicas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome Completo *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
                 <Input
                   type="text"
                   value={formData.nome_completo}
@@ -315,11 +350,9 @@ export function AdminPessoaForm() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
                   <select
                     value={formData.humano_ou_pet}
                     onChange={(e) => handleChange('humano_ou_pet', e.target.value)}
@@ -332,8 +365,23 @@ export function AdminPessoaForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cor do Card (opcional)
+                    Lado (visualização por lados)
                   </label>
+                  <select
+                    value={formData.lado}
+                    onChange={(e) => handleChange('lado', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  >
+                    <option value="esquerda">Esquerda</option>
+                    <option value="direita">Direita</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Este campo permanece ativo para o modo legado. A nova visualização por gerações não depende dele.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cor do Card (opcional)</label>
                   <ColorPicker
                     value={formData.cor_bg_card}
                     onChange={(color) => handleChange('cor_bg_card', color)}
@@ -343,7 +391,6 @@ export function AdminPessoaForm() {
             </CardContent>
           </Card>
 
-          {/* Datas e Locais */}
           <Card>
             <CardHeader>
               <CardTitle>Datas e Locais</CardTitle>
@@ -351,9 +398,7 @@ export function AdminPessoaForm() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data de Nascimento
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento</label>
                   <Input
                     type="text"
                     value={formData.data_nascimento}
@@ -363,9 +408,7 @@ export function AdminPessoaForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Local de Nascimento
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Local de Nascimento</label>
                   <Input
                     type="text"
                     value={formData.local_nascimento}
@@ -375,9 +418,7 @@ export function AdminPessoaForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data de Falecimento
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Data de Falecimento</label>
                   <Input
                     type="text"
                     value={formData.data_falecimento}
@@ -387,9 +428,7 @@ export function AdminPessoaForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Local de Falecimento
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Local de Falecimento</label>
                   <Input
                     type="text"
                     value={formData.local_falecimento}
@@ -400,9 +439,7 @@ export function AdminPessoaForm() {
 
                 {!isFalecido && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Local Atual (residência)
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Local Atual (residência)</label>
                     <Input
                       type="text"
                       value={formData.local_atual}
@@ -415,16 +452,13 @@ export function AdminPessoaForm() {
             </CardContent>
           </Card>
 
-          {/* Biografia */}
           <Card>
             <CardHeader>
               <CardTitle>Biografia e Curiosidades</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mini Biografia
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mini Biografia</label>
                 <textarea
                   value={formData.minibio}
                   onChange={(e) => handleChange('minibio', e.target.value)}
@@ -435,9 +469,7 @@ export function AdminPessoaForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Curiosidades
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Curiosidades</label>
                 <textarea
                   value={formData.curiosidades}
                   onChange={(e) => handleChange('curiosidades', e.target.value)}
@@ -449,7 +481,6 @@ export function AdminPessoaForm() {
             </CardContent>
           </Card>
 
-          {/* Contato - Não exibir se pessoa falecida */}
           {!isFalecido && (
             <Card>
               <CardHeader>
@@ -458,9 +489,7 @@ export function AdminPessoaForm() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Telefone
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
                     <Input
                       type="tel"
                       value={formData.telefone}
@@ -471,9 +500,7 @@ export function AdminPessoaForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Rede Social / Site
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rede Social / Site</label>
                     <Input
                       type="url"
                       value={formData.rede_social}
@@ -484,9 +511,7 @@ export function AdminPessoaForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Endereço
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
                   <Input
                     type="text"
                     value={formData.endereco}
@@ -498,13 +523,11 @@ export function AdminPessoaForm() {
             </Card>
           )}
 
-          {/* Arquivos Históricos */}
           <ArquivosHistoricos
             arquivos={formData.arquivos_historicos}
             onChange={(arquivos) => handleChange('arquivos_historicos', arquivos)}
           />
 
-          {/* Relacionamentos Pendentes - Para NOVA pessoa */}
           {!isEdit && (
             <Card>
               <CardHeader>
@@ -515,23 +538,18 @@ export function AdminPessoaForm() {
                   Defina os relacionamentos que serão criados automaticamente após salvar a pessoa.
                 </p>
 
-                {/* Seção de Pais - CAMPOS SEPARADOS */}
                 <div className="border-t pt-4">
                   <h3 className="font-semibold text-gray-900 mb-4">👨‍👩‍👦 Filiação (Pais)</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Campo Pai */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pai
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Pai</label>
                       <div className="space-y-2">
-                        {/* Mostrar pai selecionado */}
-                        {relacionamentosPendentes.find(r => r.tipo === 'pai') ? (
+                        {paiSelecionado ? (
                           <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                            {relacionamentosPendentes.find(r => r.tipo === 'pai')?.pessoa.foto_principal_url ? (
-                              <img 
-                                src={relacionamentosPendentes.find(r => r.tipo === 'pai')?.pessoa.foto_principal_url} 
+                            {paiSelecionado.pessoa.foto_principal_url ? (
+                              <img
+                                src={paiSelecionado.pessoa.foto_principal_url}
                                 alt=""
                                 className="w-8 h-8 rounded-full object-cover"
                               />
@@ -541,14 +559,11 @@ export function AdminPessoaForm() {
                               </div>
                             )}
                             <span className="flex-1 text-sm font-medium">
-                              {relacionamentosPendentes.find(r => r.tipo === 'pai')?.pessoa.nome_completo}
+                              {paiSelecionado.pessoa.nome_completo}
                             </span>
                             <button
                               type="button"
-                              onClick={() => {
-                                const pai = relacionamentosPendentes.find(r => r.tipo === 'pai');
-                                if (pai) handleRemoverRelacionamentoPendente(pai.pessoa.id);
-                              }}
+                              onClick={() => handleRemoverRelacionamentoPendente(paiSelecionado.pessoa.id, 'pai')}
                               className="text-red-600 hover:text-red-800"
                             >
                               <X className="w-4 h-4" />
@@ -573,18 +588,14 @@ export function AdminPessoaForm() {
                       </div>
                     </div>
 
-                    {/* Campo Mãe */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Mãe
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mãe</label>
                       <div className="space-y-2">
-                        {/* Mostrar mãe selecionada */}
-                        {relacionamentosPendentes.find(r => r.tipo === 'mae') ? (
+                        {maeSelecionada ? (
                           <div className="flex items-center gap-2 p-2 bg-pink-50 rounded-lg border border-pink-200">
-                            {relacionamentosPendentes.find(r => r.tipo === 'mae')?.pessoa.foto_principal_url ? (
-                              <img 
-                                src={relacionamentosPendentes.find(r => r.tipo === 'mae')?.pessoa.foto_principal_url} 
+                            {maeSelecionada.pessoa.foto_principal_url ? (
+                              <img
+                                src={maeSelecionada.pessoa.foto_principal_url}
                                 alt=""
                                 className="w-8 h-8 rounded-full object-cover"
                               />
@@ -594,14 +605,11 @@ export function AdminPessoaForm() {
                               </div>
                             )}
                             <span className="flex-1 text-sm font-medium">
-                              {relacionamentosPendentes.find(r => r.tipo === 'mae')?.pessoa.nome_completo}
+                              {maeSelecionada.pessoa.nome_completo}
                             </span>
                             <button
                               type="button"
-                              onClick={() => {
-                                const mae = relacionamentosPendentes.find(r => r.tipo === 'mae');
-                                if (mae) handleRemoverRelacionamentoPendente(mae.pessoa.id);
-                              }}
+                              onClick={() => handleRemoverRelacionamentoPendente(maeSelecionada.pessoa.id, 'mae')}
                               className="text-red-600 hover:text-red-800"
                             >
                               <X className="w-4 h-4" />
@@ -628,13 +636,12 @@ export function AdminPessoaForm() {
                   </div>
                 </div>
 
-                {/* Seção de Outros Relacionamentos */}
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-900">💍 Outros Relacionamentos</h3>
-                    <Button 
-                      type="button" 
-                      size="sm" 
+                    <Button
+                      type="button"
+                      size="sm"
                       onClick={() => {
                         setTipoRelSelecionado('conjuge');
                         setSubtipoRelSelecionado('casamento');
@@ -647,229 +654,154 @@ export function AdminPessoaForm() {
                     </Button>
                   </div>
 
-                  {/* Lista de outros relacionamentos (exceto pai/mae) */}
-                  {relacionamentosPendentes.filter(r => r.tipo !== 'pai' && r.tipo !== 'mae').length > 0 && (
+                  {outrosRelacionamentos.length > 0 && (
                     <div className="space-y-2">
-                      {relacionamentosPendentes
-                        .filter(r => r.tipo !== 'pai' && r.tipo !== 'mae')
-                        .map((rel) => (
-                          <div 
-                            key={rel.pessoa.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
-                          >
-                            {rel.pessoa.foto_principal_url ? (
-                              <img 
-                                src={rel.pessoa.foto_principal_url} 
-                                alt={rel.pessoa.nome_completo}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User className="w-5 h-5 text-gray-400" />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">{rel.pessoa.nome_completo}</p>
-                              <p className="text-xs text-gray-500 capitalize">
-                                {getTipoLabel(rel.tipo)} • {rel.subtipo}
-                              </p>
+                      {outrosRelacionamentos.map((rel) => (
+                        <div
+                          key={`${rel.pessoa.id}-${rel.tipo}`}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+                        >
+                          {rel.pessoa.foto_principal_url ? (
+                            <img
+                              src={rel.pessoa.foto_principal_url}
+                              alt=""
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <User className="w-5 h-5 text-gray-400" />
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoverRelacionamentoPendente(rel.pessoa.id)}
-                              className="text-red-600 hover:text-red-800 transition-colors"
-                            >
-                              <X className="w-5 h-5\" />
-                            </button>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {rel.pessoa.nome_completo}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {getTipoLabel(rel.tipo)} · {rel.subtipo === 'adotivo' ? 'Adotivo' : 'Sangue/Casamento'}
+                            </p>
                           </div>
-                        ))}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoverRelacionamentoPendente(rel.pessoa.id, rel.tipo)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-
-                {/* Diálogo de adicionar relacionamento */}
-                {showAddRelDialog && (
-                  <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-blue-900">
-                        Selecionar {getTipoLabel(tipoRelSelecionado)}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddRelDialog(false);
-                          setSearchTerm('');
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* Tipo e Subtipo - APENAS para outros relacionamentos (não pai/mãe) */}
-                    {tipoRelSelecionado !== 'pai' && tipoRelSelecionado !== 'mae' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo
-                          </label>
-                          <select
-                            value={tipoRelSelecionado}
-                            onChange={(e) => setTipoRelSelecionado(e.target.value as TipoRelacionamento)}
-                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                          >
-                            <option value="conjuge">Cônjuge</option>
-                            <option value="filho">Filho(a)</option>
-                            <option value="irmao">Irmão(ã)</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Subtipo
-                          </label>
-                          <select
-                            value={subtipoRelSelecionado}
-                            onChange={(e) => setSubtipoRelSelecionado(e.target.value as SubtipoRelacionamento)}
-                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                          >
-                            {(tipoRelSelecionado === 'conjuge') ? (
-                              <>
-                                <option value="casamento">Casamento</option>
-                                <option value="uniao">União Estável</option>
-                                <option value="separado">Separado</option>
-                              </>
-                            ) : (
-                              <>
-                                <option value="sangue">Sangue</option>
-                                <option value="adotivo">Adotivo</option>
-                              </>
-                            )}
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Para pai/mãe, mostrar apenas o subtipo */}
-                    {(tipoRelSelecionado === 'pai' || tipoRelSelecionado === 'mae') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Tipo de Filiação
-                        </label>
-                        <select
-                          value={subtipoRelSelecionado}
-                          onChange={(e) => setSubtipoRelSelecionado(e.target.value as SubtipoRelacionamento)}
-                          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                        >
-                          <option value="sangue">Biológico</option>
-                          <option value="adotivo">Adotivo</option>
-                        </select>
-                      </div>
-                    )}
-
-                    {/* Busca de pessoa */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Buscar Pessoa
-                      </label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="text"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Digite o nome..."
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Lista de pessoas */}
-                    {searchTerm && (
-                      <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md bg-white">
-                        {pessoasFiltradas.length === 0 ? (
-                          <div className="p-4 text-center text-gray-500 text-sm">
-                            Nenhuma pessoa encontrada
-                          </div>
-                        ) : (
-                          <div className="divide-y">
-                            {pessoasFiltradas.map(pessoa => (
-                              <button
-                                key={pessoa.id}
-                                type="button"
-                                onClick={() => handleAdicionarRelacionamentoPendente(pessoa)}
-                                className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
-                              >
-                                {pessoa.foto_principal_url ? (
-                                  <img 
-                                    src={pessoa.foto_principal_url} 
-                                    alt={pessoa.nome_completo}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <User className="w-5 h-5 text-gray-400" />
-                                  </div>
-                                )}
-                                <div className="flex-1">
-                                  <p className="font-medium text-gray-900">{pessoa.nome_completo}</p>
-                                  {pessoa.data_nascimento && (
-                                    <p className="text-xs text-gray-500">{pessoa.data_nascimento}</p>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}
 
-          {/* Relacionamentos - Apenas para edição */}
-          {isEdit && id && (
-            <RelacionamentoManagerWrapper
-              pessoaId={id}
-              pessoaNome={formData.nome_completo}
-              onChange={() => {
-                // Opcional: atualizar página ou recarregar dados
-                console.log('Relacionamento atualizado');
-              }}
-            />
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/admin/pessoas')}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              <Save className="w-4 h-4 mr-2" />
-              {isSubmitting ? 'Salvando...' : (isEdit ? 'Atualizar' : 'Criar')} Pessoa
-            </Button>
-          </div>
+          {isEdit && id && <RelacionamentoManagerWrapper pessoaId={id} />}
         </form>
       </main>
 
-      {/* Unsaved Changes Dialog */}
       <ConfirmDialog
         open={showPrompt}
-        onOpenChange={(open) => !open && cancelNavigation()}
-        title="Alterações não salvas"
-        description="Você fez alterações que não foram salvas. Deseja realmente sair sem salvar?"
-        confirmText="Sair sem salvar"
-        cancelText="Continuar editando"
         onConfirm={confirmNavigation}
-        variant="warning"
+        onCancel={cancelNavigation}
+        title="Descartar alterações?"
+        description="Você tem alterações não salvas. Se sair agora, elas serão perdidas."
       />
+
+      <ConfirmDialog
+        open={showAddRelDialog}
+        onConfirm={() => {}}
+        onCancel={() => {
+          setShowAddRelDialog(false);
+          setSearchTerm('');
+        }}
+        title="Adicionar relacionamento"
+        description=""
+        hideButtons
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+              <select
+                value={tipoRelSelecionado}
+                onChange={(e) => setTipoRelSelecionado(e.target.value as TipoRelacionamento)}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="conjuge">Cônjuge</option>
+                <option value="filho">Filho(a)</option>
+                <option value="irmao">Irmão(ã)</option>
+                <option value="pai">Pai</option>
+                <option value="mae">Mãe</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Subtipo</label>
+              <select
+                value={subtipoRelSelecionado}
+                onChange={(e) => setSubtipoRelSelecionado(e.target.value as SubtipoRelacionamento)}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="sangue">Sangue</option>
+                <option value="adotivo">Adotivo</option>
+                <option value="casamento">Casamento</option>
+                <option value="uniao">União</option>
+                <option value="separado">Separado</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Buscar pessoa</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Digite o nome da pessoa..."
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto border rounded-lg">
+            {pessoasFiltradas.length > 0 ? (
+              pessoasFiltradas.map((pessoa) => (
+                <button
+                  key={pessoa.id}
+                  type="button"
+                  onClick={() => handleAdicionarRelacionamentoPendente(pessoa)}
+                  className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 border-b last:border-b-0"
+                >
+                  {pessoa.foto_principal_url ? (
+                    <img
+                      src={pessoa.foto_principal_url}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{pessoa.nome_completo}</p>
+                    {pessoa.local_nascimento && (
+                      <p className="text-xs text-gray-500 truncate">{pessoa.local_nascimento}</p>
+                    )}
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="p-4 text-sm text-gray-500 text-center">
+                Nenhuma pessoa encontrada.
+              </div>
+            )}
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

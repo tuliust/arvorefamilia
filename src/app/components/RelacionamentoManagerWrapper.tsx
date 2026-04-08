@@ -46,7 +46,7 @@ export function RelacionamentoManagerWrapper({
   };
 
   const handleChange = () => {
-    loadRelacionamentos(); // Recarregar relacionamentos
+    loadRelacionamentos();
     onChange?.();
   };
 

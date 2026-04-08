@@ -1,11 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { FamilyTree } from '../components/FamilyTree/FamilyTree';
+import { ViewModeToggle } from '../components/FamilyTree/ViewModeToggle';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { obterTodasPessoas, obterTodosRelacionamentos, buscarPessoas } from '../services/dataService';
-import { Pessoa, Relacionamento } from '../types';
-import { Search, Users, Home as HomeIcon, Settings, ChevronLeft, ChevronRight, MapPin, Heart, Activity } from 'lucide-react';
+import { Pessoa, Relacionamento, TipoVisualizacaoArvore } from '../types';
+import {
+  Search,
+  Users,
+  Home as HomeIcon,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Heart,
+  Activity,
+} from 'lucide-react';
 
 export function Home() {
   const navigate = useNavigate();
@@ -16,8 +27,8 @@ export function Home() {
   const [pessoasFiltradas, setPessoasFiltradas] = useState<Pessoa[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Estado para controlar quais tipos de linhas são exibidas
+  const [viewMode, setViewMode] = useState<TipoVisualizacaoArvore>('lados');
+
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
     filiacao_sangue: true,
@@ -25,23 +36,21 @@ export function Home() {
     irmaos: true,
   });
 
-  // Estado para filtrar tipos de pessoas
   const [personFilters, setPersonFilters] = useState({
     vivos: true,
     falecidos: true,
     pets: true,
   });
 
-  // Carregar dados inicialmente
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
         const [pessoasData, relacionamentosData] = await Promise.all([
           obterTodasPessoas(),
-          obterTodosRelacionamentos()
+          obterTodosRelacionamentos(),
         ]);
-        
+
         setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
       } catch (error) {
@@ -52,11 +61,10 @@ export function Home() {
         setIsLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
-  // Atualizar busca quando searchTerm mudar
   useEffect(() => {
     const performSearch = async () => {
       if (!searchTerm.trim()) {
@@ -66,42 +74,43 @@ export function Home() {
         setPessoasFiltradas(Array.isArray(resultados) ? resultados : []);
       }
     };
-    
-    // Debounce a busca para evitar muitas chamadas
-    const timeoutId = setTimeout(() => {
+
+    const timeoutId = window.setTimeout(() => {
       performSearch();
     }, 300);
-    
-    return () => clearTimeout(timeoutId);
+
+    return () => window.clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  const handlePersonClick = React.useCallback((pessoa: Pessoa) => {
-    setSelectedPersonId(pessoa.id);
-    navigate(`/pessoa/${pessoa.id}`);
-  }, [navigate]);
+  const handlePersonClick = React.useCallback(
+    (pessoa: Pessoa) => {
+      setSelectedPersonId(pessoa.id);
+      navigate(`/pessoa/${pessoa.id}`);
+    },
+    [navigate]
+  );
 
   const handleSearchSelect = React.useCallback((pessoa: Pessoa) => {
     setSelectedPersonId(pessoa.id);
     setSearchTerm('');
   }, []);
-  
+
   const toggleFilter = (filterKey: keyof typeof edgeFilters) => {
-    setEdgeFilters(prev => ({
+    setEdgeFilters((prev) => ({
       ...prev,
-      [filterKey]: !prev[filterKey]
+      [filterKey]: !prev[filterKey],
     }));
   };
 
   const togglePersonFilter = (filterKey: keyof typeof personFilters) => {
-    setPersonFilters(prev => ({
+    setPersonFilters((prev) => ({
       ...prev,
-      [filterKey]: !prev[filterKey]
+      [filterKey]: !prev[filterKey],
     }));
   };
 
-  // Aplicar filtros de pessoas
   const pessoasVisiveis = useMemo(() => {
-    return pessoas.filter(pessoa => {
+    return pessoas.filter((pessoa) => {
       if (pessoa.humano_ou_pet === 'Pet') {
         return personFilters.pets;
       }
@@ -112,41 +121,38 @@ export function Home() {
     });
   }, [pessoas, personFilters]);
 
-  // Calcular estatísticas
   const stats = useMemo(() => {
-    const pessoasVivas = pessoas.filter(p => p.humano_ou_pet === 'Humano' && !p.data_falecimento);
-    const pessoasFalecidas = pessoas.filter(p => p.humano_ou_pet === 'Humano' && p.data_falecimento);
-    const pets = pessoas.filter(p => p.humano_ou_pet === 'Pet');
-    
-    // Casados - contar pessoas que têm relacionamento conjugal
+    const pessoasVivas = pessoas.filter((p) => p.humano_ou_pet === 'Humano' && !p.data_falecimento);
+    const pessoasFalecidas = pessoas.filter((p) => p.humano_ou_pet === 'Humano' && p.data_falecimento);
+    const pets = pessoas.filter((p) => p.humano_ou_pet === 'Pet');
+
     const pessoasComConjuge = new Set<string>();
-    relacionamentos.filter(r => r.tipo_relacionamento === 'conjuge').forEach(r => {
-      if (r.pessoa_origem_id) pessoasComConjuge.add(r.pessoa_origem_id);
-      if (r.pessoa_destino_id) pessoasComConjuge.add(r.pessoa_destino_id);
-    });
-    
-    // Cidades de nascimento
+    relacionamentos
+      .filter((r) => r.tipo_relacionamento === 'conjuge')
+      .forEach((r) => {
+        if (r.pessoa_origem_id) pessoasComConjuge.add(r.pessoa_origem_id);
+        if (r.pessoa_destino_id) pessoasComConjuge.add(r.pessoa_destino_id);
+      });
+
     const cidadesNascimento = new Map<string, number>();
-    pessoas.forEach(p => {
+    pessoas.forEach((p) => {
       if (p.local_nascimento && p.humano_ou_pet === 'Humano') {
         const count = cidadesNascimento.get(p.local_nascimento) || 0;
         cidadesNascimento.set(p.local_nascimento, count + 1);
       }
     });
-    
-    // Cidades onde vivem atualmente (considerando pessoas vivas)
+
     const cidadesAtuais = new Set<string>();
-    pessoasVivas.forEach(p => {
+    pessoasVivas.forEach((p) => {
       if (p.local_atual) {
         cidadesAtuais.add(p.local_atual);
       }
     });
 
-    // Ordenar cidades de nascimento por quantidade
     const topCidadesNascimento = Array.from(cidadesNascimento.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-    
+
     return {
       totalPessoas: pessoas.length,
       pessoasVivas: pessoasVivas.length,
@@ -160,9 +166,8 @@ export function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
@@ -173,8 +178,10 @@ export function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative w-80">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
+            <div className="relative w-80 max-w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="text"
@@ -183,7 +190,7 @@ export function Home() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
-              
+
               {searchTerm && pessoasFiltradas.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
                   {pessoasFiltradas.map((pessoa) => (
@@ -202,12 +209,7 @@ export function Home() {
               )}
             </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate('/')}
-              title="Voltar para a árvore"
-            >
+            <Button variant="outline" size="icon" onClick={() => navigate('/')} title="Voltar para a árvore">
               <HomeIcon className="w-4 h-4" />
             </Button>
 
@@ -223,10 +225,8 @@ export function Home() {
         </div>
       </header>
 
-      {/* Main Content - Family Tree + Sidebar */}
       <div className="flex-1 flex relative overflow-hidden">
-        {/* Sidebar de Estatísticas */}
-        <div 
+        <div
           className={`transition-all duration-300 ease-in-out bg-white border-r border-gray-200 shadow-lg overflow-y-auto ${
             sidebarOpen ? 'w-80' : 'w-0'
           }`}
@@ -238,7 +238,15 @@ export function Home() {
                 <p className="text-sm text-gray-500">Estatísticas da família</p>
               </div>
 
-              {/* Estatísticas Principais */}
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Visualização ativa</p>
+                <p className="mt-1 text-sm text-blue-900">
+                  {viewMode === 'lados'
+                    ? 'Modo legado organizado por lados.'
+                    : 'Novo modo organizado por gerações.'}
+                </p>
+              </div>
+
               <div className="space-y-3">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                   <div className="flex items-center gap-3">
@@ -301,12 +309,9 @@ export function Home() {
                 </div>
               </div>
 
-              {/* Cidades de Nascimento */}
               {stats.cidadesNascimento.length > 0 && (
                 <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                    Principais cidades de nascimento
-                  </h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Principais cidades de nascimento</h3>
                   <div className="space-y-2">
                     {stats.cidadesNascimento.map(([cidade, count]) => (
                       <div key={cidade} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
@@ -321,7 +326,6 @@ export function Home() {
                 </div>
               )}
 
-              {/* Outras Estatísticas */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Outros dados</h3>
                 <div className="space-y-2 text-sm text-gray-600">
@@ -335,7 +339,6 @@ export function Home() {
           )}
         </div>
 
-        {/* Toggle Button para Sidebar */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-200 rounded-r-lg p-2 shadow-lg hover:bg-gray-50 transition-colors"
@@ -348,7 +351,6 @@ export function Home() {
           )}
         </button>
 
-        {/* Family Tree */}
         <main className="flex-1 relative overflow-hidden h-full">
           {isLoading ? (
             <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -364,16 +366,18 @@ export function Home() {
               onPersonClick={handlePersonClick}
               selectedPersonId={selectedPersonId}
               edgeFilters={edgeFilters}
+              viewMode={viewMode}
             />
           )}
         </main>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-6 left-6 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm" style={{ left: sidebarOpen ? '344px' : '24px' }}>
+      <div
+        className="absolute bottom-6 left-6 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm"
+        style={{ left: sidebarOpen ? '344px' : '24px' }}
+      >
         <h3 className="font-semibold text-sm mb-3 text-gray-900">Legenda</h3>
-        
-        {/* Tipos de Linhas */}
+
         <div className="mb-4">
           <p className="text-xs font-medium text-gray-700 mb-2">Tipos de Linhas:</p>
           <div className="space-y-2">
@@ -387,7 +391,7 @@ export function Home() {
               <div className="w-6 h-0.5 bg-emerald-500"></div>
               <span className="text-xs text-gray-700">Relacionamento conjugal</span>
             </label>
-            
+
             <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
               <input
                 type="checkbox"
@@ -398,7 +402,7 @@ export function Home() {
               <div className="w-6 h-1 border-t-2 border-dashed border-emerald-500"></div>
               <span className="text-xs text-gray-700">Filiação (sangue)</span>
             </label>
-            
+
             <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
               <input
                 type="checkbox"
@@ -409,7 +413,7 @@ export function Home() {
               <div className="w-6 h-1 border-t-2 border-dashed border-purple-600"></div>
               <span className="text-xs text-gray-700">Filiação (adotiva)</span>
             </label>
-            
+
             <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
               <input
                 type="checkbox"
@@ -422,40 +426,39 @@ export function Home() {
             </label>
           </div>
         </div>
-        
-        {/* Filtros de Pessoas */}
+
         <div className="pt-3 border-t border-gray-200">
           <p className="text-xs font-medium text-gray-700 mb-2">Filtrar por tipo:</p>
           <div className="space-y-2">
             <button
               onClick={() => togglePersonFilter('vivos')}
               className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all ${
-                personFilters.vivos 
-                  ? 'bg-blue-50 border-2 border-blue-500' 
+                personFilters.vivos
+                  ? 'bg-blue-50 border-2 border-blue-500'
                   : 'bg-gray-100 border-2 border-transparent opacity-50'
               }`}
             >
               <div className="w-6 h-6 rounded-md border-2 border-blue-500 bg-white"></div>
               <span className="text-xs text-gray-700 font-medium">Pessoa viva</span>
             </button>
-            
+
             <button
               onClick={() => togglePersonFilter('falecidos')}
               className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all ${
-                personFilters.falecidos 
-                  ? 'bg-purple-50 border-2 border-purple-500' 
+                personFilters.falecidos
+                  ? 'bg-purple-50 border-2 border-purple-500'
                   : 'bg-gray-100 border-2 border-transparent opacity-50'
               }`}
             >
               <div className="w-6 h-6 rounded-md border-2 border-purple-500 bg-white"></div>
               <span className="text-xs text-gray-700 font-medium">Pessoa falecida</span>
             </button>
-            
+
             <button
               onClick={() => togglePersonFilter('pets')}
               className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all ${
-                personFilters.pets 
-                  ? 'bg-yellow-50 border-2 border-yellow-500' 
+                personFilters.pets
+                  ? 'bg-yellow-50 border-2 border-yellow-500'
                   : 'bg-gray-100 border-2 border-transparent opacity-50'
               }`}
             >
@@ -465,8 +468,6 @@ export function Home() {
           </div>
         </div>
       </div>
-
-      {/* Stats - Remover o painel inferior já que teremos sidebar */}
     </div>
   );
 }

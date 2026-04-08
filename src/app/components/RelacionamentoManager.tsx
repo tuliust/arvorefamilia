@@ -3,19 +3,19 @@ import { Pessoa, Relacionamento, TipoRelacionamento, SubtipoRelacionamento } fro
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { 
-  Plus, 
-  X, 
-  Search, 
-  Users, 
+import {
+  Plus,
+  X,
+  Search,
+  Users,
   Heart,
   Baby,
   User,
   GitBranch
 } from 'lucide-react';
-import { 
-  adicionarRelacionamento, 
-  deletarRelacionamento, 
+import {
+  adicionarRelacionamento,
+  deletarRelacionamento,
   obterTodasPessoas,
   obterTodosRelacionamentos
 } from '../services/dataService';
@@ -43,11 +43,11 @@ interface RelacionamentoComPessoa {
   relacionamentoId?: string;
 }
 
-export function RelacionamentoManager({ 
-  pessoaId, 
+export function RelacionamentoManager({
+  pessoaId,
   pessoaNome,
   relacionamentosIniciais,
-  onChange 
+  onChange
 }: RelacionamentoManagerProps) {
   const [relacionamentos, setRelacionamentos] = useState<RelacionamentoComPessoa[]>([]);
   const [todasPessoas, setTodasPessoas] = useState<Pessoa[]>([]);
@@ -56,60 +56,49 @@ export function RelacionamentoManager({
   const [subtipoSelecionado, setSubtipoSelecionado] = useState<SubtipoRelacionamento>('sangue');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  // Estado adicional para saber se a pessoa atual é pai ou mãe ao adicionar filho
   const [parentGender, setParentGender] = useState<'pai' | 'mae'>('pai');
 
   useEffect(() => {
     loadPessoas();
     loadRelacionamentos();
-  }, [relacionamentosIniciais]);
+  }, [relacionamentosIniciais, pessoaId]);
 
   const loadPessoas = async () => {
     const pessoas = await obterTodasPessoas();
-    // Filtrar a própria pessoa
     setTodasPessoas(pessoas.filter(p => p.id !== pessoaId));
   };
 
   const loadRelacionamentos = () => {
     const rels: RelacionamentoComPessoa[] = [];
-    
+
     relacionamentosIniciais.pais.forEach(p => {
-      rels.push({ id: p.id, tipo: 'pai', pessoa: p, subtipo: 'sangue' });
+      rels.push({ id: `pai-${p.id}`, tipo: 'pai', pessoa: p, subtipo: 'sangue' });
     });
-    
+
     relacionamentosIniciais.maes.forEach(p => {
-      rels.push({ id: p.id, tipo: 'mae', pessoa: p, subtipo: 'sangue' });
+      rels.push({ id: `mae-${p.id}`, tipo: 'mae', pessoa: p, subtipo: 'sangue' });
     });
-    
+
     relacionamentosIniciais.conjuges.forEach(p => {
-      rels.push({ id: p.id, tipo: 'conjuge', pessoa: p, subtipo: 'casamento' });
+      rels.push({ id: `conjuge-${p.id}`, tipo: 'conjuge', pessoa: p, subtipo: 'casamento' });
     });
-    
+
     relacionamentosIniciais.filhos.forEach(p => {
-      rels.push({ id: p.id, tipo: 'filho', pessoa: p, subtipo: 'sangue' });
+      rels.push({ id: `filho-${p.id}`, tipo: 'filho', pessoa: p, subtipo: 'sangue' });
     });
 
     relacionamentosIniciais.irmaos.forEach(p => {
-      rels.push({ id: p.id, tipo: 'irmao', pessoa: p, subtipo: 'sangue' });
+      rels.push({ id: `irmao-${p.id}`, tipo: 'irmao', pessoa: p, subtipo: 'sangue' });
     });
-    
+
     setRelacionamentos(rels);
   };
 
   const handleAdicionarRelacionamento = async (pessoaSelecionada: Pessoa) => {
     if (!pessoaSelecionada) return;
-    
+
     setLoading(true);
     try {
-      console.log('Adicionando relacionamento:', {
-        de: pessoaId,
-        para: pessoaSelecionada.id,
-        tipo: tipoSelecionado,
-        subtipo: subtipoSelecionado
-      });
-
-      // Criar relacionamento direto
       const rel1 = await adicionarRelacionamento({
         pessoa_origem_id: pessoaId,
         pessoa_destino_id: pessoaSelecionada.id,
@@ -121,57 +110,48 @@ export function RelacionamentoManager({
         throw new Error('Falha ao criar relacionamento principal');
       }
 
-      // Para relacionamentos bidirecionais (cônjuge, irmão)
+      // Bidirecionais
       if (tipoSelecionado === 'conjuge' || tipoSelecionado === 'irmao') {
-        const rel2 = await adicionarRelacionamento({
+        await adicionarRelacionamento({
           pessoa_origem_id: pessoaSelecionada.id,
           pessoa_destino_id: pessoaId,
           tipo_relacionamento: tipoSelecionado as TipoRelacionamento,
           subtipo_relacionamento: subtipoSelecionado,
         });
-        
-        if (!rel2) {
-          console.warn('Falha ao criar relacionamento inverso, mas continuando...');
-        }
       }
 
-      // Para pai/mae, criar relacionamento filho inverso
+      // Se a pessoa atual aponta para alguém como pai/mãe,
+      // o inverso é essa pessoa apontar para a atual como filho.
       if (tipoSelecionado === 'pai' || tipoSelecionado === 'mae') {
-        const rel2 = await adicionarRelacionamento({
+        await adicionarRelacionamento({
           pessoa_origem_id: pessoaSelecionada.id,
           pessoa_destino_id: pessoaId,
           tipo_relacionamento: 'filho',
           subtipo_relacionamento: subtipoSelecionado,
         });
-        
-        if (!rel2) {
-          console.warn('Falha ao criar relacionamento filho inverso, mas continuando...');
-        }
       }
 
-      // Para filho, criar relacionamento pai/mae inverso (assumir pai por padrão)
+      // Se a pessoa atual aponta para alguém como filho,
+      // o inverso é o filho apontar para a atual como pai ou mãe.
       if (tipoSelecionado === 'filho') {
-        const rel2 = await adicionarRelacionamento({
+        await adicionarRelacionamento({
           pessoa_origem_id: pessoaSelecionada.id,
           pessoa_destino_id: pessoaId,
-          tipo_relacionamento: parentGender, // ou 'mae' dependendo do contexto
+          tipo_relacionamento: parentGender,
           subtipo_relacionamento: subtipoSelecionado,
         });
-        
-        if (!rel2) {
-          console.warn('Falha ao criar relacionamento pai inverso, mas continuando...');
-        }
       }
 
-      console.log('Relacionamento criado com sucesso!');
-
-      setRelacionamentos(prev => [...prev, {
-        id: pessoaSelecionada.id,
-        tipo: tipoSelecionado as TipoRelacionamento,
-        subtipo: subtipoSelecionado,
-        pessoa: pessoaSelecionada,
-        relacionamentoId: rel1?.id,
-      }]);
+      setRelacionamentos(prev => [
+        ...prev,
+        {
+          id: `${tipoSelecionado}-${pessoaSelecionada.id}`,
+          tipo: tipoSelecionado as TipoRelacionamento,
+          subtipo: subtipoSelecionado,
+          pessoa: pessoaSelecionada,
+          relacionamentoId: rel1.id,
+        },
+      ]);
 
       setShowAddDialog(false);
       setSearchTerm('');
@@ -186,24 +166,43 @@ export function RelacionamentoManager({
 
   const handleRemoverRelacionamento = async (rel: RelacionamentoComPessoa) => {
     if (!confirm(`Remover ${getTipoLabel(rel.tipo)} "${rel.pessoa.nome_completo}"?`)) return;
-    
+
     setLoading(true);
     try {
-      // Buscar todos relacionamentos para encontrar os IDs corretos
       const todosRels = await obterTodosRelacionamentos();
 
-      // Encontrar relacionamentos direto e inverso
-      const relsParaDeletar = todosRels.filter((r: Relacionamento) => 
-        (r.pessoa_origem_id === pessoaId && r.pessoa_destino_id === rel.pessoa.id) ||
-        (r.pessoa_origem_id === rel.pessoa.id && r.pessoa_destino_id === pessoaId)
-      );
+      const relsParaDeletar = todosRels.filter((r: Relacionamento) => {
+        const isDirect =
+          r.pessoa_origem_id === pessoaId &&
+          r.pessoa_destino_id === rel.pessoa.id &&
+          r.tipo_relacionamento === rel.tipo;
 
-      // Deletar todos relacionamentos
+        const isReverseConjugeIrmao =
+          (rel.tipo === 'conjuge' || rel.tipo === 'irmao') &&
+          r.pessoa_origem_id === rel.pessoa.id &&
+          r.pessoa_destino_id === pessoaId &&
+          r.tipo_relacionamento === rel.tipo;
+
+        const isReversePaiMae =
+          (rel.tipo === 'pai' || rel.tipo === 'mae') &&
+          r.pessoa_origem_id === rel.pessoa.id &&
+          r.pessoa_destino_id === pessoaId &&
+          r.tipo_relacionamento === 'filho';
+
+        const isReverseFilho =
+          rel.tipo === 'filho' &&
+          r.pessoa_origem_id === rel.pessoa.id &&
+          r.pessoa_destino_id === pessoaId &&
+          (r.tipo_relacionamento === 'pai' || r.tipo_relacionamento === 'mae');
+
+        return isDirect || isReverseConjugeIrmao || isReversePaiMae || isReverseFilho;
+      });
+
       for (const r of relsParaDeletar) {
         await deletarRelacionamento(r.id);
       }
 
-      setRelacionamentos(prev => prev.filter(r => r.id !== rel.id));
+      setRelacionamentos(prev => prev.filter(r => !(r.tipo === rel.tipo && r.pessoa.id === rel.pessoa.id)));
       onChange?.();
     } catch (error) {
       console.error('Erro ao remover relacionamento:', error);
@@ -237,11 +236,11 @@ export function RelacionamentoManager({
   };
 
   const pessoasFiltradas = todasPessoas.filter(p => {
-    // Excluir pessoas já relacionadas
-    const jaRelacionado = relacionamentos.some(r => r.pessoa.id === p.id);
-    if (jaRelacionado) return false;
+    const jaRelacionadoMesmoTipo = relacionamentos.some(
+      r => r.pessoa.id === p.id && r.tipo === (tipoSelecionado as TipoRelacionamento)
+    );
+    if (jaRelacionadoMesmoTipo) return false;
 
-    // Filtrar por busca
     if (searchTerm) {
       return p.nome_completo.toLowerCase().includes(searchTerm.toLowerCase());
     }
@@ -264,9 +263,9 @@ export function RelacionamentoManager({
             <Users className="w-5 h-5" />
             Relacionamentos
           </span>
-          <Button 
-            type="button" 
-            size="sm" 
+          <Button
+            type="button"
+            size="sm"
             onClick={() => setShowAddDialog(!showAddDialog)}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -275,7 +274,6 @@ export function RelacionamentoManager({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Diálogo de adicionar */}
         {showAddDialog && (
           <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-4">
             <div className="flex items-center justify-between">
@@ -292,7 +290,6 @@ export function RelacionamentoManager({
               </button>
             </div>
 
-            {/* Tipo de relacionamento */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -320,7 +317,7 @@ export function RelacionamentoManager({
                   onChange={(e) => setSubtipoSelecionado(e.target.value as SubtipoRelacionamento)}
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                 >
-                  {(tipoSelecionado === 'conjuge') ? (
+                  {tipoSelecionado === 'conjuge' ? (
                     <>
                       <option value="casamento">Casamento</option>
                       <option value="uniao">União Estável</option>
@@ -335,8 +332,7 @@ export function RelacionamentoManager({
                 </select>
               </div>
             </div>
-            
-            {/* Se estiver adicionando filho, perguntar se a pessoa atual é pai ou mãe */}
+
             {tipoSelecionado === 'filho' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -356,7 +352,6 @@ export function RelacionamentoManager({
               </div>
             )}
 
-            {/* Busca de pessoa */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Buscar Pessoa
@@ -373,7 +368,6 @@ export function RelacionamentoManager({
               </div>
             </div>
 
-            {/* Lista de pessoas */}
             {searchTerm && (
               <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md bg-white">
                 {pessoasFiltradas.length === 0 ? (
@@ -391,8 +385,8 @@ export function RelacionamentoManager({
                         className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 disabled:opacity-50"
                       >
                         {pessoa.foto_principal_url ? (
-                          <img 
-                            src={pessoa.foto_principal_url} 
+                          <img
+                            src={pessoa.foto_principal_url}
                             alt={pessoa.nome_completo}
                             className="w-10 h-10 rounded-full object-cover"
                           />
@@ -416,10 +410,9 @@ export function RelacionamentoManager({
           </div>
         )}
 
-        {/* Lista de relacionamentos por tipo */}
         <div className="space-y-4">
-          {Object.entries(relacionamentosPorTipo).map(([tipo, rels]) => (
-            rels.length > 0 && (
+          {Object.entries(relacionamentosPorTipo).map(([tipo, rels]) =>
+            rels.length > 0 ? (
               <div key={tipo}>
                 <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   {getTipoIcon(tipo as TipoRelacionamento)}
@@ -427,13 +420,13 @@ export function RelacionamentoManager({
                 </h4>
                 <div className="space-y-2">
                   {rels.map(rel => (
-                    <div 
+                    <div
                       key={rel.id}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
                     >
                       {rel.pessoa.foto_principal_url ? (
-                        <img 
-                          src={rel.pessoa.foto_principal_url} 
+                        <img
+                          src={rel.pessoa.foto_principal_url}
                           alt={rel.pessoa.nome_completo}
                           className="w-10 h-10 rounded-full object-cover"
                         />
@@ -460,8 +453,8 @@ export function RelacionamentoManager({
                   ))}
                 </div>
               </div>
-            )
-          ))}
+            ) : null
+          )}
         </div>
 
         {relacionamentos.length === 0 && !showAddDialog && (
