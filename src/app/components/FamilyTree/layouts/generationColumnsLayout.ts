@@ -92,12 +92,8 @@ function computeGenerations(
   return generations;
 }
 
-function normalizeName(value?: string) {
-  return (value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase();
+function getGenerationLabel(level: number) {
+  return `Geração ${level + 2}`;
 }
 
 export function generationColumnsLayout({
@@ -143,24 +139,26 @@ export function generationColumnsLayout({
     return (pessoaA?.nome_completo || '').localeCompare(pessoaB?.nome_completo || '');
   };
 
-  // Geração visual desejada por pessoa.
-  // Atenção: aqui o valor é 0-based:
-  // Geração 1 = 0
-  // Geração 2 = 1
-  // Geração 3 = 2
-  // Geração 5 = 4
-  const generationOverrideByName = new Map<string, number>([
-    [normalizeName('Amalia Tsangaropoulos'), 0],
-    [normalizeName('Dimitri Tsangaropoulos'), 0],
-    [normalizeName('Athanase Tsangaropoulos'), 1],
-    [normalizeName('Charalambos Tsangaropoulos'), 2],
-    [normalizeName('Ivanira'), 2],
-    [normalizeName('Condilênia Maria Tsangaropulos Souza'), 4],
+  /**
+   * Overrides visuais por ID.
+   *
+   * -1 = coluna visual anterior à antiga "Geração 1"
+   *  0 = antiga Geração 1
+   *  1 = antiga Geração 2
+   * etc.
+   *
+   * Como o label foi renumerado com +2:
+   * -1 será exibido como "Geração 1"
+   *  0 será exibido como "Geração 2"
+   *  1 será exibido como "Geração 3"
+   */
+  const generationOverrideById = new Map<string, number>([
+    ['e07b4cd4-608a-4afd-b1a2-8b0962355403', -1],
+    ['e2402ccd-62da-4f1a-b1b2-10c214fb6b26', -1],
   ]);
 
   const getVisualGeneration = (personId: string) => {
-    const pessoa = pessoaById.get(personId);
-    const override = generationOverrideByName.get(normalizeName(pessoa?.nome_completo));
+    const override = generationOverrideById.get(personId);
 
     if (typeof override === 'number') {
       return override;
@@ -181,15 +179,22 @@ export function generationColumnsLayout({
   });
 
   const occupiedLevels = Array.from(peopleByGeneration.keys()).sort((a, b) => a - b);
+  const minOccupiedLevel = occupiedLevels.length > 0 ? Math.min(...occupiedLevels) : 0;
   const maxOccupiedLevel = occupiedLevels.length > 0 ? Math.max(...occupiedLevels) : 0;
 
-  const allLevels = Array.from({ length: maxOccupiedLevel + 1 }, (_, index) => index);
+  const allLevels = Array.from(
+    { length: maxOccupiedLevel - minOccupiedLevel + 1 },
+    (_, index) => minOccupiedLevel + index
+  );
 
   const generationColumns: GenerationColumnMeta[] = allLevels.map((level) => ({
     level,
-    label: `Geração ${level + 1}`,
-    x: INITIAL_X + level * HORIZONTAL_GAP_BETWEEN_GENERATIONS,
+    label: getGenerationLabel(level),
+    x: INITIAL_X + (level - minOccupiedLevel) * HORIZONTAL_GAP_BETWEEN_GENERATIONS,
   }));
+
+  const getColumnX = (level: number) =>
+    INITIAL_X + (level - minOccupiedLevel) * HORIZONTAL_GAP_BETWEEN_GENERATIONS;
 
   const positionedNodes: Node[] = [];
   const positionedNodeIds = new Set<string>();
@@ -241,7 +246,7 @@ export function generationColumnsLayout({
   };
 
   occupiedLevels.forEach((level) => {
-    const currentX = INITIAL_X + level * HORIZONTAL_GAP_BETWEEN_GENERATIONS;
+    const currentX = getColumnX(level);
     const peopleInLevel = [...(peopleByGeneration.get(level) || [])].sort(comparePeople);
 
     const blocks: Array<{

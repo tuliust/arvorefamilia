@@ -104,7 +104,13 @@ export function legacySideLayout({
 
   const getPessoaById = (id: string) => pessoas.find((p) => p.id === id);
 
-  const comparePeople = getStablePersonComparator(pessoas, childParentsMap, undefined, marriageMap, marriageNodes);
+  const comparePeople = getStablePersonComparator(
+    pessoas,
+    childParentsMap,
+    undefined,
+    marriageMap,
+    marriageNodes
+  );
 
   const getCoupleDisplayOrder = (person1Id: string, person2Id: string): [string, string] => {
     const pessoa1 = getPessoaById(person1Id);
@@ -165,18 +171,41 @@ export function legacySideLayout({
     });
   }
 
+  /**
+   * Mesmo override visual usado no modo "geracoes".
+   * Aqui deslocamos as pessoas para uma coluna anterior.
+   */
+  const generationOverrideById = new Map<string, number>([
+    ['e07b4cd4-608a-4afd-b1a2-8b0962355403', -1],
+    ['e2402ccd-62da-4f1a-b1b2-10c214fb6b26', -1],
+  ]);
+
+  const getVisualGeneration = (personId: string) => {
+    const override = generationOverrideById.get(personId);
+    if (typeof override === 'number') return override;
+    return generations.get(personId) ?? 0;
+  };
+
   const peopleByGeneration = new Map<number, string[]>();
 
-  generations.forEach((level, personId) => {
-    if (!availablePersonIds.has(personId)) return;
+  personNodes.forEach((node) => {
+    if (!availablePersonIds.has(node.id)) return;
+
+    const level = getVisualGeneration(node.id);
+
     if (!peopleByGeneration.has(level)) {
       peopleByGeneration.set(level, []);
     }
-    peopleByGeneration.get(level)!.push(personId);
+
+    peopleByGeneration.get(level)!.push(node.id);
   });
 
   const positionedNodes: Node[] = [];
   const sortedLevels = Array.from(peopleByGeneration.keys()).sort((a, b) => a - b);
+  const minLevel = sortedLevels.length > 0 ? Math.min(...sortedLevels) : 0;
+
+  const getColumnX = (level: number) =>
+    INITIAL_X + (level - minLevel) * HORIZONTAL_GAP_BETWEEN_GENERATIONS;
 
   sortedLevels.forEach((level) => {
     const peopleInLevel = [...(peopleByGeneration.get(level) || [])];
@@ -216,7 +245,7 @@ export function legacySideLayout({
 
     peopleInLevel.sort(comparePeople);
 
-    const currentX = INITIAL_X + level * HORIZONTAL_GAP_BETWEEN_GENERATIONS;
+    const currentX = getColumnX(level);
     let currentY = INITIAL_Y;
 
     const processedInLevel = new Set<string>();
