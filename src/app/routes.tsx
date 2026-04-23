@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router';
 import { Home } from './pages/Home';
 import { PersonProfile } from './pages/PersonProfile';
 import { CalendarioFamiliar } from './pages/CalendarioFamiliar';
+import { MeusFavoritos } from './pages/MeusFavoritos';
+import { CentralNotificacoes } from './pages/CentralNotificacoes';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminPessoas } from './pages/admin/AdminPessoas';
@@ -24,6 +26,14 @@ export const router = createBrowserRouter([
   {
     path: '/calendario-familiar',
     element: <CalendarioFamiliar />,
+  },
+  {
+    path: '/meus-favoritos',
+    element: <MeusFavoritos />,
+  },
+  {
+    path: '/notificacoes',
+    element: <CentralNotificacoes />,
   },
   {
     path: '/admin',
