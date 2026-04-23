@@ -10,6 +10,26 @@ export type LadoPessoa = 'esquerda' | 'direita';
 
 export type TipoVisualizacaoArvore = 'lados' | 'geracoes';
 
+export type GeracaoSociologica =
+  | 'Geração Silenciosa'
+  | 'Baby Boomer'
+  | 'Geração X'
+  | 'Geração Y / Millennials'
+  | 'Geração Z'
+  | 'Geração Alpha';
+
+export type TipoEventoFamiliar = 'aniversario' | 'memoria' | 'encontro' | 'aviso' | 'outro';
+
+export type TipoConteudoFavorito =
+  | 'pessoa'
+  | 'arquivo'
+  | 'topico'
+  | 'evento'
+  | 'pagina'
+  | 'historia';
+
+export type TipoCanalNotificacao = 'interna' | 'email' | 'push' | 'whatsapp';
+
 export interface ArquivoHistorico {
   id: string;
   tipo: 'imagem' | 'pdf';
@@ -35,6 +55,11 @@ export interface Pessoa {
   telefone?: string;
   endereco?: string;
   rede_social?: string;
+  instagram_usuario?: string;
+  instagram_url?: string;
+  permitir_exibir_instagram?: boolean;
+  permitir_mensagens_whatsapp?: boolean;
+  geracao_sociologica?: GeracaoSociologica;
   arquivos_historicos?: ArquivoHistorico[];
   created_at?: string;
   updated_at?: string;
@@ -60,6 +85,59 @@ export interface Relacionamento {
   local_separacao?: string;
   ativo: boolean;
   observacoes?: string;
+}
+
+export interface EventoFamiliar {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  data_inicio: string;
+  data_fim?: string;
+  local?: string;
+  tipo: TipoEventoFamiliar;
+  pessoa_relacionada_id?: string;
+  created_by?: string;
+}
+
+export interface FavoritoUsuario {
+  id: string;
+  user_id: string;
+  tipo_conteudo: TipoConteudoFavorito;
+  conteudo_id: string;
+  titulo?: string;
+  created_at?: string;
+}
+
+export interface NotificacaoUsuario {
+  id: string;
+  user_id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: TipoEventoFamiliar | 'notificacao';
+  canal: TipoCanalNotificacao;
+  lida: boolean;
+  link?: string;
+  created_at?: string;
+}
+
+export interface PreferenciaNotificacao {
+  id: string;
+  user_id: string;
+  receber_aniversarios: boolean;
+  receber_datas_memoria: boolean;
+  receber_eventos: boolean;
+  receber_avisos_gerais: boolean;
+  receber_email: boolean;
+  receber_push: boolean;
+  receber_whatsapp: boolean;
+}
+
+export interface VinculoUsuarioPessoa {
+  id: string;
+  user_id: string;
+  pessoa_id: string;
+  relacao_com_perfil?: string;
+  principal?: boolean;
 }
 
 export interface DadosImportacao {
