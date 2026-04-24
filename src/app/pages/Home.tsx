@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 
 import { FamilyTree } from '../components/FamilyTree/FamilyTree';
 import { ViewModeToggle } from '../components/FamilyTree/ViewModeToggle';
@@ -35,6 +35,9 @@ import {
   Heart,
   Activity,
   Monitor,
+  CalendarDays,
+  Star,
+  Bell,
 } from 'lucide-react';
 
 export function Home() {
@@ -325,6 +328,24 @@ export function Home() {
                 availableModes={availableModes}
               />
 
+              <Link to="/calendario-familiar">
+                <Button variant="outline" size="icon" title="Calendário familiar">
+                  <CalendarDays className="w-4 h-4" />
+                </Button>
+              </Link>
+
+              <Link to="/meus-favoritos">
+                <Button variant="outline" size="icon" title="Meus favoritos">
+                  <Star className="w-4 h-4" />
+                </Button>
+              </Link>
+
+              <Link to="/notificacoes">
+                <Button variant="outline" size="icon" title="Notificações">
+                  <Bell className="w-4 h-4" />
+                </Button>
+              </Link>
+
               <Button variant="outline" size="icon" onClick={() => navigate('/')} title="Voltar para a árvore">
                 <HomeIcon className="w-4 h-4" />
               </Button>
@@ -473,6 +494,44 @@ export function Home() {
                       ? 'Modo legado organizado por lados.'
                       : 'Novo modo organizado por gerações.'}
                   </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <Link to="/calendario-familiar" className="rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+                        <CalendarDays className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">Calendário familiar</p>
+                        <p className="text-xs text-gray-500">Aniversários e datas de memória</p>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/meus-favoritos" className="rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                        <Star className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">Meus favoritos</p>
+                        <p className="text-xs text-gray-500">Perfis e páginas salvas</p>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/notificacoes" className="rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
+                        <Bell className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">Notificações</p>
+                        <p className="text-xs text-gray-500">Central de avisos da família</p>
+                      </div>
+                    </div>
+                  </Link>
                 </div>
 
                 <div className="space-y-3">
