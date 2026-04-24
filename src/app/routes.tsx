@@ -6,6 +6,7 @@ import { MeusFavoritos } from './pages/MeusFavoritos';
 import { CentralNotificacoes } from './pages/CentralNotificacoes';
 import { Entrar } from './pages/Entrar';
 import { MinhaArvore } from './pages/MinhaArvore';
+import { VincularPerfil } from './pages/VincularPerfil';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminPessoas } from './pages/admin/AdminPessoas';
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: '/minha-arvore',
     element: <MemberRoute><MinhaArvore /></MemberRoute>,
+  },
+  {
+    path: '/vincular-perfil',
+    element: <MemberRoute><VincularPerfil /></MemberRoute>,
   },
   {
     path: '/pessoa/:id',
