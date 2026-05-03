@@ -26,6 +26,7 @@ begin
     select 1
     from pg_constraint
     where conname = 'pessoas_lado_check'
+      and conrelid = 'public.pessoas'::regclass
   ) then
     alter table pessoas
       add constraint pessoas_lado_check
@@ -35,10 +36,11 @@ begin
   if not exists (
     select 1
     from pg_constraint
-    where conname = 'pessoas_manual_generation_range'
+    where conname = 'pessoas_manual_generation_check'
+      and conrelid = 'public.pessoas'::regclass
   ) then
     alter table pessoas
-      add constraint pessoas_manual_generation_range
+      add constraint pessoas_manual_generation_check
       check (manual_generation is null or manual_generation between 1 and 7);
   end if;
 end $$;

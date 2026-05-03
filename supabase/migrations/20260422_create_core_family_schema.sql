@@ -64,9 +64,99 @@ create table if not exists public.pessoas (
   constraint pessoas_lado_check
     check (lado in ('esquerda', 'direita')),
 
-  constraint pessoas_manual_generation_range
+  constraint pessoas_manual_generation_check
     check (manual_generation is null or manual_generation between 1 and 7)
 );
+
+alter table public.pessoas
+  add column if not exists nome_completo text,
+  add column if not exists data_nascimento text,
+  add column if not exists local_nascimento text,
+  add column if not exists data_falecimento text,
+  add column if not exists local_falecimento text,
+  add column if not exists local_atual text,
+  add column if not exists foto_principal_url text,
+  add column if not exists humano_ou_pet text default 'Humano',
+  add column if not exists lado text default 'esquerda',
+  add column if not exists cor_bg_card text,
+  add column if not exists minibio text,
+  add column if not exists curiosidades text,
+  add column if not exists telefone text,
+  add column if not exists endereco text,
+  add column if not exists rede_social text,
+  add column if not exists instagram_usuario text,
+  add column if not exists instagram_url text,
+  add column if not exists permitir_exibir_instagram boolean default false,
+  add column if not exists permitir_mensagens_whatsapp boolean default false,
+  add column if not exists geracao_sociologica text,
+  add column if not exists manual_generation smallint,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
+update public.pessoas
+set
+  humano_ou_pet = coalesce(humano_ou_pet, 'Humano'),
+  permitir_exibir_instagram = coalesce(permitir_exibir_instagram, false),
+  permitir_mensagens_whatsapp = coalesce(permitir_mensagens_whatsapp, false),
+  created_at = coalesce(created_at, now()),
+  updated_at = coalesce(updated_at, now());
+
+alter table public.pessoas
+  alter column humano_ou_pet set not null,
+  alter column humano_ou_pet set default 'Humano',
+  alter column permitir_exibir_instagram set not null,
+  alter column permitir_exibir_instagram set default false,
+  alter column permitir_mensagens_whatsapp set not null,
+  alter column permitir_mensagens_whatsapp set default false,
+  alter column created_at set not null,
+  alter column created_at set default now(),
+  alter column updated_at set not null,
+  alter column updated_at set default now();
+
+do $$
+begin
+  if not exists (
+    select 1
+    from public.pessoas
+    where nome_completo is null
+  ) then
+    alter table public.pessoas
+      alter column nome_completo set not null;
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'pessoas_humano_ou_pet_check'
+      and conrelid = 'public.pessoas'::regclass
+  ) then
+    alter table public.pessoas
+      add constraint pessoas_humano_ou_pet_check
+      check (humano_ou_pet in ('Humano', 'Pet'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'pessoas_lado_check'
+      and conrelid = 'public.pessoas'::regclass
+  ) then
+    alter table public.pessoas
+      add constraint pessoas_lado_check
+      check (lado in ('esquerda', 'direita'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'pessoas_manual_generation_check'
+      and conrelid = 'public.pessoas'::regclass
+  ) then
+    alter table public.pessoas
+      add constraint pessoas_manual_generation_check
+      check (manual_generation is null or manual_generation between 1 and 7);
+  end if;
+end $$;
 
 create index if not exists idx_pessoas_nome_completo
   on public.pessoas (nome_completo);
@@ -224,4 +314,3 @@ create trigger update_arquivos_historicos_updated_at
 before update on public.arquivos_historicos
 for each row
 execute function public.update_updated_at_column();
-

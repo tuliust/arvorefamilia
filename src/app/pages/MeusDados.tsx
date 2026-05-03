@@ -1,18 +1,33 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowRight, Image, Save, UserCircle2 } from 'lucide-react';
+import { ArrowRight, Camera, ImagePlus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import {
+  GoogleAddressComponent,
+  GooglePlaceResult,
+  GooglePlacesAutocomplete,
+  loadGoogleMapsPlaces,
+} from '../lib/googleMapsLoader';
+import {
   confirmOwnLinkedPersonData,
   EditableOwnPersonPayload,
   ensureMemberProfile,
   getPrimaryLinkedPersonWithPessoa,
+  listLinkablePeople,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
@@ -24,17 +39,22 @@ const EDITABLE_FIELDS: Array<keyof EditableOwnPersonPayload> = [
   'data_nascimento',
   'local_nascimento',
   'local_atual',
-  'foto_principal_url',
   'minibio',
   'curiosidades',
   'telefone',
   'endereco',
   'rede_social',
   'instagram_usuario',
-  'instagram_url',
   'permitir_exibir_instagram',
   'permitir_mensagens_whatsapp',
 ];
+
+const SOCIAL_NETWORKS = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok'] as const;
+const LOWERCASE_NAME_PARTS = new Set(['de', 'da', 'das', 'do', 'dos', 'e']);
+
+// Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
+// (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
+type FieldErrors = Partial<Record<keyof EditableOwnPersonPayload | 'complemento', string>>;
 
 function buildFormState(pessoa?: Pessoa | null): EditableOwnPersonPayload {
   return {
@@ -56,24 +76,191 @@ function buildFormState(pessoa?: Pessoa | null): EditableOwnPersonPayload {
 }
 
 function cleanPayload(form: EditableOwnPersonPayload): EditableOwnPersonPayload {
-  return EDITABLE_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
-    const value = form[field];
+  const normalizedForm: EditableOwnPersonPayload = {
+    ...form,
+    nome_completo: formatPersonName(String(form.nome_completo ?? '')),
+    data_nascimento: normalizeBirthDate(String(form.data_nascimento ?? '')),
+    local_nascimento: normalizeLocation(String(form.local_nascimento ?? '')),
+    local_atual: normalizeLocation(String(form.local_atual ?? '')),
+    telefone: formatPhone(String(form.telefone ?? '')),
+  };
 
-    if (typeof value === 'string') {
-      (payload as Record<string, unknown>)[field] = value.trim();
+  return EDITABLE_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
+    const value = normalizedForm[field];
+
+    if (field === 'rede_social' && !value) {
+      (payload as Record<string, unknown>)[field] = '';
       return payload;
     }
 
-    (payload as Record<string, unknown>)[field] = value;
+    if (typeof value === 'string') {
+      (payload as Record<string, unknown>)[field] = normalizedForm[field]?.toString().trim() ?? '';
+      return payload;
+    }
+
+    (payload as Record<string, unknown>)[field] = normalizedForm[field];
     return payload;
   }, {});
+}
+
+function normalizeWord(word: string) {
+  const lower = word.toLocaleLowerCase('pt-BR');
+  if (LOWERCASE_NAME_PARTS.has(lower)) return lower;
+
+  return lower
+    .split('-')
+    .map((part) => part.charAt(0).toLocaleUpperCase('pt-BR') + part.slice(1))
+    .join('-');
+}
+
+function titleCase(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(normalizeWord)
+    .join(' ');
+}
+
+function formatPersonName(value: string) {
+  return titleCase(value);
+}
+
+function hasFirstAndLastName(value: string) {
+  const words = value.trim().split(/\s+/).filter((part) => part.length >= 2);
+  return words.length >= 2;
+}
+
+function maskBirthDate(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function normalizeBirthDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^\d{4}$/.test(trimmed)) return trimmed;
+  return maskBirthDate(trimmed);
+}
+
+function validateBirthDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  if (/^\d{4}$/.test(trimmed)) return undefined;
+
+  const match = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return 'Use DD/MM/AAAA ou apenas AAAA.';
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  if (day < 1 || day > 31) return 'Dia deve estar entre 01 e 31.';
+  if (month < 1 || month > 12) return 'Mês deve estar entre 01 e 12.';
+
+  return undefined;
+}
+
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length <= 2) return digits ? `(${digits}` : '';
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function normalizeLocation(value: string) {
+  const trimmed = value.trim().replace(/\s+/g, ' ');
+  if (!trimmed) return '';
+
+  const [rawCity, ...rest] = trimmed.split('/');
+  if (!rest.length) return titleCase(rawCity);
+
+  const city = titleCase(rawCity);
+  const region = rest.join('/').trim();
+  const normalizedRegion = /^[a-zA-Z]{2}$/.test(region) ? region.toLocaleUpperCase('pt-BR') : titleCase(region);
+  return `${city}/${normalizedRegion}`;
+}
+
+function validateLocation(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const slashParts = trimmed.split('/');
+  if (slashParts.length !== 2 || !slashParts[0].trim() || !slashParts[1].trim()) {
+    return 'Use Cidade/UF ou Cidade/País.';
+  }
+
+  const region = slashParts[1].trim();
+  if (/^[a-zA-Z]{1,2}$/.test(region) && !/^[A-Z]{2}$/.test(region)) {
+    return 'Para cidades brasileiras, use UF com duas letras maiúsculas. Ex.: São José dos Campos/SP.';
+  }
+
+  return undefined;
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? '';
+  const second = parts.find((part, index) => index > 0 && !LOWERCASE_NAME_PARTS.has(part.toLocaleLowerCase('pt-BR')))?.[0] ?? parts[1]?.[0] ?? '';
+  return `${first}${second}`.toLocaleUpperCase('pt-BR') || 'EU';
+}
+
+function getSocialPlaceholder(network?: string) {
+  if (network === 'Instagram' || network === 'TikTok') return '@usuario';
+  if (network === 'Facebook' || network === 'LinkedIn') return 'nome-do-perfil ou URL';
+  return 'Selecione uma rede primeiro';
+}
+
+function getAddressComponent(
+  components: GoogleAddressComponent[] | undefined,
+  type: string,
+  name: 'long_name' | 'short_name' = 'long_name',
+) {
+  return components?.find((component) => component.types.includes(type))?.[name] ?? '';
+}
+
+function formatGooglePlaceAddress(place: GooglePlaceResult) {
+  const components = place.address_components;
+  if (!components?.length) return place.formatted_address ?? '';
+
+  const street = getAddressComponent(components, 'route');
+  const number = getAddressComponent(components, 'street_number');
+  const neighborhood =
+    getAddressComponent(components, 'sublocality_level_1') ||
+    getAddressComponent(components, 'sublocality') ||
+    getAddressComponent(components, 'neighborhood');
+  const city =
+    getAddressComponent(components, 'locality') ||
+    getAddressComponent(components, 'administrative_area_level_2') ||
+    getAddressComponent(components, 'postal_town');
+  const state = getAddressComponent(components, 'administrative_area_level_1', 'short_name');
+  const postalCode = getAddressComponent(components, 'postal_code');
+  const postalCodeSuffix = getAddressComponent(components, 'postal_code_suffix');
+  const fullPostalCode = [postalCode, postalCodeSuffix].filter(Boolean).join('-');
+  const cityState = [city, state].filter(Boolean).join(' - ');
+  const streetLine = [street, number].filter(Boolean).join(', ');
+
+  return [streetLine, neighborhood, cityState, fullPostalCode ? `CEP ${fullPostalCode}` : '']
+    .filter(Boolean)
+    .join(', ');
 }
 
 export function MeusDados() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildFormState());
+  const [complemento, setComplemento] = useState('');
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -97,6 +284,8 @@ export function MeusDados() {
 
       setLink(data);
       setForm(buildFormState(data?.pessoa));
+      setComplemento('');
+      setPhotoMarkedForRemoval(false);
       setLoading(false);
     }
 
@@ -107,19 +296,203 @@ export function MeusDados() {
     };
   }, [user]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadLocationSuggestions() {
+      const { data } = await listLinkablePeople();
+      if (!mounted) return;
+
+      const suggestions = new Set<string>();
+      data.forEach((person) => {
+        const birthLocation = normalizeLocation(String(person.local_nascimento ?? ''));
+        const currentLocation = normalizeLocation(String(person.local_atual ?? ''));
+
+        if (birthLocation) suggestions.add(birthLocation);
+        if (currentLocation) suggestions.add(currentLocation);
+      });
+
+      setLocationSuggestions(Array.from(suggestions).sort((a, b) => a.localeCompare(b, 'pt-BR')));
+    }
+
+    loadLocationSuggestions();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const input = addressInputRef.current;
+
+    if (!apiKey || !input) return;
+
+    let active = true;
+    let autocomplete: GooglePlacesAutocomplete | undefined;
+    let listener: { remove: () => void } | undefined;
+
+    loadGoogleMapsPlaces(apiKey)
+      .then((googleMaps) => {
+        if (!active || !googleMaps || !addressInputRef.current) return;
+
+        const brazilBounds = new googleMaps.maps.LatLngBounds(
+          { lat: -33.75, lng: -73.99 },
+          { lat: 5.27, lng: -34.79 },
+        );
+
+        autocomplete = new googleMaps.maps.places.Autocomplete(addressInputRef.current, {
+          bounds: brazilBounds,
+          fields: ['address_components', 'formatted_address', 'geometry'],
+          strictBounds: false,
+          types: ['address'],
+        });
+
+        listener = autocomplete.addListener('place_changed', () => {
+          const selectedAddress = formatGooglePlaceAddress(autocomplete.getPlace());
+          if (!selectedAddress) return;
+
+          setForm((current) => ({
+            ...current,
+            endereco: selectedAddress,
+          }));
+          setErrors((current) => ({
+            ...current,
+            endereco: undefined,
+          }));
+        });
+      })
+      .catch(() => {
+        if (active) toast.error('Não foi possível carregar sugestões de endereço.');
+      });
+
+    return () => {
+      active = false;
+      listener?.remove();
+      if (autocomplete && window.google?.maps.event?.clearInstanceListeners) {
+        window.google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    };
+  }, [photoPreviewUrl]);
+
   const pessoa = link?.pessoa;
   const alreadyConfirmed = Boolean(link?.dados_confirmados);
 
   const previewName = useMemo(() => {
-    const name = String(form.nome_completo ?? '').trim();
+    const name = formatPersonName(String(form.nome_completo ?? '').trim());
     return name || pessoa?.nome_completo || 'Minha pessoa na árvore';
   }, [form.nome_completo, pessoa?.nome_completo]);
+
+  const previewLocation = useMemo(() => {
+    return normalizeLocation(String(form.local_atual || form.local_nascimento || '')) || 'Sem local informado';
+  }, [form.local_atual, form.local_nascimento]);
+
+  const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
 
   const updateField = (field: keyof EditableOwnPersonPayload, value: string | boolean) => {
     setForm((current) => ({
       ...current,
       [field]: value,
     }));
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined,
+    }));
+  };
+
+  const updateTextField = (field: keyof EditableOwnPersonPayload, value: string) => {
+    if (field === 'data_nascimento') {
+      updateField(field, maskBirthDate(value));
+      return;
+    }
+
+    if (field === 'telefone') {
+      updateField(field, formatPhone(value));
+      return;
+    }
+
+    updateField(field, value);
+  };
+
+  const normalizeFieldOnBlur = (field: keyof EditableOwnPersonPayload) => {
+    const value = String(form[field] ?? '');
+
+    if (field === 'nome_completo') updateField(field, formatPersonName(value));
+    if (field === 'data_nascimento') updateField(field, normalizeBirthDate(value));
+    if (field === 'local_nascimento' || field === 'local_atual') updateField(field, normalizeLocation(value));
+  };
+
+  const validateForm = () => {
+    const nextErrors: FieldErrors = {};
+    const normalizedName = formatPersonName(String(form.nome_completo ?? ''));
+    const normalizedBirthDate = normalizeBirthDate(String(form.data_nascimento ?? ''));
+    const normalizedBirthLocation = normalizeLocation(String(form.local_nascimento ?? ''));
+    const normalizedCurrentLocation = normalizeLocation(String(form.local_atual ?? ''));
+
+    if (!hasFirstAndLastName(normalizedName)) {
+      nextErrors.nome_completo = 'Informe pelo menos nome e sobrenome, com duas letras ou mais.';
+    }
+
+    const birthDateError = validateBirthDate(normalizedBirthDate);
+    if (birthDateError) nextErrors.data_nascimento = birthDateError;
+
+    const birthLocationError = validateLocation(normalizedBirthLocation);
+    if (birthLocationError) nextErrors.local_nascimento = birthLocationError;
+
+    const currentLocationError = validateLocation(normalizedCurrentLocation);
+    if (currentLocationError) nextErrors.local_atual = currentLocationError;
+
+    if (
+      Boolean(form.permitir_exibir_instagram) &&
+      String(form.rede_social ?? '').trim() &&
+      !String(form.instagram_usuario ?? '').trim()
+    ) {
+      nextErrors.instagram_usuario = 'Informe o perfil para exibir a rede social.';
+    }
+
+    if (Boolean(form.permitir_exibir_instagram) && !String(form.rede_social ?? '').trim()) {
+      nextErrors.rede_social = 'Selecione uma rede social para exibir no perfil.';
+    }
+
+    setErrors(nextErrors);
+    setForm((current) => ({
+      ...current,
+      nome_completo: normalizedName,
+      data_nascimento: normalizedBirthDate,
+      local_nascimento: normalizedBirthLocation,
+      local_atual: normalizedCurrentLocation,
+      telefone: formatPhone(String(current.telefone ?? '')),
+    }));
+
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handlePhotoFile = (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem.');
+      return;
+    }
+
+    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    setSelectedPhoto(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+    setPhotoMarkedForRemoval(false);
+  };
+
+  const handleRemovePhoto = () => {
+    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    setPhotoPreviewUrl(null);
+    setSelectedPhoto(null);
+    setPhotoMarkedForRemoval(true);
+    setPhotoDialogOpen(false);
   };
 
   const handleConfirm = async (event: React.FormEvent) => {
@@ -130,14 +503,18 @@ export function MeusDados() {
       return;
     }
 
-    if (!String(form.nome_completo ?? '').trim()) {
-      toast.error('Nome completo é obrigatório.');
+    if (!validateForm()) {
+      toast.error('Revise os campos destacados antes de salvar.');
       return;
     }
 
     setSaving(true);
 
     const payload = cleanPayload(form);
+    if (photoMarkedForRemoval) {
+      payload.foto_principal_url = '';
+    }
+
     const { error: updateError, data: updatedPessoa } = await updateOwnLinkedPerson(pessoa.id, payload);
 
     if (updateError) {
@@ -148,7 +525,7 @@ export function MeusDados() {
 
     const { error: profileError } = await ensureMemberProfile(user.id, {
       nome_exibicao: updatedPessoa?.nome_completo ?? String(payload.nome_completo ?? ''),
-      avatar_url: String(payload.foto_principal_url ?? '') || null,
+      avatar_url: photoMarkedForRemoval ? null : String(updatedPessoa?.foto_principal_url ?? form.foto_principal_url ?? '') || null,
     });
 
     if (profileError) {
@@ -216,50 +593,117 @@ export function MeusDados() {
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_320px]">
         <form onSubmit={handleConfirm} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Nome completo">
-              <Input value={String(form.nome_completo ?? '')} onChange={(e) => updateField('nome_completo', e.target.value)} required />
+            <Field label="Nome completo" error={errors.nome_completo}>
+              <Input
+                value={String(form.nome_completo ?? '')}
+                onBlur={() => normalizeFieldOnBlur('nome_completo')}
+                onChange={(e) => updateTextField('nome_completo', e.target.value)}
+                aria-invalid={Boolean(errors.nome_completo)}
+                required
+              />
             </Field>
-            <Field label="Data de nascimento">
-              <Input value={String(form.data_nascimento ?? '')} onChange={(e) => updateField('data_nascimento', e.target.value)} placeholder="DD/MM/AAAA ou AAAA" />
+            <Field label="Data de nascimento" error={errors.data_nascimento}>
+              <Input
+                value={String(form.data_nascimento ?? '')}
+                onBlur={() => normalizeFieldOnBlur('data_nascimento')}
+                onChange={(e) => updateTextField('data_nascimento', e.target.value)}
+                placeholder="DD/MM/AAAA ou AAAA"
+                aria-invalid={Boolean(errors.data_nascimento)}
+              />
             </Field>
-            <Field label="Local de nascimento">
-              <Input value={String(form.local_nascimento ?? '')} onChange={(e) => updateField('local_nascimento', e.target.value)} />
+            <Field label="Local de nascimento" error={errors.local_nascimento}>
+              <Input
+                value={String(form.local_nascimento ?? '')}
+                onBlur={() => normalizeFieldOnBlur('local_nascimento')}
+                onChange={(e) => updateTextField('local_nascimento', e.target.value)}
+                placeholder="Cidade/UF"
+                list="location-suggestions"
+                aria-invalid={Boolean(errors.local_nascimento)}
+              />
             </Field>
-            <Field label="Residência atual">
-              <Input value={String(form.local_atual ?? '')} onChange={(e) => updateField('local_atual', e.target.value)} />
+            <Field label="Residência atual" error={errors.local_atual}>
+              <Input
+                value={String(form.local_atual ?? '')}
+                onBlur={() => normalizeFieldOnBlur('local_atual')}
+                onChange={(e) => updateTextField('local_atual', e.target.value)}
+                placeholder="Cidade/UF"
+                list="location-suggestions"
+                aria-invalid={Boolean(errors.local_atual)}
+              />
             </Field>
+            <datalist id="location-suggestions">
+              {locationSuggestions.map((location) => (
+                <option key={location} value={location} />
+              ))}
+            </datalist>
             <Field label="Telefone">
-              <Input value={String(form.telefone ?? '')} onChange={(e) => updateField('telefone', e.target.value)} />
+              <Input
+                value={String(form.telefone ?? '')}
+                onChange={(e) => updateTextField('telefone', e.target.value)}
+                placeholder="(XX) XXXXX-XXXX"
+              />
             </Field>
             <Field label="Endereço">
-              <Input value={String(form.endereco ?? '')} onChange={(e) => updateField('endereco', e.target.value)} />
+              <Input
+                ref={addressInputRef}
+                value={String(form.endereco ?? '')}
+                onChange={(e) => updateTextField('endereco', e.target.value)}
+                placeholder="Rua, número, bairro, cidade, CEP"
+              />
             </Field>
-            <Field label="Rede social">
-              <Input value={String(form.rede_social ?? '')} onChange={(e) => updateField('rede_social', e.target.value)} />
+            <Field label="Complemento">
+              <Input
+                value={complemento}
+                onChange={(e) => setComplemento(e.target.value)}
+                placeholder="Apartamento, bloco, casa, referência"
+              />
+              {/* Campo visual até public.pessoas.complemento existir no schema e na tipagem. */}
             </Field>
-            <Field label="Usuário do Instagram">
-              <Input value={String(form.instagram_usuario ?? '')} onChange={(e) => updateField('instagram_usuario', e.target.value)} placeholder="@usuario" />
+            <Field label="Rede social" error={errors.rede_social}>
+              <select
+                value={String(form.rede_social ?? '')}
+                onChange={(event) => updateField('rede_social', event.target.value)}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                aria-invalid={Boolean(errors.rede_social)}
+              >
+                <option value="">Selecione uma rede</option>
+                {SOCIAL_NETWORKS.map((network) => (
+                  <option key={network} value={network}>
+                    {network}
+                  </option>
+                ))}
+              </select>
             </Field>
-            <Field label="URL do Instagram">
-              <Input value={String(form.instagram_url ?? '')} onChange={(e) => updateField('instagram_url', e.target.value)} placeholder="https://instagram.com/usuario" />
-            </Field>
-            <Field label="URL da foto principal">
-              <Input value={String(form.foto_principal_url ?? '')} onChange={(e) => updateField('foto_principal_url', e.target.value)} placeholder="https://..." />
+            <Field label="Perfil da Rede Social" error={errors.instagram_usuario}>
+              <Input
+                value={String(form.instagram_usuario ?? '')}
+                onChange={(e) => updateTextField('instagram_usuario', e.target.value)}
+                placeholder={getSocialPlaceholder(String(form.rede_social ?? ''))}
+                aria-invalid={Boolean(errors.instagram_usuario)}
+              />
             </Field>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4">
             <Field label="Mini bio">
-              <Textarea value={String(form.minibio ?? '')} onChange={(e) => updateField('minibio', e.target.value)} className="min-h-24" />
+              <Textarea
+                value={String(form.minibio ?? '')}
+                onChange={(e) => updateTextField('minibio', e.target.value)}
+                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+              />
             </Field>
             <Field label="Curiosidades">
-              <Textarea value={String(form.curiosidades ?? '')} onChange={(e) => updateField('curiosidades', e.target.value)} className="min-h-24" />
+              <Textarea
+                value={String(form.curiosidades ?? '')}
+                onChange={(e) => updateTextField('curiosidades', e.target.value)}
+                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+              />
             </Field>
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             <ToggleField
-              label="Exibir Instagram no perfil"
+              label="Exibir rede social no perfil"
               checked={Boolean(form.permitir_exibir_instagram)}
               onCheckedChange={(checked) => updateField('permitir_exibir_instagram', checked)}
             />
@@ -284,24 +728,38 @@ export function MeusDados() {
           </div>
         </form>
 
-        <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700">
-              {form.foto_principal_url ? (
-                <img src={String(form.foto_principal_url)} alt={previewName} className="h-full w-full object-cover" />
-              ) : (
-                <Image className="h-6 w-6" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <h2 className="truncate text-lg font-bold text-gray-900">{previewName}</h2>
-              <p className="text-sm text-gray-500">{String(form.local_atual || form.local_nascimento || 'Sem local informado')}</p>
-            </div>
+        <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+          <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-3xl font-bold text-blue-700">
+            {currentPhotoUrl ? (
+              <img src={currentPhotoUrl} alt={previewName} className="h-full w-full object-cover" />
+            ) : (
+              <span>{getInitials(previewName)}</span>
+            )}
           </div>
 
-          <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
-            Campos administrativos como geração manual, lado da árvore, falecimento e tipo de entidade continuam protegidos.
+          <h2 className="mt-4 whitespace-normal text-xl font-bold leading-snug text-gray-900">
+            {previewName}
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">{previewLocation}</p>
+
+          <div className="mt-5 grid grid-cols-1 gap-2">
+            <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
+            </Button>
+            {currentPhotoUrl && (
+              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remover foto
+              </Button>
+            )}
           </div>
+
+          {selectedPhoto && (
+            <p className="mt-3 text-xs text-amber-700">
+              Preview local preparado. A foto ainda depende da configuração do Storage para ser salva.
+            </p>
+          )}
 
           {alreadyConfirmed && (
             <Button variant="outline" className="mt-5 w-full" onClick={() => navigate('/')}>
@@ -311,15 +769,69 @@ export function MeusDados() {
           )}
         </aside>
       </main>
+
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</DialogTitle>
+            <DialogDescription>
+              Selecione uma imagem para pré-visualizar no avatar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <label
+            className="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-blue-50"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              handlePhotoFile(event.dataTransfer.files?.[0]);
+            }}
+          >
+            {photoPreviewUrl ? (
+              <img src={photoPreviewUrl} alt="Preview da foto" className="h-32 w-32 rounded-2xl object-cover" />
+            ) : currentPhotoUrl ? (
+              <img src={currentPhotoUrl} alt={previewName} className="h-32 w-32 rounded-2xl object-cover" />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                <ImagePlus className="h-8 w-8" />
+              </div>
+            )}
+            <span className="mt-4 flex items-center text-sm font-medium text-gray-900">
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Arraste uma imagem ou clique para selecionar
+            </span>
+            <span className="mt-1 text-xs text-gray-500">Prévia quadrada para o avatar.</span>
+            {/* Futuro crop: plugar react-easy-crop aqui se a dependência for aprovada. */}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) => handlePhotoFile(event.target.files?.[0])}
+            />
+          </label>
+
+          <DialogFooter>
+            {currentPhotoUrl && (
+              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
+                Remover foto
+              </Button>
+            )}
+            <Button type="button" onClick={() => setPhotoDialogOpen(false)}>
+              Usar preview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       {children}
+      {error && <p className="text-xs font-medium text-red-600">{error}</p>}
     </div>
   );
 }
@@ -334,7 +846,7 @@ function ToggleField({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
       <Label>{label}</Label>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
