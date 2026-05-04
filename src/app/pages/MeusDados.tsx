@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
 import { ArrowRight, Camera, ImagePlus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import {
   GoogleAddressComponent,
   GooglePlaceResult,
@@ -51,6 +53,8 @@ const EDITABLE_FIELDS: Array<keyof EditableOwnPersonPayload> = [
 
 const SOCIAL_NETWORKS = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok'] as const;
 const LOWERCASE_NAME_PARTS = new Set(['de', 'da', 'das', 'do', 'dos', 'e']);
+const AVATAR_BUCKET = 'person-avatars';
+const AVATAR_SIZE = 512;
 
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
 // (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
@@ -222,6 +226,10 @@ function getAddressComponent(
   return components?.find((component) => component.types.includes(type))?.[name] ?? '';
 }
 
+function joinAddressParts(parts: string[]) {
+  return parts.map((part) => part.trim()).filter(Boolean).join(', ');
+}
+
 function formatGooglePlaceAddress(place: GooglePlaceResult) {
   const components = place.address_components;
   if (!components?.length) return place.formatted_address ?? '';
@@ -240,12 +248,61 @@ function formatGooglePlaceAddress(place: GooglePlaceResult) {
   const postalCode = getAddressComponent(components, 'postal_code');
   const postalCodeSuffix = getAddressComponent(components, 'postal_code_suffix');
   const fullPostalCode = [postalCode, postalCodeSuffix].filter(Boolean).join('-');
-  const cityState = [city, state].filter(Boolean).join(' - ');
-  const streetLine = [street, number].filter(Boolean).join(', ');
+  const cityState = [city, state].filter(Boolean).join('/');
+  const streetLine = joinAddressParts([street, number]);
+  const address = joinAddressParts([streetLine, neighborhood, cityState, fullPostalCode ? `CEP ${fullPostalCode}` : '']);
 
-  return [streetLine, neighborhood, cityState, fullPostalCode ? `CEP ${fullPostalCode}` : '']
-    .filter(Boolean)
-    .join(', ');
+  return address || (place.formatted_address ?? '');
+}
+
+function readImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', reject);
+    image.src = src;
+  });
+}
+
+async function createCroppedAvatarBlob(imageSrc: string, cropPixels: Area) {
+  const image = await readImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    throw new Error('Não foi possível preparar o corte da imagem.');
+  }
+
+  canvas.width = AVATAR_SIZE;
+  canvas.height = AVATAR_SIZE;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(
+    image,
+    cropPixels.x,
+    cropPixels.y,
+    cropPixels.width,
+    cropPixels.height,
+    0,
+    0,
+    AVATAR_SIZE,
+    AVATAR_SIZE,
+  );
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Não foi possível gerar o JPEG final.'));
+        return;
+      }
+
+      resolve(blob);
+    }, 'image/jpeg', 0.9);
+  });
+}
+
+function isMissingStorageBucketError(message: string) {
+  const normalized = message.toLocaleLowerCase('pt-BR');
+  return normalized.includes('bucket not found') || (normalized.includes('bucket') && normalized.includes('not found'));
 }
 
 export function MeusDados() {
@@ -259,7 +316,12 @@ export function MeusDados() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [croppedPhotoBlob, setCroppedPhotoBlob] = useState<Blob | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -381,6 +443,12 @@ export function MeusDados() {
     };
   }, [photoPreviewUrl]);
 
+  useEffect(() => {
+    return () => {
+      if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
+    };
+  }, [cropImageUrl]);
+
   const pessoa = link?.pessoa;
   const alreadyConfirmed = Boolean(link?.dados_confirmados);
 
@@ -481,18 +549,72 @@ export function MeusDados() {
       return;
     }
 
-    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
     setSelectedPhoto(file);
-    setPhotoPreviewUrl(URL.createObjectURL(file));
+    setCropImageUrl(URL.createObjectURL(file));
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
     setPhotoMarkedForRemoval(false);
   };
 
   const handleRemovePhoto = () => {
     if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
     setPhotoPreviewUrl(null);
+    setCropImageUrl(null);
+    setCroppedPhotoBlob(null);
     setSelectedPhoto(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
     setPhotoMarkedForRemoval(true);
     setPhotoDialogOpen(false);
+  };
+
+  const handleApplyCrop = async () => {
+    if (!cropImageUrl || !croppedAreaPixels) {
+      toast.error('Selecione e ajuste uma imagem antes de aplicar.');
+      return;
+    }
+
+    try {
+      const blob = await createCroppedAvatarBlob(cropImageUrl, croppedAreaPixels);
+      const previewUrl = URL.createObjectURL(blob);
+
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      setPhotoPreviewUrl(previewUrl);
+      setCroppedPhotoBlob(blob);
+      setPhotoMarkedForRemoval(false);
+      setPhotoDialogOpen(false);
+      toast.success('Corte aplicado ao avatar.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível aplicar o corte.');
+    }
+  };
+
+  const uploadAvatarBlob = async (blob: Blob) => {
+    if (!user || !pessoa?.id) return { error: 'Não foi possível localizar o usuário para salvar a foto.', url: null };
+
+    const extension = 'jpg';
+    const storagePath = `${user.id}/${pessoa.id}-${Date.now()}.${extension}`;
+    const { error } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .upload(storagePath, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (error) {
+      if (isMissingStorageBucketError(error.message)) {
+        return { error: undefined, url: null };
+      }
+
+      return { error: error.message, url: null };
+    }
+
+    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storagePath);
+    return { error: undefined, url: data.publicUrl };
   };
 
   const handleConfirm = async (event: React.FormEvent) => {
@@ -513,6 +635,20 @@ export function MeusDados() {
     const payload = cleanPayload(form);
     if (photoMarkedForRemoval) {
       payload.foto_principal_url = '';
+    } else if (croppedPhotoBlob) {
+      const upload = await uploadAvatarBlob(croppedPhotoBlob);
+
+      if (upload.error) {
+        setSaving(false);
+        toast.error(`Não foi possível enviar a foto: ${upload.error}`);
+        return;
+      }
+
+      if (upload.url) {
+        payload.foto_principal_url = upload.url;
+      } else {
+        toast.info('Storage de avatars não configurado. O corte ficará apenas como preview local.');
+      }
     }
 
     const { error: updateError, data: updatedPessoa } = await updateOwnLinkedPerson(pessoa.id, payload);
@@ -757,7 +893,7 @@ export function MeusDados() {
 
           {selectedPhoto && (
             <p className="mt-3 text-xs text-amber-700">
-              Preview local preparado. A foto ainda depende da configuração do Storage para ser salva.
+              Corte aplicado localmente. Ao confirmar, o app tentará enviar a foto ao Storage.
             </p>
           )}
 
@@ -775,40 +911,82 @@ export function MeusDados() {
           <DialogHeader>
             <DialogTitle>{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</DialogTitle>
             <DialogDescription>
-              Selecione uma imagem para pré-visualizar no avatar.
+              Selecione uma imagem, ajuste o corte quadrado e aplique antes de salvar.
             </DialogDescription>
           </DialogHeader>
 
-          <label
-            className="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-blue-50"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              handlePhotoFile(event.dataTransfer.files?.[0]);
-            }}
-          >
-            {photoPreviewUrl ? (
-              <img src={photoPreviewUrl} alt="Preview da foto" className="h-32 w-32 rounded-2xl object-cover" />
-            ) : currentPhotoUrl ? (
-              <img src={currentPhotoUrl} alt={previewName} className="h-32 w-32 rounded-2xl object-cover" />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-                <ImagePlus className="h-8 w-8" />
+          {cropImageUrl ? (
+            <div className="space-y-4">
+              <div className="relative h-72 overflow-hidden rounded-xl bg-gray-950">
+                <Cropper
+                  image={cropImageUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="rect"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, croppedPixels) => setCroppedAreaPixels(croppedPixels)}
+                />
               </div>
-            )}
-            <span className="mt-4 flex items-center text-sm font-medium text-gray-900">
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Arraste uma imagem ou clique para selecionar
-            </span>
-            <span className="mt-1 text-xs text-gray-500">Prévia quadrada para o avatar.</span>
-            {/* Futuro crop: plugar react-easy-crop aqui se a dependência for aprovada. */}
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(event) => handlePhotoFile(event.target.files?.[0])}
-            />
-          </label>
+
+              <div className="space-y-2">
+                <Label htmlFor="avatar-zoom">Zoom</Label>
+                <input
+                  id="avatar-zoom"
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(event) => setZoom(Number(event.target.value))}
+                  className="w-full accent-blue-600"
+                />
+              </div>
+
+              <label className="inline-flex cursor-pointer items-center text-sm font-medium text-blue-700 hover:text-blue-800">
+                <UploadCloud className="mr-2 h-4 w-4" />
+                Escolher outra imagem
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => handlePhotoFile(event.target.files?.[0])}
+                />
+              </label>
+            </div>
+          ) : (
+            <label
+              className="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-blue-50"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                handlePhotoFile(event.dataTransfer.files?.[0]);
+              }}
+            >
+              {photoPreviewUrl ? (
+                <img src={photoPreviewUrl} alt="Preview da foto" className="h-32 w-32 rounded-2xl object-cover" />
+              ) : currentPhotoUrl ? (
+                <img src={currentPhotoUrl} alt={previewName} className="h-32 w-32 rounded-2xl object-cover" />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                  <ImagePlus className="h-8 w-8" />
+                </div>
+              )}
+              <span className="mt-4 flex items-center text-sm font-medium text-gray-900">
+                <UploadCloud className="mr-2 h-4 w-4" />
+                Arraste uma imagem ou clique para selecionar
+              </span>
+              <span className="mt-1 text-xs text-gray-500">O corte final será quadrado.</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => handlePhotoFile(event.target.files?.[0])}
+              />
+            </label>
+          )}
 
           <DialogFooter>
             {currentPhotoUrl && (
@@ -816,9 +994,15 @@ export function MeusDados() {
                 Remover foto
               </Button>
             )}
-            <Button type="button" onClick={() => setPhotoDialogOpen(false)}>
-              Usar preview
-            </Button>
+            {cropImageUrl ? (
+              <Button type="button" onClick={handleApplyCrop}>
+                Aplicar corte
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => setPhotoDialogOpen(false)}>
+                Fechar
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

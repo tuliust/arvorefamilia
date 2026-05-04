@@ -16,6 +16,13 @@ export type GoogleMapsEventListener = {
   remove: () => void;
 };
 
+type GooglePlacesAutocompleteOptions = {
+  bounds?: unknown;
+  fields?: string[];
+  strictBounds?: boolean;
+  types?: string[];
+};
+
 export type GooglePlacesAutocomplete = {
   addListener: (eventName: 'place_changed', handler: () => void) => GoogleMapsEventListener;
   getPlace: () => GooglePlaceResult;
@@ -33,12 +40,7 @@ type GoogleMapsApi = {
     places: {
       Autocomplete: new (
         input: HTMLInputElement,
-        options: {
-          bounds?: unknown;
-          fields?: string[];
-          strictBounds?: boolean;
-          types?: string[];
-        },
+        options: GooglePlacesAutocompleteOptions,
       ) => GooglePlacesAutocomplete;
     };
   };

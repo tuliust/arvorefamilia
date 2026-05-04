@@ -72,8 +72,6 @@ export function Entrar() {
 
       if (result.status === 'linked' && result.data.dados_confirmados) {
         navigate('/', { replace: true });
-      } else if (result.status === 'linked') {
-        navigate('/meus-dados', { replace: true });
       } else {
         setCheckingSession(false);
       }

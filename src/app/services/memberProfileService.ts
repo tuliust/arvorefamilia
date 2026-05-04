@@ -287,7 +287,6 @@ export async function resolveFirstAccessLinkForUser(user: User): Promise<LinkRes
   }
 
   if (existingLink.data) {
-    clearPendingFirstAccess();
     return { status: 'linked', data: existingLink.data, created: false };
   }
 
