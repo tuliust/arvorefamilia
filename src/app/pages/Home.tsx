@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 
 import { FamilyTree } from '../components/FamilyTree/FamilyTree';
-import { ViewModeToggle } from '../components/FamilyTree/ViewModeToggle';
 import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageModal';
 import {
   AddConnectionModal,
@@ -21,6 +20,27 @@ import {
 } from '../components/FamilyTree/utils/treePreferences';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { Textarea } from '../components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '../components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,22 +67,38 @@ import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
 import {
   Search,
+  Monitor,
   Settings,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  Monitor,
   CalendarDays,
   Star,
   Bell,
   UserCircle2,
-  Focus,
   LogIn,
   LogOut,
   Pencil,
+  Sparkles,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const VIEW_MODE_OPTIONS: Array<{ value: TipoVisualizacaoArvore; label: string }> = [
+  { value: 'familiares-diretos', label: 'Minha Árvore' },
+  { value: 'lados', label: 'Cônjuges' },
+  { value: 'geracoes', label: 'Genealogia' },
+  { value: 'lista', label: 'Lista por Gerações' },
+];
+
+const AI_QUESTION_EXAMPLES = [
+  'Quem são meus bisavós paternos?',
+  'Quantas pessoas da família nasceram em Recife?',
+  'Quais parentes moram em Porto Alegre?',
+  'Monte um resumo da linha genealógica de Tulius.',
+  'Quem são os descendentes de determinada pessoa?',
+];
 
 export function Home() {
   const navigate = useNavigate();
@@ -97,6 +133,8 @@ export function Home() {
 
   const [selectedMarriage, setSelectedMarriage] = useState<MarriageNodeDetails | null>(null);
   const [connectionTarget, setConnectionTarget] = useState<Pessoa | null>(null);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
 
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
@@ -504,9 +542,9 @@ export function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-gray-200 px-3 py-3 shadow-sm lg:px-5">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
             <UserMenu
               isLoggedIn={Boolean(user)}
               displayName={displayName}
@@ -514,76 +552,84 @@ export function Home() {
               initials={initials}
               onLogin={() => navigate('/entrar')}
               onEditProfile={() => navigate('/minha-arvore')}
+              onFavorites={() => navigate('/meus-favoritos')}
+              onCalendar={() => navigate('/calendario-familiar')}
+              onAdmin={() => navigate('/admin/login')}
               onSignOut={handleSignOut}
             />
 
-            <div>
-              <h1 className="font-bold text-xl text-gray-900">Árvore Genealógica</h1>
-              <p className="text-sm text-gray-500">Família Barros Souza</p>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold text-gray-900 lg:text-xl">Árvore Genealógica</h1>
+              <p className="truncate text-xs text-gray-500 lg:text-sm">Família Barros Souza</p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
-            <div className="flex items-center gap-2 flex-wrap">
-              <ViewModeToggle
-                value={viewMode}
-                onChange={handleViewModeChange}
-                availableModes={availableModes}
-              />
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex-nowrap lg:justify-end">
+            <div className="w-[170px] shrink-0">
+              <Select value={viewMode} onValueChange={(value) => handleViewModeChange(value as TipoVisualizacaoArvore)}>
+                <SelectTrigger className="h-9 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VIEW_MODE_OPTIONS.filter((option) => availableModes.includes(option.value)).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              {user && linkedPersonId && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  title="Centralizar em mim"
-                  onClick={() => setSelectedPersonId(linkedPersonId)}
-                >
-                  <Focus className="w-4 h-4" />
+            <Button
+              variant="outline"
+              className="h-9 shrink-0 gap-2 px-3"
+              onClick={() => setAiDialogOpen(true)}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden xl:inline">Pergunte à IA</span>
+            </Button>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 shrink-0 gap-2 px-3">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="hidden xl:inline">Filtros</span>
                 </Button>
-              )}
+              </PopoverTrigger>
+              <PopoverContent align="end" className="max-h-[75vh] w-[min(92vw,360px)] overflow-y-auto p-4">
+                <FilterPanel
+                  viewMode={viewMode}
+                  personFilters={personFilters}
+                  edgeFilters={edgeFilters}
+                  directRelativeFilters={directRelativeFilters}
+                  onTogglePerson={togglePersonFilter}
+                  onToggleEdge={toggleFilter}
+                  onToggleDirect={toggleDirectRelativeFilter}
+                />
+              </PopoverContent>
+            </Popover>
 
-              <Link to="/calendario-familiar">
-                <Button variant="outline" size="icon" title="Calendário familiar">
-                  <CalendarDays className="w-4 h-4" />
-                </Button>
-              </Link>
-
-              <Link to="/meus-favoritos">
-                <Button variant="outline" size="icon" title="Meus favoritos">
-                  <Star className="w-4 h-4" />
-                </Button>
-              </Link>
-
+            {isMobile && (
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => navigate('/admin/login')}
-                title="Painel Administrativo"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setLegendOpen((prev) => !prev)}
+                title={legendOpen ? 'Ocultar legenda' : 'Exibir legenda'}
               >
-                <Settings className="w-4 h-4" />
+                {legendOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
+            )}
 
-              {isMobile && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setLegendOpen((prev) => !prev)}
-                  title={legendOpen ? 'Ocultar legenda' : 'Exibir legenda'}
-                >
-                  {legendOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </Button>
-              )}
-            </div>
-
-            <div className="flex w-full max-w-full items-center gap-2 lg:w-auto">
-              <div className="relative min-w-0 flex-1 lg:w-80 lg:flex-none">
+            <div className="flex min-w-[220px] flex-1 items-center gap-2 lg:max-w-sm xl:max-w-md">
+              <div className="relative min-w-0 flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   type="text"
                   placeholder="Buscar por nome ou local..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="h-9 pl-10"
                 />
 
                 {searchTerm && pessoasFiltradas.length > 0 && (
@@ -605,7 +651,7 @@ export function Home() {
               </div>
 
               <Link to="/notificacoes" className="shrink-0">
-                <Button variant="outline" size="icon" title="Notificações">
+                <Button variant="outline" size="icon" className="h-9 w-9" title="Notificações">
                   <Bell className="w-4 h-4" />
                 </Button>
               </Link>
@@ -835,6 +881,53 @@ export function Home() {
         onClose={() => setConnectionTarget(null)}
         onSubmit={handleAddConnectionSubmit}
       />
+
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              Pergunte à IA
+            </DialogTitle>
+            <DialogDescription>
+              Faça perguntas sobre sua árvore genealógica.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Textarea
+              value={aiQuestion}
+              onChange={(event) => setAiQuestion(event.target.value)}
+              placeholder="Digite sua pergunta..."
+              className="min-h-28 resize-none"
+            />
+
+            <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+              Em breve, este recurso será conectado à API da OpenAI.
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-gray-900">Exemplos de perguntas</p>
+              <div className="space-y-2">
+                {AI_QUESTION_EXAMPLES.map((example) => (
+                  <button
+                    key={example}
+                    type="button"
+                    onClick={() => setAiQuestion(example)}
+                    className="block w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button disabled>Enviar pergunta</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -861,6 +954,9 @@ function UserMenu({
   initials,
   onLogin,
   onEditProfile,
+  onFavorites,
+  onCalendar,
+  onAdmin,
   onSignOut,
 }: {
   isLoggedIn: boolean;
@@ -869,6 +965,9 @@ function UserMenu({
   initials: string;
   onLogin: () => void;
   onEditProfile: () => void;
+  onFavorites: () => void;
+  onCalendar: () => void;
+  onAdmin: () => void;
   onSignOut: () => void;
 }) {
   return (
@@ -905,6 +1004,18 @@ function UserMenu({
               <Pencil className="h-4 w-4" />
               Editar Perfil
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={onFavorites}>
+              <Star className="h-4 w-4" />
+              Meus favoritos
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onCalendar}>
+              <CalendarDays className="h-4 w-4" />
+              Calendário familiar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onAdmin}>
+              <Settings className="h-4 w-4" />
+              Painel administrativo
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} variant="destructive">
               <LogOut className="h-4 w-4" />
@@ -914,6 +1025,80 @@ function UserMenu({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function FilterPanel({
+  viewMode,
+  personFilters,
+  edgeFilters,
+  directRelativeFilters,
+  onTogglePerson,
+  onToggleEdge,
+  onToggleDirect,
+}: {
+  viewMode: TipoVisualizacaoArvore;
+  personFilters: {
+    vivos: boolean;
+    falecidos: boolean;
+    pets: boolean;
+  };
+  edgeFilters: {
+    conjugal: boolean;
+    filiacao_sangue: boolean;
+    filiacao_adotiva: boolean;
+    irmaos: boolean;
+  };
+  directRelativeFilters: DirectRelativeFilters;
+  onTogglePerson: (key: 'vivos' | 'falecidos' | 'pets') => void;
+  onToggleEdge: (key: 'conjugal' | 'filiacao_sangue' | 'filiacao_adotiva' | 'irmaos') => void;
+  onToggleDirect: (key: DirectRelativeGroup) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-gray-900">Pessoas</h2>
+        <div className="space-y-2">
+          <FilterButton active={personFilters.vivos} onClick={() => onTogglePerson('vivos')}>
+            Vivos
+          </FilterButton>
+          <FilterButton active={personFilters.falecidos} onClick={() => onTogglePerson('falecidos')}>
+            Falecidos
+          </FilterButton>
+          <FilterButton active={personFilters.pets} onClick={() => onTogglePerson('pets')}>
+            Pets
+          </FilterButton>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-gray-900">Relações</h2>
+        <div className="space-y-2">
+          <FilterButton active={edgeFilters.conjugal} onClick={() => onToggleEdge('conjugal')}>
+            Cônjuges
+          </FilterButton>
+          <FilterButton active={edgeFilters.filiacao_sangue} onClick={() => onToggleEdge('filiacao_sangue')}>
+            Filiação de sangue
+          </FilterButton>
+          <FilterButton active={edgeFilters.filiacao_adotiva} onClick={() => onToggleEdge('filiacao_adotiva')}>
+            Filiação adotiva
+          </FilterButton>
+          <FilterButton active={edgeFilters.irmaos} onClick={() => onToggleEdge('irmaos')}>
+            Irmãos
+          </FilterButton>
+        </div>
+      </div>
+
+      {viewMode === 'familiares-diretos' && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-gray-900">Familiares Diretos</h2>
+          <DirectRelativeFilterGrid
+            filters={directRelativeFilters}
+            onToggle={onToggleDirect}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

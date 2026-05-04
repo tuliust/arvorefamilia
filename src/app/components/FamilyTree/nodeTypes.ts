@@ -1,9 +1,14 @@
 import React from 'react';
-import { Handle, NodeTypes, Position } from 'reactflow';
+import { Handle, NodeProps, NodeTypes, Position } from 'reactflow';
 import { PersonNode } from './PersonNode';
 import { MarriageNode } from './MarriageNode';
 import { GenerationHeaderNode } from './GenerationHeaderNode';
 import { DirectFamilyLabelNode } from './DirectFamilyLabelNode';
+
+interface DirectFamilyGroupBoxNodeData {
+  width?: number;
+  height?: number;
+}
 
 function DirectFamilyAnchorNode() {
   const hiddenHandle = { background: 'transparent', border: 'none', width: 1, height: 1 };
@@ -18,10 +23,22 @@ function DirectFamilyAnchorNode() {
   );
 }
 
+function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeData>) {
+  return React.createElement('div', {
+    'aria-hidden': true,
+    className: 'pointer-events-none rounded-xl border border-slate-600/60 bg-white/[0.04]',
+    style: {
+      width: data.width ?? 0,
+      height: data.height ?? 0,
+    },
+  });
+}
+
 export const nodeTypes: NodeTypes = {
   personNode: PersonNode,
   marriageNode: MarriageNode,
   generationHeaderNode: GenerationHeaderNode,
   directFamilyLabelNode: DirectFamilyLabelNode,
   directFamilyAnchorNode: DirectFamilyAnchorNode,
+  directFamilyGroupBoxNode: DirectFamilyGroupBoxNode,
 };

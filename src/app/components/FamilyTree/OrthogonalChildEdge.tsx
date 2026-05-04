@@ -6,7 +6,16 @@ interface OrthogonalEdgeData {
   corridorY?: number;
   side?: 'left' | 'right';
   offset?: number;
-  kind?: 'child' | 'familyChild' | 'siblings' | 'singleParentChild' | 'generationChild' | 'directSmooth';
+  kind?:
+    | 'child'
+    | 'familyChild'
+    | 'siblings'
+    | 'singleParentChild'
+    | 'generationChild'
+    | 'directSmooth'
+    | 'directHorizontal'
+    | 'directElbowFromCenter'
+    | 'directSideElbow';
   nodeWidth?: number;
   nodeHeight?: number;
   attachGap?: number;
@@ -16,6 +25,8 @@ interface OrthogonalEdgeData {
   trunkX?: number;
   trunkMinY?: number;
   trunkMaxY?: number;
+  elbowY?: number;
+  elbowX?: number;
 }
 
 function directBezierPath(sourceX: number, sourceY: number, targetX: number, targetY: number) {
@@ -38,6 +49,41 @@ export function OrthogonalChildEdge({
   markerEnd,
   data,
 }: EdgeProps<OrthogonalEdgeData>) {
+  if (data?.kind === 'directHorizontal') {
+    return (
+      <BaseEdge
+        id={id}
+        path={`M ${sourceX} ${sourceY} L ${targetX} ${targetY}`}
+        style={style}
+        markerEnd={markerEnd}
+      />
+    );
+  }
+
+  if (data?.kind === 'directElbowFromCenter') {
+    const elbowY = data.elbowY ?? sourceY + 42;
+    const path = [
+      `M ${sourceX} ${sourceY}`,
+      `L ${sourceX} ${elbowY}`,
+      `L ${targetX} ${elbowY}`,
+      `L ${targetX} ${targetY}`,
+    ].join(' ');
+
+    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+  }
+
+  if (data?.kind === 'directSideElbow') {
+    const elbowX = data.elbowX ?? sourceX + (targetX - sourceX) / 2;
+    const path = [
+      `M ${sourceX} ${sourceY}`,
+      `L ${elbowX} ${sourceY}`,
+      `L ${elbowX} ${targetY}`,
+      `L ${targetX} ${targetY}`,
+    ].join(' ');
+
+    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+  }
+
   if (data?.kind === 'directSmooth') {
     return (
       <BaseEdge

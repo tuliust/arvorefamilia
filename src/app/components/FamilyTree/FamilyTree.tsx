@@ -89,8 +89,13 @@ const MARRIAGE_NODE_SIZE = TREE_CONSTANTS.MARRIAGE_NODE_WIDTH;
 const INITIAL_MOBILE_CENTER_Y = TREE_CONSTANTS.INITIAL_Y + TREE_CONSTANTS.NODE_HEIGHT;
 const MIN_MANUAL_GENERATION = 1;
 const MAX_MANUAL_GENERATION = 7;
-const DIRECT_FAMILY_MAX_ZOOM = 0.75;
-const DIRECT_FAMILY_MOBILE_MAX_ZOOM = DIRECT_FAMILY_TOKENS.MOBILE_ZOOM;
+const DIRECT_FAMILY_FIT_MAX_ZOOM = 0.75;
+const DIRECT_FAMILY_MOBILE_FIT_MAX_ZOOM = DIRECT_FAMILY_TOKENS.MOBILE_ZOOM;
+const DIRECT_FAMILY_MAX_ZOOM = 2;
+const DIRECT_FAMILY_MOBILE_MAX_ZOOM = 1.5;
+const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.1;
+const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.2;
+const DIRECT_FAMILY_MIN_ZOOM_TOLERANCE = 0.02;
 
 function clampManualGeneration(generation: number) {
   return Math.min(MAX_MANUAL_GENERATION, Math.max(MIN_MANUAL_GENERATION, generation));
@@ -136,9 +141,16 @@ export function FamilyTree({
   onPersonGenerationChange,
 }: FamilyTreeProps) {
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
+  const directFamilyRecenteringRef = useRef(false);
   const [dragTargetGeneration, setDragTargetGeneration] = useState<number | null>(null);
+  const [directFamilyFitZoom, setDirectFamilyFitZoom] = useState<number | null>(null);
+  const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const isDirectFamilyView = viewMode === 'familiares-diretos';
+  const directFamilyFitMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_FIT_MAX_ZOOM : DIRECT_FAMILY_FIT_MAX_ZOOM;
+  const directFamilyMinZoom = directFamilyFitZoom ?? (isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM);
+  const directFamilyViewportZoom = directFamilyCurrentZoom ?? directFamilyMinZoom;
+  const directFamilyCanPan = !isDirectFamilyView || directFamilyViewportZoom > directFamilyMinZoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE;
   const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
   const effectiveCentralPersonId = isDirectFamilyView
     ? centralPersonId || selectedPersonId || pessoas[0]?.id
@@ -278,16 +290,28 @@ export function FamilyTree({
     if (!focusPersonId || !reactFlowRef.current || nodes.length === 0) return;
 
     if (isDirectFamilyView) {
+      setDirectFamilyFitZoom(null);
+      setDirectFamilyCurrentZoom(null);
       const timer = window.setTimeout(() => {
         reactFlowRef.current?.fitView({
           padding: isMobile ? 0.08 : 0.1,
           includeHiddenNodes: false,
-          maxZoom: directFamilyMaxZoom,
+          maxZoom: directFamilyFitMaxZoom,
           duration: 500,
         });
       }, 50);
+      const minZoomTimer = window.setTimeout(() => {
+        const nextMinZoom = reactFlowRef.current?.getZoom();
+        if (typeof nextMinZoom === 'number' && Number.isFinite(nextMinZoom)) {
+          setDirectFamilyFitZoom(nextMinZoom);
+          setDirectFamilyCurrentZoom(nextMinZoom);
+        }
+      }, 650);
 
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.clearTimeout(timer);
+        window.clearTimeout(minZoomTimer);
+      };
     }
 
     const selectedNode = nodes.find((node) => node.id === focusPersonId);
@@ -321,7 +345,7 @@ export function FamilyTree({
     }, 50);
 
     return () => window.clearTimeout(timer);
-  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView, directFamilyMaxZoom]);
+  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView, directFamilyFitMaxZoom]);
 
   useEffect(() => {
     if (
@@ -406,6 +430,37 @@ export function FamilyTree({
     [selectedPersonId, isMobile, isDirectFamilyView]
   );
 
+  const handleMoveEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | null, viewport: { zoom: number }) => {
+      if (!isDirectFamilyView) return;
+
+      setDirectFamilyCurrentZoom(viewport.zoom);
+
+      if (
+        !reactFlowRef.current ||
+        directFamilyFitZoom === null ||
+        viewport.zoom > directFamilyFitZoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE ||
+        directFamilyRecenteringRef.current
+      ) {
+        return;
+      }
+
+      directFamilyRecenteringRef.current = true;
+      reactFlowRef.current.fitView({
+        padding: isMobile ? 0.08 : 0.1,
+        includeHiddenNodes: false,
+        maxZoom: directFamilyFitZoom,
+        duration: 220,
+      });
+
+      window.setTimeout(() => {
+        setDirectFamilyCurrentZoom(directFamilyFitZoom);
+        directFamilyRecenteringRef.current = false;
+      }, 260);
+    },
+    [directFamilyFitZoom, isDirectFamilyView, isMobile]
+  );
+
   return (
     <div
       className={[
@@ -414,45 +469,6 @@ export function FamilyTree({
       ].join(' ')}
       style={{ width: '100%', height: '100%', minHeight: '500px' }}
     >
-      {isDirectFamilyView && (
-        <div className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute inset-0 opacity-90"
-            style={{
-              background:
-                'radial-gradient(circle at 50% 50%, transparent 0 170px, rgba(100,116,139,0.12) 171px 172px, transparent 173px 330px, rgba(100,116,139,0.10) 331px 332px, transparent 333px 520px, rgba(100,116,139,0.08) 521px 522px, transparent 523px)',
-            }}
-          />
-          <div
-            className="absolute left-8 top-8 h-28 w-28 opacity-35"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
-              backgroundSize: '16px 16px',
-            }}
-          />
-          <div
-            className="absolute right-10 top-10 h-28 w-28 opacity-30"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
-              backgroundSize: '16px 16px',
-            }}
-          />
-          <div
-            className="absolute bottom-10 left-8 h-36 w-36 opacity-25"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
-              backgroundSize: '16px 16px',
-            }}
-          />
-          <div
-            className="absolute bottom-10 right-10 h-36 w-36 opacity-25"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
-              backgroundSize: '16px 16px',
-            }}
-          />
-        </div>
-      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -462,18 +478,20 @@ export function FamilyTree({
         onNodeClick={onNodeClick}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
+        onMoveEnd={handleMoveEnd}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        minZoom={isDirectFamilyView && isMobile ? 0.25 : isMobile ? 0.5 : 0.1}
+        minZoom={isDirectFamilyView ? directFamilyMinZoom : isMobile ? 0.5 : 0.1}
         maxZoom={isDirectFamilyView ? directFamilyMaxZoom : isMobile ? 1.3 : 2}
         nodesDraggable={!isDirectFamilyView}
         nodesConnectable={!isDirectFamilyView}
         elementsSelectable={!isDirectFamilyView}
+        panOnDrag={directFamilyCanPan}
         defaultViewport={{
           x: 0,
           y: 0,
           zoom: isDirectFamilyView
-            ? directFamilyMaxZoom
+            ? directFamilyMinZoom
             : (isMobile ? 0.72 : 0.8),
         }}
         proOptions={{ hideAttribution: true }}

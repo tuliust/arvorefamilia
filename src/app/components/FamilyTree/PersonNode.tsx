@@ -55,7 +55,7 @@ const directRelationStyles: Record<NonNullable<PersonNodeData['directRelation']>
 }> = {
   central: {
     background: '#ffffff',
-    border: '#0284c7',
+    border: '#475569',
     color: '#111827',
     muted: '#4b5563',
   },
@@ -174,6 +174,61 @@ function getLifeYearsLabel(pessoa: PersonNodeData['pessoa']) {
   if (deathYear) return `†${deathYear}`;
   if (birthYear) return birthYear;
   return undefined;
+}
+
+function parseBirthDate(value?: string | number | null) {
+  if (value === null || value === undefined) return null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const brDate = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (brDate) {
+    const [, day, month, year] = brDate;
+    return {
+      day: Number(day),
+      month: Number(month),
+      year: Number(year),
+      hasFullDate: true,
+    };
+  }
+
+  const isoDate = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoDate) {
+    const [, year, month, day] = isoDate;
+    return {
+      day: Number(day),
+      month: Number(month),
+      year: Number(year),
+      hasFullDate: true,
+    };
+  }
+
+  const year = extractYear(text);
+  if (!year) return null;
+
+  return {
+    year: Number(year),
+    hasFullDate: false,
+  };
+}
+
+function getAgeLabel(value?: string | number | null) {
+  const birthDate = parseBirthDate(value);
+  if (!birthDate || !Number.isFinite(birthDate.year)) return undefined;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.year;
+
+  if (birthDate.hasFullDate && birthDate.month && birthDate.day) {
+    const hasHadBirthday =
+      today.getMonth() + 1 > birthDate.month ||
+      (today.getMonth() + 1 === birthDate.month && today.getDate() >= birthDate.day);
+    if (!hasHadBirthday) age -= 1;
+  }
+
+  if (age < 0 || age > 130) return undefined;
+  return birthDate.hasFullDate ? `${age} anos` : `aprox. ${age} anos`;
 }
 
 export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
@@ -302,6 +357,15 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const cardHeight = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT : DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
     const avatarSize = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE;
     const directSecondaryText = getLifeYearsLabel(pessoa) || secondaryText;
+    const centralDetails = [
+      getAgeLabel(pessoa.data_nascimento),
+      pessoa.local_nascimento
+        ? `Natural de ${pessoa.local_nascimento}${pessoa.data_nascimento ? ` (${pessoa.data_nascimento})` : ''}`
+        : pessoa.data_nascimento
+          ? String(pessoa.data_nascimento)
+          : undefined,
+      pessoa.local_atual ? `Mora atualmente em ${pessoa.local_atual}` : undefined,
+    ].filter((item): item is string => Boolean(item));
 
     return (
       <div className="relative" ref={menuRef}>
@@ -309,7 +373,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           className={[
             'cursor-pointer rounded-lg border-2 shadow-lg transition-all hover:shadow-xl',
             isCentralDirectNode
-              ? 'flex flex-col items-center justify-center px-4 py-5 text-center'
+              ? 'flex flex-col items-center justify-start px-10 py-10 text-center'
               : 'flex items-center gap-3 px-3 py-2.5',
             isSelected ? 'ring-2 ring-blue-300' : '',
           ].join(' ')}
@@ -334,26 +398,36 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             style={{ width: avatarSize, height: avatarSize }}
           >
             {avatarContent(
-              isCentralDirectNode ? 'h-[100px] w-[100px]' : 'h-[50px] w-[50px]',
-              isCentralDirectNode ? 'h-12 w-12 text-slate-700' : 'h-6 w-6 text-slate-700'
+              isCentralDirectNode ? 'h-[300px] w-[300px]' : 'h-[50px] w-[50px]',
+              isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-6 w-6 text-slate-700'
             )}
           </div>
 
-          <div className={isCentralDirectNode ? 'mt-4 min-w-0' : 'min-w-0 flex-1'}>
+          <div className={isCentralDirectNode ? 'mt-8 min-w-0 max-w-full' : 'min-w-0 flex-1'}>
             <h3
               className={[
-                'truncate font-bold leading-tight',
-                isCentralDirectNode ? 'max-w-[166px] text-lg' : 'text-[16px]',
+                'font-bold leading-tight',
+                isCentralDirectNode ? 'whitespace-normal break-words text-3xl' : 'truncate text-[16px]',
               ].join(' ')}
               title={pessoa.nome_completo}
             >
               {pessoa.nome_completo}
             </h3>
-            {directSecondaryText && (
+            {isCentralDirectNode ? (
+              centralDetails.length > 0 && (
+                <div className="mt-5 space-y-2 text-lg leading-snug" style={{ color: style.muted }}>
+                  {centralDetails.map((detail) => (
+                    <p key={detail} className="whitespace-normal break-words">
+                      {detail}
+                    </p>
+                  ))}
+                </div>
+              )
+            ) : directSecondaryText && (
               <p
                 className={[
                   'truncate leading-tight',
-                  isCentralDirectNode ? 'mt-1 max-w-[166px] text-sm' : 'mt-0.5 text-[13px]',
+                  'mt-0.5 text-[13px]',
                 ].join(' ')}
                 style={{ color: style.muted }}
                 title={directSecondaryText}
