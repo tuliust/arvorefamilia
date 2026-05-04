@@ -30,7 +30,7 @@ import {
   MarriageNodeDetails,
   GenerationColumnMeta,
 } from './types';
-import { FAMILY_TREE_COLORS, hasDeathDate } from './visualTokens';
+import { DIRECT_FAMILY_TOKENS, FAMILY_TREE_COLORS, hasDeathDate } from './visualTokens';
 
 interface FamilyTreeProps {
   pessoas: Pessoa[];
@@ -89,6 +89,8 @@ const MARRIAGE_NODE_SIZE = TREE_CONSTANTS.MARRIAGE_NODE_WIDTH;
 const INITIAL_MOBILE_CENTER_Y = TREE_CONSTANTS.INITIAL_Y + TREE_CONSTANTS.NODE_HEIGHT;
 const MIN_MANUAL_GENERATION = 1;
 const MAX_MANUAL_GENERATION = 7;
+const DIRECT_FAMILY_MAX_ZOOM = 0.75;
+const DIRECT_FAMILY_MOBILE_MAX_ZOOM = DIRECT_FAMILY_TOKENS.MOBILE_ZOOM;
 
 function clampManualGeneration(generation: number) {
   return Math.min(MAX_MANUAL_GENERATION, Math.max(MIN_MANUAL_GENERATION, generation));
@@ -137,6 +139,7 @@ export function FamilyTree({
   const [dragTargetGeneration, setDragTargetGeneration] = useState<number | null>(null);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const isDirectFamilyView = viewMode === 'familiares-diretos';
+  const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
   const effectiveCentralPersonId = isDirectFamilyView
     ? centralPersonId || selectedPersonId || pessoas[0]?.id
     : centralPersonId;
@@ -274,32 +277,51 @@ export function FamilyTree({
     const focusPersonId = isDirectFamilyView ? effectiveCentralPersonId : selectedPersonId;
     if (!focusPersonId || !reactFlowRef.current || nodes.length === 0) return;
 
+    if (isDirectFamilyView) {
+      const timer = window.setTimeout(() => {
+        reactFlowRef.current?.fitView({
+          padding: isMobile ? 0.08 : 0.1,
+          includeHiddenNodes: false,
+          maxZoom: directFamilyMaxZoom,
+          duration: 500,
+        });
+      }, 50);
+
+      return () => window.clearTimeout(timer);
+    }
+
     const selectedNode = nodes.find((node) => node.id === focusPersonId);
     if (!selectedNode) return;
 
     const width = selectedNode.type === 'marriageNode'
       ? MARRIAGE_NODE_SIZE
       : selectedNode.data?.directRelation === 'central'
-        ? 190
-        : NODE_WIDTH;
+        ? DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH
+        : selectedNode.data?.directRelation
+          ? DIRECT_FAMILY_TOKENS.CARD_WIDTH
+          : NODE_WIDTH;
     const height = selectedNode.type === 'marriageNode'
       ? MARRIAGE_NODE_SIZE
       : selectedNode.data?.directRelation === 'central'
-        ? 220
-        : NODE_HEIGHT;
+        ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT
+        : selectedNode.data?.directRelation
+          ? DIRECT_FAMILY_TOKENS.CARD_HEIGHT
+          : NODE_HEIGHT;
 
     const centerX = selectedNode.position.x + width / 2;
     const centerY = selectedNode.position.y + height / 2;
 
     const timer = window.setTimeout(() => {
       reactFlowRef.current?.setCenter(centerX, centerY, {
-        zoom: isDirectFamilyView ? (isMobile ? 0.34 : 0.52) : (isMobile ? 0.8 : 1.05),
+        zoom: isDirectFamilyView
+          ? (isMobile ? DIRECT_FAMILY_TOKENS.MOBILE_ZOOM : DIRECT_FAMILY_TOKENS.DESKTOP_ZOOM)
+          : (isMobile ? 0.8 : 1.05),
         duration: 800,
       });
     }, 50);
 
     return () => window.clearTimeout(timer);
-  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView]);
+  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView, directFamilyMaxZoom]);
 
   useEffect(() => {
     if (
@@ -398,7 +420,7 @@ export function FamilyTree({
             className="absolute inset-0 opacity-90"
             style={{
               background:
-                'radial-gradient(circle at center, transparent 0 170px, rgba(100,116,139,0.12) 171px 172px, transparent 173px 330px, rgba(100,116,139,0.10) 331px 332px, transparent 333px 520px, rgba(100,116,139,0.08) 521px 522px, transparent 523px)',
+                'radial-gradient(circle at 50% 50%, transparent 0 170px, rgba(100,116,139,0.12) 171px 172px, transparent 173px 330px, rgba(100,116,139,0.10) 331px 332px, transparent 333px 520px, rgba(100,116,139,0.08) 521px 522px, transparent 523px)',
             }}
           />
           <div
@@ -443,8 +465,17 @@ export function FamilyTree({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         minZoom={isDirectFamilyView && isMobile ? 0.25 : isMobile ? 0.5 : 0.1}
-        maxZoom={isMobile ? 1.3 : 2}
-        defaultViewport={{ x: 0, y: 0, zoom: isDirectFamilyView ? (isMobile ? 0.34 : 0.52) : (isMobile ? 0.72 : 0.8) }}
+        maxZoom={isDirectFamilyView ? directFamilyMaxZoom : isMobile ? 1.3 : 2}
+        nodesDraggable={!isDirectFamilyView}
+        nodesConnectable={!isDirectFamilyView}
+        elementsSelectable={!isDirectFamilyView}
+        defaultViewport={{
+          x: 0,
+          y: 0,
+          zoom: isDirectFamilyView
+            ? directFamilyMaxZoom
+            : (isMobile ? 0.72 : 0.8),
+        }}
         proOptions={{ hideAttribution: true }}
       >
         {!isDirectFamilyView && <Background />}

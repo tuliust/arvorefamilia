@@ -6,7 +6,7 @@ interface OrthogonalEdgeData {
   corridorY?: number;
   side?: 'left' | 'right';
   offset?: number;
-  kind?: 'child' | 'familyChild' | 'siblings' | 'singleParentChild' | 'generationChild';
+  kind?: 'child' | 'familyChild' | 'siblings' | 'singleParentChild' | 'generationChild' | 'directSmooth';
   nodeWidth?: number;
   nodeHeight?: number;
   attachGap?: number;
@@ -16,6 +16,16 @@ interface OrthogonalEdgeData {
   trunkX?: number;
   trunkMinY?: number;
   trunkMaxY?: number;
+}
+
+function directBezierPath(sourceX: number, sourceY: number, targetX: number, targetY: number) {
+  const midX = sourceX + (targetX - sourceX) / 2;
+
+  if (Math.abs(sourceY - targetY) <= 2) {
+    return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+  }
+
+  return `M ${sourceX} ${sourceY} C ${midX} ${sourceY}, ${midX} ${targetY}, ${targetX} ${targetY}`;
 }
 
 export function OrthogonalChildEdge({
@@ -28,6 +38,17 @@ export function OrthogonalChildEdge({
   markerEnd,
   data,
 }: EdgeProps<OrthogonalEdgeData>) {
+  if (data?.kind === 'directSmooth') {
+    return (
+      <BaseEdge
+        id={id}
+        path={directBezierPath(sourceX, sourceY, targetX, targetY)}
+        style={style}
+        markerEnd={markerEnd}
+      />
+    );
+  }
+
   if (data?.kind === 'familyChild') {
     const startX = data.startX ?? sourceX;
     const startY = data.startY ?? sourceY;

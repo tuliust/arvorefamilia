@@ -2,7 +2,7 @@ import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { User, Dog, Eye, Pencil, Link2, Trash2 } from 'lucide-react';
 import { PersonNodeData } from './types';
-import { FAMILY_TREE_COLORS, hasDeathDate } from './visualTokens';
+import { DIRECT_FAMILY_TOKENS, FAMILY_TREE_COLORS, hasDeathDate } from './visualTokens';
 
 function PersonHandles() {
   const hiddenHandle = { background: 'transparent', border: 'none' };
@@ -78,8 +78,8 @@ const directRelationStyles: Record<NonNullable<PersonNodeData['directRelation']>
     muted: 'rgba(255,255,255,0.82)',
   },
   spouse: {
-    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-    border: '#38bdf8',
+    background: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
+    border: '#fda4af',
     color: '#ffffff',
     muted: 'rgba(255,255,255,0.82)',
   },
@@ -154,6 +154,26 @@ function ActionButton({
       <span>{label}</span>
     </button>
   );
+}
+
+function extractYear(value?: string | number | null) {
+  if (value === null || value === undefined) return undefined;
+
+  const text = String(value).trim();
+  if (!text) return undefined;
+
+  const year = text.match(/(?:^|[^\d])(\d{4})(?:[^\d]|$)/)?.[1];
+  return year;
+}
+
+function getLifeYearsLabel(pessoa: PersonNodeData['pessoa']) {
+  const birthYear = extractYear(pessoa.data_nascimento);
+  const deathYear = extractYear(pessoa.data_falecimento);
+
+  if (birthYear && deathYear) return `${birthYear}-${deathYear}`;
+  if (deathYear) return `†${deathYear}`;
+  if (birthYear) return birthYear;
+  return undefined;
 }
 
 export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
@@ -278,6 +298,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         }
       : directRelationStyles[directRelation];
     const isCentralDirectNode = directRelation === 'central';
+    const cardWidth = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH : DIRECT_FAMILY_TOKENS.CARD_WIDTH;
+    const cardHeight = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT : DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
+    const avatarSize = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE;
+    const directSecondaryText = getLifeYearsLabel(pessoa) || secondaryText;
 
     return (
       <div className="relative" ref={menuRef}>
@@ -292,9 +316,9 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           style={{
-            width: isCentralDirectNode ? 190 : 220,
-            minHeight: isCentralDirectNode ? 220 : 78,
-            height: isCentralDirectNode ? 220 : 78,
+            width: cardWidth,
+            minHeight: cardHeight,
+            height: cardHeight,
             background: style.background,
             borderColor: style.border,
             color: style.color,
@@ -305,11 +329,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div
             className={[
               'flex shrink-0 items-center justify-center rounded-full',
-              isCentralDirectNode ? 'h-24 w-24 bg-gray-100' : 'h-11 w-11 bg-white/90',
+              isCentralDirectNode ? 'bg-gray-100' : 'bg-white/90',
             ].join(' ')}
+            style={{ width: avatarSize, height: avatarSize }}
           >
             {avatarContent(
-              isCentralDirectNode ? 'h-24 w-24' : 'h-11 w-11',
+              isCentralDirectNode ? 'h-[100px] w-[100px]' : 'h-[50px] w-[50px]',
               isCentralDirectNode ? 'h-12 w-12 text-slate-700' : 'h-6 w-6 text-slate-700'
             )}
           </div>
@@ -318,22 +343,22 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             <h3
               className={[
                 'truncate font-bold leading-tight',
-                isCentralDirectNode ? 'max-w-[150px] text-base' : 'text-sm',
+                isCentralDirectNode ? 'max-w-[166px] text-lg' : 'text-[16px]',
               ].join(' ')}
               title={pessoa.nome_completo}
             >
               {pessoa.nome_completo}
             </h3>
-            {secondaryText && (
+            {directSecondaryText && (
               <p
                 className={[
                   'truncate leading-tight',
-                  isCentralDirectNode ? 'mt-1 max-w-[150px] text-sm' : 'mt-0.5 text-xs',
+                  isCentralDirectNode ? 'mt-1 max-w-[166px] text-sm' : 'mt-0.5 text-[13px]',
                 ].join(' ')}
                 style={{ color: style.muted }}
-                title={secondaryText}
+                title={directSecondaryText}
               >
-                {secondaryText}
+                {directSecondaryText}
               </p>
             )}
           </div>
