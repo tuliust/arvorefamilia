@@ -47,6 +47,20 @@ export interface PersonNodeContextActions {
   onRemove?: (pessoa: Pessoa) => void;
 }
 
+export type DirectRelationVariant =
+  | 'central'
+  | 'parent'
+  | 'sibling'
+  | 'grandparent'
+  | 'greatGrandparent'
+  | 'greatGreatGrandparent'
+  | 'uncleAunt'
+  | 'cousin'
+  | 'nephewNiece'
+  | 'spouse'
+  | 'child'
+  | 'grandchild';
+
 export interface FamilyTreeBuildParams extends PersonNodeContextActions {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
@@ -116,6 +130,7 @@ export interface PersonNodeData extends PersonNodeContextActions {
   onClick?: (pessoa: Pessoa) => void;
   isSelected?: boolean;
   isCentralPerson?: boolean;
+  directRelation?: DirectRelationVariant;
 }
 
 export interface MarriageNodeData {

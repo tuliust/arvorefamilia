@@ -136,6 +136,10 @@ export function FamilyTree({
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const [dragTargetGeneration, setDragTargetGeneration] = useState<number | null>(null);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
+  const isDirectFamilyView = viewMode === 'familiares-diretos';
+  const effectiveCentralPersonId = isDirectFamilyView
+    ? centralPersonId || selectedPersonId || pessoas[0]?.id
+    : centralPersonId;
 
   const dataHash = useMemo(() => {
     return JSON.stringify({
@@ -145,10 +149,10 @@ export function FamilyTree({
       edgeFilters,
       viewMode,
       directRelativeFilters,
-      centralPersonId,
+      centralPersonId: effectiveCentralPersonId,
       isMobile,
     });
-  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, centralPersonId, viewMode, isMobile]);
+  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, effectiveCentralPersonId, viewMode, isMobile]);
 
   const layoutResult = useMemo(() => {
     const graph = buildTreeGraph({
@@ -165,7 +169,7 @@ export function FamilyTree({
     });
 
     return getLayoutByViewMode(viewMode, graph, {
-      centralPersonId,
+      centralPersonId: effectiveCentralPersonId,
       directRelativeFilters,
     });
   }, [
@@ -181,7 +185,7 @@ export function FamilyTree({
     selectedPersonId,
     edgeFilters,
     directRelativeFilters,
-    centralPersonId,
+    effectiveCentralPersonId,
     viewMode,
   ]);
 
@@ -235,7 +239,7 @@ export function FamilyTree({
               onAddConnection: onPersonAddConnection,
               onRemove: onPersonRemove,
               isSelected: node.data.pessoa.id === selectedPersonId,
-              isCentralPerson: viewMode === 'familiares-diretos' && node.data.pessoa.id === centralPersonId,
+              isCentralPerson: viewMode === 'familiares-diretos' && node.data.pessoa.id === effectiveCentralPersonId,
             },
           };
         }
@@ -262,31 +266,40 @@ export function FamilyTree({
     onPersonRemove,
     onMarriageClick,
     viewMode,
-    centralPersonId,
+    effectiveCentralPersonId,
     setNodes,
   ]);
 
   useEffect(() => {
-    if (!selectedPersonId || !reactFlowRef.current || nodes.length === 0) return;
+    const focusPersonId = isDirectFamilyView ? effectiveCentralPersonId : selectedPersonId;
+    if (!focusPersonId || !reactFlowRef.current || nodes.length === 0) return;
 
-    const selectedNode = nodes.find((node) => node.id === selectedPersonId);
+    const selectedNode = nodes.find((node) => node.id === focusPersonId);
     if (!selectedNode) return;
 
-    const width = selectedNode.type === 'marriageNode' ? MARRIAGE_NODE_SIZE : NODE_WIDTH;
-    const height = selectedNode.type === 'marriageNode' ? MARRIAGE_NODE_SIZE : NODE_HEIGHT;
+    const width = selectedNode.type === 'marriageNode'
+      ? MARRIAGE_NODE_SIZE
+      : selectedNode.data?.directRelation === 'central'
+        ? 190
+        : NODE_WIDTH;
+    const height = selectedNode.type === 'marriageNode'
+      ? MARRIAGE_NODE_SIZE
+      : selectedNode.data?.directRelation === 'central'
+        ? 220
+        : NODE_HEIGHT;
 
     const centerX = selectedNode.position.x + width / 2;
     const centerY = selectedNode.position.y + height / 2;
 
     const timer = window.setTimeout(() => {
       reactFlowRef.current?.setCenter(centerX, centerY, {
-        zoom: isMobile ? 0.8 : 1.05,
+        zoom: isDirectFamilyView ? (isMobile ? 0.34 : 0.52) : (isMobile ? 0.8 : 1.05),
         duration: 800,
       });
     }, 50);
 
     return () => window.clearTimeout(timer);
-  }, [selectedPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile]);
+  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView]);
 
   useEffect(() => {
     if (
@@ -361,18 +374,63 @@ export function FamilyTree({
     (instance: ReactFlowInstance) => {
       reactFlowRef.current = instance;
 
-      if (!selectedPersonId) {
+      if (!selectedPersonId && !isDirectFamilyView) {
         instance.fitView({
           padding: isMobile ? 0.12 : 0.2,
           includeHiddenNodes: false,
         });
       }
     },
-    [selectedPersonId, isMobile]
+    [selectedPersonId, isMobile, isDirectFamilyView]
   );
 
   return (
-    <div className="w-full h-full" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
+    <div
+      className={[
+        'relative h-full w-full overflow-hidden',
+        isDirectFamilyView ? 'bg-slate-50' : '',
+      ].join(' ')}
+      style={{ width: '100%', height: '100%', minHeight: '500px' }}
+    >
+      {isDirectFamilyView && (
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0 opacity-90"
+            style={{
+              background:
+                'radial-gradient(circle at center, transparent 0 170px, rgba(100,116,139,0.12) 171px 172px, transparent 173px 330px, rgba(100,116,139,0.10) 331px 332px, transparent 333px 520px, rgba(100,116,139,0.08) 521px 522px, transparent 523px)',
+            }}
+          />
+          <div
+            className="absolute left-8 top-8 h-28 w-28 opacity-35"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
+              backgroundSize: '16px 16px',
+            }}
+          />
+          <div
+            className="absolute right-10 top-10 h-28 w-28 opacity-30"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
+              backgroundSize: '16px 16px',
+            }}
+          />
+          <div
+            className="absolute bottom-10 left-8 h-36 w-36 opacity-25"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
+              backgroundSize: '16px 16px',
+            }}
+          />
+          <div
+            className="absolute bottom-10 right-10 h-36 w-36 opacity-25"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1.4px, transparent 1.4px)',
+              backgroundSize: '16px 16px',
+            }}
+          />
+        </div>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -384,12 +442,12 @@ export function FamilyTree({
         onNodeDragStop={handleNodeDragStop}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        minZoom={isMobile ? 0.5 : 0.1}
+        minZoom={isDirectFamilyView && isMobile ? 0.25 : isMobile ? 0.5 : 0.1}
         maxZoom={isMobile ? 1.3 : 2}
-        defaultViewport={{ x: 0, y: 0, zoom: isMobile ? 0.72 : 0.8 }}
+        defaultViewport={{ x: 0, y: 0, zoom: isDirectFamilyView ? (isMobile ? 0.34 : 0.52) : (isMobile ? 0.72 : 0.8) }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background />
+        {!isDirectFamilyView && <Background />}
         <Controls showInteractive={!isMobile} />
         {!isMobile && (
           <MiniMap
