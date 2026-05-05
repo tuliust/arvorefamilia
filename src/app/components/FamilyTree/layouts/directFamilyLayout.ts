@@ -906,7 +906,7 @@ export function directFamilyLayout(
   addVisible(filters.bisavos, [...groups.paternal.greatGrandparents, ...groups.maternal.greatGrandparents]);
   addVisible(filters.tataravos, [...groups.paternal.greatGreatGrandparents, ...groups.maternal.greatGreatGrandparents]);
   addVisible(filters.irmaos, siblings);
-  addVisible(filters.irmaos, nephewsAndNieces);
+  addVisible(filters.sobrinhos, nephewsAndNieces);
   addVisible(filters.tios, [...groups.paternal.uncles, ...groups.maternal.uncles]);
   addVisible(filters.primos, [...groups.paternal.cousins, ...groups.maternal.cousins]);
   addVisible(filters.conjuge, spouses);
@@ -1066,22 +1066,22 @@ export function directFamilyLayout(
   const lowerConnectionElbowY = CENTRAL_BOTTOM_Y + 54;
 
   if (fatherGroupBoxBounds) {
-    addAnchor(positionedNodes, positionedIds, 'direct-center-left-to-father-anchor', CENTRAL_X, centralSideConnectionY);
+    addAnchor(positionedNodes, positionedIds, 'direct-anchor-central-left', CENTRAL_X, centralSideConnectionY);
     addAnchor(
       positionedNodes,
       positionedIds,
-      'direct-father-group-right-anchor',
+      'direct-anchor-pai-right',
       fatherGroupBoxBounds.maxX,
       fatherGroupBoxBounds.centerY
     );
   }
 
   if (motherGroupBoxBounds) {
-    addAnchor(positionedNodes, positionedIds, 'direct-center-right-to-mother-anchor', CENTRAL_X + CENTRAL_WIDTH, centralSideConnectionY);
+    addAnchor(positionedNodes, positionedIds, 'direct-anchor-central-right', CENTRAL_X + CENTRAL_WIDTH, centralSideConnectionY);
     addAnchor(
       positionedNodes,
       positionedIds,
-      'direct-mother-group-left-anchor',
+      'direct-anchor-mae-left',
       motherGroupBoxBounds.minX,
       motherGroupBoxBounds.centerY
     );
@@ -1139,11 +1139,11 @@ export function directFamilyLayout(
     addDirectStructuralEdge(
       addEdge,
       'direct-central-to-father-group',
-      'direct-center-left-to-father-anchor',
-      'direct-father-group-right-anchor',
+      'direct-anchor-central-left',
+      'direct-anchor-pai-right',
       'directSideElbow',
       {
-        elbowX: CENTRAL_X - 92,
+        elbowX: fatherGroupBoxBounds.maxX + 96,
       }
     );
   }
@@ -1152,11 +1152,11 @@ export function directFamilyLayout(
     addDirectStructuralEdge(
       addEdge,
       'direct-central-to-mother-group',
-      'direct-center-right-to-mother-anchor',
-      'direct-mother-group-left-anchor',
+      'direct-anchor-central-right',
+      'direct-anchor-mae-left',
       'directSideElbow',
       {
-        elbowX: CENTRAL_X + CENTRAL_WIDTH + 92,
+        elbowX: motherGroupBoxBounds.minX - 96,
       }
     );
   }

@@ -17,6 +17,7 @@ export type DirectRelativeGroup =
   | 'filhos'
   | 'netos'
   | 'irmaos'
+  | 'sobrinhos'
   | 'tios'
   | 'primos';
 
@@ -155,6 +156,7 @@ export const DEFAULT_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {
   filhos: true,
   netos: true,
   irmaos: true,
+  sobrinhos: true,
   tios: true,
   primos: true,
 };
