@@ -1,23 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { CheckCircle2, FileArchive, Heart, Plus, Save, Users } from 'lucide-react';
+import { CheckCircle2, FileArchive, Heart, Save, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
-import { adicionarRelacionamento, obterRelacionamentosDaPessoa } from '../services/dataService';
+import { obterRelacionamentosDaPessoa } from '../services/dataService';
 import {
   confirmOwnLinkedPersonData,
   getPrimaryLinkedPersonWithPessoa,
-  listLinkablePeople,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
-import { ArquivoHistorico, Pessoa, SubtipoRelacionamento, TipoRelacionamento } from '../types';
+import { ArquivoHistorico, Pessoa } from '../types';
 
 type RelationshipGroups = {
   pais: Pessoa[];
@@ -27,8 +24,6 @@ type RelationshipGroups = {
   irmaos: Pessoa[];
 };
 
-type RelationshipTypeOption = 'pai' | 'mae' | 'filho' | 'conjuge' | 'irmao';
-
 const EMPTY_GROUPS: RelationshipGroups = {
   pais: [],
   maes: [],
@@ -37,24 +32,8 @@ const EMPTY_GROUPS: RelationshipGroups = {
   irmaos: [],
 };
 
-const RELATIONSHIP_LABELS: Record<RelationshipTypeOption, string> = {
-  pai: 'Pai',
-  mae: 'Mãe',
-  filho: 'Filho(a)',
-  conjuge: 'Cônjuge',
-  irmao: 'Irmão(ã)',
-};
-
 function uniquePeople(people: Pessoa[]) {
   return Array.from(new Map(people.map((person) => [person.id, person])).values());
-}
-
-function groupContains(groups: RelationshipGroups, type: RelationshipTypeOption, personId: string) {
-  if (type === 'pai') return groups.pais.some((person) => person.id === personId);
-  if (type === 'mae') return groups.maes.some((person) => person.id === personId);
-  if (type === 'filho') return groups.filhos.some((person) => person.id === personId);
-  if (type === 'conjuge') return groups.conjuges.some((person) => person.id === personId);
-  return groups.irmaos.some((person) => person.id === personId);
 }
 
 function RelationSection({
@@ -99,37 +78,11 @@ export function MeusVinculos() {
   const { user } = useAuth();
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [relationships, setRelationships] = useState<RelationshipGroups>(EMPTY_GROUPS);
-  const [people, setPeople] = useState<Pessoa[]>([]);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
-  const [relationshipType, setRelationshipType] = useState<RelationshipTypeOption>('pai');
-  const [subtype, setSubtype] = useState<SubtipoRelacionamento>('sangue');
-  const [parentGender, setParentGender] = useState<'pai' | 'mae'>('pai');
-  const [personSearch, setPersonSearch] = useState('');
-  const [selectedPersonId, setSelectedPersonId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [savingRelationship, setSavingRelationship] = useState(false);
   const [finishing, setFinishing] = useState(false);
 
   const pessoa = link?.pessoa;
-
-  const selectablePeople = useMemo(
-    () => people.filter((person) => person.id !== pessoa?.id),
-    [people, pessoa?.id],
-  );
-
-  const selectedPerson = useMemo(
-    () => selectablePeople.find((person) => person.id === selectedPersonId) ?? null,
-    [selectablePeople, selectedPersonId],
-  );
-
-  const filteredPeople = useMemo(() => {
-    const term = personSearch.trim().toLocaleLowerCase('pt-BR');
-    if (!term) return selectablePeople.slice(0, 8);
-
-    return selectablePeople
-      .filter((person) => person.nome_completo.toLocaleLowerCase('pt-BR').includes(term))
-      .slice(0, 8);
-  }, [personSearch, selectablePeople]);
 
   async function reloadRelationships(pessoaId: string) {
     const nextRelationships = await obterRelacionamentosDaPessoa(pessoaId);
@@ -144,10 +97,7 @@ export function MeusVinculos() {
 
       setLoading(true);
       await resolveFirstAccessLinkForUser(user);
-      const [{ data, error }, linkablePeople] = await Promise.all([
-        getPrimaryLinkedPersonWithPessoa(user.id),
-        listLinkablePeople(),
-      ]);
+      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
 
       if (!mounted) return;
 
@@ -159,7 +109,6 @@ export function MeusVinculos() {
 
       setLink(data);
       setArchives(data?.pessoa?.arquivos_historicos ?? []);
-      setPeople(linkablePeople.data ?? []);
 
       if (data?.pessoa?.id) {
         await reloadRelationships(data.pessoa.id);
@@ -174,81 +123,6 @@ export function MeusVinculos() {
       mounted = false;
     };
   }, [user]);
-
-  const handleSelectPerson = (person: Pessoa) => {
-    setSelectedPersonId(person.id);
-    setPersonSearch(person.nome_completo);
-  };
-
-  const handleAddRelationship = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!pessoa?.id || !selectedPerson) {
-      toast.error('Selecione uma pessoa cadastrada.');
-      return;
-    }
-
-    if (selectedPerson.id === pessoa.id) {
-      toast.error('Não é possível vincular a pessoa com ela mesma.');
-      return;
-    }
-
-    if (groupContains(relationships, relationshipType, selectedPerson.id)) {
-      toast.warning('Este relacionamento já está cadastrado.');
-      return;
-    }
-
-    setSavingRelationship(true);
-
-    try {
-      const created = await adicionarRelacionamento({
-        pessoa_origem_id: pessoa.id,
-        pessoa_destino_id: selectedPerson.id,
-        tipo_relacionamento: relationshipType as TipoRelacionamento,
-        subtipo_relacionamento: subtype,
-      });
-
-      if (!created) {
-        throw new Error('Não foi possível criar o relacionamento.');
-      }
-
-      if (relationshipType === 'conjuge' || relationshipType === 'irmao') {
-        await adicionarRelacionamento({
-          pessoa_origem_id: selectedPerson.id,
-          pessoa_destino_id: pessoa.id,
-          tipo_relacionamento: relationshipType,
-          subtipo_relacionamento: subtype,
-        });
-      }
-
-      if (relationshipType === 'pai' || relationshipType === 'mae') {
-        await adicionarRelacionamento({
-          pessoa_origem_id: selectedPerson.id,
-          pessoa_destino_id: pessoa.id,
-          tipo_relacionamento: 'filho',
-          subtipo_relacionamento: subtype,
-        });
-      }
-
-      if (relationshipType === 'filho') {
-        await adicionarRelacionamento({
-          pessoa_origem_id: selectedPerson.id,
-          pessoa_destino_id: pessoa.id,
-          tipo_relacionamento: parentGender,
-          subtipo_relacionamento: subtype,
-        });
-      }
-
-      await reloadRelationships(pessoa.id);
-      setSelectedPersonId('');
-      setPersonSearch('');
-      toast.success('Relacionamento adicionado.');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar relacionamento.');
-    } finally {
-      setSavingRelationship(false);
-    }
-  };
 
   const handleFinish = async () => {
     if (!link?.id || !pessoa?.id) {
@@ -324,7 +198,7 @@ export function MeusVinculos() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Relacionamentos cadastrados
+                Relacionamentos
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -332,113 +206,6 @@ export function MeusVinculos() {
               <RelationSection title="Filhos" emptyLabel="Nenhum filho cadastrado" people={uniquePeople(relationships.filhos)} typeLabel="Filho(a)" />
               <RelationSection title="Cônjuge" emptyLabel="Nenhum cônjuge cadastrado" people={uniquePeople(relationships.conjuges)} typeLabel="Cônjuge" />
               <RelationSection title="Irmãos" emptyLabel="Nenhum irmão cadastrado" people={uniquePeople(relationships.irmaos)} typeLabel="Irmão(ã)" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Adicionar ou corrigir relacionamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddRelationship} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="tipo-relacionamento">Tipo de relacionamento</Label>
-                  <select
-                    id="tipo-relacionamento"
-                    value={relationshipType}
-                    onChange={(event) => setRelationshipType(event.target.value as RelationshipTypeOption)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="pai">Pai</option>
-                    <option value="mae">Mãe</option>
-                    <option value="filho">Filho(a)</option>
-                    <option value="conjuge">Cônjuge</option>
-                    <option value="irmao">Irmão(ã)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subtipo-relacionamento">Subtipo</Label>
-                  <select
-                    id="subtipo-relacionamento"
-                    value={subtype}
-                    onChange={(event) => setSubtype(event.target.value as SubtipoRelacionamento)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    {relationshipType === 'conjuge' ? (
-                      <>
-                        <option value="casamento">Casamento</option>
-                        <option value="uniao">União estável</option>
-                        <option value="separado">Separado</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="sangue">Sangue</option>
-                        <option value="adotivo">Adotivo</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-
-                {relationshipType === 'filho' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="parent-genero">{pessoa.nome_completo} é</Label>
-                    <select
-                      id="parent-genero"
-                      value={parentGender}
-                      onChange={(event) => setParentGender(event.target.value as 'pai' | 'mae')}
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                    >
-                      <option value="pai">Pai</option>
-                      <option value="mae">Mãe</option>
-                    </select>
-                  </div>
-                )}
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="pessoa-relacionada">Pessoa relacionada</Label>
-                  <Input
-                    id="pessoa-relacionada"
-                    value={personSearch}
-                    onChange={(event) => {
-                      setPersonSearch(event.target.value);
-                      setSelectedPersonId('');
-                    }}
-                    placeholder="Digite para buscar uma pessoa cadastrada"
-                  />
-                  {personSearch && (
-                    <div className="max-h-56 overflow-y-auto rounded-md border border-gray-200 bg-white">
-                      {filteredPeople.length === 0 ? (
-                        <p className="px-3 py-3 text-sm text-gray-500">Nenhuma pessoa cadastrada encontrada.</p>
-                      ) : (
-                        filteredPeople.map((person) => (
-                          <button
-                            key={person.id}
-                            type="button"
-                            onClick={() => handleSelectPerson(person)}
-                            className="flex w-full items-center justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50"
-                          >
-                            <span>
-                              <span className="block text-sm font-medium text-gray-900">{person.nome_completo}</span>
-                              {person.data_nascimento && <span className="text-xs text-gray-500">{person.data_nascimento}</span>}
-                            </span>
-                            {selectedPersonId === person.id && <CheckCircle2 className="h-4 w-4 text-green-600" />}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Button type="submit" disabled={savingRelationship || !selectedPerson}>
-                    {savingRelationship ? 'Salvando...' : `Adicionar ${RELATIONSHIP_LABELS[relationshipType]}`}
-                  </Button>
-                </div>
-              </form>
             </CardContent>
           </Card>
 

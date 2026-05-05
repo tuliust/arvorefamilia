@@ -8,7 +8,6 @@ import { alternarFavorito, conteudoEstaFavoritado } from '../services/userEngage
 import { Pessoa } from '../types';
 import { 
   ArrowLeft, 
-  Calendar, 
   Star,
   Bell
 } from 'lucide-react';
@@ -218,19 +217,6 @@ export function PersonProfile() {
               />
             </div>
           )}
-        </div>
-
-        {/* Actions */}
-        <div className="mt-6 flex gap-3 justify-center flex-wrap">
-          <Button onClick={() => navigate('/')} variant="outline">
-            Ver na Árvore Genealógica
-          </Button>
-          <Link to="/calendario-familiar">
-            <Button variant="outline">
-              <Calendar className="w-4 h-4 mr-2" />
-              Abrir calendário familiar
-            </Button>
-          </Link>
         </div>
       </main>
     </div>
