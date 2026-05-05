@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
-import { ArrowRight, Camera, ImagePlus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
+import { Camera, ImagePlus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
@@ -156,7 +156,6 @@ export function MeusDados() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   const [croppedPhotoBlob, setCroppedPhotoBlob] = useState<Blob | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -367,7 +366,6 @@ export function MeusDados() {
     }
 
     if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
-    setSelectedPhoto(file);
     setCropImageUrl(URL.createObjectURL(file));
     setCrop({ x: 0, y: 0 });
     setZoom(1);
@@ -381,7 +379,6 @@ export function MeusDados() {
     setPhotoPreviewUrl(null);
     setCropImageUrl(null);
     setCroppedPhotoBlob(null);
-    setSelectedPhoto(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
@@ -526,9 +523,7 @@ export function MeusDados() {
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-blue-700">
-              {alreadyConfirmed ? 'Gerenciamento dos meus dados' : 'Confirmação necessária'}
-            </p>
+            {!alreadyConfirmed && <p className="text-sm font-medium text-blue-700">Confirmação necessária</p>}
             <h1 className="text-2xl font-bold text-gray-900">Revisar meus dados</h1>
             <p className="mt-1 text-sm text-gray-500">
               Confira suas informações antes de acessar a árvore principal.
@@ -705,18 +700,6 @@ export function MeusDados() {
             )}
           </div>
 
-          {selectedPhoto && (
-            <p className="mt-3 text-xs text-amber-700">
-              Corte aplicado localmente. Ao confirmar, o app tentará enviar a foto ao Storage.
-            </p>
-          )}
-
-          {alreadyConfirmed && (
-            <Button variant="outline" className="mt-5 w-full" onClick={() => navigate('/')}>
-              Acessar árvore
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          )}
         </aside>
       </main>
 
