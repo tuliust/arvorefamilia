@@ -17,7 +17,7 @@ function AccessLoading({ message = 'Verificando acesso...' }: { message?: string
 export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const [checking, setChecking] = React.useState(true);
-  const [target, setTarget] = React.useState<'tree' | 'auth'>('auth');
+  const [target, setTarget] = React.useState<'tree' | 'auth' | 'profile'>('auth');
 
   React.useEffect(() => {
     let mounted = true;
@@ -41,7 +41,7 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
       } else if (result.data.dados_confirmados) {
         setTarget('tree');
       } else {
-        setTarget('auth');
+        setTarget('profile');
       }
 
       setChecking(false);
@@ -60,6 +60,10 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
 
   if (!user || target === 'auth') {
     return <Navigate to="/entrar" replace />;
+  }
+
+  if (target === 'profile') {
+    return <Navigate to="/meus-dados" replace />;
   }
 
   return <>{children}</>;

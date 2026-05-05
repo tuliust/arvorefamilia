@@ -7,6 +7,7 @@ import { CentralNotificacoes } from './pages/CentralNotificacoes';
 import { Entrar } from './pages/Entrar';
 import { MinhaArvore } from './pages/MinhaArvore';
 import { MeusDados } from './pages/MeusDados';
+import { MeusVinculos } from './pages/MeusVinculos';
 import { VincularPerfil } from './pages/VincularPerfil';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -38,12 +39,20 @@ export const router = createBrowserRouter([
     element: <MemberRoute><MeusDados /></MemberRoute>,
   },
   {
+    path: '/meus-vinculos',
+    element: <MemberRoute><MeusVinculos /></MemberRoute>,
+  },
+  {
     path: '/vincular-perfil',
     element: <MemberRoute><VincularPerfil /></MemberRoute>,
   },
   {
     path: '/pessoa/:id',
-    element: <PersonProfile />,
+    element: <MemberRoute><PersonProfile /></MemberRoute>,
+  },
+  {
+    path: '/pessoas/:id',
+    element: <MemberRoute><PersonProfile /></MemberRoute>,
   },
   {
     path: '/calendario-familiar',
@@ -79,6 +88,10 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin/pessoas/:id/editar',
+    element: <ProtectedRoute><AdminPessoaForm /></ProtectedRoute>,
+  },
+  {
+    path: '/admin/pessoas/:id',
     element: <ProtectedRoute><AdminPessoaForm /></ProtectedRoute>,
   },
   {

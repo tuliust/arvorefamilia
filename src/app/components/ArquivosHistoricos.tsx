@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico } from '../types';
 import { Upload, X, FileText, Image as ImageIcon, Eye } from 'lucide-react';
 
+const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
 interface ArquivosHistoricosProps {
   arquivos: ArquivoHistorico[];
   onChange: (arquivos: ArquivoHistorico[]) => void;
@@ -27,11 +29,11 @@ export function ArquivosHistoricos({ arquivos, onChange, readOnly = false }: Arq
     if (!file) return;
 
     // Verificar tipo de arquivo
-    const isImage = file.type.startsWith('image/');
+    const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
     const isPdf = file.type === 'application/pdf';
     
-    if (!isImage && !isPdf) {
-      alert('Apenas imagens e PDFs são permitidos');
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      alert('Apenas JPG, PNG, WebP e PDF são permitidos');
       return;
     }
 
@@ -103,7 +105,7 @@ export function ArquivosHistoricos({ arquivos, onChange, readOnly = false }: Arq
                 </label>
                 <Input
                   type="file"
-                  accept="image/*,.pdf"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
                   onChange={handleFileChange}
                   className="cursor-pointer"
                 />

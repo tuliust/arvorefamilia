@@ -31,6 +31,7 @@ const PESSOA_COLUMNS = [
   'permitir_mensagens_whatsapp',
   'geracao_sociologica',
   'manual_generation',
+  'arquivos_historicos',
 ] as const;
 
 const RELACIONAMENTO_COLUMNS = [
@@ -144,6 +145,26 @@ export async function obterPessoaPorId(id: string): Promise<Pessoa | undefined> 
   return data ? toPessoa(data) : undefined;
 }
 
+export async function obterPessoasPorIds(ids: string[]): Promise<Pessoa[]> {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+
+  if (uniqueIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('pessoas')
+    .select('*')
+    .in('id', uniqueIds);
+
+  if (error) {
+    logSupabaseError('Erro ao obter pessoas por IDs', error);
+    throw new Error(getSupabaseErrorMessage('pessoas', error));
+  }
+
+  return (data || []).map(toPessoa);
+}
+
 export async function adicionarPessoa(pessoa: Omit<Pessoa, 'id'>): Promise<Pessoa | undefined> {
   const payload = pickDefined(pessoa, PESSOA_COLUMNS);
   const { data, error } = await supabase
@@ -243,7 +264,10 @@ export async function obterRelacionamentosDaPessoa(pessoaId: string) {
     }
 
     const relacionamentos = (data || []).map(toRelacionamento);
-    const pessoas = await obterTodasPessoas();
+    const relatedIds = relacionamentos.map((rel) =>
+      rel.pessoa_origem_id === pessoaId ? rel.pessoa_destino_id : rel.pessoa_origem_id
+    );
+    const pessoas = await obterPessoasPorIds(relatedIds);
     const pessoasMap = new Map(pessoas.map(p => [p.id, p]));
 
     const paisSet = new Set<string>();

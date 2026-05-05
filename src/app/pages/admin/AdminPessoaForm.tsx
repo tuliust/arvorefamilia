@@ -25,7 +25,15 @@ import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import { RelacionamentoManagerWrapper } from '../../components/RelacionamentoManagerWrapper';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
-import { formatarTelefone } from '../../utils/telefone';
+import {
+  cleanPersonPayload,
+  formatPhone,
+  getZodiacSignFromBirthDate,
+  maskBirthDate,
+  normalizeBirthDate,
+  normalizeLocation,
+  validateEditablePersonForm,
+} from '../../utils/personFields';
 import { toast } from 'sonner';
 
 interface RelacionamentoPendente {
@@ -142,12 +150,22 @@ export function AdminPessoaForm() {
     try {
       const pessoaData = {
         ...formData,
-        data_nascimento: formData.data_nascimento || undefined,
-        data_falecimento: formData.data_falecimento || undefined,
+        ...cleanPersonPayload(formData),
+        data_nascimento: normalizeBirthDate(formData.data_nascimento) || undefined,
+        data_falecimento: normalizeBirthDate(formData.data_falecimento) || undefined,
+        local_nascimento: normalizeLocation(formData.local_nascimento),
+        local_atual: normalizeLocation(formData.local_atual),
+        local_falecimento: normalizeLocation(formData.local_falecimento),
         lado: formData.lado || 'esquerda',
         manual_generation: formData.manual_generation ? Number(formData.manual_generation) : null,
         arquivos_historicos: formData.arquivos_historicos || [],
       };
+
+      const validationErrors = validateEditablePersonForm(pessoaData);
+      if (Object.keys(validationErrors).length > 0) {
+        toast.error(Object.values(validationErrors)[0] ?? 'Revise os campos antes de salvar.');
+        return;
+      }
 
       let pessoaCriada: Pessoa | undefined;
 
@@ -231,7 +249,7 @@ export function AdminPessoaForm() {
   };
 
   const handleTelefoneChange = (value: string) => {
-    const formatted = formatarTelefone(value);
+    const formatted = formatPhone(value);
     handleChange('telefone', formatted);
   };
 
@@ -421,8 +439,18 @@ export function AdminPessoaForm() {
                   <Input
                     type="text"
                     value={formData.data_nascimento}
-                    onChange={(e) => handleChange('data_nascimento', e.target.value)}
+                    onChange={(e) => handleChange('data_nascimento', maskBirthDate(e.target.value))}
                     placeholder="Ex: 1990 ou 15/03/1990"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Signo</label>
+                  <Input
+                    type="text"
+                    value={getZodiacSignFromBirthDate(formData.data_nascimento) || 'Não identificado'}
+                    readOnly
+                    className="bg-gray-50 text-gray-700"
                   />
                 </div>
 
@@ -432,6 +460,7 @@ export function AdminPessoaForm() {
                     type="text"
                     value={formData.local_nascimento}
                     onChange={(e) => handleChange('local_nascimento', e.target.value)}
+                    onBlur={() => handleChange('local_nascimento', normalizeLocation(formData.local_nascimento))}
                     placeholder="Ex: São Paulo/SP"
                   />
                 </div>
@@ -441,7 +470,7 @@ export function AdminPessoaForm() {
                   <Input
                     type="text"
                     value={formData.data_falecimento}
-                    onChange={(e) => handleChange('data_falecimento', e.target.value)}
+                    onChange={(e) => handleChange('data_falecimento', maskBirthDate(e.target.value))}
                     placeholder="Ex: 2020"
                   />
                 </div>
@@ -452,6 +481,7 @@ export function AdminPessoaForm() {
                     type="text"
                     value={formData.local_falecimento}
                     onChange={(e) => handleChange('local_falecimento', e.target.value)}
+                    onBlur={() => handleChange('local_falecimento', normalizeLocation(formData.local_falecimento))}
                     placeholder="Ex: Rio de Janeiro/RJ"
                   />
                 </div>
@@ -463,6 +493,7 @@ export function AdminPessoaForm() {
                       type="text"
                       value={formData.local_atual}
                       onChange={(e) => handleChange('local_atual', e.target.value)}
+                      onBlur={() => handleChange('local_atual', normalizeLocation(formData.local_atual))}
                       placeholder="Ex: Belo Horizonte/MG"
                     />
                   </div>

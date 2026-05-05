@@ -25,7 +25,6 @@ import {
   loadGoogleMapsPlaces,
 } from '../lib/googleMapsLoader';
 import {
-  confirmOwnLinkedPersonData,
   EditableOwnPersonPayload,
   ensureMemberProfile,
   getPrimaryLinkedPersonWithPessoa,
@@ -35,188 +34,27 @@ import {
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
 import { Pessoa } from '../types';
+import {
+  buildEditablePersonFormState,
+  cleanPersonPayload,
+  formatPersonName,
+  formatPhone,
+  getInitials,
+  getSocialPlaceholder,
+  maskBirthDate,
+  normalizeBirthDate,
+  normalizeLocation,
+  PersonFieldErrors,
+  SOCIAL_NETWORKS,
+  validateEditablePersonForm,
+} from '../utils/personFields';
+import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 
-const EDITABLE_FIELDS: Array<keyof EditableOwnPersonPayload> = [
-  'nome_completo',
-  'data_nascimento',
-  'local_nascimento',
-  'local_atual',
-  'minibio',
-  'curiosidades',
-  'telefone',
-  'endereco',
-  'rede_social',
-  'instagram_usuario',
-  'permitir_exibir_instagram',
-  'permitir_mensagens_whatsapp',
-];
-
-const SOCIAL_NETWORKS = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok'] as const;
-const LOWERCASE_NAME_PARTS = new Set(['de', 'da', 'das', 'do', 'dos', 'e']);
 const AVATAR_BUCKET = 'person-avatars';
 const AVATAR_SIZE = 512;
 
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
 // (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
-type FieldErrors = Partial<Record<keyof EditableOwnPersonPayload | 'complemento', string>>;
-
-function buildFormState(pessoa?: Pessoa | null): EditableOwnPersonPayload {
-  return {
-    nome_completo: pessoa?.nome_completo ?? '',
-    data_nascimento: pessoa?.data_nascimento ?? '',
-    local_nascimento: pessoa?.local_nascimento ?? '',
-    local_atual: pessoa?.local_atual ?? '',
-    foto_principal_url: pessoa?.foto_principal_url ?? '',
-    minibio: pessoa?.minibio ?? '',
-    curiosidades: pessoa?.curiosidades ?? '',
-    telefone: pessoa?.telefone ?? '',
-    endereco: pessoa?.endereco ?? '',
-    rede_social: pessoa?.rede_social ?? '',
-    instagram_usuario: pessoa?.instagram_usuario ?? '',
-    instagram_url: pessoa?.instagram_url ?? '',
-    permitir_exibir_instagram: Boolean(pessoa?.permitir_exibir_instagram),
-    permitir_mensagens_whatsapp: Boolean(pessoa?.permitir_mensagens_whatsapp),
-  };
-}
-
-function cleanPayload(form: EditableOwnPersonPayload): EditableOwnPersonPayload {
-  const normalizedForm: EditableOwnPersonPayload = {
-    ...form,
-    nome_completo: formatPersonName(String(form.nome_completo ?? '')),
-    data_nascimento: normalizeBirthDate(String(form.data_nascimento ?? '')),
-    local_nascimento: normalizeLocation(String(form.local_nascimento ?? '')),
-    local_atual: normalizeLocation(String(form.local_atual ?? '')),
-    telefone: formatPhone(String(form.telefone ?? '')),
-  };
-
-  return EDITABLE_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
-    const value = normalizedForm[field];
-
-    if (field === 'rede_social' && !value) {
-      (payload as Record<string, unknown>)[field] = '';
-      return payload;
-    }
-
-    if (typeof value === 'string') {
-      (payload as Record<string, unknown>)[field] = normalizedForm[field]?.toString().trim() ?? '';
-      return payload;
-    }
-
-    (payload as Record<string, unknown>)[field] = normalizedForm[field];
-    return payload;
-  }, {});
-}
-
-function normalizeWord(word: string) {
-  const lower = word.toLocaleLowerCase('pt-BR');
-  if (LOWERCASE_NAME_PARTS.has(lower)) return lower;
-
-  return lower
-    .split('-')
-    .map((part) => part.charAt(0).toLocaleUpperCase('pt-BR') + part.slice(1))
-    .join('-');
-}
-
-function titleCase(value: string) {
-  return value
-    .trim()
-    .replace(/\s+/g, ' ')
-    .split(' ')
-    .map(normalizeWord)
-    .join(' ');
-}
-
-function formatPersonName(value: string) {
-  return titleCase(value);
-}
-
-function hasFirstAndLastName(value: string) {
-  const words = value.trim().split(/\s+/).filter((part) => part.length >= 2);
-  return words.length >= 2;
-}
-
-function maskBirthDate(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 8);
-
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
-function normalizeBirthDate(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return '';
-  if (/^\d{4}$/.test(trimmed)) return trimmed;
-  return maskBirthDate(trimmed);
-}
-
-function validateBirthDate(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  if (/^\d{4}$/.test(trimmed)) return undefined;
-
-  const match = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return 'Use DD/MM/AAAA ou apenas AAAA.';
-
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  if (day < 1 || day > 31) return 'Dia deve estar entre 01 e 31.';
-  if (month < 1 || month > 12) return 'Mês deve estar entre 01 e 12.';
-
-  return undefined;
-}
-
-function formatPhone(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-
-  if (digits.length <= 2) return digits ? `(${digits}` : '';
-  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-function normalizeLocation(value: string) {
-  const trimmed = value.trim().replace(/\s+/g, ' ');
-  if (!trimmed) return '';
-
-  const [rawCity, ...rest] = trimmed.split('/');
-  if (!rest.length) return titleCase(rawCity);
-
-  const city = titleCase(rawCity);
-  const region = rest.join('/').trim();
-  const normalizedRegion = /^[a-zA-Z]{2}$/.test(region) ? region.toLocaleUpperCase('pt-BR') : titleCase(region);
-  return `${city}/${normalizedRegion}`;
-}
-
-function validateLocation(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  const slashParts = trimmed.split('/');
-  if (slashParts.length !== 2 || !slashParts[0].trim() || !slashParts[1].trim()) {
-    return 'Use Cidade/UF ou Cidade/País.';
-  }
-
-  const region = slashParts[1].trim();
-  if (/^[a-zA-Z]{1,2}$/.test(region) && !/^[A-Z]{2}$/.test(region)) {
-    return 'Para cidades brasileiras, use UF com duas letras maiúsculas. Ex.: São José dos Campos/SP.';
-  }
-
-  return undefined;
-}
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const first = parts[0]?.[0] ?? '';
-  const second = parts.find((part, index) => index > 0 && !LOWERCASE_NAME_PARTS.has(part.toLocaleLowerCase('pt-BR')))?.[0] ?? parts[1]?.[0] ?? '';
-  return `${first}${second}`.toLocaleUpperCase('pt-BR') || 'EU';
-}
-
-function getSocialPlaceholder(network?: string) {
-  if (network === 'Instagram' || network === 'TikTok') return '@usuario';
-  if (network === 'Facebook' || network === 'LinkedIn') return 'nome-do-perfil ou URL';
-  return 'Selecione uma rede primeiro';
-}
 
 function getAddressComponent(
   components: GoogleAddressComponent[] | undefined,
@@ -310,9 +148,9 @@ export function MeusDados() {
   const { user } = useAuth();
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
-  const [form, setForm] = useState<EditableOwnPersonPayload>(buildFormState());
+  const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [complemento, setComplemento] = useState('');
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const [errors, setErrors] = useState<PersonFieldErrors>({});
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -345,7 +183,7 @@ export function MeusDados() {
       }
 
       setLink(data);
-      setForm(buildFormState(data?.pessoa));
+      setForm(buildEditablePersonFormState(data?.pessoa));
       setComplemento('');
       setPhotoMarkedForRemoval(false);
       setLoading(false);
@@ -462,6 +300,10 @@ export function MeusDados() {
   }, [form.local_atual, form.local_nascimento]);
 
   const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
+  const zodiacSign = useMemo(
+    () => getZodiacSignFromBirthDate(form.data_nascimento),
+    [form.data_nascimento],
+  );
 
   const updateField = (field: keyof EditableOwnPersonPayload, value: string | boolean) => {
     setForm((current) => ({
@@ -498,36 +340,11 @@ export function MeusDados() {
   };
 
   const validateForm = () => {
-    const nextErrors: FieldErrors = {};
+    const nextErrors = validateEditablePersonForm(form);
     const normalizedName = formatPersonName(String(form.nome_completo ?? ''));
     const normalizedBirthDate = normalizeBirthDate(String(form.data_nascimento ?? ''));
     const normalizedBirthLocation = normalizeLocation(String(form.local_nascimento ?? ''));
     const normalizedCurrentLocation = normalizeLocation(String(form.local_atual ?? ''));
-
-    if (!hasFirstAndLastName(normalizedName)) {
-      nextErrors.nome_completo = 'Informe pelo menos nome e sobrenome, com duas letras ou mais.';
-    }
-
-    const birthDateError = validateBirthDate(normalizedBirthDate);
-    if (birthDateError) nextErrors.data_nascimento = birthDateError;
-
-    const birthLocationError = validateLocation(normalizedBirthLocation);
-    if (birthLocationError) nextErrors.local_nascimento = birthLocationError;
-
-    const currentLocationError = validateLocation(normalizedCurrentLocation);
-    if (currentLocationError) nextErrors.local_atual = currentLocationError;
-
-    if (
-      Boolean(form.permitir_exibir_instagram) &&
-      String(form.rede_social ?? '').trim() &&
-      !String(form.instagram_usuario ?? '').trim()
-    ) {
-      nextErrors.instagram_usuario = 'Informe o perfil para exibir a rede social.';
-    }
-
-    if (Boolean(form.permitir_exibir_instagram) && !String(form.rede_social ?? '').trim()) {
-      nextErrors.rede_social = 'Selecione uma rede social para exibir no perfil.';
-    }
 
     setErrors(nextErrors);
     setForm((current) => ({
@@ -632,7 +449,7 @@ export function MeusDados() {
 
     setSaving(true);
 
-    const payload = cleanPayload(form);
+    const payload = cleanPersonPayload(form);
     if (photoMarkedForRemoval) {
       payload.foto_principal_url = '';
     } else if (croppedPhotoBlob) {
@@ -670,16 +487,10 @@ export function MeusDados() {
       return;
     }
 
-    const { error: confirmError } = await confirmOwnLinkedPersonData(link.id);
     setSaving(false);
 
-    if (confirmError) {
-      toast.error(confirmError);
-      return;
-    }
-
-    toast.success('Dados confirmados.');
-    navigate('/', { replace: true });
+    toast.success('Dados pessoais salvos.');
+    navigate('/meus-vinculos', { replace: true });
   };
 
   if (loading) {
@@ -746,6 +557,9 @@ export function MeusDados() {
                 placeholder="DD/MM/AAAA ou AAAA"
                 aria-invalid={Boolean(errors.data_nascimento)}
               />
+            </Field>
+            <Field label="Signo">
+              <Input value={zodiacSign || 'Não identificado'} readOnly className="bg-gray-50 text-gray-700" />
             </Field>
             <Field label="Local de nascimento" error={errors.local_nascimento}>
               <Input

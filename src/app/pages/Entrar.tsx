@@ -85,8 +85,8 @@ export function Entrar() {
 
       if (!mounted) return;
 
-      if (result.status === 'linked' && result.data.dados_confirmados) {
-        navigate('/', { replace: true });
+      if (result.status === 'linked') {
+        navigate(result.data.dados_confirmados ? '/' : '/meus-dados', { replace: true });
       } else {
         setCheckingSession(false);
       }
@@ -171,6 +171,28 @@ export function Entrar() {
     }
 
     await routeAfterAuth(data.user);
+  };
+
+  const handleResetPassword = async () => {
+    const normalizedEmail = loginEmail.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      toast.error('Informe seu e-mail para recuperar a senha.');
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: `${window.location.origin}/entrar`,
+    });
+    setSubmitting(false);
+
+    if (error) {
+      toast.error(friendlyAuthError(error.message));
+      return;
+    }
+
+    toast.success('Enviamos um e-mail com instruções para recuperar sua senha.');
   };
 
   const handleValidateCode = async (event: React.FormEvent) => {
@@ -469,6 +491,15 @@ export function Entrar() {
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? 'Entrando...' : 'Entrar'}
                   </Button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    disabled={submitting}
+                    className="w-full text-center text-sm font-medium text-gray-600 hover:text-blue-700 hover:underline disabled:opacity-60"
+                  >
+                    Esqueci minha senha
+                  </button>
 
                   <button
                     type="button"
