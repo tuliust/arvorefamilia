@@ -176,7 +176,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
 }
 
 function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
-  const visibleNodes = nodes.filter((node) => !node.hidden && node.type === 'personNode');
+  const visibleNodes = nodes.filter((node) => !node.hidden && node.type !== 'directFamilyAnchorNode');
   if (visibleNodes.length === 0) return null;
 
   const bounds = visibleNodes.reduce(

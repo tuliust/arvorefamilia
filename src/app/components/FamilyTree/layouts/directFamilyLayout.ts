@@ -95,16 +95,18 @@ export const DIRECT_CENTER_COLUMN_X = DIRECT_MIDLINE_X;
 export const DIRECT_MATERNAL_COLUMN_X = DIRECT_FRAME_RIGHT - 490;
 export const DIRECT_TOP_ALIGNMENT_Y = CENTRAL_Y;
 export const DIRECT_TITLE_Y = DIRECT_FRAME_TOP + 44;
+export const DIRECT_TOP_GROUP_CARD_Y = DIRECT_TITLE_Y + 90;
+export const DIRECT_SIDE_GROUP_STEP_Y = 260;
 export const DIRECT_ALIGNED_GROUP_ROW_Y =
   DIRECT_TOP_ALIGNMENT_Y + DIRECT_GROUP_BOX_PADDING_Y + DIRECT_LABEL_GAP + DIRECT_LABEL_HEIGHT;
 export const DIRECT_PARENT_ROW_UP_OFFSET_Y = 70;
 export const DIRECT_UNCLES_ROW_DOWN_OFFSET_Y = 160;
-export const DIRECT_ROW_TATARAVOS_PATERNOS_Y = DIRECT_FRAME_TOP + 70;
-export const DIRECT_ROW_BISAVOS_PATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y - 60;
-export const DIRECT_ROW_AVOS_PATERNOS_Y = DIRECT_ROW_BISAVOS_PATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
-export const DIRECT_ROW_TATARAVOS_MATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y - 60;
-export const DIRECT_ROW_BISAVOS_MATERNOS_Y = DIRECT_ROW_TATARAVOS_MATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
-export const DIRECT_ROW_AVOS_MATERNOS_Y = DIRECT_ROW_BISAVOS_MATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
+export const DIRECT_ROW_TATARAVOS_PATERNOS_Y = DIRECT_TOP_GROUP_CARD_Y;
+export const DIRECT_ROW_BISAVOS_PATERNOS_Y = DIRECT_ROW_TATARAVOS_PATERNOS_Y + DIRECT_SIDE_GROUP_STEP_Y;
+export const DIRECT_ROW_AVOS_PATERNOS_Y = DIRECT_ROW_BISAVOS_PATERNOS_Y + DIRECT_SIDE_GROUP_STEP_Y;
+export const DIRECT_ROW_TATARAVOS_MATERNOS_Y = DIRECT_TOP_GROUP_CARD_Y;
+export const DIRECT_ROW_BISAVOS_MATERNOS_Y = DIRECT_ROW_TATARAVOS_MATERNOS_Y + DIRECT_SIDE_GROUP_STEP_Y;
+export const DIRECT_ROW_AVOS_MATERNOS_Y = DIRECT_ROW_BISAVOS_MATERNOS_Y + DIRECT_SIDE_GROUP_STEP_Y;
 export const DIRECT_ROW_PAIS_Y =
   Math.max(DIRECT_ROW_AVOS_PATERNOS_Y, DIRECT_ROW_AVOS_MATERNOS_Y) +
   DIRECT_GROUP_VERTICAL_GAP -
@@ -147,6 +149,19 @@ const CHILDREN_CENTER_X = DIRECT_RIGHT_ZONE_CENTER_X;
 const IRMAOS_LABEL_Y = DIRECT_BELOW_CENTER_START_Y;
 const IRMAOS_Y = IRMAOS_LABEL_Y + DIRECT_LABEL_HEIGHT + DIRECT_LABEL_TO_CARD_GAP;
 const GRANDCHILDREN_Y = CHILDREN_Y + 112;
+
+function buildSideRows(groups: Array<{ key: string; visible: boolean }>) {
+  const rows: Record<string, number> = {};
+  let rowIndex = 0;
+
+  groups.forEach((group) => {
+    if (!group.visible) return;
+    rows[group.key] = DIRECT_TOP_GROUP_CARD_Y + rowIndex * DIRECT_SIDE_GROUP_STEP_Y;
+    rowIndex += 1;
+  });
+
+  return rows;
+}
 
 function unique(ids: string[]) {
   return Array.from(new Set(ids.filter(Boolean)));
@@ -934,25 +949,41 @@ export function directFamilyLayout(
   const visibleMaternalUncles = onlyVisible(groups.maternal.uncles);
   const visiblePaternalCousins = onlyVisible(groups.paternal.cousins);
   const visibleMaternalCousins = onlyVisible(groups.maternal.cousins);
+  const paternalRows = buildSideRows([
+    { key: 'tataravos', visible: visiblePaternalGreatGreatGrandparents.length > 0 },
+    { key: 'bisavos', visible: visiblePaternalGreatGrandparents.length > 0 },
+    { key: 'avos', visible: visiblePaternalGrandparents.length > 0 },
+    { key: 'pai', visible: Boolean(groups.paternal.parentId && visiblePeople.has(groups.paternal.parentId)) },
+    { key: 'tios', visible: visiblePaternalUncles.length > 0 },
+    { key: 'primos', visible: visiblePaternalCousins.length > 0 },
+  ]);
+  const maternalRows = buildSideRows([
+    { key: 'tataravos', visible: visibleMaternalGreatGreatGrandparents.length > 0 },
+    { key: 'bisavos', visible: visibleMaternalGreatGrandparents.length > 0 },
+    { key: 'avos', visible: visibleMaternalGrandparents.length > 0 },
+    { key: 'mae', visible: Boolean(groups.maternal.parentId && visiblePeople.has(groups.maternal.parentId)) },
+    { key: 'tios', visible: visibleMaternalUncles.length > 0 },
+    { key: 'primos', visible: visibleMaternalCousins.length > 0 },
+  ]);
   const positionedNodes: Node[] = [];
   const positionedIds = new Set<string>();
 
   addTitle(positionedNodes, pessoasById.get(centralPersonId)?.nome_completo || '');
 
-  placeGridCentered(visiblePaternalGreatGreatGrandparents, FATHER_CENTER_X, TATARAVOS_PATERNOS_Y, 4, 'greatGreatGrandparent', positionedNodes, positionedIds, personNodeById);
-  placeGridCentered(visibleMaternalGreatGreatGrandparents, MOTHER_CENTER_X, TATARAVOS_MATERNOS_Y, 4, 'greatGreatGrandparent', positionedNodes, positionedIds, personNodeById);
-  placeGridCentered(visiblePaternalGreatGrandparents, FATHER_CENTER_X, BISAVOS_PATERNOS_Y, 4, 'greatGrandparent', positionedNodes, positionedIds, personNodeById);
-  placeGridCentered(visibleMaternalGreatGrandparents, MOTHER_CENTER_X, BISAVOS_MATERNOS_Y, 4, 'greatGrandparent', positionedNodes, positionedIds, personNodeById);
-  placeGridCentered(visiblePaternalGrandparents, FATHER_CENTER_X, AVOS_PATERNOS_Y, 2, 'grandparent', positionedNodes, positionedIds, personNodeById, 40);
-  placeGridCentered(visibleMaternalGrandparents, MOTHER_CENTER_X, AVOS_MATERNOS_Y, 2, 'grandparent', positionedNodes, positionedIds, personNodeById, 40);
+  placeGridCentered(visiblePaternalGreatGreatGrandparents, FATHER_CENTER_X, paternalRows.tataravos ?? TATARAVOS_PATERNOS_Y, 4, 'greatGreatGrandparent', positionedNodes, positionedIds, personNodeById);
+  placeGridCentered(visibleMaternalGreatGreatGrandparents, MOTHER_CENTER_X, maternalRows.tataravos ?? TATARAVOS_MATERNOS_Y, 4, 'greatGreatGrandparent', positionedNodes, positionedIds, personNodeById);
+  placeGridCentered(visiblePaternalGreatGrandparents, FATHER_CENTER_X, paternalRows.bisavos ?? BISAVOS_PATERNOS_Y, 4, 'greatGrandparent', positionedNodes, positionedIds, personNodeById);
+  placeGridCentered(visibleMaternalGreatGrandparents, MOTHER_CENTER_X, maternalRows.bisavos ?? BISAVOS_MATERNOS_Y, 4, 'greatGrandparent', positionedNodes, positionedIds, personNodeById);
+  placeGridCentered(visiblePaternalGrandparents, FATHER_CENTER_X, paternalRows.avos ?? AVOS_PATERNOS_Y, 2, 'grandparent', positionedNodes, positionedIds, personNodeById, 40);
+  placeGridCentered(visibleMaternalGrandparents, MOTHER_CENTER_X, maternalRows.avos ?? AVOS_MATERNOS_Y, 2, 'grandparent', positionedNodes, positionedIds, personNodeById, 40);
 
-  placeGridCentered(visiblePaternalUncles, PATERNAL_OUTER_CENTER_X, TIOS_Y, UNCLES_PER_ROW, 'uncleAunt', positionedNodes, positionedIds, personNodeById, UNCLE_COLUMN_GAP, CARD_ROW_GAP);
-  placeGridCentered(visibleMaternalUncles, MATERNAL_OUTER_CENTER_X, TIOS_Y, UNCLES_PER_ROW, 'uncleAunt', positionedNodes, positionedIds, personNodeById, UNCLE_COLUMN_GAP, CARD_ROW_GAP);
-  placeGridCentered(visiblePaternalCousins, PATERNAL_OUTER_CENTER_X, PRIMOS_Y, COUSINS_PER_ROW, 'cousin', positionedNodes, positionedIds, personNodeById, COUSIN_COLUMN_GAP, CARD_ROW_GAP);
-  placeGridCentered(visibleMaternalCousins, MATERNAL_OUTER_CENTER_X, PRIMOS_Y, COUSINS_PER_ROW, 'cousin', positionedNodes, positionedIds, personNodeById, COUSIN_COLUMN_GAP, CARD_ROW_GAP);
+  placeGridCentered(visiblePaternalUncles, PATERNAL_OUTER_CENTER_X, paternalRows.tios ?? TIOS_Y, UNCLES_PER_ROW, 'uncleAunt', positionedNodes, positionedIds, personNodeById, UNCLE_COLUMN_GAP, CARD_ROW_GAP);
+  placeGridCentered(visibleMaternalUncles, MATERNAL_OUTER_CENTER_X, maternalRows.tios ?? TIOS_Y, UNCLES_PER_ROW, 'uncleAunt', positionedNodes, positionedIds, personNodeById, UNCLE_COLUMN_GAP, CARD_ROW_GAP);
+  placeGridCentered(visiblePaternalCousins, PATERNAL_OUTER_CENTER_X, paternalRows.primos ?? PRIMOS_Y, COUSINS_PER_ROW, 'cousin', positionedNodes, positionedIds, personNodeById, COUSIN_COLUMN_GAP, CARD_ROW_GAP);
+  placeGridCentered(visibleMaternalCousins, MATERNAL_OUTER_CENTER_X, maternalRows.primos ?? PRIMOS_Y, COUSINS_PER_ROW, 'cousin', positionedNodes, positionedIds, personNodeById, COUSIN_COLUMN_GAP, CARD_ROW_GAP);
 
-  placePerson(groups.paternal.parentId, nodeXFromCenter(FATHER_CENTER_X), PAIS_Y, 'parent', positionedNodes, positionedIds, personNodeById);
-  placePerson(groups.maternal.parentId, nodeXFromCenter(MOTHER_CENTER_X), PAIS_Y, 'parent', positionedNodes, positionedIds, personNodeById);
+  placePerson(groups.paternal.parentId, nodeXFromCenter(FATHER_CENTER_X), paternalRows.pai ?? PAIS_Y, 'parent', positionedNodes, positionedIds, personNodeById);
+  placePerson(groups.maternal.parentId, nodeXFromCenter(MOTHER_CENTER_X), maternalRows.mae ?? PAIS_Y, 'parent', positionedNodes, positionedIds, personNodeById);
   placePerson(centralPersonId, CENTRAL_X, CENTRAL_Y, 'central', positionedNodes, positionedIds, personNodeById, true);
 
   placeGridCentered(visibleSiblings, SIBLINGS_CENTER_X, IRMAOS_Y, DIRECT_SIBLINGS_COLUMNS, 'sibling', positionedNodes, positionedIds, personNodeById, SIBLING_COLUMN_GAP, DIRECT_GROUP_GAP_Y);
@@ -1066,7 +1097,7 @@ export function directFamilyLayout(
   const nephewsGroupBoxBounds = getGroupBoxBounds(positionedNodes, visibleNephewsAndNieces, 'direct-label-sobrinhos');
   const spouseGroupBoxBounds = getGroupBoxBounds(positionedNodes, visibleSpouses, 'direct-label-conjuge');
   const childrenGroupBoxBounds = getGroupBoxBounds(positionedNodes, visibleChildren, 'direct-label-filhos');
-  const centralSideConnectionY = CENTER_Y;
+  const centralSideConnectionY = CENTRAL_Y + CENTRAL_HEIGHT * 0.66;
   const lowerGroupTopY = Math.min(
     siblingsGroupBoxBounds?.minY ?? Number.POSITIVE_INFINITY,
     spouseGroupBoxBounds?.minY ?? Number.POSITIVE_INFINITY
