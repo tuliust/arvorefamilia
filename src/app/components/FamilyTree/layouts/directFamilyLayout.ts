@@ -94,18 +94,22 @@ export const DIRECT_PATERNAL_COLUMN_X = DIRECT_FRAME_LEFT + 490;
 export const DIRECT_CENTER_COLUMN_X = DIRECT_MIDLINE_X;
 export const DIRECT_MATERNAL_COLUMN_X = DIRECT_FRAME_RIGHT - 490;
 export const DIRECT_TOP_ALIGNMENT_Y = CENTRAL_Y;
-export const DIRECT_TITLE_Y = DIRECT_FRAME_TOP - 78;
+export const DIRECT_TITLE_Y = DIRECT_FRAME_TOP + 44;
 export const DIRECT_ALIGNED_GROUP_ROW_Y =
   DIRECT_TOP_ALIGNMENT_Y + DIRECT_GROUP_BOX_PADDING_Y + DIRECT_LABEL_GAP + DIRECT_LABEL_HEIGHT;
+export const DIRECT_PARENT_ROW_UP_OFFSET_Y = 70;
+export const DIRECT_UNCLES_ROW_DOWN_OFFSET_Y = 160;
 export const DIRECT_ROW_TATARAVOS_PATERNOS_Y = DIRECT_FRAME_TOP + 70;
-export const DIRECT_ROW_BISAVOS_PATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y;
+export const DIRECT_ROW_BISAVOS_PATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y - 60;
 export const DIRECT_ROW_AVOS_PATERNOS_Y = DIRECT_ROW_BISAVOS_PATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
-export const DIRECT_ROW_TATARAVOS_MATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y;
+export const DIRECT_ROW_TATARAVOS_MATERNOS_Y = DIRECT_ALIGNED_GROUP_ROW_Y - 60;
 export const DIRECT_ROW_BISAVOS_MATERNOS_Y = DIRECT_ROW_TATARAVOS_MATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
 export const DIRECT_ROW_AVOS_MATERNOS_Y = DIRECT_ROW_BISAVOS_MATERNOS_Y + DIRECT_ANCESTOR_GROUP_GAP_Y;
 export const DIRECT_ROW_PAIS_Y =
-  Math.max(DIRECT_ROW_AVOS_PATERNOS_Y, DIRECT_ROW_AVOS_MATERNOS_Y) + DIRECT_GROUP_VERTICAL_GAP;
-export const DIRECT_ROW_TIOS_Y = DIRECT_ROW_PAIS_Y + DIRECT_GROUP_VERTICAL_GAP;
+  Math.max(DIRECT_ROW_AVOS_PATERNOS_Y, DIRECT_ROW_AVOS_MATERNOS_Y) +
+  DIRECT_GROUP_VERTICAL_GAP -
+  DIRECT_PARENT_ROW_UP_OFFSET_Y;
+export const DIRECT_ROW_TIOS_Y = DIRECT_ROW_PAIS_Y + DIRECT_GROUP_VERTICAL_GAP + DIRECT_UNCLES_ROW_DOWN_OFFSET_Y;
 export const DIRECT_ROW_PRIMOS_Y = DIRECT_ROW_TIOS_Y + DIRECT_UNCLES_TO_COUSINS_GAP_Y;
 export const DIRECT_ROW_SIBLINGS_Y = CENTRAL_Y + CENTRAL_HEIGHT + CENTER_TO_LOWER_GROUP_GAP_Y;
 export const DIRECT_ROW_SPOUSE_Y = DIRECT_ROW_SIBLINGS_Y;
@@ -128,7 +132,7 @@ const TIOS_Y = DIRECT_ROW_TIOS_Y;
 const PRIMOS_Y = DIRECT_ROW_PRIMOS_Y;
 const CENTRAL_BOTTOM_Y = CENTRAL_Y + CENTRAL_HEIGHT;
 export const DIRECT_BELOW_CENTER_START_Y = DIRECT_ROW_SIBLINGS_Y - DIRECT_LABEL_HEIGHT - DIRECT_LABEL_TO_CARD_GAP;
-export const DIRECT_LEFT_ZONE_CENTER_X = DIRECT_CENTER_COLUMN_X - 260;
+export const DIRECT_LEFT_ZONE_CENTER_X = DIRECT_CENTER_COLUMN_X - 340;
 export const DIRECT_RIGHT_ZONE_CENTER_X = DIRECT_CENTER_COLUMN_X + 260;
 export const DIRECT_SPOUSE_OFFSET_Y = 0;
 export const DIRECT_CHILDREN_OFFSET_Y = DIRECT_ROW_CHILDREN_Y - DIRECT_ROW_SPOUSE_Y;
@@ -1063,7 +1067,21 @@ export function directFamilyLayout(
   const spouseGroupBoxBounds = getGroupBoxBounds(positionedNodes, visibleSpouses, 'direct-label-conjuge');
   const childrenGroupBoxBounds = getGroupBoxBounds(positionedNodes, visibleChildren, 'direct-label-filhos');
   const centralSideConnectionY = CENTER_Y;
-  const lowerConnectionElbowY = CENTRAL_BOTTOM_Y + 54;
+  const lowerGroupTopY = Math.min(
+    siblingsGroupBoxBounds?.minY ?? Number.POSITIVE_INFINITY,
+    spouseGroupBoxBounds?.minY ?? Number.POSITIVE_INFINITY
+  );
+  const lowerConnectionElbowY = Number.isFinite(lowerGroupTopY)
+    ? Math.min(CENTRAL_BOTTOM_Y + 54, lowerGroupTopY - 18)
+    : CENTRAL_BOTTOM_Y + 54;
+  const fatherConnectionElbowX = Math.min(
+    CENTRAL_X - 112,
+    (siblingsGroupBoxBounds?.minX ?? CENTRAL_X - 64) - 48
+  );
+  const motherConnectionElbowX = Math.max(
+    CENTRAL_X + CENTRAL_WIDTH + 112,
+    (spouseGroupBoxBounds?.maxX ?? CENTRAL_X + CENTRAL_WIDTH + 64) + 48
+  );
 
   if (fatherGroupBoxBounds) {
     addAnchor(positionedNodes, positionedIds, 'direct-anchor-central-left', CENTRAL_X, centralSideConnectionY);
@@ -1143,7 +1161,7 @@ export function directFamilyLayout(
       'direct-anchor-pai-right',
       'directSideElbow',
       {
-        elbowX: CENTRAL_X - 112,
+        elbowX: fatherConnectionElbowX,
       }
     );
   }
@@ -1156,7 +1174,7 @@ export function directFamilyLayout(
       'direct-anchor-mae-left',
       'directSideElbow',
       {
-        elbowX: CENTRAL_X + CENTRAL_WIDTH + 112,
+        elbowX: motherConnectionElbowX,
       }
     );
   }

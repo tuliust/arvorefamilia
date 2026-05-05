@@ -11,7 +11,7 @@ export const DirectFamilyLabelNode = React.memo(({ data }: NodeProps<DirectFamil
   if (data.variant === 'title') {
     return (
       <div
-        className="pointer-events-none select-none text-center text-4xl font-bold tracking-wide text-slate-900"
+        className="pointer-events-none select-none text-center text-2xl font-extrabold leading-8 tracking-normal text-slate-900"
         aria-label={data.label}
         style={{ width: data.width ?? 760 }}
       >
