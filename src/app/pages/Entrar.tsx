@@ -21,8 +21,21 @@ import {
 type AuthMode = 'login' | 'first-access';
 type FirstAccessStep = 'code' | 'account' | 'confirmation';
 
+function getEmailRedirectTo() {
+  return `${window.location.origin}/entrar`;
+}
+
+function isEmailNotConfirmedError(message: string) {
+  const lower = message.toLowerCase();
+  return lower.includes('email not confirmed') || lower.includes('email_not_confirmed');
+}
+
 function friendlyAuthError(message: string) {
   const lower = message.toLowerCase();
+
+  if (isEmailNotConfirmedError(message)) {
+    return 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada e o spam antes de tentar entrar.';
+  }
 
   if (lower.includes('invalid login credentials')) {
     return 'E-mail ou senha inválidos.';
@@ -51,7 +64,9 @@ export function Entrar() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupPasswordConfirmation, setSignupPasswordConfirmation] = useState('');
+  const [confirmationEmail, setConfirmationEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resendSubmitting, setResendSubmitting] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
@@ -124,19 +139,28 @@ export function Entrar() {
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!loginEmail.trim() || !loginPassword) {
+    const normalizedEmail = loginEmail.trim().toLowerCase();
+
+    if (!normalizedEmail || !loginPassword) {
       toast.error('Informe e-mail e senha.');
       return;
     }
 
     setSubmitting(true);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail.trim(),
+      email: normalizedEmail,
       password: loginPassword,
     });
     setSubmitting(false);
 
     if (error) {
+      if (isEmailNotConfirmedError(error.message)) {
+        setConfirmationEmail(normalizedEmail);
+        setLoginEmail(normalizedEmail);
+        setMode('login');
+        setFirstAccessStep('confirmation');
+      }
+
       toast.error(friendlyAuthError(error.message));
       return;
     }
@@ -183,7 +207,9 @@ export function Entrar() {
       return;
     }
 
-    if (!signupEmail.trim()) {
+    const normalizedEmail = signupEmail.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       toast.error('E-mail é obrigatório.');
       return;
     }
@@ -223,10 +249,13 @@ export function Entrar() {
       return;
     }
 
+    const redirectTo = getEmailRedirectTo();
+
     const { data, error } = await supabase.auth.signUp({
-      email: signupEmail.trim(),
+      email: normalizedEmail,
       password: signupPassword,
       options: {
+        emailRedirectTo: redirectTo,
         data: {
           nome_exibicao: preview.nome_completo,
           pessoa_id: preview.pessoa_id,
@@ -247,10 +276,11 @@ export function Entrar() {
       return;
     }
 
-    storePendingFirstAccess(preview.pessoa_id, signupEmail);
+    storePendingFirstAccess(preview.pessoa_id, normalizedEmail);
 
     if (!data.session) {
       setSubmitting(false);
+      setConfirmationEmail(normalizedEmail);
       setFirstAccessStep('confirmation');
       setMode('login');
       return;
@@ -289,6 +319,44 @@ export function Entrar() {
     navigate('/meus-dados', { replace: true });
   };
 
+  const handleResendConfirmation = async () => {
+    const normalizedEmail = confirmationEmail.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      toast.error('Não foi possível identificar o e-mail para reenvio.');
+      return;
+    }
+
+    setResendSubmitting(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: getEmailRedirectTo(),
+      },
+    });
+    setResendSubmitting(false);
+
+    if (error) {
+      toast.error(friendlyAuthError(error.message));
+      return;
+    }
+
+    setConfirmationEmail(normalizedEmail);
+    toast.success('E-mail de confirmação reenviado.');
+  };
+
+  const showLogin = () => {
+    setMode('login');
+  };
+
+  const showFirstAccess = () => {
+    setMode('first-access');
+    if (firstAccessStep === 'confirmation') {
+      setFirstAccessStep('code');
+    }
+  };
+
   if (loading || checkingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -315,11 +383,11 @@ export function Entrar() {
           <Card className="border-gray-200 shadow-xl">
             <CardHeader className="space-y-4">
               <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
-                <ModeButton active={mode === 'login'} onClick={() => setMode('login')}>
+                <ModeButton active={mode === 'login'} onClick={showLogin}>
                   <LogIn className="h-4 w-4" />
                   Login
                 </ModeButton>
-                <ModeButton active={mode === 'first-access'} onClick={() => setMode('first-access')}>
+                <ModeButton active={mode === 'first-access'} onClick={showFirstAccess}>
                   <UserPlus className="h-4 w-4" />
                   Primeiro acesso
                 </ModeButton>
@@ -343,17 +411,40 @@ export function Entrar() {
                   <div className="rounded-xl border border-green-200 bg-green-50 p-4">
                     <p className="text-sm font-semibold text-green-950">Cadastro iniciado com sucesso.</p>
                     <p className="mt-2 text-sm text-green-800">
-                      Enviamos um email de confirmação para você. Confirme seu email e depois faça login para continuar.
+                      Enviamos um e-mail de confirmação para:
                     </p>
+                    <p className="mt-1 break-all text-sm font-semibold text-green-950">
+                      {confirmationEmail || 'e-mail cadastrado'}
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm text-green-800">
+                      <p>Confira sua caixa de entrada e também a pasta de spam ou lixo eletrônico.</p>
+                      <p>Depois de confirmar o e-mail, volte para esta página e faça login.</p>
+                      <p>
+                        Se o e-mail estiver incorreto, solicite ajuda ao administrador para remover o cadastro pendente e refazer o primeiro acesso.
+                      </p>
+                    </div>
                   </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={resendSubmitting}
+                    onClick={handleResendConfirmation}
+                  >
+                    {resendSubmitting ? 'Reenviando...' : 'Reenviar e-mail de confirmação'}
+                  </Button>
 
                   <Button
                     type="button"
                     className="w-full"
                     onClick={() => {
+                      const normalizedEmail = confirmationEmail.trim().toLowerCase();
                       setFirstAccessStep('code');
                       setMode('login');
-                      setLoginEmail(signupEmail);
+                      if (normalizedEmail) {
+                        setLoginEmail(normalizedEmail);
+                      }
                     }}
                   >
                     Ir para login
@@ -381,7 +472,7 @@ export function Entrar() {
 
                   <button
                     type="button"
-                    onClick={() => setMode('first-access')}
+                    onClick={showFirstAccess}
                     className="w-full text-center text-sm font-medium text-blue-700 hover:underline"
                   >
                     Primeiro acesso
@@ -436,14 +527,6 @@ export function Entrar() {
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? 'Criando conta...' : 'Criar conta e revisar dados'}
                   </Button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFirstAccessStep('code')}
-                    className="w-full text-center text-sm font-medium text-gray-600 hover:text-gray-900"
-                  >
-                    Trocar código
-                  </button>
                 </form>
               )}
             </CardContent>
