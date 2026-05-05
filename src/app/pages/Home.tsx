@@ -577,7 +577,7 @@ export function Home() {
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex-nowrap lg:justify-end">
             <div className="w-[170px] shrink-0">
               <Select value={viewMode} onValueChange={(value) => handleViewModeChange(value as TipoVisualizacaoArvore)}>
-                <SelectTrigger className="h-9 bg-white">
+                <SelectTrigger className="h-9 rounded-md border border-gray-300 bg-white px-3 shadow-none hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-offset-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1245,14 +1245,22 @@ function calculateDirectRelationCounts(
 
   const getParents = (id: string) => Array.from(parentsByChild.get(id) || []);
   const getChildren = (id: string) => Array.from(childrenByParent.get(id) || []);
-  const getSiblings = (id: string) => Array.from(siblingsByPerson.get(id) || []);
+  const getSiblings = (id: string) => {
+    const sharedParentSiblings = getParents(id).flatMap(getChildren);
+    const explicitSiblings = Array.from(siblingsByPerson.get(id) || []);
+
+    return uniqueIds([...sharedParentSiblings, ...explicitSiblings], id);
+  };
 
   const parents = uniqueIds(getParents(centralPersonId), centralPersonId);
   const grandparents = uniqueIds(parents.flatMap(getParents), centralPersonId);
   const greatGrandparents = uniqueIds(grandparents.flatMap(getParents), centralPersonId);
   const greatGreatGrandparents = uniqueIds(greatGrandparents.flatMap(getParents), centralPersonId);
   const siblings = uniqueIds(getSiblings(centralPersonId), centralPersonId);
-  const uncles = uniqueIds(parents.flatMap(getSiblings), centralPersonId);
+  const uncles = uniqueIds(
+    parents.flatMap((parentId) => getSiblings(parentId).filter((id) => !parents.includes(id))),
+    centralPersonId
+  );
   const cousins = uniqueIds(uncles.flatMap(getChildren), centralPersonId);
   const nephewsAndNieces = uniqueIds(siblings.flatMap(getChildren), centralPersonId);
   const children = uniqueIds(getChildren(centralPersonId), centralPersonId);

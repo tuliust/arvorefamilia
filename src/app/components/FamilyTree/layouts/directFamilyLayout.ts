@@ -1143,7 +1143,7 @@ export function directFamilyLayout(
       'direct-anchor-pai-right',
       'directSideElbow',
       {
-        elbowX: fatherGroupBoxBounds.maxX + 96,
+        elbowX: CENTRAL_X - 112,
       }
     );
   }
@@ -1156,7 +1156,7 @@ export function directFamilyLayout(
       'direct-anchor-mae-left',
       'directSideElbow',
       {
-        elbowX: motherGroupBoxBounds.minX - 96,
+        elbowX: CENTRAL_X + CENTRAL_WIDTH + 112,
       }
     );
   }

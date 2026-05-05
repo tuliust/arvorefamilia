@@ -93,11 +93,11 @@ const MIN_MANUAL_GENERATION = 1;
 const MAX_MANUAL_GENERATION = 7;
 const DIRECT_FAMILY_MAX_ZOOM = 2;
 const DIRECT_FAMILY_MOBILE_MAX_ZOOM = 1.5;
-const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.1;
-const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.2;
+const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.28;
+const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.34;
 const DIRECT_FAMILY_MIN_ZOOM_TOLERANCE = 0.02;
-const DIRECT_FAMILY_VIEWPORT_PADDING = 40;
-const DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING = 24;
+const DIRECT_FAMILY_VIEWPORT_PADDING = 18;
+const DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING = 16;
 const DIRECT_FAMILY_TRANSLATE_PADDING = 120;
 const DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING = 80;
 
@@ -176,7 +176,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
 }
 
 function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
-  const visibleNodes = nodes.filter((node) => !node.hidden);
+  const visibleNodes = nodes.filter((node) => !node.hidden && node.type === 'personNode');
   if (visibleNodes.length === 0) return null;
 
   const bounds = visibleNodes.reduce(
@@ -276,9 +276,13 @@ export function FamilyTree({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const isDirectFamilyView = viewMode === 'familiares-diretos';
-  const directFamilyMinZoom = directFamilyFitZoom ?? (isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM);
+  const directFamilyFallbackMinZoom = isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM;
+  const directFamilyMinZoom = directFamilyFitZoom
+    ? Math.max(directFamilyFitZoom * 0.9, Math.min(directFamilyFallbackMinZoom, directFamilyFitZoom))
+    : directFamilyFallbackMinZoom;
+  const directFamilyFittedZoom = directFamilyFitZoom ?? directFamilyMinZoom;
   const directFamilyViewportZoom = directFamilyCurrentZoom ?? directFamilyMinZoom;
-  const directFamilyCanPan = !isDirectFamilyView || directFamilyViewportZoom > directFamilyMinZoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE;
+  const directFamilyCanPan = !isDirectFamilyView || directFamilyViewportZoom > directFamilyFittedZoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE;
   const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
   const effectiveCentralPersonId = isDirectFamilyView
     ? centralPersonId || selectedPersonId || pessoas[0]?.id
@@ -684,7 +688,7 @@ export function FamilyTree({
           x: 0,
           y: 0,
           zoom: isDirectFamilyView
-            ? directFamilyMinZoom
+            ? directFamilyFittedZoom
             : (isMobile ? 0.72 : 0.8),
         }}
         proOptions={{ hideAttribution: true }}
