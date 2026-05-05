@@ -398,7 +398,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             style={{ width: avatarSize, height: avatarSize }}
           >
             {avatarContent(
-              isCentralDirectNode ? 'h-[300px] w-[300px]' : 'h-[50px] w-[50px]',
+              isCentralDirectNode ? 'h-[300px] w-[300px]' : 'h-[58px] w-[58px]',
               isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-6 w-6 text-slate-700'
             )}
           </div>

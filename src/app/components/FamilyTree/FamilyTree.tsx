@@ -139,7 +139,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
   if (node.type === 'directFamilyLabelNode') {
     return {
       width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 180,
-      height: 24,
+      height: 30,
     };
   }
 
