@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { CheckCircle2, FileArchive, Heart, Save, Users } from 'lucide-react';
+import { CheckCircle2, Heart, Save, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { Button } from '../components/ui/button';
@@ -186,7 +186,6 @@ export function MeusVinculos() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-6xl px-4 py-5">
-          <p className="text-sm font-medium text-blue-700">Etapa final</p>
           <h1 className="text-2xl font-bold text-gray-900">Confirmar vínculos familiares</h1>
           <p className="mt-1 text-sm text-gray-500">Revise seus relacionamentos e arquivos antes de acessar a árvore.</p>
         </div>
@@ -221,18 +220,12 @@ export function MeusVinculos() {
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">{pessoa.nome_completo}</h2>
-              <p className="text-sm text-gray-500">Perfil vinculado à sua conta</p>
             </div>
           </div>
 
           <div className="mt-5 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
             <p className="font-medium text-gray-900">Confirmação</p>
             <p className="mt-1">Ao concluir, seus dados ficam marcados como confirmados e a árvore principal é liberada.</p>
-          </div>
-
-          <div className="mt-5 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
-            <FileArchive className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <p>Arquivos adicionados aqui são salvos junto dos arquivos históricos da pessoa.</p>
           </div>
 
           <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
