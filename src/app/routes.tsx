@@ -9,6 +9,10 @@ import { MinhaArvore } from './pages/MinhaArvore';
 import { MeusDados } from './pages/MeusDados';
 import { MeusVinculos } from './pages/MeusVinculos';
 import { VincularPerfil } from './pages/VincularPerfil';
+import { ForumHome } from './pages/forum/ForumHome';
+import { ForumTopico } from './pages/forum/ForumTopico';
+import { ForumNovoTopico } from './pages/forum/ForumNovoTopico';
+import { ForumEditarTopico } from './pages/forum/ForumEditarTopico';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminPessoas } from './pages/admin/AdminPessoas';
@@ -65,6 +69,22 @@ export const router = createBrowserRouter([
   {
     path: '/notificacoes',
     element: <CentralNotificacoes />,
+  },
+  {
+    path: '/forum',
+    element: <MemberRoute><ForumHome /></MemberRoute>,
+  },
+  {
+    path: '/forum/novo',
+    element: <MemberRoute><ForumNovoTopico /></MemberRoute>,
+  },
+  {
+    path: '/forum/topico/:id',
+    element: <MemberRoute><ForumTopico /></MemberRoute>,
+  },
+  {
+    path: '/forum/topico/:id/editar',
+    element: <MemberRoute><ForumEditarTopico /></MemberRoute>,
   },
   {
     path: '/admin',

@@ -99,6 +99,49 @@ export function parseFlexibleFamilyDate(valor?: string | number): Date | undefin
   return isValidDate(data) ? data : undefined;
 }
 
+export function parseCompleteFamilyDate(valor?: string | number): Date | undefined {
+  if (valor === undefined || valor === null || valor === '') return undefined;
+  if (typeof valor === 'number') return undefined;
+
+  const texto = String(valor).trim();
+  if (/^\d{4}$/.test(texto)) return undefined;
+
+  const brMatch = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (brMatch) {
+    const dia = Number(brMatch[1]);
+    const mes = Number(brMatch[2]) - 1;
+    const ano = Number(brMatch[3]);
+    const data = new Date(ano, mes, dia);
+    if (
+      isValidDate(data) &&
+      data.getFullYear() === ano &&
+      data.getMonth() === mes &&
+      data.getDate() === dia
+    ) {
+      return data;
+    }
+    return undefined;
+  }
+
+  const isoMatch = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const ano = Number(isoMatch[1]);
+    const mes = Number(isoMatch[2]) - 1;
+    const dia = Number(isoMatch[3]);
+    const data = new Date(ano, mes, dia);
+    if (
+      isValidDate(data) &&
+      data.getFullYear() === ano &&
+      data.getMonth() === mes &&
+      data.getDate() === dia
+    ) {
+      return data;
+    }
+  }
+
+  return undefined;
+}
+
 export function obterGeracaoPorAno(ano?: number): string | undefined {
   if (!ano) return undefined;
 

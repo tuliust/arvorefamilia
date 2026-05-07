@@ -5,17 +5,21 @@ import { Button } from '../components/ui/button';
 import { obterPessoaPorId, obterRelacionamentosDaPessoa } from '../services/dataService';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { alternarFavorito, conteudoEstaFavoritado } from '../services/userEngagementService';
-import { Pessoa } from '../types';
+import { listarTopicosForum } from '../services/forumService';
+import { ForumTopico, Pessoa } from '../types';
 import { 
   ArrowLeft, 
-  Star,
-  Bell
+  Star, 
+  Bell,
+  MessageCircle,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PersonDataView } from '../components/person/PersonDataView';
 import { PersonRelationshipsView } from '../components/person/PersonRelationshipsView';
 import { useAuth } from '../contexts/AuthContext';
 import { canEditPerson, getLinkedPessoaIdForUser, isMainAdmin } from '../services/permissionService';
+import { ForumEmptyState } from '../components/forum/ForumEmptyState';
 
 type ProfileRelationships = {
   pais: Pessoa[];
@@ -41,6 +45,8 @@ export function PersonProfile() {
   const [relacionamentos, setRelacionamentos] = useState<ProfileRelationships>(EMPTY_RELATIONSHIPS);
   const [loading, setLoading] = useState(true);
   const [relationshipsLoading, setRelationshipsLoading] = useState(false);
+  const [forumTopicos, setForumTopicos] = useState<ForumTopico[]>([]);
+  const [forumLoading, setForumLoading] = useState(false);
   const [favoritado, setFavoritado] = useState(false);
   const [linkedPessoaId, setLinkedPessoaId] = useState<string | null>(null);
   const canEdit = useMemo(
@@ -115,6 +121,32 @@ export function PersonProfile() {
       mounted = false;
     };
   }, [id, pessoa]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadForumDiscussions() {
+      if (!id || !user) {
+        setForumTopicos([]);
+        setForumLoading(false);
+        return;
+      }
+
+      setForumLoading(true);
+      const topicos = await listarTopicosForum({ pessoaRelacionadaId: id, limite: 6 });
+
+      if (!mounted) return;
+
+      setForumTopicos(topicos);
+      setForumLoading(false);
+    }
+
+    loadForumDiscussions();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id, user]);
 
   if (!id) {
     navigate('/');
@@ -216,6 +248,66 @@ export function PersonProfile() {
                 readOnly={true}
               />
             </div>
+          )}
+
+          {user && (
+            <section className="md:col-span-2">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <MessageCircle className="h-5 w-5 text-blue-600" />
+                        Discussões relacionadas
+                      </h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Tópicos do fórum ligados a esta pessoa da árvore.
+                      </p>
+                    </div>
+
+                    <Link to={`/forum/novo?pessoaId=${pessoa.id}`}>
+                      <Button variant="outline">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar discussão sobre esta pessoa
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <div className="mt-5">
+                    {forumLoading ? (
+                      <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">Carregando discussões...</p>
+                    ) : forumTopicos.length === 0 ? (
+                      <ForumEmptyState
+                        titulo="Nenhuma discussão relacionada"
+                        descricao="Ainda não há tópicos do fórum vinculados a esta pessoa."
+                        actionLabel="Criar discussão"
+                        onAction={() => navigate(`/forum/novo?pessoaId=${pessoa.id}`)}
+                      />
+                    ) : (
+                      <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                        {forumTopicos.map((topico) => (
+                          <Link
+                            key={topico.id}
+                            to={`/forum/topico/${topico.id}`}
+                            className="block p-4 transition-colors hover:bg-gray-50"
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{topico.titulo}</h3>
+                                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{topico.conteudo}</p>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                                {topico.status}
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
           )}
         </div>
       </main>

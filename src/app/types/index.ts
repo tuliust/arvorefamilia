@@ -30,6 +30,16 @@ export type TipoConteudoFavorito =
 
 export type TipoCanalNotificacao = 'interna' | 'email' | 'push' | 'whatsapp';
 
+export type ForumTopicoTipo = 'pergunta' | 'discussao' | 'aviso' | 'memoria' | 'ajuda';
+
+export type ForumTopicoStatus = 'aberto' | 'resolvido' | 'fechado' | 'oculto';
+
+export type ForumConteudoStatus = 'publicado' | 'oculto';
+
+export type ForumReacaoTipo = 'curtir' | 'apoiar' | 'lembrar' | 'celebrar';
+
+export type ForumAlvoTipo = 'topico' | 'resposta' | 'comentario';
+
 export interface ArquivoHistorico {
   id: string;
   tipo: 'imagem' | 'pdf';
@@ -139,6 +149,85 @@ export interface VinculoUsuarioPessoa {
   pessoa_id: string;
   relacao_com_perfil?: string;
   principal?: boolean;
+}
+
+export interface ForumCategoria {
+  id: string;
+  nome: string;
+  slug: string;
+  descricao?: string | null;
+  icone?: string | null;
+  cor_token?: string | null;
+  ordem?: number | null;
+  ativa?: boolean | null;
+  created_at?: string;
+  updated_at?: string;
+  total_topicos?: number;
+}
+
+export interface ForumTopico {
+  id: string;
+  categoria_id?: string | null;
+  autor_id: string;
+  titulo: string;
+  slug: string;
+  conteudo: string;
+  tipo: ForumTopicoTipo;
+  status: ForumTopicoStatus;
+  fixado?: boolean | null;
+  destacado?: boolean | null;
+  visualizacoes?: number | null;
+  pessoa_relacionada_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  categoria?: ForumCategoria | null;
+  pessoa_relacionada?: Pessoa | null;
+  respostas_count?: number;
+  reacoes_count?: number;
+}
+
+export interface ForumResposta {
+  id: string;
+  topico_id: string;
+  autor_id: string;
+  conteudo: string;
+  aceita_como_solucao?: boolean | null;
+  status: ForumConteudoStatus;
+  created_at?: string;
+  updated_at?: string;
+  comentarios_count?: number;
+  reacoes_count?: number;
+}
+
+export interface ForumComentario {
+  id: string;
+  resposta_id: string;
+  autor_id: string;
+  conteudo: string;
+  status: ForumConteudoStatus;
+  created_at?: string;
+  updated_at?: string;
+  reacoes_count?: number;
+}
+
+export interface ForumReacao {
+  id: string;
+  user_id: string;
+  alvo_tipo: ForumAlvoTipo;
+  alvo_id: string;
+  tipo: ForumReacaoTipo;
+  created_at?: string;
+}
+
+export interface ForumDenuncia {
+  id: string;
+  denunciante_id: string;
+  alvo_tipo: ForumAlvoTipo;
+  alvo_id: string;
+  motivo: string;
+  detalhes?: string | null;
+  status: 'pendente' | 'analisada' | 'descartada' | 'removida';
+  created_at?: string;
 }
 
 export interface DadosImportacao {
