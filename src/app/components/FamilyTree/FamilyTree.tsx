@@ -139,7 +139,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
   if (node.type === 'directFamilyLabelNode') {
     return {
       width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 180,
-      height: node.data?.variant === 'title' ? 56 : 30,
+      height: node.data?.variant === 'title' ? 64 : 30,
     };
   }
 
@@ -695,7 +695,7 @@ export function FamilyTree({
       >
         {!isDirectFamilyView && <Background />}
         <Controls showInteractive={!isMobile} />
-        {!isMobile && (
+        {!isMobile && !isDirectFamilyView && (
           <MiniMap
             nodeColor={(node) => {
               const pessoa = node.data?.pessoa;
