@@ -544,10 +544,6 @@ export function Home() {
 
   const directRelativeFilters = directRelativeFilterState.filters;
   const centralReferencePersonId = linkedPersonId || selectedPersonId;
-  const centralReferencePerson = useMemo(
-    () => pessoas.find((pessoa) => pessoa.id === centralReferencePersonId),
-    [pessoas, centralReferencePersonId]
-  );
   const linkedPerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === linkedPersonId),
     [pessoas, linkedPersonId]
@@ -569,12 +565,10 @@ export function Home() {
     (user?.user_metadata?.picture as string | undefined) ||
     null;
   const initials = getInitials(displayName || fullDisplayName);
-  const relationReferenceName = getFirstName(centralReferencePerson?.nome_completo || displayName);
   const directRelationCounts = useMemo(
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
     [pessoas, relacionamentos, centralReferencePersonId]
   );
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-3 py-3 shadow-sm lg:px-5">
@@ -637,6 +631,7 @@ export function Home() {
                   personFilters={personFilters}
                   edgeFilters={edgeFilters}
                   directRelativeFilters={directRelativeFilters}
+                  directRelationCounts={directRelationCounts}
                   onTogglePerson={togglePersonFilter}
                   onToggleEdge={toggleFilter}
                   onToggleDirect={toggleDirectRelativeFilter}
@@ -734,16 +729,6 @@ export function Home() {
         </section>
       )}
 
-      {isMobile && viewMode === 'familiares-diretos' && (
-        <section className="border-b border-gray-200 bg-white px-4 py-3">
-          <DirectRelativeFilterGrid
-            filters={directRelativeFilters}
-            onToggle={toggleDirectRelativeFilter}
-            compact
-          />
-        </section>
-      )}
-
       <main className="flex min-h-0 flex-1 overflow-hidden">
         {!isMobile && (
           <aside
@@ -787,15 +772,6 @@ export function Home() {
 
             {sidebarOpen && (
               <div className="space-y-4">
-                {viewMode === 'familiares-diretos' && (
-                  <DirectRelationKpiGrid
-                    title={relationReferenceName ? `Relações com ${relationReferenceName}` : 'Relações familiares'}
-                    counts={directRelationCounts}
-                    filters={directRelativeFilters}
-                    onToggle={toggleDirectRelativeFilter}
-                  />
-                )}
-
                 <section>
                   <h2 className="mb-3 text-sm font-semibold text-gray-900">Resumo</h2>
                   <div className="grid grid-cols-2 gap-2">
@@ -949,10 +925,6 @@ function getInitials(displayName: string) {
     .join('');
 }
 
-function getFirstName(name: string) {
-  return name.trim().split(/\s+/)[0] || '';
-}
-
 function getShortDisplayName(name: string) {
   const cleanName = name.trim();
   if (!cleanName || cleanName.includes('@')) return cleanName;
@@ -1058,6 +1030,7 @@ function FilterPanel({
   personFilters,
   edgeFilters,
   directRelativeFilters,
+  directRelationCounts,
   onTogglePerson,
   onToggleEdge,
   onToggleDirect,
@@ -1075,6 +1048,7 @@ function FilterPanel({
     irmaos: boolean;
   };
   directRelativeFilters: DirectRelativeFilters;
+  directRelationCounts: DirectRelationCounts;
   onTogglePerson: (key: 'vivos' | 'falecidos' | 'pets') => void;
   onToggleEdge: (key: 'conjugal' | 'filiacao_sangue' | 'filiacao_adotiva' | 'irmaos') => void;
   onToggleDirect: (key: DirectRelativeGroup) => void;
@@ -1119,6 +1093,7 @@ function FilterPanel({
           <h2 className="mb-3 text-sm font-semibold text-gray-900">Familiares Diretos</h2>
           <DirectRelativeFilterGrid
             filters={directRelativeFilters}
+            counts={directRelationCounts}
             onToggle={onToggleDirect}
           />
         </div>
@@ -1127,108 +1102,16 @@ function FilterPanel({
   );
 }
 
-type DirectRelationCountKey =
-  | 'tataravos'
-  | 'bisavos'
-  | 'avos'
-  | 'tios'
-  | 'primos'
-  | 'irmaos'
-  | 'sobrinhos'
-  | 'netos';
-
-type DirectRelationCounts = Record<DirectRelationCountKey, number>;
-
-const DIRECT_RELATION_KPI_OPTIONS: Array<{
-  key: DirectRelationCountKey;
-  label: string;
-  className: string;
-}> = [
-  {
-    key: 'tataravos',
-    label: 'Tataravós',
-    className: 'border-red-300 bg-gradient-to-br from-red-400 to-red-600 text-white',
-  },
-  {
-    key: 'bisavos',
-    label: 'Bisavós',
-    className: 'border-orange-300 bg-gradient-to-br from-orange-400 to-orange-600 text-white',
-  },
-  {
-    key: 'avos',
-    label: 'Avós',
-    className: 'border-violet-300 bg-gradient-to-br from-violet-500 to-violet-700 text-white',
-  },
-  {
-    key: 'tios',
-    label: 'Tios',
-    className: 'border-red-300 bg-gradient-to-br from-red-400 to-red-600 text-white',
-  },
-  {
-    key: 'primos',
-    label: 'Primos',
-    className: 'border-yellow-200 bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-900',
-  },
-  {
-    key: 'irmaos',
-    label: 'Irmãos',
-    className: 'border-sky-300 bg-gradient-to-br from-sky-500 to-sky-700 text-white',
-  },
-  {
-    key: 'sobrinhos',
-    label: 'Sobrinhos',
-    className: 'border-green-300 bg-gradient-to-br from-green-500 to-green-700 text-white',
-  },
-  {
-    key: 'netos',
-    label: 'Netos',
-    className: 'border-green-300 bg-gradient-to-br from-green-500 to-green-700 text-white',
-  },
-];
-
-function DirectRelationKpiGrid({
-  title,
-  counts,
-  filters,
-  onToggle,
-}: {
-  title: string;
-  counts: DirectRelationCounts;
-  filters: DirectRelativeFilters;
-  onToggle: (key: DirectRelativeGroup) => void;
-}) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <section>
-      <h2 className="mb-3 text-sm font-semibold text-gray-900">{title}</h2>
-      <div className="grid grid-cols-2 gap-2">
-        {DIRECT_RELATION_KPI_OPTIONS.map((option) => {
-          const count = counts[option.key];
-          const active = filters[option.key];
-          const disabled = count === 0;
-
-          return (
-            <button
-              key={option.key}
-              type="button"
-              disabled={disabled}
-              onClick={() => onToggle(option.key)}
-              className={[
-                'min-h-[72px] rounded-lg border p-3 text-left shadow-sm transition',
-                option.className,
-                active ? 'opacity-100' : 'grayscale opacity-45',
-                disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
-              ].join(' ')}
-              title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
-            >
-              <span className="block text-xs font-semibold">{option.label}</span>
-              <span className="mt-1 block text-2xl font-bold leading-none">{count}</span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
+    </div>
   );
 }
+
+type DirectRelationCounts = Record<DirectRelativeGroup, number>;
 
 function uniqueIds(ids: Array<string | undefined | null>, centralPersonId?: string) {
   return Array.from(new Set(ids.filter((id): id is string => Boolean(id) && id !== centralPersonId)));
@@ -1240,14 +1123,17 @@ function calculateDirectRelationCounts(
   centralPersonId?: string
 ): DirectRelationCounts {
   const emptyCounts: DirectRelationCounts = {
-    tataravos: 0,
-    bisavos: 0,
+    pais: 0,
     avos: 0,
-    tios: 0,
-    primos: 0,
+    bisavos: 0,
+    tataravos: 0,
+    conjuge: 0,
+    filhos: 0,
+    netos: 0,
     irmaos: 0,
     sobrinhos: 0,
-    netos: 0,
+    tios: 0,
+    primos: 0,
   };
 
   if (!centralPersonId || pessoas.length === 0) return emptyCounts;
@@ -1258,20 +1144,26 @@ function calculateDirectRelationCounts(
   const parentsByChild = new Map<string, Set<string>>();
   const childrenByParent = new Map<string, Set<string>>();
   const siblingsByPerson = new Map<string, Set<string>>();
+  const spousesByPerson = new Map<string, Set<string>>();
 
   const addToSet = (map: Map<string, Set<string>>, key: string, value: string) => {
-    if (!key || !value || key === value) return;
+    if (!key || !value || key === value || !personIds.has(key) || !personIds.has(value)) return;
     if (!map.has(key)) map.set(key, new Set());
     map.get(key)!.add(value);
   };
 
   const addParentChild = (parentId: string, childId: string) => {
-    if (!personIds.has(parentId) || !personIds.has(childId) || parentId === childId) return;
     addToSet(parentsByChild, childId, parentId);
     addToSet(childrenByParent, parentId, childId);
   };
 
   relacionamentos.forEach((relacionamento) => {
+    if (relacionamento.tipo_relacionamento === 'conjuge') {
+      addToSet(spousesByPerson, relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id);
+      addToSet(spousesByPerson, relacionamento.pessoa_destino_id, relacionamento.pessoa_origem_id);
+      return;
+    }
+
     if (relacionamento.tipo_relacionamento === 'irmao') {
       addToSet(siblingsByPerson, relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id);
       addToSet(siblingsByPerson, relacionamento.pessoa_destino_id, relacionamento.pessoa_origem_id);
@@ -1293,7 +1185,6 @@ function calculateDirectRelationCounts(
   const getSiblings = (id: string) => {
     const sharedParentSiblings = getParents(id).flatMap(getChildren);
     const explicitSiblings = Array.from(siblingsByPerson.get(id) || []);
-
     return uniqueIds([...sharedParentSiblings, ...explicitSiblings], id);
   };
 
@@ -1307,29 +1198,24 @@ function calculateDirectRelationCounts(
     centralPersonId
   );
   const cousins = uniqueIds(uncles.flatMap(getChildren), centralPersonId);
-  const nephewsAndNieces = uniqueIds(siblings.flatMap(getChildren), centralPersonId);
+  const nephews = uniqueIds(siblings.flatMap(getChildren), centralPersonId);
+  const spouses = uniqueIds(Array.from(spousesByPerson.get(centralPersonId) || []), centralPersonId);
   const children = uniqueIds(getChildren(centralPersonId), centralPersonId);
   const grandchildren = uniqueIds(children.flatMap(getChildren), centralPersonId);
 
   return {
-    tataravos: greatGreatGrandparents.length,
-    bisavos: greatGrandparents.length,
+    pais: parents.length,
     avos: grandparents.length,
+    bisavos: greatGrandparents.length,
+    tataravos: greatGreatGrandparents.length,
+    conjuge: spouses.length,
+    filhos: children.length,
+    netos: grandchildren.length,
+    irmaos: siblings.length,
+    sobrinhos: nephews.length,
     tios: uncles.length,
     primos: cousins.length,
-    irmaos: siblings.length,
-    sobrinhos: nephewsAndNieces.length,
-    netos: grandchildren.length,
   };
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
-    </div>
-  );
 }
 
 function FilterButton({
@@ -1361,40 +1247,58 @@ function FilterButton({
 const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   key: DirectRelativeGroup;
   label: string;
+  className: string;
 }> = [
-  { key: 'pais', label: 'Pais' },
-  { key: 'avos', label: 'Avós' },
-  { key: 'bisavos', label: 'Bisavós' },
-  { key: 'tataravos', label: 'Tataravós' },
-  { key: 'conjuge', label: 'Cônjuge' },
-  { key: 'filhos', label: 'Filhos' },
-  { key: 'netos', label: 'Netos' },
-  { key: 'irmaos', label: 'Irmãos' },
-  { key: 'sobrinhos', label: 'Sobrinhos' },
-  { key: 'tios', label: 'Tios' },
-  { key: 'primos', label: 'Primos' },
+  { key: 'pais', label: 'Pais', className: 'border-blue-300 bg-gradient-to-br from-blue-500 to-blue-700 text-white' },
+  { key: 'avos', label: 'Avós', className: 'border-violet-300 bg-gradient-to-br from-violet-500 to-violet-700 text-white' },
+  { key: 'bisavos', label: 'Bisavós', className: 'border-orange-300 bg-gradient-to-br from-orange-400 to-orange-600 text-white' },
+  { key: 'tataravos', label: 'Tataravós', className: 'border-red-300 bg-gradient-to-br from-red-400 to-red-600 text-white' },
+  { key: 'conjuge', label: 'Cônjuge', className: 'border-fuchsia-300 bg-gradient-to-br from-fuchsia-500 to-fuchsia-700 text-white' },
+  { key: 'filhos', label: 'Filhos', className: 'border-emerald-300 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white' },
+  { key: 'netos', label: 'Netos', className: 'border-green-300 bg-gradient-to-br from-green-500 to-green-700 text-white' },
+  { key: 'irmaos', label: 'Irmãos', className: 'border-sky-300 bg-gradient-to-br from-sky-500 to-sky-700 text-white' },
+  { key: 'sobrinhos', label: 'Sobrinhos', className: 'border-lime-300 bg-gradient-to-br from-lime-500 to-lime-700 text-white' },
+  { key: 'tios', label: 'Tios', className: 'border-rose-300 bg-gradient-to-br from-rose-500 to-rose-700 text-white' },
+  { key: 'primos', label: 'Primos', className: 'border-yellow-200 bg-gradient-to-br from-yellow-300 to-yellow-400 text-gray-900' },
 ];
 
 function DirectRelativeFilterGrid({
   filters,
+  counts,
   onToggle,
   compact = false,
 }: {
   filters: DirectRelativeFilters;
+  counts: DirectRelationCounts;
   onToggle: (key: DirectRelativeGroup) => void;
   compact?: boolean;
 }) {
   return (
-    <div className={compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-5' : 'space-y-2'}>
-      {DIRECT_RELATIVE_FILTER_OPTIONS.map((option) => (
-        <FilterButton
-          key={option.key}
-          active={filters[option.key]}
-          onClick={() => onToggle(option.key)}
-        >
-          {option.label}
-        </FilterButton>
-      ))}
+    <div className={compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-5' : 'grid grid-cols-2 gap-2'}>
+      {DIRECT_RELATIVE_FILTER_OPTIONS.map((option) => {
+        const active = filters[option.key];
+        const count = counts[option.key];
+        const disabled = count === 0;
+
+        return (
+          <button
+            key={option.key}
+            type="button"
+            disabled={disabled}
+            onClick={() => onToggle(option.key)}
+            className={[
+              'min-h-[68px] rounded-lg border p-3 text-left shadow-sm transition',
+              option.className,
+              active ? 'opacity-100' : 'grayscale opacity-45',
+              disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
+            ].join(' ')}
+            title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
+          >
+            <span className="block text-xs font-semibold">{option.label}</span>
+            <span className="mt-1 block text-2xl font-bold leading-none">{count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
