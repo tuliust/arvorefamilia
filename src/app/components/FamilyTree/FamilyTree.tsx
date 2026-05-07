@@ -50,6 +50,7 @@ interface FamilyTreeProps {
   viewMode?: TipoVisualizacaoArvore;
   activeGeneration?: number;
   isMobile?: boolean;
+  layoutRevision?: number;
   onGenerationColumnsChange?: (columns: GenerationColumnMeta[]) => void;
   onPersonGenerationChange?: (personId: string, generation: number) => Promise<void> | void;
 }
@@ -263,6 +264,7 @@ export function FamilyTree({
   viewMode = getDefaultViewMode(),
   activeGeneration,
   isMobile = false,
+  layoutRevision = 0,
   onGenerationColumnsChange,
   onPersonGenerationChange,
 }: FamilyTreeProps) {
@@ -371,7 +373,12 @@ export function FamilyTree({
     const resizeObserver = new ResizeObserver(updateContainerSize);
     resizeObserver.observe(container);
 
-    return () => resizeObserver.disconnect();
+    window.addEventListener('resize', updateContainerSize);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateContainerSize);
+    };
   }, []);
 
   const directFamilyBounds = useMemo(() => {
@@ -476,7 +483,21 @@ export function FamilyTree({
 
   useEffect(() => {
     const focusPersonId = isDirectFamilyView ? effectiveCentralPersonId : selectedPersonId;
-    if (!focusPersonId || !reactFlowRef.current || nodes.length === 0) return;
+    if (!reactFlowRef.current || nodes.length === 0 || containerSize.width <= 0 || containerSize.height <= 0) return;
+
+    if (!focusPersonId && !isDirectFamilyView) {
+      const timer = window.setTimeout(() => {
+        reactFlowRef.current?.fitView({
+          padding: isMobile ? 0.12 : 0.2,
+          includeHiddenNodes: false,
+          duration: 320,
+        });
+      }, 50);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    if (!focusPersonId) return;
 
     if (isDirectFamilyView) {
       if (!directFamilyViewport) return;
@@ -523,7 +544,47 @@ export function FamilyTree({
     }, 50);
 
     return () => window.clearTimeout(timer);
-  }, [selectedPersonId, effectiveCentralPersonId, nodes, NODE_WIDTH, NODE_HEIGHT, isMobile, isDirectFamilyView, directFamilyViewport]);
+  }, [
+    selectedPersonId,
+    effectiveCentralPersonId,
+    nodes,
+    NODE_WIDTH,
+    NODE_HEIGHT,
+    isMobile,
+    isDirectFamilyView,
+    directFamilyViewport,
+    containerSize.width,
+    containerSize.height,
+    layoutRevision,
+  ]);
+
+  useEffect(() => {
+    if (!reactFlowRef.current || containerSize.width <= 0 || containerSize.height <= 0) return;
+
+    if (isDirectFamilyView && directFamilyViewport) {
+      directFamilyViewportRef.current = directFamilyViewport;
+      setDirectFamilyFitZoom(directFamilyViewport.zoom);
+      setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
+      reactFlowRef.current.setViewport(directFamilyViewport, { duration: 180 });
+      return;
+    }
+
+    if (!selectedPersonId) {
+      reactFlowRef.current.fitView({
+        padding: isMobile ? 0.12 : 0.2,
+        includeHiddenNodes: false,
+        duration: 180,
+      });
+    }
+  }, [
+    layoutRevision,
+    containerSize.width,
+    containerSize.height,
+    isMobile,
+    isDirectFamilyView,
+    directFamilyViewport,
+    selectedPersonId,
+  ]);
 
   useEffect(() => {
     if (

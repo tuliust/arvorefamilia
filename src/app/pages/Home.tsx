@@ -113,6 +113,7 @@ export function Home() {
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
   const [pessoasFiltradas, setPessoasFiltradas] = useState<Pessoa[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
   const [legendOpen, setLegendOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -153,6 +154,21 @@ export function Home() {
     setSidebarOpen((prev) => (isMobile ? false : prev));
     setLegendOpen((prev) => (isMobile ? false : prev));
   }, [isMobile]);
+
+  useEffect(() => {
+    setTreeLayoutRevision((revision) => revision + 1);
+
+    const timers = [0, 120, 240].map((delay) =>
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        setTreeLayoutRevision((revision) => revision + 1);
+      }, delay)
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [sidebarOpen, isMobile]);
 
   useEffect(() => {
     const savedViewMode = readStoredViewMode();
@@ -526,24 +542,33 @@ export function Home() {
   const activeGenerationMeta = generationColumns.find((column) => column.level === activeGeneration);
   const maxGenerationIndex = generationColumns.length - 1;
 
-  const displayName = (
-    profile?.nome_exibicao ||
-    (user?.user_metadata?.nome_exibicao as string | undefined) ||
-    (user?.user_metadata?.name as string | undefined) ||
-    user?.email ||
-    ''
-  ).trim();
-  const avatarUrl =
-    profile?.avatar_url ||
-    (user?.user_metadata?.avatar_url as string | undefined) ||
-    null;
-  const initials = getInitials(displayName);
   const directRelativeFilters = directRelativeFilterState.filters;
   const centralReferencePersonId = linkedPersonId || selectedPersonId;
   const centralReferencePerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === centralReferencePersonId),
     [pessoas, centralReferencePersonId]
   );
+  const linkedPerson = useMemo(
+    () => pessoas.find((pessoa) => pessoa.id === linkedPersonId),
+    [pessoas, linkedPersonId]
+  );
+  const fullDisplayName = (
+    linkedPerson?.nome_completo ||
+    profile?.nome_exibicao ||
+    (user?.user_metadata?.nome_exibicao as string | undefined) ||
+    (user?.user_metadata?.name as string | undefined) ||
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email ||
+    ''
+  ).trim();
+  const displayName = getShortDisplayName(fullDisplayName);
+  const avatarUrl =
+    linkedPerson?.foto_principal_url ||
+    profile?.avatar_url ||
+    (user?.user_metadata?.avatar_url as string | undefined) ||
+    (user?.user_metadata?.picture as string | undefined) ||
+    null;
+  const initials = getInitials(displayName || fullDisplayName);
   const relationReferenceName = getFirstName(centralReferencePerson?.nome_completo || displayName);
   const directRelationCounts = useMemo(
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
@@ -569,8 +594,8 @@ export function Home() {
             />
 
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-gray-900 lg:text-xl">Árvore Genealógica</h1>
-              <p className="truncate text-xs text-gray-500 lg:text-sm">Família Barros Souza</p>
+              <h1 className="truncate text-lg font-bold text-gray-900 lg:text-xl">{displayName || 'Árvore Genealógica'}</h1>
+              <p className="truncate text-xs text-gray-500 lg:text-sm">Árvore Genealógica</p>
             </div>
           </div>
 
@@ -719,7 +744,7 @@ export function Home() {
         </section>
       )}
 
-      <main className="flex min-h-0 flex-1">
+      <main className="flex min-h-0 flex-1 overflow-hidden">
         {!isMobile && (
           <aside
             className={[
@@ -803,7 +828,7 @@ export function Home() {
           </aside>
         )}
 
-        <section className="relative min-w-0 flex-1 bg-gray-100">
+        <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100">
           {isLoading ? (
             <StateMessage
               title="Carregando árvore"
@@ -837,6 +862,7 @@ export function Home() {
               viewMode={viewMode}
               activeGeneration={activeGeneration}
               isMobile={isMobile}
+              layoutRevision={treeLayoutRevision}
               onGenerationColumnsChange={setGenerationColumns}
               onPersonGenerationChange={handlePersonGenerationChange}
             />
@@ -927,6 +953,16 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || '';
 }
 
+function getShortDisplayName(name: string) {
+  const cleanName = name.trim();
+  if (!cleanName || cleanName.includes('@')) return cleanName;
+
+  const parts = cleanName.split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return cleanName;
+
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
 function UserMenu({
   isLoggedIn,
   displayName,
@@ -955,21 +991,30 @@ function UserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="group flex h-12 shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-1.5 pr-2 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           title={isLoggedIn ? displayName || 'Conta do usuário' : 'Login'}
           aria-label={isLoggedIn ? displayName || 'Conta do usuário' : 'Login'}
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName || 'Usuário'}
-              className="h-full w-full object-cover"
-            />
-          ) : initials ? (
-            <span>{initials}</span>
-          ) : (
-            <UserCircle2 className="h-6 w-6" />
-          )}
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName || 'Usuário'}
+                className="h-full w-full object-cover"
+              />
+            ) : initials ? (
+              <span>{initials}</span>
+            ) : (
+              <UserCircle2 className="h-6 w-6" />
+            )}
+          </span>
+          <span className="hidden leading-none sm:block">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">Menu</span>
+            <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-gray-800">
+              Conta
+              <ChevronDown className="h-3 w-3 text-gray-500 transition group-data-[state=open]:rotate-180" />
+            </span>
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
