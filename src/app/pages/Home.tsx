@@ -80,6 +80,7 @@ import {
   Pencil,
   Sparkles,
   SlidersHorizontal,
+  MessageCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -97,6 +98,8 @@ const AI_QUESTION_EXAMPLES = [
   'Monte um resumo da linha genealógica de Tulius.',
   'Quem são os descendentes de determinada pessoa?',
 ];
+
+const AI_ENDPOINT = '/api/ai';
 
 export function Home() {
   const navigate = useNavigate();
@@ -573,9 +576,10 @@ export function Home() {
     setAiAnswer('');
 
     try {
-      const response = await fetch('/api/ai', {
+      const response = await fetch(AI_ENDPOINT, {
         method: 'POST',
         headers: {
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -592,13 +596,19 @@ export function Home() {
         }),
       });
 
-      const payload = await response.json().catch(() => ({}));
+      const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload.error || 'Não foi possível gerar a resposta agora.');
+        throw new Error(payload?.error || payload?.message || 'Não foi possível gerar a resposta agora.');
       }
 
-      setAiAnswer(payload.answer || 'Não encontrei uma resposta para essa pergunta.');
+      const answer = payload?.answer || payload?.data?.answer || payload?.response;
+
+      if (!answer || typeof answer !== 'string') {
+        throw new Error('A IA não retornou uma resposta válida.');
+      }
+
+      setAiAnswer(answer);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível gerar a resposta agora.';
       setAiError(message);
@@ -667,6 +677,18 @@ export function Home() {
               <Sparkles className="h-4 w-4" />
               <span className="hidden xl:inline">Curiosidades</span>
             </Button>
+
+            <Link to="/forum" className="shrink-0">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                title="Fórum de Discussões"
+                aria-label="Abrir Fórum de Discussões"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
 
             <Popover>
               <PopoverTrigger asChild>
@@ -886,8 +908,8 @@ export function Home() {
       />
 
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="max-h-[92vh] overflow-hidden p-0 sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[85vh] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 border-b border-gray-100 pb-4">
             <DialogTitle className="flex items-center gap-2 px-6 pt-6">
               <Sparkles className="h-5 w-5" />
               Curiosidades
@@ -897,7 +919,7 @@ export function Home() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 overflow-y-auto px-6 pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-4">
               <section>
                 <h2 className="mb-2 text-sm font-semibold text-gray-900">Pergunte à IA</h2>
@@ -919,7 +941,7 @@ export function Home() {
                   </p>
                 )}
                 {aiAnswer && (
-                  <div className="mt-2 whitespace-pre-wrap rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-relaxed text-emerald-950">
+                  <div className="mt-2 max-h-[32vh] overflow-y-auto whitespace-pre-wrap rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-relaxed text-emerald-950">
                     {aiAnswer}
                   </div>
                 )}
@@ -969,7 +991,7 @@ export function Home() {
 
           <DialogFooter className="border-t border-gray-200 px-6 py-4">
             <Button onClick={handleAskAi} disabled={!aiQuestion.trim() || aiLoading}>
-              {aiLoading ? 'Enviando...' : 'Enviar pergunta'}
+              {aiLoading ? 'Perguntando...' : 'Perguntar'}
             </Button>
           </DialogFooter>
         </DialogContent>
