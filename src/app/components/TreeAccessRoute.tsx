@@ -3,6 +3,8 @@ import { Navigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveFirstAccessLinkForUser } from '../services/memberProfileService';
 
+const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
+
 function AccessLoading({ message = 'Verificando acesso...' }: { message?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -12,6 +14,15 @@ function AccessLoading({ message = 'Verificando acesso...' }: { message?: string
       </div>
     </div>
   );
+}
+
+function hasRecentLogin(lastSignInAt?: string | null) {
+  if (!lastSignInAt) return false;
+
+  const lastSignInTime = new Date(lastSignInAt).getTime();
+  if (!Number.isFinite(lastSignInTime)) return false;
+
+  return Date.now() - lastSignInTime <= RECENT_LOGIN_LIMIT_MS;
 }
 
 export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
@@ -26,6 +37,12 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
       if (loading) return;
 
       if (!user) {
+        setTarget('auth');
+        setChecking(false);
+        return;
+      }
+
+      if (!hasRecentLogin(user.last_sign_in_at)) {
         setTarget('auth');
         setChecking(false);
         return;
