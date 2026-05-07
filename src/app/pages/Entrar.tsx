@@ -21,8 +21,19 @@ import {
 type AuthMode = 'login' | 'first-access';
 type FirstAccessStep = 'code' | 'account' | 'confirmation';
 
+const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
+
 function getEmailRedirectTo() {
   return `${window.location.origin}/entrar`;
+}
+
+function hasRecentLogin(lastSignInAt?: string | null) {
+  if (!lastSignInAt) return false;
+
+  const lastSignInTime = new Date(lastSignInAt).getTime();
+  if (!Number.isFinite(lastSignInTime)) return false;
+
+  return Date.now() - lastSignInTime <= RECENT_LOGIN_LIMIT_MS;
 }
 
 function isEmailNotConfirmedError(message: string) {
@@ -76,6 +87,12 @@ export function Entrar() {
       if (loading) return;
 
       if (!user) {
+        setCheckingSession(false);
+        return;
+      }
+
+      if (!hasRecentLogin(user.last_sign_in_at)) {
+        setLoginEmail(user.email || '');
         setCheckingSession(false);
         return;
       }
