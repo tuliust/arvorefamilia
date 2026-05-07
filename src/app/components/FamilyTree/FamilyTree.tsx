@@ -21,7 +21,7 @@ import { buildTreeGraph } from './buildTreeGraph';
 import { legacySideLayout } from './layouts/legacySideLayout';
 import { generationColumnsLayout } from './layouts/generationColumnsLayout';
 import { chronologicalListLayout } from './layouts/chronologicalListLayout';
-import { directFamilyLayout } from './layouts/directFamilyLayout';
+import { directFamilyDistributedLayout } from './layouts/directFamilyDistributedLayout';
 import {
   DEFAULT_EDGE_FILTERS,
   DEFAULT_DIRECT_RELATIVE_FILTERS,
@@ -70,7 +70,7 @@ function getLayoutByViewMode(
   }
 ) {
   if (viewMode === 'familiares-diretos') {
-    return directFamilyLayout(graph, {
+    return directFamilyDistributedLayout(graph, {
       centralPersonId: options?.centralPersonId,
       filters: options?.directRelativeFilters,
     });
@@ -139,7 +139,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
   if (node.type === 'directFamilyLabelNode') {
     return {
       width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 180,
-      height: 30,
+      height: node.data?.variant === 'title' ? 56 : 30,
     };
   }
 
