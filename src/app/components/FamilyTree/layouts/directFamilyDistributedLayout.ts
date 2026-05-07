@@ -39,40 +39,53 @@ interface GroupSpec {
   maxPerRow: number;
   centerX: number;
   side?: DirectSide;
+  laneWidth?: number;
 }
 
-const FRAME_LEFT = 50;
-const FRAME_RIGHT = 3150;
-const FRAME_TOP = 50;
-const FRAME_BOTTOM = 1980;
-const TITLE_TOP = FRAME_TOP + 100;
-const TITLE_WIDTH = 1120;
-const TITLE_RESERVED_HEIGHT = 110;
+const FRAME_LEFT = 10;
+const FRAME_RIGHT = 3210;
+const FRAME_TOP = 10;
+const FRAME_BOTTOM = 2190;
+const TITLE_TOP = FRAME_TOP + 20;
+const TITLE_WIDTH = 1180;
+const TITLE_RESERVED_HEIGHT = 116;
 const VIEW_CENTER_X = (FRAME_LEFT + FRAME_RIGHT) / 2;
-const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2 + 35;
+const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
 const CENTRAL_HEIGHT = DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT;
 
-const GROUP_BOX_PADDING_X = 26;
-const GROUP_BOX_PADDING_Y = 26;
+const GROUP_BOX_PADDING_X = 12;
+const GROUP_BOX_PADDING_Y = 12;
 const LABEL_HEIGHT = 30;
-const LABEL_TO_CARD_GAP = 16;
-const COLUMN_GAP = 46;
-const ROW_GAP = 138;
+const LABEL_TO_CARD_GAP = 8;
+const COLUMN_GAP = 16;
+const ROW_GAP = 14;
+const ROW_STEP = CARD_HEIGHT + ROW_GAP;
 const SIDE_TOP = TITLE_TOP + TITLE_RESERVED_HEIGHT;
-const SIDE_BOTTOM = FRAME_BOTTOM - 50;
+const SIDE_BOTTOM = FRAME_BOTTOM - 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
-const CENTRAL_LEFT_BOUNDARY = CENTRAL_X - 90;
-const CENTRAL_RIGHT_BOUNDARY = CENTRAL_X + CENTRAL_WIDTH + 90;
+const CENTRAL_LEFT_BOUNDARY = CENTRAL_X - 110;
+const CENTRAL_RIGHT_BOUNDARY = CENTRAL_X + CENTRAL_WIDTH + 110;
+const SIDE_INNER_GAP = 18;
+const PATERNAL_LANE_LEFT = FRAME_LEFT;
+const PATERNAL_LANE_RIGHT = CENTRAL_LEFT_BOUNDARY - SIDE_INNER_GAP;
+const MATERNAL_LANE_LEFT = CENTRAL_RIGHT_BOUNDARY + SIDE_INNER_GAP;
+const MATERNAL_LANE_RIGHT = FRAME_RIGHT;
+const SIDE_LANE_WIDTH = Math.min(
+  PATERNAL_LANE_RIGHT - PATERNAL_LANE_LEFT,
+  MATERNAL_LANE_RIGHT - MATERNAL_LANE_LEFT
+);
 const PATERNAL_CENTER_X = FRAME_LEFT + (CENTRAL_LEFT_BOUNDARY - FRAME_LEFT) / 2;
 const MATERNAL_CENTER_X = CENTRAL_RIGHT_BOUNDARY + (FRAME_RIGHT - CENTRAL_RIGHT_BOUNDARY) / 2;
-const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 170;
-const LOWER_LEFT_CENTER_X = VIEW_CENTER_X - 360;
-const LOWER_RIGHT_CENTER_X = VIEW_CENTER_X + 360;
+const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 38;
+const LOWER_LEFT_CENTER_X = VIEW_CENTER_X - 430;
+const LOWER_RIGHT_CENTER_X = VIEW_CENTER_X + 430;
+const LOWER_LANE_WIDTH = 760;
+const LOWER_GROUP_GAP = 26;
 
 function unique(ids: string[]) {
   return Array.from(new Set(ids.filter(Boolean)));
@@ -337,11 +350,13 @@ function addGroupBox(nodes: Node[], id: string, x: number, y: number, width: num
 }
 
 function groupGridMetrics(ids: string[], maxPerRow: number) {
-  const rows = Math.max(1, Math.ceil(ids.length / maxPerRow));
-  const largestRow = Math.min(maxPerRow, Math.max(1, ids.length));
+  const columns = Math.max(1, Math.min(maxPerRow, Math.max(1, ids.length)));
+  const rows = Math.max(1, Math.ceil(ids.length / columns));
+  const largestRow = Math.min(columns, Math.max(1, ids.length));
   return {
     rows,
     largestRow,
+    columns,
     cardsHeight: rows * CARD_HEIGHT + Math.max(0, rows - 1) * ROW_GAP,
     cardsWidth: largestRow * CARD_WIDTH + Math.max(0, largestRow - 1) * COLUMN_GAP,
   };
@@ -350,6 +365,31 @@ function groupGridMetrics(ids: string[], maxPerRow: number) {
 function groupHeight(ids: string[], maxPerRow: number) {
   const metrics = groupGridMetrics(ids, maxPerRow);
   return GROUP_BOX_PADDING_Y * 2 + LABEL_HEIGHT + LABEL_TO_CARD_GAP + metrics.cardsHeight;
+}
+
+function groupWidthForColumns(label: string, columns: number) {
+  const cardsWidth = columns * CARD_WIDTH + Math.max(0, columns - 1) * COLUMN_GAP;
+  return Math.max(cardsWidth, labelWidth(label)) + GROUP_BOX_PADDING_X * 2;
+}
+
+function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number) {
+  const visibleCount = Math.max(1, ids.length);
+  const cappedMax = Math.min(maxColumns, visibleCount);
+  const preferred = visibleCount >= 5 ? Math.min(3, cappedMax) : Math.min(2, cappedMax);
+
+  for (let columns = preferred; columns >= 1; columns -= 1) {
+    if (groupWidthForColumns(label, columns) <= laneWidth) return columns;
+  }
+
+  return 1;
+}
+
+function resolveGroupColumns(spec: GroupSpec, ids = spec.ids) {
+  return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH);
+}
+
+function visibleGroupHeight(ids: string[], maxPerRow: number) {
+  return ids.length > 0 ? groupHeight(ids, maxPerRow) : 0;
 }
 
 function placeGroup(
@@ -362,7 +402,8 @@ function placeGroup(
   const visibleIds = spec.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id));
   if (visibleIds.length === 0) return [];
 
-  const metrics = groupGridMetrics(visibleIds, spec.maxPerRow);
+  const maxPerRow = resolveGroupColumns(spec, visibleIds);
+  const metrics = groupGridMetrics(visibleIds, maxPerRow);
   const groupWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label)) + GROUP_BOX_PADDING_X * 2;
   const groupX = spec.centerX - groupWidth / 2;
   const labelY = topY + GROUP_BOX_PADDING_Y;
@@ -372,7 +413,7 @@ function placeGroup(
   addLabel(positionedNodes, `direct-label-${spec.key}`, spec.label, spec.centerX, labelY);
 
   for (let rowIndex = 0; rowIndex < metrics.rows; rowIndex += 1) {
-    const rowIds = visibleIds.slice(rowIndex * spec.maxPerRow, rowIndex * spec.maxPerRow + spec.maxPerRow);
+    const rowIds = visibleIds.slice(rowIndex * metrics.columns, rowIndex * metrics.columns + metrics.columns);
     const rowWidth = rowIds.length * CARD_WIDTH + Math.max(0, rowIds.length - 1) * COLUMN_GAP;
     const startX = spec.centerX - rowWidth / 2;
 
@@ -383,7 +424,7 @@ function placeGroup(
       positionedNodes.push(clonePersonNode(
         node,
         startX + index * (CARD_WIDTH + COLUMN_GAP),
-        firstCardY + rowIndex * ROW_GAP,
+        firstCardY + rowIndex * ROW_STEP,
         spec.variant
       ));
       positionedIds.add(id);
@@ -391,7 +432,7 @@ function placeGroup(
     });
   }
 
-  addGroupBox(positionedNodes, spec.key, groupX, topY, groupWidth, groupHeight(visibleIds, spec.maxPerRow));
+  addGroupBox(positionedNodes, spec.key, groupX, topY, groupWidth, groupHeight(visibleIds, maxPerRow));
 
   return placedIds;
 }
@@ -411,14 +452,19 @@ function placeGroupStack(
 
   if (visibleGroups.length === 0) return [];
 
-  const heights = visibleGroups.map((group) => groupHeight(group.ids, group.maxPerRow));
+  const resolvedGroups = visibleGroups.map((group) => ({
+    ...group,
+    maxPerRow: resolveGroupColumns(group),
+  }));
+  const heights = resolvedGroups.map((group) => groupHeight(group.ids, group.maxPerRow));
   const availableHeight = SIDE_BOTTOM - SIDE_TOP;
   const totalHeight = heights.reduce((sum, height) => sum + height, 0);
-  const uniformGap = Math.max(64, (availableHeight - totalHeight) / (visibleGroups.length + 1));
+  const rawGap = (availableHeight - totalHeight) / (resolvedGroups.length + 1);
+  const uniformGap = Math.max(10, rawGap);
   let cursorY = SIDE_TOP + uniformGap;
   const placedIds: string[] = [];
 
-  visibleGroups.forEach((group, index) => {
+  resolvedGroups.forEach((group, index) => {
     placedIds.push(...placeGroup(group, cursorY, positionedNodes, positionedIds, personNodeById));
     cursorY += heights[index] + uniformGap;
   });
@@ -514,7 +560,9 @@ export function directFamilyDistributedLayout(
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const index = buildRelationshipIndex(graph.relacionamentos);
-  const centralPersonId = options.centralPersonId || graph.pessoas[0]?.id;
+  const centralPersonId = options.centralPersonId && personNodeById.has(options.centralPersonId)
+    ? options.centralPersonId
+    : graph.pessoas[0]?.id;
 
   if (!centralPersonId || !personNodeById.has(centralPersonId)) {
     return { nodes: [], edges: [] };
@@ -529,37 +577,49 @@ export function directFamilyDistributedLayout(
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [
-    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal' },
-    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal' },
-    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: PATERNAL_CENTER_X, side: 'paternal' },
-    { key: 'pai', label: 'Pai', ids: filters.pais ? sides.paternal.parent : [], variant: 'parent', maxPerRow: 1, centerX: PATERNAL_CENTER_X, side: 'paternal' },
-    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal' },
-    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal' },
+    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'pai', label: 'Pai', ids: filters.pais ? sides.paternal.parent : [], variant: 'parent', maxPerRow: 1, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: SIDE_LANE_WIDTH },
   ];
 
   const maternalGroups: GroupSpec[] = [
-    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal' },
-    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal' },
-    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: MATERNAL_CENTER_X, side: 'maternal' },
-    { key: 'mae', label: 'Mãe', ids: filters.pais ? sides.maternal.parent : [], variant: 'parent', maxPerRow: 1, centerX: MATERNAL_CENTER_X, side: 'maternal' },
-    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal' },
-    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal' },
+    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'mae', label: 'Mãe', ids: filters.pais ? sides.maternal.parent : [], variant: 'parent', maxPerRow: 1, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
+    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: SIDE_LANE_WIDTH },
   ];
 
   placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById);
   placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById);
 
-  const siblings = filters.irmaos ? findSiblings(centralPersonId, index, pessoasById) : [];
+  const allSiblings = findSiblings(centralPersonId, index, pessoasById);
+  const siblings = filters.irmaos ? allSiblings : [];
   const spouses = filters.conjuge ? sortPersonIds(Array.from(index.spousesByPerson.get(centralPersonId) || []), pessoasById) : [];
   const children = filters.filhos ? findChildren(centralPersonId, index, pessoasById) : [];
   const grandchildren = filters.netos ? sortPersonIds(children.flatMap((id) => findChildren(id, index, pessoasById)), pessoasById) : [];
-  const nephews = filters.sobrinhos ? sortPersonIds(siblings.flatMap((id) => findChildren(id, index, pessoasById)), pessoasById) : [];
+  const nephews = filters.sobrinhos ? sortPersonIds(allSiblings.flatMap((id) => findChildren(id, index, pessoasById)), pessoasById) : [];
+  const siblingGroup: GroupSpec = { key: 'irmaos', label: 'Irmãos', ids: siblings, variant: 'sibling', maxPerRow: 3, centerX: LOWER_LEFT_CENTER_X, laneWidth: LOWER_LANE_WIDTH };
+  const nephewGroup: GroupSpec = { key: 'sobrinhos', label: 'Sobrinhos', ids: nephews, variant: 'nephewNiece', maxPerRow: 3, centerX: LOWER_LEFT_CENTER_X, laneWidth: LOWER_LANE_WIDTH };
+  const spouseGroup: GroupSpec = { key: 'conjuge', label: 'Cônjuge', ids: spouses, variant: 'spouse', maxPerRow: 1, centerX: LOWER_RIGHT_CENTER_X, laneWidth: LOWER_LANE_WIDTH };
+  const childrenGroup: GroupSpec = { key: 'filhos', label: 'Filhos', ids: children, variant: 'child', maxPerRow: 3, centerX: LOWER_RIGHT_CENTER_X, laneWidth: LOWER_LANE_WIDTH };
+  const grandchildrenGroup: GroupSpec = { key: 'netos', label: 'Netos', ids: grandchildren, variant: 'grandchild', maxPerRow: 3, centerX: LOWER_RIGHT_CENTER_X, laneWidth: LOWER_LANE_WIDTH };
+  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup));
+  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup));
+  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup));
+  const nephewsY = siblingsHeight > 0 ? LOWER_GROUP_Y + siblingsHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
+  const childrenY = spouseHeight > 0 ? LOWER_GROUP_Y + spouseHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
+  const grandchildrenY = childrenHeight > 0 ? childrenY + childrenHeight + LOWER_GROUP_GAP : childrenY;
 
-  placeGroup({ key: 'irmaos', label: 'Irmãos', ids: siblings, variant: 'sibling', maxPerRow: 2, centerX: LOWER_LEFT_CENTER_X }, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
-  placeGroup({ key: 'sobrinhos', label: 'Sobrinhos', ids: nephews, variant: 'nephewNiece', maxPerRow: 2, centerX: LOWER_LEFT_CENTER_X }, LOWER_GROUP_Y + 360, positionedNodes, positionedIds, personNodeById);
-  placeGroup({ key: 'conjuge', label: 'Cônjuge', ids: spouses, variant: 'spouse', maxPerRow: 1, centerX: LOWER_RIGHT_CENTER_X }, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
-  placeGroup({ key: 'filhos', label: 'Filhos', ids: children, variant: 'child', maxPerRow: 2, centerX: LOWER_RIGHT_CENTER_X }, LOWER_GROUP_Y + 320, positionedNodes, positionedIds, personNodeById);
-  placeGroup({ key: 'netos', label: 'Netos', ids: grandchildren, variant: 'grandchild', maxPerRow: 2, centerX: LOWER_RIGHT_CENTER_X }, LOWER_GROUP_Y + 700, positionedNodes, positionedIds, personNodeById);
+  placeGroup(siblingGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
+  placeGroup(nephewGroup, nephewsY, positionedNodes, positionedIds, personNodeById);
+  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
+  placeGroup(childrenGroup, childrenY, positionedNodes, positionedIds, personNodeById);
+  placeGroup(grandchildrenGroup, grandchildrenY, positionedNodes, positionedIds, personNodeById);
 
   return {
     nodes: positionedNodes,
