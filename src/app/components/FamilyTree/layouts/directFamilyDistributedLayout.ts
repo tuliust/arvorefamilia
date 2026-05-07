@@ -69,6 +69,9 @@ const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
 const CENTRAL_HEIGHT = DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT;
+const LEGEND_WIDTH = CENTRAL_WIDTH;
+const LEGEND_HEIGHT = 74;
+const LEGEND_BOTTOM_GAP = 24;
 
 const GROUP_BOX_PADDING_X = 12;
 const GROUP_BOX_PADDING_Y = 12;
@@ -676,7 +679,6 @@ function addAncestorSpouseEdges(
         const personNode = findPositionedNode(positionedNodes, personId);
         const spouseNode = findPositionedNode(positionedNodes, spouseId);
         if (!personNode || !spouseNode) return;
-        if (Math.abs(personNode.position.y - spouseNode.position.y) > 2) return;
 
         const leftId = personNode.position.x <= spouseNode.position.x ? personId : spouseId;
         const rightId = leftId === personId ? spouseId : personId;
@@ -688,6 +690,23 @@ function addAncestorSpouseEdges(
 function addTitle(nodes: Node[], centralPersonName: string) {
   const firstName = centralPersonName.trim().split(/\s+/)[0] || centralPersonName;
   addLabel(nodes, 'direct-title', `Linha Genealógica de ${firstName}`, VIEW_CENTER_X, TITLE_TOP, 'title');
+}
+
+function addLegend(nodes: Node[]) {
+  nodes.push({
+    id: 'direct-legend',
+    type: 'directFamilyLegendNode',
+    data: {
+      width: LEGEND_WIDTH,
+      height: LEGEND_HEIGHT,
+    },
+    position: finitePosition(
+      CENTRAL_X,
+      CENTRAL_Y - LEGEND_HEIGHT - LEGEND_BOTTOM_GAP
+    ),
+    draggable: false,
+    selectable: false,
+  });
 }
 
 export function directFamilyDistributedLayout(
@@ -712,6 +731,7 @@ export function directFamilyDistributedLayout(
   const positionedIds = new Set<string>();
 
   addTitle(positionedNodes, centralPerson?.nome_completo || '');
+  addLegend(positionedNodes);
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [

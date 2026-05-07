@@ -4,8 +4,14 @@ import { PersonNode } from './PersonNode';
 import { MarriageNode } from './MarriageNode';
 import { GenerationHeaderNode } from './GenerationHeaderNode';
 import { DirectFamilyLabelNode } from './DirectFamilyLabelNode';
+import { FAMILY_TREE_COLORS } from './visualTokens';
 
 interface DirectFamilyGroupBoxNodeData {
+  width?: number;
+  height?: number;
+}
+
+interface DirectFamilyLegendNodeData {
   width?: number;
   height?: number;
 }
@@ -34,6 +40,64 @@ function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeDa
   });
 }
 
+function LegendSample({ type }: { type: 'alive' | 'deceased' | 'spouse' | 'child' | 'sibling' }) {
+  if (type === 'alive' || type === 'deceased') {
+    return React.createElement('span', {
+      className: 'h-4 w-7 rounded border-2 bg-white',
+      style: {
+        borderColor: type === 'alive'
+          ? FAMILY_TREE_COLORS.CARD_BORDER_ALIVE
+          : FAMILY_TREE_COLORS.CARD_BORDER_DECEASED,
+      },
+    });
+  }
+
+  return React.createElement('span', {
+    className: 'block h-0 w-8 border-t-2',
+    style: {
+      borderColor: type === 'spouse'
+        ? FAMILY_TREE_COLORS.EDGE_SPOUSE
+        : type === 'child'
+          ? FAMILY_TREE_COLORS.EDGE_CHILD
+          : FAMILY_TREE_COLORS.EDGE_SIBLING,
+      borderStyle: type === 'sibling' ? 'dashed' : 'solid',
+    },
+  });
+}
+
+function DirectFamilyLegendNode({ data }: NodeProps<DirectFamilyLegendNodeData>) {
+  const items = [
+    ['alive', 'Vivas'],
+    ['deceased', 'Falecidas'],
+    ['spouse', 'Cônjuges'],
+    ['child', 'Filhos'],
+    ['sibling', 'Irmãos'],
+  ] as const;
+
+  return React.createElement(
+    'div',
+    {
+      className: 'pointer-events-none rounded-md border border-gray-200 bg-white/90 px-3 py-2 shadow-sm',
+      style: {
+        width: data.width ?? 570,
+        height: data.height ?? 74,
+      },
+    },
+    React.createElement(
+      'div',
+      { className: 'grid h-full grid-cols-2 content-center gap-x-3 gap-y-1' },
+      items.map(([type, label]) =>
+        React.createElement(
+          'div',
+          { key: type, className: 'flex min-w-0 items-center gap-2 text-[11px] text-gray-600' },
+          React.createElement('span', { className: 'flex w-8 shrink-0 items-center justify-center' }, React.createElement(LegendSample, { type })),
+          React.createElement('span', { className: 'truncate' }, label)
+        )
+      )
+    )
+  );
+}
+
 export const nodeTypes: NodeTypes = {
   personNode: PersonNode,
   marriageNode: MarriageNode,
@@ -41,4 +105,5 @@ export const nodeTypes: NodeTypes = {
   directFamilyLabelNode: DirectFamilyLabelNode,
   directFamilyAnchorNode: DirectFamilyAnchorNode,
   directFamilyGroupBoxNode: DirectFamilyGroupBoxNode,
+  directFamilyLegendNode: DirectFamilyLegendNode,
 };

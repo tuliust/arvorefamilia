@@ -13,8 +13,6 @@ import {
   storeViewMode,
   readStoredActiveGeneration,
   storeActiveGeneration,
-  readDesktopNoticeDismissed,
-  storeDesktopNoticeDismissed,
   readDirectRelativeFilters,
   storeDirectRelativeFilters,
 } from '../components/FamilyTree/utils/treePreferences';
@@ -123,7 +121,6 @@ export function Home() {
   );
   const [activeGeneration, setActiveGeneration] = useState(0);
   const [generationColumns, setGenerationColumns] = useState<GenerationColumnMeta[]>([]);
-  const [desktopNoticeDismissed, setDesktopNoticeDismissed] = useState(false);
   const [directRelativeFilterState, setDirectRelativeFilterState] = useState<{
     userId?: string;
     filters: DirectRelativeFilters;
@@ -136,6 +133,9 @@ export function Home() {
   const [connectionTarget, setConnectionTarget] = useState<Pessoa | null>(null);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
@@ -173,7 +173,6 @@ export function Home() {
   useEffect(() => {
     const savedViewMode = readStoredViewMode();
     const savedActiveGeneration = readStoredActiveGeneration();
-    const savedDesktopNoticeDismissed = readDesktopNoticeDismissed();
 
     if (savedViewMode) {
       setViewMode(savedViewMode);
@@ -182,8 +181,6 @@ export function Home() {
     if (typeof savedActiveGeneration === 'number') {
       setActiveGeneration(savedActiveGeneration);
     }
-
-    setDesktopNoticeDismissed(savedDesktopNoticeDismissed);
   }, []);
 
   useEffect(() => {
@@ -401,11 +398,6 @@ export function Home() {
     setSelectedMarriage(details);
   }, []);
 
-  const handleDismissDesktopNotice = useCallback(() => {
-    setDesktopNoticeDismissed(true);
-    storeDesktopNoticeDismissed(true);
-  }, []);
-
   const handleAddConnectionSubmit = useCallback((payload: AddConnectionPayload) => {
     console.info('Salvar conexão:', payload);
     setConnectionTarget(null);
@@ -533,6 +525,8 @@ export function Home() {
     };
   }, [pessoas, relacionamentos]);
 
+  const curiosities = useMemo(() => calculateCuriosities(pessoas, relacionamentos), [pessoas, relacionamentos]);
+
   const availableModes = useMemo<TipoVisualizacaoArvore[]>(
     () => (isMobile ? ['familiares-diretos', 'geracoes', 'lista'] : ['familiares-diretos', 'lados', 'geracoes', 'lista']),
     [isMobile]
@@ -569,6 +563,62 @@ export function Home() {
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
     [pessoas, relacionamentos, centralReferencePersonId]
   );
+
+  const handleAskAi = useCallback(async () => {
+    const question = aiQuestion.trim();
+    if (!question || aiLoading) return;
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiAnswer('');
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: question,
+          context: buildAiTreeContext({
+            pessoas,
+            relacionamentos,
+            stats,
+            curiosities,
+            centralPersonId: centralReferencePersonId,
+            centralPersonName: fullDisplayName || displayName,
+            directRelationCounts,
+          }),
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Não foi possível gerar a resposta agora.');
+      }
+
+      setAiAnswer(payload.answer || 'Não encontrei uma resposta para essa pergunta.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível gerar a resposta agora.';
+      setAiError(message);
+      toast.error(message);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [
+    aiLoading,
+    aiQuestion,
+    centralReferencePersonId,
+    curiosities,
+    directRelationCounts,
+    displayName,
+    fullDisplayName,
+    pessoas,
+    relacionamentos,
+    stats,
+  ]);
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-3 py-3 shadow-sm lg:px-5">
@@ -615,7 +665,7 @@ export function Home() {
               onClick={() => setAiDialogOpen(true)}
             >
               <Sparkles className="h-4 w-4" />
-              <span className="hidden xl:inline">Pergunte à IA</span>
+              <span className="hidden xl:inline">Curiosidades</span>
             </Button>
 
             <Popover>
@@ -632,6 +682,7 @@ export function Home() {
                   edgeFilters={edgeFilters}
                   directRelativeFilters={directRelativeFilters}
                   directRelationCounts={directRelationCounts}
+                  showDirectRelativeFilters={isMobile || !sidebarOpen}
                   onTogglePerson={togglePersonFilter}
                   onToggleEdge={toggleFilter}
                   onToggleDirect={toggleDirectRelativeFilter}
@@ -733,12 +784,21 @@ export function Home() {
         {!isMobile && (
           <aside
             className={[
-              'shrink-0 overflow-y-auto border-r border-gray-200 bg-white transition-[width] duration-200',
+              'flex h-full min-h-0 shrink-0 flex-col border-r border-gray-200 bg-white transition-[width] duration-200',
               sidebarOpen ? 'w-80 p-4' : 'w-14 p-2',
             ].join(' ')}
           >
-            <div className={sidebarOpen ? 'mb-4 flex items-center justify-between gap-3' : 'flex justify-center'}>
-              {sidebarOpen && <span aria-hidden="true" />}
+            <div className={sidebarOpen ? 'mb-4 flex h-9 items-center justify-between gap-3' : 'flex justify-center'}>
+              {sidebarOpen && (
+                <div className="min-w-0 flex-1 leading-tight">
+                  <p className="truncate text-xs text-gray-600">
+                    Use zoom, arraste a árvore
+                  </p>
+                  <p className="truncate text-xs text-gray-600">
+                    e clique nas pessoas para abrir detalhes.
+                  </p>
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -750,55 +810,20 @@ export function Home() {
               </Button>
             </div>
 
-            {sidebarOpen && !desktopNoticeDismissed && (
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-blue-950">Visualização interativa</p>
-                    <p className="mt-1 text-xs text-blue-800">
-                      Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleDismissDesktopNotice}
-                    className="text-xs font-medium text-blue-700 hover:text-blue-900"
-                  >
-                    OK
-                  </button>
-                </div>
-              </div>
-            )}
-
             {sidebarOpen && (
-              <div className="space-y-4">
-                <section>
-                  <h2 className="mb-3 text-sm font-semibold text-gray-900">Resumo</h2>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Stat label="Pessoas" value={stats.totalPessoas} />
-                    <Stat label="Vivos" value={stats.pessoasVivas} />
-                    <Stat label="Falecidos" value={stats.pessoasFalecidas} />
-                    <Stat label="Pets" value={stats.pets} />
-                    <Stat label="Cônjuges" value={stats.casados} />
-                    <Stat label="Cidades" value={stats.cidadesAtuais} />
-                  </div>
-                </section>
-
-                <FamilyTreeLegend />
-
-                {stats.cidadesNascimento.length > 0 && (
-                  <section>
-                    <h2 className="mb-3 text-sm font-semibold text-gray-900">Cidades de residência atual</h2>
-                    <div className="space-y-2">
-                      {stats.cidadesNascimento.map(([cidade, total]) => (
-                        <div key={cidade} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="truncate text-gray-600">{cidade}</span>
-                          <span className="font-semibold text-gray-900">{total}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                {viewMode === 'familiares-diretos' && (
+                  <DirectRelationKpiGrid
+                    filters={directRelativeFilters}
+                    counts={directRelationCounts}
+                    onToggle={toggleDirectRelativeFilter}
+                  />
                 )}
+
+                <LifeStatusKpiGrid
+                  vivos={stats.pessoasVivas}
+                  falecidos={stats.pessoasFalecidas}
+                />
               </div>
             )}
           </aside>
@@ -861,48 +886,91 @@ export function Home() {
       />
 
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="max-h-[92vh] overflow-hidden p-0 sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 px-6 pt-6">
               <Sparkles className="h-5 w-5" />
-              Pergunte à IA
+              Curiosidades
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="px-6">
               Faça perguntas sobre sua árvore genealógica.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Textarea
-              value={aiQuestion}
-              onChange={(event) => setAiQuestion(event.target.value)}
-              placeholder="Digite sua pergunta..."
-              className="min-h-28 resize-none"
-            />
+          <div className="min-h-0 overflow-y-auto px-6 pb-4">
+            <div className="space-y-4">
+              <section>
+                <h2 className="mb-2 text-sm font-semibold text-gray-900">Pergunte à IA</h2>
+                <Textarea
+                  value={aiQuestion}
+                  onChange={(event) => {
+                    setAiQuestion(event.target.value);
+                    setAiError(null);
+                  }}
+                  placeholder="Digite sua pergunta..."
+                  className="min-h-24 resize-none"
+                />
+                <p className="mt-2 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                  A IA usa os dados carregados nesta árvore para responder. A chave da OpenAI fica somente no backend.
+                </p>
+                {aiError && (
+                  <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {aiError}
+                  </p>
+                )}
+                {aiAnswer && (
+                  <div className="mt-2 whitespace-pre-wrap rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-relaxed text-emerald-950">
+                    {aiAnswer}
+                  </div>
+                )}
+              </section>
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900">
-              Em breve, este recurso será conectado à API da OpenAI.
-            </div>
+              <section>
+                <h2 className="mb-2 text-sm font-semibold text-gray-900">Curiosidades rápidas</h2>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <Stat label="Vivos" value={stats.pessoasVivas} />
+                  <Stat label="Falecidos" value={stats.pessoasFalecidas} />
+                  <Stat label="Cidades atuais" value={stats.cidadesAtuais} />
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <CuriosityCard label="Mais velho" value={curiosities.oldest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.oldest?.data_nascimento)} />
+                  <CuriosityCard label="Mais novo" value={curiosities.youngest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.youngest?.data_nascimento)} />
+                  <CuriosityCard label="Mais filhos" value={curiosities.mostChildren?.name || 'Sem dados'} detail={`${curiosities.mostChildren?.count ?? 0} filhos`} />
+                  <CuriosityCard label="Cidade com mais nascimentos" value={curiosities.topBirthCity?.city || 'Sem dados'} detail={`${curiosities.topBirthCity?.count ?? 0} pessoas`} />
+                </div>
+              </section>
 
-            <div>
-              <p className="mb-2 text-sm font-semibold text-gray-900">Exemplos de perguntas</p>
-              <div className="space-y-2">
-                {AI_QUESTION_EXAMPLES.map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    onClick={() => setAiQuestion(example)}
-                    className="block w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    {example}
-                  </button>
-                ))}
+              <section className="grid gap-3 sm:grid-cols-2">
+                <CuriosityList title="Onde moram" items={curiosities.topCurrentCities.map(({ city, count }) => [city, count])} />
+                <CuriosityList title="Onde nasceram" items={curiosities.topBirthCities.map(({ city, count }) => [city, count])} />
+              </section>
+
+              <section>
+                <p className="mb-2 text-sm font-semibold text-gray-900">Sugestões de perguntas</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {AI_QUESTION_EXAMPLES.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      onClick={() => {
+                        setAiQuestion(example);
+                        setAiError(null);
+                        setAiAnswer('');
+                      }}
+                      className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </section>
               </div>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button disabled>Enviar pergunta</Button>
+          <DialogFooter className="border-t border-gray-200 px-6 py-4">
+            <Button onClick={handleAskAi} disabled={!aiQuestion.trim() || aiLoading}>
+              {aiLoading ? 'Enviando...' : 'Enviar pergunta'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1031,6 +1099,7 @@ function FilterPanel({
   edgeFilters,
   directRelativeFilters,
   directRelationCounts,
+  showDirectRelativeFilters,
   onTogglePerson,
   onToggleEdge,
   onToggleDirect,
@@ -1049,6 +1118,7 @@ function FilterPanel({
   };
   directRelativeFilters: DirectRelativeFilters;
   directRelationCounts: DirectRelationCounts;
+  showDirectRelativeFilters: boolean;
   onTogglePerson: (key: 'vivos' | 'falecidos' | 'pets') => void;
   onToggleEdge: (key: 'conjugal' | 'filiacao_sangue' | 'filiacao_adotiva' | 'irmaos') => void;
   onToggleDirect: (key: DirectRelativeGroup) => void;
@@ -1088,7 +1158,7 @@ function FilterPanel({
         </div>
       </div>
 
-      {viewMode === 'familiares-diretos' && (
+      {viewMode === 'familiares-diretos' && showDirectRelativeFilters && (
         <div>
           <h2 className="mb-3 text-sm font-semibold text-gray-900">Familiares Diretos</h2>
           <DirectRelativeFilterGrid
@@ -1108,6 +1178,216 @@ function Stat({ label, value }: { label: string; value: number }) {
       <p className="text-xs text-gray-500">{label}</p>
       <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
     </div>
+  );
+}
+
+function CuriosityCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-gray-900">{value}</p>
+      {detail && <p className="mt-1 text-xs text-gray-500">{detail}</p>}
+    </div>
+  );
+}
+
+function CuriosityList({ title, items }: { title: string; items: Array<[string, number]> }) {
+  return (
+    <div>
+      <h2 className="mb-2 text-sm font-semibold text-gray-900">{title}</h2>
+      <div className="space-y-2">
+        {items.length > 0 ? items.map(([label, count]) => (
+          <div key={label} className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm">
+            <span className="truncate text-gray-600">{label}</span>
+            <span className="font-semibold text-gray-900">{count}</span>
+          </div>
+        )) : (
+          <p className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500">Sem dados.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function getBirthValue(pessoa?: Pessoa | null) {
+  if (!pessoa?.data_nascimento) return null;
+  const value = Number(pessoa.data_nascimento);
+  if (Number.isFinite(value)) return value;
+
+  const year = String(pessoa.data_nascimento).match(/\d{4}/)?.[0];
+  return year ? Number(year) : null;
+}
+
+function formatYear(value?: string | number | null) {
+  if (!value) return undefined;
+  const year = String(value).match(/\d{4}/)?.[0];
+  return year || String(value);
+}
+
+function calculateCuriosities(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
+  const humans = pessoas.filter((pessoa) => pessoa.humano_ou_pet === 'Humano');
+  const withBirth = humans
+    .map((pessoa) => ({ pessoa, birth: getBirthValue(pessoa) }))
+    .filter((item): item is { pessoa: Pessoa; birth: number } => typeof item.birth === 'number');
+  const sortedByBirth = [...withBirth].sort((a, b) => a.birth - b.birth);
+
+  const currentCities = countBy(
+    humans.filter((pessoa) => !hasDeathDate(pessoa.data_falecimento)).map((pessoa) => pessoa.local_atual)
+  );
+  const birthCities = countBy(humans.map((pessoa) => pessoa.local_nascimento));
+  const childrenByParent = new Map<string, Set<string>>();
+
+  const addChild = (parentId: string, childId: string) => {
+    if (!parentId || !childId || parentId === childId) return;
+    if (!childrenByParent.has(parentId)) childrenByParent.set(parentId, new Set());
+    childrenByParent.get(parentId)!.add(childId);
+  };
+
+  relacionamentos.forEach((rel) => {
+    if (rel.tipo_relacionamento === 'filho') {
+      addChild(rel.pessoa_origem_id, rel.pessoa_destino_id);
+      return;
+    }
+
+    if (rel.tipo_relacionamento === 'pai' || rel.tipo_relacionamento === 'mae') {
+      addChild(rel.pessoa_destino_id, rel.pessoa_origem_id);
+    }
+  });
+
+  const mostChildren = Array.from(childrenByParent.entries())
+    .map(([personId, children]) => ({
+      name: pessoas.find((pessoa) => pessoa.id === personId)?.nome_completo || 'Sem nome',
+      count: children.size,
+    }))
+    .sort((a, b) => b.count - a.count)[0];
+
+  return {
+    oldest: sortedByBirth[0]?.pessoa,
+    youngest: sortedByBirth[sortedByBirth.length - 1]?.pessoa,
+    mostChildren,
+    topCurrentCities: currentCities.slice(0, 5),
+    topBirthCities: birthCities.slice(0, 5),
+    topBirthCity: birthCities[0],
+  };
+}
+
+function countBy(values: Array<string | undefined | null>) {
+  const counts = new Map<string, number>();
+  values.forEach((value) => {
+    const normalized = value?.trim();
+    if (!normalized) return;
+    counts.set(normalized, (counts.get(normalized) || 0) + 1);
+  });
+
+  return Array.from(counts.entries())
+    .map(([city, count]) => ({ city, count }))
+    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
+}
+
+function buildAiTreeContext({
+  pessoas,
+  relacionamentos,
+  stats,
+  curiosities,
+  centralPersonId,
+  centralPersonName,
+  directRelationCounts,
+}: {
+  pessoas: Pessoa[];
+  relacionamentos: Relacionamento[];
+  stats: Record<string, unknown>;
+  curiosities: ReturnType<typeof calculateCuriosities>;
+  centralPersonId?: string;
+  centralPersonName: string;
+  directRelationCounts: DirectRelationCounts;
+}) {
+  return {
+    pessoaCentral: {
+      id: centralPersonId,
+      nome: centralPersonName,
+    },
+    estatisticas: stats,
+    filtrosFamiliaresDiretos: directRelationCounts,
+    curiosidades: {
+      maisVelho: curiosities.oldest
+        ? {
+            nome: curiosities.oldest.nome_completo,
+            dataNascimento: curiosities.oldest.data_nascimento,
+          }
+        : null,
+      maisNovo: curiosities.youngest
+        ? {
+            nome: curiosities.youngest.nome_completo,
+            dataNascimento: curiosities.youngest.data_nascimento,
+          }
+        : null,
+      maisFilhos: curiosities.mostChildren || null,
+      principaisCidadesAtuais: curiosities.topCurrentCities,
+      principaisCidadesNascimento: curiosities.topBirthCities,
+    },
+    pessoas: pessoas.slice(0, 700).map((pessoa) => ({
+      id: pessoa.id,
+      nome: pessoa.nome_completo,
+      nascimento: pessoa.data_nascimento,
+      falecimento: pessoa.data_falecimento,
+      localNascimento: pessoa.local_nascimento,
+      localFalecimento: pessoa.local_falecimento,
+      localAtual: pessoa.local_atual,
+      tipo: pessoa.humano_ou_pet,
+      lado: pessoa.lado,
+      bio: pessoa.minibio,
+      curiosidades: pessoa.curiosidades,
+    })),
+    relacionamentos: relacionamentos.slice(0, 1200).map((rel) => ({
+      origem: rel.pessoa_origem_id,
+      destino: rel.pessoa_destino_id,
+      tipo: rel.tipo_relacionamento,
+      subtipo: rel.subtipo_relacionamento,
+      ativo: rel.ativo,
+      observacoes: rel.observacoes,
+    })),
+  };
+}
+
+function DirectRelationKpiGrid({
+  filters,
+  counts,
+  onToggle,
+}: {
+  filters: DirectRelativeFilters;
+  counts: DirectRelationCounts;
+  onToggle: (key: DirectRelativeGroup) => void;
+}) {
+  return (
+    <section>
+      <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
+      <p className="mb-2 text-xs leading-snug text-gray-500">
+        Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
+      </p>
+      <DirectRelativeFilterGrid
+        filters={filters}
+        counts={counts}
+        onToggle={onToggle}
+        excludedKeys={['pais']}
+      />
+    </section>
+  );
+}
+
+function LifeStatusKpiGrid({ vivos, falecidos }: { vivos: number; falecidos: number }) {
+  return (
+    <section>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="min-h-[54px] rounded-lg border border-emerald-300 bg-gradient-to-br from-emerald-500 to-emerald-700 p-2 text-left text-white shadow-sm">
+          <span className="block text-xs font-semibold">Vivos</span>
+          <span className="mt-1 block text-xl font-bold leading-none">{vivos}</span>
+        </div>
+        <div className="min-h-[54px] rounded-lg border border-slate-300 bg-gradient-to-br from-slate-500 to-slate-700 p-2 text-left text-white shadow-sm">
+          <span className="block text-xs font-semibold">Falecidos</span>
+          <span className="mt-1 block text-xl font-bold leading-none">{falecidos}</span>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1266,16 +1546,20 @@ function DirectRelativeFilterGrid({
   filters,
   counts,
   onToggle,
+  excludedKeys = [],
   compact = false,
 }: {
   filters: DirectRelativeFilters;
   counts: DirectRelationCounts;
   onToggle: (key: DirectRelativeGroup) => void;
+  excludedKeys?: DirectRelativeGroup[];
   compact?: boolean;
 }) {
+  const excludedKeySet = new Set(excludedKeys);
+
   return (
     <div className={compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-5' : 'grid grid-cols-2 gap-2'}>
-      {DIRECT_RELATIVE_FILTER_OPTIONS.map((option) => {
+      {DIRECT_RELATIVE_FILTER_OPTIONS.filter((option) => !excludedKeySet.has(option.key)).map((option) => {
         const active = filters[option.key];
         const count = counts[option.key];
         const disabled = count === 0;
@@ -1287,7 +1571,7 @@ function DirectRelativeFilterGrid({
             disabled={disabled}
             onClick={() => onToggle(option.key)}
             className={[
-              'min-h-[68px] rounded-lg border p-3 text-left shadow-sm transition',
+              'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
               option.className,
               active ? 'opacity-100' : 'grayscale opacity-45',
               disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
@@ -1295,7 +1579,7 @@ function DirectRelativeFilterGrid({
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
             <span className="block text-xs font-semibold">{option.label}</span>
-            <span className="mt-1 block text-2xl font-bold leading-none">{count}</span>
+            <span className="mt-1 block text-xl font-bold leading-none">{count}</span>
           </button>
         );
       })}
@@ -1339,12 +1623,12 @@ function FamilyTreeLegend({ compact = false }: { compact?: boolean }) {
 
   return (
     <section className={compact ? '' : 'rounded-lg border border-gray-200 bg-gray-50 p-3'}>
-      <h2 className="mb-3 text-sm font-semibold text-gray-900">Legenda</h2>
-      <div className={compact ? 'grid grid-cols-1 gap-2 sm:grid-cols-2' : 'space-y-2'}>
+      {!compact && <h2 className="mb-3 text-sm font-semibold text-gray-900">Legenda</h2>}
+      <div className={compact ? 'grid grid-cols-2 gap-x-3 gap-y-1' : 'space-y-2'}>
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-3 text-xs text-gray-600">
-            <span className="flex w-12 shrink-0 items-center justify-center">{item.sample}</span>
-            <span>{item.label}</span>
+          <div key={item.label} className="flex min-w-0 items-center gap-2 text-[11px] text-gray-600">
+            <span className="flex w-10 shrink-0 items-center justify-center">{item.sample}</span>
+            <span className="truncate">{item.label}</span>
           </div>
         ))}
       </div>

@@ -151,6 +151,13 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
     };
   }
 
+  if (node.type === 'directFamilyLegendNode') {
+    return {
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : 74,
+    };
+  }
+
   if (node.type === 'directFamilyAnchorNode') {
     return { width: 1, height: 1 };
   }
