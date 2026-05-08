@@ -55,6 +55,18 @@ interface GroupBoxBounds {
   centerY: number;
 }
 
+interface GroupLayoutUnit {
+  ids: string[];
+}
+
+interface GroupGridMetrics {
+  rows: GroupLayoutUnit[][];
+  largestRow: number;
+  columns: number;
+  cardsHeight: number;
+  cardsWidth: number;
+}
+
 const FRAME_LEFT = 10;
 const FRAME_RIGHT = 3210;
 const FRAME_TOP = 10;
@@ -69,9 +81,9 @@ const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
 const CENTRAL_HEIGHT = DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT;
-const LEGEND_WIDTH = CENTRAL_WIDTH;
-const LEGEND_HEIGHT = 74;
-const LEGEND_BOTTOM_GAP = 24;
+const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
+const LEGEND_HEIGHT = 92;
+const LEGEND_BOTTOM_GAP = 30;
 
 const GROUP_BOX_PADDING_X = 12;
 const GROUP_BOX_PADDING_Y = 12;
@@ -405,21 +417,87 @@ function getGroupBoxBounds(nodes: Node[], key: string): GroupBoxBounds | null {
   };
 }
 
-function groupGridMetrics(ids: string[], maxPerRow: number) {
-  const columns = Math.max(1, Math.min(maxPerRow, Math.max(1, ids.length)));
-  const rows = Math.max(1, Math.ceil(ids.length / columns));
-  const largestRow = Math.min(columns, Math.max(1, ids.length));
+function unitCardCount(unit: GroupLayoutUnit) {
+  return unit.ids.length;
+}
+
+function rowCardCount(row: GroupLayoutUnit[]) {
+  return row.reduce((sum, unit) => sum + unitCardCount(unit), 0);
+}
+
+function buildGroupLayoutUnits(ids: string[], index?: RelationshipIndex) {
+  const groupIds = new Set(ids);
+  const usedIds = new Set<string>();
+  const units: GroupLayoutUnit[] = [];
+
+  ids.forEach((id) => {
+    if (usedIds.has(id)) return;
+
+    const spouseId = Array.from(index?.spousesByPerson.get(id) || []).find(
+      (candidateId) => groupIds.has(candidateId) && !usedIds.has(candidateId)
+    );
+
+    if (spouseId) {
+      units.push({ ids: [id, spouseId] });
+      usedIds.add(id);
+      usedIds.add(spouseId);
+      return;
+    }
+
+    units.push({ ids: [id] });
+    usedIds.add(id);
+  });
+
+  return units;
+}
+
+function buildGroupRows(ids: string[], maxPerRow: number, index?: RelationshipIndex) {
+  const units = buildGroupLayoutUnits(ids, index);
+  const columns = Math.max(
+    1,
+    Math.min(
+      Math.max(maxPerRow, ...units.map(unitCardCount)),
+      Math.max(1, ids.length)
+    )
+  );
+  const rows: GroupLayoutUnit[][] = [];
+  let currentRow: GroupLayoutUnit[] = [];
+  let currentCards = 0;
+
+  units.forEach((unit) => {
+    const unitSize = unitCardCount(unit);
+    if (currentRow.length > 0 && currentCards + unitSize > columns) {
+      rows.push(currentRow);
+      currentRow = [];
+      currentCards = 0;
+    }
+
+    currentRow.push(unit);
+    currentCards += unitSize;
+  });
+
+  if (currentRow.length > 0) rows.push(currentRow);
+  if (rows.length === 0) rows.push([]);
+
+  return { rows, columns };
+}
+
+function groupGridMetrics(ids: string[], maxPerRow: number, index?: RelationshipIndex): GroupGridMetrics {
+  const { rows, columns } = buildGroupRows(ids, maxPerRow, index);
+  const largestRow = Math.max(1, ...rows.map(rowCardCount));
+  const rowCount = Math.max(1, rows.length);
+
   return {
     rows,
     largestRow,
     columns,
-    cardsHeight: rows * CARD_HEIGHT + Math.max(0, rows - 1) * ROW_GAP,
+    cardsHeight: rowCount * CARD_HEIGHT + Math.max(0, rowCount - 1) * ROW_GAP,
     cardsWidth: largestRow * CARD_WIDTH + Math.max(0, largestRow - 1) * COLUMN_GAP,
   };
 }
 
-function groupHeight(ids: string[], maxPerRow: number) {
-  const metrics = groupGridMetrics(ids, maxPerRow);
+function groupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex) {
+  const metrics = groupGridMetrics(ids, maxPerRow, index);
   return GROUP_BOX_PADDING_Y * 2 + LABEL_HEIGHT + LABEL_TO_CARD_GAP + metrics.cardsHeight;
 }
 
@@ -428,28 +506,30 @@ function groupWidthForColumns(label: string, columns: number) {
   return Math.max(cardsWidth, labelWidth(label)) + GROUP_BOX_PADDING_X * 2;
 }
 
-function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number) {
+function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex) {
   const visibleCount = Math.max(1, ids.length);
-  const cappedMax = Math.min(maxColumns, visibleCount);
+  const units = buildGroupLayoutUnits(ids, index);
+  const minColumns = Math.max(1, ...units.map(unitCardCount));
+  const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount);
   const preferred = visibleCount <= 2
-    ? 1
+    ? Math.min(Math.max(2, minColumns), cappedMax)
     : visibleCount <= 4
-      ? Math.min(2, cappedMax)
+      ? Math.min(Math.max(2, minColumns), cappedMax)
       : Math.min(3, cappedMax);
 
-  for (let columns = preferred; columns >= 1; columns -= 1) {
+  for (let columns = preferred; columns >= minColumns; columns -= 1) {
     if (groupWidthForColumns(label, columns) <= laneWidth) return columns;
   }
 
-  return 1;
+  return minColumns;
 }
 
-function resolveGroupColumns(spec: GroupSpec, ids = spec.ids) {
-  return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH);
+function resolveGroupColumns(spec: GroupSpec, ids = spec.ids, index?: RelationshipIndex) {
+  return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH, index);
 }
 
-function visibleGroupHeight(ids: string[], maxPerRow: number) {
-  return ids.length > 0 ? groupHeight(ids, maxPerRow) : 0;
+function visibleGroupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex) {
+  return ids.length > 0 ? groupHeight(ids, maxPerRow, index) : 0;
 }
 
 function placeGroup(
@@ -457,13 +537,14 @@ function placeGroup(
   topY: number,
   positionedNodes: Node[],
   positionedIds: Set<string>,
-  personNodeById: Map<string, Node>
+  personNodeById: Map<string, Node>,
+  index?: RelationshipIndex
 ) {
   const visibleIds = spec.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id));
   if (visibleIds.length === 0) return [];
 
-  const maxPerRow = resolveGroupColumns(spec, visibleIds);
-  const metrics = groupGridMetrics(visibleIds, maxPerRow);
+  const maxPerRow = resolveGroupColumns(spec, visibleIds, index);
+  const metrics = groupGridMetrics(visibleIds, maxPerRow, index);
   const groupWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label)) + GROUP_BOX_PADDING_X * 2;
   const groupX = spec.alignBoundary?.side === 'left'
     ? spec.alignBoundary.x
@@ -477,8 +558,8 @@ function placeGroup(
 
   addLabel(positionedNodes, `direct-label-${spec.key}`, spec.label, groupCenterX, labelY);
 
-  for (let rowIndex = 0; rowIndex < metrics.rows; rowIndex += 1) {
-    const rowIds = visibleIds.slice(rowIndex * metrics.columns, rowIndex * metrics.columns + metrics.columns);
+  for (let rowIndex = 0; rowIndex < metrics.rows.length; rowIndex += 1) {
+    const rowIds = metrics.rows[rowIndex].flatMap((unit) => unit.ids);
     const rowWidth = rowIds.length * CARD_WIDTH + Math.max(0, rowIds.length - 1) * COLUMN_GAP;
     const startX = groupCenterX - rowWidth / 2;
 
@@ -497,7 +578,7 @@ function placeGroup(
     });
   }
 
-  addGroupBox(positionedNodes, spec.key, groupX, topY, groupWidth, groupHeight(visibleIds, maxPerRow));
+  addGroupBox(positionedNodes, spec.key, groupX, topY, groupWidth, groupHeight(visibleIds, maxPerRow, index));
 
   return placedIds;
 }
@@ -506,7 +587,8 @@ function placeGroupStack(
   groups: GroupSpec[],
   positionedNodes: Node[],
   positionedIds: Set<string>,
-  personNodeById: Map<string, Node>
+  personNodeById: Map<string, Node>,
+  index?: RelationshipIndex
 ) {
   const visibleGroups = groups
     .map((group) => ({
@@ -519,9 +601,9 @@ function placeGroupStack(
 
   const resolvedGroups = visibleGroups.map((group) => ({
     ...group,
-    maxPerRow: resolveGroupColumns(group),
+    maxPerRow: resolveGroupColumns(group, group.ids, index),
   }));
-  const heights = resolvedGroups.map((group) => groupHeight(group.ids, group.maxPerRow));
+  const heights = resolvedGroups.map((group) => groupHeight(group.ids, group.maxPerRow, index));
   const availableHeight = SIDE_BOTTOM - SIDE_TOP;
   const totalHeight = heights.reduce((sum, height) => sum + height, 0);
   const rawGap = resolvedGroups.length > 1
@@ -533,9 +615,9 @@ function placeGroupStack(
     : SIDE_TOP + Math.max(0, rawGap);
   const placedIds: string[] = [];
 
-  resolvedGroups.forEach((group, index) => {
-    placedIds.push(...placeGroup(group, cursorY, positionedNodes, positionedIds, personNodeById));
-    cursorY += heights[index] + uniformGap;
+  resolvedGroups.forEach((group, groupIndex) => {
+    placedIds.push(...placeGroup(group, cursorY, positionedNodes, positionedIds, personNodeById, index));
+    cursorY += heights[groupIndex] + uniformGap;
   });
 
   return placedIds;
@@ -655,7 +737,11 @@ function addAncestorSpouseEdge(addEdge: (edge: Edge) => void, leftId: string | u
     type: 'spouseEdge',
     selectable: false,
     style: ANCESTOR_SPOUSE_EDGE_STYLE,
-    data: { kind: 'directSmooth' },
+    data: {
+      kind: 'directHorizontal',
+      forceHorizontal: true,
+      horizontalTolerance: 4,
+    },
   });
 }
 
@@ -701,7 +787,7 @@ function addLegend(nodes: Node[]) {
       height: LEGEND_HEIGHT,
     },
     position: finitePosition(
-      CENTRAL_X,
+      CENTRAL_X + CENTRAL_WIDTH / 2 - LEGEND_WIDTH / 2,
       CENTRAL_Y - LEGEND_HEIGHT - LEGEND_BOTTOM_GAP
     ),
     draggable: false,
@@ -752,8 +838,8 @@ export function directFamilyDistributedLayout(
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
   ];
 
-  placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById);
-  placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById);
+  placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById, index);
+  placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById, index);
 
   const allSiblings = findSiblings(centralPersonId, index, pessoasById);
   const siblings = filters.irmaos ? allSiblings : [];
@@ -811,18 +897,18 @@ export function directFamilyDistributedLayout(
     laneWidth: LOWER_LANE_WIDTH,
     alignBoundary: { side: 'right', x: CENTRAL_X + CENTRAL_WIDTH },
   };
-  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup));
-  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup));
-  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup));
+  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup, siblings, index), index);
+  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup, spouses, index), index);
+  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup, children, index), index);
   const nephewsY = siblingsHeight > 0 ? LOWER_GROUP_Y + siblingsHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
   const childrenY = spouseHeight > 0 ? LOWER_GROUP_Y + spouseHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
   const grandchildrenY = childrenHeight > 0 ? childrenY + childrenHeight + LOWER_GROUP_GAP : childrenY;
 
-  placeGroup(siblingGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
-  placeGroup(nephewGroup, nephewsY, positionedNodes, positionedIds, personNodeById);
-  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById);
-  placeGroup(childrenGroup, childrenY, positionedNodes, positionedIds, personNodeById);
-  placeGroup(grandchildrenGroup, grandchildrenY, positionedNodes, positionedIds, personNodeById);
+  placeGroup(siblingGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(nephewGroup, nephewsY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(childrenGroup, childrenY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(grandchildrenGroup, grandchildrenY, positionedNodes, positionedIds, personNodeById, index);
 
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [

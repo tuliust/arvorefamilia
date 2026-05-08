@@ -27,13 +27,16 @@ interface OrthogonalEdgeData {
   trunkMaxY?: number;
   elbowY?: number;
   elbowX?: number;
+  forceHorizontal?: boolean;
+  horizontalTolerance?: number;
 }
 
 function directBezierPath(sourceX: number, sourceY: number, targetX: number, targetY: number) {
   const midX = sourceX + (targetX - sourceX) / 2;
 
-  if (Math.abs(sourceY - targetY) <= 2) {
-    return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+  if (Math.abs(sourceY - targetY) <= 4) {
+    const y = (sourceY + targetY) / 2;
+    return `M ${sourceX} ${y} L ${targetX} ${y}`;
   }
 
   return `M ${sourceX} ${sourceY} C ${midX} ${sourceY}, ${midX} ${targetY}, ${targetX} ${targetY}`;
@@ -50,10 +53,15 @@ export function OrthogonalChildEdge({
   data,
 }: EdgeProps<OrthogonalEdgeData>) {
   if (data?.kind === 'directHorizontal') {
+    const horizontalTolerance = data.horizontalTolerance ?? 4;
+    const path = data.forceHorizontal && Math.abs(sourceY - targetY) <= horizontalTolerance
+      ? `M ${sourceX} ${(sourceY + targetY) / 2} L ${targetX} ${(sourceY + targetY) / 2}`
+      : `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+
     return (
       <BaseEdge
         id={id}
-        path={`M ${sourceX} ${sourceY} L ${targetX} ${targetY}`}
+        path={path}
         style={style}
         markerEnd={markerEnd}
       />

@@ -77,19 +77,22 @@ function DirectFamilyLegendNode({ data }: NodeProps<DirectFamilyLegendNodeData>)
   return React.createElement(
     'div',
     {
-      className: 'pointer-events-none rounded-md border border-gray-200 bg-white/90 px-3 py-2 shadow-sm',
+      className: 'pointer-events-none rounded-md border border-gray-200 bg-white/90 px-4 py-2.5 shadow-sm',
       style: {
-        width: data.width ?? 570,
-        height: data.height ?? 74,
+        width: data.width ?? 760,
+        height: data.height ?? 92,
       },
     },
     React.createElement(
       'div',
-      { className: 'grid h-full grid-cols-2 content-center gap-x-3 gap-y-1' },
+      {
+        className: 'grid h-full content-center gap-x-4 gap-y-1',
+        style: { gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' },
+      },
       items.map(([type, label]) =>
         React.createElement(
           'div',
-          { key: type, className: 'flex min-w-0 items-center gap-2 text-[11px] text-gray-600' },
+          { key: type, className: 'flex min-w-0 items-center justify-center gap-2 text-xs text-gray-600' },
           React.createElement('span', { className: 'flex w-8 shrink-0 items-center justify-center' }, React.createElement(LegendSample, { type })),
           React.createElement('span', { className: 'truncate' }, label)
         )

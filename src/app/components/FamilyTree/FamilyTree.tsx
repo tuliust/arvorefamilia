@@ -153,8 +153,8 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
 
   if (node.type === 'directFamilyLegendNode') {
     return {
-      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH,
-      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : 74,
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 760,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : 92,
     };
   }
 

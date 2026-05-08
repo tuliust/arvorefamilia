@@ -352,15 +352,24 @@ export function Home() {
     setViewMode(nextMode);
   }, []);
 
+  const navigateToPersonProfile = useCallback(
+    (personId: string) => {
+      window.setTimeout(() => {
+        navigate(`/pessoa/${personId}`);
+      }, 0);
+    },
+    [navigate]
+  );
+
   const handlePersonClick = useCallback(
     (pessoa: Pessoa) => {
       setSelectedPersonId(pessoa.id);
 
       if (!isMobile) {
-        navigate(`/pessoa/${pessoa.id}`);
+        navigateToPersonProfile(pessoa.id);
       }
     },
-    [navigate, isMobile]
+    [navigateToPersonProfile, isMobile]
   );
 
   const handleSearchSelect = useCallback(
@@ -369,18 +378,18 @@ export function Home() {
       setSearchTerm('');
 
       if (!isMobile) {
-        navigate(`/pessoa/${pessoa.id}`);
+        navigateToPersonProfile(pessoa.id);
       }
     },
-    [navigate, isMobile]
+    [navigateToPersonProfile, isMobile]
   );
 
   const handlePersonView = useCallback(
     (pessoa: Pessoa) => {
       setSelectedPersonId(pessoa.id);
-      navigate(`/pessoa/${pessoa.id}`);
+      navigateToPersonProfile(pessoa.id);
     },
-    [navigate]
+    [navigateToPersonProfile]
   );
 
   const handlePersonEdit = useCallback((pessoa: Pessoa) => {
@@ -845,6 +854,8 @@ export function Home() {
                 <LifeStatusKpiGrid
                   vivos={stats.pessoasVivas}
                   falecidos={stats.pessoasFalecidas}
+                  filters={personFilters}
+                  onToggle={togglePersonFilter}
                 />
               </div>
             )}
@@ -908,7 +919,7 @@ export function Home() {
       />
 
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="flex max-h-[85vh] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b border-gray-100 pb-4">
             <DialogTitle className="flex items-center gap-2 px-6 pt-6">
               <Sparkles className="h-5 w-5" />
@@ -919,7 +930,7 @@ export function Home() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] sm:px-6">
             <div className="space-y-4">
               <section>
                 <h2 className="mb-2 text-sm font-semibold text-gray-900">Pergunte à IA</h2>
@@ -989,7 +1000,7 @@ export function Home() {
               </div>
             </div>
 
-          <DialogFooter className="border-t border-gray-200 px-6 py-4">
+          <DialogFooter className="shrink-0 border-t border-gray-200 px-4 py-4 sm:px-6">
             <Button onClick={handleAskAi} disabled={!aiQuestion.trim() || aiLoading}>
               {aiLoading ? 'Perguntando...' : 'Perguntar'}
             </Button>
@@ -1396,18 +1407,60 @@ function DirectRelationKpiGrid({
   );
 }
 
-function LifeStatusKpiGrid({ vivos, falecidos }: { vivos: number; falecidos: number }) {
+function LifeStatusKpiGrid({
+  vivos,
+  falecidos,
+  filters,
+  onToggle,
+}: {
+  vivos: number;
+  falecidos: number;
+  filters: {
+    vivos: boolean;
+    falecidos: boolean;
+  };
+  onToggle: (key: 'vivos' | 'falecidos') => void;
+}) {
+  const items = [
+    {
+      key: 'vivos' as const,
+      label: 'Vivos',
+      value: vivos,
+      className: 'border-emerald-300 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white',
+    },
+    {
+      key: 'falecidos' as const,
+      label: 'Falecidos',
+      value: falecidos,
+      className: 'border-slate-300 bg-gradient-to-br from-slate-500 to-slate-700 text-white',
+    },
+  ];
+
   return (
     <section>
       <div className="grid grid-cols-2 gap-2">
-        <div className="min-h-[54px] rounded-lg border border-emerald-300 bg-gradient-to-br from-emerald-500 to-emerald-700 p-2 text-left text-white shadow-sm">
-          <span className="block text-xs font-semibold">Vivos</span>
-          <span className="mt-1 block text-xl font-bold leading-none">{vivos}</span>
-        </div>
-        <div className="min-h-[54px] rounded-lg border border-slate-300 bg-gradient-to-br from-slate-500 to-slate-700 p-2 text-left text-white shadow-sm">
-          <span className="block text-xs font-semibold">Falecidos</span>
-          <span className="mt-1 block text-xl font-bold leading-none">{falecidos}</span>
-        </div>
+        {items.map((item) => {
+          const active = filters[item.key];
+
+          return (
+            <button
+              key={item.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onToggle(item.key)}
+              className={[
+                'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
+                item.className,
+                active ? 'opacity-100' : 'grayscale opacity-45',
+                'hover:-translate-y-0.5 hover:shadow-md',
+              ].join(' ')}
+              title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
+            >
+              <span className="block text-xs font-semibold">{item.label}</span>
+              <span className="mt-1 block text-xl font-bold leading-none">{item.value}</span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

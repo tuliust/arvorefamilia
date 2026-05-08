@@ -239,7 +239,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   const isPet = pessoa.humano_ou_pet === 'Pet';
   const isFalecido = hasDeathDate(pessoa.data_falecimento);
 
-  const handleClick = React.useCallback(() => {
+  const handleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
     onClick?.(pessoa);
   }, [onClick, pessoa]);
 
