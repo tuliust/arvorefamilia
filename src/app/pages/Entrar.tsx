@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { User } from '@supabase/supabase-js';
 import { ArrowRight, KeyRound, Lock, LogIn, Mail, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -408,8 +408,8 @@ export function Entrar() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8">
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-8">
         <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(380px,1fr)]">
           <section className="flex flex-col justify-center">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Árvore Genealógica</p>
@@ -581,6 +581,17 @@ export function Entrar() {
           </Card>
         </div>
       </main>
+      <footer className="px-4 pb-6">
+        <nav className="mx-auto flex max-w-6xl items-center justify-center gap-3 text-xs text-gray-500">
+          <Link to="/termos" className="font-medium hover:text-blue-700 hover:underline">
+            Termos de Uso
+          </Link>
+          <span aria-hidden="true">•</span>
+          <Link to="/privacidade" className="font-medium hover:text-blue-700 hover:underline">
+            Políticas de Privacidade
+          </Link>
+        </nav>
+      </footer>
     </div>
   );
 }

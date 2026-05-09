@@ -5,6 +5,8 @@ import { CalendarioFamiliar } from './pages/CalendarioFamiliar';
 import { MeusFavoritos } from './pages/MeusFavoritos';
 import { CentralNotificacoes } from './pages/CentralNotificacoes';
 import { Entrar } from './pages/Entrar';
+import { Privacidade } from './pages/Privacidade';
+import { Termos } from './pages/Termos';
 import { MinhaArvore } from './pages/MinhaArvore';
 import { MeusDados } from './pages/MeusDados';
 import { MeusVinculos } from './pages/MeusVinculos';
@@ -34,6 +36,14 @@ export const router = createBrowserRouter([
   {
     path: '/entrar',
     element: <Entrar />,
+  },
+  {
+    path: '/termos',
+    element: <Termos />,
+  },
+  {
+    path: '/privacidade',
+    element: <Privacidade />,
   },
   {
     path: '/minha-arvore',
