@@ -85,6 +85,11 @@ const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
+const SIDE_GROUPS_TOP = 155;
+const SIDE_GROUPS_BOTTOM = 1835;
+const CENTRAL_GROUP_TOP = 250;
+const CENTRAL_GROUP_BOTTOM = 1585;
+
 const GROUP_BOX_PADDING_X = 12;
 const GROUP_BOX_PADDING_Y = 12;
 const LABEL_HEIGHT = 30;
@@ -92,12 +97,12 @@ const LABEL_TO_CARD_GAP = 8;
 const COLUMN_GAP = 16;
 const ROW_GAP = 14;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
-const SIDE_TOP = TITLE_TOP;
-const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
-const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
-const SIDE_BOTTOM = CENTRAL_Y + CENTRAL_HEIGHT + 220;
+const SIDE_TOP = SIDE_GROUPS_TOP;
+const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
 const SIDE_GROUP_MIN_GAP = 8;
-const PARENT_GROUP_Y = CENTRAL_Y - 205;
+const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
+const CENTRAL_Y = 520;
+const PARENT_GROUP_Y = CENTRAL_GROUP_TOP + 65;
 const PARENT_GROUP_GAP = 260;
 const FATHER_GROUP_CENTER_X = VIEW_CENTER_X - PARENT_GROUP_GAP;
 const MOTHER_GROUP_CENTER_X = VIEW_CENTER_X + PARENT_GROUP_GAP;
@@ -116,9 +121,9 @@ const PATERNAL_GROUP_LANE_WIDTH = Math.min(700, SIDE_LANE_WIDTH);
 const MATERNAL_GROUP_LANE_WIDTH = Math.min(760, SIDE_LANE_WIDTH);
 const PATERNAL_CENTER_X = FRAME_LEFT + (CENTRAL_LEFT_BOUNDARY - FRAME_LEFT) / 2;
 const MATERNAL_CENTER_X = CENTRAL_RIGHT_BOUNDARY + (FRAME_RIGHT - CENTRAL_RIGHT_BOUNDARY) / 2;
-const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 38;
+const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 24;
 const LOWER_LANE_WIDTH = 760;
-const LOWER_GROUP_GAP = 26;
+const LOWER_GROUP_GAP = 18;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH,
@@ -617,10 +622,11 @@ function placeGroupStack(
   const rawGap = resolvedGroups.length > 1
     ? (availableHeight - totalHeight) / (resolvedGroups.length - 1)
     : (availableHeight - totalHeight) / 2;
-  const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, rawGap);
-  let cursorY = resolvedGroups.length > 1 && totalHeight <= availableHeight
-    ? SIDE_TOP
-    : SIDE_TOP + Math.max(0, rawGap);
+  const uniformGap = Math.max(
+    SIDE_GROUP_MIN_GAP,
+    Number.isFinite(rawGap) ? rawGap : SIDE_GROUP_MIN_GAP
+  );
+  let cursorY = SIDE_TOP;
   const placedIds: string[] = [];
 
   resolvedGroups.forEach((group, groupIndex) => {
