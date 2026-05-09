@@ -10,6 +10,7 @@ import {
   ForumTopico,
   ForumTopicoStatus,
   ForumTopicoTipo,
+  Pessoa,
 } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -229,6 +230,44 @@ export async function criarTopicoForum(payload: CriarTopicoForumPayload): Promis
   }
 
   return data ? (data as ForumTopico) : undefined;
+}
+
+export async function vincularPessoasAoTopico(topicoId: string, pessoaIds: string[]) {
+  const uniquePessoaIds = Array.from(new Set(pessoaIds.filter(Boolean)));
+
+  if (uniquePessoaIds.length === 0) return;
+
+  const payload = uniquePessoaIds.map((pessoaId) => ({
+    topico_id: topicoId,
+    pessoa_id: pessoaId,
+  }));
+
+  const { error } = await supabase
+    .from('forum_topico_pessoas')
+    .upsert(payload, {
+      onConflict: 'topico_id,pessoa_id',
+    });
+
+  if (error) {
+    logSupabaseError(`Erro ao vincular pessoas ao tópico ${topicoId}`, error);
+    throw new Error(error.message);
+  }
+}
+
+export async function listarPessoasDoTopico(topicoId: string): Promise<Pessoa[]> {
+  const { data, error } = await supabase
+    .from('forum_topico_pessoas')
+    .select('pessoa_id, pessoas(*)')
+    .eq('topico_id', topicoId);
+
+  if (error) {
+    logSupabaseError(`Erro ao listar pessoas do tópico ${topicoId}`, error);
+    return [];
+  }
+
+  return (data || [])
+    .map((row) => row.pessoas)
+    .filter(Boolean) as Pessoa[];
 }
 
 export async function atualizarTopicoForum(

@@ -76,6 +76,10 @@ export type EditableOwnPersonPayload = Pick<
   | 'instagram_url'
   | 'permitir_exibir_instagram'
   | 'permitir_mensagens_whatsapp'
+  | 'permitir_exibir_data_nascimento'
+  | 'permitir_exibir_endereco'
+  | 'permitir_exibir_rede_social'
+  | 'permitir_exibir_telefone'
 >;
 
 export async function ensureMemberProfile(userId: string, payload?: { nome_exibicao?: string | null; avatar_url?: string | null }) {

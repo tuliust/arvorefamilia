@@ -1,11 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AppLink as Link } from '../components/AppLink';
-import { ChevronLeft, ChevronRight, ArrowLeft, Gift, Heart, CalendarSync, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, CalendarSync, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { obterTodasPessoas } from '../services/dataService';
-import { Pessoa } from '../types';
-import { criarEventosDoCalendario, EventoCalendarioFamiliar } from '../utils/familyDates';
+import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
+import { Pessoa, Relacionamento } from '../types';
+import {
+  CalendarEventCategory,
+  criarEventosDoCalendario,
+  EventoCalendarioFamiliar,
+  getCalendarCategory,
+} from '../utils/familyDates';
 import { useAuth } from '../contexts/AuthContext';
 import {
   desconectarGoogleCalendar,
@@ -30,6 +35,54 @@ const MESES = [
   'Novembro',
   'Dezembro',
 ];
+
+const CALENDAR_CATEGORY_COLORS = {
+  aniversarios: {
+    label: 'Aniversários',
+    background: '#EFF6FF',
+    border: '#93C5FD',
+    text: '#1D4ED8',
+    dot: '#3B82F6',
+  },
+  casamento: {
+    label: 'Data de Casamento',
+    background: '#FDF2F8',
+    border: '#F9A8D4',
+    text: '#BE185D',
+    dot: '#EC4899',
+  },
+  falecimento: {
+    label: 'Dia de Falecimento',
+    background: '#F8FAFC',
+    border: '#CBD5E1',
+    text: '#475569',
+    dot: '#64748B',
+  },
+  eventos_historicos: {
+    label: 'Eventos Históricos',
+    background: '#FEFCE8',
+    border: '#FDE047',
+    text: '#854D0E',
+    dot: '#EAB308',
+  },
+  confraternizacoes: {
+    label: 'Confraternizações',
+    background: '#F0FDF4',
+    border: '#86EFAC',
+    text: '#166534',
+    dot: '#22C55E',
+  },
+} as const;
+
+const CALENDAR_CATEGORY_KEYS = Object.keys(CALENDAR_CATEGORY_COLORS) as CalendarEventCategory[];
+
+const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
+  aniversarios: true,
+  casamento: true,
+  falecimento: true,
+  eventos_historicos: true,
+  confraternizacoes: true,
+};
 
 function construirGradeMes(ano: number, mes: number) {
   const primeiroDia = new Date(ano, mes, 1);
@@ -72,6 +125,7 @@ export function CalendarioFamiliar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dataAtual, setDataAtual] = useState(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus>({ conectado: false });
@@ -82,14 +136,17 @@ export function CalendarioFamiliar() {
     totalAtualizados?: number;
     totalIgnorados?: number;
   } | null>(null);
-  const [mostrarAniversarios, setMostrarAniversarios] = useState(true);
-  const [mostrarMemoria, setMostrarMemoria] = useState(true);
+  const [activeCategories, setActiveCategories] = useState<Record<CalendarEventCategory, boolean>>(DEFAULT_ACTIVE_CATEGORIES);
 
   useEffect(() => {
     const carregar = async () => {
       setLoading(true);
-      const dados = await obterTodasPessoas();
-      setPessoas(Array.isArray(dados) ? dados : []);
+      const [dadosPessoas, dadosRelacionamentos] = await Promise.all([
+        obterTodasPessoas(),
+        obterTodosRelacionamentos(),
+      ]);
+      setPessoas(Array.isArray(dadosPessoas) ? dadosPessoas : []);
+      setRelacionamentos(Array.isArray(dadosRelacionamentos) ? dadosRelacionamentos : []);
       setLoading(false);
     };
 
@@ -196,22 +253,38 @@ export function CalendarioFamiliar() {
     toast.success('Google Agenda desconectado.');
   }
 
-  const eventos = useMemo(() => criarEventosDoCalendario(pessoas), [pessoas]);
+  function toggleCategory(category: CalendarEventCategory) {
+    setActiveCategories((current) => ({
+      ...current,
+      [category]: !current[category],
+    }));
+  }
+
+  const eventos = useMemo(
+    () => criarEventosDoCalendario(pessoas, relacionamentos, dataAtual.getFullYear()),
+    [pessoas, relacionamentos, dataAtual]
+  );
+
+  const categoryCounts = useMemo(() => {
+    return eventos.reduce<Record<CalendarEventCategory, number>>((acc, evento) => {
+      const category = getCalendarCategory(evento);
+      acc[category] += 1;
+      return acc;
+    }, { ...DEFAULT_ACTIVE_CATEGORIES, aniversarios: 0, casamento: 0, falecimento: 0, eventos_historicos: 0, confraternizacoes: 0 });
+  }, [eventos]);
 
   const eventosDoMes = useMemo(() => {
     return eventos.filter((evento) => {
       if (evento.mes !== dataAtual.getMonth()) return false;
-      if (evento.tipo === 'aniversario' && !mostrarAniversarios) return false;
-      if (evento.tipo === 'memoria' && !mostrarMemoria) return false;
-      return true;
+      return activeCategories[getCalendarCategory(evento)];
     });
-  }, [eventos, dataAtual, mostrarAniversarios, mostrarMemoria]);
+  }, [eventos, dataAtual, activeCategories]);
 
   const eventosPorDia = useMemo(() => agruparPorDia(eventosDoMes), [eventosDoMes]);
   const grade = useMemo(() => construirGradeMes(dataAtual.getFullYear(), dataAtual.getMonth()), [dataAtual]);
 
-  const aniversariantesMes = eventosDoMes.filter((evento) => evento.tipo === 'aniversario');
-  const memoriasMes = eventosDoMes.filter((evento) => evento.tipo === 'memoria');
+  const aniversariantesMes = eventosDoMes.filter((evento) => evento.category === 'aniversarios');
+  const falecimentosMes = eventosDoMes.filter((evento) => evento.category === 'falecimento');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -262,25 +335,52 @@ export function CalendarioFamiliar() {
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={mostrarAniversarios}
-                  onChange={() => setMostrarAniversarios((prev) => !prev)}
-                />
-                Aniversários
-              </label>
+            <p className="max-w-md text-sm text-gray-500">
+              Use as categorias abaixo para filtrar aniversários, casamentos, falecimentos e eventos familiares.
+            </p>
+          </div>
+        </section>
 
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={mostrarMemoria}
-                  onChange={() => setMostrarMemoria((prev) => !prev)}
-                />
-                Datas de memória
-              </label>
-            </div>
+        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+          <div className="mb-3">
+            <h2 className="text-lg font-bold text-gray-900">Categorias</h2>
+            <p className="text-sm text-gray-500">Clique para ativar ou ocultar categorias do calendário.</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {CALENDAR_CATEGORY_KEYS.map((category) => {
+              const colors = CALENDAR_CATEGORY_COLORS[category];
+              const active = activeCategories[category];
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition hover:shadow-sm"
+                  style={{
+                    backgroundColor: active ? colors.background : '#FFFFFF',
+                    borderColor: active ? colors.border : '#E5E7EB',
+                    color: active ? colors.text : '#6B7280',
+                    opacity: active ? 1 : 0.62,
+                  }}
+                >
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: colors.dot }}
+                  />
+                  <span>{colors.label}</span>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-xs"
+                    style={{
+                      backgroundColor: active ? '#FFFFFFAA' : '#F3F4F6',
+                      color: active ? colors.text : '#6B7280',
+                    }}
+                  >
+                    {categoryCounts[category]}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -430,23 +530,31 @@ export function CalendarioFamiliar() {
                           </div>
 
                           <div className="space-y-2">
-                            {eventosDia.slice(0, 3).map((evento) => (
-                              <Link
-                                key={evento.id}
-                                to={`/pessoa/${evento.pessoaId}`}
-                                className={`block rounded-lg border px-2 py-1.5 text-[11px] leading-tight transition-colors ${
-                                  evento.tipo === 'aniversario'
-                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
-                                    : 'border-purple-200 bg-purple-50 text-purple-900 hover:bg-purple-100'
-                                }`}
-                              >
-                                <div className="flex items-center gap-1 font-semibold mb-1">
-                                  {evento.tipo === 'aniversario' ? <Gift className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
-                                  <span>{evento.nome}</span>
-                                </div>
-                                <p>{evento.descricao}</p>
-                              </Link>
-                            ))}
+                            {eventosDia.slice(0, 3).map((evento) => {
+                              const category = getCalendarCategory(evento);
+                              const colors = CALENDAR_CATEGORY_COLORS[category];
+                              return (
+                                <Link
+                                  key={evento.id}
+                                  to={evento.link || `/pessoa/${evento.pessoaId}`}
+                                  className="block rounded-lg border px-2 py-1.5 text-[11px] leading-tight transition-colors hover:brightness-95"
+                                  style={{
+                                    backgroundColor: colors.background,
+                                    borderColor: colors.border,
+                                    color: colors.text,
+                                  }}
+                                >
+                                  <div className="mb-1 flex items-center gap-1 font-semibold">
+                                    <span
+                                      className="h-2 w-2 rounded-full"
+                                      style={{ backgroundColor: colors.dot }}
+                                    />
+                                    <span>{evento.titulo}</span>
+                                  </div>
+                                  <p>{evento.descricao}</p>
+                                </Link>
+                              );
+                            })}
 
                             {eventosDia.length > 3 && (
                               <div className="text-[11px] font-medium text-gray-500 px-1">
@@ -467,14 +575,27 @@ export function CalendarioFamiliar() {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Resumo do mês</h3>
               <div className="space-y-3 text-sm text-gray-700">
-                <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
-                  <span>Aniversários</span>
-                  <strong className="text-emerald-700">{aniversariantesMes.length}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-purple-50 px-4 py-3">
-                  <span>Datas de memória</span>
-                  <strong className="text-purple-700">{memoriasMes.length}</strong>
-                </div>
+                {CALENDAR_CATEGORY_KEYS.map((category) => {
+                  const colors = CALENDAR_CATEGORY_COLORS[category];
+                  const count = eventosDoMes.filter((evento) => getCalendarCategory(evento) === category).length;
+                  return (
+                    <div
+                      key={category}
+                      className="flex items-center justify-between rounded-xl border px-4 py-3"
+                      style={{
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.dot }} />
+                        {colors.label}
+                      </span>
+                      <strong>{count}</strong>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -494,7 +615,9 @@ export function CalendarioFamiliar() {
                         <p className="font-semibold text-sm text-gray-900">{evento.nome}</p>
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
-                      <span className="text-xs font-medium text-emerald-700">{evento.descricao}</span>
+                      <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.aniversarios.text }}>
+                        {evento.descricao}
+                      </span>
                     </Link>
                   ))
                 )}
@@ -502,22 +625,24 @@ export function CalendarioFamiliar() {
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Datas de memória</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Dias de falecimento</h3>
               <div className="space-y-3">
-                {memoriasMes.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nenhuma data de memória neste mês com os filtros atuais.</p>
+                {falecimentosMes.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nenhum dia de falecimento neste mês com os filtros atuais.</p>
                 ) : (
-                  memoriasMes.map((evento) => (
+                  falecimentosMes.map((evento) => (
                     <Link
                       key={evento.id}
-                      to={`/pessoa/${evento.pessoaId}`}
+                      to={evento.link || `/pessoa/${evento.pessoaId}`}
                       className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
                       <div>
-                        <p className="font-semibold text-sm text-gray-900">{evento.nome}</p>
+                        <p className="font-semibold text-sm text-gray-900">{evento.titulo}</p>
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
-                      <span className="text-xs font-medium text-purple-700">{evento.descricao}</span>
+                      <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
+                        {CALENDAR_CATEGORY_COLORS.falecimento.label}
+                      </span>
                     </Link>
                   ))
                 )}

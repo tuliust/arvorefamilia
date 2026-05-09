@@ -25,6 +25,10 @@ export const PERSON_FIELD_LABELS = {
   instagram_url: 'URL da rede social',
   permitir_exibir_instagram: 'Exibir rede social no perfil',
   permitir_mensagens_whatsapp: 'Permitir mensagens por WhatsApp',
+  permitir_exibir_data_nascimento: 'Exibir data de nascimento',
+  permitir_exibir_endereco: 'Exibir endereço',
+  permitir_exibir_rede_social: 'Exibir rede social',
+  permitir_exibir_telefone: 'Exibir telefone',
   data_falecimento: 'Data de falecimento',
   local_falecimento: 'Local de falecimento',
   humano_ou_pet: 'Tipo',
@@ -47,6 +51,10 @@ export const EDITABLE_OWN_PERSON_FIELDS: Array<keyof EditableOwnPersonPayload> =
   'instagram_usuario',
   'permitir_exibir_instagram',
   'permitir_mensagens_whatsapp',
+  'permitir_exibir_data_nascimento',
+  'permitir_exibir_endereco',
+  'permitir_exibir_rede_social',
+  'permitir_exibir_telefone',
 ];
 
 export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOwnPersonPayload {
@@ -63,8 +71,12 @@ export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOw
     rede_social: pessoa?.rede_social ?? '',
     instagram_usuario: pessoa?.instagram_usuario ?? '',
     instagram_url: pessoa?.instagram_url ?? '',
-    permitir_exibir_instagram: Boolean(pessoa?.permitir_exibir_instagram),
+    permitir_exibir_instagram: Boolean(pessoa?.permitir_exibir_instagram || pessoa?.permitir_exibir_rede_social),
     permitir_mensagens_whatsapp: Boolean(pessoa?.permitir_mensagens_whatsapp),
+    permitir_exibir_data_nascimento: pessoa?.permitir_exibir_data_nascimento ?? true,
+    permitir_exibir_endereco: pessoa?.permitir_exibir_endereco ?? false,
+    permitir_exibir_rede_social: pessoa?.permitir_exibir_rede_social ?? Boolean(pessoa?.permitir_exibir_instagram),
+    permitir_exibir_telefone: pessoa?.permitir_exibir_telefone ?? false,
   };
 }
 
@@ -187,6 +199,12 @@ export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnP
     local_nascimento: normalizeLocation(String(form.local_nascimento ?? '')),
     local_atual: normalizeLocation(String(form.local_atual ?? '')),
     telefone: formatPhone(String(form.telefone ?? '')),
+    permitir_exibir_instagram: Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram),
+    permitir_mensagens_whatsapp: Boolean(form.permitir_mensagens_whatsapp),
+    permitir_exibir_data_nascimento: form.permitir_exibir_data_nascimento ?? true,
+    permitir_exibir_endereco: Boolean(form.permitir_exibir_endereco),
+    permitir_exibir_rede_social: Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram),
+    permitir_exibir_telefone: Boolean(form.permitir_exibir_telefone),
   };
 
   return EDITABLE_OWN_PERSON_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
@@ -228,14 +246,14 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   if (currentLocationError) nextErrors.local_atual = currentLocationError;
 
   if (
-    Boolean(form.permitir_exibir_instagram) &&
+    Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram) &&
     String(form.rede_social ?? '').trim() &&
     !String(form.instagram_usuario ?? '').trim()
   ) {
     nextErrors.instagram_usuario = 'Informe o perfil para exibir a rede social.';
   }
 
-  if (Boolean(form.permitir_exibir_instagram) && !String(form.rede_social ?? '').trim()) {
+  if (Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram) && !String(form.rede_social ?? '').trim()) {
     nextErrors.rede_social = 'Selecione uma rede social para exibir no perfil.';
   }
 

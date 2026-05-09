@@ -1,5 +1,6 @@
 import { Pessoa, Relacionamento } from '../types';
 import { supabase } from '../lib/supabaseClient';
+import { limparCacheParentesco } from './relationshipCacheService';
 
 type SupabaseErrorLike = {
   message?: string;
@@ -29,6 +30,10 @@ const PESSOA_COLUMNS = [
   'instagram_url',
   'permitir_exibir_instagram',
   'permitir_mensagens_whatsapp',
+  'permitir_exibir_data_nascimento',
+  'permitir_exibir_endereco',
+  'permitir_exibir_rede_social',
+  'permitir_exibir_telefone',
   'geracao_sociologica',
   'manual_generation',
 ] as const;
@@ -52,6 +57,14 @@ function logSupabaseError(context: string, error: SupabaseErrorLike) {
     details: error.details,
     hint: error.hint,
   });
+}
+
+async function limparCacheParentescoSemBloquear() {
+  try {
+    await limparCacheParentesco();
+  } catch (error) {
+    console.warn('Não foi possível limpar cache de parentesco:', error);
+  }
 }
 
 function getSupabaseErrorMessage(tableName: string, error: SupabaseErrorLike) {
@@ -86,6 +99,10 @@ function toPessoa(row: any): Pessoa {
   return {
     ...row,
     humano_ou_pet: row?.humano_ou_pet || 'Humano',
+    permitir_exibir_data_nascimento: row?.permitir_exibir_data_nascimento ?? true,
+    permitir_exibir_endereco: row?.permitir_exibir_endereco ?? false,
+    permitir_exibir_rede_social: row?.permitir_exibir_rede_social ?? false,
+    permitir_exibir_telefone: row?.permitir_exibir_telefone ?? false,
   } as Pessoa;
 }
 
@@ -406,6 +423,7 @@ export async function adicionarRelacionamento(relacionamento: Omit<Relacionament
     return undefined;
   }
 
+  await limparCacheParentescoSemBloquear();
   return data ? toRelacionamento(data) : undefined;
 }
 
@@ -489,6 +507,7 @@ export async function adicionarRelacionamentoComInverso(
     logSupabaseError('Erro ao adicionar relacionamento inverso', error);
   }
 
+  await limparCacheParentescoSemBloquear();
   return principal;
 }
 
@@ -506,6 +525,7 @@ export async function atualizarRelacionamento(id: string, relacionamento: Partia
     return undefined;
   }
 
+  await limparCacheParentescoSemBloquear();
   return data ? toRelacionamento(data) : undefined;
 }
 
@@ -520,6 +540,7 @@ export async function deletarRelacionamento(id: string): Promise<boolean> {
     return false;
   }
 
+  await limparCacheParentescoSemBloquear();
   return true;
 }
 

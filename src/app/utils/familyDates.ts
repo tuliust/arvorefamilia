@@ -1,17 +1,34 @@
-import { Pessoa } from '../types';
+import { Pessoa, Relacionamento } from '../types';
 
-export type TipoEventoCalendario = 'aniversario' | 'memoria';
+export type CalendarEventCategory =
+  | 'aniversarios'
+  | 'casamento'
+  | 'falecimento'
+  | 'eventos_historicos'
+  | 'confraternizacoes';
+
+export type TipoEventoCalendario =
+  | 'aniversario'
+  | 'casamento'
+  | 'falecimento'
+  | 'evento_historico'
+  | 'confraternizacao'
+  | 'memoria';
 
 export interface EventoCalendarioFamiliar {
   id: string;
   pessoaId: string;
   nome: string;
   tipo: TipoEventoCalendario;
+  category: CalendarEventCategory;
+  titulo: string;
   dia: number;
   mes: number;
   anoOriginal?: number;
   descricao: string;
-  pessoa: Pessoa;
+  pessoa?: Pessoa;
+  pessoas?: Pessoa[];
+  link?: string;
 }
 
 export interface FaixaGeracao {
@@ -185,40 +202,135 @@ export function formatarMemorial(dataFalecimento: Date, referencia = new Date())
   return anos === 1 ? `há 1 ano e ${meses} meses` : `há ${anos} anos e ${meses} meses`;
 }
 
-export function criarEventosDoCalendario(pessoas: Pessoa[]): EventoCalendarioFamiliar[] {
+export function hasDeathDate(value?: string | number | null) {
+  return Boolean(String(value ?? '').trim());
+}
+
+function createDeathAnniversaryTitle(pessoa: Pessoa, falecimento: Date, referenceYear: number) {
+  const anos = referenceYear - falecimento.getFullYear();
+
+  if (anos >= 1) {
+    return `${anos} ${anos === 1 ? 'ano' : 'anos'} de falecimento de ${pessoa.nome_completo}`;
+  }
+
+  return `Falecimento de ${pessoa.nome_completo}`;
+}
+
+export function getCalendarCategory(event: Pick<EventoCalendarioFamiliar, 'tipo' | 'category'>): CalendarEventCategory {
+  if (event.category) return event.category;
+
+  switch (event.tipo) {
+    case 'aniversario':
+      return 'aniversarios';
+    case 'casamento':
+      return 'casamento';
+    case 'falecimento':
+    case 'memoria':
+      return 'falecimento';
+    case 'evento_historico':
+      return 'eventos_historicos';
+    case 'confraternizacao':
+      return 'confraternizacoes';
+    default:
+      return 'eventos_historicos';
+  }
+}
+
+export function criarEventosDoCalendario(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[] = [],
+  referenceYear = new Date().getFullYear()
+): EventoCalendarioFamiliar[] {
   const eventos: EventoCalendarioFamiliar[] = [];
+  const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
 
   for (const pessoa of pessoas) {
     const nascimento = parseFlexibleFamilyDate(pessoa.data_nascimento);
-    if (nascimento) {
+    if (nascimento && !hasDeathDate(pessoa.data_falecimento)) {
       const idade = calcularIdadeOuTempoDecorrido(nascimento).anos;
       eventos.push({
         id: `${pessoa.id}-aniversario`,
         pessoaId: pessoa.id,
         nome: pessoa.nome_completo,
         tipo: 'aniversario',
+        category: 'aniversarios',
+        titulo: `Aniversário de ${pessoa.nome_completo}`,
         dia: nascimento.getDate(),
         mes: nascimento.getMonth(),
         anoOriginal: nascimento.getFullYear(),
         descricao: Number.isFinite(idade) ? `${idade + 1} anos no próximo aniversário` : 'Aniversário',
         pessoa,
+        pessoas: [pessoa],
+        link: `/pessoa/${pessoa.id}`,
       });
     }
 
     const falecimento = parseFlexibleFamilyDate(pessoa.data_falecimento);
     if (falecimento) {
+      const anosFalecimento = referenceYear - falecimento.getFullYear();
+      const titulo = anosFalecimento >= 1
+        ? createDeathAnniversaryTitle(pessoa, falecimento, referenceYear)
+        : `Memória de ${pessoa.nome_completo}`;
+
       eventos.push({
-        id: `${pessoa.id}-memoria`,
+        id: `${pessoa.id}-falecimento`,
         pessoaId: pessoa.id,
         nome: pessoa.nome_completo,
-        tipo: 'memoria',
+        tipo: 'falecimento',
+        category: 'falecimento',
+        titulo,
         dia: falecimento.getDate(),
         mes: falecimento.getMonth(),
         anoOriginal: falecimento.getFullYear(),
-        descricao: formatarMemorial(falecimento),
+        descricao: `Data de memória familiar de ${pessoa.nome_completo}.`,
         pessoa,
+        pessoas: [pessoa],
+        link: `/pessoa/${pessoa.id}`,
       });
     }
+  }
+
+  const casamentoKeys = new Set<string>();
+
+  for (const relacionamento of relacionamentos) {
+    if (relacionamento.tipo_relacionamento !== 'conjuge' || !relacionamento.data_casamento) {
+      continue;
+    }
+
+    const dataCasamento = parseFlexibleFamilyDate(relacionamento.data_casamento);
+    if (!dataCasamento) continue;
+
+    const pairIds = [relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id].filter(Boolean).sort();
+    if (pairIds.length < 2) continue;
+
+    const key = pairIds.join('-');
+    if (casamentoKeys.has(key)) continue;
+    casamentoKeys.add(key);
+
+    const pessoaA = pessoasById.get(pairIds[0]);
+    const pessoaB = pessoasById.get(pairIds[1]);
+    if (!pessoaA || !pessoaB) continue;
+
+    const pessoaFalecida = hasDeathDate(pessoaA.data_falecimento) || hasDeathDate(pessoaB.data_falecimento);
+    const nomes = `${pessoaA.nome_completo} e ${pessoaB.nome_completo}`;
+
+    eventos.push({
+      id: `${key}-casamento`,
+      pessoaId: pessoaA.id,
+      nome: nomes,
+      tipo: 'casamento',
+      category: 'casamento',
+      titulo: pessoaFalecida ? `Data de casamento de ${nomes}` : `Aniversário de casamento de ${nomes}`,
+      dia: dataCasamento.getDate(),
+      mes: dataCasamento.getMonth(),
+      anoOriginal: dataCasamento.getFullYear(),
+      descricao: dataCasamento.getFullYear()
+        ? `${referenceYear - dataCasamento.getFullYear()} anos desde o casamento`
+        : 'Data de casamento',
+      pessoa: pessoaA,
+      pessoas: [pessoaA, pessoaB],
+      link: `/pessoa/${pessoaA.id}`,
+    });
   }
 
   return eventos.sort((a, b) => {

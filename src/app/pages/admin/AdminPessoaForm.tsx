@@ -68,6 +68,12 @@ export function AdminPessoaForm() {
     telefone: '',
     endereco: '',
     rede_social: '',
+    permitir_exibir_data_nascimento: true,
+    permitir_exibir_endereco: false,
+    permitir_exibir_rede_social: false,
+    permitir_exibir_telefone: false,
+    permitir_exibir_instagram: false,
+    permitir_mensagens_whatsapp: false,
     arquivos_historicos: [] as ArquivoHistorico[],
   });
 
@@ -108,6 +114,12 @@ export function AdminPessoaForm() {
               telefone: pessoa.telefone || '',
               endereco: pessoa.endereco || '',
               rede_social: pessoa.rede_social || '',
+              permitir_exibir_data_nascimento: pessoa.permitir_exibir_data_nascimento ?? true,
+              permitir_exibir_endereco: pessoa.permitir_exibir_endereco ?? false,
+              permitir_exibir_rede_social: pessoa.permitir_exibir_rede_social ?? Boolean(pessoa.permitir_exibir_instagram),
+              permitir_exibir_telefone: pessoa.permitir_exibir_telefone ?? false,
+              permitir_exibir_instagram: pessoa.permitir_exibir_instagram ?? Boolean(pessoa.permitir_exibir_rede_social),
+              permitir_mensagens_whatsapp: pessoa.permitir_mensagens_whatsapp ?? false,
               arquivos_historicos: arquivosHistoricos,
             };
 
@@ -235,8 +247,16 @@ export function AdminPessoaForm() {
     }
   };
 
-  const handleChange = (field: string, value: string | ArquivoHistorico[]) => {
+  const handleChange = (field: string, value: string | boolean | ArquivoHistorico[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleRedeSocialPrivacyChange = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      permitir_exibir_rede_social: checked,
+      permitir_exibir_instagram: checked,
+    }));
   };
 
   const handleTelefoneChange = (value: string) => {
@@ -564,6 +584,40 @@ export function AdminPessoaForm() {
             </Card>
           )}
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Privacidade</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Defina quais dados pessoais podem aparecer para outros familiares. Essas opções podem ser ajustadas depois.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <PrivacyCheckbox
+                  label="Exibir minha data de nascimento para outros familiares"
+                  checked={formData.permitir_exibir_data_nascimento !== false}
+                  onChange={(checked) => handleChange('permitir_exibir_data_nascimento', checked)}
+                />
+                <PrivacyCheckbox
+                  label="Exibir meu telefone para outros familiares"
+                  checked={Boolean(formData.permitir_exibir_telefone)}
+                  onChange={(checked) => handleChange('permitir_exibir_telefone', checked)}
+                />
+                <PrivacyCheckbox
+                  label="Exibir meu endereço para outros familiares"
+                  checked={Boolean(formData.permitir_exibir_endereco)}
+                  onChange={(checked) => handleChange('permitir_exibir_endereco', checked)}
+                />
+                <PrivacyCheckbox
+                  label="Exibir minha rede social para outros familiares"
+                  checked={Boolean(formData.permitir_exibir_rede_social || formData.permitir_exibir_instagram)}
+                  onChange={handleRedeSocialPrivacyChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           <ArquivosHistoricos
             arquivos={formData.arquivos_historicos}
             onChange={(arquivos) => handleChange('arquivos_historicos', arquivos)}
@@ -844,5 +898,27 @@ export function AdminPessoaForm() {
         </div>
       </ConfirmDialog>
     </div>
+  );
+}
+
+function PrivacyCheckbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+      />
+      <span>{label}</span>
+    </label>
   );
 }

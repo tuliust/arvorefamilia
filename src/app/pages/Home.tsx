@@ -57,13 +57,14 @@ import {
 } from '../components/FamilyTree/types';
 import { FAMILY_TREE_COLORS, hasDeathDate } from '../components/FamilyTree/visualTokens';
 import {
+  DIRECT_FAMILY_CARD_TEXT_COLORS,
   DIRECT_FAMILY_LEGEND_BACKGROUNDS,
   DIRECT_FAMILY_RELATION_COLORS,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from '../components/FamilyTree/directFamilyColors';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
-import { listarNotificacoes } from '../services/userEngagementService';
+import { listarNotificacoes, listarNotificacoesSupabase } from '../services/userEngagementService';
 import {
   Search,
   Monitor,
@@ -134,6 +135,7 @@ export function Home() {
   const [legendOpen, setLegendOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(() => !homeTreeDataCache);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const [viewMode, setViewMode] = useState<TipoVisualizacaoArvore>(() =>
     user ? 'familiares-diretos' : 'lados'
@@ -634,10 +636,35 @@ export function Home() {
     (user?.user_metadata?.picture as string | undefined) ||
     null;
   const initials = getInitials(displayName || fullDisplayName);
-  const notificationCount = useMemo(
-    () => listarNotificacoes().filter((notificacao) => !notificacao.lida).length,
-    []
-  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadNotificationCount() {
+      if (!user) {
+        setNotificationCount(0);
+        return;
+      }
+
+      try {
+        const notificacoes = await listarNotificacoesSupabase(user.id);
+        if (!cancelled) {
+          setNotificationCount(notificacoes.filter((notificacao) => !notificacao.lida).length);
+        }
+      } catch {
+        if (!cancelled) {
+          setNotificationCount(listarNotificacoes(user.id).filter((notificacao) => !notificacao.lida).length);
+        }
+      }
+    }
+
+    loadNotificationCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   const directRelationCounts = useMemo(
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
     [pessoas, relacionamentos, centralReferencePersonId]
@@ -755,8 +782,8 @@ export function Home() {
                   className={[
                     'h-9 rounded-md border px-3 shadow-none focus-visible:ring-2 focus-visible:ring-offset-2',
                     viewMode === 'familiares-diretos'
-                      ? 'border-gray-700 bg-gray-800 text-white hover:bg-gray-700 [&_svg]:text-white'
-                      : 'border-gray-300 bg-white hover:bg-gray-50',
+                      ? 'border-gray-700 bg-gray-800 text-white hover:bg-gray-700 [&_svg]:text-white [&_svg]:stroke-white'
+                      : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50 [&_svg]:text-gray-500 [&_svg]:stroke-gray-500',
                   ].join(' ')}
                 >
                   <SelectValue />
@@ -1595,22 +1622,31 @@ function LifeStatusKpiGrid({
   };
   onToggle: (key: 'vivos' | 'falecidos') => void;
 }) {
+  const directStatusFilterCardColors = {
+    vivos: {
+      background: '#F8FAFC',
+      color: '#334155',
+      border: '#CBD5E1',
+    },
+    falecidos: {
+      background: '#F8FAFC',
+      color: '#334155',
+      border: '#CBD5E1',
+    },
+  } as const;
+
   const items = [
     {
       key: 'vivos' as const,
       label: 'Vivos',
       value: vivos,
-      background: '#F0FDF4',
-      color: '#166534',
-      borderColor: '#BBF7D0',
+      ...directStatusFilterCardColors.vivos,
     },
     {
       key: 'falecidos' as const,
       label: 'Falecidos',
       value: falecidos,
-      background: '#F8FAFC',
-      color: '#334155',
-      borderColor: '#CBD5E1',
+      ...directStatusFilterCardColors.falecidos,
     },
   ];
 
@@ -1632,8 +1668,8 @@ function LifeStatusKpiGrid({
                 'hover:-translate-y-0.5 hover:shadow-md',
               ].join(' ')}
               style={{
-                background: item.background,
-                borderColor: item.borderColor,
+                backgroundColor: item.background,
+                borderColor: item.border,
                 color: item.color,
               }}
               title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
@@ -1790,7 +1826,7 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   { key: 'bisavos', label: 'Bisavós', colorKey: 'bisavos' },
   { key: 'avos', label: 'Avós', colorKey: 'avos' },
   { key: 'tios', label: 'Tios', colorKey: 'tios' },
-  { key: 'pais', label: 'Pais', colorKey: 'pais' },
+  { key: 'pais', label: 'Pai e Mãe', colorKey: 'pais' },
   { key: 'primos', label: 'Primos', colorKey: 'primos' },
   { key: 'conjuge', label: 'Cônjuge', colorKey: 'conjuge' },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos' },
@@ -1830,11 +1866,14 @@ function DirectRelativeFilterGrid({
             onClick={() => onToggle(option.key)}
             className={[
               'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
-              'text-white',
               active ? 'opacity-100' : 'grayscale opacity-45',
               disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
             ].join(' ')}
-            style={{ background: color.background, borderColor: color.solid }}
+            style={{
+              background: color.background,
+              borderColor: color.solid,
+              color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
+            }}
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
             <span className="block text-xs font-semibold">{option.label}</span>
@@ -1917,7 +1956,7 @@ function FamilyTreeLegend({ compact = false }: { compact?: boolean }) {
                     className="h-4 w-7 shrink-0 rounded border"
                     style={{
                       background: item.background,
-                      borderColor: item.label === 'Usuário Principal' ? '#E5E7EB' : item.solid,
+                      borderColor: item.solid,
                     }}
                   />
                   <span className="leading-snug">{item.label}</span>

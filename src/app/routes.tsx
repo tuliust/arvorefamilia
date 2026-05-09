@@ -3,7 +3,7 @@ import { Home } from './pages/Home';
 import { PersonProfile } from './pages/PersonProfile';
 import { CalendarioFamiliar } from './pages/CalendarioFamiliar';
 import { MeusFavoritos } from './pages/MeusFavoritos';
-import { CentralNotificacoes } from './pages/CentralNotificacoes';
+import { Notificacoes } from './pages/Notificacoes';
 import { Entrar } from './pages/Entrar';
 import { Privacidade } from './pages/Privacidade';
 import { Termos } from './pages/Termos';
@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/notificacoes',
-    element: <MemberRoute><CentralNotificacoes /></MemberRoute>,
+    element: <MemberRoute><Notificacoes /></MemberRoute>,
   },
   {
     path: '/forum',

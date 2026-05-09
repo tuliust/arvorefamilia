@@ -8,6 +8,19 @@ export type SubtipoRelacionamento = 'sangue' | 'adotivo' | 'uniao' | 'casamento'
 
 export type LadoPessoa = 'esquerda' | 'direita';
 
+export type LinhaParentesco =
+  | 'ascendente'
+  | 'descendente'
+  | 'colateral'
+  | 'conjugal'
+  | 'auto';
+
+export type LadoParentesco =
+  | 'paterno'
+  | 'materno'
+  | 'ambos'
+  | 'indefinido';
+
 export type TipoVisualizacaoArvore = 'familiares-diretos' | 'lados' | 'geracoes' | 'lista';
 
 export type GeracaoSociologica =
@@ -18,7 +31,25 @@ export type GeracaoSociologica =
   | 'Geração Z'
   | 'Geração Alpha';
 
-export type TipoEventoFamiliar = 'aniversario' | 'memoria' | 'encontro' | 'aviso' | 'outro';
+export type TipoEventoFamiliar =
+  | 'aniversario'
+  | 'casamento'
+  | 'falecimento'
+  | 'evento_historico'
+  | 'confraternizacao'
+  | 'memoria'
+  | 'encontro'
+  | 'aviso'
+  | 'outro';
+
+export type TipoNotificacaoUsuario =
+  | TipoEventoFamiliar
+  | 'notificacao'
+  | 'novo_usuario'
+  | 'datas_especiais'
+  | 'novas_mensagens_forum'
+  | 'novos_registros_historicos'
+  | 'evento_historico_familia';
 
 export type TipoConteudoFavorito =
   | 'pessoa'
@@ -72,6 +103,10 @@ export interface Pessoa {
   instagram_url?: string;
   permitir_exibir_instagram?: boolean;
   permitir_mensagens_whatsapp?: boolean;
+  permitir_exibir_data_nascimento?: boolean;
+  permitir_exibir_endereco?: boolean;
+  permitir_exibir_rede_social?: boolean;
+  permitir_exibir_telefone?: boolean;
   geracao_sociologica?: GeracaoSociologica;
   manual_generation?: number | null;
   arquivos_historicos?: ArquivoHistorico[];
@@ -101,6 +136,47 @@ export interface Relacionamento {
   observacoes?: string;
 }
 
+export interface RegraParentesco {
+  id: string;
+  codigo: string;
+  nome: string;
+  nome_feminino?: string | null;
+  nome_masculino?: string | null;
+  nome_plural?: string | null;
+  caminho: string[];
+  descricao_template: string;
+  descricao_curta_template?: string | null;
+  grau?: number | null;
+  linha?: LinhaParentesco | null;
+  lado?: LadoParentesco | null;
+  ativo?: boolean;
+  created_at?: string;
+}
+
+export interface ResultadoParentesco {
+  pessoaOrigemId: string;
+  pessoaDestinoId: string;
+  encontrado: boolean;
+  codigo?: string;
+  nome?: string;
+  descricao?: string;
+  descricaoCurta?: string;
+  caminhoPessoas: Array<{
+    id: string;
+    nome: string;
+  }>;
+  caminhoRelacoes: string[];
+  distancia: number;
+  descricaoContextual?: string;
+  relacoesIntermediarias?: Array<{
+    pessoaId: string;
+    pessoaNome: string;
+    parentescoComOrigem?: string;
+    parentescoComDestino?: string;
+    frase?: string;
+  }>;
+}
+
 export interface EventoFamiliar {
   id: string;
   titulo: string;
@@ -127,11 +203,13 @@ export interface NotificacaoUsuario {
   user_id: string;
   titulo: string;
   mensagem: string;
-  tipo: TipoEventoFamiliar | 'notificacao';
+  tipo: TipoNotificacaoUsuario;
   canal: TipoCanalNotificacao;
   lida: boolean;
   link?: string;
+  metadata?: Record<string, unknown>;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface PreferenciaNotificacao {
@@ -144,6 +222,13 @@ export interface PreferenciaNotificacao {
   receber_email: boolean;
   receber_push: boolean;
   receber_whatsapp: boolean;
+  receber_email_novo_usuario: boolean;
+  receber_email_datas_especiais: boolean;
+  receber_email_novas_mensagens_forum: boolean;
+  receber_email_novos_registros_historicos: boolean;
+  receber_email_evento_historico_familia: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface VinculoUsuarioPessoa {

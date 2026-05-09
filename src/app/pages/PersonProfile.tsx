@@ -14,12 +14,12 @@ import {
   Star, 
   Bell,
   MessageCircle,
-  Plus,
-  Users
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PersonAstrologyCard, PersonDataView, PersonHistoricalEventsCard } from '../components/person/PersonDataView';
+import { PersonDataView } from '../components/person/PersonDataView';
 import { PersonRelationshipsView } from '../components/person/PersonRelationshipsView';
+import { RelationshipFinder } from '../components/person/RelationshipFinder';
 import { useAuth } from '../contexts/AuthContext';
 import { canEditPerson, getLinkedPessoaIdForUser, isAdminUser } from '../services/permissionService';
 import { ForumEmptyState } from '../components/forum/ForumEmptyState';
@@ -39,68 +39,6 @@ const EMPTY_RELATIONSHIPS: ProfileRelationships = {
   filhos: [],
   irmaos: [],
 };
-
-function uniqueById(people: Pessoa[]) {
-  return Array.from(new Map(people.map((person) => [person.id, person])).values());
-}
-
-function getKinshipResult(selectedId: string, currentPersonId: string, relationships: ProfileRelationships) {
-  if (!selectedId) return '';
-  if (selectedId === currentPersonId) return 'É a própria pessoa.';
-
-  const parents = uniqueById([...relationships.pais, ...relationships.maes]);
-  if (parents.some((person) => person.id === selectedId)) return 'Pai/Mãe';
-  if (relationships.conjuges.some((person) => person.id === selectedId)) return 'Cônjuge';
-  if (relationships.filhos.some((person) => person.id === selectedId)) return 'Filho(a)';
-  if (relationships.irmaos.some((person) => person.id === selectedId)) return 'Irmão(ã)';
-
-  return 'Parentesco ainda não identificado automaticamente.';
-}
-
-function RelationshipDiscoveryBox({
-  currentPersonId,
-  people,
-  relationships,
-}: {
-  currentPersonId: string;
-  people: Pessoa[];
-  relationships: ProfileRelationships;
-}) {
-  const [selectedId, setSelectedId] = useState('');
-  const result = getKinshipResult(selectedId, currentPersonId, relationships);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-blue-600" />
-          Descubra seu parentesco com...
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)] md:items-center">
-            <select
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.target.value)}
-              className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">Selecione uma pessoa</option>
-              {people.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.nome_completo}
-                </option>
-              ))}
-            </select>
-            <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-700">
-              {result || 'O resultado aparece aqui após a seleção.'}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function PersonProfile() {
   const { id } = useParams<{ id: string }>();
@@ -342,15 +280,10 @@ export function PersonProfile() {
 
         <PersonRelationshipsView relationships={relacionamentos} loading={relationshipsLoading} />
 
-        <RelationshipDiscoveryBox
-          currentPersonId={pessoa.id}
-          people={allPeople.length > 0 ? allPeople : [pessoa]}
-          relationships={relacionamentos}
+        <RelationshipFinder
+          pessoaBase={pessoa}
+          pessoas={allPeople.length > 0 ? allPeople : [pessoa]}
         />
-
-        <PersonAstrologyCard pessoa={pessoa} />
-
-        <PersonHistoricalEventsCard pessoa={pessoa} />
 
           {user && (
             <section>

@@ -71,9 +71,9 @@ const FRAME_LEFT = 10;
 const FRAME_RIGHT = 3210;
 const FRAME_TOP = 10;
 const FRAME_BOTTOM = 2190;
-const TITLE_TOP = FRAME_TOP + 20;
+const TITLE_TOP = FRAME_TOP + 10;
 const TITLE_WIDTH = 1540;
-const TITLE_RESERVED_HEIGHT = 146;
+const TITLE_RESERVED_HEIGHT = 80;
 const VIEW_CENTER_X = (FRAME_LEFT + FRAME_RIGHT) / 2;
 const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 
@@ -92,10 +92,15 @@ const LABEL_TO_CARD_GAP = 8;
 const COLUMN_GAP = 16;
 const ROW_GAP = 14;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
-const SIDE_TOP = TITLE_TOP + TITLE_RESERVED_HEIGHT;
-const SIDE_BOTTOM = FRAME_BOTTOM - 150;
+const SIDE_TOP = TITLE_TOP;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
+const SIDE_BOTTOM = CENTRAL_Y + CENTRAL_HEIGHT + 220;
+const SIDE_GROUP_MIN_GAP = 8;
+const PARENT_GROUP_Y = CENTRAL_Y - 205;
+const PARENT_GROUP_GAP = 260;
+const FATHER_GROUP_CENTER_X = VIEW_CENTER_X - PARENT_GROUP_GAP;
+const MOTHER_GROUP_CENTER_X = VIEW_CENTER_X + PARENT_GROUP_GAP;
 const CENTRAL_LEFT_BOUNDARY = CENTRAL_X - 110;
 const CENTRAL_RIGHT_BOUNDARY = CENTRAL_X + CENTRAL_WIDTH + 110;
 const SIDE_INNER_GAP = 18;
@@ -612,7 +617,7 @@ function placeGroupStack(
   const rawGap = resolvedGroups.length > 1
     ? (availableHeight - totalHeight) / (resolvedGroups.length - 1)
     : (availableHeight - totalHeight) / 2;
-  const uniformGap = Math.max(12, rawGap);
+  const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, rawGap);
   let cursorY = resolvedGroups.length > 1 && totalHeight <= availableHeight
     ? SIDE_TOP
     : SIDE_TOP + Math.max(0, rawGap);
@@ -662,6 +667,9 @@ function addGroupBoundaryAnchors(
 ) {
   addAnchor(nodes, positionedIds, `direct-group-${key}-top-anchor`, bounds.centerX, bounds.minY);
   addAnchor(nodes, positionedIds, `direct-group-${key}-bottom-anchor`, bounds.centerX, bounds.maxY);
+  addAnchor(nodes, positionedIds, `direct-group-${key}-left-anchor`, bounds.minX, bounds.centerY);
+  addAnchor(nodes, positionedIds, `direct-group-${key}-right-anchor`, bounds.maxX, bounds.centerY);
+  addAnchor(nodes, positionedIds, `direct-group-${key}-center-anchor`, bounds.centerX, bounds.centerY);
 }
 
 function addDirectStructuralEdge(
@@ -828,14 +836,12 @@ export function directFamilyDistributedLayout(
   const positionedIds = new Set<string>();
 
   addTitle(positionedNodes, centralPerson?.nome_completo || '');
-  addLegend(positionedNodes);
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [
     { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
     { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
     { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
-    { key: 'pai', label: 'PAI', ids: sides.paternal.parent, variant: 'parent', maxPerRow: 1, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
     { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
     { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH },
   ];
@@ -844,13 +850,34 @@ export function directFamilyDistributedLayout(
     { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
     { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
     { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: 2, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
-    { key: 'mae', label: 'MÃE', ids: sides.maternal.parent, variant: 'parent', maxPerRow: 1, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
     { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH },
   ];
 
   placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById, index);
   placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById, index);
+
+  const motherGroup: GroupSpec = {
+    key: 'mae',
+    label: 'MÃE',
+    ids: sides.maternal.parent,
+    variant: 'parent',
+    maxPerRow: 1,
+    centerX: MOTHER_GROUP_CENTER_X,
+    laneWidth: CARD_WIDTH + GROUP_BOX_PADDING_X * 2,
+  };
+  const fatherGroup: GroupSpec = {
+    key: 'pai',
+    label: 'PAI',
+    ids: sides.paternal.parent,
+    variant: 'parent',
+    maxPerRow: 1,
+    centerX: FATHER_GROUP_CENTER_X,
+    laneWidth: CARD_WIDTH + GROUP_BOX_PADDING_X * 2,
+  };
+
+  placeGroup(motherGroup, PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(fatherGroup, PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
 
   const allSiblings = findSiblings(centralPersonId, index, pessoasById);
   const siblings = filters.irmaos ? allSiblings : [];
@@ -952,7 +979,6 @@ export function directFamilyDistributedLayout(
   const maternalUnclesGroupBounds = groupBoundsByKey.get('tios-maternos');
   const siblingsGroupBounds = groupBoundsByKey.get('irmaos');
   const spouseGroupBounds = groupBoundsByKey.get('conjuge');
-  const centralSideConnectionY = CENTRAL_Y + CENTRAL_HEIGHT * 0.62;
   const centralBottomY = CENTRAL_Y + CENTRAL_HEIGHT;
   const lowerGroupTopY = Math.min(
     siblingsGroupBounds?.minY ?? Number.POSITIVE_INFINITY,
@@ -962,14 +988,17 @@ export function directFamilyDistributedLayout(
     ? Math.min(centralBottomY + 54, lowerGroupTopY - 18)
     : centralBottomY + 54;
 
-  if (fatherGroupBounds) {
-    addAnchor(positionedNodes, positionedIds, 'direct-anchor-central-left', CENTRAL_X, centralSideConnectionY);
-    addAnchor(positionedNodes, positionedIds, 'direct-anchor-pai-right', fatherGroupBounds.maxX, fatherGroupBounds.centerY);
-  }
-
-  if (motherGroupBounds) {
-    addAnchor(positionedNodes, positionedIds, 'direct-anchor-central-right', CENTRAL_X + CENTRAL_WIDTH, centralSideConnectionY);
-    addAnchor(positionedNodes, positionedIds, 'direct-anchor-mae-left', motherGroupBounds.minX, motherGroupBounds.centerY);
+  if (fatherGroupBounds && motherGroupBounds) {
+    const parentCoupleMidX = (fatherGroupBounds.maxX + motherGroupBounds.minX) / 2;
+    const parentCoupleMidY = (fatherGroupBounds.centerY + motherGroupBounds.centerY) / 2;
+    addAnchor(positionedNodes, positionedIds, 'direct-parent-couple-mid-anchor', parentCoupleMidX, parentCoupleMidY);
+    addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, CENTRAL_Y);
+  } else if (fatherGroupBounds || motherGroupBounds) {
+    const singleParentBounds = fatherGroupBounds || motherGroupBounds;
+    if (singleParentBounds) {
+      addAnchor(positionedNodes, positionedIds, 'direct-single-parent-bottom-anchor', singleParentBounds.centerX, singleParentBounds.maxY);
+      addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, CENTRAL_Y);
+    }
   }
 
   if (siblingsGroupBounds || spouseGroupBounds) {
@@ -986,25 +1015,83 @@ export function directFamilyDistributedLayout(
 
   const { edges, addEdge } = createEdgeBuilder(positionedIds);
 
-  if (fatherGroupBounds) {
+  if (fatherGroupBounds && motherGroupBounds) {
     addDirectStructuralEdge(
       addEdge,
-      'direct-central-to-father-group',
-      'direct-anchor-central-left',
-      'direct-anchor-pai-right',
-      'directSideElbow',
-      { elbowX: Math.min(CENTRAL_X - 96, (paternalUnclesGroupBounds?.maxX ?? fatherGroupBounds.maxX) + 36) }
+      'direct-father-to-parent-mid',
+      'direct-group-pai-right-anchor',
+      'direct-parent-couple-mid-anchor',
+      'directHorizontal',
+      {
+        sourceHandle: 'right',
+        targetHandle: 'left',
+      }
+    );
+    addDirectStructuralEdge(
+      addEdge,
+      'direct-parent-mid-to-mother',
+      'direct-parent-couple-mid-anchor',
+      'direct-group-mae-left-anchor',
+      'directHorizontal',
+      {
+        sourceHandle: 'right',
+        targetHandle: 'left',
+      }
+    );
+    addDirectStructuralEdge(
+      addEdge,
+      'direct-parent-mid-to-central-top',
+      'direct-parent-couple-mid-anchor',
+      'direct-central-top-anchor',
+      'directElbowFromCenter',
+      {
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        elbowY: CENTRAL_Y - 32,
+      }
+    );
+  } else if (fatherGroupBounds || motherGroupBounds) {
+    addDirectStructuralEdge(
+      addEdge,
+      'direct-single-parent-to-central-top',
+      'direct-single-parent-bottom-anchor',
+      'direct-central-top-anchor',
+      'directElbowFromCenter',
+      {
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        elbowY: CENTRAL_Y - 32,
+      }
     );
   }
 
-  if (motherGroupBounds) {
+  if (fatherGroupBounds && paternalUnclesGroupBounds) {
     addDirectStructuralEdge(
       addEdge,
-      'direct-central-to-mother-group',
-      'direct-anchor-central-right',
-      'direct-anchor-mae-left',
+      'direct-father-to-paternal-uncles',
+      'direct-group-pai-left-anchor',
+      'direct-group-tios-paternos-right-anchor',
       'directSideElbow',
-      { elbowX: Math.max(CENTRAL_X + CENTRAL_WIDTH + 96, (maternalUnclesGroupBounds?.minX ?? motherGroupBounds.minX) - 36) }
+      {
+        sourceHandle: 'left',
+        targetHandle: 'right',
+        elbowX: (paternalUnclesGroupBounds.maxX + fatherGroupBounds.minX) / 2,
+      }
+    );
+  }
+
+  if (motherGroupBounds && maternalUnclesGroupBounds) {
+    addDirectStructuralEdge(
+      addEdge,
+      'direct-mother-to-maternal-uncles',
+      'direct-group-mae-right-anchor',
+      'direct-group-tios-maternos-left-anchor',
+      'directSideElbow',
+      {
+        sourceHandle: 'right',
+        targetHandle: 'left',
+        elbowX: (motherGroupBounds.maxX + maternalUnclesGroupBounds.minX) / 2,
+      }
     );
   }
 
@@ -1040,12 +1127,12 @@ export function directFamilyDistributedLayout(
 
   addConsecutiveGroupConnections(
     addEdge,
-    ['tataravos-paternos', 'bisavos-paternos', 'avos-paternos', 'pai', 'tios-paternos', 'primos-paternos'],
+    ['tataravos-paternos', 'bisavos-paternos', 'avos-paternos', 'tios-paternos', 'primos-paternos'],
     groupBoundsByKey
   );
   addConsecutiveGroupConnections(
     addEdge,
-    ['tataravos-maternos', 'bisavos-maternos', 'avos-maternos', 'mae', 'tios-maternos', 'primos-maternos'],
+    ['tataravos-maternos', 'bisavos-maternos', 'avos-maternos', 'tios-maternos', 'primos-maternos'],
     groupBoundsByKey
   );
   addConsecutiveGroupConnections(addEdge, ['irmaos', 'sobrinhos'], groupBoundsByKey);

@@ -1,80 +1,101 @@
+const directFilterCardColors = {
+  tataravos: '#B7AED6',
+  bisavos: '#D49BC5',
+  avos: '#E8A29B',
+  tios: '#EAB08F',
+  primos: '#E7B985',
+  pais: '#E4C37A',
+  central: '#E7E8E8',
+  irmaos: '#A9CB72',
+  sobrinhos: '#B8CEC2',
+  netos: '#BDD8DC',
+} as const;
+
 export const DIRECT_FAMILY_RELATION_COLORS = {
   tataravos: {
-    background: '#B91C1C',
-    solid: '#B91C1C',
+    background: directFilterCardColors.tataravos,
+    solid: directFilterCardColors.tataravos,
     label: 'Tataravós',
   },
   bisavos: {
-    background: '#C2410C',
-    solid: '#C2410C',
+    background: directFilterCardColors.bisavos,
+    solid: directFilterCardColors.bisavos,
     label: 'Bisavós',
   },
   avos: {
-    background: '#A16207',
-    solid: '#A16207',
+    background: directFilterCardColors.avos,
+    solid: directFilterCardColors.avos,
     label: 'Avós',
   },
-  pais: {
-    background: '#15803D',
-    solid: '#15803D',
-    label: 'Pais',
-  },
   tios: {
-    background: '#15803D',
-    solid: '#15803D',
+    background: directFilterCardColors.tios,
+    solid: directFilterCardColors.tios,
     label: 'Tios',
   },
   primos: {
-    background: '#1D4ED8',
-    solid: '#1D4ED8',
+    background: directFilterCardColors.primos,
+    solid: directFilterCardColors.primos,
     label: 'Primos',
   },
+  pais: {
+    background: directFilterCardColors.pais,
+    solid: directFilterCardColors.pais,
+    label: 'Pai e Mãe',
+  },
   central: {
-    background: '#FFFFFF',
-    solid: '#FFFFFF',
-    label: 'Usuário Principal',
+    background: directFilterCardColors.central,
+    solid: directFilterCardColors.central,
+    label: 'Pessoa Principal',
   },
   irmaos: {
-    background: '#4338CA',
-    solid: '#4338CA',
+    background: directFilterCardColors.irmaos,
+    solid: directFilterCardColors.irmaos,
     label: 'Irmãos',
   },
   sobrinhos: {
-    background: '#7E22CE',
-    solid: '#7E22CE',
+    background: directFilterCardColors.sobrinhos,
+    solid: directFilterCardColors.sobrinhos,
     label: 'Sobrinhos',
   },
   netos: {
-    background: '#581C87',
-    solid: '#581C87',
+    background: directFilterCardColors.netos,
+    solid: directFilterCardColors.netos,
     label: 'Netos',
   },
   conjuge: {
-    background: '#A21CAF',
-    solid: '#A21CAF',
+    background: directFilterCardColors.pais,
+    solid: directFilterCardColors.pais,
     label: 'Cônjuge',
   },
   filhos: {
-    background: '#1D4ED8',
-    solid: '#1D4ED8',
+    background: directFilterCardColors.netos,
+    solid: directFilterCardColors.netos,
     label: 'Filhos',
   },
 } as const;
 
+export const DIRECT_FAMILY_CARD_TEXT_COLORS = {
+  primary: '#111827',
+  muted: '#4B5563',
+} as const;
+
 export const DIRECT_FAMILY_STATUS_BORDER_COLORS = {
-  alive: '#22C55E',
-  deceased: '#CBD5E1',
+  alive: '#3F7F72',
+  deceased: '#6B7280',
+} as const;
+
+export const DIRECT_FAMILY_GROUP_CONTAINER_BORDER = {
+  color: '#E7E8E8',
+  width: 2,
 } as const;
 
 export const DIRECT_FAMILY_LEGEND_BACKGROUNDS = [
   DIRECT_FAMILY_RELATION_COLORS.tataravos,
   DIRECT_FAMILY_RELATION_COLORS.bisavos,
   DIRECT_FAMILY_RELATION_COLORS.avos,
-  {
-    ...DIRECT_FAMILY_RELATION_COLORS.tios,
-    label: 'Tios, Pai e Mãe',
-  },
+  DIRECT_FAMILY_RELATION_COLORS.tios,
   DIRECT_FAMILY_RELATION_COLORS.primos,
+  DIRECT_FAMILY_RELATION_COLORS.pais,
   DIRECT_FAMILY_RELATION_COLORS.central,
   DIRECT_FAMILY_RELATION_COLORS.irmaos,
   DIRECT_FAMILY_RELATION_COLORS.sobrinhos,

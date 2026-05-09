@@ -648,9 +648,31 @@ export function MeusDados() {
 
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             <ToggleField
-              label="Exibir rede social no perfil"
-              checked={Boolean(form.permitir_exibir_instagram)}
-              onCheckedChange={(checked) => updateField('permitir_exibir_instagram', checked)}
+              label="Exibir minha data de nascimento para outros familiares"
+              description="Você pode alterar esta opção depois na edição do perfil."
+              checked={form.permitir_exibir_data_nascimento !== false}
+              onCheckedChange={(checked) => updateField('permitir_exibir_data_nascimento', checked)}
+            />
+            <ToggleField
+              label="Exibir meu telefone para outros familiares"
+              description="Controla a visualização do número no perfil."
+              checked={Boolean(form.permitir_exibir_telefone)}
+              onCheckedChange={(checked) => updateField('permitir_exibir_telefone', checked)}
+            />
+            <ToggleField
+              label="Exibir meu endereço para outros familiares"
+              description="Endereço fica oculto por padrão."
+              checked={Boolean(form.permitir_exibir_endereco)}
+              onCheckedChange={(checked) => updateField('permitir_exibir_endereco', checked)}
+            />
+            <ToggleField
+              label="Exibir minha rede social para outros familiares"
+              description="Você pode alterar esta opção depois na edição do perfil."
+              checked={Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram)}
+              onCheckedChange={(checked) => {
+                updateField('permitir_exibir_rede_social', checked);
+                updateField('permitir_exibir_instagram', checked);
+              }}
             />
             <ToggleField
               label="Permitir mensagens por WhatsApp"
@@ -819,16 +841,21 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 function ToggleField({
   label,
+  description,
   checked,
   onCheckedChange,
 }: {
   label: string;
+  description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <Label>{label}</Label>
+      <div className="space-y-1">
+        <Label>{label}</Label>
+        {description && <p className="text-xs leading-snug text-gray-500">{description}</p>}
+      </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );

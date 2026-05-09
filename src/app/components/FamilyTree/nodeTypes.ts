@@ -5,6 +5,10 @@ import { MarriageNode } from './MarriageNode';
 import { GenerationHeaderNode } from './GenerationHeaderNode';
 import { DirectFamilyLabelNode } from './DirectFamilyLabelNode';
 import { FAMILY_TREE_COLORS } from './visualTokens';
+import {
+  DIRECT_FAMILY_GROUP_CONTAINER_BORDER,
+  DIRECT_FAMILY_STATUS_BORDER_COLORS,
+} from './directFamilyColors';
 
 interface DirectFamilyGroupBoxNodeData {
   width?: number;
@@ -32,10 +36,13 @@ function DirectFamilyAnchorNode() {
 function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeData>) {
   return React.createElement('div', {
     'aria-hidden': true,
-    className: 'pointer-events-none rounded-xl border border-slate-600/60 bg-white/[0.04]',
+    className: 'pointer-events-none rounded-xl bg-white/[0.04]',
     style: {
       width: data.width ?? 0,
       height: data.height ?? 0,
+      borderColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.color,
+      borderWidth: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.width,
+      borderStyle: 'solid',
     },
   });
 }
@@ -43,11 +50,13 @@ function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeDa
 function LegendSample({ type }: { type: 'alive' | 'deceased' | 'spouse' | 'child' | 'sibling' }) {
   if (type === 'alive' || type === 'deceased') {
     return React.createElement('span', {
-      className: 'h-4 w-7 rounded border-2 bg-white',
+      className: 'h-4 w-7 rounded bg-white',
       style: {
         borderColor: type === 'alive'
-          ? FAMILY_TREE_COLORS.CARD_BORDER_ALIVE
-          : FAMILY_TREE_COLORS.CARD_BORDER_DECEASED,
+          ? DIRECT_FAMILY_STATUS_BORDER_COLORS.alive
+          : DIRECT_FAMILY_STATUS_BORDER_COLORS.deceased,
+        borderWidth: 3,
+        borderStyle: 'solid',
       },
     });
   }

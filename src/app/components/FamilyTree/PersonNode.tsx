@@ -8,6 +8,7 @@ import {
   hasDeathDate,
 } from './visualTokens';
 import {
+  DIRECT_FAMILY_CARD_TEXT_COLORS,
   DIRECT_FAMILY_RELATION_COLORS,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from './directFamilyColors';
@@ -18,6 +19,15 @@ const DIRECT_FAMILY_PET_STYLE = {
   color: '#ffffff',
   muted: 'rgba(255,255,255,0.82)',
 };
+
+function relationCardStyle(relationKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS) {
+  return {
+    background: DIRECT_FAMILY_RELATION_COLORS[relationKey].background,
+    border: DIRECT_FAMILY_RELATION_COLORS[relationKey].solid,
+    color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
+    muted: DIRECT_FAMILY_CARD_TEXT_COLORS.muted,
+  };
+}
 
 function PersonHandles() {
   const hiddenHandle = { background: 'transparent', border: 'none' };
@@ -68,78 +78,18 @@ const directRelationStyles: Record<NonNullable<PersonNodeData['directRelation']>
   color: string;
   muted: string;
 }> = {
-  central: {
-    background: '#ffffff',
-    border: '#475569',
-    color: '#111827',
-    muted: '#4b5563',
-  },
-  parent: {
-    background: DIRECT_FAMILY_RELATION_COLORS.pais.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  sibling: {
-    background: DIRECT_FAMILY_RELATION_COLORS.irmaos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  child: {
-    background: DIRECT_FAMILY_RELATION_COLORS.filhos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  spouse: {
-    background: DIRECT_FAMILY_RELATION_COLORS.conjuge.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  grandparent: {
-    background: DIRECT_FAMILY_RELATION_COLORS.avos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  greatGrandparent: {
-    background: DIRECT_FAMILY_RELATION_COLORS.bisavos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  greatGreatGrandparent: {
-    background: DIRECT_FAMILY_RELATION_COLORS.tataravos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  uncleAunt: {
-    background: DIRECT_FAMILY_RELATION_COLORS.tios.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  cousin: {
-    background: DIRECT_FAMILY_RELATION_COLORS.primos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  nephewNiece: {
-    background: DIRECT_FAMILY_RELATION_COLORS.sobrinhos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
-  grandchild: {
-    background: DIRECT_FAMILY_RELATION_COLORS.netos.background,
-    border: '#22C55E',
-    color: '#ffffff',
-    muted: 'rgba(255,255,255,0.82)',
-  },
+  central: relationCardStyle('central'),
+  parent: relationCardStyle('pais'),
+  sibling: relationCardStyle('irmaos'),
+  child: relationCardStyle('filhos'),
+  spouse: relationCardStyle('conjuge'),
+  grandparent: relationCardStyle('avos'),
+  greatGrandparent: relationCardStyle('bisavos'),
+  greatGreatGrandparent: relationCardStyle('tataravos'),
+  uncleAunt: relationCardStyle('tios'),
+  cousin: relationCardStyle('primos'),
+  nephewNiece: relationCardStyle('sobrinhos'),
+  grandchild: relationCardStyle('netos'),
 };
 
 function ActionButton({

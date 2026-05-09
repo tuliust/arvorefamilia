@@ -1,8 +1,31 @@
-import { FavoritoUsuario, NotificacaoUsuario, Pessoa, TipoConteudoFavorito } from '../types';
+import { supabase } from '../lib/supabaseClient';
+import {
+  FavoritoUsuario,
+  NotificacaoUsuario,
+  Pessoa,
+  PreferenciaNotificacao,
+  TipoConteudoFavorito,
+  TipoNotificacaoUsuario,
+} from '../types';
 
 const FAVORITES_KEY = 'arvorefamilia:favorites';
 const NOTIFICATIONS_KEY = 'arvorefamilia:notifications';
 const DEFAULT_USER_ID = 'demo-user';
+
+export const DEFAULT_NOTIFICATION_PREFERENCES = {
+  receber_aniversarios: true,
+  receber_datas_memoria: true,
+  receber_eventos: true,
+  receber_avisos_gerais: true,
+  receber_email: true,
+  receber_push: false,
+  receber_whatsapp: false,
+  receber_email_novo_usuario: true,
+  receber_email_datas_especiais: true,
+  receber_email_novas_mensagens_forum: true,
+  receber_email_novos_registros_historicos: true,
+  receber_email_evento_historico_familia: true,
+} satisfies Omit<PreferenciaNotificacao, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
@@ -112,6 +135,236 @@ export function listarNotificacoes(userId = DEFAULT_USER_ID): NotificacaoUsuario
   return notificacoes
     .filter((item) => item.user_id === userId)
     .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
+}
+
+function mapNotificacaoRow(row: Record<string, unknown>): NotificacaoUsuario {
+  return {
+    id: String(row.id),
+    user_id: String(row.user_id),
+    titulo: String(row.titulo ?? ''),
+    mensagem: String(row.mensagem ?? ''),
+    tipo: (row.tipo as TipoNotificacaoUsuario) || 'notificacao',
+    canal: (row.canal as NotificacaoUsuario['canal']) || 'interna',
+    lida: Boolean(row.lida),
+    link: row.link ? String(row.link) : undefined,
+    metadata: (row.metadata as Record<string, unknown> | undefined) ?? {},
+    created_at: row.created_at ? String(row.created_at) : undefined,
+    updated_at: row.updated_at ? String(row.updated_at) : undefined,
+  };
+}
+
+function mapPreferenciaRow(row: Record<string, unknown>): PreferenciaNotificacao {
+  return {
+    id: String(row.id),
+    user_id: String(row.user_id),
+    receber_aniversarios: row.receber_aniversarios !== false,
+    receber_datas_memoria: row.receber_datas_memoria !== false,
+    receber_eventos: row.receber_eventos !== false,
+    receber_avisos_gerais: row.receber_avisos_gerais !== false,
+    receber_email: row.receber_email !== false,
+    receber_push: Boolean(row.receber_push),
+    receber_whatsapp: Boolean(row.receber_whatsapp),
+    receber_email_novo_usuario: row.receber_email_novo_usuario !== false,
+    receber_email_datas_especiais: row.receber_email_datas_especiais !== false,
+    receber_email_novas_mensagens_forum: row.receber_email_novas_mensagens_forum !== false,
+    receber_email_novos_registros_historicos: row.receber_email_novos_registros_historicos !== false,
+    receber_email_evento_historico_familia: row.receber_email_evento_historico_familia !== false,
+    created_at: row.created_at ? String(row.created_at) : undefined,
+    updated_at: row.updated_at ? String(row.updated_at) : undefined,
+  };
+}
+
+function getLocalPreferences(userId: string): PreferenciaNotificacao {
+  return {
+    id: `local-${userId}`,
+    user_id: userId,
+    ...DEFAULT_NOTIFICATION_PREFERENCES,
+  };
+}
+
+export async function obterPreferenciasNotificacao(userId: string): Promise<PreferenciaNotificacao> {
+  try {
+    const { data, error } = await supabase
+      .from('preferencias_notificacao')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return mapPreferenciaRow(data);
+
+    const { data: created, error: createError } = await supabase
+      .from('preferencias_notificacao')
+      .insert({ user_id: userId, ...DEFAULT_NOTIFICATION_PREFERENCES })
+      .select('*')
+      .single();
+
+    if (createError) throw createError;
+    return mapPreferenciaRow(created);
+  } catch (error) {
+    console.error('[Supabase] Erro ao obter preferências de notificação:', error);
+    return getLocalPreferences(userId);
+  }
+}
+
+export async function salvarPreferenciasNotificacao(
+  userId: string,
+  preferencias: Partial<PreferenciaNotificacao>
+): Promise<PreferenciaNotificacao> {
+  const payload = {
+    ...DEFAULT_NOTIFICATION_PREFERENCES,
+    ...preferencias,
+    user_id: userId,
+  };
+
+  delete (payload as Partial<PreferenciaNotificacao>).id;
+  delete (payload as Partial<PreferenciaNotificacao>).created_at;
+  delete (payload as Partial<PreferenciaNotificacao>).updated_at;
+
+  try {
+    const { data, error } = await supabase
+      .from('preferencias_notificacao')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return mapPreferenciaRow(data);
+  } catch (error) {
+    console.error('[Supabase] Erro ao salvar preferências de notificação:', error);
+    return {
+      ...getLocalPreferences(userId),
+      ...preferencias,
+    };
+  }
+}
+
+export async function listarNotificacoesSupabase(userId: string): Promise<NotificacaoUsuario[]> {
+  try {
+    const { data, error } = await supabase
+      .from('notificacoes_usuario')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(mapNotificacaoRow);
+  } catch (error) {
+    console.error('[Supabase] Erro ao listar notificações:', error);
+    return listarNotificacoes(userId);
+  }
+}
+
+export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string) {
+  const { error } = await supabase
+    .from('notificacoes_usuario')
+    .update({ lida: true })
+    .eq('id', notificacaoId);
+
+  if (error) {
+    console.error('[Supabase] Erro ao marcar notificação como lida:', error);
+    throw error;
+  }
+}
+
+export async function marcarTodasNotificacoesSupabaseComoLidas(userId: string) {
+  const { error } = await supabase
+    .from('notificacoes_usuario')
+    .update({ lida: true })
+    .eq('user_id', userId)
+    .eq('lida', false);
+
+  if (error) {
+    console.error('[Supabase] Erro ao marcar todas notificações como lidas:', error);
+    throw error;
+  }
+}
+
+export async function removerNotificacaoSupabase(notificacaoId: string) {
+  const { error } = await supabase
+    .from('notificacoes_usuario')
+    .delete()
+    .eq('id', notificacaoId);
+
+  if (error) {
+    console.error('[Supabase] Erro ao remover notificação:', error);
+    throw error;
+  }
+}
+
+export async function criarNotificacaoSupabase(params: {
+  userId: string;
+  titulo: string;
+  mensagem: string;
+  tipo?: TipoNotificacaoUsuario;
+  canal?: NotificacaoUsuario['canal'];
+  link?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const { data, error } = await supabase
+    .from('notificacoes_usuario')
+    .insert({
+      user_id: params.userId,
+      titulo: params.titulo,
+      mensagem: params.mensagem,
+      tipo: params.tipo || 'notificacao',
+      canal: params.canal || 'interna',
+      link: params.link,
+      metadata: params.metadata || {},
+    })
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[Supabase] Erro ao criar notificação:', error);
+    throw error;
+  }
+
+  return mapNotificacaoRow(data);
+}
+
+export async function garantirNotificacaoInicialSupabase(userId: string) {
+  const notificacoes = await listarNotificacoesSupabase(userId);
+  if (notificacoes.length > 0) return;
+
+  await criarNotificacaoSupabase({
+    userId,
+    titulo: 'Bem-vindo à central de notificações',
+    mensagem:
+      'Aqui você acompanhará aniversários, datas de memória, mensagens do fórum, registros históricos e avisos importantes da família.',
+    tipo: 'notificacao',
+    canal: 'interna',
+    link: '/notificacoes',
+  });
+}
+
+export async function criarNotificacaoComEmail(params: {
+  userId: string;
+  notificationType: TipoNotificacaoUsuario;
+  titulo: string;
+  mensagem: string;
+  link?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const notificacao = await criarNotificacaoSupabase({
+    userId: params.userId,
+    titulo: params.titulo,
+    mensagem: params.mensagem,
+    tipo: params.notificationType,
+    canal: 'interna',
+    link: params.link,
+    metadata: params.metadata,
+  });
+
+  try {
+    await supabase.functions.invoke('send-notification-email', {
+      body: params,
+    });
+  } catch (error) {
+    console.warn('[Supabase Function] Email de notificação não enviado:', error);
+  }
+
+  return notificacao;
 }
 
 export function criarNotificacao(params: Omit<NotificacaoUsuario, 'id' | 'user_id' | 'created_at' | 'lida'> & { userId?: string }) {

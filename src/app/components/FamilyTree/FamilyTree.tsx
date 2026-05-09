@@ -26,6 +26,10 @@ import { generationColumnsLayout } from './layouts/generationColumnsLayout';
 import { chronologicalListLayout } from './layouts/chronologicalListLayout';
 import { directFamilyDistributedLayout } from './layouts/directFamilyDistributedLayout';
 import {
+  injectExportSafeCss,
+  sanitizeUnsupportedExportColors,
+} from './utils/exportColorSanitizer';
+import {
   DEFAULT_EDGE_FILTERS,
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DirectRelativeFilters,
@@ -270,18 +274,36 @@ async function captureVisibleTree(container: HTMLDivElement | null) {
 
   // Loaded on demand because print/PDF export needs a bitmap of the current ReactFlow viewport.
   const { default: html2canvas } = await import('html2canvas');
-  return html2canvas(element, {
-    backgroundColor: '#f8fafc',
-    scale: Math.min(2, window.devicePixelRatio || 1),
-    useCORS: true,
-    ignoreElements: (node) => {
-      const elementNode = node as HTMLElement;
-      return Boolean(
-        elementNode.classList?.contains('react-flow__controls') ||
-        elementNode.classList?.contains('react-flow__minimap')
-      );
-    },
-  });
+  document.documentElement.classList.add('is-exporting-family-tree');
+
+  try {
+    return await html2canvas(element, {
+      backgroundColor: '#ffffff',
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      ignoreElements: (node) => {
+        const elementNode = node as HTMLElement;
+        return Boolean(
+          elementNode.classList?.contains('react-flow__controls') ||
+          elementNode.classList?.contains('react-flow__minimap')
+        );
+      },
+      onclone: (clonedDocument) => {
+        clonedDocument.documentElement.classList.add('is-exporting-family-tree');
+        injectExportSafeCss(clonedDocument);
+        const clonedRoot =
+          clonedDocument.querySelector('[data-export-root="family-tree"]') ||
+          clonedDocument.querySelector('.react-flow') ||
+          clonedDocument.body;
+        sanitizeUnsupportedExportColors(clonedDocument.body);
+        sanitizeUnsupportedExportColors(clonedRoot as HTMLElement);
+      },
+    });
+  } finally {
+    document.documentElement.classList.remove('is-exporting-family-tree');
+  }
 }
 
 async function printVisibleTree(container: HTMLDivElement | null) {
@@ -811,7 +833,8 @@ export function FamilyTree({
     try {
       await printVisibleTree(containerRef.current);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir a árvore.');
+      console.error('Erro ao imprimir árvore:', error);
+      toast.error('Não foi possível imprimir a árvore. As cores foram ajustadas para exportação; tente novamente.');
     }
   }, []);
 
@@ -819,14 +842,18 @@ export function FamilyTree({
     try {
       await saveVisibleTreePdf(containerRef.current);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o PDF.');
+      console.error('Erro ao exportar árvore:', error);
+      toast.error('Não foi possível gerar o PDF. As cores da árvore foram ajustadas para exportação; tente novamente.');
     }
   }, []);
 
   return (
     <div
       ref={containerRef}
+      data-export-root="family-tree"
+      data-export-view={viewMode}
       className={[
+        'family-tree-export-root',
         'relative h-full w-full overflow-hidden',
         isDirectFamilyView ? 'bg-slate-50' : '',
       ].join(' ')}
