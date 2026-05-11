@@ -30,6 +30,11 @@ interface GenealogyPersonPlacement {
   directRelation: DirectRelationVariant;
 }
 
+interface PositionedPerson {
+  placement: GenealogyPersonPlacement;
+  y: number;
+}
+
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const TITLE_WIDTH = 1180;
@@ -368,7 +373,8 @@ function appendPlacementNodes(
   relationshipIndex: RelationshipIndex,
   personNodeById: Map<string, Node>,
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
+  positionedPeople?: Map<string, PositionedPerson>
 ) {
   let currentY = startY;
 
@@ -387,6 +393,10 @@ function appendPlacementNodes(
     }
 
     nodes.push(clonePersonNode(node, x, currentY, directRelation));
+    positionedPeople?.set(pessoa.id, {
+      placement: { pessoa, directRelation },
+      y: currentY,
+    });
   });
 
   return currentY + CARD_HEIGHT;
@@ -455,23 +465,85 @@ function buildChildFamilyBlock(
   return placements;
 }
 
-function buildGeneration4ParentUnits(
-  generation4Group: GenerationGroup,
-  generation5Group: GenerationGroup | undefined,
+function getOrderedParentPlacements(
+  parentGroup: GenerationGroup,
+  positionedPeople?: Map<string, PositionedPerson>
+) {
+  if (!positionedPeople) return parentGroup.people;
+
+  const positioned = parentGroup.people
+    .map((placement, originalIndex) => ({
+      placement,
+      originalIndex,
+      positioned: positionedPeople.get(placement.pessoa.id),
+    }))
+    .filter((item) => item.positioned)
+    .sort((itemA, itemB) => {
+      const yA = itemA.positioned?.y ?? Number.POSITIVE_INFINITY;
+      const yB = itemB.positioned?.y ?? Number.POSITIVE_INFINITY;
+
+      if (yA !== yB) return yA - yB;
+      return itemA.originalIndex - itemB.originalIndex;
+    })
+    .map((item) => item.positioned?.placement || item.placement);
+
+  return positioned.length > 0 ? positioned : parentGroup.people;
+}
+
+function getParentBlockMetrics(
+  parentPlacements: GenealogyPersonPlacement[],
   relationshipIndex: RelationshipIndex,
-  visitedGeneration5Ids: Set<string>
+  positionedPeople?: Map<string, PositionedPerson>
+) {
+  if (parentPlacements.length === 0) {
+    return { height: 0, topY: 0, centerY: 0 };
+  }
+
+  const positionedYs = parentPlacements
+    .map((placement) => positionedPeople?.get(placement.pessoa.id)?.y)
+    .filter((y): y is number => typeof y === 'number');
+
+  if (positionedYs.length === parentPlacements.length) {
+    const minY = Math.min(...positionedYs);
+    const maxY = Math.max(...positionedYs.map((y) => y + CARD_HEIGHT));
+
+    return {
+      height: maxY - minY,
+      topY: minY,
+      centerY: minY + (maxY - minY) / 2,
+    };
+  }
+
+  const height = getPlacementBlockHeight(parentPlacements, relationshipIndex);
+
+  return {
+    height,
+    topY: 0,
+    centerY: height / 2,
+  };
+}
+
+function buildAdjacentGenerationParentUnits(
+  parentGroup: GenerationGroup,
+  childGroup: GenerationGroup | undefined,
+  relationshipIndex: RelationshipIndex,
+  visitedChildIds: Set<string>,
+  positionedParents?: Map<string, PositionedPerson>
 ) {
   const units: Array<{
     parentPlacements: GenealogyPersonPlacement[];
     childPlacements: GenealogyPersonPlacement[];
     parentHeight: number;
+    parentTopY?: number;
+    parentCenterY?: number;
     childrenHeight: number;
     unitHeight: number;
   }> = [];
+  const parentPlacementsInOrder = getOrderedParentPlacements(parentGroup, positionedParents);
 
-  for (let index = 0; index < generation4Group.people.length; index++) {
-    const currentPlacement = generation4Group.people[index];
-    const nextPlacement = generation4Group.people[index + 1];
+  for (let index = 0; index < parentPlacementsInOrder.length; index++) {
+    const currentPlacement = parentPlacementsInOrder[index];
+    const nextPlacement = parentPlacementsInOrder[index + 1];
     const parentPlacements = [currentPlacement];
     const childIds = new Set<string>();
 
@@ -481,103 +553,128 @@ function buildGeneration4ParentUnits(
         getSpousePairKey(currentPlacement.pessoa.id, nextPlacement.pessoa.id)
       )?.forEach((childId) => childIds.add(childId));
 
-      parentPlacements.forEach((parentPlacement) => {
-        relationshipIndex.childrenByParent.get(parentPlacement.pessoa.id)?.forEach((childId) => {
-          const parentIds = relationshipIndex.parentsByChild.get(childId);
-          if (parentIds?.size === 1) {
-            childIds.add(childId);
-          }
-        });
-      });
-
       index++;
     } else {
       relationshipIndex.childrenByParent.get(currentPlacement.pessoa.id)?.forEach((childId) => {
-        childIds.add(childId);
+        const parentIds = relationshipIndex.parentsByChild.get(childId);
+        if (parentIds?.size === 1) {
+          childIds.add(childId);
+        }
       });
     }
 
-    const childPlacements = generation5Group
-      ? buildChildFamilyBlock(childIds, generation5Group, relationshipIndex, visitedGeneration5Ids)
+    const childPlacements = childGroup
+      ? buildChildFamilyBlock(childIds, childGroup, relationshipIndex, visitedChildIds)
       : [];
-    const parentHeight = getPlacementBlockHeight(parentPlacements, relationshipIndex);
+    const parentMetrics = getParentBlockMetrics(parentPlacements, relationshipIndex, positionedParents);
     const childrenHeight = getPlacementBlockHeight(childPlacements, relationshipIndex);
 
     units.push({
       parentPlacements,
       childPlacements,
-      parentHeight,
+      parentHeight: parentMetrics.height,
+      parentTopY: positionedParents ? parentMetrics.topY : undefined,
+      parentCenterY: positionedParents ? parentMetrics.centerY : undefined,
       childrenHeight,
-      unitHeight: Math.max(parentHeight, childrenHeight),
+      unitHeight: Math.max(parentMetrics.height, childrenHeight),
     });
   }
 
   return units;
 }
 
-function layoutGeneration4And5FamilyUnits(
-  generation4Group: GenerationGroup,
-  generation5Group: GenerationGroup | undefined,
-  generation4X: number,
-  generation5X: number | undefined,
+function layoutAdjacentGenerationFamilyUnits({
+  parentGroup,
+  childGroup,
+  parentX,
+  childX,
+  baseY,
+  relationshipIndex,
+  personNodeById,
+  nodes,
+  edges,
+  positionedPeople,
+  positionParents,
+}: {
+  parentGroup: GenerationGroup;
+  childGroup?: GenerationGroup;
+  parentX: number;
+  childX?: number;
   baseY: number,
-  relationshipIndex: RelationshipIndex,
-  personNodeById: Map<string, Node>,
-  nodes: Node[],
-  edges: Edge[]
-) {
-  const visitedGeneration5Ids = new Set<string>();
-  const units = buildGeneration4ParentUnits(
-    generation4Group,
-    generation5Group,
+  relationshipIndex: RelationshipIndex;
+  personNodeById: Map<string, Node>;
+  nodes: Node[];
+  edges: Edge[];
+  positionedPeople: Map<string, PositionedPerson>;
+  positionParents: boolean;
+}) {
+  const visitedChildIds = new Set<string>();
+  const units = buildAdjacentGenerationParentUnits(
+    parentGroup,
+    childGroup,
     relationshipIndex,
-    visitedGeneration5Ids
+    visitedChildIds,
+    positionParents ? undefined : positionedPeople
   );
   let currentUnitTopY = baseY;
 
   units.forEach((unit) => {
-    const unitCenterY = currentUnitTopY + unit.unitHeight / 2;
+    const unitCenterY = positionParents
+      ? currentUnitTopY + unit.unitHeight / 2
+      : unit.parentCenterY ?? currentUnitTopY + unit.unitHeight / 2;
     const parentBlockTopY = unitCenterY - unit.parentHeight / 2;
     const childrenBlockTopY = unitCenterY - unit.childrenHeight / 2;
 
-    appendPlacementNodes(
-      unit.parentPlacements,
-      generation4X,
-      parentBlockTopY,
-      relationshipIndex,
-      personNodeById,
-      nodes,
-      edges
-    );
-
-    if (generation5Group && generation5X !== undefined && unit.childPlacements.length > 0) {
+    if (positionParents) {
       appendPlacementNodes(
-        unit.childPlacements,
-        generation5X,
-        childrenBlockTopY,
+        unit.parentPlacements,
+        parentX,
+        parentBlockTopY,
         relationshipIndex,
         personNodeById,
         nodes,
-        edges
+        edges,
+        positionedPeople
       );
     }
 
-    currentUnitTopY += unit.unitHeight + FAMILY_UNIT_GAP;
+    if (childGroup && childX !== undefined && unit.childPlacements.length > 0) {
+      const childStartY = Math.max(baseY, currentUnitTopY, childrenBlockTopY);
+      appendPlacementNodes(
+        unit.childPlacements,
+        childX,
+        childStartY,
+        relationshipIndex,
+        personNodeById,
+        nodes,
+        edges,
+        positionedPeople
+      );
+    }
+
+    const parentBottomY = positionParents
+      ? parentBlockTopY + unit.parentHeight
+      : (unit.parentTopY ?? parentBlockTopY) + unit.parentHeight;
+    const childrenBottomY = unit.childPlacements.length > 0
+      ? Math.max(baseY, currentUnitTopY, childrenBlockTopY) + unit.childrenHeight
+      : currentUnitTopY + unit.unitHeight;
+    currentUnitTopY = Math.max(currentUnitTopY + unit.unitHeight, parentBottomY, childrenBottomY) + FAMILY_UNIT_GAP;
   });
 
-  if (!generation5Group || generation5X === undefined) return;
+  if (!childGroup || childX === undefined) return;
 
-  const remainingPlacements = generation5Group.people.filter((placement) => !visitedGeneration5Ids.has(placement.pessoa.id));
+  const remainingPlacements = childGroup.people.filter((placement) => !visitedChildIds.has(placement.pessoa.id));
   if (remainingPlacements.length === 0) return;
 
   appendPlacementNodes(
     remainingPlacements,
-    generation5X,
+    childX,
     Math.max(baseY, currentUnitTopY),
     relationshipIndex,
     personNodeById,
     nodes,
-    edges
+    edges,
+    positionedPeople
   );
 }
 
@@ -587,6 +684,7 @@ export function genealogyColumnsLayout(graph: TreeLayoutParams): TreeLayoutResul
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const positionedPeople = new Map<string, PositionedPerson>();
 
   if (groups.length === 0) {
     addLabelNode(
@@ -608,9 +706,12 @@ export function genealogyColumnsLayout(graph: TreeLayoutParams): TreeLayoutResul
   const getColumnX = (columnIndex: number) => startX + columnIndex * (CARD_WIDTH + COLUMN_GAP);
   const generation4GroupIndex = groups.findIndex((group) => group.key === 4);
   const generation5GroupIndex = groups.findIndex((group) => group.key === 5);
+  const generation6GroupIndex = groups.findIndex((group) => group.key === 6);
   const generation4Group = generation4GroupIndex >= 0 ? groups[generation4GroupIndex] : undefined;
   const generation5Group = generation5GroupIndex >= 0 ? groups[generation5GroupIndex] : undefined;
-  const shouldLayoutGeneration4And5Together = Boolean(generation4Group);
+  const generation6Group = generation6GroupIndex >= 0 ? groups[generation6GroupIndex] : undefined;
+  const shouldLayoutGeneration4And5Together = Boolean(generation4Group && generation5Group);
+  const shouldLayoutGeneration5And6Together = Boolean(generation5Group && generation6Group);
 
   addLabelNode(
     nodes,
@@ -632,22 +733,46 @@ export function genealogyColumnsLayout(graph: TreeLayoutParams): TreeLayoutResul
     const firstCardY = COLUMN_TOP + COLUMN_LABEL_HEIGHT + LABEL_TO_CARD_GAP;
 
     if (group.key === 4 && generation4Group) {
-      layoutGeneration4And5FamilyUnits(
-        generation4Group,
-        generation5Group,
-        x,
-        generation5GroupIndex >= 0 ? getColumnX(generation5GroupIndex) : undefined,
-        firstCardY,
+      layoutAdjacentGenerationFamilyUnits({
+        parentGroup: generation4Group,
+        childGroup: generation5Group,
+        parentX: x,
+        childX: generation5GroupIndex >= 0 ? getColumnX(generation5GroupIndex) : undefined,
+        baseY: firstCardY,
         relationshipIndex,
         personNodeById,
         nodes,
-        edges
-      );
+        edges,
+        positionedPeople,
+        positionParents: true,
+      });
+
+      return;
+    }
+
+    if (group.key === 5 && generation5Group && shouldLayoutGeneration5And6Together) {
+      layoutAdjacentGenerationFamilyUnits({
+        parentGroup: generation5Group,
+        childGroup: generation6Group,
+        parentX: x,
+        childX: generation6GroupIndex >= 0 ? getColumnX(generation6GroupIndex) : undefined,
+        baseY: firstCardY,
+        relationshipIndex,
+        personNodeById,
+        nodes,
+        edges,
+        positionedPeople,
+        positionParents: !shouldLayoutGeneration4And5Together,
+      });
 
       return;
     }
 
     if (group.key === 5 && shouldLayoutGeneration4And5Together) {
+      return;
+    }
+
+    if (group.key === 6 && shouldLayoutGeneration5And6Together) {
       return;
     }
 
@@ -668,6 +793,10 @@ export function genealogyColumnsLayout(graph: TreeLayoutParams): TreeLayoutResul
       }
 
       nodes.push(clonePersonNode(node, x, currentY, directRelation));
+      positionedPeople.set(pessoa.id, {
+        placement: { pessoa, directRelation },
+        y: currentY,
+      });
     });
   });
 
