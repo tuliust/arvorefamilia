@@ -191,7 +191,19 @@ function getAgeLabel(value?: string | number | null) {
 }
 
 export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
-  const { pessoa, onClick, isSelected, isCentralPerson, onView, onEdit, onAddConnection, onRemove, directRelation } = data;
+  const {
+    pessoa,
+    onClick,
+    isSelected,
+    isCentralPerson,
+    onView,
+    onEdit,
+    onAddConnection,
+    onRemove,
+    directRelation,
+    useDirectRelationStyleForPet,
+    useCentralDirectLayout,
+  } = data;
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -301,11 +313,11 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   );
 
   if (directRelation) {
-    const style = isPet ? DIRECT_FAMILY_PET_STYLE : directRelationStyles[directRelation];
+    const style = isPet && !useDirectRelationStyleForPet ? DIRECT_FAMILY_PET_STYLE : directRelationStyles[directRelation];
     const directBorderColor = isFalecido
       ? DIRECT_FAMILY_STATUS_BORDER_COLORS.deceased
       : DIRECT_FAMILY_STATUS_BORDER_COLORS.alive;
-    const isCentralDirectNode = directRelation === 'central';
+    const isCentralDirectNode = directRelation === 'central' && useCentralDirectLayout !== false;
     const cardWidth = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH : DIRECT_FAMILY_TOKENS.CARD_WIDTH;
     const cardHeight = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT : DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
     const avatarSize = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE;

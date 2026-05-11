@@ -24,7 +24,6 @@ import {
 } from '../../types';
 import { ArrowLeft, Save, Plus, X, User, Search } from 'lucide-react';
 import { FotoUpload } from '../../components/FotoUpload';
-import { ColorPicker } from '../../components/ColorPicker';
 import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import { RelacionamentoManagerWrapper } from '../../components/RelacionamentoManagerWrapper';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -62,7 +61,6 @@ export function AdminPessoaForm() {
     humano_ou_pet: 'Humano' as TipoEntidade,
     lado: 'esquerda' as LadoPessoa,
     manual_generation: '',
-    cor_bg_card: '',
     minibio: '',
     curiosidades: '',
     telefone: '',
@@ -108,7 +106,6 @@ export function AdminPessoaForm() {
               humano_ou_pet: pessoa.humano_ou_pet || ('Humano' as TipoEntidade),
               lado: (pessoa.lado as LadoPessoa) || 'esquerda',
               manual_generation: pessoa.manual_generation?.toString() || '',
-              cor_bg_card: pessoa.cor_bg_card || '',
               minibio: pessoa.minibio || '',
               curiosidades: pessoa.curiosidades || '',
               telefone: pessoa.telefone || '',
@@ -428,13 +425,6 @@ export function AdminPessoaForm() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cor do Card (opcional)</label>
-                  <ColorPicker
-                    value={formData.cor_bg_card}
-                    onChange={(color) => handleChange('cor_bg_card', color)}
-                  />
-                </div>
               </div>
             </CardContent>
           </Card>

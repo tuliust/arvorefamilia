@@ -119,6 +119,8 @@ export interface PersonNodeData extends PersonNodeContextActions {
   isSelected?: boolean;
   isCentralPerson?: boolean;
   directRelation?: DirectRelationVariant;
+  useDirectRelationStyleForPet?: boolean;
+  useCentralDirectLayout?: boolean;
 }
 
 export interface MarriageNodeData {
