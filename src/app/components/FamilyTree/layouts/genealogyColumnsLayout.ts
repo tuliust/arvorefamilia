@@ -945,6 +945,7 @@ function layoutAdjacentGenerationFamilyUnits({
     positionParents ? undefined : positionedPeople
   );
   let currentUnitTopY = baseY;
+  let childColumnBottomY = baseY;
 
   units.forEach((unit) => {
     const unitCenterY = positionParents
@@ -973,17 +974,21 @@ function layoutAdjacentGenerationFamilyUnits({
     const parentIdsForConnector = getVisiblePlacements(unit.parentPlacements, filters)
       .map((placement) => placement.pessoa.id)
       .filter((personId) => positionedPeople.has(personId));
-    const singleChildOrigin = visibleConnectedChildIds.length === 1
+    const singleChildOrigin = unit.connectedChildIds.length === 1 && visibleConnectedChildIds.length === 1
       ? getFamilyConnectorOrigin(parentIdsForConnector, positionedPeople)
       : null;
     const alignedSingleChildTopY = singleChildOrigin
       ? singleChildOrigin.y - CARD_HEIGHT / 2
       : null;
-    const childStartY = Math.max(
-      baseY,
-      currentUnitTopY,
-      alignedSingleChildTopY ?? childrenBlockTopY
-    );
+    const minimumChildTopY = Math.max(baseY, childColumnBottomY);
+    const canUseSingleChildAlignment = alignedSingleChildTopY !== null && alignedSingleChildTopY >= minimumChildTopY;
+    const childStartY = canUseSingleChildAlignment
+      ? alignedSingleChildTopY
+      : Math.max(
+          minimumChildTopY,
+          currentUnitTopY,
+          alignedSingleChildTopY ?? childrenBlockTopY
+        );
 
     if (childGroup && childX !== undefined && visibleChildPlacements.length > 0) {
       appendPlacementNodes(
@@ -1018,6 +1023,9 @@ function layoutAdjacentGenerationFamilyUnits({
     const childrenBottomY = visibleChildPlacements.length > 0
       ? childStartY + unit.childrenHeight
       : currentUnitTopY + unit.unitHeight;
+    if (visibleChildPlacements.length > 0) {
+      childColumnBottomY = childrenBottomY + FAMILY_UNIT_GAP;
+    }
     currentUnitTopY = Math.max(currentUnitTopY + unit.unitHeight, parentBottomY, childrenBottomY) + FAMILY_UNIT_GAP;
   });
 
@@ -1029,7 +1037,7 @@ function layoutAdjacentGenerationFamilyUnits({
   appendPlacementNodes(
     remainingPlacements,
     childX,
-    Math.max(baseY, currentUnitTopY),
+    Math.max(baseY, currentUnitTopY, childColumnBottomY),
     relationshipIndex,
     personNodeById,
     peopleById,

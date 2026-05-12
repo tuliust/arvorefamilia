@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { FamilyTree } from '../components/FamilyTree/FamilyTree';
+import { FamilyTree, type FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
 import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageModal';
 import {
   AddConnectionModal,
@@ -77,11 +77,15 @@ import {
   Network,
   Monitor,
   Settings,
+  CircleEllipsis,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
   CalendarDays,
+  FileDown,
+  ImageDown,
+  Printer,
   Star,
   Bell,
   UserCircle2,
@@ -181,6 +185,7 @@ export function Home() {
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const familyTreeRef = useRef<FamilyTreeActions | null>(null);
 
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
@@ -709,7 +714,14 @@ export function Home() {
 
       {activeSidebarPanel === 'legend' && <FamilyTreeLegend compact={isMobile} />}
 
-      {activeSidebarPanel === 'info' && <SidebarInfoPanel />}
+      {activeSidebarPanel === 'info' && (
+        <SidebarInfoPanel
+          onSavePdf={() => familyTreeRef.current?.savePdf()}
+          onSaveImage={() => familyTreeRef.current?.saveImage()}
+          onPrint={() => familyTreeRef.current?.print()}
+          onWhatsApp={() => toast.info('Envio por WhatsApp será implementado em breve.')}
+        />
+      )}
     </>
   );
   const selectedCuriosityPerson = useMemo(
@@ -888,21 +900,39 @@ export function Home() {
     ],
     []
   );
+  const isSearchExpanded = searchExpanded;
+  const currentTreeViewLabel = treeViewMode === 'genealogia' ? 'Genealogia' : 'Minha Árvore';
+  const headerActionTextClassName = isSearchExpanded ? 'hidden' : 'hidden xl:inline-flex';
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-3 py-3 shadow-sm lg:px-5">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-          <div className="flex min-w-fit items-center gap-3 lg:w-auto lg:shrink-0">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-4">
+          <div className="flex min-w-fit items-center gap-3 justify-self-start">
             <div className="min-w-0">
               <h1 className="whitespace-normal text-lg font-bold leading-tight text-gray-900 sm:whitespace-nowrap lg:text-xl">
-                Família Souza Barros
+                Família Barros Souza
               </h1>
-              <p className="text-xs text-gray-500 lg:text-sm">Minha Árvore</p>
+              <p className="text-xs text-gray-500 lg:text-sm">{currentTreeViewLabel}</p>
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 lg:flex-nowrap lg:justify-center">
+            <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
+              <SelectTrigger
+                className="h-9 w-auto min-w-[168px] shrink-0 gap-2 border-blue-300 bg-blue-50 px-3 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:min-w-[210px]"
+                aria-label="Mude a Visualização"
+                title="Mude a Visualização"
+              >
+                <Network className="h-4 w-4 shrink-0 text-blue-700" />
+                <span>Mude a Visualização</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
+                <SelectItem value="genealogia">Genealogia</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Button
               variant="outline"
               className="h-9 shrink-0 gap-2 px-3"
@@ -911,7 +941,7 @@ export function Home() {
               onClick={() => setAiDialogOpen(true)}
             >
               <Sparkles className="h-4 w-4" />
-              <span className="hidden xl:inline-flex">Curiosidades</span>
+              <span className={headerActionTextClassName}>Curiosidades</span>
             </Button>
 
             <Button
@@ -922,7 +952,7 @@ export function Home() {
               onClick={() => navigateFromHome('/forum')}
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="hidden xl:inline-flex">Fórum</span>
+              <span className={headerActionTextClassName}>Fórum</span>
             </Button>
 
             <Button
@@ -933,24 +963,8 @@ export function Home() {
               onClick={() => navigateFromHome('/calendario-familiar')}
             >
               <CalendarDays className="h-4 w-4" />
-              <span className="hidden xl:inline-flex">Calendário</span>
+              <span className={headerActionTextClassName}>Calendário</span>
             </Button>
-
-            <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
-              <SelectTrigger
-                className="h-9 w-auto min-w-[168px] shrink-0 gap-2 border-blue-300 bg-blue-50 px-3 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:min-w-[210px]"
-                aria-label="Mude a Visualização"
-                title="Mude a Visualização"
-              >
-                <Network className="h-4 w-4 shrink-0 text-blue-700" />
-                <span className="hidden sm:inline">Mude a Visualização</span>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
-                <SelectItem value="genealogia">Genealogia</SelectItem>
-              </SelectContent>
-            </Select>
 
             {isMobile && (
               <Button
@@ -963,8 +977,10 @@ export function Home() {
                 {legendOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
             )}
+          </div>
 
-            <div className="relative ml-auto flex min-w-0 flex-row-reverse items-center">
+          <div className="flex min-w-0 items-center justify-end gap-2">
+            <div className="relative flex min-w-0 flex-row-reverse items-center">
               <Button
                 variant="outline"
                 size="icon"
@@ -1021,9 +1037,7 @@ export function Home() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end lg:ml-auto">
             <UserMenu
               isLoggedIn={Boolean(user)}
               displayName={displayName}
@@ -1066,30 +1080,42 @@ export function Home() {
           >
             {sidebarOpen && (
               <div className="flex min-h-0 flex-1 flex-col gap-4">
-                <SidebarPanelTabs
-                  activePanel={activeSidebarPanel}
-                  onChange={setActiveSidebarPanel}
-                />
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <SidebarPanelTabs
+                      activePanel={activeSidebarPanel}
+                      onChange={setActiveSidebarPanel}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                    onClick={() => setSidebarOpen(false)}
+                    title="Recolher painel lateral"
+                    aria-label="Recolher painel lateral"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </div>
                 <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                   {sidebarPanelContent}
                 </div>
               </div>
             )}
+            {!sidebarOpen && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                onClick={() => setSidebarOpen(true)}
+                title="Expandir painel lateral"
+                aria-label="Expandir painel lateral"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </aside>
-        )}
-
-        {!isMobile && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute top-4 z-30 h-9 w-9 bg-white shadow-sm"
-            style={{ left: sidebarOpen ? 332 : 68 }}
-            onClick={() => setSidebarOpen((prev) => !prev)}
-            title={sidebarOpen ? 'Ocultar painel lateral' : 'Exibir painel lateral'}
-            aria-label={sidebarOpen ? 'Ocultar painel lateral' : 'Exibir painel lateral'}
-          >
-            {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
         )}
 
         <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100">
@@ -1111,6 +1137,7 @@ export function Home() {
             />
           ) : (
             <FamilyTree
+              ref={familyTreeRef}
               pessoas={pessoasVisiveis}
               relacionamentos={relacionamentos}
               onPersonClick={handlePersonClick}
@@ -1126,7 +1153,6 @@ export function Home() {
               isMobile={isMobile}
               layoutRevision={treeLayoutRevision}
               viewMode={treeViewMode}
-              onViewModeChange={setTreeViewMode}
               genealogyFilters={genealogyFilters}
             />
           )}
@@ -1838,15 +1864,17 @@ function SidebarPanelTabs({
             key={option.key}
             type="button"
             aria-pressed={active}
+            aria-label={option.key === 'info' ? 'Informações' : undefined}
+            title={option.key === 'info' ? 'Informações' : undefined}
             onClick={() => onChange(option.key)}
             className={[
-              'min-h-8 rounded-md px-2 text-xs font-semibold transition-colors',
+              'flex min-h-8 items-center justify-center rounded-md px-2 text-xs font-semibold transition-colors',
               active
                 ? 'bg-white text-gray-950 shadow-sm'
                 : 'text-gray-500 hover:bg-white/70 hover:text-gray-800',
             ].join(' ')}
           >
-            {option.label}
+            {option.key === 'info' ? <CircleEllipsis className="h-4 w-4" /> : option.label}
           </button>
         );
       })}
@@ -1854,14 +1882,54 @@ function SidebarPanelTabs({
   );
 }
 
-function SidebarInfoPanel() {
+function SidebarInfoPanel({
+  onSavePdf,
+  onSaveImage,
+  onPrint,
+  onWhatsApp,
+}: {
+  onSavePdf: () => void;
+  onSaveImage: () => void;
+  onPrint: () => void;
+  onWhatsApp: () => void;
+}) {
   return (
-    <section className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <h2 className="text-sm font-semibold text-gray-900">Informações da árvore</h2>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        Esta seção reunirá detalhes complementares sobre a visualização selecionada.
-      </p>
+    <section className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div>
+        <h2 className="text-sm font-semibold text-gray-900">Informações da árvore</h2>
+        <p className="mt-2 text-xs leading-relaxed text-gray-500">
+          Ações para exportar ou compartilhar a visualização atual da árvore.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <SidebarActionButton icon={FileDown} label="Salvar como PDF" onClick={onSavePdf} />
+        <SidebarActionButton icon={ImageDown} label="Salvar como Imagem" onClick={onSaveImage} />
+        <SidebarActionButton icon={Printer} label="Imprimir" onClick={onPrint} />
+        <SidebarActionButton icon={MessageCircle} label="Enviar WhatsApp" onClick={onWhatsApp} />
+      </div>
     </section>
+  );
+}
+
+function SidebarActionButton({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-10 w-full items-center gap-3 rounded-md border border-gray-200 bg-white px-3 text-left text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+    >
+      <Icon className="h-4 w-4 shrink-0 text-gray-500" />
+      <span>{label}</span>
+    </button>
   );
 }
 

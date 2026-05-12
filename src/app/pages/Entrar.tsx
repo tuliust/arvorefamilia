@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { User } from '@supabase/supabase-js';
-import { ArrowRight, KeyRound, Lock, LogIn, Mail, UserPlus } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, KeyRound, Lock, LogIn, Mail, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -22,6 +22,7 @@ type AuthMode = 'login' | 'first-access';
 type FirstAccessStep = 'code' | 'account' | 'confirmation';
 
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
+const RESEND_CONFIRMATION_COOLDOWN_SECONDS = 60;
 
 function getEmailRedirectTo() {
   return `${window.location.origin}/entrar`;
@@ -39,6 +40,11 @@ function hasRecentLogin(lastSignInAt?: string | null) {
 function isEmailNotConfirmedError(message: string) {
   const lower = message.toLowerCase();
   return lower.includes('email not confirmed') || lower.includes('email_not_confirmed');
+}
+
+function getCooldownFromAuthMessage(message: string) {
+  const match = message.match(/after\s+(\d+)\s+seconds/i);
+  return match ? Number(match[1]) : null;
 }
 
 function friendlyAuthError(message: string) {
@@ -75,9 +81,13 @@ export function Entrar() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupPasswordConfirmation, setSignupPasswordConfirmation] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupPasswordConfirmation, setShowSignupPasswordConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resendSubmitting, setResendSubmitting] = useState(false);
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
@@ -115,6 +125,20 @@ export function Entrar() {
       mounted = false;
     };
   }, [loading, navigate, user]);
+
+  useEffect(() => {
+    if (resendCooldownSeconds <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setResendCooldownSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendCooldownSeconds]);
+
+  const startResendCooldown = useCallback((seconds = RESEND_CONFIRMATION_COOLDOWN_SECONDS) => {
+    setResendCooldownSeconds(Math.max(0, seconds));
+  }, []);
 
   const title = useMemo(() => {
     if (firstAccessStep === 'confirmation') return 'Confirme seu e-mail';
@@ -176,6 +200,7 @@ export function Entrar() {
         setLoginEmail(normalizedEmail);
         setMode('login');
         setFirstAccessStep('confirmation');
+        startResendCooldown();
       }
 
       toast.error(friendlyAuthError(error.message));
@@ -322,6 +347,7 @@ export function Entrar() {
       setConfirmationEmail(normalizedEmail);
       setFirstAccessStep('confirmation');
       setMode('login');
+      startResendCooldown();
       return;
     }
 
@@ -361,6 +387,11 @@ export function Entrar() {
   const handleResendConfirmation = async () => {
     const normalizedEmail = confirmationEmail.trim().toLowerCase();
 
+    if (resendCooldownSeconds > 0) {
+      toast.info(`Aguarde ${resendCooldownSeconds}s para reenviar o e-mail.`);
+      return;
+    }
+
     if (!normalizedEmail) {
       toast.error('Não foi possível identificar o e-mail para reenvio.');
       return;
@@ -377,11 +408,19 @@ export function Entrar() {
     setResendSubmitting(false);
 
     if (error) {
+      const cooldown = getCooldownFromAuthMessage(error.message);
+      if (cooldown !== null) {
+        startResendCooldown(cooldown);
+        toast.info(`Aguarde ${cooldown}s para reenviar o e-mail.`);
+        return;
+      }
+
       toast.error(friendlyAuthError(error.message));
       return;
     }
 
     setConfirmationEmail(normalizedEmail);
+    startResendCooldown();
     toast.success('E-mail de confirmação reenviado.');
   };
 
@@ -468,10 +507,14 @@ export function Entrar() {
                     type="button"
                     variant="outline"
                     className="w-full"
-                    disabled={resendSubmitting}
+                    disabled={resendSubmitting || resendCooldownSeconds > 0}
                     onClick={handleResendConfirmation}
                   >
-                    {resendSubmitting ? 'Reenviando...' : 'Reenviar e-mail de confirmação'}
+                    {resendSubmitting
+                      ? 'Reenviando...'
+                      : resendCooldownSeconds > 0
+                        ? `Reenviar e-mail em ${resendCooldownSeconds}s`
+                        : 'Reenviar e-mail de confirmação'}
                   </Button>
 
                   <Button
@@ -501,7 +544,21 @@ export function Entrar() {
                   <Field label="Senha">
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                      <Input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} className="pl-10" required />
+                      <Input
+                        type={showLoginPassword ? 'text' : 'password'}
+                        value={loginPassword}
+                        onChange={(event) => setLoginPassword(event.target.value)}
+                        className="pl-10 pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword((current) => !current)}
+                        className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-gray-400 transition hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        aria-label={showLoginPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </Field>
 
@@ -560,16 +617,43 @@ export function Entrar() {
                   </Field>
 
                   <Field label="Senha">
-                    <Input type="password" value={signupPassword} onChange={(event) => setSignupPassword(event.target.value)} required />
+                    <div className="relative">
+                      <Input
+                        type={showSignupPassword ? 'text' : 'password'}
+                        value={signupPassword}
+                        onChange={(event) => setSignupPassword(event.target.value)}
+                        className="pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignupPassword((current) => !current)}
+                        className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-gray-400 transition hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        aria-label={showSignupPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </Field>
 
                   <Field label="Confirmar senha">
-                    <Input
-                      type="password"
-                      value={signupPasswordConfirmation}
-                      onChange={(event) => setSignupPasswordConfirmation(event.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showSignupPasswordConfirmation ? 'text' : 'password'}
+                        value={signupPasswordConfirmation}
+                        onChange={(event) => setSignupPasswordConfirmation(event.target.value)}
+                        className="pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignupPasswordConfirmation((current) => !current)}
+                        className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-gray-400 transition hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        aria-label={showSignupPasswordConfirmation ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                      >
+                        {showSignupPasswordConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </Field>
 
                   <Button type="submit" className="w-full" disabled={submitting}>

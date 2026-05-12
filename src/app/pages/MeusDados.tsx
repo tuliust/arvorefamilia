@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
-import { Camera, ImagePlus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
+import { Camera, ImagePlus, Plus, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
@@ -28,7 +28,6 @@ import {
   EditableOwnPersonPayload,
   ensureMemberProfile,
   getPrimaryLinkedPersonWithPessoa,
-  listLinkablePeople,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
@@ -47,11 +46,25 @@ import {
   PersonFieldErrors,
   SOCIAL_NETWORKS,
   validateEditablePersonForm,
+  validateLocation,
 } from '../utils/personFields';
 import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 
 const AVATAR_BUCKET = 'person-avatars';
 const AVATAR_SIZE = 512;
+const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
+
+type SocialProfileForm = {
+  id: string;
+  rede: string;
+  perfil: string;
+};
+
+type MeusDadosDraft = {
+  form: EditableOwnPersonPayload;
+  complemento: string;
+  socialProfiles: SocialProfileForm[];
+};
 
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
 // (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
@@ -66,6 +79,52 @@ function getAddressComponent(
 
 function joinAddressParts(parts: string[]) {
   return parts.map((part) => part.trim()).filter(Boolean).join(', ');
+}
+
+function createSocialProfile(rede = '', perfil = ''): SocialProfileForm {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    rede,
+    perfil,
+  };
+}
+
+function getDraftKey(userId: string, pessoaId: string) {
+  return `meus-dados-draft:${userId}:${pessoaId}`;
+}
+
+function readMeusDadosDraft(key: string): MeusDadosDraft | null {
+  try {
+    const rawDraft = window.sessionStorage.getItem(key);
+    if (!rawDraft) return null;
+
+    const draft = JSON.parse(rawDraft) as Partial<MeusDadosDraft>;
+    if (!draft.form || !Array.isArray(draft.socialProfiles)) return null;
+
+    return {
+      form: draft.form,
+      complemento: draft.complemento ?? '',
+      socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeMeusDadosDraft(key: string, draft: MeusDadosDraft) {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(draft));
+  } catch {
+    // Rascunho é uma proteção auxiliar; falhas de storage não devem bloquear a edição.
+  }
+}
+
+function removeMeusDadosDraft(key: string) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // noop
+  }
 }
 
 function formatGooglePlaceAddress(place: GooglePlaceResult) {
@@ -147,11 +206,14 @@ export function MeusDados() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const hasInitializedFormRef = useRef(false);
+  const initializedPessoaIdRef = useRef<string | null>(null);
+  const isDirtyRef = useRef(false);
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [complemento, setComplemento] = useState('');
+  const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
   const [errors, setErrors] = useState<PersonFieldErrors>({});
-  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
@@ -181,9 +243,29 @@ export function MeusDados() {
         return;
       }
 
+      const nextPessoaId = data?.pessoa?.id ?? null;
+      const samePessoa = nextPessoaId && initializedPessoaIdRef.current === nextPessoaId;
+      const shouldPreserveDraft = hasInitializedFormRef.current && isDirtyRef.current && samePessoa;
+
       setLink(data);
-      setForm(buildEditablePersonFormState(data?.pessoa));
-      setComplemento('');
+
+      if (!shouldPreserveDraft) {
+        const draftKey = user.id && nextPessoaId ? getDraftKey(user.id, nextPessoaId) : null;
+        const draft = draftKey ? readMeusDadosDraft(draftKey) : null;
+
+        setForm(draft?.form ?? buildEditablePersonFormState(data?.pessoa));
+        setSocialProfiles(draft?.socialProfiles ?? [
+          createSocialProfile(
+            String(data?.pessoa?.rede_social ?? ''),
+            String(data?.pessoa?.instagram_usuario ?? ''),
+          ),
+        ]);
+        setComplemento(draft?.complemento ?? '');
+        isDirtyRef.current = Boolean(draft);
+      }
+
+      hasInitializedFormRef.current = true;
+      initializedPessoaIdRef.current = nextPessoaId;
       setPhotoMarkedForRemoval(false);
       setLoading(false);
     }
@@ -196,36 +278,17 @@ export function MeusDados() {
   }, [user]);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadLocationSuggestions() {
-      const { data } = await listLinkablePeople();
-      if (!mounted) return;
-
-      const suggestions = new Set<string>();
-      data.forEach((person) => {
-        const birthLocation = normalizeLocation(String(person.local_nascimento ?? ''));
-        const currentLocation = normalizeLocation(String(person.local_atual ?? ''));
-
-        if (birthLocation) suggestions.add(birthLocation);
-        if (currentLocation) suggestions.add(currentLocation);
-      });
-
-      setLocationSuggestions(Array.from(suggestions).sort((a, b) => a.localeCompare(b, 'pt-BR')));
-    }
-
-    loadLocationSuggestions();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     const input = addressInputRef.current;
 
-    if (!apiKey || !input) return;
+    if (!apiKey) {
+      if (import.meta.env.DEV) {
+        console.warn('[Google Maps] VITE_GOOGLE_MAPS_API_KEY ausente; autocomplete de endereço desativado.');
+      }
+      return;
+    }
+
+    if (loading || !input) return;
 
     let active = true;
     let autocomplete: GooglePlacesAutocomplete | undefined;
@@ -242,15 +305,27 @@ export function MeusDados() {
 
         autocomplete = new googleMaps.maps.places.Autocomplete(addressInputRef.current, {
           bounds: brazilBounds,
-          fields: ['address_components', 'formatted_address', 'geometry'],
+          componentRestrictions: { country: 'br' },
+          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
           strictBounds: false,
-          types: ['address'],
+          types: ['geocode'],
         });
 
+        if (import.meta.env.DEV) {
+          console.debug('[Google Maps] Autocomplete de endereço inicializado.');
+        }
+
         listener = autocomplete.addListener('place_changed', () => {
-          const selectedAddress = formatGooglePlaceAddress(autocomplete.getPlace());
+          const place = autocomplete?.getPlace();
+
+          if (!place?.address_components?.length && import.meta.env.DEV) {
+            console.warn('[Google Maps] place_changed sem address_components.', place);
+          }
+
+          const selectedAddress = place ? formatGooglePlaceAddress(place) : '';
           if (!selectedAddress) return;
 
+          markFormDirty();
           setForm((current) => ({
             ...current,
             endereco: selectedAddress,
@@ -261,8 +336,10 @@ export function MeusDados() {
           }));
         });
       })
-      .catch(() => {
-        if (active) toast.error('Não foi possível carregar sugestões de endereço.');
+      .catch((error) => {
+        if (active && import.meta.env.DEV) {
+          console.warn('[Google Maps] Não foi possível carregar Places.', error);
+        }
       });
 
     return () => {
@@ -272,7 +349,7 @@ export function MeusDados() {
         window.google.maps.event.clearInstanceListeners(autocomplete);
       }
     };
-  }, []);
+  }, [loading]);
 
   useEffect(() => {
     return () => {
@@ -286,9 +363,18 @@ export function MeusDados() {
     };
   }, [cropImageUrl]);
 
-  const pessoa = link?.pessoa;
-  const alreadyConfirmed = Boolean(link?.dados_confirmados);
+  useEffect(() => {
+    const pessoaId = link?.pessoa?.id;
+    if (!user?.id || !pessoaId || !hasInitializedFormRef.current || !isDirtyRef.current) return;
 
+    writeMeusDadosDraft(getDraftKey(user.id, pessoaId), {
+      form,
+      complemento,
+      socialProfiles,
+    });
+  }, [complemento, form, link?.pessoa?.id, socialProfiles, user?.id]);
+
+  const pessoa = link?.pessoa;
   const previewName = useMemo(() => {
     const name = formatPersonName(String(form.nome_completo ?? '').trim());
     return name || pessoa?.nome_completo || 'Minha pessoa na árvore';
@@ -303,8 +389,14 @@ export function MeusDados() {
     () => getZodiacSignFromBirthDate(form.data_nascimento),
     [form.data_nascimento],
   );
+  const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
+
+  const markFormDirty = () => {
+    isDirtyRef.current = true;
+  };
 
   const updateField = (field: keyof EditableOwnPersonPayload, value: string | boolean) => {
+    markFormDirty();
     setForm((current) => ({
       ...current,
       [field]: value,
@@ -330,12 +422,59 @@ export function MeusDados() {
     updateField(field, value);
   };
 
+  const syncFirstSocialProfileToLegacyFields = (profiles: SocialProfileForm[]) => {
+    const firstProfile = profiles[0] ?? createSocialProfile();
+
+    markFormDirty();
+    setForm((current) => ({
+      ...current,
+      rede_social: firstProfile.rede,
+      instagram_usuario: firstProfile.perfil,
+    }));
+    setErrors((current) => ({
+      ...current,
+      rede_social: undefined,
+      instagram_usuario: undefined,
+    }));
+  };
+
+  const updateSocialProfile = (profileId: string, field: 'rede' | 'perfil', value: string) => {
+    markFormDirty();
+    const nextProfiles = socialProfiles.map((profile) =>
+      profile.id === profileId ? { ...profile, [field]: value } : profile
+    );
+
+    setSocialProfiles(nextProfiles);
+    syncFirstSocialProfileToLegacyFields(nextProfiles);
+  };
+
+  const addSocialProfile = () => {
+    markFormDirty();
+    setSocialProfiles((current) => [...current, createSocialProfile()]);
+  };
+
+  const removeSocialProfile = (profileId: string) => {
+    markFormDirty();
+    const nextProfiles = socialProfiles.filter((profile) => profile.id !== profileId);
+    const ensuredProfiles = nextProfiles.length > 0 ? nextProfiles : [createSocialProfile()];
+
+    setSocialProfiles(ensuredProfiles);
+    syncFirstSocialProfileToLegacyFields(ensuredProfiles);
+  };
+
   const normalizeFieldOnBlur = (field: keyof EditableOwnPersonPayload) => {
     const value = String(form[field] ?? '');
 
     if (field === 'nome_completo') updateField(field, formatPersonName(value));
     if (field === 'data_nascimento') updateField(field, normalizeBirthDate(value));
-    if (field === 'local_nascimento' || field === 'local_atual') updateField(field, normalizeLocation(value));
+    if (field === 'local_nascimento' || field === 'local_atual') {
+      const normalizedLocation = normalizeLocation(value);
+      updateField(field, normalizedLocation);
+      setErrors((current) => ({
+        ...current,
+        [field]: validateLocation(normalizedLocation),
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -446,7 +585,13 @@ export function MeusDados() {
 
     setSaving(true);
 
-    const payload = cleanPersonPayload(form);
+    // TODO: persistir todos os itens em pessoa_social_profiles quando a tabela estiver disponível.
+    const primarySocialProfile = socialProfiles[0];
+    const payload = cleanPersonPayload({
+      ...form,
+      rede_social: primarySocialProfile?.rede || '',
+      instagram_usuario: primarySocialProfile?.perfil || '',
+    });
     if (photoMarkedForRemoval) {
       payload.foto_principal_url = '';
     } else if (croppedPhotoBlob) {
@@ -486,6 +631,10 @@ export function MeusDados() {
 
     setSaving(false);
 
+    if (user?.id && pessoa.id) {
+      removeMeusDadosDraft(getDraftKey(user.id, pessoa.id));
+    }
+    isDirtyRef.current = false;
     toast.success('Dados pessoais salvos.');
     navigate('/meus-vinculos', { replace: true });
   };
@@ -523,7 +672,6 @@ export function MeusDados() {
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            {!alreadyConfirmed && <p className="text-sm font-medium text-blue-700">Confirmação necessária</p>}
             <h1 className="text-2xl font-bold text-gray-900">Revisar meus dados</h1>
             <p className="mt-1 text-sm text-gray-500">
               Confira suas informações antes de acessar a árvore principal.
@@ -552,6 +700,11 @@ export function MeusDados() {
                 placeholder="DD/MM/AAAA ou AAAA"
                 aria-invalid={Boolean(errors.data_nascimento)}
               />
+              {shouldSuggestFullBirthDate && (
+                <p className="text-xs text-gray-500">
+                  Se souber, adicione também o dia e o mês de nascimento.
+                </p>
+              )}
             </Field>
             <Field label="Signo">
               <Input value={zodiacSign || 'Não identificado'} readOnly className="bg-gray-50 text-gray-700" />
@@ -562,25 +715,20 @@ export function MeusDados() {
                 onBlur={() => normalizeFieldOnBlur('local_nascimento')}
                 onChange={(e) => updateTextField('local_nascimento', e.target.value)}
                 placeholder="Cidade/UF"
-                list="location-suggestions"
                 aria-invalid={Boolean(errors.local_nascimento)}
               />
+              <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
             </Field>
-            <Field label="Residência atual" error={errors.local_atual}>
+            <Field label="Cidade de Residência" error={errors.local_atual}>
               <Input
                 value={String(form.local_atual ?? '')}
                 onBlur={() => normalizeFieldOnBlur('local_atual')}
                 onChange={(e) => updateTextField('local_atual', e.target.value)}
                 placeholder="Cidade/UF"
-                list="location-suggestions"
                 aria-invalid={Boolean(errors.local_atual)}
               />
+              <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
             </Field>
-            <datalist id="location-suggestions">
-              {locationSuggestions.map((location) => (
-                <option key={location} value={location} />
-              ))}
-            </datalist>
             <Field label="Telefone">
               <Input
                 value={String(form.telefone ?? '')}
@@ -599,34 +747,72 @@ export function MeusDados() {
             <Field label="Complemento">
               <Input
                 value={complemento}
-                onChange={(e) => setComplemento(e.target.value)}
+                onChange={(e) => {
+                  markFormDirty();
+                  setComplemento(e.target.value);
+                }}
                 placeholder="Apartamento, bloco, casa, referência"
               />
               {/* Campo visual até public.pessoas.complemento existir no schema e na tipagem. */}
             </Field>
-            <Field label="Rede social" error={errors.rede_social}>
-              <select
-                value={String(form.rede_social ?? '')}
-                onChange={(event) => updateField('rede_social', event.target.value)}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                aria-invalid={Boolean(errors.rede_social)}
-              >
-                <option value="">Selecione uma rede</option>
-                {SOCIAL_NETWORKS.map((network) => (
-                  <option key={network} value={network}>
-                    {network}
-                  </option>
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label>Redes sociais</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={addSocialProfile}
+                  aria-label="Adicionar rede social"
+                  title="Adicionar rede social"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {socialProfiles.map((profile, index) => (
+                  <div key={profile.id} className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] md:items-start">
+                    <Field label="Rede social" error={index === 0 ? errors.rede_social : undefined}>
+                      <select
+                        value={profile.rede}
+                        onChange={(event) => updateSocialProfile(profile.id, 'rede', event.target.value)}
+                        className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                        aria-invalid={index === 0 ? Boolean(errors.rede_social) : undefined}
+                      >
+                        <option value="">Selecione uma rede</option>
+                        {SOCIAL_NETWORKS.map((network) => (
+                          <option key={network} value={network}>
+                            {network}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Perfil da Rede Social" error={index === 0 ? errors.instagram_usuario : undefined}>
+                      <Input
+                        value={profile.perfil}
+                        onChange={(e) => updateSocialProfile(profile.id, 'perfil', e.target.value)}
+                        placeholder={getSocialPlaceholder(profile.rede)}
+                        aria-invalid={index === 0 ? Boolean(errors.instagram_usuario) : undefined}
+                      />
+                    </Field>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 shrink-0 md:mt-8"
+                      onClick={() => removeSocialProfile(profile.id)}
+                      disabled={socialProfiles.length === 1}
+                      aria-label="Remover rede social"
+                      title="Remover rede social"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
-              </select>
-            </Field>
-            <Field label="Perfil da Rede Social" error={errors.instagram_usuario}>
-              <Input
-                value={String(form.instagram_usuario ?? '')}
-                onChange={(e) => updateTextField('instagram_usuario', e.target.value)}
-                placeholder={getSocialPlaceholder(String(form.rede_social ?? ''))}
-                aria-invalid={Boolean(errors.instagram_usuario)}
-              />
-            </Field>
+              </div>
+            </div>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4">
@@ -634,13 +820,15 @@ export function MeusDados() {
               <Textarea
                 value={String(form.minibio ?? '')}
                 onChange={(e) => updateTextField('minibio', e.target.value)}
+                placeholder="Opcional: escreva uma breve apresentação sobre você. Conte quem você é, de onde vem, o que faz ou fez, sua trajetória, valores, conquistas e sua relação com a família."
                 className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
               />
             </Field>
-            <Field label="Curiosidades">
+            <Field label="Curiosidades de Vida">
               <Textarea
                 value={String(form.curiosidades ?? '')}
                 onChange={(e) => updateTextField('curiosidades', e.target.value)}
+                placeholder="Opcional: compartilhe fatos, histórias ou lembranças curiosas sobre sua vida. Pode incluir hobbies, costumes, viagens, talentos, apelidos, momentos marcantes ou detalhes que ajudem a família a conhecer melhor você."
                 className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
               />
             </Field>
@@ -656,28 +844,23 @@ export function MeusDados() {
             <ToggleField
               label="Exibir meu telefone para outros familiares"
               description="Controla a visualização do número no perfil."
-              checked={Boolean(form.permitir_exibir_telefone)}
+              checked={form.permitir_exibir_telefone !== false}
               onCheckedChange={(checked) => updateField('permitir_exibir_telefone', checked)}
             />
             <ToggleField
               label="Exibir meu endereço para outros familiares"
               description="Endereço fica oculto por padrão."
-              checked={Boolean(form.permitir_exibir_endereco)}
+              checked={form.permitir_exibir_endereco !== false}
               onCheckedChange={(checked) => updateField('permitir_exibir_endereco', checked)}
             />
             <ToggleField
               label="Exibir minha rede social para outros familiares"
               description="Você pode alterar esta opção depois na edição do perfil."
-              checked={Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram)}
+              checked={form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false}
               onCheckedChange={(checked) => {
                 updateField('permitir_exibir_rede_social', checked);
                 updateField('permitir_exibir_instagram', checked);
               }}
-            />
-            <ToggleField
-              label="Permitir mensagens por WhatsApp"
-              checked={Boolean(form.permitir_mensagens_whatsapp)}
-              onCheckedChange={(checked) => updateField('permitir_mensagens_whatsapp', checked)}
             />
           </div>
 

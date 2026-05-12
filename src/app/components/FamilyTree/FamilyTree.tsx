@@ -1,8 +1,6 @@
-import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
-  Controls,
-  ControlButton,
   useNodesState,
   useEdgesState,
   ReactFlowInstance,
@@ -11,7 +9,7 @@ import ReactFlow, {
   Viewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { FileDown, Minus, Plus, Printer } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Pessoa, Relacionamento } from '../../types';
@@ -21,7 +19,7 @@ import { GenealogySpouseEdge } from './GenealogySpouseEdge';
 import { buildTreeGraph } from './buildTreeGraph';
 import { directFamilyDistributedLayout } from './layouts/directFamilyDistributedLayout';
 import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
-import { TreeViewMode, ViewModeToggle } from './ViewModeToggle';
+import type { TreeViewMode } from './ViewModeToggle';
 import {
   injectExportSafeCss,
   sanitizeUnsupportedExportColors,
@@ -52,10 +50,17 @@ interface FamilyTreeProps {
   directRelativeFilters?: DirectRelativeFilters;
   genealogyFilters?: GenealogyFilters;
   viewMode: TreeViewMode;
-  onViewModeChange: (mode: TreeViewMode) => void;
   centralPersonId?: string;
   isMobile?: boolean;
   layoutRevision?: number;
+}
+
+export interface FamilyTreeActions {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  print: () => Promise<void>;
+  savePdf: () => Promise<void>;
+  saveImage: () => Promise<void>;
 }
 
 const edgeTypes: EdgeTypes = {
@@ -365,7 +370,19 @@ async function saveVisibleTreePdf(container: HTMLDivElement | null) {
   pdf.save('minha-arvore.pdf');
 }
 
-export function FamilyTree({
+async function saveVisibleTreeImage(container: HTMLDivElement | null, viewMode: TreeViewMode) {
+  const canvas = await captureVisibleTree(container);
+  const imageUrl = canvas.toDataURL('image/png');
+  const link = document.createElement('a');
+
+  link.href = imageUrl;
+  link.download = viewMode === 'genealogia' ? 'arvore-genealogica.png' : 'minha-arvore.png';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(function FamilyTree({
   pessoas,
   relacionamentos,
   onPersonClick,
@@ -379,11 +396,10 @@ export function FamilyTree({
   directRelativeFilters = DEFAULT_DIRECT_RELATIVE_FILTERS,
   genealogyFilters = DEFAULT_GENEALOGY_FILTERS,
   viewMode,
-  onViewModeChange,
   centralPersonId,
   isMobile = false,
   layoutRevision = 0,
-}: FamilyTreeProps) {
+}, ref) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const directFamilyRecenteringRef = useRef(false);
@@ -715,6 +731,23 @@ export function FamilyTree({
     }
   }, []);
 
+  const handleSaveImage = useCallback(async () => {
+    try {
+      await saveVisibleTreeImage(containerRef.current, viewMode);
+    } catch (error) {
+      console.error('Erro ao exportar imagem da árvore:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem da árvore.');
+    }
+  }, [viewMode]);
+
+  useImperativeHandle(ref, () => ({
+    zoomIn: handleZoomIn,
+    zoomOut: handleZoomOut,
+    print: handlePrint,
+    savePdf: handleSavePdf,
+    saveImage: handleSaveImage,
+  }), [handleZoomIn, handleZoomOut, handlePrint, handleSavePdf, handleSaveImage]);
+
   return (
     <div
       ref={containerRef}
@@ -727,7 +760,26 @@ export function FamilyTree({
       ].join(' ')}
       style={{ width: '100%', height: '100%', minHeight: '500px' }}
     >
-      <ViewModeToggle value={viewMode} onChange={onViewModeChange} />
+      <div className="absolute left-4 top-4 z-20 flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={handleZoomIn}
+          className="flex h-9 w-9 items-center justify-center border-r border-gray-200 text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          title="Aumentar zoom"
+          aria-label="Aumentar zoom"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={handleZoomOut}
+          className="flex h-9 w-9 items-center justify-center text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          title="Diminuir zoom"
+          aria-label="Diminuir zoom"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -756,22 +808,7 @@ export function FamilyTree({
           zoom: activeFittedZoom,
         }}
         proOptions={{ hideAttribution: true }}
-      >
-        <Controls showZoom={false} showFitView={false} showInteractive={false}>
-          <ControlButton onClick={handleZoomIn} title="Aumentar Zoom" aria-label="Aumentar Zoom">
-            <Plus className="h-4 w-4" />
-          </ControlButton>
-          <ControlButton onClick={handleZoomOut} title="Diminuir Zoom" aria-label="Diminuir Zoom">
-            <Minus className="h-4 w-4" />
-          </ControlButton>
-          <ControlButton onClick={handlePrint} title="Imprimir" aria-label="Imprimir">
-            <Printer className="h-4 w-4" />
-          </ControlButton>
-          <ControlButton onClick={handleSavePdf} title="Salvar PDF" aria-label="Salvar PDF">
-            <FileDown className="h-4 w-4" />
-          </ControlButton>
-        </Controls>
-      </ReactFlow>
+      />
     </div>
   );
-}
+});

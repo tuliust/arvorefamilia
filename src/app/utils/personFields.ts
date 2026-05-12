@@ -71,12 +71,12 @@ export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOw
     rede_social: pessoa?.rede_social ?? '',
     instagram_usuario: pessoa?.instagram_usuario ?? '',
     instagram_url: pessoa?.instagram_url ?? '',
-    permitir_exibir_instagram: Boolean(pessoa?.permitir_exibir_instagram || pessoa?.permitir_exibir_rede_social),
+    permitir_exibir_instagram: pessoa?.permitir_exibir_instagram ?? pessoa?.permitir_exibir_rede_social ?? true,
     permitir_mensagens_whatsapp: Boolean(pessoa?.permitir_mensagens_whatsapp),
     permitir_exibir_data_nascimento: pessoa?.permitir_exibir_data_nascimento ?? true,
-    permitir_exibir_endereco: pessoa?.permitir_exibir_endereco ?? false,
-    permitir_exibir_rede_social: pessoa?.permitir_exibir_rede_social ?? Boolean(pessoa?.permitir_exibir_instagram),
-    permitir_exibir_telefone: pessoa?.permitir_exibir_telefone ?? false,
+    permitir_exibir_endereco: pessoa?.permitir_exibir_endereco ?? true,
+    permitir_exibir_rede_social: pessoa?.permitir_exibir_rede_social ?? pessoa?.permitir_exibir_instagram ?? true,
+    permitir_exibir_telefone: pessoa?.permitir_exibir_telefone ?? true,
   };
 }
 
@@ -152,6 +152,11 @@ export function normalizeLocation(value: string) {
   const trimmed = value.trim().replace(/\s+/g, ' ');
   if (!trimmed) return '';
 
+  const cityStateMatch = trimmed.match(/^(.+?)(?:\s*\/\s*|\s*-\s*|\s*,\s*|\s+)([a-zA-Z]{2})$/);
+  if (cityStateMatch) {
+    return `${titleCase(cityStateMatch[1])}/${cityStateMatch[2].toLocaleUpperCase('pt-BR')}`;
+  }
+
   const [rawCity, ...rest] = trimmed.split('/');
   if (!rest.length) return titleCase(rawCity);
 
@@ -167,12 +172,12 @@ export function validateLocation(value: string) {
 
   const slashParts = trimmed.split('/');
   if (slashParts.length !== 2 || !slashParts[0].trim() || !slashParts[1].trim()) {
-    return 'Use Cidade/UF ou Cidade/País.';
+    return 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
   }
 
   const region = slashParts[1].trim();
-  if (/^[a-zA-Z]{1,2}$/.test(region) && !/^[A-Z]{2}$/.test(region)) {
-    return 'Para cidades brasileiras, use UF com duas letras maiúsculas. Ex.: São José dos Campos/SP.';
+  if (!/^[A-Z]{2}$/.test(region)) {
+    return 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
   }
 
   return undefined;
@@ -199,12 +204,12 @@ export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnP
     local_nascimento: normalizeLocation(String(form.local_nascimento ?? '')),
     local_atual: normalizeLocation(String(form.local_atual ?? '')),
     telefone: formatPhone(String(form.telefone ?? '')),
-    permitir_exibir_instagram: Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram),
+    permitir_exibir_instagram: form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
     permitir_mensagens_whatsapp: Boolean(form.permitir_mensagens_whatsapp),
     permitir_exibir_data_nascimento: form.permitir_exibir_data_nascimento ?? true,
-    permitir_exibir_endereco: Boolean(form.permitir_exibir_endereco),
-    permitir_exibir_rede_social: Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram),
-    permitir_exibir_telefone: Boolean(form.permitir_exibir_telefone),
+    permitir_exibir_endereco: form.permitir_exibir_endereco !== false,
+    permitir_exibir_rede_social: form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
+    permitir_exibir_telefone: form.permitir_exibir_telefone !== false,
   };
 
   return EDITABLE_OWN_PERSON_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
@@ -245,15 +250,14 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   const currentLocationError = validateLocation(normalizedCurrentLocation);
   if (currentLocationError) nextErrors.local_atual = currentLocationError;
 
-  if (
-    Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram) &&
-    String(form.rede_social ?? '').trim() &&
-    !String(form.instagram_usuario ?? '').trim()
-  ) {
+  const socialNetwork = String(form.rede_social ?? '').trim();
+  const socialProfile = String(form.instagram_usuario ?? '').trim();
+
+  if (socialNetwork && !socialProfile) {
     nextErrors.instagram_usuario = 'Informe o perfil para exibir a rede social.';
   }
 
-  if (Boolean(form.permitir_exibir_rede_social ?? form.permitir_exibir_instagram) && !String(form.rede_social ?? '').trim()) {
+  if (socialProfile && !socialNetwork) {
     nextErrors.rede_social = 'Selecione uma rede social para exibir no perfil.';
   }
 

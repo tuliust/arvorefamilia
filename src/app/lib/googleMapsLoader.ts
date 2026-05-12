@@ -10,6 +10,7 @@ export type GooglePlaceResult = {
   address_components?: GoogleAddressComponent[];
   formatted_address?: string;
   geometry?: unknown;
+  name?: string;
 };
 
 export type GoogleMapsEventListener = {
@@ -18,6 +19,7 @@ export type GoogleMapsEventListener = {
 
 type GooglePlacesAutocompleteOptions = {
   bounds?: unknown;
+  componentRestrictions?: { country: string | string[] };
   fields?: string[];
   strictBounds?: boolean;
   types?: string[];
