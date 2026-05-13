@@ -62,6 +62,7 @@ import {
 } from '../components/FamilyTree/directFamilyColors';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
+import { isAdminUser } from '../services/permissionService';
 import { listarNotificacoes, listarNotificacoesSupabase } from '../services/userEngagementService';
 import { descobrirParentesco } from '../services/relationshipResolverService';
 import {
@@ -150,6 +151,7 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(() => !homeTreeDataCache);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [directRelativeFilterState, setDirectRelativeFilterState] = useState<{
     userId?: string;
@@ -399,6 +401,40 @@ export function Home() {
 
     loadProfile();
   }, [user?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAdminStatus = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(false);
+
+      try {
+        const { isAdmin: nextIsAdmin, error } = await isAdminUser(user);
+        if (error) {
+          console.error('Erro ao verificar permissão administrativa:', error);
+        }
+        if (!cancelled) {
+          setIsAdmin(nextIsAdmin);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar permissão administrativa:', error);
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
+      }
+    };
+
+    loadAdminStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     const performSearch = async () => {
@@ -1051,6 +1087,7 @@ export function Home() {
               avatarUrl={avatarUrl}
               initials={initials}
               notificationCount={notificationCount}
+              isAdmin={isAdmin}
               onLogin={() => navigateFromHome('/entrar')}
               onHome={() => navigateFromHome('/')}
               onCuriosities={() => setAiDialogOpen(true)}
@@ -1059,7 +1096,7 @@ export function Home() {
               onFavorites={() => navigateFromHome('/meus-favoritos')}
               onCalendar={() => navigateFromHome('/calendario-familiar')}
               onNotifications={() => navigateFromHome('/notificacoes')}
-              onAdmin={() => navigateFromHome('/admin/login')}
+              onAdmin={() => navigateFromHome('/admin')}
               onSignOut={handleSignOut}
             />
           </div>
@@ -1727,6 +1764,7 @@ function UserMenu({
   avatarUrl,
   initials,
   notificationCount,
+  isAdmin,
   onLogin,
   onHome,
   onCuriosities,
@@ -1744,6 +1782,7 @@ function UserMenu({
   avatarUrl: string | null;
   initials: string;
   notificationCount: number;
+  isAdmin: boolean;
   onLogin: () => void;
   onHome: () => void;
   onCuriosities: () => void;
@@ -1823,10 +1862,12 @@ function UserMenu({
               <Bell className="h-4 w-4" />
               Notificações
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onAdmin}>
-              <Settings className="h-4 w-4" />
-              Painel administrativo
-            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem onClick={onAdmin}>
+                <Settings className="h-4 w-4" />
+                Painel administrativo
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onEditProfile} className="py-1 text-xs text-gray-600">
               <Pencil className="h-3.5 w-3.5" />

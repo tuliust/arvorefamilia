@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { obterTodasPessoas, deletarPessoa } from '../../services/dataService';
 import { Pessoa } from '../../types';
 import { 
@@ -13,18 +22,150 @@ import {
   Trash2, 
   Home,
   Dog,
-  User
+  User,
+  SlidersHorizontal
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+
+type AdvancedFilters = {
+  status: Array<'vivos' | 'falecidos'>;
+  foto: Array<'com_foto' | 'sem_foto'>;
+  geracao: Array<'1' | '2' | '3' | '4' | '5' | '6' | '7' | 'sem_manual'>;
+  dadosIncompletos: Array<'sem_data_nascimento' | 'sem_local_nascimento' | 'sem_local_atual'>;
+  contato: Array<'com_telefone' | 'sem_telefone' | 'com_rede_social' | 'sem_rede_social'>;
+};
+
+type AdvancedFilterKey = keyof AdvancedFilters;
+type AdvancedFilterValue<TKey extends AdvancedFilterKey> = AdvancedFilters[TKey][number];
+
+const EMPTY_ADVANCED_FILTERS: AdvancedFilters = {
+  status: [],
+  foto: [],
+  geracao: [],
+  dadosIncompletos: [],
+  contato: [],
+};
+
+const ADVANCED_FILTER_GROUPS: Array<{
+  key: AdvancedFilterKey;
+  title: string;
+  options: Array<{ value: AdvancedFilters[AdvancedFilterKey][number]; label: string }>;
+}> = [
+  {
+    key: 'status',
+    title: 'Status',
+    options: [
+      { value: 'vivos', label: 'Vivos' },
+      { value: 'falecidos', label: 'Falecidos' },
+    ],
+  },
+  {
+    key: 'foto',
+    title: 'Foto',
+    options: [
+      { value: 'com_foto', label: 'Com foto' },
+      { value: 'sem_foto', label: 'Sem foto' },
+    ],
+  },
+  {
+    key: 'geracao',
+    title: 'Geração',
+    options: [
+      { value: '1', label: 'Geração 1' },
+      { value: '2', label: 'Geração 2' },
+      { value: '3', label: 'Geração 3' },
+      { value: '4', label: 'Geração 4' },
+      { value: '5', label: 'Geração 5' },
+      { value: '6', label: 'Geração 6' },
+      { value: '7', label: 'Geração 7' },
+      { value: 'sem_manual', label: 'Sem geração manual' },
+    ],
+  },
+  {
+    key: 'dadosIncompletos',
+    title: 'Dados incompletos',
+    options: [
+      { value: 'sem_data_nascimento', label: 'Sem data de nascimento' },
+      { value: 'sem_local_nascimento', label: 'Sem local de nascimento' },
+      { value: 'sem_local_atual', label: 'Sem local atual' },
+    ],
+  },
+  {
+    key: 'contato',
+    title: 'Contato',
+    options: [
+      { value: 'com_telefone', label: 'Com telefone' },
+      { value: 'sem_telefone', label: 'Sem telefone' },
+      { value: 'com_rede_social', label: 'Com rede social/site' },
+      { value: 'sem_rede_social', label: 'Sem rede social/site' },
+    ],
+  },
+];
+
+function countAdvancedFilters(filters: AdvancedFilters) {
+  return Object.values(filters).reduce((total, values) => total + values.length, 0);
+}
+
+function cloneAdvancedFilters(filters: AdvancedFilters): AdvancedFilters {
+  return {
+    status: [...filters.status],
+    foto: [...filters.foto],
+    geracao: [...filters.geracao],
+    dadosIncompletos: [...filters.dadosIncompletos],
+    contato: [...filters.contato],
+  };
+}
+
+function hasValue(value?: string | number | null) {
+  return String(value ?? '').trim().length > 0;
+}
+
+function matchesAny<T extends string>(selected: T[], predicate: (value: T) => boolean) {
+  return selected.length === 0 || selected.some(predicate);
+}
+
+function matchesAdvancedFilters(pessoa: Pessoa, filters: AdvancedFilters) {
+  const isFalecido = hasValue(pessoa.data_falecimento) || hasValue(pessoa.local_falecimento);
+  const hasPhoto = hasValue(pessoa.foto_principal_url);
+  const generation = typeof pessoa.manual_generation === 'number' ? String(pessoa.manual_generation) : '';
+  const hasTelefone = hasValue(pessoa.telefone);
+  const hasRedeSocial = hasValue(pessoa.rede_social) || hasValue(pessoa.instagram_usuario) || hasValue(pessoa.instagram_url);
+
+  return (
+    matchesAny(filters.status, (status) => status === 'falecidos' ? isFalecido : !isFalecido) &&
+    matchesAny(filters.foto, (foto) => foto === 'com_foto' ? hasPhoto : !hasPhoto) &&
+    matchesAny(filters.geracao, (selectedGeneration) => (
+      selectedGeneration === 'sem_manual'
+        ? !hasValue(pessoa.manual_generation)
+        : generation === selectedGeneration
+    )) &&
+    matchesAny(filters.dadosIncompletos, (field) => {
+      if (field === 'sem_data_nascimento') return !hasValue(pessoa.data_nascimento);
+      if (field === 'sem_local_nascimento') return !hasValue(pessoa.local_nascimento);
+      return !hasValue(pessoa.local_atual);
+    }) &&
+    matchesAny(filters.contato, (contactFilter) => {
+      if (contactFilter === 'com_telefone') return hasTelefone;
+      if (contactFilter === 'sem_telefone') return !hasTelefone;
+      if (contactFilter === 'com_rede_social') return hasRedeSocial;
+      return !hasRedeSocial;
+    })
+  );
+}
 
 export function AdminPessoas() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'todos' | 'humano' | 'pet'>('todos');
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
+  const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const activeAdvancedFilterCount = countAdvancedFilters(advancedFilters);
 
   useEffect(() => {
     loadPessoas();
@@ -53,6 +194,40 @@ export function AdminPessoas() {
     setIsDeleting(false);
   };
 
+  const openFilters = () => {
+    setDraftAdvancedFilters(cloneAdvancedFilters(advancedFilters));
+    setFiltersOpen(true);
+  };
+
+  const toggleDraftFilter = <TKey extends AdvancedFilterKey>(
+    key: TKey,
+    value: AdvancedFilterValue<TKey>,
+    checked: boolean
+  ) => {
+    setDraftAdvancedFilters((current) => {
+      const currentValues = current[key] as Array<AdvancedFilterValue<TKey>>;
+      const nextValues = checked
+        ? Array.from(new Set([...currentValues, value]))
+        : currentValues.filter((currentValue) => currentValue !== value);
+
+      return {
+        ...current,
+        [key]: nextValues,
+      };
+    });
+  };
+
+  const clearAdvancedFilters = () => {
+    const emptyFilters = cloneAdvancedFilters(EMPTY_ADVANCED_FILTERS);
+    setDraftAdvancedFilters(emptyFilters);
+    setAdvancedFilters(emptyFilters);
+  };
+
+  const applyAdvancedFilters = () => {
+    setAdvancedFilters(cloneAdvancedFilters(draftAdvancedFilters));
+    setFiltersOpen(false);
+  };
+
   const pessoasFiltradas = (Array.isArray(pessoas) ? pessoas : [])
     .filter(p => {
       // Filtro de busca
@@ -64,7 +239,7 @@ export function AdminPessoas() {
         (filter === 'humano' && p.humano_ou_pet === 'Humano') ||
         (filter === 'pet' && p.humano_ou_pet === 'Pet');
       
-      return matchSearch && matchType;
+      return matchSearch && matchType && matchesAdvancedFilters(p, advancedFilters);
     });
 
   return (
@@ -103,7 +278,7 @@ export function AdminPessoas() {
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant={filter === 'todos' ? 'default' : 'outline'}
                   onClick={() => setFilter('todos')}
@@ -122,8 +297,25 @@ export function AdminPessoas() {
                 >
                   Pets ({pessoas.filter(p => p.humano_ou_pet === 'Pet').length})
                 </Button>
+                <Button variant="outline" onClick={openFilters}>
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  Filtros
+                  {activeAdvancedFilterCount > 0 && (
+                    <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                      {activeAdvancedFilterCount}
+                    </span>
+                  )}
+                </Button>
               </div>
             </div>
+            {activeAdvancedFilterCount > 0 && (
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                <span>{activeAdvancedFilterCount} filtro(s) avançado(s) ativo(s).</span>
+                <Button variant="ghost" size="sm" onClick={clearAdvancedFilters} className="h-8 text-blue-800 hover:bg-blue-100">
+                  Limpar filtros
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -204,6 +396,51 @@ export function AdminPessoas() {
         variant="danger"
         loading={isDeleting}
       />
+
+      <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Filtros</DialogTitle>
+            <DialogDescription>
+              Refine a lista de pessoas sem fazer novas consultas ao banco.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {ADVANCED_FILTER_GROUPS.map((group) => (
+              <section key={group.key} className="rounded-lg border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold text-gray-900">{group.title}</h3>
+                <div className="mt-3 space-y-3">
+                  {group.options.map((option) => (
+                    <label key={option.value} className="flex items-center gap-3 text-sm text-gray-700">
+                      <Checkbox
+                        checked={draftAdvancedFilters[group.key].includes(option.value as never)}
+                        onCheckedChange={(checked) => {
+                          toggleDraftFilter(
+                            group.key,
+                            option.value as never,
+                            checked === true
+                          );
+                        }}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={clearAdvancedFilters}>
+              Limpar filtros
+            </Button>
+            <Button onClick={applyAdvancedFilters}>
+              Aplicar filtros
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

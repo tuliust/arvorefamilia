@@ -67,11 +67,11 @@ export function AdminPessoaForm() {
     endereco: '',
     rede_social: '',
     permitir_exibir_data_nascimento: true,
-    permitir_exibir_endereco: false,
-    permitir_exibir_rede_social: false,
-    permitir_exibir_telefone: false,
-    permitir_exibir_instagram: false,
-    permitir_mensagens_whatsapp: false,
+    permitir_exibir_endereco: true,
+    permitir_exibir_rede_social: true,
+    permitir_exibir_telefone: true,
+    permitir_exibir_instagram: true,
+    permitir_mensagens_whatsapp: true,
     arquivos_historicos: [] as ArquivoHistorico[],
   });
 
@@ -112,11 +112,11 @@ export function AdminPessoaForm() {
               endereco: pessoa.endereco || '',
               rede_social: pessoa.rede_social || '',
               permitir_exibir_data_nascimento: pessoa.permitir_exibir_data_nascimento ?? true,
-              permitir_exibir_endereco: pessoa.permitir_exibir_endereco ?? false,
-              permitir_exibir_rede_social: pessoa.permitir_exibir_rede_social ?? Boolean(pessoa.permitir_exibir_instagram),
-              permitir_exibir_telefone: pessoa.permitir_exibir_telefone ?? false,
-              permitir_exibir_instagram: pessoa.permitir_exibir_instagram ?? Boolean(pessoa.permitir_exibir_rede_social),
-              permitir_mensagens_whatsapp: pessoa.permitir_mensagens_whatsapp ?? false,
+              permitir_exibir_endereco: pessoa.permitir_exibir_endereco ?? true,
+              permitir_exibir_rede_social: pessoa.permitir_exibir_rede_social ?? pessoa.permitir_exibir_instagram ?? true,
+              permitir_exibir_telefone: pessoa.permitir_exibir_telefone ?? true,
+              permitir_exibir_instagram: pessoa.permitir_exibir_instagram ?? pessoa.permitir_exibir_rede_social ?? true,
+              permitir_mensagens_whatsapp: pessoa.permitir_mensagens_whatsapp ?? true,
               arquivos_historicos: arquivosHistoricos,
             };
 
@@ -379,7 +379,7 @@ export function AdminPessoaForm() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
                   <select
@@ -390,23 +390,6 @@ export function AdminPessoaForm() {
                     <option value="Humano">Humano</option>
                     <option value="Pet">Pet</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lado (visualização por lados)
-                  </label>
-                  <select
-                    value={formData.lado}
-                    onChange={(e) => handleChange('lado', e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="esquerda">Esquerda</option>
-                    <option value="direita">Direita</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Este campo permanece ativo para o modo legado. A nova visualização por gerações não depende dele.
-                  </p>
                 </div>
 
                 <div>
@@ -591,18 +574,23 @@ export function AdminPessoaForm() {
                 />
                 <PrivacyCheckbox
                   label="Exibir meu telefone para outros familiares"
-                  checked={Boolean(formData.permitir_exibir_telefone)}
+                  checked={formData.permitir_exibir_telefone !== false}
                   onChange={(checked) => handleChange('permitir_exibir_telefone', checked)}
                 />
                 <PrivacyCheckbox
                   label="Exibir meu endereço para outros familiares"
-                  checked={Boolean(formData.permitir_exibir_endereco)}
+                  checked={formData.permitir_exibir_endereco !== false}
                   onChange={(checked) => handleChange('permitir_exibir_endereco', checked)}
                 />
                 <PrivacyCheckbox
                   label="Exibir minha rede social para outros familiares"
-                  checked={Boolean(formData.permitir_exibir_rede_social || formData.permitir_exibir_instagram)}
+                  checked={formData.permitir_exibir_rede_social !== false && formData.permitir_exibir_instagram !== false}
                   onChange={handleRedeSocialPrivacyChange}
+                />
+                <PrivacyCheckbox
+                  label="Permitir mensagens por WhatsApp"
+                  checked={formData.permitir_mensagens_whatsapp !== false}
+                  onChange={(checked) => handleChange('permitir_mensagens_whatsapp', checked)}
                 />
               </div>
             </CardContent>

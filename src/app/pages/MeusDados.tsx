@@ -70,6 +70,9 @@ type NotificationPreferenceKey =
   | 'receber_datas_memoria'
   | 'receber_eventos'
   | 'receber_avisos_gerais'
+  | 'receber_email'
+  | 'receber_push'
+  | 'receber_whatsapp'
   | 'receber_email_novo_usuario'
   | 'receber_email_datas_especiais'
   | 'receber_email_novas_mensagens_forum'
@@ -96,6 +99,21 @@ const NOTIFICATION_OPTIONS: Array<{ key: NotificationPreferenceKey; label: strin
     key: 'receber_avisos_gerais',
     label: 'Avisos gerais',
     description: 'Comunicados importantes da plataforma.',
+  },
+  {
+    key: 'receber_email',
+    label: 'Receber emails',
+    description: 'Controle geral para emails opcionais.',
+  },
+  {
+    key: 'receber_push',
+    label: 'Receber notificações push',
+    description: 'Avisos pelo navegador quando disponíveis.',
+  },
+  {
+    key: 'receber_whatsapp',
+    label: 'Receber avisos por WhatsApp',
+    description: 'Comunicações familiares por WhatsApp quando disponíveis.',
   },
   {
     key: 'receber_email_novo_usuario',
@@ -993,6 +1011,12 @@ export function MeusDados() {
                 updateField('permitir_exibir_rede_social', checked);
                 updateField('permitir_exibir_instagram', checked);
               }}
+            />
+            <ToggleField
+              label="Permitir mensagens por WhatsApp"
+              description="Permite que familiares usem seu telefone para contato por WhatsApp."
+              checked={form.permitir_mensagens_whatsapp !== false}
+              onCheckedChange={(checked) => updateField('permitir_mensagens_whatsapp', checked)}
             />
           </div>
 

@@ -101,9 +101,11 @@ function toPessoa(row: any): Pessoa {
     ...row,
     humano_ou_pet: row?.humano_ou_pet || 'Humano',
     permitir_exibir_data_nascimento: row?.permitir_exibir_data_nascimento ?? true,
-    permitir_exibir_endereco: row?.permitir_exibir_endereco ?? false,
-    permitir_exibir_rede_social: row?.permitir_exibir_rede_social ?? false,
-    permitir_exibir_telefone: row?.permitir_exibir_telefone ?? false,
+    permitir_exibir_endereco: row?.permitir_exibir_endereco ?? true,
+    permitir_exibir_rede_social: row?.permitir_exibir_rede_social ?? row?.permitir_exibir_instagram ?? true,
+    permitir_exibir_telefone: row?.permitir_exibir_telefone ?? true,
+    permitir_exibir_instagram: row?.permitir_exibir_instagram ?? row?.permitir_exibir_rede_social ?? true,
+    permitir_mensagens_whatsapp: row?.permitir_mensagens_whatsapp ?? true,
   } as Pessoa;
 }
 

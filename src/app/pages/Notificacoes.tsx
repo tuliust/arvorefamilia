@@ -23,6 +23,47 @@ type EmailPreferenceKey =
   | 'receber_email_novos_registros_historicos'
   | 'receber_email_evento_historico_familia';
 
+type GeneralPreferenceKey =
+  | 'receber_aniversarios'
+  | 'receber_datas_memoria'
+  | 'receber_eventos'
+  | 'receber_avisos_gerais'
+  | 'receber_push'
+  | 'receber_whatsapp';
+
+const GENERAL_OPTIONS: Array<{ key: GeneralPreferenceKey; label: string; description: string }> = [
+  {
+    key: 'receber_aniversarios',
+    label: 'Aniversários',
+    description: 'Avisos sobre aniversários de familiares.',
+  },
+  {
+    key: 'receber_datas_memoria',
+    label: 'Datas de memória',
+    description: 'Lembretes de datas marcantes da família.',
+  },
+  {
+    key: 'receber_eventos',
+    label: 'Eventos familiares',
+    description: 'Convites e atualizações de eventos.',
+  },
+  {
+    key: 'receber_avisos_gerais',
+    label: 'Avisos gerais',
+    description: 'Comunicados importantes da plataforma.',
+  },
+  {
+    key: 'receber_push',
+    label: 'Notificações push',
+    description: 'Avisos pelo navegador quando disponíveis.',
+  },
+  {
+    key: 'receber_whatsapp',
+    label: 'Avisos por WhatsApp',
+    description: 'Comunicações familiares por WhatsApp quando disponíveis.',
+  },
+];
+
 const EMAIL_OPTIONS: Array<{ key: EmailPreferenceKey; label: string; description: string }> = [
   {
     key: 'receber_email_novo_usuario',
@@ -190,8 +231,8 @@ export function Notificacoes() {
                 <Mail className="h-5 w-5" />
               </span>
               <div>
-                <CardTitle className="text-base">Preferências por email</CardTitle>
-                <p className="text-xs text-gray-500">A lista interna continua visível mesmo com email desligado.</p>
+                <CardTitle className="text-base">Preferências de notificação</CardTitle>
+                <p className="text-xs text-gray-500">A lista interna continua visível mesmo com canais desligados.</p>
               </div>
             </div>
           </CardHeader>
@@ -200,13 +241,28 @@ export function Notificacoes() {
               <p className="text-sm text-gray-500">Carregando preferências...</p>
             ) : preferencias ? (
               <>
-                <PreferenceToggle
-                  label="Receber notificações por email"
-                  description="Controle geral para todos os emails opcionais."
-                  checked={preferencias.receber_email}
-                  disabled={savingKey === 'receber_email'}
-                  onCheckedChange={(checked) => atualizarPreferencia('receber_email', checked)}
-                />
+                <div className="space-y-3">
+                  {GENERAL_OPTIONS.map((option) => (
+                    <PreferenceToggle
+                      key={option.key}
+                      label={option.label}
+                      description={option.description}
+                      checked={preferencias[option.key] !== false}
+                      disabled={savingKey === option.key}
+                      onCheckedChange={(checked) => atualizarPreferencia(option.key, checked)}
+                    />
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-100 pt-3">
+                  <PreferenceToggle
+                    label="Receber notificações por email"
+                    description="Controle geral para todos os emails opcionais."
+                    checked={preferencias.receber_email !== false}
+                    disabled={savingKey === 'receber_email'}
+                    onCheckedChange={(checked) => atualizarPreferencia('receber_email', checked)}
+                  />
+                </div>
 
                 <div className="border-t border-gray-100 pt-3">
                   <div className="space-y-3">
@@ -215,9 +271,9 @@ export function Notificacoes() {
                         key={option.key}
                         label={option.label}
                         description={option.description}
-                        checked={Boolean(preferencias[option.key])}
-                        disabled={!preferencias.receber_email || savingKey === option.key}
-                        muted={!preferencias.receber_email}
+                        checked={preferencias[option.key] !== false}
+                        disabled={preferencias.receber_email === false || savingKey === option.key}
+                        muted={preferencias.receber_email === false}
                         onCheckedChange={(checked) => atualizarPreferencia(option.key, checked)}
                       />
                     ))}
