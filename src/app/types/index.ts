@@ -59,6 +59,26 @@ export type TipoConteudoFavorito =
 
 export type TipoCanalNotificacao = 'interna' | 'email' | 'push' | 'whatsapp';
 
+export type ActivityLogAction =
+  | 'person.created'
+  | 'person.updated'
+  | 'person.photo_updated'
+  | 'person.privacy_updated'
+  | 'relationship.created'
+  | 'relationship.deleted'
+  | 'historical_file.added'
+  | 'historical_file.removed'
+  | 'historical_file.updated'
+  | 'notification_preferences.updated'
+  | 'first_access.confirmed';
+
+export type ActivityLogEntityType =
+  | 'person'
+  | 'relationship'
+  | 'historical_file'
+  | 'notification_preferences'
+  | 'first_access';
+
 export type ForumTopicoTipo = 'pergunta' | 'discussao' | 'aviso' | 'memoria' | 'ajuda';
 
 export type ForumTopicoStatus = 'aberto' | 'resolvido' | 'fechado' | 'oculto';
@@ -227,6 +247,43 @@ export interface PreferenciaNotificacao {
   receber_email_evento_historico_familia: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  actor_user_id?: string | null;
+  actor_pessoa_id?: string | null;
+  actor_display_name?: string | null;
+  action: ActivityLogAction;
+  entity_type: ActivityLogEntityType;
+  entity_id?: string | null;
+  entity_label?: string | null;
+  metadata: Record<string, unknown>;
+  created_at?: string;
+}
+
+export interface CreateActivityLogPayload {
+  actor_user_id?: string | null;
+  actor_pessoa_id?: string | null;
+  actor_display_name?: string | null;
+  action: ActivityLogAction;
+  entity_type: ActivityLogEntityType;
+  entity_id?: string | null;
+  entity_label?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ActivityLogFilters {
+  actor_user_id?: string;
+  actor_pessoa_id?: string;
+  actor_query?: string;
+  action?: ActivityLogAction;
+  entity_type?: ActivityLogEntityType;
+  entity_id?: string;
+  entity_query?: string;
+  created_from?: string;
+  created_to?: string;
+  limit?: number;
 }
 
 export interface VinculoUsuarioPessoa {

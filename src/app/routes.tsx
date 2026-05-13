@@ -24,6 +24,7 @@ import { AdminRelacionamentoForm } from './pages/admin/AdminRelacionamentoForm';
 import { AdminImportacao } from './pages/admin/AdminImportacao';
 import { AdminMigrarDados } from './pages/admin/AdminMigrarDados';
 import { AdminDiagnostico } from './pages/admin/AdminDiagnostico';
+import { AdminAtividades } from './pages/admin/AdminAtividades';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
@@ -144,6 +145,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/diagnostico',
     element: <ProtectedRoute><AdminDiagnostico /></ProtectedRoute>,
+  },
+  {
+    path: '/admin/atividades',
+    element: <ProtectedRoute><AdminAtividades /></ProtectedRoute>,
   },
   {
     path: '*',

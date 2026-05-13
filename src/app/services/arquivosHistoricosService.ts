@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { ArquivoHistorico } from '../types';
+import { createActivityLog } from './activityLogService';
 
 type SupabaseErrorLike = {
   message?: string;
@@ -47,6 +48,7 @@ export async function substituirArquivosHistoricosDaPessoa(
 ): Promise<ArquivoHistorico[]> {
   const arquivosExistentes = await listarArquivosHistoricosPorPessoa(pessoaId);
   const idsMantidos = new Set(arquivos.filter((arquivo) => isUuid(arquivo.id)).map((arquivo) => arquivo.id));
+  const arquivosParaRemover = arquivosExistentes.filter((arquivo) => !idsMantidos.has(arquivo.id));
   const idsParaRemover = arquivosExistentes
     .map((arquivo) => arquivo.id)
     .filter((arquivoId) => !idsMantidos.has(arquivoId));
@@ -60,6 +62,19 @@ export async function substituirArquivosHistoricosDaPessoa(
 
     if (error) {
       throw new Error(getErrorMessage('Erro ao remover arquivos históricos', error));
+    }
+
+    for (const arquivo of arquivosParaRemover) {
+      await createActivityLog({
+        action: 'historical_file.removed',
+        entity_type: 'historical_file',
+        entity_id: arquivo.id,
+        entity_label: arquivo.titulo,
+        metadata: {
+          pessoa_id: pessoaId,
+          file_type: arquivo.tipo,
+        },
+      });
     }
   }
 
@@ -84,14 +99,44 @@ export async function substituirArquivosHistoricosDaPessoa(
       if (error) {
         throw new Error(getErrorMessage('Erro ao atualizar arquivo histórico', error));
       }
+
+      await createActivityLog({
+        action: 'historical_file.updated',
+        entity_type: 'historical_file',
+        entity_id: arquivo.id,
+        entity_label: arquivo.titulo,
+        metadata: {
+          pessoa_id: pessoaId,
+          file_type: arquivo.tipo,
+          has_description: Boolean(arquivo.descricao),
+          has_year: Boolean(arquivo.ano),
+          order: payload.ordem,
+        },
+      });
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('arquivos_historicos')
-        .insert(payload);
+        .insert(payload)
+        .select('*')
+        .single();
 
       if (error) {
         throw new Error(getErrorMessage('Erro ao inserir arquivo histórico', error));
       }
+
+      await createActivityLog({
+        action: 'historical_file.added',
+        entity_type: 'historical_file',
+        entity_id: data?.id ?? null,
+        entity_label: arquivo.titulo,
+        metadata: {
+          pessoa_id: pessoaId,
+          file_type: arquivo.tipo,
+          has_description: Boolean(arquivo.descricao),
+          has_year: Boolean(arquivo.ano),
+          order: payload.ordem,
+        },
+      });
     }
   }
 

@@ -1,6 +1,7 @@
 import { Pessoa, Relacionamento } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { limparCacheParentesco } from './relationshipCacheService';
+import { createActivityLog } from './activityLogService';
 
 type SupabaseErrorLike = {
   message?: string;
@@ -45,6 +46,15 @@ const RELACIONAMENTO_COLUMNS = [
   'data_casamento',
   'local_casamento',
 ] as const;
+
+const PRIVACY_FIELDS = new Set([
+  'permitir_exibir_instagram',
+  'permitir_mensagens_whatsapp',
+  'permitir_exibir_data_nascimento',
+  'permitir_exibir_endereco',
+  'permitir_exibir_rede_social',
+  'permitir_exibir_telefone',
+]);
 
 type RelacionamentoPayload = Omit<Relacionamento, 'id'>;
 type InverseOptions = {
@@ -136,6 +146,10 @@ function normalizeManualGeneration(value: unknown) {
     : null;
 }
 
+function getSafeChangedFields(payload: Record<string, any>) {
+  return Object.keys(payload).filter((field) => field !== 'telefone' && field !== 'endereco');
+}
+
 // =====================================================
 // PESSOAS - CRUD
 // =====================================================
@@ -202,6 +216,20 @@ export async function adicionarPessoa(pessoa: Omit<Pessoa, 'id'>): Promise<Pesso
     return undefined;
   }
 
+  if (data) {
+    await createActivityLog({
+      action: 'person.created',
+      entity_type: 'person',
+      entity_id: data.id,
+      entity_label: data.nome_completo,
+      metadata: {
+        humano_ou_pet: data.humano_ou_pet,
+        has_photo: Boolean(data.foto_principal_url),
+        manual_generation: data.manual_generation ?? null,
+      },
+    });
+  }
+
   return data ? toPessoa(data) : undefined;
 }
 
@@ -217,6 +245,45 @@ export async function atualizarPessoa(id: string, pessoa: Partial<Pessoa>): Prom
   if (error) {
     logSupabaseError(`Erro ao atualizar pessoa ${id}`, error);
     return undefined;
+  }
+
+  if (data) {
+    const changedFields = getSafeChangedFields(payload);
+
+    await createActivityLog({
+      action: 'person.updated',
+      entity_type: 'person',
+      entity_id: data.id,
+      entity_label: data.nome_completo,
+      metadata: {
+        changed_fields: changedFields,
+      },
+    });
+
+    if ('foto_principal_url' in payload) {
+      await createActivityLog({
+        action: 'person.photo_updated',
+        entity_type: 'person',
+        entity_id: data.id,
+        entity_label: data.nome_completo,
+        metadata: {
+          has_photo: Boolean(data.foto_principal_url),
+        },
+      });
+    }
+
+    const privacyFields = changedFields.filter((field) => PRIVACY_FIELDS.has(field));
+    if (privacyFields.length > 0) {
+      await createActivityLog({
+        action: 'person.privacy_updated',
+        entity_type: 'person',
+        entity_id: data.id,
+        entity_label: data.nome_completo,
+        metadata: {
+          changed_fields: privacyFields,
+        },
+      });
+    }
   }
 
   return data ? toPessoa(data) : undefined;
@@ -513,6 +580,18 @@ export async function adicionarRelacionamentoComInverso(
   }
 
   await limparCacheParentescoSemBloquear();
+  await createActivityLog({
+    action: 'relationship.created',
+    entity_type: 'relationship',
+    entity_id: principal.id,
+    entity_label: principal.tipo_relacionamento,
+    metadata: {
+      relationship_type: principal.tipo_relacionamento,
+      relationship_subtype: principal.subtipo_relacionamento ?? null,
+      has_inverse: Boolean(inverso),
+    },
+  });
+
   return principal;
 }
 
@@ -593,6 +672,18 @@ export async function excluirRelacionamentoComInverso(id: string): Promise<boole
   if (inverso) {
     await deletarRelacionamento(inverso.id);
   }
+
+  await createActivityLog({
+    action: 'relationship.deleted',
+    entity_type: 'relationship',
+    entity_id: relacionamento.id,
+    entity_label: relacionamento.tipo_relacionamento,
+    metadata: {
+      relationship_type: relacionamento.tipo_relacionamento,
+      relationship_subtype: relacionamento.subtipo_relacionamento ?? null,
+      had_inverse: Boolean(inverso),
+    },
+  });
 
   return true;
 }

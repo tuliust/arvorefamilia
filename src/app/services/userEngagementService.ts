@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { createActivityLog } from './activityLogService';
 import {
   FavoritoUsuario,
   NotificacaoUsuario,
@@ -229,6 +230,15 @@ export async function salvarPreferenciasNotificacao(
       .single();
 
     if (error) throw error;
+    await createActivityLog({
+      action: 'notification_preferences.updated',
+      entity_type: 'notification_preferences',
+      entity_id: userId,
+      entity_label: 'Preferências de notificação',
+      metadata: {
+        preference_keys: Object.keys(payload).filter((key) => key !== 'user_id'),
+      },
+    });
     return mapPreferenciaRow(data);
   } catch (error) {
     console.error('[Supabase] Erro ao salvar preferências de notificação:', error);

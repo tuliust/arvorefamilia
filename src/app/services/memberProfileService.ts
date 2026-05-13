@@ -1,6 +1,7 @@
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { Pessoa } from '../types';
+import { createActivityLog } from './activityLogService';
 
 export interface MemberProfile {
   id: string;
@@ -438,6 +439,18 @@ export async function confirmOwnLinkedPersonData(linkId: string) {
     .eq('id', linkId)
     .select('*')
     .single();
+
+  if (!error && data) {
+    await createActivityLog({
+      action: 'first_access.confirmed',
+      entity_type: 'first_access',
+      entity_id: linkId,
+      entity_label: 'Confirmação de primeiro acesso',
+      metadata: {
+        pessoa_id: (data as UserPersonLinkRecord).pessoa_id,
+      },
+    });
+  }
 
   return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
 }

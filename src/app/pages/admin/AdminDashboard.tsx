@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
+import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
+import { ActivityLog } from '../../types';
 import {
   Users,
   Link2,
@@ -11,6 +13,7 @@ import {
   Home,
   PlusCircle,
   BarChart3,
+  Clock,
 } from 'lucide-react';
 
 type Pessoa = {
@@ -31,6 +34,7 @@ export function AdminDashboard() {
   const { signOut } = useAuth();
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
+  const [atividadesRecentes, setAtividadesRecentes] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,15 +42,20 @@ export function AdminDashboard() {
       try {
         setLoading(true);
 
-        const pessoasData = await obterTodasPessoas();
-        const relacionamentosData = await obterTodosRelacionamentos();
+        const [pessoasData, relacionamentosData, atividadesData] = await Promise.all([
+          obterTodasPessoas(),
+          obterTodosRelacionamentos(),
+          listRecentActivityLogs(5),
+        ]);
 
         setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
+        setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData : []);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
         setPessoas([]);
         setRelacionamentos([]);
+        setAtividadesRecentes([]);
       } finally {
         setLoading(false);
       }
@@ -93,9 +102,24 @@ export function AdminDashboard() {
       onClick: () => navigate('/admin/relacionamentos'),
       color: 'bg-purple-500',
     },
+    {
+      title: 'Histórico',
+      description: 'Ver atividades recentes',
+      icon: Clock,
+      onClick: () => navigate('/admin/atividades'),
+      color: 'bg-slate-800',
+    },
   ];
 
   const pessoasRecentes = pessoas.slice(0, 5);
+
+  const formatActivityDate = (value?: string) => {
+    if (!value) return 'Data não informada';
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,7 +202,7 @@ export function AdminDashboard() {
 
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
               <button
                 key={action.title}
@@ -198,48 +222,86 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pessoas Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-sm text-gray-500">Carregando...</p>
-            ) : pessoasRecentes.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhuma pessoa cadastrada.</p>
-            ) : (
-              <div className="space-y-3">
-                {pessoasRecentes.map((pessoa) => (
-                  <div
-                    key={pessoa.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/pessoa/${pessoa.id}`)}
-                  >
-                    <div>
-                      <p className="font-medium text-sm text-gray-900">
-                        {pessoa.nome_completo}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {pessoa.local_nascimento || 'Local não informado'}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pessoas Recentes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-gray-500">Carregando...</p>
+              ) : pessoasRecentes.length === 0 ? (
+                <p className="text-sm text-gray-500">Nenhuma pessoa cadastrada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {pessoasRecentes.map((pessoa) => (
+                    <div
+                      key={pessoa.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/pessoa/${pessoa.id}`)}
+                    >
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">
+                          {pessoa.nome_completo}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {pessoa.local_nascimento || 'Local não informado'}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/admin/pessoas/${pessoa.id}/editar`);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Histórico de Atividades</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/atividades')}>
+                Ver histórico completo
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-gray-500">Carregando...</p>
+              ) : atividadesRecentes.length === 0 ? (
+                <p className="text-sm text-gray-500">Nenhuma atividade registrada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {atividadesRecentes.map((atividade) => (
+                    <div key={atividade.id} className="rounded-lg border border-gray-100 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {getActivityActionLabel(atividade.action)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {atividade.actor_display_name || 'Ator não identificado'} · {formatActivityDate(atividade.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-600">
+                        {getActivitySummary(atividade)}
                       </p>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/admin/pessoas/${pessoa.id}/editar`);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
