@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
 import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
+import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
 import { ActivityLog } from '../../types';
 import {
   Users,
@@ -14,6 +15,7 @@ import {
   PlusCircle,
   BarChart3,
   Clock,
+  GitPullRequest,
 } from 'lucide-react';
 
 type Pessoa = {
@@ -35,6 +37,7 @@ export function AdminDashboard() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
   const [atividadesRecentes, setAtividadesRecentes] = useState<ActivityLog[]>([]);
+  const [pendingRelationshipRequests, setPendingRelationshipRequests] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,20 +45,23 @@ export function AdminDashboard() {
       try {
         setLoading(true);
 
-        const [pessoasData, relacionamentosData, atividadesData] = await Promise.all([
+        const [pessoasData, relacionamentosData, atividadesData, pendingRequestsData] = await Promise.all([
           obterTodasPessoas(),
           obterTodosRelacionamentos(),
           listRecentActivityLogs(5),
+          listPendingRelationshipChangeRequests({ limit: 1000 }),
         ]);
 
         setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
         setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData : []);
+        setPendingRelationshipRequests(Array.isArray(pendingRequestsData) ? pendingRequestsData.length : 0);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
         setPessoas([]);
         setRelacionamentos([]);
         setAtividadesRecentes([]);
+        setPendingRelationshipRequests(0);
       } finally {
         setLoading(false);
       }
@@ -75,6 +81,7 @@ export function AdminDashboard() {
     totalPets: pessoas.filter((p) => p.humano_ou_pet === 'Pet').length,
     totalFalecidos: pessoas.filter((p) => !!p.data_falecimento).length,
     totalRelacionamentos: relacionamentos.length,
+    pendingRelationshipRequests,
     totalCasamentos: Math.floor(
       relacionamentos.filter((r) => r.tipo_relacionamento === 'conjuge').length / 2
     ),
@@ -101,6 +108,13 @@ export function AdminDashboard() {
       icon: Link2,
       onClick: () => navigate('/admin/relacionamentos'),
       color: 'bg-purple-500',
+    },
+    {
+      title: 'Solicitações de vínculos',
+      description: `${stats.pendingRelationshipRequests} pendente(s)`,
+      icon: GitPullRequest,
+      onClick: () => navigate('/admin/solicitacoes-vinculos'),
+      color: 'bg-amber-600',
     },
     {
       title: 'Histórico',
@@ -189,6 +203,19 @@ export function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
+                Solicitações pendentes
+              </CardTitle>
+              <GitPullRequest className="w-4 h-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">{stats.pendingRelationshipRequests}</div>
+              <p className="text-xs text-gray-500 mt-1">Vínculos aguardando revisão</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 In Memoriam
               </CardTitle>
               <BarChart3 className="w-4 h-4 text-gray-400" />
@@ -202,7 +229,7 @@ export function AdminDashboard() {
 
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {quickActions.map((action) => (
               <button
                 key={action.title}
