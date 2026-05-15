@@ -2,12 +2,59 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico } from '../types';
-import { ArrowDown, ArrowUp, Upload, X, FileText, Eye } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye } from 'lucide-react';
 import { uploadHistoricalFile } from '../services/storageService';
 
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+function sanitizeFileName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+}
+
+function getExtensionFromDataUrl(url: string) {
+  const match = url.match(/^data:([^;,]+)/);
+  const mimeType = match?.[1];
+
+  if (mimeType === 'application/pdf') return 'pdf';
+  if (mimeType === 'image/jpeg') return 'jpg';
+  if (mimeType === 'image/png') return 'png';
+  if (mimeType === 'image/webp') return 'webp';
+
+  return null;
+}
+
+function getExtensionFromUrl(url: string) {
+  if (url.startsWith('data:')) return getExtensionFromDataUrl(url);
+
+  try {
+    const pathname = new URL(url, window.location.href).pathname;
+    const extension = pathname.split('.').pop()?.toLowerCase();
+    if (extension && /^[a-z0-9]{2,5}$/.test(extension)) return extension;
+  } catch {
+    const extension = url.split('?')[0]?.split('#')[0]?.split('.').pop()?.toLowerCase();
+    if (extension && /^[a-z0-9]{2,5}$/.test(extension)) return extension;
+  }
+
+  return null;
+}
+
+function getHistoricalFileName(arquivo: ArquivoHistorico) {
+  const baseName = sanitizeFileName(arquivo.titulo || 'arquivo-historico') || 'arquivo-historico';
+  const extension = getExtensionFromUrl(arquivo.url) ?? (arquivo.tipo === 'pdf' ? 'pdf' : 'jpg');
+
+  return baseName.endsWith(`.${extension}`) ? baseName : `${baseName}.${extension}`;
+}
+
+function openArquivoInNewTab(arquivo: ArquivoHistorico) {
+  window.open(arquivo.url, '_blank', 'noopener,noreferrer');
+}
 
 interface ArquivosHistoricosProps {
   arquivos: ArquivoHistorico[];
@@ -27,7 +74,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
   });
   const [isAddingFile, setIsAddingFile] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [previewFile, setPreviewFile] = useState<{ url: string; tipo: ArquivoHistorico['tipo'] } | null>(null);
+  const [previewFile, setPreviewFile] = useState<ArquivoHistorico | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,7 +148,18 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
   };
 
   const handleViewFile = (arquivo: ArquivoHistorico) => {
-    setPreviewFile({ url: arquivo.url, tipo: arquivo.tipo });
+    setPreviewFile(arquivo);
+  };
+
+  const handleDownloadArquivo = (arquivo: ArquivoHistorico) => {
+    const link = document.createElement('a');
+    link.href = arquivo.url;
+    link.download = getHistoricalFileName(arquivo);
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -234,7 +292,10 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                         </div>
                       ) : (
                         <div className="w-16 h-16 bg-red-50 rounded flex items-center justify-center">
-                          <FileText className="w-8 h-8 text-red-600" />
+                          <div className="flex flex-col items-center gap-1">
+                            <FileText className="w-7 h-7 text-red-600" />
+                            <span className="text-[10px] font-semibold text-red-700">PDF</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -286,6 +347,22 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                           <Eye className="w-3 h-3" />
                           Visualizar
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadArquivo(arquivo)}
+                          className="text-xs text-gray-700 hover:underline flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" />
+                          Baixar arquivo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openArquivoInNewTab(arquivo)}
+                          className="text-xs text-gray-700 hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Abrir
+                        </button>
                         {!readOnly && (
                           <>
                             <button
@@ -330,26 +407,56 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
       <Dialog open={!!previewFile} onOpenChange={(open) => {
         if (!open) setPreviewFile(null);
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden grid-rows-[auto_minmax(0,1fr)_auto]">
           <DialogHeader>
-            <DialogTitle>Visualização do Arquivo</DialogTitle>
+            <DialogTitle>
+              {previewFile?.titulo ? `Visualização: ${previewFile.titulo}` : 'Visualização do arquivo'}
+            </DialogTitle>
           </DialogHeader>
           {previewFile && (
-            <div className="mt-4">
+            <div className="min-h-0 overflow-auto rounded-lg border bg-gray-50 p-3">
               {previewFile.tipo === 'imagem' || previewFile.url.startsWith('data:image') ? (
                 <img 
                   src={previewFile.url}
-                  alt="Visualização"
-                  className="w-full h-auto rounded"
+                  alt={previewFile.titulo || 'Arquivo histórico'}
+                  className="mx-auto max-h-[68vh] w-auto max-w-full rounded object-contain"
                 />
               ) : (
-                <iframe
-                  src={previewFile.url}
-                  className="w-full h-[70vh] rounded border"
-                  title="Visualização PDF"
-                />
+                <div className="space-y-3">
+                  <iframe
+                    src={previewFile.url}
+                    className="h-[68vh] w-full rounded border bg-white"
+                    title={`Preview do PDF ${previewFile.titulo || 'arquivo histórico'}`}
+                  />
+                  <p className="text-xs text-gray-600">
+                    Se o PDF não carregar no navegador, use “Abrir em nova aba”.
+                  </p>
+                </div>
               )}
             </div>
+          )}
+          {previewFile && (
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDownloadArquivo(previewFile)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Baixar arquivo
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => openArquivoInNewTab(previewFile)}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Abrir em nova aba
+              </Button>
+              <DialogClose asChild>
+                <Button type="button">Fechar</Button>
+              </DialogClose>
+            </DialogFooter>
           )}
         </DialogContent>
       </Dialog>

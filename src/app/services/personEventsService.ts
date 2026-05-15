@@ -117,7 +117,7 @@ export async function salvarEventosDaPessoa(pessoaId: string, eventos: PersonEve
   for (const [index, evento] of eventosValidos.entries()) {
     const payload = getPayload(pessoaId, evento, index);
 
-    if (isUuid(evento.id)) {
+    if (isUuid(evento.id) && eventosExistentesPorId.has(evento.id)) {
       const eventoExistente = eventosExistentesPorId.get(evento.id);
       if (eventoExistente && !hasEventChanged(eventoExistente, evento, index)) {
         continue;
@@ -193,7 +193,8 @@ export async function adicionarEventoDaPessoa(
     },
   ]);
 
-  const criado = eventosAtualizados.find((item) => item.titulo === evento.titulo && item.ordem === eventos.length);
+  const titulo = evento.titulo.trim();
+  const criado = eventosAtualizados.find((item) => item.titulo === titulo && item.ordem === eventos.length);
   if (!criado) {
     throw new Error('Não foi possível localizar o evento criado.');
   }

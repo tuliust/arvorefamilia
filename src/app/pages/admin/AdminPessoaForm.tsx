@@ -39,9 +39,13 @@ import { FotoUpload } from '../../components/FotoUpload';
 import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import {
   SocialProfileForm,
-  SocialProfilesEditor,
 } from '../../components/person/SocialProfilesEditor';
+import { PersonBasicInfoFields } from '../../components/person/PersonBasicInfoFields';
+import { PersonBioFields } from '../../components/person/PersonBioFields';
+import { PersonContactFields } from '../../components/person/PersonContactFields';
+import { PersonDatesLocationsFields } from '../../components/person/PersonDatesLocationsFields';
 import { PersonEventsEditor } from '../../components/person/PersonEventsEditor';
+import { PersonPrivacyFields } from '../../components/person/PersonPrivacyFields';
 import {
   createEmptyMarriageDetails,
   MarriageDetailsEditor,
@@ -55,12 +59,10 @@ import {
   buildSocialProfilesFromPerson,
   cleanPersonPayload,
   formatPhone,
-  getZodiacSignFromBirthDate,
-  maskBirthDate,
+  isPersonDeceased,
   normalizeBirthDate,
   normalizeLocation,
   normalizeLocationByMode,
-  isPersonDeceased,
   syncFirstSocialProfileToPersonFields,
   validateEditablePersonForm,
   validateLocationByMode,
@@ -114,6 +116,7 @@ type AdminPessoaDraft = {
   relacionamentosPendentes: RelacionamentoPendente[];
   socialProfiles: SocialProfileForm[];
   personEvents: PersonEvent[];
+  pendingMarriageDetails: MarriageDetailsForm;
   searchTerm: string;
   tipoRelSelecionado: TipoRelacionamento;
   subtipoRelSelecionado: SubtipoRelacionamento;
@@ -146,6 +149,7 @@ function readAdminPessoaDraft(key: string): AdminPessoaDraft | null {
         ? draft.socialProfiles
         : buildSocialProfilesFromPerson(draft.formData),
       personEvents: Array.isArray(draft.personEvents) ? draft.personEvents : [],
+      pendingMarriageDetails: normalizeMarriageDetails(draft.pendingMarriageDetails),
       searchTerm: draft.searchTerm ?? '',
       tipoRelSelecionado: draft.tipoRelSelecionado ?? 'pai',
       subtipoRelSelecionado: draft.subtipoRelSelecionado ?? 'sangue',
@@ -247,11 +251,16 @@ export function AdminPessoaForm() {
               setRelacionamentosPendentes(draft?.relacionamentosPendentes ?? []);
               setSocialProfiles(draft?.socialProfiles ?? buildSocialProfilesFromPerson(pessoa));
               setPersonEvents(draft?.personEvents ?? eventosDaPessoa);
+              setPendingMarriageDetails(draft?.pendingMarriageDetails ?? createEmptyMarriageDetails());
               setSearchTerm(draft?.searchTerm ?? '');
               setTipoRelSelecionado(draft?.tipoRelSelecionado ?? 'pai');
               setSubtipoRelSelecionado(draft?.subtipoRelSelecionado ?? 'sangue');
             }
-            setInitialData(JSON.stringify({ formData: data, personEvents: eventosDaPessoa }));
+            setInitialData(JSON.stringify({
+              formData: data,
+              personEvents: eventosDaPessoa,
+              pendingMarriageDetails: createEmptyMarriageDetails(),
+            }));
             if (draft) hasUserEditedRef.current = true;
           }
         } catch (error) {
@@ -264,10 +273,15 @@ export function AdminPessoaForm() {
         setRelacionamentosPendentes(draft?.relacionamentosPendentes ?? []);
         setSocialProfiles(draft?.socialProfiles ?? buildSocialProfilesFromPerson());
         setPersonEvents(draft?.personEvents ?? []);
+        setPendingMarriageDetails(draft?.pendingMarriageDetails ?? createEmptyMarriageDetails());
         setSearchTerm(draft?.searchTerm ?? '');
         setTipoRelSelecionado(draft?.tipoRelSelecionado ?? 'pai');
         setSubtipoRelSelecionado(draft?.subtipoRelSelecionado ?? 'sangue');
-        setInitialData(JSON.stringify({ formData: emptyData, personEvents: [] }));
+        setInitialData(JSON.stringify({
+          formData: emptyData,
+          personEvents: [],
+          pendingMarriageDetails: createEmptyMarriageDetails(),
+        }));
         hasUserEditedRef.current = Boolean(draft);
         await loadTodasPessoas();
       }
@@ -295,9 +309,9 @@ export function AdminPessoaForm() {
   };
 
   useEffect(() => {
-    const currentData = JSON.stringify({ formData, personEvents });
+    const currentData = JSON.stringify({ formData, personEvents, pendingMarriageDetails });
     setHasChanges(currentData !== initialData || relacionamentosPendentes.length > 0);
-  }, [formData, initialData, personEvents, relacionamentosPendentes]);
+  }, [formData, initialData, pendingMarriageDetails, personEvents, relacionamentosPendentes]);
 
   useEffect(() => {
     if (!hasInitializedDraftRef.current || !hasUserEditedRef.current) return;
@@ -307,6 +321,7 @@ export function AdminPessoaForm() {
       relacionamentosPendentes,
       socialProfiles,
       personEvents,
+      pendingMarriageDetails,
       searchTerm,
       tipoRelSelecionado,
       subtipoRelSelecionado,
@@ -317,6 +332,7 @@ export function AdminPessoaForm() {
     relacionamentosPendentes,
     socialProfiles,
     personEvents,
+    pendingMarriageDetails,
     searchTerm,
     tipoRelSelecionado,
     subtipoRelSelecionado,
@@ -441,6 +457,7 @@ export function AdminPessoaForm() {
           arquivos_historicos: formData.arquivos_historicos || [],
         },
         personEvents,
+        pendingMarriageDetails: createEmptyMarriageDetails(),
       });
 
       setInitialData(snapshotAtual);
@@ -616,264 +633,37 @@ export function AdminPessoaForm() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações Básicas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
-                <Input
-                  type="text"
-                  value={formData.nome_completo}
-                  onChange={(e) => handleChange('nome_completo', e.target.value)}
-                  required
-                  placeholder="Ex: João da Silva"
-                />
-              </div>
+          <PersonBasicInfoFields
+            value={formData}
+            onChange={(field, value) => handleChange(field, value)}
+          />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-                  <select
-                    value={formData.humano_ou_pet}
-                    onChange={(e) => handleChange('humano_ou_pet', e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="Humano">Humano</option>
-                    <option value="Pet">Pet</option>
-                  </select>
-                </div>
+          <PersonDatesLocationsFields
+            value={formData}
+            isFalecido={isFalecido}
+            onChange={(field, value) => handleChange(field, value)}
+          />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Geração</label>
-                  <select
-                    value={formData.manual_generation}
-                    onChange={(e) => handleChange('manual_generation', e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="">Automática</option>
-                    {Array.from({ length: 7 }, (_, index) => index + 1).map((generation) => (
-                      <option key={generation} value={generation}>
-                        Geração {generation}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Datas e Locais</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento</label>
-                  <Input
-                    type="text"
-                    value={formData.data_nascimento}
-                    onChange={(e) => handleChange('data_nascimento', maskBirthDate(e.target.value))}
-                    placeholder="Ex: 1990 ou 15/03/1990"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Signo</label>
-                  <Input
-                    type="text"
-                    value={getZodiacSignFromBirthDate(formData.data_nascimento) || 'Não identificado'}
-                    readOnly
-                    className="bg-gray-50 text-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Local de Nascimento</label>
-                  <Input
-                    type="text"
-                    value={formData.local_nascimento}
-                    onChange={(e) => handleChange('local_nascimento', e.target.value)}
-                    onBlur={() => handleChange('local_nascimento', normalizeLocationByMode(formData.local_nascimento, {
-                      international: formData.local_nascimento_exterior,
-                    }))}
-                    placeholder={formData.local_nascimento_exterior ? 'Ex: Dublin (Irlanda)' : 'Ex: São Paulo/SP'}
-                  />
-                  <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={formData.local_nascimento_exterior === true}
-                      onChange={(event) => handleChange('local_nascimento_exterior', event.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                    />
-                    Local de nascimento fora do Brasil
-                  </label>
-                </div>
-
-                <div className="md:col-span-2">
-                  <PrivacyCheckbox
-                    label="Pessoa falecida"
-                    description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."
-                    checked={formData.falecido === true}
-                    onChange={(checked) => handleChange('falecido', checked)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Data de Falecimento</label>
-                  <Input
-                    type="text"
-                    value={formData.data_falecimento}
-                    onChange={(e) => handleChange('data_falecimento', maskBirthDate(e.target.value))}
-                    placeholder="Ex: 2020"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Local de Falecimento</label>
-                  <Input
-                    type="text"
-                    value={formData.local_falecimento}
-                    onChange={(e) => handleChange('local_falecimento', e.target.value)}
-                    onBlur={() => handleChange('local_falecimento', normalizeLocationByMode(formData.local_falecimento, {
-                      international: formData.local_falecimento_exterior,
-                    }))}
-                    placeholder={formData.local_falecimento_exterior ? 'Ex: Lisboa (Portugal)' : 'Ex: Rio de Janeiro/RJ'}
-                  />
-                  <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={formData.local_falecimento_exterior === true}
-                      onChange={(event) => handleChange('local_falecimento_exterior', event.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                    />
-                    Local de falecimento fora do Brasil
-                  </label>
-                </div>
-
-                {!isFalecido && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Local Atual (residência)</label>
-                    <Input
-                      type="text"
-                      value={formData.local_atual}
-                      onChange={(e) => handleChange('local_atual', e.target.value)}
-                      onBlur={() => handleChange('local_atual', normalizeLocation(formData.local_atual))}
-                      placeholder="Ex: Belo Horizonte/MG"
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Biografia e Curiosidades</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mini Biografia</label>
-                <textarea
-                  value={formData.minibio}
-                  onChange={(e) => handleChange('minibio', e.target.value)}
-                  rows={4}
-                  className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  placeholder="Breve biografia da pessoa..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Curiosidades</label>
-                <textarea
-                  value={formData.curiosidades}
-                  onChange={(e) => handleChange('curiosidades', e.target.value)}
-                  rows={4}
-                  className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  placeholder="Fatos interessantes, hobbies, conquistas..."
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <PersonBioFields
+            value={formData}
+            onChange={(field, value) => handleChange(field, value)}
+          />
 
           {!isFalecido && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações de Contato</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                    <Input
-                      type="tel"
-                      value={formData.telefone}
-                      onChange={(e) => handleTelefoneChange(e.target.value)}
-                      placeholder="(11) 99999-9999"
-                      maxLength={15}
-                    />
-                  </div>
-                </div>
-
-                <SocialProfilesEditor
-                  profiles={socialProfiles}
-                  onChange={handleSocialProfilesChange}
-                />
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
-                  <Input
-                    type="text"
-                    value={formData.endereco}
-                    onChange={(e) => handleChange('endereco', e.target.value)}
-                    placeholder="Rua, número, bairro, cidade"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <PersonContactFields
+              value={formData}
+              socialProfiles={socialProfiles}
+              onChange={(field, value) => handleChange(field, value)}
+              onPhoneChange={handleTelefoneChange}
+              onSocialProfilesChange={handleSocialProfilesChange}
+            />
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Privacidade</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Defina quais dados pessoais podem aparecer para outros familiares. Essas opções podem ser ajustadas depois.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <PrivacyCheckbox
-                  label="Exibir minha data de nascimento para outros familiares"
-                  checked={formData.permitir_exibir_data_nascimento !== false}
-                  onChange={(checked) => handleChange('permitir_exibir_data_nascimento', checked)}
-                />
-                <PrivacyCheckbox
-                  label="Exibir meu telefone para outros familiares"
-                  checked={formData.permitir_exibir_telefone !== false}
-                  onChange={(checked) => handleChange('permitir_exibir_telefone', checked)}
-                />
-                <PrivacyCheckbox
-                  label="Exibir meu endereço para outros familiares"
-                  checked={formData.permitir_exibir_endereco !== false}
-                  onChange={(checked) => handleChange('permitir_exibir_endereco', checked)}
-                />
-                <PrivacyCheckbox
-                  label="Exibir minha rede social para outros familiares"
-                  checked={formData.permitir_exibir_rede_social !== false && formData.permitir_exibir_instagram !== false}
-                  onChange={handleRedeSocialPrivacyChange}
-                />
-                <PrivacyCheckbox
-                  label="Permitir mensagens por WhatsApp"
-                  checked={formData.permitir_mensagens_whatsapp !== false}
-                  onChange={(checked) => handleChange('permitir_mensagens_whatsapp', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <PersonPrivacyFields
+            value={formData}
+            onChange={(field, value) => handleChange(field, value)}
+            onSocialPrivacyChange={handleRedeSocialPrivacyChange}
+          />
 
           <ArquivosHistoricos
             arquivos={formData.arquivos_historicos}
@@ -1236,32 +1026,5 @@ export function AdminPessoaForm() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function PrivacyCheckbox({
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700 shadow-sm">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-      />
-      <span>
-        <span className="block">{label}</span>
-        {description && <span className="mt-1 block text-xs text-gray-500">{description}</span>}
-      </span>
-    </label>
   );
 }

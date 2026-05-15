@@ -70,6 +70,7 @@ import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 const AVATAR_SIZE = 512;
 const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
 const INTERNATIONAL_LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade (País). Exemplo: Dublin (Irlanda).';
+// TODO: Migrar blocos simples para os componentes compartilhados de pessoa sem afetar avatar/crop, Places e primeiro acesso.
 
 type NotificationPreferenceKey =
   | 'receber_aniversarios'
