@@ -69,13 +69,25 @@ import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
 import { listarNotificacoes, listarNotificacoesSupabase } from '../services/userEngagementService';
-import { descobrirParentesco } from '../services/relationshipResolverService';
 import {
   getInsightByType,
   obterInsightsGeradosPessoa,
   PersonGeneratedInsight,
 } from '../services/personInsightsService';
-import { getPersonZodiacSign, isPersonDeceased } from '../utils/personFields';
+import { formatPhone, getPersonZodiacSign, isPersonDeceased } from '../utils/personFields';
+import { WhatsAppContactButton } from '../components/person/WhatsAppContactButton';
+import { canUseWhatsAppContact } from '../utils/whatsapp';
+import {
+  calculateRelationshipDegree,
+  type RelationshipDegreeResult,
+} from '../utils/relationshipDegree';
+import {
+  formatRelationshipPersonPath,
+  formatRelationshipStepPath,
+  getFriendlyRelationshipWarnings,
+  getRelationshipConfidenceLabel,
+  getRelationshipResultMessage,
+} from '../utils/relationshipDegreeDisplay';
 import {
   Search,
   Lightbulb,
@@ -178,13 +190,8 @@ export function Home() {
   const [discoverInsights, setDiscoverInsights] = useState<PersonGeneratedInsight[]>([]);
   const [connectionPersonOneId, setConnectionPersonOneId] = useState<string>('');
   const [connectionPersonTwoId, setConnectionPersonTwoId] = useState<string>('');
-  const [connectionResult, setConnectionResult] = useState<{
-    nome?: string;
-    descricao?: string;
-    descricaoContextual?: string;
-    caminho?: string;
-    relacoes?: string;
-  } | null>(null);
+  const [connectionResult, setConnectionResult] = useState<RelationshipDegreeResult | null>(null);
+  const [connectionIncludeInactiveSpouses, setConnectionIncludeInactiveSpouses] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -910,7 +917,7 @@ export function Home() {
     setAiError(null);
   }
 
-  const handleDiscoverConnection = useCallback(async () => {
+  const handleDiscoverConnection = useCallback(() => {
     if (!connectionPersonOneId || !connectionPersonTwoId || connectionLoading) return;
 
     if (connectionPersonOneId === connectionPersonTwoId) {
@@ -924,21 +931,41 @@ export function Home() {
     setConnectionResult(null);
 
     try {
-      const resultado = await descobrirParentesco(connectionPersonOneId, connectionPersonTwoId);
-      setConnectionResult({
-        nome: resultado.nome,
-        descricao: resultado.descricao,
-        descricaoContextual: resultado.descricaoContextual,
-        caminho: resultado.caminhoPessoas.map((pessoa) => pessoa.nome).join(' → '),
-        relacoes: resultado.caminhoRelacoes.join(' → '),
+      const resultado = calculateRelationshipDegree({
+        originPersonId: connectionPersonOneId,
+        targetPersonId: connectionPersonTwoId,
+        people: pessoas,
+        relationships: relacionamentos,
+        includeInactiveSpouses: connectionIncludeInactiveSpouses,
       });
+      setConnectionResult(resultado);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível descobrir a conexão agora.';
       setConnectionError(message);
     } finally {
       setConnectionLoading(false);
     }
-  }, [connectionLoading, connectionPersonOneId, connectionPersonTwoId]);
+  }, [
+    connectionIncludeInactiveSpouses,
+    connectionLoading,
+    connectionPersonOneId,
+    connectionPersonTwoId,
+    pessoas,
+    relacionamentos,
+  ]);
+
+  const connectionPathText = useMemo(
+    () => connectionResult ? formatRelationshipPersonPath(connectionResult, pessoas) : '',
+    [connectionResult, pessoas]
+  );
+  const connectionRelationText = useMemo(
+    () => connectionResult ? formatRelationshipStepPath(connectionResult) : '',
+    [connectionResult]
+  );
+  const connectionWarnings = useMemo(
+    () => connectionResult ? getFriendlyRelationshipWarnings(connectionResult) : [],
+    [connectionResult]
+  );
 
   const curiosityTabs = useMemo(
     () => [
@@ -1543,7 +1570,14 @@ export function Home() {
                       </p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Select value={connectionPersonOneId} onValueChange={setConnectionPersonOneId}>
+                      <Select
+                        value={connectionPersonOneId}
+                        onValueChange={(value) => {
+                          setConnectionPersonOneId(value);
+                          setConnectionResult(null);
+                          setConnectionError(null);
+                        }}
+                      >
                         <SelectTrigger className="w-full bg-white">
                           <SelectValue placeholder="Pessoa 1" />
                         </SelectTrigger>
@@ -1556,7 +1590,14 @@ export function Home() {
                         </SelectContent>
                       </Select>
 
-                      <Select value={connectionPersonTwoId} onValueChange={setConnectionPersonTwoId}>
+                      <Select
+                        value={connectionPersonTwoId}
+                        onValueChange={(value) => {
+                          setConnectionPersonTwoId(value);
+                          setConnectionResult(null);
+                          setConnectionError(null);
+                        }}
+                      >
                         <SelectTrigger className="w-full bg-white">
                           <SelectValue placeholder="Pessoa 2" />
                         </SelectTrigger>
@@ -1569,6 +1610,19 @@ export function Home() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={connectionIncludeInactiveSpouses}
+                        onChange={(event) => {
+                          setConnectionIncludeInactiveSpouses(event.target.checked);
+                          setConnectionResult(null);
+                          setConnectionError(null);
+                        }}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Incluir ex-cônjuges/separações no cálculo</span>
+                    </label>
                     <div className="flex justify-end">
                       <Button
                         type="button"
@@ -1586,16 +1640,27 @@ export function Home() {
                     )}
                     {connectionResult && (
                       <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-gray-700">
-                        <p className="font-semibold text-gray-900">{connectionResult.nome || 'Conexão encontrada'}</p>
-                        {connectionResult.descricao && <p className="mt-2">{connectionResult.descricao}</p>}
-                        {connectionResult.descricaoContextual && (
-                          <p className="mt-2 text-gray-600">{connectionResult.descricaoContextual}</p>
+                        <p className="font-semibold text-gray-900">
+                          {connectionResult.found ? connectionResult.label : 'Sem vínculo encontrado'}
+                        </p>
+                        <p className="mt-2">{getRelationshipResultMessage(connectionResult)}</p>
+                        <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-3">
+                          <span>Distância: {connectionResult.distance} conexões</span>
+                          <span>Grau: {connectionResult.degree ?? 'não definido'}</span>
+                          <span>Confiança: {getRelationshipConfidenceLabel(connectionResult.confidence)}</span>
+                        </div>
+                        {connectionPathText && (
+                          <p className="mt-3 text-xs text-gray-500">Caminho: {connectionPathText}</p>
                         )}
-                        {connectionResult.caminho && (
-                          <p className="mt-3 text-xs text-gray-500">Caminho: {connectionResult.caminho}</p>
+                        {connectionRelationText && (
+                          <p className="mt-1 text-xs text-gray-400">Relações: {connectionRelationText}</p>
                         )}
-                        {connectionResult.relacoes && (
-                          <p className="mt-1 text-xs text-gray-400">Relações: {connectionResult.relacoes}</p>
+                        {connectionWarnings.length > 0 && (
+                          <ul className="mt-3 space-y-1 text-xs text-amber-700">
+                            {connectionWarnings.map((warning) => (
+                              <li key={warning}>{warning}</li>
+                            ))}
+                          </ul>
                         )}
                       </div>
                     )}
@@ -1629,6 +1694,8 @@ function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
   const canShowBirthDate = pessoa.permitir_exibir_data_nascimento !== false;
   const ageLabel = canShowBirthDate ? getCurrentAgeLabel(pessoa.data_nascimento) : undefined;
   const zodiacSign = canShowBirthDate ? getPersonZodiacSign(pessoa) : undefined;
+  const canShowPhoneNumber = pessoa.permitir_exibir_telefone === true && Boolean(pessoa.telefone);
+  const canShowWhatsAppContact = canUseWhatsAppContact(pessoa);
   const contactItems = [
     ['Nome completo', pessoa.nome_completo],
     canShowBirthDate
@@ -1654,8 +1721,8 @@ function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
     canShowBirthDate && zodiacSign
       ? ['Signo', zodiacSign]
       : null,
-    pessoa.permitir_exibir_telefone === true || pessoa.permitir_mensagens_whatsapp === true
-      ? ['Telefone', pessoa.telefone]
+    canShowPhoneNumber
+      ? ['Telefone', formatPhone(String(pessoa.telefone ?? ''))]
       : null,
     pessoa.permitir_exibir_rede_social === true || pessoa.permitir_exibir_instagram === true
       ? ['Redes sociais', pessoa.rede_social || pessoa.instagram_usuario || pessoa.instagram_url]
@@ -1665,7 +1732,7 @@ function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
       : null,
   ].filter((item): item is [string, string] => Boolean(item?.[1]));
 
-  if (contactItems.length <= 1) {
+  if (contactItems.length <= 1 && !canShowWhatsAppContact) {
     return (
       <div className="space-y-2">
         <p className="font-semibold text-slate-900">{pessoa.nome_completo}</p>
@@ -1675,14 +1742,26 @@ function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
   }
 
   return (
-    <dl className="space-y-2">
-      {contactItems.map(([label, value]) => (
-        <div key={label}>
-          <dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt>
-          <dd className="text-slate-800">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="space-y-2">
+      <dl className="space-y-2">
+        {contactItems.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt>
+            <dd className="text-slate-800">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {canShowWhatsAppContact && (
+        <WhatsAppContactButton
+          telefone={pessoa.telefone ?? null}
+          permitirExibirTelefone={pessoa.permitir_exibir_telefone ?? null}
+          permitirMensagensWhatsApp={pessoa.permitir_mensagens_whatsapp ?? null}
+          personId={pessoa.id}
+          personName={pessoa.nome_completo}
+          className="mt-3"
+        />
+      )}
+    </div>
   );
 }
 

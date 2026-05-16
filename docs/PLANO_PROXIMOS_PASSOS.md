@@ -1153,12 +1153,14 @@ Essas evoluções permanecem em backlog e não bloqueiam o status funcional da p
 
 ### Status
 
-Parcial.
+Concluído no escopo visual/frontend.
 
 - 7.4A diagnóstico técnico concluído.
 - 7.4B helper/base técnica concluído.
 - 7.4C componente visual e integração no perfil concluído.
+- 7.4D QA técnico final, revisão Home/ContactInfo e documentação concluídos.
 - Privacidade forte em nível de banco/API permanece como possível frente futura, não requisito da primeira versão visual.
+- Log de clique `contact.whatsapp_clicked` permanece como melhoria futura opcional, sem telefone, URL `wa.me` ou mensagem em metadata.
 
 ### Objetivo
 
@@ -1170,6 +1172,8 @@ Permitir que usuários entrem em contato com familiares via WhatsApp quando perm
   - telefone existir;
   - `permitir_exibir_telefone` ou `permitir_mensagens_whatsapp` permitir;
   - o usuário estiver autenticado, se essa for a regra desejada.
+- Exibir número em texto somente se `permitir_exibir_telefone === true`.
+- Permitir contato por WhatsApp com `permitir_mensagens_whatsapp === true` sem expor o número em texto.
 
 ### Arquivos prováveis
 
@@ -1202,10 +1206,10 @@ https://wa.me/55NUMERO
 
 ### Próximo passo
 
-- Executar QA final da frente 7.4 no perfil.
-- Decidir se clique em WhatsApp deve gerar activity log.
-- Se houver log, metadata deve conter apenas identificadores seguros, sem telefone ou URL `wa.me`.
-- Revisar duplicidade em `Home.tsx`/`ContactInfo` sem quebrar a Home.
+- Manter como futuras evoluções:
+  - privacidade forte de telefone em banco/API via RLS, view ou RPC;
+  - log opcional de clique, com metadata segura e sem telefone ou URL `wa.me`;
+  - QA manual adicional em navegador para múltiplos perfis reais.
 
 ---
 
@@ -1213,7 +1217,9 @@ https://wa.me/55NUMERO
 
 ### Status
 
-7.5B/7.5C criados como base técnica pura e testada. A funcionalidade final ainda não está implementada.
+7.5B/7.5C criados como base técnica pura e testada.
+7.5D integrou a UI existente de cálculo de vínculo ao utilitário puro.
+A frente 7.5 ainda não está finalizada porque falta QA manual com admin e usuário comum.
 
 ### Objetivo
 
@@ -1283,6 +1289,26 @@ src/app/utils/relationshipDegree.ts
 - Não houve alteração de schema.
 - Não houve alteração de RLS.
 - Próxima etapa recomendada: 7.5D com integração visual controlada, avaliando `RelationshipFinder.tsx` e `relationshipResolverService.ts` antes de substituir a lógica legada.
+
+### Registro 7.5D
+
+- Adaptada a UI existente de cálculo de vínculo para usar `src/app/utils/relationshipDegree.ts`.
+- `RelationshipFinder.tsx` passou a calcular localmente com `calculateRelationshipDegree`.
+- A aba "Qual a minha conexão com alguém?" da Home também passou a usar o utilitário puro.
+- O cálculo usa `Pessoa[]` e `Relacionamento[]` já carregados ou obtidos por `dataService` na camada de página/componente.
+- Na Home, o cálculo reaproveita `pessoas` e `relacionamentos` já carregados pela árvore, sem consulta duplicada.
+- No perfil, o cálculo reaproveita o cache em memória da árvore quando disponível e usa `dataService` como fallback, respeitando o escopo/RLS da tela chamadora.
+- Foi adicionada opção explícita para incluir ex-cônjuges/separações no cálculo.
+- A UI exibe label, descrição, confiança, distância/grau, caminho legível e avisos amigáveis.
+- Não houve migration.
+- Não houve alteração de schema.
+- Não houve alteração de RLS.
+- Não houve alteração de dados reais.
+- Não houve integração na árvore/Genealogia.
+- Não houve cálculo em massa.
+- Não houve cache persistido novo.
+- `relationshipResolverService.ts` permanece como legado/parcial e deixou de ser usado no fluxo visual principal adaptado.
+- Próxima etapa recomendada: 7.5E com QA manual e refinamento de UX/documentação.
 
 ### Exemplos de retorno esperado
 

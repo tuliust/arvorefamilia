@@ -1405,6 +1405,8 @@ supabase/migrations/20260514201000_create_notification_dispatch_rpc.sql
 - Verificar se a pessoa possui telefone com DDD e formato válido.
 - Verificar a normalização em `src/app/utils/whatsapp.ts`.
 - Verificar se `permitir_exibir_telefone` ou `permitir_mensagens_whatsapp` está verdadeiro.
+- Verificar `canUseWhatsAppContact`.
+- Verificar `buildWhatsAppUrl`.
 - Verificar se `PersonDataView.tsx` usa `canUseWhatsAppContact`.
 - Verificar se `WhatsAppContactButton.tsx` está recebendo as flags corretas.
 
@@ -1419,7 +1421,9 @@ supabase/migrations/20260514201000_create_notification_dispatch_rpc.sql
 - Verificar a regra `canUseWhatsAppContact`.
 - Verificar a distinção entre `permitir_exibir_telefone` e `permitir_mensagens_whatsapp`.
 - Verificar o uso em `src/app/components/person/PersonDataView.tsx`.
+- Verificar o uso em `ContactInfo` dentro de `src/app/pages/Home.tsx`.
 - O número em texto só deve aparecer quando `permitir_exibir_telefone` for verdadeiro.
+- `permitir_mensagens_whatsapp` pode liberar botão/link de WhatsApp, mas não deve liberar exibição textual do número.
 - Lembrar que a regra atual protege a UI; RLS forte para ocultar telefone no banco exige frente própria.
 
 #### Activity log de WhatsApp contém dado sensível

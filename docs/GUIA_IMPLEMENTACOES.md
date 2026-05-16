@@ -924,7 +924,7 @@
 
 ### WhatsApp no perfil
 
-- O tópico 7.4 ainda não está totalmente concluído.
+- O tópico 7.4 foi concluído no escopo visual/frontend.
 - A etapa 7.4B criou a base técnica/helper centralizado:
   - `src/app/utils/whatsapp.ts`
 - O helper centraliza:
@@ -941,11 +941,15 @@
 - O botão **Entrar em contato por WhatsApp** aparece no perfil apenas quando há telefone válido e as flags permitem contato.
 - O telefone em texto aparece somente quando `permitir_exibir_telefone = true`.
 - Quando apenas `permitir_mensagens_whatsapp = true`, o botão pode aparecer sem exibir o número em texto.
+- A etapa 7.4D executou o QA técnico final e revisou `Home.tsx`/`ContactInfo`.
+- `ContactInfo` deixou de usar `permitir_mensagens_whatsapp` para exibir telefone em texto.
+- Na Home, o contato por WhatsApp reaproveita o componente visual dedicado e a regra centralizada, sem redesenhar a tela.
 - Não houve migration.
 - Não houve alteração de RLS.
 - Não houve WhatsApp Business API.
 - Não houve envio automático de mensagem.
-- Não houve log de clique nesta etapa; se for necessário, deve usar metadata sem telefone, URL `wa.me` ou mensagem.
+- Não houve log de clique nesta frente; ficou como melhoria futura opcional para evitar risco de metadata sensível.
+- Se o log for implementado futuramente, deve usar `contact.whatsapp_clicked` com metadata segura, sem telefone, URL `wa.me` ou mensagem.
 - Privacidade forte em nível de banco/API permanece como possível evolução futura.
 
 ### Técnicas
@@ -966,7 +970,7 @@
 ### Ainda não implementado nesta etapa
 
 - Tópico 7.2 — Astrologia e acontecimentos do nascimento.
-- Tópico 7.4 — Entrar em contato por WhatsApp, exceto helper 7.4B e botão visual 7.4C; QA/log opcional permanecem pendentes.
+- Tópico 7.4 — Entrar em contato por WhatsApp concluído no escopo visual/frontend; log opcional e privacidade forte em banco/API permanecem como evoluções futuras.
 - Tópico 7.5 — Grau de parentesco/vínculo.
 - Tópico 7.6 — Selecionar área para PDF/impressão.
 - Tópico 7.7 — Legendas visuais da árvore.
@@ -983,7 +987,7 @@ Esta seção relaciona o guia de implementações com os tópicos do plano de pr
 | 7.1 Notificações | Parcialmente implementado / consolidado para QA final | Seção "Notificações" |
 | 7.2 Astrologia e acontecimentos do nascimento | Não implementado | Ainda não há seção de implementação |
 | 7.3 Linha do tempo do usuário | Implementado funcionalmente; evoluções futuras em backlog | Seção "Linha do tempo do usuário" |
-| 7.4 WhatsApp | Parcial: helper/base técnica 7.4B e botão visual 7.4C implementados; QA/log opcional pendentes | Seção "WhatsApp no perfil" |
+| 7.4 WhatsApp | Concluído no escopo visual/frontend; privacidade forte em banco/API e log opcional ficam como futuras evoluções | Seção "WhatsApp no perfil" |
 | 7.5 Grau de parentesco/vínculo | Não implementado | Ainda não há seção de implementação |
 | 7.6 PDF/impressão por área | Não implementado | Ainda não há seção de implementação |
 | 7.7 Legendas visuais da árvore | Não implementado | Ainda não há seção de implementação |
