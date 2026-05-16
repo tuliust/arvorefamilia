@@ -468,6 +468,12 @@
 
 ## Notificações
 
+### Status da frente 7.1
+
+- A frente 7.1 Notificações foi consolidada para QA final.
+- O escopo consolidado inclui `/notificacoes`, `/admin/notificacoes`, preferências por tipo e canal, notificações internas, logs de dispatch, deduplicação de recorrências, gatilhos internos, rotina manual de aniversários/memórias e Edge Functions de suporte.
+- Ainda não deve ser considerada encerrada até concluir configuração real de secrets, ativação segura do cron e QA manual completo com usuário comum.
+
 ### Central de notificações do usuário
 
 - Existe rota/página:
@@ -521,7 +527,9 @@
   - `push`;
   - `whatsapp`.
 - O canal interno cria registro em `notificacoes_usuario`.
-- O canal email pode delegar para Edge Function, mas envio real ficou para etapa posterior.
+- O canal email pode delegar para a Edge Function `send-notification-email`.
+- A Edge Function `send-notification-email` foi revisada com Resend e teste admin controlado.
+- Se `RESEND_API_KEY` ou `NOTIFICATION_EMAIL_FROM` estiverem ausentes, o e-mail retorna `not_configured`.
 - Push e WhatsApp ficam como `not_configured`/`skipped` nesta etapa.
 - O dispatch respeita preferências do usuário.
 - Falha em um canal não deve impedir os demais.
@@ -605,12 +613,20 @@
 
 ### Email real, Edge Function e QA final
 
-- A etapa de e-mail real foi planejada para usar Edge Function `send-notification-email`.
-- O envio real de e-mail não foi confirmado como implementado até esta atualização.
-- A etapa de Edge Function/agendamento diário foi planejada para `run-daily-notifications`.
-- A confirmação de implementação do agendamento automático ainda depende de validação posterior.
+- A Edge Function `send-notification-email` foi revisada com Resend e teste admin controlado.
+- A Edge Function `run-daily-notifications` foi preparada e deployada para suportar a rotina diária.
+- O recebimento real de e-mail ainda depende de secrets reais do Resend configurados no projeto remoto e de confirmação em QA admin.
+- A ativação automática da rotina diária ainda depende de `pg_cron` com segredo armazenado fora do repositório.
+- O painel não consegue verificar secrets do provider pelo frontend; a validação real depende de teste controlado.
 - Push real e WhatsApp real não foram implementados nesta rodada.
-- QA final da frente de notificações foi planejado para validar:
+- Na rodada de consolidação foram registrados como testados:
+  - build de produção;
+  - `git diff --check`;
+  - `supabase db push`;
+  - deploy das Edge Functions;
+  - abertura de `/admin/notificacoes` em rodada anterior da mesma frente;
+  - execução manual de aniversários/memórias em ambiente sem candidatos no dia.
+- QA final da frente de notificações ainda precisa validar:
   - `/notificacoes`;
   - `/admin/notificacoes`;
   - preferências;
@@ -801,6 +817,8 @@
 - Rotina de aniversários/memórias não deve duplicar notificações ao ser executada mais de uma vez.
 - Rotina de aniversários/memórias não deve ser executada automaticamente ao abrir o painel admin.
 - E-mail real não deve ser ativado sem provider, secrets e teste controlado.
+- O frontend não deve afirmar que secrets do provider existem; essa validação depende de teste controlado da Edge Function.
+- Ausência de `RESEND_API_KEY` ou `NOTIFICATION_EMAIL_FROM` deve resultar em `not_configured`, não em falso sucesso.
 
 ---
 
@@ -823,15 +841,17 @@
 - Testar aniversários/memórias com pessoa de data correspondente ao dia.
 - Confirmar deduplicação real em `notification_occurrences`.
 - Validar `/admin/notificacoes` com base maior de logs.
+- Confirmar recebimento real de e-mail no admin QA após configurar secrets reais do Resend.
+- Executar QA manual completo de notificações com usuário comum.
 - Validar limpeza de notificações reais criadas em testes QA.
 
 ### Notificações
 
-- Implementar ou confirmar Edge Function/agendamento diário `run-daily-notifications`.
-- Implementar ou confirmar envio real de e-mail via `send-notification-email`.
-- Configurar provider de e-mail, se o envio real for ativado.
-- Registrar e documentar secrets necessários para e-mail.
-- Executar QA final da frente de notificações.
+- Ativar `pg_cron` para `run-daily-notifications` com segredo armazenado fora do repositório.
+- Configurar secrets reais do Resend no projeto remoto.
+- Confirmar recebimento real de e-mail via `send-notification-email` em teste admin controlado.
+- Executar QA final da frente 7.1 Notificações.
+- Limpar notificações/logs de teste somente após confirmação.
 - Documentar arquitetura de notificações em arquivo próprio.
 - Push real e WhatsApp real permanecem como futuras implementações.
 
@@ -851,7 +871,7 @@
 ### Ainda não implementado nesta etapa
 
 - Tópico 7.2 — Astrologia e acontecimentos do nascimento.
-- Tópico 7.3 — Linha do tempo do usuário.
+- Tópico 7.3 — Linha do tempo do usuário, exceto diagnóstico/modelagem 7.3A quando documentado fora desta lista.
 - Tópico 7.4 — Entrar em contato por WhatsApp.
 - Tópico 7.5 — Grau de parentesco/vínculo.
 - Tópico 7.6 — Selecionar área para PDF/impressão.
@@ -859,3 +879,20 @@
 - Tópico 7.8 — Favoritos em todo o site.
 - Tópico 7.9 — Página de favoritos.
 - Tópico 7.10 — Responsividade/mobile.
+
+## Referência com o plano 7.x
+
+Esta seção relaciona o guia de implementações com os tópicos do plano de próximas implementações. O guia não está organizado originalmente por 7.1, 7.2, 7.3 etc.; por isso, os tópicos abaixo funcionam como referência cruzada.
+
+| Tópico | Status no guia de implementações | Onde aparece neste guia |
+|---|---|---|
+| 7.1 Notificações | Parcialmente implementado / consolidado para QA final | Seção "Notificações" |
+| 7.2 Astrologia e acontecimentos do nascimento | Não implementado | Ainda não há seção de implementação |
+| 7.3 Linha do tempo do usuário | Apenas diagnóstico/modelagem 7.3A; builder/UI ainda não consolidados | Ainda não há seção de implementação final |
+| 7.4 WhatsApp | Não implementado | Ainda não há seção de implementação |
+| 7.5 Grau de parentesco/vínculo | Não implementado | Ainda não há seção de implementação |
+| 7.6 PDF/impressão por área | Não implementado | Ainda não há seção de implementação |
+| 7.7 Legendas visuais da árvore | Não implementado | Ainda não há seção de implementação |
+| 7.8 Favoritos em todo o site | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
+| 7.9 Página de favoritos | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
+| 7.10 Responsividade/mobile | Não implementado nesta rodada | Ainda não há seção de implementação |
