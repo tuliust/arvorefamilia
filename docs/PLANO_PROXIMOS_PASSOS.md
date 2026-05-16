@@ -20,8 +20,8 @@ Este documento organiza a retomada dos trabalhos após as implementações reali
 Antes de iniciar novos ajustes, revisar os documentos já criados:
 
 ```txt
-docs/IMPLEMENTACOES_1305.md
-docs/SEDERERRO_1305.md
+docs/GUIA_IMPLEMENTACOES.md
+docs/GUIA_CORRECAO_ERROS.md
 ```
 
 ## Checklist técnico inicial
@@ -34,6 +34,8 @@ npm run build
 git diff --check
 supabase db push
 ```
+
+Observação operacional: antes de qualquer `supabase db push`, revisar `supabase migration list` e confirmar se há migration local realmente pendente. Em 09/05 houve caso em que o schema remoto já refletia os efeitos e o caminho correto foi `supabase migration repair --status applied`, não push.
 
 ## Resultado esperado
 
@@ -82,6 +84,12 @@ git status
 npm run build
 git diff --check
 supabase db push
+```
+
+Para frentes de schema, rodar também:
+
+```bash
+supabase migration list
 ```
 
 ## Comandos úteis para Edge Functions
@@ -186,6 +194,39 @@ select id, nome_completo, falecido, data_falecimento, local_falecimento, local_n
 from public.pessoas
 order by updated_at desc nulls last
 limit 30;
+```
+
+### Validação de coluna legada de arquivos históricos
+
+Executar no Supabase SQL Editor antes de qualquer remoção futura de coluna:
+
+```sql
+select count(*) as pessoas_com_json_legado
+from public.pessoas
+where arquivos_historicos is not null
+  and arquivos_historicos::text not in ('[]', 'null');
+```
+
+### Auditoria rápida de RLS e policies
+
+```sql
+select
+  n.nspname as schema,
+  c.relname as table,
+  c.relrowsecurity as rls_enabled,
+  c.relforcerowsecurity as rls_forced
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public'
+  and c.relkind = 'r'
+order by c.relname;
+```
+
+```sql
+select schemaname, tablename, policyname, cmd
+from pg_policies
+where schemaname = 'public'
+order by tablename, policyname;
 ```
 
 ---
@@ -782,6 +823,10 @@ supabase/migrations
 - [ ] Testar aniversários/memórias com pessoa de data correspondente ao dia.
 - [ ] Confirmar deduplicação real em `notification_occurrences`.
 - [ ] Confirmar que metadata de logs não contém dados sensíveis.
+- [ ] Testar fórum: categorias, tópicos, respostas, comentários, reações, solução e moderação.
+- [ ] Testar Google Calendar: status da conexão, OAuth, sincronização e proteção de tokens.
+- [ ] Confirmar visualmente se `total_arquivos_relacionais = 0`, quando observado no remoto, é esperado para o ambiente.
+- [ ] Confirmar no Supabase SQL Editor se `public.pessoas.arquivos_historicos` não tem dados úteis antes de qualquer remoção futura.
 
 ## Pendências técnicas
 
@@ -800,6 +845,11 @@ supabase/migrations
 - [ ] Documentar arquitetura de notificações em arquivo próprio.
 - [ ] Criar QA final da frente de notificações.
 - [ ] Push real e WhatsApp real seguem como futuras implementações.
+- [ ] Atualizar `MIGRATION-GUIDE.md` com fluxo de dump, `migration list`, repair e validação antes de push.
+- [ ] Decidir se `public.pessoas_com_estatisticas` será removida ou documentada como legado remoto.
+- [ ] Decidir se `public.imagens_pessoa` será aposentada das migrations futuras ou mantida como histórico antigo.
+- [ ] Planejar refatoração futura de redes sociais para `public.pessoa_social_profiles`.
+- [ ] Arquivar ou revisar scripts SQL legados, como `supabase/forum-schema.sql` e `supabase/google-calendar-schema.sql`.
 
 ---
 
@@ -1439,6 +1489,39 @@ src/app/components/ArquivosHistoricos.tsx
 - Verificar botões fixos/sticky.
 - Verificar árvore em touch.
 - Verificar se pan/zoom funciona bem no mobile.
+
+---
+
+## 7.11 Roadmap de produto legado a avaliar
+
+### Status
+
+Backlog estratégico; verificar escopo antes de implementar.
+
+### Objetivo
+
+Consolidar ideias ainda úteis dos documentos legados sem tratá-las como implementadas.
+
+### Itens a avaliar
+
+- Calendário familiar visual com aniversários, datas de memória, eventos internos e filtros por favoritos/ramo.
+- Integração com Google Agenda ou exportação `.ics` por pessoa, grupo ou favoritos.
+- Assistente de IA como camada de consulta sobre dados estruturados, sem substituir cálculo determinístico de parentesco.
+- Curiosidades e estatísticas, como sobrenomes frequentes, cidades recorrentes, aniversários por mês e distribuição por décadas.
+- Mural/fórum com anexos, marcação de pessoas, temas editoriais e notificações de resposta.
+- Álbuns e acervo por ramo, década, casamento, encontro, infância, pessoa, evento, local ou tema.
+- Linha do tempo da família, modo história e páginas de homenagens.
+- Mapa da família com cidades de nascimento, residência, países e fluxos migratórios.
+- Colaboração moderada para correções, fotos, histórias, datas e documentos enviados por familiares.
+- Comparador de perfis por parentesco, idade, cidades, sobrenomes, ramo e eventos parecidos.
+- Home dinâmica com aniversariantes, lembranças, curiosidades, tópicos recentes, arquivos novos e próximos eventos.
+
+### Dependências antes de priorizar
+
+- Normalizar datas, cidades, sobrenomes e relacionamentos.
+- Definir regras de privacidade e consentimento para telefone, WhatsApp, fotos, datas sensíveis e perfis memoriais.
+- Separar cada módulo grande em issues ou etapas independentes.
+- Confirmar quais partes já têm base técnica existente, como fórum, Google Calendar, favoritos e notificações.
 
 ---
 

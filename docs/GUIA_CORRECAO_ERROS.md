@@ -972,6 +972,15 @@ src/app/types/index.ts
 ### Arquivos envolvidos
 
 ```txt
+supabase/migrations/20260509100000_add_forum_schema.sql
+supabase/migrations/20260509100100_add_google_calendar_schema.sql
+supabase/migrations/20260509100200_enable_rls_core_family_tables.sql
+supabase/migrations/20260509100300_use_profile_role_for_forum_admin.sql
+supabase/migrations/20260509100400_remove_legacy_public_core_policies.sql
+supabase/migrations/20260509100500_migrate_legacy_pessoas_arquivos_historicos.sql
+supabase/migrations/20260509100600_remove_legacy_relacionamentos_policies.sql
+supabase/migrations/20260509100700_align_relacionamentos_schema.sql
+supabase/migrations/20260509100800_version_pessoa_social_profiles.sql
 supabase/migrations/20260513143000_create_activity_logs.sql
 supabase/migrations/20260513160000_create_storage_upload_buckets.sql
 supabase/migrations/20260513170000_restrict_relationship_writes_to_admins.sql
@@ -991,11 +1000,31 @@ supabase/migrations/20260514203000_create_notification_occurrences.sql
 
 #### Funciona local, mas não no remoto
 
-- Rodar:
+- Antes de aplicar qualquer alteração, verificar o histórico:
+
+```bash
+supabase migration list
+```
+
+- Se houver migration local pendente e ela realmente precisar ser aplicada, rodar:
 
 ```bash
 supabase db push
 ```
+
+- Se o schema remoto já refletir os efeitos e apenas o histórico estiver desalinhado, verificar com dump/SQL administrativo antes de considerar `supabase migration repair --status applied`.
+
+#### Drift remoto x migrations antigas
+
+- Verificar se o problema envolve uma divergência histórica de 09/05:
+  - policies legadas permissivas em `public.pessoas`, `public.arquivos_historicos` ou `public.relacionamentos`;
+  - schema de `public.relacionamentos` sem campos conjugais;
+  - `public.pessoa_social_profiles` presente no remoto, mas sem uso runtime;
+  - `public.imagens_pessoa` citada em legado, mas sem tabela/runtime atual;
+  - view `public.pessoas_com_estatisticas` presente apenas no remoto;
+  - coluna `public.pessoas.arquivos_historicos` ainda existente por compatibilidade.
+- Não criar migration apenas para igualar objeto legado sem consumidor real.
+- Não remover coluna ou view legada sem dump recente, validação SQL administrativa e validação visual no app.
 
 #### RLS inesperada
 
@@ -1008,9 +1037,26 @@ where schemaname = 'public'
 order by tablename, policyname;
 ```
 
+Verificar também se RLS está habilitado nas tabelas públicas:
+
+```sql
+select
+  n.nspname as schema,
+  c.relname as table,
+  c.relrowsecurity as rls_enabled,
+  c.relforcerowsecurity as rls_forced
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public'
+  and c.relkind = 'r'
+order by c.relname;
+```
+
 #### Migration já aplicada
 
 - `supabase db push` deve informar que o remoto está atualizado.
+- Se o CLI indicar divergência de histórico, confirmar se os efeitos existem no remoto antes de reparar.
+- Não usar `repair` para mascarar migration não aplicada.
 
 #### Migration criou tabela, mas frontend não lê
 
@@ -1018,6 +1064,27 @@ order by tablename, policyname;
 - Verificar se o service usa a tabela correta.
 - Verificar se o tipo TypeScript foi criado.
 - Verificar se o service foi importado no lugar certo.
+
+#### Coluna legada `pessoas.arquivos_historicos`
+
+- Se houver plano de remoção futura, confirmar primeiro no SQL Editor:
+
+```sql
+select count(*) as pessoas_com_json_legado
+from public.pessoas
+where arquivos_historicos is not null
+  and arquivos_historicos::text not in ('[]', 'null');
+```
+
+- Confirmar visualmente no app se arquivos históricos esperados aparecem via `public.arquivos_historicos`.
+- Gerar dump recente antes de qualquer migration destrutiva.
+- Se `total_arquivos_relacionais = 0` aparecer em diagnóstico remoto, tratar como alerta de validação, não como autorização automática para remover dados.
+
+#### Objetos legados citados em dumps antigos
+
+- `public.imagens_pessoa`: verificar se ainda existe consumidor runtime antes de criar ou remover qualquer coisa.
+- `public.pessoas_com_estatisticas`: verificar se alguma tela passou a depender da view antes de versionar ou remover.
+- `supabase/forum-schema.sql` e `supabase/google-calendar-schema.sql`: tratar como arquivos legados até revisão formal; a fonte operacional deve ser `supabase/migrations`.
 
 ---
 

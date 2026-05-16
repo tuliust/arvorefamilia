@@ -313,6 +313,16 @@
 
 ## Admin geral
 
+### Histórico técnico anterior a 13/05
+
+- A rodada técnica de 09/05 consolidou o projeto em torno de React + TypeScript + Vite no frontend e Supabase para Auth, PostgreSQL, RLS, RPCs, Storage, fórum, calendário e Edge Functions.
+- A autorização admin foi consolidada para depender de `profiles.role = 'admin'` via RPC `is_admin_user`, não de e-mail fixo no frontend.
+- O fluxo de primeiro acesso usa Supabase Auth, `profiles`, `user_person_links` e RPCs de validação/vinculação.
+- A modelagem oficial de arquivos históricos passou a ser relacional em `public.arquivos_historicos`; a coluna legada `public.pessoas.arquivos_historicos` foi mantida por segurança.
+- A lógica de relacionamentos com inversos ficou centralizada em helpers do `dataService`, incluindo cônjuge, pai/mãe, filho e irmão.
+- O histórico remoto de migrations foi reparado em 09/05 com `supabase migration repair --status applied` porque o dump indicava que os efeitos já estavam refletidos no banco remoto.
+- Após esse repair, não havia necessidade de `supabase db push` naquela rodada.
+
 ### Dashboard administrativo
 
 - O dashboard ganhou acesso para **Histórico de Atividades**.
@@ -422,6 +432,37 @@
 - Relacionamentos sem inverso, duplicados ou inconsistentes são listados.
 - Solicitações antigas pendentes são destacadas.
 - A tela deve ter botão de atualizar diagnóstico.
+
+---
+
+## Fórum e Google Calendar
+
+### Fórum familiar
+
+- O schema do fórum foi versionado em migration própria.
+- O fórum contempla categorias, tópicos, respostas, comentários, reações, denúncias e marcação de solução.
+- A função `forum_is_admin()` foi consolidada para usar `public.is_admin_user(auth.uid())`.
+- Objetos relevantes:
+  - `forum_categorias`
+  - `forum_topicos`
+  - `forum_respostas`
+  - `forum_comentarios`
+  - `forum_reacoes`
+  - `forum_denuncias`
+  - `forum_increment_topic_view`
+  - `forum_mark_solution`
+- O fórum aparece como base existente/versionada, mas ainda exige QA manual de criação, edição, respostas, comentários, reações, solução e moderação.
+
+### Google Calendar
+
+- A integração com Google Calendar foi versionada em migration própria.
+- Objetos relevantes:
+  - `google_calendar_connections`
+  - `google_calendar_oauth_states`
+  - `google_calendar_synced_events`
+  - view `google_calendar_connection_status`
+- Tokens devem ficar restritos a Edge Functions/service role, sem exposição no frontend.
+- OAuth, sincronização e proteção de tokens ainda exigem validação manual antes de considerar a frente estável.
 
 ---
 
@@ -635,6 +676,22 @@
 
 ## Banco, RLS e segurança
 
+### Migrations e histórico remoto
+
+- Migrations antigas relevantes existentes no repositório:
+  - `20260509100000_add_forum_schema.sql`
+  - `20260509100100_add_google_calendar_schema.sql`
+  - `20260509100200_enable_rls_core_family_tables.sql`
+  - `20260509100300_use_profile_role_for_forum_admin.sql`
+  - `20260509100400_remove_legacy_public_core_policies.sql`
+  - `20260509100500_migrate_legacy_pessoas_arquivos_historicos.sql`
+  - `20260509100600_remove_legacy_relacionamentos_policies.sql`
+  - `20260509100700_align_relacionamentos_schema.sql`
+  - `20260509100800_version_pessoa_social_profiles.sql`
+- Essas migrations documentam a base antiga de fórum, Google Calendar, RLS core, remoção de policies permissivas, migração de arquivos históricos legados, alinhamento de relacionamentos e versionamento de `pessoa_social_profiles`.
+- O histórico remoto foi alinhado por repair em 09/05 porque o dump indicava efeitos já aplicados no banco remoto.
+- `supabase db push` não foi necessário naquela rodada e não deve ser usado sem revisar `supabase migration list`.
+
 ### Relacionamentos
 
 - Edição direta de `public.relacionamentos` por membros comuns foi neutralizada.
@@ -665,6 +722,14 @@
 - Buckets `person-avatars` e `historical-files` foram criados/configurados.
 - Escrita fica restrita a usuários autenticados conforme policies.
 - Deleção de arquivos no Storage fica restrita a admin.
+
+### Objetos legados e compatibilidade
+
+- `public.pessoa_social_profiles` foi versionada com RLS/policies, mas o frontend atual ainda sincroniza a primeira rede social com campos diretos em `public.pessoas`.
+- `public.imagens_pessoa` aparece como legado/migrations-only, sem uso runtime confirmado e sem criação nova nesta etapa.
+- `public.pessoas_com_estatisticas` foi identificada como view remota legada sem uso runtime atual; não foi versionada nesta etapa.
+- `public.pessoas.arquivos_historicos` foi mantida como coluna legada até validação administrativa e visual completa.
+- Dumps de schema devem permanecer ignorados pelo Git e não devem ser commitados.
 
 ### Notificações
 
