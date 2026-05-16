@@ -5,6 +5,13 @@ import {
   obterTodosRelacionamentos,
 } from './dataService';
 
+/**
+ * Implementacao legada/parcial mantida por compatibilidade.
+ * O fluxo visual principal da etapa 7.5D usa relationshipDegree.ts com dados ja
+ * escopados pela tela chamadora, sem depender de regras_parentesco ou cache
+ * persistido em parentescos_calculados.
+ */
+
 type GraphEdge = {
   from: string;
   to: string;

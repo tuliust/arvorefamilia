@@ -1,20 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { Users } from 'lucide-react';
-import { Pessoa, ResultadoParentesco } from '../../types';
-import { descobrirParentesco } from '../../services/relationshipResolverService';
+import { Pessoa, Relacionamento } from '../../types';
+import { calculateRelationshipDegree } from '../../utils/relationshipDegree';
+import {
+  formatRelationshipPersonPath,
+  formatRelationshipStepPath,
+  getFriendlyRelationshipWarnings,
+  getRelationshipConfidenceLabel,
+  getRelationshipResultMessage,
+} from '../../utils/relationshipDegreeDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+
+type RelationshipFinderProps = {
+  pessoaBase: Pessoa;
+  pessoas: Pessoa[];
+  relacionamentos?: Relacionamento[];
+  dataScopeNotice?: string;
+};
 
 export function RelationshipFinder({
   pessoaBase,
   pessoas,
-}: {
-  pessoaBase: Pessoa;
-  pessoas: Pessoa[];
-}) {
+  relacionamentos = [],
+  dataScopeNotice,
+}: RelationshipFinderProps) {
   const [selectedPersonId, setSelectedPersonId] = useState('');
-  const [resultado, setResultado] = useState<ResultadoParentesco | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [includeInactiveSpouses, setIncludeInactiveSpouses] = useState(false);
 
   const pessoasDisponiveis = useMemo(
     () =>
@@ -24,31 +36,21 @@ export function RelationshipFinder({
     [pessoas, pessoaBase.id]
   );
 
-  async function handleSelect(personId: string) {
-    setSelectedPersonId(personId);
-    setResultado(null);
+  const resultado = useMemo(() => {
+    if (!selectedPersonId) return null;
 
-    if (!personId) return;
+    return calculateRelationshipDegree({
+      originPersonId: pessoaBase.id,
+      targetPersonId: selectedPersonId,
+      people: pessoas,
+      relationships: relacionamentos,
+      includeInactiveSpouses,
+    });
+  }, [includeInactiveSpouses, pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
 
-    try {
-      setLoading(true);
-      const result = await descobrirParentesco(pessoaBase.id, personId);
-      setResultado(result);
-    } catch (error) {
-      console.error('Erro ao descobrir parentesco:', error);
-      setResultado({
-        pessoaOrigemId: pessoaBase.id,
-        pessoaDestinoId: personId,
-        encontrado: false,
-        caminhoPessoas: [],
-        caminhoRelacoes: [],
-        distancia: 0,
-        descricao: 'Não foi possível calcular o parentesco agora.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const pathText = resultado ? formatRelationshipPersonPath(resultado, pessoas) : '';
+  const relationText = resultado ? formatRelationshipStepPath(resultado) : '';
+  const friendlyWarnings = resultado ? getFriendlyRelationshipWarnings(resultado) : [];
 
   return (
     <Card>
@@ -60,48 +62,80 @@ export function RelationshipFinder({
       </CardHeader>
 
       <CardContent>
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Select value={selectedPersonId} onValueChange={handleSelect}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Selecione uma pessoa" />
-              </SelectTrigger>
-              <SelectContent>
-                {pessoasDisponiveis.map((pessoa) => (
-                  <SelectItem key={pessoa.id} value={pessoa.id}>
-                    {pessoa.nome_completo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-3">
+              <Select
+                value={selectedPersonId}
+                onValueChange={setSelectedPersonId}
+                disabled={pessoasDisponiveis.length === 0}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Selecione uma pessoa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pessoasDisponiveis.map((pessoa) => (
+                    <SelectItem key={pessoa.id} value={pessoa.id}>
+                      {pessoa.nome_completo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <label className="flex items-start gap-2 rounded-md border border-blue-100 bg-white/70 px-3 py-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={includeInactiveSpouses}
+                  onChange={(event) => setIncludeInactiveSpouses(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>Incluir ex-cônjuges/separações no cálculo</span>
+              </label>
+
+              {dataScopeNotice && (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  {dataScopeNotice}
+                </p>
+              )}
+            </div>
 
             <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-700">
-              {loading ? (
-                'Calculando parentesco...'
-              ) : resultado ? (
+              {resultado ? (
                 <div className="space-y-2">
                   <p className="font-semibold text-gray-900">
-                    {resultado.nome || 'Parentesco encontrado'}
+                    {resultado.found ? resultado.label : 'Sem vínculo encontrado'}
                   </p>
 
-                  {resultado.descricao && <p>{resultado.descricao}</p>}
+                  <p>{getRelationshipResultMessage(resultado)}</p>
 
-                  {resultado.descricaoContextual && (
-                    <p className="text-gray-600">{resultado.descricaoContextual}</p>
-                  )}
+                  <div className="grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-3">
+                    <span>Distância: {resultado.distance} conexões</span>
+                    <span>Grau: {resultado.degree ?? 'não definido'}</span>
+                    <span>Confiança: {getRelationshipConfidenceLabel(resultado.confidence)}</span>
+                  </div>
 
-                  {resultado.caminhoPessoas.length > 0 && (
+                  {pathText && (
                     <p className="text-xs text-gray-500">
-                      Caminho: {resultado.caminhoPessoas.map((p) => p.nome).join(' → ')}
+                      Caminho: {pathText}
                     </p>
                   )}
 
-                  {resultado.caminhoRelacoes.length > 0 && (
+                  {relationText && (
                     <p className="text-xs text-gray-400">
-                      Relações: {resultado.caminhoRelacoes.join(' → ')}
+                      Relações: {relationText}
                     </p>
+                  )}
+
+                  {friendlyWarnings.length > 0 && (
+                    <ul className="space-y-1 text-xs text-amber-700">
+                      {friendlyWarnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
+              ) : pessoasDisponiveis.length === 0 ? (
+                'Dados insuficientes para comparar com outra pessoa.'
               ) : (
                 'O resultado aparece aqui após a seleção.'
               )}

@@ -8,6 +8,7 @@ import {
   obterRelacionamentosDaPessoa,
   obterRelacionamentosDetalhadosDaPessoa,
   obterTodasPessoas,
+  obterTodosRelacionamentos,
 } from '../services/dataService';
 import {
   listarArquivosHistoricosDoRelacionamento,
@@ -32,6 +33,7 @@ import { RelationshipFinder } from '../components/person/RelationshipFinder';
 import { PersonEventsList } from '../components/person/PersonEventsList';
 import { useAuth } from '../contexts/AuthContext';
 import { canEditPerson, getLinkedPessoaIdForUser, isAdminUser } from '../services/permissionService';
+import { getCachedTreeData } from '../services/treeDataCache';
 import { ForumEmptyState } from '../components/forum/ForumEmptyState';
 import { PersonTimeline } from '../components/Timeline/PersonTimeline';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
@@ -69,6 +71,8 @@ export function PersonProfile() {
   const [linkedPessoaId, setLinkedPessoaId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allPeople, setAllPeople] = useState<Pessoa[]>([]);
+  const [allRelationships, setAllRelationships] = useState<Relacionamento[]>([]);
+  const [relationshipDegreeContextComplete, setRelationshipDegreeContextComplete] = useState(false);
   const canEdit = useMemo(
     () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }),
     [id, linkedPessoaId, user, isAdmin],
@@ -222,17 +226,40 @@ export function PersonProfile() {
   useEffect(() => {
     let mounted = true;
 
-    async function loadPeople() {
+    async function loadRelationshipDegreeContext() {
       try {
-        const pessoas = await obterTodasPessoas();
-        if (mounted) setAllPeople(pessoas);
+        const cachedTreeData = getCachedTreeData();
+
+        if (cachedTreeData) {
+          if (mounted) {
+            setAllPeople(cachedTreeData.pessoas);
+            setAllRelationships(cachedTreeData.relacionamentos);
+            setRelationshipDegreeContextComplete(true);
+          }
+          return;
+        }
+
+        const [pessoasResult, relacionamentosResult] = await Promise.allSettled([
+          obterTodasPessoas(),
+          obterTodosRelacionamentos(),
+        ]);
+
+        if (!mounted) return;
+
+        setAllPeople(pessoasResult.status === 'fulfilled' ? pessoasResult.value : []);
+        setAllRelationships(relacionamentosResult.status === 'fulfilled' ? relacionamentosResult.value : []);
+        setRelationshipDegreeContextComplete(relacionamentosResult.status === 'fulfilled');
       } catch (error) {
-        console.error('Erro ao carregar pessoas para parentesco:', error);
-        if (mounted) setAllPeople([]);
+        console.error('Erro ao carregar contexto para parentesco:', error);
+        if (mounted) {
+          setAllPeople([]);
+          setAllRelationships([]);
+          setRelationshipDegreeContextComplete(false);
+        }
       }
     }
 
-    loadPeople();
+    loadRelationshipDegreeContext();
 
     return () => {
       mounted = false;
@@ -307,6 +334,10 @@ export function PersonProfile() {
     setFavoritado(resultado.active);
     toast.success(resultado.active ? 'Pessoa adicionada aos favoritos' : 'Pessoa removida dos favoritos');
   };
+  const relationshipFinderRelationships = relationshipDegreeContextComplete ? allRelationships : rawRelationships;
+  const relationshipFinderScopeNotice = relationshipDegreeContextComplete
+    ? undefined
+    : 'O cálculo usará apenas os vínculos já carregados nesta tela enquanto a base completa visível não estiver disponível.';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -356,6 +387,8 @@ export function PersonProfile() {
         <RelationshipFinder
           pessoaBase={pessoa}
           pessoas={allPeople.length > 0 ? allPeople : [pessoa]}
+          relacionamentos={relationshipFinderRelationships}
+          dataScopeNotice={relationshipFinderScopeNotice}
         />
 
         <PersonTimeline items={timelineItems} isAdmin={isAdmin} />
