@@ -195,6 +195,38 @@ order by updated_at desc nulls last
 limit 30;
 ```
 
+### Insights gerados de astrologia e acontecimentos do nascimento
+
+```sql
+select id, pessoa_id, tipo, data_nascimento, status, modelo, prompt_version, created_at, updated_at
+from public.person_generated_insights
+order by updated_at desc
+limit 30;
+```
+
+```sql
+select table_schema, table_name
+from information_schema.tables
+where table_schema = 'public'
+  and table_name = 'person_generated_insights';
+```
+
+```sql
+select column_name, data_type, is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'person_generated_insights'
+order by ordinal_position;
+```
+
+```sql
+select schemaname, tablename, policyname, cmd
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'person_generated_insights'
+order by policyname;
+```
+
 ### Validação de coluna legada de arquivos históricos
 
 Executar no Supabase SQL Editor antes de qualquer remoção futura de coluna:
@@ -849,6 +881,10 @@ supabase/migrations
 - [ ] Decidir se `public.pessoas_com_estatisticas` será removida ou documentada como legado remoto.
 - [ ] Decidir se `public.imagens_pessoa` será aposentada das migrations futuras ou mantida como histórico antigo.
 - [ ] Arquivar ou revisar scripts SQL legados, como `supabase/forum-schema.sql` e `supabase/google-calendar-schema.sql`.
+- [ ] Criar ou recuperar migration local idempotente para `public.person_generated_insights`, pois a tabela existe no remoto mas não foi encontrada em `supabase/migrations`.
+- [ ] Remover geração automática de insights em `PersonDataView.tsx`.
+- [ ] Criar geração/regeneração controlada por admin para astrologia e acontecimentos do nascimento.
+- [ ] Confirmar deploy e secrets da Edge Function `generate-person-insights` no projeto remoto.
 
 ## Pendências de produto
 
@@ -901,6 +937,8 @@ Corrigir antes de novas funcionalidades:
 6. E-mail real de notificações.
 7. Edge Function/cron de notificações.
 8. Documentação final das frentes implementadas.
+9. Correção arquitetural da 7.2 para remover geração automática de IA no perfil.
+10. Migration local rastreável para `person_generated_insights`, sem misturar com migrations de outras frentes.
 
 ---
 
@@ -1003,69 +1041,151 @@ supabase/migrations
 
 ### Status
 
-Implementado funcionalmente.
+Parcialmente implementado.
+
+A frente 7.2 possui implementação real em código e schema remoto confirmado, mas ainda não deve ser considerada concluída. O status anterior “Implementado funcionalmente” foi ajustado porque a auditoria identificou pendências arquiteturais e de rastreabilidade de migration.
+
+### Já confirmado
+
+- Existe tabela remota:
+  - `public.person_generated_insights`
+- A tabela remota tem RLS ativo.
+- Há policy de leitura para usuários autenticados:
+  - `Authenticated users can read generated insights`
+- A tabela remota possui:
+  - `id`
+  - `pessoa_id`
+  - `tipo`
+  - `data_nascimento`
+  - `conteudo`
+  - `modelo`
+  - `prompt_version`
+  - `status`
+  - `error_message`
+  - `created_at`
+  - `updated_at`
+- Constraints confirmadas:
+  - `PRIMARY KEY (id)`
+  - `FOREIGN KEY (pessoa_id) REFERENCES pessoas(id) ON DELETE CASCADE`
+  - `UNIQUE (pessoa_id, tipo)`
+  - `tipo` restrito a `astrology` e `historical_events`
+  - `status` restrito a `pending`, `completed` e `error`
+
+### Já existe no código
+
+- Service:
+  - `src/app/services/personInsightsService.ts`
+- Edge Function:
+  - `supabase/functions/generate-person-insights/index.ts`
+- Configuração da Edge Function:
+  - `supabase/config.toml`
+- UI de exibição no perfil:
+  - `src/app/components/person/PersonDataView.tsx`
+- Uso na Home/Curiosidades:
+  - `src/app/pages/Home.tsx`
+
+### Tipos implementados
+
+Os tipos efetivamente implementados são:
+
+```txt
+astrology
+historical_events
+```
+
+Não tratar `birth_date_events` ou `historical_context` como tipos implementados nesta versão. Se forem desejados futuramente, devem ser tratados como evolução de schema/código em etapa própria.
 
 ### Objetivo
 
-Verificar se áreas de astrologia e acontecimentos do dia de nascimento estão sendo geradas automaticamente por IA e armazenadas no Supabase.
+Exibir no perfil da pessoa conteúdos gerados e persistidos sobre:
+
+- astrologia/signo;
+- acontecimentos históricos relacionados à data de nascimento.
 
 ### Regra desejada
 
-- O conteúdo deve ser gerado uma vez.
-- Depois deve ser persistido no Supabase.
-- Não deve ser recriado a cada acesso ao perfil.
+- O conteúdo deve ser gerado uma vez e persistido em `person_generated_insights`.
+- O perfil deve apenas ler e exibir conteúdos existentes.
+- O perfil não deve disparar geração automática de IA ao carregar.
+- A geração/regeneração deve ser ação explícita de admin.
+- A chamada de IA deve permanecer em Edge Function, sem expor chave no frontend.
+- Usuário comum não deve conseguir disparar geração ou regeneração.
+- Conteúdo ausente deve aparecer como estado vazio/informativo, não como gatilho automático.
 
-### Pontos a verificar
+### Problemas identificados
 
-- Onde o conteúdo aparece no perfil.
-- Se existe tabela ou campo para armazenar o conteúdo.
-- Se existe flag de geração.
-- Se existe data da última geração.
-- Se há fallback quando não existe data de nascimento.
-- Se há chamada de IA no frontend.
-- Se há custo ou risco de geração repetida.
-- Se admin deve poder regenerar.
+- O remoto possui `public.person_generated_insights`, mas não foi encontrada migration local correspondente em `supabase/migrations`.
+- `src/app/components/person/PersonDataView.tsx` ainda chama `gerarInsightsPessoa(pessoa.id)` automaticamente quando não encontra os dois registros esperados.
+- Ainda não há controle admin consolidado para gerar/regenerar.
+- Ainda não há QA final específico da frente 7.2.
+- A documentação anterior estava divergente: o plano marcava como implementado funcionalmente, enquanto o guia não consolidava a frente como implementada.
+- A migration local pendente de favoritos (`20260518120000_create_user_favorites.sql`) é de outra frente e deve ser tratada separadamente, sem misturar com 7.2.
 
 ### Arquivos prováveis
 
 ```txt
+src/app/components/person/PersonDataView.tsx
 src/app/pages/PersonProfile.tsx
-src/app/services/dataService.ts
+src/app/pages/Home.tsx
+src/app/pages/admin/AdminPessoaForm.tsx
+src/app/services/personInsightsService.ts
+src/app/services/activityLogService.ts
 src/app/types/index.ts
 src/app/lib/supabaseClient.ts
+supabase/functions/generate-person-insights/index.ts
+supabase/config.toml
 supabase/migrations
 ```
 
-### Sugestões
+### Secrets envolvidos
 
-- Criar tabela `person_generated_insights`.
-- Campos possíveis:
-  - `pessoa_id`
-  - `tipo`
-  - `conteudo`
-  - `fonte`
-  - `status`
-  - `prompt_version`
-  - `input_hash`
-  - `generated_at`
-  - `updated_at`
-  - `metadata`
-- Tipos possíveis:
-  - `astrology`
-  - `birth_date_events`
-  - `historical_context`
-- Criar botão admin para “gerar conteúdo”.
-- Criar botão admin para “regenerar conteúdo”.
-- Evitar gerar IA automaticamente em todo carregamento de perfil.
-- Preferir Edge Function para geração de IA, sem expor chave no frontend.
+A Edge Function depende de secrets/configurações server-side:
 
-### Ordem sugerida de prompts
+```txt
+OPENAI_API_KEY
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
 
-1. Diagnóstico do estado atual.
-2. Schema e service de `person_generated_insights`.
-3. Exibição persistida no perfil.
-4. Geração/regeneração controlada por admin.
-5. QA final, logs e documentação.
+Esses valores não devem aparecer no frontend, nos logs públicos, em commits ou em documentação com valores reais.
+
+### Próximos passos técnicos
+
+1. Criar ou recuperar migration local idempotente para `public.person_generated_insights`, alinhada ao schema remoto já existente.
+2. Revisar `supabase migration list` antes de qualquer `supabase db push`.
+3. Não aplicar `db push` automaticamente, porque o remoto já possui a tabela.
+4. Remover de `PersonDataView.tsx` a chamada automática a `gerarInsightsPessoa`.
+5. Fazer o perfil apenas ler `obterInsightsGeradosPessoa`.
+6. Exibir estado vazio/informativo quando não houver conteúdo.
+7. Criar geração/regeneração controlada por admin.
+8. Registrar activity log seguro para geração/regeneração, sem prompt completo, telefone, e-mail, URL completa, tokens ou secrets.
+9. Confirmar deploy da Edge Function `generate-person-insights`.
+10. Confirmar secrets reais no projeto remoto.
+11. Executar QA final com admin e usuário comum.
+
+### Checklist de QA da 7.2
+
+- [ ] Pessoa humana com data de nascimento completa e insights existentes exibe os cards corretamente.
+- [ ] Pessoa humana com data de nascimento completa e sem insights não dispara geração automática no perfil.
+- [ ] Pessoa sem data de nascimento completa não tenta gerar conteúdo.
+- [ ] Pessoa marcada como pet não exibe/gatilha insights de nascimento.
+- [ ] Pessoa com privacidade de data de nascimento desativada não exibe/gatilha insights.
+- [ ] Usuário comum não consegue gerar/regenerar insights.
+- [ ] Admin consegue gerar insights por ação explícita.
+- [ ] Admin consegue regenerar insights por ação explícita, quando permitido.
+- [ ] Edge Function não expõe secrets no frontend.
+- [ ] Falha da Edge Function não quebra o perfil.
+- [ ] Logs de geração/regeneração não contêm prompt completo, telefone, e-mail, URL completa, base64, tokens ou secrets.
+- [ ] `npm run build` passa.
+- [ ] `git diff --check` passa.
+- [ ] `supabase migration list` foi revisado antes de qualquer ação em migrations.
+
+### Ordem sugerida de execução
+
+1. 7.2R1 — Reconciliar migration local de `person_generated_insights`.
+2. 7.2R2 — Remover geração automática no perfil.
+3. 7.2R3 — Criar geração/regeneração admin.
+4. 7.2R4 — QA final, logs e documentação.
 
 ---
 

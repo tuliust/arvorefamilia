@@ -58,6 +58,7 @@
 - Pessoas marcadas como falecidas podem ser tratadas como falecidas mesmo sem data/local de falecimento.
 - Locais no exterior podem ser exibidos no formato `Cidade (País)` quando cadastrados dessa forma.
 - A visualização de arquivos históricos passou a diferenciar imagem/PDF, com preview e download explícito.
+- As áreas de astrologia e acontecimentos históricos do nascimento podem aparecer no perfil quando houver data de nascimento exibível, mas a geração automática por IA no carregamento do perfil ainda precisa ser removida e substituída por ação explícita de admin.
 
 ---
 
@@ -217,6 +218,105 @@
 
 ---
 
+
+## Astrologia e acontecimentos do nascimento
+
+### Tópico 7.2
+
+- O tópico 7.2 — Astrologia e acontecimentos do nascimento está parcialmente implementado.
+- Há schema remoto existente para `public.person_generated_insights`, com RLS ativo e leitura permitida a usuários autenticados.
+- Há service, Edge Function e UI de exibição, mas a frente ainda não deve ser considerada concluída.
+- A migration local correspondente a `person_generated_insights` não foi encontrada em `supabase/migrations` na auditoria atual.
+- O comportamento atual ainda pode disparar geração automática ao carregar o perfil quando faltam registros, o que deve ser corrigido.
+- A geração/regeneração deve passar a ser ação explícita de admin, não efeito colateral do carregamento do perfil.
+
+### Schema remoto confirmado
+
+- A tabela remota existente é:
+  - `public.person_generated_insights`
+- Colunas confirmadas no remoto:
+  - `id`
+  - `pessoa_id`
+  - `tipo`
+  - `data_nascimento`
+  - `conteudo`
+  - `modelo`
+  - `prompt_version`
+  - `status`
+  - `error_message`
+  - `created_at`
+  - `updated_at`
+- Constraints confirmadas no remoto:
+  - chave primária em `id`;
+  - chave estrangeira `pessoa_id` para `public.pessoas(id)` com `ON DELETE CASCADE`;
+  - `UNIQUE (pessoa_id, tipo)`;
+  - `tipo` limitado a `astrology` e `historical_events`;
+  - `status` limitado a `pending`, `completed` e `error`.
+- RLS está ativo.
+- Policy confirmada:
+  - usuários autenticados podem ler conteúdos gerados.
+
+### Arquivos existentes
+
+- Service:
+  - `src/app/services/personInsightsService.ts`
+- Edge Function:
+  - `supabase/functions/generate-person-insights/index.ts`
+- Configuração da Edge Function:
+  - `supabase/config.toml`
+- UI de exibição:
+  - `src/app/components/person/PersonDataView.tsx`
+- Uso em curiosidades/Home:
+  - `src/app/pages/Home.tsx`
+
+### Comportamento atual
+
+- O service `personInsightsService.ts` lê registros de `person_generated_insights`.
+- O service invoca a Edge Function `generate-person-insights`.
+- A Edge Function usa `OPENAI_API_KEY` no ambiente server-side e não expõe chave de IA no frontend.
+- A Edge Function gera os tipos:
+  - `astrology`;
+  - `historical_events`.
+- A Edge Function salva o conteúdo com `upsert` por `pessoa_id,tipo`.
+- O perfil exibe cards de:
+  - “O que diz a astrologia”;
+  - “Acontecimentos históricos no dia do nascimento”.
+- A Home usa insights já gerados na área de curiosidades quando o usuário seleciona tópicos relacionados.
+
+### Problemas e pendências da 7.2
+
+- O repositório local não tem migration identificada para criar `public.person_generated_insights`.
+- O status documental anterior estava divergente entre `PLANO_PROXIMOS_PASSOS.md` e este guia.
+- O perfil ainda não deve chamar geração de IA automaticamente ao carregar a pessoa.
+- Se não houver conteúdo gerado, o perfil deve apenas exibir estado vazio ou informativo.
+- A geração deve ser acionada por admin em fluxo controlado.
+- A regeneração deve exigir ação explícita de admin e usar `force=true` apenas nesse contexto.
+- A geração/regeneração deve registrar activity log com metadata sanitizada.
+- A documentação deve registrar os secrets necessários para a Edge Function:
+  - `OPENAI_API_KEY`;
+  - `SUPABASE_URL`;
+  - `SUPABASE_SERVICE_ROLE_KEY`.
+- Deve ser confirmado se a Edge Function está deployada no projeto remoto.
+- Deve ser confirmado se os secrets reais estão configurados no projeto remoto.
+- Deve ser executado QA com admin e usuário comum antes de marcar a frente como concluída.
+
+### Regra desejada
+
+- O frontend comum deve apenas ler conteúdos já persistidos.
+- O frontend não deve chamar IA diretamente.
+- O perfil não deve gerar conteúdo automaticamente em todo carregamento.
+- Conteúdo já existente não deve ser recriado sem ação explícita.
+- A ausência de conteúdo deve ser tratada como estado vazio, não como gatilho automático.
+- A tabela remota existente deve ser rastreada por migration local idempotente ou por estratégia documentada de repair, após revisão de `supabase migration list`.
+
+### Status operacional
+
+- Status atual: parcialmente implementado.
+- Não tratar como “não implementado”.
+- Não tratar como “concluído”.
+- Próxima etapa recomendada: corrigir a arquitetura para remover geração automática no perfil, criar/recuperar migration local de `person_generated_insights`, implementar geração/regeneração controlada por admin e executar QA final.
+
+---
 ## Linha do tempo do usuário
 
 ### Tópico 7.3
@@ -875,6 +975,14 @@
 - A tela nova não deve depender da Edge Function legada.
 - Nenhuma correção automática deve ser executada nessa primeira versão.
 
+### Astrologia e insights de nascimento
+
+- O perfil da pessoa não deve chamar geração de IA automaticamente ao carregar.
+- Usuário comum não deve conseguir disparar geração ou regeneração de insights.
+- O frontend não deve expor `OPENAI_API_KEY`, service role ou qualquer secret.
+- Ausência de insight persistido deve aparecer como estado vazio/informativo, não como erro bloqueante.
+- Regeneração de conteúdo deve depender de ação explícita de admin.
+
 ### Notificações
 
 - A página `/notificacoes` não deve quebrar quando não houver notificações.
@@ -946,6 +1054,8 @@
 - Confirmar recebimento real de e-mail no admin QA após configurar secrets reais do Resend.
 - Executar QA manual completo de notificações com usuário comum.
 - Validar limpeza de notificações reais criadas em testes QA.
+- Validar 7.2 com usuário comum: perfil deve apenas ler/exibir insights existentes e não deve disparar geração automática de IA.
+- Validar 7.2 com admin: geração/regeneração deve ser explícita, controlada e sem expor secrets no frontend.
 
 ### Notificações
 
@@ -1026,10 +1136,14 @@
 - Avaliar exportação PDF de eventos/timeline.
 - Avaliar edição manual de eventos da timeline.
 - Avaliar consolidação visual futura entre `PersonTimeline` e `PersonEventsList`.
+- Criar ou recuperar migration local idempotente para `public.person_generated_insights`, alinhada ao schema remoto já existente.
+- Remover geração automática de insights em `PersonDataView.tsx`.
+- Implementar geração/regeneração de insights apenas por ação explícita de admin.
+- Registrar logs seguros para geração/regeneração de insights, sem prompt completo, telefone, e-mail, URL completa, tokens ou secrets.
 
 ### Ainda não implementado nesta etapa
 
-- Tópico 7.2 — Astrologia e acontecimentos do nascimento.
+- Tópico 7.2 — Astrologia e acontecimentos do nascimento parcialmente implementado; falta migration local rastreável, remoção da geração automática no perfil, controle admin de geração/regeneração e QA final.
 - Tópico 7.4 — Entrar em contato por WhatsApp concluído no escopo visual/frontend; log opcional e privacidade forte em banco/API permanecem como evoluções futuras.
 - Tópico 7.5 — Grau de parentesco/vínculo.
 - Tópico 7.6 — Selecionar área para PDF/impressão implementado e refinado no QA 7.6C para a viewport visível; árvore completa fica para evolução futura.
@@ -1045,7 +1159,7 @@ Esta seção relaciona o guia de implementações com os tópicos do plano de pr
 | Tópico | Status no guia de implementações | Onde aparece neste guia |
 |---|---|---|
 | 7.1 Notificações | Parcialmente implementado / consolidado para QA final | Seção "Notificações" |
-| 7.2 Astrologia e acontecimentos do nascimento | Não implementado | Ainda não há seção de implementação |
+| 7.2 Astrologia e acontecimentos do nascimento | Parcialmente implementado; schema remoto, service, Edge Function e UI existem; faltam migration local, correção da geração automática, controle admin e QA | Seção "Astrologia e acontecimentos do nascimento" |
 | 7.3 Linha do tempo do usuário | Implementado funcionalmente; evoluções futuras em backlog | Seção "Linha do tempo do usuário" |
 | 7.4 WhatsApp | Concluído no escopo visual/frontend; privacidade forte em banco/API e log opcional ficam como futuras evoluções | Seção "WhatsApp no perfil" |
 | 7.5 Grau de parentesco/vínculo | Funcionalmente consolidado após QA | Seção "Grau de parentesco/vínculo" |
