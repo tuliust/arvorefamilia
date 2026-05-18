@@ -167,10 +167,12 @@ export function Notificacoes() {
   };
 
   const marcarComoLida = async (id: string) => {
+    if (!user) return;
+
     setNotificacoes((current) =>
       current.map((notificacao) => (notificacao.id === id ? { ...notificacao, lida: true } : notificacao))
     );
-    await marcarNotificacaoSupabaseComoLida(id);
+    await marcarNotificacaoSupabaseComoLida(id, user.id);
   };
 
   const marcarTodas = async () => {
@@ -180,8 +182,10 @@ export function Notificacoes() {
   };
 
   const remover = async (id: string) => {
+    if (!user) return;
+
     setNotificacoes((current) => current.filter((notificacao) => notificacao.id !== id));
-    await removerNotificacaoSupabase(id);
+    await removerNotificacaoSupabase(id, user.id);
   };
 
   if (!user) {

@@ -270,14 +270,28 @@ export async function listarNotificacoesSupabase(userId: string): Promise<Notifi
   }
 }
 
-export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string) {
+export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string, userId: string) {
   const { error } = await supabase
     .from('notificacoes_usuario')
     .update({ lida: true })
-    .eq('id', notificacaoId);
+    .eq('id', notificacaoId)
+    .eq('user_id', userId);
 
   if (error) {
     console.error('[Supabase] Erro ao marcar notificação como lida:', error);
+    throw error;
+  }
+}
+
+export async function removerNotificacaoSupabase(notificacaoId: string, userId: string) {
+  const { error } = await supabase
+    .from('notificacoes_usuario')
+    .delete()
+    .eq('id', notificacaoId)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('[Supabase] Erro ao remover notificação:', error);
     throw error;
   }
 }
@@ -291,18 +305,6 @@ export async function marcarTodasNotificacoesSupabaseComoLidas(userId: string) {
 
   if (error) {
     console.error('[Supabase] Erro ao marcar todas notificações como lidas:', error);
-    throw error;
-  }
-}
-
-export async function removerNotificacaoSupabase(notificacaoId: string) {
-  const { error } = await supabase
-    .from('notificacoes_usuario')
-    .delete()
-    .eq('id', notificacaoId);
-
-  if (error) {
-    console.error('[Supabase] Erro ao remover notificação:', error);
     throw error;
   }
 }
