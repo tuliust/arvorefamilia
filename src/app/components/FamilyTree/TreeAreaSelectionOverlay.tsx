@@ -27,6 +27,7 @@ interface TreeAreaSelectionOverlayProps {
 }
 
 const MIN_SELECTION_SIZE = 80;
+const MAX_EXPORT_PIXELS = 12_000_000;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -54,6 +55,11 @@ function getActionLabel(action: ExportAction) {
   if (action === 'png') return 'Salvando PNG...';
   if (action === 'pdf') return 'Gerando PDF...';
   return 'Preparando impressão...';
+}
+
+function getEstimatedExportPixels(selection: ExportRect) {
+  const scale = Math.min(2, window.devicePixelRatio || 1);
+  return selection.width * scale * selection.height * scale;
 }
 
 export function TreeAreaSelectionOverlay({
@@ -133,7 +139,13 @@ export function TreeAreaSelectionOverlay({
     event.preventDefault();
     event.stopPropagation();
     setIsDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture can already be released by the browser on cancel.
+      }
+    }
   }, [getTargetElement, isDragging]);
 
   const exportSelectedArea = useCallback(async (action: ExportAction) => {
@@ -145,6 +157,11 @@ export function TreeAreaSelectionOverlay({
     const target = getTargetElement();
     if (!target) {
       setError('Área da árvore não encontrada para exportação.');
+      return;
+    }
+
+    if (getEstimatedExportPixels(selection) > MAX_EXPORT_PIXELS) {
+      setError('A área selecionada é muito grande para exportar com segurança. Selecione uma área menor da árvore visível.');
       return;
     }
 
@@ -179,6 +196,8 @@ export function TreeAreaSelectionOverlay({
       } else {
         printCanvas(croppedCanvas, title, printWindow);
       }
+
+      onClose();
     } catch (exportError) {
       if (printWindow && !printWindow.closed) {
         printWindow.close();
@@ -196,6 +215,7 @@ export function TreeAreaSelectionOverlay({
     getTargetElement,
     hasValidSelection,
     isBusy,
+    onClose,
     selection,
     title,
   ]);

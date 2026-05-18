@@ -1421,7 +1421,7 @@ Grau: bisavô
 
 ### Status
 
-7.6A diagnóstico concluído. 7.6B implementado em primeira versão para seleção da viewport visível.
+7.6A diagnóstico concluído. 7.6B implementado em primeira versão para seleção da viewport visível. 7.6C executado com QA técnico, refinamentos pontuais e documentação final.
 
 ### Objetivo
 
@@ -1438,6 +1438,19 @@ Implementar funcionalidade para selecionar área que o usuário deseja salvar co
 - Feedback de carregamento e erro no overlay.
 - Captura limitada à área visível atual da árvore; não exporta árvore completa.
 - Sem migration, sem alteração de schema Supabase e sem Storage.
+
+### Refinado em 7.6C
+
+- O modo de seleção fecha após exportação PNG/PDF/impressão concluída, liberando pan/zoom.
+- `releasePointerCapture` foi protegido para evitar erro em cancelamento de pointer.
+- `ignoreElements` passou a cobrir descendentes de:
+  - `[data-tree-selection-overlay="true"]`;
+  - `[data-tree-node-menu="true"]`;
+  - `.react-flow__controls`;
+  - `.react-flow__minimap`.
+- Seleções pequenas continuam recusadas.
+- Seleções grandes demais são recusadas antes da captura para evitar travamento sem feedback.
+- Não houve migration, alteração de schema, RLS, Storage ou logs persistidos.
 
 ### Pontos a verificar
 
@@ -1460,14 +1473,12 @@ src/app/components/FamilyTree/utils/treeExport.ts
 src/app/pages/Home.tsx
 ```
 
-### Pendências recomendadas para 7.6C
+### Pendências remanescentes após 7.6C
 
-- QA visual nas três visões da árvore.
-- Testes em diferentes combinações de zoom e pan.
-- Testes em mobile/tablet.
-- Testes com árvores grandes.
-- Testes com imagens externas e URLs sem CORS.
-- Avaliar limites de dimensão/área e eventual redução automática de escala.
+- Ampliar QA manual em dados reais nas três visões quando houver janela dedicada.
+- Testar em mais combinações de navegadores, zoom do browser e densidade de tela.
+- Testar árvores muito grandes e imagens externas sem CORS.
+- Avaliar redução automática de escala para seleções grandes, além da recusa atual.
 - Avaliar exportação da árvore completa futuramente.
 
 ---

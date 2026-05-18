@@ -350,4 +350,18 @@ Risco de imagens externas:
 
 7.6A foi concluido como diagnostico. A implementacao 7.6B foi concluida em primeira versao com selecao da viewport visivel da `.react-flow`, recorte do canvas selecionado e exportacao PNG/PDF/impressao.
 
-A funcionalidade implementada permanece limitada ao que esta visivel na viewport atual da arvore. Exportacao da arvore completa, QA mobile/tablet, validacao ampla com zoom/pan, arvores grandes e imagens externas ficam como evolucoes futuras da 7.6C.
+7.6C foi executado como QA tecnico e refinamento pontual. Bugs encontrados e corrigidos:
+
+- apos exportacao bem-sucedida, o modo de selecao permanecia aberto e mantinha pan/zoom bloqueados ate cancelamento manual;
+- `releasePointerCapture` podia falhar se a captura ja tivesse sido liberada pelo navegador;
+- `ignoreElements` cobria controles ReactFlow/minimap apenas no proprio elemento, nao necessariamente em descendentes;
+- selecoes muito grandes nao tinham limite amigavel antes da captura.
+
+Correcoes aplicadas:
+
+- fechamento automatico do modo selecao apos PNG/PDF/impressao concluida;
+- guarda com `hasPointerCapture` e `try/catch` em `releasePointerCapture`;
+- `ignoreElements` com `closest` para overlay, menu de pessoa, controles ReactFlow e minimap;
+- limite simples de area final estimada para evitar exportacao pesada sem feedback.
+
+A funcionalidade permanece limitada ao que esta visivel na viewport atual da arvore. Exportacao da arvore completa, reducao automatica de escala, QA visual amplo em multiplos navegadores e validacao extensa com imagens externas ficam como evolucoes futuras.

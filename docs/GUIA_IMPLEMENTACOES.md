@@ -1002,6 +1002,11 @@
 - O overlay visual ficou em:
   - `src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx`
 - O modo de seleção bloqueia interações de pan/zoom enquanto está ativo e libera a árvore ao cancelar.
+- A etapa 7.6C executou QA técnico e refinou a seleção de área:
+  - o modo de seleção agora fecha após PNG/PDF/impressão concluídos, liberando pan/zoom;
+  - `releasePointerCapture` foi protegido para eventos `pointercancel`/captura já liberada;
+  - a exportação passou a ignorar descendentes de controles ReactFlow, minimap, menu de pessoa e overlay;
+  - seleções grandes demais são recusadas antes da captura, com mensagem amigável.
 - Não houve migration.
 - Não houve alteração de schema Supabase.
 - Não salva PNG/PDF no Storage.
@@ -1027,7 +1032,7 @@
 - Tópico 7.2 — Astrologia e acontecimentos do nascimento.
 - Tópico 7.4 — Entrar em contato por WhatsApp concluído no escopo visual/frontend; log opcional e privacidade forte em banco/API permanecem como evoluções futuras.
 - Tópico 7.5 — Grau de parentesco/vínculo.
-- Tópico 7.6 — Selecionar área para PDF/impressão implementado em primeira versão para a viewport visível; QA ampliado e árvore completa ficam para evolução futura.
+- Tópico 7.6 — Selecionar área para PDF/impressão implementado e refinado no QA 7.6C para a viewport visível; árvore completa fica para evolução futura.
 - Tópico 7.7 — Legendas visuais da árvore.
 - Tópico 7.8 — Favoritos em todo o site.
 - Tópico 7.9 — Página de favoritos.
@@ -1044,7 +1049,7 @@ Esta seção relaciona o guia de implementações com os tópicos do plano de pr
 | 7.3 Linha do tempo do usuário | Implementado funcionalmente; evoluções futuras em backlog | Seção "Linha do tempo do usuário" |
 | 7.4 WhatsApp | Concluído no escopo visual/frontend; privacidade forte em banco/API e log opcional ficam como futuras evoluções | Seção "WhatsApp no perfil" |
 | 7.5 Grau de parentesco/vínculo | Funcionalmente consolidado após QA | Seção "Grau de parentesco/vínculo" |
-| 7.6 PDF/impressão por área | Implementado em primeira versão para viewport visível; pendente QA ampliado | Seção "Exportação de área visível da árvore" |
+| 7.6 PDF/impressão por área | Implementado e refinado no QA 7.6C para viewport visível; árvore completa permanece futura | Seção "Exportação de área visível da árvore" |
 | 7.7 Legendas visuais da árvore | Não implementado | Ainda não há seção de implementação |
 | 7.8 Favoritos em todo o site | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
 | 7.9 Página de favoritos | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |

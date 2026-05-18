@@ -64,8 +64,8 @@ export function getDefaultTreeExportIgnoreElements(node: Element) {
   const elementNode = node as HTMLElement;
 
   return Boolean(
-    elementNode.classList?.contains('react-flow__controls') ||
-    elementNode.classList?.contains('react-flow__minimap') ||
+    elementNode.closest?.('.react-flow__controls') ||
+    elementNode.closest?.('.react-flow__minimap') ||
     elementNode.closest?.('[data-tree-node-menu="true"]') ||
     elementNode.closest?.('[data-tree-selection-overlay="true"]')
   );
