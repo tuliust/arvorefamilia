@@ -8,7 +8,6 @@ import { getSocialLink, isBirthDate, shouldShowAquariusFallback } from '../../ut
 import { canUseWhatsAppContact } from '../../utils/whatsapp';
 import { WhatsAppContactButton } from './WhatsAppContactButton';
 import {
-  gerarInsightsPessoa,
   getInsightByType,
   obterInsightsGeradosPessoa,
   PersonGeneratedInsight,
@@ -72,24 +71,8 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
 
         const existing = await obterInsightsGeradosPessoa(pessoa.id);
 
-        if (cancelled) return;
-
-        const hasAstrology = existing.some((item) => item.tipo === 'astrology');
-        const hasHistorical = existing.some((item) => item.tipo === 'historical_events');
-
-        if (hasAstrology && hasHistorical) {
-          setGeneratedInsights(existing);
-          return;
-        }
-
-        await gerarInsightsPessoa(pessoa.id);
-
-        if (cancelled) return;
-
-        const refreshed = await obterInsightsGeradosPessoa(pessoa.id);
-
         if (!cancelled) {
-          setGeneratedInsights(refreshed);
+          setGeneratedInsights(existing);
         }
       } catch (error) {
         if (!cancelled) {
@@ -420,7 +403,7 @@ export function PersonHistoricalEventsCard({
           </div>
         ) : (
           <p className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-500">
-            Em breve, esta seção será gerada automaticamente.
+            Conteúdo ainda não gerado.
           </p>
         )}
       </CardContent>
