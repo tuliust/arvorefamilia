@@ -1,1179 +1,787 @@
-# Novidades incorporadas e pontos de atenção
+# Guia de implementações — Árvore Família
 
-## Novidades para usuários
+## Objetivo
+
+Este documento registra o estado consolidado das implementações do projeto **Árvore Família**. Ele deve ser usado como referência para entender o que já existe, o comportamento esperado, as decisões técnicas e o que ainda está em backlog.
+
+Documentos complementares:
+
+- `docs/PLANO_PROXIMOS_PASSOS.md`: ordem de trabalho, QA e próximas fases.
+- `docs/GUIA_CORRECAO_ERROS.md`: mapa de investigação por sintoma/tema.
+- `docs/NOTIFICACOES.md`: arquitetura específica de notificações, canais, Edge Functions, secrets e testes.
+- `docs/TIMELINE.md`: arquitetura específica da timeline da pessoa.
+
+---
+
+## Estado geral das frentes 7.x
+
+| Frente | Status atual | Observação |
+|---|---|---|
+| 7.1 Notificações | Arquiteturalmente pronta; QA operacional pendente | Canal interno funcional. E-mail depende de Resend/secrets/teste real. Push e WhatsApp ficam futuros. |
+| 7.2 Astrologia e acontecimentos do nascimento | Concluída no escopo funcional atual | Perfil apenas lê insights persistidos. Geração/regeneração é ação admin. |
+| 7.3 Linha do tempo do usuário | Implementada funcionalmente | Primeira versão derivada dos dados existentes, sem tabela própria. |
+| 7.4 WhatsApp no perfil | Concluída no escopo visual/frontend | Privacidade forte em banco/API e log de clique ficam como evolução futura. |
+| 7.5 Grau de parentesco/vínculo | Funcionalmente consolidada | Utilitário puro, testes unitários e integração em Home/perfil. |
+| 7.6 Selecionar área para PDF/impressão | Implementada tecnicamente | Exporta a viewport visível da árvore como PNG/PDF/impressão. Falta QA amplo em navegadores/dispositivos. |
+| 7.7 Legendas visuais da árvore | Pendente | Próxima frente funcional recomendada antes da responsividade. |
+| 7.8 Favoritos em todo o site | Implementada em primeira camada | Schema, RLS, service, botão reutilizável, página e favorito de pessoa existem. Falta expandir para mais entidades. |
+| 7.9 Página de favoritos | Implementada em primeira versão | Usa Supabase, busca, filtros e remoção. |
+| 7.10 Responsividade tablet/mobile | Pendente | Deve ser a última fase antes do lançamento. |
+
+---
+
+## Regras operacionais permanentes
+
+Antes de novas implementações:
+
+- executar `git status`;
+- executar `npm run build`;
+- executar `git diff --check`;
+- executar `supabase migration list` antes de qualquer alteração de banco.
+
+Regras de segurança:
+
+- não usar `supabase db push` sem revisar `supabase migration list`;
+- não aplicar `db push` se a frente não tiver migration;
+- não guardar secrets no repositório;
+- não expor service role no frontend;
+- não salvar URL completa, telefone, endereço, e-mail, base64, token ou secret em `activity_logs.metadata`, favoritos, timeline ou dispatch logs;
+- não apagar dados legados/base64 sem auditoria;
+- não transformar backlog em status implementado sem código e QA.
+
+---
+
+## Arquitetura base
+
+Stack atual:
+
+- React;
+- Vite;
+- TypeScript;
+- Tailwind;
+- Supabase Auth;
+- Supabase PostgreSQL/RLS/RPCs;
+- Supabase Storage;
+- Supabase Edge Functions;
+- Google Maps/Places API;
+- `lucide-react`;
+- `react-easy-crop`;
+- `html2canvas`;
+- `jspdf`;
+- Vitest;
+- Playwright.
+
+Áreas principais:
+
+- árvore familiar;
+- perfis de pessoa;
+- admin de pessoas/relacionamentos;
+- arquivos históricos;
+- solicitações de vínculos;
+- histórico de atividades;
+- fórum;
+- Google Calendar;
+- notificações;
+- timeline;
+- favoritos;
+- insights de nascimento;
+- exportação de área da árvore.
+
+---
+
+## Acesso, permissões e rotas
 
 ### Menu do usuário / Header
 
-- O botão **“Painel administrativo”** só aparece para usuários admin.
-- Usuários comuns não devem mais ver o botão de acesso ao admin.
-- Ao clicar em **“Painel administrativo”**, o admin vai direto para `/admin`.
-- A tela intermediária `/admin/login` não deve mais aparecer a partir do menu do usuário.
+- O botão **Painel administrativo** só aparece para admin.
+- Usuário comum não deve ver o botão de acesso admin.
+- Admin deve ir direto para `/admin`.
+- A tela intermediária `/admin/login` não deve ser usada pelo menu do usuário.
 
-### Minha Árvore
+Arquivos principais:
 
-- Usuários comuns não alteram mais vínculos reais diretamente.
-- Ao tentar criar, remover ou corrigir vínculo, a ação vira **solicitação para revisão dos administradores**.
-- Devem aparecer textos como:
-  - **Solicitar vínculo**
-  - **Solicitar remoção**
-  - **Solicitar correção**
-- Após solicitar, o usuário deve receber feedback de que a solicitação foi enviada para revisão.
-- A árvore real não deve mudar imediatamente antes da aprovação admin.
-- Edições de perfil feitas pelo próprio usuário agora geram histórico de atividades.
-- Alterações feitas no perfil devem refletir na Home sem depender de cache antigo/local obsoleto.
-- O usuário agora pode gerenciar **arquivos históricos** na área de edição do próprio perfil.
-- Novos arquivos históricos enviados pelo usuário devem ir para **Supabase Storage**, não para base64 no banco.
+- `src/app/pages/Home.tsx`
+- `src/app/services/permissionService.ts`
+- `src/app/components/ProtectedRoute.tsx`
+- `src/app/routes.tsx`
 
-### Meus Dados / Primeiro acesso
+### Rotas protegidas
 
-- Campos de privacidade devem vir ativados por padrão.
-- Preferências de notificação também devem vir ativadas por padrão.
-- O usuário pode revisar e alterar essas opções.
-- Dados confirmados no primeiro acesso agora podem gerar registro no histórico.
-- Ajustes de vínculos no primeiro acesso não devem mais ser apenas simulação local; devem virar solicitações pendentes para admins.
-- O texto antigo de “revisão” sem backend não deve mais existir.
-- O formulário passou a preservar rascunhos de sessão para reduzir perda de dados durante navegação, preview de arquivos ou interações intermediárias.
-- O rascunho de `/meus-dados` passou a preservar também arquivos históricos em edição.
-- A área de redes sociais foi padronizada com editor reutilizável de perfis sociais.
-- O usuário pode informar se nasceu fora do Brasil quando o campo estiver disponível.
-- O campo de pessoa falecida pode ser tratado pela interface quando permitido pelo fluxo.
-
-### Meus Vínculos
-
-- Adições, remoções ou edições de vínculos feitas por usuário comum agora devem virar solicitações.
-- Não deve mais haver gravação direta de relacionamento real por usuário comum.
-- Não deve mais haver promessa de revisão sem que uma solicitação seja registrada no banco.
-- O formulário passou a preservar rascunhos de sessão por usuário/pessoa.
-- Dados conjugais editados por usuário comum devem seguir como solicitação de alteração, não alteração direta em `public.relacionamentos`.
-- Observações internas de relacionamento conjugal não aparecem para usuário comum.
-- Upload de arquivos históricos de casamento não foi liberado para usuário comum nesta etapa.
-
-### Página de perfil da pessoa
-
-- Arquivos históricos vinculados à pessoa devem aparecer no perfil.
-- Arquivos históricos podem exibir também o ano, quando informado.
-- Arquivos antigos em base64/data URL continuam compatíveis.
-- Arquivos novos devem ser URLs do Storage.
-- Eventos pessoais/históricos da pessoa agora podem aparecer no perfil quando cadastrados.
-- Pessoas marcadas como falecidas podem ser tratadas como falecidas mesmo sem data/local de falecimento.
-- Locais no exterior podem ser exibidos no formato `Cidade (País)` quando cadastrados dessa forma.
-- A visualização de arquivos históricos passou a diferenciar imagem/PDF, com preview e download explícito.
+- Rotas admin devem usar `ProtectedRoute`.
+- Usuário comum não deve acessar:
+  - `/admin`
+  - `/admin/atividades`
+  - `/admin/integridade`
+  - `/admin/solicitacoes-vinculos`
+  - `/admin/notificacoes`
+- `/notificacoes` é protegida por rota de membro/autenticado.
+- `/meus-favoritos` deve operar com o usuário autenticado.
 
 ---
 
-## Formulários de pessoas e dados pessoais
+## Pessoas, formulários e dados pessoais
 
-### Adicionar/editar pessoa no admin
+### Formulários admin
 
-- O fluxo de `/admin/pessoas/nova` e `/admin/pessoas/:id/editar` foi estabilizado.
-- O modal de adicionar relacionamento deixou de usar `ConfirmDialog` indevidamente.
-- A inclusão de relacionamento pendente usa `Dialog`/painel adequado e não exibe confirmação intermediária desnecessária.
-- O relacionamento pendente é salvo no banco apenas ao clicar no botão principal **Salvar**.
-- O formulário de pessoa passou a preservar rascunho em `sessionStorage`.
-- Chaves de rascunho usadas:
-  - `admin-pessoa-form-draft:new`
-  - `admin-pessoa-form-draft:edit:{id}`
-- O rascunho preserva:
-  - dados do formulário;
-  - arquivos históricos;
-  - relacionamentos pendentes;
-  - busca e tipo/subtipo selecionados;
-  - dados conjugais pendentes;
-  - redes sociais;
-  - eventos pessoais.
-- O rascunho é removido ao salvar com sucesso.
-- O rascunho é preservado ao cancelar navegação com alterações não salvas.
-- O rascunho é descartado ao confirmar descarte explícito.
-- O formulário foi refatorado em blocos reutilizáveis:
-  - `PersonFormSection`
-  - `PersonBasicInfoFields`
-  - `PersonDatesLocationsFields`
-  - `PersonBioFields`
-  - `PersonContactFields`
-  - `PersonPrivacyFields`
-- A página pai continua responsável por:
-  - rascunho;
-  - validação final;
-  - navegação;
-  - salvamento;
-  - eventos pessoais;
-  - arquivos históricos;
-  - relacionamentos pendentes/reais.
+Rotas:
+
+- `/admin/pessoas/nova`
+- `/admin/pessoas/:id/editar`
+
+Comportamento consolidado:
+
+- formulário dividido em blocos reutilizáveis;
+- rascunho em `sessionStorage`;
+- rascunho preserva dados básicos, arquivos, eventos, redes sociais, relacionamentos pendentes e dados conjugais;
+- rascunho é removido após salvar;
+- modal de relacionamento não usa `ConfirmDialog`;
+- relacionamentos pendentes só são salvos ao clicar no botão principal **Salvar**;
+- botões internos que não submetem formulário devem usar `type="button"`.
+
+Componentes principais:
+
+- `AdminPessoaForm.tsx`
+- `PersonFormSection`
+- `PersonBasicInfoFields`
+- `PersonDatesLocationsFields`
+- `PersonBioFields`
+- `PersonContactFields`
+- `PersonPrivacyFields`
+- `SocialProfilesEditor`
+- `PersonEventsEditor`
+- `MarriageDetailsEditor`
+- `ArquivosHistoricos`
+
+### Meus Dados e Primeiro Acesso
+
+- Preferências de privacidade e notificação vêm ativadas por padrão.
+- Alterações feitas pelo usuário geram histórico quando aplicável.
+- Arquivos históricos do próprio perfil usam Supabase Storage.
+- Ajustes de vínculos no primeiro acesso viram solicitações, não alterações diretas.
 
 ### Redes sociais
 
-- Foi criado o componente reutilizável `SocialProfilesEditor`.
-- `/meus-dados` e os formulários admin passaram a usar o mesmo modelo visual de redes sociais.
-- O primeiro perfil social continua sincronizado com os campos legados:
-  - `rede_social`
-  - `instagram_usuario`
-  - `instagram_url`, quando aplicável.
-- Foram adicionados/reaproveitados helpers em `personFields.ts`:
-  - `SocialProfileForm`
-  - `createSocialProfile`
-  - `buildSocialProfilesFromPerson`
-  - `syncFirstSocialProfileToPersonFields`
-- Não foi criada tabela nova de redes sociais nesta etapa.
-- Persistência de múltiplas redes em tabela própria fica como possibilidade futura.
+- A UI usa `SocialProfilesEditor`.
+- O primeiro perfil social continua sincronizado com campos legados em `pessoas`.
+- Persistência completa de múltiplas redes em tabela própria fica como evolução futura.
 
 ### Pessoa falecida
 
-- Foi adicionado suporte a marcar pessoa como falecida sem exigir data ou local de falecimento.
-- Existe campo booleano `falecido`.
+- Campo booleano: `falecido`.
 - Uma pessoa é considerada falecida se:
-  - `falecido` for verdadeiro;
-  - ou houver `data_falecimento`;
-  - ou houver `local_falecimento`.
-- Foi criado/reaproveitado helper `isPersonDeceased`.
-- O admin pode marcar **Pessoa falecida** no formulário.
-- Preencher data/local de falecimento marca a pessoa como falecida automaticamente.
-- Desmarcar o checkbox não apaga automaticamente data/local de falecimento.
-- O dashboard, perfil, árvore, filtros e status conjugal passaram a considerar esse novo critério.
-- Migration relacionada:
-  - `20260514130000_add_falecido_to_pessoas.sql`
+  - `falecido = true`;
+  - ou `data_falecimento` existir;
+  - ou `local_falecimento` existir.
+- Helper: `isPersonDeceased`.
+- A árvore, filtros, perfil e status conjugal devem considerar essa regra.
+
+Migration relacionada:
+
+- `20260514130000_add_falecido_to_pessoas.sql`
 
 ### Locais no exterior
 
-- Campos de local de nascimento e local de falecimento passaram a aceitar modo exterior.
-- Para locais no Brasil, o formato esperado continua:
-  - `Cidade/UF`
-- Para locais no exterior, o formato esperado é:
-  - `Cidade (País)`
-- Foram adicionados flags:
+- Brasil: `Cidade/UF`.
+- Exterior: `Cidade (País)`.
+- Flags:
   - `local_nascimento_exterior`
   - `local_falecimento_exterior`
-- Foram criados/ajustados helpers de normalização e validação para:
-  - local brasileiro;
-  - local internacional;
-  - seleção por modo.
-- `/admin/pessoas/nova` e `/admin/pessoas/:id/editar` exibem checkboxes e placeholders dinâmicos.
-- `/meus-dados` passou a tratar nascimento fora do Brasil quando aplicável.
-- `/meus-vinculos` recebeu suporte compatível no cadastro local de familiar, preservando o fluxo atual.
-- Migration relacionada:
-  - `20260514133000_add_exterior_location_flags_to_pessoas.sql`
+
+Migration relacionada:
+
+- `20260514133000_add_exterior_location_flags_to_pessoas.sql`
 
 ### Busca sem acentuação
 
-- Foi criado helper de normalização textual para buscas.
-- Buscar `Marcio` deve encontrar `Márcio`.
-- Buscar `Sao Paulo` deve encontrar `São Paulo`.
-- A busca passou a ignorar acentuação e caixa.
-- A normalização foi aplicada em:
-  - `dataService.buscarPessoas`;
-  - filtros de relacionamento em `AdminPessoaForm`;
-  - `RelacionamentoManager`;
-  - listagem `AdminPessoas`;
-  - `AddConnectionModal`;
-  - `MinhaArvore`;
-  - `VincularPerfil`.
-- Alguns filtros locais também passaram a considerar `local_atual` e `local_falecimento`, quando aplicável.
+Busca deve ignorar caixa e acentos.
+
+Helpers:
+
+- `normalizeSearchText`
+- `includesNormalizedText`
 
 ---
 
-## Eventos pessoais/históricos da pessoa
+## Eventos pessoais
 
-### Estrutura de eventos pessoais
+Tabela:
 
-- Foi criada estrutura para eventos pessoais/históricos da pessoa.
-- Migration relacionada:
-  - `20260514165000_create_person_events.sql`
-- Foi criada tabela `person_events`.
-- A tabela possui:
-  - índices;
-  - trigger de `updated_at`;
-  - RLS.
-- Foram criados tipos:
-  - `PersonEvent`
-  - `PersonEventType`
-- Foram adicionados logs de atividade para:
-  - `person_event.added`
-  - `person_event.updated`
-  - `person_event.removed`
-- Foi criado editor admin `PersonEventsEditor`.
-- Foi criada lista de eventos no perfil `PersonEventsList`.
-- `AdminPessoaForm` passou a:
-  - carregar eventos;
-  - preservar eventos em rascunho;
-  - salvar eventos ao criar/editar pessoa.
-- O serviço de eventos foi ajustado para evitar duplicação/perda na edição.
-- Eventos com UUID real só são atualizados se já existirem para aquela pessoa.
-- A localização de evento recém-criado foi normalizada para reduzir inconsistências.
+- `public.person_events`
 
-### Escopo dos eventos pessoais
+Migration:
 
-- Eventos pessoais suportam casos como:
-  - imigração;
-  - chegada ao Brasil;
-  - mudança;
-  - batismo;
-  - formatura;
-  - profissão;
-  - serviço militar;
-  - evento religioso;
-  - memória;
-  - outro.
-- Não foi criada edição de eventos diretamente na timeline nesta etapa.
-- Upload por evento e privacidade por evento ficam para evolução futura.
+- `20260514165000_create_person_events.sql`
 
----
+Arquivos principais:
 
-## Astrologia e acontecimentos do nascimento
+- `personEventsService.ts`
+- `PersonEventsEditor.tsx`
+- `PersonEventsList.tsx`
+- `AdminPessoaForm.tsx`
+- `PersonProfile.tsx`
 
-### Tópico 7.2
+Eventos suportam tipos como imigração, chegada ao Brasil, mudança, batismo, formatura, profissão, serviço militar, evento religioso, memória e outro.
 
-- O tópico 7.2 — Astrologia e acontecimentos do nascimento foi concluído no escopo funcional previsto para esta rodada.
-- A frente agora possui schema rastreado por migration local, service, Edge Function, UI de exibição, controle admin de geração/regeneração, logs seguros e QA manual aprovado.
-- O perfil da pessoa não dispara mais geração automática de IA ao carregar.
-- Usuário comum apenas lê conteúdos já persistidos, quando existirem e quando a data de nascimento puder ser exibida.
-- Geração e regeneração são ações explícitas de admin em `/admin/pessoas/:id/editar`.
+Logs:
 
-### Schema e migration
+- `person_event.added`
+- `person_event.updated`
+- `person_event.removed`
 
-- Tabela usada:
-  - `public.person_generated_insights`
-- Migration local de reconciliação:
-  - `supabase/migrations/20260518174542_reconcile_person_generated_insights_schema.sql`
-- O schema remoto já existia antes da migration local.
-- O histórico remoto foi alinhado com:
-  - `supabase migration repair --status applied 20260518174542`
-- `supabase migration list` foi validado com a migration presente em Local e Remote.
-- A tabela possui RLS ativo e policy de leitura para usuários autenticados.
-- Constraints consolidadas:
-  - chave primária em `id`;
-  - chave estrangeira `pessoa_id` para `public.pessoas(id)` com `ON DELETE CASCADE`;
-  - `UNIQUE (pessoa_id, tipo)`;
-  - `tipo` restrito a `astrology` e `historical_events`;
-  - `status` restrito a `pending`, `completed` e `error`.
+Backlog:
 
-### Arquivos principais
-
-```txt
-src/app/services/personInsightsService.ts
-src/app/components/person/PersonDataView.tsx
-src/app/pages/admin/AdminPessoaForm.tsx
-src/app/pages/Home.tsx
-src/app/pages/PersonProfile.tsx
-src/app/services/activityLogService.ts
-src/app/types/index.ts
-supabase/functions/generate-person-insights/index.ts
-supabase/config.toml
-supabase/migrations/20260518174542_reconcile_person_generated_insights_schema.sql
-```
-
-### Tipos implementados
-
-Os tipos efetivamente implementados são:
-
-```txt
-astrology
-historical_events
-```
-
-Não tratar `birth_date_events` ou `historical_context` como tipos implementados nesta versão. Se forem desejados futuramente, devem ser tratados como evolução própria de schema/código.
-
-### Comportamento consolidado
-
-- `personInsightsService.ts` lê registros de `person_generated_insights`.
-- `personInsightsService.ts` expõe:
-  - `obterInsightsGeradosPessoa`;
-  - `gerarInsightsPessoa`;
-  - `getInsightByType`.
-- A Edge Function `generate-person-insights` usa `OPENAI_API_KEY` no ambiente server-side.
-- A chave de IA não é exposta no frontend.
-- A Edge Function gera e salva conteúdos com `upsert` por `pessoa_id,tipo`.
-- `PersonDataView.tsx` apenas lê conteúdos existentes e exibe estado vazio/informativo quando não há conteúdo.
-- `PersonDataView.tsx` não importa nem chama `gerarInsightsPessoa`.
-- `AdminPessoaForm.tsx` exibe bloco admin para gerar/regenerar insights em edição de pessoa existente.
-- Os botões admin ficam bloqueados quando a pessoa é pet, não tem data de nascimento ou não permite exibição da data.
-- A Home pode usar insights já gerados na área de curiosidades quando o usuário seleciona tópicos relacionados.
-
-### Logs seguros
-
-- Geração e regeneração registram activity log.
-- Ações adicionadas:
-  - `person_insights.generated`
-  - `person_insights.regenerated`
-- Entity type usado:
-  - `person`
-- Metadata segura registrada:
-  - `tipos`
-  - `force`
-  - `source`
-- O log não deve salvar prompt completo, conteúdo gerado, telefone, endereço, e-mail, URL completa, base64, token, secret, chave OpenAI ou service role.
-
-### Secrets envolvidos
-
-A Edge Function depende de secrets/configurações server-side:
-
-```txt
-OPENAI_API_KEY
-SUPABASE_URL
-SUPABASE_SERVICE_ROLE_KEY
-```
-
-Esses valores não devem aparecer no frontend, nos logs públicos, em commits ou em documentação com valores reais.
-
-### QA aprovado nesta rodada
-
-- Admin consegue gerar conteúdos ausentes por ação explícita.
-- Admin consegue regenerar conteúdos por ação explícita.
-- Registros são persistidos em `public.person_generated_insights`.
-- Logs são registrados em `activity_logs` com metadata segura.
-- Usuário comum não vê botões de geração/regeneração.
-- Perfil com insights existentes apenas lê e exibe conteúdo.
-- Perfil sem insights não dispara geração automática.
-- Pessoa pet não permite geração.
-- Pessoa sem data de nascimento não permite geração.
-- Pessoa com data de nascimento privada não permite geração.
-- Falhas da geração são tratadas sem quebrar o perfil.
-- `npm run build` passou.
-- `git diff --check` passou.
-- `supabase migration list` foi validado após repair.
-
-### Limitações e evoluções futuras
-
-- Ajustes editoriais finos dos prompts da Edge Function podem ser feitos futuramente.
-- `birth_date_events` e `historical_context` permanecem como possíveis tipos futuros, não implementados.
-- Pode ser avaliada futura revisão de RLS/policies caso a visibilidade dos insights precise ficar mais restrita por vínculo familiar ou privacidade avançada.
-- Pode ser criada documentação específica da frente se a área crescer.
-
----
-
-## Linha do tempo do usuário
-
-### Tópico 7.3
-
-- O tópico 7.3 — Linha do tempo do usuário foi implementado funcionalmente.
-- A primeira versão é derivada dos dados existentes e não criou tabela nova.
-- Não houve migration para a timeline.
-- Não há persistência própria da timeline nesta etapa.
-- Documentação detalhada:
-  - `docs/TIMELINE.md`
-
-### Builder da timeline
-
-- Foi criado o utilitário:
-  - `src/app/utils/buildPersonTimeline.ts`
-- O service `src/app/services/dataService.ts` expõe `obterRelacionamentosDetalhadosDaPessoa` para carregar relacionamentos detalhados da pessoa sem buscar toda a tabela no perfil.
-- O builder `buildPersonTimeline` é uma função pura.
-- O builder não acessa Supabase.
-- O builder não faz fetch.
-- O builder recebe dados já carregados e retorna itens normalizados, deduplicados e ordenados.
-- O parser de datas preserva precisão de dia, mês, ano ou data desconhecida.
-- Ano puro permanece como ano, sem virar `01/01/AAAA`.
-- Metadata sensível é sanitizada para não expor URLs completas, base64, telefone, endereço, e-mail, tokens, secrets ou keys sensíveis.
-
-### Componente e integração
-
-- Foi criado o componente:
-  - `src/app/components/Timeline/PersonTimeline.tsx`
-- O perfil da pessoa em `src/app/pages/PersonProfile.tsx` monta os itens com `buildPersonTimeline`.
-- A timeline aparece no perfil depois do bloco de parentesco e antes de `PersonEventsList`.
-- `PersonEventsList` foi mantido nesta etapa para preservar a visualização existente de eventos pessoais.
-
-### Eventos suportados
-
-- A timeline suporta:
-  - nascimento;
-  - falecimento com data;
-  - falecimento informado sem data;
-  - casamento;
-  - união;
-  - separação;
-  - nascimento de filhos;
-  - arquivos históricos da pessoa;
-  - arquivos históricos de relacionamento conjugal;
-  - eventos pessoais de `person_events`;
-  - memórias;
-  - eventos familiares globais, quando fornecidos futuramente ao builder.
-
-### Dados carregados pelo perfil
-
-- `PersonProfile` continua carregando pessoa, eventos pessoais, arquivos históricos da pessoa e relacionamentos agrupados.
-- Para a timeline, o perfil carrega também relacionamentos detalhados da pessoa por `pessoa_origem_id` ou `pessoa_destino_id`.
-- Arquivos históricos de relacionamentos conjugais são carregados por relacionamento relevante.
-- Falhas nesse carregamento adicional não devem quebrar o perfil; a timeline renderiza com os dados disponíveis.
-- A arquitetura completa, regras de datas, deduplicação, segurança e troubleshooting estão documentados em `docs/TIMELINE.md`.
-
-### Limitações e evoluções futuras
-
-- Não há edição manual de eventos na timeline.
-- Não há upload por evento.
-- Não há privacidade por evento.
-- Não há exportação PDF da timeline.
-- Não há integração com IA na timeline.
-- Pode ser avaliada consolidação visual futura entre `PersonTimeline` e `PersonEventsList`.
-
----
-
-## Genealogia e Visão Completa
-
-### Views por geração
-
-- Existe a nova view **Visão Completa**.
-- **Genealogia** usa o mesmo escopo pessoal da **Minha Árvore**, mas em layout de colunas por geração.
-- **Visão Completa** usa o layout de colunas por geração, mas exibindo todas as pessoas cadastradas.
-- A view **Minha Árvore** continua separada e não deve ter sido alterada visualmente.
-
-### Conectores pais-filhos
-
-- Conectores pais-filhos foram generalizados para todos os pares adjacentes de gerações.
-- Devem aparecer conexões em:
-  - geração 1 → geração 2;
-  - geração 2 → geração 3;
-  - geração 3 → geração 4;
-  - geração 4 → geração 5;
-  - geração 5 → geração 6;
-  - futuros pares N → N+1.
-- Famílias com filho único não devem mais gerar linha diagonal.
-- Filho único alinhado usa linha reta.
-- Filho único desalinhado usa conector ortogonal.
-- Famílias com múltiplos filhos usam barramento vertical.
-- Barramentos verticais de famílias diferentes agora usam “lanes” para reduzir sobreposição.
-- Não devem existir linhas diagonais entre pais e filhos.
-- Não devem existir linhas verticais exatamente sobrepostas quando houver espaço para separação visual.
-- Cônjuges dos filhos não devem ser conectados como filhos reais.
-
-### Anel de casamento 💍
-
-- O emoji `💍` continua aparecendo entre cônjuges.
-- O anel agora é clicável.
-- Clicar no anel abre o modal de relacionamento conjugal.
-- O clique no anel não deve quebrar pan, zoom, drag ou seleção do ReactFlow.
-- O visual do anel deve continuar respeitando o status conjugal:
-  - ativo;
-  - separado/divorciado;
-  - viuvez;
-  - desconhecido.
-
-### Modal de relacionamento conjugal
-
-- O modal mostra os dois cônjuges.
-- Mostra dados reais do relacionamento conjugal.
-- Mostra status calculado: ativo, separado/divorciado, viuvez ou desconhecido.
-- Mostra tipo/subtipo do relacionamento.
-- Mostra data/local de casamento, quando houver.
-- Mostra data/local de separação, quando houver.
-- Observações aparecem apenas para admin.
-- Arquivos históricos vinculados ao relacionamento aparecem no modal.
-- Admin pode adicionar, editar, remover e salvar arquivos históricos do relacionamento.
-- Usuário comum pode apenas visualizar.
-- Usuário comum não deve conseguir alterar relacionamento real pelo modal.
-- Arquivos históricos do relacionamento usam `relacionamento_id`.
-- Novos arquivos do relacionamento devem ser salvos no bucket `historical-files`.
-
----
-
-## Relacionamentos conjugais e casamento
-
-### Dados conjugais no admin
-
-- Foi criado o componente `MarriageDetailsEditor`.
-- O componente centraliza dados conjugais como:
-  - data de casamento;
-  - local de casamento;
-  - relacionamento ativo;
-  - data de separação;
-  - local de separação;
-  - observações internas;
-  - arquivos históricos do relacionamento quando houver `relacionamento_id`.
-- `/admin/pessoas/nova` permite preencher dados de casamento ao adicionar cônjuge pendente.
-- Os dados conjugais pendentes são preservados no rascunho.
-- Os dados conjugais pendentes entram no cálculo de alterações não salvas.
-- Ao salvar nova pessoa com cônjuge, os dados conjugais são enviados junto ao relacionamento.
-- `/admin/pessoas/:id/editar` permite editar dados conjugais existentes no `RelacionamentoManager`.
-- Admin pode alterar:
-  - data/local de casamento;
-  - status ativo;
-  - data/local de separação;
-  - observações internas;
-  - arquivos históricos do relacionamento.
-- Arquivos históricos de casamento usam `relacionamento_id` e não `pessoa_id`.
-
-### Dados conjugais em Meus Vínculos
-
-- `/meus-vinculos` passou a usar o mesmo editor de dados conjugais com restrições.
-- Usuário comum não vê observações internas.
-- Usuário comum não faz upload de arquivos históricos de casamento.
-- Alterações feitas por usuário comum seguem como solicitação de alteração de vínculo.
-- Usuário comum não altera diretamente o relacionamento real.
-
----
-
-## Admin geral
-
-### Histórico técnico anterior a 13/05
-
-- A rodada técnica de 09/05 consolidou o projeto em torno de React + TypeScript + Vite no frontend e Supabase para Auth, PostgreSQL, RLS, RPCs, Storage, fórum, calendário e Edge Functions.
-- A autorização admin foi consolidada para depender de `profiles.role = 'admin'` via RPC `is_admin_user`, não de e-mail fixo no frontend.
-- O fluxo de primeiro acesso usa Supabase Auth, `profiles`, `user_person_links` e RPCs de validação/vinculação.
-- A modelagem oficial de arquivos históricos passou a ser relacional em `public.arquivos_historicos`; a coluna legada `public.pessoas.arquivos_historicos` foi mantida por segurança.
-- A lógica de relacionamentos com inversos ficou centralizada em helpers do `dataService`, incluindo cônjuge, pai/mãe, filho e irmão.
-- O histórico remoto de migrations foi reparado em 09/05 com `supabase migration repair --status applied` porque o dump indicava que os efeitos já estavam refletidos no banco remoto.
-- Após esse repair, não havia necessidade de `supabase db push` naquela rodada.
-
-### Dashboard administrativo
-
-- O dashboard ganhou acesso para **Histórico de Atividades**.
-- O dashboard ganhou acesso para **Solicitações de vínculos**.
-- O dashboard ganhou acesso para **Integridade dos dados**.
-- O dashboard ganhou acesso para **Notificações**.
-- O dashboard mostra atividades recentes.
-- O dashboard mostra contagem/atalho para solicitações pendentes de vínculos.
-
-### Gerenciar Pessoas
-
-- O campo **“Lado”** não deve mais aparecer no formulário.
-- O campo `lado` pode continuar existindo tecnicamente, mas não deve ser editável pela UI.
-- Gerenciar Pessoas agora tem botão **Filtros**.
-- O modal de filtros permite filtrar por:
-  - vivos/falecidos;
-  - com foto/sem foto;
-  - geração manual;
-  - sem geração manual;
-  - sem data de nascimento;
-  - sem local de nascimento;
-  - sem local atual;
-  - com/sem telefone;
-  - com/sem rede social/site.
-- Filtros avançados combinam com busca textual e filtro humano/pet.
-- Deve existir opção para limpar filtros.
-- Filtros e contadores de falecidos passaram a considerar também o booleano `falecido`.
-
-### Relacionamentos admin
-
-- Admin continua sendo quem cria, edita e remove relacionamentos reais.
-- Usuários comuns não devem mais conseguir alterar `public.relacionamentos` diretamente.
-- Relacionamentos conjugais agora suportam status completo:
-  - ativo;
-  - inativo;
-  - separado;
-  - data de separação;
-  - local de separação;
-  - observações.
-- Admin pode criar relacionamento conjugal com esses campos.
-- Admin pode editar status conjugal existente.
-- A listagem de relacionamentos exibe status conjugal.
-- A Genealogia usa esses dados para calcular o estado visual do anel.
-- Logs de relacionamento passaram a incluir `relationship.updated`.
-
-### Solicitações de vínculos
-
-- Existe rota administrativa:
-  - `/admin/solicitacoes-vinculos`
-- Admin pode visualizar solicitações de alteração de vínculos.
-- Solicitações podem ter status:
-  - pendente;
-  - aprovada;
-  - rejeitada;
-  - cancelada.
-- Usuário comum envia solicitação, não altera relacionamento real.
-- Admin aprova ou rejeita.
-- Aprovação aplica a alteração real no relacionamento.
-- Rejeição não altera relacionamento real.
-- Histórico registra:
-  - `relationship_change_requested`;
-  - `relationship_change_approved`;
-  - `relationship_change_rejected`;
-  - `relationship_change_cancelled`.
-
-### Histórico de Atividades
-
-- Existe rota:
-  - `/admin/atividades`
-- Admin pode visualizar histórico de:
-  - criação de pessoa;
-  - edição de pessoa;
-  - alteração de foto;
-  - alteração de privacidade;
-  - alteração de notificações;
-  - criação/edição/exclusão de relacionamento;
-  - arquivos históricos adicionados/editados/removidos;
-  - eventos pessoais adicionados/editados/removidos;
-  - confirmação de primeiro acesso;
-  - solicitações de vínculo;
-  - geração/regeneração admin de insights de nascimento;
-  - notificações, quando aplicável.
-- Logs agora funcionam com RLS sem depender de `.select().single()` após insert.
-- Usuário comum consegue registrar logs das próprias ações.
-- Usuário comum não deve conseguir listar logs globais.
-- O histórico não deve salvar URL completa, base64, telefone, endereço ou e-mail em metadata.
-- O admin consegue listar os logs globais.
-
-### Integridade dos dados
-
-- Existe nova rota:
-  - `/admin/integridade`
-- A tela é protegida por `ProtectedRoute`.
-- Usuário comum não deve acessar.
-- A tela não usa mais endpoint legado `make-server`.
-- A tela é somente leitura.
-- Não faz correções automáticas.
-- Diagnostica problemas em:
-  - pessoas;
-  - relacionamentos;
-  - arquivos históricos;
-  - Storage;
-  - usuários/vínculos;
-  - activity logs;
-  - solicitações de vínculos.
-- Arquivos antigos em base64/data URL aparecem como legado, não como erro destrutivo.
-- URLs suspeitas de Storage são sinalizadas.
-- Relacionamentos sem inverso, duplicados ou inconsistentes são listados.
-- Solicitações antigas pendentes são destacadas.
-- A tela deve ter botão de atualizar diagnóstico.
-
----
-
-## Fórum e Google Calendar
-
-### Fórum familiar
-
-- O schema do fórum foi versionado em migration própria.
-- O fórum contempla categorias, tópicos, respostas, comentários, reações, denúncias e marcação de solução.
-- A função `forum_is_admin()` foi consolidada para usar `public.is_admin_user(auth.uid())`.
-- Objetos relevantes:
-  - `forum_categorias`
-  - `forum_topicos`
-  - `forum_respostas`
-  - `forum_comentarios`
-  - `forum_reacoes`
-  - `forum_denuncias`
-  - `forum_increment_topic_view`
-  - `forum_mark_solution`
-- O fórum aparece como base existente/versionada, mas ainda exige QA manual de criação, edição, respostas, comentários, reações, solução e moderação.
-
-### Google Calendar
-
-- A integração com Google Calendar foi versionada em migration própria.
-- Objetos relevantes:
-  - `google_calendar_connections`
-  - `google_calendar_oauth_states`
-  - `google_calendar_synced_events`
-  - view `google_calendar_connection_status`
-- Tokens devem ficar restritos a Edge Functions/service role, sem exposição no frontend.
-- OAuth, sincronização e proteção de tokens ainda exigem validação manual antes de considerar a frente estável.
-
----
-
-## Notificações
-
-### Status da frente 7.1
-
-- A frente 7.1 Notificações foi consolidada para QA final.
-- O escopo consolidado inclui `/notificacoes`, `/admin/notificacoes`, preferências por tipo e canal, notificações internas, logs de dispatch, deduplicação de recorrências, gatilhos internos, rotina manual de aniversários/memórias e Edge Functions de suporte.
-- Ainda não deve ser considerada encerrada até concluir configuração real de secrets, ativação segura do cron e QA manual completo com usuário comum.
-
-### Central de notificações do usuário
-
-- Existe rota/página:
-  - `/notificacoes`
-- A página permite ao usuário:
-  - visualizar notificações recentes;
-  - marcar notificação como lida;
-  - marcar todas como lidas;
-  - remover notificações;
-  - gerenciar preferências.
-- Preferências disponíveis incluem:
-  - aniversários;
-  - datas de memória;
-  - eventos;
-  - avisos gerais;
-  - email;
-  - push;
-  - WhatsApp;
-  - novo usuário;
-  - datas especiais;
-  - novas mensagens no fórum;
-  - novos registros históricos;
-  - evento histórico da família.
-- A lista interna continua visível mesmo com canais externos desligados.
-- Alterações de preferências são registradas no histórico.
-
-### Painel admin de notificações
-
-- Existe rota administrativa:
-  - `/admin/notificacoes`
-- A rota é protegida.
-- Usuário comum não deve acessar.
-- O dashboard administrativo ganhou atalho para **Notificações**.
-- O painel admin mostra:
-  - cards de resumo;
-  - notificações recentes;
-  - preferências de usuários;
-  - diagnóstico de e-mail;
-  - logs de dispatch;
-  - status da rotina manual de aniversários/memórias, quando disponível.
-- O painel tem botão de teste interno para admin.
-- O teste interno cria notificação interna para o próprio admin.
-- O teste interno não envia e-mail real.
-
-### Dispatch central de notificações
-
-- Foi criado serviço central de dispatch de notificações.
-- O dispatch diferencia canais:
-  - `interna`;
-  - `email`;
-  - `push`;
-  - `whatsapp`.
-- O canal interno cria registro em `notificacoes_usuario`.
-- O canal email pode delegar para a Edge Function `send-notification-email`.
-- A Edge Function `send-notification-email` foi revisada com Resend e teste admin controlado.
-- Se `RESEND_API_KEY` ou `NOTIFICATION_EMAIL_FROM` estiverem ausentes, o e-mail retorna `not_configured`.
-- Push e WhatsApp ficam como `not_configured`/`skipped` nesta etapa.
-- O dispatch respeita preferências do usuário.
-- Falha em um canal não deve impedir os demais.
-- Falha de e-mail não deve impedir a criação de notificação interna.
-- Metadata de notificações/logs deve ser sanitizada.
-- Não deve conter:
-  - senha;
-  - token;
-  - e-mail completo;
-  - telefone;
-  - endereço completo;
-  - URL completa de arquivo;
-  - base64.
-
-### Logs de dispatch
-
-- Foi criada estrutura de logs de dispatch.
-- Migrations relacionadas:
-  - `20260514190000_create_notification_dispatch_logs.sql`
-  - `20260514193000_allow_own_notification_dispatch_log_insert.sql`
-- Logs registram status por canal, como:
-  - `pending`;
-  - `sent`;
-  - `failed`;
-  - `skipped`;
-  - `disabled_by_preferences`;
-  - `missing_destination`;
-  - `not_configured`.
-- Logs podem ser visualizados pelo admin em `/admin/notificacoes`.
-
-### Gatilhos reais internos
-
-- Foram criados serviços de destinatários e gatilhos de notificação:
-  - `notificationRecipientsService`
-  - `notificationTriggersService`
-- Foram implementados gatilhos internos para:
-  - novos arquivos históricos;
-  - novo vínculo/primeiro acesso confirmado;
-  - novas respostas no fórum;
-  - novos comentários no fórum.
-- Arquivos históricos disparam notificação interna ao inserir novo registro.
-- Novo vínculo/primeiro acesso confirmado pode notificar admins.
-- Fórum pode notificar autor/participantes relevantes.
-- O autor da ação não deve receber notificação duplicada de si mesmo, quando o ator for identificável.
-- Falha de notificação não deve impedir a ação principal.
-- Migrations relacionadas:
-  - `20260514200000_create_notification_recipient_helpers.sql`
-  - `20260514201000_create_notification_dispatch_rpc.sql`
-
-### Aniversários e datas de memória
-
-- Foi criada rotina manual para verificar aniversários e datas de memória.
-- O painel `/admin/notificacoes` possui botão para executar a rotina manualmente.
-- A rotina usa:
-  - `notificationScheduledService`
-  - `notificationDateRules`
-- A rotina considera:
-  - aniversários;
-  - datas de memória/falecimento.
-- A rotina usa apenas canal interno nesta etapa.
-- A rotina respeita preferências:
-  - `receber_aniversarios`;
-  - `receber_datas_memoria`.
-- Foi criada tabela de ocorrências para deduplicação.
-- Migration relacionada:
-  - `20260514203000_create_notification_occurrences.sql`
-- A deduplicação usa `occurrence_key` estável no padrão:
-  - `tipo:YYYY-MM-DD:userId:pessoaId`
-- A ocorrência é reservada antes do dispatch com status `pending`.
-- Depois do dispatch, a ocorrência é atualizada para:
-  - `sent`;
-  - `failed`;
-  - `skipped`.
-- Rodar a rotina duas vezes no mesmo dia não deve duplicar notificações.
-- A rotina não quebra por inteiro se um candidato falhar.
-- O resumo da execução informa:
-  - criadas;
-  - duplicadas/ignoradas;
-  - sem destinatário;
-  - falhas.
-
-### Email real, Edge Function e QA final
-
-- A Edge Function `send-notification-email` foi revisada com Resend e teste admin controlado.
-- A Edge Function `run-daily-notifications` foi preparada e deployada para suportar a rotina diária.
-- O recebimento real de e-mail ainda depende de secrets reais do Resend configurados no projeto remoto e de confirmação em QA admin.
-- A ativação automática da rotina diária ainda depende de `pg_cron` com segredo armazenado fora do repositório.
-- O painel não consegue verificar secrets do provider pelo frontend; a validação real depende de teste controlado.
-- Push real e WhatsApp real não foram implementados nesta rodada.
-- Na rodada de consolidação foram registrados como testados:
-  - build de produção;
-  - `git diff --check`;
-  - `supabase db push`;
-  - deploy das Edge Functions;
-  - abertura de `/admin/notificacoes` em rodada anterior da mesma frente;
-  - execução manual de aniversários/memórias em ambiente sem candidatos no dia.
-- QA final da frente de notificações ainda precisa validar:
-  - `/notificacoes`;
-  - `/admin/notificacoes`;
-  - preferências;
-  - logs;
-  - gatilhos internos;
-  - aniversários/memórias;
-  - Edge Function/agendamento, se implementado;
-  - e-mail real, se implementado.
+- upload por evento;
+- privacidade por evento;
+- edição diretamente na timeline;
+- exportação PDF da timeline/eventos.
 
 ---
 
 ## Arquivos históricos e Storage
 
-### Uploads
+### Regras gerais
 
-- Fotos principais agora devem ser salvas no Supabase Storage.
-- Fotos novas não devem mais ser salvas como base64 no banco.
-- Arquivos históricos novos devem ser salvos no Supabase Storage.
-- Arquivos históricos novos não devem mais ser salvos como base64 no banco.
-- Buckets usados:
-  - `person-avatars`;
-  - `historical-files`.
-- Registros antigos em base64/data URL continuam funcionando.
-- Não houve migração destrutiva para apagar dados antigos.
+- Novas fotos principais usam bucket `person-avatars`.
+- Novos arquivos históricos usam bucket `historical-files`.
+- Novos arquivos não devem ser salvos como base64.
+- Base64/data URL antigo continua compatível.
+- Não apagar base64 antigo automaticamente.
+- Preview/download/abrir arquivo não deve disparar `onChange` nem limpar formulário.
 
-### Arquivos históricos de pessoas
+### Arquivos de pessoa
 
-- Continuam vinculados por `pessoa_id`.
-- Usuário pode adicionar arquivos no próprio perfil.
-- Usuário pode editar título, descrição e ano dos arquivos do próprio perfil.
-- Usuário pode reordenar arquivos históricos.
-- Usuário pode remover o vínculo/registro do arquivo histórico do próprio perfil, conforme RLS atual.
-- Objeto físico no Storage não é necessariamente deletado pelo usuário comum, porque deleção de Storage é restrita.
+- Usam `pessoa_id`.
+- Usuário pode gerenciar arquivos do próprio perfil conforme RLS.
+- Admin pode gerenciar arquivos por formulário/perfil.
 
-### Arquivos históricos de relacionamentos
+### Arquivos de relacionamento/casamento
 
-- Agora existe suporte a `relacionamento_id` em `arquivos_historicos`.
-- Arquivos históricos de relacionamento ficam ligados ao relacionamento conjugal.
-- Admin pode adicionar arquivos históricos ao relacionamento pelo modal do anel e pela edição admin quando o relacionamento existe.
-- Usuário comum apenas visualiza arquivos históricos de relacionamento.
-- Novos uploads de relacionamento usam paths de Storage por relacionamento.
-- Arquivos de relacionamento devem usar `relacionamento_id` preenchido e `pessoa_id` nulo.
+- Usam `relacionamento_id`.
+- Devem ter `pessoa_id` nulo.
+- Aparecem no modal do anel e em edição admin.
+- Usuário comum apenas visualiza.
+- Upload de casamento por usuário comum ainda não foi liberado.
 
-### Preview e download
+### Preview/download
 
-- Arquivos históricos passaram a ter visualização aprimorada.
-- Cards de imagem exibem miniatura real.
-- Cards de PDF exibem identificação visual de PDF.
-- As ações disponíveis incluem:
-  - visualizar;
-  - baixar arquivo;
-  - abrir.
-- O modal de preview:
-  - usa o título do arquivo;
-  - exibe imagem responsiva;
-  - exibe PDF em `iframe`;
-  - possui ações explícitas de download, abrir em nova aba e fechar.
-- Preview/download/nova aba não devem chamar `onChange`.
-- Botões internos devem usar `type="button"` para evitar submit acidental.
-- Download deve ser ação explícita; preview não deve baixar automaticamente.
+- Imagem exibe miniatura/preview.
+- PDF usa identificação visual e `iframe` quando possível.
+- Download é ação explícita.
+- Se download cross-origin falhar, abrir em nova aba como fallback.
 
 ---
 
-## Banco, RLS e segurança
+## Relacionamentos, genealogia e Visão Completa
 
-### Migrations e histórico remoto
+### Regras de relacionamento
 
-- Migrations antigas relevantes existentes no repositório:
-  - `20260509100000_add_forum_schema.sql`
-  - `20260509100100_add_google_calendar_schema.sql`
-  - `20260509100200_enable_rls_core_family_tables.sql`
-  - `20260509100300_use_profile_role_for_forum_admin.sql`
-  - `20260509100400_remove_legacy_public_core_policies.sql`
-  - `20260509100500_migrate_legacy_pessoas_arquivos_historicos.sql`
-  - `20260509100600_remove_legacy_relacionamentos_policies.sql`
-  - `20260509100700_align_relacionamentos_schema.sql`
-  - `20260509100800_version_pessoa_social_profiles.sql`
-- Essas migrations documentam a base antiga de fórum, Google Calendar, RLS core, remoção de policies permissivas, migração de arquivos históricos legados, alinhamento de relacionamentos e versionamento de `pessoa_social_profiles`.
-- O histórico remoto foi alinhado por repair em 09/05 porque o dump indicava efeitos já aplicados no banco remoto.
-- `supabase db push` não foi necessário naquela rodada e não deve ser usado sem revisar `supabase migration list`.
+- Admin cria, edita e remove relacionamentos reais.
+- Usuário comum envia solicitações.
+- Usuário comum não altera `public.relacionamentos` diretamente.
+- Solicitações usam `relationship_change_requests`.
 
-### Relacionamentos
+### Dados conjugais
 
-- Edição direta de `public.relacionamentos` por membros comuns foi neutralizada.
-- Apenas admins devem conseguir inserir, atualizar ou excluir relacionamentos reais.
-- Usuários autenticados continuam podendo ler relacionamentos.
-- Usuários comuns passam a usar solicitações de alteração.
+Componente:
 
-### Solicitações de vínculos
+- `MarriageDetailsEditor`
 
-- Foi criada estrutura `relationship_change_requests`.
-- Usuário cria solicitação própria.
-- Usuário pode ler as próprias solicitações.
-- Admin pode ler e revisar todas.
-- Usuário comum não pode aprovar/rejeitar.
-- Usuário comum não pode alterar solicitação já aprovada/rejeitada.
+Campos:
 
-### Activity logs
+- `data_casamento`
+- `local_casamento`
+- `ativo`
+- `data_separacao`
+- `local_separacao`
+- `observacoes`
 
-- Foi criada tabela `activity_logs`.
-- RLS permite admin ler tudo.
-- Usuário autenticado insere logs das próprias ações.
-- Usuário comum não tem leitura global.
-- `createActivityLog` não deve usar `.select().single()` após insert.
-- Novas ações adicionadas contemplam eventos pessoais e notificações quando aplicável.
+Observações internas aparecem apenas para admin.
 
-### Storage
+### Genealogia e Visão Completa
 
-- Buckets `person-avatars` e `historical-files` foram criados/configurados.
-- Escrita fica restrita a usuários autenticados conforme policies.
-- Deleção de arquivos no Storage fica restrita a admin.
-
-### Objetos legados e compatibilidade
-
-- `public.pessoa_social_profiles` foi versionada com RLS/policies, mas o frontend atual ainda sincroniza a primeira rede social com campos diretos em `public.pessoas`.
-- `public.imagens_pessoa` aparece como legado/migrations-only, sem uso runtime confirmado e sem criação nova nesta etapa.
-- `public.pessoas_com_estatisticas` foi identificada como view remota legada sem uso runtime atual; não foi versionada nesta etapa.
-- `public.pessoas.arquivos_historicos` foi mantida como coluna legada até validação administrativa e visual completa.
-- Dumps de schema devem permanecer ignorados pelo Git e não devem ser commitados.
-
-### Notificações
-
-- Tabelas de notificações/preferências/logs seguem com RLS.
-- Usuário comum não deve ler logs globais de dispatch.
-- Admin pode visualizar diagnóstico e logs em `/admin/notificacoes`.
-- RPCs de notificação foram usadas para permitir criação segura de notificação/log para destinatários sem abrir escrita ampla nas tabelas.
-- Secrets de e-mail e service role não devem aparecer no frontend.
-
----
-
-## O que não deve mais existir/acontecer
-
-### Acesso/admin
-
-- Usuário comum não deve ver botão **Painel administrativo** no header.
-- Menu do usuário não deve mandar admin para `/admin/login`.
-- Usuário comum não deve acessar `/admin`, `/admin/atividades`, `/admin/integridade`, `/admin/solicitacoes-vinculos` ou `/admin/notificacoes`.
-
-### Relacionamentos
-
-- Usuário comum não deve criar relacionamento real diretamente.
-- Usuário comum não deve remover relacionamento real diretamente.
-- Usuário comum não deve editar dados conjugais reais diretamente.
-- `MeusVinculos` não deve mais fingir revisão apenas local sem backend.
-- Alterações de vínculos por usuários não devem mudar a árvore real antes de aprovação.
-- Migration permissiva de edição direta por membros não deve ser a política ativa.
-
-### Genealogia/Visão Completa
-
-- Não devem existir linhas diagonais entre pais e filhos.
-- Filho único desalinhado não deve gerar diagonal.
+- **Minha Árvore** mantém layout próprio.
+- **Genealogia** usa escopo pessoal com layout por gerações.
+- **Visão Completa** usa base completa com layout por gerações.
+- Não deve haver linhas diagonais entre pais e filhos.
 - Cônjuges dos filhos não devem ser tratados como filhos reais.
-- Não devem sobrar conectores, barramentos ou anéis soltos quando filtros ocultarem pessoas.
-- A view **Minha Árvore** não deve ter sido alterada pelo layout de Genealogia.
-- A view **Genealogia** não deve mostrar toda a base; deve usar o escopo pessoal.
-- A view **Visão Completa** não deve filtrar pelo escopo pessoal; deve mostrar todos.
+- Conectores/anéis não devem ficar soltos após filtros.
 
-### Uploads/dados
+### Anel de casamento 💍
 
-- Novas fotos não devem ser salvas como base64 no banco.
-- Novos arquivos históricos não devem ser salvos como base64 no banco.
-- `activity_logs.metadata` não deve conter URL completa, base64, telefone, endereço ou e-mail.
-- Metadata de notificações e dispatch logs também não deve conter dados sensíveis.
-- Arquivos antigos em base64 não devem ser apagados automaticamente.
-- O campo **Lado** não deve aparecer na UI do formulário de pessoa.
-
-### Histórico
-
-- Edição de perfil do usuário não deve passar sem log.
-- Alteração de notificações não deve passar sem log.
-- Alteração de foto não deve passar sem log.
-- Logs não devem falhar por RLS/SELECT após insert.
-- Usuário comum não deve conseguir ver o histórico global.
-- Usuário comum não deve conseguir ver logs globais de notificações.
-
-### Integridade
-
-- `/admin/integridade` não deve alterar dados.
-- A tela nova não deve depender da Edge Function legada.
-- Nenhuma correção automática deve ser executada nessa primeira versão.
-
-### Notificações
-
-- A página `/notificacoes` não deve quebrar quando não houver notificações.
-- O painel `/admin/notificacoes` não deve enviar e-mail real automaticamente.
-- Testes internos não devem disparar e-mail real.
-- Push e WhatsApp não devem fingir envio real; devem ser marcados como `not_configured`/`skipped` enquanto não houver infraestrutura.
-- Rotina de aniversários/memórias não deve duplicar notificações ao ser executada mais de uma vez.
-- Rotina de aniversários/memórias não deve ser executada automaticamente ao abrir o painel admin.
-- E-mail real não deve ser ativado sem provider, secrets e teste controlado.
-- O frontend não deve afirmar que secrets do provider existem; essa validação depende de teste controlado da Edge Function.
-- Ausência de `RESEND_API_KEY` ou `NOTIFICATION_EMAIL_FROM` deve resultar em `not_configured`, não em falso sucesso.
-
-### Grau de parentesco/vínculo
-
-- A frente 7.5 está funcionalmente consolidada após QA complementar.
-- O cálculo principal fica em `src/app/utils/relationshipDegree.ts`.
-- O utilitário é puro:
-  - recebe `Pessoa[]` e `Relacionamento[]`;
-  - não chama Supabase;
-  - não usa IA;
-  - não persiste cache;
-  - não lê observações, sobrenome, telefone, endereço, foto, redes sociais, minibio ou curiosidades para inferir vínculo.
-- Os testes unitários ficam em `src/app/utils/relationshipDegree.test.ts` e cobrem:
-  - pai/mãe e filho(a), na orientação real dos dados do app;
-  - irmãos explícitos e derivados por parental compartilhado;
-  - avô/avó e neto(a);
-  - tio(a), sobrinho(a) e primo(a);
-  - cônjuge ativo;
-  - cônjuge inativo ignorado por padrão;
-  - cônjuge inativo incluído quando configurado;
-  - sem vínculo, dados incompletos, duplicados e ciclos.
-- A apresentação fica em `src/app/utils/relationshipDegreeDisplay.ts`, responsável por mensagens, métricas, caminho legível e warnings amigáveis.
-- A UI reutilizável fica em `src/app/components/person/RelationshipFinder.tsx`.
-- Integrações atuais:
-  - Home, em "Curiosidades" > "Qual a minha conexão com alguém?";
-  - Perfil da pessoa, via `RelationshipFinder`.
-- Na Home, o cálculo usa os arrays já carregados pela árvore.
-- No Perfil, o cálculo usa o cache em memória da árvore quando disponível e fallback via `dataService` quando necessário, sempre respeitando o escopo/RLS da tela chamadora.
-- O fluxo visual principal não depende de `regras_parentesco` nem de `parentescos_calculados`.
-- `src/app/services/relationshipResolverService.ts` permanece como legado/parcial mantido por compatibilidade, fora do fluxo principal da 7.5.
-- Limites conhecidos:
-  - não há integração na árvore/Genealogia nem na Visão Completa;
-  - não há cálculo em massa;
-  - cônjuges inativos/separados dependem de dados reais para QA manual completo;
-  - testes de componente ficam para uma infraestrutura futura.
-- Não houve migration, schema, RLS, tabela nova, alteração de dados reais ou alteração de notificações nesta frente.
+- Aparece entre cônjuges.
+- É clicável.
+- Abre modal conjugal.
+- Respeita status visual: ativo, separado/divorciado, viuvez ou desconhecido.
 
 ---
 
-## Pendências conhecidas
+## Solicitações de vínculos
 
-### Validação manual
+Tabela:
 
-- Testar manualmente o modal do anel com admin e usuário comum.
-- Testar upload de arquivo histórico de relacionamento e confirmar `relacionamento_id`.
-- Testar preview/download com arquivo real de imagem.
-- Testar preview/download com arquivo real de PDF.
-- Confirmar que usuário comum não consegue adicionar arquivo histórico de relacionamento.
-- Confirmar que observações conjugais aparecem apenas para admin.
-- Confirmar que `/admin/integridade` não altera dados.
-- Confirmar que `/admin/solicitacoes-vinculos` aprova/rejeita corretamente.
-- Confirmar que `/admin/atividades` lista logs recentes corretamente.
-- Testar fluxo completo de notificações por upload histórico via UI.
-- Testar fluxo completo de notificações por fórum via UI.
-- Testar fluxo completo de notificação por novo vínculo/primeiro acesso.
-- Testar aniversários/memórias com pessoa de data correspondente ao dia.
-- Confirmar deduplicação real em `notification_occurrences`.
-- Validar `/admin/notificacoes` com base maior de logs.
-- Confirmar recebimento real de e-mail no admin QA após configurar secrets reais do Resend.
-- Executar QA manual completo de notificações com usuário comum.
-- Validar limpeza de notificações reais criadas em testes QA.
+- `relationship_change_requests`
 
-### Notificações
+Migration:
 
-- Ativar `pg_cron` para `run-daily-notifications` com segredo armazenado fora do repositório.
-- Configurar secrets reais do Resend no projeto remoto.
-- Confirmar recebimento real de e-mail via `send-notification-email` em teste admin controlado.
-- Executar QA final da frente 7.1 Notificações.
-- Limpar notificações/logs de teste somente após confirmação.
-- Documentar arquitetura de notificações em arquivo próprio.
-- Push real e WhatsApp real permanecem como futuras implementações.
+- `20260513173000_create_relationship_change_requests.sql`
 
-### WhatsApp no perfil
+Fluxo:
 
-- O tópico 7.4 foi concluído no escopo visual/frontend.
-- A etapa 7.4B criou a base técnica/helper centralizado:
-  - `src/app/utils/whatsapp.ts`
-- O helper centraliza:
-  - normalização de telefone para `wa.me`;
-  - validação de telefone;
-  - montagem de URL `https://wa.me/NUMERO`;
-  - regra visual de uso do contato por WhatsApp.
-- A regra visual centralizada exige telefone válido e:
-  - `permitir_exibir_telefone = true`;
-  - ou `permitir_mensagens_whatsapp = true`.
-- O perfil passou a usar essa regra centralizada sem redesenho visual.
-- A etapa 7.4C criou o componente visual dedicado:
-  - `src/app/components/person/WhatsAppContactButton.tsx`
-- O botão **Entrar em contato por WhatsApp** aparece no perfil apenas quando há telefone válido e as flags permitem contato.
-- O telefone em texto aparece somente quando `permitir_exibir_telefone = true`.
-- Quando apenas `permitir_mensagens_whatsapp = true`, o botão pode aparecer sem exibir o número em texto.
-- A etapa 7.4D executou o QA técnico final e revisou `Home.tsx`/`ContactInfo`.
-- `ContactInfo` deixou de usar `permitir_mensagens_whatsapp` para exibir telefone em texto.
-- Na Home, o contato por WhatsApp reaproveita o componente visual dedicado e a regra centralizada, sem redesenhar a tela.
-- Não houve migration.
-- Não houve alteração de RLS.
-- Não houve WhatsApp Business API.
-- Não houve envio automático de mensagem.
-- Não houve log de clique nesta frente; ficou como melhoria futura opcional para evitar risco de metadata sensível.
-- Se o log for implementado futuramente, deve usar `contact.whatsapp_clicked` com metadata segura, sem telefone, URL `wa.me` ou mensagem.
-- Privacidade forte em nível de banco/API permanece como possível evolução futura.
+- usuário comum solicita criação/remoção/correção;
+- relacionamento real não muda imediatamente;
+- admin aprova/rejeita;
+- aprovação aplica alteração real;
+- rejeição não altera relacionamento real.
 
-### Exportação de área visível da árvore
+Logs:
 
-- A etapa 7.6A concluiu o diagnóstico técnico em `docs/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md`.
-- A etapa 7.6B implementou a primeira versão funcional de seleção de área visível da árvore.
-- Foi adicionado o botão **Selecionar área** no painel **Informações da árvore**.
-- O modo de seleção renderiza um overlay sobre a viewport atual da `.react-flow`.
-- O usuário pode arrastar um retângulo, cancelar pelo botão **Cancelar** ou pela tecla `Esc`.
-- A área selecionada pode ser exportada como PNG, PDF ou enviada para impressão.
-- A captura é limitada ao que está visível na viewport atual da árvore; não exporta nós fora da tela.
-- O recorte usa coordenadas relativas ao elemento capturado e corrige a escala real do canvas.
-- A lógica comum de captura, recorte, download PNG, PDF, impressão e nome seguro de arquivo ficou em:
-  - `src/app/components/FamilyTree/utils/treeExport.ts`
-- O overlay visual ficou em:
-  - `src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx`
-- O modo de seleção bloqueia interações de pan/zoom enquanto está ativo e libera a árvore ao cancelar.
-- A etapa 7.6C executou QA técnico e refinou a seleção de área:
-  - o modo de seleção agora fecha após PNG/PDF/impressão concluídos, liberando pan/zoom;
-  - `releasePointerCapture` foi protegido para eventos `pointercancel`/captura já liberada;
-  - a exportação passou a ignorar descendentes de controles ReactFlow, minimap, menu de pessoa e overlay;
-  - seleções grandes demais são recusadas antes da captura, com mensagem amigável.
-- Não houve migration.
-- Não houve alteração de schema Supabase.
-- Não salva PNG/PDF no Storage.
-- Exportação de árvore completa permanece como evolução futura.
+- `relationship_change_requested`
+- `relationship_change_approved`
+- `relationship_change_rejected`
+- `relationship_change_cancelled`
 
-### Técnicas
+---
 
-- Verificar se upload abandonado no modal deixa objeto órfão no Storage.
-- Criar controle para evitar uploads órfãos no Storage.
-- Refinar `/admin/integridade` com filtros por severidade quando a base crescer.
-- Remover `lado` dos `changed_fields` do histórico para reduzir ruído.
-- Implementar lazy loading de rotas admin e bibliotecas pesadas para reduzir bundle.
-- Avaliar limpeza ou migração futura de arquivos antigos em base64 para Storage.
-- Avaliar persistência futura de múltiplas redes sociais em tabela própria.
-- Avaliar upload por evento pessoal.
-- Avaliar privacidade por evento pessoal.
-- Avaliar exportação PDF de eventos/timeline.
-- Avaliar edição manual de eventos da timeline.
-- Avaliar consolidação visual futura entre `PersonTimeline` e `PersonEventsList`.
+## Histórico de atividades
 
-### Ainda não implementado nesta etapa
+Tabela:
 
-- Tópico 7.2 — Astrologia e acontecimentos do nascimento concluído no escopo funcional desta rodada; evoluções editoriais/privacidade avançada ficam para backlog futuro.
-- Tópico 7.4 — Entrar em contato por WhatsApp concluído no escopo visual/frontend; log opcional e privacidade forte em banco/API permanecem como evoluções futuras.
-- Tópico 7.5 — Grau de parentesco/vínculo.
-- Tópico 7.6 — Selecionar área para PDF/impressão implementado e refinado no QA 7.6C para a viewport visível; árvore completa fica para evolução futura.
-- Tópico 7.7 — Legendas visuais da árvore.
-- Tópico 7.8 — Favoritos em todo o site.
-- Tópico 7.9 — Página de favoritos.
-- Tópico 7.10 — Responsividade/mobile.
+- `activity_logs`
 
-## Referência com o plano 7.x
+Migration:
 
-Esta seção relaciona o guia de implementações com os tópicos do plano de próximas implementações. O guia não está organizado originalmente por 7.1, 7.2, 7.3 etc.; por isso, os tópicos abaixo funcionam como referência cruzada.
+- `20260513143000_create_activity_logs.sql`
 
-| Tópico | Status no guia de implementações | Onde aparece neste guia |
-|---|---|---|
-| 7.1 Notificações | Parcialmente implementado / consolidado para QA final | Seção "Notificações" |
-| 7.2 Astrologia e acontecimentos do nascimento | Concluído no escopo funcional: schema/migration, service, Edge Function, exibição, controle admin, logs seguros e QA aprovado | Seção "Astrologia e acontecimentos do nascimento" |
-| 7.3 Linha do tempo do usuário | Implementado funcionalmente; evoluções futuras em backlog | Seção "Linha do tempo do usuário" |
-| 7.4 WhatsApp | Concluído no escopo visual/frontend; privacidade forte em banco/API e log opcional ficam como futuras evoluções | Seção "WhatsApp no perfil" |
-| 7.5 Grau de parentesco/vínculo | Funcionalmente consolidado após QA | Seção "Grau de parentesco/vínculo" |
-| 7.6 PDF/impressão por área | Implementado e refinado no QA 7.6C para viewport visível; árvore completa permanece futura | Seção "Exportação de área visível da árvore" |
-| 7.7 Legendas visuais da árvore | Não implementado | Ainda não há seção de implementação |
-| 7.8 Favoritos em todo o site | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
-| 7.9 Página de favoritos | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
-| 7.10 Responsividade/mobile | Não implementado nesta rodada | Ainda não há seção de implementação |
+Regras:
+
+- admin lê globalmente;
+- usuário autenticado insere logs próprios;
+- usuário comum não lê histórico global;
+- `createActivityLog` não deve depender de `.select().single()` após insert;
+- metadata deve ser sanitizada.
+
+Não registrar em metadata:
+
+- URL completa;
+- base64;
+- telefone;
+- endereço;
+- e-mail;
+- token;
+- secrets;
+- service role;
+- prompts completos;
+- conteúdo completo gerado por IA.
+
+---
+
+## Integridade dos dados
+
+Rota:
+
+- `/admin/integridade`
+
+Regras:
+
+- somente admin;
+- somente leitura;
+- não executa correções automáticas;
+- não depende de endpoint legado `make-server`;
+- diagnostica pessoas, relacionamentos, arquivos históricos, Storage, usuários/vínculos, logs e solicitações.
+
+Backlog:
+
+- filtros por severidade;
+- paginação/limites se a base crescer;
+- ações assistidas de correção somente em frente própria.
+
+---
+
+## Notificações — 7.1
+
+Documentação específica:
+
+- `docs/NOTIFICACOES.md`
+
+Status:
+
+- arquitetura pronta;
+- canal interno funcional;
+- e-mail condicional ao deploy/configuração de Resend;
+- push real e WhatsApp real futuros;
+- fila/retry avançado futuro;
+- cron automático depende de solução segura para segredo fora do repositório.
+
+Implementado:
+
+- `/notificacoes`;
+- `/admin/notificacoes`;
+- preferências por categoria/canal;
+- `notification_dispatch_logs`;
+- `notification_occurrences`;
+- deduplicação por `occurrence_key`;
+- rotina manual de aniversários/memórias;
+- gatilhos de novo arquivo histórico, novo vínculo, resposta no fórum e comentário no fórum;
+- Edge Function `send-notification-email`;
+- Edge Function `run-daily-notifications`.
+
+Hardening já consolidado:
+
+- marcar/remover notificação usa filtro por `id` e `user_id`.
+
+Pendências operacionais:
+
+- configurar secrets reais do Resend;
+- confirmar e-mail real por teste admin controlado;
+- configurar `DAILY_NOTIFICATIONS_SECRET`;
+- testar chamada manual com header;
+- criar `pg_cron` apenas sem expor segredo em migration versionada;
+- executar QA completo com usuário comum;
+- limpar dados de teste só depois de confirmar logs, deduplicação e recebimento.
+
+---
+
+## Astrologia e acontecimentos do nascimento — 7.2
+
+Status:
+
+- concluída no escopo funcional atual.
+
+Tabela:
+
+- `public.person_generated_insights`
+
+Migration:
+
+- `20260518174542_reconcile_person_generated_insights_schema.sql`
+
+Tipos implementados:
+
+- `astrology`
+- `historical_events`
+
+Não implementados nesta versão:
+
+- `birth_date_events`
+- `historical_context`
+
+Regras consolidadas:
+
+- perfil apenas lê insights existentes;
+- perfil não gera IA automaticamente;
+- conteúdo ausente aparece como estado vazio/informativo;
+- admin gera/regenera explicitamente em `/admin/pessoas/:id/editar`;
+- chamada de IA fica apenas na Edge Function;
+- secrets permanecem server-side;
+- logs são seguros.
+
+Arquivos principais:
+
+- `personInsightsService.ts`
+- `PersonDataView.tsx`
+- `AdminPessoaForm.tsx`
+- `Home.tsx`
+- `generate-person-insights/index.ts`
+
+Logs:
+
+- `person_insights.generated`
+- `person_insights.regenerated`
+
+Metadata segura:
+
+- `tipos`
+- `force`
+- `source`
+
+---
+
+## Linha do tempo — 7.3
+
+Status:
+
+- implementada funcionalmente.
+
+Documentação específica:
+
+- `docs/TIMELINE.md`
+
+Arquivos:
+
+- `src/app/utils/buildPersonTimeline.ts`
+- `src/app/components/Timeline/PersonTimeline.tsx`
+- `src/app/pages/PersonProfile.tsx`
+
+Características:
+
+- função pura;
+- sem tabela nova;
+- sem migration;
+- deriva eventos de pessoa, relacionamentos, filhos, arquivos históricos e `person_events`;
+- preserva precisão de data;
+- ordena e deduplica eventos;
+- sanitiza metadata.
+
+Backlog:
+
+- edição manual;
+- upload por evento;
+- privacidade por evento;
+- exportação PDF;
+- consolidação visual com `PersonEventsList`, se fizer sentido.
+
+---
+
+## WhatsApp no perfil — 7.4
+
+Status:
+
+- concluído no escopo visual/frontend.
+
+Arquivos:
+
+- `src/app/utils/whatsapp.ts`
+- `src/app/components/person/WhatsAppContactButton.tsx`
+- `PersonDataView.tsx`
+- `Home.tsx`
+
+Regras:
+
+- botão aparece apenas com telefone válido e permissão;
+- número em texto aparece somente se `permitir_exibir_telefone = true`;
+- `permitir_mensagens_whatsapp = true` pode liberar botão sem exibir número;
+- não há WhatsApp Business API;
+- não há envio automático;
+- não há log de clique nesta etapa.
+
+Backlog:
+
+- privacidade forte em banco/API;
+- log seguro `contact.whatsapp_clicked` sem telefone, URL ou mensagem.
+
+---
+
+## Grau de parentesco/vínculo — 7.5
+
+Status:
+
+- funcionalmente consolidado após QA complementar.
+
+Arquivos:
+
+- `src/app/utils/relationshipDegree.ts`
+- `src/app/utils/relationshipDegree.test.ts`
+- `src/app/utils/relationshipDegreeDisplay.ts`
+- `src/app/components/person/RelationshipFinder.tsx`
+- `Home.tsx`
+- `PersonProfile.tsx`
+
+Características:
+
+- utilitário puro;
+- sem Supabase;
+- sem IA;
+- sem cache persistido;
+- usa `Pessoa[]` e `Relacionamento[]` já carregados;
+- considera orientação real dos relacionamentos do app;
+- UI mostra caminho, grau, confiança e avisos amigáveis;
+- não expõe dados sensíveis.
+
+Backlog:
+
+- integração na árvore/Genealogia;
+- integração na Visão Completa;
+- limpeza futura de `relationshipResolverService.ts`;
+- testes de componente.
+
+---
+
+## Exportação de área da árvore — 7.6
+
+Status:
+
+- implementada tecnicamente e refinada em QA técnico.
+
+Arquivos:
+
+- `src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx`
+- `src/app/components/FamilyTree/utils/treeExport.ts`
+- `FamilyTree.tsx`
+- `Home.tsx`
+
+Características:
+
+- botão **Selecionar área**;
+- overlay sobre viewport visível da `.react-flow`;
+- seleção por retângulo;
+- cancelamento por botão ou `Esc`;
+- exportação PNG/PDF/impressão;
+- bloqueio temporário de pan/zoom;
+- ignora overlay, menu de pessoa, controles e minimap;
+- recusa seleção pequena ou grande demais;
+- sem migration, sem Storage e sem logs persistidos.
+
+Limitações:
+
+- exporta apenas a viewport visível, não a árvore completa;
+- requer QA amplo em navegadores, zooms, árvores grandes e mobile/tablet;
+- imagens externas sem CORS podem falhar com erro amigável.
+
+---
+
+## Favoritos — 7.8 e 7.9
+
+Status:
+
+- primeira camada funcional implementada.
+
+Banco:
+
+- `public.user_favorites`
+
+Migrations:
+
+- `20260518120000_create_user_favorites.sql`
+- `20260518141305_relax_legacy_user_favorites_columns.sql`
+
+Modelo novo:
+
+- `entity_type`
+- `entity_id`
+- `label`
+- `description`
+- `href`
+- `metadata`
+
+Arquivos:
+
+- `src/app/services/favoritesService.ts`
+- `src/app/components/favorites/FavoriteButton.tsx`
+- `src/app/pages/MeusFavoritos.tsx`
+- `src/app/pages/PersonProfile.tsx`
+
+Comportamento:
+
+- service usa Supabase e usuário autenticado;
+- metadata é sanitizada;
+- botão reutilizável alterna favorito;
+- `/meus-favoritos` lista, busca, filtra, abre e remove favoritos;
+- perfil de pessoa já possui `FavoriteButton` com `entityType="person"`.
+
+Backlog imediato:
+
+- integrar favoritos em arquivos históricos;
+- integrar em tópicos do fórum;
+- integrar em modal conjugal/relacionamentos;
+- integrar em eventos pessoais/timeline;
+- avaliar logs `favorite.added` e `favorite.removed` com metadata segura.
+
+---
+
+## Legendas visuais da árvore — 7.7
+
+Status:
+
+- pendente.
+
+Objetivo:
+
+- explicar visualmente conectores, anéis, status conjugais, cores, bordas e diferenças entre views.
+
+Componente sugerido:
+
+- `src/app/components/FamilyTree/TreeLegend.tsx`
+
+Esta é a próxima frente funcional recomendada antes da responsividade.
+
+---
+
+## Responsividade — 7.10
+
+Status:
+
+- pendente.
+
+Regra de priorização:
+
+- deve ser a última fase antes do lançamento do site.
+
+Escopo mínimo:
+
+- Home;
+- Minha Árvore;
+- Genealogia;
+- Visão Completa;
+- modal conjugal;
+- perfil da pessoa;
+- Meus Dados;
+- Meus Vínculos;
+- Notificações;
+- Meus Favoritos;
+- Fórum;
+- Admin Dashboard;
+- Admin Pessoas;
+- Admin Pessoa Form;
+- Admin Notificações;
+- Admin Integridade;
+- Admin Solicitações;
+- Admin Atividades.
+
+Larguras a validar:
+
+- 320px;
+- 375px;
+- 390px;
+- 430px;
+- 768px;
+- desktop.
+
+---
+
+## Fórum e Google Calendar
+
+### Fórum
+
+- Schema versionado em migration.
+- Contempla categorias, tópicos, respostas, comentários, reações, denúncias e solução.
+- Admin usa função consolidada por `is_admin_user`.
+- Exige QA manual antes de ser considerado estável.
+
+### Google Calendar
+
+- Integração versionada em migration.
+- Tokens devem ficar restritos a Edge Functions/service role.
+- OAuth, sincronização e proteção de tokens ainda exigem validação manual.
+
+---
+
+## Banco, migrations e objetos legados
+
+### Regras
+
+- Sempre revisar `supabase migration list` antes de `db push`.
+- Usar `migration repair` apenas quando o schema remoto já refletir comprovadamente a migration.
+- Não criar migration para objeto legado sem consumidor runtime.
+- Não remover coluna/view legada sem dump recente, SQL de auditoria e QA visual.
+
+### Objetos legados/compatibilidade
+
+- `public.pessoas.arquivos_historicos`: mantida por compatibilidade até validação completa.
+- `public.imagens_pessoa`: legado/migrations-only; não criar consumidor novo sem decisão.
+- `public.pessoas_com_estatisticas`: view remota legada sem uso runtime confirmado.
+- scripts SQL antigos de fórum/Google Calendar devem ser tratados como legado se já houver migrations oficiais.
+
+---
+
+## O que não deve acontecer
+
+- Usuário comum acessar admin.
+- Usuário comum alterar relacionamento real diretamente.
+- Perfil gerar IA automaticamente.
+- E-mail real ser enviado sem provider/secrets/teste controlado.
+- Push/WhatsApp fingirem envio real.
+- Dados novos serem salvos como base64.
+- Logs/favoritos/timeline/notificações salvarem dados sensíveis.
+- `/admin/integridade` alterar dados.
+- `supabase db push` ser usado sem revisar migrations.
+- Responsividade ser iniciada antes de fechar 7.7, favoritos prioritários e QA operacional básico.
