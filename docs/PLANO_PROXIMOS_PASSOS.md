@@ -227,6 +227,34 @@ where schemaname = 'public'
 order by policyname;
 ```
 
+### Favoritos persistidos
+
+```sql
+select column_name, data_type, is_nullable, column_default
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'user_favorites'
+order by ordinal_position;
+```
+
+```sql
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public'
+  and tablename = 'user_favorites'
+order by indexname;
+```
+
+```sql
+select schemaname, tablename, policyname, cmd
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'user_favorites'
+order by policyname;
+```
+
+---
+
 ### Validação de coluna legada de arquivos históricos
 
 Executar no Supabase SQL Editor antes de qualquer remoção futura de coluna:
@@ -885,6 +913,8 @@ supabase/migrations
 - [ ] Remover geração automática de insights em `PersonDataView.tsx`.
 - [ ] Criar geração/regeneração controlada por admin para astrologia e acontecimentos do nascimento.
 - [ ] Confirmar deploy e secrets da Edge Function `generate-person-insights` no projeto remoto.
+- [ ] Implementar camada de aplicação dos favoritos persistidos: `favoritesService.ts`, `FavoriteButton.tsx`, refatoração de `/meus-favoritos` e integração inicial no perfil.
+- [ ] Avaliar remoção futura das colunas legadas `tipo_conteudo`, `conteudo_id` e `titulo` de `public.user_favorites` após QA do fluxo novo.
 
 ## Pendências de produto
 
@@ -892,7 +922,8 @@ supabase/migrations
 
 ## Pendências operacionais
 
-- [ ] Aplicar a migration pendente no Supabase remoto após revisão de `supabase migration list`.
+- [x] Aplicar as migrations de favoritos `20260518120000_create_user_favorites.sql` e `20260518141305_relax_legacy_user_favorites_columns.sql` no Supabase remoto após revisão de `supabase migration list`.
+- [ ] Antes de novas migrations, continuar revisando `supabase migration list` e não usar `db push` sem confirmar que há migration local pendente.
 - [ ] Rodar dry-run dos scripts administrativos em ambiente protegido:
   - `node scripts/storage-diagnose-orphans.mjs --output=/tmp/storage-orphans.json`;
   - `node scripts/migrate-legacy-base64-files.mjs --output=/tmp/base64-migration.json`.
@@ -930,7 +961,7 @@ Corrigir antes de novas funcionalidades:
 ## 6.3 Terceiro: melhorias técnicas
 
 1. Uploads órfãos.
-2. Aplicação remota da migration pendente.
+2. Implementação da camada de aplicação de favoritos persistidos após schema aplicado.
 3. Filtros na integridade.
 4. Limpeza de metadata.
 5. Dry-run administrativo dos scripts de Storage/base64.
@@ -1119,7 +1150,7 @@ Exibir no perfil da pessoa conteúdos gerados e persistidos sobre:
 - Ainda não há controle admin consolidado para gerar/regenerar.
 - Ainda não há QA final específico da frente 7.2.
 - A documentação anterior estava divergente: o plano marcava como implementado funcionalmente, enquanto o guia não consolidava a frente como implementada.
-- A migration local pendente de favoritos (`20260518120000_create_user_favorites.sql`) é de outra frente e deve ser tratada separadamente, sem misturar com 7.2.
+- As migrations de favoritos (`20260518120000_create_user_favorites.sql` e `20260518141305_relax_legacy_user_favorites_columns.sql`) já foram aplicadas no remoto e permanecem como frente separada, sem misturar com 7.2.
 
 ### Arquivos prováveis
 
@@ -1659,11 +1690,46 @@ src/app/components/FamilyTree/TreeLegend.tsx
 
 ### Status
 
-Não implementado nesta rodada.
+Schema e tipos implementados. Camada de aplicação pendente.
+
+### Já implementado
+
+- Criada e aplicada a migration:
+  - `20260518120000_create_user_favorites.sql`
+- Criada e aplicada a migration de compatibilidade legado/novo modelo:
+  - `20260518141305_relax_legacy_user_favorites_columns.sql`
+- Tabela consolidada no remoto:
+  - `public.user_favorites`
+- Colunas novas disponíveis:
+  - `entity_type`;
+  - `entity_id`;
+  - `label`;
+  - `description`;
+  - `href`;
+  - `metadata`.
+- Colunas legadas preservadas temporariamente:
+  - `tipo_conteudo`;
+  - `conteudo_id`;
+  - `titulo`.
+- `tipo_conteudo` e `conteudo_id` deixaram de ser obrigatórias para permitir inserts do modelo novo.
+- Criado índice único novo por `user_id`, `entity_type` e `entity_id`.
+- RLS/policies permitem que usuário autenticado leia, insira, atualize e remova apenas seus próprios favoritos.
+- `src/app/types/index.ts` recebeu tipos novos para favoritos persistidos.
+
+### Ainda pendente
+
+- Criar service persistido:
+  - `src/app/services/favoritesService.ts`
+- Criar botão reutilizável:
+  - `src/app/components/favorites/FavoriteButton.tsx`
+- Integrar o botão inicialmente no perfil da pessoa.
+- Integrar futuramente em modal conjugal, arquivos históricos, tópicos de fórum, timeline e eventos.
+- Marcar funções de favoritos locais em `userEngagementService.ts` como legado/compatibilidade.
+- Decidir futuramente se haverá logs `favorite.added` e `favorite.removed`.
 
 ### Objetivo
 
-Implementar botão de estrela em páginas, modais, tópicos de fórum, views personalizadas e outras áreas para o usuário favoritar conteúdos.
+Implementar botão de favorito em páginas, modais, tópicos de fórum, views personalizadas e outras áreas para o usuário salvar conteúdos em `public.user_favorites`.
 
 ### Áreas possíveis
 
@@ -1675,34 +1741,25 @@ Implementar botão de estrela em páginas, modais, tópicos de fórum, views per
 - Solicitações relevantes.
 - Eventos/timeline.
 
-### Arquivos prováveis
+### Arquivos prováveis para a próxima etapa
 
 ```txt
-src/app/services/userEngagementService.ts
-src/app/pages/Favoritos.tsx
+src/app/services/favoritesService.ts
+src/app/components/favorites/FavoriteButton.tsx
 src/app/pages/PersonProfile.tsx
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/pages/MeusFavoritos.tsx
+src/app/services/userEngagementService.ts
 src/app/types/index.ts
 ```
 
-### Sugestões
+### Regras
 
-- Verificar estrutura atual de favoritos.
-- Generalizar favoritos com:
-  - `entity_type`
-  - `entity_id`
-  - `label`
-  - `metadata`
-- Criar componente reutilizável:
-
-```txt
-src/app/components/FavoriteButton.tsx
-```
-
-- Registrar logs opcionais:
-  - `favorite.added`
-  - `favorite.removed`
+- Não criar nova migration na etapa de service/UI.
+- Não usar `localStorage` no novo fluxo.
+- Não usar `DEFAULT_USER_ID = 'demo-user'` no novo fluxo.
+- Obter usuário com `supabase.auth.getUser()`.
+- Inserir apenas colunas novas no service.
+- Não salvar telefone, endereço, e-mail, URL completa privada, base64, token ou secrets em `metadata`.
 
 ---
 
@@ -1710,37 +1767,56 @@ src/app/components/FavoriteButton.tsx
 
 ### Status
 
-Não implementado nesta rodada.
+Schema e tipos implementados. Página existente ainda precisa ser refatorada para Supabase.
 
-### Objetivo
+### Já existe
 
-Testar se a página de favoritos está armazenando e exibindo todo o conteúdo salvo pelo usuário.
+- Rota protegida existente:
+  - `/meus-favoritos`
+- Página existente:
+  - `src/app/pages/MeusFavoritos.tsx`
+- A página atual ainda usa o modelo legado/local via `userEngagementService.ts`.
 
-### Checklist
+### Ainda pendente
+
+- Refatorar `/meus-favoritos` para usar `favoritesService.ts`.
+- Remover dependência de `listarFavoritos` e `removerFavorito` do fluxo local legado.
+- Listar favoritos persistidos por usuário autenticado.
+- Agrupar/filtrar por `entity_type`.
+- Exibir `label`, `description`, `href` e data de criação.
+- Permitir remoção pelo novo service.
+- Exibir estado vazio, loading e erro controlado.
+- Confirmar persistência após reload.
+- Confirmar isolamento por usuário via RLS.
+
+### Checklist futuro de QA
 
 - [ ] Favoritar pessoa.
-- [ ] Favoritar relacionamento/modal conjugal.
-- [ ] Favoritar arquivo histórico.
-- [ ] Favoritar tópico de fórum.
-- [ ] Remover favorito.
+- [ ] Abrir `/meus-favoritos` e confirmar que aparece.
 - [ ] Confirmar persistência após reload.
+- [ ] Confirmar que o botão “Abrir” usa `href` interno quando existir.
+- [ ] Remover favorito.
+- [ ] Confirmar que favoritar a mesma entidade não duplica.
 - [ ] Confirmar isolamento por usuário.
+- [ ] Confirmar que metadata não contém dados sensíveis.
 
 ### Arquivos prováveis
 
 ```txt
-src/app/pages/Favoritos.tsx
-src/app/services/userEngagementService.ts
+src/app/pages/MeusFavoritos.tsx
+src/app/services/favoritesService.ts
+src/app/components/favorites/FavoriteButton.tsx
 src/app/types/index.ts
 ```
 
-### Sugestões
+### Backlog futuro
 
-- Criar agrupamento por tipo.
-- Adicionar busca.
-- Adicionar filtros.
-- Criar links diretos para entidade favoritada.
-- Verificar se favoritos quebram quando entidade é removida.
+- Integrar favoritos em relacionamento/modal conjugal.
+- Integrar favoritos em arquivos históricos.
+- Integrar favoritos em tópico de fórum.
+- Integrar favoritos em timeline/eventos.
+- Tratar entidade removida com verificação ativa.
+- Avaliar remoção das colunas legadas após QA do fluxo novo.
 
 ---
 

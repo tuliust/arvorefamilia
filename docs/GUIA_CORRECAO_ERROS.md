@@ -994,6 +994,8 @@ supabase/migrations/20260514193000_allow_own_notification_dispatch_log_insert.sq
 supabase/migrations/20260514200000_create_notification_recipient_helpers.sql
 supabase/migrations/20260514201000_create_notification_dispatch_rpc.sql
 supabase/migrations/20260514203000_create_notification_occurrences.sql
+supabase/migrations/20260518120000_create_user_favorites.sql
+supabase/migrations/20260518141305_relax_legacy_user_favorites_columns.sql
 ```
 
 ### Se der erro
@@ -1599,7 +1601,117 @@ supabase functions deploy run-daily-notifications
 
 ---
 
-## 32. Checklist rápido de investigação por sintoma
+## 32. Favoritos
+
+### Arquivos envolvidos
+
+```txt
+src/app/services/favoritesService.ts
+src/app/components/favorites/FavoriteButton.tsx
+src/app/pages/MeusFavoritos.tsx
+src/app/pages/PersonProfile.tsx
+src/app/services/userEngagementService.ts
+src/app/types/index.ts
+supabase/migrations/20260518120000_create_user_favorites.sql
+supabase/migrations/20260518141305_relax_legacy_user_favorites_columns.sql
+```
+
+### Se der erro
+
+#### Favorito não salva
+
+- Verificar se o usuário está autenticado com `supabase.auth.getUser()`.
+- Verificar `src/app/services/favoritesService.ts`.
+- Confirmar se o insert usa as colunas novas:
+  - `user_id`;
+  - `entity_type`;
+  - `entity_id`;
+  - `label`;
+  - `description`;
+  - `href`;
+  - `metadata`.
+- Confirmar que o novo fluxo não tenta preencher obrigatoriamente `tipo_conteudo` ou `conteudo_id`.
+- Verificar RLS de `public.user_favorites`.
+- Verificar no console se há erro de policy, constraint ou conflito único.
+
+#### Erro de NOT NULL em `tipo_conteudo` ou `conteudo_id`
+
+- Confirmar se a migration `20260518141305_relax_legacy_user_favorites_columns.sql` foi aplicada no remoto.
+- Validar no SQL Editor:
+
+```sql
+select column_name, is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'user_favorites'
+  and column_name in ('tipo_conteudo', 'conteudo_id')
+order by column_name;
+```
+
+- O esperado é `YES` para as duas colunas legadas.
+
+#### Botão de favorito não muda estado
+
+- Verificar `FavoriteButton.tsx`.
+- Confirmar se `isFavorite` está sendo chamado ao montar.
+- Confirmar se `toggleFavorite` atualiza estado local após sucesso.
+- Confirmar se o botão usa `type="button"`.
+- Confirmar se o estado `loading` não ficou preso após erro.
+
+#### `/meus-favoritos` aparece vazio
+
+- Verificar se a página usa `listFavorites` do novo service, não `listarFavoritos` do legado local.
+- Confirmar se existem registros em `public.user_favorites` para o `auth.uid()` atual.
+- Confirmar RLS de SELECT:
+
+```sql
+select schemaname, tablename, policyname, cmd
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'user_favorites'
+order by policyname;
+```
+
+- Confirmar se o usuário logado é o mesmo `user_id` dos registros.
+
+#### Erro de duplicidade ao favoritar
+
+- Verificar o índice único `user_favorites_user_entity_unique`.
+- O novo service deve usar `upsert` ou consultar/remover/inserir respeitando a unicidade por:
+  - `user_id`;
+  - `entity_type`;
+  - `entity_id`.
+- Não usar a constraint legada por `tipo_conteudo`/`conteudo_id` no novo fluxo.
+
+#### Link do favorito quebra
+
+- Verificar `href` salvo no registro.
+- Favoritos sem `href` devem exibir estado “Link indisponível” ou omitir o botão de abrir.
+- Não tentar corrigir ou apagar automaticamente favoritos de entidades removidas nesta etapa.
+
+#### Metadata sensível em favoritos
+
+- Corrigir imediatamente o ponto que monta o payload.
+- Não salvar em `metadata`:
+  - telefone;
+  - endereço;
+  - e-mail;
+  - URL completa privada;
+  - base64;
+  - token;
+  - secret;
+  - service role;
+  - prompt completo de IA.
+
+#### Modelo legado/local ainda aparece
+
+- Verificar se a tela ou botão novo importa funções de `userEngagementService.ts`.
+- O novo fluxo deve usar `favoritesService.ts`.
+- As funções antigas de favoritos em `userEngagementService.ts` podem permanecer apenas como compatibilidade temporária.
+
+---
+
+## 33. Checklist rápido de investigação por sintoma
 
 ### Usuário comum conseguiu fazer algo que não deveria
 

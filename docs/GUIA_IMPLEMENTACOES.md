@@ -384,6 +384,100 @@
 
 ---
 
+## Favoritos
+
+### Tópicos 7.8 e 7.9
+
+- A base de schema para favoritos persistidos foi implementada e aplicada no Supabase remoto.
+- A frente ainda não está concluída como funcionalidade de produto, porque faltam service, componente reutilizável, refatoração da página e integração visual no perfil.
+- O modelo legado/local de favoritos continua existindo temporariamente em `userEngagementService.ts` para compatibilidade.
+- Novos favoritos devem usar `public.user_favorites` com `entity_type`, `entity_id`, `label`, `description`, `href` e `metadata`.
+- As colunas legadas `tipo_conteudo`, `conteudo_id` e `titulo` permanecem na tabela para transição, mas `tipo_conteudo` e `conteudo_id` deixaram de ser obrigatórias.
+- Não deve haver uso de `localStorage` no novo fluxo persistido.
+- Não deve haver `DEFAULT_USER_ID = 'demo-user'` no novo service.
+
+### Schema consolidado
+
+- Tabela principal:
+  - `public.user_favorites`
+- Migrations relacionadas:
+  - `20260518120000_create_user_favorites.sql`
+  - `20260518141305_relax_legacy_user_favorites_columns.sql`
+- Colunas novas consolidadas:
+  - `id`
+  - `user_id`
+  - `entity_type`
+  - `entity_id`
+  - `label`
+  - `description`
+  - `href`
+  - `metadata`
+  - `created_at`
+- Colunas legadas mantidas temporariamente:
+  - `tipo_conteudo`
+  - `conteudo_id`
+  - `titulo`
+
+### RLS e policies
+
+- RLS está ativo em `public.user_favorites`.
+- Policies esperadas:
+  - `users can read own favorites` — SELECT;
+  - `users can insert own favorites` — INSERT;
+  - `users can update own favorites` — UPDATE;
+  - `users can delete own favorites` — DELETE.
+- Todas as operações devem respeitar `auth.uid() = user_id`.
+- Usuário autenticado só pode ler, inserir, atualizar ou remover seus próprios favoritos.
+- Não usar service role no frontend.
+
+### Índices e unicidade
+
+- Índices novos esperados:
+  - `idx_user_favorites_entity`;
+  - `idx_user_favorites_user_id_created_at_desc`;
+  - `user_favorites_user_entity_unique`.
+- A unicidade nova é por:
+  - `user_id`;
+  - `entity_type`;
+  - `entity_id`.
+- O índice/constraint legado por `tipo_conteudo` e `conteudo_id` foi removido ou neutralizado pela migration de relaxamento.
+
+### Tipos TypeScript
+
+- `src/app/types/index.ts` passou a incluir tipos novos para favoritos persistidos, como:
+  - `FavoriteEntityType`;
+  - `UserFavorite`;
+  - `CreateUserFavoritePayload`.
+- Tipos legados como `TipoConteudoFavorito` e `FavoritoUsuario` continuam existindo para compatibilidade até a refatoração final.
+
+### Próxima etapa de implementação
+
+- Criar service persistido:
+  - `src/app/services/favoritesService.ts`
+- Criar botão reutilizável:
+  - `src/app/components/favorites/FavoriteButton.tsx`
+- Refatorar página existente:
+  - `src/app/pages/MeusFavoritos.tsx`
+- Integrar botão inicial no perfil:
+  - `src/app/pages/PersonProfile.tsx`
+- Atualizar `userEngagementService.ts` apenas com comentário de legado para favoritos locais.
+
+### Regras para a próxima etapa
+
+- Não criar nova migration para service/UI.
+- Não rodar `supabase db push` na etapa de service/UI.
+- O novo service deve usar `supabase.auth.getUser()` para obter o usuário atual.
+- O novo service deve inserir apenas as colunas novas.
+- Metadata não deve conter telefone, endereço, e-mail, URL completa privada, base64, token ou secrets.
+- A página `/meus-favoritos` deve deixar de depender de `listarFavoritos`/`removerFavorito` do fluxo local legado.
+
+### Status operacional
+
+- Status atual: schema e tipos implementados; camada de aplicação pendente.
+- Próxima etapa recomendada: implementar service, componente, página refatorada, integração no perfil e QA manual.
+
+---
+
 ## Genealogia e Visão Completa
 
 ### Views por geração
@@ -1140,6 +1234,8 @@
 - Remover geração automática de insights em `PersonDataView.tsx`.
 - Implementar geração/regeneração de insights apenas por ação explícita de admin.
 - Registrar logs seguros para geração/regeneração de insights, sem prompt completo, telefone, e-mail, URL completa, tokens ou secrets.
+- Implementar a camada de aplicação de favoritos persistidos: `favoritesService.ts`, `FavoriteButton.tsx`, refatoração de `/meus-favoritos` e integração inicial no perfil.
+- Avaliar remoção futura das colunas legadas de `public.user_favorites` após QA e migração definitiva do fluxo local.
 
 ### Ainda não implementado nesta etapa
 
@@ -1148,8 +1244,8 @@
 - Tópico 7.5 — Grau de parentesco/vínculo.
 - Tópico 7.6 — Selecionar área para PDF/impressão implementado e refinado no QA 7.6C para a viewport visível; árvore completa fica para evolução futura.
 - Tópico 7.7 — Legendas visuais da árvore.
-- Tópico 7.8 — Favoritos em todo o site.
-- Tópico 7.9 — Página de favoritos.
+- Tópico 7.8 — Favoritos em todo o site com schema/tipos implementados; falta camada de aplicação e integrações visuais.
+- Tópico 7.9 — Página de favoritos com schema/tipos implementados; falta refatorar `/meus-favoritos` para Supabase.
 - Tópico 7.10 — Responsividade/mobile.
 
 ## Referência com o plano 7.x
@@ -1165,6 +1261,6 @@ Esta seção relaciona o guia de implementações com os tópicos do plano de pr
 | 7.5 Grau de parentesco/vínculo | Funcionalmente consolidado após QA | Seção "Grau de parentesco/vínculo" |
 | 7.6 PDF/impressão por área | Implementado e refinado no QA 7.6C para viewport visível; árvore completa permanece futura | Seção "Exportação de área visível da árvore" |
 | 7.7 Legendas visuais da árvore | Não implementado | Ainda não há seção de implementação |
-| 7.8 Favoritos em todo o site | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
-| 7.9 Página de favoritos | Não implementado nesta rodada | Ver eventuais bases de favoritos, se documentadas |
+| 7.8 Favoritos em todo o site | Schema e tipos implementados; service, botão reutilizável e integrações visuais pendentes | Seção "Favoritos" |
+| 7.9 Página de favoritos | Schema e tipos implementados; refatoração de `/meus-favoritos` para Supabase pendente | Seção "Favoritos" |
 | 7.10 Responsividade/mobile | Não implementado nesta rodada | Ainda não há seção de implementação |
