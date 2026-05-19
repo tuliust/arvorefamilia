@@ -123,7 +123,7 @@ export function ForumHome() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
         <Card className="min-w-0">
           <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
             <label className="relative block min-w-0">
@@ -211,11 +211,18 @@ export function ForumHome() {
           <div className="min-w-0 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="break-words text-lg font-semibold text-gray-900">Tópicos recentes</h2>
-              <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => {                setBusca('');
-                setCategoriaId('todas');
-                setTipo('todos');
-                setStatus('todos');
-              }}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  setBusca('');
+                  setCategoriaId('todas');
+                  setTipo('todos');
+                  setStatus('todos');
+                }}
+              >
                 Limpar filtros
               </Button>
             </div>
@@ -234,7 +241,8 @@ export function ForumHome() {
                 const categoria = topico.categoria ?? categoriasMap.get(String(topico.categoria_id ?? ''));
                 return (
                   <Link key={topico.id} to={`/forum/topico/${topico.id}`} className="block min-w-0">
-                    <Card className="min-w-0 transition hover:border-blue-200 hover:shadow-md">                      <CardHeader className="p-4 pb-2">
+                    <Card className="min-w-0 transition hover:border-blue-200 hover:shadow-md">
+                      <CardHeader className="p-4 pb-2">
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                           {categoria?.nome && <span className="break-words">{categoria.nome}</span>}
                           <span>{TIPO_LABELS[topico.tipo]}</span>
@@ -252,7 +260,7 @@ export function ForumHome() {
                             <MessageCircle className="h-3 w-3 shrink-0" />
                             {topico.visualizacoes ?? 0} visualizações
                           </span>
-                           <span className="break-words">{formatarData(topico.created_at)}</span>
+                          <span className="break-words">{formatarData(topico.created_at)}</span>
                         </div>
                       </CardContent>
                     </Card>

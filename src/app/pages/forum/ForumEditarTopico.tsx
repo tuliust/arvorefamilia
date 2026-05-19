@@ -154,10 +154,10 @@ export function ForumEditarTopico() {
 
   if (!podeEditar) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <Card className="max-w-xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <Card className="mx-auto max-w-xl">
           <CardContent className="p-8 text-center">
-            <p className="text-gray-600">Você não tem permissão para editar este tópico.</p>
+            <p className="break-words text-gray-600">Você não tem permissão para editar este tópico.</p>
             <Link to={`/forum/topico/${topico.id}`} className="mt-4 inline-flex text-sm font-medium text-blue-600 hover:underline">
               Voltar ao tópico
             </Link>
@@ -169,42 +169,42 @@ export function ForumEditarTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Editar tópico</h1>
-            <p className="text-sm text-gray-500">Atualize as informações do tópico.</p>
+      <header className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">Editar tópico</h1>
+            <p className="break-words text-sm text-gray-500">Atualize as informações do tópico.</p>
           </div>
           <Link
             to={`/forum/topico/${topico.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Voltar
           </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <Card>
+      <main className="mx-auto max-w-4xl px-4 py-6">
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Dados do tópico</CardTitle>
+            <CardTitle className="break-words">Dados do tópico</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-5">
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="titulo">Título</label>
                 <Input id="titulo" value={titulo} onChange={(event) => setTitulo(event.target.value)} />
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700" htmlFor="categoria">Categoria</label>
                   <select
                     id="categoria"
                     value={categoriaId}
                     onChange={(event) => setCategoriaId(event.target.value)}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                   >
                     <option value="">Sem categoria</option>
                     {categorias.map((categoria) => (
@@ -213,13 +213,13 @@ export function ForumEditarTopico() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700" htmlFor="tipo">Tipo</label>
                   <select
                     id="tipo"
                     value={tipo}
                     onChange={(event) => setTipo(event.target.value as ForumTopicoTipo)}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                   >
                     {TIPO_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -228,13 +228,13 @@ export function ForumEditarTopico() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="pessoa">Pessoa relacionada</label>
                 <select
                   id="pessoa"
                   value={pessoaRelacionadaId}
                   onChange={(event) => setPessoaRelacionadaId(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                 >
                   <option value="">Nenhuma pessoa relacionada</option>
                   {pessoas.map((pessoa) => (
@@ -243,7 +243,7 @@ export function ForumEditarTopico() {
                 </select>
               </div>
 
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="conteudo">Conteúdo</label>
                 <Textarea
                   id="conteudo"
@@ -253,9 +253,9 @@ export function ForumEditarTopico() {
                 />
               </div>
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={salvando}>
-                  <Save className="w-4 h-4 mr-2" />
+              <div className="flex flex-col sm:flex-row sm:justify-end">
+                <Button type="submit" disabled={salvando} className="w-full sm:w-auto">
+                  <Save className="mr-2 h-4 w-4 shrink-0" />
                   {salvando ? 'Salvando...' : 'Salvar alterações'}
                 </Button>
               </div>
