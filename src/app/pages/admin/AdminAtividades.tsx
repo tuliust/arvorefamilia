@@ -54,26 +54,26 @@ function buildServiceFilters(filters: ActivityFilters): ActivityLogFilters {
 
 function ActivityRow({ activity }: { activity: ActivityLog }) {
   return (
-    <div className="grid gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0 lg:grid-cols-[150px_180px_190px_1fr]">
-      <div className="text-sm text-gray-600">{formatActivityDate(activity.created_at)}</div>
-      <div>
-        <p className="text-sm font-medium text-gray-900">
+    <div className="grid min-w-0 gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0 lg:grid-cols-[150px_180px_190px_1fr]">
+      <div className="break-words text-sm text-gray-600">{formatActivityDate(activity.created_at)}</div>
+      <div className="min-w-0">
+        <p className="break-words text-sm font-medium text-gray-900">
           {activity.actor_display_name || 'Ator não identificado'}
         </p>
       </div>
-      <div>
-        <p className="text-sm font-medium text-gray-900">
+      <div className="min-w-0">
+        <p className="break-words text-sm font-medium text-gray-900">
           {getActivityActionLabel(activity.action)}
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="break-words text-xs text-gray-500">
           {getActivityEntityLabel(activity.entity_type)}
         </p>
       </div>
-      <div>
-        <p className="text-sm text-gray-900">
+      <div className="min-w-0">
+        <p className="break-words text-sm text-gray-900">
           {activity.entity_label || getActivityEntityLabel(activity.entity_type)}
         </p>
-        <p className="text-xs text-gray-500">{getActivitySummary(activity)}</p>
+        <p className="break-words text-xs text-gray-500">{getActivitySummary(activity)}</p>
       </div>
     </div>
   );
@@ -121,30 +121,30 @@ export function AdminAtividades() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900">
+      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900">
               <Clock className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Histórico de Atividades</h1>
-              <p className="text-sm text-gray-500">Auditoria administrativa das alterações recentes</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Histórico de Atividades</h1>
+              <p className="break-words text-sm text-gray-500">Auditoria administrativa das alterações recentes</p>
             </div>
           </div>
 
-          <Button variant="outline" onClick={() => navigate('/admin')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
+            <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
             Voltar ao painel
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <Card className="mb-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="mb-6 min-w-0">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Filter className="h-4 w-4" />
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
+              <Filter className="h-4 w-4 shrink-0" />
               Filtros
               {activeFiltersCount > 0 && (
                 <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
@@ -155,10 +155,10 @@ export function AdminAtividades() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Tipo de ação
                 <select
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={filters.action}
                   onChange={(event) =>
                     setFilters((current) => ({
@@ -176,10 +176,10 @@ export function AdminAtividades() {
                 </select>
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Entidade
                 <select
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={filters.entityType}
                   onChange={(event) =>
                     setFilters((current) => ({
@@ -197,7 +197,7 @@ export function AdminAtividades() {
                 </select>
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Usuário/ator
                 <Input
                   value={filters.actorQuery}
@@ -208,7 +208,7 @@ export function AdminAtividades() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Entidade afetada
                 <Input
                   value={filters.entityQuery}
@@ -219,7 +219,7 @@ export function AdminAtividades() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 De
                 <Input
                   type="date"
@@ -230,7 +230,7 @@ export function AdminAtividades() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Até
                 <Input
                   type="date"
@@ -242,27 +242,27 @@ export function AdminAtividades() {
               </label>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button onClick={handleApplyFilters} disabled={loading}>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <Button className="w-full sm:w-auto" onClick={handleApplyFilters} disabled={loading}>
                 Aplicar filtros
               </Button>
-              <Button variant="outline" onClick={handleClearFilters} disabled={loading}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleClearFilters} disabled={loading}>
                 Limpar filtros
               </Button>
-              <Button variant="ghost" onClick={() => loadActivities(filters)} disabled={loading}>
-                <RefreshCcw className="mr-2 h-4 w-4" />
+              <Button variant="ghost" className="w-full sm:w-auto" onClick={() => loadActivities(filters)} disabled={loading}>
+                <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
                 Atualizar
               </Button>
-              <span className="text-sm text-gray-500">
+              <span className="break-words text-sm text-gray-500">
                 {loading ? 'Carregando...' : `${activities.length} atividades encontradas`}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Atividades</CardTitle>
+            <CardTitle className="break-words">Atividades</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
