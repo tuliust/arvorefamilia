@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { AppLink as Link } from '../components/AppLink';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import {
   obterPessoaPorId,
@@ -296,8 +296,8 @@ export function PersonProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <p className="text-center text-gray-600">Carregando...</p>
           </CardContent>
@@ -308,11 +308,11 @@ export function PersonProfile() {
 
   if (!pessoa) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <p className="text-center text-gray-600">Pessoa não encontrada</p>
-            <Button onClick={() => navigate('/')} className="w-full mt-4">
+            <Button onClick={() => navigate('/')} className="mt-4 w-full">
               Voltar para a árvore
             </Button>
           </CardContent>
@@ -329,23 +329,23 @@ export function PersonProfile() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 flex-wrap">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="ghost" onClick={() => navigate('/')} className="w-full justify-start sm:w-auto">
+            <ArrowLeft className="h-4 w-4" />
             Voltar para árvore
           </Button>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
             <Link to="/meus-favoritos">
-              <Button variant="outline">
-                <Star className="w-4 h-4 mr-2" />
+              <Button variant="outline" className="w-full sm:w-auto">
+                <Star className="h-4 w-4" />
                 Favoritos
               </Button>
             </Link>
             <Link to="/notificacoes">
-              <Button variant="outline">
-                <Bell className="w-4 h-4 mr-2" />
+              <Button variant="outline" className="w-full sm:w-auto">
+                <Bell className="h-4 w-4" />
                 Notificações
               </Button>
             </Link>
@@ -360,6 +360,7 @@ export function PersonProfile() {
             {canEdit && (
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados')}
               >
                 Editar
@@ -370,7 +371,7 @@ export function PersonProfile() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto space-y-6 px-6 py-8">
+      <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <PersonDataView pessoa={pessoa} />
 
         <PersonRelationshipsView relationships={relacionamentos} loading={relationshipsLoading} />
@@ -386,65 +387,65 @@ export function PersonProfile() {
 
         <PersonEventsList eventos={personEvents} />
 
-          {user && (
-            <section>
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                        <MessageCircle className="h-5 w-5 text-blue-600" />
-                        Discussões relacionadas
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Tópicos do fórum ligados a esta pessoa da árvore.
-                      </p>
-                    </div>
-
-                    <Link to={`/forum/novo?pessoaId=${pessoa.id}`}>
-                      <Button variant="outline">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Criar discussão sobre esta pessoa
-                      </Button>
-                    </Link>
+        {user && (
+          <section>
+            <Card>
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="flex min-w-0 items-center gap-2 break-words text-lg font-semibold text-gray-900">
+                      <MessageCircle className="h-5 w-5 shrink-0 text-blue-600" />
+                      <span className="min-w-0 break-words">Discussões relacionadas</span>
+                    </h2>
+                    <p className="mt-1 break-words text-sm text-gray-500">
+                      Tópicos do fórum ligados a esta pessoa da árvore.
+                    </p>
                   </div>
 
-                  <div className="mt-5">
-                    {forumLoading ? (
-                      <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">Carregando discussões...</p>
-                    ) : forumTopicos.length === 0 ? (
-                      <ForumEmptyState
-                        titulo="Nenhuma discussão relacionada"
-                        descricao="Ainda não há tópicos do fórum vinculados a esta pessoa."
-                        actionLabel="Criar discussão"
-                        onAction={() => navigate(`/forum/novo?pessoaId=${pessoa.id}`)}
-                      />
-                    ) : (
-                      <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
-                        {forumTopicos.map((topico) => (
-                          <Link
-                            key={topico.id}
-                            to={`/forum/topico/${topico.id}`}
-                            className="block p-4 transition-colors hover:bg-gray-50"
-                          >
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                              <div>
-                                <h3 className="font-semibold text-gray-900">{topico.titulo}</h3>
-                                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{topico.conteudo}</p>
-                              </div>
-                              <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                                {topico.status}
-                              </span>
+                  <Link to={`/forum/novo?pessoaId=${pessoa.id}`}>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      <Plus className="h-4 w-4" />
+                      Criar discussão sobre esta pessoa
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="mt-5">
+                  {forumLoading ? (
+                    <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">Carregando discussões...</p>
+                  ) : forumTopicos.length === 0 ? (
+                    <ForumEmptyState
+                      titulo="Nenhuma discussão relacionada"
+                      descricao="Ainda não há tópicos do fórum vinculados a esta pessoa."
+                      actionLabel="Criar discussão"
+                      onAction={() => navigate(`/forum/novo?pessoaId=${pessoa.id}`)}
+                    />
+                  ) : (
+                    <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                      {forumTopicos.map((topico) => (
+                        <Link
+                          key={topico.id}
+                          to={`/forum/topico/${topico.id}`}
+                          className="block p-4 transition-colors hover:bg-gray-50"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                              <h3 className="break-words font-semibold text-gray-900">{topico.titulo}</h3>
+                              <p className="mt-1 line-clamp-2 break-words text-sm text-gray-500">{topico.conteudo}</p>
                             </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          )}
+                            <span className="shrink-0 self-start rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                              {topico.status}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {pessoa.arquivos_historicos && pessoa.arquivos_historicos.length > 0 && (
           <ArquivosHistoricos
