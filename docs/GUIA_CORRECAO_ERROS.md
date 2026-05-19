@@ -910,32 +910,68 @@ Não salvar:
 
 ## 19. Legendas visuais — 7.7
 
-Arquivos prováveis:
+Status:
+
+- implementada no escopo visual/frontend;
+- sem migration;
+- sem Supabase;
+- sem configuração administrativa.
+
+Arquivos principais:
 
 ```txt
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
-src/app/pages/Home.tsx
+src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
 ```
 
 ### Legenda não aparece
 
-Verificar integração em `Home` ou `FamilyTree`.
+Verificar:
+
+- import de `TreeLegend` em `FamilyTree.tsx`;
+- estado `isLegendOpen`;
+- botão flutuante com texto **Legenda**;
+- se o painel não está escondido por `isAreaSelectionOpen`;
+- z-index e posicionamento do painel.
+
+### Legenda abre, mas atrapalha pan/zoom da árvore
+
+Verificar:
+
+- `onMouseDown={(event) => event.stopPropagation()}`;
+- `onClick={(event) => event.stopPropagation()}`;
+- se o painel tem `data-tree-legend="true"`;
+- se a interação não está propagando para o ReactFlow.
+
+### Legenda aparece em PNG/PDF/impressão
+
+Verificar em `treeExport.ts` se `getDefaultTreeExportIgnoreElements` ignora `[data-tree-legend="true"]`.
 
 ### Legenda contradiz visual da árvore
 
 Comparar com:
 
-- status do anel;
-- conectores pais-filhos;
-- cores de pessoa/pet/falecido;
-- diferenças entre views.
+- `GenealogySpouseEdge.tsx` para status do anel;
+- `GenealogyFamilyConnectorNode.tsx` para conectores/barramentos;
+- `directFamilyColors.ts` para cores de grupos;
+- `visualTokens.ts` para cores de edges e cards;
+- diferenças entre `minha-arvore`, `genealogia` e `visao-completa`.
 
 ### Mobile quebra
 
-Pode ser ajustado na fase 7.10, mas o componente deve nascer com layout flexível.
+Ajustar preferencialmente dentro da fase 7.10.
+
+Verificar:
+
+- largura do painel;
+- altura máxima;
+- scroll interno;
+- sobreposição com header/controles;
+- legibilidade dos textos curtos;
+- toque no botão **Legenda**.
 
 ---
 

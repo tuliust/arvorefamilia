@@ -23,7 +23,7 @@ Documentos complementares:
 | 7.4 WhatsApp no perfil | Concluída no escopo visual/frontend | Privacidade forte em banco/API e log de clique ficam como evolução futura. |
 | 7.5 Grau de parentesco/vínculo | Funcionalmente consolidada | Utilitário puro, testes unitários e integração em Home/perfil. |
 | 7.6 Selecionar área para PDF/impressão | Implementada tecnicamente | Exporta a viewport visível da árvore como PNG/PDF/impressão. Falta QA amplo em navegadores/dispositivos. |
-| 7.7 Legendas visuais da árvore | Pendente | Próxima frente funcional recomendada antes da responsividade. |
+| 7.7 Legendas visuais da árvore | Concluída no escopo visual/frontend | `TreeLegend.tsx` integrado ao `FamilyTree.tsx`; QA manual aprovado. |
 | 7.8 Favoritos em todo o site | Implementada em primeira camada | Schema, RLS, service, botão reutilizável, página e favorito de pessoa existem. Falta expandir para mais entidades. |
 | 7.9 Página de favoritos | Implementada em primeira versão | Usa Supabase, busca, filtros e remoção. |
 | 7.10 Responsividade tablet/mobile | Pendente | Deve ser a última fase antes do lançamento. |
@@ -682,17 +682,40 @@ Backlog imediato:
 
 Status:
 
-- pendente.
+- concluída no escopo visual/frontend;
+- QA manual aprovado.
 
-Objetivo:
-
-- explicar visualmente conectores, anéis, status conjugais, cores, bordas e diferenças entre views.
-
-Componente sugerido:
+Arquivos:
 
 - `src/app/components/FamilyTree/TreeLegend.tsx`
+- `src/app/components/FamilyTree/FamilyTree.tsx`
+- `src/app/components/FamilyTree/utils/treeExport.ts`
 
-Esta é a próxima frente funcional recomendada antes da responsividade.
+Características:
+
+- componente visual reutilizável;
+- sem migration;
+- sem alteração em Supabase;
+- sem configuração administrativa;
+- integrado como painel flutuante no `FamilyTree`;
+- botão **Legenda** disponível na árvore;
+- painel fechado por padrão;
+- layout flexível para desktop/mobile;
+- explica cards, conectores, barramento vertical, anel 💍, status conjugal, cores e diferenças entre views;
+- respeita os modos **Minha Árvore**, **Genealogia** e **Visão Completa**;
+- não altera lógica de relacionamento, cálculo de status conjugal ou modal do anel;
+- elementos da legenda são ignorados na exportação PNG/PDF/impressão via `data-tree-legend`.
+
+QA realizado:
+
+- `npm run build` aprovado;
+- `git diff --check` sem pendências;
+- `supabase migration list` sem divergências local/remoto;
+- testes manuais aprovados.
+
+Backlog:
+
+- refinamentos visuais finos podem ser tratados dentro da frente 7.10 de responsividade, se necessário.
 
 ---
 
@@ -784,4 +807,4 @@ Larguras a validar:
 - Logs/favoritos/timeline/notificações salvarem dados sensíveis.
 - `/admin/integridade` alterar dados.
 - `supabase db push` ser usado sem revisar migrations.
-- Responsividade ser iniciada antes de fechar 7.7, favoritos prioritários e QA operacional básico.
+- Responsividade ser iniciada sem considerar a legenda 7.7 nos testes de árvore e touch.

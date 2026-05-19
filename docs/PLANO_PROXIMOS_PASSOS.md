@@ -51,7 +51,7 @@ Regras:
 | 7.4 WhatsApp | Concluído no frontend | Backlog: privacidade forte em banco/API e log seguro opcional. |
 | 7.5 Grau de parentesco | Consolidado funcionalmente | Backlog: integração na árvore/Visão Completa e limpeza de legado. |
 | 7.6 Exportação área da árvore | Implementada tecnicamente | QA amplo em navegadores, zoom, árvores grandes e mobile/tablet. |
-| 7.7 Legendas visuais | Pendente | Implementar antes da responsividade. |
+| 7.7 Legendas visuais | Concluída no escopo visual/frontend | QA manual aprovado; considerar apenas refinamentos durante 7.10. |
 | 7.8 Favoritos | Primeira camada implementada | Expandir para arquivos, fórum, relacionamento e timeline. |
 | 7.9 Página de favoritos | Primeira versão implementada | QA e expansão junto à 7.8. |
 | 7.10 Responsividade | Pendente | Última fase pré-lançamento. |
@@ -82,33 +82,30 @@ git status
 
 ### Fase 2 — 7.7 Legendas visuais da árvore
 
-Objetivo:
+Status:
 
-Criar uma legenda clara para a árvore, antes dos testes responsivos.
+- concluída no escopo visual/frontend;
+- QA manual aprovado.
 
-Escopo mínimo:
+Implementado:
 
-- criar `src/app/components/FamilyTree/TreeLegend.tsx`;
-- explicar:
-  - linhas pais-filhos;
-  - barramento vertical;
-  - linhas/anel conjugal;
-  - anel ativo;
-  - anel separado/divorciado;
-  - anel de viuvez;
-  - cores de pessoa/pet/falecido;
-  - diferenças entre Minha Árvore, Genealogia e Visão Completa;
-- integrar em `Home.tsx` ou `FamilyTree.tsx`;
-- não criar migration;
-- não alterar Supabase.
+- `src/app/components/FamilyTree/TreeLegend.tsx`;
+- integração em `src/app/components/FamilyTree/FamilyTree.tsx`;
+- exclusão da legenda nas exportações em `src/app/components/FamilyTree/utils/treeExport.ts`;
+- explicação de linhas pais-filhos, barramento vertical, linhas/anel conjugal, anel ativo, anel separado/divorciado, anel de viuvez, cores de pessoa/pet/falecido e diferenças entre Minha Árvore, Genealogia e Visão Completa.
 
-Validação:
+Validação realizada:
 
-```bash
-npm run build
-git diff --check
-git status
-```
+- `npm run build`;
+- `git diff --check`;
+- `git status`;
+- `supabase migration list`.
+
+Observações:
+
+- não houve migration;
+- não houve alteração em Supabase;
+- eventuais ajustes visuais finos devem entrar na fase 7.10 de responsividade.
 
 ---
 
