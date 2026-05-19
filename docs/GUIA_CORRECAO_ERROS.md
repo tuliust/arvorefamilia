@@ -510,6 +510,17 @@ Documentação específica:
 
 - `docs/NOTIFICACOES.md`
 
+Status operacional atual:
+
+- arquitetura 7.1 pronta;
+- QA operacional manual concluído;
+- canal interno validado;
+- e-mail real com Resend validado em teste admin controlado;
+- usuário comum validado em `/notificacoes`;
+- hardening de ownership consolidado: marcar/remover notificação usa `id` e `user_id`;
+- rotina manual de aniversários/memórias validada;
+- pendente: `DAILY_NOTIFICATIONS_SECRET`, teste da Edge Function diária, `pg_cron` seguro e limpeza de testes.
+
 Arquivos:
 
 ```txt
@@ -532,15 +543,19 @@ Verificar:
 - `listarNotificacoesSupabase`;
 - RLS de `notificacoes_usuario`;
 - `user_id` correto;
-- fallback local.
+- se o usuário está autenticado;
+- se a central está em `/notificacoes`;
+- fallback local apenas como compatibilidade.
 
 ### Marcar/remover notificação não funciona
 
 Verificar:
 
 - funções usam `id` e `user_id`;
+- chamadas em `Notificacoes.tsx` passam `user.id`;
 - RLS UPDATE/DELETE do próprio usuário;
-- chamadas em `Notificacoes.tsx` passam `user.id`.
+- se a notificação pertence ao usuário autenticado;
+- se houve erro no console após rollback visual.
 
 ### Preferências não salvam
 
@@ -548,18 +563,21 @@ Verificar:
 
 - `salvarPreferenciasNotificacao`;
 - tabela `preferencias_notificacao`;
+- RLS de upsert por `user_id`;
 - log `notification_preferences.updated`;
-- defaults não sobrescrevem `false`.
+- defaults não sobrescrevem `false`;
+- usuário comum não altera preferências de outro usuário.
 
 ### Gatilho não notifica
 
 Verificar:
 
 - `notificationTriggersService`;
-- destinatários;
+- destinatários em `notificationRecipientsService`;
 - exclusão do ator;
 - dispatch log;
-- preferências do destinatário.
+- preferências do destinatário;
+- se o gatilho usa canal `interna`, não push/WhatsApp.
 
 ### Notificação duplica
 
@@ -568,29 +586,114 @@ Verificar:
 - `notification_occurrences`;
 - `occurrence_key`;
 - constraint única;
-- deduplicação de destinatários.
+- deduplicação de destinatários;
+- se a rotina foi executada manualmente mais de uma vez no mesmo dia;
+- se a Edge Function diária e a rotina manual estão usando o mesmo padrão de chave.
 
-### Email real não envia
+### E-mail real não envia
 
 Verificar:
 
 - deploy de `send-notification-email`;
-- secrets do Resend;
-- `NOTIFICATION_EMAIL_FROM`;
+- secrets no Supabase:
+  - `RESEND_API_KEY`;
+  - `NOTIFICATION_EMAIL_FROM`;
+  - `NOTIFICATION_EMAIL_REPLY_TO`;
+  - `SITE_URL`;
+- domínio/remetente verificado no Resend;
 - logs da Edge Function;
-- `notification_dispatch_logs`.
+- `notification_dispatch_logs`;
+- status retornado:
+  - `not_configured`;
+  - `missing_destination`;
+  - `disabled_by_preferences`;
+  - `failed`;
+  - `sent`.
 
-### Email envia sem preferência
+### E-mail retorna `disabled_by_preferences`
 
 Verificar:
 
-- `shouldSendNotificationChannel`;
 - `receber_email`;
-- preferências específicas por tipo.
+- preferência específica por tipo;
+- `shouldSendNotificationChannel`;
+- preferências lidas dentro de `send-notification-email`.
+
+### E-mail envia para destinatário errado
+
+P0 operacional.
+
+Verificar imediatamente:
+
+- `send-notification-email` exige usuário autenticado;
+- usuário comum só pode enviar para si mesmo;
+- admin pode testar de forma controlada;
+- teste admin não deve disparar para massa de usuários;
+- `userId` no body da Edge Function;
+- logs em `notification_dispatch_logs`.
+
+### Rotina diária retorna 401
+
+Verificar:
+
+- `DAILY_NOTIFICATIONS_SECRET` configurado em Supabase secrets;
+- header `x-daily-notifications-secret`;
+- ou `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`;
+- se o secret usado no teste é exatamente o configurado;
+- se a function `run-daily-notifications` foi deployada.
+
+### Rotina diária roda, mas não cria notificações
+
+Verificar:
+
+- há pessoas com data completa no dia de referência;
+- `referenceDate` está no formato `YYYY-MM-DD`;
+- timezone esperado é `America/Sao_Paulo`;
+- recipients resolvidos:
+  - admins;
+  - usuários vinculados à pessoa;
+- preferências de aniversários/memórias;
+- `notification_occurrences`;
+- `notification_dispatch_logs`.
+
+### Cron não dispara
+
+Verificar:
+
+- `pg_cron` criado no SQL Editor;
+- horário configurado em UTC;
+- 08:00 `America/Sao_Paulo` equivale a 11:00 UTC;
+- URL da Edge Function correta;
+- header `x-daily-notifications-secret`;
+- segredo não está hardcoded em migration versionada;
+- logs recentes com `metadata.source = edge-run-daily-notifications`.
 
 ### Push/WhatsApp tentam envio real
 
 Corrigir para `not_configured` ou `skipped` até existir provider real.
+
+### Limpeza de dados de teste
+
+Só limpar depois de confirmar:
+
+- e-mail real recebido;
+- logs criados;
+- deduplicação funcionando;
+- usuário comum OK;
+- rotina manual OK;
+- cron OK.
+
+Buscar primeiro por metadata de teste, por exemplo:
+
+```sql
+select *
+from public.notification_dispatch_logs
+where metadata->>'test' = 'true'
+   or metadata->>'source' in ('admin-notificacoes', 'admin-email-test', 'edge-run-daily-notifications')
+order by created_at desc;
+```
+
+Não apagar logs de produção sem revisão.
 
 ---
 

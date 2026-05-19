@@ -45,7 +45,7 @@ Regras:
 
 | Frente | Status | Próximo passo |
 |---|---|---|
-| 7.1 Notificações | Arquitetura pronta; QA operacional pendente | Validar Resend, e-mail real, cron seguro, gatilhos via UI e usuário comum. |
+| 7.1 Notificações | QA operacional manual concluído; automação diária pendente | Resend/e-mail real, canal interno, usuário comum e rotina manual validados. Próximo: `DAILY_NOTIFICATIONS_SECRET`, teste da Edge Function diária, `pg_cron` seguro e limpeza de testes. |
 | 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Apenas backlog editorial/privacidade avançada. |
 | 7.3 Timeline | Implementada funcionalmente | Backlog futuro: edição manual, upload por evento, PDF, privacidade por evento. |
 | 7.4 WhatsApp | Concluído no frontend | Backlog: privacidade forte em banco/API e log seguro opcional. |
@@ -148,11 +148,18 @@ git status
 
 ### Fase 4 — QA operacional de notificações 7.1
 
-Objetivo:
+Status:
 
-Validar a frente já arquitetada em ambiente real/controlado.
+- QA operacional manual concluído.
+- Canal interno validado.
+- Resend configurado.
+- E-mail real validado em teste admin controlado.
+- Usuário comum validado em `/notificacoes`.
+- Hardening de ownership validado: marcar/remover notificação usa `id` e `user_id`.
+- Rotina manual de aniversários/memórias validada.
+- Deduplicação manual validada via `notification_occurrences`.
 
-Checklist admin:
+Já concluído:
 
 - acessar `/admin/notificacoes`;
 - criar teste interno;
@@ -161,42 +168,47 @@ Checklist admin:
 - executar teste de e-mail para o próprio admin;
 - confirmar recebimento real;
 - confirmar log em `notification_dispatch_logs`;
-- executar rotina manual de aniversários/memórias;
-- rodar a rotina duas vezes e confirmar deduplicação.
-
-Checklist usuário comum:
-
-- acessar `/notificacoes`;
+- acessar `/notificacoes` como usuário comum;
 - alterar preferências;
 - marcar notificação como lida;
 - marcar todas como lidas;
 - remover notificação;
-- confirmar que não acessa `/admin/notificacoes`;
-- confirmar que não vê notificações de outro usuário.
+- confirmar bloqueio de `/admin/notificacoes` para usuário comum;
+- executar rotina manual de aniversários/memórias;
+- rodar a rotina duas vezes e confirmar deduplicação.
 
-Secrets esperados:
+Secrets de e-mail já esperados/configurados:
 
 ```txt
 RESEND_API_KEY
 NOTIFICATION_EMAIL_FROM
 NOTIFICATION_EMAIL_REPLY_TO
 SITE_URL
-DAILY_NOTIFICATIONS_SECRET
 ```
 
-Cron:
+Pendências restantes:
 
-- testar `run-daily-notifications` manualmente com header seguro;
-- só depois criar `pg_cron`;
-- não colocar segredo em migration versionada.
+- configurar `DAILY_NOTIFICATIONS_SECRET`;
+- fazer deploy/confirmar deploy de `run-daily-notifications`;
+- testar `run-daily-notifications` manualmente com `x-daily-notifications-secret`;
+- testar `run-daily-notifications` sem secret e confirmar retorno `401`;
+- criar `pg_cron` no SQL Editor somente depois do teste manual;
+- não colocar segredo em migration versionada;
+- confirmar primeira execução automática;
+- limpar notificações/logs de teste apenas após validação completa.
 
-Validação:
+Validação restante:
 
 ```bash
 npm run build
 git diff --check
 git status
 ```
+
+Observação:
+
+- esta fase não exige `supabase db push`;
+- push real, WhatsApp real e fila/retry avançado permanecem backlog.
 
 ---
 
@@ -406,14 +418,17 @@ Critérios finais:
 
 ### 4.5 Notificações
 
-- [ ] `/notificacoes` funciona.
-- [ ] `/admin/notificacoes` funciona.
-- [ ] Preferências persistem.
-- [ ] Marcar/remover notificação respeita `user_id`.
-- [ ] Gatilhos principais geram notificações.
-- [ ] Deduplicação funciona.
-- [ ] E-mail real testado de forma controlada.
-- [ ] Cron seguro testado, se ativado.
+- [x] `/notificacoes` funciona.
+- [x] `/admin/notificacoes` funciona.
+- [x] Preferências persistem.
+- [x] Marcar/remover notificação respeita `user_id`.
+- [x] Gatilhos principais geram notificações internas.
+- [x] Deduplicação manual funciona.
+- [x] E-mail real testado de forma controlada.
+- [ ] `DAILY_NOTIFICATIONS_SECRET` configurado.
+- [ ] Edge Function diária testada com secret.
+- [ ] Edge Function diária testada sem secret com retorno `401`.
+- [ ] Cron seguro ativado e confirmado.
 
 ### 4.6 Insights 7.2
 
@@ -449,8 +464,8 @@ Critérios finais:
 
 ### Operacionais
 
-- [ ] Configurar Resend.
-- [ ] Validar e-mail real.
+- [x] Configurar Resend.
+- [x] Validar e-mail real.
 - [ ] Configurar segredo da rotina diária.
 - [ ] Ativar cron com segurança.
 - [ ] Limpar notificações/logs de teste após validação.

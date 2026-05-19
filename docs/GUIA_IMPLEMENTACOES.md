@@ -17,7 +17,7 @@ Documentos complementares:
 
 | Frente | Status atual | Observação |
 |---|---|---|
-| 7.1 Notificações | Arquiteturalmente pronta; QA operacional pendente | Canal interno funcional. E-mail depende de Resend/secrets/teste real. Push e WhatsApp ficam futuros. |
+| 7.1 Notificações | QA operacional manual concluído; automação diária pendente | Canal interno e e-mail real validados. Resend/secrets configurados. Falta ativar rotina diária com `DAILY_NOTIFICATIONS_SECRET`, testar Edge Function com/sem secret, configurar `pg_cron` seguro e limpar dados de teste, se necessário. Push e WhatsApp ficam futuros. |
 | 7.2 Astrologia e acontecimentos do nascimento | Concluída no escopo funcional atual | Perfil apenas lê insights persistidos. Geração/regeneração é ação admin. |
 | 7.3 Linha do tempo do usuário | Implementada funcionalmente | Primeira versão derivada dos dados existentes, sem tabela própria. |
 | 7.4 WhatsApp no perfil | Concluída no escopo visual/frontend | Privacidade forte em banco/API e log de clique ficam como evolução futura. |
@@ -406,13 +406,15 @@ Documentação específica:
 Status:
 
 - arquitetura pronta;
+- QA operacional manual concluído;
 - canal interno funcional;
-- e-mail condicional ao deploy/configuração de Resend;
+- e-mail real validado com Resend em teste admin controlado;
+- usuário comum validado em `/notificacoes`;
 - push real e WhatsApp real futuros;
 - fila/retry avançado futuro;
 - cron automático depende de solução segura para segredo fora do repositório.
 
-Implementado:
+Implementado e validado manualmente:
 
 - `/notificacoes`;
 - `/admin/notificacoes`;
@@ -423,21 +425,30 @@ Implementado:
 - rotina manual de aniversários/memórias;
 - gatilhos de novo arquivo histórico, novo vínculo, resposta no fórum e comentário no fórum;
 - Edge Function `send-notification-email`;
-- Edge Function `run-daily-notifications`.
+- envio real de e-mail com Resend;
+- secrets de e-mail no Supabase:
+  - `RESEND_API_KEY`;
+  - `NOTIFICATION_EMAIL_FROM`;
+  - `NOTIFICATION_EMAIL_REPLY_TO`;
+  - `SITE_URL`;
+- hardening da central do usuário para marcar/remover notificação com filtro por `id` e `user_id`.
 
-Hardening já consolidado:
+Pendências operacionais restantes:
 
-- marcar/remover notificação usa filtro por `id` e `user_id`.
-
-Pendências operacionais:
-
-- configurar secrets reais do Resend;
-- confirmar e-mail real por teste admin controlado;
 - configurar `DAILY_NOTIFICATIONS_SECRET`;
-- testar chamada manual com header;
-- criar `pg_cron` apenas sem expor segredo em migration versionada;
-- executar QA completo com usuário comum;
-- limpar dados de teste só depois de confirmar logs, deduplicação e recebimento.
+- fazer deploy/confirmar deploy de `run-daily-notifications`;
+- testar chamada manual da Edge Function diária com `x-daily-notifications-secret`;
+- testar chamada manual sem secret e confirmar retorno `401`;
+- criar `pg_cron` no SQL Editor sem expor segredo em migration versionada;
+- confirmar primeira execução automática;
+- limpar notificações/logs de teste somente depois de confirmar logs, deduplicação e recebimento.
+
+Continua como futuro/backlog:
+
+- push real;
+- WhatsApp real;
+- fila/retry avançado;
+- cron automático por migration apenas se houver estratégia segura para segredo fora do repositório.
 
 ---
 
