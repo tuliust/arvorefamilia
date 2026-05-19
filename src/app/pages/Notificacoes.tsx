@@ -191,13 +191,13 @@ export function Notificacoes() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 px-4 py-10">
-        <div className="mx-auto max-w-xl rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <div className="mx-auto w-full max-w-xl rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
           <Bell className="mx-auto mb-3 h-8 w-8 text-gray-500" />
-          <h1 className="text-xl font-bold text-gray-900">Notificações</h1>
-          <p className="mt-2 text-sm text-gray-600">Faça login para gerenciar suas notificações familiares.</p>
+          <h1 className="break-words text-xl font-bold text-gray-900">Notificações</h1>
+          <p className="mt-2 break-words text-sm text-gray-600">Faça login para gerenciar suas notificações familiares.</p>
           <Link
             to="/entrar"
-            className="mt-5 inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+            className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 sm:w-auto"
           >
             Entrar
           </Link>
@@ -209,40 +209,40 @@ export function Notificacoes() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Notificações</h1>
-            <p className="text-sm text-gray-500">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">Notificações</h1>
+            <p className="break-words text-sm text-gray-500">
               Gerencie seus avisos e acompanhe atualizações importantes da família.
             </p>
           </div>
 
           <Link
             to="/"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm font-medium transition-colors hover:bg-gray-50"
+            className="inline-flex h-9 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm font-medium transition-colors hover:bg-gray-50 sm:w-auto"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-5xl gap-5 px-4 py-6 lg:grid-cols-[360px_1fr]">
-        <Card className="h-fit rounded-lg border-gray-200 shadow-sm">
+      <main className="mx-auto grid max-w-5xl grid-cols-1 gap-5 px-4 py-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+        <Card className="h-fit min-w-0 rounded-lg border-gray-200 shadow-sm">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
                 <Mail className="h-5 w-5" />
               </span>
-              <div>
-                <CardTitle className="text-base">Preferências de notificação</CardTitle>
-                <p className="text-xs text-gray-500">A lista interna continua visível mesmo com canais desligados.</p>
+              <div className="min-w-0">
+                <CardTitle className="break-words text-base">Preferências de notificação</CardTitle>
+                <p className="break-words text-xs text-gray-500">A lista interna continua visível mesmo com canais desligados.</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading && !preferencias ? (
-              <p className="text-sm text-gray-500">Carregando preferências...</p>
+              <p className="break-words text-sm text-gray-500">Carregando preferências...</p>
             ) : preferencias ? (
               <>
                 <div className="space-y-3">
@@ -284,54 +284,54 @@ export function Notificacoes() {
                   </div>
                 </div>
 
-                {savingKey && <p className="text-xs text-gray-500">Salvando preferências...</p>}
+                {savingKey && <p className="break-words text-xs text-gray-500">Salvando preferências...</p>}
               </>
             ) : (
-              <p className="text-sm text-red-600">Não foi possível carregar as preferências.</p>
+              <p className="break-words text-sm text-red-600">Não foi possível carregar as preferências.</p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg border-gray-200 shadow-sm">
+        <Card className="min-w-0 rounded-lg border-gray-200 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
                   {naoLidas > 0 ? <BellRing className="h-5 w-5" /> : <Inbox className="h-5 w-5" />}
                 </span>
-                <div>
-                  <CardTitle className="text-base">Notificações recentes</CardTitle>
-                  <p className="text-xs text-gray-500">{naoLidas} não lida(s)</p>
+                <div className="min-w-0">
+                  <CardTitle className="break-words text-base">Notificações recentes</CardTitle>
+                  <p className="break-words text-xs text-gray-500">{naoLidas} não lida(s)</p>
                 </div>
               </div>
 
-              <Button type="button" variant="outline" size="sm" onClick={marcarTodas} disabled={naoLidas === 0}>
-                <CheckCheck className="mr-2 h-4 w-4" />
+              <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={marcarTodas} disabled={naoLidas === 0}>
+                <CheckCheck className="h-4 w-4" />
                 Marcar todas como lidas
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <div className="mb-4 break-words rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 {error}
               </div>
             )}
 
             {loading ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-500">
+              <div className="break-words rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-500">
                 Carregando notificações...
               </div>
             ) : notificacoes.length === 0 ? (
               <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
                 <Inbox className="mx-auto mb-3 h-8 w-8 text-gray-400" />
-                <p className="text-sm font-medium text-gray-700">Nenhuma notificação por enquanto.</p>
+                <p className="break-words text-sm font-medium text-gray-700">Nenhuma notificação por enquanto.</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {notificacoes.map((item) => (
                   <article key={item.id} className="py-4 first:pt-0 last:pb-0">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
@@ -342,25 +342,25 @@ export function Notificacoes() {
                           >
                             {item.lida ? 'Lida' : 'Nova'}
                           </span>
-                          <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                          <span className="break-all text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                             {item.tipo}
                           </span>
                         </div>
-                        <h2 className="text-sm font-bold text-gray-900">{item.titulo}</h2>
-                        <p className="text-sm leading-relaxed text-gray-600">{item.mensagem}</p>
-                        <p className="text-xs text-gray-400">{formatarData(item.created_at)}</p>
+                        <h2 className="break-words text-sm font-bold text-gray-900">{item.titulo}</h2>
+                        <p className="break-words text-sm leading-relaxed text-gray-600">{item.mensagem}</p>
+                        <p className="break-words text-xs text-gray-400">{formatarData(item.created_at)}</p>
                         {item.link && (
                           <Link
                             to={item.link}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"
+                            className="inline-flex items-center gap-1 break-all text-xs font-semibold text-blue-700 hover:underline"
                           >
                             Abrir conteúdo
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-3 w-3 shrink-0" />
                           </Link>
                         )}
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2 self-start">
                         {!item.lida && (
                           <button
                             type="button"
@@ -410,15 +410,15 @@ function PreferenceToggle({
   return (
     <div
       className={[
-        'flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3',
+        'flex min-w-0 items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3',
         muted ? 'opacity-60' : '',
       ].join(' ')}
     >
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-gray-900">{label}</p>
-        <p className="text-xs leading-relaxed text-gray-500">{description}</p>
+        <p className="break-words text-sm font-semibold text-gray-900">{label}</p>
+        <p className="break-words text-xs leading-relaxed text-gray-500">{description}</p>
       </div>
-      <Switch checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} />
+      <Switch checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
   );
 }
