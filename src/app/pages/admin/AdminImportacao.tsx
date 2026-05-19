@@ -59,29 +59,29 @@ export function AdminImportacao() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')}>
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="max-w-5xl mx-auto flex min-w-0 items-center justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')} className="shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-bold text-xl text-gray-900">Importar Dados</h1>
+            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">Importar Dados</h1>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {/* Instructions */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileJson className="w-5 h-5" />
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words">
+              <FileJson className="h-5 w-5 shrink-0" />
               Como Importar
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none break-words">
               <p className="text-gray-600">
                 Cole um array JSON com os dados das pessoas seguindo o formato abaixo. 
                 O sistema criará automaticamente os relacionamentos baseado nos nomes.
@@ -102,7 +102,7 @@ export function AdminImportacao() {
               </ul>
             </div>
 
-            <div className="bg-gray-900 text-white p-4 rounded-lg overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-white">
               <pre className="text-xs">
                 {exampleData}
               </pre>
@@ -111,21 +111,21 @@ export function AdminImportacao() {
         </Card>
 
         {/* Import Form */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Cole o JSON para Importar</CardTitle>
+            <CardTitle className="break-words">Cole o JSON para Importar</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <textarea
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={15}
-              className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono"
+              className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm"
               placeholder="Cole o JSON aqui..."
             />
             
-            <div className="flex gap-3">
-              <Button onClick={handleImportar} disabled={!jsonInput.trim() || loading}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+              <Button onClick={handleImportar} disabled={!jsonInput.trim() || loading} className="w-full sm:w-auto">
                 <Upload className="w-4 h-4 mr-2" />
                 {loading ? 'Importando...' : 'Importar Dados'}
               </Button>
@@ -133,6 +133,7 @@ export function AdminImportacao() {
                 variant="outline" 
                 onClick={() => setJsonInput(exampleData)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Usar Exemplo
               </Button>
@@ -143,6 +144,7 @@ export function AdminImportacao() {
                   setResultado(null);
                 }}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Limpar
               </Button>
@@ -152,17 +154,17 @@ export function AdminImportacao() {
 
         {/* Result */}
         {resultado && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex min-w-0 items-center gap-2 break-words">
                 {resultado.sucesso ? (
                   <>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
                     Importação Concluída
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
                     Erro na Importação
                   </>
                 )}
@@ -172,15 +174,15 @@ export function AdminImportacao() {
               {resultado.sucesso && (
                 <div className="space-y-3">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-sm text-green-800">
+                    <p className="break-words text-sm text-green-800">
                       ✅ <strong>{resultado.pessoas}</strong> pessoas importadas
                     </p>
-                    <p className="text-sm text-green-800">
+                    <p className="break-words text-sm text-green-800">
                       ✅ <strong>{resultado.relacionamentos}</strong> relacionamentos criados
                     </p>
                   </div>
 
-                  <Button onClick={() => navigate('/admin/pessoas')}>
+                  <Button onClick={() => navigate('/admin/pessoas')} className="w-full sm:w-auto">
                     Ver Pessoas Importadas
                   </Button>
                 </div>
@@ -188,10 +190,10 @@ export function AdminImportacao() {
 
               {resultado.erros.length > 0 && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-900 mb-2">Avisos e Erros:</h4>
+                  <h4 className="mb-2 break-words font-semibold text-amber-900">Avisos e Erros:</h4>
                   <ul className="space-y-1">
                     {resultado.erros.map((erro, index) => (
-                      <li key={index} className="text-sm text-amber-800">
+                      <li key={index} className="break-words text-sm text-amber-800">
                         • {erro}
                       </li>
                     ))}
@@ -203,12 +205,12 @@ export function AdminImportacao() {
         )}
 
         {/* Tips */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Dicas Importantes</CardTitle>
+            <CardTitle className="break-words">Dicas Importantes</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <ul className="space-y-2 break-words text-sm text-gray-600">
               <li>✓ Os nomes devem ser exatamente iguais para criar relacionamentos</li>
               <li>✓ Nomes provisórios (ex: "Mulher de João") são aceitos</li>
               <li>✓ Campos vazios são permitidos e podem ser preenchidos depois</li>

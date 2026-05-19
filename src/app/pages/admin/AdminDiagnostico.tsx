@@ -133,28 +133,29 @@ export function AdminDiagnostico() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+      <header className="bg-white border-b border-gray-200 px-4 py-4 shadow-sm sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
               <Settings className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="font-bold text-xl text-gray-900">Diagnóstico do Banco de Dados</h1>
-              <p className="text-sm text-gray-500">Análise de integridade e relacionamentos</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Diagnóstico do Banco de Dados</h1>
+              <p className="break-words text-sm text-gray-500">Análise de integridade e relacionamentos</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <Button 
               variant="outline" 
               onClick={carregarDiagnostico}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
-            <Button variant="outline" onClick={() => navigate('/admin')}>
+            <Button variant="outline" onClick={() => navigate('/admin')} className="w-full sm:w-auto">
               <Home className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
@@ -163,15 +164,15 @@ export function AdminDiagnostico() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <Card className="border-amber-200 bg-amber-50 mb-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="mb-6 min-w-0 border-amber-200 bg-amber-50">
           <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-amber-600 mt-0.5" />
-              <div>
+            <div className="flex min-w-0 items-start gap-3">
+              <AlertCircle className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" />
+              <div className="min-w-0">
                 <p className="font-semibold text-amber-900">Diagnóstico legado</p>
-                <p className="text-sm text-amber-800">
-                  Esta tela consulta a Edge Function antiga <code className="rounded bg-amber-100 px-1">make-server-055bf375</code>.
+                <p className="break-words text-sm text-amber-800">
+                  Esta tela consulta a Edge Function antiga <code className="rounded bg-amber-100 px-1 break-all">make-server-055bf375</code>.
                   O resultado pode não refletir o schema atual versionado em migrations.
                 </p>
               </div>
@@ -187,13 +188,13 @@ export function AdminDiagnostico() {
         )}
 
         {error && (
-          <Card className="border-red-200 bg-red-50 mb-6">
+          <Card className="mb-6 min-w-0 border-red-200 bg-red-50">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <XCircle className="w-6 h-6 text-red-600" />
-                <div>
+              <div className="flex min-w-0 items-start gap-3">
+                <XCircle className="h-6 w-6 shrink-0 text-red-600" />
+                <div className="min-w-0">
                   <p className="font-semibold text-red-900">Erro ao carregar diagnóstico</p>
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="break-words text-sm text-red-700">{error}</p>
                 </div>
               </div>
             </CardContent>
@@ -207,19 +208,19 @@ export function AdminDiagnostico() {
               {diagnostico.avisos.map((aviso, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 p-4 rounded-lg border ${getAvisoColor(aviso)}`}
+                  className={`flex min-w-0 items-start gap-3 rounded-lg border p-4 ${getAvisoColor(aviso)}`}
                 >
-                  {getAvisoIcon(aviso)}
-                  <p className="text-sm font-medium">{aviso}</p>
+                  <span className="shrink-0">{getAvisoIcon(aviso)}</span>
+                  <p className="min-w-0 break-words text-sm font-medium">{aviso}</p>
                 </div>
               ))}
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+              <Card className="min-w-0">
+                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
+                  <CardTitle className="break-words text-sm font-medium text-gray-600">
                     Total de Pessoas
                   </CardTitle>
                   <Users className="w-4 h-4 text-gray-400" />
@@ -232,9 +233,9 @@ export function AdminDiagnostico() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+              <Card className="min-w-0">
+                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
+                  <CardTitle className="break-words text-sm font-medium text-gray-600">
                     Relacionamentos
                   </CardTitle>
                   <Link2 className="w-4 h-4 text-gray-400" />
@@ -247,9 +248,9 @@ export function AdminDiagnostico() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+              <Card className="min-w-0">
+                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
+                  <CardTitle className="break-words text-sm font-medium text-gray-600">
                     Com Cônjuge
                   </CardTitle>
                   <Heart className="w-4 h-4 text-gray-400" />
@@ -264,9 +265,9 @@ export function AdminDiagnostico() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+              <Card className="min-w-0">
+                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
+                  <CardTitle className="break-words text-sm font-medium text-gray-600">
                     Com Filhos
                   </CardTitle>
                   <Baby className="w-4 h-4 text-gray-400" />
@@ -283,12 +284,12 @@ export function AdminDiagnostico() {
             </div>
 
             {/* Relacionamentos por Tipo */}
-            <Card className="mb-6">
+            <Card className="mb-6 min-w-0">
               <CardHeader>
-                <CardTitle>Relacionamentos por Tipo</CardTitle>
+                <CardTitle className="break-words">Relacionamentos por Tipo</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
                     <Heart className="w-6 h-6 text-pink-600 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-gray-900">
@@ -330,10 +331,10 @@ export function AdminDiagnostico() {
 
             {/* Pessoas sem Relacionamentos */}
             {diagnostico.resumo.pessoasSemRelacionamentos.length > 0 && (
-              <Card className="mb-6 border-amber-200 bg-amber-50">
+              <Card className="mb-6 min-w-0 border-amber-200 bg-amber-50">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-amber-900">
-                    <AlertCircle className="w-5 h-5" />
+                  <CardTitle className="flex min-w-0 items-start gap-2 break-words text-amber-900">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
                     Pessoas sem Relacionamentos ({diagnostico.resumo.pessoasSemRelacionamentos.length})
                   </CardTitle>
                 </CardHeader>
@@ -342,13 +343,14 @@ export function AdminDiagnostico() {
                     {diagnostico.resumo.pessoasSemRelacionamentos.map((pessoa) => (
                       <div
                         key={pessoa.id}
-                        className="flex items-center justify-between p-3 bg-white rounded-lg"
+                        className="flex min-w-0 flex-col gap-3 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <p className="text-sm font-medium text-gray-900">{pessoa.nome}</p>
+                        <p className="min-w-0 break-words text-sm font-medium text-gray-900">{pessoa.nome}</p>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/admin/pessoas/${pessoa.id}/editar`)}
+                          className="w-full sm:w-auto"
                         >
                           Adicionar Relacionamentos
                         </Button>
@@ -361,27 +363,27 @@ export function AdminDiagnostico() {
 
             {/* Relacionamentos Inválidos */}
             {diagnostico.resumo.relacionamentosInvalidos.length > 0 && (
-              <Card className="mb-6 border-red-200 bg-red-50">
+              <Card className="mb-6 min-w-0 border-red-200 bg-red-50">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-900">
-                    <XCircle className="w-5 h-5" />
+                  <CardTitle className="flex min-w-0 items-start gap-2 break-words text-red-900">
+                    <XCircle className="h-5 w-5 shrink-0" />
                     Relacionamentos Inválidos ({diagnostico.resumo.relacionamentosInvalidos.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-red-700 mb-4">
+                  <p className="mb-4 break-words text-sm text-red-700">
                     Estes relacionamentos apontam para IDs de pessoas que não existem no banco de dados.
                   </p>
                   <div className="space-y-2">
                     {diagnostico.resumo.relacionamentosInvalidos.map((rel, idx) => (
                       <div
                         key={idx}
-                        className="p-3 bg-white rounded-lg text-sm"
+                        className="min-w-0 rounded-lg bg-white p-3 text-sm"
                       >
-                        <p className="font-medium text-gray-900">
+                        <p className="break-all font-medium text-gray-900">
                           Tipo: {rel.tipo} | ID: {rel.id}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="mt-1 break-all text-xs text-gray-600">
                           Origem: {rel.origem} {!rel.origem_existe && <span className="text-red-600">(não existe)</span>}
                           {' → '}
                           Destino: {rel.destino} {!rel.destino_existe && <span className="text-red-600">(não existe)</span>}
@@ -394,26 +396,26 @@ export function AdminDiagnostico() {
             )}
 
             {/* Exemplos de Pessoas */}
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
-                <CardTitle>Exemplos de Pessoas e seus Relacionamentos</CardTitle>
+                <CardTitle className="break-words">Exemplos de Pessoas e seus Relacionamentos</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {diagnostico.exemplos.map((exemplo) => (
-                    <div key={exemplo.id} className="border-b border-gray-200 pb-4 last:border-0">
-                      <h3 className="font-semibold text-gray-900 mb-3">{exemplo.nome}</h3>
+                    <div key={exemplo.id} className="min-w-0 border-b border-gray-200 pb-4 last:border-0">
+                      <h3 className="mb-3 break-words font-semibold text-gray-900">{exemplo.nome}</h3>
                       {exemplo.relacionamentos.length > 0 ? (
                         <div className="space-y-2">
                           {exemplo.relacionamentos.map((rel, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center gap-3 text-sm p-2 bg-gray-50 rounded"
+                              className="flex min-w-0 flex-col gap-2 rounded bg-gray-50 p-2 text-sm sm:flex-row sm:items-center sm:gap-3"
                             >
-                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                              <span className="w-fit max-w-full rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
                                 {rel.tipo}
                               </span>
-                              <span className="flex-1 text-gray-700">
+                              <span className="min-w-0 flex-1 break-words text-gray-700">
                                 {rel.comQuem || 'Pessoa desconhecida'}
                               </span>
                               <span className="text-xs text-gray-500">
