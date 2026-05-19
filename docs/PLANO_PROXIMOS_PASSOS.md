@@ -2,587 +2,78 @@
 
 ## Objetivo
 
-Este documento define a ordem de trabalho até o lançamento do site, separando:
+Este documento define **o que falta fazer** até o lançamento do site e organiza o backlog pós-MVP.
 
-- validações obrigatórias;
-- pendências funcionais;
-- QA operacional;
-- documentação mínima;
-- fase final de responsividade tablet/mobile.
+Este arquivo não deve repetir o guia de implementações nem o guia de correção de erros. Para esses temas, use:
 
-A responsividade deve ser tratada como **última fase antes do lançamento**, depois de estabilizar as funcionalidades principais.
-
----
-
-## 1. Checklist técnico antes de qualquer frente
-
-Executar no terminal:
-
-```bash
-git status
-npm run build
-git diff --check
-```
-
-Antes de qualquer alteração de banco:
-
-```bash
-supabase migration list
-```
-
-Regras:
-
-- não rodar `supabase db push` se não houver migration da frente;
-- não rodar `db push` sem revisar `migration list`;
-- não usar `migration repair` sem confirmar que o schema remoto já reflete a migration;
-- não misturar frentes diferentes no mesmo commit;
-- não commitar dumps, secrets, tokens ou arquivos temporários;
-- ao mexer em Edge Functions, validar deploy e secrets no Supabase Dashboard.
+- `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado e comportamento consolidado.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigação e correção por sintoma.
+- `docs/NOTIFICACOES.md`: detalhes técnicos de notificações.
+- `docs/TIMELINE.md`: detalhes técnicos da timeline.
 
 ---
 
-## 2. Estado atual das frentes
+## 1. Situação atual do MVP
 
-| Frente | Status | Próximo passo |
+As frentes funcionais principais do MVP já foram implementadas e testadas manualmente.
+
+| Frente | Status MVP | Decisão |
 |---|---|---|
-| 7.1 Notificações | Concluída tecnicamente | Resend/e-mail real, canal interno, usuário comum, rotina manual, Edge Function diária, `DAILY_NOTIFICATIONS_SECRET`, `pg_cron`, logs e deduplicação validados. Resta monitorar a primeira execução automática e limpar testes, se necessário. |
-| 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Apenas backlog editorial/privacidade avançada. |
-| 7.3 Timeline | Implementada funcionalmente | Backlog futuro: edição manual, upload por evento, PDF, privacidade por evento. |
-| 7.4 WhatsApp | Concluído no frontend | Backlog: privacidade forte em banco/API e log seguro opcional. |
-| 7.5 Grau de parentesco | Consolidado funcionalmente | Backlog: integração na árvore/Visão Completa e limpeza de legado. |
-| 7.6 Exportação área da árvore | Concluída no escopo atual | QA técnico e QA manual dirigido aprovados. Árvore completa, redução automática de escala e monitoramento touch seguem como backlog. |
-| 7.7 Legendas visuais | Concluída no escopo visual/frontend | QA manual aprovado; considerar apenas refinamentos durante 7.10. |
-| 7.8 Favoritos | Primeira camada implementada | Expandir para arquivos, fórum, relacionamento e timeline. |
-| 7.9 Página de favoritos | Primeira versão implementada | QA e expansão junto à 7.8. |
-| 7.10 Responsividade | Pendente | Última fase pré-lançamento. |
+| 7.1 Notificações | Concluída tecnicamente | Monitorar execução automática do cron e limpar testes se necessário. |
+| 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Evoluções ficam pós-MVP. |
+| 7.3 Timeline | Implementada funcionalmente | Edição, upload por evento, privacidade por evento e PDF ficam pós-MVP. |
+| 7.4 WhatsApp | Concluído no frontend | Privacidade forte/API/log seguro ficam pós-MVP. |
+| 7.5 Grau de parentesco | Consolidado funcionalmente | Integração direta na árvore/Genealogia/Visão Completa fica pós-MVP. |
+| 7.6 Exportação de área da árvore | Concluída no escopo atual | Árvore completa e escala automática ficam pós-MVP. |
+| 7.7 Legendas visuais | Concluída | Ajustes finos podem entrar na responsividade. |
+| 7.8 Favoritos | Primeira camada aprovada | Expansão para outras entidades fica pós-MVP. |
+| 7.9 Página de favoritos | Primeira versão aprovada | Refinamentos ficam pós-MVP. |
+| 7.10 Responsividade mobile/tablet | Pendente | Última etapa antes do lançamento. |
 
 ---
 
-## 3. Ordem recomendada até a responsividade
+## 2. Escopo congelado do MVP
 
-### Fase 1 — Alinhamento documental
+O MVP deve ser fechado com:
 
-Status desta fase:
+- árvore familiar funcional;
+- perfis de pessoa;
+- administração de pessoas e relacionamentos;
+- solicitações de vínculos;
+- arquivos históricos;
+- fórum básico;
+- notificações internas/e-mail;
+- timeline básica;
+- insights persistidos;
+- botão WhatsApp no frontend;
+- grau de parentesco no escopo atual;
+- favoritos de pessoa;
+- página `/meus-favoritos`;
+- exportação de área visível da árvore;
+- legenda visual da árvore;
+- responsividade mobile/tablet;
+- QA final de lançamento.
 
-- atualizar `GUIA_IMPLEMENTACOES.md`;
-- atualizar `PLANO_PROXIMOS_PASSOS.md`;
-- atualizar `GUIA_CORRECAO_ERROS.md`;
-- remover contradições antigas;
-- registrar que 7.8/7.9 já possuem primeira camada funcional;
-- manter 7.10 como última fase pré-lançamento.
+Não incluir antes do lançamento:
 
-Validação:
-
-```bash
-git diff --check
-git status
-```
-
----
-
-### Fase 2 — 7.7 Legendas visuais da árvore
-
-Status:
-
-- concluída no escopo visual/frontend;
-- QA manual aprovado.
-
-Implementado:
-
-- `src/app/components/FamilyTree/TreeLegend.tsx`;
-- integração em `src/app/components/FamilyTree/FamilyTree.tsx`;
-- exclusão da legenda nas exportações em `src/app/components/FamilyTree/utils/treeExport.ts`;
-- explicação de linhas pais-filhos, barramento vertical, linhas/anel conjugal, anel ativo, anel separado/divorciado, anel de viuvez, cores de pessoa/pet/falecido e diferenças entre Minha Árvore, Genealogia e Visão Completa.
-
-Validação realizada:
-
-- `npm run build`;
-- `git diff --check`;
-- `git status`;
-- `supabase migration list`.
-
-Observações:
-
-- não houve migration;
-- não houve alteração em Supabase;
-- eventuais ajustes visuais finos devem entrar na fase 7.10 de responsividade.
+- expansão de favoritos para novas entidades;
+- push real;
+- WhatsApp real por provider;
+- fila/retry avançado;
+- exportação da árvore completa;
+- upload por evento;
+- privacidade por evento;
+- PDF da timeline;
+- IA consultiva;
+- comparador de perfis;
+- mapa familiar;
+- home dinâmica.
 
 ---
 
-### Fase 3 — Expandir favoritos 7.8/7.9
+## 3. Checklist técnico antes da etapa final
 
-Base já implementada:
-
-- `user_favorites`;
-- RLS;
-- `favoritesService.ts`;
-- `FavoriteButton.tsx`;
-- `/meus-favoritos`;
-- favorito inicial no perfil de pessoa.
-
-Próximo escopo recomendado:
-
-1. arquivos históricos;
-2. tópicos de fórum;
-3. relacionamento/modal conjugal;
-4. eventos pessoais/timeline.
-
-Regras:
-
-- usar `favoritesService.ts`;
-- não voltar para `userEngagementService.ts` no novo fluxo;
-- usar `entity_type` e `entity_id`;
-- salvar `href` quando houver rota direta;
-- sanitizar metadata;
-- não salvar URL privada, base64, telefone, endereço, e-mail, token ou secret.
-
-Validação:
-
-```bash
-npm run build
-git diff --check
-git status
-```
-
----
-
-### Fase 4 — QA operacional de notificações 7.1
-
-Status:
-
-- concluída tecnicamente.
-- QA operacional manual concluído.
-- Canal interno validado.
-- Resend configurado.
-- E-mail real validado em teste admin controlado.
-- Usuário comum validado em `/notificacoes`.
-- Hardening de ownership validado: marcar/remover notificação usa `id` e `user_id`.
-- Rotina manual de aniversários/memórias validada.
-- Deduplicação manual validada via `notification_occurrences`.
-- `DAILY_NOTIFICATIONS_SECRET` configurado.
-- `run-daily-notifications` deployada e validada.
-- Chamada com secret validada com HTTP 200.
-- Chamada sem secret validada com HTTP 401.
-- `pg_cron` e `pg_net` habilitados.
-- Job `run-daily-notifications-0800-brt` ativo com agenda `0 11 * * *`.
-- Chamada manual via `net.http_post` validada com status 200.
-- `notification_occurrences` conferida.
-- `notification_dispatch_logs` conferido.
-- Consulta de duplicidade por `occurrence_key` sem linhas retornadas.
-
-Já concluído:
-
-- acessar `/admin/notificacoes`;
-- criar teste interno;
-- confirmar notificação interna;
-- configurar secrets reais do Resend;
-- executar teste de e-mail para o próprio admin;
-- confirmar recebimento real;
-- confirmar log em `notification_dispatch_logs`;
-- acessar `/notificacoes` como usuário comum;
-- alterar preferências;
-- marcar notificação como lida;
-- marcar todas como lidas;
-- remover notificação;
-- confirmar bloqueio de `/admin/notificacoes` para usuário comum;
-- executar rotina manual de aniversários/memórias;
-- rodar a rotina duas vezes e confirmar deduplicação;
-- configurar `DAILY_NOTIFICATIONS_SECRET`;
-- fazer deploy de `run-daily-notifications`;
-- testar `run-daily-notifications` manualmente com `x-daily-notifications-secret`;
-- testar `run-daily-notifications` sem secret e confirmar retorno `401`;
-- criar `pg_cron` no SQL Editor sem migration versionada;
-- validar `net.http_post` com status 200;
-- confirmar que não há `occurrence_key` duplicada.
-
-Secrets esperados/configurados:
-
-```txt
-RESEND_API_KEY
-NOTIFICATION_EMAIL_FROM
-NOTIFICATION_EMAIL_REPLY_TO
-SITE_URL
-DAILY_NOTIFICATIONS_SECRET
-```
-
-Monitoramento pós-conclusão:
-
-- confirmar a primeira execução automática do cron após 08:00 America/Sao_Paulo;
-- verificar `net._http_response` depois da execução automática;
-- verificar `notification_dispatch_logs` quando houver candidatos no dia;
-- verificar `notification_occurrences` quando houver aniversários ou datas de memória;
-- limpar notificações/logs de teste apenas se necessário;
-- manter secrets fora do repositório;
-- rotacionar `DAILY_NOTIFICATIONS_SECRET` se o valor for exposto fora de ambiente controlado.
-
-Validação:
-
-```bash
-npm run build
-git diff --check
-git status
-```
-
-Observação:
-
-- esta fase não exige `supabase db push`;
-- push real, WhatsApp real e fila/retry avançado permanecem backlog.
-
----
-
-### Fase 5 — QA amplo da exportação 7.6
-
-Status:
-
-- concluída no escopo atual;
-- QA técnico aprovado;
-- QA manual dirigido aprovado.
-
-Objetivo:
-
-Validar PNG/PDF/impressão da área visível da árvore e confirmar que a exportação não quebra a experiência da árvore.
-
-Testes realizados/registrados como OK:
-
-- Chrome desktop;
-- Safari desktop;
-- zoom/pan;
-- árvore pequena;
-- árvore grande;
-- Genealogia;
-- Visão Completa;
-- Minha Árvore;
-- seleção pequena;
-- seleção grande;
-- cancelar com `Esc`;
-- exportar PNG;
-- exportar PDF;
-- imprimir;
-- imagem externa;
-- tablet/mobile real no escopo de validação manual dirigida.
-
-Critérios validados:
-
-- pan/zoom não ficam bloqueados;
-- overlay fecha após exportar;
-- controles/minimap/menu/legenda não aparecem na exportação;
-- erro é amigável;
-- nenhuma alteração de banco é feita;
-- nenhuma migration foi criada;
-- nenhum arquivo foi salvo no Storage;
-- nenhum log persistido foi criado.
-
-Limitações mantidas:
-
-- a exportação permanece limitada à viewport visível da `.react-flow`;
-- exportação da árvore completa fica para backlog futuro;
-- imagens externas sem CORS podem falhar com erro amigável;
-- redução automática de escala para seleções grandes permanece evolução futura;
-- experiência touch deve continuar sendo observada durante a fase 7.10.
-
----
-
-### Fase 6 — Documentação mínima pré-responsividade
-
-Criar ou revisar, se houver janela:
-
-1. `docs/MATRIZ_PERMISSOES.md`;
-2. `docs/TESTES_MANUAIS_1405.md` ou checklist equivalente atualizado;
-3. `docs/ARQUIVOS_HISTORICOS.md`, se a frente de arquivos continuar gerando dúvidas operacionais.
-
-Não bloquear lançamento por documentações opcionais se o QA funcional estiver aprovado.
-
----
-
-### Fase 7 — Responsividade tablet/mobile — última fase antes do lançamento
-
-Objetivo:
-
-Ajustar layout e usabilidade em tablet e mobile após estabilizar funcionalidades.
-
-Larguras obrigatórias:
-
-- 320px;
-- 375px;
-- 390px;
-- 430px;
-- 768px;
-- desktop.
-
-Ordem de trabalho:
-
-1. base global;
-2. árvore e ReactFlow;
-3. perfil da pessoa;
-4. área do usuário;
-5. fórum/favoritos/notificações;
-6. admin;
-7. QA final de lançamento.
-
-Detalhamento:
-
-#### 7.1 Base global
-
-- header;
-- menus;
-- containers;
-- grids;
-- botões;
-- tipografia;
-- cards;
-- modais;
-- tabelas;
-- overflow horizontal.
-
-#### 7.2 Árvore
-
-Rotas/componentes:
-
-- Home;
-- Minha Árvore;
-- Genealogia;
-- Visão Completa;
-- `FamilyTree`;
-- controles ReactFlow;
-- legenda 7.7;
-- exportação 7.6.
-
-Validar:
-
-- pan/zoom touch;
-- botões acessíveis;
-- modais na tela pequena;
-- menu de pessoa;
-- conectores visíveis;
-- busca/filtros;
-- exportação sem quebrar.
-
-#### 7.3 Perfil
-
-Validar:
-
-- `PersonProfile`;
-- `PersonDataView`;
-- `RelationshipFinder`;
-- `PersonTimeline`;
-- `PersonEventsList`;
-- `ArquivosHistoricos`;
-- `FavoriteButton`;
-- discussões relacionadas.
-
-#### 7.4 Área do usuário
-
-Validar:
-
-- `MeusDados`;
-- `MeusVinculos`;
-- `Notificacoes`;
-- `MeusFavoritos`;
-- fórum;
-- primeiro acesso/vinculação.
-
-#### 7.5 Admin
-
-Validar:
-
-- Dashboard;
-- Pessoas;
-- Formulário de pessoa;
-- Relacionamentos;
-- Solicitações;
-- Atividades;
-- Integridade;
-- Notificações.
-
-Critérios finais:
-
-- sem overflow horizontal indevido;
-- botões não ficam fora da tela;
-- modais roláveis em tela pequena;
-- tabelas com scroll controlado;
-- árvore utilizável em touch;
-- formulários longos usáveis;
-- ações destrutivas continuam protegidas;
-- `npm run build` passa;
-- `git diff --check` passa.
-
----
-
-## 4. QA funcional principal
-
-### 4.1 Login e permissões
-
-- [ ] Login admin.
-- [ ] Login usuário comum.
-- [ ] Header mostra admin apenas para admin.
-- [ ] Usuário comum não acessa rotas admin.
-- [ ] Admin acessa todas as rotas administrativas.
-
-### 4.2 Pessoas e formulários
-
-- [ ] Criar pessoa.
-- [ ] Editar pessoa.
-- [ ] Preservar rascunho.
-- [ ] Salvar pessoa falecida.
-- [ ] Salvar local no exterior.
-- [ ] Salvar redes sociais.
-- [ ] Salvar eventos pessoais.
-- [ ] Salvar arquivos históricos.
-- [ ] Preview/download não limpa formulário.
-
-### 4.3 Relacionamentos e árvore
-
-- [ ] Minha Árvore carrega.
-- [ ] Genealogia carrega.
-- [ ] Visão Completa carrega.
-- [ ] Conectores não ficam diagonais indevidamente.
-- [ ] Anel abre modal.
-- [ ] Usuário comum não altera relação real.
-- [ ] Solicitação de vínculo é registrada.
-- [ ] Admin aprova/rejeita corretamente.
-
-### 4.4 Arquivos históricos
-
-- [ ] Arquivo de pessoa salva com `pessoa_id`.
-- [ ] Arquivo de relacionamento salva com `relacionamento_id` e `pessoa_id` nulo.
-- [ ] Storage é usado para novos arquivos.
-- [ ] Base64 legado continua visualizável.
-- [ ] Preview de imagem funciona.
-- [ ] Preview de PDF funciona.
-- [ ] Download explícito funciona.
-
-### 4.5 Notificações
-
-- [x] `/notificacoes` funciona.
-- [x] `/admin/notificacoes` funciona.
-- [x] Preferências persistem.
-- [x] Marcar/remover notificação respeita `user_id`.
-- [x] Gatilhos principais geram notificações internas.
-- [x] Deduplicação manual funciona.
-- [x] E-mail real testado de forma controlada.
-- [x] `DAILY_NOTIFICATIONS_SECRET` configurado.
-- [x] Edge Function diária testada com secret.
-- [x] Edge Function diária testada sem secret com retorno `401`.
-- [x] Cron seguro ativado e confirmado.
-- [x] `net.http_post` validado com status `200`.
-- [x] Logs e occurrences conferidos.
-- [x] Consulta de duplicidade sem linhas retornadas.
-- [ ] Primeira execução automática do cron conferida após 08:00 America/Sao_Paulo.
-- [ ] Limpeza de dados de teste feita ou conscientemente adiada.
-
-### 4.6 Insights 7.2
-
-- [ ] Perfil lê insights existentes.
-- [ ] Perfil sem insight não gera IA automaticamente.
-- [ ] Admin gera/regenera explicitamente.
-- [ ] Usuário comum não vê ações admin.
-- [ ] Logs não contêm dados sensíveis.
-
-### 4.7 Favoritos
-
-- [ ] Favoritar pessoa.
-- [ ] Remover favorito.
-- [ ] `/meus-favoritos` lista favoritos.
-- [ ] Busca e filtros funcionam.
-- [ ] Persistência após reload.
-- [ ] Isolamento por usuário.
-- [ ] Metadata sem dados sensíveis.
-
-
-### 4.8 Exportação da árvore — 7.6
-
-- [x] Botão **Selecionar área** disponível.
-- [x] Overlay sobre `.react-flow` abre corretamente.
-- [x] Cancelamento por botão funciona.
-- [x] Cancelamento por `Esc` funciona.
-- [x] Pan/zoom são liberados após cancelar/exportar.
-- [x] Seleção pequena é recusada.
-- [x] Seleção grande demais é recusada com mensagem amigável.
-- [x] PNG aprovado em QA manual dirigido.
-- [x] PDF aprovado em QA manual dirigido.
-- [x] Impressão aprovada em QA manual dirigido.
-- [x] Safari aprovado em QA manual dirigido.
-- [x] Árvore com zoom/pan aprovada em QA manual dirigido.
-- [x] Árvores grandes aprovadas no escopo atual.
-- [x] Imagens externas aprovadas com ressalva para URLs sem CORS.
-- [x] Sem migration, Supabase, Storage ou logs persistidos.
-
----
-
-## 5. Pendências técnicas e operacionais
-
-### Técnicas
-
-- [ ] Verificar uploads órfãos no Storage.
-- [ ] Criar controle para evitar uploads órfãos, se necessário.
-- [ ] Rodar dry-run de Storage/base64 em ambiente protegido.
-- [ ] Refinar `/admin/integridade` com filtros por severidade.
-- [ ] Remover ruído técnico `lado` dos `changed_fields`.
-- [ ] Revisar scripts SQL legados de fórum/Google Calendar.
-- [ ] Atualizar `MIGRATION-GUIDE.md` com fluxo de `migration list`, `db push`, dump e `repair`.
-
-### Operacionais
-
-- [x] Configurar Resend.
-- [x] Validar e-mail real.
-- [x] Configurar segredo da rotina diária.
-- [x] Ativar cron com segurança.
-- [ ] Limpar notificações/logs de teste após validação.
-
-### Produto/backlog
-
-- [ ] Exportação da árvore completa.
-- [ ] Upload por evento pessoal.
-- [ ] Privacidade por evento pessoal.
-- [ ] PDF de timeline/eventos.
-- [ ] Integração de parentesco diretamente na árvore.
-- [ ] Privacidade forte para telefone/WhatsApp em banco/API.
-- [ ] Push real.
-- [ ] WhatsApp real por provider.
-- [ ] Fila/retry avançado de notificações.
-
----
-
-## 6. Bugs e prioridades
-
-### P0 — bloqueador
-
-- build quebrado;
-- login quebrado;
-- usuário comum acessa admin;
-- usuário comum altera dado restrito;
-- perda/corrupção de dados;
-- secrets no frontend;
-- envio real em massa não controlado.
-
-### P1 — alto
-
-- árvore principal não carrega;
-- formulário principal não salva;
-- solicitações de vínculo não registram;
-- admin não aprova/rejeita;
-- upload falha;
-- notificações duplicam;
-- RLS bloqueia fluxo principal ou libera escrita indevida.
-
-### P2 — médio
-
-- problema visual relevante;
-- preview/download falha em um formato;
-- filtro/busca inconsistente;
-- logs incompletos;
-- mensagem confusa.
-
-### P3 — baixo
-
-- copy;
-- espaçamento;
-- refinamento visual;
-- documentação complementar.
-
----
-
-## 7. Comandos de validação final antes de lançamento
+Executar antes de iniciar ou concluir a responsividade:
 
 ```bash
 git status
@@ -593,17 +84,540 @@ git diff --check
 supabase migration list
 ```
 
-Se houver migration nova e aprovada:
+Regras:
 
-```bash
-supabase db push
+- não iniciar ajustes amplos de responsividade com build quebrado;
+- não rodar `supabase db push` se não houver migration nova aprovada;
+- não criar migration para ajuste puramente visual;
+- não commitar secrets, dumps, tokens ou arquivos temporários;
+- não misturar pós-MVP com responsividade;
+- não expandir escopo funcional durante 7.10.
+
+---
+
+## 4. Responsividade mobile/tablet
+
+**Última etapa antes do lançamento.**
+
+Objetivo:
+
+- ajustar layout e usabilidade em tablet e mobile;
+- preservar todos os fluxos já aprovados em QA manual;
+- corrigir apenas problemas de layout/usabilidade;
+- não adicionar novas funcionalidades.
+
+Larguras obrigatórias:
+
+- 320px;
+- 375px;
+- 390px;
+- 430px;
+- 768px;
+- desktop.
+
+Ordem recomendada:
+
+1. base global;
+2. árvore e ReactFlow;
+3. perfil da pessoa;
+4. área do usuário;
+5. fórum/favoritos/notificações;
+6. admin;
+7. QA final de lançamento.
+
+---
+
+## 5. Responsividade — bloco 1: base global
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/components
+src/app/components/ui
+src/app/routes.tsx
+src/index.css
+src/app/index.css
 ```
 
-Se houver Edge Function alterada:
+Validar:
+
+- header;
+- menus;
+- containers;
+- grids;
+- botões;
+- tipografia;
+- cards;
+- modais;
+- tabelas;
+- estados vazios;
+- loading states;
+- mensagens de erro;
+- overflow horizontal.
+
+Critérios de aceite:
+
+- não há scroll horizontal indevido;
+- botões têm área de toque adequada;
+- menus são acessíveis;
+- cards quebram linha corretamente;
+- textos longos não estouram layout;
+- modais têm rolagem interna quando necessário;
+- tabelas usam scroll controlado;
+- ações destrutivas continuam protegidas.
+
+Commit sugerido:
 
 ```bash
-supabase functions deploy send-notification-email
-supabase functions deploy run-daily-notifications
+git add .
+git commit -m "style: ajustar base responsiva global"
 ```
 
-Nunca commitar secrets.
+---
+
+## 6. Responsividade — bloco 2: árvore e ReactFlow
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
+src/app/components/FamilyTree/modals
+src/app/components/FamilyTree/layouts
+```
+
+Validar:
+
+- Home;
+- Minha Árvore;
+- Genealogia;
+- Visão Completa;
+- ReactFlow;
+- pan/zoom touch;
+- controles de zoom;
+- botão de legenda;
+- painel da legenda;
+- menu de pessoa;
+- anel de casamento;
+- modal conjugal;
+- busca/filtros;
+- exportação de área;
+- seleção por retângulo;
+- cancelamento por `Esc`;
+- overlay em tela pequena.
+
+Critérios de aceite:
+
+- árvore é utilizável em touch;
+- controles não ficam sobrepostos de forma impeditiva;
+- legenda não impede pan/zoom;
+- modais cabem na tela ou rolam internamente;
+- exportação não inclui controles/legenda/menu;
+- pan/zoom são restaurados após seleção/exportação;
+- não há scroll horizontal indevido na página.
+
+Commit sugerido:
+
+```bash
+git add .
+git commit -m "style: ajustar árvore para mobile e tablet"
+```
+
+---
+
+## 7. Responsividade — bloco 3: perfil da pessoa
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/PersonProfile.tsx
+src/app/components/person/PersonDataView.tsx
+src/app/components/person/PersonRelationshipsView.tsx
+src/app/components/person/RelationshipFinder.tsx
+src/app/components/person/PersonEventsList.tsx
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/components/favorites/FavoriteButton.tsx
+```
+
+Validar:
+
+- cabeçalho do perfil;
+- foto/avatar;
+- dados pessoais;
+- status de falecimento;
+- locais no exterior;
+- redes sociais;
+- botão WhatsApp;
+- favoritos;
+- relacionamentos;
+- grau de parentesco;
+- timeline;
+- eventos pessoais;
+- arquivos históricos;
+- tópicos relacionados do fórum;
+- estados vazios;
+- permissões admin/usuário comum.
+
+Critérios de aceite:
+
+- dados principais são legíveis em 320px;
+- cards empilham corretamente;
+- timeline não estoura largura;
+- arquivos históricos têm preview/download acessíveis;
+- botão WhatsApp não revela número indevidamente;
+- FavoriteButton é clicável;
+- RelationshipFinder é usável;
+- ações admin não aparecem para usuário comum.
+
+Commit sugerido:
+
+```bash
+git add .
+git commit -m "style: ajustar perfil de pessoa para mobile"
+```
+
+---
+
+## 8. Responsividade — bloco 4: área do usuário
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/MeusDados.tsx
+src/app/pages/MeusVinculos.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/MeusFavoritos.tsx
+src/app/pages/VincularPerfil.tsx
+```
+
+Validar:
+
+- Meus Dados;
+- Meus Vínculos;
+- Notificações;
+- Meus Favoritos;
+- Primeiro acesso/vinculação;
+- formulários longos;
+- listas;
+- filtros;
+- busca;
+- botões de ação;
+- mensagens de sucesso/erro.
+
+Critérios de aceite:
+
+- formulários são usáveis em mobile;
+- listas não estouram horizontalmente;
+- filtros e busca cabem em telas pequenas;
+- notificações podem ser lidas, marcadas e removidas;
+- favoritos podem ser listados, filtrados, abertos e removidos;
+- solicitações de vínculo são compreensíveis.
+
+Commit sugerido:
+
+```bash
+git add .
+git commit -m "style: ajustar área do usuário para mobile"
+```
+
+---
+
+## 9. Responsividade — bloco 5: fórum/favoritos/notificações
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/forum/ForumHome.tsx
+src/app/pages/forum/ForumTopico.tsx
+src/app/pages/forum/ForumNovoTopico.tsx
+src/app/pages/forum/ForumEditarTopico.tsx
+src/app/components/forum
+src/app/pages/MeusFavoritos.tsx
+src/app/pages/Notificacoes.tsx
+```
+
+Validar:
+
+- lista de tópicos;
+- categorias;
+- criação de tópico;
+- edição de tópico;
+- tela de tópico;
+- respostas;
+- comentários;
+- reações/ações disponíveis;
+- denúncia/solução, se visível;
+- favoritos;
+- notificações.
+
+Critérios de aceite:
+
+- cards/tópicos quebram linha corretamente;
+- editores e textareas são usáveis;
+- botões de ação não ficam fora da tela;
+- filtros não geram overflow;
+- notificações e favoritos preservam comportamento aprovado no QA manual.
+
+Commit sugerido:
+
+```bash
+git add .
+git commit -m "style: ajustar fórum favoritos e notificações para mobile"
+```
+
+---
+
+## 10. Responsividade — bloco 6: admin
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/admin/AdminDashboard.tsx
+src/app/pages/admin/AdminPessoas.tsx
+src/app/pages/admin/AdminPessoaForm.tsx
+src/app/pages/admin/AdminRelacionamentos.tsx
+src/app/pages/admin/AdminRelacionamentoForm.tsx
+src/app/pages/admin/AdminSolicitacoesVinculos.tsx
+src/app/pages/admin/AdminAtividades.tsx
+src/app/pages/admin/AdminIntegridade.tsx
+src/app/pages/admin/AdminNotificacoes.tsx
+```
+
+Prioridade:
+
+1. Admin Pessoas;
+2. Admin Pessoa Form;
+3. Admin Solicitações;
+4. Admin Integridade;
+5. Admin Notificações;
+6. Admin Relacionamentos;
+7. Admin Atividades;
+8. Dashboard.
+
+Validar:
+
+- tabelas/listas;
+- filtros;
+- busca;
+- botões de ação;
+- formulários longos;
+- modais;
+- previews;
+- áreas com scroll;
+- ações destrutivas;
+- permissões.
+
+Critérios de aceite:
+
+- admin não precisa ser perfeito no mobile;
+- admin precisa ser operável;
+- tabelas podem ter scroll horizontal controlado;
+- formulário de pessoa deve ser utilizável;
+- botões críticos não ficam fora da tela;
+- modais têm altura máxima e scroll;
+- ações destrutivas continuam protegidas.
+
+Commit sugerido:
+
+```bash
+git add .
+git commit -m "style: ajustar admin para mobile"
+```
+
+---
+
+## 11. QA final de lançamento
+
+Executar após concluir os blocos de responsividade.
+
+### 11.1 Validação técnica
+
+```bash
+git status
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+supabase migration list
+```
+
+Critérios:
+
+- build passa;
+- testes unitários passam;
+- e2e passa ou falhas são documentadas e não bloqueadoras;
+- `git diff --check` sem erros;
+- migrations locais/remotas entendidas;
+- nenhuma migration visual criada;
+- nenhum secret versionado.
+
+### 11.2 QA visual obrigatório
+
+Testar em:
+
+- 320px;
+- 375px;
+- 390px;
+- 430px;
+- 768px;
+- desktop.
+
+Checklist por largura:
+
+- [ ] sem overflow horizontal indevido;
+- [ ] header utilizável;
+- [ ] menus acessíveis;
+- [ ] botões clicáveis;
+- [ ] cards não estouram;
+- [ ] modais têm scroll interno;
+- [ ] tabelas têm scroll controlado;
+- [ ] formulários longos são usáveis;
+- [ ] árvore permite pan/zoom;
+- [ ] legenda é acessível;
+- [ ] seleção de área não quebra;
+- [ ] notificações funcionam;
+- [ ] favoritos funcionam;
+- [ ] fórum é usável;
+- [ ] admin básico é operável;
+- [ ] ações destrutivas continuam protegidas.
+
+### 11.3 QA funcional de regressão
+
+Revalidar rapidamente:
+
+- login admin;
+- login usuário comum;
+- usuário comum não acessa admin;
+- admin acessa rotas administrativas;
+- criar pessoa;
+- editar pessoa;
+- salvar pessoa falecida;
+- salvar local no exterior;
+- salvar redes sociais;
+- salvar eventos pessoais;
+- salvar arquivos históricos;
+- Minha Árvore;
+- Genealogia;
+- Visão Completa;
+- anel conjugal;
+- solicitação de vínculo;
+- notificações;
+- favoritos;
+- insights;
+- timeline;
+- exportação PNG/PDF/impressão.
+
+---
+
+## 12. Encerramento do MVP
+
+Depois do QA final:
+
+1. atualizar este documento, marcando 7.10 como concluída;
+2. confirmar que os itens pós-MVP continuam fora do lançamento;
+3. rodar validação técnica final;
+4. fazer commit de documentação;
+5. fazer merge para `main`;
+6. criar tag ou release, se o fluxo do projeto usar versionamento;
+7. preparar deploy.
+
+Comandos sugeridos:
+
+```bash
+git status
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+supabase migration list
+```
+
+Commit sugerido:
+
+```bash
+git add docs/PLANO_PROXIMOS_PASSOS.md
+git commit -m "docs: registrar responsividade MVP aprovada"
+```
+
+---
+
+# O que fica pós-MVP
+
+## Pós-MVP imediato
+
+| Frente | Implementação |
+|---|---|
+| Favoritos expandidos | Arquivos históricos, fórum, relacionamentos, eventos pessoais/timeline. |
+| WhatsApp avançado | Privacidade forte em banco/API e log seguro de clique. |
+| Notificações avançadas | Push real, WhatsApp real, fila/retry avançado. |
+| Timeline avançada | Edição manual, upload por evento, privacidade por evento, PDF. |
+| Exportação avançada | Exportar árvore completa, não só viewport visível. |
+| Parentesco avançado | Integração direta na árvore, Genealogia e Visão Completa. |
+| Insights avançados | Backlog editorial, privacidade refinada e novos tipos de conteúdo. |
+
+---
+
+## Pós-MVP técnico
+
+| Frente | Implementação |
+|---|---|
+| Storage | Verificar e prevenir uploads órfãos. |
+| Base legada | Dry-run de Storage/base64 e possível limpeza auditada. |
+| Admin Integridade | Filtros por severidade, paginação e ações assistidas futuras. |
+| Migrations | Atualizar `MIGRATION-GUIDE.md`. |
+| Legado SQL | Revisar scripts antigos de fórum/Google Calendar. |
+| Logs | Remover ruídos técnicos como `lado` dos `changed_fields`. |
+
+Essas pendências aparecem no plano como técnicas e operacionais e não devem bloquear o MVP se não houver P0/P1 aberto.
+
+---
+
+## Pós-MVP produto
+
+| Módulo | Implementações |
+|---|---|
+| Calendário familiar | Google Agenda, ICS, lembretes mais completos. |
+| Fórum | QA ampliado, moderação, expansão de recursos. |
+| Acervo | Álbuns, documentos, arquivos por evento, galeria familiar. |
+| Família expandida | Linha do tempo da família, mapa familiar, visualizações por ramo. |
+| IA | Curiosidades, estatísticas, IA consultiva e conteúdos narrativos. |
+| Colaboração | Sugestões moderadas por familiares. |
+| Comparações | Comparador de perfis e caminhos familiares. |
+| Home dinâmica | Aniversários, memórias do dia, novidades e destaques. |
+
+---
+
+## Critérios de bloqueio para lançamento
+
+Bloqueiam lançamento:
+
+- build quebrado;
+- login quebrado;
+- usuário comum acessa admin;
+- usuário comum altera dado restrito;
+- perda/corrupção de dados;
+- secret no frontend ou no repositório;
+- árvore principal não carrega;
+- formulário principal não salva;
+- upload falha em fluxo essencial;
+- notificações duplicam de forma massiva;
+- RLS libera escrita indevida;
+- responsividade impede uso em mobile.
+
+Não bloqueiam lançamento, se documentados:
+
+- refinamentos visuais pequenos;
+- expansão de favoritos;
+- árvore completa em PDF;
+- push real;
+- WhatsApp real;
+- timeline avançada;
+- IA consultiva;
+- filtros avançados do admin integridade;
+- limpeza auditada de legado/base64;
+- revisão de scripts legados.
