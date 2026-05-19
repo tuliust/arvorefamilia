@@ -41,15 +41,15 @@ const FILTERS: Array<{ value: 'all' | FavoriteEntityType; label: string }> = [
 ];
 
 function getFavoriteIcon(entityType: FavoriteEntityType) {
-  if (entityType === 'person') return <User className="h-4 w-4 text-gray-400" />;
-  if (entityType === 'historical_file') return <FileText className="h-4 w-4 text-gray-400" />;
-  if (entityType === 'relationship') return <Users className="h-4 w-4 text-gray-400" />;
-  if (entityType === 'forum_topic') return <MessageCircle className="h-4 w-4 text-gray-400" />;
+  if (entityType === 'person') return <User className="h-4 w-4 shrink-0 text-gray-400" />;
+  if (entityType === 'historical_file') return <FileText className="h-4 w-4 shrink-0 text-gray-400" />;
+  if (entityType === 'relationship') return <Users className="h-4 w-4 shrink-0 text-gray-400" />;
+  if (entityType === 'forum_topic') return <MessageCircle className="h-4 w-4 shrink-0 text-gray-400" />;
   if (entityType === 'family_event' || entityType === 'person_event') {
-    return <CalendarDays className="h-4 w-4 text-gray-400" />;
+    return <CalendarDays className="h-4 w-4 shrink-0 text-gray-400" />;
   }
 
-  return <LinkIcon className="h-4 w-4 text-gray-400" />;
+  return <LinkIcon className="h-4 w-4 shrink-0 text-gray-400" />;
 }
 
 function formatDate(value?: string) {
@@ -130,26 +130,26 @@ export function MeusFavoritos() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Meus Favoritos</h1>
-            <p className="text-sm text-gray-500">Conteúdos salvos para consultar depois</p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">Meus Favoritos</h1>
+            <p className="break-words text-sm text-gray-500">Conteúdos salvos para consultar depois</p>
           </div>
 
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Voltar
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4">
-            <div className="relative">
+        <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="search"
@@ -160,13 +160,13 @@ export function MeusFavoritos() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {FILTERS.map((item) => (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => setFiltro(item.value)}
-                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
                     filtro === item.value
                       ? 'border-blue-600 bg-blue-600 text-white'
                       : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -180,19 +180,19 @@ export function MeusFavoritos() {
         </section>
 
         {erro && (
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+          <div className="break-words rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
             {erro}
           </div>
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
+          <div className="break-words rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
             Carregando favoritos...
           </div>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {favoritosFiltrados.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2 xl:col-span-3">
+              <div className="break-words rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2 xl:col-span-3">
                 Nenhum favorito encontrado.
               </div>
             ) : (
@@ -202,19 +202,19 @@ export function MeusFavoritos() {
                 return (
                   <div
                     key={favorito.id}
-                    className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                    className="flex min-w-0 flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="mb-3 inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700">
-                          <Heart className="h-3 w-3 fill-current" />
-                          {FAVORITE_TYPE_LABELS[favorito.entity_type]}
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="mb-3 inline-flex max-w-full items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700">
+                          <Heart className="h-3 w-3 shrink-0 fill-current" />
+                          <span className="truncate">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
                         </span>
 
-                        <h2 className="text-lg font-bold text-gray-900">{favorito.label}</h2>
+                        <h2 className="break-words text-lg font-bold text-gray-900">{favorito.label}</h2>
 
                         {favorito.description && (
-                          <p className="mt-1 text-sm text-gray-500">{favorito.description}</p>
+                          <p className="mt-1 line-clamp-3 break-words text-sm text-gray-500">{favorito.description}</p>
                         )}
                       </div>
 
@@ -222,27 +222,27 @@ export function MeusFavoritos() {
                         type="button"
                         onClick={() => handleRemove(favorito)}
                         disabled={removingId === favorito.id}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                         aria-label="Remover dos favoritos"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
 
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0 space-y-2 text-sm text-gray-600">
+                      <div className="flex min-w-0 items-center gap-2">
                         {getFavoriteIcon(favorito.entity_type)}
-                        <span>{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
+                        <span className="min-w-0 break-words">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
                       </div>
 
-                      {createdAt && <p className="text-xs text-gray-400">Salvo em {createdAt}</p>}
+                      {createdAt && <p className="break-words text-xs text-gray-400">Salvo em {createdAt}</p>}
                     </div>
 
-                    <div className="mt-auto">
+                    <div className="mt-auto min-w-0">
                       {isInternalHref(favorito.href) ? (
                         <Link
                           to={favorito.href ?? '/'}
-                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-blue-700"
                         >
                           Abrir conteúdo
                         </Link>
@@ -251,12 +251,12 @@ export function MeusFavoritos() {
                           href={favorito.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-blue-700"
                         >
                           Abrir conteúdo
                         </a>
                       ) : (
-                        <span className="inline-flex w-full items-center justify-center rounded-xl bg-gray-100 px-4 py-3 text-sm font-medium text-gray-500">
+                        <span className="inline-flex w-full items-center justify-center rounded-xl bg-gray-100 px-4 py-3 text-center text-sm font-medium text-gray-500">
                           Link indisponível
                         </span>
                       )}
