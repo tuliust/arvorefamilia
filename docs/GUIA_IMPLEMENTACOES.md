@@ -26,7 +26,7 @@ Este guia não é um checklist de próximos passos nem um manual de correção d
 | 7.7 Legendas visuais da árvore | Concluída no frontend | `TreeLegend.tsx` integrado ao `FamilyTree.tsx`; QA manual aprovado. |
 | 7.8 Favoritos | Primeira camada aprovada para MVP | Favorito de pessoa e página `/meus-favoritos` implementados e validados manualmente. |
 | 7.9 Página de favoritos | Primeira versão aprovada para MVP | Listagem, busca, filtros, abertura e remoção funcionais. |
-| 7.10 Responsividade mobile/tablet | Pendente | Última etapa antes do lançamento. |
+| 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA técnico e visual de lançamento aprovado em 2026-05-19. |
 
 ---
 
@@ -742,7 +742,80 @@ Fora do MVP:
 
 ---
 
-## 18. Fórum e Google Calendar
+## 18. Responsividade mobile/tablet — 7.10
+
+Status:
+
+- concluída para o MVP;
+- ajustes restritos a CSS, Tailwind, layout, scroll, largura, quebra de texto e usabilidade mobile/tablet;
+- sem migrations;
+- sem alteração de RLS;
+- sem alteração de Edge Functions;
+- sem alteração de services;
+- sem alteração de regras de negócio de árvore, upload, vínculos, fórum, favoritos ou notificações;
+- QA final técnico e visual aprovado em 2026-05-19.
+
+Blocos concluídos:
+
+- base global;
+- árvore e ReactFlow;
+- perfil da pessoa;
+- área do usuário;
+- fórum/favoritos/notificações;
+- admin;
+- QA final de lançamento.
+
+Padrões consolidados:
+
+- containers flex/grid com `min-w-0`;
+- textos de usuário com `break-words`;
+- IDs, e-mails, URLs e valores técnicos longos com `break-all`;
+- headers e grupos de ações em `flex-col gap-2 sm:flex-row`;
+- botões principais em `w-full sm:w-auto` no mobile;
+- formulários longos com grids mobile-first;
+- tabelas/listas largas com `overflow-x-auto` contido;
+- modais longos com altura máxima e rolagem interna.
+
+Validação final executada:
+
+- `npm run build`;
+- `npm test`;
+- `npm run test:e2e`;
+- `git diff --check`;
+- `supabase migration list`;
+- QA visual em 320px, 375px, 390px, 430px, 768px e desktop.
+
+Roteiro visual validado:
+
+- Home/árvore;
+- Minha Árvore;
+- Meus Dados;
+- Meus Vínculos;
+- Meus Favoritos;
+- Notificações;
+- Fórum;
+- novo tópico;
+- Admin Dashboard;
+- Admin Pessoas;
+- Admin Pessoa Form;
+- Admin Relacionamentos;
+- Admin Relacionamento Form;
+- Admin Solicitações de Vínculos;
+- Admin Notificações;
+- Admin Integridade;
+- Admin Atividades;
+- Admin Diagnóstico;
+- Admin Importação;
+- Admin Migrar Dados.
+
+Resultado do QA visual:
+
+- sem overflow horizontal global indevido nas larguras obrigatórias;
+- headers, filtros, cards, formulários e telas admin permaneceram operáveis;
+- ações destrutivas continuaram protegidas pelos fluxos existentes;
+- admin continuou protegido por `ProtectedRoute`.
+
+## 19. Fórum e Google Calendar
 
 ### Fórum
 
@@ -763,7 +836,7 @@ Status:
 
 ---
 
-## 19. Banco, migrations e objetos legados
+## 20. Banco, migrations e objetos legados
 
 Regras consolidadas:
 
@@ -781,7 +854,7 @@ Objetos legados/compatibilidade:
 
 ---
 
-## 20. Regras de segurança permanentes
+## 21. Regras de segurança permanentes
 
 Não deve acontecer:
 
