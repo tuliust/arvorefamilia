@@ -22,7 +22,7 @@ Documentos complementares:
 | 7.3 Linha do tempo do usuário | Implementada funcionalmente | Primeira versão derivada dos dados existentes, sem tabela própria. |
 | 7.4 WhatsApp no perfil | Concluída no escopo visual/frontend | Privacidade forte em banco/API e log de clique ficam como evolução futura. |
 | 7.5 Grau de parentesco/vínculo | Funcionalmente consolidada | Utilitário puro, testes unitários e integração em Home/perfil. |
-| 7.6 Selecionar área para PDF/impressão | Implementada tecnicamente | Exporta a viewport visível da árvore como PNG/PDF/impressão. Falta QA amplo em navegadores/dispositivos. |
+| 7.6 Selecionar área para PDF/impressão | Concluída no escopo atual | Exporta a viewport visível da árvore como PNG/PDF/impressão. QA técnico e QA manual dirigido aprovados. Árvore completa permanece backlog. |
 | 7.7 Legendas visuais da árvore | Concluída no escopo visual/frontend | `TreeLegend.tsx` integrado ao `FamilyTree.tsx`; QA manual aprovado. |
 | 7.8 Favoritos em todo o site | Implementada em primeira camada | Schema, RLS, service, botão reutilizável, página e favorito de pessoa existem. Falta expandir para mais entidades. |
 | 7.9 Página de favoritos | Implementada em primeira versão | Usa Supabase, busca, filtros e remoção. |
@@ -628,7 +628,11 @@ Backlog:
 
 Status:
 
-- implementada tecnicamente e refinada em QA técnico.
+- concluída no escopo atual;
+- diagnóstico 7.6A concluído;
+- implementação 7.6B concluída;
+- QA técnico/refino 7.6C concluído;
+- QA manual dirigido aprovado.
 
 Arquivos:
 
@@ -636,6 +640,8 @@ Arquivos:
 - `src/app/components/FamilyTree/utils/treeExport.ts`
 - `FamilyTree.tsx`
 - `Home.tsx`
+- `docs/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md`
+- `docs/QA_7_6_EXPORTACAO_ARVORE.md`
 
 Características:
 
@@ -644,16 +650,33 @@ Características:
 - seleção por retângulo;
 - cancelamento por botão ou `Esc`;
 - exportação PNG/PDF/impressão;
-- bloqueio temporário de pan/zoom;
-- ignora overlay, menu de pessoa, controles e minimap;
+- bloqueio temporário de pan/zoom durante a seleção;
+- liberação de pan/zoom ao cancelar ou concluir exportação;
+- recorte com correção de escala entre CSS pixels e canvas real;
+- ignora overlay, menu de pessoa, controles ReactFlow, minimap e legenda;
 - recusa seleção pequena ou grande demais;
-- sem migration, sem Storage e sem logs persistidos.
+- trata erro de popup/impressão e falhas de captura;
+- sem migration, sem Storage, sem alteração Supabase e sem logs persistidos.
 
-Limitações:
+QA manual dirigido:
+
+- PNG: OK;
+- PDF: OK;
+- impressão: OK;
+- cancelamento por `Esc`: OK;
+- árvores grandes: OK;
+- zoom/pan: OK;
+- Safari: OK;
+- imagens externas: OK, mantendo ressalva para URLs sem CORS;
+- mobile/tablet real: OK no escopo de validação manual dirigida.
+
+Limitações/backlog:
 
 - exporta apenas a viewport visível, não a árvore completa;
-- requer QA amplo em navegadores, zooms, árvores grandes e mobile/tablet;
-- imagens externas sem CORS podem falhar com erro amigável.
+- exportação da árvore completa permanece backlog;
+- imagens externas sem CORS podem falhar com erro amigável;
+- redução automática de escala para seleções grandes permanece evolução futura;
+- experiência touch deve continuar sendo observada na fase 7.10 de responsividade.
 
 ---
 

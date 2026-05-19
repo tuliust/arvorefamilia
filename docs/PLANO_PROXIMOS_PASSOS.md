@@ -50,7 +50,7 @@ Regras:
 | 7.3 Timeline | Implementada funcionalmente | Backlog futuro: edição manual, upload por evento, PDF, privacidade por evento. |
 | 7.4 WhatsApp | Concluído no frontend | Backlog: privacidade forte em banco/API e log seguro opcional. |
 | 7.5 Grau de parentesco | Consolidado funcionalmente | Backlog: integração na árvore/Visão Completa e limpeza de legado. |
-| 7.6 Exportação área da árvore | Implementada tecnicamente | QA amplo em navegadores, zoom, árvores grandes e mobile/tablet. |
+| 7.6 Exportação área da árvore | Concluída no escopo atual | QA técnico e QA manual dirigido aprovados. Árvore completa, redução automática de escala e monitoramento touch seguem como backlog. |
 | 7.7 Legendas visuais | Concluída no escopo visual/frontend | QA manual aprovado; considerar apenas refinamentos durante 7.10. |
 | 7.8 Favoritos | Primeira camada implementada | Expandir para arquivos, fórum, relacionamento e timeline. |
 | 7.9 Página de favoritos | Primeira versão implementada | QA e expansão junto à 7.8. |
@@ -232,15 +232,21 @@ Observação:
 
 ### Fase 5 — QA amplo da exportação 7.6
 
+Status:
+
+- concluída no escopo atual;
+- QA técnico aprovado;
+- QA manual dirigido aprovado.
+
 Objetivo:
 
-Validar PNG/PDF/impressão da área visível da árvore.
+Validar PNG/PDF/impressão da área visível da árvore e confirmar que a exportação não quebra a experiência da árvore.
 
-Testes mínimos:
+Testes realizados/registrados como OK:
 
 - Chrome desktop;
 - Safari desktop;
-- zoom 80%, 100%, 125%;
+- zoom/pan;
 - árvore pequena;
 - árvore grande;
 - Genealogia;
@@ -252,16 +258,27 @@ Testes mínimos:
 - exportar PNG;
 - exportar PDF;
 - imprimir;
-- imagem externa sem CORS;
-- tablet/mobile em modo básico.
+- imagem externa;
+- tablet/mobile real no escopo de validação manual dirigida.
 
-Critérios:
+Critérios validados:
 
 - pan/zoom não ficam bloqueados;
 - overlay fecha após exportar;
-- controles/minimap/menu não aparecem na exportação;
+- controles/minimap/menu/legenda não aparecem na exportação;
 - erro é amigável;
-- nenhuma alteração de banco é feita.
+- nenhuma alteração de banco é feita;
+- nenhuma migration foi criada;
+- nenhum arquivo foi salvo no Storage;
+- nenhum log persistido foi criado.
+
+Limitações mantidas:
+
+- a exportação permanece limitada à viewport visível da `.react-flow`;
+- exportação da árvore completa fica para backlog futuro;
+- imagens externas sem CORS podem falhar com erro amigável;
+- redução automática de escala para seleções grandes permanece evolução futura;
+- experiência touch deve continuar sendo observada durante a fase 7.10.
 
 ---
 
@@ -470,6 +487,25 @@ Critérios finais:
 - [ ] Persistência após reload.
 - [ ] Isolamento por usuário.
 - [ ] Metadata sem dados sensíveis.
+
+
+### 4.8 Exportação da árvore — 7.6
+
+- [x] Botão **Selecionar área** disponível.
+- [x] Overlay sobre `.react-flow` abre corretamente.
+- [x] Cancelamento por botão funciona.
+- [x] Cancelamento por `Esc` funciona.
+- [x] Pan/zoom são liberados após cancelar/exportar.
+- [x] Seleção pequena é recusada.
+- [x] Seleção grande demais é recusada com mensagem amigável.
+- [x] PNG aprovado em QA manual dirigido.
+- [x] PDF aprovado em QA manual dirigido.
+- [x] Impressão aprovada em QA manual dirigido.
+- [x] Safari aprovado em QA manual dirigido.
+- [x] Árvore com zoom/pan aprovada em QA manual dirigido.
+- [x] Árvores grandes aprovadas no escopo atual.
+- [x] Imagens externas aprovadas com ressalva para URLs sem CORS.
+- [x] Sem migration, Supabase, Storage ou logs persistidos.
 
 ---
 

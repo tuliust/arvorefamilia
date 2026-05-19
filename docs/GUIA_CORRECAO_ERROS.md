@@ -916,6 +916,13 @@ Corrigir em `relationshipDegreeDisplay.ts`, não no algoritmo, se o problema for
 
 ## 17. Exportação de área da árvore — 7.6
 
+Status:
+
+- concluída no escopo atual;
+- QA técnico concluído;
+- QA manual dirigido aprovado;
+- sem migration, Supabase, Storage ou logs persistidos.
+
 Arquivos:
 
 ```txt
@@ -923,24 +930,53 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/pages/Home.tsx
+docs/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
+docs/QA_7_6_EXPORTACAO_ARVORE.md
 ```
+
+Comportamento esperado:
+
+- botão **Selecionar área** no painel de informações da árvore;
+- overlay sobre a viewport visível da `.react-flow`;
+- seleção por retângulo;
+- cancelamento por botão ou `Esc`;
+- exportação PNG/PDF/impressão apenas da área selecionada;
+- pan/zoom bloqueados apenas durante seleção;
+- pan/zoom liberados após cancelar ou exportar;
+- seleção pequena recusada;
+- seleção grande demais recusada antes da captura;
+- overlay, menu de pessoa, controles ReactFlow, minimap e legenda não entram na exportação.
 
 ### Overlay não fecha
 
-Verificar `onClose` após PNG/PDF/impressão.
+Verificar:
+
+- `onClose` após PNG/PDF/impressão;
+- `onClose` no botão **Cancelar**;
+- listener de `Escape`;
+- estado `isAreaSelectionOpen` em `FamilyTree`.
 
 ### Pan/zoom fica bloqueado
 
-Verificar estado de modo seleção em `FamilyTree`.
+Verificar:
+
+- `panOnDrag={!isAreaSelectionOpen && activeCanPan}`;
+- `panOnScroll={!isAreaSelectionOpen && activeCanPan}`;
+- `zoomOnScroll={!isAreaSelectionOpen}`;
+- `zoomOnPinch={!isAreaSelectionOpen}`;
+- se `onClose` está sendo chamado após exportação concluída.
 
 ### Exportação inclui overlay/controles
 
-Verificar `ignoreElements` para:
+Verificar `ignoreElements` em `treeExport.ts` para:
 
 - `[data-tree-selection-overlay="true"]`;
 - `[data-tree-node-menu="true"]`;
+- `[data-tree-legend="true"]`;
 - `.react-flow__controls`;
 - `.react-flow__minimap`.
+
+Usar `closest`, não apenas `classList.contains`, para cobrir descendentes.
 
 ### PDF/PNG falha
 
@@ -949,12 +985,64 @@ Verificar:
 - `html2canvas`;
 - `jspdf`;
 - CORS de imagens externas;
+- `allowTaint: false`;
+- `useCORS: true`;
 - tamanho máximo da seleção;
-- sanitização de cores não suportadas.
+- sanitização de cores não suportadas;
+- se o erro aparece de forma amigável no overlay.
+
+### Impressão falha
+
+Verificar:
+
+- bloqueio de popup pelo navegador;
+- `openTreePrintWindow`;
+- `printCanvas`;
+- se a janela é fechada no `catch`;
+- se o navegador exige interação direta do usuário.
 
 ### Seleção muito grande trava
 
-Recusar antes da captura ou reduzir escala em evolução futura.
+Verificar:
+
+- limite `MAX_EXPORT_PIXELS`;
+- estimativa com `window.devicePixelRatio`;
+- mensagem amigável antes da captura;
+- redução automática de escala fica como evolução futura.
+
+### Crop deslocado após zoom/pan
+
+Verificar:
+
+- seleção relativa ao `getBoundingClientRect()` da `.react-flow`;
+- conversão `scaleX = canvas.width / targetRect.width`;
+- conversão `scaleY = canvas.height / targetRect.height`;
+- uso de `cropCanvas`;
+- seleção em qualquer direção com normalização por `min/abs`.
+
+### Imagens externas sem CORS
+
+Comportamento aceitável atual:
+
+- exportação pode falhar;
+- erro deve ser amigável;
+- página não deve quebrar.
+
+Não mascarar o problema com `allowTaint: true` sem avaliar risco de `toDataURL`.
+
+### Mobile/tablet
+
+Status atual:
+
+- QA manual dirigido aprovado no escopo atual;
+- continuar monitorando experiência touch na fase 7.10.
+
+Se quebrar:
+
+- verificar toolbar fora da viewport;
+- pointer events;
+- conflito com pan/zoom touch;
+- largura do painel de ações.
 
 ---
 
