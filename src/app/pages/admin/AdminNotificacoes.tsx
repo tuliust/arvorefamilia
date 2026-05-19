@@ -204,50 +204,50 @@ export function AdminNotificacoes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-700">
+      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-700">
               <Bell className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Notificações</h1>
-              <p className="text-sm text-gray-500">Diagnóstico administrativo de preferências e disparos</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Notificações</h1>
+              <p className="break-words text-sm text-gray-500">Diagnóstico administrativo de preferências e disparos</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="outline" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
+              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
               Voltar ao painel
             </Button>
-            <Button onClick={loadDiagnostics} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
+            <Button className="w-full sm:w-auto" onClick={loadDiagnostics} disabled={loading}>
+              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
               Atualizar diagnóstico
             </Button>
-            <Button variant="secondary" onClick={handleCreateInternalTest} disabled={creatingTest || loading}>
-              <Bell className="mr-2 h-4 w-4" />
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={handleCreateInternalTest} disabled={creatingTest || loading}>
+              <Bell className="mr-2 h-4 w-4 shrink-0" />
               Teste interno
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total de notificações</CardTitle>
+              <CardTitle className="break-words text-sm font-medium text-gray-600">Total de notificações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{summary.totalNotifications}</div>
-              <p className="mt-1 text-xs text-gray-500">Registros recentes acessíveis ao admin</p>
+              <p className="mt-1 break-words text-xs text-gray-500">Registros recentes acessíveis ao admin</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Não lidas</CardTitle>
+              <CardTitle className="break-words text-sm font-medium text-gray-600">Não lidas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{summary.unreadNotifications}</div>
@@ -255,23 +255,23 @@ export function AdminNotificacoes() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Canais usados</CardTitle>
+              <CardTitle className="break-words text-sm font-medium text-gray-600">Canais usados</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{summary.channelsUsed}</div>
-              <p className="mt-1 text-xs text-gray-500">Canais presentes nas notificações</p>
+              <p className="mt-1 break-words text-xs text-gray-500">Canais presentes nas notificações</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Últimos erros de envio</CardTitle>
+              <CardTitle className="break-words text-sm font-medium text-gray-600">Últimos erros de envio</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{summary.recentDispatchErrors}</div>
-              <p className="mt-1 text-xs text-gray-500">Falhas nos logs recentes de dispatch</p>
+              <p className="mt-1 break-words text-xs text-gray-500">Falhas nos logs recentes de dispatch</p>
             </CardContent>
           </Card>
         </div>
@@ -282,9 +282,9 @@ export function AdminNotificacoes() {
         </div>
 
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="h-4 w-4" />
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
+              <Mail className="h-4 w-4 shrink-0" />
               Diagnóstico de e-mail
             </CardTitle>
             <Badge variant={emailConfig.status === 'not_configured' ? 'destructive' : 'outline'}>
@@ -296,13 +296,13 @@ export function AdminNotificacoes() {
             </Badge>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-700">{emailConfig.message}</p>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="break-words text-sm text-gray-700">{emailConfig.message}</p>
+            <p className="mt-2 break-words text-xs text-gray-500">
               Função esperada: {emailConfig.functionName}. Secrets não são verificáveis pelo frontend; valide com teste controlado.
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button variant="secondary" onClick={handleSendEmailTest} disabled={sendingEmailTest || loading}>
-                <Mail className="mr-2 h-4 w-4" />
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <Button variant="secondary" className="w-full sm:w-auto" onClick={handleSendEmailTest} disabled={sendingEmailTest || loading}>
+                <Mail className="mr-2 h-4 w-4 shrink-0" />
                 Enviar e-mail de teste para mim
               </Button>
               {sendingEmailTest && <span className="text-sm text-gray-500">Enviando teste...</span>}
@@ -312,11 +312,11 @@ export function AdminNotificacoes() {
                 {emailTestResults.map((result) => (
                   <div
                     key={`${result.channel}-${result.status}-${result.notificationId || 'sem-id'}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="flex min-w-0 flex-col gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                   >
-                    <span className="font-medium text-gray-800">{result.channel}</span>
+                    <span className="break-words font-medium text-gray-800">{result.channel}</span>
                     <NotificationStatusBadge status={result.status} />
-                    <span className="text-xs text-gray-500">{result.errorMessage || result.provider || 'Sem erro'}</span>
+                    <span className="break-all text-xs text-gray-500">{result.errorMessage || result.provider || 'Sem erro'}</span>
                   </div>
                 ))}
               </div>
@@ -325,15 +325,15 @@ export function AdminNotificacoes() {
         </Card>
 
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <CardTitle className="text-base">Rotinas manuais</CardTitle>
-            <Button onClick={handleRunManualRoutine} disabled={runningManualRoutine || loading}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="break-words text-base">Rotinas manuais</CardTitle>
+            <Button className="w-full sm:w-auto" onClick={handleRunManualRoutine} disabled={runningManualRoutine || loading}>
+              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
               Verificar aniversários e memórias de hoje
             </Button>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-700">
+            <p className="break-words text-sm text-gray-700">
               Executa apenas notificações internas para datas completas do dia. Não envia e-mail, push ou WhatsApp.
             </p>
 
@@ -342,44 +342,44 @@ export function AdminNotificacoes() {
             )}
 
             {manualRoutineError && (
-              <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="mt-3 break-words rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {manualRoutineError}
               </p>
             )}
 
             {manualRoutineSummary && (
               <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Aniversários</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.birthdaysFound}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Memórias</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.memorialsFound}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Criadas</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.notificationsCreated}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Duplicadas</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.skippedDuplicates}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Preferências</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.skippedByPreferences}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Sem destinatário</p>
                   <p className="text-xl font-semibold text-gray-900">
                     {manualRoutineSummary.skippedWithoutRecipients}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Falhas</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.dispatchFailures}</p>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
                   <p className="text-xs text-gray-500">Destinatários</p>
                   <p className="text-xl font-semibold text-gray-900">{manualRoutineSummary.recipientsResolved}</p>
                 </div>
@@ -389,9 +389,9 @@ export function AdminNotificacoes() {
         </Card>
 
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CalendarClock className="h-4 w-4" />
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
+              <CalendarClock className="h-4 w-4 shrink-0" />
               Agendamento automático
             </CardTitle>
             <Badge
@@ -414,31 +414,31 @@ export function AdminNotificacoes() {
             <div className="grid grid-cols-1 gap-3 text-sm text-gray-700 md:grid-cols-3">
               <div>
                 <p className="text-xs text-gray-500">Function</p>
-                <p className="font-medium text-gray-900">{automationInfo.functionName}</p>
+	                <p className="break-all font-medium text-gray-900">{automationInfo.functionName}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Horário planejado</p>
-                <p className="font-medium text-gray-900">{automationInfo.scheduledTime}</p>
+	                <p className="break-words font-medium text-gray-900">{automationInfo.scheduledTime}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Última ocorrência</p>
-                <p className="font-medium text-gray-900">
+	                <p className="break-words font-medium text-gray-900">
                   {automationInfo.lastOccurrenceAt
                     ? `${formatDate(automationInfo.lastOccurrenceAt)} (${automationInfo.lastOccurrenceDate})`
                     : 'Sem registro'}
                 </p>
               </div>
             </div>
-            <p className="mt-3 text-sm text-gray-600">{automationInfo.message}</p>
+	            <p className="mt-3 break-words text-sm text-gray-600">{automationInfo.message}</p>
             {automationInfo.lastDispatchAt && (
-              <p className="mt-1 text-xs text-gray-500">Último dispatch: {formatDate(automationInfo.lastDispatchAt)}</p>
+	              <p className="mt-1 break-words text-xs text-gray-500">Último dispatch: {formatDate(automationInfo.lastDispatchAt)}</p>
             )}
           </CardContent>
         </Card>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">Notificações recentes</CardTitle>
+            <CardTitle className="break-words text-base">Notificações recentes</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -446,7 +446,8 @@ export function AdminNotificacoes() {
             ) : notifications.length === 0 ? (
               <p className="text-sm text-gray-500">Nenhuma notificação encontrada.</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Título</TableHead>
@@ -461,29 +462,30 @@ export function AdminNotificacoes() {
                   {notifications.map((notification) => (
                     <TableRow key={notification.id}>
                       <TableCell className="max-w-[320px] whitespace-normal">
-                        <p className="font-medium text-gray-900">{notification.titulo}</p>
-                        <p className="line-clamp-2 text-xs text-gray-500">{notification.mensagem}</p>
+	                        <p className="break-words font-medium text-gray-900">{notification.titulo}</p>
+	                        <p className="line-clamp-2 break-words text-xs text-gray-500">{notification.mensagem}</p>
                       </TableCell>
-                      <TableCell>{notification.tipo}</TableCell>
-                      <TableCell>{notification.canal}</TableCell>
+	                      <TableCell className="break-words">{notification.tipo}</TableCell>
+	                      <TableCell className="break-words">{notification.canal}</TableCell>
                       <TableCell>
                         <Badge variant={notification.lida ? 'outline' : 'secondary'}>
                           {notification.lida ? 'Lida' : 'Não lida'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{maskUserId(notification.user_id)}</TableCell>
+	                      <TableCell className="break-all">{maskUserId(notification.user_id)}</TableCell>
                       <TableCell>{formatDate(notification.created_at)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+	              </Table>
+              </div>
             )}
           </CardContent>
         </Card>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">Preferências de usuários</CardTitle>
+            <CardTitle className="break-words text-base">Preferências de usuários</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -491,7 +493,8 @@ export function AdminNotificacoes() {
             ) : preferences.length === 0 ? (
               <p className="text-sm text-gray-500">Nenhuma preferência encontrada.</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Usuário</TableHead>
@@ -504,7 +507,7 @@ export function AdminNotificacoes() {
                 <TableBody>
                   {preferences.map((preference) => (
                     <TableRow key={preference.id}>
-                      <TableCell>{maskUserId(preference.user_id)}</TableCell>
+	                      <TableCell className="break-all">{maskUserId(preference.user_id)}</TableCell>
                       <TableCell>{booleanLabel(preference.receber_email)}</TableCell>
                       <TableCell>{booleanLabel(preference.receber_push)}</TableCell>
                       <TableCell>{booleanLabel(preference.receber_whatsapp)}</TableCell>
@@ -512,14 +515,15 @@ export function AdminNotificacoes() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+	              </Table>
+              </div>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Logs de dispatch</CardTitle>
+            <CardTitle className="break-words text-base">Logs de dispatch</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -527,7 +531,8 @@ export function AdminNotificacoes() {
             ) : dispatchLogs.length === 0 ? (
               <p className="text-sm text-gray-500">Nenhum log de dispatch encontrado.</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Status</TableHead>
@@ -544,17 +549,18 @@ export function AdminNotificacoes() {
                       <TableCell>
                         <NotificationStatusBadge status={log.status} />
                       </TableCell>
-                      <TableCell>{log.tipo}</TableCell>
-                      <TableCell>{log.canal}</TableCell>
-                      <TableCell>{log.provider || 'Não informado'}</TableCell>
-                      <TableCell className="max-w-[280px] whitespace-normal text-xs text-gray-600">
+	                      <TableCell className="break-words">{log.tipo}</TableCell>
+	                      <TableCell className="break-words">{log.canal}</TableCell>
+	                      <TableCell className="break-all">{log.provider || 'Não informado'}</TableCell>
+	                      <TableCell className="max-w-[280px] whitespace-normal break-words text-xs text-gray-600">
                         {log.error_message || 'Sem erro registrado'}
                       </TableCell>
                       <TableCell>{formatDate(log.created_at)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+	              </Table>
+              </div>
             )}
           </CardContent>
         </Card>
