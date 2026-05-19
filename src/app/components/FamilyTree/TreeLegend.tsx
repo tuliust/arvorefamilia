@@ -3,7 +3,6 @@ import React from 'react';
 import type { TreeViewMode } from './ViewModeToggle';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 import {
-  DIRECT_FAMILY_CARD_TEXT_COLORS,
   DIRECT_FAMILY_LEGEND_BACKGROUNDS,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from './directFamilyColors';
