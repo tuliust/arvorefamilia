@@ -124,8 +124,29 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  html {
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
+    width: 100%;
+    min-width: 320px;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    width: 100%;
+    min-width: 0;
   }
 
   /**
