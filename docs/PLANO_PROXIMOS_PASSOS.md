@@ -45,7 +45,7 @@ Regras:
 
 | Frente | Status | Próximo passo |
 |---|---|---|
-| 7.1 Notificações | QA operacional manual concluído; automação diária pendente | Resend/e-mail real, canal interno, usuário comum e rotina manual validados. Próximo: `DAILY_NOTIFICATIONS_SECRET`, teste da Edge Function diária, `pg_cron` seguro e limpeza de testes. |
+| 7.1 Notificações | Concluída tecnicamente | Resend/e-mail real, canal interno, usuário comum, rotina manual, Edge Function diária, `DAILY_NOTIFICATIONS_SECRET`, `pg_cron`, logs e deduplicação validados. Resta monitorar a primeira execução automática e limpar testes, se necessário. |
 | 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Apenas backlog editorial/privacidade avançada. |
 | 7.3 Timeline | Implementada funcionalmente | Backlog futuro: edição manual, upload por evento, PDF, privacidade por evento. |
 | 7.4 WhatsApp | Concluído no frontend | Backlog: privacidade forte em banco/API e log seguro opcional. |
@@ -150,6 +150,7 @@ git status
 
 Status:
 
+- concluída tecnicamente.
 - QA operacional manual concluído.
 - Canal interno validado.
 - Resend configurado.
@@ -158,6 +159,16 @@ Status:
 - Hardening de ownership validado: marcar/remover notificação usa `id` e `user_id`.
 - Rotina manual de aniversários/memórias validada.
 - Deduplicação manual validada via `notification_occurrences`.
+- `DAILY_NOTIFICATIONS_SECRET` configurado.
+- `run-daily-notifications` deployada e validada.
+- Chamada com secret validada com HTTP 200.
+- Chamada sem secret validada com HTTP 401.
+- `pg_cron` e `pg_net` habilitados.
+- Job `run-daily-notifications-0800-brt` ativo com agenda `0 11 * * *`.
+- Chamada manual via `net.http_post` validada com status 200.
+- `notification_occurrences` conferida.
+- `notification_dispatch_logs` conferido.
+- Consulta de duplicidade por `occurrence_key` sem linhas retornadas.
 
 Já concluído:
 
@@ -175,29 +186,36 @@ Já concluído:
 - remover notificação;
 - confirmar bloqueio de `/admin/notificacoes` para usuário comum;
 - executar rotina manual de aniversários/memórias;
-- rodar a rotina duas vezes e confirmar deduplicação.
+- rodar a rotina duas vezes e confirmar deduplicação;
+- configurar `DAILY_NOTIFICATIONS_SECRET`;
+- fazer deploy de `run-daily-notifications`;
+- testar `run-daily-notifications` manualmente com `x-daily-notifications-secret`;
+- testar `run-daily-notifications` sem secret e confirmar retorno `401`;
+- criar `pg_cron` no SQL Editor sem migration versionada;
+- validar `net.http_post` com status 200;
+- confirmar que não há `occurrence_key` duplicada.
 
-Secrets de e-mail já esperados/configurados:
+Secrets esperados/configurados:
 
 ```txt
 RESEND_API_KEY
 NOTIFICATION_EMAIL_FROM
 NOTIFICATION_EMAIL_REPLY_TO
 SITE_URL
+DAILY_NOTIFICATIONS_SECRET
 ```
 
-Pendências restantes:
+Monitoramento pós-conclusão:
 
-- configurar `DAILY_NOTIFICATIONS_SECRET`;
-- fazer deploy/confirmar deploy de `run-daily-notifications`;
-- testar `run-daily-notifications` manualmente com `x-daily-notifications-secret`;
-- testar `run-daily-notifications` sem secret e confirmar retorno `401`;
-- criar `pg_cron` no SQL Editor somente depois do teste manual;
-- não colocar segredo em migration versionada;
-- confirmar primeira execução automática;
-- limpar notificações/logs de teste apenas após validação completa.
+- confirmar a primeira execução automática do cron após 08:00 America/Sao_Paulo;
+- verificar `net._http_response` depois da execução automática;
+- verificar `notification_dispatch_logs` quando houver candidatos no dia;
+- verificar `notification_occurrences` quando houver aniversários ou datas de memória;
+- limpar notificações/logs de teste apenas se necessário;
+- manter secrets fora do repositório;
+- rotacionar `DAILY_NOTIFICATIONS_SECRET` se o valor for exposto fora de ambiente controlado.
 
-Validação restante:
+Validação:
 
 ```bash
 npm run build
@@ -425,10 +443,15 @@ Critérios finais:
 - [x] Gatilhos principais geram notificações internas.
 - [x] Deduplicação manual funciona.
 - [x] E-mail real testado de forma controlada.
-- [ ] `DAILY_NOTIFICATIONS_SECRET` configurado.
-- [ ] Edge Function diária testada com secret.
-- [ ] Edge Function diária testada sem secret com retorno `401`.
-- [ ] Cron seguro ativado e confirmado.
+- [x] `DAILY_NOTIFICATIONS_SECRET` configurado.
+- [x] Edge Function diária testada com secret.
+- [x] Edge Function diária testada sem secret com retorno `401`.
+- [x] Cron seguro ativado e confirmado.
+- [x] `net.http_post` validado com status `200`.
+- [x] Logs e occurrences conferidos.
+- [x] Consulta de duplicidade sem linhas retornadas.
+- [ ] Primeira execução automática do cron conferida após 08:00 America/Sao_Paulo.
+- [ ] Limpeza de dados de teste feita ou conscientemente adiada.
 
 ### 4.6 Insights 7.2
 
@@ -466,8 +489,8 @@ Critérios finais:
 
 - [x] Configurar Resend.
 - [x] Validar e-mail real.
-- [ ] Configurar segredo da rotina diária.
-- [ ] Ativar cron com segurança.
+- [x] Configurar segredo da rotina diária.
+- [x] Ativar cron com segurança.
 - [ ] Limpar notificações/logs de teste após validação.
 
 ### Produto/backlog

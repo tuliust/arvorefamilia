@@ -17,7 +17,7 @@ Documentos complementares:
 
 | Frente | Status atual | Observação |
 |---|---|---|
-| 7.1 Notificações | QA operacional manual concluído; automação diária pendente | Canal interno e e-mail real validados. Resend/secrets configurados. Falta ativar rotina diária com `DAILY_NOTIFICATIONS_SECRET`, testar Edge Function com/sem secret, configurar `pg_cron` seguro e limpar dados de teste, se necessário. Push e WhatsApp ficam futuros. |
+| 7.1 Notificações | Concluída tecnicamente | Canal interno, e-mail real, usuário comum, rotina manual, Edge Function diária, `DAILY_NOTIFICATIONS_SECRET`, `pg_cron`, logs e deduplicação validados. Resta apenas monitorar a primeira execução automática e limpar dados de teste, se necessário. Push e WhatsApp ficam futuros. |
 | 7.2 Astrologia e acontecimentos do nascimento | Concluída no escopo funcional atual | Perfil apenas lê insights persistidos. Geração/regeneração é ação admin. |
 | 7.3 Linha do tempo do usuário | Implementada funcionalmente | Primeira versão derivada dos dados existentes, sem tabela própria. |
 | 7.4 WhatsApp no perfil | Concluída no escopo visual/frontend | Privacidade forte em banco/API e log de clique ficam como evolução futura. |
@@ -405,14 +405,23 @@ Documentação específica:
 
 Status:
 
+- concluída tecnicamente;
 - arquitetura pronta;
 - QA operacional manual concluído;
 - canal interno funcional;
 - e-mail real validado com Resend em teste admin controlado;
 - usuário comum validado em `/notificacoes`;
+- rotina manual de aniversários/memórias validada;
+- Edge Function diária `run-daily-notifications` deployada e validada;
+- `DAILY_NOTIFICATIONS_SECRET` configurado em Supabase Secrets;
+- chamada com `x-daily-notifications-secret` validada com HTTP 200;
+- chamada sem secret validada com HTTP 401;
+- `pg_cron` habilitado e job diário ativo;
+- `pg_net` habilitado e chamada manual via `net.http_post` validada com status 200;
+- logs e occurrences conferidos;
+- deduplicação por `occurrence_key` validada sem duplicidades;
 - push real e WhatsApp real futuros;
-- fila/retry avançado futuro;
-- cron automático depende de solução segura para segredo fora do repositório.
+- fila/retry avançado futuro.
 
 Implementado e validado manualmente:
 
@@ -431,17 +440,25 @@ Implementado e validado manualmente:
   - `NOTIFICATION_EMAIL_FROM`;
   - `NOTIFICATION_EMAIL_REPLY_TO`;
   - `SITE_URL`;
-- hardening da central do usuário para marcar/remover notificação com filtro por `id` e `user_id`.
+- hardening da central do usuário para marcar/remover notificação com filtro por `id` e `user_id`;
+- Edge Function `run-daily-notifications`;
+- secret operacional `DAILY_NOTIFICATIONS_SECRET`;
+- extensões `pg_cron` e `pg_net`;
+- job `run-daily-notifications-0800-brt` com agenda `0 11 * * *`;
+- chamada manual via `net.http_post`;
+- occurrence de memória com `status = sent`;
+- dispatch log com `provider = supabase-edge-function`;
+- consulta de duplicidade sem linhas retornadas.
 
-Pendências operacionais restantes:
+Monitoramento pós-conclusão:
 
-- configurar `DAILY_NOTIFICATIONS_SECRET`;
-- fazer deploy/confirmar deploy de `run-daily-notifications`;
-- testar chamada manual da Edge Function diária com `x-daily-notifications-secret`;
-- testar chamada manual sem secret e confirmar retorno `401`;
-- criar `pg_cron` no SQL Editor sem expor segredo em migration versionada;
-- confirmar primeira execução automática;
-- limpar notificações/logs de teste somente depois de confirmar logs, deduplicação e recebimento.
+- confirmar a primeira execução automática do cron após 08:00 America/Sao_Paulo;
+- revisar `net._http_response` após a execução automática;
+- revisar `notification_dispatch_logs` quando houver candidatos no dia;
+- revisar `notification_occurrences` quando houver aniversários ou datas de memória;
+- limpar notificações/logs de teste somente se necessário e após revisão;
+- manter o segredo fora do repositório;
+- se o segredo for exposto fora de ambiente controlado, rotacionar `DAILY_NOTIFICATIONS_SECRET`.
 
 Continua como futuro/backlog:
 

@@ -513,13 +513,23 @@ Documentação específica:
 Status operacional atual:
 
 - arquitetura 7.1 pronta;
+- frente concluída tecnicamente;
 - QA operacional manual concluído;
 - canal interno validado;
 - e-mail real com Resend validado em teste admin controlado;
 - usuário comum validado em `/notificacoes`;
 - hardening de ownership consolidado: marcar/remover notificação usa `id` e `user_id`;
 - rotina manual de aniversários/memórias validada;
-- pendente: `DAILY_NOTIFICATIONS_SECRET`, teste da Edge Function diária, `pg_cron` seguro e limpeza de testes.
+- `DAILY_NOTIFICATIONS_SECRET` configurado;
+- Edge Function diária `run-daily-notifications` deployada e validada;
+- chamada com secret validada com HTTP 200;
+- chamada sem secret validada com HTTP 401;
+- `pg_cron` e `pg_net` habilitados;
+- job `run-daily-notifications-0800-brt` ativo;
+- chamada manual via `net.http_post` validada com status 200;
+- occurrences e dispatch logs conferidos;
+- deduplicação validada sem `occurrence_key` duplicada;
+- pendente apenas monitorar a primeira execução automática e limpar testes, se necessário.
 
 Arquivos:
 
@@ -646,7 +656,7 @@ Verificar:
 
 Verificar:
 
-- há pessoas com data completa no dia de referência;
+- se há pessoas com data completa no dia de referência;
 - `referenceDate` está no formato `YYYY-MM-DD`;
 - timezone esperado é `America/Sao_Paulo`;
 - recipients resolvidos:
@@ -661,12 +671,24 @@ Verificar:
 Verificar:
 
 - `pg_cron` criado no SQL Editor;
+- job `run-daily-notifications-0800-brt` ativo;
 - horário configurado em UTC;
 - 08:00 `America/Sao_Paulo` equivale a 11:00 UTC;
 - URL da Edge Function correta;
 - header `x-daily-notifications-secret`;
 - segredo não está hardcoded em migration versionada;
-- logs recentes com `metadata.source = edge-run-daily-notifications`.
+- resposta recente em `net._http_response`;
+- logs recentes com `metadata.source = edge-run-daily-notifications`, quando houver candidatos.
+
+### `net.http_post` retorna 401
+
+Verificar:
+
+- valor usado no header `x-daily-notifications-secret`;
+- se o valor bate exatamente com `DAILY_NOTIFICATIONS_SECRET`;
+- se não foram usados `< >`, aspas extras, connection string, `RESEND_API_KEY` ou `SUPABASE_SERVICE_ROLE_KEY`;
+- se a função foi redeployada após alteração do secret;
+- se o secret não tem quebra de linha ou espaço invisível.
 
 ### Push/WhatsApp tentam envio real
 
@@ -681,7 +703,8 @@ Só limpar depois de confirmar:
 - deduplicação funcionando;
 - usuário comum OK;
 - rotina manual OK;
-- cron OK.
+- cron OK;
+- primeira execução automática conferida ou limpeza conscientemente adiada.
 
 Buscar primeiro por metadata de teste, por exemplo:
 
