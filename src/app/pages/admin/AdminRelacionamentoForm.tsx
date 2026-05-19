@@ -134,25 +134,25 @@ export function AdminRelacionamentoForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/relacionamentos')}>
-            <ArrowLeft className="w-5 h-5" />
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-3xl min-w-0 items-center gap-3">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/relacionamentos')}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="font-bold text-xl text-gray-900">Novo Relacionamento</h1>
-            <p className="text-sm text-gray-500">Cadastre um vínculo entre duas pessoas</p>
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-bold text-gray-900">Novo Relacionamento</h1>
+            <p className="break-words text-sm text-gray-500">Cadastre um vínculo entre duas pessoas</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
-        <Card>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Dados do relacionamento</CardTitle>
+            <CardTitle className="break-words">Dados do relacionamento</CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="min-w-0 space-y-6" onSubmit={handleSubmit}>
               {error && (
                 <Alert variant="destructive">
                   <AlertTitle>Erro</AlertTitle>
@@ -160,8 +160,8 @@ export function AdminRelacionamentoForm() {
                 </Alert>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700">Pessoa origem</label>
                   <Select value={pessoaOrigemId} onValueChange={setPessoaOrigemId} disabled={loading || saving}>
                     <SelectTrigger>
@@ -177,7 +177,7 @@ export function AdminRelacionamentoForm() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700">Pessoa destino</label>
                   <Select value={pessoaDestinoId} onValueChange={setPessoaDestinoId} disabled={loading || saving}>
                     <SelectTrigger>
@@ -193,7 +193,7 @@ export function AdminRelacionamentoForm() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700">Tipo</label>
                   <Select
                     value={tipoRelacionamento}
@@ -213,7 +213,7 @@ export function AdminRelacionamentoForm() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700">Subtipo</label>
                   <Select
                     value={subtipoRelacionamento}
@@ -235,21 +235,21 @@ export function AdminRelacionamentoForm() {
               </div>
 
               {isConjugal && (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <h2 className="mb-4 text-sm font-semibold text-gray-900">Status conjugal</h2>
+                <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h2 className="mb-4 break-words text-sm font-semibold text-gray-900">Status conjugal</h2>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                    <label className="flex min-w-0 items-start gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
                         checked={ativo}
                         onChange={(event) => setAtivo(event.target.checked)}
                         disabled={saving}
-                        className="h-4 w-4"
+                        className="mt-0.5 h-4 w-4 shrink-0"
                       />
-                      Relacionamento ativo
+                      <span className="min-w-0 break-words">Relacionamento ativo</span>
                     </label>
 
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <label className="text-sm font-medium text-gray-700">Data de separação</label>
                       <Input
                         type="date"
@@ -259,7 +259,7 @@ export function AdminRelacionamentoForm() {
                       />
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="min-w-0 space-y-2 md:col-span-2">
                       <label className="text-sm font-medium text-gray-700">Local de separação</label>
                       <Input
                         value={localSeparacao}
@@ -269,7 +269,7 @@ export function AdminRelacionamentoForm() {
                       />
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="min-w-0 space-y-2 md:col-span-2">
                       <label className="text-sm font-medium text-gray-700">Observações internas</label>
                       <Textarea
                         value={observacoes}
@@ -282,17 +282,18 @@ export function AdminRelacionamentoForm() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => navigate('/admin/relacionamentos')}
                   disabled={saving}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading || saving || pessoasOrdenadas.length < 2}>
-                  <Save className="w-4 h-4 mr-2" />
+                <Button type="submit" disabled={loading || saving || pessoasOrdenadas.length < 2} className="w-full sm:w-auto">
+                  <Save className="mr-2 h-4 w-4 shrink-0" />
                   {saving ? 'Salvando...' : 'Salvar relacionamento'}
                 </Button>
               </div>

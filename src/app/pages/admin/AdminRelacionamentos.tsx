@@ -170,27 +170,27 @@ export function AdminRelacionamentos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/dashboard')}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="font-bold text-xl text-gray-900">Gerenciar Relacionamentos</h1>
+            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">Gerenciar Relacionamentos</h1>
           </div>
 
-          <Button onClick={() => navigate('/admin/relacionamentos/novo')}>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button className="w-full sm:w-auto" onClick={() => navigate('/admin/relacionamentos/novo')}>
+            <Plus className="mr-2 h-4 w-4 shrink-0" />
             Adicionar Relacionamento
           </Button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card className="min-w-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Total de Relacionamentos
               </CardTitle>
             </CardHeader>
@@ -199,9 +199,9 @@ export function AdminRelacionamentos() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Casamentos
               </CardTitle>
             </CardHeader>
@@ -212,9 +212,9 @@ export function AdminRelacionamentos() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Filiações
               </CardTitle>
             </CardHeader>
@@ -226,10 +226,10 @@ export function AdminRelacionamentos() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-emerald-600" />
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words">
+              <Heart className="h-5 w-5 shrink-0 text-emerald-600" />
               Relacionamentos Conjugais
             </CardTitle>
           </CardHeader>
@@ -249,26 +249,26 @@ export function AdminRelacionamentos() {
                   return (
                     <div
                       key={rel.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50"
+                      className="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 lg:flex-row lg:items-center lg:justify-between"
                     >
-                      <div className="flex items-start gap-3 flex-1">
-                        <Heart className="w-5 h-5 text-emerald-500" />
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <Heart className="h-5 w-5 shrink-0 text-emerald-500" />
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900">
+                          <p className="break-words font-medium text-gray-900">
                             {pessoa1?.nome_completo} ❤️ {pessoa2?.nome_completo}
                           </p>
                           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                            <span>Status: {status}</span>
-                            {rel.subtipo_relacionamento && <span>Tipo: {rel.subtipo_relacionamento}</span>}
-                            {rel.data_separacao && <span>Separação: {formatDateLabel(rel.data_separacao)}</span>}
-                            {rel.local_separacao && <span>Local: {rel.local_separacao}</span>}
+                            <span className="break-words">Status: {status}</span>
+                            {rel.subtipo_relacionamento && <span className="break-words">Tipo: {rel.subtipo_relacionamento}</span>}
+                            {rel.data_separacao && <span className="break-words">Separação: {formatDateLabel(rel.data_separacao)}</span>}
+                            {rel.local_separacao && <span className="break-words">Local: {rel.local_separacao}</span>}
                             {rel.observacoes && <span>Com observações</span>}
                           </div>
 
                           {isEditing && (
                             <div className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-2">
                               <div className="space-y-1">
-                                <label className="text-xs font-medium text-gray-600">Tipo conjugal</label>
+	                                <label className="text-xs font-medium text-gray-600">Tipo conjugal</label>
                                 <select
                                   value={marriageForm.subtipo_relacionamento}
                                   onChange={(event) =>
@@ -277,7 +277,7 @@ export function AdminRelacionamentos() {
                                       subtipo_relacionamento: event.target.value as SubtipoRelacionamento,
                                     }))
                                   }
-                                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+	                                  className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                                   disabled={savingMarriageId === rel.id}
                                 >
                                   <option value="casamento">Casamento</option>
@@ -287,14 +287,14 @@ export function AdminRelacionamentos() {
                               </div>
 
                               <label className="flex items-center gap-3 self-end rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
-                                <input
+	                                <input
                                   type="checkbox"
                                   checked={marriageForm.ativo}
                                   onChange={(event) =>
                                     setMarriageForm((current) => ({ ...current, ativo: event.target.checked }))
                                   }
                                   disabled={savingMarriageId === rel.id}
-                                  className="h-4 w-4"
+	                                  className="h-4 w-4 shrink-0"
                                 />
                                 Relacionamento ativo
                               </label>
@@ -333,18 +333,19 @@ export function AdminRelacionamentos() {
                                 />
                               </div>
 
-                              <div className="flex justify-end gap-2 md:col-span-2">
-                                <Button type="button" variant="outline" size="sm" onClick={cancelMarriageEdit}>
-                                  <X className="mr-2 h-4 w-4" />
+	                              <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row sm:justify-end">
+	                                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={cancelMarriageEdit}>
+	                                  <X className="mr-2 h-4 w-4 shrink-0" />
                                   Cancelar
                                 </Button>
                                 <Button
-                                  type="button"
-                                  size="sm"
-                                  onClick={() => handleSaveMarriage(rel)}
+	                                  type="button"
+	                                  size="sm"
+	                                  className="w-full sm:w-auto"
+	                                  onClick={() => handleSaveMarriage(rel)}
                                   disabled={savingMarriageId === rel.id}
                                 >
-                                  <Save className="mr-2 h-4 w-4" />
+	                                  <Save className="mr-2 h-4 w-4 shrink-0" />
                                   {savingMarriageId === rel.id ? 'Salvando...' : 'Salvar'}
                                 </Button>
                               </div>
@@ -353,21 +354,23 @@ export function AdminRelacionamentos() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex w-full gap-2 lg:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="flex-1 lg:flex-none"
                           onClick={() => startMarriageEdit(rel)}
                           disabled={Boolean(editingMarriageId && editingMarriageId !== rel.id)}
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="flex-1 lg:flex-none"
                           onClick={() => handleDelete(rel.id)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -378,10 +381,10 @@ export function AdminRelacionamentos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UsersIcon className="w-5 h-5 text-blue-600" />
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words">
+              <UsersIcon className="h-5 w-5 shrink-0 text-blue-600" />
               Relacionamentos de Filiação
             </CardTitle>
           </CardHeader>
@@ -399,15 +402,15 @@ export function AdminRelacionamentos() {
                   return (
                     <div
                       key={rel.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50"
+                      className="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <UsersIcon className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium text-gray-900">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <UsersIcon className="h-5 w-5 shrink-0 text-blue-500" />
+                        <div className="min-w-0">
+                          <p className="break-words font-medium text-gray-900">
                             {origem?.nome_completo} → {destino?.nome_completo}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="mt-1 break-words text-xs text-gray-500">
                             {rel.tipo_relacionamento} • {rel.subtipo_relacionamento === 'adotivo' ? 'adotivo' : 'sangue'}
                           </p>
                         </div>
@@ -416,9 +419,10 @@ export function AdminRelacionamentos() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => handleDelete(rel.id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   );
