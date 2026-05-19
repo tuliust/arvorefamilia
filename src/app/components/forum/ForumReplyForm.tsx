@@ -27,16 +27,16 @@ export function ForumReplyForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="min-w-0 space-y-3">
       <Textarea
         value={conteudo}
         onChange={(event) => setConteudo(event.target.value)}
         placeholder={placeholder}
         className="min-h-32"
       />
-      <div className="flex justify-end">
-        <Button type="submit" disabled={enviando || !conteudo.trim()}>
-          <Send className="mr-2 h-4 w-4" />
+      <div className="flex flex-col sm:flex-row sm:justify-end">
+        <Button type="submit" disabled={enviando || !conteudo.trim()} className="w-full sm:w-auto">
+          <Send className="mr-2 h-4 w-4 shrink-0" />
           {enviando ? 'Enviando...' : submitLabel}
         </Button>
       </div>

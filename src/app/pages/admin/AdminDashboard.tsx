@@ -156,27 +156,28 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-              <Settings className="w-6 h-6 text-white" />
+      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+              <Settings className="h-6 w-6 text-white" />
             </div>
 
-            <div>
-              <h1 className="font-bold text-xl text-gray-900">Painel Administrativo</h1>
-              <p className="text-sm text-gray-500">Gestão da Árvore Genealógica</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Painel Administrativo</h1>
+              <p className="break-words text-sm text-gray-500">Gestão da Árvore Genealógica</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => navigate('/')}>
-              <Home className="w-4 h-4 mr-2" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/')}>
+              <Home className="mr-2 h-4 w-4 shrink-0" />
               Ver Árvore Pública
             </Button>
 
             <Button
               variant="ghost"
+              className="w-full sm:w-auto"
               onClick={handleSignOut}
             >
               Sair
@@ -185,93 +186,93 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Total de Membros
               </CardTitle>
-              <Users className="w-4 h-4 text-gray-400" />
+              <Users className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{stats.totalPessoas}</div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 break-words text-xs text-gray-500">
                 {stats.totalHumanos} humanos, {stats.totalPets} pets
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Relacionamentos
               </CardTitle>
-              <Link2 className="w-4 h-4 text-gray-400" />
+              <Link2 className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
                 {stats.totalRelacionamentos}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 break-words text-xs text-gray-500">
                 {stats.totalCasamentos} casamentos
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 Solicitações pendentes
               </CardTitle>
-              <GitPullRequest className="w-4 h-4 text-gray-400" />
+              <GitPullRequest className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{stats.pendingRelationshipRequests}</div>
-              <p className="text-xs text-gray-500 mt-1">Vínculos aguardando revisão</p>
+              <p className="mt-1 break-words text-xs text-gray-500">Vínculos aguardando revisão</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="break-words text-sm font-medium text-gray-600">
                 In Memoriam
               </CardTitle>
-              <BarChart3 className="w-4 h-4 text-gray-400" />
+              <BarChart3 className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">{stats.totalFalecidos}</div>
-              <p className="text-xs text-gray-500 mt-1">Pessoas falecidas</p>
+              <p className="mt-1 break-words text-xs text-gray-500">Pessoas falecidas</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+          <h2 className="mb-4 break-words text-lg font-semibold text-gray-900">Ações Rápidas</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
             {quickActions.map((action) => (
               <button
                 key={action.title}
                 onClick={action.onClick}
-                className="text-left p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+	                className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 text-left transition-shadow hover:shadow-md sm:p-6"
                 type="button"
               >
                 <div
-                  className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}
+	                  className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${action.color}`}
                 >
-                  <action.icon className="w-6 h-6 text-white" />
+	                  <action.icon className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{action.title}</h3>
-                <p className="text-sm text-gray-600">{action.description}</p>
+	                <h3 className="mb-1 break-words font-semibold text-gray-900">{action.title}</h3>
+	                <p className="line-clamp-3 break-words text-sm text-gray-600">{action.description}</p>
               </button>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
+	          <Card className="min-w-0">
             <CardHeader>
-              <CardTitle>Pessoas Recentes</CardTitle>
+	              <CardTitle className="break-words">Pessoas Recentes</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -283,21 +284,22 @@ export function AdminDashboard() {
                   {pessoasRecentes.map((pessoa) => (
                     <div
                       key={pessoa.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+	                      className="flex min-w-0 flex-col gap-2 rounded-lg p-3 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                       onClick={() => navigate(`/pessoa/${pessoa.id}`)}
                     >
-                      <div>
-                        <p className="font-medium text-sm text-gray-900">
+	                      <div className="min-w-0">
+	                        <p className="break-words text-sm font-medium text-gray-900">
                           {pessoa.nome_completo}
                         </p>
-                        <p className="text-xs text-gray-500">
+	                        <p className="break-words text-xs text-gray-500">
                           {pessoa.local_nascimento || 'Local não informado'}
                         </p>
                       </div>
 
                       <Button
-                        variant="ghost"
-                        size="sm"
+	                        variant="ghost"
+	                        size="sm"
+	                        className="w-full sm:w-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/admin/pessoas/${pessoa.id}/editar`);
@@ -312,10 +314,10 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Histórico de Atividades</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/atividades')}>
+	          <Card className="min-w-0">
+	            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+	              <CardTitle className="break-words">Histórico de Atividades</CardTitle>
+	              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate('/admin/atividades')}>
                 Ver histórico completo
               </Button>
             </CardHeader>
@@ -328,17 +330,17 @@ export function AdminDashboard() {
                 <div className="space-y-3">
                   {atividadesRecentes.map((atividade) => (
                     <div key={atividade.id} className="rounded-lg border border-gray-100 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
+	                      <div className="flex min-w-0 items-start justify-between gap-3">
+	                        <div className="min-w-0">
+	                          <p className="break-words text-sm font-medium text-gray-900">
                             {getActivityActionLabel(atividade.action)}
                           </p>
-                          <p className="text-xs text-gray-500">
+	                          <p className="break-words text-xs text-gray-500">
                             {atividade.actor_display_name || 'Ator não identificado'} · {formatActivityDate(atividade.created_at)}
                           </p>
                         </div>
                       </div>
-                      <p className="mt-2 text-xs text-gray-600">
+	                      <p className="mt-2 break-words text-xs text-gray-600">
                         {getActivitySummary(atividade)}
                       </p>
                     </div>

@@ -736,29 +736,29 @@ export function AdminPessoaForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/admin/pessoas')}>
-              <ArrowLeft className="w-5 h-5" />
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/pessoas')}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="font-bold text-xl text-gray-900">
+            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">
               {isEdit ? 'Editar Pessoa' : 'Nova Pessoa'}
             </h1>
           </div>
 
-          <Button form="pessoa-form" type="submit" disabled={isSubmitting}>
-            <Save className="w-4 h-4 mr-2" />
+          <Button form="pessoa-form" type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+            <Save className="mr-2 h-4 w-4 shrink-0" />
             {isSubmitting ? 'Salvando...' : 'Salvar'}
           </Button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <form id="pessoa-form" onSubmit={handleSubmit} className="space-y-6">
-          <Card>
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <form id="pessoa-form" onSubmit={handleSubmit} className="min-w-0 space-y-6">
+          <Card className="min-w-0">
             <CardHeader>
-              <CardTitle>Foto Principal</CardTitle>
+              <CardTitle className="break-words">Foto Principal</CardTitle>
             </CardHeader>
             <CardContent>
               <FotoUpload
@@ -781,57 +781,58 @@ export function AdminPessoaForm() {
           />
 
           {isEdit && id && (
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
-                <CardTitle>Astrologia e acontecimentos do nascimento</CardTitle>
+                <CardTitle className="break-words">Astrologia e acontecimentos do nascimento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="break-words text-sm text-gray-600">
                   Gere ou regenere conteúdos persistidos para exibição no perfil. Esta ação usa a Edge Function
                   `generate-person-insights` e deve ser executada apenas quando necessário.
                 </p>
 
                 {insightsLoading && (
-                  <p className="text-sm text-gray-500">Carregando insights gerados...</p>
+                  <p className="break-words text-sm text-gray-500">Carregando insights gerados...</p>
                 )}
 
                 {insightsError && (
-                  <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <p className="break-words rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     {insightsError}
                   </p>
                 )}
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <div className="min-w-0 rounded-lg border border-gray-100 bg-gray-50 p-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Astrologia</p>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">
+                    <p className="mt-1 break-words text-sm font-semibold text-gray-900">
                       {getGeneratedInsightStatusLabel(astrologyInsight)}
                     </p>
                   </div>
 
-                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <div className="min-w-0 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                    <p className="break-words text-xs font-medium uppercase tracking-wide text-gray-500">
                       Acontecimentos históricos
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">
+                    <p className="mt-1 break-words text-sm font-semibold text-gray-900">
                       {getGeneratedInsightStatusLabel(historicalEventsInsight)}
                     </p>
                   </div>
                 </div>
 
                 {!canManageGeneratedInsights && (
-                  <p className="text-sm text-gray-500">
+                  <p className="break-words text-sm text-gray-500">
                     Disponível apenas para pessoas humanas com data de nascimento exibível.
                   </p>
                 )}
 
                 {canManageGeneratedInsights && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => handleGenerateInsights(false)}
                       disabled={insightsActionLoading || hasAllGeneratedInsights}
+                      className="w-full sm:w-auto"
                     >
                       {insightsActionLoading ? 'Processando...' : 'Gerar conteúdos ausentes'}
                     </Button>
@@ -841,6 +842,7 @@ export function AdminPessoaForm() {
                       variant="outline"
                       onClick={() => handleGenerateInsights(true)}
                       disabled={insightsActionLoading}
+                      className="w-full sm:w-auto"
                     >
                       {insightsActionLoading ? 'Processando...' : 'Regenerar conteúdos'}
                     </Button>
@@ -877,9 +879,9 @@ export function AdminPessoaForm() {
             pessoaId={id}
           />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Eventos da vida</CardTitle>
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle className="break-words">Eventos da vida</CardTitle>
             </CardHeader>
             <CardContent>
               <PersonEventsEditor
@@ -890,42 +892,42 @@ export function AdminPessoaForm() {
           </Card>
 
           {!isEdit && (
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
-                <CardTitle>Relacionamentos Familiares (opcional)</CardTitle>
+                <CardTitle className="break-words">Relacionamentos Familiares (opcional)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <p className="text-sm text-gray-600">
+                <p className="break-words text-sm text-gray-600">
                   Defina os relacionamentos que serão criados automaticamente após salvar a pessoa.
                 </p>
 
                 <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-4">👨‍👩‍👦 Filiação (Pais)</h3>
+                  <h3 className="mb-4 break-words font-semibold text-gray-900">Filiação (Pais)</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Pai</label>
                       <div className="space-y-2">
                         {paiSelecionado ? (
-                          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+	                          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2">
                             {paiSelecionado.pessoa.foto_principal_url ? (
                               <img
                                 src={paiSelecionado.pessoa.foto_principal_url}
                                 alt=""
-                                className="w-8 h-8 rounded-full object-cover"
+	                                className="h-8 w-8 shrink-0 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User className="w-4 h-4 text-gray-400" />
+	                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200">
+	                                <User className="h-4 w-4 text-gray-400" />
                               </div>
                             )}
-                            <span className="flex-1 text-sm font-medium">
+	                            <span className="min-w-0 flex-1 break-words text-sm font-medium">
                               {paiSelecionado.pessoa.nome_completo}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleRemoverRelacionamentoPendente(paiSelecionado.pessoa.id, 'pai')}
-                              className="text-red-600 hover:text-red-800"
+	                              className="shrink-0 text-red-600 hover:text-red-800"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -943,7 +945,7 @@ export function AdminPessoaForm() {
                             }}
                             className="w-full"
                           >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <Plus className="mr-2 h-4 w-4 shrink-0" />
                             Selecionar Pai
                           </Button>
                         )}
@@ -954,25 +956,25 @@ export function AdminPessoaForm() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Mãe</label>
                       <div className="space-y-2">
                         {maeSelecionada ? (
-                          <div className="flex items-center gap-2 p-2 bg-pink-50 rounded-lg border border-pink-200">
+	                          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-pink-200 bg-pink-50 p-2">
                             {maeSelecionada.pessoa.foto_principal_url ? (
                               <img
                                 src={maeSelecionada.pessoa.foto_principal_url}
                                 alt=""
-                                className="w-8 h-8 rounded-full object-cover"
+	                                className="h-8 w-8 shrink-0 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User className="w-4 h-4 text-gray-400" />
+	                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200">
+	                                <User className="h-4 w-4 text-gray-400" />
                               </div>
                             )}
-                            <span className="flex-1 text-sm font-medium">
+	                            <span className="min-w-0 flex-1 break-words text-sm font-medium">
                               {maeSelecionada.pessoa.nome_completo}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleRemoverRelacionamentoPendente(maeSelecionada.pessoa.id, 'mae')}
-                              className="text-red-600 hover:text-red-800"
+	                              className="shrink-0 text-red-600 hover:text-red-800"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -990,7 +992,7 @@ export function AdminPessoaForm() {
                             }}
                             className="w-full"
                           >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <Plus className="mr-2 h-4 w-4 shrink-0" />
                             Selecionar Mãe
                           </Button>
                         )}
@@ -1000,8 +1002,8 @@ export function AdminPessoaForm() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">💍 Outros Relacionamentos</h3>
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="break-words font-semibold text-gray-900">Outros Relacionamentos</h3>
                     <Button
                       type="button"
                       size="sm"
@@ -1012,8 +1014,9 @@ export function AdminPessoaForm() {
                         setShowAddRelDialog(true);
                       }}
                       variant="outline"
+                      className="w-full sm:w-auto"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="mr-2 h-4 w-4 shrink-0" />
                       Adicionar
                     </Button>
                   </div>
@@ -1021,31 +1024,31 @@ export function AdminPessoaForm() {
                   {outrosRelacionamentos.length > 0 && (
                     <div className="space-y-2">
                       {outrosRelacionamentos.map((rel) => (
-                        <div key={`${rel.pessoa.id}-${rel.tipo}`} className="rounded-lg border bg-gray-50 p-3">
-                          <div className="flex items-center gap-3">
+	                        <div key={`${rel.pessoa.id}-${rel.tipo}`} className="min-w-0 rounded-lg border bg-gray-50 p-3">
+	                          <div className="flex min-w-0 items-center gap-3">
                             {rel.pessoa.foto_principal_url ? (
                               <img
                                 src={rel.pessoa.foto_principal_url}
                                 alt=""
-                                className="w-10 h-10 rounded-full object-cover"
+	                                className="h-10 w-10 shrink-0 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User className="w-5 h-5 text-gray-400" />
+	                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200">
+	                                <User className="h-5 w-5 text-gray-400" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+	                              <p className="truncate text-sm font-medium text-gray-900">
                                 {rel.pessoa.nome_completo}
                               </p>
-                              <p className="text-xs text-gray-500">
+	                              <p className="break-words text-xs text-gray-500">
                                 {getTipoLabel(rel.tipo)} · {rel.subtipo === 'adotivo' ? 'Adotivo' : 'Sangue/Casamento'}
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleRemoverRelacionamentoPendente(rel.pessoa.id, rel.tipo)}
-                              className="text-red-600 hover:text-red-800"
+	                              className="shrink-0 text-red-600 hover:text-red-800"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1101,12 +1104,12 @@ export function AdminPessoaForm() {
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Adicionar relacionamento</DialogTitle>
+            <DialogTitle className="break-words">Adicionar relacionamento</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="min-w-0">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
                 <select
                   value={tipoRelSelecionado}
@@ -1119,7 +1122,7 @@ export function AdminPessoaForm() {
                       setPendingMarriageDetails(createEmptyMarriageDetails());
                     }
                   }}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                 >
                   <option value="conjuge">Cônjuge</option>
                   <option value="filho">Filho(a)</option>
@@ -1129,7 +1132,7 @@ export function AdminPessoaForm() {
                 </select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Subtipo</label>
                 <select
                   value={subtipoRelSelecionado}
@@ -1137,7 +1140,7 @@ export function AdminPessoaForm() {
                     markDraftDirty();
                     setSubtipoRelSelecionado(e.target.value as SubtipoRelacionamento);
                   }}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                 >
                   {tipoRelSelecionado === 'conjuge' ? (
                     <>
@@ -1157,8 +1160,8 @@ export function AdminPessoaForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Buscar pessoa</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="relative min-w-0">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   type="text"
                   value={searchTerm}
@@ -1172,36 +1175,36 @@ export function AdminPessoaForm() {
               </div>
             </div>
 
-            <div className="max-h-80 overflow-y-auto border rounded-lg">
+            <div className="max-h-80 overflow-y-auto rounded-lg border">
               {pessoasFiltradas.length > 0 ? (
                 pessoasFiltradas.map((pessoa) => (
                   <button
                     key={pessoa.id}
                     type="button"
                     onClick={() => handleAdicionarRelacionamentoPendente(pessoa)}
-                    className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 border-b last:border-b-0"
+                    className="flex w-full min-w-0 items-center gap-3 border-b p-3 text-left hover:bg-gray-50 last:border-b-0"
                   >
                     {pessoa.foto_principal_url ? (
                       <img
                         src={pessoa.foto_principal_url}
                         alt=""
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-400" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200">
+                        <User className="h-5 w-5 text-gray-400" />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{pessoa.nome_completo}</p>
+                      <p className="truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
                       {pessoa.local_nascimento && (
-                        <p className="text-xs text-gray-500 truncate">{pessoa.local_nascimento}</p>
+                        <p className="truncate text-xs text-gray-500">{pessoa.local_nascimento}</p>
                       )}
                     </div>
                   </button>
                 ))
               ) : (
-                <div className="p-4 text-sm text-gray-500 text-center">
+                <div className="p-4 text-center text-sm text-gray-500">
                   Nenhuma pessoa encontrada.
                 </div>
               )}
@@ -1224,6 +1227,7 @@ export function AdminPessoaForm() {
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={handleCloseRelacionamentoDialog}
             >
               Cancelar

@@ -768,32 +768,32 @@ export function AdminIntegridade() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
+      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
               <Database className="h-5 w-5" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Integridade dos dados</h1>
-              <p className="text-sm text-gray-500">Diagnóstico somente leitura da árvore, vínculos, arquivos e auditoria.</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Integridade dos dados</h1>
+              <p className="break-words text-sm text-gray-500">Diagnóstico somente leitura da árvore, vínculos, arquivos e auditoria.</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
+              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
               Painel
             </Button>
-            <Button onClick={loadData} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
+            <Button className="w-full sm:w-auto" onClick={loadData} disabled={loading}>
+              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
               Atualizar diagnóstico
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {error && (
           <Card className="border-red-200 bg-red-50">
             <CardContent className="pt-6 text-sm text-red-800">{error}</CardContent>
@@ -827,7 +827,7 @@ export function AdminIntegridade() {
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Volume de logs por ação</CardTitle>
+	                    <CardTitle className="break-words">Volume de logs por ação</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {actionVolumes.length === 0 ? (
@@ -835,8 +835,8 @@ export function AdminIntegridade() {
                     ) : (
                       <div className="space-y-2">
                         {actionVolumes.map(([action, count]) => (
-                          <div key={action} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm">
-                            <span className="text-gray-700">{ACTIVITY_ACTION_LABELS[action as ActivityLogAction] ?? action}</span>
+	                          <div key={action} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm">
+	                            <span className="min-w-0 break-words text-gray-700">{ACTIVITY_ACTION_LABELS[action as ActivityLogAction] ?? action}</span>
                             <span className="font-semibold text-gray-900">{count}</span>
                           </div>
                         ))}
@@ -847,7 +847,7 @@ export function AdminIntegridade() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Solicitações por status</CardTitle>
+	                    <CardTitle className="break-words">Solicitações por status</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {requestCounts ? (
@@ -874,7 +874,7 @@ export function AdminIntegridade() {
             {data && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Últimos logs</CardTitle>
+	                  <CardTitle className="break-words">Últimos logs</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {data.activityLogs.slice(0, 10).length === 0 ? (
@@ -882,10 +882,10 @@ export function AdminIntegridade() {
                   ) : (
                     <div className="divide-y divide-gray-100">
                       {data.activityLogs.slice(0, 10).map((log) => (
-                        <div key={log.id} className="grid gap-2 py-3 text-sm md:grid-cols-[160px_220px_1fr]">
-                          <span className="text-gray-500">{formatDate(log.created_at)}</span>
-                          <span className="font-medium text-gray-900">{ACTIVITY_ACTION_LABELS[log.action] ?? log.action}</span>
-                          <span className="text-gray-600">{log.entity_label || log.entity_id || 'Sem entidade'}</span>
+	                        <div key={log.id} className="grid min-w-0 gap-2 py-3 text-sm md:grid-cols-[160px_220px_1fr]">
+	                          <span className="break-words text-gray-500">{formatDate(log.created_at)}</span>
+	                          <span className="break-words font-medium text-gray-900">{ACTIVITY_ACTION_LABELS[log.action] ?? log.action}</span>
+	                          <span className="break-all text-gray-600">{log.entity_label || log.entity_id || 'Sem entidade'}</span>
                         </div>
                       ))}
                     </div>
@@ -909,9 +909,9 @@ function SummaryCard({ label, value, tone }: { label: string; value: number; ton
   };
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardContent className="pt-6">
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="break-words text-sm text-gray-500">{label}</p>
         <p className={`mt-2 inline-flex rounded-lg px-3 py-1 text-2xl font-bold ${classes[tone]}`}>{value}</p>
       </CardContent>
     </Card>
@@ -925,15 +925,15 @@ function DiagnosticSummary({ section }: { section: DiagnosticSection }) {
   const info = countSeverity(section.issues, 'info');
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="h-5 w-5 text-gray-500" />
+        <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
+          <Icon className="h-5 w-5 shrink-0 text-gray-500" />
           {section.title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-500">{section.description}</p>
+        <p className="break-words text-sm text-gray-500">{section.description}</p>
         <div className="flex flex-wrap gap-2 text-xs">
           <Badge tone="critical">Crítico: {critical}</Badge>
           <Badge tone="warning">Atenção: {warning}</Badge>
@@ -952,31 +952,31 @@ function DiagnosticDetails({
   onNavigate: (path: string) => void;
 }) {
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-3">
-          <span>{section.title}</span>
+        <CardTitle className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <span className="min-w-0 break-words">{section.title}</span>
           <span className="text-sm font-normal text-gray-500">{section.issues.length} item(ns)</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {section.info && <p className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">{section.info}</p>}
+        {section.info && <p className="mb-3 break-words rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">{section.info}</p>}
         {section.issues.length === 0 ? (
-          <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
-            <CheckCircle2 className="h-4 w-4" />
+          <div className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             Nenhum problema encontrado nesta área.
           </div>
         ) : (
           <div className="divide-y divide-gray-100 rounded-lg border border-gray-200">
             {section.issues.slice(0, 50).map((issue) => (
-              <div key={issue.id} className="grid gap-3 px-4 py-3 text-sm lg:grid-cols-[110px_1fr_auto] lg:items-center">
+              <div key={issue.id} className="grid min-w-0 gap-3 px-4 py-3 text-sm lg:grid-cols-[110px_1fr_auto] lg:items-center">
                 <Badge tone={issue.severity}>{issue.severity === 'critical' ? 'Crítico' : issue.severity === 'warning' ? 'Atenção' : 'Info'}</Badge>
-                <div>
-                  <p className="font-medium text-gray-900">{issue.title}</p>
-                  {issue.description && <p className="mt-1 text-gray-500">{issue.description}</p>}
-                </div>
+	                <div className="min-w-0">
+	                  <p className="break-words font-medium text-gray-900">{issue.title}</p>
+	                  {issue.description && <p className="mt-1 break-words text-gray-500">{issue.description}</p>}
+	                </div>
                 {issue.link && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => onNavigate(issue.link!)}>
+	                  <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onNavigate(issue.link!)}>
                     {issue.linkLabel || 'Abrir'}
                   </Button>
                 )}

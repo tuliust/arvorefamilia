@@ -28,7 +28,7 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | 7.7 Legendas visuais | Concluída | Ajustes finos podem entrar na responsividade. |
 | 7.8 Favoritos | Primeira camada aprovada | Expansão para outras entidades fica pós-MVP. |
 | 7.9 Página de favoritos | Primeira versão aprovada | Refinamentos ficam pós-MVP. |
-| 7.10 Responsividade mobile/tablet | Pendente | Última etapa antes do lançamento. |
+| 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA final técnico e visual aprovado em 2026-05-19. |
 
 ---
 
@@ -99,6 +99,8 @@ Regras:
 
 **Última etapa antes do lançamento.**
 
+Status em 2026-05-19: concluída e validada para o MVP.
+
 Objetivo:
 
 - ajustar layout e usabilidade em tablet e mobile;
@@ -124,6 +126,16 @@ Ordem recomendada:
 5. fórum/favoritos/notificações;
 6. admin;
 7. QA final de lançamento.
+
+Blocos executados:
+
+- base global;
+- árvore e ReactFlow;
+- perfil da pessoa;
+- área do usuário;
+- fórum/favoritos/notificações;
+- admin;
+- QA final de lançamento.
 
 ---
 
@@ -435,6 +447,8 @@ git commit -m "style: ajustar admin para mobile"
 
 Executar após concluir os blocos de responsividade.
 
+Status em 2026-05-19: executado e aprovado.
+
 ### 11.1 Validação técnica
 
 ```bash
@@ -448,13 +462,13 @@ supabase migration list
 
 Critérios:
 
-- build passa;
-- testes unitários passam;
-- e2e passa ou falhas são documentadas e não bloqueadoras;
-- `git diff --check` sem erros;
-- migrations locais/remotas entendidas;
-- nenhuma migration visual criada;
-- nenhum secret versionado.
+- build passou com `npm run build`;
+- testes unitários passaram com `npm test` (`28` testes);
+- e2e passou com `npm run test:e2e` (`5` testes);
+- `git diff --check` passou sem erros;
+- `supabase migration list` mostrou migrations locais/remotas alinhadas;
+- nenhuma migration visual foi criada;
+- nenhum secret foi versionado.
 
 ### 11.2 QA visual obrigatório
 
@@ -469,22 +483,37 @@ Testar em:
 
 Checklist por largura:
 
-- [ ] sem overflow horizontal indevido;
-- [ ] header utilizável;
-- [ ] menus acessíveis;
-- [ ] botões clicáveis;
-- [ ] cards não estouram;
-- [ ] modais têm scroll interno;
-- [ ] tabelas têm scroll controlado;
-- [ ] formulários longos são usáveis;
-- [ ] árvore permite pan/zoom;
-- [ ] legenda é acessível;
-- [ ] seleção de área não quebra;
-- [ ] notificações funcionam;
-- [ ] favoritos funcionam;
-- [ ] fórum é usável;
-- [ ] admin básico é operável;
-- [ ] ações destrutivas continuam protegidas.
+- [x] 320px aprovado.
+- [x] 375px aprovado.
+- [x] 390px aprovado.
+- [x] 430px aprovado.
+- [x] 768px aprovado.
+- [x] desktop aprovado.
+
+Roteiro visual executado com sessão admin autenticada e verificação de overflow global:
+
+- `/`;
+- `/minha-arvore`;
+- `/meus-dados`;
+- `/meus-vinculos`;
+- `/meus-favoritos`;
+- `/notificacoes`;
+- `/forum`;
+- `/forum/novo`;
+- `/admin/dashboard`;
+- `/admin/pessoas`;
+- `/admin/pessoas/nova`;
+- `/admin/relacionamentos`;
+- `/admin/relacionamentos/novo`;
+- `/admin/solicitacoes-vinculos`;
+- `/admin/notificacoes`;
+- `/admin/integridade`;
+- `/admin/atividades`;
+- `/admin/diagnostico`;
+- `/admin/importacao`;
+- `/admin/migrar-dados`.
+
+Resultado: `document.documentElement.scrollWidth > window.innerWidth` retornou `false` nas rotas acima em todas as larguras testadas.
 
 ### 11.3 QA funcional de regressão
 
@@ -522,9 +551,11 @@ Depois do QA final:
 2. confirmar que os itens pós-MVP continuam fora do lançamento;
 3. rodar validação técnica final;
 4. fazer commit de documentação;
-5. fazer merge para `main`;
+5. preparar merge para `main`;
 6. criar tag ou release, se o fluxo do projeto usar versionamento;
 7. preparar deploy.
+
+Status em 2026-05-19: itens 1 a 4 concluídos nesta branch. O próximo passo é preparar o merge para `main`.
 
 Comandos sugeridos:
 

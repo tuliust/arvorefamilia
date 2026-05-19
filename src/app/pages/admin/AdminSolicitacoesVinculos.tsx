@@ -324,36 +324,36 @@ export function AdminSolicitacoesVinculos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-700">
+      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-700">
               <Filter className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Solicitacoes de vinculos</h1>
-              <p className="text-sm text-gray-500">Revisao administrativa de ajustes familiares</p>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold text-gray-900">Solicitacoes de vinculos</h1>
+              <p className="break-words text-sm text-gray-500">Revisao administrativa de ajustes familiares</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void loadData()} disabled={loading}>
+              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
               Atualizar
             </Button>
-            <Button variant="outline" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
+              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
               Voltar ao painel
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <Card className="mb-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="mb-6 min-w-0">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Filter className="h-4 w-4" />
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
+              <Filter className="h-4 w-4 shrink-0" />
               Filtros
               {activeFiltersCount > 0 && (
                 <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
@@ -364,10 +364,10 @@ export function AdminSolicitacoesVinculos() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Status
                 <select
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={filters.status}
                   onChange={(event) =>
                     setFilters((current) => ({ ...current, status: event.target.value as RequestFilters['status'] }))
@@ -380,10 +380,10 @@ export function AdminSolicitacoesVinculos() {
                 </select>
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Acao
                 <select
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={filters.action}
                   onChange={(event) =>
                     setFilters((current) => ({ ...current, action: event.target.value as RequestFilters['action'] }))
@@ -396,10 +396,10 @@ export function AdminSolicitacoesVinculos() {
                 </select>
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Tipo
                 <select
-                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
+                  className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={filters.relationshipType}
                   onChange={(event) =>
                     setFilters((current) => ({
@@ -415,7 +415,7 @@ export function AdminSolicitacoesVinculos() {
                 </select>
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Solicitante
                 <Input
                   value={filters.requesterQuery}
@@ -424,7 +424,7 @@ export function AdminSolicitacoesVinculos() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Pessoa relacionada
                 <Input
                   value={filters.relatedQuery}
@@ -433,7 +433,7 @@ export function AdminSolicitacoesVinculos() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 De
                 <Input
                   type="date"
@@ -442,7 +442,7 @@ export function AdminSolicitacoesVinculos() {
                 />
               </label>
 
-              <label className="space-y-1 text-sm font-medium text-gray-700">
+              <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
                 Ate
                 <Input
                   type="date"
@@ -460,9 +460,9 @@ export function AdminSolicitacoesVinculos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Solicitacoes ({filteredRequests.length})</CardTitle>
+            <CardTitle className="break-words">Solicitacoes ({filteredRequests.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
@@ -474,49 +474,50 @@ export function AdminSolicitacoesVinculos() {
                 {filteredRequests.map((request) => (
                   <div
                     key={request.id}
-                    className="grid gap-3 px-4 py-4 lg:grid-cols-[120px_120px_1.1fr_1.1fr_1fr_140px]"
+                    className="grid min-w-0 gap-3 px-4 py-4 lg:grid-cols-[120px_120px_1.1fr_1.1fr_1fr_140px]"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <Badge variant={getStatusBadgeVariant(request.status)}>
                         {STATUS_LABELS[request.status]}
                       </Badge>
-                      <p className="mt-2 text-xs text-gray-500">{formatDateTime(request.created_at)}</p>
+                      <p className="mt-2 break-words text-xs text-gray-500">{formatDateTime(request.created_at)}</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{ACTION_LABELS[request.action]}</p>
-                      <p className="text-xs text-gray-500">{RELATIONSHIP_TYPE_LABELS[request.relationship_type]}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-medium text-gray-900">{ACTION_LABELS[request.action]}</p>
+                      <p className="break-words text-xs text-gray-500">{RELATIONSHIP_TYPE_LABELS[request.relationship_type]}</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{getRequesterName(profilesMap, request)}</p>
-                      <p className="text-xs text-gray-500">{getPessoaName(pessoasMap, request.requester_pessoa_id)}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-medium text-gray-900">{getRequesterName(profilesMap, request)}</p>
+                      <p className="break-words text-xs text-gray-500">{getPessoaName(pessoasMap, request.requester_pessoa_id)}</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-900">{getPessoaName(pessoasMap, request.target_pessoa_id)}</p>
-                      <p className="text-xs text-gray-500">{getPessoaName(pessoasMap, request.related_pessoa_id)}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm text-gray-900">{getPessoaName(pessoasMap, request.target_pessoa_id)}</p>
+                      <p className="break-words text-xs text-gray-500">{getPessoaName(pessoasMap, request.related_pessoa_id)}</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-900">{getSafeChangeSummary(request)}</p>
-                      <p className="text-xs text-gray-500">{request.relationship_subtype || 'Sem subtipo'}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm text-gray-900">{getSafeChangeSummary(request)}</p>
+                      <p className="break-words text-xs text-gray-500">{request.relationship_subtype || 'Sem subtipo'}</p>
                     </div>
-                    <div className="flex flex-wrap items-start gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => openDetails(request)}>
-                        <Eye className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col">
+                      <Button type="button" variant="outline" size="sm" className="w-full lg:w-auto" onClick={() => openDetails(request)}>
+                        <Eye className="mr-2 h-4 w-4 shrink-0" />
                         Detalhes
                       </Button>
                       {request.status === 'pending' && (
                         <>
-                          <Button type="button" size="sm" onClick={() => void handleApprove(request)} disabled={reviewing}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <Button type="button" size="sm" className="w-full lg:w-auto" onClick={() => void handleApprove(request)} disabled={reviewing}>
+                            <CheckCircle2 className="mr-2 h-4 w-4 shrink-0" />
                             Aprovar
                           </Button>
                           <Button
                             type="button"
                             variant="destructive"
                             size="sm"
+                            className="w-full lg:w-auto"
                             onClick={() => void handleReject(request)}
                             disabled={reviewing}
                           >
-                            <XCircle className="mr-2 h-4 w-4" />
+                            <XCircle className="mr-2 h-4 w-4 shrink-0" />
                             Rejeitar
                           </Button>
                         </>
@@ -533,40 +534,40 @@ export function AdminSolicitacoesVinculos() {
       <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => (!open ? closeDetails() : undefined)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Detalhes da solicitacao</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="break-words">Detalhes da solicitacao</DialogTitle>
+            <DialogDescription className="break-words">
               Revise o pedido antes de aprovar ou rejeitar.
             </DialogDescription>
           </DialogHeader>
 
           {selectedRequest && (
             <div className="space-y-5">
-              <div className="grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Status</p>
-                  <p className="text-sm text-gray-900">{STATUS_LABELS[selectedRequest.status]}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Acao</p>
-                  <p className="text-sm text-gray-900">{ACTION_LABELS[selectedRequest.action]}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Solicitante</p>
-                  <p className="text-sm text-gray-900">{getRequesterName(profilesMap, selectedRequest)}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Pessoa solicitante</p>
-                  <p className="text-sm text-gray-900">{getPessoaName(pessoasMap, selectedRequest.requester_pessoa_id)}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Pessoas envolvidas</p>
-                  <p className="text-sm text-gray-900">
-                    {getPessoaName(pessoasMap, selectedRequest.target_pessoa_id)} / {getPessoaName(pessoasMap, selectedRequest.related_pessoa_id)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Vinculo</p>
-                  <p className="text-sm text-gray-900">
+	              <div className="grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 md:grid-cols-2">
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Status</p>
+	                  <p className="break-words text-sm text-gray-900">{STATUS_LABELS[selectedRequest.status]}</p>
+	                </div>
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Acao</p>
+	                  <p className="break-words text-sm text-gray-900">{ACTION_LABELS[selectedRequest.action]}</p>
+	                </div>
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Solicitante</p>
+	                  <p className="break-words text-sm text-gray-900">{getRequesterName(profilesMap, selectedRequest)}</p>
+	                </div>
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Pessoa solicitante</p>
+	                  <p className="break-words text-sm text-gray-900">{getPessoaName(pessoasMap, selectedRequest.requester_pessoa_id)}</p>
+	                </div>
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Pessoas envolvidas</p>
+	                  <p className="break-words text-sm text-gray-900">
+	                    {getPessoaName(pessoasMap, selectedRequest.target_pessoa_id)} / {getPessoaName(pessoasMap, selectedRequest.related_pessoa_id)}
+	                  </p>
+	                </div>
+	                <div className="min-w-0">
+	                  <p className="text-xs font-medium uppercase text-gray-500">Vinculo</p>
+	                  <p className="break-words text-sm text-gray-900">
                     {RELATIONSHIP_TYPE_LABELS[selectedRequest.relationship_type]} · {selectedRequest.relationship_subtype || 'sem subtipo'}
                   </p>
                 </div>
@@ -574,16 +575,16 @@ export function AdminSolicitacoesVinculos() {
 
               {selectedRequest.action === 'update' && (
                 <div>
-                  <h3 className="mb-2 text-sm font-semibold text-gray-900">Comparacao antes/depois</h3>
-                  <div className="overflow-hidden rounded-lg border border-gray-200">
+	                  <h3 className="mb-2 break-words text-sm font-semibold text-gray-900">Comparacao antes/depois</h3>
+	                  <div className="overflow-x-auto rounded-lg border border-gray-200">
                     {getSafeComparisonRows(selectedRequest, getCurrentRelationship(relacionamentosMap, selectedRequest)).length === 0 ? (
                       <p className="p-3 text-sm text-gray-500">Nenhuma alteracao comparavel informada.</p>
                     ) : (
                       getSafeComparisonRows(selectedRequest, getCurrentRelationship(relacionamentosMap, selectedRequest)).map((row) => (
-                        <div key={row.field} className="grid grid-cols-3 gap-3 border-b border-gray-100 p-3 text-sm last:border-b-0">
-                          <span className="font-medium text-gray-700">{row.field}</span>
-                          <span className="text-gray-600">{row.before || '-'}</span>
-                          <span className="text-gray-900">{row.after || '-'}</span>
+	                        <div key={row.field} className="grid min-w-[520px] grid-cols-3 gap-3 border-b border-gray-100 p-3 text-sm last:border-b-0">
+	                          <span className="break-words font-medium text-gray-700">{row.field}</span>
+	                          <span className="break-words text-gray-600">{row.before || '-'}</span>
+	                          <span className="break-words text-gray-900">{row.after || '-'}</span>
                         </div>
                       ))
                     )}
@@ -592,7 +593,7 @@ export function AdminSolicitacoesVinculos() {
               )}
 
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">Payload sanitizado</h3>
+	                <h3 className="mb-2 break-words text-sm font-semibold text-gray-900">Payload sanitizado</h3>
                 <pre className="max-h-72 overflow-auto rounded-lg bg-gray-950 p-4 text-xs text-gray-100">
                   {JSON.stringify(sanitizePayload(selectedRequest.payload), null, 2)}
                 </pre>
@@ -611,15 +612,15 @@ export function AdminSolicitacoesVinculos() {
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeDetails} disabled={reviewing}>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeDetails} disabled={reviewing}>
               Fechar
             </Button>
             {selectedRequest?.status === 'pending' && (
               <>
-                <Button type="button" variant="destructive" onClick={() => void handleReject()} disabled={reviewing}>
+                <Button type="button" variant="destructive" className="w-full sm:w-auto" onClick={() => void handleReject()} disabled={reviewing}>
                   Rejeitar
                 </Button>
-                <Button type="button" onClick={() => void handleApprove()} disabled={reviewing}>
+                <Button type="button" className="w-full sm:w-auto" onClick={() => void handleApprove()} disabled={reviewing}>
                   Aprovar
                 </Button>
               </>

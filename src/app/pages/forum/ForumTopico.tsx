@@ -110,10 +110,10 @@ function ReactionBar({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex min-w-0 flex-wrap gap-2">
       {(Object.keys(REACAO_LABELS) as ForumReacaoTipo[]).map((tipo) => (
-        <Button key={tipo} type="button" variant="outline" size="sm" onClick={() => reagir(tipo)}>
-          <Heart className="w-3 h-3 mr-1" />
+        <Button key={tipo} type="button" variant="outline" size="sm" className="min-w-0" onClick={() => reagir(tipo)}>
+          <Heart className="mr-1 h-3 w-3 shrink-0" />
           {REACAO_LABELS[tipo]} {resumo[tipo] ? `(${resumo[tipo]})` : ''}
         </Button>
       ))}
@@ -415,32 +415,32 @@ export function ForumTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <Link
             to="/forum"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-700"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 sm:w-auto sm:justify-start sm:border-0 sm:px-0 sm:py-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Voltar ao fórum
           </Link>
 
           {podeEditarTopico && (
-            <div className="flex gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
               <Link
                 to={`/forum/topico/${topico.id}/editar`}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="h-4 w-4 shrink-0" />
                 Editar
               </Link>
-              <Button type="button" variant="destructive" size="sm" onClick={removerTopico}>
-                <Trash2 className="w-4 h-4 mr-1" />
+              <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto" onClick={removerTopico}>
+                <Trash2 className="mr-1 h-4 w-4 shrink-0" />
                 Excluir
               </Button>
               {admin && topico.status !== 'oculto' && (
-                <Button type="button" variant="outline" size="sm" onClick={ocultarTopico}>
-                  <EyeOff className="w-4 h-4 mr-1" />
+                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={ocultarTopico}>
+                  <EyeOff className="mr-1 h-4 w-4 shrink-0" />
                   Ocultar
                 </Button>
               )}
@@ -449,18 +449,18 @@ export function ForumTopico() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <Card>
-          <CardContent className="p-5 md:p-6 space-y-5">
+      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        <Card className="min-w-0">
+          <CardContent className="space-y-5 p-4 sm:p-5 md:p-6">
             <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-              {topico.categoria?.nome && <span>{topico.categoria.nome}</span>}
+              {topico.categoria?.nome && <span className="break-words">{topico.categoria.nome}</span>}
               <span>{TOPICO_TIPO_LABELS[topico.tipo]}</span>
               <span>{TOPICO_STATUS_LABELS[topico.status]}</span>
             </div>
 
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{topico.titulo}</h1>
-              <p className="mt-2 text-sm text-gray-500">
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-bold text-gray-900 md:text-3xl">{topico.titulo}</h1>
+              <p className="mt-2 break-words text-sm text-gray-500">
                 Por {nomeAutor(topico.autor_id, user?.id)} em {formatarData(topico.created_at)}
               </p>
             </div>
@@ -468,19 +468,19 @@ export function ForumTopico() {
             {topico.pessoa_relacionada && (
               <Card className="border-blue-100 bg-blue-50 shadow-none">
                 <CardContent className="p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-blue-700">
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-blue-700">
                         <UserRound className="h-5 w-5" />
                       </span>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs font-medium uppercase text-blue-700">Pessoa relacionada</p>
-                        <h2 className="font-semibold text-gray-900">{topico.pessoa_relacionada.nome_completo}</h2>
+                        <h2 className="break-words font-semibold text-gray-900">{topico.pessoa_relacionada.nome_completo}</h2>
                       </div>
                     </div>
                     <Link
                       to={`/pessoa/${topico.pessoa_relacionada.id}`}
-                      className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 hover:bg-blue-100"
+                      className="inline-flex w-full items-center justify-center rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-800 hover:bg-blue-100 sm:w-auto"
                     >
                       Ver perfil
                     </Link>
@@ -489,7 +489,7 @@ export function ForumTopico() {
               </Card>
             )}
 
-            <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">{topico.conteudo}</p>
+            <p className="whitespace-pre-wrap break-words leading-relaxed text-gray-700">{topico.conteudo}</p>
 
             <ReactionBar
               alvoTipo="topico"
@@ -501,9 +501,9 @@ export function ForumTopico() {
         </Card>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Respostas</h2>
-            <span className="text-sm text-gray-500">{respostas.length} resposta(s)</span>
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <h2 className="break-words text-xl font-bold text-gray-900">Respostas</h2>
+            <span className="shrink-0 text-sm text-gray-500">{respostas.length} resposta(s)</span>
           </div>
 
           {respostas.length === 0 ? (
@@ -516,11 +516,11 @@ export function ForumTopico() {
               return (
                 <Card
                   key={resposta.id}
-                  className={resposta.aceita_como_solucao ? 'border-emerald-300 bg-emerald-50/30' : undefined}
+                  className={`min-w-0 ${resposta.aceita_como_solucao ? 'border-emerald-300 bg-emerald-50/30' : ''}`}
                 >
                   <CardHeader className="p-4 pb-2">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
+                      <div className="min-w-0">
                         <CardTitle className="text-base">
                           {nomeAutor(resposta.autor_id, user?.id)}
                           {resposta.aceita_como_solucao && (
@@ -533,27 +533,27 @@ export function ForumTopico() {
                         <p className="text-xs text-gray-500">{formatarData(resposta.created_at)}</p>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                         {podeMarcarSolucao && !resposta.aceita_como_solucao && (
-                          <Button type="button" variant="outline" size="sm" onClick={() => marcarSolucao(resposta.id)}>
+                          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => marcarSolucao(resposta.id)}>
                             Marcar solução
                           </Button>
                         )}
                         {podeAlterarResposta && (
                           <>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => iniciarEdicaoResposta(resposta)}>
-                              <Edit className="w-4 h-4 mr-1" />
+                            <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => iniciarEdicaoResposta(resposta)}>
+                              <Edit className="mr-1 h-4 w-4 shrink-0" />
                               Editar
                             </Button>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => removerResposta(resposta.id)}>
-                              <Trash2 className="w-4 h-4 mr-1" />
+                            <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => removerResposta(resposta.id)}>
+                              <Trash2 className="mr-1 h-4 w-4 shrink-0" />
                               Excluir
                             </Button>
                           </>
                         )}
                         {admin && resposta.status !== 'oculto' && (
-                          <Button type="button" variant="outline" size="sm" onClick={() => ocultarResposta(resposta.id)}>
-                            <EyeOff className="w-4 h-4 mr-1" />
+                          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => ocultarResposta(resposta.id)}>
+                            <EyeOff className="mr-1 h-4 w-4 shrink-0" />
                             Ocultar
                           </Button>
                         )}
@@ -561,7 +561,7 @@ export function ForumTopico() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4 pt-2 space-y-4">
+                  <CardContent className="space-y-4 p-4 pt-2">
                     {editandoRespostaId === resposta.id ? (
                       <div className="space-y-2">
                         <Textarea
@@ -569,17 +569,17 @@ export function ForumTopico() {
                           onChange={(event) => setRespostaEditada(event.target.value)}
                           className="min-h-28"
                         />
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" size="sm" onClick={() => salvarRespostaEditada(resposta.id)}>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                          <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarRespostaEditada(resposta.id)}>
                             Salvar resposta
                           </Button>
-                          <Button type="button" variant="outline" size="sm" onClick={() => setEditandoRespostaId(null)}>
+                          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoRespostaId(null)}>
                             Cancelar
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap text-gray-700">{resposta.conteudo}</p>
+                      <p className="whitespace-pre-wrap break-words text-gray-700">{resposta.conteudo}</p>
                     )}
 
                     <ReactionBar
@@ -589,7 +589,7 @@ export function ForumTopico() {
                       onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))}
                     />
 
-                    <div className="border-t border-gray-100 pt-4 space-y-3">
+                    <div className="space-y-3 border-t border-gray-100 pt-4">
                       <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
                         <MessageSquare className="w-4 h-4" />
                         Comentários
@@ -598,9 +598,9 @@ export function ForumTopico() {
                       {(comentarios[resposta.id] ?? []).map((comentario) => {
                         const podeAlterarComentario = Boolean(user && (comentario.autor_id === user.id || admin));
                         return (
-                          <div key={comentario.id} className="rounded-md bg-gray-50 p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
+                          <div key={comentario.id} className="min-w-0 rounded-md bg-gray-50 p-3">
+                            <div className="flex min-w-0 items-start justify-between gap-2">
+                              <div className="min-w-0">
                                 <p className="text-xs font-semibold text-gray-700">
                                   {nomeAutor(comentario.autor_id, user?.id)}
                                 </p>
@@ -611,10 +611,11 @@ export function ForumTopico() {
                                       onChange={(event) => setComentarioEditado(event.target.value)}
                                       className="min-h-16"
                                     />
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                                       <Button
                                         type="button"
                                         size="sm"
+                                        className="w-full sm:w-auto"
                                         onClick={() => salvarComentarioEditado(resposta.id, comentario.id)}
                                       >
                                         Salvar
@@ -623,6 +624,7 @@ export function ForumTopico() {
                                         type="button"
                                         variant="outline"
                                         size="sm"
+                                        className="w-full sm:w-auto"
                                         onClick={() => setEditandoComentarioId(null)}
                                       >
                                         Cancelar
@@ -630,7 +632,7 @@ export function ForumTopico() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{comentario.conteudo}</p>
+                                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{comentario.conteudo}</p>
                                 )}
                               </div>
                               {podeAlterarComentario && (
@@ -677,7 +679,7 @@ export function ForumTopico() {
                           placeholder="Escrever comentário"
                           className="min-h-16"
                         />
-                        <Button type="button" onClick={() => comentar(resposta.id)} className="sm:self-start">
+                        <Button type="button" onClick={() => comentar(resposta.id)} className="w-full sm:w-auto sm:self-start">
                           Comentar
                         </Button>
                       </div>
@@ -689,7 +691,7 @@ export function ForumTopico() {
           )}
         </section>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Responder</CardTitle>
           </CardHeader>
@@ -706,9 +708,9 @@ export function ForumTopico() {
                   placeholder="Escreva sua resposta"
                   className="min-h-32"
                 />
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={enviandoResposta}>
-                    <Send className="w-4 h-4 mr-2" />
+                <div className="flex flex-col sm:flex-row sm:justify-end">
+                  <Button type="submit" disabled={enviandoResposta} className="w-full sm:w-auto">
+                    <Send className="mr-2 h-4 w-4 shrink-0" />
                     {enviandoResposta ? 'Enviando...' : 'Publicar resposta'}
                   </Button>
                 </div>

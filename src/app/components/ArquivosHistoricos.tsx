@@ -173,18 +173,19 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
 
   return (
     <>
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Arquivos Históricos</CardTitle>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="break-words">Arquivos Históricos</CardTitle>
             {!readOnly && (
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
+                className="w-full sm:w-auto"
                 onClick={() => setIsAddingFile(!isAddingFile)}
               >
-                <Upload className="w-4 h-4 mr-2" />
+                <Upload className="h-4 w-4" />
                 Adicionar Arquivo
               </Button>
             )}
@@ -192,9 +193,9 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
         </CardHeader>
         <CardContent className="space-y-4">
           {isAddingFile && !readOnly && (
-            <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 space-y-3">
+            <div className="space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Arquivo (imagem ou PDF) *
                 </label>
                 <Input
@@ -205,19 +206,19 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                   className="cursor-pointer"
                 />
                 {novoArquivo.url && (
-                  <p className="text-xs text-green-600 mt-1">
+                  <p className="mt-1 break-words text-xs text-green-600">
                     ✓ Arquivo carregado ({novoArquivo.tipo})
                   </p>
                 )}
                 {isUploadingFile && (
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="mt-1 break-words text-xs text-blue-600">
                     Enviando arquivo para o Storage...
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Título *
                 </label>
                 <Input
@@ -229,7 +230,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Descrição
                 </label>
                 <textarea
@@ -242,7 +243,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Ano
                 </label>
                 <Input
@@ -253,14 +254,15 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                 />
               </div>
 
-              <div className="flex gap-2 justify-end">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     setIsAddingFile(false);
-                    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '' });
+                    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '', storage_bucket: '', storage_path: '', mime_type: '' });
                   }}
                   disabled={isUploadingFile}
                 >
@@ -269,6 +271,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                 <Button
                   type="button"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={handleAddArquivo}
                   disabled={isUploadingFile}
                 >
@@ -279,47 +282,47 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
           )}
 
           {arquivos.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="py-4 text-center text-sm text-gray-500">
               Nenhum arquivo histórico adicionado
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {arquivos.map((arquivo, index) => (
                 <div
                   key={arquivo.id}
-                  className="border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors"
+                  className="min-w-0 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="shrink-0">
                       {arquivo.tipo === 'imagem' ? (
-                        <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
                           <img 
                             src={arquivo.url} 
                             alt={arquivo.titulo}
-                            className="w-full h-full object-cover"
+                            className="h-full w-full object-cover"
                           />
                         </div>
                       ) : (
-                        <div className="w-16 h-16 bg-red-50 rounded flex items-center justify-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded bg-red-50">
                           <div className="flex flex-col items-center gap-1">
-                            <FileText className="w-7 h-7 text-red-600" />
+                            <FileText className="h-7 w-7 text-red-600" />
                             <span className="text-[10px] font-semibold text-red-700">PDF</span>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       {readOnly ? (
                         <>
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                          <h4 className="break-words text-sm font-medium text-gray-900">
                             {arquivo.titulo}
                           </h4>
                           {arquivo.ano && (
-                            <p className="text-xs text-gray-500 mt-1">{arquivo.ano}</p>
+                            <p className="mt-1 break-words text-xs text-gray-500">{arquivo.ano}</p>
                           )}
                           {arquivo.descricao && (
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            <p className="mt-1 line-clamp-2 break-words text-xs text-gray-500">
                               {arquivo.descricao}
                             </p>
                           )}
@@ -347,29 +350,29 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                           />
                         </div>
                       )}
-                      <div className="flex gap-2 mt-2">
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-2">
                         <button
                           type="button"
                           onClick={() => handleViewFile(arquivo)}
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Eye className="h-3 w-3" />
                           Visualizar
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDownloadArquivo(arquivo)}
-                          className="text-xs text-gray-700 hover:underline flex items-center gap-1"
+                          className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
                         >
-                          <Download className="w-3 h-3" />
+                          <Download className="h-3 w-3" />
                           Baixar arquivo
                         </button>
                         <button
                           type="button"
                           onClick={() => openArquivoInNewTab(arquivo)}
-                          className="text-xs text-gray-700 hover:underline flex items-center gap-1"
+                          className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="h-3 w-3" />
                           Abrir
                         </button>
                         {!readOnly && (
@@ -378,26 +381,26 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                               type="button"
                               onClick={() => handleMoveArquivo(arquivo.id, -1)}
                               disabled={index === 0}
-                              className="text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300 flex items-center gap-1"
+                              className="inline-flex items-center gap-1 text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300"
                             >
-                              <ArrowUp className="w-3 h-3" />
+                              <ArrowUp className="h-3 w-3" />
                               Subir
                             </button>
                             <button
                               type="button"
                               onClick={() => handleMoveArquivo(arquivo.id, 1)}
                               disabled={index === arquivos.length - 1}
-                              className="text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300 flex items-center gap-1"
+                              className="inline-flex items-center gap-1 text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300"
                             >
-                              <ArrowDown className="w-3 h-3" />
+                              <ArrowDown className="h-3 w-3" />
                               Descer
                             </button>
                             <button
                               type="button"
                               onClick={() => handleRemoveArquivo(arquivo.id)}
-                              className="text-xs text-red-600 hover:underline flex items-center gap-1"
+                              className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="h-3 w-3" />
                               Remover
                             </button>
                           </>
@@ -416,9 +419,9 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
       <Dialog open={!!previewFile} onOpenChange={(open) => {
         if (!open) setPreviewFile(null);
       }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-hidden grid-rows-[auto_minmax(0,1fr)_auto]">
+        <DialogContent className="grid max-h-[92vh] max-w-5xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="break-words">
               {previewFile?.titulo ? `Visualização: ${previewFile.titulo}` : 'Visualização do arquivo'}
             </DialogTitle>
           </DialogHeader>
@@ -437,7 +440,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                     className="h-[68vh] w-full rounded border bg-white"
                     title={`Preview do PDF ${previewFile.titulo || 'arquivo histórico'}`}
                   />
-                  <p className="text-xs text-gray-600">
+                  <p className="break-words text-xs text-gray-600">
                     Se o PDF não carregar no navegador, use “Abrir em nova aba”.
                   </p>
                 </div>
@@ -445,25 +448,27 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
             </div>
           )}
           {previewFile && (
-            <DialogFooter>
+            <DialogFooter className="sm:flex-wrap">
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => handleDownloadArquivo(previewFile)}
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Baixar arquivo
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => openArquivoInNewTab(previewFile)}
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
+                <ExternalLink className="h-4 w-4" />
                 Abrir em nova aba
               </Button>
               <DialogClose asChild>
-                <Button type="button">Fechar</Button>
+                <Button type="button" className="w-full sm:w-auto">Fechar</Button>
               </DialogClose>
             </DialogFooter>
           )}

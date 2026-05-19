@@ -224,8 +224,9 @@ export function TreeAreaSelectionOverlay({
   const toolbarTop = selection
     ? clamp(selection.y + selection.height + 12, 16, Math.max(16, (targetRect?.height ?? 0) - 64))
     : 16;
+  const toolbarWidth = Math.min(320, Math.max(240, (targetRect?.width ?? 0) - 32));
   const toolbarLeft = selection
-    ? clamp(selection.x, 16, Math.max(16, (targetRect?.width ?? 0) - 320))
+    ? clamp(selection.x, 16, Math.max(16, (targetRect?.width ?? 0) - toolbarWidth - 16))
     : 16;
 
   return (
@@ -239,7 +240,7 @@ export function TreeAreaSelectionOverlay({
       onPointerCancel={handlePointerUp}
       role="presentation"
     >
-      <div className="pointer-events-none absolute left-4 top-4 max-w-[calc(100%-2rem)] rounded-md bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg ring-1 ring-slate-200">
+      <div className="pointer-events-none absolute left-3 right-3 top-3 rounded-md bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg ring-1 ring-slate-200 sm:left-4 sm:right-auto sm:top-4 sm:max-w-[calc(100%-2rem)]">
         Arraste para selecionar uma área visível da árvore.
       </div>
 
@@ -260,17 +261,17 @@ export function TreeAreaSelectionOverlay({
 
           <div
             className="absolute max-w-[calc(100%-2rem)] cursor-default rounded-lg border border-slate-200 bg-white p-2 shadow-xl"
-            style={{ left: toolbarLeft, top: toolbarTop }}
+            style={{ left: toolbarLeft, top: toolbarTop, width: toolbarWidth }}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerMove={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
           >
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 disabled={!hasValidSelection || isBusy}
                 onClick={() => exportSelectedArea('png')}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {activeAction === 'png' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageDown className="h-4 w-4" />}
                 Salvar PNG
@@ -279,7 +280,7 @@ export function TreeAreaSelectionOverlay({
                 type="button"
                 disabled={!hasValidSelection || isBusy}
                 onClick={() => exportSelectedArea('pdf')}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {activeAction === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
                 Salvar PDF
@@ -288,7 +289,7 @@ export function TreeAreaSelectionOverlay({
                 type="button"
                 disabled={!hasValidSelection || isBusy}
                 onClick={() => exportSelectedArea('print')}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {activeAction === 'print' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
                 Imprimir
@@ -297,7 +298,7 @@ export function TreeAreaSelectionOverlay({
                 type="button"
                 disabled={isBusy}
                 onClick={onClose}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
                 Cancelar
@@ -323,7 +324,7 @@ export function TreeAreaSelectionOverlay({
           type="button"
           disabled={isBusy}
           onClick={onClose}
-          className="absolute right-4 top-4 inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-lg transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-3 top-14 inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-lg transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:right-4 sm:top-4"
         >
           <X className="h-4 w-4" />
           Cancelar

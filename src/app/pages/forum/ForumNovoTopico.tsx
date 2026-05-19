@@ -241,42 +241,42 @@ export function ForumNovoTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Criar tópico</h1>
-            <p className="text-sm text-gray-500">Compartilhe uma pergunta, memória, documento ou pedido de ajuda.</p>
+      <header className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">Criar tópico</h1>
+            <p className="break-words text-sm text-gray-500">Compartilhe uma pergunta, memória, documento ou pedido de ajuda.</p>
           </div>
           <Link
             to="/forum"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Fórum
           </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <Card>
+      <main className="mx-auto max-w-4xl px-4 py-6">
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Novo tópico</CardTitle>
+            <CardTitle className="break-words">Novo tópico</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={publicar} className="space-y-5">
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="titulo">Título</label>
                 <Input id="titulo" value={titulo} onChange={(event) => setTitulo(event.target.value)} />
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700" htmlFor="categoria">Categoria</label>
                   <select
                     id="categoria"
                     value={categoriaId}
                     onChange={(event) => setCategoriaId(event.target.value)}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                   >
                     {categorias.map((categoria) => (
                       <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
@@ -284,13 +284,13 @@ export function ForumNovoTopico() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label className="text-sm font-medium text-gray-700" htmlFor="tipo">Tipo</label>
                   <select
                     id="tipo"
                     value={tipo}
                     onChange={(event) => setTipo(event.target.value as ForumTopicoTipo)}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                   >
                     {TIPO_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -299,21 +299,21 @@ export function ForumNovoTopico() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="pessoas-relacionadas">
                   Pessoas Relacionadas
                 </label>
-                <div className="relative">
+                <div className="relative min-w-0">
                   <button
                     id="pessoas-relacionadas"
                     type="button"
                     onClick={() => setRelatedDropdownOpen((current) => !current)}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   >
-                    <span className={selectedRelatedPersonIds.length ? 'text-gray-900' : 'text-gray-500'}>
+                    <span className={`min-w-0 truncate ${selectedRelatedPersonIds.length ? 'text-gray-900' : 'text-gray-500'}`}>
                       {relatedSummary}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
                   </button>
 
                   {relatedDropdownOpen && (
@@ -325,11 +325,11 @@ export function ForumNovoTopico() {
                             key={pessoa.id}
                             type="button"
                             onClick={() => toggleRelatedPerson(pessoa.id)}
-                            className="flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                            className="flex w-full min-w-0 items-center gap-3 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                           >
                             <span
                               className={[
-                                'flex h-4 w-4 items-center justify-center rounded border',
+                                'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                                 checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 bg-white',
                               ].join(' ')}
                               aria-hidden="true"
@@ -350,18 +350,18 @@ export function ForumNovoTopico() {
                         key={pessoa.id}
                         type="button"
                         onClick={() => toggleRelatedPerson(pessoa.id)}
-                        className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                        className="max-w-full rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
                       >
-                        {pessoa.nome_completo}
+                        <span className="block truncate">{pessoa.nome_completo}</span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="conteudo">Conteúdo</label>
-                <div className="relative">
+                <div className="relative min-w-0">
                   <Textarea
                     ref={textareaRef}
                     id="conteudo"
@@ -386,9 +386,9 @@ export function ForumNovoTopico() {
                             index === selectedMentionIndex ? 'bg-blue-50 text-blue-800' : 'text-gray-700 hover:bg-gray-50',
                           ].join(' ')}
                         >
-                          <span className="font-medium">{pessoa.nome_completo}</span>
+                          <span className="break-words font-medium">{pessoa.nome_completo}</span>
                           {(pessoa.data_nascimento || pessoa.local_nascimento) && (
-                            <span className="text-xs text-gray-500">
+                            <span className="break-words text-xs text-gray-500">
                               {[pessoa.data_nascimento, pessoa.local_nascimento].filter(Boolean).join(' • ')}
                             </span>
                           )}
@@ -399,9 +399,9 @@ export function ForumNovoTopico() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={salvando}>
-                  <Send className="w-4 h-4 mr-2" />
+              <div className="flex flex-col sm:flex-row sm:justify-end">
+                <Button type="submit" disabled={salvando} className="w-full sm:w-auto">
+                  <Send className="mr-2 h-4 w-4 shrink-0" />
                   {salvando ? 'Publicando...' : 'Publicar'}
                 </Button>
               </div>

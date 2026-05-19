@@ -111,27 +111,27 @@ export function AddConnectionModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/40 p-2 sm:items-center sm:p-4"
       onMouseDown={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white shadow-2xl"
+        className="flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-connection-modal-title"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-4 py-4 sm:px-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
               <Link2 className="h-5 w-5" />
             </div>
 
-            <div>
-              <h2 id="add-connection-modal-title" className="text-base font-semibold text-gray-900">
+            <div className="min-w-0">
+              <h2 id="add-connection-modal-title" className="break-words text-base font-semibold text-gray-900">
                 {isAdmin ? 'Adicionar conexão' : 'Solicitar vínculo'}
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 break-words text-sm text-gray-500">
                 Origem: {sourcePerson.nome_completo}
               </p>
             </div>
@@ -140,16 +140,16 @@ export function AddConnectionModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+            className="shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
             aria-label="Fechar modal"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="space-y-5 px-5 py-4">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-            <div className="space-y-3">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0 space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                   Buscar pessoa de destino
@@ -165,7 +165,7 @@ export function AddConnectionModal({
                 </div>
               </div>
 
-              <div className="max-h-80 overflow-y-auto rounded-xl border border-gray-200 bg-white">
+              <div className="max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-white sm:max-h-80">
                 {filteredPeople.length === 0 ? (
                   <div className="px-4 py-6 text-sm text-gray-500">
                     Nenhuma pessoa encontrada.
@@ -185,8 +185,8 @@ export function AddConnectionModal({
                         ].join(' ')}
                         aria-pressed={isSelected}
                       >
-                        <p className="text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="break-words text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
+                        <p className="mt-1 break-words text-xs text-gray-500">
                           {pessoa.local_nascimento || pessoa.local_atual || 'Sem local informado'}
                         </p>
                       </button>
@@ -196,7 +196,7 @@ export function AddConnectionModal({
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <div>
                 <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
                   Tipo de conexão
@@ -229,7 +229,7 @@ export function AddConnectionModal({
                 <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
                   Pessoa selecionada
                 </p>
-                <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800">
+                <div className="break-words rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800">
                   {selectedTarget ? selectedTarget.nome_completo : 'Nenhuma pessoa selecionada.'}
                 </div>
               </div>
@@ -243,18 +243,18 @@ export function AddConnectionModal({
                   onChange={(event) => setNotes(event.target.value)}
                   rows={5}
                   placeholder="Opcional"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-blue-500"
+                  className="min-h-28 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-blue-500"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={!sourcePerson || !selectedTargetId}>
+          <Button onClick={handleSubmit} disabled={!sourcePerson || !selectedTargetId} className="w-full sm:w-auto">
             {isAdmin ? 'Salvar conexão' : 'Solicitar vínculo'}
           </Button>
         </div>
