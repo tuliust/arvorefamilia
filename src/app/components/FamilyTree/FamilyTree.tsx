@@ -9,13 +9,14 @@ import ReactFlow, {
   Viewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Minus, Plus } from 'lucide-react';
+import { Info, Minus, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Pessoa, Relacionamento } from '../../types';
 import { nodeTypes } from './nodeTypes';
 import { OrthogonalChildEdge } from './OrthogonalChildEdge';
 import { GenealogySpouseEdge } from './GenealogySpouseEdge';
+import { TreeLegend } from './TreeLegend';
 import { buildTreeGraph } from './buildTreeGraph';
 import {
   collectDirectFamilyScopePersonIds,
@@ -327,6 +328,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
   const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const directFamilyFallbackMinZoom = isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM;
   const directFamilyMinZoom = directFamilyFitZoom
@@ -679,6 +681,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
       return;
     }
 
+    setIsLegendOpen(false);
     setIsAreaSelectionOpen(true);
   }, []);
 
@@ -727,6 +730,51 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
           <Minus className="h-4 w-4" />
         </button>
       </div>
+
+      {!isAreaSelectionOpen && (
+        <div data-tree-legend="true" className="absolute right-4 top-4 z-20">
+          <button
+            type="button"
+            onClick={() => setIsLegendOpen((value) => !value)}
+            onMouseDown={(event) => event.stopPropagation()}
+            className="flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            title={isLegendOpen ? 'Ocultar legenda da árvore' : 'Abrir legenda da árvore'}
+            aria-expanded={isLegendOpen}
+            aria-controls="family-tree-visual-legend"
+          >
+            <Info className="h-4 w-4" />
+            <span className="hidden sm:inline">Legenda</span>
+          </button>
+        </div>
+      )}
+
+      {!isAreaSelectionOpen && isLegendOpen && (
+        <div
+          id="family-tree-visual-legend"
+          data-tree-legend="true"
+          className="absolute right-4 top-16 z-30 max-h-[calc(100%-5rem)] w-[min(26rem,calc(100%-2rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white/95 p-3 shadow-xl backdrop-blur"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="mb-3 flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Legenda da árvore</h2>
+              <p className="mt-1 text-xs text-gray-500">Entenda cores, linhas, anéis e visualizações.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsLegendOpen(false)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Fechar legenda da árvore"
+              title="Fechar legenda"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <TreeLegend viewMode={viewMode} compact={isMobile} showTitle={false} />
+        </div>
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
