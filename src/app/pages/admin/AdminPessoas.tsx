@@ -250,30 +250,30 @@ export function AdminPessoas() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')}>
-              <ArrowLeft className="w-5 h-5" />
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/dashboard')}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="font-bold text-xl text-gray-900">Gerenciar Pessoas</h1>
+            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">Gerenciar Pessoas</h1>
           </div>
           
-          <Button onClick={() => navigate('/admin/pessoas/nova')}>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button className="w-full sm:w-auto" onClick={() => navigate('/admin/pessoas/nova')}>
+            <Plus className="mr-2 h-4 w-4 shrink-0" />
             Adicionar Pessoa
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {/* Filters and Search */}
-        <Card className="mb-6">
+        <Card className="mb-6 min-w-0">
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="flex min-w-0 flex-col gap-4 md:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   type="text"
                   placeholder="Buscar por nome..."
@@ -283,27 +283,30 @@ export function AdminPessoas() {
                 />
               </div>
               
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Button
                   variant={filter === 'todos' ? 'default' : 'outline'}
+                  className="w-full sm:w-auto"
                   onClick={() => setFilter('todos')}
                 >
                   Todos ({pessoas.length})
                 </Button>
                 <Button
                   variant={filter === 'humano' ? 'default' : 'outline'}
+                  className="w-full sm:w-auto"
                   onClick={() => setFilter('humano')}
                 >
                   Humanos ({pessoas.filter(p => p.humano_ou_pet === 'Humano').length})
                 </Button>
                 <Button
                   variant={filter === 'pet' ? 'default' : 'outline'}
+                  className="w-full sm:w-auto"
                   onClick={() => setFilter('pet')}
                 >
                   Pets ({pessoas.filter(p => p.humano_ou_pet === 'Pet').length})
                 </Button>
-                <Button variant="outline" onClick={openFilters}>
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="w-full sm:w-auto" onClick={openFilters}>
+                  <SlidersHorizontal className="mr-2 h-4 w-4 shrink-0" />
                   Filtros
                   {activeAdvancedFilterCount > 0 && (
                     <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
@@ -314,9 +317,9 @@ export function AdminPessoas() {
               </div>
             </div>
             {activeAdvancedFilterCount > 0 && (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-                <span>{activeAdvancedFilterCount} filtro(s) avançado(s) ativo(s).</span>
-                <Button variant="ghost" size="sm" onClick={clearAdvancedFilters} className="h-8 text-blue-800 hover:bg-blue-100">
+              <div className="mt-3 flex flex-col gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800 sm:flex-row sm:items-center sm:justify-between">
+                <span className="break-words">{activeAdvancedFilterCount} filtro(s) avançado(s) ativo(s).</span>
+                <Button variant="ghost" size="sm" onClick={clearAdvancedFilters} className="h-8 w-full text-blue-800 hover:bg-blue-100 sm:w-auto">
                   Limpar filtros
                 </Button>
               </div>
@@ -325,9 +328,9 @@ export function AdminPessoas() {
         </Card>
 
         {/* People List */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="break-words">
               {pessoasFiltradas.length} {pessoasFiltradas.length === 1 ? 'Pessoa' : 'Pessoas'}
             </CardTitle>
           </CardHeader>
@@ -341,44 +344,45 @@ export function AdminPessoas() {
                 pessoasFiltradas.map((pessoa) => (
                   <div
                     key={pessoa.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                         pessoa.humano_ou_pet === 'Pet' ? 'bg-amber-100' : 'bg-blue-100'
                       }`}>
                         {pessoa.humano_ou_pet === 'Pet' ? (
-                          <Dog className="w-5 h-5 text-amber-700" />
+                          <Dog className="h-5 w-5 text-amber-700" />
                         ) : (
-                          <User className="w-5 h-5 text-blue-700" />
+                          <User className="h-5 w-5 text-blue-700" />
                         )}
                       </div>
                       
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{pessoa.nome_completo}</h3>
-                        <p className="text-sm text-gray-500">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="break-words font-medium text-gray-900">{pessoa.nome_completo}</h3>
+                        <p className="break-words text-sm text-gray-500">
                           {pessoa.data_nascimento && `Nascimento: ${pessoa.data_nascimento}`}
                           {pessoa.local_nascimento && ` • ${pessoa.local_nascimento}`}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => navigate(`/admin/pessoas/${pessoa.id}/editar`)}
                       >
-                        <Edit className="w-4 h-4 mr-2" />
+                        <Edit className="mr-2 h-4 w-4 shrink-0" />
                         Editar
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setDeleteId(pessoa.id)}
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        className="w-full text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -405,19 +409,19 @@ export function AdminPessoas() {
       <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Filtros</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="break-words">Filtros</DialogTitle>
+            <DialogDescription className="break-words">
               Refine a lista de pessoas sem fazer novas consultas ao banco.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {ADVANCED_FILTER_GROUPS.map((group) => (
-              <section key={group.key} className="rounded-lg border border-gray-200 p-4">
-                <h3 className="text-sm font-semibold text-gray-900">{group.title}</h3>
+              <section key={group.key} className="min-w-0 rounded-lg border border-gray-200 p-4">
+                <h3 className="break-words text-sm font-semibold text-gray-900">{group.title}</h3>
                 <div className="mt-3 space-y-3">
                   {group.options.map((option) => (
-                    <label key={option.value} className="flex items-center gap-3 text-sm text-gray-700">
+                    <label key={option.value} className="flex min-w-0 items-start gap-3 text-sm text-gray-700">
                       <Checkbox
                         checked={draftAdvancedFilters[group.key].includes(option.value as never)}
                         onCheckedChange={(checked) => {
@@ -428,7 +432,7 @@ export function AdminPessoas() {
                           );
                         }}
                       />
-                      <span>{option.label}</span>
+                      <span className="min-w-0 break-words">{option.label}</span>
                     </label>
                   ))}
                 </div>
@@ -437,10 +441,10 @@ export function AdminPessoas() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={clearAdvancedFilters}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={clearAdvancedFilters}>
               Limpar filtros
             </Button>
-            <Button onClick={applyAdvancedFilters}>
+            <Button className="w-full sm:w-auto" onClick={applyAdvancedFilters}>
               Aplicar filtros
             </Button>
           </DialogFooter>
