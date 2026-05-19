@@ -60,14 +60,39 @@ Escopo: QA tecnico/visual e refinamento pontual da selecao de area visivel da ar
 - `ignoreElements` com `closest` para overlay, menu de pessoa, controles ReactFlow e minimap.
 - Limite simples de area final estimada antes da captura, com mensagem amigavel.
 
+## Fase 3 - QA manual dirigido
+
+Data de registro: 2026-05-18
+
+Status informado: **TESTES MANUAIS -> OK**.
+
+Objetivo da fase: confirmar, em uso real, que a exportacao da area selecionada nao quebra a experiencia da arvore.
+
+Itens validados manualmente:
+
+- PNG: OK.
+- PDF: OK.
+- Impressao: OK.
+- Cancelamento por `Esc`: OK.
+- Arvores grandes: OK.
+- Zoom/pan: OK.
+- Safari: OK.
+- Imagens externas: OK, com ressalva documentada para casos de URL sem CORS.
+- Mobile/tablet real: OK para validacao manual dirigida, mantendo recomendacao de monitorar experiencia touch em uso ampliado.
+
+Resultado da fase:
+
+- A funcionalidade 7.6 permanece aprovada para o escopo atual: selecao e exportacao da viewport visivel.
+- Nao foram identificados bloqueadores para manter a feature ativa.
+- Nao houve necessidade de migration, alteracao de schema, Storage ou log persistido.
+
 ## Limitacoes remanescentes
 
 - A exportacao segue limitada a viewport visivel atual da arvore.
 - Exportacao da arvore completa permanece para evolucao futura.
-- QA mobile/tablet foi avaliado por revisao responsiva simples do overlay; ainda merece validacao manual em dispositivo real.
-- A automacao visual confirmou abertura/cancelamento do overlay, mas nao validou download real de PNG/PDF nem popup real de impressao.
 - Imagens externas sem CORS podem impedir `toDataURL`; o fluxo mantem erro amigavel.
 - Nao foi adicionada reducao automatica de escala para selecoes grandes, apenas recusa preventiva.
+- A experiencia touch deve continuar sendo observada quando houver uso real com mais dispositivos.
 
 ## Banco e persistencia
 
