@@ -786,9 +786,9 @@ export function MeusDados() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
+          <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600" />
           <p className="text-gray-600">Carregando seus dados...</p>
         </div>
       </div>
@@ -797,14 +797,14 @@ export function MeusDados() {
 
   if (!link || !pessoa) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-lg rounded-2xl border border-amber-200 bg-white p-6 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-amber-200 bg-white p-6 text-center shadow-sm">
           <UserCircle2 className="mx-auto mb-4 h-12 w-12 text-amber-600" />
-          <h1 className="text-xl font-bold text-gray-900">Perfil não vinculado</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="break-words text-xl font-bold text-gray-900">Perfil não vinculado</h1>
+          <p className="mt-2 break-words text-sm text-gray-600">
             Sua conta ainda não está vinculada a uma pessoa da árvore. Use o primeiro acesso ou solicite ajuda.
           </p>
-          <Button className="mt-5" onClick={() => navigate('/entrar')}>
+          <Button className="mt-5 w-full sm:w-auto" onClick={() => navigate('/entrar')}>
             Ir para autenticação
           </Button>
         </div>
@@ -816,17 +816,17 @@ export function MeusDados() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Revisar meus dados</h1>
-            <p className="mt-1 text-sm text-gray-500">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">Revisar meus dados</h1>
+            <p className="mt-1 break-words text-sm text-gray-500">
               Confira suas informações antes de acessar a árvore principal.
             </p>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_320px]">
-        <form onSubmit={handleConfirm} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
+        <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Nome completo" error={errors.nome_completo}>
               <Input
@@ -848,8 +848,8 @@ export function MeusDados() {
               {shouldSuggestFullBirthDate && (
                 <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                   <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>
-                  Se souber, adicione também o dia e o mês de nascimento.
+                  <p className="break-words">
+                    Se souber, adicione também o dia e o mês de nascimento.
                   </p>
                 </div>
               )}
@@ -865,7 +865,7 @@ export function MeusDados() {
                 placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
                 aria-invalid={Boolean(errors.local_nascimento)}
               />
-              <p className="text-xs text-gray-500">
+              <p className="break-words text-xs text-gray-500">
                 {form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
               </p>
               <ToggleField
@@ -882,7 +882,7 @@ export function MeusDados() {
                 placeholder="Cidade/UF"
                 aria-invalid={Boolean(errors.local_atual)}
               />
-              <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
+              <p className="break-words text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
             </Field>
             <div className="md:col-span-2">
               <ToggleField
@@ -923,7 +923,7 @@ export function MeusDados() {
               />
               {/* Campo visual até public.pessoas.complemento existir no schema e na tipagem. */}
             </Field>
-            <div className="space-y-2 md:col-span-2">
+            <div className="min-w-0 space-y-2 md:col-span-2">
               <SocialProfilesEditor
                 profiles={socialProfiles}
                 onChange={handleSocialProfilesChange}
@@ -991,7 +991,7 @@ export function MeusDados() {
           </div>
 
           {pessoa?.id && (
-            <div className="mt-6">
+            <div className="mt-6 min-w-0">
               <ArquivosHistoricos
                 arquivos={archives}
                 onChange={(nextArchives) => {
@@ -1003,10 +1003,10 @@ export function MeusDados() {
             </div>
           )}
 
-          <section className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4">
-              <h2 className="text-base font-semibold text-gray-900">Preferências de notificação</h2>
-              <p className="mt-1 text-sm text-gray-500">Escolha quais avisos familiares deseja receber.</p>
+          <section className="mt-6 min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="mb-4 min-w-0">
+              <h2 className="break-words text-base font-semibold text-gray-900">Preferências de notificação</h2>
+              <p className="mt-1 break-words text-sm text-gray-500">Escolha quais avisos familiares deseja receber.</p>
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {NOTIFICATION_OPTIONS.map((option) => (
@@ -1022,12 +1022,12 @@ export function MeusDados() {
           </section>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-            <Button type="submit" disabled={saving} className="sm:min-w-[220px]">
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto sm:min-w-[220px]">
               {saving ? (
                 'Salvando...'
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4" />
                   Confirmar meus dados
                 </>
               )}
@@ -1035,7 +1035,7 @@ export function MeusDados() {
           </div>
         </form>
 
-        <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+        <aside className="h-fit min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
           <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-3xl font-bold text-blue-700">
             {currentPhotoUrl ? (
               <img src={currentPhotoUrl} alt={previewName} className="h-full w-full object-cover" />
@@ -1044,19 +1044,19 @@ export function MeusDados() {
             )}
           </div>
 
-          <h2 className="mt-4 whitespace-normal text-xl font-bold leading-snug text-gray-900">
+          <h2 className="mt-4 break-words text-xl font-bold leading-snug text-gray-900">
             {previewName}
           </h2>
-          <p className="mt-2 text-sm text-gray-500">{previewLocation}</p>
+          <p className="mt-2 break-words text-sm text-gray-500">{previewLocation}</p>
 
           <div className="mt-5 grid grid-cols-1 gap-2">
             <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
-              <Camera className="mr-2 h-4 w-4" />
+              <Camera className="h-4 w-4" />
               {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
             </Button>
             {currentPhotoUrl && (
               <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Remover foto
               </Button>
             )}
@@ -1068,15 +1068,15 @@ export function MeusDados() {
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="break-words">{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</DialogTitle>
+            <DialogDescription className="break-words">
               Selecione uma imagem, ajuste o corte quadrado e aplique antes de salvar.
             </DialogDescription>
           </DialogHeader>
 
           {cropImageUrl ? (
             <div className="space-y-4">
-              <div className="relative h-72 overflow-hidden rounded-xl bg-gray-950">
+              <div className="relative h-64 overflow-hidden rounded-xl bg-gray-950 sm:h-72">
                 <Cropper
                   image={cropImageUrl}
                   crop={crop}
@@ -1105,8 +1105,8 @@ export function MeusDados() {
               </div>
 
               <label className="inline-flex cursor-pointer items-center text-sm font-medium text-blue-700 hover:text-blue-800">
-                <UploadCloud className="mr-2 h-4 w-4" />
-                Escolher outra imagem
+                <UploadCloud className="mr-2 h-4 w-4 shrink-0" />
+                <span className="break-words">Escolher outra imagem</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -1134,10 +1134,10 @@ export function MeusDados() {
                 </div>
               )}
               <span className="mt-4 flex items-center text-sm font-medium text-gray-900">
-                <UploadCloud className="mr-2 h-4 w-4" />
-                Arraste uma imagem ou clique para selecionar
+                <UploadCloud className="mr-2 h-4 w-4 shrink-0" />
+                <span className="break-words">Arraste uma imagem ou clique para selecionar</span>
               </span>
-              <span className="mt-1 text-xs text-gray-500">O corte final será quadrado.</span>
+              <span className="mt-1 break-words text-xs text-gray-500">O corte final será quadrado.</span>
               <input
                 type="file"
                 accept="image/*"
@@ -1149,16 +1149,16 @@ export function MeusDados() {
 
           <DialogFooter>
             {currentPhotoUrl && (
-              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
+              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="w-full text-red-700 hover:bg-red-50 sm:w-auto">
                 Remover foto
               </Button>
             )}
             {cropImageUrl ? (
-              <Button type="button" onClick={handleApplyCrop}>
+              <Button type="button" className="w-full sm:w-auto" onClick={handleApplyCrop}>
                 Aplicar corte
               </Button>
             ) : (
-              <Button type="button" onClick={() => setPhotoDialogOpen(false)}>
+              <Button type="button" className="w-full sm:w-auto" onClick={() => setPhotoDialogOpen(false)}>
                 Fechar
               </Button>
             )}
@@ -1171,10 +1171,10 @@ export function MeusDados() {
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <Label>{label}</Label>
       {children}
-      {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+      {error && <p className="break-words text-xs font-medium text-red-600">{error}</p>}
     </div>
   );
 }
@@ -1191,12 +1191,12 @@ function ToggleField({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <div className="space-y-1">
+    <div className="flex min-w-0 items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
+      <div className="min-w-0 space-y-1">
         <Label>{label}</Label>
-        {description && <p className="text-xs leading-snug text-gray-500">{description}</p>}
+        {description && <p className="break-words text-xs leading-snug text-gray-500">{description}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
   );
 }
