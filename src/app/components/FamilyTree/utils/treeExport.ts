@@ -67,7 +67,8 @@ export function getDefaultTreeExportIgnoreElements(node: Element) {
     elementNode.closest?.('.react-flow__controls') ||
     elementNode.closest?.('.react-flow__minimap') ||
     elementNode.closest?.('[data-tree-node-menu="true"]') ||
-    elementNode.closest?.('[data-tree-selection-overlay="true"]')
+    elementNode.closest?.('[data-tree-selection-overlay="true"]') ||
+    elementNode.closest?.('[data-tree-legend="true"]')
   );
 }
 
