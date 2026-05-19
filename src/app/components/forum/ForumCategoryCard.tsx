@@ -35,22 +35,22 @@ export function ForumCategoryCard({
   const cor = categoria.cor_token ? CORES[categoria.cor_token] ?? CORES.blue : CORES.blue;
   const total = totalTopicos ?? categoria.total_topicos;
   const conteudo = (
-    <Card className={`h-full transition ${selecionada ? 'border-blue-500 ring-2 ring-blue-100' : 'hover:border-blue-200'}`}>
+    <Card className={`h-full min-w-0 transition ${selecionada ? 'border-blue-500 ring-2 ring-blue-100' : 'hover:border-blue-200'}`}>
       <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${cor}`}>
             <Icone className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold text-gray-900">{categoria.nome}</h3>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <h3 className="min-w-0 break-words font-semibold text-gray-900">{categoria.nome}</h3>
               {typeof total === 'number' && (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
                   {total}
                 </span>
               )}
             </div>
-            {categoria.descricao && <p className="mt-1 text-sm leading-5 text-gray-500">{categoria.descricao}</p>}
+            {categoria.descricao && <p className="mt-1 line-clamp-3 break-words text-sm leading-5 text-gray-500">{categoria.descricao}</p>}
           </div>
         </div>
       </CardContent>
@@ -60,7 +60,7 @@ export function ForumCategoryCard({
   if (!onClick) return conteudo;
 
   return (
-    <button type="button" onClick={() => onClick(categoria)} className="block w-full text-left">
+    <button type="button" onClick={() => onClick(categoria)} className="block w-full min-w-0 text-left">
       {conteudo}
     </button>
   );

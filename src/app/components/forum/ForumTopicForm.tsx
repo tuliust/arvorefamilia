@@ -62,8 +62,8 @@ export function ForumTopicForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="min-w-0 space-y-5">
+      <div className="min-w-0 space-y-2">
         <Label htmlFor="forum-titulo">Título</Label>
         <Input
           id="forum-titulo"
@@ -74,13 +74,13 @@ export function ForumTopicForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="forum-categoria">Categoria</Label>
           <select
             id="forum-categoria"
             value={categoriaId}
             onChange={(event) => setCategoriaId(event.target.value)}
-            className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">Sem categoria</option>
             {categorias.map((categoria) => (
@@ -91,13 +91,13 @@ export function ForumTopicForm({
           </select>
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="forum-tipo">Tipo</Label>
           <select
             id="forum-tipo"
             value={tipo}
             onChange={(event) => setTipo(event.target.value as ForumTopicoTipo)}
-            className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
           >
             {TIPO_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -108,13 +108,13 @@ export function ForumTopicForm({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="min-w-0 space-y-2">
         <Label htmlFor="forum-pessoa">Pessoa relacionada</Label>
         <select
           id="forum-pessoa"
           value={pessoaRelacionadaId}
           onChange={(event) => setPessoaRelacionadaId(event.target.value)}
-          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
         >
           <option value="">Nenhuma pessoa relacionada</option>
           {pessoas.map((pessoa) => (
@@ -125,7 +125,7 @@ export function ForumTopicForm({
         </select>
       </div>
 
-      <div className="space-y-2">
+      <div className="min-w-0 space-y-2">
         <Label htmlFor="forum-conteudo">Conteúdo</Label>
         <Textarea
           id="forum-conteudo"
@@ -136,9 +136,9 @@ export function ForumTopicForm({
         />
       </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={salvando}>
-          {topico ? <Save className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+      <div className="flex flex-col sm:flex-row sm:justify-end">
+        <Button type="submit" disabled={salvando} className="w-full sm:w-auto">
+          {topico ? <Save className="mr-2 h-4 w-4 shrink-0" /> : <Send className="mr-2 h-4 w-4 shrink-0" />}
           {salvando ? 'Salvando...' : submitLabel ?? (topico ? 'Salvar alterações' : 'Publicar')}
         </Button>
       </div>
