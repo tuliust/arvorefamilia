@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
+import { TreeLegend } from '../components/FamilyTree/TreeLegend';
 import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
 import { collectDirectFamilyScopePersonIds } from '../components/FamilyTree/layouts/directFamilyDistributedLayout';
 import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageModal';
@@ -61,12 +62,9 @@ import {
   MarriageNodeDetails,
 } from '../components/FamilyTree/types';
 import { TreeViewMode } from '../components/FamilyTree/ViewModeToggle';
-import { FAMILY_TREE_COLORS } from '../components/FamilyTree/visualTokens';
 import {
   DIRECT_FAMILY_CARD_TEXT_COLORS,
-  DIRECT_FAMILY_LEGEND_BACKGROUNDS,
   DIRECT_FAMILY_RELATION_COLORS,
-  DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from '../components/FamilyTree/directFamilyColors';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
@@ -704,6 +702,8 @@ export function Home() {
     });
   }, [centralReferencePersonId, pessoas, personFilters]);
 
+  const directRelativeFilters = directRelativeFilterState.filters;
+
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
 
@@ -788,7 +788,6 @@ export function Home() {
 
   const curiosities = useMemo(() => calculateCuriosities(pessoas, relacionamentos), [pessoas, relacionamentos]);
 
-  const directRelativeFilters = directRelativeFilterState.filters;
   const linkedPerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === linkedPersonId),
     [pessoas, linkedPersonId]
@@ -870,7 +869,14 @@ export function Home() {
         </div>
       )}
 
-      {activeSidebarPanel === 'legend' && <FamilyTreeLegend compact={isMobile} />}
+      {activeSidebarPanel === 'legend' && (
+        <TreeLegend
+          viewMode={treeViewMode}
+          compact
+          showTitle
+          className="rounded-lg border border-gray-200 bg-gray-50 p-2"
+        />
+      )}
 
       {activeSidebarPanel === 'info' && (
         <SidebarInfoPanel
@@ -2879,102 +2885,6 @@ function DirectRelativeFilterGrid({
   );
 }
 
-function FamilyTreeLegend({ compact = false }: { compact?: boolean }) {
-  const borderItems = [
-    {
-      label: 'Pessoas vivas',
-      sample: (
-        <span
-          className="h-5 w-10 rounded-md bg-white"
-          style={{ border: `3px solid ${DIRECT_FAMILY_STATUS_BORDER_COLORS.alive}` }}
-        />
-      ),
-    },
-    {
-      label: 'Pessoas falecidas',
-      sample: (
-        <span
-          className="h-5 w-10 rounded-md bg-white"
-          style={{ border: `3px solid ${DIRECT_FAMILY_STATUS_BORDER_COLORS.deceased}` }}
-        />
-      ),
-    },
-  ];
-
-  const lineItems = [
-    {
-      label: 'Relacionamento conjugal',
-      sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SPOUSE} />,
-    },
-    {
-      label: 'Filhos do relacionamento',
-      sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_CHILD} />,
-    },
-    {
-      label: 'Relação de irmãos',
-      sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
-    },
-  ];
-
-  const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
-
-  return (
-    <section className={compact ? '' : 'rounded-lg border border-gray-200 bg-gray-50 p-3'}>
-      {!compact && <h2 className="mb-3 text-sm font-semibold text-gray-900">Legendas</h2>}
-      <div className={compact ? 'grid grid-cols-2 gap-x-3 gap-y-1' : 'space-y-2'}>
-        {!compact && (
-          <p className="text-[11px] font-semibold uppercase tracking-normal text-gray-500">Bordas dos cards</p>
-        )}
-        {borderItems.map((item) => (
-          <div key={item.label} className="flex min-w-0 items-center gap-2 text-[11px] text-gray-600">
-            <span className="flex w-10 shrink-0 items-center justify-center">{item.sample}</span>
-            <span className="truncate">{item.label}</span>
-          </div>
-        ))}
-        {!compact && (
-          <p className="pt-2 text-[11px] font-semibold uppercase tracking-normal text-gray-500">Linhas</p>
-        )}
-        {lineItems.map((item) => (
-          <div key={item.label} className="flex min-w-0 items-center gap-2 text-[11px] text-gray-600">
-            <span className="flex w-10 shrink-0 items-center justify-center">{item.sample}</span>
-            <span className="truncate">{item.label}</span>
-          </div>
-        ))}
-        {!compact && (
-          <>
-            <p className="pt-2 text-[11px] font-semibold uppercase tracking-normal text-gray-500">Fundos dos cards</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {backgroundItems.map((item) => (
-                <div key={item.label} className="flex min-w-0 items-center gap-1.5 text-[11px] text-gray-600">
-                  <span
-                    className="h-4 w-7 shrink-0 rounded border"
-                    style={{
-                      background: item.background,
-                      borderColor: item.solid,
-                    }}
-                  />
-                  <span className="leading-snug">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function LegendLine({ color, dashed = false }: { color: string; dashed?: boolean }) {
-  return (
-    <span
-      className="block h-0 w-10 border-t-2"
-      style={{
-        borderColor: color,
-        borderStyle: dashed ? 'dashed' : 'solid',
-      }}
-    />
-  );
-}
 
 function StateMessage({
   title,
