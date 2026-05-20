@@ -14,54 +14,28 @@ interface TreeLegendProps {
   showTitle?: boolean;
 }
 
-const viewModeDescriptions: Record<TreeViewMode, { title: string; description: string; shortDescription: string }> = {
-  'minha-arvore': {
-    title: 'Minha Árvore',
-    description: 'Mostra a família em torno da pessoa central selecionada, com grupos diretos de parentes.',
-    shortDescription: 'Família em torno da pessoa central.',
-  },
-  genealogia: {
-    title: 'Genealogia',
-    description: 'Organiza o escopo pessoal por gerações, usando colunas e conectores ortogonais.',
-    shortDescription: 'Escopo pessoal por gerações.',
-  },
-  'visao-completa': {
-    title: 'Visão Completa',
-    description: 'Usa o layout por gerações, mas considera toda a base familiar cadastrada.',
-    shortDescription: 'Toda a base familiar cadastrada.',
-  },
-};
-
 const marriageStatusItems = [
   {
     label: 'União ativa',
-    shortLabel: 'Ativa',
-    description: 'Casamento ou união sem separação registrada.',
-    shortDescription: 'Sem separação registrada.',
+    shortLabel: 'Em relacionamento',
     background: '#FFFFFF',
     border: '#D1D5DB',
   },
   {
     label: 'Separado/divorciado',
     shortLabel: 'Separado',
-    description: 'Relação inativa, separada ou com data de separação.',
-    shortDescription: 'Relação inativa.',
     background: '#FEF3C7',
     border: '#F59E0B',
   },
   {
     label: 'Viuvez',
     shortLabel: 'Viuvez',
-    description: 'Um dos cônjuges foi marcado como falecido.',
-    shortDescription: 'Cônjuge falecido.',
     background: '#E5E7EB',
     border: '#9CA3AF',
   },
   {
     label: 'Status desconhecido',
     shortLabel: 'Desconhecido',
-    description: 'Dados conjugais insuficientes para classificar a relação.',
-    shortDescription: 'Dados insuficientes.',
     background: '#FFFFFF',
     border: '#D1D5DB',
   },
@@ -69,42 +43,32 @@ const marriageStatusItems = [
 
 const lineItems = [
   {
-    label: 'Linha conjugal',
-    shortLabel: 'Conjugal',
-    description: 'Conecta cônjuges ou companheiros. Nas views por geração, o anel fica no meio da linha.',
-    shortDescription: 'Conecta cônjuges.',
+    label: 'Conjugal',
+    fullLabel: 'Linha conjugal',
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SPOUSE} />,
   },
   {
-    label: 'Pais e filhos',
-    shortLabel: 'Pais/filhos',
-    description: 'Conexão de filiação. Em Genealogia e Visão Completa, os traçados são retos/ortogonais, sem diagonais.',
-    shortDescription: 'Conexão de filiação.',
+    label: 'Pais/filhos',
+    fullLabel: 'Pais e filhos',
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_CHILD} />,
   },
   {
     label: 'Irmãos',
-    shortLabel: 'Irmãos',
-    description: 'Relação lateral entre pessoas da mesma geração, quando exibida pelo modo atual.',
-    shortDescription: 'Mesma geração.',
+    fullLabel: 'Irmãos',
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
   },
   {
-    label: 'Barramento vertical',
-    shortLabel: 'Barramento',
-    description: 'Agrupa filhos de um mesmo núcleo familiar nas views por geração.',
-    shortDescription: 'Agrupa filhos.',
+    label: 'Barramento',
+    fullLabel: 'Barramento vertical',
     sample: <LegendBus />,
   },
 ];
 
 export function TreeLegend({
-  viewMode = 'minha-arvore',
   compact = false,
   className = '',
   showTitle = true,
 }: TreeLegendProps) {
-  const viewDescription = viewModeDescriptions[viewMode];
   const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
 
   if (compact) {
@@ -116,18 +80,8 @@ export function TreeLegend({
         {showTitle && (
           <div>
             <h2 className="text-sm font-semibold leading-tight text-gray-900">Legendas visuais</h2>
-            <p className="mt-0.5 text-[11px] leading-snug text-gray-500">
-              Cores, linhas, anéis e modos da árvore.
-            </p>
           </div>
         )}
-
-        <LegendGroup title="Visualização atual" compact>
-          <div className="rounded-md border border-blue-100 bg-blue-50 px-2 py-1.5 leading-snug text-blue-950">
-            <p className="font-semibold">{viewDescription.title}</p>
-            <p className="mt-0.5">{viewDescription.shortDescription}</p>
-          </div>
-        </LegendGroup>
 
         <LegendGroup title="Cards" compact>
           <div className="grid grid-cols-2 gap-1.5">
@@ -140,7 +94,6 @@ export function TreeLegend({
                 />
               )}
               label="Pessoa viva"
-              description="Sem falecimento."
             />
             <LegendItem
               compact
@@ -151,7 +104,6 @@ export function TreeLegend({
                 />
               )}
               label="Falecida"
-              description="Com falecimento."
             />
             <LegendItem
               compact
@@ -162,13 +114,11 @@ export function TreeLegend({
                 />
               )}
               label="Pet"
-              description="Registro tipo pet."
             />
             <LegendItem
               compact
               sample={<span className="h-4 w-8 rounded bg-white shadow-inner ring-2 ring-slate-800" />}
               label="Central"
-              description="Referência atual."
             />
           </div>
         </LegendGroup>
@@ -177,11 +127,10 @@ export function TreeLegend({
           <div className="grid grid-cols-2 gap-1.5">
             {lineItems.map((item) => (
               <LegendItem
-                key={item.label}
+                key={item.fullLabel}
                 compact
                 sample={item.sample}
-                label={item.shortLabel}
-                description={item.shortDescription}
+                label={item.label}
               />
             ))}
           </div>
@@ -195,7 +144,6 @@ export function TreeLegend({
                 compact
                 sample={<MarriageRingSample background={item.background} border={item.border} />}
                 label={item.shortLabel}
-                description={item.shortDescription}
               />
             ))}
           </div>
@@ -217,17 +165,6 @@ export function TreeLegend({
             ))}
           </div>
         </LegendGroup>
-
-        <LegendGroup title="Views" compact>
-          <dl className="grid grid-cols-1 gap-1 leading-snug text-gray-600">
-            {Object.entries(viewModeDescriptions).map(([key, item]) => (
-              <div key={key}>
-                <dt className="font-semibold text-gray-800">{item.title}</dt>
-                <dd>{item.shortDescription}</dd>
-              </div>
-            ))}
-          </dl>
-        </LegendGroup>
       </section>
     );
   }
@@ -243,18 +180,8 @@ export function TreeLegend({
       {showTitle && (
         <div>
           <h2 className="text-sm font-semibold text-gray-900">Legendas visuais</h2>
-          <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Referência rápida para interpretar cards, linhas, anéis e modos da árvore.
-          </p>
         </div>
       )}
-
-      <LegendGroup title="Visualização atual">
-        <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs leading-relaxed text-blue-950">
-          <p className="font-semibold">{viewDescription.title}</p>
-          <p className="mt-1">{viewDescription.description}</p>
-        </div>
-      </LegendGroup>
 
       <LegendGroup title="Cards de pessoas">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -266,7 +193,6 @@ export function TreeLegend({
               />
             )}
             label="Pessoa viva"
-            description="Card de pessoa sem marcação de falecimento."
           />
           <LegendItem
             sample={(
@@ -275,8 +201,7 @@ export function TreeLegend({
                 style={{ border: `3px solid ${DIRECT_FAMILY_STATUS_BORDER_COLORS.deceased}` }}
               />
             )}
-            label="Pessoa falecida"
-            description="Card com falecimento informado por checkbox, data ou local."
+            label="Falecida"
           />
           <LegendItem
             sample={(
@@ -286,12 +211,10 @@ export function TreeLegend({
               />
             )}
             label="Pet"
-            description="Pessoa cadastrada como pet, quando esse tipo estiver visível."
           />
           <LegendItem
             sample={<span className="h-6 w-12 rounded-md bg-white shadow-inner ring-2 ring-slate-800" />}
-            label="Pessoa central"
-            description="Referência principal usada para montar a visualização atual."
+            label="Central"
           />
         </div>
       </LegendGroup>
@@ -300,10 +223,9 @@ export function TreeLegend({
         <div className="space-y-2">
           {lineItems.map((item) => (
             <LegendItem
-              key={item.label}
+              key={item.fullLabel}
               sample={item.sample}
-              label={item.label}
-              description={item.description}
+              label={item.fullLabel}
             />
           ))}
         </div>
@@ -311,16 +233,12 @@ export function TreeLegend({
 
       <LegendGroup title="Anel de casamento">
         <div className="space-y-2">
-          <p className="text-xs leading-relaxed text-gray-600">
-            O anel 💍 aparece entre cônjuges. Clique nele para abrir o modal conjugal quando houver dados disponíveis. Observações internas continuam restritas a administradores.
-          </p>
           <div className="space-y-2">
             {marriageStatusItems.map((item) => (
               <LegendItem
                 key={item.label}
                 sample={<MarriageRingSample background={item.background} border={item.border} />}
-                label={item.label}
-                description={item.description}
+                label={item.shortLabel}
               />
             ))}
           </div>
@@ -342,17 +260,6 @@ export function TreeLegend({
             </div>
           ))}
         </div>
-      </LegendGroup>
-
-      <LegendGroup title="Diferenças entre views">
-        <dl className="space-y-2 text-xs leading-relaxed text-gray-600">
-          {Object.entries(viewModeDescriptions).map(([key, item]) => (
-            <div key={key}>
-              <dt className="font-semibold text-gray-800">{item.title}</dt>
-              <dd>{item.description}</dd>
-            </div>
-          ))}
-        </dl>
       </LegendGroup>
     </section>
   );
@@ -383,17 +290,15 @@ function LegendGroup({
 function LegendItem({
   sample,
   label,
-  description,
   compact = false,
 }: {
   sample: React.ReactNode;
   label: string;
-  description: string;
   compact?: boolean;
 }) {
   return (
     <div className={[
-      'flex min-w-0 items-start rounded-lg border border-gray-200 bg-white shadow-sm',
+      'flex min-w-0 items-center rounded-lg border border-gray-200 bg-white shadow-sm',
       compact ? 'gap-1.5 p-1.5' : 'gap-3 p-2',
     ].join(' ')}
     >
@@ -405,7 +310,6 @@ function LegendItem({
       </span>
       <span className={compact ? 'min-w-0 text-[10px] leading-snug' : 'min-w-0 text-xs leading-relaxed'}>
         <span className="block font-semibold text-gray-900">{label}</span>
-        <span className="block text-gray-600">{description}</span>
       </span>
     </div>
   );
