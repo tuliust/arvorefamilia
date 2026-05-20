@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, Clock, Filter, RefreshCcw } from 'lucide-react';
+import { Clock, Filter, RefreshCcw, Settings } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import {
   ACTIVITY_ACTION_LABELS,
   ACTIVITY_ENTITY_LABELS,
@@ -80,7 +80,6 @@ function ActivityRow({ activity }: { activity: ActivityLog }) {
 }
 
 export function AdminAtividades() {
-  const navigate = useNavigate();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filters, setFilters] = useState<ActivityFilters>(INITIAL_FILTERS);
   const [loading, setLoading] = useState(true);
@@ -121,24 +120,15 @@ export function AdminAtividades() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900">
-              <Clock className="h-5 w-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Histórico de Atividades</h1>
-              <p className="break-words text-sm text-gray-500">Auditoria administrativa das alterações recentes</p>
-            </div>
-          </div>
-
-          <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
-            <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
-            Voltar ao painel
-          </Button>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Histórico de Atividades"
+        subtitle="Auditoria administrativa das alterações recentes"
+        icon={Clock}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+        ]}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <Card className="mb-6 min-w-0">

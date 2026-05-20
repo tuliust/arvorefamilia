@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   AlertTriangle,
-  ArrowLeft,
   CheckCircle2,
   Database,
   FileWarning,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { supabase } from '../../lib/supabaseClient';
 import { ACTIVITY_ACTION_LABELS, ACTIVITY_ENTITY_LABELS, listActivityLogs } from '../../services/activityLogService';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
@@ -768,30 +768,16 @@ export function AdminIntegridade() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
-              <Database className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Integridade dos dados</h1>
-              <p className="break-words text-sm text-gray-500">Diagnóstico somente leitura da árvore, vínculos, arquivos e auditoria.</p>
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
-              Painel
-            </Button>
-            <Button className="w-full sm:w-auto" onClick={loadData} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
-              Atualizar diagnóstico
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Integridade dos dados"
+        subtitle="Diagnóstico somente leitura da árvore, vínculos, arquivos e auditoria."
+        icon={Database}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Database },
+          { label: 'Atualizar diagnóstico', onClick: loadData, icon: RefreshCcw, variant: 'primary', disabled: loading },
+        ]}
+      />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {error && (

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, Bell, CalendarClock, Mail, RefreshCcw } from 'lucide-react';
+import { Bell, CalendarClock, Mail, RefreshCcw, Settings } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import {
   Table,
   TableBody,
@@ -78,7 +78,6 @@ function SummaryList({ title, items }: { title: string; items: Record<string, nu
 }
 
 export function AdminNotificacoes() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificacaoUsuario[]>([]);
   const [preferences, setPreferences] = useState<PreferenciaNotificacao[]>([]);
@@ -204,34 +203,17 @@ export function AdminNotificacoes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-700">
-              <Bell className="h-5 w-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Notificações</h1>
-              <p className="break-words text-sm text-gray-500">Diagnóstico administrativo de preferências e disparos</p>
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
-              Voltar ao painel
-            </Button>
-            <Button className="w-full sm:w-auto" onClick={loadDiagnostics} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
-              Atualizar diagnóstico
-            </Button>
-            <Button variant="secondary" className="w-full sm:w-auto" onClick={handleCreateInternalTest} disabled={creatingTest || loading}>
-              <Bell className="mr-2 h-4 w-4 shrink-0" />
-              Teste interno
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Notificações"
+        subtitle="Diagnóstico administrativo de preferências e disparos"
+        icon={Bell}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Atualizar diagnóstico', onClick: loadDiagnostics, icon: RefreshCcw, variant: 'primary', disabled: loading },
+          { label: 'Teste interno', onClick: handleCreateInternalTest, icon: Bell, disabled: creatingTest || loading },
+        ]}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

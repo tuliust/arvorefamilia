@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { ArrowLeft, Database, AlertCircle } from 'lucide-react';
+import { Database, AlertCircle, Settings } from 'lucide-react';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 
 export function AdminMigrarDados() {
   const navigate = useNavigate();
@@ -10,19 +11,15 @@ export function AdminMigrarDados() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="max-w-4xl mx-auto flex min-w-0 items-center justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="shrink-0">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">
-              Migrar Dados para o Banco
-            </h1>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Migrar Dados para o Banco"
+        subtitle="Ferramenta operacional desativada para execução pelo frontend"
+        icon={Database}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
