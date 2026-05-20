@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { ChevronLeft, ChevronRight, CalendarSync } from 'lucide-react';
