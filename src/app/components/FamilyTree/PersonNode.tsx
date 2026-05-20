@@ -203,6 +203,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     directRelation,
     useDirectRelationStyleForPet,
     useCentralDirectLayout,
+    layoutWidth,
+    layoutHeight,
   } = data;
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -321,9 +323,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       ? DIRECT_FAMILY_STATUS_BORDER_COLORS.deceased
       : DIRECT_FAMILY_STATUS_BORDER_COLORS.alive;
     const isCentralDirectNode = directRelation === 'central' && useCentralDirectLayout !== false;
-    const cardWidth = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH : DIRECT_FAMILY_TOKENS.CARD_WIDTH;
-    const cardHeight = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT : DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
-    const avatarSize = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE;
+    const baseCardWidth = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH : DIRECT_FAMILY_TOKENS.CARD_WIDTH;
+    const baseCardHeight = isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT : DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
+    const cardWidth = layoutWidth ?? baseCardWidth;
+    const cardHeight = layoutHeight ?? baseCardHeight;
+    const cardScale = Math.min(cardWidth / baseCardWidth, cardHeight / baseCardHeight);
+    const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const centralDetails = [
       getAgeLabel(pessoa.data_nascimento),
@@ -366,7 +371,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             style={{ width: avatarSize, height: avatarSize }}
           >
             {avatarContent(
-              isCentralDirectNode ? 'h-[320px] w-[320px]' : 'h-[66px] w-[66px]',
+              'h-full w-full',
               isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-7 w-7 text-slate-700'
             )}
           </div>
@@ -422,9 +427,9 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         onClick={handleClick}
         onContextMenu={handleContextMenu}
         style={{
-          width: 280,
-          minHeight: 120,
-          height: 120,
+          width: layoutWidth ?? 280,
+          minHeight: layoutHeight ?? 120,
+          height: layoutHeight ?? 120,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',

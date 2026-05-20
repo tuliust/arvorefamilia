@@ -4,6 +4,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   ReactFlowInstance,
+  Edge,
   Node,
   CoordinateExtent,
   Viewport,
@@ -43,6 +44,7 @@ import {
   TreeLayoutBounds,
   TREE_CONSTANTS,
   MarriageNodeDetails,
+  TreeLayoutResult,
 } from './types';
 import { DIRECT_FAMILY_TOKENS } from './visualTokens';
 
@@ -108,11 +110,15 @@ const TREE_MOBILE_VIEWPORT_PADDING_X = 22;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 22;
 const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
 const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
+const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
+const TREE_DEBUG_BOUNDS_STORAGE_KEY = 'treeDebugBounds';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
 
 type FlowBounds = TreeLayoutBounds;
 type TreeViewportFitMode = 'contain' | 'width' | 'height';
 type TreeViewportHorizontalAlign = 'center' | 'left';
+type TreeViewportVerticalAlign = 'center' | 'top';
+type LayoutNormalizationMode = 'direct-family' | 'genealogy-columns' | 'complete-genealogy-columns';
 
 function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: number) {
   const dataWidth = Number(node.data?.width);
@@ -143,25 +149,271 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
     return { width: 1, height: 1 };
   }
 
+  if (node.type === 'genealogyFamilyConnectorNode') {
+    return {
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 1,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : 1,
+    };
+  }
+
   if (node.type === 'marriageNode') {
     return { width: MARRIAGE_NODE_SIZE, height: MARRIAGE_NODE_SIZE };
   }
 
   if (node.data?.directRelation === 'central' && node.data?.useCentralDirectLayout !== false) {
     return {
-      width: DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH,
-      height: DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT,
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT,
     };
   }
 
   if (node.data?.directRelation) {
     return {
-      width: DIRECT_FAMILY_TOKENS.CARD_WIDTH,
-      height: DIRECT_FAMILY_TOKENS.CARD_HEIGHT,
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : DIRECT_FAMILY_TOKENS.CARD_WIDTH,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : DIRECT_FAMILY_TOKENS.CARD_HEIGHT,
+    };
+  }
+
+  if (node.type === 'personNode') {
+    return {
+      width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : fallbackWidth,
+      height: Number.isFinite(dataHeight) && dataHeight > 0 ? dataHeight : fallbackHeight,
     };
   }
 
   return { width: fallbackWidth, height: fallbackHeight };
+}
+
+function transformScalar(value: unknown, scale: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value * scale : value;
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function constrainBoundsToViewport(bounds: FlowBounds, viewportBounds: FlowBounds): FlowBounds {
+  const width = Math.min(bounds.width, viewportBounds.width);
+  const height = Math.min(bounds.height, viewportBounds.height);
+
+  return {
+    x: clampNumber(bounds.x, viewportBounds.x, viewportBounds.x + viewportBounds.width - width),
+    y: clampNumber(bounds.y, viewportBounds.y, viewportBounds.y + viewportBounds.height - height),
+    width,
+    height,
+  };
+}
+
+function constrainDecorativeNodeToViewport(
+  node: Node,
+  viewportBounds: FlowBounds,
+  fallbackWidth: number,
+  fallbackHeight: number
+) {
+  if (node.type === 'personNode' || node.type === 'marriageNode' || node.type === 'genealogyFamilyConnectorNode') {
+    return node;
+  }
+
+  const size = getNodeRenderSize(node, fallbackWidth, fallbackHeight);
+  const constrainedBounds = constrainBoundsToViewport(
+    {
+      x: node.position.x,
+      y: node.position.y,
+      width: size.width,
+      height: size.height,
+    },
+    viewportBounds
+  );
+  const nextData = { ...node.data };
+
+  if (node.type === 'directFamilyGroupBoxNode' || node.type === 'directFamilyLegendNode') {
+    nextData.width = constrainedBounds.width;
+    nextData.height = constrainedBounds.height;
+  } else if (node.type === 'directFamilyLabelNode') {
+    nextData.width = constrainedBounds.width;
+  }
+
+  return {
+    ...node,
+    position: {
+      x: constrainedBounds.x,
+      y: constrainedBounds.y,
+    },
+    data: nextData,
+  };
+}
+
+function constrainEdgeDataToViewport(edge: Edge, viewportBounds: FlowBounds) {
+  if (!edge.data) return edge;
+
+  const viewportRight = viewportBounds.x + viewportBounds.width;
+  const viewportBottom = viewportBounds.y + viewportBounds.height;
+
+  return {
+    ...edge,
+    data: {
+      ...edge.data,
+      elbowX: typeof edge.data.elbowX === 'number'
+        ? clampNumber(edge.data.elbowX, viewportBounds.x, viewportRight)
+        : edge.data.elbowX,
+      elbowY: typeof edge.data.elbowY === 'number'
+        ? clampNumber(edge.data.elbowY, viewportBounds.y, viewportBottom)
+        : edge.data.elbowY,
+    },
+  };
+}
+
+function normalizeTreeLayoutByPersonBounds(
+  layout: TreeLayoutResult,
+  mode: LayoutNormalizationMode,
+  fallbackWidth: number,
+  fallbackHeight: number
+): TreeLayoutResult {
+  const targetBounds = layout.viewportBounds;
+  if (!targetBounds) return layout;
+
+  const personBounds = getViewportContentBounds(layout.nodes, fallbackWidth, fallbackHeight);
+  const normalizationBounds = getLayoutNormalizationBounds(
+    layout,
+    mode,
+    personBounds,
+    fallbackWidth,
+    fallbackHeight
+  );
+
+  if (!normalizationBounds) {
+    return {
+      ...layout,
+      translateBounds: layout.translateBounds ?? targetBounds,
+    };
+  }
+
+  const scaleX = targetBounds.width / Math.max(1, normalizationBounds.width);
+  const scaleY = mode === 'direct-family'
+    ? targetBounds.height / Math.max(1, normalizationBounds.height)
+    : scaleX;
+  const translateX = targetBounds.x - normalizationBounds.x * scaleX;
+  const translateY = targetBounds.y - normalizationBounds.y * scaleY;
+  const transformX = (value: number) => value * scaleX + translateX;
+  const transformY = (value: number) => value * scaleY + translateY;
+
+  const scaledNodes = layout.nodes.map((node) => {
+    const size = getNodeRenderSize(node, fallbackWidth, fallbackHeight);
+    const nextData = { ...node.data };
+
+    if (node.type === 'personNode') {
+      nextData.width = size.width * scaleX;
+      nextData.height = size.height * scaleY;
+      nextData.layoutWidth = size.width * scaleX;
+      nextData.layoutHeight = size.height * scaleY;
+    } else {
+      if (typeof nextData.width === 'number') nextData.width = nextData.width * scaleX;
+      if (typeof nextData.height === 'number') nextData.height = nextData.height * scaleY;
+    }
+
+    if (node.type === 'genealogyFamilyConnectorNode') {
+      nextData.originX = transformScalar(nextData.originX, scaleX);
+      nextData.originY = transformScalar(nextData.originY, scaleY);
+      nextData.busX = transformScalar(nextData.busX, scaleX);
+      if (Array.isArray(nextData.childPoints)) {
+        nextData.childPoints = nextData.childPoints.map((point: { id: string; x: number; y: number }) => ({
+          ...point,
+          x: point.x * scaleX,
+          y: point.y * scaleY,
+        }));
+      }
+    }
+
+    return {
+      ...node,
+      position: {
+        x: transformX(node.position.x),
+        y: transformY(node.position.y),
+      },
+      data: nextData,
+    };
+  });
+
+  const scaledEdges = layout.edges.map((edge) => ({
+    ...edge,
+    data: edge.data
+      ? {
+          ...edge.data,
+          elbowX: typeof edge.data.elbowX === 'number' ? transformX(edge.data.elbowX) : edge.data.elbowX,
+          elbowY: typeof edge.data.elbowY === 'number' ? transformY(edge.data.elbowY) : edge.data.elbowY,
+        }
+      : edge.data,
+  }));
+
+  const normalizedNodes = mode === 'direct-family'
+    ? scaledNodes.map((node) => constrainDecorativeNodeToViewport(node, targetBounds, fallbackWidth, fallbackHeight))
+    : scaledNodes;
+  const normalizedEdges = mode === 'direct-family'
+    ? scaledEdges.map((edge) => constrainEdgeDataToViewport(edge, targetBounds))
+    : scaledEdges;
+  const finalPersonBounds = getViewportContentBounds(normalizedNodes, fallbackWidth, fallbackHeight);
+  const finalFlowBounds = getFlowBounds(normalizedNodes, fallbackWidth, fallbackHeight);
+  const finalTranslateContentBounds = getTranslateBounds(normalizedNodes, fallbackWidth, fallbackHeight)
+    ?? finalFlowBounds
+    ?? finalPersonBounds
+    ?? targetBounds;
+  const minX = Math.min(targetBounds.x, finalTranslateContentBounds.x);
+  const minY = Math.min(targetBounds.y, finalTranslateContentBounds.y);
+  const maxX = Math.max(targetBounds.x + targetBounds.width, finalTranslateContentBounds.x + finalTranslateContentBounds.width);
+  const maxY = Math.max(targetBounds.y + targetBounds.height, finalTranslateContentBounds.y + finalTranslateContentBounds.height);
+
+  return {
+    ...layout,
+    nodes: normalizedNodes,
+    edges: normalizedEdges,
+    viewportBounds: targetBounds,
+    translateBounds: {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    },
+  };
+}
+
+function getLayoutNormalizationBounds(
+  layout: TreeLayoutResult,
+  mode: LayoutNormalizationMode,
+  personBounds: FlowBounds | null,
+  fallbackWidth: number,
+  fallbackHeight: number
+): FlowBounds | null {
+  if (mode === 'genealogy-columns') {
+    return layout.viewportBounds ?? personBounds;
+  }
+
+  if (!personBounds) return null;
+
+  const directFamilyGroupBounds = getBoundsForNodes(
+    layout.nodes.filter((node) => {
+      if (node.hidden) return false;
+      if (node.type === 'personNode') return true;
+      if (node.type === 'directFamilyGroupBoxNode') return true;
+      return node.type === 'directFamilyLabelNode' && node.data?.variant !== 'title';
+    }),
+    fallbackWidth,
+    fallbackHeight
+  );
+
+  if (!directFamilyGroupBounds) return personBounds;
+
+  const minY = Math.min(personBounds.y, directFamilyGroupBounds.y);
+  const maxY = Math.max(
+    personBounds.y + personBounds.height,
+    directFamilyGroupBounds.y + directFamilyGroupBounds.height
+  );
+
+  return {
+    x: personBounds.x,
+    y: minY,
+    width: personBounds.width,
+    height: Math.max(1, maxY - minY),
+  };
 }
 
 function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
@@ -255,6 +507,7 @@ function getNormalizedTreeViewport({
   maxZoom,
   fitMode,
   horizontalAlign = 'center',
+  verticalAlign = 'center',
 }: {
   bounds: FlowBounds;
   containerWidth: number;
@@ -265,6 +518,7 @@ function getNormalizedTreeViewport({
   maxZoom: number;
   fitMode: TreeViewportFitMode;
   horizontalAlign?: TreeViewportHorizontalAlign;
+  verticalAlign?: TreeViewportVerticalAlign;
 }): Viewport {
   const availableWidth = Math.max(1, containerWidth - paddingX * 2);
   const availableHeight = Math.max(1, containerHeight - titleSafeArea - paddingY * 2);
@@ -283,7 +537,9 @@ function getNormalizedTreeViewport({
     x: horizontalAlign === 'left'
       ? paddingX - bounds.x * zoom
       : containerWidth / 2 - centerX * zoom,
-    y: titleSafeArea + paddingY + availableHeight / 2 - centerY * zoom,
+    y: verticalAlign === 'top'
+      ? titleSafeArea + paddingY - bounds.y * zoom
+      : titleSafeArea + paddingY + availableHeight / 2 - centerY * zoom,
     zoom,
   };
 }
@@ -293,6 +549,72 @@ function getDirectFamilyTranslateExtent(bounds: FlowBounds, padding: number): Co
     [bounds.x - padding, bounds.y - padding],
     [bounds.x + bounds.width + padding, bounds.y + bounds.height + padding],
   ];
+}
+
+function isTreeDebugBoundsEnabled() {
+  if (typeof window === 'undefined') return false;
+
+  const params = new URLSearchParams(window.location.search);
+  const queryValue = params.get(TREE_DEBUG_BOUNDS_QUERY_PARAM);
+
+  if (queryValue === '1' || queryValue === 'true') return true;
+  if (queryValue === '0' || queryValue === 'false') return false;
+
+  return window.localStorage.getItem(TREE_DEBUG_BOUNDS_STORAGE_KEY) === '1';
+}
+
+function formatDebugNumber(value: number) {
+  return Number.isFinite(value) ? Math.round(value) : value;
+}
+
+function createDebugBoundsNode({
+  id,
+  label,
+  bounds,
+  borderColor,
+  backgroundColor,
+  textColor,
+  labelOffset,
+}: {
+  id: string;
+  label: string;
+  bounds: FlowBounds;
+  borderColor: string;
+  backgroundColor: string;
+  textColor: string;
+  labelOffset: number;
+}): Node {
+  return {
+    id: `tree-debug-${id}`,
+    type: 'default',
+    position: {
+      x: bounds.x,
+      y: bounds.y,
+    },
+    data: {
+      label: `${label} | x:${formatDebugNumber(bounds.x)} y:${formatDebugNumber(bounds.y)} w:${formatDebugNumber(bounds.width)} h:${formatDebugNumber(bounds.height)}`,
+    },
+    draggable: false,
+    selectable: false,
+    connectable: false,
+    focusable: false,
+    style: {
+      width: bounds.width,
+      height: bounds.height,
+      border: `4px dashed ${borderColor}`,
+      background: backgroundColor,
+      color: textColor,
+      fontSize: 18,
+      fontWeight: 800,
+      lineHeight: 1.15,
+      opacity: 0.95,
+      pointerEvents: 'none',
+      padding: 8,
+      borderRadius: 0,
+      transform: `translateY(${labelOffset}px)`,
+      zIndex: 1,
+    },
+  };
 }
 
 function getExportableFlowElement(container: HTMLDivElement | null) {
@@ -394,6 +716,17 @@ function FamilyTreeComponent({
     const centralPerson = pessoas.find((pessoa) => pessoa.id === effectiveCentralPersonId);
     return getTreeTitleFirstName(centralPerson?.nome_completo);
   }, [effectiveCentralPersonId, pessoas]);
+  const treeTitle = useMemo(() => {
+    if (viewMode === 'minha-arvore') {
+      return `A árvore de ${treeTitleFirstName}`;
+    }
+
+    if (viewMode === 'genealogia') {
+      return `Família de ${treeTitleFirstName}`;
+    }
+
+    return `Linha Genealógica de ${treeTitleFirstName}`;
+  }, [treeTitleFirstName, viewMode]);
 
   const dataHash = useMemo(() => {
     return JSON.stringify({
@@ -409,7 +742,7 @@ function FamilyTreeComponent({
     });
   }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, effectiveCentralPersonId, isMobile, viewMode]);
 
-  const layoutResult = useMemo(() => {
+  const rawLayoutResult = useMemo(() => {
     const graph = buildTreeGraph({
       pessoas,
       relacionamentos,
@@ -465,7 +798,79 @@ function FamilyTreeComponent({
     viewMode,
   ]);
 
-  const initialNodes = layoutResult.nodes;
+  const layoutResult = useMemo(() => {
+    return normalizeTreeLayoutByPersonBounds(
+      rawLayoutResult,
+      viewMode === 'genealogia'
+        ? 'genealogy-columns'
+        : viewMode === 'visao-completa'
+          ? 'complete-genealogy-columns'
+          : 'direct-family',
+      NODE_WIDTH,
+      NODE_HEIGHT
+    );
+  }, [rawLayoutResult, viewMode, NODE_WIDTH, NODE_HEIGHT]);
+
+  const debugBoundsEnabled = useMemo(() => isTreeDebugBoundsEnabled(), []);
+
+  const debugBoundsNodes = useMemo<Node[]>(() => {
+    if (!debugBoundsEnabled) return [];
+
+    const cardsBounds = getViewportContentBounds(layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT);
+    const renderedContentBounds = getFlowBounds(layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT);
+    const logicalViewportBounds = layoutResult.viewportBounds ?? cardsBounds ?? renderedContentBounds;
+
+    const debugNodes: Node[] = [];
+
+    if (logicalViewportBounds) {
+      debugNodes.push(createDebugBoundsNode({
+        id: `${viewMode}-logical-viewport`,
+        label: 'GRADE LÓGICA / VIEWPORT BOUNDS',
+        bounds: logicalViewportBounds,
+        borderColor: 'rgba(245, 158, 11, 0.95)',
+        backgroundColor: 'rgba(245, 158, 11, 0.08)',
+        textColor: '#92400e',
+        labelOffset: 0,
+      }));
+    }
+
+    if (renderedContentBounds) {
+      debugNodes.push(createDebugBoundsNode({
+        id: `${viewMode}-rendered-content`,
+        label: 'CONTEÚDO RENDERIZADO / FLOW BOUNDS',
+        bounds: renderedContentBounds,
+        borderColor: 'rgba(59, 130, 246, 0.95)',
+        backgroundColor: 'rgba(59, 130, 246, 0.06)',
+        textColor: '#1d4ed8',
+        labelOffset: 34,
+      }));
+    }
+
+    if (cardsBounds) {
+      debugNodes.push(createDebugBoundsNode({
+        id: `${viewMode}-cards`,
+        label: 'CARDS / PERSON NODES',
+        bounds: cardsBounds,
+        borderColor: 'rgba(236, 72, 153, 0.95)',
+        backgroundColor: 'rgba(236, 72, 153, 0.06)',
+        textColor: '#be185d',
+        labelOffset: 68,
+      }));
+    }
+
+    return debugNodes;
+  }, [
+    debugBoundsEnabled,
+    layoutResult.nodes,
+    layoutResult.viewportBounds,
+    NODE_WIDTH,
+    NODE_HEIGHT,
+    viewMode,
+  ]);
+
+  const initialNodes = debugBoundsEnabled
+    ? [...layoutResult.nodes, ...debugBoundsNodes]
+    : layoutResult.nodes;
   const initialEdges = layoutResult.edges;
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -541,6 +946,7 @@ function FamilyTreeComponent({
         ? (isMobile ? 'height' : 'width')
         : 'contain',
       horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
+      verticalAlign: !isMobile && isGenealogyLayout ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile]);
 
@@ -775,13 +1181,28 @@ function FamilyTreeComponent({
         style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
       >
         <h2 className="text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
-          {`Linha Genealógica de ${treeTitleFirstName}`}
+          {treeTitle}
         </h2>
         <p className="mt-1 text-xs font-semibold leading-tight text-slate-600 sm:text-sm">
           Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
         </p>
       </div>
 
+
+      {debugBoundsEnabled && (
+        <div className="pointer-events-none absolute inset-0 z-30 border-4 border-dashed border-red-500/80 bg-red-500/[0.02]">
+          <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
+            <div>DEBUG TREE BOUNDS</div>
+            <div>Vermelho: área total visível do componente</div>
+            <div>Amarelo: grade lógica / viewportBounds</div>
+            <div>Azul: conteúdo renderizado / flowBounds</div>
+            <div>Rosa: área preenchida por cards / personNodes</div>
+            <div>View atual: {viewMode}</div>
+            <div>Container: {containerSize.width}px × {containerSize.height}px</div>
+            <div>Zoom inicial: {directFamilyViewport?.zoom.toFixed(6) ?? 'pendente'}</div>
+          </div>
+        </div>
+      )}
 
       <ReactFlow
         nodes={nodes}

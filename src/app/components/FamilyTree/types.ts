@@ -143,6 +143,8 @@ export interface PersonNodeData extends PersonNodeContextActions {
   directRelation?: DirectRelationVariant;
   useDirectRelationStyleForPet?: boolean;
   useCentralDirectLayout?: boolean;
+  layoutWidth?: number;
+  layoutHeight?: number;
 }
 
 export interface MarriageNodeData {
