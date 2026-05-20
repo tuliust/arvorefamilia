@@ -25,10 +25,12 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | 7.4 WhatsApp | Concluído no frontend | Privacidade forte/API/log seguro ficam pós-MVP. |
 | 7.5 Grau de parentesco | Consolidado funcionalmente | Integração direta na árvore/Genealogia/Visão Completa fica pós-MVP. |
 | 7.6 Exportação de área da árvore | Concluída no escopo atual | Árvore completa e escala automática ficam pós-MVP. |
-| 7.7 Legendas visuais | Concluída | Ajustes finos podem entrar na responsividade. |
+| 7.7 Legendas visuais | Concluída | Painel lateral simplificado; manter monitoramento visual. |
 | 7.8 Favoritos | Primeira camada aprovada | Expansão para outras entidades fica pós-MVP. |
 | 7.9 Página de favoritos | Primeira versão aprovada | Refinamentos ficam pós-MVP. |
 | 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA final técnico e visual aprovado em 2026-05-19. |
+| Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
+| Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
 
 ---
 
@@ -51,6 +53,7 @@ O MVP deve ser fechado com:
 - página `/meus-favoritos`;
 - exportação de área visível da árvore;
 - legenda visual da árvore;
+- headers internos padronizados;
 - responsividade mobile/tablet;
 - QA final de lançamento.
 
@@ -71,9 +74,9 @@ Não incluir antes do lançamento:
 
 ---
 
-## 3. Checklist técnico antes da etapa final
+## 3. Checklist técnico antes de qualquer etapa final
 
-Executar antes de iniciar ou concluir a responsividade:
+Executar antes de qualquer alteração de fechamento, documentação ou hotfix:
 
 ```bash
 git status
@@ -86,18 +89,16 @@ supabase migration list
 
 Regras:
 
-- não iniciar ajustes amplos de responsividade com build quebrado;
+- não iniciar ajustes amplos com build quebrado;
 - não rodar `supabase db push` se não houver migration nova aprovada;
 - não criar migration para ajuste puramente visual;
-- não commitar secrets, dumps, tokens ou arquivos temporários;
-- não misturar pós-MVP com responsividade;
-- não expandir escopo funcional durante 7.10.
+- não commitar secrets, dumps, tokens, backups ou arquivos temporários;
+- não misturar pós-MVP com correções de lançamento;
+- não expandir escopo funcional sem registrar no plano.
 
 ---
 
 ## 4. Responsividade mobile/tablet
-
-**Última etapa antes do lançamento.**
 
 Status em 2026-05-19: concluída e validada para o MVP.
 
@@ -117,16 +118,6 @@ Larguras obrigatórias:
 - 768px;
 - desktop.
 
-Ordem recomendada:
-
-1. base global;
-2. árvore e ReactFlow;
-3. perfil da pessoa;
-4. área do usuário;
-5. fórum/favoritos/notificações;
-6. admin;
-7. QA final de lançamento.
-
 Blocos executados:
 
 - base global;
@@ -139,317 +130,95 @@ Blocos executados:
 
 ---
 
-## 5. Responsividade — bloco 1: base global
+## 5. Ajustes visuais recentes concluídos
 
-Arquivos prováveis:
+### 5.1 Header e margens
 
-```txt
-src/app/pages/Home.tsx
-src/app/components
-src/app/components/ui
-src/app/routes.tsx
-src/index.css
-src/app/index.css
-```
+Concluído:
 
-Validar:
+- criação de `MemberPageHeader`;
+- padronização do header das páginas internas;
+- padronização de margens laterais com `PAGE_CONTAINER_CLASS`;
+- preservação do header próprio da Home pós-login.
 
-- header;
-- menus;
-- containers;
-- grids;
-- botões;
-- tipografia;
-- cards;
-- modais;
-- tabelas;
-- estados vazios;
-- loading states;
-- mensagens de erro;
-- overflow horizontal.
-
-Critérios de aceite:
-
-- não há scroll horizontal indevido;
-- botões têm área de toque adequada;
-- menus são acessíveis;
-- cards quebram linha corretamente;
-- textos longos não estouram layout;
-- modais têm rolagem interna quando necessário;
-- tabelas usam scroll controlado;
-- ações destrutivas continuam protegidas.
-
-Commit sugerido:
-
-```bash
-git add .
-git commit -m "style: ajustar base responsiva global"
-```
-
----
-
-## 6. Responsividade — bloco 2: árvore e ReactFlow
-
-Arquivos prováveis:
+Arquivos relacionados:
 
 ```txt
+src/app/components/layout/MemberPageHeader.tsx
 src/app/pages/Home.tsx
 src/app/pages/MinhaArvore.tsx
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/modals
-src/app/components/FamilyTree/layouts
-```
-
-Validar:
-
-- Home;
-- Minha Árvore;
-- Genealogia;
-- Visão Completa;
-- ReactFlow;
-- pan/zoom touch;
-- controles de zoom;
-- botão de legenda;
-- painel da legenda;
-- menu de pessoa;
-- anel de casamento;
-- modal conjugal;
-- busca/filtros;
-- exportação de área;
-- seleção por retângulo;
-- cancelamento por `Esc`;
-- overlay em tela pequena.
-
-Critérios de aceite:
-
-- árvore é utilizável em touch;
-- controles não ficam sobrepostos de forma impeditiva;
-- legenda não impede pan/zoom;
-- modais cabem na tela ou rolam internamente;
-- exportação não inclui controles/legenda/menu;
-- pan/zoom são restaurados após seleção/exportação;
-- não há scroll horizontal indevido na página.
-
-Commit sugerido:
-
-```bash
-git add .
-git commit -m "style: ajustar árvore para mobile e tablet"
-```
-
----
-
-## 7. Responsividade — bloco 3: perfil da pessoa
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/PersonProfile.tsx
-src/app/components/person/PersonDataView.tsx
-src/app/components/person/PersonRelationshipsView.tsx
-src/app/components/person/RelationshipFinder.tsx
-src/app/components/person/PersonEventsList.tsx
-src/app/components/Timeline/PersonTimeline.tsx
-src/app/components/ArquivosHistoricos.tsx
-src/app/components/favorites/FavoriteButton.tsx
-```
-
-Validar:
-
-- cabeçalho do perfil;
-- foto/avatar;
-- dados pessoais;
-- status de falecimento;
-- locais no exterior;
-- redes sociais;
-- botão WhatsApp;
-- favoritos;
-- relacionamentos;
-- grau de parentesco;
-- timeline;
-- eventos pessoais;
-- arquivos históricos;
-- tópicos relacionados do fórum;
-- estados vazios;
-- permissões admin/usuário comum.
-
-Critérios de aceite:
-
-- dados principais são legíveis em 320px;
-- cards empilham corretamente;
-- timeline não estoura largura;
-- arquivos históricos têm preview/download acessíveis;
-- botão WhatsApp não revela número indevidamente;
-- FavoriteButton é clicável;
-- RelationshipFinder é usável;
-- ações admin não aparecem para usuário comum.
-
-Commit sugerido:
-
-```bash
-git add .
-git commit -m "style: ajustar perfil de pessoa para mobile"
-```
-
----
-
-## 8. Responsividade — bloco 4: área do usuário
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/MeusDados.tsx
-src/app/pages/MeusVinculos.tsx
-src/app/pages/Notificacoes.tsx
+src/app/pages/CalendarioFamiliar.tsx
 src/app/pages/MeusFavoritos.tsx
-src/app/pages/VincularPerfil.tsx
-```
-
-Validar:
-
-- Meus Dados;
-- Meus Vínculos;
-- Notificações;
-- Meus Favoritos;
-- Primeiro acesso/vinculação;
-- formulários longos;
-- listas;
-- filtros;
-- busca;
-- botões de ação;
-- mensagens de sucesso/erro.
-
-Critérios de aceite:
-
-- formulários são usáveis em mobile;
-- listas não estouram horizontalmente;
-- filtros e busca cabem em telas pequenas;
-- notificações podem ser lidas, marcadas e removidas;
-- favoritos podem ser listados, filtrados, abertos e removidos;
-- solicitações de vínculo são compreensíveis.
-
-Commit sugerido:
-
-```bash
-git add .
-git commit -m "style: ajustar área do usuário para mobile"
-```
-
----
-
-## 9. Responsividade — bloco 5: fórum/favoritos/notificações
-
-Arquivos prováveis:
-
-```txt
+src/app/pages/Notificacoes.tsx
 src/app/pages/forum/ForumHome.tsx
-src/app/pages/forum/ForumTopico.tsx
-src/app/pages/forum/ForumNovoTopico.tsx
-src/app/pages/forum/ForumEditarTopico.tsx
-src/app/components/forum
-src/app/pages/MeusFavoritos.tsx
-src/app/pages/Notificacoes.tsx
+src/app/pages/admin/AdminDashboard.tsx
 ```
 
-Validar:
+### 5.2 Painel lateral da árvore
 
-- lista de tópicos;
-- categorias;
-- criação de tópico;
-- edição de tópico;
-- tela de tópico;
-- respostas;
-- comentários;
-- reações/ações disponíveis;
-- denúncia/solução, se visível;
-- favoritos;
-- notificações.
+Concluído:
 
-Critérios de aceite:
+- botão único de expandir/recolher painel;
+- botão fica dentro ou junto ao painel conforme largura;
+- remoção de duplicidade com botão dentro da área ReactFlow.
 
-- cards/tópicos quebram linha corretamente;
-- editores e textareas são usáveis;
-- botões de ação não ficam fora da tela;
-- filtros não geram overflow;
-- notificações e favoritos preservam comportamento aprovado no QA manual.
-
-Commit sugerido:
-
-```bash
-git add .
-git commit -m "style: ajustar fórum favoritos e notificações para mobile"
-```
-
----
-
-## 10. Responsividade — bloco 6: admin
-
-Arquivos prováveis:
+Arquivos relacionados:
 
 ```txt
-src/app/pages/admin/AdminDashboard.tsx
-src/app/pages/admin/AdminPessoas.tsx
-src/app/pages/admin/AdminPessoaForm.tsx
-src/app/pages/admin/AdminRelacionamentos.tsx
-src/app/pages/admin/AdminRelacionamentoForm.tsx
-src/app/pages/admin/AdminSolicitacoesVinculos.tsx
-src/app/pages/admin/AdminAtividades.tsx
-src/app/pages/admin/AdminIntegridade.tsx
-src/app/pages/admin/AdminNotificacoes.tsx
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
-Prioridade:
+### 5.3 Viewport das views da árvore
 
-1. Admin Pessoas;
-2. Admin Pessoa Form;
-3. Admin Solicitações;
-4. Admin Integridade;
-5. Admin Notificações;
-6. Admin Relacionamentos;
-7. Admin Atividades;
-8. Dashboard.
+Concluído:
 
-Validar:
+- **Minha Árvore** usa bounds de cards reais para evitar zoom minúsculo;
+- **Genealogia** e **Visão Completa** usam zoom por largura, sem reduzir pela altura total;
+- título/subtítulo interno foi removido dos layouts;
+- overlay fixo único foi mantido em `FamilyTree.tsx`;
+- bounds de viewport e pan foram separados;
+- usuário pode arrastar/deslizar verticalmente em Genealogia/Visão Completa quando houver muitos cards.
 
-- tabelas/listas;
-- filtros;
-- busca;
-- botões de ação;
-- formulários longos;
-- modais;
-- previews;
-- áreas com scroll;
-- ações destrutivas;
-- permissões.
+Arquivos relacionados:
 
-Critérios de aceite:
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
 
-- admin não precisa ser perfeito no mobile;
-- admin precisa ser operável;
-- tabelas podem ter scroll horizontal controlado;
-- formulário de pessoa deve ser utilizável;
-- botões críticos não ficam fora da tela;
-- modais têm altura máxima e scroll;
-- ações destrutivas continuam protegidas.
+Commits de referência:
 
-Commit sugerido:
+```txt
+94add1e fix: padronizar viewport inicial da arvore
+e94ed6b fix: ajustar escala e titulo das views da arvore
+```
 
-```bash
-git add .
-git commit -m "style: ajustar admin para mobile"
+### 5.4 Legenda no painel lateral
+
+Concluído:
+
+- remoção do subtítulo do painel;
+- remoção da seção “Visualização atual”;
+- remoção do card azul da view atual;
+- remoção dos subtítulos internos dos cards;
+- renomeação de “Ativa” para “Em relacionamento”;
+- remoção da seção “Views” no final.
+
+Arquivo relacionado:
+
+```txt
+src/app/components/FamilyTree/TreeLegend.tsx
 ```
 
 ---
 
-## 11. QA final de lançamento
-
-Executar após concluir os blocos de responsividade.
+## 6. QA final de lançamento
 
 Status em 2026-05-19: executado e aprovado.
 
-### 11.1 Validação técnica
+### 6.1 Validação técnica
 
 ```bash
 git status
@@ -470,7 +239,7 @@ Critérios:
 - nenhuma migration visual foi criada;
 - nenhum secret foi versionado.
 
-### 11.2 QA visual obrigatório
+### 6.2 QA visual obrigatório
 
 Testar em:
 
@@ -515,9 +284,9 @@ Roteiro visual executado com sessão admin autenticada e verificação de overfl
 
 Resultado: `document.documentElement.scrollWidth > window.innerWidth` retornou `false` nas rotas acima em todas as larguras testadas.
 
-### 11.3 QA funcional de regressão
+### 6.3 QA funcional de regressão
 
-Revalidar rapidamente:
+Revalidar rapidamente antes do lançamento:
 
 - login admin;
 - login usuário comum;
@@ -534,6 +303,8 @@ Revalidar rapidamente:
 - Genealogia;
 - Visão Completa;
 - anel conjugal;
+- painel de Legendas;
+- recolher/expandir painel lateral;
 - solicitação de vínculo;
 - notificações;
 - favoritos;
@@ -543,19 +314,16 @@ Revalidar rapidamente:
 
 ---
 
-## 12. Encerramento do MVP
+## 7. Encerramento do MVP
 
 Depois do QA final:
 
-1. atualizar este documento, marcando 7.10 como concluída;
+1. atualizar documentações;
 2. confirmar que os itens pós-MVP continuam fora do lançamento;
 3. rodar validação técnica final;
 4. fazer commit de documentação;
-5. preparar merge para `main`;
-6. criar tag ou release, se o fluxo do projeto usar versionamento;
-7. preparar deploy.
-
-Status em 2026-05-19: itens 1 a 4 concluídos nesta branch. O próximo passo é preparar o merge para `main`.
+5. criar tag ou release, se o fluxo do projeto usar versionamento;
+6. preparar deploy.
 
 Comandos sugeridos:
 
@@ -571,8 +339,9 @@ supabase migration list
 Commit sugerido:
 
 ```bash
-git add docs/PLANO_PROXIMOS_PASSOS.md
-git commit -m "docs: registrar responsividade MVP aprovada"
+git add docs/GUIA_IMPLEMENTACOES.md docs/GUIA_CORRECAO_ERROS.md docs/PLANO_PROXIMOS_PASSOS.md
+git commit -m "docs: atualizar documentacao do MVP"
+git push origin main
 ```
 
 ---
@@ -603,6 +372,8 @@ git commit -m "docs: registrar responsividade MVP aprovada"
 | Migrations | Atualizar `MIGRATION-GUIDE.md`. |
 | Legado SQL | Revisar scripts antigos de fórum/Google Calendar. |
 | Logs | Remover ruídos técnicos como `lado` dos `changed_fields`. |
+| Viewport árvore | Avaliar melhorias finas para árvores muito grandes após uso real. |
+| Legenda | Avaliar versão administrativa/configurável pós-MVP, se necessário. |
 
 Essas pendências aparecem no plano como técnicas e operacionais e não devem bloquear o MVP se não houver P0/P1 aberto.
 
@@ -638,7 +409,10 @@ Bloqueiam lançamento:
 - upload falha em fluxo essencial;
 - notificações duplicam de forma massiva;
 - RLS libera escrita indevida;
-- responsividade impede uso em mobile.
+- responsividade impede uso em mobile;
+- Genealogia/Visão Completa exibem título duplicado;
+- painel lateral impede uso da árvore;
+- viewport inicial torna a árvore inutilizável.
 
 Não bloqueiam lançamento, se documentados:
 

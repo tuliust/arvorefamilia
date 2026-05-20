@@ -14,7 +14,7 @@ Este documento é um guia de investigação e correção por sintoma. Use quando
 Este guia não descreve roadmap nem lista implementações concluídas em detalhe. Para isso, use:
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: responsividade, lançamento e pós-MVP.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: validações finais, lançamento e backlog pós-MVP.
 - `docs/NOTIFICACOES.md`: detalhes de arquitetura e operação de notificações.
 - `docs/TIMELINE.md`: detalhes da timeline.
 
@@ -56,6 +56,7 @@ Regras:
 - não rodar `supabase db push` sem revisar `supabase migration list`;
 - não usar `migration repair` para mascarar migration não aplicada;
 - não commitar dumps, tokens, service role ou secrets;
+- não commitar `backups/`, arquivos `.bak`, patches temporários ou saídas de build;
 - não apagar dados legados/base64 sem auditoria;
 - não ampliar RLS para resolver bug de leitura sem entender a regra de negócio.
 
@@ -87,7 +88,8 @@ Investigar:
 - dependência não instalada;
 - action/log novo não incluído nos tipos;
 - conflito de nome entre tipos, componentes e services;
-- arquivo com erro de sintaxe após merge.
+- arquivo com erro de sintaxe após merge;
+- JSX inválido após script de substituição.
 
 Correção:
 
@@ -98,9 +100,190 @@ Correção:
 5. rodar `git diff --check`;
 6. confirmar que a correção não alterou escopo funcional indevidamente.
 
+### Erro: `Link is not defined`
+
+Sintoma:
+
+```txt
+ReferenceError: Link is not defined
+```
+
+Exemplo já ocorrido:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Causa provável:
+
+- import de `AppLink as Link` removido durante padronização de header;
+- a página ainda usa `<Link>` em trechos internos.
+
+Correção:
+
+```ts
+import { AppLink as Link } from '../components/AppLink';
+```
+
+Confirmar:
+
+```bash
+npm run build
+npm test
+git diff --check
+```
+
+### Erro: `Missing initializer in const declaration` em `React.forwardRef`
+
+Sintoma:
+
+```txt
+Missing initializer in const declaration
+```
+
+Arquivo provável:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Causa provável:
+
+- script alterou a declaração `export const FamilyTree = React.forwardRef...`;
+- falta `=`;
+- parênteses/chaves foram quebrados.
+
+Correção segura:
+
+- preferir função nomeada + export com `React.forwardRef` ao final:
+
+```ts
+function FamilyTreeComponent(props: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
+  // ...
+}
+
+export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
+```
+
+Ajustar o formato real conforme a assinatura de props usada no arquivo.
+
+### Erro: `Expected "}" but found ":"` em `style`
+
+Sintoma:
+
+```txt
+Expected "}" but found ":"
+style={ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }
+```
+
+Correção:
+
+```tsx
+style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
+```
+
+### Erro: arquivo gerado por script não corresponde ao formato esperado
+
+Sintoma:
+
+```txt
+O arquivo ... não está exatamente no formato esperado. Não apliquei alterações para evitar quebra.
+```
+
+Causa:
+
+- arquivo já foi alterado por commit posterior;
+- script baseado em substituição literal ficou obsoleto.
+
+Correção:
+
+- conferir `git diff`;
+- buscar trechos por nomes de funções, não por blocos inteiros;
+- preferir patch manual localizado;
+- se houver risco, recuperar backup e aplicar ajuste menor.
+
 ---
 
-## 3. Rotas, acesso e permissões
+## 3. Git, backups locais e limpeza
+
+### `index.lock`
+
+Sintoma:
+
+```txt
+fatal: Unable to create '.git/index.lock': File exists.
+```
+
+Correção:
+
+1. confirmar que não há `git commit`, editor ou processo Git aberto;
+2. se não houver processo ativo, remover o lock:
+
+```bash
+rm -f .git/index.lock
+git status
+```
+
+### Backups aparecem no `git status`
+
+Sintoma:
+
+```txt
+Untracked files:
+  backups/
+  *.bak
+  *.patch
+```
+
+Regra:
+
+- não commitar backups gerados por scripts;
+- remover depois que build/test passaram e o commit correto foi enviado.
+
+Correção:
+
+```bash
+rm -rf backups/
+rm -f *.bak *.patch
+git status
+```
+
+Se os backups estiverem em subpastas:
+
+```bash
+find src -name "*.bak" -type f -delete
+rm -rf backups/
+git status
+```
+
+### Commit já enviado, mas há alterações locais
+
+Verificar:
+
+```bash
+git status
+git diff --stat
+```
+
+Se for ajuste novo:
+
+```bash
+git add caminho/do/arquivo
+git commit -m "mensagem"
+git push origin main
+```
+
+Se for lixo local:
+
+```bash
+git restore caminho/do/arquivo
+rm -rf backups/
+git status
+```
+
+---
+
+## 4. Rotas, acesso e permissões
 
 Arquivos prováveis:
 
@@ -157,7 +340,67 @@ Verificar:
 
 ---
 
-## 4. Formulários de pessoa
+## 5. Headers, margens e navegação interna
+
+Arquivos prováveis:
+
+```txt
+src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/Home.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/MeusFavoritos.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/forum/ForumHome.tsx
+src/app/pages/admin/AdminDashboard.tsx
+```
+
+### Header interno diferente entre páginas
+
+Verificar:
+
+- página usa `MemberPageHeader`;
+- container usa `PAGE_CONTAINER_CLASS`;
+- Home pós-login deve continuar com header próprio;
+- `/minha-arvore`, `/calendario-familiar`, `/forum`, `/meus-favoritos`, `/notificacoes` e `/admin` devem compartilhar o padrão interno.
+
+### Margens laterais divergentes
+
+Verificar:
+
+- `max-w-7xl`;
+- `px-4 sm:px-6 lg:px-8`;
+- `PAGE_CONTAINER_CLASS`;
+- wrappers duplicados em header/main.
+
+### Botão duplicado de recolher/expandir painel
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Verificar:
+
+- botão interno do painel;
+- botão passado por props para `FamilyTree`;
+- `showSidebarToggle`;
+- `onToggleSidebar`;
+- mobile versus desktop;
+- estado `sidebarOpen` e `legendOpen`.
+
+Regra esperada:
+
+- apenas um botão de expandir/recolher visível;
+- em desktop, dentro ou junto ao painel;
+- em mobile, junto ao painel móvel;
+- não pode existir botão duplicado na área da árvore.
+
+---
+
+## 6. Formulários de pessoa
 
 Arquivos prováveis:
 
@@ -240,7 +483,7 @@ Verificar:
 
 ---
 
-## 5. Busca com acentos
+## 7. Busca com acentos
 
 Arquivos prováveis:
 
@@ -274,7 +517,7 @@ Correção:
 
 ---
 
-## 6. Pessoa falecida e locais no exterior
+## 8. Pessoa falecida e locais no exterior
 
 Arquivos prováveis:
 
@@ -311,7 +554,7 @@ Verificar:
 
 ---
 
-## 7. Arquivos históricos e Storage
+## 9. Arquivos históricos e Storage
 
 Arquivos prováveis:
 
@@ -391,7 +634,7 @@ Verificar:
 
 ---
 
-## 8. Relacionamentos, solicitações e dados conjugais
+## 10. Relacionamentos, solicitações e dados conjugais
 
 Arquivos prováveis:
 
@@ -463,7 +706,7 @@ Verificar:
 
 ---
 
-## 9. Árvore, Genealogia, Visão Completa e anel 💍
+## 11. Árvore, Genealogia, Visão Completa e anel 💍
 
 Arquivos prováveis:
 
@@ -475,9 +718,65 @@ src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
 src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
 src/app/pages/Home.tsx
 ```
+
+### Minha Árvore carrega muito pequena
+
+Verificar:
+
+- função de bounds do viewport;
+- se `getViewportContentBounds` usa apenas cards reais;
+- se labels, group boxes, legend nodes e anchors estão excluídos do cálculo de zoom;
+- `personNode` como base do zoom inicial;
+- diferença entre bounds de viewport e bounds de pan;
+- `maxZoom` e `minZoom`;
+- recenter automático após zoom.
+
+Correção esperada:
+
+- zoom inicial deve usar bounds de cards reais;
+- elementos auxiliares não devem reduzir a escala;
+- `+` e `-` devem funcionar até o zoom máximo.
+
+### Genealogia ou Visão Completa reduzem demais por altura
+
+Regra esperada:
+
+- Genealogia e Visão Completa usam zoom por largura;
+- altura total não deve reduzir o zoom;
+- usuário arrasta/desliza para baixo se houver muitos cards verticais;
+- posição vertical inicial deve ser padronizada com Minha Árvore.
+
+Verificar:
+
+- `getNormalizedTreeViewport`;
+- diferenciação de regra por `viewMode`;
+- cálculo com `zoomX` versus `Math.min(zoomX, zoomY)`;
+- `translateExtent` para permitir pan vertical.
+
+### Título/subtítulo duplicado nas views genealógicas
+
+Sintoma:
+
+- overlay fixo em `FamilyTree.tsx` aparece;
+- outro título/subtítulo aparece junto aos cards.
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
+```
+
+Correção:
+
+- manter apenas overlay fixo em `FamilyTree.tsx`;
+- remover title/subtitle nodes dos layouts;
+- `DirectFamilyLabelNode` só deve permanecer se usado para labels de grupo, não título principal.
 
 ### Linha diagonal entre pais e filhos
 
@@ -534,7 +833,75 @@ Correção:
 
 ---
 
-## 10. Histórico de atividades
+## 12. Painel de legendas
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+### Legenda não aparece
+
+Verificar:
+
+- aba **Legendas** no painel lateral;
+- import de `TreeLegend`;
+- `activeSidebarPanel === 'legend'`;
+- painel recolhido;
+- z-index;
+- mobile/desktop.
+
+### Legenda aparece duplicada
+
+Verificar:
+
+- botão flutuante de legenda em `FamilyTree.tsx`;
+- painel lateral em `Home.tsx`;
+- remover popover/botão flutuante se a regra for legenda apenas no painel lateral.
+
+### Conteúdo antigo volta a aparecer
+
+Itens que não devem voltar no painel lateral compacto:
+
+- subtítulo “Cores, linhas, anéis e modos da árvore.”;
+- label “Visualização atual”;
+- card azul com view atual;
+- subtítulos dentro dos cards das seções Cards, Linhas e Anel de casamento;
+- área “Views” no final;
+- texto “Ativa” no anel; usar **Em relacionamento**.
+
+### Legenda atrapalha pan/zoom
+
+Verificar:
+
+- `onMouseDown={(event) => event.stopPropagation()}`;
+- `onClick={(event) => event.stopPropagation()}`;
+- `data-tree-legend="true"`;
+- propagação para ReactFlow.
+
+### Legenda aparece em exportação
+
+Verificar:
+
+- `getDefaultTreeExportIgnoreElements`;
+- seletor `[data-tree-legend="true"]`.
+
+### Legenda contradiz árvore
+
+Comparar com:
+
+- `GenealogySpouseEdge.tsx`;
+- `GenealogyFamilyConnectorNode.tsx`;
+- `directFamilyColors.ts`;
+- `visualTokens.ts`;
+- modos `minha-arvore`, `genealogia`, `visao-completa`.
+
+---
+
+## 13. Histórico de atividades
 
 Arquivos prováveis:
 
@@ -588,7 +955,7 @@ Remover imediatamente:
 
 ---
 
-## 11. Admin Integridade
+## 14. Admin Integridade
 
 Arquivos prováveis:
 
@@ -645,7 +1012,7 @@ Correção:
 
 ---
 
-## 12. Notificações
+## 15. Notificações
 
 Arquivos prováveis:
 
@@ -721,20 +1088,10 @@ Verificar:
 Verificar:
 
 - deploy de `send-notification-email`;
-- secrets:
-  - `RESEND_API_KEY`;
-  - `NOTIFICATION_EMAIL_FROM`;
-  - `NOTIFICATION_EMAIL_REPLY_TO`;
-  - `SITE_URL`;
+- secrets: `RESEND_API_KEY`, `NOTIFICATION_EMAIL_FROM`, `NOTIFICATION_EMAIL_REPLY_TO`, `SITE_URL`;
 - domínio/remetente verificado no Resend;
 - logs da Edge Function;
-- `notification_dispatch_logs`;
-- status:
-  - `not_configured`;
-  - `missing_destination`;
-  - `disabled_by_preferences`;
-  - `failed`;
-  - `sent`.
+- `notification_dispatch_logs`.
 
 ### E-mail envia para destinatário errado
 
@@ -744,6 +1101,7 @@ Verificar imediatamente:
 
 - Edge Function exige usuário autenticado;
 - usuário comum só envia para si mesmo;
+- usuário comum não escolhe destinatário arbitrário;
 - teste admin é controlado;
 - teste admin não dispara massa de usuários;
 - `userId` no body;
@@ -780,7 +1138,9 @@ Correção:
 
 ---
 
-## 13. Astrologia e acontecimentos do nascimento
+## 16. Astrologia, Timeline, WhatsApp, parentesco, exportação e favoritos
+
+### Astrologia e acontecimentos do nascimento
 
 Arquivos prováveis:
 
@@ -788,70 +1148,12 @@ Arquivos prováveis:
 src/app/components/person/PersonDataView.tsx
 src/app/pages/admin/AdminPessoaForm.tsx
 src/app/services/personInsightsService.ts
-src/app/services/activityLogService.ts
 supabase/functions/generate-person-insights/index.ts
-supabase/migrations/20260518174542_reconcile_person_generated_insights_schema.sql
 ```
 
-### Perfil gera IA automaticamente
+Verificar se o perfil apenas lê insights. Geração automática no perfil é P0 operacional; geração/regeneração deve ser ação admin.
 
-P0 operacional.
-
-Correção:
-
-- `PersonDataView.tsx` deve apenas ler;
-- não importar/chamar `gerarInsightsPessoa` no perfil;
-- conteúdo ausente vira estado vazio.
-
-### Cards não aparecem
-
-Verificar:
-
-- pessoa humana;
-- data de nascimento completa;
-- privacidade permite exibir data;
-- registros em `person_generated_insights`;
-- tipos `astrology` e `historical_events`;
-- status `completed`;
-- `getInsightByType`.
-
-### Admin não gera/regenera
-
-Verificar:
-
-- botões no formulário admin;
-- pessoa não é pet;
-- data de nascimento existe;
-- Edge Function deployada;
-- secrets:
-  - `OPENAI_API_KEY`;
-  - `SUPABASE_URL`;
-  - `SUPABASE_SERVICE_ROLE_KEY`.
-
-### Logs com dados sensíveis
-
-Metadata permitida:
-
-- `tipos`;
-- `force`;
-- `source`.
-
-Remover:
-
-- prompt;
-- conteúdo gerado;
-- data de nascimento;
-- telefone;
-- e-mail;
-- endereço;
-- URL;
-- base64;
-- token;
-- secret.
-
----
-
-## 14. Timeline
+### Timeline
 
 Arquivos prováveis:
 
@@ -860,59 +1162,11 @@ src/app/pages/PersonProfile.tsx
 src/app/components/Timeline/PersonTimeline.tsx
 src/app/utils/buildPersonTimeline.ts
 src/app/services/personEventsService.ts
-src/app/services/arquivosHistoricosService.ts
-src/app/services/dataService.ts
 ```
 
-### Timeline vazia
+Verificar eventos vazios, duplicados, fora de ordem e metadata sensível.
 
-Verificar se a pessoa tem:
-
-- nascimento;
-- falecimento;
-- relacionamentos com data;
-- filhos;
-- arquivos históricos;
-- eventos pessoais.
-
-Estado vazio sem erro é comportamento esperado.
-
-### Casamento/separação não aparece
-
-Verificar:
-
-- `obterRelacionamentosDetalhadosDaPessoa`;
-- `tipo_relacionamento = conjuge`;
-- `data_casamento`;
-- `data_separacao`;
-- builder.
-
-### Eventos duplicados
-
-Verificar:
-
-- chaves de deduplicação em `buildPersonTimeline`;
-- fonte duplicada entre relacionamento e evento pessoal;
-- arquivo histórico repetido.
-
-### Data fora de ordem
-
-Verificar:
-
-- parser de datas;
-- precisão da data;
-- ano puro não deve virar `01/01/AAAA` se a precisão for anual.
-
-### Metadata sensível aparece
-
-Correção:
-
-- `PersonTimeline` não deve renderizar metadata bruta;
-- remover URL de arquivo, base64, telefone, e-mail, endereço, token ou secret.
-
----
-
-## 15. WhatsApp
+### WhatsApp
 
 Arquivos prováveis:
 
@@ -920,45 +1174,11 @@ Arquivos prováveis:
 src/app/utils/whatsapp.ts
 src/app/components/person/WhatsAppContactButton.tsx
 src/app/components/person/PersonDataView.tsx
-src/app/pages/Home.tsx
 ```
 
-### Botão não aparece
+Número textual só aparece se `permitir_exibir_telefone = true`. Botão depende de telefone válido e `permitir_mensagens_whatsapp`.
 
-Verificar:
-
-- telefone válido;
-- DDD/DDI plausível;
-- `permitir_exibir_telefone`;
-- `permitir_mensagens_whatsapp`;
-- `canUseWhatsAppContact`.
-
-### Número aparece indevidamente
-
-Regra:
-
-- número em texto só aparece se `permitir_exibir_telefone = true`;
-- `permitir_mensagens_whatsapp` libera botão/link, mas não exibição textual.
-
-### Link errado
-
-Correção:
-
-- usar `buildWhatsAppUrl`;
-- não montar `wa.me` manualmente em componente.
-
-### Log de clique com telefone
-
-Se log for implementado no futuro:
-
-- não salvar telefone;
-- não salvar URL `wa.me`;
-- não salvar mensagem;
-- não salvar e-mail/endereço/token/secret.
-
----
-
-## 16. Grau de parentesco
+### Grau de parentesco
 
 Arquivos prováveis:
 
@@ -966,50 +1186,11 @@ Arquivos prováveis:
 src/app/utils/relationshipDegree.ts
 src/app/utils/relationshipDegree.test.ts
 src/app/utils/relationshipDegreeDisplay.ts
-src/app/components/person/RelationshipFinder.tsx
-src/app/pages/Home.tsx
-src/app/pages/PersonProfile.tsx
-src/app/services/treeDataCache.ts
 ```
 
-### Resultado pai/filho invertido
+Se pai/filho estiver invertido, corrigir algoritmo com teste unitário antes de mexer na UI.
 
-Verificar orientação real dos dados:
-
-- `pai`/`mae`: destino é pai/mãe da origem;
-- `filho`: destino é filho da origem.
-
-Correção:
-
-- ajustar algoritmo com teste unitário antes de mexer na UI.
-
-### Sem vínculo quando deveria haver
-
-Verificar:
-
-- pessoas carregadas;
-- relacionamentos carregados;
-- cache da árvore;
-- fallback por `dataService`;
-- RLS;
-- profundidade máxima.
-
-### Resultado expõe dado sensível
-
-Correção:
-
-- UI não deve exibir telefone, endereço, e-mail, URL de arquivo, base64, token, secret ou observações internas.
-
-### Texto pouco natural
-
-Correção:
-
-- ajustar em `relationshipDegreeDisplay.ts`;
-- não alterar algoritmo se o problema é só copy.
-
----
-
-## 17. Exportação de área da árvore
+### Exportação de área da árvore
 
 Arquivos prováveis:
 
@@ -1017,74 +1198,11 @@ Arquivos prováveis:
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/FamilyTree.tsx
-src/app/pages/Home.tsx
 ```
 
-### Overlay não fecha
+Verificar overlay, crop, CORS, impressão e ignore elements.
 
-Verificar:
-
-- `onClose` após PNG/PDF/impressão;
-- botão **Cancelar**;
-- listener de `Escape`;
-- estado `isAreaSelectionOpen`.
-
-### Pan/zoom fica bloqueado
-
-Verificar:
-
-- `panOnDrag`;
-- `panOnScroll`;
-- `zoomOnScroll`;
-- `zoomOnPinch`;
-- `onClose` após exportação.
-
-### Exportação inclui overlay, controles ou legenda
-
-Verificar `ignoreElements` para:
-
-- `[data-tree-selection-overlay="true"]`;
-- `[data-tree-node-menu="true"]`;
-- `[data-tree-legend="true"]`;
-- `.react-flow__controls`;
-- `.react-flow__minimap`.
-
-### PDF/PNG falha
-
-Verificar:
-
-- `html2canvas`;
-- `jspdf`;
-- CORS;
-- `allowTaint: false`;
-- `useCORS: true`;
-- tamanho máximo;
-- cores não suportadas;
-- mensagem amigável no overlay.
-
-### Impressão falha
-
-Verificar:
-
-- popup bloqueado;
-- `openTreePrintWindow`;
-- `printCanvas`;
-- fechamento de janela no `catch`;
-- interação direta do usuário.
-
-### Crop deslocado
-
-Verificar:
-
-- `getBoundingClientRect`;
-- `scaleX`;
-- `scaleY`;
-- `cropCanvas`;
-- seleção em qualquer direção.
-
----
-
-## 18. Favoritos
+### Favoritos
 
 Arquivos prováveis:
 
@@ -1093,132 +1211,13 @@ src/app/services/favoritesService.ts
 src/app/components/favorites/FavoriteButton.tsx
 src/app/pages/MeusFavoritos.tsx
 src/app/pages/PersonProfile.tsx
-src/app/types/index.ts
-supabase/migrations/20260518120000_create_user_favorites.sql
-supabase/migrations/20260518141305_relax_legacy_user_favorites_columns.sql
 ```
 
-### Favorito não salva
-
-Verificar:
-
-- usuário autenticado via `supabase.auth.getUser()`;
-- RLS de `user_favorites`;
-- colunas:
-  - `entity_type`;
-  - `entity_id`;
-  - `label`;
-  - `description`;
-  - `href`;
-  - `metadata`;
-- índice único `user_id, entity_type, entity_id`.
-
-### Erro NOT NULL em colunas legadas
-
-Verificar migration:
-
-- `20260518141305_relax_legacy_user_favorites_columns.sql`.
-
-Colunas legadas devem aceitar null:
-
-- `tipo_conteudo`;
-- `conteudo_id`.
-
-### Botão não muda estado
-
-Verificar:
-
-- `isFavorite`;
-- `toggleFavorite`;
-- estado `loading`;
-- `type="button"`;
-- `onChange`.
-
-### `/meus-favoritos` vazio
-
-Verificar:
-
-- página usa `listFavorites`;
-- não usa fluxo antigo de `userEngagementService`;
-- registros pertencem ao `auth.uid()` atual;
-- RLS SELECT.
-
-### Link quebra
-
-Verificar:
-
-- `href`;
-- favoritos sem `href` devem mostrar estado “Link indisponível” ou equivalente;
-- links internos devem iniciar com `/`.
-
-### Metadata sensível
-
-Remover:
-
-- telefone;
-- endereço;
-- e-mail;
-- URL privada;
-- base64;
-- token;
-- secret;
-- service role;
-- prompt completo.
+Verificar RLS, usuário autenticado, campos novos, colunas legadas relaxadas, link interno e metadata sensível.
 
 ---
 
-## 19. Legendas visuais
-
-Arquivos prováveis:
-
-```txt
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/utils/treeExport.ts
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
-```
-
-### Legenda não aparece
-
-Verificar:
-
-- import de `TreeLegend`;
-- estado `isLegendOpen`;
-- botão **Legenda**;
-- painel escondido por `isAreaSelectionOpen`;
-- z-index;
-- posição do painel.
-
-### Legenda atrapalha pan/zoom
-
-Verificar:
-
-- `onMouseDown={(event) => event.stopPropagation()}`;
-- `onClick={(event) => event.stopPropagation()}`;
-- `data-tree-legend="true"`;
-- propagação para ReactFlow.
-
-### Legenda aparece em exportação
-
-Verificar:
-
-- `getDefaultTreeExportIgnoreElements`;
-- seletor `[data-tree-legend="true"]`.
-
-### Legenda contradiz árvore
-
-Comparar com:
-
-- `GenealogySpouseEdge.tsx`;
-- `GenealogyFamilyConnectorNode.tsx`;
-- `directFamilyColors.ts`;
-- `visualTokens.ts`;
-- modos `minha-arvore`, `genealogia`, `visao-completa`.
-
----
-
-## 20. Responsividade
+## 17. Responsividade
 
 Arquivos prioritários:
 
@@ -1278,7 +1277,7 @@ Priorizar:
 
 ---
 
-## 21. Migrations e Supabase
+## 18. Migrations e Supabase
 
 Arquivos prováveis:
 
@@ -1348,7 +1347,7 @@ Não remover sem dump, auditoria e QA visual.
 
 ---
 
-## 22. Sintomas rápidos
+## 19. Sintomas rápidos
 
 ### Usuário comum fez algo indevido
 
