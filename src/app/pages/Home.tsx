@@ -3,6 +3,8 @@ import { flushSync } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
+import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
+import { collectDirectFamilyScopePersonIds } from '../components/FamilyTree/layouts/directFamilyDistributedLayout';
 import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageModal';
 import {
   AddConnectionModal,
@@ -702,6 +704,45 @@ export function Home() {
     });
   }, [centralReferencePersonId, pessoas, personFilters]);
 
+  const lifeStatusScopePeople = useMemo(() => {
+    if (!centralReferencePersonId || pessoas.length === 0) return [];
+
+    if (treeViewMode !== 'minha-arvore') {
+      return pessoas;
+    }
+
+    const graph = buildTreeGraph({
+      pessoas,
+      relacionamentos,
+      selectedPersonId,
+      edgeFilters,
+    });
+
+    const scopeIds = collectDirectFamilyScopePersonIds(graph, {
+      centralPersonId: centralReferencePersonId,
+      filters: directRelativeFilters,
+    });
+
+    if (scopeIds.size === 0) return [];
+
+    return pessoas.filter((pessoa) => scopeIds.has(pessoa.id));
+  }, [
+    centralReferencePersonId,
+    directRelativeFilters,
+    edgeFilters,
+    pessoas,
+    relacionamentos,
+    selectedPersonId,
+    treeViewMode,
+  ]);
+
+  const lifeStatusCounts = useMemo(() => {
+    return {
+      vivos: lifeStatusScopePeople.filter((pessoa) => isHumanFamilyMember(pessoa) && !isPersonDeceased(pessoa)).length,
+      falecidos: lifeStatusScopePeople.filter((pessoa) => isHumanFamilyMember(pessoa) && isPersonDeceased(pessoa)).length,
+    };
+  }, [lifeStatusScopePeople]);
+
   const stats = useMemo(() => {
     const pessoasVivas = pessoas.filter((p) => isHumanFamilyMember(p) && !isPersonDeceased(p));
     const pessoasFalecidas = pessoas.filter((p) => isHumanFamilyMember(p) && isPersonDeceased(p));
@@ -821,8 +862,8 @@ export function Home() {
           )}
 
           <LifeStatusKpiGrid
-            vivos={stats.pessoasVivas}
-            falecidos={stats.pessoasFalecidas}
+            vivos={lifeStatusCounts.vivos}
+            falecidos={lifeStatusCounts.falecidos}
             filters={personFilters}
             onToggle={togglePersonFilter}
           />
@@ -2008,7 +2049,7 @@ function UserMenu({
             )}
           </span>
           {notificationCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+            <span className="absolute right-1 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
               {notificationCount > 99 ? '99+' : notificationCount}
             </span>
           )}
