@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 export default function App() {
   useEffect(() => {
-    document.title = 'Família Souza Barros - Minha Árvore';
+    document.title = 'Árvore Genealógica da Família';
   }, []);
 
   return (

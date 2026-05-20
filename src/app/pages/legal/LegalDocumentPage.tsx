@@ -1,6 +1,36 @@
 import { ArrowLeft, CalendarDays, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { Link } from 'react-router';
-import { LegalDocumentContent } from './legalContent';
+import { LegalDocumentContent, LegalText } from './legalContent';
+
+function getLegalTextKey(text: LegalText) {
+  return typeof text === 'string' ? text : text.map((part) => `${part.text}:${part.href || ''}:${part.bold || ''}`).join('|');
+}
+
+function renderLegalText(text: LegalText) {
+  if (typeof text === 'string') return text;
+
+  return text.map((part, index) => {
+    const key = `${part.text}-${index}`;
+
+    if (part.href) {
+      return (
+        <Link key={key} to={part.href} className="font-medium text-blue-700 hover:underline">
+          {part.text}
+        </Link>
+      );
+    }
+
+    if (part.bold) {
+      return (
+        <strong key={key} className="font-semibold text-gray-800">
+          {part.text}
+        </strong>
+      );
+    }
+
+    return <span key={key}>{part.text}</span>;
+  });
+}
 
 export function LegalDocumentPage({ content }: { content: LegalDocumentContent }) {
   return (
@@ -64,7 +94,7 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
           <div className="border-b border-gray-200 px-5 py-6 sm:px-8 sm:py-8">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{content.subtitle}</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl">{content.title}</h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">{content.intro}</p>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">{renderLegalText(content.intro)}</p>
           </div>
 
           <div className="divide-y divide-gray-100">
@@ -77,16 +107,16 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
                   <div>
                     <h2 className="text-xl font-semibold text-gray-950">{section.title}</h2>
                     {section.paragraphs?.map((paragraph) => (
-                      <p key={paragraph} className="mt-3 leading-7 text-gray-600">
-                        {paragraph}
+                      <p key={getLegalTextKey(paragraph)} className="mt-3 leading-7 text-gray-600">
+                        {renderLegalText(paragraph)}
                       </p>
                     ))}
                     {section.items ? (
                       <ul className="mt-4 grid gap-2 text-gray-600 sm:grid-cols-2">
                         {section.items.map((item) => (
-                          <li key={item} className="flex gap-2 leading-6">
+                          <li key={getLegalTextKey(item)} className="flex gap-2 leading-6">
                             <span className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-blue-600" />
-                            <span>{item}</span>
+                            <span>{renderLegalText(item)}</span>
                           </li>
                         ))}
                       </ul>

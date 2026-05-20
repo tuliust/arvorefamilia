@@ -22,6 +22,7 @@ const ForumNovoTopico = React.lazy(() => import('./pages/forum/ForumNovoTopico')
 const ForumEditarTopico = React.lazy(() => import('./pages/forum/ForumEditarTopico').then((module) => ({ default: module.ForumEditarTopico })));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin').then((module) => ({ default: module.AdminLogin })));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
+const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettings').then((module) => ({ default: module.AdminHomeSettings })));
 const AdminPessoas = React.lazy(() => import('./pages/admin/AdminPessoas').then((module) => ({ default: module.AdminPessoas })));
 const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm').then((module) => ({ default: module.AdminPessoaForm })));
 const AdminRelacionamentos = React.lazy(() => import('./pages/admin/AdminRelacionamentos').then((module) => ({ default: module.AdminRelacionamentos })));
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/dashboard',
     element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>),
+  },
+  {
+    path: '/admin/home',
+    element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>),
   },
   {
     path: '/admin/pessoas',

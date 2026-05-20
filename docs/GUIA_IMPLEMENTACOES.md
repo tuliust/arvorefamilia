@@ -27,6 +27,7 @@ Este guia não é um checklist de próximos passos nem um manual de correção d
 | 7.8 Favoritos | Primeira camada aprovada para MVP | Favorito de pessoa e página `/meus-favoritos` implementados e validados manualmente. |
 | 7.9 Página de favoritos | Primeira versão aprovada para MVP | Listagem, busca, filtros, abertura e remoção funcionais. |
 | 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA técnico e visual de lançamento aprovado em 2026-05-19. |
+| Home pública e legal | Implementada | Aparência da tela `/entrar` configurável no admin, aceite obrigatório de termos/política no primeiro acesso, noindex em `index.html` e script manual de limpeza de dados de teste. |
 
 ---
 
@@ -112,6 +113,7 @@ Rotas administrativas implementadas:
 
 - `/admin`;
 - `/admin/dashboard`;
+- `/admin/home`;
 - `/admin/pessoas`;
 - `/admin/pessoas/nova`;
 - `/admin/pessoas/:id/editar`;
@@ -124,6 +126,20 @@ Rotas administrativas implementadas:
 - `/admin/atividades`;
 - `/admin/notificacoes`;
 - `/admin/solicitacoes-vinculos`.
+
+### Home pública, aceite legal e indexação
+
+Implementado:
+
+- `/entrar` lê `public.site_visual_settings` com fallback seguro para o visual padrão;
+- admin gerencia logo, mídia de background, cor de fundo em 10 opções fixas e opacidade em `/admin/home`;
+- primeiro acesso exige aceite explícito dos termos de uso e da política de privacidade antes de criar conta;
+- `index.html` usa título `Árvore Genealógica da Família`, `lang="pt-BR"` e metatags `noindex/nofollow`;
+- limpeza de dados de teste fica em script manual comentado: `scripts/cleanup-test-user-9feabe7c.sql`.
+
+Migration relacionada:
+
+- `20260519180000_create_site_visual_settings.sql`
 
 ---
 

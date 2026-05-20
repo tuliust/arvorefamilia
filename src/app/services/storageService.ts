@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export const PERSON_AVATARS_BUCKET = 'person-avatars';
 export const HISTORICAL_FILES_BUCKET = 'historical-files';
+export const SITE_MEDIA_BUCKET = 'site-media';
 
 type UploadOptions = {
   pessoaId?: string | null;
@@ -19,6 +20,7 @@ const IMAGE_EXTENSION_BY_TYPE: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'image/gif': 'gif',
+  'image/svg+xml': 'svg',
 };
 
 function getMissingBucketMessage(bucket: string) {
@@ -105,4 +107,20 @@ export async function uploadHistoricalFile(file: File, options: UploadOptions = 
   const storagePath = `${ownerSegment}/${userId}-${Date.now()}-${getSafeFileName(file.name)}`;
 
   return uploadPublicFile(HISTORICAL_FILES_BUCKET, storagePath, file, file.type || 'application/octet-stream');
+}
+
+export async function uploadSiteMediaFile(file: File) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Selecione apenas arquivos de imagem.');
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('A imagem deve ter no máximo 5MB.');
+  }
+
+  const userId = await getCurrentUserId();
+  const extension = getExtension(file, 'jpg');
+  const storagePath = `site/${userId}-${Date.now()}.${extension}`;
+
+  return uploadPublicFile(SITE_MEDIA_BUCKET, storagePath, file, file.type || 'image/jpeg');
 }

@@ -5,6 +5,7 @@ import { ArrowRight, Eye, EyeOff, KeyRound, Lock, LogIn, Mail, UserPlus } from '
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +18,11 @@ import {
   storePendingFirstAccess,
   validateFirstAccessCode,
 } from '../services/memberProfileService';
+import {
+  DEFAULT_SITE_VISUAL_SETTINGS,
+  getSiteVisualSettings,
+  SiteVisualSettings,
+} from '../services/siteVisualSettingsService';
 
 type AuthMode = 'login' | 'first-access';
 type FirstAccessStep = 'code' | 'account' | 'confirmation';
@@ -89,6 +95,25 @@ export function Entrar() {
   const [resendSubmitting, setResendSubmitting] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
+  const [siteVisualSettings, setSiteVisualSettings] = useState<SiteVisualSettings>(DEFAULT_SITE_VISUAL_SETTINGS);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSiteVisualSettings() {
+      const settings = await getSiteVisualSettings();
+      if (mounted) {
+        setSiteVisualSettings(settings);
+      }
+    }
+
+    loadSiteVisualSettings();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -258,6 +283,7 @@ export function Entrar() {
       return;
     }
 
+    setAcceptedLegalTerms(false);
     setPreview(data);
     setFirstAccessStep('account');
   };
@@ -295,6 +321,11 @@ export function Entrar() {
 
     if (signupPassword !== signupPasswordConfirmation) {
       toast.error('Senha e confirmação devem ser iguais.');
+      return;
+    }
+
+    if (!acceptedLegalTerms) {
+      toast.error('Você precisa aceitar os termos de uso e a política de privacidade para criar a conta.');
       return;
     }
 
@@ -432,7 +463,14 @@ export function Entrar() {
     setMode('first-access');
     if (firstAccessStep === 'confirmation') {
       setFirstAccessStep('code');
+      setAcceptedLegalTerms(false);
     }
+  };
+
+  const resetFirstAccessCodeStep = () => {
+    setFirstAccessStep('code');
+    setPreview(null);
+    setAcceptedLegalTerms(false);
   };
 
   if (loading || checkingSession) {
@@ -446,11 +484,32 @@ export function Entrar() {
     );
   }
 
+  const logoMediaUrl = siteVisualSettings.home_logo_media_url || '/favicon.svg';
+  const hasBackgroundMedia = Boolean(siteVisualSettings.home_background_media_url);
+
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <main className="mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-8">
+    <div
+      className="relative flex min-h-screen flex-col overflow-hidden"
+      style={{ backgroundColor: siteVisualSettings.home_background_color }}
+    >
+      {hasBackgroundMedia ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url("${siteVisualSettings.home_background_media_url}")`,
+            opacity: siteVisualSettings.home_background_media_opacity / 100,
+          }}
+          aria-hidden="true"
+        />
+      ) : null}
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-8">
         <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(380px,1fr)]">
-          <section className="flex flex-col justify-center">
+          <section className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
+            <img
+              src={logoMediaUrl}
+              alt="Árvore Genealógica da Família"
+              className="mb-6 h-auto w-24 max-w-full object-contain sm:w-28 lg:w-32"
+            />
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Árvore Genealógica</p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">Família Barros Souza</h1>
             <p className="mt-4 max-w-xl text-base text-gray-600">
@@ -522,7 +581,7 @@ export function Entrar() {
                     className="w-full"
                     onClick={() => {
                       const normalizedEmail = confirmationEmail.trim().toLowerCase();
-                      setFirstAccessStep('code');
+                      resetFirstAccessCodeStep();
                       setMode('login');
                       if (normalizedEmail) {
                         setLoginEmail(normalizedEmail);
@@ -591,7 +650,10 @@ export function Entrar() {
                       <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <Input
                         value={accessCode}
-                        onChange={(event) => setAccessCode(event.target.value)}
+                        onChange={(event) => {
+                          setAccessCode(event.target.value);
+                          setAcceptedLegalTerms(false);
+                        }}
                         placeholder="04fe1b51-306b-4b88-8d6d-1d084984f6ec"
                         className="pl-10"
                         required
@@ -657,6 +719,36 @@ export function Entrar() {
                     </div>
                   </Field>
 
+                  <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-sm leading-6 text-gray-600">
+                    <Checkbox
+                      checked={acceptedLegalTerms}
+                      onCheckedChange={(checked) => setAcceptedLegalTerms(checked === true)}
+                      className="mt-1"
+                      aria-label="Aceitar termos de uso e política de privacidade"
+                    />
+                    <span>
+                      Li e aceito os{' '}
+                      <a
+                        href="/termos"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-blue-700 hover:underline"
+                      >
+                        termos de uso
+                      </a>{' '}
+                      e a{' '}
+                      <a
+                        href="/privacidade"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-blue-700 hover:underline"
+                      >
+                        política de privacidade
+                      </a>
+                      .
+                    </span>
+                  </label>
+
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? 'Criando conta...' : 'Criar conta e revisar dados'}
                   </Button>
@@ -666,14 +758,14 @@ export function Entrar() {
           </Card>
         </div>
       </main>
-      <footer className="px-4 pb-6">
+      <footer className="relative z-10 px-4 pb-6">
         <nav className="mx-auto flex max-w-6xl items-center justify-center gap-3 text-xs text-gray-500">
           <Link to="/termos" className="font-medium hover:text-blue-700 hover:underline">
-            Termos de Uso
+            termos de uso
           </Link>
           <span aria-hidden="true">•</span>
           <Link to="/privacidade" className="font-medium hover:text-blue-700 hover:underline">
-            Políticas de Privacidade
+            política de privacidade
           </Link>
         </nav>
       </footer>
