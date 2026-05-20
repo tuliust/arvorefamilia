@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { 
   AlertCircle, 
@@ -9,7 +10,6 @@ import {
   XCircle, 
   Users, 
   Link2, 
-  Home,
   Settings,
   RefreshCw,
   Heart,
@@ -132,36 +132,16 @@ export function AdminDiagnostico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-4 shadow-sm sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
-              <Settings className="w-6 h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Diagnóstico do Banco de Dados</h1>
-              <p className="break-words text-sm text-gray-500">Análise de integridade e relacionamentos</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <Button 
-              variant="outline" 
-              onClick={carregarDiagnostico}
-              disabled={loading}
-              className="w-full sm:w-auto"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/admin')} className="w-full sm:w-auto">
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Diagnóstico do Banco de Dados"
+        subtitle="Análise de integridade e relacionamentos"
+        icon={Settings}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Atualizar', onClick: carregarDiagnostico, icon: RefreshCw, variant: 'primary', disabled: loading },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8">

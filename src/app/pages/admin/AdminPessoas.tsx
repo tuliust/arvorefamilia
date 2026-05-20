@@ -15,19 +15,19 @@ import {
 import { obterTodasPessoas, deletarPessoa } from '../../services/dataService';
 import { Pessoa } from '../../types';
 import { 
-  ArrowLeft, 
   Search, 
   Plus, 
   Edit, 
   Trash2, 
-  Home,
   Dog,
   User,
+  Settings,
   SlidersHorizontal
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { includesNormalizedText } from '../../utils/searchText';
 import { isPersonDeceased } from '../../utils/personFields';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 
 type AdvancedFilters = {
   status: Array<'vivos' | 'falecidos'>;
@@ -249,22 +249,16 @@ export function AdminPessoas() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">Gerenciar Pessoas</h1>
-          </div>
-          
-          <Button className="w-full sm:w-auto" onClick={() => navigate('/admin/pessoas/nova')}>
-            <Plus className="mr-2 h-4 w-4 shrink-0" />
-            Adicionar Pessoa
-          </Button>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Gerenciar Pessoas"
+        subtitle="Cadastro, busca e manutenção dos membros da árvore"
+        icon={User}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Adicionar Pessoa', onClick: () => navigate('/admin/pessoas/nova'), icon: Plus, variant: 'primary' },
+        ]}
+      />
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">

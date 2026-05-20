@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Link2, Save, Settings } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { Input } from '../../components/ui/input';
 import {
   Select,
@@ -134,17 +135,16 @@ export function AdminRelacionamentoForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-3xl min-w-0 items-center gap-3">
-          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/relacionamentos')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="min-w-0">
-            <h1 className="break-words text-xl font-bold text-gray-900">Novo Relacionamento</h1>
-            <p className="break-words text-sm text-gray-500">Cadastre um vínculo entre duas pessoas</p>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Novo Relacionamento"
+        subtitle="Cadastre um vínculo entre duas pessoas"
+        icon={Link2}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Relacionamentos', to: '/admin/relacionamentos', icon: Link2 },
+        ]}
+      />
 
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         <Card className="min-w-0">

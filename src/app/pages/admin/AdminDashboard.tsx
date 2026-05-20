@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -169,7 +169,7 @@ export function AdminDashboard() {
         subtitle="Gestão da Árvore Genealógica"
         icon={Settings}
         actions={[
-          { label: 'Árvore geral', to: '/', icon: Settings },
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
           { label: 'Sair', onClick: handleSignOut, variant: 'ghost' },
         ]}
       />

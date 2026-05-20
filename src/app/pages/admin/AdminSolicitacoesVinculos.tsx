@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, CheckCircle2, Eye, Filter, RefreshCcw, XCircle } from 'lucide-react';
+import { CheckCircle2, Eye, Filter, RefreshCcw, Settings, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import {
   Dialog,
   DialogContent,
@@ -173,7 +173,6 @@ function getSafeComparisonRows(request: RelationshipChangeRequest, current?: Rel
 }
 
 export function AdminSolicitacoesVinculos() {
-  const navigate = useNavigate();
   const [requests, setRequests] = useState<RelationshipChangeRequest[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
@@ -324,30 +323,16 @@ export function AdminSolicitacoesVinculos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-700">
-              <Filter className="h-5 w-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Solicitacoes de vinculos</h1>
-              <p className="break-words text-sm text-gray-500">Revisao administrativa de ajustes familiares</p>
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void loadData()} disabled={loading}>
-              <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
-              Atualizar
-            </Button>
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/admin')}>
-              <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
-              Voltar ao painel
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Solicitações de vínculos"
+        subtitle="Revisão administrativa de ajustes familiares"
+        icon={Filter}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Atualizar', onClick: () => void loadData(), icon: RefreshCcw, variant: 'primary', disabled: loading },
+        ]}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <Card className="mb-6 min-w-0">

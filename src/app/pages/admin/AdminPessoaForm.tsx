@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import {
   Dialog,
   DialogContent,
@@ -54,7 +55,7 @@ import {
   SubtipoRelacionamento,
   LadoPessoa,
 } from '../../types';
-import { ArrowLeft, Save, Plus, X, User, Search, Link2, Trash2 } from 'lucide-react';
+import { Save, Plus, X, User, Search, Link2, Settings, Trash2 } from 'lucide-react';
 import { FotoUpload } from '../../components/FotoUpload';
 import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import {
@@ -858,23 +859,22 @@ export function AdminPessoaForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/pessoas')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">
-              {isEdit ? 'Editar Pessoa' : 'Nova Pessoa'}
-            </h1>
-          </div>
-
-          <Button form="pessoa-form" type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+      <MemberPageHeader
+        title={isEdit ? 'Editar Pessoa' : 'Nova Pessoa'}
+        subtitle={isEdit ? 'Atualize os dados desta pessoa da árvore' : 'Cadastre uma nova pessoa na árvore familiar'}
+        icon={User}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Pessoas', to: '/admin/pessoas', icon: User },
+        ]}
+        customActions={(
+          <Button form="pessoa-form" type="submit" disabled={isSubmitting} className="w-full rounded-xl shadow-sm sm:w-auto">
             <Save className="mr-2 h-4 w-4 shrink-0" />
             {isSubmitting ? 'Salvando...' : 'Salvar'}
           </Button>
-        </div>
-      </header>
+        )}
+      />
 
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
         <form id="pessoa-form" onSubmit={handleSubmit} className="min-w-0 space-y-6">

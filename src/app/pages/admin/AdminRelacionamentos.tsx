@@ -12,7 +12,8 @@ import {
 } from '../../services/dataService';
 import { Relacionamento, Pessoa, SubtipoRelacionamento } from '../../types';
 import { isPersonDeceased } from '../../utils/personFields';
-import { ArrowLeft, Edit3, Plus, Save, Trash2, Heart, Users as UsersIcon, X } from 'lucide-react';
+import { Edit3, Plus, Save, Settings, Trash2, Heart, Users as UsersIcon, X } from 'lucide-react';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 
 type MarriageEditForm = {
   subtipo_relacionamento: SubtipoRelacionamento;
@@ -170,21 +171,16 @@ export function AdminRelacionamentos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/admin/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="min-w-0 break-words text-xl font-bold text-gray-900">Gerenciar Relacionamentos</h1>
-          </div>
-
-          <Button className="w-full sm:w-auto" onClick={() => navigate('/admin/relacionamentos/novo')}>
-            <Plus className="mr-2 h-4 w-4 shrink-0" />
-            Adicionar Relacionamento
-          </Button>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Gerenciar Relacionamentos"
+        subtitle="Cadastro e manutenção dos vínculos familiares"
+        icon={UsersIcon}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Adicionar Relacionamento', onClick: () => navigate('/admin/relacionamentos/novo'), icon: Plus, variant: 'primary' },
+        ]}
+      />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

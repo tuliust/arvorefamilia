@@ -19,11 +19,10 @@ import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { listarTopicosForum } from '../services/forumService';
 import { ArquivoHistorico, ForumTopico, Pessoa, PersonEvent, Relacionamento } from '../types';
 import { 
-  ArrowLeft, 
-  Star, 
-  Bell,
   MessageCircle,
-  Plus
+  Pencil,
+  Plus,
+  UserCircle2,
 } from 'lucide-react';
 import { PersonDataView } from '../components/person/PersonDataView';
 import { PersonRelationshipsView } from '../components/person/PersonRelationshipsView';
@@ -35,6 +34,7 @@ import { getCachedTreeData } from '../services/treeDataCache';
 import { ForumEmptyState } from '../components/forum/ForumEmptyState';
 import { PersonTimeline } from '../components/Timeline/PersonTimeline';
 import { FavoriteButton } from '../components/favorites/FavoriteButton';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../components/layout/MemberPageHeader';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 
 type ProfileRelationships = {
@@ -328,27 +328,13 @@ export function PersonProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" onClick={() => navigate('/')} className="w-full justify-start sm:w-auto">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para árvore
-          </Button>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-            <Link to="/meus-favoritos">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Star className="h-4 w-4" />
-                Favoritos
-              </Button>
-            </Link>
-            <Link to="/notificacoes">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Bell className="h-4 w-4" />
-                Notificações
-              </Button>
-            </Link>
+      <MemberPageHeader
+        title={pessoa.nome_completo}
+        subtitle="Perfil individual da árvore familiar"
+        icon={UserCircle2}
+        actions={DEFAULT_MEMBER_HEADER_ACTIONS}
+        customActions={(
+          <>
             <FavoriteButton
               entityType="person"
               entityId={pessoa.id}
@@ -356,19 +342,21 @@ export function PersonProfile() {
               description="Perfil individual da árvore familiar"
               href={`/pessoa/${pessoa.id}`}
               metadata={{ source: 'person_profile' }}
+              className="w-full rounded-xl shadow-sm sm:w-auto"
             />
             {canEdit && (
               <Button
                 variant="outline"
-                className="w-full sm:w-auto"
+                className="w-full rounded-xl shadow-sm sm:w-auto"
                 onClick={() => navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados')}
               >
+                <Pencil className="h-4 w-4" />
                 Editar
               </Button>
             )}
-          </div>
-        </div>
-      </header>
+          </>
+        )}
+      />
 
       {/* Main Content */}
       <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">

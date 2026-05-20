@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ImageIcon, Palette, Save, Trash2, Upload } from 'lucide-react';
-import { Link } from 'react-router';
+import { ImageIcon, Palette, Save, Settings, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
@@ -83,26 +83,21 @@ export function AdminHomeSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <Link
-              to="/admin"
-              className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-700"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao painel
-            </Link>
-            <h1 className="break-words text-2xl font-bold text-gray-900">Aparência da home</h1>
-            <p className="mt-1 text-sm text-gray-500">Configurações visuais da tela de entrada pública.</p>
-          </div>
-
-          <Button onClick={handleSave} disabled={saving || loading} className="w-full sm:w-auto">
+      <MemberPageHeader
+        title="Aparência da home"
+        subtitle="Configurações visuais da tela de entrada pública."
+        icon={Palette}
+        actions={[
+          ...DEFAULT_MEMBER_HEADER_ACTIONS,
+          { label: 'Admin', to: '/admin', icon: Settings },
+        ]}
+        customActions={(
+          <Button onClick={handleSave} disabled={saving || loading} className="w-full rounded-xl shadow-sm sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </Button>
-        </div>
-      </header>
+        )}
+      />
 
       <main className="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">

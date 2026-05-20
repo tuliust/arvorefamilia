@@ -6,17 +6,19 @@ import {
   CalendarDays,
   Home,
   LogOut,
+  Network,
   Plus,
   Settings,
   Star,
 } from 'lucide-react';
 
-type HeaderAction = {
+export type HeaderAction = {
   label: string;
   to?: string;
   onClick?: () => void;
   icon?: React.ComponentType<{ className?: string }>;
   variant?: 'default' | 'primary' | 'danger' | 'ghost';
+  disabled?: boolean;
 };
 
 interface MemberPageHeaderProps {
@@ -24,21 +26,23 @@ interface MemberPageHeaderProps {
   subtitle: string;
   icon?: React.ComponentType<{ className?: string }>;
   actions?: HeaderAction[];
+  customActions?: React.ReactNode;
+  className?: string;
 }
 
 export const PAGE_CONTAINER_CLASS = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
 
 const defaultActionClass =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 
 const primaryActionClass =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 
 const dangerActionClass =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 
 const ghostActionClass =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 
 function getActionClass(variant: HeaderAction['variant']) {
   if (variant === 'primary') return primaryActionClass;
@@ -67,20 +71,29 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
   }
 
   return (
-    <button type="button" onClick={action.onClick} className={className}>
+    <button type="button" onClick={action.onClick} disabled={action.disabled} className={className}>
       {content}
     </button>
   );
 }
+
+export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
+  { label: 'Árvore geral', to: '/', icon: Home },
+  { label: 'Minha Árvore', to: '/minha-arvore', icon: Network },
+  { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
+  { label: 'Notificações', to: '/notificacoes', icon: Bell },
+];
 
 export function MemberPageHeader({
   title,
   subtitle,
   icon: Icon,
   actions = [],
+  customActions,
+  className = '',
 }: MemberPageHeaderProps) {
   return (
-    <header className="border-b border-gray-200 bg-white shadow-sm">
+    <header className={`border-b border-gray-200 bg-white shadow-sm ${className}`}>
       <div className={`${PAGE_CONTAINER_CLASS} py-4`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -95,11 +108,12 @@ export function MemberPageHeader({
             </div>
           </div>
 
-          {actions.length > 0 && (
+          {(actions.length > 0 || customActions) && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
               {actions.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
+              {customActions}
             </div>
           )}
         </div>
@@ -114,6 +128,7 @@ export const HEADER_ACTION_ICONS = {
   CalendarDays,
   Home,
   LogOut,
+  Network,
   Plus,
   Settings,
   Star,
