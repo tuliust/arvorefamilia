@@ -4,6 +4,7 @@ import {
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DirectRelationVariant,
   DirectRelativeFilters,
+  TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
   getSortableBirthValue,
@@ -13,6 +14,7 @@ import { DIRECT_FAMILY_TOKENS } from '../visualTokens';
 interface DirectFamilyLayoutOptions {
   centralPersonId?: string;
   filters?: DirectRelativeFilters;
+  isMobile?: boolean;
 }
 
 type ParentKind = 'pai' | 'mae' | 'parent';
@@ -71,6 +73,10 @@ const FRAME_LEFT = 10;
 const FRAME_RIGHT = 3210;
 const FRAME_TOP = 10;
 const FRAME_BOTTOM = 2190;
+const MOBILE_FRAME_LEFT = -70;
+const MOBILE_FRAME_RIGHT = 3290;
+const MOBILE_FRAME_TOP = -30;
+const MOBILE_FRAME_BOTTOM = 2230;
 const TITLE_TOP = FRAME_TOP + 10;
 const TITLE_WIDTH = 1540;
 const TITLE_RESERVED_HEIGHT = 80;
@@ -863,11 +869,30 @@ function addLegend(nodes: Node[]) {
   });
 }
 
+function getDirectFamilyViewportBounds(isMobile = false): TreeLayoutBounds {
+  if (isMobile) {
+    return {
+      x: MOBILE_FRAME_LEFT,
+      y: MOBILE_FRAME_TOP,
+      width: MOBILE_FRAME_RIGHT - MOBILE_FRAME_LEFT,
+      height: MOBILE_FRAME_BOTTOM - MOBILE_FRAME_TOP,
+    };
+  }
+
+  return {
+    x: FRAME_LEFT,
+    y: FRAME_TOP,
+    width: FRAME_RIGHT - FRAME_LEFT,
+    height: FRAME_BOTTOM - FRAME_TOP,
+  };
+}
+
 export function directFamilyDistributedLayout(
   graph: TreeLayoutParams,
   options: DirectFamilyLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters || DEFAULT_DIRECT_RELATIVE_FILTERS;
+  const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const index = buildRelationshipIndex(graph.relacionamentos);
@@ -1190,5 +1215,7 @@ export function directFamilyDistributedLayout(
   return {
     nodes: positionedNodes,
     edges,
+    viewportBounds,
+    translateBounds: viewportBounds,
   };
 }

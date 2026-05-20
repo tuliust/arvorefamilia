@@ -94,6 +94,15 @@ export interface TreeGraphBuildResult extends TreeLayoutParams {
 export interface TreeLayoutResult {
   nodes: Node[];
   edges: Edge[];
+  viewportBounds?: TreeLayoutBounds;
+  translateBounds?: TreeLayoutBounds;
+}
+
+export interface TreeLayoutBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface LayoutConstants {

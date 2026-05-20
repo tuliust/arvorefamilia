@@ -7,6 +7,7 @@ import {
   GenealogyFilterKey,
   GenealogyFilters,
   MarriageNodeDetails,
+  TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
   getSortableBirthValue,
@@ -65,6 +66,7 @@ export interface GenealogyFamilyConnectorDraft {
 interface GenealogyColumnsLayoutOptions {
   filters?: GenealogyFilters;
   onMarriageClick?: (details: MarriageNodeDetails) => void;
+  hideUngenerated?: boolean;
 }
 
 interface CreateGenealogyFamilyConnectorNodeParams {
@@ -91,6 +93,7 @@ const FAMILY_UNIT_GAP = 48;
 const FAMILY_CONNECTOR_CHILD_BUS_OFFSET = 24;
 const FAMILY_CONNECTOR_LANE_GAP = 10;
 const FAMILY_CONNECTOR_MAX_LANES = 4;
+const FIXED_GENERATION_KEYS = [1, 2, 3, 4, 5, 6] as const;
 
 const GENERATION_RELATION_VARIANTS: Record<number, {
   base: DirectRelationVariant;
@@ -331,28 +334,67 @@ function sortPeopleWithinGeneration(
 
 function groupPeopleByGeneration(
   graph: TreeLayoutParams,
-  relationshipIndex: RelationshipIndex
+  relationshipIndex: RelationshipIndex,
+  options: Pick<GenealogyColumnsLayoutOptions, 'hideUngenerated'> = {}
 ): GenerationGroup[] {
   const groupsByKey = new Map<GenerationKey, Pessoa[]>();
 
   graph.pessoas.forEach((pessoa) => {
     const key = getGenerationKey(pessoa);
+    if (key === null && options.hideUngenerated) return;
     if (!groupsByKey.has(key)) groupsByKey.set(key, []);
     groupsByKey.get(key)!.push(pessoa);
   });
 
-  const keys = Array.from(groupsByKey.keys()).sort((keyA, keyB) => {
-    if (keyA === null && keyB === null) return 0;
-    if (keyA === null) return 1;
-    if (keyB === null) return -1;
-    return keyA - keyB;
+  FIXED_GENERATION_KEYS.forEach((key) => {
+    if (!groupsByKey.has(key)) groupsByKey.set(key, []);
   });
+
+  const keys = Array.from(groupsByKey.keys())
+    .filter((key) => key !== null || !options.hideUngenerated)
+    .sort((keyA, keyB) => {
+      if (keyA === null && keyB === null) return 0;
+      if (keyA === null) return 1;
+      if (keyB === null) return -1;
+      return keyA - keyB;
+    });
 
   return keys.map((key) => ({
     key,
     label: getGenerationLabel(key),
     people: sortPeopleWithinGeneration(groupsByKey.get(key) || [], key, relationshipIndex),
   }));
+}
+
+function getGenealogyViewportBounds({
+  groups,
+  startX,
+  totalWidth,
+  positionedPeople,
+}: {
+  groups: GenerationGroup[];
+  startX: number;
+  totalWidth: number;
+  positionedPeople: Map<string, PositionedPerson>;
+}): TreeLayoutBounds {
+  const labelBottomY = COLUMN_TOP + COLUMN_LABEL_HEIGHT;
+  const peopleBottomY = Array.from(positionedPeople.values()).reduce(
+    (maxY, positioned) => Math.max(maxY, positioned.y + positioned.height),
+    labelBottomY
+  );
+  const hasUngeneratedColumn = groups.some((group) => group.key === null);
+  const generationColumnCount = groups.filter((group) => group.key !== null).length;
+  const logicalColumnCount = generationColumnCount + (hasUngeneratedColumn ? 1 : 0);
+  const logicalWidth = logicalColumnCount > 0
+    ? totalWidth
+    : FIXED_GENERATION_KEYS.length * CARD_WIDTH + (FIXED_GENERATION_KEYS.length - 1) * COLUMN_GAP;
+
+  return {
+    x: startX,
+    y: COLUMN_TOP,
+    width: logicalWidth,
+    height: Math.max(COLUMN_LABEL_HEIGHT, peopleBottomY - COLUMN_TOP),
+  };
 }
 
 function addLabelNode(
@@ -1113,7 +1155,9 @@ export function genealogyColumnsLayout(
   const filters = options.filters ?? DEFAULT_GENEALOGY_FILTERS;
   const onMarriageClick = options.onMarriageClick;
   const relationshipIndex = buildRelationshipIndex(graph);
-  const groups = groupPeopleByGeneration(graph, relationshipIndex);
+  const groups = groupPeopleByGeneration(graph, relationshipIndex, {
+    hideUngenerated: options.hideUngenerated,
+  });
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const peopleById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const nodes: Node[] = [];
@@ -1194,5 +1238,17 @@ export function genealogyColumnsLayout(
     positionedPeople,
   });
 
-  return { nodes, edges };
+  const viewportBounds = getGenealogyViewportBounds({
+    groups,
+    startX,
+    totalWidth,
+    positionedPeople,
+  });
+
+  return {
+    nodes,
+    edges,
+    viewportBounds,
+    translateBounds: viewportBounds,
+  };
 }
