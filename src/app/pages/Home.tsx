@@ -1102,8 +1102,8 @@ export function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <header className="shrink-0 border-b border-gray-200 bg-white px-2 py-2 shadow-sm sm:px-3 lg:px-5">
-        <div className="mx-auto flex h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden sm:gap-2 lg:gap-4">
+      <header className="shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm">
+        <div className="mx-auto flex h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden px-4 sm:gap-2 sm:px-6 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
             <div className="min-w-0 overflow-hidden">
               <h1 className="truncate whitespace-nowrap text-base font-bold leading-tight text-gray-900 sm:text-lg lg:text-xl">

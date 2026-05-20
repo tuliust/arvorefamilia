@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,7 +13,6 @@ import {
   Users,
   Link2,
   Settings,
-  Home,
   PlusCircle,
   BarChart3,
   Clock,
@@ -164,37 +164,17 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
-              <Settings className="h-6 w-6 text-white" />
-            </div>
+      <MemberPageHeader
+        title="Painel Administrativo"
+        subtitle="Gestão da Árvore Genealógica"
+        icon={Settings}
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: Settings },
+          { label: 'Sair', onClick: handleSignOut, variant: 'ghost' },
+        ]}
+      />
 
-            <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold text-gray-900">Painel Administrativo</h1>
-              <p className="break-words text-sm text-gray-500">Gestão da Árvore Genealógica</p>
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/')}>
-              <Home className="mr-2 h-4 w-4 shrink-0" />
-              Ver Árvore Pública
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full sm:w-auto"
-              onClick={handleSignOut}
-            >
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 sm:py-8`}>
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">

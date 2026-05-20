@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { AppLink as Link } from '../components/AppLink';
-import { ChevronLeft, ChevronRight, ArrowLeft, CalendarSync, LogOut } from 'lucide-react';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
+import { ChevronLeft, ChevronRight, CalendarSync } from 'lucide-react';
 import { toast } from 'sonner';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
 import { Pessoa, Relacionamento } from '../types';
@@ -288,24 +288,18 @@ export function CalendarioFamiliar() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Calendário Familiar</h1>
-            <p className="text-sm text-gray-500">Aniversários e datas de memória da árvore genealógica</p>
-          </div>
+      <MemberPageHeader
+        title="Calendário Familiar"
+        subtitle="Aniversários e datas de memória da árvore genealógica"
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
+          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
+        ]}
+      />
 
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar para a árvore
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 space-y-6`}>
         <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">

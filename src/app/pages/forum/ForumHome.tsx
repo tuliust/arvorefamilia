@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
-import { ArrowLeft, MessageCircle, Plus, Search } from 'lucide-react';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
+import { MessageCircle, Search } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -95,35 +96,19 @@ export function ForumHome() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Fórum da Família</h1>
-            <p className="break-words text-sm text-gray-500">
-              Espaço para perguntas, histórias, documentos, memórias e ajuda com a árvore.
-            </p>
-          </div>
+      <MemberPageHeader
+        title="Fórum da Família"
+        subtitle="Espaço para perguntas, histórias, documentos, memórias e ajuda com a árvore."
+        icon={MessageCircle}
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+          { label: 'Criar tópico', to: '/forum/novo', icon: HEADER_ACTION_ICONS.Plus, variant: 'primary' },
+        ]}
+      />
 
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft className="h-4 w-4 shrink-0" />
-              Voltar
-            </Link>
-            <Link
-              to="/forum/novo"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 shrink-0" />
-              Criar tópico
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <Card className="min-w-0">
           <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
             <label className="relative block min-w-0">

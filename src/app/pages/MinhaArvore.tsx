@@ -1,20 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { AppLink as Link } from '../components/AppLink';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import {
-  ArrowLeft,
-  Bell,
   Camera,
-  CalendarDays,
   Filter,
   ImagePlus,
   Info,
   Link2,
-  LogOut,
   Plus,
   Save,
-  Star,
   Trash2,
   UploadCloud,
 } from 'lucide-react';
@@ -1464,51 +1460,19 @@ export function MinhaArvore() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Minha Árvore</h1>
-            <p className="text-sm text-gray-500">Área inicial do membro autenticado</p>
-          </div>
+      <MemberPageHeader
+        title="Minha Árvore"
+        subtitle="Área inicial do membro autenticado"
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+          { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
+          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
+          { label: 'Sair', onClick: handleLogout, icon: HEADER_ACTION_ICONS.LogOut, variant: 'danger' },
+        ]}
+      />
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link to="/">
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <ArrowLeft className="w-4 h-4" />
-                Árvore geral
-              </button>
-            </Link>
-            <Link to="/calendario-familiar">
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <CalendarDays className="w-4 h-4" />
-                Calendário
-              </button>
-            </Link>
-            <Link to="/meus-favoritos">
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <Star className="w-4 h-4" />
-                Favoritos
-              </button>
-            </Link>
-            <Link to="/notificacoes">
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <Bell className="w-4 h-4" />
-                Notificações
-              </button>
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 bg-white text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 space-y-6`}>
         {semVinculo && (
           <section className="bg-amber-50 border border-amber-200 rounded-2xl shadow-sm p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>

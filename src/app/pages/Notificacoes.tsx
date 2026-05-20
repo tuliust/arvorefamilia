@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bell, BellRing, CheckCheck, ExternalLink, Inbox, Mail, Trash2 } from 'lucide-react';
+import { Bell, BellRing, CheckCheck, ExternalLink, Inbox, Mail, Trash2 } from 'lucide-react';
 import { AppLink as Link } from '../components/AppLink';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Switch } from '../components/ui/switch';
@@ -208,26 +209,18 @@ export function Notificacoes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Notificações</h1>
-            <p className="break-words text-sm text-gray-500">
-              Gerencie seus avisos e acompanhe atualizações importantes da família.
-            </p>
-          </div>
+      <MemberPageHeader
+        title="Notificações"
+        subtitle="Gerencie seus avisos e acompanhe atualizações importantes da família."
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+          { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
+        ]}
+      />
 
-          <Link
-            to="/"
-            className="inline-flex h-9 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm font-medium transition-colors hover:bg-gray-50 sm:w-auto"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto grid max-w-5xl grid-cols-1 gap-5 px-4 py-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+      <main className={`${PAGE_CONTAINER_CLASS} grid grid-cols-1 gap-5 py-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]`}>
         <Card className="h-fit min-w-0 rounded-lg border-gray-200 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex min-w-0 items-start gap-3">

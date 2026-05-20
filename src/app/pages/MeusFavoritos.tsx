@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
-  ArrowLeft,
   CalendarDays,
   FileText,
   Heart,
@@ -129,24 +129,18 @@ export function MeusFavoritos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Meus Favoritos</h1>
-            <p className="break-words text-sm text-gray-500">Conteúdos salvos para consultar depois</p>
-          </div>
+      <MemberPageHeader
+        title="Meus Favoritos"
+        subtitle="Conteúdos salvos para consultar depois"
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
+        ]}
+      />
 
-          <Link
-            to="/"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" />
-            Voltar
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex min-w-0 flex-col gap-4">
             <div className="relative min-w-0">
