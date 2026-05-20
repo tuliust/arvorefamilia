@@ -86,6 +86,9 @@ export type ActivityLogAction =
   | 'person.updated'
   | 'person.photo_updated'
   | 'person.privacy_updated'
+  | 'user_person_link.created'
+  | 'user_person_link.updated'
+  | 'user_person_link.deleted'
   | 'person_event.added'
   | 'person_event.updated'
   | 'person_event.removed'
@@ -111,6 +114,7 @@ export type ActivityLogAction =
 
 export type ActivityLogEntityType =
   | 'person'
+  | 'user_person_link'
   | 'person_event'
   | 'relationship'
   | 'historical_file'

@@ -19,6 +19,9 @@ export const ACTIVITY_ACTION_LABELS: Record<ActivityLogAction, string> = {
   'person.updated': 'Pessoa atualizada',
   'person.photo_updated': 'Foto atualizada',
   'person.privacy_updated': 'Privacidade atualizada',
+  'user_person_link.created': 'Vínculo de usuário criado',
+  'user_person_link.updated': 'Vínculo de usuário atualizado',
+  'user_person_link.deleted': 'Vínculo de usuário removido',
   'person_insights.generated': 'Insights da pessoa gerados',
   'person_insights.regenerated': 'Insights da pessoa regenerados',
   'person_event.added': 'Evento da pessoa adicionado',
@@ -45,6 +48,7 @@ export const ACTIVITY_ACTION_LABELS: Record<ActivityLogAction, string> = {
 
 export const ACTIVITY_ENTITY_LABELS: Record<ActivityLogEntityType, string> = {
   person: 'Pessoa',
+  user_person_link: 'Vínculo de usuário',
   person_event: 'Evento da pessoa',
   relationship: 'Relacionamento',
   historical_file: 'Arquivo histórico',
