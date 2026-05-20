@@ -81,9 +81,6 @@ interface CreateGenealogyFamilyConnectorNodeParams {
 
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
-const TITLE_WIDTH = 1180;
-const TITLE_TOP = 40;
-const TITLE_CENTER_X = 0;
 const COLUMN_TOP = 205;
 const COLUMN_LABEL_HEIGHT = 30;
 const LABEL_TO_CARD_GAP = 16;
@@ -365,13 +362,12 @@ function addLabelNode(
   x: number,
   y: number,
   width: number,
-  variant: 'group' | 'title',
-  subtitle?: string
+  variant: 'group' | 'title'
 ) {
   nodes.push({
     id,
     type: 'directFamilyLabelNode',
-    data: { label, subtitle, width, variant },
+    data: { label, width, variant },
     position: { x, y },
     draggable: false,
     selectable: false,
@@ -1126,17 +1122,6 @@ export function genealogyColumnsLayout(
   const familyConnectorDrafts: GenealogyFamilyConnectorDraft[] = [];
 
   if (groups.length === 0) {
-    addLabelNode(
-      nodes,
-      'genealogy-title',
-      'Árvore Genealógica',
-      TITLE_CENTER_X - TITLE_WIDTH / 2,
-      TITLE_TOP,
-      TITLE_WIDTH,
-      'title',
-      'Use o zoom, arraste a árvore e clique na pessoa para abrir detalhes.'
-    );
-
     return { nodes, edges: [] };
   }
 
@@ -1144,17 +1129,6 @@ export function genealogyColumnsLayout(
   const startX = -totalWidth / 2;
   const getColumnX = (columnIndex: number) => startX + columnIndex * (CARD_WIDTH + COLUMN_GAP);
   const columnIndexByGeneration = new Map(groups.map((group, index) => [group.key, index]));
-
-  addLabelNode(
-    nodes,
-    'genealogy-title',
-    'Árvore Genealógica',
-    TITLE_CENTER_X - TITLE_WIDTH / 2,
-    TITLE_TOP,
-    TITLE_WIDTH,
-    'title',
-    'Use o zoom, arraste a árvore e clique na pessoa para abrir detalhes.'
-  );
 
   groups.forEach((group, columnIndex) => {
     const x = getColumnX(columnIndex);

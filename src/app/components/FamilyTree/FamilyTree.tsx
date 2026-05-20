@@ -108,6 +108,8 @@ const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
 const TREE_MOBILE_VIEWPORT_PADDING_X = 18;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 18;
+const TREE_INITIAL_MIN_ZOOM = 0.55;
+const TREE_MOBILE_INITIAL_MIN_ZOOM = 0.45;
 
 interface FlowBounds {
   x: number;
@@ -167,12 +169,20 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
 }
 
 function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
-  const visibleNodes = nodes.filter((node) => {
-    if (node.hidden) return false;
-    if (node.type === 'directFamilyAnchorNode') return false;
-    if (node.type === 'directFamilyLabelNode' && node.data?.variant === 'title') return false;
-    return true;
-  });
+  return getBoundsForNodes(
+    nodes.filter((node) => {
+      if (node.hidden) return false;
+      if (node.type === 'directFamilyAnchorNode') return false;
+      if (node.type === 'directFamilyLabelNode' && node.data?.variant === 'title') return false;
+      return true;
+    }),
+    fallbackWidth,
+    fallbackHeight
+  );
+}
+
+function getBoundsForNodes(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
+  const visibleNodes = nodes.filter((node) => !node.hidden);
   if (visibleNodes.length === 0) return null;
 
   const bounds = visibleNodes.reduce(
@@ -215,6 +225,30 @@ function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: num
   };
 }
 
+function getViewportContentBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
+  return getBoundsForNodes(
+    nodes.filter((node) => {
+      if (node.hidden) return false;
+      return node.type === 'personNode';
+    }),
+    fallbackWidth,
+    fallbackHeight
+  );
+}
+
+function getTranslateBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
+  return getBoundsForNodes(
+    nodes.filter((node) => {
+      if (node.hidden) return false;
+      if (node.type === 'directFamilyLabelNode' && node.data?.variant === 'title') return false;
+      if (node.type === 'directFamilyAnchorNode') return false;
+      return true;
+    }),
+    fallbackWidth,
+    fallbackHeight
+  );
+}
+
 function getNormalizedTreeViewport({
   bounds,
   containerWidth,
@@ -223,6 +257,8 @@ function getNormalizedTreeViewport({
   paddingY,
   titleSafeArea,
   maxZoom,
+  minInitialZoom,
+  fitHeight,
 }: {
   bounds: FlowBounds;
   containerWidth: number;
@@ -231,19 +267,21 @@ function getNormalizedTreeViewport({
   paddingY: number;
   titleSafeArea: number;
   maxZoom: number;
+  minInitialZoom: number;
+  fitHeight: boolean;
 }): Viewport {
   const availableWidth = Math.max(1, containerWidth - paddingX * 2);
   const availableHeight = Math.max(1, containerHeight - titleSafeArea - paddingY * 2);
   const zoomX = availableWidth / Math.max(1, bounds.width);
   const zoomY = availableHeight / Math.max(1, bounds.height);
-  const zoom = Math.max(0.01, Math.min(1, maxZoom, zoomX, zoomY));
+  const fitZoom = fitHeight ? Math.min(zoomX, zoomY) : zoomX;
+  const zoom = Math.min(1, maxZoom, Math.max(minInitialZoom, fitZoom));
   const centerX = bounds.x + bounds.width / 2;
-  const centerY = bounds.y + bounds.height / 2;
-  const visibleCenterY = titleSafeArea + availableHeight / 2;
+  const topY = bounds.y;
 
   return {
     x: containerWidth / 2 - centerX * zoom,
-    y: visibleCenterY - centerY * zoom,
+    y: titleSafeArea + paddingY - topY * zoom,
     zoom,
   };
 }
@@ -475,13 +513,17 @@ function FamilyTreeComponent({
     };
   }, []);
 
-  const directFamilyBounds = useMemo(() => {
-    return getFlowBounds(nodes, NODE_WIDTH, NODE_HEIGHT);
+  const viewportContentBounds = useMemo(() => {
+    return getViewportContentBounds(nodes, NODE_WIDTH, NODE_HEIGHT) ?? getFlowBounds(nodes, NODE_WIDTH, NODE_HEIGHT);
   }, [nodes, NODE_WIDTH, NODE_HEIGHT]);
+
+  const translateBounds = useMemo(() => {
+    return getTranslateBounds(nodes, NODE_WIDTH, NODE_HEIGHT) ?? viewportContentBounds;
+  }, [nodes, NODE_WIDTH, NODE_HEIGHT, viewportContentBounds]);
 
   const directFamilyViewport = useMemo(() => {
     if (
-      !directFamilyBounds ||
+      !viewportContentBounds ||
       containerSize.width <= 0 ||
       containerSize.height <= 0
     ) {
@@ -489,7 +531,7 @@ function FamilyTreeComponent({
     }
 
     return getNormalizedTreeViewport({
-      bounds: directFamilyBounds,
+      bounds: viewportContentBounds,
       containerWidth: containerSize.width,
       containerHeight: containerSize.height,
       paddingX: isMobile ? TREE_MOBILE_VIEWPORT_PADDING_X : TREE_VIEWPORT_PADDING_X,
@@ -498,19 +540,21 @@ function FamilyTreeComponent({
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
+      minInitialZoom: isMobile ? TREE_MOBILE_INITIAL_MIN_ZOOM : TREE_INITIAL_MIN_ZOOM,
+      fitHeight: !isGenealogyLayout,
     });
-  }, [directFamilyBounds, containerSize, isGenealogyLayout, isMobile]);
+  }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile]);
 
   const directFamilyTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
-    if (!directFamilyBounds) return undefined;
+    if (!translateBounds) return undefined;
 
     return getDirectFamilyTranslateExtent(
-      directFamilyBounds,
+      translateBounds,
       isGenealogyLayout
         ? (isMobile ? GENEALOGY_MOBILE_TRANSLATE_PADDING : GENEALOGY_TRANSLATE_PADDING)
         : (isMobile ? DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING : DIRECT_FAMILY_TRANSLATE_PADDING)
     );
-  }, [directFamilyBounds, isGenealogyLayout, isMobile]);
+  }, [translateBounds, isGenealogyLayout, isMobile]);
 
   useEffect(() => {
     setNodes((prevNodes) =>
