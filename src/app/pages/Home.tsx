@@ -96,7 +96,6 @@ import {
   Network,
   Monitor,
   Settings,
-  CircleEllipsis,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -843,13 +842,18 @@ export function Home() {
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
     [pessoas, relacionamentos, centralReferencePersonId]
   );
+  const genealogyFilterCounts = useMemo(
+    () => calculateGenealogyFilterCounts(pessoasVisiveis, relacionamentos),
+    [pessoasVisiveis, relacionamentos]
+  );
   const sidebarPanelContent = (
-    <>
+    <section className="rounded-lg border border-gray-200 bg-gray-50 p-2.5">
       {activeSidebarPanel === 'filters' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {treeViewMode === 'genealogia' || treeViewMode === 'visao-completa' ? (
             <GenealogyFilterGrid
               filters={genealogyFilters}
+              counts={genealogyFilterCounts}
               onToggle={toggleGenealogyFilter}
             />
           ) : (
@@ -874,7 +878,6 @@ export function Home() {
           viewMode={treeViewMode}
           compact
           showTitle
-          className="rounded-lg border border-gray-200 bg-gray-50 p-2"
         />
       )}
 
@@ -887,7 +890,7 @@ export function Home() {
           onWhatsApp={() => toast.info('Envio por WhatsApp será implementado em breve.')}
         />
       )}
-    </>
+    </section>
   );
   const selectedCuriosityPerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === selectedCuriosityPersonId),
@@ -1121,12 +1124,12 @@ export function Home() {
           >
             <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
               <SelectTrigger
-                className="h-9 w-10 min-w-0 shrink-0 gap-1 border-blue-300 bg-blue-50 px-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:w-auto sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
-                aria-label="Mude a Visualização"
-                title="Mude a Visualização"
+                className="h-9 w-[9.5rem] max-w-[48vw] min-w-[8.25rem] shrink-0 gap-1.5 border-blue-300 bg-blue-50 px-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
+                aria-label={`Visualização atual: ${currentTreeViewLabel}`}
+                title={currentTreeViewLabel}
               >
                 <Network className="h-4 w-4 shrink-0 text-blue-700" />
-                <span className="hidden truncate sm:inline">Mude a Visualização</span>
+                <span className="min-w-0 truncate">{currentTreeViewLabel}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
@@ -1265,17 +1268,6 @@ export function Home() {
               variant="outline"
               size="icon"
               className="h-9 w-9 shrink-0 bg-white shadow-sm"
-              onClick={() => setActiveSidebarPanel('info')}
-              title="Informações"
-              aria-label="Informações"
-              aria-pressed={activeSidebarPanel === 'info'}
-            >
-              <CircleEllipsis className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 shrink-0 bg-white shadow-sm"
               onClick={() => setLegendOpen(false)}
               title="Recolher painel"
               aria-label="Recolher painel"
@@ -1296,7 +1288,7 @@ export function Home() {
             ].join(' ')}
           >
             {sidebarOpen && (
-              <div className="flex min-h-0 flex-1 flex-col gap-4">
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <div className="min-w-0 flex-1">
                     <SidebarPanelTabs
@@ -1308,17 +1300,6 @@ export function Home() {
                     variant="outline"
                     size="icon"
                     className="h-9 w-9 shrink-0 bg-white shadow-sm"
-                    onClick={() => setActiveSidebarPanel('info')}
-                    title="Informações"
-                    aria-label="Informações"
-                    aria-pressed={activeSidebarPanel === 'info'}
-                  >
-                    <CircleEllipsis className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
@@ -1326,7 +1307,7 @@ export function Home() {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className="min-h-0 flex-1 overflow-visible">
                   {sidebarPanelContent}
                 </div>
               </div>
@@ -2153,6 +2134,7 @@ function UserMenu({
 const SIDEBAR_PANEL_OPTIONS: Array<{ key: SidebarPanel; label: string }> = [
   { key: 'filters', label: 'Filtros' },
   { key: 'legend', label: 'Legendas' },
+  { key: 'info', label: 'Informações' },
 ];
 
 function SidebarPanelTabs({
@@ -2163,7 +2145,7 @@ function SidebarPanelTabs({
   onChange: (panel: SidebarPanel) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+    <div className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
       {SIDEBAR_PANEL_OPTIONS.map((option) => {
         const active = activePanel === option.key;
 
@@ -2202,15 +2184,15 @@ function SidebarInfoPanel({
   onWhatsApp: () => void;
 }) {
   return (
-    <section className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+    <section className="space-y-3">
       <div>
         <h2 className="text-sm font-semibold text-gray-900">Informações da árvore</h2>
-        <p className="mt-2 text-xs leading-relaxed text-gray-500">
+        <p className="mt-1 text-xs leading-snug text-gray-500">
           Ações para exportar ou compartilhar a visualização atual da árvore.
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <SidebarActionButton icon={Scan} label="Selecionar área" onClick={onSelectArea} />
         <SidebarActionButton icon={FileDown} label="Salvar como PDF" onClick={onSavePdf} />
         <SidebarActionButton icon={ImageDown} label="Salvar como Imagem" onClick={onSaveImage} />
@@ -2234,7 +2216,7 @@ function SidebarActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-10 w-full items-center gap-3 rounded-md border border-gray-200 bg-white px-3 text-left text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+      className="flex h-9 w-full items-center gap-2.5 rounded-md border border-gray-200 bg-white px-3 text-left text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
     >
       <Icon className="h-4 w-4 shrink-0 text-gray-500" />
       <span>{label}</span>
@@ -2555,7 +2537,7 @@ function DirectRelationKpiGrid({
   return (
     <section>
       <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
-      <p className="mb-2 text-xs leading-snug text-gray-500">
+      <p className="mb-1.5 text-xs leading-snug text-gray-500">
         Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
       </p>
       <DirectRelativeFilterGrid
@@ -2570,37 +2552,42 @@ function DirectRelationKpiGrid({
 
 const GENEALOGY_FILTER_OPTIONS: Array<{
   key: GenealogyFilterKey;
-  label: string;
+  title: string;
+  subtitle?: string;
   colorKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS;
 }> = [
-  { key: 'generation1', label: 'Geração 1', colorKey: 'tataravos' },
-  { key: 'generation2', label: 'Geração 2', colorKey: 'bisavos' },
-  { key: 'generation3Family', label: 'Geração 3 - Familiares', colorKey: 'avos' },
-  { key: 'generation3Spouses', label: 'Geração 3 - Cônjuges', colorKey: 'tios' },
-  { key: 'generation4Family', label: 'Geração 4 - Familiares', colorKey: 'primos' },
-  { key: 'generation4Spouses', label: 'Geração 4 - Cônjuges', colorKey: 'conjuge' },
-  { key: 'generation5Family', label: 'Geração 5 - Familiares', colorKey: 'irmaos' },
-  { key: 'generation5Spouses', label: 'Geração 5 - Cônjuges', colorKey: 'sobrinhos' },
-  { key: 'generation6', label: 'Geração 6', colorKey: 'filhos' },
+  { key: 'generation1', title: 'Geração 1', colorKey: 'tataravos' },
+  { key: 'generation2', title: 'Geração 2', colorKey: 'bisavos' },
+  { key: 'generation3Family', title: 'Geração 3', subtitle: 'Familiares', colorKey: 'avos' },
+  { key: 'generation3Spouses', title: 'Geração 3', subtitle: 'Cônjuges', colorKey: 'tios' },
+  { key: 'generation4Family', title: 'Geração 4', subtitle: 'Familiares', colorKey: 'primos' },
+  { key: 'generation4Spouses', title: 'Geração 4', subtitle: 'Cônjuges', colorKey: 'conjuge' },
+  { key: 'generation5Family', title: 'Geração 5', subtitle: 'Familiares', colorKey: 'irmaos' },
+  { key: 'generation5Spouses', title: 'Geração 5', subtitle: 'Cônjuges', colorKey: 'sobrinhos' },
+  { key: 'generation6', title: 'Geração 6', colorKey: 'filhos' },
 ];
 
 function GenealogyFilterGrid({
   filters,
+  counts,
   onToggle,
 }: {
   filters: GenealogyFilters;
+  counts: GenealogyFilterCounts;
   onToggle: (key: GenealogyFilterKey) => void;
 }) {
   return (
     <section>
       <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
-      <p className="mb-2 text-xs leading-snug text-gray-500">
+      <p className="mb-1.5 text-xs leading-snug text-gray-500">
         Clique nos cards abaixo para exibir ou ocultar gerações na genealogia.
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {GENEALOGY_FILTER_OPTIONS.map((option) => {
           const active = filters[option.key];
+          const count = counts[option.key];
           const color = DIRECT_FAMILY_RELATION_COLORS[option.colorKey];
+          const label = option.subtitle ? `${option.title} - ${option.subtitle}` : option.title;
 
           return (
             <button
@@ -2609,7 +2596,7 @@ function GenealogyFilterGrid({
               aria-pressed={active}
               onClick={() => onToggle(option.key)}
               className={[
-                'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
+                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
                 active ? 'opacity-100' : 'grayscale opacity-45',
                 'hover:-translate-y-0.5 hover:shadow-md',
               ].join(' ')}
@@ -2618,12 +2605,15 @@ function GenealogyFilterGrid({
                 borderColor: color.solid,
                 color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
               }}
-              title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
+              title={active ? `Ocultar ${label}` : `Mostrar ${label}`}
             >
-              <span className="block text-xs font-semibold leading-snug">{option.label}</span>
-              <span className="mt-1 block text-[11px] font-medium leading-none">
-                {active ? 'Ativo' : 'Oculto'}
-              </span>
+              <span className="block truncate text-xs font-semibold leading-snug">{option.title}</span>
+              {option.subtitle && (
+                <span className="mt-0.5 block truncate text-[11px] font-medium italic leading-snug">
+                  {option.subtitle}
+                </span>
+              )}
+              <span className="mt-1 block text-lg font-bold leading-none">{count}</span>
             </button>
           );
         })}
@@ -2676,7 +2666,7 @@ function LifeStatusKpiGrid({
 
   return (
     <section>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {items.map((item) => {
           const active = filters[item.key];
 
@@ -2687,7 +2677,7 @@ function LifeStatusKpiGrid({
               aria-pressed={active}
               onClick={() => onToggle(item.key)}
               className={[
-                'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
+                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
                 active ? 'opacity-100' : 'grayscale opacity-45',
                 'hover:-translate-y-0.5 hover:shadow-md',
               ].join(' ')}
@@ -2699,7 +2689,7 @@ function LifeStatusKpiGrid({
               title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
             >
               <span className="block text-xs font-semibold">{item.label}</span>
-              <span className="mt-1 block text-xl font-bold leading-none">{item.value}</span>
+              <span className="mt-1 block text-lg font-bold leading-none">{item.value}</span>
             </button>
           );
         })}
@@ -2709,6 +2699,7 @@ function LifeStatusKpiGrid({
 }
 
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
+type GenealogyFilterCounts = Record<GenealogyFilterKey, number>;
 
 function uniqueIds(ids: Array<string | undefined | null>, centralPersonId?: string) {
   return Array.from(new Set(ids.filter((id): id is string => Boolean(id) && id !== centralPersonId)));
@@ -2815,6 +2806,99 @@ function calculateDirectRelationCounts(
   };
 }
 
+function calculateGenealogyFilterCounts(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[]
+): GenealogyFilterCounts {
+  const counts: GenealogyFilterCounts = {
+    generation1: 0,
+    generation2: 0,
+    generation3Family: 0,
+    generation3Spouses: 0,
+    generation4Family: 0,
+    generation4Spouses: 0,
+    generation5Family: 0,
+    generation5Spouses: 0,
+    generation6: 0,
+  };
+
+  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
+  const spouseIdsByGeneration = new Map<number, Set<string>>();
+
+  const getSortableBirthTimestamp = (pessoa: Pessoa) => {
+    if (!pessoa.data_nascimento) return Number.POSITIVE_INFINITY;
+    const timestamp = new Date(pessoa.data_nascimento).getTime();
+    return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
+  };
+
+  const comparePeopleForGenealogyOrder = (pessoaA: Pessoa, pessoaB: Pessoa) => {
+    const birthA = getSortableBirthTimestamp(pessoaA);
+    const birthB = getSortableBirthTimestamp(pessoaB);
+
+    if (birthA !== birthB) return birthA - birthB;
+    return (pessoaA.nome_completo || '').localeCompare(pessoaB.nome_completo || '');
+  };
+
+  const markSpouseInGeneration = (generation: number, personId: string) => {
+    if (!spouseIdsByGeneration.has(generation)) spouseIdsByGeneration.set(generation, new Set());
+    spouseIdsByGeneration.get(generation)!.add(personId);
+  };
+
+  relacionamentos.forEach((relacionamento) => {
+    if (relacionamento.tipo_relacionamento !== 'conjuge') return;
+
+    const origin = peopleById.get(relacionamento.pessoa_origem_id);
+    const destination = peopleById.get(relacionamento.pessoa_destino_id);
+    if (!origin || !destination) return;
+    if (origin.manual_generation !== destination.manual_generation) return;
+
+    const generation = origin.manual_generation;
+    if (generation !== 3 && generation !== 4 && generation !== 5) return;
+
+    const orderedPair = [origin, destination].sort(comparePeopleForGenealogyOrder);
+    markSpouseInGeneration(generation, orderedPair[1].id);
+  });
+
+  pessoas.forEach((pessoa) => {
+    switch (pessoa.manual_generation) {
+      case 1:
+        counts.generation1 += 1;
+        break;
+      case 2:
+        counts.generation2 += 1;
+        break;
+      case 3:
+        if (spouseIdsByGeneration.get(3)?.has(pessoa.id)) {
+          counts.generation3Spouses += 1;
+        } else {
+          counts.generation3Family += 1;
+        }
+        break;
+      case 4:
+        if (spouseIdsByGeneration.get(4)?.has(pessoa.id)) {
+          counts.generation4Spouses += 1;
+        } else {
+          counts.generation4Family += 1;
+        }
+        break;
+      case 5:
+        if (spouseIdsByGeneration.get(5)?.has(pessoa.id)) {
+          counts.generation5Spouses += 1;
+        } else {
+          counts.generation5Family += 1;
+        }
+        break;
+      case 6:
+        counts.generation6 += 1;
+        break;
+      default:
+        break;
+    }
+  });
+
+  return counts;
+}
+
 function FilterButton({
   active,
   onClick,
@@ -2875,7 +2959,7 @@ function DirectRelativeFilterGrid({
   const excludedKeySet = new Set(excludedKeys);
 
   return (
-    <div className={compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-5' : 'grid grid-cols-2 gap-2'}>
+    <div className={compact ? 'grid grid-cols-2 gap-1.5 sm:grid-cols-5' : 'grid grid-cols-2 gap-1.5'}>
       {DIRECT_RELATIVE_FILTER_OPTIONS.filter((option) => !excludedKeySet.has(option.key)).map((option) => {
         const active = filters[option.key];
         const count = counts[option.key];
@@ -2889,7 +2973,7 @@ function DirectRelativeFilterGrid({
             disabled={disabled}
             onClick={() => onToggle(option.key)}
             className={[
-              'min-h-[54px] rounded-lg border p-2 text-left shadow-sm transition',
+                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
               active ? 'opacity-100' : 'grayscale opacity-45',
               disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
             ].join(' ')}
@@ -2901,7 +2985,7 @@ function DirectRelativeFilterGrid({
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
             <span className="block text-xs font-semibold">{option.label}</span>
-            <span className="mt-1 block text-xl font-bold leading-none">{count}</span>
+            <span className="mt-1 block text-lg font-bold leading-none">{count}</span>
           </button>
         );
       })}
