@@ -38,6 +38,14 @@ import {
   PersonGeneratedInsight,
 } from '../../services/personInsightsService';
 import {
+  AdminLinkableProfile,
+  adminCreateUserPersonLink,
+  adminDeleteUserPersonLink,
+  adminListLinksForPerson,
+  adminListProfilesForLinking,
+  UserPersonLinkRecord,
+} from '../../services/memberProfileService';
+import {
   TipoEntidade,
   ArquivoHistorico,
   Pessoa,
@@ -46,7 +54,7 @@ import {
   SubtipoRelacionamento,
   LadoPessoa,
 } from '../../types';
-import { ArrowLeft, Save, Plus, X, User, Search } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, User, Search, Link2, Trash2 } from 'lucide-react';
 import { FotoUpload } from '../../components/FotoUpload';
 import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import {
@@ -144,6 +152,13 @@ type AdminPessoaDraft = {
   subtipoRelSelecionado: SubtipoRelacionamento;
 };
 
+const ADMIN_LINK_RELATION_OPTIONS = [
+  'Responsável legal',
+  'Guardião de memória',
+  'Familiar responsável',
+  'Outro',
+] as const;
+
 function getAdminPessoaDraftKey(isEdit: boolean, id?: string) {
   return isEdit && id ? `admin-pessoa-form-draft:edit:${id}` : 'admin-pessoa-form-draft:new';
 }
@@ -220,6 +235,14 @@ export function AdminPessoaForm() {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsActionLoading, setInsightsActionLoading] = useState(false);
   const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [linkableProfiles, setLinkableProfiles] = useState<AdminLinkableProfile[]>([]);
+  const [personUserLinks, setPersonUserLinks] = useState<UserPersonLinkRecord[]>([]);
+  const [linksLoading, setLinksLoading] = useState(false);
+  const [linkActionLoading, setLinkActionLoading] = useState(false);
+  const [newLinkUserId, setNewLinkUserId] = useState('');
+  const [newLinkRelation, setNewLinkRelation] = useState<(typeof ADMIN_LINK_RELATION_OPTIONS)[number]>('Familiar responsável');
+  const [newLinkCanEdit, setNewLinkCanEdit] = useState(true);
+  const [newLinkPrincipal, setNewLinkPrincipal] = useState(false);
   const draftKey = useMemo(() => getAdminPessoaDraftKey(isEdit, id), [id, isEdit]);
   const hasInitializedDraftRef = useRef(false);
   const hasUserEditedRef = useRef(false);
@@ -372,6 +395,37 @@ export function AdminPessoaForm() {
     return () => {
       mounted = false;
     };
+  }, [id, isEdit]);
+
+  const loadPersonUserLinks = async () => {
+    if (!isEdit || !id) return;
+
+    try {
+      setLinksLoading(true);
+      const [profilesResult, linksResult] = await Promise.all([
+        adminListProfilesForLinking(),
+        adminListLinksForPerson(id),
+      ]);
+
+      if (profilesResult.error) {
+        toast.error(profilesResult.error);
+      } else {
+        setLinkableProfiles(profilesResult.data);
+      }
+
+      if (linksResult.error) {
+        toast.error(linksResult.error);
+      } else {
+        setPersonUserLinks(linksResult.data);
+      }
+    } finally {
+      setLinksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPersonUserLinks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEdit]);
 
   const loadTodasPessoas = async () => {
@@ -734,6 +788,74 @@ export function AdminPessoaForm() {
     formData.permitir_exibir_data_nascimento !== false
   );
 
+  const linkedUserIds = new Set(personUserLinks.map((link) => link.user_id));
+  const availableProfilesForLinking = linkableProfiles.filter((profile) => !linkedUserIds.has(profile.id));
+  const profilesById = new Map(linkableProfiles.map((profile) => [profile.id, profile]));
+
+  const handleCreateUserPersonLink = async () => {
+    if (!id || !newLinkUserId) {
+      toast.error('Selecione um usuário para vincular.');
+      return;
+    }
+
+    try {
+      setLinkActionLoading(true);
+      const result = await adminCreateUserPersonLink({
+        userId: newLinkUserId,
+        pessoaId: id,
+        relacaoComPerfil: newLinkRelation,
+        principal: newLinkPrincipal,
+        canEdit: newLinkCanEdit,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success('Usuário vinculado à pessoa.');
+      setNewLinkUserId('');
+      setNewLinkRelation('Familiar responsável');
+      setNewLinkCanEdit(true);
+      setNewLinkPrincipal(false);
+      await loadPersonUserLinks();
+    } finally {
+      setLinkActionLoading(false);
+    }
+  };
+
+  const handleDeleteUserPersonLink = async (link: UserPersonLinkRecord) => {
+    const isSelfLink = link.relacao_com_perfil === 'Sou esta pessoa';
+    const selfLinks = personUserLinks.filter((item) => item.relacao_com_perfil === 'Sou esta pessoa');
+
+    if (isSelfLink && selfLinks.length <= 1) {
+      const firstConfirmation = window.confirm(
+        'Este é o último vínculo "Sou esta pessoa" desta pessoa. Remover esse vínculo pode impedir o acesso direto ao próprio perfil. Deseja continuar?'
+      );
+      if (!firstConfirmation) return;
+
+      const secondConfirmation = window.confirm('Confirme novamente para remover o último vínculo principal de identidade desta pessoa.');
+      if (!secondConfirmation) return;
+    } else if (!window.confirm('Remover este vínculo de usuário com a pessoa?')) {
+      return;
+    }
+
+    try {
+      setLinkActionLoading(true);
+      const result = await adminDeleteUserPersonLink(link.id);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success('Vínculo removido.');
+      await loadPersonUserLinks();
+    } finally {
+      setLinkActionLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 shadow-sm sm:px-6">
@@ -1077,6 +1199,133 @@ export function AdminPessoaForm() {
               pessoaId={id}
               pessoaNome={formData.nome_completo || 'Pessoa'}
             />
+          )}
+
+          {isEdit && id && (
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 break-words">
+                  <Link2 className="h-5 w-5 text-blue-700" />
+                  Usuários vinculados a esta pessoa
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {linksLoading ? (
+                  <p className="text-sm text-gray-500">Carregando vínculos...</p>
+                ) : personUserLinks.length === 0 ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    Nenhum usuário está vinculado a esta pessoa.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {personUserLinks.map((link) => {
+                      const profile = profilesById.get(link.user_id);
+                      const displayName = profile?.nome_exibicao || profile?.email || link.user_id;
+
+                      return (
+                        <div key={link.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="break-words text-sm font-semibold text-gray-900">{displayName}</p>
+                              <p className="break-all text-xs text-gray-500">{profile?.email || link.user_id}</p>
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">
+                                  {link.relacao_com_perfil || 'Relação não informada'}
+                                </span>
+                                {link.principal ? (
+                                  <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">Principal</span>
+                                ) : null}
+                                <span className={`rounded-full px-2 py-1 ${link.can_edit === false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                                  {link.can_edit === false ? 'Somente leitura' : 'Pode editar'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteUserPersonLink(link)}
+                              disabled={linkActionLoading}
+                              className="w-full text-red-700 hover:text-red-800 sm:w-auto"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Remover
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h3 className="break-words text-sm font-semibold text-gray-900">Adicionar vínculo manual</h3>
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Usuário</label>
+                      <select
+                        value={newLinkUserId}
+                        onChange={(event) => setNewLinkUserId(event.target.value)}
+                        className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Selecione um usuário</option>
+                        {availableProfilesForLinking.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.nome_exibicao || profile.email || profile.id}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Relação com o perfil</label>
+                      <select
+                        value={newLinkRelation}
+                        onChange={(event) => setNewLinkRelation(event.target.value as typeof newLinkRelation)}
+                        className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        {ADMIN_LINK_RELATION_OPTIONS.map((relation) => (
+                          <option key={relation} value={relation}>{relation}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={newLinkCanEdit}
+                        onChange={(event) => setNewLinkCanEdit(event.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      Pode editar
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={newLinkPrincipal}
+                        onChange={(event) => setNewLinkPrincipal(event.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      Tornar principal
+                    </label>
+                  </div>
+
+                  <Button
+                    type="button"
+                    className="mt-4 w-full sm:w-auto"
+                    onClick={handleCreateUserPersonLink}
+                    disabled={linkActionLoading || !newLinkUserId}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {linkActionLoading ? 'Vinculando...' : 'Adicionar vínculo'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </form>
       </main>

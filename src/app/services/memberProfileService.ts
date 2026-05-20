@@ -20,6 +20,19 @@ export interface UserPersonLinkRecord {
   principal?: boolean | null;
   dados_confirmados?: boolean | null;
   dados_confirmados_em?: string | null;
+  managed_by_admin?: boolean | null;
+  can_edit?: boolean | null;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface AdminLinkableProfile {
+  id: string;
+  email?: string | null;
+  nome_exibicao?: string | null;
+  avatar_url?: string | null;
+  role?: 'admin' | 'member' | string | null;
 }
 
 export interface FirstAccessPersonPreview {
@@ -293,6 +306,180 @@ export async function getPrimaryLinkedPersonWithPessoa(userId: string) {
   };
 }
 
+export async function listUserPersonLinksWithPessoa(userId: string) {
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('*, pessoa:pessoas(*)')
+    .eq('user_id', userId)
+    .order('principal', { ascending: false })
+    .order('created_at', { ascending: true });
+
+  return {
+    error: error?.message,
+    data: ((data || []) as Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>).map((link) => ({
+      ...link,
+      pessoa: (link as any).pessoa as Pessoa | null,
+    })),
+  };
+}
+
+export async function getLinkedPersonWithPessoa(userId: string, pessoaId: string) {
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('*, pessoa:pessoas(*)')
+    .eq('user_id', userId)
+    .eq('pessoa_id', pessoaId)
+    .maybeSingle();
+
+  return {
+    error: error?.message,
+    data: data
+      ? ({
+          ...(data as UserPersonLinkRecord),
+          pessoa: (data as any).pessoa as Pessoa | null,
+        } as UserPersonLinkRecord & { pessoa: Pessoa | null })
+      : null,
+  };
+}
+
+export async function getCurrentUserLinkedPeople() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authData.user?.id) {
+    return { error: authError?.message || 'Usuário não autenticado.', data: [] as Array<UserPersonLinkRecord & { pessoa: Pessoa | null }> };
+  }
+
+  return listUserPersonLinksWithPessoa(authData.user.id);
+}
+
+export async function setPrimaryLinkedPerson(userId: string, pessoaId: string) {
+  const { data, error } = await supabase
+    .rpc('set_user_primary_person_link', {
+      target_user_id: userId,
+      target_pessoa_id: pessoaId,
+    })
+    .maybeSingle();
+
+  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+}
+
+export async function adminListProfilesForLinking() {
+  const { data, error } = await supabase.rpc('admin_list_profiles_for_linking');
+
+  return {
+    error: error?.message,
+    data: ((data || []) as AdminLinkableProfile[]).map((profile) => ({
+      ...profile,
+      role: profile.role ?? 'member',
+    })),
+  };
+}
+
+export async function adminListLinksForPerson(pessoaId: string) {
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('*, pessoa:pessoas(*)')
+    .eq('pessoa_id', pessoaId)
+    .order('created_at', { ascending: true });
+
+  return {
+    error: error?.message,
+    data: ((data || []) as Array<UserPersonLinkRecord & { pessoa?: Pessoa | null }>).map((link) => ({
+      ...link,
+      pessoa: (link as any).pessoa ?? null,
+    })),
+  };
+}
+
+async function getPessoaLabel(pessoaId: string) {
+  const { data } = await supabase
+    .from('pessoas')
+    .select('nome_completo')
+    .eq('id', pessoaId)
+    .maybeSingle();
+
+  return (data as Pick<Pessoa, 'nome_completo'> | null)?.nome_completo ?? 'Pessoa vinculada';
+}
+
+async function registerUserPersonLinkActivity(
+  action: 'user_person_link.created' | 'user_person_link.updated' | 'user_person_link.deleted',
+  link: UserPersonLinkRecord
+) {
+  const pessoaLabel = await getPessoaLabel(link.pessoa_id);
+
+  await createActivityLog({
+    action,
+    entity_type: 'user_person_link',
+    entity_id: link.id,
+    entity_label: pessoaLabel,
+    metadata: {
+      pessoa_id: link.pessoa_id,
+      target_user_id: link.user_id,
+      relacao_com_perfil: link.relacao_com_perfil,
+      principal: link.principal,
+      can_edit: link.can_edit,
+    },
+  });
+}
+
+export async function adminCreateUserPersonLink(params: {
+  userId: string;
+  pessoaId: string;
+  relacaoComPerfil?: string | null;
+  principal?: boolean;
+  canEdit?: boolean;
+}) {
+  const { data, error } = await supabase
+    .rpc('admin_create_user_person_link', {
+      target_user_id: params.userId,
+      target_pessoa_id: params.pessoaId,
+      target_relacao_com_perfil: params.relacaoComPerfil ?? null,
+      target_principal: params.principal ?? false,
+      target_can_edit: params.canEdit ?? true,
+    })
+    .maybeSingle();
+
+  if (!error && data) {
+    await registerUserPersonLinkActivity('user_person_link.created', data as UserPersonLinkRecord);
+  }
+
+  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+}
+
+export async function adminUpdateUserPersonLink(params: {
+  linkId: string;
+  relacaoComPerfil?: string | null;
+  principal?: boolean;
+  canEdit?: boolean;
+}) {
+  const { data, error } = await supabase
+    .rpc('admin_update_user_person_link', {
+      target_link_id: params.linkId,
+      target_relacao_com_perfil: params.relacaoComPerfil ?? null,
+      target_principal: params.principal ?? false,
+      target_can_edit: params.canEdit ?? true,
+    })
+    .maybeSingle();
+
+  if (!error && data) {
+    await registerUserPersonLinkActivity('user_person_link.updated', data as UserPersonLinkRecord);
+  }
+
+  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+}
+
+export async function adminDeleteUserPersonLink(linkId: string) {
+  const { data, error } = await supabase
+    .rpc('admin_delete_user_person_link', { target_link_id: linkId })
+    .maybeSingle();
+
+  if (!error && data) {
+    await registerUserPersonLinkActivity('user_person_link.deleted', data as UserPersonLinkRecord);
+  }
+
+  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+}
+
 export async function validateFirstAccessCode(accessCode: string) {
   const normalizedCode = accessCode.trim();
 
@@ -505,6 +692,21 @@ export async function linkUserToPerson(params: {
 }
 
 export async function updateOwnLinkedPerson(pessoaId: string, payload: EditableOwnPersonPayload) {
+  const currentLinks = await getCurrentUserLinkedPeople();
+  const currentLink = currentLinks.data.find((link) => link.pessoa_id === pessoaId);
+
+  if (currentLinks.error) {
+    return { error: currentLinks.error, data: null as Pessoa | null };
+  }
+
+  if (!currentLink) {
+    return { error: 'Sua conta não está vinculada a esta pessoa.', data: null as Pessoa | null };
+  }
+
+  if (currentLink.can_edit === false) {
+    return { error: 'Você não tem permissão para editar este perfil.', data: null as Pessoa | null };
+  }
+
   const { data, error } = await supabase
     .from('pessoas')
     .update(payload)
@@ -522,14 +724,8 @@ export async function updateOwnLinkedPerson(pessoaId: string, payload: EditableO
 
 export async function confirmOwnLinkedPersonData(linkId: string) {
   const { data, error } = await supabase
-    .from('user_person_links')
-    .update({
-      dados_confirmados: true,
-      dados_confirmados_em: new Date().toISOString(),
-    })
-    .eq('id', linkId)
-    .select('*')
-    .single();
+    .rpc('confirm_own_user_person_link_data', { target_link_id: linkId })
+    .maybeSingle();
 
   if (!error && data) {
     const link = data as UserPersonLinkRecord;

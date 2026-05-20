@@ -31,7 +31,7 @@ import {
 import {
   EditableOwnPersonPayload,
   ensureMemberProfile,
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentUserLinkedPeople,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
@@ -293,6 +293,8 @@ export function MeusDados() {
   const initializedPessoaIdRef = useRef<string | null>(null);
   const isDirtyRef = useRef(false);
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
+  const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
+  const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [complemento, setComplemento] = useState('');
   const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
@@ -318,7 +320,7 @@ export function MeusDados() {
 
       setLoading(true);
       await resolveFirstAccessLinkForUser(user);
-      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
+      const { data: linksData, error } = await getCurrentUserLinkedPeople();
 
       if (!mounted) return;
 
@@ -328,6 +330,18 @@ export function MeusDados() {
         return;
       }
 
+      setLinkedPeople(linksData);
+      const selectedLink = (
+        selectedPessoaId
+          ? linksData.find((item) => item.pessoa_id === selectedPessoaId)
+          : null
+      ) || linksData.find((item) => item.principal) || linksData[0] || null;
+
+      if (selectedLink && selectedLink.pessoa_id !== selectedPessoaId) {
+        setSelectedPessoaId(selectedLink.pessoa_id);
+      }
+
+      const data = selectedLink;
       const nextPessoaId = data?.pessoa?.id ?? null;
       const samePessoa = nextPessoaId && initializedPessoaIdRef.current === nextPessoaId;
       const shouldPreserveDraft = hasInitializedFormRef.current && isDirtyRef.current && samePessoa;
@@ -388,6 +402,9 @@ export function MeusDados() {
 
       hasInitializedFormRef.current = true;
       initializedPessoaIdRef.current = nextPessoaId;
+      setPhotoPreviewUrl(null);
+      setCropImageUrl(null);
+      setCroppedPhotoBlob(null);
       setPhotoMarkedForRemoval(false);
       setLoading(false);
     }
@@ -397,7 +414,7 @@ export function MeusDados() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [selectedPessoaId, user]);
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -498,6 +515,7 @@ export function MeusDados() {
   }, [archives, complemento, form, link?.pessoa?.id, socialProfiles, user?.id]);
 
   const pessoa = link?.pessoa;
+  const canEditSelectedProfile = link?.can_edit !== false;
   const previewName = useMemo(() => {
     const name = formatPersonName(String(form.nome_completo ?? '').trim());
     return name || pessoa?.nome_completo || 'Minha pessoa na árvore';
@@ -686,6 +704,11 @@ export function MeusDados() {
       return;
     }
 
+    if (!canEditSelectedProfile) {
+      toast.error('Este perfil está em modo somente leitura para sua conta.');
+      return;
+    }
+
     if (!validateForm()) {
       toast.error('Revise os campos destacados antes de salvar.');
       return;
@@ -747,15 +770,17 @@ export function MeusDados() {
       return;
     }
 
-    const { error: profileError } = await ensureMemberProfile(user.id, {
-      nome_exibicao: updatedPessoa?.nome_completo ?? String(payload.nome_completo ?? ''),
-      avatar_url: photoMarkedForRemoval ? null : String(updatedPessoa?.foto_principal_url ?? form.foto_principal_url ?? '') || null,
-    });
+    if (link.relacao_com_perfil === 'Sou esta pessoa') {
+      const { error: profileError } = await ensureMemberProfile(user.id, {
+        nome_exibicao: updatedPessoa?.nome_completo ?? String(payload.nome_completo ?? ''),
+        avatar_url: photoMarkedForRemoval ? null : String(updatedPessoa?.foto_principal_url ?? form.foto_principal_url ?? '') || null,
+      });
 
-    if (profileError) {
-      setSaving(false);
-      toast.error(profileError);
-      return;
+      if (profileError) {
+        setSaving(false);
+        toast.error(profileError);
+        return;
+      }
     }
 
     if (notificationPreferences) {
@@ -827,6 +852,37 @@ export function MeusDados() {
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
         <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+          {linkedPeople.length > 1 && (
+            <section className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <Label htmlFor="linked-profile-selector">Perfil em edição</Label>
+              <select
+                id="linked-profile-selector"
+                value={selectedPessoaId}
+                onChange={(event) => {
+                  isDirtyRef.current = false;
+                  hasInitializedFormRef.current = false;
+                  initializedPessoaIdRef.current = null;
+                  setSelectedPessoaId(event.target.value);
+                }}
+                className="mt-2 flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              >
+                {linkedPeople.map((item) => (
+                  <option key={item.id} value={item.pessoa_id}>
+                    {item.pessoa?.nome_completo || item.pessoa_id}
+                    {item.principal ? ' · principal' : ''}
+                    {item.can_edit === false ? ' · somente leitura' : ''}
+                  </option>
+                ))}
+              </select>
+            </section>
+          )}
+
+          {!canEditSelectedProfile && (
+            <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              Este perfil está disponível para consulta, mas sua conta não tem permissão para editar os dados.
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Nome completo" error={errors.nome_completo}>
               <Input
@@ -1022,7 +1078,7 @@ export function MeusDados() {
           </section>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-            <Button type="submit" disabled={saving} className="w-full sm:w-auto sm:min-w-[220px]">
+            <Button type="submit" disabled={saving || !canEditSelectedProfile} className="w-full sm:w-auto sm:min-w-[220px]">
               {saving ? (
                 'Salvando...'
               ) : (
