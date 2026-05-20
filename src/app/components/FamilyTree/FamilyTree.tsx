@@ -108,6 +108,7 @@ const TREE_MOBILE_VIEWPORT_PADDING_X = 22;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 22;
 const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
 const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
+const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
 
 type FlowBounds = TreeLayoutBounds;
 type TreeViewportFitMode = 'contain' | 'width' | 'height';
@@ -377,7 +378,7 @@ function FamilyTreeComponent({
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const [reactFlowReady, setReactFlowReady] = useState(false);
   const [hasAppliedInitialViewport, setHasAppliedInitialViewport] = useState(false);
-  const [, setDirectFamilyCurrentZoom] = useState<number | null>(null);
+  const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
@@ -536,7 +537,9 @@ function FamilyTreeComponent({
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
-      fitMode: isMobile && isGenealogyLayout ? 'height' : 'contain',
+      fitMode: isGenealogyLayout
+        ? (isMobile ? 'height' : 'width')
+        : 'contain',
       horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile]);
@@ -647,13 +650,23 @@ function FamilyTreeComponent({
     [onPersonClick]
   );
 
+  const isAtMinZoom = directFamilyCurrentZoom !== null
+    ? directFamilyCurrentZoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON
+    : false;
+
   const handleZoomIn = useCallback(() => {
     reactFlowRef.current?.zoomIn({ duration: 160 });
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    reactFlowRef.current?.zoomOut({ duration: 160 });
-  }, []);
+    const instance = reactFlowRef.current;
+    if (!instance) return;
+
+    const viewport = instance.getViewport();
+    if (viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON) return;
+
+    instance.zoomOut({ duration: 160 });
+  }, [activeMinZoom]);
 
   const handlePrint = useCallback(async () => {
     try {
@@ -743,8 +756,12 @@ function FamilyTreeComponent({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="flex h-9 w-9 items-center justify-center text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            title="Diminuir zoom"
+            disabled={isAtMinZoom}
+            className={[
+              'flex h-9 w-9 items-center justify-center text-gray-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+              isAtMinZoom ? 'cursor-not-allowed opacity-45' : 'hover:bg-gray-50',
+            ].join(' ')}
+            title={isAtMinZoom ? 'Zoom mínimo' : 'Diminuir zoom'}
             aria-label="Diminuir zoom"
           >
             <Minus className="h-4 w-4" />
