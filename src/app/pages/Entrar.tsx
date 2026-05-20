@@ -825,11 +825,11 @@ export function Entrar() {
       <footer className="relative z-10 px-4 pb-6">
         <nav className="mx-auto flex max-w-6xl items-center justify-center gap-3 text-xs text-gray-500">
           <Link to="/termos" className="font-medium hover:text-blue-700 hover:underline">
-            termos de uso
+            Termos de Uso
           </Link>
           <span aria-hidden="true">•</span>
           <Link to="/privacidade" className="font-medium hover:text-blue-700 hover:underline">
-            política de privacidade
+            Política de Privacidade
           </Link>
         </nav>
       </footer>

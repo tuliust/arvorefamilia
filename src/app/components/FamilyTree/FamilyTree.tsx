@@ -89,7 +89,6 @@ const DIRECT_FAMILY_MAX_ZOOM = 2;
 const DIRECT_FAMILY_MOBILE_MAX_ZOOM = 1.5;
 const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.01;
 const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.01;
-const DIRECT_FAMILY_MIN_ZOOM_TOLERANCE = 0.02;
 const DIRECT_FAMILY_VIEWPORT_PADDING = 18;
 const DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING = 16;
 const DIRECT_FAMILY_TRANSLATE_PADDING = 120;
@@ -108,8 +107,8 @@ const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
 const TREE_MOBILE_VIEWPORT_PADDING_X = 18;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 18;
-const TREE_INITIAL_MIN_ZOOM = 0.55;
-const TREE_MOBILE_INITIAL_MIN_ZOOM = 0.45;
+const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
+const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
 
 interface FlowBounds {
   x: number;
@@ -257,7 +256,6 @@ function getNormalizedTreeViewport({
   paddingY,
   titleSafeArea,
   maxZoom,
-  minInitialZoom,
   fitHeight,
 }: {
   bounds: FlowBounds;
@@ -267,7 +265,6 @@ function getNormalizedTreeViewport({
   paddingY: number;
   titleSafeArea: number;
   maxZoom: number;
-  minInitialZoom: number;
   fitHeight: boolean;
 }): Viewport {
   const availableWidth = Math.max(1, containerWidth - paddingX * 2);
@@ -275,7 +272,7 @@ function getNormalizedTreeViewport({
   const zoomX = availableWidth / Math.max(1, bounds.width);
   const zoomY = availableHeight / Math.max(1, bounds.height);
   const fitZoom = fitHeight ? Math.min(zoomX, zoomY) : zoomX;
-  const zoom = Math.min(1, maxZoom, Math.max(minInitialZoom, fitZoom));
+  const zoom = Math.min(1, maxZoom, Math.max(TREE_INITIAL_TECHNICAL_MIN_ZOOM, fitZoom));
   const centerX = bounds.x + bounds.width / 2;
   const topY = bounds.y;
 
@@ -374,10 +371,8 @@ function FamilyTreeComponent({
 }: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
-  const directFamilyRecenteringRef = useRef(false);
-  const directFamilyViewportRef = useRef<Viewport | null>(null);
   const [directFamilyFitZoom, setDirectFamilyFitZoom] = useState<number | null>(null);
-  const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
+  const [, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
@@ -385,9 +380,7 @@ function FamilyTreeComponent({
   const directFamilyMinZoom = directFamilyFitZoom
     ? Math.max(directFamilyFitZoom * 0.9, Math.min(directFamilyFallbackMinZoom, directFamilyFitZoom))
     : directFamilyFallbackMinZoom;
-  const directFamilyFittedZoom = directFamilyFitZoom ?? directFamilyMinZoom;
-  const directFamilyViewportZoom = directFamilyCurrentZoom ?? directFamilyMinZoom;
-  const directFamilyCanPan = directFamilyViewportZoom > directFamilyFittedZoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE;
+
   const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
   const isGenealogyLayout = usesGenealogyLayout(viewMode);
   const activeMinZoom = isGenealogyLayout
@@ -396,8 +389,7 @@ function FamilyTreeComponent({
   const activeMaxZoom = isGenealogyLayout
     ? (isMobile ? GENEALOGY_MOBILE_MAX_ZOOM : GENEALOGY_MAX_ZOOM)
     : directFamilyMaxZoom;
-  const activeFittedZoom = directFamilyFitZoom ?? activeMinZoom;
-  const activeCanPan = isGenealogyLayout ? true : directFamilyCanPan;
+  const activeCanPan = true;
   const effectiveCentralPersonId = centralPersonId || selectedPersonId || pessoas[0]?.id;
   const treeTitleFirstName = useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === effectiveCentralPersonId);
@@ -540,8 +532,7 @@ function FamilyTreeComponent({
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
-      minInitialZoom: isMobile ? TREE_MOBILE_INITIAL_MIN_ZOOM : TREE_INITIAL_MIN_ZOOM,
-      fitHeight: !isGenealogyLayout,
+      fitHeight: false,
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile]);
 
@@ -602,32 +593,9 @@ function FamilyTreeComponent({
   ]);
 
   useEffect(() => {
-    if (!reactFlowRef.current || nodes.length === 0 || containerSize.width <= 0 || containerSize.height <= 0) return;
-    if (!directFamilyViewport) return;
-
-    const timer = window.setTimeout(() => {
-      directFamilyViewportRef.current = directFamilyViewport;
-      setDirectFamilyFitZoom(directFamilyViewport.zoom);
-      setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
-      reactFlowRef.current?.setViewport(directFamilyViewport, { duration: 360 });
-    }, 50);
-
-    return () => window.clearTimeout(timer);
-  }, [
-    effectiveCentralPersonId,
-    nodes,
-    directFamilyViewport,
-    containerSize.width,
-    containerSize.height,
-    layoutRevision,
-    viewMode,
-  ]);
-
-  useEffect(() => {
     if (!reactFlowRef.current || containerSize.width <= 0 || containerSize.height <= 0) return;
     if (!directFamilyViewport) return;
 
-    directFamilyViewportRef.current = directFamilyViewport;
     setDirectFamilyFitZoom(directFamilyViewport.zoom);
     setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
     reactFlowRef.current.setViewport(directFamilyViewport, { duration: 180 });
@@ -644,8 +612,7 @@ function FamilyTreeComponent({
       reactFlowRef.current = instance;
 
       if (directFamilyViewport) {
-        directFamilyViewportRef.current = directFamilyViewport;
-        setDirectFamilyFitZoom(directFamilyViewport.zoom);
+            setDirectFamilyFitZoom(directFamilyViewport.zoom);
         setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
         instance.setViewport(directFamilyViewport);
       }
@@ -663,30 +630,8 @@ function FamilyTreeComponent({
   const handleMoveEnd = useCallback(
     (_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
       setDirectFamilyCurrentZoom(viewport.zoom);
-
-      if (isGenealogyLayout) {
-        return;
-      }
-
-      if (
-        !reactFlowRef.current ||
-        !directFamilyViewportRef.current ||
-        viewport.zoom > directFamilyViewportRef.current.zoom + DIRECT_FAMILY_MIN_ZOOM_TOLERANCE ||
-        directFamilyRecenteringRef.current
-      ) {
-        return;
-      }
-
-      directFamilyRecenteringRef.current = true;
-      const targetViewport = directFamilyViewportRef.current;
-      reactFlowRef.current.setViewport(targetViewport, { duration: 220 });
-
-      window.setTimeout(() => {
-        setDirectFamilyCurrentZoom(targetViewport.zoom);
-        directFamilyRecenteringRef.current = false;
-      }, 260);
     },
-    [isGenealogyLayout]
+    []
   );
 
   const handleNodeClick = useCallback(
@@ -841,7 +786,7 @@ function FamilyTreeComponent({
         defaultViewport={{
           x: directFamilyViewport?.x ?? 0,
           y: directFamilyViewport?.y ?? 0,
-          zoom: activeFittedZoom,
+          zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
         }}
         proOptions={{ hideAttribution: true }}
       />
