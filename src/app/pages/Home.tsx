@@ -1272,6 +1272,16 @@ export function Home() {
             >
               <CircleEllipsis className="h-4 w-4" />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0 bg-white shadow-sm"
+              onClick={() => setLegendOpen(false)}
+              title="Recolher painel"
+              aria-label="Recolher painel"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
           </div>
           <div className="mt-3">{sidebarPanelContent}</div>
         </section>
@@ -1322,7 +1332,18 @@ export function Home() {
               </div>
             )}
             {!sidebarOpen && (
-              <span className="sr-only">Painel lateral recolhido</span>
+              <div className="flex h-full items-start justify-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                  onClick={() => setSidebarOpen(true)}
+                  title="Expandir painel lateral"
+                  aria-label="Expandir painel lateral"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </aside>
         )}
@@ -1330,6 +1351,18 @@ export function Home() {
         <section
           className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
         >
+          {isMobile && !legendOpen && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-4 top-4 z-30 h-9 w-9 shrink-0 bg-white shadow-sm"
+              onClick={() => setLegendOpen(true)}
+              title="Expandir painel"
+              aria-label="Expandir painel"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
           {isTreeResolving ? (
             <StateMessage
               title="Carregando árvore"
@@ -1365,15 +1398,6 @@ export function Home() {
               layoutRevision={treeLayoutRevision}
               viewMode={treeViewMode}
               genealogyFilters={genealogyFilters}
-              showSidebarToggle
-              sidebarOpen={isMobile ? legendOpen : sidebarOpen}
-              onToggleSidebar={() => {
-                if (isMobile) {
-                  setLegendOpen((current) => !current);
-                } else {
-                  setSidebarOpen((current) => !current);
-                }
-              }}
             />
           ) : (
             <StateMessage
