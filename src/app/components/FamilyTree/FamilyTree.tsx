@@ -9,7 +9,7 @@ import ReactFlow, {
   Viewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Info, Minus, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Minus, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Pessoa, Relacionamento } from '../../types';
@@ -63,6 +63,9 @@ interface FamilyTreeProps {
   centralPersonId?: string;
   isMobile?: boolean;
   layoutRevision?: number;
+  showSidebarToggle?: boolean;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export interface FamilyTreeActions {
@@ -319,6 +322,9 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
   centralPersonId,
   isMobile = false,
   layoutRevision = 0,
+  showSidebarToggle = false,
+  sidebarOpen = false,
+  onToggleSidebar,
 }, ref) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
@@ -710,25 +716,40 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
       ].join(' ')}
       style={{ width: '100%', height: '100%', minHeight: '500px' }}
     >
-      <div className="absolute left-4 top-4 z-20 flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <button
-          type="button"
-          onClick={handleZoomIn}
-          className="flex h-9 w-9 items-center justify-center border-r border-gray-200 text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          title="Aumentar zoom"
-          aria-label="Aumentar zoom"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={handleZoomOut}
-          className="flex h-9 w-9 items-center justify-center text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          title="Diminuir zoom"
-          aria-label="Diminuir zoom"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
+      <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
+        {showSidebarToggle && onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            title={sidebarOpen ? 'Recolher painel' : 'Expandir painel'}
+            aria-label={sidebarOpen ? 'Recolher painel' : 'Expandir painel'}
+            aria-expanded={sidebarOpen}
+          >
+            {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+        )}
+
+        <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            className="flex h-9 w-9 items-center justify-center border-r border-gray-200 text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            title="Aumentar zoom"
+            aria-label="Aumentar zoom"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            className="flex h-9 w-9 items-center justify-center text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            title="Diminuir zoom"
+            aria-label="Diminuir zoom"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {!isAreaSelectionOpen && (

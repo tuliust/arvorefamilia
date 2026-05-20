@@ -3,21 +3,30 @@ import { Pessoa, Relacionamento } from '../types';
 export type CachedTreeData = {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
+  cacheKey?: string;
 };
 
 const TREE_DATA_CHANGED_EVENT = 'arvorefamilia:tree-data-changed';
 
 let cachedTreeData: CachedTreeData | null = null;
 
-export function getCachedTreeData() {
+export function getCachedTreeData(cacheKey?: string) {
+  if (cacheKey && cachedTreeData?.cacheKey !== cacheKey) {
+    return null;
+  }
+
   return cachedTreeData;
 }
 
-export function setCachedTreeData(data: CachedTreeData) {
-  cachedTreeData = data;
+export function setCachedTreeData(data: CachedTreeData, cacheKey?: string) {
+  cachedTreeData = { ...data, cacheKey };
 }
 
-export function clearTreeDataCache() {
+export function clearTreeDataCache(cacheKey?: string) {
+  if (cacheKey && cachedTreeData?.cacheKey !== cacheKey) {
+    return;
+  }
+
   cachedTreeData = null;
 }
 

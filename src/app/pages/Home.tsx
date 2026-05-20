@@ -43,6 +43,7 @@ import {
   buscarPessoas,
 } from '../services/dataService';
 import {
+  clearTreeDataCache,
   getCachedTreeData,
   setCachedTreeData,
   subscribeTreeDataChanged,
@@ -140,6 +141,15 @@ type CuriosityTopic = typeof CURIOSITY_TOPIC_OPTIONS[number];
 type CuriosidadesTab = 'voce-sabia' | 'descubra' | 'pergunte-ia' | 'conexao';
 type SidebarPanel = 'filters' | 'legend' | 'info';
 
+function isPetFamilyMember(pessoa: Pessoa) {
+  return pessoa.humano_ou_pet === 'Pet';
+}
+
+function isHumanFamilyMember(pessoa: Pessoa) {
+  return !isPetFamilyMember(pessoa);
+}
+
+
 export function Home() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -151,17 +161,18 @@ export function Home() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | undefined>();
   const [linkedPersonId, setLinkedPersonId] = useState<string | undefined>();
+  const [linkedPersonResolved, setLinkedPersonResolved] = useState(false);
   const [treeFocusPersonId, setTreeFocusPersonId] = useState<string | undefined>();
   const [profile, setProfile] = useState<MemberProfile | null>(null);
-  const [pessoas, setPessoas] = useState<Pessoa[]>(() => getCachedTreeData()?.pessoas ?? []);
-  const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>(() => getCachedTreeData()?.relacionamentos ?? []);
+  const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
   const [pessoasFiltradas, setPessoasFiltradas] = useState<Pessoa[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
   const [treeViewMode, setTreeViewMode] = useState<TreeViewMode>('minha-arvore');
   const [activeSidebarPanel, setActiveSidebarPanel] = useState<SidebarPanel>('filters');
   const [legendOpen, setLegendOpen] = useState(true);
-  const [isLoading, setIsLoading] = useState(() => !getCachedTreeData());
+  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -197,6 +208,9 @@ export function Home() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const familyTreeRef = useRef<FamilyTreeActions | null>(null);
   const treeDataLoadTokenRef = useRef(0);
+  const treeCacheKey = linkedPersonResolved
+    ? `home:${user?.id ?? 'anon'}:${linkedPersonId ?? 'no-linked-person'}`
+    : null;
 
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
@@ -238,6 +252,20 @@ export function Home() {
   }, []);
 
   useEffect(() => {
+    clearTreeDataCache();
+    treeDataLoadTokenRef.current += 1;
+    setPessoas([]);
+    setRelacionamentos([]);
+    setSelectedPersonId(undefined);
+    setLinkedPersonId(undefined);
+    setLinkedPersonResolved(false);
+    setTreeFocusPersonId(undefined);
+    setPessoasFiltradas([]);
+    setIsLoading(true);
+    setLoadError(null);
+  }, [user?.id]);
+
+  useEffect(() => {
     setDirectRelativeFilterState({
       userId: user?.id,
       filters: readDirectRelativeFilters(user?.id),
@@ -251,9 +279,14 @@ export function Home() {
   }, [user?.id, directRelativeFilterState]);
 
   const loadTreeData = useCallback(async (options: { force?: boolean } = {}) => {
+    if (!treeCacheKey) {
+      setIsLoading(true);
+      return;
+    }
+
     const loadToken = treeDataLoadTokenRef.current + 1;
     treeDataLoadTokenRef.current = loadToken;
-    const cachedTreeData = getCachedTreeData();
+    const cachedTreeData = getCachedTreeData(treeCacheKey);
     if (!options.force && cachedTreeData) {
       setPessoas(cachedTreeData.pessoas);
       setRelacionamentos(cachedTreeData.relacionamentos);
@@ -304,7 +337,7 @@ export function Home() {
       setCachedTreeData({
         pessoas: nextPessoas,
         relacionamentos: nextRelacionamentos,
-      });
+      }, treeCacheKey);
 
       setPessoas(nextPessoas);
       setRelacionamentos(nextRelacionamentos);
@@ -324,7 +357,7 @@ export function Home() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [treeCacheKey]);
 
   useEffect(() => {
     let active = true;
@@ -345,29 +378,48 @@ export function Home() {
   }, [loadTreeData]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadLinkedPerson = async () => {
+      setLinkedPersonResolved(false);
+      setLinkedPersonId(undefined);
+      setTreeFocusPersonId(undefined);
+
       if (!user) {
-        setLinkedPersonId(undefined);
+        if (!cancelled) {
+          setLinkedPersonResolved(true);
+        }
         return;
       }
 
       try {
         const { data } = await getPrimaryLinkedPerson(user.id);
+        if (cancelled) return;
+
         setLinkedPersonId(data?.pessoa_id);
         if (data?.pessoa_id && !queryPersonId) {
           setSelectedPersonId(data.pessoa_id);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error('Erro ao carregar vínculo do membro:', error);
         setLinkedPersonId(undefined);
+      } finally {
+        if (!cancelled) {
+          setLinkedPersonResolved(true);
+        }
       }
     };
 
     loadLinkedPerson();
+
+    return () => {
+      cancelled = true;
+    };
   }, [queryPersonId, user?.id]);
 
   useEffect(() => {
-    if (!queryPersonId || pessoas.length === 0) return;
+    if (!linkedPersonResolved || !queryPersonId || pessoas.length === 0) return;
 
     const queryPersonExists = pessoas.some((pessoa) => pessoa.id === queryPersonId);
 
@@ -380,7 +432,7 @@ export function Home() {
 
     setTreeFocusPersonId(queryPersonId);
     setSelectedPersonId(queryPersonId);
-  }, [linkedPersonId, navigate, pessoas, queryPersonId]);
+  }, [linkedPersonId, linkedPersonResolved, navigate, pessoas, queryPersonId]);
 
   useEffect(() => {
     if (selectedCuriosityPersonId || pessoas.length === 0) return;
@@ -565,6 +617,13 @@ export function Home() {
   }, []);
 
   const handleSignOut = useCallback(async () => {
+    clearTreeDataCache();
+    setSelectedPersonId(undefined);
+    setLinkedPersonId(undefined);
+    setLinkedPersonResolved(false);
+    setTreeFocusPersonId(undefined);
+    setPessoas([]);
+    setRelacionamentos([]);
     await signOut();
     toast.success('Sessão encerrada.');
     navigate('/');
@@ -601,7 +660,9 @@ export function Home() {
     }));
   }, []);
 
-  const centralReferencePersonId = treeFocusPersonId || linkedPersonId || selectedPersonId || pessoas[0]?.id;
+  const centralReferencePersonId = linkedPersonResolved
+    ? treeFocusPersonId || linkedPersonId || selectedPersonId || pessoas[0]?.id
+    : undefined;
   const centralReferencePerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === centralReferencePersonId),
     [centralReferencePersonId, pessoas]
@@ -629,7 +690,7 @@ export function Home() {
         return true;
       }
 
-      if (pessoa.humano_ou_pet === 'Pet') {
+      if (isPetFamilyMember(pessoa)) {
         return personFilters.pets;
       }
 
@@ -642,9 +703,9 @@ export function Home() {
   }, [centralReferencePersonId, pessoas, personFilters]);
 
   const stats = useMemo(() => {
-    const pessoasVivas = pessoas.filter((p) => p.humano_ou_pet === 'Humano' && !isPersonDeceased(p));
-    const pessoasFalecidas = pessoas.filter((p) => p.humano_ou_pet === 'Humano' && isPersonDeceased(p));
-    const pets = pessoas.filter((p) => p.humano_ou_pet === 'Pet');
+    const pessoasVivas = pessoas.filter((p) => isHumanFamilyMember(p) && !isPersonDeceased(p));
+    const pessoasFalecidas = pessoas.filter((p) => isHumanFamilyMember(p) && isPersonDeceased(p));
+    const pets = pessoas.filter((p) => isPetFamilyMember(p));
 
     const pessoasComConjuge = new Set<string>();
     relacionamentos
@@ -656,7 +717,7 @@ export function Home() {
 
     const cidadesNascimento = new Map<string, number>();
     pessoas.forEach((p) => {
-      if (p.local_nascimento && p.humano_ou_pet === 'Humano') {
+      if (p.local_nascimento && isHumanFamilyMember(p)) {
         const count = cidadesNascimento.get(p.local_nascimento) || 0;
         cidadesNascimento.set(p.local_nascimento, count + 1);
       }
@@ -982,6 +1043,8 @@ export function Home() {
     []
   );
   const isSearchExpanded = searchExpanded;
+  const isTreeResolving = isLoading || !linkedPersonResolved;
+  const canRenderTree = !isTreeResolving && !loadError && pessoas.length > 0 && Boolean(centralReferencePersonId);
   const currentTreeViewLabel =
     treeViewMode === 'genealogia'
       ? 'Genealogia'
@@ -1144,10 +1207,25 @@ export function Home() {
 
       {isMobile && legendOpen && (
         <section className="border-b border-gray-200 bg-white px-4 py-3">
-          <SidebarPanelTabs
-            activePanel={activeSidebarPanel}
-            onChange={setActiveSidebarPanel}
-          />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <SidebarPanelTabs
+                activePanel={activeSidebarPanel}
+                onChange={setActiveSidebarPanel}
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0 bg-white shadow-sm"
+              onClick={() => setActiveSidebarPanel('info')}
+              title="Informações"
+              aria-label="Informações"
+              aria-pressed={activeSidebarPanel === 'info'}
+            >
+              <CircleEllipsis className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="mt-3">{sidebarPanelContent}</div>
         </section>
       )}
@@ -1173,6 +1251,17 @@ export function Home() {
                     variant="outline"
                     size="icon"
                     className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                    onClick={() => setActiveSidebarPanel('info')}
+                    title="Informações"
+                    aria-label="Informações"
+                    aria-pressed={activeSidebarPanel === 'info'}
+                  >
+                    <CircleEllipsis className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
@@ -1186,40 +1275,15 @@ export function Home() {
               </div>
             )}
             {!sidebarOpen && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0 bg-white shadow-sm"
-                onClick={() => setSidebarOpen(true)}
-                title="Expandir painel lateral"
-                aria-label="Expandir painel lateral"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <span className="sr-only">Painel lateral recolhido</span>
             )}
           </aside>
         )}
 
         <section
-          className={[
-            'relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100',
-            isMobile ? '[&_.family-tree-export-root>div:first-child]:translate-x-10' : '',
-          ].join(' ')}
+          className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
         >
-          {isMobile && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-4 top-4 z-30 h-9 w-9 shrink-0 bg-white shadow-sm"
-              onClick={() => setLegendOpen((current) => !current)}
-              title={legendOpen ? 'Recolher painel' : 'Exibir painel'}
-              aria-label={legendOpen ? 'Recolher painel' : 'Exibir painel'}
-            >
-              {legendOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </Button>
-          )}
-
-          {isLoading ? (
+          {isTreeResolving ? (
             <StateMessage
               title="Carregando árvore"
               message="Buscando pessoas e relacionamentos no Supabase."
@@ -1230,12 +1294,12 @@ export function Home() {
               message={loadError}
               tone="error"
             />
-          ) : pessoas.length === 0 ? (
+          ) : pessoas.length === 0 || !centralReferencePersonId ? (
             <StateMessage
               title="Nenhuma pessoa encontrada"
               message="A tabela pessoas não retornou registros para renderizar a árvore."
             />
-          ) : (
+          ) : canRenderTree ? (
             <FamilyTree
               ref={familyTreeRef}
               pessoas={pessoasVisiveis}
@@ -1254,6 +1318,20 @@ export function Home() {
               layoutRevision={treeLayoutRevision}
               viewMode={treeViewMode}
               genealogyFilters={genealogyFilters}
+              showSidebarToggle
+              sidebarOpen={isMobile ? legendOpen : sidebarOpen}
+              onToggleSidebar={() => {
+                if (isMobile) {
+                  setLegendOpen((current) => !current);
+                } else {
+                  setSidebarOpen((current) => !current);
+                }
+              }}
+            />
+          ) : (
+            <StateMessage
+              title="Carregando árvore"
+              message="Preparando a referência principal da árvore."
             />
           )}
         </section>
@@ -2004,7 +2082,6 @@ function UserMenu({
 const SIDEBAR_PANEL_OPTIONS: Array<{ key: SidebarPanel; label: string }> = [
   { key: 'filters', label: 'Filtros' },
   { key: 'legend', label: 'Legendas' },
-  { key: 'info', label: 'Informações' },
 ];
 
 function SidebarPanelTabs({
@@ -2015,7 +2092,7 @@ function SidebarPanelTabs({
   onChange: (panel: SidebarPanel) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+    <div className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
       {SIDEBAR_PANEL_OPTIONS.map((option) => {
         const active = activePanel === option.key;
 
@@ -2024,8 +2101,6 @@ function SidebarPanelTabs({
             key={option.key}
             type="button"
             aria-pressed={active}
-            aria-label={option.key === 'info' ? 'Informações' : undefined}
-            title={option.key === 'info' ? 'Informações' : undefined}
             onClick={() => onChange(option.key)}
             className={[
               'flex min-h-8 items-center justify-center rounded-md px-2 text-xs font-semibold transition-colors',
@@ -2034,7 +2109,7 @@ function SidebarPanelTabs({
                 : 'text-gray-500 hover:bg-white/70 hover:text-gray-800',
             ].join(' ')}
           >
-            {option.key === 'info' ? <CircleEllipsis className="h-4 w-4" /> : option.label}
+            {option.label}
           </button>
         );
       })}
@@ -2250,7 +2325,7 @@ function formatYear(value?: string | number | null) {
 }
 
 function calculateCuriosities(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
-  const humans = pessoas.filter((pessoa) => pessoa.humano_ou_pet === 'Humano');
+  const humans = pessoas.filter(isHumanFamilyMember);
   const withBirth = humans
     .map((pessoa) => ({ pessoa, birth: getBirthValue(pessoa) }))
     .filter((item): item is { pessoa: Pessoa; birth: number } => typeof item.birth === 'number');
