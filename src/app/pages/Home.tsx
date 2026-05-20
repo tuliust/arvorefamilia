@@ -99,7 +99,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp,
   CalendarDays,
   FileDown,
   ImageDown,
@@ -993,26 +992,31 @@ export function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-3 py-3 shadow-sm lg:px-5">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-4">
-          <div className="flex min-w-fit items-center gap-3 justify-self-start">
-            <div className="min-w-0">
-              <h1 className="whitespace-normal text-lg font-bold leading-tight text-gray-900 sm:whitespace-nowrap lg:text-xl">
+      <header className="shrink-0 border-b border-gray-200 bg-white px-2 py-2 shadow-sm sm:px-3 lg:px-5">
+        <div className="mx-auto flex h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden sm:gap-2 lg:gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+            <div className="min-w-0 overflow-hidden">
+              <h1 className="truncate whitespace-nowrap text-base font-bold leading-tight text-gray-900 sm:text-lg lg:text-xl">
                 Família Barros Souza
               </h1>
-              <p className="text-xs text-gray-500 lg:text-sm">{currentTreeViewLabel}</p>
+              <p className="truncate whitespace-nowrap text-xs text-gray-500 lg:text-sm">{currentTreeViewLabel}</p>
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 lg:flex-nowrap lg:justify-center">
+          <div
+            className={[
+              'flex min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-hidden sm:gap-2',
+              isSearchExpanded ? 'hidden lg:flex' : 'flex',
+            ].join(' ')}
+          >
             <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
               <SelectTrigger
-                className="h-9 w-auto min-w-[168px] shrink-0 gap-2 border-blue-300 bg-blue-50 px-3 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:min-w-[210px]"
+                className="h-9 w-10 min-w-0 shrink-0 gap-1 border-blue-300 bg-blue-50 px-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:w-auto sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
                 aria-label="Mude a Visualização"
                 title="Mude a Visualização"
               >
                 <Network className="h-4 w-4 shrink-0 text-blue-700" />
-                <span>Mude a Visualização</span>
+                <span className="hidden truncate sm:inline">Mude a Visualização</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
@@ -1023,7 +1027,7 @@ export function Home() {
 
             <Button
               variant="outline"
-              className="h-9 shrink-0 gap-2 px-3"
+              className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3"
               title="Curiosidades"
               aria-label="Abrir Curiosidades"
               onClick={() => setAiDialogOpen(true)}
@@ -1034,7 +1038,7 @@ export function Home() {
 
             <Button
               variant="outline"
-              className="h-9 shrink-0 gap-2 px-3"
+              className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3"
               title="Fórum de Discussões"
               aria-label="Abrir Fórum de Discussões"
               onClick={() => navigateFromHome('/forum')}
@@ -1045,7 +1049,7 @@ export function Home() {
 
             <Button
               variant="outline"
-              className="h-9 shrink-0 gap-2 px-3"
+              className="hidden h-9 shrink-0 gap-2 px-2 xl:inline-flex lg:px-3"
               title="Calendário familiar"
               aria-label="Abrir Calendário familiar"
               onClick={() => navigateFromHome('/calendario-familiar')}
@@ -1054,20 +1058,9 @@ export function Home() {
               <span className={headerActionTextClassName}>Calendário</span>
             </Button>
 
-            {isMobile && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0"
-                onClick={() => setLegendOpen((prev) => !prev)}
-                title={legendOpen ? 'Ocultar painel' : 'Exibir painel'}
-              >
-                {legendOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </Button>
-            )}
           </div>
 
-          <div className="flex min-w-0 items-center justify-end gap-2">
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-2">
             <div className="pointer-events-none relative flex min-w-0 flex-row-reverse items-center">
               <Button
                 variant="outline"
@@ -1082,8 +1075,8 @@ export function Home() {
 
               <div
                 className={[
-                  'pointer-events-auto relative z-10 overflow-visible transition-all duration-300 ease-out',
-                  searchExpanded ? 'w-[min(68vw,320px)] opacity-100' : 'w-0 opacity-0',
+                  'pointer-events-auto relative z-10 min-w-0 overflow-visible transition-all duration-300 ease-out',
+                  searchExpanded ? 'w-[min(54vw,320px)] opacity-100 sm:w-[min(42vw,320px)]' : 'w-0 opacity-0',
                 ].join(' ')}
               >
                 <div className="pr-2">
@@ -1207,7 +1200,25 @@ export function Home() {
           </aside>
         )}
 
-        <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100">
+        <section
+          className={[
+            'relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100',
+            isMobile ? '[&_.family-tree-export-root>div:first-child]:translate-x-10' : '',
+          ].join(' ')}
+        >
+          {isMobile && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-4 top-4 z-30 h-9 w-9 shrink-0 bg-white shadow-sm"
+              onClick={() => setLegendOpen((current) => !current)}
+              title={legendOpen ? 'Recolher painel' : 'Exibir painel'}
+              aria-label={legendOpen ? 'Recolher painel' : 'Exibir painel'}
+            >
+              {legendOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          )}
+
           {isLoading ? (
             <StateMessage
               title="Carregando árvore"
@@ -1901,11 +1912,11 @@ function UserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="group relative flex min-h-12 min-w-[154px] shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="group relative flex h-10 min-w-10 shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-1.5 py-1 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:min-h-12 sm:min-w-[154px] sm:px-2.5 sm:py-1.5"
           title={isLoggedIn ? firstName || displayName || 'Conta do usuário' : 'Login'}
           aria-label={isLoggedIn ? `Menu de ${firstName || displayName || 'usuário'}` : 'Login'}
         >
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white">
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white sm:h-9 sm:w-9">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -1923,13 +1934,13 @@ function UserMenu({
               {notificationCount > 99 ? '99+' : notificationCount}
             </span>
           )}
-          <span className="min-w-0 flex-1 leading-none">
+          <span className="hidden min-w-0 flex-1 leading-none sm:block">
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">MENU</span>
             <span className="mt-1 block whitespace-nowrap text-sm font-semibold text-gray-800">
               {isLoggedIn ? firstName : 'Login'}
             </span>
           </span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-gray-500 transition group-data-[state=open]:rotate-180" />
+          <ChevronDown className="hidden h-4 w-4 shrink-0 text-gray-500 transition group-data-[state=open]:rotate-180 sm:block" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

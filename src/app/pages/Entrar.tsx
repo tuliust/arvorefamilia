@@ -6,6 +6,14 @@ import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +37,7 @@ type FirstAccessStep = 'code' | 'account' | 'confirmation';
 
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
 const RESEND_CONFIRMATION_COOLDOWN_SECONDS = 60;
+const MOBILE_DESKTOP_TIP_SESSION_KEY = 'arvore-mobile-desktop-tip-dismissed';
 
 function getEmailRedirectTo() {
   return `${window.location.origin}/entrar`;
@@ -75,6 +84,12 @@ function friendlyAuthError(message: string) {
   return message;
 }
 
+function shouldShowMobileDesktopTip() {
+  if (typeof window === 'undefined') return false;
+  if (window.sessionStorage.getItem(MOBILE_DESKTOP_TIP_SESSION_KEY) === 'true') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
 export function Entrar() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -97,6 +112,8 @@ export function Entrar() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [siteVisualSettings, setSiteVisualSettings] = useState<SiteVisualSettings>(DEFAULT_SITE_VISUAL_SETTINGS);
+  const [mobileTipOpen, setMobileTipOpen] = useState(false);
+  const [pendingMobileTipNavigation, setPendingMobileTipNavigation] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -138,7 +155,7 @@ export function Entrar() {
       if (!mounted) return;
 
       if (result.status === 'linked') {
-        navigate(result.data.dados_confirmados ? '/' : '/meus-dados', { replace: true });
+        navigateAfterOptionalMobileTip(result.data.dados_confirmados ? '/' : '/meus-dados');
       } else {
         setCheckingSession(false);
       }
@@ -149,7 +166,7 @@ export function Entrar() {
     return () => {
       mounted = false;
     };
-  }, [loading, navigate, user]);
+  }, [loading, user]);
 
   useEffect(() => {
     if (resendCooldownSeconds <= 0) return;
@@ -199,7 +216,25 @@ export function Entrar() {
       toast.success('Vínculo criado. Revise seus dados para continuar.');
     }
 
-    navigate(result.data.dados_confirmados ? '/' : '/meus-dados', { replace: true });
+    navigateAfterOptionalMobileTip(result.data.dados_confirmados ? '/' : '/meus-dados');
+  };
+
+  const navigateAfterOptionalMobileTip = (path: string) => {
+    if (shouldShowMobileDesktopTip()) {
+      setPendingMobileTipNavigation(path);
+      setMobileTipOpen(true);
+      return;
+    }
+
+    navigate(path, { replace: true });
+  };
+
+  const handleConfirmMobileTip = () => {
+    window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_SESSION_KEY, 'true');
+    const nextPath = pendingMobileTipNavigation || '/';
+    setMobileTipOpen(false);
+    setPendingMobileTipNavigation(null);
+    navigate(nextPath, { replace: true });
   };
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -412,7 +447,7 @@ export function Entrar() {
     }
 
     toast.success('Conta criada. Revise seus dados para acessar a árvore.');
-    navigate('/meus-dados', { replace: true });
+    navigateAfterOptionalMobileTip('/meus-dados');
   };
 
   const handleResendConfirmation = async () => {
@@ -473,6 +508,34 @@ export function Entrar() {
     setAcceptedLegalTerms(false);
   };
 
+  const mobileTipDialog = (
+    <Dialog
+      open={mobileTipOpen}
+      onOpenChange={(open) => {
+        if (!open && mobileTipOpen) {
+          handleConfirmMobileTip();
+          return;
+        }
+
+        setMobileTipOpen(open);
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Fica a dica</DialogTitle>
+          <DialogDescription>
+            Fica a dica: este site é bem melhor quando acessado pelo computador, notebook ou tablet!
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" className="w-full" onClick={handleConfirmMobileTip}>
+            Entendi
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (loading || checkingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -480,6 +543,7 @@ export function Entrar() {
           <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
           <p className="text-gray-600">Verificando sessão...</p>
         </div>
+        {mobileTipDialog}
       </div>
     );
   }
@@ -769,6 +833,8 @@ export function Entrar() {
           </Link>
         </nav>
       </footer>
+
+      {mobileTipDialog}
     </div>
   );
 }
