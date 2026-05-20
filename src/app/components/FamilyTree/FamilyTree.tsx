@@ -87,19 +87,27 @@ const edgeTypes: EdgeTypes = {
 const MARRIAGE_NODE_SIZE = TREE_CONSTANTS.MARRIAGE_NODE_WIDTH;
 const DIRECT_FAMILY_MAX_ZOOM = 2;
 const DIRECT_FAMILY_MOBILE_MAX_ZOOM = 1.5;
-const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.28;
-const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.34;
+const DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.01;
+const DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM = 0.01;
 const DIRECT_FAMILY_MIN_ZOOM_TOLERANCE = 0.02;
 const DIRECT_FAMILY_VIEWPORT_PADDING = 18;
 const DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING = 16;
 const DIRECT_FAMILY_TRANSLATE_PADDING = 120;
 const DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING = 80;
-const GENEALOGY_MIN_ZOOM = 0.12;
-const GENEALOGY_MOBILE_MIN_ZOOM = 0.06;
+const GENEALOGY_MIN_ZOOM = 0.01;
+const GENEALOGY_MOBILE_MIN_ZOOM = 0.01;
 const GENEALOGY_MAX_ZOOM = 2;
 const GENEALOGY_MOBILE_MAX_ZOOM = 1.7;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
+const TREE_TITLE_TOP = 12;
+const TREE_TITLE_HEIGHT = 48;
+const TREE_VIEWPORT_TOP_SAFE_AREA = 78;
+const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 74;
+const TREE_VIEWPORT_PADDING_X = 24;
+const TREE_VIEWPORT_PADDING_Y = 24;
+const TREE_MOBILE_VIEWPORT_PADDING_X = 18;
+const TREE_MOBILE_VIEWPORT_PADDING_Y = 18;
 
 interface FlowBounds {
   x: number;
@@ -159,7 +167,12 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
 }
 
 function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: number): FlowBounds | null {
-  const visibleNodes = nodes.filter((node) => !node.hidden && node.type !== 'directFamilyAnchorNode');
+  const visibleNodes = nodes.filter((node) => {
+    if (node.hidden) return false;
+    if (node.type === 'directFamilyAnchorNode') return false;
+    if (node.type === 'directFamilyLabelNode' && node.data?.variant === 'title') return false;
+    return true;
+  });
   if (visibleNodes.length === 0) return null;
 
   const bounds = visibleNodes.reduce(
@@ -202,45 +215,35 @@ function getFlowBounds(nodes: Node[], fallbackWidth: number, fallbackHeight: num
   };
 }
 
-function getDirectFamilyViewport(
-  bounds: FlowBounds,
-  containerWidth: number,
-  containerHeight: number,
-  padding: number
-): Viewport {
-  const paddedWidth = bounds.width + padding * 2;
-  const paddedHeight = bounds.height + padding * 2;
-  const zoomX = containerWidth / paddedWidth;
-  const zoomY = containerHeight / paddedHeight;
-  const zoom = Math.min(1, Math.max(0.1, Math.min(zoomX, zoomY)));
+function getNormalizedTreeViewport({
+  bounds,
+  containerWidth,
+  containerHeight,
+  paddingX,
+  paddingY,
+  titleSafeArea,
+  maxZoom,
+}: {
+  bounds: FlowBounds;
+  containerWidth: number;
+  containerHeight: number;
+  paddingX: number;
+  paddingY: number;
+  titleSafeArea: number;
+  maxZoom: number;
+}): Viewport {
+  const availableWidth = Math.max(1, containerWidth - paddingX * 2);
+  const availableHeight = Math.max(1, containerHeight - titleSafeArea - paddingY * 2);
+  const zoomX = availableWidth / Math.max(1, bounds.width);
+  const zoomY = availableHeight / Math.max(1, bounds.height);
+  const zoom = Math.max(0.01, Math.min(1, maxZoom, zoomX, zoomY));
   const centerX = bounds.x + bounds.width / 2;
   const centerY = bounds.y + bounds.height / 2;
+  const visibleCenterY = titleSafeArea + availableHeight / 2;
 
   return {
     x: containerWidth / 2 - centerX * zoom,
-    y: containerHeight / 2 - centerY * zoom,
-    zoom,
-  };
-}
-
-function getGenealogyViewport(
-  bounds: FlowBounds,
-  containerWidth: number,
-  _containerHeight: number,
-  isMobile: boolean
-): Viewport {
-  const paddingX = isMobile ? 48 : 80;
-  const topOffset = isMobile ? 72 : 95;
-  const minZoom = isMobile ? GENEALOGY_MOBILE_MIN_ZOOM : GENEALOGY_MIN_ZOOM;
-  const maxZoom = isMobile ? GENEALOGY_MOBILE_MAX_ZOOM : GENEALOGY_MAX_ZOOM;
-  const paddedWidth = bounds.width + paddingX * 2;
-  const zoomX = containerWidth / paddedWidth;
-  const zoom = Math.max(minZoom, Math.min(maxZoom, zoomX));
-  const centerX = bounds.x + bounds.width / 2;
-
-  return {
-    x: containerWidth / 2 - centerX * zoom,
-    y: topOffset - bounds.y * zoom,
+    y: visibleCenterY - centerY * zoom,
     zoom,
   };
 }
@@ -304,6 +307,12 @@ function usesGenealogyLayout(viewMode: TreeViewMode) {
   return viewMode === 'genealogia' || viewMode === 'visao-completa';
 }
 
+function getTreeTitleFirstName(value?: string | null) {
+  const clean = value?.trim();
+  if (!clean) return 'Família';
+  return clean.split(/\s+/)[0] || clean;
+}
+
 export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(function FamilyTree({
   pessoas,
   relacionamentos,
@@ -352,6 +361,10 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
   const activeFittedZoom = directFamilyFitZoom ?? activeMinZoom;
   const activeCanPan = isGenealogyLayout ? true : directFamilyCanPan;
   const effectiveCentralPersonId = centralPersonId || selectedPersonId || pessoas[0]?.id;
+  const treeTitleFirstName = useMemo(() => {
+    const centralPerson = pessoas.find((pessoa) => pessoa.id === effectiveCentralPersonId);
+    return getTreeTitleFirstName(centralPerson?.nome_completo);
+  }, [effectiveCentralPersonId, pessoas]);
 
   const dataHash = useMemo(() => {
     return JSON.stringify({
@@ -475,21 +488,17 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
       return null;
     }
 
-    if (isGenealogyLayout) {
-      return getGenealogyViewport(
-        directFamilyBounds,
-        containerSize.width,
-        containerSize.height,
-        isMobile
-      );
-    }
-
-    return getDirectFamilyViewport(
-      directFamilyBounds,
-      containerSize.width,
-      containerSize.height,
-      isMobile ? DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING : DIRECT_FAMILY_VIEWPORT_PADDING
-    );
+    return getNormalizedTreeViewport({
+      bounds: directFamilyBounds,
+      containerWidth: containerSize.width,
+      containerHeight: containerSize.height,
+      paddingX: isMobile ? TREE_MOBILE_VIEWPORT_PADDING_X : TREE_VIEWPORT_PADDING_X,
+      paddingY: isMobile ? TREE_MOBILE_VIEWPORT_PADDING_Y : TREE_VIEWPORT_PADDING_Y,
+      titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : TREE_VIEWPORT_TOP_SAFE_AREA,
+      maxZoom: isMobile
+        ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
+        : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
+    });
   }, [directFamilyBounds, containerSize, isGenealogyLayout, isMobile]);
 
   const directFamilyTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
@@ -685,7 +694,6 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
       return;
     }
 
-    setIsLegendOpen(false);
     setIsAreaSelectionOpen(true);
   }, []);
 
@@ -748,6 +756,19 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
             <Minus className="h-4 w-4" />
           </button>
         </div>
+      </div>
+
+
+      <div
+        className="pointer-events-none absolute inset-x-0 z-10 text-center"
+        style={ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }
+      >
+        <h2 className="text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
+          {`Linha Genealógica de ${treeTitleFirstName}`}
+        </h2>
+        <p className="mt-1 text-xs font-semibold leading-tight text-slate-600 sm:text-sm">
+          Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
+        </p>
       </div>
 
 

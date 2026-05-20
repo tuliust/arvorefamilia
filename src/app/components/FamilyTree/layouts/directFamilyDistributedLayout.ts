@@ -792,18 +792,6 @@ function addAncestorSpouseEdges(
   });
 }
 
-function addTitle(nodes: Node[], centralPersonName: string) {
-  const firstName = centralPersonName.trim().split(/\s+/)[0] || centralPersonName;
-  addLabel(
-    nodes,
-    'direct-title',
-    `Linha Genealógica de ${firstName}`,
-    VIEW_CENTER_X,
-    TITLE_TOP,
-    'title',
-    'Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.'
-  );
-}
 
 export function collectDirectFamilyScopePersonIds(
   graph: TreeLayoutParams,
@@ -891,12 +879,10 @@ export function directFamilyDistributedLayout(
     return { nodes: [], edges: [] };
   }
 
-  const centralPerson = pessoasById.get(centralPersonId);
   const sides = groupByPaternalMaternalSide(centralPersonId, index, pessoasById);
   const positionedNodes: Node[] = [];
   const positionedIds = new Set<string>();
 
-  addTitle(positionedNodes, centralPerson?.nome_completo || '');
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [
