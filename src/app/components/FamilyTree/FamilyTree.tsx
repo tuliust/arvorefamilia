@@ -375,6 +375,8 @@ function FamilyTreeComponent({
 }: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
+  const [reactFlowReady, setReactFlowReady] = useState(false);
+  const [hasAppliedInitialViewport, setHasAppliedInitialViewport] = useState(false);
   const [, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
@@ -597,12 +599,17 @@ function FamilyTreeComponent({
   ]);
 
   useEffect(() => {
-    if (!reactFlowRef.current || containerSize.width <= 0 || containerSize.height <= 0) return;
+    if (!reactFlowReady || !reactFlowRef.current || containerSize.width <= 0 || containerSize.height <= 0) return;
     if (!directFamilyViewport) return;
 
     setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
-    reactFlowRef.current.setViewport(directFamilyViewport, { duration: 180 });
+    reactFlowRef.current.setViewport(directFamilyViewport, {
+      duration: hasAppliedInitialViewport ? 180 : 0,
+    });
+    setHasAppliedInitialViewport(true);
   }, [
+    reactFlowReady,
+    hasAppliedInitialViewport,
     layoutRevision,
     containerSize.width,
     containerSize.height,
@@ -613,13 +620,9 @@ function FamilyTreeComponent({
   const handleInit = useCallback(
     (instance: ReactFlowInstance) => {
       reactFlowRef.current = instance;
-
-      if (directFamilyViewport) {
-        setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
-        instance.setViewport(directFamilyViewport);
-      }
+      setReactFlowReady(true);
     },
-    [directFamilyViewport]
+    []
   );
 
   const handleMove = useCallback(
@@ -790,6 +793,7 @@ function FamilyTreeComponent({
           y: directFamilyViewport?.y ?? 0,
           zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
         }}
+        style={{ visibility: hasAppliedInitialViewport ? 'visible' : 'hidden' }}
         proOptions={{ hideAttribution: true }}
       />
       {isAreaSelectionOpen && (
