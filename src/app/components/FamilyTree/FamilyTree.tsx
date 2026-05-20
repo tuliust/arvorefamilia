@@ -313,7 +313,7 @@ function getTreeTitleFirstName(value?: string | null) {
   return clean.split(/\s+/)[0] || clean;
 }
 
-export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(function FamilyTree({
+function FamilyTreeComponent({
   pessoas,
   relacionamentos,
   onPersonClick,
@@ -333,7 +333,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
   showSidebarToggle = false,
   sidebarOpen = false,
   onToggleSidebar,
-}, ref) {
+}: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const directFamilyRecenteringRef = useRef(false);
@@ -761,7 +761,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
 
       <div
         className="pointer-events-none absolute inset-x-0 z-10 text-center"
-        style={ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }
+        style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
       >
         <h2 className="text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
           {`Linha Genealógica de ${treeTitleFirstName}`}
@@ -817,4 +817,6 @@ export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(f
       )}
     </div>
   );
-});
+}
+
+export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
