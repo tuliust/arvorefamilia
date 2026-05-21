@@ -520,11 +520,11 @@ export function Entrar() {
         setMobileTipOpen(open);
       }}
     >
-      <DialogContent className="max-w-sm">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm">
         <DialogHeader>
           <DialogTitle>Fica a dica</DialogTitle>
           <DialogDescription>
-            Fica a dica: este site é bem melhor quando acessado pelo computador, notebook ou tablet!
+            Este site é melhor acessado pelo computador, notebook ou tablet.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

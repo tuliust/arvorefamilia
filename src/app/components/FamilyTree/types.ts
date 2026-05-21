@@ -145,6 +145,7 @@ export interface PersonNodeData extends PersonNodeContextActions {
   useCentralDirectLayout?: boolean;
   layoutWidth?: number;
   layoutHeight?: number;
+  isMobile?: boolean;
 }
 
 export interface MarriageNodeData {

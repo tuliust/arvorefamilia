@@ -114,6 +114,10 @@ import {
   MessageCircle,
   UserSearch,
   Scan,
+  PanelBottom,
+  Minus,
+  Plus,
+  MoreHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -1106,20 +1110,20 @@ export function Home() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <header className="shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm">
-        <div className="mx-auto flex h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden px-4 sm:gap-2 sm:px-6 lg:gap-4 lg:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-            <div className="min-w-0 overflow-hidden">
-              <h1 className="truncate whitespace-nowrap text-base font-bold leading-tight text-gray-900 sm:text-lg lg:text-xl">
+        <div className="mx-auto flex min-h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
+            <div className="min-w-0 overflow-visible lg:overflow-hidden">
+              <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
                 Família Barros Souza
               </h1>
-              <p className="truncate whitespace-nowrap text-xs text-gray-500 lg:text-sm">{currentTreeViewLabel}</p>
+              <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">{currentTreeViewLabel}</p>
             </div>
           </div>
 
           <div
             className={[
-              'flex min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-hidden sm:gap-2',
-              isSearchExpanded ? 'hidden lg:flex' : 'flex',
+              'min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-hidden sm:gap-2',
+              isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex',
             ].join(' ')}
           >
             <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
@@ -1255,30 +1259,6 @@ export function Home() {
         </div>
       </header>
 
-      {isMobile && legendOpen && (
-        <section className="border-b border-gray-200 bg-white px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <SidebarPanelTabs
-                activePanel={activeSidebarPanel}
-                onChange={setActiveSidebarPanel}
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 shrink-0 bg-white shadow-sm"
-              onClick={() => setLegendOpen(false)}
-              title="Recolher painel"
-              aria-label="Recolher painel"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="mt-3">{sidebarPanelContent}</div>
-        </section>
-      )}
-
       <main className="relative flex min-h-0 flex-1 overflow-hidden">
         {!isMobile && (
           <aside
@@ -1332,18 +1312,6 @@ export function Home() {
         <section
           className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
         >
-          {isMobile && !legendOpen && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-4 top-4 z-30 h-9 w-9 shrink-0 bg-white shadow-sm"
-              onClick={() => setLegendOpen(true)}
-              title="Expandir painel"
-              aria-label="Expandir painel"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
           {isTreeResolving ? (
             <StateMessage
               title="Carregando árvore"
@@ -1388,6 +1356,135 @@ export function Home() {
           )}
         </section>
       </main>
+
+      {isMobile && (
+        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur">
+          <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5">
+            <button
+              type="button"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+              onClick={() => setLegendOpen((open) => !open)}
+              aria-label={legendOpen ? 'Fechar painel' : 'Abrir painel'}
+            >
+              <PanelBottom className="h-5 w-5" />
+              <span>Painel</span>
+            </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+                  aria-label={`Visualização atual: ${currentTreeViewLabel}`}
+                >
+                  <Network className="h-5 w-5" />
+                  <span>Visual</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" side="top" className="mb-2 w-52">
+                <DropdownMenuItem onClick={() => setTreeViewMode('minha-arvore')}>
+                  Minha Árvore
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTreeViewMode('genealogia')}>
+                  Genealogia
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTreeViewMode('visao-completa')}>
+                  Visão Completa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <button
+              type="button"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+              onClick={() => familyTreeRef.current?.zoomOut()}
+              aria-label="Diminuir zoom"
+            >
+              <Minus className="h-5 w-5" />
+              <span>Zoom -</span>
+            </button>
+
+            <button
+              type="button"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+              onClick={() => familyTreeRef.current?.zoomIn()}
+              aria-label="Aumentar zoom"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Zoom +</span>
+            </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+                  aria-label="Abrir mais atalhos"
+                >
+                  <MoreHorizontal className="h-5 w-5" />
+                  <span>Mais</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="mb-2 w-56">
+                <DropdownMenuItem onClick={() => setAiDialogOpen(true)}>
+                  <Sparkles className="h-4 w-4" />
+                  Curiosidades
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigateFromHome('/forum')}>
+                  <MessageCircle className="h-4 w-4" />
+                  Fórum
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigateFromHome('/calendario-familiar')}>
+                  <CalendarDays className="h-4 w-4" />
+                  Calendário
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigateFromHome('/meus-favoritos')}>
+                  <Star className="h-4 w-4" />
+                  Favoritos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigateFromHome('/notificacoes')}>
+                  <Bell className="h-4 w-4" />
+                  Notificações
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </nav>
+      )}
+
+      {isMobile && legendOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-30 bg-black/15"
+            onClick={() => setLegendOpen(false)}
+            aria-label="Fechar painel"
+          />
+          <section className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 max-h-[60vh] overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <SidebarPanelTabs
+                  activePanel={activeSidebarPanel}
+                  onChange={setActiveSidebarPanel}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                onClick={() => setLegendOpen(false)}
+                title="Fechar painel"
+                aria-label="Fechar painel"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="max-h-[calc(60vh-4rem)] overflow-y-auto overscroll-contain px-4 py-3 [-webkit-overflow-scrolling:touch]">
+              {sidebarPanelContent}
+            </div>
+          </section>
+        </>
+      )}
 
       <ViewMarriageModal
         open={!!selectedMarriage}

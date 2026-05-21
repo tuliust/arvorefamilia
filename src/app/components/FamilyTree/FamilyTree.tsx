@@ -10,7 +10,7 @@ import ReactFlow, {
   Viewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Pessoa, Relacionamento } from '../../types';
@@ -113,6 +113,7 @@ const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
 const TREE_DEBUG_BOUNDS_STORAGE_KEY = 'treeDebugBounds';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
+const TREE_MOBILE_DIRECTIONAL_PAN_RATIO = 0.65;
 
 type FlowBounds = TreeLayoutBounds;
 type TreeViewportFitMode = 'contain' | 'width' | 'height';
@@ -621,6 +622,11 @@ function getExportableFlowElement(container: HTMLDivElement | null) {
   return container?.querySelector('.react-flow') as HTMLElement | null;
 }
 
+function clampViewportCoordinate(value: number, min: number, max: number) {
+  if (min > max) return (min + max) / 2;
+  return Math.min(Math.max(value, min), max);
+}
+
 async function captureVisibleTree(container: HTMLDivElement | null) {
   const element = getExportableFlowElement(container);
   if (!element) {
@@ -868,9 +874,24 @@ function FamilyTreeComponent({
     viewMode,
   ]);
 
+  const renderedLayoutNodes = useMemo(
+    () =>
+      layoutResult.nodes.map((node) => {
+        if (node.type !== 'personNode' || !node.data?.pessoa) return node;
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            isMobile,
+          },
+        };
+      }),
+    [layoutResult.nodes, isMobile]
+  );
   const initialNodes = debugBoundsEnabled
-    ? [...layoutResult.nodes, ...debugBoundsNodes]
-    : layoutResult.nodes;
+    ? [...renderedLayoutNodes, ...debugBoundsNodes]
+    : renderedLayoutNodes;
   const initialEdges = layoutResult.edges;
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -977,6 +998,7 @@ function FamilyTreeComponent({
               onRemove: onPersonRemove,
               isSelected: viewMode === 'minha-arvore' && node.data.pessoa.id === selectedPersonId,
               isCentralPerson: viewMode === 'minha-arvore' && node.data.pessoa.id === effectiveCentralPersonId,
+              isMobile,
             },
           };
         }
@@ -1003,6 +1025,7 @@ function FamilyTreeComponent({
     onPersonRemove,
     onMarriageClick,
     effectiveCentralPersonId,
+    isMobile,
     viewMode,
     setNodes,
   ]);
@@ -1073,6 +1096,41 @@ function FamilyTreeComponent({
 
     instance.zoomOut({ duration: 160 });
   }, [activeMinZoom]);
+
+  const handleDirectionalPan = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
+    const instance = reactFlowRef.current;
+    if (!instance || containerSize.width <= 0 || containerSize.height <= 0) return;
+
+    const viewport = instance.getViewport();
+    const horizontalFlowStep = (containerSize.width * TREE_MOBILE_DIRECTIONAL_PAN_RATIO) / viewport.zoom;
+    const verticalFlowStep = (containerSize.height * TREE_MOBILE_DIRECTIONAL_PAN_RATIO) / viewport.zoom;
+    const horizontalViewportStep = horizontalFlowStep * viewport.zoom;
+    const verticalViewportStep = verticalFlowStep * viewport.zoom;
+
+    let nextX = viewport.x;
+    let nextY = viewport.y;
+
+    if (direction === 'left') nextX -= horizontalViewportStep;
+    if (direction === 'right') nextX += horizontalViewportStep;
+    if (direction === 'up') nextY -= verticalViewportStep;
+    if (direction === 'down') nextY += verticalViewportStep;
+
+    if (directFamilyTranslateExtent) {
+      const [[minX, minY], [maxX, maxY]] = directFamilyTranslateExtent;
+      nextX = clampViewportCoordinate(
+        nextX,
+        containerSize.width - maxX * viewport.zoom,
+        -minX * viewport.zoom
+      );
+      nextY = clampViewportCoordinate(
+        nextY,
+        containerSize.height - maxY * viewport.zoom,
+        -minY * viewport.zoom
+      );
+    }
+
+    instance.setViewport({ x: nextX, y: nextY, zoom: viewport.zoom }, { duration: 220 });
+  }, [containerSize.height, containerSize.width, directFamilyTranslateExtent]);
 
   const handlePrint = useCallback(async () => {
     try {
@@ -1188,6 +1246,42 @@ function FamilyTreeComponent({
         </p>
       </div>
 
+      {isMobile && !isAreaSelectionOpen && (
+        <>
+          <button
+            type="button"
+            onClick={() => handleDirectionalPan('left')}
+            className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Mover árvore para a esquerda"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDirectionalPan('right')}
+            className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Mover árvore para a direita"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDirectionalPan('up')}
+            className="absolute left-1/2 top-20 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Mover árvore para cima"
+          >
+            <ChevronUp className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDirectionalPan('down')}
+            className="absolute bottom-[5.75rem] left-1/2 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Mover árvore para baixo"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </button>
+        </>
+      )}
 
       {debugBoundsEnabled && (
         <div className="pointer-events-none absolute inset-0 z-30 border-4 border-dashed border-red-500/80 bg-red-500/[0.02]">

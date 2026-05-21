@@ -51,7 +51,7 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
       </header>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:py-12">
-        <aside className="lg:sticky lg:top-8 lg:self-start">
+        <aside className="order-2 lg:order-1 lg:sticky lg:top-8 lg:self-start">
           <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
               <ShieldCheck className="h-5 w-5" />
@@ -90,7 +90,7 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
           </div>
         </aside>
 
-        <article className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        <article className="order-1 rounded-lg border border-gray-200 bg-white shadow-sm lg:order-2">
           <div className="border-b border-gray-200 px-5 py-6 sm:px-8 sm:py-8">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{content.subtitle}</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl">{content.title}</h1>
