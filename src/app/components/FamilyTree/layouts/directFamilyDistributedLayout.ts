@@ -4,6 +4,7 @@ import {
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DirectRelationVariant,
   DirectRelativeFilters,
+  EdgeFilters,
   TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
@@ -16,6 +17,7 @@ interface DirectFamilyLayoutOptions {
   centralPersonId?: string;
   filters?: DirectRelativeFilters;
   visualLineFilters?: VisualLineFilters;
+  edgeFilters?: EdgeFilters;
   isMobile?: boolean;
 }
 
@@ -966,8 +968,12 @@ export function directFamilyDistributedLayout(
   options: DirectFamilyLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters || DEFAULT_DIRECT_RELATIVE_FILTERS;
-  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true;
-  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true;
+  const parentChildEdgesVisible = options.edgeFilters
+    ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
+    : true;
+  const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
+  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
+  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
   const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));

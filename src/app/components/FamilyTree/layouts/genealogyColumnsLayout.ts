@@ -4,6 +4,7 @@ import type { GenealogyFamilyConnectorNodeData } from '../GenealogyFamilyConnect
 import {
   DEFAULT_GENEALOGY_FILTERS,
   DirectRelationVariant,
+  EdgeFilters,
   GenealogyFilterKey,
   GenealogyFilters,
   MarriageNodeDetails,
@@ -67,6 +68,7 @@ export interface GenealogyFamilyConnectorDraft {
 interface GenealogyColumnsLayoutOptions {
   filters?: GenealogyFilters;
   visualLineFilters?: VisualLineFilters;
+  edgeFilters?: EdgeFilters;
   onMarriageClick?: (details: MarriageNodeDetails) => void;
   hideUngenerated?: boolean;
 }
@@ -1016,52 +1018,84 @@ function addGenealogyFamilyConnectorNodes({
 function addGenealogySiblingHighlightEdges(
   edges: Edge[],
   positionedPeople: Map<string, PositionedPerson>,
-  relationshipIndex: RelationshipIndex
+  drafts: GenealogyFamilyConnectorDraft[],
+  relationshipIndex: RelationshipIndex,
+  relacionamentos: Relacionamento[]
 ) {
-  const peopleByColumn = new Map<number, PositionedPerson[]>();
+  const addedEdgeIds = new Set<string>();
 
-  positionedPeople.forEach((positioned) => {
-    const columnPeople = peopleByColumn.get(positioned.x) ?? [];
-    columnPeople.push(positioned);
-    peopleByColumn.set(positioned.x, columnPeople);
-  });
+  const addSiblingEdge = (positioned: PositionedPerson, nextPositioned: PositionedPerson) => {
+    if (positioned.x !== nextPositioned.x) return;
 
-  peopleByColumn.forEach((columnPeople) => {
-    columnPeople
+    const generationKey = getGenerationKey(positioned.placement.pessoa);
+    if (generationKey !== getGenerationKey(nextPositioned.placement.pessoa)) return;
+
+    const verticalDistance = Math.abs(nextPositioned.y - positioned.y);
+    if (verticalDistance > CARD_HEIGHT * 3) return;
+
+    const [firstPositioned, secondPositioned] = positioned.y <= nextPositioned.y
+      ? [positioned, nextPositioned]
+      : [nextPositioned, positioned];
+    const firstPersonId = firstPositioned.placement.pessoa.id;
+    const secondPersonId = secondPositioned.placement.pessoa.id;
+    const edgeId = `genealogy-sibling-highlight-${firstPersonId}-${secondPersonId}`;
+    if (addedEdgeIds.has(edgeId)) return;
+    addedEdgeIds.add(edgeId);
+
+      edges.push({
+        id: edgeId,
+        source: firstPersonId,
+        sourceHandle: 'sibling-left',
+        target: secondPersonId,
+        targetHandle: 'sibling-left',
+        type: 'siblingEdge',
+      selectable: false,
+      zIndex: 0,
+      style: GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE,
+      data: {
+        kind: 'siblings',
+        attachGap: 18,
+      },
+    });
+  };
+
+  drafts.forEach((draft) => {
+    const childPositions = draft.childIds
+      .map((childId) => positionedPeople.get(childId))
+      .filter((positioned): positioned is PositionedPerson => Boolean(positioned))
       .sort((personA, personB) => (
         personA.y - personB.y
         || personA.placement.pessoa.id.localeCompare(personB.placement.pessoa.id)
-      ))
-      .forEach((positioned, index) => {
-        const nextPositioned = columnPeople[index + 1];
-        if (!nextPositioned) return;
+      ));
 
-        const personId = positioned.placement.pessoa.id;
-        const nextPersonId = nextPositioned.placement.pessoa.id;
-        if (!relationshipIndex.siblingsByPerson.get(personId)?.has(nextPersonId)) return;
+    childPositions.forEach((positioned, index) => {
+      const nextPositioned = childPositions[index + 1];
+      if (!nextPositioned) return;
 
-        const generationKey = getGenerationKey(positioned.placement.pessoa);
-        if (generationKey !== getGenerationKey(nextPositioned.placement.pessoa)) return;
+      const verticalGap = nextPositioned.y - positioned.y - positioned.height;
+      if (verticalGap > CARD_HEIGHT + ROW_GAP + SPOUSE_ROW_EXTRA_GAP + 4) return;
 
-        const verticalGap = nextPositioned.y - positioned.y - positioned.height;
-        if (verticalGap > ROW_GAP + 4) return;
+      addSiblingEdge(positioned, nextPositioned);
+    });
+  });
 
-        edges.push({
-          id: `genealogy-sibling-highlight-${personId}-${nextPersonId}`,
-          source: personId,
-          sourceHandle: 'right',
-          target: nextPersonId,
-          targetHandle: 'right',
-          type: 'siblingEdge',
-          selectable: false,
-          zIndex: 0,
-          style: GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE,
-          data: {
-            kind: 'siblings',
-            attachGap: 18,
-          },
-        });
-      });
+  positionedPeople.forEach((positioned, personId) => {
+    relationshipIndex.siblingsByPerson.get(personId)?.forEach((siblingId) => {
+      const siblingPositioned = positionedPeople.get(siblingId);
+      if (!siblingPositioned) return;
+
+      addSiblingEdge(positioned, siblingPositioned);
+    });
+  });
+
+  relacionamentos.forEach((relacionamento) => {
+    if (relacionamento.tipo_relacionamento !== 'irmao') return;
+
+    const originPositioned = positionedPeople.get(relacionamento.pessoa_origem_id);
+    const targetPositioned = positionedPeople.get(relacionamento.pessoa_destino_id);
+    if (!originPositioned || !targetPositioned) return;
+
+    addSiblingEdge(originPositioned, targetPositioned);
   });
 }
 
@@ -1219,8 +1253,12 @@ export function genealogyColumnsLayout(
   options: GenealogyColumnsLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters ?? DEFAULT_GENEALOGY_FILTERS;
-  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true;
-  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true;
+  const parentChildEdgesVisible = options.edgeFilters
+    ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
+    : true;
+  const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
+  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
+  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
   const onMarriageClick = options.onMarriageClick;
   const relationshipIndex = buildRelationshipIndex(graph);
   const groups = groupPeopleByGeneration(graph, relationshipIndex, {
@@ -1308,7 +1346,13 @@ export function genealogyColumnsLayout(
   });
 
   if (siblingHighlight) {
-    addGenealogySiblingHighlightEdges(edges, positionedPeople, relationshipIndex);
+    addGenealogySiblingHighlightEdges(
+      edges,
+      positionedPeople,
+      familyConnectorDrafts,
+      relationshipIndex,
+      graph.relacionamentos
+    );
   }
 
   const viewportBounds = getGenealogyViewportBounds({

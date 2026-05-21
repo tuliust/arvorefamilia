@@ -783,6 +783,7 @@ function FamilyTreeComponent({
       return genealogyColumnsLayout(layoutGraph, {
         filters: genealogyFilters,
         visualLineFilters: genealogyVisualLineFilters,
+        edgeFilters,
         onMarriageClick,
         hideUngenerated: viewMode === 'visao-completa',
       });
@@ -792,6 +793,7 @@ function FamilyTreeComponent({
       centralPersonId: effectiveCentralPersonId,
       filters: directRelativeFilters,
       visualLineFilters: directVisualLineFilters,
+      edgeFilters,
       isMobile,
     });
   }, [
