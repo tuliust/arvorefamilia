@@ -121,6 +121,7 @@ import {
   Minus,
   Plus,
   MoreHorizontal,
+  SquareDashedMousePointer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -875,22 +876,24 @@ export function Home() {
     [pessoasVisiveis, relacionamentos]
   );
   const sidebarPanelContent = (
-    <section className="rounded-lg border border-gray-200 bg-gray-50 p-2.5">
+    <section className="h-full rounded-lg border border-gray-200 bg-gray-50 p-2.5">
       {activeSidebarPanel === 'filters' && (
-        <div className="space-y-3">
-          {treeViewMode === 'genealogia' || treeViewMode === 'visao-completa' ? (
-            <GenealogyFilterGrid
-              filters={genealogyFilters}
-              counts={genealogyFilterCounts}
-              onToggle={toggleGenealogyFilter}
-            />
-          ) : (
-            <DirectRelationKpiGrid
-              filters={directRelativeFilters}
-              counts={directRelationCounts}
-              onToggle={toggleDirectRelativeFilter}
-            />
-          )}
+        <div className="flex h-full flex-col justify-between gap-3">
+          <div>
+            {treeViewMode === 'genealogia' || treeViewMode === 'visao-completa' ? (
+              <GenealogyFilterGrid
+                filters={genealogyFilters}
+                counts={genealogyFilterCounts}
+                onToggle={toggleGenealogyFilter}
+              />
+            ) : (
+              <DirectRelationKpiGrid
+                filters={directRelativeFilters}
+                counts={directRelationCounts}
+                onToggle={toggleDirectRelativeFilter}
+              />
+            )}
+          </div>
 
           <LifeStatusKpiGrid
             vivos={lifeStatusCounts.vivos}
@@ -1312,6 +1315,17 @@ export function Home() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="h-9 w-9 shrink-0 border-gray-500 bg-gray-500 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
+                    onClick={() => setActiveSidebarPanel('info')}
+                    title="Informações da árvore"
+                    aria-label="Informações da árvore"
+                    aria-pressed={activeSidebarPanel === 'info'}
+                  >
+                    <SquareDashedMousePointer className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
                     className="h-9 w-9 shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
@@ -1502,6 +1516,17 @@ export function Home() {
                   onChange={setActiveSidebarPanel}
                 />
               </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 border-gray-500 bg-gray-500 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
+                onClick={() => setActiveSidebarPanel('info')}
+                title="Informações da árvore"
+                aria-label="Informações da árvore"
+                aria-pressed={activeSidebarPanel === 'info'}
+              >
+                <SquareDashedMousePointer className="h-4 w-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -2265,7 +2290,6 @@ function UserMenu({
 const SIDEBAR_PANEL_OPTIONS: Array<{ key: SidebarPanel; label: string }> = [
   { key: 'filters', label: 'Filtros' },
   { key: 'legend', label: 'Legendas' },
-  { key: 'info', label: 'Informações' },
 ];
 
 function SidebarPanelTabs({
@@ -2276,7 +2300,7 @@ function SidebarPanelTabs({
   onChange: (panel: SidebarPanel) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+    <div className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
       {SIDEBAR_PANEL_OPTIONS.map((option) => {
         const active = activePanel === option.key;
 

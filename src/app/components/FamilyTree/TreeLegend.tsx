@@ -196,7 +196,7 @@ export function TreeLegend({
   if (compact) {
     return (
       <section
-        className={['space-y-2 text-[11px]', className].filter(Boolean).join(' ')}
+        className={['flex h-full flex-col justify-between gap-2 text-[11px]', className].filter(Boolean).join(' ')}
         aria-label="Legenda visual da árvore"
       >
         {showTitle && (
@@ -297,20 +297,6 @@ export function TreeLegend({
           </div>
         </LegendGroup>
 
-        <LegendGroup title="Cores dos grupos" compact>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-            {backgroundItems.map((item) => (
-              <LegendColorItem
-                key={item.label}
-                label={item.label}
-                background={item.background}
-                border={item.solid}
-                compact
-                {...getDirectRelativeAction(item.label)}
-              />
-            ))}
-          </div>
-        </LegendGroup>
       </section>
     );
   }

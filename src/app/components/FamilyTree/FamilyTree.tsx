@@ -1206,8 +1206,8 @@ function FamilyTreeComponent({
       ].join(' ')}
       style={{ width: '100%', height: '100%', minHeight: '500px' }}
     >
-      <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
-        {showSidebarToggle && onToggleSidebar && (
+      {showSidebarToggle && onToggleSidebar && (
+        <div className="absolute left-4 top-4 z-20">
           <button
             type="button"
             onClick={onToggleSidebar}
@@ -1218,8 +1218,10 @@ function FamilyTreeComponent({
           >
             {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
-        )}
+        </div>
+      )}
 
+      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
         <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <button
             type="button"
