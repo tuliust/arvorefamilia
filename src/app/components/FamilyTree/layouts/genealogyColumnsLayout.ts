@@ -10,9 +10,10 @@ import {
   TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
+  VisualLineFilters,
   getSortableBirthValue,
 } from '../types';
-import { DIRECT_FAMILY_TOKENS } from '../visualTokens';
+import { DIRECT_FAMILY_TOKENS, FAMILY_TREE_COLORS } from '../visualTokens';
 import { isPersonDeceased } from '../../../utils/personFields';
 
 type GenerationKey = number | null;
@@ -65,6 +66,7 @@ export interface GenealogyFamilyConnectorDraft {
 
 interface GenealogyColumnsLayoutOptions {
   filters?: GenealogyFilters;
+  visualLineFilters?: VisualLineFilters;
   onMarriageClick?: (details: MarriageNodeDetails) => void;
   hideUngenerated?: boolean;
 }
@@ -79,6 +81,7 @@ interface CreateGenealogyFamilyConnectorNodeParams {
     x: number;
     y: number;
   }>;
+  parentChildHighlight?: boolean;
 }
 
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
@@ -93,6 +96,12 @@ const FAMILY_UNIT_GAP = 48;
 const FAMILY_CONNECTOR_CHILD_BUS_OFFSET = 24;
 const FAMILY_CONNECTOR_LANE_GAP = 10;
 const FAMILY_CONNECTOR_MAX_LANES = 4;
+const GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE = {
+  stroke: FAMILY_TREE_COLORS.EDGE_SIBLING,
+  strokeWidth: 2.25,
+  opacity: 0.86,
+  strokeDasharray: '5,5',
+};
 const FIXED_GENERATION_KEYS = [1, 2, 3, 4, 5, 6] as const;
 
 const GENERATION_RELATION_VARIANTS: Record<number, {
@@ -532,6 +541,7 @@ export function createGenealogyFamilyConnectorNode({
   originY,
   busX,
   childPoints,
+  parentChildHighlight,
 }: CreateGenealogyFamilyConnectorNodeParams): Node<GenealogyFamilyConnectorNodeData> | null {
   if (childPoints.length === 0) return null;
 
@@ -558,6 +568,7 @@ export function createGenealogyFamilyConnectorNode({
         x: point.x - nodeX,
         y: point.y - nodeY,
       })),
+      ...(parentChildHighlight ? { parentChildHighlight } : {}),
     },
     draggable: false,
     selectable: false,
@@ -915,10 +926,12 @@ function addGenealogyFamilyConnectorNodes({
   nodes,
   drafts,
   positionedPeople,
+  parentChildHighlight,
 }: {
   nodes: Node[];
   drafts: GenealogyFamilyConnectorDraft[];
   positionedPeople: Map<string, PositionedPerson>;
+  parentChildHighlight?: boolean;
 }) {
   const addedConnectorIds = new Set<string>();
   const connectorItems = drafts
@@ -990,12 +1003,65 @@ function addGenealogyFamilyConnectorNodes({
       originY: item.origin.y,
       busX,
       childPoints: item.childPoints,
+      ...(parentChildHighlight ? { parentChildHighlight } : {}),
     });
 
     if (!connectorNode) return;
 
     addedConnectorIds.add(item.connectorId);
     nodes.unshift(connectorNode);
+  });
+}
+
+function addGenealogySiblingHighlightEdges(
+  edges: Edge[],
+  positionedPeople: Map<string, PositionedPerson>,
+  relationshipIndex: RelationshipIndex
+) {
+  const peopleByColumn = new Map<number, PositionedPerson[]>();
+
+  positionedPeople.forEach((positioned) => {
+    const columnPeople = peopleByColumn.get(positioned.x) ?? [];
+    columnPeople.push(positioned);
+    peopleByColumn.set(positioned.x, columnPeople);
+  });
+
+  peopleByColumn.forEach((columnPeople) => {
+    columnPeople
+      .sort((personA, personB) => (
+        personA.y - personB.y
+        || personA.placement.pessoa.id.localeCompare(personB.placement.pessoa.id)
+      ))
+      .forEach((positioned, index) => {
+        const nextPositioned = columnPeople[index + 1];
+        if (!nextPositioned) return;
+
+        const personId = positioned.placement.pessoa.id;
+        const nextPersonId = nextPositioned.placement.pessoa.id;
+        if (!relationshipIndex.siblingsByPerson.get(personId)?.has(nextPersonId)) return;
+
+        const generationKey = getGenerationKey(positioned.placement.pessoa);
+        if (generationKey !== getGenerationKey(nextPositioned.placement.pessoa)) return;
+
+        const verticalGap = nextPositioned.y - positioned.y - positioned.height;
+        if (verticalGap > ROW_GAP + 4) return;
+
+        edges.push({
+          id: `genealogy-sibling-highlight-${personId}-${nextPersonId}`,
+          source: personId,
+          sourceHandle: 'right',
+          target: nextPersonId,
+          targetHandle: 'right',
+          type: 'siblingEdge',
+          selectable: false,
+          zIndex: 0,
+          style: GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE,
+          data: {
+            kind: 'siblings',
+            attachGap: 18,
+          },
+        });
+      });
   });
 }
 
@@ -1153,6 +1219,8 @@ export function genealogyColumnsLayout(
   options: GenealogyColumnsLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters ?? DEFAULT_GENEALOGY_FILTERS;
+  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true;
+  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true;
   const onMarriageClick = options.onMarriageClick;
   const relationshipIndex = buildRelationshipIndex(graph);
   const groups = groupPeopleByGeneration(graph, relationshipIndex, {
@@ -1236,7 +1304,12 @@ export function genealogyColumnsLayout(
     nodes,
     drafts: familyConnectorDrafts,
     positionedPeople,
+    parentChildHighlight,
   });
+
+  if (siblingHighlight) {
+    addGenealogySiblingHighlightEdges(edges, positionedPeople, relationshipIndex);
+  }
 
   const viewportBounds = getGenealogyViewportBounds({
     groups,

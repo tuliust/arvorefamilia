@@ -45,6 +45,7 @@ import {
   TREE_CONSTANTS,
   MarriageNodeDetails,
   TreeLayoutResult,
+  VisualLineFilters,
 } from './types';
 import { DIRECT_FAMILY_TOKENS } from './visualTokens';
 
@@ -61,6 +62,7 @@ interface FamilyTreeProps {
   edgeFilters?: EdgeFilters;
   directRelativeFilters?: DirectRelativeFilters;
   genealogyFilters?: GenealogyFilters;
+  visualLineFilters?: VisualLineFilters;
   viewMode: TreeViewMode;
   centralPersonId?: string;
   isMobile?: boolean;
@@ -694,6 +696,7 @@ function FamilyTreeComponent({
   edgeFilters = DEFAULT_EDGE_FILTERS,
   directRelativeFilters = DEFAULT_DIRECT_RELATIVE_FILTERS,
   genealogyFilters = DEFAULT_GENEALOGY_FILTERS,
+  visualLineFilters,
   viewMode,
   centralPersonId,
   isMobile = false,
@@ -713,6 +716,8 @@ function FamilyTreeComponent({
   const directFamilyFallbackMinZoom = isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM;
   const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
   const isGenealogyLayout = usesGenealogyLayout(viewMode);
+  const genealogyVisualLineFilters = isGenealogyLayout ? visualLineFilters : undefined;
+  const directVisualLineFilters = viewMode === 'minha-arvore' ? visualLineFilters : undefined;
   const activeMaxZoom = isGenealogyLayout
     ? (isMobile ? GENEALOGY_MOBILE_MAX_ZOOM : GENEALOGY_MAX_ZOOM)
     : directFamilyMaxZoom;
@@ -742,11 +747,13 @@ function FamilyTreeComponent({
       edgeFilters,
       directRelativeFilters,
       genealogyFilters,
+      visualLineFilters: genealogyVisualLineFilters,
+      directVisualLineFilters,
       centralPersonId: effectiveCentralPersonId,
       isMobile,
       viewMode,
     });
-  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, effectiveCentralPersonId, isMobile, viewMode]);
+  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, genealogyVisualLineFilters, directVisualLineFilters, effectiveCentralPersonId, isMobile, viewMode]);
 
   const rawLayoutResult = useMemo(() => {
     const graph = buildTreeGraph({
@@ -775,6 +782,7 @@ function FamilyTreeComponent({
     if (isGenealogyLayout) {
       return genealogyColumnsLayout(layoutGraph, {
         filters: genealogyFilters,
+        visualLineFilters: genealogyVisualLineFilters,
         onMarriageClick,
         hideUngenerated: viewMode === 'visao-completa',
       });
@@ -783,6 +791,7 @@ function FamilyTreeComponent({
     return directFamilyDistributedLayout(layoutGraph, {
       centralPersonId: effectiveCentralPersonId,
       filters: directRelativeFilters,
+      visualLineFilters: directVisualLineFilters,
       isMobile,
     });
   }, [
@@ -799,6 +808,8 @@ function FamilyTreeComponent({
     edgeFilters,
     directRelativeFilters,
     genealogyFilters,
+    genealogyVisualLineFilters,
+    directVisualLineFilters,
     effectiveCentralPersonId,
     isGenealogyLayout,
     viewMode,

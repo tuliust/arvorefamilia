@@ -1380,6 +1380,7 @@ export function Home() {
               layoutRevision={treeLayoutRevision}
               viewMode={treeViewMode}
               genealogyFilters={genealogyFilters}
+              visualLineFilters={visualLineFilters}
             />
           ) : (
             <StateMessage

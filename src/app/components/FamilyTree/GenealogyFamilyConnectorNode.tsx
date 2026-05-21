@@ -1,7 +1,7 @@
 import React from 'react';
 import { NodeProps } from 'reactflow';
 
-import { DIRECT_FAMILY_TOKENS } from './visualTokens';
+import { DIRECT_FAMILY_TOKENS, FAMILY_TREE_COLORS } from './visualTokens';
 
 export interface GenealogyFamilyConnectorNodeData {
   width: number;
@@ -14,6 +14,7 @@ export interface GenealogyFamilyConnectorNodeData {
     x: number;
     y: number;
   }>;
+  parentChildHighlight?: boolean;
 }
 
 export function GenealogyFamilyConnectorNode({
@@ -29,6 +30,10 @@ export function GenealogyFamilyConnectorNode({
   const isSingleChildAligned = singleChildPoint
     ? Math.abs(data.originY - singleChildPoint.y) <= ALIGNED_Y_TOLERANCE
     : false;
+  const stroke = data.parentChildHighlight
+    ? FAMILY_TREE_COLORS.EDGE_CHILD
+    : DIRECT_FAMILY_TOKENS.EDGE_STROKE;
+  const strokeWidth = data.parentChildHighlight ? 2.25 : 2;
 
   return (
     <svg
@@ -41,10 +46,10 @@ export function GenealogyFamilyConnectorNode({
     >
       <g
         fill="none"
-        stroke={DIRECT_FAMILY_TOKENS.EDGE_STROKE}
+        stroke={stroke}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={2}
+        strokeWidth={strokeWidth}
         opacity={DIRECT_FAMILY_TOKENS.EDGE_OPACITY}
       >
         {singleChildPoint && isSingleChildAligned ? (

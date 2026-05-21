@@ -7,13 +7,15 @@ import {
   TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
+  VisualLineFilters,
   getSortableBirthValue,
 } from '../types';
-import { DIRECT_FAMILY_TOKENS } from '../visualTokens';
+import { DIRECT_FAMILY_TOKENS, FAMILY_TREE_COLORS } from '../visualTokens';
 
 interface DirectFamilyLayoutOptions {
   centralPersonId?: string;
   filters?: DirectRelativeFilters;
+  visualLineFilters?: VisualLineFilters;
   isMobile?: boolean;
 }
 
@@ -136,6 +138,18 @@ const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH,
   opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
+};
+const DIRECT_PARENT_CHILD_HIGHLIGHT_EDGE_STYLE = {
+  stroke: FAMILY_TREE_COLORS.EDGE_CHILD,
+  strokeWidth: 2.25,
+  opacity: 0.86,
+  strokeDasharray: 'none',
+};
+const DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE = {
+  stroke: FAMILY_TREE_COLORS.EDGE_SIBLING,
+  strokeWidth: 2.25,
+  opacity: 0.86,
+  strokeDasharray: '5,5',
 };
 const ANCESTOR_SPOUSE_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
@@ -716,6 +730,66 @@ function addDirectStructuralEdge(
   });
 }
 
+function addDirectParentChildHighlightEdge(
+  edges: Edge[],
+  positionedIds: Set<string>,
+  id: string,
+  source: string,
+  target: string,
+  kind: 'directHorizontal' | 'directElbowFromCenter',
+  options: {
+    sourceHandle?: string;
+    targetHandle?: string;
+    elbowY?: number;
+  } = {}
+) {
+  if (!positionedIds.has(source) || !positionedIds.has(target)) return;
+  if (edges.some((edge) => edge.id === id)) return;
+
+  edges.push({
+    id,
+    source,
+    sourceHandle: options.sourceHandle || 'bottom',
+    target,
+    targetHandle: options.targetHandle || 'top',
+    type: 'childEdge',
+    selectable: false,
+    zIndex: 0,
+    style: DIRECT_PARENT_CHILD_HIGHLIGHT_EDGE_STYLE,
+    data: {
+      kind,
+      elbowY: options.elbowY,
+    },
+  });
+}
+
+function addDirectSiblingHighlightEdge(
+  edges: Edge[],
+  positionedIds: Set<string>,
+  source: string,
+  target: string,
+  elbowY: number
+) {
+  if (!positionedIds.has(source) || !positionedIds.has(target)) return;
+  if (edges.some((edge) => edge.id === 'direct-highlight-central-to-siblings')) return;
+
+  edges.push({
+    id: 'direct-highlight-central-to-siblings',
+    source,
+    sourceHandle: 'bottom',
+    target,
+    targetHandle: 'top',
+    type: 'siblingEdge',
+    selectable: false,
+    zIndex: 0,
+    style: DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE,
+    data: {
+      kind: 'directElbowFromCenter',
+      elbowY,
+    },
+  });
+}
+
 function addGroupBoxConnection(
   addEdge: (edge: Edge) => void,
   sourceGroupKey: string,
@@ -892,6 +966,8 @@ export function directFamilyDistributedLayout(
   options: DirectFamilyLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters || DEFAULT_DIRECT_RELATIVE_FILTERS;
+  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true;
+  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true;
   const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
   const personNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
@@ -1046,6 +1122,7 @@ export function directFamilyDistributedLayout(
   const maternalUnclesGroupBounds = groupBoundsByKey.get('tios-maternos');
   const siblingsGroupBounds = groupBoundsByKey.get('irmaos');
   const spouseGroupBounds = groupBoundsByKey.get('conjuge');
+  const childrenGroupBounds = groupBoundsByKey.get('filhos');
   const centralBottomY = CENTRAL_Y + CENTRAL_HEIGHT;
   const lowerGroupTopY = Math.min(
     siblingsGroupBounds?.minY ?? Number.POSITIVE_INFINITY,
@@ -1068,7 +1145,7 @@ export function directFamilyDistributedLayout(
     }
   }
 
-  if (siblingsGroupBounds || spouseGroupBounds) {
+  if (siblingsGroupBounds || spouseGroupBounds || (parentChildHighlight && childrenGroupBounds)) {
     addAnchor(positionedNodes, positionedIds, 'direct-center-bottom-anchor', VIEW_CENTER_X, centralBottomY);
   }
 
@@ -1177,6 +1254,16 @@ export function directFamilyDistributedLayout(
     );
   }
 
+  if (siblingHighlight && siblingsGroupBounds) {
+    addDirectSiblingHighlightEdge(
+      edges,
+      positionedIds,
+      'direct-center-bottom-anchor',
+      'direct-siblings-group-top-anchor',
+      lowerConnectionElbowY
+    );
+  }
+
   if (spouseGroupBounds) {
     addDirectStructuralEdge(
       addEdge,
@@ -1204,6 +1291,69 @@ export function directFamilyDistributedLayout(
   );
   addConsecutiveGroupConnections(addEdge, ['irmaos', 'sobrinhos'], groupBoundsByKey);
   addConsecutiveGroupConnections(addEdge, ['conjuge', 'filhos'], groupBoundsByKey);
+
+  if (parentChildHighlight) {
+    if (fatherGroupBounds && motherGroupBounds) {
+      addDirectParentChildHighlightEdge(
+        edges,
+        positionedIds,
+        'direct-highlight-parent-to-central',
+        'direct-parent-couple-mid-anchor',
+        'direct-central-top-anchor',
+        'directElbowFromCenter',
+        {
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+          elbowY: CENTRAL_Y - 32,
+        }
+      );
+    } else if (fatherGroupBounds || motherGroupBounds) {
+      addDirectParentChildHighlightEdge(
+        edges,
+        positionedIds,
+        'direct-highlight-parent-to-central',
+        'direct-single-parent-bottom-anchor',
+        'direct-central-top-anchor',
+        'directElbowFromCenter',
+        {
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+          elbowY: CENTRAL_Y - 32,
+        }
+      );
+    }
+
+    if (childrenGroupBounds) {
+      addDirectParentChildHighlightEdge(
+        edges,
+        positionedIds,
+        'direct-highlight-central-to-children',
+        'direct-center-bottom-anchor',
+        'direct-group-filhos-top-anchor',
+        'directElbowFromCenter',
+        {
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+          elbowY: lowerConnectionElbowY,
+        }
+      );
+    }
+
+    if (spouseGroupBounds && childrenGroupBounds) {
+      addDirectParentChildHighlightEdge(
+        edges,
+        positionedIds,
+        'direct-highlight-spouse-to-children',
+        'direct-group-conjuge-bottom-anchor',
+        'direct-group-filhos-top-anchor',
+        'directHorizontal',
+        {
+          sourceHandle: 'bottom',
+          targetHandle: 'top',
+        }
+      );
+    }
+  }
 
   addAncestorSpouseEdges(addEdge, sides.paternal.greatGreatGrandparents, positionedNodes, index);
   addAncestorSpouseEdges(addEdge, sides.maternal.greatGreatGrandparents, positionedNodes, index);
