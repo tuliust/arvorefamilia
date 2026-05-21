@@ -1422,3 +1422,74 @@ Correção imediata:
 - rotacionar secret se foi exposto;
 - mover para Edge Function ou Supabase secrets;
 - revisar histórico do Git se houve commit.
+
+---
+
+## 20. Troubleshooting recente — legenda funcional, camadas visuais e painel lateral
+
+### Destaques visuais aparecem mesmo com filtro oculto
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+src/app/components/FamilyTree/TreeLegend.tsx
+```
+
+Verificar:
+
+- `edgeFilters` está sendo passado aos layouts;
+- `parentChildHighlight` está condicionado a `filiacao_sangue || filiacao_adotiva`;
+- `siblingHighlight` está condicionado a `edgeFilters.irmaos`;
+- pessoas/grupos ocultos não recebem edges opcionais.
+
+### Botão “Destacar pais/filhos” não tem efeito
+
+Verificar:
+
+- `visualLineFilters.parentChildHighlight`;
+- callback `onToggleVisualLineFilter`;
+- repasse de `visualLineFilters` de `Home.tsx` para `FamilyTree.tsx`;
+- repasse para `directFamilyDistributedLayout` e `genealogyColumnsLayout`;
+- `GenealogyFamilyConnectorNode` recebendo `parentChildHighlight`.
+
+### Botão “Destacar irmãos” não tem efeito
+
+Verificar:
+
+- `visualLineFilters.siblingHighlight`;
+- `edgeFilters.irmaos`;
+- relações explícitas `irmao`;
+- handles usados nas edges de irmãos;
+- restrições contra linhas longas em Genealogia/Visão Completa.
+
+### Informações voltou para dentro da toggle
+
+Arquivo provável:
+
+```txt
+src/app/pages/Home.tsx
+```
+
+Esperado:
+
+- `SidebarPanelTabs` mostra apenas **Filtros** e **Legendas**;
+- **Informações** abre por botão externo;
+- botão usa `SquareDashedMousePointer`;
+- `activeSidebarPanel = 'info'` continua renderizando `SidebarInfoPanel`.
+
+### Zoom voltou para a esquerda
+
+Arquivo provável:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Esperado:
+
+- botões `+` e `-` no canto superior direito;
+- wrapper visual com `right-4 top-4`;
+- não alterar minZoom, maxZoom, viewport, bounds ou normalização.

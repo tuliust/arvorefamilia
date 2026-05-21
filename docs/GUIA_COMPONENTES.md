@@ -988,3 +988,99 @@ src/app/components/favorites
 src/app/components/forum
 src/app/components/ui
 ```
+
+---
+
+## 20. Atualização recente — legenda, painel e linhas da árvore
+
+### 20.1 `TreeLegend` como legenda funcional
+
+`TreeLegend` deixou de ser apenas informativa no painel lateral e também atua como controle visual/filtro, quando recebe callbacks.
+
+Props relevantes atuais:
+
+```txt
+viewMode?
+compact?
+className?
+showTitle?
+personFilters?
+edgeFilters?
+directRelativeFilters?
+visualLineFilters?
+onTogglePersonFilter?
+onToggleEdgeFilter?
+onToggleDirectRelativeFilter?
+onToggleVisualLineFilter?
+```
+
+Controles funcionais possíveis:
+
+- Pessoa viva;
+- Falecida;
+- Pet;
+- Conjugal;
+- Pais/filhos;
+- Irmãos;
+- Cores dos grupos na Minha Árvore, quando aplicável;
+- Destacar pais/filhos;
+- Destacar irmãos.
+
+### 20.2 Camadas visuais opcionais
+
+As camadas visuais opcionais usam:
+
+```txt
+visualLineFilters.parentChildHighlight
+visualLineFilters.siblingHighlight
+```
+
+Comportamento:
+
+- **Destacar pais/filhos** usa linha amarela contínua;
+- **Destacar irmãos** usa linha amarela tracejada;
+- ambas ficam desligadas por padrão;
+- ambas respeitam os filtros legados de linhas.
+
+### 20.3 `FamilyTree`
+
+`FamilyTree` recebe `visualLineFilters` e repassa a configuração para:
+
+```txt
+directFamilyDistributedLayout
+genealogyColumnsLayout
+GenealogyFamilyConnectorNode
+```
+
+Também expõe via ref:
+
+```txt
+zoomIn
+zoomOut
+print
+savePdf
+saveImage
+startAreaSelection
+```
+
+### 20.4 Painel lateral da Home
+
+O topo do painel lateral da Home tem toggle apenas para:
+
+```txt
+Filtros
+Legendas
+```
+
+O painel **Informações da árvore** é aberto por botão externo com ícone `SquareDashedMousePointer`.
+
+A versão compacta da legenda removeu **Cores dos grupos** para caber melhor no painel lateral, mas mantém:
+
+- Cards;
+- Linhas;
+- Camadas extras;
+- Anel de casamento.
+
+### 20.5 Botões de zoom
+
+Os botões de zoom da árvore ficam no canto superior direito da área da árvore.

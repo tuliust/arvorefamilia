@@ -426,3 +426,36 @@ Não bloqueiam lançamento, se documentados:
 - filtros avançados do admin integridade;
 - limpeza auditada de legado/base64;
 - revisão de scripts legados.
+
+---
+
+## 8. Atualização recente — ajustes visuais concluídos após 7.10
+
+Concluído após os ajustes finais de responsividade:
+
+- legenda visual transformada em filtros funcionais;
+- preparação de camadas visuais opcionais;
+- destaque opcional de pais/filhos;
+- destaque opcional de irmãos;
+- QA visual dos destaques;
+- painel lateral com toggle apenas para Filtros/Legendas;
+- botão externo de Informações com `SquareDashedMousePointer`;
+- botões de zoom reposicionados à direita.
+
+Commits de referência:
+
+```txt
+779fee6 feat: tornar legenda visual em filtros da arvore
+733eb65 feat: preparar camadas visuais opcionais da arvore
+e41d9b1 feat: adicionar destaques visuais opcionais nas linhas da arvore
+94b5408 style: ajustar painel lateral e controles da home
+```
+
+Esses ajustes não alteraram Supabase, migrations, autenticação, rotas ou `package.json`.
+
+Pós-MVP permanece:
+
+- versão administrativa/configurável da legenda, se necessária;
+- exportação da árvore completa;
+- melhorias finas para árvores muito grandes;
+- integração mais profunda do grau de parentesco diretamente na árvore.

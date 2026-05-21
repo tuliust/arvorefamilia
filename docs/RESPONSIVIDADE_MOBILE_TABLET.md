@@ -1,3 +1,5 @@
+> Status atual: fase 7.10 concluída no escopo MVP. Este documento fica preservado como referência histórica, checklist de regressão e guia para ajustes futuros de responsividade.
+
 # Responsividade mobile/tablet — Árvore Família
 
 ## Objetivo

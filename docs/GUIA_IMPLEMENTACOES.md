@@ -699,3 +699,74 @@ Não deve acontecer:
 - secrets entrarem no frontend ou no repositório;
 - responsividade ignorar árvore, legenda e seleção de área;
 - título/subtítulo interno voltar a aparecer nas views Genealogia/Visão Completa.
+
+---
+
+## 17. Atualização recente — legenda funcional, camadas visuais e painel lateral
+
+### 17.1 Legenda visual 7.7 consolidada
+
+A frente 7.7 evoluiu de legenda explicativa para legenda funcional no painel lateral.
+
+Além de explicar cards, linhas e anel de casamento, a legenda pode controlar:
+
+- filtros de status de pessoa;
+- filtros de linhas;
+- filtros de grupos da Minha Árvore;
+- camadas visuais opcionais.
+
+### 17.2 Camadas visuais opcionais das linhas
+
+Implementado:
+
+```txt
+visualLineFilters.parentChildHighlight
+visualLineFilters.siblingHighlight
+```
+
+Comportamento:
+
+- `parentChildHighlight`: destaca pais/filhos em amarelo contínuo;
+- `siblingHighlight`: destaca irmãos em amarelo tracejado;
+- estado inicial: desligado;
+- não altera o visual padrão quando desligado;
+- respeita filtros de linhas existentes.
+
+Regras consolidadas:
+
+- `parentChildHighlight` só aparece quando `filiacao_sangue || filiacao_adotiva` está ativo;
+- `siblingHighlight` só aparece quando `edgeFilters.irmaos` está ativo;
+- Minha Árvore usa destaque conservador para evitar poluição visual;
+- Genealogia e Visão Completa limitam linhas de irmãos a casos visíveis e seguros.
+
+### 17.3 Painel lateral da Home
+
+Implementado:
+
+- toggle principal apenas com **Filtros** e **Legendas**;
+- **Informações** saiu da toggle;
+- botão externo de Informações usa `SquareDashedMousePointer`;
+- botão fica ao lado do controle de recolher/expandir;
+- versão desktop e mobile preservadas;
+- zoom da árvore movido para o canto superior direito.
+
+### 17.4 Arquivos envolvidos
+
+```txt
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+### 17.5 Commits de referência
+
+```txt
+779fee6 feat: tornar legenda visual em filtros da arvore
+733eb65 feat: preparar camadas visuais opcionais da arvore
+e41d9b1 feat: adicionar destaques visuais opcionais nas linhas da arvore
+94b5408 style: ajustar painel lateral e controles da home
+```

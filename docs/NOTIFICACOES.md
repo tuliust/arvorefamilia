@@ -259,3 +259,30 @@ limit 50;
 - Nao usar testes de email para todos os usuarios.
 - Nao salvar metadata com telefone, endereco, email completo, token, base64 ou URL completa de arquivo.
 - Nao apagar logs de producao sem confirmacao explicita.
+
+---
+
+## Nota de consistência — cron e rotina diária
+
+Há uma diferença documental que deve ser tratada com cuidado:
+
+- os guias principais podem tratar a rotina diária como tecnicamente validada;
+- este documento registra que o agendamento automático via `pg_cron` depende de configuração segura de segredo fora do repositório e não deve ser hardcoded em migration.
+
+Regra consolidada:
+
+- a Edge Function `run-daily-notifications` está preparada;
+- a rotina manual/admin é suportada;
+- a ativação automática por cron depende de ambiente/secret seguro;
+- não versionar segredo em migration;
+- antes de marcar cron como ativo em produção, confirmar no Supabase se o job está agendado e operacional.
+
+Comandos/verificações úteis:
+
+```sql
+select *
+from cron.job
+where jobname = 'run-daily-notifications-0800-brt';
+```
+
+E conferir logs recentes de chamada HTTP em ambiente Supabase, quando aplicável.

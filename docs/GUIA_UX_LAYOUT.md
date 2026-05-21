@@ -641,3 +641,53 @@ src/app/pages/Notificacoes.tsx
 src/app/pages/forum/ForumHome.tsx
 src/app/pages/admin/AdminDashboard.tsx
 ```
+
+---
+
+## 16. Atualização recente — painel lateral, legenda e zoom
+
+### 16.1 Painel lateral
+
+O painel lateral da Home usa toggle com apenas duas abas:
+
+```txt
+Filtros
+Legendas
+```
+
+A aba **Informações** não aparece mais na toggle. Ela é aberta por um botão externo com ícone `SquareDashedMousePointer`, posicionado ao lado do botão de recolher/expandir painel.
+
+### 16.2 Legenda compacta
+
+Na versão compacta usada no painel lateral, a legenda prioriza:
+
+- Cards;
+- Linhas;
+- Camadas extras;
+- Anel de casamento.
+
+A seção **Cores dos grupos** não deve aparecer na versão compacta quando comprometer a altura útil do painel. A versão completa pode manter explicações adicionais, quando houver contexto para isso.
+
+### 16.3 Camadas extras
+
+A legenda compacta mantém os controles:
+
+- **Destacar pais/filhos**;
+- **Destacar irmãos**.
+
+Regras visuais:
+
+- pais/filhos: amarelo contínuo;
+- irmãos: amarelo tracejado;
+- ambos desligados por padrão;
+- ambos devem sumir quando o filtro correspondente estiver oculto.
+
+### 16.4 Zoom
+
+Os botões de zoom da árvore ficam no canto superior direito da área da árvore:
+
+```txt
+right-4 top-4
+```
+
+O comportamento de zoom não deve ser alterado por ajustes visuais do painel.
