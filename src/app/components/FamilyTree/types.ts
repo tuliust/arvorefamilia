@@ -8,6 +8,12 @@ export interface EdgeFilters {
   irmaos: boolean;
 }
 
+export type VisualLineFilterKey =
+  | 'parentChildHighlight'
+  | 'siblingHighlight';
+
+export type VisualLineFilters = Record<VisualLineFilterKey, boolean>;
+
 export type DirectRelativeGroup =
   | 'pais'
   | 'avos'
@@ -159,6 +165,11 @@ export const DEFAULT_EDGE_FILTERS: EdgeFilters = {
   filiacao_sangue: true,
   filiacao_adotiva: true,
   irmaos: true,
+};
+
+export const DEFAULT_VISUAL_LINE_FILTERS: VisualLineFilters = {
+  parentChildHighlight: false,
+  siblingHighlight: false,
 };
 
 export const DEFAULT_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {

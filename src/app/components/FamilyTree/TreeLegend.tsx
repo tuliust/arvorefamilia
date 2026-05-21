@@ -1,7 +1,13 @@
 import React from 'react';
 
 import type { TreeViewMode } from './ViewModeToggle';
-import type { DirectRelativeFilters, DirectRelativeGroup, EdgeFilters } from './types';
+import type {
+  DirectRelativeFilters,
+  DirectRelativeGroup,
+  EdgeFilters,
+  VisualLineFilterKey,
+  VisualLineFilters,
+} from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 import {
   DIRECT_FAMILY_LEGEND_BACKGROUNDS,
@@ -18,10 +24,12 @@ interface TreeLegendProps {
   personFilters?: Record<PersonLegendFilterKey, boolean>;
   edgeFilters?: EdgeFilters;
   directRelativeFilters?: DirectRelativeFilters;
+  visualLineFilters?: VisualLineFilters;
   onTogglePersonFilter?: (key: PersonLegendFilterKey) => void;
   onToggleEdgeFilter?: (key: keyof EdgeFilters) => void;
   onToggleParentChildFilter?: () => void;
   onToggleDirectRelativeFilter?: (key: DirectRelativeGroup) => void;
+  onToggleVisualLineFilter?: (key: VisualLineFilterKey) => void;
 }
 
 const marriageStatusItems = [
@@ -74,6 +82,26 @@ const lineItems = [
   },
 ];
 
+const visualLineItems: Array<{
+  key: VisualLineFilterKey;
+  label: string;
+  fullLabel: string;
+  sample: React.ReactNode;
+}> = [
+  {
+    key: 'parentChildHighlight',
+    label: 'Destacar pais/filhos',
+    fullLabel: 'Destacar pais e filhos',
+    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_CHILD} />,
+  },
+  {
+    key: 'siblingHighlight',
+    label: 'Destacar irmãos',
+    fullLabel: 'Destacar irmãos',
+    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
+  },
+];
+
 const directRelativeKeyByLegendLabel: Partial<Record<string, DirectRelativeGroup | 'central'>> = {
   Tataravós: 'tataravos',
   Bisavós: 'bisavos',
@@ -97,10 +125,12 @@ export function TreeLegend({
   personFilters,
   edgeFilters,
   directRelativeFilters,
+  visualLineFilters,
   onTogglePersonFilter,
   onToggleEdgeFilter,
   onToggleParentChildFilter,
   onToggleDirectRelativeFilter,
+  onToggleVisualLineFilter,
 }: TreeLegendProps) {
   const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
   const parentChildActive = edgeFilters ? edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva : undefined;
@@ -133,6 +163,18 @@ export function TreeLegend({
     }
 
     return {};
+  };
+
+  const getVisualLineAction = (key: VisualLineFilterKey, label: string) => {
+    if (!visualLineFilters || !onToggleVisualLineFilter) return {};
+
+    const active = visualLineFilters[key];
+
+    return {
+      active,
+      onClick: () => onToggleVisualLineFilter(key),
+      title: active ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`,
+    };
   };
 
   const getDirectRelativeAction = (label: string) => {
@@ -222,6 +264,20 @@ export function TreeLegend({
                 sample={item.sample}
                 label={item.label}
                 {...getLineAction(item.label)}
+              />
+            ))}
+          </div>
+        </LegendGroup>
+
+        <LegendGroup title="Camadas extras" compact>
+          <div className="grid grid-cols-2 gap-1.5">
+            {visualLineItems.map((item) => (
+              <LegendItem
+                key={item.key}
+                compact
+                sample={item.sample}
+                label={item.label}
+                {...getVisualLineAction(item.key, item.fullLabel)}
               />
             ))}
           </div>
@@ -327,6 +383,19 @@ export function TreeLegend({
               sample={item.sample}
               label={item.fullLabel}
               {...getLineAction(item.label)}
+            />
+          ))}
+        </div>
+      </LegendGroup>
+
+      <LegendGroup title="Camadas extras">
+        <div className="space-y-2">
+          {visualLineItems.map((item) => (
+            <LegendItem
+              key={item.key}
+              sample={item.sample}
+              label={item.fullLabel}
+              {...getVisualLineAction(item.key, item.fullLabel)}
             />
           ))}
         </div>

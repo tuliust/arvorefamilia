@@ -55,11 +55,14 @@ import { Pessoa, Relacionamento } from '../types';
 import {
   DEFAULT_GENEALOGY_FILTERS,
   DEFAULT_DIRECT_RELATIVE_FILTERS,
+  DEFAULT_VISUAL_LINE_FILTERS,
   DirectRelativeFilters,
   DirectRelativeGroup,
   GenealogyFilterKey,
   GenealogyFilters,
   MarriageNodeDetails,
+  VisualLineFilterKey,
+  VisualLineFilters,
 } from '../components/FamilyTree/types';
 import { TreeViewMode } from '../components/FamilyTree/ViewModeToggle';
 import {
@@ -221,6 +224,8 @@ export function Home() {
     filiacao_adotiva: true,
     irmaos: true,
   });
+
+  const [visualLineFilters, setVisualLineFilters] = useState<VisualLineFilters>(DEFAULT_VISUAL_LINE_FILTERS);
 
   const [personFilters, setPersonFilters] = useState({
     vivos: true,
@@ -651,6 +656,13 @@ export function Home() {
     });
   }, []);
 
+  const toggleVisualLineFilter = useCallback((filterKey: VisualLineFilterKey) => {
+    setVisualLineFilters((prev) => ({
+      ...prev,
+      [filterKey]: !prev[filterKey],
+    }));
+  }, []);
+
   const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
     setPersonFilters((prev) => ({
       ...prev,
@@ -901,6 +913,8 @@ export function Home() {
           onToggleEdgeFilter={toggleFilter}
           onToggleParentChildFilter={toggleParentChildFilters}
           onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
+          visualLineFilters={visualLineFilters}
+          onToggleVisualLineFilter={toggleVisualLineFilter}
         />
       )}
 
