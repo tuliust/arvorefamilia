@@ -1,17 +1,27 @@
 import React from 'react';
 
 import type { TreeViewMode } from './ViewModeToggle';
+import type { DirectRelativeFilters, DirectRelativeGroup, EdgeFilters } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 import {
   DIRECT_FAMILY_LEGEND_BACKGROUNDS,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from './directFamilyColors';
 
+type PersonLegendFilterKey = 'vivos' | 'falecidos' | 'pets';
+
 interface TreeLegendProps {
   viewMode?: TreeViewMode;
   compact?: boolean;
   className?: string;
   showTitle?: boolean;
+  personFilters?: Record<PersonLegendFilterKey, boolean>;
+  edgeFilters?: EdgeFilters;
+  directRelativeFilters?: DirectRelativeFilters;
+  onTogglePersonFilter?: (key: PersonLegendFilterKey) => void;
+  onToggleEdgeFilter?: (key: keyof EdgeFilters) => void;
+  onToggleParentChildFilter?: () => void;
+  onToggleDirectRelativeFilter?: (key: DirectRelativeGroup) => void;
 }
 
 const marriageStatusItems = [
@@ -64,12 +74,82 @@ const lineItems = [
   },
 ];
 
+const directRelativeKeyByLegendLabel: Partial<Record<string, DirectRelativeGroup | 'central'>> = {
+  Tataravós: 'tataravos',
+  Bisavós: 'bisavos',
+  Avós: 'avos',
+  Tios: 'tios',
+  Primos: 'primos',
+  'Pai e Mãe': 'pais',
+  'Pessoa Principal': 'central',
+  Irmãos: 'irmaos',
+  Sobrinhos: 'sobrinhos',
+  Netos: 'netos',
+  Cônjuge: 'conjuge',
+  Filhos: 'filhos',
+};
+
 export function TreeLegend({
+  viewMode,
   compact = false,
   className = '',
   showTitle = true,
+  personFilters,
+  edgeFilters,
+  directRelativeFilters,
+  onTogglePersonFilter,
+  onToggleEdgeFilter,
+  onToggleParentChildFilter,
+  onToggleDirectRelativeFilter,
 }: TreeLegendProps) {
   const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
+  const parentChildActive = edgeFilters ? edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva : undefined;
+
+  const getLineAction = (label: string) => {
+    if (!edgeFilters) return {};
+
+    if (label === 'Conjugal' && onToggleEdgeFilter) {
+      return {
+        active: edgeFilters.conjugal,
+        onClick: () => onToggleEdgeFilter('conjugal'),
+        title: edgeFilters.conjugal ? 'Ocultar linhas conjugais' : 'Mostrar linhas conjugais',
+      };
+    }
+
+    if (label === 'Pais/filhos' && onToggleParentChildFilter) {
+      return {
+        active: parentChildActive,
+        onClick: onToggleParentChildFilter,
+        title: parentChildActive ? 'Ocultar linhas de pais e filhos' : 'Mostrar linhas de pais e filhos',
+      };
+    }
+
+    if (label === 'Irmãos' && onToggleEdgeFilter) {
+      return {
+        active: edgeFilters.irmaos,
+        onClick: () => onToggleEdgeFilter('irmaos'),
+        title: edgeFilters.irmaos ? 'Ocultar linhas de irmãos' : 'Mostrar linhas de irmãos',
+      };
+    }
+
+    return {};
+  };
+
+  const getDirectRelativeAction = (label: string) => {
+    const key = directRelativeKeyByLegendLabel[label];
+
+    if (!key || key === 'central') return {};
+    if (viewMode !== 'minha-arvore') return {};
+    if (!directRelativeFilters || !onToggleDirectRelativeFilter) return {};
+
+    const active = directRelativeFilters[key];
+
+    return {
+      active,
+      onClick: () => onToggleDirectRelativeFilter(key),
+      title: active ? `Ocultar ${label}` : `Mostrar ${label}`,
+    };
+  };
 
   if (compact) {
     return (
@@ -94,6 +174,9 @@ export function TreeLegend({
                 />
               )}
               label="Pessoa viva"
+              active={personFilters?.vivos}
+              onClick={onTogglePersonFilter ? () => onTogglePersonFilter('vivos') : undefined}
+              title={personFilters?.vivos ? 'Ocultar pessoas vivas' : 'Mostrar pessoas vivas'}
             />
             <LegendItem
               compact
@@ -104,6 +187,9 @@ export function TreeLegend({
                 />
               )}
               label="Falecida"
+              active={personFilters?.falecidos}
+              onClick={onTogglePersonFilter ? () => onTogglePersonFilter('falecidos') : undefined}
+              title={personFilters?.falecidos ? 'Ocultar pessoas falecidas' : 'Mostrar pessoas falecidas'}
             />
             <LegendItem
               compact
@@ -114,11 +200,15 @@ export function TreeLegend({
                 />
               )}
               label="Pet"
+              active={personFilters?.pets}
+              onClick={onTogglePersonFilter ? () => onTogglePersonFilter('pets') : undefined}
+              title={personFilters?.pets ? 'Ocultar pets' : 'Mostrar pets'}
             />
             <LegendItem
               compact
               sample={<span className="h-4 w-8 rounded bg-white shadow-inner ring-2 ring-slate-800" />}
               label="Central"
+              title="A pessoa central permanece sempre visível"
             />
           </div>
         </LegendGroup>
@@ -131,6 +221,7 @@ export function TreeLegend({
                 compact
                 sample={item.sample}
                 label={item.label}
+                {...getLineAction(item.label)}
               />
             ))}
           </div>
@@ -144,6 +235,7 @@ export function TreeLegend({
                 compact
                 sample={<MarriageRingSample background={item.background} border={item.border} />}
                 label={item.shortLabel}
+                title="Status visual do relacionamento"
               />
             ))}
           </div>
@@ -152,16 +244,14 @@ export function TreeLegend({
         <LegendGroup title="Cores dos grupos" compact>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {backgroundItems.map((item) => (
-              <div key={item.label} className="flex min-w-0 items-center gap-1.5 leading-tight text-gray-600">
-                <span
-                  className="h-3.5 w-6 shrink-0 rounded border"
-                  style={{
-                    background: item.background,
-                    borderColor: item.solid,
-                  }}
-                />
-                <span className="truncate">{item.label}</span>
-              </div>
+              <LegendColorItem
+                key={item.label}
+                label={item.label}
+                background={item.background}
+                border={item.solid}
+                compact
+                {...getDirectRelativeAction(item.label)}
+              />
             ))}
           </div>
         </LegendGroup>
@@ -193,6 +283,9 @@ export function TreeLegend({
               />
             )}
             label="Pessoa viva"
+            active={personFilters?.vivos}
+            onClick={onTogglePersonFilter ? () => onTogglePersonFilter('vivos') : undefined}
+            title={personFilters?.vivos ? 'Ocultar pessoas vivas' : 'Mostrar pessoas vivas'}
           />
           <LegendItem
             sample={(
@@ -202,6 +295,9 @@ export function TreeLegend({
               />
             )}
             label="Falecida"
+            active={personFilters?.falecidos}
+            onClick={onTogglePersonFilter ? () => onTogglePersonFilter('falecidos') : undefined}
+            title={personFilters?.falecidos ? 'Ocultar pessoas falecidas' : 'Mostrar pessoas falecidas'}
           />
           <LegendItem
             sample={(
@@ -211,10 +307,14 @@ export function TreeLegend({
               />
             )}
             label="Pet"
+            active={personFilters?.pets}
+            onClick={onTogglePersonFilter ? () => onTogglePersonFilter('pets') : undefined}
+            title={personFilters?.pets ? 'Ocultar pets' : 'Mostrar pets'}
           />
           <LegendItem
             sample={<span className="h-6 w-12 rounded-md bg-white shadow-inner ring-2 ring-slate-800" />}
             label="Central"
+            title="A pessoa central permanece sempre visível"
           />
         </div>
       </LegendGroup>
@@ -226,6 +326,7 @@ export function TreeLegend({
               key={item.fullLabel}
               sample={item.sample}
               label={item.fullLabel}
+              {...getLineAction(item.label)}
             />
           ))}
         </div>
@@ -233,31 +334,27 @@ export function TreeLegend({
 
       <LegendGroup title="Anel de casamento">
         <div className="space-y-2">
-          <div className="space-y-2">
-            {marriageStatusItems.map((item) => (
-              <LegendItem
-                key={item.label}
-                sample={<MarriageRingSample background={item.background} border={item.border} />}
-                label={item.shortLabel}
-              />
-            ))}
-          </div>
+          {marriageStatusItems.map((item) => (
+            <LegendItem
+              key={item.label}
+              sample={<MarriageRingSample background={item.background} border={item.border} />}
+              label={item.shortLabel}
+              title="Status visual do relacionamento"
+            />
+          ))}
         </div>
       </LegendGroup>
 
       <LegendGroup title="Cores dos grupos">
         <div className="grid grid-cols-2 gap-2">
           {backgroundItems.map((item) => (
-            <div key={item.label} className="flex min-w-0 items-center gap-2 text-xs text-gray-600">
-              <span
-                className="h-5 w-9 shrink-0 rounded border"
-                style={{
-                  background: item.background,
-                  borderColor: item.solid,
-                }}
-              />
-              <span className="leading-snug">{item.label}</span>
-            </div>
+            <LegendColorItem
+              key={item.label}
+              label={item.label}
+              background={item.background}
+              border={item.solid}
+              {...getDirectRelativeAction(item.label)}
+            />
           ))}
         </div>
       </LegendGroup>
@@ -291,17 +388,28 @@ function LegendItem({
   sample,
   label,
   compact = false,
+  active,
+  onClick,
+  title,
 }: {
   sample: React.ReactNode;
   label: string;
   compact?: boolean;
+  active?: boolean;
+  onClick?: () => void;
+  title?: string;
 }) {
-  return (
-    <div className={[
-      'flex min-w-0 items-center rounded-lg border border-gray-200 bg-white shadow-sm',
-      compact ? 'gap-1.5 p-1.5' : 'gap-3 p-2',
-    ].join(' ')}
-    >
+  const isInteractive = typeof onClick === 'function';
+  const inactive = isInteractive && active === false;
+  const className = [
+    'flex min-w-0 items-center rounded-lg border border-gray-200 bg-white shadow-sm transition',
+    compact ? 'gap-1.5 p-1.5' : 'gap-3 p-2',
+    isInteractive ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : '',
+    inactive ? 'grayscale opacity-45' : '',
+  ].filter(Boolean).join(' ');
+
+  const content = (
+    <>
       <span className={compact
         ? 'flex h-5 w-8 shrink-0 items-center justify-center'
         : 'flex h-8 w-12 shrink-0 items-center justify-center'}
@@ -311,6 +419,85 @@ function LegendItem({
       <span className={compact ? 'min-w-0 text-[10px] leading-snug' : 'min-w-0 text-xs leading-relaxed'}>
         <span className="block font-semibold text-gray-900">{label}</span>
       </span>
+    </>
+  );
+
+  if (isInteractive) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        className={className}
+        title={title}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} title={title}>
+      {content}
+    </div>
+  );
+}
+
+function LegendColorItem({
+  label,
+  background,
+  border,
+  compact = false,
+  active,
+  onClick,
+  title,
+}: {
+  label: string;
+  background: string;
+  border: string;
+  compact?: boolean;
+  active?: boolean;
+  onClick?: () => void;
+  title?: string;
+}) {
+  const isInteractive = typeof onClick === 'function';
+  const inactive = isInteractive && active === false;
+  const className = [
+    'flex min-w-0 items-center gap-1.5 leading-tight text-gray-600 transition',
+    isInteractive ? 'cursor-pointer rounded-md hover:bg-white/70' : '',
+    inactive ? 'grayscale opacity-45' : '',
+  ].filter(Boolean).join(' ');
+
+  const content = (
+    <>
+      <span
+        className={compact ? 'h-3.5 w-6 shrink-0 rounded border' : 'h-5 w-9 shrink-0 rounded border'}
+        style={{
+          background,
+          borderColor: border,
+        }}
+      />
+      <span className={compact ? 'truncate' : 'leading-snug'}>{label}</span>
+    </>
+  );
+
+  if (isInteractive) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        className={className}
+        title={title}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} title={title}>
+      {content}
     </div>
   );
 }

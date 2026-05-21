@@ -639,6 +639,18 @@ export function Home() {
     }));
   }, []);
 
+  const toggleParentChildFilters = useCallback(() => {
+    setEdgeFilters((prev) => {
+      const shouldEnable = !(prev.filiacao_sangue || prev.filiacao_adotiva);
+
+      return {
+        ...prev,
+        filiacao_sangue: shouldEnable,
+        filiacao_adotiva: shouldEnable,
+      };
+    });
+  }, []);
+
   const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
     setPersonFilters((prev) => ({
       ...prev,
@@ -882,6 +894,13 @@ export function Home() {
           viewMode={treeViewMode}
           compact
           showTitle
+          personFilters={personFilters}
+          edgeFilters={edgeFilters}
+          directRelativeFilters={treeViewMode === 'minha-arvore' ? directRelativeFilters : undefined}
+          onTogglePersonFilter={togglePersonFilter}
+          onToggleEdgeFilter={toggleFilter}
+          onToggleParentChildFilter={toggleParentChildFilters}
+          onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
         />
       )}
 
