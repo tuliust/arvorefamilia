@@ -677,6 +677,19 @@ export function Home() {
     }));
   }, []);
 
+  const toggleAllVisualLineFilters = useCallback(() => {
+    setVisualLineFilters((prev) => {
+      const allActive = prev.spouseHighlight && prev.parentChildHighlight && prev.siblingHighlight;
+      const nextValue = !allActive;
+
+      return {
+        spouseHighlight: nextValue,
+        parentChildHighlight: nextValue,
+        siblingHighlight: nextValue,
+      };
+    });
+  }, []);
+
   const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
     setPersonFilters((prev) => ({
       ...prev,
@@ -932,6 +945,7 @@ export function Home() {
           onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
           visualLineFilters={visualLineFilters}
           onToggleVisualLineFilter={toggleVisualLineFilter}
+          onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
         />
       )}
 

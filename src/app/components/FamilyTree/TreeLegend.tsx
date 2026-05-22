@@ -31,6 +31,7 @@ interface TreeLegendProps {
   onToggleParentChildFilter?: () => void;
   onToggleDirectRelativeFilter?: (key: DirectRelativeGroup) => void;
   onToggleVisualLineFilter?: (key: VisualLineFilterKey) => void;
+  onToggleAllVisualLineFilters?: () => void;
 }
 
 const marriageStatusItems = [
@@ -139,11 +140,15 @@ export function TreeLegend({
   onToggleParentChildFilter,
   onToggleDirectRelativeFilter,
   onToggleVisualLineFilter,
+  onToggleAllVisualLineFilters,
 }: TreeLegendProps) {
   const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
   const parentChildActive = edgeFilters ? edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva : undefined;
   const allEdgeFiltersActive = edgeFilters
     ? edgeFilters.conjugal && edgeFilters.filiacao_sangue && edgeFilters.filiacao_adotiva && edgeFilters.irmaos
+    : undefined;
+  const allVisualLineFiltersActive = visualLineFilters
+    ? visualLineFilters.spouseHighlight && visualLineFilters.parentChildHighlight && visualLineFilters.siblingHighlight
     : undefined;
 
   const getLineAction = (label: string) => {
@@ -193,6 +198,16 @@ export function TreeLegend({
       active,
       onClick: () => onToggleVisualLineFilter(key),
       title: active ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`,
+    };
+  };
+
+  const getAllVisualLineAction = () => {
+    if (!visualLineFilters || !onToggleAllVisualLineFilters) return {};
+
+    return {
+      active: allVisualLineFiltersActive,
+      onClick: onToggleAllVisualLineFilters,
+      title: allVisualLineFiltersActive ? 'Ocultar todos os destaques' : 'Mostrar todos os destaques',
     };
   };
 
@@ -293,6 +308,12 @@ export function TreeLegend({
 
         <LegendGroup title="Destacar" compact>
           <div className="grid grid-cols-2 gap-1.5">
+            <LegendItem
+              compact
+              sample={<LegendBus />}
+              label="Todas"
+              {...getAllVisualLineAction()}
+            />
             {visualLineItems.map((item) => (
               <LegendItem
                 key={item.key}
@@ -401,6 +422,11 @@ export function TreeLegend({
 
       <LegendGroup title="Destacar">
         <div className="space-y-2">
+          <LegendItem
+            sample={<LegendBus />}
+            label="Todas"
+            {...getAllVisualLineAction()}
+          />
           {visualLineItems.map((item) => (
             <LegendItem
               key={item.key}
