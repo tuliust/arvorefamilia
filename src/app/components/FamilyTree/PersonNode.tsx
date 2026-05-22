@@ -16,6 +16,12 @@ import {
   extractYear,
   getPersonCardSecondaryText,
 } from './utils/personCardText';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 
 const DIRECT_FAMILY_PET_STYLE = {
   background: '#D97706',
@@ -208,6 +214,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     isMobile = false,
   } = data;
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [photoDialogOpen, setPhotoDialogOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
 
   const isPet = pessoa.humano_ou_pet === 'Pet';
@@ -222,6 +229,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     event.preventDefault();
     event.stopPropagation();
     setMenuOpen(true);
+  }, []);
+
+  const handleOpenPhotoDialog = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setPhotoDialogOpen(true);
   }, []);
 
   React.useEffect(() => {
@@ -365,18 +378,31 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         >
           <PersonHandles />
 
-          <div
-            className={[
-              'flex shrink-0 items-center justify-center rounded-full',
-              isCentralDirectNode ? 'bg-gray-100' : 'bg-white/90',
-            ].join(' ')}
-            style={{ width: avatarSize, height: avatarSize }}
-          >
-            {avatarContent(
-              'h-full w-full',
-              isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-7 w-7 text-slate-700'
-            )}
-          </div>
+          {isCentralDirectNode && pessoa.foto_principal_url ? (
+            <button
+              type="button"
+              className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:ring-offset-2"
+              style={{ width: avatarSize, height: avatarSize }}
+              onClick={handleOpenPhotoDialog}
+              onMouseDown={(event) => event.stopPropagation()}
+              aria-label={`Ampliar foto de ${pessoa.nome_completo}`}
+            >
+              {avatarContent('h-full w-full', 'h-28 w-28 text-slate-700')}
+            </button>
+          ) : (
+            <div
+              className={[
+                'flex shrink-0 items-center justify-center rounded-full',
+                isCentralDirectNode ? 'bg-gray-100' : 'bg-white/90',
+              ].join(' ')}
+              style={{ width: avatarSize, height: avatarSize }}
+            >
+              {avatarContent(
+                'h-full w-full',
+                isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-7 w-7 text-slate-700'
+              )}
+            </div>
+          )}
 
           <div className={isCentralDirectNode ? 'mt-9 min-w-0 max-w-full' : 'min-w-0 flex-1'}>
             <h3
@@ -414,6 +440,29 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             )}
           </div>
         </div>
+
+        {isCentralDirectNode && pessoa.foto_principal_url && (
+          <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+            <DialogContent
+              className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
+              onClick={(event) => event.stopPropagation()}
+              onContextMenu={(event) => event.stopPropagation()}
+            >
+              <DialogHeader>
+                <DialogTitle className="pr-8 text-white">
+                  Foto de {pessoa.nome_completo}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex max-h-[calc(100dvh-8rem)] items-center justify-center overflow-hidden rounded-md bg-black/30">
+                <img
+                  src={pessoa.foto_principal_url}
+                  alt={`Foto de ${pessoa.nome_completo}`}
+                  className="max-h-[calc(100dvh-8rem)] max-w-full object-contain"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {renderMenu()}
       </div>
