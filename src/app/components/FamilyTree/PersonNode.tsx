@@ -346,10 +346,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       <div className="relative" ref={menuRef}>
         <div
           className={[
-            'cursor-pointer rounded-lg border-[3px] shadow-lg transition-all hover:shadow-xl',
+            'cursor-pointer overflow-hidden rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
             isCentralDirectNode
-              ? 'flex flex-col items-center justify-start px-12 py-11 text-center'
-              : 'flex items-center gap-3 px-3 py-2',
+              ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
+              : 'flex items-center gap-3.5 px-4 py-2.5',
             isSelected ? 'ring-2 ring-blue-300' : '',
           ].join(' ')}
           onClick={handleClick}
@@ -383,8 +383,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               className={[
                 'font-bold leading-tight',
                 isCentralDirectNode
-                  ? `whitespace-normal break-words ${isMobile ? 'text-[44px]' : 'text-4xl'}`
-                  : `overflow-hidden text-ellipsis ${isMobile ? 'text-[20px]' : 'text-[18px]'} [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`,
+                  ? `whitespace-normal break-words ${isMobile ? 'text-[46px]' : 'text-[42px]'}`
+                  : `overflow-hidden break-words ${isMobile ? 'text-[21px]' : 'text-[19px]'} [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`,
               ].join(' ')}
               title={pessoa.nome_completo}
             >
@@ -392,7 +392,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             </h3>
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
-                <div className={`mt-5 space-y-2 ${isMobile ? 'text-[22px]' : 'text-xl'} leading-snug`} style={{ color: style.muted }}>
+                <div className={`mt-5 space-y-2 ${isMobile ? 'text-[24px]' : 'text-[22px]'} leading-snug`} style={{ color: style.muted }}>
                   {centralDetails.map((detail) => (
                     <p key={detail} className="whitespace-normal break-words">
                       {detail}
@@ -403,8 +403,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             ) : directSecondaryText && (
               <p
                 className={[
-                  'truncate leading-tight',
-                  isMobile ? 'mt-1 text-[15px]' : 'mt-0.5 text-[13px]',
+                  'overflow-hidden whitespace-nowrap leading-tight',
+                  isMobile ? 'mt-1 text-[16px]' : 'mt-1 text-[14px]',
                 ].join(' ')}
                 style={{ color: style.muted }}
                 title={directSecondaryText}
@@ -423,7 +423,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <div className="relative" ref={menuRef}>
       <div
-        className={`cursor-pointer rounded-lg border-2 px-4 py-3 shadow-md transition-all hover:shadow-lg ${
+        className={`cursor-pointer overflow-hidden rounded-lg border-[3px] px-4 py-3 shadow-md transition-all hover:shadow-lg ${
           isSelected ? 'ring-2 ring-blue-300' : ''
         }`}
         onClick={handleClick}
@@ -441,9 +441,9 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       >
         <PersonHandles />
 
-        <div className={`flex items-start ${isMobile ? 'gap-3.5' : 'gap-3'}`}>
+        <div className={`flex items-start ${isMobile ? 'gap-4' : 'gap-3.5'}`}>
           <div
-            className={`flex ${isMobile ? 'h-[52px] w-[52px]' : 'h-12 w-12'} flex-shrink-0 items-center justify-center rounded-full ${
+            className={`flex ${isMobile ? 'h-[58px] w-[58px]' : 'h-14 w-14'} flex-shrink-0 items-center justify-center rounded-full ${
               isPet ? 'bg-amber-200' : isFalecido ? 'bg-gray-300' : 'bg-blue-200'
             }`}
           >
@@ -451,19 +451,19 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <img
                 src={pessoa.foto_principal_url}
                 alt={pessoa.nome_completo}
-                className={`${isMobile ? 'h-[52px] w-[52px]' : 'h-12 w-12'} rounded-full object-cover`}
+                className={`${isMobile ? 'h-[58px] w-[58px]' : 'h-14 w-14'} rounded-full object-cover`}
               />
             ) : isPet ? (
-              <Dog className={`${isMobile ? 'h-7 w-7' : 'h-6 w-6'} text-amber-700`} />
+              <Dog className={`${isMobile ? 'h-8 w-8' : 'h-7 w-7'} text-amber-700`} />
             ) : (
-              <User className={`${isMobile ? 'h-7 w-7' : 'h-6 w-6'} text-blue-700`} />
+              <User className={`${isMobile ? 'h-8 w-8' : 'h-7 w-7'} text-blue-700`} />
             )}
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3
-                className={`min-w-0 flex-1 overflow-hidden text-ellipsis ${isMobile ? 'text-base' : 'text-sm'} font-semibold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
+                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[17px]' : 'text-base'} font-semibold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
                 title={pessoa.nome_completo}
               >
                 {pessoa.nome_completo}
@@ -476,7 +476,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             </div>
 
             {secondaryText && (
-              <p className={`mt-1 truncate ${isMobile ? 'text-sm' : 'text-xs'} text-gray-600`} title={secondaryText}>
+              <p className={`mt-1 overflow-hidden whitespace-nowrap ${isMobile ? 'text-[15px]' : 'text-sm'} text-gray-600`} title={secondaryText}>
                 {secondaryText}
               </p>
             )}
