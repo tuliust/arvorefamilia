@@ -38,10 +38,10 @@ export function WhatsAppContactButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Entrar em contato por WhatsApp"
-      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full gap-2 sm:w-auto', className)}
+      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full shrink-0 gap-2 whitespace-nowrap rounded-xl shadow-sm sm:w-auto', className)}
     >
       {showIcon && <MessageCircle className="h-4 w-4" aria-hidden="true" />}
-      <span>Entrar em contato por WhatsApp</span>
+      <span className="whitespace-nowrap">Entrar em contato por WhatsApp</span>
     </a>
   );
 }
