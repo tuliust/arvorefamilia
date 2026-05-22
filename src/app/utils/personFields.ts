@@ -122,6 +122,10 @@ export function hasFirstAndLastName(value: string) {
   return words.length >= 2;
 }
 
+export function hasValidPetName(value: string) {
+  return value.trim().split(/\s+/).some((part) => part.length >= 2);
+}
+
 export function maskBirthDate(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 8);
 
@@ -358,7 +362,13 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   });
   const normalizedCurrentLocation = normalizeLocation(String(form.local_atual ?? ''));
 
-  if (!hasFirstAndLastName(normalizedName)) {
+  const isPet = (form as Record<string, unknown>).humano_ou_pet === 'Pet';
+
+  if (isPet) {
+    if (!hasValidPetName(normalizedName)) {
+      nextErrors.nome_completo = 'Informe o nome do pet com duas letras ou mais.';
+    }
+  } else if (!hasFirstAndLastName(normalizedName)) {
     nextErrors.nome_completo = 'Informe pelo menos nome e sobrenome, com duas letras ou mais.';
   }
 
