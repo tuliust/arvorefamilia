@@ -76,8 +76,8 @@ const lineItems = [
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
   },
   {
-    label: 'Barramento',
-    fullLabel: 'Barramento vertical',
+    label: 'Todas',
+    fullLabel: 'Todas',
     sample: <LegendBus />,
   },
 ];
@@ -90,14 +90,14 @@ const visualLineItems: Array<{
 }> = [
   {
     key: 'parentChildHighlight',
-    label: 'Destacar pais/filhos',
-    fullLabel: 'Destacar pais e filhos',
+    label: 'Pais/Filhos',
+    fullLabel: 'Pais/Filhos',
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_CHILD} />,
   },
   {
     key: 'siblingHighlight',
-    label: 'Destacar irmãos',
-    fullLabel: 'Destacar irmãos',
+    label: 'Irmãos',
+    fullLabel: 'Irmãos',
     sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
   },
 ];
@@ -200,8 +200,11 @@ export function TreeLegend({
         aria-label="Legenda visual da árvore"
       >
         {showTitle && (
-          <div>
+          <div className="space-y-1">
             <h2 className="text-sm font-semibold leading-tight text-gray-900">Legendas visuais</h2>
+            <p className="text-[11px] leading-snug text-gray-500">
+              Clique nos botões para ativar ou desativar linhas e destaques da árvore.
+            </p>
           </div>
         )}
 
@@ -269,7 +272,7 @@ export function TreeLegend({
           </div>
         </LegendGroup>
 
-        <LegendGroup title="Camadas extras" compact>
+        <LegendGroup title="Destacar" compact>
           <div className="grid grid-cols-2 gap-1.5">
             {visualLineItems.map((item) => (
               <LegendItem
@@ -310,8 +313,11 @@ export function TreeLegend({
       aria-label="Legenda visual da árvore"
     >
       {showTitle && (
-        <div>
+        <div className="space-y-1">
           <h2 className="text-sm font-semibold text-gray-900">Legendas visuais</h2>
+          <p className="text-xs leading-snug text-gray-500">
+            Clique nos botões para ativar ou desativar linhas e destaques da árvore.
+          </p>
         </div>
       )}
 
@@ -374,7 +380,7 @@ export function TreeLegend({
         </div>
       </LegendGroup>
 
-      <LegendGroup title="Camadas extras">
+      <LegendGroup title="Destacar">
         <div className="space-y-2">
           {visualLineItems.map((item) => (
             <LegendItem
