@@ -239,6 +239,8 @@ export function AdminPessoaForm() {
   const [linkableProfiles, setLinkableProfiles] = useState<AdminLinkableProfile[]>([]);
   const [personUserLinks, setPersonUserLinks] = useState<UserPersonLinkRecord[]>([]);
   const [linksLoading, setLinksLoading] = useState(false);
+  const [linkableProfilesError, setLinkableProfilesError] = useState<string | null>(null);
+  const [personUserLinksError, setPersonUserLinksError] = useState<string | null>(null);
   const [linkActionLoading, setLinkActionLoading] = useState(false);
   const [newLinkUserId, setNewLinkUserId] = useState('');
   const [newLinkRelation, setNewLinkRelation] = useState<(typeof ADMIN_LINK_RELATION_OPTIONS)[number]>('Familiar responsável');
@@ -403,19 +405,23 @@ export function AdminPessoaForm() {
 
     try {
       setLinksLoading(true);
+      setLinkableProfilesError(null);
+      setPersonUserLinksError(null);
       const [profilesResult, linksResult] = await Promise.all([
         adminListProfilesForLinking(),
         adminListLinksForPerson(id),
       ]);
 
       if (profilesResult.error) {
-        toast.error(profilesResult.error);
+        setLinkableProfilesError(profilesResult.error);
+        setLinkableProfiles([]);
       } else {
         setLinkableProfiles(profilesResult.data);
       }
 
       if (linksResult.error) {
-        toast.error(linksResult.error);
+        setPersonUserLinksError(`Não foi possível carregar vínculos existentes: ${linksResult.error}`);
+        setPersonUserLinks([]);
       } else {
         setPersonUserLinks(linksResult.data);
       }
@@ -1219,6 +1225,10 @@ export function AdminPessoaForm() {
               <CardContent className="space-y-5">
                 {linksLoading ? (
                   <p className="text-sm text-gray-500">Carregando vínculos...</p>
+                ) : personUserLinksError ? (
+                  <p className="break-words rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {personUserLinksError}
+                  </p>
                 ) : personUserLinks.length === 0 ? (
                   <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                     Nenhum usuário está vinculado a esta pessoa.
@@ -1267,13 +1277,44 @@ export function AdminPessoaForm() {
                 )}
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <h3 className="break-words text-sm font-semibold text-gray-900">Adicionar vínculo manual</h3>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="break-words text-sm font-semibold text-gray-900">Adicionar vínculo manual</h3>
+                      <p className="mt-1 break-words text-xs text-gray-500">
+                        Escolha um usuário cadastrado que ainda não esteja vinculado a esta pessoa.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={loadPersonUserLinks}
+                      disabled={linksLoading}
+                      className="w-full sm:w-auto"
+                    >
+                      {linksLoading ? 'Carregando...' : 'Recarregar'}
+                    </Button>
+                  </div>
+
+                  {linkableProfilesError && (
+                    <p className="mt-4 break-words rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                      {linkableProfilesError}
+                    </p>
+                  )}
+
+                  {!linksLoading && !linkableProfilesError && availableProfilesForLinking.length === 0 && (
+                    <p className="mt-4 break-words rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                      Não há usuários disponíveis para vincular a esta pessoa.
+                    </p>
+                  )}
+
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">Usuário</label>
                       <select
                         value={newLinkUserId}
                         onChange={(event) => setNewLinkUserId(event.target.value)}
+                        disabled={linksLoading || Boolean(linkableProfilesError)}
                         className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                       >
                         <option value="">Selecione um usuário</option>
@@ -1325,7 +1366,7 @@ export function AdminPessoaForm() {
                     type="button"
                     className="mt-4 w-full sm:w-auto"
                     onClick={handleCreateUserPersonLink}
-                    disabled={linkActionLoading || !newLinkUserId}
+                    disabled={linkActionLoading || linksLoading || Boolean(linkableProfilesError) || !newLinkUserId}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     {linkActionLoading ? 'Vinculando...' : 'Adicionar vínculo'}

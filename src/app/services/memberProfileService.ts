@@ -366,9 +366,18 @@ export async function setPrimaryLinkedPerson(userId: string, pessoaId: string) {
 export async function adminListProfilesForLinking() {
   const { data, error } = await supabase.rpc('admin_list_profiles_for_linking');
 
+  if (error) {
+    return {
+      error: `Não foi possível carregar usuários disponíveis para vínculo: ${error.message}`,
+      data: [] as AdminLinkableProfile[],
+    };
+  }
+
+  const profiles = Array.isArray(data) ? (data as AdminLinkableProfile[]) : [];
+
   return {
-    error: error?.message,
-    data: ((data || []) as AdminLinkableProfile[]).map((profile) => ({
+    error: undefined,
+    data: profiles.map((profile) => ({
       ...profile,
       role: profile.role ?? 'member',
     })),
