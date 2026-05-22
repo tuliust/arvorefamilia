@@ -315,6 +315,9 @@ export function PersonHistoricalEventsCard({
   const content = insight?.conteudo;
   const brazilParagraphs = toParagraphs(content?.brazil?.body);
   const worldParagraphs = toParagraphs(content?.world?.body);
+  const shouldRender = Boolean(content || loading || error || showHistoricalFallback);
+
+  if (!shouldRender) return null;
 
   return (
     <Card>
@@ -401,11 +404,7 @@ export function PersonHistoricalEventsCard({
               </div>
             </div>
           </div>
-        ) : (
-          <p className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-500">
-            Conteúdo ainda não gerado.
-          </p>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

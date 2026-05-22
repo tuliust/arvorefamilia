@@ -788,6 +788,13 @@ export function AdminPessoaForm() {
     formData.humano_ou_pet !== 'Pet' &&
     formData.permitir_exibir_data_nascimento !== false
   );
+  const shouldShowGeneratedInsightsCard = Boolean(
+    canManageGeneratedInsights ||
+    hasAstrologyInsight ||
+    hasHistoricalEventsInsight ||
+    insightsLoading ||
+    insightsError
+  );
 
   const linkedUserIds = new Set(personUserLinks.map((link) => link.user_id));
   const availableProfilesForLinking = linkableProfiles.filter((profile) => !linkedUserIds.has(profile.id));
@@ -902,7 +909,7 @@ export function AdminPessoaForm() {
             onChange={(field, value) => handleChange(field, value)}
           />
 
-          {isEdit && id && (
+          {shouldShowGeneratedInsightsCard && (
             <Card className="min-w-0">
               <CardHeader>
                 <CardTitle className="break-words">Astrologia e acontecimentos do nascimento</CardTitle>
