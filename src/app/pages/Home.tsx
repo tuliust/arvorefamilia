@@ -656,6 +656,20 @@ export function Home() {
     });
   }, []);
 
+  const toggleAllEdgeFilters = useCallback(() => {
+    setEdgeFilters((prev) => {
+      const allActive = prev.conjugal && prev.filiacao_sangue && prev.filiacao_adotiva && prev.irmaos;
+      const nextValue = !allActive;
+
+      return {
+        conjugal: nextValue,
+        filiacao_sangue: nextValue,
+        filiacao_adotiva: nextValue,
+        irmaos: nextValue,
+      };
+    });
+  }, []);
+
   const toggleVisualLineFilter = useCallback((filterKey: VisualLineFilterKey) => {
     setVisualLineFilters((prev) => ({
       ...prev,
@@ -913,6 +927,7 @@ export function Home() {
           directRelativeFilters={treeViewMode === 'minha-arvore' ? directRelativeFilters : undefined}
           onTogglePersonFilter={togglePersonFilter}
           onToggleEdgeFilter={toggleFilter}
+          onToggleAllEdgeFilters={toggleAllEdgeFilters}
           onToggleParentChildFilter={toggleParentChildFilters}
           onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
           visualLineFilters={visualLineFilters}

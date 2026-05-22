@@ -27,6 +27,7 @@ interface TreeLegendProps {
   visualLineFilters?: VisualLineFilters;
   onTogglePersonFilter?: (key: PersonLegendFilterKey) => void;
   onToggleEdgeFilter?: (key: keyof EdgeFilters) => void;
+  onToggleAllEdgeFilters?: () => void;
   onToggleParentChildFilter?: () => void;
   onToggleDirectRelativeFilter?: (key: DirectRelativeGroup) => void;
   onToggleVisualLineFilter?: (key: VisualLineFilterKey) => void;
@@ -128,15 +129,27 @@ export function TreeLegend({
   visualLineFilters,
   onTogglePersonFilter,
   onToggleEdgeFilter,
+  onToggleAllEdgeFilters,
   onToggleParentChildFilter,
   onToggleDirectRelativeFilter,
   onToggleVisualLineFilter,
 }: TreeLegendProps) {
   const backgroundItems = DIRECT_FAMILY_LEGEND_BACKGROUNDS;
   const parentChildActive = edgeFilters ? edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva : undefined;
+  const allEdgeFiltersActive = edgeFilters
+    ? edgeFilters.conjugal && edgeFilters.filiacao_sangue && edgeFilters.filiacao_adotiva && edgeFilters.irmaos
+    : undefined;
 
   const getLineAction = (label: string) => {
     if (!edgeFilters) return {};
+
+    if (label === 'Todas' && onToggleAllEdgeFilters) {
+      return {
+        active: allEdgeFiltersActive,
+        onClick: onToggleAllEdgeFilters,
+        title: allEdgeFiltersActive ? 'Ocultar todas as linhas' : 'Mostrar todas as linhas',
+      };
+    }
 
     if (label === 'Conjugal' && onToggleEdgeFilter) {
       return {
