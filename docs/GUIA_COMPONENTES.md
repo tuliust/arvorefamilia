@@ -554,12 +554,15 @@ Arquivos principais:
 
 ```txt
 src/app/components/person/PersonDataView.tsx
+src/app/components/person/AddressAutocompleteInput.tsx
+src/app/components/person/PersonContactFields.tsx
 src/app/components/person/PersonDatesLocationsFields.tsx
 src/app/components/person/SocialProfilesEditor.tsx
 src/app/components/person/WhatsAppContactButton.tsx
 src/app/components/person/RelationshipFinder.tsx
 src/app/components/person/PersonEventsEditor.tsx
 src/app/components/person/PersonEventsList.tsx
+src/app/utils/googleAddress.ts
 src/app/pages/PersonProfile.tsx
 src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/MeusDados.tsx
@@ -575,13 +578,18 @@ Responsabilidades gerais:
 - WhatsApp;
 - eventos pessoais;
 - grau de parentesco;
-- dados gerados de astrologia/acontecimentos.
+- dados gerados de astrologia/acontecimentos;
+- autocomplete de endereço em formulários de contato.
 
 Cuidados:
 
 - perfil não deve gerar IA automaticamente;
 - WhatsApp não deve revelar número se privacidade não permitir;
 - campos de local exterior precisam preservar formato;
+- `PersonContactFields` usa `AddressAutocompleteInput` para endereço;
+- `AddressAutocompleteInput` usa Google Places quando `VITE_GOOGLE_MAPS_API_KEY` existe;
+- `googleAddress.ts` centraliza a formatação de endereço selecionado;
+- sem API key ou com falha do Google, o campo continua como input normal;
 - botões internos em formulários devem usar `type="button"`;
 - componentes visuais não devem persistir Supabase diretamente quando já existir service.
 
@@ -762,6 +770,8 @@ Arquivos principais:
 
 ```txt
 src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
 src/app/pages/admin/AdminNotificacoes.tsx
 src/app/services/userEngagementService.ts
 src/app/services/notificationDispatchService.ts
@@ -773,10 +783,9 @@ src/app/services/notificationAdminService.ts
 
 Responsabilidades:
 
-- central do usuário;
-- preferências;
-- marcar como lida;
-- remover;
+- `Notificacoes.tsx`: lista/central em cards, leitura, marcação e remoção;
+- `AjustarNotificacoes.tsx`: página dedicada de preferências;
+- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferências;
 - administração/testes;
 - disparos internos/e-mail;
 - logs e deduplicação.
@@ -814,6 +823,7 @@ Responsabilidades:
 
 - administração de dados;
 - formulários longos;
+- vínculo usuário-pessoa no card **Usuários vinculados a esta pessoa**;
 - diagnóstico;
 - integridade;
 - atividades;
@@ -828,6 +838,11 @@ Cuidados:
 - `/admin/integridade` é leitura/diagnóstico;
 - tabelas podem usar scroll horizontal controlado;
 - formulários precisam ser operáveis em mobile;
+- vínculo usuário-pessoa depende da RPC `admin_list_profiles_for_linking`;
+- erro de listagem de usuários aparece inline no card;
+- botão **Recarregar** deve permanecer disponível para nova tentativa;
+- dropdown de usuário fica desabilitado durante erro/loading;
+- não substituir falha da RPC por consulta direta insegura em `profiles`;
 - ações destrutivas precisam de confirmação.
 
 ---

@@ -19,8 +19,8 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 
 | Frente | Status MVP | Decisão |
 |---|---|---|
-| 7.1 Notificações | Concluída tecnicamente | Monitorar execução automática do cron e limpar testes se necessário. |
-| 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Evoluções ficam pós-MVP. |
+| 7.1 Notificações | Concluída tecnicamente | `/notificacoes` e `/ajustar-notificacoes` separados; cron automático depende de configuração segura externa. |
+| 7.2 Astrologia/acontecimentos | Concluída no escopo atual | Cards vazios ocultos no perfil público; evoluções ficam pós-MVP. |
 | 7.3 Timeline | Implementada funcionalmente | Edição, upload por evento, privacidade por evento e PDF ficam pós-MVP. |
 | 7.4 WhatsApp | Concluído no frontend | Privacidade forte/API/log seguro ficam pós-MVP. |
 | 7.5 Grau de parentesco | Consolidado funcionalmente | Integração direta na árvore/Genealogia/Visão Completa fica pós-MVP. |
@@ -32,6 +32,9 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
 | Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
 | Minha Árvore e arquivos históricos | Atualizados | `ce482a2` consolidou categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral. |
+| Vínculo admin usuário-pessoa | Corrigido no código | RPC `admin_list_profiles_for_linking` corrigida; aplicar migration remota antes do QA final. |
+| Autocomplete de endereço | Concluído no frontend | Admin e dados do usuário usam Google Places com fallback para input normal. |
+| Calendário familiar | Ajustes residuais concluídos | Categorias na sidebar, filtros clicáveis, pluralização e “Faz X anos”. |
 
 ---
 
@@ -238,6 +241,20 @@ Pré-requisito operacional:
 
 - aplicar `20260522121000_add_historical_file_event_category.sql` antes de deploy com `ce482a2`, pois insert/update em `arquivos_historicos` envia `categoria_evento`.
 
+### 5.6 Ajustes após PDF
+
+Concluído:
+
+- separação de `/notificacoes` e `/ajustar-notificacoes`;
+- ocultação de cards vazios de insights no perfil público;
+- correção da listagem de usuários para vínculo admin;
+- autocomplete de endereço no admin;
+- ajustes residuais do calendário familiar.
+
+Pendência operacional:
+
+- aplicar `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` no ambiente Supabase remoto.
+
 ---
 
 ## 6. QA final de lançamento
@@ -361,6 +378,14 @@ npm run test:e2e
 git diff --check
 supabase migration list
 ```
+
+Pendente até fechamento:
+
+- aplicar a migration remota `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
+- QA final pós-migration;
+- `npm run test:e2e`;
+- `supabase migration list`;
+- deploy.
 
 Commit sugerido:
 

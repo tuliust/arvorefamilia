@@ -144,6 +144,7 @@ src/app/pages/MinhaArvore.tsx
 src/app/pages/CalendarioFamiliar.tsx
 src/app/pages/MeusFavoritos.tsx
 src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
 src/app/pages/forum/ForumHome.tsx
 src/app/pages/admin/AdminDashboard.tsx
 ```
@@ -162,6 +163,7 @@ Regras:
 - usar `MemberPageHeader` para novas páginas internas de usuário/admin, salvo exceção justificada;
 - ações do header devem usar `actions`;
 - botões devem preservar foco visível;
+- botões de header e ações internas não devem quebrar texto em duas linhas;
 - ícones devem vir de `HEADER_ACTION_ICONS` quando já existirem ali;
 - títulos e subtítulos devem usar textos curtos, pois são truncados em tela estreita.
 
@@ -637,6 +639,32 @@ Checklist manual mínimo:
 - botão individual **Salvar casamento** foi removido;
 - botão geral **Salvar meus dados** salva dados pessoais e processa dados conjugais;
 - local de casamento inválido não bloqueia os dados pessoais, mas deixa casamento sem salvar e mostra aviso.
+
+### 13.7 Ajustes pós-PDF
+
+Notificações:
+
+- `/notificacoes` é lista/central em cards;
+- `/ajustar-notificacoes` é página dedicada de preferências.
+
+Calendário Familiar:
+
+- o bloco superior de **Categorias** foi removido;
+- a sidebar mantém o título **Categorias**;
+- categorias são filtros clicáveis;
+- contadores usam singular/plural: **1 evento**, **2 eventos**;
+- aniversários mostram **“Faz X anos”**.
+
+Perfil e contato:
+
+- cards vazios de insights não devem renderizar no perfil público;
+- botão WhatsApp deve manter o mesmo peso visual dos botões de ação/header.
+
+Admin:
+
+- erro de listagem de usuários para vínculo aparece inline;
+- evitar toast repetitivo para a mesma falha de listagem;
+- autocomplete de endereço não bloqueia o formulário se o Google falhar.
 
 ---
 

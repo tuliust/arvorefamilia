@@ -4,7 +4,9 @@
 
 Pronto:
 
-- Central do usuario em `/notificacoes`;
+- Central do usuario em `/notificacoes`, dedicada à lista em cards;
+- preferencias do usuario em `/ajustar-notificacoes`;
+- componente `NotificationPreferencesPanel`;
 - painel admin em `/admin/notificacoes`;
 - notificacoes internas;
 - preferencias por categoria e canal;
@@ -19,7 +21,7 @@ Futuro:
 - push real;
 - WhatsApp real;
 - fila/retry avancado;
-- cron automatico ativado por migration.
+- cron automatico somente depois de configurar segredo seguro fora do repositorio.
 
 ## Arquitetura
 
@@ -31,6 +33,12 @@ Services principais:
 - `notificationScheduledService.ts`: rotina manual de aniversarios/memorias;
 - `notificationAdminService.ts`: diagnostico admin;
 - `userEngagementService.ts`: preferencias e lista do usuario.
+
+UI principal:
+
+- `src/app/pages/Notificacoes.tsx`: central/lista, marcar como lida, marcar todas e remover;
+- `src/app/pages/AjustarNotificacoes.tsx`: página de preferências;
+- `src/app/components/notifications/NotificationPreferencesPanel.tsx`: toggles e salvamento.
 
 Tabelas principais:
 
@@ -223,11 +231,12 @@ Admin:
 Usuario comum:
 
 1. Login usuario comum.
-2. Abrir `/notificacoes`.
-3. Alterar preferencias.
-4. Marcar notificacao como lida.
-5. Marcar todas como lidas.
-6. Remover notificacao.
+2. Abrir `/notificacoes` para validar a lista.
+3. Marcar notificacao como lida.
+4. Marcar todas como lidas.
+5. Remover notificacao.
+6. Abrir `/ajustar-notificacoes` para validar preferencias.
+7. Alterar preferencias.
 
 ## Consultas SQL
 

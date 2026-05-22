@@ -409,8 +409,11 @@ src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/MeusDados.tsx
 src/app/pages/MeusVinculos.tsx
 src/app/components/person
+src/app/components/person/AddressAutocompleteInput.tsx
+src/app/components/person/PersonContactFields.tsx
 src/app/components/relationships/MarriageDetailsEditor.tsx
 src/app/components/ArquivosHistoricos.tsx
+src/app/utils/googleAddress.ts
 src/app/utils/personFields.ts
 src/app/services/dataService.ts
 ```
@@ -448,6 +451,22 @@ Confirmar se o campo está em:
 - migration;
 - banco remoto;
 - SELECT usado na leitura após salvar.
+
+### Autocomplete de endereço não aparece
+
+Verificar:
+
+- `VITE_GOOGLE_MAPS_API_KEY` existe no ambiente do frontend;
+- `AddressAutocompleteInput` está sendo usado no campo de endereço;
+- `PersonContactFields` está presente no admin;
+- console do navegador para falha de carregamento do Google Places.
+
+Correção:
+
+- configurar `VITE_GOOGLE_MAPS_API_KEY` quando autocomplete for necessário;
+- confirmar `src/app/utils/googleAddress.ts` para formatação do endereço;
+- manter fallback silencioso para input normal quando a chave não existir ou o Google falhar;
+- não bloquear salvamento do formulário por falha externa do Google.
 
 Campos frequentes:
 
@@ -1037,12 +1056,57 @@ Correção:
 
 ---
 
+## 14.1 Vínculo admin usuário-pessoa
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/admin/AdminPessoaForm.tsx
+src/app/services/memberProfileService.ts
+supabase/migrations/20260522173000_fix_admin_list_profiles_for_linking_rpc.sql
+```
+
+### Erro: `Could not find the function public.admin_list_profiles_for_linking without parameters in the schema cache`
+
+Causas prováveis:
+
+- migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` não aplicada no Supabase remoto;
+- schema cache remoto ainda não atualizou;
+- função ausente ou com assinatura diferente.
+
+Correção:
+
+- aplicar a migration aprovada;
+- conferir no Supabase se `public.admin_list_profiles_for_linking()` existe sem parâmetros;
+- aguardar/recarregar schema cache se a função acabou de ser criada;
+- não substituir por consulta direta insegura em `profiles`.
+
+### Usuários não aparecem no dropdown de vínculo admin
+
+Verificar:
+
+- resultado de `adminListProfilesForLinking`;
+- erro inline no card **Adicionar vínculo manual**;
+- botão **Recarregar**;
+- migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` aplicada;
+- usuário logado é admin.
+
+Comportamento esperado:
+
+- dropdown fica desabilitado durante loading;
+- dropdown fica desabilitado quando há erro de listagem;
+- **Recarregar** tenta buscar novamente sem depender de toast repetitivo.
+
+---
+
 ## 15. Notificações
 
 Arquivos prováveis:
 
 ```txt
 src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
 src/app/pages/admin/AdminNotificacoes.tsx
 src/app/services/userEngagementService.ts
 src/app/services/notificationDispatchService.ts
@@ -1085,6 +1149,19 @@ Verificar:
 - RLS de upsert por `user_id`;
 - log `notification_preferences.updated`;
 - defaults não sobrescrevem `false`.
+
+### Preferências não aparecem em `/notificacoes`
+
+Causa provável:
+
+- as preferências foram separadas da central de notificações.
+
+Correção:
+
+- abrir `/ajustar-notificacoes`;
+- verificar `src/app/pages/AjustarNotificacoes.tsx`;
+- verificar `src/app/components/notifications/NotificationPreferencesPanel.tsx`;
+- manter `/notificacoes` dedicada à lista/central em cards.
 
 ### Gatilho não notifica
 
@@ -1177,6 +1254,13 @@ supabase/functions/generate-person-insights/index.ts
 ```
 
 Verificar se o perfil apenas lê insights. Geração automática no perfil é P0 operacional; geração/regeneração deve ser ação admin.
+
+Se cards vazios aparecerem no perfil público:
+
+- verificar `PersonDataView.tsx`;
+- garantir que cards sem conteúdo, sem loading, sem erro e sem fallback válido retornem `null`;
+- o texto **“Conteúdo ainda não gerado.”** não deve aparecer publicamente;
+- no admin, exibir card apenas quando houver ação possível, conteúdo existente, loading ou erro.
 
 ### Timeline
 
@@ -1447,6 +1531,42 @@ Correção imediata:
 - rotacionar secret se foi exposto;
 - mover para Edge Function ou Supabase secrets;
 - revisar histórico do Git se houve commit.
+
+---
+
+## 19.1 Calendário Familiar
+
+Arquivo provável:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+### Calendário volta a mostrar `item(ns)` ou contadores brutos
+
+Verificar:
+
+- helper `formatEventCount`;
+- textos do calendário e da sidebar;
+- singular/plural esperado: **1 evento**, **2 eventos**.
+
+### Categorias não filtram
+
+Verificar:
+
+- `activeCategories`;
+- `toggleCategory`;
+- `getCalendarCategory`;
+- botões da sidebar com título **Categorias**;
+- `aria-pressed` e estado visual ativo/inativo.
+
+### Aniversário não mostra idade como `Faz X anos`
+
+Verificar:
+
+- `formatCalendarEventDescription`;
+- cards do calendário usando primeiro nome;
+- lista inferior usando nome completo.
 
 ---
 

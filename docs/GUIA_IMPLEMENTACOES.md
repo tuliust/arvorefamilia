@@ -17,8 +17,8 @@ Este guia não é um checklist de próximos passos nem um manual de correção d
 
 | Frente | Status MVP | Observação |
 |---|---|---|
-| 7.1 Notificações | Concluída tecnicamente | Canal interno, e-mail real, usuário comum, rotina manual, Edge Function diária, `DAILY_NOTIFICATIONS_SECRET`, `pg_cron`, logs e deduplicação validados. |
-| 7.2 Astrologia e acontecimentos do nascimento | Concluída no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin. |
+| 7.1 Notificações | Concluída tecnicamente | Central em `/notificacoes`, preferências em `/ajustar-notificacoes`, canal interno, e-mail real, rotina manual, Edge Function diária preparada, logs e deduplicação. Cron automático depende de configuração segura externa. |
+| 7.2 Astrologia e acontecimentos do nascimento | Concluída no escopo atual | Perfil lê insights persistidos e não exibe cards vazios; geração/regeneração é ação admin. |
 | 7.3 Linha do tempo do usuário | Implementada funcionalmente | Primeira versão derivada dos dados existentes, sem tabela própria. |
 | 7.4 WhatsApp no perfil | Concluído no frontend | Botão/link controlado por telefone e permissões; sem WhatsApp Business API. |
 | 7.5 Grau de parentesco/vínculo | Consolidado funcionalmente | Utilitário puro, testes unitários e integração em Home/perfil. |
@@ -109,6 +109,7 @@ Rotas de usuário/membro implementadas:
 - `/pessoas/:id`;
 - `/meus-favoritos`;
 - `/notificacoes`;
+- `/ajustar-notificacoes`;
 - `/forum`;
 - `/forum/novo`;
 - `/forum/topico/:id`;
@@ -204,8 +205,11 @@ Arquivos principais:
 ```txt
 src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/MeusDados.tsx
+src/app/components/person/AddressAutocompleteInput.tsx
+src/app/components/person/PersonContactFields.tsx
 src/app/components/person
 src/app/utils/personFields.ts
+src/app/utils/googleAddress.ts
 src/app/services/dataService.ts
 ```
 
@@ -220,6 +224,10 @@ Comportamento implementado:
 - preview/download de arquivos não limpa o formulário;
 - usuário edita os próprios dados conforme permissão;
 - alterações de vínculo por usuário comum viram solicitações, não alteração direta.
+- `PersonContactFields` usa `AddressAutocompleteInput` para endereço;
+- `MeusDados` e o admin usam autocomplete Google Places para endereço;
+- `src/app/utils/googleAddress.ts` formata o endereço retornado pelo Google;
+- se `VITE_GOOGLE_MAPS_API_KEY` não existir ou o Google falhar, o campo continua como input normal, sem bloquear o formulário.
 
 ### Pessoa falecida
 
@@ -261,6 +269,16 @@ Comportamento esperado:
 - busca ignora caixa e acentos;
 - `Marcio` encontra `Márcio`;
 - `Sao Paulo` encontra `São Paulo`.
+
+### Vínculo admin usuário-pessoa
+
+Implementado:
+
+- o card **Usuários vinculados a esta pessoa** fica em `AdminPessoaForm`;
+- a listagem de usuários disponíveis usa a RPC `admin_list_profiles_for_linking`;
+- a correção da RPC está na migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
+- essa migration precisa estar aplicada no Supabase remoto para resolver erro de schema cache;
+- o frontend não usa fallback inseguro de consulta direta em `profiles`.
 
 ---
 
@@ -611,6 +629,12 @@ supabase/functions/generate-person-insights/index.ts
 
 Perfil apenas lê insights persistidos. Admin gera/regenera explicitamente. Secrets ficam server-side.
 
+Comportamento consolidado:
+
+- o perfil público não renderiza cards vazios de astrologia/acontecimentos;
+- o texto **“Conteúdo ainda não gerado.”** não deve aparecer publicamente;
+- no admin, o card de insights aparece somente quando há ação possível, conteúdo existente, loading ou erro.
+
 ### Notificações — 7.1
 
 Documentação específica:
@@ -619,7 +643,23 @@ Documentação específica:
 docs/NOTIFICACOES.md
 ```
 
-Implementado: `/notificacoes`, `/admin/notificacoes`, preferências, logs, deduplicação, Edge Functions, Resend, rotina diária e cron seguro.
+Implementado:
+
+- `/notificacoes` é a central/lista de notificações em cards;
+- `/ajustar-notificacoes` é a página dedicada de preferências;
+- `NotificationPreferencesPanel` foi extraído para toggles e salvamento de preferências;
+- a lista mantém marcar como lida, marcar todas como lidas, remover, loading, vazio e erro;
+- `/admin/notificacoes`, logs, deduplicação, Edge Functions, Resend e rotina diária estão preparados;
+- cron automático depende de configuração segura externa, conforme `docs/NOTIFICACOES.md`.
+
+Arquivos principais:
+
+```txt
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+src/app/services/userEngagementService.ts
+```
 
 ### Exportação de área da árvore — 7.6
 
@@ -685,6 +725,24 @@ Validação final executada:
 ---
 
 ## 14. Fórum e Google Calendar
+
+### Calendário Familiar
+
+Arquivos principais:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/app/utils/familyDates.ts
+```
+
+Comportamento consolidado:
+
+- o bloco superior de **Categorias** foi removido;
+- **Categorias** fica na sidebar;
+- categorias da sidebar são filtros clicáveis;
+- contadores usam singular/plural: **1 evento**, **2 eventos**;
+- aniversário mostra primeiro nome no card do calendário e nome completo na lista inferior;
+- idade aparece como **“Faz X anos”**.
 
 ### Fórum
 
