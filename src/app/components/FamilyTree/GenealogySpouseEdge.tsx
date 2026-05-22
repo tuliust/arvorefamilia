@@ -58,7 +58,7 @@ export function GenealogySpouseEdge({
       <EdgeLabelRenderer>
         <button
           type="button"
-          className="nodrag nopan absolute flex h-8 w-8 items-center justify-center rounded-full border text-base shadow-sm"
+          className="nodrag nopan absolute z-50 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border text-base shadow-md pointer-events-auto transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
           style={{
             transform: `translate(-50%, -50%) translate(${markerX}px, ${markerY}px)`,
             backgroundColor: markerStyle.background,
@@ -66,6 +66,8 @@ export function GenealogySpouseEdge({
           }}
           onClick={handleRingClick}
           onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          title="Visualizar relacionamento conjugal"
           aria-label="Visualizar relacionamento conjugal"
         >
           💍

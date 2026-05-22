@@ -19,8 +19,10 @@ export const MarriageNode = React.memo(({ data }: NodeProps<MarriageNodeData>) =
     <button
       type="button"
       onClick={handleClick}
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
       title="Visualizar informações do matrimônio"
-      className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 bg-white text-lg transition-colors hover:bg-orange-50"
+      className="nodrag nopan relative z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 bg-white text-lg shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
       style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
     >
       <Handle

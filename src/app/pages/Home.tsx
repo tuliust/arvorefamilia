@@ -1186,13 +1186,13 @@ export function Home() {
 
           <div
             className={[
-              'min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-hidden sm:gap-2',
+              'min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-visible sm:gap-2',
               isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex',
             ].join(' ')}
           >
             <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
               <SelectTrigger
-                className="h-9 w-[9.5rem] max-w-[48vw] min-w-[8.25rem] shrink-0 gap-1.5 border-blue-300 bg-blue-50 px-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
+                className="relative z-20 h-9 w-[9.5rem] max-w-[48vw] min-w-[8.25rem] shrink-0 gap-1.5 overflow-visible rounded-xl border-blue-300 bg-blue-50 px-2.5 text-sm font-semibold text-blue-900 shadow-md transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 focus:ring-offset-0 sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
                 aria-label={`Visualização atual: ${currentTreeViewLabel}`}
                 title={currentTreeViewLabel}
               >
