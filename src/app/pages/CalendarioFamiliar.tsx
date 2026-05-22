@@ -120,6 +120,33 @@ function agruparPorDia(eventos: EventoCalendarioFamiliar[]) {
   return mapa;
 }
 
+function formatEventCount(count: number) {
+  return count === 1 ? '1 evento' : `${count} eventos`;
+}
+
+function getFirstDisplayName(nome: string) {
+  return nome.trim().split(/\s+/)[0] || nome;
+}
+
+function formatCalendarEventTitle(evento: EventoCalendarioFamiliar) {
+  if (evento.category === 'aniversarios' || evento.tipo === 'aniversario') {
+    return `Aniversário de ${getFirstDisplayName(evento.nome)}`;
+  }
+
+  return evento.titulo;
+}
+
+function formatCalendarEventDescription(evento: EventoCalendarioFamiliar) {
+  if (evento.category !== 'aniversarios' && evento.tipo !== 'aniversario') {
+    return evento.descricao;
+  }
+
+  const match = evento.descricao.match(/^(\d+)\s+anos?/);
+  if (!match) return evento.descricao;
+
+  return `Faz ${match[1]} anos`;
+}
+
 export function CalendarioFamiliar() {
   const hoje = new Date();
   const { user } = useAuth();
@@ -336,48 +363,6 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
-          <div className="mb-3">
-            <h2 className="text-lg font-bold text-gray-900">Categorias</h2>
-            <p className="text-sm text-gray-500">Clique para ativar ou ocultar categorias do calendário.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {CALENDAR_CATEGORY_KEYS.map((category) => {
-              const colors = CALENDAR_CATEGORY_COLORS[category];
-              const active = activeCategories[category];
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => toggleCategory(category)}
-                  className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition hover:shadow-sm"
-                  style={{
-                    backgroundColor: active ? colors.background : '#FFFFFF',
-                    borderColor: active ? colors.border : '#E5E7EB',
-                    color: active ? colors.text : '#6B7280',
-                    opacity: active ? 1 : 0.62,
-                  }}
-                >
-                  <span
-                    className="inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: colors.dot }}
-                  />
-                  <span>{colors.label}</span>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-xs"
-                    style={{
-                      backgroundColor: active ? '#FFFFFFAA' : '#F3F4F6',
-                      color: active ? colors.text : '#6B7280',
-                    }}
-                  >
-                    {categoryCounts[category]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
 
         {user && (
         <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-5">
@@ -520,7 +505,7 @@ export function CalendarioFamiliar() {
                               {dia}
                             </span>
                             {eventosDia.length > 0 && (
-                              <span className="text-[10px] font-semibold text-gray-500">{eventosDia.length} item(ns)</span>
+                              <span className="text-[10px] font-semibold text-gray-500">{formatEventCount(eventosDia.length)}</span>
                             )}
                           </div>
 
@@ -544,22 +529,22 @@ export function CalendarioFamiliar() {
                                       className="h-2 w-2 rounded-full"
                                       style={{ backgroundColor: colors.dot }}
                                     />
-                                    <span>{evento.titulo}</span>
+                                    <span>{formatCalendarEventTitle(evento)}</span>
                                   </div>
-                                  <p>{evento.descricao}</p>
+                                  <p>{formatCalendarEventDescription(evento)}</p>
                                 </Link>
                               );
                             })}
 
                             {eventosDia.length > 3 && (
                               <div className="text-[11px] font-medium text-gray-500 px-1">
-                                +{eventosDia.length - 3} item(ns)
+                                +{formatEventCount(eventosDia.length - 3)}
                               </div>
                             )}
                           </div>
                         </>
                       ) : null}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -568,19 +553,25 @@ export function CalendarioFamiliar() {
 
           <aside className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Resumo do mês</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Categorias</h3>
+              <p className="mb-4 text-sm text-gray-500">Clique para ativar ou ocultar categorias do calendário.</p>
               <div className="space-y-3 text-sm text-gray-700">
                 {CALENDAR_CATEGORY_KEYS.map((category) => {
                   const colors = CALENDAR_CATEGORY_COLORS[category];
-                  const count = eventosDoMes.filter((evento) => getCalendarCategory(evento) === category).length;
+                  const count = eventos.filter((evento) => evento.mes === dataAtual.getMonth() && getCalendarCategory(evento) === category).length;
+                  const active = activeCategories[category];
                   return (
-                    <div
+                    <button
                       key={category}
-                      className="flex items-center justify-between rounded-xl border px-4 py-3"
+                      type="button"
+                      onClick={() => toggleCategory(category)}
+                      aria-pressed={active}
+                      className="flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition hover:shadow-sm"
                       style={{
-                        backgroundColor: colors.background,
-                        borderColor: colors.border,
-                        color: colors.text,
+                        backgroundColor: active ? colors.background : '#FFFFFF',
+                        borderColor: active ? colors.border : '#E5E7EB',
+                        color: active ? colors.text : '#6B7280',
+                        opacity: active ? 1 : 0.62,
                       }}
                     >
                       <span className="inline-flex items-center gap-2">
@@ -611,7 +602,7 @@ export function CalendarioFamiliar() {
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
                       <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.aniversarios.text }}>
-                        {evento.descricao}
+                        {formatCalendarEventDescription(evento)}
                       </span>
                     </Link>
                   ))
