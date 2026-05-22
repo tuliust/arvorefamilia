@@ -578,7 +578,7 @@ export function CalendarioFamiliar() {
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.dot }} />
                         {colors.label}
                       </span>
-                      <strong>{count}</strong>
+                      <strong>{formatEventCount(count)}</strong>
                     </button>
                   );
                 })}
