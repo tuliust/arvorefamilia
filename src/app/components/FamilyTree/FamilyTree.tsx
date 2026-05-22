@@ -712,6 +712,7 @@ function FamilyTreeComponent({
   const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
+  const [hasUserInteractedWithViewport, setHasUserInteractedWithViewport] = useState(false);
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const directFamilyFallbackMinZoom = isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM;
   const directFamilyMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
@@ -912,6 +913,7 @@ function FamilyTreeComponent({
   useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
+    setHasUserInteractedWithViewport(false);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   useEffect(() => {
@@ -1073,6 +1075,9 @@ function FamilyTreeComponent({
   const handleMove = useCallback(
     (_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
       setDirectFamilyCurrentZoom(viewport.zoom);
+      if (_event) {
+        setHasUserInteractedWithViewport(true);
+      }
     },
     []
   );
@@ -1080,6 +1085,9 @@ function FamilyTreeComponent({
   const handleMoveEnd = useCallback(
     (_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
       setDirectFamilyCurrentZoom(viewport.zoom);
+      if (_event) {
+        setHasUserInteractedWithViewport(true);
+      }
     },
     []
   );
@@ -1097,6 +1105,7 @@ function FamilyTreeComponent({
     : false;
 
   const handleZoomIn = useCallback(() => {
+    setHasUserInteractedWithViewport(true);
     reactFlowRef.current?.zoomIn({ duration: 160 });
   }, []);
 
@@ -1107,6 +1116,7 @@ function FamilyTreeComponent({
     const viewport = instance.getViewport();
     if (viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON) return;
 
+    setHasUserInteractedWithViewport(true);
     instance.zoomOut({ duration: 160 });
   }, [activeMinZoom]);
 
@@ -1114,6 +1124,7 @@ function FamilyTreeComponent({
     const instance = reactFlowRef.current;
     if (!instance || containerSize.width <= 0 || containerSize.height <= 0) return;
 
+    setHasUserInteractedWithViewport(true);
     const viewport = instance.getViewport();
     const horizontalFlowStep = (containerSize.width * TREE_MOBILE_DIRECTIONAL_PAN_RATIO) / viewport.zoom;
     const verticalFlowStep = (containerSize.height * TREE_MOBILE_DIRECTIONAL_PAN_RATIO) / viewport.zoom;
@@ -1249,17 +1260,19 @@ function FamilyTreeComponent({
       </div>
 
 
-      <div
-        className="pointer-events-none absolute inset-x-0 z-10 text-center"
-        style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
-      >
-        <h2 className="text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
-          {treeTitle}
-        </h2>
-        <p className="mt-1 text-xs font-semibold leading-tight text-slate-600 sm:text-sm">
-          Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
-        </p>
-      </div>
+      {!hasUserInteractedWithViewport && (
+        <div
+          className="pointer-events-none absolute inset-x-0 z-10 text-center"
+          style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
+        >
+          <h2 className="text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
+            {treeTitle}
+          </h2>
+          <p className="mt-1 text-xs font-semibold leading-tight text-slate-600 sm:text-sm">
+            Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
+          </p>
+        </div>
+      )}
 
       {isMobile && !isAreaSelectionOpen && (
         <>
