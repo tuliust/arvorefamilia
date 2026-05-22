@@ -1,4 +1,5 @@
 import { Input } from '../ui/input';
+import { AddressAutocompleteInput } from './AddressAutocompleteInput';
 import { SocialProfileForm, SocialProfilesEditor } from './SocialProfilesEditor';
 import { PersonFormSection } from './PersonFormSection';
 
@@ -44,10 +45,9 @@ export function PersonContactFields({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
-        <Input
-          type="text"
+        <AddressAutocompleteInput
           value={value.endereco}
-          onChange={(event) => onChange('endereco', event.target.value)}
+          onChange={(nextValue) => onChange('endereco', nextValue)}
           placeholder="Rua, número, bairro, cidade"
         />
       </div>

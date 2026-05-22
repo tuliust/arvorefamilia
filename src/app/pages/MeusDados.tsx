@@ -5,6 +5,7 @@ import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
+import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
   SocialProfileForm,
   SocialProfilesEditor,
@@ -22,12 +23,6 @@ import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  GoogleAddressComponent,
-  GooglePlaceResult,
-  GooglePlacesAutocomplete,
-  loadGoogleMapsPlaces,
-} from '../lib/googleMapsLoader';
 import {
   EditableOwnPersonPayload,
   ensureMemberProfile,
@@ -164,18 +159,6 @@ type MeusDadosDraft = {
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
 // (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
 
-function getAddressComponent(
-  components: GoogleAddressComponent[] | undefined,
-  type: string,
-  name: 'long_name' | 'short_name' = 'long_name',
-) {
-  return components?.find((component) => component.types.includes(type))?.[name] ?? '';
-}
-
-function joinAddressParts(parts: string[]) {
-  return parts.map((part) => part.trim()).filter(Boolean).join(', ');
-}
-
 function getDraftKey(userId: string, pessoaId: string) {
   return `meus-dados-draft:${userId}:${pessoaId}`;
 }
@@ -213,31 +196,6 @@ function removeMeusDadosDraft(key: string) {
   } catch {
     // noop
   }
-}
-
-function formatGooglePlaceAddress(place: GooglePlaceResult) {
-  const components = place.address_components;
-  if (!components?.length) return place.formatted_address ?? '';
-
-  const street = getAddressComponent(components, 'route');
-  const number = getAddressComponent(components, 'street_number');
-  const neighborhood =
-    getAddressComponent(components, 'sublocality_level_1') ||
-    getAddressComponent(components, 'sublocality') ||
-    getAddressComponent(components, 'neighborhood');
-  const city =
-    getAddressComponent(components, 'locality') ||
-    getAddressComponent(components, 'administrative_area_level_2') ||
-    getAddressComponent(components, 'postal_town');
-  const state = getAddressComponent(components, 'administrative_area_level_1', 'short_name');
-  const postalCode = getAddressComponent(components, 'postal_code');
-  const postalCodeSuffix = getAddressComponent(components, 'postal_code_suffix');
-  const fullPostalCode = [postalCode, postalCodeSuffix].filter(Boolean).join('-');
-  const cityState = [city, state].filter(Boolean).join('/');
-  const streetLine = joinAddressParts([street, number]);
-  const address = joinAddressParts([streetLine, neighborhood, cityState, fullPostalCode ? `CEP ${fullPostalCode}` : '']);
-
-  return address || (place.formatted_address ?? '');
 }
 
 function readImage(src: string) {
@@ -288,7 +246,6 @@ async function createCroppedAvatarBlob(imageSrc: string, cropPixels: Area) {
 export function MeusDados() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const addressInputRef = useRef<HTMLInputElement | null>(null);
   const hasInitializedFormRef = useRef(false);
   const initializedPessoaIdRef = useRef<string | null>(null);
   const isDirtyRef = useRef(false);
@@ -415,80 +372,6 @@ export function MeusDados() {
       mounted = false;
     };
   }, [selectedPessoaId, user]);
-
-  useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    const input = addressInputRef.current;
-
-    if (!apiKey) {
-      if (import.meta.env.DEV) {
-        console.warn('[Google Maps] VITE_GOOGLE_MAPS_API_KEY ausente; autocomplete de endereço desativado.');
-      }
-      return;
-    }
-
-    if (loading || !input) return;
-
-    let active = true;
-    let autocomplete: GooglePlacesAutocomplete | undefined;
-    let listener: { remove: () => void } | undefined;
-
-    loadGoogleMapsPlaces(apiKey)
-      .then((googleMaps) => {
-        if (!active || !googleMaps || !addressInputRef.current) return;
-
-        const brazilBounds = new googleMaps.maps.LatLngBounds(
-          { lat: -33.75, lng: -73.99 },
-          { lat: 5.27, lng: -34.79 },
-        );
-
-        autocomplete = new googleMaps.maps.places.Autocomplete(addressInputRef.current, {
-          bounds: brazilBounds,
-          componentRestrictions: { country: 'br' },
-          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
-          strictBounds: false,
-          types: ['geocode'],
-        });
-
-        if (import.meta.env.DEV) {
-          console.debug('[Google Maps] Autocomplete de endereço inicializado.');
-        }
-
-        listener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete?.getPlace();
-
-          if (!place?.address_components?.length && import.meta.env.DEV) {
-            console.warn('[Google Maps] place_changed sem address_components.', place);
-          }
-
-          const selectedAddress = place ? formatGooglePlaceAddress(place) : '';
-          if (!selectedAddress) return;
-
-          markFormDirty();
-          setForm((current) => ({
-            ...current,
-            endereco: selectedAddress,
-          }));
-          setErrors((current) => ({
-            ...current,
-            endereco: undefined,
-          }));
-        });
-      })
-      .catch((error) => {
-        if (active && import.meta.env.DEV) {
-          console.warn('[Google Maps] Não foi possível carregar Places.', error);
-        }
-      });
-
-    return () => {
-      active = false;
-      listener?.remove();
-      if (autocomplete && window.google?.maps.event?.clearInstanceListeners) {
-        window.google.maps.event.clearInstanceListeners(autocomplete);
-      }
-    };
-  }, [loading]);
 
   useEffect(() => {
     return () => {
@@ -956,15 +839,10 @@ export function MeusDados() {
               />
             </Field>
             <Field label="Endereço">
-              <Input
-                ref={addressInputRef}
+              <AddressAutocompleteInput
                 name="google-places-address-input"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
                 value={String(form.endereco ?? '')}
-                onChange={(e) => updateTextField('endereco', e.target.value)}
+                onChange={(nextValue) => updateTextField('endereco', nextValue)}
                 placeholder="Rua, número, bairro, cidade, CEP"
               />
             </Field>
