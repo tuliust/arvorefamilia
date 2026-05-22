@@ -19,6 +19,8 @@ Este documento não substitui:
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
 - `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pendências.
 - `docs/GUIA_COMPONENTES.md`: catálogo técnico dos componentes reutilizáveis.
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: comportamento específico do calendário familiar.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: detalhes de perfil, admin e vínculos.
 
 ---
 
@@ -699,6 +701,7 @@ src/app/pages/MinhaArvore.tsx
 src/app/pages/CalendarioFamiliar.tsx
 src/app/pages/MeusFavoritos.tsx
 src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
 src/app/pages/forum/ForumHome.tsx
 src/app/pages/admin/AdminDashboard.tsx
 ```

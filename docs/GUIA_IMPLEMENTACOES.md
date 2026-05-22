@@ -285,7 +285,7 @@ Implementado:
 - o card **Usuários vinculados a esta pessoa** fica em `AdminPessoaForm`;
 - a listagem de usuários disponíveis usa a RPC `admin_list_profiles_for_linking`;
 - a correção da RPC está na migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
-- essa migration precisa estar aplicada no Supabase remoto para resolver erro de schema cache;
+- essa migration foi aplicada no Supabase remoto e local/remoto ficaram alinhados em `supabase migration list`;
 - o frontend não usa fallback inseguro de consulta direta em `profiles`.
 
 ---
@@ -788,7 +788,17 @@ Regras consolidadas:
 
 Histórico operacional recente:
 
-- no `supabase db push` citado no histórico do projeto, também foram aplicadas as migrations pendentes `20260519180000_create_site_visual_settings.sql`, `20260520100000_support_admin_managed_user_person_links.sql` e `20260522121000_add_historical_file_event_category.sql`.
+- no `supabase db push` citado no histórico do projeto, também foram aplicadas as migrations pendentes `20260519180000_create_site_visual_settings.sql`, `20260520100000_support_admin_managed_user_person_links.sql` e `20260522121000_add_historical_file_event_category.sql`;
+- a migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` foi aplicada no remoto para recriar `public.admin_list_profiles_for_linking()` e resolver o erro de schema cache no vínculo admin usuário-pessoa.
+
+Validação técnica final pós-migration:
+
+- `npm run build` aprovado;
+- `npm test` aprovado com 28 testes;
+- `npm run test:e2e` aprovado com 5 testes;
+- `git diff --check` sem erros;
+- `supabase migration list` alinhado até `20260522173000`;
+- worktree limpo após remoção de `test-results/`.
 
 Objetos legados/compatibilidade:
 

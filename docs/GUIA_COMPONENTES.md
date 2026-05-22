@@ -550,6 +550,12 @@ Cuidados:
 
 ## 6. Componentes de pessoa
 
+Documentação específica de pessoas/perfil/admin:
+
+```txt
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+```
+
 Arquivos principais:
 
 ```txt
@@ -674,7 +680,7 @@ Cuidados:
 - preview/download não deve limpar formulário;
 - botões de visualizar/baixar/remover devem usar `type="button"`;
 - não apagar base64 legado automaticamente;
-- não criar limpeza automática de órfãos sem auditoria.
+- não criar limpeza automática de órfãos sem auditoria;
 - migration `20260522121000_add_historical_file_event_category.sql` precisa estar aplicada antes de deploy que envie `categoria_evento`.
 
 ---
@@ -765,6 +771,12 @@ Cuidados:
 ---
 
 ## 12. Componentes de notificações
+
+Documentação específica de notificações:
+
+```txt
+docs/funcionalidades/NOTIFICACOES.md
+```
 
 Arquivos principais:
 

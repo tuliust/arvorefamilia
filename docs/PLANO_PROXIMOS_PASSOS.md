@@ -32,7 +32,7 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
 | Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
 | Minha Árvore e arquivos históricos | Atualizados | `ce482a2` consolidou categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral. |
-| Vínculo admin usuário-pessoa | Corrigido no código | RPC `admin_list_profiles_for_linking` corrigida; aplicar migration remota antes do QA final. |
+| Vínculo admin usuário-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida, migration remota aplicada e migrations local/remoto alinhadas. |
 | Autocomplete de endereço | Concluído no frontend | Admin e dados do usuário usam Google Places com fallback para input normal. |
 | Calendário familiar | Ajustes residuais concluídos | Categorias na sidebar, filtros clicáveis, pluralização e “Faz X anos”. |
 
@@ -251,15 +251,17 @@ Concluído:
 - autocomplete de endereço no admin;
 - ajustes residuais do calendário familiar.
 
-Pendência operacional:
+Validação operacional:
 
-- aplicar `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` no ambiente Supabase remoto.
+- `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` foi aplicada no ambiente Supabase remoto;
+- `supabase migration list` confirmou local/remoto alinhados até `20260522173000`;
+- validação técnica pós-migration passou com `npm run build`, `npm test`, `npm run test:e2e`, `git diff --check` e worktree limpo.
 
 ---
 
 ## 6. QA final de lançamento
 
-Status em 2026-05-19: executado e aprovado.
+Status: validação técnica final executada e aprovada. O QA visual amplo foi aprovado em 2026-05-19; a validação técnica pós-documentação e pós-migration foi concluída em 2026-05-22.
 
 ### 6.1 Validação técnica
 
@@ -278,7 +280,7 @@ Critérios:
 - testes unitários passaram com `npm test` (`28` testes);
 - e2e passou com `npm run test:e2e` (`5` testes);
 - `git diff --check` passou sem erros;
-- `supabase migration list` mostrou migrations locais/remotas alinhadas;
+- `supabase migration list` mostrou migrations locais/remotas alinhadas até `20260522173000`;
 - nenhuma migration visual foi criada;
 - nenhum secret foi versionado.
 
@@ -355,18 +357,46 @@ Revalidar rapidamente antes do lançamento:
 - timeline;
 - exportação PNG/PDF/impressão.
 
+### 6.4 Validação pós-PDF, documentação e migration
+
+Validação final executada após os ajustes do PDF, reorganização documental e aplicação da migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`:
+
+```bash
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+supabase migration list
+```
+
+Resultado consolidado:
+
+- build aprovado;
+- testes unitários aprovados (`28` testes);
+- testes e2e aprovados (`5` testes);
+- `git diff --check` sem erros;
+- `test-results/` removido após Playwright;
+- worktree limpo;
+- migrations locais/remotas alinhadas até `20260522173000`.
+
+Checagem manual restante antes do deploy, se ainda não tiver sido feita no ambiente final:
+
+- abrir `/admin/pessoas/:id/editar` como admin;
+- confirmar que o dropdown de usuários vinculáveis carrega;
+- confirmar que usuários já vinculados não aparecem;
+- testar o botão **Recarregar**;
+- confirmar que o erro de schema cache da RPC desapareceu.
+
 ---
 
 ## 7. Encerramento do MVP
 
-Depois do QA final:
+Depois da validação final:
 
-1. atualizar documentações;
-2. confirmar que os itens pós-MVP continuam fora do lançamento;
-3. rodar validação técnica final;
-4. fazer commit de documentação;
-5. criar tag ou release, se o fluxo do projeto usar versionamento;
-6. preparar deploy.
+1. confirmar que os itens pós-MVP continuam fora do lançamento;
+2. fazer checagem manual do card de vínculos no admin, se ainda não feita no ambiente final;
+3. criar tag ou release, se o fluxo do projeto usar versionamento;
+4. preparar deploy.
 
 Comandos sugeridos:
 
@@ -381,19 +411,8 @@ supabase migration list
 
 Pendente até fechamento:
 
-- aplicar a migration remota `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
-- QA final pós-migration;
-- `npm run test:e2e`;
-- `supabase migration list`;
+- checagem manual do card de vínculos em `/admin/pessoas/:id/editar`, se ainda não feita no ambiente final;
 - deploy.
-
-Commit sugerido:
-
-```bash
-git add docs/GUIA_IMPLEMENTACOES.md docs/GUIA_CORRECAO_ERROS.md docs/PLANO_PROXIMOS_PASSOS.md
-git commit -m "docs: atualizar documentacao do MVP"
-git push origin main
-```
 
 ---
 
