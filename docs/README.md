@@ -12,7 +12,9 @@ Este diretório separa a documentação canônica do projeto de documentos espec
 
 ## Funcionalidades específicas
 
+- `funcionalidades/CALENDARIO_FAMILIAR.md`
 - `funcionalidades/NOTIFICACOES.md`
+- `funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 - `funcionalidades/TIMELINE.md`
 
 ## Operação e manutenção

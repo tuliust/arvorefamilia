@@ -8,7 +8,9 @@ Este guia não é um checklist de próximos passos nem um manual de correção d
 
 - `docs/PLANO_PROXIMOS_PASSOS.md`: ordem restante até o lançamento, validações finais e backlog pós-MVP.
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma, arquivos prováveis e correções.
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: comportamento específico do calendário familiar.
 - `docs/funcionalidades/NOTIFICACOES.md`: arquitetura específica de notificações.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: detalhes de perfil público, admin de pessoa e vínculos.
 - `docs/funcionalidades/TIMELINE.md`: arquitetura específica da timeline.
 
 ---
@@ -199,6 +201,12 @@ Comportamento implementado:
 ---
 
 ## 5. Pessoas, formulários e dados pessoais
+
+Documentação específica:
+
+```txt
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+```
 
 Arquivos principais:
 
@@ -727,6 +735,12 @@ Validação final executada:
 ## 14. Fórum e Google Calendar
 
 ### Calendário Familiar
+
+Documentação específica:
+
+```txt
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+```
 
 Arquivos principais:
 

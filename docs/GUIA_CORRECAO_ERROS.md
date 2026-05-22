@@ -15,7 +15,9 @@ Este guia não descreve roadmap nem lista implementações concluídas em detalh
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado.
 - `docs/PLANO_PROXIMOS_PASSOS.md`: validações finais, lançamento e backlog pós-MVP.
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: troubleshooting específico do calendário familiar.
 - `docs/funcionalidades/NOTIFICACOES.md`: detalhes de arquitetura e operação de notificações.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: troubleshooting específico de pessoas, perfil e admin.
 - `docs/funcionalidades/TIMELINE.md`: detalhes da timeline.
 
 ---
@@ -1058,6 +1060,12 @@ Correção:
 
 ## 14.1 Vínculo admin usuário-pessoa
 
+Detalhes específicos de pessoas/perfil/admin:
+
+```txt
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+```
+
 Arquivos prováveis:
 
 ```txt
@@ -1535,6 +1543,12 @@ Correção imediata:
 ---
 
 ## 19.1 Calendário Familiar
+
+Detalhes específicos:
+
+```txt
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+```
 
 Arquivo provável:
 
