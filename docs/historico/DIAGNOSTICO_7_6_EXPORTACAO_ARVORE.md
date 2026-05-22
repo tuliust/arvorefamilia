@@ -149,7 +149,7 @@ canvas.height / targetRect.height
 Documento complementar:
 
 ```txt
-docs/QA_7_6_EXPORTACAO_ARVORE.md
+docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
 ```
 
 Bugs corrigidos:

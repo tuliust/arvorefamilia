@@ -8,8 +8,8 @@ Este arquivo não deve repetir o guia de implementações nem o guia de correç�
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado e comportamento consolidado.
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação e correção por sintoma.
-- `docs/NOTIFICACOES.md`: detalhes técnicos de notificações.
-- `docs/TIMELINE.md`: detalhes técnicos da timeline.
+- `docs/funcionalidades/NOTIFICACOES.md`: detalhes técnicos de notificações.
+- `docs/funcionalidades/TIMELINE.md`: detalhes técnicos da timeline.
 
 ---
 

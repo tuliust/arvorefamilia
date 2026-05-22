@@ -15,8 +15,8 @@ Este guia não descreve roadmap nem lista implementações concluídas em detalh
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado.
 - `docs/PLANO_PROXIMOS_PASSOS.md`: validações finais, lançamento e backlog pós-MVP.
-- `docs/NOTIFICACOES.md`: detalhes de arquitetura e operação de notificações.
-- `docs/TIMELINE.md`: detalhes da timeline.
+- `docs/funcionalidades/NOTIFICACOES.md`: detalhes de arquitetura e operação de notificações.
+- `docs/funcionalidades/TIMELINE.md`: detalhes da timeline.
 
 ---
 
@@ -1116,7 +1116,7 @@ src/app/services/notificationScheduledService.ts
 src/app/services/notificationAdminService.ts
 supabase/functions/send-notification-email
 supabase/functions/run-daily-notifications
-docs/NOTIFICACOES.md
+docs/funcionalidades/NOTIFICACOES.md
 ```
 
 ### Notificações não aparecem

@@ -41,17 +41,17 @@ f6109f4 docs: adicionar guias de ux layout e componentes
 
 ```txt
 docs/.DS_Store
-docs/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
+docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
 docs/GUIA_COMPONENTES.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/GUIA_IMPLEMENTACOES.md
 docs/GUIA_UX_LAYOUT.md
-docs/NOTIFICACOES.md
+docs/funcionalidades/NOTIFICACOES.md
 docs/PLANO_PROXIMOS_PASSOS.md
-docs/QA_7_6_EXPORTACAO_ARVORE.md
-docs/RESPONSIVIDADE_MOBILE_TABLET.md
-docs/STORAGE_MAINTENANCE.md
-docs/TIMELINE.md
+docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
+docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
+docs/operacao/STORAGE_MAINTENANCE.md
+docs/funcionalidades/TIMELINE.md
 ```
 
 ## Arquivo indesejado detectado

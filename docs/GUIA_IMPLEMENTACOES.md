@@ -8,8 +8,8 @@ Este guia não é um checklist de próximos passos nem um manual de correção d
 
 - `docs/PLANO_PROXIMOS_PASSOS.md`: ordem restante até o lançamento, validações finais e backlog pós-MVP.
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma, arquivos prováveis e correções.
-- `docs/NOTIFICACOES.md`: arquitetura específica de notificações.
-- `docs/TIMELINE.md`: arquitetura específica da timeline.
+- `docs/funcionalidades/NOTIFICACOES.md`: arquitetura específica de notificações.
+- `docs/funcionalidades/TIMELINE.md`: arquitetura específica da timeline.
 
 ---
 
@@ -640,7 +640,7 @@ Comportamento consolidado:
 Documentação específica:
 
 ```txt
-docs/NOTIFICACOES.md
+docs/funcionalidades/NOTIFICACOES.md
 ```
 
 Implementado:
@@ -650,7 +650,7 @@ Implementado:
 - `NotificationPreferencesPanel` foi extraído para toggles e salvamento de preferências;
 - a lista mantém marcar como lida, marcar todas como lidas, remover, loading, vazio e erro;
 - `/admin/notificacoes`, logs, deduplicação, Edge Functions, Resend e rotina diária estão preparados;
-- cron automático depende de configuração segura externa, conforme `docs/NOTIFICACOES.md`.
+- cron automático depende de configuração segura externa, conforme `docs/funcionalidades/NOTIFICACOES.md`.
 
 Arquivos principais:
 
