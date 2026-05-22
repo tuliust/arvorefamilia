@@ -544,7 +544,7 @@ export function CalendarioFamiliar() {
                           </div>
                         </>
                       ) : null}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -579,7 +579,7 @@ export function CalendarioFamiliar() {
                         {colors.label}
                       </span>
                       <strong>{count}</strong>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
