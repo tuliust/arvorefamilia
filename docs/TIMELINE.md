@@ -48,7 +48,7 @@ A timeline pode receber:
 
 - pessoa;
 - eventos pessoais;
-- arquivos historicos da pessoa;
+- arquivos historicos da pessoa, incluindo `categoria_evento` quando disponivel;
 - filhos;
 - pessoas carregadas;
 - relacionamentos brutos/detalhados;
@@ -225,6 +225,11 @@ Verificar:
 - arquivos historicos de relacionamento;
 - dados enviados por `PersonProfile`;
 - mapeamento em `buildPersonTimeline`.
+
+Se o problema acontecer apos editar/salvar arquivos historicos:
+
+- confirmar se `20260522121000_add_historical_file_event_category.sql` foi aplicada no ambiente;
+- insert/update pode falhar quando o payload inclui `categoria_evento` e a coluna ainda nao existe.
 
 ### Eventos pessoais nao aparecem
 

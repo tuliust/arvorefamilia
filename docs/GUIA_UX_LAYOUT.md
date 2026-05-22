@@ -121,6 +121,11 @@ Regras:
 - manter altura compacta;
 - preservar busca expansível;
 - preservar seletor de view;
+- botão **Ações** usa ícone `Printer`;
+- no desktop, o botão pode exibir texto **Ações**;
+- no mobile, o botão deve aparecer apenas como ícone;
+- **Ações** continua abrindo `activeSidebarPanel = 'info'`;
+- loading da Home deve usar **“Buscando pessoas e relacionamentos…”**, sem “no Supabase”;
 - evitar ações que causem overflow horizontal;
 - em breakpoints menores, esconder textos e priorizar ícones.
 
@@ -221,6 +226,14 @@ A aba **Legendas** foi simplificada recentemente. Não deve exibir:
 Texto consolidado do status conjugal:
 
 - “Em relacionamento” no lugar de “Ativa”.
+
+Além de legenda, `TreeLegend` também pode controlar filtros/camadas visuais reais:
+
+- `visualLineFilters.parentChildHighlight`;
+- `visualLineFilters.siblingHighlight`;
+- `parentChildHighlight` respeita `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
+- `siblingHighlight` respeita `edgeFilters.irmaos`;
+- estado padrão desligado mantém o visual original.
 
 ---
 
@@ -535,6 +548,8 @@ Exemplos consolidados:
 | Subtítulo da árvore | Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes. |
 | Status conjugal ativo | Em relacionamento |
 | Exportação | Selecionar área |
+| Ações da árvore | Ações |
+| Loading da Home | Buscando pessoas e relacionamentos… |
 | Busca | Buscar por nome ou local... |
 
 ---
@@ -604,6 +619,24 @@ Checklist manual mínimo:
 - removida seção “Views”;
 - removidas descrições internas dos itens;
 - “Ativa” foi trocado por “Em relacionamento”.
+- legenda também controla filtros/camadas visuais quando callbacks são fornecidos.
+
+### 13.5 Arquivos históricos
+
+- após upload, o input nativo fica oculto;
+- campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente;
+- mensagem verde **“✓ Arquivo carregado”** permanece visível;
+- imagens mostram thumbnail;
+- PDF mostra card/ícone/label PDF;
+- botão **Adicionar Arquivo** reabre campos sem apagar a miniatura carregada;
+- usuário ainda pode preencher título, descrição, ano e categoria depois do upload.
+
+### 13.6 Minha Árvore
+
+- cards de **Escopo da visualização** exibem avatar circular com foto ou iniciais;
+- botão individual **Salvar casamento** foi removido;
+- botão geral **Salvar meus dados** salva dados pessoais e processa dados conjugais;
+- local de casamento inválido não bloqueia os dados pessoais, mas deixa casamento sem salvar e mostra aviso.
 
 ---
 
@@ -655,7 +688,7 @@ Filtros
 Legendas
 ```
 
-A aba **Informações** não aparece mais na toggle. Ela é aberta por um botão externo com ícone `SquareDashedMousePointer`, posicionado ao lado do botão de recolher/expandir painel.
+A aba **Informações** não aparece mais na toggle. Ela é aberta pelo botão externo **Ações**, com ícone `Printer`, posicionado ao lado do botão de recolher/expandir painel.
 
 ### 16.2 Legenda compacta
 

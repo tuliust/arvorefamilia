@@ -58,6 +58,20 @@ node scripts/migrate-legacy-base64-files.mjs --include-avatars --output=/tmp/bas
 
 O script nao remove automaticamente dados antigos e nao dropa `public.pessoas.arquivos_historicos`.
 
+## Arquivos historicos recentes
+
+O componente `ArquivosHistoricos` envia novos arquivos para o bucket `historical-files` e, apos upload, pode manter uma miniatura/card PDF em draft ate o usuario clicar em **Adicionar Arquivo**.
+
+Risco conhecido:
+
+- se o usuario fizer upload e abandonar o formulario antes de adicionar/salvar o registro, o objeto pode ficar orfao no Storage;
+- a limpeza deve continuar usando diagnostico dry-run antes de qualquer remocao.
+
+Schema relacionado:
+
+- `public.arquivos_historicos.categoria_evento` foi adicionado por `20260522121000_add_historical_file_event_category.sql`;
+- ambientes sem essa migration podem conseguir listar arquivos, mas falhar ao inserir/atualizar payloads com `categoria_evento`.
+
 ## Dependencias de produto
 
 Upload de arquivos historicos de casamento por usuario comum continua sem UI ativa. Antes de liberar, definir moderacao/aprovacao e confirmar se o usuario pode anexar arquivos a qualquer casamento em que sua pessoa participa ou apenas aos eventos proprios.

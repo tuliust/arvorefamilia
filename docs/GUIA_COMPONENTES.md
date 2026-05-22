@@ -309,6 +309,7 @@ src/app/components/FamilyTree/TreeLegend.tsx
 Responsabilidade:
 
 - explicar elementos visuais da árvore;
+- controlar filtros reais/camadas visuais quando recebe callbacks;
 - renderizar modo compacto no painel lateral;
 - renderizar modo expandido se necessário;
 - mostrar cards, linhas, anel e cores dos grupos.
@@ -320,6 +321,10 @@ viewMode?: TreeViewMode
 compact?: boolean
 className?: string
 showTitle?: boolean
+edgeFilters?: EdgeFilters
+onToggleEdgeFilter?: (...)
+visualLineFilters?: VisualLineFilters
+onToggleVisualLineFilter?: (...)
 ```
 
 Estado atual da UX:
@@ -339,6 +344,14 @@ Linhas
 Anel de casamento
 Cores dos grupos
 ```
+
+Camadas/filtros funcionais:
+
+- `visualLineFilters.parentChildHighlight`;
+- `visualLineFilters.siblingHighlight`;
+- `parentChildHighlight` deve respeitar `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
+- `siblingHighlight` deve respeitar `edgeFilters.irmaos`;
+- estado padrão desligado mantém o visual original.
 
 Cuidados:
 
@@ -625,7 +638,27 @@ Responsabilidades:
 - download;
 - remoção;
 - compatibilidade com base64 legado;
-- arquivos de pessoa e relacionamento.
+- arquivos de pessoa e relacionamento;
+- edição de título, ano, descrição e categoria histórica.
+
+Comportamento atual:
+
+- aceita JPG, PNG, WebP e PDF;
+- após upload de novo arquivo, o input nativo fica oculto;
+- campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente após upload;
+- mensagem verde **“✓ Arquivo carregado”** permanece visível;
+- imagens mostram thumbnail;
+- PDF mostra card com ícone/label PDF;
+- clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
+- usuário pode preencher título, descrição, ano e categoria depois do upload;
+- arquivos existentes permitem editar título, ano, descrição e categoria histórica.
+
+Categoria histórica:
+
+- tipo `HistoricalFileEventCategory`;
+- campo `ArquivoHistorico.categoria_evento`;
+- coluna `public.arquivos_historicos.categoria_evento`;
+- valores aceitos: `certidao_nascimento`, `certidao_casamento`, `alistamento_militar`, `imigracao`, `divorcio`, `carreira_profissional`, `mudanca_cidade`, `certidao_obito`, `outro`.
 
 Cuidados:
 
@@ -634,6 +667,7 @@ Cuidados:
 - botões de visualizar/baixar/remover devem usar `type="button"`;
 - não apagar base64 legado automaticamente;
 - não criar limpeza automática de órfãos sem auditoria.
+- migration `20260522121000_add_historical_file_event_category.sql` precisa estar aplicada antes de deploy que envie `categoria_evento`.
 
 ---
 
@@ -1072,7 +1106,7 @@ Filtros
 Legendas
 ```
 
-O painel **Informações da árvore** é aberto por botão externo com ícone `SquareDashedMousePointer`.
+O painel **Informações da árvore** é aberto pelo botão externo **Ações**, com ícone `Printer`.
 
 A versão compacta da legenda removeu **Cores dos grupos** para caber melhor no painel lateral, mas mantém:
 

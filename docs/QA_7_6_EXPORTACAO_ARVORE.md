@@ -83,6 +83,9 @@ Itens validados manualmente:
 Resultado da fase:
 
 - A funcionalidade 7.6 permanece aprovada para o escopo atual: selecao e exportacao da viewport visivel.
+- Selecionar area, PNG, PDF e impressao estao concluidos no escopo atual.
+- A limitacao atual permanece: exporta a viewport visivel da `.react-flow`.
+- Exportacao da arvore completa permanece pos-MVP.
 - Nao foram identificados bloqueadores para manter a feature ativa.
 - Nao houve necessidade de migration, alteracao de schema, Storage ou log persistido.
 

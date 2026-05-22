@@ -31,6 +31,7 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA final técnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
 | Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
+| Minha Árvore e arquivos históricos | Atualizados | `ce482a2` consolidou categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral. |
 
 ---
 
@@ -53,6 +54,8 @@ O MVP deve ser fechado com:
 - página `/meus-favoritos`;
 - exportação de área visível da árvore;
 - legenda visual da árvore;
+- categoria histórica em arquivos históricos;
+- `/minha-arvore` com dados conjugais salvos pelo botão geral;
 - headers internos padronizados;
 - responsividade mobile/tablet;
 - QA final de lançamento.
@@ -211,6 +214,29 @@ Arquivo relacionado:
 ```txt
 src/app/components/FamilyTree/TreeLegend.tsx
 ```
+
+### 5.5 Ajustes de `ce482a2`
+
+Concluído:
+
+- Home usa botão **Ações** com ícone `Printer`;
+- desktop pode exibir texto **Ações** e mobile usa apenas ícone;
+- o botão continua abrindo `activeSidebarPanel = 'info'`;
+- loading da Home é **“Buscando pessoas e relacionamentos…”**;
+- `ArquivosHistoricos` mantém mensagem verde e miniatura/card PDF após upload;
+- input nativo, campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente após upload;
+- botão **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
+- arquivos históricos têm `HistoricalFileEventCategory` e `categoria_evento`;
+- `/minha-arvore` removeu **Salvar casamento** individual;
+- **Salvar meus dados** também processa `marriageForms`;
+- cards de **Escopo da visualização** exibem avatar circular com foto ou iniciais;
+- admin atualiza relacionamento conjugal principal e inverso, quando existir;
+- usuário não-admin cria solicitação via `relationshipChangeRequestService`;
+- local de casamento inválido não bloqueia dados pessoais, mas deixa casamento sem salvar e exibe aviso.
+
+Pré-requisito operacional:
+
+- aplicar `20260522121000_add_historical_file_event_category.sql` antes de deploy com `ce482a2`, pois insert/update em `arquivos_historicos` envia `categoria_evento`.
 
 ---
 
@@ -439,7 +465,7 @@ Concluído após os ajustes finais de responsividade:
 - destaque opcional de irmãos;
 - QA visual dos destaques;
 - painel lateral com toggle apenas para Filtros/Legendas;
-- botão externo de Informações com `SquareDashedMousePointer`;
+- botão externo **Ações** com `Printer`, texto no desktop e ícone apenas no mobile;
 - botões de zoom reposicionados à direita.
 
 Commits de referência:

@@ -14,6 +14,8 @@ A funcionalidade atual permite selecionar uma área visível da árvore e export
 
 A exportação permanece limitada à **viewport visível atual da `.react-flow`**. A exportação da árvore completa fica como evolução pós-MVP.
 
+Consolidação atual: seleção de área, PNG, PDF e impressão estão concluídos no escopo atual; árvore completa permanece fora do MVP.
+
 ---
 
 ## 1. Histórico da frente

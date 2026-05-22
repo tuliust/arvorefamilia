@@ -604,6 +604,31 @@ Verificar:
 - CORS;
 - tipo MIME.
 
+### Erro ao salvar `categoria_evento`
+
+Sintomas prováveis:
+
+- erro PostgREST/Supabase indicando que a coluna `categoria_evento` não existe;
+- insert/update em `public.arquivos_historicos` falha;
+- listagem pode funcionar, mas salvar arquivo novo ou editar arquivo existente falha.
+
+Causa provável:
+
+- ambiente remoto ainda não recebeu `20260522121000_add_historical_file_event_category.sql`;
+- schema cache do Supabase ainda não refletiu a coluna após migration recente.
+
+Correção:
+
+1. confirmar `supabase migration list`;
+2. aplicar a migration pendente aprovada com `supabase db push`;
+3. confirmar que `public.arquivos_historicos.categoria_evento` existe;
+4. se a coluna já existir e o erro persistir, aguardar/recarregar schema cache do Supabase antes de alterar código.
+
+Regra operacional:
+
+- `20260522121000_add_historical_file_event_category.sql` é pré-requisito de deploy para versões que enviam `categoria_evento` no payload;
+- não remover `categoria_evento` do payload para contornar ambiente sem migration.
+
 ### Upload abandonado deixa órfão
 
 Verificar:
@@ -1477,7 +1502,7 @@ Esperado:
 
 - `SidebarPanelTabs` mostra apenas **Filtros** e **Legendas**;
 - **Informações** abre por botão externo;
-- botão usa `SquareDashedMousePointer`;
+- botão usa `Printer` e texto **Ações** no desktop;
 - `activeSidebarPanel = 'info'` continua renderizando `SidebarInfoPanel`.
 
 ### Zoom voltou para a esquerda

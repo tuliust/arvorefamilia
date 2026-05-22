@@ -758,7 +758,7 @@ desktop
 ### Checklist geral
 
 ```md
-- [ ] Home aprovada.
+- [ ] Home aprovada, incluindo botão Ações com texto no desktop e ícone apenas no mobile.
 - [ ] Minha Árvore aprovada.
 - [ ] Genealogia aprovada.
 - [ ] Visão Completa aprovada.
@@ -784,6 +784,13 @@ desktop
 - [ ] Testes e2e aprovados.
 - [ ] Migrations alinhadas.
 ```
+
+Pontos responsivos recentes:
+
+- botão **Ações** da Home usa `Printer`, texto no desktop e ícone apenas no mobile;
+- o botão **Ações** continua abrindo o painel interno `activeSidebarPanel = 'info'`;
+- cards de **Escopo da visualização** em `/minha-arvore` exibem avatar circular com foto ou iniciais;
+- fluxo de arquivos históricos mantém thumbnail/card PDF e mensagem verde após upload, sem exibir o input nativo até o usuário reabrir o formulário.
 
 ### Commit de documentação final
 

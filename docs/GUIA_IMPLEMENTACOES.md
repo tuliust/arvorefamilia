@@ -166,9 +166,12 @@ Comportamento consolidado:
 - Home pós-login mantém header próprio, diferente do header das páginas internas;
 - margens laterais do header principal foram padronizadas com o restante do layout;
 - painel lateral da árvore contém as abas **Filtros** e **Legendas**;
+- o botão **Ações** usa ícone `Printer`, mostra texto no desktop e apenas ícone no mobile;
+- o botão **Ações** abre o painel interno `activeSidebarPanel = 'info'`;
 - o botão de recolher/expandir painel lateral foi unificado para evitar duplicidade;
 - em desktop, o botão fica dentro ou junto ao painel;
 - em mobile/largura reduzida, apenas um botão de expandir/recolher deve aparecer.
+- loading atual: **“Buscando pessoas e relacionamentos…”**, sem complemento “no Supabase”.
 
 ### Header compartilhado das páginas internas
 
@@ -355,12 +358,34 @@ Comportamento implementado:
 - base64/data URL legado continua compatível;
 - preview de imagem funciona;
 - preview de PDF funciona quando possível;
+- após upload de novo arquivo, o input nativo fica oculto;
+- após upload de novo arquivo, campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente;
+- mensagem verde **“✓ Arquivo carregado”** permanece visível;
+- imagem carregada mostra thumbnail;
+- PDF carregado mostra card com ícone/label PDF;
+- clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
+- após upload, usuário ainda pode preencher título, descrição, ano e categoria;
+- arquivos existentes permitem editar título, ano, descrição e categoria histórica;
 - download é ação explícita;
 - fallback de abrir em nova aba existe para download cross-origin;
 - arquivos de pessoa usam `pessoa_id`;
 - arquivos de relacionamento/casamento usam `relacionamento_id` e `pessoa_id` nulo;
 - usuário comum visualiza arquivos de relacionamento conforme permissão;
 - admin gerencia arquivos via formulário/perfil.
+
+Categoria histórica:
+
+- tipo `HistoricalFileEventCategory` em `src/app/types/index.ts`;
+- campo `ArquivoHistorico.categoria_evento`;
+- coluna `public.arquivos_historicos.categoria_evento`;
+- migration `supabase/migrations/20260522121000_add_historical_file_event_category.sql`;
+- constraint aceita `certidao_nascimento`, `certidao_casamento`, `alistamento_militar`, `imigracao`, `divorcio`, `carreira_profissional`, `mudanca_cidade`, `certidao_obito` e `outro`.
+
+Risco operacional:
+
+- `20260522121000_add_historical_file_event_category.sql` é pré-requisito de deploy para o commit `ce482a2`;
+- se o ambiente remoto ainda não recebeu a migration, insert/update em `arquivos_historicos` pode falhar por ausência da coluna `categoria_evento`;
+- listagens podem continuar funcionando, mas salvar/inserir/atualizar envia payload com `categoria_evento`.
 
 Compatibilidade mantida:
 
@@ -426,6 +451,16 @@ Regras:
 - observações internas aparecem apenas para admin;
 - dados conjugais são preservados em rascunho;
 - modal de relacionamento não deve salvar antes do botão principal do formulário.
+- em `/minha-arvore`, o botão individual **Salvar casamento** foi removido;
+- o botão geral **Salvar meus dados** também processa `marriageForms`;
+- admin atualiza o relacionamento conjugal principal e tenta atualizar o inverso quando existir;
+- usuário não-admin cria solicitação via `relationshipChangeRequestService`;
+- proteção contra solicitação pendente duplicada continua em `findPendingDuplicateRelationshipChangeRequest`;
+- local de casamento inválido não bloqueia os dados pessoais, mas deixa o casamento sem salvar e exibe aviso.
+
+UX de `/minha-arvore`:
+
+- cards da seção **Escopo da visualização** exibem avatar circular com foto ou iniciais.
 
 ---
 
@@ -503,6 +538,11 @@ src/app/pages/Home.tsx
 Comportamento implementado:
 
 - legenda aparece no painel lateral, aba **Legendas**;
+- `TreeLegend` não é apenas informativa: também controla filtros reais/camadas visuais quando recebe callbacks;
+- inclui `visualLineFilters`, `parentChildHighlight` e `siblingHighlight`;
+- `parentChildHighlight` respeita `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
+- `siblingHighlight` respeita `edgeFilters.irmaos`;
+- estado padrão desligado mantém o visual original;
 - botão flutuante duplicado de legenda foi removido;
 - conteúdo da legenda foi simplificado;
 - subtítulo “Cores, linhas, anéis e modos da árvore.” foi removido;
@@ -592,7 +632,7 @@ src/app/components/FamilyTree/FamilyTree.tsx
 src/app/pages/Home.tsx
 ```
 
-Exporta viewport visível da árvore como PNG/PDF/impressão, sem salvar no Storage e sem migration.
+Selecionar área, PNG, PDF e impressão estão concluídos no escopo atual. A exportação usa a viewport visível da `.react-flow`, sem salvar no Storage e sem migration. Exportação da árvore completa fica pós-MVP.
 
 ### Favoritos — 7.8 e 7.9
 
@@ -674,6 +714,10 @@ Regras consolidadas:
 - não criar migration para objeto legado sem consumidor runtime;
 - não remover coluna/view legada sem dump recente, SQL de auditoria e QA visual.
 
+Histórico operacional recente:
+
+- no `supabase db push` citado no histórico do projeto, também foram aplicadas as migrations pendentes `20260519180000_create_site_visual_settings.sql`, `20260520100000_support_admin_managed_user_person_links.sql` e `20260522121000_add_historical_file_event_category.sql`.
+
 Objetos legados/compatibilidade:
 
 - `public.pessoas.arquivos_historicos`: mantida por compatibilidade até validação completa;
@@ -745,7 +789,7 @@ Implementado:
 
 - toggle principal apenas com **Filtros** e **Legendas**;
 - **Informações** saiu da toggle;
-- botão externo de Informações usa `SquareDashedMousePointer`;
+- botão externo de ações/informações usa `Printer` e texto **Ações** no desktop;
 - botão fica ao lado do controle de recolher/expandir;
 - versão desktop e mobile preservadas;
 - zoom da árvore movido para o canto superior direito.
