@@ -453,7 +453,6 @@ export function MinhaArvore() {
   const [relationshipSaving, setRelationshipSaving] = useState(false);
   const [relationshipRemoving, setRelationshipRemoving] = useState<string | null>(null);
   const [marriageForms, setMarriageForms] = useState<MarriageFormState>({});
-  const [marriageSaving, setMarriageSaving] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
 
@@ -1070,9 +1069,27 @@ export function MinhaArvore() {
       }
     }
 
+    const marriageResult = await saveMarriageChanges();
+
     removeMinhaArvoreDraft(getDraftKey(user.id, pessoaBase.id));
     isDirtyRef.current = false;
     setSaving(false);
+
+    if (marriageResult.skipped > 0 || marriageResult.failed > 0) {
+      toast.warning('Dados pessoais salvos, mas revise os dados de casamento destacados.');
+      return;
+    }
+
+    if (marriageResult.saved > 0) {
+      toast.success('Dados pessoais e casamento salvos.');
+      return;
+    }
+
+    if (marriageResult.requested > 0) {
+      toast.success('Dados pessoais salvos e correção de casamento enviada para revisão.');
+      return;
+    }
+
     toast.success('Dados pessoais salvos.');
   };
 
@@ -1365,90 +1382,132 @@ export function MinhaArvore() {
     });
   };
 
-  const handleSaveMarriage = async (spouse: Pessoa) => {
-    if (!pessoaBase) return;
+  const saveMarriageChanges = async () => {
+    if (!pessoaBase) return { attempted: 0, saved: 0, requested: 0, skipped: 0, failed: 0 };
 
-    const details = marriageForms[spouse.id] ?? { data_casamento: '', local_casamento: '' };
-    const normalizedDate = normalizeBirthDate(details.data_casamento);
-    const normalizedLocation = normalizeLocation(details.local_casamento);
-    const locationError = normalizedLocation ? validateLocation(normalizedLocation) : undefined;
+    let attempted = 0;
+    let saved = 0;
+    let requested = 0;
+    let skipped = 0;
+    let failed = 0;
+    let shouldReloadRelationships = false;
 
-    if (locationError) {
-      setMarriageForms((current) => ({
-        ...current,
-        [spouse.id]: { ...details, local_casamento: normalizedLocation, error: locationError },
-      }));
-      toast.error('Revise o local de casamento antes de salvar.');
-      return;
-    }
+    for (const spouse of relationshipGroups.conjuges) {
+      const details = marriageForms[spouse.id] ?? { data_casamento: '', local_casamento: '' };
+      const normalizedDate = normalizeBirthDate(details.data_casamento);
+      const normalizedLocation = normalizeLocation(details.local_casamento);
+      const locationError = normalizedLocation ? validateLocation(normalizedLocation) : undefined;
 
-    const principal = findRelationshipBetween(pessoaBase.id, spouse.id, ['conjuge']);
-    if (!principal) {
-      toast.error('Não foi possível localizar o vínculo de cônjuge.');
-      return;
-    }
+      if (locationError) {
+        skipped += 1;
+        setMarriageForms((current) => ({
+          ...current,
+          [spouse.id]: { ...details, local_casamento: normalizedLocation, error: locationError },
+        }));
+        continue;
+      }
 
-    const inverse = relacionamentos.find((rel) =>
-      rel.id !== principal.id &&
-      rel.tipo_relacionamento === 'conjuge' &&
-      rel.pessoa_origem_id === principal.pessoa_destino_id &&
-      rel.pessoa_destino_id === principal.pessoa_origem_id &&
-      rel.subtipo_relacionamento === principal.subtipo_relacionamento
-    );
+      const principal =
+        relacionamentos.find((rel) =>
+          rel.tipo_relacionamento === 'conjuge' &&
+          rel.pessoa_origem_id === pessoaBase.id &&
+          rel.pessoa_destino_id === spouse.id
+        ) ?? findRelationshipBetween(pessoaBase.id, spouse.id, ['conjuge']);
 
-    setMarriageSaving(spouse.id);
+      if (!principal) {
+        failed += 1;
+        continue;
+      }
 
-    try {
+      const currentDate = normalizeBirthDate(String(principal.data_casamento ?? ''));
+      const currentLocation = normalizeLocation(String(principal.local_casamento ?? ''));
       const payload = {
         data_casamento: normalizedDate,
         local_casamento: normalizedLocation,
       };
 
-      if (!isAdmin) {
-        const submitted = await submitRelationshipChangeRequest(getRelationshipRequestInput('update', principal, {
-          relationshipId: principal.id,
-          changes: payload,
+      if (currentDate === payload.data_casamento && currentLocation === payload.local_casamento) {
+        setMarriageForms((current) => ({
+          ...current,
+          [spouse.id]: {
+            data_casamento: normalizedDate,
+            local_casamento: normalizedLocation,
+            error: undefined,
+          },
         }));
+        continue;
+      }
 
-        if (submitted) {
-          setMarriageForms((current) => ({
-            ...current,
-            [spouse.id]: {
-              data_casamento: String(principal.data_casamento ?? ''),
-              local_casamento: String(principal.local_casamento ?? ''),
-              error: undefined,
-            },
+      attempted += 1;
+
+      try {
+        if (!isAdmin) {
+          const submitted = await submitRelationshipChangeRequest(getRelationshipRequestInput('update', principal, {
+            relationshipId: principal.id,
+            changes: payload,
           }));
+
+          if (submitted) {
+            requested += 1;
+            setMarriageForms((current) => ({
+              ...current,
+              [spouse.id]: {
+                data_casamento: String(principal.data_casamento ?? ''),
+                local_casamento: String(principal.local_casamento ?? ''),
+                error: undefined,
+              },
+            }));
+          }
+          continue;
         }
-        return;
-      }
 
-      const updated = await atualizarRelacionamento(principal.id, payload);
-      if (!updated) {
-        toast.error('Não foi possível salvar o casamento. Verifique permissões do Supabase.');
-        return;
-      }
+        const updated = await atualizarRelacionamento(principal.id, payload);
+        if (!updated) {
+          failed += 1;
+          continue;
+        }
 
-      if (inverse) {
-        await atualizarRelacionamento(inverse.id, payload);
-      }
+        const inverse = relacionamentos.find((rel) =>
+          rel.id !== principal.id &&
+          rel.tipo_relacionamento === 'conjuge' &&
+          rel.pessoa_origem_id === principal.pessoa_destino_id &&
+          rel.pessoa_destino_id === principal.pessoa_origem_id &&
+          rel.subtipo_relacionamento === principal.subtipo_relacionamento
+        );
 
-      setMarriageForms((current) => ({
-        ...current,
-        [spouse.id]: {
-          data_casamento: normalizedDate,
-          local_casamento: normalizedLocation,
-          error: undefined,
-        },
-      }));
-      await reloadFamilyData();
-      toast.success('Dados de casamento salvos.');
-    } catch (error) {
-      console.error('[MinhaArvore] Erro ao salvar casamento:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar os dados de casamento.');
-    } finally {
-      setMarriageSaving(null);
+        if (inverse) {
+          const updatedInverse = await atualizarRelacionamento(inverse.id, payload);
+          if (!updatedInverse) {
+            failed += 1;
+          }
+        }
+
+        saved += 1;
+        shouldReloadRelationships = true;
+        setMarriageForms((current) => ({
+          ...current,
+          [spouse.id]: {
+            data_casamento: normalizedDate,
+            local_casamento: normalizedLocation,
+            error: undefined,
+          },
+        }));
+      } catch (error) {
+        failed += 1;
+        console.error('[MinhaArvore] Erro ao salvar casamento:', error);
+      }
     }
+
+    if (shouldReloadRelationships) {
+      try {
+        await reloadFamilyData();
+      } catch (error) {
+        failed += 1;
+        console.error('[MinhaArvore] Erro ao recarregar relacionamentos após salvar casamento:', error);
+      }
+    }
+
+    return { attempted, saved, requested, skipped, failed };
   };
 
   const handleLogout = async () => {
@@ -1907,17 +1966,6 @@ export function MinhaArvore() {
                                     aria-invalid={Boolean(marriageDetails.error)}
                                   />
                                 </Field>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full"
-                                  onClick={() => handleSaveMarriage(person)}
-                                  disabled={marriageSaving === person.id}
-                                >
-                                  {marriageSaving === person.id
-                                    ? (isAdmin ? 'Salvando...' : 'Enviando...')
-                                    : (isAdmin ? 'Salvar casamento' : 'Solicitar correção')}
-                                </Button>
                               </div>
                             )}
                           </div>
@@ -1972,12 +2020,25 @@ export function MinhaArvore() {
                   <Link
                     key={pessoa.id}
                     to={`/pessoa/${pessoa.id}`}
-                    className="block rounded-xl border border-gray-200 px-4 py-4 hover:bg-gray-50"
+                    className="flex min-w-0 items-center gap-3 rounded-xl border border-gray-200 px-4 py-4 hover:bg-gray-50"
                   >
-                    <p className="font-semibold text-gray-900 text-sm">{pessoa.nome_completo}</p>
-                    {pessoa.local_nascimento && (
-                      <p className="text-xs text-gray-500 mt-1">{pessoa.local_nascimento}</p>
-                    )}
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-sm font-semibold text-blue-700 ring-1 ring-blue-100">
+                      {pessoa.foto_principal_url ? (
+                        <img
+                          src={pessoa.foto_principal_url}
+                          alt={pessoa.nome_completo}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span>{getPessoaInitials(pessoa.nome_completo)}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900">{pessoa.nome_completo}</p>
+                      {pessoa.local_nascimento && (
+                        <p className="mt-1 truncate text-xs text-gray-500">{pessoa.local_nascimento}</p>
+                      )}
+                    </div>
                   </Link>
                 ))}
               </div>

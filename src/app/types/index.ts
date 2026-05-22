@@ -137,6 +137,17 @@ export type ForumReacaoTipo = 'curtir' | 'apoiar' | 'lembrar' | 'celebrar';
 
 export type ForumAlvoTipo = 'topico' | 'resposta' | 'comentario';
 
+export type HistoricalFileEventCategory =
+  | 'certidao_nascimento'
+  | 'certidao_casamento'
+  | 'alistamento_militar'
+  | 'imigracao'
+  | 'divorcio'
+  | 'carreira_profissional'
+  | 'mudanca_cidade'
+  | 'certidao_obito'
+  | 'outro';
+
 export interface ArquivoHistorico {
   id: string;
   pessoa_id?: string | null;
@@ -150,6 +161,7 @@ export interface ArquivoHistorico {
   titulo: string;
   descricao?: string;
   ano?: string;
+  categoria_evento?: HistoricalFileEventCategory | null;
   ordem?: number;
 }
 

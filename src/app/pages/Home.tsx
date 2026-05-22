@@ -121,7 +121,6 @@ import {
   Minus,
   Plus,
   MoreHorizontal,
-  SquareDashedMousePointer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -1314,14 +1313,15 @@ export function Home() {
                   </div>
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 border-gray-500 bg-gray-500 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
+                    size="sm"
+                    className="h-9 shrink-0 border-gray-500 bg-gray-500 px-3 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
                     onClick={() => setActiveSidebarPanel('info')}
-                    title="Informações da árvore"
-                    aria-label="Informações da árvore"
+                    title="Ações da árvore"
+                    aria-label="Ações da árvore"
                     aria-pressed={activeSidebarPanel === 'info'}
                   >
-                    <SquareDashedMousePointer className="h-4 w-4" />
+                    <Printer className="h-4 w-4" />
+                    <span className="ml-2">Ações</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -1362,7 +1362,7 @@ export function Home() {
           {isTreeResolving ? (
             <StateMessage
               title="Carregando árvore"
-              message="Buscando pessoas e relacionamentos no Supabase."
+              message="Buscando pessoas e relacionamentos…"
             />
           ) : loadError ? (
             <StateMessage
@@ -1521,11 +1521,11 @@ export function Home() {
                 size="icon"
                 className="h-9 w-9 shrink-0 border-gray-500 bg-gray-500 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
                 onClick={() => setActiveSidebarPanel('info')}
-                title="Informações da árvore"
-                aria-label="Informações da árvore"
+                title="Ações da árvore"
+                aria-label="Ações da árvore"
                 aria-pressed={activeSidebarPanel === 'info'}
               >
-                <SquareDashedMousePointer className="h-4 w-4" />
+                <Printer className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"

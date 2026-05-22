@@ -3,11 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { ArquivoHistorico } from '../types';
+import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
 import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye } from 'lucide-react';
 import { uploadHistoricalFile } from '../services/storageService';
 
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEventCategory; label: string }> = [
+  { value: 'certidao_nascimento', label: 'Certidão de Nascimento' },
+  { value: 'certidao_casamento', label: 'Certidão de Casamento' },
+  { value: 'alistamento_militar', label: 'Alistamento Militar' },
+  { value: 'imigracao', label: 'Imigração' },
+  { value: 'divorcio', label: 'Divórcio' },
+  { value: 'carreira_profissional', label: 'Carreira Profissional' },
+  { value: 'mudanca_cidade', label: 'Mudança de Cidade' },
+  { value: 'certidao_obito', label: 'Certidão de Óbito' },
+  { value: 'outro', label: 'Outro' },
+];
 
 function sanitizeFileName(value: string) {
   return value
@@ -56,6 +67,29 @@ function openArquivoInNewTab(arquivo: ArquivoHistorico) {
   window.open(arquivo.url, '_blank', 'noopener,noreferrer');
 }
 
+function getHistoricalFileEventCategoryLabel(value: ArquivoHistorico['categoria_evento']) {
+  return HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.find((option) => option.value === value)?.label;
+}
+
+function ArquivoThumbnail({ arquivo }: { arquivo: Pick<ArquivoHistorico, 'tipo' | 'url' | 'titulo'> }) {
+  return arquivo.tipo === 'imagem' ? (
+    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
+      <img
+        src={arquivo.url}
+        alt={arquivo.titulo || 'Arquivo carregado'}
+        className="h-full w-full object-cover"
+      />
+    </div>
+  ) : (
+    <div className="flex h-16 w-16 items-center justify-center rounded bg-red-50">
+      <div className="flex flex-col items-center gap-1">
+        <FileText className="h-7 w-7 text-red-600" />
+        <span className="text-[10px] font-semibold text-red-700">PDF</span>
+      </div>
+    </div>
+  );
+}
+
 interface ArquivosHistoricosProps {
   arquivos: ArquivoHistorico[];
   onChange: (arquivos: ArquivoHistorico[]) => void;
@@ -74,10 +108,20 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
     storage_bucket: '',
     storage_path: '',
     mime_type: '',
+    categoria_evento: '' as HistoricalFileEventCategory | '',
   });
   const [isAddingFile, setIsAddingFile] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [previewFile, setPreviewFile] = useState<ArquivoHistorico | null>(null);
+  const hasUploadedDraftFile = Boolean(novoArquivo.url);
+
+  const resetNovoArquivo = () => {
+    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '', storage_bucket: '', storage_path: '', mime_type: '', categoria_evento: '' });
+  };
+
+  const handleToggleAddFile = () => {
+    setIsAddingFile((current) => !current);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,6 +145,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
         mime_type: file.type || 'application/octet-stream',
         tipo: isImage ? 'imagem' : 'pdf'
       }));
+      setIsAddingFile(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
     } finally {
@@ -127,11 +172,12 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
       relacionamento_id: relacionamentoId ?? null,
       descricao: novoArquivo.descricao || undefined,
       ano: novoArquivo.ano || undefined,
+      categoria_evento: novoArquivo.categoria_evento || null,
       ordem: arquivos.length,
     };
 
     onChange([...arquivos, arquivo]);
-    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '', storage_bucket: '', storage_path: '', mime_type: '' });
+    resetNovoArquivo();
     setIsAddingFile(false);
   };
 
@@ -139,9 +185,9 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
     onChange(arquivos.filter(a => a.id !== id));
   };
 
-  const handleUpdateArquivo = (id: string, field: 'titulo' | 'descricao' | 'ano', value: string) => {
+  const handleUpdateArquivo = (id: string, updates: Partial<ArquivoHistorico>) => {
     onChange(arquivos.map((arquivo) => (
-      arquivo.id === id ? { ...arquivo, [field]: value } : arquivo
+      arquivo.id === id ? { ...arquivo, ...updates } : arquivo
     )));
   };
 
@@ -183,7 +229,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                 variant="outline" 
                 size="sm"
                 className="w-full sm:w-auto"
-                onClick={() => setIsAddingFile(!isAddingFile)}
+                onClick={handleToggleAddFile}
               >
                 <Upload className="h-4 w-4" />
                 Adicionar Arquivo
@@ -192,92 +238,128 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isAddingFile && !readOnly && (
+          {(isAddingFile || hasUploadedDraftFile) && !readOnly && (
             <div className="space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Arquivo (imagem ou PDF) *
-                </label>
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  onChange={handleFileChange}
-                  disabled={isUploadingFile}
-                  className="cursor-pointer"
-                />
-                {novoArquivo.url && (
-                  <p className="mt-1 break-words text-xs text-green-600">
-                    ✓ Arquivo carregado ({novoArquivo.tipo})
-                  </p>
-                )}
-                {isUploadingFile && (
-                  <p className="mt-1 break-words text-xs text-blue-600">
-                    Enviando arquivo para o Storage...
-                  </p>
-                )}
-              </div>
+              {hasUploadedDraftFile && (
+                <div className="flex min-w-0 items-center gap-3 rounded-lg border border-green-100 bg-white p-3">
+                  <ArquivoThumbnail arquivo={{ tipo: novoArquivo.tipo, url: novoArquivo.url, titulo: novoArquivo.titulo }} />
+                  <div className="min-w-0">
+                    <p className="mt-1 break-words text-xs text-green-600">
+                      ✓ Arquivo carregado ({novoArquivo.tipo})
+                    </p>
+                    {!isAddingFile && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Clique em Adicionar Arquivo para preencher os dados e adicionar.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Título *
-                </label>
-                <Input
-                  type="text"
-                  value={novoArquivo.titulo}
-                  onChange={(e) => setNovoArquivo(prev => ({ ...prev, titulo: e.target.value }))}
-                  placeholder="Ex: Certidão de nascimento"
-                />
-              </div>
+              {isAddingFile && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Arquivo (imagem ou PDF) *
+                    </label>
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={handleFileChange}
+                      disabled={isUploadingFile}
+                      className="cursor-pointer"
+                    />
+                    {isUploadingFile && (
+                      <p className="mt-1 break-words text-xs text-blue-600">
+                        Enviando arquivo para o Storage...
+                      </p>
+                    )}
+                  </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Descrição
-                </label>
-                <textarea
-                  value={novoArquivo.descricao}
-                  onChange={(e) => setNovoArquivo(prev => ({ ...prev, descricao: e.target.value }))}
-                  rows={2}
-                  className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  placeholder="Informações adicionais sobre o arquivo..."
-                />
-              </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Título *
+                    </label>
+                    <Input
+                      type="text"
+                      value={novoArquivo.titulo}
+                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, titulo: e.target.value }))}
+                      placeholder="Ex: Certidão de nascimento"
+                    />
+                  </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Ano
-                </label>
-                <Input
-                  type="text"
-                  value={novoArquivo.ano}
-                  onChange={(e) => setNovoArquivo(prev => ({ ...prev, ano: e.target.value }))}
-                  placeholder="Ex: 1950"
-                />
-              </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Descrição
+                    </label>
+                    <textarea
+                      value={novoArquivo.descricao}
+                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, descricao: e.target.value }))}
+                      rows={2}
+                      className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                      placeholder="Informações adicionais sobre o arquivo..."
+                    />
+                  </div>
 
-              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    setIsAddingFile(false);
-                    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '', storage_bucket: '', storage_path: '', mime_type: '' });
-                  }}
-                  disabled={isUploadingFile}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  onClick={handleAddArquivo}
-                  disabled={isUploadingFile}
-                >
-                  Adicionar
-                </Button>
-              </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Ano
+                    </label>
+                    <Input
+                      type="text"
+                      value={novoArquivo.ano}
+                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, ano: e.target.value }))}
+                      placeholder="Ex: 1950"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Categoria histórica
+                    </label>
+                    <select
+                      value={novoArquivo.categoria_evento}
+                      onChange={(e) => setNovoArquivo(prev => ({
+                        ...prev,
+                        categoria_evento: e.target.value as HistoricalFileEventCategory | '',
+                      }))}
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    >
+                      <option value="">Sem categoria</option>
+                      {HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={() => {
+                        setIsAddingFile(false);
+                        resetNovoArquivo();
+                      }}
+                      disabled={isUploadingFile}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={handleAddArquivo}
+                      disabled={isUploadingFile}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -294,22 +376,7 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <div className="shrink-0">
-                      {arquivo.tipo === 'imagem' ? (
-                        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
-                          <img 
-                            src={arquivo.url} 
-                            alt={arquivo.titulo}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded bg-red-50">
-                          <div className="flex flex-col items-center gap-1">
-                            <FileText className="h-7 w-7 text-red-600" />
-                            <span className="text-[10px] font-semibold text-red-700">PDF</span>
-                          </div>
-                        </div>
-                      )}
+                      <ArquivoThumbnail arquivo={arquivo} />
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -321,6 +388,11 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                           {arquivo.ano && (
                             <p className="mt-1 break-words text-xs text-gray-500">{arquivo.ano}</p>
                           )}
+                          {arquivo.categoria_evento && (
+                            <p className="mt-1 break-words text-xs font-medium text-gray-600">
+                              {getHistoricalFileEventCategoryLabel(arquivo.categoria_evento)}
+                            </p>
+                          )}
                           {arquivo.descricao && (
                             <p className="mt-1 line-clamp-2 break-words text-xs text-gray-500">
                               {arquivo.descricao}
@@ -331,19 +403,36 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
                         <div className="space-y-2">
                           <Input
                             value={arquivo.titulo}
-                            onChange={(event) => handleUpdateArquivo(arquivo.id, 'titulo', event.target.value)}
+                            onChange={(event) => handleUpdateArquivo(arquivo.id, { titulo: event.target.value })}
                             placeholder="Título"
                             className="h-8 bg-white text-sm"
                           />
                           <Input
                             value={arquivo.ano ?? ''}
-                            onChange={(event) => handleUpdateArquivo(arquivo.id, 'ano', event.target.value)}
+                            onChange={(event) => handleUpdateArquivo(arquivo.id, { ano: event.target.value })}
                             placeholder="Ano"
                             className="h-8 bg-white text-sm"
                           />
+                          <select
+                            value={arquivo.categoria_evento ?? ''}
+                            onChange={(event) => handleUpdateArquivo(arquivo.id, {
+                              categoria_evento: event.target.value
+                                ? event.target.value as HistoricalFileEventCategory
+                                : null,
+                            })}
+                            className="flex h-8 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
+                            aria-label="Categoria histórica"
+                          >
+                            <option value="">Sem categoria</option>
+                            {HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
                           <textarea
                             value={arquivo.descricao ?? ''}
-                            onChange={(event) => handleUpdateArquivo(arquivo.id, 'descricao', event.target.value)}
+                            onChange={(event) => handleUpdateArquivo(arquivo.id, { descricao: event.target.value })}
                             rows={2}
                             className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                             placeholder="Descrição"

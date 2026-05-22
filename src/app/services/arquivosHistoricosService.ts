@@ -44,6 +44,7 @@ function toArquivoHistorico(row: any): ArquivoHistorico {
     titulo: row.titulo,
     descricao: row.descricao ?? undefined,
     ano: row.ano ?? undefined,
+    categoria_evento: row.categoria_evento ?? null,
     ordem: row.ordem ?? 0,
   };
 }
@@ -67,6 +68,7 @@ function hasArquivoChanged(current: ArquivoHistorico, next: ArquivoHistorico, ne
     current.titulo !== next.titulo ||
     normalizeOptional(current.descricao) !== normalizeOptional(next.descricao) ||
     normalizeOptional(current.ano) !== normalizeOptional(next.ano) ||
+    normalizeOptional(current.categoria_evento) !== normalizeOptional(next.categoria_evento) ||
     (current.ordem ?? 0) !== nextOrder
   );
 }
@@ -80,6 +82,7 @@ type NovoArquivoHistoricoInput = {
   titulo: string;
   descricao?: string | null;
   ano?: string | null;
+  categoria_evento?: ArquivoHistorico['categoria_evento'];
   ordem?: number;
 };
 
@@ -185,6 +188,7 @@ async function salvarArquivosHistoricosPorOwner(
       titulo: arquivo.titulo,
       descricao: normalizeOptional(arquivo.descricao),
       ano: normalizeOptional(arquivo.ano),
+      categoria_evento: normalizeOptional(arquivo.categoria_evento),
       ordem: arquivo.ordem ?? index,
     };
 
@@ -214,6 +218,7 @@ async function salvarArquivosHistoricosPorOwner(
           file_type: arquivo.tipo,
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
+          categoria_evento: payload.categoria_evento,
           order: payload.ordem,
         },
       });
@@ -238,6 +243,7 @@ async function salvarArquivosHistoricosPorOwner(
           file_type: arquivo.tipo,
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
+          categoria_evento: payload.categoria_evento,
           order: payload.ordem,
         },
       });
@@ -304,6 +310,7 @@ export async function adicionarArquivoHistoricoAoRelacionamento(
     titulo: input.titulo,
     descricao: input.descricao ?? undefined,
     ano: input.ano ?? undefined,
+    categoria_evento: input.categoria_evento ?? null,
     ordem: input.ordem ?? arquivosExistentes.length,
   };
   const arquivos = await salvarArquivosHistoricosPorOwner(
