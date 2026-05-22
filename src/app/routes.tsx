@@ -9,6 +9,7 @@ const PersonProfile = React.lazy(() => import('./pages/PersonProfile').then((mod
 const CalendarioFamiliar = React.lazy(() => import('./pages/CalendarioFamiliar').then((module) => ({ default: module.CalendarioFamiliar })));
 const MeusFavoritos = React.lazy(() => import('./pages/MeusFavoritos').then((module) => ({ default: module.MeusFavoritos })));
 const Notificacoes = React.lazy(() => import('./pages/Notificacoes').then((module) => ({ default: module.Notificacoes })));
+const AjustarNotificacoes = React.lazy(() => import('./pages/AjustarNotificacoes').then((module) => ({ default: module.AjustarNotificacoes })));
 const Entrar = React.lazy(() => import('./pages/Entrar').then((module) => ({ default: module.Entrar })));
 const Privacidade = React.lazy(() => import('./pages/Privacidade').then((module) => ({ default: module.Privacidade })));
 const Termos = React.lazy(() => import('./pages/Termos').then((module) => ({ default: module.Termos })));
@@ -102,6 +103,10 @@ export const router = createBrowserRouter([
   {
     path: '/notificacoes',
     element: lazyRoute(<MemberRoute><Notificacoes /></MemberRoute>),
+  },
+  {
+    path: '/ajustar-notificacoes',
+    element: lazyRoute(<MemberRoute><AjustarNotificacoes /></MemberRoute>),
   },
   {
     path: '/forum',
