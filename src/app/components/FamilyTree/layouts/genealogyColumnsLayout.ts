@@ -497,7 +497,8 @@ function addGenealogySpouseEdge(
   targetPersonId: string,
   relationshipIndex: RelationshipIndex,
   peopleById: Map<string, Pessoa>,
-  onMarriageClick?: (details: MarriageNodeDetails) => void
+  onMarriageClick?: (details: MarriageNodeDetails) => void,
+  spouseHighlight = false
 ) {
   const pairKey = getSpousePairKey(sourcePersonId, targetPersonId);
   const relationship = relationshipIndex.spouseRelationshipByPairKey.get(pairKey);
@@ -517,9 +518,9 @@ function addGenealogySpouseEdge(
     type: 'genealogySpouseEdge',
     animated: false,
     style: {
-      stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
-      strokeWidth: DIRECT_FAMILY_TOKENS.SPOUSE_EDGE_STROKE_WIDTH,
-      opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
+      stroke: spouseHighlight ? FAMILY_TREE_COLORS.EDGE_SPOUSE : DIRECT_FAMILY_TOKENS.EDGE_STROKE,
+      strokeWidth: spouseHighlight ? 2.25 : DIRECT_FAMILY_TOKENS.SPOUSE_EDGE_STROKE_WIDTH,
+      opacity: spouseHighlight ? 0.9 : DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
     },
     data: {
       marriageStatus: getGenealogyMarriageStatus(relationship, person1, person2),
@@ -589,6 +590,7 @@ function appendPlacementNodes(
   nodes: Node[],
   edges: Edge[],
   onMarriageClick?: (details: MarriageNodeDetails) => void,
+  spouseHighlight = false,
   positionedPeople?: Map<string, PositionedPerson>
 ) {
   let currentY = startY;
@@ -604,7 +606,15 @@ function appendPlacementNodes(
       currentY += CARD_HEIGHT + gap;
 
       if (areSpouses(previousPlacement?.pessoa.id, pessoa.id, relationshipIndex)) {
-        addGenealogySpouseEdge(edges, previousPlacement.pessoa.id, pessoa.id, relationshipIndex, peopleById, onMarriageClick);
+        addGenealogySpouseEdge(
+          edges,
+          previousPlacement.pessoa.id,
+          pessoa.id,
+          relationshipIndex,
+          peopleById,
+          onMarriageClick,
+          spouseHighlight
+        );
       }
     }
 
@@ -1115,6 +1125,7 @@ function layoutAdjacentGenerationFamilyUnits({
   familyConnectorDrafts,
   positionParents,
   onMarriageClick,
+  spouseHighlight,
 }: {
   parentGroup: GenerationGroup;
   childGroup?: GenerationGroup;
@@ -1131,6 +1142,7 @@ function layoutAdjacentGenerationFamilyUnits({
   familyConnectorDrafts: GenealogyFamilyConnectorDraft[];
   positionParents: boolean;
   onMarriageClick?: (details: MarriageNodeDetails) => void;
+  spouseHighlight?: boolean;
 }) {
   const visitedChildIds = new Set<string>();
   const units = buildAdjacentGenerationParentUnits(
@@ -1163,6 +1175,7 @@ function layoutAdjacentGenerationFamilyUnits({
         nodes,
         edges,
         onMarriageClick,
+        spouseHighlight,
         positionedPeople
       );
     }
@@ -1200,6 +1213,7 @@ function layoutAdjacentGenerationFamilyUnits({
         nodes,
         edges,
         onMarriageClick,
+        spouseHighlight,
         positionedPeople
       );
     }
@@ -1244,6 +1258,7 @@ function layoutAdjacentGenerationFamilyUnits({
     nodes,
     edges,
     onMarriageClick,
+    spouseHighlight,
     positionedPeople
   );
 }
@@ -1257,6 +1272,8 @@ export function genealogyColumnsLayout(
     ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
     : true;
   const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
+  const spouseEdgesVisible = options.edgeFilters ? options.edgeFilters.conjugal : true;
+  const spouseHighlight = options.visualLineFilters?.spouseHighlight === true && spouseEdgesVisible;
   const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
   const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
   const onMarriageClick = options.onMarriageClick;
@@ -1314,6 +1331,7 @@ export function genealogyColumnsLayout(
         familyConnectorDrafts,
         positionParents: !hasPositionedGroupPeople,
         onMarriageClick,
+        spouseHighlight,
       });
 
       return;
@@ -1334,6 +1352,7 @@ export function genealogyColumnsLayout(
       nodes,
       edges,
       onMarriageClick,
+      spouseHighlight,
       positionedPeople
     );
   });

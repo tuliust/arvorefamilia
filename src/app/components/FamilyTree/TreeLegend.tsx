@@ -90,6 +90,12 @@ const visualLineItems: Array<{
   sample: React.ReactNode;
 }> = [
   {
+    key: 'spouseHighlight',
+    label: 'Cônjuges',
+    fullLabel: 'Cônjuges',
+    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SPOUSE} />,
+  },
+  {
     key: 'parentChildHighlight',
     label: 'Pais/Filhos',
     fullLabel: 'Pais/Filhos',

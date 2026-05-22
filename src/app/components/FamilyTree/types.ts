@@ -9,6 +9,7 @@ export interface EdgeFilters {
 }
 
 export type VisualLineFilterKey =
+  | 'spouseHighlight'
   | 'parentChildHighlight'
   | 'siblingHighlight';
 
@@ -168,6 +169,7 @@ export const DEFAULT_EDGE_FILTERS: EdgeFilters = {
 };
 
 export const DEFAULT_VISUAL_LINE_FILTERS: VisualLineFilters = {
+  spouseHighlight: false,
   parentChildHighlight: false,
   siblingHighlight: false,
 };

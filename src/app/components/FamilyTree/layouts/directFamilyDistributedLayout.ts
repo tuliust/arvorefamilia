@@ -153,6 +153,12 @@ const DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE = {
   opacity: 0.86,
   strokeDasharray: '5,5',
 };
+const DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE = {
+  stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
+  strokeWidth: 2.25,
+  opacity: 0.9,
+  strokeDasharray: 'none',
+};
 const ANCESTOR_SPOUSE_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: DIRECT_FAMILY_TOKENS.SPOUSE_EDGE_STROKE_WIDTH,
@@ -713,6 +719,7 @@ function addDirectStructuralEdge(
     targetHandle?: string;
     elbowY?: number;
     elbowX?: number;
+    style?: Edge['style'];
   } = {}
 ) {
   addEdge({
@@ -723,7 +730,7 @@ function addDirectStructuralEdge(
     targetHandle: options.targetHandle || 'left',
     type: 'childEdge',
     selectable: false,
-    style: DIRECT_STRUCTURAL_EDGE_STYLE,
+    style: options.style || DIRECT_STRUCTURAL_EDGE_STYLE,
     data: {
       kind,
       elbowY: options.elbowY,
@@ -826,7 +833,12 @@ function findPositionedNode(nodes: Node[], id: string) {
   return nodes.find((node) => node.id === id);
 }
 
-function addAncestorSpouseEdge(addEdge: (edge: Edge) => void, leftId: string | undefined, rightId: string | undefined) {
+function addAncestorSpouseEdge(
+  addEdge: (edge: Edge) => void,
+  leftId: string | undefined,
+  rightId: string | undefined,
+  spouseHighlight = false
+) {
   if (!leftId || !rightId || leftId === rightId) return;
 
   addEdge({
@@ -837,7 +849,7 @@ function addAncestorSpouseEdge(addEdge: (edge: Edge) => void, leftId: string | u
     targetHandle: 'spouse-left',
     type: 'spouseEdge',
     selectable: false,
-    style: ANCESTOR_SPOUSE_EDGE_STYLE,
+    style: spouseHighlight ? DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE : ANCESTOR_SPOUSE_EDGE_STYLE,
     data: {
       kind: 'directHorizontal',
       forceHorizontal: true,
@@ -850,7 +862,8 @@ function addAncestorSpouseEdges(
   addEdge: (edge: Edge) => void,
   ids: string[],
   positionedNodes: Node[],
-  index: RelationshipIndex
+  index: RelationshipIndex,
+  spouseHighlight = false
 ) {
   const groupIds = new Set(ids);
   const addedPairs = new Set<string>();
@@ -869,7 +882,7 @@ function addAncestorSpouseEdges(
 
         const leftId = personNode.position.x <= spouseNode.position.x ? personId : spouseId;
         const rightId = leftId === personId ? spouseId : personId;
-        addAncestorSpouseEdge(addEdge, leftId, rightId);
+        addAncestorSpouseEdge(addEdge, leftId, rightId, spouseHighlight);
       });
   });
 }
@@ -972,6 +985,8 @@ export function directFamilyDistributedLayout(
     ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
     : true;
   const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
+  const spouseEdgesVisible = options.edgeFilters ? options.edgeFilters.conjugal : true;
+  const spouseHighlight = options.visualLineFilters?.spouseHighlight === true && spouseEdgesVisible;
   const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
   const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
   const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
@@ -1256,6 +1271,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: lowerConnectionElbowY,
+        ...(spouseHighlight ? { style: DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE } : {}),
       }
     );
   }
@@ -1361,12 +1377,12 @@ export function directFamilyDistributedLayout(
     }
   }
 
-  addAncestorSpouseEdges(addEdge, sides.paternal.greatGreatGrandparents, positionedNodes, index);
-  addAncestorSpouseEdges(addEdge, sides.maternal.greatGreatGrandparents, positionedNodes, index);
-  addAncestorSpouseEdges(addEdge, sides.paternal.greatGrandparents, positionedNodes, index);
-  addAncestorSpouseEdges(addEdge, sides.maternal.greatGrandparents, positionedNodes, index);
-  addAncestorSpouseEdges(addEdge, sides.paternal.grandparents, positionedNodes, index);
-  addAncestorSpouseEdges(addEdge, sides.maternal.grandparents, positionedNodes, index);
+  addAncestorSpouseEdges(addEdge, sides.paternal.greatGreatGrandparents, positionedNodes, index, spouseHighlight);
+  addAncestorSpouseEdges(addEdge, sides.maternal.greatGreatGrandparents, positionedNodes, index, spouseHighlight);
+  addAncestorSpouseEdges(addEdge, sides.paternal.greatGrandparents, positionedNodes, index, spouseHighlight);
+  addAncestorSpouseEdges(addEdge, sides.maternal.greatGrandparents, positionedNodes, index, spouseHighlight);
+  addAncestorSpouseEdges(addEdge, sides.paternal.grandparents, positionedNodes, index, spouseHighlight);
+  addAncestorSpouseEdges(addEdge, sides.maternal.grandparents, positionedNodes, index, spouseHighlight);
 
   return {
     nodes: positionedNodes,
