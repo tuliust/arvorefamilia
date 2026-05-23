@@ -115,6 +115,7 @@ const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
 const TREE_DEBUG_BOUNDS_STORAGE_KEY = 'treeDebugBounds';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
+const TREE_ZOOM_OUT_RESTORE_MULTIPLIER = 1.25;
 const TREE_MOBILE_DIRECTIONAL_PAN_RATIO = 0.65;
 
 type FlowBounds = TreeLayoutBounds;
@@ -1116,9 +1117,20 @@ function FamilyTreeComponent({
     const viewport = instance.getViewport();
     if (viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON) return;
 
+    const shouldRestoreInitialViewport =
+      directFamilyViewport &&
+      viewport.zoom <= activeMinZoom * TREE_ZOOM_OUT_RESTORE_MULTIPLIER + TREE_VIEWPORT_ZOOM_EPSILON;
+
+    if (shouldRestoreInitialViewport) {
+      instance.setViewport(directFamilyViewport, { duration: 180 });
+      setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
+      setHasUserInteractedWithViewport(false);
+      return;
+    }
+
     setHasUserInteractedWithViewport(true);
     instance.zoomOut({ duration: 160 });
-  }, [activeMinZoom]);
+  }, [activeMinZoom, directFamilyViewport]);
 
   const handleDirectionalPan = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
     const instance = reactFlowRef.current;
