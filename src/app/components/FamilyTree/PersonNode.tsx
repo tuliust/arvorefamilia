@@ -14,6 +14,7 @@ import {
 } from './directFamilyColors';
 import {
   extractYear,
+  getPersonCardDetailLines,
   getPersonCardSecondaryText,
 } from './utils/personCardText';
 import {
@@ -196,6 +197,43 @@ function getAgeLabel(value?: string | number | null) {
   return birthDate.hasFullDate ? `${age} anos` : `aprox. ${age} anos`;
 }
 
+function PetMarker({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      className={[
+        'absolute rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-sm',
+        compact ? '-bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center' : 'bottom-0 right-0 flex h-6 w-6 items-center justify-center',
+      ].join(' ')}
+      title="Pet"
+      aria-label="Pet"
+    >
+      <Dog className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+    </span>
+  );
+}
+
+function PersonDetailLines({
+  lines,
+  className = '',
+  style,
+}: {
+  lines: string[];
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  if (lines.length === 0) return null;
+
+  return (
+    <div className={className} style={style} title={lines.join('\n')}>
+      {lines.slice(0, 2).map((line) => (
+        <p key={line} className="overflow-hidden text-ellipsis whitespace-nowrap">
+          {line}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   const {
     pessoa,
@@ -269,6 +307,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   };
 
   const secondaryText = getPersonCardSecondaryText(pessoa);
+  const detailLines = getPersonCardDetailLines(pessoa);
 
   const avatarContent = (avatarClassName: string, iconClassName: string) => {
     if (pessoa.foto_principal_url) {
@@ -342,9 +381,15 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const cardWidth = layoutWidth ?? baseCardWidth;
     const cardHeight = layoutHeight ?? baseCardHeight;
     const cardScale = Math.min(cardWidth / baseCardWidth, cardHeight / baseCardHeight);
-    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.06) : 1;
-    const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale;
+    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.04) : 1;
+    const nonCentralAvatarScale = isCentralDirectNode ? 1 : 1.08;
+    const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale * nonCentralAvatarScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
+    const directDetailLines = detailLines.length > 0
+      ? detailLines
+      : directSecondaryText
+        ? [directSecondaryText]
+        : [];
     const centralDetails = [
       getAgeLabel(pessoa.data_nascimento),
       pessoa.local_nascimento
@@ -362,7 +407,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             'cursor-pointer overflow-hidden rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
             isCentralDirectNode
               ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
-              : 'flex items-center gap-3.5 px-4 py-2.5',
+              : 'flex items-center gap-3 px-3.5 py-2',
             isSelected ? 'ring-2 ring-blue-300' : '',
           ].join(' ')}
           onClick={handleClick}
@@ -392,7 +437,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           ) : (
             <div
               className={[
-                'flex shrink-0 items-center justify-center rounded-full',
+                'relative flex shrink-0 items-center justify-center rounded-full',
                 isCentralDirectNode ? 'bg-gray-100' : 'bg-white/90',
               ].join(' ')}
               style={{ width: avatarSize, height: avatarSize }}
@@ -401,6 +446,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 'h-full w-full',
                 isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-7 w-7 text-slate-700'
               )}
+              {!isCentralDirectNode && isPet && <PetMarker compact />}
             </div>
           )}
 
@@ -426,17 +472,15 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                   ))}
                 </div>
               )
-            ) : directSecondaryText && (
-              <p
+            ) : (
+              <PersonDetailLines
+                lines={directDetailLines}
                 className={[
-                  'overflow-hidden whitespace-nowrap leading-tight',
-                  isMobile ? 'mt-1 text-[16px]' : 'mt-1 text-[14px]',
+                  'mt-1.5 space-y-0.5 overflow-hidden font-medium leading-tight',
+                  isMobile ? 'text-[14px]' : 'text-[12.5px]',
                 ].join(' ')}
                 style={{ color: style.muted }}
-                title={directSecondaryText}
-              >
-                {directSecondaryText}
-              </p>
+              />
             )}
           </div>
         </div>
@@ -472,7 +516,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <div className="relative" ref={menuRef}>
       <div
-        className={`cursor-pointer overflow-hidden rounded-lg border-[3px] px-4 py-3 shadow-md transition-all hover:shadow-lg ${
+        className={`cursor-pointer overflow-hidden rounded-lg border-[3px] px-3.5 py-3 shadow-md transition-all hover:shadow-lg ${
           isSelected ? 'ring-2 ring-blue-300' : ''
         }`}
         onClick={handleClick}
@@ -490,9 +534,9 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       >
         <PersonHandles />
 
-        <div className={`flex items-start ${isMobile ? 'gap-4' : 'gap-3.5'}`}>
+        <div className={`flex items-center ${isMobile ? 'gap-4' : 'gap-3.5'}`}>
           <div
-            className={`flex ${isMobile ? 'h-[58px] w-[58px]' : 'h-14 w-14'} flex-shrink-0 items-center justify-center rounded-full ${
+            className={`relative flex ${isMobile ? 'h-[66px] w-[66px]' : 'h-16 w-16'} flex-shrink-0 items-center justify-center rounded-full ${
               isPet ? 'bg-amber-200' : isFalecido ? 'bg-gray-300' : 'bg-blue-200'
             }`}
           >
@@ -500,19 +544,20 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <img
                 src={pessoa.foto_principal_url}
                 alt={pessoa.nome_completo}
-                className={`${isMobile ? 'h-[58px] w-[58px]' : 'h-14 w-14'} rounded-full object-cover`}
+                className={`${isMobile ? 'h-[66px] w-[66px]' : 'h-16 w-16'} rounded-full object-cover`}
               />
             ) : isPet ? (
-              <Dog className={`${isMobile ? 'h-8 w-8' : 'h-7 w-7'} text-amber-700`} />
+              <Dog className={`${isMobile ? 'h-9 w-9' : 'h-8 w-8'} text-amber-700`} />
             ) : (
-              <User className={`${isMobile ? 'h-8 w-8' : 'h-7 w-7'} text-blue-700`} />
+              <User className={`${isMobile ? 'h-9 w-9' : 'h-8 w-8'} text-blue-700`} />
             )}
+            {isPet && <PetMarker compact />}
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3
-                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[17px]' : 'text-base'} font-semibold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
+                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[18px]' : 'text-[17px]'} font-bold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
                 title={pessoa.nome_completo}
               >
                 {pessoa.nome_completo}
@@ -524,23 +569,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               )}
             </div>
 
-            {secondaryText && (
-              <p className={`mt-1 overflow-hidden whitespace-nowrap ${isMobile ? 'text-[15px]' : 'text-sm'} text-gray-600`} title={secondaryText}>
-                {secondaryText}
-              </p>
-            )}
-
-            {isPet && (
-              <span className="mt-1 inline-block rounded-full bg-amber-200 px-2 py-0.5 text-xs text-amber-800">
-                🐾 Pet
-              </span>
-            )}
-
-            {isFalecido && !isPet && (
-              <span className="mt-1 inline-block rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                🕊️ In Memoriam
-              </span>
-            )}
+            <PersonDetailLines
+              lines={detailLines}
+              className={`mt-1.5 space-y-0.5 overflow-hidden font-medium leading-tight ${isMobile ? 'text-[14px]' : 'text-[13px]'} text-gray-600`}
+            />
           </div>
         </div>
       </div>

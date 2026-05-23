@@ -38,23 +38,37 @@ export function normalizeBirthPlace(value?: string | null) {
   return normalized || undefined;
 }
 
-export function getPersonCardSecondaryText(pessoa: Pick<Pessoa, 'falecido' | 'data_nascimento' | 'data_falecimento' | 'local_falecimento' | 'local_nascimento'>) {
-  const birthYear = extractYear(pessoa.data_nascimento);
-  const deathYear = extractYear(pessoa.data_falecimento);
+function joinDateAndPlace(date?: string, place?: string) {
+  if (date && place) return `${date} - ${place}`;
+  return date || place;
+}
 
-  if (isPersonDeceased(pessoa)) {
-    if (birthYear && deathYear) return `⭐ ${birthYear} - ✝ ${deathYear}`;
-    if (deathYear) return `⭐ ✝ ${deathYear}`;
-    if (birthYear) return `⭐ ${birthYear} - ✝`;
-    return '✝ Falecido(a)';
+export function getPersonCardDetailLines(
+  pessoa: Pick<Pessoa, 'falecido' | 'data_nascimento' | 'data_falecimento' | 'local_falecimento' | 'local_nascimento'>
+) {
+  const birthText = joinDateAndPlace(
+    formatDateBR(pessoa.data_nascimento),
+    normalizeBirthPlace(pessoa.local_nascimento)
+  );
+  const deathText = joinDateAndPlace(
+    formatDateBR(pessoa.data_falecimento),
+    normalizeBirthPlace(pessoa.local_falecimento)
+  );
+  const lines: string[] = [];
+
+  if (birthText) {
+    lines.push(`⭐ ${birthText}`);
   }
 
-  const birthPlace = normalizeBirthPlace(pessoa.local_nascimento);
-  const birthDate = formatDateBR(pessoa.data_nascimento);
+  if (deathText) {
+    lines.push(`✝ ${deathText}`);
+  } else if (isPersonDeceased(pessoa)) {
+    lines.push('✝ Falecido(a)');
+  }
 
-  if (birthPlace && birthDate) return `⭐ ${birthPlace}, ${birthDate}`;
-  if (birthPlace) return `⭐ ${birthPlace}`;
-  if (birthDate) return `⭐ ${birthDate}`;
+  return lines;
+}
 
-  return undefined;
+export function getPersonCardSecondaryText(pessoa: Pick<Pessoa, 'falecido' | 'data_nascimento' | 'data_falecimento' | 'local_falecimento' | 'local_nascimento'>) {
+  return getPersonCardDetailLines(pessoa).join(' · ') || undefined;
 }
