@@ -37,13 +37,13 @@ interface TreeLegendProps {
 const marriageStatusItems = [
   {
     label: 'União ativa',
-    shortLabel: 'Em relacionamento',
+    shortLabel: 'Casados',
     background: '#FFFFFF',
     border: '#D1D5DB',
   },
   {
     label: 'Separado/divorciado',
-    shortLabel: 'Separado',
+    shortLabel: 'Divórcio',
     background: '#FEF3C7',
     border: '#F59E0B',
   },
@@ -55,7 +55,7 @@ const marriageStatusItems = [
   },
   {
     label: 'Status desconhecido',
-    shortLabel: 'Desconhecido',
+    shortLabel: 'União Estável',
     background: '#FFFFFF',
     border: '#D1D5DB',
   },
@@ -326,7 +326,7 @@ export function TreeLegend({
           </div>
         </LegendGroup>
 
-        <LegendGroup title="Anel de casamento" compact>
+        <LegendGroup title="ALIANÇA" compact>
           <div className="grid grid-cols-2 gap-1.5">
             {marriageStatusItems.map((item) => (
               <LegendItem
@@ -438,7 +438,7 @@ export function TreeLegend({
         </div>
       </LegendGroup>
 
-      <LegendGroup title="Anel de casamento">
+      <LegendGroup title="ALIANÇA">
         <div className="space-y-2">
           {marriageStatusItems.map((item) => (
             <LegendItem
