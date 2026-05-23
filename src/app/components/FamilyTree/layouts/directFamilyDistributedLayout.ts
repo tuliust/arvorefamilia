@@ -127,14 +127,18 @@ const SIDE_LANE_WIDTH = Math.min(
   PATERNAL_LANE_RIGHT - PATERNAL_LANE_LEFT,
   MATERNAL_LANE_RIGHT - MATERNAL_LANE_LEFT
 );
-const SIDE_GROUP_TARGET_COLUMNS = 3;
-const SIDE_GROUP_TARGET_WIDTH =
-  SIDE_GROUP_TARGET_COLUMNS * CARD_WIDTH +
-  Math.max(0, SIDE_GROUP_TARGET_COLUMNS - 1) * COLUMN_GAP +
+const SIDE_GROUP_COLUMNS = 3;
+const SIDE_GROUP_WIDTH =
+  SIDE_GROUP_COLUMNS * CARD_WIDTH +
+  Math.max(0, SIDE_GROUP_COLUMNS - 1) * COLUMN_GAP +
   GROUP_BOX_PADDING_X * 2;
 
-const PATERNAL_GROUP_LANE_WIDTH = Math.min(SIDE_GROUP_TARGET_WIDTH, SIDE_LANE_WIDTH);
-const MATERNAL_GROUP_LANE_WIDTH = Math.min(SIDE_GROUP_TARGET_WIDTH, SIDE_LANE_WIDTH);
+const PATERNAL_GROUP_LEFT_X = FRAME_LEFT;
+const PATERNAL_GROUP_RIGHT_X = PATERNAL_GROUP_LEFT_X + SIDE_GROUP_WIDTH;
+const MATERNAL_GROUP_RIGHT_X = FRAME_RIGHT;
+const MATERNAL_GROUP_LEFT_X = MATERNAL_GROUP_RIGHT_X - SIDE_GROUP_WIDTH;
+const PATERNAL_GROUP_LANE_WIDTH = PATERNAL_GROUP_RIGHT_X - PATERNAL_GROUP_LEFT_X;
+const MATERNAL_GROUP_LANE_WIDTH = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LEFT_X;
 const PATERNAL_CENTER_X = FRAME_LEFT + (CENTRAL_LEFT_BOUNDARY - FRAME_LEFT) / 2;
 const MATERNAL_CENTER_X = CENTRAL_RIGHT_BOUNDARY + (FRAME_RIGHT - CENTRAL_RIGHT_BOUNDARY) / 2;
 const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 80;
@@ -573,7 +577,24 @@ function compactColumns(ids: string[], label: string, maxColumns: number, laneWi
   return minColumns;
 }
 
+function sideGroupColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex) {
+  const visibleCount = Math.max(1, ids.length);
+  const units = buildGroupLayoutUnits(ids, index);
+  const minColumns = Math.max(1, ...units.map(unitCardCount));
+  const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount, SIDE_GROUP_COLUMNS);
+
+  for (let columns = cappedMax; columns >= minColumns; columns -= 1) {
+    if (groupWidthForColumns(label, columns) <= laneWidth) return columns;
+  }
+
+  return minColumns;
+}
+
 function resolveGroupColumns(spec: GroupSpec, ids = spec.ids, index?: RelationshipIndex) {
+  if (spec.side) {
+    return sideGroupColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_GROUP_WIDTH, index);
+  }
+
   return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH, index);
 }
 
@@ -1017,19 +1038,19 @@ export function directFamilyDistributedLayout(
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [
-    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: PATERNAL_LANE_RIGHT } },
-    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: PATERNAL_LANE_RIGHT } },
-    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: PATERNAL_LANE_RIGHT } },
-    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: PATERNAL_LANE_RIGHT } },
-    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: PATERNAL_LANE_RIGHT } },
+    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
+    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
+    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
+    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
+    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
   ];
 
   const maternalGroups: GroupSpec[] = [
-    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: MATERNAL_LANE_LEFT } },
-    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: MATERNAL_LANE_LEFT } },
-    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: MATERNAL_LANE_LEFT } },
-    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: MATERNAL_LANE_LEFT } },
-    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: MATERNAL_LANE_LEFT } },
+    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
+    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
+    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
+    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
+    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
   ];
 
   placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById, index);
