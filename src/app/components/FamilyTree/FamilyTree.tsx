@@ -52,6 +52,7 @@ import { DIRECT_FAMILY_TOKENS } from './visualTokens';
 interface FamilyTreeProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
+  visiblePersonIds?: Set<string>;
   onPersonClick?: (pessoa: Pessoa) => void;
   onPersonView?: (pessoa: Pessoa) => void;
   onPersonEdit?: (pessoa: Pessoa) => void;
@@ -687,6 +688,7 @@ function getTreeTitleFirstName(value?: string | null) {
 function FamilyTreeComponent({
   pessoas,
   relacionamentos,
+  visiblePersonIds,
   onPersonClick,
   onPersonView,
   onPersonEdit,
@@ -751,11 +753,12 @@ function FamilyTreeComponent({
       genealogyFilters,
       visualLineFilters: genealogyVisualLineFilters,
       directVisualLineFilters,
+      visiblePersonIds: visiblePersonIds ? Array.from(visiblePersonIds).sort() : undefined,
       centralPersonId: effectiveCentralPersonId,
       isMobile,
       viewMode,
     });
-  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, genealogyVisualLineFilters, directVisualLineFilters, effectiveCentralPersonId, isMobile, viewMode]);
+  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, genealogyVisualLineFilters, directVisualLineFilters, visiblePersonIds, effectiveCentralPersonId, isMobile, viewMode]);
 
   const rawLayoutResult = useMemo(() => {
     const graph = buildTreeGraph({
@@ -779,7 +782,9 @@ function FamilyTreeComponent({
             centralPersonId: effectiveCentralPersonId,
           })
         );
-    const layoutGraph = viewMode === 'visao-completa' ? graph : personalScopeGraph;
+    const layoutGraph = visiblePersonIds
+      ? filterGraphToPersonalScope(personalScopeGraph, visiblePersonIds)
+      : personalScopeGraph;
 
     if (isGenealogyLayout) {
       return genealogyColumnsLayout(layoutGraph, {
@@ -814,6 +819,7 @@ function FamilyTreeComponent({
     genealogyFilters,
     genealogyVisualLineFilters,
     directVisualLineFilters,
+    visiblePersonIds,
     effectiveCentralPersonId,
     isGenealogyLayout,
     viewMode,

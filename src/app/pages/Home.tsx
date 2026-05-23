@@ -146,6 +146,11 @@ const CURIOSITY_TOPIC_OPTIONS = [
 type CuriosityTopic = typeof CURIOSITY_TOPIC_OPTIONS[number];
 type CuriosidadesTab = 'voce-sabia' | 'descubra' | 'pergunte-ia' | 'conexao';
 type SidebarPanel = 'filters' | 'legend' | 'info';
+type PersonStatusFilters = {
+  vivos: boolean;
+  falecidos: boolean;
+  pets: boolean;
+};
 
 function isPetFamilyMember(pessoa: Pessoa) {
   return pessoa.humano_ou_pet === 'Pet';
@@ -153,6 +158,26 @@ function isPetFamilyMember(pessoa: Pessoa) {
 
 function isHumanFamilyMember(pessoa: Pessoa) {
   return !isPetFamilyMember(pessoa);
+}
+
+function isVisibleByLifeStatusFilter(
+  pessoa: Pessoa,
+  filters: PersonStatusFilters,
+  centralReferencePersonId?: string
+) {
+  if (centralReferencePersonId && pessoa.id === centralReferencePersonId) {
+    return true;
+  }
+
+  if (isPetFamilyMember(pessoa)) {
+    return filters.pets;
+  }
+
+  if (isPersonDeceased(pessoa)) {
+    return filters.falecidos;
+  }
+
+  return filters.vivos;
 }
 
 
@@ -738,23 +763,15 @@ export function Home() {
     }, 80);
   }, [isMobile, navigate]);
 
-  const pessoasVisiveis = useMemo(() => {
-    return pessoas.filter((pessoa) => {
-      if (centralReferencePersonId && pessoa.id === centralReferencePersonId) {
-        return true;
-      }
-
-      if (isPetFamilyMember(pessoa)) {
-        return personFilters.pets;
-      }
-
-      if (isPersonDeceased(pessoa)) {
-        return personFilters.falecidos;
-      }
-
-      return personFilters.vivos;
-    });
+  const pessoasVisiveisPorStatus = useMemo(() => {
+    return pessoas.filter((pessoa) =>
+      isVisibleByLifeStatusFilter(pessoa, personFilters, centralReferencePersonId)
+    );
   }, [centralReferencePersonId, pessoas, personFilters]);
+
+  const visiblePersonIdsByLifeStatus = useMemo(() => {
+    return new Set(pessoasVisiveisPorStatus.map((pessoa) => pessoa.id));
+  }, [pessoasVisiveisPorStatus]);
 
   const directRelativeFilters = directRelativeFilterState.filters;
 
@@ -898,8 +915,8 @@ export function Home() {
     [pessoas, relacionamentos, centralReferencePersonId]
   );
   const genealogyFilterCounts = useMemo(
-    () => calculateGenealogyFilterCounts(pessoasVisiveis, relacionamentos),
-    [pessoasVisiveis, relacionamentos]
+    () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
+    [pessoasVisiveisPorStatus, relacionamentos]
   );
   const sidebarPanelContent = (
     <section className="h-full rounded-lg border border-gray-200 bg-gray-50 p-2.5">
@@ -1407,7 +1424,8 @@ export function Home() {
           ) : canRenderTree ? (
             <FamilyTree
               ref={familyTreeRef}
-              pessoas={pessoasVisiveis}
+              pessoas={pessoas}
+              visiblePersonIds={visiblePersonIdsByLifeStatus}
               relacionamentos={relacionamentos}
               onPersonClick={handlePersonClick}
               onPersonView={handlePersonView}
