@@ -1092,11 +1092,25 @@ function FamilyTreeComponent({
   const handleMoveEnd = useCallback(
     (_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
       setDirectFamilyCurrentZoom(viewport.zoom);
-      if (_event) {
-        setHasUserInteractedWithViewport(true);
+
+      if (!_event) {
+        return;
       }
+
+      const shouldRestoreInitialViewport =
+        directFamilyViewport &&
+        viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON;
+
+      if (shouldRestoreInitialViewport) {
+        reactFlowRef.current?.setViewport(directFamilyViewport, { duration: 180 });
+        setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
+        setHasUserInteractedWithViewport(false);
+        return;
+      }
+
+      setHasUserInteractedWithViewport(true);
     },
-    []
+    [activeMinZoom, directFamilyViewport]
   );
 
   const handleNodeClick = useCallback(
@@ -1278,7 +1292,7 @@ function FamilyTreeComponent({
       </div>
 
 
-      {!hasUserInteractedWithViewport && (
+      {(!hasUserInteractedWithViewport || isAtMinZoom) && (
         <div
           className="pointer-events-none absolute inset-x-0 z-10 text-center"
           style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
