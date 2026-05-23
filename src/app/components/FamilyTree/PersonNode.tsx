@@ -202,12 +202,12 @@ function PetMarker({ compact = false }: { compact?: boolean }) {
     <span
       className={[
         'absolute rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-sm',
-        compact ? '-bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center' : 'bottom-0 right-0 flex h-6 w-6 items-center justify-center',
+        compact ? '-bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center' : 'bottom-0 right-0 flex h-7 w-7 items-center justify-center',
       ].join(' ')}
       title="Pet"
       aria-label="Pet"
     >
-      <Dog className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+      <Dog className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
     </span>
   );
 }
@@ -381,8 +381,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const cardWidth = layoutWidth ?? baseCardWidth;
     const cardHeight = layoutHeight ?? baseCardHeight;
     const cardScale = Math.min(cardWidth / baseCardWidth, cardHeight / baseCardHeight);
-    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.08) : 1;
-    const nonCentralAvatarScale = isCentralDirectNode ? 1 : 1.22;
+    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
+    const nonCentralAvatarScale = isCentralDirectNode ? 1 : 1.48;
     const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale * nonCentralAvatarScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const directDetailLines = detailLines.length > 0
@@ -407,7 +407,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             'cursor-pointer overflow-hidden rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
             isCentralDirectNode
               ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
-              : 'flex items-center gap-4 px-4 py-3',
+              : 'flex items-center gap-4 px-3 py-2.5',
             isSelected ? 'ring-2 ring-blue-300' : '',
           ].join(' ')}
           onClick={handleClick}
@@ -456,7 +456,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 'font-bold leading-tight',
                 isCentralDirectNode
                   ? `whitespace-normal break-words ${isMobile ? 'text-[46px]' : 'text-[42px]'}`
-                  : `overflow-hidden break-words ${isMobile ? 'text-[24px]' : 'text-[22px]'} [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`,
+                  : `overflow-hidden break-words ${isMobile ? 'text-[30px]' : 'text-[27px]'} [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`,
               ].join(' ')}
               title={pessoa.nome_completo}
             >
@@ -476,8 +476,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <PersonDetailLines
                 lines={directDetailLines}
                 className={[
-                  'mt-1.5 space-y-0.5 overflow-hidden font-medium leading-tight',
-                  isMobile ? 'text-[17px]' : 'text-[15px]',
+                  'mt-1 space-y-0.5 overflow-hidden font-bold leading-tight',
+                  isMobile ? 'text-[19px]' : 'text-[17px]',
                 ].join(' ')}
                 style={{ color: style.muted }}
               />
@@ -516,7 +516,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <div className="relative" ref={menuRef}>
       <div
-        className={`cursor-pointer overflow-hidden rounded-lg border-[3px] px-4 py-3.5 shadow-md transition-all hover:shadow-lg ${
+        className={`cursor-pointer overflow-hidden rounded-lg border-[4px] px-3 py-2.5 shadow-md transition-all hover:shadow-lg ${
           isSelected ? 'ring-2 ring-blue-300' : ''
         }`}
         onClick={handleClick}
@@ -536,7 +536,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
 
         <div className={`flex items-center ${isMobile ? 'gap-5' : 'gap-4'}`}>
           <div
-            className={`relative flex ${isMobile ? 'h-[82px] w-[82px]' : 'h-[78px] w-[78px]'} flex-shrink-0 items-center justify-center rounded-full ${
+            className={`relative flex ${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} flex-shrink-0 items-center justify-center rounded-full ${
               isPet ? 'bg-amber-200' : isFalecido ? 'bg-gray-300' : 'bg-blue-200'
             }`}
           >
@@ -544,12 +544,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <img
                 src={pessoa.foto_principal_url}
                 alt={pessoa.nome_completo}
-                className={`${isMobile ? 'h-[82px] w-[82px]' : 'h-[78px] w-[78px]'} rounded-full object-cover`}
+                className={`${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} rounded-full object-cover`}
               />
             ) : isPet ? (
-              <Dog className={`${isMobile ? 'h-11 w-11' : 'h-10 w-10'} text-amber-700`} />
+              <Dog className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-amber-700`} />
             ) : (
-              <User className={`${isMobile ? 'h-11 w-11' : 'h-10 w-10'} text-blue-700`} />
+              <User className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-blue-700`} />
             )}
             {isPet && <PetMarker compact />}
           </div>
@@ -557,7 +557,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3
-                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[22px]' : 'text-[20px]'} font-extrabold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
+                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[29px]' : 'text-[26px]'} font-extrabold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
                 title={pessoa.nome_completo}
               >
                 {pessoa.nome_completo}
@@ -571,7 +571,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
 
             <PersonDetailLines
               lines={detailLines}
-              className={`mt-2 space-y-0.5 overflow-hidden font-semibold leading-tight ${isMobile ? 'text-[17px]' : 'text-[15px]'} text-gray-700`}
+              className={`mt-1 space-y-0.5 overflow-hidden font-bold leading-tight ${isMobile ? 'text-[19px]' : 'text-[17px]'} text-gray-800`}
             />
           </div>
         </div>
