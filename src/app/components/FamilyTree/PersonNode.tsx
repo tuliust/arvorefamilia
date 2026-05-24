@@ -225,8 +225,8 @@ function PersonDetailLines({
 
   return (
     <div className={className} style={style} title={lines.join('\n')}>
-      {lines.slice(0, 2).map((line) => (
-        <p key={line} className="overflow-hidden text-ellipsis whitespace-nowrap">
+      {lines.map((line) => (
+        <p key={line} className="whitespace-normal break-words">
           {line}
         </p>
       ))}
@@ -389,16 +389,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const centralDetailFontSize = Math.max(15, Math.round((isMobile ? 24 : 22) * cappedCardScale * 1.04));
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
-      : isCompactDirectCard
-        ? (isMobile ? 18 : 17)
-        : (isMobile ? 30 : 27);
+      : (isMobile ? 19 : 18);
     const directDetailFontSize = isCentralDirectNode
       ? centralDetailFontSize
-      : isCompactDirectCard
-        ? (isMobile ? 13 : 12)
-        : (isMobile ? 19 : 17);
+      : (isMobile ? 14 : 13);
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
-    const nonCentralAvatarScale = isCentralDirectNode ? 1 : isCompactDirectCard ? 1.38 : 1.48;
+    const nonCentralAvatarScale = isCentralDirectNode ? 1 : 1.08;
     const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale * nonCentralAvatarScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const directDetailLines = detailLines.length > 0
@@ -420,7 +416,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       <div className="relative" ref={menuRef}>
         <div
           className={[
-            'cursor-pointer overflow-hidden rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
+            'cursor-pointer rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
             isCentralDirectNode
               ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
               : 'flex items-center gap-4 px-3 py-2.5',
@@ -480,7 +476,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 'font-bold leading-tight',
                 isCentralDirectNode
                   ? 'whitespace-normal break-words'
-                  : 'overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]',
+                  : 'whitespace-normal break-words',
               ].join(' ')}
               style={{ fontSize: directNameFontSize }}
               title={pessoa.nome_completo}
@@ -504,7 +500,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <PersonDetailLines
                 lines={directDetailLines}
                 className={[
-                  'mt-1 space-y-0.5 overflow-hidden font-bold leading-tight',
+                  'mt-1 space-y-0.5 font-bold leading-tight',
                 ].join(' ')}
                 style={{ color: style.muted, fontSize: directDetailFontSize }}
               />
@@ -543,7 +539,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <div className="relative" ref={menuRef}>
       <div
-        className={`cursor-pointer overflow-hidden rounded-lg border-[4px] px-3 py-2.5 shadow-md transition-all hover:shadow-lg ${
+        className={`cursor-pointer rounded-lg border-[4px] px-3 py-2.5 shadow-md transition-all hover:shadow-lg ${
           isSelected ? 'ring-2 ring-blue-300' : ''
         }`}
         onClick={handleClick}
@@ -584,7 +580,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3
-                className={`min-w-0 flex-1 overflow-hidden break-words ${isMobile ? 'text-[29px]' : 'text-[26px]'} font-extrabold leading-tight text-gray-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`}
+                className={`min-w-0 flex-1 whitespace-normal break-words ${isMobile ? 'text-[20px]' : 'text-[18px]'} font-extrabold leading-tight text-gray-900`}
                 title={pessoa.nome_completo}
               >
                 {pessoa.nome_completo}
@@ -598,7 +594,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
 
             <PersonDetailLines
               lines={detailLines}
-              className={`mt-1 space-y-0.5 overflow-hidden font-bold leading-tight ${isMobile ? 'text-[19px]' : 'text-[17px]'} text-gray-800`}
+              className={`mt-1 space-y-0.5 font-bold leading-tight ${isMobile ? 'text-[14px]' : 'text-[13px]'} text-gray-800`}
             />
           </div>
         </div>
