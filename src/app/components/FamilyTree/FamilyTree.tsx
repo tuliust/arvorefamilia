@@ -991,7 +991,7 @@ function FamilyTreeComponent({
       containerHeight: containerSize.height,
       paddingX: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_X
-        : (isGenealogyLayout || viewMode === 'minha-arvore')
+        : isGenealogyLayout
           ? TREE_VIEWPORT_PADDING_X
           : 0,
       paddingY: isMobile
@@ -1005,8 +1005,10 @@ function FamilyTreeComponent({
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
       fitMode: isGenealogyLayout
         ? (isMobile ? 'height' : 'width')
-        : 'contain',
-      horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
+        : viewMode === 'minha-arvore'
+          ? (isMobile ? 'contain' : 'width')
+          : 'contain',
+      horizontalAlign: (isMobile && isGenealogyLayout) || (!isMobile && viewMode === 'minha-arvore') ? 'left' : 'center',
       verticalAlign: !isMobile && isGenealogyLayout ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
