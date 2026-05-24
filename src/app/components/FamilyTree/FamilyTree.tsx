@@ -105,7 +105,6 @@ const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
 const TREE_TITLE_TOP = 12;
 const TREE_TITLE_HEIGHT = 48;
-const TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET = 64;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 104;
@@ -731,9 +730,7 @@ function FamilyTreeComponent({
   const flowViewportStyle = isMobile
     ? undefined
     : {
-        top: viewMode === 'minha-arvore'
-          ? TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET
-          : TREE_DESKTOP_VISUAL_TOP_INSET,
+        top: TREE_DESKTOP_VISUAL_TOP_INSET,
         bottom: TREE_DESKTOP_VISUAL_BOTTOM_INSET,
       };
   const effectiveCentralPersonId = centralPersonId || selectedPersonId || pessoas[0]?.id;
@@ -991,9 +988,7 @@ function FamilyTreeComponent({
       containerHeight: containerSize.height,
       paddingX: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_X
-        : isGenealogyLayout
-          ? TREE_VIEWPORT_PADDING_X
-          : 0,
+        : TREE_VIEWPORT_PADDING_X,
       paddingY: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_Y
         : (isGenealogyLayout || viewMode === 'minha-arvore')
@@ -1008,8 +1003,8 @@ function FamilyTreeComponent({
         : viewMode === 'minha-arvore'
           ? 'contain'
           : 'contain',
-      horizontalAlign: (isMobile && isGenealogyLayout) || (!isMobile && viewMode === 'minha-arvore') ? 'left' : 'center',
-      verticalAlign: !isMobile && isGenealogyLayout ? 'top' : 'center',
+      horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
+      verticalAlign: !isMobile && (isGenealogyLayout || viewMode === 'minha-arvore') ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 
@@ -1369,7 +1364,7 @@ function FamilyTreeComponent({
           <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
             <div>DEBUG TREE BOUNDS</div>
             <div>Vermelho: área total visível do componente</div>
-            <div>ReactFlow: top {isMobile ? 0 : viewMode === 'minha-arvore' ? TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET : TREE_DESKTOP_VISUAL_TOP_INSET}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
+            <div>ReactFlow: top {isMobile ? 0 : TREE_DESKTOP_VISUAL_TOP_INSET}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
             <div>Amarelo: grade lógica / viewportBounds</div>
             <div>Azul: conteúdo renderizado / flowBounds</div>
             <div>Rosa: área preenchida por cards / personNodes</div>

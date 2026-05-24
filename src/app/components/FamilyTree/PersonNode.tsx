@@ -390,15 +390,15 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
       : isCompactDirectCard
-        ? (isMobile ? 14 : 13)
+        ? (isMobile ? 17 : 16)
         : (isMobile ? 30 : 27);
     const directDetailFontSize = isCentralDirectNode
       ? centralDetailFontSize
       : isCompactDirectCard
-        ? (isMobile ? 10 : 9)
+        ? (isMobile ? 12 : 11)
         : (isMobile ? 19 : 17);
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
-    const nonCentralAvatarScale = isCentralDirectNode ? 1 : isCompactDirectCard ? 1.05 : 1.48;
+    const nonCentralAvatarScale = isCentralDirectNode ? 1 : isCompactDirectCard ? 1.38 : 1.48;
     const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale * nonCentralAvatarScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const directDetailLines = detailLines.length > 0
@@ -435,7 +435,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             ...(isCentralDirectNode
               ? { padding: `${centralPaddingY}px ${centralPaddingX}px` }
               : isCompactDirectCard
-                ? { gap: 8, padding: '5px 8px' }
+                ? { gap: 9, padding: '6px 8px' }
                 : {}),
             background: style.background,
             borderColor: directBorderColor,

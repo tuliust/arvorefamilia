@@ -82,7 +82,7 @@ const DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE = 0;
 const DIRECT_FRAME_LEFT = 10 - DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
 const DIRECT_FRAME_RIGHT = 3210 + DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
 const FRAME_TOP = 10;
-const FRAME_BOTTOM = 2190;
+const FRAME_BOTTOM = 1810;
 const MOBILE_FRAME_LEFT = -70;
 const MOBILE_FRAME_RIGHT = 3290;
 const MOBILE_FRAME_TOP = -30;
@@ -96,20 +96,20 @@ const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
-const CENTRAL_HEIGHT = 420;
+const CENTRAL_HEIGHT = 360;
 const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
-const SIDE_GROUPS_TOP = 420;
-const SIDE_GROUPS_BOTTOM = 1380;
+const SIDE_GROUPS_TOP = 170;
+const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM - 90;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
 
 const GROUP_BOX_PADDING_X = 24;
-const GROUP_BOX_PADDING_Y = 4;
-const LABEL_HEIGHT = 22;
-const LABEL_TO_CARD_GAP = 0;
+const GROUP_BOX_PADDING_Y = 10;
+const LABEL_HEIGHT = 28;
+const LABEL_TO_CARD_GAP = 6;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
@@ -117,7 +117,7 @@ const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
 const SIDE_GROUP_MIN_GAP = 8;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
-const CENTRAL_Y = 560;
+const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
 const PARENT_GROUP_Y = SIDE_TOP;
 const PARENT_GROUP_GAP = 260;
 const FATHER_GROUP_CENTER_X = VIEW_CENTER_X - PARENT_GROUP_GAP;
@@ -139,12 +139,12 @@ const SIDE_LANE_WIDTH = Math.min(
   PATERNAL_LANE_RIGHT - PATERNAL_LANE_LEFT,
   MATERNAL_LANE_RIGHT - MATERNAL_LANE_LEFT
 );
-const SIDE_GROUP_COLUMNS = 3;
+const SIDE_GROUP_COLUMNS = 4;
 const ANCESTOR_GROUP_COLUMNS = 2;
-const SIDE_CARD_WIDTH = 230;
-const SIDE_CARD_HEIGHT = 60;
-const SIDE_COLUMN_GAP = 5;
-const SIDE_ROW_GAP = 3;
+const SIDE_CARD_WIDTH = 235;
+const SIDE_CARD_HEIGHT = 76;
+const SIDE_COLUMN_GAP = 6;
+const SIDE_ROW_GAP = 4;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * CARD_WIDTH +
@@ -164,37 +164,38 @@ const PATERNAL_GROUP_LANE_WIDTH = PATERNAL_GROUP_RIGHT_X - PATERNAL_GROUP_LEFT_X
 const MATERNAL_GROUP_LANE_WIDTH = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LEFT_X;
 const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
 const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
-const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 80;
-const LOWER_LANE_WIDTH = 760;
+const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 52;
+const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 12;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
-  strokeWidth: DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH,
+  strokeWidth: 3,
   opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
 };
+const DIRECT_HIGHLIGHT_EDGE_STROKE_WIDTH = DIRECT_STRUCTURAL_EDGE_STYLE.strokeWidth;
 const DIRECT_PARENT_CHILD_HIGHLIGHT_EDGE_STYLE = {
   stroke: FAMILY_TREE_COLORS.EDGE_CHILD,
-  strokeWidth: 2.25,
+  strokeWidth: DIRECT_HIGHLIGHT_EDGE_STROKE_WIDTH,
   opacity: 0.86,
   strokeDasharray: 'none',
 };
 const DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE = {
   stroke: FAMILY_TREE_COLORS.EDGE_SIBLING,
-  strokeWidth: 2.25,
+  strokeWidth: DIRECT_HIGHLIGHT_EDGE_STROKE_WIDTH,
   opacity: 0.86,
   strokeDasharray: '5,5',
 };
 const DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE = {
   stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-  strokeWidth: 2.25,
+  strokeWidth: DIRECT_HIGHLIGHT_EDGE_STROKE_WIDTH,
   opacity: 0.9,
   strokeDasharray: 'none',
 };
 const ANCESTOR_SPOUSE_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
-  strokeWidth: DIRECT_FAMILY_TOKENS.SPOUSE_EDGE_STROKE_WIDTH,
+  strokeWidth: DIRECT_STRUCTURAL_EDGE_STYLE.strokeWidth,
   opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
 };
 
@@ -708,7 +709,7 @@ function shouldCenterCardsInGroup(spec: GroupSpec) {
 }
 
 function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
-  if (spec.fillAvailableWidth && spec.laneWidth) {
+  if (spec.fillAvailableWidth && spec.laneWidth && metrics.columns > 2) {
     return spec.laneWidth;
   }
 
@@ -723,11 +724,11 @@ function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
 }
 
 function getGroupX(spec: GroupSpec, groupWidth: number) {
-  if (spec.fillAvailableWidth && spec.side === 'paternal') {
+  if (spec.fillAvailableWidth && spec.side === 'paternal' && groupWidth === spec.laneWidth) {
     return PATERNAL_SIDE_AREA_LEFT;
   }
 
-  if (spec.fillAvailableWidth && spec.side === 'maternal') {
+  if (spec.fillAvailableWidth && spec.side === 'maternal' && groupWidth === spec.laneWidth) {
     return MATERNAL_SIDE_AREA_RIGHT - groupWidth;
   }
 
@@ -831,14 +832,11 @@ function resolveSideStackGroups(groups: GroupSpec[], index?: RelationshipIndex) 
     };
   });
 
-  const maxMeasuredWidth = Math.max(0, ...measuredGroups.map((group) => group.measuredWidth));
-
   return measuredGroups.map(({ measuredWidth, ...group }) => ({
     ...group,
     fillAvailableWidth: Boolean(
       group.side &&
-      group.laneWidth &&
-      Math.abs(measuredWidth - maxMeasuredWidth) < 0.5
+      group.laneWidth
     ),
   }));
 }
@@ -874,19 +872,20 @@ function placeGroupStack(
     };
   });
 
-  const maxGroupWidth = Math.max(...resolvedGroups.map((group) => group.proportionalWidth));
-
   const resolvedGroupsWithFill = resolvedGroups.map((group) => ({
     ...group,
     fillAvailableWidth: Boolean(
       group.side &&
-      group.laneWidth &&
-      Math.abs(group.proportionalWidth - maxGroupWidth) < 0.5
+      group.laneWidth
     ),
   }));
 
   const heights = resolvedGroupsWithFill.map((group) => groupHeight(group.ids, group.maxPerRow, index, group));
-  const uniformGap = SIDE_GROUP_MIN_GAP;
+  const totalHeight = heights.reduce((sum, height) => sum + height, 0);
+  const availableGap = resolvedGroupsWithFill.length > 1
+    ? (SIDE_BOTTOM - SIDE_TOP - totalHeight) / (resolvedGroupsWithFill.length - 1)
+    : 0;
+  const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, availableGap);
   let cursorY = SIDE_TOP;
   const placedIds: string[] = [];
 
