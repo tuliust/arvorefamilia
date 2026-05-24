@@ -96,26 +96,26 @@ const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
-const CENTRAL_HEIGHT = DIRECT_FAMILY_TOKENS.CENTRAL_HEIGHT;
+const CENTRAL_HEIGHT = 500;
 const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
-const SIDE_GROUPS_TOP = 245;
+const SIDE_GROUPS_TOP = 360;
 const SIDE_GROUPS_BOTTOM = 1580;
 const CENTRAL_GROUP_TOP = 250;
 const CENTRAL_GROUP_BOTTOM = 1585;
 
 const GROUP_BOX_PADDING_X = 24;
-const GROUP_BOX_PADDING_Y = 6;
-const LABEL_HEIGHT = 26;
+const GROUP_BOX_PADDING_Y = 4;
+const LABEL_HEIGHT = 22;
 const LABEL_TO_CARD_GAP = 0;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
 const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
-const SIDE_GROUP_MIN_GAP = 2;
+const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = 520;
 const PARENT_GROUP_Y = SIDE_TOP;
@@ -141,10 +141,10 @@ const SIDE_LANE_WIDTH = Math.min(
 );
 const SIDE_GROUP_COLUMNS = 3;
 const ANCESTOR_GROUP_COLUMNS = 2;
-const SIDE_CARD_WIDTH = 255;
-const SIDE_CARD_HEIGHT = 72;
-const SIDE_COLUMN_GAP = 6;
-const SIDE_ROW_GAP = 4;
+const SIDE_CARD_WIDTH = 230;
+const SIDE_CARD_HEIGHT = 60;
+const SIDE_COLUMN_GAP = 5;
+const SIDE_ROW_GAP = 3;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * CARD_WIDTH +
@@ -670,8 +670,8 @@ function resolveGroupColumns(spec: GroupSpec, ids = spec.ids, index?: Relationsh
   return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH, index);
 }
 
-function visibleGroupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex) {
-  return ids.length > 0 ? groupHeight(ids, maxPerRow, index) : 0;
+function visibleGroupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex, spec?: GroupSpec) {
+  return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
 }
 
 function shouldCenterCardsInGroup(spec: GroupSpec) {
@@ -857,15 +857,7 @@ function placeGroupStack(
   }));
 
   const heights = resolvedGroupsWithFill.map((group) => groupHeight(group.ids, group.maxPerRow, index, group));
-  const availableHeight = SIDE_BOTTOM - SIDE_TOP;
-  const totalHeight = heights.reduce((sum, height) => sum + height, 0);
-  const rawGap = resolvedGroupsWithFill.length > 1
-    ? (availableHeight - totalHeight) / (resolvedGroupsWithFill.length - 1)
-    : (availableHeight - totalHeight) / 2;
-  const uniformGap = Math.max(
-    SIDE_GROUP_MIN_GAP,
-    Number.isFinite(rawGap) ? rawGap : SIDE_GROUP_MIN_GAP
-  );
+  const uniformGap = SIDE_GROUP_MIN_GAP;
   let cursorY = SIDE_TOP;
   const placedIds: string[] = [];
 
@@ -886,7 +878,20 @@ function addCentralPerson(
   const node = personNodeById.get(centralPersonId);
   if (!node) return;
 
-  positionedNodes.push(clonePersonNode(node, CENTRAL_X, CENTRAL_Y, 'central', true));
+  positionedNodes.push(clonePersonNode(
+    {
+      ...node,
+      data: {
+        ...node.data,
+        height: CENTRAL_HEIGHT,
+        layoutHeight: CENTRAL_HEIGHT,
+      },
+    },
+    CENTRAL_X,
+    CENTRAL_Y,
+    'central',
+    true
+  ));
   positionedIds.add(centralPersonId);
 }
 
@@ -1309,9 +1314,9 @@ export function directFamilyDistributedLayout(
     centerX: LOWER_RIGHT_GROUP_CENTER_X,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: SIDE_CARD_WIDTH, cardHeight: SIDE_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
-  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup, siblings, index), index);
-  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup, spouses, index), index);
-  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup, children, index), index);
+  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup, siblings, index), index, siblingGroup);
+  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup, spouses, index), index, spouseGroup);
+  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup, children, index), index, childrenGroup);
   const nephewsY = siblingsHeight > 0 ? LOWER_GROUP_Y + siblingsHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
   const childrenY = spouseHeight > 0 ? LOWER_GROUP_Y + spouseHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
   const grandchildrenY = childrenHeight > 0 ? childrenY + childrenHeight + LOWER_GROUP_GAP : childrenY;
