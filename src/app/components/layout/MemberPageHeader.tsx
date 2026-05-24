@@ -102,7 +102,7 @@ export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
 export function MemberPageHeader({
   title,
   subtitle,
-  icon: Icon,
+  icon: Icon = Network,
   actions = [],
   customActions,
   className = '',
