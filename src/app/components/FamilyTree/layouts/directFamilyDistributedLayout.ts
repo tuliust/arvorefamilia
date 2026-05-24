@@ -116,7 +116,7 @@ const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
 const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
-const SIDE_GROUP_MIN_GAP = 14;
+const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
 const PARENT_GROUP_Y = SIDE_TOP;
@@ -147,14 +147,14 @@ const STANDARD_GROUP_CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const STANDARD_GROUP_CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const SIDE_COLLATERAL_CARD_WIDTH = 360;
-const SIDE_COLLATERAL_CARD_HEIGHT = 154;
+const SIDE_COLLATERAL_CARD_WIDTH = 330;
+const SIDE_COLLATERAL_CARD_HEIGHT = 142;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const LOWER_CARD_WIDTH = 360;
-const LOWER_CARD_HEIGHT = 154;
-const SIDE_COLUMN_GAP = 10;
-const SIDE_ROW_GAP = 10;
+const LOWER_CARD_WIDTH = 330;
+const LOWER_CARD_HEIGHT = 142;
+const SIDE_COLUMN_GAP = 8;
+const SIDE_ROW_GAP = 8;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * SIDE_COLLATERAL_CARD_WIDTH +
@@ -176,7 +176,7 @@ const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
 const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
 const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 52;
 const LOWER_LANE_WIDTH = 860;
-const LOWER_GROUP_GAP = 14;
+const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
@@ -1445,17 +1445,6 @@ export function directFamilyDistributedLayout(
   placeGroup(spouseGroup, rightLowerPositions.get(spouseGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(childrenGroup, rightLowerPositions.get(childrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, rightLowerPositions.get(grandchildrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-
-  const paternalCousinsGroup = paternalGroups.find((group) => group.key === 'primos-paternos');
-  const maternalCousinsGroup = maternalGroups.find((group) => group.key === 'primos-maternos');
-
-  if (paternalCousinsGroup) {
-    alignGroupToBottom(positionedNodes, paternalCousinsGroup, DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y, positionedIds);
-  }
-
-  if (maternalCousinsGroup) {
-    alignGroupToBottom(positionedNodes, maternalCousinsGroup, DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y, positionedIds);
-  }
 
   alignGroupStackToBottom(
     positionedNodes,
