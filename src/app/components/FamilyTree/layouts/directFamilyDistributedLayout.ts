@@ -141,8 +141,8 @@ const SIDE_LANE_WIDTH = Math.min(
 );
 const SIDE_GROUP_COLUMNS = 4;
 const ANCESTOR_GROUP_COLUMNS = 2;
-const SIDE_CARD_WIDTH = 235;
-const SIDE_CARD_HEIGHT = 76;
+const SIDE_CARD_WIDTH = 245;
+const SIDE_CARD_HEIGHT = 82;
 const SIDE_COLUMN_GAP = 6;
 const SIDE_ROW_GAP = 4;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
@@ -648,8 +648,18 @@ function sideGroupColumns(ids: string[], label: string, maxColumns: number, lane
   const units = buildGroupLayoutUnits(ids, index);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
   const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount, SIDE_GROUP_COLUMNS);
+  const adaptiveMax = spec && isCollateralGroup(spec)
+    ? visibleCount <= 2
+      ? Math.min(visibleCount, cappedMax)
+      : visibleCount <= 4
+        ? Math.min(2, cappedMax)
+        : visibleCount <= 6
+          ? Math.min(3, cappedMax)
+          : Math.min(4, cappedMax)
+    : cappedMax;
+  const preferredMax = Math.max(minColumns, adaptiveMax);
 
-  for (let columns = cappedMax; columns >= minColumns; columns -= 1) {
+  for (let columns = preferredMax; columns >= minColumns; columns -= 1) {
     if (cardRowWidthForColumns(columns, spec) <= laneWidth) return columns;
   }
 
