@@ -101,10 +101,10 @@ const SIDE_GROUPS_BOTTOM = 1835;
 const CENTRAL_GROUP_TOP = 250;
 const CENTRAL_GROUP_BOTTOM = 1585;
 
-const GROUP_BOX_PADDING_X = 10;
-const GROUP_BOX_PADDING_Y = 10;
+const GROUP_BOX_PADDING_X = 24;
+const GROUP_BOX_PADDING_Y = 18;
 const LABEL_HEIGHT = 30;
-const LABEL_TO_CARD_GAP = 8;
+const LABEL_TO_CARD_GAP = 12;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
@@ -147,6 +147,8 @@ const MATERNAL_GROUP_RIGHT_X = DIRECT_FRAME_RIGHT;
 const MATERNAL_GROUP_LEFT_X = MATERNAL_GROUP_RIGHT_X - SIDE_GROUP_WIDTH;
 const PATERNAL_GROUP_LANE_WIDTH = PATERNAL_GROUP_RIGHT_X - PATERNAL_GROUP_LEFT_X;
 const MATERNAL_GROUP_LANE_WIDTH = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LEFT_X;
+const PATERNAL_SIDE_GROUP_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
+const MATERNAL_SIDE_GROUP_CENTER_X = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LANE_WIDTH / 2;
 const PATERNAL_ANCESTOR_GROUP_LANE_WIDTH = ANCESTOR_GROUP_WIDTH;
 const MATERNAL_ANCESTOR_GROUP_LANE_WIDTH = ANCESTOR_GROUP_WIDTH;
 const PATERNAL_CENTER_X = DIRECT_FRAME_LEFT + (CENTRAL_LEFT_BOUNDARY - DIRECT_FRAME_LEFT) / 2;
@@ -1065,17 +1067,17 @@ export function directFamilyDistributedLayout(
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = [
-    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
-    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
-    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
+    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_SIDE_GROUP_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
+    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_SIDE_GROUP_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
+    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_SIDE_GROUP_CENTER_X, side: 'paternal', laneWidth: PATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
     { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
     { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'left', x: PATERNAL_GROUP_LEFT_X } },
   ];
 
   const maternalGroups: GroupSpec[] = [
-    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
-    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
-    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
+    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_SIDE_GROUP_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
+    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_SIDE_GROUP_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
+    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_SIDE_GROUP_CENTER_X, side: 'maternal', laneWidth: MATERNAL_ANCESTOR_GROUP_LANE_WIDTH },
     { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, alignBoundary: { side: 'right', x: MATERNAL_GROUP_RIGHT_X } },
   ];
