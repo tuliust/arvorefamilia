@@ -991,12 +991,12 @@ function FamilyTreeComponent({
       containerHeight: containerSize.height,
       paddingX: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_X
-        : isGenealogyLayout
+        : (isGenealogyLayout || viewMode === 'minha-arvore')
           ? TREE_VIEWPORT_PADDING_X
           : 0,
       paddingY: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_Y
-        : isGenealogyLayout
+        : (isGenealogyLayout || viewMode === 'minha-arvore')
           ? TREE_VIEWPORT_PADDING_Y
           : 0,
       titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : 0,
@@ -1009,7 +1009,7 @@ function FamilyTreeComponent({
       horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
       verticalAlign: !isMobile && isGenealogyLayout ? 'top' : 'center',
     });
-  }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile]);
+  }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 
   const directFamilyTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
     if (!translateBounds) return undefined;
