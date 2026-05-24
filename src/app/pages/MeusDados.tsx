@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router';
 import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
+import {
+  HEADER_ACTION_ICONS,
+  MemberPageHeader,
+} from '../components/layout/MemberPageHeader';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
@@ -722,16 +726,15 @@ export function MeusDados() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Revisar meus dados</h1>
-            <p className="mt-1 break-words text-sm text-gray-500">
-              Confira suas informações antes de acessar a árvore principal.
-            </p>
-          </div>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Revisar meus dados"
+        subtitle="Confira suas informações antes de acessar a árvore principal."
+        icon={UserCircle2}
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
+        ]}
+      />
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
         <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
