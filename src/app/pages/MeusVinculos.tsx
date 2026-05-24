@@ -4,6 +4,10 @@ import { Heart, Plus, Save, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import {
+  HEADER_ACTION_ICONS,
+  MemberPageHeader,
+} from '../components/layout/MemberPageHeader';
+import {
   createEmptyMarriageDetails,
   MarriageDetailsEditor,
   MarriageDetailsForm,
@@ -677,12 +681,16 @@ export function MeusVinculos() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-6xl px-4 py-5">
-          <h1 className="break-words text-2xl font-bold text-gray-900">Confirmar vínculos familiares</h1>
-          <p className="mt-1 break-words text-sm text-gray-500">Revise seus relacionamentos e arquivos antes de acessar a árvore.</p>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Confirmar vínculos familiares"
+        subtitle="Revise seus relacionamentos e arquivos antes de acessar a árvore."
+        icon={Users}
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
+          { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
+        ]}
+      />
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,360px)]">
         <div className="min-w-0 space-y-6">
