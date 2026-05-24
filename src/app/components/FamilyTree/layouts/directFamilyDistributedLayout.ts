@@ -150,12 +150,12 @@ const MATERNAL_GROUP_LEFT_X = MATERNAL_LANE_LEFT;
 const MATERNAL_GROUP_RIGHT_X = MATERNAL_LANE_RIGHT;
 const PATERNAL_GROUP_LANE_WIDTH = PATERNAL_GROUP_RIGHT_X - PATERNAL_GROUP_LEFT_X;
 const MATERNAL_GROUP_LANE_WIDTH = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LEFT_X;
-const PATERNAL_SIDE_GROUP_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
-const MATERNAL_SIDE_GROUP_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
+const PATERNAL_SIDE_GROUP_CENTER_X = PATERNAL_GROUP_LEFT_X + SIDE_GROUP_WIDTH / 2;
+const MATERNAL_SIDE_GROUP_CENTER_X = MATERNAL_GROUP_RIGHT_X - SIDE_GROUP_WIDTH / 2;
 const PATERNAL_ANCESTOR_GROUP_LANE_WIDTH = PATERNAL_GROUP_LANE_WIDTH;
 const MATERNAL_ANCESTOR_GROUP_LANE_WIDTH = MATERNAL_GROUP_LANE_WIDTH;
-const PATERNAL_CENTER_X = PATERNAL_SIDE_GROUP_CENTER_X;
-const MATERNAL_CENTER_X = MATERNAL_SIDE_GROUP_CENTER_X;
+const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
+const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
 const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 80;
 const LOWER_LANE_WIDTH = 760;
 const LOWER_GROUP_GAP = 18;
@@ -608,6 +608,10 @@ function sideGroupColumns(ids: string[], label: string, maxColumns: number, lane
   const visibleCount = Math.max(1, ids.length);
   const units = buildGroupLayoutUnits(ids, index);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
+  if (maxColumns === SIDE_GROUP_COLUMNS && groupWidthForColumns(label, SIDE_GROUP_COLUMNS) <= laneWidth) {
+    return Math.max(SIDE_GROUP_COLUMNS, minColumns);
+  }
+
   const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount, SIDE_GROUP_COLUMNS);
 
   for (let columns = cappedMax; columns >= minColumns; columns -= 1) {
@@ -642,7 +646,7 @@ function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
   }
 
   if (isCollateralGroup(spec)) {
-    return Math.min(proportionalWidth, SIDE_GROUP_WIDTH);
+    return SIDE_GROUP_WIDTH;
   }
 
   return proportionalWidth;
