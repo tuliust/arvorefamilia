@@ -105,6 +105,7 @@ const SIDE_GROUPS_TOP = 170;
 const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM - 90;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
+const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = FRAME_BOTTOM;
 
 const GROUP_BOX_PADDING_X = 18;
 const GROUP_BOX_PADDING_Y = 14;
@@ -1436,24 +1437,24 @@ export function directFamilyDistributedLayout(
   const maternalCousinsGroup = maternalGroups.find((group) => group.key === 'primos-maternos');
 
   if (paternalCousinsGroup) {
-    alignGroupToBottom(positionedNodes, paternalCousinsGroup, SIDE_BOTTOM, positionedIds);
+    alignGroupToBottom(positionedNodes, paternalCousinsGroup, DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y, positionedIds);
   }
 
   if (maternalCousinsGroup) {
-    alignGroupToBottom(positionedNodes, maternalCousinsGroup, SIDE_BOTTOM, positionedIds);
+    alignGroupToBottom(positionedNodes, maternalCousinsGroup, DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y, positionedIds);
   }
 
   alignGroupStackToBottom(
     positionedNodes,
     [siblingGroup, nephewGroup],
-    CENTRAL_GROUP_BOTTOM,
+    DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y,
     positionedIds
   );
 
   alignGroupStackToBottom(
     positionedNodes,
     [spouseGroup, childrenGroup, grandchildrenGroup],
-    CENTRAL_GROUP_BOTTOM,
+    DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y,
     positionedIds
   );
 
