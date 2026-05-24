@@ -1193,7 +1193,11 @@ export function Home() {
       <header className="shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm">
         <div className="mx-auto flex min-h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
-            <div className="min-w-0 overflow-visible lg:overflow-hidden">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+              <Network className="h-6 w-6 text-white" />
+            </div>
+
+            <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
               <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
                 Família Barros Souza
               </h1>
