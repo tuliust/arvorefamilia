@@ -639,16 +639,18 @@ function placeGroup(
   const metrics = groupGridMetrics(visibleIds, maxPerRow, index);
   const preferredGroupWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label)) + GROUP_BOX_PADDING_X * 2;
   const groupWidth = preferredGroupWidth;
-  const groupX = spec.alignBoundary?.side === 'left'
-    ? spec.alignBoundary.x
-    : spec.alignBoundary?.side === 'right'
-      ? spec.alignBoundary.x - groupWidth
-      : spec.centerX - groupWidth / 2;
+  const shouldCenterCards = shouldCenterCardsInGroup(spec);
+  const groupX = shouldCenterCards
+    ? spec.centerX - groupWidth / 2
+    : spec.alignBoundary?.side === 'left'
+      ? spec.alignBoundary.x
+      : spec.alignBoundary?.side === 'right'
+        ? spec.alignBoundary.x - groupWidth
+        : spec.centerX - groupWidth / 2;
   const groupCenterX = groupX + groupWidth / 2;
   const labelY = topY + GROUP_BOX_PADDING_Y;
   const firstCardY = labelY + LABEL_HEIGHT + LABEL_TO_CARD_GAP;
   const placedIds: string[] = [];
-  const shouldCenterCards = shouldCenterCardsInGroup(spec);
 
   addLabel(positionedNodes, `direct-label-${spec.key}`, spec.label, groupCenterX, labelY);
 
