@@ -32,17 +32,20 @@ interface MemberPageHeaderProps {
 
 export const PAGE_CONTAINER_CLASS = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
 
+const baseActionClass =
+  'inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+
 const defaultActionClass =
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+  `${baseActionClass} border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50`;
 
 const primaryActionClass =
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+  `${baseActionClass} border border-blue-600 bg-blue-600 text-white shadow-sm hover:bg-blue-700`;
 
 const dangerActionClass =
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+  `${baseActionClass} border border-red-200 bg-white text-red-600 shadow-sm hover:bg-red-50 focus-visible:ring-red-500`;
 
 const ghostActionClass =
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-transparent bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+  `${baseActionClass} border border-transparent bg-white text-gray-700 hover:bg-gray-50`;
 
 function getActionClass(variant: HeaderAction['variant']) {
   if (variant === 'primary') return primaryActionClass;
@@ -53,25 +56,37 @@ function getActionClass(variant: HeaderAction['variant']) {
 
 function HeaderActionButton({ action }: { action: HeaderAction }) {
   const Icon = action.icon;
-  const className = getActionClass(action.variant);
+  const variantClassName = getActionClass(action.variant);
+  const className = Icon
+    ? `${variantClassName} w-10 px-0 xl:w-auto xl:px-4`
+    : `${variantClassName} px-4`;
 
   const content = (
     <>
       {Icon && <Icon className="h-4 w-4 shrink-0" />}
-      <span className="whitespace-nowrap">{action.label}</span>
+      <span className={Icon ? 'sr-only xl:not-sr-only xl:whitespace-nowrap' : 'whitespace-nowrap'}>
+        {action.label}
+      </span>
     </>
   );
 
   if (action.to) {
     return (
-      <Link to={action.to} className={className}>
+      <Link to={action.to} className={className} title={action.label} aria-label={action.label}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={action.onClick} disabled={action.disabled} className={className}>
+    <button
+      type="button"
+      onClick={action.onClick}
+      disabled={action.disabled}
+      className={className}
+      title={action.label}
+      aria-label={action.label}
+    >
       {content}
     </button>
   );
@@ -95,21 +110,21 @@ export function MemberPageHeader({
   return (
     <header className={`border-b border-gray-200 bg-white shadow-sm ${className}`}>
       <div className={`${PAGE_CONTAINER_CLASS} py-4`}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-row items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {Icon && (
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
                 <Icon className="h-6 w-6 text-white" />
               </div>
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">{title}</h1>
               <p className="truncate text-sm text-gray-500">{subtitle}</p>
             </div>
           </div>
 
           {(actions.length > 0 || customActions) && (
-            <div className="flex w-full min-w-0 flex-row flex-nowrap gap-2 overflow-x-auto pb-1 sm:w-auto sm:max-w-[60vw] sm:justify-end sm:pb-0 lg:max-w-none">
+            <div className="flex min-w-fit shrink-0 flex-row flex-nowrap justify-end gap-2">
               {actions.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
