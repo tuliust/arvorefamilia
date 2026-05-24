@@ -1006,7 +1006,7 @@ function FamilyTreeComponent({
       fitMode: isGenealogyLayout
         ? (isMobile ? 'height' : 'width')
         : viewMode === 'minha-arvore'
-          ? (isMobile ? 'contain' : 'width')
+          ? 'contain'
           : 'contain',
       horizontalAlign: (isMobile && isGenealogyLayout) || (!isMobile && viewMode === 'minha-arvore') ? 'left' : 'center',
       verticalAlign: !isMobile && isGenealogyLayout ? 'top' : 'center',

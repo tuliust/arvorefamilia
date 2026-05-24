@@ -102,9 +102,9 @@ const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
 const SIDE_GROUPS_TOP = 420;
-const SIDE_GROUPS_BOTTOM = 1580;
-const CENTRAL_GROUP_TOP = 250;
-const CENTRAL_GROUP_BOTTOM = 1585;
+const SIDE_GROUPS_BOTTOM = 1380;
+const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
+const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
 
 const GROUP_BOX_PADDING_X = 24;
 const GROUP_BOX_PADDING_Y = 4;
@@ -1567,7 +1567,7 @@ export function directFamilyDistributedLayout(
     groupBoundsByKey
   );
   addConsecutiveGroupConnections(addEdge, ['irmaos', 'sobrinhos'], groupBoundsByKey);
-  addConsecutiveGroupConnections(addEdge, ['conjuge', 'filhos'], groupBoundsByKey);
+  addConsecutiveGroupConnections(addEdge, ['conjuge', 'filhos', 'netos'], groupBoundsByKey);
 
   if (parentChildHighlight) {
     if (fatherGroupBounds && motherGroupBounds) {
