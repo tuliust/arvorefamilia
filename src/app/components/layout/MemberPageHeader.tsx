@@ -18,6 +18,19 @@ export type HeaderAction = {
   onClick?: () => void;
   icon?: React.ComponentType<{ className?: string }>;
   variant?: 'default' | 'primary' | 'danger' | 'ghost';
+  /**
+   * Controla quando o texto do botão aparece em ações com ícone.
+   *
+   * - always: texto sempre visível.
+   * - lg: texto visível a partir de lg.
+   * - xl: texto visível a partir de xl.
+   * - never: sempre icon-only visualmente, mantendo label para leitores de tela.
+   *
+   * Padrão:
+   * - primary: lg.
+   * - demais variantes: xl.
+   */
+  responsiveLabel?: 'always' | 'lg' | 'xl' | 'never';
   disabled?: boolean;
 };
 
@@ -54,17 +67,37 @@ function getActionClass(variant: HeaderAction['variant']) {
   return defaultActionClass;
 }
 
+function getResponsiveLabelMode(action: HeaderAction) {
+  if (action.responsiveLabel) return action.responsiveLabel;
+  return action.variant === 'primary' ? 'lg' : 'xl';
+}
+
+function getIconActionClassName(variantClassName: string, mode: HeaderAction['responsiveLabel']) {
+  if (mode === 'always') return `${variantClassName} w-auto px-4`;
+  if (mode === 'lg') return `${variantClassName} w-10 px-0 lg:w-auto lg:px-4`;
+  if (mode === 'never') return `${variantClassName} w-10 px-0`;
+  return `${variantClassName} w-10 px-0 xl:w-auto xl:px-4`;
+}
+
+function getLabelClassName(mode: HeaderAction['responsiveLabel']) {
+  if (mode === 'always') return 'whitespace-nowrap';
+  if (mode === 'lg') return 'sr-only lg:not-sr-only lg:whitespace-nowrap';
+  if (mode === 'never') return 'sr-only';
+  return 'sr-only xl:not-sr-only xl:whitespace-nowrap';
+}
+
 function HeaderActionButton({ action }: { action: HeaderAction }) {
   const Icon = action.icon;
   const variantClassName = getActionClass(action.variant);
+  const responsiveLabelMode = getResponsiveLabelMode(action);
   const className = Icon
-    ? `${variantClassName} w-10 px-0 xl:w-auto xl:px-4`
+    ? getIconActionClassName(variantClassName, responsiveLabelMode)
     : `${variantClassName} px-4`;
 
   const content = (
     <>
       {Icon && <Icon className="h-4 w-4 shrink-0" />}
-      <span className={Icon ? 'sr-only xl:not-sr-only xl:whitespace-nowrap' : 'whitespace-nowrap'}>
+      <span className={Icon ? getLabelClassName(responsiveLabelMode) : 'whitespace-nowrap'}>
         {action.label}
       </span>
     </>
@@ -93,10 +126,10 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
 }
 
 export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
-  { label: 'Árvore geral', to: '/', icon: Home },
-  { label: 'Minha Árvore', to: '/minha-arvore', icon: Network },
-  { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
-  { label: 'Notificações', to: '/notificacoes', icon: Bell },
+  { label: 'Árvore geral', to: '/', icon: Home, responsiveLabel: 'lg' },
+  { label: 'Minha Árvore', to: '/minha-arvore', icon: Network, responsiveLabel: 'lg' },
+  { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'xl' },
+  { label: 'Notificações', to: '/notificacoes', icon: Bell, responsiveLabel: 'xl' },
 ];
 
 export function MemberPageHeader({
