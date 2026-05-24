@@ -390,12 +390,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
       : isCompactDirectCard
-        ? (isMobile ? 17 : 16)
+        ? (isMobile ? 18 : 17)
         : (isMobile ? 30 : 27);
     const directDetailFontSize = isCentralDirectNode
       ? centralDetailFontSize
       : isCompactDirectCard
-        ? (isMobile ? 12 : 11)
+        ? (isMobile ? 13 : 12)
         : (isMobile ? 19 : 17);
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
     const nonCentralAvatarScale = isCentralDirectNode ? 1 : isCompactDirectCard ? 1.38 : 1.48;
@@ -435,7 +435,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             ...(isCentralDirectNode
               ? { padding: `${centralPaddingY}px ${centralPaddingX}px` }
               : isCompactDirectCard
-                ? { gap: 9, padding: '6px 8px' }
+                ? { gap: 10, padding: '7px 9px' }
                 : {}),
             background: style.background,
             borderColor: directBorderColor,

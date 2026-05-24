@@ -106,10 +106,10 @@ const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM - 90;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
 
-const GROUP_BOX_PADDING_X = 24;
-const GROUP_BOX_PADDING_Y = 10;
+const GROUP_BOX_PADDING_X = 18;
+const GROUP_BOX_PADDING_Y = 14;
 const LABEL_HEIGHT = 28;
-const LABEL_TO_CARD_GAP = 6;
+const LABEL_TO_CARD_GAP = 8;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
@@ -126,7 +126,7 @@ const CENTRAL_SIDE_GROUP_WIDTH = CARD_WIDTH + GROUP_BOX_PADDING_X * 2;
 const CENTRAL_LEFT_BOUNDARY = FATHER_GROUP_CENTER_X - CENTRAL_SIDE_GROUP_WIDTH / 2;
 const CENTRAL_RIGHT_BOUNDARY = MOTHER_GROUP_CENTER_X + CENTRAL_SIDE_GROUP_WIDTH / 2;
 const SIDE_AREA_OUTER_INSET_X = 48;
-const SIDE_AREA_CENTER_GAP_X = 64;
+const SIDE_AREA_CENTER_GAP_X = 40;
 const PATERNAL_SIDE_AREA_LEFT = DIRECT_FRAME_LEFT + SIDE_AREA_OUTER_INSET_X;
 const PATERNAL_SIDE_AREA_RIGHT = CENTRAL_LEFT_BOUNDARY - SIDE_AREA_CENTER_GAP_X;
 const MATERNAL_SIDE_AREA_LEFT = CENTRAL_RIGHT_BOUNDARY + SIDE_AREA_CENTER_GAP_X;
@@ -141,10 +141,10 @@ const SIDE_LANE_WIDTH = Math.min(
 );
 const SIDE_GROUP_COLUMNS = 4;
 const ANCESTOR_GROUP_COLUMNS = 2;
-const SIDE_CARD_WIDTH = 245;
-const SIDE_CARD_HEIGHT = 82;
+const SIDE_CARD_WIDTH = 244;
+const SIDE_CARD_HEIGHT = 88;
 const SIDE_COLUMN_GAP = 6;
-const SIDE_ROW_GAP = 4;
+const SIDE_ROW_GAP = 5;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * CARD_WIDTH +
@@ -660,7 +660,7 @@ function sideGroupColumns(ids: string[], label: string, maxColumns: number, lane
   const preferredMax = Math.max(minColumns, adaptiveMax);
 
   for (let columns = preferredMax; columns >= minColumns; columns -= 1) {
-    if (cardRowWidthForColumns(columns, spec) <= laneWidth) return columns;
+    if (groupWidthForColumns(label, columns, spec) <= laneWidth) return columns;
   }
 
   return minColumns;
@@ -1414,8 +1414,8 @@ export function directFamilyDistributedLayout(
     spouseGroupBounds?.minY ?? Number.POSITIVE_INFINITY
   );
   const lowerConnectionElbowY = Number.isFinite(lowerGroupTopY)
-    ? Math.min(centralBottomY + 54, lowerGroupTopY - 18)
-    : centralBottomY + 54;
+    ? Math.min(centralBottomY + 34, lowerGroupTopY - 14)
+    : centralBottomY + 34;
 
   if (fatherGroupBounds && motherGroupBounds) {
     const parentCoupleMidX = (fatherGroupBounds.maxX + motherGroupBounds.minX) / 2;
@@ -1476,7 +1476,7 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'bottom',
         targetHandle: 'top',
-        elbowY: CENTRAL_Y - 32,
+        elbowY: CENTRAL_Y - 22,
       }
     );
   } else if (fatherGroupBounds || motherGroupBounds) {
@@ -1489,7 +1489,7 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'bottom',
         targetHandle: 'top',
-        elbowY: CENTRAL_Y - 32,
+        elbowY: CENTRAL_Y - 22,
       }
     );
   }
@@ -1590,7 +1590,7 @@ export function directFamilyDistributedLayout(
         {
           sourceHandle: 'bottom',
           targetHandle: 'top',
-          elbowY: CENTRAL_Y - 32,
+          elbowY: CENTRAL_Y - 22,
         }
       );
     } else if (fatherGroupBounds || motherGroupBounds) {
@@ -1604,7 +1604,7 @@ export function directFamilyDistributedLayout(
         {
           sourceHandle: 'bottom',
           targetHandle: 'top',
-          elbowY: CENTRAL_Y - 32,
+          elbowY: CENTRAL_Y - 22,
         }
       );
     }
