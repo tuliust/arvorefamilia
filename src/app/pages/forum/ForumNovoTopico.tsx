@@ -1,12 +1,12 @@
 import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { AppLink as Link } from '../../components/AppLink';
-import { ArrowLeft, Check, ChevronDown, Send } from 'lucide-react';
+import { Check, ChevronDown, MessageCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas } from '../../services/dataService';
 import { criarTopicoForum, listarCategoriasForum, vincularPessoasAoTopico } from '../../services/forumService';
@@ -241,21 +241,14 @@ export function ForumNovoTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Criar tópico</h1>
-            <p className="break-words text-sm text-gray-500">Compartilhe uma pergunta, memória, documento ou pedido de ajuda.</p>
-          </div>
-          <Link
-            to="/forum"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" />
-            Fórum
-          </Link>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Criar tópico"
+        subtitle="Compartilhe uma pergunta, memória, documento ou pedido de ajuda."
+        icon={MessageCircle}
+        actions={[
+          { label: 'Fórum', to: '/forum', icon: HEADER_ACTION_ICONS.ArrowLeft },
+        ]}
+      />
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card className="min-w-0">

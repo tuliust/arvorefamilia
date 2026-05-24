@@ -1,12 +1,13 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { AppLink as Link } from '../../components/AppLink';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Pencil, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas } from '../../services/dataService';
 import {
@@ -169,21 +170,14 @@ export function ForumEditarTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold text-gray-900">Editar tópico</h1>
-            <p className="break-words text-sm text-gray-500">Atualize as informações do tópico.</p>
-          </div>
-          <Link
-            to={`/forum/topico/${topico.id}`}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" />
-            Voltar
-          </Link>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Editar tópico"
+        subtitle="Atualize as informações do tópico."
+        icon={Pencil}
+        actions={[
+          { label: 'Voltar', to: `/forum/topico/${topico.id}`, icon: HEADER_ACTION_ICONS.ArrowLeft },
+        ]}
+      />
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card className="min-w-0">

@@ -2,11 +2,11 @@ import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { AppLink as Link } from '../../components/AppLink';
 import {
-  ArrowLeft,
   CheckCircle2,
   Edit,
   EyeOff,
   Heart,
+  MessageCircle,
   MessageSquare,
   UserRound,
   Send,
@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Textarea } from '../../components/ui/textarea';
+import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   criarComentarioForum,
@@ -415,39 +416,23 @@ export function ForumTopico() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            to="/forum"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 sm:w-auto sm:justify-start sm:border-0 sm:px-0 sm:py-0"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" />
-            Voltar ao fórum
-          </Link>
-
-          {podeEditarTopico && (
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-              <Link
-                to={`/forum/topico/${topico.id}/editar`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-              >
-                <Edit className="h-4 w-4 shrink-0" />
-                Editar
-              </Link>
-              <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto" onClick={removerTopico}>
-                <Trash2 className="mr-1 h-4 w-4 shrink-0" />
-                Excluir
-              </Button>
-              {admin && topico.status !== 'oculto' && (
-                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={ocultarTopico}>
-                  <EyeOff className="mr-1 h-4 w-4 shrink-0" />
-                  Ocultar
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Tópico do fórum"
+        subtitle={topico.titulo}
+        icon={MessageCircle}
+        actions={[
+          { label: 'Voltar ao fórum', to: '/forum', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          ...(podeEditarTopico
+            ? [
+                { label: 'Editar', to: `/forum/topico/${topico.id}/editar`, icon: Edit },
+                { label: 'Excluir', onClick: removerTopico, icon: Trash2, variant: 'danger' as const },
+                ...(admin && topico.status !== 'oculto'
+                  ? [{ label: 'Ocultar', onClick: ocultarTopico, icon: EyeOff }]
+                  : []),
+              ]
+            : []),
+        ]}
+      />
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
         <Card className="min-w-0">
