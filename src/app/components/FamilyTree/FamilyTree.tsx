@@ -396,6 +396,13 @@ function getLayoutNormalizationBounds(
 
   if (!personBounds) return null;
 
+  if (mode !== 'direct-family') {
+    return personBounds;
+  }
+
+  const viewportBounds = layout.viewportBounds;
+  if (!viewportBounds) return personBounds;
+
   const directFamilyGroupBounds = getBoundsForNodes(
     layout.nodes.filter((node) => {
       if (node.hidden) return false;
@@ -416,9 +423,9 @@ function getLayoutNormalizationBounds(
   );
 
   return {
-    x: personBounds.x,
+    x: viewportBounds.x,
     y: minY,
-    width: personBounds.width,
+    width: viewportBounds.width,
     height: Math.max(1, maxY - minY),
   };
 }
