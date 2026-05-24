@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { AppLink as Link } from '../components/AppLink';
-import { ArrowLeft, Check, Link2, Search, UserCircle2 } from 'lucide-react';
+import { Check, Link2, Search, UserCircle2 } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import {
+  HEADER_ACTION_ICONS,
+  MemberPageHeader,
+} from '../components/layout/MemberPageHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { ensureMemberProfile, linkUserToPerson, listLinkablePeople } from '../services/memberProfileService';
 import { Pessoa } from '../types';
@@ -91,19 +94,15 @@ export function VincularPerfil() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vincular meu perfil</h1>
-            <p className="text-sm text-gray-500">Associe sua conta a uma pessoa já cadastrada na árvore genealógica</p>
-          </div>
-
-          <Link to="/minha-arvore" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Link>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Vincular meu perfil"
+        subtitle="Associe sua conta a uma pessoa já cadastrada na árvore genealógica."
+        icon={UserCircle2}
+        actions={[
+          { label: 'Voltar', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
+        ]}
+      />
 
       <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)] gap-6">
         <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
