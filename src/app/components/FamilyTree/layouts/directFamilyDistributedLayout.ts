@@ -101,9 +101,9 @@ const SIDE_GROUPS_BOTTOM = 1835;
 const CENTRAL_GROUP_TOP = 250;
 const CENTRAL_GROUP_BOTTOM = 1585;
 
-const GROUP_BOX_PADDING_X = 22;
-const GROUP_BOX_PADDING_Y = 16;
-const LABEL_HEIGHT = 38;
+const GROUP_BOX_PADDING_X = 24;
+const GROUP_BOX_PADDING_Y = 18;
+const LABEL_HEIGHT = 42;
 const LABEL_TO_CARD_GAP = 4;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
@@ -638,9 +638,7 @@ function placeGroup(
   const maxPerRow = resolveGroupColumns(spec, visibleIds, index);
   const metrics = groupGridMetrics(visibleIds, maxPerRow, index);
   const preferredGroupWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label)) + GROUP_BOX_PADDING_X * 2;
-  const groupWidth = spec.alignBoundary && spec.side
-    ? Math.max(preferredGroupWidth, spec.laneWidth || preferredGroupWidth)
-    : preferredGroupWidth;
+  const groupWidth = preferredGroupWidth;
   const groupX = spec.alignBoundary?.side === 'left'
     ? spec.alignBoundary.x
     : spec.alignBoundary?.side === 'right'
