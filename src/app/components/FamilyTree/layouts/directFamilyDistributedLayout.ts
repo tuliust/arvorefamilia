@@ -96,12 +96,12 @@ const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
-const CENTRAL_HEIGHT = 500;
+const CENTRAL_HEIGHT = 420;
 const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
-const SIDE_GROUPS_TOP = 360;
+const SIDE_GROUPS_TOP = 420;
 const SIDE_GROUPS_BOTTOM = 1580;
 const CENTRAL_GROUP_TOP = 250;
 const CENTRAL_GROUP_BOTTOM = 1585;
@@ -115,9 +115,9 @@ const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
 const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
-const SIDE_GROUP_MIN_GAP = 10;
+const SIDE_GROUP_MIN_GAP = 8;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
-const CENTRAL_Y = 520;
+const CENTRAL_Y = 560;
 const PARENT_GROUP_Y = SIDE_TOP;
 const PARENT_GROUP_GAP = 260;
 const FATHER_GROUP_CENTER_X = VIEW_CENTER_X - PARENT_GROUP_GAP;
@@ -166,7 +166,7 @@ const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
 const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
 const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 80;
 const LOWER_LANE_WIDTH = 760;
-const LOWER_GROUP_GAP = 18;
+const LOWER_GROUP_GAP = 12;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
@@ -607,8 +607,8 @@ function isCollateralGroup(spec: GroupSpec) {
   return spec.variant === 'uncleAunt' || spec.variant === 'cousin';
 }
 
-function groupWidthForColumns(label: string, columns: number) {
-  const cardsWidth = columns * CARD_WIDTH + Math.max(0, columns - 1) * COLUMN_GAP;
+function groupWidthForColumns(label: string, columns: number, spec?: GroupSpec) {
+  const cardsWidth = cardRowWidthForColumns(columns, spec);
   return Math.max(cardsWidth, labelWidth(label)) + GROUP_BOX_PADDING_X * 2;
 }
 
@@ -618,11 +618,11 @@ function cardRowWidthForColumns(columns: number, spec?: GroupSpec) {
   return columns * cardWidth + Math.max(0, columns - 1) * columnGap;
 }
 
-function cappedGroupWidthForColumns(label: string, columns: number, laneWidth: number) {
-  return Math.min(groupWidthForColumns(label, columns), laneWidth);
+function cappedGroupWidthForColumns(label: string, columns: number, laneWidth: number, spec?: GroupSpec) {
+  return Math.min(groupWidthForColumns(label, columns, spec), laneWidth);
 }
 
-function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex) {
+function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex, spec?: GroupSpec) {
   const visibleCount = Math.max(1, ids.length);
   const units = buildGroupLayoutUnits(ids, index);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
@@ -636,7 +636,7 @@ function compactColumns(ids: string[], label: string, maxColumns: number, laneWi
       : Math.min(3, cappedMax);
 
   for (let columns = preferred; columns >= minColumns; columns -= 1) {
-    if (groupWidthForColumns(label, columns) <= laneWidth) return columns;
+    if (groupWidthForColumns(label, columns, spec) <= laneWidth) return columns;
   }
 
   return minColumns;
@@ -667,11 +667,40 @@ function resolveGroupColumns(spec: GroupSpec, ids = spec.ids, index?: Relationsh
     );
   }
 
-  return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH, index);
+  return compactColumns(ids, spec.label, spec.maxPerRow, spec.laneWidth || SIDE_LANE_WIDTH, index, spec);
 }
 
 function visibleGroupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex, spec?: GroupSpec) {
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
+}
+
+function lowerGroupTopPositions(
+  groups: GroupSpec[],
+  minTopY: number,
+  bottomY: number,
+  gap: number,
+  index?: RelationshipIndex
+) {
+  const visibleGroups = groups.filter((group) => group.ids.length > 0);
+  if (visibleGroups.length === 0) return new Map<string, number>();
+
+  const heights = new Map(
+    visibleGroups.map((group) => {
+      const columns = resolveGroupColumns(group, group.ids, index);
+      return [group.key, visibleGroupHeight(group.ids, columns, index, group)];
+    })
+  );
+  const totalHeight = visibleGroups.reduce((sum, group) => sum + (heights.get(group.key) || 0), 0);
+  const totalGap = Math.max(0, visibleGroups.length - 1) * gap;
+  let cursorY = Math.max(minTopY, bottomY - totalHeight - totalGap);
+  const positions = new Map<string, number>();
+
+  visibleGroups.forEach((group) => {
+    positions.set(group.key, cursorY);
+    cursorY += (heights.get(group.key) || 0) + gap;
+  });
+
+  return positions;
 }
 
 function shouldCenterCardsInGroup(spec: GroupSpec) {
@@ -883,7 +912,9 @@ function addCentralPerson(
       ...node,
       data: {
         ...node.data,
+        width: CENTRAL_WIDTH,
         height: CENTRAL_HEIGHT,
+        layoutWidth: CENTRAL_WIDTH,
         layoutHeight: CENTRAL_HEIGHT,
       },
     },
@@ -1314,18 +1345,26 @@ export function directFamilyDistributedLayout(
     centerX: LOWER_RIGHT_GROUP_CENTER_X,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: SIDE_CARD_WIDTH, cardHeight: SIDE_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
-  const siblingsHeight = visibleGroupHeight(siblings, resolveGroupColumns(siblingGroup, siblings, index), index, siblingGroup);
-  const spouseHeight = visibleGroupHeight(spouses, resolveGroupColumns(spouseGroup, spouses, index), index, spouseGroup);
-  const childrenHeight = visibleGroupHeight(children, resolveGroupColumns(childrenGroup, children, index), index, childrenGroup);
-  const nephewsY = siblingsHeight > 0 ? LOWER_GROUP_Y + siblingsHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
-  const childrenY = spouseHeight > 0 ? LOWER_GROUP_Y + spouseHeight + LOWER_GROUP_GAP : LOWER_GROUP_Y;
-  const grandchildrenY = childrenHeight > 0 ? childrenY + childrenHeight + LOWER_GROUP_GAP : childrenY;
+  const leftLowerPositions = lowerGroupTopPositions(
+    [siblingGroup, nephewGroup],
+    LOWER_GROUP_Y,
+    CENTRAL_GROUP_BOTTOM,
+    LOWER_GROUP_GAP,
+    index
+  );
+  const rightLowerPositions = lowerGroupTopPositions(
+    [spouseGroup, childrenGroup, grandchildrenGroup],
+    LOWER_GROUP_Y,
+    CENTRAL_GROUP_BOTTOM,
+    LOWER_GROUP_GAP,
+    index
+  );
 
-  placeGroup(siblingGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(nephewGroup, nephewsY, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(childrenGroup, childrenY, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(grandchildrenGroup, grandchildrenY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(siblingGroup, leftLowerPositions.get(siblingGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(nephewGroup, leftLowerPositions.get(nephewGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(spouseGroup, rightLowerPositions.get(spouseGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(childrenGroup, rightLowerPositions.get(childrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(grandchildrenGroup, rightLowerPositions.get(grandchildrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
 
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [
@@ -1345,6 +1384,7 @@ export function directFamilyDistributedLayout(
     'sobrinhos',
     'conjuge',
     'filhos',
+    'netos',
   ].forEach((key) => {
     const bounds = getGroupBoxBounds(positionedNodes, key);
     if (!bounds) return;

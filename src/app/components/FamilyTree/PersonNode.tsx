@@ -381,8 +381,24 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const cardWidth = layoutWidth ?? baseCardWidth;
     const cardHeight = layoutHeight ?? baseCardHeight;
     const cardScale = Math.min(cardWidth / baseCardWidth, cardHeight / baseCardHeight);
+    const cappedCardScale = Math.min(1, cardScale);
+    const isCompactDirectCard = !isCentralDirectNode && cardHeight < DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
+    const centralPaddingY = Math.max(22, Math.round(40 * cappedCardScale));
+    const centralPaddingX = Math.max(34, Math.round(48 * cappedCardScale));
+    const centralNameFontSize = Math.max(28, Math.round((isMobile ? 46 : 42) * cappedCardScale * 1.08));
+    const centralDetailFontSize = Math.max(15, Math.round((isMobile ? 24 : 22) * cappedCardScale * 1.04));
+    const directNameFontSize = isCentralDirectNode
+      ? centralNameFontSize
+      : isCompactDirectCard
+        ? (isMobile ? 20 : 18)
+        : (isMobile ? 30 : 27);
+    const directDetailFontSize = isCentralDirectNode
+      ? centralDetailFontSize
+      : isCompactDirectCard
+        ? (isMobile ? 14 : 12)
+        : (isMobile ? 19 : 17);
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
-    const nonCentralAvatarScale = isCentralDirectNode ? 1 : 1.48;
+    const nonCentralAvatarScale = isCentralDirectNode ? 1 : isCompactDirectCard ? 1.24 : 1.48;
     const avatarSize = (isCentralDirectNode ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE : DIRECT_FAMILY_TOKENS.AVATAR_SIZE) * cardScale * mobileAvatarScale * nonCentralAvatarScale;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const directDetailLines = detailLines.length > 0
@@ -416,6 +432,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             width: cardWidth,
             minHeight: cardHeight,
             height: cardHeight,
+            ...(isCentralDirectNode ? { padding: `${centralPaddingY}px ${centralPaddingX}px` } : {}),
             background: style.background,
             borderColor: directBorderColor,
             color: style.color,
@@ -450,21 +467,28 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             </div>
           )}
 
-          <div className={isCentralDirectNode ? 'mt-9 min-w-0 max-w-full' : 'min-w-0 flex-1'}>
+          <div
+            className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'min-w-0 flex-1'}
+            style={isCentralDirectNode ? { marginTop: Math.max(16, Math.round(36 * cappedCardScale)) } : undefined}
+          >
             <h3
               className={[
                 'font-bold leading-tight',
                 isCentralDirectNode
-                  ? `whitespace-normal break-words ${isMobile ? 'text-[46px]' : 'text-[42px]'}`
-                  : `overflow-hidden break-words ${isMobile ? 'text-[30px]' : 'text-[27px]'} [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]`,
+                  ? 'whitespace-normal break-words'
+                  : 'overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]',
               ].join(' ')}
+              style={{ fontSize: directNameFontSize }}
               title={pessoa.nome_completo}
             >
               {pessoa.nome_completo}
             </h3>
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
-                <div className={`mt-5 space-y-2 ${isMobile ? 'text-[24px]' : 'text-[22px]'} leading-snug`} style={{ color: style.muted }}>
+                <div
+                  className="mt-3 space-y-1.5 leading-snug"
+                  style={{ color: style.muted, fontSize: directDetailFontSize }}
+                >
                   {centralDetails.map((detail) => (
                     <p key={detail} className="whitespace-normal break-words">
                       {detail}
@@ -477,9 +501,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 lines={directDetailLines}
                 className={[
                   'mt-1 space-y-0.5 overflow-hidden font-bold leading-tight',
-                  isMobile ? 'text-[19px]' : 'text-[17px]',
                 ].join(' ')}
-                style={{ color: style.muted }}
+                style={{ color: style.muted, fontSize: directDetailFontSize }}
               />
             )}
           </div>
