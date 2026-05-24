@@ -30,7 +30,7 @@ export const DirectFamilyLabelNode = React.memo(({ data }: NodeProps<DirectFamil
 
   return (
     <div
-      className="pointer-events-none flex min-h-[34px] w-full select-none items-center justify-center overflow-visible whitespace-nowrap bg-transparent p-0 text-center text-[24px] font-extrabold uppercase tracking-normal text-slate-800 shadow-none"
+      className="pointer-events-none flex min-h-[38px] w-full select-none items-center justify-center overflow-visible whitespace-nowrap bg-transparent p-0 text-center text-[26px] font-extrabold uppercase tracking-normal text-slate-800 shadow-none"
       aria-label={data.label}
       style={{
         width: data.width ?? 180,
