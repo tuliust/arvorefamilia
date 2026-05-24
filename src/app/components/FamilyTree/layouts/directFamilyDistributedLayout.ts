@@ -129,10 +129,12 @@ const SIDE_LANE_WIDTH = Math.min(
   MATERNAL_LANE_RIGHT - MATERNAL_LANE_LEFT
 );
 const SIDE_GROUP_COLUMNS = 3;
+const SIDE_GROUP_EXTRA_INNER_SPACE = Math.round(CARD_WIDTH * 0.9);
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * CARD_WIDTH +
   Math.max(0, SIDE_GROUP_COLUMNS - 1) * COLUMN_GAP +
-  GROUP_BOX_PADDING_X * 2;
+  GROUP_BOX_PADDING_X * 2 +
+  SIDE_GROUP_EXTRA_INNER_SPACE;
 
 const PATERNAL_GROUP_LEFT_X = DIRECT_FRAME_LEFT;
 const PATERNAL_GROUP_RIGHT_X = PATERNAL_GROUP_LEFT_X + SIDE_GROUP_WIDTH;
@@ -603,6 +605,14 @@ function visibleGroupHeight(ids: string[], maxPerRow: number, index?: Relationsh
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index) : 0;
 }
 
+function shouldCenterCardsInGroup(spec: GroupSpec) {
+  return (
+    spec.variant === 'greatGreatGrandparent' ||
+    spec.variant === 'greatGrandparent' ||
+    spec.variant === 'grandparent'
+  );
+}
+
 function placeGroup(
   spec: GroupSpec,
   topY: number,
@@ -629,17 +639,20 @@ function placeGroup(
   const labelY = topY + GROUP_BOX_PADDING_Y;
   const firstCardY = labelY + LABEL_HEIGHT + LABEL_TO_CARD_GAP;
   const placedIds: string[] = [];
+  const shouldCenterCards = shouldCenterCardsInGroup(spec);
 
   addLabel(positionedNodes, `direct-label-${spec.key}`, spec.label, groupCenterX, labelY);
 
   for (let rowIndex = 0; rowIndex < metrics.rows.length; rowIndex += 1) {
     const rowIds = metrics.rows[rowIndex].flatMap((unit) => unit.ids);
     const rowWidth = rowIds.length * CARD_WIDTH + Math.max(0, rowIds.length - 1) * COLUMN_GAP;
-    const startX = spec.alignBoundary?.side === 'left'
-      ? groupX + GROUP_BOX_PADDING_X
-      : spec.alignBoundary?.side === 'right'
-        ? groupX + groupWidth - GROUP_BOX_PADDING_X - rowWidth
-        : groupCenterX - rowWidth / 2;
+    const startX = shouldCenterCards
+      ? groupCenterX - rowWidth / 2
+      : spec.alignBoundary?.side === 'left'
+        ? groupX + GROUP_BOX_PADDING_X
+        : spec.alignBoundary?.side === 'right'
+          ? groupX + groupWidth - GROUP_BOX_PADDING_X - rowWidth
+          : groupCenterX - rowWidth / 2;
 
     rowIds.forEach((id, index) => {
       const node = personNodeById.get(id);
