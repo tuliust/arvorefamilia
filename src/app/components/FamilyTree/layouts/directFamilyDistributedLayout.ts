@@ -73,7 +73,7 @@ interface GroupGridMetrics {
   cardsWidth: number;
 }
 
-const DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE = 640;
+const DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE = 0;
 const DIRECT_FRAME_LEFT = 10 - DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
 const DIRECT_FRAME_RIGHT = 3210 + DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
 const FRAME_TOP = 10;
@@ -103,8 +103,8 @@ const CENTRAL_GROUP_BOTTOM = 1585;
 
 const GROUP_BOX_PADDING_X = 24;
 const GROUP_BOX_PADDING_Y = 18;
-const LABEL_HEIGHT = 42;
-const LABEL_TO_CARD_GAP = 4;
+const LABEL_HEIGHT = 46;
+const LABEL_TO_CARD_GAP = 0;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
@@ -564,6 +564,18 @@ function groupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex
   return GROUP_BOX_PADDING_Y * 2 + LABEL_HEIGHT + LABEL_TO_CARD_GAP + metrics.cardsHeight;
 }
 
+function isAncestorGroup(spec: GroupSpec) {
+  return (
+    spec.variant === 'greatGreatGrandparent' ||
+    spec.variant === 'greatGrandparent' ||
+    spec.variant === 'grandparent'
+  );
+}
+
+function isCollateralGroup(spec: GroupSpec) {
+  return spec.variant === 'uncleAunt' || spec.variant === 'cousin';
+}
+
 function groupWidthForColumns(label: string, columns: number) {
   const cardsWidth = columns * CARD_WIDTH + Math.max(0, columns - 1) * COLUMN_GAP;
   return Math.max(cardsWidth, labelWidth(label)) + GROUP_BOX_PADDING_X * 2;
@@ -615,13 +627,48 @@ function visibleGroupHeight(ids: string[], maxPerRow: number, index?: Relationsh
 }
 
 function shouldCenterCardsInGroup(spec: GroupSpec) {
-  return (
-    spec.variant === 'greatGreatGrandparent' ||
-    spec.variant === 'greatGrandparent' ||
-    spec.variant === 'grandparent' ||
-    spec.variant === 'uncleAunt' ||
-    spec.variant === 'cousin'
-  );
+  return isAncestorGroup(spec) || isCollateralGroup(spec);
+}
+
+function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
+  const contentWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label));
+  const proportionalWidth = contentWidth + GROUP_BOX_PADDING_X * 2;
+
+  if (isAncestorGroup(spec)) {
+    return Math.min(proportionalWidth, ANCESTOR_GROUP_WIDTH);
+  }
+
+  if (isCollateralGroup(spec)) {
+    return Math.min(proportionalWidth, SIDE_GROUP_WIDTH);
+  }
+
+  return proportionalWidth;
+}
+
+function getGroupX(spec: GroupSpec, groupWidth: number) {
+  if (isCollateralGroup(spec) && spec.alignBoundary?.side === 'left') {
+    return spec.alignBoundary.x;
+  }
+
+  if (isCollateralGroup(spec) && spec.alignBoundary?.side === 'right') {
+    return spec.alignBoundary.x - groupWidth;
+  }
+
+  return spec.centerX - groupWidth / 2;
+}
+
+function getGroupCenterX(groupX: number, groupWidth: number) {
+  return groupX + groupWidth / 2;
+}
+
+function getInnerCenterX(groupX: number, groupWidth: number) {
+  const innerLeft = groupX + GROUP_BOX_PADDING_X;
+  const innerRight = groupX + groupWidth - GROUP_BOX_PADDING_X;
+  return (innerLeft + innerRight) / 2;
+}
+
+function getRowWidth(cardCount: number) {
+  return cardCount * CARD_WIDTH + Math.max(0, cardCount - 1) * COLUMN_GAP;
 }
 
 function placeGroup(
@@ -637,17 +684,11 @@ function placeGroup(
 
   const maxPerRow = resolveGroupColumns(spec, visibleIds, index);
   const metrics = groupGridMetrics(visibleIds, maxPerRow, index);
-  const preferredGroupWidth = Math.max(metrics.cardsWidth, labelWidth(spec.label)) + GROUP_BOX_PADDING_X * 2;
-  const groupWidth = preferredGroupWidth;
+  const groupWidth = getGroupWidth(spec, metrics);
   const shouldCenterCards = shouldCenterCardsInGroup(spec);
-  const groupX = shouldCenterCards
-    ? spec.centerX - groupWidth / 2
-    : spec.alignBoundary?.side === 'left'
-      ? spec.alignBoundary.x
-      : spec.alignBoundary?.side === 'right'
-        ? spec.alignBoundary.x - groupWidth
-        : spec.centerX - groupWidth / 2;
-  const groupCenterX = groupX + groupWidth / 2;
+  const groupX = getGroupX(spec, groupWidth);
+  const groupCenterX = getGroupCenterX(groupX, groupWidth);
+  const innerCenterX = getInnerCenterX(groupX, groupWidth);
   const labelY = topY + GROUP_BOX_PADDING_Y;
   const firstCardY = labelY + LABEL_HEIGHT + LABEL_TO_CARD_GAP;
   const placedIds: string[] = [];
@@ -656,9 +697,9 @@ function placeGroup(
 
   for (let rowIndex = 0; rowIndex < metrics.rows.length; rowIndex += 1) {
     const rowIds = metrics.rows[rowIndex].flatMap((unit) => unit.ids);
-    const rowWidth = rowIds.length * CARD_WIDTH + Math.max(0, rowIds.length - 1) * COLUMN_GAP;
+    const rowWidth = getRowWidth(rowIds.length);
     const startX = shouldCenterCards
-      ? groupCenterX - rowWidth / 2
+      ? innerCenterX - rowWidth / 2
       : spec.alignBoundary?.side === 'left'
         ? groupX + GROUP_BOX_PADDING_X
         : spec.alignBoundary?.side === 'right'

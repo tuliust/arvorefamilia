@@ -105,7 +105,9 @@ const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
 const TREE_TITLE_TOP = 12;
 const TREE_TITLE_HEIGHT = 48;
-const TREE_VIEWPORT_TOP_SAFE_AREA = 78;
+const TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET = 64;
+const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
+const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 104;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
@@ -132,7 +134,7 @@ function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: nu
   if (node.type === 'directFamilyLabelNode') {
     return {
       width: Number.isFinite(dataWidth) && dataWidth > 0 ? dataWidth : 180,
-      height: node.data?.variant === 'title' ? 64 : 30,
+      height: node.data?.variant === 'title' ? 64 : 46,
     };
   }
 
@@ -709,6 +711,7 @@ function FamilyTreeComponent({
   onToggleSidebar,
 }: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const flowViewportRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const [reactFlowReady, setReactFlowReady] = useState(false);
   const [hasAppliedInitialViewport, setHasAppliedInitialViewport] = useState(false);
@@ -725,7 +728,14 @@ function FamilyTreeComponent({
   const activeMaxZoom = isGenealogyLayout
     ? (isMobile ? GENEALOGY_MOBILE_MAX_ZOOM : GENEALOGY_MAX_ZOOM)
     : directFamilyMaxZoom;
-  const activeCanPan = true;
+  const flowViewportStyle = isMobile
+    ? undefined
+    : {
+        top: viewMode === 'minha-arvore'
+          ? TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET
+          : TREE_DESKTOP_VISUAL_TOP_INSET,
+        bottom: TREE_DESKTOP_VISUAL_BOTTOM_INSET,
+      };
   const effectiveCentralPersonId = centralPersonId || selectedPersonId || pessoas[0]?.id;
   const treeTitleFirstName = useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === effectiveCentralPersonId);
@@ -924,7 +934,7 @@ function FamilyTreeComponent({
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   useEffect(() => {
-    const container = containerRef.current;
+    const container = flowViewportRef.current;
     if (!container) return;
 
     const updateContainerSize = () => {
@@ -979,9 +989,17 @@ function FamilyTreeComponent({
       bounds: viewportContentBounds,
       containerWidth: containerSize.width,
       containerHeight: containerSize.height,
-      paddingX: isMobile ? TREE_MOBILE_VIEWPORT_PADDING_X : TREE_VIEWPORT_PADDING_X,
-      paddingY: isMobile ? TREE_MOBILE_VIEWPORT_PADDING_Y : TREE_VIEWPORT_PADDING_Y,
-      titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : TREE_VIEWPORT_TOP_SAFE_AREA,
+      paddingX: isMobile
+        ? TREE_MOBILE_VIEWPORT_PADDING_X
+        : isGenealogyLayout
+          ? TREE_VIEWPORT_PADDING_X
+          : 0,
+      paddingY: isMobile
+        ? TREE_MOBILE_VIEWPORT_PADDING_Y
+        : isGenealogyLayout
+          ? TREE_VIEWPORT_PADDING_Y
+          : 0,
+      titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : 0,
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
@@ -1124,6 +1142,7 @@ function FamilyTreeComponent({
   const isAtMinZoom = directFamilyCurrentZoom !== null
     ? directFamilyCurrentZoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON
     : false;
+  const activeCanPan = viewMode !== 'minha-arvore' || !isAtMinZoom;
 
   const handleZoomIn = useCallback(() => {
     setHasUserInteractedWithViewport(true);
@@ -1247,7 +1266,7 @@ function FamilyTreeComponent({
         'relative h-full w-full overflow-hidden',
         'bg-slate-50',
       ].join(' ')}
-      style={{ width: '100%', height: '100%', minHeight: '500px' }}
+      style={{ width: '100%', height: '100%' }}
     >
       {showSidebarToggle && onToggleSidebar && (
         <div className="absolute left-4 top-4 z-20">
@@ -1348,6 +1367,7 @@ function FamilyTreeComponent({
           <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
             <div>DEBUG TREE BOUNDS</div>
             <div>Vermelho: área total visível do componente</div>
+            <div>ReactFlow: top {isMobile ? 0 : viewMode === 'minha-arvore' ? TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET : TREE_DESKTOP_VISUAL_TOP_INSET}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
             <div>Amarelo: grade lógica / viewportBounds</div>
             <div>Azul: conteúdo renderizado / flowBounds</div>
             <div>Rosa: área preenchida por cards / personNodes</div>
@@ -1358,36 +1378,38 @@ function FamilyTreeComponent({
         </div>
       )}
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onInit={handleInit}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        onMove={handleMove}
-        onMoveEnd={handleMoveEnd}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        minZoom={activeMinZoom}
-        maxZoom={activeMaxZoom}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        panOnDrag={!isAreaSelectionOpen && activeCanPan}
-        panOnScroll={!isAreaSelectionOpen && activeCanPan}
-        zoomOnScroll={!isAreaSelectionOpen}
-        zoomOnPinch={!isAreaSelectionOpen}
-        translateExtent={directFamilyTranslateExtent}
-        preventScrolling
-        defaultViewport={{
-          x: directFamilyViewport?.x ?? 0,
-          y: directFamilyViewport?.y ?? 0,
-          zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
-        }}
-        style={{ visibility: hasAppliedInitialViewport ? 'visible' : 'hidden' }}
-        proOptions={{ hideAttribution: true }}
-      />
+      <div ref={flowViewportRef} className={isMobile ? 'absolute inset-0' : 'absolute left-0 right-0'} style={flowViewportStyle}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onInit={handleInit}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={handleNodeClick}
+          onMove={handleMove}
+          onMoveEnd={handleMoveEnd}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          minZoom={activeMinZoom}
+          maxZoom={activeMaxZoom}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          panOnDrag={!isAreaSelectionOpen && activeCanPan}
+          panOnScroll={!isAreaSelectionOpen && activeCanPan}
+          zoomOnScroll={!isAreaSelectionOpen}
+          zoomOnPinch={!isAreaSelectionOpen}
+          translateExtent={directFamilyTranslateExtent}
+          preventScrolling
+          defaultViewport={{
+            x: directFamilyViewport?.x ?? 0,
+            y: directFamilyViewport?.y ?? 0,
+            zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
+          }}
+          style={{ visibility: hasAppliedInitialViewport ? 'visible' : 'hidden' }}
+          proOptions={{ hideAttribution: true }}
+        />
+      </div>
       {isAreaSelectionOpen && (
         <TreeAreaSelectionOverlay
           getTargetElement={() => getExportableFlowElement(containerRef.current)}
