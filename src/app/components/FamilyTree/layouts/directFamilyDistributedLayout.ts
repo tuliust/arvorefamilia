@@ -908,6 +908,62 @@ function placeGroupStack(
   return placedIds;
 }
 
+function shiftPlacedGroupY(
+  nodes: Node[],
+  spec: GroupSpec,
+  deltaY: number,
+  positionedIds: Set<string>
+) {
+  if (!Number.isFinite(deltaY) || Math.abs(deltaY) < 0.5) return;
+
+  const groupNodeIds = new Set([
+    `direct-group-box-${spec.key}`,
+    `direct-label-${spec.key}`,
+    ...spec.ids.filter((id) => positionedIds.has(id)),
+  ]);
+
+  nodes.forEach((node) => {
+    if (!groupNodeIds.has(node.id)) return;
+    node.position = {
+      ...node.position,
+      y: node.position.y + deltaY,
+    };
+  });
+}
+
+function alignGroupToBottom(
+  nodes: Node[],
+  spec: GroupSpec,
+  bottomY: number,
+  positionedIds: Set<string>
+) {
+  const bounds = getGroupBoxBounds(nodes, spec.key);
+  if (!bounds) return;
+
+  shiftPlacedGroupY(nodes, spec, bottomY - bounds.maxY, positionedIds);
+}
+
+function alignGroupStackToBottom(
+  nodes: Node[],
+  specs: GroupSpec[],
+  bottomY: number,
+  positionedIds: Set<string>
+) {
+  const visibleSpecs = specs.filter((spec) => getGroupBoxBounds(nodes, spec.key));
+  if (visibleSpecs.length === 0) return;
+
+  const lastVisibleSpec = visibleSpecs[visibleSpecs.length - 1];
+  const lastBounds = getGroupBoxBounds(nodes, lastVisibleSpec.key);
+  if (!lastBounds) return;
+
+  const deltaY = bottomY - lastBounds.maxY;
+  if (!Number.isFinite(deltaY) || Math.abs(deltaY) < 0.5) return;
+
+  visibleSpecs.forEach((spec) => {
+    shiftPlacedGroupY(nodes, spec, deltaY, positionedIds);
+  });
+}
+
 function addCentralPerson(
   centralPersonId: string,
   positionedNodes: Node[],
@@ -1375,6 +1431,31 @@ export function directFamilyDistributedLayout(
   placeGroup(spouseGroup, rightLowerPositions.get(spouseGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(childrenGroup, rightLowerPositions.get(childrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, rightLowerPositions.get(grandchildrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+
+  const paternalCousinsGroup = paternalGroups.find((group) => group.key === 'primos-paternos');
+  const maternalCousinsGroup = maternalGroups.find((group) => group.key === 'primos-maternos');
+
+  if (paternalCousinsGroup) {
+    alignGroupToBottom(positionedNodes, paternalCousinsGroup, SIDE_BOTTOM, positionedIds);
+  }
+
+  if (maternalCousinsGroup) {
+    alignGroupToBottom(positionedNodes, maternalCousinsGroup, SIDE_BOTTOM, positionedIds);
+  }
+
+  alignGroupStackToBottom(
+    positionedNodes,
+    [siblingGroup, nephewGroup],
+    CENTRAL_GROUP_BOTTOM,
+    positionedIds
+  );
+
+  alignGroupStackToBottom(
+    positionedNodes,
+    [spouseGroup, childrenGroup, grandchildrenGroup],
+    CENTRAL_GROUP_BOTTOM,
+    positionedIds
+  );
 
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [
