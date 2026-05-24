@@ -123,7 +123,7 @@ const TREE_MOBILE_DIRECTIONAL_PAN_RATIO = 0.65;
 type FlowBounds = TreeLayoutBounds;
 type TreeViewportFitMode = 'contain' | 'width' | 'height';
 type TreeViewportHorizontalAlign = 'center' | 'left';
-type TreeViewportVerticalAlign = 'center' | 'top' | 'bottom';
+type TreeViewportVerticalAlign = 'center' | 'top';
 type LayoutNormalizationMode = 'direct-family' | 'genealogy-columns' | 'complete-genealogy-columns';
 
 function getNodeRenderSize(node: Node, fallbackWidth: number, fallbackHeight: number) {
@@ -545,9 +545,7 @@ function getNormalizedTreeViewport({
       : containerWidth / 2 - centerX * zoom,
     y: verticalAlign === 'top'
       ? titleSafeArea + paddingY - bounds.y * zoom
-      : verticalAlign === 'bottom'
-        ? titleSafeArea + paddingY + availableHeight - (bounds.y + bounds.height) * zoom
-        : titleSafeArea + paddingY + availableHeight / 2 - centerY * zoom,
+      : titleSafeArea + paddingY + availableHeight / 2 - centerY * zoom,
     zoom,
   };
 }
@@ -993,11 +991,9 @@ function FamilyTreeComponent({
         : TREE_VIEWPORT_PADDING_X,
       paddingY: isMobile
         ? TREE_MOBILE_VIEWPORT_PADDING_Y
-        : viewMode === 'minha-arvore'
-          ? 0
-          : isGenealogyLayout
-            ? TREE_VIEWPORT_PADDING_Y
-            : 0,
+        : (isGenealogyLayout || viewMode === 'minha-arvore')
+          ? TREE_VIEWPORT_PADDING_Y
+          : 0,
       titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : 0,
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
@@ -1008,11 +1004,7 @@ function FamilyTreeComponent({
           ? 'contain'
           : 'contain',
       horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
-      verticalAlign: !isMobile && viewMode === 'minha-arvore'
-        ? 'bottom'
-        : !isMobile && isGenealogyLayout
-          ? 'top'
-          : 'center',
+      verticalAlign: !isMobile && (isGenealogyLayout || viewMode === 'minha-arvore') ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 

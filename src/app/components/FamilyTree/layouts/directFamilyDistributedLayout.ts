@@ -102,10 +102,10 @@ const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
 
 const SIDE_GROUPS_TOP = 170;
-const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM - 90;
+const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
-const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = FRAME_BOTTOM;
+const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = SIDE_GROUPS_BOTTOM;
 
 const GROUP_BOX_PADDING_X = 18;
 const GROUP_BOX_PADDING_Y = 14;
@@ -116,7 +116,7 @@ const ROW_GAP = 16;
 const ROW_STEP = CARD_HEIGHT + ROW_GAP;
 const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
-const SIDE_GROUP_MIN_GAP = 8;
+const SIDE_GROUP_MIN_GAP = 14;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
 const PARENT_GROUP_Y = SIDE_TOP;
@@ -140,21 +140,21 @@ const SIDE_LANE_WIDTH = Math.min(
   PATERNAL_LANE_RIGHT - PATERNAL_LANE_LEFT,
   MATERNAL_LANE_RIGHT - MATERNAL_LANE_LEFT
 );
-const SIDE_GROUP_COLUMNS = 3;
+const SIDE_GROUP_COLUMNS = 4;
 const SIDE_COLLATERAL_MIN_COLUMNS = 2;
 const ANCESTOR_GROUP_COLUMNS = 2;
 const STANDARD_GROUP_CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const STANDARD_GROUP_CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const SIDE_COLLATERAL_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
-const SIDE_COLLATERAL_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
+const SIDE_COLLATERAL_CARD_WIDTH = 360;
+const SIDE_COLLATERAL_CARD_HEIGHT = 154;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const LOWER_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
-const LOWER_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const SIDE_COLUMN_GAP = 8;
-const SIDE_ROW_GAP = 8;
+const LOWER_CARD_WIDTH = 360;
+const LOWER_CARD_HEIGHT = 154;
+const SIDE_COLUMN_GAP = 10;
+const SIDE_ROW_GAP = 10;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * SIDE_COLLATERAL_CARD_WIDTH +
@@ -176,7 +176,7 @@ const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
 const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
 const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 52;
 const LOWER_LANE_WIDTH = 860;
-const LOWER_GROUP_GAP = 12;
+const LOWER_GROUP_GAP = 14;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
@@ -658,14 +658,23 @@ function sideGroupColumns(ids: string[], label: string, maxColumns: number, lane
   const units = buildGroupLayoutUnits(ids, index);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
   const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount, SIDE_GROUP_COLUMNS);
-  const adaptiveMax = spec && isCollateralGroup(spec)
-    ? visibleCount <= 4
-      ? Math.min(Math.max(SIDE_COLLATERAL_MIN_COLUMNS, minColumns), cappedMax)
-      : visibleCount <= 6
-        ? Math.min(Math.max(3, minColumns), cappedMax)
-        : Math.min(3, cappedMax)
+
+  const preferredColumns = spec && isCollateralGroup(spec)
+    ? visibleCount <= 1
+      ? 1
+      : visibleCount === 2
+        ? 2
+        : visibleCount <= 4
+          ? 2
+          : visibleCount <= 6
+            ? 3
+            : 4
     : cappedMax;
-  const preferredMax = Math.max(minColumns, adaptiveMax);
+
+  const preferredMax = Math.max(
+    minColumns,
+    Math.min(preferredColumns, cappedMax)
+  );
 
   for (let columns = preferredMax; columns >= minColumns; columns -= 1) {
     if (groupWidthForColumns(label, columns, spec) <= laneWidth) return columns;
@@ -723,11 +732,15 @@ function lowerGroupTopPositions(
 }
 
 function shouldCenterCardsInGroup(spec: GroupSpec) {
-  return isAncestorGroup(spec) || isCollateralGroup(spec);
+  return isAncestorGroup(spec);
 }
 
 function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
-  if (spec.fillAvailableWidth && spec.laneWidth && metrics.columns > 2) {
+  if (
+    spec.laneWidth &&
+    metrics.columns > 2 &&
+    (spec.fillAvailableWidth || (spec.side && isCollateralGroup(spec)))
+  ) {
     return spec.laneWidth;
   }
 
