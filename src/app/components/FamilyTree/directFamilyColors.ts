@@ -85,8 +85,8 @@ export const DIRECT_FAMILY_STATUS_BORDER_COLORS = {
 } as const;
 
 export const DIRECT_FAMILY_GROUP_CONTAINER_BORDER = {
-  color: '#64748b',
-  width: 2.25,
+  color: '#CBD5E1',
+  width: 1.6,
 } as const;
 
 export const DIRECT_FAMILY_LEGEND_BACKGROUNDS = [

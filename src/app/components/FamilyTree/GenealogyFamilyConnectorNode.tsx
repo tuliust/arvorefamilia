@@ -33,7 +33,9 @@ export function GenealogyFamilyConnectorNode({
   const stroke = data.parentChildHighlight
     ? FAMILY_TREE_COLORS.EDGE_CHILD
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE;
-  const strokeWidth = data.parentChildHighlight ? 2.25 : 2;
+  const strokeWidth = data.parentChildHighlight
+    ? 2.25
+    : DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH;
 
   return (
     <svg
