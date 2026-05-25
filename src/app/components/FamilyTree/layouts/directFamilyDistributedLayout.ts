@@ -120,18 +120,23 @@ const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
 const PARENT_GROUP_Y = SIDE_TOP;
-const PARENT_GROUP_GAP = 260;
-const FATHER_GROUP_CENTER_X = VIEW_CENTER_X - PARENT_GROUP_GAP;
-const MOTHER_GROUP_CENTER_X = VIEW_CENTER_X + PARENT_GROUP_GAP;
 const CENTRAL_SIDE_GROUP_WIDTH = CARD_WIDTH + GROUP_BOX_PADDING_X * 2;
-const CENTRAL_LEFT_BOUNDARY = FATHER_GROUP_CENTER_X - CENTRAL_SIDE_GROUP_WIDTH / 2;
-const CENTRAL_RIGHT_BOUNDARY = MOTHER_GROUP_CENTER_X + CENTRAL_SIDE_GROUP_WIDTH / 2;
 const SIDE_AREA_OUTER_INSET_X = 48;
-const SIDE_AREA_CENTER_GAP_X = 40;
-const PATERNAL_SIDE_AREA_LEFT = DIRECT_FRAME_LEFT + SIDE_AREA_OUTER_INSET_X;
-const PATERNAL_SIDE_AREA_RIGHT = CENTRAL_LEFT_BOUNDARY - SIDE_AREA_CENTER_GAP_X;
-const MATERNAL_SIDE_AREA_LEFT = CENTRAL_RIGHT_BOUNDARY + SIDE_AREA_CENTER_GAP_X;
-const MATERNAL_SIDE_AREA_RIGHT = DIRECT_FRAME_RIGHT - SIDE_AREA_OUTER_INSET_X;
+const SIDE_AREA_CENTER_GAP_X = SIDE_AREA_OUTER_INSET_X;
+const CENTRAL_AREA_TARGET_RATIO = 0.3;
+const DIRECT_USEFUL_LEFT = DIRECT_FRAME_LEFT + SIDE_AREA_OUTER_INSET_X;
+const DIRECT_USEFUL_RIGHT = DIRECT_FRAME_RIGHT - SIDE_AREA_OUTER_INSET_X;
+const DIRECT_AREA_CONTENT_WIDTH = DIRECT_USEFUL_RIGHT - DIRECT_USEFUL_LEFT - SIDE_AREA_CENTER_GAP_X * 2;
+const CENTRAL_AREA_WIDTH = DIRECT_AREA_CONTENT_WIDTH * CENTRAL_AREA_TARGET_RATIO;
+const SIDE_AREA_WIDTH = (DIRECT_AREA_CONTENT_WIDTH - CENTRAL_AREA_WIDTH) / 2;
+const PATERNAL_SIDE_AREA_LEFT = DIRECT_USEFUL_LEFT;
+const PATERNAL_SIDE_AREA_RIGHT = PATERNAL_SIDE_AREA_LEFT + SIDE_AREA_WIDTH;
+const MATERNAL_SIDE_AREA_RIGHT = DIRECT_USEFUL_RIGHT;
+const MATERNAL_SIDE_AREA_LEFT = MATERNAL_SIDE_AREA_RIGHT - SIDE_AREA_WIDTH;
+const CENTRAL_LEFT_BOUNDARY = PATERNAL_SIDE_AREA_RIGHT + SIDE_AREA_CENTER_GAP_X;
+const CENTRAL_RIGHT_BOUNDARY = MATERNAL_SIDE_AREA_LEFT - SIDE_AREA_CENTER_GAP_X;
+const FATHER_GROUP_CENTER_X = CENTRAL_LEFT_BOUNDARY + CENTRAL_SIDE_GROUP_WIDTH / 2;
+const MOTHER_GROUP_CENTER_X = CENTRAL_RIGHT_BOUNDARY - CENTRAL_SIDE_GROUP_WIDTH / 2;
 const PATERNAL_LANE_LEFT = PATERNAL_SIDE_AREA_LEFT;
 const PATERNAL_LANE_RIGHT = PATERNAL_SIDE_AREA_RIGHT;
 const MATERNAL_LANE_LEFT = MATERNAL_SIDE_AREA_LEFT;
@@ -147,8 +152,8 @@ const STANDARD_GROUP_CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const STANDARD_GROUP_CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
-const SIDE_COLLATERAL_CARD_WIDTH = 330;
-const SIDE_COLLATERAL_CARD_HEIGHT = 142;
+const SIDE_COLLATERAL_CARD_WIDTH = 346;
+const SIDE_COLLATERAL_CARD_HEIGHT = 152;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
 const LOWER_CARD_WIDTH = 330;
@@ -664,11 +669,13 @@ function sideGroupColumns(ids: string[], label: string, maxColumns: number, lane
       ? 1
       : visibleCount === 2
         ? 2
-        : visibleCount <= 4
-          ? 2
-          : visibleCount <= 6
-            ? 3
-            : 4
+        : visibleCount === 3
+          ? 3
+        : visibleCount === 4
+          ? 4
+        : visibleCount <= 6
+          ? 3
+          : 4
     : cappedMax;
 
   const preferredMax = Math.max(
@@ -732,7 +739,7 @@ function lowerGroupTopPositions(
 }
 
 function shouldCenterCardsInGroup(spec: GroupSpec) {
-  return isAncestorGroup(spec);
+  return Boolean(spec.side) || isAncestorGroup(spec);
 }
 
 function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
@@ -869,6 +876,61 @@ function resolveSideStackGroups(groups: GroupSpec[], index?: RelationshipIndex) 
   }));
 }
 
+function resolveSideStackLayout(groups: GroupSpec[], index?: RelationshipIndex) {
+  const resolvedGroups = groups.map((group) => {
+    const maxPerRow = resolveGroupColumns(group, group.ids, index);
+
+    return {
+      ...group,
+      maxPerRow,
+    };
+  });
+
+  const sideRangeHeight = SIDE_BOTTOM - SIDE_TOP;
+  const stackGapFor = (items: typeof resolvedGroups) => {
+    if (items.length <= 1) return 0;
+
+    const totalHeight = items.reduce(
+      (sum, group) => sum + groupHeight(group.ids, group.maxPerRow, index, group),
+      0
+    );
+
+    return (sideRangeHeight - totalHeight) / (items.length - 1);
+  };
+
+  let adjustedGroups = resolvedGroups;
+  let availableGap = stackGapFor(adjustedGroups);
+
+  while (adjustedGroups.length > 1 && availableGap > 150) {
+    let changed = false;
+
+    adjustedGroups = adjustedGroups.map((group) => {
+      if (changed || !isCollateralGroup(group) || group.maxPerRow <= 3 || group.ids.length <= 4) {
+        return group;
+      }
+
+      const nextColumns = group.maxPerRow - 1;
+      if (groupWidthForColumns(group.label, nextColumns, group) > (group.laneWidth || SIDE_LANE_WIDTH)) {
+        return group;
+      }
+
+      changed = true;
+      return {
+        ...group,
+        maxPerRow: nextColumns,
+      };
+    });
+
+    if (!changed) break;
+    availableGap = stackGapFor(adjustedGroups);
+  }
+
+  return adjustedGroups.map((group) => ({
+    ...group,
+    fillAvailableWidth: group.fillAvailableWidth,
+  }));
+}
+
 function placeGroupStack(
   groups: GroupSpec[],
   positionedNodes: Node[],
@@ -885,33 +947,16 @@ function placeGroupStack(
 
   if (visibleGroups.length === 0) return [];
 
-  const resolvedGroups = visibleGroups.map((group) => {
-    const maxPerRow = resolveGroupColumns(group, group.ids, index);
-    const metrics = groupGridMetrics(group.ids, maxPerRow, index, group);
-    const contentWidth = Math.max(metrics.cardsWidth, labelWidth(group.label));
-    const proportionalWidth = group.laneWidth
-      ? Math.min(contentWidth + GROUP_BOX_PADDING_X * 2, group.laneWidth)
-      : contentWidth + GROUP_BOX_PADDING_X * 2;
-
-    return {
-      ...group,
-      maxPerRow,
-      proportionalWidth,
-    };
-  });
-
-  const resolvedGroupsWithFill = resolvedGroups.map((group) => ({
-    ...group,
-    fillAvailableWidth: group.fillAvailableWidth,
-  }));
-
+  const resolvedGroupsWithFill = resolveSideStackLayout(visibleGroups, index);
   const heights = resolvedGroupsWithFill.map((group) => groupHeight(group.ids, group.maxPerRow, index, group));
   const totalHeight = heights.reduce((sum, height) => sum + height, 0);
   const availableGap = resolvedGroupsWithFill.length > 1
     ? (SIDE_BOTTOM - SIDE_TOP - totalHeight) / (resolvedGroupsWithFill.length - 1)
     : 0;
   const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, availableGap);
-  let cursorY = SIDE_TOP;
+  let cursorY = resolvedGroupsWithFill.length === 1 && totalHeight < SIDE_BOTTOM - SIDE_TOP
+    ? SIDE_BOTTOM - totalHeight
+    : SIDE_TOP;
   const placedIds: string[] = [];
 
   resolvedGroupsWithFill.forEach((group, groupIndex) => {
