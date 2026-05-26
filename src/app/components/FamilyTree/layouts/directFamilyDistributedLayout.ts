@@ -102,7 +102,7 @@ const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
-const CENTRAL_HEIGHT = 360;
+const CENTRAL_HEIGHT = 330;
 const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
@@ -112,7 +112,7 @@ const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = SIDE_GROUPS_BOTTOM;
 // Extra logical room used only by Minha Árvore so lower groups reach the filter panel's visual base.
-const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 140;
+const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 600;
 const DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y =
   DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y + DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET;
 const CENTRAL_GROUP_BOTTOM = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y;
@@ -161,15 +161,15 @@ const ANCESTOR_GROUP_COLUMNS = 2;
 const STANDARD_GROUP_CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const STANDARD_GROUP_CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
-const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
+const SIDE_ANCESTOR_CARD_HEIGHT = 160;
 const SIDE_COLLATERAL_CARD_WIDTH = 346;
-const SIDE_COLLATERAL_CARD_HEIGHT = 152;
+const SIDE_COLLATERAL_CARD_HEIGHT = 126;
 const SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04;
 const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
-const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
+const SIDE_PARENT_CARD_HEIGHT = 160;
 const LOWER_CARD_WIDTH = 330;
-const LOWER_CARD_HEIGHT = 142;
+const LOWER_CARD_HEIGHT = 120;
 const SIDE_COLUMN_GAP = 8;
 const SIDE_ROW_GAP = 8;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
@@ -760,11 +760,7 @@ function shouldCenterCardsInGroup(spec: GroupSpec) {
 }
 
 function getGroupWidth(spec: GroupSpec, metrics: GroupGridMetrics) {
-  if (
-    spec.laneWidth &&
-    metrics.columns > 2 &&
-    (spec.fillAvailableWidth || (spec.side && isCollateralGroup(spec)))
-  ) {
+  if (spec.laneWidth && metrics.columns > 2 && spec.fillAvailableWidth) {
     return spec.laneWidth;
   }
 
@@ -1044,13 +1040,44 @@ function buildAdaptiveSideStackPlan(
   });
 }
 
+function redistributeSideStackPlanToBottom(
+  plan: SideStackPlanItem[],
+  bottomY = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
+): SideStackPlanItem[] {
+  if (plan.length === 0) return plan;
+
+  if (plan.length === 1) {
+    const [item] = plan;
+    return [{
+      ...item,
+      topY: Math.max(SIDE_TOP, bottomY - item.height),
+    }];
+  }
+
+  const totalHeight = plan.reduce((sum, item) => sum + item.height, 0);
+  const availableGap = (bottomY - SIDE_TOP - totalHeight) / (plan.length - 1);
+  const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, availableGap);
+
+  let cursorY = SIDE_TOP;
+
+  return plan.map((item) => {
+    const nextItem = {
+      ...item,
+      topY: cursorY,
+    };
+
+    cursorY += item.height + uniformGap;
+    return nextItem;
+  });
+}
+
 function sideCollateralScaleSteps(maxScale = SIDE_COLLATERAL_CARD_MAX_SCALE) {
   const boundedMaxScale = Math.max(1, Math.min(maxScale, SIDE_COLLATERAL_CARD_MAX_SCALE));
   return Math.floor((boundedMaxScale - 1 + 0.0001) / SIDE_COLLATERAL_CARD_SCALE_STEP);
 }
 
 function resolveAdaptiveSideStackMaxScale(groups: GroupSpec[], index?: RelationshipIndex) {
-  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
+  const basePlan = resolveSideStackPlan(groups, index, DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y);
   const lastCollateralIndex = getLastCollateralPlanIndex(basePlan);
 
   if (lastCollateralIndex < 0) return undefined;
@@ -1075,7 +1102,7 @@ function resolveAdaptiveSideStackPlan(
   index?: RelationshipIndex,
   maxScale = SIDE_COLLATERAL_CARD_MAX_SCALE
 ) {
-  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
+  const basePlan = resolveSideStackPlan(groups, index, DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y);
   const lastCollateralIndex = getLastCollateralPlanIndex(basePlan);
 
   if (lastCollateralIndex < 0) return basePlan;
@@ -1092,7 +1119,7 @@ function resolveAdaptiveSideStackPlan(
     }
   }
 
-  return bestPlan;
+  return redistributeSideStackPlanToBottom(bestPlan);
 }
 
 function placeGroupStackPlan(

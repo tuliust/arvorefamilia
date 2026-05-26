@@ -216,17 +216,21 @@ function PersonDetailLines({
   lines,
   className = '',
   style,
+  lineClassName = 'whitespace-normal break-words',
+  lineStyle,
 }: {
   lines: string[];
   className?: string;
   style?: React.CSSProperties;
+  lineClassName?: string;
+  lineStyle?: React.CSSProperties;
 }) {
   if (lines.length === 0) return null;
 
   return (
     <div className={className} style={style} title={lines.join('\n')}>
       {lines.map((line) => (
-        <p key={line} className="whitespace-normal break-words">
+        <p key={line} className={lineClassName} style={lineStyle}>
           {line}
         </p>
       ))}
@@ -386,22 +390,56 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const cardHeight = layoutHeight ?? baseCardHeight;
     const cardScale = Math.min(cardWidth / baseCardWidth, cardHeight / baseCardHeight);
     const cappedCardScale = Math.min(1, cardScale);
-    const nonCentralPaddingY = clampNumber(Math.round(cardHeight * 0.07), 10, 18);
-    const nonCentralPaddingX = clampNumber(Math.round(cardWidth * 0.035), 12, 20);
-    const nonCentralGap = clampNumber(Math.round(cardWidth * 0.035), 12, 18);
-    const nonCentralImageSize = Math.max(96, cardHeight - nonCentralPaddingY * 2);
-    const nonCentralTextWidth = Math.max(120, cardWidth - nonCentralPaddingX * 2 - nonCentralGap - nonCentralImageSize);
-    const estimatedNameFontForTwoLines = Math.floor((nonCentralTextWidth * 2) / Math.max(10, pessoa.nome_completo.length * 0.68));
+    const isCompactDirectCard = !isCentralDirectNode && cardHeight <= 160;
+    const isSmallDirectCard = !isCentralDirectNode && cardHeight <= 175;
+    const nonCentralPaddingY = isCompactDirectCard
+      ? clampNumber(Math.round(cardHeight * 0.055), 8, 12)
+      : clampNumber(Math.round(cardHeight * 0.065), 10, 18);
+    const nonCentralPaddingX = isCompactDirectCard
+      ? clampNumber(Math.round(cardWidth * 0.03), 10, 14)
+      : clampNumber(Math.round(cardWidth * 0.035), 12, 20);
+    const nonCentralGap = isCompactDirectCard
+      ? clampNumber(Math.round(cardWidth * 0.025), 8, 12)
+      : clampNumber(Math.round(cardWidth * 0.035), 12, 18);
+    const nonCentralImageSize = isCompactDirectCard
+      ? clampNumber(Math.round(cardHeight * 0.58), 72, 88)
+      : isSmallDirectCard
+        ? clampNumber(Math.round(cardHeight * 0.62), 82, 100)
+        : clampNumber(Math.round(cardHeight * 0.64), 96, 124);
+    const nonCentralTextWidth = Math.max(138, cardWidth - nonCentralPaddingX * 2 - nonCentralGap - nonCentralImageSize);
+    const estimatedNameFontForTwoLines = Math.floor(
+      (nonCentralTextWidth * 2) / Math.max(10, pessoa.nome_completo.length * 0.52)
+    );
     const centralPaddingY = Math.max(22, Math.round(40 * cappedCardScale));
     const centralPaddingX = Math.max(34, Math.round(48 * cappedCardScale));
     const centralNameFontSize = Math.max(28, Math.round((isMobile ? 46 : 42) * cappedCardScale * 1.08));
     const centralDetailFontSize = Math.max(15, Math.round((isMobile ? 24 : 22) * cappedCardScale * 1.04));
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
-      : clampNumber(estimatedNameFontForTwoLines, isMobile ? 18 : 17, isMobile ? 26 : 24);
+      : clampNumber(
+        estimatedNameFontForTwoLines,
+        isMobile ? 18 : isCompactDirectCard ? 16 : 18,
+        isMobile ? 28 : isCompactDirectCard ? 24 : isSmallDirectCard ? 26 : 28
+      );
+    const directDetailSizingLines = detailLines.length > 0
+      ? detailLines
+      : secondaryText || getLifeYearsLabel(pessoa)
+        ? [secondaryText || getLifeYearsLabel(pessoa) || '']
+        : [];
+    const longestDirectDetailLine = directDetailSizingLines.reduce(
+      (longest, line) => line.length > longest.length ? line : longest,
+      ''
+    );
+    const estimatedDetailFontForOneLine = longestDirectDetailLine
+      ? Math.floor(nonCentralTextWidth / Math.max(8, longestDirectDetailLine.length * 0.48))
+      : 13;
     const directDetailFontSize = isCentralDirectNode
       ? centralDetailFontSize
-      : clampNumber(Math.round(directNameFontSize * 0.72), isMobile ? 13 : 12, isMobile ? 18 : 17);
+      : clampNumber(
+        estimatedDetailFontForOneLine,
+        isMobile ? 13 : isCompactDirectCard ? 12 : 13,
+        isMobile ? 20 : isCompactDirectCard ? 16 : isSmallDirectCard ? 17 : 19
+      );
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
     const avatarSize = isCentralDirectNode
       ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE * cardScale * mobileAvatarScale
@@ -469,7 +507,11 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             >
               {avatarContent(
                 'h-full w-full',
-                isCentralDirectNode ? 'h-28 w-28 text-slate-700' : 'h-7 w-7 text-slate-700'
+                isCentralDirectNode
+                  ? 'h-28 w-28 text-slate-700'
+                  : isCompactDirectCard
+                    ? 'h-5 w-5 text-slate-700'
+                    : 'h-7 w-7 text-slate-700'
               )}
               {!isCentralDirectNode && isPet && <PetMarker compact />}
             </div>
@@ -489,7 +531,18 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                   ? 'whitespace-normal break-words'
                   : 'whitespace-normal break-words',
               ].join(' ')}
-              style={{ fontSize: directNameFontSize }}
+              style={{
+                fontSize: directNameFontSize,
+                lineHeight: isCentralDirectNode ? undefined : isCompactDirectCard ? 1.02 : 1.06,
+                ...(!isCentralDirectNode
+                  ? {
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }
+                  : {}),
+              }}
               title={pessoa.nome_completo}
             >
               {pessoa.nome_completo}
@@ -511,9 +564,13 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               <PersonDetailLines
                 lines={directDetailLines}
                 className={[
-                  'mt-1 space-y-0.5 font-bold leading-tight',
+                  isCompactDirectCard
+                    ? 'mt-1 space-y-0 font-semibold leading-[1.05]'
+                    : 'mt-1.5 space-y-0.5 font-semibold leading-tight',
                 ].join(' ')}
                 style={{ color: style.muted, fontSize: directDetailFontSize }}
+                lineClassName="overflow-hidden text-ellipsis whitespace-nowrap"
+                lineStyle={{ maxWidth: '100%' }}
               />
             )}
           </div>
