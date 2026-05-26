@@ -656,11 +656,18 @@ async function printVisibleTree(container: HTMLDivElement | null) {
   }
 }
 
-async function saveVisibleTreePdf(container: HTMLDivElement | null) {
+async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: TreeViewMode) {
   const canvas = await captureVisibleTree(container);
   await exportCanvasAsPdf(
     canvas,
-    buildTreeExportFilename('minha-arvore', 'pdf'),
+    buildTreeExportFilename(
+      viewMode === 'minha-arvore'
+        ? 'minha-arvore'
+        : viewMode === 'genealogia'
+          ? 'genealogia'
+          : 'visao-completa',
+      'pdf'
+    ),
     'Árvore genealógica'
   );
 }
@@ -1242,12 +1249,12 @@ function FamilyTreeComponent({
 
   const handleSavePdf = useCallback(async () => {
     try {
-      await saveVisibleTreePdf(containerRef.current);
+      await saveVisibleTreePdf(containerRef.current, viewMode);
     } catch (error) {
       console.error('Erro ao exportar árvore:', error);
       toast.error('Não foi possível gerar o PDF. As cores da árvore foram ajustadas para exportação; tente novamente.');
     }
-  }, []);
+  }, [viewMode]);
 
   const handleSaveImage = useCallback(async () => {
     try {
