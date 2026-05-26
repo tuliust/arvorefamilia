@@ -102,7 +102,7 @@ const VIEW_CENTER_Y = (FRAME_TOP + FRAME_BOTTOM) / 2;
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
 const CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const CENTRAL_WIDTH = DIRECT_FAMILY_TOKENS.CENTRAL_WIDTH;
-const CENTRAL_HEIGHT = 330;
+const CENTRAL_HEIGHT = 420;
 const LEGEND_WIDTH = Math.min(760, CENTRAL_WIDTH * 1.8);
 const LEGEND_HEIGHT = 92;
 const LEGEND_BOTTOM_GAP = 30;
@@ -119,7 +119,7 @@ const CENTRAL_GROUP_BOTTOM = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y;
 
 const GROUP_BOX_PADDING_X = 18;
 const GROUP_BOX_PADDING_Y = 14;
-const LABEL_HEIGHT = 28;
+const LABEL_HEIGHT = 38;
 const LABEL_TO_CARD_GAP = 8;
 const COLUMN_GAP = 14;
 const ROW_GAP = 16;
@@ -128,8 +128,11 @@ const SIDE_TOP = SIDE_GROUPS_TOP;
 const SIDE_BOTTOM = SIDE_GROUPS_BOTTOM;
 const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
-const CENTRAL_Y = VIEW_CENTER_Y - CENTRAL_HEIGHT / 2;
-const PARENT_GROUP_Y = SIDE_TOP;
+const CENTRAL_AREA_VERTICAL_CENTER_Y = (SIDE_GROUPS_TOP + DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y) / 2;
+const CENTRAL_Y = CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_HEIGHT / 2;
+const CENTRAL_PARENT_GAP = 56;
+const CENTRAL_LOWER_GROUP_GAP = 48;
+const CENTRAL_LOWER_STACK_GAP = 34;
 const CENTRAL_SIDE_GROUP_WIDTH = CARD_WIDTH + GROUP_BOX_PADDING_X * 2;
 const SIDE_AREA_OUTER_INSET_X = 48;
 const SIDE_AREA_CENTER_GAP_X = SIDE_AREA_OUTER_INSET_X;
@@ -168,6 +171,7 @@ const SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04;
 const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = 160;
+const CENTRAL_PARENT_GROUP_Y = CENTRAL_Y - CENTRAL_PARENT_GAP - SIDE_PARENT_CARD_HEIGHT;
 const LOWER_CARD_WIDTH = 330;
 const LOWER_CARD_HEIGHT = 120;
 const SIDE_COLUMN_GAP = 8;
@@ -191,7 +195,7 @@ const PATERNAL_GROUP_LANE_WIDTH = PATERNAL_GROUP_RIGHT_X - PATERNAL_GROUP_LEFT_X
 const MATERNAL_GROUP_LANE_WIDTH = MATERNAL_GROUP_RIGHT_X - MATERNAL_GROUP_LEFT_X;
 const PATERNAL_CENTER_X = PATERNAL_GROUP_LEFT_X + PATERNAL_GROUP_LANE_WIDTH / 2;
 const MATERNAL_CENTER_X = MATERNAL_GROUP_LEFT_X + MATERNAL_GROUP_LANE_WIDTH / 2;
-const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + 52;
+const LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + CENTRAL_LOWER_GROUP_GAP;
 const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
@@ -750,6 +754,25 @@ function lowerGroupTopPositions(
   visibleGroups.forEach((group) => {
     positions.set(group.key, cursorY);
     cursorY += (heights.get(group.key) || 0) + uniformGap;
+  });
+
+  return positions;
+}
+
+function compactLowerGroupTopPositions(
+  groups: GroupSpec[],
+  minTopY: number,
+  gap: number,
+  index?: RelationshipIndex
+) {
+  const visibleGroups = groups.filter((group) => group.ids.length > 0);
+  const positions = new Map<string, number>();
+  let cursorY = minTopY;
+
+  visibleGroups.forEach((group) => {
+    const columns = resolveGroupColumns(group, group.ids, index);
+    positions.set(group.key, cursorY);
+    cursorY += visibleGroupHeight(group.ids, columns, index, group) + gap;
   });
 
   return positions;
@@ -1619,8 +1642,8 @@ export function directFamilyDistributedLayout(
     laneWidth: SIDE_PARENT_CARD_WIDTH + GROUP_BOX_PADDING_X * 2, cardWidth: SIDE_PARENT_CARD_WIDTH, cardHeight: SIDE_PARENT_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
 
-  placeGroup(motherGroup, PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(fatherGroup, PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(motherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(fatherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
 
   const allSiblings = findSiblings(centralPersonId, index, pessoasById);
   const siblings = filters.irmaos ? allSiblings : [];
@@ -1673,18 +1696,16 @@ export function directFamilyDistributedLayout(
     centerX: LOWER_RIGHT_GROUP_CENTER_X,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
-  const leftLowerPositions = lowerGroupTopPositions(
+  const leftLowerPositions = compactLowerGroupTopPositions(
     [siblingGroup, nephewGroup],
     LOWER_GROUP_Y,
-    CENTRAL_GROUP_BOTTOM,
-    LOWER_GROUP_GAP,
+    CENTRAL_LOWER_STACK_GAP,
     index
   );
-  const rightLowerPositions = lowerGroupTopPositions(
+  const rightLowerPositions = compactLowerGroupTopPositions(
     [spouseGroup, childrenGroup, grandchildrenGroup],
     LOWER_GROUP_Y,
-    CENTRAL_GROUP_BOTTOM,
-    LOWER_GROUP_GAP,
+    CENTRAL_LOWER_STACK_GAP,
     index
   );
 
@@ -1693,20 +1714,6 @@ export function directFamilyDistributedLayout(
   placeGroup(spouseGroup, rightLowerPositions.get(spouseGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(childrenGroup, rightLowerPositions.get(childrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, rightLowerPositions.get(grandchildrenGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-
-  alignGroupStackToBottom(
-    positionedNodes,
-    [siblingGroup, nephewGroup],
-    DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
-    positionedIds
-  );
-
-  alignGroupStackToBottom(
-    positionedNodes,
-    [spouseGroup, childrenGroup, grandchildrenGroup],
-    DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
-    positionedIds
-  );
 
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [
