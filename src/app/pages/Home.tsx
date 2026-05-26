@@ -64,10 +64,6 @@ import {
   VisualLineFilters,
 } from '../components/FamilyTree/types';
 import type { TreeViewMode } from '../components/FamilyTree/treeViewMode';
-import {
-  DIRECT_FAMILY_CARD_TEXT_COLORS,
-  DIRECT_FAMILY_RELATION_COLORS,
-} from '../components/FamilyTree/directFamilyColors';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
@@ -102,8 +98,6 @@ import {
   ChevronRight,
   ChevronDown,
   CalendarDays,
-  FileDown,
-  ImageDown,
   Printer,
   Star,
   Bell,
@@ -115,12 +109,17 @@ import {
   Sparkles,
   MessageCircle,
   UserSearch,
-  Scan,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
+import { DirectRelativeFilterGrid } from './home/DirectRelativeFilterGrid';
+import { GenealogyFilterGrid } from './home/GenealogyFilterGrid';
 import { HomeHeader } from './home/HomeHeader';
 import { HomeMobileNav } from './home/HomeMobileNav';
 import { HomeTreeSection } from './home/HomeTreeSection';
+import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
+import { SidebarInfoPanel } from './home/SidebarInfoPanel';
+import { SidebarPanelTabs, type SidebarPanel } from './home/SidebarPanelTabs';
 
 const AI_QUESTION_EXAMPLES = [
   'Quem são meus bisavós paternos?',
@@ -143,7 +142,6 @@ const CURIOSITY_TOPIC_OPTIONS = [
 
 type CuriosityTopic = typeof CURIOSITY_TOPIC_OPTIONS[number];
 type CuriosidadesTab = 'voce-sabia' | 'descubra' | 'pergunte-ia' | 'conexao';
-type SidebarPanel = 'filters' | 'legend' | 'info';
 type PersonStatusFilters = {
   vivos: boolean;
   falecidos: boolean;
@@ -2114,98 +2112,6 @@ function UserMenu({
   );
 }
 
-const SIDEBAR_PANEL_OPTIONS: Array<{ key: SidebarPanel; label: string }> = [
-  { key: 'filters', label: 'Filtros' },
-  { key: 'legend', label: 'Legendas' },
-];
-
-function SidebarPanelTabs({
-  activePanel,
-  onChange,
-}: {
-  activePanel: SidebarPanel;
-  onChange: (panel: SidebarPanel) => void;
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
-      {SIDEBAR_PANEL_OPTIONS.map((option) => {
-        const active = activePanel === option.key;
-
-        return (
-          <button
-            key={option.key}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(option.key)}
-            className={[
-              'flex min-h-8 items-center justify-center rounded-md px-2 text-xs font-semibold transition-colors',
-              active
-                ? 'bg-white text-gray-950 shadow-sm'
-                : 'text-gray-500 hover:bg-white/70 hover:text-gray-800',
-            ].join(' ')}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function SidebarInfoPanel({
-  onSelectArea,
-  onSavePdf,
-  onSaveImage,
-  onPrint,
-  onWhatsApp,
-}: {
-  onSelectArea: () => void;
-  onSavePdf: () => void;
-  onSaveImage: () => void;
-  onPrint: () => void;
-  onWhatsApp: () => void;
-}) {
-  return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="text-sm font-semibold text-gray-900">Informações da árvore</h2>
-        <p className="mt-1 text-xs leading-snug text-gray-500">
-          Ações para exportar ou compartilhar a visualização atual da árvore.
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <SidebarActionButton icon={Scan} label="Selecionar área" onClick={onSelectArea} />
-        <SidebarActionButton icon={FileDown} label="Salvar como PDF" onClick={onSavePdf} />
-        <SidebarActionButton icon={ImageDown} label="Salvar como Imagem" onClick={onSaveImage} />
-        <SidebarActionButton icon={Printer} label="Imprimir" onClick={onPrint} />
-        <SidebarActionButton icon={MessageCircle} label="Enviar WhatsApp" onClick={onWhatsApp} />
-      </div>
-    </section>
-  );
-}
-
-function SidebarActionButton({
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-9 w-full items-center gap-2.5 rounded-md border border-gray-200 bg-white px-3 text-left text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-    >
-      <Icon className="h-4 w-4 shrink-0 text-gray-500" />
-      <span>{label}</span>
-    </button>
-  );
-}
-
 function FilterPanel({
   personFilters,
   edgeFilters,
@@ -2507,179 +2413,6 @@ function buildAiTreeContext({
   };
 }
 
-function DirectRelationKpiGrid({
-  filters,
-  counts,
-  onToggle,
-}: {
-  filters: DirectRelativeFilters;
-  counts: DirectRelationCounts;
-  onToggle: (key: DirectRelativeGroup) => void;
-}) {
-  return (
-    <section>
-      <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
-      <p className="mb-1.5 text-xs leading-snug text-gray-500">
-        Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
-      </p>
-      <DirectRelativeFilterGrid
-        filters={filters}
-        counts={counts}
-        onToggle={onToggle}
-        excludedKeys={['pais']}
-      />
-    </section>
-  );
-}
-
-const GENEALOGY_FILTER_OPTIONS: Array<{
-  key: GenealogyFilterKey;
-  title: string;
-  subtitle?: string;
-  colorKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS;
-}> = [
-  { key: 'generation1', title: 'Geração 1', colorKey: 'tataravos' },
-  { key: 'generation2', title: 'Geração 2', colorKey: 'bisavos' },
-  { key: 'generation3Family', title: 'Geração 3', subtitle: 'Familiares', colorKey: 'avos' },
-  { key: 'generation3Spouses', title: 'Geração 3', subtitle: 'Cônjuges', colorKey: 'tios' },
-  { key: 'generation4Family', title: 'Geração 4', subtitle: 'Familiares', colorKey: 'primos' },
-  { key: 'generation4Spouses', title: 'Geração 4', subtitle: 'Cônjuges', colorKey: 'conjuge' },
-  { key: 'generation5Family', title: 'Geração 5', subtitle: 'Familiares', colorKey: 'irmaos' },
-  { key: 'generation5Spouses', title: 'Geração 5', subtitle: 'Cônjuges', colorKey: 'sobrinhos' },
-  { key: 'generation6', title: 'Geração 6', colorKey: 'filhos' },
-];
-
-function GenealogyFilterGrid({
-  filters,
-  counts,
-  onToggle,
-}: {
-  filters: GenealogyFilters;
-  counts: GenealogyFilterCounts;
-  onToggle: (key: GenealogyFilterKey) => void;
-}) {
-  return (
-    <section>
-      <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
-      <p className="mb-1.5 text-xs leading-snug text-gray-500">
-        Clique nos cards abaixo para exibir ou ocultar gerações na genealogia.
-      </p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {GENEALOGY_FILTER_OPTIONS.map((option) => {
-          const active = filters[option.key];
-          const count = counts[option.key];
-          const color = DIRECT_FAMILY_RELATION_COLORS[option.colorKey];
-          const label = option.subtitle ? `${option.title} - ${option.subtitle}` : option.title;
-
-          return (
-            <button
-              key={option.key}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onToggle(option.key)}
-              className={[
-                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
-                active ? 'opacity-100' : 'grayscale opacity-45',
-                'hover:-translate-y-0.5 hover:shadow-md',
-              ].join(' ')}
-              style={{
-                background: color.background,
-                borderColor: color.solid,
-                color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
-              }}
-              title={active ? `Ocultar ${label}` : `Mostrar ${label}`}
-            >
-              <span className="block truncate text-xs font-semibold leading-snug">{option.title}</span>
-              {option.subtitle && (
-                <span className="mt-0.5 block truncate text-[11px] font-medium italic leading-snug">
-                  {option.subtitle}
-                </span>
-              )}
-              <span className="mt-1 block text-lg font-bold leading-none">{count}</span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function LifeStatusKpiGrid({
-  vivos,
-  falecidos,
-  filters,
-  onToggle,
-}: {
-  vivos: number;
-  falecidos: number;
-  filters: {
-    vivos: boolean;
-    falecidos: boolean;
-  };
-  onToggle: (key: 'vivos' | 'falecidos') => void;
-}) {
-  const directStatusFilterCardColors = {
-    vivos: {
-      background: '#F8FAFC',
-      color: '#334155',
-      border: '#CBD5E1',
-    },
-    falecidos: {
-      background: '#F8FAFC',
-      color: '#334155',
-      border: '#CBD5E1',
-    },
-  } as const;
-
-  const items = [
-    {
-      key: 'vivos' as const,
-      label: 'Vivos',
-      value: vivos,
-      ...directStatusFilterCardColors.vivos,
-    },
-    {
-      key: 'falecidos' as const,
-      label: 'Falecidos',
-      value: falecidos,
-      ...directStatusFilterCardColors.falecidos,
-    },
-  ];
-
-  return (
-    <section>
-      <div className="grid grid-cols-2 gap-1.5">
-        {items.map((item) => {
-          const active = filters[item.key];
-
-          return (
-            <button
-              key={item.key}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onToggle(item.key)}
-              className={[
-                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
-                active ? 'opacity-100' : 'grayscale opacity-45',
-                'hover:-translate-y-0.5 hover:shadow-md',
-              ].join(' ')}
-              style={{
-                backgroundColor: item.background,
-                borderColor: item.border,
-                color: item.color,
-              }}
-              title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
-            >
-              <span className="block text-xs font-semibold">{item.label}</span>
-              <span className="mt-1 block text-lg font-bold leading-none">{item.value}</span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
 type GenealogyFilterCounts = Record<GenealogyFilterKey, number>;
 
@@ -2906,75 +2639,6 @@ function FilterButton({
     </button>
   );
 }
-
-const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
-  key: DirectRelativeGroup;
-  label: string;
-  colorKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS;
-}> = [
-  { key: 'tataravos', label: 'Tataravós', colorKey: 'tataravos' },
-  { key: 'bisavos', label: 'Bisavós', colorKey: 'bisavos' },
-  { key: 'avos', label: 'Avós', colorKey: 'avos' },
-  { key: 'tios', label: 'Tios', colorKey: 'tios' },
-  { key: 'pais', label: 'Pai e Mãe', colorKey: 'pais' },
-  { key: 'primos', label: 'Primos', colorKey: 'primos' },
-  { key: 'conjuge', label: 'Cônjuge', colorKey: 'conjuge' },
-  { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos' },
-  { key: 'filhos', label: 'Filhos', colorKey: 'filhos' },
-  { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos' },
-  { key: 'netos', label: 'Netos', colorKey: 'netos' },
-];
-
-function DirectRelativeFilterGrid({
-  filters,
-  counts,
-  onToggle,
-  excludedKeys = [],
-  compact = false,
-}: {
-  filters: DirectRelativeFilters;
-  counts: DirectRelationCounts;
-  onToggle: (key: DirectRelativeGroup) => void;
-  excludedKeys?: DirectRelativeGroup[];
-  compact?: boolean;
-}) {
-  const excludedKeySet = new Set(excludedKeys);
-
-  return (
-    <div className={compact ? 'grid grid-cols-2 gap-1.5 sm:grid-cols-5' : 'grid grid-cols-2 gap-1.5'}>
-      {DIRECT_RELATIVE_FILTER_OPTIONS.filter((option) => !excludedKeySet.has(option.key)).map((option) => {
-        const active = filters[option.key];
-        const count = counts[option.key];
-        const disabled = count === 0;
-        const color = DIRECT_FAMILY_RELATION_COLORS[option.colorKey];
-
-        return (
-          <button
-            key={option.key}
-            type="button"
-            disabled={disabled}
-            onClick={() => onToggle(option.key)}
-            className={[
-                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
-              active ? 'opacity-100' : 'grayscale opacity-45',
-              disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
-            ].join(' ')}
-            style={{
-              background: color.background,
-              borderColor: color.solid,
-              color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
-            }}
-            title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
-          >
-            <span className="block text-xs font-semibold">{option.label}</span>
-            <span className="mt-1 block text-lg font-bold leading-none">{count}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 
 function StateMessage({
   title,
