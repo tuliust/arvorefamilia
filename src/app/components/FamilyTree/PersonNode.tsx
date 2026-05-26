@@ -412,8 +412,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     );
     const centralPaddingY = Math.max(22, Math.round(40 * cappedCardScale));
     const centralPaddingX = Math.max(34, Math.round(48 * cappedCardScale));
-    const centralNameFontSize = Math.max(28, Math.round((isMobile ? 46 : 42) * cappedCardScale * 1.08));
-    const centralDetailFontSize = Math.max(15, Math.round((isMobile ? 24 : 22) * cappedCardScale * 1.04));
+    const centralNameFontSize = Math.max(34, Math.round((isMobile ? 52 : 50) * cappedCardScale * 1.12));
+    const centralDetailFontSize = Math.max(18, Math.round((isMobile ? 28 : 26) * cappedCardScale * 1.08));
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
       : clampNumber(
@@ -520,7 +520,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div
             className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'flex min-w-0 flex-1 flex-col justify-center'}
             style={isCentralDirectNode
-              ? { marginTop: Math.max(16, Math.round(36 * cappedCardScale)) }
+              ? { marginTop: Math.max(22, Math.round(46 * cappedCardScale)) }
               : {
                 maxWidth: nonCentralTextWidth,
                 minHeight: nonCentralImageSize,
@@ -553,7 +553,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
                 <div
-                  className="mt-3 space-y-1.5 leading-snug"
+                  className="mt-5 space-y-2.5 leading-[1.22]"
                   style={{ color: style.muted, fontSize: directDetailFontSize }}
                 >
                   {centralDetails.map((detail) => (
@@ -568,8 +568,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 lines={directDetailLines}
                 className={[
                   isCompactDirectCard
-                    ? 'mt-[5px] space-y-[3px] font-semibold leading-[1.08]'
-                    : 'mt-[6px] space-y-[4px] font-semibold leading-[1.12]',
+                    ? 'mt-[7px] space-y-[5px] font-semibold leading-[1.16]'
+                    : 'mt-[9px] space-y-[6px] font-semibold leading-[1.2]',
                 ].join(' ')}
                 style={{ color: style.muted, fontSize: directDetailFontSize }}
                 lineClassName="overflow-hidden text-ellipsis whitespace-nowrap"
