@@ -78,6 +78,12 @@ interface GroupGridMetrics {
   cardsWidth: number;
 }
 
+interface SideStackPlanItem {
+  group: GroupSpec;
+  topY: number;
+  height: number;
+}
+
 const DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE = 560;
 const DIRECT_FRAME_LEFT = 10 - DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
 const DIRECT_FRAME_RIGHT = 3210 + DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE;
@@ -158,6 +164,8 @@ const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
 const SIDE_COLLATERAL_CARD_WIDTH = 346;
 const SIDE_COLLATERAL_CARD_HEIGHT = 152;
+const SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04;
+const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.32;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
 const LOWER_CARD_WIDTH = 330;
@@ -940,37 +948,121 @@ function resolveSideStackLayout(groups: GroupSpec[], index?: RelationshipIndex) 
   }));
 }
 
-function placeGroupStack(
-  groups: GroupSpec[],
-  positionedNodes: Node[],
-  positionedIds: Set<string>,
-  personNodeById: Map<string, Node>,
-  index?: RelationshipIndex
-) {
-  const visibleGroups = groups
-    .map((group) => ({
-      ...group,
-      ids: group.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id)),
-    }))
-    .filter((group) => group.ids.length > 0);
-
+function resolveSideStackPlan(
+  visibleGroups: GroupSpec[],
+  index?: RelationshipIndex,
+  bottomY = SIDE_BOTTOM
+): SideStackPlanItem[] {
   if (visibleGroups.length === 0) return [];
 
   const resolvedGroupsWithFill = resolveSideStackLayout(visibleGroups, index);
   const heights = resolvedGroupsWithFill.map((group) => groupHeight(group.ids, group.maxPerRow, index, group));
   const totalHeight = heights.reduce((sum, height) => sum + height, 0);
   const availableGap = resolvedGroupsWithFill.length > 1
-    ? (SIDE_BOTTOM - SIDE_TOP - totalHeight) / (resolvedGroupsWithFill.length - 1)
+    ? (bottomY - SIDE_TOP - totalHeight) / (resolvedGroupsWithFill.length - 1)
     : 0;
   const uniformGap = Math.max(SIDE_GROUP_MIN_GAP, availableGap);
-  let cursorY = resolvedGroupsWithFill.length === 1 && totalHeight < SIDE_BOTTOM - SIDE_TOP
-    ? SIDE_BOTTOM - totalHeight
+  let cursorY = resolvedGroupsWithFill.length === 1 && totalHeight < bottomY - SIDE_TOP
+    ? bottomY - totalHeight
     : SIDE_TOP;
+
+  return resolvedGroupsWithFill.map((group, groupIndex) => {
+    const item = {
+      group,
+      topY: cursorY,
+      height: heights[groupIndex],
+    };
+
+    cursorY += heights[groupIndex] + uniformGap;
+    return item;
+  });
+}
+
+function scaleGroupCards(spec: GroupSpec, scale: number): GroupSpec {
+  if (!isCollateralGroup(spec)) return spec;
+
+  return {
+    ...spec,
+    cardWidth: Math.round(getSpecCardWidth(spec) * scale),
+    cardHeight: Math.round(getSpecCardHeight(spec) * scale),
+  };
+}
+
+function sideStackPlanFits(
+  plan: SideStackPlanItem[],
+  index?: RelationshipIndex
+) {
+  let previousBottom = Number.NEGATIVE_INFINITY;
+
+  return plan.every((item) => {
+    const columns = resolveGroupColumns(item.group, item.group.ids, index);
+    const width = groupWidthForColumns(item.group.label, columns, item.group);
+    const laneWidth = item.group.laneWidth || SIDE_LANE_WIDTH;
+    const height = groupHeight(item.group.ids, columns, index, item.group);
+    const bottomY = item.topY + height;
+    const fitsWidth = width <= laneWidth;
+    const fitsHeight = bottomY <= DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y;
+    const keepsGap = item.topY >= previousBottom + SIDE_GROUP_MIN_GAP;
+
+    previousBottom = bottomY;
+    return fitsWidth && fitsHeight && keepsGap;
+  });
+}
+
+function resolveAdaptiveSideStackPlan(groups: GroupSpec[], index?: RelationshipIndex) {
+  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
+  let lastCollateralIndex = -1;
+  for (let itemIndex = basePlan.length - 1; itemIndex >= 0; itemIndex -= 1) {
+    if (isCollateralGroup(basePlan[itemIndex].group)) {
+      lastCollateralIndex = itemIndex;
+      break;
+    }
+  }
+
+  if (lastCollateralIndex < 0) return basePlan;
+
+  let bestPlan = basePlan;
+  const scaleSteps = Math.round((SIDE_COLLATERAL_CARD_MAX_SCALE - 1) / SIDE_COLLATERAL_CARD_SCALE_STEP);
+
+  for (let step = 0; step <= scaleSteps; step += 1) {
+    const scale = 1 + step * SIDE_COLLATERAL_CARD_SCALE_STEP;
+    const candidatePlan = basePlan.map((item, itemIndex) => {
+      const group = scaleGroupCards(item.group, scale);
+      const columns = resolveGroupColumns(group, group.ids, index);
+      const height = groupHeight(group.ids, columns, index, group);
+      const topY = itemIndex === lastCollateralIndex
+        ? DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - height
+        : item.topY;
+
+      return {
+        group: {
+          ...group,
+          maxPerRow: columns,
+        },
+        topY,
+        height,
+      };
+    });
+
+    if (sideStackPlanFits(candidatePlan, index)) {
+      bestPlan = candidatePlan;
+    }
+  }
+
+  return bestPlan;
+}
+
+function placeGroupStackPlan(
+  plan: SideStackPlanItem[],
+  positionedNodes: Node[],
+  positionedIds: Set<string>,
+  personNodeById: Map<string, Node>,
+  index?: RelationshipIndex
+) {
   const placedIds: string[] = [];
 
-  resolvedGroupsWithFill.forEach((group, groupIndex) => {
-    placedIds.push(...placeGroup(group, cursorY, positionedNodes, positionedIds, personNodeById, index));
-    cursorY += heights[groupIndex] + uniformGap;
+  plan.forEach((item) => {
+    placedIds.push(...placeGroup(item.group, item.topY, positionedNodes, positionedIds, personNodeById, index));
   });
 
   return placedIds;
@@ -1403,29 +1495,33 @@ export function directFamilyDistributedLayout(
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
   ], index);
 
-  placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById, index);
-  placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById, index);
+  const visiblePaternalGroups = paternalGroups
+    .map((group) => ({
+      ...group,
+      ids: group.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id)),
+    }))
+    .filter((group) => group.ids.length > 0);
+  const visibleMaternalGroups = maternalGroups
+    .map((group) => ({
+      ...group,
+      ids: group.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id)),
+    }))
+    .filter((group) => group.ids.length > 0);
 
-  const paternalCousinsGroup = paternalGroups.find((group) => group.key === 'primos-paternos');
-  const maternalCousinsGroup = maternalGroups.find((group) => group.key === 'primos-maternos');
-
-  if (paternalCousinsGroup) {
-    alignGroupToBottom(
-      positionedNodes,
-      paternalCousinsGroup,
-      DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
-      positionedIds
-    );
-  }
-
-  if (maternalCousinsGroup) {
-    alignGroupToBottom(
-      positionedNodes,
-      maternalCousinsGroup,
-      DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
-      positionedIds
-    );
-  }
+  placeGroupStackPlan(
+    resolveAdaptiveSideStackPlan(visiblePaternalGroups, index),
+    positionedNodes,
+    positionedIds,
+    personNodeById,
+    index
+  );
+  placeGroupStackPlan(
+    resolveAdaptiveSideStackPlan(visibleMaternalGroups, index),
+    positionedNodes,
+    positionedIds,
+    personNodeById,
+    index
+  );
 
   const motherGroup: GroupSpec = {
     key: 'mae',
