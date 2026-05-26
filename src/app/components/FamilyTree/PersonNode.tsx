@@ -412,8 +412,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     );
     const centralPaddingY = Math.max(22, Math.round(40 * cappedCardScale));
     const centralPaddingX = Math.max(34, Math.round(48 * cappedCardScale));
-    const centralNameFontSize = Math.max(34, Math.round((isMobile ? 52 : 50) * cappedCardScale * 1.12));
-    const centralDetailFontSize = Math.max(18, Math.round((isMobile ? 28 : 26) * cappedCardScale * 1.08));
+    const centralNameFontSize = Math.max(42, Math.round((isMobile ? 62 : 58) * cappedCardScale * 1.2));
+    const centralDetailFontSize = Math.max(22, Math.round((isMobile ? 34 : 32) * cappedCardScale * 1.12));
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
       : clampNumber(
@@ -442,7 +442,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       );
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
     const avatarSize = isCentralDirectNode
-      ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE * cardScale * mobileAvatarScale
+      ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE * cardScale * mobileAvatarScale * 1.22
       : nonCentralImageSize;
     const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
     const directDetailLines = detailLines.length > 0
@@ -520,7 +520,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div
             className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'flex min-w-0 flex-1 flex-col justify-center'}
             style={isCentralDirectNode
-              ? { marginTop: Math.max(22, Math.round(46 * cappedCardScale)) }
+              ? { marginTop: Math.max(28, Math.round(56 * cappedCardScale)) }
               : {
                 maxWidth: nonCentralTextWidth,
                 minHeight: nonCentralImageSize,
@@ -553,7 +553,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
                 <div
-                  className="mt-5 space-y-2.5 leading-[1.22]"
+                  className="mt-6 space-y-3 leading-[1.28]"
                   style={{ color: style.muted, fontSize: directDetailFontSize }}
                 >
                   {centralDetails.map((detail) => (
@@ -568,8 +568,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 lines={directDetailLines}
                 className={[
                   isCompactDirectCard
-                    ? 'mt-[7px] space-y-[5px] font-semibold leading-[1.16]'
-                    : 'mt-[9px] space-y-[6px] font-semibold leading-[1.2]',
+                    ? 'mt-[8px] space-y-[6px] font-semibold leading-[1.22]'
+                    : 'mt-[10px] space-y-[7px] font-semibold leading-[1.26]',
                 ].join(' ')}
                 style={{ color: style.muted, fontSize: directDetailFontSize }}
                 lineClassName="overflow-hidden text-ellipsis whitespace-nowrap"
