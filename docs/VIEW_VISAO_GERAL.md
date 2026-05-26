@@ -304,7 +304,7 @@ No layout direto, os valores efetivos são:
 
 | Elemento | Largura | Altura |
 |---|---:|---:|
-| Pessoa central lógica | `620` | `620` |
+| Pessoa central lógica | `620` | `760` |
 | Pais | `400` | `160` |
 | Ancestrais laterais | `400` | `160` |
 | Tios/primos base | `300` | `126` |
@@ -452,6 +452,8 @@ SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48
 
 ## 11. Área central
 
+Os ajustes desta seção se aplicam apenas à view Minha Árvore e não devem alterar Genealogia nem Visão Completa.
+
 A área central foi redesenhada para deixar de seguir as regras rígidas dos ramos laterais.
 
 ### Estrutura central
@@ -484,10 +486,31 @@ Com os valores atuais:
 ```ts
 SIDE_GROUPS_TOP = 170
 DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y = 2410
-CENTRAL_HEIGHT = 620
+CENTRAL_HEIGHT = 760
 ```
 
 O card central passa a ocupar uma posição vertical mais representativa do centro visual da árvore.
+
+### Referências verticais atuais da área central
+
+A área central usa referências separadas para controlar o card principal, os grupos superiores e os grupos inferiores.
+
+Valores atuais:
+
+- CENTRAL_HEIGHT = 760
+- CENTRAL_LOWER_REFERENCE_HEIGHT = 620
+- CENTRAL_AREA_SHIFT_DOWN = 60
+- CENTRAL_CORE_SHIFT_UP = 180
+- CENTRAL_LOWER_GROUP_GAP = 120
+- CENTRAL_LOWER_STACK_GAP = 34
+
+A posição da pessoa principal é controlada por CENTRAL_Y. Pai e Mãe sobem ou descem junto com a pessoa principal porque CENTRAL_PARENT_GROUP_Y depende de CENTRAL_Y.
+
+Os grupos inferiores centrais usam uma referência independente, CENTRAL_BASE_Y, para manter Irmãos, Sobrinhos, Cônjuge, Filhos e Netos em uma faixa visual estável mesmo quando o card principal aumenta de altura ou é deslocado verticalmente.
+
+Fórmula atual dos grupos inferiores:
+
+LOWER_GROUP_Y = CENTRAL_BASE_Y + CENTRAL_LOWER_REFERENCE_HEIGHT + CENTRAL_LOWER_GROUP_GAP
 
 ### Pai e mãe
 
@@ -507,19 +530,19 @@ Com isso, Pai e Mãe ficam acima da pessoa principal, mas com distância visual 
 
 ### Grupos inferiores centrais
 
-Os grupos inferiores não são mais empurrados para o bottom lógico da view.
+Os grupos inferiores não são mais empurrados para o bottom lógico da view. Eles partem de uma referência vertical própria, baseada em CENTRAL_BASE_Y, para preservar a composição visual da área central.
 
 Eles partem de:
 
 ```ts
 LOWER_GROUP_Y =
-  CENTRAL_Y + CENTRAL_HEIGHT + CENTRAL_LOWER_GROUP_GAP
+  CENTRAL_BASE_Y + CENTRAL_LOWER_REFERENCE_HEIGHT + CENTRAL_LOWER_GROUP_GAP
 ```
 
 Valores atuais:
 
 ```ts
-CENTRAL_LOWER_GROUP_GAP = 64
+CENTRAL_LOWER_GROUP_GAP = 120
 CENTRAL_LOWER_STACK_GAP = 34
 ```
 
@@ -673,7 +696,7 @@ No layout direto:
 
 ```ts
 CENTRAL_WIDTH = 620
-CENTRAL_HEIGHT = 620
+CENTRAL_HEIGHT = 760
 ```
 
 ### Altura visual automática
@@ -689,7 +712,7 @@ height: isCentralDirectNode ? 'auto' : cardHeight
 
 Isso significa:
 
-- `CENTRAL_HEIGHT = 620` funciona como altura mínima lógica;
+- `CENTRAL_HEIGHT = 760` funciona como altura mínima lógica;
 - se foto + nome + detalhes exigirem mais espaço, o card central pode crescer visualmente;
 - a foto não precisa ser reduzida para impedir vazamento;
 - a margem entre foto e texto é preservada.
@@ -892,7 +915,7 @@ Isso resolve o vazamento de texto, mas exige atenção:
 
 - o ReactFlow e os anchors continuam baseados no layout lógico;
 - se o crescimento visual for muito maior do que o lógico, pode haver desalinhamento entre borda visual e linhas;
-- por isso `CENTRAL_HEIGHT = 620` deve funcionar como uma aproximação generosa da altura real esperada.
+- por isso `CENTRAL_HEIGHT = 760` deve funcionar como uma aproximação generosa da altura real esperada.
 
 Se o conteúdo central crescer muito no futuro, revisar primeiro:
 
