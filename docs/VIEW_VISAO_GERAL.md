@@ -188,14 +188,14 @@ O estado atual inclui:
   - `layoutRevision`;
   - `containerSize.width`;
   - `containerSize.height`;
-  - `directFamilyViewport.x`;
-  - `directFamilyViewport.y`;
-  - `directFamilyViewport.zoom`;
+  - `activeTreeViewport.x`;
+  - `activeTreeViewport.y`;
+  - `activeTreeViewport.zoom`;
 - `hasAppliedCurrentViewport`;
-- `canRenderReactFlow = Boolean(directFamilyViewport && viewportSignature)`;
+- `canRenderReactFlow = Boolean(activeTreeViewport && viewportSignature)`;
 - wrapper do ReactFlow com `visibility: hidden` até o viewport atual ser aplicado;
 - ReactFlow renderizado condicionalmente somente quando há viewport calculado;
-- `defaultViewport` usando diretamente `directFamilyViewport.x/y/zoom`.
+- `defaultViewport` usando diretamente `activeTreeViewport.x/y/zoom`.
 
 Com isso, a área principal pode ficar brevemente vazia, mas a árvore aparece já no enquadramento correto.
 
@@ -477,8 +477,11 @@ A pessoa principal é centralizada com base no intervalo útil vertical da árvo
 CENTRAL_AREA_VERTICAL_CENTER_Y =
   (SIDE_GROUPS_TOP + DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y) / 2
 
+CENTRAL_BASE_Y =
+  CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_LOWER_REFERENCE_HEIGHT / 2 + CENTRAL_AREA_SHIFT_DOWN
+
 CENTRAL_Y =
-  CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_HEIGHT / 2
+  CENTRAL_BASE_Y - CENTRAL_CORE_SHIFT_UP
 ```
 
 Com os valores atuais:
@@ -487,6 +490,9 @@ Com os valores atuais:
 SIDE_GROUPS_TOP = 170
 DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y = 2410
 CENTRAL_HEIGHT = 760
+CENTRAL_LOWER_REFERENCE_HEIGHT = 620
+CENTRAL_AREA_SHIFT_DOWN = 60
+CENTRAL_CORE_SHIFT_UP = 180
 ```
 
 O card central passa a ocupar uma posição vertical mais representativa do centro visual da árvore.
