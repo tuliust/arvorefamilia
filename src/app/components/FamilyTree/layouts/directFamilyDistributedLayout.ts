@@ -729,6 +729,11 @@ function visibleGroupHeight(ids: string[], maxPerRow: number, index?: Relationsh
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
 }
 
+// Helpers legados de alinhamento vertical. A area central inferior da Minha Arvore
+// nao deve usar alinhamento pelo bottom logico da view: Irmaos, Sobrinhos,
+// Conjuge, Filhos e Netos devem permanecer compactados a partir de
+// compactLowerGroupTopPositions(). Qualquer mudanca nesse comportamento precisa
+// ser deliberada e testada visualmente na view Minha Arvore.
 function lowerGroupTopPositions(
   groups: GroupSpec[],
   minTopY: number,
@@ -1188,6 +1193,8 @@ function shiftPlacedGroupY(
   });
 }
 
+// Helper auxiliar legado para casos pontuais de alinhamento ao bottom.
+// Nao aplicar aos grupos inferiores centrais da Minha Arvore.
 function alignGroupToBottom(
   nodes: Node[],
   spec: GroupSpec,
@@ -1200,6 +1207,10 @@ function alignGroupToBottom(
   shiftPlacedGroupY(nodes, spec, bottomY - bounds.maxY, positionedIds);
 }
 
+// Helper auxiliar legado para pilhas alinhadas ao bottom.
+// Nao usar para Irmaos, Sobrinhos, Conjuge, Filhos e Netos na area central
+// inferior da Minha Arvore; esses grupos devem continuar com
+// compactLowerGroupTopPositions(), sem serem empurrados para o bottom logico.
 function alignGroupStackToBottom(
   nodes: Node[],
   specs: GroupSpec[],
