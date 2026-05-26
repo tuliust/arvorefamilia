@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
   useNodesState,
@@ -116,7 +116,6 @@ const TREE_MOBILE_VIEWPORT_PADDING_Y = 22;
 const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
 const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
-const TREE_DEBUG_BOUNDS_STORAGE_KEY = 'treeDebugBounds';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
 const TREE_ZOOM_OUT_RESTORE_MULTIPLIER = 1.25;
 const TREE_MOBILE_DIRECTIONAL_PAN_RATIO = 0.65;
@@ -567,9 +566,7 @@ function isTreeDebugBoundsEnabled() {
   const queryValue = params.get(TREE_DEBUG_BOUNDS_QUERY_PARAM);
 
   if (queryValue === '1' || queryValue === 'true') return true;
-  if (queryValue === '0' || queryValue === 'false') return false;
-
-  return window.localStorage.getItem(TREE_DEBUG_BOUNDS_STORAGE_KEY) === '1';
+  return false;
 }
 
 function formatDebugNumber(value: number) {
@@ -716,7 +713,7 @@ function FamilyTreeComponent({
   const flowViewportRef = useRef<HTMLDivElement | null>(null);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const [reactFlowReady, setReactFlowReady] = useState(false);
-  const [hasAppliedInitialViewport, setHasAppliedInitialViewport] = useState(false);
+  const [appliedViewportSignature, setAppliedViewportSignature] = useState<string | null>(null);
   const [directFamilyCurrentZoom, setDirectFamilyCurrentZoom] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
@@ -1014,6 +1011,28 @@ function FamilyTreeComponent({
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 
+  const viewportSignature = useMemo(() => {
+    if (!directFamilyViewport) return null;
+
+    return [
+      viewMode,
+      layoutRevision,
+      containerSize.width,
+      containerSize.height,
+      directFamilyViewport.x.toFixed(3),
+      directFamilyViewport.y.toFixed(3),
+      directFamilyViewport.zoom.toFixed(6),
+    ].join(':');
+  }, [
+    containerSize.height,
+    containerSize.width,
+    directFamilyViewport,
+    layoutRevision,
+    viewMode,
+  ]);
+  const hasAppliedCurrentViewport =
+    viewportSignature !== null && appliedViewportSignature === viewportSignature;
+
   const directFamilyTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
     if (!translateBounds) return undefined;
 
@@ -1073,22 +1092,23 @@ function FamilyTreeComponent({
     setNodes,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!reactFlowReady || !reactFlowRef.current || containerSize.width <= 0 || containerSize.height <= 0) return;
-    if (!directFamilyViewport) return;
+    if (!directFamilyViewport || !viewportSignature) return;
+    if (appliedViewportSignature === viewportSignature) return;
 
     setDirectFamilyCurrentZoom(directFamilyViewport.zoom);
     reactFlowRef.current.setViewport(directFamilyViewport, {
-      duration: hasAppliedInitialViewport ? 180 : 0,
+      duration: viewMode === 'minha-arvore' || appliedViewportSignature === null ? 0 : 180,
     });
-    setHasAppliedInitialViewport(true);
+    setAppliedViewportSignature(viewportSignature);
   }, [
+    appliedViewportSignature,
     reactFlowReady,
-    hasAppliedInitialViewport,
-    layoutRevision,
     containerSize.width,
     containerSize.height,
     directFamilyViewport,
+    viewportSignature,
     viewMode,
   ]);
 
@@ -1409,7 +1429,7 @@ function FamilyTreeComponent({
             y: directFamilyViewport?.y ?? 0,
             zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
           }}
-          style={{ visibility: hasAppliedInitialViewport ? 'visible' : 'hidden' }}
+          style={{ visibility: hasAppliedCurrentViewport ? 'visible' : 'hidden' }}
           proOptions={{ hideAttribution: true }}
         />
       </div>

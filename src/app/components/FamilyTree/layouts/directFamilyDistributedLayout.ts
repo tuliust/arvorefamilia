@@ -165,7 +165,7 @@ const SIDE_ANCESTOR_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
 const SIDE_COLLATERAL_CARD_WIDTH = 346;
 const SIDE_COLLATERAL_CARD_HEIGHT = 152;
 const SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04;
-const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.32;
+const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_PARENT_CARD_HEIGHT = STANDARD_GROUP_CARD_HEIGHT;
 const LOWER_CARD_WIDTH = 330;
@@ -1009,40 +1009,83 @@ function sideStackPlanFits(
   });
 }
 
-function resolveAdaptiveSideStackPlan(groups: GroupSpec[], index?: RelationshipIndex) {
-  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
-  let lastCollateralIndex = -1;
-  for (let itemIndex = basePlan.length - 1; itemIndex >= 0; itemIndex -= 1) {
-    if (isCollateralGroup(basePlan[itemIndex].group)) {
-      lastCollateralIndex = itemIndex;
-      break;
+function getLastCollateralPlanIndex(plan: SideStackPlanItem[]) {
+  for (let itemIndex = plan.length - 1; itemIndex >= 0; itemIndex -= 1) {
+    if (isCollateralGroup(plan[itemIndex].group)) {
+      return itemIndex;
     }
   }
+
+  return -1;
+}
+
+function buildAdaptiveSideStackPlan(
+  basePlan: SideStackPlanItem[],
+  lastCollateralIndex: number,
+  scale: number,
+  index?: RelationshipIndex
+) {
+  return basePlan.map((item, itemIndex) => {
+    const group = scaleGroupCards(item.group, scale);
+    const columns = resolveGroupColumns(group, group.ids, index);
+    const height = groupHeight(group.ids, columns, index, group);
+    const topY = itemIndex === lastCollateralIndex
+      ? DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - height
+      : item.topY;
+
+    return {
+      group: {
+        ...group,
+        maxPerRow: columns,
+      },
+      topY,
+      height,
+    };
+  });
+}
+
+function sideCollateralScaleSteps(maxScale = SIDE_COLLATERAL_CARD_MAX_SCALE) {
+  const boundedMaxScale = Math.max(1, Math.min(maxScale, SIDE_COLLATERAL_CARD_MAX_SCALE));
+  return Math.floor((boundedMaxScale - 1 + 0.0001) / SIDE_COLLATERAL_CARD_SCALE_STEP);
+}
+
+function resolveAdaptiveSideStackMaxScale(groups: GroupSpec[], index?: RelationshipIndex) {
+  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
+  const lastCollateralIndex = getLastCollateralPlanIndex(basePlan);
+
+  if (lastCollateralIndex < 0) return undefined;
+
+  let bestScale = 1;
+  const scaleSteps = sideCollateralScaleSteps();
+
+  for (let step = 0; step <= scaleSteps; step += 1) {
+    const scale = 1 + step * SIDE_COLLATERAL_CARD_SCALE_STEP;
+    const candidatePlan = buildAdaptiveSideStackPlan(basePlan, lastCollateralIndex, scale, index);
+
+    if (sideStackPlanFits(candidatePlan, index)) {
+      bestScale = scale;
+    }
+  }
+
+  return bestScale;
+}
+
+function resolveAdaptiveSideStackPlan(
+  groups: GroupSpec[],
+  index?: RelationshipIndex,
+  maxScale = SIDE_COLLATERAL_CARD_MAX_SCALE
+) {
+  const basePlan = resolveSideStackPlan(groups, index, SIDE_BOTTOM);
+  const lastCollateralIndex = getLastCollateralPlanIndex(basePlan);
 
   if (lastCollateralIndex < 0) return basePlan;
 
   let bestPlan = basePlan;
-  const scaleSteps = Math.round((SIDE_COLLATERAL_CARD_MAX_SCALE - 1) / SIDE_COLLATERAL_CARD_SCALE_STEP);
+  const scaleSteps = sideCollateralScaleSteps(maxScale);
 
   for (let step = 0; step <= scaleSteps; step += 1) {
     const scale = 1 + step * SIDE_COLLATERAL_CARD_SCALE_STEP;
-    const candidatePlan = basePlan.map((item, itemIndex) => {
-      const group = scaleGroupCards(item.group, scale);
-      const columns = resolveGroupColumns(group, group.ids, index);
-      const height = groupHeight(group.ids, columns, index, group);
-      const topY = itemIndex === lastCollateralIndex
-        ? DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - height
-        : item.topY;
-
-      return {
-        group: {
-          ...group,
-          maxPerRow: columns,
-        },
-        topY,
-        height,
-      };
-    });
+    const candidatePlan = buildAdaptiveSideStackPlan(basePlan, lastCollateralIndex, scale, index);
 
     if (sideStackPlanFits(candidatePlan, index)) {
       bestPlan = candidatePlan;
@@ -1507,16 +1550,23 @@ export function directFamilyDistributedLayout(
       ids: group.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id)),
     }))
     .filter((group) => group.ids.length > 0);
+  const paternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visiblePaternalGroups, index);
+  const maternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visibleMaternalGroups, index);
+  const sideMaxScales = [paternalSideMaxScale, maternalSideMaxScale]
+    .filter((scale): scale is number => typeof scale === 'number' && Number.isFinite(scale));
+  const sharedSideMaxScale = sideMaxScales.length > 1
+    ? Math.min(...sideMaxScales)
+    : sideMaxScales[0] ?? SIDE_COLLATERAL_CARD_MAX_SCALE;
 
   placeGroupStackPlan(
-    resolveAdaptiveSideStackPlan(visiblePaternalGroups, index),
+    resolveAdaptiveSideStackPlan(visiblePaternalGroups, index, sharedSideMaxScale),
     positionedNodes,
     positionedIds,
     personNodeById,
     index
   );
   placeGroupStackPlan(
-    resolveAdaptiveSideStackPlan(visibleMaternalGroups, index),
+    resolveAdaptiveSideStackPlan(visibleMaternalGroups, index, sharedSideMaxScale),
     positionedNodes,
     positionedIds,
     personNodeById,
