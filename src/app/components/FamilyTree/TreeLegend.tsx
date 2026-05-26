@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { TreeViewMode } from './ViewModeToggle';
+import type { TreeViewMode } from './treeViewMode';
 import type {
   DirectRelativeFilters,
   DirectRelativeGroup,

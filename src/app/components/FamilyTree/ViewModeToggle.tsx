@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type TreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa';
+import type { TreeViewMode } from './treeViewMode';
 
 interface ViewModeToggleProps {
   value: TreeViewMode;

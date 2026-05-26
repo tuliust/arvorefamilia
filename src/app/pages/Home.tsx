@@ -64,7 +64,7 @@ import {
   VisualLineFilterKey,
   VisualLineFilters,
 } from '../components/FamilyTree/types';
-import { TreeViewMode } from '../components/FamilyTree/ViewModeToggle';
+import type { TreeViewMode } from '../components/FamilyTree/treeViewMode';
 import {
   DIRECT_FAMILY_CARD_TEXT_COLORS,
   DIRECT_FAMILY_RELATION_COLORS,

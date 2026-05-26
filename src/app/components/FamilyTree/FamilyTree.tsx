@@ -24,7 +24,7 @@ import {
 } from './layouts/directFamilyDistributedLayout';
 import { filterGraphToPersonalScope } from './layouts/filterPersonalTreeScope';
 import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
-import type { TreeViewMode } from './ViewModeToggle';
+import type { TreeViewMode } from './treeViewMode';
 import { TreeAreaSelectionOverlay } from './TreeAreaSelectionOverlay';
 import {
   buildTreeExportFilename,
