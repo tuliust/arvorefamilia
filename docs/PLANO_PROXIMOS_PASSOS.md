@@ -440,6 +440,17 @@ Pendente até fechamento:
 
 | Frente | Implementação |
 |---|---|
+| Rotas das views da árvore | Avaliar rota pai/layout compartilhado para `/minha-arvore`, `/genealogia` e `/visao-completa`, caso seja confirmado remount da Home ao trocar view; hoje as três rotas usam o mesmo componente, mas o React Router pode remontar o shell dependendo do matching/renderização. |
+| Navegação interna | Revisar navegações internas que ainda apontam para `/` e decidir se devem ir direto para `/minha-arvore`, reduzindo dependência do redirect e preservando intenção explícita. |
+| Refatoração da Home | Continuar extração incremental apenas em blocos seguros; `Home.tsx` ainda concentra orquestração, efeitos, estado e handlers principais. |
+| Dialog de Curiosidades/IA | Revisar acoplamento de `HomeCuriositiesDialog.tsx` e avaliar extração adicional de subpainéis/hooks sem alterar contratos de IA, conexão ou privacidade. |
+| Página MinhaArvore | Refatorar progressivamente `src/app/pages/MinhaArvore.tsx`, que ainda concentra formulário grande, dados pessoais, casamento, avatar/crop e arquivos; há TODO para extrair redes sociais junto com `/meus-dados`. |
+| MeusDados | Reaproveitar componentes compartilhados de pessoa em `MeusDados.tsx`, respeitando avatar/crop, Places e fluxo de primeiro acesso; há TODO registrado no arquivo. |
+| MeusVinculos | Definir e implementar persistência real da remoção de vínculo em Supabase quando a revisão de relacionamentos for definitiva; hoje há TODO explícito. |
+| AdminPessoaForm | Dividir formulário admin em blocos menores e revisar hooks/efeitos; há um `eslint-disable react-hooks/exhaustive-deps` que deve ser revisitado com cuidado. |
+| AdminDiagnostico | Trocar `Array<any>` por tipos explícitos para resultados de diagnóstico, reduzindo risco de regressão em correções futuras. |
+| FamilyTree | Manter refatorações extremamente conservadoras; o arquivo segue grande e crítico para viewport, exportação, seleção de área e ReactFlow. |
+| Links e AppLink | Revisar link 404 em `routes.tsx` que usa `<a href="/">`; trocar por navegação client-side em momento seguro para evitar reload desnecessário. |
 | Storage | Verificar e prevenir uploads órfãos. |
 | Base legada | Dry-run de Storage/base64 e possível limpeza auditada. |
 | Admin Integridade | Filtros por severidade, paginação e ações assistidas futuras. |
@@ -450,6 +461,18 @@ Pendente até fechamento:
 | Legenda | Avaliar versão administrativa/configurável pós-MVP, se necessário. |
 
 Essas pendências aparecem no plano como técnicas e operacionais e não devem bloquear o MVP se não houver P0/P1 aberto.
+
+### Varredura técnica de 2026-05-26
+
+Pontos identificados em páginas e componentes principais:
+
+- `Home.tsx` ainda tem aproximadamente 1.800 linhas mesmo após a extração de componentes visuais, filtros, curiosidades, IA e conexão; manter novas extrações em etapas pequenas e testáveis.
+- `MinhaArvore.tsx` tem aproximadamente 2.300 linhas e continua sendo o maior candidato a decomposição pós-MVP.
+- `AdminPessoaForm.tsx` e `FamilyTree.tsx` têm mais de 1.400 linhas cada; ambos são críticos e devem ser refatorados apenas com validação técnica e, no caso da árvore, validação visual.
+- `HomeCuriositiesDialog.tsx` ficou funcional, mas ainda é um ponto de acoplamento médio por reunir abas, estados e painéis de IA/conexão recebidos por props.
+- Existem usos legítimos de `window.location` para origem, search params, path atual ou parsing de URL; não tratar como bug automaticamente, mas revisar quando tocar nesses fluxos.
+- Existem usos de `setTimeout` para foco, debounce, impressão e UX de carregamento; manter como pontos de atenção em refatorações, garantindo cleanup quando aplicável.
+- Não foram encontrados backups `.bak-views-normalization` rastreados após a limpeza.
 
 ---
 
