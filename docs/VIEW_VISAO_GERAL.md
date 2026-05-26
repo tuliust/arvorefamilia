@@ -307,7 +307,7 @@ No layout direto, os valores efetivos são:
 | Pessoa central lógica | `620` | `620` |
 | Pais | `400` | `160` |
 | Ancestrais laterais | `400` | `160` |
-| Tios/primos base | `400` | `126` |
+| Tios/primos base | `350` | `126` |
 | Grupos inferiores centrais | `400` | `120` |
 
 ### Labels de grupo
@@ -442,7 +442,7 @@ O layout calcula a escala máxima segura para o lado paterno e para o lado mater
 Valores principais:
 
 ```ts
-SIDE_COLLATERAL_CARD_WIDTH = 400
+SIDE_COLLATERAL_CARD_WIDTH = 350
 SIDE_COLLATERAL_CARD_HEIGHT = 126
 SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04
 SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48
