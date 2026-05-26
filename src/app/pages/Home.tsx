@@ -18,20 +18,6 @@ import {
   migrateLegacyTreeViewPreferences,
 } from '../components/FamilyTree/utils/treePreferences';
 import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,9 +59,7 @@ import {
   obterInsightsGeradosPessoa,
   PersonGeneratedInsight,
 } from '../services/personInsightsService';
-import { formatPhone, getPersonZodiacSign, isPersonDeceased } from '../utils/personFields';
-import { WhatsAppContactButton } from '../components/person/WhatsAppContactButton';
-import { canUseWhatsAppContact } from '../utils/whatsapp';
+import { isPersonDeceased } from '../utils/personFields';
 import {
   calculateRelationshipDegree,
   type RelationshipDegreeResult,
@@ -85,7 +69,6 @@ import {
   formatRelationshipStepPath,
   getFriendlyRelationshipWarnings,
   getRelationshipMetricLabels,
-  getRelationshipResultMessage,
 } from '../utils/relationshipDegreeDisplay';
 import {
   Search,
@@ -108,12 +91,20 @@ import {
   Pencil,
   Sparkles,
   MessageCircle,
-  UserSearch,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
 import { DirectRelativeFilterGrid } from './home/DirectRelativeFilterGrid';
 import { GenealogyFilterGrid } from './home/GenealogyFilterGrid';
+import { buildAiTreeContext } from './home/homeAiContext';
+import {
+  calculateCuriosities,
+  type CuriosityTopic,
+} from './home/homeCuriositiesUtils';
+import {
+  HomeCuriositiesDialog,
+  type CuriosidadesTab,
+} from './home/HomeCuriositiesDialog';
 import { HomeHeader } from './home/HomeHeader';
 import { HomeMobileNav } from './home/HomeMobileNav';
 import { HomeTreeSection } from './home/HomeTreeSection';
@@ -131,17 +122,6 @@ const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.
 
 const AI_ENDPOINT = '/api/ai';
 
-const CURIOSITY_TOPIC_OPTIONS = [
-  'Dados e Contato',
-  'Biografia',
-  'Curiosidades',
-  'Fatos Históricos do Dia de Nascimento',
-  'O que diz a Astrologia',
-  'Árvore Genealógica',
-] as const;
-
-type CuriosityTopic = typeof CURIOSITY_TOPIC_OPTIONS[number];
-type CuriosidadesTab = 'voce-sabia' | 'descubra' | 'pergunte-ia' | 'conexao';
 type PersonStatusFilters = {
   vivos: boolean;
   falecidos: boolean;
@@ -1386,566 +1366,59 @@ export function Home() {
         onSubmit={handleAddConnectionSubmit}
       />
 
-      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
-          <DialogHeader className="shrink-0 border-b border-gray-100 pb-4">
-            <DialogTitle className="flex items-center gap-2 px-6 pt-6">
-              <Sparkles className="h-5 w-5" />
-              Curiosidades
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] sm:px-6">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {curiosityTabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const active = activeCuriosityTab === tab.id;
-
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveCuriosityTab(tab.id)}
-                      className={`flex min-h-[118px] flex-col items-center justify-center gap-2 rounded-2xl px-3 py-4 text-center shadow-sm transition ${
-                        active
-                          ? 'border-2 border-blue-500 bg-blue-50 text-blue-900'
-                          : 'border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Icon className={`h-9 w-9 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
-                      <span className="text-sm font-semibold leading-tight">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                {activeCuriosityTab === 'voce-sabia' && (
-                  <section className="space-y-4">
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Você Sabia?</h2>
-                      <p className="mt-1 text-sm text-gray-600">
-                        Veja curiosidades rápidas sobre a família, datas, lugares e conexões da árvore.
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <Stat label="Pessoas cadastradas" value={stats.totalPessoas} />
-                      <Stat label="Vivos" value={stats.pessoasVivas} />
-                      <Stat label="Falecidos" value={stats.pessoasFalecidas} />
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <CuriosityCard label="Mais velho" value={curiosities.oldest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.oldest?.data_nascimento)} />
-                      <CuriosityCard label="Mais novo" value={curiosities.youngest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.youngest?.data_nascimento)} />
-                      <CuriosityCard label="Mais filhos" value={curiosities.mostChildren?.name || 'Sem dados'} detail={`${curiosities.mostChildren?.count ?? 0} filhos`} />
-                      <CuriosityCard label="Cidade com mais nascimentos" value={curiosities.topBirthCity?.city || 'Sem dados'} detail={`${curiosities.topBirthCity?.count ?? 0} pessoas`} />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <CuriosityList title="Onde moram" items={curiosities.topCurrentCities} />
-                      <CuriosityList title="Onde nasceram" items={curiosities.topBirthCities} />
-                    </div>
-                  </section>
-                )}
-
-                {activeCuriosityTab === 'descubra' && (
-                  <section className="space-y-4">
-                    {!discoverSubmitted ? (
-                      <>
-                        <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                          <UserSearch className="h-5 w-5 text-blue-600" />
-                          Descubra mais sobre...
-                        </h2>
-                        <Select
-                          value={selectedCuriosityPersonId}
-                          onValueChange={(value) => {
-                            setSelectedCuriosityPersonId(value);
-                            setDiscoverSubmitted(false);
-                            setDiscoverResultsEmpty();
-                          }}
-                        >
-                          <SelectTrigger className="h-12 rounded-lg border border-slate-500 bg-slate-100 px-4 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            <SelectValue placeholder="Selecione uma pessoa" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {pessoas.map((pessoa) => (
-                              <SelectItem key={pessoa.id} value={pessoa.id}>
-                                {pessoa.nome_completo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          {CURIOSITY_TOPIC_OPTIONS.map((topic) => {
-                            const checked = selectedCuriosityTopics.includes(topic);
-
-                            return (
-                              <label
-                                key={topic}
-                                className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                                  checked
-                                    ? 'border-blue-200 bg-blue-50 text-blue-900'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => toggleCuriosityTopic(topic)}
-                                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span>{topic}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-
-                        <div className="flex justify-end">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={discoverSubmitted ? handleBackToDiscoverForm : handleAdvanceCuriosityPrompt}
-                            disabled={!discoverSubmitted && (!selectedCuriosityPerson || selectedCuriosityTopics.length === 0 || discoverLoading)}
-                            className="w-full bg-white sm:w-auto"
-                          >
-                            {discoverLoading ? 'Carregando...' : discoverSubmitted ? 'Voltar' : 'Avançar'}
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900">
-                              {selectedCuriosityPerson?.nome_completo || 'Pessoa selecionada'}
-                            </h3>
-                            <p className="text-sm text-slate-500">
-                              Informações selecionadas sobre esta pessoa.
-                            </p>
-                          </div>
-                        </div>
-
-                        {discoverLoading && (
-                          <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                            Carregando informações selecionadas...
-                          </p>
-                        )}
-
-                        {discoverError && (
-                          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {discoverError}
-                          </p>
-                        )}
-
-                        {!discoverLoading && selectedCuriosityPerson && (
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {selectedCuriosityTopics.includes('Dados e Contato') && (
-                              <DiscoverResultCard title="Dados e Contato">
-                                <ContactInfo pessoa={selectedCuriosityPerson} />
-                              </DiscoverResultCard>
-                            )}
-
-                            {selectedCuriosityTopics.includes('Biografia') && (
-                              <DiscoverResultCard title="Biografia">
-                                <div className="space-y-2">
-                                  {selectedCuriosityPerson.minibio ? (
-                                    <p>{selectedCuriosityPerson.minibio}</p>
-                                  ) : (
-                                    <p>Esta pessoa ainda não possui biografia cadastrada.</p>
-                                  )}
-                                </div>
-                              </DiscoverResultCard>
-                            )}
-
-                            {selectedCuriosityTopics.includes('Curiosidades') && (
-                              <DiscoverResultCard title="Curiosidades">
-                                <div className="space-y-2">
-                                  {selectedCuriosityPerson.curiosidades && (
-                                    <p>{selectedCuriosityPerson.curiosidades}</p>
-                                  )}
-                                  {!selectedCuriosityPerson.curiosidades && (
-                                    <p>Esta pessoa ainda não possui curiosidades cadastradas.</p>
-                                  )}
-                                </div>
-                              </DiscoverResultCard>
-                            )}
-
-                            {selectedCuriosityTopics.includes('Fatos Históricos do Dia de Nascimento') && (
-                              <DiscoverResultCard title="Fatos Históricos do Dia do Nascimento">
-                                {discoverHistoricalInsight?.conteudo ? (
-                                  <div className="space-y-2">
-                                    <p className="font-semibold text-slate-900">{discoverHistoricalInsight.conteudo.title}</p>
-                                    {discoverHistoricalInsight.conteudo.main_event && <p>{discoverHistoricalInsight.conteudo.main_event}</p>}
-                                    <p className="font-semibold text-slate-800">
-                                      {discoverHistoricalInsight.conteudo.period_title || 'O que estava acontecendo na época'}
-                                    </p>
-                                    {Array.isArray(discoverHistoricalInsight.conteudo.brazil?.body) && (
-                                      <div>
-                                        <p className="font-medium text-slate-800">{discoverHistoricalInsight.conteudo.brazil?.title || 'Brasil'}</p>
-                                        {discoverHistoricalInsight.conteudo.brazil.body.map((item: string, index: number) => (
-                                          <p key={`brazil-${index}`}>{item}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {Array.isArray(discoverHistoricalInsight.conteudo.world?.body) && (
-                                      <div>
-                                        <p className="font-medium text-slate-800">{discoverHistoricalInsight.conteudo.world?.title || 'Mundo'}</p>
-                                        {discoverHistoricalInsight.conteudo.world.body.map((item: string, index: number) => (
-                                          <p key={`world-${index}`}>{item}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <p>Os acontecimentos históricos ainda não foram gerados para esta pessoa.</p>
-                                )}
-                              </DiscoverResultCard>
-                            )}
-
-                            {selectedCuriosityTopics.includes('O que diz a Astrologia') && (
-                              <DiscoverResultCard title="O que diz a astrologia">
-                                {selectedCuriosityPerson.permitir_exibir_data_nascimento === false ? (
-                                  <p>Esta informação está oculta pelas preferências de privacidade.</p>
-                                ) : discoverAstrologyInsight?.conteudo?.body ? (
-                                  <p>{discoverAstrologyInsight.conteudo.body}</p>
-                                ) : (
-                                  <p>O texto de astrologia ainda não foi gerado para esta pessoa.</p>
-                                )}
-                              </DiscoverResultCard>
-                            )}
-
-                            {selectedCuriosityTopics.includes('Árvore Genealógica') && (
-                              <DiscoverResultCard title="Árvore Genealógica">
-                                <div className="space-y-3">
-                                  <p>
-                                    Abrir a árvore genealógica de {selectedCuriosityPerson.nome_completo} como pessoa central.
-                                  </p>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full bg-white sm:w-auto"
-                                    onClick={() => {
-                                      handleOpenPersonTree(selectedCuriosityPerson.id);
-                                    }}
-                                  >
-                                    Abrir árvore
-                                  </Button>
-                                </div>
-                              </DiscoverResultCard>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex justify-end">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleBackToDiscoverForm}
-                            className="w-full bg-white sm:w-auto"
-                          >
-                            Voltar
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {activeCuriosityTab === 'pergunte-ia' && (
-                  <section>
-                    <h2 className="mb-2 text-base font-semibold text-gray-900">Pergunte à IA</h2>
-                    {!aiAnswer ? (
-                      <Textarea
-                        value={aiQuestion}
-                        onChange={(event) => {
-                          setAiQuestion(event.target.value);
-                          setAiError(null);
-                        }}
-                        placeholder={AI_QUESTION_PLACEHOLDER}
-                        className="min-h-[170px] w-full resize-y rounded-lg border border-slate-400 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      />
-                    ) : (
-                      <div className="min-h-[170px] w-full whitespace-pre-line rounded-lg border border-slate-500 bg-slate-100 px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-inner">
-                        {aiAnswer}
-                      </div>
-                    )}
-                    <div className="mt-3 flex flex-col justify-end gap-2 sm:flex-row">
-                      {aiAnswer && (
-                        <Button type="button" variant="outline" onClick={handleNewAiQuestion} className="w-full bg-white sm:w-auto">
-                          Nova pergunta
-                        </Button>
-                      )}
-                      {!aiAnswer && (
-                        <Button onClick={handleAskAi} disabled={!canAskAi || aiLoading} className="w-full sm:w-auto">
-                          {aiLoading ? 'Perguntando...' : 'Perguntar'}
-                        </Button>
-                      )}
-                    </div>
-                    {aiError && (
-                      <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {aiError}
-                      </p>
-                    )}
-                  </section>
-                )}
-
-                {activeCuriosityTab === 'conexao' && (
-                  <section className="space-y-4">
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Qual a minha conexão com alguém?</h2>
-                      <p className="mt-1 text-sm text-gray-600">
-                        Escolha duas pessoas da árvore para descobrir o parentesco e o caminho familiar entre elas.
-                      </p>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Select
-                        value={connectionPersonOneId}
-                        onValueChange={(value) => {
-                          setConnectionPersonOneId(value);
-                          setConnectionResult(null);
-                          setConnectionError(null);
-                        }}
-                      >
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Pessoa 1" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pessoas.map((pessoa) => (
-                            <SelectItem key={pessoa.id} value={pessoa.id}>
-                              {pessoa.nome_completo}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Select
-                        value={connectionPersonTwoId}
-                        onValueChange={(value) => {
-                          setConnectionPersonTwoId(value);
-                          setConnectionResult(null);
-                          setConnectionError(null);
-                        }}
-                      >
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Pessoa 2" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pessoas.map((pessoa) => (
-                            <SelectItem key={pessoa.id} value={pessoa.id}>
-                              {pessoa.nome_completo}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                      <input
-                        type="checkbox"
-                        checked={connectionIncludeInactiveSpouses}
-                        onChange={(event) => {
-                          setConnectionIncludeInactiveSpouses(event.target.checked);
-                          setConnectionResult(null);
-                          setConnectionError(null);
-                        }}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span>Incluir ex-cônjuges/separações no cálculo</span>
-                    </label>
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        onClick={handleDiscoverConnection}
-                        disabled={!connectionPersonOneId || !connectionPersonTwoId || connectionLoading}
-                        className="w-full sm:w-auto"
-                      >
-                        {connectionLoading ? 'Calculando...' : 'Descobrir conexão'}
-                      </Button>
-                    </div>
-                    {connectionError && (
-                      <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {connectionError}
-                      </p>
-                    )}
-                    {connectionResult && (
-                      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-gray-700">
-                        <p className="font-semibold text-gray-900">
-                          {connectionResult.found ? connectionResult.label : 'Sem vínculo encontrado'}
-                        </p>
-                        <p className="mt-2">{getRelationshipResultMessage(connectionResult)}</p>
-                        <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-3">
-                          {connectionMetricLabels.map((metric) => (
-                            <span key={metric}>{metric}</span>
-                          ))}
-                        </div>
-                        {connectionPathText && (
-                          <p className="mt-3 text-xs text-gray-500">Caminho: {connectionPathText}</p>
-                        )}
-                        {connectionRelationText && (
-                          <p className="mt-1 text-xs text-gray-400">Relações: {connectionRelationText}</p>
-                        )}
-                        {connectionWarnings.length > 0 && (
-                          <ul className="mt-3 space-y-1 text-xs text-amber-700">
-                            {connectionWarnings.map((warning) => (
-                              <li key={warning}>{warning}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  </section>
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <HomeCuriositiesDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        curiosityTabs={curiosityTabs}
+        activeCuriosityTab={activeCuriosityTab}
+        onActiveCuriosityTabChange={setActiveCuriosityTab}
+        stats={stats}
+        curiosities={curiosities}
+        pessoas={pessoas}
+        selectedCuriosityPersonId={selectedCuriosityPersonId}
+        onSelectedCuriosityPersonIdChange={setSelectedCuriosityPersonId}
+        selectedCuriosityPerson={selectedCuriosityPerson}
+        selectedCuriosityTopics={selectedCuriosityTopics}
+        toggleCuriosityTopic={toggleCuriosityTopic}
+        discoverSubmitted={discoverSubmitted}
+        discoverLoading={discoverLoading}
+        discoverError={discoverError}
+        discoverAstrologyInsight={discoverAstrologyInsight}
+        discoverHistoricalInsight={discoverHistoricalInsight}
+        setDiscoverResultsEmpty={setDiscoverResultsEmpty}
+        onDiscoverSubmittedChange={setDiscoverSubmitted}
+        handleBackToDiscoverForm={handleBackToDiscoverForm}
+        handleAdvanceCuriosityPrompt={handleAdvanceCuriosityPrompt}
+        handleOpenPersonTree={handleOpenPersonTree}
+        aiQuestion={aiQuestion}
+        aiAnswer={aiAnswer}
+        aiLoading={aiLoading}
+        aiError={aiError}
+        canAskAi={canAskAi}
+        aiQuestionPlaceholder={AI_QUESTION_PLACEHOLDER}
+        onAiQuestionChange={setAiQuestion}
+        onAiErrorChange={setAiError}
+        handleAskAi={handleAskAi}
+        handleNewAiQuestion={handleNewAiQuestion}
+        connectionPersonOneId={connectionPersonOneId}
+        connectionPersonTwoId={connectionPersonTwoId}
+        connectionIncludeInactiveSpouses={connectionIncludeInactiveSpouses}
+        connectionLoading={connectionLoading}
+        connectionError={connectionError}
+        connectionResult={connectionResult}
+        connectionMetricLabels={connectionMetricLabels}
+        connectionPathText={connectionPathText}
+        connectionRelationText={connectionRelationText}
+        connectionWarnings={connectionWarnings}
+        onConnectionPersonOneIdChange={setConnectionPersonOneId}
+        onConnectionPersonTwoIdChange={setConnectionPersonTwoId}
+        onConnectionIncludeInactiveSpousesChange={setConnectionIncludeInactiveSpouses}
+        clearConnectionResult={() => setConnectionResult(null)}
+        clearConnectionError={() => setConnectionError(null)}
+        handleDiscoverConnection={handleDiscoverConnection}
+      />
     </div>
   );
-}
-
-function DiscoverResultCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-700 shadow-sm">
-      <h4 className="mb-3 text-base font-bold text-slate-900">{title}</h4>
-      {children}
-    </article>
-  );
-}
-
-function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
-  const canShowBirthDate = pessoa.permitir_exibir_data_nascimento !== false;
-  const ageLabel = canShowBirthDate ? getCurrentAgeLabel(pessoa.data_nascimento) : undefined;
-  const zodiacSign = canShowBirthDate ? getPersonZodiacSign(pessoa) : undefined;
-  const canShowPhoneNumber = pessoa.permitir_exibir_telefone === true && Boolean(pessoa.telefone);
-  const canShowWhatsAppContact = canUseWhatsAppContact(pessoa);
-  const contactItems = [
-    ['Nome completo', pessoa.nome_completo],
-    canShowBirthDate
-      ? ['Nascimento', pessoa.data_nascimento ? String(pessoa.data_nascimento) : undefined]
-      : null,
-    pessoa.local_nascimento
-      ? ['Local de nascimento', pessoa.local_nascimento]
-      : null,
-    pessoa.local_atual
-      ? ['Local atual', pessoa.local_atual]
-      : null,
-    pessoa.data_falecimento
-      ? ['Data de falecimento', String(pessoa.data_falecimento)]
-      : isPersonDeceased(pessoa)
-        ? ['Falecimento', 'Falecido(a)']
-        : null,
-    pessoa.local_falecimento
-      ? ['Local de falecimento', pessoa.local_falecimento]
-      : null,
-    canShowBirthDate && ageLabel
-      ? ['Idade', ageLabel]
-      : null,
-    canShowBirthDate && zodiacSign
-      ? ['Signo', zodiacSign]
-      : null,
-    canShowPhoneNumber
-      ? ['Telefone', formatPhone(String(pessoa.telefone ?? ''))]
-      : null,
-    pessoa.permitir_exibir_rede_social === true || pessoa.permitir_exibir_instagram === true
-      ? ['Redes sociais', pessoa.rede_social || pessoa.instagram_usuario || pessoa.instagram_url]
-      : null,
-    pessoa.permitir_exibir_endereco === true
-      ? ['Endereço', pessoa.endereco]
-      : null,
-  ].filter((item): item is [string, string] => Boolean(item?.[1]));
-
-  if (contactItems.length <= 1 && !canShowWhatsAppContact) {
-    return (
-      <div className="space-y-2">
-        <p className="font-semibold text-slate-900">{pessoa.nome_completo}</p>
-        <p>Esta pessoa não disponibilizou dados ou contatos para visualização.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      <dl className="space-y-2">
-        {contactItems.map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt>
-            <dd className="text-slate-800">{value}</dd>
-          </div>
-        ))}
-      </dl>
-      {canShowWhatsAppContact && (
-        <WhatsAppContactButton
-          telefone={pessoa.telefone ?? null}
-          permitirExibirTelefone={pessoa.permitir_exibir_telefone ?? null}
-          permitirMensagensWhatsApp={pessoa.permitir_mensagens_whatsapp ?? null}
-          personId={pessoa.id}
-          personName={pessoa.nome_completo}
-          className="mt-3"
-        />
-      )}
-    </div>
-  );
-}
-
-function getCurrentAgeLabel(value?: string | number | null) {
-  const birthDate = parseSimpleBirthDate(value);
-  if (!birthDate || !Number.isFinite(birthDate.year)) return undefined;
-
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.year;
-
-  if (birthDate.hasFullDate && birthDate.month && birthDate.day) {
-    const hasHadBirthday =
-      today.getMonth() + 1 > birthDate.month ||
-      (today.getMonth() + 1 === birthDate.month && today.getDate() >= birthDate.day);
-    if (!hasHadBirthday) age -= 1;
-  }
-
-  if (age < 0 || age > 130) return undefined;
-  return birthDate.hasFullDate ? `${age} anos` : `aprox. ${age} anos`;
-}
-
-function parseSimpleBirthDate(value?: string | number | null) {
-  if (value === null || value === undefined) return null;
-
-  const text = String(value).trim();
-  if (!text) return null;
-
-  const brDate = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (brDate) {
-    const [, day, month, year] = brDate;
-    return {
-      day: Number(day),
-      month: Number(month),
-      year: Number(year),
-      hasFullDate: true,
-    };
-  }
-
-  const isoDate = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (isoDate) {
-    const [, year, month, day] = isoDate;
-    return {
-      day: Number(day),
-      month: Number(month),
-      year: Number(year),
-      hasFullDate: true,
-    };
-  }
-
-  const year = text.match(/(?:^|[^\d])(\d{4})(?:[^\d]|$)/)?.[1];
-  if (!year) return null;
-
-  return {
-    year: Number(year),
-    hasFullDate: false,
-  };
 }
 
 function getInitials(displayName: string) {
@@ -2187,230 +1660,6 @@ function FilterPanel({
       )}
     </div>
   );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-function CuriosityCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
-  return (
-    <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-gray-900">{value}</p>
-      {detail && <p className="mt-1 text-xs text-gray-500">{detail}</p>}
-    </div>
-  );
-}
-
-type CityCuriosity = {
-  city: string;
-  count: number;
-  people: string[];
-};
-
-function CuriosityList({ title, items }: { title: string; items: CityCuriosity[] }) {
-  return (
-    <div>
-      <h2 className="mb-2 text-sm font-semibold text-gray-900">{title}</h2>
-      <div className="space-y-2">
-        {items.length > 0 ? items.map((item) => (
-          <div
-            key={item.city}
-            className="group relative flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
-            title={`${item.city}\n${item.people.join('\n')}`}
-          >
-            <span className="truncate text-gray-600">{item.city}</span>
-            <span className="font-semibold text-gray-900">{item.count}</span>
-            <div className="pointer-events-none absolute left-3 right-3 top-[calc(100%+0.35rem)] z-20 hidden rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-lg group-hover:block">
-              <p className="font-semibold text-gray-900">{item.city}</p>
-              <p className="mt-1 text-gray-500">Pessoas:</p>
-              <ul className="mt-1 space-y-1">
-                {item.people.slice(0, 10).map((name) => (
-                  <li key={name} className="truncate">
-                    {name}
-                  </li>
-                ))}
-              </ul>
-              {item.people.length > 10 && (
-                <p className="mt-2 font-medium text-gray-600">+ {item.people.length - 10} pessoas</p>
-              )}
-            </div>
-          </div>
-        )) : (
-          <p className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500">Sem dados.</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function getBirthValue(pessoa?: Pessoa | null) {
-  if (!pessoa?.data_nascimento) return null;
-  const value = Number(pessoa.data_nascimento);
-  if (Number.isFinite(value)) return value;
-
-  const year = String(pessoa.data_nascimento).match(/\d{4}/)?.[0];
-  return year ? Number(year) : null;
-}
-
-function formatYear(value?: string | number | null) {
-  if (!value) return undefined;
-  const year = String(value).match(/\d{4}/)?.[0];
-  return year || String(value);
-}
-
-function calculateCuriosities(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
-  const humans = pessoas.filter(isHumanFamilyMember);
-  const withBirth = humans
-    .map((pessoa) => ({ pessoa, birth: getBirthValue(pessoa) }))
-    .filter((item): item is { pessoa: Pessoa; birth: number } => typeof item.birth === 'number');
-  const sortedByBirth = [...withBirth].sort((a, b) => a.birth - b.birth);
-
-  const currentCities = countCityPeople(
-    humans.filter((pessoa) => !isPersonDeceased(pessoa)),
-    (pessoa) => pessoa.local_atual
-  );
-  const birthCities = countCityPeople(humans, (pessoa) => pessoa.local_nascimento);
-  const childrenByParent = new Map<string, Set<string>>();
-
-  const addChild = (parentId: string, childId: string) => {
-    if (!parentId || !childId || parentId === childId) return;
-    if (!childrenByParent.has(parentId)) childrenByParent.set(parentId, new Set());
-    childrenByParent.get(parentId)!.add(childId);
-  };
-
-  relacionamentos.forEach((rel) => {
-    if (rel.tipo_relacionamento === 'filho') {
-      addChild(rel.pessoa_origem_id, rel.pessoa_destino_id);
-      return;
-    }
-
-    if (rel.tipo_relacionamento === 'pai' || rel.tipo_relacionamento === 'mae') {
-      addChild(rel.pessoa_destino_id, rel.pessoa_origem_id);
-    }
-  });
-
-  const mostChildren = Array.from(childrenByParent.entries())
-    .map(([personId, children]) => ({
-      name: pessoas.find((pessoa) => pessoa.id === personId)?.nome_completo || 'Sem nome',
-      count: children.size,
-    }))
-    .sort((a, b) => b.count - a.count)[0];
-
-  return {
-    oldest: sortedByBirth[0]?.pessoa,
-    youngest: sortedByBirth[sortedByBirth.length - 1]?.pessoa,
-    mostChildren,
-    topCurrentCities: currentCities.slice(0, 5),
-    topBirthCities: birthCities.slice(0, 5),
-    topBirthCity: birthCities[0],
-  };
-}
-
-function countCityPeople(people: Pessoa[], getLocation: (pessoa: Pessoa) => string | undefined | null): CityCuriosity[] {
-  const counts = new Map<string, string[]>();
-  people.forEach((pessoa) => {
-    const normalized = getLocation(pessoa)?.trim();
-    if (!normalized) return;
-    const names = counts.get(normalized) || [];
-    counts.set(normalized, [...names, pessoa.nome_completo]);
-  });
-
-  return Array.from(counts.entries())
-    .map(([city, people]) => ({ city, count: people.length, people: people.sort((a, b) => a.localeCompare(b)) }))
-    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
-}
-
-function buildAiTreeContext({
-  pessoas,
-  relacionamentos,
-  stats,
-  curiosities,
-  centralPersonId,
-  centralPersonName,
-  directRelationCounts,
-  selectedCuriosityPerson,
-  selectedCuriosityTopics,
-}: {
-  pessoas: Pessoa[];
-  relacionamentos: Relacionamento[];
-  stats: Record<string, unknown>;
-  curiosities: ReturnType<typeof calculateCuriosities>;
-  centralPersonId?: string;
-  centralPersonName: string;
-  directRelationCounts: DirectRelationCounts;
-  selectedCuriosityPerson?: Pessoa;
-  selectedCuriosityTopics: CuriosityTopic[];
-}) {
-  return {
-    pessoaCentral: {
-      id: centralPersonId,
-      nome: centralPersonName,
-    },
-    consultaCuriosidades: {
-      pessoaSelecionada: selectedCuriosityPerson
-        ? {
-            id: selectedCuriosityPerson.id,
-            nome: selectedCuriosityPerson.nome_completo,
-            nascimento: selectedCuriosityPerson.data_nascimento,
-            falecimento: selectedCuriosityPerson.data_falecimento,
-            localNascimento: selectedCuriosityPerson.local_nascimento,
-            localAtual: selectedCuriosityPerson.local_atual,
-            telefone: selectedCuriosityPerson.telefone,
-            redeSocial: selectedCuriosityPerson.instagram_usuario || selectedCuriosityPerson.instagram_url || selectedCuriosityPerson.rede_social,
-            bio: selectedCuriosityPerson.minibio,
-            curiosidades: selectedCuriosityPerson.curiosidades,
-          }
-        : null,
-      topicosDesejados: selectedCuriosityTopics,
-    },
-    estatisticas: stats,
-    filtrosFamiliaresDiretos: directRelationCounts,
-    curiosidades: {
-      maisVelho: curiosities.oldest
-        ? {
-            nome: curiosities.oldest.nome_completo,
-            dataNascimento: curiosities.oldest.data_nascimento,
-          }
-        : null,
-      maisNovo: curiosities.youngest
-        ? {
-            nome: curiosities.youngest.nome_completo,
-            dataNascimento: curiosities.youngest.data_nascimento,
-          }
-        : null,
-      maisFilhos: curiosities.mostChildren || null,
-      principaisCidadesAtuais: curiosities.topCurrentCities,
-      principaisCidadesNascimento: curiosities.topBirthCities,
-    },
-    pessoas: pessoas.slice(0, 700).map((pessoa) => ({
-      id: pessoa.id,
-      nome: pessoa.nome_completo,
-      nascimento: pessoa.data_nascimento,
-      falecimento: pessoa.data_falecimento,
-      localNascimento: pessoa.local_nascimento,
-      localFalecimento: pessoa.local_falecimento,
-      localAtual: pessoa.local_atual,
-      tipo: pessoa.humano_ou_pet,
-      lado: pessoa.lado,
-      bio: pessoa.minibio,
-      curiosidades: pessoa.curiosidades,
-    })),
-    relacionamentos: relacionamentos.slice(0, 1200).map((rel) => ({
-      origem: rel.pessoa_origem_id,
-      destino: rel.pessoa_destino_id,
-      tipo: rel.tipo_relacionamento,
-      subtipo: rel.subtipo_relacionamento,
-      ativo: rel.ativo,
-      observacoes: rel.observacoes,
-    })),
-  };
 }
 
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
