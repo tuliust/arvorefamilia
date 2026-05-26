@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import type { FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
 import { TreeLegend } from '../components/FamilyTree/TreeLegend';
@@ -49,7 +49,11 @@ import {
   VisualLineFilterKey,
   VisualLineFilters,
 } from '../components/FamilyTree/types';
-import type { TreeViewMode } from '../components/FamilyTree/treeViewMode';
+import {
+  getPathForTreeViewMode,
+  getTreeViewModeFromPath,
+  type TreeViewMode,
+} from '../components/FamilyTree/treeViewMode';
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
@@ -94,7 +98,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
-import { DirectRelativeFilterGrid } from './home/DirectRelativeFilterGrid';
 import { GenealogyFilterGrid } from './home/GenealogyFilterGrid';
 import { buildAiTreeContext } from './home/homeAiContext';
 import {
@@ -159,6 +162,7 @@ function isVisibleByLifeStatusFilter(
 
 export function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const queryPersonId = searchParams.get('pessoa')?.trim() || undefined;
   const isMobile = useIsMobile();
@@ -176,7 +180,6 @@ export function Home() {
   const [pessoasFiltradas, setPessoasFiltradas] = useState<Pessoa[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
-  const [treeViewMode, setTreeViewMode] = useState<TreeViewMode>('minha-arvore');
   const [activeSidebarPanel, setActiveSidebarPanel] = useState<SidebarPanel>('filters');
   const [legendOpen, setLegendOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -214,6 +217,7 @@ export function Home() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const familyTreeRef = useRef<FamilyTreeActions | null>(null);
+  const treeViewMode = getTreeViewModeFromPath(location.pathname);
   const treeDataLoadTokenRef = useRef(0);
   const treeCacheKey = linkedPersonResolved
     ? `home:${user?.id ?? 'anon'}:${linkedPersonId ?? 'no-linked-person'}`
@@ -563,6 +567,17 @@ export function Home() {
       navigate(path, { replace: false, flushSync: true });
     },
     [navigate]
+  );
+
+  const handleTreeViewModeChange = useCallback(
+    (viewMode: TreeViewMode) => {
+      const nextPath = getPathForTreeViewMode(viewMode);
+      const nextUrl = `${nextPath}${location.search}`;
+      if (`${location.pathname}${location.search}` === nextUrl) return;
+
+      navigate(nextUrl, { replace: false, flushSync: true });
+    },
+    [location.pathname, location.search, navigate]
   );
 
   const handlePersonClick = useCallback(
@@ -1169,7 +1184,7 @@ export function Home() {
       <HomeHeader
         currentTreeViewLabel={currentTreeViewLabel}
         treeViewMode={treeViewMode}
-        onTreeViewModeChange={setTreeViewMode}
+        onTreeViewModeChange={handleTreeViewModeChange}
         isSearchExpanded={isSearchExpanded}
         searchExpanded={searchExpanded}
         onSearchExpandedChange={setSearchExpanded}
@@ -1194,7 +1209,7 @@ export function Home() {
             onHome={() => navigateFromHome('/')}
             onCuriosities={() => setAiDialogOpen(true)}
             onForum={() => navigateFromHome('/forum')}
-            onEditProfile={() => navigateFromHome('/minha-arvore')}
+            onEditProfile={() => navigateFromHome('/minha-arvore/editar')}
             onFavorites={() => navigateFromHome('/meus-favoritos')}
             onCalendar={() => navigateFromHome('/calendario-familiar')}
             onNotifications={() => navigateFromHome('/notificacoes')}
@@ -1298,7 +1313,7 @@ export function Home() {
           legendOpen={legendOpen}
           onToggleLegend={() => setLegendOpen((open) => !open)}
           currentTreeViewLabel={currentTreeViewLabel}
-          onTreeViewModeChange={setTreeViewMode}
+          onTreeViewModeChange={handleTreeViewModeChange}
           familyTreeRef={familyTreeRef}
           onCuriosities={() => setAiDialogOpen(true)}
           navigateFromHome={navigateFromHome}
@@ -1585,83 +1600,6 @@ function UserMenu({
   );
 }
 
-function FilterPanel({
-  personFilters,
-  edgeFilters,
-  directRelativeFilters,
-  directRelationCounts,
-  showDirectRelativeFilters,
-  onTogglePerson,
-  onToggleEdge,
-  onToggleDirect,
-}: {
-  personFilters: {
-    vivos: boolean;
-    falecidos: boolean;
-    pets: boolean;
-  };
-  edgeFilters: {
-    conjugal: boolean;
-    filiacao_sangue: boolean;
-    filiacao_adotiva: boolean;
-    irmaos: boolean;
-  };
-  directRelativeFilters: DirectRelativeFilters;
-  directRelationCounts: DirectRelationCounts;
-  showDirectRelativeFilters: boolean;
-  onTogglePerson: (key: 'vivos' | 'falecidos' | 'pets') => void;
-  onToggleEdge: (key: 'conjugal' | 'filiacao_sangue' | 'filiacao_adotiva' | 'irmaos') => void;
-  onToggleDirect: (key: DirectRelativeGroup) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">Pessoas</h2>
-        <div className="space-y-2">
-          <FilterButton active={personFilters.vivos} onClick={() => onTogglePerson('vivos')}>
-            Vivos
-          </FilterButton>
-          <FilterButton active={personFilters.falecidos} onClick={() => onTogglePerson('falecidos')}>
-            Falecidos
-          </FilterButton>
-          <FilterButton active={personFilters.pets} onClick={() => onTogglePerson('pets')}>
-            Pets
-          </FilterButton>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">Relações</h2>
-        <div className="space-y-2">
-          <FilterButton active={edgeFilters.conjugal} onClick={() => onToggleEdge('conjugal')}>
-            Cônjuges
-          </FilterButton>
-          <FilterButton active={edgeFilters.filiacao_sangue} onClick={() => onToggleEdge('filiacao_sangue')}>
-            Filiação de sangue
-          </FilterButton>
-          <FilterButton active={edgeFilters.filiacao_adotiva} onClick={() => onToggleEdge('filiacao_adotiva')}>
-            Filiação adotiva
-          </FilterButton>
-          <FilterButton active={edgeFilters.irmaos} onClick={() => onToggleEdge('irmaos')}>
-            Irmãos
-          </FilterButton>
-        </div>
-      </div>
-
-      {showDirectRelativeFilters && (
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">Familiares Diretos</h2>
-          <DirectRelativeFilterGrid
-            filters={directRelativeFilters}
-            counts={directRelationCounts}
-            onToggle={onToggleDirect}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
 type GenealogyFilterCounts = Record<GenealogyFilterKey, number>;
 
@@ -1861,32 +1799,6 @@ function calculateGenealogyFilterCounts(
   });
 
   return counts;
-}
-
-function FilterButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-        active
-          ? 'border-blue-200 bg-blue-50 text-blue-900'
-          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50',
-      ].join(' ')}
-    >
-      <span>{children}</span>
-      <span className={active ? 'text-blue-700' : 'text-gray-400'}>{active ? 'Ativo' : 'Oculto'}</span>
-    </button>
-  );
 }
 
 function StateMessage({

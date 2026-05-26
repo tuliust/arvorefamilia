@@ -57,6 +57,18 @@ export const router = createBrowserRouter([
     element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
   },
   {
+    path: '/minha-arvore',
+    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
+  },
+  {
+    path: '/genealogia',
+    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
+  },
+  {
+    path: '/visao-completa',
+    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
+  },
+  {
     path: '/entrar',
     element: lazyRoute(<Entrar />),
   },
@@ -69,7 +81,7 @@ export const router = createBrowserRouter([
     element: lazyRoute(<Privacidade />),
   },
   {
-    path: '/minha-arvore',
+    path: '/minha-arvore/editar',
     element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>),
   },
   {
