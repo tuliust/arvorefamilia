@@ -130,7 +130,8 @@ const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_AREA_VERTICAL_CENTER_Y = (SIDE_GROUPS_TOP + DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y) / 2;
 const CENTRAL_LOWER_REFERENCE_HEIGHT = 620;
-const CENTRAL_BASE_Y = CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_LOWER_REFERENCE_HEIGHT / 2;
+const CENTRAL_AREA_SHIFT_DOWN = 60;
+const CENTRAL_BASE_Y = CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_LOWER_REFERENCE_HEIGHT / 2 + CENTRAL_AREA_SHIFT_DOWN;
 const CENTRAL_CORE_SHIFT_UP = 180;
 const CENTRAL_Y = CENTRAL_BASE_Y - CENTRAL_CORE_SHIFT_UP;
 const CENTRAL_PARENT_GAP = 120;
@@ -1757,7 +1758,7 @@ export function directFamilyDistributedLayout(
     spouseGroupBounds?.minY ?? Number.POSITIVE_INFINITY
   );
   const lowerConnectionElbowY = Number.isFinite(lowerGroupTopY)
-    ? Math.min(centralBottomY + 34, lowerGroupTopY - 14)
+    ? Math.min(centralBottomY + 34, lowerGroupTopY - 4)
     : centralBottomY + 34;
 
   if (fatherGroupBounds && motherGroupBounds) {
