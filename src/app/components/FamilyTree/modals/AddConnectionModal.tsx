@@ -4,6 +4,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Pessoa } from '../../../types';
 import { includesNormalizedText, normalizeSearchText } from '../../../utils/searchText';
+import { isPetFamilyMember } from '../../../utils/personEntity';
 
 export type AddConnectionType = 'conjuge' | 'pai' | 'mae' | 'filho' | 'irmao';
 
@@ -30,6 +31,17 @@ const CONNECTION_OPTIONS: Array<{ value: AddConnectionType; label: string }> = [
   { value: 'filho', label: 'Filho(a)' },
   { value: 'irmao', label: 'Irmão(ã)' },
 ];
+
+function getConnectionOptionLabel(
+  option: { value: AddConnectionType; label: string },
+  sourcePerson: Pessoa,
+  selectedTarget: Pessoa | null
+) {
+  if (option.value !== 'filho') return option.label;
+
+  const involvesPet = isPetFamilyMember(sourcePerson) || isPetFamilyMember(selectedTarget);
+  return involvesPet ? 'Pet da família' : option.label;
+}
 
 export function AddConnectionModal({
   open,
@@ -218,7 +230,7 @@ export function AddConnectionModal({
                         ].join(' ')}
                         aria-pressed={isActive}
                       >
-                        {option.label}
+                        {getConnectionOptionLabel(option, sourcePerson, selectedTarget)}
                       </button>
                     );
                   })}
@@ -232,6 +244,11 @@ export function AddConnectionModal({
                 <div className="break-words rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800">
                   {selectedTarget ? selectedTarget.nome_completo : 'Nenhuma pessoa selecionada.'}
                 </div>
+                {selectedTarget && (isPetFamilyMember(sourcePerson) || isPetFamilyMember(selectedTarget)) && (
+                  <p className="mt-2 text-xs leading-relaxed text-amber-700">
+                    Quando a conexão envolve um pet, use Pet da família. O sistema mantém o vínculo técnico como filho para compatibilidade.
+                  </p>
+                )}
               </div>
 
               <div>

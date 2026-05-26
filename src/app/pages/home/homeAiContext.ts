@@ -1,6 +1,7 @@
 import type { DirectRelativeGroup } from '../../components/FamilyTree/types';
 import type { Pessoa, Relacionamento } from '../../types';
 import { calculateCuriosities, type CuriosityTopic } from './homeCuriositiesUtils';
+import { isHumanFamilyMember, isPetFamilyMember } from '../../utils/personEntity';
 
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
 
@@ -25,6 +26,18 @@ export function buildAiTreeContext({
   selectedCuriosityPerson?: Pessoa;
   selectedCuriosityTopics: CuriosityTopic[];
 }) {
+  const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
+
+  const filhosHumanosRelacionamentos = relacionamentos.filter((rel) => {
+    if (rel.tipo_relacionamento !== 'filho') return false;
+    return isHumanFamilyMember(pessoasById.get(rel.pessoa_destino_id));
+  });
+
+  const petsRelacionamentos = relacionamentos.filter((rel) => {
+    if (rel.tipo_relacionamento !== 'filho') return false;
+    return isPetFamilyMember(pessoasById.get(rel.pessoa_destino_id));
+  });
+
   return {
     pessoaCentral: {
       id: centralPersonId,
@@ -65,6 +78,19 @@ export function buildAiTreeContext({
       maisFilhos: curiosities.mostChildren || null,
       principaisCidadesAtuais: curiosities.topCurrentCities,
       principaisCidadesNascimento: curiosities.topBirthCities,
+    },
+    relacionamentosSemanticos: {
+      observacao: 'Pets usam tipo_relacionamento = filho por compatibilidade técnica, mas devem ser interpretados separadamente de filhos humanos.',
+      filhosHumanos: filhosHumanosRelacionamentos.map((rel) => ({
+        origem: rel.pessoa_origem_id,
+        destino: rel.pessoa_destino_id,
+        tipoSemantico: 'filho_humano',
+      })),
+      pets: petsRelacionamentos.map((rel) => ({
+        origem: rel.pessoa_origem_id,
+        destino: rel.pessoa_destino_id,
+        tipoSemantico: 'pet_da_familia',
+      })),
     },
     pessoas: pessoas.slice(0, 700).map((pessoa) => ({
       id: pessoa.id,

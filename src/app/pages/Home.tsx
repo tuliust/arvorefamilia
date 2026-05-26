@@ -64,6 +64,7 @@ import {
   PersonGeneratedInsight,
 } from '../services/personInsightsService';
 import { isPersonDeceased } from '../utils/personFields';
+import { isHumanFamilyMember, isPetFamilyMember } from '../utils/personEntity';
 import {
   calculateRelationshipDegree,
   type RelationshipDegreeResult,
@@ -130,14 +131,6 @@ type PersonStatusFilters = {
   falecidos: boolean;
   pets: boolean;
 };
-
-function isPetFamilyMember(pessoa: Pessoa) {
-  return pessoa.humano_ou_pet === 'Pet';
-}
-
-function isHumanFamilyMember(pessoa: Pessoa) {
-  return !isPetFamilyMember(pessoa);
-}
 
 function isVisibleByLifeStatusFilter(
   pessoa: Pessoa,
@@ -799,8 +792,13 @@ export function Home() {
 
   const lifeStatusCounts = useMemo(() => {
     return {
-      vivos: lifeStatusScopePeople.filter((pessoa) => isHumanFamilyMember(pessoa) && !isPersonDeceased(pessoa)).length,
-      falecidos: lifeStatusScopePeople.filter((pessoa) => isHumanFamilyMember(pessoa) && isPersonDeceased(pessoa)).length,
+      vivos: lifeStatusScopePeople.filter(
+        (pessoa) => isHumanFamilyMember(pessoa) && !isPersonDeceased(pessoa)
+      ).length,
+      falecidos: lifeStatusScopePeople.filter(
+        (pessoa) => isHumanFamilyMember(pessoa) && isPersonDeceased(pessoa)
+      ).length,
+      pets: lifeStatusScopePeople.filter(isPetFamilyMember).length,
     };
   }, [lifeStatusScopePeople]);
 
@@ -931,6 +929,7 @@ export function Home() {
           <LifeStatusKpiGrid
             vivos={lifeStatusCounts.vivos}
             falecidos={lifeStatusCounts.falecidos}
+            pets={lifeStatusCounts.pets}
             filters={personFilters}
             onToggle={togglePersonFilter}
           />
@@ -1623,11 +1622,13 @@ function calculateDirectRelationCounts(
     sobrinhos: 0,
     tios: 0,
     primos: 0,
+    pets: 0,
   };
 
   if (!centralPersonId || pessoas.length === 0) return emptyCounts;
 
   const personIds = new Set(pessoas.map((pessoa) => pessoa.id));
+  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
   if (!personIds.has(centralPersonId)) return emptyCounts;
 
   const parentsByChild = new Map<string, Set<string>>();
@@ -1690,7 +1691,9 @@ function calculateDirectRelationCounts(
   const nephews = uniqueIds(siblings.flatMap(getChildren), centralPersonId);
   const spouses = uniqueIds(Array.from(spousesByPerson.get(centralPersonId) || []), centralPersonId);
   const children = uniqueIds(getChildren(centralPersonId), centralPersonId);
-  const grandchildren = uniqueIds(children.flatMap(getChildren), centralPersonId);
+  const humanChildren = children.filter((id) => isHumanFamilyMember(peopleById.get(id)));
+  const petChildren = children.filter((id) => isPetFamilyMember(peopleById.get(id)));
+  const grandchildren = uniqueIds(humanChildren.flatMap(getChildren), centralPersonId);
 
   return {
     pais: parents.length,
@@ -1698,12 +1701,13 @@ function calculateDirectRelationCounts(
     bisavos: greatGrandparents.length,
     tataravos: greatGreatGrandparents.length,
     conjuge: spouses.length,
-    filhos: children.length,
+    filhos: humanChildren.length,
     netos: grandchildren.length,
     irmaos: siblings.length,
     sobrinhos: nephews.length,
     tios: uncles.length,
     primos: cousins.length,
+    pets: petChildren.length,
   };
 }
 

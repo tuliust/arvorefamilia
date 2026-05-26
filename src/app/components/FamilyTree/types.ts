@@ -26,7 +26,8 @@ export type DirectRelativeGroup =
   | 'irmaos'
   | 'sobrinhos'
   | 'tios'
-  | 'primos';
+  | 'primos'
+  | 'pets';
 
 export type DirectRelativeFilters = Record<DirectRelativeGroup, boolean>;
 
@@ -72,7 +73,8 @@ export type DirectRelationVariant =
   | 'nephewNiece'
   | 'spouse'
   | 'child'
-  | 'grandchild';
+  | 'grandchild'
+  | 'pet';
 
 export interface FamilyTreeBuildParams extends PersonNodeContextActions {
   pessoas: Pessoa[];
@@ -186,6 +188,7 @@ export const DEFAULT_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {
   sobrinhos: true,
   tios: true,
   primos: true,
+  pets: true,
 };
 
 export const DEFAULT_GENEALOGY_FILTERS: GenealogyFilters = {

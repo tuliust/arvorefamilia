@@ -1,5 +1,6 @@
 import type { Pessoa, Relacionamento } from '../../types';
 import { isPersonDeceased } from '../../utils/personFields';
+import { isHumanFamilyMember, isPetFamilyMember } from '../../utils/personEntity';
 
 export const CURIOSITY_TOPIC_OPTIONS = [
   'Dados e Contato',
@@ -18,14 +19,6 @@ export type CityCuriosity = {
   people: string[];
 };
 
-function isPetFamilyMember(pessoa: Pessoa) {
-  return pessoa.humano_ou_pet === 'Pet';
-}
-
-function isHumanFamilyMember(pessoa: Pessoa) {
-  return !isPetFamilyMember(pessoa);
-}
-
 export function getBirthValue(pessoa?: Pessoa | null) {
   if (!pessoa?.data_nascimento) return null;
   const value = Number(pessoa.data_nascimento);
@@ -43,6 +36,7 @@ export function formatYear(value?: string | number | null) {
 
 export function calculateCuriosities(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
   const humans = pessoas.filter(isHumanFamilyMember);
+  const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const withBirth = humans
     .map((pessoa) => ({ pessoa, birth: getBirthValue(pessoa) }))
     .filter((item): item is { pessoa: Pessoa; birth: number } => typeof item.birth === 'number');
@@ -73,10 +67,21 @@ export function calculateCuriosities(pessoas: Pessoa[], relacionamentos: Relacio
   });
 
   const mostChildren = Array.from(childrenByParent.entries())
-    .map(([personId, children]) => ({
-      name: pessoas.find((pessoa) => pessoa.id === personId)?.nome_completo || 'Sem nome',
-      count: children.size,
-    }))
+    .map(([personId, children]) => {
+      const humanChildren = Array.from(children).filter((childId) =>
+        isHumanFamilyMember(pessoasById.get(childId))
+      );
+      const petChildren = Array.from(children).filter((childId) =>
+        isPetFamilyMember(pessoasById.get(childId))
+      );
+
+      return {
+        name: pessoasById.get(personId)?.nome_completo || 'Sem nome',
+        count: humanChildren.length,
+        petCount: petChildren.length,
+      };
+    })
+    .filter((item) => item.count > 0)
     .sort((a, b) => b.count - a.count)[0];
 
   return {

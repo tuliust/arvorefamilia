@@ -14,6 +14,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Minus, Plus } from '
 import { toast } from 'sonner';
 
 import { Pessoa, Relacionamento } from '../../types';
+import { isHumanFamilyMember } from '../../utils/personEntity';
 import { nodeTypes } from './nodeTypes';
 import { OrthogonalChildEdge } from './OrthogonalChildEdge';
 import { GenealogySpouseEdge } from './GenealogySpouseEdge';
@@ -796,12 +797,24 @@ function FamilyTreeComponent({
             centralPersonId: effectiveCentralPersonId,
           })
         );
-    const layoutGraph = visiblePersonIds
+    const shouldFilterGraphByVisiblePersonIds = Boolean(visiblePersonIds && viewMode !== 'minha-arvore');
+    const layoutGraph = shouldFilterGraphByVisiblePersonIds
       ? filterGraphToPersonalScope(personalScopeGraph, visiblePersonIds)
       : personalScopeGraph;
 
+    const genealogyLayoutGraph = isGenealogyLayout
+      ? filterGraphToPersonalScope(
+          layoutGraph,
+          new Set(
+            layoutGraph.pessoas
+              .filter(isHumanFamilyMember)
+              .map((pessoa) => pessoa.id)
+          )
+        )
+      : layoutGraph;
+
     if (isGenealogyLayout) {
-      return genealogyColumnsLayout(layoutGraph, {
+      return genealogyColumnsLayout(genealogyLayoutGraph, {
         filters: genealogyFilters,
         visualLineFilters: genealogyVisualLineFilters,
         edgeFilters,
@@ -813,6 +826,7 @@ function FamilyTreeComponent({
     return directFamilyDistributedLayout(layoutGraph, {
       centralPersonId: effectiveCentralPersonId,
       filters: directRelativeFilters,
+      visiblePersonIds,
       visualLineFilters: directVisualLineFilters,
       edgeFilters,
       isMobile,

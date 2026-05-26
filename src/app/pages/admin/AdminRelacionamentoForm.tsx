@@ -16,6 +16,7 @@ import {
 import { Textarea } from '../../components/ui/textarea';
 import { adicionarRelacionamentoComInverso, obterTodasPessoas } from '../../services/dataService';
 import { Pessoa, SubtipoRelacionamento, TipoRelacionamento } from '../../types';
+import { isPetFamilyMember } from '../../utils/personEntity';
 
 const TIPOS_RELACIONAMENTO: Array<{ value: TipoRelacionamento; label: string }> = [
   { value: 'pai', label: 'Pai' },
@@ -80,6 +81,28 @@ export function AdminRelacionamentoForm() {
     () => [...pessoas].sort((a, b) => a.nome_completo.localeCompare(b.nome_completo, 'pt-BR')),
     [pessoas]
   );
+
+  const pessoaOrigemSelecionada = useMemo(
+    () => pessoas.find((pessoa) => pessoa.id === pessoaOrigemId) || null,
+    [pessoas, pessoaOrigemId]
+  );
+
+  const pessoaDestinoSelecionada = useMemo(
+    () => pessoas.find((pessoa) => pessoa.id === pessoaDestinoId) || null,
+    [pessoas, pessoaDestinoId]
+  );
+
+  const relationshipInvolvesPet = Boolean(
+    isPetFamilyMember(pessoaOrigemSelecionada) || isPetFamilyMember(pessoaDestinoSelecionada)
+  );
+
+  const getTipoRelacionamentoLabel = (tipo: { value: TipoRelacionamento; label: string }) => {
+    if (tipo.value === 'filho' && relationshipInvolvesPet) {
+      return 'Pet da família';
+    }
+
+    return tipo.label;
+  };
 
   const handleTipoChange = (value: TipoRelacionamento) => {
     setTipoRelacionamento(value);
@@ -206,11 +229,16 @@ export function AdminRelacionamentoForm() {
                     <SelectContent>
                       {TIPOS_RELACIONAMENTO.map((tipo) => (
                         <SelectItem key={tipo.value} value={tipo.value}>
-                          {tipo.label}
+                          {getTipoRelacionamentoLabel(tipo)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {relationshipInvolvesPet && tipoRelacionamento === 'filho' && (
+                    <p className="mt-2 text-xs leading-relaxed text-amber-700">
+                      Para vínculos com pets, esta opção é exibida como Pet da família. O valor salvo continuará sendo filho para manter compatibilidade com os dados atuais.
+                    </p>
+                  )}
                 </div>
 
                 <div className="min-w-0 space-y-2">

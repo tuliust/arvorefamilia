@@ -1,18 +1,19 @@
 import React from 'react';
 
+type LifeStatusFilterKey = 'vivos' | 'falecidos' | 'pets';
+
 interface LifeStatusKpiGridProps {
   vivos: number;
   falecidos: number;
-  filters: {
-    vivos: boolean;
-    falecidos: boolean;
-  };
-  onToggle: (key: 'vivos' | 'falecidos') => void;
+  pets: number;
+  filters: Record<LifeStatusFilterKey, boolean>;
+  onToggle: (key: LifeStatusFilterKey) => void;
 }
 
 export function LifeStatusKpiGrid({
   vivos,
   falecidos,
+  pets,
   filters,
   onToggle,
 }: LifeStatusKpiGridProps) {
@@ -23,6 +24,11 @@ export function LifeStatusKpiGrid({
       border: '#CBD5E1',
     },
     falecidos: {
+      background: '#F8FAFC',
+      color: '#334155',
+      border: '#CBD5E1',
+    },
+    pets: {
       background: '#F8FAFC',
       color: '#334155',
       border: '#CBD5E1',
@@ -42,11 +48,17 @@ export function LifeStatusKpiGrid({
       value: falecidos,
       ...directStatusFilterCardColors.falecidos,
     },
+    {
+      key: 'pets' as const,
+      label: 'Pets',
+      value: pets,
+      ...directStatusFilterCardColors.pets,
+    },
   ];
 
   return (
     <section>
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         {items.map((item) => {
           const active = filters[item.key];
 

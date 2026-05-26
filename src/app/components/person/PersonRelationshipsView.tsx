@@ -1,9 +1,10 @@
 import React from 'react';
-import { Heart, User, Users } from 'lucide-react';
+import { Heart, PawPrint, User, Users } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Pessoa } from '../../types';
 import { getRelationshipSubtitle } from '../../utils/personProfile';
+import { isHumanFamilyMember, isPetFamilyMember } from '../../utils/personEntity';
 
 type RelationshipGroups = {
   pais: Pessoa[];
@@ -46,7 +47,9 @@ function PersonButton({ person, label }: { person: Pessoa; label: string }) {
 export function PersonRelationshipsView({ relationships, loading = false }: { relationships: RelationshipGroups; loading?: boolean }) {
   const parents = uniqueById([...relationships.pais, ...relationships.maes]);
   const spouses = uniqueById(relationships.conjuges);
-  const children = uniqueById(relationships.filhos);
+  const relatedChildren = uniqueById(relationships.filhos);
+  const children = relatedChildren.filter(isHumanFamilyMember);
+  const pets = relatedChildren.filter(isPetFamilyMember);
   const siblings = uniqueById(relationships.irmaos);
 
   if (loading) {
@@ -94,6 +97,18 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
         </CardHeader>
         <CardContent className="space-y-2">
           {children.length === 0 ? <p className="text-sm text-gray-500">Nenhum filho cadastrado</p> : children.map((person) => <PersonButton key={person.id} person={person} label="Filho(a)" />)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PawPrint className="h-5 w-5" />
+            Pets
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {pets.length === 0 ? <p className="text-sm text-gray-500">Nenhum pet cadastrado</p> : pets.map((person) => <PersonButton key={person.id} person={person} label="Pet da família" />)}
         </CardContent>
       </Card>
 

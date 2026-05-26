@@ -9,6 +9,7 @@ const directFilterCardColors = {
   irmaos: '#A9CB72',
   sobrinhos: '#B8CEC2',
   netos: '#BDD8DC',
+  pets: '#F4C7AB',
 } as const;
 
 export const DIRECT_FAMILY_RELATION_COLORS = {
@@ -72,6 +73,11 @@ export const DIRECT_FAMILY_RELATION_COLORS = {
     solid: directFilterCardColors.netos,
     label: 'Filhos',
   },
+  pets: {
+    background: directFilterCardColors.pets,
+    solid: directFilterCardColors.pets,
+    label: 'Pets',
+  },
 } as const;
 
 export const DIRECT_FAMILY_CARD_TEXT_COLORS = {
@@ -102,4 +108,5 @@ export const DIRECT_FAMILY_LEGEND_BACKGROUNDS = [
   DIRECT_FAMILY_RELATION_COLORS.netos,
   DIRECT_FAMILY_RELATION_COLORS.conjuge,
   DIRECT_FAMILY_RELATION_COLORS.filhos,
+  DIRECT_FAMILY_RELATION_COLORS.pets,
 ] as const;

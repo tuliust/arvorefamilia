@@ -48,6 +48,7 @@ interface HomeCuriositiesDialogProps {
     totalPessoas: number;
     pessoasVivas: number;
     pessoasFalecidas: number;
+    pets?: number;
   };
   curiosities: ReturnType<typeof calculateCuriosities>;
   pessoas: Pessoa[];
@@ -193,11 +194,12 @@ export function HomeCuriositiesDialog({
                     <Stat label="Pessoas cadastradas" value={stats.totalPessoas} />
                     <Stat label="Vivos" value={stats.pessoasVivas} />
                     <Stat label="Falecidos" value={stats.pessoasFalecidas} />
+                    <Stat label="Pets" value={stats.pets ?? 0} />
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <CuriosityCard label="Mais velho" value={curiosities.oldest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.oldest?.data_nascimento)} />
                     <CuriosityCard label="Mais novo" value={curiosities.youngest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.youngest?.data_nascimento)} />
-                    <CuriosityCard label="Mais filhos" value={curiosities.mostChildren?.name || 'Sem dados'} detail={`${curiosities.mostChildren?.count ?? 0} filhos`} />
+                    <CuriosityCard label="Mais filhos humanos" value={curiosities.mostChildren?.name || 'Sem dados'} detail={`${curiosities.mostChildren?.count ?? 0} filhos humanos`} />
                     <CuriosityCard label="Cidade com mais nascimentos" value={curiosities.topBirthCity?.city || 'Sem dados'} detail={`${curiosities.topBirthCity?.count ?? 0} pessoas`} />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
