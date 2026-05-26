@@ -110,6 +110,7 @@ const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 104;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
+const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
 const TREE_MOBILE_VIEWPORT_PADDING_X = 22;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 22;
 const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
@@ -509,6 +510,7 @@ function getNormalizedTreeViewport({
   containerHeight,
   paddingX,
   paddingY,
+  paddingBottomY = paddingY,
   titleSafeArea,
   maxZoom,
   fitMode,
@@ -520,6 +522,7 @@ function getNormalizedTreeViewport({
   containerHeight: number;
   paddingX: number;
   paddingY: number;
+  paddingBottomY?: number;
   titleSafeArea: number;
   maxZoom: number;
   fitMode: TreeViewportFitMode;
@@ -527,7 +530,7 @@ function getNormalizedTreeViewport({
   verticalAlign?: TreeViewportVerticalAlign;
 }): Viewport {
   const availableWidth = Math.max(1, containerWidth - paddingX * 2);
-  const availableHeight = Math.max(1, containerHeight - titleSafeArea - paddingY * 2);
+  const availableHeight = Math.max(1, containerHeight - titleSafeArea - paddingY - paddingBottomY);
   const zoomX = availableWidth / Math.max(1, bounds.width);
   const zoomY = availableHeight / Math.max(1, bounds.height);
   const fitZoom = fitMode === 'contain'
@@ -994,6 +997,9 @@ function FamilyTreeComponent({
         : (isGenealogyLayout || viewMode === 'minha-arvore')
           ? TREE_VIEWPORT_PADDING_Y
           : 0,
+      paddingBottomY: !isMobile && viewMode === 'minha-arvore'
+        ? TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y
+        : undefined,
       titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : 0,
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)

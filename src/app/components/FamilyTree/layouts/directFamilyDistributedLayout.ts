@@ -104,8 +104,12 @@ const LEGEND_BOTTOM_GAP = 30;
 const SIDE_GROUPS_TOP = 170;
 const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
-const CENTRAL_GROUP_BOTTOM = SIDE_GROUPS_BOTTOM;
 const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = SIDE_GROUPS_BOTTOM;
+// Extra logical room used only by Minha Árvore so lower groups reach the filter panel's visual base.
+const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 140;
+const DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y =
+  DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y + DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET;
+const CENTRAL_GROUP_BOTTOM = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y;
 
 const GROUP_BOX_PADDING_X = 18;
 const GROUP_BOX_PADDING_Y = 14;
@@ -726,13 +730,18 @@ function lowerGroupTopPositions(
     })
   );
   const totalHeight = visibleGroups.reduce((sum, group) => sum + (heights.get(group.key) || 0), 0);
-  const totalGap = Math.max(0, visibleGroups.length - 1) * gap;
-  let cursorY = Math.max(minTopY, bottomY - totalHeight - totalGap);
+  const availableGap = visibleGroups.length > 1
+    ? (bottomY - minTopY - totalHeight) / (visibleGroups.length - 1)
+    : 0;
+  const uniformGap = Math.max(gap, availableGap);
+  let cursorY = visibleGroups.length === 1
+    ? Math.max(minTopY, bottomY - totalHeight)
+    : minTopY;
   const positions = new Map<string, number>();
 
   visibleGroups.forEach((group) => {
     positions.set(group.key, cursorY);
-    cursorY += (heights.get(group.key) || 0) + gap;
+    cursorY += (heights.get(group.key) || 0) + uniformGap;
   });
 
   return positions;
@@ -1343,7 +1352,7 @@ function getDirectFamilyViewportBounds(isMobile = false): TreeLayoutBounds {
     x: DIRECT_FRAME_LEFT,
     y: FRAME_TOP,
     width: DIRECT_FRAME_RIGHT - DIRECT_FRAME_LEFT,
-    height: FRAME_BOTTOM - FRAME_TOP,
+    height: DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - FRAME_TOP,
   };
 }
 
@@ -1396,6 +1405,27 @@ export function directFamilyDistributedLayout(
 
   placeGroupStack(paternalGroups, positionedNodes, positionedIds, personNodeById, index);
   placeGroupStack(maternalGroups, positionedNodes, positionedIds, personNodeById, index);
+
+  const paternalCousinsGroup = paternalGroups.find((group) => group.key === 'primos-paternos');
+  const maternalCousinsGroup = maternalGroups.find((group) => group.key === 'primos-maternos');
+
+  if (paternalCousinsGroup) {
+    alignGroupToBottom(
+      positionedNodes,
+      paternalCousinsGroup,
+      DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
+      positionedIds
+    );
+  }
+
+  if (maternalCousinsGroup) {
+    alignGroupToBottom(
+      positionedNodes,
+      maternalCousinsGroup,
+      DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
+      positionedIds
+    );
+  }
 
   const motherGroup: GroupSpec = {
     key: 'mae',
@@ -1494,14 +1524,14 @@ export function directFamilyDistributedLayout(
   alignGroupStackToBottom(
     positionedNodes,
     [siblingGroup, nephewGroup],
-    DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y,
+    DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
     positionedIds
   );
 
   alignGroupStackToBottom(
     positionedNodes,
     [spouseGroup, childrenGroup, grandchildrenGroup],
-    DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y,
+    DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y,
     positionedIds
   );
 
