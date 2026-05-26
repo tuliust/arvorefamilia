@@ -96,6 +96,12 @@ Comportamento consolidado:
 - rotas administrativas usam `ProtectedRoute`;
 - rotas de membro usam `MemberRoute`;
 - a árvore principal usa `TreeAccessRoute`;
+- as views da árvore usam rotas dedicadas, todas protegidas por `TreeAccessRoute`:
+  - `/minha-arvore` -> `viewMode = 'minha-arvore'`;
+  - `/genealogia` -> `viewMode = 'genealogia'`;
+  - `/visao-completa` -> `viewMode = 'visao-completa'`;
+- `/` redireciona para `/minha-arvore` preservando search params, como `?pessoa=...`;
+- a página antiga de edição/dados da árvore pessoal permanece em `/minha-arvore/editar` com `MemberRoute`;
 - o botão **Painel administrativo** aparece apenas para administradores;
 - usuário comum não deve acessar rotas administrativas;
 - admin acessa `/admin` diretamente;
@@ -104,6 +110,9 @@ Comportamento consolidado:
 Rotas de usuário/membro implementadas:
 
 - `/minha-arvore`;
+- `/genealogia`;
+- `/visao-completa`;
+- `/minha-arvore/editar`;
 - `/meus-dados`;
 - `/meus-vinculos`;
 - `/vincular-perfil`;
@@ -167,6 +176,9 @@ src/app/pages/Home.tsx
 Comportamento consolidado:
 
 - Home pós-login mantém header próprio, diferente do header das páginas internas;
+- Home atua como shell único das três views da árvore;
+- `treeViewMode` é derivado da rota atual por helpers em `treeViewMode.ts`;
+- a troca de view pelo header e pela navegação mobile usa uma função central em `Home.tsx`, navegação client-side e preservação de search params;
 - margens laterais do header principal foram padronizadas com o restante do layout;
 - painel lateral da árvore contém as abas **Filtros** e **Legendas**;
 - o botão **Ações** usa ícone `Printer`, mostra texto no desktop e apenas ícone no mobile;
@@ -175,6 +187,38 @@ Comportamento consolidado:
 - em desktop, o botão fica dentro ou junto ao painel;
 - em mobile/largura reduzida, apenas um botão de expandir/recolher deve aparecer.
 - loading atual: **“Buscando pessoas e relacionamentos…”**, sem complemento “no Supabase”.
+
+Componentes extraídos da Home:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/DirectRelativeFilterGrid.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/SidebarInfoPanel.tsx
+src/app/pages/home/HomeCuriositiesDialog.tsx
+src/app/pages/home/DiscoverResultCard.tsx
+src/app/pages/home/ContactInfo.tsx
+src/app/pages/home/ConnectionDiscoveryPanel.tsx
+src/app/pages/home/AiQuestionPanel.tsx
+src/app/pages/home/homeCuriositiesUtils.ts
+src/app/pages/home/homeAiContext.ts
+```
+
+Esses arquivos são componentes/auxiliares de apresentação ou funções puras; estados principais, handlers de orquestração, carregamento da árvore, Supabase e filtros continuam em `Home.tsx`.
+
+Commits de referência da refatoração incremental e rotas:
+
+```txt
+4e3cbe7 refactor: extrair componentes visuais seguros da Home
+7c98479 refactor: extrair filtros da Home
+65c3796 refactor: extrair curiosidades e IA da Home
+c9aa3c3 feat: adicionar rotas para views da arvore
+```
 
 ### Header compartilhado das páginas internas
 

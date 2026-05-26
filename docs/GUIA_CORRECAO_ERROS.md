@@ -258,6 +258,50 @@ rm -rf backups/
 git status
 ```
 
+Se arquivos `*.bak-views-normalization` aparecerem rastreados em `src/app/components/FamilyTree`, confirmar que não são importados e remover com `git rm`. Backups rastreados já removidos:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx.bak-views-normalization
+src/app/components/FamilyTree/types.ts.bak-views-normalization
+```
+
+---
+
+## 4. Rotas das views da árvore
+
+Arquivos prováveis:
+
+```txt
+src/app/routes.tsx
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeMobileNav.tsx
+```
+
+Comportamento esperado:
+
+- `/` redireciona para `/minha-arvore` preservando search params;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
+- `Home.tsx` deriva `treeViewMode` de `location.pathname`;
+- header e nav mobile usam o mesmo callback de troca de view;
+- troca de view usa `navigate`, não `window.location`;
+- antes de navegar, comparar `location.pathname` com o path alvo;
+- search params como `?pessoa=...` devem ser preservados.
+
+Se uma view abrir pública por engano:
+
+1. revisar `src/app/routes.tsx`;
+2. confirmar que a rota usa `TreeAccessRoute`;
+3. rodar `npm run build`;
+4. testar manualmente login/acesso conforme regra de produto.
+
+Se `?pessoa=...` desaparecer ao trocar view:
+
+1. revisar o callback central de troca de view em `Home.tsx`;
+2. confirmar que o destino concatena `location.search`;
+3. evitar `setTreeViewMode` local separado da rota.
+
 ### Commit já enviado, mas há alterações locais
 
 Verificar:
@@ -285,7 +329,7 @@ git status
 
 ---
 
-## 4. Rotas, acesso e permissões
+## 5. Rotas, acesso e permissões
 
 Arquivos prováveis:
 
@@ -342,7 +386,7 @@ Verificar:
 
 ---
 
-## 5. Headers, margens e navegação interna
+## 6. Headers, margens e navegação interna
 
 Arquivos prováveis:
 
@@ -402,7 +446,7 @@ Regra esperada:
 
 ---
 
-## 6. Formulários de pessoa
+## 7. Formulários de pessoa
 
 Arquivos prováveis:
 
@@ -504,7 +548,7 @@ Verificar:
 
 ---
 
-## 7. Busca com acentos
+## 8. Busca com acentos
 
 Arquivos prováveis:
 
@@ -538,7 +582,7 @@ Correção:
 
 ---
 
-## 8. Pessoa falecida e locais no exterior
+## 9. Pessoa falecida e locais no exterior
 
 Arquivos prováveis:
 
@@ -575,7 +619,7 @@ Verificar:
 
 ---
 
-## 9. Arquivos históricos e Storage
+## 10. Arquivos históricos e Storage
 
 Arquivos prováveis:
 
@@ -680,7 +724,7 @@ Verificar:
 
 ---
 
-## 10. Relacionamentos, solicitações e dados conjugais
+## 11. Relacionamentos, solicitações e dados conjugais
 
 Arquivos prováveis:
 
@@ -752,7 +796,7 @@ Verificar:
 
 ---
 
-## 11. Árvore, Genealogia, Visão Completa e anel 💍
+## 12. Árvore, Genealogia, Visão Completa e anel 💍
 
 Arquivos prováveis:
 
@@ -879,7 +923,7 @@ Correção:
 
 ---
 
-## 12. Painel de legendas
+## 13. Painel de legendas
 
 Arquivos prováveis:
 
@@ -947,7 +991,7 @@ Comparar com:
 
 ---
 
-## 13. Histórico de atividades
+## 14. Histórico de atividades
 
 Arquivos prováveis:
 
@@ -1001,7 +1045,7 @@ Remover imediatamente:
 
 ---
 
-## 14. Admin Integridade
+## 15. Admin Integridade
 
 Arquivos prováveis:
 
@@ -1058,7 +1102,7 @@ Correção:
 
 ---
 
-## 14.1 Vínculo admin usuário-pessoa
+## 15.1 Vínculo admin usuário-pessoa
 
 Detalhes específicos de pessoas/perfil/admin:
 
@@ -1107,7 +1151,7 @@ Comportamento esperado:
 
 ---
 
-## 15. Notificações
+## 16. Notificações
 
 Arquivos prováveis:
 
@@ -1248,7 +1292,7 @@ Correção:
 
 ---
 
-## 16. Astrologia, Timeline, WhatsApp, parentesco, exportação e favoritos
+## 17. Astrologia, Timeline, WhatsApp, parentesco, exportação e favoritos
 
 ### Astrologia e acontecimentos do nascimento
 
@@ -1334,7 +1378,7 @@ Verificar RLS, usuário autenticado, campos novos, colunas legadas relaxadas, li
 
 ---
 
-## 17. Responsividade
+## 18. Responsividade
 
 Arquivos prioritários:
 
@@ -1394,7 +1438,7 @@ Priorizar:
 
 ---
 
-## 18. Migrations e Supabase
+## 19. Migrations e Supabase
 
 Arquivos prováveis:
 
@@ -1464,7 +1508,7 @@ Não remover sem dump, auditoria e QA visual.
 
 ---
 
-## 19. Sintomas rápidos
+## 20. Sintomas rápidos
 
 ### Usuário comum fez algo indevido
 
@@ -1542,7 +1586,7 @@ Correção imediata:
 
 ---
 
-## 19.1 Calendário Familiar
+## 20.1 Calendário Familiar
 
 Detalhes específicos:
 
@@ -1584,7 +1628,7 @@ Verificar:
 
 ---
 
-## 20. Troubleshooting recente — legenda funcional, camadas visuais e painel lateral
+## 21. Troubleshooting recente — legenda funcional, camadas visuais e painel lateral
 
 ### Destaques visuais aparecem mesmo com filtro oculto
 

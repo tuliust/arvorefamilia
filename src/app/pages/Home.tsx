@@ -572,10 +572,9 @@ export function Home() {
   const handleTreeViewModeChange = useCallback(
     (viewMode: TreeViewMode) => {
       const nextPath = getPathForTreeViewMode(viewMode);
-      const nextUrl = `${nextPath}${location.search}`;
-      if (`${location.pathname}${location.search}` === nextUrl) return;
+      if (location.pathname === nextPath) return;
 
-      navigate(nextUrl, { replace: false, flushSync: true });
+      navigate(`${nextPath}${location.search}`, { replace: false, flushSync: true });
     },
     [location.pathname, location.search, navigate]
   );

@@ -31,6 +31,8 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA final técnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
 | Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
+| Rotas das views da árvore | Concluídas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o mesmo shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
+| Refatoração incremental da Home | Em andamento seguro | Header, seção da árvore, nav mobile, filtros, painel lateral, curiosidades, IA e conexão foram extraídos para `src/app/pages/home`; a Home segue como orquestradora. |
 | Minha Árvore e arquivos históricos | Atualizados | `ce482a2` consolidou categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral. |
 | Vínculo admin usuário-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida, migration remota aplicada e migrations local/remoto alinhadas. |
 | Autocomplete de endereço | Concluído no frontend | Admin e dados do usuário usam Google Places com fallback para input normal. |
@@ -59,6 +61,7 @@ O MVP deve ser fechado com:
 - legenda visual da árvore;
 - categoria histórica em arquivos históricos;
 - `/minha-arvore` com dados conjugais salvos pelo botão geral;
+- rotas dedicadas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - headers internos padronizados;
 - responsividade mobile/tablet;
 - QA final de lançamento.
@@ -101,6 +104,7 @@ Regras:
 - não commitar secrets, dumps, tokens, backups ou arquivos temporários;
 - não misturar pós-MVP com correções de lançamento;
 - não expandir escopo funcional sem registrar no plano.
+- não commitar arquivos `.bak`, backups temporários ou dumps.
 
 ---
 

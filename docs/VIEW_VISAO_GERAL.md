@@ -49,6 +49,15 @@ Os ajustes descritos aqui se aplicam à view **Minha Árvore**. As views **Genea
   - Área principal da árvore.
   - Renderização de `FamilyTree`.
   - Repasse de `layoutRevision`.
+  - Shell único das rotas `/minha-arvore`, `/genealogia` e `/visao-completa`.
+
+- `src/app/pages/home/*`
+  - Componentes visuais extraídos da Home.
+  - Header, seção da árvore, navegação mobile, filtros, painel lateral, curiosidades, IA e conexão.
+
+- `src/app/components/FamilyTree/treeViewMode.ts`
+  - Tipo `TreeViewMode`.
+  - Mapeamento entre view modes e rotas dedicadas.
 
 - `src/app/components/FamilyTree/FamilyTree.tsx`
   - Controle do ReactFlow.
@@ -120,6 +129,14 @@ No desktop, o painel lateral fica em um `aside`:
 - área de conteúdo com `min-h-0 flex-1 overflow-visible`.
 
 Na view **Minha Árvore**, o painel lateral exibe a aba **Filtros** com `DirectRelativeFilterGrid`.
+
+A Home é o shell comum das três rotas da árvore:
+
+- `/minha-arvore`;
+- `/genealogia`;
+- `/visao-completa`.
+
+`/` redireciona para `/minha-arvore` preservando search params. A troca de view pelo header ou pela nav mobile usa navegação client-side e mantém parâmetros como `?pessoa=...`.
 
 ### Filtros exibidos
 

@@ -117,12 +117,16 @@ A Home pós-login mantém header próprio porque concentra:
 - `UserMenu`;
 - integração com estado da árvore.
 
+O header visual está extraído para `src/app/pages/home/HomeHeader.tsx`, mas a Home continua responsável por estado, navegação, busca e handlers.
+
 Regras:
 
 - não substituir o header da Home por `MemberPageHeader`;
 - manter altura compacta;
 - preservar busca expansível;
 - preservar seletor de view;
+- o seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a página;
+- search params existentes, especialmente `?pessoa=...`, devem ser preservados ao trocar view;
 - botão **Ações** usa ícone `Printer`;
 - no desktop, o botão pode exibir texto **Ações**;
 - no mobile, o botão deve aparecer apenas como ícone;
@@ -186,6 +190,18 @@ A Home pós-login é composta por:
 - painel lateral;
 - área da árvore;
 - modais globais da árvore.
+
+Componentes visuais extraídos:
+
+- `HomeHeader`;
+- `HomeTreeSection`;
+- `HomeMobileNav`;
+- `SidebarPanelTabs`;
+- `SidebarInfoPanel`;
+- grids de filtros e KPIs em `src/app/pages/home`;
+- `HomeCuriositiesDialog` e painéis internos de IA/conexão.
+
+A extração é deliberadamente incremental: não mover estado principal, handlers complexos, chamadas Supabase ou regras da árvore para esses componentes sem nova revisão.
 
 ### 4.1 Painel lateral desktop
 
@@ -255,11 +271,13 @@ src/app/pages/Home.tsx
 
 Views existentes:
 
-| View | Uso |
-|---|---|
-| Minha Árvore | Escopo em torno da pessoa central. |
-| Genealogia | Escopo pessoal por gerações. |
-| Visão Completa | Base familiar completa por gerações. |
+| View | Rota | Uso |
+|---|---|---|
+| Minha Árvore | `/minha-arvore` | Escopo em torno da pessoa central. |
+| Genealogia | `/genealogia` | Escopo pessoal por gerações. |
+| Visão Completa | `/visao-completa` | Base familiar completa por gerações. |
+
+`/` redireciona para `/minha-arvore` preservando search params. As três rotas usam o mesmo shell `Home`, e a mudança de view deve alterar apenas a área principal da árvore e controles condicionados por `viewMode`.
 
 ### 5.1 Título fixo da árvore
 

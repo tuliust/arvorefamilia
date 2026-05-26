@@ -45,6 +45,7 @@ Páginas ficam em:
 src/app/pages
 src/app/pages/admin
 src/app/pages/forum
+src/app/pages/home
 ```
 
 Services, utils e types não devem ser misturados com componentes:
@@ -184,6 +185,23 @@ onPersonAddConnection
 onPersonRemove
 onMarriageClick
 ```
+
+`TreeViewMode` fica em:
+
+```txt
+src/app/components/FamilyTree/treeViewMode.ts
+```
+
+Esse arquivo centraliza o tipo e os helpers de rota:
+
+```txt
+VIEW_MODE_TO_PATH
+PATH_TO_VIEW_MODE
+getTreeViewModeFromPath
+getPathForTreeViewMode
+```
+
+As rotas dedicadas da árvore devem continuar usando esses helpers para evitar divergência entre URL e `viewMode`.
 
 Ações expostas via `ref`:
 
@@ -491,9 +509,59 @@ Cuidados:
 
 ---
 
-## 5. Componentes de navegação e menu
+## 5. Componentes da Home
 
-## 5.1 `AppLink`
+## 5.1 Componentes extraídos da Home
+
+Pasta:
+
+```txt
+src/app/pages/home
+```
+
+Responsabilidade:
+
+- reduzir o tamanho de `Home.tsx`;
+- manter componentes visuais simples, tipados e orientados por props;
+- preservar `Home.tsx` como orquestrador de estado, carregamento, filtros, IA, conexão e navegação.
+
+Componentes principais:
+
+```txt
+HomeHeader
+HomeTreeSection
+HomeMobileNav
+DirectRelationKpiGrid
+DirectRelativeFilterGrid
+GenealogyFilterGrid
+LifeStatusKpiGrid
+SidebarPanelTabs
+SidebarInfoPanel
+HomeCuriositiesDialog
+DiscoverResultCard
+ContactInfo
+ConnectionDiscoveryPanel
+AiQuestionPanel
+```
+
+Auxiliares:
+
+```txt
+homeCuriositiesUtils
+homeAiContext
+```
+
+Cuidados:
+
+- não mover estado principal para esses componentes sem decisão explícita;
+- preservar textos, labels, `aria-labels`, classes Tailwind e ordem visual;
+- manter `UserMenu` montado pela Home e repassado ao header por slot, salvo nova refatoração deliberada;
+- header e nav mobile devem receber o mesmo callback de troca de view;
+- grids de filtros não devem alterar chaves de filtros nem contadores recebidos por props.
+
+## 6. Componentes de navegação e menu
+
+## 6.1 `AppLink`
 
 Arquivo:
 
@@ -518,7 +586,7 @@ Cuidados:
 - ao remover import de `AppLink as Link`, confirmar se a página ainda usa `<Link>`;
 - erro conhecido corrigido: `Link is not defined` em `CalendarioFamiliar.tsx`.
 
-## 5.2 `UserMenu`
+## 6.2 `UserMenu`
 
 Arquivo provável:
 
@@ -548,7 +616,7 @@ Cuidados:
 
 ---
 
-## 6. Componentes de pessoa
+## 7. Componentes de pessoa
 
 Documentação específica de pessoas/perfil/admin:
 
@@ -601,7 +669,7 @@ Cuidados:
 
 ---
 
-## 7. Componentes de relacionamentos
+## 8. Componentes de relacionamentos
 
 Arquivos principais:
 
@@ -634,7 +702,7 @@ Cuidados:
 
 ---
 
-## 8. Componentes de arquivos históricos
+## 9. Componentes de arquivos históricos
 
 Arquivos principais:
 
@@ -685,7 +753,7 @@ Cuidados:
 
 ---
 
-## 9. Componentes de timeline
+## 10. Componentes de timeline
 
 Arquivos principais:
 
@@ -711,7 +779,7 @@ Cuidados:
 
 ---
 
-## 10. Componentes de favoritos
+## 11. Componentes de favoritos
 
 Arquivos principais:
 
@@ -738,7 +806,7 @@ Cuidados:
 
 ---
 
-## 11. Componentes de fórum
+## 12. Componentes de fórum
 
 Arquivos principais:
 
@@ -770,7 +838,7 @@ Cuidados:
 
 ---
 
-## 12. Componentes de notificações
+## 13. Componentes de notificações
 
 Documentação específica de notificações:
 
@@ -811,7 +879,7 @@ Cuidados:
 
 ---
 
-## 13. Componentes administrativos
+## 14. Componentes administrativos
 
 Arquivos principais:
 
@@ -859,7 +927,7 @@ Cuidados:
 
 ---
 
-## 14. Componentes UI base
+## 15. Componentes UI base
 
 Pasta:
 
@@ -892,7 +960,7 @@ Regras:
 
 ---
 
-## 15. Componentes e estados vazios
+## 16. Componentes e estados vazios
 
 Padrão esperado:
 
@@ -911,7 +979,7 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 
 ---
 
-## 16. Alterações recentes registradas
+## 17. Alterações recentes registradas
 
 ### 16.1 `MemberPageHeader`
 
@@ -963,7 +1031,7 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 
 ---
 
-## 17. Checklist antes de alterar componentes críticos
+## 18. Checklist antes de alterar componentes críticos
 
 Para componentes da árvore:
 
@@ -1013,7 +1081,7 @@ Para componentes admin:
 
 ---
 
-## 18. O que evitar
+## 19. O que evitar
 
 Não fazer:
 
@@ -1031,7 +1099,7 @@ Não fazer:
 
 ---
 
-## 19. Arquivos de referência rápida
+## 20. Arquivos de referência rápida
 
 ```txt
 src/app/components/layout/MemberPageHeader.tsx
@@ -1052,7 +1120,7 @@ src/app/components/ui
 
 ---
 
-## 20. Atualização recente — legenda, painel e linhas da árvore
+## 21. Atualização recente — legenda, painel e linhas da árvore
 
 ### 20.1 `TreeLegend` como legenda funcional
 

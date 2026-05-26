@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate, useLocation } from 'react-router';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
@@ -51,10 +51,15 @@ function lazyRoute(element: React.ReactNode) {
   return <Suspense fallback={<RouteFallback />}>{element}</Suspense>;
 }
 
+function RedirectToMinhaArvore() {
+  const location = useLocation();
+  return <Navigate to={`/minha-arvore${location.search}`} replace />;
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
+    element: lazyRoute(<TreeAccessRoute><RedirectToMinhaArvore /></TreeAccessRoute>),
   },
   {
     path: '/minha-arvore',
