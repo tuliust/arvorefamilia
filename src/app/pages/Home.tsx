@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { FamilyTree, type FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
+import type { FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
 import { TreeLegend } from '../components/FamilyTree/TreeLegend';
 import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
 import { collectDirectFamilyScopePersonIds } from '../components/FamilyTree/layouts/directFamilyDistributedLayout';
@@ -17,7 +17,6 @@ import {
   storeDirectRelativeFilters,
   migrateLegacyTreeViewPreferences,
 } from '../components/FamilyTree/utils/treePreferences';
-import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import {
@@ -117,12 +116,11 @@ import {
   MessageCircle,
   UserSearch,
   Scan,
-  PanelBottom,
-  Minus,
-  Plus,
-  MoreHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { HomeHeader } from './home/HomeHeader';
+import { HomeMobileNav } from './home/HomeMobileNav';
+import { HomeTreeSection } from './home/HomeTreeSection';
 
 const AI_QUESTION_EXAMPLES = [
   'Quem são meus bisavós paternos?',
@@ -1190,159 +1188,43 @@ export function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <header className="shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm">
-        <div className="mx-auto flex min-h-14 max-w-7xl min-w-0 flex-nowrap items-center gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
-              <Network className="h-6 w-6 text-white" />
-            </div>
-
-            <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
-              <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
-                Família Barros Souza
-              </h1>
-              <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">{currentTreeViewLabel}</p>
-            </div>
-          </div>
-
-          <div
-            className={[
-              'min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-visible sm:gap-2',
-              isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex',
-            ].join(' ')}
-          >
-            <Select value={treeViewMode} onValueChange={(value) => setTreeViewMode(value as TreeViewMode)}>
-              <SelectTrigger
-                className="relative z-20 h-9 w-[9.5rem] max-w-[48vw] min-w-[8.25rem] shrink-0 gap-1.5 overflow-visible rounded-xl border-blue-300 bg-blue-50 px-2.5 text-sm font-semibold text-blue-900 shadow-md transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 focus:ring-offset-0 sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]"
-                aria-label={`Visualização atual: ${currentTreeViewLabel}`}
-                title={currentTreeViewLabel}
-              >
-                <Network className="h-4 w-4 shrink-0 text-blue-700" />
-                <span className="min-w-0 truncate">{currentTreeViewLabel}</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
-                <SelectItem value="genealogia">Genealogia</SelectItem>
-                <SelectItem value="visao-completa">Visão Completa</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3"
-              title="Curiosidades"
-              aria-label="Abrir Curiosidades"
-              onClick={() => setAiDialogOpen(true)}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className={headerActionTextClassName}>Curiosidades</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3"
-              title="Fórum de Discussões"
-              aria-label="Abrir Fórum de Discussões"
-              onClick={() => navigateFromHome('/forum')}
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className={headerActionTextClassName}>Fórum</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="hidden h-9 shrink-0 gap-2 px-2 xl:inline-flex lg:px-3"
-              title="Calendário familiar"
-              aria-label="Abrir Calendário familiar"
-              onClick={() => navigateFromHome('/calendario-familiar')}
-            >
-              <CalendarDays className="h-4 w-4" />
-              <span className={headerActionTextClassName}>Calendário</span>
-            </Button>
-
-          </div>
-
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-2">
-            <div className="pointer-events-none relative flex min-w-0 flex-row-reverse items-center">
-              <Button
-                variant="outline"
-                size="icon"
-                className="pointer-events-auto relative z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
-                title="Buscar por nome ou local"
-                aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
-                onClick={() => setSearchExpanded(true)}
-              >
-                <Search className="pointer-events-none h-4 w-4" />
-              </Button>
-
-              <div
-                className={[
-                  'pointer-events-auto relative z-10 min-w-0 overflow-visible transition-all duration-300 ease-out',
-                  searchExpanded ? 'w-[min(54vw,320px)] opacity-100 sm:w-[min(42vw,320px)]' : 'w-0 opacity-0',
-                ].join(' ')}
-              >
-                <div className="pr-2">
-                  <Input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Buscar por nome ou local..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onBlur={() => {
-                      window.setTimeout(() => {
-                        if (!searchTerm.trim()) {
-                          setSearchExpanded(false);
-                        }
-                      }, 120);
-                    }}
-                    className="h-10"
-                    tabIndex={searchExpanded ? 0 : -1}
-                  />
-
-                  {searchExpanded && searchTerm && pessoasFiltradas.length > 0 && (
-                    <div className="absolute left-0 right-2 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                      {pessoasFiltradas.map((pessoa) => (
-                        <button
-                          key={pessoa.id}
-                          type="button"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => handleSearchSelect(pessoa)}
-                          className="w-full border-b border-gray-100 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-gray-50"
-                        >
-                          <p className="text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
-                          {pessoa.local_nascimento && (
-                            <p className="mt-1 text-xs text-gray-500">📍 {pessoa.local_nascimento}</p>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <UserMenu
-              isLoggedIn={Boolean(user)}
-              displayName={displayName}
-              firstName={accountFirstName}
-              avatarUrl={avatarUrl}
-              initials={initials}
-              notificationCount={notificationCount}
-              isAdmin={isAdmin}
-              onLogin={() => navigateFromHome('/entrar')}
-              onHome={() => navigateFromHome('/')}
-              onCuriosities={() => setAiDialogOpen(true)}
-              onForum={() => navigateFromHome('/forum')}
-              onEditProfile={() => navigateFromHome('/minha-arvore')}
-              onFavorites={() => navigateFromHome('/meus-favoritos')}
-              onCalendar={() => navigateFromHome('/calendario-familiar')}
-              onNotifications={() => navigateFromHome('/notificacoes')}
-              onAdmin={() => navigateFromHome('/admin')}
-              onSignOut={handleSignOut}
-            />
-          </div>
-        </div>
-      </header>
+      <HomeHeader
+        currentTreeViewLabel={currentTreeViewLabel}
+        treeViewMode={treeViewMode}
+        onTreeViewModeChange={setTreeViewMode}
+        isSearchExpanded={isSearchExpanded}
+        searchExpanded={searchExpanded}
+        onSearchExpandedChange={setSearchExpanded}
+        searchTerm={searchTerm}
+        onSearchTermChange={setSearchTerm}
+        searchInputRef={searchInputRef}
+        pessoasFiltradas={pessoasFiltradas}
+        handleSearchSelect={handleSearchSelect}
+        headerActionTextClassName={headerActionTextClassName}
+        onCuriosities={() => setAiDialogOpen(true)}
+        navigateFromHome={navigateFromHome}
+        userMenuSlot={(
+          <UserMenu
+            isLoggedIn={Boolean(user)}
+            displayName={displayName}
+            firstName={accountFirstName}
+            avatarUrl={avatarUrl}
+            initials={initials}
+            notificationCount={notificationCount}
+            isAdmin={isAdmin}
+            onLogin={() => navigateFromHome('/entrar')}
+            onHome={() => navigateFromHome('/')}
+            onCuriosities={() => setAiDialogOpen(true)}
+            onForum={() => navigateFromHome('/forum')}
+            onEditProfile={() => navigateFromHome('/minha-arvore')}
+            onFavorites={() => navigateFromHome('/meus-favoritos')}
+            onCalendar={() => navigateFromHome('/calendario-familiar')}
+            onNotifications={() => navigateFromHome('/notificacoes')}
+            onAdmin={() => navigateFromHome('/admin')}
+            onSignOut={handleSignOut}
+          />
+        )}
+      />
 
       <main className="relative flex min-h-0 flex-1 overflow-hidden">
         {!isMobile && (
@@ -1406,149 +1288,43 @@ export function Home() {
           </aside>
         )}
 
-        <section
-          className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
-        >
-          {isTreeResolving ? (
-            <StateMessage
-              title="Carregando árvore"
-              message="Buscando pessoas e relacionamentos…"
-            />
-          ) : loadError ? (
-            <StateMessage
-              title="Erro ao carregar a árvore"
-              message={loadError}
-              tone="error"
-            />
-          ) : pessoas.length === 0 || !centralReferencePersonId ? (
-            <StateMessage
-              title="Nenhuma pessoa encontrada"
-              message="A tabela pessoas não retornou registros para renderizar a árvore."
-            />
-          ) : canRenderTree ? (
-            <FamilyTree
-              ref={familyTreeRef}
-              pessoas={pessoas}
-              visiblePersonIds={visiblePersonIdsByLifeStatus}
-              relacionamentos={relacionamentos}
-              onPersonClick={handlePersonClick}
-              onPersonView={handlePersonView}
-              onPersonEdit={handlePersonEdit}
-              onPersonAddConnection={handlePersonAddConnection}
-              onPersonRemove={handlePersonRemove}
-              onMarriageClick={handleMarriageClick}
-              selectedPersonId={selectedPersonId}
-              edgeFilters={edgeFilters}
-              directRelativeFilters={directRelativeFilters}
-              centralPersonId={centralReferencePersonId}
-              isMobile={isMobile}
-              layoutRevision={treeLayoutRevision}
-              viewMode={treeViewMode}
-              genealogyFilters={genealogyFilters}
-              visualLineFilters={visualLineFilters}
-            />
-          ) : (
-            <StateMessage
-              title="Carregando árvore"
-              message="Preparando a referência principal da árvore."
-            />
-          )}
-        </section>
+        <HomeTreeSection
+          isTreeResolving={isTreeResolving}
+          loadError={loadError}
+          pessoas={pessoas}
+          centralReferencePersonId={centralReferencePersonId}
+          canRenderTree={canRenderTree}
+          familyTreeRef={familyTreeRef}
+          visiblePersonIdsByLifeStatus={visiblePersonIdsByLifeStatus}
+          relacionamentos={relacionamentos}
+          onPersonClick={handlePersonClick}
+          onPersonView={handlePersonView}
+          onPersonEdit={handlePersonEdit}
+          onPersonAddConnection={handlePersonAddConnection}
+          onPersonRemove={handlePersonRemove}
+          onMarriageClick={handleMarriageClick}
+          selectedPersonId={selectedPersonId}
+          edgeFilters={edgeFilters}
+          directRelativeFilters={directRelativeFilters}
+          isMobile={isMobile}
+          treeLayoutRevision={treeLayoutRevision}
+          treeViewMode={treeViewMode}
+          genealogyFilters={genealogyFilters}
+          visualLineFilters={visualLineFilters}
+          renderStateMessage={(props) => <StateMessage {...props} />}
+        />
       </main>
 
       {isMobile && (
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur">
-          <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5">
-            <button
-              type="button"
-              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
-              onClick={() => setLegendOpen((open) => !open)}
-              aria-label={legendOpen ? 'Fechar painel' : 'Abrir painel'}
-            >
-              <PanelBottom className="h-5 w-5" />
-              <span>Painel</span>
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
-                  aria-label={`Visualização atual: ${currentTreeViewLabel}`}
-                >
-                  <Network className="h-5 w-5" />
-                  <span>Visual</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" side="top" className="mb-2 w-52">
-                <DropdownMenuItem onClick={() => setTreeViewMode('minha-arvore')}>
-                  Minha Árvore
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTreeViewMode('genealogia')}>
-                  Genealogia
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTreeViewMode('visao-completa')}>
-                  Visão Completa
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <button
-              type="button"
-              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
-              onClick={() => familyTreeRef.current?.zoomOut()}
-              aria-label="Diminuir zoom"
-            >
-              <Minus className="h-5 w-5" />
-              <span>Zoom -</span>
-            </button>
-
-            <button
-              type="button"
-              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
-              onClick={() => familyTreeRef.current?.zoomIn()}
-              aria-label="Aumentar zoom"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Zoom +</span>
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
-                  aria-label="Abrir mais atalhos"
-                >
-                  <MoreHorizontal className="h-5 w-5" />
-                  <span>Mais</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="top" className="mb-2 w-56">
-                <DropdownMenuItem onClick={() => setAiDialogOpen(true)}>
-                  <Sparkles className="h-4 w-4" />
-                  Curiosidades
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigateFromHome('/forum')}>
-                  <MessageCircle className="h-4 w-4" />
-                  Fórum
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigateFromHome('/calendario-familiar')}>
-                  <CalendarDays className="h-4 w-4" />
-                  Calendário
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigateFromHome('/meus-favoritos')}>
-                  <Star className="h-4 w-4" />
-                  Favoritos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigateFromHome('/notificacoes')}>
-                  <Bell className="h-4 w-4" />
-                  Notificações
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </nav>
+        <HomeMobileNav
+          legendOpen={legendOpen}
+          onToggleLegend={() => setLegendOpen((open) => !open)}
+          currentTreeViewLabel={currentTreeViewLabel}
+          onTreeViewModeChange={setTreeViewMode}
+          familyTreeRef={familyTreeRef}
+          onCuriosities={() => setAiDialogOpen(true)}
+          navigateFromHome={navigateFromHome}
+        />
       )}
 
       {isMobile && legendOpen && (
