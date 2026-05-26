@@ -408,7 +408,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         : clampNumber(Math.round(cardHeight * 0.64), 96, 124);
     const nonCentralTextWidth = Math.max(138, cardWidth - nonCentralPaddingX * 2 - nonCentralGap - nonCentralImageSize);
     const estimatedNameFontForTwoLines = Math.floor(
-      (nonCentralTextWidth * 2) / Math.max(10, pessoa.nome_completo.length * 0.52)
+      (nonCentralTextWidth * 2) / Math.max(10, pessoa.nome_completo.length * 0.46)
     );
     const centralPaddingY = Math.max(22, Math.round(40 * cappedCardScale));
     const centralPaddingX = Math.max(34, Math.round(48 * cappedCardScale));
@@ -418,8 +418,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       ? centralNameFontSize
       : clampNumber(
         estimatedNameFontForTwoLines,
-        isMobile ? 18 : isCompactDirectCard ? 16 : 18,
-        isMobile ? 28 : isCompactDirectCard ? 24 : isSmallDirectCard ? 26 : 28
+        isMobile ? 18 : isCompactDirectCard ? 17 : 19,
+        isMobile ? 30 : isCompactDirectCard ? 26 : isSmallDirectCard ? 29 : 30
       );
     const directDetailSizingLines = detailLines.length > 0
       ? detailLines
@@ -431,14 +431,14 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       ''
     );
     const estimatedDetailFontForOneLine = longestDirectDetailLine
-      ? Math.floor(nonCentralTextWidth / Math.max(8, longestDirectDetailLine.length * 0.48))
-      : 13;
+      ? Math.floor(nonCentralTextWidth / Math.max(8, longestDirectDetailLine.length * 0.40))
+      : 14;
     const directDetailFontSize = isCentralDirectNode
       ? centralDetailFontSize
       : clampNumber(
         estimatedDetailFontForOneLine,
-        isMobile ? 13 : isCompactDirectCard ? 12 : 13,
-        isMobile ? 20 : isCompactDirectCard ? 16 : isSmallDirectCard ? 17 : 19
+        isMobile ? 13 : isCompactDirectCard ? 13 : 14,
+        isMobile ? 22 : isCompactDirectCard ? 18 : isSmallDirectCard ? 20 : 21
       );
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
     const avatarSize = isCentralDirectNode
@@ -518,10 +518,13 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           )}
 
           <div
-            className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'min-w-0 flex-1'}
+            className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'flex min-w-0 flex-1 flex-col justify-center'}
             style={isCentralDirectNode
               ? { marginTop: Math.max(16, Math.round(36 * cappedCardScale)) }
-              : { maxWidth: nonCentralTextWidth }
+              : {
+                maxWidth: nonCentralTextWidth,
+                minHeight: nonCentralImageSize,
+              }
             }
           >
             <h3
@@ -533,7 +536,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               ].join(' ')}
               style={{
                 fontSize: directNameFontSize,
-                lineHeight: isCentralDirectNode ? undefined : isCompactDirectCard ? 1.02 : 1.06,
+                lineHeight: isCentralDirectNode ? undefined : isCompactDirectCard ? 1.08 : 1.1,
                 ...(!isCentralDirectNode
                   ? {
                     display: '-webkit-box',
@@ -565,8 +568,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 lines={directDetailLines}
                 className={[
                   isCompactDirectCard
-                    ? 'mt-1 space-y-0 font-semibold leading-[1.05]'
-                    : 'mt-1.5 space-y-0.5 font-semibold leading-tight',
+                    ? 'mt-[5px] space-y-[3px] font-semibold leading-[1.08]'
+                    : 'mt-[6px] space-y-[4px] font-semibold leading-[1.12]',
                 ].join(' ')}
                 style={{ color: style.muted, fontSize: directDetailFontSize }}
                 lineClassName="overflow-hidden text-ellipsis whitespace-nowrap"

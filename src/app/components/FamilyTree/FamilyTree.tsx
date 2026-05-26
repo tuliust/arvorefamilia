@@ -114,7 +114,7 @@ const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
 const TREE_MOBILE_VIEWPORT_PADDING_X = 22;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 22;
 const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
-const TREE_PENDING_VIEWPORT_ZOOM = 0.35;
+const TREE_PENDING_VIEWPORT_ZOOM = TREE_INITIAL_TECHNICAL_MIN_ZOOM;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
 const TREE_ZOOM_OUT_RESTORE_MULTIPLIER = 1.25;
@@ -1044,6 +1044,7 @@ function FamilyTreeComponent({
     );
   }, [translateBounds, isGenealogyLayout, isMobile]);
   const activeMinZoom = directFamilyViewport?.zoom ?? directFamilyFallbackMinZoom;
+  const canRenderReactFlow = Boolean(directFamilyViewport && viewportSignature);
 
   useEffect(() => {
     setNodes((prevNodes) =>
@@ -1401,37 +1402,46 @@ function FamilyTreeComponent({
         </div>
       )}
 
-      <div ref={flowViewportRef} className={isMobile ? 'absolute inset-0' : 'absolute left-0 right-0'} style={flowViewportStyle}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onInit={handleInit}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onNodeClick={handleNodeClick}
-          onMove={handleMove}
-          onMoveEnd={handleMoveEnd}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          minZoom={activeMinZoom}
-          maxZoom={activeMaxZoom}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
-          panOnDrag={!isAreaSelectionOpen && activeCanPan}
-          panOnScroll={!isAreaSelectionOpen && activeCanPan}
-          zoomOnScroll={!isAreaSelectionOpen}
-          zoomOnPinch={!isAreaSelectionOpen}
-          translateExtent={directFamilyTranslateExtent}
-          preventScrolling
-          defaultViewport={{
-            x: directFamilyViewport?.x ?? 0,
-            y: directFamilyViewport?.y ?? 0,
-            zoom: directFamilyViewport?.zoom ?? TREE_PENDING_VIEWPORT_ZOOM,
-          }}
-          style={{ visibility: hasAppliedCurrentViewport ? 'visible' : 'hidden' }}
-          proOptions={{ hideAttribution: true }}
-        />
+      <div
+        ref={flowViewportRef}
+        className={isMobile ? 'absolute inset-0' : 'absolute left-0 right-0'}
+        style={{
+          ...flowViewportStyle,
+          visibility: hasAppliedCurrentViewport ? 'visible' : 'hidden',
+        }}
+      >
+        {canRenderReactFlow && (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onInit={handleInit}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onNodeClick={handleNodeClick}
+            onMove={handleMove}
+            onMoveEnd={handleMoveEnd}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            minZoom={activeMinZoom}
+            maxZoom={activeMaxZoom}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            panOnDrag={!isAreaSelectionOpen && activeCanPan}
+            panOnScroll={!isAreaSelectionOpen && activeCanPan}
+            zoomOnScroll={!isAreaSelectionOpen}
+            zoomOnPinch={!isAreaSelectionOpen}
+            translateExtent={directFamilyTranslateExtent}
+            preventScrolling
+            defaultViewport={{
+              x: directFamilyViewport.x,
+              y: directFamilyViewport.y,
+              zoom: directFamilyViewport.zoom,
+            }}
+            style={{ visibility: hasAppliedCurrentViewport ? 'visible' : 'hidden' }}
+            proOptions={{ hideAttribution: true }}
+          />
+        )}
       </div>
       {isAreaSelectionOpen && (
         <TreeAreaSelectionOverlay
