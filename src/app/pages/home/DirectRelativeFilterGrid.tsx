@@ -45,23 +45,28 @@ export function DirectRelativeFilterGrid({
   const excludedKeySet = new Set(excludedKeys);
 
   return (
-    <div className={compact ? 'grid grid-cols-2 gap-1.5 sm:grid-cols-5' : 'grid grid-cols-2 gap-1.5'}>
+    <div
+      className={
+        compact
+          ? 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:grid-cols-5'
+          : 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-2'
+      }
+    >
       {DIRECT_RELATIVE_FILTER_OPTIONS.filter((option) => !excludedKeySet.has(option.key)).map((option) => {
         const active = filters[option.key];
-        const count = counts[option.key];
-        const disabled = count === 0;
+        const count = counts[option.key] ?? 0;
         const color = DIRECT_FAMILY_RELATION_COLORS[option.colorKey];
 
         return (
           <button
             key={option.key}
             type="button"
-            disabled={disabled}
+            aria-pressed={active}
             onClick={() => onToggle(option.key)}
             className={[
-                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
+              'min-h-[40px] w-full min-w-0 overflow-hidden rounded-lg border p-1.5 text-left shadow-sm transition',
               active ? 'opacity-100' : 'grayscale opacity-45',
-              disabled ? 'cursor-not-allowed opacity-35' : 'hover:-translate-y-0.5 hover:shadow-md',
+              'hover:-translate-y-0.5 hover:shadow-md',
             ].join(' ')}
             style={{
               background: color.background,
@@ -70,8 +75,8 @@ export function DirectRelativeFilterGrid({
             }}
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
-            <span className="block text-xs font-semibold">{option.label}</span>
-            <span className="mt-1 block text-lg font-bold leading-none">{count}</span>
+            <span className="block truncate text-xs font-semibold">{option.label}</span>
+            <span className="mt-1 block truncate text-lg font-bold leading-none">{count}</span>
           </button>
         );
       })}

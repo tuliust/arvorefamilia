@@ -3,6 +3,7 @@ import React from 'react';
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
   DirectRelativeFilters,
+  DirectRelativeGroup,
   EdgeFilters,
   GenealogyFilters,
   MarriageNodeDetails,
@@ -41,6 +42,7 @@ interface HomeTreeSectionProps {
   genealogyFilters: GenealogyFilters;
   visualLineFilters: VisualLineFilters;
   renderStateMessage: (props: StateMessageProps) => React.ReactNode;
+  onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
 export function HomeTreeSection({
@@ -67,6 +69,7 @@ export function HomeTreeSection({
   genealogyFilters,
   visualLineFilters,
   renderStateMessage,
+  onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   return (
     <section
@@ -109,6 +112,7 @@ export function HomeTreeSection({
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
+          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
       ) : (
         renderStateMessage({

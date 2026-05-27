@@ -17,9 +17,9 @@ export function DirectRelationKpiGrid({
   onToggle,
 }: DirectRelationKpiGridProps) {
   return (
-    <section>
+    <section className="min-w-0">
       <h2 className="mb-1 text-sm font-semibold text-gray-900">Filtros</h2>
-      <p className="mb-1.5 text-xs leading-snug text-gray-500">
+      <p className="mb-3 text-xs leading-snug text-gray-500">
         Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
       </p>
       <DirectRelativeFilterGrid

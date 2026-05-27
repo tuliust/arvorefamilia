@@ -231,6 +231,8 @@ export function Home() {
     pets: true,
   });
 
+  const [renderedDirectRelationCounts, setRenderedDirectRelationCounts] = useState<DirectRelationCounts | null>(null);
+
   const [genealogyFilters, setGenealogyFilters] = useState<GenealogyFilters>(DEFAULT_GENEALOGY_FILTERS);
 
   useEffect(() => {
@@ -730,6 +732,13 @@ export function Home() {
     [centralReferencePersonId, pessoas]
   );
 
+  const handleDirectRelationRenderedCounts = useCallback((counts: DirectRelationCounts) => {
+    setRenderedDirectRelationCounts((prev) => {
+      if (prev && JSON.stringify(prev) === JSON.stringify(counts)) return prev;
+      return counts;
+    });
+  }, []);
+
   const handleOpenPersonTree = useCallback((personId: string) => {
     setTreeFocusPersonId(personId);
     setSelectedPersonId(personId);
@@ -898,19 +907,23 @@ export function Home() {
     };
   }, [user]);
 
-  const directRelationCounts = useMemo(
+  const structuralDirectRelationCounts = useMemo(
     () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
     [pessoas, relacionamentos, centralReferencePersonId]
   );
+
+  const directRelationCounts = treeViewMode === 'minha-arvore'
+    ? renderedDirectRelationCounts ?? structuralDirectRelationCounts
+    : structuralDirectRelationCounts;
   const genealogyFilterCounts = useMemo(
     () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
     [pessoasVisiveisPorStatus, relacionamentos]
   );
   const sidebarPanelContent = (
-    <section className="h-full rounded-lg border border-gray-200 bg-gray-50 p-2.5">
+    <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2.5">
       {activeSidebarPanel === 'filters' && (
-        <div className="flex h-full flex-col justify-between gap-3">
-          <div>
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
             {treeViewMode === 'genealogia' || treeViewMode === 'visao-completa' ? (
               <GenealogyFilterGrid
                 filters={genealogyFilters}
@@ -1303,6 +1316,7 @@ export function Home() {
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
           renderStateMessage={(props) => <StateMessage {...props} />}
+          onDirectRelationRenderedCounts={handleDirectRelationRenderedCounts}
         />
       </main>
 
@@ -1608,7 +1622,8 @@ function uniqueIds(ids: Array<string | undefined | null>, centralPersonId?: stri
 function calculateDirectRelationCounts(
   pessoas: Pessoa[],
   relacionamentos: Relacionamento[],
-  centralPersonId?: string
+  centralPersonId?: string,
+  visiblePersonIds?: Set<string>
 ): DirectRelationCounts {
   const emptyCounts: DirectRelationCounts = {
     pais: 0,
@@ -1630,6 +1645,9 @@ function calculateDirectRelationCounts(
   const personIds = new Set(pessoas.map((pessoa) => pessoa.id));
   const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
   if (!personIds.has(centralPersonId)) return emptyCounts;
+
+  const countVisible = (ids: string[]) =>
+    ids.filter((id) => !visiblePersonIds || visiblePersonIds.has(id)).length;
 
   const parentsByChild = new Map<string, Set<string>>();
   const childrenByParent = new Map<string, Set<string>>();
@@ -1696,18 +1714,18 @@ function calculateDirectRelationCounts(
   const grandchildren = uniqueIds(humanChildren.flatMap(getChildren), centralPersonId);
 
   return {
-    pais: parents.length,
-    avos: grandparents.length,
-    bisavos: greatGrandparents.length,
-    tataravos: greatGreatGrandparents.length,
-    conjuge: spouses.length,
-    filhos: humanChildren.length,
-    netos: grandchildren.length,
-    irmaos: siblings.length,
-    sobrinhos: nephews.length,
-    tios: uncles.length,
-    primos: cousins.length,
-    pets: petChildren.length,
+    pais: countVisible(parents),
+    avos: countVisible(grandparents),
+    bisavos: countVisible(greatGrandparents),
+    tataravos: countVisible(greatGreatGrandparents),
+    conjuge: countVisible(spouses),
+    filhos: countVisible(humanChildren),
+    netos: countVisible(grandchildren),
+    irmaos: countVisible(siblings),
+    sobrinhos: countVisible(nephews),
+    tios: countVisible(uncles),
+    primos: countVisible(cousins),
+    pets: countVisible(petChildren),
   };
 }
 

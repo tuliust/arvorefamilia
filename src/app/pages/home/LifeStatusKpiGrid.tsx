@@ -57,8 +57,8 @@ export function LifeStatusKpiGrid({
   ];
 
   return (
-    <section>
-      <div className="grid grid-cols-3 gap-1.5">
+    <section className="min-w-0">
+      <div className="grid w-full min-w-0 grid-cols-[repeat(3,minmax(0,1fr))] gap-1.5">
         {items.map((item) => {
           const active = filters[item.key];
 
@@ -69,7 +69,7 @@ export function LifeStatusKpiGrid({
               aria-pressed={active}
               onClick={() => onToggle(item.key)}
               className={[
-                'min-h-[40px] rounded-lg border p-1.5 text-left shadow-sm transition',
+                'min-h-[40px] w-full min-w-0 overflow-hidden rounded-lg border p-1.5 text-left shadow-sm transition',
                 active ? 'opacity-100' : 'grayscale opacity-45',
                 'hover:-translate-y-0.5 hover:shadow-md',
               ].join(' ')}
@@ -80,8 +80,8 @@ export function LifeStatusKpiGrid({
               }}
               title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
             >
-              <span className="block text-xs font-semibold">{item.label}</span>
-              <span className="mt-1 block text-lg font-bold leading-none">{item.value}</span>
+              <span className="block truncate text-xs font-semibold">{item.label}</span>
+              <span className="mt-1 block truncate text-lg font-bold leading-none">{item.value}</span>
             </button>
           );
         })}

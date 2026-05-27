@@ -39,6 +39,7 @@ import {
   DEFAULT_EDGE_FILTERS,
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DEFAULT_GENEALOGY_FILTERS,
+  DirectRelativeGroup,
   DirectRelativeFilters,
   EdgeFilters,
   GenealogyFilters,
@@ -72,6 +73,7 @@ interface FamilyTreeProps {
   showSidebarToggle?: boolean;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
 export interface FamilyTreeActions {
@@ -118,6 +120,71 @@ const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
 const TREE_PENDING_VIEWPORT_ZOOM = TREE_INITIAL_TECHNICAL_MIN_ZOOM;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
+
+function createEmptyDirectRelationCounts(): Record<DirectRelativeGroup, number> {
+  return {
+    pais: 0,
+    avos: 0,
+    bisavos: 0,
+    tataravos: 0,
+    conjuge: 0,
+    filhos: 0,
+    netos: 0,
+    irmaos: 0,
+    sobrinhos: 0,
+    tios: 0,
+    primos: 0,
+    pets: 0,
+  };
+}
+
+function directRelationVariantToGroup(variant: unknown): DirectRelativeGroup | null {
+  switch (variant) {
+    case 'parent':
+      return 'pais';
+    case 'grandparent':
+      return 'avos';
+    case 'greatGrandparent':
+      return 'bisavos';
+    case 'greatGreatGrandparent':
+      return 'tataravos';
+    case 'spouse':
+      return 'conjuge';
+    case 'child':
+      return 'filhos';
+    case 'grandchild':
+      return 'netos';
+    case 'sibling':
+      return 'irmaos';
+    case 'nephewNiece':
+      return 'sobrinhos';
+    case 'uncleAunt':
+      return 'tios';
+    case 'cousin':
+      return 'primos';
+    case 'pet':
+      return 'pets';
+    default:
+      return null;
+  }
+}
+
+function countRenderedDirectRelations(nodes: Node[]): Record<DirectRelativeGroup, number> {
+  const counts = createEmptyDirectRelationCounts();
+
+  nodes.forEach((node) => {
+    if (node.type !== 'personNode') return;
+    if (!node.data?.pessoa) return;
+    if (node.data?.isCentralPerson) return;
+
+    const group = directRelationVariantToGroup(node.data?.directRelation);
+    if (!group) return;
+
+    counts[group] += 1;
+  });
+
+  return counts;
+}
 const TREE_ZOOM_OUT_RESTORE_MULTIPLIER = 1.25;
 const TREE_MOBILE_DIRECTIONAL_PAN_RATIO = 0.65;
 
@@ -716,6 +783,7 @@ function FamilyTreeComponent({
   showSidebarToggle = false,
   sidebarOpen = false,
   onToggleSidebar,
+  onDirectRelationRenderedCounts,
 }: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const flowViewportRef = useRef<HTMLDivElement | null>(null);
@@ -865,6 +933,13 @@ function FamilyTreeComponent({
       NODE_HEIGHT
     );
   }, [rawLayoutResult, viewMode, NODE_WIDTH, NODE_HEIGHT]);
+
+  useEffect(() => {
+    if (viewMode !== 'minha-arvore') return;
+    if (!onDirectRelationRenderedCounts) return;
+
+    onDirectRelationRenderedCounts(countRenderedDirectRelations(layoutResult.nodes));
+  }, [layoutResult.nodes, onDirectRelationRenderedCounts, viewMode]);
 
   const debugBoundsEnabled = useMemo(() => isTreeDebugBoundsEnabled(), []);
 
