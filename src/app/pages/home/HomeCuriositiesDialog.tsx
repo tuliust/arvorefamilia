@@ -148,7 +148,7 @@ export function HomeCuriositiesDialog({
 }: HomeCuriositiesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!top-4 !translate-y-0 sm:!top-6 flex max-h-[calc(100dvh-2rem)] w-[min(calc(100vw-1rem),960px)] max-w-none min-h-0 flex-col gap-0 overflow-hidden p-0 [&>button:last-child]:h-11 [&>button:last-child]:w-11 [&>button:last-child]:rounded-xl [&>button:last-child]:border [&>button:last-child]:border-slate-300 [&>button:last-child]:bg-white [&>button:last-child]:opacity-100 [&>button:last-child]:shadow-sm [&>button:last-child]:transition [&>button:last-child]:hover:border-blue-300 [&>button:last-child]:hover:bg-blue-50 [&>button:last-child>svg]:h-5 [&>button:last-child>svg]:w-5">
+      <DialogContent className="!top-6 !translate-y-0 sm:!top-8 flex max-h-[calc(100dvh-3rem)] w-[min(calc(100vw-1rem),1120px)] max-w-none min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-4rem)] [&>button:last-child]:h-11 [&>button:last-child]:w-11 [&>button:last-child]:rounded-xl [&>button:last-child]:border [&>button:last-child]:border-slate-300 [&>button:last-child]:bg-white [&>button:last-child]:opacity-100 [&>button:last-child]:shadow-sm [&>button:last-child]:transition [&>button:last-child]:hover:border-blue-300 [&>button:last-child]:hover:bg-blue-50 [&>button:last-child>svg]:h-5 [&>button:last-child>svg]:w-5">
         <DialogHeader className="shrink-0 border-b border-gray-100 px-6 py-5 pr-20">
           <DialogTitle className="flex items-center gap-4 text-2xl font-black tracking-tight text-slate-950">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
