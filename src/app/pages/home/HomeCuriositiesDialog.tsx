@@ -148,17 +148,19 @@ export function HomeCuriositiesDialog({
 }: HomeCuriositiesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] min-h-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
-        <DialogHeader className="shrink-0 border-b border-gray-100 pb-4">
-          <DialogTitle className="flex items-center gap-2 px-6 pt-6">
-            <Sparkles className="h-5 w-5" />
-            Curiosidades
+      <DialogContent className="!top-4 !translate-y-0 sm:!top-6 flex max-h-[calc(100dvh-2rem)] w-[min(calc(100vw-1rem),960px)] max-w-none min-h-0 flex-col gap-0 overflow-hidden p-0 [&>button:last-child]:h-11 [&>button:last-child]:w-11 [&>button:last-child]:rounded-xl [&>button:last-child]:border [&>button:last-child]:border-slate-300 [&>button:last-child]:bg-white [&>button:last-child]:opacity-100 [&>button:last-child]:shadow-sm [&>button:last-child]:transition [&>button:last-child]:hover:border-blue-300 [&>button:last-child]:hover:bg-blue-50 [&>button:last-child>svg]:h-5 [&>button:last-child>svg]:w-5">
+        <DialogHeader className="shrink-0 border-b border-gray-100 px-6 py-5 pr-20">
+          <DialogTitle className="flex items-center gap-4 text-2xl font-black tracking-tight text-slate-950">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-700">
+              <Sparkles className="h-8 w-8" />
+            </span>
+            <span>Curiosidades</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] sm:px-6">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-4 gap-2">
               {curiosityTabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeCuriosityTab === tab.id;
@@ -168,25 +170,25 @@ export function HomeCuriositiesDialog({
                     key={tab.id}
                     type="button"
                     onClick={() => onActiveCuriosityTabChange(tab.id)}
-                    className={`flex min-h-[118px] flex-col items-center justify-center gap-2 rounded-2xl px-3 py-4 text-center shadow-sm transition ${
+                    className={`flex min-w-0 flex-col items-center justify-center gap-2 rounded-2xl px-2 py-4 text-center shadow-sm transition sm:min-h-[118px] sm:px-3 ${
                       active
                         ? 'border-2 border-blue-500 bg-blue-50 text-blue-900'
                         : 'border border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-slate-50'
                     }`}
                   >
-                    <Icon className={`h-9 w-9 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
-                    <span className="text-sm font-semibold leading-tight">{tab.label}</span>
+                    <Icon className={`h-7 w-7 sm:h-9 sm:w-9 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
+                    <span className="text-[11px] font-semibold leading-tight sm:text-sm">{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="min-h-[520px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               {activeCuriosityTab === 'voce-sabia' && (
                 <section className="space-y-4">
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Você Sabia?</h2>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h2 className="text-2xl font-black tracking-tight text-gray-900">Você Sabia?</h2>
+                    <p className="mt-2 text-sm text-gray-600">
                       Veja curiosidades rápidas sobre a família, datas, lugares e conexões da árvore.
                     </p>
                   </div>
@@ -469,9 +471,9 @@ export function HomeCuriositiesDialog({
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-gray-900">{value}</p>
+    <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
+      <p className="truncate text-[11px] font-medium text-gray-500 sm:text-xs">{label}</p>
+      <p className="mt-2 text-xl font-black text-gray-900 sm:text-2xl">{value}</p>
     </div>
   );
 }

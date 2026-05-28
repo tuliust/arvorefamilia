@@ -58,18 +58,13 @@ import {
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
 } from '../services/memberProfileService';
-import {
-  DEFAULT_NOTIFICATION_PREFERENCES,
-  obterPreferenciasNotificacao,
-  salvarPreferenciasNotificacao,
-} from '../services/userEngagementService';
 import { uploadPersonAvatarFile } from '../services/storageService';
 import { isAdminUser } from '../services/permissionService';
 import {
   listarArquivosHistoricosPorPessoa,
   substituirArquivosHistoricosDaPessoa,
 } from '../services/arquivosHistoricosService';
-import { ArquivoHistorico, Pessoa, PreferenciaNotificacao, Relacionamento } from '../types';
+import { ArquivoHistorico, Pessoa, Relacionamento } from '../types';
 import {
   buildEditablePersonFormState,
   cleanPersonPayload,
@@ -90,20 +85,6 @@ import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 import { toast } from 'sonner';
 
 type MemberScope = 'toda_arvore' | 'familia_direta' | 'ramo_materno' | 'ramo_paterno';
-type NotificationPreferenceKey =
-  | 'receber_aniversarios'
-  | 'receber_datas_memoria'
-  | 'receber_eventos'
-  | 'receber_avisos_gerais'
-  | 'receber_email'
-  | 'receber_push'
-  | 'receber_whatsapp'
-  | 'receber_email_novo_usuario'
-  | 'receber_email_datas_especiais'
-  | 'receber_email_novas_mensagens_forum'
-  | 'receber_email_novos_registros_historicos'
-  | 'receber_email_evento_historico_familia';
-
 type AuthUserSummary = {
   email?: string | null;
   user_metadata?: Record<string, unknown>;
@@ -146,69 +127,6 @@ const SOCIAL_PROFILE_PREFIXES: Record<string, string> = {
   Instagram: 'instagram.com/',
   TikTok: 'tiktok.com/@',
 };
-const NOTIFICATION_OPTIONS: Array<{ key: NotificationPreferenceKey; label: string; description: string }> = [
-  {
-    key: 'receber_aniversarios',
-    label: 'Aniversários',
-    description: 'Avisos sobre aniversários de familiares.',
-  },
-  {
-    key: 'receber_datas_memoria',
-    label: 'Datas de memória',
-    description: 'Lembretes de datas marcantes da família.',
-  },
-  {
-    key: 'receber_eventos',
-    label: 'Eventos familiares',
-    description: 'Convites e atualizações de eventos.',
-  },
-  {
-    key: 'receber_avisos_gerais',
-    label: 'Avisos gerais',
-    description: 'Comunicados importantes da plataforma.',
-  },
-  {
-    key: 'receber_email',
-    label: 'Receber emails',
-    description: 'Controle geral para emails opcionais.',
-  },
-  {
-    key: 'receber_push',
-    label: 'Receber notificações push',
-    description: 'Avisos pelo navegador quando disponíveis.',
-  },
-  {
-    key: 'receber_whatsapp',
-    label: 'Receber avisos por WhatsApp',
-    description: 'Comunicações familiares por WhatsApp quando disponíveis.',
-  },
-  {
-    key: 'receber_email_novo_usuario',
-    label: 'Email sobre novo usuário',
-    description: 'Quando um novo familiar entra na plataforma.',
-  },
-  {
-    key: 'receber_email_datas_especiais',
-    label: 'Email sobre datas especiais',
-    description: 'Aniversários, memórias e datas importantes.',
-  },
-  {
-    key: 'receber_email_novas_mensagens_forum',
-    label: 'Email sobre mensagens no fórum',
-    description: 'Atualizações em conversas familiares.',
-  },
-  {
-    key: 'receber_email_novos_registros_historicos',
-    label: 'Email sobre registros históricos',
-    description: 'Fotos, documentos e memórias adicionados.',
-  },
-  {
-    key: 'receber_email_evento_historico_familia',
-    label: 'Email sobre evento histórico',
-    description: 'Avisos relacionados à história familiar.',
-  },
-];
-
 function getDisplayName(pessoaBase?: Pessoa, user?: AuthUserSummary | null) {
   const metadataName = user?.user_metadata?.nome_exibicao;
   return pessoaBase?.nome_completo
@@ -436,9 +354,7 @@ export function MinhaArvore() {
   const [scope, setScope] = useState<MemberScope>('familia_direta');
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [complemento, setComplemento] = useState('');
-  const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
-  const [notificationPreferences, setNotificationPreferences] = useState<PreferenciaNotificacao | null>(null);
-  const [errors, setErrors] = useState<PersonFieldErrors>({});
+  const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);  const [errors, setErrors] = useState<PersonFieldErrors>({});
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
@@ -669,29 +585,6 @@ export function MinhaArvore() {
       return next;
     });
   }, [pessoaBase, relationshipGroups.conjuges, relacionamentos]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-
-    let mounted = true;
-    obterPreferenciasNotificacao(user.id).then((preferences) => {
-      if (!mounted) return;
-      setNotificationPreferences({
-        ...preferences,
-        ...Object.fromEntries(
-          Object.entries(DEFAULT_NOTIFICATION_PREFERENCES).map(([key, defaultValue]) => [
-            key,
-            (preferences as Record<string, unknown>)[key] === false ? false : defaultValue,
-          ]),
-        ),
-      } as PreferenciaNotificacao);
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, [user?.id]);
-
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     const input = addressInputRef.current;
@@ -868,17 +761,6 @@ export function MinhaArvore() {
     setSocialProfiles(ensuredProfiles);
     syncFirstSocialProfileToLegacyFields(ensuredProfiles);
   };
-
-  const updateNotificationPreference = (key: NotificationPreferenceKey, checked: boolean) => {
-    setNotificationPreferences((current) => ({
-      id: current?.id ?? `local-${user?.id ?? 'user'}`,
-      user_id: current?.user_id ?? user?.id ?? '',
-      ...DEFAULT_NOTIFICATION_PREFERENCES,
-      ...current,
-      [key]: checked,
-    }));
-  };
-
   const normalizeFieldOnBlur = (field: keyof EditableOwnPersonPayload) => {
     const value = String(form[field] ?? '');
 
@@ -1051,25 +933,7 @@ export function MinhaArvore() {
 
     if (profileError) {
       toast.warning(`Dados pessoais salvos, mas não foi possível atualizar o perfil do usuário: ${profileError}`);
-    }
-
-    if (notificationPreferences) {
-      try {
-        const savedPreferences = await salvarPreferenciasNotificacao(user.id, notificationPreferences);
-        setNotificationPreferences(savedPreferences);
-        if (savedPreferences.id.startsWith('local-')) {
-          toast.warning('Dados pessoais salvos, mas as preferências de notificação ficaram apenas locais.');
-        }
-      } catch (notificationError) {
-        toast.warning(
-          notificationError instanceof Error
-            ? `Dados pessoais salvos, mas não foi possível salvar notificações: ${notificationError.message}`
-            : 'Dados pessoais salvos, mas não foi possível salvar as preferências de notificação.',
-        );
-      }
-    }
-
-    const marriageResult = await saveMarriageChanges();
+    }    const marriageResult = await saveMarriageChanges();
 
     removeMinhaArvoreDraft(getDraftKey(user.id, pessoaBase.id));
     isDirtyRef.current = false;
@@ -1531,7 +1395,7 @@ export function MinhaArvore() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6 space-y-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-28`}>
         {semVinculo && (
           <section className="bg-amber-50 border border-amber-200 rounded-2xl shadow-sm p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -1602,7 +1466,8 @@ export function MinhaArvore() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Meus dados</h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Edite suas informações pessoais, foto, permissões e preferências de notificação.
+                  Edite suas informações pessoais, foto, permissões, arquivos históricos e dados familiares.
+                
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -1611,7 +1476,12 @@ export function MinhaArvore() {
                   {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
                 </Button>
                 {currentPhotoUrl && (
-                  <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRemovePhoto}
+                    className="border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+                  >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Remover foto
                   </Button>
@@ -1619,7 +1489,7 @@ export function MinhaArvore() {
               </div>
             </div>
 
-            <form onSubmit={handleSavePersonalData} className="space-y-5">
+            <form id="minha-arvore-edit-form" onSubmit={handleSavePersonalData} className="space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="Nome completo" error={errors.nome_completo}>
                   <Input
@@ -1842,27 +1712,7 @@ export function MinhaArvore() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoaBase.id}
-              />
-
-              <section className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div className="mb-4">
-                  <h3 className="text-base font-semibold text-gray-900">Preferências de notificação</h3>
-                  <p className="mt-1 text-sm text-gray-500">Escolha quais avisos familiares deseja receber.</p>
-                </div>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {NOTIFICATION_OPTIONS.map((option) => (
-                    <ToggleField
-                      key={option.key}
-                      label={option.label}
-                      description={option.description}
-                      checked={notificationPreferences?.[option.key] !== false}
-                      onCheckedChange={(checked) => updateNotificationPreference(option.key, checked)}
-                    />
-                  ))}
-                </div>
-              </section>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              /><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <Button type="submit" disabled={saving} className="sm:min-w-[220px]">
                   {saving ? (
                     'Salvando...'
@@ -2047,6 +1897,26 @@ export function MinhaArvore() {
         </section>
 
       </main>
+
+      {pessoaBase && (
+        <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+          <Button
+            type="submit"
+            form="minha-arvore-edit-form"
+            disabled={saving}
+            className="min-w-[220px] rounded-2xl shadow-lg"
+          >
+            {saving ? (
+              'Salvando...'
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar meus dados
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={Boolean(addRelativeDialog)} onOpenChange={(open) => (!open ? closeAddRelativeDialog() : undefined)}>
         <DialogContent className="bg-white sm:max-w-2xl">
