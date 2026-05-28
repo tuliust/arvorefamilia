@@ -1087,7 +1087,7 @@ function addGenealogySiblingEdges(
         source: firstPersonId,
         sourceHandle: 'sibling-left',
         target: secondPersonId,
-        targetHandle: 'sibling-left',
+        targetHandle: 'left-target',
         type: 'siblingEdge',
       selectable: false,
       zIndex: 0,

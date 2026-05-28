@@ -1297,6 +1297,7 @@ function FamilyTreeComponent({
       }
 
       const shouldRestoreInitialViewport =
+        viewMode === 'minha-arvore' &&
         activeTreeViewport &&
         viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON;
 
@@ -1309,7 +1310,7 @@ function FamilyTreeComponent({
 
       setHasUserInteractedWithViewport(true);
     },
-    [activeMinZoom, activeTreeViewport]
+    [activeMinZoom, activeTreeViewport, viewMode]
   );
 
   const handleNodeClick = useCallback(
