@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -175,7 +175,7 @@ export function AdminDashboard() {
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} py-6 sm:py-8`}>
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="break-words text-sm font-medium text-gray-600">
@@ -237,7 +237,7 @@ export function AdminDashboard() {
 
         <div className="mb-8">
           <h2 className="mb-4 break-words text-lg font-semibold text-gray-900">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {quickActions.map((action) => (
               <button
                 key={action.title}
@@ -257,8 +257,8 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-	          <Card className="min-w-0">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+	          <Card className="h-fit min-w-0 self-start">
             <CardHeader>
 	              <CardTitle className="break-words">Pessoas Recentes</CardTitle>
             </CardHeader>
@@ -285,9 +285,9 @@ export function AdminDashboard() {
                       </div>
 
                       <Button
-	                        variant="ghost"
-	                        size="sm"
-	                        className="w-full sm:w-auto"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 w-full rounded-xl border-gray-200 bg-white px-4 text-sm font-medium shadow-sm hover:bg-gray-50 sm:w-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/admin/pessoas/${pessoa.id}/editar`);
@@ -342,3 +342,4 @@ export function AdminDashboard() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { User } from '@supabase/supabase-js';
+﻿import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import {
   ActivityLog,
@@ -241,12 +241,207 @@ export function getActivityMetadataSummary(metadata: Record<string, unknown> = {
     .join(' · ');
 }
 
-export function getActivitySummary(activity: ActivityLog) {
-  const actionLabel = getActivityActionLabel(activity.action);
-  const entityLabel = activity.entity_label || getActivityEntityLabel(activity.entity_type);
-  const metadataSummary = getActivityMetadataSummary(activity.metadata);
+const ACTIVITY_CHANGED_FIELD_GROUPS: Array<{ label: string; fields: string[] }> = [
+  {
+    label: 'dados pessoais',
+    fields: [
+      'nome_completo',
+      'data_nascimento',
+      'falecido',
+      'humano_ou_pet',
+      'lado',
+      'genero',
+    ],
+  },
+  {
+    label: 'locais de nascimento e falecimento',
+    fields: [
+      'local_nascimento',
+      'local_nascimento_exterior',
+      'local_falecimento',
+      'local_falecimento_exterior',
+      'local_atual',
+    ],
+  },
+  {
+    label: 'foto',
+    fields: ['foto_principal_url', 'has_photo'],
+  },
+  {
+    label: 'biografia e curiosidades',
+    fields: ['minibio', 'curiosidades'],
+  },
+  {
+    label: 'redes sociais',
+    fields: ['rede_social', 'instagram_usuario', 'instagram_url'],
+  },
+  {
+    label: 'preferÃªncias de exibiÃ§Ã£o',
+    fields: [
+      'permitir_exibir_instagram',
+      'permitir_exibir_data_nascimento',
+      'permitir_exibir_endereco',
+      'permitir_exibir_rede_social',
+      'permitir_exibir_telefone',
+    ],
+  },
+  {
+    label: 'configuraÃ§Ãµes de contato',
+    fields: ['permitir_mensagens_whatsapp', 'telefone', 'whatsapp'],
+  },
+];
+
+function normalizeChangedFields(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((field) => String(field).trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value.split(',').map((field) => field.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
+function formatReadableList(items: string[]) {
+  const uniqueItems = Array.from(new Set(items.filter(Boolean)));
+
+  if (uniqueItems.length === 0) return '';
+  if (uniqueItems.length === 1) return uniqueItems[0];
+  if (uniqueItems.length === 2) return `${uniqueItems[0]} e ${uniqueItems[1]}`;
+
+  return `${uniqueItems.slice(0, -1).join(', ')} e ${uniqueItems[uniqueItems.length - 1]}`;
+}
+
+function getChangedFieldGroupLabels(metadata: Record<string, unknown> = {}) {
+  const changedFields = normalizeChangedFields(metadata.changed_fields);
+  if (changedFields.length === 0) return [];
+
+  const changedFieldSet = new Set(changedFields);
+
+  return ACTIVITY_CHANGED_FIELD_GROUPS
+    .filter((group) => group.fields.some((field) => changedFieldSet.has(field)))
+    .map((group) => group.label);
+}
+
+function getReadableActivitySummary(activity: ActivityLog, actionLabel: string, entityLabel: string) {
+  const metadata = activity.metadata ?? {};
+  const changedGroups = getChangedFieldGroupLabels(metadata);
+  const changedGroupsText = formatReadableList(changedGroups);
+
+  if (activity.action === 'person.created') {
+    return `Perfil criado para ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person.updated') {
+    return changedGroupsText
+      ? `Perfil atualizado em ${entityLabel} com alteraÃ§Ãµes em ${changedGroupsText}.`
+      : `Perfil atualizado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person.photo_updated') {
+    return `Foto atualizada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person.privacy_updated') {
+    return `Privacidade atualizada em ${entityLabel}, com ajustes em preferÃªncias de exibiÃ§Ã£o e configuraÃ§Ãµes de contato.`;
+  }
+
+  if (activity.action === 'relationship.created') {
+    return `Relacionamento criado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'relationship.updated') {
+    return `Relacionamento atualizado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'relationship.deleted') {
+    return `Relacionamento removido em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'user_person_link.created') {
+    return `VÃ­nculo de usuÃ¡rio criado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'user_person_link.updated') {
+    return `VÃ­nculo de usuÃ¡rio atualizado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'user_person_link.deleted') {
+    return `VÃ­nculo de usuÃ¡rio removido em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'relationship_change_requested') {
+    return `SolicitaÃ§Ã£o de vÃ­nculo criada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'relationship_change_approved') {
+    return `SolicitaÃ§Ã£o de vÃ­nculo aprovada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'relationship_change_rejected') {
+    return `SolicitaÃ§Ã£o de vÃ­nculo rejeitada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'notification_preferences.updated') {
+    return `PreferÃªncias de notificaÃ§Ã£o atualizadas em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'notification.created') {
+    return `NotificaÃ§Ã£o criada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'notification.dispatched') {
+    return `NotificaÃ§Ã£o enviada em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'notification.dispatch_failed') {
+    return `Falha ao enviar notificaÃ§Ã£o em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'historical_file.added') {
+    return `Arquivo histÃ³rico adicionado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'historical_file.updated') {
+    return `Arquivo histÃ³rico atualizado em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'historical_file.removed') {
+    return `Arquivo histÃ³rico removido em ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person_insights.generated') {
+    return `Insights gerados para ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person_insights.regenerated') {
+    return `Insights regenerados para ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person_event.added') {
+    return `Evento adicionado ao perfil de ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person_event.updated') {
+    return `Evento atualizado no perfil de ${entityLabel}.`;
+  }
+
+  if (activity.action === 'person_event.removed') {
+    return `Evento removido do perfil de ${entityLabel}.`;
+  }
+
+  const metadataSummary = getActivityMetadataSummary(metadata);
 
   return metadataSummary
     ? `${actionLabel} em ${entityLabel}. ${metadataSummary}`
-    : `${actionLabel} em ${entityLabel}`;
+    : `${actionLabel} em ${entityLabel}.`;
 }
+
+export function getActivitySummary(activity: ActivityLog) {
+  const actionLabel = getActivityActionLabel(activity.action);
+  const entityLabel = activity.entity_label || getActivityEntityLabel(activity.entity_type);
+
+  return getReadableActivitySummary(activity, actionLabel, entityLabel);
+}
+
