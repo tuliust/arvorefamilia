@@ -85,6 +85,7 @@ interface CreateGenealogyFamilyConnectorNodeParams {
     y: number;
   }>;
   parentChildHighlight?: boolean;
+  siblingHighlight?: boolean;
 }
 
 const CARD_WIDTH = DIRECT_FAMILY_TOKENS.CARD_WIDTH;
@@ -965,11 +966,13 @@ function addGenealogyFamilyConnectorNodes({
   drafts,
   positionedPeople,
   parentChildHighlight,
+  siblingHighlight,
 }: {
   nodes: Node[];
   drafts: GenealogyFamilyConnectorDraft[];
   positionedPeople: Map<string, PositionedPerson>;
   parentChildHighlight?: boolean;
+  siblingHighlight?: boolean;
 }) {
   const addedConnectorIds = new Set<string>();
   const connectorItems = drafts
@@ -1042,6 +1045,7 @@ function addGenealogyFamilyConnectorNodes({
       busX,
       childPoints: item.childPoints,
       ...(parentChildHighlight ? { parentChildHighlight } : {}),
+      ...(siblingHighlight ? { siblingHighlight } : {}),
     });
 
     if (!connectorNode) return;
@@ -1400,20 +1404,9 @@ export function genealogyColumnsLayout(
       drafts: familyConnectorDrafts,
       positionedPeople,
       parentChildHighlight,
+      siblingHighlight,
     });
   }
-
-  if (siblingEdgesVisible) {
-    addGenealogySiblingEdges(
-      edges,
-      positionedPeople,
-      familyConnectorDrafts,
-      relationshipIndex,
-      graph.relacionamentos,
-      siblingHighlight
-    );
-  }
-
   const viewportBounds = getGenealogyViewportBounds({
     groups,
     startX,

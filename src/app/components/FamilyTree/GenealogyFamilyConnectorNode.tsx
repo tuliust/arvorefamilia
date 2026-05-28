@@ -15,6 +15,7 @@ export interface GenealogyFamilyConnectorNodeData {
     y: number;
   }>;
   parentChildHighlight?: boolean;
+  siblingHighlight?: boolean;
 }
 
 export function GenealogyFamilyConnectorNode({
@@ -30,12 +31,19 @@ export function GenealogyFamilyConnectorNode({
   const isSingleChildAligned = singleChildPoint
     ? Math.abs(data.originY - singleChildPoint.y) <= ALIGNED_Y_TOLERANCE
     : false;
-  const stroke = data.parentChildHighlight
+  const baseStroke = data.parentChildHighlight
     ? FAMILY_TREE_COLORS.EDGE_CHILD
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE;
-  const strokeWidth = data.parentChildHighlight
+  const baseStrokeWidth = data.parentChildHighlight
     ? 2.25
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH;
+  const siblingStroke = data.siblingHighlight
+    ? FAMILY_TREE_COLORS.EDGE_SIBLING
+    : baseStroke;
+  const siblingStrokeWidth = data.siblingHighlight
+    ? 2.25
+    : baseStrokeWidth;
+  const siblingStrokeDasharray = data.siblingHighlight ? '5,5' : undefined;
 
   return (
     <svg
@@ -48,10 +56,10 @@ export function GenealogyFamilyConnectorNode({
     >
       <g
         fill="none"
-        stroke={stroke}
+        stroke={baseStroke}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={strokeWidth}
+        strokeWidth={baseStrokeWidth}
         opacity={DIRECT_FAMILY_TOKENS.EDGE_OPACITY}
       >
         {singleChildPoint && isSingleChildAligned ? (
@@ -64,7 +72,15 @@ export function GenealogyFamilyConnectorNode({
         ) : (
           <>
             <line x1={data.originX} y1={data.originY} x2={data.busX} y2={data.originY} />
-            <line x1={data.busX} y1={verticalTopY} x2={data.busX} y2={verticalBottomY} />
+            <line
+              x1={data.busX}
+              y1={verticalTopY}
+              x2={data.busX}
+              y2={verticalBottomY}
+              stroke={siblingStroke}
+              strokeWidth={siblingStrokeWidth}
+              strokeDasharray={siblingStrokeDasharray}
+            />
             {data.childPoints.map((point) => (
               <line key={point.id} x1={data.busX} y1={point.y} x2={point.x} y2={point.y} />
             ))}
