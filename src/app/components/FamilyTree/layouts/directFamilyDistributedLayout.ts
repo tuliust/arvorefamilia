@@ -25,6 +25,7 @@ interface DirectFamilyLayoutOptions {
 
 type ParentKind = 'pai' | 'mae' | 'parent';
 type DirectSide = 'paternal' | 'maternal';
+type DirectLineGroup = 'spouse' | 'parentChild' | 'sibling' | 'auxiliary';
 
 interface ParentLink {
   parentId: string;
@@ -182,6 +183,11 @@ const LOWER_CARD_WIDTH = 400;
 const LOWER_CARD_HEIGHT = 120;
 const SIDE_COLUMN_GAP = 8;
 const SIDE_ROW_GAP = 8;
+const ANCESTOR_COLUMN_GAP = 52;
+const ANCESTOR_ROW_GAP = 14;
+const IN_GROUP_SIBLING_COLUMN_GAP = 18;
+const IN_GROUP_SIBLING_ROW_GAP = 12;
+const MARRIAGE_NODE_SIZE = 32;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * SIDE_COLLATERAL_CARD_WIDTH +
@@ -190,7 +196,7 @@ const SIDE_GROUP_WIDTH =
   SIDE_GROUP_EXTRA_INNER_SPACE;
 const ANCESTOR_GROUP_WIDTH =
   ANCESTOR_GROUP_COLUMNS * SIDE_ANCESTOR_CARD_WIDTH +
-  Math.max(0, ANCESTOR_GROUP_COLUMNS - 1) * SIDE_COLUMN_GAP +
+  Math.max(0, ANCESTOR_GROUP_COLUMNS - 1) * ANCESTOR_COLUMN_GAP +
   GROUP_BOX_PADDING_X * 2;
 
 const PATERNAL_GROUP_LEFT_X = PATERNAL_LANE_LEFT;
@@ -235,6 +241,44 @@ const ANCESTOR_SPOUSE_EDGE_STYLE = {
   strokeWidth: DIRECT_STRUCTURAL_EDGE_STYLE.strokeWidth,
   opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
 };
+
+function isDirectLineVisible(lineGroup: DirectLineGroup, edgeFilters?: EdgeFilters) {
+  if (!edgeFilters) return true;
+
+  switch (lineGroup) {
+    case 'spouse':
+      return edgeFilters.conjugal;
+    case 'parentChild':
+      return edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva;
+    case 'sibling':
+      return edgeFilters.irmaos;
+    case 'auxiliary':
+      return true;
+    default:
+      return true;
+  }
+}
+
+function getDirectLineStyle(
+  lineGroup: DirectLineGroup,
+  visualLineFilters?: VisualLineFilters
+): Edge['style'] {
+  if (lineGroup === 'spouse' && visualLineFilters?.spouseHighlight) {
+    return DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE;
+  }
+
+  if (lineGroup === 'parentChild' && visualLineFilters?.parentChildHighlight) {
+    return DIRECT_PARENT_CHILD_HIGHLIGHT_EDGE_STYLE;
+  }
+
+  if (lineGroup === 'sibling' && visualLineFilters?.siblingHighlight) {
+    return DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE;
+  }
+
+  return DIRECT_STRUCTURAL_EDGE_STYLE;
+}
+
+// Hidden line groups always win over highlight flags; highlighting only restyles visible edges.
 
 function unique(ids: string[]) {
   return Array.from(new Set(ids.filter(Boolean)));
@@ -507,6 +551,23 @@ function addAnchor(nodes: Node[], positionedIds: Set<string>, id: string, x: num
     position: finitePosition(x, y),
     draggable: false,
     selectable: false,
+  });
+  positionedIds.add(id);
+}
+
+function addMarriageNode(nodes: Node[], positionedIds: Set<string>, id: string, centerX: number, centerY: number) {
+  if (!Number.isFinite(centerX) || !Number.isFinite(centerY) || positionedIds.has(id)) return;
+
+  nodes.push({
+    id,
+    type: 'marriageNode',
+    data: {
+      emoji: '💍',
+    },
+    position: finitePosition(centerX - MARRIAGE_NODE_SIZE / 2, centerY - MARRIAGE_NODE_SIZE / 2),
+    draggable: false,
+    selectable: false,
+    zIndex: 40,
   });
   positionedIds.add(id);
 }
@@ -1301,9 +1362,15 @@ function addDirectStructuralEdge(
     targetHandle?: string;
     elbowY?: number;
     elbowX?: number;
+    lineGroup?: DirectLineGroup;
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
     style?: Edge['style'];
   } = {}
 ) {
+  const lineGroup = options.lineGroup || 'auxiliary';
+  if (!isDirectLineVisible(lineGroup, options.edgeFilters)) return;
+
   addEdge({
     id,
     source,
@@ -1312,71 +1379,13 @@ function addDirectStructuralEdge(
     targetHandle: options.targetHandle || 'left',
     type: 'childEdge',
     selectable: false,
-    style: options.style || DIRECT_STRUCTURAL_EDGE_STYLE,
+    style: options.style || getDirectLineStyle(lineGroup, options.visualLineFilters),
     data: {
       kind,
       elbowY: options.elbowY,
       elbowX: options.elbowX,
-    },
-  });
-}
-
-function addDirectParentChildHighlightEdge(
-  edges: Edge[],
-  positionedIds: Set<string>,
-  id: string,
-  source: string,
-  target: string,
-  kind: 'directHorizontal' | 'directElbowFromCenter',
-  options: {
-    sourceHandle?: string;
-    targetHandle?: string;
-    elbowY?: number;
-  } = {}
-) {
-  if (!positionedIds.has(source) || !positionedIds.has(target)) return;
-  if (edges.some((edge) => edge.id === id)) return;
-
-  edges.push({
-    id,
-    source,
-    sourceHandle: options.sourceHandle || 'bottom',
-    target,
-    targetHandle: options.targetHandle || 'top',
-    type: 'childEdge',
-    selectable: false,
-    zIndex: 0,
-    style: DIRECT_PARENT_CHILD_HIGHLIGHT_EDGE_STYLE,
-    data: {
-      kind,
-      elbowY: options.elbowY,
-    },
-  });
-}
-
-function addDirectSiblingHighlightEdge(
-  edges: Edge[],
-  positionedIds: Set<string>,
-  source: string,
-  target: string,
-  elbowY: number
-) {
-  if (!positionedIds.has(source) || !positionedIds.has(target)) return;
-  if (edges.some((edge) => edge.id === 'direct-highlight-central-to-siblings')) return;
-
-  edges.push({
-    id: 'direct-highlight-central-to-siblings',
-    source,
-    sourceHandle: 'bottom',
-    target,
-    targetHandle: 'top',
-    type: 'siblingEdge',
-    selectable: false,
-    zIndex: 0,
-    style: DIRECT_SIBLING_HIGHLIGHT_EDGE_STYLE,
-    data: {
-      kind: 'directElbowFromCenter',
-      elbowY,
+      lineGroup,
+      isStructural: true,
     },
   });
 }
@@ -1384,7 +1393,12 @@ function addDirectSiblingHighlightEdge(
 function addGroupBoxConnection(
   addEdge: (edge: Edge) => void,
   sourceGroupKey: string,
-  targetGroupKey: string
+  targetGroupKey: string,
+  options: {
+    lineGroup?: DirectLineGroup;
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
 ) {
   addDirectStructuralEdge(
     addEdge,
@@ -1395,6 +1409,9 @@ function addGroupBoxConnection(
     {
       sourceHandle: 'bottom',
       targetHandle: 'top',
+      lineGroup: options.lineGroup,
+      edgeFilters: options.edgeFilters,
+      visualLineFilters: options.visualLineFilters,
     }
   );
 }
@@ -1402,12 +1419,17 @@ function addGroupBoxConnection(
 function addConsecutiveGroupConnections(
   addEdge: (edge: Edge) => void,
   groupKeys: string[],
-  groupBoundsByKey: Map<string, GroupBoxBounds>
+  groupBoundsByKey: Map<string, GroupBoxBounds>,
+  options: {
+    lineGroup?: DirectLineGroup;
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
 ) {
   const visibleKeys = groupKeys.filter((key) => groupBoundsByKey.has(key));
 
   for (let index = 0; index < visibleKeys.length - 1; index += 1) {
-    addGroupBoxConnection(addEdge, visibleKeys[index], visibleKeys[index + 1]);
+    addGroupBoxConnection(addEdge, visibleKeys[index], visibleKeys[index + 1], options);
   }
 }
 
@@ -1415,13 +1437,98 @@ function findPositionedNode(nodes: Node[], id: string) {
   return nodes.find((node) => node.id === id);
 }
 
+function getPositionedNodeDimensions(node: Node) {
+  return {
+    width: Number(node.data?.layoutWidth || node.data?.width) || CARD_WIDTH,
+    height: Number(node.data?.layoutHeight || node.data?.height) || CARD_HEIGHT,
+  };
+}
+
+function getPositionedNodeCenter(node: Node) {
+  const dimensions = getPositionedNodeDimensions(node);
+  return {
+    x: node.position.x + dimensions.width / 2,
+    y: node.position.y + dimensions.height / 2,
+  };
+}
+
+function isNodeInsideBounds(node: Node, bounds: GroupBoxBounds) {
+  const center = getPositionedNodeCenter(node);
+  return (
+    center.x >= bounds.minX &&
+    center.x <= bounds.maxX &&
+    center.y >= bounds.minY &&
+    center.y <= bounds.maxY
+  );
+}
+
+function addInGroupSiblingEdges(
+  addEdge: (edge: Edge) => void,
+  positionedNodes: Node[],
+  groupBoundsByKey: Map<string, GroupBoxBounds>,
+  groupKeys: string[],
+  options: {
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
+) {
+  groupKeys.forEach((groupKey) => {
+    const bounds = groupBoundsByKey.get(groupKey);
+    if (!bounds) return;
+
+    const groupCards = positionedNodes
+      .filter((node) => node.type === 'personNode' && isNodeInsideBounds(node, bounds))
+      .sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x);
+    const rows: Node[][] = [];
+
+    groupCards.forEach((node) => {
+      const center = getPositionedNodeCenter(node);
+      const row = rows.find((candidate) => {
+        const firstCenter = getPositionedNodeCenter(candidate[0]);
+        return Math.abs(firstCenter.y - center.y) <= 8;
+      });
+
+      if (row) {
+        row.push(node);
+      } else {
+        rows.push([node]);
+      }
+    });
+
+    rows.forEach((row, rowIndex) => {
+      const sortedRow = row.sort((a, b) => a.position.x - b.position.x);
+
+      for (let index = 0; index < sortedRow.length - 1; index += 1) {
+        addDirectStructuralEdge(
+          addEdge,
+          `direct-${groupKey}-sibling-row-${rowIndex}-${sortedRow[index].id}-to-${sortedRow[index + 1].id}`,
+          sortedRow[index].id,
+          sortedRow[index + 1].id,
+          'directHorizontal',
+          {
+            sourceHandle: 'right-source',
+            targetHandle: 'left-target',
+            lineGroup: 'sibling',
+            edgeFilters: options.edgeFilters,
+            visualLineFilters: options.visualLineFilters,
+          }
+        );
+      }
+    });
+  });
+}
+
 function addAncestorSpouseEdge(
   addEdge: (edge: Edge) => void,
   leftId: string | undefined,
   rightId: string | undefined,
-  spouseHighlight = false
+  options: {
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
 ) {
   if (!leftId || !rightId || leftId === rightId) return;
+  if (!isDirectLineVisible('spouse', options.edgeFilters)) return;
 
   addEdge({
     id: `direct-ancestor-spouse-${[leftId, rightId].sort().join('-')}`,
@@ -1431,11 +1538,16 @@ function addAncestorSpouseEdge(
     targetHandle: 'spouse-left',
     type: 'spouseEdge',
     selectable: false,
-    style: spouseHighlight ? DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE : ANCESTOR_SPOUSE_EDGE_STYLE,
+    // Ancestor spouse lines keep the thinner spouse baseline, but still use the shared highlight style.
+    style: options.visualLineFilters?.spouseHighlight
+      ? getDirectLineStyle('spouse', options.visualLineFilters)
+      : ANCESTOR_SPOUSE_EDGE_STYLE,
     data: {
       kind: 'directHorizontal',
       forceHorizontal: true,
       horizontalTolerance: 4,
+      lineGroup: 'spouse',
+      isStructural: true,
     },
   });
 }
@@ -1444,9 +1556,15 @@ function addAncestorSpouseEdges(
   addEdge: (edge: Edge) => void,
   ids: string[],
   positionedNodes: Node[],
+  positionedIds: Set<string>,
   index: RelationshipIndex,
-  spouseHighlight = false
+  options: {
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
 ) {
+  if (!isDirectLineVisible('spouse', options.edgeFilters)) return;
+
   const groupIds = new Set(ids);
   const addedPairs = new Set<string>();
 
@@ -1464,7 +1582,22 @@ function addAncestorSpouseEdges(
 
         const leftId = personNode.position.x <= spouseNode.position.x ? personId : spouseId;
         const rightId = leftId === personId ? spouseId : personId;
-        addAncestorSpouseEdge(addEdge, leftId, rightId, spouseHighlight);
+        const leftNode = leftId === personId ? personNode : spouseNode;
+        const rightNode = rightId === personId ? personNode : spouseNode;
+        const leftDimensions = getPositionedNodeDimensions(leftNode);
+        const rightDimensions = getPositionedNodeDimensions(rightNode);
+        const marriageCenterX = (leftNode.position.x + leftDimensions.width + rightNode.position.x) / 2;
+        const marriageCenterY =
+          (leftNode.position.y + leftDimensions.height / 2 + rightNode.position.y + rightDimensions.height / 2) / 2;
+
+        addMarriageNode(
+          positionedNodes,
+          positionedIds,
+          `direct-ancestor-marriage-${pairKey.replace('|', '-')}`,
+          marriageCenterX,
+          marriageCenterY
+        );
+        addAncestorSpouseEdge(addEdge, leftId, rightId, options);
       });
   });
 }
@@ -1566,14 +1699,6 @@ export function directFamilyDistributedLayout(
   options: DirectFamilyLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters || DEFAULT_DIRECT_RELATIVE_FILTERS;
-  const parentChildEdgesVisible = options.edgeFilters
-    ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
-    : true;
-  const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
-  const spouseEdgesVisible = options.edgeFilters ? options.edgeFilters.conjugal : true;
-  const spouseHighlight = options.visualLineFilters?.spouseHighlight === true && spouseEdgesVisible;
-  const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
-  const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
   const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
   const allPersonNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
@@ -1602,19 +1727,19 @@ export function directFamilyDistributedLayout(
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
 
   const paternalGroups: GroupSpec[] = resolveSideStackGroups([
-    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
   ], index);
 
   const maternalGroups: GroupSpec[] = resolveSideStackGroups([
-    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
   ], index);
 
   const visiblePaternalGroups = paternalGroups
@@ -1701,7 +1826,7 @@ export function directFamilyDistributedLayout(
     variant: 'sibling',
     maxPerRow: 1,
     centerX: LOWER_LEFT_GROUP_CENTER_X,
-    laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
+    laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
   const nephewGroup: GroupSpec = {
     key: 'sobrinhos',
@@ -1710,7 +1835,7 @@ export function directFamilyDistributedLayout(
     variant: 'nephewNiece',
     maxPerRow: 3,
     centerX: LOWER_LEFT_GROUP_CENTER_X,
-    laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
+    laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
   const spouseGroup: GroupSpec = {
     key: 'conjuge',
@@ -1746,7 +1871,7 @@ export function directFamilyDistributedLayout(
     variant: 'grandchild',
     maxPerRow: 2,
     centerX: children.length > 0 ? childrenPetsLeftCenterX : LOWER_RIGHT_GROUP_CENTER_X,
-    laneWidth: lowerSplitLaneWidth, cardWidth: lowerSplitCardWidth, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
+    laneWidth: lowerSplitLaneWidth, cardWidth: lowerSplitCardWidth, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
 
   const leftLowerPositions = compactLowerGroupTopPositions(
@@ -1792,6 +1917,7 @@ export function directFamilyDistributedLayout(
     'sobrinhos',
     'conjuge',
     'filhos',
+    'pets',
     'netos',
   ].forEach((key) => {
     const bounds = getGroupBoxBounds(positionedNodes, key);
@@ -1821,6 +1947,9 @@ export function directFamilyDistributedLayout(
     const parentCoupleMidX = (fatherGroupBounds.maxX + motherGroupBounds.minX) / 2;
     const parentCoupleMidY = (fatherGroupBounds.centerY + motherGroupBounds.centerY) / 2;
     addAnchor(positionedNodes, positionedIds, 'direct-parent-couple-mid-anchor', parentCoupleMidX, parentCoupleMidY);
+    if (isDirectLineVisible('spouse', options.edgeFilters)) {
+      addMarriageNode(positionedNodes, positionedIds, 'direct-parent-marriage-node', parentCoupleMidX, parentCoupleMidY);
+    }
     addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, CENTRAL_Y);
   } else if (fatherGroupBounds || motherGroupBounds) {
     const singleParentBounds = fatherGroupBounds || motherGroupBounds;
@@ -1830,7 +1959,7 @@ export function directFamilyDistributedLayout(
     }
   }
 
-  if (siblingsGroupBounds || spouseGroupBounds || (parentChildHighlight && childrenGroupBounds)) {
+  if (siblingsGroupBounds || spouseGroupBounds || childrenGroupBounds || petsGroupBounds) {
     addAnchor(positionedNodes, positionedIds, 'direct-center-bottom-anchor', VIEW_CENTER_X, centralBottomY);
   }
 
@@ -1864,6 +1993,9 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'right',
         targetHandle: 'left',
+        lineGroup: 'spouse',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
     addDirectStructuralEdge(
@@ -1875,6 +2007,9 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'right',
         targetHandle: 'left',
+        lineGroup: 'spouse',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
     addDirectStructuralEdge(
@@ -1887,6 +2022,9 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
   } else if (fatherGroupBounds || motherGroupBounds) {
@@ -1900,6 +2038,9 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
   }
@@ -1915,6 +2056,9 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'left',
         targetHandle: 'right',
         elbowX: (paternalUnclesGroupBounds.maxX + fatherGroupBounds.minX) / 2,
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
   }
@@ -1930,6 +2074,9 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'right',
         targetHandle: 'left',
         elbowX: (motherGroupBounds.maxX + maternalUnclesGroupBounds.minX) / 2,
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
   }
@@ -1945,18 +2092,10 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: lowerConnectionElbowY,
-        ...(spouseHighlight ? { style: DIRECT_SPOUSE_HIGHLIGHT_EDGE_STYLE } : {}),
+        lineGroup: 'sibling',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
-    );
-  }
-
-  if (siblingHighlight && siblingsGroupBounds) {
-    addDirectSiblingHighlightEdge(
-      edges,
-      positionedIds,
-      'direct-center-bottom-anchor',
-      'direct-siblings-group-top-anchor',
-      lowerConnectionElbowY
     );
   }
 
@@ -1971,6 +2110,9 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: lowerConnectionElbowY,
+        lineGroup: 'spouse',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
   }
@@ -1978,14 +2120,28 @@ export function directFamilyDistributedLayout(
   addConsecutiveGroupConnections(
     addEdge,
     ['tataravos-paternos', 'bisavos-paternos', 'avos-paternos', 'tios-paternos', 'primos-paternos'],
-    groupBoundsByKey
+    groupBoundsByKey,
+    {
+      lineGroup: 'parentChild',
+      edgeFilters: options.edgeFilters,
+      visualLineFilters: options.visualLineFilters,
+    }
   );
   addConsecutiveGroupConnections(
     addEdge,
     ['tataravos-maternos', 'bisavos-maternos', 'avos-maternos', 'tios-maternos', 'primos-maternos'],
-    groupBoundsByKey
+    groupBoundsByKey,
+    {
+      lineGroup: 'parentChild',
+      edgeFilters: options.edgeFilters,
+      visualLineFilters: options.visualLineFilters,
+    }
   );
-  addConsecutiveGroupConnections(addEdge, ['irmaos', 'sobrinhos'], groupBoundsByKey);
+  addConsecutiveGroupConnections(addEdge, ['irmaos', 'sobrinhos'], groupBoundsByKey, {
+    lineGroup: 'parentChild',
+    edgeFilters: options.edgeFilters,
+    visualLineFilters: options.visualLineFilters,
+  });
 
   if (spouseGroupBounds && (childrenGroupBounds || petsGroupBounds)) {
     addDirectStructuralEdge(
@@ -1997,6 +2153,9 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'bottom',
         targetHandle: 'top',
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
       }
     );
 
@@ -2011,6 +2170,9 @@ export function directFamilyDistributedLayout(
           sourceHandle: 'bottom',
           targetHandle: 'top',
           elbowY: spouseGroupBounds.maxY + 56,
+          lineGroup: 'parentChild',
+          edgeFilters: options.edgeFilters,
+          visualLineFilters: options.visualLineFilters,
         }
       );
     }
@@ -2026,51 +2188,17 @@ export function directFamilyDistributedLayout(
           sourceHandle: 'bottom',
           targetHandle: 'top',
           elbowY: spouseGroupBounds.maxY + 56,
+          lineGroup: 'parentChild',
+          edgeFilters: options.edgeFilters,
+          visualLineFilters: options.visualLineFilters,
         }
       );
     }
   } else {
-    addConsecutiveGroupConnections(addEdge, ['conjuge', 'filhos'], groupBoundsByKey);
-  }
-
-  addConsecutiveGroupConnections(addEdge, ['filhos', 'netos'], groupBoundsByKey);
-
-  if (parentChildHighlight) {
-    if (fatherGroupBounds && motherGroupBounds) {
-      addDirectParentChildHighlightEdge(
-        edges,
-        positionedIds,
-        'direct-highlight-parent-to-central',
-        'direct-parent-couple-mid-anchor',
-        'direct-central-top-anchor',
-        'directElbowFromCenter',
-        {
-          sourceHandle: 'bottom',
-          targetHandle: 'top',
-          elbowY: CENTRAL_Y - 22,
-        }
-      );
-    } else if (fatherGroupBounds || motherGroupBounds) {
-      addDirectParentChildHighlightEdge(
-        edges,
-        positionedIds,
-        'direct-highlight-parent-to-central',
-        'direct-single-parent-bottom-anchor',
-        'direct-central-top-anchor',
-        'directElbowFromCenter',
-        {
-          sourceHandle: 'bottom',
-          targetHandle: 'top',
-          elbowY: CENTRAL_Y - 22,
-        }
-      );
-    }
-
     if (childrenGroupBounds) {
-      addDirectParentChildHighlightEdge(
-        edges,
-        positionedIds,
-        'direct-highlight-central-to-children',
+      addDirectStructuralEdge(
+        addEdge,
+        'direct-central-to-children-group',
         'direct-center-bottom-anchor',
         'direct-group-filhos-top-anchor',
         'directElbowFromCenter',
@@ -2078,32 +2206,67 @@ export function directFamilyDistributedLayout(
           sourceHandle: 'bottom',
           targetHandle: 'top',
           elbowY: lowerConnectionElbowY,
+          lineGroup: 'parentChild',
+          edgeFilters: options.edgeFilters,
+          visualLineFilters: options.visualLineFilters,
         }
       );
     }
 
-    if (spouseGroupBounds && childrenGroupBounds) {
-      addDirectParentChildHighlightEdge(
-        edges,
-        positionedIds,
-        'direct-highlight-spouse-to-children',
-        'direct-group-conjuge-bottom-anchor',
-        'direct-group-filhos-top-anchor',
-        'directHorizontal',
+    if (petsGroupBounds) {
+      addDirectStructuralEdge(
+        addEdge,
+        'direct-central-to-pets-group',
+        'direct-center-bottom-anchor',
+        'direct-group-pets-top-anchor',
+        'directElbowFromCenter',
         {
           sourceHandle: 'bottom',
           targetHandle: 'top',
+          elbowY: lowerConnectionElbowY,
+          lineGroup: 'parentChild',
+          edgeFilters: options.edgeFilters,
+          visualLineFilters: options.visualLineFilters,
         }
       );
     }
   }
 
-  addAncestorSpouseEdges(addEdge, sides.paternal.greatGreatGrandparents, positionedNodes, index, spouseHighlight);
-  addAncestorSpouseEdges(addEdge, sides.maternal.greatGreatGrandparents, positionedNodes, index, spouseHighlight);
-  addAncestorSpouseEdges(addEdge, sides.paternal.greatGrandparents, positionedNodes, index, spouseHighlight);
-  addAncestorSpouseEdges(addEdge, sides.maternal.greatGrandparents, positionedNodes, index, spouseHighlight);
-  addAncestorSpouseEdges(addEdge, sides.paternal.grandparents, positionedNodes, index, spouseHighlight);
-  addAncestorSpouseEdges(addEdge, sides.maternal.grandparents, positionedNodes, index, spouseHighlight);
+  addConsecutiveGroupConnections(addEdge, ['filhos', 'netos'], groupBoundsByKey, {
+    lineGroup: 'parentChild',
+    edgeFilters: options.edgeFilters,
+    visualLineFilters: options.visualLineFilters,
+  });
+
+  addInGroupSiblingEdges(
+    addEdge,
+    positionedNodes,
+    groupBoundsByKey,
+    [
+      'tios-paternos',
+      'primos-paternos',
+      'tios-maternos',
+      'primos-maternos',
+      'irmaos',
+      'sobrinhos',
+      'netos',
+    ],
+    {
+      edgeFilters: options.edgeFilters,
+      visualLineFilters: options.visualLineFilters,
+    }
+  );
+
+  const spouseLineOptions = {
+    edgeFilters: options.edgeFilters,
+    visualLineFilters: options.visualLineFilters,
+  };
+  addAncestorSpouseEdges(addEdge, sides.paternal.greatGreatGrandparents, positionedNodes, positionedIds, index, spouseLineOptions);
+  addAncestorSpouseEdges(addEdge, sides.maternal.greatGreatGrandparents, positionedNodes, positionedIds, index, spouseLineOptions);
+  addAncestorSpouseEdges(addEdge, sides.paternal.greatGrandparents, positionedNodes, positionedIds, index, spouseLineOptions);
+  addAncestorSpouseEdges(addEdge, sides.maternal.greatGrandparents, positionedNodes, positionedIds, index, spouseLineOptions);
+  addAncestorSpouseEdges(addEdge, sides.paternal.grandparents, positionedNodes, positionedIds, index, spouseLineOptions);
+  addAncestorSpouseEdges(addEdge, sides.maternal.grandparents, positionedNodes, positionedIds, index, spouseLineOptions);
 
   return {
     nodes: positionedNodes,
