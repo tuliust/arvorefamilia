@@ -70,12 +70,6 @@ import {
   type RelationshipDegreeResult,
 } from '../utils/relationshipDegree';
 import {
-  formatRelationshipPersonPath,
-  formatRelationshipStepPath,
-  getFriendlyRelationshipWarnings,
-  getRelationshipMetricLabels,
-} from '../utils/relationshipDegreeDisplay';
-import {
   Search,
   Lightbulb,
   Bot,
@@ -1163,23 +1157,6 @@ export function Home() {
     relacionamentos,
   ]);
 
-  const connectionPathText = useMemo(
-    () => connectionResult ? formatRelationshipPersonPath(connectionResult, pessoas) : '',
-    [connectionResult, pessoas]
-  );
-  const connectionRelationText = useMemo(
-    () => connectionResult ? formatRelationshipStepPath(connectionResult) : '',
-    [connectionResult]
-  );
-  const connectionWarnings = useMemo(
-    () => connectionResult ? getFriendlyRelationshipWarnings(connectionResult) : [],
-    [connectionResult]
-  );
-  const connectionMetricLabels = useMemo(
-    () => connectionResult ? getRelationshipMetricLabels(connectionResult) : [],
-    [connectionResult]
-  );
-
   const curiosityTabs = useMemo(
     () => [
       { id: 'voce-sabia' as const, label: 'Você Sabia?', icon: Lightbulb },
@@ -1443,10 +1420,6 @@ export function Home() {
         connectionLoading={connectionLoading}
         connectionError={connectionError}
         connectionResult={connectionResult}
-        connectionMetricLabels={connectionMetricLabels}
-        connectionPathText={connectionPathText}
-        connectionRelationText={connectionRelationText}
-        connectionWarnings={connectionWarnings}
         onConnectionPersonOneIdChange={setConnectionPersonOneId}
         onConnectionPersonTwoIdChange={setConnectionPersonTwoId}
         onConnectionIncludeInactiveSpousesChange={setConnectionIncludeInactiveSpouses}

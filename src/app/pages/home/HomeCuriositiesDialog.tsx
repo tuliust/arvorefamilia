@@ -89,10 +89,6 @@ interface HomeCuriositiesDialogProps {
   connectionLoading: boolean;
   connectionError: string | null;
   connectionResult: RelationshipDegreeResult | null;
-  connectionMetricLabels: string[];
-  connectionPathText: string;
-  connectionRelationText: string;
-  connectionWarnings: string[];
   onConnectionPersonOneIdChange: (value: string) => void;
   onConnectionPersonTwoIdChange: (value: string) => void;
   onConnectionIncludeInactiveSpousesChange: (value: boolean) => void;
@@ -141,10 +137,6 @@ export function HomeCuriositiesDialog({
   connectionLoading,
   connectionError,
   connectionResult,
-  connectionMetricLabels,
-  connectionPathText,
-  connectionRelationText,
-  connectionWarnings,
   onConnectionPersonOneIdChange,
   onConnectionPersonTwoIdChange,
   onConnectionIncludeInactiveSpousesChange,
@@ -451,10 +443,6 @@ export function HomeCuriositiesDialog({
                     connectionLoading={connectionLoading}
                     connectionError={connectionError}
                     connectionResult={connectionResult}
-                    connectionMetricLabels={connectionMetricLabels}
-                    connectionPathText={connectionPathText}
-                    connectionRelationText={connectionRelationText}
-                    connectionWarnings={connectionWarnings}
                     onPersonOneChange={(value) => {
                       onConnectionPersonOneIdChange(value);
                       clearConnectionResult();

@@ -28,6 +28,19 @@ function getPersonName(peopleById: Map<string, Pessoa>, personId: string) {
   return peopleById.get(personId)?.nome_completo?.trim() || 'Pessoa';
 }
 
+export function formatShortName(fullName?: string | null) {
+  if (!fullName) return '';
+
+  const cleanName = fullName.trim();
+  const parts = cleanName.split(/\s+/);
+
+  if (parts.length <= 2) {
+    return cleanName;
+  }
+
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
 function getStepLabel(edge: RelationshipGraphEdge) {
   if (edge.normalizedType === 'parent') {
     if (edge.type === 'pai') return 'pai';
@@ -131,7 +144,89 @@ function getShortPersonName(name: string) {
   const cleanName = name.trim();
   if (!cleanName) return 'Pessoa';
 
-  return cleanName.split(/\s+/)[0] || cleanName;
+  return formatShortName(cleanName) || 'Pessoa';
+}
+
+function getRelationshipPeople(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+
+  return {
+    originName: formatShortName(getPersonName(peopleById, result.originPersonId)) || 'Pessoa',
+    targetName: formatShortName(getPersonName(peopleById, result.targetPersonId)) || 'Pessoa',
+  };
+}
+
+function getRelationshipPattern(result: RelationshipDegreeResult) {
+  return result.path.map((step) => step.edge.normalizedType).join('>');
+}
+
+function getDirectParentPresentationLabel(result: RelationshipDegreeResult) {
+  const edge = result.path[0]?.edge;
+  if (!edge) return 'pai/m\u00e3e';
+  if (edge.type === 'pai') return 'pai';
+  if (edge.type === 'mae') return 'm\u00e3e';
+  return 'pai/m\u00e3e';
+}
+
+export function getRelationshipResultSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const { originName, targetName } = getRelationshipPeople(result, people);
+
+  if (!result.found) {
+    return `N\u00e3o foi encontrado v\u00ednculo familiar entre ${originName} e ${targetName}.`;
+  }
+
+  if (result.samePerson) {
+    return `${originName} e ${targetName} s\u00e3o a mesma pessoa.`;
+  }
+
+  const pattern = getRelationshipPattern(result);
+
+  if (pattern === 'child>sibling>parent' && result.label === 'primo(a)') {
+    return `${originName} e ${targetName} s\u00e3o primos.`;
+  }
+
+  if (pattern === 'sibling') {
+    return `${originName} e ${targetName} s\u00e3o irm\u00e3os.`;
+  }
+
+  if (pattern === 'spouse') {
+    const label = result.path[0]?.edge.active ? 'c\u00f4njuges' : 'ex-c\u00f4njuges';
+    return `${originName} e ${targetName} s\u00e3o ${label}.`;
+  }
+
+  if (pattern === 'parent') {
+    return `${originName} \u00e9 ${getDirectParentPresentationLabel(result)} de ${targetName}.`;
+  }
+
+  if (pattern === 'child') {
+    return `${originName} \u00e9 filho de ${targetName}.`;
+  }
+
+  if (pattern === 'parent>parent') {
+    return `${originName} \u00e9 av\u00f4/av\u00f3 de ${targetName}.`;
+  }
+
+  if (pattern === 'child>child') {
+    return `${originName} \u00e9 neto de ${targetName}.`;
+  }
+
+  if (pattern === 'sibling>parent') {
+    return `${originName} \u00e9 tio/tia de ${targetName}.`;
+  }
+
+  if (pattern === 'child>sibling') {
+    return `${originName} \u00e9 sobrinho de ${targetName}.`;
+  }
+
+  if (pattern === 'spouse>child>sibling>parent') {
+    return `${originName} \u00e9 c\u00f4njuge da prima de ${targetName}.`;
+  }
+
+  if (pattern === 'child>sibling>parent>spouse') {
+    return `${targetName} \u00e9 c\u00f4njuge da prima de ${originName}.`;
+  }
+
+  return `H\u00e1 uma liga\u00e7\u00e3o familiar entre ${originName} e ${targetName}.`;
 }
 
 function getPossessiveParentLabel(stepLabel: string) {
@@ -210,4 +305,3 @@ export function getRelationshipNarrative(result: RelationshipDegreeResult, peopl
     summary: getRelationshipResultMessage(result),
   };
 }
-

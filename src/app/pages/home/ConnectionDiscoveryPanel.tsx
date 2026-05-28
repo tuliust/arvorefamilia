@@ -10,7 +10,7 @@ import {
 } from '../../components/ui/select';
 import type { Pessoa } from '../../types';
 import type { RelationshipDegreeResult } from '../../utils/relationshipDegree';
-import { getRelationshipResultMessage } from '../../utils/relationshipDegreeDisplay';
+import { getRelationshipResultSentence } from '../../utils/relationshipDegreeDisplay';
 
 interface ConnectionDiscoveryPanelProps {
   pessoas: Pessoa[];
@@ -20,10 +20,6 @@ interface ConnectionDiscoveryPanelProps {
   connectionLoading: boolean;
   connectionError: string | null;
   connectionResult: RelationshipDegreeResult | null;
-  connectionMetricLabels: string[];
-  connectionPathText: string;
-  connectionRelationText: string;
-  connectionWarnings: string[];
   onPersonOneChange: (value: string) => void;
   onPersonTwoChange: (value: string) => void;
   onIncludeInactiveSpousesChange: (value: boolean) => void;
@@ -39,10 +35,6 @@ export function ConnectionDiscoveryPanel({
   connectionLoading,
   connectionError,
   connectionResult,
-  connectionMetricLabels,
-  connectionPathText,
-  connectionRelationText,
-  connectionWarnings,
   onPersonOneChange,
   onPersonTwoChange,
   onIncludeInactiveSpousesChange,
@@ -119,27 +111,8 @@ export function ConnectionDiscoveryPanel({
       {connectionResult && (
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-gray-700">
           <p className="font-semibold text-gray-900">
-            {connectionResult.found ? connectionResult.label : 'Sem vínculo encontrado'}
+            {getRelationshipResultSentence(connectionResult, pessoas)}
           </p>
-          <p className="mt-2">{getRelationshipResultMessage(connectionResult)}</p>
-          <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-3">
-            {connectionMetricLabels.map((metric) => (
-              <span key={metric}>{metric}</span>
-            ))}
-          </div>
-          {connectionPathText && (
-            <p className="mt-3 text-xs text-gray-500">Caminho: {connectionPathText}</p>
-          )}
-          {connectionRelationText && (
-            <p className="mt-1 text-xs text-gray-400">Relações: {connectionRelationText}</p>
-          )}
-          {connectionWarnings.length > 0 && (
-            <ul className="mt-3 space-y-1 text-xs text-amber-700">
-              {connectionWarnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
     </section>

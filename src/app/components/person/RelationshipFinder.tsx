@@ -2,13 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Users } from 'lucide-react';
 import { Pessoa, Relacionamento } from '../../types';
 import { calculateRelationshipDegree } from '../../utils/relationshipDegree';
-import {
-  formatRelationshipPersonPath,
-  formatRelationshipStepPath,
-  getFriendlyRelationshipWarnings,
-  getRelationshipMetricLabels,
-  getRelationshipResultMessage,
-} from '../../utils/relationshipDegreeDisplay';
+import { getRelationshipResultSentence } from '../../utils/relationshipDegreeDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -47,11 +41,6 @@ export function RelationshipFinder({
       includeInactiveSpouses,
     });
   }, [includeInactiveSpouses, pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
-
-  const pathText = resultado ? formatRelationshipPersonPath(resultado, pessoas) : '';
-  const relationText = resultado ? formatRelationshipStepPath(resultado) : '';
-  const friendlyWarnings = resultado ? getFriendlyRelationshipWarnings(resultado) : [];
-  const metricLabels = resultado ? getRelationshipMetricLabels(resultado) : [];
 
   return (
     <Card>
@@ -102,39 +91,9 @@ export function RelationshipFinder({
 
             <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-700">
               {resultado ? (
-                <div className="space-y-2">
-                  <p className="font-semibold text-gray-900">
-                    {resultado.found ? resultado.label : 'Sem vínculo encontrado'}
-                  </p>
-
-                  <p>{getRelationshipResultMessage(resultado)}</p>
-
-                  <div className="grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-3">
-                    {metricLabels.map((metric) => (
-                      <span key={metric}>{metric}</span>
-                    ))}
-                  </div>
-
-                  {pathText && (
-                    <p className="text-xs text-gray-500">
-                      Caminho: {pathText}
-                    </p>
-                  )}
-
-                  {relationText && (
-                    <p className="text-xs text-gray-400">
-                      Relações: {relationText}
-                    </p>
-                  )}
-
-                  {friendlyWarnings.length > 0 && (
-                    <ul className="space-y-1 text-xs text-amber-700">
-                      {friendlyWarnings.map((warning) => (
-                        <li key={warning}>{warning}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <p className="font-semibold text-gray-900">
+                  {getRelationshipResultSentence(resultado, pessoas)}
+                </p>
               ) : pessoasDisponiveis.length === 0 ? (
                 'Dados insuficientes para comparar com outra pessoa.'
               ) : (
