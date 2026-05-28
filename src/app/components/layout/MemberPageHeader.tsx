@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AppLink as Link } from '../AppLink';
 import {
   ArrowLeft,
@@ -141,35 +141,37 @@ export function MemberPageHeader({
   className = '',
 }: MemberPageHeaderProps) {
   return (
-    <header className={`border-b border-gray-200 bg-white shadow-sm ${className}`}>
-      <div className={`${PAGE_CONTAINER_CLASS} py-4`}>
-        <div className="flex min-w-0 flex-row items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            {Icon && (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
-                <Icon className="h-6 w-6 text-white" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">{title}</h1>
-              <p className="truncate text-sm text-gray-500">{subtitle}</p>
-            </div>
-          </div>
-
-          {(actions.length > 0 || customActions) && (
-            <div className="flex min-w-fit shrink-0 flex-row flex-nowrap justify-end gap-2">
-              {actions.map((action) => (
-                <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
-              ))}
-              {customActions}
+    <header className={['shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
+      <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
+          {Icon && (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+              <Icon className="h-6 w-6 text-white" />
             </div>
           )}
+
+          <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
+            <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
+              {title}
+            </h1>
+            <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">
+              {subtitle}
+            </p>
+          </div>
         </div>
+
+        {(actions.length > 0 || customActions) && (
+          <div className="flex min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
+            {actions.map((action) => (
+              <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
+            ))}
+            {customActions}
+          </div>
+        )}
       </div>
     </header>
   );
 }
-
 export const HEADER_ACTION_ICONS = {
   ArrowLeft,
   Bell,
@@ -181,3 +183,4 @@ export const HEADER_ACTION_ICONS = {
   Settings,
   Star,
 };
+
