@@ -100,17 +100,19 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PawPrint className="h-5 w-5" />
-            Pets
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {pets.length === 0 ? <p className="text-sm text-gray-500">Nenhum pet cadastrado</p> : pets.map((person) => <PersonButton key={person.id} person={person} label="Pet da família" />)}
-        </CardContent>
-      </Card>
+      {pets.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PawPrint className="h-5 w-5" />
+              Pets
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pets.map((person) => <PersonButton key={person.id} person={person} label="Pet da família" />)}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

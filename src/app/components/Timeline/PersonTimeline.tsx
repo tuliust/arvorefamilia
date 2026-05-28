@@ -25,7 +25,7 @@ const TYPE_LABELS: Record<PersonTimelineItemType, string> = {
   marriage: 'Casamento',
   union: 'União',
   separation: 'Separação',
-  child_birth: 'Nascimento',
+  child_birth: 'Nasceu o filho',
   historical_file: 'Arquivo',
   person_event: 'Evento',
   family_event: 'Família',

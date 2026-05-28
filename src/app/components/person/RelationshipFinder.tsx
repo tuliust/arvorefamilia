@@ -20,7 +20,6 @@ export function RelationshipFinder({
   dataScopeNotice,
 }: RelationshipFinderProps) {
   const [selectedPersonId, setSelectedPersonId] = useState('');
-  const [includeInactiveSpouses, setIncludeInactiveSpouses] = useState(false);
 
   const pessoasDisponiveis = useMemo(
     () =>
@@ -38,9 +37,8 @@ export function RelationshipFinder({
       targetPersonId: selectedPersonId,
       people: pessoas,
       relationships: relacionamentos,
-      includeInactiveSpouses,
     });
-  }, [includeInactiveSpouses, pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
+  }, [pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
 
   return (
     <Card>
@@ -71,16 +69,6 @@ export function RelationshipFinder({
                   ))}
                 </SelectContent>
               </Select>
-
-              <label className="flex items-start gap-2 rounded-md border border-blue-100 bg-white/70 px-3 py-2 text-xs text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={includeInactiveSpouses}
-                  onChange={(event) => setIncludeInactiveSpouses(event.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>Incluir ex-cônjuges/separações no cálculo</span>
-              </label>
 
               {dataScopeNotice && (
                 <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
