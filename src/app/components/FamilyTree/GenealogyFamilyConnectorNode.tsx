@@ -31,19 +31,21 @@ export function GenealogyFamilyConnectorNode({
   const isSingleChildAligned = singleChildPoint
     ? Math.abs(data.originY - singleChildPoint.y) <= ALIGNED_Y_TOLERANCE
     : false;
-  const baseStroke = data.parentChildHighlight
+
+  const parentChildStroke = data.parentChildHighlight
     ? FAMILY_TREE_COLORS.EDGE_CHILD
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE;
-  const baseStrokeWidth = data.parentChildHighlight
+  const parentChildStrokeWidth = data.parentChildHighlight
     ? 2.25
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH;
-  const siblingStroke = data.siblingHighlight
+
+  const siblingBranchStroke = data.siblingHighlight
     ? FAMILY_TREE_COLORS.EDGE_SIBLING
-    : baseStroke;
-  const siblingStrokeWidth = data.siblingHighlight
+    : parentChildStroke;
+  const siblingBranchStrokeWidth = data.siblingHighlight
     ? 2.25
-    : baseStrokeWidth;
-  const siblingStrokeDasharray = data.siblingHighlight ? '5,5' : undefined;
+    : parentChildStrokeWidth;
+  const siblingBranchStrokeDasharray = data.siblingHighlight ? '5,5' : undefined;
 
   return (
     <svg
@@ -56,10 +58,8 @@ export function GenealogyFamilyConnectorNode({
     >
       <g
         fill="none"
-        stroke={baseStroke}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={baseStrokeWidth}
         opacity={DIRECT_FAMILY_TOKENS.EDGE_OPACITY}
       >
         {singleChildPoint && isSingleChildAligned ? (
@@ -68,21 +68,39 @@ export function GenealogyFamilyConnectorNode({
             y1={data.originY}
             x2={singleChildPoint.x}
             y2={singleChildPoint.y}
+            stroke={parentChildStroke}
+            strokeWidth={parentChildStrokeWidth}
           />
         ) : (
           <>
-            <line x1={data.originX} y1={data.originY} x2={data.busX} y2={data.originY} />
+            <line
+              x1={data.originX}
+              y1={data.originY}
+              x2={data.busX}
+              y2={data.originY}
+              stroke={parentChildStroke}
+              strokeWidth={parentChildStrokeWidth}
+            />
             <line
               x1={data.busX}
               y1={verticalTopY}
               x2={data.busX}
               y2={verticalBottomY}
-              stroke={siblingStroke}
-              strokeWidth={siblingStrokeWidth}
-              strokeDasharray={siblingStrokeDasharray}
+              stroke={siblingBranchStroke}
+              strokeWidth={siblingBranchStrokeWidth}
+              strokeDasharray={siblingBranchStrokeDasharray}
             />
             {data.childPoints.map((point) => (
-              <line key={point.id} x1={data.busX} y1={point.y} x2={point.x} y2={point.y} />
+              <line
+                key={point.id}
+                x1={data.busX}
+                y1={point.y}
+                x2={point.x}
+                y2={point.y}
+                stroke={siblingBranchStroke}
+                strokeWidth={siblingBranchStrokeWidth}
+                strokeDasharray={siblingBranchStrokeDasharray}
+              />
             ))}
           </>
         )}

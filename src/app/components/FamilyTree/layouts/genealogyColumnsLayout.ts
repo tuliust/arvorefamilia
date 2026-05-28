@@ -1,4 +1,4 @@
-import { Edge, Node } from 'reactflow';
+﻿import { Edge, Node } from 'reactflow';
 import { Pessoa, Relacionamento } from '../../../types';
 import type { GenealogyFamilyConnectorNodeData } from '../GenealogyFamilyConnectorNode';
 import {
@@ -570,6 +570,7 @@ export function createGenealogyFamilyConnectorNode({
   busX,
   childPoints,
   parentChildHighlight,
+  siblingHighlight,
 }: CreateGenealogyFamilyConnectorNodeParams): Node<GenealogyFamilyConnectorNodeData> | null {
   if (childPoints.length === 0) return null;
 
@@ -597,6 +598,7 @@ export function createGenealogyFamilyConnectorNode({
         y: point.y - nodeY,
       })),
       ...(parentChildHighlight ? { parentChildHighlight } : {}),
+      ...(siblingHighlight ? { siblingHighlight } : {}),
     },
     draggable: false,
     selectable: false,
@@ -1055,96 +1057,6 @@ function addGenealogyFamilyConnectorNodes({
   });
 }
 
-function addGenealogySiblingEdges(
-  edges: Edge[],
-  positionedPeople: Map<string, PositionedPerson>,
-  drafts: GenealogyFamilyConnectorDraft[],
-  relationshipIndex: RelationshipIndex,
-  relacionamentos: Relacionamento[],
-  siblingHighlight = false
-) {
-  const addedEdgeIds = new Set<string>();
-  const siblingEdgeStyle = siblingHighlight
-    ? GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE
-    : GENEALOGY_SIBLING_EDGE_STYLE;
-
-  const addSiblingEdge = (positioned: PositionedPerson, nextPositioned: PositionedPerson) => {
-    if (positioned.x !== nextPositioned.x) return;
-
-    const generationKey = getGenerationKey(positioned.placement.pessoa);
-    if (generationKey !== getGenerationKey(nextPositioned.placement.pessoa)) return;
-
-    const verticalDistance = Math.abs(nextPositioned.y - positioned.y);
-    if (verticalDistance > CARD_HEIGHT * 3) return;
-
-    const [firstPositioned, secondPositioned] = positioned.y <= nextPositioned.y
-      ? [positioned, nextPositioned]
-      : [nextPositioned, positioned];
-    const firstPersonId = firstPositioned.placement.pessoa.id;
-    const secondPersonId = secondPositioned.placement.pessoa.id;
-    const edgeId = `genealogy-sibling-${firstPersonId}-${secondPersonId}`;
-    if (addedEdgeIds.has(edgeId)) return;
-    addedEdgeIds.add(edgeId);
-
-      edges.push({
-        id: edgeId,
-        source: firstPersonId,
-        sourceHandle: 'sibling-left',
-        target: secondPersonId,
-        targetHandle: 'left-target',
-        type: 'siblingEdge',
-      selectable: false,
-      zIndex: 0,
-      style: siblingEdgeStyle,
-      data: {
-        kind: 'siblings',
-        attachGap: 18,
-        lineGroup: 'sibling',
-        isStructural: true,
-      },
-    });
-  };
-
-  drafts.forEach((draft) => {
-    const childPositions = draft.childIds
-      .map((childId) => positionedPeople.get(childId))
-      .filter((positioned): positioned is PositionedPerson => Boolean(positioned))
-      .sort((personA, personB) => (
-        personA.y - personB.y
-        || personA.placement.pessoa.id.localeCompare(personB.placement.pessoa.id)
-      ));
-
-    childPositions.forEach((positioned, index) => {
-      const nextPositioned = childPositions[index + 1];
-      if (!nextPositioned) return;
-
-      const verticalGap = nextPositioned.y - positioned.y - positioned.height;
-      if (verticalGap > CARD_HEIGHT + ROW_GAP + SPOUSE_ROW_EXTRA_GAP + 4) return;
-
-      addSiblingEdge(positioned, nextPositioned);
-    });
-  });
-
-  positionedPeople.forEach((positioned, personId) => {
-    relationshipIndex.siblingsByPerson.get(personId)?.forEach((siblingId) => {
-      const siblingPositioned = positionedPeople.get(siblingId);
-      if (!siblingPositioned) return;
-
-      addSiblingEdge(positioned, siblingPositioned);
-    });
-  });
-
-  relacionamentos.forEach((relacionamento) => {
-    if (relacionamento.tipo_relacionamento !== 'irmao') return;
-
-    const originPositioned = positionedPeople.get(relacionamento.pessoa_origem_id);
-    const targetPositioned = positionedPeople.get(relacionamento.pessoa_destino_id);
-    if (!originPositioned || !targetPositioned) return;
-
-    addSiblingEdge(originPositioned, targetPositioned);
-  });
-}
-
 function layoutAdjacentGenerationFamilyUnits({
   parentGroup,
   childGroup,
@@ -1421,3 +1333,4 @@ export function genealogyColumnsLayout(
     translateBounds: viewportBounds,
   };
 }
+
