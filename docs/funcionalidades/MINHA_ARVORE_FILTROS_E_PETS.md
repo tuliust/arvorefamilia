@@ -244,3 +244,84 @@ Na rota /minha-arvore, testar:
 Ainda não foi feita migration para tipos semânticos como pet e tutor.
 
 A recomendação é manter o modelo atual até a regra de domínio estar estável. Uma migration futura pode criar tipos próprios e fazer backfill com segurança.
+
+---
+
+## Modo foco da pessoa central
+
+Quando a view Minha Árvore renderiza apenas a pessoa central como único personNode real, o sistema ativa um modo foco visual.
+
+### Regra de ativação
+
+O modo foco é ativado em FamilyTree.tsx quando:
+
+- a view atual é Minha Árvore;
+- o layout renderizado contém exatamente um personNode real;
+- esse personNode é a pessoa central/effectiveCentralPersonId.
+
+O node continua sendo do tipo personNode. Não foi criado novo node type.
+
+### Arquitetura
+
+A solução usa a Opção B definida no plano técnico:
+
+- PersonNodeData recebe a flag useCentralFocusPanel;
+- FamilyTree.tsx detecta o modo foco após o layout bruto;
+- PersonNode.tsx renderiza CentralPersonFocusPanel quando a flag está ativa;
+- CentralPersonFocusPanel.tsx concentra a interface infográfica.
+
+### Dados exibidos
+
+O painel pode exibir:
+
+- foto ou placeholder;
+- nome completo;
+- badge Vivo, Falecido ou Pet;
+- idade ou anos de vida;
+- nascimento e naturalidade, quando permitir_exibir_data_nascimento não for false;
+- local atual;
+- geração sociológica, se houver;
+- contagem de arquivos históricos;
+- minibio limitada;
+- curiosidades limitadas;
+- botão para visualizar perfil;
+- botão para adicionar conexão.
+
+### Dados não exibidos na primeira versão
+
+A primeira versão não exibe:
+
+- telefone;
+- endereço;
+- rede social;
+- Instagram;
+- WhatsApp;
+- manual_generation;
+- lado.
+
+Esses dados podem ser avaliados em fases futuras, sempre respeitando permissões de privacidade.
+
+### Restrições
+
+- Não altera Supabase.
+- Não cria migration.
+- Não altera regras de pets.
+- Não altera Genealogia.
+- Não altera Visão Completa.
+- Mantém o node como personNode para preservar React Flow, exportação, zoom, pan, clique e menu de contexto.
+
+### Validação manual
+
+Na rota /minha-arvore:
+
+1. desativar todos os cards coloridos;
+2. confirmar painel infográfico da pessoa central;
+3. reativar qualquer grupo;
+4. confirmar retorno ao card central normal;
+5. testar pessoa viva;
+6. testar pessoa falecida;
+7. testar pet;
+8. testar pessoa sem foto;
+9. testar minibio e curiosidades longas;
+10. testar desktop, notebook, tablet e mobile;
+11. rodar npm.cmd run build.
