@@ -34,3 +34,5 @@ Este diretório separa a documentação canônica do projeto de documentos espec
 - Documentos específicos ficam em `funcionalidades/`.
 - Procedimentos operacionais ficam em `operacao/`.
 - Diagnósticos, QA e documentos de fase ficam em `historico/`.
+
+- [Minha Árvore — Filtros, Pets e Regras de Exibição](funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md)
