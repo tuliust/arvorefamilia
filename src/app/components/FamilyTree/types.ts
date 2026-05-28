@@ -152,6 +152,7 @@ export interface PersonNodeData extends PersonNodeContextActions {
   directRelation?: DirectRelationVariant;
   useDirectRelationStyleForPet?: boolean;
   useCentralDirectLayout?: boolean;
+  useCentralFocusPanel?: boolean;
   layoutWidth?: number;
   layoutHeight?: number;
   isMobile?: boolean;

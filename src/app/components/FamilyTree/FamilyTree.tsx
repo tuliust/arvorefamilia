@@ -120,6 +120,10 @@ const TREE_INITIAL_TECHNICAL_MIN_ZOOM = 0.01;
 const TREE_PENDING_VIEWPORT_ZOOM = TREE_INITIAL_TECHNICAL_MIN_ZOOM;
 const TREE_DEBUG_BOUNDS_QUERY_PARAM = 'treeDebug';
 const TREE_VIEWPORT_ZOOM_EPSILON = 0.0001;
+const CENTRAL_FOCUS_PANEL_WIDTH = 1160;
+const CENTRAL_FOCUS_PANEL_HEIGHT = 720;
+const CENTRAL_FOCUS_PANEL_MOBILE_WIDTH = 760;
+const CENTRAL_FOCUS_PANEL_MOBILE_HEIGHT = 1080;
 
 function createEmptyDirectRelationCounts(): Record<DirectRelativeGroup, number> {
   return {
@@ -922,8 +926,65 @@ function FamilyTreeComponent({
   ]);
 
   const layoutResult = useMemo(() => {
+    const realPersonNodes = rawLayoutResult.nodes.filter((node) => {
+      if (node.hidden) return false;
+      return node.type === 'personNode' && Boolean(node.data?.pessoa);
+    });
+    const centralFocusPersonNode = realPersonNodes.length === 1
+      ? realPersonNodes[0]
+      : undefined;
+    const useCentralFocusPanel =
+      viewMode === 'minha-arvore' &&
+      centralFocusPersonNode?.id === effectiveCentralPersonId;
+    const focusPanelWidth = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_WIDTH : CENTRAL_FOCUS_PANEL_WIDTH;
+    const focusPanelHeight = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_HEIGHT : CENTRAL_FOCUS_PANEL_HEIGHT;
+    const focusAdjustedLayout = useCentralFocusPanel
+      ? (() => {
+          let focusBounds: TreeLayoutBounds | undefined;
+          const nodes = rawLayoutResult.nodes.map((node) => {
+            if (node.id !== effectiveCentralPersonId || node.type !== 'personNode' || !node.data?.pessoa) {
+              return node;
+            }
+
+            const currentSize = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
+            const centerX = node.position.x + currentSize.width / 2;
+            const centerY = node.position.y + currentSize.height / 2;
+            const position = {
+              x: centerX - focusPanelWidth / 2,
+              y: centerY - focusPanelHeight / 2,
+            };
+            focusBounds = {
+              x: position.x,
+              y: position.y,
+              width: focusPanelWidth,
+              height: focusPanelHeight,
+            };
+
+            return {
+              ...node,
+              position,
+              data: {
+                ...node.data,
+                width: focusPanelWidth,
+                height: focusPanelHeight,
+                layoutWidth: focusPanelWidth,
+                layoutHeight: focusPanelHeight,
+                useCentralFocusPanel: true,
+              },
+            };
+          });
+
+          return {
+            ...rawLayoutResult,
+            nodes,
+            viewportBounds: focusBounds ?? rawLayoutResult.viewportBounds,
+            translateBounds: focusBounds ?? rawLayoutResult.translateBounds,
+          };
+        })()
+      : rawLayoutResult;
+
     return normalizeTreeLayoutByPersonBounds(
-      rawLayoutResult,
+      focusAdjustedLayout,
       viewMode === 'genealogia'
         ? 'genealogy-columns'
         : viewMode === 'visao-completa'
@@ -932,7 +993,7 @@ function FamilyTreeComponent({
       NODE_WIDTH,
       NODE_HEIGHT
     );
-  }, [rawLayoutResult, viewMode, NODE_WIDTH, NODE_HEIGHT]);
+  }, [rawLayoutResult, viewMode, NODE_WIDTH, NODE_HEIGHT, effectiveCentralPersonId, isMobile]);
 
   useEffect(() => {
     if (viewMode !== 'minha-arvore') return;

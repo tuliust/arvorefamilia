@@ -17,6 +17,7 @@ import {
   getPersonCardDetailLines,
   getPersonCardSecondaryText,
 } from './utils/personCardText';
+import { CentralPersonFocusPanel } from './CentralPersonFocusPanel';
 import {
   Dialog,
   DialogContent,
@@ -255,6 +256,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     directRelation,
     useDirectRelationStyleForPet,
     useCentralDirectLayout,
+    useCentralFocusPanel,
     layoutWidth,
     layoutHeight,
     isMobile = false,
@@ -463,6 +465,64 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           : undefined,
       pessoa.local_atual ? `Mora atualmente em ${pessoa.local_atual}` : undefined,
     ].filter((item): item is string => Boolean(item));
+
+    if (isCentralDirectNode && useCentralFocusPanel) {
+      return (
+        <div className="relative" ref={menuRef}>
+          <div
+            className={[
+              'cursor-pointer rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
+              isSelected ? 'ring-2 ring-blue-300' : '',
+            ].join(' ')}
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+            style={{
+              width: cardWidth,
+              minHeight: cardHeight,
+              height: cardHeight,
+              overflow: 'hidden',
+              background: style.background,
+              borderColor: directBorderColor,
+              color: style.color,
+            }}
+          >
+            <PersonHandles />
+            <CentralPersonFocusPanel
+              pessoa={pessoa}
+              isMobile={isMobile}
+              onView={onView}
+              onAddConnection={onAddConnection}
+              onOpenPhoto={pessoa.foto_principal_url ? handleOpenPhotoDialog : undefined}
+            />
+          </div>
+
+          {pessoa.foto_principal_url && (
+            <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+              <DialogContent
+                className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
+                onClick={(event) => event.stopPropagation()}
+                onContextMenu={(event) => event.stopPropagation()}
+              >
+                <DialogHeader>
+                  <DialogTitle className="pr-8 text-white">
+                    Foto de {pessoa.nome_completo}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex max-h-[calc(100dvh-8rem)] items-center justify-center overflow-hidden rounded-md bg-black/30">
+                  <img
+                    src={pessoa.foto_principal_url}
+                    alt={`Foto de ${pessoa.nome_completo}`}
+                    className="max-h-[calc(100dvh-8rem)] max-w-full object-contain"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {renderMenu()}
+        </div>
+      );
+    }
 
     return (
       <div className="relative" ref={menuRef}>
