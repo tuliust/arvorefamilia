@@ -1,4 +1,4 @@
-﻿import { User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import {
   ActivityLog,
@@ -76,6 +76,60 @@ const METADATA_LABELS: Record<string, string> = {
   relationship_subtype: 'Subtipo',
   relationship_type: 'Tipo de vínculo',
 };
+
+const ACTIVITY_CHANGED_FIELD_GROUPS: Array<{ label: string; fields: string[] }> = [
+  {
+    label: 'dados pessoais',
+    fields: [
+      'nome_completo',
+      'data_nascimento',
+      'falecido',
+      'humano_ou_pet',
+      'lado',
+      'genero',
+    ],
+  },
+  {
+    label: 'locais de nascimento e falecimento',
+    fields: [
+      'local_nascimento',
+      'local_nascimento_exterior',
+      'local_falecimento',
+      'local_falecimento_exterior',
+      'local_atual',
+    ],
+  },
+  {
+    label: 'foto',
+    fields: ['foto_principal_url', 'has_photo'],
+  },
+  {
+    label: 'biografia e curiosidades',
+    fields: ['minibio', 'curiosidades'],
+  },
+  {
+    label: 'redes sociais',
+    fields: ['rede_social', 'instagram_usuario', 'instagram_url'],
+  },
+  {
+    label: 'preferências de exibição',
+    fields: [
+      'permitir_exibir_instagram',
+      'permitir_exibir_data_nascimento',
+      'permitir_exibir_endereco',
+      'permitir_exibir_rede_social',
+      'permitir_exibir_telefone',
+    ],
+  },
+  {
+    label: 'configurações de contato',
+    fields: ['permitir_mensagens_whatsapp', 'telefone', 'whatsapp'],
+  },
+  {
+    label: 'configurações técnicas',
+    fields: ['manual_generation'],
+  },
+];
 
 function toActivityLog(row: Record<string, unknown>): ActivityLog {
   return {
@@ -228,61 +282,18 @@ function formatMetadataValue(value: unknown) {
   return String(value);
 }
 
-export function getActivityMetadataSummary(metadata: Record<string, unknown> = {}
-
-const ACTIVITY_CHANGED_FIELD_GROUPS: Array<{ label: string; fields: string[] }> = [
-  {
-    label: 'dados pessoais',
-    fields: [
-      'nome_completo',
-      'data_nascimento',
-      'falecido',
-      'humano_ou_pet',
-      'lado',
-      'genero',
-    ],
-  },
-  {
-    label: 'locais de nascimento e falecimento',
-    fields: [
-      'local_nascimento',
-      'local_nascimento_exterior',
-      'local_falecimento',
-      'local_falecimento_exterior',
-      'local_atual',
-    ],
-  },
-  {
-    label: 'foto',
-    fields: ['foto_principal_url', 'has_photo'],
-  },
-  {
-    label: 'biografia e curiosidades',
-    fields: ['minibio', 'curiosidades'],
-  },
-  {
-    label: 'redes sociais',
-    fields: ['rede_social', 'instagram_usuario', 'instagram_url'],
-  },
-  {
-    label: 'preferências de exibição',
-    fields: [
-      'permitir_exibir_instagram',
-      'permitir_exibir_data_nascimento',
-      'permitir_exibir_endereco',
-      'permitir_exibir_rede_social',
-      'permitir_exibir_telefone',
-    ],
-  },
-  {
-    label: 'configurações de contato',
-    fields: ['permitir_mensagens_whatsapp', 'telefone', 'whatsapp'],
-  },
-  {
-    label: 'configurações técnicas',
-    fields: ['manual_generation'],
-  },
-];
+export function getActivityMetadataSummary(metadata: Record<string, unknown> = {}) {
+  return Object.entries(metadata)
+    .filter(([key, value]) => key !== 'pessoa_id' && value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => {
+      const label = METADATA_LABELS[key] ?? key;
+      const formattedValue = formatMetadataValue(value);
+      return formattedValue ? `${label}: ${formattedValue}` : '';
+    })
+    .filter(Boolean)
+    .slice(0, 4)
+    .join(' · ');
+}
 
 function normalizeChangedFields(value: unknown) {
   if (Array.isArray(value)) {
