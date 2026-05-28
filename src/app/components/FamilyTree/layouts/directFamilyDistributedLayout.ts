@@ -1,4 +1,4 @@
-import { Edge, Node } from 'reactflow';
+﻿import { Edge, Node } from 'reactflow';
 import { Relacionamento } from '../../../types';
 import { isHumanFamilyMember, isPetFamilyMember } from '../../../utils/personEntity';
 import {
@@ -1507,6 +1507,27 @@ function isNodeInsideBounds(node: Node, bounds: GroupBoxBounds) {
   );
 }
 
+function getInGroupVerticalConnectionOptions(sourceNode: Node, targetNode: Node) {
+  const sourceCenter = getPositionedNodeCenter(sourceNode);
+  const targetCenter = getPositionedNodeCenter(targetNode);
+  const deltaX = targetCenter.x - sourceCenter.x;
+
+  if (Math.abs(deltaX) <= 12) {
+    return {
+      kind: 'directHorizontal' as const,
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+    };
+  }
+
+  return {
+    kind: 'directSideElbow' as const,
+    sourceHandle: deltaX > 0 ? 'right-source' : 'left-source',
+    targetHandle: deltaX > 0 ? 'left-target' : 'right-target',
+    elbowX: sourceCenter.x + deltaX / 2,
+  };
+}
+
 function addInGroupSiblingEdges(
   addEdge: (edge: Edge) => void,
   positionedNodes: Node[],
@@ -1568,15 +1589,18 @@ function addInGroupSiblingEdges(
         const targetNode = rows[rowIndex + 1][columnIndex];
         if (!sourceNode || !targetNode) continue;
 
+        const verticalConnection = getInGroupVerticalConnectionOptions(sourceNode, targetNode);
+
         addDirectStructuralEdge(
           addEdge,
           `direct-${groupKey}-sibling-column-${columnIndex}-${rowIndex}`,
           sourceNode.id,
           targetNode.id,
-          'directHorizontal',
+          verticalConnection.kind,
           {
-            sourceHandle: 'bottom',
-            targetHandle: 'top',
+            sourceHandle: verticalConnection.sourceHandle,
+            targetHandle: verticalConnection.targetHandle,
+            elbowX: verticalConnection.elbowX,
             lineGroup: 'sibling',
             edgeFilters: options.edgeFilters,
             visualLineFilters: options.visualLineFilters,
@@ -1667,15 +1691,18 @@ function addCousinGroupGridEdges(
         const targetNode = rows[rowIndex + 1][columnIndex];
         if (!sourceNode || !targetNode) continue;
 
+        const verticalConnection = getInGroupVerticalConnectionOptions(sourceNode, targetNode);
+
         addDirectStructuralEdge(
           addEdge,
           `direct-${groupKey}-grid-column-${columnIndex}-${rowIndex}`,
           sourceNode.id,
           targetNode.id,
-          'directHorizontal',
+          verticalConnection.kind,
           {
-            sourceHandle: 'bottom',
-            targetHandle: 'top',
+            sourceHandle: verticalConnection.sourceHandle,
+            targetHandle: verticalConnection.targetHandle,
+            elbowX: verticalConnection.elbowX,
             lineGroup: 'auxiliary',
             style: edgeStyleFor(sourceNode.id, targetNode.id),
           }
@@ -2138,7 +2165,7 @@ export function directFamilyDistributedLayout(
     addAnchor(positionedNodes, positionedIds, 'direct-spouse-group-top-anchor', spouseGroupBounds.centerX, spouseGroupBounds.minY);
   }
 
-  if (spouseGroupBounds && (childrenGroupBounds || petsGroupBounds)) {
+  if (spouseGroupBounds && childrenGroupBounds) {
     const splitAnchorX = childrenGroupBounds && petsGroupBounds
       ? spouseGroupBounds.centerX
       : (childrenGroupBounds || petsGroupBounds)?.centerX ?? spouseGroupBounds.centerX;
@@ -2151,15 +2178,6 @@ export function directFamilyDistributedLayout(
     );
   }
 
-  if (spouseGroupBounds && petsGroupBounds) {
-    addAnchor(
-      positionedNodes,
-      positionedIds,
-      'direct-pets-above-anchor',
-      petsGroupBounds.centerX,
-      petsGroupBounds.minY - 6
-    );
-  }
 
   const { edges, addEdge } = createEdgeBuilder(positionedIds);
 
@@ -2202,7 +2220,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
-        lineGroup: 'sibling',
+        lineGroup: 'parentChild',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2218,7 +2236,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
-        lineGroup: 'sibling',
+        lineGroup: 'parentChild',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2236,7 +2254,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'left',
         targetHandle: 'right',
         elbowX: (paternalUnclesGroupBounds.maxX + fatherGroupBounds.minX) / 2,
-        lineGroup: 'parentChild',
+        lineGroup: 'sibling',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2254,7 +2272,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'right',
         targetHandle: 'left',
         elbowX: (motherGroupBounds.maxX + maternalUnclesGroupBounds.minX) / 2,
-        lineGroup: 'parentChild',
+        lineGroup: 'sibling',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2323,7 +2341,7 @@ export function directFamilyDistributedLayout(
     visualLineFilters: options.visualLineFilters,
   });
 
-  if (spouseGroupBounds && (childrenGroupBounds || petsGroupBounds)) {
+  if (spouseGroupBounds && childrenGroupBounds) {
     addDirectStructuralEdge(
       addEdge,
       'direct-spouse-to-children-pets-split',
@@ -2362,7 +2380,7 @@ export function directFamilyDistributedLayout(
         addEdge,
         'direct-children-pets-split-to-pets',
         'direct-children-pets-split-anchor',
-        'direct-pets-above-anchor',
+        'direct-group-pets-top-anchor',
         'directElbowFromCenter',
         {
           sourceHandle: 'bottom',
@@ -2374,6 +2392,22 @@ export function directFamilyDistributedLayout(
         }
       );
     }
+  } else if (spouseGroupBounds && petsGroupBounds) {
+    addDirectStructuralEdge(
+      addEdge,
+      'direct-spouse-to-pets-group',
+      'direct-group-conjuge-bottom-anchor',
+      'direct-group-pets-top-anchor',
+      'directElbowFromCenter',
+      {
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        elbowY: spouseGroupBounds.maxY + 56,
+        lineGroup: 'parentChild',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
+      }
+    );
   } else {
     if (childrenGroupBounds) {
       addDirectStructuralEdge(
@@ -2465,3 +2499,10 @@ export function directFamilyDistributedLayout(
     translateBounds: viewportBounds,
   };
 }
+
+
+
+
+
+
+

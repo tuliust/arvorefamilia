@@ -15,6 +15,7 @@ import {
 } from './directFamilyColors';
 
 type PersonLegendFilterKey = 'vivos' | 'falecidos' | 'pets';
+const NEUTRAL_LINE_SAMPLE_COLOR = '#94A3B8';
 
 interface TreeLegendProps {
   viewMode?: TreeViewMode;
@@ -65,17 +66,17 @@ const lineItems = [
   {
     label: 'Conjugal',
     fullLabel: 'Linha conjugal',
-    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SPOUSE} />,
+    sample: <LegendLine color={NEUTRAL_LINE_SAMPLE_COLOR} />,
   },
   {
     label: 'Pais/filhos',
     fullLabel: 'Pais e filhos',
-    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_CHILD} />,
+    sample: <LegendLine color={NEUTRAL_LINE_SAMPLE_COLOR} />,
   },
   {
     label: 'Irmãos',
     fullLabel: 'Irmãos',
-    sample: <LegendLine color={FAMILY_TREE_COLORS.EDGE_SIBLING} dashed />,
+    sample: <LegendLine color={NEUTRAL_LINE_SAMPLE_COLOR} dashed />,
   },
   {
     label: 'Todas',
