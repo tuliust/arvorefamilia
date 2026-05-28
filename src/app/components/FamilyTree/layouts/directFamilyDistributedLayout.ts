@@ -598,7 +598,52 @@ function rowCardCount(row: GroupLayoutUnit[]) {
   return row.reduce((sum, unit) => sum + unitCardCount(unit), 0);
 }
 
-function buildGroupLayoutUnits(ids: string[], index?: RelationshipIndex) {
+function areDirectSiblings(firstId: string, secondId: string, index: RelationshipIndex) {
+  if (firstId === secondId) return false;
+  if (index.siblingsByPerson.get(firstId)?.has(secondId)) return true;
+
+  const firstParentIds = new Set((index.parentsByChild.get(firstId) || []).map((link) => link.parentId));
+  if (firstParentIds.size === 0) return false;
+
+  return (index.parentsByChild.get(secondId) || []).some((link) => firstParentIds.has(link.parentId));
+}
+
+function buildSiblingLayoutUnits(ids: string[], index: RelationshipIndex) {
+  const groupIds = new Set(ids);
+  const usedIds = new Set<string>();
+  const units: GroupLayoutUnit[] = [];
+
+  ids.forEach((id) => {
+    if (usedIds.has(id)) return;
+
+    const unitIds = new Set<string>();
+    const pending = [id];
+
+    while (pending.length > 0) {
+      const currentId = pending.pop();
+      if (!currentId || unitIds.has(currentId) || !groupIds.has(currentId)) continue;
+
+      unitIds.add(currentId);
+      ids.forEach((candidateId) => {
+        if (!unitIds.has(candidateId) && areDirectSiblings(currentId, candidateId, index)) {
+          pending.push(candidateId);
+        }
+      });
+    }
+
+    const orderedUnitIds = ids.filter((candidateId) => unitIds.has(candidateId));
+    orderedUnitIds.forEach((candidateId) => usedIds.add(candidateId));
+    units.push({ ids: orderedUnitIds });
+  });
+
+  return units;
+}
+
+function buildGroupLayoutUnits(ids: string[], index?: RelationshipIndex, spec?: GroupSpec) {
+  if (index && spec?.variant === 'cousin') {
+    return buildSiblingLayoutUnits(ids, index);
+  }
+
   const groupIds = new Set(ids);
   const usedIds = new Set<string>();
   const units: GroupLayoutUnit[] = [];
@@ -624,8 +669,8 @@ function buildGroupLayoutUnits(ids: string[], index?: RelationshipIndex) {
   return units;
 }
 
-function buildGroupRows(ids: string[], maxPerRow: number, index?: RelationshipIndex) {
-  const units = buildGroupLayoutUnits(ids, index);
+function buildGroupRows(ids: string[], maxPerRow: number, index?: RelationshipIndex, spec?: GroupSpec) {
+  const units = buildGroupLayoutUnits(ids, index, spec);
   const columns = Math.max(
     1,
     Math.min(
@@ -672,7 +717,7 @@ function getSpecRowGap(spec?: Pick<GroupSpec, 'rowGap'>) {
 }
 
 function groupGridMetrics(ids: string[], maxPerRow: number, index?: RelationshipIndex, spec?: GroupSpec): GroupGridMetrics {
-  const { rows, columns } = buildGroupRows(ids, maxPerRow, index);
+  const { rows, columns } = buildGroupRows(ids, maxPerRow, index, spec);
   const largestRow = Math.max(1, ...rows.map(rowCardCount));
   const rowCount = Math.max(1, rows.length);
   const cardWidth = getSpecCardWidth(spec);
@@ -723,7 +768,7 @@ function cappedGroupWidthForColumns(label: string, columns: number, laneWidth: n
 
 function compactColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex, spec?: GroupSpec) {
   const visibleCount = Math.max(1, ids.length);
-  const units = buildGroupLayoutUnits(ids, index);
+  const units = buildGroupLayoutUnits(ids, index, spec);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
   if (maxColumns <= 1) return 1;
 
@@ -743,7 +788,7 @@ function compactColumns(ids: string[], label: string, maxColumns: number, laneWi
 
 function sideGroupColumns(ids: string[], label: string, maxColumns: number, laneWidth: number, index?: RelationshipIndex, spec?: GroupSpec) {
   const visibleCount = Math.max(1, ids.length);
-  const units = buildGroupLayoutUnits(ids, index);
+  const units = buildGroupLayoutUnits(ids, index, spec);
   const minColumns = Math.max(1, ...units.map(unitCardCount));
   const cappedMax = Math.min(Math.max(maxColumns, minColumns), visibleCount, SIDE_GROUP_COLUMNS);
 
@@ -1518,6 +1563,104 @@ function addInGroupSiblingEdges(
   });
 }
 
+function groupNodesByVisualRows(nodes: Node[]) {
+  const rows: Node[][] = [];
+
+  nodes
+    .sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x)
+    .forEach((node) => {
+      const center = getPositionedNodeCenter(node);
+      const row = rows.find((candidate) => {
+        const firstCenter = getPositionedNodeCenter(candidate[0]);
+        return Math.abs(firstCenter.y - center.y) <= 8;
+      });
+
+      if (row) {
+        row.push(node);
+      } else {
+        rows.push([node]);
+      }
+    });
+
+  rows.forEach((row) => row.sort((a, b) => a.position.x - b.position.x));
+
+  return rows;
+}
+
+function addCousinGroupGridEdges(
+  addEdge: (edge: Edge) => void,
+  positionedNodes: Node[],
+  groupBoundsByKey: Map<string, GroupBoxBounds>,
+  groupKeys: string[],
+  index: RelationshipIndex,
+  options: {
+    edgeFilters?: EdgeFilters;
+    visualLineFilters?: VisualLineFilters;
+  } = {}
+) {
+  const siblingHighlightEnabled =
+    isDirectLineVisible('sibling', options.edgeFilters) &&
+    options.visualLineFilters?.siblingHighlight === true;
+
+  const edgeStyleFor = (sourceId: string, targetId: string) =>
+    siblingHighlightEnabled && areDirectSiblings(sourceId, targetId, index)
+      ? getDirectLineStyle('sibling', options.visualLineFilters)
+      : DIRECT_STRUCTURAL_EDGE_STYLE;
+
+  groupKeys.forEach((groupKey) => {
+    const bounds = groupBoundsByKey.get(groupKey);
+    if (!bounds) return;
+
+    const rows = groupNodesByVisualRows(
+      positionedNodes.filter((node) => node.type === 'personNode' && isNodeInsideBounds(node, bounds))
+    );
+
+    rows.forEach((row, rowIndex) => {
+      for (let columnIndex = 0; columnIndex < row.length - 1; columnIndex += 1) {
+        const sourceNode = row[columnIndex];
+        const targetNode = row[columnIndex + 1];
+
+        addDirectStructuralEdge(
+          addEdge,
+          `direct-${groupKey}-grid-row-${rowIndex}-${columnIndex}`,
+          sourceNode.id,
+          targetNode.id,
+          'directHorizontal',
+          {
+            sourceHandle: 'right-source',
+            targetHandle: 'left-target',
+            lineGroup: 'auxiliary',
+            style: edgeStyleFor(sourceNode.id, targetNode.id),
+          }
+        );
+      }
+    });
+
+    const maxColumns = Math.max(0, ...rows.map((row) => row.length));
+    for (let columnIndex = 0; columnIndex < maxColumns; columnIndex += 1) {
+      for (let rowIndex = 0; rowIndex < rows.length - 1; rowIndex += 1) {
+        const sourceNode = rows[rowIndex][columnIndex];
+        const targetNode = rows[rowIndex + 1][columnIndex];
+        if (!sourceNode || !targetNode) continue;
+
+        addDirectStructuralEdge(
+          addEdge,
+          `direct-${groupKey}-grid-column-${columnIndex}-${rowIndex}`,
+          sourceNode.id,
+          targetNode.id,
+          'directHorizontal',
+          {
+            sourceHandle: 'bottom',
+            targetHandle: 'top',
+            lineGroup: 'auxiliary',
+            style: edgeStyleFor(sourceNode.id, targetNode.id),
+          }
+        );
+      }
+    }
+  });
+}
+
 function addAncestorSpouseEdge(
   addEdge: (edge: Edge) => void,
   leftId: string | undefined,
@@ -2244,13 +2387,23 @@ export function directFamilyDistributedLayout(
     groupBoundsByKey,
     [
       'tios-paternos',
-      'primos-paternos',
       'tios-maternos',
-      'primos-maternos',
       'irmaos',
       'sobrinhos',
       'netos',
     ],
+    {
+      edgeFilters: options.edgeFilters,
+      visualLineFilters: options.visualLineFilters,
+    }
+  );
+
+  addCousinGroupGridEdges(
+    addEdge,
+    positionedNodes,
+    groupBoundsByKey,
+    ['primos-paternos', 'primos-maternos'],
+    index,
     {
       edgeFilters: options.edgeFilters,
       visualLineFilters: options.visualLineFilters,
