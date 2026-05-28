@@ -22,7 +22,6 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   { key: 'conjuge', label: 'Cônjuge', colorKey: 'conjuge' },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos' },
   { key: 'filhos', label: 'Filhos', colorKey: 'filhos' },
-  { key: 'pets', label: 'Pets', colorKey: 'pets' },
   { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos' },
   { key: 'netos', label: 'Netos', colorKey: 'netos' },
 ];

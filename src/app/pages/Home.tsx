@@ -765,7 +765,13 @@ export function Home() {
     return new Set(pessoasVisiveisPorStatus.map((pessoa) => pessoa.id));
   }, [pessoasVisiveisPorStatus]);
 
-  const directRelativeFilters = directRelativeFilterState.filters;
+  const directRelativeFilters = useMemo(
+    () => ({
+      ...directRelativeFilterState.filters,
+      pets: true,
+    }),
+    [directRelativeFilterState.filters]
+  );
 
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
@@ -907,14 +913,16 @@ export function Home() {
     };
   }, [user]);
 
-  const structuralDirectRelationCounts = useMemo(
-    () => calculateDirectRelationCounts(pessoas, relacionamentos, centralReferencePersonId),
-    [pessoas, relacionamentos, centralReferencePersonId]
+  const directRelationCounts = useMemo(
+    () =>
+      calculateDirectRelationCounts(
+        pessoas,
+        relacionamentos,
+        centralReferencePersonId,
+        visiblePersonIdsByLifeStatus
+      ),
+    [pessoas, relacionamentos, centralReferencePersonId, visiblePersonIdsByLifeStatus]
   );
-
-  const directRelationCounts = treeViewMode === 'minha-arvore'
-    ? renderedDirectRelationCounts ?? structuralDirectRelationCounts
-    : structuralDirectRelationCounts;
   const genealogyFilterCounts = useMemo(
     () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
     [pessoasVisiveisPorStatus, relacionamentos]
