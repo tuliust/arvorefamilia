@@ -187,7 +187,7 @@ const ANCESTOR_COLUMN_GAP = 52;
 const ANCESTOR_ROW_GAP = 14;
 const IN_GROUP_SIBLING_COLUMN_GAP = 18;
 const IN_GROUP_SIBLING_ROW_GAP = 12;
-const MARRIAGE_NODE_SIZE = 32;
+const MARRIAGE_NODE_SIZE = 40;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * SIDE_COLLATERAL_CARD_WIDTH +
@@ -1560,6 +1560,30 @@ function addInGroupSiblingEdges(
         );
       }
     });
+
+    const maxColumns = Math.max(0, ...rows.map((row) => row.length));
+    for (let columnIndex = 0; columnIndex < maxColumns; columnIndex += 1) {
+      for (let rowIndex = 0; rowIndex < rows.length - 1; rowIndex += 1) {
+        const sourceNode = rows[rowIndex][columnIndex];
+        const targetNode = rows[rowIndex + 1][columnIndex];
+        if (!sourceNode || !targetNode) continue;
+
+        addDirectStructuralEdge(
+          addEdge,
+          `direct-${groupKey}-sibling-column-${columnIndex}-${rowIndex}`,
+          sourceNode.id,
+          targetNode.id,
+          'directHorizontal',
+          {
+            sourceHandle: 'bottom',
+            targetHandle: 'top',
+            lineGroup: 'sibling',
+            edgeFilters: options.edgeFilters,
+            visualLineFilters: options.visualLineFilters,
+          }
+        );
+      }
+    }
   });
 }
 
@@ -2115,12 +2139,25 @@ export function directFamilyDistributedLayout(
   }
 
   if (spouseGroupBounds && (childrenGroupBounds || petsGroupBounds)) {
+    const splitAnchorX = childrenGroupBounds && petsGroupBounds
+      ? spouseGroupBounds.centerX
+      : (childrenGroupBounds || petsGroupBounds)?.centerX ?? spouseGroupBounds.centerX;
     addAnchor(
       positionedNodes,
       positionedIds,
       'direct-children-pets-split-anchor',
-      spouseGroupBounds.centerX,
+      splitAnchorX,
       spouseGroupBounds.maxY + 34
+    );
+  }
+
+  if (spouseGroupBounds && petsGroupBounds) {
+    addAnchor(
+      positionedNodes,
+      positionedIds,
+      'direct-pets-above-anchor',
+      petsGroupBounds.centerX,
+      petsGroupBounds.minY - 6
     );
   }
 
@@ -2165,7 +2202,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
-        lineGroup: 'parentChild',
+        lineGroup: 'sibling',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2181,7 +2218,7 @@ export function directFamilyDistributedLayout(
         sourceHandle: 'bottom',
         targetHandle: 'top',
         elbowY: CENTRAL_Y - 22,
-        lineGroup: 'parentChild',
+        lineGroup: 'sibling',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
       }
@@ -2325,7 +2362,7 @@ export function directFamilyDistributedLayout(
         addEdge,
         'direct-children-pets-split-to-pets',
         'direct-children-pets-split-anchor',
-        'direct-group-pets-top-anchor',
+        'direct-pets-above-anchor',
         'directElbowFromCenter',
         {
           sourceHandle: 'bottom',

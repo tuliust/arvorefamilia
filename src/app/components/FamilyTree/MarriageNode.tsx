@@ -4,6 +4,14 @@ import { MarriageNodeData } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 
 export const MarriageNode = React.memo(({ data }: NodeProps<MarriageNodeData>) => {
+  const hiddenHandle = {
+    width: 1,
+    height: 1,
+    opacity: 0,
+    border: 'none',
+    background: 'transparent',
+  };
+
   const handleClick = React.useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
@@ -22,43 +30,39 @@ export const MarriageNode = React.memo(({ data }: NodeProps<MarriageNodeData>) =
       onMouseDown={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
       title="Visualizar informações do matrimônio"
-      className="nodrag nopan relative z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 bg-white text-lg shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+      className="nodrag nopan relative z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-white text-xl shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
       style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
     >
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        style={{ background: FAMILY_TREE_COLORS.EDGE_SPOUSE, top: 0, left: '50%' }}
+        style={{ ...hiddenHandle, top: 0, left: '50%' }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        style={{ background: FAMILY_TREE_COLORS.EDGE_CHILD, bottom: 0, left: '50%' }}
+        style={{ ...hiddenHandle, bottom: 0, left: '50%' }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        style={{ background: FAMILY_TREE_COLORS.EDGE_SPOUSE, right: 0, top: '50%' }}
+        style={{ ...hiddenHandle, right: 0, top: '50%' }}
       />
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        style={{ background: FAMILY_TREE_COLORS.EDGE_SPOUSE, left: 0, top: '50%' }}
+        style={{ ...hiddenHandle, left: 0, top: '50%' }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="family-center"
         style={{
-          width: 1,
-          height: 1,
-          opacity: 0,
-          border: 'none',
-          background: 'transparent',
+          ...hiddenHandle,
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
