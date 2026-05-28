@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, UserSearch } from 'lucide-react';
+import { Bot, Lightbulb, Network, Search, Sparkles } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import {
@@ -37,6 +37,12 @@ type CuriosityTabOption = {
   label: string;
   icon: React.ElementType<{ className?: string }>;
 };
+
+interface CuriositySectionHeaderProps {
+  icon: React.ElementType<{ className?: string }>;
+  title: string;
+  description?: string;
+}
 
 interface HomeCuriositiesDialogProps {
   open: boolean;
@@ -186,12 +192,11 @@ export function HomeCuriositiesDialog({
             <div className="min-h-[520px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               {activeCuriosityTab === 'voce-sabia' && (
                 <section className="space-y-4">
-                  <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-gray-900">Você Sabia?</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Veja curiosidades rápidas sobre a família, datas, lugares e conexões da árvore.
-                    </p>
-                  </div>
+                  <CuriositySectionHeader
+                    icon={Lightbulb}
+                    title="Você Sabia?"
+                    description="Veja curiosidades rápidas sobre a família, datas, lugares e conexões da árvore."
+                  />
                   <div className="grid grid-cols-4 gap-2">
                     <Stat label="Pessoas cadastradas" value={stats.totalPessoas} />
                     <Stat label="Vivos" value={stats.pessoasVivas} />
@@ -215,10 +220,7 @@ export function HomeCuriositiesDialog({
                 <section className="space-y-4">
                   {!discoverSubmitted ? (
                     <>
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                        <UserSearch className="h-5 w-5 text-blue-600" />
-                        Descubra mais sobre...
-                      </h2>
+                      <CuriositySectionHeader icon={Search} title="Descubra mais sobre..." />
                       <Select
                         value={selectedCuriosityPersonId}
                         onValueChange={(value) => {
@@ -416,56 +418,82 @@ export function HomeCuriositiesDialog({
               )}
 
               {activeCuriosityTab === 'pergunte-ia' && (
-                <AiQuestionPanel
-                  aiQuestion={aiQuestion}
-                  aiAnswer={aiAnswer}
-                  aiLoading={aiLoading}
-                  aiError={aiError}
-                  canAskAi={canAskAi}
-                  placeholder={aiQuestionPlaceholder}
-                  onQuestionChange={onAiQuestionChange}
-                  onClearError={() => onAiErrorChange(null)}
-                  onAskAi={handleAskAi}
-                  onNewAiQuestion={handleNewAiQuestion}
-                />
+                <section className="space-y-4">
+                  <CuriositySectionHeader icon={Bot} title="Pergunte à IA" />
+                  <AiQuestionPanel
+                    aiQuestion={aiQuestion}
+                    aiAnswer={aiAnswer}
+                    aiLoading={aiLoading}
+                    aiError={aiError}
+                    canAskAi={canAskAi}
+                    placeholder={aiQuestionPlaceholder}
+                    onQuestionChange={onAiQuestionChange}
+                    onClearError={() => onAiErrorChange(null)}
+                    onAskAi={handleAskAi}
+                    onNewAiQuestion={handleNewAiQuestion}
+                    hideTitle
+                  />
+                </section>
               )}
 
               {activeCuriosityTab === 'conexao' && (
-                <ConnectionDiscoveryPanel
-                  pessoas={pessoas}
-                  connectionPersonOneId={connectionPersonOneId}
-                  connectionPersonTwoId={connectionPersonTwoId}
-                  connectionIncludeInactiveSpouses={connectionIncludeInactiveSpouses}
-                  connectionLoading={connectionLoading}
-                  connectionError={connectionError}
-                  connectionResult={connectionResult}
-                  connectionMetricLabels={connectionMetricLabels}
-                  connectionPathText={connectionPathText}
-                  connectionRelationText={connectionRelationText}
-                  connectionWarnings={connectionWarnings}
-                  onPersonOneChange={(value) => {
-                    onConnectionPersonOneIdChange(value);
-                    clearConnectionResult();
-                    clearConnectionError();
-                  }}
-                  onPersonTwoChange={(value) => {
-                    onConnectionPersonTwoIdChange(value);
-                    clearConnectionResult();
-                    clearConnectionError();
-                  }}
-                  onIncludeInactiveSpousesChange={(value) => {
-                    onConnectionIncludeInactiveSpousesChange(value);
-                    clearConnectionResult();
-                    clearConnectionError();
-                  }}
-                  onDiscoverConnection={handleDiscoverConnection}
-                />
+                <section className="space-y-4">
+                  <CuriositySectionHeader
+                    icon={Network}
+                    title="Qual a minha conexão com alguém?"
+                    description="Escolha duas pessoas da árvore para descobrir o parentesco e o caminho familiar entre elas."
+                  />
+                  <ConnectionDiscoveryPanel
+                    pessoas={pessoas}
+                    connectionPersonOneId={connectionPersonOneId}
+                    connectionPersonTwoId={connectionPersonTwoId}
+                    connectionIncludeInactiveSpouses={connectionIncludeInactiveSpouses}
+                    connectionLoading={connectionLoading}
+                    connectionError={connectionError}
+                    connectionResult={connectionResult}
+                    connectionMetricLabels={connectionMetricLabels}
+                    connectionPathText={connectionPathText}
+                    connectionRelationText={connectionRelationText}
+                    connectionWarnings={connectionWarnings}
+                    onPersonOneChange={(value) => {
+                      onConnectionPersonOneIdChange(value);
+                      clearConnectionResult();
+                      clearConnectionError();
+                    }}
+                    onPersonTwoChange={(value) => {
+                      onConnectionPersonTwoIdChange(value);
+                      clearConnectionResult();
+                      clearConnectionError();
+                    }}
+                    onIncludeInactiveSpousesChange={(value) => {
+                      onConnectionIncludeInactiveSpousesChange(value);
+                      clearConnectionResult();
+                      clearConnectionError();
+                    }}
+                    onDiscoverConnection={handleDiscoverConnection}
+                    hideTitle
+                  />
+                </section>
               )}
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CuriositySectionHeader({ icon, title, description }: CuriositySectionHeaderProps) {
+  const Icon = icon;
+
+  return (
+    <div>
+      <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900">
+        <Icon className="h-5 w-5 text-blue-600" />
+        <span>{title}</span>
+      </h2>
+      {description && <p className="mt-2 text-sm text-gray-600">{description}</p>}
+    </div>
   );
 }
 

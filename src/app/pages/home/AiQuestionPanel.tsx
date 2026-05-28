@@ -14,6 +14,7 @@ interface AiQuestionPanelProps {
   onClearError: () => void;
   onAskAi: () => void;
   onNewAiQuestion: () => void;
+  hideTitle?: boolean;
 }
 
 export function AiQuestionPanel({
@@ -27,10 +28,11 @@ export function AiQuestionPanel({
   onClearError,
   onAskAi,
   onNewAiQuestion,
+  hideTitle = false,
 }: AiQuestionPanelProps) {
   return (
     <section>
-      <h2 className="mb-2 text-base font-semibold text-gray-900">Pergunte à IA</h2>
+      {!hideTitle && <h2 className="mb-2 text-base font-semibold text-gray-900">Pergunte à IA</h2>}
       {!aiAnswer ? (
         <Textarea
           value={aiQuestion}

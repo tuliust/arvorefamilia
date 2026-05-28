@@ -28,6 +28,7 @@ interface ConnectionDiscoveryPanelProps {
   onPersonTwoChange: (value: string) => void;
   onIncludeInactiveSpousesChange: (value: boolean) => void;
   onDiscoverConnection: () => void;
+  hideTitle?: boolean;
 }
 
 export function ConnectionDiscoveryPanel({
@@ -46,15 +47,18 @@ export function ConnectionDiscoveryPanel({
   onPersonTwoChange,
   onIncludeInactiveSpousesChange,
   onDiscoverConnection,
+  hideTitle = false,
 }: ConnectionDiscoveryPanelProps) {
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-base font-semibold text-gray-900">Qual a minha conexão com alguém?</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Escolha duas pessoas da árvore para descobrir o parentesco e o caminho familiar entre elas.
-        </p>
-      </div>
+      {!hideTitle && (
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Qual a minha conexão com alguém?</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Escolha duas pessoas da árvore para descobrir o parentesco e o caminho familiar entre elas.
+          </p>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
           value={connectionPersonOneId}
