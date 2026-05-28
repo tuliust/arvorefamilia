@@ -19,6 +19,7 @@ import { isPersonDeceased } from '../../../utils/personFields';
 
 type GenerationKey = number | null;
 export type GenealogyMarriageStatus = 'active' | 'divorced' | 'widowed' | 'unknown';
+type GenealogyLineGroup = 'spouse' | 'parentChild' | 'sibling';
 
 interface GenerationGroup {
   key: GenerationKey;
@@ -104,7 +105,27 @@ const GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE = {
   opacity: 0.86,
   strokeDasharray: '5,5',
 };
+const GENEALOGY_SIBLING_EDGE_STYLE = {
+  stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
+  strokeWidth: DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH,
+  opacity: DIRECT_FAMILY_TOKENS.EDGE_OPACITY,
+};
 const FIXED_GENERATION_KEYS = [1, 2, 3, 4, 5, 6] as const;
+
+function isGenealogyLineVisible(lineGroup: GenealogyLineGroup, edgeFilters?: EdgeFilters) {
+  if (!edgeFilters) return true;
+
+  switch (lineGroup) {
+    case 'spouse':
+      return edgeFilters.conjugal;
+    case 'parentChild':
+      return edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva;
+    case 'sibling':
+      return edgeFilters.irmaos;
+    default:
+      return true;
+  }
+}
 
 const GENERATION_RELATION_VARIANTS: Record<number, {
   base: DirectRelationVariant;
@@ -498,8 +519,11 @@ function addGenealogySpouseEdge(
   relationshipIndex: RelationshipIndex,
   peopleById: Map<string, Pessoa>,
   onMarriageClick?: (details: MarriageNodeDetails) => void,
-  spouseHighlight = false
+  spouseHighlight = false,
+  spouseEdgesVisible = true
 ) {
+  if (!spouseEdgesVisible) return;
+
   const pairKey = getSpousePairKey(sourcePersonId, targetPersonId);
   const relationship = relationshipIndex.spouseRelationshipByPairKey.get(pairKey);
   const person1 = peopleById.get(sourcePersonId);
@@ -591,6 +615,7 @@ function appendPlacementNodes(
   edges: Edge[],
   onMarriageClick?: (details: MarriageNodeDetails) => void,
   spouseHighlight = false,
+  spouseEdgesVisible = true,
   positionedPeople?: Map<string, PositionedPerson>
 ) {
   let currentY = startY;
@@ -613,7 +638,8 @@ function appendPlacementNodes(
           relationshipIndex,
           peopleById,
           onMarriageClick,
-          spouseHighlight
+          spouseHighlight,
+          spouseEdgesVisible
         );
       }
     }
@@ -1025,14 +1051,18 @@ function addGenealogyFamilyConnectorNodes({
   });
 }
 
-function addGenealogySiblingHighlightEdges(
+function addGenealogySiblingEdges(
   edges: Edge[],
   positionedPeople: Map<string, PositionedPerson>,
   drafts: GenealogyFamilyConnectorDraft[],
   relationshipIndex: RelationshipIndex,
-  relacionamentos: Relacionamento[]
+  relacionamentos: Relacionamento[],
+  siblingHighlight = false
 ) {
   const addedEdgeIds = new Set<string>();
+  const siblingEdgeStyle = siblingHighlight
+    ? GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE
+    : GENEALOGY_SIBLING_EDGE_STYLE;
 
   const addSiblingEdge = (positioned: PositionedPerson, nextPositioned: PositionedPerson) => {
     if (positioned.x !== nextPositioned.x) return;
@@ -1048,7 +1078,7 @@ function addGenealogySiblingHighlightEdges(
       : [nextPositioned, positioned];
     const firstPersonId = firstPositioned.placement.pessoa.id;
     const secondPersonId = secondPositioned.placement.pessoa.id;
-    const edgeId = `genealogy-sibling-highlight-${firstPersonId}-${secondPersonId}`;
+    const edgeId = `genealogy-sibling-${firstPersonId}-${secondPersonId}`;
     if (addedEdgeIds.has(edgeId)) return;
     addedEdgeIds.add(edgeId);
 
@@ -1061,10 +1091,12 @@ function addGenealogySiblingHighlightEdges(
         type: 'siblingEdge',
       selectable: false,
       zIndex: 0,
-      style: GENEALOGY_SIBLING_HIGHLIGHT_EDGE_STYLE,
+      style: siblingEdgeStyle,
       data: {
         kind: 'siblings',
         attachGap: 18,
+        lineGroup: 'sibling',
+        isStructural: true,
       },
     });
   };
@@ -1126,6 +1158,7 @@ function layoutAdjacentGenerationFamilyUnits({
   positionParents,
   onMarriageClick,
   spouseHighlight,
+  spouseEdgesVisible,
 }: {
   parentGroup: GenerationGroup;
   childGroup?: GenerationGroup;
@@ -1143,6 +1176,7 @@ function layoutAdjacentGenerationFamilyUnits({
   positionParents: boolean;
   onMarriageClick?: (details: MarriageNodeDetails) => void;
   spouseHighlight?: boolean;
+  spouseEdgesVisible?: boolean;
 }) {
   const visitedChildIds = new Set<string>();
   const units = buildAdjacentGenerationParentUnits(
@@ -1176,6 +1210,7 @@ function layoutAdjacentGenerationFamilyUnits({
         edges,
         onMarriageClick,
         spouseHighlight,
+        spouseEdgesVisible,
         positionedPeople
       );
     }
@@ -1214,6 +1249,7 @@ function layoutAdjacentGenerationFamilyUnits({
         edges,
         onMarriageClick,
         spouseHighlight,
+        spouseEdgesVisible,
         positionedPeople
       );
     }
@@ -1259,6 +1295,7 @@ function layoutAdjacentGenerationFamilyUnits({
     edges,
     onMarriageClick,
     spouseHighlight,
+    spouseEdgesVisible,
     positionedPeople
   );
 }
@@ -1268,11 +1305,9 @@ export function genealogyColumnsLayout(
   options: GenealogyColumnsLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters ?? DEFAULT_GENEALOGY_FILTERS;
-  const parentChildEdgesVisible = options.edgeFilters
-    ? options.edgeFilters.filiacao_sangue || options.edgeFilters.filiacao_adotiva
-    : true;
-  const siblingEdgesVisible = options.edgeFilters ? options.edgeFilters.irmaos : true;
-  const spouseEdgesVisible = options.edgeFilters ? options.edgeFilters.conjugal : true;
+  const parentChildEdgesVisible = isGenealogyLineVisible('parentChild', options.edgeFilters);
+  const siblingEdgesVisible = isGenealogyLineVisible('sibling', options.edgeFilters);
+  const spouseEdgesVisible = isGenealogyLineVisible('spouse', options.edgeFilters);
   const spouseHighlight = options.visualLineFilters?.spouseHighlight === true && spouseEdgesVisible;
   const parentChildHighlight = options.visualLineFilters?.parentChildHighlight === true && parentChildEdgesVisible;
   const siblingHighlight = options.visualLineFilters?.siblingHighlight === true && siblingEdgesVisible;
@@ -1332,6 +1367,7 @@ export function genealogyColumnsLayout(
         positionParents: !hasPositionedGroupPeople,
         onMarriageClick,
         spouseHighlight,
+        spouseEdgesVisible,
       });
 
       return;
@@ -1353,24 +1389,28 @@ export function genealogyColumnsLayout(
       edges,
       onMarriageClick,
       spouseHighlight,
+      spouseEdgesVisible,
       positionedPeople
     );
   });
 
-  addGenealogyFamilyConnectorNodes({
-    nodes,
-    drafts: familyConnectorDrafts,
-    positionedPeople,
-    parentChildHighlight,
-  });
+  if (parentChildEdgesVisible) {
+    addGenealogyFamilyConnectorNodes({
+      nodes,
+      drafts: familyConnectorDrafts,
+      positionedPeople,
+      parentChildHighlight,
+    });
+  }
 
-  if (siblingHighlight) {
-    addGenealogySiblingHighlightEdges(
+  if (siblingEdgesVisible) {
+    addGenealogySiblingEdges(
       edges,
       positionedPeople,
       familyConnectorDrafts,
       relationshipIndex,
-      graph.relacionamentos
+      graph.relacionamentos,
+      siblingHighlight
     );
   }
 
