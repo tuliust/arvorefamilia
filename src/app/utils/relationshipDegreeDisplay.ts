@@ -126,3 +126,88 @@ export function getRelationshipMetricLabels(result: RelationshipDegreeResult) {
 
   return labels;
 }
+
+function getShortPersonName(name: string) {
+  const cleanName = name.trim();
+  if (!cleanName) return 'Pessoa';
+
+  return cleanName.split(/\s+/)[0] || cleanName;
+}
+
+function getPossessiveParentLabel(stepLabel: string) {
+  if (stepLabel === 'mae' || stepLabel === 'mãe') return 'mãe';
+  if (stepLabel === 'pai') return 'pai';
+  return 'pai/mãe';
+}
+
+function getSiblingLabelByPersonName(name: string) {
+  const firstName = getShortPersonName(name).toLowerCase();
+
+  const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da'];
+  const isLikelyFemale = likelyFemaleEndings.some((ending) => firstName.endsWith(ending));
+
+  return isLikelyFemale ? 'irmã' : 'irmão';
+}
+
+function getParentLabelFromIncomingStep(result: RelationshipDegreeResult, stepIndex: number) {
+  const step = result.path[stepIndex];
+  if (!step) return 'pai/mãe';
+
+  const rawLabel = getStepLabel(step.edge);
+  return getPossessiveParentLabel(rawLabel);
+}
+
+function buildCousinNarrative(result: RelationshipDegreeResult, people: Pessoa[]) {
+  if (!result.found || result.path.length !== 3 || result.label !== 'primo(a)') return null;
+
+  const relationPattern = result.path.map((step) => step.edge.normalizedType).join('>');
+  if (relationPattern !== 'child>sibling>parent') return null;
+
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originFullName = getPersonName(peopleById, result.originPersonId);
+  const targetFullName = getPersonName(peopleById, result.targetPersonId);
+
+  const originShortName = getShortPersonName(originFullName);
+  const targetShortName = getShortPersonName(targetFullName);
+
+  const originParentId = result.path[0].to;
+  const targetParentId = result.path[1].to;
+
+  const originParentName = getPersonName(peopleById, originParentId);
+  const targetParentName = getPersonName(peopleById, targetParentId);
+
+  const originParentShortName = getShortPersonName(originParentName);
+  const targetParentShortName = getShortPersonName(targetParentName);
+
+  const originParentLabel = getParentLabelFromIncomingStep(result, 0);
+  const targetParentLabel = getParentLabelFromIncomingStep(result, 2);
+  const siblingLabel = getSiblingLabelByPersonName(targetParentName);
+
+  return {
+    title: `${originShortName} e ${targetShortName} são primos`,
+    summary: `A ${originParentLabel} de ${originShortName}, ${originParentShortName}, é ${siblingLabel} de ${targetParentShortName}, que é ${targetParentLabel} de ${targetShortName}.`,
+  };
+}
+
+export function getRelationshipNarrative(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const cousinNarrative = buildCousinNarrative(result, people);
+  if (cousinNarrative) return cousinNarrative;
+
+  if (result.found) {
+    const peopleById = new Map(people.map((person) => [person.id, person]));
+    const originName = getShortPersonName(getPersonName(peopleById, result.originPersonId));
+    const targetName = getShortPersonName(getPersonName(peopleById, result.targetPersonId));
+    const label = result.label === 'a própria pessoa' ? 'a mesma pessoa' : result.label;
+
+    return {
+      title: `${originName} e ${targetName}: ${label}`,
+      summary: getRelationshipResultMessage(result),
+    };
+  }
+
+  return {
+    title: 'Sem vínculo encontrado',
+    summary: getRelationshipResultMessage(result),
+  };
+}
+
