@@ -231,13 +231,13 @@ export function TreeLegend({
   if (compact) {
     return (
       <section
-        className={['flex h-full flex-col justify-between gap-2 text-[11px]', className].filter(Boolean).join(' ')}
+        className={['flex min-h-full flex-col gap-[clamp(0.35rem,1.1vh,0.75rem)] text-[11px]', className].filter(Boolean).join(' ')}
         aria-label="Legenda visual da árvore"
       >
         {showTitle && (
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold leading-tight text-gray-900">Legendas visuais</h2>
-            <p className="text-[11px] leading-snug text-gray-500">
+          <div className="space-y-[clamp(0.15rem,0.45vh,0.25rem)]">
+            <h2 className="text-[clamp(12px,1.9vh,14px)] font-semibold leading-tight text-gray-900">Legendas visuais</h2>
+            <p className="text-[clamp(10px,1.45vh,11px)] leading-snug text-gray-500">
               Clique nos botões para ativar ou desativar linhas e destaques da árvore.
             </p>
           </div>
@@ -479,9 +479,9 @@ function LegendGroup({
   compact?: boolean;
 }) {
   return (
-    <div className={compact ? 'space-y-1' : 'space-y-2'}>
+    <div className={compact ? 'space-y-[clamp(0.2rem,0.65vh,0.5rem)]' : 'space-y-2'}>
       <p className={compact
-        ? 'text-[10px] font-semibold uppercase leading-tight tracking-normal text-gray-500'
+        ? 'text-[9px] font-semibold uppercase leading-tight tracking-normal text-gray-500'
         : 'text-[11px] font-semibold uppercase tracking-normal text-gray-500'}
       >
         {title}
@@ -510,7 +510,7 @@ function LegendItem({
   const inactive = isInteractive && active === false;
   const className = [
     'flex min-w-0 items-center rounded-lg border border-gray-200 bg-white shadow-sm transition',
-    compact ? 'gap-1.5 p-1.5' : 'gap-3 p-2',
+    compact ? 'min-h-[clamp(28px,4.6vh,38px)] gap-1.5 px-1.5 py-[clamp(0.2rem,0.55vh,0.375rem)]' : 'gap-3 p-2',
     isInteractive ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : '',
     inactive ? 'grayscale opacity-45' : '',
   ].filter(Boolean).join(' ');
@@ -518,12 +518,12 @@ function LegendItem({
   const content = (
     <>
       <span className={compact
-        ? 'flex h-5 w-8 shrink-0 items-center justify-center'
+        ? 'flex h-[clamp(16px,2.8vh,20px)] w-8 shrink-0 items-center justify-center'
         : 'flex h-8 w-12 shrink-0 items-center justify-center'}
       >
         {sample}
       </span>
-      <span className={compact ? 'min-w-0 text-[10px] leading-snug' : 'min-w-0 text-xs leading-relaxed'}>
+      <span className={compact ? 'min-w-0 text-[clamp(9px,1.45vh,10px)] leading-tight' : 'min-w-0 text-xs leading-relaxed'}>
         <span className="block font-semibold text-gray-900">{label}</span>
       </span>
     </>

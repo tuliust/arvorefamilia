@@ -928,7 +928,7 @@ export function Home() {
     [pessoasVisiveisPorStatus, relacionamentos]
   );
   const sidebarPanelContent = (
-    <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2.5">
+    <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
       {activeSidebarPanel === 'filters' && (
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
           <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
@@ -958,22 +958,24 @@ export function Home() {
       )}
 
       {activeSidebarPanel === 'legend' && (
-        <TreeLegend
-          viewMode={treeViewMode}
-          compact
-          showTitle
-          personFilters={personFilters}
-          edgeFilters={edgeFilters}
-          directRelativeFilters={treeViewMode === 'minha-arvore' ? directRelativeFilters : undefined}
-          onTogglePersonFilter={togglePersonFilter}
-          onToggleEdgeFilter={toggleFilter}
-          onToggleAllEdgeFilters={toggleAllEdgeFilters}
-          onToggleParentChildFilter={toggleParentChildFilters}
-          onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
-          visualLineFilters={visualLineFilters}
-          onToggleVisualLineFilter={toggleVisualLineFilter}
-          onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
-        />
+        <div className="h-full min-h-0 overflow-y-auto pr-0.5">
+          <TreeLegend
+            viewMode={treeViewMode}
+            compact
+            showTitle
+            personFilters={personFilters}
+            edgeFilters={edgeFilters}
+            directRelativeFilters={treeViewMode === 'minha-arvore' ? directRelativeFilters : undefined}
+            onTogglePersonFilter={togglePersonFilter}
+            onToggleEdgeFilter={toggleFilter}
+            onToggleAllEdgeFilters={toggleAllEdgeFilters}
+            onToggleParentChildFilter={toggleParentChildFilters}
+            onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
+            visualLineFilters={visualLineFilters}
+            onToggleVisualLineFilter={toggleVisualLineFilter}
+            onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
+          />
+        </div>
       )}
 
       {activeSidebarPanel === 'info' && (
@@ -1243,12 +1245,12 @@ export function Home() {
           <aside
             className={[
               'flex h-full min-h-0 shrink-0 flex-col border-r border-gray-200 bg-white transition-[width] duration-200',
-              sidebarOpen ? 'w-80 p-4' : 'w-14 p-2',
+              sidebarOpen ? 'w-80 p-[clamp(0.65rem,1.45vh,1rem)]' : 'w-14 p-2',
             ].join(' ')}
           >
             {sidebarOpen && (
-              <div className="flex min-h-0 flex-1 flex-col gap-3">
-                <div className="flex items-center gap-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
+                <div className="flex items-center gap-[clamp(0.35rem,0.8vh,0.5rem)]">
                   <div className="min-w-0 flex-1">
                     <SidebarPanelTabs
                       activePanel={activeSidebarPanel}
@@ -1258,7 +1260,7 @@ export function Home() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 shrink-0 border-gray-500 bg-gray-500 px-3 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
+                    className="h-[clamp(32px,4.5vh,36px)] shrink-0 border-gray-500 bg-gray-500 px-[clamp(0.55rem,1.2vh,0.75rem)] text-[clamp(11px,1.45vh,12px)] text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
                     onClick={() => setActiveSidebarPanel('info')}
                     title="Ações da árvore"
                     aria-label="Ações da árvore"
@@ -1270,7 +1272,7 @@ export function Home() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                    className="h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
@@ -1278,7 +1280,7 @@ export function Home() {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-visible">
+                <div className="min-h-0 flex-1 overflow-hidden">
                   {sidebarPanelContent}
                 </div>
               </div>
@@ -1288,7 +1290,7 @@ export function Home() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9 shrink-0 bg-white shadow-sm"
+                  className="h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
                   onClick={() => setSidebarOpen(true)}
                   title="Expandir painel lateral"
                   aria-label="Expandir painel lateral"

@@ -17,7 +17,7 @@ export function SidebarPanelTabs({
   onChange,
 }: SidebarPanelTabsProps) {
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+    <div className="grid grid-cols-2 gap-[clamp(0.2rem,0.55vh,0.25rem)] rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.2rem,0.55vh,0.25rem)]">
       {SIDEBAR_PANEL_OPTIONS.map((option) => {
         const active = activePanel === option.key;
 
@@ -28,7 +28,7 @@ export function SidebarPanelTabs({
             aria-pressed={active}
             onClick={() => onChange(option.key)}
             className={[
-              'flex min-h-8 items-center justify-center rounded-md px-2 text-xs font-semibold transition-colors',
+              'flex min-h-[clamp(30px,4.2vh,34px)] items-center justify-center rounded-md px-[clamp(0.4rem,0.9vh,0.5rem)] text-[clamp(11px,1.45vh,12px)] font-semibold leading-tight transition-colors',
               active
                 ? 'bg-white text-gray-950 shadow-sm'
                 : 'text-gray-500 hover:bg-white/70 hover:text-gray-800',
