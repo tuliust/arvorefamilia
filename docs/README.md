@@ -1,38 +1,60 @@
-# Documentação — Árvore Família
+﻿# Documentacao - Arvore Familia
 
-Este diretório separa a documentação canônica do projeto de documentos específicos, procedimentos operacionais e histórico de diagnósticos/QA.
+Este diretorio e o indice canonico da documentacao do projeto.
+
+Use este arquivo como ponto de entrada antes de consultar documentos antigos, historicos ou arquivos soltos na raiz do repositorio.
 
 ## Guias oficiais
 
-- `GUIA_IMPLEMENTACOES.md`
-- `GUIA_COMPONENTES.md`
-- `GUIA_UX_LAYOUT.md`
-- `GUIA_CORRECAO_ERROS.md`
-- `PLANO_PROXIMOS_PASSOS.md`
+- `GUIA_IMPLEMENTACOES.md` - estado consolidado do que ja foi implementado.
+- `GUIA_COMPONENTES.md` - componentes reutilizaveis, responsabilidades e cuidados contra regressoes.
+- `GUIA_UX_LAYOUT.md` - decisoes de UX, layout, responsividade e comportamento visual.
+- `GUIA_CORRECAO_ERROS.md` - investigacao e correcao por sintoma.
+- `PLANO_PROXIMOS_PASSOS.md` - pendencias de lancamento, escopo congelado e backlog pos-MVP.
 
-## Funcionalidades específicas
+## Arquitetura
 
+- `arquitetura/ROTAS_E_GUARDS.md` - rotas publicas, rotas de membro, rotas administrativas e guards de acesso.
+
+## Funcionalidades especificas
+
+- `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 - `funcionalidades/CALENDARIO_FAMILIAR.md`
+- `funcionalidades/EXPORTACAO_ARVORE.md`
+- `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
+- `funcionalidades/MINHA_ARVORE_VIEW.md`
 - `funcionalidades/NOTIFICACOES.md`
 - `funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 - `funcionalidades/TIMELINE.md`
 
-## Operação e manutenção
+## Operacao e manutencao
 
+- `operacao/README.md`
 - `operacao/STORAGE_MAINTENANCE.md`
+- `operacao/MIGRATIONS_SUPABASE.md`
 
-## Histórico, diagnósticos e QA
+## Comandos e checklists tecnicos
 
+- `comandos/GIT_RESPONSIVIDADE.md`
+
+## Historico, diagnosticos e QA
+
+Documentos nesta pasta sao referencia historica, diagnostico pontual ou checklist de uma fase especifica. Eles nao devem substituir os guias oficiais.
+
+- `historico/README.md`
+- `historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md`
 - `historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md`
 - `historico/QA_7_6_EXPORTACAO_ARVORE.md`
-- `historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md`
 - `historico/RESPONSIVIDADE_MOBILE_TABLET.md`
+- `historico/documentacao-antiga/`
 
-## Regras
+## Regras de organizacao
 
-- Guias oficiais ficam na raiz.
-- Documentos específicos ficam em `funcionalidades/`.
-- Procedimentos operacionais ficam em `operacao/`.
-- Diagnósticos, QA e documentos de fase ficam em `historico/`.
-
-- [Minha Árvore — Filtros, Pets e Regras de Exibição](funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md)
+1. Guias oficiais ficam na raiz de `docs/`.
+2. Funcionalidades especificas ficam em `docs/funcionalidades/`.
+3. Procedimentos operacionais ficam em `docs/operacao/`.
+4. Arquitetura fica em `docs/arquitetura/`.
+5. Comandos auxiliares e checklists pontuais ficam em `docs/comandos/`.
+6. Diagnosticos, relatorios antigos, QA e documentos de fase ficam em `docs/historico/`.
+7. Documentos antigos da raiz do repositorio devem ser movidos para `docs/historico/documentacao-antiga/`.
+8. Scripts SQL soltos sao historicos ou operacionais; a fonte da verdade do banco deve continuar sendo `supabase/migrations`.
