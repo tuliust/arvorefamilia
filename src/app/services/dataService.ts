@@ -23,7 +23,8 @@ const PESSOA_COLUMNS = [
   'local_falecimento',
   'local_falecimento_exterior',
   'falecido',
-  'local_atual',
+  'local_atual',  'profissao',
+
   'foto_principal_url',
   'humano_ou_pet',
   'lado',

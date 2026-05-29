@@ -212,6 +212,8 @@ export interface Pessoa {
   local_falecimento_exterior?: boolean;
   falecido?: boolean;
   local_atual?: string;
+
+  profissao?: string;
   foto_principal_url?: string;
   humano_ou_pet: TipoEntidade;
   lado?: LadoPessoa;

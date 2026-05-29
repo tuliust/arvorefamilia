@@ -4,6 +4,8 @@ import { PersonFormSection } from './PersonFormSection';
 
 type PersonBasicInfoValue = {
   nome_completo: string;
+
+  profissao?: string;
   humano_ou_pet: TipoEntidade;
   manual_generation: string;
   lado?: LadoPessoa;
@@ -28,7 +30,17 @@ export function PersonBasicInfoFields({ value, onChange }: PersonBasicInfoFields
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Profissão</label>
+        <Input
+          type="text"
+          value={value.profissao ?? ''}
+          onChange={(event) => onChange('profissao', event.target.value)}
+          placeholder="Ex: professora, advogado, comerciante..."
+        />
+      </div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
           <select

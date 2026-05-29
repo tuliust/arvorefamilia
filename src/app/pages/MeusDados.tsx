@@ -826,7 +826,14 @@ export function MeusDados() {
               />
               <p className="break-words text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
             </Field>
-            <div className="md:col-span-2">
+            
+            <Field label="Profissão">
+              <Input
+                value={String(form.profissao ?? '')}
+                onChange={(e) => updateTextField('profissao', e.target.value)}
+                placeholder="Ex: jornalista, professora, médico, empresário..."
+              />
+            </Field><div className="md:col-span-2">
               <ToggleField
                 label="Pessoa falecida"
                 description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."

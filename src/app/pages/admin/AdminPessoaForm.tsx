@@ -118,7 +118,8 @@ function createEmptyAdminPessoaFormData() {
     local_falecimento: '',
     local_falecimento_exterior: false,
     falecido: false,
-    local_atual: '',
+    local_atual: '',    profissao: '',
+
     foto_principal_url: '',
     humano_ou_pet: 'Humano' as TipoEntidade,
     lado: 'esquerda' as LadoPessoa,
@@ -287,7 +288,8 @@ export function AdminPessoaForm() {
               local_falecimento: pessoa.local_falecimento || '',
               local_falecimento_exterior: pessoa.local_falecimento_exterior ?? false,
               falecido: pessoa.falecido ?? Boolean(pessoa.data_falecimento || pessoa.local_falecimento),
-              local_atual: pessoa.local_atual || '',
+              local_atual: pessoa.local_atual || '',              profissao: pessoa.profissao || '',
+
               foto_principal_url: pessoa.foto_principal_url || '',
               humano_ou_pet: pessoa.humano_ou_pet || ('Humano' as TipoEntidade),
               lado: (pessoa.lado as LadoPessoa) || 'esquerda',

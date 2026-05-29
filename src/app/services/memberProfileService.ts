@@ -82,7 +82,8 @@ export type EditableOwnPersonPayload = Pick<
   | 'data_nascimento'
   | 'local_nascimento'
   | 'local_nascimento_exterior'
-  | 'local_atual'
+  | 'local_atual'  | 'profissao'
+
   | 'foto_principal_url'
   | 'falecido'
   | 'minibio'

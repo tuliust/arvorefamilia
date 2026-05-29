@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Calendar, CalendarClock, Dog, Globe, Home, Lightbulb, MapPin, Phone, Sparkles, User } from 'lucide-react';
+import { BookOpen, Briefcase, Calendar, CalendarClock, Dog, Globe, Home, Lightbulb, MapPin, Phone, Sparkles, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Pessoa } from '../../types';
@@ -140,7 +140,8 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
                     <InfoItem icon={<Calendar className="h-4 w-4" />} label="Signo" value={zodiacSign || 'Não identificado'} />
                   </>
                 )}
-                <InfoItem icon={<MapPin className="h-4 w-4" />} label="Local de nascimento" value={pessoa.local_nascimento} />
+                <InfoItem icon={<MapPin className="h-4 w-4" />} label="Local de nascimento" value={pessoa.local_nascimento} />                <InfoItem icon={<Briefcase className="h-4 w-4" />} label="Profissão" value={pessoa.profissao} />
+
                 {!isFalecido && <InfoItem icon={<Home className="h-4 w-4" />} label="Residência atual" value={pessoa.local_atual} />}
                 <InfoItem icon={<Calendar className="h-4 w-4" />} label="Falecimento" value={pessoa.data_falecimento || (isFalecido ? 'Falecido(a)' : undefined)} />
                 <InfoItem icon={<MapPin className="h-4 w-4" />} label="Local de falecimento" value={pessoa.local_falecimento} />

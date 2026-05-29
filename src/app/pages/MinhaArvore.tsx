@@ -1543,6 +1543,14 @@ export function MinhaArvore() {
                   <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
                 </Field>
 
+                <Field label="Profissão">
+                  <Input
+                    value={String(form.profissao ?? '')}
+                    onChange={(e) => updateTextField('profissao', e.target.value)}
+                    placeholder="Ex: jornalista, professora, médico, empresário..."
+                  />
+                </Field>
+
                 <Field label="Telefone">
                   <Input
                     value={String(form.telefone ?? '')}
