@@ -1,4 +1,4 @@
-# Yi  Setup do Banco de Dados no Supabase
+﻿# Yi  Setup do Banco de Dados no Supabase
 
 ## a... O que precisa ser criado no Supabase
 

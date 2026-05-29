@@ -1,4 +1,4 @@
-# Diagnostico de documentacao atual  Arvore Familia
+﻿# Diagnostico de documentacao atual  Arvore Familia
 
 Data: 2026-05-21T02:48:02.562Z
 

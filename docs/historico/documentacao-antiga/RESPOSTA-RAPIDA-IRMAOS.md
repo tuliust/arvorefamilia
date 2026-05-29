@@ -1,4 +1,4 @@
-# a... RESPOSTA RAPIDA: Irmaos Estao Interligados
+﻿# a... RESPOSTA RAPIDA: Irmaos Estao Interligados
 
 ## YZ  Resposta Direta
 
@@ -126,7 +126,7 @@ Joao -------- Maria -------- Pedro
  |              |              |
 filho          filho          filho
  de            de             de
-                             
+
 Pai: Carlos   Pai: Carlos   Pai: Carlos
 Mae: Ana      Mae: Ana      Mae: Ana
 

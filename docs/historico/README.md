@@ -1,4 +1,4 @@
-# Historico, diagnosticos e QA
+﻿# Historico, diagnosticos e QA
 
 > Local recomendado: `docs/historico/README.md`
 > Tipo: indice da pasta historica.
@@ -103,9 +103,9 @@ Exemplo:
 
 ```txt
 docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
-  
+
 docs/funcionalidades/EXPORTACAO_ARVORE.md
-  
+
 docs/GUIA_CORRECAO_ERROS.md
 ```
 

@@ -1,4 +1,4 @@
-# Minha Arvore  filtros, pets e regras de exibicao
+﻿# Minha Arvore  filtros, pets e regras de exibicao
 
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
 > Tipo: documentacao funcional especifica da view **Minha Arvore**.

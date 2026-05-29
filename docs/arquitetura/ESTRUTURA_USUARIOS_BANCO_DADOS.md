@@ -1,4 +1,4 @@
-# Estrutura de usuarios, banco de dados e fluxos de pessoa
+﻿# Estrutura de usuarios, banco de dados e fluxos de pessoa
 
 > Ultima atualizacao: 2026-05-29
 > Projeto: `tuliust/arvorefamilia`
@@ -37,13 +37,13 @@ Fluxo conceitual:
 
 ```txt
 auth.users
-  
+
 profiles
-  
+
 user_person_links
-  
+
 pessoas
-  
+
 relacionamentos / arquivos_historicos / person_events / pessoa_social_profiles / person_generated_insights
 ```
 
@@ -51,7 +51,7 @@ Fluxo de engajamento do usuario:
 
 ```txt
 auth.users
-  
+
 preferencias_notificacao
 notificacoes_usuario
 notification_dispatch_logs

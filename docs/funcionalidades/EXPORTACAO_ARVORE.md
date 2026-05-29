@@ -1,4 +1,4 @@
-# Exportacao da arvore
+﻿# Exportacao da arvore
 
 > Documento canonico da funcionalidade de exportacao de area visivel da arvore.
 > Local recomendado: `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
@@ -175,23 +175,23 @@ Fluxo funcional esperado:
 
 ```txt
 Usuario abre a arvore
-  
+
 Usuario abre Acoes
-  
+
 Usuario escolhe Selecionar area
-  
+
 Overlay e exibido sobre a arvore
-  
+
 Usuario arrasta para selecionar uma area visivel
-  
+
 Toolbar contextual aparece
-  
+
 Usuario escolhe PNG, PDF ou Imprimir
-  
+
 Sistema captura a area selecionada
-  
+
 Sistema baixa arquivo ou abre impressao
-  
+
 Overlay fecha apos sucesso
 ```
 
@@ -199,11 +199,11 @@ Cancelamento:
 
 ```txt
 Overlay ativo
-  
+
 Usuario clica em Cancelar ou pressiona Esc
-  
+
 Overlay fecha
-  
+
 Pan/zoom voltam ao comportamento normal
 ```
 

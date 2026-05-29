@@ -1,4 +1,4 @@
-# Manutencao de Storage
+﻿# Manutencao de Storage
 
 > Local recomendado: `docs/operacao/STORAGE_MAINTENANCE.md`
 > Tipo: documentacao operacional de manutencao controlada de Storage.

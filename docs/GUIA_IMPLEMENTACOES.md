@@ -1,4 +1,4 @@
-# Guia de implementacoes  Arvore Familia
+﻿# Guia de implementacoes  Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`

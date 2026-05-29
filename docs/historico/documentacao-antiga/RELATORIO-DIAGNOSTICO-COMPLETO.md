@@ -1,4 +1,4 @@
-# YS RELATORIO COMPLETO DE DIAGNOSTICO DO SISTEMA
+﻿# YS RELATORIO COMPLETO DE DIAGNOSTICO DO SISTEMA
 
 **Data:** 05/04/2026
 **Sistema:** Arvore Genealogica Familia Limeira Souza
@@ -81,7 +81,7 @@ a mae                 a  35   a  13.78%
 a conjuge             a  34   a  13.39%
 aaaaaaaaaaaaaaaaaaaaaaa14aaaaaaaa
 a TOTAL               a 254   a
-aaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa 
+aaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa
 ```
 
 **a... Analise:** A distribuicao esta correta e coerente com uma familia de 56 pessoas.
@@ -140,7 +140,7 @@ Testamos a familia **Charalambos Athanase Tsangaropoulos** (4 filhos):
 
 ## as i  PROBLEMAS IDENTIFICADOS
 
-### **PROBLEMA 1: Pessoa Isolada no Grafo** as i 
+### **PROBLEMA 1: Pessoa Isolada no Grafo** as i
 
 **Descricao:**
 A pessoa **"Glauce Thais Barros"** esta cadastrada no banco mas nao possui nenhum relacionamento (pai, mae, conjuge, filho ou irmao).
@@ -210,9 +210,9 @@ DELETE FROM pessoas WHERE nome_completo = 'Glauce Thais Barros';
 aaaaaaaaaaaaaaaaaa     aaaaaaaaaaaaaaaaaa     aaaaaaaaaaaaaaaaaa
 a Maria Acilda   a  a Absalon Junior a  a Marcio Ailton  a
 a (1969)         a     a (1970)         a     a (1971)         a
-aaaaaaaaaaaaaaaaaa      aaaaaaaaaaaaaaaaaa      aaaaaaaaaaaaaaaaaa 
-                                                   
-       aaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaa 
+aaaaaaaaaaaaaaaaaa      aaaaaaaaaaaaaaaaaa      aaaaaaaaaaaaaaaaaa
+
+       aaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaa
               (Irmaos conectados em cadeia)
 
 Linha: Pontilhada laranja (#f59e0b)
@@ -322,7 +322,7 @@ Estimativa baseada nos dados:
 
 ### **Alta Prioridade**
 
-1. **Resolver pessoa isolada** as i 
+1. **Resolver pessoa isolada** as i
    - Investigar Glauce Thais Barros
    - Adicionar relacionamentos ou remover cadastro
    - Atualizar seed.ts

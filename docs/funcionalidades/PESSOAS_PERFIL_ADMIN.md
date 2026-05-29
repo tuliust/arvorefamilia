@@ -1,4 +1,4 @@
-# Pessoas, perfil publico e admin de pessoa
+﻿# Pessoas, perfil publico e admin de pessoa
 
 > Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 > Tipo: documentacao funcional especifica.

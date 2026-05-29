@@ -1,4 +1,4 @@
-# Linha do tempo do usuario
+﻿# Linha do tempo do usuario
 
 > Local recomendado: `docs/funcionalidades/TIMELINE.md`
 > Tipo: documentacao funcional especifica.
@@ -34,9 +34,9 @@ O fluxo e dividido em tres partes:
 
 ```txt
 PersonProfile carrega os dados disponiveis para a pessoa.
-  
+
 buildPersonTimeline normaliza, deduplica e ordena os itens.
-  
+
 PersonTimeline renderiza a lista no perfil da pessoa.
 ```
 

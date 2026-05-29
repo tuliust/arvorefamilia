@@ -1,4 +1,4 @@
-# Guia de correcao de erros  Arvore Familia
+﻿# Guia de correcao de erros  Arvore Familia
 
 > Ultima atualizacao: 2026-05-29
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`

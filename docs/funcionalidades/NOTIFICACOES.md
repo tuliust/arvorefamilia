@@ -1,4 +1,4 @@
-# Notificacoes
+﻿# Notificacoes
 
 > Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`
 > Tipo: documentacao funcional e operacional especifica.

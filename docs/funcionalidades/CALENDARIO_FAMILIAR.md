@@ -1,4 +1,4 @@
-# Calendario Familiar
+﻿# Calendario Familiar
 
 > Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
 > Tipo: documentacao funcional especifica.

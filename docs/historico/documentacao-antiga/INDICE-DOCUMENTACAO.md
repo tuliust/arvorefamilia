@@ -1,4 +1,4 @@
-# Ys Indice da Documentacao - Sistema de Arvore Genealogica
+﻿# Ys Indice da Documentacao - Sistema de Arvore Genealogica
 
 ## YZ  Documentos Criados para Voce
 
@@ -14,7 +14,7 @@
 
 ---
 
-### **2. SETUP DO BANCO DE DADOS** Yi 
+### **2. SETUP DO BANCO DE DADOS** Yi
 **Arquivo:** `/SETUP-BANCO-DADOS.md`
 **Quando usar:** Primeira vez configurando o banco
 **Tempo de leitura:** 10 minutos
@@ -135,13 +135,13 @@
 
 ```
 1. Leia: SETUP-BANCO-DADOS.md
-   
+
 2. Execute: database-schema.sql (no Supabase SQL Editor)
-   
+
 3. Execute: Migracao em /admin/migrar-dados
-   
+
 4. Execute: diagnostico-rapido.sql (no Supabase SQL Editor)
-   
+
 5. Se tudo a..., pronto! Se nao, veja SETUP-BANCO-DADOS.md  Solucao de Problemas
 ```
 
@@ -149,9 +149,9 @@
 
 ```
 1. Leia: RESPOSTA-RAPIDA-IRMAOS.md (2 min)
-   
+
 2. Execute: diagnostico-rapido.sql (5 seg)
-   
+
 3. Se quiser detalhes, execute: verificar-irmaos.sql (30 seg)
 ```
 
@@ -159,9 +159,9 @@
 
 ```
 1. Leia: COMO-FUNCIONA-IRMAOS.md (15 min)
-   
+
 2. Explore o codigo: /supabase/functions/server/index.tsx (linha 541)
-   
+
 3. Teste modificacoes e re-execute a migracao
 ```
 
@@ -169,11 +169,11 @@
 
 ```
 1. Execute: diagnostico-rapido.sql ou verificar-irmaos.sql
-   
+
 2. Leia: RELATORIO-DIAGNOSTICO-COMPLETO.md
-   
+
 3. Se houver erros, leia: ERROS-E-SOLUCOES.md
-   
+
 4. Execute: corrigir-pessoa-isolada.sql (se necessario)
 ```
 

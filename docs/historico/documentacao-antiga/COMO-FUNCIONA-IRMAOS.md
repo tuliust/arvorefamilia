@@ -1,4 +1,4 @@
-# Y aYaYaY Como Funciona o Sistema de Relacionamento de Irmaos
+﻿# Y aYaYaY Como Funciona o Sistema de Relacionamento de Irmaos
 
 ## Y Resumo
 
@@ -171,7 +171,7 @@ Na visualizacao da arvore (`/src/app/components/FamilyTree/FamilyTree.tsx`):
 
 ```
 Joao (1990) -------- Maria (1992) -------- Pedro (1994)
-                                              
+
 mais velho         meio               mais novo
 ```
 

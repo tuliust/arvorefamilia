@@ -1,4 +1,4 @@
-# Y3 Guia de Migracao para Banco de Dados Supabase
+﻿# Y3 Guia de Migracao para Banco de Dados Supabase
 
 ## Y Visao Geral
 

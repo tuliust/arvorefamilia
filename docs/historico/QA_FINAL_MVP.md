@@ -1,4 +1,4 @@
-# QA Final MVP
+﻿# QA Final MVP
 
 > Local recomendado: `docs/historico/QA_FINAL_MVP.md`
 > Tipo: checklist historico e operacional de validacao final do MVP.

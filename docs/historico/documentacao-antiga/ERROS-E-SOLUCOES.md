@@ -1,4 +1,4 @@
-# as i  ERROS ENCONTRADOS E COMO CORRIGIR
+﻿# as i  ERROS ENCONTRADOS E COMO CORRIGIR
 
 **Data:** 05/04/2026
 **Sistema:** Arvore Genealogica

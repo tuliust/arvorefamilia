@@ -1,4 +1,4 @@
-# Documentacao - Arvore Familia
+﻿# Documentacao - Arvore Familia
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
 

@@ -1,4 +1,4 @@
-# Operacao e manutencao
+﻿# Operacao e manutencao
 
 > Local recomendado: `docs/operacao/README.md`
 > Tipo: indice operacional da pasta `docs/operacao/`.

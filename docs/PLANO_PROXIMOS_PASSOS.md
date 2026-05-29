@@ -1,4 +1,4 @@
-# Plano de proximos passos  Arvore Familia
+﻿# Plano de proximos passos  Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`

@@ -1,4 +1,4 @@
-# Migrations Supabase
+﻿# Migrations Supabase
 
 > Local recomendado: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentacao operacional canonica.

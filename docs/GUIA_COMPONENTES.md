@@ -1,4 +1,4 @@
-# Guia de componentes  Arvore Familia
+﻿# Guia de componentes  Arvore Familia
 
 > Ultima atualizacao: 2026-05-29
 > Local canonico: `docs/GUIA_COMPONENTES.md`

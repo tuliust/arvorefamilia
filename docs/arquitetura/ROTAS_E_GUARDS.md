@@ -1,4 +1,4 @@
-# Rotas e guards de acesso
+﻿# Rotas e guards de acesso
 
 > Documento canonico de rotas, navegacao e protecao de acesso.
 > Local recomendado: `docs/arquitetura/ROTAS_E_GUARDS.md`.
@@ -345,19 +345,19 @@ Fluxo resumido:
 
 ```txt
 Usuario acessa /entrar
-  
+
 Informa codigo de primeiro acesso
-  
+
 Sistema valida codigo contra uma pessoa existente
-  
+
 Usuario cria conta no Supabase Auth
-  
+
 Sistema cria/resolve profile
-  
+
 Sistema cria/resolve vinculo em user_person_links
-  
+
 Usuario confirma dados proprios
-  
+
 Usuario passa a acessar area de membro/arvore
 ```
 

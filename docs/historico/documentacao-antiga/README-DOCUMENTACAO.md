@@ -1,4 +1,4 @@
-# Ys Documentacao Completa - Sistema de Arvore Genealogica
+﻿# Ys Documentacao Completa - Sistema de Arvore Genealogica
 
 ## YZ Status do Sistema
 
@@ -165,7 +165,7 @@ Use esta checklist para garantir que tudo funciona:
 
 ## YZ  Acoes Recomendadas
 
-### **Alta Prioridade** Y 
+### **Alta Prioridade** Y
 1. a... **Verificar integridade** - CONCLUIDO
 2. as i  **Corrigir pessoa isolada** - PENDENTE (baixo impacto)
 
@@ -189,7 +189,7 @@ Pessoas com irmaos:      29 (51.8%)
 Pessoas sem irmaos:      27 (48.2%)
   - Filhos unicos:       ~20
   - Patriarcas:          ~6
-  - Isoladas:            1 as i 
+  - Isoladas:            1 as i
 ```
 
 ### **Maior Grupo de Irmaos**
@@ -273,7 +273,7 @@ Passo 4: Inserir no banco
 ### **Visualizacao na Arvore:**
 ```
 Joao (1990) -------- Maria (1992) -------- Pedro (1994)
-                                            
+
         mais velho       meio           mais novo
 
 Linha: Pontilhada laranja (#f59e0b)

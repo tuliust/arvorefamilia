@@ -1,4 +1,4 @@
-# Guia de UX e Layout  Arvore Familia
+﻿# Guia de UX e Layout  Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/GUIA_UX_LAYOUT.md`

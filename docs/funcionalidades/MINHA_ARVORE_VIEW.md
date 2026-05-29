@@ -1,4 +1,4 @@
-# Minha Arvore  view, layout e viewport
+﻿# Minha Arvore  view, layout e viewport
 
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`
 > Tipo: documentacao tecnica/funcional da view **Minha Arvore**.

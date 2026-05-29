@@ -1,4 +1,4 @@
-# Git  comandos de responsividade mobile/tablet
+﻿# Git  comandos de responsividade mobile/tablet
 
 > Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`
 > Tipo: comando/checklist tecnico pontual.

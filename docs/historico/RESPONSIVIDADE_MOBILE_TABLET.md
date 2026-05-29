@@ -1,4 +1,4 @@
-> Status atual: fase 7.10 concluida no escopo MVP. Este documento fica preservado como referencia historica, checklist de regressao e guia para ajustes futuros de responsividade.
+﻿> Status atual: fase 7.10 concluida no escopo MVP. Este documento fica preservado como referencia historica, checklist de regressao e guia para ajustes futuros de responsividade.
 
 # Responsividade mobile/tablet  Arvore Familia
 

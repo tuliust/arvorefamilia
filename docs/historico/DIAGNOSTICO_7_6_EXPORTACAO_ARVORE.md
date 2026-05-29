@@ -1,4 +1,4 @@
-# Diagnostico e consolidacao 7.6  Exportacao de area da arvore
+﻿# Diagnostico e consolidacao 7.6  Exportacao de area da arvore
 
 ## Status atual
 
