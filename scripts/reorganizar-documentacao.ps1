@@ -1,14 +1,9 @@
-# Reorganiza a documentação do projeto Árvore Família.
+# Reorganiza a documentacao do projeto Arvore Familia.
 # Uso no PowerShell, a partir da raiz do projeto:
 #   powershell -ExecutionPolicy Bypass -File scripts/reorganizar-documentacao.ps1
 #
-# O script:
-# - cria subpastas necessárias;
-# - move documentos antigos da raiz para docs/historico/documentacao-antiga/;
-# - move documentos específicos da raiz de docs/ para docs/funcionalidades/;
-# - cria documentações novas em branco para rotas/guards e migrations Supabase;
-# - redefine docs/README.md como índice canônico;
-# - evita sobrescrever arquivos existentes sem criar backup.
+# Versao intencionalmente sem acentos no conteudo gravado para evitar mojibake
+# em Windows PowerShell 5.x quando o arquivo .ps1 e interpretado com codepage local.
 
 $ErrorActionPreference = "Stop"
 
@@ -39,7 +34,7 @@ function Move-IfExists {
   )
 
   if (-not (Test-Path -LiteralPath $Source)) {
-    Write-Host "[skip] não existe: $Source"
+    Write-Host "[skip] nao existe: $Source"
     return
   }
 
@@ -49,7 +44,7 @@ function Move-IfExists {
   if (Test-Path -LiteralPath $Destination) {
     Ensure-Dir $BackupDir
     $BackupPath = Join-Path $BackupDir (Split-Path -Leaf $Destination)
-    Write-Host "[backup] destino já existe: $Destination -> $BackupPath"
+    Write-Host "[backup] destino ja existe: $Destination -> $BackupPath"
     Move-Item -LiteralPath $Destination -Destination $BackupPath -Force
   }
 
@@ -64,7 +59,7 @@ function Create-BlankIfMissing {
   Ensure-Dir $Dir
 
   if (Test-Path -LiteralPath $FilePath) {
-    Write-Host "[skip] já existe: $FilePath"
+    Write-Host "[skip] ja existe: $FilePath"
     return
   }
 
@@ -84,25 +79,25 @@ function Write-CanonicalDocsReadme {
   }
 
   $Content = @'
-# Documentação — Árvore Família
+# Documentacao - Arvore Familia
 
-Este diretório é o **índice canônico da documentação do projeto**.
+Este diretorio e o indice canonico da documentacao do projeto.
 
-Use este arquivo como ponto de entrada antes de consultar documentos antigos, históricos ou arquivos soltos na raiz do repositório.
+Use este arquivo como ponto de entrada antes de consultar documentos antigos, historicos ou arquivos soltos na raiz do repositorio.
 
 ## Guias oficiais
 
-- `GUIA_IMPLEMENTACOES.md` — estado consolidado do que já foi implementado.
-- `GUIA_COMPONENTES.md` — componentes reutilizáveis, responsabilidades e cuidados contra regressões.
-- `GUIA_UX_LAYOUT.md` — decisões de UX, layout, responsividade e comportamento visual.
-- `GUIA_CORRECAO_ERROS.md` — investigação e correção por sintoma.
-- `PLANO_PROXIMOS_PASSOS.md` — pendências de lançamento, escopo congelado e backlog pós-MVP.
+- `GUIA_IMPLEMENTACOES.md` - estado consolidado do que ja foi implementado.
+- `GUIA_COMPONENTES.md` - componentes reutilizaveis, responsabilidades e cuidados contra regressoes.
+- `GUIA_UX_LAYOUT.md` - decisoes de UX, layout, responsividade e comportamento visual.
+- `GUIA_CORRECAO_ERROS.md` - investigacao e correcao por sintoma.
+- `PLANO_PROXIMOS_PASSOS.md` - pendencias de lancamento, escopo congelado e backlog pos-MVP.
 
 ## Arquitetura
 
-- `arquitetura/ROTAS_E_GUARDS.md` — rotas públicas, rotas de membro, rotas administrativas e guards de acesso.
+- `arquitetura/ROTAS_E_GUARDS.md` - rotas publicas, rotas de membro, rotas administrativas e guards de acesso.
 
-## Funcionalidades específicas
+## Funcionalidades especificas
 
 - `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 - `funcionalidades/CALENDARIO_FAMILIAR.md`
@@ -113,19 +108,19 @@ Use este arquivo como ponto de entrada antes de consultar documentos antigos, hi
 - `funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 - `funcionalidades/TIMELINE.md`
 
-## Operação e manutenção
+## Operacao e manutencao
 
 - `operacao/README.md`
 - `operacao/STORAGE_MAINTENANCE.md`
 - `operacao/MIGRATIONS_SUPABASE.md`
 
-## Comandos e checklists técnicos
+## Comandos e checklists tecnicos
 
 - `comandos/GIT_RESPONSIVIDADE.md`
 
-## Histórico, diagnósticos e QA
+## Historico, diagnosticos e QA
 
-Documentos nesta pasta são referência histórica, diagnóstico pontual ou checklist de uma fase específica. Eles **não devem substituir os guias oficiais**.
+Documentos nesta pasta sao referencia historica, diagnostico pontual ou checklist de uma fase especifica. Eles nao devem substituir os guias oficiais.
 
 - `historico/README.md`
 - `historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md`
@@ -134,16 +129,16 @@ Documentos nesta pasta são referência histórica, diagnóstico pontual ou chec
 - `historico/RESPONSIVIDADE_MOBILE_TABLET.md`
 - `historico/documentacao-antiga/`
 
-## Regras de organização
+## Regras de organizacao
 
 1. Guias oficiais ficam na raiz de `docs/`.
-2. Funcionalidades específicas ficam em `docs/funcionalidades/`.
+2. Funcionalidades especificas ficam em `docs/funcionalidades/`.
 3. Procedimentos operacionais ficam em `docs/operacao/`.
 4. Arquitetura fica em `docs/arquitetura/`.
 5. Comandos auxiliares e checklists pontuais ficam em `docs/comandos/`.
-6. Diagnósticos, relatórios antigos, QA e documentos de fase ficam em `docs/historico/`.
-7. Documentos antigos da raiz do repositório devem ser movidos para `docs/historico/documentacao-antiga/`.
-8. Scripts SQL soltos são históricos ou operacionais; a fonte da verdade do banco deve continuar sendo `supabase/migrations`.
+6. Diagnosticos, relatorios antigos, QA e documentos de fase ficam em `docs/historico/`.
+7. Documentos antigos da raiz do repositorio devem ser movidos para `docs/historico/documentacao-antiga/`.
+8. Scripts SQL soltos sao historicos ou operacionais; a fonte da verdade do banco deve continuar sendo `supabase/migrations`.
 '@
 
   Set-Content -LiteralPath $FilePath -Value $Content -Encoding UTF8
@@ -156,7 +151,7 @@ Ensure-Dir "docs/operacao"
 Ensure-Dir "docs/comandos"
 Ensure-Dir "docs/historico/documentacao-antiga"
 
-Write-Step "2. Movendo documentos antigos da raiz para histórico"
+Write-Step "2. Movendo documentos antigos da raiz para historico"
 Move-IfExists "INDICE-DOCUMENTACAO.md" "docs/historico/documentacao-antiga/INDICE-DOCUMENTACAO.md"
 Move-IfExists "README-DOCUMENTACAO.md" "docs/historico/documentacao-antiga/README-DOCUMENTACAO.md"
 Move-IfExists "MIGRATION-GUIDE.md" "docs/historico/documentacao-antiga/MIGRATION-GUIDE.md"
@@ -166,15 +161,15 @@ Move-IfExists "COMO-FUNCIONA-IRMAOS.md" "docs/historico/documentacao-antiga/COMO
 Move-IfExists "RELATORIO-DIAGNOSTICO-COMPLETO.md" "docs/historico/documentacao-antiga/RELATORIO-DIAGNOSTICO-COMPLETO.md"
 Move-IfExists "ERROS-E-SOLUCOES.md" "docs/historico/documentacao-antiga/ERROS-E-SOLUCOES.md"
 
-Write-Step "3. Movendo documentos específicos da raiz de docs/ para funcionalidades"
+Write-Step "3. Movendo documentos especificos da raiz de docs/ para funcionalidades"
 Move-IfExists "docs/VIEW_VISAO_GERAL.md" "docs/funcionalidades/MINHA_ARVORE_VIEW.md"
 
-Write-Step "4. Criando documentações novas em branco"
+Write-Step "4. Criando documentacoes novas em branco"
 Create-BlankIfMissing "docs/arquitetura/ROTAS_E_GUARDS.md"
 Create-BlankIfMissing "docs/operacao/MIGRATIONS_SUPABASE.md"
 Create-BlankIfMissing "docs/funcionalidades/EXPORTACAO_ARVORE.md"
 
-Write-Step "5. Redefinindo docs/README.md como índice canônico"
+Write-Step "5. Redefinindo docs/README.md como indice canonico"
 Write-CanonicalDocsReadme
 
 Write-Step "6. Removendo lixo local conhecido, se existir"
@@ -182,15 +177,15 @@ if (Test-Path -LiteralPath "docs/.DS_Store") {
   Write-Host "[remove] docs/.DS_Store"
   Remove-Item -LiteralPath "docs/.DS_Store" -Force
 } else {
-  Write-Host "[skip] docs/.DS_Store não encontrado"
+  Write-Host "[skip] docs/.DS_Store nao encontrado"
 }
 
 Write-Step "7. Resultado"
-Write-Host "Reorganização concluída. Revise com:"
+Write-Host "Reorganizacao concluida. Revise com:"
 Write-Host "  git status --short"
 Write-Host "  git diff --stat"
 Write-Host "  git diff -- docs/README.md"
 Write-Host ""
-Write-Host "Depois, rode validações básicas se desejar:"
+Write-Host "Depois, rode validacoes basicas se desejar:"
 Write-Host "  npm run build"
 Write-Host "  git diff --check"
