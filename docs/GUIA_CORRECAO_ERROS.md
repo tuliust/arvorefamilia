@@ -1,49 +1,49 @@
-﻿# Guia de correÃ§Ã£o de erros â€” Ãrvore FamÃ­lia
+# Guia de correcao de erros  Arvore Familia
 
-> Ãšltima atualizaÃ§Ã£o: 2026-05-29
-> Local canÃ´nico: `docs/GUIA_CORRECAO_ERROS.md`
+> Ultima atualizacao: 2026-05-29
+> Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
 
-Este documento Ã© um guia de investigaÃ§Ã£o e correÃ§Ã£o por sintoma. Use quando:
+Este documento e um guia de investigacao e correcao por sintoma. Use quando:
 
 - uma funcionalidade falhar;
-- houver regressÃ£o;
+- houver regressao;
 - o build quebrar;
-- uma tela nÃ£o carregar;
-- uma permissÃ£o/RLS se comportar de forma inesperada;
-- uma Edge Function, migration, Storage ou rotina de notificaÃ§Ã£o apresentar erro.
+- uma tela nao carregar;
+- uma permissao/RLS se comportar de forma inesperada;
+- uma Edge Function, migration, Storage ou rotina de notificacao apresentar erro.
 
-Este guia nÃ£o descreve roadmap nem lista implementaÃ§Ãµes concluÃ­das em detalhe. Para isso, use:
+Este guia nao descreve roadmap nem lista implementacoes concluidas em detalhe. Para isso, use:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: o que jÃ¡ foi implementado.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: validaÃ§Ãµes finais, lanÃ§amento e backlog pÃ³s-MVP.
+- `docs/GUIA_IMPLEMENTACOES.md`: o que ja foi implementado.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: validacoes finais, lancamento e backlog pos-MVP.
 - `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso.
 - `docs/operacao/MIGRATIONS_SUPABASE.md`: procedimento operacional de migrations.
-- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: troubleshooting especÃ­fico do calendÃ¡rio familiar.
-- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportaÃ§Ã£o da Ã¡rvore.
-- `docs/funcionalidades/NOTIFICACOES.md`: detalhes de arquitetura e operaÃ§Ã£o de notificaÃ§Ãµes.
-- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: troubleshooting especÃ­fico de pessoas, perfil e admin.
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: troubleshooting especifico do calendario familiar.
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportacao da arvore.
+- `docs/funcionalidades/NOTIFICACOES.md`: detalhes de arquitetura e operacao de notificacoes.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: troubleshooting especifico de pessoas, perfil e admin.
 - `docs/funcionalidades/TIMELINE.md`: detalhes da timeline.
 
 ---
 
 ## Como usar este guia
 
-Use este documento por **sintoma observado**, nÃ£o por arquivo. O fluxo recomendado Ã©:
+Use este documento por **sintoma observado**, nao por arquivo. O fluxo recomendado e:
 
 1. identificar o sintoma;
-2. localizar os arquivos provÃ¡veis;
+2. localizar os arquivos provaveis;
 3. reproduzir o erro;
 4. corrigir a menor causa real;
 5. validar com build/testes;
 6. registrar nova regra apenas se ela for recorrente.
 
-Evite usar este guia como backlog. PendÃªncias e melhorias devem ficar em `docs/PLANO_PROXIMOS_PASSOS.md`.
+Evite usar este guia como backlog. Pendencias e melhorias devem ficar em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
-## 1. Checklist inicial de investigaÃ§Ã£o
+## 1. Checklist inicial de investigacao
 
-Antes de alterar cÃ³digo:
+Antes de alterar codigo:
 
 ```bash
 git status
@@ -74,18 +74,18 @@ Regras:
 
 - corrigir build antes de QA manual;
 - corrigir o primeiro erro real do terminal antes de seguir para erros derivados;
-- nÃ£o rodar `supabase db push` sem revisar `supabase migration list`;
-- nÃ£o usar `migration repair` para mascarar migration nÃ£o aplicada;
-- nÃ£o commitar dumps, tokens, service role ou secrets;
-- nÃ£o commitar `backups/`, arquivos `.bak`, patches temporÃ¡rios ou saÃ­das de build;
-- nÃ£o apagar dados legados/base64 sem auditoria;
-- nÃ£o ampliar RLS para resolver bug de leitura sem entender a regra de negÃ³cio.
+- nao rodar `supabase db push` sem revisar `supabase migration list`;
+- nao usar `migration repair` para mascarar migration nao aplicada;
+- nao commitar dumps, tokens, service role ou secrets;
+- nao commitar `backups/`, arquivos `.bak`, patches temporarios ou saidas de build;
+- nao apagar dados legados/base64 sem auditoria;
+- nao ampliar RLS para resolver bug de leitura sem entender a regra de negocio.
 
 ---
 
 ## 2. Build quebrado
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/types/index.ts
@@ -106,20 +106,20 @@ Investigar:
 - componente movido sem ajustar caminho;
 - tipo ausente em `types/index.ts`;
 - campo de banco usado no frontend sem tipo;
-- dependÃªncia nÃ£o instalada;
-- action/log novo nÃ£o incluÃ­do nos tipos;
+- dependencia nao instalada;
+- action/log novo nao incluido nos tipos;
 - conflito de nome entre tipos, componentes e services;
-- arquivo com erro de sintaxe apÃ³s merge;
-- JSX invÃ¡lido apÃ³s script de substituiÃ§Ã£o.
+- arquivo com erro de sintaxe apos merge;
+- JSX invalido apos script de substituicao.
 
-CorreÃ§Ã£o:
+Correcao:
 
 1. rodar `npm run build`;
 2. ler o primeiro erro do terminal;
 3. corrigir o arquivo apontado;
 4. repetir `npm run build`;
 5. rodar `git diff --check`;
-6. confirmar que a correÃ§Ã£o nÃ£o alterou escopo funcional indevidamente.
+6. confirmar que a correcao nao alterou escopo funcional indevidamente.
 
 ### Erro: `Link is not defined`
 
@@ -129,18 +129,18 @@ Sintoma:
 ReferenceError: Link is not defined
 ```
 
-Exemplo jÃ¡ ocorrido:
+Exemplo ja ocorrido:
 
 ```txt
 src/app/pages/CalendarioFamiliar.tsx
 ```
 
-Causa provÃ¡vel:
+Causa provavel:
 
-- import de `AppLink as Link` removido durante padronizaÃ§Ã£o de header;
-- a pÃ¡gina ainda usa `<Link>` em trechos internos.
+- import de `AppLink as Link` removido durante padronizacao de header;
+- a pagina ainda usa `<Link>` em trechos internos.
 
-CorreÃ§Ã£o:
+Correcao:
 
 ```ts
 import { AppLink as Link } from '../components/AppLink';
@@ -162,21 +162,21 @@ Sintoma:
 Missing initializer in const declaration
 ```
 
-Arquivo provÃ¡vel:
+Arquivo provavel:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
-Causa provÃ¡vel:
+Causa provavel:
 
-- script alterou a declaraÃ§Ã£o `export const FamilyTree = React.forwardRef...`;
+- script alterou a declaracao `export const FamilyTree = React.forwardRef...`;
 - falta `=`;
-- parÃªnteses/chaves foram quebrados.
+- parenteses/chaves foram quebrados.
 
-CorreÃ§Ã£o segura:
+Correcao segura:
 
-- preferir funÃ§Ã£o nomeada + export com `React.forwardRef` ao final:
+- preferir funcao nomeada + export com `React.forwardRef` ao final:
 
 ```ts
 function FamilyTreeComponent(props: FamilyTreeProps, ref: React.ForwardedRef<FamilyTreeActions>) {
@@ -197,29 +197,29 @@ Expected "}" but found ":"
 style={ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }
 ```
 
-CorreÃ§Ã£o:
+Correcao:
 
 ```tsx
 style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
 ```
 
-### Erro: arquivo gerado por script nÃ£o corresponde ao formato esperado
+### Erro: arquivo gerado por script nao corresponde ao formato esperado
 
 Sintoma:
 
 ```txt
-O arquivo ... nÃ£o estÃ¡ exatamente no formato esperado. NÃ£o apliquei alteraÃ§Ãµes para evitar quebra.
+O arquivo ... nao esta exatamente no formato esperado. Nao apliquei alteracoes para evitar quebra.
 ```
 
 Causa:
 
-- arquivo jÃ¡ foi alterado por commit posterior;
-- script baseado em substituiÃ§Ã£o literal ficou obsoleto.
+- arquivo ja foi alterado por commit posterior;
+- script baseado em substituicao literal ficou obsoleto.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - conferir `git diff`;
-- buscar trechos por nomes de funÃ§Ãµes, nÃ£o por blocos inteiros;
+- buscar trechos por nomes de funcoes, nao por blocos inteiros;
 - preferir patch manual localizado;
 - se houver risco, recuperar backup e aplicar ajuste menor.
 
@@ -235,10 +235,10 @@ Sintoma:
 fatal: Unable to create '.git/index.lock': File exists.
 ```
 
-CorreÃ§Ã£o:
+Correcao:
 
-1. confirmar que nÃ£o hÃ¡ `git commit`, editor ou processo Git aberto;
-2. se nÃ£o houver processo ativo, remover o lock:
+1. confirmar que nao ha `git commit`, editor ou processo Git aberto;
+2. se nao houver processo ativo, remover o lock:
 
 ```bash
 rm -f .git/index.lock
@@ -258,10 +258,10 @@ Untracked files:
 
 Regra:
 
-- nÃ£o commitar backups gerados por scripts;
+- nao commitar backups gerados por scripts;
 - remover depois que build/test passaram e o commit correto foi enviado.
 
-CorreÃ§Ã£o:
+Correcao:
 
 ```bash
 rm -rf backups/
@@ -277,7 +277,7 @@ rm -rf backups/
 git status
 ```
 
-Se arquivos `*.bak-views-normalization` aparecerem rastreados em `src/app/components/FamilyTree`, confirmar que nÃ£o sÃ£o importados e remover com `git rm`. Backups rastreados jÃ¡ removidos:
+Se arquivos `*.bak-views-normalization` aparecerem rastreados em `src/app/components/FamilyTree`, confirmar que nao sao importados e remover com `git rm`. Backups rastreados ja removidos:
 
 ```txt
 src/app/components/FamilyTree/PersonNode.tsx.bak-views-normalization
@@ -286,9 +286,9 @@ src/app/components/FamilyTree/types.ts.bak-views-normalization
 
 ---
 
-## 4. Rotas das views da Ã¡rvore
+## 4. Rotas das views da arvore
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/routes.tsx
@@ -304,24 +304,24 @@ Comportamento esperado:
 - `/minha-arvore`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
 - `Home.tsx` deriva `treeViewMode` de `location.pathname`;
 - header e nav mobile usam o mesmo callback de troca de view;
-- troca de view usa `navigate`, nÃ£o `window.location`;
+- troca de view usa `navigate`, nao `window.location`;
 - antes de navegar, comparar `location.pathname` com o path alvo;
-- search params como `?pessoa=...` devem ser preservados.
+- search params como `pessoa=...` devem ser preservados.
 
-Se uma view abrir pÃºblica por engano:
+Se uma view abrir publica por engano:
 
 1. revisar `src/app/routes.tsx`;
 2. confirmar que a rota usa `TreeAccessRoute`;
 3. rodar `npm run build`;
 4. testar manualmente login/acesso conforme regra de produto.
 
-Se `?pessoa=...` desaparecer ao trocar view:
+Se `pessoa=...` desaparecer ao trocar view:
 
 1. revisar o callback central de troca de view em `Home.tsx`;
 2. confirmar que o destino concatena `location.search`;
 3. evitar `setTreeViewMode` local separado da rota.
 
-### Commit jÃ¡ enviado, mas hÃ¡ alteraÃ§Ãµes locais
+### Commit ja enviado, mas ha alteracoes locais
 
 Verificar:
 
@@ -348,9 +348,9 @@ git status
 
 ---
 
-## 5. Rotas, acesso e permissÃµes
+## 5. Rotas, acesso e permissoes
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/routes.tsx
@@ -362,52 +362,52 @@ src/app/pages/Home.tsx
 src/app/contexts/AuthContext.tsx
 ```
 
-### UsuÃ¡rio comum acessa admin
+### Usuario comum acessa admin
 
 Verificar:
 
 - rota usa `ProtectedRoute`;
 - `isAdminUser(user)` retorna corretamente;
 - `profiles.role = 'admin'`;
-- RPC/admin role estÃ¡ funcionando;
+- RPC/admin role esta funcionando;
 - fallback de erro bloqueia acesso;
-- RLS da tabela sensÃ­vel nÃ£o libera leitura/escrita indevida;
-- menu nÃ£o renderiza botÃ£o admin para usuÃ¡rio comum.
+- RLS da tabela sensivel nao libera leitura/escrita indevida;
+- menu nao renderiza botao admin para usuario comum.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - proteger rota;
-- corrigir renderizaÃ§Ã£o condicional;
+- corrigir renderizacao condicional;
 - corrigir service chamado pela UI;
-- corrigir policy RLS, se necessÃ¡rio;
-- nunca esconder sÃ³ no frontend mantendo escrita liberada no banco.
+- corrigir policy RLS, se necessario;
+- nunca esconder so no frontend mantendo escrita liberada no banco.
 
-### Admin nÃ£o vÃª Painel Administrativo
+### Admin nao ve Painel Administrativo
 
 Verificar:
 
-- sessÃ£o Supabase ativa;
+- sessao Supabase ativa;
 - `profiles.role`;
 - RPC `is_admin_user`;
 - estado `isAdmin` em `Home.tsx`;
 - fallback de loading/erro;
-- cache de sessÃ£o antigo.
+- cache de sessao antigo.
 
-### UsuÃ¡rio autenticado nÃ£o acessa pÃ¡gina de membro
+### Usuario autenticado nao acessa pagina de membro
 
 Verificar:
 
 - `MemberRoute`;
 - `AuthContext`;
-- status de loading da sessÃ£o;
-- vÃ­nculo de perfil, se a rota exigir;
+- status de loading da sessao;
+- vinculo de perfil, se a rota exigir;
 - erro de RLS em consultas iniciais.
 
 ---
 
-## 6. Headers, margens e navegaÃ§Ã£o interna
+## 6. Headers, margens e navegacao interna
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/layout/MemberPageHeader.tsx
@@ -420,14 +420,14 @@ src/app/pages/forum/ForumHome.tsx
 src/app/pages/admin/AdminDashboard.tsx
 ```
 
-### Header interno diferente entre pÃ¡ginas
+### Header interno diferente entre paginas
 
 Verificar:
 
-- pÃ¡gina usa `MemberPageHeader`;
+- pagina usa `MemberPageHeader`;
 - container usa `PAGE_CONTAINER_CLASS`;
-- Home pÃ³s-login deve continuar com header prÃ³prio;
-- `/minha-arvore`, `/calendario-familiar`, `/forum`, `/meus-favoritos`, `/notificacoes` e `/admin` devem compartilhar o padrÃ£o interno.
+- Home pos-login deve continuar com header proprio;
+- `/minha-arvore`, `/calendario-familiar`, `/forum`, `/meus-favoritos`, `/notificacoes` e `/admin` devem compartilhar o padrao interno.
 
 ### Margens laterais divergentes
 
@@ -438,9 +438,9 @@ Verificar:
 - `PAGE_CONTAINER_CLASS`;
 - wrappers duplicados em header/main.
 
-### BotÃ£o duplicado de recolher/expandir painel
+### Botao duplicado de recolher/expandir painel
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/Home.tsx
@@ -449,8 +449,8 @@ src/app/components/FamilyTree/FamilyTree.tsx
 
 Verificar:
 
-- botÃ£o interno do painel;
-- botÃ£o passado por props para `FamilyTree`;
+- botao interno do painel;
+- botao passado por props para `FamilyTree`;
 - `showSidebarToggle`;
 - `onToggleSidebar`;
 - mobile versus desktop;
@@ -458,16 +458,16 @@ Verificar:
 
 Regra esperada:
 
-- apenas um botÃ£o de expandir/recolher visÃ­vel;
+- apenas um botao de expandir/recolher visivel;
 - em desktop, dentro ou junto ao painel;
-- em mobile, junto ao painel mÃ³vel;
-- nÃ£o pode existir botÃ£o duplicado na Ã¡rea da Ã¡rvore.
+- em mobile, junto ao painel movel;
+- nao pode existir botao duplicado na area da arvore.
 
 ---
 
-## 7. FormulÃ¡rios de pessoa
+## 7. Formularios de pessoa
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/admin/AdminPessoaForm.tsx
@@ -483,7 +483,7 @@ src/app/utils/personFields.ts
 src/app/services/dataService.ts
 ```
 
-### Pessoa nÃ£o salva
+### Pessoa nao salva
 
 Verificar:
 
@@ -491,47 +491,47 @@ Verificar:
 - `PESSOA_COLUMNS`;
 - tipo `Pessoa`;
 - migration do campo;
-- validaÃ§Ã£o de campos obrigatÃ³rios;
+- validacao de campos obrigatorios;
 - `adicionarPessoa`;
 - `atualizarPessoa`;
 - erro de RLS;
 - erro no console do Supabase.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - incluir campo no tipo e no payload somente se existir no banco;
 - manter limpeza de campos desconhecidos;
 - corrigir policy sem liberar escrita indevida;
-- validar que o formulÃ¡rio nÃ£o envia `undefined` onde o banco exige `null`.
+- validar que o formulario nao envia `undefined` onde o banco exige `null`.
 
-### Campo novo nÃ£o persiste
+### Campo novo nao persiste
 
-Confirmar se o campo estÃ¡ em:
+Confirmar se o campo esta em:
 
 - tipo TypeScript;
-- estado do formulÃ¡rio;
+- estado do formulario;
 - componente de input;
 - payload limpo;
 - lista de colunas do service;
 - migration;
 - banco remoto;
-- SELECT usado na leitura apÃ³s salvar.
+- SELECT usado na leitura apos salvar.
 
-### Autocomplete de endereÃ§o nÃ£o aparece
+### Autocomplete de endereco nao aparece
 
 Verificar:
 
 - `VITE_GOOGLE_MAPS_API_KEY` existe no ambiente do frontend;
-- `AddressAutocompleteInput` estÃ¡ sendo usado no campo de endereÃ§o;
-- `PersonContactFields` estÃ¡ presente no admin;
+- `AddressAutocompleteInput` esta sendo usado no campo de endereco;
+- `PersonContactFields` esta presente no admin;
 - console do navegador para falha de carregamento do Google Places.
 
-CorreÃ§Ã£o:
+Correcao:
 
-- configurar `VITE_GOOGLE_MAPS_API_KEY` quando autocomplete for necessÃ¡rio;
-- confirmar `src/app/utils/googleAddress.ts` para formataÃ§Ã£o do endereÃ§o;
-- manter fallback silencioso para input normal quando a chave nÃ£o existir ou o Google falhar;
-- nÃ£o bloquear salvamento do formulÃ¡rio por falha externa do Google.
+- configurar `VITE_GOOGLE_MAPS_API_KEY` quando autocomplete for necessario;
+- confirmar `src/app/utils/googleAddress.ts` para formatacao do endereco;
+- manter fallback silencioso para input normal quando a chave nao existir ou o Google falhar;
+- nao bloquear salvamento do formulario por falha externa do Google.
 
 Campos frequentes:
 
@@ -541,35 +541,35 @@ Campos frequentes:
 - `permitir_mensagens_whatsapp`;
 - redes sociais;
 - datas conjugais;
-- observaÃ§Ãµes internas.
+- observacoes internas.
 
-### FormulÃ¡rio perde dados
+### Formulario perde dados
 
 Verificar:
 
 - rascunho em `sessionStorage`;
 - `useUnsavedChanges`;
-- `useEffect` assÃ­ncrono sobrescrevendo estado apÃ³s ediÃ§Ã£o local;
+- `useEffect` assincrono sobrescrevendo estado apos edicao local;
 - preview/download chamando `onChange`;
-- botÃµes internos sem `type="button"`;
+- botoes internos sem `type="button"`;
 - modal fechando e limpando estado pai;
-- objeto inicial recalculado sem memoizaÃ§Ã£o adequada.
+- objeto inicial recalculado sem memoizacao adequada.
 
 ### Modal de relacionamento salva antes da hora
 
 Verificar:
 
-- `ConfirmDialog` nÃ£o deve ser usado para adicionar relacionamento no fluxo de formulÃ¡rio;
-- relacionamento pendente sÃ³ deve salvar no botÃ£o principal;
+- `ConfirmDialog` nao deve ser usado para adicionar relacionamento no fluxo de formulario;
+- relacionamento pendente so deve salvar no botao principal;
 - cancelamentos usam `type="button"`;
 - dados conjugais pendentes ficam no rascunho;
-- `onSubmit` do formulÃ¡rio nÃ£o Ã© disparado por botÃ£o interno.
+- `onSubmit` do formulario nao e disparado por botao interno.
 
 ---
 
 ## 8. Busca com acentos
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/utils/searchText.ts
@@ -581,29 +581,29 @@ src/app/components/FamilyTree/modals/AddConnectionModal.tsx
 
 Sintomas:
 
-- `Marcio` nÃ£o encontra `MÃ¡rcio`;
-- `Sao Paulo` nÃ£o encontra `SÃ£o Paulo`;
+- `Marcio` nao encontra `Marcio`;
+- `Sao Paulo` nao encontra `Sao Paulo`;
 - busca funciona em uma tela e falha em outra.
 
 Verificar:
 
 - uso de `normalizeSearchText`;
 - uso de `includesNormalizedText`;
-- `toLowerCase().includes(...)` sem normalizaÃ§Ã£o;
+- `toLowerCase().includes(...)` sem normalizacao;
 - busca feita no frontend versus busca feita no banco;
 - campos nulos.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - padronizar com os helpers;
 - tratar `null`/`undefined`;
-- testar em admin, Ã¡rvore, relacionamentos e vinculaÃ§Ã£o.
+- testar em admin, arvore, relacionamentos e vinculacao.
 
 ---
 
 ## 9. Pessoa falecida e locais no exterior
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/utils/personFields.ts
@@ -622,8 +622,8 @@ Verificar:
 - `isPersonDeceased`;
 - payload de salvamento;
 - migration aplicada;
-- SELECT apÃ³s salvar;
-- componentes da Ã¡rvore usando helper correto.
+- SELECT apos salvar;
+- componentes da arvore usando helper correto.
 
 ### Local exterior rejeitado
 
@@ -633,14 +633,14 @@ Verificar:
 - `validateLocationByMode`;
 - modo Brasil/exterior;
 - placeholder;
-- formato esperado `Cidade (PaÃ­s)`;
+- formato esperado `Cidade (Pais)`;
 - campo limpo indevidamente antes de salvar.
 
 ---
 
-## 10. Arquivos histÃ³ricos e Storage
+## 10. Arquivos historicos e Storage
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/ArquivosHistoricos.tsx
@@ -662,26 +662,26 @@ Verificar:
 - fallback legado sendo chamado indevidamente;
 - falha de upload escondida por fallback.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - novos arquivos devem ir para Storage;
-- fallback base64 sÃ³ deve servir legado/compatibilidade;
-- nÃ£o apagar base64 antigo automaticamente.
+- fallback base64 so deve servir legado/compatibilidade;
+- nao apagar base64 antigo automaticamente.
 
-### Preview limpa formulÃ¡rio
+### Preview limpa formulario
 
 Verificar:
 
-- abrir/fechar preview nÃ£o chama `onChange`;
-- botÃµes de visualizar/baixar/abrir usam `type="button"`;
-- estado de `novoArquivo` nÃ£o Ã© limpo sem aÃ§Ã£o explÃ­cita;
-- preview nÃ£o dispara submit do formulÃ¡rio.
+- abrir/fechar preview nao chama `onChange`;
+- botoes de visualizar/baixar/abrir usam `type="button"`;
+- estado de `novoArquivo` nao e limpo sem acao explicita;
+- preview nao dispara submit do formulario.
 
 ### Download falha
 
 Verificar:
 
-- URL pÃºblica/acessÃ­vel;
+- URL publica/acessivel;
 - compatibilidade com `data:`;
 - fallback de abrir em nova aba;
 - nome de arquivo sanitizado;
@@ -690,41 +690,41 @@ Verificar:
 
 ### Erro ao salvar `categoria_evento`
 
-Sintomas provÃ¡veis:
+Sintomas provaveis:
 
-- erro PostgREST/Supabase indicando que a coluna `categoria_evento` nÃ£o existe;
+- erro PostgREST/Supabase indicando que a coluna `categoria_evento` nao existe;
 - insert/update em `public.arquivos_historicos` falha;
 - listagem pode funcionar, mas salvar arquivo novo ou editar arquivo existente falha.
 
-Causa provÃ¡vel:
+Causa provavel:
 
-- ambiente remoto ainda nÃ£o recebeu `20260522121000_add_historical_file_event_category.sql`;
-- schema cache do Supabase ainda nÃ£o refletiu a coluna apÃ³s migration recente.
+- ambiente remoto ainda nao recebeu `20260522121000_add_historical_file_event_category.sql`;
+- schema cache do Supabase ainda nao refletiu a coluna apos migration recente.
 
-CorreÃ§Ã£o:
+Correcao:
 
 1. confirmar `supabase migration list`;
 2. aplicar a migration pendente aprovada com `supabase db push`;
 3. confirmar que `public.arquivos_historicos.categoria_evento` existe;
-4. se a coluna jÃ¡ existir e o erro persistir, aguardar/recarregar schema cache do Supabase antes de alterar cÃ³digo.
+4. se a coluna ja existir e o erro persistir, aguardar/recarregar schema cache do Supabase antes de alterar codigo.
 
 Regra operacional:
 
-- `20260522121000_add_historical_file_event_category.sql` Ã© prÃ©-requisito de deploy para versÃµes que enviam `categoria_evento` no payload;
-- nÃ£o remover `categoria_evento` do payload para contornar ambiente sem migration.
+- `20260522121000_add_historical_file_event_category.sql` e pre-requisito de deploy para versoes que enviam `categoria_evento` no payload;
+- nao remover `categoria_evento` do payload para contornar ambiente sem migration.
 
-### Upload abandonado deixa Ã³rfÃ£o
+### Upload abandonado deixa orfao
 
 Verificar:
 
 - upload antes do salvamento final;
-- existÃªncia de registro correspondente em `arquivos_historicos`;
+- existencia de registro correspondente em `arquivos_historicos`;
 - scripts dry-run antes de qualquer limpeza.
 
-CorreÃ§Ã£o:
+Correcao:
 
-- nÃ£o deletar automaticamente sem auditoria;
-- registrar procedimento de limpeza em frente tÃ©cnica separada.
+- nao deletar automaticamente sem auditoria;
+- registrar procedimento de limpeza em frente tecnica separada.
 
 ### Arquivo de relacionamento salva como arquivo de pessoa
 
@@ -739,13 +739,13 @@ Verificar:
 - `MarriageDetailsEditor`;
 - `adicionarArquivoHistoricoAoRelacionamento`;
 - RLS/admin;
-- payload de criaÃ§Ã£o.
+- payload de criacao.
 
 ---
 
-## 11. Relacionamentos, solicitaÃ§Ãµes e dados conjugais
+## 11. Relacionamentos, solicitacoes e dados conjugais
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/services/dataService.ts
@@ -757,22 +757,22 @@ src/app/components/relationships/MarriageDetailsEditor.tsx
 src/app/components/RelacionamentoManager.tsx
 ```
 
-### UsuÃ¡rio comum altera relacionamento real
+### Usuario comum altera relacionamento real
 
 Verificar:
 
-- UI estÃ¡ chamando `createRelationshipChangeRequest`;
-- UI nÃ£o chama `adicionarRelacionamentoComInverso`;
+- UI esta chamando `createRelationshipChangeRequest`;
+- UI nao chama `adicionarRelacionamentoComInverso`;
 - RLS de `public.relacionamentos`;
 - policy antiga permissiva;
 - rota admin exposta indevidamente.
 
-CorreÃ§Ã£o:
+Correcao:
 
-- usuÃ¡rio comum deve gerar solicitaÃ§Ã£o;
-- alteraÃ§Ã£o real deve ser feita apenas por admin/aprovaÃ§Ã£o.
+- usuario comum deve gerar solicitacao;
+- alteracao real deve ser feita apenas por admin/aprovacao.
 
-### SolicitaÃ§Ã£o nÃ£o aparece no admin
+### Solicitacao nao aparece no admin
 
 Verificar:
 
@@ -782,7 +782,7 @@ Verificar:
 - `listAllRelationshipChangeRequests`;
 - filtro de status na tela.
 
-### AprovaÃ§Ã£o nÃ£o altera relacionamento
+### Aprovacao nao altera relacionamento
 
 Verificar:
 
@@ -792,16 +792,16 @@ Verificar:
 - dados conjugais;
 - logs `relationship_change_approved`.
 
-### RejeiÃ§Ã£o altera dado real
+### Rejeicao altera dado real
 
 P0 funcional.
 
-CorreÃ§Ã£o:
+Correcao:
 
-- rejeitar sÃ³ deve atualizar status da solicitaÃ§Ã£o;
-- nÃ£o chamar funÃ§Ã£o que altera relacionamento real.
+- rejeitar so deve atualizar status da solicitacao;
+- nao chamar funcao que altera relacionamento real.
 
-### Status conjugal nÃ£o aparece na Ã¡rvore
+### Status conjugal nao aparece na arvore
 
 Verificar:
 
@@ -815,9 +815,9 @@ Verificar:
 
 ---
 
-## 12. Ãrvore, Genealogia, VisÃ£o Completa e anel
+## 12. Arvore, Genealogia, Visao Completa e anel
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -832,48 +832,48 @@ src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
 src/app/pages/Home.tsx
 ```
 
-### Minha Ãrvore carrega muito pequena
+### Minha Arvore carrega muito pequena
 
 Verificar:
 
-- funÃ§Ã£o de bounds do viewport;
+- funcao de bounds do viewport;
 - se `getViewportContentBounds` usa apenas cards reais;
-- se labels, group boxes, legend nodes e anchors estÃ£o excluÃ­dos do cÃ¡lculo de zoom;
+- se labels, group boxes, legend nodes e anchors estao excluidos do calculo de zoom;
 - `personNode` como base do zoom inicial;
-- diferenÃ§a entre bounds de viewport e bounds de pan;
+- diferenca entre bounds de viewport e bounds de pan;
 - `maxZoom` e `minZoom`;
-- recenter automÃ¡tico apÃ³s zoom.
+- recenter automatico apos zoom.
 
-CorreÃ§Ã£o esperada:
+Correcao esperada:
 
 - zoom inicial deve usar bounds de cards reais;
-- elementos auxiliares nÃ£o devem reduzir a escala;
-- `+` e `-` devem funcionar atÃ© o zoom mÃ¡ximo.
+- elementos auxiliares nao devem reduzir a escala;
+- `+` e `-` devem funcionar ate o zoom maximo.
 
-### Genealogia ou VisÃ£o Completa reduzem demais por altura
+### Genealogia ou Visao Completa reduzem demais por altura
 
 Regra esperada:
 
-- Genealogia e VisÃ£o Completa usam zoom por largura;
-- altura total nÃ£o deve reduzir o zoom;
-- usuÃ¡rio arrasta/desliza para baixo se houver muitos cards verticais;
-- posiÃ§Ã£o vertical inicial deve ser padronizada com Minha Ãrvore.
+- Genealogia e Visao Completa usam zoom por largura;
+- altura total nao deve reduzir o zoom;
+- usuario arrasta/desliza para baixo se houver muitos cards verticais;
+- posicao vertical inicial deve ser padronizada com Minha Arvore.
 
 Verificar:
 
 - `getNormalizedTreeViewport`;
-- diferenciaÃ§Ã£o de regra por `viewMode`;
-- cÃ¡lculo com `zoomX` versus `Math.min(zoomX, zoomY)`;
+- diferenciacao de regra por `viewMode`;
+- calculo com `zoomX` versus `Math.min(zoomX, zoomY)`;
 - `translateExtent` para permitir pan vertical.
 
-### TÃ­tulo/subtÃ­tulo duplicado nas views genealÃ³gicas
+### Titulo/subtitulo duplicado nas views genealogicas
 
 Sintoma:
 
 - overlay fixo em `FamilyTree.tsx` aparece;
-- outro tÃ­tulo/subtÃ­tulo aparece junto aos cards.
+- outro titulo/subtitulo aparece junto aos cards.
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
@@ -881,27 +881,27 @@ src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
 ```
 
-CorreÃ§Ã£o:
+Correcao:
 
 - manter apenas overlay fixo em `FamilyTree.tsx`;
 - remover title/subtitle nodes dos layouts;
-- `DirectFamilyLabelNode` sÃ³ deve permanecer se usado para labels de grupo, nÃ£o tÃ­tulo principal.
+- `DirectFamilyLabelNode` so deve permanecer se usado para labels de grupo, nao titulo principal.
 
 ### Linha diagonal entre pais e filhos
 
 Verificar:
 
-- regra de filho Ãºnico;
+- regra de filho unico;
 - edge ortogonal;
 - `GenealogyFamilyConnectorNode`;
-- layout por geraÃ§Ãµes.
+- layout por geracoes.
 
-### Conectores/anÃ©is soltos apÃ³s filtro
+### Conectores/aneis soltos apos filtro
 
 Verificar:
 
-- filtro de pessoas visÃ­veis;
-- criaÃ§Ã£o de edges apenas quando origem/destino visÃ­veis;
+- filtro de pessoas visiveis;
+- criacao de edges apenas quando origem/destino visiveis;
 - `filterPersonalTreeScope`;
 - dados de relacionamento sem pessoa correspondente.
 
@@ -914,7 +914,7 @@ Verificar:
 - pessoa central;
 - `filterGraphToPersonalScope`.
 
-### VisÃ£o Completa mostra poucas pessoas
+### Visao Completa mostra poucas pessoas
 
 Verificar:
 
@@ -922,9 +922,9 @@ Verificar:
 - filtros ativos;
 - cache de dados;
 - RLS;
-- modo de visualizaÃ§Ã£o selecionado.
+- modo de visualizacao selecionado.
 
-### Anel nÃ£o abre modal
+### Anel nao abre modal
 
 Verificar:
 
@@ -934,17 +934,17 @@ Verificar:
 - `event.stopPropagation()`;
 - modal em `Home.tsx` ou `FamilyTree`.
 
-### Modal mostra observaÃ§Ã£o para usuÃ¡rio comum
+### Modal mostra observacao para usuario comum
 
-CorreÃ§Ã£o:
+Correcao:
 
-- renderizar observaÃ§Ãµes internas apenas quando `isAdmin = true`.
+- renderizar observacoes internas apenas quando `isAdmin = true`.
 
 ---
 
 ## 13. Painel de legendas
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/FamilyTree/TreeLegend.tsx
@@ -952,7 +952,7 @@ src/app/pages/Home.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
-### Legenda nÃ£o aparece
+### Legenda nao aparece
 
 Verificar:
 
@@ -967,20 +967,20 @@ Verificar:
 
 Verificar:
 
-- botÃ£o flutuante de legenda em `FamilyTree.tsx`;
+- botao flutuante de legenda em `FamilyTree.tsx`;
 - painel lateral em `Home.tsx`;
-- remover popover/botÃ£o flutuante se a regra for legenda apenas no painel lateral.
+- remover popover/botao flutuante se a regra for legenda apenas no painel lateral.
 
-### ConteÃºdo antigo volta a aparecer
+### Conteudo antigo volta a aparecer
 
-Itens que nÃ£o devem voltar no painel lateral compacto:
+Itens que nao devem voltar no painel lateral compacto:
 
-- subtÃ­tulo â€œCores, linhas, anÃ©is e modos da Ã¡rvore.â€;
-- label â€œVisualizaÃ§Ã£o atualâ€;
+- subtitulo Cores, linhas, aneis e modos da arvore.;
+- label Visualizacao atual;
 - card azul com view atual;
-- subtÃ­tulos dentro dos cards das seÃ§Ãµes Cards, Linhas e Anel de casamento;
-- Ã¡rea â€œViewsâ€ no final;
-- texto â€œAtivaâ€ no anel; usar **Em relacionamento**.
+- subtitulos dentro dos cards das secoes Cards, Linhas e Anel de casamento;
+- area Views no final;
+- texto Ativa no anel; usar **Em relacionamento**.
 
 ### Legenda atrapalha pan/zoom
 
@@ -989,16 +989,16 @@ Verificar:
 - `onMouseDown={(event) => event.stopPropagation()}`;
 - `onClick={(event) => event.stopPropagation()}`;
 - `data-tree-legend="true"`;
-- propagaÃ§Ã£o para ReactFlow.
+- propagacao para ReactFlow.
 
-### Legenda aparece em exportaÃ§Ã£o
+### Legenda aparece em exportacao
 
 Verificar:
 
 - `getDefaultTreeExportIgnoreElements`;
 - seletor `[data-tree-legend="true"]`.
 
-### Legenda contradiz Ã¡rvore
+### Legenda contradiz arvore
 
 Comparar com:
 
@@ -1010,9 +1010,9 @@ Comparar com:
 
 ---
 
-## 14. HistÃ³rico de atividades
+## 14. Historico de atividades
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/services/activityLogService.ts
@@ -1020,7 +1020,7 @@ src/app/pages/admin/AdminAtividades.tsx
 src/app/types/index.ts
 ```
 
-### Log nÃ£o Ã© criado
+### Log nao e criado
 
 Verificar:
 
@@ -1030,15 +1030,15 @@ Verificar:
 - erro engolido em `catch`;
 - action permitida no tipo.
 
-### Log falha para usuÃ¡rio comum
+### Log falha para usuario comum
 
 Verificar:
 
-- `createActivityLog` nÃ£o deve depender de `.select().single()` apÃ³s insert;
-- policy permite INSERT prÃ³prio;
-- metadata estÃ¡ sanitizada.
+- `createActivityLog` nao deve depender de `.select().single()` apos insert;
+- policy permite INSERT proprio;
+- metadata esta sanitizada.
 
-### Admin nÃ£o vÃª logs
+### Admin nao ve logs
 
 Verificar:
 
@@ -1047,26 +1047,26 @@ Verificar:
 - rota protegida;
 - `listActivityLogs`.
 
-### Metadata sensÃ­vel
+### Metadata sensivel
 
 Remover imediatamente:
 
 - URL completa;
 - base64;
 - telefone;
-- endereÃ§o;
+- endereco;
 - e-mail;
 - token;
 - secret;
 - service role;
 - prompt completo;
-- conteÃºdo gerado por IA.
+- conteudo gerado por IA.
 
 ---
 
 ## 15. Admin Integridade
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/admin/AdminIntegridade.tsx
@@ -1077,7 +1077,7 @@ src/app/services/relationshipChangeRequestService.ts
 src/app/lib/supabaseClient.ts
 ```
 
-### Tela nÃ£o abre
+### Tela nao abre
 
 Verificar:
 
@@ -1086,50 +1086,50 @@ Verificar:
 - `ProtectedRoute`;
 - erro de service;
 - erro de RLS;
-- dados nulos nÃ£o tratados.
+- dados nulos nao tratados.
 
-### UsuÃ¡rio comum acessa
+### Usuario comum acessa
 
-P0 de permissÃ£o.
+P0 de permissao.
 
 Corrigir:
 
-- proteÃ§Ã£o de rota;
-- fallback de permissÃ£o;
+- protecao de rota;
+- fallback de permissao;
 - policy RLS;
-- renderizaÃ§Ã£o condicional do menu.
+- renderizacao condicional do menu.
 
-### DiagnÃ³stico acusa erro demais
+### Diagnostico acusa erro demais
 
 Separar:
 
-- erro crÃ­tico;
+- erro critico;
 - alerta;
-- legado compatÃ­vel;
-- pendÃªncia de validaÃ§Ã£o;
+- legado compativel;
+- pendencia de validacao;
 - item informativo.
 
 ### Tela altera dados
 
 P0.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - `/admin/integridade` deve ser somente leitura;
-- qualquer correÃ§Ã£o automÃ¡tica deve virar frente prÃ³pria;
-- aÃ§Ãµes assistidas ficam pÃ³s-MVP.
+- qualquer correcao automatica deve virar frente propria;
+- acoes assistidas ficam pos-MVP.
 
 ---
 
-## 16. VÃ­nculo admin usuÃ¡rio-pessoa
+## 16. Vinculo admin usuario-pessoa
 
-Detalhes especÃ­ficos de pessoas/perfil/admin:
+Detalhes especificos de pessoas/perfil/admin:
 
 ```txt
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
 ```
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/admin/AdminPessoaForm.tsx
@@ -1139,40 +1139,40 @@ supabase/migrations/20260522173000_fix_admin_list_profiles_for_linking_rpc.sql
 
 ### Erro: `Could not find the function public.admin_list_profiles_for_linking without parameters in the schema cache`
 
-Causas provÃ¡veis:
+Causas provaveis:
 
-- migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` nÃ£o aplicada no Supabase remoto;
-- schema cache remoto ainda nÃ£o atualizou;
-- funÃ§Ã£o ausente ou com assinatura diferente.
+- migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` nao aplicada no Supabase remoto;
+- schema cache remoto ainda nao atualizou;
+- funcao ausente ou com assinatura diferente.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - aplicar a migration aprovada;
-- conferir no Supabase se `public.admin_list_profiles_for_linking()` existe sem parÃ¢metros;
-- aguardar/recarregar schema cache se a funÃ§Ã£o acabou de ser criada;
-- nÃ£o substituir por consulta direta insegura em `profiles`.
+- conferir no Supabase se `public.admin_list_profiles_for_linking()` existe sem parametros;
+- aguardar/recarregar schema cache se a funcao acabou de ser criada;
+- nao substituir por consulta direta insegura em `profiles`.
 
-### UsuÃ¡rios nÃ£o aparecem no dropdown de vÃ­nculo admin
+### Usuarios nao aparecem no dropdown de vinculo admin
 
 Verificar:
 
 - resultado de `adminListProfilesForLinking`;
-- erro inline no card **Adicionar vÃ­nculo manual**;
-- botÃ£o **Recarregar**;
+- erro inline no card **Adicionar vinculo manual**;
+- botao **Recarregar**;
 - migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` aplicada;
-- usuÃ¡rio logado Ã© admin.
+- usuario logado e admin.
 
 Comportamento esperado:
 
 - dropdown fica desabilitado durante loading;
-- dropdown fica desabilitado quando hÃ¡ erro de listagem;
+- dropdown fica desabilitado quando ha erro de listagem;
 - **Recarregar** tenta buscar novamente sem depender de toast repetitivo.
 
 ---
 
-## 17. NotificaÃ§Ãµes
+## 17. Notificacoes
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/Notificacoes.tsx
@@ -1190,28 +1190,28 @@ supabase/functions/run-daily-notifications
 docs/funcionalidades/NOTIFICACOES.md
 ```
 
-### NotificaÃ§Ãµes nÃ£o aparecem
+### Notificacoes nao aparecem
 
 Verificar:
 
 - `listarNotificacoesSupabase`;
 - RLS de `notificacoes_usuario`;
 - `user_id` correto;
-- usuÃ¡rio autenticado;
+- usuario autenticado;
 - central em `/notificacoes`;
 - fallback local apenas como compatibilidade.
 
-### Marcar/remover notificaÃ§Ã£o nÃ£o funciona
+### Marcar/remover notificacao nao funciona
 
 Verificar:
 
-- funÃ§Ã£o filtra por `id` e `user_id`;
+- funcao filtra por `id` e `user_id`;
 - chamadas passam `user.id`;
-- RLS UPDATE/DELETE do prÃ³prio usuÃ¡rio;
-- rollback visual apÃ³s erro;
+- RLS UPDATE/DELETE do proprio usuario;
+- rollback visual apos erro;
 - console do navegador.
 
-### PreferÃªncias nÃ£o salvam
+### Preferencias nao salvam
 
 Verificar:
 
@@ -1219,103 +1219,103 @@ Verificar:
 - tabela `preferencias_notificacao`;
 - RLS de upsert por `user_id`;
 - log `notification_preferences.updated`;
-- defaults nÃ£o sobrescrevem `false`.
+- defaults nao sobrescrevem `false`.
 
-### PreferÃªncias nÃ£o aparecem em `/notificacoes`
+### Preferencias nao aparecem em `/notificacoes`
 
-Causa provÃ¡vel:
+Causa provavel:
 
-- as preferÃªncias foram separadas da central de notificaÃ§Ãµes.
+- as preferencias foram separadas da central de notificacoes.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - abrir `/ajustar-notificacoes`;
 - verificar `src/app/pages/AjustarNotificacoes.tsx`;
 - verificar `src/app/components/notifications/NotificationPreferencesPanel.tsx`;
-- manter `/notificacoes` dedicada Ã  lista/central em cards.
+- manter `/notificacoes` dedicada A  lista/central em cards.
 
-### Gatilho nÃ£o notifica
+### Gatilho nao notifica
 
 Verificar:
 
 - `notificationTriggersService`;
-- destinatÃ¡rios em `notificationRecipientsService`;
-- exclusÃ£o do ator;
+- destinatarios em `notificationRecipientsService`;
+- exclusao do ator;
 - dispatch log;
-- preferÃªncias do destinatÃ¡rio;
+- preferencias do destinatario;
 - canal interno versus e-mail.
 
-### NotificaÃ§Ã£o duplica
+### Notificacao duplica
 
 Verificar:
 
 - `notification_occurrences`;
 - `occurrence_key`;
-- constraint Ãºnica;
-- deduplicaÃ§Ã£o de destinatÃ¡rios;
-- execuÃ§Ã£o manual repetida;
-- Edge Function diÃ¡ria e rotina manual usando o mesmo padrÃ£o de chave.
+- constraint unica;
+- deduplicacao de destinatarios;
+- execucao manual repetida;
+- Edge Function diaria e rotina manual usando o mesmo padrao de chave.
 
-### E-mail real nÃ£o envia
+### E-mail real nao envia
 
 Verificar:
 
 - deploy de `send-notification-email`;
 - secrets: `RESEND_API_KEY`, `NOTIFICATION_EMAIL_FROM`, `NOTIFICATION_EMAIL_REPLY_TO`, `SITE_URL`;
-- domÃ­nio/remetente verificado no Resend;
+- dominio/remetente verificado no Resend;
 - logs da Edge Function;
 - `notification_dispatch_logs`.
 
-### E-mail envia para destinatÃ¡rio errado
+### E-mail envia para destinatario errado
 
 P0 operacional.
 
 Verificar imediatamente:
 
-- Edge Function exige usuÃ¡rio autenticado;
-- usuÃ¡rio comum sÃ³ envia para si mesmo;
-- usuÃ¡rio comum nÃ£o escolhe destinatÃ¡rio arbitrÃ¡rio;
-- teste admin Ã© controlado;
-- teste admin nÃ£o dispara massa de usuÃ¡rios;
+- Edge Function exige usuario autenticado;
+- usuario comum so envia para si mesmo;
+- usuario comum nao escolhe destinatario arbitrario;
+- teste admin e controlado;
+- teste admin nao dispara massa de usuarios;
 - `userId` no body;
 - logs em `notification_dispatch_logs`.
 
-### Rotina diÃ¡ria retorna 401
+### Rotina diaria retorna 401
 
 Verificar:
 
 - `DAILY_NOTIFICATIONS_SECRET`;
 - header `x-daily-notifications-secret`;
 - `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`;
-- secret sem espaÃ§os/quebras de linha;
-- function redeployada apÃ³s alteraÃ§Ã£o.
+- secret sem espacos/quebras de linha;
+- function redeployada apos alteracao.
 
-### Cron nÃ£o dispara
+### Cron nao dispara
 
 Verificar:
 
 - `pg_cron`;
 - job `run-daily-notifications-0800-brt`;
-- horÃ¡rio UTC;
+- horario UTC;
 - 08:00 `America/Sao_Paulo` equivale a 11:00 UTC;
 - URL da Edge Function;
 - header com secret;
-- segredo nÃ£o estÃ¡ em migration versionada;
+- segredo nao esta em migration versionada;
 - resposta recente em `net._http_response`.
 
 ### Push/WhatsApp tentam envio real
 
-CorreÃ§Ã£o:
+Correcao:
 
-- retornar `not_configured` ou `skipped` atÃ© existir provider real.
+- retornar `not_configured` ou `skipped` ate existir provider real.
 
 ---
 
-## 18. Astrologia, Timeline, WhatsApp, parentesco, exportaÃ§Ã£o e favoritos
+## 18. Astrologia, Timeline, WhatsApp, parentesco, exportacao e favoritos
 
 ### Astrologia e acontecimentos do nascimento
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/person/PersonDataView.tsx
@@ -1324,18 +1324,18 @@ src/app/services/personInsightsService.ts
 supabase/functions/generate-person-insights/index.ts
 ```
 
-Verificar se o perfil apenas lÃª insights. GeraÃ§Ã£o automÃ¡tica no perfil Ã© P0 operacional; geraÃ§Ã£o/regeneraÃ§Ã£o deve ser aÃ§Ã£o admin.
+Verificar se o perfil apenas le insights. Geracao automatica no perfil e P0 operacional; geracao/regeneracao deve ser acao admin.
 
-Se cards vazios aparecerem no perfil pÃºblico:
+Se cards vazios aparecerem no perfil publico:
 
 - verificar `PersonDataView.tsx`;
-- garantir que cards sem conteÃºdo, sem loading, sem erro e sem fallback vÃ¡lido retornem `null`;
-- o texto **â€œConteÃºdo ainda nÃ£o gerado.â€** nÃ£o deve aparecer publicamente;
-- no admin, exibir card apenas quando houver aÃ§Ã£o possÃ­vel, conteÃºdo existente, loading ou erro.
+- garantir que cards sem conteudo, sem loading, sem erro e sem fallback valido retornem `null`;
+- o texto **Conteudo ainda nao gerado.** nao deve aparecer publicamente;
+- no admin, exibir card apenas quando houver acao possivel, conteudo existente, loading ou erro.
 
 ### Timeline
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/pages/PersonProfile.tsx
@@ -1344,11 +1344,11 @@ src/app/utils/buildPersonTimeline.ts
 src/app/services/personEventsService.ts
 ```
 
-Verificar eventos vazios, duplicados, fora de ordem e metadata sensÃ­vel.
+Verificar eventos vazios, duplicados, fora de ordem e metadata sensivel.
 
 ### WhatsApp
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/utils/whatsapp.ts
@@ -1356,11 +1356,11 @@ src/app/components/person/WhatsAppContactButton.tsx
 src/app/components/person/PersonDataView.tsx
 ```
 
-NÃºmero textual sÃ³ aparece se `permitir_exibir_telefone = true`. BotÃ£o depende de telefone vÃ¡lido e `permitir_mensagens_whatsapp`.
+Numero textual so aparece se `permitir_exibir_telefone = true`. Botao depende de telefone valido e `permitir_mensagens_whatsapp`.
 
 ### Grau de parentesco
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/utils/relationshipDegree.ts
@@ -1368,11 +1368,11 @@ src/app/utils/relationshipDegree.test.ts
 src/app/utils/relationshipDegreeDisplay.ts
 ```
 
-Se pai/filho estiver invertido, corrigir algoritmo com teste unitÃ¡rio antes de mexer na UI.
+Se pai/filho estiver invertido, corrigir algoritmo com teste unitario antes de mexer na UI.
 
-### ExportaÃ§Ã£o de Ã¡rea da Ã¡rvore
+### Exportacao de area da arvore
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
@@ -1380,11 +1380,11 @@ src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
-Verificar overlay, crop, CORS, impressÃ£o e ignore elements.
+Verificar overlay, crop, CORS, impressao e ignore elements.
 
 ### Favoritos
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/services/favoritesService.ts
@@ -1393,13 +1393,13 @@ src/app/pages/MeusFavoritos.tsx
 src/app/pages/PersonProfile.tsx
 ```
 
-Verificar RLS, usuÃ¡rio autenticado, campos novos, colunas legadas relaxadas, link interno e metadata sensÃ­vel.
+Verificar RLS, usuario autenticado, campos novos, colunas legadas relaxadas, link interno e metadata sensivel.
 
 ---
 
 ## 19. Responsividade
 
-Arquivos prioritÃ¡rios:
+Arquivos prioritarios:
 
 ```txt
 src/app/pages/Home.tsx
@@ -1420,46 +1420,46 @@ Verificar:
 
 - containers com largura fixa;
 - tabelas;
-- botÃµes em linha;
+- botoes em linha;
 - cards com `min-width`;
 - ReactFlow;
 - modais;
 - imagens sem `max-width`.
 
-### Modal nÃ£o cabe na tela
+### Modal nao cabe na tela
 
-CorreÃ§Ã£o:
+Correcao:
 
-- altura mÃ¡xima;
+- altura maxima;
 - scroll interno;
 - padding responsivo;
-- footer sticky se necessÃ¡rio.
+- footer sticky se necessario.
 
-### Ãrvore ruim em touch
+### Arvore ruim em touch
 
 Verificar:
 
 - pan/zoom;
-- botÃµes pequenos;
-- sobreposiÃ§Ã£o de controles;
+- botoes pequenos;
+- sobreposicao de controles;
 - menu de pessoa;
 - legenda;
-- seleÃ§Ã£o de Ã¡rea.
+- selecao de area.
 
-### Admin inutilizÃ¡vel em mobile
+### Admin inutilizavel em mobile
 
 Priorizar:
 
-- formulÃ¡rio de pessoa;
+- formulario de pessoa;
 - listas/tabelas com scroll;
 - filtros;
-- aÃ§Ãµes primÃ¡rias visÃ­veis.
+- acoes primarias visiveis.
 
 ---
 
 ## 20. Migrations e Supabase
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 supabase/migrations
@@ -1467,7 +1467,7 @@ supabase/config.toml
 supabase/functions
 ```
 
-### Funciona local, mas nÃ£o remoto
+### Funciona local, mas nao remoto
 
 Verificar:
 
@@ -1475,16 +1475,16 @@ Verificar:
 supabase migration list
 ```
 
-Se hÃ¡ migration local pendente e aprovada:
+Se ha migration local pendente e aprovada:
 
 ```bash
 supabase db push
 ```
 
-Se o schema remoto jÃ¡ tem os efeitos:
+Se o schema remoto ja tem os efeitos:
 
 - confirmar com SQL/dump;
-- sÃ³ entÃ£o considerar `supabase migration repair --status applied`.
+- so entao considerar `supabase migration repair --status applied`.
 
 ### RLS inesperada
 
@@ -1514,7 +1514,7 @@ order by c.relname;
 
 ### Coluna legada `pessoas.arquivos_historicos`
 
-Antes de qualquer remoÃ§Ã£o:
+Antes de qualquer remocao:
 
 ```sql
 select count(*) as pessoas_com_json_legado
@@ -1523,13 +1523,13 @@ where arquivos_historicos is not null
   and arquivos_historicos::text not in ('[]', 'null');
 ```
 
-NÃ£o remover sem dump, auditoria e QA visual.
+Nao remover sem dump, auditoria e QA visual.
 
 ---
 
-## 21. Sintomas rÃ¡pidos
+## 21. Sintomas rapidos
 
-### UsuÃ¡rio comum fez algo indevido
+### Usuario comum fez algo indevido
 
 Verificar:
 
@@ -1542,7 +1542,7 @@ RPC security definer
 policies antigas
 ```
 
-### Algo salva, mas nÃ£o aparece
+### Algo salva, mas nao aparece
 
 Verificar:
 
@@ -1554,13 +1554,13 @@ types/index.ts
 RLS SELECT
 ```
 
-### Algo aparece para usuÃ¡rio comum, mas deveria ser admin-only
+### Algo aparece para usuario comum, mas deveria ser admin-only
 
 Verificar:
 
 ```txt
 isAdmin
-renderizaÃ§Ã£o condicional
+renderizacao condicional
 readOnly
 ProtectedRoute
 RLS
@@ -1573,12 +1573,12 @@ Verificar:
 ```txt
 sessionStorage draft
 useUnsavedChanges
-botÃµes sem type="button"
+botoes sem type="button"
 preview de arquivos
 useEffect sobrescrevendo estado
 ```
 
-### NotificaÃ§Ã£o nÃ£o chega
+### Notificacao nao chega
 
 Verificar:
 
@@ -1596,62 +1596,62 @@ RLS/RPC
 
 P0.
 
-CorreÃ§Ã£o imediata:
+Correcao imediata:
 
 - remover do frontend;
 - rotacionar secret se foi exposto;
 - mover para Edge Function ou Supabase secrets;
-- revisar histÃ³rico do Git se houve commit.
+- revisar historico do Git se houve commit.
 
 ---
 
-## 22. CalendÃ¡rio Familiar
+## 22. Calendario Familiar
 
-Detalhes especÃ­ficos:
+Detalhes especificos:
 
 ```txt
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
 ```
 
-Arquivo provÃ¡vel:
+Arquivo provavel:
 
 ```txt
 src/app/pages/CalendarioFamiliar.tsx
 ```
 
-### CalendÃ¡rio volta a mostrar `item(ns)` ou contadores brutos
+### Calendario volta a mostrar `item(ns)` ou contadores brutos
 
 Verificar:
 
 - helper `formatEventCount`;
-- textos do calendÃ¡rio e da sidebar;
+- textos do calendario e da sidebar;
 - singular/plural esperado: **1 evento**, **2 eventos**.
 
-### Categorias nÃ£o filtram
+### Categorias nao filtram
 
 Verificar:
 
 - `activeCategories`;
 - `toggleCategory`;
 - `getCalendarCategory`;
-- botÃµes da sidebar com tÃ­tulo **Categorias**;
+- botoes da sidebar com titulo **Categorias**;
 - `aria-pressed` e estado visual ativo/inativo.
 
-### AniversÃ¡rio nÃ£o mostra idade como `Faz X anos`
+### Aniversario nao mostra idade como `Faz X anos`
 
 Verificar:
 
 - `formatCalendarEventDescription`;
-- cards do calendÃ¡rio usando primeiro nome;
+- cards do calendario usando primeiro nome;
 - lista inferior usando nome completo.
 
 ---
 
-## 23. Troubleshooting recente â€” legenda funcional, camadas visuais e painel lateral
+## 23. Troubleshooting recente  legenda funcional, camadas visuais e painel lateral
 
 ### Destaques visuais aparecem mesmo com filtro oculto
 
-Arquivos provÃ¡veis:
+Arquivos provaveis:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -1662,12 +1662,12 @@ src/app/components/FamilyTree/TreeLegend.tsx
 
 Verificar:
 
-- `edgeFilters` estÃ¡ sendo passado aos layouts;
-- `parentChildHighlight` estÃ¡ condicionado a `filiacao_sangue || filiacao_adotiva`;
-- `siblingHighlight` estÃ¡ condicionado a `edgeFilters.irmaos`;
-- pessoas/grupos ocultos nÃ£o recebem edges opcionais.
+- `edgeFilters` esta sendo passado aos layouts;
+- `parentChildHighlight` esta condicionado a `filiacao_sangue || filiacao_adotiva`;
+- `siblingHighlight` esta condicionado a `edgeFilters.irmaos`;
+- pessoas/grupos ocultos nao recebem edges opcionais.
 
-### BotÃ£o â€œDestacar pais/filhosâ€ nÃ£o tem efeito
+### Botao Destacar pais/filhos nao tem efeito
 
 Verificar:
 
@@ -1677,19 +1677,19 @@ Verificar:
 - repasse para `directFamilyDistributedLayout` e `genealogyColumnsLayout`;
 - `GenealogyFamilyConnectorNode` recebendo `parentChildHighlight`.
 
-### BotÃ£o â€œDestacar irmÃ£osâ€ nÃ£o tem efeito
+### Botao Destacar irmaos nao tem efeito
 
 Verificar:
 
 - `visualLineFilters.siblingHighlight`;
 - `edgeFilters.irmaos`;
-- relaÃ§Ãµes explÃ­citas `irmao`;
-- handles usados nas edges de irmÃ£os;
-- restriÃ§Ãµes contra linhas longas em Genealogia/VisÃ£o Completa.
+- relacoes explicitas `irmao`;
+- handles usados nas edges de irmaos;
+- restricoes contra linhas longas em Genealogia/Visao Completa.
 
-### InformaÃ§Ãµes voltou para dentro da toggle
+### Informacoes voltou para dentro da toggle
 
-Arquivo provÃ¡vel:
+Arquivo provavel:
 
 ```txt
 src/app/pages/Home.tsx
@@ -1698,13 +1698,13 @@ src/app/pages/Home.tsx
 Esperado:
 
 - `SidebarPanelTabs` mostra apenas **Filtros** e **Legendas**;
-- **InformaÃ§Ãµes** abre por botÃ£o externo;
-- botÃ£o usa `Printer` e texto **AÃ§Ãµes** no desktop;
+- **Informacoes** abre por botao externo;
+- botao usa `Printer` e texto **Acoes** no desktop;
 - `activeSidebarPanel = 'info'` continua renderizando `SidebarInfoPanel`.
 
 ### Zoom voltou para a esquerda
 
-Arquivo provÃ¡vel:
+Arquivo provavel:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -1712,6 +1712,6 @@ src/app/components/FamilyTree/FamilyTree.tsx
 
 Esperado:
 
-- botÃµes `+` e `-` no canto superior direito;
+- botoes `+` e `-` no canto superior direito;
 - wrapper visual com `right-4 top-4`;
-- nÃ£o alterar minZoom, maxZoom, viewport, bounds ou normalizaÃ§Ã£o.
+- nao alterar minZoom, maxZoom, viewport, bounds ou normalizacao.

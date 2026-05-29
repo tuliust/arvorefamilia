@@ -1,21 +1,21 @@
-﻿# QA Final MVP
+# QA Final MVP
 
 > Local recomendado: `docs/historico/QA_FINAL_MVP.md`
-> Tipo: checklist histÃ³rico e operacional de validaÃ§Ã£o final do MVP.
+> Tipo: checklist historico e operacional de validacao final do MVP.
 
 ---
 
 ## 1. Objetivo
 
-Este documento consolida o checklist de QA final do MVP do projeto **Ãrvore FamÃ­lia**.
+Este documento consolida o checklist de QA final do MVP do projeto **Arvore Familia**.
 
 Use para:
 
 - validar fechamento de MVP;
 - repetir o roteiro antes de deploy;
-- documentar critÃ©rios de bloqueio;
-- registrar validaÃ§Ã£o tÃ©cnica e visual;
-- evitar que o `PLANO_PROXIMOS_PASSOS.md` acumule histÃ³rico granular de QA.
+- documentar criterios de bloqueio;
+- registrar validacao tecnica e visual;
+- evitar que o `PLANO_PROXIMOS_PASSOS.md` acumule historico granular de QA.
 
 ---
 
@@ -23,73 +23,73 @@ Use para:
 
 O MVP considera como escopo:
 
-- Ã¡rvore familiar funcional;
+- arvore familiar funcional;
 - perfis de pessoa;
-- administraÃ§Ã£o de pessoas;
-- administraÃ§Ã£o de relacionamentos;
-- solicitaÃ§Ãµes de vÃ­nculos;
-- arquivos histÃ³ricos;
-- fÃ³rum bÃ¡sico;
-- notificaÃ§Ãµes internas/e-mail;
-- timeline bÃ¡sica;
+- administracao de pessoas;
+- administracao de relacionamentos;
+- solicitacoes de vinculos;
+- arquivos historicos;
+- forum basico;
+- notificacoes internas/e-mail;
+- timeline basica;
 - insights persistidos;
-- botÃ£o WhatsApp no frontend;
+- botao WhatsApp no frontend;
 - grau de parentesco no escopo atual;
 - favoritos de pessoa;
-- pÃ¡gina `/meus-favoritos`;
-- exportaÃ§Ã£o de Ã¡rea visÃ­vel da Ã¡rvore;
-- legenda visual da Ã¡rvore;
-- categoria histÃ³rica em arquivos histÃ³ricos;
-- `/minha-arvore` com dados conjugais salvos pelo botÃ£o geral;
+- pagina `/meus-favoritos`;
+- exportacao de area visivel da arvore;
+- legenda visual da arvore;
+- categoria historica em arquivos historicos;
+- `/minha-arvore` com dados conjugais salvos pelo botao geral;
 - rotas dedicadas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - headers internos padronizados;
 - responsividade mobile/tablet.
 
 ---
 
-## 3. CritÃ©rios de bloqueio
+## 3. Criterios de bloqueio
 
-### P0 â€” bloqueia lanÃ§amento
+### P0  bloqueia lancamento
 
 - build quebrado;
 - login quebrado;
-- usuÃ¡rio comum acessa admin;
-- admin nÃ£o acessa admin;
-- Ã¡rvore nÃ£o carrega;
-- dados de pessoas nÃ£o salvam;
-- relacionamento real Ã© alterado indevidamente por usuÃ¡rio comum;
-- arquivos histÃ³ricos nÃ£o salvam apÃ³s migration necessÃ¡ria;
-- erro de RLS expondo dado sensÃ­vel;
+- usuario comum acessa admin;
+- admin nao acessa admin;
+- arvore nao carrega;
+- dados de pessoas nao salvam;
+- relacionamento real e alterado indevidamente por usuario comum;
+- arquivos historicos nao salvam apos migration necessaria;
+- erro de RLS expondo dado sensivel;
 - deploy exige secret versionado;
-- migration obrigatÃ³ria ausente no remoto.
+- migration obrigatoria ausente no remoto.
 
-### P1 â€” avaliar bloqueio
+### P1  avaliar bloqueio
 
-- exportaÃ§Ã£o PNG/PDF falha em fluxo principal;
-- notificaÃ§Ãµes principais quebram;
-- favoritos nÃ£o funcionam;
-- perfil pÃºblico mostra dado privado;
+- exportacao PNG/PDF falha em fluxo principal;
+- notificacoes principais quebram;
+- favoritos nao funcionam;
+- perfil publico mostra dado privado;
 - mobile tem overflow horizontal global em rota principal;
-- admin essencial fica inutilizÃ¡vel em desktop;
-- calendÃ¡rio familiar quebra ao abrir;
-- fÃ³rum bÃ¡sico nÃ£o abre.
+- admin essencial fica inutilizavel em desktop;
+- calendario familiar quebra ao abrir;
+- forum basico nao abre.
 
-### P2 â€” nÃ£o bloqueia se documentado
+### P2  nao bloqueia se documentado
 
 - refinamento visual menor;
-- texto/microcopy nÃ£o crÃ­tico;
-- melhoria pÃ³s-MVP;
-- exportaÃ§Ã£o da Ã¡rvore completa;
+- texto/microcopy nao critico;
+- melhoria pos-MVP;
+- exportacao da arvore completa;
 - push real;
 - WhatsApp real por provider;
-- timeline avanÃ§ada;
+- timeline avancada;
 - favoritos expandidos;
 - mapa familiar;
-- home dinÃ¢mica.
+- home dinamica.
 
 ---
 
-## 4. ValidaÃ§Ã£o tÃ©cnica obrigatÃ³ria
+## 4. Validacao tecnica obrigatoria
 
 Antes de fechar MVP:
 
@@ -102,23 +102,23 @@ git diff --check
 supabase migration list
 ```
 
-CritÃ©rios:
+Criterios:
 
 - build aprovado;
-- testes unitÃ¡rios aprovados;
+- testes unitarios aprovados;
 - testes e2e aprovados;
 - `git diff --check` sem erros;
 - migrations locais/remotas alinhadas;
-- worktree limpo ou com alteraÃ§Ãµes esperadas;
+- worktree limpo ou com alteracoes esperadas;
 - nenhum secret versionado;
 - nenhum dump versionado;
-- nenhum backup temporÃ¡rio versionado.
+- nenhum backup temporario versionado.
 
 ---
 
-## 5. QA visual obrigatÃ³rio
+## 5. QA visual obrigatorio
 
-Larguras obrigatÃ³rias:
+Larguras obrigatorias:
 
 ```txt
 320px
@@ -129,7 +129,7 @@ Larguras obrigatÃ³rias:
 desktop
 ```
 
-CritÃ©rio global:
+Criterio global:
 
 ```js
 document.documentElement.scrollWidth > window.innerWidth
@@ -141,7 +141,7 @@ Resultado esperado:
 false
 ```
 
-Rotas principais para verificaÃ§Ã£o visual:
+Rotas principais para verificacao visual:
 
 ```txt
 /
@@ -176,22 +176,22 @@ Rotas principais para verificaÃ§Ã£o visual:
 
 Validar:
 
-- usuÃ¡rio deslogado acessa `/entrar`;
-- usuÃ¡rio deslogado nÃ£o acessa `/minha-arvore`;
-- usuÃ¡rio deslogado nÃ£o acessa `/admin`;
-- usuÃ¡rio comum acessa `/meus-dados`;
-- usuÃ¡rio comum acessa `/notificacoes`;
-- usuÃ¡rio comum acessa `/forum`;
-- usuÃ¡rio comum nÃ£o acessa `/admin`;
+- usuario deslogado acessa `/entrar`;
+- usuario deslogado nao acessa `/minha-arvore`;
+- usuario deslogado nao acessa `/admin`;
+- usuario comum acessa `/meus-dados`;
+- usuario comum acessa `/notificacoes`;
+- usuario comum acessa `/forum`;
+- usuario comum nao acessa `/admin`;
 - admin acessa `/admin`;
 - admin acessa `/admin/pessoas`;
 - `/` redireciona para `/minha-arvore`;
-- `/?pessoa=ID` redireciona para `/minha-arvore?pessoa=ID`;
-- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` preserva `?pessoa=ID`.
+- `/pessoa=ID` redireciona para `/minha-arvorepessoa=ID`;
+- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` preserva `pessoa=ID`.
 
 ---
 
-## 7. QA da Ã¡rvore
+## 7. QA da arvore
 
 Validar em:
 
@@ -203,21 +203,21 @@ Validar em:
 
 Checklist:
 
-- Ã¡rvore carrega;
+- arvore carrega;
 - pessoa central aparece;
 - zoom `+` funciona;
 - zoom `-` funciona;
 - pan/arraste funciona;
 - clique em pessoa abre detalhe/perfil conforme esperado;
 - anel conjugal abre modal;
-- tÃ­tulo fixo aparece uma Ãºnica vez;
-- nÃ£o hÃ¡ tÃ­tulo duplicado dentro do layout;
-- Minha Ãrvore nÃ£o abre minÃºscula;
+- titulo fixo aparece uma unica vez;
+- nao ha titulo duplicado dentro do layout;
+- Minha Arvore nao abre minuscula;
 - Genealogia usa zoom por largura;
-- VisÃ£o Completa usa zoom por largura;
-- Genealogia/VisÃ£o Completa permitem pan vertical;
+- Visao Completa usa zoom por largura;
+- Genealogia/Visao Completa permitem pan vertical;
 - painel lateral abre e recolhe;
-- nÃ£o hÃ¡ botÃ£o duplicado de recolher painel.
+- nao ha botao duplicado de recolher painel.
 
 ---
 
@@ -229,20 +229,20 @@ Validar aba **Legendas**.
 
 - Conjugal oculta/exibe linhas conjugais;
 - Pais/filhos oculta/exibe linhas parentais;
-- IrmÃ£os oculta/exibe linhas/trechos de irmÃ£os quando suportado;
-- Todas liga/desliga linhas controlÃ¡veis.
+- Irmaos oculta/exibe linhas/trechos de irmaos quando suportado;
+- Todas liga/desliga linhas controlaveis.
 
 ### Destacar
 
-- CÃ´njuges destaca apenas linhas conjugais visÃ­veis;
-- Pais/Filhos destaca apenas linhas parentais visÃ­veis;
-- IrmÃ£os destaca trechos de irmÃ£os visÃ­veis;
-- Todas destaca linhas visÃ­veis.
+- Conjuges destaca apenas linhas conjugais visiveis;
+- Pais/Filhos destaca apenas linhas parentais visiveis;
+- Irmaos destaca trechos de irmaos visiveis;
+- Todas destaca linhas visiveis.
 
-Regra crÃ­tica:
+Regra critica:
 
 ```txt
-Destaque nÃ£o recria linha oculta.
+Destaque nao recria linha oculta.
 ```
 
 ### Filtros
@@ -251,28 +251,28 @@ Destaque nÃ£o recria linha oculta.
 - Falecidos funciona;
 - Pets funciona;
 - filtros de grupos funcionam;
-- contadores nÃ£o mudam por destaque;
-- cards nÃ£o somem por aÃ§Ã£o de linha.
+- contadores nao mudam por destaque;
+- cards nao somem por acao de linha.
 
 ---
 
-## 9. QA de exportaÃ§Ã£o da Ã¡rvore
+## 9. QA de exportacao da arvore
 
 Validar:
 
-- abrir AÃ§Ãµes;
-- iniciar seleÃ§Ã£o de Ã¡rea;
-- cancelar por botÃ£o;
+- abrir Acoes;
+- iniciar selecao de area;
+- cancelar por botao;
 - iniciar novamente;
 - cancelar por `Esc`;
-- selecionar Ã¡rea vÃ¡lida;
+- selecionar area valida;
 - exportar PNG;
 - exportar PDF;
 - imprimir;
-- seleÃ§Ã£o pequena demais mostra erro/impede aÃ§Ã£o;
-- pan/zoom bloqueiam durante seleÃ§Ã£o;
-- pan/zoom voltam apÃ³s cancelar/concluir;
-- controles, legenda, menus e overlay nÃ£o aparecem na exportaÃ§Ã£o.
+- selecao pequena demais mostra erro/impede acao;
+- pan/zoom bloqueiam durante selecao;
+- pan/zoom voltam apos cancelar/concluir;
+- controles, legenda, menus e overlay nao aparecem na exportacao.
 
 Views:
 
@@ -300,58 +300,58 @@ Validar:
 - salvar minibio;
 - salvar curiosidades;
 - salvar telefone;
-- salvar endereÃ§o;
+- salvar endereco;
 - salvar privacidade de telefone;
 - salvar privacidade de data de nascimento;
 - salvar redes sociais;
-- ver perfil pÃºblico/interno;
-- cards vazios de insights nÃ£o aparecem publicamente;
-- texto `ConteÃºdo ainda nÃ£o gerado.` nÃ£o aparece publicamente.
+- ver perfil publico/interno;
+- cards vazios de insights nao aparecem publicamente;
+- texto `Conteudo ainda nao gerado.` nao aparece publicamente.
 
 ---
 
-## 11. QA de vÃ­nculos e permissÃµes de pessoa
+## 11. QA de vinculos e permissoes de pessoa
 
 Validar:
 
 - primeiro acesso;
-- vÃ­nculo usuÃ¡rio-pessoa;
-- usuÃ¡rio edita prÃ³prios dados se permitido;
-- usuÃ¡rio sem permissÃ£o nÃ£o edita pessoa indevida;
+- vinculo usuario-pessoa;
+- usuario edita proprios dados se permitido;
+- usuario sem permissao nao edita pessoa indevida;
 - admin abre `/admin/pessoas/:id/editar`;
-- card de usuÃ¡rios vinculÃ¡veis carrega;
-- usuÃ¡rios jÃ¡ vinculados nÃ£o aparecem;
-- botÃ£o Recarregar funciona;
-- erro de schema cache da RPC nÃ£o aparece;
-- usuÃ¡rio comum nÃ£o cria relacionamento real diretamente;
-- solicitaÃ§Ã£o de vÃ­nculo aparece no admin;
-- aprovaÃ§Ã£o aplica alteraÃ§Ã£o real;
-- rejeiÃ§Ã£o nÃ£o altera dado real.
+- card de usuarios vinculaveis carrega;
+- usuarios ja vinculados nao aparecem;
+- botao Recarregar funciona;
+- erro de schema cache da RPC nao aparece;
+- usuario comum nao cria relacionamento real diretamente;
+- solicitacao de vinculo aparece no admin;
+- aprovacao aplica alteracao real;
+- rejeicao nao altera dado real.
 
 ---
 
-## 12. QA de arquivos histÃ³ricos e Storage
+## 12. QA de arquivos historicos e Storage
 
 Validar:
 
 - upload de imagem;
 - upload de PDF;
 - preview de imagem;
-- card/Ã­cone de PDF;
-- mensagem verde `âœ“ Arquivo carregado`;
-- input nativo oculto apÃ³s upload;
-- campos e botÃµes Cancelar/Adicionar ocultos apÃ³s upload;
-- botÃ£o Adicionar Arquivo reabre campos;
-- tÃ­tulo salva;
-- descriÃ§Ã£o salva;
+- card/icone de PDF;
+- mensagem verde `a Arquivo carregado`;
+- input nativo oculto apos upload;
+- campos e botoes Cancelar/Adicionar ocultos apos upload;
+- botao Adicionar Arquivo reabre campos;
+- titulo salva;
+- descricao salva;
 - ano salva;
-- categoria histÃ³rica salva;
+- categoria historica salva;
 - download funciona;
-- remover arquivo funciona conforme permissÃ£o;
+- remover arquivo funciona conforme permissao;
 - arquivo de relacionamento usa `relacionamento_id`;
-- base64 legado continua compatÃ­vel.
+- base64 legado continua compativel.
 
-PrÃ©-requisito:
+Pre-requisito:
 
 ```txt
 20260522121000_add_historical_file_event_category.sql
@@ -359,43 +359,43 @@ PrÃ©-requisito:
 
 ---
 
-## 13. QA de notificaÃ§Ãµes
+## 13. QA de notificacoes
 
 Validar:
 
 - `/notificacoes` abre;
 - lista em cards aparece;
-- estado vazio aparece quando aplicÃ¡vel;
+- estado vazio aparece quando aplicavel;
 - marcar como lida;
 - marcar todas como lidas;
-- remover notificaÃ§Ã£o;
+- remover notificacao;
 - `/ajustar-notificacoes` abre;
-- toggles de preferÃªncia salvam;
+- toggles de preferencia salvam;
 - `/admin/notificacoes` abre;
 - rotina manual funciona em ambiente apropriado;
-- e-mail real sÃ³ funciona se provider/secrets estiverem configurados.
+- e-mail real so funciona se provider/secrets estiverem configurados.
 
 Regra:
 
 ```txt
-Cron automÃ¡tico depende de configuraÃ§Ã£o segura externa.
+Cron automatico depende de configuracao segura externa.
 ```
 
 ---
 
-## 14. QA de calendÃ¡rio familiar
+## 14. QA de calendario familiar
 
 Validar:
 
 - abrir `/calendario-familiar`;
-- trocar mÃªs;
-- voltar mÃªs;
+- trocar mes;
+- voltar mes;
 - clicar em categorias da sidebar;
 - contadores mostram `1 evento` e `N eventos`;
-- aniversÃ¡rio no grid usa primeiro nome;
+- aniversario no grid usa primeiro nome;
 - lista de aniversariantes pode mostrar nome completo;
-- descriÃ§Ã£o usa `Faz X anos`;
-- nÃ£o aparece `item(ns)`;
+- descricao usa `Faz X anos`;
+- nao aparece `item(ns)`;
 - desktop e mobile sem overflow global.
 
 Se Google Agenda foi afetado:
@@ -403,22 +403,22 @@ Se Google Agenda foi afetado:
 - conectar;
 - sincronizar;
 - desconectar;
-- validar erros de token/permissÃ£o.
+- validar erros de token/permissao.
 
 ---
 
-## 15. QA de fÃ³rum
+## 15. QA de forum
 
 Validar:
 
 - abrir `/forum`;
-- criar tÃ³pico;
-- abrir tÃ³pico;
-- editar tÃ³pico;
-- responder/comentar se aplicÃ¡vel;
+- criar topico;
+- abrir topico;
+- editar topico;
+- responder/comentar se aplicavel;
 - texto longo quebra linha;
-- mobile nÃ£o quebra layout;
-- aÃ§Ãµes de moderaÃ§Ã£o respeitam permissÃ£o.
+- mobile nao quebra layout;
+- acoes de moderacao respeitam permissao.
 
 ---
 
@@ -432,7 +432,7 @@ Validar:
 - buscar favorito;
 - filtrar favorito;
 - abrir pessoa favorita;
-- isolamento por usuÃ¡rio.
+- isolamento por usuario.
 
 ---
 
@@ -441,17 +441,17 @@ Validar:
 Timeline:
 
 - eventos aparecem no perfil;
-- nascimento/falecimento aparecem quando hÃ¡ dados;
-- relacionamentos/filhos/arquivos aparecem quando aplicÃ¡vel;
+- nascimento/falecimento aparecem quando ha dados;
+- relacionamentos/filhos/arquivos aparecem quando aplicavel;
 - eventos pessoais aparecem;
-- estado vazio Ã© adequado.
+- estado vazio e adequado.
 
 Insights:
 
-- perfil lÃª conteÃºdo persistido;
+- perfil le conteudo persistido;
 - admin gera/regenera;
-- erro aparece no admin quando aplicÃ¡vel;
-- perfil pÃºblico nÃ£o mostra cards vazios;
+- erro aparece no admin quando aplicavel;
+- perfil publico nao mostra cards vazios;
 - secrets de IA ficam server-side.
 
 ---
@@ -466,25 +466,25 @@ Validar:
 - editar pessoa;
 - relacionamentos;
 - novo relacionamento;
-- solicitaÃ§Ãµes de vÃ­nculos;
-- notificaÃ§Ãµes admin;
+- solicitacoes de vinculos;
+- notificacoes admin;
 - integridade;
 - atividades;
-- diagnÃ³stico;
-- importaÃ§Ã£o;
+- diagnostico;
+- importacao;
 - migrar dados.
 
 Regra:
 
 ```txt
-/admin/migrar-dados Ã© destrutiva e deve permanecer bloqueada em produÃ§Ã£o salvo variÃ¡vel explÃ­cita e confirmaÃ§Ã£o textual.
+/admin/migrar-dados e destrutiva e deve permanecer bloqueada em producao salvo variavel explicita e confirmacao textual.
 ```
 
 ---
 
-## 19. QA pÃ³s-migration
+## 19. QA pos-migration
 
-ApÃ³s aplicar migration:
+Apos aplicar migration:
 
 ```bash
 supabase migration list
@@ -498,10 +498,10 @@ Validar manualmente a tela afetada.
 
 Exemplos:
 
-- `categoria_evento` em arquivos histÃ³ricos;
+- `categoria_evento` em arquivos historicos;
 - RPC `admin_list_profiles_for_linking`;
 - `site_visual_settings`;
-- tabelas de notificaÃ§Ãµes;
+- tabelas de notificacoes;
 - tabelas de eventos pessoais.
 
 ---
@@ -515,36 +515,36 @@ Para considerar MVP pronto:
 - build/test/e2e aprovados;
 - QA visual principal aprovado;
 - migrations alinhadas;
-- documentaÃ§Ã£o canÃ´nica atualizada;
-- pÃ³s-MVP separado do escopo de lanÃ§amento;
+- documentacao canonica atualizada;
+- pos-MVP separado do escopo de lancamento;
 - deploy preparado.
 
 ---
 
-## 21. PÃ³s-MVP nÃ£o bloqueante
+## 21. Pos-MVP nao bloqueante
 
-NÃ£o bloqueia MVP:
+Nao bloqueia MVP:
 
-- exportar Ã¡rvore completa;
+- exportar arvore completa;
 - push real;
 - WhatsApp real por provider;
-- fila/retry avanÃ§ado;
+- fila/retry avancado;
 - upload por evento;
 - privacidade por evento;
 - PDF da timeline;
 - IA consultiva;
 - comparador de perfis;
 - mapa familiar;
-- home dinÃ¢mica;
-- legenda configurÃ¡vel;
+- home dinamica;
+- legenda configuravel;
 - favoritos para outras entidades;
 - Google Agenda com QA operacional ampliado.
 
 ---
 
-## 22. HistÃ³rico documental
+## 22. Historico documental
 
-Este arquivo deve receber checklists e resultados de QA final. O plano de prÃ³ximos passos deve continuar focado em decisÃµes e pendÃªncias, nÃ£o em logs longos de validaÃ§Ã£o.
+Este arquivo deve receber checklists e resultados de QA final. O plano de proximos passos deve continuar focado em decisoes e pendencias, nao em logs longos de validacao.
 
 Se este documento ficar muito grande, separar por data:
 

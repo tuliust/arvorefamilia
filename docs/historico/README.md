@@ -1,38 +1,38 @@
-﻿# HistÃ³rico, diagnÃ³sticos e QA
+# Historico, diagnosticos e QA
 
 > Local recomendado: `docs/historico/README.md`
-> Tipo: Ã­ndice da pasta histÃ³rica.
+> Tipo: indice da pasta historica.
 
 ---
 
 ## 1. Objetivo
 
-Esta pasta preserva documentos de fase, diagnÃ³sticos, registros de QA e documentaÃ§Ã£o antiga para rastreabilidade do projeto **Ãrvore FamÃ­lia**.
+Esta pasta preserva documentos de fase, diagnosticos, registros de QA e documentacao antiga para rastreabilidade do projeto **Arvore Familia**.
 
-O estado canÃ´nico atual do projeto fica nos guias oficiais na raiz de `docs/`.
+O estado canonico atual do projeto fica nos guias oficiais na raiz de `docs/`.
 
 Use os arquivos desta pasta como:
 
-- histÃ³rico do processo;
-- registro de decisÃµes anteriores;
+- historico do processo;
+- registro de decisoes anteriores;
 - rastreabilidade de QA;
-- diagnÃ³stico pontual;
-- referÃªncia para entender evoluÃ§Ã£o de uma frente.
+- diagnostico pontual;
+- referencia para entender evolucao de uma frente.
 
-NÃ£o use os arquivos desta pasta como fonte principal para novas decisÃµes sem conferir os documentos canÃ´nicos atuais.
+Nao use os arquivos desta pasta como fonte principal para novas decisoes sem conferir os documentos canonicos atuais.
 
 ---
 
 ## 2. Regra principal
 
 ```txt
-Documentos em docs/historico/ sÃ£o histÃ³ricos.
-Eles nÃ£o substituem os guias oficiais em docs/.
+Documentos em docs/historico/ sao historicos.
+Eles nao substituem os guias oficiais em docs/.
 ```
 
-Se houver divergÃªncia entre documento histÃ³rico e guia atual, prevalece a documentaÃ§Ã£o canÃ´nica.
+Se houver divergencia entre documento historico e guia atual, prevalece a documentacao canonica.
 
-Documentos canÃ´nicos principais:
+Documentos canonicos principais:
 
 ```txt
 docs/README.md
@@ -51,16 +51,16 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 
 | Arquivo/pasta | Tipo | Uso |
 |---|---|---|
-| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | DiagnÃ³stico histÃ³rico | Registro da anÃ¡lise da frente de exportaÃ§Ã£o da Ã¡rvore. |
-| `QA_7_6_EXPORTACAO_ARVORE.md` | QA histÃ³rico | Registro de validaÃ§Ã£o da exportaÃ§Ã£o da Ã¡rvore. |
-| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | DiagnÃ³stico histÃ³rico | Registro de uma auditoria anterior da documentaÃ§Ã£o. |
-| `RESPONSIVIDADE_MOBILE_TABLET.md` | HistÃ³rico/checklist | Registro da frente de responsividade mobile/tablet. |
-| `QA_FINAL_MVP.md` | QA final | Checklist e rastreabilidade da validaÃ§Ã£o final do MVP. |
-| `documentacao-antiga/` | Arquivo morto organizado | Documentos antigos movidos da raiz do repositÃ³rio. |
+| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Diagnostico historico | Registro da analise da frente de exportacao da arvore. |
+| `QA_7_6_EXPORTACAO_ARVORE.md` | QA historico | Registro de validacao da exportacao da arvore. |
+| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | Diagnostico historico | Registro de uma auditoria anterior da documentacao. |
+| `RESPONSIVIDADE_MOBILE_TABLET.md` | Historico/checklist | Registro da frente de responsividade mobile/tablet. |
+| `QA_FINAL_MVP.md` | QA final | Checklist e rastreabilidade da validacao final do MVP. |
+| `documentacao-antiga/` | Arquivo morto organizado | Documentos antigos movidos da raiz do repositorio. |
 
 ---
 
-## 4. DocumentaÃ§Ã£o antiga
+## 4. Documentacao antiga
 
 A pasta:
 
@@ -68,9 +68,9 @@ A pasta:
 docs/historico/documentacao-antiga/
 ```
 
-deve conter documentos antigos que jÃ¡ nÃ£o sÃ£o a fonte principal do projeto.
+deve conter documentos antigos que ja nao sao a fonte principal do projeto.
 
-Exemplos possÃ­veis:
+Exemplos possiveis:
 
 ```txt
 INDICE-DOCUMENTACAO.md
@@ -85,27 +85,27 @@ ERROS-E-SOLUCOES.md
 
 Regras:
 
-- nÃ£o apagar sem revisÃ£o;
-- nÃ£o usar como guia atual;
-- nÃ£o misturar com documentos canÃ´nicos;
+- nao apagar sem revisao;
+- nao usar como guia atual;
+- nao misturar com documentos canonicos;
 - manter apenas para rastreabilidade;
-- se houver informaÃ§Ã£o ainda Ãºtil, migrar para o documento canÃ´nico adequado e deixar o original como histÃ³rico.
+- se houver informacao ainda util, migrar para o documento canonico adequado e deixar o original como historico.
 
 ---
 
 ## 5. Como usar esta pasta
 
-### Para investigar uma decisÃ£o antiga
+### Para investigar uma decisao antiga
 
-Consultar o documento histÃ³rico correspondente e depois confirmar o estado atual nos guias canÃ´nicos.
+Consultar o documento historico correspondente e depois confirmar o estado atual nos guias canonicos.
 
 Exemplo:
 
 ```txt
 docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
-  â†“
+  
 docs/funcionalidades/EXPORTACAO_ARVORE.md
-  â†“
+  
 docs/GUIA_CORRECAO_ERROS.md
 ```
 
@@ -117,7 +117,7 @@ Usar:
 docs/historico/QA_FINAL_MVP.md
 ```
 
-Mas confirmar pendÃªncias atuais em:
+Mas confirmar pendencias atuais em:
 
 ```txt
 docs/PLANO_PROXIMOS_PASSOS.md
@@ -131,7 +131,7 @@ Usar:
 docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
 ```
 
-Mas decisÃµes atuais de layout devem ser consultadas em:
+Mas decisoes atuais de layout devem ser consultadas em:
 
 ```txt
 docs/GUIA_UX_LAYOUT.md
@@ -139,33 +139,33 @@ docs/GUIA_UX_LAYOUT.md
 
 ---
 
-## 6. Quando atualizar documentos histÃ³ricos
+## 6. Quando atualizar documentos historicos
 
-Atualize documentos histÃ³ricos apenas quando:
+Atualize documentos historicos apenas quando:
 
-- for necessÃ¡rio corrigir o Ã­ndice;
-- for necessÃ¡rio marcar explicitamente que o documento Ã© histÃ³rico;
-- um novo checklist/QA histÃ³rico for adicionado;
-- um diagnÃ³stico novo precisar ser preservado;
+- for necessario corrigir o indice;
+- for necessario marcar explicitamente que o documento e historico;
+- um novo checklist/QA historico for adicionado;
+- um diagnostico novo precisar ser preservado;
 - algum documento antigo for movido para esta pasta.
 
-NÃ£o atualizar documentos histÃ³ricos para refletir o estado atual do produto. Para isso, atualize os guias canÃ´nicos.
+Nao atualizar documentos historicos para refletir o estado atual do produto. Para isso, atualize os guias canonicos.
 
 ---
 
 ## 7. Aviso recomendado em documentos antigos
 
-Quando um documento histÃ³rico puder causar confusÃ£o, adicionar no topo:
+Quando um documento historico puder causar confusao, adicionar no topo:
 
 ```md
-> Documento histÃ³rico. NÃ£o substitui a documentaÃ§Ã£o canÃ´nica atual em `docs/`.
+> Documento historico. Nao substitui a documentacao canonica atual em `docs/`.
 ```
 
-Esse aviso Ã© especialmente Ãºtil para documentos antigos sobre:
+Esse aviso e especialmente util para documentos antigos sobre:
 
 - banco;
 - migrations;
-- erros e soluÃ§Ãµes;
+- erros e solucoes;
 - arquitetura;
 - rotas;
 - scripts SQL;
@@ -173,54 +173,54 @@ Esse aviso Ã© especialmente Ãºtil para documentos antigos sobre:
 
 ---
 
-## 8. Onde documentar novos conteÃºdos
+## 8. Onde documentar novos conteudos
 
-| ConteÃºdo novo | Destino correto |
+| Conteudo novo | Destino correto |
 |---|---|
 | Estado atual implementado | `docs/GUIA_IMPLEMENTACOES.md` |
-| Sintoma e correÃ§Ã£o | `docs/GUIA_CORRECAO_ERROS.md` |
+| Sintoma e correcao | `docs/GUIA_CORRECAO_ERROS.md` |
 | UX/layout atual | `docs/GUIA_UX_LAYOUT.md` |
-| Componente reutilizÃ¡vel | `docs/GUIA_COMPONENTES.md` |
-| PendÃªncia ou pÃ³s-MVP | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| Componente reutilizavel | `docs/GUIA_COMPONENTES.md` |
+| Pendencia ou pos-MVP | `docs/PLANO_PROXIMOS_PASSOS.md` |
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 | Migrations/Supabase | `docs/operacao/MIGRATIONS_SUPABASE.md` |
 | Storage | `docs/operacao/STORAGE_MAINTENANCE.md` |
-| QA final/histÃ³rico | `docs/historico/QA_FINAL_MVP.md` |
-| DiagnÃ³stico pontual antigo | `docs/historico/` |
+| QA final/historico | `docs/historico/QA_FINAL_MVP.md` |
+| Diagnostico pontual antigo | `docs/historico/` |
 | Documento obsoleto da raiz | `docs/historico/documentacao-antiga/` |
 
 ---
 
-## 9. Checklist de manutenÃ§Ã£o desta pasta
+## 9. Checklist de manutencao desta pasta
 
-Ao reorganizar documentaÃ§Ã£o:
+Ao reorganizar documentacao:
 
-- [ ] confirmar que `docs/README.md` lista os documentos histÃ³ricos principais;
-- [ ] confirmar que este README lista novos histÃ³ricos relevantes;
-- [ ] confirmar que documentos antigos nÃ£o aparecem como guias oficiais;
-- [ ] confirmar que `documentacao-antiga/` nÃ£o contÃ©m backups temporÃ¡rios;
+- [ ] confirmar que `docs/README.md` lista os documentos historicos principais;
+- [ ] confirmar que este README lista novos historicos relevantes;
+- [ ] confirmar que documentos antigos nao aparecem como guias oficiais;
+- [ ] confirmar que `documentacao-antiga/` nao contem backups temporarios;
 - [ ] remover pastas `backups-reorganizacao-*` se tiverem sido commitadas por engano;
-- [ ] preservar documentos histÃ³ricos Ãºteis;
-- [ ] migrar conteÃºdo ainda atual para documentos canÃ´nicos.
+- [ ] preservar documentos historicos uteis;
+- [ ] migrar conteudo ainda atual para documentos canonicos.
 
 ---
 
 ## 10. O que evitar
 
-NÃ£o fazer:
+Nao fazer:
 
-- transformar diagnÃ³stico antigo em guia oficial;
-- duplicar conteÃºdo canÃ´nico dentro de documento histÃ³rico;
-- atualizar histÃ³rico antigo como se fosse documentaÃ§Ã£o viva;
-- manter backups temporÃ¡rios dentro da pasta;
-- deixar documento antigo de banco sem aviso histÃ³rico;
+- transformar diagnostico antigo em guia oficial;
+- duplicar conteudo canonico dentro de documento historico;
+- atualizar historico antigo como se fosse documentacao viva;
+- manter backups temporarios dentro da pasta;
+- deixar documento antigo de banco sem aviso historico;
 - usar `MIGRATION-GUIDE.md` antigo no lugar de `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
 ---
 
 ## 11. Resumo
 
-A pasta `docs/historico/` existe para preservar memÃ³ria tÃ©cnica e operacional do projeto.
+A pasta `docs/historico/` existe para preservar memoria tecnica e operacional do projeto.
 
 A fonte atual de verdade deve continuar em:
 

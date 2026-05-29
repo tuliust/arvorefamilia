@@ -1,20 +1,20 @@
-﻿# Migrations Supabase
+# Migrations Supabase
 
 > Local recomendado: `docs/operacao/MIGRATIONS_SUPABASE.md`
-> Tipo: documentaÃ§Ã£o operacional canÃ´nica.
+> Tipo: documentacao operacional canonica.
 
 ---
 
 ## 1. Objetivo
 
-Este documento define o fluxo seguro para trabalhar com migrations, schema Supabase, scripts SQL legados e alteraÃ§Ãµes de banco no projeto **Ãrvore FamÃ­lia**.
+Este documento define o fluxo seguro para trabalhar com migrations, schema Supabase, scripts SQL legados e alteracoes de banco no projeto **Arvore Familia**.
 
 Use este arquivo antes de:
 
 - criar migration;
 - aplicar migration local/remota;
 - rodar `supabase db push`;
-- revisar divergÃªncia entre local e remoto;
+- revisar divergencia entre local e remoto;
 - lidar com schema cache;
 - decidir se um SQL solto deve ser mantido, movido ou removido;
 - auditar objetos legados.
@@ -24,19 +24,19 @@ Use este arquivo antes de:
 ## 2. Regra principal
 
 ```txt
-supabase/migrations Ã© a fonte da verdade do schema.
+supabase/migrations e a fonte da verdade do schema.
 ```
 
 Scripts SQL soltos podem existir como:
 
-- histÃ³rico;
-- diagnÃ³stico;
-- referÃªncia;
-- operaÃ§Ã£o pontual;
+- historico;
+- diagnostico;
+- referencia;
+- operacao pontual;
 - dry-run;
-- correÃ§Ã£o manual documentada.
+- correcao manual documentada.
 
-Eles **nÃ£o devem substituir migrations** em novos ambientes.
+Eles **nao devem substituir migrations** em novos ambientes.
 
 ---
 
@@ -53,13 +53,13 @@ DEPLOYMENT.md
 README.md
 ```
 
-Scripts SQL soltos antigos, quando existirem, devem ser tratados como referÃªncia histÃ³rica ou operacional, nÃ£o como schema principal.
+Scripts SQL soltos antigos, quando existirem, devem ser tratados como referencia historica ou operacional, nao como schema principal.
 
 ---
 
 ## 4. Checklist antes de alterar banco
 
-Antes de qualquer alteraÃ§Ã£o de schema:
+Antes de qualquer alteracao de schema:
 
 ```bash
 git status
@@ -69,22 +69,22 @@ git diff --check
 supabase migration list
 ```
 
-Perguntas obrigatÃ³rias:
+Perguntas obrigatorias:
 
-1. A alteraÃ§Ã£o realmente exige banco?
-2. Ã‰ ajuste funcional ou apenas visual?
-3. A coluna/tabela/RPC jÃ¡ existe em migration?
-4. O ambiente remoto estÃ¡ alinhado com local?
-5. Existe risco de perda de dados?
-6. HÃ¡ backup ou rollback manual?
-7. O frontend jÃ¡ envia payload para a nova coluna?
-8. RLS precisa ser alterada?
-9. Existe teste ou QA manual para o fluxo?
+1. A alteracao realmente exige banco
+2. E ajuste funcional ou apenas visual
+3. A coluna/tabela/RPC ja existe em migration
+4. O ambiente remoto esta alinhado com local
+5. Existe risco de perda de dados
+6. Ha backup ou rollback manual
+7. O frontend ja envia payload para a nova coluna
+8. RLS precisa ser alterada
+9. Existe teste ou QA manual para o fluxo
 
 Regra:
 
 ```txt
-NÃ£o criar migration para ajuste puramente visual.
+Nao criar migration para ajuste puramente visual.
 ```
 
 ---
@@ -103,15 +103,15 @@ Exemplo esperado:
 20260522121000_add_historical_file_event_category.sql
 ```
 
-Boas prÃ¡ticas:
+Boas praticas:
 
 - usar nomes objetivos;
-- evitar migration genÃ©rica como `fix`;
+- evitar migration generica como `fix`;
 - comentar SQL complexo;
-- tornar alteraÃ§Ã£o idempotente quando seguro;
+- tornar alteracao idempotente quando seguro;
 - revisar locks e impactos;
 - incluir constraints/checks com cuidado;
-- revisar RLS se a tabela/coluna for sensÃ­vel.
+- revisar RLS se a tabela/coluna for sensivel.
 
 ---
 
@@ -127,7 +127,7 @@ npm test
 git diff --check
 ```
 
-Quando `db reset` for destrutivo para dados locais importantes, nÃ£o executar sem backup.
+Quando `db reset` for destrutivo para dados locais importantes, nao executar sem backup.
 
 Alternativa controlada:
 
@@ -135,7 +135,7 @@ Alternativa controlada:
 supabase db push
 ```
 
-Usar apenas quando o alvo estiver correto e houver revisÃ£o prÃ©via.
+Usar apenas quando o alvo estiver correto e houver revisao previa.
 
 ---
 
@@ -169,7 +169,7 @@ git diff --check
 Regra:
 
 ```txt
-NÃ£o rodar supabase db push em produÃ§Ã£o sem autorizaÃ§Ã£o explÃ­cita, backup e revisÃ£o do SQL.
+Nao rodar supabase db push em producao sem autorizacao explicita, backup e revisao do SQL.
 ```
 
 ---
@@ -178,18 +178,18 @@ NÃ£o rodar supabase db push em produÃ§Ã£o sem autorizaÃ§Ã£o explÃ­ci
 
 Usar `migration repair` apenas quando:
 
-- a migration jÃ¡ foi aplicada manualmente no banco;
-- o schema remoto comprovadamente reflete o conteÃºdo da migration;
-- o histÃ³rico de migrations estÃ¡ divergente;
+- a migration ja foi aplicada manualmente no banco;
+- o schema remoto comprovadamente reflete o conteudo da migration;
+- o historico de migrations esta divergente;
 - houve auditoria do SQL;
-- a decisÃ£o foi registrada.
+- a decisao foi registrada.
 
-NÃ£o usar para:
+Nao usar para:
 
-- mascarar migration nÃ£o aplicada;
-- â€œfazer sumirâ€ divergÃªncia sem conferir banco;
+- mascarar migration nao aplicada;
+- fazer sumir divergencia sem conferir banco;
 - corrigir erro de SQL;
-- pular validaÃ§Ã£o.
+- pular validacao.
 
 ---
 
@@ -197,18 +197,18 @@ NÃ£o usar para:
 
 Sintomas de schema cache:
 
-- coluna recÃ©m-criada nÃ£o aparece para PostgREST;
-- insert/update falha dizendo que coluna nÃ£o existe;
+- coluna recem-criada nao aparece para PostgREST;
+- insert/update falha dizendo que coluna nao existe;
 - RPC corrigida continua parecendo antiga;
-- frontend falha mesmo apÃ³s migration aplicada.
+- frontend falha mesmo apos migration aplicada.
 
-AÃ§Ãµes:
+Acoes:
 
 1. confirmar `supabase migration list`;
 2. confirmar que a coluna/RPC existe no banco;
 3. aguardar/recarregar schema cache;
 4. testar novamente;
-5. evitar alterar frontend para contornar schema ainda nÃ£o refletido.
+5. evitar alterar frontend para contornar schema ainda nao refletido.
 
 Exemplo conhecido:
 
@@ -226,18 +226,18 @@ Se a migration foi aplicada, mas o PostgREST ainda reclama, avaliar cache antes 
 
 Escopo:
 
-- configuraÃ§Ãµes visuais da home pÃºblica;
+- configuracoes visuais da home publica;
 - usada por `/entrar`;
-- nÃ£o deve ser substituÃ­da por configuraÃ§Ã£o hardcoded.
+- nao deve ser substituida por configuracao hardcoded.
 
 ### `20260522121000_add_historical_file_event_category.sql`
 
 Escopo:
 
 - adiciona `categoria_evento` em `public.arquivos_historicos`;
-- permite categorias histÃ³ricas em arquivos.
+- permite categorias historicas em arquivos.
 
-PrÃ©-requisito:
+Pre-requisito:
 
 ```txt
 Aplicar antes de deploy que envie categoria_evento no payload.
@@ -246,7 +246,7 @@ Aplicar antes de deploy que envie categoria_evento no payload.
 Sintoma se ausente:
 
 ```txt
-insert/update em arquivos_historicos falha porque categoria_evento nÃ£o existe.
+insert/update em arquivos_historicos falha porque categoria_evento nao existe.
 ```
 
 ### `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`
@@ -254,14 +254,14 @@ insert/update em arquivos_historicos falha porque categoria_evento nÃ£o existe
 Escopo:
 
 - corrige RPC `admin_list_profiles_for_linking`;
-- usada no vÃ­nculo admin usuÃ¡rio-pessoa;
+- usada no vinculo admin usuario-pessoa;
 - evita fallback inseguro de consulta direta em `profiles`.
 
-ValidaÃ§Ã£o esperada:
+Validacao esperada:
 
-- card de usuÃ¡rios vinculÃ¡veis carrega no admin;
-- usuÃ¡rios jÃ¡ vinculados nÃ£o aparecem;
-- botÃ£o Recarregar funciona;
+- card de usuarios vinculaveis carrega no admin;
+- usuarios ja vinculados nao aparecem;
+- botao Recarregar funciona;
 - erro de schema cache da RPC desaparece.
 
 ---
@@ -277,29 +277,29 @@ scripts/
 docs/historico/documentacao-antiga/
 ```
 
-ClassificaÃ§Ã£o recomendada:
+Classificacao recomendada:
 
 | Tipo | Destino |
 |---|---|
-| DiagnÃ³stico manual | `docs/historico/` ou `scripts/` com aviso claro |
-| CorreÃ§Ã£o operacional pontual | `scripts/` com dry-run e instruÃ§Ã£o |
-| Schema antigo substituÃ­do por migrations | `docs/historico/documentacao-antiga/` |
-| Script destrutivo | `scripts/` com comentÃ¡rios, bloqueios e confirmaÃ§Ã£o |
+| Diagnostico manual | `docs/historico/` ou `scripts/` com aviso claro |
+| Correcao operacional pontual | `scripts/` com dry-run e instrucao |
+| Schema antigo substituido por migrations | `docs/historico/documentacao-antiga/` |
+| Script destrutivo | `scripts/` com comentarios, bloqueios e confirmacao |
 | Migration real | `supabase/migrations/` |
 
 Regra:
 
 ```txt
-NÃ£o aplicar database-schema.sql como schema principal em novo ambiente.
+Nao aplicar database-schema.sql como schema principal em novo ambiente.
 ```
 
 ---
 
-## 12. RLS e permissÃµes
+## 12. RLS e permissoes
 
-Ao alterar tabela sensÃ­vel, revisar RLS.
+Ao alterar tabela sensivel, revisar RLS.
 
-Tabelas sensÃ­veis:
+Tabelas sensiveis:
 
 ```txt
 profiles
@@ -319,12 +319,12 @@ user_favorites
 
 Checklist:
 
-- SELECT de usuÃ¡rio comum estÃ¡ restrito?
-- INSERT/UPDATE/DELETE exigem dono/admin?
-- Admin usa RPC ou policy adequada?
-- Service role fica apenas server-side?
-- UsuÃ¡rio comum nÃ£o consegue alterar relacionamento real diretamente?
-- SolicitaÃ§Ãµes usam `relationship_change_requests`?
+- SELECT de usuario comum esta restrito
+- INSERT/UPDATE/DELETE exigem dono/admin
+- Admin usa RPC ou policy adequada
+- Service role fica apenas server-side
+- Usuario comum nao consegue alterar relacionamento real diretamente
+- Solicitacoes usam `relationship_change_requests`
 
 ---
 
@@ -332,11 +332,11 @@ Checklist:
 
 Regras:
 
-- secrets nÃ£o entram em migration;
-- service role nÃ£o entra no frontend;
-- Edge Functions usam variÃ¡veis/segredos do ambiente;
-- migrations nÃ£o devem hardcodar tokens;
-- cron automÃ¡tico que chama Edge Function precisa de segredo seguro fora do repositÃ³rio.
+- secrets nao entram em migration;
+- service role nao entra no frontend;
+- Edge Functions usam variaveis/segredos do ambiente;
+- migrations nao devem hardcodar tokens;
+- cron automatico que chama Edge Function precisa de segredo seguro fora do repositorio.
 
 Exemplo:
 
@@ -346,11 +346,11 @@ send-notification-email
 generate-person-insights
 ```
 
-Para notificaÃ§Ãµes diÃ¡rias:
+Para notificacoes diarias:
 
 - rotina manual pode existir;
 - Edge Function pode estar preparada;
-- cron automÃ¡tico sÃ³ deve ser ativado apÃ³s segredo seguro externo.
+- cron automatico so deve ser ativado apos segredo seguro externo.
 
 ---
 
@@ -361,7 +361,7 @@ Para notificaÃ§Ãµes diÃ¡rias:
 3. Aplicar em local/staging.
 4. Rodar build/testes.
 5. Validar fluxo manual.
-6. Aplicar remoto com autorizaÃ§Ã£o.
+6. Aplicar remoto com autorizacao.
 7. Confirmar `supabase migration list`.
 8. Validar tela afetada.
 9. Fazer deploy frontend.
@@ -382,7 +382,7 @@ git diff --check
 
 ## 15. Troubleshooting
 
-### Migration aparece local, mas nÃ£o remota
+### Migration aparece local, mas nao remota
 
 Verificar:
 
@@ -390,7 +390,7 @@ Verificar:
 supabase migration list
 ```
 
-CorreÃ§Ã£o:
+Correcao:
 
 - revisar SQL;
 - aplicar com `supabase db push`;
@@ -406,16 +406,16 @@ Causas:
 - migration repair feito incorretamente;
 - branch local desatualizada.
 
-CorreÃ§Ã£o:
+Correcao:
 
 - puxar main;
 - revisar migrations;
 - comparar schema;
-- usar `migration repair` apenas se o schema jÃ¡ estiver comprovadamente aplicado.
+- usar `migration repair` apenas se o schema ja estiver comprovadamente aplicado.
 
 ---
 
-### Frontend envia coluna que nÃ£o existe
+### Frontend envia coluna que nao existe
 
 Exemplo:
 
@@ -423,11 +423,11 @@ Exemplo:
 categoria_evento
 ```
 
-CorreÃ§Ã£o:
+Correcao:
 
 - aplicar migration correta;
-- nÃ£o remover campo do payload sÃ³ para contornar ambiente desatualizado;
-- se necessÃ¡rio, bloquear deploy frontend atÃ© banco estar pronto.
+- nao remover campo do payload so para contornar ambiente desatualizado;
+- se necessario, bloquear deploy frontend ate banco estar pronto.
 
 ---
 
@@ -438,15 +438,15 @@ Verificar:
 - migration aplicada;
 - schema cache;
 - assinatura da RPC;
-- permissÃµes;
+- permissoes;
 - chamada do service;
 - erro real no console/Supabase.
 
 ---
 
-## 16. O que nÃ£o fazer
+## 16. O que nao fazer
 
-NÃ£o fazer:
+Nao fazer:
 
 - commitar secrets;
 - commitar dumps;
@@ -454,8 +454,8 @@ NÃ£o fazer:
 - aplicar SQL legado como schema novo;
 - rodar `db push` sem revisar;
 - usar `migration repair` como atalho;
-- criar migration para mudanÃ§a visual;
-- ampliar RLS para â€œresolver rÃ¡pidoâ€ bug de frontend;
+- criar migration para mudanca visual;
+- ampliar RLS para resolver rapido bug de frontend;
 - apagar coluna/tabela legada sem auditoria;
 - apagar base64 legado sem dry-run.
 
@@ -472,12 +472,12 @@ Fazer:
 - documentar scripts destrutivos;
 - usar dry-run para limpeza;
 - testar fluxo afetado;
-- atualizar documentaÃ§Ã£o relacionada;
-- registrar pÃ³s-MVP quando a correÃ§Ã£o nÃ£o bloquear lanÃ§amento.
+- atualizar documentacao relacionada;
+- registrar pos-MVP quando a correcao nao bloquear lancamento.
 
 ---
 
-## 18. RelaÃ§Ã£o com outras documentaÃ§Ãµes
+## 18. Relacao com outras documentacoes
 
 - Estado funcional: `docs/GUIA_IMPLEMENTACOES.md`
 - Troubleshooting por sintoma: `docs/GUIA_CORRECAO_ERROS.md`

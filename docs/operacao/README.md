@@ -1,21 +1,21 @@
-﻿# OperaÃ§Ã£o e manutenÃ§Ã£o
+# Operacao e manutencao
 
 > Local recomendado: `docs/operacao/README.md`
-> Tipo: Ã­ndice operacional da pasta `docs/operacao/`.
+> Tipo: indice operacional da pasta `docs/operacao/`.
 
 ---
 
 ## 1. Objetivo
 
-Esta pasta reÃºne procedimentos operacionais, manutenÃ§Ã£o controlada e rotinas administrativas que nÃ£o fazem parte dos guias oficiais de implementaÃ§Ã£o, UX, componentes ou correÃ§Ã£o de erros.
+Esta pasta reune procedimentos operacionais, manutencao controlada e rotinas administrativas que nao fazem parte dos guias oficiais de implementacao, UX, componentes ou correcao de erros.
 
 Use esta pasta para temas como:
 
 - Supabase migrations;
-- manutenÃ§Ã£o de Storage;
+- manutencao de Storage;
 - scripts administrativos;
 - dry-run de limpeza;
-- operaÃ§Ãµes com service role;
+- operacoes com service role;
 - cuidados com dados legados;
 - procedimentos que podem alterar dados ou infraestrutura.
 
@@ -26,33 +26,33 @@ Use esta pasta para temas como:
 | Arquivo | Uso |
 |---|---|
 | `MIGRATIONS_SUPABASE.md` | Fluxo seguro de migrations, `supabase migration list`, `db push`, schema cache, RLS e scripts SQL legados. |
-| `STORAGE_MAINTENANCE.md` | DiagnÃ³stico de Ã³rfÃ£os, migraÃ§Ã£o de base64 legado, manutenÃ§Ã£o de buckets e limpeza controlada de Storage. |
+| `STORAGE_MAINTENANCE.md` | Diagnostico de orfaos, migracao de base64 legado, manutencao de buckets e limpeza controlada de Storage. |
 
 ---
 
-## 3. RelaÃ§Ã£o com outros documentos
+## 3. Relacao com outros documentos
 
 | Documento | Papel |
 |---|---|
-| `../README.md` | Ãndice canÃ´nico de toda a documentaÃ§Ã£o do projeto. |
-| `../GUIA_IMPLEMENTACOES.md` | Estado consolidado do que jÃ¡ foi implementado. |
+| `../README.md` | Indice canonico de toda a documentacao do projeto. |
+| `../GUIA_IMPLEMENTACOES.md` | Estado consolidado do que ja foi implementado. |
 | `../GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma. |
-| `../PLANO_PROXIMOS_PASSOS.md` | Fechamento de MVP e backlog pÃ³s-MVP. |
-| `../historico/QA_FINAL_MVP.md` | Checklist e histÃ³rico de validaÃ§Ã£o final. |
+| `../PLANO_PROXIMOS_PASSOS.md` | Fechamento de MVP e backlog pos-MVP. |
+| `../historico/QA_FINAL_MVP.md` | Checklist e historico de validacao final. |
 
 Regra:
 
 ```txt
-docs/operacao/README.md nÃ£o substitui docs/README.md.
+docs/operacao/README.md nao substitui docs/README.md.
 ```
 
-O `README.md` desta pasta Ã© apenas o Ã­ndice operacional.
+O `README.md` desta pasta e apenas o indice operacional.
 
 ---
 
-## 4. Regras gerais de operaÃ§Ã£o
+## 4. Regras gerais de operacao
 
-Antes de qualquer operaÃ§Ã£o que altere dados, banco, Storage ou infraestrutura:
+Antes de qualquer operacao que altere dados, banco, Storage ou infraestrutura:
 
 ```bash
 git status
@@ -62,14 +62,14 @@ git diff --check
 supabase migration list
 ```
 
-Quando a operaÃ§Ã£o envolver scripts administrativos:
+Quando a operacao envolver scripts administrativos:
 
 - executar primeiro em `dry-run`;
-- revisar relatÃ³rio gerado;
+- revisar relatorio gerado;
 - confirmar ambiente;
 - confirmar uso de service role apenas em ambiente controlado;
-- nÃ£o commitar relatÃ³rio com dados sensÃ­veis;
-- nÃ£o commitar `.env`, tokens, dumps, service role ou arquivos temporÃ¡rios.
+- nao commitar relatorio com dados sensiveis;
+- nao commitar `.env`, tokens, dumps, service role ou arquivos temporarios.
 
 ---
 
@@ -81,32 +81,32 @@ Regras:
 
 - nunca expor `SUPABASE_SERVICE_ROLE_KEY` no frontend;
 - nunca commitar a chave;
-- nÃ£o enviar a chave em prompt, issue ou documentaÃ§Ã£o pÃºblica;
+- nao enviar a chave em prompt, issue ou documentacao publica;
 - preferir ambiente local administrativo ou CI protegido;
-- conferir o projeto Supabase antes de executar operaÃ§Ãµes destrutivas.
+- conferir o projeto Supabase antes de executar operacoes destrutivas.
 
 ---
 
-## 6. Dry-run como padrÃ£o
+## 6. Dry-run como padrao
 
-Para manutenÃ§Ã£o de dados e Storage, o padrÃ£o esperado Ã©:
+Para manutencao de dados e Storage, o padrao esperado e:
 
 ```txt
 1. Rodar em dry-run.
-2. Revisar relatÃ³rio.
+2. Revisar relatorio.
 3. Confirmar ambiente.
-4. Executar com flag explÃ­cita de confirmaÃ§Ã£o.
+4. Executar com flag explicita de confirmacao.
 5. Revisar resultado.
-6. Documentar se necessÃ¡rio.
+6. Documentar se necessario.
 ```
 
-Nenhum script de manutenÃ§Ã£o deve remover ou migrar dados sem flag explÃ­cita.
+Nenhum script de manutencao deve remover ou migrar dados sem flag explicita.
 
 ---
 
-## 7. OperaÃ§Ãµes destrutivas
+## 7. Operacoes destrutivas
 
-OperaÃ§Ãµes destrutivas incluem:
+Operacoes destrutivas incluem:
 
 - deletar objetos do Storage;
 - remover registros;
@@ -117,30 +117,30 @@ OperaÃ§Ãµes destrutivas incluem:
 
 Regras:
 
-- exigir confirmaÃ§Ã£o explÃ­cita;
-- manter logs/relatÃ³rio;
-- validar backup quando aplicÃ¡vel;
-- nÃ£o executar em produÃ§Ã£o sem revisÃ£o;
-- nÃ£o misturar limpeza com alteraÃ§Ã£o funcional no mesmo commit.
+- exigir confirmacao explicita;
+- manter logs/relatorio;
+- validar backup quando aplicavel;
+- nao executar em producao sem revisao;
+- nao misturar limpeza com alteracao funcional no mesmo commit.
 
 ---
 
-## 8. Onde documentar novas operaÃ§Ãµes
+## 8. Onde documentar novas operacoes
 
-| Tipo de operaÃ§Ã£o | Destino |
+| Tipo de operacao | Destino |
 |---|---|
 | Migration, schema, RLS, RPC | `MIGRATIONS_SUPABASE.md` |
-| Storage, Ã³rfÃ£os, base64 legado | `STORAGE_MAINTENANCE.md` |
-| QA final de lanÃ§amento | `../historico/QA_FINAL_MVP.md` |
-| CorreÃ§Ã£o por sintoma | `../GUIA_CORRECAO_ERROS.md` |
-| DecisÃ£o pÃ³s-MVP | `../PLANO_PROXIMOS_PASSOS.md` |
-| Script antigo/relatÃ³rio histÃ³rico | `../historico/` |
+| Storage, orfaos, base64 legado | `STORAGE_MAINTENANCE.md` |
+| QA final de lancamento | `../historico/QA_FINAL_MVP.md` |
+| Correcao por sintoma | `../GUIA_CORRECAO_ERROS.md` |
+| Decisao pos-MVP | `../PLANO_PROXIMOS_PASSOS.md` |
+| Script antigo/relatorio historico | `../historico/` |
 
 ---
 
 ## 9. Checklist antes de adicionar novo documento operacional
 
-Criar novo `.md` em `docs/operacao/` apenas se o tema nÃ£o couber em:
+Criar novo `.md` em `docs/operacao/` apenas se o tema nao couber em:
 
 - `MIGRATIONS_SUPABASE.md`;
 - `STORAGE_MAINTENANCE.md`;
@@ -148,20 +148,20 @@ Criar novo `.md` em `docs/operacao/` apenas se o tema nÃ£o couber em:
 
 Perguntas:
 
-1. Ã‰ uma operaÃ§Ã£o recorrente?
-2. Tem risco de alterar dados?
-3. Usa service role?
-4. Tem dry-run?
-5. Precisa de checklist prÃ³prio?
-6. NÃ£o Ã© apenas histÃ³rico?
+1. E uma operacao recorrente
+2. Tem risco de alterar dados
+3. Usa service role
+4. Tem dry-run
+5. Precisa de checklist proprio
+6. Nao e apenas historico
 
-Se a resposta for sim para vÃ¡rios itens, pode justificar novo documento operacional.
+Se a resposta for sim para varios itens, pode justificar novo documento operacional.
 
 ---
 
-## 10. Documentos possÃ­veis no futuro
+## 10. Documentos possiveis no futuro
 
-NÃ£o necessÃ¡rios agora, mas possÃ­veis se o projeto crescer:
+Nao necessarios agora, mas possiveis se o projeto crescer:
 
 ```txt
 EDGE_FUNCTIONS_OPERACAO.md

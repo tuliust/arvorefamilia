@@ -1,52 +1,52 @@
-﻿# Guia de implementaÃ§Ãµes â€” Ãrvore FamÃ­lia
+# Guia de implementacoes  Arvore Familia
 
-> Ãšltima revisÃ£o: 2026-05-29
-> Local canÃ´nico: `docs/GUIA_IMPLEMENTACOES.md`
+> Ultima revisao: 2026-05-29
+> Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 
 ## Objetivo
 
-Este documento registra **o que jÃ¡ foi implementado** no projeto **Ãrvore FamÃ­lia**, o comportamento esperado das frentes consolidadas, os principais arquivos envolvidos e as decisÃµes tÃ©cnicas que nÃ£o devem ser reabertas sem motivo tÃ©cnico ou de produto.
+Este documento registra **o que ja foi implementado** no projeto **Arvore Familia**, o comportamento esperado das frentes consolidadas, os principais arquivos envolvidos e as decisoes tecnicas que nao devem ser reabertas sem motivo tecnico ou de produto.
 
-Este guia responde Ã  pergunta: **â€œo que existe hoje e como deve se comportar?â€**
+Este guia responde A  pergunta: **o que existe hoje e como deve se comportar**
 
-Ele nÃ£o deve funcionar como checklist de execuÃ§Ã£o, manual de troubleshooting ou documentaÃ§Ã£o detalhada de uma funcionalidade especÃ­fica.
+Ele nao deve funcionar como checklist de execucao, manual de troubleshooting ou documentacao detalhada de uma funcionalidade especifica.
 
-Use tambÃ©m:
+Use tambem:
 
-- `docs/README.md`: Ã­ndice canÃ´nico da documentaÃ§Ã£o.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: fechamento de MVP, pendÃªncias e backlog pÃ³s-MVP.
-- `docs/GUIA_CORRECAO_ERROS.md`: investigaÃ§Ã£o e correÃ§Ã£o por sintoma.
-- `docs/GUIA_COMPONENTES.md`: catÃ¡logo tÃ©cnico de componentes reutilizÃ¡veis.
-- `docs/GUIA_UX_LAYOUT.md`: decisÃµes de UX, layout e responsividade.
+- `docs/README.md`: indice canonico da documentacao.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: fechamento de MVP, pendencias e backlog pos-MVP.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigacao e correcao por sintoma.
+- `docs/GUIA_COMPONENTES.md`: catalogo tecnico de componentes reutilizaveis.
+- `docs/GUIA_UX_LAYOUT.md`: decisoes de UX, layout e responsividade.
 - `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso.
-- `docs/operacao/MIGRATIONS_SUPABASE.md`: operaÃ§Ã£o de migrations, banco e scripts SQL.
-- `docs/funcionalidades/*.md`: documentaÃ§Ã£o especÃ­fica por funcionalidade.
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: operacao de migrations, banco e scripts SQL.
+- `docs/funcionalidades/*.md`: documentacao especifica por funcionalidade.
 
 ---
 
 ## 1. Estado consolidado do MVP
 
-As frentes principais do MVP estÃ£o implementadas no escopo atual. Algumas dependem de configuraÃ§Ã£o operacional externa, especialmente notificaÃ§Ãµes automÃ¡ticas, e outras tÃªm evoluÃ§Ã£o prevista pÃ³s-MVP.
+As frentes principais do MVP estao implementadas no escopo atual. Algumas dependem de configuracao operacional externa, especialmente notificacoes automaticas, e outras tem evolucao prevista pos-MVP.
 
-| Frente | Status MVP | DecisÃ£o consolidada |
+| Frente | Status MVP | Decisao consolidada |
 |---|---|---|
-| 7.1 NotificaÃ§Ãµes | ConcluÃ­da tecnicamente | Central em `/notificacoes`, preferÃªncias em `/ajustar-notificacoes`, canal interno, e-mail real via provider configurÃ¡vel, rotina manual, Edge Function diÃ¡ria preparada, logs e deduplicaÃ§Ã£o. Cron automÃ¡tico depende de configuraÃ§Ã£o segura externa. |
-| 7.2 Astrologia e acontecimentos do nascimento | ConcluÃ­da no escopo atual | Perfil lÃª insights persistidos. GeraÃ§Ã£o/regeneraÃ§Ã£o Ã© aÃ§Ã£o admin. Cards vazios nÃ£o aparecem no perfil pÃºblico. |
-| 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes; ediÃ§Ã£o avanÃ§ada, upload por evento, privacidade por evento e PDF ficam pÃ³s-MVP. |
-| 7.4 WhatsApp no perfil | ConcluÃ­do no frontend | BotÃ£o/link controlado por telefone e permissÃµes; sem WhatsApp Business API no MVP. |
-| 7.5 Grau de parentesco/vÃ­nculo | Consolidado funcionalmente | UtilitÃ¡rio puro, testes unitÃ¡rios e integraÃ§Ã£o em Home/perfil. IntegraÃ§Ãµes visuais mais profundas ficam pÃ³s-MVP. |
-| 7.6 ExportaÃ§Ã£o de Ã¡rea da Ã¡rvore | ConcluÃ­da no escopo atual | Exporta Ã¡rea visÃ­vel/selecionada da Ã¡rvore como PNG, PDF ou impressÃ£o; Ã¡rvore completa fica pÃ³s-MVP. |
-| 7.7 Legendas visuais da Ã¡rvore | ConcluÃ­da no frontend | Legenda no painel lateral; tambÃ©m controla filtros/camadas visuais quando recebe callbacks. |
-| 7.8 Favoritos | Primeira camada aprovada | Favorito de pessoa implementado. ExpansÃ£o para arquivos, fÃ³rum, eventos e outros itens fica pÃ³s-MVP. |
-| 7.9 PÃ¡gina de favoritos | Primeira versÃ£o aprovada | Listagem, busca, filtros, abertura e remoÃ§Ã£o funcionais. |
-| 7.10 Responsividade mobile/tablet | ConcluÃ­da | QA tÃ©cnico e visual aprovado em 2026-05-19 para as larguras obrigatÃ³rias. |
-| Home pÃºblica e legal | Implementada | `/entrar` configurÃ¡vel no admin, aceite legal obrigatÃ³rio no primeiro acesso, `noindex/nofollow` em `index.html`. |
-| Headers e margens internas | Implementados | PÃ¡ginas internas usam `MemberPageHeader`; Home pÃ³s-login mantÃ©m header prÃ³prio. |
-| Viewport das views da Ã¡rvore | Ajustado | Minha Ãrvore usa bounds reais de cards; Genealogia/VisÃ£o Completa usam zoom por largura e tÃ­tulo fixo Ãºnico. |
-| VÃ­nculo admin usuÃ¡rio-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no histÃ³rico recente. |
-| Autocomplete de endereÃ§o | ConcluÃ­do no frontend | Admin e dados do usuÃ¡rio usam Google Places quando houver chave; fallback mantÃ©m input normal. |
-| CalendÃ¡rio familiar | Ajustes residuais concluÃ­dos | Categorias na sidebar, filtros clicÃ¡veis, pluralizaÃ§Ã£o e texto â€œFaz X anosâ€. |
+| 7.1 Notificacoes | Concluida tecnicamente | Central em `/notificacoes`, preferencias em `/ajustar-notificacoes`, canal interno, e-mail real via provider configuravel, rotina manual, Edge Function diaria preparada, logs e deduplicacao. Cron automatico depende de configuracao segura externa. |
+| 7.2 Astrologia e acontecimentos do nascimento | Concluida no escopo atual | Perfil le insights persistidos. Geracao/regeneracao e acao admin. Cards vazios nao aparecem no perfil publico. |
+| 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes; edicao avancada, upload por evento, privacidade por evento e PDF ficam pos-MVP. |
+| 7.4 WhatsApp no perfil | Concluido no frontend | Botao/link controlado por telefone e permissoes; sem WhatsApp Business API no MVP. |
+| 7.5 Grau de parentesco/vinculo | Consolidado funcionalmente | Utilitario puro, testes unitarios e integracao em Home/perfil. Integracoes visuais mais profundas ficam pos-MVP. |
+| 7.6 Exportacao de area da arvore | Concluida no escopo atual | Exporta area visivel/selecionada da arvore como PNG, PDF ou impressao; arvore completa fica pos-MVP. |
+| 7.7 Legendas visuais da arvore | Concluida no frontend | Legenda no painel lateral; tambem controla filtros/camadas visuais quando recebe callbacks. |
+| 7.8 Favoritos | Primeira camada aprovada | Favorito de pessoa implementado. Expansao para arquivos, forum, eventos e outros itens fica pos-MVP. |
+| 7.9 Pagina de favoritos | Primeira versao aprovada | Listagem, busca, filtros, abertura e remocao funcionais. |
+| 7.10 Responsividade mobile/tablet | Concluida | QA tecnico e visual aprovado em 2026-05-19 para as larguras obrigatorias. |
+| Home publica e legal | Implementada | `/entrar` configuravel no admin, aceite legal obrigatorio no primeiro acesso, `noindex/nofollow` em `index.html`. |
+| Headers e margens internas | Implementados | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio. |
+| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico. |
+| Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
+| Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
+| Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e texto Faz X anos. |
 
 ---
 
@@ -71,38 +71,38 @@ Stack atual:
 - Vitest;
 - Playwright.
 
-Ãreas implementadas no MVP:
+Areas implementadas no MVP:
 
-- Ã¡rvore familiar;
+- arvore familiar;
 - perfis de pessoa;
-- administraÃ§Ã£o de pessoas;
-- administraÃ§Ã£o de relacionamentos;
-- solicitaÃ§Ãµes de vÃ­nculos/alteraÃ§Ãµes;
-- arquivos histÃ³ricos;
-- histÃ³rico de atividades;
-- fÃ³rum;
+- administracao de pessoas;
+- administracao de relacionamentos;
+- solicitacoes de vinculos/alteracoes;
+- arquivos historicos;
+- historico de atividades;
+- forum;
 - Google Calendar;
-- notificaÃ§Ãµes;
+- notificacoes;
 - timeline;
 - favoritos;
 - insights de nascimento;
-- exportaÃ§Ã£o de Ã¡rea da Ã¡rvore;
-- legenda visual da Ã¡rvore;
+- exportacao de area da arvore;
+- legenda visual da arvore;
 - headers internos padronizados;
 - responsividade mobile/tablet.
 
-Regra de organizaÃ§Ã£o:
+Regra de organizacao:
 
-- `supabase/migrations` Ã© a fonte da verdade do schema.
-- Scripts SQL soltos sÃ£o histÃ³ricos, diagnÃ³sticos ou operacionais.
-- Ajustes visuais nÃ£o devem criar migration.
-- MudanÃ§as de schema devem ser documentadas tambÃ©m em `docs/operacao/MIGRATIONS_SUPABASE.md`.
+- `supabase/migrations` e a fonte da verdade do schema.
+- Scripts SQL soltos sao historicos, diagnosticos ou operacionais.
+- Ajustes visuais nao devem criar migration.
+- Mudancas de schema devem ser documentadas tambem em `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
 ---
 
-## 3. Acesso, permissÃµes e rotas
+## 3. Acesso, permissoes e rotas
 
-DocumentaÃ§Ã£o detalhada recomendada:
+Documentacao detalhada recomendada:
 
 ```txt
 docs/arquitetura/ROTAS_E_GUARDS.md
@@ -124,17 +124,17 @@ Comportamento consolidado:
 
 - rotas administrativas usam `ProtectedRoute`;
 - rotas de membro usam `MemberRoute`;
-- a Ã¡rvore principal usa `TreeAccessRoute`;
-- `/` redireciona para `/minha-arvore` preservando search params, como `?pessoa=...`;
+- a arvore principal usa `TreeAccessRoute`;
+- `/` redireciona para `/minha-arvore` preservando search params, como `pessoa=...`;
 - `/minha-arvore`, `/genealogia` e `/visao-completa` usam o mesmo shell `Home` protegido por `TreeAccessRoute`;
-- `viewMode` Ã© derivado da rota por helpers em `treeViewMode.ts`;
-- a pÃ¡gina antiga de ediÃ§Ã£o/dados da Ã¡rvore pessoal permanece em `/minha-arvore/editar` com `MemberRoute`;
-- o botÃ£o **Painel administrativo** aparece apenas para administradores;
-- usuÃ¡rio comum nÃ£o deve acessar rotas administrativas;
+- `viewMode` e derivado da rota por helpers em `treeViewMode.ts`;
+- a pagina antiga de edicao/dados da arvore pessoal permanece em `/minha-arvore/editar` com `MemberRoute`;
+- o botao **Painel administrativo** aparece apenas para administradores;
+- usuario comum nao deve acessar rotas administrativas;
 - admin acessa `/admin` diretamente;
-- `/admin/login` nÃ£o deve ser usado como caminho principal do menu do usuÃ¡rio.
+- `/admin/login` nao deve ser usado como caminho principal do menu do usuario.
 
-Rotas de usuÃ¡rio/membro implementadas:
+Rotas de usuario/membro implementadas:
 
 ```txt
 /minha-arvore
@@ -177,22 +177,22 @@ Rotas administrativas implementadas:
 /admin/solicitacoes-vinculos
 ```
 
-Regra de manutenÃ§Ã£o:
+Regra de manutencao:
 
-> Ao alterar rotas ou guards, atualizar tambÃ©m `docs/arquitetura/ROTAS_E_GUARDS.md`, `docs/GUIA_CORRECAO_ERROS.md` e, se afetar UX, `docs/GUIA_UX_LAYOUT.md`.
+> Ao alterar rotas ou guards, atualizar tambem `docs/arquitetura/ROTAS_E_GUARDS.md`, `docs/GUIA_CORRECAO_ERROS.md` e, se afetar UX, `docs/GUIA_UX_LAYOUT.md`.
 
 ---
 
 ## 4. Home, headers e margens
 
-### 4.1 Home pÃºblica, aceite legal e indexaÃ§Ã£o
+### 4.1 Home publica, aceite legal e indexacao
 
 Implementado:
 
-- `/entrar` lÃª `public.site_visual_settings` com fallback seguro para o visual padrÃ£o;
-- admin gerencia logo, mÃ­dia de background, cor de fundo em opÃ§Ãµes fixas e opacidade em `/admin/home`;
-- primeiro acesso exige aceite explÃ­cito dos termos de uso e da polÃ­tica de privacidade antes de criar conta;
-- `index.html` usa tÃ­tulo `Ãrvore GenealÃ³gica da FamÃ­lia`, `lang="pt-BR"` e metatags `noindex/nofollow`;
+- `/entrar` le `public.site_visual_settings` com fallback seguro para o visual padrao;
+- admin gerencia logo, midia de background, cor de fundo em opcoes fixas e opacidade em `/admin/home`;
+- primeiro acesso exige aceite explicito dos termos de uso e da politica de privacidade antes de criar conta;
+- `index.html` usa titulo `Arvore Genealogica da Familia`, `lang="pt-BR"` e metatags `noindex/nofollow`;
 - limpeza de dados de teste fica em script manual comentado.
 
 Migration relacionada:
@@ -211,20 +211,20 @@ src/app/pages/Home.tsx
 
 Comportamento consolidado:
 
-- Home pÃ³s-login mantÃ©m header prÃ³prio, diferente do header das pÃ¡ginas internas;
-- Home atua como shell Ãºnico das trÃªs views da Ã¡rvore;
-- `treeViewMode` Ã© derivado da rota atual por helpers em `treeViewMode.ts`;
-- troca de view pelo header e pela navegaÃ§Ã£o mobile usa funÃ§Ã£o central em `Home.tsx`;
-- troca de view usa navegaÃ§Ã£o client-side e preserva search params;
-- painel lateral da Ã¡rvore contÃ©m as abas **Filtros** e **Legendas**;
-- o botÃ£o **AÃ§Ãµes** usa Ã­cone `Printer`, mostra texto no desktop e apenas Ã­cone no mobile;
-- o botÃ£o **AÃ§Ãµes** abre o painel/aÃ§Ã£o de informaÃ§Ãµes, fora da toggle principal do painel lateral;
-- o botÃ£o de recolher/expandir painel lateral foi unificado para evitar duplicidade;
-- em desktop, o botÃ£o fica dentro ou junto ao painel;
-- em mobile/largura reduzida, apenas um botÃ£o de expandir/recolher deve aparecer;
-- loading atual: **â€œBuscando pessoas e relacionamentosâ€¦â€**, sem complemento â€œno Supabaseâ€.
+- Home pos-login mantem header proprio, diferente do header das paginas internas;
+- Home atua como shell unico das tres views da arvore;
+- `treeViewMode` e derivado da rota atual por helpers em `treeViewMode.ts`;
+- troca de view pelo header e pela navegacao mobile usa funcao central em `Home.tsx`;
+- troca de view usa navegacao client-side e preserva search params;
+- painel lateral da arvore contem as abas **Filtros** e **Legendas**;
+- o botao **Acoes** usa icone `Printer`, mostra texto no desktop e apenas icone no mobile;
+- o botao **Acoes** abre o painel/acao de informacoes, fora da toggle principal do painel lateral;
+- o botao de recolher/expandir painel lateral foi unificado para evitar duplicidade;
+- em desktop, o botao fica dentro ou junto ao painel;
+- em mobile/largura reduzida, apenas um botao de expandir/recolher deve aparecer;
+- loading atual: **Buscando pessoas e relacionamentos...**, sem complemento no Supabase.
 
-Componentes extraÃ­dos da Home:
+Componentes extraidos da Home:
 
 ```txt
 src/app/pages/home/HomeHeader.tsx
@@ -245,9 +245,9 @@ src/app/pages/home/homeCuriositiesUtils.ts
 src/app/pages/home/homeAiContext.ts
 ```
 
-Esses arquivos sÃ£o componentes/auxiliares de apresentaÃ§Ã£o ou funÃ§Ãµes puras. Estados principais, handlers de orquestraÃ§Ã£o, carregamento da Ã¡rvore, Supabase e filtros continuam em `Home.tsx`.
+Esses arquivos sao componentes/auxiliares de apresentacao ou funcoes puras. Estados principais, handlers de orquestracao, carregamento da arvore, Supabase e filtros continuam em `Home.tsx`.
 
-### 4.3 Header compartilhado das pÃ¡ginas internas
+### 4.3 Header compartilhado das paginas internas
 
 Arquivos principais:
 
@@ -264,16 +264,16 @@ src/app/pages/admin/AdminDashboard.tsx
 
 Comportamento implementado:
 
-- pÃ¡ginas internas usam header compartilhado baseado no padrÃ£o visual de `/minha-arvore`;
-- margens laterais sÃ£o padronizadas com `PAGE_CONTAINER_CLASS`;
-- aÃ§Ãµes de navegaÃ§Ã£o ficam agrupadas de forma responsiva;
-- Home pÃ³s-login continua com header prÃ³prio por regra de produto.
+- paginas internas usam header compartilhado baseado no padrao visual de `/minha-arvore`;
+- margens laterais sao padronizadas com `PAGE_CONTAINER_CLASS`;
+- acoes de navegacao ficam agrupadas de forma responsiva;
+- Home pos-login continua com header proprio por regra de produto.
 
 ---
 
-## 5. Pessoas, formulÃ¡rios e dados pessoais
+## 5. Pessoas, formularios e dados pessoais
 
-DocumentaÃ§Ã£o especÃ­fica:
+Documentacao especifica:
 
 ```txt
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
@@ -298,18 +298,18 @@ src/app/services/relationshipChangeRequestService.ts
 
 Comportamento implementado:
 
-- criaÃ§Ã£o e ediÃ§Ã£o de pessoa via admin;
-- ediÃ§Ã£o dos prÃ³prios dados pelo usuÃ¡rio conforme permissÃ£o;
-- formulÃ¡rio dividido em blocos reutilizÃ¡veis;
+- criacao e edicao de pessoa via admin;
+- edicao dos proprios dados pelo usuario conforme permissao;
+- formulario dividido em blocos reutilizaveis;
 - rascunho preservado em `sessionStorage`;
-- rascunho removido apÃ³s salvamento concluÃ­do;
-- dados bÃ¡sicos, datas, locais, biografia, contato, privacidade, redes sociais, eventos pessoais, relacionamentos pendentes e dados conjugais sÃ£o tratados em blocos especÃ­ficos;
-- botÃµes internos que nÃ£o submetem formulÃ¡rio usam `type="button"`;
-- preview/download de arquivos nÃ£o limpa o formulÃ¡rio;
-- alteraÃ§Ãµes de vÃ­nculo por usuÃ¡rio comum viram solicitaÃ§Ãµes, nÃ£o alteraÃ§Ã£o direta;
-- `PersonContactFields` usa `AddressAutocompleteInput` para endereÃ§o;
-- `MeusDados` e admin usam autocomplete Google Places para endereÃ§o;
-- `src/app/utils/googleAddress.ts` formata o endereÃ§o retornado pelo Google;
+- rascunho removido apos salvamento concluido;
+- dados basicos, datas, locais, biografia, contato, privacidade, redes sociais, eventos pessoais, relacionamentos pendentes e dados conjugais sao tratados em blocos especificos;
+- botoes internos que nao submetem formulario usam `type="button"`;
+- preview/download de arquivos nao limpa o formulario;
+- alteracoes de vinculo por usuario comum viram solicitacoes, nao alteracao direta;
+- `PersonContactFields` usa `AddressAutocompleteInput` para endereco;
+- `MeusDados` e admin usam autocomplete Google Places para endereco;
+- `src/app/utils/googleAddress.ts` formata o endereco retornado pelo Google;
 - sem `VITE_GOOGLE_MAPS_API_KEY`, ou se o Google falhar, o campo continua como input normal.
 
 ### 5.1 Pessoa falecida
@@ -331,7 +331,7 @@ Migration relacionada:
 Implementado:
 
 - Brasil: `Cidade/UF`;
-- exterior: `Cidade (PaÃ­s)`;
+- exterior: `Cidade (Pais)`;
 - flags `local_nascimento_exterior` e `local_falecimento_exterior`.
 
 Migration relacionada:
@@ -340,7 +340,7 @@ Migration relacionada:
 20260514133000_add_exterior_location_flags_to_pessoas.sql
 ```
 
-### 5.3 Busca sem acentuaÃ§Ã£o
+### 5.3 Busca sem acentuacao
 
 Helpers:
 
@@ -352,17 +352,17 @@ includesNormalizedText
 Comportamento esperado:
 
 - busca ignora caixa e acentos;
-- `Marcio` encontra `MÃ¡rcio`;
-- `Sao Paulo` encontra `SÃ£o Paulo`.
+- `Marcio` encontra `Marcio`;
+- `Sao Paulo` encontra `Sao Paulo`.
 
-### 5.4 VÃ­nculo admin usuÃ¡rio-pessoa
+### 5.4 Vinculo admin usuario-pessoa
 
 Implementado:
 
-- card **UsuÃ¡rios vinculados a esta pessoa** em `AdminPessoaForm`;
-- listagem de usuÃ¡rios disponÃ­veis via RPC `admin_list_profiles_for_linking`;
-- correÃ§Ã£o da RPC na migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
-- frontend nÃ£o usa fallback inseguro de consulta direta em `profiles`.
+- card **Usuarios vinculados a esta pessoa** em `AdminPessoaForm`;
+- listagem de usuarios disponiveis via RPC `admin_list_profiles_for_linking`;
+- correcao da RPC na migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`;
+- frontend nao usa fallback inseguro de consulta direta em `profiles`.
 
 ---
 
@@ -380,13 +380,13 @@ src/app/services/pessoaSocialProfilesService.ts
 Comportamento implementado:
 
 - UI usa `SocialProfilesEditor`;
-- primeiro perfil social permanece sincronizado com campos legados em `pessoas` quando aplicÃ¡vel;
+- primeiro perfil social permanece sincronizado com campos legados em `pessoas` quando aplicavel;
 - campos legados continuam por compatibilidade;
-- exibiÃ§Ã£o no perfil respeita privacidade.
+- exibicao no perfil respeita privacidade.
 
 Fora do MVP:
 
-- persistÃªncia completa e UX avanÃ§ada para mÃºltiplas redes sociais, caso o uso real exija.
+- persistencia completa e UX avancada para multiplas redes sociais, caso o uso real exija.
 
 ---
 
@@ -441,14 +441,14 @@ Fora do MVP:
 
 - upload por evento;
 - privacidade por evento;
-- ediÃ§Ã£o diretamente na timeline;
-- exportaÃ§Ã£o PDF de timeline/eventos.
+- edicao diretamente na timeline;
+- exportacao PDF de timeline/eventos.
 
 ---
 
-## 8. Arquivos histÃ³ricos e Storage
+## 8. Arquivos historicos e Storage
 
-DocumentaÃ§Ã£o especÃ­fica recomendada:
+Documentacao especifica recomendada:
 
 ```txt
 docs/operacao/STORAGE_MAINTENANCE.md
@@ -467,25 +467,25 @@ src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
 Comportamento implementado:
 
 - novas fotos principais usam bucket `person-avatars`;
-- novos arquivos histÃ³ricos usam bucket `historical-files`;
-- novos arquivos nÃ£o devem ser salvos como base64;
-- base64/data URL legado continua compatÃ­vel;
+- novos arquivos historicos usam bucket `historical-files`;
+- novos arquivos nao devem ser salvos como base64;
+- base64/data URL legado continua compativel;
 - preview de imagem funciona;
-- preview de PDF funciona quando possÃ­vel;
-- apÃ³s upload de novo arquivo, o input nativo fica oculto;
-- campos e botÃµes **Cancelar**/**Adicionar** ficam ocultos imediatamente apÃ³s upload;
-- mensagem verde **â€œâœ“ Arquivo carregadoâ€** permanece visÃ­vel;
+- preview de PDF funciona quando possivel;
+- apos upload de novo arquivo, o input nativo fica oculto;
+- campos e botoes **Cancelar**/**Adicionar** ficam ocultos imediatamente apos upload;
+- mensagem verde **a Arquivo carregado** permanece visivel;
 - imagem carregada mostra thumbnail;
-- PDF carregado mostra card com Ã­cone/label PDF;
+- PDF carregado mostra card com icone/label PDF;
 - clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
-- apÃ³s upload, usuÃ¡rio ainda pode preencher tÃ­tulo, descriÃ§Ã£o, ano e categoria;
-- arquivos existentes permitem editar tÃ­tulo, ano, descriÃ§Ã£o e categoria histÃ³rica;
+- apos upload, usuario ainda pode preencher titulo, descricao, ano e categoria;
+- arquivos existentes permitem editar titulo, ano, descricao e categoria historica;
 - arquivos de pessoa usam `pessoa_id`;
 - arquivos de relacionamento/casamento usam `relacionamento_id` e `pessoa_id` nulo;
-- usuÃ¡rio comum visualiza arquivos de relacionamento conforme permissÃ£o;
-- admin gerencia arquivos via formulÃ¡rio/perfil.
+- usuario comum visualiza arquivos de relacionamento conforme permissao;
+- admin gerencia arquivos via formulario/perfil.
 
-Categoria histÃ³rica:
+Categoria historica:
 
 ```txt
 HistoricalFileEventCategory
@@ -510,18 +510,18 @@ outro
 
 Risco operacional:
 
-- `20260522121000_add_historical_file_event_category.sql` Ã© prÃ©-requisito de deploy para versÃµes que enviam `categoria_evento` no payload;
-- se o ambiente remoto ainda nÃ£o recebeu a migration, insert/update em `arquivos_historicos` pode falhar;
-- nÃ£o remover `categoria_evento` do payload para mascarar ambiente desatualizado.
+- `20260522121000_add_historical_file_event_category.sql` e pre-requisito de deploy para versoes que enviam `categoria_evento` no payload;
+- se o ambiente remoto ainda nao recebeu a migration, insert/update em `arquivos_historicos` pode falhar;
+- nao remover `categoria_evento` do payload para mascarar ambiente desatualizado.
 
 Compatibilidade mantida:
 
-- `public.pessoas.arquivos_historicos` continua existindo por compatibilidade atÃ© auditoria futura;
-- base64 legado nÃ£o deve ser removido automaticamente.
+- `public.pessoas.arquivos_historicos` continua existindo por compatibilidade ate auditoria futura;
+- base64 legado nao deve ser removido automaticamente.
 
 ---
 
-## 9. Relacionamentos, vÃ­nculos e dados conjugais
+## 9. Relacionamentos, vinculos e dados conjugais
 
 Arquivos principais:
 
@@ -538,12 +538,12 @@ src/app/pages/MeusVinculos.tsx
 Comportamento implementado:
 
 - admin cria, edita e remove relacionamentos reais;
-- usuÃ¡rio comum envia solicitaÃ§Ã£o de criaÃ§Ã£o, remoÃ§Ã£o ou correÃ§Ã£o;
-- relacionamento real nÃ£o Ã© alterado diretamente por usuÃ¡rio comum;
-- solicitaÃ§Ãµes usam `relationship_change_requests`;
-- admin aprova/rejeita solicitaÃ§Ãµes;
-- aprovaÃ§Ã£o aplica alteraÃ§Ã£o real;
-- rejeiÃ§Ã£o nÃ£o altera relacionamento real.
+- usuario comum envia solicitacao de criacao, remocao ou correcao;
+- relacionamento real nao e alterado diretamente por usuario comum;
+- solicitacoes usam `relationship_change_requests`;
+- admin aprova/rejeita solicitacoes;
+- aprovacao aplica alteracao real;
+- rejeicao nao altera relacionamento real.
 
 Migration:
 
@@ -581,21 +581,21 @@ observacoes
 
 Regras:
 
-- observaÃ§Ãµes internas aparecem apenas para admin;
-- dados conjugais sÃ£o preservados em rascunho;
-- modal de relacionamento nÃ£o deve salvar antes do botÃ£o principal do formulÃ¡rio;
-- em `/minha-arvore`, o botÃ£o individual **Salvar casamento** foi removido;
-- botÃ£o geral **Salvar meus dados** tambÃ©m processa `marriageForms`;
+- observacoes internas aparecem apenas para admin;
+- dados conjugais sao preservados em rascunho;
+- modal de relacionamento nao deve salvar antes do botao principal do formulario;
+- em `/minha-arvore`, o botao individual **Salvar casamento** foi removido;
+- botao geral **Salvar meus dados** tambem processa `marriageForms`;
 - admin atualiza o relacionamento conjugal principal e tenta atualizar o inverso quando existir;
-- usuÃ¡rio nÃ£o-admin cria solicitaÃ§Ã£o via `relationshipChangeRequestService`;
-- proteÃ§Ã£o contra solicitaÃ§Ã£o pendente duplicada continua em `findPendingDuplicateRelationshipChangeRequest`;
-- local de casamento invÃ¡lido nÃ£o bloqueia dados pessoais, mas deixa casamento sem salvar e exibe aviso.
+- usuario nao-admin cria solicitacao via `relationshipChangeRequestService`;
+- protecao contra solicitacao pendente duplicada continua em `findPendingDuplicateRelationshipChangeRequest`;
+- local de casamento invalido nao bloqueia dados pessoais, mas deixa casamento sem salvar e exibe aviso.
 
 ---
 
-## 10. Ãrvore, Minha Ãrvore, Genealogia e VisÃ£o Completa
+## 10. Arvore, Minha Arvore, Genealogia e Visao Completa
 
-DocumentaÃ§Ãµes especÃ­ficas recomendadas:
+Documentacoes especificas recomendadas:
 
 ```txt
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
@@ -617,36 +617,36 @@ src/app/pages/Home.tsx
 src/app/pages/MinhaArvore.tsx
 ```
 
-### 10.1 Modos de visualizaÃ§Ã£o
+### 10.1 Modos de visualizacao
 
-- **Minha Ãrvore** mantÃ©m layout prÃ³prio em torno da pessoa central.
-- **Genealogia** usa escopo pessoal com layout por geraÃ§Ãµes.
-- **VisÃ£o Completa** usa base completa com layout por geraÃ§Ãµes.
+- **Minha Arvore** mantem layout proprio em torno da pessoa central.
+- **Genealogia** usa escopo pessoal com layout por geracoes.
+- **Visao Completa** usa base completa com layout por geracoes.
 
 Comportamentos consolidados:
 
-- conectores pais-filhos sÃ£o ortogonais nas views por geraÃ§Ã£o;
-- cÃ´njuges dos filhos nÃ£o sÃ£o tratados como filhos reais;
-- conectores/anÃ©is sÃ£o filtrados conforme pessoas visÃ­veis;
-- anel de casamento aparece entre cÃ´njuges;
-- anel Ã© clicÃ¡vel;
+- conectores pais-filhos sao ortogonais nas views por geracao;
+- conjuges dos filhos nao sao tratados como filhos reais;
+- conectores/aneis sao filtrados conforme pessoas visiveis;
+- anel de casamento aparece entre conjuges;
+- anel e clicavel;
 - anel abre modal conjugal;
-- status visual do anel respeita uniÃ£o ativa, separaÃ§Ã£o/divÃ³rcio, viuvez ou desconhecido.
+- status visual do anel respeita uniao ativa, separacao/divorcio, viuvez ou desconhecido.
 
 ### 10.2 Viewport e escala inicial
 
 Comportamento consolidado:
 
-- tÃ­tulo/subtÃ­tulo da Ã¡rvore sÃ£o renderizados como overlay fixo Ãºnico em `FamilyTree.tsx`;
-- tÃ­tulos/subtÃ­tulos internos de layout foram removidos;
-- **Minha Ãrvore** usa bounds de cards reais (`personNode`) para evitar zoom inicial excessivamente pequeno;
-- bounds de viewport e bounds de pan/arraste sÃ£o tratados separadamente;
-- **Genealogia** e **VisÃ£o Completa** usam zoom inicial por largura;
-- altura total nÃ£o reduz a escala de Genealogia/VisÃ£o Completa;
-- se houver muitos cards verticalmente, o usuÃ¡rio deve arrastar/deslizar para baixo;
-- botÃµes `+` e `-` continuam controlando zoom conforme limites definidos.
+- titulo/subtitulo da arvore sao renderizados como overlay fixo unico em `FamilyTree.tsx`;
+- titulos/subtitulos internos de layout foram removidos;
+- **Minha Arvore** usa bounds de cards reais (`personNode`) para evitar zoom inicial excessivamente pequeno;
+- bounds de viewport e bounds de pan/arraste sao tratados separadamente;
+- **Genealogia** e **Visao Completa** usam zoom inicial por largura;
+- altura total nao reduz a escala de Genealogia/Visao Completa;
+- se houver muitos cards verticalmente, o usuario deve arrastar/deslizar para baixo;
+- botoes `+` e `-` continuam controlando zoom conforme limites definidos.
 
-Commits de referÃªncia:
+Commits de referencia:
 
 ```txt
 94add1e fix: padronizar viewport inicial da arvore
@@ -655,9 +655,9 @@ e94ed6b fix: ajustar escala e titulo das views da arvore
 
 ---
 
-## 11. Painel lateral e legendas visuais da Ã¡rvore â€” 7.7
+## 11. Painel lateral e legendas visuais da arvore  7.7
 
-DocumentaÃ§Ã£o especÃ­fica recomendada:
+Documentacao especifica recomendada:
 
 ```txt
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
@@ -665,10 +665,10 @@ docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 
 Status:
 
-- concluÃ­da no frontend;
+- concluida no frontend;
 - sem migration;
 - sem Supabase;
-- sem configuraÃ§Ã£o administrativa.
+- sem configuracao administrativa.
 
 Arquivos principais:
 
@@ -683,20 +683,20 @@ src/app/pages/Home.tsx
 Comportamento implementado:
 
 - legenda aparece no painel lateral, aba **Legendas**;
-- `TreeLegend` nÃ£o Ã© apenas informativa: tambÃ©m controla filtros reais/camadas visuais quando recebe callbacks;
+- `TreeLegend` nao e apenas informativa: tambem controla filtros reais/camadas visuais quando recebe callbacks;
 - inclui `visualLineFilters`, `parentChildHighlight` e `siblingHighlight`;
 - `parentChildHighlight` respeita `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
 - `siblingHighlight` respeita `edgeFilters.irmaos`;
-- estado padrÃ£o desligado mantÃ©m o visual original;
-- botÃ£o flutuante duplicado de legenda foi removido;
-- conteÃºdo da legenda foi simplificado;
-- subtÃ­tulo â€œCores, linhas, anÃ©is e modos da Ã¡rvore.â€ foi removido;
-- seÃ§Ã£o â€œVisualizaÃ§Ã£o atualâ€ e card azul da view ativa foram removidos;
-- subtÃ­tulos internos dos cards de legenda foram removidos;
-- â€œAtivaâ€ em Anel de casamento foi renomeado para **Em relacionamento**;
-- Ã¡rea â€œViewsâ€ foi removida do final do painel;
-- legenda mantÃ©m seÃ§Ãµes de cards, linhas, anel de casamento e cores dos grupos quando compatÃ­vel com a altura disponÃ­vel;
-- elementos da legenda sÃ£o ignorados na exportaÃ§Ã£o quando usam `data-tree-legend`.
+- estado padrao desligado mantem o visual original;
+- botao flutuante duplicado de legenda foi removido;
+- conteudo da legenda foi simplificado;
+- subtitulo Cores, linhas, aneis e modos da arvore. foi removido;
+- secao Visualizacao atual e card azul da view ativa foram removidos;
+- subtitulos internos dos cards de legenda foram removidos;
+- Ativa em Anel de casamento foi renomeado para **Em relacionamento**;
+- area Views foi removida do final do painel;
+- legenda mantem secoes de cards, linhas, anel de casamento e cores dos grupos quando compativel com a altura disponivel;
+- elementos da legenda sao ignorados na exportacao quando usam `data-tree-legend`.
 
 Camadas visuais opcionais:
 
@@ -707,18 +707,18 @@ visualLineFilters.siblingHighlight
 
 Regras:
 
-- `parentChildHighlight`: destaca pais/filhos em amarelo contÃ­nuo;
-- `siblingHighlight`: destaca irmÃ£os em amarelo tracejado;
-- ambos desligados por padrÃ£o;
+- `parentChildHighlight`: destaca pais/filhos em amarelo continuo;
+- `siblingHighlight`: destaca irmaos em amarelo tracejado;
+- ambos desligados por padrao;
 - ambos respeitam os filtros de linhas correspondentes;
-- Minha Ãrvore usa destaque conservador para evitar poluiÃ§Ã£o visual;
-- Genealogia e VisÃ£o Completa limitam linhas de irmÃ£os a casos visÃ­veis e seguros.
+- Minha Arvore usa destaque conservador para evitar poluicao visual;
+- Genealogia e Visao Completa limitam linhas de irmaos a casos visiveis e seguros.
 
 ---
 
 ## 12. Demais frentes consolidadas
 
-### 12.1 Linha do tempo â€” 7.3
+### 12.1 Linha do tempo  7.3
 
 Arquivos principais:
 
@@ -734,12 +734,12 @@ Fontes usadas:
 - falecimento;
 - relacionamentos;
 - filhos;
-- arquivos histÃ³ricos;
+- arquivos historicos;
 - eventos pessoais.
 
-A implementaÃ§Ã£o Ã© funcional e derivada dos dados existentes.
+A implementacao e funcional e derivada dos dados existentes.
 
-### 12.2 Grau de parentesco/vÃ­nculo â€” 7.5
+### 12.2 Grau de parentesco/vinculo  7.5
 
 Arquivos principais:
 
@@ -755,13 +755,13 @@ src/app/services/treeDataCache.ts
 
 Comportamento:
 
-- utilitÃ¡rio puro;
-- testes unitÃ¡rios;
-- integraÃ§Ã£o em Home/perfil;
-- cÃ¡lculo de caminho/grau/confianÃ§a;
-- sem exposiÃ§Ã£o de dados sensÃ­veis.
+- utilitario puro;
+- testes unitarios;
+- integracao em Home/perfil;
+- calculo de caminho/grau/confianca;
+- sem exposicao de dados sensiveis.
 
-### 12.3 WhatsApp no perfil â€” 7.4
+### 12.3 WhatsApp no perfil  7.4
 
 Arquivos principais:
 
@@ -774,11 +774,11 @@ src/app/pages/Home.tsx
 
 Regras:
 
-- botÃ£o aparece apenas com telefone vÃ¡lido e permissÃ£o;
-- nÃºmero textual sÃ³ aparece se `permitir_exibir_telefone = true`;
+- botao aparece apenas com telefone valido e permissao;
+- numero textual so aparece se `permitir_exibir_telefone = true`;
 - sem WhatsApp Business API no MVP.
 
-### 12.4 Astrologia e acontecimentos â€” 7.2
+### 12.4 Astrologia e acontecimentos  7.2
 
 Arquivos principais:
 
@@ -791,16 +791,16 @@ supabase/functions/generate-person-insights/index.ts
 
 Comportamento consolidado:
 
-- perfil apenas lÃª insights persistidos;
+- perfil apenas le insights persistidos;
 - admin gera/regenera explicitamente;
 - secrets ficam server-side;
-- perfil pÃºblico nÃ£o renderiza cards vazios;
-- texto **â€œConteÃºdo ainda nÃ£o gerado.â€** nÃ£o aparece publicamente;
-- no admin, card aparece somente quando hÃ¡ aÃ§Ã£o possÃ­vel, conteÃºdo existente, loading ou erro.
+- perfil publico nao renderiza cards vazios;
+- texto **Conteudo ainda nao gerado.** nao aparece publicamente;
+- no admin, card aparece somente quando ha acao possivel, conteudo existente, loading ou erro.
 
-### 12.5 NotificaÃ§Ãµes â€” 7.1
+### 12.5 Notificacoes  7.1
 
-DocumentaÃ§Ã£o especÃ­fica:
+Documentacao especifica:
 
 ```txt
 docs/funcionalidades/NOTIFICACOES.md
@@ -808,16 +808,16 @@ docs/funcionalidades/NOTIFICACOES.md
 
 Implementado:
 
-- `/notificacoes` Ã© central/lista de notificaÃ§Ãµes em cards;
-- `/ajustar-notificacoes` Ã© pÃ¡gina dedicada de preferÃªncias;
-- `NotificationPreferencesPanel` foi extraÃ­do para toggles e salvamento;
-- lista mantÃ©m marcar como lida, marcar todas como lidas, remover, loading, vazio e erro;
-- `/admin/notificacoes`, logs, deduplicaÃ§Ã£o, Edge Functions, Resend e rotina diÃ¡ria estÃ£o preparados;
-- cron automÃ¡tico depende de configuraÃ§Ã£o segura externa.
+- `/notificacoes` e central/lista de notificacoes em cards;
+- `/ajustar-notificacoes` e pagina dedicada de preferencias;
+- `NotificationPreferencesPanel` foi extraido para toggles e salvamento;
+- lista mantem marcar como lida, marcar todas como lidas, remover, loading, vazio e erro;
+- `/admin/notificacoes`, logs, deduplicacao, Edge Functions, Resend e rotina diaria estao preparados;
+- cron automatico depende de configuracao segura externa.
 
-### 12.6 ExportaÃ§Ã£o de Ã¡rea da Ã¡rvore â€” 7.6
+### 12.6 Exportacao de area da arvore  7.6
 
-DocumentaÃ§Ã£o especÃ­fica recomendada:
+Documentacao especifica recomendada:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
@@ -834,16 +834,16 @@ src/app/pages/Home.tsx
 
 Comportamento:
 
-- seleÃ§Ã£o de Ã¡rea visÃ­vel;
-- exportaÃ§Ã£o PNG;
-- exportaÃ§Ã£o PDF;
-- impressÃ£o;
+- selecao de area visivel;
+- exportacao PNG;
+- exportacao PDF;
+- impressao;
 - sem Storage;
 - sem migration;
 - sem log persistido;
-- exportaÃ§Ã£o da Ã¡rvore completa fica pÃ³s-MVP.
+- exportacao da arvore completa fica pos-MVP.
 
-### 12.7 Favoritos â€” 7.8 e 7.9
+### 12.7 Favoritos  7.8 e 7.9
 
 Arquivos principais:
 
@@ -859,36 +859,36 @@ Primeira camada funcional:
 - favoritos de pessoa;
 - busca;
 - filtros;
-- remoÃ§Ã£o;
-- isolamento por usuÃ¡rio.
+- remocao;
+- isolamento por usuario.
 
 ---
 
-## 13. Responsividade mobile/tablet â€” 7.10
+## 13. Responsividade mobile/tablet  7.10
 
 Status:
 
-- concluÃ­da para o MVP;
+- concluida para o MVP;
 - ajustes restritos a CSS, Tailwind, layout, scroll, largura, quebra de texto e usabilidade mobile/tablet;
 - sem migrations;
-- sem alteraÃ§Ã£o de RLS;
-- sem alteraÃ§Ã£o de Edge Functions;
-- sem alteraÃ§Ã£o de services;
-- sem alteraÃ§Ã£o de regras de negÃ³cio de Ã¡rvore, upload, vÃ­nculos, fÃ³rum, favoritos ou notificaÃ§Ãµes;
-- QA final tÃ©cnico e visual aprovado em 2026-05-19.
+- sem alteracao de RLS;
+- sem alteracao de Edge Functions;
+- sem alteracao de services;
+- sem alteracao de regras de negocio de arvore, upload, vinculos, forum, favoritos ou notificacoes;
+- QA final tecnico e visual aprovado em 2026-05-19.
 
-PadrÃµes consolidados:
+Padroes consolidados:
 
 - containers flex/grid com `min-w-0`;
-- textos de usuÃ¡rio com `break-words`;
-- IDs, e-mails, URLs e valores tÃ©cnicos longos com `break-all`;
-- headers e grupos de aÃ§Ãµes em `flex-col gap-2 sm:flex-row`;
-- botÃµes principais em `w-full sm:w-auto` no mobile;
-- formulÃ¡rios longos com grids mobile-first;
+- textos de usuario com `break-words`;
+- IDs, e-mails, URLs e valores tecnicos longos com `break-all`;
+- headers e grupos de acoes em `flex-col gap-2 sm:flex-row`;
+- botoes principais em `w-full sm:w-auto` no mobile;
+- formularios longos com grids mobile-first;
 - tabelas/listas largas com `overflow-x-auto` contido;
-- modais longos com altura mÃ¡xima e rolagem interna.
+- modais longos com altura maxima e rolagem interna.
 
-ValidaÃ§Ã£o final executada:
+Validacao final executada:
 
 ```txt
 npm run build
@@ -911,11 +911,11 @@ desktop
 
 ---
 
-## 14. FÃ³rum, CalendÃ¡rio Familiar e Google Calendar
+## 14. Forum, Calendario Familiar e Google Calendar
 
-### 14.1 CalendÃ¡rio Familiar
+### 14.1 Calendario Familiar
 
-DocumentaÃ§Ã£o especÃ­fica:
+Documentacao especifica:
 
 ```txt
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
@@ -932,33 +932,33 @@ Comportamento consolidado:
 
 - bloco superior de **Categorias** foi removido;
 - **Categorias** fica na sidebar;
-- categorias da sidebar sÃ£o filtros clicÃ¡veis;
+- categorias da sidebar sao filtros clicaveis;
 - contadores usam singular/plural: **1 evento**, **2 eventos**;
-- aniversÃ¡rio mostra primeiro nome no card do calendÃ¡rio e nome completo na lista inferior;
-- idade aparece como **â€œFaz X anosâ€**.
+- aniversario mostra primeiro nome no card do calendario e nome completo na lista inferior;
+- idade aparece como **Faz X anos**.
 
-### 14.2 FÃ³rum
+### 14.2 Forum
 
 Status:
 
 - schema versionado em migration;
-- categorias, tÃ³picos, respostas, comentÃ¡rios, reaÃ§Ãµes, denÃºncias e soluÃ§Ã£o;
-- admin usa funÃ§Ã£o consolidada por `is_admin_user`;
-- fluxo bÃ¡sico entra no MVP conforme QA manual.
+- categorias, topicos, respostas, comentarios, reacoes, denuncias e solucao;
+- admin usa funcao consolidada por `is_admin_user`;
+- fluxo basico entra no MVP conforme QA manual.
 
 ### 14.3 Google Calendar
 
 Status:
 
-- integraÃ§Ã£o versionada em migration;
+- integracao versionada em migration;
 - tokens devem ficar restritos a Edge Functions/service role;
-- OAuth, sincronizaÃ§Ã£o e proteÃ§Ã£o de tokens exigem validaÃ§Ã£o operacional quando a frente for priorizada.
+- OAuth, sincronizacao e protecao de tokens exigem validacao operacional quando a frente for priorizada.
 
 ---
 
 ## 15. Banco, migrations e objetos legados
 
-DocumentaÃ§Ã£o operacional recomendada:
+Documentacao operacional recomendada:
 
 ```txt
 docs/operacao/MIGRATIONS_SUPABASE.md
@@ -967,54 +967,54 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 Regras consolidadas:
 
 - revisar `supabase migration list` antes de `db push`;
-- usar `migration repair` apenas quando o schema remoto jÃ¡ refletir comprovadamente a migration;
-- nÃ£o criar migration para objeto legado sem consumidor runtime;
-- nÃ£o remover coluna/view legada sem dump recente, SQL de auditoria e QA visual;
-- nÃ£o commitar secrets, dumps ou tokens.
+- usar `migration repair` apenas quando o schema remoto ja refletir comprovadamente a migration;
+- nao criar migration para objeto legado sem consumidor runtime;
+- nao remover coluna/view legada sem dump recente, SQL de auditoria e QA visual;
+- nao commitar secrets, dumps ou tokens.
 
-HistÃ³rico operacional recente:
+Historico operacional recente:
 
-- migrations pendentes de visual/home/categoria histÃ³rica foram aplicadas em histÃ³rico recente;
+- migrations pendentes de visual/home/categoria historica foram aplicadas em historico recente;
 - `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` corrigiu `public.admin_list_profiles_for_linking()`;
-- validaÃ§Ã£o tÃ©cnica pÃ³s-migration passou no histÃ³rico recente com build, testes, e2e, `git diff --check` e `supabase migration list`.
+- validacao tecnica pos-migration passou no historico recente com build, testes, e2e, `git diff --check` e `supabase migration list`.
 
 Objetos legados/compatibilidade:
 
-- `public.pessoas.arquivos_historicos`: mantida por compatibilidade atÃ© validaÃ§Ã£o completa;
+- `public.pessoas.arquivos_historicos`: mantida por compatibilidade ate validacao completa;
 - `public.imagens_pessoa`: legado/migrations-only;
 - `public.pessoas_com_estatisticas`: view remota legada sem uso runtime confirmado;
-- scripts SQL antigos de fÃ³rum/Google Calendar devem ser tratados como legado se jÃ¡ houver migrations oficiais.
+- scripts SQL antigos de forum/Google Calendar devem ser tratados como legado se ja houver migrations oficiais.
 
 ---
 
-## 16. Regras de seguranÃ§a permanentes
+## 16. Regras de seguranca permanentes
 
-NÃ£o deve acontecer:
+Nao deve acontecer:
 
-- usuÃ¡rio comum acessar admin;
-- usuÃ¡rio comum alterar relacionamento real diretamente;
+- usuario comum acessar admin;
+- usuario comum alterar relacionamento real diretamente;
 - perfil gerar IA automaticamente;
 - e-mail real ser enviado sem provider, secrets e teste controlado;
 - push/WhatsApp fingirem envio real;
 - dados novos serem salvos como base64;
-- logs, favoritos, timeline ou notificaÃ§Ãµes salvarem dados sensÃ­veis;
+- logs, favoritos, timeline ou notificacoes salvarem dados sensiveis;
 - `/admin/integridade` alterar dados;
 - `supabase db push` ser usado sem revisar migrations;
-- secrets entrarem no frontend ou no repositÃ³rio;
-- responsividade ignorar Ã¡rvore, legenda e seleÃ§Ã£o de Ã¡rea;
-- tÃ­tulo/subtÃ­tulo interno voltar a aparecer nas views Genealogia/VisÃ£o Completa;
-- legenda ou overlay aparecerem em exportaÃ§Ã£o;
-- filtros visuais serem persistidos como regra de negÃ³cio.
+- secrets entrarem no frontend ou no repositorio;
+- responsividade ignorar arvore, legenda e selecao de area;
+- titulo/subtitulo interno voltar a aparecer nas views Genealogia/Visao Completa;
+- legenda ou overlay aparecerem em exportacao;
+- filtros visuais serem persistidos como regra de negocio.
 
 ---
 
-## 17. ObservaÃ§Ãµes de manutenÃ§Ã£o documental
+## 17. Observacoes de manutencao documental
 
-Este arquivo deve permanecer como inventÃ¡rio consolidado. Para evitar repetiÃ§Ã£o:
+Este arquivo deve permanecer como inventario consolidado. Para evitar repeticao:
 
 - detalhes de rotas devem migrar para `docs/arquitetura/ROTAS_E_GUARDS.md`;
 - detalhes de migrations e banco devem migrar para `docs/operacao/MIGRATIONS_SUPABASE.md`;
-- detalhes de exportaÃ§Ã£o devem migrar para `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
-- detalhes de Minha Ãrvore devem permanecer em `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
+- detalhes de exportacao devem migrar para `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
+- detalhes de Minha Arvore devem permanecer em `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
 - detalhes de legenda, painel e conectores devem permanecer em `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
-- histÃ³rico de commits e diagnÃ³sticos deve ir para `docs/historico/`, nÃ£o para este guia.
+- historico de commits e diagnosticos deve ir para `docs/historico/`, nao para este guia.

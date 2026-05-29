@@ -71,7 +71,7 @@ VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
 
 A tela ainda exige digitar `MIGRAR DADOS`.
 
-## Deploy Estático
+## Deploy Estatico
 
 Configure as variaveis acima no provedor (Vercel, Netlify ou equivalente) e publique `dist`.
 
