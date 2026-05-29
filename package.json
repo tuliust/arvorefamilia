@@ -81,7 +81,7 @@
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
     "postcss": "^8.5.12",
-    "supabase": "^2.101.0",
+    "supabase": "^2.102.0",
     "tailwindcss": "4.1.12",
     "vite": "^6.4.2",
     "vitest": "^4.1.6"
