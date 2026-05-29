@@ -1,20 +1,20 @@
-# Manutenção de Storage
+﻿# ManutenÃ§Ã£o de Storage
 
-> Local recomendado: `docs/operacao/STORAGE_MAINTENANCE.md`  
-> Tipo: documentação operacional de manutenção controlada de Storage.
+> Local recomendado: `docs/operacao/STORAGE_MAINTENANCE.md`
+> Tipo: documentaÃ§Ã£o operacional de manutenÃ§Ã£o controlada de Storage.
 
 ---
 
 ## 1. Objetivo
 
-Este documento descreve procedimentos seguros para diagnosticar, migrar e limpar arquivos do Supabase Storage no projeto **Árvore Família**.
+Este documento descreve procedimentos seguros para diagnosticar, migrar e limpar arquivos do Supabase Storage no projeto **Ãrvore FamÃ­lia**.
 
 Use este documento para:
 
-- diagnosticar objetos órfãos;
+- diagnosticar objetos Ã³rfÃ£os;
 - migrar base64 legado para Storage;
 - revisar uploads abandonados;
-- evitar remoções acidentais;
+- evitar remoÃ§Ãµes acidentais;
 - executar scripts administrativos com service role;
 - preservar compatibilidade com dados legados.
 
@@ -22,23 +22,23 @@ Use este documento para:
 
 ## 2. Regra principal
 
-Os scripts citados aqui são seguros por padrão:
+Os scripts citados aqui sÃ£o seguros por padrÃ£o:
 
 ```txt
-geram relatório em dry-run e não removem nem migram dados sem flag explícita.
+geram relatÃ³rio em dry-run e nÃ£o removem nem migram dados sem flag explÃ­cita.
 ```
 
-Nenhuma operação destrutiva deve acontecer sem:
+Nenhuma operaÃ§Ã£o destrutiva deve acontecer sem:
 
 1. dry-run;
-2. revisão do relatório;
-3. confirmação do ambiente;
-4. flag explícita de escrita/remoção;
-5. validação posterior.
+2. revisÃ£o do relatÃ³rio;
+3. confirmaÃ§Ã£o do ambiente;
+4. flag explÃ­cita de escrita/remoÃ§Ã£o;
+5. validaÃ§Ã£o posterior.
 
 ---
 
-## 3. Variáveis necessárias
+## 3. VariÃ¡veis necessÃ¡rias
 
 Defina no ambiente ou em `.env.local`:
 
@@ -52,8 +52,8 @@ Regras:
 - usar service role somente em ambiente administrativo local ou CI protegido;
 - nunca expor service role no frontend;
 - nunca commitar `.env.local`;
-- nunca enviar service role em documentação, issue, log público ou prompt;
-- scripts devem falhar com mensagem explícita se `SUPABASE_SERVICE_ROLE_KEY` não estiver definida.
+- nunca enviar service role em documentaÃ§Ã£o, issue, log pÃºblico ou prompt;
+- scripts devem falhar com mensagem explÃ­cita se `SUPABASE_SERVICE_ROLE_KEY` nÃ£o estiver definida.
 
 ---
 
@@ -71,11 +71,11 @@ Uso esperado:
 | Bucket | Uso |
 |---|---|
 | `person-avatars` | Foto/avatar principal de pessoas. |
-| `historical-files` | Arquivos históricos de pessoas e relacionamentos. |
+| `historical-files` | Arquivos histÃ³ricos de pessoas e relacionamentos. |
 
 ---
 
-## 5. Diagnóstico de órfãos
+## 5. DiagnÃ³stico de Ã³rfÃ£os
 
 Comando dry-run:
 
@@ -90,7 +90,7 @@ person-avatars
 historical-files
 ```
 
-com referências em:
+com referÃªncias em:
 
 ```txt
 public.pessoas.foto_principal_url
@@ -101,15 +101,15 @@ public.arquivos_historicos.storage_path
 
 Resultado esperado:
 
-- relatório JSON;
-- lista de objetos possivelmente órfãos;
-- nenhuma remoção sem flag explícita.
+- relatÃ³rio JSON;
+- lista de objetos possivelmente Ã³rfÃ£os;
+- nenhuma remoÃ§Ã£o sem flag explÃ­cita.
 
 ---
 
-## 6. Remoção de órfãos
+## 6. RemoÃ§Ã£o de Ã³rfÃ£os
 
-Depois de revisar o relatório, executar explicitamente:
+Depois de revisar o relatÃ³rio, executar explicitamente:
 
 ```bash
 node scripts/storage-diagnose-orphans.mjs --delete-confirmed --output=/tmp/storage-orphans-delete.json
@@ -118,22 +118,22 @@ node scripts/storage-diagnose-orphans.mjs --delete-confirmed --output=/tmp/stora
 Regra:
 
 ```txt
---delete-confirmed é a única flag que habilita remoção.
+--delete-confirmed Ã© a Ãºnica flag que habilita remoÃ§Ã£o.
 ```
 
-Sem essa flag, o script apenas gera relatório.
+Sem essa flag, o script apenas gera relatÃ³rio.
 
 Antes de remover:
 
 - conferir ambiente Supabase;
 - revisar quantidade de objetos;
 - revisar paths;
-- confirmar se não há referência indireta;
-- confirmar backup, se aplicável.
+- confirmar se nÃ£o hÃ¡ referÃªncia indireta;
+- confirmar backup, se aplicÃ¡vel.
 
 ---
 
-## 7. Migração de base64 legado
+## 7. MigraÃ§Ã£o de base64 legado
 
 Comando dry-run:
 
@@ -162,9 +162,9 @@ e calcula:
 
 ---
 
-## 8. Executar migração de base64
+## 8. Executar migraÃ§Ã£o de base64
 
-Depois de revisar o relatório:
+Depois de revisar o relatÃ³rio:
 
 ```bash
 node scripts/migrate-legacy-base64-files.mjs --write-confirmed --output=/tmp/base64-migration-write.json
@@ -173,10 +173,10 @@ node scripts/migrate-legacy-base64-files.mjs --write-confirmed --output=/tmp/bas
 Regra:
 
 ```txt
---write-confirmed é a única flag que habilita upload no Storage e update no banco.
+--write-confirmed Ã© a Ãºnica flag que habilita upload no Storage e update no banco.
 ```
 
-Sem essa flag, o script apenas planeja a migração.
+Sem essa flag, o script apenas planeja a migraÃ§Ã£o.
 
 ---
 
@@ -190,15 +190,15 @@ node scripts/migrate-legacy-base64-files.mjs --include-avatars --output=/tmp/bas
 
 Regra:
 
-- incluir avatars apenas após revisar impacto;
+- incluir avatars apenas apÃ³s revisar impacto;
 - validar perfis com foto antes e depois;
 - confirmar que avatar principal continua abrindo no perfil.
 
 ---
 
-## 10. O que o script não faz
+## 10. O que o script nÃ£o faz
 
-O script de migração não deve:
+O script de migraÃ§Ã£o nÃ£o deve:
 
 - remover automaticamente dados antigos;
 - dropar `public.pessoas.arquivos_historicos`;
@@ -210,12 +210,12 @@ O script de migração não deve:
 Regra:
 
 ```txt
-migração de conteúdo e alteração de schema são frentes diferentes.
+migraÃ§Ã£o de conteÃºdo e alteraÃ§Ã£o de schema sÃ£o frentes diferentes.
 ```
 
 ---
 
-## 11. Arquivos históricos recentes
+## 11. Arquivos histÃ³ricos recentes
 
 O componente:
 
@@ -229,7 +229,7 @@ envia novos arquivos para o bucket:
 historical-files
 ```
 
-Depois do upload, pode manter uma miniatura/card PDF em draft até o usuário clicar em:
+Depois do upload, pode manter uma miniatura/card PDF em draft atÃ© o usuÃ¡rio clicar em:
 
 ```txt
 Adicionar Arquivo
@@ -237,12 +237,12 @@ Adicionar Arquivo
 
 Risco conhecido:
 
-- se o usuário fizer upload e abandonar o formulário antes de adicionar/salvar o registro, o objeto pode ficar órfão no Storage.
+- se o usuÃ¡rio fizer upload e abandonar o formulÃ¡rio antes de adicionar/salvar o registro, o objeto pode ficar Ã³rfÃ£o no Storage.
 
 Regra:
 
 ```txt
-a limpeza deve continuar usando diagnóstico dry-run antes de qualquer remoção.
+a limpeza deve continuar usando diagnÃ³stico dry-run antes de qualquer remoÃ§Ã£o.
 ```
 
 ---
@@ -274,23 +274,23 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 
 ---
 
-## 13. Dependências de produto
+## 13. DependÃªncias de produto
 
-Upload de arquivos históricos de casamento por usuário comum continua sem UI ativa.
+Upload de arquivos histÃ³ricos de casamento por usuÃ¡rio comum continua sem UI ativa.
 
 Antes de liberar, definir:
 
-- moderação/aprovação;
-- se usuário pode anexar arquivos a qualquer casamento em que sua pessoa participa;
-- se usuário pode anexar apenas aos próprios eventos;
+- moderaÃ§Ã£o/aprovaÃ§Ã£o;
+- se usuÃ¡rio pode anexar arquivos a qualquer casamento em que sua pessoa participa;
+- se usuÃ¡rio pode anexar apenas aos prÃ³prios eventos;
 - se admin precisa aprovar;
-- se notificação será disparada;
+- se notificaÃ§Ã£o serÃ¡ disparada;
 - como evitar abuso de Storage;
 - limite de tamanho e tipo de arquivo.
 
 ---
 
-## 14. Checklist de execução segura
+## 14. Checklist de execuÃ§Ã£o segura
 
 Antes:
 
@@ -313,35 +313,35 @@ Para Storage:
 2. confirmar projeto correto;
 3. confirmar `SUPABASE_SERVICE_ROLE_KEY`;
 4. rodar dry-run;
-5. revisar relatório;
-6. executar com flag explícita se aprovado;
+5. revisar relatÃ³rio;
+6. executar com flag explÃ­cita se aprovado;
 7. validar UI afetada;
-8. remover relatórios temporários se contiverem dados sensíveis.
+8. remover relatÃ³rios temporÃ¡rios se contiverem dados sensÃ­veis.
 
 ---
 
-## 15. Relatórios gerados
+## 15. RelatÃ³rios gerados
 
-Relatórios podem conter:
+RelatÃ³rios podem conter:
 
 - paths;
 - URLs;
 - IDs;
 - nomes de arquivos;
-- referências de banco.
+- referÃªncias de banco.
 
 Regra:
 
 ```txt
-não commitar relatórios com dados reais sem revisão.
+nÃ£o commitar relatÃ³rios com dados reais sem revisÃ£o.
 ```
 
-Recomendações:
+RecomendaÃ§Ãµes:
 
 - salvar em `/tmp`;
-- remover após uso;
+- remover apÃ³s uso;
 - se precisar preservar, sanitizar antes;
-- não anexar relatório sensível em issue pública.
+- nÃ£o anexar relatÃ³rio sensÃ­vel em issue pÃºblica.
 
 ---
 
@@ -355,34 +355,34 @@ Verificar:
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Correção:
+CorreÃ§Ã£o:
 
-- definir variável no ambiente local;
-- não commitar a chave;
-- não usar anon key para operação administrativa.
+- definir variÃ¡vel no ambiente local;
+- nÃ£o commitar a chave;
+- nÃ£o usar anon key para operaÃ§Ã£o administrativa.
 
 ---
 
-### Muitos órfãos aparecem
+### Muitos Ã³rfÃ£os aparecem
 
-Possíveis causas:
+PossÃ­veis causas:
 
 - upload abandonado;
-- mudança de path;
-- referência antiga em base64;
+- mudanÃ§a de path;
+- referÃªncia antiga em base64;
 - campo `storage_path` ausente;
-- arquivo associado por URL pública;
-- relatório considerando bucket errado.
+- arquivo associado por URL pÃºblica;
+- relatÃ³rio considerando bucket errado.
 
-Correção:
+CorreÃ§Ã£o:
 
 - revisar amostra manualmente;
 - confirmar se a UI ainda acessa o arquivo;
-- não executar `--delete-confirmed` sem validar.
+- nÃ£o executar `--delete-confirmed` sem validar.
 
 ---
 
-### Migração base64 não encontra registros
+### MigraÃ§Ã£o base64 nÃ£o encontra registros
 
 Verificar:
 
@@ -390,22 +390,22 @@ Verificar:
 public.arquivos_historicos.url
 ```
 
-Possíveis causas:
+PossÃ­veis causas:
 
-- dados já migrados;
+- dados jÃ¡ migrados;
 - base64 salvo em outro campo;
 - filtro do script restrito;
 - ambiente errado.
 
 ---
 
-### Arquivo migrou, mas não abre
+### Arquivo migrou, mas nÃ£o abre
 
 Verificar:
 
 - bucket;
 - path;
-- política de acesso;
+- polÃ­tica de acesso;
 - URL salva;
 - MIME type;
 - `storage_bucket`;
@@ -424,22 +424,22 @@ supabase migration list
 schema cache
 ```
 
-Não remover `categoria_evento` do payload sem avaliar o ambiente e a migration.
+NÃ£o remover `categoria_evento` do payload sem avaliar o ambiente e a migration.
 
 ---
 
-## 17. O que não fazer
+## 17. O que nÃ£o fazer
 
-Não fazer:
+NÃ£o fazer:
 
-- remover órfãos sem dry-run;
+- remover Ã³rfÃ£os sem dry-run;
 - usar service role no frontend;
 - commitar `.env.local`;
-- commitar relatório com dados sensíveis;
+- commitar relatÃ³rio com dados sensÃ­veis;
 - dropar coluna/tabela legada sem auditoria;
 - apagar base64 legado automaticamente;
 - misturar limpeza de Storage com migration de schema;
-- usar script em produção sem confirmar projeto.
+- usar script em produÃ§Ã£o sem confirmar projeto.
 
 ---
 
@@ -448,27 +448,27 @@ Não fazer:
 Fazer:
 
 - rodar dry-run;
-- revisar relatório;
+- revisar relatÃ³rio;
 - validar ambiente;
-- usar flag explícita;
+- usar flag explÃ­cita;
 - validar UI depois;
 - manter compatibilidade com legado;
-- documentar decisão operacional;
-- atualizar `MIGRATIONS_SUPABASE.md` quando houver alteração de schema.
+- documentar decisÃ£o operacional;
+- atualizar `MIGRATIONS_SUPABASE.md` quando houver alteraÃ§Ã£o de schema.
 
 ---
 
-## 19. Pós-MVP
+## 19. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
-- tela admin de diagnóstico de Storage;
-- job programado de relatório de órfãos sem remoção;
+- tela admin de diagnÃ³stico de Storage;
+- job programado de relatÃ³rio de Ã³rfÃ£os sem remoÃ§Ã£o;
 - limite de tamanho por tipo de arquivo;
-- política de retenção;
-- aprovação de uploads por usuário comum;
+- polÃ­tica de retenÃ§Ã£o;
+- aprovaÃ§Ã£o de uploads por usuÃ¡rio comum;
 - logs de upload/download;
-- migração completa de base64 legado;
+- migraÃ§Ã£o completa de base64 legado;
 - limpeza auditada de `public.pessoas.arquivos_historicos`.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.

@@ -1,38 +1,38 @@
-# ✅ RESPOSTA RÁPIDA: Irmãos Estão Interligados?
+﻿# âœ… RESPOSTA RÃPIDA: IrmÃ£os EstÃ£o Interligados?
 
-## 🎯 Resposta Direta
+## ðŸŽ¯ Resposta Direta
 
-**SIM**, o sistema **detecta e cria automaticamente** relacionamentos bidirecionais entre irmãos no banco de dados.
+**SIM**, o sistema **detecta e cria automaticamente** relacionamentos bidirecionais entre irmÃ£os no banco de dados.
 
 ---
 
-## 📋 Como Funciona (Resumo de 30 segundos)
+## ðŸ“‹ Como Funciona (Resumo de 30 segundos)
 
-1. Você executa a **migração** em `/admin/migrar-dados`
-2. O sistema cria pessoas e relacionamentos explícitos (pai, mãe, cônjuge, filho)
+1. VocÃª executa a **migraÃ§Ã£o** em `/admin/migrar-dados`
+2. O sistema cria pessoas e relacionamentos explÃ­citos (pai, mÃ£e, cÃ´njuge, filho)
 3. **Automaticamente**, o servidor executa `detectarECriarIrmaos()` que:
    - Agrupa filhos pelo mesmo pai
-   - Agrupa filhos pela mesma mãe
-   - Cria relacionamentos **bidirecionais** entre cada par de irmãos
+   - Agrupa filhos pela mesma mÃ£e
+   - Cria relacionamentos **bidirecionais** entre cada par de irmÃ£os
    - Insere tudo na tabela `relacionamentos` com `tipo_relacionamento = 'irmao'`
 
 ---
 
-## ✅ Como Verificar AGORA (3 minutos)
+## âœ… Como Verificar AGORA (3 minutos)
 
-### **Opção 1: Via SQL (MAIS RÁPIDO)**
+### **OpÃ§Ã£o 1: Via SQL (MAIS RÃPIDO)**
 
-1. Abra o Supabase → SQL Editor
+1. Abra o Supabase â†’ SQL Editor
 2. Execute:
 
 ```sql
--- Ver total de irmãos
+-- Ver total de irmÃ£os
 SELECT COUNT(*) as total_irmaos
 FROM relacionamentos
 WHERE tipo_relacionamento = 'irmao';
 
--- Ver alguns exemplos de irmãos
-SELECT 
+-- Ver alguns exemplos de irmÃ£os
+SELECT
   p1.nome_completo as pessoa,
   STRING_AGG(p2.nome_completo, ', ') as irmaos
 FROM pessoas p1
@@ -43,102 +43,102 @@ LIMIT 5;
 ```
 
 **Resultado esperado:**
-- Primeira query: número > 0 (geralmente 200-400)
-- Segunda query: lista de pessoas com seus irmãos
+- Primeira query: nÃºmero > 0 (geralmente 200-400)
+- Segunda query: lista de pessoas com seus irmÃ£os
 
-### **Opção 2: Via Interface**
+### **OpÃ§Ã£o 2: Via Interface**
 
 1. Acesse `/admin/diagnostico`
-2. Veja a seção "Relacionamentos por Tipo"
-3. Deve ter uma linha "Irmãos" com número > 0
+2. Veja a seÃ§Ã£o "Relacionamentos por Tipo"
+3. Deve ter uma linha "IrmÃ£os" com nÃºmero > 0
 
-### **Opção 3: Via Árvore Visual**
+### **OpÃ§Ã£o 3: Via Ãrvore Visual**
 
 1. Acesse a home (`/`)
 2. Procure por **linhas pontilhadas laranjas** conectando pessoas lado a lado
-3. Estas são as conexões entre irmãos
+3. Estas sÃ£o as conexÃµes entre irmÃ£os
 
 ---
 
-## 🐛 Se NÃO Estiver Funcionando
+## ðŸ› Se NÃƒO Estiver Funcionando
 
-### **Cenário 1: Migração não foi executada**
+### **CenÃ¡rio 1: MigraÃ§Ã£o nÃ£o foi executada**
 
-**Solução:**
+**SoluÃ§Ã£o:**
 1. Acesse `/admin/migrar-dados`
 2. Clique em "Migrar Dados do Seed para o Banco"
-3. Aguarde conclusão
+3. Aguarde conclusÃ£o
 
-### **Cenário 2: Tabelas não foram criadas**
+### **CenÃ¡rio 2: Tabelas nÃ£o foram criadas**
 
-**Solução:**
-1. Abra o Supabase → SQL Editor
-2. Execute o arquivo `/database-schema.sql` (copie e cole todo conteúdo)
-3. Depois execute a migração
+**SoluÃ§Ã£o:**
+1. Abra o Supabase â†’ SQL Editor
+2. Execute o arquivo `/database-schema.sql` (copie e cole todo conteÃºdo)
+3. Depois execute a migraÃ§Ã£o
 
-### **Cenário 3: Irmãos criados mas não aparecem na árvore**
+### **CenÃ¡rio 3: IrmÃ£os criados mas nÃ£o aparecem na Ã¡rvore**
 
-**Solução:**
-1. Na home, abra a sidebar (botão ☰)
-2. Em "Filtros de Linhas", verifique se "Irmãos" está marcado
-3. Se não, marque a checkbox
+**SoluÃ§Ã£o:**
+1. Na home, abra a sidebar (botÃ£o â˜°)
+2. Em "Filtros de Linhas", verifique se "IrmÃ£os" estÃ¡ marcado
+3. Se nÃ£o, marque a checkbox
 
 ---
 
-## 📊 Números Esperados
+## ðŸ“Š NÃºmeros Esperados
 
-Após migração completa (62 pessoas):
+ApÃ³s migraÃ§Ã£o completa (62 pessoas):
 
 | Item | Valor Esperado |
 |------|----------------|
 | Pessoas | 62 |
-| Relacionamentos de irmãos | 200-400 |
+| Relacionamentos de irmÃ£os | 200-400 |
 | Total de relacionamentos | 500-800 |
 
 ---
 
-## 📁 Arquivos de Referência
+## ðŸ“ Arquivos de ReferÃªncia
 
 - **Schema SQL:** `/database-schema.sql`
-- **Verificação SQL:** `/verificar-irmaos.sql`
-- **Código do servidor:** `/supabase/functions/server/index.tsx` (linha 541)
+- **VerificaÃ§Ã£o SQL:** `/verificar-irmaos.sql`
+- **CÃ³digo do servidor:** `/supabase/functions/server/index.tsx` (linha 541)
 - **Guia completo:** `/COMO-FUNCIONA-IRMAOS.md`
 - **Setup do banco:** `/SETUP-BANCO-DADOS.md`
 
 ---
 
-## 🎯 Checklist Rápido
+## ðŸŽ¯ Checklist RÃ¡pido
 
 - [ ] Schema SQL executado no Supabase
-- [ ] Migração executada em `/admin/migrar-dados`
-- [ ] Query SQL retorna relacionamentos de irmãos > 0
-- [ ] Diagnóstico mostra relacionamentos de irmãos
-- [ ] Árvore visual mostra linhas pontilhadas laranjas
+- [ ] MigraÃ§Ã£o executada em `/admin/migrar-dados`
+- [ ] Query SQL retorna relacionamentos de irmÃ£os > 0
+- [ ] DiagnÃ³stico mostra relacionamentos de irmÃ£os
+- [ ] Ãrvore visual mostra linhas pontilhadas laranjas
 
-**Se todos estão ✅, então SIM, os irmãos estão completamente interligados no banco!**
+**Se todos estÃ£o âœ…, entÃ£o SIM, os irmÃ£os estÃ£o completamente interligados no banco!**
 
 ---
 
-## 💡 Exemplo Visual
+## ðŸ’¡ Exemplo Visual
 
 ```
-João -------- Maria -------- Pedro
+JoÃ£o -------- Maria -------- Pedro
  |              |              |
 filho          filho          filho
  de            de             de
- ↓              ↓              ↓
+ â†“              â†“              â†“
 Pai: Carlos   Pai: Carlos   Pai: Carlos
-Mãe: Ana      Mãe: Ana      Mãe: Ana
+MÃ£e: Ana      MÃ£e: Ana      MÃ£e: Ana
 
 Relacionamentos criados automaticamente:
-- João ↔ Maria (bidirecional)
-- João ↔ Pedro (bidirecional)
-- Maria ↔ Pedro (bidirecional)
+- JoÃ£o â†” Maria (bidirecional)
+- JoÃ£o â†” Pedro (bidirecional)
+- Maria â†” Pedro (bidirecional)
 
 Total: 6 registros na tabela relacionamentos
-(3 pares × 2 direções)
+(3 pares Ã— 2 direÃ§Ãµes)
 ```
 
 ---
 
-**Dúvidas?** Consulte `/COMO-FUNCIONA-IRMAOS.md` para detalhes completos.
+**DÃºvidas?** Consulte `/COMO-FUNCIONA-IRMAOS.md` para detalhes completos.

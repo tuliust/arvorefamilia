@@ -1,38 +1,38 @@
-# 🗄️ Setup do Banco de Dados no Supabase
+﻿# ðŸ—„ï¸ Setup do Banco de Dados no Supabase
 
-## ✅ O que precisa ser criado no Supabase
+## âœ… O que precisa ser criado no Supabase
 
-### 1️⃣ **Tabelas**
-- ✅ `pessoas` - Membros da família e pets
-- ✅ `relacionamentos` - Conexões entre pessoas (pai, mãe, cônjuge, filho, irmão)
-- ✅ `arquivos_historicos` - Fotos e documentos históricos
+### 1ï¸âƒ£ **Tabelas**
+- âœ… `pessoas` - Membros da famÃ­lia e pets
+- âœ… `relacionamentos` - ConexÃµes entre pessoas (pai, mÃ£e, cÃ´njuge, filho, irmÃ£o)
+- âœ… `arquivos_historicos` - Fotos e documentos histÃ³ricos
 
-### 2️⃣ **Função**
-- ✅ `update_updated_at_column()` - Atualiza automaticamente o campo `updated_at`
+### 2ï¸âƒ£ **FunÃ§Ã£o**
+- âœ… `update_updated_at_column()` - Atualiza automaticamente o campo `updated_at`
 
-### 3️⃣ **Triggers**
-- ✅ `update_pessoas_updated_at` - Atualiza `updated_at` na tabela `pessoas`
-- ✅ `update_relacionamentos_updated_at` - Atualiza `updated_at` na tabela `relacionamentos`
-- ✅ `update_arquivos_updated_at` - Atualiza `updated_at` na tabela `arquivos_historicos`
+### 3ï¸âƒ£ **Triggers**
+- âœ… `update_pessoas_updated_at` - Atualiza `updated_at` na tabela `pessoas`
+- âœ… `update_relacionamentos_updated_at` - Atualiza `updated_at` na tabela `relacionamentos`
+- âœ… `update_arquivos_updated_at` - Atualiza `updated_at` na tabela `arquivos_historicos`
 
-### 4️⃣ **Índices**
-- ✅ Índices em `pessoas` (nome, tipo, created_at)
-- ✅ Índices em `relacionamentos` (origem, destino, tipo)
-- ✅ Índices em `arquivos_historicos` (pessoa_id, ordem)
+### 4ï¸âƒ£ **Ãndices**
+- âœ… Ãndices em `pessoas` (nome, tipo, created_at)
+- âœ… Ãndices em `relacionamentos` (origem, destino, tipo)
+- âœ… Ãndices em `arquivos_historicos` (pessoa_id, ordem)
 
-### 5️⃣ **Políticas RLS (Row Level Security)**
-- ✅ Leitura pública para todas as tabelas (área pública do site)
-- ✅ Escrita permitida via `service_role` (backend)
+### 5ï¸âƒ£ **PolÃ­ticas RLS (Row Level Security)**
+- âœ… Leitura pÃºblica para todas as tabelas (Ã¡rea pÃºblica do site)
+- âœ… Escrita permitida via `service_role` (backend)
 
-### 6️⃣ **View (opcional)**
-- ✅ `pessoas_com_estatisticas` - Estatísticas agregadas por pessoa
+### 6ï¸âƒ£ **View (opcional)**
+- âœ… `pessoas_com_estatisticas` - EstatÃ­sticas agregadas por pessoa
 
-### 7️⃣ **Extensão**
-- ✅ `uuid-ossp` - Para gerar UUIDs automaticamente
+### 7ï¸âƒ£ **ExtensÃ£o**
+- âœ… `uuid-ossp` - Para gerar UUIDs automaticamente
 
 ---
 
-## 📝 Como Executar o Setup
+## ðŸ“ Como Executar o Setup
 
 ### **Passo 1: Acessar o Supabase SQL Editor**
 1. Acesse seu projeto no [Supabase Dashboard](https://supabase.com/dashboard)
@@ -41,47 +41,47 @@
 
 ### **Passo 2: Executar o Schema**
 1. Abra o arquivo `database-schema.sql` (na raiz do projeto)
-2. Copie TODO o conteúdo do arquivo
+2. Copie TODO o conteÃºdo do arquivo
 3. Cole no SQL Editor do Supabase
 4. Clique em **RUN** (ou pressione Ctrl+Enter)
 
-### **Passo 3: Verificar Criação**
-Após executar, você deve ver:
-- ✅ 3 tabelas criadas
-- ✅ 1 função criada
-- ✅ 3 triggers criados
-- ✅ 9 índices criados
-- ✅ 12 políticas RLS criadas
-- ✅ 1 view criada
-- ✅ 1 extensão habilitada
+### **Passo 3: Verificar CriaÃ§Ã£o**
+ApÃ³s executar, vocÃª deve ver:
+- âœ… 3 tabelas criadas
+- âœ… 1 funÃ§Ã£o criada
+- âœ… 3 triggers criados
+- âœ… 9 Ã­ndices criados
+- âœ… 12 polÃ­ticas RLS criadas
+- âœ… 1 view criada
+- âœ… 1 extensÃ£o habilitada
 
 ### **Passo 4: Migrar os Dados**
 1. Acesse o painel administrativo: `/admin/login`
-2. Faça login (senha padrão: `admin123`)
-3. Vá em **Migrar para Banco** ou acesse `/admin/migrar-dados`
+2. FaÃ§a login (senha padrÃ£o: `admin123`)
+3. VÃ¡ em **Migrar para Banco** ou acesse `/admin/migrar-dados`
 4. Clique em **Migrar Dados do Seed para o Banco**
-5. Aguarde a conclusão (62 pessoas + relacionamentos serão criados)
+5. Aguarde a conclusÃ£o (62 pessoas + relacionamentos serÃ£o criados)
 
 ---
 
-## 🔍 Como Verificar se Está Funcionando
+## ðŸ” Como Verificar se EstÃ¡ Funcionando
 
-### **Método 1: Via Interface**
+### **MÃ©todo 1: Via Interface**
 1. Acesse `/admin/diagnostico`
-2. Verifique as estatísticas:
+2. Verifique as estatÃ­sticas:
    - Total de pessoas cadastradas
    - Total de relacionamentos
-   - Total de relacionamentos de irmãos
+   - Total de relacionamentos de irmÃ£os
    - Avisos sobre integridade dos dados
 
-### **Método 2: Via Supabase Dashboard**
-1. No Supabase, vá em **Table Editor**
+### **MÃ©todo 2: Via Supabase Dashboard**
+1. No Supabase, vÃ¡ em **Table Editor**
 2. Selecione a tabela `pessoas` - deve ter 62 registros
 3. Selecione a tabela `relacionamentos` - deve ter centenas de registros
 4. Filtre por `tipo_relacionamento = 'irmao'` - deve ter muitos registros
-5. Verifique se os dados estão corretos
+5. Verifique se os dados estÃ£o corretos
 
-### **Método 3: Via SQL (RECOMENDADO para verificar irmãos)**
+### **MÃ©todo 3: Via SQL (RECOMENDADO para verificar irmÃ£os)**
 Execute o arquivo `verificar-irmaos.sql` no SQL Editor do Supabase:
 ```sql
 -- Ver total de relacionamentos por tipo
@@ -89,8 +89,8 @@ SELECT tipo_relacionamento, COUNT(*) as total
 FROM relacionamentos
 GROUP BY tipo_relacionamento;
 
--- Ver pessoas com seus irmãos
-SELECT 
+-- Ver pessoas com seus irmÃ£os
+SELECT
   p1.nome_completo as pessoa,
   COUNT(r.id) as total_irmaos,
   STRING_AGG(p2.nome_completo, ', ') as nomes_irmaos
@@ -104,9 +104,9 @@ ORDER BY total_irmaos DESC
 LIMIT 10;
 ```
 
-✅ **Arquivo completo de verificação disponível em:** `/verificar-irmaos.sql`
+âœ… **Arquivo completo de verificaÃ§Ã£o disponÃ­vel em:** `/verificar-irmaos.sql`
 
-### **Método 4: Via SQL Básico**
+### **MÃ©todo 4: Via SQL BÃ¡sico**
 Execute no SQL Editor:
 ```sql
 -- Ver total de pessoas
@@ -115,69 +115,69 @@ SELECT COUNT(*) FROM pessoas;
 -- Ver total de relacionamentos
 SELECT COUNT(*) FROM relacionamentos;
 
--- Ver estatísticas por tipo de relacionamento
-SELECT tipo_relacionamento, COUNT(*) 
-FROM relacionamentos 
+-- Ver estatÃ­sticas por tipo de relacionamento
+SELECT tipo_relacionamento, COUNT(*)
+FROM relacionamentos
 GROUP BY tipo_relacionamento;
 
--- IMPORTANTE: Verificar se existe relacionamento de irmãos
+-- IMPORTANTE: Verificar se existe relacionamento de irmÃ£os
 SELECT COUNT(*) as total_irmaos
-FROM relacionamentos 
+FROM relacionamentos
 WHERE tipo_relacionamento = 'irmao';
--- Este número deve ser > 0 (geralmente centenas)
+-- Este nÃºmero deve ser > 0 (geralmente centenas)
 
 -- Ver algumas pessoas de exemplo
-SELECT id, nome_completo, humano_ou_pet 
-FROM pessoas 
+SELECT id, nome_completo, humano_ou_pet
+FROM pessoas
 LIMIT 10;
 ```
 
 ---
 
-## ⚠️ Solução de Problemas
+## âš ï¸ SoluÃ§Ã£o de Problemas
 
 ### **Erro: "relation already exists"**
-- **Causa:** Tabelas já foram criadas anteriormente
-- **Solução:** O script usa `CREATE TABLE IF NOT EXISTS`, então é seguro executar novamente
+- **Causa:** Tabelas jÃ¡ foram criadas anteriormente
+- **SoluÃ§Ã£o:** O script usa `CREATE TABLE IF NOT EXISTS`, entÃ£o Ã© seguro executar novamente
 
 ### **Erro: "permission denied"**
-- **Causa:** Usuário sem permissões adequadas
-- **Solução:** Use o SQL Editor do Supabase (já tem permissões corretas)
+- **Causa:** UsuÃ¡rio sem permissÃµes adequadas
+- **SoluÃ§Ã£o:** Use o SQL Editor do Supabase (jÃ¡ tem permissÃµes corretas)
 
 ### **Erro: "extension uuid-ossp does not exist"**
-- **Causa:** Extensão não instalada
-- **Solução:** Execute primeiro: `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
+- **Causa:** ExtensÃ£o nÃ£o instalada
+- **SoluÃ§Ã£o:** Execute primeiro: `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 
 ### **Tabelas criadas mas vazias**
-- **Causa:** Migração de dados não foi executada
-- **Solução:** Acesse `/admin/migrar-dados` e execute a migração
+- **Causa:** MigraÃ§Ã£o de dados nÃ£o foi executada
+- **SoluÃ§Ã£o:** Acesse `/admin/migrar-dados` e execute a migraÃ§Ã£o
 
-### **Erro na migração: "seed inválido"**
-- **Causa:** Arquivo seed.ts não está acessível
-- **Solução:** Verifique se o arquivo `/src/app/data/seed.ts` existe
+### **Erro na migraÃ§Ã£o: "seed invÃ¡lido"**
+- **Causa:** Arquivo seed.ts nÃ£o estÃ¡ acessÃ­vel
+- **SoluÃ§Ã£o:** Verifique se o arquivo `/src/app/data/seed.ts` existe
 
 ---
 
-## 🎯 Checklist Completo
+## ðŸŽ¯ Checklist Completo
 
 Antes de considerar o setup completo, verifique:
 
-- [ ] Extensão `uuid-ossp` habilitada
-- [ ] Tabela `pessoas` criada (62 registros após migração)
-- [ ] Tabela `relacionamentos` criada (centenas de registros após migração)
+- [ ] ExtensÃ£o `uuid-ossp` habilitada
+- [ ] Tabela `pessoas` criada (62 registros apÃ³s migraÃ§Ã£o)
+- [ ] Tabela `relacionamentos` criada (centenas de registros apÃ³s migraÃ§Ã£o)
 - [ ] Tabela `arquivos_historicos` criada (vazia inicialmente)
-- [ ] Função `update_updated_at_column()` criada
+- [ ] FunÃ§Ã£o `update_updated_at_column()` criada
 - [ ] 3 triggers criados (um para cada tabela)
-- [ ] Índices criados em todas as tabelas
-- [ ] Políticas RLS configuradas
+- [ ] Ãndices criados em todas as tabelas
+- [ ] PolÃ­ticas RLS configuradas
 - [ ] View `pessoas_com_estatisticas` criada
-- [ ] Migração de dados executada com sucesso
-- [ ] Árvore genealógica aparecendo na home (`/`)
-- [ ] Diagnóstico em `/admin/diagnostico` mostrando dados corretos
+- [ ] MigraÃ§Ã£o de dados executada com sucesso
+- [ ] Ãrvore genealÃ³gica aparecendo na home (`/`)
+- [ ] DiagnÃ³stico em `/admin/diagnostico` mostrando dados corretos
 
 ---
 
-## 📚 Estrutura das Tabelas
+## ðŸ“š Estrutura das Tabelas
 
 ### **Tabela: pessoas**
 ```
@@ -229,22 +229,22 @@ updated_at  TIMESTAMP
 
 ---
 
-## 🚀 Próximos Passos
+## ðŸš€ PrÃ³ximos Passos
 
-Após concluir o setup:
+ApÃ³s concluir o setup:
 
-1. ✅ Acesse a home (`/`) para ver a árvore genealógica
-2. ✅ Teste a navegação clicando nas pessoas
-3. ✅ Acesse o painel admin (`/admin`) para gerenciar dados
-4. ✅ Use o diagnóstico (`/admin/diagnostico`) para verificar integridade
-5. ✅ Experimente adicionar/editar pessoas e relacionamentos
+1. âœ… Acesse a home (`/`) para ver a Ã¡rvore genealÃ³gica
+2. âœ… Teste a navegaÃ§Ã£o clicando nas pessoas
+3. âœ… Acesse o painel admin (`/admin`) para gerenciar dados
+4. âœ… Use o diagnÃ³stico (`/admin/diagnostico`) para verificar integridade
+5. âœ… Experimente adicionar/editar pessoas e relacionamentos
 
 ---
 
-## 📞 Suporte
+## ðŸ“ž Suporte
 
 Se encontrar problemas:
 1. Verifique os logs do servidor Supabase
 2. Verifique os logs do navegador (Console do DevTools)
-3. Execute o diagnóstico em `/admin/diagnostico`
-4. Consulte a documentação do Supabase: https://supabase.com/docs
+3. Execute o diagnÃ³stico em `/admin/diagnostico`
+4. Consulte a documentaÃ§Ã£o do Supabase: https://supabase.com/docs

@@ -1,12 +1,12 @@
-# Diagnóstico de documentação atual — Árvore Família
+﻿# DiagnÃ³stico de documentaÃ§Ã£o atual â€” Ãrvore FamÃ­lia
 
 Data: 2026-05-21T02:48:02.562Z
 
 ## Escopo
 
-Este relatório compara as documentações em `docs/` com o estado atual do código local e com as frentes recentes da árvore, painel lateral, exportação, responsividade e notificações.
+Este relatÃ³rio compara as documentaÃ§Ãµes em `docs/` com o estado atual do cÃ³digo local e com as frentes recentes da Ã¡rvore, painel lateral, exportaÃ§Ã£o, responsividade e notificaÃ§Ãµes.
 
-Nenhum arquivo de produção foi alterado por este diagnóstico.
+Nenhum arquivo de produÃ§Ã£o foi alterado por este diagnÃ³stico.
 
 ## Estado do Git
 
@@ -37,7 +37,7 @@ d965020 fix: estabilizar viewport inicial da arvore
 f6109f4 docs: adicionar guias de ux layout e componentes
 ```
 
-## Arquivos de documentação encontrados
+## Arquivos de documentaÃ§Ã£o encontrados
 
 ```txt
 docs/.DS_Store
@@ -56,41 +56,41 @@ docs/funcionalidades/TIMELINE.md
 
 ## Arquivo indesejado detectado
 
-- `docs/.DS_Store` existe no diretório local. Não deve ser commitado.
+- `docs/.DS_Store` existe no diretÃ³rio local. NÃ£o deve ser commitado.
 
-## Classificação por documento
+## ClassificaÃ§Ã£o por documento
 
-| Documento | Classificação | Atualizações necessárias |
+| Documento | ClassificaÃ§Ã£o | AtualizaÃ§Ãµes necessÃ¡rias |
 |---|---|---|
-| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Contraditório | Separar diagnóstico 7.6A de implementação 7.6B/QA 7.6C; documento está contraditório. |
-| `GUIA_COMPONENTES.md` | Parcialmente atualizado | Atualizar TreeLegend/FamilyTree com filtros e camadas visuais. Registrar botão Destacar pais/filhos. Registrar botão Destacar irmãos. Registrar novo botão externo de Informações no painel. |
+| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | ContraditÃ³rio | Separar diagnÃ³stico 7.6A de implementaÃ§Ã£o 7.6B/QA 7.6C; documento estÃ¡ contraditÃ³rio. |
+| `GUIA_COMPONENTES.md` | Parcialmente atualizado | Atualizar TreeLegend/FamilyTree com filtros e camadas visuais. Registrar botÃ£o Destacar pais/filhos. Registrar botÃ£o Destacar irmÃ£os. Registrar novo botÃ£o externo de InformaÃ§Ãµes no painel. |
 | `GUIA_CORRECAO_ERROS.md` | Parcialmente atualizado | Adicionar troubleshooting dos destaques visuais. Adicionar troubleshooting do painel lateral atual. |
-| `GUIA_IMPLEMENTACOES.md` | Parcialmente atualizado | Consolidar 7.7 como legenda funcional + camadas visuais opcionais. Registrar ajuste do painel lateral da Home. Registrar destaques opcionais de pais/filhos e irmãos. |
-| `GUIA_UX_LAYOUT.md` | Parcialmente atualizado | Adicionar Camadas extras na legenda. Registrar Informações fora da toggle e botão com ícone. Registrar zoom no canto superior direito da árvore. |
-| `NOTIFICACOES.md` | Parcialmente atualizado | Resolver possível divergência com guias que tratam pg_cron como validado/concluído. |
-| `PLANO_PROXIMOS_PASSOS.md` | Parcialmente atualizado | Registrar conclusão dos destaques visuais opcionais. Registrar ajuste recente do painel lateral. |
-| `QA_7_6_EXPORTACAO_ARVORE.md` | Parcialmente atualizado | Sem lacuna crítica detectada por busca textual. |
-| `RESPONSIVIDADE_MOBILE_TABLET.md` | Parcialmente atualizado | Sem lacuna crítica detectada por busca textual. |
-| `STORAGE_MAINTENANCE.md` | Referência específica | Sem lacuna crítica detectada por busca textual. |
-| `TIMELINE.md` | Referência específica | Sem lacuna crítica detectada por busca textual. |
+| `GUIA_IMPLEMENTACOES.md` | Parcialmente atualizado | Consolidar 7.7 como legenda funcional + camadas visuais opcionais. Registrar ajuste do painel lateral da Home. Registrar destaques opcionais de pais/filhos e irmÃ£os. |
+| `GUIA_UX_LAYOUT.md` | Parcialmente atualizado | Adicionar Camadas extras na legenda. Registrar InformaÃ§Ãµes fora da toggle e botÃ£o com Ã­cone. Registrar zoom no canto superior direito da Ã¡rvore. |
+| `NOTIFICACOES.md` | Parcialmente atualizado | Resolver possÃ­vel divergÃªncia com guias que tratam pg_cron como validado/concluÃ­do. |
+| `PLANO_PROXIMOS_PASSOS.md` | Parcialmente atualizado | Registrar conclusÃ£o dos destaques visuais opcionais. Registrar ajuste recente do painel lateral. |
+| `QA_7_6_EXPORTACAO_ARVORE.md` | Parcialmente atualizado | Sem lacuna crÃ­tica detectada por busca textual. |
+| `RESPONSIVIDADE_MOBILE_TABLET.md` | Parcialmente atualizado | Sem lacuna crÃ­tica detectada por busca textual. |
+| `STORAGE_MAINTENANCE.md` | ReferÃªncia especÃ­fica | Sem lacuna crÃ­tica detectada por busca textual. |
+| `TIMELINE.md` | ReferÃªncia especÃ­fica | Sem lacuna crÃ­tica detectada por busca textual. |
 
-## Conferência de tópicos no código versus documentação
+## ConferÃªncia de tÃ³picos no cÃ³digo versus documentaÃ§Ã£o
 
-| Tópico | Existe no código? | Existe nos docs? | Avaliação |
+| TÃ³pico | Existe no cÃ³digo? | Existe nos docs? | AvaliaÃ§Ã£o |
 |---|---:|---:|---|
 | Legenda como filtros reais | Sim | Sim | Parcial |
-| Camadas visuais opcionais das linhas | Sim | Não | Defasagem documental |
+| Camadas visuais opcionais das linhas | Sim | NÃ£o | Defasagem documental |
 | Painel lateral da Home | Sim | Sim | OK |
-| Exportação de área da árvore | Sim | Sim | OK |
-| Responsividade mobile/tablet concluída | Sim | Sim | OK |
-| Status de notificações e cron | Não | Sim | OK |
+| ExportaÃ§Ã£o de Ã¡rea da Ã¡rvore | Sim | Sim | OK |
+| Responsividade mobile/tablet concluÃ­da | Sim | Sim | OK |
+| Status de notificaÃ§Ãµes e cron | NÃ£o | Sim | OK |
 
-## Evidências rápidas no código
+## EvidÃªncias rÃ¡pidas no cÃ³digo
 
 ```txt
 src/app/pages/Home.tsx: visualLineFilters, SquareDashedMousePointer, startAreaSelection
 src/app/components/FamilyTree/FamilyTree.tsx: visualLineFilters, TreeAreaSelectionOverlay, startAreaSelection, right-4 top-4
-src/app/components/FamilyTree/TreeLegend.tsx: visualLineFilters, parentChildHighlight, siblingHighlight, Destacar pais/filhos, Destacar irmãos
+src/app/components/FamilyTree/TreeLegend.tsx: visualLineFilters, parentChildHighlight, siblingHighlight, Destacar pais/filhos, Destacar irmÃ£os
 src/app/components/FamilyTree/types.ts: parentChildHighlight, siblingHighlight
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx: parentChildHighlight
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts: visualLineFilters, parentChildHighlight, siblingHighlight
@@ -98,14 +98,14 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts: visualLineFilte
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx: TreeAreaSelectionOverlay
 ```
 
-## Recomendações objetivas
+## RecomendaÃ§Ãµes objetivas
 
-1. Atualizar `GUIA_COMPONENTES.md` para refletir `TreeLegend`, filtros funcionais, camadas extras e ações de `FamilyTree`.
+1. Atualizar `GUIA_COMPONENTES.md` para refletir `TreeLegend`, filtros funcionais, camadas extras e aÃ§Ãµes de `FamilyTree`.
 2. Atualizar `GUIA_IMPLEMENTACOES.md` para consolidar 7.7 como legenda funcional + camadas visuais opcionais.
-3. Atualizar `GUIA_UX_LAYOUT.md` para registrar painel lateral atual, botão externo de Informações e zoom à direita.
+3. Atualizar `GUIA_UX_LAYOUT.md` para registrar painel lateral atual, botÃ£o externo de InformaÃ§Ãµes e zoom Ã  direita.
 4. Atualizar `GUIA_CORRECAO_ERROS.md` com troubleshooting de destaques visuais, filtros da legenda e painel lateral.
-5. Atualizar `PLANO_PROXIMOS_PASSOS.md` para distinguir concluído versus pós-MVP.
-6. Revisar `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` para separar diagnóstico histórico de implementação/QA.
-7. Marcar `RESPONSIVIDADE_MOBILE_TABLET.md` como documento histórico/checklist de regressão.
-8. Resolver divergência entre `NOTIFICACOES.md` e guias principais sobre `pg_cron`/rotina diária.
+5. Atualizar `PLANO_PROXIMOS_PASSOS.md` para distinguir concluÃ­do versus pÃ³s-MVP.
+6. Revisar `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` para separar diagnÃ³stico histÃ³rico de implementaÃ§Ã£o/QA.
+7. Marcar `RESPONSIVIDADE_MOBILE_TABLET.md` como documento histÃ³rico/checklist de regressÃ£o.
+8. Resolver divergÃªncia entre `NOTIFICACOES.md` e guias principais sobre `pg_cron`/rotina diÃ¡ria.
 9. Remover `docs/.DS_Store`, se estiver presente.

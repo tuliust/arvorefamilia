@@ -1,27 +1,27 @@
-# Árvore — legendas, conectores, filtros e painel lateral
+﻿# Ãrvore â€” legendas, conectores, filtros e painel lateral
 
-> Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
-> Tipo: documentação funcional/técnica específica da árvore.
+> Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
+> Tipo: documentaÃ§Ã£o funcional/tÃ©cnica especÃ­fica da Ã¡rvore.
 
 ---
 
 ## 1. Objetivo
 
-Este documento consolida as decisões, regras e cuidados da visualização da árvore familiar no projeto `tuliust/arvorefamilia`, com foco em:
+Este documento consolida as decisÃµes, regras e cuidados da visualizaÃ§Ã£o da Ã¡rvore familiar no projeto `tuliust/arvorefamilia`, com foco em:
 
 - aba **Legendas**;
-- botões de **Linhas**;
-- botões de **Destacar**;
-- conectores da **Minha Árvore**;
+- botÃµes de **Linhas**;
+- botÃµes de **Destacar**;
+- conectores da **Minha Ãrvore**;
 - conectores da **Genealogia**;
-- conectores da **Visão Completa**;
+- conectores da **VisÃ£o Completa**;
 - comportamento visual de pets;
 - painel lateral esquerdo;
 - filtros visuais e filtros de grupos;
-- correções de pan/scroll;
-- riscos de regressão visual.
+- correÃ§Ãµes de pan/scroll;
+- riscos de regressÃ£o visual.
 
-Este documento não substitui:
+Este documento nÃ£o substitui:
 
 ```txt
 docs/GUIA_COMPONENTES.md
@@ -35,39 +35,39 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ## 2. Regra central da frente
 
-A regra central é separar claramente **existência**, **destaque**, **cards** e **grupos**.
+A regra central Ã© separar claramente **existÃªncia**, **destaque**, **cards** e **grupos**.
 
 ```txt
 edgeFilters:
-  controlam existência/visibilidade de linhas.
+  controlam existÃªncia/visibilidade de linhas.
 
 visualLineFilters:
-  controlam apenas destaque visual de linhas já visíveis.
+  controlam apenas destaque visual de linhas jÃ¡ visÃ­veis.
 
 personFilters:
   controlam cards por status/tipo.
 
 directRelativeFilters:
-  controlam grupos de parentes na Minha Árvore.
+  controlam grupos de parentes na Minha Ãrvore.
 
 genealogyFilters:
-  controlam gerações/grupos na Genealogia e na Visão Completa.
+  controlam geraÃ§Ãµes/grupos na Genealogia e na VisÃ£o Completa.
 ```
 
-Regra obrigatória:
+Regra obrigatÃ³ria:
 
 ```txt
-Destaque não cria linha nova.
-Destaque não reexibe linha oculta.
-Destaque não altera cards.
-Destaque não altera contadores.
+Destaque nÃ£o cria linha nova.
+Destaque nÃ£o reexibe linha oculta.
+Destaque nÃ£o altera cards.
+Destaque nÃ£o altera contadores.
 ```
 
 ---
 
-## 3. Views da árvore
+## 3. Views da Ã¡rvore
 
-O projeto possui três rotas principais da árvore:
+O projeto possui trÃªs rotas principais da Ã¡rvore:
 
 ```txt
 /minha-arvore
@@ -75,7 +75,7 @@ O projeto possui três rotas principais da árvore:
 /visao-completa
 ```
 
-### 3.1 Minha Árvore
+### 3.1 Minha Ãrvore
 
 Layout principal:
 
@@ -83,17 +83,17 @@ Layout principal:
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 ```
 
-Características:
+CaracterÃ­sticas:
 
 - foco na pessoa central;
 - grupos diretos de parentes;
 - cards coloridos por grupo;
-- separação visual entre filhos humanos e pets;
+- separaÃ§Ã£o visual entre filhos humanos e pets;
 - conectores customizados entre grupos diretos;
 - suporte ao modo de foco da pessoa central;
 - filtros por grupos diretos.
 
-Documentação complementar:
+DocumentaÃ§Ã£o complementar:
 
 ```txt
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
@@ -110,37 +110,37 @@ Layout principal:
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
 
-Características:
+CaracterÃ­sticas:
 
-- organização por gerações;
-- conectores familiares por geração;
-- cônjuges com edge própria;
+- organizaÃ§Ã£o por geraÃ§Ãµes;
+- conectores familiares por geraÃ§Ã£o;
+- cÃ´njuges com edge prÃ³pria;
 - conectores de pais/filhos por `GenealogyFamilyConnectorNode`;
 - anel conjugal via `GenealogySpouseEdge`;
 - escopo pessoal.
 
 ---
 
-### 3.3 Visão Completa
+### 3.3 VisÃ£o Completa
 
-Também usa:
+TambÃ©m usa:
 
 ```txt
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
 
-Características:
+CaracterÃ­sticas:
 
 - base familiar completa;
-- organização por gerações;
+- organizaÃ§Ã£o por geraÃ§Ãµes;
 - mesma arquitetura visual da Genealogia;
-- regras próprias de recorte/exibição conforme o `viewMode`.
+- regras prÃ³prias de recorte/exibiÃ§Ã£o conforme o `viewMode`.
 
 ---
 
 ## 4. Estados principais
 
-Os estados principais são mantidos em:
+Os estados principais sÃ£o mantidos em:
 
 ```txt
 src/app/pages/Home.tsx
@@ -148,7 +148,7 @@ src/app/pages/Home.tsx
 
 ### 4.1 `edgeFilters`
 
-Controla exibição/ocultação de linhas.
+Controla exibiÃ§Ã£o/ocultaÃ§Ã£o de linhas.
 
 ```ts
 {
@@ -161,12 +161,12 @@ Controla exibição/ocultação de linhas.
 
 Uso esperado:
 
-- `conjugal`: linhas conjugais/cônjuges;
-- `filiacao_sangue`: linhas de pais/filhos por filiação sanguínea;
-- `filiacao_adotiva`: linhas de pais/filhos por filiação adotiva;
-- `irmaos`: linhas ou trechos visuais relacionados a irmãos, quando a view suportar controle separado.
+- `conjugal`: linhas conjugais/cÃ´njuges;
+- `filiacao_sangue`: linhas de pais/filhos por filiaÃ§Ã£o sanguÃ­nea;
+- `filiacao_adotiva`: linhas de pais/filhos por filiaÃ§Ã£o adotiva;
+- `irmaos`: linhas ou trechos visuais relacionados a irmÃ£os, quando a view suportar controle separado.
 
-Não deve:
+NÃ£o deve:
 
 - alterar cards;
 - alterar contadores;
@@ -189,11 +189,11 @@ Controla apenas destaque visual.
 
 Uso esperado:
 
-- `spouseHighlight`: destacar linhas conjugais visíveis;
-- `parentChildHighlight`: destacar linhas parentais/de filiação visíveis;
-- `siblingHighlight`: destacar linhas/trechos de irmãos visíveis.
+- `spouseHighlight`: destacar linhas conjugais visÃ­veis;
+- `parentChildHighlight`: destacar linhas parentais/de filiaÃ§Ã£o visÃ­veis;
+- `siblingHighlight`: destacar linhas/trechos de irmÃ£os visÃ­veis.
 
-Não deve:
+NÃ£o deve:
 
 - criar novas edges;
 - reexibir edge oculta por `edgeFilters`;
@@ -218,15 +218,15 @@ Controla cards por status/tipo.
 Regras:
 
 - afeta cards renderizados;
-- não deve ser alterado por botões de linhas;
-- não deve ser alterado por botões de destaque;
+- nÃ£o deve ser alterado por botÃµes de linhas;
+- nÃ£o deve ser alterado por botÃµes de destaque;
 - contadores devem continuar coerentes com o escopo da view.
 
 ---
 
 ### 4.4 `directRelativeFilters`
 
-Controla grupos de parentes na Minha Árvore.
+Controla grupos de parentes na Minha Ãrvore.
 
 Exemplos:
 
@@ -247,16 +247,16 @@ pets
 
 Regras:
 
-- usado apenas na lógica da Minha Árvore;
+- usado apenas na lÃ³gica da Minha Ãrvore;
 - oculta/exibe grupos de cards;
-- não deve ser confundido com `edgeFilters`;
+- nÃ£o deve ser confundido com `edgeFilters`;
 - pode afetar contadores e cards exibidos.
 
 ---
 
 ### 4.5 `genealogyFilters`
 
-Controla gerações e grupos na Genealogia/Visão Completa.
+Controla geraÃ§Ãµes e grupos na Genealogia/VisÃ£o Completa.
 
 Exemplos:
 
@@ -274,9 +274,9 @@ generation6
 
 Regras:
 
-- usado em views por geração;
-- deve preservar conectores apenas entre pessoas visíveis;
-- deve evitar edges soltas após filtro.
+- usado em views por geraÃ§Ã£o;
+- deve preservar conectores apenas entre pessoas visÃ­veis;
+- deve evitar edges soltas apÃ³s filtro.
 
 ---
 
@@ -301,12 +301,12 @@ Pet
 Central
 ```
 
-Função:
+FunÃ§Ã£o:
 
 - indicar estilo visual dos cards;
 - quando interativos, controlar `personFilters`;
-- não controlar linhas;
-- não aplicar destaque em conectores.
+- nÃ£o controlar linhas;
+- nÃ£o aplicar destaque em conectores.
 
 ---
 
@@ -317,32 +317,32 @@ Exemplos:
 ```txt
 Conjugal
 Pais/filhos
-Irmãos
+IrmÃ£os
 Todas
 ```
 
-Função:
+FunÃ§Ã£o:
 
 - controlar `edgeFilters`;
-- exibir/ocultar linhas controláveis;
-- não alterar cards;
-- não alterar contadores;
-- não aplicar destaque visual.
+- exibir/ocultar linhas controlÃ¡veis;
+- nÃ£o alterar cards;
+- nÃ£o alterar contadores;
+- nÃ£o aplicar destaque visual.
 
 Regras esperadas:
 
 ```txt
 Conjugal:
-  exibe/oculta linhas de cônjuge/casal.
+  exibe/oculta linhas de cÃ´njuge/casal.
 
 Pais/filhos:
-  exibe/oculta linhas parentais/de filiação.
+  exibe/oculta linhas parentais/de filiaÃ§Ã£o.
 
-Irmãos:
-  exibe/oculta linhas ou trechos de irmãos quando a view suportar.
+IrmÃ£os:
+  exibe/oculta linhas ou trechos de irmÃ£os quando a view suportar.
 
 Todas:
-  liga/desliga todos os edgeFilters controláveis.
+  liga/desliga todos os edgeFilters controlÃ¡veis.
 ```
 
 ---
@@ -353,67 +353,67 @@ Exemplos:
 
 ```txt
 Todas
-Cônjuges
+CÃ´njuges
 Pais/Filhos
-Irmãos
+IrmÃ£os
 ```
 
-Função:
+FunÃ§Ã£o:
 
 - controlar `visualLineFilters`;
-- destacar linhas visíveis;
+- destacar linhas visÃ­veis;
 - nunca recriar linha oculta;
-- não alterar cards;
-- não alterar contadores.
+- nÃ£o alterar cards;
+- nÃ£o alterar contadores.
 
 Regras esperadas:
 
 ```txt
-Destaque Cônjuges:
-  destaca apenas linhas conjugais visíveis.
+Destaque CÃ´njuges:
+  destaca apenas linhas conjugais visÃ­veis.
 
 Destaque Pais/Filhos:
-  destaca apenas linhas parentais/de filiação visíveis.
+  destaca apenas linhas parentais/de filiaÃ§Ã£o visÃ­veis.
 
-Destaque Irmãos:
-  destaca apenas linhas ou trechos de irmãos visíveis.
+Destaque IrmÃ£os:
+  destaca apenas linhas ou trechos de irmÃ£os visÃ­veis.
 
 Destaque Todas:
-  destaca todos os grupos de linhas visíveis.
+  destaca todos os grupos de linhas visÃ­veis.
 ```
 
 ---
 
-### 5.4 Aliança
+### 5.4 AlianÃ§a
 
 Exemplos:
 
 ```txt
 Casados
-Divórcio
+DivÃ³rcio
 Viuvez
-União Estável
+UniÃ£o EstÃ¡vel
 ```
 
-Função atual:
+FunÃ§Ã£o atual:
 
 - legenda visual;
-- não filtra;
-- não destaca;
-- não altera árvore;
-- não altera relação no banco.
+- nÃ£o filtra;
+- nÃ£o destaca;
+- nÃ£o altera Ã¡rvore;
+- nÃ£o altera relaÃ§Ã£o no banco.
 
 Regra:
 
 ```txt
-A seção Aliança não deve virar filtro sem uma frente específica.
+A seÃ§Ã£o AlianÃ§a nÃ£o deve virar filtro sem uma frente especÃ­fica.
 ```
 
 ---
 
-## 6. Classificação de linhas na Minha Árvore
+## 6. ClassificaÃ§Ã£o de linhas na Minha Ãrvore
 
-Na Minha Árvore, a classificação conceitual adotada foi:
+Na Minha Ãrvore, a classificaÃ§Ã£o conceitual adotada foi:
 
 ```ts
 type DirectLineGroup = 'spouse' | 'parentChild' | 'sibling' | 'auxiliary';
@@ -426,56 +426,56 @@ Linhas conjugais.
 Exemplos:
 
 ```txt
-cônjuge ↔ central
-cônjuges ancestrais
-pai ↔ mãe
+cÃ´njuge â†” central
+cÃ´njuges ancestrais
+pai â†” mÃ£e
 ```
 
 ### 6.2 `parentChild`
 
-Linhas de filiação/descendência.
+Linhas de filiaÃ§Ã£o/descendÃªncia.
 
 Exemplos:
 
 ```txt
-pai/mãe ↔ pessoa central
-central ↔ filhos
-cônjuge ↔ filhos
-filhos ↔ netos
-irmãos ↔ sobrinhos
+pai/mÃ£e â†” pessoa central
+central â†” filhos
+cÃ´njuge â†” filhos
+filhos â†” netos
+irmÃ£os â†” sobrinhos
 pets
 ```
 
-Observações:
+ObservaÃ§Ãµes:
 
-- irmãos → sobrinhos é `parentChild`, porque sobrinhos são filhos dos irmãos;
-- pets ficam nesse grupo porque usam vínculo técnico equivalente a `filho`.
+- irmÃ£os â†’ sobrinhos Ã© `parentChild`, porque sobrinhos sÃ£o filhos dos irmÃ£os;
+- pets ficam nesse grupo porque usam vÃ­nculo tÃ©cnico equivalente a `filho`.
 
 ### 6.3 `sibling`
 
-Linhas entre irmãos.
+Linhas entre irmÃ£os.
 
 Exemplos:
 
 ```txt
-central ↔ irmãos
-pai/mãe ↔ tios, quando a linha representa relação entre irmãos
-conectores internos de irmãos reais dentro de grupos
+central â†” irmÃ£os
+pai/mÃ£e â†” tios, quando a linha representa relaÃ§Ã£o entre irmÃ£os
+conectores internos de irmÃ£os reais dentro de grupos
 ```
 
 ### 6.4 `auxiliary`
 
-Apenas conectores técnicos indispensáveis.
+Apenas conectores tÃ©cnicos indispensÃ¡veis.
 
 Regra:
 
 ```txt
-Se a linha parece visualmente representar cônjuge, pais/filhos ou irmãos, ela não deve ser auxiliary.
+Se a linha parece visualmente representar cÃ´njuge, pais/filhos ou irmÃ£os, ela nÃ£o deve ser auxiliary.
 ```
 
 ---
 
-## 7. Correções consolidadas na Minha Árvore
+## 7. CorreÃ§Ãµes consolidadas na Minha Ãrvore
 
 Arquivo principal:
 
@@ -487,7 +487,7 @@ Foram ajustados:
 
 - conectores conjugais;
 - conectores parentais;
-- conectores entre irmãos;
+- conectores entre irmÃ£os;
 - conectores internos de grupos;
 - conectores de pets;
 - conectores de netos;
@@ -496,22 +496,22 @@ Foram ajustados:
 - conectores de tios;
 - conectores de ancestrais.
 
-Correção relevante:
+CorreÃ§Ã£o relevante:
 
 ```txt
-spouseHighlight não deve ser aplicado indevidamente em linha de irmãos.
+spouseHighlight nÃ£o deve ser aplicado indevidamente em linha de irmÃ£os.
 ```
 
-Decisão sobre pets:
+DecisÃ£o sobre pets:
 
 ```txt
 Pets continuam separados dos filhos nos cards,
-mas a linha de Pets é controlada por Pais/filhos, ou seja, parentChild.
+mas a linha de Pets Ã© controlada por Pais/filhos, ou seja, parentChild.
 ```
 
 ---
 
-## 8. Genealogia e Visão Completa
+## 8. Genealogia e VisÃ£o Completa
 
 Arquivos principais:
 
@@ -523,57 +523,57 @@ src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 
 ### 8.1 Controle de linhas
 
-A Genealogia e a Visão Completa devem respeitar:
+A Genealogia e a VisÃ£o Completa devem respeitar:
 
 ```txt
 Linhas > Conjugal
 Linhas > Pais/filhos
-Linhas > Irmãos
+Linhas > IrmÃ£os
 ```
 
 Comportamento:
 
 ```txt
 Conjugal:
-  oculta/exibe linhas conjugais e ícone de aliança.
+  oculta/exibe linhas conjugais e Ã­cone de alianÃ§a.
 
 Pais/filhos:
-  oculta/exibe conectores familiares entre gerações.
+  oculta/exibe conectores familiares entre geraÃ§Ãµes.
 
-Irmãos:
-  controla linhas/trechos de irmãos quando aplicável.
+IrmÃ£os:
+  controla linhas/trechos de irmÃ£os quando aplicÃ¡vel.
 ```
 
 ---
 
 ### 8.2 Destaque visual
 
-A seção **Destacar** atua apenas em linhas visíveis.
+A seÃ§Ã£o **Destacar** atua apenas em linhas visÃ­veis.
 
 Regras:
 
 ```txt
-Destaque não cria linha nova.
-Destaque não exibe linha oculta.
-Destaque não altera cards.
-Destaque não altera contadores.
+Destaque nÃ£o cria linha nova.
+Destaque nÃ£o exibe linha oculta.
+Destaque nÃ£o altera cards.
+Destaque nÃ£o altera contadores.
 ```
 
 ---
 
-### 8.3 Correção de pan/scroll
+### 8.3 CorreÃ§Ã£o de pan/scroll
 
 Problema corrigido:
 
 ```txt
-Em /genealogia e /visao-completa, ao tentar deslizar a árvore para baixo,
+Em /genealogia e /visao-completa, ao tentar deslizar a Ã¡rvore para baixo,
 a view voltava automaticamente para cima.
 ```
 
-Correção consolidada:
+CorreÃ§Ã£o consolidada:
 
 ```txt
-O restore automático do viewport no zoom mínimo deve ser restrito a viewMode === 'minha-arvore'.
+O restore automÃ¡tico do viewport no zoom mÃ­nimo deve ser restrito a viewMode === 'minha-arvore'.
 ```
 
 Arquivo:
@@ -584,7 +584,7 @@ src/app/components/FamilyTree/FamilyTree.tsx
 
 ---
 
-### 8.4 Correção de handle do React Flow
+### 8.4 CorreÃ§Ã£o de handle do React Flow
 
 Erro observado:
 
@@ -592,13 +592,13 @@ Erro observado:
 Couldn't create edge for target handle id: "sibling-left"
 ```
 
-Diagnóstico:
+DiagnÃ³stico:
 
 ```txt
-sibling-left existia como source handle, não como target handle.
+sibling-left existia como source handle, nÃ£o como target handle.
 ```
 
-Correção:
+CorreÃ§Ã£o:
 
 ```ts
 targetHandle: 'left-target'
@@ -612,31 +612,31 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 ---
 
-## 9. Destaque de irmãos em Genealogia/Visão Completa
+## 9. Destaque de irmÃ£os em Genealogia/VisÃ£o Completa
 
 ### 9.1 Problema
 
-A Genealogia/Visão Completa estavam criando uma nova edge vertical para destacar irmãos.
+A Genealogia/VisÃ£o Completa estavam criando uma nova edge vertical para destacar irmÃ£os.
 
-Isso era incorreto porque o conector familiar já possuía a linha vertical e os braços horizontais necessários.
+Isso era incorreto porque o conector familiar jÃ¡ possuÃ­a a linha vertical e os braÃ§os horizontais necessÃ¡rios.
 
 ### 9.2 Arquitetura correta
 
-Componente responsável:
+Componente responsÃ¡vel:
 
 ```txt
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
 ```
 
-Esse componente já desenha:
+Esse componente jÃ¡ desenha:
 
 ```txt
-linha pais/casal -> ramificação
-linha vertical da ramificação
-braços horizontais até cada filho/irmão
+linha pais/casal -> ramificaÃ§Ã£o
+linha vertical da ramificaÃ§Ã£o
+braÃ§os horizontais atÃ© cada filho/irmÃ£o
 ```
 
-Portanto, o destaque de irmãos deve estilizar a ramificação existente, não criar uma edge nova.
+Portanto, o destaque de irmÃ£os deve estilizar a ramificaÃ§Ã£o existente, nÃ£o criar uma edge nova.
 
 ### 9.3 Regra implementada
 
@@ -659,8 +659,8 @@ siblingBranchStrokeDasharray
 Quando `siblingHighlight === true`:
 
 ```txt
-a linha vertical da ramificação fica no estilo de irmãos;
-os braços horizontais até cada irmão também ficam no estilo de irmãos.
+a linha vertical da ramificaÃ§Ã£o fica no estilo de irmÃ£os;
+os braÃ§os horizontais atÃ© cada irmÃ£o tambÃ©m ficam no estilo de irmÃ£os.
 ```
 
 Estilo esperado:
@@ -670,9 +670,9 @@ amarelo
 tracejado
 ```
 
-### 9.4 Remoção de edge duplicada
+### 9.4 RemoÃ§Ã£o de edge duplicada
 
-Não recriar função equivalente a:
+NÃ£o recriar funÃ§Ã£o equivalente a:
 
 ```txt
 addGenealogySiblingEdges
@@ -681,7 +681,7 @@ addGenealogySiblingEdges
 Motivo:
 
 ```txt
-A função criava uma segunda linha visual, duplicando a ramificação já existente.
+A funÃ§Ã£o criava uma segunda linha visual, duplicando a ramificaÃ§Ã£o jÃ¡ existente.
 ```
 
 ---
@@ -705,14 +705,14 @@ Objetivo:
 
 - melhorar responsividade vertical das abas;
 - evitar overflow externo fora do painel;
-- permitir rolagem interna quando necessário;
-- manter cards e textos legíveis em telas menores de desktop;
-- preservar lógica de filtros.
+- permitir rolagem interna quando necessÃ¡rio;
+- manter cards e textos legÃ­veis em telas menores de desktop;
+- preservar lÃ³gica de filtros.
 
 ### 10.1 Problemas anteriores
 
-- uso de `justify-between` espalhava grupos pela altura disponível;
-- cards de filtros tinham dimensões fixas;
+- uso de `justify-between` espalhava grupos pela altura disponÃ­vel;
+- cards de filtros tinham dimensÃµes fixas;
 - alguns grupos ficavam altos demais em telas baixas;
 - rolagem interna era insuficiente.
 
@@ -724,7 +724,7 @@ Usar preferencialmente:
 min-h-0
 flex-1
 overflow-y-auto
-overflow-hidden no miolo quando necessário
+overflow-hidden no miolo quando necessÃ¡rio
 clamp()
 leading-tight
 gaps adaptativos
@@ -741,9 +741,9 @@ fontes grandes demais em telas baixas
 
 ---
 
-## 11. Regras de validação manual
+## 11. Regras de validaÃ§Ã£o manual
 
-Após alterações em árvore, validar:
+ApÃ³s alteraÃ§Ãµes em Ã¡rvore, validar:
 
 ```txt
 /minha-arvore
@@ -762,33 +762,33 @@ Conjugal:
 Pais/filhos:
   linhas parentais somem/voltam; cards permanecem.
 
-Irmãos:
-  linhas ou trechos de irmãos somem/voltam quando a view suportar.
+IrmÃ£os:
+  linhas ou trechos de irmÃ£os somem/voltam quando a view suportar.
 
 Todas:
-  todas as linhas controláveis somem/voltam.
+  todas as linhas controlÃ¡veis somem/voltam.
 ```
 
 Validar **Destacar**:
 
 ```txt
-Cônjuges:
-  apenas linhas conjugais visíveis destacam.
+CÃ´njuges:
+  apenas linhas conjugais visÃ­veis destacam.
 
 Pais/Filhos:
-  apenas linhas parentais visíveis destacam.
+  apenas linhas parentais visÃ­veis destacam.
 
-Irmãos:
-  trechos de irmãos visíveis destacam.
+IrmÃ£os:
+  trechos de irmÃ£os visÃ­veis destacam.
 
 Todas:
-  todas as linhas visíveis destacam.
+  todas as linhas visÃ­veis destacam.
 ```
 
-Regra obrigatória:
+Regra obrigatÃ³ria:
 
 ```txt
-Destaque não recria linha oculta.
+Destaque nÃ£o recria linha oculta.
 ```
 
 ---
@@ -798,8 +798,8 @@ Destaque não recria linha oculta.
 Validar:
 
 ```txt
-cards não desaparecem por alteração de linhas;
-contadores não mudam por destaque;
+cards nÃ£o desaparecem por alteraÃ§Ã£o de linhas;
+contadores nÃ£o mudam por destaque;
 Vivos/Falecidos/Pets continuam funcionando;
 filtros de grupos continuam funcionando;
 modo foco da pessoa central continua funcionando;
@@ -808,16 +808,16 @@ Pets continuam separados nos cards.
 
 ---
 
-### 11.3 Genealogia/Visão Completa
+### 11.3 Genealogia/VisÃ£o Completa
 
 Validar:
 
 ```txt
-scroll/pan vertical não volta sozinho ao topo;
+scroll/pan vertical nÃ£o volta sozinho ao topo;
 console sem erro sibling-left;
-destaque de irmãos não cria linha duplicada;
-ramificação existente fica amarela e tracejada;
-linha pais/casal -> ramificação mantém estilo de pais/filhos.
+destaque de irmÃ£os nÃ£o cria linha duplicada;
+ramificaÃ§Ã£o existente fica amarela e tracejada;
+linha pais/casal -> ramificaÃ§Ã£o mantÃ©m estilo de pais/filhos.
 ```
 
 ---
@@ -829,24 +829,24 @@ Validar:
 ```txt
 Filtros:
   cards compactos e adaptativos;
-  Vivos/Falecidos/Pets no rodapé;
-  rolagem interna se necessário.
+  Vivos/Falecidos/Pets no rodapÃ©;
+  rolagem interna se necessÃ¡rio.
 
 Legendas:
-  sem espaçamento artificial por justify-between;
-  rolagem interna se necessário;
+  sem espaÃ§amento artificial por justify-between;
+  rolagem interna se necessÃ¡rio;
   cards e textos compactos em telas baixas.
 
-Ações:
-  botões proporcionais;
-  rolagem interna se necessário.
+AÃ§Ãµes:
+  botÃµes proporcionais;
+  rolagem interna se necessÃ¡rio.
 ```
 
 ---
 
 ## 12. Arquivos envolvidos
 
-### Árvore e conectores
+### Ãrvore e conectores
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -880,13 +880,13 @@ src/app/pages/home/LifeStatusKpiGrid.tsx
 
 ## 13. Riscos e cuidados futuros
 
-### 13.1 Não misturar estados
+### 13.1 NÃ£o misturar estados
 
 Evitar confundir:
 
 ```txt
 edgeFilters:
-  existência/visibilidade de linhas.
+  existÃªncia/visibilidade de linhas.
 
 visualLineFilters:
   estilo/destaque de linhas existentes.
@@ -895,37 +895,37 @@ personFilters:
   visibilidade de cards por status.
 
 directRelativeFilters:
-  grupos de parentes na Minha Árvore.
+  grupos de parentes na Minha Ãrvore.
 
 genealogyFilters:
-  gerações/grupos na Genealogia.
+  geraÃ§Ãµes/grupos na Genealogia.
 ```
 
-### 13.2 Não recriar linha oculta por destaque
+### 13.2 NÃ£o recriar linha oculta por destaque
 
-Sequência correta:
+SequÃªncia correta:
 
 ```txt
 1. decidir se linha existe;
 2. se existir, decidir estilo;
-3. se não existir, destaque não faz nada.
+3. se nÃ£o existir, destaque nÃ£o faz nada.
 ```
 
 ### 13.3 Cuidado com conectores estruturais
 
-Nem toda linha é uma relação familiar explícita, mas se visualmente parece representar uma relação, deve ser classificada corretamente.
+Nem toda linha Ã© uma relaÃ§Ã£o familiar explÃ­cita, mas se visualmente parece representar uma relaÃ§Ã£o, deve ser classificada corretamente.
 
-Não usar `auxiliary` para linhas percebidas pelo usuário como:
+NÃ£o usar `auxiliary` para linhas percebidas pelo usuÃ¡rio como:
 
 ```txt
-cônjuge
+cÃ´njuge
 pais/filhos
-irmãos
+irmÃ£os
 ```
 
-### 13.4 Genealogia usa arquitetura própria
+### 13.4 Genealogia usa arquitetura prÃ³pria
 
-Não aplicar automaticamente soluções da Minha Árvore em:
+NÃ£o aplicar automaticamente soluÃ§Ãµes da Minha Ãrvore em:
 
 ```txt
 genealogyColumnsLayout.ts
@@ -933,13 +933,13 @@ GenealogyFamilyConnectorNode.tsx
 GenealogySpouseEdge.tsx
 ```
 
-Genealogia e Visão Completa compartilham arquitetura, mas diferem da Minha Árvore.
+Genealogia e VisÃ£o Completa compartilham arquitetura, mas diferem da Minha Ãrvore.
 
 ---
 
-## 14. QA técnico
+## 14. QA tÃ©cnico
 
-Após alterações relevantes, rodar:
+ApÃ³s alteraÃ§Ãµes relevantes, rodar:
 
 ```bash
 npm run build
@@ -959,17 +959,17 @@ git diff -- src/app/pages/Home.tsx
 
 ---
 
-## 15. Pós-MVP
+## 15. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
-- legenda configurável por admin;
-- presets de visualização da árvore;
-- filtros salvos por usuário;
-- controle persistido de preferências visuais;
+- legenda configurÃ¡vel por admin;
+- presets de visualizaÃ§Ã£o da Ã¡rvore;
+- filtros salvos por usuÃ¡rio;
+- controle persistido de preferÃªncias visuais;
 - legenda contextual por view;
-- modo apresentação;
-- exportação com legenda embutida;
-- documentação visual com imagens de exemplo.
+- modo apresentaÃ§Ã£o;
+- exportaÃ§Ã£o com legenda embutida;
+- documentaÃ§Ã£o visual com imagens de exemplo.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.

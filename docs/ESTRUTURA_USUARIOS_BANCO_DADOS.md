@@ -1,57 +1,57 @@
-# Estrutura de usuários, banco de dados e fluxos de pessoa
+﻿# Estrutura de usuÃ¡rios, banco de dados e fluxos de pessoa
 
-> Última atualização: 2026-05-29  
-> Projeto: `tuliust/arvorefamilia`  
-> Stack: React + Vite + TypeScript + Supabase Auth + Supabase Postgres  
+> Ãšltima atualizaÃ§Ã£o: 2026-05-29
+> Projeto: `tuliust/arvorefamilia`
+> Stack: React + Vite + TypeScript + Supabase Auth + Supabase Postgres
 > Local recomendado: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 
-Este documento consolida a estrutura atual relacionada a usuários, pessoas, perfis, vínculos, preferências, notificações, favoritos, eventos, arquivos históricos, insights gerados por IA e demais tabelas/views de apoio.
+Este documento consolida a estrutura atual relacionada a usuÃ¡rios, pessoas, perfis, vÃ­nculos, preferÃªncias, notificaÃ§Ãµes, favoritos, eventos, arquivos histÃ³ricos, insights gerados por IA e demais tabelas/views de apoio.
 
-A finalidade é servir como referência para desenvolvimento, manutenção, auditoria de dados, limpeza controlada de schema e evolução das funcionalidades.
+A finalidade Ã© servir como referÃªncia para desenvolvimento, manutenÃ§Ã£o, auditoria de dados, limpeza controlada de schema e evoluÃ§Ã£o das funcionalidades.
 
 ## Como usar este documento
 
-Use este arquivo para entender **como usuários autenticados, pessoas da árvore e tabelas de apoio se conectam**. Ele não substitui:
+Use este arquivo para entender **como usuÃ¡rios autenticados, pessoas da Ã¡rvore e tabelas de apoio se conectam**. Ele nÃ£o substitui:
 
 - `docs/operacao/MIGRATIONS_SUPABASE.md`: regras operacionais para aplicar ou revisar migrations.
-- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, proteções e regras de acesso.
-- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: comportamento de produto de pessoas, perfil público e administração.
-- `docs/funcionalidades/NOTIFICACOES.md`: arquitetura específica de notificações.
-- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, proteÃ§Ãµes e regras de acesso.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: comportamento de produto de pessoas, perfil pÃºblico e administraÃ§Ã£o.
+- `docs/funcionalidades/NOTIFICACOES.md`: arquitetura especÃ­fica de notificaÃ§Ãµes.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigaÃ§Ã£o por sintoma.
 
-Regra central: **a fonte da verdade do schema é `supabase/migrations`**. Scripts SQL soltos, tabelas legadas e colunas legadas devem ser tratados como histórico ou compatibilidade até auditoria específica.
+Regra central: **a fonte da verdade do schema Ã© `supabase/migrations`**. Scripts SQL soltos, tabelas legadas e colunas legadas devem ser tratados como histÃ³rico ou compatibilidade atÃ© auditoria especÃ­fica.
 
 ---
 
-## 1. Visão geral do modelo
+## 1. VisÃ£o geral do modelo
 
 O sistema separa claramente dois conceitos:
 
-1. **Usuário autenticado**  
-   Representado pelo usuário do Supabase Auth (`auth.users`) e complementado por tabelas públicas como `profiles`, `user_person_links`, `preferencias_notificacao`, `notificacoes_usuario` e `user_favorites`.
+1. **UsuÃ¡rio autenticado**
+   Representado pelo usuÃ¡rio do Supabase Auth (`auth.users`) e complementado por tabelas pÃºblicas como `profiles`, `user_person_links`, `preferencias_notificacao`, `notificacoes_usuario` e `user_favorites`.
 
-2. **Pessoa da árvore genealógica**  
-   Representada pela tabela `pessoas` e conectada a outras pessoas por `relacionamentos`. A pessoa também pode ter eventos, arquivos históricos, redes sociais, insights gerados e registros de auditoria associados.
+2. **Pessoa da Ã¡rvore genealÃ³gica**
+   Representada pela tabela `pessoas` e conectada a outras pessoas por `relacionamentos`. A pessoa tambÃ©m pode ter eventos, arquivos histÃ³ricos, redes sociais, insights gerados e registros de auditoria associados.
 
 Fluxo conceitual:
 
 ```txt
 auth.users
-  ↓
+  â†“
 profiles
-  ↓
+  â†“
 user_person_links
-  ↓
+  â†“
 pessoas
-  ↓
+  â†“
 relacionamentos / arquivos_historicos / person_events / pessoa_social_profiles / person_generated_insights
 ```
 
-Fluxo de engajamento do usuário:
+Fluxo de engajamento do usuÃ¡rio:
 
 ```txt
 auth.users
-  ↓
+  â†“
 preferencias_notificacao
 notificacoes_usuario
 notification_dispatch_logs
@@ -62,22 +62,22 @@ activity_logs
 
 ---
 
-## 2. Páginas e rotas relevantes
+## 2. PÃ¡ginas e rotas relevantes
 
-### 2.1 Autenticação e primeiro acesso
+### 2.1 AutenticaÃ§Ã£o e primeiro acesso
 
-| Rota | Componente | Função |
+| Rota | Componente | FunÃ§Ã£o |
 |---|---|---|
-| `/entrar` | `src/app/pages/Entrar.tsx` | Login, primeiro acesso, validação de código, criação de conta e vínculo inicial com pessoa da árvore. |
+| `/entrar` | `src/app/pages/Entrar.tsx` | Login, primeiro acesso, validaÃ§Ã£o de cÃ³digo, criaÃ§Ã£o de conta e vÃ­nculo inicial com pessoa da Ã¡rvore. |
 
 Fluxo resumido:
 
-1. Usuário informa código de primeiro acesso.
-2. O código é validado contra uma pessoa existente.
-3. Usuário cria conta no Supabase Auth.
+1. UsuÃ¡rio informa cÃ³digo de primeiro acesso.
+2. O cÃ³digo Ã© validado contra uma pessoa existente.
+3. UsuÃ¡rio cria conta no Supabase Auth.
 4. O metadata inicial recebe `nome_exibicao`, `pessoa_id` e `primeiro_acesso`.
-5. O sistema cria ou resolve o vínculo em `user_person_links`.
-6. Se os dados ainda não foram confirmados, o usuário é enviado para revisar seus dados.
+5. O sistema cria ou resolve o vÃ­nculo em `user_person_links`.
+6. Se os dados ainda nÃ£o foram confirmados, o usuÃ¡rio Ã© enviado para revisar seus dados.
 
 Services envolvidos:
 
@@ -92,15 +92,15 @@ Services envolvidos:
 
 ---
 
-### 2.2 Área da árvore
+### 2.2 Ãrea da Ã¡rvore
 
-| Rota | Componente | Proteção | Função |
+| Rota | Componente | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|---|
-| `/` | redireciona para `/minha-arvore` | `TreeAccessRoute` | Entrada principal da árvore. |
-| `/minha-arvore` | `Home.tsx` | `TreeAccessRoute` | Visualização principal da árvore. |
-| `/genealogia` | `Home.tsx` | `TreeAccessRoute` | View genealógica. |
-| `/visao-completa` | `Home.tsx` | `TreeAccessRoute` | View completa da árvore. |
-| `/minha-arvore/editar` | `MinhaArvore.tsx` | `MemberRoute` | Edição da própria árvore e vínculos familiares pelo membro. |
+| `/` | redireciona para `/minha-arvore` | `TreeAccessRoute` | Entrada principal da Ã¡rvore. |
+| `/minha-arvore` | `Home.tsx` | `TreeAccessRoute` | VisualizaÃ§Ã£o principal da Ã¡rvore. |
+| `/genealogia` | `Home.tsx` | `TreeAccessRoute` | View genealÃ³gica. |
+| `/visao-completa` | `Home.tsx` | `TreeAccessRoute` | View completa da Ã¡rvore. |
+| `/minha-arvore/editar` | `MinhaArvore.tsx` | `MemberRoute` | EdiÃ§Ã£o da prÃ³pria Ã¡rvore e vÃ­nculos familiares pelo membro. |
 
 Services e componentes relacionados:
 
@@ -113,17 +113,17 @@ Services e componentes relacionados:
 
 ---
 
-### 2.3 Dados pessoais do usuário
+### 2.3 Dados pessoais do usuÃ¡rio
 
-| Rota | Componente | Proteção | Função |
+| Rota | Componente | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|---|
-| `/meus-dados` | `MeusDados.tsx` | `MemberRoute` | Edição dos dados da pessoa vinculada ao usuário logado. |
-| `/meus-vinculos` | `MeusVinculos.tsx` | `MemberRoute` | Visualização/gestão de vínculos usuário-pessoa. |
-| `/vincular-perfil` | `VincularPerfil.tsx` | `MemberRoute` | Solicitação ou criação de vínculo adicional. |
+| `/meus-dados` | `MeusDados.tsx` | `MemberRoute` | EdiÃ§Ã£o dos dados da pessoa vinculada ao usuÃ¡rio logado. |
+| `/meus-vinculos` | `MeusVinculos.tsx` | `MemberRoute` | VisualizaÃ§Ã£o/gestÃ£o de vÃ­nculos usuÃ¡rio-pessoa. |
+| `/vincular-perfil` | `VincularPerfil.tsx` | `MemberRoute` | SolicitaÃ§Ã£o ou criaÃ§Ã£o de vÃ­nculo adicional. |
 
-Campos editáveis pelo próprio usuário são centralizados no tipo `EditableOwnPersonPayload` e nas funções de `personFields.ts`.
+Campos editÃ¡veis pelo prÃ³prio usuÃ¡rio sÃ£o centralizados no tipo `EditableOwnPersonPayload` e nas funÃ§Ãµes de `personFields.ts`.
 
-Campos principais editáveis:
+Campos principais editÃ¡veis:
 
 - `nome_completo`
 - `data_nascimento`
@@ -159,11 +159,11 @@ Services envolvidos:
 
 ---
 
-### 2.4 Perfil público de pessoa
+### 2.4 Perfil pÃºblico de pessoa
 
-| Rota | Componente | Proteção | Função |
+| Rota | Componente | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|---|
-| `/pessoa/:id` | `PersonProfile.tsx` | `MemberRoute` | Perfil público/interno de uma pessoa da árvore. |
+| `/pessoa/:id` | `PersonProfile.tsx` | `MemberRoute` | Perfil pÃºblico/interno de uma pessoa da Ã¡rvore. |
 | `/pessoas/:id` | `PersonProfile.tsx` | `MemberRoute` | Alias do perfil de pessoa. |
 
 Componentes relacionados:
@@ -176,123 +176,123 @@ Componentes relacionados:
 
 Regras de privacidade relevantes:
 
-- Telefone só deve aparecer se `permitir_exibir_telefone = true`.
-- Endereço só deve aparecer se `permitir_exibir_endereco = true`.
+- Telefone sÃ³ deve aparecer se `permitir_exibir_telefone = true`.
+- EndereÃ§o sÃ³ deve aparecer se `permitir_exibir_endereco = true`.
 - Data de nascimento deve respeitar `permitir_exibir_data_nascimento`.
 - Rede social deve respeitar `permitir_exibir_rede_social` ou `permitir_exibir_instagram`.
-- WhatsApp depende de telefone válido e permissão de contato.
+- WhatsApp depende de telefone vÃ¡lido e permissÃ£o de contato.
 
 ---
 
-### 2.5 Administração
+### 2.5 AdministraÃ§Ã£o
 
-| Rota | Componente | Proteção | Função |
+| Rota | Componente | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|---|
-| `/admin/login` | `AdminLogin.tsx` | pública | Entrada administrativa. |
+| `/admin/login` | `AdminLogin.tsx` | pÃºblica | Entrada administrativa. |
 | `/admin` | `AdminDashboard.tsx` | `ProtectedRoute` | Dashboard admin. |
 | `/admin/dashboard` | `AdminDashboard.tsx` | `ProtectedRoute` | Dashboard admin. |
 | `/admin/pessoas` | `AdminPessoas.tsx` | `ProtectedRoute` | Listagem de pessoas. |
-| `/admin/pessoas/nova` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Criação de pessoa. |
-| `/admin/pessoas/:id/editar` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Edição de pessoa. |
-| `/admin/pessoas/:id` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Alias de edição/visualização admin. |
-| `/admin/relacionamentos` | `AdminRelacionamentos.tsx` | `ProtectedRoute` | Gestão de relacionamentos. |
-| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm.tsx` | `ProtectedRoute` | Criação de relacionamento. |
-| `/admin/diagnostico` | `AdminDiagnostico.tsx` | `ProtectedRoute` | Diagnóstico de integridade. |
+| `/admin/pessoas/nova` | `AdminPessoaForm.tsx` | `ProtectedRoute` | CriaÃ§Ã£o de pessoa. |
+| `/admin/pessoas/:id/editar` | `AdminPessoaForm.tsx` | `ProtectedRoute` | EdiÃ§Ã£o de pessoa. |
+| `/admin/pessoas/:id` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Alias de ediÃ§Ã£o/visualizaÃ§Ã£o admin. |
+| `/admin/relacionamentos` | `AdminRelacionamentos.tsx` | `ProtectedRoute` | GestÃ£o de relacionamentos. |
+| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm.tsx` | `ProtectedRoute` | CriaÃ§Ã£o de relacionamento. |
+| `/admin/diagnostico` | `AdminDiagnostico.tsx` | `ProtectedRoute` | DiagnÃ³stico de integridade. |
 | `/admin/integridade` | `AdminIntegridade.tsx` | `ProtectedRoute` | Integridade de dados. |
 | `/admin/atividades` | `AdminAtividades.tsx` | `ProtectedRoute` | Logs de atividade. |
-| `/admin/notificacoes` | `AdminNotificacoes.tsx` | `ProtectedRoute` | Diagnóstico/gestão de notificações. |
-| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos.tsx` | `ProtectedRoute` | Solicitações de vínculo/relacionamento. |
+| `/admin/notificacoes` | `AdminNotificacoes.tsx` | `ProtectedRoute` | DiagnÃ³stico/gestÃ£o de notificaÃ§Ãµes. |
+| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos.tsx` | `ProtectedRoute` | SolicitaÃ§Ãµes de vÃ­nculo/relacionamento. |
 
 ---
 
-## 3. Tabelas e views do schema público
+## 3. Tabelas e views do schema pÃºblico
 
 Lista observada no Supabase:
 
-| Objeto | Tipo | Status recomendado | Módulo |
+| Objeto | Tipo | Status recomendado | MÃ³dulo |
 |---|---|---|---|
 | `activity_logs` | BASE TABLE | Ativa | Auditoria |
-| `arquivos_historicos` | BASE TABLE | Ativa | Arquivos históricos |
+| `arquivos_historicos` | BASE TABLE | Ativa | Arquivos histÃ³ricos |
 | `event_attendees` | BASE TABLE | Ativa/futura | Eventos familiares |
 | `family_events` | BASE TABLE | Ativa/futura | Eventos familiares |
-| `forum_categorias` | BASE TABLE | Ativa | Fórum |
-| `forum_comentarios` | BASE TABLE | Ativa | Fórum |
-| `forum_denuncias` | BASE TABLE | Ativa | Fórum |
-| `forum_reacoes` | BASE TABLE | Ativa | Fórum |
-| `forum_respostas` | BASE TABLE | Ativa | Fórum |
-| `forum_topico_pessoas` | BASE TABLE | Ativa | Fórum |
-| `forum_topicos` | BASE TABLE | Ativa | Fórum |
+| `forum_categorias` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_comentarios` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_denuncias` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_reacoes` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_respostas` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_topico_pessoas` | BASE TABLE | Ativa | FÃ³rum |
+| `forum_topicos` | BASE TABLE | Ativa | FÃ³rum |
 | `google_calendar_connection_status` | VIEW | Ativa | Google Calendar |
 | `google_calendar_connections` | BASE TABLE | Ativa | Google Calendar |
 | `google_calendar_oauth_states` | BASE TABLE | Ativa | Google Calendar |
 | `google_calendar_synced_events` | BASE TABLE | Ativa | Google Calendar |
-| `notificacoes_usuario` | BASE TABLE | Ativa | Notificações atuais |
-| `notification_dispatch_logs` | BASE TABLE | Ativa | Logs técnicos de envio |
-| `notification_occurrences` | BASE TABLE | Ativa | Ocorrências automáticas |
-| `notification_preferences` | BASE TABLE | Legado provável | Preferências antigas |
-| `notifications` | BASE TABLE | Legado provável | Notificações antigas |
+| `notificacoes_usuario` | BASE TABLE | Ativa | NotificaÃ§Ãµes atuais |
+| `notification_dispatch_logs` | BASE TABLE | Ativa | Logs tÃ©cnicos de envio |
+| `notification_occurrences` | BASE TABLE | Ativa | OcorrÃªncias automÃ¡ticas |
+| `notification_preferences` | BASE TABLE | Legado provÃ¡vel | PreferÃªncias antigas |
+| `notifications` | BASE TABLE | Legado provÃ¡vel | NotificaÃ§Ãµes antigas |
 | `parentescos_calculados` | BASE TABLE | Ativa/futura | Parentesco calculado |
 | `person_events` | BASE TABLE | Ativa | Timeline de pessoa |
 | `person_generated_insights` | BASE TABLE | Ativa | Insights gerados por IA |
 | `pessoa_social_profiles` | BASE TABLE | Ativa | Redes sociais por pessoa |
-| `pessoas` | BASE TABLE | Essencial | Núcleo da árvore |
+| `pessoas` | BASE TABLE | Essencial | NÃºcleo da Ã¡rvore |
 | `pessoas_com_estatisticas` | VIEW | Ativa | View auxiliar |
-| `preferencias_notificacao` | BASE TABLE | Ativa | Preferências atuais |
-| `profiles` | BASE TABLE | Essencial | Perfil de usuário |
+| `preferencias_notificacao` | BASE TABLE | Ativa | PreferÃªncias atuais |
+| `profiles` | BASE TABLE | Essencial | Perfil de usuÃ¡rio |
 | `regras_parentesco` | BASE TABLE | Ativa/futura | Regras de parentesco |
-| `relacionamentos` | BASE TABLE | Essencial | Núcleo da árvore |
-| `relationship_change_requests` | BASE TABLE | Ativa | Solicitações de alteração |
-| `site_visual_settings` | BASE TABLE | Ativa | Configurações visuais |
+| `relacionamentos` | BASE TABLE | Essencial | NÃºcleo da Ã¡rvore |
+| `relationship_change_requests` | BASE TABLE | Ativa | SolicitaÃ§Ãµes de alteraÃ§Ã£o |
+| `site_visual_settings` | BASE TABLE | Ativa | ConfiguraÃ§Ãµes visuais |
 | `user_favorites` | BASE TABLE | Ativa com campos legados | Favoritos |
-| `user_person_links` | BASE TABLE | Essencial | Vínculo usuário-pessoa |
+| `user_person_links` | BASE TABLE | Essencial | VÃ­nculo usuÃ¡rio-pessoa |
 
 ---
 
-## 4. Tabelas essenciais do fluxo de usuário
+## 4. Tabelas essenciais do fluxo de usuÃ¡rio
 
 ### 4.1 `profiles`
 
-Complementa `auth.users` com dados de exibição e papel do usuário.
+Complementa `auth.users` com dados de exibiÃ§Ã£o e papel do usuÃ¡rio.
 
 Uso principal:
 
-- identificar se o usuário é `admin` ou `member`;
-- exibir nome/avatar do usuário;
-- apoiar permissões administrativas.
+- identificar se o usuÃ¡rio Ã© `admin` ou `member`;
+- exibir nome/avatar do usuÃ¡rio;
+- apoiar permissÃµes administrativas.
 
 Campos esperados:
 
-| Coluna | Tipo | Função |
+| Coluna | Tipo | FunÃ§Ã£o |
 |---|---|---|
 | `id` | uuid | Mesmo ID de `auth.users.id`. |
-| `nome_exibicao` | text/varchar | Nome de exibição do usuário. |
-| `avatar_url` | text | Avatar do usuário. |
+| `nome_exibicao` | text/varchar | Nome de exibiÃ§Ã£o do usuÃ¡rio. |
+| `avatar_url` | text | Avatar do usuÃ¡rio. |
 | `role` | text/varchar | `admin` ou `member`. |
-| `created_at` | timestamptz | Criação. |
-| `updated_at` | timestamptz | Atualização. |
+| `created_at` | timestamptz | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | AtualizaÃ§Ã£o. |
 
 ---
 
 ### 4.2 `user_person_links`
 
-Tabela central para conectar usuários autenticados a pessoas da árvore.
+Tabela central para conectar usuÃ¡rios autenticados a pessoas da Ã¡rvore.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do vínculo. |
-| `user_id` | uuid | não | Referência ao usuário autenticado. |
-| `pessoa_id` | uuid | não | Referência a `pessoas.id`. |
+| `id` | uuid | nÃ£o | ID do vÃ­nculo. |
+| `user_id` | uuid | nÃ£o | ReferÃªncia ao usuÃ¡rio autenticado. |
+| `pessoa_id` | uuid | nÃ£o | ReferÃªncia a `pessoas.id`. |
 | `relacao_com_perfil` | varchar(100) | sim | Ex.: `Sou esta pessoa`. |
-| `principal` | boolean | não | Indica vínculo principal. |
-| `created_at` | timestamptz | sim | Criação do vínculo. |
-| `dados_confirmados` | boolean | não | Indica se o usuário confirmou os próprios dados. |
-| `dados_confirmados_em` | timestamptz | sim | Data/hora da confirmação. |
-| `managed_by_admin` | boolean | não | Indica vínculo criado/gerido por admin. |
-| `can_edit` | boolean | não | Controla se o usuário pode editar a pessoa. |
-| `created_by` | uuid | sim | Usuário/admin que criou o vínculo. |
-| `updated_at` | timestamptz | sim | Atualização. |
+| `principal` | boolean | nÃ£o | Indica vÃ­nculo principal. |
+| `created_at` | timestamptz | sim | CriaÃ§Ã£o do vÃ­nculo. |
+| `dados_confirmados` | boolean | nÃ£o | Indica se o usuÃ¡rio confirmou os prÃ³prios dados. |
+| `dados_confirmados_em` | timestamptz | sim | Data/hora da confirmaÃ§Ã£o. |
+| `managed_by_admin` | boolean | nÃ£o | Indica vÃ­nculo criado/gerido por admin. |
+| `can_edit` | boolean | nÃ£o | Controla se o usuÃ¡rio pode editar a pessoa. |
+| `created_by` | uuid | sim | UsuÃ¡rio/admin que criou o vÃ­nculo. |
+| `updated_at` | timestamptz | sim | AtualizaÃ§Ã£o. |
 
 Constraints relevantes:
 
@@ -303,84 +303,84 @@ Constraints relevantes:
 
 Regras de uso:
 
-- Cada usuário pode estar vinculado a uma ou mais pessoas.
-- Cada vínculo usuário-pessoa deve ser único.
-- O campo `principal` define qual pessoa é usada como referência principal.
-- O campo `can_edit` controla edição em `/meus-dados` e fluxos correlatos.
+- Cada usuÃ¡rio pode estar vinculado a uma ou mais pessoas.
+- Cada vÃ­nculo usuÃ¡rio-pessoa deve ser Ãºnico.
+- O campo `principal` define qual pessoa Ã© usada como referÃªncia principal.
+- O campo `can_edit` controla ediÃ§Ã£o em `/meus-dados` e fluxos correlatos.
 
 ---
 
 ### 4.3 `pessoas`
 
-Tabela principal de pessoas e pets da árvore genealógica.
+Tabela principal de pessoas e pets da Ã¡rvore genealÃ³gica.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID da pessoa. |
-| `nome_completo` | varchar(255) | não | Nome completo. |
+| `id` | uuid | nÃ£o | ID da pessoa. |
+| `nome_completo` | varchar(255) | nÃ£o | Nome completo. |
 | `data_nascimento` | varchar(50) | sim | Data ou ano de nascimento. |
 | `local_nascimento` | varchar(255) | sim | Local de nascimento. |
 | `data_falecimento` | varchar(50) | sim | Data ou ano de falecimento. |
 | `local_falecimento` | varchar(255) | sim | Local de falecimento. |
-| `local_atual` | varchar(255) | sim | Residência atual. |
+| `local_atual` | varchar(255) | sim | ResidÃªncia atual. |
 | `foto_principal_url` | text | sim | Foto/avatar principal. |
-| `humano_ou_pet` | varchar(20) | não | `Humano` ou `Pet`. |
+| `humano_ou_pet` | varchar(20) | nÃ£o | `Humano` ou `Pet`. |
 | `cor_bg_card` | varchar(20) | sim | Cor visual do card. |
 | `minibio` | text | sim | Mini biografia. |
 | `curiosidades` | text | sim | Curiosidades. |
 | `telefone` | varchar(20) | sim | Telefone. |
-| `endereco` | text | sim | Endereço. |
+| `endereco` | text | sim | EndereÃ§o. |
 | `rede_social` | varchar(500) | sim | Campo legado/simples de rede social. |
-| `created_at` | timestamptz | sim | Criação. |
-| `updated_at` | timestamptz | sim | Atualização. |
-| `arquivos_historicos` | jsonb | não | Campo legado provável. Hoje há tabela relacional. |
-| `lado` | varchar | não | Lado visual na árvore. |
-| `manual_generation` | smallint | sim | Geração manual. |
+| `created_at` | timestamptz | sim | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | sim | AtualizaÃ§Ã£o. |
+| `arquivos_historicos` | jsonb | nÃ£o | Campo legado provÃ¡vel. Hoje hÃ¡ tabela relacional. |
+| `lado` | varchar | nÃ£o | Lado visual na Ã¡rvore. |
+| `manual_generation` | smallint | sim | GeraÃ§Ã£o manual. |
 | `instagram_usuario` | varchar(255) | sim | Perfil legado/simples. |
 | `instagram_url` | text | sim | URL legado/simples. |
 | `permitir_exibir_instagram` | boolean | sim | Privacidade de Instagram/rede social. |
 | `permitir_mensagens_whatsapp` | boolean | sim | Permite contato por WhatsApp. |
-| `geracao_sociologica` | varchar(80) | sim | Geração sociológica. |
-| `complemento` | text | sim | Complemento de endereço. |
-| `permitir_exibir_data_nascimento` | boolean | não | Privacidade da data de nascimento. |
-| `permitir_exibir_endereco` | boolean | não | Privacidade do endereço. |
-| `permitir_exibir_rede_social` | boolean | não | Privacidade de redes sociais. |
-| `permitir_exibir_telefone` | boolean | não | Privacidade do telefone. |
-| `falecido` | boolean | não | Status de falecimento. |
-| `local_nascimento_exterior` | boolean | não | Local de nascimento fora do Brasil. |
-| `local_falecimento_exterior` | boolean | não | Local de falecimento fora do Brasil. |
+| `geracao_sociologica` | varchar(80) | sim | GeraÃ§Ã£o sociolÃ³gica. |
+| `complemento` | text | sim | Complemento de endereÃ§o. |
+| `permitir_exibir_data_nascimento` | boolean | nÃ£o | Privacidade da data de nascimento. |
+| `permitir_exibir_endereco` | boolean | nÃ£o | Privacidade do endereÃ§o. |
+| `permitir_exibir_rede_social` | boolean | nÃ£o | Privacidade de redes sociais. |
+| `permitir_exibir_telefone` | boolean | nÃ£o | Privacidade do telefone. |
+| `falecido` | boolean | nÃ£o | Status de falecimento. |
+| `local_nascimento_exterior` | boolean | nÃ£o | Local de nascimento fora do Brasil. |
+| `local_falecimento_exterior` | boolean | nÃ£o | Local de falecimento fora do Brasil. |
 
-Observações:
+ObservaÃ§Ãµes:
 
-- `data_nascimento` e `data_falecimento` são `varchar`, pois o sistema aceita ano isolado ou datas em formato textual.
-- `arquivos_historicos` em JSON é legado provável. A fonte atual recomendada é a tabela `arquivos_historicos`.
-- Redes sociais têm campos legados em `pessoas`, mas o modelo atual mais flexível é `pessoa_social_profiles`.
+- `data_nascimento` e `data_falecimento` sÃ£o `varchar`, pois o sistema aceita ano isolado ou datas em formato textual.
+- `arquivos_historicos` em JSON Ã© legado provÃ¡vel. A fonte atual recomendada Ã© a tabela `arquivos_historicos`.
+- Redes sociais tÃªm campos legados em `pessoas`, mas o modelo atual mais flexÃ­vel Ã© `pessoa_social_profiles`.
 
 ---
 
 ### 4.4 `relacionamentos`
 
-Guarda as conexões entre pessoas.
+Guarda as conexÃµes entre pessoas.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do relacionamento. |
-| `pessoa_origem_id` | uuid | não | Pessoa de origem. |
-| `pessoa_destino_id` | uuid | não | Pessoa de destino. |
-| `tipo_relacionamento` | varchar(50) | não | Ex.: `pai`, `mae`, `filho`, `irmao`, `conjuge`. |
+| `id` | uuid | nÃ£o | ID do relacionamento. |
+| `pessoa_origem_id` | uuid | nÃ£o | Pessoa de origem. |
+| `pessoa_destino_id` | uuid | nÃ£o | Pessoa de destino. |
+| `tipo_relacionamento` | varchar(50) | nÃ£o | Ex.: `pai`, `mae`, `filho`, `irmao`, `conjuge`. |
 | `subtipo_relacionamento` | varchar(50) | sim | Ex.: `sangue`, `adotivo`, `casamento`, `uniao`, `separado`. |
-| `created_at` | timestamptz | sim | Criação. |
-| `updated_at` | timestamptz | sim | Atualização. |
-| `ativo` | boolean | não | Relacionamento ativo/inativo. |
-| `data_casamento` | text | sim | Data de casamento/união. |
-| `data_separacao` | date | sim | Data de separação. |
-| `local_casamento` | text | sim | Local do casamento/união. |
-| `local_separacao` | text | sim | Local da separação. |
-| `observacoes` | text | sim | Observações. |
+| `created_at` | timestamptz | sim | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | sim | AtualizaÃ§Ã£o. |
+| `ativo` | boolean | nÃ£o | Relacionamento ativo/inativo. |
+| `data_casamento` | text | sim | Data de casamento/uniÃ£o. |
+| `data_separacao` | date | sim | Data de separaÃ§Ã£o. |
+| `local_casamento` | text | sim | Local do casamento/uniÃ£o. |
+| `local_separacao` | text | sim | Local da separaÃ§Ã£o. |
+| `observacoes` | text | sim | ObservaÃ§Ãµes. |
 
 Constraints relevantes:
 
@@ -388,12 +388,12 @@ Constraints relevantes:
 - Foreign key `pessoa_destino_id -> pessoas.id`.
 - Checks para `tipo_relacionamento` e `subtipo_relacionamento`.
 
-Regras de negócio documentadas no código:
+Regras de negÃ³cio documentadas no cÃ³digo:
 
 - `conjuge`: A -> B cria B -> A.
 - `irmao`: A -> B cria B -> A.
-- `pai`/`mae`: filho -> pai/mãe cria pai/mãe -> filho.
-- `filho`: inverso só deve ser criado quando o sistema sabe se o inverso é `pai` ou `mae`.
+- `pai`/`mae`: filho -> pai/mÃ£e cria pai/mÃ£e -> filho.
+- `filho`: inverso sÃ³ deve ser criado quando o sistema sabe se o inverso Ã© `pai` ou `mae`.
 
 ---
 
@@ -401,53 +401,53 @@ Regras de negócio documentadas no código:
 
 ### 5.1 `arquivos_historicos`
 
-Registros históricos associados a pessoas ou relacionamentos.
+Registros histÃ³ricos associados a pessoas ou relacionamentos.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do arquivo. |
-| `pessoa_id` | uuid | não | Pessoa vinculada. |
-| `url` | text | não | URL pública ou interna do arquivo. |
-| `titulo` | varchar(255) | sim | Título. |
-| `descricao` | text | sim | Descrição. |
+| `id` | uuid | nÃ£o | ID do arquivo. |
+| `pessoa_id` | uuid | nÃ£o | Pessoa vinculada. |
+| `url` | text | nÃ£o | URL pÃºblica ou interna do arquivo. |
+| `titulo` | varchar(255) | sim | TÃ­tulo. |
+| `descricao` | text | sim | DescriÃ§Ã£o. |
 | `ano` | varchar(10) | sim | Ano aproximado. |
 | `tipo` | varchar(50) | sim | Ex.: `imagem`, `pdf`. |
-| `ordem` | integer | sim | Ordem de exibição. |
-| `created_at` | timestamptz | sim | Criação. |
-| `updated_at` | timestamptz | sim | Atualização. |
+| `ordem` | integer | sim | Ordem de exibiÃ§Ã£o. |
+| `created_at` | timestamptz | sim | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | sim | AtualizaÃ§Ã£o. |
 | `relacionamento_id` | uuid | sim | Relacionamento associado. |
 | `storage_bucket` | text | sim | Bucket no Supabase Storage. |
 | `storage_path` | text | sim | Caminho no Storage. |
 | `mime_type` | text | sim | MIME type. |
-| `created_by` | uuid | sim | Usuário que criou. |
-| `categoria_evento` | text | sim | Categoria histórica. |
+| `created_by` | uuid | sim | UsuÃ¡rio que criou. |
+| `categoria_evento` | text | sim | Categoria histÃ³rica. |
 
 Uso:
 
 - Fotos e documentos no perfil da pessoa.
 - Arquivos associados a relacionamentos.
-- Registros históricos familiares.
+- Registros histÃ³ricos familiares.
 
 ---
 
 ### 5.2 `pessoa_social_profiles`
 
-Modelo atual para múltiplas redes sociais por pessoa.
+Modelo atual para mÃºltiplas redes sociais por pessoa.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do perfil social. |
-| `pessoa_id` | uuid | não | Pessoa vinculada. |
-| `rede` | text | não | Ex.: Instagram, Facebook, LinkedIn, TikTok. |
-| `perfil` | text | não | Usuário/perfil informado. |
+| `id` | uuid | nÃ£o | ID do perfil social. |
+| `pessoa_id` | uuid | nÃ£o | Pessoa vinculada. |
+| `rede` | text | nÃ£o | Ex.: Instagram, Facebook, LinkedIn, TikTok. |
+| `perfil` | text | nÃ£o | UsuÃ¡rio/perfil informado. |
 | `url` | text | sim | URL calculada ou informada. |
-| `exibir_no_perfil` | boolean | não | Controla exibição pública. |
-| `created_at` | timestamptz | não | Criação. |
-| `updated_at` | timestamptz | não | Atualização. |
+| `exibir_no_perfil` | boolean | nÃ£o | Controla exibiÃ§Ã£o pÃºblica. |
+| `created_at` | timestamptz | nÃ£o | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | nÃ£o | AtualizaÃ§Ã£o. |
 
 Constraints:
 
@@ -460,28 +460,28 @@ Uso:
 - `/meus-dados`
 - `/minha-arvore/editar`
 - `/admin/pessoas/:id/editar`
-- perfil público, respeitando privacidade.
+- perfil pÃºblico, respeitando privacidade.
 
 ---
 
 ### 5.3 `person_events`
 
-Eventos biográficos/timeline de uma pessoa.
+Eventos biogrÃ¡ficos/timeline de uma pessoa.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do evento. |
-| `pessoa_id` | uuid | não | Pessoa vinculada. |
-| `tipo` | text | não | Tipo do evento. |
-| `titulo` | text | não | Título. |
+| `id` | uuid | nÃ£o | ID do evento. |
+| `pessoa_id` | uuid | nÃ£o | Pessoa vinculada. |
+| `tipo` | text | nÃ£o | Tipo do evento. |
+| `titulo` | text | nÃ£o | TÃ­tulo. |
 | `data_evento` | text | sim | Data textual ou ano. |
 | `local` | text | sim | Local do evento. |
-| `descricao` | text | sim | Descrição. |
-| `ordem` | integer | não | Ordem de exibição. |
-| `created_at` | timestamptz | não | Criação. |
-| `updated_at` | timestamptz | não | Atualização. |
+| `descricao` | text | sim | DescriÃ§Ã£o. |
+| `ordem` | integer | nÃ£o | Ordem de exibiÃ§Ã£o. |
+| `created_at` | timestamptz | nÃ£o | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | nÃ£o | AtualizaÃ§Ã£o. |
 
 Tipos usados no TypeScript:
 
@@ -500,44 +500,44 @@ Tipos usados no TypeScript:
 
 ### 5.4 `person_generated_insights`
 
-Armazena conteúdos gerados por IA para a pessoa.
+Armazena conteÃºdos gerados por IA para a pessoa.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID do insight. |
-| `pessoa_id` | uuid | não | Pessoa vinculada. |
-| `tipo` | text | não | Tipo de insight. |
-| `data_nascimento` | text | não | Data usada como base da geração. |
-| `conteudo` | jsonb | não | Conteúdo gerado. |
+| `id` | uuid | nÃ£o | ID do insight. |
+| `pessoa_id` | uuid | nÃ£o | Pessoa vinculada. |
+| `tipo` | text | nÃ£o | Tipo de insight. |
+| `data_nascimento` | text | nÃ£o | Data usada como base da geraÃ§Ã£o. |
+| `conteudo` | jsonb | nÃ£o | ConteÃºdo gerado. |
 | `modelo` | text | sim | Modelo de IA usado. |
-| `prompt_version` | text | não | Versão do prompt. |
-| `status` | text | não | Ex.: `completed`, erro etc. |
+| `prompt_version` | text | nÃ£o | VersÃ£o do prompt. |
+| `status` | text | nÃ£o | Ex.: `completed`, erro etc. |
 | `error_message` | text | sim | Mensagem de erro, se houver. |
-| `created_at` | timestamptz | não | Criação. |
-| `updated_at` | timestamptz | não | Atualização. |
+| `created_at` | timestamptz | nÃ£o | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | nÃ£o | AtualizaÃ§Ã£o. |
 
 Constraints:
 
 - Foreign key `pessoa_id -> pessoas.id`.
-- Unique provável em `(pessoa_id, tipo)`.
+- Unique provÃ¡vel em `(pessoa_id, tipo)`.
 - Check em `tipo`.
 - Check em `status`.
 
 Uso esperado:
 
-- Geração/regeneração por admin.
-- Exibição condicional no perfil público.
-- Evitar exibir cards vazios ou mensagem `Conteúdo ainda não gerado.` publicamente.
+- GeraÃ§Ã£o/regeneraÃ§Ã£o por admin.
+- ExibiÃ§Ã£o condicional no perfil pÃºblico.
+- Evitar exibir cards vazios ou mensagem `ConteÃºdo ainda nÃ£o gerado.` publicamente.
 
 ---
 
-## 6. Notificações e preferências
+## 6. NotificaÃ§Ãµes e preferÃªncias
 
 ### 6.1 Modelo atual
 
-O modelo atual usa as tabelas em português:
+O modelo atual usa as tabelas em portuguÃªs:
 
 - `preferencias_notificacao`
 - `notificacoes_usuario`
@@ -546,13 +546,13 @@ Fluxo:
 
 ```txt
 preferencias_notificacao
-  ↓ controla
+  â†“ controla
 notificationDispatchService
-  ↓ gera
+  â†“ gera
 notificacoes_usuario
-  ↓ registra envio técnico em
+  â†“ registra envio tÃ©cnico em
 notification_dispatch_logs
-  ↓ evita duplicidade/rotina em
+  â†“ evita duplicidade/rotina em
 notification_occurrences
 ```
 
@@ -560,28 +560,28 @@ notification_occurrences
 
 ### 6.2 `preferencias_notificacao`
 
-Preferências individuais por usuário.
+PreferÃªncias individuais por usuÃ¡rio.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID. |
-| `user_id` | uuid | não | Usuário. |
-| `receber_aniversarios` | boolean | não | Receber aniversários. |
-| `receber_datas_memoria` | boolean | não | Receber datas de memória. |
-| `receber_eventos` | boolean | não | Receber eventos. |
-| `receber_avisos_gerais` | boolean | não | Receber avisos gerais. |
-| `receber_email` | boolean | não | Canal email geral. |
-| `receber_push` | boolean | não | Canal push. |
-| `receber_whatsapp` | boolean | não | Canal WhatsApp. |
-| `receber_email_novo_usuario` | boolean | não | Email para novo usuário. |
-| `receber_email_datas_especiais` | boolean | não | Email para datas especiais. |
-| `receber_email_novas_mensagens_forum` | boolean | não | Email para fórum. |
-| `receber_email_novos_registros_historicos` | boolean | não | Email para novos registros históricos. |
-| `receber_email_evento_historico_familia` | boolean | não | Email para evento histórico familiar. |
-| `created_at` | timestamptz | não | Criação. |
-| `updated_at` | timestamptz | não | Atualização. |
+| `id` | uuid | nÃ£o | ID. |
+| `user_id` | uuid | nÃ£o | UsuÃ¡rio. |
+| `receber_aniversarios` | boolean | nÃ£o | Receber aniversÃ¡rios. |
+| `receber_datas_memoria` | boolean | nÃ£o | Receber datas de memÃ³ria. |
+| `receber_eventos` | boolean | nÃ£o | Receber eventos. |
+| `receber_avisos_gerais` | boolean | nÃ£o | Receber avisos gerais. |
+| `receber_email` | boolean | nÃ£o | Canal email geral. |
+| `receber_push` | boolean | nÃ£o | Canal push. |
+| `receber_whatsapp` | boolean | nÃ£o | Canal WhatsApp. |
+| `receber_email_novo_usuario` | boolean | nÃ£o | Email para novo usuÃ¡rio. |
+| `receber_email_datas_especiais` | boolean | nÃ£o | Email para datas especiais. |
+| `receber_email_novas_mensagens_forum` | boolean | nÃ£o | Email para fÃ³rum. |
+| `receber_email_novos_registros_historicos` | boolean | nÃ£o | Email para novos registros histÃ³ricos. |
+| `receber_email_evento_historico_familia` | boolean | nÃ£o | Email para evento histÃ³rico familiar. |
+| `created_at` | timestamptz | nÃ£o | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | nÃ£o | AtualizaÃ§Ã£o. |
 
 Constraints:
 
@@ -591,7 +591,7 @@ Constraints:
 
 Uso:
 
-- `/meus-dados` ou página de ajustes de notificações.
+- `/meus-dados` ou pÃ¡gina de ajustes de notificaÃ§Ãµes.
 - `userEngagementService.ts`.
 - `notificationDispatchService.ts`.
 - `notificationAdminService.ts`.
@@ -600,81 +600,81 @@ Uso:
 
 ### 6.3 `notificacoes_usuario`
 
-Notificações visíveis para o usuário.
+NotificaÃ§Ãµes visÃ­veis para o usuÃ¡rio.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID. |
-| `user_id` | uuid | não | Usuário destinatário. |
-| `titulo` | text | não | Título. |
-| `mensagem` | text | não | Corpo. |
-| `tipo` | text | não | Tipo de notificação. |
-| `canal` | text | não | Ex.: `interna`, `email`, `push`, `whatsapp`. |
-| `lida` | boolean | não | Status de leitura. |
+| `id` | uuid | nÃ£o | ID. |
+| `user_id` | uuid | nÃ£o | UsuÃ¡rio destinatÃ¡rio. |
+| `titulo` | text | nÃ£o | TÃ­tulo. |
+| `mensagem` | text | nÃ£o | Corpo. |
+| `tipo` | text | nÃ£o | Tipo de notificaÃ§Ã£o. |
+| `canal` | text | nÃ£o | Ex.: `interna`, `email`, `push`, `whatsapp`. |
+| `lida` | boolean | nÃ£o | Status de leitura. |
 | `link` | text | sim | Link de destino. |
-| `metadata` | jsonb | não | Dados auxiliares. |
-| `created_at` | timestamptz | não | Criação. |
-| `updated_at` | timestamptz | não | Atualização. |
+| `metadata` | jsonb | nÃ£o | Dados auxiliares. |
+| `created_at` | timestamptz | nÃ£o | CriaÃ§Ã£o. |
+| `updated_at` | timestamptz | nÃ£o | AtualizaÃ§Ã£o. |
 
 Uso:
 
-- Central de notificações.
+- Central de notificaÃ§Ãµes.
 - Marcar como lida.
-- Remover notificação.
-- Criar notificações internas.
+- Remover notificaÃ§Ã£o.
+- Criar notificaÃ§Ãµes internas.
 
 ---
 
 ### 6.4 `notification_dispatch_logs`
 
-Logs técnicos de envio.
+Logs tÃ©cnicos de envio.
 
 Uso:
 
 - Registrar tentativas de envio.
 - Registrar falhas.
-- Diagnóstico admin.
+- DiagnÃ³stico admin.
 - Acompanhar canal usado (`interna`, `email`, `push`, `whatsapp`).
 
-Não deve ser confundida com `notificacoes_usuario`. Uma notificação pode ser visível para o usuário e também gerar logs de tentativa de entrega.
+NÃ£o deve ser confundida com `notificacoes_usuario`. Uma notificaÃ§Ã£o pode ser visÃ­vel para o usuÃ¡rio e tambÃ©m gerar logs de tentativa de entrega.
 
 ---
 
 ### 6.5 `notification_occurrences`
 
-Controle de ocorrências automáticas.
+Controle de ocorrÃªncias automÃ¡ticas.
 
 Uso:
 
-- Evitar duplicidade de notificações recorrentes.
-- Registrar execuções de aniversário/datas de memória.
+- Evitar duplicidade de notificaÃ§Ãµes recorrentes.
+- Registrar execuÃ§Ãµes de aniversÃ¡rio/datas de memÃ³ria.
 - Apoiar a Edge Function `run-daily-notifications`.
 
 ---
 
-### 6.6 Tabelas legadas prováveis: `notification_preferences` e `notifications`
+### 6.6 Tabelas legadas provÃ¡veis: `notification_preferences` e `notifications`
 
-Existem também:
+Existem tambÃ©m:
 
 - `notification_preferences`
 - `notifications`
 
-Essas tabelas parecem pertencer a uma versão anterior em inglês do módulo de notificações.
+Essas tabelas parecem pertencer a uma versÃ£o anterior em inglÃªs do mÃ³dulo de notificaÃ§Ãµes.
 
-O código atual pesquisado usa principalmente:
+O cÃ³digo atual pesquisado usa principalmente:
 
 - `preferencias_notificacao`
 - `notificacoes_usuario`
 
-Recomendação:
+RecomendaÃ§Ã£o:
 
-1. Não apagar diretamente.
+1. NÃ£o apagar diretamente.
 2. Verificar contagem de registros.
-3. Verificar data de última escrita.
+3. Verificar data de Ãºltima escrita.
 4. Migrar dados remanescentes, se houver.
-5. Criar migration de limpeza apenas depois de validar que não há dependências.
+5. Criar migration de limpeza apenas depois de validar que nÃ£o hÃ¡ dependÃªncias.
 
 SQL de auditoria:
 
@@ -694,24 +694,24 @@ select 'notificacoes_usuario', count(*) from public.notificacoes_usuario;
 
 ### 7.1 `user_favorites`
 
-Tabela ativa de favoritos do usuário.
+Tabela ativa de favoritos do usuÃ¡rio.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Status | Função |
+| Coluna | Tipo | Nulo | Status | FunÃ§Ã£o |
 |---|---|---|---|---|
-| `id` | uuid | não | Atual | ID. |
-| `user_id` | uuid | não | Atual | Usuário. |
+| `id` | uuid | nÃ£o | Atual | ID. |
+| `user_id` | uuid | nÃ£o | Atual | UsuÃ¡rio. |
 | `tipo_conteudo` | varchar(40) | sim | Legado | Tipo antigo. |
 | `conteudo_id` | varchar(255) | sim | Legado | ID antigo. |
-| `titulo` | varchar(255) | sim | Legado | Título antigo. |
-| `created_at` | timestamptz | sim | Atual | Criação. |
-| `entity_type` | text | não | Atual | Tipo da entidade. |
-| `entity_id` | text | não | Atual | ID da entidade. |
-| `label` | text | não | Atual | Nome exibido. |
-| `description` | text | sim | Atual | Descrição. |
+| `titulo` | varchar(255) | sim | Legado | TÃ­tulo antigo. |
+| `created_at` | timestamptz | sim | Atual | CriaÃ§Ã£o. |
+| `entity_type` | text | nÃ£o | Atual | Tipo da entidade. |
+| `entity_id` | text | nÃ£o | Atual | ID da entidade. |
+| `label` | text | nÃ£o | Atual | Nome exibido. |
+| `description` | text | sim | Atual | DescriÃ§Ã£o. |
 | `href` | text | sim | Atual | Link. |
-| `metadata` | jsonb | não | Atual | Dados auxiliares. |
+| `metadata` | jsonb | nÃ£o | Atual | Dados auxiliares. |
 
 Tipos atuais aceitos em `entity_type`:
 
@@ -725,9 +725,9 @@ Tipos atuais aceitos em `entity_type`:
 - `timeline_item`
 - `story`
 
-Recomendação:
+RecomendaÃ§Ã£o:
 
-- Manter os campos legados até garantir que não há dados dependentes.
+- Manter os campos legados atÃ© garantir que nÃ£o hÃ¡ dados dependentes.
 - Futuramente remover `tipo_conteudo`, `conteudo_id` e `titulo` se estiverem totalmente migrados.
 
 SQL de auditoria:
@@ -743,29 +743,29 @@ where entity_type is null
 
 ---
 
-## 8. Eventos familiares e calendário
+## 8. Eventos familiares e calendÃ¡rio
 
 ### 8.1 `family_events`
 
-Eventos familiares gerais, como encontros, avisos, aniversários ou confraternizações.
+Eventos familiares gerais, como encontros, avisos, aniversÃ¡rios ou confraternizaÃ§Ãµes.
 
 ### 8.2 `event_attendees`
 
-Presença/RSVP de usuários em eventos familiares.
+PresenÃ§a/RSVP de usuÃ¡rios em eventos familiares.
 
-Diferença importante:
+DiferenÃ§a importante:
 
 | Tabela | Uso |
 |---|---|
-| `person_events` | Eventos biográficos de uma pessoa específica. |
+| `person_events` | Eventos biogrÃ¡ficos de uma pessoa especÃ­fica. |
 | `family_events` | Eventos familiares gerais. |
 | `event_attendees` | Participantes/convites dos eventos familiares. |
 
 ---
 
-## 9. Fórum
+## 9. FÃ³rum
 
-Tabelas do fórum:
+Tabelas do fÃ³rum:
 
 - `forum_categorias`
 - `forum_topicos`
@@ -777,12 +777,12 @@ Tabelas do fórum:
 
 Uso esperado:
 
-- Categorias do fórum.
-- Tópicos criados por usuários.
-- Respostas e comentários.
-- Reações.
-- Denúncias/moderação.
-- Associação entre tópicos e pessoas da árvore.
+- Categorias do fÃ³rum.
+- TÃ³picos criados por usuÃ¡rios.
+- Respostas e comentÃ¡rios.
+- ReaÃ§Ãµes.
+- DenÃºncias/moderaÃ§Ã£o.
+- AssociaÃ§Ã£o entre tÃ³picos e pessoas da Ã¡rvore.
 
 Services esperados:
 
@@ -804,14 +804,14 @@ Tabelas/views:
 - `google_calendar_connections`
 - `google_calendar_oauth_states`
 - `google_calendar_synced_events`
-- `google_calendar_connection_status` — view
+- `google_calendar_connection_status` â€” view
 
 Uso esperado:
 
-- Guardar conexão OAuth.
-- Controlar estado OAuth temporário.
+- Guardar conexÃ£o OAuth.
+- Controlar estado OAuth temporÃ¡rio.
 - Sincronizar eventos.
-- Exibir status de conexão via view.
+- Exibir status de conexÃ£o via view.
 
 Service esperado:
 
@@ -828,11 +828,11 @@ Tabelas:
 
 Uso esperado:
 
-- Definir regras para interpretar caminhos na árvore.
-- Armazenar relações calculadas para consulta mais rápida.
-- Apoiar exibição de parentesco entre duas pessoas.
+- Definir regras para interpretar caminhos na Ã¡rvore.
+- Armazenar relaÃ§Ãµes calculadas para consulta mais rÃ¡pida.
+- Apoiar exibiÃ§Ã£o de parentesco entre duas pessoas.
 
-Essas tabelas são independentes de `relacionamentos`: `relacionamentos` guarda a aresta base; `parentescos_calculados` pode guardar inferências derivadas.
+Essas tabelas sÃ£o independentes de `relacionamentos`: `relacionamentos` guarda a aresta base; `parentescos_calculados` pode guardar inferÃªncias derivadas.
 
 ---
 
@@ -840,24 +840,24 @@ Essas tabelas são independentes de `relacionamentos`: `relacionamentos` guarda 
 
 ### 12.1 `activity_logs`
 
-Registra ações relevantes do sistema.
+Registra aÃ§Ãµes relevantes do sistema.
 
 Campos observados:
 
-| Coluna | Tipo | Nulo | Função |
+| Coluna | Tipo | Nulo | FunÃ§Ã£o |
 |---|---|---|---|
-| `id` | uuid | não | ID. |
-| `actor_user_id` | uuid | sim | Usuário que executou. |
+| `id` | uuid | nÃ£o | ID. |
+| `actor_user_id` | uuid | sim | UsuÃ¡rio que executou. |
 | `actor_pessoa_id` | uuid | sim | Pessoa associada ao ator. |
 | `actor_display_name` | text | sim | Nome exibido do ator. |
-| `action` | text | não | Ação executada. |
-| `entity_type` | text | não | Tipo de entidade. |
+| `action` | text | nÃ£o | AÃ§Ã£o executada. |
+| `entity_type` | text | nÃ£o | Tipo de entidade. |
 | `entity_id` | uuid | sim | ID da entidade afetada. |
-| `entity_label` | text | sim | Nome/título da entidade. |
-| `metadata` | jsonb | não | Dados auxiliares. |
-| `created_at` | timestamptz | não | Data do log. |
+| `entity_label` | text | sim | Nome/tÃ­tulo da entidade. |
+| `metadata` | jsonb | nÃ£o | Dados auxiliares. |
+| `created_at` | timestamptz | nÃ£o | Data do log. |
 
-Ações esperadas no TypeScript incluem:
+AÃ§Ãµes esperadas no TypeScript incluem:
 
 - `person.created`
 - `person.updated`
@@ -899,33 +899,33 @@ Campos observados incluem dados de `pessoas` e contadores:
 
 Uso esperado:
 
-- Diagnóstico.
+- DiagnÃ³stico.
 - Listagens administrativas.
-- Estatísticas rápidas.
+- EstatÃ­sticas rÃ¡pidas.
 
-Não deve ser usada como fonte principal de escrita.
+NÃ£o deve ser usada como fonte principal de escrita.
 
 ---
 
 ### 13.2 `google_calendar_connection_status`
 
-View auxiliar para status de conexão com Google Calendar.
+View auxiliar para status de conexÃ£o com Google Calendar.
 
 Uso esperado:
 
-- Mostrar se o usuário está conectado.
-- Evitar montar esse estado manualmente a partir de múltiplas tabelas.
+- Mostrar se o usuÃ¡rio estÃ¡ conectado.
+- Evitar montar esse estado manualmente a partir de mÃºltiplas tabelas.
 
 ---
 
-## 14. Pontos de limpeza e organização recomendados
+## 14. Pontos de limpeza e organizaÃ§Ã£o recomendados
 
 ### 14.1 Tabelas provavelmente legadas
 
-| Objeto | Motivo | Recomendação |
+| Objeto | Motivo | RecomendaÃ§Ã£o |
 |---|---|---|
-| `notification_preferences` | Versão antiga em inglês; código atual usa `preferencias_notificacao`. | Auditar, migrar dados se houver, remover depois. |
-| `notifications` | Versão antiga em inglês; código atual usa `notificacoes_usuario`. | Auditar, migrar dados se houver, remover depois. |
+| `notification_preferences` | VersÃ£o antiga em inglÃªs; cÃ³digo atual usa `preferencias_notificacao`. | Auditar, migrar dados se houver, remover depois. |
+| `notifications` | VersÃ£o antiga em inglÃªs; cÃ³digo atual usa `notificacoes_usuario`. | Auditar, migrar dados se houver, remover depois. |
 
 SQL para contagem:
 
@@ -939,7 +939,7 @@ union all
 select 'notificacoes_usuario', count(*) from public.notificacoes_usuario;
 ```
 
-SQL para última atividade:
+SQL para Ãºltima atividade:
 
 ```sql
 select
@@ -961,15 +961,15 @@ from public.notifications;
 
 ### 14.2 Colunas provavelmente legadas
 
-| Tabela | Coluna | Motivo | Recomendação |
+| Tabela | Coluna | Motivo | RecomendaÃ§Ã£o |
 |---|---|---|---|
-| `pessoas` | `arquivos_historicos` | Hoje existe tabela relacional `arquivos_historicos`. | Verificar se está vazia antes de remover. |
-| `pessoas` | `rede_social` | Modelo atual suporta múltiplas redes em `pessoa_social_profiles`. | Manter como fallback até migração completa. |
-| `pessoas` | `instagram_usuario` | Modelo atual suporta múltiplas redes em `pessoa_social_profiles`. | Manter como fallback até migração completa. |
-| `pessoas` | `instagram_url` | Modelo atual suporta múltiplas redes em `pessoa_social_profiles`. | Manter como fallback até migração completa. |
-| `user_favorites` | `tipo_conteudo` | Modelo atual usa `entity_type`. | Remover só depois de auditoria. |
-| `user_favorites` | `conteudo_id` | Modelo atual usa `entity_id`. | Remover só depois de auditoria. |
-| `user_favorites` | `titulo` | Modelo atual usa `label`. | Remover só depois de auditoria. |
+| `pessoas` | `arquivos_historicos` | Hoje existe tabela relacional `arquivos_historicos`. | Verificar se estÃ¡ vazia antes de remover. |
+| `pessoas` | `rede_social` | Modelo atual suporta mÃºltiplas redes em `pessoa_social_profiles`. | Manter como fallback atÃ© migraÃ§Ã£o completa. |
+| `pessoas` | `instagram_usuario` | Modelo atual suporta mÃºltiplas redes em `pessoa_social_profiles`. | Manter como fallback atÃ© migraÃ§Ã£o completa. |
+| `pessoas` | `instagram_url` | Modelo atual suporta mÃºltiplas redes em `pessoa_social_profiles`. | Manter como fallback atÃ© migraÃ§Ã£o completa. |
+| `user_favorites` | `tipo_conteudo` | Modelo atual usa `entity_type`. | Remover sÃ³ depois de auditoria. |
+| `user_favorites` | `conteudo_id` | Modelo atual usa `entity_id`. | Remover sÃ³ depois de auditoria. |
+| `user_favorites` | `titulo` | Modelo atual usa `label`. | Remover sÃ³ depois de auditoria. |
 
 SQL para verificar `pessoas.arquivos_historicos`:
 
@@ -993,9 +993,9 @@ where entity_type is null
 
 ---
 
-## 15. Queries úteis de diagnóstico
+## 15. Queries Ãºteis de diagnÃ³stico
 
-### 15.1 Listar tabelas/views do schema público
+### 15.1 Listar tabelas/views do schema pÃºblico
 
 ```sql
 select
@@ -1043,7 +1043,7 @@ where tc.table_schema = 'public'
 order by tc.table_name, tc.constraint_type, tc.constraint_name;
 ```
 
-### 15.4 Verificar dependências antes de remover tabelas
+### 15.4 Verificar dependÃªncias antes de remover tabelas
 
 ```sql
 select
@@ -1066,74 +1066,74 @@ where source_ns.nspname = 'public'
 
 ---
 
-## 16. Recomendações finais
+## 16. RecomendaÃ§Ãµes finais
 
-### 16.1 Não remover agora sem auditoria
+### 16.1 NÃ£o remover agora sem auditoria
 
-Mesmo quando uma tabela parece legada, ela pode conter dados antigos ainda não migrados ou ser usada por RPCs, Edge Functions ou views.
+Mesmo quando uma tabela parece legada, ela pode conter dados antigos ainda nÃ£o migrados ou ser usada por RPCs, Edge Functions ou views.
 
 Antes de qualquer `DROP TABLE` ou `DROP COLUMN`:
 
 1. verificar contagem de registros;
-2. verificar última escrita;
-3. procurar referências no código;
-4. procurar dependências no banco;
+2. verificar Ãºltima escrita;
+3. procurar referÃªncias no cÃ³digo;
+4. procurar dependÃªncias no banco;
 5. fazer backup;
-6. criar migration específica e reversível quando possível.
+6. criar migration especÃ­fica e reversÃ­vel quando possÃ­vel.
 
 ---
 
-### 16.2 Organização sugerida
+### 16.2 OrganizaÃ§Ã£o sugerida
 
 Criar futuramente uma migration de limpeza com fases:
 
 1. **Auditoria**
    - Contar registros em tabelas legadas.
-   - Verificar dados não migrados.
+   - Verificar dados nÃ£o migrados.
 
-2. **Migração complementar**
+2. **MigraÃ§Ã£o complementar**
    - Migrar dados de `notifications` para `notificacoes_usuario`, se existirem.
    - Migrar dados de `notification_preferences` para `preferencias_notificacao`, se existirem.
-   - Migrar `pessoas.arquivos_historicos` para `arquivos_historicos`, se houver conteúdo.
+   - Migrar `pessoas.arquivos_historicos` para `arquivos_historicos`, se houver conteÃºdo.
    - Migrar campos antigos de `user_favorites` para os campos atuais.
 
-3. **Depreciação**
-   - Marcar tabelas/colunas antigas como deprecated em documentação.
+3. **DepreciaÃ§Ã£o**
+   - Marcar tabelas/colunas antigas como deprecated em documentaÃ§Ã£o.
    - Evitar novas escritas.
 
-4. **Remoção**
-   - Remover somente depois de uma rodada de produção sem uso.
+4. **RemoÃ§Ã£o**
+   - Remover somente depois de uma rodada de produÃ§Ã£o sem uso.
 
 ---
 
-## 17. Critérios para limpeza futura
+## 17. CritÃ©rios para limpeza futura
 
 Antes de remover tabela, coluna ou campo legado:
 
-1. confirmar se há migration atual equivalente;
+1. confirmar se hÃ¡ migration atual equivalente;
 2. buscar uso no frontend, services, Edge Functions, testes e scripts;
-3. conferir dependências por constraints, views, triggers, RPCs e policies;
-4. executar diagnóstico em staging ou ambiente local;
-5. criar backup ou plano de reversão;
-6. registrar a decisão em documentação operacional;
-7. evitar alteração simultânea de schema, UI e regra de negócio.
+3. conferir dependÃªncias por constraints, views, triggers, RPCs e policies;
+4. executar diagnÃ³stico em staging ou ambiente local;
+5. criar backup ou plano de reversÃ£o;
+6. registrar a decisÃ£o em documentaÃ§Ã£o operacional;
+7. evitar alteraÃ§Ã£o simultÃ¢nea de schema, UI e regra de negÃ³cio.
 
-Itens marcados como **legado provável** não devem ser apagados apenas por parecerem antigos. Eles indicam que o modelo evoluiu, mas ainda podem sustentar compatibilidade, migração incremental ou dados históricos.
+Itens marcados como **legado provÃ¡vel** nÃ£o devem ser apagados apenas por parecerem antigos. Eles indicam que o modelo evoluiu, mas ainda podem sustentar compatibilidade, migraÃ§Ã£o incremental ou dados histÃ³ricos.
 
 
 ## 18. Resumo executivo
 
-O fluxo atual está coerente e funcional em sua estrutura principal:
+O fluxo atual estÃ¡ coerente e funcional em sua estrutura principal:
 
 ```txt
 auth.users
-→ profiles
-→ user_person_links
-→ pessoas
-→ relacionamentos
+â†’ profiles
+â†’ user_person_links
+â†’ pessoas
+â†’ relacionamentos
 ```
 
-As funcionalidades auxiliares também estão bem separadas:
+As funcionalidades auxiliares tambÃ©m estÃ£o bem separadas:
 
 ```txt
 pessoa_social_profiles
@@ -1146,7 +1146,7 @@ notificacoes_usuario
 activity_logs
 ```
 
-O principal ponto de atenção é a presença de camadas legadas:
+O principal ponto de atenÃ§Ã£o Ã© a presenÃ§a de camadas legadas:
 
 ```txt
 notification_preferences
@@ -1157,4 +1157,4 @@ user_favorites.conteudo_id
 user_favorites.titulo
 ```
 
-Esses itens não indicam necessariamente erro. Indicam evolução do schema. A recomendação é manter por ora, documentar como legado provável e limpar apenas após auditoria controlada.
+Esses itens nÃ£o indicam necessariamente erro. Indicam evoluÃ§Ã£o do schema. A recomendaÃ§Ã£o Ã© manter por ora, documentar como legado provÃ¡vel e limpar apenas apÃ³s auditoria controlada.

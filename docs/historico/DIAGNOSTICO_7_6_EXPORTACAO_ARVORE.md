@@ -1,36 +1,36 @@
-# Diagnóstico e consolidação 7.6 — Exportação de área da árvore
+﻿# DiagnÃ³stico e consolidaÃ§Ã£o 7.6 â€” ExportaÃ§Ã£o de Ã¡rea da Ã¡rvore
 
 ## Status atual
 
-Status: **concluído no escopo MVP**.
+Status: **concluÃ­do no escopo MVP**.
 
-A frente 7.6 foi executada em três etapas:
+A frente 7.6 foi executada em trÃªs etapas:
 
-- **7.6A — Diagnóstico técnico inicial**;
-- **7.6B — Implementação da seleção/exportação de área visível**;
-- **7.6C — QA técnico/visual e refinamento pontual**.
+- **7.6A â€” DiagnÃ³stico tÃ©cnico inicial**;
+- **7.6B â€” ImplementaÃ§Ã£o da seleÃ§Ã£o/exportaÃ§Ã£o de Ã¡rea visÃ­vel**;
+- **7.6C â€” QA tÃ©cnico/visual e refinamento pontual**.
 
-A funcionalidade atual permite selecionar uma área visível da árvore e exportar essa seleção como PNG, PDF ou impressão.
+A funcionalidade atual permite selecionar uma Ã¡rea visÃ­vel da Ã¡rvore e exportar essa seleÃ§Ã£o como PNG, PDF ou impressÃ£o.
 
-A exportação permanece limitada à **viewport visível atual da `.react-flow`**. A exportação da árvore completa fica como evolução pós-MVP.
+A exportaÃ§Ã£o permanece limitada Ã  **viewport visÃ­vel atual da `.react-flow`**. A exportaÃ§Ã£o da Ã¡rvore completa fica como evoluÃ§Ã£o pÃ³s-MVP.
 
-Consolidação atual: seleção de área, PNG, PDF e impressão estão concluídos no escopo atual; árvore completa permanece fora do MVP.
+ConsolidaÃ§Ã£o atual: seleÃ§Ã£o de Ã¡rea, PNG, PDF e impressÃ£o estÃ£o concluÃ­dos no escopo atual; Ã¡rvore completa permanece fora do MVP.
 
 ---
 
-## 1. Histórico da frente
+## 1. HistÃ³rico da frente
 
-### 1.1 7.6A — Diagnóstico técnico
+### 1.1 7.6A â€” DiagnÃ³stico tÃ©cnico
 
 Data original: 2026-05-15.
 
-O diagnóstico inicial confirmou que, naquele momento, ainda não existiam modo **Selecionar área**, overlay de seleção por retângulo, estado de área selecionada, crop de canvas, captura parcial por retângulo nem fluxo de cancelamento da seleção.
+O diagnÃ³stico inicial confirmou que, naquele momento, ainda nÃ£o existiam modo **Selecionar Ã¡rea**, overlay de seleÃ§Ã£o por retÃ¢ngulo, estado de Ã¡rea selecionada, crop de canvas, captura parcial por retÃ¢ngulo nem fluxo de cancelamento da seleÃ§Ã£o.
 
-Também foi identificado que já havia uma base parcial de exportação da visualização atual com `html2canvas`, `jspdf`, ações imperativas em `FamilyTree`, botões no painel de Informações e captura baseada na `.react-flow`.
+TambÃ©m foi identificado que jÃ¡ havia uma base parcial de exportaÃ§Ã£o da visualizaÃ§Ã£o atual com `html2canvas`, `jspdf`, aÃ§Ãµes imperativas em `FamilyTree`, botÃµes no painel de InformaÃ§Ãµes e captura baseada na `.react-flow`.
 
 ---
 
-## 2. 7.6B — Implementação concluída
+## 2. 7.6B â€” ImplementaÃ§Ã£o concluÃ­da
 
 Arquivos principais:
 
@@ -43,17 +43,17 @@ src/app/pages/Home.tsx
 
 Comportamento implementado:
 
-- iniciar modo de seleção pelo botão **Selecionar área** no painel **Informações da árvore**;
-- desenhar retângulo sobre a área visível da árvore;
-- cancelar seleção por botão;
-- cancelar seleção com `Esc`;
-- exportar a área selecionada como PNG;
-- exportar a área selecionada como PDF;
-- imprimir a área selecionada;
-- bloquear pan/zoom enquanto a seleção está ativa;
-- restaurar pan/zoom ao cancelar ou concluir exportação.
+- iniciar modo de seleÃ§Ã£o pelo botÃ£o **Selecionar Ã¡rea** no painel **InformaÃ§Ãµes da Ã¡rvore**;
+- desenhar retÃ¢ngulo sobre a Ã¡rea visÃ­vel da Ã¡rvore;
+- cancelar seleÃ§Ã£o por botÃ£o;
+- cancelar seleÃ§Ã£o com `Esc`;
+- exportar a Ã¡rea selecionada como PNG;
+- exportar a Ã¡rea selecionada como PDF;
+- imprimir a Ã¡rea selecionada;
+- bloquear pan/zoom enquanto a seleÃ§Ã£o estÃ¡ ativa;
+- restaurar pan/zoom ao cancelar ou concluir exportaÃ§Ã£o.
 
-`FamilyTreeActions` expõe:
+`FamilyTreeActions` expÃµe:
 
 ```txt
 startAreaSelection
@@ -61,7 +61,7 @@ startAreaSelection
 
 ---
 
-## 3. Overlay e utilitário de exportação
+## 3. Overlay e utilitÃ¡rio de exportaÃ§Ã£o
 
 ### 3.1 `TreeAreaSelectionOverlay`
 
@@ -74,13 +74,13 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 Responsabilidades:
 
 - capturar pointer events;
-- desenhar e normalizar o retângulo;
-- validar tamanho mínimo;
+- desenhar e normalizar o retÃ¢ngulo;
+- validar tamanho mÃ­nimo;
 - mostrar toolbar contextual;
-- permitir PNG/PDF/impressão;
-- cancelar por botão ou `Esc`;
-- exibir erros amigáveis;
-- fechar após exportação bem-sucedida.
+- permitir PNG/PDF/impressÃ£o;
+- cancelar por botÃ£o ou `Esc`;
+- exibir erros amigÃ¡veis;
+- fechar apÃ³s exportaÃ§Ã£o bem-sucedida.
 
 ### 3.2 `treeExport.ts`
 
@@ -90,7 +90,7 @@ Arquivo:
 src/app/components/FamilyTree/utils/treeExport.ts
 ```
 
-Funções principais:
+FunÃ§Ãµes principais:
 
 ```txt
 buildTreeExportFilename
@@ -120,9 +120,9 @@ Elementos ignorados na captura:
 Views suportadas:
 
 ```txt
-Minha Árvore
+Minha Ãrvore
 Genealogia
-Visão Completa
+VisÃ£o Completa
 ```
 
 Formatos suportados:
@@ -130,10 +130,10 @@ Formatos suportados:
 ```txt
 PNG
 PDF
-Impressão
+ImpressÃ£o
 ```
 
-A seleção usa coordenadas relativas ao elemento `.react-flow`.
+A seleÃ§Ã£o usa coordenadas relativas ao elemento `.react-flow`.
 
 O crop converte CSS pixels para canvas pixels usando:
 
@@ -144,7 +144,7 @@ canvas.height / targetRect.height
 
 ---
 
-## 5. 7.6C — QA e refinamento concluídos
+## 5. 7.6C â€” QA e refinamento concluÃ­dos
 
 Documento complementar:
 
@@ -154,61 +154,61 @@ docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
 
 Bugs corrigidos:
 
-- modo de seleção permanecia aberto após exportação concluída;
-- pan/zoom continuavam bloqueados após exportar;
-- `releasePointerCapture` podia falhar se a captura já tivesse sido liberada;
-- `ignoreElements` não cobria descendentes de controles ReactFlow/minimap;
-- seleções muito grandes não tinham limite preventivo amigável.
+- modo de seleÃ§Ã£o permanecia aberto apÃ³s exportaÃ§Ã£o concluÃ­da;
+- pan/zoom continuavam bloqueados apÃ³s exportar;
+- `releasePointerCapture` podia falhar se a captura jÃ¡ tivesse sido liberada;
+- `ignoreElements` nÃ£o cobria descendentes de controles ReactFlow/minimap;
+- seleÃ§Ãµes muito grandes nÃ£o tinham limite preventivo amigÃ¡vel.
 
-Correções aplicadas:
+CorreÃ§Ãµes aplicadas:
 
-- fechamento automático do overlay após PNG/PDF/impressão concluída;
+- fechamento automÃ¡tico do overlay apÃ³s PNG/PDF/impressÃ£o concluÃ­da;
 - guarda com `hasPointerCapture`;
 - `try/catch` em `releasePointerCapture`;
 - `ignoreElements` usando `closest`;
-- limite simples de área final estimada antes da captura.
+- limite simples de Ã¡rea final estimada antes da captura.
 
 ---
 
-## 6. Banco, Storage e permissões
+## 6. Banco, Storage e permissÃµes
 
-A frente 7.6 não exigiu migration, alteração de schema Supabase, alteração de RLS, `supabase db push`, Storage, persistência de PNG/PDF nem logs persistidos.
+A frente 7.6 nÃ£o exigiu migration, alteraÃ§Ã£o de schema Supabase, alteraÃ§Ã£o de RLS, `supabase db push`, Storage, persistÃªncia de PNG/PDF nem logs persistidos.
 
-A exportação atua apenas sobre a visualização que o usuário já consegue ver.
+A exportaÃ§Ã£o atua apenas sobre a visualizaÃ§Ã£o que o usuÃ¡rio jÃ¡ consegue ver.
 
 ---
 
-## 7. Limitações atuais
+## 7. LimitaÃ§Ãµes atuais
 
-Limitações aceitas no MVP:
+LimitaÃ§Ãµes aceitas no MVP:
 
-- exportação limitada à viewport visível;
-- exportação da árvore completa não implementada;
-- redução automática de escala para seleções grandes não implementada;
+- exportaÃ§Ã£o limitada Ã  viewport visÃ­vel;
+- exportaÃ§Ã£o da Ã¡rvore completa nÃ£o implementada;
+- reduÃ§Ã£o automÃ¡tica de escala para seleÃ§Ãµes grandes nÃ£o implementada;
 - imagens externas sem CORS podem gerar falha de canvas;
-- QA visual amplo em múltiplos navegadores fica para monitoramento pós-MVP;
-- experiência touch deve continuar sendo observada em uso real.
+- QA visual amplo em mÃºltiplos navegadores fica para monitoramento pÃ³s-MVP;
+- experiÃªncia touch deve continuar sendo observada em uso real.
 
 ---
 
-## 8. Pós-MVP
+## 8. PÃ³s-MVP
 
-Evoluções futuras possíveis:
+EvoluÃ§Ãµes futuras possÃ­veis:
 
-- exportar árvore completa;
-- exportar por ramo/família;
-- permitir seleção fora da viewport visível;
-- reduzir escala automaticamente para seleções grandes;
-- salvar exportações no Storage;
-- registrar logs/auditoria de exportação;
-- opções de margem/orientação/tamanho de PDF;
-- preset de exportação por view.
+- exportar Ã¡rvore completa;
+- exportar por ramo/famÃ­lia;
+- permitir seleÃ§Ã£o fora da viewport visÃ­vel;
+- reduzir escala automaticamente para seleÃ§Ãµes grandes;
+- salvar exportaÃ§Ãµes no Storage;
+- registrar logs/auditoria de exportaÃ§Ã£o;
+- opÃ§Ãµes de margem/orientaÃ§Ã£o/tamanho de PDF;
+- preset de exportaÃ§Ã£o por view.
 
 ---
 
-## 9. Checklist de regressão
+## 9. Checklist de regressÃ£o
 
-Após alterações em árvore, exportação, ReactFlow ou painel lateral, validar:
+ApÃ³s alteraÃ§Ãµes em Ã¡rvore, exportaÃ§Ã£o, ReactFlow ou painel lateral, validar:
 
 ```bash
 npm run build
@@ -218,19 +218,19 @@ git diff --check
 
 E testar manualmente:
 
-- abrir Minha Árvore;
+- abrir Minha Ãrvore;
 - abrir Genealogia;
-- abrir Visão Completa;
-- abrir painel Informações;
-- clicar em Selecionar área;
-- cancelar com botão;
+- abrir VisÃ£o Completa;
+- abrir painel InformaÃ§Ãµes;
+- clicar em Selecionar Ã¡rea;
+- cancelar com botÃ£o;
 - cancelar com `Esc`;
-- selecionar área pequena;
-- selecionar área válida;
+- selecionar Ã¡rea pequena;
+- selecionar Ã¡rea vÃ¡lida;
 - exportar PNG;
 - exportar PDF;
 - imprimir;
 - confirmar que pan/zoom voltam;
-- confirmar que clique em pessoa funciona após fechar overlay;
-- confirmar que modal de casamento funciona fora do modo de seleção;
-- confirmar que overlay/menus/filtros/sidebar não aparecem no arquivo exportado.
+- confirmar que clique em pessoa funciona apÃ³s fechar overlay;
+- confirmar que modal de casamento funciona fora do modo de seleÃ§Ã£o;
+- confirmar que overlay/menus/filtros/sidebar nÃ£o aparecem no arquivo exportado.

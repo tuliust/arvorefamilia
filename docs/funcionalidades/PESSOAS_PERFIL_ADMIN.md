@@ -1,7 +1,7 @@
-# Pessoas, perfil público e admin de pessoa
+﻿# Pessoas, perfil pÃºblico e admin de pessoa
 
-> Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`  
-> Tipo: documentação funcional específica.
+> Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
+> Tipo: documentaÃ§Ã£o funcional especÃ­fica.
 
 ---
 
@@ -21,17 +21,17 @@ Rotas principais:
 
 Inclui:
 
-- perfil público/interno de pessoa;
+- perfil pÃºblico/interno de pessoa;
 - admin de pessoa;
-- edição dos próprios dados;
-- vínculos usuário-pessoa;
+- ediÃ§Ã£o dos prÃ³prios dados;
+- vÃ­nculos usuÃ¡rio-pessoa;
 - insights;
 - WhatsApp;
-- autocomplete de endereço;
+- autocomplete de endereÃ§o;
 - privacidade;
 - pets;
 - eventos pessoais;
-- arquivos históricos.
+- arquivos histÃ³ricos.
 
 ---
 
@@ -68,40 +68,40 @@ docs/GUIA_CORRECAO_ERROS.md
 
 ## 3. Rotas
 
-| Rota | Proteção | Função |
+| Rota | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|
-| `/pessoa/:id` | `MemberRoute` | Perfil público/interno de pessoa. |
+| `/pessoa/:id` | `MemberRoute` | Perfil pÃºblico/interno de pessoa. |
 | `/pessoas/:id` | `MemberRoute` | Alias do perfil de pessoa. |
 | `/admin/pessoas/nova` | `ProtectedRoute` | Criar pessoa. |
 | `/admin/pessoas/:id/editar` | `ProtectedRoute` | Editar pessoa. |
-| `/admin/pessoas/:id` | `ProtectedRoute` | Alias admin de edição/visualização. |
-| `/meus-dados` | `MemberRoute` | Usuário edita dados da pessoa vinculada. |
+| `/admin/pessoas/:id` | `ProtectedRoute` | Alias admin de ediÃ§Ã£o/visualizaÃ§Ã£o. |
+| `/meus-dados` | `MemberRoute` | UsuÃ¡rio edita dados da pessoa vinculada. |
 
 ---
 
-## 4. Perfil público/interno
+## 4. Perfil pÃºblico/interno
 
-O perfil exibe, conforme dados e permissões:
+O perfil exibe, conforme dados e permissÃµes:
 
-- dados básicos;
+- dados bÃ¡sicos;
 - foto principal;
-- informações biográficas;
+- informaÃ§Ãµes biogrÃ¡ficas;
 - relacionamentos;
 - eventos;
 - timeline;
-- arquivos históricos;
+- arquivos histÃ³ricos;
 - redes sociais;
 - contato;
 - insights persistidos.
 
 Regras:
 
-- foto principal é ampliável quando existe;
-- dados sensíveis respeitam flags de privacidade;
-- WhatsApp depende de telefone válido e permissão de contato;
-- cards de astrologia/acontecimentos só aparecem com conteúdo, loading, erro ou fallback explícito;
-- o texto **“Conteúdo ainda não gerado.”** não deve aparecer publicamente;
-- pet não exibe astrologia/acontecimentos.
+- foto principal Ã© ampliÃ¡vel quando existe;
+- dados sensÃ­veis respeitam flags de privacidade;
+- WhatsApp depende de telefone vÃ¡lido e permissÃ£o de contato;
+- cards de astrologia/acontecimentos sÃ³ aparecem com conteÃºdo, loading, erro ou fallback explÃ­cito;
+- o texto **â€œConteÃºdo ainda nÃ£o gerado.â€** nÃ£o deve aparecer publicamente;
+- pet nÃ£o exibe astrologia/acontecimentos.
 
 ---
 
@@ -109,7 +109,7 @@ Regras:
 
 ### 5.1 Telefone
 
-Telefone textual só aparece com:
+Telefone textual sÃ³ aparece com:
 
 ```txt
 permitir_exibir_telefone = true
@@ -119,9 +119,9 @@ permitir_exibir_telefone = true
 
 WhatsApp depende de:
 
-- telefone válido;
-- flags de permissão;
-- avaliação por `canUseWhatsAppContact`.
+- telefone vÃ¡lido;
+- flags de permissÃ£o;
+- avaliaÃ§Ã£o por `canUseWhatsAppContact`.
 
 Arquivo:
 
@@ -129,9 +129,9 @@ Arquivo:
 src/app/utils/whatsapp.ts
 ```
 
-### 5.3 Endereço
+### 5.3 EndereÃ§o
 
-Endereço só aparece com:
+EndereÃ§o sÃ³ aparece com:
 
 ```txt
 permitir_exibir_endereco = true
@@ -157,25 +157,25 @@ permitir_exibir_instagram
 Regra:
 
 ```txt
-Não resolver privacidade apenas escondendo UI se o service/RLS expõe dados indevidos.
+NÃ£o resolver privacidade apenas escondendo UI se o service/RLS expÃµe dados indevidos.
 ```
 
 ---
 
 ## 6. Admin de pessoa
 
-O formulário admin é dividido por blocos:
+O formulÃ¡rio admin Ã© dividido por blocos:
 
 - foto;
-- dados básicos;
+- dados bÃ¡sicos;
 - datas/locais;
 - biografia;
 - contato;
 - privacidade;
 - eventos;
-- arquivos históricos;
+- arquivos histÃ³ricos;
 - relacionamentos;
-- vínculos;
+- vÃ­nculos;
 - insights.
 
 Arquivo principal:
@@ -186,30 +186,30 @@ src/app/pages/admin/AdminPessoaForm.tsx
 
 Comportamento:
 
-- rascunho usa `sessionStorage` com chave por criação/edição;
+- rascunho usa `sessionStorage` com chave por criaÃ§Ã£o/ediÃ§Ã£o;
 - eventos da vida usam `PersonEventsEditor`;
-- arquivos históricos usam `ArquivosHistoricos`;
+- arquivos histÃ³ricos usam `ArquivosHistoricos`;
 - redes sociais usam componentes compartilhados;
-- privacidade controla exibição pública;
-- dados conjugais aparecem quando aplicável;
-- insights são gerados/regenerados por ação explícita do admin via `generate-person-insights`;
-- card de insights no admin só aparece quando há ação possível, conteúdo existente, loading ou erro.
+- privacidade controla exibiÃ§Ã£o pÃºblica;
+- dados conjugais aparecem quando aplicÃ¡vel;
+- insights sÃ£o gerados/regenerados por aÃ§Ã£o explÃ­cita do admin via `generate-person-insights`;
+- card de insights no admin sÃ³ aparece quando hÃ¡ aÃ§Ã£o possÃ­vel, conteÃºdo existente, loading ou erro.
 
 ---
 
-## 7. Área do usuário — `/meus-dados`
+## 7. Ãrea do usuÃ¡rio â€” `/meus-dados`
 
-A página `/meus-dados` permite que o usuário edite dados da pessoa vinculada quando tiver permissão.
+A pÃ¡gina `/meus-dados` permite que o usuÃ¡rio edite dados da pessoa vinculada quando tiver permissÃ£o.
 
 Regras:
 
 - respeitar `user_person_links.can_edit`;
-- confirmar dados quando aplicável;
-- não permitir edição de pessoa sem vínculo;
-- usar componentes compartilhados sempre que possível;
-- preservar autocomplete de endereço;
-- preservar validações de humano/pet;
-- não expor ação admin.
+- confirmar dados quando aplicÃ¡vel;
+- nÃ£o permitir ediÃ§Ã£o de pessoa sem vÃ­nculo;
+- usar componentes compartilhados sempre que possÃ­vel;
+- preservar autocomplete de endereÃ§o;
+- preservar validaÃ§Ãµes de humano/pet;
+- nÃ£o expor aÃ§Ã£o admin.
 
 Services relacionados:
 
@@ -225,7 +225,7 @@ userEngagementService.ts
 
 ## 8. Pets
 
-Regras de validação:
+Regras de validaÃ§Ã£o:
 
 ```txt
 Pet:
@@ -235,12 +235,12 @@ Humano:
   exige pelo menos nome e sobrenome com duas letras ou mais.
 ```
 
-Regras de exibição:
+Regras de exibiÃ§Ã£o:
 
-- pets não exibem astrologia/acontecimentos;
+- pets nÃ£o exibem astrologia/acontecimentos;
 - pets podem aparecer no perfil;
-- pets aparecem em card próprio quando relacionados como filho técnico;
-- pets usam regra semântica de `humano_ou_pet`.
+- pets aparecem em card prÃ³prio quando relacionados como filho tÃ©cnico;
+- pets usam regra semÃ¢ntica de `humano_ou_pet`.
 
 Arquivo relacionado:
 
@@ -256,9 +256,9 @@ docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 
 ---
 
-## 9. Vínculo usuário-pessoa no admin
+## 9. VÃ­nculo usuÃ¡rio-pessoa no admin
 
-A listagem de usuários depende de:
+A listagem de usuÃ¡rios depende de:
 
 ```txt
 adminListProfilesForLinking
@@ -278,15 +278,15 @@ Migration relacionada:
 
 Regras:
 
-- dropdown exclui usuários já vinculados à pessoa;
+- dropdown exclui usuÃ¡rios jÃ¡ vinculados Ã  pessoa;
 - erro de listagem aparece inline no card;
-- botão **Recarregar** tenta buscar novamente;
-- não usar fallback inseguro de consulta direta em `profiles`;
-- usuário logado precisa ser admin.
+- botÃ£o **Recarregar** tenta buscar novamente;
+- nÃ£o usar fallback inseguro de consulta direta em `profiles`;
+- usuÃ¡rio logado precisa ser admin.
 
 ---
 
-## 10. Autocomplete de endereço
+## 10. Autocomplete de endereÃ§o
 
 Componente:
 
@@ -317,7 +317,7 @@ Usado em:
 - `/meus-dados`;
 - admin de pessoa via `PersonContactFields`.
 
-Formatação centralizada em:
+FormataÃ§Ã£o centralizada em:
 
 ```txt
 src/app/utils/googleAddress.ts
@@ -326,7 +326,7 @@ src/app/utils/googleAddress.ts
 Regra:
 
 ```txt
-falha do Google não pode bloquear salvamento do formulário.
+falha do Google nÃ£o pode bloquear salvamento do formulÃ¡rio.
 ```
 
 ---
@@ -356,7 +356,7 @@ Uso:
 - admin cria/edita eventos pessoais;
 - perfil pode exibir eventos;
 - timeline pode consumir eventos pessoais;
-- eventos não devem quebrar perfil se ausentes.
+- eventos nÃ£o devem quebrar perfil se ausentes.
 
 Documento complementar:
 
@@ -366,7 +366,7 @@ docs/funcionalidades/TIMELINE.md
 
 ---
 
-## 12. Arquivos históricos
+## 12. Arquivos histÃ³ricos
 
 Componente:
 
@@ -387,7 +387,7 @@ Uso:
 - arquivos associados a relacionamento;
 - preview;
 - download;
-- edição de título, descrição, ano e categoria;
+- ediÃ§Ã£o de tÃ­tulo, descriÃ§Ã£o, ano e categoria;
 - compatibilidade com base64 legado.
 
 Migration relevante:
@@ -417,44 +417,44 @@ supabase/functions/generate-person-insights/index.ts
 
 Regras:
 
-- perfil apenas lê insights persistidos;
+- perfil apenas lÃª insights persistidos;
 - admin gera/regenera explicitamente;
 - secrets ficam server-side;
-- perfil público não renderiza card vazio;
-- texto **“Conteúdo ainda não gerado.”** não deve aparecer publicamente;
-- pet não exibe astrologia/acontecimentos;
-- card admin aparece se houver ação possível, conteúdo, loading ou erro.
+- perfil pÃºblico nÃ£o renderiza card vazio;
+- texto **â€œConteÃºdo ainda nÃ£o gerado.â€** nÃ£o deve aparecer publicamente;
+- pet nÃ£o exibe astrologia/acontecimentos;
+- card admin aparece se houver aÃ§Ã£o possÃ­vel, conteÃºdo, loading ou erro.
 
 ---
 
 ## 14. Troubleshooting
 
-### Usuário não aparece no dropdown
+### UsuÃ¡rio nÃ£o aparece no dropdown
 
 Verificar:
 
 - `adminListProfilesForLinking`;
-- se a pessoa já não tem vínculo com esse usuário;
+- se a pessoa jÃ¡ nÃ£o tem vÃ­nculo com esse usuÃ¡rio;
 - erro inline;
-- botão **Recarregar**;
-- usuário logado como admin.
+- botÃ£o **Recarregar**;
+- usuÃ¡rio logado como admin.
 
 ### Erro de schema cache da RPC
 
-Mensagem típica:
+Mensagem tÃ­pica:
 
 ```txt
 Could not find the function public.admin_list_profiles_for_linking without parameters in the schema cache
 ```
 
-Correção:
+CorreÃ§Ã£o:
 
 - aplicar `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` no Supabase remoto;
-- conferir assinatura `public.admin_list_profiles_for_linking()` sem parâmetros;
-- aguardar/recarregar schema cache, se necessário;
-- não trocar por consulta direta insegura em `profiles`.
+- conferir assinatura `public.admin_list_profiles_for_linking()` sem parÃ¢metros;
+- aguardar/recarregar schema cache, se necessÃ¡rio;
+- nÃ£o trocar por consulta direta insegura em `profiles`.
 
-### Campo endereço não mostra sugestões
+### Campo endereÃ§o nÃ£o mostra sugestÃµes
 
 Verificar:
 
@@ -468,18 +468,18 @@ Verificar:
 Comportamento esperado:
 
 - pode aparecer aviso no console em desenvolvimento;
-- formulário continua salvável com input normal.
+- formulÃ¡rio continua salvÃ¡vel com input normal.
 
 ### Card de insights aparece vazio
 
 Verificar:
 
 - `PersonDataView.tsx`;
-- se há conteúdo/loading/erro/fallback;
+- se hÃ¡ conteÃºdo/loading/erro/fallback;
 - pet;
-- regra pública versus admin.
+- regra pÃºblica versus admin.
 
-### Pet exige sobrenome por regressão
+### Pet exige sobrenome por regressÃ£o
 
 Verificar:
 
@@ -488,15 +488,15 @@ Verificar:
 - `hasValidPetName`;
 - humano continua usando `hasFirstAndLastName`.
 
-### Botão WhatsApp aparece sem permissão
+### BotÃ£o WhatsApp aparece sem permissÃ£o
 
 Verificar:
 
 - `canUseWhatsAppContact`;
-- telefone válido;
+- telefone vÃ¡lido;
 - flags de privacidade/contato da pessoa.
 
-### Arquivo histórico falha ao salvar categoria
+### Arquivo histÃ³rico falha ao salvar categoria
 
 Verificar:
 
@@ -511,16 +511,16 @@ Verificar:
 
 ### Perfil
 
-- perfil público humano com insights;
-- perfil público humano sem insights;
-- perfil público de pet;
-- foto ampliável;
+- perfil pÃºblico humano com insights;
+- perfil pÃºblico humano sem insights;
+- perfil pÃºblico de pet;
+- foto ampliÃ¡vel;
 - timeline;
-- arquivos históricos;
-- WhatsApp com permissão;
-- WhatsApp sem permissão;
+- arquivos histÃ³ricos;
+- WhatsApp com permissÃ£o;
+- WhatsApp sem permissÃ£o;
 - telefone oculto;
-- endereço oculto;
+- endereÃ§o oculto;
 - nascimento oculto.
 
 ### Admin
@@ -533,21 +533,21 @@ Verificar:
 - salvar local exterior;
 - salvar redes sociais;
 - salvar eventos;
-- salvar arquivos históricos;
-- vínculo usuário-pessoa no admin;
-- botão Recarregar;
+- salvar arquivos histÃ³ricos;
+- vÃ­nculo usuÃ¡rio-pessoa no admin;
+- botÃ£o Recarregar;
 - insights admin.
 
 ### `/meus-dados`
 
-- editar dados próprios;
-- salvar endereço;
+- editar dados prÃ³prios;
+- salvar endereÃ§o;
 - autocomplete com API key;
 - fallback sem API key;
 - validar privacidade;
-- confirmar dados quando aplicável.
+- confirmar dados quando aplicÃ¡vel.
 
-### Técnico
+### TÃ©cnico
 
 ```bash
 npm run build
@@ -555,7 +555,7 @@ npm test
 git diff --check
 ```
 
-Se envolver rota/admin/vínculo:
+Se envolver rota/admin/vÃ­nculo:
 
 ```bash
 npm run test:e2e
@@ -564,18 +564,18 @@ supabase migration list
 
 ---
 
-## 16. Pós-MVP
+## 16. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
 - refatorar `AdminPessoaForm` em blocos menores;
 - reaproveitar mais componentes entre admin e `/meus-dados`;
-- persistência semântica de pet/tutor;
+- persistÃªncia semÃ¢ntica de pet/tutor;
 - privacidade por evento;
 - arquivos por evento;
 - insights adicionais;
-- histórico de alterações por campo;
-- validação mais detalhada de endereço;
-- controles administrativos de exibição pública.
+- histÃ³rico de alteraÃ§Ãµes por campo;
+- validaÃ§Ã£o mais detalhada de endereÃ§o;
+- controles administrativos de exibiÃ§Ã£o pÃºblica.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.

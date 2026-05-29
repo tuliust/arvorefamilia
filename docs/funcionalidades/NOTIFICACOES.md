@@ -1,25 +1,25 @@
-# Notificações
+﻿# NotificaÃ§Ãµes
 
-> Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`  
-> Tipo: documentação funcional e operacional específica.
+> Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`
+> Tipo: documentaÃ§Ã£o funcional e operacional especÃ­fica.
 
 ---
 
 ## 1. Status
 
-Frente 7.1 concluída tecnicamente no escopo atual do MVP.
+Frente 7.1 concluÃ­da tecnicamente no escopo atual do MVP.
 
 ### Pronto
 
-- Central do usuário em `/notificacoes`, dedicada à lista em cards.
-- Preferências do usuário em `/ajustar-notificacoes`.
+- Central do usuÃ¡rio em `/notificacoes`, dedicada Ã  lista em cards.
+- PreferÃªncias do usuÃ¡rio em `/ajustar-notificacoes`.
 - Componente `NotificationPreferencesPanel`.
 - Painel admin em `/admin/notificacoes`.
-- Notificações internas.
-- Preferências por categoria e canal.
+- NotificaÃ§Ãµes internas.
+- PreferÃªncias por categoria e canal.
 - Logs em `notification_dispatch_logs`.
-- Deduplicação de recorrências em `notification_occurrences`.
-- Rotina manual de aniversários e memórias.
+- DeduplicaÃ§Ã£o de recorrÃªncias em `notification_occurrences`.
+- Rotina manual de aniversÃ¡rios e memÃ³rias.
 - Edge Function `run-daily-notifications` preparada e deployada.
 - Edge Function `send-notification-email` com provider Resend e teste controlado admin.
 
@@ -27,20 +27,20 @@ Frente 7.1 concluída tecnicamente no escopo atual do MVP.
 
 - push real;
 - WhatsApp real;
-- fila/retry avançado;
-- cron automático somente depois de configurar segredo seguro fora do repositório.
+- fila/retry avanÃ§ado;
+- cron automÃ¡tico somente depois de configurar segredo seguro fora do repositÃ³rio.
 
 ---
 
 ## 2. Rotas
 
-| Rota | Proteção | Função |
+| Rota | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|
-| `/notificacoes` | `MemberRoute` | Central/lista de notificações em cards. |
-| `/ajustar-notificacoes` | `MemberRoute` | Preferências de notificações do usuário. |
-| `/admin/notificacoes` | `ProtectedRoute` | Diagnóstico, testes e rotinas administrativas. |
+| `/notificacoes` | `MemberRoute` | Central/lista de notificaÃ§Ãµes em cards. |
+| `/ajustar-notificacoes` | `MemberRoute` | PreferÃªncias de notificaÃ§Ãµes do usuÃ¡rio. |
+| `/admin/notificacoes` | `ProtectedRoute` | DiagnÃ³stico, testes e rotinas administrativas. |
 
-Documentação complementar:
+DocumentaÃ§Ã£o complementar:
 
 ```txt
 docs/arquitetura/ROTAS_E_GUARDS.md
@@ -67,12 +67,12 @@ Responsabilidades:
 
 | Service | Responsabilidade |
 |---|---|
-| `notificationDispatchService.ts` | Orquestra canais, preferências e logs. |
-| `notificationRecipientsService.ts` | Resolve admins e usuários vinculados. |
+| `notificationDispatchService.ts` | Orquestra canais, preferÃªncias e logs. |
+| `notificationRecipientsService.ts` | Resolve admins e usuÃ¡rios vinculados. |
 | `notificationTriggersService.ts` | Integra gatilhos event-driven. |
-| `notificationScheduledService.ts` | Rotina manual de aniversários/memórias. |
-| `notificationAdminService.ts` | Diagnóstico admin. |
-| `userEngagementService.ts` | Preferências e lista do usuário. |
+| `notificationScheduledService.ts` | Rotina manual de aniversÃ¡rios/memÃ³rias. |
+| `notificationAdminService.ts` | DiagnÃ³stico admin. |
+| `userEngagementService.ts` | PreferÃªncias e lista do usuÃ¡rio. |
 
 ---
 
@@ -87,12 +87,12 @@ src/app/pages/admin/AdminNotificacoes.tsx
 
 Responsabilidades:
 
-| Arquivo | Função |
+| Arquivo | FunÃ§Ã£o |
 |---|---|
 | `Notificacoes.tsx` | Central/lista, marcar como lida, marcar todas e remover. |
-| `AjustarNotificacoes.tsx` | Página dedicada de preferências. |
+| `AjustarNotificacoes.tsx` | PÃ¡gina dedicada de preferÃªncias. |
 | `NotificationPreferencesPanel.tsx` | Toggles e salvamento. |
-| `AdminNotificacoes.tsx` | Diagnóstico, testes e rotinas. |
+| `AdminNotificacoes.tsx` | DiagnÃ³stico, testes e rotinas. |
 
 ---
 
@@ -111,25 +111,25 @@ profiles
 
 Uso:
 
-- notificação interna;
-- lista do usuário;
-- status lida/não lida;
-- remoção;
+- notificaÃ§Ã£o interna;
+- lista do usuÃ¡rio;
+- status lida/nÃ£o lida;
+- remoÃ§Ã£o;
 - metadata sanitizada.
 
 ### 4.2 `preferencias_notificacao`
 
 Uso:
 
-- preferências gerais;
-- preferências por canal;
-- preferências específicas de e-mail.
+- preferÃªncias gerais;
+- preferÃªncias por canal;
+- preferÃªncias especÃ­ficas de e-mail.
 
 ### 4.3 `notification_dispatch_logs`
 
 Uso:
 
-- log técnico de tentativa de envio;
+- log tÃ©cnico de tentativa de envio;
 - status por canal;
 - provider;
 - erro;
@@ -139,10 +139,10 @@ Uso:
 
 Uso:
 
-- deduplicação de recorrências;
-- aniversários;
-- datas de memória;
-- rotina diária/manual.
+- deduplicaÃ§Ã£o de recorrÃªncias;
+- aniversÃ¡rios;
+- datas de memÃ³ria;
+- rotina diÃ¡ria/manual.
 
 ---
 
@@ -156,10 +156,10 @@ list_admin_user_ids
 
 Regras:
 
-- usuário comum não deve acionar envio para terceiros;
+- usuÃ¡rio comum nÃ£o deve acionar envio para terceiros;
 - admin pode executar testes controlados;
 - service role deve ficar apenas no backend/Edge Function;
-- falha de canal externo não deve desfazer notificação interna.
+- falha de canal externo nÃ£o deve desfazer notificaÃ§Ã£o interna.
 
 ---
 
@@ -177,8 +177,8 @@ O canal `email` depende de:
 - Edge Function `send-notification-email`;
 - provider Resend;
 - secrets configurados;
-- destino válido;
-- preferência do usuário.
+- destino vÃ¡lido;
+- preferÃªncia do usuÃ¡rio.
 
 ### 6.2 Futuros
 
@@ -190,14 +190,14 @@ whatsapp
 Regra:
 
 ```txt
-Push e WhatsApp devem permanecer como not_configured/ignorado até haver provider real.
+Push e WhatsApp devem permanecer como not_configured/ignorado atÃ© haver provider real.
 ```
 
 ---
 
-## 7. Preferências
+## 7. PreferÃªncias
 
-### 7.1 Preferências gerais
+### 7.1 PreferÃªncias gerais
 
 ```txt
 receber_aniversarios
@@ -209,7 +209,7 @@ receber_push
 receber_whatsapp
 ```
 
-### 7.2 Preferências específicas de e-mail
+### 7.2 PreferÃªncias especÃ­ficas de e-mail
 
 ```txt
 receber_email_novo_usuario
@@ -221,10 +221,10 @@ receber_email_evento_historico_familia
 
 Regras:
 
-- preferência geral de canal deve ser respeitada;
-- preferência específica deve ser respeitada;
+- preferÃªncia geral de canal deve ser respeitada;
+- preferÃªncia especÃ­fica deve ser respeitada;
 - canal ausente/configurado incorretamente deve retornar status apropriado;
-- usuário deve poder alterar preferências em `/ajustar-notificacoes`.
+- usuÃ¡rio deve poder alterar preferÃªncias em `/ajustar-notificacoes`.
 
 ---
 
@@ -242,13 +242,13 @@ Card:
 Rotinas manuais
 ```
 
-Botão:
+BotÃ£o:
 
 ```txt
-Verificar aniversários e memórias de hoje
+Verificar aniversÃ¡rios e memÃ³rias de hoje
 ```
 
-Função chamada:
+FunÃ§Ã£o chamada:
 
 ```txt
 runDailyNotificationChecks
@@ -257,11 +257,11 @@ runDailyNotificationChecks
 Regras:
 
 - rotina usa apenas canal interno;
-- respeita preferências;
+- respeita preferÃªncias;
 - deduplica por `notification_occurrences.occurrence_key`;
-- não envia email/push/WhatsApp nessa rotina manual, salvo alteração futura explícita.
+- nÃ£o envia email/push/WhatsApp nessa rotina manual, salvo alteraÃ§Ã£o futura explÃ­cita.
 
-Padrão de chave:
+PadrÃ£o de chave:
 
 ```txt
 aniversario:YYYY-MM-DD:userId:pessoaId
@@ -270,7 +270,7 @@ memoria_falecimento:YYYY-MM-DD:userId:pessoaId
 
 ---
 
-## 9. Edge Function diária
+## 9. Edge Function diÃ¡ria
 
 Function:
 
@@ -292,7 +292,7 @@ Aceita `POST` com body opcional:
 }
 ```
 
-Se `referenceDate` não for enviado, a data atual em `America/Sao_Paulo` é usada.
+Se `referenceDate` nÃ£o for enviado, a data atual em `America/Sao_Paulo` Ã© usada.
 
 Resposta esperada:
 
@@ -310,31 +310,31 @@ Resposta esperada:
 }
 ```
 
-Segurança:
+SeguranÃ§a:
 
 - usa `SUPABASE_SERVICE_ROLE_KEY` somente dentro da Edge Function;
 - aceita `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` ou `x-daily-notifications-secret`;
-- não envia email/push/WhatsApp.
+- nÃ£o envia email/push/WhatsApp.
 
 ---
 
-## 10. Agendamento automático
+## 10. Agendamento automÃ¡tico
 
 Status atual:
 
 ```txt
-preparado, mas não ativado por migration.
+preparado, mas nÃ£o ativado por migration.
 ```
 
 Motivo:
 
 ```txt
-para chamar a Edge Function via pg_cron com segurança,
+para chamar a Edge Function via pg_cron com seguranÃ§a,
 o segredo precisa estar no ambiente/secret manager do projeto,
-não hardcoded em migration.
+nÃ£o hardcoded em migration.
 ```
 
-Horário planejado:
+HorÃ¡rio planejado:
 
 - 08:00 `America/Sao_Paulo`;
 - 11:00 UTC.
@@ -358,7 +358,7 @@ select cron.schedule(
 );
 ```
 
-Verificação útil:
+VerificaÃ§Ã£o Ãºtil:
 
 ```sql
 select *
@@ -368,11 +368,11 @@ where jobname = 'run-daily-notifications-0800-brt';
 
 Regra consolidada:
 
-- a Edge Function está preparada;
-- a rotina manual/admin é suportada;
-- a ativação automática por cron depende de ambiente/secret seguro;
-- não versionar segredo em migration;
-- antes de marcar cron como ativo em produção, confirmar no Supabase se o job está agendado e operacional.
+- a Edge Function estÃ¡ preparada;
+- a rotina manual/admin Ã© suportada;
+- a ativaÃ§Ã£o automÃ¡tica por cron depende de ambiente/secret seguro;
+- nÃ£o versionar segredo em migration;
+- antes de marcar cron como ativo em produÃ§Ã£o, confirmar no Supabase se o job estÃ¡ agendado e operacional.
 
 ---
 
@@ -390,7 +390,7 @@ Function:
 supabase/functions/send-notification-email/index.ts
 ```
 
-Secrets necessários:
+Secrets necessÃ¡rios:
 
 ```bash
 supabase secrets set RESEND_API_KEY="..."
@@ -405,15 +405,15 @@ Deploy:
 supabase functions deploy send-notification-email
 ```
 
-Segurança:
+SeguranÃ§a:
 
 - secrets ficam apenas no Supabase;
 - frontend nunca recebe `RESEND_API_KEY`;
-- usuário comum só pode acionar e-mail para si mesmo;
-- admin pode executar teste controlado para o próprio usuário pelo painel;
-- falha de e-mail não desfaz notificação interna.
+- usuÃ¡rio comum sÃ³ pode acionar e-mail para si mesmo;
+- admin pode executar teste controlado para o prÃ³prio usuÃ¡rio pelo painel;
+- falha de e-mail nÃ£o desfaz notificaÃ§Ã£o interna.
 
-Status possíveis:
+Status possÃ­veis:
 
 ```txt
 sent
@@ -439,27 +439,27 @@ not_configured
 
 ## 12. Metadata e privacidade
 
-Não salvar metadata com:
+NÃ£o salvar metadata com:
 
 - telefone;
-- endereço;
+- endereÃ§o;
 - e-mail completo;
 - token;
 - secret;
 - base64;
 - URL completa de arquivo;
-- dados sensíveis desnecessários.
+- dados sensÃ­veis desnecessÃ¡rios.
 
 Regras:
 
-- metadata deve ser mínima;
-- metadata deve ser útil para diagnóstico e navegação;
-- metadata não deve vazar informação sensível;
-- logs técnicos não devem virar exposição ao usuário comum.
+- metadata deve ser mÃ­nima;
+- metadata deve ser Ãºtil para diagnÃ³stico e navegaÃ§Ã£o;
+- metadata nÃ£o deve vazar informaÃ§Ã£o sensÃ­vel;
+- logs tÃ©cnicos nÃ£o devem virar exposiÃ§Ã£o ao usuÃ¡rio comum.
 
 ---
 
-## 13. Consultas SQL úteis
+## 13. Consultas SQL Ãºteis
 
 ```sql
 select id, user_id, titulo, mensagem, tipo, canal, lida, metadata, created_at
@@ -497,24 +497,24 @@ limit 50;
 
 1. Login admin.
 2. Abrir `/admin/notificacoes`.
-3. Verificar cards, logs e diagnósticos.
+3. Verificar cards, logs e diagnÃ³sticos.
 4. Clicar em **Teste interno**.
-5. Clicar em **Verificar aniversários e memórias de hoje**.
+5. Clicar em **Verificar aniversÃ¡rios e memÃ³rias de hoje**.
 6. Para e-mail, clicar em **Enviar e-mail de teste para mim** e confirmar.
 
-### 14.2 Usuário comum
+### 14.2 UsuÃ¡rio comum
 
-1. Login usuário comum.
+1. Login usuÃ¡rio comum.
 2. Abrir `/notificacoes`.
 3. Validar lista.
-4. Marcar notificação como lida.
+4. Marcar notificaÃ§Ã£o como lida.
 5. Marcar todas como lidas.
-6. Remover notificação.
+6. Remover notificaÃ§Ã£o.
 7. Abrir `/ajustar-notificacoes`.
-8. Alterar preferências.
-9. Confirmar persistência.
+8. Alterar preferÃªncias.
+9. Confirmar persistÃªncia.
 
-### 14.3 Técnico
+### 14.3 TÃ©cnico
 
 ```bash
 npm run build
@@ -522,7 +522,7 @@ npm test
 git diff --check
 ```
 
-Se houver alteração de Edge Function ou integração:
+Se houver alteraÃ§Ã£o de Edge Function ou integraÃ§Ã£o:
 
 ```bash
 supabase functions list
@@ -533,7 +533,7 @@ supabase migration list
 
 ## 15. Troubleshooting
 
-### Notificação interna não aparece
+### NotificaÃ§Ã£o interna nÃ£o aparece
 
 Verificar:
 
@@ -545,7 +545,7 @@ Verificar:
 - filtro de lida/removida;
 - erros no console.
 
-### Preferência não salva
+### PreferÃªncia nÃ£o salva
 
 Verificar:
 
@@ -570,11 +570,11 @@ SITE_URL
 Verificar:
 
 - `receber_email`;
-- preferência específica do tipo de e-mail;
-- destino do usuário;
+- preferÃªncia especÃ­fica do tipo de e-mail;
+- destino do usuÃ¡rio;
 - logs em `notification_dispatch_logs`.
 
-### Cron não roda
+### Cron nÃ£o roda
 
 Verificar:
 
@@ -592,7 +592,7 @@ Confirmar:
 - logs HTTP/Supabase;
 - Edge Function deployada.
 
-### Duplicidade de notificações
+### Duplicidade de notificaÃ§Ãµes
 
 Verificar:
 
@@ -600,48 +600,48 @@ Verificar:
 - `occurrence_key`;
 - referenceDate;
 - timezone;
-- reexecução manual;
-- lógica de deduplicação.
+- reexecuÃ§Ã£o manual;
+- lÃ³gica de deduplicaÃ§Ã£o.
 
 ---
 
 ## 16. Cuidados
 
-Não fazer:
+NÃ£o fazer:
 
 - commitar service role key;
 - commitar Resend API key;
 - commitar secrets;
-- usar testes de e-mail para todos os usuários;
-- salvar metadata sensível;
-- apagar logs de produção sem confirmação explícita;
+- usar testes de e-mail para todos os usuÃ¡rios;
+- salvar metadata sensÃ­vel;
+- apagar logs de produÃ§Ã£o sem confirmaÃ§Ã£o explÃ­cita;
 - hardcodar segredo de cron em migration;
 - marcar push/WhatsApp como ativo sem provider real.
 
 Fazer:
 
-- manter logs mínimos;
-- tratar falha de canal externo sem desfazer notificação interna;
-- testar admin e usuário comum;
-- manter cron automático separado de migration com secret;
-- atualizar `docs/operacao/MIGRATIONS_SUPABASE.md` se houver alteração de banco/cron.
+- manter logs mÃ­nimos;
+- tratar falha de canal externo sem desfazer notificaÃ§Ã£o interna;
+- testar admin e usuÃ¡rio comum;
+- manter cron automÃ¡tico separado de migration com secret;
+- atualizar `docs/operacao/MIGRATIONS_SUPABASE.md` se houver alteraÃ§Ã£o de banco/cron.
 
 ---
 
-## 17. Pós-MVP
+## 17. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
 - push real;
 - WhatsApp real;
-- fila/retry avançado;
-- preferências mais granulares;
+- fila/retry avanÃ§ado;
+- preferÃªncias mais granulares;
 - digest semanal;
-- notificações por fórum;
-- notificações por novos arquivos históricos;
-- notificações por eventos familiares;
-- painel de métricas;
+- notificaÃ§Ãµes por fÃ³rum;
+- notificaÃ§Ãµes por novos arquivos histÃ³ricos;
+- notificaÃ§Ãµes por eventos familiares;
+- painel de mÃ©tricas;
 - retry de e-mail;
 - templates transacionais.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.

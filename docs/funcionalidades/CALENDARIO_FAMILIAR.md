@@ -1,7 +1,7 @@
-# Calendário Familiar
+﻿# CalendÃ¡rio Familiar
 
-> Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`  
-> Tipo: documentação funcional específica.
+> Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
+> Tipo: documentaÃ§Ã£o funcional especÃ­fica.
 
 ---
 
@@ -9,23 +9,23 @@
 
 - Funcional no escopo atual do MVP.
 - Rota: `/calendario-familiar`.
-- Proteção: `MemberRoute`.
+- ProteÃ§Ã£o: `MemberRoute`.
 - Usa eventos derivados de pessoas, relacionamentos e datas familiares.
-- Integração com Google Agenda existe na UI e deve ser tratada com cuidado, porque depende do shape dos eventos.
+- IntegraÃ§Ã£o com Google Agenda existe na UI e deve ser tratada com cuidado, porque depende do shape dos eventos.
 
 ---
 
 ## 2. Objetivo
 
-O Calendário Familiar organiza datas familiares relevantes em uma visualização mensal.
+O CalendÃ¡rio Familiar organiza datas familiares relevantes em uma visualizaÃ§Ã£o mensal.
 
-A funcionalidade deve permitir que membros da família acompanhem:
+A funcionalidade deve permitir que membros da famÃ­lia acompanhem:
 
-- aniversários;
+- aniversÃ¡rios;
 - datas de casamento;
-- datas de falecimento/memória;
-- eventos históricos familiares;
-- confraternizações.
+- datas de falecimento/memÃ³ria;
+- eventos histÃ³ricos familiares;
+- confraternizaÃ§Ãµes.
 
 ---
 
@@ -56,36 +56,36 @@ docs/arquitetura/ROTAS_E_GUARDS.md
 
 ---
 
-## 4. Rota e navegação
+## 4. Rota e navegaÃ§Ã£o
 
-| Rota | Componente | Proteção | Função |
+| Rota | Componente | ProteÃ§Ã£o | FunÃ§Ã£o |
 |---|---|---|---|
-| `/calendario-familiar` | `CalendarioFamiliar.tsx` | `MemberRoute` | Exibir calendário mensal familiar. |
+| `/calendario-familiar` | `CalendarioFamiliar.tsx` | `MemberRoute` | Exibir calendÃ¡rio mensal familiar. |
 
 Regras:
 
-- a página deve usar header interno padronizado com `MemberPageHeader`;
-- deve ser acessível para usuário autenticado/membro;
-- não deve expor administração;
-- navegação interna deve usar client-side navigation quando possível.
+- a pÃ¡gina deve usar header interno padronizado com `MemberPageHeader`;
+- deve ser acessÃ­vel para usuÃ¡rio autenticado/membro;
+- nÃ£o deve expor administraÃ§Ã£o;
+- navegaÃ§Ã£o interna deve usar client-side navigation quando possÃ­vel.
 
 ---
 
 ## 5. Comportamento consolidado
 
-- Navegação por mês com botões de mês anterior/próximo.
+- NavegaÃ§Ã£o por mÃªs com botÃµes de mÃªs anterior/prÃ³ximo.
 - Grid mensal com dias da semana.
 - Dia atual destacado.
-- Até 3 eventos visíveis por dia no grid compacto.
-- Lista lateral/inferior de aniversariantes e dias de falecimento do mês.
-- Sidebar **Categorias** com filtros clicáveis.
+- AtÃ© 3 eventos visÃ­veis por dia no grid compacto.
+- Lista lateral/inferior de aniversariantes e dias de falecimento do mÃªs.
+- Sidebar **Categorias** com filtros clicÃ¡veis.
 - Categorias ficam em `activeCategories`.
-- Categorias são alternadas por `toggleCategory`.
+- Categorias sÃ£o alternadas por `toggleCategory`.
 - Contadores usam singular/plural: **1 evento**, **2 eventos**.
-- Card de aniversário no grid usa primeiro nome para caber no espaço compacto.
+- Card de aniversÃ¡rio no grid usa primeiro nome para caber no espaÃ§o compacto.
 - Lista de aniversariantes pode manter nome completo.
-- Descrição de aniversário usa **“Faz X anos”**.
-- Eventos do mês são considerados para contadores da sidebar.
+- DescriÃ§Ã£o de aniversÃ¡rio usa **â€œFaz X anosâ€**.
+- Eventos do mÃªs sÃ£o considerados para contadores da sidebar.
 
 ---
 
@@ -101,7 +101,7 @@ eventos_historicos
 confraternizacoes
 ```
 
-Função central:
+FunÃ§Ã£o central:
 
 ```txt
 getCalendarCategory
@@ -111,14 +111,14 @@ Responsabilidade:
 
 - mapear o tipo de evento para categoria;
 - manter contadores consistentes;
-- permitir filtros clicáveis;
-- evitar duplicação de regras de categoria dentro do componente.
+- permitir filtros clicÃ¡veis;
+- evitar duplicaÃ§Ã£o de regras de categoria dentro do componente.
 
 Regra:
 
 ```txt
-Os contadores da sidebar consideram os eventos do mês exibido,
-não apenas os eventos atualmente ativos no filtro.
+Os contadores da sidebar consideram os eventos do mÃªs exibido,
+nÃ£o apenas os eventos atualmente ativos no filtro.
 ```
 
 ---
@@ -127,10 +127,10 @@ não apenas os eventos atualmente ativos no filtro.
 
 Regras de texto:
 
-- não usar **“item(ns)”**;
-- usar **“evento”** e **“eventos”**;
-- usar **“Faz X anos”** para idade/aniversário;
-- evitar nome completo no card compacto do grid quando o contexto for aniversário;
+- nÃ£o usar **â€œitem(ns)â€**;
+- usar **â€œeventoâ€** e **â€œeventosâ€**;
+- usar **â€œFaz X anosâ€** para idade/aniversÃ¡rio;
+- evitar nome completo no card compacto do grid quando o contexto for aniversÃ¡rio;
 - a lista lateral/inferior pode manter nome completo.
 
 Exemplos:
@@ -139,8 +139,8 @@ Exemplos:
 |---|---|
 | 1 evento | `1 evento` |
 | 2 ou mais eventos | `N eventos` |
-| Aniversário | `Faz X anos` |
-| Card compacto de aniversário | primeiro nome |
+| AniversÃ¡rio | `Faz X anos` |
+| Card compacto de aniversÃ¡rio | primeiro nome |
 | Lista de aniversariantes | nome completo permitido |
 
 ---
@@ -151,18 +151,18 @@ A UI permite:
 
 - conectar Google Agenda;
 - exibir conta conectada;
-- exibir última sincronização;
-- escolher sincronização de aniversários;
-- escolher sincronização de datas de memória;
+- exibir Ãºltima sincronizaÃ§Ã£o;
+- escolher sincronizaÃ§Ã£o de aniversÃ¡rios;
+- escolher sincronizaÃ§Ã£o de datas de memÃ³ria;
 - sincronizar agora;
 - desconectar.
 
 Regras:
 
-- não alterar `familyDates.ts` sem avaliar impacto em sincronização/exportação;
-- qualquer mudança no shape de `EventoCalendarioFamiliar` deve considerar consumidores atuais e futuros;
-- tokens/secrets de Google Agenda não devem ir para frontend;
-- operações sensíveis devem continuar protegidas por Edge Functions/service adequado;
+- nÃ£o alterar `familyDates.ts` sem avaliar impacto em sincronizaÃ§Ã£o/exportaÃ§Ã£o;
+- qualquer mudanÃ§a no shape de `EventoCalendarioFamiliar` deve considerar consumidores atuais e futuros;
+- tokens/secrets de Google Agenda nÃ£o devem ir para frontend;
+- operaÃ§Ãµes sensÃ­veis devem continuar protegidas por Edge Functions/service adequado;
 - validar conectar/sincronizar/desconectar quando a frente for alterada.
 
 ---
@@ -171,10 +171,10 @@ Regras:
 
 Regras:
 
-- calendário precisa funcionar em desktop, tablet e mobile;
+- calendÃ¡rio precisa funcionar em desktop, tablet e mobile;
 - sidebar pode virar bloco empilhado em telas menores;
-- grid mensal não deve causar overflow horizontal global;
-- cards compactos devem truncar texto quando necessário;
+- grid mensal nÃ£o deve causar overflow horizontal global;
+- cards compactos devem truncar texto quando necessÃ¡rio;
 - lista inferior/lateral deve usar quebra de linha segura.
 
 Larguras de QA:
@@ -192,7 +192,7 @@ desktop
 
 ## 10. Troubleshooting
 
-### Categorias não filtram
+### Categorias nÃ£o filtram
 
 Verificar:
 
@@ -201,18 +201,18 @@ activeCategories
 toggleCategory
 getCalendarCategory
 aria-pressed
-estilo ativo/inativo dos botões
+estilo ativo/inativo dos botÃµes
 ```
 
-Correção:
+CorreÃ§Ã£o:
 
 - confirmar que o clique altera `activeCategories`;
 - confirmar que a lista filtrada usa categorias ativas;
-- confirmar que a sidebar não está apenas visualmente ativa.
+- confirmar que a sidebar nÃ£o estÃ¡ apenas visualmente ativa.
 
 ---
 
-### Contadores aparecem como número cru
+### Contadores aparecem como nÃºmero cru
 
 Verificar:
 
@@ -227,7 +227,7 @@ Regra:
 N eventos
 ```
 
-Não usar:
+NÃ£o usar:
 
 ```txt
 item
@@ -237,7 +237,7 @@ item(ns)
 
 ---
 
-### Aniversário volta a mostrar nome completo no grid
+### AniversÃ¡rio volta a mostrar nome completo no grid
 
 Verificar:
 
@@ -247,22 +247,22 @@ formatCalendarEventTitle
 
 Regra:
 
-- grid compacto usa primeiro nome em aniversários;
+- grid compacto usa primeiro nome em aniversÃ¡rios;
 - lista de aniversariantes pode continuar com nome completo.
 
 ---
 
 ### Texto `item(ns)` voltou
 
-Correção:
+CorreÃ§Ã£o:
 
-- procurar texto literal na página;
+- procurar texto literal na pÃ¡gina;
 - substituir por `evento/eventos`;
 - centralizar em `formatEventCount`.
 
 ---
 
-### Google Agenda foi afetado por mudança visual
+### Google Agenda foi afetado por mudanÃ§a visual
 
 Verificar:
 
@@ -273,24 +273,24 @@ googleCalendarService
 Edge Functions relacionadas
 ```
 
-Correção:
+CorreÃ§Ã£o:
 
-- confirmar que o shape dos eventos não mudou sem necessidade;
+- confirmar que o shape dos eventos nÃ£o mudou sem necessidade;
 - validar conectar;
 - validar sincronizar;
 - validar desconectar;
-- validar erros de permissão/token.
+- validar erros de permissÃ£o/token.
 
 ---
 
-### Página quebra com `Link is not defined`
+### PÃ¡gina quebra com `Link is not defined`
 
-Causa provável:
+Causa provÃ¡vel:
 
-- import de `AppLink as Link` removido durante padronização visual;
+- import de `AppLink as Link` removido durante padronizaÃ§Ã£o visual;
 - algum trecho ainda usa `<Link>`.
 
-Correção:
+CorreÃ§Ã£o:
 
 ```ts
 import { AppLink as Link } from '../components/AppLink';
@@ -300,7 +300,7 @@ import { AppLink as Link } from '../components/AppLink';
 
 ## 11. Checklist de QA
 
-### QA técnico
+### QA tÃ©cnico
 
 ```bash
 npm run build
@@ -308,7 +308,7 @@ npm test
 git diff --check
 ```
 
-Se houver mudança de rota, navegação ou integração:
+Se houver mudanÃ§a de rota, navegaÃ§Ã£o ou integraÃ§Ã£o:
 
 ```bash
 npm run test:e2e
@@ -317,12 +317,12 @@ npm run test:e2e
 ### QA manual
 
 - abrir `/calendario-familiar`;
-- trocar mês;
-- voltar mês;
+- trocar mÃªs;
+- voltar mÃªs;
 - clicar em categorias da sidebar;
 - validar singular/plural dos contadores;
-- validar aniversário no grid;
-- validar aniversário na lista;
+- validar aniversÃ¡rio no grid;
+- validar aniversÃ¡rio na lista;
 - validar dia atual destacado;
 - validar desktop;
 - validar 768px;
@@ -330,34 +330,34 @@ npm run test:e2e
 - validar 390px;
 - validar 375px;
 - validar 320px;
-- garantir ausência de overflow horizontal global;
+- garantir ausÃªncia de overflow horizontal global;
 - se Google Agenda foi afetado, validar conectar/sincronizar/desconectar.
 
 ---
 
-## 12. Pós-MVP
+## 12. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
-- integração operacional completa com Google Agenda;
-- exportação ICS;
-- lembretes configuráveis;
-- eventos criados por usuários;
-- eventos com aprovação/admin;
+- integraÃ§Ã£o operacional completa com Google Agenda;
+- exportaÃ§Ã£o ICS;
+- lembretes configurÃ¡veis;
+- eventos criados por usuÃ¡rios;
+- eventos com aprovaÃ§Ã£o/admin;
 - convidados/participantes;
-- notificações automáticas de eventos;
-- integração com timeline familiar;
-- filtros persistidos por usuário;
-- visualização anual;
-- impressão/exportação do calendário.
+- notificaÃ§Ãµes automÃ¡ticas de eventos;
+- integraÃ§Ã£o com timeline familiar;
+- filtros persistidos por usuÃ¡rio;
+- visualizaÃ§Ã£o anual;
+- impressÃ£o/exportaÃ§Ã£o do calendÃ¡rio.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.
 
 ---
 
-## 13. Regras de manutenção
+## 13. Regras de manutenÃ§Ã£o
 
-Não fazer:
+NÃ£o fazer:
 
 - alterar shape de `EventoCalendarioFamiliar` sem revisar consumidores;
 - trocar microcopy de eventos por `item(ns)`;
@@ -369,7 +369,7 @@ Não fazer:
 Fazer:
 
 - manter categoria centralizada;
-- manter contadores legíveis;
+- manter contadores legÃ­veis;
 - validar mobile;
 - preservar fallback de erros;
-- documentar mudança funcional neste arquivo.
+- documentar mudanÃ§a funcional neste arquivo.

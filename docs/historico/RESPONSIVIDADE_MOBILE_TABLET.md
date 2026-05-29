@@ -1,22 +1,22 @@
-> Status atual: fase 7.10 concluída no escopo MVP. Este documento fica preservado como referência histórica, checklist de regressão e guia para ajustes futuros de responsividade.
+﻿> Status atual: fase 7.10 concluÃ­da no escopo MVP. Este documento fica preservado como referÃªncia histÃ³rica, checklist de regressÃ£o e guia para ajustes futuros de responsividade.
 
-# Responsividade mobile/tablet — Árvore Família
+# Responsividade mobile/tablet â€” Ãrvore FamÃ­lia
 
 ## Objetivo
 
-Este documento orienta a fase **7.10 Responsividade mobile/tablet**, última etapa do MVP antes do lançamento.
+Este documento orienta a fase **7.10 Responsividade mobile/tablet**, Ãºltima etapa do MVP antes do lanÃ§amento.
 
 Ele deve ser usado para:
 
-- organizar a execução por blocos;
+- organizar a execuÃ§Ã£o por blocos;
 - evitar ajustes dispersos em muitas telas ao mesmo tempo;
-- listar arquivos prováveis por frente;
-- padronizar testes em larguras obrigatórias;
-- definir critérios mínimos de aceite;
-- registrar comandos úteis de validação;
-- separar ajustes de MVP de melhorias pós-MVP.
+- listar arquivos provÃ¡veis por frente;
+- padronizar testes em larguras obrigatÃ³rias;
+- definir critÃ©rios mÃ­nimos de aceite;
+- registrar comandos Ãºteis de validaÃ§Ã£o;
+- separar ajustes de MVP de melhorias pÃ³s-MVP.
 
-A responsividade deve começar somente depois de:
+A responsividade deve comeÃ§ar somente depois de:
 
 - funcionalidades MVP estabilizadas;
 - QA funcional manual aprovado;
@@ -24,7 +24,7 @@ A responsividade deve começar somente depois de:
 - `npm test` aprovado;
 - `npm run test:e2e` aprovado;
 - `git diff --check` sem erros;
-- `supabase migration list` sem divergências local/remoto.
+- `supabase migration list` sem divergÃªncias local/remoto.
 
 ---
 
@@ -32,16 +32,16 @@ A responsividade deve começar somente depois de:
 
 Antes de iniciar os ajustes responsivos, o projeto deve estar neste estado:
 
-| Validação | Status esperado |
+| ValidaÃ§Ã£o | Status esperado |
 |---|---|
-| Build de produção | aprovado |
-| Testes unitários | aprovados |
+| Build de produÃ§Ã£o | aprovado |
+| Testes unitÃ¡rios | aprovados |
 | Testes e2e | aprovados |
 | `git diff --check` | sem erros |
 | Migrations Supabase | local/remoto alinhados |
 | QA manual funcional | aprovado |
 | Escopo MVP | congelado |
-| Pós-MVP | documentado |
+| PÃ³s-MVP | documentado |
 
 Se algum item acima falhar, corrigir antes de iniciar a responsividade.
 
@@ -49,20 +49,20 @@ Se algum item acima falhar, corrigir antes de iniciar a responsividade.
 
 ## 2. Regra principal
 
-A responsividade é a **última etapa antes do lançamento**.
+A responsividade Ã© a **Ãºltima etapa antes do lanÃ§amento**.
 
 Durante esta fase:
 
-- não expandir funcionalidades;
-- não criar novas migrations, salvo correção crítica;
-- não alterar regras de negócio sem necessidade;
-- não mexer em Edge Functions;
-- não alterar RLS;
-- não implementar backlog pós-MVP;
-- não iniciar redesign amplo;
-- priorizar usabilidade, legibilidade, toque e ausência de quebras visuais.
+- nÃ£o expandir funcionalidades;
+- nÃ£o criar novas migrations, salvo correÃ§Ã£o crÃ­tica;
+- nÃ£o alterar regras de negÃ³cio sem necessidade;
+- nÃ£o mexer em Edge Functions;
+- nÃ£o alterar RLS;
+- nÃ£o implementar backlog pÃ³s-MVP;
+- nÃ£o iniciar redesign amplo;
+- priorizar usabilidade, legibilidade, toque e ausÃªncia de quebras visuais.
 
-O foco é deixar o produto **operável, legível e confiável** em mobile, tablet e desktop.
+O foco Ã© deixar o produto **operÃ¡vel, legÃ­vel e confiÃ¡vel** em mobile, tablet e desktop.
 
 ---
 
@@ -90,42 +90,42 @@ feat/responsividade-mobile-tablet
 
 ---
 
-## 4. Larguras obrigatórias de teste
+## 4. Larguras obrigatÃ³rias de teste
 
 Testar no DevTools ou em dispositivos reais:
 
 | Largura | Uso esperado |
 |---:|---|
 | 320px | menor mobile suportado |
-| 375px | iPhone padrão/pequeno |
-| 390px | mobile intermediário |
+| 375px | iPhone padrÃ£o/pequeno |
+| 390px | mobile intermediÃ¡rio |
 | 430px | mobile grande |
 | 768px | tablet vertical |
-| desktop | referência final |
+| desktop | referÃªncia final |
 
-Sempre validar também altura reduzida quando houver modais, overlays ou formulários longos.
+Sempre validar tambÃ©m altura reduzida quando houver modais, overlays ou formulÃ¡rios longos.
 
 ---
 
-## 5. Critérios globais de aceite
+## 5. CritÃ©rios globais de aceite
 
-Uma tela só deve ser considerada aprovada quando:
+Uma tela sÃ³ deve ser considerada aprovada quando:
 
-- não houver overflow horizontal indevido;
-- o header estiver utilizável;
-- menus e botões forem acessíveis por toque;
-- botões não ficarem fora da tela;
-- cards não estourarem o container;
+- nÃ£o houver overflow horizontal indevido;
+- o header estiver utilizÃ¡vel;
+- menus e botÃµes forem acessÃ­veis por toque;
+- botÃµes nÃ£o ficarem fora da tela;
+- cards nÃ£o estourarem o container;
 - tabelas tiverem scroll controlado;
 - modais couberem na viewport ou tenham scroll interno;
-- formulários longos forem usáveis;
-- textos principais permanecerem legíveis;
-- CTAs principais continuarem visíveis;
-- estados vazios continuarem compreensíveis;
-- loading/error states não quebrarem layout;
-- ações destrutivas permanecerem protegidas;
-- a árvore continuar utilizável com pan/zoom;
-- build continuar passando após os ajustes.
+- formulÃ¡rios longos forem usÃ¡veis;
+- textos principais permanecerem legÃ­veis;
+- CTAs principais continuarem visÃ­veis;
+- estados vazios continuarem compreensÃ­veis;
+- loading/error states nÃ£o quebrarem layout;
+- aÃ§Ãµes destrutivas permanecerem protegidas;
+- a Ã¡rvore continuar utilizÃ¡vel com pan/zoom;
+- build continuar passando apÃ³s os ajustes.
 
 ---
 
@@ -134,61 +134,61 @@ Uma tela só deve ser considerada aprovada quando:
 Executar em blocos, com commit ao final de cada bloco validado:
 
 1. base global;
-2. árvore e ReactFlow;
+2. Ã¡rvore e ReactFlow;
 3. perfil da pessoa;
-4. área do usuário;
-5. fórum/favoritos/notificações;
+4. Ã¡rea do usuÃ¡rio;
+5. fÃ³rum/favoritos/notificaÃ§Ãµes;
 6. admin;
-7. QA final de lançamento.
+7. QA final de lanÃ§amento.
 
-Não avançar para o próximo bloco se o anterior introduzir quebra visual evidente ou build quebrado.
+NÃ£o avanÃ§ar para o prÃ³ximo bloco se o anterior introduzir quebra visual evidente ou build quebrado.
 
 ---
 
-## 7. Diagnóstico inicial recomendado
+## 7. DiagnÃ³stico inicial recomendado
 
-Antes de alterar código, fazer uma leitura visual rápida em 320px, 390px e 768px para identificar os pontos mais críticos.
+Antes de alterar cÃ³digo, fazer uma leitura visual rÃ¡pida em 320px, 390px e 768px para identificar os pontos mais crÃ­ticos.
 
 ### Itens com maior risco de quebra
 
-| Área | Risco provável | Ação esperada |
+| Ãrea | Risco provÃ¡vel | AÃ§Ã£o esperada |
 |---|---|---|
-| Árvore/ReactFlow | controles, overlays, pan/zoom e largura do canvas | revisar wrappers, z-index, botões flutuantes e interação touch |
-| Admin Pessoa Form | formulário longo, muitos blocos e botões internos | garantir grids responsivos, scroll natural e botões acessíveis |
+| Ãrvore/ReactFlow | controles, overlays, pan/zoom e largura do canvas | revisar wrappers, z-index, botÃµes flutuantes e interaÃ§Ã£o touch |
+| Admin Pessoa Form | formulÃ¡rio longo, muitos blocos e botÃµes internos | garantir grids responsivos, scroll natural e botÃµes acessÃ­veis |
 | Tabelas admin | overflow horizontal | adicionar wrappers `overflow-x-auto` |
 | Modais | altura maior que viewport | aplicar `max-h-[90vh]` e `overflow-y-auto` |
-| Favoritos/fórum/notificações | filtros e cards em linha | empilhar em mobile e permitir quebra |
+| Favoritos/fÃ³rum/notificaÃ§Ãµes | filtros e cards em linha | empilhar em mobile e permitir quebra |
 | Timeline/perfil | textos longos e cards | usar `min-w-0`, `break-words` e grids responsivos |
 
 ### Sinais de problema
 
 - barra horizontal no navegador;
-- botão fora da tela;
+- botÃ£o fora da tela;
 - card cortado;
-- modal sem botão de fechar visível;
+- modal sem botÃ£o de fechar visÃ­vel;
 - tabela empurrando todo o layout;
-- ReactFlow impedindo rolagem da página;
+- ReactFlow impedindo rolagem da pÃ¡gina;
 - legenda cobrindo controles essenciais;
 - menu de pessoa abrindo fora da viewport;
-- formulário com botão de salvar inacessível.
+- formulÃ¡rio com botÃ£o de salvar inacessÃ­vel.
 
 ---
 
-## 8. Bloco 1 — Base global
+## 8. Bloco 1 â€” Base global
 
 ### Objetivo
 
-Criar uma base responsiva consistente para evitar correções repetidas em cada tela.
+Criar uma base responsiva consistente para evitar correÃ§Ãµes repetidas em cada tela.
 
 ### Itens a verificar
 
 - header;
 - menu principal;
-- menu do usuário;
+- menu do usuÃ¡rio;
 - containers;
 - grids;
 - cards;
-- botões;
+- botÃµes;
 - inputs;
 - selects;
 - textareas;
@@ -197,11 +197,11 @@ Criar uma base responsiva consistente para evitar correções repetidas em cada 
 - modais;
 - dialogs;
 - toasts;
-- espaçamentos;
+- espaÃ§amentos;
 - tipografia;
 - overflow horizontal.
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/Home.tsx
@@ -212,7 +212,7 @@ src/app/index.css
 src/app/routes.tsx
 ```
 
-### Correções frequentes
+### CorreÃ§Ãµes frequentes
 
 #### Containers
 
@@ -230,7 +230,7 @@ Preferir grids que empilham no mobile:
 className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
 ```
 
-#### Botões em linha
+#### BotÃµes em linha
 
 Permitir quebra no mobile:
 
@@ -252,13 +252,13 @@ Usar wrapper com scroll horizontal controlado:
 
 #### Modais
 
-Garantir altura máxima e rolagem:
+Garantir altura mÃ¡xima e rolagem:
 
 ```tsx
 className="max-h-[90vh] overflow-y-auto"
 ```
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -275,29 +275,29 @@ git commit -m "style: ajustar base responsiva global"
 
 ---
 
-## 9. Bloco 2 — Árvore e ReactFlow
+## 9. Bloco 2 â€” Ãrvore e ReactFlow
 
 ### Objetivo
 
-Garantir que a árvore funcione em mobile/tablet sem perder uso básico.
+Garantir que a Ã¡rvore funcione em mobile/tablet sem perder uso bÃ¡sico.
 
-### Rotas e áreas
+### Rotas e Ã¡reas
 
 - `/`
 - `/minha-arvore`
 - Genealogia;
-- Visão Completa;
-- Minha Árvore;
-- painel de informações;
+- VisÃ£o Completa;
+- Minha Ãrvore;
+- painel de informaÃ§Ãµes;
 - filtros;
 - controles de zoom;
 - legenda;
 - menu de pessoa;
 - modal conjugal;
-- seleção de área;
-- exportação PNG/PDF/impressão.
+- seleÃ§Ã£o de Ã¡rea;
+- exportaÃ§Ã£o PNG/PDF/impressÃ£o.
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/Home.tsx
@@ -311,34 +311,34 @@ src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
 src/app/components/FamilyTree/layouts
 ```
 
-### Testes obrigatórios
+### Testes obrigatÃ³rios
 
-- árvore carrega em 320px;
-- árvore carrega em 375px;
-- árvore carrega em 390px;
-- árvore carrega em 430px;
-- árvore carrega em 768px;
+- Ã¡rvore carrega em 320px;
+- Ã¡rvore carrega em 375px;
+- Ã¡rvore carrega em 390px;
+- Ã¡rvore carrega em 430px;
+- Ã¡rvore carrega em 768px;
 - pan por toque funciona;
-- zoom não impede uso;
-- controles não cobrem conteúdo crítico;
-- botão **Legenda** é acessível;
-- painel da legenda tem scroll se necessário;
+- zoom nÃ£o impede uso;
+- controles nÃ£o cobrem conteÃºdo crÃ­tico;
+- botÃ£o **Legenda** Ã© acessÃ­vel;
+- painel da legenda tem scroll se necessÃ¡rio;
 - menu da pessoa abre e fecha;
 - modal conjugal cabe na tela;
-- seleção de área abre e cancela;
-- exportação não quebra a tela;
-- filtros não deixam anéis/conectores soltos.
+- seleÃ§Ã£o de Ã¡rea abre e cancela;
+- exportaÃ§Ã£o nÃ£o quebra a tela;
+- filtros nÃ£o deixam anÃ©is/conectores soltos.
 
-### Critérios específicos
+### CritÃ©rios especÃ­ficos
 
-- a árvore não precisa mostrar tudo confortavelmente em 320px, mas precisa ser navegável;
-- não deve haver scroll horizontal da página causado pela árvore;
+- a Ã¡rvore nÃ£o precisa mostrar tudo confortavelmente em 320px, mas precisa ser navegÃ¡vel;
+- nÃ£o deve haver scroll horizontal da pÃ¡gina causado pela Ã¡rvore;
 - o ReactFlow pode ocupar viewport ampla, desde que contido em seu wrapper;
 - overlays devem respeitar a viewport;
-- botões flutuantes devem ter área mínima de toque;
-- legenda e seleção de área não devem aparecer em exportações.
+- botÃµes flutuantes devem ter Ã¡rea mÃ­nima de toque;
+- legenda e seleÃ§Ã£o de Ã¡rea nÃ£o devem aparecer em exportaÃ§Ãµes.
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -355,11 +355,11 @@ git commit -m "style: ajustar arvore para mobile e tablet"
 
 ---
 
-## 10. Bloco 3 — Perfil da pessoa
+## 10. Bloco 3 â€” Perfil da pessoa
 
 ### Objetivo
 
-Garantir leitura, navegação e ações principais no perfil individual.
+Garantir leitura, navegaÃ§Ã£o e aÃ§Ãµes principais no perfil individual.
 
 ### Rotas
 
@@ -368,21 +368,21 @@ Garantir leitura, navegação e ações principais no perfil individual.
 
 ### Componentes a validar
 
-- cabeçalho do perfil;
+- cabeÃ§alho do perfil;
 - foto/avatar;
 - dados pessoais;
-- botões de ação;
+- botÃµes de aÃ§Ã£o;
 - WhatsApp;
 - favorito;
 - grau de parentesco;
-- relações familiares;
+- relaÃ§Ãµes familiares;
 - timeline;
 - eventos pessoais;
-- arquivos históricos;
-- tópicos/discussões relacionadas;
+- arquivos histÃ³ricos;
+- tÃ³picos/discussÃµes relacionadas;
 - estados vazios.
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/PersonProfile.tsx
@@ -395,29 +395,29 @@ src/app/components/ArquivosHistoricos.tsx
 src/app/components/favorites/FavoriteButton.tsx
 ```
 
-### Testes obrigatórios
+### Testes obrigatÃ³rios
 
 - perfil com muitos dados;
 - perfil com poucos dados;
 - perfil com pessoa falecida;
-- perfil com arquivos históricos;
+- perfil com arquivos histÃ³ricos;
 - perfil com timeline longa;
 - perfil com WhatsApp habilitado;
-- perfil sem permissão de telefone;
+- perfil sem permissÃ£o de telefone;
 - perfil com favorito ativo;
-- perfil sem relação encontrada;
-- botões empilham corretamente no mobile.
+- perfil sem relaÃ§Ã£o encontrada;
+- botÃµes empilham corretamente no mobile.
 
-### Critérios específicos
+### CritÃ©rios especÃ­ficos
 
 - cards devem empilhar;
-- timeline não deve estourar largura;
+- timeline nÃ£o deve estourar largura;
 - textos longos devem quebrar linha;
-- arquivos devem ter ações acessíveis por toque;
-- botões principais não devem ficar escondidos;
-- dados sensíveis continuam respeitando permissões.
+- arquivos devem ter aÃ§Ãµes acessÃ­veis por toque;
+- botÃµes principais nÃ£o devem ficar escondidos;
+- dados sensÃ­veis continuam respeitando permissÃµes.
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -434,11 +434,11 @@ git commit -m "style: ajustar perfil de pessoa para mobile"
 
 ---
 
-## 11. Bloco 4 — Área do usuário
+## 11. Bloco 4 â€” Ãrea do usuÃ¡rio
 
 ### Objetivo
 
-Garantir que usuários comuns consigam revisar dados, vínculos, notificações e favoritos no mobile.
+Garantir que usuÃ¡rios comuns consigam revisar dados, vÃ­nculos, notificaÃ§Ãµes e favoritos no mobile.
 
 ### Rotas
 
@@ -448,7 +448,7 @@ Garantir que usuários comuns consigam revisar dados, vínculos, notificações 
 - `/meus-favoritos`
 - `/vincular-perfil`
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/MeusDados.tsx
@@ -460,33 +460,33 @@ src/app/components/ArquivosHistoricos.tsx
 src/app/components/favorites/FavoriteButton.tsx
 ```
 
-### Testes obrigatórios
+### Testes obrigatÃ³rios
 
 #### Meus Dados
 
-- formulário longo;
+- formulÃ¡rio longo;
 - dados pessoais;
 - privacidade;
 - redes sociais;
 - eventos pessoais;
-- arquivos históricos;
-- botões salvar/cancelar.
+- arquivos histÃ³ricos;
+- botÃµes salvar/cancelar.
 
-#### Meus Vínculos
+#### Meus VÃ­nculos
 
-- lista de vínculos;
-- solicitação de vínculo;
-- status de solicitação;
-- ações em mobile.
+- lista de vÃ­nculos;
+- solicitaÃ§Ã£o de vÃ­nculo;
+- status de solicitaÃ§Ã£o;
+- aÃ§Ãµes em mobile.
 
-#### Notificações
+#### NotificaÃ§Ãµes
 
 - lista vazia;
-- lista com notificações;
+- lista com notificaÃ§Ãµes;
 - marcar uma como lida;
 - marcar todas como lidas;
-- remover notificação;
-- preferências.
+- remover notificaÃ§Ã£o;
+- preferÃªncias.
 
 #### Meus Favoritos
 
@@ -494,25 +494,25 @@ src/app/components/favorites/FavoriteButton.tsx
 - filtros;
 - cards;
 - link interno;
-- remoção;
+- remoÃ§Ã£o;
 - estado sem favoritos.
 
 #### Vincular Perfil
 
 - busca de pessoa;
 - resultados;
-- solicitação;
+- solicitaÃ§Ã£o;
 - mensagens de erro/sucesso.
 
-### Critérios específicos
+### CritÃ©rios especÃ­ficos
 
 - inputs devem ocupar largura total no mobile;
-- ações secundárias podem ir para baixo;
-- listas devem ter espaçamento de toque;
-- filtros não devem gerar overflow;
+- aÃ§Ãµes secundÃ¡rias podem ir para baixo;
+- listas devem ter espaÃ§amento de toque;
+- filtros nÃ£o devem gerar overflow;
 - tabelas, se existirem, devem ter scroll controlado.
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -529,11 +529,11 @@ git commit -m "style: ajustar area do usuario para mobile"
 
 ---
 
-## 12. Bloco 5 — Fórum, favoritos e notificações
+## 12. Bloco 5 â€” FÃ³rum, favoritos e notificaÃ§Ãµes
 
 ### Objetivo
 
-Garantir que áreas de interação e leitura recorrente funcionem em telas pequenas.
+Garantir que Ã¡reas de interaÃ§Ã£o e leitura recorrente funcionem em telas pequenas.
 
 ### Rotas
 
@@ -544,7 +544,7 @@ Garantir que áreas de interação e leitura recorrente funcionem em telas peque
 - `/meus-favoritos`
 - `/notificacoes`
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/forum/ForumHome.tsx
@@ -556,44 +556,44 @@ src/app/pages/MeusFavoritos.tsx
 src/app/pages/Notificacoes.tsx
 ```
 
-### Testes obrigatórios
+### Testes obrigatÃ³rios
 
-#### Fórum
+#### FÃ³rum
 
-- lista de tópicos;
+- lista de tÃ³picos;
 - filtros/categorias;
-- novo tópico;
-- edição;
-- tela de tópico;
+- novo tÃ³pico;
+- ediÃ§Ã£o;
+- tela de tÃ³pico;
 - respostas;
-- comentários;
-- reações, se exibidas;
-- denúncia/moderação, se exibida.
+- comentÃ¡rios;
+- reaÃ§Ãµes, se exibidas;
+- denÃºncia/moderaÃ§Ã£o, se exibida.
 
 #### Favoritos
 
 - listagem;
 - filtros;
 - busca;
-- remoção;
-- link indisponível.
+- remoÃ§Ã£o;
+- link indisponÃ­vel.
 
-#### Notificações
+#### NotificaÃ§Ãµes
 
-- preferências;
+- preferÃªncias;
 - marcar/remover;
 - lista com textos longos;
 - estado vazio.
 
-### Critérios específicos
+### CritÃ©rios especÃ­ficos
 
-- cards de tópico devem empilhar;
+- cards de tÃ³pico devem empilhar;
 - filtros devem quebrar linha;
 - editores de texto devem caber na tela;
-- ações em tópicos devem ser tocáveis;
-- texto longo não deve estourar o card.
+- aÃ§Ãµes em tÃ³picos devem ser tocÃ¡veis;
+- texto longo nÃ£o deve estourar o card.
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -610,15 +610,15 @@ git commit -m "style: ajustar forum favoritos e notificacoes para mobile"
 
 ---
 
-## 13. Bloco 6 — Admin
+## 13. Bloco 6 â€” Admin
 
 ### Objetivo
 
-Garantir que o admin continue operável em mobile/tablet.
+Garantir que o admin continue operÃ¡vel em mobile/tablet.
 
-O admin não precisa ter a mesma eficiência do desktop em telas pequenas, mas não pode quebrar layout nem impedir ações essenciais.
+O admin nÃ£o precisa ter a mesma eficiÃªncia do desktop em telas pequenas, mas nÃ£o pode quebrar layout nem impedir aÃ§Ãµes essenciais.
 
-### Rotas prioritárias
+### Rotas prioritÃ¡rias
 
 - `/admin`
 - `/admin/pessoas`
@@ -630,7 +630,7 @@ O admin não precisa ter a mesma eficiência do desktop em telas pequenas, mas n
 - `/admin/atividades`
 - `/admin/notificacoes`
 
-### Arquivos prováveis
+### Arquivos provÃ¡veis
 
 ```txt
 src/app/pages/admin/AdminDashboard.tsx
@@ -647,38 +647,38 @@ src/app/components/relationships/MarriageDetailsEditor.tsx
 src/app/components/ArquivosHistoricos.tsx
 ```
 
-### Testes obrigatórios
+### Testes obrigatÃ³rios
 
 #### Dashboard
 
 - cards;
 - atalhos;
-- navegação.
+- navegaÃ§Ã£o.
 
 #### Admin Pessoas
 
 - busca;
 - filtros;
 - tabela/lista;
-- ações de editar/remover.
+- aÃ§Ãµes de editar/remover.
 
 #### Admin Pessoa Form
 
-- formulário longo;
-- blocos reutilizáveis;
-- dados básicos;
+- formulÃ¡rio longo;
+- blocos reutilizÃ¡veis;
+- dados bÃ¡sicos;
 - datas/locais;
 - bio;
 - contato;
 - privacidade;
 - redes sociais;
 - eventos;
-- arquivos históricos;
+- arquivos histÃ³ricos;
 - relacionamentos;
 - dados conjugais;
-- botões de salvar/cancelar.
+- botÃµes de salvar/cancelar.
 
-#### Solicitações
+#### SolicitaÃ§Ãµes
 
 - lista;
 - aprovar;
@@ -692,23 +692,23 @@ src/app/components/ArquivosHistoricos.tsx
 - tabelas;
 - scroll horizontal controlado.
 
-#### Notificações admin
+#### NotificaÃ§Ãµes admin
 
 - teste interno;
 - teste de e-mail;
 - rotina manual;
 - logs, se exibidos.
 
-### Critérios específicos
+### CritÃ©rios especÃ­ficos
 
-- formulários longos devem ter rolagem natural;
-- botões principais devem aparecer ao final e não sobrepor conteúdo;
+- formulÃ¡rios longos devem ter rolagem natural;
+- botÃµes principais devem aparecer ao final e nÃ£o sobrepor conteÃºdo;
 - tabelas largas devem ficar dentro de `overflow-x-auto`;
-- ações destrutivas continuam com confirmação;
+- aÃ§Ãµes destrutivas continuam com confirmaÃ§Ã£o;
 - admin continua protegido por `ProtectedRoute`;
-- nenhum ajuste visual deve liberar ação indevida para usuário comum.
+- nenhum ajuste visual deve liberar aÃ§Ã£o indevida para usuÃ¡rio comum.
 
-### Validação do bloco
+### ValidaÃ§Ã£o do bloco
 
 ```bash
 npm run build
@@ -725,13 +725,13 @@ git commit -m "style: ajustar admin para mobile"
 
 ---
 
-## 14. Bloco 7 — QA final de lançamento
+## 14. Bloco 7 â€” QA final de lanÃ§amento
 
 ### Objetivo
 
-Confirmar que a fase de responsividade não quebrou funcionalidades já aprovadas.
+Confirmar que a fase de responsividade nÃ£o quebrou funcionalidades jÃ¡ aprovadas.
 
-### Comandos obrigatórios
+### Comandos obrigatÃ³rios
 
 ```bash
 npm run build
@@ -758,41 +758,41 @@ desktop
 ### Checklist geral
 
 ```md
-- [ ] Home aprovada, incluindo botão Ações com texto no desktop e ícone apenas no mobile.
-- [ ] Minha Árvore aprovada.
+- [ ] Home aprovada, incluindo botÃ£o AÃ§Ãµes com texto no desktop e Ã­cone apenas no mobile.
+- [ ] Minha Ãrvore aprovada.
 - [ ] Genealogia aprovada.
-- [ ] Visão Completa aprovada.
+- [ ] VisÃ£o Completa aprovada.
 - [ ] Perfil da pessoa aprovado.
 - [ ] Meus Dados aprovado.
-- [ ] Meus Vínculos aprovado.
-- [ ] Notificações aprovado.
+- [ ] Meus VÃ­nculos aprovado.
+- [ ] NotificaÃ§Ãµes aprovado.
 - [ ] Meus Favoritos aprovado.
-- [ ] Fórum aprovado.
+- [ ] FÃ³rum aprovado.
 - [ ] Admin Dashboard aprovado.
 - [ ] Admin Pessoas aprovado.
 - [ ] Admin Pessoa Form aprovado.
-- [ ] Admin Solicitações aprovado.
+- [ ] Admin SolicitaÃ§Ãµes aprovado.
 - [ ] Admin Integridade aprovado.
-- [ ] Admin Notificações aprovado.
+- [ ] Admin NotificaÃ§Ãµes aprovado.
 - [ ] Modais aprovados.
 - [ ] Tabelas aprovadas.
-- [ ] Formulários longos aprovados.
-- [ ] Árvore touch aprovada.
+- [ ] FormulÃ¡rios longos aprovados.
+- [ ] Ãrvore touch aprovada.
 - [ ] Sem overflow horizontal indevido.
 - [ ] Build aprovado.
-- [ ] Testes unitários aprovados.
+- [ ] Testes unitÃ¡rios aprovados.
 - [ ] Testes e2e aprovados.
 - [ ] Migrations alinhadas.
 ```
 
 Pontos responsivos recentes:
 
-- botão **Ações** da Home usa `Printer`, texto no desktop e ícone apenas no mobile;
-- o botão **Ações** continua abrindo o painel interno `activeSidebarPanel = 'info'`;
-- cards de **Escopo da visualização** em `/minha-arvore` exibem avatar circular com foto ou iniciais;
-- fluxo de arquivos históricos mantém thumbnail/card PDF e mensagem verde após upload, sem exibir o input nativo até o usuário reabrir o formulário.
+- botÃ£o **AÃ§Ãµes** da Home usa `Printer`, texto no desktop e Ã­cone apenas no mobile;
+- o botÃ£o **AÃ§Ãµes** continua abrindo o painel interno `activeSidebarPanel = 'info'`;
+- cards de **Escopo da visualizaÃ§Ã£o** em `/minha-arvore` exibem avatar circular com foto ou iniciais;
+- fluxo de arquivos histÃ³ricos mantÃ©m thumbnail/card PDF e mensagem verde apÃ³s upload, sem exibir o input nativo atÃ© o usuÃ¡rio reabrir o formulÃ¡rio.
 
-### Commit de documentação final
+### Commit de documentaÃ§Ã£o final
 
 Depois de atualizar `PLANO_PROXIMOS_PASSOS.md` e `GUIA_IMPLEMENTACOES.md` com responsividade aprovada:
 
@@ -803,7 +803,7 @@ git commit -m "docs: registrar responsividade MVP aprovada"
 
 ---
 
-## 15. Comandos úteis durante a fase
+## 15. Comandos Ãºteis durante a fase
 
 ### Servidor local
 
@@ -817,7 +817,7 @@ npm run dev
 npm run build
 ```
 
-### Testes unitários
+### Testes unitÃ¡rios
 
 ```bash
 npm test
@@ -868,17 +868,17 @@ git commit -m "style: ajustar <bloco> para mobile"
 
 ---
 
-## 16. Boas práticas de implementação
+## 16. Boas prÃ¡ticas de implementaÃ§Ã£o
 
-### Preferir ajustes locais antes de refatorações amplas
+### Preferir ajustes locais antes de refatoraÃ§Ãµes amplas
 
-Corrigir o layout onde o problema ocorre, salvo quando o mesmo padrão quebrar várias telas.
+Corrigir o layout onde o problema ocorre, salvo quando o mesmo padrÃ£o quebrar vÃ¡rias telas.
 
-### Evitar alteração de lógica
+### Evitar alteraÃ§Ã£o de lÃ³gica
 
-Responsividade não deve mudar:
+Responsividade nÃ£o deve mudar:
 
-- permissões;
+- permissÃµes;
 - RLS;
 - services;
 - mutations;
@@ -901,13 +901,13 @@ className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
 className="px-4 py-4 sm:px-6 lg:px-8"
 ```
 
-### Controlar largura de conteúdo
+### Controlar largura de conteÃºdo
 
 ```tsx
 className="w-full min-w-0"
 ```
 
-`min-w-0` é importante em flex/grid para evitar estouro com textos longos.
+`min-w-0` Ã© importante em flex/grid para evitar estouro com textos longos.
 
 ### Quebrar textos longos
 
@@ -921,9 +921,9 @@ ou:
 className="overflow-hidden text-ellipsis"
 ```
 
-### Evitar botões pequenos demais
+### Evitar botÃµes pequenos demais
 
-Alvo mínimo recomendado:
+Alvo mÃ­nimo recomendado:
 
 ```tsx
 className="min-h-10"
@@ -953,20 +953,20 @@ className="w-full"
 
 ---
 
-## 17. Problemas comuns e correções rápidas
+## 17. Problemas comuns e correÃ§Ãµes rÃ¡pidas
 
-### Scroll horizontal na página
+### Scroll horizontal na pÃ¡gina
 
 Verificar:
 
 - `w-screen`;
 - `min-w-*`;
 - tabela sem wrapper;
-- botões em `flex-row` sem quebra;
+- botÃµes em `flex-row` sem quebra;
 - cards com largura fixa;
 - ReactFlow fora do container.
 
-Correções típicas:
+CorreÃ§Ãµes tÃ­picas:
 
 ```tsx
 className="w-full min-w-0 overflow-hidden"
@@ -982,23 +982,23 @@ className="overflow-x-auto"
 
 Verificar textos longos e grids.
 
-Correção:
+CorreÃ§Ã£o:
 
 ```tsx
 className="min-w-0 break-words"
 ```
 
-### Botões ficam espremidos
+### BotÃµes ficam espremidos
 
-Correção:
+CorreÃ§Ã£o:
 
 ```tsx
 className="flex flex-col gap-2 sm:flex-row"
 ```
 
-### Modal não cabe
+### Modal nÃ£o cabe
 
-Correção:
+CorreÃ§Ã£o:
 
 ```tsx
 className="max-h-[90vh] overflow-y-auto"
@@ -1006,7 +1006,7 @@ className="max-h-[90vh] overflow-y-auto"
 
 ### Tabela quebra layout
 
-Correção:
+CorreÃ§Ã£o:
 
 ```tsx
 <div className="overflow-x-auto">
@@ -1021,63 +1021,63 @@ Correção:
 Verificar:
 
 - overlays;
-- painéis flutuantes;
+- painÃ©is flutuantes;
 - `stopPropagation`;
 - z-index;
 - `panOnDrag`;
 - `zoomOnPinch`;
-- estado de seleção de área.
+- estado de seleÃ§Ã£o de Ã¡rea.
 
-### Legenda atrapalha árvore
+### Legenda atrapalha Ã¡rvore
 
 Verificar:
 
 - painel com `data-tree-legend="true"`;
 - eventos com `stopPropagation`;
-- altura máxima;
+- altura mÃ¡xima;
 - scroll interno;
 - posicionamento em mobile.
 
 ---
 
-## 18. O que não fazer nesta fase
+## 18. O que nÃ£o fazer nesta fase
 
-- não implementar favoritos expandidos;
-- não implementar WhatsApp API real;
-- não implementar push real;
-- não implementar fila/retry avançado;
-- não implementar exportação da árvore completa;
-- não criar nova arquitetura de timeline;
-- não alterar regras de parentesco;
-- não refatorar banco;
-- não limpar base64 legado;
-- não alterar secrets;
-- não mexer no cron, salvo correção crítica;
-- não criar nova frente visual que atrase o lançamento.
+- nÃ£o implementar favoritos expandidos;
+- nÃ£o implementar WhatsApp API real;
+- nÃ£o implementar push real;
+- nÃ£o implementar fila/retry avanÃ§ado;
+- nÃ£o implementar exportaÃ§Ã£o da Ã¡rvore completa;
+- nÃ£o criar nova arquitetura de timeline;
+- nÃ£o alterar regras de parentesco;
+- nÃ£o refatorar banco;
+- nÃ£o limpar base64 legado;
+- nÃ£o alterar secrets;
+- nÃ£o mexer no cron, salvo correÃ§Ã£o crÃ­tica;
+- nÃ£o criar nova frente visual que atrase o lanÃ§amento.
 
 ---
 
-## 19. Critério para encerrar a fase 7.10
+## 19. CritÃ©rio para encerrar a fase 7.10
 
-A responsividade pode ser considerada concluída quando:
+A responsividade pode ser considerada concluÃ­da quando:
 
 - todos os blocos foram ajustados;
-- todas as larguras obrigatórias foram testadas;
+- todas as larguras obrigatÃ³rias foram testadas;
 - QA visual final foi aprovado;
 - `npm run build` passou;
 - `npm test` passou;
 - `npm run test:e2e` passou;
 - `git diff --check` passou;
-- `supabase migration list` está alinhado;
-- documentação foi atualizada;
+- `supabase migration list` estÃ¡ alinhado;
+- documentaÃ§Ã£o foi atualizada;
 - branch foi mergeada na `main`;
 - push final foi feito.
 
 ---
 
-## 20. Pós-responsividade
+## 20. PÃ³s-responsividade
 
-Após concluir e fazer merge:
+ApÃ³s concluir e fazer merge:
 
 ```bash
 git checkout main
@@ -1097,6 +1097,6 @@ Depois atualizar:
 
 Registrar que:
 
-- 7.10 foi concluída no escopo MVP;
+- 7.10 foi concluÃ­da no escopo MVP;
 - QA mobile/tablet/desktop foi aprovado;
-- refinamentos finos ficam para pós-MVP, desde que não bloqueiem uso.
+- refinamentos finos ficam para pÃ³s-MVP, desde que nÃ£o bloqueiem uso.

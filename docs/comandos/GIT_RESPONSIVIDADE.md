@@ -1,8 +1,8 @@
-# Git — comandos de responsividade mobile/tablet
+﻿# Git â€” comandos de responsividade mobile/tablet
 
-> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`  
-> Tipo: comando/checklist técnico pontual.  
-> Status: referência operacional, não documentação funcional canônica.
+> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`
+> Tipo: comando/checklist tÃ©cnico pontual.
+> Status: referÃªncia operacional, nÃ£o documentaÃ§Ã£o funcional canÃ´nica.
 
 ---
 
@@ -10,9 +10,9 @@
 
 Este documento registra comandos Git usados durante a frente de **responsividade mobile/tablet**.
 
-Use apenas como referência rápida para situações de branch, push, revisão de diff e validação antes de commit.
+Use apenas como referÃªncia rÃ¡pida para situaÃ§Ãµes de branch, push, revisÃ£o de diff e validaÃ§Ã£o antes de commit.
 
-Para documentação canônica de UX/responsividade, use:
+Para documentaÃ§Ã£o canÃ´nica de UX/responsividade, use:
 
 ```txt
 docs/GUIA_UX_LAYOUT.md
@@ -56,7 +56,7 @@ Conferir estado local:
 git status --short
 ```
 
-Conferir relação com remoto:
+Conferir relaÃ§Ã£o com remoto:
 
 ```bash
 git branch -vv
@@ -89,14 +89,14 @@ git rebase main
 
 Regra:
 
-- não usar `rebase` em branch compartilhada sem alinhamento prévio;
-- se houver conflito, resolver arquivo por arquivo e rodar validação antes do push.
+- nÃ£o usar `rebase` em branch compartilhada sem alinhamento prÃ©vio;
+- se houver conflito, resolver arquivo por arquivo e rodar validaÃ§Ã£o antes do push.
 
 ---
 
 ## 5. Validar antes de commit
 
-Checklist mínimo:
+Checklist mÃ­nimo:
 
 ```bash
 git status
@@ -105,7 +105,7 @@ npm test
 git diff --check
 ```
 
-Quando a alteração envolver layout, árvore, painel lateral ou responsividade:
+Quando a alteraÃ§Ã£o envolver layout, Ã¡rvore, painel lateral ou responsividade:
 
 ```bash
 npm run test:e2e
@@ -127,7 +127,7 @@ Diff completo:
 git diff
 ```
 
-Diff de arquivo específico:
+Diff de arquivo especÃ­fico:
 
 ```bash
 git diff -- caminho/do/arquivo
@@ -144,7 +144,7 @@ git diff --cached
 
 ## 7. Commit
 
-Adicionar alterações:
+Adicionar alteraÃ§Ãµes:
 
 ```bash
 git add -A
@@ -173,7 +173,7 @@ git push
 
 ## 8. Evitar commitar lixo local
 
-Não commitar:
+NÃ£o commitar:
 
 ```txt
 dist/
@@ -216,18 +216,18 @@ Get-ChildItem -Recurse -Filter *.bak | Remove-Item -Force
 Revisar este documento se:
 
 - o fluxo de branches mudar;
-- o projeto passar a usar PR obrigatório;
-- os comandos de validação mudarem;
-- `npm test` ou `npm run test:e2e` forem substituídos;
-- a frente de responsividade deixar de ser uma branch específica e virar checklist permanente.
+- o projeto passar a usar PR obrigatÃ³rio;
+- os comandos de validaÃ§Ã£o mudarem;
+- `npm test` ou `npm run test:e2e` forem substituÃ­dos;
+- a frente de responsividade deixar de ser uma branch especÃ­fica e virar checklist permanente.
 
 ---
 
-## 10. Observação documental
+## 10. ObservaÃ§Ã£o documental
 
-Este arquivo é um comando auxiliar. Não deve acumular diagnóstico, decisões de UX, checklist final de QA ou histórico longo.
+Este arquivo Ã© um comando auxiliar. NÃ£o deve acumular diagnÃ³stico, decisÃµes de UX, checklist final de QA ou histÃ³rico longo.
 
-Se o conteúdo crescer, separar em:
+Se o conteÃºdo crescer, separar em:
 
 ```txt
 docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md

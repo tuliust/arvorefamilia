@@ -1,4 +1,4 @@
-# QA 7.6C - Exportacao de area visivel da arvore
+﻿# QA 7.6C - Exportacao de area visivel da arvore
 
 Data: 2026-05-18
 

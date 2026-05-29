@@ -1,45 +1,45 @@
-# Guia de componentes — Árvore Família
+﻿# Guia de componentes â€” Ãrvore FamÃ­lia
 
-> Última atualização: 2026-05-29  
-> Local canônico: `docs/GUIA_COMPONENTES.md`
+> Ãšltima atualizaÃ§Ã£o: 2026-05-29
+> Local canÃ´nico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
 
-Este documento registra os principais componentes reutilizáveis do projeto **Árvore Família**, suas responsabilidades, arquivos relacionados, padrões de uso e cuidados contra regressões.
+Este documento registra os principais componentes reutilizÃ¡veis do projeto **Ãrvore FamÃ­lia**, suas responsabilidades, arquivos relacionados, padrÃµes de uso e cuidados contra regressÃµes.
 
 Use este guia para:
 
 - localizar rapidamente componentes relevantes;
-- saber onde alterar UI sem mexer em regra de negócio;
-- evitar duplicação de componentes;
-- preservar padrões de props, layout e acessibilidade;
-- orientar novos prompts de implementação.
+- saber onde alterar UI sem mexer em regra de negÃ³cio;
+- evitar duplicaÃ§Ã£o de componentes;
+- preservar padrÃµes de props, layout e acessibilidade;
+- orientar novos prompts de implementaÃ§Ã£o.
 
-Este documento não substitui:
+Este documento nÃ£o substitui:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: visão funcional consolidada.
-- `docs/GUIA_UX_LAYOUT.md`: decisões visuais e regras de layout.
-- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pós-MVP.
+- `docs/GUIA_IMPLEMENTACOES.md`: visÃ£o funcional consolidada.
+- `docs/GUIA_UX_LAYOUT.md`: decisÃµes visuais e regras de layout.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigaÃ§Ã£o por sintoma.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pÃ³s-MVP.
 - `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso.
-- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore.
-- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportação.
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento especÃ­fico da view Minha Ãrvore.
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportaÃ§Ã£o.
 
 ---
 
 ## Escopo deste guia
 
-Este guia deve responder a três perguntas:
+Este guia deve responder a trÃªs perguntas:
 
 1. **qual componente alterar**;
 2. **qual responsabilidade ele possui**;
-3. **quais cuidados evitam regressão**.
+3. **quais cuidados evitam regressÃ£o**.
 
-Quando a dúvida envolver regra de negócio, Supabase, RLS, migrations ou fluxo de produto, consulte primeiro o documento funcional ou operacional correspondente. Componentes visuais não devem se tornar ponto de entrada para regras de banco.
+Quando a dÃºvida envolver regra de negÃ³cio, Supabase, RLS, migrations ou fluxo de produto, consulte primeiro o documento funcional ou operacional correspondente. Componentes visuais nÃ£o devem se tornar ponto de entrada para regras de banco.
 
-## 1. Convenções gerais de componentes
+## 1. ConvenÃ§Ãµes gerais de componentes
 
-### 1.1 Organização
+### 1.1 OrganizaÃ§Ã£o
 
 Componentes ficam principalmente em:
 
@@ -55,7 +55,7 @@ src/app/components/favorites
 src/app/components/forum
 ```
 
-Páginas ficam em:
+PÃ¡ginas ficam em:
 
 ```txt
 src/app/pages
@@ -64,7 +64,7 @@ src/app/pages/forum
 src/app/pages/home
 ```
 
-Services, utils e types não devem ser misturados com componentes:
+Services, utils e types nÃ£o devem ser misturados com componentes:
 
 ```txt
 src/app/services
@@ -72,28 +72,28 @@ src/app/utils
 src/app/types
 ```
 
-### 1.2 Regras de alteração
+### 1.2 Regras de alteraÃ§Ã£o
 
 Ao alterar componente:
 
 - manter props tipadas;
-- evitar lógica de banco dentro do componente visual;
+- evitar lÃ³gica de banco dentro do componente visual;
 - usar services para Supabase;
-- usar utils para cálculo puro;
-- não introduzir side effects em componentes de exibição;
-- manter `type="button"` em botões internos que não fazem submit;
+- usar utils para cÃ¡lculo puro;
+- nÃ£o introduzir side effects em componentes de exibiÃ§Ã£o;
+- manter `type="button"` em botÃµes internos que nÃ£o fazem submit;
 - preservar estados de loading/erro/vazio;
-- preservar acessibilidade básica: `aria-label`, foco visível e semântica.
+- preservar acessibilidade bÃ¡sica: `aria-label`, foco visÃ­vel e semÃ¢ntica.
 
-### 1.3 Padrões de estilo
+### 1.3 PadrÃµes de estilo
 
 - Tailwind local no JSX;
 - `min-w-0` em wrappers flex/grid;
-- `shrink-0` em ícones/avatares;
+- `shrink-0` em Ã­cones/avatares;
 - `truncate` quando texto precisa caber em uma linha;
-- `break-words` para conteúdo de usuário;
-- `break-all` para valores técnicos;
-- `w-full sm:w-auto` em botões responsivos;
+- `break-words` para conteÃºdo de usuÃ¡rio;
+- `break-all` para valores tÃ©cnicos;
+- `w-full sm:w-auto` em botÃµes responsivos;
 - modais com `max-h` e rolagem interna.
 
 ---
@@ -110,10 +110,10 @@ src/app/components/layout/MemberPageHeader.tsx
 
 Responsabilidade:
 
-- padronizar header de páginas internas;
-- fornecer título, subtítulo, ícone e ações;
+- padronizar header de pÃ¡ginas internas;
+- fornecer tÃ­tulo, subtÃ­tulo, Ã­cone e aÃ§Ãµes;
 - exportar classe global de container;
-- exportar ícones comuns para ações.
+- exportar Ã­cones comuns para aÃ§Ãµes.
 
 Exports principais:
 
@@ -144,23 +144,23 @@ variant: default | primary | danger | ghost
 
 Uso esperado:
 
-- páginas internas de usuário;
-- páginas internas administrativas;
-- páginas que precisam seguir o padrão visual de `/minha-arvore`.
+- pÃ¡ginas internas de usuÃ¡rio;
+- pÃ¡ginas internas administrativas;
+- pÃ¡ginas que precisam seguir o padrÃ£o visual de `/minha-arvore`.
 
-Não usar em:
+NÃ£o usar em:
 
-- Home pós-login (`src/app/pages/Home.tsx`), que possui header próprio integrado à árvore.
+- Home pÃ³s-login (`src/app/pages/Home.tsx`), que possui header prÃ³prio integrado Ã  Ã¡rvore.
 
 Cuidados:
 
-- não duplicar botões de navegação que já existam no conteúdo;
-- manter textos curtos, pois o header trunca título/subtítulo;
-- não criar novo container se `PAGE_CONTAINER_CLASS` atender.
+- nÃ£o duplicar botÃµes de navegaÃ§Ã£o que jÃ¡ existam no conteÃºdo;
+- manter textos curtos, pois o header trunca tÃ­tulo/subtÃ­tulo;
+- nÃ£o criar novo container se `PAGE_CONTAINER_CLASS` atender.
 
 ---
 
-## 3. Componentes da árvore
+## 3. Componentes da Ã¡rvore
 
 ### 3.1 `FamilyTree`
 
@@ -176,9 +176,9 @@ Responsabilidade:
 - selecionar layout conforme view;
 - gerenciar viewport inicial;
 - controlar pan/zoom;
-- expor ações imperativas;
-- renderizar título/subtítulo fixo da árvore;
-- integrar exportação de área;
+- expor aÃ§Ãµes imperativas;
+- renderizar tÃ­tulo/subtÃ­tulo fixo da Ã¡rvore;
+- integrar exportaÃ§Ã£o de Ã¡rea;
 - integrar clique em pessoa e casamento.
 
 Props principais:
@@ -217,9 +217,9 @@ getTreeViewModeFromPath
 getPathForTreeViewMode
 ```
 
-As rotas dedicadas da árvore devem continuar usando esses helpers para evitar divergência entre URL e `viewMode`.
+As rotas dedicadas da Ã¡rvore devem continuar usando esses helpers para evitar divergÃªncia entre URL e `viewMode`.
 
-Ações expostas via `ref`:
+AÃ§Ãµes expostas via `ref`:
 
 ```txt
 zoomIn
@@ -235,19 +235,19 @@ Comportamento consolidado:
 - `viewMode = minha-arvore` usa `directFamilyDistributedLayout`;
 - `viewMode = genealogia` usa `genealogyColumnsLayout` com escopo pessoal;
 - `viewMode = visao-completa` usa `genealogyColumnsLayout` com base completa;
-- título da árvore é overlay fixo no próprio componente;
+- tÃ­tulo da Ã¡rvore Ã© overlay fixo no prÃ³prio componente;
 - viewport inicial usa bounds de `personNode`;
-- bounds de pan são separados dos bounds de viewport;
-- Genealogia/Visão Completa usam zoom por largura;
-- seleção de área bloqueia pan/zoom temporariamente.
+- bounds de pan sÃ£o separados dos bounds de viewport;
+- Genealogia/VisÃ£o Completa usam zoom por largura;
+- seleÃ§Ã£o de Ã¡rea bloqueia pan/zoom temporariamente.
 
 Cuidados:
 
-- não recolocar title nodes nos layouts;
-- não usar altura total para reduzir zoom de Genealogia/Visão Completa;
-- não incluir labels/group boxes/anchors no bounds visual de zoom;
-- não alterar filtros sem revisar `Home.tsx`;
-- não mexer em Supabase neste componente.
+- nÃ£o recolocar title nodes nos layouts;
+- nÃ£o usar altura total para reduzir zoom de Genealogia/VisÃ£o Completa;
+- nÃ£o incluir labels/group boxes/anchors no bounds visual de zoom;
+- nÃ£o alterar filtros sem revisar `Home.tsx`;
+- nÃ£o mexer em Supabase neste componente.
 
 ---
 
@@ -261,7 +261,7 @@ src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 
 Responsabilidade:
 
-- posicionar a view **Minha Árvore**;
+- posicionar a view **Minha Ãrvore**;
 - montar pessoa central;
 - agrupar parentes por lado paterno/materno;
 - criar labels de grupos;
@@ -283,10 +283,10 @@ childEdge
 Cuidados:
 
 - labels de grupo podem permanecer;
-- título geral da árvore não deve ser criado aqui;
-- group boxes e anchors não devem comandar zoom inicial;
-- alteração de constantes de posição pode afetar toda a composição visual;
-- validar em desktop e mobile após qualquer mudança.
+- tÃ­tulo geral da Ã¡rvore nÃ£o deve ser criado aqui;
+- group boxes e anchors nÃ£o devem comandar zoom inicial;
+- alteraÃ§Ã£o de constantes de posiÃ§Ã£o pode afetar toda a composiÃ§Ã£o visual;
+- validar em desktop e mobile apÃ³s qualquer mudanÃ§a.
 
 ---
 
@@ -300,16 +300,16 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 Responsabilidade:
 
-- posicionar **Genealogia** e **Visão Completa**;
+- posicionar **Genealogia** e **VisÃ£o Completa**;
 - agrupar pessoas por `manual_generation`;
 - ordenar por data de nascimento e nome;
-- posicionar cônjuges;
-- criar labels de geração;
-- criar conectores ortogonais de família;
+- posicionar cÃ´njuges;
+- criar labels de geraÃ§Ã£o;
+- criar conectores ortogonais de famÃ­lia;
 - criar edges conjugais com anel;
-- aplicar filtros de geração.
+- aplicar filtros de geraÃ§Ã£o.
 
-Funções/conceitos importantes:
+FunÃ§Ãµes/conceitos importantes:
 
 ```txt
 getGenealogyMarriageStatus
@@ -323,12 +323,12 @@ genealogyColumnsLayout
 
 Cuidados:
 
-- não adicionar título/subtítulo geral da árvore;
-- labels de geração são permitidas;
+- nÃ£o adicionar tÃ­tulo/subtÃ­tulo geral da Ã¡rvore;
+- labels de geraÃ§Ã£o sÃ£o permitidas;
 - altura pode exceder a viewport;
 - preservar conectores entre pais e filhos;
 - preservar status visual do anel de casamento;
-- testar filtros de geração após mudanças.
+- testar filtros de geraÃ§Ã£o apÃ³s mudanÃ§as.
 
 ---
 
@@ -342,10 +342,10 @@ src/app/components/FamilyTree/TreeLegend.tsx
 
 Responsabilidade:
 
-- explicar elementos visuais da árvore;
+- explicar elementos visuais da Ã¡rvore;
 - controlar filtros reais/camadas visuais quando recebe callbacks;
 - renderizar modo compacto no painel lateral;
-- renderizar modo expandido se necessário;
+- renderizar modo expandido se necessÃ¡rio;
 - mostrar cards, linhas, anel e cores dos grupos.
 
 Props:
@@ -363,14 +363,14 @@ onToggleVisualLineFilter?: (...)
 
 Estado atual da UX:
 
-- subtítulo removido;
-- “Visualização atual” removida;
+- subtÃ­tulo removido;
+- â€œVisualizaÃ§Ã£o atualâ€ removida;
 - card azul da view atual removido;
-- seção “Views” removida;
-- descrições internas dos itens removidas;
-- “Ativa” alterado para “Em relacionamento”.
+- seÃ§Ã£o â€œViewsâ€ removida;
+- descriÃ§Ãµes internas dos itens removidas;
+- â€œAtivaâ€ alterado para â€œEm relacionamentoâ€.
 
-Seções atuais:
+SeÃ§Ãµes atuais:
 
 ```txt
 Cards
@@ -385,13 +385,13 @@ Camadas/filtros funcionais:
 - `visualLineFilters.siblingHighlight`;
 - `parentChildHighlight` deve respeitar `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
 - `siblingHighlight` deve respeitar `edgeFilters.irmaos`;
-- estado padrão desligado mantém o visual original.
+- estado padrÃ£o desligado mantÃ©m o visual original.
 
 Cuidados:
 
-- não reintroduzir descrições redundantes sem decisão de UX;
-- não conectar a legenda a Supabase;
-- não alterar regra do status conjugal aqui;
+- nÃ£o reintroduzir descriÃ§Ãµes redundantes sem decisÃ£o de UX;
+- nÃ£o conectar a legenda a Supabase;
+- nÃ£o alterar regra do status conjugal aqui;
 - se adicionar item, validar painel lateral em mobile.
 
 ---
@@ -406,11 +406,11 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 
 Responsabilidade:
 
-- permitir seleção retangular de área visível da árvore;
-- exportar seleção em PNG;
-- exportar seleção em PDF;
-- imprimir seleção;
-- cancelar por botão ou `Esc`.
+- permitir seleÃ§Ã£o retangular de Ã¡rea visÃ­vel da Ã¡rvore;
+- exportar seleÃ§Ã£o em PNG;
+- exportar seleÃ§Ã£o em PDF;
+- imprimir seleÃ§Ã£o;
+- cancelar por botÃ£o ou `Esc`.
 
 Props:
 
@@ -423,24 +423,24 @@ onClose
 
 Regras implementadas:
 
-- seleção mínima de 80x80px;
-- limite máximo de exportação estimado;
+- seleÃ§Ã£o mÃ­nima de 80x80px;
+- limite mÃ¡ximo de exportaÃ§Ã£o estimado;
 - toolbar contextual;
-- bloqueia propagação de eventos;
+- bloqueia propagaÃ§Ã£o de eventos;
 - exibe mensagens de erro locais;
-- fecha após exportação bem-sucedida.
+- fecha apÃ³s exportaÃ§Ã£o bem-sucedida.
 
 Cuidados:
 
-- não usar para exportar árvore completa;
-- não salvar arquivo no Storage;
-- não criar log persistido;
+- nÃ£o usar para exportar Ã¡rvore completa;
+- nÃ£o salvar arquivo no Storage;
+- nÃ£o criar log persistido;
 - manter pan/zoom bloqueados enquanto overlay estiver aberto;
-- manter `data-tree-selection-overlay="true"` para exclusão na captura.
+- manter `data-tree-selection-overlay="true"` para exclusÃ£o na captura.
 
 ---
 
-### 3.6 Utils de exportação da árvore
+### 3.6 Utils de exportaÃ§Ã£o da Ã¡rvore
 
 Arquivo:
 
@@ -452,15 +452,15 @@ Responsabilidade:
 
 - gerar nome de arquivo;
 - capturar elemento com `html2canvas`;
-- sanitizar cores não suportadas;
+- sanitizar cores nÃ£o suportadas;
 - recortar canvas;
 - salvar PNG;
 - gerar PDF;
-- abrir janela de impressão;
+- abrir janela de impressÃ£o;
 - imprimir canvas;
-- ignorar elementos que não devem aparecer na exportação.
+- ignorar elementos que nÃ£o devem aparecer na exportaÃ§Ã£o.
 
-Funções principais:
+FunÃ§Ãµes principais:
 
 ```txt
 buildTreeExportFilename
@@ -487,13 +487,13 @@ Cuidados:
 
 - preservar `useCORS: true`;
 - preservar `allowTaint: false`;
-- manter mensagens amigáveis para erro de CORS;
-- não remover sanitização de cores;
-- não capturar overlay/legenda/menus.
+- manter mensagens amigÃ¡veis para erro de CORS;
+- nÃ£o remover sanitizaÃ§Ã£o de cores;
+- nÃ£o capturar overlay/legenda/menus.
 
 ---
 
-## 4. Nodes e edges da árvore
+## 4. Nodes e edges da Ã¡rvore
 
 Arquivos principais:
 
@@ -510,24 +510,24 @@ src/app/components/FamilyTree/edges
 Responsabilidades:
 
 - `PersonNode`: card visual da pessoa;
-- `DirectFamilyLabelNode`: labels de grupos/gerações;
+- `DirectFamilyLabelNode`: labels de grupos/geraÃ§Ãµes;
 - `DirectFamilyGroupBoxNode`: caixas visuais de agrupamento;
 - `DirectFamilyAnchorNode`: pontos estruturais para edges;
 - `GenealogyFamilyConnectorNode`: conectores ortogonais entre pais e filhos;
-- `GenealogySpouseEdge`: linha conjugal com anel clicável.
+- `GenealogySpouseEdge`: linha conjugal com anel clicÃ¡vel.
 
 Cuidados:
 
-- nodes estruturais não devem comandar zoom inicial;
-- edges devem checar se source/target estão visíveis;
+- nodes estruturais nÃ£o devem comandar zoom inicial;
+- edges devem checar se source/target estÃ£o visÃ­veis;
 - anel conjugal deve preservar clique no modal;
-- observações internas não devem aparecer para usuário comum.
+- observaÃ§Ãµes internas nÃ£o devem aparecer para usuÃ¡rio comum.
 
 ---
 
 ## 5. Componentes da Home
 
-### 5.1 Componentes extraídos da Home
+### 5.1 Componentes extraÃ­dos da Home
 
 Pasta:
 
@@ -539,7 +539,7 @@ Responsabilidade:
 
 - reduzir o tamanho de `Home.tsx`;
 - manter componentes visuais simples, tipados e orientados por props;
-- preservar `Home.tsx` como orquestrador de estado, carregamento, filtros, IA, conexão e navegação.
+- preservar `Home.tsx` como orquestrador de estado, carregamento, filtros, IA, conexÃ£o e navegaÃ§Ã£o.
 
 Componentes principais:
 
@@ -569,13 +569,13 @@ homeAiContext
 
 Cuidados:
 
-- não mover estado principal para esses componentes sem decisão explícita;
+- nÃ£o mover estado principal para esses componentes sem decisÃ£o explÃ­cita;
 - preservar textos, labels, `aria-labels`, classes Tailwind e ordem visual;
-- manter `UserMenu` montado pela Home e repassado ao header por slot, salvo nova refatoração deliberada;
+- manter `UserMenu` montado pela Home e repassado ao header por slot, salvo nova refatoraÃ§Ã£o deliberada;
 - header e nav mobile devem receber o mesmo callback de troca de view;
-- grids de filtros não devem alterar chaves de filtros nem contadores recebidos por props.
+- grids de filtros nÃ£o devem alterar chaves de filtros nem contadores recebidos por props.
 
-## 6. Componentes de navegação e menu
+## 6. Componentes de navegaÃ§Ã£o e menu
 
 ### 6.1 `AppLink`
 
@@ -588,23 +588,23 @@ src/app/components/AppLink.tsx
 Responsabilidade:
 
 - padronizar links internos do app;
-- evitar inconsistência entre navegação por rota e links visuais.
+- evitar inconsistÃªncia entre navegaÃ§Ã£o por rota e links visuais.
 
 Uso:
 
 - headers;
-- páginas internas;
-- cards de navegação;
-- botões com `to`.
+- pÃ¡ginas internas;
+- cards de navegaÃ§Ã£o;
+- botÃµes com `to`.
 
 Cuidados:
 
-- ao remover import de `AppLink as Link`, confirmar se a página ainda usa `<Link>`;
+- ao remover import de `AppLink as Link`, confirmar se a pÃ¡gina ainda usa `<Link>`;
 - erro conhecido corrigido: `Link is not defined` em `CalendarioFamiliar.tsx`.
 
 ### 6.2 `UserMenu`
 
-Arquivo provável:
+Arquivo provÃ¡vel:
 
 ```txt
 src/app/components/UserMenu.tsx
@@ -612,10 +612,10 @@ src/app/components/UserMenu.tsx
 
 Responsabilidade:
 
-- menu do usuário autenticado;
-- atalhos de navegação;
+- menu do usuÃ¡rio autenticado;
+- atalhos de navegaÃ§Ã£o;
 - acesso admin condicional;
-- favoritos, notificações, calendário, fórum e logout.
+- favoritos, notificaÃ§Ãµes, calendÃ¡rio, fÃ³rum e logout.
 
 Uso principal:
 
@@ -625,16 +625,16 @@ src/app/pages/Home.tsx
 
 Cuidados:
 
-- botão admin apenas para admin;
-- não duplicar atalhos já presentes no header se isso causar overflow;
-- preservar contagem de notificações;
+- botÃ£o admin apenas para admin;
+- nÃ£o duplicar atalhos jÃ¡ presentes no header se isso causar overflow;
+- preservar contagem de notificaÃ§Ãµes;
 - preservar logout.
 
 ---
 
 ## 7. Componentes de pessoa
 
-Documentação específica de pessoas/perfil/admin:
+DocumentaÃ§Ã£o especÃ­fica de pessoas/perfil/admin:
 
 ```txt
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
@@ -660,8 +660,8 @@ src/app/pages/MeusDados.tsx
 
 Responsabilidades gerais:
 
-- exibição de dados pessoais;
-- formulário de dados pessoais;
+- exibiÃ§Ã£o de dados pessoais;
+- formulÃ¡rio de dados pessoais;
 - datas e locais;
 - privacidade;
 - redes sociais;
@@ -669,19 +669,19 @@ Responsabilidades gerais:
 - eventos pessoais;
 - grau de parentesco;
 - dados gerados de astrologia/acontecimentos;
-- autocomplete de endereço em formulários de contato.
+- autocomplete de endereÃ§o em formulÃ¡rios de contato.
 
 Cuidados:
 
-- perfil não deve gerar IA automaticamente;
-- WhatsApp não deve revelar número se privacidade não permitir;
+- perfil nÃ£o deve gerar IA automaticamente;
+- WhatsApp nÃ£o deve revelar nÃºmero se privacidade nÃ£o permitir;
 - campos de local exterior precisam preservar formato;
-- `PersonContactFields` usa `AddressAutocompleteInput` para endereço;
+- `PersonContactFields` usa `AddressAutocompleteInput` para endereÃ§o;
 - `AddressAutocompleteInput` usa Google Places quando `VITE_GOOGLE_MAPS_API_KEY` existe;
-- `googleAddress.ts` centraliza a formatação de endereço selecionado;
+- `googleAddress.ts` centraliza a formataÃ§Ã£o de endereÃ§o selecionado;
 - sem API key ou com falha do Google, o campo continua como input normal;
-- botões internos em formulários devem usar `type="button"`;
-- componentes visuais não devem persistir Supabase diretamente quando já existir service.
+- botÃµes internos em formulÃ¡rios devem usar `type="button"`;
+- componentes visuais nÃ£o devem persistir Supabase diretamente quando jÃ¡ existir service.
 
 ---
 
@@ -705,20 +705,20 @@ Responsabilidades:
 - criar/editar relacionamento;
 - editar dados conjugais;
 - abrir modal conjugal;
-- criar solicitação de vínculo para usuário comum;
-- aprovar/rejeitar vínculo no admin.
+- criar solicitaÃ§Ã£o de vÃ­nculo para usuÃ¡rio comum;
+- aprovar/rejeitar vÃ­nculo no admin.
 
 Cuidados:
 
-- usuário comum não altera relacionamento real diretamente;
-- observações conjugais internas só aparecem para admin;
-- modal não deve salvar antes do botão principal;
-- rejeição de solicitação não altera dado real;
+- usuÃ¡rio comum nÃ£o altera relacionamento real diretamente;
+- observaÃ§Ãµes conjugais internas sÃ³ aparecem para admin;
+- modal nÃ£o deve salvar antes do botÃ£o principal;
+- rejeiÃ§Ã£o de solicitaÃ§Ã£o nÃ£o altera dado real;
 - arquivos de relacionamento usam `relacionamento_id`.
 
 ---
 
-## 9. Componentes de arquivos históricos
+## 9. Componentes de arquivos histÃ³ricos
 
 Arquivos principais:
 
@@ -734,24 +734,24 @@ Responsabilidades:
 - upload;
 - preview;
 - download;
-- remoção;
+- remoÃ§Ã£o;
 - compatibilidade com base64 legado;
 - arquivos de pessoa e relacionamento;
-- edição de título, ano, descrição e categoria histórica.
+- ediÃ§Ã£o de tÃ­tulo, ano, descriÃ§Ã£o e categoria histÃ³rica.
 
 Comportamento atual:
 
 - aceita JPG, PNG, WebP e PDF;
-- após upload de novo arquivo, o input nativo fica oculto;
-- campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente após upload;
-- mensagem verde **“✓ Arquivo carregado”** permanece visível;
+- apÃ³s upload de novo arquivo, o input nativo fica oculto;
+- campos e botÃµes **Cancelar**/**Adicionar** ficam ocultos imediatamente apÃ³s upload;
+- mensagem verde **â€œâœ“ Arquivo carregadoâ€** permanece visÃ­vel;
 - imagens mostram thumbnail;
-- PDF mostra card com ícone/label PDF;
+- PDF mostra card com Ã­cone/label PDF;
 - clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
-- usuário pode preencher título, descrição, ano e categoria depois do upload;
-- arquivos existentes permitem editar título, ano, descrição e categoria histórica.
+- usuÃ¡rio pode preencher tÃ­tulo, descriÃ§Ã£o, ano e categoria depois do upload;
+- arquivos existentes permitem editar tÃ­tulo, ano, descriÃ§Ã£o e categoria histÃ³rica.
 
-Categoria histórica:
+Categoria histÃ³rica:
 
 - tipo `HistoricalFileEventCategory`;
 - campo `ArquivoHistorico.categoria_evento`;
@@ -761,10 +761,10 @@ Categoria histórica:
 Cuidados:
 
 - novos arquivos devem ir para Storage;
-- preview/download não deve limpar formulário;
-- botões de visualizar/baixar/remover devem usar `type="button"`;
-- não apagar base64 legado automaticamente;
-- não criar limpeza automática de órfãos sem auditoria;
+- preview/download nÃ£o deve limpar formulÃ¡rio;
+- botÃµes de visualizar/baixar/remover devem usar `type="button"`;
+- nÃ£o apagar base64 legado automaticamente;
+- nÃ£o criar limpeza automÃ¡tica de Ã³rfÃ£os sem auditoria;
 - migration `20260522121000_add_historical_file_event_category.sql` precisa estar aplicada antes de deploy que envie `categoria_evento`.
 
 ---
@@ -788,10 +788,10 @@ Responsabilidades:
 
 Cuidados:
 
-- não renderizar metadata bruta;
-- preservar precisão de data;
-- evitar duplicação de eventos;
-- edição manual fica pós-MVP.
+- nÃ£o renderizar metadata bruta;
+- preservar precisÃ£o de data;
+- evitar duplicaÃ§Ã£o de eventos;
+- ediÃ§Ã£o manual fica pÃ³s-MVP.
 
 ---
 
@@ -816,13 +816,13 @@ Responsabilidades:
 Cuidados:
 
 - metadata deve ser sanitizada no service;
-- botão precisa ser clicável em mobile;
-- isolamento por usuário depende de RLS/service;
-- expansão para outras entidades fica pós-MVP.
+- botÃ£o precisa ser clicÃ¡vel em mobile;
+- isolamento por usuÃ¡rio depende de RLS/service;
+- expansÃ£o para outras entidades fica pÃ³s-MVP.
 
 ---
 
-## 12. Componentes de fórum
+## 12. Componentes de fÃ³rum
 
 Arquivos principais:
 
@@ -837,26 +837,26 @@ src/app/services/forumService.ts
 
 Responsabilidades:
 
-- listar tópicos;
-- criar tópico;
-- editar tópico;
-- exibir tópico;
-- respostas/comentários;
+- listar tÃ³picos;
+- criar tÃ³pico;
+- editar tÃ³pico;
+- exibir tÃ³pico;
+- respostas/comentÃ¡rios;
 - categorias;
-- ações de moderação conforme permissão.
+- aÃ§Ãµes de moderaÃ§Ã£o conforme permissÃ£o.
 
 Cuidados:
 
-- textos de usuário precisam quebrar linha;
+- textos de usuÃ¡rio precisam quebrar linha;
 - editores/textareas devem funcionar em mobile;
-- ações destrutivas devem ser protegidas;
+- aÃ§Ãµes destrutivas devem ser protegidas;
 - manter filtros sem overflow.
 
 ---
 
-## 13. Componentes de notificações
+## 13. Componentes de notificaÃ§Ãµes
 
-Documentação específica de notificações:
+DocumentaÃ§Ã£o especÃ­fica de notificaÃ§Ãµes:
 
 ```txt
 docs/funcionalidades/NOTIFICACOES.md
@@ -879,19 +879,19 @@ src/app/services/notificationAdminService.ts
 
 Responsabilidades:
 
-- `Notificacoes.tsx`: lista/central em cards, leitura, marcação e remoção;
-- `AjustarNotificacoes.tsx`: página dedicada de preferências;
-- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferências;
-- administração/testes;
+- `Notificacoes.tsx`: lista/central em cards, leitura, marcaÃ§Ã£o e remoÃ§Ã£o;
+- `AjustarNotificacoes.tsx`: pÃ¡gina dedicada de preferÃªncias;
+- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferÃªncias;
+- administraÃ§Ã£o/testes;
 - disparos internos/e-mail;
-- logs e deduplicação.
+- logs e deduplicaÃ§Ã£o.
 
 Cuidados:
 
 - marcar/remover sempre filtrar por `id` e `user_id`;
-- admin não deve disparar massa por acidente;
-- WhatsApp/push sem provider real devem retornar status não configurado;
-- preferências `false` não devem ser sobrescritas por defaults.
+- admin nÃ£o deve disparar massa por acidente;
+- WhatsApp/push sem provider real devem retornar status nÃ£o configurado;
+- preferÃªncias `false` nÃ£o devem ser sobrescritas por defaults.
 
 ---
 
@@ -917,29 +917,29 @@ src/app/pages/admin/AdminHomeSettings.tsx
 
 Responsabilidades:
 
-- administração de dados;
-- formulários longos;
-- vínculo usuário-pessoa no card **Usuários vinculados a esta pessoa**;
-- diagnóstico;
+- administraÃ§Ã£o de dados;
+- formulÃ¡rios longos;
+- vÃ­nculo usuÃ¡rio-pessoa no card **UsuÃ¡rios vinculados a esta pessoa**;
+- diagnÃ³stico;
 - integridade;
 - atividades;
-- notificações;
-- home pública;
-- importação/migração.
+- notificaÃ§Ãµes;
+- home pÃºblica;
+- importaÃ§Ã£o/migraÃ§Ã£o.
 
 Cuidados:
 
 - rotas admin devem usar `ProtectedRoute`;
-- usuário comum não deve acessar;
-- `/admin/integridade` é leitura/diagnóstico;
+- usuÃ¡rio comum nÃ£o deve acessar;
+- `/admin/integridade` Ã© leitura/diagnÃ³stico;
 - tabelas podem usar scroll horizontal controlado;
-- formulários precisam ser operáveis em mobile;
-- vínculo usuário-pessoa depende da RPC `admin_list_profiles_for_linking`;
-- erro de listagem de usuários aparece inline no card;
-- botão **Recarregar** deve permanecer disponível para nova tentativa;
-- dropdown de usuário fica desabilitado durante erro/loading;
-- não substituir falha da RPC por consulta direta insegura em `profiles`;
-- ações destrutivas precisam de confirmação.
+- formulÃ¡rios precisam ser operÃ¡veis em mobile;
+- vÃ­nculo usuÃ¡rio-pessoa depende da RPC `admin_list_profiles_for_linking`;
+- erro de listagem de usuÃ¡rios aparece inline no card;
+- botÃ£o **Recarregar** deve permanecer disponÃ­vel para nova tentativa;
+- dropdown de usuÃ¡rio fica desabilitado durante erro/loading;
+- nÃ£o substituir falha da RPC por consulta direta insegura em `profiles`;
+- aÃ§Ãµes destrutivas precisam de confirmaÃ§Ã£o.
 
 ---
 
@@ -968,49 +968,49 @@ badge
 
 Regras:
 
-- usar componentes UI base antes de criar botão/input próprio;
+- usar componentes UI base antes de criar botÃ£o/input prÃ³prio;
 - preservar variantes existentes;
-- não quebrar classes responsivas;
-- manter foco visível;
-- não acoplar UI base a regras de negócio.
+- nÃ£o quebrar classes responsivas;
+- manter foco visÃ­vel;
+- nÃ£o acoplar UI base a regras de negÃ³cio.
 
 ---
 
 ## 16. Componentes e estados vazios
 
-Padrão esperado:
+PadrÃ£o esperado:
 
-- toda página com carregamento deve ter estado de loading;
-- toda consulta vazia deve ter estado vazio compreensível;
+- toda pÃ¡gina com carregamento deve ter estado de loading;
+- toda consulta vazia deve ter estado vazio compreensÃ­vel;
 - erros devem explicar o problema sem expor stack/secrets;
-- botões de retry devem existir quando fizer sentido.
+- botÃµes de retry devem existir quando fizer sentido.
 
 Exemplos de uso:
 
 ```txt
 StateMessage em Home
-ForumEmptyState no fórum
+ForumEmptyState no fÃ³rum
 Estados vazios em MeusFavoritos, Notificacoes e Timeline
 ```
 
 ---
 
-## 17. Alterações recentes registradas
+## 17. AlteraÃ§Ãµes recentes registradas
 
 ### 17.1 `MemberPageHeader`
 
 - criado para padronizar headers internos;
 - exporta `PAGE_CONTAINER_CLASS`;
-- usado em páginas internas;
-- Home pós-login ficou fora por ter header próprio.
+- usado em pÃ¡ginas internas;
+- Home pÃ³s-login ficou fora por ter header prÃ³prio.
 
 ### 17.2 `Home.tsx`
 
 - header compacto mantido;
-- busca expansível preservada;
-- painel lateral passou a ter controle único;
-- mobile passou a controlar painel acima da árvore;
-- botão duplicado de painel vindo da árvore foi removido do fluxo principal.
+- busca expansÃ­vel preservada;
+- painel lateral passou a ter controle Ãºnico;
+- mobile passou a controlar painel acima da Ã¡rvore;
+- botÃ£o duplicado de painel vindo da Ã¡rvore foi removido do fluxo principal.
 
 ### 17.3 `FamilyTree.tsx`
 
@@ -1019,21 +1019,21 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
   - `getViewportContentBounds`;
   - `getTranslateBounds`;
 - viewport inicial usa cards reais;
-- Genealogia/Visão Completa usam largura, não altura total;
-- overlay fixo de título/subtítulo centralizado;
-- seleção de área permanece integrada;
+- Genealogia/VisÃ£o Completa usam largura, nÃ£o altura total;
+- overlay fixo de tÃ­tulo/subtÃ­tulo centralizado;
+- seleÃ§Ã£o de Ã¡rea permanece integrada;
 - `TreeAreaSelectionOverlay` aparece quando `isAreaSelectionOpen`.
 
 ### 17.4 `genealogyColumnsLayout.ts`
 
-- título/subtítulo interno removido;
-- labels de geração preservadas;
+- tÃ­tulo/subtÃ­tulo interno removido;
+- labels de geraÃ§Ã£o preservadas;
 - layout por colunas mantido;
-- conectores e anéis preservados.
+- conectores e anÃ©is preservados.
 
 ### 17.5 `directFamilyDistributedLayout.ts`
 
-- título principal interno removido;
+- tÃ­tulo principal interno removido;
 - labels de grupo preservadas;
 - estrutura de grupos e boxes mantida.
 
@@ -1041,15 +1041,15 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 
 - componente simplificado;
 - view atual removida;
-- seção “Views” removida;
-- descrições internas removidas;
-- texto “Em relacionamento” consolidado.
+- seÃ§Ã£o â€œViewsâ€ removida;
+- descriÃ§Ãµes internas removidas;
+- texto â€œEm relacionamentoâ€ consolidado.
 
 ---
 
-## 18. Checklist antes de alterar componentes críticos
+## 18. Checklist antes de alterar componentes crÃ­ticos
 
-Para componentes da árvore:
+Para componentes da Ã¡rvore:
 
 ```bash
 npm run build
@@ -1059,18 +1059,18 @@ git diff --check
 
 E validar manualmente:
 
-- Minha Árvore;
+- Minha Ãrvore;
 - Genealogia;
-- Visão Completa;
+- VisÃ£o Completa;
 - zoom + e -;
 - pan/arraste;
 - painel lateral;
 - aba Legendas;
-- seleção/exportação de área;
+- seleÃ§Ã£o/exportaÃ§Ã£o de Ã¡rea;
 - modal conjugal;
 - mobile.
 
-Para componentes de formulário:
+Para componentes de formulÃ¡rio:
 
 ```bash
 npm run build
@@ -1084,38 +1084,38 @@ E validar:
 - cancelar;
 - preview/download;
 - rascunho;
-- botões internos;
-- permissões.
+- botÃµes internos;
+- permissÃµes.
 
 Para componentes admin:
 
 - validar admin autenticado;
-- validar usuário comum bloqueado;
+- validar usuÃ¡rio comum bloqueado;
 - checar tabelas/listas em mobile;
-- checar ações destrutivas;
+- checar aÃ§Ãµes destrutivas;
 - checar RLS quando houver service novo.
 
 ---
 
 ## 19. O que evitar
 
-Não fazer:
+NÃ£o fazer:
 
-- duplicar componente já existente;
+- duplicar componente jÃ¡ existente;
 - colocar chamada Supabase em componente puramente visual;
-- criar title node da árvore dentro de layouts;
-- usar `git add .` sem checar arquivos temporários;
+- criar title node da Ã¡rvore dentro de layouts;
+- usar `git add .` sem checar arquivos temporÃ¡rios;
 - commitar backups;
 - alterar migrations em ajuste visual;
 - remover `AppLink` sem procurar `<Link>`;
-- remover `type="button"` de botões internos;
-- renderizar observações internas para usuário comum;
+- remover `type="button"` de botÃµes internos;
+- renderizar observaÃ§Ãµes internas para usuÃ¡rio comum;
 - salvar telefone, e-mail, URL privada, base64, token ou secret em logs/metadata;
-- expandir comportamento pós-MVP dentro de ajuste de componente.
+- expandir comportamento pÃ³s-MVP dentro de ajuste de componente.
 
 ---
 
-## 20. Arquivos de referência rápida
+## 20. Arquivos de referÃªncia rÃ¡pida
 
 ```txt
 src/app/components/layout/MemberPageHeader.tsx
@@ -1136,11 +1136,11 @@ src/app/components/ui
 
 ---
 
-## 21. Atualização recente — legenda, painel e linhas da árvore
+## 21. AtualizaÃ§Ã£o recente â€” legenda, painel e linhas da Ã¡rvore
 
 ### 21.1 `TreeLegend` como legenda funcional
 
-`TreeLegend` deixou de ser apenas informativa no painel lateral e também atua como controle visual/filtro, quando recebe callbacks.
+`TreeLegend` deixou de ser apenas informativa no painel lateral e tambÃ©m atua como controle visual/filtro, quando recebe callbacks.
 
 Props relevantes atuais:
 
@@ -1159,17 +1159,17 @@ onToggleDirectRelativeFilter?
 onToggleVisualLineFilter?
 ```
 
-Controles funcionais possíveis:
+Controles funcionais possÃ­veis:
 
 - Pessoa viva;
 - Falecida;
 - Pet;
 - Conjugal;
 - Pais/filhos;
-- Irmãos;
-- Cores dos grupos na Minha Árvore, quando aplicável;
+- IrmÃ£os;
+- Cores dos grupos na Minha Ãrvore, quando aplicÃ¡vel;
 - Destacar pais/filhos;
-- Destacar irmãos.
+- Destacar irmÃ£os.
 
 ### 21.2 Camadas visuais opcionais
 
@@ -1182,14 +1182,14 @@ visualLineFilters.siblingHighlight
 
 Comportamento:
 
-- **Destacar pais/filhos** usa linha amarela contínua;
-- **Destacar irmãos** usa linha amarela tracejada;
-- ambas ficam desligadas por padrão;
+- **Destacar pais/filhos** usa linha amarela contÃ­nua;
+- **Destacar irmÃ£os** usa linha amarela tracejada;
+- ambas ficam desligadas por padrÃ£o;
 - ambas respeitam os filtros legados de linhas.
 
 ### 21.3 `FamilyTree`
 
-`FamilyTree` recebe `visualLineFilters` e repassa a configuração para:
+`FamilyTree` recebe `visualLineFilters` e repassa a configuraÃ§Ã£o para:
 
 ```txt
 directFamilyDistributedLayout
@@ -1197,7 +1197,7 @@ genealogyColumnsLayout
 GenealogyFamilyConnectorNode
 ```
 
-Também expõe via ref:
+TambÃ©m expÃµe via ref:
 
 ```txt
 zoomIn
@@ -1217,15 +1217,15 @@ Filtros
 Legendas
 ```
 
-O painel **Informações da árvore** é aberto pelo botão externo **Ações**, com ícone `Printer`.
+O painel **InformaÃ§Ãµes da Ã¡rvore** Ã© aberto pelo botÃ£o externo **AÃ§Ãµes**, com Ã­cone `Printer`.
 
-A versão compacta da legenda removeu **Cores dos grupos** para caber melhor no painel lateral, mas mantém:
+A versÃ£o compacta da legenda removeu **Cores dos grupos** para caber melhor no painel lateral, mas mantÃ©m:
 
 - Cards;
 - Linhas;
 - Camadas extras;
 - Anel de casamento.
 
-### 21.5 Botões de zoom
+### 21.5 BotÃµes de zoom
 
-Os botões de zoom da árvore ficam no canto superior direito da área da árvore.
+Os botÃµes de zoom da Ã¡rvore ficam no canto superior direito da Ã¡rea da Ã¡rvore.

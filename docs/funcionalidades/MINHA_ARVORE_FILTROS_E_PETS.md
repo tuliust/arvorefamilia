@@ -1,21 +1,21 @@
-# Minha Árvore — filtros, pets e regras de exibição
+﻿# Minha Ãrvore â€” filtros, pets e regras de exibiÃ§Ã£o
 
-> Local recomendado: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`  
-> Tipo: documentação funcional específica da view **Minha Árvore**.
+> Local recomendado: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
+> Tipo: documentaÃ§Ã£o funcional especÃ­fica da view **Minha Ãrvore**.
 
 ---
 
 ## 1. Objetivo
 
-Este documento registra as regras da view **Minha Árvore** relacionadas a:
+Este documento registra as regras da view **Minha Ãrvore** relacionadas a:
 
 - filtros laterais;
 - pessoas vivas/falecidas;
 - pets;
-- separação entre filhos humanos e pets;
+- separaÃ§Ã£o entre filhos humanos e pets;
 - contadores dos grupos;
 - modo foco da pessoa central;
-- impacto dos filtros na renderização da árvore.
+- impacto dos filtros na renderizaÃ§Ã£o da Ã¡rvore.
 
 Este documento complementa:
 
@@ -30,7 +30,7 @@ docs/GUIA_COMPONENTES.md
 
 ## 2. Contexto
 
-A view **Minha Árvore** fica em:
+A view **Minha Ãrvore** fica em:
 
 ```txt
 /minha-arvore
@@ -50,16 +50,16 @@ src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/utils/personEntity.ts
 ```
 
-A decisão principal desta frente foi manter compatibilidade com o banco atual:
+A decisÃ£o principal desta frente foi manter compatibilidade com o banco atual:
 
 ```txt
-pets continuam usando relacionamentos.tipo_relacionamento = 'filho' como vínculo técnico,
-mas o app passa a classificá-los semanticamente por pessoas.humano_ou_pet === 'Pet'.
+pets continuam usando relacionamentos.tipo_relacionamento = 'filho' como vÃ­nculo tÃ©cnico,
+mas o app passa a classificÃ¡-los semanticamente por pessoas.humano_ou_pet === 'Pet'.
 ```
 
 ---
 
-## 3. Regra de domínio para humanos e pets
+## 3. Regra de domÃ­nio para humanos e pets
 
 ### 3.1 Campos usados
 
@@ -68,7 +68,7 @@ pessoas.humano_ou_pet
 relacionamentos.tipo_relacionamento
 ```
 
-### 3.2 Classificação
+### 3.2 ClassificaÃ§Ã£o
 
 ```txt
 pessoas.humano_ou_pet === 'Humano':
@@ -78,15 +78,15 @@ pessoas.humano_ou_pet === 'Pet':
   pet.
 
 relacionamentos.tipo_relacionamento = 'filho':
-  vínculo técnico mantido por compatibilidade.
+  vÃ­nculo tÃ©cnico mantido por compatibilidade.
 ```
 
-Não foi criada migration para:
+NÃ£o foi criada migration para:
 
 - `pet`;
 - `tutor`;
-- novo tipo de relacionamento específico;
-- backfill semântico de relacionamento.
+- novo tipo de relacionamento especÃ­fico;
+- backfill semÃ¢ntico de relacionamento.
 
 ---
 
@@ -98,7 +98,7 @@ Arquivo:
 src/app/utils/personEntity.ts
 ```
 
-Funções esperadas:
+FunÃ§Ãµes esperadas:
 
 ```txt
 isHumanFamilyMember(pessoa)
@@ -108,13 +108,13 @@ isPetFamilyMember(pessoa)
 Regras:
 
 - usar esses helpers para diferenciar humano/pet;
-- evitar comparações duplicadas em componentes;
-- não inferir pet pelo nome, relacionamento ou grupo visual;
-- a fonte semântica é `pessoas.humano_ou_pet`.
+- evitar comparaÃ§Ãµes duplicadas em componentes;
+- nÃ£o inferir pet pelo nome, relacionamento ou grupo visual;
+- a fonte semÃ¢ntica Ã© `pessoas.humano_ou_pet`.
 
 ---
 
-## 5. Correção dos filtros Vivos/Falecidos
+## 5. CorreÃ§Ã£o dos filtros Vivos/Falecidos
 
 ### 5.1 Problema original
 
@@ -123,34 +123,34 @@ Ao desativar o filtro **Vivos**, pessoas do ramo materno/direito eram deslocadas
 Causa:
 
 ```txt
-o filtro de status removia pessoas e relacionamentos antes do cálculo estrutural do layout.
+o filtro de status removia pessoas e relacionamentos antes do cÃ¡lculo estrutural do layout.
 ```
 
 Isso afetava:
 
-- classificação paterna/materna;
-- posição dos grupos;
+- classificaÃ§Ã£o paterna/materna;
+- posiÃ§Ã£o dos grupos;
 - conectores;
-- consistência visual.
+- consistÃªncia visual.
 
 ---
 
 ### 5.2 Regra implementada
 
-Na **Minha Árvore**, o layout usa o grafo completo para calcular:
+Na **Minha Ãrvore**, o layout usa o grafo completo para calcular:
 
 - estrutura;
 - lado paterno/materno;
 - grupos;
 - conectores;
-- posição dos cards.
+- posiÃ§Ã£o dos cards.
 
-Os filtros de status afetam apenas a renderização dos cards.
+Os filtros de status afetam apenas a renderizaÃ§Ã£o dos cards.
 
 Regra consolidada:
 
 ```txt
-Filtros de status não devem recalcular a estrutura familiar.
+Filtros de status nÃ£o devem recalcular a estrutura familiar.
 ```
 
 ---
@@ -158,14 +158,14 @@ Filtros de status não devem recalcular a estrutura familiar.
 ### 5.3 Resultado esperado
 
 - Desativar **Vivos** oculta pessoas vivas sem reposicionar ramos.
-- Desativar **Falecidos** oculta falecidos sem quebrar a classificação paterna/materna.
-- A pessoa central permanece visível.
-- Conectores estruturais não devem reorganizar a árvore indevidamente.
-- Cards ocultos por status não devem alterar a origem semântica dos grupos.
+- Desativar **Falecidos** oculta falecidos sem quebrar a classificaÃ§Ã£o paterna/materna.
+- A pessoa central permanece visÃ­vel.
+- Conectores estruturais nÃ£o devem reorganizar a Ã¡rvore indevidamente.
+- Cards ocultos por status nÃ£o devem alterar a origem semÃ¢ntica dos grupos.
 
 ---
 
-## 6. Separação entre filhos humanos e pets
+## 6. SeparaÃ§Ã£o entre filhos humanos e pets
 
 ### 6.1 Antes
 
@@ -173,15 +173,15 @@ Pets eram tratados visualmente como filhos e apareciam dentro do grupo **Filhos*
 
 ### 6.2 Depois
 
-Pets aparecem em grupo próprio **Pets**, separado de **Filhos**.
+Pets aparecem em grupo prÃ³prio **Pets**, separado de **Filhos**.
 
 Estrutura visual definida:
 
 ```txt
-Cônjuge
+CÃ´njuge
   |
   v
-Bifurcação
+BifurcaÃ§Ã£o
   |-- Filhos
   |     |
   |     v
@@ -195,11 +195,11 @@ Bifurcação
 - **Filhos** mostra apenas humanos.
 - **Pets** mostra apenas pets.
 - **Netos** derivam apenas de filhos humanos.
-- Pets não geram netos.
-- Pets aparecem na **Minha Árvore**.
-- Pets não aparecem em **Genealogia**.
-- Pets não aparecem em **Visão Completa**.
-- Pets aparecem no perfil em card próprio.
+- Pets nÃ£o geram netos.
+- Pets aparecem na **Minha Ãrvore**.
+- Pets nÃ£o aparecem em **Genealogia**.
+- Pets nÃ£o aparecem em **VisÃ£o Completa**.
+- Pets aparecem no perfil em card prÃ³prio.
 
 ---
 
@@ -207,23 +207,23 @@ Bifurcação
 
 | View | Pets |
 |---|---|
-| Minha Árvore | aparecem no grupo Pets |
-| Genealogia | não aparecem |
-| Visão Completa | não aparecem |
-| Perfil | aparecem em card próprio |
+| Minha Ãrvore | aparecem no grupo Pets |
+| Genealogia | nÃ£o aparecem |
+| VisÃ£o Completa | nÃ£o aparecem |
+| Perfil | aparecem em card prÃ³prio |
 
 Regra:
 
 ```txt
-Pets fazem parte da experiência direta/familiar da pessoa central,
-mas não entram nas views genealógicas formais.
+Pets fazem parte da experiÃªncia direta/familiar da pessoa central,
+mas nÃ£o entram nas views genealÃ³gicas formais.
 ```
 
 ---
 
 ## 8. Perfil de pessoa
 
-O componente de relações do perfil deve separar:
+O componente de relaÃ§Ãµes do perfil deve separar:
 
 - filhos humanos;
 - pets vinculados tecnicamente como filho.
@@ -241,7 +241,7 @@ Card Pets:
 Label sugerido:
 
 ```txt
-Pet da família
+Pet da famÃ­lia
 ```
 
 Documento complementar:
@@ -254,25 +254,25 @@ docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
 
 ## 9. Cadastro e admin de relacionamentos
 
-A UX foi ajustada para vínculos envolvendo pet.
+A UX foi ajustada para vÃ­nculos envolvendo pet.
 
-| Situação | Label exibido | Valor salvo |
+| SituaÃ§Ã£o | Label exibido | Valor salvo |
 |---|---|---|
 | humano para humano | Filho(a) | `filho` |
-| humano para pet | Pet da família | `filho` |
-| pet envolvido | Pet da família | `filho` |
+| humano para pet | Pet da famÃ­lia | `filho` |
+| pet envolvido | Pet da famÃ­lia | `filho` |
 
 Objetivo:
 
 ```txt
-preservar compatibilidade com dados existentes enquanto a regra de domínio não for migrada definitivamente.
+preservar compatibilidade com dados existentes enquanto a regra de domÃ­nio nÃ£o for migrada definitivamente.
 ```
 
 Regras:
 
-- não salvar tipo `pet` no relacionamento enquanto não houver migration;
-- não criar tipo `tutor` por UI sem alteração de schema;
-- documentar qualquer futura mudança de domínio antes de migrar dados.
+- nÃ£o salvar tipo `pet` no relacionamento enquanto nÃ£o houver migration;
+- nÃ£o criar tipo `tutor` por UI sem alteraÃ§Ã£o de schema;
+- documentar qualquer futura mudanÃ§a de domÃ­nio antes de migrar dados.
 
 ---
 
@@ -285,13 +285,13 @@ Os cards coloridos representam grupos de parentes.
 Grupos:
 
 ```txt
-Tataravós
-Bisavós
-Avós
+TataravÃ³s
+BisavÃ³s
+AvÃ³s
 Tios
 Primos
-Cônjuge
-Irmãos
+CÃ´njuge
+IrmÃ£os
 Filhos
 Sobrinhos
 Netos
@@ -306,7 +306,7 @@ Pets passam a ser controlados apenas pelo bloco inferior de status/tipo.
 
 ### 10.2 Cards inferiores de status/tipo
 
-O bloco inferior contém:
+O bloco inferior contÃ©m:
 
 ```txt
 Vivos
@@ -314,39 +314,39 @@ Falecidos
 Pets
 ```
 
-Função:
+FunÃ§Ã£o:
 
 - controlar status/tipo;
-- afetar renderização de cards;
+- afetar renderizaÃ§Ã£o de cards;
 - preservar estrutura;
-- não zerar grupos indevidamente.
+- nÃ£o zerar grupos indevidamente.
 
 ---
 
-## 11. Regra dos números nos cards
+## 11. Regra dos nÃºmeros nos cards
 
-Os números dos cards coloridos devem respeitar apenas os filtros inferiores de status/tipo.
+Os nÃºmeros dos cards coloridos devem respeitar apenas os filtros inferiores de status/tipo.
 
 Regras:
 
 - se **Falecidos** estiver desativado, os cards coloridos contam apenas pessoas vivas;
 - se **Vivos** estiver desativado, os cards coloridos contam apenas pessoas falecidas;
-- se **Pets** estiver desativado, pets são removidos da contagem/exibição onde aplicável;
-- se o próprio card colorido for desativado, seu número não deve zerar;
-- cards com número `0` continuam clicáveis.
+- se **Pets** estiver desativado, pets sÃ£o removidos da contagem/exibiÃ§Ã£o onde aplicÃ¡vel;
+- se o prÃ³prio card colorido for desativado, seu nÃºmero nÃ£o deve zerar;
+- cards com nÃºmero `0` continuam clicÃ¡veis.
 
 Exemplo:
 
-| Ação | Número esperado |
+| AÃ§Ã£o | NÃºmero esperado |
 |---|---:|
-| Desativar Bisavós | Bisavós continua 6 |
-| Desativar Falecidos, se todos os bisavós forem falecidos | Bisavós vira 0 |
-| Reativar Falecidos | Bisavós volta para 6 |
+| Desativar BisavÃ³s | BisavÃ³s continua 6 |
+| Desativar Falecidos, se todos os bisavÃ³s forem falecidos | BisavÃ³s vira 0 |
+| Reativar Falecidos | BisavÃ³s volta para 6 |
 
 Regra consolidada:
 
 ```txt
-Desativar um grupo oculta o grupo, mas não altera o número do próprio card.
+Desativar um grupo oculta o grupo, mas nÃ£o altera o nÃºmero do prÃ³prio card.
 ```
 
 ---
@@ -357,21 +357,21 @@ Ajustes esperados:
 
 - container com `min-h-0`;
 - container com `min-w-0`;
-- área superior dos filtros com rolagem interna;
+- Ã¡rea superior dos filtros com rolagem interna;
 - grids com `minmax(0, 1fr)`;
-- botões com `w-full`;
-- botões com `min-w-0`;
-- botões com `overflow-hidden`;
+- botÃµes com `w-full`;
+- botÃµes com `min-w-0`;
+- botÃµes com `overflow-hidden`;
 - textos com `truncate`;
-- cards com `0` continuam clicáveis;
+- cards com `0` continuam clicÃ¡veis;
 - evitar `disabled` apenas porque `count === 0`.
 
 Resultado esperado:
 
-- cards não saem da borda do painel;
-- bloco **Vivos / Falecidos / Pets** permanece no rodapé interno;
-- cards com `0` continuam restauráveis/clicáveis;
-- não há overflow horizontal global.
+- cards nÃ£o saem da borda do painel;
+- bloco **Vivos / Falecidos / Pets** permanece no rodapÃ© interno;
+- cards com `0` continuam restaurÃ¡veis/clicÃ¡veis;
+- nÃ£o hÃ¡ overflow horizontal global.
 
 ---
 
@@ -379,10 +379,10 @@ Resultado esperado:
 
 Ajuste consolidado para telas maiores:
 
-- logo/título alinhados à esquerda;
-- navegação no centro;
-- busca e menu do usuário alinhados à direita;
-- remoção de limitação visual que centralizava indevidamente o header em desktop amplo.
+- logo/tÃ­tulo alinhados Ã  esquerda;
+- navegaÃ§Ã£o no centro;
+- busca e menu do usuÃ¡rio alinhados Ã  direita;
+- remoÃ§Ã£o de limitaÃ§Ã£o visual que centralizava indevidamente o header em desktop amplo.
 
 Documento complementar:
 
@@ -399,24 +399,24 @@ A camada de curiosidades e IA deve diferenciar filhos humanos e pets.
 Regras:
 
 - **Mais filhos** conta apenas filhos humanos.
-- Pets podem ter métrica própria.
-- Contexto da IA deve explicitar que pets usam `tipo_relacionamento = 'filho'` apenas por compatibilidade técnica.
-- IA não deve inferir que pet é filho humano.
-- IA não deve sugerir migration sem contexto explícito de domínio.
+- Pets podem ter mÃ©trica prÃ³pria.
+- Contexto da IA deve explicitar que pets usam `tipo_relacionamento = 'filho'` apenas por compatibilidade tÃ©cnica.
+- IA nÃ£o deve inferir que pet Ã© filho humano.
+- IA nÃ£o deve sugerir migration sem contexto explÃ­cito de domÃ­nio.
 
 ---
 
 ## 15. Modo foco da pessoa central
 
-Quando a view **Minha Árvore** renderiza apenas a pessoa central como único `personNode` real, o sistema ativa um modo foco visual.
+Quando a view **Minha Ãrvore** renderiza apenas a pessoa central como Ãºnico `personNode` real, o sistema ativa um modo foco visual.
 
-### 15.1 Regra de ativação
+### 15.1 Regra de ativaÃ§Ã£o
 
-O modo foco é ativado em `FamilyTree.tsx` quando:
+O modo foco Ã© ativado em `FamilyTree.tsx` quando:
 
-- a view atual é `minha-arvore`;
-- o layout renderizado contém exatamente um `personNode` real;
-- esse `personNode` é a pessoa central/effectiveCentralPersonId.
+- a view atual Ã© `minha-arvore`;
+- o layout renderizado contÃ©m exatamente um `personNode` real;
+- esse `personNode` Ã© a pessoa central/effectiveCentralPersonId.
 
 O node continua sendo do tipo:
 
@@ -424,19 +424,19 @@ O node continua sendo do tipo:
 personNode
 ```
 
-Não foi criado novo node type.
+NÃ£o foi criado novo node type.
 
 ---
 
 ### 15.2 Arquitetura
 
-A solução usa a opção técnica definida anteriormente:
+A soluÃ§Ã£o usa a opÃ§Ã£o tÃ©cnica definida anteriormente:
 
 ```txt
 PersonNodeData recebe a flag useCentralFocusPanel.
-FamilyTree.tsx detecta o modo foco após o layout bruto.
-PersonNode.tsx renderiza CentralPersonFocusPanel quando a flag está ativa.
-CentralPersonFocusPanel.tsx concentra a interface infográfica.
+FamilyTree.tsx detecta o modo foco apÃ³s o layout bruto.
+PersonNode.tsx renderiza CentralPersonFocusPanel quando a flag estÃ¡ ativa.
+CentralPersonFocusPanel.tsx concentra a interface infogrÃ¡fica.
 ```
 
 ---
@@ -449,41 +449,41 @@ O painel pode exibir:
 - nome completo;
 - badge Vivo, Falecido ou Pet;
 - idade ou anos de vida;
-- nascimento e naturalidade, quando `permitir_exibir_data_nascimento` não for `false`;
+- nascimento e naturalidade, quando `permitir_exibir_data_nascimento` nÃ£o for `false`;
 - local atual;
-- geração sociológica, se houver;
-- contagem de arquivos históricos;
+- geraÃ§Ã£o sociolÃ³gica, se houver;
+- contagem de arquivos histÃ³ricos;
 - minibio limitada;
 - curiosidades limitadas;
-- botão para visualizar perfil;
-- botão para adicionar conexão.
+- botÃ£o para visualizar perfil;
+- botÃ£o para adicionar conexÃ£o.
 
 ---
 
-### 15.4 Dados não exibidos na primeira versão
+### 15.4 Dados nÃ£o exibidos na primeira versÃ£o
 
-A primeira versão não exibe:
+A primeira versÃ£o nÃ£o exibe:
 
 - telefone;
-- endereço;
+- endereÃ§o;
 - rede social;
 - Instagram;
 - WhatsApp;
 - `manual_generation`;
 - `lado`.
 
-Esses dados podem ser avaliados em fases futuras, sempre respeitando permissões de privacidade.
+Esses dados podem ser avaliados em fases futuras, sempre respeitando permissÃµes de privacidade.
 
 ---
 
-### 15.5 Restrições
+### 15.5 RestriÃ§Ãµes
 
-- Não altera Supabase.
-- Não cria migration.
-- Não altera regras de pets.
-- Não altera Genealogia.
-- Não altera Visão Completa.
-- Mantém o node como `personNode` para preservar ReactFlow, exportação, zoom, pan, clique e menu de contexto.
+- NÃ£o altera Supabase.
+- NÃ£o cria migration.
+- NÃ£o altera regras de pets.
+- NÃ£o altera Genealogia.
+- NÃ£o altera VisÃ£o Completa.
+- MantÃ©m o node como `personNode` para preservar ReactFlow, exportaÃ§Ã£o, zoom, pan, clique e menu de contexto.
 
 ---
 
@@ -493,7 +493,7 @@ Principais commits desta frente:
 
 ```txt
 fix: corrigir filtros de pessoas vivas e falecidas
-feat: separar pets de filhos na árvore familiar
+feat: separar pets de filhos na Ã¡rvore familiar
 feat: separar pets e ajustar filtros da arvore familiar
 fix: ajustar filtros e header da minha arvore
 chore: atualizar supabase cli
@@ -502,28 +502,28 @@ chore: atualizar supabase cli
 Regra documental:
 
 ```txt
-Commits são referência histórica. A regra canônica é o comportamento descrito neste documento.
+Commits sÃ£o referÃªncia histÃ³rica. A regra canÃ´nica Ã© o comportamento descrito neste documento.
 ```
 
 ---
 
-## 17. Validação manual recomendada
+## 17. ValidaÃ§Ã£o manual recomendada
 
 Na rota `/minha-arvore`, testar:
 
 1. desativar **Falecidos**;
 2. verificar se grupos compostos apenas por falecidos passam a contar `0`;
-3. confirmar que cards com `0` continuam clicáveis;
-4. desativar um card colorido e confirmar que o número dele não zera;
+3. confirmar que cards com `0` continuam clicÃ¡veis;
+4. desativar um card colorido e confirmar que o nÃºmero dele nÃ£o zera;
 5. reativar o card e confirmar que o grupo reaparece;
 6. desativar **Pets** no bloco inferior e confirmar que pets somem;
-7. confirmar que **Pets** não aparece mais nos cards coloridos superiores;
-8. reduzir a janela do navegador e verificar se o painel lateral não estoura;
-9. abrir **Genealogia** e confirmar que pets não aparecem;
-10. abrir **Visão Completa** e confirmar que pets não aparecem;
+7. confirmar que **Pets** nÃ£o aparece mais nos cards coloridos superiores;
+8. reduzir a janela do navegador e verificar se o painel lateral nÃ£o estoura;
+9. abrir **Genealogia** e confirmar que pets nÃ£o aparecem;
+10. abrir **VisÃ£o Completa** e confirmar que pets nÃ£o aparecem;
 11. abrir perfil e confirmar card **Pets** separado de **Filhos**;
 12. desativar todos os cards coloridos;
-13. confirmar painel infográfico da pessoa central;
+13. confirmar painel infogrÃ¡fico da pessoa central;
 14. reativar qualquer grupo;
 15. confirmar retorno ao card central normal;
 16. testar pessoa viva;
@@ -542,23 +542,23 @@ npm run build
 
 ---
 
-## 18. Decisão pendente
+## 18. DecisÃ£o pendente
 
-Ainda não foi feita migration para tipos semânticos como:
+Ainda nÃ£o foi feita migration para tipos semÃ¢nticos como:
 
 - `pet`;
 - `tutor`;
-- outro relacionamento específico.
+- outro relacionamento especÃ­fico.
 
-Recomendação:
+RecomendaÃ§Ã£o:
 
 ```txt
-manter o modelo atual até a regra de domínio estar estável.
+manter o modelo atual atÃ© a regra de domÃ­nio estar estÃ¡vel.
 ```
 
-Uma migration futura pode criar tipos próprios e fazer backfill com segurança.
+Uma migration futura pode criar tipos prÃ³prios e fazer backfill com seguranÃ§a.
 
-Se essa frente avançar, documentar em:
+Se essa frente avanÃ§ar, documentar em:
 
 ```txt
 docs/operacao/MIGRATIONS_SUPABASE.md
@@ -568,17 +568,17 @@ docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 
 ---
 
-## 19. Pós-MVP
+## 19. PÃ³s-MVP
 
-Possíveis evoluções:
+PossÃ­veis evoluÃ§Ãµes:
 
-- relacionamento semântico `pet`;
-- relacionamento semântico `tutor`;
+- relacionamento semÃ¢ntico `pet`;
+- relacionamento semÃ¢ntico `tutor`;
 - backfill dos pets existentes;
-- filtros persistidos por usuário;
-- preferência de ocultar/exibir pets;
-- card específico de pet no modo foco;
-- métricas próprias de pets;
-- filtros salvos no perfil do usuário.
+- filtros persistidos por usuÃ¡rio;
+- preferÃªncia de ocultar/exibir pets;
+- card especÃ­fico de pet no modo foco;
+- mÃ©tricas prÃ³prias de pets;
+- filtros salvos no perfil do usuÃ¡rio.
 
-Esses itens não bloqueiam o MVP.
+Esses itens nÃ£o bloqueiam o MVP.
