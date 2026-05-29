@@ -1,31 +1,31 @@
-# ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦ Como Funciona o Sistema de Relacionamento de Irmãos
+# Y aYaYaY Como Funciona o Sistema de Relacionamento de Irmaos
 
-## ðŸ“‹ Resumo
+## Y Resumo
 
-O sistema **detecta e cria automaticamente** relacionamentos de irmãos durante a migração de dados, com base nos relacionamentos de filiação (pai/mãe) existentes.
+O sistema **detecta e cria automaticamente** relacionamentos de irmaos durante a migracao de dados, com base nos relacionamentos de filiacao (pai/mae) existentes.
 
 ---
 
-## ðŸ”„ Fluxo de Criação dos Relacionamentos de Irmãos
+## Y Fluxo de Criacao dos Relacionamentos de Irmaos
 
-### **1. Durante a Migração (`/admin/migrar-dados`)**
+### **1. Durante a Migracao (`/admin/migrar-dados`)**
 
-Quando você executa a migração de dados, o sistema segue este fluxo:
+Quando voce executa a migracao de dados, o sistema segue este fluxo:
 
 ```
 1. Limpar banco de dados (DELETE)
 2. Criar pessoas (INSERT na tabela pessoas)
-3. Criar relacionamentos explícitos do seed (INSERT na tabela relacionamentos)
+3. Criar relacionamentos explicitos do seed (INSERT na tabela relacionamentos)
    - Relacionamentos de pai
-   - Relacionamentos de mãe
-   - Relacionamentos de cônjuge
+   - Relacionamentos de mae
+   - Relacionamentos de conjuge
    - Relacionamentos de filho
-4. ðŸŽ¯ DETECTAR E CRIAR IRMÃƒOS automaticamente
+4. YZ  DETECTAR E CRIAR IRMAOS automaticamente
 ```
 
-### **2. Detecção Automática de Irmãos**
+### **2. Deteccao Automatica de Irmaos**
 
-A função `detectarECriarIrmaos()` no servidor (`/supabase/functions/server/index.tsx`) executa:
+A funcao `detectarECriarIrmaos()` no servidor (`/supabase/functions/server/index.tsx`) executa:
 
 **Algoritmo:**
 
@@ -35,37 +35,37 @@ A função `detectarECriarIrmaos()` no servidor (`/supabase/functions/server/ind
 2. Agrupar filhos por pai:
    - Mapear: pai_id -> [filho1_id, filho2_id, filho3_id, ...]
 
-3. Agrupar filhos por mãe:
+3. Agrupar filhos por mae:
    - Mapear: mae_id -> [filho1_id, filho2_id, filho3_id, ...]
 
 4. Para cada grupo de filhos do mesmo pai:
    - Criar relacionamento BIDIRECIONAL entre cada par
-   - filho1 â†” filho2
-   - filho1 â†” filho3
-   - filho2 â†” filho3
+   - filho1 a filho2
+   - filho1 a filho3
+   - filho2 a filho3
    - etc.
 
-5. Para cada grupo de filhos da mesma mãe:
+5. Para cada grupo de filhos da mesma mae:
    - Criar relacionamento BIDIRECIONAL entre cada par
    - (mesmo processo)
 
 6. Evitar duplicatas usando Set<string> com pares ordenados
    - Exemplo: "uuid1-uuid2" (sempre menor UUID primeiro)
 
-7. Inserir todos relacionamentos de irmãos no banco
+7. Inserir todos relacionamentos de irmaos no banco
 ```
 
-**Código simplificado:**
+**Codigo simplificado:**
 
 ```typescript
 async function detectarECriarIrmaos() {
-  // 1. Buscar filiações
+  // 1. Buscar filiacoes
   const { data: relacionamentos } = await supabase
     .from('relacionamentos')
     .select('*')
     .in('tipo_relacionamento', ['pai', 'mae']);
 
-  // 2. Agrupar filhos por pai/mãe
+  // 2. Agrupar filhos por pai/mae
   const pessoasPorPai = new Map<string, Set<string>>();
   const pessoasPorMae = new Map<string, Set<string>>();
 
@@ -109,7 +109,7 @@ async function detectarECriarIrmaos() {
     }
   }
 
-  // 4. Repetir para filhos da mesma mãe
+  // 4. Repetir para filhos da mesma mae
   // (mesmo processo)
 
   // 5. Inserir no banco
@@ -121,32 +121,32 @@ async function detectarECriarIrmaos() {
 
 ---
 
-## ðŸ—„ï¸ Estrutura no Banco de Dados
+## Yi  Estrutura no Banco de Dados
 
 ### **Tabela: relacionamentos**
 
-Os irmãos são armazenados como registros **bidirecionais**:
+Os irmaos sao armazenados como registros **bidirecionais**:
 
 ```sql
--- Exemplo: João e Maria são irmãos
+-- Exemplo: Joao e Maria sao irmaos
 
--- Registro 1: João → Maria
+-- Registro 1: Joao  Maria
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES ('uuid-joao', 'uuid-maria', 'irmao', 'sangue');
 
--- Registro 2: Maria → João
+-- Registro 2: Maria  Joao
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES ('uuid-maria', 'uuid-joao', 'irmao', 'sangue');
 ```
 
 ### **Por que bidirecional**
 
-- Facilita queries em qualquer direção
-- Não precisa usar `OR` nas queries
-- Melhor performance com índices
+- Facilita queries em qualquer direcao
+- Nao precisa usar `OR` nas queries
+- Melhor performance com indices
 
 ```sql
--- Buscar irmãos de João (simples):
+-- Buscar irmaos de Joao (simples):
 SELECT * FROM relacionamentos
 WHERE pessoa_origem_id = 'uuid-joao'
 AND tipo_relacionamento = 'irmao';
@@ -159,25 +159,25 @@ AND tipo_relacionamento = 'irmao';
 
 ---
 
-## ðŸŽ¨ Como Aparece na Árvore Genealógica
+## YZ  Como Aparece na Arvore Genealogica
 
-Na visualização da árvore (`/src/app/components/FamilyTree/FamilyTree.tsx`):
+Na visualizacao da arvore (`/src/app/components/FamilyTree/FamilyTree.tsx`):
 
-### **Linhas de Irmãos:**
+### **Linhas de Irmaos:**
 
 - **Cor:** Laranja/Amarelo (`#f59e0b`)
 - **Estilo:** Pontilhado (`strokeDasharray: '5,5'`)
-- **Conexão:** Em cadeia (mais velho → próximo mais novo)
+- **Conexao:** Em cadeia (mais velho  proximo mais novo)
 
 ```
-João (1990) -------- Maria (1992) -------- Pedro (1994)
-  ↑                      ↑                      ↑
+Joao (1990) -------- Maria (1992) -------- Pedro (1994)
+                                              
 mais velho         meio               mais novo
 ```
 
-### **Ordem dos Irmãos:**
+### **Ordem dos Irmaos:**
 
-Os irmãos são ordenados por **data de nascimento** (crescente):
+Os irmaos sao ordenados por **data de nascimento** (crescente):
 
 ```typescript
 const siblingsWithDates = childrenIds
@@ -191,7 +191,7 @@ const siblingsWithDates = childrenIds
     return a.dataNascimento.localeCompare(b.dataNascimento);
   });
 
-// Conectar em cadeia: irmão[i] -> irmão[i+1]
+// Conectar em cadeia: irmao[i] -> irmao[i+1]
 for (let i = 0; i < siblingsWithDates.length - 1; i++) {
   const sibling1 = siblingsWithDates[i].id;
   const sibling2 = siblingsWithDates[i + 1].id;
@@ -201,15 +201,15 @@ for (let i = 0; i < siblingsWithDates.length - 1; i++) {
 
 ---
 
-## âœ… Como Verificar se Está Funcionando
+## a... Como Verificar se Esta Funcionando
 
 ### **1. Via Painel Admin (`/admin/diagnostico`)**
 
-Acesse o diagnóstico e verifique:
+Acesse o diagnostico e verifique:
 
-- âœ… **Relacionamentos por Tipo:** Deve ter linha "Irmãos" com número > 0
-- âœ… **Pessoas com Irmãos:** Deve ter uma contagem significativa
-- âœ… **Avisos:** Não deve ter avisos sobre relacionamentos faltando
+- a... **Relacionamentos por Tipo:** Deve ter linha "Irmaos" com numero > 0
+- a... **Pessoas com Irmaos:** Deve ter uma contagem significativa
+- a... **Avisos:** Nao deve ter avisos sobre relacionamentos faltando
 
 ### **2. Via SQL (Supabase SQL Editor)**
 
@@ -218,13 +218,13 @@ Execute: `/verificar-irmaos.sql`
 Ou execute diretamente:
 
 ```sql
--- 1. Ver total de relacionamentos de irmãos
+-- 1. Ver total de relacionamentos de irmaos
 SELECT COUNT(*) as total_irmaos
 FROM relacionamentos
 WHERE tipo_relacionamento = 'irmao';
 -- Deve retornar > 0 (geralmente centenas)
 
--- 2. Ver pessoas com seus irmãos
+-- 2. Ver pessoas com seus irmaos
 SELECT
   p1.nome_completo as pessoa,
   COUNT(r.id) as total_irmaos,
@@ -238,8 +238,8 @@ HAVING COUNT(r.id) > 0
 ORDER BY total_irmaos DESC
 LIMIT 10;
 
--- 3. Verificar se são bidirecionais
--- Se A é irmão de B, então B deve ser irmão de A
+-- 3. Verificar se sao bidirecionais
+-- Se A e irmao de B, entao B deve ser irmao de A
 SELECT COUNT(*) as irmaos_unidirecionais
 FROM relacionamentos r1
 WHERE r1.tipo_relacionamento = 'irmao'
@@ -252,53 +252,53 @@ AND NOT EXISTS (
 -- Deve retornar 0 (todos devem ser bidirecionais)
 ```
 
-### **3. Via Interface (Visualização da Árvore)**
+### **3. Via Interface (Visualizacao da Arvore)**
 
 1. Acesse a home (`/`)
-2. Visualize a árvore genealógica
-3. Procure por linhas **pontilhadas laranjas** conectando irmãos lado a lado
-4. Verifique se estão ordenados por idade (mais velho Ã  esquerda)
+2. Visualize a arvore genealogica
+3. Procure por linhas **pontilhadas laranjas** conectando irmaos lado a lado
+4. Verifique se estao ordenados por idade (mais velho A  esquerda)
 
 ### **4. Via Filtros**
 
-1. Na home, abra o painel lateral (botão hamburger)
-2. Em "Filtros de Linhas", desmarque "Irmãos"
+1. Na home, abra o painel lateral (botao hamburger)
+2. Em "Filtros de Linhas", desmarque "Irmaos"
 3. As linhas pontilhadas laranjas devem **desaparecer**
 4. Marque novamente e elas devem **reaparecer**
 
 ---
 
-## ðŸ› Solução de Problemas
+## Y Solucao de Problemas
 
-### **Problema: Irmãos não aparecem no banco**
+### **Problema: Irmaos nao aparecem no banco**
 
-**Causas possíveis:**
-1. Migração não foi executada completamente
-2. Não existem relacionamentos de filiação (pai/mãe)
-3. Erro silencioso na função `detectarECriarIrmaos()`
+**Causas possiveis:**
+1. Migracao nao foi executada completamente
+2. Nao existem relacionamentos de filiacao (pai/mae)
+3. Erro silencioso na funcao `detectarECriarIrmaos()`
 
-**Solução:**
+**Solucao:**
 ```sql
--- 1. Verificar se existem relacionamentos de pai/mãe
+-- 1. Verificar se existem relacionamentos de pai/mae
 SELECT COUNT(*) FROM relacionamentos WHERE tipo_relacionamento IN ('pai', 'mae');
--- Se retornar 0, o problema é anterior (filiações não foram criadas)
+-- Se retornar 0, o problema e anterior (filiacoes nao foram criadas)
 
--- 2. Verificar se existem irmãos
+-- 2. Verificar se existem irmaos
 SELECT COUNT(*) FROM relacionamentos WHERE tipo_relacionamento = 'irmao';
--- Se retornar 0, irmãos não foram criados
+-- Se retornar 0, irmaos nao foram criados
 
--- 3. Re-executar migração
+-- 3. Re-executar migracao
 -- Acesse /admin/migrar-dados e execute novamente
 ```
 
-### **Problema: Irmãos não aparecem na árvore**
+### **Problema: Irmaos nao aparecem na arvore**
 
-**Causas possíveis:**
-1. Filtro "Irmãos" está desmarcado
-2. Irmãos não têm conexão visual (layout)
+**Causas possiveis:**
+1. Filtro "Irmaos" esta desmarcado
+2. Irmaos nao tem conexao visual (layout)
 3. Erro no componente FamilyTree
 
-**Solução:**
+**Solucao:**
 1. Verifique o filtro na sidebar
 2. Abra o console do navegador (F12) e procure erros
 3. Verifique se os relacionamentos existem no estado do React:
@@ -307,45 +307,45 @@ SELECT COUNT(*) FROM relacionamentos WHERE tipo_relacionamento = 'irmao';
    // Procure por relacionamentos de tipo 'irmao'
    ```
 
-### **Problema: Irmãos estão conectados mas não na ordem correta**
+### **Problema: Irmaos estao conectados mas nao na ordem correta**
 
 **Causa:** Datas de nascimento faltando ou incorretas
 
-**Solução:**
+**Solucao:**
 1. Verifique os dados no seed (`/src/app/data/seed.ts`)
-2. Certifique-se que `data_nascimento` está preenchido
+2. Certifique-se que `data_nascimento` esta preenchido
 3. Formato deve ser: `DD/MM/YYYY` ou `YYYY`
-4. Re-execute a migração
+4. Re-execute a migracao
 
 ---
 
-## ðŸ“Š Estatísticas Esperadas (Família com 62 membros)
+## YS Estatisticas Esperadas (Familia com 62 membros)
 
-Após migração completa, você deve ter aproximadamente:
+Apos migracao completa, voce deve ter aproximadamente:
 
-| Métrica | Valor Esperado |
+| Metrica | Valor Esperado |
 |---------|----------------|
 | Total de pessoas | 62 |
 | Relacionamentos de pai | ~50-80 |
-| Relacionamentos de mãe | ~50-80 |
-| Relacionamentos de cônjuge | ~30-50 |
+| Relacionamentos de mae | ~50-80 |
+| Relacionamentos de conjuge | ~30-50 |
 | Relacionamentos de filho | ~100-150 |
-| **Relacionamentos de irmão** | **~200-400** |
+| **Relacionamentos de irmao** | **~200-400** |
 | Total de relacionamentos | ~500-800 |
 
-**Nota:** Os números variam dependendo da estrutura da família no seed.
+**Nota:** Os numeros variam dependendo da estrutura da familia no seed.
 
 ---
 
-## ðŸ”§ Manutenção Manual (se necessário)
+## Y Manutencao Manual (se necessario)
 
-Se você precisar criar relacionamentos de irmãos manualmente:
+Se voce precisar criar relacionamentos de irmaos manualmente:
 
 ```sql
--- ATENÇÃƒO: Executar APENAS se os irmãos não foram criados automaticamente!
+-- ATENCAO: Executar APENAS se os irmaos nao foram criados automaticamente!
 
 WITH irmaos_detectados AS (
-  -- Detectar irmãos pelo mesmo pai
+  -- Detectar irmaos pelo mesmo pai
   SELECT DISTINCT
     r1.pessoa_origem_id as pessoa_a,
     r2.pessoa_origem_id as pessoa_b
@@ -358,7 +358,7 @@ WITH irmaos_detectados AS (
 
   UNION
 
-  -- Detectar irmãos pela mesma mãe
+  -- Detectar irmaos pela mesma mae
   SELECT DISTINCT
     r1.pessoa_origem_id as pessoa_a,
     r2.pessoa_origem_id as pessoa_b
@@ -378,23 +378,23 @@ ON CONFLICT (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento) DO NOTHIN
 
 ---
 
-## ðŸ“ Resumo Final
+## Y Resumo Final
 
-âœ… **Irmãos são detectados automaticamente** durante a migração
-âœ… **Criados de forma bidirecional** (A→B e B→A)
-âœ… **Baseados em filiação** (mesmo pai ou mesma mãe)
-âœ… **Aparecem na árvore** como linhas pontilhadas laranjas
-âœ… **Ordenados por idade** (mais velho → mais novo)
-âœ… **Podem ser filtrados** na interface
-âœ… **Verificáveis via SQL** ou painel admin
+a... **Irmaos sao detectados automaticamente** durante a migracao
+a... **Criados de forma bidirecional** (AB e BA)
+a... **Baseados em filiacao** (mesmo pai ou mesma mae)
+a... **Aparecem na arvore** como linhas pontilhadas laranjas
+a... **Ordenados por idade** (mais velho  mais novo)
+a... **Podem ser filtrados** na interface
+a... **Verificaveis via SQL** ou painel admin
 
 ---
 
-## ðŸŽ¯ Próximos Passos
+## YZ  Proximos Passos
 
-1. Execute a migração em `/admin/migrar-dados`
+1. Execute a migracao em `/admin/migrar-dados`
 2. Execute o arquivo `/verificar-irmaos.sql` no Supabase
-3. Verifique o diagnóstico em `/admin/diagnostico`
-4. Visualize a árvore na home e procure pelas linhas pontilhadas laranjas
+3. Verifique o diagnostico em `/admin/diagnostico`
+4. Visualize a arvore na home e procure pelas linhas pontilhadas laranjas
 
-**Se tudo estiver correto, você deve ver centenas de relacionamentos de irmãos criados automaticamente! ðŸŽ‰**
+**Se tudo estiver correto, voce deve ver centenas de relacionamentos de irmaos criados automaticamente! YZ**

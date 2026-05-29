@@ -1,37 +1,37 @@
-# âœ… RESPOSTA RÁPIDA: Irmãos Estão Interligados
+# a... RESPOSTA RAPIDA: Irmaos Estao Interligados
 
-## ðŸŽ¯ Resposta Direta
+## YZ  Resposta Direta
 
-**SIM**, o sistema **detecta e cria automaticamente** relacionamentos bidirecionais entre irmãos no banco de dados.
+**SIM**, o sistema **detecta e cria automaticamente** relacionamentos bidirecionais entre irmaos no banco de dados.
 
 ---
 
-## ðŸ“‹ Como Funciona (Resumo de 30 segundos)
+## Y Como Funciona (Resumo de 30 segundos)
 
-1. Você executa a **migração** em `/admin/migrar-dados`
-2. O sistema cria pessoas e relacionamentos explícitos (pai, mãe, cônjuge, filho)
+1. Voce executa a **migracao** em `/admin/migrar-dados`
+2. O sistema cria pessoas e relacionamentos explicitos (pai, mae, conjuge, filho)
 3. **Automaticamente**, o servidor executa `detectarECriarIrmaos()` que:
    - Agrupa filhos pelo mesmo pai
-   - Agrupa filhos pela mesma mãe
-   - Cria relacionamentos **bidirecionais** entre cada par de irmãos
+   - Agrupa filhos pela mesma mae
+   - Cria relacionamentos **bidirecionais** entre cada par de irmaos
    - Insere tudo na tabela `relacionamentos` com `tipo_relacionamento = 'irmao'`
 
 ---
 
-## âœ… Como Verificar AGORA (3 minutos)
+## a... Como Verificar AGORA (3 minutos)
 
-### **Opção 1: Via SQL (MAIS RÁPIDO)**
+### **Opcao 1: Via SQL (MAIS RAPIDO)**
 
-1. Abra o Supabase → SQL Editor
+1. Abra o Supabase  SQL Editor
 2. Execute:
 
 ```sql
--- Ver total de irmãos
+-- Ver total de irmaos
 SELECT COUNT(*) as total_irmaos
 FROM relacionamentos
 WHERE tipo_relacionamento = 'irmao';
 
--- Ver alguns exemplos de irmãos
+-- Ver alguns exemplos de irmaos
 SELECT
   p1.nome_completo as pessoa,
   STRING_AGG(p2.nome_completo, ', ') as irmaos
@@ -43,102 +43,102 @@ LIMIT 5;
 ```
 
 **Resultado esperado:**
-- Primeira query: número > 0 (geralmente 200-400)
-- Segunda query: lista de pessoas com seus irmãos
+- Primeira query: numero > 0 (geralmente 200-400)
+- Segunda query: lista de pessoas com seus irmaos
 
-### **Opção 2: Via Interface**
+### **Opcao 2: Via Interface**
 
 1. Acesse `/admin/diagnostico`
-2. Veja a seção "Relacionamentos por Tipo"
-3. Deve ter uma linha "Irmãos" com número > 0
+2. Veja a secao "Relacionamentos por Tipo"
+3. Deve ter uma linha "Irmaos" com numero > 0
 
-### **Opção 3: Via Árvore Visual**
+### **Opcao 3: Via Arvore Visual**
 
 1. Acesse a home (`/`)
 2. Procure por **linhas pontilhadas laranjas** conectando pessoas lado a lado
-3. Estas são as conexões entre irmãos
+3. Estas sao as conexoes entre irmaos
 
 ---
 
-## ðŸ› Se NÃƒO Estiver Funcionando
+## Y Se NAO Estiver Funcionando
 
-### **Cenário 1: Migração não foi executada**
+### **Cenario 1: Migracao nao foi executada**
 
-**Solução:**
+**Solucao:**
 1. Acesse `/admin/migrar-dados`
 2. Clique em "Migrar Dados do Seed para o Banco"
-3. Aguarde conclusão
+3. Aguarde conclusao
 
-### **Cenário 2: Tabelas não foram criadas**
+### **Cenario 2: Tabelas nao foram criadas**
 
-**Solução:**
-1. Abra o Supabase → SQL Editor
-2. Execute o arquivo `/database-schema.sql` (copie e cole todo conteúdo)
-3. Depois execute a migração
+**Solucao:**
+1. Abra o Supabase  SQL Editor
+2. Execute o arquivo `/database-schema.sql` (copie e cole todo conteudo)
+3. Depois execute a migracao
 
-### **Cenário 3: Irmãos criados mas não aparecem na árvore**
+### **Cenario 3: Irmaos criados mas nao aparecem na arvore**
 
-**Solução:**
-1. Na home, abra a sidebar (botão â˜°)
-2. Em "Filtros de Linhas", verifique se "Irmãos" está marcado
-3. Se não, marque a checkbox
+**Solucao:**
+1. Na home, abra a sidebar (botao a )
+2. Em "Filtros de Linhas", verifique se "Irmaos" esta marcado
+3. Se nao, marque a checkbox
 
 ---
 
-## ðŸ“Š Números Esperados
+## YS Numeros Esperados
 
-Após migração completa (62 pessoas):
+Apos migracao completa (62 pessoas):
 
 | Item | Valor Esperado |
 |------|----------------|
 | Pessoas | 62 |
-| Relacionamentos de irmãos | 200-400 |
+| Relacionamentos de irmaos | 200-400 |
 | Total de relacionamentos | 500-800 |
 
 ---
 
-## ðŸ“ Arquivos de Referência
+## Y Arquivos de Referencia
 
 - **Schema SQL:** `/database-schema.sql`
-- **Verificação SQL:** `/verificar-irmaos.sql`
-- **Código do servidor:** `/supabase/functions/server/index.tsx` (linha 541)
+- **Verificacao SQL:** `/verificar-irmaos.sql`
+- **Codigo do servidor:** `/supabase/functions/server/index.tsx` (linha 541)
 - **Guia completo:** `/COMO-FUNCIONA-IRMAOS.md`
 - **Setup do banco:** `/SETUP-BANCO-DADOS.md`
 
 ---
 
-## ðŸŽ¯ Checklist Rápido
+## YZ  Checklist Rapido
 
 - [ ] Schema SQL executado no Supabase
-- [ ] Migração executada em `/admin/migrar-dados`
-- [ ] Query SQL retorna relacionamentos de irmãos > 0
-- [ ] Diagnóstico mostra relacionamentos de irmãos
-- [ ] Árvore visual mostra linhas pontilhadas laranjas
+- [ ] Migracao executada em `/admin/migrar-dados`
+- [ ] Query SQL retorna relacionamentos de irmaos > 0
+- [ ] Diagnostico mostra relacionamentos de irmaos
+- [ ] Arvore visual mostra linhas pontilhadas laranjas
 
-**Se todos estão âœ…, então SIM, os irmãos estão completamente interligados no banco!**
+**Se todos estao a..., entao SIM, os irmaos estao completamente interligados no banco!**
 
 ---
 
-## ðŸ’¡ Exemplo Visual
+## Y Exemplo Visual
 
 ```
-João -------- Maria -------- Pedro
+Joao -------- Maria -------- Pedro
  |              |              |
 filho          filho          filho
  de            de             de
- ↓              ↓              ↓
+                             
 Pai: Carlos   Pai: Carlos   Pai: Carlos
-Mãe: Ana      Mãe: Ana      Mãe: Ana
+Mae: Ana      Mae: Ana      Mae: Ana
 
 Relacionamentos criados automaticamente:
-- João â†” Maria (bidirecional)
-- João â†” Pedro (bidirecional)
-- Maria â†” Pedro (bidirecional)
+- Joao a Maria (bidirecional)
+- Joao a Pedro (bidirecional)
+- Maria a Pedro (bidirecional)
 
 Total: 6 registros na tabela relacionamentos
-(3 pares Ã— 2 direções)
+(3 pares  2 direcoes)
 ```
 
 ---
 
-**Dúvidas** Consulte `/COMO-FUNCIONA-IRMAOS.md` para detalhes completos.
+**Duvidas** Consulte `/COMO-FUNCIONA-IRMAOS.md` para detalhes completos.

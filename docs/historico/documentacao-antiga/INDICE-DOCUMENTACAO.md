@@ -1,157 +1,157 @@
-# ðŸ“š Índice da Documentação - Sistema de Árvore Genealógica
+# Ys Indice da Documentacao - Sistema de Arvore Genealogica
 
-## ðŸŽ¯ Documentos Criados para Você
+## YZ  Documentos Criados para Voce
 
-### **1. RESPOSTA RÁPIDA** âš¡
+### **1. RESPOSTA RAPIDA** as
 **Arquivo:** `/RESPOSTA-RAPIDA-IRMAOS.md`
-**Quando usar:** Resposta direta e objetiva sobre irmãos
+**Quando usar:** Resposta direta e objetiva sobre irmaos
 **Tempo de leitura:** 2 minutos
-**Conteúdo:**
-- Resposta SIM/NÃƒO direta
+**Conteudo:**
+- Resposta SIM/NAO direta
 - Como verificar em 3 minutos
-- Troubleshooting rápido
+- Troubleshooting rapido
 - Checklist
 
 ---
 
-### **2. SETUP DO BANCO DE DADOS** ðŸ—„ï¸
+### **2. SETUP DO BANCO DE DADOS** Yi 
 **Arquivo:** `/SETUP-BANCO-DADOS.md`
 **Quando usar:** Primeira vez configurando o banco
 **Tempo de leitura:** 10 minutos
-**Conteúdo:**
+**Conteudo:**
 - O que precisa ser criado no Supabase
 - Passo a passo completo
-- Como verificar se está funcionando
-- Solução de problemas
+- Como verificar se esta funcionando
+- Solucao de problemas
 - Checklist completo
 
 ---
 
-### **3. COMO FUNCIONA O SISTEMA DE IRMÃƒOS** ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦
+### **3. COMO FUNCIONA O SISTEMA DE IRMAOS** Y aYaYaY
 **Arquivo:** `/COMO-FUNCIONA-IRMAOS.md`
-**Quando usar:** Entender detalhadamente a lógica de irmãos
+**Quando usar:** Entender detalhadamente a logica de irmaos
 **Tempo de leitura:** 15 minutos
-**Conteúdo:**
-- Fluxo completo de criação de irmãos
-- Algoritmo de detecção
-- Código TypeScript comentado
+**Conteudo:**
+- Fluxo completo de criacao de irmaos
+- Algoritmo de deteccao
+- Codigo TypeScript comentado
 - Estrutura no banco de dados
-- Como aparece na árvore visual
-- Verificação detalhada
-- Manutenção manual
+- Como aparece na arvore visual
+- Verificacao detalhada
+- Manutencao manual
 
 ---
 
-### **4. SCHEMA SQL COMPLETO** ðŸ“
+### **4. SCHEMA SQL COMPLETO** Y
 **Arquivo:** `/database-schema.sql`
 **Quando usar:** Criar as tabelas no Supabase
-**Tempo de execução:** 10 segundos
-**Conteúdo:**
-- Criação de 3 tabelas (pessoas, relacionamentos, arquivos_historicos)
-- Função update_updated_at_column()
+**Tempo de execucao:** 10 segundos
+**Conteudo:**
+- Criacao de 3 tabelas (pessoas, relacionamentos, arquivos_historicos)
+- Funcao update_updated_at_column()
 - 3 Triggers
-- Índices
-- Políticas RLS
+- Indices
+- Politicas RLS
 - View pessoas_com_estatisticas
-- Extensão uuid-ossp
+- Extensao uuid-ossp
 
 ---
 
-### **5. VERIFICAÇÃƒO DE IRMÃƒOS SQL** ðŸ”
+### **5. VERIFICACAO DE IRMAOS SQL** Y
 **Arquivo:** `/verificar-irmaos.sql`
-**Quando usar:** Verificar integridade dos relacionamentos de irmãos
-**Tempo de execução:** 30 segundos
-**Conteúdo:**
-- 7 queries de verificação
+**Quando usar:** Verificar integridade dos relacionamentos de irmaos
+**Tempo de execucao:** 30 segundos
+**Conteudo:**
+- 7 queries de verificacao
 - Total de relacionamentos por tipo
-- Pessoas com seus irmãos
-- Famílias completas
-- Verificação de bidirecionalidade
-- Estatísticas gerais
-- Exemplo de família específica
+- Pessoas com seus irmaos
+- Familias completas
+- Verificacao de bidirecionalidade
+- Estatisticas gerais
+- Exemplo de familia especifica
 - Pessoas sem relacionamentos
-- Ações corretivas (se necessário)
+- Acoes corretivas (se necessario)
 
 ---
 
-### **6. DIAGNÓSTICO RÁPIDO SQL** âš¡
+### **6. DIAGNOSTICO RAPIDO SQL** as
 **Arquivo:** `/diagnostico-rapido.sql`
-**Quando usar:** Verificação rápida de 5 testes essenciais
-**Tempo de execução:** 5 segundos
-**Conteúdo:**
+**Quando usar:** Verificacao rapida de 5 testes essenciais
+**Tempo de execucao:** 5 segundos
+**Conteudo:**
 - 5 testes automatizados
-- Interpretação dos resultados
+- Interpretacao dos resultados
 - Resultado PASSOU/FALHOU claro
 
 ---
 
-### **7. RELATÓRIO DE DIAGNÓSTICO COMPLETO** ðŸ“Š â­ NOVO
+### **7. RELATORIO DE DIAGNOSTICO COMPLETO** YS a NOVO
 **Arquivo:** `/RELATORIO-DIAGNOSTICO-COMPLETO.md`
-**Quando usar:** Ver análise completa do sistema com resultados reais
+**Quando usar:** Ver analise completa do sistema com resultados reais
 **Tempo de leitura:** 10 minutos
-**Conteúdo:**
+**Conteudo:**
 - Resumo executivo com status geral
 - Resultados dos 5 testes executados
-- Análise detalhada de famílias e relacionamentos
-- Estatísticas avançadas
+- Analise detalhada de familias e relacionamentos
+- Estatisticas avancadas
 - Problemas identificados com detalhes
-- Visualização de como irmãos aparecem na árvore
-- Código-fonte relevante
-- Recomendações prioritizadas
+- Visualizacao de como irmaos aparecem na arvore
+- Codigo-fonte relevante
+- Recomendacoes prioritizadas
 
 ---
 
-### **8. ERROS E SOLUÇÃ•ES** âš ï¸ â­ NOVO
+### **8. ERROS E SOLUCAES** as i  a NOVO
 **Arquivo:** `/ERROS-E-SOLUCOES.md`
-**Quando usar:** Quando encontrar erros no diagnóstico
+**Quando usar:** Quando encontrar erros no diagnostico
 **Tempo de leitura:** 8 minutos
-**Conteúdo:**
+**Conteudo:**
 - Lista de todos erros encontrados
-- Descrição detalhada de cada erro
+- Descricao detalhada de cada erro
 - Impacto e severidade
-- 3 soluções diferentes para cada problema
-- Passo a passo de correção
-- Testes de validação
-- Checklist de correção
+- 3 solucoes diferentes para cada problema
+- Passo a passo de correcao
+- Testes de validacao
+- Checklist de correcao
 
 ---
 
-### **9. SCRIPT DE CORREÇÃƒO SQL** ðŸ”§ â­ NOVO
+### **9. SCRIPT DE CORRECAO SQL** Y a NOVO
 **Arquivo:** `/corrigir-pessoa-isolada.sql`
 **Quando usar:** Corrigir pessoa sem relacionamentos
-**Tempo de execução:** 10 segundos
-**Conteúdo:**
-- 3 opções de correção (remover, adicionar, investigar)
+**Tempo de execucao:** 10 segundos
+**Conteudo:**
+- 3 opcoes de correcao (remover, adicionar, investigar)
 - Scripts SQL prontos para executar
-- Queries de investigação
-- Testes de validação
-- Instruções detalhadas
+- Queries de investigacao
+- Testes de validacao
+- Instrucoes detalhadas
 
 ---
 
-## ðŸ—ºï¸ Fluxo de Uso Recomendado
+## Yoi  Fluxo de Uso Recomendado
 
 ### **Para Primeira Vez (Setup Inicial)**
 
 ```
 1. Leia: SETUP-BANCO-DADOS.md
-   ↓
+   
 2. Execute: database-schema.sql (no Supabase SQL Editor)
-   ↓
-3. Execute: Migração em /admin/migrar-dados
-   ↓
+   
+3. Execute: Migracao em /admin/migrar-dados
+   
 4. Execute: diagnostico-rapido.sql (no Supabase SQL Editor)
-   ↓
-5. Se tudo âœ…, pronto! Se não, veja SETUP-BANCO-DADOS.md → Solução de Problemas
+   
+5. Se tudo a..., pronto! Se nao, veja SETUP-BANCO-DADOS.md  Solucao de Problemas
 ```
 
-### **Para Verificar se Irmãos Estão Conectados**
+### **Para Verificar se Irmaos Estao Conectados**
 
 ```
 1. Leia: RESPOSTA-RAPIDA-IRMAOS.md (2 min)
-   ↓
+   
 2. Execute: diagnostico-rapido.sql (5 seg)
-   ↓
+   
 3. Se quiser detalhes, execute: verificar-irmaos.sql (30 seg)
 ```
 
@@ -159,130 +159,130 @@
 
 ```
 1. Leia: COMO-FUNCIONA-IRMAOS.md (15 min)
-   ↓
-2. Explore o código: /supabase/functions/server/index.tsx (linha 541)
-   ↓
-3. Teste modificações e re-execute a migração
+   
+2. Explore o codigo: /supabase/functions/server/index.tsx (linha 541)
+   
+3. Teste modificacoes e re-execute a migracao
 ```
 
-### **Para Ver Diagnóstico Completo e Erros** â­ NOVO
+### **Para Ver Diagnostico Completo e Erros** a NOVO
 
 ```
 1. Execute: diagnostico-rapido.sql ou verificar-irmaos.sql
-   ↓
+   
 2. Leia: RELATORIO-DIAGNOSTICO-COMPLETO.md
-   ↓
+   
 3. Se houver erros, leia: ERROS-E-SOLUCOES.md
-   ↓
-4. Execute: corrigir-pessoa-isolada.sql (se necessário)
+   
+4. Execute: corrigir-pessoa-isolada.sql (se necessario)
 ```
 
 ---
 
-## ðŸ“Š Matriz de Decisão: Qual Arquivo Ler
+## YS Matriz de Decisao: Qual Arquivo Ler
 
-| Situação | Arquivo Recomendado | Tempo |
+| Situacao | Arquivo Recomendado | Tempo |
 |----------|---------------------|-------|
-| "Irmãos estão conectados" | RESPOSTA-RAPIDA-IRMAOS.md | 2 min |
+| "Irmaos estao conectados" | RESPOSTA-RAPIDA-IRMAOS.md | 2 min |
 | "Primeira vez configurando" | SETUP-BANCO-DADOS.md | 10 min |
-| "Como funciona a detecção" | COMO-FUNCIONA-IRMAOS.md | 15 min |
+| "Como funciona a deteccao" | COMO-FUNCIONA-IRMAOS.md | 15 min |
 | "Criar tabelas no banco" | database-schema.sql | 10 seg |
 | "Verificar integridade completa" | verificar-irmaos.sql | 30 seg |
-| "Teste rápido" | diagnostico-rapido.sql | 5 seg |
-| "Ver diagnóstico completo" â­ | RELATORIO-DIAGNOSTICO-COMPLETO.md | 10 min |
-| "Corrigir erros encontrados" â­ | ERROS-E-SOLUCOES.md | 8 min |
-| "Corrigir pessoa isolada" â­ | corrigir-pessoa-isolada.sql | 10 seg |
+| "Teste rapido" | diagnostico-rapido.sql | 5 seg |
+| "Ver diagnostico completo" a | RELATORIO-DIAGNOSTICO-COMPLETO.md | 10 min |
+| "Corrigir erros encontrados" a | ERROS-E-SOLUCOES.md | 8 min |
+| "Corrigir pessoa isolada" a | corrigir-pessoa-isolada.sql | 10 seg |
 
 ---
 
-## ðŸ”§ Arquivos Técnicos (Código-fonte)
+## Y Arquivos Tecnicos (Codigo-fonte)
 
 ### **Backend (Servidor Hono)**
 - `/supabase/functions/server/index.tsx`
-  - Linha 541: `detectarECriarIrmaos()` - Função que detecta irmãos
-  - Linha 637: Rota `/diagnostico` - Diagnóstico de integridade
+  - Linha 541: `detectarECriarIrmaos()` - Funcao que detecta irmaos
+  - Linha 637: Rota `/diagnostico` - Diagnostico de integridade
 
 ### **Frontend (React)**
 - `/src/app/components/FamilyTree/FamilyTree.tsx`
-  - Linha 415-450: Renderização de linhas de irmãos
-  - Linha 420-431: Ordenação de irmãos por data de nascimento
+  - Linha 415-450: Renderizacao de linhas de irmaos
+  - Linha 420-431: Ordenacao de irmaos por data de nascimento
 - `/src/app/pages/admin/AdminDiagnostico.tsx`
-  - Painel de diagnóstico visual
+  - Painel de diagnostico visual
 - `/src/app/pages/admin/AdminMigrarDados.tsx`
-  - Interface de migração de dados
+  - Interface de migracao de dados
 
 ### **Dados**
 - `/src/app/data/seed.ts`
-  - Dados iniciais da família (62 membros)
+  - Dados iniciais da familia (62 membros)
 
 ---
 
-## ðŸŽ¯ Checklist de Verificação Final
+## YZ  Checklist de Verificacao Final
 
-Use esta checklist para garantir que tudo está funcionando:
+Use esta checklist para garantir que tudo esta funcionando:
 
 ### **Setup Inicial**
 - [ ] Executou `database-schema.sql` no Supabase
-- [ ] Executou migração em `/admin/migrar-dados`
-- [ ] Migração concluiu com sucesso (sem erros)
+- [ ] Executou migracao em `/admin/migrar-dados`
+- [ ] Migracao concluiu com sucesso (sem erros)
 
-### **Verificação de Irmãos**
+### **Verificacao de Irmaos**
 - [ ] Executou `diagnostico-rapido.sql`
-- [ ] TESTE 1 PASSOU (irmãos > 0)
+- [ ] TESTE 1 PASSOU (irmaos > 0)
 - [ ] TESTE 2 PASSOU (bidirecional)
-- [ ] TESTE 3 mostra exemplos de irmãos
-- [ ] TESTE 4 mostra estatísticas corretas
+- [ ] TESTE 3 mostra exemplos de irmaos
+- [ ] TESTE 4 mostra estatisticas corretas
 - [ ] TESTE 5 mostra tipo "irmao" na lista
 
-### **Verificação Visual**
-- [ ] Home (`/`) mostra árvore genealógica
-- [ ] Linhas pontilhadas laranjas aparecem (irmãos)
-- [ ] Filtro "Irmãos" funciona (ocultar/mostrar)
-- [ ] Diagnóstico admin mostra dados corretos
+### **Verificacao Visual**
+- [ ] Home (`/`) mostra arvore genealogica
+- [ ] Linhas pontilhadas laranjas aparecem (irmaos)
+- [ ] Filtro "Irmaos" funciona (ocultar/mostrar)
+- [ ] Diagnostico admin mostra dados corretos
 
 ### **Testes de Integridade**
 - [ ] Executou `verificar-irmaos.sql` (todas 7 queries)
-- [ ] Relacionamentos são bidirecionais
-- [ ] Famílias estão completas
-- [ ] Sem pessoas isoladas (exceto casos válidos)
+- [ ] Relacionamentos sao bidirecionais
+- [ ] Familias estao completas
+- [ ] Sem pessoas isoladas (exceto casos validos)
 
 ---
 
-## ðŸ“ž Suporte e Referências
+## Yz Suporte e Referencias
 
-### **Documentação Oficial**
+### **Documentacao Oficial**
 - Supabase: https://supabase.com/docs
 - React Flow: https://reactflow.dev/
 - React Router: https://reactrouter.com/
 
-### **Arquivos de Configuração**
+### **Arquivos de Configuracao**
 - `/database-schema.sql` - Schema SQL completo
-- `/package.json` - Dependências do projeto
-- `/tsconfig.json` - Configuração TypeScript
+- `/package.json` - Dependencias do projeto
+- `/tsconfig.json` - Configuracao TypeScript
 
 ### **Troubleshooting**
-1. Consulte SETUP-BANCO-DADOS.md → "Solução de Problemas"
-2. Consulte COMO-FUNCIONA-IRMAOS.md → "Solução de Problemas"
+1. Consulte SETUP-BANCO-DADOS.md  "Solucao de Problemas"
+2. Consulte COMO-FUNCIONA-IRMAOS.md  "Solucao de Problemas"
 3. Execute diagnostico-rapido.sql e interprete os resultados
 4. Verifique logs no console do navegador (F12)
 5. Verifique logs do servidor no Supabase Dashboard
 
 ---
 
-## ðŸš€ Próximos Passos
+## Ys Proximos Passos
 
-Após verificar que tudo está funcionando:
+Apos verificar que tudo esta funcionando:
 
 1. **Explorar a interface:**
-   - Home: Visualize a árvore
+   - Home: Visualize a arvore
    - Clique em pessoas para ver detalhes
    - Use filtros na sidebar
 
 2. **Painel Admin:**
    - Acesse `/admin/login` (senha: `admin123`)
    - Explore CRUD de pessoas
-   - Veja diagnóstico detalhado
-   - Teste exportação de dados
+   - Veja diagnostico detalhado
+   - Teste exportacao de dados
 
 3. **Personalizar:**
    - Adicione mais pessoas
@@ -290,14 +290,14 @@ Após verificar que tudo está funcionando:
    - Customize cores dos cards
    - Adicione curiosidades e minibios
 
-4. **Avançado:**
-   - Configure autenticação real
+4. **Avancado:**
+   - Configure autenticacao real
    - Adicione upload de fotos no Supabase Storage
-   - Implemente histórico de mudanças
-   - Adicione mais views e relatórios
+   - Implemente historico de mudancas
+   - Adicione mais views e relatorios
 
 ---
 
-**Última atualização:** 2026-04-05
-**Versão da documentação:** 1.0
-**Status:** âœ… Completo e testado
+**Ultima atualizacao:** 2026-04-05
+**Versao da documentacao:** 1.0
+**Status:** a... Completo e testado
