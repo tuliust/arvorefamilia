@@ -1,4 +1,40 @@
-﻿# as i  ERROS ENCONTRADOS E COMO CORRIGIR
+> Status: documento historico / obsoleto.
+> Local: `docs/historico/documentacao-antiga/`.
+> Nao usar como fonte canonica para desenvolvimento atual.
+>
+> Fonte canonica atual:
+>
+> ```txt
+> docs/README.md
+> docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+> docs/arquitetura/ROTAS_E_GUARDS.md
+> docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+> docs/funcionalidades/MINHA_ARVORE_VIEW.md
+> docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+> docs/operacao/MIGRATIONS_SUPABASE.md
+> ```
+>
+> Este arquivo foi preservado apenas para rastreabilidade historica. Ele pode citar rotas, scripts SQL, endpoints, dados de seed, senhas, numeros de registros ou fluxos que nao representam mais o estado atual do projeto.
+
+---
+
+## Aviso tecnico atual
+
+Este documento registra um erro de dados identificado em diagnostico antigo. Os nomes, contagens e solucoes SQL aqui descritos nao devem ser aplicados automaticamente no banco atual.
+
+Para diagnostico corrente, consultar:
+
+```txt
+docs/GUIA_CORRECAO_ERROS.md
+docs/historico/QA_FINAL_MVP.md
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+Qualquer correcao de dados deve ser validada no ambiente atual antes de executar SQL manual.
+
+---
+
+# Aviso: ERROS ENCONTRADOS E COMO CORRIGIR
 
 **Data:** 05/04/2026
 **Sistema:** Arvore Genealogica
@@ -6,11 +42,11 @@
 
 ---
 
-## YS RESUMO DE ERROS
+## RESUMO DE ERROS
 
 | # | Tipo | Severidade | Descricao | Status |
 |---|------|------------|-----------|--------|
-| 1 | Dados | YY BAIXA | Pessoa sem relacionamentos | as i  Requer atencao |
+| 1 | Dados | YBAIXA | Pessoa sem relacionamentos | Aviso: Requer atencao |
 
 **Total de erros:** 1
 **Erros criticos:** 0
@@ -32,7 +68,7 @@ A pessoa **"Glauce Thais Barros"** esta cadastrada no banco de dados mas nao pos
 - **Total de relacionamentos:** 0
 
 ### **Impacto**
-- YY **BAIXO:** Nao afeta funcionamento do sistema
+- Y**BAIXO:** Nao afeta funcionamento do sistema
 - Esta pessoa nao aparecera na arvore genealogica visual
 - Nao causa erros na aplicacao
 - Pode confundir usuarios se esperarem ver esta pessoa
@@ -40,25 +76,25 @@ A pessoa **"Glauce Thais Barros"** esta cadastrada no banco de dados mas nao pos
 ### **Como Detectado**
 ```sql
 SELECT
-  p.nome_completo,
-  p.humano_ou_pet,
-  COUNT(r.id) as total_relacionamentos
+ p.nome_completo,
+ p.humano_ou_pet,
+ COUNT(r.id) as total_relacionamentos
 FROM pessoas p
 LEFT JOIN relacionamentos r ON (r.pessoa_origem_id = p.id OR r.pessoa_destino_id = p.id)
-GROUP BY p.id, p.nome_completo, p.humano_ou_pet
+GROUP Bp.id, p.nome_completo, p.humano_ou_pet
 HAVING COUNT(r.id) = 0;
 ```
 
 **Resultado:**
 ```
-| nome_completo       | humano_ou_pet | total_relacionamentos |
+| nome_completo    | humano_ou_pet | total_relacionamentos |
 | ------------------- | ------------- | --------------------- |
-| Glauce Thais Barros | Humano        | 0                     |
+| Glauce Thais Barros | Humano    | 0           |
 ```
 
 ---
 
-## Y SOLUCAES PROPOSTAS
+## SOLUCAES PROPOSTAS
 
 ### **Solucao 1: Adicionar Relacionamentos (RECOMENDADO)**
 
@@ -89,19 +125,19 @@ Perguntas a responder:
 -- Relacionamento com pai
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES (
-  (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
-  (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Pai'),
-  'pai',
-  'sangue'
+ (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
+ (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Pai'),
+ 'pai',
+ 'sangue'
 );
 
 -- Relacionamento com mae
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES (
-  (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
-  (SELECT id FROM pessoas WHERE nome_completo = 'Nome da Mae'),
-  'mae',
-  'sangue'
+ (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
+ (SELECT id FROM pessoas WHERE nome_completo = 'Nome da Mae'),
+ 'mae',
+ 'sangue'
 );
 ```
 
@@ -110,18 +146,18 @@ VALUES (
 -- Relacionamento de casamento (bidirecional)
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES
-  (
-    (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
-    (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Conjuge'),
-    'conjuge',
-    'casamento'
-  ),
-  (
-    (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Conjuge'),
-    (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
-    'conjuge',
-    'casamento'
-  );
+ (
+  (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
+  (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Conjuge'),
+  'conjuge',
+  'casamento'
+ ),
+ (
+  (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Conjuge'),
+  (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
+  'conjuge',
+  'casamento'
+ );
 ```
 
 **Exemplo 3: Adicionar filhos**
@@ -129,10 +165,10 @@ VALUES
 -- Relacionamento de filiacao
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 VALUES (
-  (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Filho'),
-  (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
-  'mae',
-  'sangue'
+ (SELECT id FROM pessoas WHERE nome_completo = 'Nome do Filho'),
+ (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros'),
+ 'mae',
+ 'sangue'
 );
 ```
 
@@ -148,27 +184,27 @@ Ou execute manualmente:
 ```sql
 -- Detectar e criar irmaos automaticamente
 WITH irmaos_detectados AS (
-  SELECT DISTINCT
-    r1.pessoa_origem_id as pessoa_a,
-    r2.pessoa_origem_id as pessoa_b
-  FROM relacionamentos r1
-  JOIN relacionamentos r2
-    ON r1.pessoa_destino_id = r2.pessoa_destino_id
-    AND r1.pessoa_origem_id < r2.pessoa_origem_id
-  WHERE r1.tipo_relacionamento = 'pai'
-  AND r2.tipo_relacionamento = 'pai'
+ SELECT DISTINCT
+  r1.pessoa_origem_id as pessoa_a,
+  r2.pessoa_origem_id as pessoa_b
+ FROM relacionamentos r1
+ JOIN relacionamentos r2
+  ON r1.pessoa_destino_id = r2.pessoa_destino_id
+  AND r1.pessoa_origem_id < r2.pessoa_origem_id
+ WHERE r1.tipo_relacionamento = 'pai'
+ AND r2.tipo_relacionamento = 'pai'
 
-  UNION
+ UNION
 
-  SELECT DISTINCT
-    r1.pessoa_origem_id as pessoa_a,
-    r2.pessoa_origem_id as pessoa_b
-  FROM relacionamentos r1
-  JOIN relacionamentos r2
-    ON r1.pessoa_destino_id = r2.pessoa_destino_id
-    AND r1.pessoa_origem_id < r2.pessoa_origem_id
-  WHERE r1.tipo_relacionamento = 'mae'
-  AND r2.tipo_relacionamento = 'mae'
+ SELECT DISTINCT
+  r1.pessoa_origem_id as pessoa_a,
+  r2.pessoa_origem_id as pessoa_b
+ FROM relacionamentos r1
+ JOIN relacionamentos r2
+  ON r1.pessoa_destino_id = r2.pessoa_destino_id
+  AND r1.pessoa_origem_id < r2.pessoa_origem_id
+ WHERE r1.tipo_relacionamento = 'mae'
+ AND r2.tipo_relacionamento = 'mae'
 )
 INSERT INTO relacionamentos (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento)
 SELECT pessoa_a, pessoa_b, 'irmao', 'sangue' FROM irmaos_detectados
@@ -184,29 +220,29 @@ Se esta pessoa deve estar na arvore, atualize o arquivo `/src/app/data/seed.ts`:
 ```typescript
 // Adicionar no array de pessoas
 {
-  id: 'uuid-glauce',
-  nomeCompleto: 'Glauce Thais Barros',
-  dataNascimento: '01/01/1980', // data correta
-  localNascimento: 'Cidade, Estado',
-  localAtual: 'Cidade atual',
-  fotoPrincipalUrl: 'https://...',
-  humanouPet: 'Humano' as TipoEntidade,
-  corBgCard: '#e0f2fe',
-  minibio: 'Biografia...',
+ id: 'uuid-glauce',
+ nomeCompleto: 'Glauce Thais Barros',
+ dataNascimento: '01/01/1980', // data correta
+ localNascimento: 'Cidade, Estado',
+ localAtual: 'Cidade atual',
+ fotoPrincipalUrl: 'https://...',
+ humanouPet: 'Humano' as TipoEntidade,
+ corBgCard: '#e0f2fe',
+ minibio: 'Biografi-',
 },
 
 // Adicionar relacionamentos no array
 {
-  pessoaOrigemId: 'uuid-glauce',
-  pessoaDestinoId: 'uuid-do-pai',
-  tipoRelacionamento: 'pai' as TipoRelacionamento,
-  subtipoRelacionamento: 'sangue' as SubtipoRelacionamento,
+ pessoaOrigemId: 'uuid-glauce',
+ pessoaDestinoId: 'uuid-do-pai',
+ tipoRelacionamento: 'pai' as TipoRelacionamento,
+ subtipoRelacionamento: 'sangue' as SubtipoRelacionamento,
 },
 {
-  pessoaOrigemId: 'uuid-glauce',
-  pessoaDestinoId: 'uuid-da-mae',
-  tipoRelacionamento: 'mae' as TipoRelacionamento,
-  subtipoRelacionamento: 'sangue' as SubtipoRelacionamento,
+ pessoaOrigemId: 'uuid-glauce',
+ pessoaDestinoId: 'uuid-da-mae',
+ tipoRelacionamento: 'mae' as TipoRelacionamento,
+ subtipoRelacionamento: 'sangue' as SubtipoRelacionamento,
 },
 ```
 
@@ -267,7 +303,7 @@ Use o painel administrativo para adicionar relacionamentos:
 
 ---
 
-## Y CHECKLIST DE CORRECAO
+## CHECKLIST DE CORRECAO
 
 ### **Antes de Corrigir**
 - [ ] Identifiquei se a pessoa deve estar na arvore
@@ -291,7 +327,7 @@ Use o painel administrativo para adicionar relacionamentos:
 
 ---
 
-## Ya TESTES DE VALIDACAO
+## TESTES DE VALIDACAO
 
 Apos corrigir, execute estes testes:
 
@@ -300,21 +336,21 @@ Apos corrigir, execute estes testes:
 SELECT COUNT(*) as total_relacionamentos
 FROM relacionamentos
 WHERE pessoa_origem_id = (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros')
-   OR pessoa_destino_id = (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros');
+  OR pessoa_destino_id = (SELECT id FROM pessoas WHERE nome_completo = 'Glauce Thais Barros');
 ```
 **Esperado:** > 0
 
 ### **Teste 2: Pessoa aparece na lista de irmaos**
 ```sql
 SELECT
-  p1.nome_completo as pessoa,
-  COUNT(r.id) as total_irmaos,
-  STRING_AGG(p2.nome_completo, ', ') as nomes_irmaos
+ p1.nome_completo as pessoa,
+ COUNT(r.id) as total_irmaos,
+ STRING_AGG(p2.nome_completo, ', ') as nomes_irmaos
 FROM pessoas p1
 LEFT JOIN relacionamentos r ON r.pessoa_origem_id = p1.id AND r.tipo_relacionamento = 'irmao'
 LEFT JOIN pessoas p2 ON p2.id = r.pessoa_destino_id
 WHERE p1.nome_completo = 'Glauce Thais Barros'
-GROUP BY p1.id, p1.nome_completo;
+GROUP Bp1.id, p1.nome_completo;
 ```
 **Esperado:** Lista de irmaos ou 0 se for filho unico
 
@@ -323,7 +359,7 @@ GROUP BY p1.id, p1.nome_completo;
 SELECT COUNT(*) as total_pessoas_isoladas
 FROM pessoas p
 LEFT JOIN relacionamentos r ON (r.pessoa_origem_id = p.id OR r.pessoa_destino_id = p.id)
-GROUP BY p.id
+GROUP Bp.id
 HAVING COUNT(r.id) = 0;
 ```
 **Esperado:** 0
@@ -331,11 +367,11 @@ HAVING COUNT(r.id) = 0;
 ### **Teste 4: Diagnostico completo**
 Execute `/diagnostico-rapido.sql` no Supabase SQL Editor.
 
-**Esperado:** Todos 5 testes devem PASSAR a...
+**Esperado:** Todos 5 testes devem PASSAR -
 
 ---
 
-## YS IMPACTO DA CORRECAO
+## IMPACTO DA CORRECAO
 
 ### **Antes da Correcao**
 - Total de pessoas: 56
@@ -346,19 +382,19 @@ Execute `/diagnostico-rapido.sql` no Supabase SQL Editor.
 
 **Se adicionar relacionamentos:**
 - Total de pessoas: 56
-- Pessoas isoladas: 0 a...
+- Pessoas isoladas: 0 -
 - Pessoas com irmaos: 29-30 (depende dos irmaos)
 - Novos relacionamentos: +2 a +10 (pais, conjuge, filhos, irmaos)
 
 **Se remover pessoa:**
 - Total de pessoas: 55
-- Pessoas isoladas: 0 a...
+- Pessoas isoladas: 0 -
 - Pessoas com irmaos: 29
 - Relacionamentos deletados: 0 (pessoa ja estava isolada)
 
 ---
 
-## YZ  RECOMENDACAO FINAL
+## RECOMENDACAO FINAL
 
 ### **Opcao Recomendada: Adicionar Relacionamentos**
 
@@ -376,44 +412,44 @@ Execute `/diagnostico-rapido.sql` no Supabase SQL Editor.
 
 ### **Quando remover:**
 - Se a pessoa foi cadastrada por engano
-- Se nao pertence A  familia
+- Se nao pertence a familia
 - Se e um teste/exemplo que deve ser removido
 
 ---
 
-## Yz SUPORTE
+## SUPORTE
 
 Se encontrar dificuldades:
 
 1. **Verifique os logs:**
-   - Console do navegador (F12)
-   - Logs do Supabase
-   - Erros SQL
+ - Console do navegador (F12)
+ - Logs do Supabase
+ - Erros SQL
 
 2. **Execute diagnosticos:**
-   - `/diagnostico-rapido.sql`
-   - `/verificar-irmaos.sql`
-   - `/admin/diagnostico`
+ - `/diagnostico-rapido.sql`
+ - `/verificar-irmaos.sql`
+ - `/admin/diagnostico`
 
 3. **Consulte documentacao:**
-   - `/RELATORIO-DIAGNOSTICO-COMPLETO.md`
-   - `/COMO-FUNCIONA-IRMAOS.md`
-   - `/SETUP-BANCO-DADOS.md`
+ - `/RELATORIO-DIAGNOSTICO-COMPLETO.md`
+ - `/COMO-FUNCIONA-IRMAOS.md`
+ - `/SETUP-BANCO-DADOS.md`
 
 4. **Restaure backup:**
-   - Re-execute migracao em `/admin/migrar-dados`
-   - Todos dados serao recriados do seed.ts
+ - Re-execute migracao em `/admin/migrar-dados`
+ - Todos dados serao recriados do seed.ts
 
 ---
 
-## a... CONCLUSAO
+## - CONCLUSAO
 
 **Erro encontrado:** 1 pessoa isolada (baixa severidade)
 **Impacto:** Minimo, nao afeta funcionamento
 **Solucao:** Simples, pode ser corrigida em minutos
 **Prioridade:** Media (corrigir quando possivel)
 
-**Sistema esta 99% funcional!** a...
+**Sistema esta 99% funcional!** -
 
 Este e um problema de dados, nao de codigo. O sistema de irmaos esta funcionando perfeitamente.
 
@@ -421,4 +457,4 @@ Este e um problema de dados, nao de codigo. O sistema de irmaos esta funcionando
 
 **Documento criado em:** 05/04/2026
 **Ultima atualizacao:** 05/04/2026
-**Status:** a... Documentado e com solucoes prontas
+**Status:** - Documentado e com solucoes prontas
