@@ -1,4 +1,4 @@
-> Status: documento historico / obsoleto.
+﻿> Status: documento historico / obsoleto.
 > Local: `docs/historico/documentacao-antiga/`.
 > Nao usar como fonte canonica para desenvolvimento atual.
 >
@@ -102,28 +102,28 @@ DELETE FROM pessoas WHERE nome_completo = 'Glauce Thais Barros';
 | 2. **SETUP-BANCO-DADOS.md** | Setup completo do banco | 10 min |
 | 3. **diagnostico-rapido.sql** | 5 testes automatizados | 5 seg |
 
-### **Analise e Diagnostico** 
+### **Analise e Diagnostico**
 
 | Arquivo | O que faz | Tempo |
 |---------|-----------|-------|
 | 4. **verificar-irmaos.sql** | 7 queries de verificacao | 30 seg |
 | 5. **RELATORIO-DIAGNOSTICO-COMPLETO.md** | Analise completcom resultados reais | 10 min |
 
-### **Correcao de Erros** 
+### **Correcao de Erros**
 
 | Arquivo | O que faz | Tempo |
 |---------|-----------|-------|
 | 6. **ERROS-E-SOLUCOES.md** | Listde erros + 3 solucoes cad| 8 min |
 | 7. **corrigir-pessoa-isolada.sql** | Scripts SQL prontos | 10 seg |
 
-### **Tecnico e Avancado** 
+### **Tecnico e Avancado**
 
 | Arquivo | O que faz | Tempo |
 |---------|-----------|-------|
 | 8. **COMO-FUNCIONA-IRMAOS.md** | Algoritmo completo + codigo | 15 min |
 | 9. **database-schema.sql** | Criar tabelas no Supabase | 10 seg |
 
-### **Indice Geral** 
+### **Indice Geral**
 
 | Arquivo | O que faz |
 |---------|-----------|
@@ -196,15 +196,15 @@ Use estchecklist pargarantir que tudo funciona:
 
 ##  Acoes Recomendadas
 
-### **AltPrioridade** 
+### **AltPrioridade**
 1. - **Verificar integridade** - CONCLUIDO
 2. Aviso **Corrigir pessoisolada** - PENDENTE (baixo impacto)
 
-### **MediPrioridade** 
+### **MediPrioridade**
 3. - **Validar relacionamentos** - CONCLUIDO (100% bidirecional)
 4. - **Atualizar seed.ts** - Verificar se dados estao corretos
 
-### **BaixPrioridade** 
+### **BaixPrioridade**
 5. - **Documentacao** - CONCLUIDO (9 arquivos)
 6. - **Adicionar fotos** - Futuro
 7. - **Testes automatizados** - Futuro
@@ -368,7 +368,7 @@ Execute `/corrigir-pessoa-isolada.sql` parresolver o problemmenor.
 9. - INDICE-DOCUMENTACAO.md
 10. - README-DOCUMENTACAO.md (este arquivo)
 
-**Total:** 10 arquivos de documentacao completa! 
+**Total:** 10 arquivos de documentacao completa!
 
 ---
 

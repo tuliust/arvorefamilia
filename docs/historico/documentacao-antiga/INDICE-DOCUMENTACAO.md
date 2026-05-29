@@ -1,4 +1,4 @@
-> Status: documento historico / obsoleto.
+﻿> Status: documento historico / obsoleto.
 > Local: `docs/historico/documentacao-antiga/`.
 > Nao usar como fonte canonica para desenvolvimento atual.
 >
@@ -31,7 +31,7 @@
 
 ---
 
-### **2. SETUP DO BANCO DE DADOS** 
+### **2. SETUP DO BANCO DE DADOS**
 **Arquivo:** `/SETUP-BANCO-DADOS.md`
 **Quando usar:** Primeirvez configurando o banco
 **Tempo de leitura:** 10 minutos
@@ -59,7 +59,7 @@
 
 ---
 
-### **4. SCHEMA SQL COMPLETO** 
+### **4. SCHEMA SQL COMPLETO**
 **Arquivo:** `/database-schema.sql`
 **Quando usar:** Criar as tabelas no Supabase
 **Tempo de execucao:** 10 segundos
@@ -74,7 +74,7 @@
 
 ---
 
-### **5. VERIFICACAO DE IRMAOS SQL** 
+### **5. VERIFICACAO DE IRMAOS SQL**
 **Arquivo:** `/verificar-irmaos.sql`
 **Quando usar:** Verificar integridade dos relacionamentos de irmaos
 **Tempo de execucao:** 30 segundos
