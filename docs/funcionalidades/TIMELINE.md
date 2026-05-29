@@ -1,46 +1,85 @@
-# Linha do tempo do usuario
+# Linha do tempo do usuário
+
+> Local recomendado: `docs/funcionalidades/TIMELINE.md`  
+> Tipo: documentação funcional específica.
+
+---
 
 ## 1. Status
 
-- A linha do tempo do usuario foi implementada funcionalmente no topico 7.3.
-- A primeira versao e derivada dos dados existentes do perfil, relacionamentos, arquivos historicos e eventos pessoais.
-- Nao houve tabela nova.
-- Nao houve migration.
-- Nao ha edicao manual de eventos da timeline nesta versao.
+A linha do tempo do usuário foi implementada funcionalmente no tópico 7.3.
+
+Escopo atual:
+
+- primeira versão derivada dos dados existentes;
+- sem tabela própria de timeline;
+- sem migration;
+- sem edição manual de eventos da timeline;
+- renderizada no perfil da pessoa.
+
+A timeline usa dados de:
+
+- perfil;
+- relacionamentos;
+- arquivos históricos;
+- eventos pessoais;
+- filhos;
+- eventos familiares globais, quando fornecidos futuramente.
+
+---
 
 ## 2. Arquitetura
 
-O fluxo da timeline e dividido em tres partes:
+O fluxo é dividido em três partes:
 
-1. `PersonProfile` carrega os dados disponiveis para a pessoa.
-2. `buildPersonTimeline` normaliza, deduplica e ordena os itens.
-3. `PersonTimeline` renderiza a lista no perfil da pessoa.
+```txt
+PersonProfile carrega os dados disponíveis para a pessoa.
+  ↓
+buildPersonTimeline normaliza, deduplica e ordena os itens.
+  ↓
+PersonTimeline renderiza a lista no perfil da pessoa.
+```
 
 O builder `buildPersonTimeline`:
 
-- nao acessa Supabase;
-- nao faz fetch;
-- nao depende de estado React;
-- nao acessa variaveis de ambiente;
-- e uma funcao pura que recebe dados ja carregados e retorna `PersonTimelineItem[]`.
+- não acessa Supabase;
+- não faz fetch;
+- não depende de estado React;
+- não acessa variáveis de ambiente;
+- é uma função pura;
+- recebe dados já carregados;
+- retorna `PersonTimelineItem[]`.
+
+---
 
 ## 3. Arquivos principais
 
-- `src/app/utils/buildPersonTimeline.ts`
-  - Define os tipos da timeline.
-  - Expoe `buildPersonTimeline`, `parseTimelineDate`, `dedupeTimelineItems` e `sortTimelineItems`.
-  - Normaliza eventos derivados dos dados existentes.
-- `src/app/components/Timeline/PersonTimeline.tsx`
-  - Renderiza a timeline no perfil.
-  - Trata estado vazio.
-  - Nao renderiza metadata bruta nem IDs tecnicos.
-- `src/app/pages/PersonProfile.tsx`
-  - Carrega os dados do perfil.
-  - Carrega relacionamentos detalhados e arquivos historicos de relacionamentos conjugais.
-  - Monta `timelineItems` com `buildPersonTimeline`.
-- `src/app/services/dataService.ts`
-  - Expoe `obterRelacionamentosDetalhadosDaPessoa`.
-  - A consulta filtra relacionamentos em que a pessoa aparece em `pessoa_origem_id` ou `pessoa_destino_id`.
+```txt
+src/app/utils/buildPersonTimeline.ts
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/pages/PersonProfile.tsx
+src/app/services/dataService.ts
+```
+
+Responsabilidades:
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `buildPersonTimeline.ts` | Define tipos, normaliza eventos, deduplica e ordena. |
+| `PersonTimeline.tsx` | Renderiza a timeline no perfil e trata estado vazio. |
+| `PersonProfile.tsx` | Carrega dados e monta `timelineItems`. |
+| `dataService.ts` | Expõe relacionamentos detalhados da pessoa. |
+
+Funções relevantes:
+
+```txt
+buildPersonTimeline
+parseTimelineDate
+dedupeTimelineItems
+sortTimelineItems
+```
+
+---
 
 ## 4. Dados usados
 
@@ -48,68 +87,109 @@ A timeline pode receber:
 
 - pessoa;
 - eventos pessoais;
-- arquivos historicos da pessoa, incluindo `categoria_evento` quando disponivel;
+- arquivos históricos da pessoa;
+- `categoria_evento`, quando disponível;
 - filhos;
 - pessoas carregadas;
 - relacionamentos brutos/detalhados;
-- arquivos historicos de relacionamentos conjugais;
+- arquivos históricos de relacionamentos conjugais;
 - eventos familiares globais, se forem fornecidos futuramente ao builder.
+
+Regra:
+
+```txt
+a timeline deve renderizar com os dados disponíveis e não quebrar quando um conjunto opcional estiver ausente.
+```
+
+---
 
 ## 5. Eventos suportados
 
-A primeira versao suporta:
+A primeira versão suporta:
 
 - nascimento;
 - falecimento com data;
 - falecimento informado sem data;
 - casamento;
-- uniao;
-- separacao;
+- união;
+- separação;
 - nascimento de filhos;
-- arquivos historicos da pessoa;
-- arquivos historicos de relacionamento;
+- arquivos históricos da pessoa;
+- arquivos históricos de relacionamento;
 - `person_events`;
-- memorias;
+- memórias;
 - eventos familiares globais, quando fornecidos ao builder.
+
+---
 
 ## 6. Parser de datas
 
-O helper `parseTimelineDate` suporta:
+Helper:
 
-- `DD/MM/AAAA`;
-- `D/M/AAAA`;
-- `AAAA-MM-DD`;
-- `AAAA`;
-- valores ausentes ou invalidos como `unknown`.
+```txt
+parseTimelineDate
+```
+
+Suporta:
+
+```txt
+DD/MM/AAAA
+D/M/AAAA
+AAAA-MM-DD
+AAAA
+valores ausentes ou inválidos como unknown
+```
 
 Regras importantes:
 
-- data completa preserva precisao `day`;
-- ano puro preserva precisao `year`;
-- ano puro nao vira `01/01/AAAA`;
-- itens com precisao `unknown` vao para o final da ordenacao.
+- data completa preserva precisão `day`;
+- ano puro preserva precisão `year`;
+- ano puro não vira `01/01/AAAA`;
+- itens com precisão `unknown` vão para o final da ordenação.
 
-## 7. Deduplicacao
+---
 
-`dedupeTimelineItems` evita duplicacoes usando chaves estaveis:
+## 7. Deduplicação
 
-- casamento/uniao por par de pessoas, tipo e data;
-- separacao por par de pessoas e data;
+Helper:
+
+```txt
+dedupeTimelineItems
+```
+
+Evita duplicações usando chaves estáveis.
+
+Critérios:
+
+- casamento/união por par de pessoas, tipo e data;
+- separação por par de pessoas e data;
 - arquivos por `id`;
 - `person_events` por `id`;
 - `family_events` por `id`.
 
-Isso evita duplicacao quando um relacionamento conjugal aparece nos dois sentidos.
+Objetivo:
 
-## 8. Ordenacao
+```txt
+evitar duplicação quando um relacionamento conjugal aparece nos dois sentidos.
+```
 
-`sortTimelineItems` ordena:
+---
 
-- datas completas por ano, mes e dia;
+## 8. Ordenação
+
+Helper:
+
+```txt
+sortTimelineItems
+```
+
+Ordena:
+
+- datas completas por ano, mês e dia;
 - datas com ano por ano;
 - itens `unknown` no final.
 
-Em empates, a prioridade por tipo e:
+Em empates, a prioridade por tipo é:
 
 1. `birth`
 2. `child_birth`
@@ -123,68 +203,91 @@ Em empates, a prioridade por tipo e:
 10. `death`
 11. `other`
 
-Persistindo o empate, a ordenacao final usa o titulo.
+Persistindo o empate, a ordenação final usa o título.
 
-## 9. Seguranca e privacidade
+---
 
-A timeline nao deve expor dados sensiveis.
+## 9. Segurança e privacidade
 
-Regras implementadas:
+A timeline não deve expor dados sensíveis.
 
-- metadata sensivel e sanitizada;
-- URLs completas nao devem ir para metadata;
-- base64 e data URL nao devem aparecer;
-- telefone, endereco, e-mail, tokens, secrets e keys sensiveis sao removidos;
-- IDs tecnicos nao sao exibidos na UI;
-- metadata bruta nao e renderizada por `PersonTimeline`;
-- arquivos historicos nao sao abertos ou baixados pela timeline nesta versao.
+Regras:
 
-## 10. Permissoes
+- metadata sensível é sanitizada;
+- URLs completas não devem ir para metadata;
+- base64 e data URL não devem aparecer;
+- telefone não deve aparecer;
+- endereço não deve aparecer;
+- e-mail não deve aparecer;
+- tokens, secrets e keys sensíveis são removidos;
+- IDs técnicos não são exibidos na UI;
+- metadata bruta não é renderizada por `PersonTimeline`;
+- arquivos históricos não são abertos ou baixados pela timeline nesta versão.
 
-- A timeline respeita os dados carregados pelo perfil.
-- Usuario comum nao deve ganhar acesso administrativo por causa da timeline.
-- Admin mantem a visualizacao ja permitida pelo perfil.
-- RLS nao foi alterada.
-- Nao foi criada policy nova.
-- Nao foi usado service role no frontend.
+---
 
-## 11. Estado vazio e tolerancia a erro
+## 10. Permissões
 
-- `PersonTimeline` renderiza estado vazio quando nao ha itens.
-- O componente aceita `items` opcional e usa fallback para array vazio.
-- Falhas ao carregar arquivos historicos de relacionamento nao quebram o perfil.
-- Se dados adicionais nao estiverem disponiveis, a timeline renderiza com o que ja foi carregado.
+Regras:
 
-Mensagem esperada no estado vazio:
+- a timeline respeita os dados carregados pelo perfil;
+- usuário comum não ganha acesso administrativo por causa da timeline;
+- admin mantém a visualização já permitida pelo perfil;
+- RLS não foi alterada por causa da timeline;
+- não foi criada policy nova para timeline;
+- não foi usado service role no frontend.
+
+---
+
+## 11. Estado vazio e tolerância a erro
+
+`PersonTimeline` deve renderizar estado vazio quando não há itens.
+
+Mensagem esperada:
 
 ```txt
-Ainda nao ha eventos suficientes para montar a linha do tempo desta pessoa.
+Ainda não há eventos suficientes para montar a linha do tempo desta pessoa.
 ```
 
-## 12. Limitacoes da versao atual
+Regras:
 
-Ainda nao foram implementados:
+- componente aceita `items` opcional;
+- fallback para array vazio;
+- falhas ao carregar arquivos históricos de relacionamento não quebram o perfil;
+- se dados adicionais não estiverem disponíveis, timeline renderiza com o que já foi carregado.
 
-- edicao manual de eventos da timeline;
+---
+
+## 12. Limitações da versão atual
+
+Ainda não foram implementados:
+
+- edição manual de eventos da timeline;
 - upload por evento;
 - privacidade por evento;
-- exportacao PDF;
+- exportação PDF;
 - modal detalhado por item;
-- consolidacao visual com `PersonEventsList`.
+- consolidação visual com `PersonEventsList`.
+
+Esses itens ficam pós-MVP.
+
+---
 
 ## 13. QA realizado
 
-Validacoes registradas:
+Validações registradas:
 
 - `npm run build` passou;
 - `git diff --check` passou;
 - QA em browser com perfil real;
 - mobile checado;
 - console sem erro de runtime;
-- validacao visual de nascimento;
-- validacao visual de nascimento de filho;
-- validacao visual de casamento;
-- validacao visual de falecimento informado.
+- validação visual de nascimento;
+- validação visual de nascimento de filho;
+- validação visual de casamento;
+- validação visual de falecimento informado.
+
+---
 
 ## 14. Troubleshooting
 
@@ -192,69 +295,136 @@ Validacoes registradas:
 
 Verificar:
 
-- `src/app/pages/PersonProfile.tsx`;
-- dados enviados ao `buildPersonTimeline`;
-- `src/app/components/Timeline/PersonTimeline.tsx`;
-- estado vazio do componente.
+```txt
+src/app/pages/PersonProfile.tsx
+dados enviados ao buildPersonTimeline
+src/app/components/Timeline/PersonTimeline.tsx
+estado vazio do componente
+```
 
-### Casamento/uniao nao aparece
-
-Verificar:
-
-- relacionamentos detalhados;
-- `tipo_relacionamento = conjuge`;
-- `subtipo_relacionamento`;
-- `data_casamento`;
-- `src/app/utils/buildPersonTimeline.ts`.
-
-### Separacao duplicada
+### Casamento/união não aparece
 
 Verificar:
 
-- `dedupeTimelineItems`;
-- chave `relationship-separation`;
-- normalizacao do par de pessoas;
-- relacionamentos inversos.
+```txt
+relacionamentos detalhados
+tipo_relacionamento = conjuge
+subtipo_relacionamento
+data_casamento
+src/app/utils/buildPersonTimeline.ts
+```
 
-### Arquivos historicos nao aparecem
+### Separação duplicada
 
 Verificar:
 
-- `src/app/services/arquivosHistoricosService.ts`;
-- arquivos historicos da pessoa;
-- arquivos historicos de relacionamento;
-- dados enviados por `PersonProfile`;
-- mapeamento em `buildPersonTimeline`.
+```txt
+dedupeTimelineItems
+chave relationship-separation
+normalização do par de pessoas
+relacionamentos inversos
+```
 
-Se o problema acontecer apos editar/salvar arquivos historicos:
+### Arquivos históricos não aparecem
+
+Verificar:
+
+```txt
+src/app/services/arquivosHistoricosService.ts
+arquivos historicos da pessoa
+arquivos historicos de relacionamento
+dados enviados por PersonProfile
+mapeamento em buildPersonTimeline
+```
+
+Se o problema acontecer após editar/salvar arquivos históricos:
 
 - confirmar se `20260522121000_add_historical_file_event_category.sql` foi aplicada no ambiente;
-- insert/update pode falhar quando o payload inclui `categoria_evento` e a coluna ainda nao existe.
+- insert/update pode falhar quando o payload inclui `categoria_evento` e a coluna ainda não existe.
 
-### Eventos pessoais nao aparecem
+### Eventos pessoais não aparecem
 
 Verificar:
 
-- `src/app/services/personEventsService.ts`;
-- `listarEventosDaPessoa`;
-- estado `personEvents` em `PersonProfile`;
-- mapeamento em `buildPersonTimeline`.
+```txt
+src/app/services/personEventsService.ts
+listarEventosDaPessoa
+estado personEvents em PersonProfile
+mapeamento em buildPersonTimeline
+```
 
 ### Datas em ordem errada
 
 Verificar:
 
-- `parseTimelineDate`;
-- `sortTimelineItems`;
-- `precision`;
-- `dateValue`;
-- campos `year`, `month` e `day`.
+```txt
+parseTimelineDate
+sortTimelineItems
+precision
+dateValue
+year
+month
+day
+```
 
-### Usuario comum nao ve algum item
+### Usuário comum não vê algum item
 
 Verificar:
 
-- RLS;
-- dados disponiveis no perfil;
-- permissoes do service correspondente;
-- se o dado deveria aparecer para usuario comum.
+```txt
+RLS
+dados disponíveis no perfil
+permissões do service correspondente
+se o dado deveria aparecer para usuário comum
+```
+
+---
+
+## 15. Checklist de QA
+
+### Perfil
+
+- abrir perfil com nascimento;
+- abrir perfil com falecimento;
+- abrir perfil com casamento;
+- abrir perfil com separação;
+- abrir perfil com filhos;
+- abrir perfil com arquivos históricos;
+- abrir perfil com eventos pessoais;
+- abrir perfil sem eventos suficientes;
+- validar estado vazio;
+- validar mobile.
+
+### Técnico
+
+```bash
+npm run build
+npm test
+git diff --check
+```
+
+Se envolver carregamento/rota/permissão:
+
+```bash
+npm run test:e2e
+```
+
+---
+
+## 16. Pós-MVP
+
+Possíveis evoluções:
+
+- edição manual de eventos da timeline;
+- upload por evento;
+- privacidade por evento;
+- exportação PDF;
+- modal detalhado por item;
+- consolidação visual com `PersonEventsList`;
+- integração com calendário familiar;
+- timeline familiar global;
+- filtros por tipo de evento;
+- busca dentro da timeline;
+- impressão/exportação.
+
+Esses itens não bloqueiam o MVP.

@@ -1,5 +1,8 @@
 # Guia de correção de erros — Árvore Família
 
+> Última atualização: 2026-05-29  
+> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
+
 ## Objetivo
 
 Este documento é um guia de investigação e correção por sintoma. Use quando:
@@ -15,12 +18,28 @@ Este guia não descreve roadmap nem lista implementações concluídas em detalh
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado.
 - `docs/PLANO_PROXIMOS_PASSOS.md`: validações finais, lançamento e backlog pós-MVP.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso.
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: procedimento operacional de migrations.
 - `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: troubleshooting específico do calendário familiar.
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportação da árvore.
 - `docs/funcionalidades/NOTIFICACOES.md`: detalhes de arquitetura e operação de notificações.
 - `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: troubleshooting específico de pessoas, perfil e admin.
 - `docs/funcionalidades/TIMELINE.md`: detalhes da timeline.
 
 ---
+
+## Como usar este guia
+
+Use este documento por **sintoma observado**, não por arquivo. O fluxo recomendado é:
+
+1. identificar o sintoma;
+2. localizar os arquivos prováveis;
+3. reproduzir o erro;
+4. corrigir a menor causa real;
+5. validar com build/testes;
+6. registrar nova regra apenas se ela for recorrente.
+
+Evite usar este guia como backlog. Pendências e melhorias devem ficar em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 ## 1. Checklist inicial de investigação
 
@@ -796,7 +815,7 @@ Verificar:
 
 ---
 
-## 12. Árvore, Genealogia, Visão Completa e anel 💍
+## 12. Árvore, Genealogia, Visão Completa e anel
 
 Arquivos prováveis:
 
@@ -1102,7 +1121,7 @@ Correção:
 
 ---
 
-## 15.1 Vínculo admin usuário-pessoa
+## 16. Vínculo admin usuário-pessoa
 
 Detalhes específicos de pessoas/perfil/admin:
 
@@ -1151,7 +1170,7 @@ Comportamento esperado:
 
 ---
 
-## 16. Notificações
+## 17. Notificações
 
 Arquivos prováveis:
 
@@ -1292,7 +1311,7 @@ Correção:
 
 ---
 
-## 17. Astrologia, Timeline, WhatsApp, parentesco, exportação e favoritos
+## 18. Astrologia, Timeline, WhatsApp, parentesco, exportação e favoritos
 
 ### Astrologia e acontecimentos do nascimento
 
@@ -1378,7 +1397,7 @@ Verificar RLS, usuário autenticado, campos novos, colunas legadas relaxadas, li
 
 ---
 
-## 18. Responsividade
+## 19. Responsividade
 
 Arquivos prioritários:
 
@@ -1438,7 +1457,7 @@ Priorizar:
 
 ---
 
-## 19. Migrations e Supabase
+## 20. Migrations e Supabase
 
 Arquivos prováveis:
 
@@ -1508,7 +1527,7 @@ Não remover sem dump, auditoria e QA visual.
 
 ---
 
-## 20. Sintomas rápidos
+## 21. Sintomas rápidos
 
 ### Usuário comum fez algo indevido
 
@@ -1586,7 +1605,7 @@ Correção imediata:
 
 ---
 
-## 20.1 Calendário Familiar
+## 22. Calendário Familiar
 
 Detalhes específicos:
 
@@ -1628,7 +1647,7 @@ Verificar:
 
 ---
 
-## 21. Troubleshooting recente — legenda funcional, camadas visuais e painel lateral
+## 23. Troubleshooting recente — legenda funcional, camadas visuais e painel lateral
 
 ### Destaques visuais aparecem mesmo com filtro oculto
 

@@ -1,21 +1,36 @@
 # Plano de próximos passos — Árvore Família
 
+> Última revisão: 2026-05-29  
+> Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
+> Projeto: `tuliust/arvorefamilia`
+
 ## Objetivo
 
-Este documento define **o que falta fazer** até o lançamento do site e organiza o backlog pós-MVP.
+Este documento define **o que falta fazer até o lançamento** e organiza o backlog pós-MVP do projeto **Árvore Família**.
 
-Este arquivo não deve repetir o guia de implementações nem o guia de correção de erros. Para esses temas, use:
+Ele responde à pergunta: **“o que ainda precisa ser feito, validado ou deixado explicitamente para depois?”**
+
+Este arquivo não deve repetir em detalhe:
+
+- o inventário do que já foi implementado;
+- troubleshooting por sintoma;
+- documentação técnica completa de rotas, migrations, UX ou componentes.
+
+Use também:
 
 - `docs/GUIA_IMPLEMENTACOES.md`: o que já foi implementado e comportamento consolidado.
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação e correção por sintoma.
-- `docs/funcionalidades/NOTIFICACOES.md`: detalhes técnicos de notificações.
-- `docs/funcionalidades/TIMELINE.md`: detalhes técnicos da timeline.
+- `docs/GUIA_UX_LAYOUT.md`: decisões de UX e layout.
+- `docs/GUIA_COMPONENTES.md`: componentes e cuidados de implementação.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas e guards.
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: banco, migrations e operação Supabase.
+- `docs/funcionalidades/*.md`: documentação específica por funcionalidade.
 
 ---
 
 ## 1. Situação atual do MVP
 
-As frentes funcionais principais do MVP já foram implementadas e testadas manualmente.
+As frentes funcionais principais do MVP estão implementadas e testadas manualmente no escopo atual.
 
 | Frente | Status MVP | Decisão |
 |---|---|---|
@@ -25,16 +40,16 @@ As frentes funcionais principais do MVP já foram implementadas e testadas manua
 | 7.4 WhatsApp | Concluído no frontend | Privacidade forte/API/log seguro ficam pós-MVP. |
 | 7.5 Grau de parentesco | Consolidado funcionalmente | Integração direta na árvore/Genealogia/Visão Completa fica pós-MVP. |
 | 7.6 Exportação de área da árvore | Concluída no escopo atual | Árvore completa e escala automática ficam pós-MVP. |
-| 7.7 Legendas visuais | Concluída | Painel lateral simplificado; manter monitoramento visual. |
+| 7.7 Legendas visuais | Concluída | Painel lateral simplificado e funcional; manter monitoramento visual. |
 | 7.8 Favoritos | Primeira camada aprovada | Expansão para outras entidades fica pós-MVP. |
 | 7.9 Página de favoritos | Primeira versão aprovada | Refinamentos ficam pós-MVP. |
-| 7.10 Responsividade mobile/tablet | Concluída | Blocos 1 a 7 finalizados; QA final técnico e visual aprovado em 2026-05-19. |
+| 7.10 Responsividade mobile/tablet | Concluída | QA final técnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluídos | Header compartilhado nas páginas internas e Home pós-login preservada com header próprio. |
 | Viewport da árvore | Ajustado | Minha Árvore, Genealogia e Visão Completa têm regras finais de escala/título consolidadas. |
-| Rotas das views da árvore | Concluídas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o mesmo shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
-| Refatoração incremental da Home | Em andamento seguro | Header, seção da árvore, nav mobile, filtros, painel lateral, curiosidades, IA e conexão foram extraídos para `src/app/pages/home`; a Home segue como orquestradora. |
-| Minha Árvore e arquivos históricos | Atualizados | `ce482a2` consolidou categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral. |
-| Vínculo admin usuário-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida, migration remota aplicada e migrations local/remoto alinhadas. |
+| Rotas das views da árvore | Concluídas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
+| Refatoração incremental da Home | Em andamento seguro | Componentes visuais foram extraídos; `Home.tsx` segue como orquestradora. |
+| Minha Árvore e arquivos históricos | Atualizados | Categoria histórica, preview pós-upload, botão **Ações** e casamento salvo pelo botão geral consolidados. |
+| Vínculo admin usuário-pessoa | Corrigido e validado | RPC corrigida, migration aplicada e migrations local/remoto alinhadas no histórico recente. |
 | Autocomplete de endereço | Concluído no frontend | Admin e dados do usuário usam Google Places com fallback para input normal. |
 | Calendário familiar | Ajustes residuais concluídos | Categorias na sidebar, filtros clicáveis, pluralização e “Faz X anos”. |
 
@@ -79,7 +94,8 @@ Não incluir antes do lançamento:
 - IA consultiva;
 - comparador de perfis;
 - mapa familiar;
-- home dinâmica.
+- home dinâmica;
+- versão administrativa/configurável da legenda.
 
 ---
 
@@ -103,8 +119,9 @@ Regras:
 - não criar migration para ajuste puramente visual;
 - não commitar secrets, dumps, tokens, backups ou arquivos temporários;
 - não misturar pós-MVP com correções de lançamento;
-- não expandir escopo funcional sem registrar no plano.
-- não commitar arquivos `.bak`, backups temporários ou dumps.
+- não expandir escopo funcional sem registrar neste plano;
+- não commitar arquivos `.bak`, backups temporários ou dumps;
+- não deixar `test-results/`, `dist/` ou relatórios temporários entrarem no commit.
 
 ---
 
@@ -142,6 +159,8 @@ Blocos executados:
 
 ## 5. Ajustes visuais recentes concluídos
 
+Esta seção registra apenas itens concluídos que ajudam a orientar QA final. Detalhes de UX devem ficar em `docs/GUIA_UX_LAYOUT.md`.
+
 ### 5.1 Header e margens
 
 Concluído:
@@ -160,6 +179,7 @@ src/app/pages/MinhaArvore.tsx
 src/app/pages/CalendarioFamiliar.tsx
 src/app/pages/MeusFavoritos.tsx
 src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
 src/app/pages/forum/ForumHome.tsx
 src/app/pages/admin/AdminDashboard.tsx
 ```
@@ -170,13 +190,16 @@ Concluído:
 
 - botão único de expandir/recolher painel;
 - botão fica dentro ou junto ao painel conforme largura;
-- remoção de duplicidade com botão dentro da área ReactFlow.
+- remoção de duplicidade com botão dentro da área ReactFlow;
+- toggle principal do painel usa **Filtros** e **Legendas**;
+- **Informações** fica fora da toggle, acionada por **Ações**.
 
 Arquivos relacionados:
 
 ```txt
 src/app/pages/Home.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
 ```
 
 ### 5.3 Viewport das views da árvore
@@ -214,7 +237,9 @@ Concluído:
 - remoção do card azul da view atual;
 - remoção dos subtítulos internos dos cards;
 - renomeação de “Ativa” para “Em relacionamento”;
-- remoção da seção “Views” no final.
+- remoção da seção “Views” no final;
+- legenda passou a controlar filtros/camadas visuais quando callbacks são fornecidos;
+- camadas opcionais incluem destaque de pais/filhos e destaque de irmãos.
 
 Arquivo relacionado:
 
@@ -222,13 +247,13 @@ Arquivo relacionado:
 src/app/components/FamilyTree/TreeLegend.tsx
 ```
 
-### 5.5 Ajustes de `ce482a2`
+### 5.5 Arquivos históricos e dados conjugais
 
 Concluído:
 
 - Home usa botão **Ações** com ícone `Printer`;
 - desktop pode exibir texto **Ações** e mobile usa apenas ícone;
-- o botão continua abrindo `activeSidebarPanel = 'info'`;
+- botão continua abrindo ação/painel de informações;
 - loading da Home é **“Buscando pessoas e relacionamentos…”**;
 - `ArquivosHistoricos` mantém mensagem verde e miniatura/card PDF após upload;
 - input nativo, campos e botões **Cancelar**/**Adicionar** ficam ocultos imediatamente após upload;
@@ -243,7 +268,7 @@ Concluído:
 
 Pré-requisito operacional:
 
-- aplicar `20260522121000_add_historical_file_event_category.sql` antes de deploy com `ce482a2`, pois insert/update em `arquivos_historicos` envia `categoria_evento`.
+- aplicar `20260522121000_add_historical_file_event_category.sql` antes de deploy que envie `categoria_evento` em `arquivos_historicos`.
 
 ### 5.6 Ajustes após PDF
 
@@ -255,19 +280,21 @@ Concluído:
 - autocomplete de endereço no admin;
 - ajustes residuais do calendário familiar.
 
-Validação operacional:
+Validação operacional registrada no histórico:
 
-- `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` foi aplicada no ambiente Supabase remoto;
+- `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` aplicada no ambiente Supabase remoto;
 - `supabase migration list` confirmou local/remoto alinhados até `20260522173000`;
-- validação técnica pós-migration passou com `npm run build`, `npm test`, `npm run test:e2e`, `git diff --check` e worktree limpo.
+- validação técnica pós-migration passou com build, testes, e2e e `git diff --check`.
 
 ---
 
 ## 6. QA final de lançamento
 
-Status: validação técnica final executada e aprovada. O QA visual amplo foi aprovado em 2026-05-19; a validação técnica pós-documentação e pós-migration foi concluída em 2026-05-22.
+Status: validação técnica final executada e aprovada no histórico recente. O QA visual amplo foi aprovado em 2026-05-19; a validação técnica pós-documentação e pós-migration foi concluída em 2026-05-22.
 
 ### 6.1 Validação técnica
+
+Comandos:
 
 ```bash
 git status
@@ -280,13 +307,14 @@ supabase migration list
 
 Critérios:
 
-- build passou com `npm run build`;
-- testes unitários passaram com `npm test` (`28` testes);
-- e2e passou com `npm run test:e2e` (`5` testes);
-- `git diff --check` passou sem erros;
-- `supabase migration list` mostrou migrations locais/remotas alinhadas até `20260522173000`;
-- nenhuma migration visual foi criada;
-- nenhum secret foi versionado.
+- build aprovado;
+- testes unitários aprovados;
+- e2e aprovado;
+- `git diff --check` sem erros;
+- `supabase migration list` sem divergência inesperada;
+- nenhuma migration visual criada;
+- nenhum secret versionado;
+- worktree limpo ou apenas com alterações intencionais.
 
 ### 6.2 QA visual obrigatório
 
@@ -301,37 +329,51 @@ Testar em:
 
 Checklist por largura:
 
-- [x] 320px aprovado.
-- [x] 375px aprovado.
-- [x] 390px aprovado.
-- [x] 430px aprovado.
-- [x] 768px aprovado.
-- [x] desktop aprovado.
+- [x] 320px aprovado no QA anterior.
+- [x] 375px aprovado no QA anterior.
+- [x] 390px aprovado no QA anterior.
+- [x] 430px aprovado no QA anterior.
+- [x] 768px aprovado no QA anterior.
+- [x] desktop aprovado no QA anterior.
 
-Roteiro visual executado com sessão admin autenticada e verificação de overflow global:
+Roteiro visual mínimo para revalidação antes de deploy:
 
-- `/`;
-- `/minha-arvore`;
-- `/meus-dados`;
-- `/meus-vinculos`;
-- `/meus-favoritos`;
-- `/notificacoes`;
-- `/forum`;
-- `/forum/novo`;
-- `/admin/dashboard`;
-- `/admin/pessoas`;
-- `/admin/pessoas/nova`;
-- `/admin/relacionamentos`;
-- `/admin/relacionamentos/novo`;
-- `/admin/solicitacoes-vinculos`;
-- `/admin/notificacoes`;
-- `/admin/integridade`;
-- `/admin/atividades`;
-- `/admin/diagnostico`;
-- `/admin/importacao`;
-- `/admin/migrar-dados`.
+```txt
+/
+/minha-arvore
+/genealogia
+/visao-completa
+/meus-dados
+/meus-vinculos
+/meus-favoritos
+/notificacoes
+/ajustar-notificacoes
+/forum
+/forum/novo
+/calendario-familiar
+/admin/dashboard
+/admin/pessoas
+/admin/pessoas/nova
+/admin/relacionamentos
+/admin/relacionamentos/novo
+/admin/solicitacoes-vinculos
+/admin/notificacoes
+/admin/integridade
+/admin/atividades
+/admin/diagnostico
+/admin/importacao
+/admin/migrar-dados
+```
 
-Resultado: `document.documentElement.scrollWidth > window.innerWidth` retornou `false` nas rotas acima em todas as larguras testadas.
+Verificar:
+
+- sem overflow horizontal global;
+- painel lateral operável;
+- legenda visível e não duplicada;
+- zoom funcional;
+- árvore navegável em touch;
+- modais cabem ou rolam;
+- usuário comum não vê ações admin.
 
 ### 6.3 QA funcional de regressão
 
@@ -361,35 +403,17 @@ Revalidar rapidamente antes do lançamento:
 - timeline;
 - exportação PNG/PDF/impressão.
 
-### 6.4 Validação pós-PDF, documentação e migration
+### 6.4 Checagem manual restante
 
-Validação final executada após os ajustes do PDF, reorganização documental e aplicação da migration `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`:
-
-```bash
-npm run build
-npm test
-npm run test:e2e
-git diff --check
-supabase migration list
-```
-
-Resultado consolidado:
-
-- build aprovado;
-- testes unitários aprovados (`28` testes);
-- testes e2e aprovados (`5` testes);
-- `git diff --check` sem erros;
-- `test-results/` removido após Playwright;
-- worktree limpo;
-- migrations locais/remotas alinhadas até `20260522173000`.
-
-Checagem manual restante antes do deploy, se ainda não tiver sido feita no ambiente final:
+Antes do deploy final, se ainda não foi feita no ambiente final:
 
 - abrir `/admin/pessoas/:id/editar` como admin;
 - confirmar que o dropdown de usuários vinculáveis carrega;
 - confirmar que usuários já vinculados não aparecem;
 - testar o botão **Recarregar**;
-- confirmar que o erro de schema cache da RPC desapareceu.
+- confirmar que o erro de schema cache da RPC desapareceu;
+- salvar um arquivo histórico com `categoria_evento`;
+- confirmar que a migration `20260522121000_add_historical_file_event_category.sql` existe no remoto.
 
 ---
 
@@ -399,8 +423,10 @@ Depois da validação final:
 
 1. confirmar que os itens pós-MVP continuam fora do lançamento;
 2. fazer checagem manual do card de vínculos no admin, se ainda não feita no ambiente final;
-3. criar tag ou release, se o fluxo do projeto usar versionamento;
-4. preparar deploy.
+3. confirmar migrations no remoto;
+4. confirmar que não há arquivos temporários versionados;
+5. criar tag ou release, se o fluxo do projeto usar versionamento;
+6. preparar deploy.
 
 Comandos sugeridos:
 
@@ -416,11 +442,49 @@ supabase migration list
 Pendente até fechamento:
 
 - checagem manual do card de vínculos em `/admin/pessoas/:id/editar`, se ainda não feita no ambiente final;
+- checagem de `categoria_evento` em ambiente final;
 - deploy.
 
 ---
 
-# O que fica pós-MVP
+## 8. Critérios de bloqueio para lançamento
+
+Bloqueiam lançamento:
+
+- build quebrado;
+- testes essenciais quebrados;
+- login quebrado;
+- usuário comum acessa admin;
+- usuário comum altera dado restrito;
+- perda/corrupção de dados;
+- secret no frontend ou no repositório;
+- árvore principal não carrega;
+- formulário principal não salva;
+- upload falha em fluxo essencial;
+- notificações duplicam de forma massiva;
+- RLS libera escrita indevida;
+- responsividade impede uso em mobile;
+- Genealogia/Visão Completa exibem título duplicado;
+- painel lateral impede uso da árvore;
+- viewport inicial torna a árvore inutilizável;
+- migration obrigatória ausente em ambiente final.
+
+Não bloqueiam lançamento, se documentados:
+
+- refinamentos visuais pequenos;
+- expansão de favoritos;
+- árvore completa em PDF;
+- push real;
+- WhatsApp real;
+- timeline avançada;
+- IA consultiva;
+- filtros avançados do admin integridade;
+- limpeza auditada de legado/base64;
+- revisão de scripts legados.
+
+---
+
+# Pós-MVP
 
 ## Pós-MVP imediato
 
@@ -440,36 +504,35 @@ Pendente até fechamento:
 
 | Frente | Implementação |
 |---|---|
-| Rotas das views da árvore | Avaliar rota pai/layout compartilhado para `/minha-arvore`, `/genealogia` e `/visao-completa`, caso seja confirmado remount da Home ao trocar view; hoje as três rotas usam o mesmo componente, mas o React Router pode remontar o shell dependendo do matching/renderização. |
-| Navegação interna | Revisar navegações internas que ainda apontam para `/` e decidir se devem ir direto para `/minha-arvore`, reduzindo dependência do redirect e preservando intenção explícita. |
+| Rotas das views da árvore | Avaliar rota pai/layout compartilhado para `/minha-arvore`, `/genealogia` e `/visao-completa`, caso seja confirmado remount da Home ao trocar view. |
+| Navegação interna | Revisar navegações internas que ainda apontam para `/` e decidir se devem ir direto para `/minha-arvore`. |
 | Refatoração da Home | Continuar extração incremental apenas em blocos seguros; `Home.tsx` ainda concentra orquestração, efeitos, estado e handlers principais. |
 | Dialog de Curiosidades/IA | Revisar acoplamento de `HomeCuriositiesDialog.tsx` e avaliar extração adicional de subpainéis/hooks sem alterar contratos de IA, conexão ou privacidade. |
-| Página MinhaArvore | Refatorar progressivamente `src/app/pages/MinhaArvore.tsx`, que ainda concentra formulário grande, dados pessoais, casamento, avatar/crop e arquivos; há TODO para extrair redes sociais junto com `/meus-dados`. |
-| MeusDados | Reaproveitar componentes compartilhados de pessoa em `MeusDados.tsx`, respeitando avatar/crop, Places e fluxo de primeiro acesso; há TODO registrado no arquivo. |
-| MeusVinculos | Definir e implementar persistência real da remoção de vínculo em Supabase quando a revisão de relacionamentos for definitiva; hoje há TODO explícito. |
-| AdminPessoaForm | Dividir formulário admin em blocos menores e revisar hooks/efeitos; há um `eslint-disable react-hooks/exhaustive-deps` que deve ser revisitado com cuidado. |
-| AdminDiagnostico | Trocar `Array<any>` por tipos explícitos para resultados de diagnóstico, reduzindo risco de regressão em correções futuras. |
-| FamilyTree | Manter refatorações extremamente conservadoras; o arquivo segue grande e crítico para viewport, exportação, seleção de área e ReactFlow. |
-| Links e AppLink | Revisar link 404 em `routes.tsx` que usa `<a href="/">`; trocar por navegação client-side em momento seguro para evitar reload desnecessário. |
+| Página MinhaArvore | Refatorar progressivamente `src/app/pages/MinhaArvore.tsx`, que concentra formulário grande, dados pessoais, casamento, avatar/crop e arquivos. |
+| MeusDados | Reaproveitar componentes compartilhados de pessoa em `MeusDados.tsx`, respeitando avatar/crop, Places e fluxo de primeiro acesso. |
+| MeusVinculos | Definir e implementar persistência real da remoção de vínculo em Supabase quando a revisão de relacionamentos for definitiva. |
+| AdminPessoaForm | Dividir formulário admin em blocos menores e revisar hooks/efeitos. |
+| AdminDiagnostico | Trocar `Array<any>` por tipos explícitos para resultados de diagnóstico. |
+| FamilyTree | Manter refatorações conservadoras; arquivo é crítico para viewport, exportação, seleção de área e ReactFlow. |
+| Links e AppLink | Revisar link 404 em `routes.tsx` que usa `<a href="/">`; trocar por navegação client-side em momento seguro. |
 | Storage | Verificar e prevenir uploads órfãos. |
 | Base legada | Dry-run de Storage/base64 e possível limpeza auditada. |
 | Admin Integridade | Filtros por severidade, paginação e ações assistidas futuras. |
-| Migrations | Atualizar `MIGRATION-GUIDE.md`. |
+| Migrations | Preencher `docs/operacao/MIGRATIONS_SUPABASE.md`. |
 | Legado SQL | Revisar scripts antigos de fórum/Google Calendar. |
-| Logs | Remover ruídos técnicos como `lado` dos `changed_fields`. |
+| Logs | Remover ruídos técnicos como `lado` dos `changed_fields`, se confirmado como ruído. |
 | Viewport árvore | Avaliar melhorias finas para árvores muito grandes após uso real. |
 | Legenda | Avaliar versão administrativa/configurável pós-MVP, se necessário. |
-
-Essas pendências aparecem no plano como técnicas e operacionais e não devem bloquear o MVP se não houver P0/P1 aberto.
+| Documentação | Preencher `docs/arquitetura/ROTAS_E_GUARDS.md` e `docs/funcionalidades/EXPORTACAO_ARVORE.md`. |
 
 ### Varredura técnica de 2026-05-26
 
 Pontos identificados em páginas e componentes principais:
 
-- `Home.tsx` ainda tem aproximadamente 1.800 linhas mesmo após a extração de componentes visuais, filtros, curiosidades, IA e conexão; manter novas extrações em etapas pequenas e testáveis.
+- `Home.tsx` ainda tem aproximadamente 1.800 linhas mesmo após extração de componentes visuais, filtros, curiosidades, IA e conexão; manter novas extrações em etapas pequenas e testáveis.
 - `MinhaArvore.tsx` tem aproximadamente 2.300 linhas e continua sendo o maior candidato a decomposição pós-MVP.
 - `AdminPessoaForm.tsx` e `FamilyTree.tsx` têm mais de 1.400 linhas cada; ambos são críticos e devem ser refatorados apenas com validação técnica e, no caso da árvore, validação visual.
-- `HomeCuriositiesDialog.tsx` ficou funcional, mas ainda é um ponto de acoplamento médio por reunir abas, estados e painéis de IA/conexão recebidos por props.
+- `HomeCuriositiesDialog.tsx` ficou funcional, mas ainda é ponto de acoplamento médio por reunir abas, estados e painéis de IA/conexão recebidos por props.
 - Existem usos legítimos de `window.location` para origem, search params, path atual ou parsing de URL; não tratar como bug automaticamente, mas revisar quando tocar nesses fluxos.
 - Existem usos de `setTimeout` para foco, debounce, impressão e UX de carregamento; manter como pontos de atenção em refatorações, garantindo cleanup quando aplicável.
 - Não foram encontrados backups `.bak-views-normalization` rastreados após a limpeza.
@@ -491,68 +554,16 @@ Pontos identificados em páginas e componentes principais:
 
 ---
 
-## Critérios de bloqueio para lançamento
+## 9. Manutenção documental
 
-Bloqueiam lançamento:
+Para evitar repetição:
 
-- build quebrado;
-- login quebrado;
-- usuário comum acessa admin;
-- usuário comum altera dado restrito;
-- perda/corrupção de dados;
-- secret no frontend ou no repositório;
-- árvore principal não carrega;
-- formulário principal não salva;
-- upload falha em fluxo essencial;
-- notificações duplicam de forma massiva;
-- RLS libera escrita indevida;
-- responsividade impede uso em mobile;
-- Genealogia/Visão Completa exibem título duplicado;
-- painel lateral impede uso da árvore;
-- viewport inicial torna a árvore inutilizável.
+- este plano deve manter apenas pendências, critérios e backlog;
+- histórico detalhado de QA antigo deve ir para `docs/historico/`;
+- decisões de UX devem ir para `docs/GUIA_UX_LAYOUT.md`;
+- estado implementado deve ir para `docs/GUIA_IMPLEMENTACOES.md`;
+- troubleshooting deve ir para `docs/GUIA_CORRECAO_ERROS.md`;
+- migrations devem ir para `docs/operacao/MIGRATIONS_SUPABASE.md`;
+- rotas/guards devem ir para `docs/arquitetura/ROTAS_E_GUARDS.md`;
+- exportação da árvore deve ir para `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
-Não bloqueiam lançamento, se documentados:
-
-- refinamentos visuais pequenos;
-- expansão de favoritos;
-- árvore completa em PDF;
-- push real;
-- WhatsApp real;
-- timeline avançada;
-- IA consultiva;
-- filtros avançados do admin integridade;
-- limpeza auditada de legado/base64;
-- revisão de scripts legados.
-
----
-
-## 8. Atualização recente — ajustes visuais concluídos após 7.10
-
-Concluído após os ajustes finais de responsividade:
-
-- legenda visual transformada em filtros funcionais;
-- preparação de camadas visuais opcionais;
-- destaque opcional de pais/filhos;
-- destaque opcional de irmãos;
-- QA visual dos destaques;
-- painel lateral com toggle apenas para Filtros/Legendas;
-- botão externo **Ações** com `Printer`, texto no desktop e ícone apenas no mobile;
-- botões de zoom reposicionados à direita.
-
-Commits de referência:
-
-```txt
-779fee6 feat: tornar legenda visual em filtros da arvore
-733eb65 feat: preparar camadas visuais opcionais da arvore
-e41d9b1 feat: adicionar destaques visuais opcionais nas linhas da arvore
-94b5408 style: ajustar painel lateral e controles da home
-```
-
-Esses ajustes não alteraram Supabase, migrations, autenticação, rotas ou `package.json`.
-
-Pós-MVP permanece:
-
-- versão administrativa/configurável da legenda, se necessária;
-- exportação da árvore completa;
-- melhorias finas para árvores muito grandes;
-- integração mais profunda do grau de parentesco diretamente na árvore.

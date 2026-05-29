@@ -2,11 +2,24 @@
 
 > Última atualização: 2026-05-29  
 > Projeto: `tuliust/arvorefamilia`  
-> Stack: React + Vite + TypeScript + Supabase Auth + Supabase Postgres
+> Stack: React + Vite + TypeScript + Supabase Auth + Supabase Postgres  
+> Local recomendado: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 
 Este documento consolida a estrutura atual relacionada a usuários, pessoas, perfis, vínculos, preferências, notificações, favoritos, eventos, arquivos históricos, insights gerados por IA e demais tabelas/views de apoio.
 
-A finalidade é servir como referência operacional para desenvolvimento, manutenção, limpeza de schema, auditoria de dados e evolução das funcionalidades.
+A finalidade é servir como referência para desenvolvimento, manutenção, auditoria de dados, limpeza controlada de schema e evolução das funcionalidades.
+
+## Como usar este documento
+
+Use este arquivo para entender **como usuários autenticados, pessoas da árvore e tabelas de apoio se conectam**. Ele não substitui:
+
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: regras operacionais para aplicar ou revisar migrations.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, proteções e regras de acesso.
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: comportamento de produto de pessoas, perfil público e administração.
+- `docs/funcionalidades/NOTIFICACOES.md`: arquitetura específica de notificações.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
+
+Regra central: **a fonte da verdade do schema é `supabase/migrations`**. Scripts SQL soltos, tabelas legadas e colunas legadas devem ser tratados como histórico ou compatibilidade até auditoria específica.
 
 ---
 
@@ -1093,7 +1106,22 @@ Criar futuramente uma migration de limpeza com fases:
 
 ---
 
-## 17. Resumo executivo
+## 17. Critérios para limpeza futura
+
+Antes de remover tabela, coluna ou campo legado:
+
+1. confirmar se há migration atual equivalente;
+2. buscar uso no frontend, services, Edge Functions, testes e scripts;
+3. conferir dependências por constraints, views, triggers, RPCs e policies;
+4. executar diagnóstico em staging ou ambiente local;
+5. criar backup ou plano de reversão;
+6. registrar a decisão em documentação operacional;
+7. evitar alteração simultânea de schema, UI e regra de negócio.
+
+Itens marcados como **legado provável** não devem ser apagados apenas por parecerem antigos. Eles indicam que o modelo evoluiu, mas ainda podem sustentar compatibilidade, migração incremental ou dados históricos.
+
+
+## 18. Resumo executivo
 
 O fluxo atual está coerente e funcional em sua estrutura principal:
 

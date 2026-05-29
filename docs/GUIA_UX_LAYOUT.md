@@ -1,5 +1,9 @@
 # Guia de UX e Layout — Árvore Família
 
+> Última revisão: 2026-05-29  
+> Local canônico: `docs/GUIA_UX_LAYOUT.md`  
+> Projeto: `tuliust/arvorefamilia`
+
 ## Objetivo
 
 Este documento registra as decisões consolidadas de experiência, layout, responsividade e comportamento visual do projeto **Árvore Família**.
@@ -7,7 +11,7 @@ Este documento registra as decisões consolidadas de experiência, layout, respo
 Use este guia para orientar:
 
 - ajustes de interface;
-- revisão de telas;
+- revisão visual de telas;
 - padronização de headers, containers e margens;
 - comportamento da árvore em desktop, tablet e mobile;
 - validação visual antes de lançamento;
@@ -16,11 +20,12 @@ Use este guia para orientar:
 Este documento não substitui:
 
 - `docs/GUIA_IMPLEMENTACOES.md`: inventário funcional e técnico do que já foi implementado.
-- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pendências.
 - `docs/GUIA_COMPONENTES.md`: catálogo técnico dos componentes reutilizáveis.
-- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: comportamento específico do calendário familiar.
-- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: detalhes de perfil, admin e vínculos.
+- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap, pendências e backlog.
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore.
+- `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: legenda, conectores, painel lateral e filtros visuais.
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: seleção de área, PNG, PDF e impressão.
 
 ---
 
@@ -47,6 +52,8 @@ Princípios obrigatórios:
    O painel administrativo pode usar scroll horizontal controlado em listas/tabelas, mas formulários e ações críticas precisam continuar acessíveis.
 5. **Árvore é uma superfície interativa própria.**
    Pan, zoom, exportação, legenda e seleção de área devem ser tratados como experiência de canvas, não como página tradicional.
+6. **Mudança visual não pode enfraquecer permissão.**
+   Botão escondido não substitui `ProtectedRoute`, RLS, RPC segura ou validação server-side.
 
 ---
 
@@ -86,25 +93,37 @@ Classe consolidada:
 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8
 ```
 
-Essa classe está exportada como `PAGE_CONTAINER_CLASS` em `MemberPageHeader.tsx`.
+Essa classe está exportada como `PAGE_CONTAINER_CLASS` em:
+
+```txt
+src/app/components/layout/MemberPageHeader.tsx
+```
 
 Uso esperado:
 
 - páginas internas devem usar `PAGE_CONTAINER_CLASS` para alinhar header e conteúdo;
 - não criar variações locais de margem sem necessidade;
 - evitar containers com `max-w` divergente em páginas de membro;
-- preservar `min-w-0` em wrappers flex/grid para impedir overflow.
+- preservar `min-w-0` em wrappers flex/grid para impedir overflow;
+- conteúdo de usuário deve usar `break-words` quando houver risco de texto longo;
+- IDs, e-mails, URLs e valores técnicos longos devem usar `break-all`.
 
 ---
 
 ## 3. Headers
 
-## 3.1 Header da Home pós-login
+### 3.1 Header da Home pós-login
 
 Arquivo principal:
 
 ```txt
 src/app/pages/Home.tsx
+```
+
+Componente visual extraído:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
 ```
 
 A Home pós-login mantém header próprio porque concentra:
@@ -117,25 +136,23 @@ A Home pós-login mantém header próprio porque concentra:
 - `UserMenu`;
 - integração com estado da árvore.
 
-O header visual está extraído para `src/app/pages/home/HomeHeader.tsx`, mas a Home continua responsável por estado, navegação, busca e handlers.
-
 Regras:
 
 - não substituir o header da Home por `MemberPageHeader`;
 - manter altura compacta;
 - preservar busca expansível;
 - preservar seletor de view;
-- o seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a página;
+- seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a página;
 - search params existentes, especialmente `?pessoa=...`, devem ser preservados ao trocar view;
 - botão **Ações** usa ícone `Printer`;
 - no desktop, o botão pode exibir texto **Ações**;
 - no mobile, o botão deve aparecer apenas como ícone;
-- **Ações** continua abrindo `activeSidebarPanel = 'info'`;
+- **Ações** abre o painel/ação de informações, não uma terceira aba persistente na toggle principal;
 - loading da Home deve usar **“Buscando pessoas e relacionamentos…”**, sem “no Supabase”;
 - evitar ações que causem overflow horizontal;
 - em breakpoints menores, esconder textos e priorizar ícones.
 
-## 3.2 Header das páginas internas
+### 3.2 Header das páginas internas
 
 Arquivo principal:
 
@@ -185,7 +202,7 @@ src/app/pages/Home.tsx
 
 A Home pós-login é composta por:
 
-- header fixo no topo da viewport;
+- header no topo da viewport;
 - área principal `main` com altura restante;
 - painel lateral;
 - área da árvore;
@@ -193,23 +210,34 @@ A Home pós-login é composta por:
 
 Componentes visuais extraídos:
 
-- `HomeHeader`;
-- `HomeTreeSection`;
-- `HomeMobileNav`;
-- `SidebarPanelTabs`;
-- `SidebarInfoPanel`;
-- grids de filtros e KPIs em `src/app/pages/home`;
-- `HomeCuriositiesDialog` e painéis internos de IA/conexão.
+```txt
+HomeHeader
+HomeTreeSection
+HomeMobileNav
+SidebarPanelTabs
+SidebarInfoPanel
+DirectRelationKpiGrid
+DirectRelativeFilterGrid
+GenealogyFilterGrid
+LifeStatusKpiGrid
+HomeCuriositiesDialog
+DiscoverResultCard
+ContactInfo
+ConnectionDiscoveryPanel
+AiQuestionPanel
+```
 
-A extração é deliberadamente incremental: não mover estado principal, handlers complexos, chamadas Supabase ou regras da árvore para esses componentes sem nova revisão.
+Regra de refatoração:
+
+> A extração é incremental. Não mover estado principal, handlers complexos, chamadas Supabase ou regras da árvore para esses componentes sem nova revisão.
 
 ### 4.1 Painel lateral desktop
 
 No desktop:
 
-- painel aberto usa largura de `w-80`;
-- painel recolhido usa largura estreita (`w-14`);
-- botão de recolher/expandir deve ficar dentro do painel;
+- painel aberto usa largura aproximada `w-80`;
+- painel recolhido usa largura estreita, como `w-14`;
+- botão de recolher/expandir deve ficar dentro ou junto ao painel;
 - conteúdo interno do painel rola verticalmente;
 - área da árvore ocupa o espaço restante.
 
@@ -221,21 +249,25 @@ Regra consolidada:
 
 No mobile:
 
-- o painel aparece como seção acima da árvore quando aberto;
+- painel aparece como seção acima da árvore quando aberto;
 - há botão para recolher;
 - quando fechado, aparece botão de expandir sobre a área da árvore;
 - conteúdo do painel deve ser legível e compacto;
-- a árvore continua ocupando o espaço restante.
+- a árvore continua ocupando o espaço restante;
+- textos longos devem truncar ou quebrar sem gerar overflow horizontal.
 
 ### 4.3 Abas do painel lateral
 
-O painel lateral organiza conteúdos por abas, incluindo:
+O painel lateral organiza conteúdos por abas principais:
 
-- informações/filtros;
-- legendas;
-- outros painéis de contexto da árvore.
+```txt
+Filtros
+Legendas
+```
 
-A aba **Legendas** foi simplificada recentemente. Não deve exibir:
+A aba **Informações** não deve aparecer na toggle principal. Ela é acionada pelo botão externo **Ações**.
+
+A aba **Legendas** foi simplificada. Não deve exibir:
 
 - subtítulo “Cores, linhas, anéis e modos da árvore.”;
 - label “Visualização atual”;
@@ -245,7 +277,9 @@ A aba **Legendas** foi simplificada recentemente. Não deve exibir:
 
 Texto consolidado do status conjugal:
 
-- “Em relacionamento” no lugar de “Ativa”.
+```txt
+Em relacionamento
+```
 
 Além de legenda, `TreeLegend` também pode controlar filtros/camadas visuais reais:
 
@@ -299,7 +333,7 @@ Regras:
 
 ### 5.2 Viewport inicial
 
-O viewport inicial foi ajustado recentemente para separar:
+O viewport inicial separa:
 
 - bounds usados para zoom/enquadramento visual;
 - bounds usados para pan/arraste.
@@ -322,7 +356,8 @@ A view **Minha Árvore** deve:
 - usar bounds de cards reais;
 - permitir zoom máximo perceptível;
 - recentralizar apenas quando necessário;
-- preservar layout de grupos diretos.
+- preservar layout de grupos diretos;
+- manter filtros diretos e KPIs em sincronia com a pessoa central.
 
 A view pode considerar altura para fit inicial, desde que isso não reduza a árvore a ponto de perder legibilidade.
 
@@ -360,6 +395,7 @@ Controles esperados:
 
 Regras:
 
+- botões de zoom ficam no canto superior direito da área da árvore, por exemplo `right-4 top-4`;
 - durante seleção de área, pan/zoom devem ser bloqueados;
 - ao cancelar/concluir seleção, pan/zoom devem voltar;
 - Genealogia e Visão Completa sempre precisam permitir pan vertical;
@@ -369,7 +405,7 @@ Regras:
 
 ## 6. Layouts da árvore
 
-## 6.1 Minha Árvore — layout distribuído
+### 6.1 Minha Árvore — layout distribuído
 
 Arquivo:
 
@@ -395,7 +431,7 @@ Regras de UX:
 - caixas e anchors não devem controlar zoom inicial;
 - cards devem continuar clicáveis via `FamilyTree`.
 
-## 6.2 Genealogia/Visão Completa — layout por colunas
+### 6.2 Genealogia/Visão Completa — layout por colunas
 
 Arquivo:
 
@@ -420,12 +456,18 @@ Regras de UX:
 - labels de geração são permitidas;
 - título/subtítulo principal não deve ser renderizado aqui;
 - altura vertical pode exceder a viewport;
-- o usuário deve navegar por pan/arraste;
+- usuário deve navegar por pan/arraste;
 - conectores devem continuar legíveis mesmo com filtros ativos.
 
 ---
 
 ## 7. Legendas visuais
+
+Documentação específica recomendada:
+
+```txt
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
 
 Arquivo:
 
@@ -447,8 +489,9 @@ Seções atuais:
 
 - Cards;
 - Linhas;
+- Camadas extras, quando disponíveis;
 - Anel de casamento;
-- Cores dos grupos.
+- Cores dos grupos, quando houver altura útil.
 
 Regras:
 
@@ -457,11 +500,17 @@ Regras:
 - deve ser ignorada em exportações;
 - não deve criar dependência com Supabase;
 - não deve alterar cálculo de status conjugal;
-- alterações de copy devem ser feitas em `TreeLegend.tsx`.
+- alterações de copy devem ser feitas em `TreeLegend.tsx` e refletidas na documentação específica.
 
 ---
 
 ## 8. Exportação e seleção de área
+
+Documentação específica recomendada:
+
+```txt
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
 
 Arquivos principais:
 
@@ -475,7 +524,7 @@ UX implementada:
 
 - botão de seleção de área;
 - overlay sobre a área visível da árvore;
-- instrução “Arraste para selecionar uma área visível da árvore.”;
+- instrução **“Arraste para selecionar uma área visível da árvore.”**;
 - retângulo de seleção;
 - toolbar contextual para PNG, PDF, imprimir e cancelar;
 - cancelamento por botão ou `Esc`;
@@ -500,7 +549,8 @@ Padrões:
 - em mobile, largura deve ser `calc(100vw - margem)`;
 - botões internos que não salvam devem usar `type="button"`;
 - overlays interativos devem impedir propagação quando necessário;
-- modais administrativos devem manter ações destrutivas protegidas por confirmação.
+- modais administrativos devem manter ações destrutivas protegidas por confirmação;
+- modais não devem esconder erros funcionais com fechamento automático.
 
 Exemplos relevantes:
 
@@ -601,7 +651,7 @@ Checklist manual mínimo:
 - testar Visão Completa;
 - abrir/recolher painel lateral;
 - abrir aba Legendas;
-- usar zoom + e -;
+- usar zoom `+` e `-`;
 - arrastar árvore;
 - testar mobile estreito;
 - testar exportação de área se algo afetou overlay/ReactFlow;
@@ -622,7 +672,9 @@ Checklist manual mínimo:
 
 - removida duplicidade de botões de recolher/expandir painel;
 - controle passou a ficar junto ao painel;
-- mobile mantém botão de expandir sobre a árvore quando painel está fechado.
+- mobile mantém botão de expandir sobre a árvore quando painel está fechado;
+- toggle principal ficou restrita a **Filtros** e **Legendas**;
+- **Informações** saiu da toggle e passou a ser acionada por **Ações**.
 
 ### 13.3 Viewport da árvore
 
@@ -640,8 +692,9 @@ Checklist manual mínimo:
 - removido card azul da view atual;
 - removida seção “Views”;
 - removidas descrições internas dos itens;
-- “Ativa” foi trocado por “Em relacionamento”.
-- legenda também controla filtros/camadas visuais quando callbacks são fornecidos.
+- “Ativa” foi trocado por “Em relacionamento”;
+- legenda também controla filtros/camadas visuais quando callbacks são fornecidos;
+- controles de camadas extras incluem destaque opcional de pais/filhos e irmãos.
 
 ### 13.5 Arquivos históricos
 
@@ -669,8 +722,8 @@ Notificações:
 
 Calendário Familiar:
 
-- o bloco superior de **Categorias** foi removido;
-- a sidebar mantém o título **Categorias**;
+- bloco superior de **Categorias** foi removido;
+- sidebar mantém o título **Categorias**;
 - categorias são filtros clicáveis;
 - contadores usam singular/plural: **1 evento**, **2 eventos**;
 - aniversários mostram **“Faz X anos”**.
@@ -700,7 +753,9 @@ Não fazer:
 - colocar legenda dentro da exportação;
 - salvar estado visual transitório no banco;
 - criar nova view de árvore sem documentar comportamento de zoom/pan;
-- commitar arquivos de backup, `.bak`, patches temporários ou dumps.
+- commitar arquivos de backup, `.bak`, patches temporários ou dumps;
+- usar `window.location` para navegação interna quando `navigate` resolver;
+- transformar ajuste de copy em alteração de regra de negócio.
 
 ---
 
@@ -726,50 +781,14 @@ src/app/pages/admin/AdminDashboard.tsx
 
 ---
 
-## 16. Atualização recente — painel lateral, legenda e zoom
+## 16. Manutenção documental
 
-### 16.1 Painel lateral
+Este arquivo deve concentrar decisões de UX e layout. Para evitar repetição:
 
-O painel lateral da Home usa toggle com apenas duas abas:
+- detalhes técnicos de componentes ficam em `docs/GUIA_COMPONENTES.md`;
+- troubleshooting fica em `docs/GUIA_CORRECAO_ERROS.md`;
+- estado implementado fica em `docs/GUIA_IMPLEMENTACOES.md`;
+- exportação da árvore deve ser detalhada em `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
+- legenda/painel/conectores devem ser detalhados em `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
+- rotas e guards devem ficar em `docs/arquitetura/ROTAS_E_GUARDS.md`.
 
-```txt
-Filtros
-Legendas
-```
-
-A aba **Informações** não aparece mais na toggle. Ela é aberta pelo botão externo **Ações**, com ícone `Printer`, posicionado ao lado do botão de recolher/expandir painel.
-
-### 16.2 Legenda compacta
-
-Na versão compacta usada no painel lateral, a legenda prioriza:
-
-- Cards;
-- Linhas;
-- Camadas extras;
-- Anel de casamento.
-
-A seção **Cores dos grupos** não deve aparecer na versão compacta quando comprometer a altura útil do painel. A versão completa pode manter explicações adicionais, quando houver contexto para isso.
-
-### 16.3 Camadas extras
-
-A legenda compacta mantém os controles:
-
-- **Destacar pais/filhos**;
-- **Destacar irmãos**.
-
-Regras visuais:
-
-- pais/filhos: amarelo contínuo;
-- irmãos: amarelo tracejado;
-- ambos desligados por padrão;
-- ambos devem sumir quando o filtro correspondente estiver oculto.
-
-### 16.4 Zoom
-
-Os botões de zoom da árvore ficam no canto superior direito da área da árvore:
-
-```txt
-right-4 top-4
-```
-
-O comportamento de zoom não deve ser alterado por ajustes visuais do painel.

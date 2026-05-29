@@ -1,5 +1,8 @@
 # Guia de componentes — Árvore Família
 
+> Última atualização: 2026-05-29  
+> Local canônico: `docs/GUIA_COMPONENTES.md`
+
 ## Objetivo
 
 Este documento registra os principais componentes reutilizáveis do projeto **Árvore Família**, suas responsabilidades, arquivos relacionados, padrões de uso e cuidados contra regressões.
@@ -18,8 +21,21 @@ Este documento não substitui:
 - `docs/GUIA_UX_LAYOUT.md`: decisões visuais e regras de layout.
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma.
 - `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pós-MVP.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso.
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore.
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportação.
 
 ---
+
+## Escopo deste guia
+
+Este guia deve responder a três perguntas:
+
+1. **qual componente alterar**;
+2. **qual responsabilidade ele possui**;
+3. **quais cuidados evitam regressão**.
+
+Quando a dúvida envolver regra de negócio, Supabase, RLS, migrations ou fluxo de produto, consulte primeiro o documento funcional ou operacional correspondente. Componentes visuais não devem se tornar ponto de entrada para regras de banco.
 
 ## 1. Convenções gerais de componentes
 
@@ -84,7 +100,7 @@ Ao alterar componente:
 
 ## 2. Componentes de layout
 
-## 2.1 `MemberPageHeader`
+### 2.1 `MemberPageHeader`
 
 Arquivo:
 
@@ -146,7 +162,7 @@ Cuidados:
 
 ## 3. Componentes da árvore
 
-## 3.1 `FamilyTree`
+### 3.1 `FamilyTree`
 
 Arquivo:
 
@@ -235,7 +251,7 @@ Cuidados:
 
 ---
 
-## 3.2 Layout `directFamilyDistributedLayout`
+### 3.2 Layout `directFamilyDistributedLayout`
 
 Arquivo:
 
@@ -274,7 +290,7 @@ Cuidados:
 
 ---
 
-## 3.3 Layout `genealogyColumnsLayout`
+### 3.3 Layout `genealogyColumnsLayout`
 
 Arquivo:
 
@@ -316,7 +332,7 @@ Cuidados:
 
 ---
 
-## 3.4 `TreeLegend`
+### 3.4 `TreeLegend`
 
 Arquivo:
 
@@ -380,7 +396,7 @@ Cuidados:
 
 ---
 
-## 3.5 `TreeAreaSelectionOverlay`
+### 3.5 `TreeAreaSelectionOverlay`
 
 Arquivo:
 
@@ -424,7 +440,7 @@ Cuidados:
 
 ---
 
-## 3.6 Utils de exportação da árvore
+### 3.6 Utils de exportação da árvore
 
 Arquivo:
 
@@ -511,7 +527,7 @@ Cuidados:
 
 ## 5. Componentes da Home
 
-## 5.1 Componentes extraídos da Home
+### 5.1 Componentes extraídos da Home
 
 Pasta:
 
@@ -561,7 +577,7 @@ Cuidados:
 
 ## 6. Componentes de navegação e menu
 
-## 6.1 `AppLink`
+### 6.1 `AppLink`
 
 Arquivo:
 
@@ -586,7 +602,7 @@ Cuidados:
 - ao remover import de `AppLink as Link`, confirmar se a página ainda usa `<Link>`;
 - erro conhecido corrigido: `Link is not defined` em `CalendarioFamiliar.tsx`.
 
-## 6.2 `UserMenu`
+### 6.2 `UserMenu`
 
 Arquivo provável:
 
@@ -981,14 +997,14 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 
 ## 17. Alterações recentes registradas
 
-### 16.1 `MemberPageHeader`
+### 17.1 `MemberPageHeader`
 
 - criado para padronizar headers internos;
 - exporta `PAGE_CONTAINER_CLASS`;
 - usado em páginas internas;
 - Home pós-login ficou fora por ter header próprio.
 
-### 16.2 `Home.tsx`
+### 17.2 `Home.tsx`
 
 - header compacto mantido;
 - busca expansível preservada;
@@ -996,7 +1012,7 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 - mobile passou a controlar painel acima da árvore;
 - botão duplicado de painel vindo da árvore foi removido do fluxo principal.
 
-### 16.3 `FamilyTree.tsx`
+### 17.3 `FamilyTree.tsx`
 
 - refatorado para `FamilyTreeComponent` com `React.forwardRef`;
 - adicionados bounds separados:
@@ -1008,20 +1024,20 @@ Estados vazios em MeusFavoritos, Notificacoes e Timeline
 - seleção de área permanece integrada;
 - `TreeAreaSelectionOverlay` aparece quando `isAreaSelectionOpen`.
 
-### 16.4 `genealogyColumnsLayout.ts`
+### 17.4 `genealogyColumnsLayout.ts`
 
 - título/subtítulo interno removido;
 - labels de geração preservadas;
 - layout por colunas mantido;
 - conectores e anéis preservados.
 
-### 16.5 `directFamilyDistributedLayout.ts`
+### 17.5 `directFamilyDistributedLayout.ts`
 
 - título principal interno removido;
 - labels de grupo preservadas;
 - estrutura de grupos e boxes mantida.
 
-### 16.6 `TreeLegend.tsx`
+### 17.6 `TreeLegend.tsx`
 
 - componente simplificado;
 - view atual removida;
@@ -1122,7 +1138,7 @@ src/app/components/ui
 
 ## 21. Atualização recente — legenda, painel e linhas da árvore
 
-### 20.1 `TreeLegend` como legenda funcional
+### 21.1 `TreeLegend` como legenda funcional
 
 `TreeLegend` deixou de ser apenas informativa no painel lateral e também atua como controle visual/filtro, quando recebe callbacks.
 
@@ -1155,7 +1171,7 @@ Controles funcionais possíveis:
 - Destacar pais/filhos;
 - Destacar irmãos.
 
-### 20.2 Camadas visuais opcionais
+### 21.2 Camadas visuais opcionais
 
 As camadas visuais opcionais usam:
 
@@ -1171,7 +1187,7 @@ Comportamento:
 - ambas ficam desligadas por padrão;
 - ambas respeitam os filtros legados de linhas.
 
-### 20.3 `FamilyTree`
+### 21.3 `FamilyTree`
 
 `FamilyTree` recebe `visualLineFilters` e repassa a configuração para:
 
@@ -1192,7 +1208,7 @@ saveImage
 startAreaSelection
 ```
 
-### 20.4 Painel lateral da Home
+### 21.4 Painel lateral da Home
 
 O topo do painel lateral da Home tem toggle apenas para:
 
@@ -1210,6 +1226,6 @@ A versão compacta da legenda removeu **Cores dos grupos** para caber melhor no 
 - Camadas extras;
 - Anel de casamento.
 
-### 20.5 Botões de zoom
+### 21.5 Botões de zoom
 
 Os botões de zoom da árvore ficam no canto superior direito da área da árvore.

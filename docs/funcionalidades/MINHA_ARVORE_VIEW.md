@@ -1,32 +1,114 @@
-# View "Visão Geral" / Minha Árvore
+# Minha Árvore — view, layout e viewport
 
-Este documento registra o estado atualizado da view direta da árvore familiar, chamada na UI de **"Minha Árvore"**. A view funciona como uma visão geral individual da pessoa central: mostra ancestrais, pais, colaterais, cônjuge, irmãos, descendentes e filtros laterais em uma única área de ReactFlow.
+> Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
+> Tipo: documentação técnica/funcional da view **Minha Árvore**.
 
-O documento substitui a versão anterior de `docs/VIEW_VISAO_GERAL.md` e consolida os ajustes feitos ao longo do refinamento visual da Home, especialmente em:
+---
+
+## 1. Objetivo
+
+Este documento registra o estado da view direta da árvore familiar chamada na UI de **Minha Árvore**.
+
+A view funciona como uma visão geral individual da pessoa central, exibindo:
+
+- ancestrais;
+- pais;
+- colaterais;
+- cônjuge;
+- irmãos;
+- descendentes;
+- filtros laterais;
+- painel lateral;
+- ReactFlow.
+
+Este documento substitui a versão anterior:
+
+```txt
+docs/VIEW_VISAO_GERAL.md
+```
+
+e consolida decisões sobre:
 
 - ocupação vertical dos ramos paterno e materno;
 - distribuição da área central;
 - altura e tipografia dos cards;
 - controle do flash inicial do ReactFlow;
 - títulos de grupos;
-- documentação dos novos valores de layout.
+- viewport;
+- constantes de layout.
 
 ---
 
-## 1. Contexto
+## 2. Escopo
 
-### Projeto
+Este documento trata da geometria e UX da view **Minha Árvore**.
 
-- Stack: React + Vite + TypeScript + Tailwind + Supabase.
-- Página funcional: `Home.tsx`.
-- Componente principal da árvore: `FamilyTree.tsx`.
-- Layout da view direta: `directFamilyDistributedLayout.ts`.
-- Componente visual dos cards de pessoa: `PersonNode.tsx`.
-- Componente visual dos títulos de grupo: `DirectFamilyLabelNode.tsx`.
+Para filtros, pets e regras de exibição, use:
 
-### Views existentes na Home
+```txt
+docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+```
 
-A página Home possui três views principais:
+Para linhas, conectores, destaques e legenda, use:
+
+```txt
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+Para exportação, use:
+
+```txt
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
+---
+
+## 3. Contexto técnico
+
+Stack:
+
+- React;
+- Vite;
+- TypeScript;
+- Tailwind;
+- Supabase;
+- ReactFlow.
+
+Página funcional:
+
+```txt
+src/app/pages/Home.tsx
+```
+
+Componente principal da árvore:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Layout da view direta:
+
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
+Componente visual dos cards de pessoa:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+```
+
+Componente visual dos títulos de grupo:
+
+```txt
+src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
+```
+
+---
+
+## 4. Views existentes na Home
+
+A página `Home.tsx` possui três views principais:
 
 | View na UI | `viewMode` | Papel |
 |---|---|---|
@@ -34,154 +116,158 @@ A página Home possui três views principais:
 | Genealogia | `genealogia` | Visão genealógica preservada separadamente |
 | Visão Completa | `visao-completa` | Árvore expandida/completa |
 
-Os ajustes descritos aqui se aplicam à view **Minha Árvore**. As views **Genealogia** e **Visão Completa** continuam isoladas por `viewMode`.
+Regras:
+
+- os ajustes deste documento se aplicam à view **Minha Árvore**;
+- **Genealogia** e **Visão Completa** continuam isoladas por `viewMode`;
+- não aplicar automaticamente lógica da Minha Árvore nas views por geração.
 
 ---
 
-## 2. Arquivos relacionados
+## 5. Arquivos relacionados
 
 ### Página e viewport
 
-- `src/app/pages/Home.tsx`
-  - Estrutura da página.
-  - Header.
-  - Painel lateral.
-  - Área principal da árvore.
-  - Renderização de `FamilyTree`.
-  - Repasse de `layoutRevision`.
-  - Shell único das rotas `/minha-arvore`, `/genealogia` e `/visao-completa`.
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/*
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+```
 
-- `src/app/pages/home/*`
-  - Componentes visuais extraídos da Home.
-  - Header, seção da árvore, navegação mobile, filtros, painel lateral, curiosidades, IA e conexão.
+Responsabilidades:
 
-- `src/app/components/FamilyTree/treeViewMode.ts`
-  - Tipo `TreeViewMode`.
-  - Mapeamento entre view modes e rotas dedicadas.
-
-- `src/app/components/FamilyTree/FamilyTree.tsx`
-  - Controle do ReactFlow.
-  - Cálculo do viewport.
-  - Aplicação do viewport final.
-  - Controle de visibilidade do canvas.
-  - Prevenção do flash inicial.
-  - Zoom, pan e bounds.
+- estrutura da página;
+- header;
+- painel lateral;
+- área principal da árvore;
+- renderização de `FamilyTree`;
+- repasse de `layoutRevision`;
+- shell único das rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- cálculo e aplicação do viewport;
+- controle de visibilidade do canvas;
+- prevenção do flash inicial;
+- zoom, pan e bounds.
 
 ### Layout lógico da Minha Árvore
 
-- `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts`
-  - Frame lógico desktop e mobile.
-  - Divisão horizontal `35% / 30% / 35%`.
-  - Posições dos ramos paterno, central e materno.
-  - Distribuição vertical dos grupos laterais.
-  - Distribuição compacta dos grupos centrais inferiores.
-  - Dimensões dos cards.
-  - Anchors e linhas estruturais.
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
+Responsabilidades:
+
+- frame lógico desktop e mobile;
+- divisão horizontal `35% / 30% / 35%`;
+- posições dos ramos paterno, central e materno;
+- distribuição vertical dos grupos laterais;
+- distribuição compacta dos grupos centrais inferiores;
+- dimensões dos cards;
+- anchors;
+- linhas estruturais.
 
 ### Componentes visuais
 
-- `src/app/components/FamilyTree/PersonNode.tsx`
-  - Cards de pessoa.
-  - Card central.
-  - Foto/avatar.
-  - Nome.
-  - Detalhes de nascimento/falecimento/local.
-  - Menu de contexto.
-  - Bordas por status.
-
-- `src/app/components/FamilyTree/DirectFamilyLabelNode.tsx`
-  - Títulos dos grupos.
-  - Título principal da árvore.
-
-- `src/app/components/FamilyTree/directFamilyColors.ts`
-  - Cores por tipo de relação.
-  - Cores de texto e borda por status.
-
-- `src/app/components/FamilyTree/visualTokens.ts`
-  - Tokens visuais base.
-  - Larguras e alturas base.
-  - Tamanho base do avatar central.
-  - Tokens das linhas estruturais.
-
-- `src/app/components/FamilyTree/utils/personCardText.ts`
-  - Formatação de datas.
-  - Linhas de nascimento e falecimento.
-  - Texto secundário dos cards.
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/utils/personCardText.ts
+```
 
 ---
 
-## 3. Home e painel lateral
+## 6. Home e painel lateral
 
-A página usa uma estrutura de tela cheia:
+A página usa estrutura de tela cheia:
 
-- `h-screen`;
-- `flex flex-col`;
-- `bg-gray-50`;
-- header no topo;
-- `main` com `flex-1 overflow-hidden`.
+```txt
+h-screen
+flex flex-col
+bg-gray-50
+header no topo
+main com flex-1 overflow-hidden
+```
 
 No desktop, o painel lateral fica em um `aside`:
 
-- aberto: `w-80 p-4`;
-- fechado: `w-14 p-2`;
-- conteúdo em coluna;
-- tabs via `SidebarPanelTabs`;
-- área de conteúdo com `min-h-0 flex-1 overflow-visible`.
+```txt
+aberto: w-80 p-4
+fechado: w-14 p-2
+conteúdo em coluna
+tabs via SidebarPanelTabs
+área de conteúdo com min-h-0 flex-1
+```
 
-Na view **Minha Árvore**, o painel lateral exibe a aba **Filtros** com `DirectRelativeFilterGrid`.
+Na view **Minha Árvore**, o painel lateral exibe a aba **Filtros** com:
+
+```txt
+DirectRelativeFilterGrid
+LifeStatusKpiGrid
+```
 
 A Home é o shell comum das três rotas da árvore:
 
-- `/minha-arvore`;
-- `/genealogia`;
-- `/visao-completa`.
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
 
-`/` redireciona para `/minha-arvore` preservando search params. A troca de view pelo header ou pela nav mobile usa navegação client-side e mantém parâmetros como `?pessoa=...`.
-
-### Filtros exibidos
-
-A grade de filtros da família direta inclui:
-
-- Tataravós;
-- Bisavós;
-- Avós;
-- Tios;
-- Primos;
-- Cônjuge;
-- Irmãos;
-- Filhos;
-- Sobrinhos;
-- Netos;
-- Vivos;
-- Falecidos.
-
-O bloco direto exclui pais dos filtros principais.
-
-### Comportamento visual dos filtros
-
-- Grid padrão em 2 colunas.
-- Gap visual compacto.
-- Botões com altura mínima de aproximadamente `40px`.
-- Estado inativo com `grayscale opacity-45`.
-- Estado sem dados com `disabled`, `cursor-not-allowed` e opacidade reduzida.
-- Hover ativo com deslocamento vertical leve e sombra.
+`/` redireciona para `/minha-arvore` preservando search params. A troca de view pelo header ou pela navegação mobile usa navegação client-side e mantém parâmetros como `?pessoa=...`.
 
 ---
 
-## 4. Viewport da árvore
+## 7. Filtros exibidos
 
-Em `FamilyTree.tsx`, o ReactFlow desktop fica em uma área visual com:
+A grade de filtros da família direta inclui grupos como:
 
-- `TREE_DESKTOP_VISUAL_TOP_INSET = 70`;
-- `TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16`;
-- `TREE_TITLE_TOP = 12`;
-- `TREE_TITLE_HEIGHT = 48`;
-- `TREE_VIEWPORT_PADDING_X = 24`;
-- `TREE_VIEWPORT_PADDING_Y = 24`;
-- `TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0`;
-- `DIRECT_FAMILY_TRANSLATE_PADDING = 120`;
-- `DIRECT_FAMILY_MAX_ZOOM = 2`;
-- `DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.01`.
+```txt
+Tataravós
+Bisavós
+Avós
+Tios
+Primos
+Cônjuge
+Irmãos
+Filhos
+Sobrinhos
+Netos
+```
+
+O bloco inferior de status/tipo inclui:
+
+```txt
+Vivos
+Falecidos
+Pets
+```
+
+Regras específicas de filtros e pets ficam em:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+```
+
+---
+
+## 8. Viewport da árvore
+
+Em `FamilyTree.tsx`, o ReactFlow desktop fica em uma área visual com constantes como:
+
+```txt
+TREE_DESKTOP_VISUAL_TOP_INSET = 70
+TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16
+TREE_TITLE_TOP = 12
+TREE_TITLE_HEIGHT = 48
+TREE_VIEWPORT_PADDING_X = 24
+TREE_VIEWPORT_PADDING_Y = 24
+TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0
+DIRECT_FAMILY_TRANSLATE_PADDING = 120
+DIRECT_FAMILY_MAX_ZOOM = 2
+DIRECT_FAMILY_FALLBACK_MIN_ZOOM = 0.01
+```
 
 A view **Minha Árvore** usa:
 
@@ -193,36 +279,56 @@ A view **Minha Árvore** usa:
 - drag bloqueado no zoom mínimo;
 - restauração do viewport inicial quando o usuário reduz o zoom até perto do mínimo.
 
-### Prevenção do flash inicial
+---
+
+## 9. Prevenção do flash inicial
 
 Foi ajustado o carregamento inicial da árvore para evitar que uma versão ampliada apareça por um frame antes do enquadramento final.
 
-O estado atual inclui:
+Estado consolidado:
 
-- `TREE_PENDING_VIEWPORT_ZOOM = TREE_INITIAL_TECHNICAL_MIN_ZOOM`;
-- `viewportSignature` composta por:
-  - `viewMode`;
-  - `layoutRevision`;
-  - `containerSize.width`;
-  - `containerSize.height`;
-  - `activeTreeViewport.x`;
-  - `activeTreeViewport.y`;
-  - `activeTreeViewport.zoom`;
-- `hasAppliedCurrentViewport`;
-- `canRenderReactFlow = Boolean(activeTreeViewport && viewportSignature)`;
-- wrapper do ReactFlow com `visibility: hidden` até o viewport atual ser aplicado;
-- ReactFlow renderizado condicionalmente somente quando há viewport calculado;
-- `defaultViewport` usando diretamente `activeTreeViewport.x/y/zoom`.
+```txt
+TREE_PENDING_VIEWPORT_ZOOM = TREE_INITIAL_TECHNICAL_MIN_ZOOM
+```
 
-Com isso, a área principal pode ficar brevemente vazia, mas a árvore aparece já no enquadramento correto.
+A `viewportSignature` considera:
+
+```txt
+viewMode
+layoutRevision
+containerSize.width
+containerSize.height
+activeTreeViewport.x
+activeTreeViewport.y
+activeTreeViewport.zoom
+```
+
+Controles usados:
+
+```txt
+hasAppliedCurrentViewport
+canRenderReactFlow = Boolean(activeTreeViewport && viewportSignature)
+```
+
+Regras:
+
+- wrapper do ReactFlow fica com `visibility: hidden` até o viewport atual ser aplicado;
+- ReactFlow renderiza condicionalmente somente quando há viewport calculado;
+- `defaultViewport` usa diretamente `activeTreeViewport.x/y/zoom`;
+- a área principal pode ficar brevemente vazia;
+- a árvore deve aparecer já no enquadramento correto.
 
 ---
 
-## 5. Layout lógico da Minha Árvore
+## 10. Layout lógico da Minha Árvore
 
-Arquivo: `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts`.
+Arquivo:
 
-### Frame desktop atual
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
+### 10.1 Frame desktop atual
 
 Valores principais:
 
@@ -252,11 +358,11 @@ viewportBounds.height = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - FRAME_TOP
 
 Ou seja:
 
-```ts
+```txt
 2410 - 10 = 2400
 ```
 
-### Frame mobile
+### 10.2 Frame mobile
 
 O frame mobile permanece separado:
 
@@ -269,7 +375,7 @@ MOBILE_FRAME_BOTTOM = 2230
 
 ---
 
-## 6. Distribuição horizontal
+## 11. Distribuição horizontal
 
 A distribuição horizontal continua baseada em três áreas:
 
@@ -287,23 +393,17 @@ SIDE_AREA_CENTER_GAP_X = 48
 CENTRAL_AREA_TARGET_RATIO = 0.3
 ```
 
-A área útil é calculada a partir de:
+Regras:
 
-- `DIRECT_USEFUL_LEFT`;
-- `DIRECT_USEFUL_RIGHT`;
-- `DIRECT_AREA_CONTENT_WIDTH`;
-- `CENTRAL_AREA_WIDTH`;
-- `SIDE_AREA_WIDTH`;
-- `PATERNAL_SIDE_AREA_*`;
-- `MATERNAL_SIDE_AREA_*`.
-
-O layout não usa offsets específicos por pessoa ou família para alinhar os lados. A separação horizontal permanece sistemática.
+- o layout não usa offsets específicos por pessoa ou família para alinhar os lados;
+- a separação horizontal permanece sistemática;
+- não introduzir ajustes manuais por família sem decisão explícita.
 
 ---
 
-## 7. Dimensões principais atuais
+## 12. Dimensões principais atuais
 
-### Tokens base
+### 12.1 Tokens base
 
 Em `visualTokens.ts`:
 
@@ -315,9 +415,7 @@ CENTRAL_HEIGHT token = 680
 CENTRAL_AVATAR_SIZE = 336
 ```
 
-### Layout direto atual
-
-No layout direto, os valores efetivos são:
+### 12.2 Layout direto atual
 
 | Elemento | Largura | Altura |
 |---|---:|---:|
@@ -327,15 +425,15 @@ No layout direto, os valores efetivos são:
 | Tios/primos base | `300` | `126` |
 | Grupos inferiores centrais | `400` | `120` |
 
-### Labels de grupo
+### 12.3 Labels de grupo
 
-Os labels de grupo foram ampliados:
+Os labels de grupo usam:
 
 ```ts
 LABEL_HEIGHT = 38
 ```
 
-Em `DirectFamilyLabelNode.tsx`, os títulos de grupo usam:
+Em `DirectFamilyLabelNode.tsx`:
 
 ```tsx
 text-[24px]
@@ -346,7 +444,7 @@ uppercase
 
 ---
 
-## 8. Containers de grupo
+## 13. Containers de grupo
 
 Cada grupo visível gera:
 
@@ -370,9 +468,9 @@ LABEL_HEIGHT = 38
 LABEL_TO_CARD_GAP = 8
 ```
 
-### Largura dos grupos
+### 13.1 Largura dos grupos
 
-A função `getGroupWidth()` foi ajustada para evitar que grupos colaterais com 4 colunas ocupem automaticamente toda a largura da lane.
+A função `getGroupWidth()` evita que grupos colaterais com 4 colunas ocupem automaticamente toda a largura da lane.
 
 Regra atual:
 
@@ -386,9 +484,9 @@ Com isso, tios e primos com 4 colunas não criam sobras laterais internas desnec
 
 ---
 
-## 9. Regras de colunas
+## 14. Regras de colunas
 
-As colunas laterais são adaptativas:
+Colunas laterais adaptativas:
 
 - 1 item: 1 coluna;
 - 2 itens: 2 colunas;
@@ -402,11 +500,7 @@ O layout pode reduzir colunas de grupos colaterais quando há sobra vertical gra
 
 ---
 
-## 10. Ramos laterais: paterno e materno
-
-Os ramos laterais permanecem com a lógica de pilha vertical por lado.
-
-### Grupos laterais
+## 15. Ramos laterais: paterno e materno
 
 Ramo paterno:
 
@@ -424,7 +518,7 @@ Ramo materno:
 - Tios maternos;
 - Primos maternos.
 
-### Bottom lógico
+### 15.1 Bottom lógico
 
 Os ramos laterais usam:
 
@@ -434,9 +528,15 @@ DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y = 2410
 
 Esse valor foi calibrado para que os grupos laterais ocupem a área inferior disponível e se alinhem visualmente à base do container de filtros do painel esquerdo.
 
-### Redistribuição vertical
+### 15.2 Redistribuição vertical
 
-A função `redistributeSideStackPlanToBottom()` redistribui a pilha lateral inteira entre:
+A função:
+
+```txt
+redistributeSideStackPlanToBottom()
+```
+
+redistribui a pilha lateral inteira entre:
 
 ```ts
 SIDE_TOP = 170
@@ -448,13 +548,24 @@ e:
 DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y = 2410
 ```
 
-Isso evita que apenas o último grupo seja empurrado para o bottom e melhora a uniformidade visual entre ramo paterno e ramo materno.
+Objetivo:
 
-### Escala compartilhada
+- evitar que apenas o último grupo seja empurrado para o bottom;
+- melhorar uniformidade visual entre ramo paterno e ramo materno.
 
-O layout calcula a escala máxima segura para o lado paterno e para o lado materno. Quando ambos existem, usa a menor escala máxima entre eles como escala compartilhada. Isso evita assimetria visual entre tios/primos paternos e maternos.
+### 15.3 Escala compartilhada
 
-### Escala dos colaterais
+O layout calcula a escala máxima segura para o lado paterno e para o lado materno.
+
+Quando ambos existem, usa a menor escala máxima entre eles como escala compartilhada.
+
+Objetivo:
+
+```txt
+evitar assimetria visual entre tios/primos paternos e maternos.
+```
+
+### 15.4 Escala dos colaterais
 
 Valores principais:
 
@@ -467,13 +578,13 @@ SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48
 
 ---
 
-## 11. Área central
+## 16. Área central
 
-Os ajustes desta seção se aplicam apenas à view Minha Árvore e não devem alterar Genealogia nem Visão Completa.
+Os ajustes desta seção se aplicam apenas à view **Minha Árvore**.
 
 A área central foi redesenhada para deixar de seguir as regras rígidas dos ramos laterais.
 
-### Estrutura central
+### 16.1 Estrutura central
 
 A área central contém:
 
@@ -486,7 +597,7 @@ A área central contém:
 - Filhos;
 - Netos.
 
-### Pessoa central
+### 16.2 Pessoa central
 
 A pessoa principal é centralizada com base no intervalo útil vertical da árvore:
 
@@ -501,7 +612,7 @@ CENTRAL_Y =
   CENTRAL_BASE_Y - CENTRAL_CORE_SHIFT_UP
 ```
 
-Com os valores atuais:
+Valores atuais:
 
 ```ts
 SIDE_GROUPS_TOP = 170
@@ -512,34 +623,9 @@ CENTRAL_AREA_SHIFT_DOWN = 60
 CENTRAL_CORE_SHIFT_UP = 180
 ```
 
-O card central passa a ocupar uma posição vertical mais representativa do centro visual da árvore.
+### 16.3 Grupos superiores
 
-### Referências verticais atuais da área central
-
-A área central usa referências separadas para controlar o card principal, os grupos superiores e os grupos inferiores.
-
-Valores atuais:
-
-- CENTRAL_HEIGHT = 760
-- CENTRAL_LOWER_REFERENCE_HEIGHT = 620
-- CENTRAL_AREA_SHIFT_DOWN = 60
-- CENTRAL_CORE_SHIFT_UP = 180
-- CENTRAL_LOWER_GROUP_GAP = 120
-- CENTRAL_LOWER_STACK_GAP = 34
-
-A posição da pessoa principal é controlada por CENTRAL_Y. Pai e Mãe sobem ou descem junto com a pessoa principal porque CENTRAL_PARENT_GROUP_Y depende de CENTRAL_Y.
-
-Os grupos inferiores centrais usam uma referência independente, CENTRAL_BASE_Y, para manter Irmãos, Sobrinhos, Cônjuge, Filhos e Netos em uma faixa visual estável mesmo quando o card principal aumenta de altura ou é deslocado verticalmente.
-
-Fórmula atual dos grupos inferiores:
-
-LOWER_GROUP_Y = CENTRAL_BASE_Y + CENTRAL_LOWER_REFERENCE_HEIGHT + CENTRAL_LOWER_GROUP_GAP
-
-### Pai e mãe
-
-Os grupos de Pai e Mãe não ficam mais presos ao topo da área lateral.
-
-O posicionamento é:
+Pai e Mãe são posicionados acima da pessoa principal:
 
 ```ts
 CENTRAL_PARENT_GAP = 120
@@ -549,13 +635,9 @@ CENTRAL_PARENT_GROUP_Y =
   CENTRAL_Y - CENTRAL_PARENT_GAP - SIDE_PARENT_CARD_HEIGHT
 ```
 
-Com isso, Pai e Mãe ficam acima da pessoa principal, mas com distância visual maior em relação às linhas estruturais e ao card central.
+### 16.4 Grupos inferiores
 
-### Grupos inferiores centrais
-
-Os grupos inferiores não são mais empurrados para o bottom lógico da view. Eles partem de uma referência vertical própria, baseada em CENTRAL_BASE_Y, para preservar a composição visual da área central.
-
-Eles partem de:
+Os grupos inferiores partem de uma referência vertical própria, baseada em `CENTRAL_BASE_Y`.
 
 ```ts
 LOWER_GROUP_Y =
@@ -569,15 +651,11 @@ CENTRAL_LOWER_GROUP_GAP = 120
 CENTRAL_LOWER_STACK_GAP = 34
 ```
 
-A função atual é:
+Função atual:
 
-```ts
+```txt
 compactLowerGroupTopPositions()
 ```
-
-Ela posiciona os grupos visíveis em sequência, com gap uniforme, sem alinhar o último grupo ao bottom.
-
-### Grupos inferiores por coluna
 
 Coluna esquerda central:
 
@@ -590,11 +668,21 @@ Coluna direita central:
 - Filhos;
 - Netos.
 
+Regra:
+
+```txt
+não reintroduzir alignGroupStackToBottom() para grupos centrais sem mudança explícita de objetivo visual.
+```
+
 ---
 
-## 12. Cards de pessoa
+## 17. Cards de pessoa
 
-Os cards são renderizados por `PersonNode.tsx`.
+Os cards são renderizados por:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+```
 
 Para relações diretas (`directRelation`):
 
@@ -610,96 +698,9 @@ Para relações diretas (`directRelation`):
 - menu de contexto permite visualizar, editar, adicionar conexão e remover;
 - handles do ReactFlow continuam presentes para conexões.
 
-### Cards não centrais
-
-Cards não centrais usam layout horizontal:
-
-- avatar/foto à esquerda;
-- texto à direita;
-- nome em até 2 linhas;
-- detalhes em linhas separadas com ellipsis;
-- card com altura fixa definida pelo layout.
-
-Valores atuais de cálculo:
-
-```ts
-isCompactDirectCard = cardHeight <= 160
-isSmallDirectCard = cardHeight <= 175
-```
-
-Padding e gap:
-
-```ts
-nonCentralPaddingY:
-  compacto: 5.5% da altura, limitado entre 8 e 12
-  normal: 6.5% da altura, limitado entre 10 e 18
-
-nonCentralPaddingX:
-  compacto: 3% da largura, limitado entre 10 e 14
-  normal: 3.5% da largura, limitado entre 12 e 20
-
-nonCentralGap:
-  compacto: 2.5% da largura, limitado entre 8 e 12
-  normal: 3.5% da largura, limitado entre 12 e 18
-```
-
-Avatar não central:
-
-```ts
-compacto: 58% da altura, limitado entre 72 e 88
-pequeno: 62% da altura, limitado entre 82 e 100
-normal: 64% da altura, limitado entre 96 e 124
-```
-
-Fonte do nome não central:
-
-```ts
-estimatedNameFontForTwoLines =
-  (nonCentralTextWidth * 2) /
-  max(10, nome.length * 0.46)
-```
-
-Limites desktop:
-
-```ts
-compacto: mínimo 17, máximo 26
-pequeno: máximo 29
-normal: mínimo 19, máximo 30
-```
-
-Fonte dos detalhes não centrais:
-
-```ts
-estimatedDetailFontForOneLine =
-  nonCentralTextWidth /
-  max(8, linhaMaisLonga.length * 0.40)
-```
-
-Limites desktop:
-
-```ts
-compacto: mínimo 13, máximo 18
-pequeno: mínimo 14, máximo 20
-normal: mínimo 14, máximo 21
-```
-
-Espaçamento dos detalhes não centrais:
-
-```tsx
-compacto:
-  mt-[8px]
-  space-y-[6px]
-  leading-[1.22]
-
-normal:
-  mt-[10px]
-  space-y-[7px]
-  leading-[1.26]
-```
-
 ---
 
-## 13. Card da pessoa principal
+## 18. Card da pessoa principal
 
 A pessoa principal usa tratamento especial:
 
@@ -713,7 +714,7 @@ A pessoa principal usa tratamento especial:
 - borda por status vivo/falecido;
 - foto clicável abre dialog com imagem ampliada.
 
-### Dimensão lógica
+### 18.1 Dimensão lógica
 
 No layout direto:
 
@@ -722,9 +723,7 @@ CENTRAL_WIDTH = 620
 CENTRAL_HEIGHT = 760
 ```
 
-### Altura visual automática
-
-O card principal foi ajustado para evitar que o conteúdo interno vaze para fora da borda.
+### 18.2 Altura visual automática
 
 No `PersonNode.tsx`, o card central usa:
 
@@ -740,64 +739,7 @@ Isso significa:
 - a foto não precisa ser reduzida para impedir vazamento;
 - a margem entre foto e texto é preservada.
 
-### Avatar central
-
-O avatar central continua baseado em:
-
-```ts
-DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE = 336
-```
-
-Cálculo atual:
-
-```ts
-avatarSize =
-  DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE
-  * cardScale
-  * mobileAvatarScale
-  * 1.22
-```
-
-### Tipografia central
-
-Nome:
-
-```ts
-centralNameFontSize =
-  Math.max(
-    42,
-    Math.round((isMobile ? 62 : 58) * cappedCardScale * 1.2)
-  )
-```
-
-Detalhes:
-
-```ts
-centralDetailFontSize =
-  clampNumber(
-    Math.round((isMobile ? 44 : 40) * cappedCardScale * 1.12),
-    28,
-    isMobile ? 42 : 38
-  )
-```
-
-### Espaçamento central
-
-Margem entre foto e texto:
-
-```ts
-marginTop = Math.max(28, Math.round(56 * cappedCardScale))
-```
-
-Bloco de detalhes:
-
-```tsx
-mt-6
-space-y-2.5
-leading-[1.22]
-```
-
-### Conteúdo central exibido
+### 18.3 Conteúdo central exibido
 
 O card central prioriza:
 
@@ -815,9 +757,13 @@ Mora atualmente em Porto Alegre
 
 ---
 
-## 14. Labels de grupo
+## 19. Labels de grupo
 
-Os títulos de grupos são renderizados por `DirectFamilyLabelNode.tsx`.
+Os títulos de grupos são renderizados por:
+
+```txt
+src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
+```
 
 Para labels de grupo, a classe atual é:
 
@@ -829,7 +775,7 @@ min-h-[38px]
 text-slate-900
 ```
 
-Isso vale para labels como:
+Exemplos:
 
 - BISAVÓS PATERNOS;
 - AVÓS MATERNOS;
@@ -839,15 +785,37 @@ Isso vale para labels como:
 - CÔNJUGE;
 - FILHOS.
 
-O título principal da árvore continua com `variant = title`, usando tipografia maior própria.
+Regra:
+
+```txt
+o título principal da árvore não deve ser criado por este layout.
+```
+
+O título principal fica como overlay em:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+```
 
 ---
 
-## 15. Linhas e anchors
+## 20. Linhas e anchors
 
 As linhas são criadas depois do posicionamento dos grupos.
 
-O layout mede os containers reais com `getGroupBoxBounds()` e adiciona anchors via `addGroupBoundaryAnchors()`:
+O layout mede os containers reais com:
+
+```txt
+getGroupBoxBounds()
+```
+
+e adiciona anchors via:
+
+```txt
+addGroupBoundaryAnchors()
+```
+
+Anchors:
 
 - top;
 - bottom;
@@ -855,9 +823,19 @@ O layout mede os containers reais com `getGroupBoxBounds()` e adiciona anchors v
 - right;
 - center.
 
-As conexões estruturais usam anchors, não dimensões presumidas. Isso permite que mudanças de escala, colunas, altura de containers e reposicionamento central sejam refletidas automaticamente nas linhas.
+Regra:
 
-### Conexões principais
+```txt
+As conexões estruturais usam anchors, não dimensões presumidas.
+```
+
+Isso permite que mudanças de escala, colunas, altura de containers e reposicionamento central sejam refletidas automaticamente nas linhas.
+
+---
+
+## 21. Conexões principais
+
+Conexões estruturais incluem:
 
 - Pai → ponto médio dos pais;
 - ponto médio dos pais → Mãe;
@@ -872,7 +850,7 @@ As conexões estruturais usam anchors, não dimensões presumidas. Isso permite 
   - Irmãos → Sobrinhos;
   - Cônjuge → Filhos → Netos.
 
-### Estilo atual das linhas diretas
+Estilo estrutural:
 
 ```ts
 DIRECT_STRUCTURAL_EDGE_STYLE = {
@@ -882,65 +860,20 @@ DIRECT_STRUCTURAL_EDGE_STYLE = {
 }
 ```
 
-O stroke estrutural usa cinza claro vindo dos tokens da árvore.
-
 ---
 
-## 16. Estado atual do alinhamento inferior
+## 22. Pontos sensíveis
 
-O alinhamento inferior da Minha Árvore é lógico, não medido diretamente do DOM do painel lateral.
+### 22.1 Altura visual automática do card central
 
-A view usa:
+O card central pode crescer além do `CENTRAL_HEIGHT` lógico.
 
-```ts
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y = 2410
-```
+Riscos:
 
-Esse valor é resultado de:
+- ReactFlow e anchors continuam baseados no layout lógico;
+- se o crescimento visual for muito maior do que o lógico, pode haver desalinhamento entre borda visual e linhas.
 
-```ts
-DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = 1810
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 600
-```
-
-O ajuste foi calibrado visualmente para que os grupos laterais paternos e maternos ocupem melhor o espaço inferior e cheguem próximo da base visual do container de filtros do painel esquerdo.
-
-A área central deixou de seguir o mesmo alinhamento inferior. Sobrinhos, filhos e netos não são mais forçados a encostar no bottom lógico; eles seguem uma pilha compacta abaixo do card central.
-
----
-
-## 17. Regras preservadas
-
-Continuam preservados:
-
-- separação por `viewMode`;
-- isolamento de `minha-arvore`, `genealogia` e `visao-completa`;
-- distribuição horizontal `35% / 30% / 35%`;
-- ramos paterno e materno sem offsets por pessoa/família;
-- colunas adaptativas;
-- centralização dos cards dentro dos containers;
-- anchors de grupo para conexões;
-- zoom mínimo calculado pelo viewport;
-- drag bloqueado no zoom mínimo para Minha Árvore;
-- zoom out perto do mínimo restaurando viewport inicial;
-- debug visual desligado por padrão;
-- ativação explícita do debug via `?treeDebug=1`.
-
----
-
-## 18. Pontos sensíveis
-
-### 18.1 Altura visual automática do card central
-
-O card central agora pode crescer além do `CENTRAL_HEIGHT` lógico.
-
-Isso resolve o vazamento de texto, mas exige atenção:
-
-- o ReactFlow e os anchors continuam baseados no layout lógico;
-- se o crescimento visual for muito maior do que o lógico, pode haver desalinhamento entre borda visual e linhas;
-- por isso `CENTRAL_HEIGHT = 760` deve funcionar como uma aproximação generosa da altura real esperada.
-
-Se o conteúdo central crescer muito no futuro, revisar primeiro:
+Se o conteúdo central crescer muito, revisar:
 
 ```ts
 CENTRAL_HEIGHT
@@ -949,9 +882,17 @@ centralDetailFontSize
 avatarSize
 ```
 
-### 18.2 Bottom lógico lateral
+---
 
-O valor `DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 600` está calibrado visualmente contra a Home atual.
+### 22.2 Bottom lógico lateral
+
+O valor:
+
+```ts
+DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 600
+```
+
+está calibrado visualmente contra a Home atual.
 
 Se mudarem:
 
@@ -960,7 +901,7 @@ Se mudarem:
 - top/bottom visual do ReactFlow;
 - layout do painel de filtros;
 
-então revisar:
+revisar:
 
 ```ts
 TREE_DESKTOP_VISUAL_BOTTOM_INSET
@@ -968,11 +909,11 @@ DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
 DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
 ```
 
-### 18.3 Labels maiores
+---
 
-Como `DirectFamilyLabelNode` passou para `text-[24px]`, o `LABEL_HEIGHT` lógico também foi ampliado para `38`.
+### 22.3 Labels maiores
 
-Se a fonte dos títulos de grupo mudar novamente, atualizar os dois pontos em conjunto:
+Como `DirectFamilyLabelNode` usa `text-[24px]`, o `LABEL_HEIGHT` lógico também deve acompanhar:
 
 ```tsx
 text-[24px]
@@ -985,9 +926,13 @@ e:
 LABEL_HEIGHT = 38
 ```
 
-### 18.4 Área central independente
+Se mudar a fonte dos títulos de grupo, revisar os dois pontos juntos.
 
-A área central agora tem sua própria lógica:
+---
+
+### 22.4 Área central independente
+
+A área central usa lógica própria:
 
 ```ts
 CENTRAL_PARENT_GAP
@@ -996,43 +941,24 @@ CENTRAL_LOWER_STACK_GAP
 compactLowerGroupTopPositions()
 ```
 
-Não reintroduzir `alignGroupStackToBottom()` para os grupos centrais, a menos que o objetivo visual mude novamente.
+Não reintroduzir alinhamento inferior rígido nos grupos centrais sem decisão explícita de UX.
 
 ---
 
-## 19. Sugestões futuras
+## 23. Sugestões futuras
 
-1. **Medir altura real do card central**
-   - Se houver divergência entre altura visual automática e anchors, considerar passar uma altura medida do DOM para o layout ou padronizar o card central com uma altura lógica ainda mais fiel.
+Possíveis evoluções:
 
-2. **Transformar constantes em parâmetros configuráveis**
-   - `CENTRAL_PARENT_GAP`;
-   - `CENTRAL_LOWER_GROUP_GAP`;
-   - `CENTRAL_LOWER_STACK_GAP`;
-   - `DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET`.
-
-3. **Documentar commits de layout**
-   - Manter registro dos commits que alteram geometria da árvore, porque pequenas mudanças impactam viewport, linhas e filtros.
-
-4. **Separar tokens do layout direto**
-   - Algumas dimensões hoje estão no layout (`directFamilyDistributedLayout.ts`) e outras em tokens (`visualTokens.ts`).
-   - Uma futura reorganização poderia separar:
-     - tokens globais;
-     - tokens exclusivos da Minha Árvore;
-     - tokens exclusivos da Genealogia.
-
-5. **Criar modo debug de geometria central**
-   - O debug atual exibe bounds gerais.
-   - Um modo específico poderia mostrar:
-     - `CENTRAL_Y`;
-     - `CENTRAL_PARENT_GROUP_Y`;
-     - `LOWER_GROUP_Y`;
-     - `DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y`;
-     - bounds dos grupos centrais.
+1. Medir altura real do card central.
+2. Transformar constantes em parâmetros configuráveis.
+3. Registrar commits de geometria da árvore.
+4. Separar tokens exclusivos da Minha Árvore.
+5. Criar modo debug de geometria central.
+6. Criar documentação visual com imagens de antes/depois.
 
 ---
 
-## 20. Checklist de validação visual
+## 24. Checklist de validação visual
 
 Após qualquer ajuste futuro nesta view, validar:
 
@@ -1047,7 +973,7 @@ Após qualquer ajuste futuro nesta view, validar:
 - [ ] Ramo paterno ocupa bem a altura disponível.
 - [ ] Ramo materno ocupa bem a altura disponível.
 - [ ] Primos/tios não têm sobras internas exageradas.
-- [ ] Grupos laterais não sobrepõem o painel, título ou bordas.
+- [ ] Grupos laterais não sobrepõem painel, título ou bordas.
 
 ### Área central
 
@@ -1072,9 +998,17 @@ Após qualquer ajuste futuro nesta view, validar:
 - [ ] Linhas não atravessam cards de forma visualmente problemática.
 - [ ] Highlights continuam funcionando.
 
+### Técnico
+
+```bash
+npm run build
+npm test
+git diff --check
+```
+
 ---
 
-## 21. Resumo do estado atual
+## 25. Resumo do estado atual
 
 A view **Minha Árvore** está estruturada como uma composição de três áreas:
 

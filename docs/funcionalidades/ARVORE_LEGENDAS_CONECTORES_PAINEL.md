@@ -1,22 +1,41 @@
-# Árvore: Legendas, Conectores, Filtros e Painel Lateral
+# Árvore — legendas, conectores, filtros e painel lateral
+
+> Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
+> Tipo: documentação funcional/técnica específica da árvore.
+
+---
 
 ## 1. Objetivo
 
-Este documento consolida as implementações, correções e decisões arquiteturais feitas nas frentes recentes da visualização da árvore familiar no projeto `tuliust/arvorefamilia`.
-
-O foco está em:
+Este documento consolida as decisões, regras e cuidados da visualização da árvore familiar no projeto `tuliust/arvorefamilia`, com foco em:
 
 - aba **Legendas**;
-- botões de **LINHAS** e **DESTACAR**;
+- botões de **Linhas**;
+- botões de **Destacar**;
 - conectores da **Minha Árvore**;
-- conectores da **Genealogia** e da **Visão Completa**;
-- comportamento de Pets;
+- conectores da **Genealogia**;
+- conectores da **Visão Completa**;
+- comportamento visual de pets;
 - painel lateral esquerdo;
-- filtros visuais e de grupos;
+- filtros visuais e filtros de grupos;
 - correções de pan/scroll;
-- ajustes administrativos correlatos realizados no mesmo ciclo.
+- riscos de regressão visual.
 
-A regra central desta frente é separar claramente:
+Este documento não substitui:
+
+```txt
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_CORRECAO_ERROS.md
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
+---
+
+## 2. Regra central da frente
+
+A regra central é separar claramente **existência**, **destaque**, **cards** e **grupos**.
 
 ```txt
 edgeFilters:
@@ -32,14 +51,23 @@ directRelativeFilters:
   controlam grupos de parentes na Minha Árvore.
 
 genealogyFilters:
-  controlam gerações/grupos na Genealogia e Visão Completa.
+  controlam gerações/grupos na Genealogia e na Visão Completa.
+```
+
+Regra obrigatória:
+
+```txt
+Destaque não cria linha nova.
+Destaque não reexibe linha oculta.
+Destaque não altera cards.
+Destaque não altera contadores.
 ```
 
 ---
 
-## 2. Views da árvore
+## 3. Views da árvore
 
-O projeto possui três rotas principais para a árvore:
+O projeto possui três rotas principais da árvore:
 
 ```txt
 /minha-arvore
@@ -47,7 +75,7 @@ O projeto possui três rotas principais para a árvore:
 /visao-completa
 ```
 
-### 2.1 Minha Árvore
+### 3.1 Minha Árvore
 
 Layout principal:
 
@@ -62,9 +90,19 @@ Características:
 - cards coloridos por grupo;
 - separação visual entre filhos humanos e pets;
 - conectores customizados entre grupos diretos;
-- suporte a modo foco da pessoa central.
+- suporte ao modo de foco da pessoa central;
+- filtros por grupos diretos.
 
-### 2.2 Genealogia
+Documentação complementar:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+```
+
+---
+
+### 3.2 Genealogia
 
 Layout principal:
 
@@ -77,9 +115,13 @@ Características:
 - organização por gerações;
 - conectores familiares por geração;
 - cônjuges com edge própria;
-- conectores de pais/filhos por `GenealogyFamilyConnectorNode`.
+- conectores de pais/filhos por `GenealogyFamilyConnectorNode`;
+- anel conjugal via `GenealogySpouseEdge`;
+- escopo pessoal.
 
-### 2.3 Visão Completa
+---
+
+### 3.3 Visão Completa
 
 Também usa:
 
@@ -87,17 +129,16 @@ Também usa:
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
 
-Diferença principal:
+Características:
 
-```txt
-hideUngenerated: true
-```
-
-A Visão Completa compartilha a arquitetura visual da Genealogia, mas com recorte/ocultação específica de pessoas não geradas.
+- base familiar completa;
+- organização por gerações;
+- mesma arquitetura visual da Genealogia;
+- regras próprias de recorte/exibição conforme o `viewMode`.
 
 ---
 
-## 3. Estados principais
+## 4. Estados principais
 
 Os estados principais são mantidos em:
 
@@ -105,7 +146,7 @@ Os estados principais são mantidos em:
 src/app/pages/Home.tsx
 ```
 
-### 3.1 `edgeFilters`
+### 4.1 `edgeFilters`
 
 Controla exibição/ocultação de linhas.
 
@@ -125,7 +166,16 @@ Uso esperado:
 - `filiacao_adotiva`: linhas de pais/filhos por filiação adotiva;
 - `irmaos`: linhas ou trechos visuais relacionados a irmãos, quando a view suportar controle separado.
 
-### 3.2 `visualLineFilters`
+Não deve:
+
+- alterar cards;
+- alterar contadores;
+- alterar filtros de pessoa;
+- mudar dados no Supabase.
+
+---
+
+### 4.2 `visualLineFilters`
 
 Controla apenas destaque visual.
 
@@ -143,16 +193,17 @@ Uso esperado:
 - `parentChildHighlight`: destacar linhas parentais/de filiação visíveis;
 - `siblingHighlight`: destacar linhas/trechos de irmãos visíveis.
 
-Regra obrigatória:
+Não deve:
 
-```txt
-Destaque não cria linha nova.
-Destaque não reexibe linha oculta.
-Destaque não altera cards.
-Destaque não altera contadores.
-```
+- criar novas edges;
+- reexibir edge oculta por `edgeFilters`;
+- afetar cards;
+- afetar contadores;
+- persistir estado no banco.
 
-### 3.3 `personFilters`
+---
+
+### 4.3 `personFilters`
 
 Controla cards por status/tipo.
 
@@ -166,12 +217,14 @@ Controla cards por status/tipo.
 
 Regras:
 
-- não deve ser alterado por controles de linhas;
-- não deve ser alterado por destaques;
 - afeta cards renderizados;
+- não deve ser alterado por botões de linhas;
+- não deve ser alterado por botões de destaque;
 - contadores devem continuar coerentes com o escopo da view.
 
-### 3.4 `directRelativeFilters`
+---
+
+### 4.4 `directRelativeFilters`
 
 Controla grupos de parentes na Minha Árvore.
 
@@ -194,11 +247,14 @@ pets
 
 Regras:
 
-- usado na lógica da Minha Árvore;
+- usado apenas na lógica da Minha Árvore;
+- oculta/exibe grupos de cards;
 - não deve ser confundido com `edgeFilters`;
-- oculta/exibe grupos de cards, não apenas linhas.
+- pode afetar contadores e cards exibidos.
 
-### 3.5 `genealogyFilters`
+---
+
+### 4.5 `genealogyFilters`
 
 Controla gerações e grupos na Genealogia/Visão Completa.
 
@@ -216,9 +272,15 @@ generation5Spouses
 generation6
 ```
 
+Regras:
+
+- usado em views por geração;
+- deve preservar conectores apenas entre pessoas visíveis;
+- deve evitar edges soltas após filtro.
+
 ---
 
-## 4. Aba Legendas
+## 5. Aba Legendas
 
 Componente principal:
 
@@ -228,7 +290,7 @@ src/app/components/FamilyTree/TreeLegend.tsx
 
 A aba **Legendas** possui blocos conceitualmente diferentes.
 
-### 4.1 Cards
+### 5.1 Cards
 
 Exemplos:
 
@@ -246,7 +308,9 @@ Função:
 - não controlar linhas;
 - não aplicar destaque em conectores.
 
-### 4.2 Linhas
+---
+
+### 5.2 Linhas
 
 Exemplos:
 
@@ -275,13 +339,15 @@ Pais/filhos:
   exibe/oculta linhas parentais/de filiação.
 
 Irmãos:
-  exibe/oculta linhas ou trechos visuais de irmãos quando a view suportar controle separado.
+  exibe/oculta linhas ou trechos de irmãos quando a view suportar.
 
 Todas:
   liga/desliga todos os edgeFilters controláveis.
 ```
 
-### 4.3 Destacar
+---
+
+### 5.3 Destacar
 
 Exemplos:
 
@@ -316,7 +382,9 @@ Destaque Todas:
   destaca todos os grupos de linhas visíveis.
 ```
 
-### 4.4 Aliança
+---
+
+### 5.4 Aliança
 
 Exemplos:
 
@@ -335,11 +403,15 @@ Função atual:
 - não altera árvore;
 - não altera relação no banco.
 
-A seção **ALIANÇA** não deve virar filtro sem uma frente específica.
+Regra:
+
+```txt
+A seção Aliança não deve virar filtro sem uma frente específica.
+```
 
 ---
 
-## 5. Classificação de linhas na Minha Árvore
+## 6. Classificação de linhas na Minha Árvore
 
 Na Minha Árvore, a classificação conceitual adotada foi:
 
@@ -347,7 +419,7 @@ Na Minha Árvore, a classificação conceitual adotada foi:
 type DirectLineGroup = 'spouse' | 'parentChild' | 'sibling' | 'auxiliary';
 ```
 
-### 5.1 `spouse`
+### 6.1 `spouse`
 
 Linhas conjugais.
 
@@ -359,7 +431,7 @@ cônjuges ancestrais
 pai ↔ mãe
 ```
 
-### 5.2 `parentChild`
+### 6.2 `parentChild`
 
 Linhas de filiação/descendência.
 
@@ -379,7 +451,7 @@ Observações:
 - irmãos → sobrinhos é `parentChild`, porque sobrinhos são filhos dos irmãos;
 - pets ficam nesse grupo porque usam vínculo técnico equivalente a `filho`.
 
-### 5.3 `sibling`
+### 6.3 `sibling`
 
 Linhas entre irmãos.
 
@@ -391,7 +463,7 @@ pai/mãe ↔ tios, quando a linha representa relação entre irmãos
 conectores internos de irmãos reais dentro de grupos
 ```
 
-### 5.4 `auxiliary`
+### 6.4 `auxiliary`
 
 Apenas conectores técnicos indispensáveis.
 
@@ -403,40 +475,13 @@ Se a linha parece visualmente representar cônjuge, pais/filhos ou irmãos, ela 
 
 ---
 
-## 6. Correções realizadas na Minha Árvore
+## 7. Correções consolidadas na Minha Árvore
 
 Arquivo principal:
 
 ```txt
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 ```
-
-### 6.1 Separação entre ocultação e destaque
-
-Foram separados:
-
-```txt
-edgeFilters:
-  exibir/ocultar linhas.
-
-visualLineFilters:
-  destacar linhas visíveis.
-```
-
-Regra obrigatória:
-
-```txt
-Destaque não recria linha oculta.
-```
-
-Exemplo:
-
-```txt
-Se edgeFilters.conjugal === false,
-spouseHighlight === true não pode fazer linha conjugal aparecer.
-```
-
-### 6.2 Correções de conectores
 
 Foram ajustados:
 
@@ -451,58 +496,39 @@ Foram ajustados:
 - conectores de tios;
 - conectores de ancestrais.
 
-### 6.3 Correção de destaque indevido
-
-Foi corrigido caso em que:
+Correção relevante:
 
 ```txt
-spouseHighlight era aplicado indevidamente em linha de irmãos.
+spouseHighlight não deve ser aplicado indevidamente em linha de irmãos.
 ```
 
-### 6.4 Pets
-
-Decisão consolidada:
+Decisão sobre pets:
 
 ```txt
 Pets continuam separados dos filhos nos cards,
 mas a linha de Pets é controlada por Pais/filhos, ou seja, parentChild.
 ```
 
-### 6.5 Alianças
-
-Foram adicionados/ajustados marriage nodes com ícone de aliança:
-
-- entre cônjuges ancestrais;
-- entre pai e mãe;
-- em linhas conjugais relevantes.
-
-Também foram removidas bolinhas/handles visuais em casos específicos.
-
 ---
 
-## 7. Genealogia e Visão Completa
+## 8. Genealogia e Visão Completa
 
-Arquivo principal:
+Arquivos principais:
 
 ```txt
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-```
-
-Componentes relacionados:
-
-```txt
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
 src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 ```
 
-### 7.1 Controle de linhas
+### 8.1 Controle de linhas
 
-A Genealogia e a Visão Completa passaram a respeitar:
+A Genealogia e a Visão Completa devem respeitar:
 
 ```txt
-LINHAS > Conjugal
-LINHAS > Pais/filhos
-LINHAS > Irmãos
+Linhas > Conjugal
+Linhas > Pais/filhos
+Linhas > Irmãos
 ```
 
 Comportamento:
@@ -518,9 +544,11 @@ Irmãos:
   controla linhas/trechos de irmãos quando aplicável.
 ```
 
-### 7.2 Destaque visual
+---
 
-A seção DESTACAR atua apenas em linhas visíveis.
+### 8.2 Destaque visual
+
+A seção **Destacar** atua apenas em linhas visíveis.
 
 Regras:
 
@@ -531,19 +559,21 @@ Destaque não altera cards.
 Destaque não altera contadores.
 ```
 
-### 7.3 Correção de pan/scroll
+---
 
-Problema:
+### 8.3 Correção de pan/scroll
+
+Problema corrigido:
 
 ```txt
 Em /genealogia e /visao-completa, ao tentar deslizar a árvore para baixo,
 a view voltava automaticamente para cima.
 ```
 
-Correção:
+Correção consolidada:
 
 ```txt
-O restore automático do viewport no zoom mínimo passou a ser restrito a viewMode === 'minha-arvore'.
+O restore automático do viewport no zoom mínimo deve ser restrito a viewMode === 'minha-arvore'.
 ```
 
 Arquivo:
@@ -552,7 +582,9 @@ Arquivo:
 src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
-### 7.4 Correção de handle do React Flow
+---
+
+### 8.4 Correção de handle do React Flow
 
 Erro observado:
 
@@ -580,15 +612,15 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 ---
 
-## 8. Destaque de irmãos em Genealogia/Visão Completa
+## 9. Destaque de irmãos em Genealogia/Visão Completa
 
-### 8.1 Problema
+### 9.1 Problema
 
 A Genealogia/Visão Completa estavam criando uma nova edge vertical para destacar irmãos.
 
 Isso era incorreto porque o conector familiar já possuía a linha vertical e os braços horizontais necessários.
 
-### 8.2 Arquitetura correta
+### 9.2 Arquitetura correta
 
 Componente responsável:
 
@@ -606,17 +638,17 @@ braços horizontais até cada filho/irmão
 
 Portanto, o destaque de irmãos deve estilizar a ramificação existente, não criar uma edge nova.
 
-### 8.3 Alterações realizadas
+### 9.3 Regra implementada
 
-Em `GenealogyFamilyConnectorNode.tsx`, foi adicionado:
+Em `GenealogyFamilyConnectorNode.tsx`, o node pode receber:
 
 ```ts
 siblingHighlight?: boolean;
 ```
 
-Foram separados os estilos:
+Estilos separados:
 
-```ts
+```txt
 parentChildStroke
 parentChildStrokeWidth
 siblingBranchStroke
@@ -638,9 +670,9 @@ amarelo
 tracejado
 ```
 
-### 8.4 Remoção de edge duplicada
+### 9.4 Remoção de edge duplicada
 
-Foi removida a criação de edges extras:
+Não recriar função equivalente a:
 
 ```txt
 addGenealogySiblingEdges
@@ -652,26 +684,9 @@ Motivo:
 A função criava uma segunda linha visual, duplicando a ramificação já existente.
 ```
 
-### 8.5 Correção complementar
-
-Após diagnóstico, foi identificado que `siblingHighlight` chegava até `addGenealogyFamilyConnectorNodes`, mas não entrava em `createGenealogyFamilyConnectorNode`.
-
-Foi corrigido com:
-
-```ts
-parentChildHighlight,
-siblingHighlight,
-```
-
-e no `data` do node:
-
-```ts
-...(siblingHighlight ? { siblingHighlight } : {}),
-```
-
 ---
 
-## 9. Painel lateral esquerdo
+## 10. Painel lateral esquerdo
 
 Arquivos principais:
 
@@ -686,226 +701,47 @@ src/app/pages/home/LifeStatusKpiGrid.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
 ```
 
-### 9.1 Objetivo
-
-Melhorar a responsividade vertical das abas:
-
-```txt
-Filtros
-Legendas
-Ações
-```
-
-Especialmente em telas menores de desktop.
-
-### 9.2 Problema anterior
-
-A aba Legendas usava:
-
-```txt
-justify-between
-```
-
-Isso espalhava artificialmente os grupos pela altura disponível.
-
-Os cards da aba Filtros tinham dimensões fixas:
-
-```txt
-min-h-[40px]
-p-1.5
-text-xs
-text-lg
-gap fixo
-```
-
-### 9.3 Script 1 — Legendas
-
-Arquivos:
-
-```txt
-src/app/pages/Home.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-```
-
-Alterações:
-
-- a aba Legendas passou a ter wrapper com `overflow-y-auto`;
-- `TreeLegend compact` deixou de usar `justify-between`;
-- gaps, títulos, textos e cards compactos passaram a usar `clamp`.
-
-Exemplos:
-
-```txt
-gap-[clamp(...)]
-min-h-[clamp(...)]
-text-[clamp(...)]
-```
-
-### 9.4 Script 2 — Filtros
-
-Arquivos:
-
-```txt
-src/app/pages/home/GenealogyFilterGrid.tsx
-src/app/pages/home/DirectRelationKpiGrid.tsx
-src/app/pages/home/DirectRelativeFilterGrid.tsx
-src/app/pages/home/LifeStatusKpiGrid.tsx
-```
-
-Alterações:
-
-- cards de filtros com altura adaptativa;
-- fontes com `clamp`;
-- gaps com `clamp`;
-- padding vertical adaptativo;
-- contadores mais responsivos.
-
-Importante:
-
-```txt
-Nenhuma lógica de filtro foi alterada.
-Nenhum contador foi alterado.
-Nenhum estado foi alterado.
-```
-
-### 9.5 Script 3 — Acabamento do painel
-
-Arquivos previstos:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
-src/app/pages/home/SidebarInfoPanel.tsx
-```
-
 Objetivo:
 
-- ajustar densidade dos controles superiores;
-- ajustar botão Ações;
-- ajustar botão recolher/expandir;
-- trocar `overflow-visible` por `overflow-hidden` no miolo do painel;
-- tornar a aba Ações rolável internamente;
-- padronizar alturas, gaps e fontes com `clamp`.
+- melhorar responsividade vertical das abas;
+- evitar overflow externo fora do painel;
+- permitir rolagem interna quando necessário;
+- manter cards e textos legíveis em telas menores de desktop;
+- preservar lógica de filtros.
 
-Status:
+### 10.1 Problemas anteriores
+
+- uso de `justify-between` espalhava grupos pela altura disponível;
+- cards de filtros tinham dimensões fixas;
+- alguns grupos ficavam altos demais em telas baixas;
+- rolagem interna era insuficiente.
+
+### 10.2 Regras atuais
+
+Usar preferencialmente:
 
 ```txt
-Gerado para execução e validação visual.
+min-h-0
+flex-1
+overflow-y-auto
+overflow-hidden no miolo quando necessário
+clamp()
+leading-tight
+gaps adaptativos
+```
+
+Evitar:
+
+```txt
+justify-between para preencher altura
+altura fixa excessiva
+overflow externo global
+fontes grandes demais em telas baixas
 ```
 
 ---
 
-## 10. Header desktop das páginas internas
-
-Arquivo:
-
-```txt
-src/app/components/layout/MemberPageHeader.tsx
-```
-
-### 10.1 Problema
-
-As páginas internas ainda usavam o header no padrão antigo, diferente da Home.
-
-### 10.2 Correção
-
-Foi padronizado o header para:
-
-- largura total;
-- ícone/título à esquerda;
-- botões à direita;
-- conteúdo principal preservado;
-- comportamento visual alinhado ao header da Home.
-
-Também foi corrigido um erro de interpolação inválida em JSX causado por tentativa anterior de script.
-
----
-
-## 11. Página Admin
-
-### 11.1 Dashboard
-
-Arquivo:
-
-```txt
-src/app/pages/admin/AdminDashboard.tsx
-```
-
-Ajustes realizados:
-
-- 4 cards superiores em uma linha no desktop;
-- 8 ações rápidas em 4 colunas e 2 linhas;
-- card “Pessoas Recentes” com altura proporcional;
-- botão “Editar” com estilo `outline`, borda cinza, fundo branco e sombra leve.
-
-### 11.2 Histórico de Atividades
-
-Arquivo:
-
-```txt
-src/app/services/activityLogService.ts
-```
-
-Correção:
-
-- logs técnicos foram convertidos em textos mais legíveis;
-- campos técnicos foram agrupados em categorias humanas.
-
-Exemplo:
-
-```txt
-Antes:
-Pessoa atualizada em Populos. Campos: nome_completo, data_nascimento...
-
-Depois:
-Perfil atualizado em Populos com alterações em dados pessoais, locais de nascimento e falecimento, foto, biografia, redes sociais, preferências de exibição e configurações de contato.
-```
-
-Durante a frente, foram corrigidos:
-
-- duplicação de helpers;
-- problemas de encoding;
-- assinatura quebrada de função;
-- ocorrências de caracteres corrompidos.
-
-### 11.3 Atividades
-
-Arquivo:
-
-```txt
-src/app/pages/admin/AdminAtividades.tsx
-```
-
-Ajustes previstos/aplicados:
-
-```txt
-Entidade -> Atividade
-Usuário/ator -> Responsável
-Entidade afetada -> Para usuário
-```
-
-Também foi definido o helper para reduzir o nome do responsável ao primeiro e último nome:
-
-```ts
-function formatResponsibleDisplayName(name?: string | null) {
-  const fallback = 'Responsável não identificado';
-  const cleanName = name?.trim();
-
-  if (!cleanName) return fallback;
-
-  const parts = cleanName.split(/\s+/).filter(Boolean);
-
-  if (parts.length <= 2) {
-    return cleanName;
-  }
-
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
-```
-
----
-
-## 12. Regras de validação manual
+## 11. Regras de validação manual
 
 Após alterações em árvore, validar:
 
@@ -915,9 +751,9 @@ Após alterações em árvore, validar:
 /visao-completa
 ```
 
-### 12.1 Aba Legendas
+### 11.1 Aba Legendas
 
-Validar LINHAS:
+Validar **Linhas**:
 
 ```txt
 Conjugal:
@@ -933,7 +769,7 @@ Todas:
   todas as linhas controláveis somem/voltam.
 ```
 
-Validar DESTACAR:
+Validar **Destacar**:
 
 ```txt
 Cônjuges:
@@ -955,7 +791,9 @@ Regra obrigatória:
 Destaque não recria linha oculta.
 ```
 
-### 12.2 Aba Filtros
+---
+
+### 11.2 Aba Filtros
 
 Validar:
 
@@ -968,7 +806,9 @@ modo foco da pessoa central continua funcionando;
 Pets continuam separados nos cards.
 ```
 
-### 12.3 Genealogia/Visão Completa
+---
+
+### 11.3 Genealogia/Visão Completa
 
 Validar:
 
@@ -980,7 +820,9 @@ ramificação existente fica amarela e tracejada;
 linha pais/casal -> ramificação mantém estilo de pais/filhos.
 ```
 
-### 12.4 Painel lateral
+---
+
+### 11.4 Painel lateral
 
 Validar:
 
@@ -998,6 +840,40 @@ Legendas:
 Ações:
   botões proporcionais;
   rolagem interna se necessário.
+```
+
+---
+
+## 12. Arquivos envolvidos
+
+### Árvore e conectores
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+### Home e painel lateral
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/SidebarInfoPanel.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/DirectRelativeFilterGrid.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
 ```
 
 ---
@@ -1026,8 +902,6 @@ genealogyFilters:
 ```
 
 ### 13.2 Não recriar linha oculta por destaque
-
-Qualquer helper de estilo deve respeitar primeiro a visibilidade.
 
 Sequência correta:
 
@@ -1061,176 +935,41 @@ GenealogySpouseEdge.tsx
 
 Genealogia e Visão Completa compartilham arquitetura, mas diferem da Minha Árvore.
 
-### 13.5 Painel lateral
-
-Ajustes visuais devem evitar:
-
-```txt
-overflow externo fora do painel;
-cards com altura fixa excessiva;
-fontes grandes demais em telas baixas;
-uso de justify-between para tentar preencher altura.
-```
-
 ---
 
-## 14. Arquivos envolvidos
-
-### 14.1 Árvore e conectores
-
-```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/components/FamilyTree/types.ts
-src/app/components/FamilyTree/nodeTypes.ts
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/directFamilyColors.ts
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-```
-
-### 14.2 Home e painel lateral
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
-src/app/pages/home/SidebarInfoPanel.tsx
-src/app/pages/home/GenealogyFilterGrid.tsx
-src/app/pages/home/DirectRelationKpiGrid.tsx
-src/app/pages/home/DirectRelativeFilterGrid.tsx
-src/app/pages/home/LifeStatusKpiGrid.tsx
-```
-
-### 14.3 Admin
-
-```txt
-src/app/pages/admin/AdminDashboard.tsx
-src/app/pages/admin/AdminAtividades.tsx
-src/app/services/activityLogService.ts
-```
-
-### 14.4 Layout global
-
-```txt
-src/app/components/layout/MemberPageHeader.tsx
-```
-
----
-
-## 15. Histórico de commits relacionados
-
-Commits já registrados durante as frentes:
-
-```txt
-68eb237 Ajusta conectores visuais da minha arvore
-8ad397d Refina conexoes internas de primos
-9a7c969 Ajusta controles de linhas na genealogia
-c366926 Refina conectores visuais da arvore
-```
-
-Mensagens de commit sugeridas/usadas em frentes posteriores:
-
-```txt
-Padroniza header desktop das paginas internas
-Ajusta layout e historico do painel administrativo
-Corrige pan e conexoes de irmaos na genealogia
-Destaca ramificacoes de irmaos na genealogia
-Ajusta painel lateral da arvore para telas menores
-```
-
----
-
-## 16. Checklist final de build
+## 14. QA técnico
 
 Após alterações relevantes, rodar:
 
-```powershell
-npm.cmd run build
+```bash
+npm run build
+npm test
+npm run test:e2e
+git diff --check
 ```
 
-Depois conferir:
+Para debug visual:
 
-```powershell
+```bash
 git status --short
-git diff
-```
-
-Para commits específicos, preferir commits separados por frente funcional.
-
----
-
-## 17. Recomendações para próximas manutenções
-
-### 17.1 Para Legendas
-
-Se novos botões forem adicionados:
-
-- definir se são filtro, destaque ou apenas legenda;
-- evitar que um botão faça duas coisas ao mesmo tempo;
-- atualizar `TreeLegend.tsx`;
-- atualizar o layout correspondente.
-
-### 17.2 Para linhas
-
-Sempre registrar nos `edge.data` ou nos nodes equivalentes, quando aplicável:
-
-```txt
-lineGroup
-relationKind
-relationshipSubtype
-isStructural
-```
-
-### 17.3 Para Genealogia
-
-Antes de criar nova edge:
-
-```txt
-verificar se GenealogyFamilyConnectorNode já desenha o trecho necessário.
-```
-
-Se o conector já existir, preferir estilizar o conector existente.
-
-### 17.4 Para Painel Lateral
-
-Evitar alturas fixas. Preferir:
-
-```txt
-min-h-0
-flex-1
-overflow-y-auto
-clamp()
-leading-tight
-gaps adaptativos
+git diff --stat
+git diff -- src/app/components/FamilyTree
+git diff -- src/app/pages/Home.tsx
 ```
 
 ---
 
-## 18. Estado atual consolidado
+## 15. Pós-MVP
 
-Até esta documentação, as principais frentes estão consolidadas assim:
+Possíveis evoluções:
 
-```txt
-Minha Árvore:
-  conectores corrigidos e filtros/destaques separados.
+- legenda configurável por admin;
+- presets de visualização da árvore;
+- filtros salvos por usuário;
+- controle persistido de preferências visuais;
+- legenda contextual por view;
+- modo apresentação;
+- exportação com legenda embutida;
+- documentação visual com imagens de exemplo.
 
-Genealogia/Visão Completa:
-  pan corrigido;
-  erro sibling-left corrigido;
-  destaque de irmãos reaproveita conector familiar existente.
-
-Painel lateral:
-  Legendas e Filtros com responsividade vertical em evolução;
-  Scripts 1 e 2 aplicados;
-  Script 3 planejado/gerado para acabamento.
-
-Admin:
-  dashboard ajustado;
-  histórico de atividades convertido para linguagem mais legível;
-  labels de atividades revisados.
-```
+Esses itens não bloqueiam o MVP.
