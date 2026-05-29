@@ -1,4 +1,4 @@
-﻿# Guia de correcao de erros  Arvore Familia
+# Guia de correcao de erros - Arvore Familia
 
 > Ultima atualizacao: 2026-05-29
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
@@ -306,7 +306,7 @@ Comportamento esperado:
 - header e nav mobile usam o mesmo callback de troca de view;
 - troca de view usa `navigate`, nao `window.location`;
 - antes de navegar, comparar `location.pathname` com o path alvo;
-- search params como `pessoa=...` devem ser preservados.
+- search params como `?pessoa=...` devem ser preservados.
 
 Se uma view abrir publica por engano:
 
@@ -315,7 +315,7 @@ Se uma view abrir publica por engano:
 3. rodar `npm run build`;
 4. testar manualmente login/acesso conforme regra de produto.
 
-Se `pessoa=...` desaparecer ao trocar view:
+Se `?pessoa=...` desaparecer ao trocar view:
 
 1. revisar o callback central de troca de view em `Home.tsx`;
 2. confirmar que o destino concatena `location.search`;
@@ -1232,7 +1232,7 @@ Correcao:
 - abrir `/ajustar-notificacoes`;
 - verificar `src/app/pages/AjustarNotificacoes.tsx`;
 - verificar `src/app/components/notifications/NotificationPreferencesPanel.tsx`;
-- manter `/notificacoes` dedicada A  lista/central em cards.
+- manter `/notificacoes` dedicada a lista/central em cards.
 
 ### Gatilho nao notifica
 
@@ -1262,6 +1262,7 @@ Verificar:
 
 - deploy de `send-notification-email`;
 - secrets: `RESEND_API_KEY`, `NOTIFICATION_EMAIL_FROM`, `NOTIFICATION_EMAIL_REPLY_TO`, `SITE_URL`;
+- se `NOTIFICATION_EMAIL_FROM` estiver ausente, confirmar se `EMAIL_FROM` esta configurado como fallback;
 - dominio/remetente verificado no Resend;
 - logs da Edge Function;
 - `notification_dispatch_logs`.
@@ -1301,7 +1302,8 @@ Verificar:
 - URL da Edge Function;
 - header com secret;
 - segredo nao esta em migration versionada;
-- resposta recente em `net._http_response`.
+- resposta recente em `net._http_response`;
+- retorno da rotina diaria com campos como `skippedDuplicates`, `skippedByPreferences`, `skippedWithoutRecipients` e `dispatchFailures`.
 
 ### Push/WhatsApp tentam envio real
 
@@ -1647,7 +1649,7 @@ Verificar:
 
 ---
 
-## 23. Troubleshooting recente  legenda funcional, camadas visuais e painel lateral
+## 23. Troubleshooting recente - legenda funcional, camadas visuais e painel lateral
 
 ### Destaques visuais aparecem mesmo com filtro oculto
 

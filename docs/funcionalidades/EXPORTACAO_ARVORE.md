@@ -1,4 +1,4 @@
-﻿# Exportacao da arvore
+# Exportacao da arvore
 
 > Documento canonico da funcionalidade de exportacao de area visivel da arvore.
 > Local recomendado: `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
@@ -71,6 +71,7 @@ docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/arquitetura/ROTAS_E_GUARDS.md
 docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
 docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
 ```
@@ -81,7 +82,7 @@ docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
 
 ### 4.1 `FamilyTree.tsx`
 
-Responsabilidades relacionadas A  exportacao:
+Responsabilidades relacionadas a exportacao:
 
 - expor acao imperativa `startAreaSelection`;
 - acionar o modo de selecao de area;
@@ -186,7 +187,7 @@ Usuario arrasta para selecionar uma area visivel
 
 Toolbar contextual aparece
 
-Usuario escolhe PNG, PDF ou Imprimir
+Usuario escolhe Salvar PNG, Salvar PDF ou Imprimir
 
 Sistema captura a area selecionada
 
@@ -222,11 +223,16 @@ Arraste para selecionar uma area visivel da arvore.
 Botoes/acoes esperados:
 
 ```txt
-PNG
-PDF
+Salvar PNG
+Salvar PDF
 Imprimir
 Cancelar
 ```
+
+Observacao:
+
+- os labels devem acompanhar a UI real do `TreeAreaSelectionOverlay.tsx`;
+- se a UI mudar, atualizar este documento junto.
 
 ### 6.2 Selecao
 
@@ -277,7 +283,8 @@ Regras:
 - menus de node nao devem aparecer;
 - overlay de selecao nao deve aparecer;
 - legenda lateral nao deve aparecer quando marcada com `data-tree-legend="true"`;
-- elementos de navegacao da pagina nao devem aparecer.
+- elementos de navegacao da pagina nao devem aparecer;
+- se novo overlay/menu for criado na arvore, adicionar seletor de ignore correspondente.
 
 ---
 
@@ -378,8 +385,8 @@ QA manual minimo:
 - iniciar selecao novamente;
 - cancelar por `Esc`;
 - selecionar area valida;
-- exportar PNG;
-- exportar PDF;
+- exportar PNG pelo botao Salvar PNG;
+- exportar PDF pelo botao Salvar PDF;
 - imprimir;
 - testar selecao pequena demais;
 - testar com painel lateral aberto;

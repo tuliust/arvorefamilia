@@ -1,4 +1,4 @@
-﻿# Arvore  legendas, conectores, filtros e painel lateral
+# Arvore - legendas, conectores, filtros e painel lateral
 
 > Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentacao funcional/tecnica especifica da arvore.
@@ -29,6 +29,7 @@ docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/EXPORTACAO_ARVORE.md
+docs/arquitetura/ROTAS_E_GUARDS.md
 ```
 
 ---

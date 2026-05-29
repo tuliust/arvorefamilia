@@ -1,4 +1,4 @@
-﻿# Notificacoes
+# Notificacoes
 
 > Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`
 > Tipo: documentacao funcional e operacional especifica.
@@ -303,12 +303,19 @@ Resposta esperada:
   "birthdaysFound": 0,
   "memorialsFound": 0,
   "notificationsCreated": 0,
-  "duplicatesSkipped": 0,
-  "preferenceSkipped": 0,
-  "noRecipientSkipped": 0,
-  "failed": 0
+  "skippedDuplicates": 0,
+  "skippedByPreferences": 0,
+  "skippedWithoutRecipients": 0,
+  "dispatchFailures": 0,
+  "recipientsResolved": 0,
+  "dispatchResults": []
 }
 ```
+
+Observacao:
+
+- os nomes acima seguem o resumo retornado pelo service `notificationScheduledService.ts`;
+- se a Edge Function converter ou omitir campos para resposta publica, a documentacao deve ser atualizada junto com a function.
 
 Seguranca:
 
@@ -399,6 +406,13 @@ supabase secrets set NOTIFICATION_EMAIL_REPLY_TO="contato@seudominio.com"
 supabase secrets set SITE_URL="https://seudominio.com"
 ```
 
+Observacoes:
+
+- `NOTIFICATION_EMAIL_FROM` e o remetente preferencial;
+- `EMAIL_FROM` tambem e aceito como fallback pela Edge Function;
+- `NOTIFICATION_EMAIL_REPLY_TO` e opcional;
+- `SITE_URL` define a base dos links absolutos enviados no e-mail.
+
 Deploy:
 
 ```bash
@@ -426,7 +440,7 @@ disabled_by_preferences
 Para desativar temporariamente envio real:
 
 ```txt
-remova/desative RESEND_API_KEY ou NOTIFICATION_EMAIL_FROM nos secrets.
+remova/desative RESEND_API_KEY, NOTIFICATION_EMAIL_FROM e, se estiver em uso, EMAIL_FROM nos secrets.
 ```
 
 A function deve retornar:

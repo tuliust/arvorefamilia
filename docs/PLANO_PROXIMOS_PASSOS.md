@@ -1,4 +1,4 @@
-﻿# Plano de proximos passos  Arvore Familia
+# Plano de proximos passos - Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`
@@ -8,7 +8,7 @@
 
 Este documento define **o que falta fazer ate o lancamento** e organiza o backlog pos-MVP do projeto **Arvore Familia**.
 
-Ele responde A  pergunta: **o que ainda precisa ser feito, validado ou deixado explicitamente para depois**
+Ele responde a pergunta: **o que ainda precisa ser feito, validado ou deixado explicitamente para depois**
 
 Este arquivo nao deve repetir em detalhe:
 
@@ -518,12 +518,12 @@ Nao bloqueiam lancamento, se documentados:
 | Storage | Verificar e prevenir uploads orfaos. |
 | Base legada | Dry-run de Storage/base64 e possivel limpeza auditada. |
 | Admin Integridade | Filtros por severidade, paginacao e acoes assistidas futuras. |
-| Migrations | Preencher `docs/operacao/MIGRATIONS_SUPABASE.md`. |
+| Migrations | Manter `docs/operacao/MIGRATIONS_SUPABASE.md` atualizado conforme novas migrations. |
 | Legado SQL | Revisar scripts antigos de forum/Google Calendar. |
 | Logs | Remover ruidos tecnicos como `lado` dos `changed_fields`, se confirmado como ruido. |
 | Viewport arvore | Avaliar melhorias finas para arvores muito grandes apos uso real. |
 | Legenda | Avaliar versao administrativa/configuravel pos-MVP, se necessario. |
-| Documentacao | Preencher `docs/arquitetura/ROTAS_E_GUARDS.md` e `docs/funcionalidades/EXPORTACAO_ARVORE.md`. |
+| Documentacao | Manter `docs/arquitetura/ROTAS_E_GUARDS.md`, `docs/funcionalidades/EXPORTACAO_ARVORE.md` e demais guias canonicos sincronizados com o codigo. |
 
 ### Varredura tecnica de 2026-05-26
 

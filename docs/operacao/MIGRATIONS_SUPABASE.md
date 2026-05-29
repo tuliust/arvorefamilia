@@ -1,4 +1,4 @@
-﻿# Migrations Supabase
+# Migrations Supabase
 
 > Local recomendado: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentacao operacional canonica.
@@ -71,15 +71,15 @@ supabase migration list
 
 Perguntas obrigatorias:
 
-1. A alteracao realmente exige banco
-2. E ajuste funcional ou apenas visual
-3. A coluna/tabela/RPC ja existe em migration
-4. O ambiente remoto esta alinhado com local
-5. Existe risco de perda de dados
-6. Ha backup ou rollback manual
-7. O frontend ja envia payload para a nova coluna
-8. RLS precisa ser alterada
-9. Existe teste ou QA manual para o fluxo
+1. A alteracao realmente exige banco?
+2. E ajuste funcional ou apenas visual?
+3. A coluna/tabela/RPC ja existe em migration?
+4. O ambiente remoto esta alinhado com local?
+5. Existe risco de perda de dados?
+6. Ha backup ou rollback manual?
+7. O frontend ja envia payload para a nova coluna?
+8. RLS precisa ser alterada?
+9. Existe teste ou QA manual para o fluxo?
 
 Regra:
 
@@ -319,12 +319,12 @@ user_favorites
 
 Checklist:
 
-- SELECT de usuario comum esta restrito
-- INSERT/UPDATE/DELETE exigem dono/admin
-- Admin usa RPC ou policy adequada
-- Service role fica apenas server-side
-- Usuario comum nao consegue alterar relacionamento real diretamente
-- Solicitacoes usam `relationship_change_requests`
+- SELECT de usuario comum esta restrito?
+- INSERT/UPDATE/DELETE exigem dono/admin?
+- Admin usa RPC ou policy adequada?
+- Service role fica apenas server-side?
+- Usuario comum nao consegue alterar relacionamento real diretamente?
+- Solicitacoes usam `relationship_change_requests`?
 
 ---
 

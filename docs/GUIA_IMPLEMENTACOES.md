@@ -1,4 +1,4 @@
-﻿# Guia de implementacoes  Arvore Familia
+# Guia de implementacoes - Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
@@ -8,7 +8,7 @@
 
 Este documento registra **o que ja foi implementado** no projeto **Arvore Familia**, o comportamento esperado das frentes consolidadas, os principais arquivos envolvidos e as decisoes tecnicas que nao devem ser reabertas sem motivo tecnico ou de produto.
 
-Este guia responde A  pergunta: **o que existe hoje e como deve se comportar**
+Este guia responde a pergunta: **o que existe hoje e como deve se comportar**
 
 Ele nao deve funcionar como checklist de execucao, manual de troubleshooting ou documentacao detalhada de uma funcionalidade especifica.
 
@@ -36,7 +36,7 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes; edicao avancada, upload por evento, privacidade por evento e PDF ficam pos-MVP. |
 | 7.4 WhatsApp no perfil | Concluido no frontend | Botao/link controlado por telefone e permissoes; sem WhatsApp Business API no MVP. |
 | 7.5 Grau de parentesco/vinculo | Consolidado funcionalmente | Utilitario puro, testes unitarios e integracao em Home/perfil. Integracoes visuais mais profundas ficam pos-MVP. |
-| 7.6 Exportacao de area da arvore | Concluida no escopo atual | Exporta area visivel/selecionada da arvore como PNG, PDF ou impressao; arvore completa fica pos-MVP. |
+| 7.6 Exportacao de area da arvore | Concluida no escopo atual | Exporta area visivel/selecionada da arvore como PNG, PDF ou impressao por selecao retangular; arvore completa fica pos-MVP. |
 | 7.7 Legendas visuais da arvore | Concluida no frontend | Legenda no painel lateral; tambem controla filtros/camadas visuais quando recebe callbacks. |
 | 7.8 Favoritos | Primeira camada aprovada | Favorito de pessoa implementado. Expansao para arquivos, forum, eventos e outros itens fica pos-MVP. |
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Listagem, busca, filtros, abertura e remocao funcionais. |
@@ -125,7 +125,7 @@ Comportamento consolidado:
 - rotas administrativas usam `ProtectedRoute`;
 - rotas de membro usam `MemberRoute`;
 - a arvore principal usa `TreeAccessRoute`;
-- `/` redireciona para `/minha-arvore` preservando search params, como `pessoa=...`;
+- `/` redireciona para `/minha-arvore` preservando search params, como `?pessoa=...`;
 - `/minha-arvore`, `/genealogia` e `/visao-completa` usam o mesmo shell `Home` protegido por `TreeAccessRoute`;
 - `viewMode` e derivado da rota por helpers em `treeViewMode.ts`;
 - a pagina antiga de edicao/dados da arvore pessoal permanece em `/minha-arvore/editar` com `MemberRoute`;
@@ -277,7 +277,7 @@ Documentacao especifica:
 
 ```txt
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-docs/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 ```
 
 Arquivos principais:
@@ -474,7 +474,7 @@ Comportamento implementado:
 - preview de PDF funciona quando possivel;
 - apos upload de novo arquivo, o input nativo fica oculto;
 - campos e botoes **Cancelar**/**Adicionar** ficam ocultos imediatamente apos upload;
-- mensagem verde **a Arquivo carregado** permanece visivel;
+- mensagem verde **Arquivo carregado** permanece visivel;
 - imagem carregada mostra thumbnail;
 - PDF carregado mostra card com icone/label PDF;
 - clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
@@ -655,7 +655,7 @@ e94ed6b fix: ajustar escala e titulo das views da arvore
 
 ---
 
-## 11. Painel lateral e legendas visuais da arvore  7.7
+## 11. Painel lateral e legendas visuais da arvore - 7.7
 
 Documentacao especifica recomendada:
 
@@ -718,7 +718,7 @@ Regras:
 
 ## 12. Demais frentes consolidadas
 
-### 12.1 Linha do tempo  7.3
+### 12.1 Linha do tempo - 7.3
 
 Arquivos principais:
 
@@ -739,7 +739,7 @@ Fontes usadas:
 
 A implementacao e funcional e derivada dos dados existentes.
 
-### 12.2 Grau de parentesco/vinculo  7.5
+### 12.2 Grau de parentesco/vinculo - 7.5
 
 Arquivos principais:
 
@@ -761,7 +761,7 @@ Comportamento:
 - calculo de caminho/grau/confianca;
 - sem exposicao de dados sensiveis.
 
-### 12.3 WhatsApp no perfil  7.4
+### 12.3 WhatsApp no perfil - 7.4
 
 Arquivos principais:
 

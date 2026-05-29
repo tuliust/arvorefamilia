@@ -1,4 +1,4 @@
-﻿# Manutencao de Storage
+# Manutencao de Storage
 
 > Local recomendado: `docs/operacao/STORAGE_MAINTENANCE.md`
 > Tipo: documentacao operacional de manutencao controlada de Storage.
@@ -22,7 +22,14 @@ Use este documento para:
 
 ## 2. Regra principal
 
-Os scripts citados aqui sao seguros por padrao:
+Os scripts citados aqui existem em `scripts/` e devem ser executados com dry-run antes de qualquer escrita ou remocao:
+
+```txt
+scripts/storage-diagnose-orphans.mjs
+scripts/migrate-legacy-base64-files.mjs
+```
+
+Regra de seguranca:
 
 ```txt
 geram relatorio em dry-run e nao removem nem migram dados sem flag explicita.
@@ -422,6 +429,7 @@ Verificar:
 20260522121000_add_historical_file_event_category.sql
 supabase migration list
 schema cache
+docs/operacao/MIGRATIONS_SUPABASE.md
 ```
 
 Nao remover `categoria_evento` do payload sem avaliar o ambiente e a migration.

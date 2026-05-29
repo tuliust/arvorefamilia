@@ -1,92 +1,124 @@
-﻿# Y3 Guia de Migracao para Banco de Dados Supabase
+> Status: documento historico / obsoleto.
+> Local: `docs/historico/documentacao-antiga/`.
+> Nao usar como fonte canonica para desenvolvimento atual.
+>
+> Fonte canonica atual:
+>
+> ```txt
+> docs/README.md
+> docs/operacao/MIGRATIONS_SUPABASE.md
+> docs/arquitetura/ROTAS_E_GUARDS.md
+> docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+> ```
+>
+> Este arquivo foi preservado apenas para rastreabilidade historica. Ele pode citar rotas, scripts SQL, endpoints, dados de seed, senhas, numeros de registros ou fluxos que nao representam mais o estado atual do projeto.
 
-## Y Visao Geral
+---
 
-Este guia explica como migrar os dados da arvore genealogica do armazenamento em memoria para o banco de dados PostgreSQL do Supabase.
+## Aviso operacional atual
 
-## Yi  Arquitetura do Banco de Dados
+Este guia e anterior ao fluxo atual de migrations.
+
+Nao executar `database-schema.sql` nem rotinas destrutivas antigas como fonte principal de schema em ambiente atual. Para operacao corrente, usar:
+
+```txt
+docs/operacao/MIGRATIONS_SUPABASE.md
+supabase/migrations/
+```
+
+Scripts SQL antigos devem ser tratados como referencia historica, nao como procedimento padrao.
+
+---
+
+# Guide Migracao parBanco de Dados Supabase
+
+## Visao Geral
+
+Este guiexpliccomo migrar os dados darvore genealogicdo armazenamento em memoriparo banco de dados PostgreSQL do Supabase.
+
+##  Arquiteturdo Banco de Dados
 
 ### Tabelas Criadas:
 
-1. **`pessoas`** - Armazena informacoes sobre membros da familia e pets
-   - Campos: id, nome_completo, data_nascimento, local_nascimento, foto_principal_url, etc.
-   - Chave primaria: UUID gerado automaticamente
+1. **`pessoas`** - Armazeninformacoes sobre membros dfamilie pets
+  - Campos: id, nome_completo, data_nascimento, local_nascimento, foto_principal_url, etc.
+  - Chave primaria: UUID gerado automaticamente
 
 2. **`relacionamentos`** - Define as conexoes entre pessoas
-   - Campos: id, pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento
-   - Chaves estrangeiras: pessoa_origem_id  pessoas.id, pessoa_destino_id  pessoas.id
-   - Tipos: pai, mae, filho, conjuge, irmao
+  - Campos: id, pessoa_origem_id, pessoa_destino_id, tipo_relacionamento, subtipo_relacionamento
+  - Chaves estrangeiras: pessoa_origem_id -> pessoas.id, pessoa_destino_id -> pessoas.id
+  - Tipos: pai, mae, filho, conjuge, irmao
 
 3. **`arquivos_historicos`** - Fotos e documentos historicos
-   - Campos: id, pessoa_id, url, titulo, descricao, ano, tipo
-   - Chave estrangeira: pessoa_id  pessoas.id
+  - Campos: id, pessoa_id, url, titulo, descricao, ano, tipo
+  - Chave estrangeira: pessoa_id pessoas.id
 
 ### Relacionamentos entre Tabelas:
 
 ```
-pessoas (1) aaa (N) relacionamentos
-pessoas (1) aaa (N) arquivos_historicos
+pessoas (1) -> (N) relacionamentos
+pessoas (1) -> (N) arquivos_historicos
 ```
 
-## Y Passo a Passo da Migracao
+## Passo Passo dMigracao
 
-### 1i a Executar o Schema SQL
+### 1. Executar o SchemSQL
 
 1. Acesse o **Supabase Dashboard**
-2. Va em **SQL Editor**
+2. Vem **SQL Editor**
 3. Clique em **New Query**
-4. Abra o arquivo `/database-schema.sql` deste projeto
+4. Abro arquivo `/database-schema.sql` deste projeto
 5. **Copie todo o conteudo** e cole no SQL Editor
-6. Clique em **Run** para executar
+6. Clique em **Run** parexecutar
 
 **O que esse script faz:**
-- a... Cria as 3 tabelas com todos os campos e tipos corretos
-- a... Define chaves primarias e estrangeiras
-- a... Cria indices para otimizacao de queries
-- a... Configura triggers para atualizar `updated_at` automaticamente
-- a... Habilita RLS (Row Level Security) com politicas de acesso
-- a... Cria views uteis para estatisticas
+- - Crias 3 tabelas com todos os campos e tipos corretos
+- - Define chaves primarias e estrangeiras
+- - Criindices parotimizacao de queries
+- - Configurtriggers paratualizar `updated_at` automaticamente
+- - HabilitRLS (Row Level Security) com politicas de acesso
+- - Criviews uteis parestatisticas
 
-### 2i a Executar a Migracao dos Dados
+### 2. Executar Migracao dos Dados
 
-**Opcao A: Via rotina server-side/transacional (Recomendado)**
+**Opcao A: Virotinserver-side/transacional (Recomendado)**
 
-1. Faca backup do banco no ambiente correto
-2. Execute uma rotina server-side/RPC revisada em ambiente local ou staging
-3. Garanta que a rotina rode em transacao e valide admin via `profiles.role = 'admin'`
-4. Nao execute deletes/inserts destrutivos a partir do frontend
+1. Facbackup do banco no ambiente correto
+2. Execute umrotinserver-side/RPC revisadem ambiente local ou staging
+3. Garantque rotinrode em transacao e valide admin vi`profiles.role = 'admin'`
+4. Nao execute deletes/inserts destrutivos partir do frontend
 
-**Opcao B: Via API legado**
+**Opcao B: ViAPI legado**
 
 ```bash
 curl -X POST \
-  https://{PROJECT_ID}.supabase.co/functions/v1/make-server-055bf375/migrar-dados \
-  -H "Authorization: Bearer {ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"seed": [...dados do seed...]}'
+ https://{PROJECT_ID}.supabase.co/functions/v1/make-server-055bf375/migrar-dados \
+ -H "Authorization: Bearer {ANON_KE}" \
+ -H "Content-Type: application/json" \
+ -d '{"seed": [...dados do seed...]}'
 ```
 
-### 3i a Verificar a Migracao
+### 3. Verificar Migracao
 
 **No Supabase Dashboard:**
 
-1. Va em **Table Editor**
-2. Verifique a tabela `pessoas`:
-   - Deve ter 62 registros
-   - Todos com UUIDs gerados automaticamente
-3. Verifique a tabela `relacionamentos`:
-   - Deve ter centenas de registros (filiacao, conjugal, irmaos)
+1. Vem **Table Editor**
+2. Verifique tabel`pessoas`:
+  - Deve ter 62 registros
+  - Todos com UUIDs gerados automaticamente
+3. Verifique tabel`relacionamentos`:
+  - Deve ter centenas de registros (filiacao, conjugal, irmaos)
 4. Confirme que os relacionamentos estao corretos
 
-**Na Aplicacao:**
+**NAplicacao:**
 
-1. Acesse a home `/` para ver a arvore genealogica
+1. Acesse home `/` parver arvore genealogica
 2. Navegue entre as pessoas
-3. Teste a busca
+3. Teste busca
 4. Verifique se as fotos e dados aparecem corretamente
-5. Acesse `/pessoa/{id}` de algum membro para ver detalhes
+5. Acesse `/pessoa/{id}` de algum membro parver detalhes
 
-## Y Endpoints da API
+## Endpoints dAPI
 
 O servidor Hono expoe os seguintes endpoints:
 
@@ -108,7 +140,7 @@ O servidor Hono expoe os seguintes endpoints:
 
 ### Arquivos Historicos
 
-- `GET /make-server-055bf375/pessoas/:id/arquivos` - Listar de uma pessoa
+- `GET /make-server-055bf375/pessoas/:id/arquivos` - Listar de umpessoa
 - `POST /make-server-055bf375/arquivos` - Criar novo
 - `PUT /make-server-055bf375/arquivos/:id` - Atualizar
 - `DELETE /make-server-055bf375/arquivos/:id` - Deletar
@@ -117,75 +149,75 @@ O servidor Hono expoe os seguintes endpoints:
 
 - `POST /make-server-055bf375/migrar-dados` - Executar migracao inicial
 
-## YZ  O Que Foi Implementado
+##  O Que Foi Implementado
 
-a... **Schema Relacional Completo**
+- **SchemRelacional Completo**
 - 3 tabelas normalizadas
 - Chaves primarias e estrangeiras
-- Indices para performance
+- Indices parperformance
 - Triggers automaticos
 
-a... **API RESTful Completa**
-- CRUD para todas as entidades
-- Endpoints especificos para relacionamentos
+- **API RESTful Completa**
+- CRUD partodas as entidades
+- Endpoints especificos parrelacionamentos
 - Tratamento de erros
 - CORS habilitado
 
-a... **Deteccao Automatica de Irmaos**
-- Algoritmo que identifica irmaos pelos pais
-- Criacao automatica de relacionamentos
-- Evita duplicatas
+- **Deteccao Automaticde Irmaos**
+- Algoritmo que identificirmaos pelos pais
+- Criacao automaticde relacionamentos
+- Evitduplicatas
 
-a... **Integracao Frontend**
-- dataService atualizado para usar API
+- **Integracao Frontend**
+- dataService atualizado parusar API
 - Carregamento assincrono de dados
 - Interface de migracao no admin
 
-a... **Seguranca**
+- **Seguranca**
 - RLS habilitado
-- Service role para operacoes de escrita
-- Anon key para leitura publica
+- Service role paroperacoes de escrita
+- Anon key parleiturpublica
 
-## as i  Avisos Importantes
+## Aviso Avisos Importantes
 
-1. **Backup**: A migracao apaga todos os dados existentes. Sempre faca backup antes!
+1. **Backup**: A migracao apagtodos os dados existentes. Sempre facbackup antes!
 
-2. **UUID vs String**: Os IDs agora sao UUIDs gerados pelo Supabase. O frontend foi atualizado para lidar com isso.
+2. **UUID vs String**: Os IDs agorsao UUIDs gerados pelo Supabase. O frontend foi atualizado parlidar com isso.
 
-3. **Async/Await**: Todas as operacoes de dados agora sao assincronas. Certifique-se de usar `await` nas chamadas.
+3. **Async/Await**: Todas as operacoes de dados agorsao assincronas. Certifique-se de usar `await` nas chamadas.
 
-4. **Performance**: Para grandes volumes de dados, considere implementar paginacao e cache.
+4. **Performance**: Pargrandes volumes de dados, considere implementar paginacao e cache.
 
-5. **RLS em Producao**: As politicas atuais permitem acesso publico para leitura. Em producao, implemente autenticacao e restrinja adequadamente.
+5. **RLS em Producao**: As politicas atuais permitem acesso publico parleitura. Em producao, implemente autenticacao e restrinjadequadamente.
 
-## Ys Proximos Passos (Opcional)
+## Proximos Passos (Opcional)
 
-1. **Implementar Paginacao**: Para listas grandes de pessoas
-2. **Adicionar Cache**: Redis ou similar para performance
-3. **Upload de Fotos**: Integrar com Supabase Storage para uploads reais
+1. **Implementar Paginacao**: Parlistas grandes de pessoas
+2. **Adicionar Cache**: Redis ou similar parperformance
+3. **Upload de Fotos**: Integrar com Supabase Storage paruploads reais
 4. **Autenticacao**: Implementar login com Supabase Auth
 5. **Logs de Auditoria**: Rastrear quem fez o que e quando
-6. **Backup Automatico**: Schedule para backups regulares
+6. **Backup Automatico**: Schedule parbackups regulares
 7. **Search Otimizado**: Implementar full-text search no Postgres
 
-## Y Troubleshooting
+## Troubleshooting
 
 ### Erro: "relation pessoas does not exist"
 **Solucao**: Execute o `database-schema.sql` primeiro no SQL Editor
 
 ### Erro: "CORS policy blocked"
-**Solucao**: Verifique se o servidor Hono esta rodando e o CORS esta habilitado
+**Solucao**: Verifique se o servidor Hono estrodando e o CORS esthabilitado
 
 ### Erro: "Authentication required"
-**Solucao**: Verifique se esta usando `publicAnonKey` nos headers
+**Solucao**: Verifique se estusando `publicAnonKey` nos headers
 
 ### Dados nao aparecem
 **Solucao**:
 1. Verifique no Supabase Table Editor se os dados foram criados
-2. Abra o Console do navegador e veja os erros
-3. Confirme que a migracao foi executada com sucesso
+2. Abro Console do navegador e vejos erros
+3. Confirme que migracao foi executadcom sucesso
 
-## Ys Documentacao Adicional
+## Documentacao Adicional
 
 - [Supabase Docs](https://supabase.com/docs)
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
@@ -194,5 +226,5 @@ a... **Seguranca**
 
 ---
 
-**Criado por**: Sistema de Arvore Genealogica
+**Criado por**: Sistemde Arvore Genealogica
 **Data**: 2026-04-05

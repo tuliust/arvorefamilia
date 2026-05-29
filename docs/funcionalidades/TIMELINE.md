@@ -1,4 +1,4 @@
-﻿# Linha do tempo do usuario
+# Linha do tempo do usuario
 
 > Local recomendado: `docs/funcionalidades/TIMELINE.md`
 > Tipo: documentacao funcional especifica.
@@ -136,6 +136,7 @@ Suporta:
 DD/MM/AAAA
 D/M/AAAA
 AAAA-MM-DD
+AAAA-MM
 AAAA
 valores ausentes ou invalidos como unknown
 ```
@@ -186,6 +187,7 @@ sortTimelineItems
 Ordena:
 
 - datas completas por ano, mes e dia;
+- datas com ano e mes por ano/mes;
 - datas com ano por ano;
 - itens `unknown` no final.
 

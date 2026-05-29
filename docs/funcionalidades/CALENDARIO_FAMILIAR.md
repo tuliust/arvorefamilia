@@ -1,4 +1,4 @@
-﻿# Calendario Familiar
+# Calendario Familiar
 
 > Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
 > Tipo: documentacao funcional especifica.
@@ -12,6 +12,7 @@
 - Protecao: `MemberRoute`.
 - Usa eventos derivados de pessoas, relacionamentos e datas familiares.
 - Integracao com Google Agenda existe na UI e deve ser tratada com cuidado, porque depende do shape dos eventos.
+- Tokens/secrets de Google Agenda nao devem ser expostos no frontend.
 
 ---
 
@@ -52,6 +53,7 @@ Documentos relacionados:
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/arquitetura/ROTAS_E_GUARDS.md
+docs/funcionalidades/NOTIFICACOES.md
 ```
 
 ---

@@ -1,4 +1,4 @@
-﻿# Pessoas, perfil publico e admin de pessoa
+# Pessoas, perfil publico e admin de pessoa
 
 > Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 > Tipo: documentacao funcional especifica.
@@ -15,6 +15,7 @@ Rotas principais:
 /pessoa/:id
 /pessoas/:id
 /admin/pessoas/nova
+/admin/pessoas/:id
 /admin/pessoas/:id/editar
 /meus-dados
 ```
@@ -197,7 +198,7 @@ Comportamento:
 
 ---
 
-## 7. Area do usuario  `/meus-dados`
+## 7. Area do usuario - `/meus-dados`
 
 A pagina `/meus-dados` permite que o usuario edite dados da pessoa vinculada quando tiver permissao.
 
@@ -278,7 +279,7 @@ Migration relacionada:
 
 Regras:
 
-- dropdown exclui usuarios ja vinculados A  pessoa;
+- dropdown exclui usuarios ja vinculados a pessoa;
 - erro de listagem aparece inline no card;
 - botao **Recarregar** tenta buscar novamente;
 - nao usar fallback inseguro de consulta direta em `profiles`;

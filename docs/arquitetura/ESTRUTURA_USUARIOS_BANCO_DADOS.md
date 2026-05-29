@@ -1,4 +1,4 @@
-﻿# Estrutura de usuarios, banco de dados e fluxos de pessoa
+# Estrutura de usuarios, banco de dados e fluxos de pessoa
 
 > Ultima atualizacao: 2026-05-29
 > Projeto: `tuliust/arvorefamilia`
@@ -37,27 +37,22 @@ Fluxo conceitual:
 
 ```txt
 auth.users
-
-profiles
-
-user_person_links
-
-pessoas
-
-relacionamentos / arquivos_historicos / person_events / pessoa_social_profiles / person_generated_insights
+  -> profiles
+  -> user_person_links
+  -> pessoas
+  -> relacionamentos / arquivos_historicos / person_events / pessoa_social_profiles / person_generated_insights
 ```
 
 Fluxo de engajamento do usuario:
 
 ```txt
 auth.users
-
-preferencias_notificacao
-notificacoes_usuario
-notification_dispatch_logs
-notification_occurrences
-user_favorites
-activity_logs
+  -> preferencias_notificacao
+  -> notificacoes_usuario
+  -> notification_dispatch_logs
+  -> notification_occurrences
+  -> user_favorites
+  -> activity_logs
 ```
 
 ---
@@ -191,12 +186,15 @@ Regras de privacidade relevantes:
 | `/admin/login` | `AdminLogin.tsx` | publica | Entrada administrativa. |
 | `/admin` | `AdminDashboard.tsx` | `ProtectedRoute` | Dashboard admin. |
 | `/admin/dashboard` | `AdminDashboard.tsx` | `ProtectedRoute` | Dashboard admin. |
+| `/admin/home` | `AdminHomeSettings.tsx` | `ProtectedRoute` | Configuracoes visuais da home publica. |
 | `/admin/pessoas` | `AdminPessoas.tsx` | `ProtectedRoute` | Listagem de pessoas. |
 | `/admin/pessoas/nova` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Criacao de pessoa. |
 | `/admin/pessoas/:id/editar` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Edicao de pessoa. |
 | `/admin/pessoas/:id` | `AdminPessoaForm.tsx` | `ProtectedRoute` | Alias de edicao/visualizacao admin. |
 | `/admin/relacionamentos` | `AdminRelacionamentos.tsx` | `ProtectedRoute` | Gestao de relacionamentos. |
 | `/admin/relacionamentos/novo` | `AdminRelacionamentoForm.tsx` | `ProtectedRoute` | Criacao de relacionamento. |
+| `/admin/importacao` | `AdminImportacao.tsx` | `ProtectedRoute` | Importacao. |
+| `/admin/migrar-dados` | `AdminMigrarDados.tsx` | `ProtectedRoute` | Ferramenta destrutiva de migracao de seed. |
 | `/admin/diagnostico` | `AdminDiagnostico.tsx` | `ProtectedRoute` | Diagnostico de integridade. |
 | `/admin/integridade` | `AdminIntegridade.tsx` | `ProtectedRoute` | Integridade de dados. |
 | `/admin/atividades` | `AdminAtividades.tsx` | `ProtectedRoute` | Logs de atividade. |
@@ -1127,10 +1125,10 @@ O fluxo atual esta coerente e funcional em sua estrutura principal:
 
 ```txt
 auth.users
- profiles
- user_person_links
- pessoas
- relacionamentos
+  -> profiles
+  -> user_person_links
+  -> pessoas
+  -> relacionamentos
 ```
 
 As funcionalidades auxiliares tambem estao bem separadas:

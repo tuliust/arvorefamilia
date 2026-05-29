@@ -1,6 +1,8 @@
-﻿> Status atual: fase 7.10 concluida no escopo MVP. Este documento fica preservado como referencia historica, checklist de regressao e guia para ajustes futuros de responsividade.
+> Status atual: fase 7.10 concluida no escopo MVP. Este documento fica preservado como referencia historica, checklist de regressao e guia para ajustes futuros de responsividade.
+>
+> Para regras canonicas atuais de UX e layout, consultar `docs/GUIA_UX_LAYOUT.md`.
 
-# Responsividade mobile/tablet  Arvore Familia
+# Responsividade mobile/tablet - Arvore Familia
 
 ## Objetivo
 
@@ -174,7 +176,7 @@ Antes de alterar codigo, fazer uma leitura visual rapida em 320px, 390px e 768px
 
 ---
 
-## 8. Bloco 1  Base global
+## 8. Bloco 1 - Base global
 
 ### Objetivo
 
@@ -275,7 +277,7 @@ git commit -m "style: ajustar base responsiva global"
 
 ---
 
-## 9. Bloco 2  Arvore e ReactFlow
+## 9. Bloco 2 - Arvore e ReactFlow
 
 ### Objetivo
 
@@ -355,7 +357,7 @@ git commit -m "style: ajustar arvore para mobile e tablet"
 
 ---
 
-## 10. Bloco 3  Perfil da pessoa
+## 10. Bloco 3 - Perfil da pessoa
 
 ### Objetivo
 
@@ -434,7 +436,7 @@ git commit -m "style: ajustar perfil de pessoa para mobile"
 
 ---
 
-## 11. Bloco 4  Area do usuario
+## 11. Bloco 4 - Area do usuario
 
 ### Objetivo
 
@@ -529,7 +531,7 @@ git commit -m "style: ajustar area do usuario para mobile"
 
 ---
 
-## 12. Bloco 5  Forum, favoritos e notificacoes
+## 12. Bloco 5 - Forum, favoritos e notificacoes
 
 ### Objetivo
 
@@ -610,7 +612,7 @@ git commit -m "style: ajustar forum favoritos e notificacoes para mobile"
 
 ---
 
-## 13. Bloco 6  Admin
+## 13. Bloco 6 - Admin
 
 ### Objetivo
 
@@ -725,7 +727,7 @@ git commit -m "style: ajustar admin para mobile"
 
 ---
 
-## 14. Bloco 7  QA final de lancamento
+## 14. Bloco 7 - QA final de lancamento
 
 ### Objetivo
 

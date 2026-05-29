@@ -1,4 +1,4 @@
-﻿# Guia de UX e Layout  Arvore Familia
+# Guia de UX e Layout - Arvore Familia
 
 > Ultima revisao: 2026-05-29
 > Local canonico: `docs/GUIA_UX_LAYOUT.md`
@@ -143,7 +143,7 @@ Regras:
 - preservar busca expansivel;
 - preservar seletor de view;
 - seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a pagina;
-- search params existentes, especialmente `pessoa=...`, devem ser preservados ao trocar view;
+- search params existentes, especialmente `?pessoa=...`, devem ser preservados ao trocar view;
 - botao **Acoes** usa icone `Printer`;
 - no desktop, o botao pode exibir texto **Acoes**;
 - no mobile, o botao deve aparecer apenas como icone;
@@ -368,7 +368,7 @@ A view **Genealogia** deve:
 - usar zoom por largura;
 - nao reduzir zoom por causa da altura total;
 - iniciar no mesmo topo visual das demais views;
-- manter largura visual equivalente A  Minha Arvore;
+- manter largura visual equivalente a Minha Arvore;
 - permitir que o usuario arraste/deslize para baixo quando houver muitos cards verticais;
 - preservar labels de geracao;
 - preservar aneis conjugais e conectores ortogonais.
@@ -405,7 +405,7 @@ Regras:
 
 ## 6. Layouts da arvore
 
-### 6.1 Minha Arvore  layout distribuido
+### 6.1 Minha Arvore - layout distribuido
 
 Arquivo:
 
@@ -431,7 +431,7 @@ Regras de UX:
 - caixas e anchors nao devem controlar zoom inicial;
 - cards devem continuar clicaveis via `FamilyTree`.
 
-### 6.2 Genealogia/Visao Completa  layout por colunas
+### 6.2 Genealogia/Visao Completa - layout por colunas
 
 Arquivo:
 
@@ -526,7 +526,7 @@ UX implementada:
 - overlay sobre a area visivel da arvore;
 - instrucao **Arraste para selecionar uma area visivel da arvore.**;
 - retangulo de selecao;
-- toolbar contextual para PNG, PDF, imprimir e cancelar;
+- toolbar contextual para Salvar PNG, Salvar PDF, Imprimir e Cancelar;
 - cancelamento por botao ou `Esc`;
 - bloqueio temporario de pan/zoom durante selecao.
 
@@ -605,7 +605,7 @@ Diretrizes:
 - titulos curtos;
 - subtitulos informativos, mas nao redundantes;
 - botoes com verbo claro;
-- mensagens de erro orientadas A  acao;
+- mensagens de erro orientadas a acao;
 - evitar jargao tecnico para usuario comum;
 - preservar termos tecnicos no admin quando necessario.
 
@@ -620,6 +620,8 @@ Exemplos consolidados:
 | Subtitulo da arvore | Use zoom, arraste a arvore e clique nas pessoas para abrir detalhes. |
 | Status conjugal ativo | Em relacionamento |
 | Exportacao | Selecionar area |
+| Exportacao PNG | Salvar PNG |
+| Exportacao PDF | Salvar PDF |
 | Acoes da arvore | Acoes |
 | Loading da Home | Buscando pessoas e relacionamentos... |
 | Busca | Buscar por nome ou local... |

@@ -1,18 +1,24 @@
-﻿# Diagnostico e consolidacao 7.6  Exportacao de area da arvore
+# Diagnostico e consolidacao 7.6 - Exportacao de area da arvore
 
 ## Status atual
+
+Documento canonico atual da funcionalidade:
+
+```txt
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
 
 Status: **concluido no escopo MVP**.
 
 A frente 7.6 foi executada em tres etapas:
 
-- **7.6A  Diagnostico tecnico inicial**;
-- **7.6B  Implementacao da selecao/exportacao de area visivel**;
-- **7.6C  QA tecnico/visual e refinamento pontual**.
+- **7.6A - Diagnostico tecnico inicial**;
+- **7.6B - Implementacao da selecao/exportacao de area visivel**;
+- **7.6C - QA tecnico/visual e refinamento pontual**.
 
 A funcionalidade atual permite selecionar uma area visivel da arvore e exportar essa selecao como PNG, PDF ou impressao.
 
-A exportacao permanece limitada A  **viewport visivel atual da `.react-flow`**. A exportacao da arvore completa fica como evolucao pos-MVP.
+A exportacao permanece limitada a **viewport visivel atual da `.react-flow`**. A exportacao da arvore completa fica como evolucao pos-MVP.
 
 Consolidacao atual: selecao de area, PNG, PDF e impressao estao concluidos no escopo atual; arvore completa permanece fora do MVP.
 
@@ -20,7 +26,7 @@ Consolidacao atual: selecao de area, PNG, PDF e impressao estao concluidos no es
 
 ## 1. Historico da frente
 
-### 1.1 7.6A  Diagnostico tecnico
+### 1.1 7.6A - Diagnostico tecnico
 
 Data original: 2026-05-15.
 
@@ -30,7 +36,7 @@ Tambem foi identificado que ja havia uma base parcial de exportacao da visualiza
 
 ---
 
-## 2. 7.6B  Implementacao concluida
+## 2. 7.6B - Implementacao concluida
 
 Arquivos principais:
 
@@ -144,7 +150,7 @@ canvas.height / targetRect.height
 
 ---
 
-## 5. 7.6C  QA e refinamento concluidos
+## 5. 7.6C - QA e refinamento concluidos
 
 Documento complementar:
 
@@ -182,7 +188,7 @@ A exportacao atua apenas sobre a visualizacao que o usuario ja consegue ver.
 
 Limitacoes aceitas no MVP:
 
-- exportacao limitada A  viewport visivel;
+- exportacao limitada a viewport visivel;
 - exportacao da arvore completa nao implementada;
 - reducao automatica de escala para selecoes grandes nao implementada;
 - imagens externas sem CORS podem gerar falha de canvas;
@@ -227,8 +233,8 @@ E testar manualmente:
 - cancelar com `Esc`;
 - selecionar area pequena;
 - selecionar area valida;
-- exportar PNG;
-- exportar PDF;
+- exportar PNG pelo botao Salvar PNG;
+- exportar PDF pelo botao Salvar PDF;
 - imprimir;
 - confirmar que pan/zoom voltam;
 - confirmar que clique em pessoa funciona apos fechar overlay;

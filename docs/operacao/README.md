@@ -1,4 +1,4 @@
-﻿# Operacao e manutencao
+# Operacao e manutencao
 
 > Local recomendado: `docs/operacao/README.md`
 > Tipo: indice operacional da pasta `docs/operacao/`.
@@ -13,7 +13,7 @@ Use esta pasta para temas como:
 
 - Supabase migrations;
 - manutencao de Storage;
-- scripts administrativos;
+- scripts administrativos versionados em `scripts/`;
 - dry-run de limpeza;
 - operacoes com service role;
 - cuidados com dados legados;
@@ -148,12 +148,12 @@ Criar novo `.md` em `docs/operacao/` apenas se o tema nao couber em:
 
 Perguntas:
 
-1. E uma operacao recorrente
-2. Tem risco de alterar dados
-3. Usa service role
-4. Tem dry-run
-5. Precisa de checklist proprio
-6. Nao e apenas historico
+1. E uma operacao recorrente?
+2. Tem risco de alterar dados?
+3. Usa service role?
+4. Tem dry-run?
+5. Precisa de checklist proprio?
+6. Nao e apenas historico?
 
 Se a resposta for sim para varios itens, pode justificar novo documento operacional.
 

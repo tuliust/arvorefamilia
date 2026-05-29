@@ -1,4 +1,4 @@
-﻿# Git  comandos de responsividade mobile/tablet
+# Git - comandos de responsividade mobile/tablet
 
 > Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`
 > Tipo: comando/checklist tecnico pontual.
@@ -224,6 +224,8 @@ Revisar este documento se:
 ---
 
 ## 10. Observacao documental
+
+Depois da fase 7.10, este arquivo deve ser usado apenas como referencia historica/operacional. Para ajustes correntes de documentacao, preferir os comandos usuais da branch atual do projeto.
 
 Este arquivo e um comando auxiliar. Nao deve acumular diagnostico, decisoes de UX, checklist final de QA ou historico longo.
 

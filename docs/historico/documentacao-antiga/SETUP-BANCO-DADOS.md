@@ -1,38 +1,71 @@
-﻿# Yi  Setup do Banco de Dados no Supabase
-
-## a... O que precisa ser criado no Supabase
-
-### 1i a **Tabelas**
-- a... `pessoas` - Membros da familia e pets
-- a... `relacionamentos` - Conexoes entre pessoas (pai, mae, conjuge, filho, irmao)
-- a... `arquivos_historicos` - Fotos e documentos historicos
-
-### 2i a **Funcao**
-- a... `update_updated_at_column()` - Atualiza automaticamente o campo `updated_at`
-
-### 3i a **Triggers**
-- a... `update_pessoas_updated_at` - Atualiza `updated_at` na tabela `pessoas`
-- a... `update_relacionamentos_updated_at` - Atualiza `updated_at` na tabela `relacionamentos`
-- a... `update_arquivos_updated_at` - Atualiza `updated_at` na tabela `arquivos_historicos`
-
-### 4i a **Indices**
-- a... Indices em `pessoas` (nome, tipo, created_at)
-- a... Indices em `relacionamentos` (origem, destino, tipo)
-- a... Indices em `arquivos_historicos` (pessoa_id, ordem)
-
-### 5i a **Politicas RLS (Row Level Security)**
-- a... Leitura publica para todas as tabelas (area publica do site)
-- a... Escrita permitida via `service_role` (backend)
-
-### 6i a **View (opcional)**
-- a... `pessoas_com_estatisticas` - Estatisticas agregadas por pessoa
-
-### 7i a **Extensao**
-- a... `uuid-ossp` - Para gerar UUIDs automaticamente
+> Status: documento historico / obsoleto.
+> Local: `docs/historico/documentacao-antiga/`.
+> Nao usar como fonte canonica para desenvolvimento atual.
+>
+> Fonte canonica atual:
+>
+> ```txt
+> docs/README.md
+> docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+> docs/arquitetura/ROTAS_E_GUARDS.md
+> docs/operacao/MIGRATIONS_SUPABASE.md
+> docs/GUIA_CORRECAO_ERROS.md
+> ```
+>
+> Este arquivo foi preservado apenas para rastreabilidade historica. Ele pode citar rotas, scripts SQL, endpoints, senhas, dados de seed, contagens ou fluxos que nao representam mais o estado atual do projeto.
 
 ---
 
-## Y Como Executar o Setup
+## Aviso tecnico atual
+
+Este setup descreve um fluxo antigo baseado em `database-schema.sql`, seed e `/admin/migrar-dados`.
+
+No projeto atual, a fonte principal de schema deve ser:
+
+```txt
+supabase/migrations/
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+Nao aplicar `database-schema.sql` como fonte principal de schema em ambiente novo sem revisar migrations, RLS, RPCs, Storage, backups e estado remoto.
+
+---
+
+# Setup do Banco de Dados no Supabase
+
+## - O que precisa ser criado no Supabase
+
+### 1. **Tabelas**
+- - `pessoas` - Membros da familia e pets
+- - `relacionamentos` - Conexoes entre pessoas (pai, mae, conjuge, filho, irmao)
+- - `arquivos_historicos` - Fotos e documentos historicos
+
+### 2. **Funcao**
+- - `update_updated_at_column()` - Atualiza automaticamente o campo `updated_at`
+
+### 3. **Triggers**
+- - `update_pessoas_updated_at` - Atualiza `updated_at` na tabela `pessoas`
+- - `update_relacionamentos_updated_at` - Atualiza `updated_at` na tabela `relacionamentos`
+- - `update_arquivos_updated_at` - Atualiza `updated_at` na tabela `arquivos_historicos`
+
+### 4. **Indices**
+- - Indices em `pessoas` (nome, tipo, created_at)
+- - Indices em `relacionamentos` (origem, destino, tipo)
+- - Indices em `arquivos_historicos` (pessoa_id, ordem)
+
+### 5. **Politicas RLS (Row Level Security)**
+- - Leitura publica para todas as tabelas (area publica do site)
+- - Escrita permitida via `service_role` (backend)
+
+### 6. **View (opcional)**
+- - `pessoas_com_estatisticas` - Estatisticas agregadas por pessoa
+
+### 7. **Extensao**
+- - `uuid-ossp` - Para gerar UUIDs automaticamente
+
+---
+
+## Como Executar o Setup
 
 ### **Passo 1: Acessar o Supabase SQL Editor**
 1. Acesse seu projeto no [Supabase Dashboard](https://supabase.com/dashboard)
@@ -47,13 +80,13 @@
 
 ### **Passo 3: Verificar Criacao**
 Apos executar, voce deve ver:
-- a... 3 tabelas criadas
-- a... 1 funcao criada
-- a... 3 triggers criados
-- a... 9 indices criados
-- a... 12 politicas RLS criadas
-- a... 1 view criada
-- a... 1 extensao habilitada
+- - 3 tabelas criadas
+- - 1 funcao criada
+- - 3 triggers criados
+- - 9 indices criados
+- - 12 politicas RLS criadas
+- - 1 view criada
+- - 1 extensao habilitada
 
 ### **Passo 4: Migrar os Dados**
 1. Acesse o painel administrativo: `/admin/login`
@@ -64,15 +97,15 @@ Apos executar, voce deve ver:
 
 ---
 
-## Y Como Verificar se Esta Funcionando
+## Como Verificar se Esta Funcionando
 
 ### **Metodo 1: Via Interface**
 1. Acesse `/admin/diagnostico`
 2. Verifique as estatisticas:
-   - Total de pessoas cadastradas
-   - Total de relacionamentos
-   - Total de relacionamentos de irmaos
-   - Avisos sobre integridade dos dados
+ - Total de pessoas cadastradas
+ - Total de relacionamentos
+ - Total de relacionamentos de irmaos
+ - Avisos sobre integridade dos dados
 
 ### **Metodo 2: Via Supabase Dashboard**
 1. No Supabase, va em **Table Editor**
@@ -87,7 +120,7 @@ Execute o arquivo `verificar-irmaos.sql` no SQL Editor do Supabase:
 -- Ver total de relacionamentos por tipo
 SELECT tipo_relacionamento, COUNT(*) as total
 FROM relacionamentos
-GROUP BY tipo_relacionamento;
+GROUP Btipo_relacionamento;
 
 -- Ver pessoas com seus irmaos
 SELECT
@@ -98,13 +131,13 @@ FROM pessoas p1
 LEFT JOIN relacionamentos r ON r.pessoa_origem_id = p1.id AND r.tipo_relacionamento = 'irmao'
 LEFT JOIN pessoas p2 ON p2.id = r.pessoa_destino_id
 WHERE p1.humano_ou_pet = 'Humano'
-GROUP BY p1.id, p1.nome_completo
+GROUP Bp1.id, p1.nome_completo
 HAVING COUNT(r.id) > 0
-ORDER BY total_irmaos DESC
+ORDER Btotal_irmaos DESC
 LIMIT 10;
 ```
 
-a... **Arquivo completo de verificacao disponivel em:** `/verificar-irmaos.sql`
+- **Arquivo completo de verificacao disponivel em:** `/verificar-irmaos.sql`
 
 ### **Metodo 4: Via SQL Basico**
 Execute no SQL Editor:
@@ -118,7 +151,7 @@ SELECT COUNT(*) FROM relacionamentos;
 -- Ver estatisticas por tipo de relacionamento
 SELECT tipo_relacionamento, COUNT(*)
 FROM relacionamentos
-GROUP BY tipo_relacionamento;
+GROUP Btipo_relacionamento;
 
 -- IMPORTANTE: Verificar se existe relacionamento de irmaos
 SELECT COUNT(*) as total_irmaos
@@ -134,7 +167,7 @@ LIMIT 10;
 
 ---
 
-## as i  Solucao de Problemas
+## Aviso: Solucao de Problemas
 
 ### **Erro: "relation already exists"**
 - **Causa:** Tabelas ja foram criadas anteriormente
@@ -158,7 +191,7 @@ LIMIT 10;
 
 ---
 
-## YZ  Checklist Completo
+## Checklist Completo
 
 Antes de considerar o setup completo, verifique:
 
@@ -177,7 +210,7 @@ Antes de considerar o setup completo, verifique:
 
 ---
 
-## Ys Estrutura das Tabelas
+## Estrutura das Tabelas
 
 ### **Tabela: pessoas**
 ```
@@ -229,19 +262,19 @@ updated_at  TIMESTAMP
 
 ---
 
-## Ys Proximos Passos
+## Proximos Passos
 
 Apos concluir o setup:
 
-1. a... Acesse a home (`/`) para ver a arvore genealogica
-2. a... Teste a navegacao clicando nas pessoas
-3. a... Acesse o painel admin (`/admin`) para gerenciar dados
-4. a... Use o diagnostico (`/admin/diagnostico`) para verificar integridade
-5. a... Experimente adicionar/editar pessoas e relacionamentos
+1. - Acesse a home (`/`) para ver a arvore genealogica
+2. - Teste a navegacao clicando nas pessoas
+3. - Acesse o painel admin (`/admin`) para gerenciar dados
+4. - Use o diagnostico (`/admin/diagnostico`) para verificar integridade
+5. - Experimente adicionar/editar pessoas e relacionamentos
 
 ---
 
-## Yz Suporte
+## Suporte
 
 Se encontrar problemas:
 1. Verifique os logs do servidor Supabase

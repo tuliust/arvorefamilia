@@ -1,10 +1,12 @@
-﻿# QA 7.6C - Exportacao de area visivel da arvore
+# QA 7.6C - Exportacao de area visivel da arvore
 
 Data: 2026-05-18
 
 Branch: `main`
 
 Escopo: QA tecnico/visual e refinamento pontual da selecao de area visivel da arvore para PNG, PDF e impressao.
+
+Documento canonico atual da funcionalidade: `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
 ## Validacoes executadas
 
@@ -70,8 +72,8 @@ Objetivo da fase: confirmar, em uso real, que a exportacao da area selecionada n
 
 Itens validados manualmente:
 
-- PNG: OK.
-- PDF: OK.
+- PNG pelo botao Salvar PNG: OK.
+- PDF pelo botao Salvar PDF: OK.
 - Impressao: OK.
 - Cancelamento por `Esc`: OK.
 - Arvores grandes: OK.

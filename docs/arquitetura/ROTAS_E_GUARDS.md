@@ -1,4 +1,4 @@
-﻿# Rotas e guards de acesso
+# Rotas e guards de acesso
 
 > Documento canonico de rotas, navegacao e protecao de acesso.
 > Local recomendado: `docs/arquitetura/ROTAS_E_GUARDS.md`.
@@ -56,7 +56,7 @@ O sistema separa quatro niveis de navegacao:
 
 2. **Rotas de arvore**
    - exigem login;
-   - exigem acesso confirmado A  arvore;
+   - exigem acesso confirmado a arvore;
    - protegidas por `TreeAccessRoute`.
 
 3. **Rotas de membro**
@@ -221,7 +221,7 @@ Observacao:
 Regras:
 
 - `/` redireciona para `/minha-arvore`;
-- o redirect preserva search params, como `pessoa=...`;
+- o redirect preserva search params, como `?pessoa=...`;
 - as tres views usam o mesmo shell `Home`;
 - `Home.tsx` deriva `treeViewMode` a partir da rota atual;
 - troca de view deve usar navegacao client-side;
@@ -259,7 +259,7 @@ Regras:
 
 - qualquer novo link entre views deve usar os helpers;
 - nao duplicar mapeamento de paths em componentes;
-- preservar `pessoa=...` ao navegar;
+- preservar `?pessoa=...` ao navegar;
 - manter nomes de view estaveis.
 
 ---
@@ -482,9 +482,9 @@ Checklist manual minimo:
 - admin acessa `/admin`;
 - admin acessa `/admin/pessoas`;
 - `/` redireciona para `/minha-arvore`;
-- `/pessoa=ID` redireciona para `/minha-arvorepessoa=ID`;
-- trocar de `/minha-arvorepessoa=ID` para `/genealogia` preserva `pessoa=ID`;
-- trocar de `/genealogiapessoa=ID` para `/visao-completa` preserva `pessoa=ID`;
+- `/?pessoa=ID` redireciona para `/minha-arvore?pessoa=ID`;
+- trocar de `/minha-arvore?pessoa=ID` para `/genealogia?pessoa=ID` preserva `?pessoa=ID`;
+- trocar de `/genealogia?pessoa=ID` para `/visao-completa?pessoa=ID` preserva `?pessoa=ID`;
 - rota inexistente mostra 404.
 
 ---
@@ -535,7 +535,7 @@ Correcao:
 
 ---
 
-### `pessoa=...` desaparece ao trocar view
+### `?pessoa=...` desaparece ao trocar view
 
 Verificar:
 

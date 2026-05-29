@@ -1,28 +1,62 @@
-﻿# a... RESPOSTA RAPIDA: Irmaos Estao Interligados
+> Status: documento historico / obsoleto.
+> Local: `docs/historico/documentacao-antiga/`.
+> Nao usar como fonte canonica para desenvolvimento atual.
+>
+> Fonte canonica atual:
+>
+> ```txt
+> docs/README.md
+> docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+> docs/arquitetura/ROTAS_E_GUARDS.md
+> docs/operacao/MIGRATIONS_SUPABASE.md
+> docs/GUIA_CORRECAO_ERROS.md
+> ```
+>
+> Este arquivo foi preservado apenas para rastreabilidade historica. Ele pode citar rotas, scripts SQL, endpoints, senhas, dados de seed, contagens ou fluxos que nao representam mais o estado atual do projeto.
 
-## YZ  Resposta Direta
+---
+
+## Aviso tecnico atual
+
+Este arquivo responde a uma duvida pontual sobre relacionamentos de irmaos em uma fase antiga do projeto.
+
+Nao usar este documento para decidir o fluxo atual de banco, migrations ou relacionamento. Antes de executar SQL, migracao ou rotina destrutiva, consultar:
+
+```txt
+docs/operacao/MIGRATIONS_SUPABASE.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+A rota `/admin/migrar-dados` deve ser tratada como ferramenta destrutiva/legada e nao como procedimento padrao de ambiente atual.
+
+---
+
+# Resposta rapida: Irmaos Estao Interligados
+
+## Resposta Direta
 
 **SIM**, o sistema **detecta e cria automaticamente** relacionamentos bidirecionais entre irmaos no banco de dados.
 
 ---
 
-## Y Como Funciona (Resumo de 30 segundos)
+## Como Funciona (Resumo de 30 segundos)
 
 1. Voce executa a **migracao** em `/admin/migrar-dados`
 2. O sistema cria pessoas e relacionamentos explicitos (pai, mae, conjuge, filho)
 3. **Automaticamente**, o servidor executa `detectarECriarIrmaos()` que:
-   - Agrupa filhos pelo mesmo pai
-   - Agrupa filhos pela mesma mae
-   - Cria relacionamentos **bidirecionais** entre cada par de irmaos
-   - Insere tudo na tabela `relacionamentos` com `tipo_relacionamento = 'irmao'`
+ - Agrupa filhos pelo mesmo pai
+ - Agrupa filhos pela mesma mae
+ - Cria relacionamentos **bidirecionais** entre cada par de irmaos
+ - Insere tudo na tabela `relacionamentos` com `tipo_relacionamento = 'irmao'`
 
 ---
 
-## a... Como Verificar AGORA (3 minutos)
+## - Como Verificar AGORA (3 minutos)
 
 ### **Opcao 1: Via SQL (MAIS RAPIDO)**
 
-1. Abra o Supabase  SQL Editor
+1. Abra o Supabase SQL Editor
 2. Execute:
 
 ```sql
@@ -38,7 +72,7 @@ SELECT
 FROM pessoas p1
 JOIN relacionamentos r ON r.pessoa_origem_id = p1.id AND r.tipo_relacionamento = 'irmao'
 JOIN pessoas p2 ON p2.id = r.pessoa_destino_id
-GROUP BY p1.nome_completo
+GROUP Bp1.nome_completo
 LIMIT 5;
 ```
 
@@ -60,7 +94,7 @@ LIMIT 5;
 
 ---
 
-## Y Se NAO Estiver Funcionando
+## Se NAO Estiver Funcionando
 
 ### **Cenario 1: Migracao nao foi executada**
 
@@ -72,20 +106,20 @@ LIMIT 5;
 ### **Cenario 2: Tabelas nao foram criadas**
 
 **Solucao:**
-1. Abra o Supabase  SQL Editor
+1. Abra o Supabase SQL Editor
 2. Execute o arquivo `/database-schema.sql` (copie e cole todo conteudo)
 3. Depois execute a migracao
 
 ### **Cenario 3: Irmaos criados mas nao aparecem na arvore**
 
 **Solucao:**
-1. Na home, abra a sidebar (botao a )
+1. Na home, abra a sidebar (botao de menu)
 2. Em "Filtros de Linhas", verifique se "Irmaos" esta marcado
 3. Se nao, marque a checkbox
 
 ---
 
-## YS Numeros Esperados
+## Numeros Esperados
 
 Apos migracao completa (62 pessoas):
 
@@ -97,7 +131,7 @@ Apos migracao completa (62 pessoas):
 
 ---
 
-## Y Arquivos de Referencia
+## Arquivos de Referencia
 
 - **Schema SQL:** `/database-schema.sql`
 - **Verificacao SQL:** `/verificar-irmaos.sql`
@@ -107,7 +141,7 @@ Apos migracao completa (62 pessoas):
 
 ---
 
-## YZ  Checklist Rapido
+## Checklist Rapido
 
 - [ ] Schema SQL executado no Supabase
 - [ ] Migracao executada em `/admin/migrar-dados`
@@ -115,11 +149,11 @@ Apos migracao completa (62 pessoas):
 - [ ] Diagnostico mostra relacionamentos de irmaos
 - [ ] Arvore visual mostra linhas pontilhadas laranjas
 
-**Se todos estao a..., entao SIM, os irmaos estao completamente interligados no banco!**
+**Se todos estao -, entao SIM, os irmaos estao completamente interligados no banco!**
 
 ---
 
-## Y Exemplo Visual
+## Exemplo Visual
 
 ```
 Joao -------- Maria -------- Pedro
@@ -131,12 +165,12 @@ Pai: Carlos   Pai: Carlos   Pai: Carlos
 Mae: Ana      Mae: Ana      Mae: Ana
 
 Relacionamentos criados automaticamente:
-- Joao a Maria (bidirecional)
-- Joao a Pedro (bidirecional)
-- Maria a Pedro (bidirecional)
+- Joao -> Maria (bidirecional)
+- Joao -> Pedro (bidirecional)
+- Maria -> Pedro (bidirecional)
 
 Total: 6 registros na tabela relacionamentos
-(3 pares  2 direcoes)
+(3 pares x 2 direcoes)
 ```
 
 ---

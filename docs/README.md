@@ -1,4 +1,4 @@
-﻿# Documentacao - Arvore Familia
+# Documentacao - Arvore Familia
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
 
@@ -86,6 +86,13 @@ Documentos de comandos ficam em `docs/comandos/`.
 | Arquivo | Uso |
 |---|---|
 | `comandos/GIT_RESPONSIVIDADE.md` | Comandos, checkpoints e historico tecnico da frente de responsividade. |
+
+Scripts auxiliares relacionados a documentacao ficam em `scripts/` e devem ser usados com cuidado:
+
+| Script | Uso |
+|---|---|
+| `scripts/fix-docs-encoding.py` | Corrigir mojibake/encoding em Markdown. Usar com `--ascii` se o terminal Windows voltar a corromper acentos. |
+| `scripts/polir-documentacao-etapa1.py` | Script experimental de polimento textual. Nao usar sem revisar diff antes do commit. |
 
 ---
 

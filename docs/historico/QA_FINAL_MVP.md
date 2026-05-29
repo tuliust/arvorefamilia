@@ -1,4 +1,4 @@
-﻿# QA Final MVP
+# QA Final MVP
 
 > Local recomendado: `docs/historico/QA_FINAL_MVP.md`
 > Tipo: checklist historico e operacional de validacao final do MVP.
@@ -49,7 +49,7 @@ O MVP considera como escopo:
 
 ## 3. Criterios de bloqueio
 
-### P0  bloqueia lancamento
+### P0 - bloqueia lancamento
 
 - build quebrado;
 - login quebrado;
@@ -63,7 +63,7 @@ O MVP considera como escopo:
 - deploy exige secret versionado;
 - migration obrigatoria ausente no remoto.
 
-### P1  avaliar bloqueio
+### P1 - avaliar bloqueio
 
 - exportacao PNG/PDF falha em fluxo principal;
 - notificacoes principais quebram;
@@ -74,7 +74,7 @@ O MVP considera como escopo:
 - calendario familiar quebra ao abrir;
 - forum basico nao abre.
 
-### P2  nao bloqueia se documentado
+### P2 - nao bloqueia se documentado
 
 - refinamento visual menor;
 - texto/microcopy nao critico;
@@ -174,6 +174,12 @@ Rotas principais para verificacao visual:
 
 ## 6. QA de rotas e acesso
 
+Documento de referencia:
+
+```txt
+docs/arquitetura/ROTAS_E_GUARDS.md
+```
+
 Validar:
 
 - usuario deslogado acessa `/entrar`;
@@ -186,8 +192,8 @@ Validar:
 - admin acessa `/admin`;
 - admin acessa `/admin/pessoas`;
 - `/` redireciona para `/minha-arvore`;
-- `/pessoa=ID` redireciona para `/minha-arvorepessoa=ID`;
-- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` preserva `pessoa=ID`.
+- `/??pessoa=ID` redireciona para `/minha-arvore??pessoa=ID`;
+- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` preserva `??pessoa=ID`.
 
 ---
 
@@ -258,6 +264,12 @@ Destaque nao recria linha oculta.
 
 ## 9. QA de exportacao da arvore
 
+Documento de referencia:
+
+```txt
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
 Validar:
 
 - abrir Acoes;
@@ -266,8 +278,8 @@ Validar:
 - iniciar novamente;
 - cancelar por `Esc`;
 - selecionar area valida;
-- exportar PNG;
-- exportar PDF;
+- exportar PNG pelo botao Salvar PNG;
+- exportar PDF pelo botao Salvar PDF;
 - imprimir;
 - selecao pequena demais mostra erro/impede acao;
 - pan/zoom bloqueiam durante selecao;
@@ -338,7 +350,7 @@ Validar:
 - upload de PDF;
 - preview de imagem;
 - card/icone de PDF;
-- mensagem verde `a Arquivo carregado`;
+- mensagem verde `Arquivo carregado`;
 - input nativo oculto apos upload;
 - campos e botoes Cancelar/Adicionar ocultos apos upload;
 - botao Adicionar Arquivo reabre campos;

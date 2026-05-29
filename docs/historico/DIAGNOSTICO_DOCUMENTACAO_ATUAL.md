@@ -1,8 +1,10 @@
-﻿# Diagnostico de documentacao atual  Arvore Familia
+# Diagnostico de documentacao atual - Arvore Familia
 
 Data: 2026-05-21T02:48:02.562Z
 
 ## Escopo
+
+> Este documento e historico. Ele registra o estado observado em 2026-05-21 e nao substitui `docs/README.md` nem os guias canonicos atuais.
 
 Este relatorio compara as documentacoes em `docs/` com o estado atual do codigo local e com as frentes recentes da arvore, painel lateral, exportacao, responsividade e notificacoes.
 
@@ -100,9 +102,11 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx: TreeAreaSelectionOve
 
 ## Recomendacoes objetivas
 
+Status posterior: as recomendacoes abaixo foram usadas como insumo para reorganizacao e revisao documental. Consultar `docs/README.md` para o indice canonico atual.
+
 1. Atualizar `GUIA_COMPONENTES.md` para refletir `TreeLegend`, filtros funcionais, camadas extras e acoes de `FamilyTree`.
 2. Atualizar `GUIA_IMPLEMENTACOES.md` para consolidar 7.7 como legenda funcional + camadas visuais opcionais.
-3. Atualizar `GUIA_UX_LAYOUT.md` para registrar painel lateral atual, botao externo de Informacoes e zoom A  direita.
+3. Atualizar `GUIA_UX_LAYOUT.md` para registrar painel lateral atual, botao externo de Informacoes e zoom a direita.
 4. Atualizar `GUIA_CORRECAO_ERROS.md` com troubleshooting de destaques visuais, filtros da legenda e painel lateral.
 5. Atualizar `PLANO_PROXIMOS_PASSOS.md` para distinguir concluido versus pos-MVP.
 6. Revisar `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` para separar diagnostico historico de implementacao/QA.

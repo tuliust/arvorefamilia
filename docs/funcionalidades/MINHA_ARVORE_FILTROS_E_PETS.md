@@ -1,4 +1,4 @@
-﻿# Minha Arvore  filtros, pets e regras de exibicao
+# Minha Arvore - filtros, pets e regras de exibicao
 
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
 > Tipo: documentacao funcional especifica da view **Minha Arvore**.
@@ -24,6 +24,7 @@ docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 ```
 
 ---
@@ -81,7 +82,7 @@ relacionamentos.tipo_relacionamento = 'filho':
   vinculo tecnico mantido por compatibilidade.
 ```
 
-Nao foi criada migration para:
+No estado atual, nao foi criada migration para:
 
 - `pet`;
 - `tutor`;
@@ -379,9 +380,9 @@ Resultado esperado:
 
 Ajuste consolidado para telas maiores:
 
-- logo/titulo alinhados A  esquerda;
+- logo/titulo alinhados a esquerda;
 - navegacao no centro;
-- busca e menu do usuario alinhados A  direita;
+- busca e menu do usuario alinhados a direita;
 - remocao de limitacao visual que centralizava indevidamente o header em desktop amplo.
 
 Documento complementar:

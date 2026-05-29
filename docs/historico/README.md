@@ -1,4 +1,4 @@
-﻿# Historico, diagnosticos e QA
+# Historico, diagnosticos e QA
 
 > Local recomendado: `docs/historico/README.md`
 > Tipo: indice da pasta historica.
@@ -57,6 +57,7 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 | `RESPONSIVIDADE_MOBILE_TABLET.md` | Historico/checklist | Registro da frente de responsividade mobile/tablet. |
 | `QA_FINAL_MVP.md` | QA final | Checklist e rastreabilidade da validacao final do MVP. |
 | `documentacao-antiga/` | Arquivo morto organizado | Documentos antigos movidos da raiz do repositorio. |
+| `scripts-reorganizacao/` | Historico operacional, se existir | Scripts antigos de reorganizacao documental que nao devem ser executados sem revisao. |
 
 ---
 
@@ -200,6 +201,7 @@ Ao reorganizar documentacao:
 - [ ] confirmar que documentos antigos nao aparecem como guias oficiais;
 - [ ] confirmar que `documentacao-antiga/` nao contem backups temporarios;
 - [ ] remover pastas `backups-reorganizacao-*` se tiverem sido commitadas por engano;
+- [ ] confirmar que scripts antigos de reorganizacao nao sobrescrevem a documentacao canonica;
 - [ ] preservar documentos historicos uteis;
 - [ ] migrar conteudo ainda atual para documentos canonicos.
 

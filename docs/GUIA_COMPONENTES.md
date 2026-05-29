@@ -1,4 +1,4 @@
-﻿# Guia de componentes  Arvore Familia
+# Guia de componentes - Arvore Familia
 
 > Ultima atualizacao: 2026-05-29
 > Local canonico: `docs/GUIA_COMPONENTES.md`
@@ -150,7 +150,7 @@ Uso esperado:
 
 Nao usar em:
 
-- Home pos-login (`src/app/pages/Home.tsx`), que possui header proprio integrado A  arvore.
+- Home pos-login (`src/app/pages/Home.tsx`), que possui header proprio integrado a arvore.
 
 Cuidados:
 
@@ -407,8 +407,8 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 Responsabilidade:
 
 - permitir selecao retangular de area visivel da arvore;
-- exportar selecao em PNG;
-- exportar selecao em PDF;
+- exportar selecao em PNG pelo botao **Salvar PNG**;
+- exportar selecao em PDF pelo botao **Salvar PDF**;
 - imprimir selecao;
 - cancelar por botao ou `Esc`.
 
