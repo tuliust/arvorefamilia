@@ -1,4 +1,5 @@
 import type { Pessoa } from '../types';
+import { isPersonDeceased } from './personFields';
 import type {
   RelationshipConfidence,
   RelationshipDegreeResult,
@@ -182,8 +183,39 @@ function getParentPersonNameFromSecondDegreeCousinPath(result: RelationshipDegre
   return targetParentId ? getPersonName(peopleById, targetParentId) : '';
 }
 
-function getSecondDegreeCousinParentLabels(result: RelationshipDegreeResult) {
-  const targetParentLabel = getParentLabelFromIncomingStep(result, 3);
+function getParentLabelByPersonName(name: string) {
+  const firstName = getShortPersonName(name).toLocaleLowerCase('pt-BR');
+  const knownFemaleNames = new Set(['bianca', 'lourdes', 'monika', 'monica', 'roseli', 'rosely']);
+  const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da', 'eli'];
+
+  if (knownFemaleNames.has(firstName)) return 'mãe';
+  if (likelyFemaleEndings.some((ending) => firstName.endsWith(ending))) return 'mãe';
+
+  return 'pai';
+}
+
+function getAuntOrUncleLabelByPersonName(name: string) {
+  return getParentLabelByPersonName(name) === 'mãe' ? 'tia' : 'tio';
+}
+
+function getMarriedAgreementByPersonName(name: string) {
+  return getParentLabelByPersonName(name) === 'mãe' ? 'casada' : 'casado';
+}
+
+function withFinalPeriod(sentence: string) {
+  const trimmed = sentence.trim();
+  if (!trimmed) return '';
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function getSecondDegreeCousinParentLabels(result: RelationshipDegreeResult, people: Pessoa[]) {
+  let targetParentLabel = getParentLabelFromIncomingStep(result, 3);
+
+  if (targetParentLabel === 'pai/mãe') {
+    targetParentLabel = getParentLabelByPersonName(
+      getParentPersonNameFromSecondDegreeCousinPath(result, people)
+    );
+  }
 
   if (targetParentLabel === 'pai') {
     return {
@@ -211,15 +243,36 @@ function getSecondDegreeCousinParentLabels(result: RelationshipDegreeResult) {
 function getAuntOrUncleSpouseSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originFullName = getPersonName(peopleById, result.originPersonId);
+  const targetPerson = peopleById.get(result.targetPersonId);
   const targetFullName = getPersonName(peopleById, result.targetPersonId);
   const originName = formatShortName(originFullName) || 'Pessoa';
   const targetName = formatShortName(targetFullName) || 'Pessoa';
   const parentName = formatShortName(getPersonName(peopleById, result.path[0]?.to)) || 'Pessoa';
   const auntOrUncleName = formatShortName(getPersonName(peopleById, result.path[1]?.to)) || 'Pessoa';
   const siblingLabel = getSiblingLabelByPersonName(parentName);
-  const spouseVerb = result.path[2]?.edge.active ? 'é cônjuge' : 'foi cônjuge';
+  const spouseVerb = result.path[2]?.edge.active && !isPersonDeceased(targetPerson) ? 'é cônjuge' : 'foi cônjuge';
 
-  return `${originName} é filho de ${parentName}, que é ${siblingLabel} de ${auntOrUncleName}. ${targetName} ${spouseVerb} de ${auntOrUncleName}.`;
+  return `${withFinalPeriod(`${originName} \u00e9 filho de ${parentName}, que \u00e9 ${siblingLabel} de ${auntOrUncleName}`)} ${withFinalPeriod(`${targetName} ${spouseVerb} de ${auntOrUncleName}`)}`;
+}
+
+function getSpouseParentOfAuntOrUncleSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originFullName = getPersonName(peopleById, result.originPersonId);
+  const targetFullName = getPersonName(peopleById, result.targetPersonId);
+  const spouseFullName = getPersonName(peopleById, result.path[2]?.to);
+  const auntOrUncleFullName = getPersonName(peopleById, result.path[1]?.to);
+
+  const originFirstName = getFirstName(originFullName);
+  const targetName = formatShortName(targetFullName) || 'Pessoa';
+  const spouseName = formatShortName(spouseFullName) || 'Pessoa';
+  const auntOrUncleName = formatShortName(auntOrUncleFullName) || 'Pessoa';
+  const parentLabel = getParentLabelByPersonName(targetFullName);
+  const auntOrUncleLabel = getAuntOrUncleLabelByPersonName(auntOrUncleFullName);
+  const article = auntOrUncleLabel === 'tia' ? 'a' : 'o';
+  const marriedAgreement = getMarriedAgreementByPersonName(spouseFullName);
+  const marriageVerb = result.path[2]?.edge.active ? `é ${marriedAgreement}` : `foi ${marriedAgreement}`;
+
+  return `${targetName} é ${parentLabel} de ${spouseName}, que ${marriageVerb} com ${article} ${auntOrUncleLabel} de ${originFirstName}, ${auntOrUncleName}.`;
 }
 
 export function getRelationshipResultSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
@@ -239,9 +292,13 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
     return getAuntOrUncleSpouseSentence(result, people);
   }
 
+  if (pattern === 'child>sibling>spouse>child') {
+    return getSpouseParentOfAuntOrUncleSentence(result, people);
+  }
+
   if (pattern === 'child>sibling>parent>parent') {
     const targetParentName = getFirstName(getParentPersonNameFromSecondDegreeCousinPath(result, people));
-    const { article, parentLabel, cousinLabel } = getSecondDegreeCousinParentLabels(result);
+    const { article, parentLabel, cousinLabel } = getSecondDegreeCousinParentLabels(result, people);
     return `${originFirstName} e ${targetFirstName} são primos de segundo grau. ${article} ${parentLabel} de ${targetFirstName}, ${targetParentName}, é ${cousinLabel} de ${originFirstName}.`;
   }
 
@@ -300,7 +357,7 @@ function getPossessiveParentLabel(stepLabel: string) {
 }
 
 function getSiblingLabelByPersonName(name: string) {
-  const firstName = getShortPersonName(name).toLowerCase();
+  const firstName = (getShortPersonName(name).split(/\s+/)[0] || '').toLocaleLowerCase('pt-BR');
 
   const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da'];
   const isLikelyFemale = likelyFemaleEndings.some((ending) => firstName.endsWith(ending));
