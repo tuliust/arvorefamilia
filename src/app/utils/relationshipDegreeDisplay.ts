@@ -1,4 +1,4 @@
-import type { Pessoa } from '../types';
+﻿import type { Pessoa } from '../types';
 import { isPersonDeceased } from './personFields';
 import type {
   RelationshipConfidence,
@@ -183,11 +183,16 @@ function getParentPersonNameFromSecondDegreeCousinPath(result: RelationshipDegre
   return targetParentId ? getPersonName(peopleById, targetParentId) : '';
 }
 
+function getFirstNameToken(name: string) {
+  return (name.trim().split(/\s+/)[0] || '').toLocaleLowerCase('pt-BR');
+}
 function getParentLabelByPersonName(name: string) {
-  const firstName = getShortPersonName(name).toLocaleLowerCase('pt-BR');
+  const firstName = getFirstNameToken(name);
   const knownFemaleNames = new Set(['bianca', 'lourdes', 'monika', 'monica', 'roseli', 'rosely']);
+  const knownMaleNames = new Set(['caio', 'fabio', 'fábio', 'marcio', 'márcio', 'yuri', 'tulius', 'tassius', 'absalon']);
   const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da', 'eli'];
 
+  if (knownMaleNames.has(firstName)) return 'pai';
   if (knownFemaleNames.has(firstName)) return 'mãe';
   if (likelyFemaleEndings.some((ending) => firstName.endsWith(ending))) return 'mãe';
 
@@ -373,7 +378,7 @@ function getPossessiveParentLabel(stepLabel: string) {
 }
 
 function getSiblingLabelByPersonName(name: string) {
-  const firstName = (getShortPersonName(name).split(/\s+/)[0] || '').toLocaleLowerCase('pt-BR');
+  const firstName = getFirstNameToken(name);
 
   const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da'];
   const isLikelyFemale = likelyFemaleEndings.some((ending) => firstName.endsWith(ending));
@@ -442,3 +447,4 @@ export function getRelationshipNarrative(result: RelationshipDegreeResult, peopl
     summary: getRelationshipResultMessage(result),
   };
 }
+

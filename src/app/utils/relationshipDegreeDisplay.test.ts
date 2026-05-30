@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import type { Pessoa, Relacionamento, TipoRelacionamento } from '../types';
 import { calculateRelationshipDegree } from './relationshipDegree';
 import { getRelationshipResultSentence } from './relationshipDegreeDisplay';
@@ -69,6 +69,26 @@ describe('getRelationshipResultSentence', () => {
       .toBe('Tulius e Bianca são primos de segundo grau. O pai de Bianca, Yuri, é primo de Tulius.');
   });
 
+
+  it('uses the first name only when inferring the parent label for second-degree cousins', () => {
+    const people = [
+      makePerson('tulius', 'Tulius Souza'),
+      makePerson('marcio', 'Marcio Souza'),
+      makePerson('fabio', 'Fabio Tsangaropoulos'),
+      makePerson('caio', 'Caio Souza'),
+      makePerson('cecilia', 'Cecilia Viana Souza'),
+    ];
+
+    const relationships = [
+      makeRelationship('r1', 'tulius', 'marcio', 'pai'),
+      makeRelationship('r2', 'marcio', 'fabio', 'irmao'),
+      makeRelationship('r3', 'caio', 'fabio', 'pai'),
+      makeRelationship('r4', 'cecilia', 'caio', 'filho'),
+    ];
+
+    expect(calculateSentence({ origin: 'tulius', target: 'cecilia', people, relationships }))
+      .toBe('Tulius e Cecilia são primos de segundo grau. O pai de Cecilia, Caio, é primo de Tulius.');
+  });
   it('describes the spouse of a sibling path', () => {
     const people = [
       makePerson('tulius', 'Tulius Souza'),
@@ -128,3 +148,4 @@ describe('getRelationshipResultSentence', () => {
       .toBe('Tulius Souza é filho de Márcio Souza, que é irmão de Absalon Jr. Roseli Sá foi cônjuge de Absalon Jr.');
   });
 });
+
