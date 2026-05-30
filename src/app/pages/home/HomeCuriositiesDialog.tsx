@@ -178,7 +178,7 @@ export function HomeCuriositiesDialog({
               })}
             </div>
 
-            <div className={`${activeCuriosityTab === 'conexao' ? 'min-h-0' : 'min-h-[520px]'} rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5`}>
+            <div className={`${activeCuriosityTab === 'voce-sabia' ? 'min-h-[520px]' : 'min-h-0'} rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5`}>
               {activeCuriosityTab === 'voce-sabia' && (
                 <section className="space-y-4">
                   <CuriositySectionHeader
