@@ -3,10 +3,9 @@ import { BookOpen, Briefcase, Calendar, CalendarClock, Dog, Globe, Home, Lightbu
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Pessoa } from '../../types';
-import { formatPhone, getPersonZodiacSign, isPersonDeceased } from '../../utils/personFields';
+import { formatPhone, isPersonDeceased } from '../../utils/personFields';
 import { getSocialLink, isBirthDate, shouldShowAquariusFallback } from '../../utils/personProfile';
-import { canUseWhatsAppContact } from '../../utils/whatsapp';
-import { WhatsAppContactButton } from './WhatsAppContactButton';
+import { buildWhatsAppUrl, canUseWhatsAppContact } from '../../utils/whatsapp';
 import {
   getInsightByType,
   obterInsightsGeradosPessoa,
@@ -44,7 +43,6 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
   const isPet = pessoa.humano_ou_pet === 'Pet';
   const isFalecido = isPersonDeceased(pessoa);
   const canShowBirthDate = pessoa.permitir_exibir_data_nascimento !== false;
-  const zodiacSign = canShowBirthDate ? getPersonZodiacSign(pessoa) : undefined;
   const canShowSocial = Boolean(
     (pessoa.permitir_exibir_rede_social === true || pessoa.permitir_exibir_instagram === true) &&
     (pessoa.instagram_url || pessoa.instagram_usuario || pessoa.rede_social)
@@ -53,6 +51,9 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
   const canShowWhatsAppButton = canUseWhatsAppContact(pessoa);
   const canShowAddress = Boolean(pessoa.permitir_exibir_endereco === true && pessoa.endereco);
   const socialLink = getSocialLink(pessoa);
+  const phoneWhatsAppUrl = canShowPhoneNumber && canShowWhatsAppButton
+    ? buildWhatsAppUrl(String(pessoa.telefone ?? ''))
+    : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -137,10 +138,10 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
                 {canShowBirthDate && (
                   <>
                     <InfoItem icon={<Calendar className="h-4 w-4" />} label="Nascimento" value={pessoa.data_nascimento} />
-                    <InfoItem icon={<Calendar className="h-4 w-4" />} label="Signo" value={zodiacSign || 'Não identificado'} />
                   </>
                 )}
-                <InfoItem icon={<MapPin className="h-4 w-4" />} label="Local de nascimento" value={pessoa.local_nascimento} />                <InfoItem icon={<Briefcase className="h-4 w-4" />} label="Profissão" value={pessoa.profissao} />
+                <InfoItem icon={<MapPin className="h-4 w-4" />} label="Local de nascimento" value={pessoa.local_nascimento} />
+                <InfoItem icon={<Briefcase className="h-4 w-4" />} label="Profissão" value={pessoa.profissao} />
 
                 {!isFalecido && <InfoItem icon={<Home className="h-4 w-4" />} label="Residência atual" value={pessoa.local_atual} />}
                 <InfoItem icon={<Calendar className="h-4 w-4" />} label="Falecimento" value={pessoa.data_falecimento || (isFalecido ? 'Falecido(a)' : undefined)} />
@@ -204,16 +205,22 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
               <InfoItem
                 icon={<Phone className="h-4 w-4" />}
                 label="Telefone"
-                value={formatPhone(String(pessoa.telefone ?? ''))}
+                value={
+                  phoneWhatsAppUrl ? (
+                    <a
+                      href={phoneWhatsAppUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {formatPhone(String(pessoa.telefone ?? ''))}
+                    </a>
+                  ) : (
+                    formatPhone(String(pessoa.telefone ?? ''))
+                  )
+                }
               />
             )}
-            <WhatsAppContactButton
-              telefone={pessoa.telefone ?? null}
-              permitirExibirTelefone={pessoa.permitir_exibir_telefone ?? null}
-              permitirMensagensWhatsApp={pessoa.permitir_mensagens_whatsapp ?? null}
-              personId={pessoa.id}
-              personName={pessoa.nome_completo}
-            />
             <InfoItem icon={<Home className="h-4 w-4" />} label="Endereço" value={canShowAddress ? pessoa.endereco : undefined} />
             {canShowSocial && (
               <InfoItem
