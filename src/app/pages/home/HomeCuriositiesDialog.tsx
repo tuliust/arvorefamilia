@@ -86,13 +86,11 @@ interface HomeCuriositiesDialogProps {
   handleNewAiQuestion: () => void;
   connectionPersonOneId: string;
   connectionPersonTwoId: string;
-  connectionIncludeInactiveSpouses: boolean;
   connectionLoading: boolean;
   connectionError: string | null;
   connectionResult: RelationshipDegreeResult | null;
   onConnectionPersonOneIdChange: (value: string) => void;
   onConnectionPersonTwoIdChange: (value: string) => void;
-  onConnectionIncludeInactiveSpousesChange: (value: boolean) => void;
   clearConnectionResult: () => void;
   clearConnectionError: () => void;
   handleDiscoverConnection: () => void;
@@ -134,13 +132,11 @@ export function HomeCuriositiesDialog({
   handleNewAiQuestion,
   connectionPersonOneId,
   connectionPersonTwoId,
-  connectionIncludeInactiveSpouses,
   connectionLoading,
   connectionError,
   connectionResult,
   onConnectionPersonOneIdChange,
   onConnectionPersonTwoIdChange,
-  onConnectionIncludeInactiveSpousesChange,
   clearConnectionResult,
   clearConnectionError,
   handleDiscoverConnection,
@@ -440,7 +436,6 @@ export function HomeCuriositiesDialog({
                     pessoas={pessoas}
                     connectionPersonOneId={connectionPersonOneId}
                     connectionPersonTwoId={connectionPersonTwoId}
-                    connectionIncludeInactiveSpouses={connectionIncludeInactiveSpouses}
                     connectionLoading={connectionLoading}
                     connectionError={connectionError}
                     connectionResult={connectionResult}
@@ -451,11 +446,6 @@ export function HomeCuriositiesDialog({
                     }}
                     onPersonTwoChange={(value) => {
                       onConnectionPersonTwoIdChange(value);
-                      clearConnectionResult();
-                      clearConnectionError();
-                    }}
-                    onIncludeInactiveSpousesChange={(value) => {
-                      onConnectionIncludeInactiveSpousesChange(value);
                       clearConnectionResult();
                       clearConnectionError();
                     }}
