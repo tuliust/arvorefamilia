@@ -280,6 +280,21 @@ function getSpouseParentOfAuntOrUncleSentence(result: RelationshipDegreeResult, 
   return `${targetName} é ${parentLabel} de ${spouseName}, que ${marriageVerb} com ${article} ${auntOrUncleLabel} de ${originFirstName}, ${auntOrUncleName}.`;
 }
 
+function getCousinSpouseSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originName = formatShortName(getPersonName(peopleById, result.originPersonId)) || 'Pessoa';
+  const targetName = formatShortName(getPersonName(peopleById, result.targetPersonId)) || 'Pessoa';
+
+  const spouseStep = result.path.find((step) => step.edge.normalizedType === 'spouse');
+  const cousinPersonId = spouseStep?.from === result.targetPersonId ? spouseStep.to : spouseStep?.from;
+  const cousinFullName = cousinPersonId ? getPersonName(peopleById, cousinPersonId) : '';
+  const cousinName = formatShortName(cousinFullName) || 'Pessoa';
+  const cousinLabel = getSiblingLabelByPersonName(cousinFullName) === 'irmã' ? 'prima' : 'primo';
+  const article = cousinLabel === 'prima' ? 'da' : 'do';
+  const spouseLabel = spouseStep?.edge.active ? 'cônjuge' : 'ex-cônjuge';
+
+  return `${targetName} é ${spouseLabel} ${article} ${cousinLabel} de ${originName}, ${cousinName}.`;
+}
 function getSiblingSpouseSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originName = formatShortName(getPersonName(peopleById, result.originPersonId)) || 'Pessoa';
@@ -359,15 +374,9 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
   if (pattern === 'child>sibling') {
     return `${originName} é sobrinho de ${targetName}.`;
   }
-
-  if (pattern === 'spouse>child>sibling>parent') {
-    return `${originName} é cônjuge da prima de ${targetName}.`;
+  if (pattern === 'spouse>child>sibling>parent' || pattern === 'child>sibling>parent>spouse') {
+    return getCousinSpouseSentence(result, people);
   }
-
-  if (pattern === 'child>sibling>parent>spouse') {
-    return `${targetName} é cônjuge da prima de ${originName}.`;
-  }
-
   return `Há uma ligação familiar entre ${originName} e ${targetName}.`;
 }
 

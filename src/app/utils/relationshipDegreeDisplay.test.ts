@@ -105,6 +105,26 @@ describe('getRelationshipResultSentence', () => {
       .toBe('Tulius Souza é irmão de Tassius Souza, cônjuge de Layana Medeiros.');
   });
 
+
+  it('describes the spouse of a male cousin', () => {
+    const people = [
+      makePerson('tulius', 'Tulius Souza'),
+      makePerson('marcio', 'Marcio Souza'),
+      makePerson('fabio', 'Fabio Tsangaropoulos'),
+      makePerson('caio', 'Caio Souza'),
+      makePerson('alexia', 'Alexia Lopes'),
+    ];
+
+    const relationships = [
+      makeRelationship('r1', 'tulius', 'marcio', 'pai'),
+      makeRelationship('r2', 'marcio', 'fabio', 'irmao'),
+      makeRelationship('r3', 'caio', 'fabio', 'pai'),
+      makeRelationship('r4', 'alexia', 'caio', 'conjuge', { subtipo_relacionamento: 'casamento' }),
+    ];
+
+    expect(calculateSentence({ origin: 'tulius', target: 'alexia', people, relationships }))
+      .toBe('Alexia Lopes é cônjuge do primo de Tulius Souza, Caio Souza.');
+  });
   it('describes the mother of the spouse of an uncle', () => {
     const people = [
       makePerson('tulius', 'Tulius Souza'),
