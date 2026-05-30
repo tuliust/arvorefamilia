@@ -52,7 +52,7 @@ describe('getRelationshipResultSentence', () => {
   it('names the father in a second-degree cousin sentence', () => {
     const people = [
       makePerson('tulius', 'Tulius Souza'),
-      makePerson('marcio', 'M\u00e1rcio Souza'),
+      makePerson('marcio', 'Márcio Souza'),
       makePerson('fabio', 'Fabio Tsangaropoulos'),
       makePerson('yuri', 'Yuri Souza'),
       makePerson('bianca', 'Bianca Souza'),
@@ -66,13 +66,29 @@ describe('getRelationshipResultSentence', () => {
     ];
 
     expect(calculateSentence({ origin: 'tulius', target: 'bianca', people, relationships }))
-      .toBe('Tulius e Bianca s\u00e3o primos de segundo grau. O pai de Bianca, Yuri, \u00e9 primo de Tulius.');
+      .toBe('Tulius e Bianca são primos de segundo grau. O pai de Bianca, Yuri, é primo de Tulius.');
+  });
+
+  it('describes the spouse of a sibling path', () => {
+    const people = [
+      makePerson('tulius', 'Tulius Souza'),
+      makePerson('tassius', 'Tassius Souza'),
+      makePerson('layana', 'Layana Medeiros'),
+    ];
+
+    const relationships = [
+      makeRelationship('r1', 'tulius', 'tassius', 'irmao'),
+      makeRelationship('r2', 'tassius', 'layana', 'conjuge', { subtipo_relacionamento: 'casamento' }),
+    ];
+
+    expect(calculateSentence({ origin: 'tulius', target: 'layana', people, relationships }))
+      .toBe('Tulius Souza é irmão de Tassius Souza, cônjuge de Layana Medeiros.');
   });
 
   it('describes the mother of the spouse of an uncle', () => {
     const people = [
       makePerson('tulius', 'Tulius Souza'),
-      makePerson('marcio', 'M\u00e1rcio Souza'),
+      makePerson('marcio', 'Márcio Souza'),
       makePerson('fabio', 'Fabio Tsangaropoulos'),
       makePerson('monika', 'Monika Bezerra'),
       makePerson('lourdes', 'Lourdes Bezerra'),
@@ -91,15 +107,15 @@ describe('getRelationshipResultSentence', () => {
       people,
       relationships,
       includeInactiveSpouses: true,
-    })).toBe('Lourdes Bezerra \u00e9 m\u00e3e de Monika Bezerra, que foi casada com o tio de Tulius, Fabio Tsangaropoulos.');
+    })).toBe('Lourdes Bezerra é mãe de Monika Bezerra, que foi casada com o tio de Tulius, Fabio Tsangaropoulos.');
   });
 
   it('uses past tense when the spouse in an aunt-or-uncle path is deceased', () => {
     const people = [
       makePerson('tulius', 'Tulius Souza'),
-      makePerson('marcio', 'M\u00e1rcio Souza'),
+      makePerson('marcio', 'Márcio Souza'),
       makePerson('absalon', 'Absalon Jr.'),
-      makePerson('roseli', 'Roseli S\u00e1', { falecido: true }),
+      makePerson('roseli', 'Roseli Sá', { falecido: true }),
     ];
 
     const relationships = [
@@ -109,6 +125,6 @@ describe('getRelationshipResultSentence', () => {
     ];
 
     expect(calculateSentence({ origin: 'tulius', target: 'roseli', people, relationships }))
-      .toBe('Tulius Souza \u00e9 filho de M\u00e1rcio Souza, que \u00e9 irm\u00e3o de Absalon Jr. Roseli S\u00e1 foi c\u00f4njuge de Absalon Jr.');
+      .toBe('Tulius Souza é filho de Márcio Souza, que é irmão de Absalon Jr. Roseli Sá foi cônjuge de Absalon Jr.');
   });
 });
