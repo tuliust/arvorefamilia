@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, UserRound } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -36,6 +36,29 @@ function filterDefaultPages(term: string) {
     const haystack = [page.title, page.description, ...page.keywords].map(normalizeSearchText).join(' ');
     return haystack.includes(normalizedTerm);
   });
+}
+
+function formatSuggestionBirthDate(value: unknown) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+
+  const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    return `${slashMatch[1].padStart(2, '0')}/${slashMatch[2].padStart(2, '0')}/${slashMatch[3]}`;
+  }
+
+  return raw;
+}
+
+function getPersonSuggestionDetail(pessoa: Pessoa) {
+  const birthPlace = String(pessoa.local_nascimento ?? '').trim();
+  const birthDate = formatSuggestionBirthDate(pessoa.data_nascimento);
+  return [birthPlace, birthDate].filter(Boolean).join(' – ');
 }
 
 interface HomeHeaderProps {
@@ -79,9 +102,53 @@ export function HomeHeader({
   navigateFromHome,
   userMenuSlot,
 }: HomeHeaderProps) {
+  const searchRootRef = useRef<HTMLDivElement | null>(null);
+  const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
-  const hasSearchSuggestions = searchExpanded && trimmedSearchTerm && (pessoasFiltradas.length > 0 || effectivePageSuggestions.length > 0);
+  const hasSearchSuggestions = Boolean(
+    searchExpanded &&
+    trimmedSearchTerm &&
+    !searchSuggestionsDismissed &&
+    (pessoasFiltradas.length > 0 || effectivePageSuggestions.length > 0)
+  );
+
+  useEffect(() => {
+    setSearchSuggestionsDismissed(false);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!searchExpanded) {
+      setSearchSuggestionsDismissed(false);
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (searchRootRef.current?.contains(target)) return;
+      setSearchSuggestionsDismissed(true);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSearchSuggestionsDismissed(true);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [searchExpanded]);
+
+  const handleSearchTermChange = (value: string) => {
+    setSearchSuggestionsDismissed(false);
+    onSearchTermChange(value);
+  };
 
   const submitSearch = () => {
     if (!trimmedSearchTerm) return;
@@ -144,15 +211,35 @@ export function HomeHeader({
         </div>
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-visible sm:gap-2">
-          <div className="pointer-events-none relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
-            <Button variant="outline" size="icon" className="pointer-events-auto relative z-[503] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white" title="Buscar por nome, local ou página" aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'} onClick={() => onSearchExpandedChange(true)}>
+          <div ref={searchRootRef} className="relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative z-[503] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
+              title="Buscar por pessoa ou página"
+              aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
+              onClick={() => {
+                setSearchSuggestionsDismissed(false);
+                onSearchExpandedChange(true);
+              }}
+            >
               <Search className="pointer-events-none h-4 w-4" />
             </Button>
 
             <div className={['pointer-events-auto relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'w-0 opacity-0'].join(' ')}>
               <div className="pr-2">
                 <form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
-                  <Input ref={searchInputRef} type="text" placeholder="Buscar pessoa, local ou página..." value={searchTerm} onChange={(e) => onSearchTermChange(e.target.value)} onBlur={() => { window.setTimeout(() => { if (!searchTerm.trim()) onSearchExpandedChange(false); }, 160); }} className="h-10 bg-white" tabIndex={searchExpanded ? 0 : -1} />
+                  <Input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Buscar pessoa ou página..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearchTermChange(e.target.value)}
+                    onFocus={() => setSearchSuggestionsDismissed(false)}
+                    onBlur={() => { window.setTimeout(() => { if (!searchTerm.trim()) onSearchExpandedChange(false); }, 160); }}
+                    className="h-10 bg-white"
+                    tabIndex={searchExpanded ? 0 : -1}
+                  />
                 </form>
 
                 {hasSearchSuggestions && (
@@ -160,15 +247,19 @@ export function HomeHeader({
                     {pessoasFiltradas.length > 0 && (
                       <div className="border-b border-gray-100 bg-white py-1">
                         <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PESSOAS</p>
-                        {pessoasFiltradas.slice(0, 6).map((pessoa) => (
-                          <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
-                            <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
-                              {(pessoa.local_nascimento || pessoa.local_atual) && <span className="mt-1 block truncate text-xs text-gray-500">{[pessoa.local_nascimento, pessoa.local_atual].filter(Boolean).join(' · ')}</span>}
-                            </span>
-                          </button>
-                        ))}
+                        {pessoasFiltradas.slice(0, 6).map((pessoa) => {
+                          const suggestionDetail = getPersonSuggestionDetail(pessoa);
+
+                          return (
+                            <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
+                              <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
+                                {suggestionDetail && <span className="mt-1 block truncate text-xs text-gray-500">{suggestionDetail}</span>}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
