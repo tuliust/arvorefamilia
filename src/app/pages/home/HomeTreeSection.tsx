@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -79,13 +79,8 @@ export function HomeTreeSection({
     edgeFilters.irmaos
   );
   const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
-  const effectiveVisiblePersonIds = useMemo(() => {
-    if (isMobile && treeViewMode === 'minha-arvore' && centralReferencePersonId) {
-      return new Set([centralReferencePersonId]);
-    }
 
-    return visiblePersonIdsByLifeStatus;
-  }, [centralReferencePersonId, isMobile, treeViewMode, visiblePersonIdsByLifeStatus]);
+  const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
   return (
     <section

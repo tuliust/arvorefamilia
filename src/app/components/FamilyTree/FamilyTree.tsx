@@ -930,12 +930,10 @@ function FamilyTreeComponent({
       if (node.hidden) return false;
       return node.type === 'personNode' && Boolean(node.data?.pessoa);
     });
-    const centralFocusPersonNode = realPersonNodes.length === 1
-      ? realPersonNodes[0]
-      : undefined;
+    const centralFocusPersonNode = realPersonNodes.find((node) => node.id === effectiveCentralPersonId);
     const useCentralFocusPanel =
       viewMode === 'minha-arvore' &&
-      centralFocusPersonNode?.id === effectiveCentralPersonId;
+      Boolean(centralFocusPersonNode);
     const focusPanelWidth = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_WIDTH : CENTRAL_FOCUS_PANEL_WIDTH;
     const focusPanelHeight = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_HEIGHT : CENTRAL_FOCUS_PANEL_HEIGHT;
     const focusAdjustedLayout = useCentralFocusPanel
@@ -977,8 +975,8 @@ function FamilyTreeComponent({
           return {
             ...rawLayoutResult,
             nodes,
-            viewportBounds: focusBounds ?? rawLayoutResult.viewportBounds,
-            translateBounds: focusBounds ?? rawLayoutResult.translateBounds,
+            viewportBounds: rawLayoutResult.viewportBounds,
+            translateBounds: rawLayoutResult.translateBounds,
           };
         })()
       : rawLayoutResult;
@@ -1118,11 +1116,33 @@ function FamilyTreeComponent({
     };
   }, []);
 
+  const mobileCentralViewportBounds = useMemo(() => {
+    if (!isMobile || viewMode !== 'minha-arvore' || !effectiveCentralPersonId) return null;
+
+    const centralNode = layoutResult.nodes.find((node) => {
+      if (node.hidden) return false;
+      if (node.type !== 'personNode') return false;
+      return node.id === effectiveCentralPersonId;
+    });
+
+    if (!centralNode) return null;
+
+    const size = getNodeRenderSize(centralNode, NODE_WIDTH, NODE_HEIGHT);
+
+    return {
+      x: centralNode.position.x,
+      y: centralNode.position.y,
+      width: size.width,
+      height: size.height,
+    };
+  }, [effectiveCentralPersonId, isMobile, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT, viewMode]);
+
   const viewportContentBounds = useMemo(() => {
-    return layoutResult.viewportBounds
+    return mobileCentralViewportBounds
+      ?? layoutResult.viewportBounds
       ?? getViewportContentBounds(nodes, NODE_WIDTH, NODE_HEIGHT)
       ?? getFlowBounds(nodes, NODE_WIDTH, NODE_HEIGHT);
-  }, [layoutResult.viewportBounds, nodes, NODE_WIDTH, NODE_HEIGHT]);
+  }, [layoutResult.viewportBounds, mobileCentralViewportBounds, nodes, NODE_WIDTH, NODE_HEIGHT]);
 
   const translateBounds = useMemo(() => {
     return layoutResult.translateBounds
