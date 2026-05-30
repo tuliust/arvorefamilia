@@ -1,21 +1,24 @@
 @media (max-width: 767px) {
   .family-tree-export-root [aria-label="Mover árvore para cima"] {
-    left: 50%;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14.25rem);
+    left: 50vw;
     right: auto;
     transform: translateX(-50%);
   }
 
   .family-tree-export-root [aria-label="Mover árvore para baixo"] {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6.75rem);
-    left: 50%;
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 11.75rem);
+    left: 50vw;
     right: auto;
     transform: translateX(-50%);
   }
 
   .family-tree-export-root .react-flow__node-personNode > .relative:has(.shadow-xl) > div[style] {
     width: 560px !important;
-    min-height: 700px !important;
-    height: 700px !important;
-    margin: 190px 100px 0;
+    min-height: 620px !important;
+    height: 620px !important;
+    margin: 70px auto 0;
   }
 }
