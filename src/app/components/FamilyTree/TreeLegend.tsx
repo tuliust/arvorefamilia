@@ -35,33 +35,6 @@ interface TreeLegendProps {
   onToggleAllVisualLineFilters?: () => void;
 }
 
-const marriageStatusItems = [
-  {
-    label: 'União ativa',
-    shortLabel: 'Casados',
-    background: '#FFFFFF',
-    border: '#D1D5DB',
-  },
-  {
-    label: 'Separado/divorciado',
-    shortLabel: 'Divórcio',
-    background: '#FEF3C7',
-    border: '#F59E0B',
-  },
-  {
-    label: 'Viuvez',
-    shortLabel: 'Viuvez',
-    background: '#E5E7EB',
-    border: '#9CA3AF',
-  },
-  {
-    label: 'Status desconhecido',
-    shortLabel: 'União Estável',
-    background: '#FFFFFF',
-    border: '#D1D5DB',
-  },
-];
-
 const lineItems = [
   {
     label: 'Conjugal',
@@ -326,21 +299,6 @@ export function TreeLegend({
             ))}
           </div>
         </LegendGroup>
-
-        <LegendGroup title="ALIANÇA" compact>
-          <div className="grid grid-cols-2 gap-1.5">
-            {marriageStatusItems.map((item) => (
-              <LegendItem
-                key={item.label}
-                compact
-                sample={<MarriageRingSample background={item.background} border={item.border} />}
-                label={item.shortLabel}
-                title="Status visual do relacionamento"
-              />
-            ))}
-          </div>
-        </LegendGroup>
-
       </section>
     );
   }
@@ -434,19 +392,6 @@ export function TreeLegend({
               sample={item.sample}
               label={item.fullLabel}
               {...getVisualLineAction(item.key, item.fullLabel)}
-            />
-          ))}
-        </div>
-      </LegendGroup>
-
-      <LegendGroup title="ALIANÇA">
-        <div className="space-y-2">
-          {marriageStatusItems.map((item) => (
-            <LegendItem
-              key={item.label}
-              sample={<MarriageRingSample background={item.background} border={item.border} />}
-              label={item.shortLabel}
-              title="Status visual do relacionamento"
             />
           ))}
         </div>
@@ -626,17 +571,6 @@ function LegendBus() {
     <span className="relative block h-6 w-8">
       <span className="absolute left-1/2 top-0 h-full border-l-2 border-gray-400" />
       <span className="absolute left-1 top-1/2 w-6 border-t-2 border-gray-400" />
-    </span>
-  );
-}
-
-function MarriageRingSample({ background, border }: { background: string; border: string }) {
-  return (
-    <span
-      className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm"
-      style={{ background, border: `1px solid ${border}` }}
-    >
-      💍
     </span>
   );
 }
