@@ -80,9 +80,13 @@ export function FavoriteButton({
         onClick={handleClick}
         disabled={loading}
         aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`inline-flex shrink-0 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
           size === 'sm' ? 'h-9 w-9' : 'h-10 w-10'
-        } ${active ? 'border-amber-200 bg-amber-50 text-amber-600' : ''} ${className}`}
+        } ${
+          active
+            ? 'border-amber-500 bg-amber-500 text-white hover:border-amber-600 hover:bg-amber-600 hover:text-white'
+            : 'border-gray-200 bg-white text-gray-600 hover:bg-amber-50 hover:text-amber-600'
+        } ${className}`}
       >
         <Star className={`${iconSize} ${active ? 'fill-current' : ''}`} />
       </button>
@@ -97,7 +101,7 @@ export function FavoriteButton({
       aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
       className={`inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-center text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
         active
-          ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+          ? 'border-amber-500 bg-amber-500 text-white hover:border-amber-600 hover:bg-amber-600 hover:text-white'
           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
       } ${className}`}
     >
