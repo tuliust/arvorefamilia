@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+﻿import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { AppLink as Link } from '../../components/AppLink';
 import {
@@ -141,7 +141,7 @@ export function ForumTopico() {
   const [enviandoResposta, setEnviandoResposta] = useState(false);
   const [erro, setErro] = useState('');
   const [admin, setAdmin] = useState(false);
-
+  const [excluindoTopico, setExcluindoTopico] = useState(false);
   const podeEditarTopico = useMemo(
     () => Boolean(user && topico && (topico.autor_id === user.id || admin)),
     [user, topico, admin]
@@ -271,15 +271,26 @@ export function ForumTopico() {
     }));
     toast.success('Comentário publicado.');
   }
-
   async function removerTopico() {
-    if (!topico || !window.confirm('Deseja excluir este tópico?')) return;
-    const ok = await deletarTopicoForum(topico.id);
-    if (!ok) {
-      toast.error('Não foi possível excluir o tópico.');
+    if (!topico || excluindoTopico) return;
+
+    if (!user || (topico.autor_id !== user.id && !admin)) {
+      toast.error('Voce nao tem permissao para excluir este topico.');
       return;
     }
-    toast.success('Tópico excluído.');
+
+    if (!window.confirm('Deseja excluir este topico? Esta acao nao pode ser desfeita.')) return;
+
+    setExcluindoTopico(true);
+    const ok = await deletarTopicoForum(topico.id);
+    setExcluindoTopico(false);
+
+    if (!ok) {
+      toast.error('Nao foi possivel excluir o topico.');
+      return;
+    }
+
+    toast.success('Topico excluido.');
     navigate('/forum');
   }
 
@@ -425,7 +436,7 @@ export function ForumTopico() {
           ...(podeEditarTopico
             ? [
                 { label: 'Editar', to: `/forum/topico/${topico.id}/editar`, icon: Edit },
-                { label: 'Excluir', onClick: removerTopico, icon: Trash2, variant: 'danger' as const },
+                { label: excluindoTopico ? 'Excluindo...' : 'Excluir', onClick: removerTopico, icon: Trash2, variant: 'danger' as const, disabled: excluindoTopico },
                 ...(admin && topico.status !== 'oculto'
                   ? [{ label: 'Ocultar', onClick: ocultarTopico, icon: EyeOff }]
                   : []),
@@ -437,10 +448,26 @@ export function ForumTopico() {
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
         <Card className="min-w-0">
           <CardContent className="space-y-5 p-4 sm:p-5 md:p-6">
-            <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-              {topico.categoria?.nome && <span className="break-words">{topico.categoria.nome}</span>}
-              <span>{TOPICO_TIPO_LABELS[topico.tipo]}</span>
-              <span>{TOPICO_STATUS_LABELS[topico.status]}</span>
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                {topico.categoria?.nome && <span className="break-words">{topico.categoria.nome}</span>}
+                <span>{TOPICO_TIPO_LABELS[topico.tipo]}</span>
+                <span>{TOPICO_STATUS_LABELS[topico.status]}</span>
+              </div>
+
+              {podeEditarTopico && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="w-full shrink-0 sm:w-auto"
+                  onClick={removerTopico}
+                  disabled={excluindoTopico}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {excluindoTopico ? 'Excluindo...' : 'Excluir'}
+                </Button>
+              )}
             </div>
 
             <div className="min-w-0">
@@ -707,3 +734,4 @@ export function ForumTopico() {
     </div>
   );
 }
+
