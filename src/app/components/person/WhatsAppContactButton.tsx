@@ -10,6 +10,7 @@ type WhatsAppContactButtonProps = {
   personId?: string | null;
   personName?: string | null;
   className?: string;
+  label?: string;
   showIcon?: boolean;
   logClick?: boolean;
 };
@@ -19,6 +20,7 @@ export function WhatsAppContactButton({
   permitirExibirTelefone,
   permitirMensagensWhatsApp,
   className,
+  label = 'Entrar em contato por WhatsApp',
   showIcon = true,
 }: WhatsAppContactButtonProps) {
   const canContact = canUseWhatsAppContact({
@@ -37,11 +39,11 @@ export function WhatsAppContactButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Entrar em contato por WhatsApp"
+      aria-label={label}
       className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full shrink-0 gap-2 whitespace-nowrap rounded-xl shadow-sm sm:w-auto', className)}
     >
       {showIcon && <MessageCircle className="h-4 w-4" aria-hidden="true" />}
-      <span className="whitespace-nowrap">Entrar em contato por WhatsApp</span>
+      <span className="whitespace-nowrap">{label}</span>
     </a>
   );
 }
