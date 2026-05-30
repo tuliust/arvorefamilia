@@ -252,7 +252,7 @@ function getAuntOrUncleSpouseSentence(result: RelationshipDegreeResult, people: 
   const siblingLabel = getSiblingLabelByPersonName(parentName);
   const spouseVerb = result.path[2]?.edge.active && !isPersonDeceased(targetPerson) ? 'é cônjuge' : 'foi cônjuge';
 
-  return `${withFinalPeriod(`${originName} \u00e9 filho de ${parentName}, que \u00e9 ${siblingLabel} de ${auntOrUncleName}`)} ${withFinalPeriod(`${targetName} ${spouseVerb} de ${auntOrUncleName}`)}`;
+  return `${withFinalPeriod(`${originName} é filho de ${parentName}, que é ${siblingLabel} de ${auntOrUncleName}`)} ${withFinalPeriod(`${targetName} ${spouseVerb} de ${auntOrUncleName}`)}`;
 }
 
 function getSpouseParentOfAuntOrUncleSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
@@ -275,6 +275,18 @@ function getSpouseParentOfAuntOrUncleSentence(result: RelationshipDegreeResult, 
   return `${targetName} é ${parentLabel} de ${spouseName}, que ${marriageVerb} com ${article} ${auntOrUncleLabel} de ${originFirstName}, ${auntOrUncleName}.`;
 }
 
+function getSiblingSpouseSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originName = formatShortName(getPersonName(peopleById, result.originPersonId)) || 'Pessoa';
+  const targetName = formatShortName(getPersonName(peopleById, result.targetPersonId)) || 'Pessoa';
+  const siblingFullName = getPersonName(peopleById, result.path[0]?.to);
+  const siblingName = formatShortName(siblingFullName) || 'Pessoa';
+  const siblingLabel = getSiblingLabelByPersonName(siblingFullName);
+  const spouseLabel = result.path[1]?.edge.active ? 'cônjuge' : 'ex-cônjuge';
+
+  return `${originName} é ${siblingLabel} de ${siblingName}, ${spouseLabel} de ${targetName}.`;
+}
+
 export function getRelationshipResultSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
   const { originName, targetName, originFirstName, targetFirstName } = getRelationshipPeople(result, people);
 
@@ -294,6 +306,10 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
 
   if (pattern === 'child>sibling>spouse>child') {
     return getSpouseParentOfAuntOrUncleSentence(result, people);
+  }
+
+  if (pattern === 'sibling>spouse') {
+    return getSiblingSpouseSentence(result, people);
   }
 
   if (pattern === 'child>sibling>parent>parent') {
