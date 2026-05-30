@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -94,7 +94,7 @@ export function HomeTreeSection({
       {isMobile && (
         <style>
           {`
-            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para cima"] {
+            [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"] {
               top: 1rem !important;
               right: 6.75rem !important;
               left: auto !important;
@@ -105,7 +105,7 @@ export function HomeTreeSection({
               box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
             }
 
-            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para baixo"] {
+            [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"] {
               bottom: 6.25rem !important;
               z-index: 60 !important;
             }
@@ -232,4 +232,3 @@ export function HomeTreeSection({
     </section>
   );
 }
-

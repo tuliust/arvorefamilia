@@ -1,4 +1,4 @@
-﻿import { Edge, Node } from 'reactflow';
+import { Edge, Node } from 'reactflow';
 import { Relacionamento } from '../../../types';
 import { isHumanFamilyMember, isPetFamilyMember } from '../../../utils/personEntity';
 import {
@@ -2499,13 +2499,3 @@ export function directFamilyDistributedLayout(
     translateBounds: viewportBounds,
   };
 }
-
-
-
-
-
-
-
-
-
-
