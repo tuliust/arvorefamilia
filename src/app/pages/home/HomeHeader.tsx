@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, MessageCircle, Network, Search, Sparkles } from 'lucide-react';
+import { CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, UserRound } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
 } from '../../components/ui/select';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
+import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
 
 interface HomeHeaderProps {
@@ -21,9 +22,12 @@ interface HomeHeaderProps {
   onSearchExpandedChange: (value: boolean) => void;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
+  onSearchSubmit: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   pessoasFiltradas: Pessoa[];
+  pageSuggestions: GlobalSearchPageResult[];
   handleSearchSelect: (pessoa: Pessoa) => void;
+  handlePageSuggestionSelect: (page: GlobalSearchPageResult) => void;
   headerActionTextClassName: string;
   onCuriosities: () => void;
   navigateFromHome: (path: string) => void;
@@ -39,14 +43,19 @@ export function HomeHeader({
   onSearchExpandedChange,
   searchTerm,
   onSearchTermChange,
+  onSearchSubmit,
   searchInputRef,
   pessoasFiltradas,
+  pageSuggestions,
   handleSearchSelect,
+  handlePageSuggestionSelect,
   headerActionTextClassName,
   onCuriosities,
   navigateFromHome,
   userMenuSlot,
 }: HomeHeaderProps) {
+  const hasSearchSuggestions = searchExpanded && searchTerm.trim() && (pessoasFiltradas.length > 0 || pageSuggestions.length > 0);
+
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm">
       <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
@@ -125,7 +134,7 @@ export function HomeHeader({
               variant="outline"
               size="icon"
               className="pointer-events-auto relative z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
-              title="Buscar por nome ou local"
+              title="Buscar por nome, local ou página"
               aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
               onClick={() => onSearchExpandedChange(true)}
             >
@@ -135,43 +144,91 @@ export function HomeHeader({
             <div
               className={[
                 'pointer-events-auto relative z-10 min-w-0 overflow-visible transition-all duration-300 ease-out',
-                searchExpanded ? 'w-[min(54vw,320px)] opacity-100 sm:w-[min(42vw,320px)]' : 'w-0 opacity-0',
+                searchExpanded ? 'w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'w-0 opacity-0',
               ].join(' ')}
             >
               <div className="pr-2">
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Buscar por nome ou local..."
-                  value={searchTerm}
-                  onChange={(e) => onSearchTermChange(e.target.value)}
-                  onBlur={() => {
-                    window.setTimeout(() => {
-                      if (!searchTerm.trim()) {
-                        onSearchExpandedChange(false);
-                      }
-                    }, 120);
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    onSearchSubmit();
                   }}
-                  className="h-10"
-                  tabIndex={searchExpanded ? 0 : -1}
-                />
+                >
+                  <Input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Buscar pessoa, local ou página..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchTermChange(e.target.value)}
+                    onBlur={() => {
+                      window.setTimeout(() => {
+                        if (!searchTerm.trim()) {
+                          onSearchExpandedChange(false);
+                        }
+                      }, 120);
+                    }}
+                    className="h-10"
+                    tabIndex={searchExpanded ? 0 : -1}
+                  />
+                </form>
 
-                {searchExpanded && searchTerm && pessoasFiltradas.length > 0 && (
-                  <div className="absolute left-0 right-2 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                    {pessoasFiltradas.map((pessoa) => (
-                      <button
-                        key={pessoa.id}
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handleSearchSelect(pessoa)}
-                        className="w-full border-b border-gray-100 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-gray-50"
-                      >
-                        <p className="text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
-                        {pessoa.local_nascimento && (
-                          <p className="mt-1 text-xs text-gray-500">📍 {pessoa.local_nascimento}</p>
-                        )}
-                      </button>
-                    ))}
+                {hasSearchSuggestions && (
+                  <div className="absolute left-0 right-2 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                    {pessoasFiltradas.length > 0 && (
+                      <div className="border-b border-gray-100 py-1">
+                        <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Pessoas</p>
+                        {pessoasFiltradas.slice(0, 6).map((pessoa) => (
+                          <button
+                            key={pessoa.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => handleSearchSelect(pessoa)}
+                            className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                          >
+                            <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
+                              {(pessoa.local_nascimento || pessoa.local_atual) && (
+                                <span className="mt-1 block truncate text-xs text-gray-500">
+                                  {[pessoa.local_nascimento, pessoa.local_atual].filter(Boolean).join(' · ')}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {pageSuggestions.length > 0 && (
+                      <div className="border-b border-gray-100 py-1 last:border-b-0">
+                        <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Páginas</p>
+                        {pageSuggestions.slice(0, 5).map((page) => (
+                          <button
+                            key={page.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => handlePageSuggestionSelect(page)}
+                            className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                          >
+                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium text-gray-900">{page.title}</span>
+                              <span className="mt-1 block truncate text-xs text-gray-500">{page.description}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={onSearchSubmit}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50"
+                    >
+                      <Search className="h-4 w-4" />
+                      Ver todos os resultados
+                    </button>
                   </div>
                 )}
               </div>
