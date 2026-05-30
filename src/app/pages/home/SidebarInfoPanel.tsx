@@ -1,12 +1,11 @@
 import React from 'react';
-import { FileDown, ImageDown, MessageCircle, Printer, Scan } from 'lucide-react';
+import { FileDown, ImageDown, Printer, Scan } from 'lucide-react';
 
 interface SidebarInfoPanelProps {
   onSelectArea: () => void;
   onSavePdf: () => void;
   onSaveImage: () => void;
   onPrint: () => void;
-  onWhatsApp: () => void;
 }
 
 export function SidebarInfoPanel({
@@ -14,7 +13,6 @@ export function SidebarInfoPanel({
   onSavePdf,
   onSaveImage,
   onPrint,
-  onWhatsApp,
 }: SidebarInfoPanelProps) {
   return (
     <section className="flex h-full min-h-0 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
@@ -30,7 +28,6 @@ export function SidebarInfoPanel({
         <SidebarActionButton icon={FileDown} label="Salvar como PDF" onClick={onSavePdf} />
         <SidebarActionButton icon={ImageDown} label="Salvar como Imagem" onClick={onSaveImage} />
         <SidebarActionButton icon={Printer} label="Imprimir" onClick={onPrint} />
-        <SidebarActionButton icon={MessageCircle} label="Enviar WhatsApp" onClick={onWhatsApp} />
       </div>
     </section>
   );
