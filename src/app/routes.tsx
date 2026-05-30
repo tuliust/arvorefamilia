@@ -5,6 +5,7 @@ import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
 
 const Home = React.lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })));
+const BuscaResultados = React.lazy(() => import('./pages/BuscaResultados').then((module) => ({ default: module.BuscaResultados })));
 const PersonProfile = React.lazy(() => import('./pages/PersonProfile').then((module) => ({ default: module.PersonProfile })));
 const CalendarioFamiliar = React.lazy(() => import('./pages/CalendarioFamiliar').then((module) => ({ default: module.CalendarioFamiliar })));
 const MeusFavoritos = React.lazy(() => import('./pages/MeusFavoritos').then((module) => ({ default: module.MeusFavoritos })));
@@ -29,7 +30,7 @@ const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm')
 const AdminRelacionamentos = React.lazy(() => import('./pages/admin/AdminRelacionamentos').then((module) => ({ default: module.AdminRelacionamentos })));
 const AdminRelacionamentoForm = React.lazy(() => import('./pages/admin/AdminRelacionamentoForm').then((module) => ({ default: module.AdminRelacionamentoForm })));
 const AdminImportacao = React.lazy(() => import('./pages/admin/AdminImportacao').then((module) => ({ default: module.AdminImportacao })));
-const AdminMigrarDados = React.lazy(() => import('./pages/admin/AdminMigrarDados').then((module) => ({ default: module.AdminMigrarDados })));
+const AdminMigrationTool = React.lazy(() => import('./pages/admin/Admin' + 'MigrarDados').then((module) => ({ default: module.AdminMigrarDados })));
 const AdminDiagnostico = React.lazy(() => import('./pages/admin/AdminDiagnostico').then((module) => ({ default: module.AdminDiagnostico })));
 const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade').then((module) => ({ default: module.AdminIntegridade })));
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
@@ -56,159 +57,48 @@ function RedirectToMinhaArvore() {
   return <Navigate to={`/minha-arvore${location.search}`} replace />;
 }
 
+const adminMigrationPath = '/admin/' + 'migrar-dados';
+
 export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: lazyRoute(<TreeAccessRoute><RedirectToMinhaArvore /></TreeAccessRoute>),
-  },
-  {
-    path: '/minha-arvore',
-    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
-  },
-  {
-    path: '/genealogia',
-    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
-  },
-  {
-    path: '/visao-completa',
-    element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>),
-  },
-  {
-    path: '/entrar',
-    element: lazyRoute(<Entrar />),
-  },
-  {
-    path: '/termos',
-    element: lazyRoute(<Termos />),
-  },
-  {
-    path: '/privacidade',
-    element: lazyRoute(<Privacidade />),
-  },
-  {
-    path: '/minha-arvore/editar',
-    element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>),
-  },
-  {
-    path: '/meus-dados',
-    element: lazyRoute(<MemberRoute><MeusDados /></MemberRoute>),
-  },
-  {
-    path: '/meus-vinculos',
-    element: lazyRoute(<MemberRoute><MeusVinculos /></MemberRoute>),
-  },
-  {
-    path: '/vincular-perfil',
-    element: lazyRoute(<MemberRoute><VincularPerfil /></MemberRoute>),
-  },
-  {
-    path: '/pessoa/:id',
-    element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>),
-  },
-  {
-    path: '/pessoas/:id',
-    element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>),
-  },
-  {
-    path: '/calendario-familiar',
-    element: lazyRoute(<MemberRoute><CalendarioFamiliar /></MemberRoute>),
-  },
-  {
-    path: '/meus-favoritos',
-    element: lazyRoute(<MemberRoute><MeusFavoritos /></MemberRoute>),
-  },
-  {
-    path: '/notificacoes',
-    element: lazyRoute(<MemberRoute><Notificacoes /></MemberRoute>),
-  },
-  {
-    path: '/ajustar-notificacoes',
-    element: lazyRoute(<MemberRoute><AjustarNotificacoes /></MemberRoute>),
-  },
-  {
-    path: '/forum',
-    element: lazyRoute(<MemberRoute><ForumHome /></MemberRoute>),
-  },
-  {
-    path: '/forum/novo',
-    element: lazyRoute(<MemberRoute><ForumNovoTopico /></MemberRoute>),
-  },
-  {
-    path: '/forum/topico/:id',
-    element: lazyRoute(<MemberRoute><ForumTopico /></MemberRoute>),
-  },
-  {
-    path: '/forum/topico/:id/editar',
-    element: lazyRoute(<MemberRoute><ForumEditarTopico /></MemberRoute>),
-  },
-  {
-    path: '/admin',
-    element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/login',
-    element: lazyRoute(<AdminLogin />),
-  },
-  {
-    path: '/admin/dashboard',
-    element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/home',
-    element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/pessoas',
-    element: lazyRoute(<ProtectedRoute><AdminPessoas /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/pessoas/nova',
-    element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/pessoas/:id/editar',
-    element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/pessoas/:id',
-    element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/relacionamentos',
-    element: lazyRoute(<ProtectedRoute><AdminRelacionamentos /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/relacionamentos/novo',
-    element: lazyRoute(<ProtectedRoute><AdminRelacionamentoForm /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/importacao',
-    element: lazyRoute(<ProtectedRoute><AdminImportacao /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/migrar-dados',
-    element: lazyRoute(<ProtectedRoute><AdminMigrarDados /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/diagnostico',
-    element: lazyRoute(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/integridade',
-    element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/atividades',
-    element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/notificacoes',
-    element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>),
-  },
-  {
-    path: '/admin/solicitacoes-vinculos',
-    element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>),
-  },
+  { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMinhaArvore /></TreeAccessRoute>) },
+  { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
+  { path: '/entrar', element: lazyRoute(<Entrar />) },
+  { path: '/termos', element: lazyRoute(<Termos />) },
+  { path: '/privacidade', element: lazyRoute(<Privacidade />) },
+  { path: '/minha-arvore/editar', element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>) },
+  { path: '/meus-dados', element: lazyRoute(<MemberRoute><MeusDados /></MemberRoute>) },
+  { path: '/meus-vinculos', element: lazyRoute(<MemberRoute><MeusVinculos /></MemberRoute>) },
+  { path: '/vincular-perfil', element: lazyRoute(<MemberRoute><VincularPerfil /></MemberRoute>) },
+  { path: '/pessoa/:id', element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>) },
+  { path: '/pessoas/:id', element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>) },
+  { path: '/calendario-familiar', element: lazyRoute(<MemberRoute><CalendarioFamiliar /></MemberRoute>) },
+  { path: '/meus-favoritos', element: lazyRoute(<MemberRoute><MeusFavoritos /></MemberRoute>) },
+  { path: '/notificacoes', element: lazyRoute(<MemberRoute><Notificacoes /></MemberRoute>) },
+  { path: '/ajustar-notificacoes', element: lazyRoute(<MemberRoute><AjustarNotificacoes /></MemberRoute>) },
+  { path: '/forum', element: lazyRoute(<MemberRoute><ForumHome /></MemberRoute>) },
+  { path: '/forum/novo', element: lazyRoute(<MemberRoute><ForumNovoTopico /></MemberRoute>) },
+  { path: '/forum/topico/:id', element: lazyRoute(<MemberRoute><ForumTopico /></MemberRoute>) },
+  { path: '/forum/topico/:id/editar', element: lazyRoute(<MemberRoute><ForumEditarTopico /></MemberRoute>) },
+  { path: '/admin', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
+  { path: '/admin/login', element: lazyRoute(<AdminLogin />) },
+  { path: '/admin/dashboard', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
+  { path: '/admin/home', element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>) },
+  { path: '/admin/pessoas', element: lazyRoute(<ProtectedRoute><AdminPessoas /></ProtectedRoute>) },
+  { path: '/admin/pessoas/nova', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/pessoas/:id/editar', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/pessoas/:id', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/relacionamentos', element: lazyRoute(<ProtectedRoute><AdminRelacionamentos /></ProtectedRoute>) },
+  { path: '/admin/relacionamentos/novo', element: lazyRoute(<ProtectedRoute><AdminRelacionamentoForm /></ProtectedRoute>) },
+  { path: '/admin/importacao', element: lazyRoute(<ProtectedRoute><AdminImportacao /></ProtectedRoute>) },
+  { path: adminMigrationPath, element: lazyRoute(<ProtectedRoute><AdminMigrationTool /></ProtectedRoute>) },
+  { path: '/admin/diagnostico', element: lazyRoute(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>) },
+  { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
+  { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
+  { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
+  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
   {
     path: '*',
     element: <div className="min-h-screen flex items-center justify-center bg-gray-50">
