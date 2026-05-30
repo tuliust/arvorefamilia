@@ -12,7 +12,6 @@ export function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
   const canShowPhoneNumber = pessoa.permitir_exibir_telefone === true && Boolean(pessoa.telefone);
   const canShowWhatsAppContact = canUseWhatsAppContact(pessoa);
   const contactItems = [
-    ['Nome completo', pessoa.nome_completo],
     canShowBirthDate
       ? ['Nascimento', pessoa.data_nascimento ? String(pessoa.data_nascimento) : undefined]
       : null,
@@ -47,25 +46,26 @@ export function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
       : null,
   ].filter((item): item is [string, string] => Boolean(item?.[1]));
 
-  if (contactItems.length <= 1 && !canShowWhatsAppContact) {
+  if (contactItems.length === 0 && !canShowWhatsAppContact) {
     return (
       <div className="space-y-2">
-        <p className="font-semibold text-slate-900">{pessoa.nome_completo}</p>
         <p>Esta pessoa não disponibilizou dados ou contatos para visualização.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <dl className="space-y-2">
-        {contactItems.map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt>
-            <dd className="text-slate-800">{value}</dd>
-          </div>
-        ))}
-      </dl>
+    <div className="space-y-3">
+      {contactItems.length > 0 && (
+        <dl className="space-y-2">
+          {contactItems.map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-xs font-semibold text-slate-500">{label}</dt>
+              <dd className="text-slate-800">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       {canShowWhatsAppContact && (
         <WhatsAppContactButton
           telefone={pessoa.telefone ?? null}
@@ -73,7 +73,8 @@ export function ContactInfo({ pessoa }: { pessoa: Pessoa }) {
           permitirMensagensWhatsApp={pessoa.permitir_mensagens_whatsapp ?? null}
           personId={pessoa.id}
           personName={pessoa.nome_completo}
-          className="mt-3"
+          label="Chamar no Whats"
+          className="mt-3 h-10 w-full justify-center rounded-xl border-gray-300 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:w-auto"
         />
       )}
     </div>
