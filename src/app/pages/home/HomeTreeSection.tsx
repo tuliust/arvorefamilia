@@ -84,6 +84,27 @@ export function HomeTreeSection({
     <section
       className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
     >
+      {isMobile && (
+        <style>
+          {`
+            [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"] {
+              top: 1rem !important;
+              right: 6.5rem !important;
+              left: auto !important;
+              transform: none !important;
+              width: 2.25rem !important;
+              height: 2.25rem !important;
+              border-radius: 0.5rem !important;
+              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+            }
+
+            [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+              top: 3.75rem !important;
+            }
+          `}
+        </style>
+      )}
+
       {shouldApplyDirectTreeVisualAdjustments && (
         <style>
           {`
