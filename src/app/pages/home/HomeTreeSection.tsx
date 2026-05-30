@@ -71,19 +71,50 @@ export function HomeTreeSection({
   renderStateMessage,
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
-  const shouldHideDirectCousinGridEdges = treeViewMode === 'minha-arvore' && !edgeFilters.irmaos;
+  const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
+  const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
 
   return (
     <section
       className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
     >
-      {shouldHideDirectCousinGridEdges && (
+      {shouldApplyDirectTreeVisualAdjustments && (
         <style>
           {`
-            .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
-            .react-flow__edge[data-id^="direct-primos-maternos-grid-"] {
-              display: none;
+            .react-flow__node-personNode > .relative > .cursor-pointer {
+              transform: scale(1.035);
+              transform-origin: center;
+              overflow: visible !important;
             }
+
+            .react-flow__node-personNode h3 {
+              line-height: 1.18 !important;
+              padding-bottom: 0.08em;
+            }
+
+            .react-flow__node-personNode p {
+              line-height: 1.2 !important;
+              overflow: visible !important;
+              text-overflow: clip !important;
+              white-space: normal !important;
+            }
+
+            .react-flow__node-personNode img {
+              transform: scale(1.04);
+              transform-origin: center;
+            }
+
+            .react-flow__node-personNode .rounded-full > svg {
+              transform: scale(1.06);
+              transform-origin: center;
+            }
+
+            ${shouldHideDirectCousinGridEdges ? `
+              .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
+              .react-flow__edge[data-id^="direct-primos-maternos-grid-"] {
+                display: none;
+              }
+            ` : ''}
           `}
         </style>
       )}
