@@ -31,6 +31,7 @@ import {
 } from './homeCuriositiesUtils';
 
 export type CuriosidadesTab = 'voce-sabia' | 'descubra' | 'pergunte-ia' | 'conexao';
+type StatVariant = 'total' | 'alive' | 'deceased' | 'pets';
 
 type CuriosityTabOption = {
   id: CuriosidadesTab;
@@ -190,10 +191,10 @@ export function HomeCuriositiesDialog({
                     description="Veja curiosidades rápidas sobre a família, datas, lugares e conexões da árvore."
                   />
                   <div className="grid grid-cols-4 gap-2">
-                    <Stat label="Pessoas cadastradas" value={stats.totalPessoas} />
-                    <Stat label="Vivos" value={stats.pessoasVivas} />
-                    <Stat label="Falecidos" value={stats.pessoasFalecidas} />
-                    <Stat label="Pets" value={stats.pets ?? 0} />
+                    <Stat label="Pessoas cadastradas" value={stats.totalPessoas} variant="total" />
+                    <Stat label="Vivos" value={stats.pessoasVivas} variant="alive" />
+                    <Stat label="Falecidos" value={stats.pessoasFalecidas} variant="deceased" />
+                    <Stat label="Pets" value={stats.pets ?? 0} variant="pets" />
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <CuriosityCard label="Mais velho" value={curiosities.oldest?.nome_completo || 'Sem data'} detail={formatYear(curiosities.oldest?.data_nascimento)} />
@@ -485,11 +486,25 @@ function CuriositySectionHeader({ icon, title, description }: CuriositySectionHe
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, variant }: { label: string; value: number; variant: StatVariant }) {
+  const variantClasses: Record<StatVariant, string> = {
+    total: 'border-blue-200 bg-blue-50 text-blue-950',
+    alive: 'border-emerald-200 bg-emerald-50 text-emerald-950',
+    deceased: 'border-slate-300 bg-slate-100 text-slate-950',
+    pets: 'border-amber-200 bg-amber-50 text-amber-950',
+  };
+
+  const labelClasses: Record<StatVariant, string> = {
+    total: 'text-blue-700',
+    alive: 'text-emerald-700',
+    deceased: 'text-slate-600',
+    pets: 'text-amber-700',
+  };
+
   return (
-    <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-      <p className="truncate text-[11px] font-medium text-gray-500 sm:text-xs">{label}</p>
-      <p className="mt-2 text-xl font-bold text-gray-900">{value}</p>
+    <div className={`min-w-0 rounded-xl border p-3 shadow-sm ${variantClasses[variant]}`}>
+      <p className={`truncate text-[11px] font-medium sm:text-xs ${labelClasses[variant]}`}>{label}</p>
+      <p className="mt-2 text-xl font-bold">{value}</p>
     </div>
   );
 }
