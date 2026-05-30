@@ -63,7 +63,14 @@ export const GLOBAL_SEARCH_PAGES: GlobalSearchPageResult[] = [
     title: 'Notificações',
     description: 'Central de notificações e avisos relacionados à família.',
     path: '/notificacoes',
-    keywords: ['notificacoes', 'notificações', 'avisos', 'alertas'],
+    keywords: ['notificacoes', 'notificações', 'avisos', 'alertas', 'novidades'],
+  },
+  {
+    id: 'ajustar-notificacoes',
+    title: 'Ajustar Notificações',
+    description: 'Preferências de recebimento e configuração das notificações familiares.',
+    path: '/ajustar-notificacoes',
+    keywords: ['notificacoes', 'notificações', 'ajustar notificacoes', 'ajustar notificações', 'preferencias', 'preferências', 'configurar notificacoes', 'configurar notificações'],
   },
   {
     id: 'calendario',
