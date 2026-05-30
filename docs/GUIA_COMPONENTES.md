@@ -1,6 +1,6 @@
 # Guia de componentes - Arvore Familia
 
-> Ultima atualizacao: 2026-05-29
+> Ultima atualizacao: 2026-05-30
 > Local canonico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -1314,4 +1314,188 @@ Padrao visual esperado:
 - manter `type="button"`;
 - nao submeter formulario acidentalmente.
 
+---
+## 17. Ajustes recentes documentados - ciclo 2026-05-30
 
+### 17.1 `HomeHeader`
+
+Arquivo:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+```
+
+Responsabilidades adicionais consolidadas:
+
+- busca expansivel com sugestoes de pessoas e paginas;
+- lista local de paginas recorrentes;
+- fechamento de sugestoes por clique fora e por `Esc`;
+- placeholder oficial **Buscar pessoa ou pagina...**;
+- sugestao de pessoa com linha secundaria no formato **Cidade de nascimento – DD/MM/AAAA**;
+- atalho para pagina completa de resultados.
+
+Cuidados:
+
+- nao usar `pointer-events-none` em area que precise ser clicavel;
+- manter o botao de busca clicavel em toda a sua area visual;
+- sugestoes devem usar fundo branco/solido;
+- sugestoes devem ficar acima da arvore;
+- nao mover a busca para componente global sem preservar integracao com `Home.tsx`.
+
+### 17.2 Componentes Radix base: select e dropdown menu
+
+Arquivos:
+
+```txt
+src/app/components/ui/select.tsx
+src/app/components/ui/dropdown-menu.tsx
+```
+
+Padrao consolidado para conteudos em portal:
+
+```txt
+SelectContent -> z-[1000]
+DropdownMenuContent -> z-[1000]
+DropdownMenuSubContent -> z-[1000]
+sideOffset padrao -> 8
+```
+
+Motivo:
+
+- o header da arvore usa camada elevada;
+- menus com `z-50` podem ficar parcialmente cobertos;
+- o seletor de views e o menu do usuario precisam abrir integralmente acima do header.
+
+Cuidados:
+
+- antes de reduzir `z-index`, testar `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- ajustes globais nesses componentes impactam selects e menus de todo o app;
+- se houver conflito local, preferir `className` local antes de alterar o componente base novamente.
+
+### 17.3 `HomeCuriositiesDialog`
+
+Arquivo:
+
+```txt
+src/app/pages/home/HomeCuriositiesDialog.tsx
+```
+
+A aba **Voce Sabia?** usa `Stat` com variacoes visuais.
+
+Variantes consolidadas:
+
+```txt
+total -> azul
+alive -> verde
+deceased -> slate/cinza
+pets -> ambar
+```
+
+Cuidados:
+
+- manter contraste suficiente;
+- nao usar essas cores como semantica de permissao;
+- preservar responsividade do grid;
+- novas estatisticas devem usar variacao cromatica discreta.
+
+### 17.4 Modal de foto em `/minha-arvore/editar`
+
+Arquivo principal:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+Comportamento consolidado:
+
+- avatar do topo e um botao;
+- clique abre modal de foto;
+- modo `preview` mostra foto atual ampliada ou iniciais;
+- modo `edit` permite escolher imagem;
+- crop usa `react-easy-crop`;
+- botao **Aplicar corte** confirma o recorte;
+- botao **Remover foto** marca remocao e deve ter borda visivel.
+
+Cuidados:
+
+- o botao **Remover foto** deve usar `type="button"`;
+- acao de remover foto deve marcar formulario como alterado;
+- texto oficial do upload/corte deve manter acentuacao correta: **O corte final sera quadrado.**;
+- nao duplicar modal de upload se o fluxo existente atender.
+
+### 17.5 Modal de saida sem salvar em `/minha-arvore/editar`
+
+Arquivo principal:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+Comportamento consolidado:
+
+- intercepta links internos;
+- intercepta logout;
+- usa aviso nativo em refresh/fechamento de aba;
+- se houver alteracoes pendentes, abre modal **Sair sem salvar?**;
+- **Continuar editando** fecha o modal e mantem a rota;
+- **Sair sem salvar** descarta rascunho e prossegue com navegacao/logout;
+- apos salvar pelo botao flutuante, navegar nao deve abrir modal.
+
+Cuidados:
+
+- nao interceptar `mailto:`, `tel:`, hash local ou links externos;
+- preservar atalhos de navegador com Ctrl/Cmd/Shift/Alt;
+- nao apagar rascunho ao cancelar a saida;
+- manter microcopy acentuada corretamente.
+
+### 17.6 `textEncodingRepair`
+
+Arquivo:
+
+```txt
+src/app/utils/textEncodingRepair.ts
+```
+
+Responsabilidade:
+
+- camada defensiva para reparar textos renderizados com `?` no lugar de acentos em pontos conhecidos;
+- aplicada em `src/app/App.tsx`.
+
+Exemplos cobertos:
+
+```txt
+Arquivos Hist?ricos -> Arquivos Historicos
+arquivos hist?ricos -> arquivos historicos
+Voc? tem altera??es pendentes nesta p?gina... -> Voce tem alteracoes pendentes nesta pagina...
+O corte final ser? quadrado. -> O corte final sera quadrado.
+```
+
+Cuidados:
+
+- esta camada nao substitui manter arquivos-fonte em UTF-8;
+- novas ocorrencias devem ser corrigidas na origem sempre que possivel;
+- se o reparo for ampliado, documentar o motivo em `docs/GUIA_CORRECAO_ERROS.md`;
+- evitar reparos genericos agressivos que possam alterar texto de usuario.
+
+### 17.7 `ViewMarriageModal`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+```
+
+Comportamento consolidado:
+
+- modal aberto pelo anel/alianca conjugal;
+- nao exibe ID tecnico do relacionamento para o usuario;
+- labels de tipo devem ser amigaveis;
+- `conjuge` deve aparecer como **Conjuge** ou **Cônjuge**, conforme politica de acentuacao do arquivo;
+- `casamento` deve aparecer como **Casamento**;
+- arquivos historicos do relacionamento continuam disponiveis.
+
+Cuidados:
+
+- observacoes internas continuam restritas a admin;
+- nao salvar relacionamento ao apenas visualizar o modal;
+- nao expor metadados tecnicos desnecessarios.

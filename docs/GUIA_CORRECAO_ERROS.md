@@ -1,6 +1,8 @@
 # Guia de correcao de erros - Arvore Familia
 
-> Ultima atualizacao: 2026-05-29
+> Ultima revisao: 2026-05-30
+
+> Ultima atualizacao: 2026-05-30
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -1717,3 +1719,258 @@ Esperado:
 - botoes `+` e `-` no canto superior direito;
 - wrapper visual com `right-4 top-4`;
 - nao alterar minZoom, maxZoom, viewport, bounds ou normalizacao.
+
+---
+## 22. Correcoes recentes e troubleshooting adicional - ciclo 2026-05-30
+
+### 22.1 Textos com `?` no lugar de acentos
+
+Sintoma observado:
+
+```txt
+Arquivos Hist?ricos
+arquivos hist?ricos
+Voc? tem altera??es pendentes nesta p?gina...
+O corte final ser? quadrado.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/utils/textEncodingRepair.ts
+src/app/App.tsx
+```
+
+Correcao aplicada no ciclo recente:
+
+```txt
+src/app/utils/textEncodingRepair.ts
+src/app/App.tsx
+```
+
+Responsabilidade:
+
+- reparar defensivamente textos renderizados com `?` em pontos conhecidos;
+- reduzir regressao visual enquanto a origem e revisada.
+
+Regra importante:
+
+```txt
+textEncodingRepair e camada defensiva, nao substitui manter arquivos-fonte em UTF-8.
+```
+
+Investigacao recomendada:
+
+1. buscar strings quebradas no codigo;
+2. verificar encoding do arquivo;
+3. corrigir origem quando possivel;
+4. manter reparo defensivo apenas para casos conhecidos;
+5. evitar substituicoes genericas que alterem conteudo de usuario.
+
+Comandos uteis:
+
+```bash
+git diff -- src/app/pages/MinhaArvore.tsx | Select-String "SÃ|famÃ|proteÃ"
+git grep "Hist?ricos"
+git grep "altera??es"
+git grep "ser?o"
+```
+
+### 22.2 Redirecionamento recorrente para `/meus-dados`
+
+Sintoma:
+
+```txt
+Usuario autenticado tenta acessar paginas da arvore e e redirecionado para /meus-dados.
+```
+
+Arquivo provavel:
+
+```txt
+src/app/components/TreeAccessRoute.tsx
+```
+
+Causa provavel:
+
+```txt
+TreeAccessRoute tratando todo vinculo com dados_confirmados=false como primeiro acesso.
+```
+
+Regra corrigida:
+
+```txt
+sem sessao -> /entrar
+vinculo recem-criado e dados_confirmados=false -> /meus-dados
+vinculo existente -> libera arvore mesmo com dados_confirmados=false
+```
+
+Validar:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/busca
+```
+
+Se `/pessoa/:id` ou `/notificacoes` redirecionarem indevidamente, investigar `MemberRoute`, pois essas rotas nao usam `TreeAccessRoute`.
+
+### 22.3 Dropdown coberto pelo header
+
+Sintoma:
+
+```txt
+Menu do usuario ou seletor de views abre parcialmente por baixo do header.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/components/ui/select.tsx
+src/app/components/ui/dropdown-menu.tsx
+src/app/pages/home/HomeHeader.tsx
+```
+
+Regra consolidada:
+
+```txt
+SelectContent -> z-[1000]
+DropdownMenuContent -> z-[1000]
+DropdownMenuSubContent -> z-[1000]
+sideOffset -> 8
+```
+
+Validar:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+### 22.4 Busca do header com clique parcial
+
+Sintoma:
+
+```txt
+Somente parte do botao de busca responde ao clique.
+```
+
+Arquivo provavel:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+```
+
+Verificar:
+
+- `pointer-events-none` em wrappers;
+- area visual do botao versus area real;
+- z-index da busca;
+- sobreposicao por input colapsado;
+- `onClick` no botao.
+
+Regra:
+
+```txt
+A area visual inteira do botao de busca deve ser clicavel.
+```
+
+### 22.5 Linhas de primos nao somem com `Legendas > Linhas > Todas`
+
+Sintoma:
+
+```txt
+Todas as linhas somem, exceto conectores horizontais/verticais entre primos.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/pages/Home.tsx
+```
+
+Regra:
+
+```txt
+Linhas entre primos tambem devem respeitar edgeFilters.
+```
+
+Se uma linha representa relacao familiar para o usuario, nao classificar como `auxiliary` sem filtro.
+
+### 22.6 Notificacoes com tag tecnica ou item nao clicavel
+
+Sintomas:
+
+```txt
+DATAS_ESPECIAIS aparece na UI
+memoria aparece sem acento ou com encoding quebrado
+clicar no corpo do card nao abre a notificacao
+```
+
+Arquivo provavel:
+
+```txt
+src/app/pages/Notificacoes.tsx
+```
+
+Correcao esperada:
+
+- label amigavel `DATAS_ESPECIAIS -> ESPECIAIS`;
+- corrigir acentuacao;
+- tornar card inteiro clicavel;
+- impedir que botao remover propague clique.
+
+### 22.7 Casamento aparece como Data desconhecida
+
+Sintoma:
+
+```txt
+data_casamento existe, mas timeline ou perfil mostram Data desconhecida.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/utils/buildPersonTimeline.ts
+src/app/pages/PersonProfile.tsx
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/services/dataService.ts
+```
+
+Verificar:
+
+- campo `data_casamento` no relacionamento;
+- formato `DD/MM/AAAA` versus ISO;
+- parser de datas;
+- mapeamento de relacionamento detalhado;
+- fallback para `data_relacionamento`.
+
+### 22.8 Viuvez aparece como separacao
+
+Sintoma:
+
+```txt
+Relacionamento encerrado por falecimento de conjuge aparece como Separacao.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/utils/buildPersonTimeline.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/components/person/PersonRelationshipsView.tsx
+```
+
+Regra:
+
+```txt
+Falecimento de conjuge gera viuvez, nao separacao.
+```
+
+Nao inferir separacao apenas por `ativo=false`.

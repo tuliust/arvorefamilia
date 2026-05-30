@@ -1,6 +1,8 @@
 # Plano de proximos passos - Arvore Familia
 
-> Ultima revisao: 2026-05-29
+> Ultima revisao: 2026-05-30
+
+> Ultima revisao: 2026-05-30
 > Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -566,3 +568,171 @@ Para evitar repeticao:
 - migrations devem ir para `docs/operacao/MIGRATIONS_SUPABASE.md`;
 - rotas/guards devem ir para `docs/arquitetura/ROTAS_E_GUARDS.md`;
 - exportacao da arvore deve ir para `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
+
+---
+## 10. Plano atualizado apos ajustes recentes - ciclo 2026-05-30
+
+Esta secao atualiza o plano de proximos passos com base nos ajustes recentes ja implementados e nas pendencias ainda abertas.
+
+### 10.1 Concluidos no ciclo recente
+
+Itens concluidos e tratados como anti-regressao:
+
+```txt
+/privacidade e /termos sem Arvore Genealogica no lado direito do header
+/privacidade e /termos com ultima atualizacao 01/06/2026
+Legendas > Linhas > Todas ocultando tambem linhas de primos
+Header da arvore com busca de pessoas e paginas
+Busca com pagina completa de resultados
+Busca fechando por clique fora e Esc
+Sugestao de pessoa com Cidade de nascimento – DD/MM/AAAA
+Dropdown de views e menu do usuario acima do header
+Cards coloridos em Curiosidades > Voce Sabia?
+/minha-arvore/editar reorganizada
+Avatar/foto com modal expandido
+Confirmacao de saida sem salvar
+Modal conjugal sem ID tecnico e com labels amigaveis
+TreeAccessRoute sem redirecionamento recorrente para /meus-dados
+Camada defensiva de reparo de encoding em textos conhecidos
+```
+
+### 10.2 Pendencias P1 antes de fechamento
+
+#### P1.1 `/pessoa/:id` - perfil publico
+
+Implementar:
+
+```txt
+remover Signo do topo do perfil publico
+remover botao separado Entrar em contato por WhatsApp
+transformar Telefone em link para WhatsApp quando permitido
+usar estilo visual semelhante ao link de redes sociais
+```
+
+Documentos relacionados:
+
+```txt
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+docs/GUIA_COMPONENTES.md
+```
+
+#### P1.2 Timeline/casamento/viuvez
+
+Implementar:
+
+```txt
+data_casamento = 30/07/1988 deve aparecer corretamente
+Data desconhecida so quando nao houver data valida
+nao exibir Separacao quando relacionamento terminou por falecimento
+tratar viuvez separadamente de separacao/divorcio
+```
+
+Documentos relacionados:
+
+```txt
+docs/funcionalidades/TIMELINE.md
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+```
+
+#### P1.3 `/notificacoes`
+
+Implementar:
+
+```txt
+corrigir acentuacao em memoria
+exibir DATAS_ESPECIAIS como ESPECIAIS
+tornar card inteiro clicavel
+preservar botao remover sem abrir card
+```
+
+Documento relacionado:
+
+```txt
+docs/funcionalidades/NOTIFICACOES.md
+```
+
+### 10.3 Pendencias P2 de layout
+
+#### P2.1 `/minha-arvore` - cards e espacos laterais
+
+Continuar ajuste incremental:
+
+```txt
+reduzir espacos laterais
+ampliar cards de pessoas
+ampliar grupos usando areas vazias laterais
+manter gap entre colunas
+reduzir truncamento excessivo de nomes
+```
+
+Cuidados:
+
+- nao quebrar conectores;
+- nao reduzir gap entre grupos internos;
+- usar espacos vazios externos dos ramos paterno/materno;
+- validar com nomes longos;
+- validar linhas apos ajuste.
+
+Documentos relacionados:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+#### P2.2 Modal de foto e encoding
+
+Conferir em ambiente final:
+
+```txt
+botao Remover foto com borda visivel
+O corte final sera/será quadrado sem encoding quebrado
+Arquivos Historicos/Históricos sem ?
+modal Sair sem salvar? com texto legivel
+```
+
+### 10.4 Sequencia recomendada de implementacao
+
+1. Corrigir `/pessoa/:id` contato e signo.
+2. Corrigir timeline de casamento/viuvez.
+3. Corrigir `/notificacoes`.
+4. Finalizar layout lateral/cards da `/minha-arvore`.
+5. Revalidar encoding e modal de foto.
+6. Atualizar documentacao afetada apos cada bloco.
+7. Rodar QA final.
+
+### 10.5 Checklist tecnico por bloco
+
+Para cada bloco:
+
+```bash
+git status
+npm run build
+git diff --check
+```
+
+Quando envolver rotas/permissoes:
+
+```bash
+npm run test:e2e
+```
+
+Quando envolver banco:
+
+```bash
+supabase migration list
+```
+
+### 10.6 Criterios de aceite para fechar a rodada
+
+A rodada so deve ser considerada fechada quando:
+
+- todos os itens P1 estiverem implementados;
+- build passar;
+- nao houver texto quebrado visivel nos fluxos ajustados;
+- perfil publico nao exibir Signo;
+- telefone funcionar como link WhatsApp quando permitido;
+- timeline nao confundir viuvez com separacao;
+- notificacoes exibirem label amigavel e card clicavel;
+- `/minha-arvore` nao perder legibilidade ao ajustar cards;
+- docs canônicos estiverem atualizados.

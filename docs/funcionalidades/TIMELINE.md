@@ -1,5 +1,7 @@
 # Linha do tempo do usuario
 
+> Ultima revisao: 2026-05-30
+
 > Local recomendado: `docs/funcionalidades/TIMELINE.md`
 > Tipo: documentacao funcional especifica.
 
@@ -430,3 +432,108 @@ Possiveis evolucoes:
 - impressao/exportacao.
 
 Esses itens nao bloqueiam o MVP.
+
+---
+## 17. Ajustes recentes e pendencias - ciclo 2026-05-30
+
+Esta secao registra pendencias mapeadas para casamento, separacao e viuvez no perfil publico e na timeline.
+
+### 17.1 Data de casamento
+
+Problema mapeado:
+
+```txt
+Data de casamento salva como 30/07/1988 aparece como Data desconhecida.
+```
+
+Regra esperada:
+
+- se `data_casamento` existir, a timeline e as secoes de relacionamento devem usar essa data;
+- aceitar `DD/MM/AAAA`, `D/M/AAAA`, `AAAA-MM-DD`, `AAAA-MM`, `AAAA`;
+- apenas exibir **Data desconhecida** quando realmente nao houver data valida;
+- nao converter ano puro para `01/01/AAAA`.
+
+Arquivos provaveis:
+
+```txt
+src/app/utils/buildPersonTimeline.ts
+src/app/pages/PersonProfile.tsx
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/services/dataService.ts
+```
+
+### 17.2 Separacao versus viuvez
+
+Problema mapeado:
+
+```txt
+Relacionamento encerrado por falecimento da conjuge nao deve aparecer como separacao.
+```
+
+Regra esperada:
+
+- separacao/divorcio dependem de campo explicito de separacao, fim ou status equivalente;
+- falecimento de conjuge deve gerar estado de viuvez;
+- relacionamento inativo por falecimento nao deve criar evento **Separacao**;
+- status de viuvez deve ser tratado separadamente de separacao/divorcio.
+
+### 17.3 Regras para o builder
+
+`buildPersonTimeline` deve diferenciar:
+
+```txt
+marriage/union -> data_casamento ou data_relacionamento
+separation -> data_separacao/data_fim quando houver separacao real
+widowhood -> derivado de falecimento de conjuge quando aplicavel
+```
+
+Se a versao atual ainda nao tiver tipo especifico de item para viuvez, a implementacao deve escolher entre:
+
+1. criar tipo especifico, documentando impacto visual; ou
+2. ajustar apenas para nao renderizar separacao indevida, mantendo falecimento do conjuge como evento proprio.
+
+Nao inferir separacao apenas por:
+
+```txt
+ativo = false
+```
+
+sem campo explicito de separacao/fim.
+
+### 17.4 Checklist de validacao
+
+Validar perfil com:
+
+```txt
+casamento com data_casamento = 30/07/1988
+casamento sem data_casamento
+relacionamento com separacao real
+relacionamento com divorcio real
+relacionamento encerrado por falecimento de conjuge
+relacionamento ativo
+```
+
+Resultado esperado:
+
+```txt
+casamento com data -> mostra 30/07/1988
+casamento sem data -> mostra Data desconhecida apenas quando inevitavel
+separacao real -> mostra Separacao
+falecimento de conjuge -> nao mostra Separacao indevida
+viuvez -> status/representacao propria quando suportado
+```
+
+### 17.5 Relacao com modal conjugal
+
+O modal da alianca ja possui regras documentadas em:
+
+```txt
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+```
+
+A timeline deve permanecer coerente com esse modal:
+
+- nao exibir ID tecnico;
+- usar labels amigaveis;
+- respeitar `data_casamento`;
+- distinguir viuvez de separacao.

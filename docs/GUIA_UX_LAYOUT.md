@@ -1,6 +1,6 @@
 # Guia de UX e Layout - Arvore Familia
 
-> Ultima revisao: 2026-05-29
+> Ultima revisao: 2026-05-30
 > Local canonico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -863,3 +863,101 @@ Este arquivo deve concentrar decisoes de UX e layout. Para evitar repeticao:
 - exportacao da arvore deve ser detalhada em `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
 - legenda/painel/conectores devem ser detalhados em `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
 - rotas e guards devem ficar em `docs/arquitetura/ROTAS_E_GUARDS.md`.
+
+---
+## 13. Registro de ajustes recentes - ciclo 2026-05-30
+
+Esta secao consolida decisoes de UX validadas durante o ciclo recente de ajustes. Quando houver divergencia entre prints, PDFs antigos ou documentos historicos, prevalecem as regras abaixo junto aos documentos funcionais especificos.
+
+### 13.1 Header da arvore: busca, sugestoes e pagina de resultados
+
+Rotas afetadas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Regras consolidadas:
+
+- o botao de busca deve ser clicavel em toda a area visual;
+- a busca deve sugerir automaticamente **pessoas** e **paginas**;
+- a busca deve oferecer acesso para a pagina completa de resultados;
+- o placeholder oficial e **Buscar pessoa ou pagina...**;
+- sugestoes fecham ao clicar fora;
+- sugestoes fecham com `Esc`;
+- sugestoes devem ficar em camada acima da arvore;
+- sugestoes devem usar fundo solido, nunca transparente;
+- a lista local de paginas deve contemplar rotas recorrentes, incluindo **Notificacoes** e **Ajustar Notificacoes**.
+
+Linha secundaria das sugestoes de pessoas:
+
+```txt
+Cidade de nascimento – DD/MM/AAAA
+```
+
+Se uma das informacoes estiver ausente, exibir apenas o dado disponivel. Se ambas estiverem ausentes, ocultar a linha secundaria.
+
+### 13.2 Header da arvore: camadas de menus
+
+O header da arvore usa camada elevada para ficar acima do canvas. Conteudos Radix em portal precisam ficar acima do header.
+
+Padrao consolidado:
+
+```txt
+SelectContent -> z-[1000]
+DropdownMenuContent -> z-[1000]
+DropdownMenuSubContent -> z-[1000]
+sideOffset -> 8
+```
+
+Esse padrao evita regressao em que o menu do usuario e o dropdown de views aparecem parcialmente cobertos pelo header.
+
+### 13.3 Modal Curiosidades > Voce Sabia
+
+A aba **Voce Sabia?** deve manter cards estatisticos com cores distintas:
+
+| Card | Cor |
+|---|---|
+| Pessoas cadastradas | Azul |
+| Vivos | Verde |
+| Falecidos | Slate/cinza |
+| Pets | Ambar |
+
+A cor serve para leitura rapida e nao deve ser usada como estado de permissao, erro ou alerta.
+
+### 13.4 /minha-arvore/editar
+
+A experiencia da rota `/minha-arvore/editar` possui documento funcional proprio:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
+```
+
+Regras de UX a preservar:
+
+- avatar do topo e clicavel;
+- modal de foto permite visualizar, alterar, cortar e remover imagem;
+- botao **Remover foto** deve ter borda visivel e tratamento destrutivo discreto;
+- saida sem salvar deve exibir confirmacao quando houver alteracoes pendentes;
+- o modal **Sair sem salvar?** deve manter microcopy acentuada corretamente;
+- a pagina nao deve exibir preferencias de notificacao nem campo de edicao de signo.
+
+### 13.5 Textos, acentuacao e encoding
+
+Textos de UI devem ser mantidos em UTF-8. A existencia de camada defensiva de reparo de texto renderizado nao substitui a correcao dos arquivos-fonte.
+
+Validar visualmente:
+
+- **Arquivos Historicos**;
+- **voce / alteracoes / pagina / nao / serao** em modais;
+- **O corte final sera quadrado.** com acentuacao correta no ambiente final;
+- labels de relacionamento como **Conjuge** e **Casamento** quando a UI estiver em ASCII, ou **Cônjuge** quando o arquivo-fonte permitir acentos sem corromper.
+
+### 13.6 Paginas legais
+
+Em `/privacidade` e `/termos`:
+
+- o header nao deve exibir **Arvore Genealogica** do lado direito;
+- a data oficial de ultima atualizacao e **01/06/2026**.

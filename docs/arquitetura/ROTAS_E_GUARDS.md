@@ -1,5 +1,7 @@
 # Rotas e guards de acesso
 
+> Ultima revisao: 2026-05-30
+
 > Documento canonico de rotas, navegacao e protecao de acesso.
 > Local recomendado: `docs/arquitetura/ROTAS_E_GUARDS.md`.
 
@@ -620,3 +622,81 @@ Itens recomendados:
 - ampliar testes e2e de acesso por perfil.
 
 Esses itens nao bloqueiam o MVP se nao houver falha P0/P1.
+
+---
+## 18. Ajustes recentes de acesso - ciclo 2026-05-30
+
+### 18.1 Correcao de redirecionamento recorrente para `/meus-dados`
+
+Problema observado:
+
+```txt
+Ao acessar paginas da arvore, usuario ja autenticado era redirecionado repetidamente para /meus-dados.
+```
+
+Causa funcional:
+
+```txt
+TreeAccessRoute tratava qualquer vinculo com dados_confirmados=false como motivo para redirecionar para /meus-dados.
+```
+
+Regra corrigida:
+
+```txt
+sem sessao -> /entrar
+sem vinculo -> /entrar ou fluxo de primeiro acesso
+vinculo recem-criado e dados_confirmados=false -> /meus-dados
+vinculo existente -> libera /minha-arvore, /genealogia e /visao-completa
+```
+
+Objetivo:
+
+- preservar o fluxo de primeiro acesso;
+- evitar loop para usuario ja vinculado;
+- nao bloquear acesso recorrente a arvore por `dados_confirmados=false`.
+
+### 18.2 Diferenca entre `/meus-dados` e `/minha-arvore/editar`
+
+```txt
+/meus-dados -> edicao/confirmacao de dados vinculados ao usuario.
+/minha-arvore/editar -> edicao ampliada do proprio perfil familiar, avatar, arquivos historicos e vinculos.
+```
+
+Regras:
+
+- `/meus-dados` permanece rota de membro;
+- `/minha-arvore/editar` tambem permanece rota de membro;
+- nenhuma das duas deve usar `TreeAccessRoute`;
+- alteracoes de guard devem ser documentadas aqui antes de implementadas.
+
+### 18.3 Paginas legais
+
+Rotas publicas:
+
+```txt
+/termos
+/privacidade
+```
+
+Regras de UX recentes:
+
+- nao exibir texto **Arvore Genealogica** no lado direito do header;
+- data oficial de ultima atualizacao legal: **01/06/2026**.
+
+Essas rotas continuam publicas e nao devem passar por `MemberRoute`, `TreeAccessRoute` ou `ProtectedRoute`.
+
+### 18.4 Checklist anti-regressao de guards
+
+Validar apos alteracoes:
+
+```txt
+deslogado em /minha-arvore -> /entrar
+deslogado em /pessoa/:id -> /entrar
+usuario comum em /admin -> bloqueado
+usuario vinculado existente em /minha-arvore -> acessa arvore
+usuario vinculado existente em /genealogia -> acessa genealogia
+usuario vinculado existente em /visao-completa -> acessa visao completa
+vinculo recem-criado e dados_confirmados=false -> /meus-dados
+/minha-arvore/editar -> MemberRoute
+/notificacoes -> MemberRoute
+```

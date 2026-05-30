@@ -1117,4 +1117,108 @@ corte inferior de nomes -> consolidado
 reducao de espacos laterais e ampliacao de cards -> em ajuste incremental
 ```
 
+---
+## 28. Ajustes recentes e anti-regressao - ciclo 2026-05-30
 
+### 28.1 Header da arvore
+
+As rotas abaixo usam o mesmo shell da Home e devem manter comportamento consistente:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Busca no header:
+
+- botao integralmente clicavel;
+- placeholder oficial **Buscar pessoa ou pagina...**;
+- sugestoes automaticas de pessoas;
+- sugestoes automaticas de paginas;
+- atalho para pagina completa de resultados;
+- fechamento por clique fora;
+- fechamento por `Esc`;
+- sugestoes acima da arvore e com fundo solido.
+
+Sugestoes de pessoas:
+
+```txt
+Cidade de nascimento – DD/MM/AAAA
+```
+
+A lista local de paginas deve contemplar rotas frequentes, incluindo:
+
+```txt
+Notificacoes
+Ajustar Notificacoes
+```
+
+### 28.2 Legendas > Linhas > Todas
+
+Comportamento consolidado:
+
+- a opcao **Todas** deve ocultar todas as linhas da arvore;
+- isso inclui linhas entre primos;
+- tambem inclui conectores estruturais relacionados a grupos laterais;
+- o comportamento deve ser revalidado apos qualquer mudanca em edges, anchors ou filtros visuais.
+
+Checklist:
+
+```txt
+Legendas > Linhas > Todas -> nenhuma linha visivel
+Primos paternos -> linhas horizontais/verticais ocultas
+Primos maternos -> linhas horizontais/verticais ocultas
+Filtros individuais -> continuam funcionando
+```
+
+### 28.3 Cards de pessoas
+
+Status consolidado:
+
+```txt
+evitar corte inferior de nomes/informacoes -> consolidado
+evitar truncamento excessivo -> em ajuste incremental
+reduzir espacos laterais -> em ajuste incremental
+ampliar cards usando areas vazias laterais -> em ajuste incremental
+manter gap entre colunas -> obrigatorio
+```
+
+Regras:
+
+- ampliar cards nao deve reduzir indevidamente o gap entre colunas;
+- usar preferencialmente areas vazias externas dos ramos paterno e materno;
+- nomes longos devem ter mais area util antes de truncar;
+- quando truncar for inevitavel, nao cortar a parte inferior do texto;
+- validar com nomes compostos e sobrenomes longos.
+
+### 28.4 Modal Curiosidades
+
+Na aba **Voce Sabia?**, os cards estatisticos devem permanecer diferenciados por cor:
+
+```txt
+Pessoas cadastradas -> azul
+Vivos -> verde
+Falecidos -> slate/cinza
+Pets -> ambar
+```
+
+### 28.5 Validacao manual obrigatoria apos mudancas na view
+
+Validar:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Checklist:
+
+- busca abre e fecha corretamente;
+- sugestoes de pessoas e paginas aparecem;
+- seletor de views nao fica coberto pelo header;
+- menu do usuario nao fica coberto pelo header;
+- linhas de primos somem ao selecionar Todas;
+- cards nao cortam nomes na parte inferior;
+- alteracoes de largura nao quebram conexoes.

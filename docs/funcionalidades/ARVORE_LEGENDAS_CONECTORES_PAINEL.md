@@ -1,5 +1,7 @@
 # Arvore - legendas, conectores, filtros e painel lateral
 
+> Ultima revisao: 2026-05-30
+
 > Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentacao funcional/tecnica especifica da arvore.
 
@@ -974,3 +976,93 @@ Possiveis evolucoes:
 - documentacao visual com imagens de exemplo.
 
 Esses itens nao bloqueiam o MVP.
+
+---
+## 16. Ajustes recentes e anti-regressao - ciclo 2026-05-30
+
+### 16.1 `Legendas > Linhas > Todas`
+
+Comportamento consolidado:
+
+```txt
+Ao clicar em Todas, todas as linhas controlaveis devem sumir.
+```
+
+Isso inclui obrigatoriamente:
+
+- linhas conjugais;
+- linhas de pais/filhos;
+- linhas de irmaos;
+- linhas entre primos;
+- linhas horizontais e verticais que conectam cards de primos;
+- conectores estruturais que visualmente representam relacao familiar.
+
+A correcao desta frente foi necessaria porque as linhas entre primos permaneciam visiveis mesmo com **Todas** desativado.
+
+### 16.2 Regra tecnica para linhas de primos
+
+Linhas de primos nao devem ser tratadas como puramente auxiliares se, para o usuario, representam relacao de irmaos/colaterais.
+
+Regra:
+
+```txt
+Se a linha e percebida como conector familiar, ela precisa respeitar edgeFilters.
+```
+
+Classificacao recomendada:
+
+```txt
+linhas entre primos -> sibling ou parentChild, conforme origem estrutural
+linhas tecnicas invisiveis -> auxiliary apenas quando nao forem percebidas como relacao
+```
+
+### 16.3 Checklist especifico de linhas
+
+Validar em `/minha-arvore`:
+
+```txt
+Legendas > Linhas > Todas desligado -> nenhuma linha visivel
+Primos paternos -> sem conectores horizontais/verticais
+Primos maternos -> sem conectores horizontais/verticais
+Pais/filhos ligado isoladamente -> apenas linhas parentais
+Irmaos ligado isoladamente -> apenas linhas de irmaos/colaterais suportadas
+Conjugal ligado isoladamente -> apenas linhas conjugais
+Destacar Todas -> destaca apenas linhas que continuam visiveis
+```
+
+Validar tambem:
+
+```txt
+/genealogia
+/visao-completa
+```
+
+Nessas views, o destaque de irmaos deve estilizar ramificacao existente, nao criar edge duplicada.
+
+### 16.4 Relacao com cards
+
+Filtros de linhas nao devem:
+
+- ocultar cards;
+- alterar contadores;
+- alterar filtros de vivos/falecidos/pets;
+- alterar grupos laterais;
+- persistir preferencias no banco sem frente especifica.
+
+### 16.5 Relacao com documentacao da view
+
+Quando este arquivo for atualizado por linhas/conectores, revisar tambem:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
+```
+
+Principalmente se a alteracao impactar:
+
+- largura dos cards;
+- espacamento dos grupos;
+- conectores entre grupos;
+- pan/zoom;
+- camadas de header ou legenda.

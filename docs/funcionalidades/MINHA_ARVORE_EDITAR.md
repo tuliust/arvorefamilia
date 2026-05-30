@@ -1,5 +1,7 @@
 # Minha Arvore - edicao do proprio perfil
 
+> Ultima revisao: 2026-05-30
+
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentacao funcional e tecnica da rota `/minha-arvore/editar`.
 > Status: documento criado para consolidar ajustes recentes da edicao feita pelo membro.
@@ -443,3 +445,78 @@ Nao reintroduzir:
 - botao **Remover foto** como texto solto sem borda;
 - strings quebradas por encoding.
 
+---
+## 17. Atualizacao de rastreabilidade - ciclo 2026-05-30
+
+Esta secao registra o estado consolidado dos ajustes recentes da rota `/minha-arvore/editar`.
+
+### 17.1 Ajustes implementados
+
+Status funcional consolidado:
+
+```txt
+remover campo Signo -> implementado
+remover preferencias de notificacao -> implementado
+fechar Meus dados apos Curiosidades da Vida -> implementado
+criar container separado de Arquivos Historicos -> implementado
+remover botao interno Salvar meus dados -> implementado
+manter botao flutuante de salvar -> implementado
+avatar clicavel com modal de foto -> implementado
+visualizacao ampliada de foto -> implementado
+alterar foto com upload/crop -> implementado
+remover foto pelo modal -> implementado
+confirmar saida sem salvar -> implementado
+```
+
+### 17.2 Ajustes visuais ainda sujeitos a conferencia
+
+Itens que devem ser conferidos sempre que a tela for validada em ambiente publicado:
+
+```txt
+botao Remover foto com borda visivel
+texto O corte final sera/será quadrado
+texto Arquivos Historicos/Históricos sem encoding quebrado
+modal Sair sem salvar? sem Voc?, altera??es, p?gina, n?o ou ser?o
+```
+
+Se o ambiente final estiver usando acentos normalmente, preferir UI acentuada. Se houver risco de terminal Windows corromper arquivos, manter ASCII no Markdown e corrigir a UI na origem TSX com UTF-8 validado.
+
+### 17.3 Regras de dirty state
+
+Toda acao abaixo deve marcar a tela como alterada:
+
+- edicao de campo de dados pessoais;
+- edicao de complemento;
+- edicao de redes sociais;
+- adicionar, remover ou editar arquivo historico;
+- alterar foto;
+- remover foto;
+- alterar data/local de casamento;
+- adicionar/remover parente quando a pagina permitir.
+
+O modal de saida sem salvar so deve aparecer se `isDirtyRef.current === true`.
+
+### 17.4 Fluxo esperado apos salvar
+
+Ao concluir salvamento com sucesso:
+
+1. dados da pessoa persistidos;
+2. foto removida ou atualizada, se aplicavel;
+3. arquivos historicos salvos;
+4. dados de casamento tratados;
+5. rascunho local removido;
+6. `isDirtyRef.current = false`;
+7. navegacao interna liberada sem modal.
+
+### 17.5 Anti-regressao especifica
+
+Nao reintroduzir:
+
+- componente de preferencias de notificacao nesta rota;
+- campo editavel de signo;
+- botao interno de salvamento dentro do bloco **Meus dados**;
+- arquivos historicos dentro do mesmo container de dados pessoais;
+- avatar sem clique;
+- modal de foto sem opcao de remocao;
+- saida sem confirmacao quando houver alteracoes pendentes;
+- textos quebrados por encoding.

@@ -1,5 +1,7 @@
 # Pessoas, perfil publico e admin de pessoa
 
+> Ultima revisao: 2026-05-30
+
 > Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
 > Tipo: documentacao funcional especifica.
 
@@ -634,4 +636,77 @@ Itens ainda pendentes ou em validacao visual:
 - corrigir timeline para casamento salvo como `30/07/1988` quando ainda aparecer como **Data desconhecida**;
 - evitar evento de separacao quando o relacionamento terminou por falecimento da conjuge.
 
+---
+## 20. Ajustes recentes e pendencias - ciclo 2026-05-30
 
+### 20.1 Modal de relacionamento conjugal
+
+Status consolidado:
+
+```txt
+remover ID tecnico do relacionamento -> implementado
+exibir conjuge como Conjuge/Conjuge acentuado conforme politica de encoding -> implementado
+exibir casamento como Casamento -> implementado
+manter arquivos historicos do relacionamento -> implementado
+```
+
+Regras:
+
+- o modal aberto pela alianca deve priorizar informacao legivel;
+- IDs tecnicos nao devem aparecer para usuario final;
+- observacoes internas continuam condicionadas a admin;
+- arquivos historicos do relacionamento continuam disponiveis quando houver relacionamento persistido.
+
+### 20.2 Perfil publico `/pessoa/:id`
+
+Pendencias mapeadas:
+
+```txt
+remover campo Signo do topo do perfil publico
+remover botao separado Entrar em contato por WhatsApp
+transformar Telefone em link para WhatsApp quando permitido
+usar estilo de link semelhante ao de redes sociais
+```
+
+Regras para implementacao:
+
+- signo e derivado da data de nascimento e nao deve ocupar destaque no perfil publico;
+- WhatsApp nao deve revelar telefone se a privacidade nao permitir;
+- se `canUseWhatsAppContact` retornar falso, o telefone pode continuar texto normal ou oculto conforme permissao;
+- se telefone for clicavel, usar `target="_blank"` e `rel="noopener noreferrer"`;
+- nao duplicar contato exibindo ao mesmo tempo telefone-link e botao separado de WhatsApp.
+
+### 20.3 Casamento, separacao e viuvez
+
+Pendencias mapeadas:
+
+```txt
+data_casamento salva como 30/07/1988 nao pode aparecer como Data desconhecida
+relacionamento encerrado por falecimento nao deve aparecer como separacao
+evento Separacao nao deve ser criado quando o caso e viuvez
+```
+
+Regras esperadas:
+
+- timeline e secoes de relacionamento devem ler `data_casamento` quando existir;
+- aceitar formato ISO e, quando aplicavel, `DD/MM/AAAA`;
+- separacao/divorcio dependem de campo explicito de separacao/fim;
+- falecimento de conjuge deve gerar estado de viuvez, nao separacao;
+- nao inferir separacao apenas porque um relacionamento nao esta ativo.
+
+### 20.4 Checklist de validacao do perfil
+
+Validar:
+
+```txt
+/pessoa/:id humano vivo
+/pessoa/:id humano falecido
+/pessoa/:id com telefone publico
+/pessoa/:id com telefone privado
+/pessoa/:id com WhatsApp permitido
+/pessoa/:id com WhatsApp nao permitido
+/pessoa/:id com casamento e data_casamento
+/pessoa/:id com conjuge falecido
+modal da alianca sem ID tecnico
+timeline sem Data desconhecida quando ha data de casamento
+```

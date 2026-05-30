@@ -156,3 +156,45 @@ Antes de criar um novo `.md`, verificar:
 - se o novo documento evita duplicidade;
 - se ha links cruzados para os guias relacionados;
 - se o documento deixa claro o que e canonico, historico ou pos-MVP.
+
+---
+## 10. Ajustes recentes documentados - ciclo 2026-05-30
+
+Este ciclo consolidou ajustes em header da arvore, busca, dropdowns, modal de curiosidades, edicao da propria arvore, modal de relacionamento e guard de acesso.
+
+Documentos que devem permanecer sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| Header da arvore, busca, sugestoes e camadas | `GUIA_UX_LAYOUT.md` e `funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Componentes base Radix, modais e utilitarios visuais | `GUIA_COMPONENTES.md` |
+| Edicao da propria arvore pelo membro | `funcionalidades/MINHA_ARVORE_EDITAR.md` |
+| Perfil publico, contato, relacionamento e modal conjugal | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
+| Rotas, guards e redirecionamento para `/meus-dados` | `arquitetura/ROTAS_E_GUARDS.md` |
+| Sintomas, encoding e correcoes por regressao | `GUIA_CORRECAO_ERROS.md` |
+| Linhas, conectores e legenda da arvore | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+
+### 10.1 Estado consolidado
+
+Itens concluidos e que devem ser tratados como anti-regressao:
+
+- `/privacidade` e `/termos` sem texto **Arvore Genealogica** no lado direito do header;
+- data oficial de ultima atualizacao legal: **01/06/2026**;
+- `Legendas > Linhas > Todas` oculta tambem linhas de primos;
+- header da arvore possui busca com sugestoes de pessoas e paginas;
+- busca possui pagina completa de resultados;
+- dropdown de views e menu do usuario abrem acima do header;
+- cards estatisticos de **Curiosidades > Voce Sabia?** possuem cores distintas;
+- `/minha-arvore/editar` possui modal de foto, arquivos historicos separados e saida sem salvar;
+- modal conjugal nao exibe ID tecnico;
+- `TreeAccessRoute` nao deve redirecionar recorrentemente usuarios ja vinculados para `/meus-dados`.
+
+### 10.2 Pendencias a manter rastreaveis
+
+Itens ainda pendentes ou em ajuste incremental devem ficar em `PLANO_PROXIMOS_PASSOS.md` ou no documento funcional correspondente:
+
+- reduzir espacos laterais e ampliar cards da view `/minha-arvore`;
+- reduzir truncamento excessivo de nomes;
+- concluir ajustes de `/pessoa/:id`: remover signo, contato por WhatsApp no telefone e casamento/viuvez;
+- concluir ajustes de `/notificacoes`: acentuacao, tag **ESPECIAIS** e item inteiro clicavel;
+- revisar ocorrencias de encoding na origem quando surgirem novos textos corrompidos.

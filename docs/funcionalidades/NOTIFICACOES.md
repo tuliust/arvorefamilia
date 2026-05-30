@@ -1,5 +1,7 @@
 # Notificacoes
 
+> Ultima revisao: 2026-05-30
+
 > Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`
 > Tipo: documentacao funcional e operacional especifica.
 
@@ -659,3 +661,110 @@ Possiveis evolucoes:
 - templates transacionais.
 
 Esses itens nao bloqueiam o MVP.
+
+---
+## 18. Ajustes recentes e pendencias - ciclo 2026-05-30
+
+Esta secao registra os ajustes mapeados para a central de notificacoes apos a rodada recente de QA visual.
+
+### 18.1 Ajustes pendentes na central `/notificacoes`
+
+Pendencias mapeadas:
+
+```txt
+corrigir acentuacao de textos exibidos, como memoria
+trocar tag DATAS_ESPECIAIS por ESPECIAIS
+tornar toda a area do item de notificacao clicavel para abrir o conteudo
+```
+
+Arquivo principal:
+
+```txt
+src/app/pages/Notificacoes.tsx
+```
+
+Services relacionados:
+
+```txt
+src/app/services/userEngagementService.ts
+src/app/services/notificationTriggersService.ts
+src/app/services/notificationScheduledService.ts
+```
+
+### 18.2 Label amigavel para tipo de notificacao
+
+A UI nao deve expor necessariamente o valor tecnico cru do tipo da notificacao.
+
+Regra esperada:
+
+```txt
+DATAS_ESPECIAIS -> ESPECIAIS
+```
+
+Outros tipos podem continuar com label derivado desde que legivel, mas a exibicao deve evitar underscore tecnico quando houver label amigavel.
+
+Implementacao recomendada:
+
+- criar helper local ou utilitario de formatacao de label;
+- manter o valor tecnico no banco;
+- alterar apenas a apresentacao;
+- nao criar migration para essa troca visual.
+
+### 18.3 Acentuacao
+
+Textos exibidos ao usuario devem respeitar acentuacao.
+
+Exemplos esperados:
+
+```txt
+memoria -> memória, se a UI estiver usando acentos
+notificacoes -> notificações, se a UI estiver usando acentos
+aniversarios -> aniversários, se a UI estiver usando acentos
+```
+
+Se o projeto optar por manter Markdown em ASCII por compatibilidade de terminal, a UI final ainda deve ser validada visualmente para nao exibir caracteres quebrados como:
+
+```txt
+mem?ria
+notifica??es
+```
+
+### 18.4 Item inteiro clicavel
+
+Comportamento esperado:
+
+- clicar em qualquer area util do card deve abrir o conteudo/detalhe da notificacao;
+- botoes internos, como remover, nao devem disparar a abertura;
+- se houver botao interno, usar `event.stopPropagation()`;
+- manter suporte a teclado quando o card for interativo.
+
+Implementacao recomendada:
+
+- usar `<button type="button">` como container quando semanticamente adequado; ou
+- usar `role="button"` com `tabIndex={0}` e handlers de `Enter`/`Space`;
+- preservar estilos de card;
+- garantir foco visivel.
+
+### 18.5 Checklist de validacao
+
+Validar em `/notificacoes`:
+
+```txt
+tag DATAS_ESPECIAIS nao aparece para usuario final
+tag ESPECIAIS aparece quando aplicavel
+palavra memoria aparece corretamente acentuada
+clicar no corpo do card abre a notificacao
+clicar em remover nao abre a notificacao
+marcar como lida continua funcionando
+marcar todas como lidas continua funcionando
+remover notificacao continua filtrando por id e user_id
+```
+
+Validar tambem:
+
+```txt
+/ajustar-notificacoes
+/admin/notificacoes
+```
+
+para confirmar que a alteracao visual da central nao quebrou preferencias nem diagnostico admin.
