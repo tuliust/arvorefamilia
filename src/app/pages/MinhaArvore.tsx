@@ -332,6 +332,7 @@ export function MinhaArvore() {
   const [complemento, setComplemento] = useState('');
   const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);  const [errors, setErrors] = useState<PersonFieldErrors>({});
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [photoDialogMode, setPhotoDialogMode] = useState<'preview' | 'edit'>('preview');
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   const [croppedPhotoBlob, setCroppedPhotoBlob] = useState<Blob | null>(null);
@@ -1391,17 +1392,31 @@ export function MinhaArvore() {
         <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)] gap-6">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 lg:col-span-2">
             <div className="flex items-start gap-4">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  className="w-16 h-16 rounded-2xl object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-lg font-bold">
-                  {pessoaInitials}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoDialogMode('preview');
+                  setPhotoDialogOpen(true);
+                }}
+                className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 transition hover:ring-2 hover:ring-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                aria-label={avatarUrl ? 'Ampliar ou alterar foto do perfil' : 'Cadastrar foto do perfil'}
+                title={avatarUrl ? 'Ampliar ou alterar foto' : 'Cadastrar foto'}
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-lg font-bold">
+                    {pessoaInitials}
+                  </span>
+                )}
+                <span className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-black/55 py-1 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100">
+                  Foto
+                </span>
+              </button>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
                   {displayName}
@@ -1451,7 +1466,14 @@ export function MinhaArvore() {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPhotoDialogMode('edit');
+                    setPhotoDialogOpen(true);
+                  }}
+                >
                   <Camera className="mr-2 h-4 w-4" />
                   {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
                 </Button>
@@ -2025,17 +2047,46 @@ export function MinhaArvore() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
-        <DialogContent className="bg-white">
+      <Dialog
+        open={photoDialogOpen}
+        onOpenChange={(open) => {
+          setPhotoDialogOpen(open);
+          if (!open) {
+            setPhotoDialogMode('preview');
+          }
+        }}
+      >
+        <DialogContent className="bg-white sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</DialogTitle>
+            <DialogTitle>
+              {photoDialogMode === 'preview'
+                ? (currentPhotoUrl ? 'Foto do perfil' : 'Cadastrar foto')
+                : (currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto')}
+            </DialogTitle>
             <DialogDescription>
-              Selecione uma imagem, ajuste o corte quadrado e aplique antes de salvar.
+              {photoDialogMode === 'preview'
+                ? 'Veja a foto atual, remova ou escolha uma nova imagem.'
+                : 'Selecione uma imagem, ajuste o corte quadrado e aplique antes de salvar.'}
             </DialogDescription>
           </DialogHeader>
 
-          {cropImageUrl ? (
+          {photoDialogMode === 'preview' && !cropImageUrl ? (
+            <div className="space-y-4">
+              <div className="flex min-h-72 items-center justify-center rounded-2xl bg-gray-950 p-4">
+                {currentPhotoUrl ? (
+                  <img
+                    src={currentPhotoUrl}
+                    alt={previewName}
+                    className="max-h-[420px] max-w-full rounded-2xl object-contain"
+                  />
+                ) : (
+                  <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-blue-50 text-4xl font-bold text-blue-700">
+                    {pessoaInitials}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : cropImageUrl ? (
             <div className="space-y-4">
               <div className="relative h-72 overflow-hidden rounded-xl bg-gray-950">
                 <Cropper
@@ -2072,7 +2123,10 @@ export function MinhaArvore() {
                   type="file"
                   accept="image/*"
                   className="sr-only"
-                  onChange={(event) => handlePhotoFile(event.target.files?.[0])}
+                  onChange={(event) => {
+                    setPhotoDialogMode('edit');
+                    handlePhotoFile(event.target.files?.[0]);
+                  }}
                 />
               </label>
             </div>
@@ -2082,6 +2136,7 @@ export function MinhaArvore() {
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
+                setPhotoDialogMode('edit');
                 handlePhotoFile(event.dataTransfer.files?.[0]);
               }}
             >
@@ -2098,31 +2153,53 @@ export function MinhaArvore() {
                 <UploadCloud className="mr-2 h-4 w-4" />
                 Arraste uma imagem ou clique para selecionar
               </span>
-              <span className="mt-1 text-xs text-gray-500">O corte final será quadrado.</span>
+              <span className="mt-1 text-xs text-gray-500">O corte final ser? quadrado.</span>
               <input
                 type="file"
                 accept="image/*"
                 className="sr-only"
-                onChange={(event) => handlePhotoFile(event.target.files?.[0])}
+                onChange={(event) => {
+                  setPhotoDialogMode('edit');
+                  handlePhotoFile(event.target.files?.[0]);
+                }}
               />
             </label>
           )}
 
-          <DialogFooter>
-            {currentPhotoUrl && (
-              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
-                Remover foto
-              </Button>
-            )}
-            {cropImageUrl ? (
-              <Button type="button" onClick={handleApplyCrop}>
-                Aplicar corte
-              </Button>
-            ) : (
-              <Button type="button" onClick={() => setPhotoDialogOpen(false)}>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div>
+              {currentPhotoUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    handleRemovePhoto();
+                    setPhotoDialogOpen(false);
+                    setPhotoDialogMode('preview');
+                  }}
+                  className="text-red-700 hover:bg-red-50"
+                >
+                  Remover foto
+                </Button>
+              )}
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(false)}>
                 Fechar
               </Button>
-            )}
+
+              {photoDialogMode === 'preview' && !cropImageUrl ? (
+                <Button type="button" onClick={() => setPhotoDialogMode('edit')}>
+                  <Camera className="mr-2 h-4 w-4" />
+                  {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
+                </Button>
+              ) : cropImageUrl ? (
+                <Button type="button" onClick={handleApplyCrop}>
+                  Aplicar corte
+                </Button>
+              ) : null}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
