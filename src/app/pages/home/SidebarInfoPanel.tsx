@@ -6,6 +6,7 @@ interface SidebarInfoPanelProps {
   onSavePdf: () => void;
   onSaveImage: () => void;
   onPrint: () => void;
+  onWhatsApp?: () => void;
 }
 
 export function SidebarInfoPanel({
