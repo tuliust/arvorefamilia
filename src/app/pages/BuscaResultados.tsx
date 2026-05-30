@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { ArrowLeft, FileText, Search, UserRound } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export function BuscaResultados() {
     return `${totalResults} resultado${totalResults === 1 ? '' : 's'} para “${query}”`;
   }, [isLoading, query, totalResults]);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!trimmedTerm) {
