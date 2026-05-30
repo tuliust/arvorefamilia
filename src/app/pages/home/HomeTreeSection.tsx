@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -79,6 +79,13 @@ export function HomeTreeSection({
     edgeFilters.irmaos
   );
   const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
+  const effectiveVisiblePersonIds = useMemo(() => {
+    if (isMobile && treeViewMode === 'minha-arvore' && centralReferencePersonId) {
+      return new Set([centralReferencePersonId]);
+    }
+
+    return visiblePersonIdsByLifeStatus;
+  }, [centralReferencePersonId, isMobile, treeViewMode, visiblePersonIdsByLifeStatus]);
 
   return (
     <section
@@ -89,30 +96,35 @@ export function HomeTreeSection({
           {`
             [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"] {
               top: 1rem !important;
-              right: 6.5rem !important;
+              right: 6.75rem !important;
               left: auto !important;
               transform: none !important;
-              width: 2.25rem !important;
-              height: 2.25rem !important;
-              border-radius: 0.5rem !important;
-              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+              width: 2.75rem !important;
+              height: 2.75rem !important;
+              border-radius: 9999px !important;
+              box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
+            }
+
+            [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"] {
+              bottom: 6.25rem !important;
+              z-index: 60 !important;
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-              top: 4rem !important;
-              height: 3rem !important;
-              padding-inline: 4.5rem !important;
+              top: 4.35rem !important;
+              height: 3.65rem !important;
+              padding-inline: 3.25rem !important;
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-              font-size: 1rem !important;
-              line-height: 1.1 !important;
+              font-size: 1.25rem !important;
+              line-height: 1.15 !important;
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-              margin-top: 0.125rem !important;
-              font-size: 0.72rem !important;
-              line-height: 1.12 !important;
+              margin-top: 0.2rem !important;
+              font-size: 0.84rem !important;
+              line-height: 1.18 !important;
             }
           `}
         </style>
@@ -186,7 +198,7 @@ export function HomeTreeSection({
         <FamilyTree
           ref={familyTreeRef}
           pessoas={pessoas}
-          visiblePersonIds={visiblePersonIdsByLifeStatus}
+          visiblePersonIds={effectiveVisiblePersonIds}
           relacionamentos={relacionamentos}
           onPersonClick={onPersonClick}
           onPersonView={onPersonView}
