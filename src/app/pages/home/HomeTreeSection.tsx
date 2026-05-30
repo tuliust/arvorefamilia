@@ -82,8 +82,6 @@ export function HomeTreeSection({
         <style>
           {`
             .react-flow__node-personNode > .relative > .cursor-pointer {
-              transform: scale(1.035);
-              transform-origin: center;
               overflow: visible !important;
             }
 
@@ -99,20 +97,16 @@ export function HomeTreeSection({
               white-space: normal !important;
             }
 
-            .react-flow__node-personNode img {
-              transform: scale(1.04);
-              transform-origin: center;
-            }
-
-            .react-flow__node-personNode .rounded-full > svg {
-              transform: scale(1.06);
-              transform-origin: center;
-            }
-
             ${shouldHideDirectCousinGridEdges ? `
               .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
-              .react-flow__edge[data-id^="direct-primos-maternos-grid-"] {
-                display: none;
+              .react-flow__edge[data-id^="direct-primos-maternos-grid-"],
+              .react-flow__edge[class*="react-flow__edge-direct-primos-paternos-grid-"],
+              .react-flow__edge[class*="react-flow__edge-direct-primos-maternos-grid-"],
+              g.react-flow__edge[class*="direct-primos-paternos-grid-"],
+              g.react-flow__edge[class*="direct-primos-maternos-grid-"] {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
               }
             ` : ''}
           `}
@@ -153,6 +147,7 @@ export function HomeTreeSection({
           centralPersonId={centralReferencePersonId}
           isMobile={isMobile}
           layoutRevision={treeLayoutRevision}
+          treeViewMode={treeViewMode}
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
