@@ -1,4 +1,4 @@
-import { Bell, Settings } from 'lucide-react';
+﻿import { Bell, Settings } from 'lucide-react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { NotificationPreferencesPanel } from '../components/notifications/NotificationPreferencesPanel';
@@ -42,11 +42,12 @@ export function AjustarNotificacoes() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6`}>
-        <div className="max-w-3xl">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 sm:py-8`}>
+        <div className="w-full">
           <NotificationPreferencesPanel userId={user.id} />
         </div>
       </main>
     </div>
   );
 }
+
