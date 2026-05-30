@@ -182,6 +182,32 @@ function getParentPersonNameFromSecondDegreeCousinPath(result: RelationshipDegre
   return targetParentId ? getPersonName(peopleById, targetParentId) : '';
 }
 
+function getSecondDegreeCousinParentLabels(result: RelationshipDegreeResult) {
+  const targetParentLabel = getParentLabelFromIncomingStep(result, 3);
+
+  if (targetParentLabel === 'pai') {
+    return {
+      article: 'O',
+      parentLabel: 'pai',
+      cousinLabel: 'primo',
+    };
+  }
+
+  if (targetParentLabel === 'mãe') {
+    return {
+      article: 'A',
+      parentLabel: 'mãe',
+      cousinLabel: 'prima',
+    };
+  }
+
+  return {
+    article: 'O/A',
+    parentLabel: 'pai/mãe',
+    cousinLabel: 'primo(a)',
+  };
+}
+
 function getAuntOrUncleSpouseSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originFullName = getPersonName(peopleById, result.originPersonId);
@@ -190,7 +216,6 @@ function getAuntOrUncleSpouseSentence(result: RelationshipDegreeResult, people: 
   const targetName = formatShortName(targetFullName) || 'Pessoa';
   const parentName = formatShortName(getPersonName(peopleById, result.path[0]?.to)) || 'Pessoa';
   const auntOrUncleName = formatShortName(getPersonName(peopleById, result.path[1]?.to)) || 'Pessoa';
-  const parentLabel = getParentLabelFromIncomingStep(result, 0);
   const siblingLabel = getSiblingLabelByPersonName(parentName);
   const spouseVerb = result.path[2]?.edge.active ? 'é cônjuge' : 'foi cônjuge';
 
@@ -216,7 +241,8 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
 
   if (pattern === 'child>sibling>parent>parent') {
     const targetParentName = getFirstName(getParentPersonNameFromSecondDegreeCousinPath(result, people));
-    return `${originFirstName} e ${targetFirstName} são primos de segundo grau. A mãe de ${targetFirstName}, ${targetParentName}, é prima de ${originFirstName}.`;
+    const { article, parentLabel, cousinLabel } = getSecondDegreeCousinParentLabels(result);
+    return `${originFirstName} e ${targetFirstName} são primos de segundo grau. ${article} ${parentLabel} de ${targetFirstName}, ${targetParentName}, é ${cousinLabel} de ${originFirstName}.`;
   }
 
   if (pattern === 'child>sibling>parent' && result.label === 'primo(a)') {
