@@ -72,6 +72,12 @@ export function HomeTreeSection({
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
+  const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
+    edgeFilters.conjugal ||
+    edgeFilters.filiacao_sangue ||
+    edgeFilters.filiacao_adotiva ||
+    edgeFilters.irmaos
+  );
   const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
 
   return (
@@ -97,11 +103,24 @@ export function HomeTreeSection({
               white-space: normal !important;
             }
 
-            ${shouldHideDirectCousinGridEdges ? `
+            ${shouldHideAllDirectEdges ? `
+              .react-flow__edges .react-flow__edge,
+              .react-flow__edges svg g.react-flow__edge,
+              .react-flow__edges svg path.react-flow__edge-path,
+              .react-flow__edges svg path.react-flow__edge-interaction {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+              }
+            ` : ''}
+
+            ${!shouldHideAllDirectEdges && shouldHideDirectCousinGridEdges ? `
               .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
               .react-flow__edge[data-id^="direct-primos-maternos-grid-"],
               .react-flow__edge[class*="react-flow__edge-direct-primos-paternos-grid-"],
               .react-flow__edge[class*="react-flow__edge-direct-primos-maternos-grid-"],
+              .react-flow__edge[data-testid*="direct-primos-paternos-grid-"],
+              .react-flow__edge[data-testid*="direct-primos-maternos-grid-"],
               g.react-flow__edge[class*="direct-primos-paternos-grid-"],
               g.react-flow__edge[class*="direct-primos-maternos-grid-"] {
                 display: none !important;
