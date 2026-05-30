@@ -99,7 +99,20 @@ export function HomeTreeSection({
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-              top: 3.75rem !important;
+              top: 4rem !important;
+              height: 3rem !important;
+              padding-inline: 4.5rem !important;
+            }
+
+            [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+              font-size: 1rem !important;
+              line-height: 1.1 !important;
+            }
+
+            [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+              margin-top: 0.125rem !important;
+              font-size: 0.72rem !important;
+              line-height: 1.12 !important;
             }
           `}
         </style>
