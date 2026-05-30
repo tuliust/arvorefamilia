@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -94,7 +94,7 @@ export function HomeTreeSection({
       {isMobile && (
         <style>
           {`
-            [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"] {
+            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para cima"] {
               top: 1rem !important;
               right: 6.75rem !important;
               left: auto !important;
@@ -105,7 +105,7 @@ export function HomeTreeSection({
               box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
             }
 
-            [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"] {
+            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para baixo"] {
               bottom: 6.25rem !important;
               z-index: 60 !important;
             }
@@ -144,9 +144,15 @@ export function HomeTreeSection({
 
             .react-flow__node-personNode p {
               line-height: 1.2 !important;
-              overflow: visible !important;
-              text-overflow: clip !important;
-              white-space: normal !important;
+              ${isMobile ? `
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: normal !important;
+              ` : `
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+              `}
             }
 
             ${shouldHideAllDirectEdges ? `
@@ -180,19 +186,19 @@ export function HomeTreeSection({
 
       {isTreeResolving ? (
         renderStateMessage({
-          title: 'Carregando árvore',
-          message: 'Buscando pessoas e relacionamentos…',
+          title: 'Carregando Ã¡rvore',
+          message: 'Buscando pessoas e relacionamentosâ€¦',
         })
       ) : loadError ? (
         renderStateMessage({
-          title: 'Erro ao carregar a árvore',
+          title: 'Erro ao carregar a Ã¡rvore',
           message: loadError,
           tone: 'error',
         })
       ) : pessoas.length === 0 || !centralReferencePersonId ? (
         renderStateMessage({
           title: 'Nenhuma pessoa encontrada',
-          message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
+          message: 'A tabela pessoas nÃ£o retornou registros para renderizar a Ã¡rvore.',
         })
       ) : canRenderTree ? (
         <FamilyTree
@@ -219,10 +225,11 @@ export function HomeTreeSection({
         />
       ) : (
         renderStateMessage({
-          title: 'Carregando árvore',
-          message: 'Preparando a referência principal da árvore.',
+          title: 'Carregando Ã¡rvore',
+          message: 'Preparando a referÃªncia principal da Ã¡rvore.',
         })
       )}
     </section>
   );
 }
+
