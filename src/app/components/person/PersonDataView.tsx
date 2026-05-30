@@ -35,7 +35,12 @@ function toParagraphs(value: unknown) {
   return [];
 }
 
-export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
+type PersonDataViewProps = {
+  pessoa: Pessoa;
+  headerAction?: React.ReactNode;
+};
+
+export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [generatedInsights, setGeneratedInsights] = useState<PersonGeneratedInsight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -107,7 +112,13 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="relative pt-6">
+          {headerAction && (
+            <div className="absolute right-4 top-4 z-10 sm:right-5 sm:top-5">
+              {headerAction}
+            </div>
+          )}
+
           <div className="flex flex-col gap-6 md:flex-row">
             <div className="flex-shrink-0">
               <button
@@ -127,7 +138,7 @@ export function PersonDataView({ pessoa }: { pessoa: Pessoa }) {
               </button>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 pr-12 sm:pr-14">
               <h1 className="mb-2 text-3xl font-bold text-gray-900">{pessoa.nome_completo}</h1>
               <div className="mb-4 flex flex-wrap gap-2">
                 {isPet && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm text-amber-800">Pet da família</span>}
