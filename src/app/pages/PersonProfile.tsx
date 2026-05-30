@@ -335,15 +335,6 @@ export function PersonProfile() {
         actions={DEFAULT_MEMBER_HEADER_ACTIONS}
         customActions={(
           <>
-            <FavoriteButton
-              entityType="person"
-              entityId={pessoa.id}
-              label={pessoa.nome_completo}
-              description="Perfil individual da árvore familiar"
-              href={`/pessoa/${pessoa.id}`}
-              metadata={{ source: 'person_profile' }}
-              className="w-full rounded-xl shadow-sm sm:w-auto"
-            />
             {canEdit && (
               <Button
                 variant="outline"
@@ -360,7 +351,22 @@ export function PersonProfile() {
 
       {/* Main Content */}
       <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <PersonDataView pessoa={pessoa} />
+        <PersonDataView
+          pessoa={pessoa}
+          headerAction={(
+            <FavoriteButton
+              entityType="person"
+              entityId={pessoa.id}
+              label={pessoa.nome_completo}
+              description="Perfil individual da árvore familiar"
+              href={`/pessoa/${pessoa.id}`}
+              metadata={{ source: 'person_profile' }}
+              variant="icon"
+              size="sm"
+              className="shadow-sm"
+            />
+          )}
+        />
 
         <PersonRelationshipsView relationships={relacionamentos} loading={relationshipsLoading} />
 
