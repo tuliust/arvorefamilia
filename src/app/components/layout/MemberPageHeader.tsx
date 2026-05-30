@@ -6,9 +6,11 @@ import {
   CalendarDays,
   Home,
   LogOut,
+  MessageCircle,
   Network,
   Plus,
   Settings,
+  Sparkles,
   Star,
 } from 'lucide-react';
 
@@ -125,6 +127,37 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
   );
 }
 
+const MOBILE_BOTTOM_NAV_ITEMS = [
+  { label: 'Curiosidades', to: '/minha-arvore?curiosidades=1', icon: Sparkles },
+  { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
+  { label: 'Fórum', to: '/forum', icon: MessageCircle },
+  { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
+  { label: 'Notificações', to: '/notificacoes', icon: Bell },
+];
+
+function MemberMobileBottomNav() {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5">
+        {MOBILE_BOTTOM_NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              to={item.to}
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
+              aria-label={item.label}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
   { label: 'Árvore geral', to: '/', icon: Home, responsiveLabel: 'lg' },
   { label: 'Minha Árvore', to: '/minha-arvore', icon: Network, responsiveLabel: 'lg' },
@@ -141,35 +174,38 @@ export function MemberPageHeader({
   className = '',
 }: MemberPageHeaderProps) {
   return (
-    <header className={['shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
-      <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
-          {Icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
-              <Icon className="h-6 w-6 text-white" />
+    <>
+      <header className={['shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
+        <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
+            {Icon && (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+                <Icon className="h-6 w-6 text-white" />
+              </div>
+            )}
+
+            <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
+              <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
+                {title}
+              </h1>
+              <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">
+                {subtitle}
+              </p>
+            </div>
+          </div>
+
+          {(actions.length > 0 || customActions) && (
+            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 sm:gap-2 md:flex">
+              {actions.map((action) => (
+                <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
+              ))}
+              {customActions}
             </div>
           )}
-
-          <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
-            <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
-              {title}
-            </h1>
-            <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">
-              {subtitle}
-            </p>
-          </div>
         </div>
-
-        {(actions.length > 0 || customActions) && (
-          <div className="flex min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
-            {actions.map((action) => (
-              <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
-            ))}
-            {customActions}
-          </div>
-        )}
-      </div>
-    </header>
+      </header>
+      <MemberMobileBottomNav />
+    </>
   );
 }
 export const HEADER_ACTION_ICONS = {
@@ -183,4 +219,3 @@ export const HEADER_ACTION_ICONS = {
   Settings,
   Star,
 };
-
