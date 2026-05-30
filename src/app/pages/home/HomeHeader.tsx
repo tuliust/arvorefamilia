@@ -102,8 +102,8 @@ export function HomeHeader({
   };
 
   return (
-    <header className="shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
-      <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
+    <header className="relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
+      <div className="relative z-[501] flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
             <Network className="h-6 w-6 text-white" />
@@ -142,24 +142,24 @@ export function HomeHeader({
         </div>
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-visible sm:gap-2">
-          <div className="pointer-events-none relative flex min-w-0 flex-row-reverse items-center overflow-visible">
-            <Button variant="outline" size="icon" className="pointer-events-auto relative z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white" title="Buscar por nome, local ou página" aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'} onClick={() => onSearchExpandedChange(true)}>
+          <div className="pointer-events-none relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
+            <Button variant="outline" size="icon" className="pointer-events-auto relative z-[503] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white" title="Buscar por nome, local ou página" aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'} onClick={() => onSearchExpandedChange(true)}>
               <Search className="pointer-events-none h-4 w-4" />
             </Button>
 
-            <div className={['pointer-events-auto relative z-10 min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'w-0 opacity-0'].join(' ')}>
+            <div className={['pointer-events-auto relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'w-0 opacity-0'].join(' ')}>
               <div className="pr-2">
                 <form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
-                  <Input ref={searchInputRef} type="text" placeholder="Buscar pessoa, local ou página..." value={searchTerm} onChange={(e) => onSearchTermChange(e.target.value)} onBlur={() => { window.setTimeout(() => { if (!searchTerm.trim()) onSearchExpandedChange(false); }, 160); }} className="h-10" tabIndex={searchExpanded ? 0 : -1} />
+                  <Input ref={searchInputRef} type="text" placeholder="Buscar pessoa, local ou página..." value={searchTerm} onChange={(e) => onSearchTermChange(e.target.value)} onBlur={() => { window.setTimeout(() => { if (!searchTerm.trim()) onSearchExpandedChange(false); }, 160); }} className="h-10 bg-white" tabIndex={searchExpanded ? 0 : -1} />
                 </form>
 
                 {hasSearchSuggestions && (
-                  <div className="absolute left-0 right-2 top-full z-[200] mt-2 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl">
+                  <div className="absolute left-0 right-2 top-full z-[999] mt-2 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-2xl">
                     {pessoasFiltradas.length > 0 && (
-                      <div className="border-b border-gray-100 py-1">
-                        <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PESSOAS</p>
+                      <div className="border-b border-gray-100 bg-white py-1">
+                        <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PESSOAS</p>
                         {pessoasFiltradas.slice(0, 6).map((pessoa) => (
-                          <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50">
+                          <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
                             <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
@@ -171,10 +171,10 @@ export function HomeHeader({
                     )}
 
                     {effectivePageSuggestions.length > 0 && (
-                      <div className="border-b border-gray-100 py-1 last:border-b-0">
-                        <p className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PÁGINAS</p>
+                      <div className="border-b border-gray-100 bg-white py-1 last:border-b-0">
+                        <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PÁGINAS</p>
                         {effectivePageSuggestions.slice(0, 5).map((page) => (
-                          <button key={page.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => selectPageSuggestion(page)} className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50">
+                          <button key={page.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => selectPageSuggestion(page)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
                             <FileText className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium text-gray-900">{page.title}</span>
@@ -185,7 +185,7 @@ export function HomeHeader({
                       </div>
                     )}
 
-                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={submitSearch} className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50">
+                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={submitSearch} className="flex w-full items-center gap-2 bg-white px-4 py-3 text-left text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50">
                       <Search className="h-4 w-4" />
                       Ver todos os resultados
                     </button>
