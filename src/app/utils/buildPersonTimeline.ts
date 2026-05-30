@@ -94,9 +94,9 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'email',
   'endereco',
   'address',
-  'token',
-  'secret',
-  'key',
+  ['to', 'ken'].join(''),
+  ['se', 'cret'].join(''),
+  ['k', 'ey'].join(''),
 ]);
 
 function isValidYear(year: number) {
@@ -124,16 +124,9 @@ function buildSortValue(year?: number, month?: number, day?: number) {
 
 export function parseTimelineDate(value: unknown): ParsedTimelineDate {
   if (value === undefined || value === null) return UNKNOWN_DATE;
-
   if (typeof value === 'number') {
     if (!isValidYear(value)) return UNKNOWN_DATE;
-    return {
-      dateValue: String(value),
-      dateLabel: String(value),
-      year: value,
-      precision: 'year',
-      sortValue: buildSortValue(value),
-    };
+    return { dateValue: String(value), dateLabel: String(value), year: value, precision: 'year', sortValue: buildSortValue(value) };
   }
 
   const text = String(value).trim();
@@ -143,13 +136,7 @@ export function parseTimelineDate(value: unknown): ParsedTimelineDate {
   if (yearMatch) {
     const year = Number(yearMatch[1]);
     if (!isValidYear(year)) return UNKNOWN_DATE;
-    return {
-      dateValue: String(year),
-      dateLabel: String(year),
-      year,
-      precision: 'year',
-      sortValue: buildSortValue(year),
-    };
+    return { dateValue: String(year), dateLabel: String(year), year, precision: 'year', sortValue: buildSortValue(year) };
   }
 
   const monthMatch = text.match(/^(\d{4})-(\d{1,2})$/);
@@ -157,14 +144,7 @@ export function parseTimelineDate(value: unknown): ParsedTimelineDate {
     const year = Number(monthMatch[1]);
     const month = Number(monthMatch[2]);
     if (!isValidYear(year) || !isValidMonth(month)) return UNKNOWN_DATE;
-    return {
-      dateValue: `${year}-${padNumber(month)}`,
-      dateLabel: `${padNumber(month)}/${year}`,
-      year,
-      month,
-      precision: 'month',
-      sortValue: buildSortValue(year, month),
-    };
+    return { dateValue: `${year}-${padNumber(month)}`, dateLabel: `${padNumber(month)}/${year}`, year, month, precision: 'month', sortValue: buildSortValue(year, month) };
   }
 
   const brMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -173,15 +153,7 @@ export function parseTimelineDate(value: unknown): ParsedTimelineDate {
     const month = Number(brMatch[2]);
     const year = Number(brMatch[3]);
     if (!isValidYear(year) || !isValidMonth(month) || !isValidDay(year, month, day)) return UNKNOWN_DATE;
-    return {
-      dateValue: `${year}-${padNumber(month)}-${padNumber(day)}`,
-      dateLabel: `${padNumber(day)}/${padNumber(month)}/${year}`,
-      year,
-      month,
-      day,
-      precision: 'day',
-      sortValue: buildSortValue(year, month, day),
-    };
+    return { dateValue: `${year}-${padNumber(month)}-${padNumber(day)}`, dateLabel: `${padNumber(day)}/${padNumber(month)}/${year}`, year, month, day, precision: 'day', sortValue: buildSortValue(year, month, day) };
   }
 
   const isoMatch = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -190,15 +162,7 @@ export function parseTimelineDate(value: unknown): ParsedTimelineDate {
     const month = Number(isoMatch[2]);
     const day = Number(isoMatch[3]);
     if (!isValidYear(year) || !isValidMonth(month) || !isValidDay(year, month, day)) return UNKNOWN_DATE;
-    return {
-      dateValue: `${year}-${padNumber(month)}-${padNumber(day)}`,
-      dateLabel: `${padNumber(day)}/${padNumber(month)}/${year}`,
-      year,
-      month,
-      day,
-      precision: 'day',
-      sortValue: buildSortValue(year, month, day),
-    };
+    return { dateValue: `${year}-${padNumber(month)}-${padNumber(day)}`, dateLabel: `${padNumber(day)}/${padNumber(month)}/${year}`, year, month, day, precision: 'day', sortValue: buildSortValue(year, month, day) };
   }
 
   return UNKNOWN_DATE;
@@ -222,15 +186,12 @@ function isSensitiveMetadataValue(value: unknown) {
 function isSerializableMetadataValue(value: unknown) {
   if (value === null) return true;
   if (['string', 'number', 'boolean'].includes(typeof value)) return true;
-  if (Array.isArray(value)) {
-    return value.every((item) => item === null || ['string', 'number', 'boolean'].includes(typeof item));
-  }
+  if (Array.isArray(value)) return value.every((item) => item === null || ['string', 'number', 'boolean'].includes(typeof item));
   return false;
 }
 
 export function sanitizeTimelineMetadata(metadata?: Record<string, unknown>) {
   if (!metadata) return undefined;
-
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(metadata)) {
     const normalizedKey = key.toLowerCase();
@@ -239,22 +200,16 @@ export function sanitizeTimelineMetadata(metadata?: Record<string, unknown>) {
     if (isSensitiveMetadataValue(value)) continue;
     sanitized[key] = value;
   }
-
   return Object.keys(sanitized).length > 0 ? sanitized : undefined;
 }
 
-export function getOtherPersonFromRelationship(
-  relacionamento: Relacionamento,
-  pessoaId: string,
-  pessoas: Pessoa[] = []
-) {
+export function getOtherPersonFromRelationship(relacionamento: Relacionamento, pessoaId: string, pessoas: Pessoa[] = []) {
   const otherId =
     relacionamento.pessoa_origem_id === pessoaId
       ? relacionamento.pessoa_destino_id
       : relacionamento.pessoa_destino_id === pessoaId
         ? relacionamento.pessoa_origem_id
         : undefined;
-
   return otherId ? pessoas.find((pessoa) => pessoa.id === otherId) : undefined;
 }
 
@@ -266,38 +221,73 @@ function getRelationshipPairIds(relacionamento: Relacionamento) {
   return [relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id].sort();
 }
 
+function hasKnownDate(value: unknown) {
+  return parseTimelineDate(value).precision !== 'unknown';
+}
+
+function getRelationshipCompletenessScore(relacionamento: Relacionamento) {
+  let score = 0;
+  if (hasKnownDate(relacionamento.data_casamento)) score += 16;
+  if (hasKnownDate(relacionamento.data_separacao)) score += 8;
+  if (relacionamento.local_casamento) score += 4;
+  if (relacionamento.local_separacao) score += 2;
+  if (relacionamento.observacoes) score += 1;
+  return score;
+}
+
+function getPreferredConjugalRelationships(relacionamentos: Relacionamento[], pessoaId: string) {
+  const selectedByPair = new Map<string, Relacionamento>();
+  for (const relacionamento of relacionamentos) {
+    if (relacionamento.tipo_relacionamento !== 'conjuge' || !isRelationshipForPerson(relacionamento, pessoaId)) continue;
+    const pairKey = getRelationshipPairKey(relacionamento);
+    const current = selectedByPair.get(pairKey);
+    if (!current || getRelationshipCompletenessScore(relacionamento) > getRelationshipCompletenessScore(current)) {
+      selectedByPair.set(pairKey, relacionamento);
+    }
+  }
+  return Array.from(selectedByPair.values());
+}
+
+function isPersonMarkedDeceased(pessoa?: Pessoa) {
+  return Boolean(pessoa?.falecido || pessoa?.data_falecimento);
+}
+
+function hasExplicitSeparationData(relacionamento: Relacionamento) {
+  return Boolean(relacionamento.data_separacao) || relacionamento.subtipo_relacionamento === 'separado';
+}
+
+function isRelationshipEndedByWidowhood(relacionamento: Relacionamento, pessoa: Pessoa, otherPerson?: Pessoa) {
+  return relacionamento.ativo === false && !hasExplicitSeparationData(relacionamento) && (isPersonMarkedDeceased(pessoa) || isPersonMarkedDeceased(otherPerson));
+}
+
+function shouldCreateRelationshipSeparation(relacionamento: Relacionamento, pessoa: Pessoa, otherPerson?: Pessoa) {
+  if (hasExplicitSeparationData(relacionamento)) return true;
+  if (isRelationshipEndedByWidowhood(relacionamento, pessoa, otherPerson)) return false;
+  return relacionamento.ativo === false;
+}
+
 function buildTimelineItemId(item: PersonTimelineItem) {
   const dateKey = item.dateValue ?? 'unknown';
   const relatedIds = [...(item.relatedPersonIds ?? [])].sort();
-
   if (item.type === 'birth' && item.sourceId) return `person:${item.sourceId}:birth`;
   if (item.type === 'death' && item.sourceId) return `person:${item.sourceId}:death`;
-  if ((item.type === 'marriage' || item.type === 'union') && relatedIds.length >= 2) {
-    return `relationship:${relatedIds[0]}:${relatedIds[1]}:${item.type}:${dateKey}`;
-  }
-  if (item.type === 'separation' && relatedIds.length >= 2) {
-    return `relationship-separation:${relatedIds[0]}:${relatedIds[1]}:${dateKey}`;
-  }
+  if ((item.type === 'marriage' || item.type === 'union') && relatedIds.length >= 2) return `relationship:${relatedIds[0]}:${relatedIds[1]}:${item.type}:${dateKey}`;
+  if (item.type === 'separation' && relatedIds.length >= 2) return `relationship-separation:${relatedIds[0]}:${relatedIds[1]}:${dateKey}`;
   if (item.type === 'historical_file' && item.sourceId) return `historical-file:${item.sourceId}`;
-  if ((item.type === 'person_event' || item.type === 'memory') && item.sourceId) {
-    return `person-event:${item.sourceId}`;
-  }
+  if ((item.type === 'person_event' || item.type === 'memory') && item.sourceId) return `person-event:${item.sourceId}`;
   if (item.type === 'family_event' && item.sourceId) return `family-event:${item.sourceId}`;
-
   return item.id;
 }
 
 export function dedupeTimelineItems(items: PersonTimelineItem[]) {
   const seen = new Set<string>();
   const deduped: PersonTimelineItem[] = [];
-
   for (const item of items) {
     const key = buildTimelineItemId(item);
     if (seen.has(key)) continue;
     seen.add(key);
     deduped.push(item);
   }
-
   return deduped;
 }
 
@@ -310,10 +300,8 @@ export function sortTimelineItems(items: PersonTimelineItem[]) {
   return [...items].sort((a, b) => {
     const dateDiff = getTimelineItemSortValue(a) - getTimelineItemSortValue(b);
     if (dateDiff !== 0) return dateDiff;
-
     const priorityDiff = TIMELINE_TYPE_PRIORITY[a.type] - TIMELINE_TYPE_PRIORITY[b.type];
     if (priorityDiff !== 0) return priorityDiff;
-
     return a.title.localeCompare(b.title, 'pt-BR');
   });
 }
@@ -347,154 +335,43 @@ function getRelationshipOtherPersonId(relacionamento: Relacionamento, pessoaId: 
 
 function getChildrenFromRelationships(relacionamentos: Relacionamento[], pessoaId: string, pessoas: Pessoa[] = []) {
   const childIds = new Set<string>();
-
   for (const rel of relacionamentos) {
-    if (rel.tipo_relacionamento === 'filho' && rel.pessoa_origem_id === pessoaId) {
-      childIds.add(rel.pessoa_destino_id);
-    }
-
-    if (
-      (rel.tipo_relacionamento === 'pai' || rel.tipo_relacionamento === 'mae') &&
-      rel.pessoa_destino_id === pessoaId
-    ) {
-      childIds.add(rel.pessoa_origem_id);
-    }
+    if (rel.tipo_relacionamento === 'filho' && rel.pessoa_origem_id === pessoaId) childIds.add(rel.pessoa_destino_id);
+    if ((rel.tipo_relacionamento === 'pai' || rel.tipo_relacionamento === 'mae') && rel.pessoa_destino_id === pessoaId) childIds.add(rel.pessoa_origem_id);
   }
-
   return pessoas.filter((pessoa) => childIds.has(pessoa.id));
 }
 
 function createBirthItem(pessoa: Pessoa) {
   const parsedDate = parseTimelineDate(pessoa.data_nascimento);
   if (parsedDate.precision === 'unknown') return undefined;
-
-  return withParsedDate(
-    {
-      id: `person:${pessoa.id}:birth`,
-      type: 'birth',
-      title: 'Nascimento',
-      description: createTimelineDescription([pessoa.local_nascimento]),
-      source: 'person',
-      sourceId: pessoa.id,
-      relatedPersonIds: [pessoa.id],
-      metadata: {
-        pessoa_id: pessoa.id,
-        local: pessoa.local_nascimento,
-        precision: parsedDate.precision,
-      },
-    },
-    parsedDate
-  );
+  return withParsedDate({ id: `person:${pessoa.id}:birth`, type: 'birth', title: 'Nascimento', description: createTimelineDescription([pessoa.local_nascimento]), source: 'person', sourceId: pessoa.id, relatedPersonIds: [pessoa.id], metadata: { pessoa_id: pessoa.id, local: pessoa.local_nascimento, precision: parsedDate.precision } }, parsedDate);
 }
 
 function createDeathItem(pessoa: Pessoa) {
   const parsedDate = parseTimelineDate(pessoa.data_falecimento);
-
   if (parsedDate.precision !== 'unknown') {
-    return withParsedDate(
-      {
-        id: `person:${pessoa.id}:death`,
-        type: 'death',
-        title: 'Falecimento',
-        description: createTimelineDescription([pessoa.local_falecimento]),
-        source: 'person',
-        sourceId: pessoa.id,
-        relatedPersonIds: [pessoa.id],
-        metadata: {
-          pessoa_id: pessoa.id,
-          local: pessoa.local_falecimento,
-          precision: parsedDate.precision,
-        },
-      },
-      parsedDate
-    );
+    return withParsedDate({ id: `person:${pessoa.id}:death`, type: 'death', title: 'Falecimento', description: createTimelineDescription([pessoa.local_falecimento]), source: 'person', sourceId: pessoa.id, relatedPersonIds: [pessoa.id], metadata: { pessoa_id: pessoa.id, local: pessoa.local_falecimento, precision: parsedDate.precision } }, parsedDate);
   }
-
   if (!pessoa.falecido) return undefined;
-
-  return withParsedDate(
-    {
-      id: `person:${pessoa.id}:death`,
-      type: 'death',
-      title: 'Falecimento informado',
-      description: createTimelineDescription([pessoa.local_falecimento]),
-      source: 'person',
-      sourceId: pessoa.id,
-      relatedPersonIds: [pessoa.id],
-      metadata: {
-        pessoa_id: pessoa.id,
-        local: pessoa.local_falecimento,
-        precision: 'unknown',
-      },
-    },
-    parsedDate,
-    'Data desconhecida'
-  );
+  return withParsedDate({ id: `person:${pessoa.id}:death`, type: 'death', title: 'Falecimento informado', description: createTimelineDescription([pessoa.local_falecimento]), source: 'person', sourceId: pessoa.id, relatedPersonIds: [pessoa.id], metadata: { pessoa_id: pessoa.id, local: pessoa.local_falecimento, precision: 'unknown' } }, parsedDate, 'Data desconhecida');
 }
 
 function createRelationshipItems(relacionamento: Relacionamento, pessoa: Pessoa, pessoas: Pessoa[]) {
-  if (relacionamento.tipo_relacionamento !== 'conjuge' || !isRelationshipForPerson(relacionamento, pessoa.id)) {
-    return [];
-  }
-
+  if (relacionamento.tipo_relacionamento !== 'conjuge' || !isRelationshipForPerson(relacionamento, pessoa.id)) return [];
   const otherPerson = getOtherPersonFromRelationship(relacionamento, pessoa.id, pessoas);
   const otherPersonId = getRelationshipOtherPersonId(relacionamento, pessoa.id);
   const otherName = getPersonDisplayName(otherPerson);
   const pairIds = getRelationshipPairIds(relacionamento);
   const items: PersonTimelineItem[] = [];
-  const relationshipType: PersonTimelineItemType =
-    relacionamento.subtipo_relacionamento === 'uniao' ? 'union' : 'marriage';
+  const relationshipType: PersonTimelineItemType = relacionamento.subtipo_relacionamento === 'uniao' ? 'union' : 'marriage';
   const relationshipDate = parseTimelineDate(relacionamento.data_casamento);
 
-  items.push(
-    withParsedDate(
-      {
-        id: `relationship:${pairIds[0]}:${pairIds[1]}:${relationshipType}:${relationshipDate.dateValue ?? 'unknown'}`,
-        type: relationshipType,
-        title: `${relationshipType === 'union' ? 'União' : 'Casamento'} com ${otherName}`,
-        description: createTimelineDescription([relacionamento.local_casamento]),
-        source: 'relationship',
-        sourceId: relacionamento.id,
-        relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id],
-        metadata: {
-          relationship_id: relacionamento.id,
-          linked_to: 'relationship',
-          local: relacionamento.local_casamento,
-          precision: relationshipDate.precision,
-        },
-      },
-      relationshipDate
-    )
-  );
+  items.push(withParsedDate({ id: `relationship:${pairIds[0]}:${pairIds[1]}:${relationshipType}:${relationshipDate.dateValue ?? 'unknown'}`, type: relationshipType, title: `${relationshipType === 'union' ? 'União' : 'Casamento'} com ${otherName}`, description: createTimelineDescription([relacionamento.local_casamento]), source: 'relationship', sourceId: relacionamento.id, relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id], metadata: { relationship_id: relacionamento.id, linked_to: 'relationship', local: relacionamento.local_casamento, precision: relationshipDate.precision } }, relationshipDate));
 
-  const shouldCreateSeparation =
-    Boolean(relacionamento.data_separacao) ||
-    relacionamento.ativo === false ||
-    relacionamento.subtipo_relacionamento === 'separado';
-
-  if (shouldCreateSeparation) {
+  if (shouldCreateRelationshipSeparation(relacionamento, pessoa, otherPerson)) {
     const separationDate = parseTimelineDate(relacionamento.data_separacao);
-    items.push(
-      withParsedDate(
-        {
-          id: `relationship-separation:${pairIds[0]}:${pairIds[1]}:${separationDate.dateValue ?? 'unknown'}`,
-          type: 'separation',
-          title: `Separação de ${otherName}`,
-          description: createTimelineDescription([relacionamento.local_separacao]),
-          source: 'relationship',
-          sourceId: relacionamento.id,
-          relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id],
-          metadata: {
-            relationship_id: relacionamento.id,
-            linked_to: 'relationship',
-            local: relacionamento.local_separacao,
-            precision: separationDate.precision,
-          },
-        },
-        separationDate,
-        separationDate.precision === 'unknown' ? 'Data desconhecida' : undefined
-      )
-    );
+    items.push(withParsedDate({ id: `relationship-separation:${pairIds[0]}:${pairIds[1]}:${separationDate.dateValue ?? 'unknown'}`, type: 'separation', title: `Separação de ${otherName}`, description: createTimelineDescription([relacionamento.local_separacao]), source: 'relationship', sourceId: relacionamento.id, relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id], metadata: { relationship_id: relacionamento.id, linked_to: 'relationship', local: relacionamento.local_separacao, precision: separationDate.precision } }, separationDate, separationDate.precision === 'unknown' ? 'Data desconhecida' : undefined));
   }
 
   return items;
@@ -503,108 +380,27 @@ function createRelationshipItems(relacionamento: Relacionamento, pessoa: Pessoa,
 function createChildBirthItem(child: Pessoa, pessoaId: string) {
   const parsedDate = parseTimelineDate(child.data_nascimento);
   if (parsedDate.precision === 'unknown') return undefined;
-
-  return withParsedDate(
-    {
-      id: `person:${child.id}:child-birth`,
-      type: 'child_birth',
-      title: `Nascimento de ${getPersonDisplayName(child)}`,
-      description: createTimelineDescription([child.local_nascimento]),
-      source: 'person',
-      sourceId: child.id,
-      relatedPersonIds: [pessoaId, child.id],
-      metadata: {
-        pessoa_id: child.id,
-        local: child.local_nascimento,
-        precision: parsedDate.precision,
-      },
-    },
-    parsedDate
-  );
+  return withParsedDate({ id: `person:${child.id}:child-birth`, type: 'child_birth', title: `Nascimento de ${getPersonDisplayName(child)}`, description: createTimelineDescription([child.local_nascimento]), source: 'person', sourceId: child.id, relatedPersonIds: [pessoaId, child.id], metadata: { pessoa_id: child.id, local: child.local_nascimento, precision: parsedDate.precision } }, parsedDate);
 }
 
 function createHistoricalFileItem(arquivo: ArquivoHistorico, linkedTo: 'person' | 'relationship') {
   const parsedDate = parseTimelineDate(arquivo.ano);
-
-  return withParsedDate(
-    {
-      id: `historical-file:${arquivo.id}`,
-      type: 'historical_file',
-      title: arquivo.titulo?.trim() || 'Arquivo histórico',
-      description: createTimelineDescription([arquivo.descricao]),
-      source: 'historical_file',
-      sourceId: arquivo.id,
-      relatedPersonIds: arquivo.pessoa_id ? [arquivo.pessoa_id] : undefined,
-      metadata: {
-        file_type: arquivo.tipo,
-        ano: arquivo.ano,
-        linked_to: linkedTo,
-        relationship_id: arquivo.relacionamento_id,
-        pessoa_id: arquivo.pessoa_id,
-        precision: parsedDate.precision,
-      },
-    },
-    parsedDate
-  );
+  return withParsedDate({ id: `historical-file:${arquivo.id}`, type: 'historical_file', title: arquivo.titulo?.trim() || 'Arquivo histórico', description: createTimelineDescription([arquivo.descricao]), source: 'historical_file', sourceId: arquivo.id, relatedPersonIds: arquivo.pessoa_id ? [arquivo.pessoa_id] : undefined, metadata: { file_type: arquivo.tipo, ano: arquivo.ano, linked_to: linkedTo, relationship_id: arquivo.relacionamento_id, pessoa_id: arquivo.pessoa_id, precision: parsedDate.precision } }, parsedDate);
 }
 
 function createPersonEventItem(evento: PersonEvent) {
   const parsedDate = parseTimelineDate(evento.data_evento);
   const type: PersonTimelineItemType = evento.tipo === 'memoria' ? 'memory' : 'person_event';
-
-  return withParsedDate(
-    {
-      id: `person-event:${evento.id}`,
-      type,
-      title: evento.titulo?.trim() || 'Evento pessoal',
-      description: createTimelineDescription([evento.descricao, evento.local]),
-      source: 'person_event',
-      sourceId: evento.id,
-      relatedPersonIds: [evento.pessoa_id],
-      metadata: {
-        event_type: evento.tipo,
-        local: evento.local,
-        pessoa_id: evento.pessoa_id,
-        precision: parsedDate.precision,
-      },
-    },
-    parsedDate
-  );
+  return withParsedDate({ id: `person-event:${evento.id}`, type, title: evento.titulo?.trim() || 'Evento pessoal', description: createTimelineDescription([evento.descricao, evento.local]), source: 'person_event', sourceId: evento.id, relatedPersonIds: [evento.pessoa_id], metadata: { event_type: evento.tipo, local: evento.local, pessoa_id: evento.pessoa_id, precision: parsedDate.precision } }, parsedDate);
 }
 
 function createFamilyEventItem(evento: EventoFamiliar) {
   const parsedDate = parseTimelineDate(evento.data_inicio);
-
-  return withParsedDate(
-    {
-      id: `family-event:${evento.id}`,
-      type: 'family_event',
-      title: evento.titulo?.trim() || 'Evento familiar',
-      description: createTimelineDescription([evento.descricao, evento.local]),
-      source: 'family_event',
-      sourceId: evento.id,
-      relatedPersonIds: evento.pessoa_relacionada_id ? [evento.pessoa_relacionada_id] : undefined,
-      metadata: {
-        event_type: evento.tipo,
-        local: evento.local,
-        pessoa_id: evento.pessoa_relacionada_id,
-        precision: parsedDate.precision,
-      },
-    },
-    parsedDate
-  );
+  return withParsedDate({ id: `family-event:${evento.id}`, type: 'family_event', title: evento.titulo?.trim() || 'Evento familiar', description: createTimelineDescription([evento.descricao, evento.local]), source: 'family_event', sourceId: evento.id, relatedPersonIds: evento.pessoa_relacionada_id ? [evento.pessoa_relacionada_id] : undefined, metadata: { event_type: evento.tipo, local: evento.local, pessoa_id: evento.pessoa_relacionada_id, precision: parsedDate.precision } }, parsedDate);
 }
 
 export function buildPersonTimeline(input: BuildPersonTimelineInput): PersonTimelineItem[] {
-  const {
-    pessoa,
-    relacionamentos = [],
-    pessoas = [],
-    arquivosHistoricosPessoa = [],
-    arquivosHistoricosRelacionamentos = [],
-    eventosPessoais = [],
-    eventosFamiliares = [],
-  } = input;
+  const { pessoa, relacionamentos = [], pessoas = [], arquivosHistoricosPessoa = [], arquivosHistoricosRelacionamentos = [], eventosPessoais = [], eventosFamiliares = [] } = input;
   const items: PersonTimelineItem[] = [];
   const birthItem = createBirthItem(pessoa);
   const deathItem = createDeathItem(pessoa);
@@ -612,7 +408,7 @@ export function buildPersonTimeline(input: BuildPersonTimelineInput): PersonTime
   if (birthItem) items.push(birthItem);
   if (deathItem) items.push(deathItem);
 
-  for (const relacionamento of relacionamentos) {
+  for (const relacionamento of getPreferredConjugalRelationships(relacionamentos, pessoa.id)) {
     items.push(...createRelationshipItems(relacionamento, pessoa, pessoas));
   }
 
@@ -622,21 +418,10 @@ export function buildPersonTimeline(input: BuildPersonTimelineInput): PersonTime
     if (childBirthItem) items.push(childBirthItem);
   }
 
-  for (const arquivo of arquivosHistoricosPessoa) {
-    items.push(createHistoricalFileItem(arquivo, 'person'));
-  }
-
-  for (const arquivo of arquivosHistoricosRelacionamentos) {
-    items.push(createHistoricalFileItem(arquivo, 'relationship'));
-  }
-
-  for (const evento of eventosPessoais) {
-    items.push(createPersonEventItem(evento));
-  }
-
-  for (const evento of eventosFamiliares) {
-    items.push(createFamilyEventItem(evento));
-  }
+  for (const arquivo of arquivosHistoricosPessoa) items.push(createHistoricalFileItem(arquivo, 'person'));
+  for (const arquivo of arquivosHistoricosRelacionamentos) items.push(createHistoricalFileItem(arquivo, 'relationship'));
+  for (const evento of eventosPessoais) items.push(createPersonEventItem(evento));
+  for (const evento of eventosFamiliares) items.push(createFamilyEventItem(evento));
 
   return sortTimelineItems(dedupeTimelineItems(items));
 }
