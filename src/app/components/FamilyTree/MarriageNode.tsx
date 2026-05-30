@@ -1,9 +1,75 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { MarriageNodeData } from './types';
+import { createPortal } from 'react-dom';
+import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
+import { MarriageNodeData, MarriageNodeDetails } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
+import { ViewMarriageModal } from './modals/ViewMarriageModal';
 
-export const MarriageNode = React.memo(({ data }: NodeProps<MarriageNodeData>) => {
+const FALLBACK_MARRIAGE_NODE_SIZE = 56;
+const FALLBACK_PERSON_NODE_WIDTH = 400;
+const FALLBACK_PERSON_NODE_HEIGHT = 160;
+
+function getNodeSize(node: Node) {
+  const width = Number(node.data?.layoutWidth ?? node.data?.width);
+  const height = Number(node.data?.layoutHeight ?? node.data?.height);
+
+  if (node.type === 'marriageNode') {
+    return {
+      width: Number.isFinite(width) && width > 0 ? width : FALLBACK_MARRIAGE_NODE_SIZE,
+      height: Number.isFinite(height) && height > 0 ? height : FALLBACK_MARRIAGE_NODE_SIZE,
+    };
+  }
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : FALLBACK_PERSON_NODE_WIDTH,
+    height: Number.isFinite(height) && height > 0 ? height : FALLBACK_PERSON_NODE_HEIGHT,
+  };
+}
+
+function getNodeCenter(node: Node) {
+  const size = getNodeSize(node);
+
+  return {
+    x: node.position.x + size.width / 2,
+    y: node.position.y + size.height / 2,
+  };
+}
+
+function inferMarriageDetailsFromNearestPeople(marriageNodeId: string, nodes: Node[]): MarriageNodeDetails | undefined {
+  const marriageNode = nodes.find((node) => node.id === marriageNodeId);
+  if (!marriageNode) return undefined;
+
+  const marriageCenter = getNodeCenter(marriageNode);
+  const nearestPeople = nodes
+    .filter((node) => node.type === 'personNode' && node.data?.pessoa)
+    .map((node) => {
+      const center = getNodeCenter(node);
+      const distance = Math.hypot(center.x - marriageCenter.x, center.y - marriageCenter.y);
+
+      return { node, center, distance };
+    })
+    .sort((left, right) => left.distance - right.distance)
+    .slice(0, 2)
+    .sort((left, right) => left.center.x - right.center.x || left.center.y - right.center.y);
+
+  if (nearestPeople.length < 2) return undefined;
+
+  const [first, second] = nearestPeople;
+  const firstPerson = first.node.data.pessoa;
+  const secondPerson = second.node.data.pessoa;
+
+  return {
+    marriageKey: `${first.node.id}::${second.node.id}`,
+    person1Id: firstPerson.id,
+    person2Id: secondPerson.id,
+    person1: firstPerson,
+    person2: secondPerson,
+  };
+}
+
+export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData>) => {
+  const { getNodes } = useReactFlow();
+  const [localMarriageDetails, setLocalMarriageDetails] = React.useState<MarriageNodeDetails | null>(null);
   const hiddenHandle = {
     width: 1,
     height: 1,
@@ -14,62 +80,82 @@ export const MarriageNode = React.memo(({ data }: NodeProps<MarriageNodeData>) =
 
   const handleClick = React.useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
       event.stopPropagation();
 
-      if (data.details && data.onClickMarriage) {
-        data.onClickMarriage(data.details);
+      const details = data.details ?? inferMarriageDetailsFromNearestPeople(id, getNodes());
+      if (!details) return;
+
+      if (data.onClickMarriage) {
+        data.onClickMarriage(details);
+        return;
       }
+
+      setLocalMarriageDetails(details);
     },
-    [data]
+    [data, getNodes, id]
   );
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      onMouseDown={(event) => event.stopPropagation()}
-      onPointerDown={(event) => event.stopPropagation()}
-      title="Visualizar informações do matrimônio"
-      className="nodrag nopan relative z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-white text-xl shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
-      style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
-    >
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top"
-        style={{ ...hiddenHandle, top: 0, left: '50%' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom"
-        style={{ ...hiddenHandle, bottom: 0, left: '50%' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        style={{ ...hiddenHandle, right: 0, top: '50%' }}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        style={{ ...hiddenHandle, left: 0, top: '50%' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="family-center"
-        style={{
-          ...hiddenHandle,
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-      {data.emoji || '💑'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        onMouseDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+        title="Visualizar informações do matrimônio"
+        className="nodrag nopan relative z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-2 bg-white text-2xl shadow-md transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+        style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
+      >
+        <Handle
+          type="target"
+          position={Position.Top}
+          id="top"
+          style={{ ...hiddenHandle, top: 0, left: '50%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="bottom"
+          style={{ ...hiddenHandle, bottom: 0, left: '50%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="right"
+          style={{ ...hiddenHandle, right: 0, top: '50%' }}
+        />
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="left"
+          style={{ ...hiddenHandle, left: 0, top: '50%' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="family-center"
+          style={{
+            ...hiddenHandle,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+        {data.emoji || '💑'}
+      </button>
+
+      {localMarriageDetails && typeof document !== 'undefined'
+        ? createPortal(
+            <ViewMarriageModal
+              open
+              marriage={localMarriageDetails}
+              onClose={() => setLocalMarriageDetails(null)}
+            />,
+            document.body
+          )
+        : null}
+    </>
   );
 });
 
