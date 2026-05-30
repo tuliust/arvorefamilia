@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import Cropper, { Area } from 'react-easy-crop';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
@@ -111,6 +112,7 @@ type AddRelativeForm = {
   local_casamento: string;
 };
 type MarriageFormState = Record<string, { data_casamento: string; local_casamento: string; error?: string }>;
+type PendingLeaveAction = { type: 'route'; to: string } | { type: 'logout' };
 type MinhaArvoreDraft = {
   form: EditableOwnPersonPayload;
   complemento: string;
@@ -318,6 +320,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 export function MinhaArvore() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const hasInitializedFormRef = useRef(false);
   const initializedPessoaIdRef = useRef<string | null>(null);
@@ -348,6 +351,20 @@ export function MinhaArvore() {
   const [marriageForms, setMarriageForms] = useState<MarriageFormState>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [pendingLeaveAction, setPendingLeaveAction] = useState<PendingLeaveAction | null>(null);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirtyRef.current) return;
+
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   useEffect(() => {
     const carregar = async () => {
@@ -1191,6 +1208,7 @@ export function MinhaArvore() {
   };
 
   const updateMarriageForm = (spouseId: string, field: 'data_casamento' | 'local_casamento', value: string) => {
+    markFormDirty();
     setMarriageForms((current) => ({
       ...current,
       [spouseId]: {
@@ -1348,15 +1366,80 @@ export function MinhaArvore() {
     return { attempted, saved, requested, skipped, failed };
   };
 
-  const handleLogout = async () => {
+  const executeLogout = async () => {
     await signOut();
-    toast.success('Sessão encerrada.');
+    toast.success('Sess?o encerrada.');
+  };
+
+  const requestLogout = () => {
+    if (isDirtyRef.current) {
+      setPendingLeaveAction({ type: 'logout' });
+      setLeaveConfirmOpen(true);
+      return;
+    }
+
+    void executeLogout();
+  };
+
+  const handleUnsavedLinkClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDirtyRef.current || event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const anchor = target.closest('a[href]');
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+    const url = new URL(anchor.href, window.location.href);
+    if (url.origin !== window.location.origin) return;
+
+    const currentPath = window.location.pathname + window.location.search + window.location.hash;
+    const targetPath = url.pathname + url.search + url.hash;
+    if (targetPath === currentPath) return;
+
+    event.preventDefault();
+    setPendingLeaveAction({ type: 'route', to: targetPath });
+    setLeaveConfirmOpen(true);
+  };
+
+  const cancelLeaveWithoutSaving = () => {
+    setLeaveConfirmOpen(false);
+    setPendingLeaveAction(null);
+  };
+
+  const confirmLeaveWithoutSaving = async () => {
+    const action = pendingLeaveAction;
+
+    isDirtyRef.current = false;
+    if (user?.id && pessoaBase?.id) {
+      removeMinhaArvoreDraft(getDraftKey(user.id, pessoaBase.id));
+    }
+
+    setLeaveConfirmOpen(false);
+    setPendingLeaveAction(null);
+
+    if (action?.type === 'route') {
+      navigate(action.to);
+      return;
+    }
+
+    if (action?.type === 'logout') {
+      await executeLogout();
+    }
+  };
+
+  const handleLogout = () => {
+    requestLogout();
   };
 
   const semVinculo = !loading && !linkLoading && !pessoaBase;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" onClickCapture={handleUnsavedLinkClick}>
       <MemberPageHeader
         title="Minha Árvore"
         subtitle="Área inicial do membro autenticado"
@@ -1892,6 +1975,30 @@ export function MinhaArvore() {
           </Button>
         </div>
       )}
+
+      <Dialog open={leaveConfirmOpen} onOpenChange={(open) => (!open ? cancelLeaveWithoutSaving() : undefined)}>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sair sem salvar?</DialogTitle>
+            <DialogDescription>
+              Voc? tem altera??es pendentes nesta p?gina. Se sair agora, as altera??es n?o salvas ser?o descartadas.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={cancelLeaveWithoutSaving}>
+              Continuar editando
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void confirmLeaveWithoutSaving()}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Sair sem salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(addRelativeDialog)} onOpenChange={(open) => (!open ? closeAddRelativeDialog() : undefined)}>
         <DialogContent className="bg-white sm:max-w-2xl">
