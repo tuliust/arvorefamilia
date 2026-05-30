@@ -44,9 +44,6 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
             <ArrowLeft className="h-4 w-4" />
             Voltar para entrar
           </Link>
-          <p className="hidden text-sm font-semibold uppercase tracking-wide text-blue-700 sm:block">
-            Árvore Genealógica
-          </p>
         </div>
       </header>
 
