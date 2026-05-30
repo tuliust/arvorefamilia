@@ -80,6 +80,7 @@ Regras:
 - Dia atual destacado.
 - Ate 3 eventos visiveis por dia no grid compacto.
 - Lista lateral/inferior de aniversariantes e dias de falecimento do mes.
+- Card lateral **Dias de falecimento** so aparece quando houver ao menos um falecimento no mes exibido com os filtros atuais.
 - Sidebar **Categorias** com filtros clicaveis.
 - Categorias ficam em `activeCategories`.
 - Categorias sao alternadas por `toggleCategory`.
@@ -254,6 +255,23 @@ Regra:
 
 ---
 
+### Card Dias de falecimento aparece vazio
+
+Verificar:
+
+```txt
+falecimentosMes.length
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Regra:
+
+- o card **Dias de falecimento** nao deve aparecer quando `falecimentosMes.length === 0`;
+- nao substituir o card vazio por mensagem de estado vazio na sidebar;
+- a categoria **Dia de Falecimento** pode continuar aparecendo na lista de categorias com contador `0 eventos`.
+
+---
+
 ### Texto `item(ns)` voltou
 
 Correcao:
@@ -325,6 +343,7 @@ npm run test:e2e
 - validar singular/plural dos contadores;
 - validar aniversario no grid;
 - validar aniversario na lista;
+- validar que **Dias de falecimento** aparece apenas quando houver itens;
 - validar dia atual destacado;
 - validar desktop;
 - validar 768px;
