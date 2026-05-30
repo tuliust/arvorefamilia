@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+﻿import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
   useNodesState,
@@ -1298,6 +1298,7 @@ function FamilyTreeComponent({
 
       const shouldRestoreInitialViewport =
         viewMode === 'minha-arvore' &&
+        !isMobile &&
         activeTreeViewport &&
         viewport.zoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON;
 
@@ -1310,7 +1311,7 @@ function FamilyTreeComponent({
 
       setHasUserInteractedWithViewport(true);
     },
-    [activeMinZoom, activeTreeViewport, viewMode]
+    [activeMinZoom, activeTreeViewport, isMobile, viewMode]
   );
 
   const handleNodeClick = useCallback(
@@ -1324,7 +1325,7 @@ function FamilyTreeComponent({
   const isAtMinZoom = activeTreeCurrentZoom !== null
     ? activeTreeCurrentZoom <= activeMinZoom + TREE_VIEWPORT_ZOOM_EPSILON
     : false;
-  const activeCanPan = viewMode !== 'minha-arvore' || !isAtMinZoom;
+  const activeCanPan = isMobile || viewMode !== 'minha-arvore' || !isAtMinZoom;
 
   const handleZoomIn = useCallback(() => {
     setHasUserInteractedWithViewport(true);
@@ -1367,10 +1368,10 @@ function FamilyTreeComponent({
     let nextX = viewport.x;
     let nextY = viewport.y;
 
-    if (direction === 'left') nextX -= horizontalViewportStep;
-    if (direction === 'right') nextX += horizontalViewportStep;
-    if (direction === 'up') nextY -= verticalViewportStep;
-    if (direction === 'down') nextY += verticalViewportStep;
+    if (direction === 'left') nextX += horizontalViewportStep;
+    if (direction === 'right') nextX -= horizontalViewportStep;
+    if (direction === 'up') nextY += verticalViewportStep;
+    if (direction === 'down') nextY -= verticalViewportStep;
 
     if (activeTreeTranslateExtent) {
       const [[minX, minY], [maxX, maxY]] = activeTreeTranslateExtent;
