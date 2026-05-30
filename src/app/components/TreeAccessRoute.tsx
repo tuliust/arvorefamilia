@@ -55,10 +55,10 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
 
       if (result.status !== 'linked') {
         setTarget('auth');
-      } else if (result.data.dados_confirmados) {
-        setTarget('tree');
-      } else {
+      } else if (result.created && !result.data.dados_confirmados) {
         setTarget('profile');
+      } else {
+        setTarget('tree');
       }
 
       setChecking(false);
