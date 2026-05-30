@@ -2,6 +2,8 @@ import { ArrowLeft, CalendarDays, Mail, ShieldCheck, UserRound } from 'lucide-re
 import { Link } from 'react-router';
 import { LegalDocumentContent, LegalText } from './legalContent';
 
+const LEGAL_DOCUMENT_UPDATED_AT = '01/06/2026';
+
 function getLegalTextKey(text: LegalText) {
   return typeof text === 'string' ? text : text.map((part) => `${part.text}:${part.href || ''}:${part.bold || ''}`).join('|');
 }
@@ -61,7 +63,7 @@ export function LegalDocumentPage({ content }: { content: LegalDocumentContent }
                 <CalendarDays className="mt-0.5 h-4 w-4 flex-none text-gray-400" />
                 <div>
                   <dt className="font-medium text-gray-900">Última atualização</dt>
-                  <dd className="text-gray-600">{content.updatedAt}</dd>
+                  <dd className="text-gray-600">{LEGAL_DOCUMENT_UPDATED_AT}</dd>
                 </div>
               </div>
               <div className="flex gap-3">
