@@ -627,13 +627,11 @@ export function CalendarioFamiliar() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-lg font-bold text-gray-900">Dias de falecimento</h3>
-              <div className="space-y-3">
-                {falecimentosMes.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nenhum dia de falecimento neste mês com os filtros atuais.</p>
-                ) : (
-                  falecimentosMes.map((evento) => (
+            {falecimentosMes.length > 0 && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-4 text-lg font-bold text-gray-900">Dias de falecimento</h3>
+                <div className="space-y-3">
+                  {falecimentosMes.map((evento) => (
                     <Link
                       key={evento.id}
                       to={evento.link || `/pessoa/${evento.pessoaId}`}
@@ -647,10 +645,10 @@ export function CalendarioFamiliar() {
                         {CALENDAR_CATEGORY_COLORS.falecimento.label}
                       </span>
                     </Link>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </aside>
         </section>
       </main>
