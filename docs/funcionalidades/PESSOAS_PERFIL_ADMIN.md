@@ -580,3 +580,58 @@ Possiveis evolucoes:
 - controles administrativos de exibicao publica.
 
 Esses itens nao bloqueiam o MVP.
+
+---
+
+## 18. Modal de relacionamento conjugal
+
+O modal aberto ao clicar no anel/alianca de relacionamento deve apresentar dados legiveis para usuario final.
+
+Arquivo principal:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+```
+
+Regras consolidadas de exibicao:
+
+- `conjuge` deve ser exibido como **Conjuge**;
+- `casamento` deve ser exibido como **Casamento**;
+- o campo **ID do relacionamento** nao deve ser exibido ao usuario;
+- informacoes tecnicas internas nao devem aparecer para usuario comum;
+- observacoes podem aparecer quando fizerem sentido para admin;
+- arquivos historicos do relacionamento permanecem no modal.
+
+Campos uteis no modal:
+
+- Conjuge 1;
+- Conjuge 2;
+- Status;
+- Tipo de relacionamento;
+- Casamento;
+- Data do casamento;
+- Local do casamento;
+- Data de separacao, quando houver;
+- Local de separacao, quando houver;
+- Observacoes, quando permitido;
+- Arquivos historicos.
+
+Cuidados:
+
+- nao exibir separacao quando o relacionamento terminou por falecimento;
+- status de viuvez deve ser tratado de forma distinta de separacao/divorcio;
+- data de casamento deve usar `data_casamento` quando existir;
+- nao voltar a exibir IDs tecnicos no modal publico.
+
+## 19. Pendencias mapeadas para perfil publico
+
+Itens ainda pendentes ou em validacao visual:
+
+- remover **Signo** do topo do perfil publico;
+- remover botao separado **Entrar em contato por WhatsApp**;
+- transformar o numero de telefone em link para WhatsApp quando permitido;
+- usar estilo visual de link semelhante ao de redes sociais;
+- corrigir timeline para casamento salvo como `30/07/1988` quando ainda aparecer como **Data desconhecida**;
+- evitar evento de separacao quando o relacionamento terminou por falecimento da conjuge.
+
+

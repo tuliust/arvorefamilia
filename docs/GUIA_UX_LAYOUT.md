@@ -190,6 +190,76 @@ Regras:
 - icones devem vir de `HEADER_ACTION_ICONS` quando ja existirem ali;
 - titulos e subtitulos devem usar textos curtos, pois sao truncados em tela estreita.
 
+
+### 3.3 Busca expansivel no header da arvore
+
+A busca do header da Home pos-login deve funcionar nas rotas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Comportamento consolidado:
+
+- o botao de busca precisa ser clicavel em toda a area visual;
+- ao expandir, o campo deve usar o placeholder **Buscar pessoa ou pagina...**;
+- a busca deve sugerir pessoas e paginas;
+- a lista local de paginas deve incluir rotas de uso recorrente, como **Notificacoes** e **Ajustar Notificacoes**;
+- a busca deve oferecer atalho para a pagina completa de resultados;
+- sugestoes devem fechar ao clicar fora da area de busca;
+- sugestoes devem fechar ao pressionar `Esc`;
+- sugestoes devem ficar acima da arvore e nao podem usar fundo transparente.
+
+Para sugestoes de pessoas, a linha secundaria deve seguir o padrao:
+
+```txt
+Cidade de nascimento – DD/MM/AAAA
+```
+
+Se faltar cidade ou data, exibir apenas a informacao disponivel. Se ambas estiverem ausentes, ocultar a linha secundaria.
+
+### 3.4 Camadas de dropdowns no header
+
+O header da Home usa camada elevada para permanecer acima da arvore. Por isso, menus em portal precisam ter camada superior a do header.
+
+Regras consolidadas:
+
+- `SelectContent` deve abrir acima do header;
+- `DropdownMenuContent` deve abrir acima do header;
+- `DropdownMenuSubContent` deve abrir acima do header;
+- menus devem usar afastamento vertical suficiente para nao parecerem encaixados sob a barra;
+- sugestoes de busca, menu do usuario e seletor de views nao devem se sobrepor visualmente de forma indevida.
+
+Padrao atual:
+
+```txt
+conteudos Radix em portal -> z-[1000]
+sideOffset padrao -> 8
+```
+
+Esse padrao evita regressao em que o menu do usuario e o dropdown de views ficavam com a parte superior coberta pelo header.
+
+### 3.5 Modal Curiosidades - Voce Sabia
+
+No modal **Curiosidades**, a aba **Voce Sabia?** usa cards estatisticos com cores distintas para facilitar leitura rapida:
+
+| Card | Tratamento visual |
+|---|---|
+| Pessoas cadastradas | Azul |
+| Vivos | Verde |
+| Falecidos | Slate/cinza |
+| Pets | Ambar |
+
+Regras:
+
+- manter contraste suficiente entre fundo, label e numero;
+- preservar grid responsivo;
+- nao misturar a cor dos cards estatisticos com status de permissao ou erro;
+- novas estatisticas devem seguir variacao cromatica discreta e coerente com Tailwind ja usado no projeto.
+
+
 ---
 
 ## 4. Layout da Home e painel lateral

@@ -1,4 +1,4 @@
-﻿# Minha Arvore  view, layout e viewport
+# Minha Arvore  view, layout e viewport
 
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`
 > Tipo: documentacao tecnica/funcional da view **Minha Arvore**.
@@ -1023,3 +1023,98 @@ A area central usa logica propria, com pessoa principal maior, card central com 
 O ReactFlow so aparece apos o viewport final estar calculado e aplicado, evitando o flash inicial de uma arvore ampliada.
 
 Os cards foram refinados para melhorar legibilidade, aumentar presenca da pessoa principal, reduzir sobras internas e garantir que as informacoes centrais fiquem dentro do card.
+
+---
+
+## 27. Busca no header da arvore
+
+A busca do header e compartilhada pelas rotas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Comportamento consolidado:
+
+- o botao de busca deve ser clicavel em toda a area visual;
+- o campo usa placeholder **Buscar pessoa ou pagina...**;
+- as sugestoes aparecem automaticamente ao digitar;
+- as sugestoes incluem pessoas e paginas;
+- paginas locais importantes, como **Notificacoes** e **Ajustar Notificacoes**, devem aparecer quando o termo bater;
+- o usuario pode abrir a pagina completa de resultados;
+- clicar fora fecha as sugestoes;
+- pressionar `Esc` fecha as sugestoes;
+- as sugestoes devem ficar acima do canvas da arvore.
+
+Para pessoas sugeridas, a linha secundaria deve seguir:
+
+```txt
+Cidade de nascimento – DD/MM/AAAA
+```
+
+Nao exibir cidade atual nessa linha.
+
+## 28. Dropdowns do header
+
+O header da arvore possui:
+
+- seletor de view;
+- menu do usuario;
+- busca expansivel;
+- atalhos para curiosidades, forum e calendario.
+
+Regras de camada:
+
+- sugestoes de busca devem ficar acima da arvore;
+- menu do usuario nao pode ficar coberto pelo header;
+- dropdown de views nao pode ficar coberto pelo header;
+- componentes base Radix devem usar camada superior ao header.
+
+Componentes base relacionados:
+
+```txt
+src/app/components/ui/select.tsx
+src/app/components/ui/dropdown-menu.tsx
+```
+
+## 29. Legendas > Linhas
+
+A opcao **Todas** em **Legendas > Linhas** deve ocultar todas as linhas da arvore.
+
+Isso inclui:
+
+- linhas de filiacao;
+- linhas de irmaos;
+- linhas conjugais quando aplicavel ao filtro;
+- linhas horizontais e verticais que conectam cards de primos.
+
+Regra anti-regressao:
+
+```txt
+se usuario desliga Todas, nenhuma linha estrutural de primos deve permanecer visivel.
+```
+
+## 30. Cards e espacos laterais da Minha Arvore
+
+Ajustes de layout da view direta devem obedecer estas regras:
+
+- reduzir espacos laterais ociosos sem comprimir a leitura;
+- ampliar cards quando houver area disponivel;
+- ampliar grupos de parentes usando espacos externos;
+- preservar gap entre colunas;
+- usar melhor o lado esquerdo dos grupos paternos;
+- usar melhor o lado direito dos grupos maternos;
+- evitar truncamento excessivo de nomes;
+- evitar corte inferior de nomes e informacoes.
+
+Status de implementacao:
+
+```txt
+linhas de primos no filtro Todas -> consolidado
+corte inferior de nomes -> consolidado
+reducao de espacos laterais e ampliacao de cards -> em ajuste incremental
+```
+
+

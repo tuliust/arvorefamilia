@@ -100,9 +100,22 @@ Rotas protegidas:
 Comportamento esperado:
 
 - usuario sem sessao nao acessa a arvore;
-- usuario sem vinculo/acesso confirmado nao deve ver dados da arvore;
+- usuario sem vinculo nao deve ver dados da arvore;
 - arvore so renderiza apos validacao de acesso;
-- `/` redireciona para `/minha-arvore` preservando search params.
+- `/` redireciona para `/minha-arvore` preservando search params;
+- vinculo criado durante o primeiro acesso e ainda nao confirmado pode direcionar para `/meus-dados`;
+- vinculo ja existente nao deve causar redirecionamento recorrente para `/meus-dados`, mesmo quando `dados_confirmados=false`.
+
+Regra consolidada do primeiro acesso:
+
+```txt
+sem sessao -> /entrar
+sem vinculo -> /entrar ou fluxo de primeiro acesso
+vinculo recem-criado e dados_confirmados=false -> /meus-dados
+vinculo existente -> libera rotas da arvore
+```
+
+Essa regra evita regressao em que usuarios ja vinculados eram enviados para `/meus-dados` ao acessar qualquer view da arvore.
 
 ---
 

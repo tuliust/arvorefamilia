@@ -53,6 +53,7 @@ Documentos de funcionalidades ficam em `docs/funcionalidades/`.
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportacao de area visivel da arvore em PNG/PDF/impressao e selecao retangular. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Regras especificas da Minha Arvore, filtros diretos, pets e regras de exibicao. |
 | `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow e comportamento da view Minha Arvore. |
+| `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edicao da propria arvore pelo membro, Meus Dados, avatar, arquivos historicos e saida sem salvar. |
 | `funcionalidades/NOTIFICACOES.md` | Notificacoes internas/e-mail, preferencias, logs, Edge Functions, rotina diaria e cron seguro. |
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil publico, admin de pessoa, dados pessoais, privacidade, vinculos e edicao. |
 | `funcionalidades/TIMELINE.md` | Linha do tempo, eventos derivados, eventos pessoais e evolucao pos-MVP. |

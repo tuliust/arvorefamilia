@@ -1229,3 +1229,89 @@ A versao compacta da legenda removeu **Cores dos grupos** para caber melhor no p
 ### 21.5 Botoes de zoom
 
 Os botoes de zoom da arvore ficam no canto superior direito da area da arvore.
+
+---
+
+## 14. Componentes base alterados recentemente
+
+### 14.1 `SelectContent`
+
+Arquivo:
+
+```txt
+src/app/components/ui/select.tsx
+```
+
+Regra consolidada:
+
+- conteudo do select usa portal Radix;
+- camada padrao deve ficar acima do header da arvore;
+- `sideOffset` padrao deve evitar que o dropdown encoste visualmente no header.
+
+Padrao esperado:
+
+```txt
+z-[1000]
+sideOffset = 8
+```
+
+Cuidados:
+
+- nao reduzir para `z-50` sem revisar o header da Home;
+- qualquer select usado dentro de modal precisa continuar visivel e acessivel;
+- se um caso isolado exigir outra camada, preferir `className` local em vez de alterar o padrao global.
+
+### 14.2 `DropdownMenuContent` e `DropdownMenuSubContent`
+
+Arquivo:
+
+```txt
+src/app/components/ui/dropdown-menu.tsx
+```
+
+Regra consolidada:
+
+- menus usam portal Radix;
+- menus do usuario no header da arvore precisam abrir acima da barra;
+- submenus devem usar a mesma camada base.
+
+Padrao esperado:
+
+```txt
+z-[1000]
+sideOffset = 8
+```
+
+Cuidados:
+
+- preservar foco por teclado;
+- nao quebrar clique em itens destrutivos como **Sair**;
+- nao duplicar logica de autenticacao ou permissao dentro do componente base.
+
+### 14.3 Modal de confirmacao de saida sem salvar
+
+Padrao funcional usado em `/minha-arvore/editar`:
+
+- exibir quando houver alteracoes pendentes;
+- permitir **Continuar editando**;
+- permitir **Sair sem salvar**;
+- limpar rascunho apenas quando o usuario confirmar descarte;
+- manter aviso nativo do navegador para refresh/fechamento da aba.
+
+Cuidados de texto:
+
+- revisar acentuacao antes de publicar;
+- evitar strings com mojibake ou `?` no lugar de acentos;
+- acao destrutiva deve ter destaque visual claro.
+
+### 14.4 Botao de remocao em modal de foto
+
+Padrao visual esperado:
+
+- botao **Remover foto** deve parecer botao, nao apenas texto solto;
+- deve ter borda visivel;
+- usar texto vermelho e hover vermelho claro;
+- manter `type="button"`;
+- nao submeter formulario acidentalmente.
+
+
