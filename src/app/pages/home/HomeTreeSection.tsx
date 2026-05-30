@@ -71,10 +71,23 @@ export function HomeTreeSection({
   renderStateMessage,
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
+  const shouldHideDirectCousinGridEdges = treeViewMode === 'minha-arvore' && !edgeFilters.irmaos;
+
   return (
     <section
       className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
     >
+      {shouldHideDirectCousinGridEdges && (
+        <style>
+          {`
+            .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
+            .react-flow__edge[data-id^="direct-primos-maternos-grid-"] {
+              display: none;
+            }
+          `}
+        </style>
+      )}
+
       {isTreeResolving ? (
         renderStateMessage({
           title: 'Carregando árvore',
