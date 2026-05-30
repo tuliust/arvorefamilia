@@ -1,6 +1,7 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+@import './family-tree-mobile.css';
 
 /* ReactFlow styles */
 @import 'reactflow/dist/style.css';
