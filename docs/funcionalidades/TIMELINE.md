@@ -318,6 +318,35 @@ data_casamento
 src/app/utils/buildPersonTimeline.ts
 ```
 
+### Badge Casamento aparece duplicada com Relacionamento
+
+Verificar:
+
+```txt
+src/app/components/Timeline/PersonTimeline.tsx
+item.type === 'marriage'
+item.source === 'relationship'
+```
+
+Regra:
+
+- item `marriage` nao deve renderizar badge de tipo **Casamento**;
+- quando aplicavel, a badge **Relacionamento** deve ser mantida;
+- o titulo, a descricao, o icone e a data do casamento devem permanecer visiveis.
+
+### Badge de obito voltou como Falecimento
+
+Verificar:
+
+```txt
+src/app/components/Timeline/PersonTimeline.tsx
+TYPE_LABELS.death
+```
+
+Regra:
+
+- o label publico para `death` deve ser **Obito**.
+
 ### Separacao duplicada
 
 Verificar:
@@ -397,6 +426,8 @@ se o dado deveria aparecer para usuario comum
 - abrir perfil com eventos pessoais;
 - abrir perfil sem eventos suficientes;
 - validar estado vazio;
+- validar que `death` aparece como **Obito**;
+- validar que casamento nao mostra badge **Casamento** duplicada com **Relacionamento**;
 - validar mobile.
 
 ### Tecnico
@@ -475,7 +506,7 @@ Regra esperada:
 - separacao/divorcio dependem de campo explicito de separacao, fim ou status equivalente;
 - falecimento de conjuge deve gerar estado de viuvez;
 - relacionamento inativo por falecimento nao deve criar evento **Separacao**;
-- status de viuvez deve ser tratado separadamente de separacao/divorcio.
+- a timeline nao deve inferir separacao apenas por `ativo = false`.
 
 ### 17.3 Regras para o builder
 
@@ -500,7 +531,16 @@ ativo = false
 
 sem campo explicito de separacao/fim.
 
-### 17.4 Checklist de validacao
+### 17.4 Labels visuais da timeline
+
+Regras consolidadas:
+
+- `death` deve aparecer como **Obito**;
+- `marriage` nao deve exibir badge **Casamento** quando a UI ja mostra o contexto no titulo/texto;
+- a badge **Relacionamento** deve permanecer quando `item.source === 'relationship'` e a visualizacao admin estiver ativa;
+- ajustes de badge em `PersonTimeline.tsx` nao devem alterar parser, ordenacao, RLS ou shape dos itens.
+
+### 17.5 Checklist de validacao
 
 Validar perfil com:
 
@@ -523,7 +563,7 @@ falecimento de conjuge -> nao mostra Separacao indevida
 viuvez -> status/representacao propria quando suportado
 ```
 
-### 17.5 Relacao com modal conjugal
+### 17.6 Relacao com modal conjugal
 
 O modal da alianca ja possui regras documentadas em:
 
