@@ -76,29 +76,33 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5" />
-            Cônjuge
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {spouses.length === 0 ? <p className="text-sm text-gray-500">Nenhum cônjuge cadastrado</p> : spouses.map((person) => <PersonButton key={person.id} person={person} label="Cônjuge" />)}
-        </CardContent>
-      </Card>
+      {spouses.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Cônjuge
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {spouses.map((person) => <PersonButton key={person.id} person={person} label="Cônjuge" />)}
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Filhos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {children.length === 0 ? <p className="text-sm text-gray-500">Nenhum filho cadastrado</p> : children.map((person) => <PersonButton key={person.id} person={person} label="Filho(a)" />)}
-        </CardContent>
-      </Card>
+      {children.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Filhos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {children.map((person) => <PersonButton key={person.id} person={person} label="Filho(a)" />)}
+          </CardContent>
+        </Card>
+      )}
 
       {pets.length > 0 && (
         <Card>
