@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { useAuth } from '../contexts/AuthContext';
 import { NotificacaoUsuario } from '../types';
 import {
-  garantirNotificacaoInicialSupabase,
   listarNotificacoesSupabase,
   marcarNotificacaoSupabaseComoLida,
   marcarTodasNotificacoesSupabaseComoLidas,
@@ -63,7 +62,6 @@ export function Notificacoes() {
       setLoading(true);
       setError(null);
 
-      await garantirNotificacaoInicialSupabase(user.id);
       const lista = await listarNotificacoesSupabase(user.id);
 
       setNotificacoes(lista);
