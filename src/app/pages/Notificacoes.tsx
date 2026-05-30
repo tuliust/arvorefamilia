@@ -41,6 +41,14 @@ function formatNotificationType(type?: string) {
   return labels[normalized] ?? normalized.replace(/_/g, ' ');
 }
 
+function normalizeNotificationText(value?: string | null) {
+  return String(value ?? '')
+    .replace(/\bData de memoria\b/g, 'Data de memória')
+    .replace(/\bHoje e uma data de memoria\b/g, 'Hoje é uma data de memória')
+    .replace(/\bAniversario na familia\b/g, 'Aniversário na família')
+    .replace(/\bHoje e aniversario\b/g, 'Hoje é aniversário');
+}
+
 export function Notificacoes() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -178,13 +186,15 @@ export function Notificacoes() {
               <div className="space-y-3">
                 {notificacoes.map((item) => {
                   const hasLink = Boolean(item.link);
+                  const titulo = normalizeNotificationText(item.titulo);
+                  const mensagem = normalizeNotificationText(item.mensagem);
 
                   return (
                     <article
                       key={item.id}
                       role={hasLink ? 'link' : undefined}
                       tabIndex={hasLink ? 0 : undefined}
-                      aria-label={hasLink ? `Abrir notificação: ${item.titulo}` : undefined}
+                      aria-label={hasLink ? `Abrir notificação: ${titulo}` : undefined}
                       onClick={hasLink ? () => abrirConteudo(item.link) : undefined}
                       onKeyDown={
                         hasLink
@@ -220,8 +230,8 @@ export function Notificacoes() {
                           </div>
 
                           <div className="space-y-2">
-                            <h2 className="break-words text-base font-bold leading-snug text-gray-900">{item.titulo}</h2>
-                            <p className="break-words text-sm leading-relaxed text-gray-600">{item.mensagem}</p>
+                            <h2 className="break-words text-base font-bold leading-snug text-gray-900">{titulo}</h2>
+                            <p className="break-words text-sm leading-relaxed text-gray-600">{mensagem}</p>
                           </div>
 
                           {item.link && (
