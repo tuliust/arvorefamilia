@@ -11,7 +11,31 @@ const STORAGE_KEYS = {
 const LEGACY_TREE_MODE_STORAGE_KEY = `familyTree:${'view'}${'Mode'}`;
 const LEGACY_TREE_GENERATION_STORAGE_KEY = `familyTree:${'active'}${'Generation'}`;
 
+export const MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {
+  pais: false,
+  avos: false,
+  bisavos: false,
+  tataravos: false,
+  conjuge: false,
+  filhos: false,
+  netos: false,
+  irmaos: false,
+  sobrinhos: false,
+  tios: false,
+  primos: false,
+  pets: false,
+};
+
+function isMobileViewport() {
+  try {
+    return window.matchMedia('(max-width: 767px)').matches;
+  } catch {
+    return false;
+  }
+}
+
 export function readDirectRelativeFilters(userId?: string): DirectRelativeFilters {
+  if (isMobileViewport()) return MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS;
   if (!userId) return DEFAULT_DIRECT_RELATIVE_FILTERS;
 
   try {
