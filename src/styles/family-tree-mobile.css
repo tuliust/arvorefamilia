@@ -11,4 +11,11 @@
     right: auto;
     transform: translateX(-50%);
   }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(.shadow-xl) > div[style] {
+    width: 560px !important;
+    min-height: 700px !important;
+    height: 700px !important;
+    margin: 190px 100px 0;
+  }
 }
