@@ -205,9 +205,87 @@ export function CentralPersonFocusPanel({
     </div>
   );
 
+  if (isMobile) {
+    const photo = pessoa.foto_principal_url && onOpenPhoto ? (
+      <button
+        type="button"
+        className="relative h-[330px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        onClick={(event) => stopAndRun(event, () => onOpenPhoto(event))}
+        onMouseDown={(event) => event.stopPropagation()}
+        aria-label={`Ampliar foto de ${pessoa.nome_completo}`}
+      >
+        {avatar}
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/35 to-transparent px-4 pb-4 pt-10">
+          <span className="block break-words text-left text-[32px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
+            {pessoa.nome_completo}
+          </span>
+        </span>
+      </button>
+    ) : (
+      <div className="relative h-[330px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm">
+        {avatar}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/35 to-transparent px-4 pb-4 pt-10">
+          <h3 className="break-words text-[32px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
+            {pessoa.nome_completo}
+          </h3>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-3 text-left text-slate-900 shadow-xl">
+        {photo}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className={['inline-flex rounded-full px-3 py-1.5 text-[14px] font-extrabold uppercase leading-none ring-1', statusClassName].join(' ')}>
+            {status}
+          </span>
+          {ageOrLifeSpan && (
+            <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[14px] font-extrabold uppercase leading-none text-slate-700 ring-1 ring-slate-200">
+              {ageOrLifeSpan}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {onView && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-[15px] font-extrabold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              onClick={(event) => stopAndRun(event, () => onView(pessoa))}
+            >
+              <Eye className="h-4 w-4" />
+              <span>Visualizar perfil completo</span>
+            </button>
+          )}
+          {onAddConnection && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-[15px] font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              onClick={(event) => stopAndRun(event, () => onAddConnection(pessoa))}
+            >
+              <Link2 className="h-4 w-4" />
+              <span>Adicionar conexão</span>
+            </button>
+          )}
+        </div>
+
+        <div className="mt-3 grid min-h-0 gap-2">
+          <InfoCard icon={CalendarDays} label="Nascimento" value={birthSummary} />
+          {!birthSummary && ageOrLifeSpan && (
+            <InfoCard icon={HeartPulse} label="Tempo de vida" value={ageOrLifeSpan} />
+          )}
+          {birthPlace && !birthDate && (
+            <InfoCard icon={MapPin} label="Naturalidade" value={birthPlace} />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-slate-900 shadow-xl">
-      <div className={['grid min-h-0 gap-4', isMobile ? 'grid-cols-1' : 'grid-cols-[220px_minmax(0,1fr)]'].join(' ')}>
+      <div className="grid min-h-0 grid-cols-[220px_minmax(0,1fr)] gap-4">
         {pessoa.foto_principal_url && onOpenPhoto ? (
           <button
             type="button"
@@ -269,7 +347,7 @@ export function CentralPersonFocusPanel({
         </div>
       </div>
 
-      <div className={['mt-4 grid min-h-0 gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-2'].join(' ')}>
+      <div className="mt-4 grid min-h-0 grid-cols-2 gap-3">
         <InfoCard icon={CalendarDays} label={isPet ? 'Nascimento' : 'Nascimento'} value={birthSummary} />
         <InfoCard icon={Home} label="Local atual" value={pessoa.local_atual} />
         <InfoCard icon={Sparkles} label="Geração" value={pessoa.geracao_sociologica} />
@@ -283,7 +361,7 @@ export function CentralPersonFocusPanel({
       </div>
 
       {(minibio || curiosities) && (
-        <div className={['mt-3 grid min-h-0 gap-3', isMobile ? 'grid-cols-1' : 'grid-cols-2'].join(' ')}>
+        <div className="mt-3 grid min-h-0 grid-cols-2 gap-3">
           <TextBlock title="Sobre" value={minibio} />
           <TextBlock title="Curiosidades" value={curiosities} />
         </div>
