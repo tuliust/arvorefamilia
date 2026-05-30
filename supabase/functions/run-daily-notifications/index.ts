@@ -344,11 +344,11 @@ async function createInternalNotification(
     .from("notificacoes_usuario")
     .insert({
       user_id: params.userId,
-      titulo: params.candidate.type === "aniversario" ? "Aniversario na familia" : "Data de memoria",
+      titulo: params.candidate.type === "aniversario" ? "Aniversário na família" : "Data de memória",
       mensagem:
         params.candidate.type === "aniversario"
-          ? `Hoje e aniversario de ${params.candidate.pessoa.nome_completo}.`
-          : `Hoje e uma data de memoria de ${params.candidate.pessoa.nome_completo}.`,
+          ? `Hoje é aniversário de ${params.candidate.pessoa.nome_completo}.`
+          : `Hoje é uma data de memória de ${params.candidate.pessoa.nome_completo}.`,
       tipo: type,
       canal: "interna",
       link: `/pessoa/${params.candidate.pessoa.id}`,
@@ -518,11 +518,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.info("[run-daily-notifications] Rotina finalizada.", summary);
-    return jsonResponse({ ok: true, ...summary });
+    return jsonResponse({ ok: true, summary });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro desconhecido.";
-    console.error("[run-daily-notifications]", message);
-    return jsonResponse({ ok: false, error: message }, 500);
+    return jsonResponse(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : "Erro inesperado.",
+      },
+      500
+    );
   }
 });
