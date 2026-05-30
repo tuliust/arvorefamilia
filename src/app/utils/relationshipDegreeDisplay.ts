@@ -41,6 +41,12 @@ export function formatShortName(fullName?: string | null) {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 }
 
+function getFirstName(fullName?: string | null) {
+  const cleanName = fullName?.trim();
+  if (!cleanName) return 'Pessoa';
+  return cleanName.split(/\s+/)[0] || 'Pessoa';
+}
+
 function getStepLabel(edge: RelationshipGraphEdge) {
   if (edge.normalizedType === 'parent') {
     if (edge.type === 'pai') return 'pai';
@@ -153,6 +159,8 @@ function getRelationshipPeople(result: RelationshipDegreeResult, people: Pessoa[
   return {
     originName: formatShortName(getPersonName(peopleById, result.originPersonId)) || 'Pessoa',
     targetName: formatShortName(getPersonName(peopleById, result.targetPersonId)) || 'Pessoa',
+    originFirstName: getFirstName(getPersonName(peopleById, result.originPersonId)),
+    targetFirstName: getFirstName(getPersonName(peopleById, result.targetPersonId)),
   };
 }
 
@@ -162,71 +170,82 @@ function getRelationshipPattern(result: RelationshipDegreeResult) {
 
 function getDirectParentPresentationLabel(result: RelationshipDegreeResult) {
   const edge = result.path[0]?.edge;
-  if (!edge) return 'pai/m\u00e3e';
+  if (!edge) return 'pai/mãe';
   if (edge.type === 'pai') return 'pai';
-  if (edge.type === 'mae') return 'm\u00e3e';
-  return 'pai/m\u00e3e';
+  if (edge.type === 'mae') return 'mãe';
+  return 'pai/mãe';
+}
+
+function getParentPersonNameFromSecondDegreeCousinPath(result: RelationshipDegreeResult, people: Pessoa[]) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const targetParentId = result.path[2]?.to || result.path[3]?.from;
+  return targetParentId ? getPersonName(peopleById, targetParentId) : '';
 }
 
 export function getRelationshipResultSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
-  const { originName, targetName } = getRelationshipPeople(result, people);
+  const { originName, targetName, originFirstName, targetFirstName } = getRelationshipPeople(result, people);
 
   if (!result.found) {
-    return `N\u00e3o foi encontrado v\u00ednculo familiar entre ${originName} e ${targetName}.`;
+    return `Não foi encontrado vínculo familiar entre ${originName} e ${targetName}.`;
   }
 
   if (result.samePerson) {
-    return `${originName} e ${targetName} s\u00e3o a mesma pessoa.`;
+    return `${originName} e ${targetName} são a mesma pessoa.`;
   }
 
   const pattern = getRelationshipPattern(result);
 
+  if (pattern === 'child>sibling>parent>parent') {
+    const targetParentName = getFirstName(getParentPersonNameFromSecondDegreeCousinPath(result, people));
+    return `${originFirstName} e ${targetFirstName} são primos de segundo grau. A mãe de ${targetFirstName}, ${targetParentName}, é prima de ${originFirstName}.`;
+  }
+
   if (pattern === 'child>sibling>parent' && result.label === 'primo(a)') {
-    return `${originName} e ${targetName} s\u00e3o primos.`;
+    return `${originName} e ${targetName} são primos.`;
   }
 
   if (pattern === 'sibling') {
-    return `${originName} e ${targetName} s\u00e3o irm\u00e3os.`;
+    return `${originName} e ${targetName} são irmãos.`;
   }
 
   if (pattern === 'spouse') {
-    const label = result.path[0]?.edge.active ? 'c\u00f4njuges' : 'ex-c\u00f4njuges';
-    return `${originName} e ${targetName} s\u00e3o ${label}.`;
+    const label = result.path[0]?.edge.active ? 'cônjuges' : 'ex-cônjuges';
+    return `${originName} e ${targetName} são ${label}.`;
   }
 
   if (pattern === 'parent') {
-    return `${originName} \u00e9 ${getDirectParentPresentationLabel(result)} de ${targetName}.`;
+    return `${originName} é ${getDirectParentPresentationLabel(result)} de ${targetName}.`;
   }
 
   if (pattern === 'child') {
-    return `${originName} \u00e9 filho de ${targetName}.`;
+    return `${originName} é filho de ${targetName}.`;
   }
 
   if (pattern === 'parent>parent') {
-    return `${originName} \u00e9 av\u00f4/av\u00f3 de ${targetName}.`;
+    return `${originName} é avô/avó de ${targetName}.`;
   }
 
   if (pattern === 'child>child') {
-    return `${originName} \u00e9 neto de ${targetName}.`;
+    return `${originName} é neto de ${targetName}.`;
   }
 
   if (pattern === 'sibling>parent') {
-    return `${originName} \u00e9 tio/tia de ${targetName}.`;
+    return `${originName} é tio/tia de ${targetName}.`;
   }
 
   if (pattern === 'child>sibling') {
-    return `${originName} \u00e9 sobrinho de ${targetName}.`;
+    return `${originName} é sobrinho de ${targetName}.`;
   }
 
   if (pattern === 'spouse>child>sibling>parent') {
-    return `${originName} \u00e9 c\u00f4njuge da prima de ${targetName}.`;
+    return `${originName} é cônjuge da prima de ${targetName}.`;
   }
 
   if (pattern === 'child>sibling>parent>spouse') {
-    return `${targetName} \u00e9 c\u00f4njuge da prima de ${originName}.`;
+    return `${targetName} é cônjuge da prima de ${originName}.`;
   }
 
-  return `H\u00e1 uma liga\u00e7\u00e3o familiar entre ${originName} e ${targetName}.`;
+  return `Há uma ligação familiar entre ${originName} e ${targetName}.`;
 }
 
 function getPossessiveParentLabel(stepLabel: string) {
