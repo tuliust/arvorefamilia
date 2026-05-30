@@ -147,7 +147,6 @@ export function HomeTreeSection({
           centralPersonId={centralReferencePersonId}
           isMobile={isMobile}
           layoutRevision={treeLayoutRevision}
-          treeViewMode={treeViewMode}
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
