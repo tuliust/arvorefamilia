@@ -215,7 +215,7 @@ export function HomeHeader({
             <Button
               variant="outline"
               size="icon"
-              className="relative z-[503] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
+              className="relative z-[504] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
               title="Buscar por pessoa ou página"
               aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
               onClick={() => {
@@ -226,7 +226,7 @@ export function HomeHeader({
               <Search className="pointer-events-none h-4 w-4" />
             </Button>
 
-            <div className={['pointer-events-auto relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'w-0 opacity-0'].join(' ')}>
+            <div className={['relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'pointer-events-auto w-[min(60vw,380px)] opacity-100 sm:w-[min(46vw,420px)]' : 'pointer-events-none w-0 opacity-0'].join(' ')}>
               <div className="pr-2">
                 <form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
                   <Input
