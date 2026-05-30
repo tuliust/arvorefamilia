@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { CreateUserFavoritePayload, FavoriteEntityType } from '../../types';
 import { isFavorite, toggleFavorite } from '../../services/favoritesService';
 
@@ -80,11 +80,11 @@ export function FavoriteButton({
         onClick={handleClick}
         disabled={loading}
         aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-pink-50 hover:text-pink-600 disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-60 ${
           size === 'sm' ? 'h-9 w-9' : 'h-10 w-10'
-        } ${active ? 'border-pink-200 bg-pink-50 text-pink-600' : ''} ${className}`}
+        } ${active ? 'border-amber-200 bg-amber-50 text-amber-600' : ''} ${className}`}
       >
-        <Heart className={`${iconSize} ${active ? 'fill-current' : ''}`} />
+        <Star className={`${iconSize} ${active ? 'fill-current' : ''}`} />
       </button>
     );
   }
@@ -97,11 +97,11 @@ export function FavoriteButton({
       aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
       className={`inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-center text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
         active
-          ? 'border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100'
+          ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
       } ${className}`}
     >
-      <Heart className={`${iconSize} shrink-0 ${active ? 'fill-current' : ''}`} />
+      <Star className={`${iconSize} shrink-0 ${active ? 'fill-current' : ''}`} />
       <span className="min-w-0 truncate">{loading ? 'Salvando...' : active ? 'Salvo' : 'Salvar'}</span>
     </button>
   );
