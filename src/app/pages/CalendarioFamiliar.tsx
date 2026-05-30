@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
-import { ChevronLeft, ChevronRight, CalendarSync } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarSync, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
 import { Pessoa, Relacionamento } from '../types';
 import {
@@ -165,6 +166,8 @@ export function CalendarioFamiliar() {
     totalIgnorados?: number;
   } | null>(null);
   const [activeCategories, setActiveCategories] = useState<Record<CalendarEventCategory, boolean>>(DEFAULT_ACTIVE_CATEGORIES);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<EventoCalendarioFamiliar[]>([]);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   useEffect(() => {
     const carregar = async () => {
@@ -288,18 +291,16 @@ export function CalendarioFamiliar() {
     }));
   }
 
+  function openDayEvents(dia: number, eventosDia: EventoCalendarioFamiliar[]) {
+    if (eventosDia.length === 0) return;
+    setSelectedDay(dia);
+    setSelectedDayEvents(eventosDia);
+  }
+
   const eventos = useMemo(
     () => criarEventosDoCalendario(pessoas, relacionamentos, dataAtual.getFullYear()),
     [pessoas, relacionamentos, dataAtual]
   );
-
-  const categoryCounts = useMemo(() => {
-    return eventos.reduce<Record<CalendarEventCategory, number>>((acc, evento) => {
-      const category = getCalendarCategory(evento);
-      acc[category] += 1;
-      return acc;
-    }, { ...DEFAULT_ACTIVE_CATEGORIES, aniversarios: 0, casamento: 0, falecimento: 0, eventos_historicos: 0, confraternizacoes: 0 });
-  }, [eventos]);
 
   const eventosDoMes = useMemo(() => {
     return eventos.filter((evento) => {
@@ -315,7 +316,7 @@ export function CalendarioFamiliar() {
   const falecimentosMes = eventosDoMes.filter((evento) => evento.category === 'falecimento');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Calendário Familiar"
         subtitle="Aniversários e datas de memória da árvore genealógica"
@@ -327,17 +328,17 @@ export function CalendarioFamiliar() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6 space-y-6`}>
-        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-6">
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setDataAtual(new Date(dataAtual.getFullYear(), dataAtual.getMonth() - 1, 1))}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:bg-gray-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
                 aria-label="Mês anterior"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
 
               <div>
@@ -350,10 +351,10 @@ export function CalendarioFamiliar() {
               <button
                 type="button"
                 onClick={() => setDataAtual(new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 1))}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:bg-gray-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
                 aria-label="Próximo mês"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
@@ -363,116 +364,115 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-
         {user && (
-        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-                <CalendarSync className="h-5 w-5 text-blue-600" />
-                Google Agenda
-              </h2>
-              {googleStatus.conectado ? (
-                <div className="mt-1 space-y-1 text-sm text-gray-600">
-                  <p className="font-medium text-emerald-700">Google Agenda conectado</p>
-                  {googleStatus.google_account_email && <p>Conta: {googleStatus.google_account_email}</p>}
-                  <p>
-                    Última sincronização:{' '}
-                    {googleStatus.last_sync_at
-                      ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(googleStatus.last_sync_at))
-                      : 'ainda não sincronizado'}
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                  <CalendarSync className="h-5 w-5 text-blue-600" />
+                  Google Agenda
+                </h2>
+                {googleStatus.conectado ? (
+                  <div className="mt-1 space-y-1 text-sm text-gray-600">
+                    <p className="font-medium text-emerald-700">Google Agenda conectado</p>
+                    {googleStatus.google_account_email && <p>Conta: {googleStatus.google_account_email}</p>}
+                    <p>
+                      Última sincronização:{' '}
+                      {googleStatus.last_sync_at
+                        ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(googleStatus.last_sync_at))
+                        : 'ainda não sincronizado'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Conecte sua conta Google para receber aniversários e datas de memória no Google Agenda.
                   </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {googleStatus.conectado && (
+                  <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 sm:flex-row sm:items-center">
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={incluirAniversarios}
+                        onChange={() => setIncluirAniversarios((value) => !value)}
+                      />
+                      Sincronizar aniversários
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={incluirMemorias}
+                        onChange={() => setIncluirMemorias((value) => !value)}
+                      />
+                      Sincronizar datas de memória
+                    </label>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {!googleStatus.conectado && (
+                    <button
+                      type="button"
+                      onClick={conectarGoogleCalendar}
+                      disabled={googleLoading}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      <CalendarSync className="h-4 w-4" />
+                      Conectar Google Agenda
+                    </button>
+                  )}
+
+                  {googleStatus.conectado && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={sincronizarEventosGoogle}
+                        disabled={googleLoading || (!incluirAniversarios && !incluirMemorias)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <CalendarSync className="h-4 w-4" />
+                        {googleLoading ? 'Sincronizando...' : 'Sincronizar agora'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={desconectarGoogle}
+                        disabled={googleLoading}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Desconectar
+                      </button>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <p className="mt-1 text-sm text-gray-500">
-                  Conecte sua conta Google para receber aniversários e datas de memória no Google Agenda.
-                </p>
-              )}
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {googleStatus.conectado && (
-                <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 sm:flex-row sm:items-center">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={incluirAniversarios}
-                      onChange={() => setIncluirAniversarios((value) => !value)}
-                    />
-                    Sincronizar aniversários
-                  </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={incluirMemorias}
-                      onChange={() => setIncluirMemorias((value) => !value)}
-                    />
-                    Sincronizar datas de memória
-                  </label>
+            {ultimoResultadoSync && (
+              <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                <div className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
+                  Criados: <strong>{ultimoResultadoSync.totalCriados ?? 0}</strong>
                 </div>
-              )}
-
-              <div className="flex flex-col gap-2 sm:flex-row">
-              {!googleStatus.conectado && (
-              <button
-                type="button"
-                onClick={conectarGoogleCalendar}
-                disabled={googleLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-50"
-              >
-                <CalendarSync className="h-4 w-4" />
-                Conectar Google Agenda
-              </button>
-              )}
-
-              {googleStatus.conectado && (
-              <>
-              <button
-                type="button"
-                onClick={sincronizarEventosGoogle}
-                disabled={googleLoading || (!incluirAniversarios && !incluirMemorias)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
-              >
-                <CalendarSync className="h-4 w-4" />
-                {googleLoading ? 'Sincronizando...' : 'Sincronizar agora'}
-              </button>
-
-              <button
-                type="button"
-                onClick={desconectarGoogle}
-                disabled={googleLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
-              >
-                <LogOut className="h-4 w-4" />
-                Desconectar
-              </button>
-              </>
-              )}
+                <div className="rounded-lg bg-blue-50 px-3 py-2 text-blue-800">
+                  Atualizados: <strong>{ultimoResultadoSync.totalAtualizados ?? 0}</strong>
+                </div>
+                <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-700">
+                  Ignorados: <strong>{ultimoResultadoSync.totalIgnorados ?? 0}</strong>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {ultimoResultadoSync && (
-            <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-              <div className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800">
-                Criados: <strong>{ultimoResultadoSync.totalCriados ?? 0}</strong>
-              </div>
-              <div className="rounded-lg bg-blue-50 px-3 py-2 text-blue-800">
-                Atualizados: <strong>{ultimoResultadoSync.totalAtualizados ?? 0}</strong>
-              </div>
-              <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-700">
-                Ignorados: <strong>{ultimoResultadoSync.totalIgnorados ?? 0}</strong>
-              </div>
-            </div>
-          )}
-        </section>
+            )}
+          </section>
         )}
 
-        <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6">
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
               {DIAS_SEMANA.map((diaSemana) => (
-                <div key={diaSemana} className="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <div key={diaSemana} className="px-1 py-3 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 sm:px-2 sm:text-xs">
                   {diaSemana}
                 </div>
               ))}
@@ -488,28 +488,45 @@ export function CalendarioFamiliar() {
                     dia === hoje.getDate() &&
                     dataAtual.getMonth() === hoje.getMonth() &&
                     dataAtual.getFullYear() === hoje.getFullYear();
+                  const firstEventCategory = eventosDia[0] ? getCalendarCategory(eventosDia[0]) : null;
+                  const firstEventColors = firstEventCategory ? CALENDAR_CATEGORY_COLORS[firstEventCategory] : null;
 
                   return (
                     <div
                       key={`${dia ?? 'vazio'}-${index}`}
-                      className="min-h-[132px] border-b border-r border-gray-200 p-2 align-top"
+                      className="min-h-[76px] border-b border-r border-gray-200 p-1 align-top sm:min-h-[96px] sm:p-2 md:min-h-[132px]"
                     >
                       {dia ? (
                         <>
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="mb-2 flex items-center justify-between">
                             <span
-                              className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
+                              className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
                                 isHoje ? 'bg-blue-600 text-white' : 'text-gray-900'
                               }`}
                             >
                               {dia}
                             </span>
                             {eventosDia.length > 0 && (
-                              <span className="text-[10px] font-semibold text-gray-500">{formatEventCount(eventosDia.length)}</span>
+                              <span className="hidden text-[10px] font-semibold text-gray-500 md:inline">
+                                {formatEventCount(eventosDia.length)}
+                              </span>
                             )}
                           </div>
 
-                          <div className="space-y-2">
+                          {eventosDia.length > 0 && firstEventColors && (
+                            <button
+                              type="button"
+                              className="mx-auto mt-2 flex h-5 w-5 items-center justify-center rounded-full md:hidden"
+                              style={{ backgroundColor: firstEventColors.dot }}
+                              onClick={() => openDayEvents(dia, eventosDia)}
+                              aria-label={`Abrir ${formatEventCount(eventosDia.length)} do dia ${dia}`}
+                              title={formatEventCount(eventosDia.length)}
+                            >
+                              <span className="sr-only">{formatEventCount(eventosDia.length)}</span>
+                            </button>
+                          )}
+
+                          <div className="hidden space-y-2 md:block">
                             {eventosDia.slice(0, 3).map((evento) => {
                               const category = getCalendarCategory(evento);
                               const colors = CALENDAR_CATEGORY_COLORS[category];
@@ -537,7 +554,7 @@ export function CalendarioFamiliar() {
                             })}
 
                             {eventosDia.length > 3 && (
-                              <div className="text-[11px] font-medium text-gray-500 px-1">
+                              <div className="px-1 text-[11px] font-medium text-gray-500">
                                 +{formatEventCount(eventosDia.length - 3)}
                               </div>
                             )}
@@ -552,8 +569,8 @@ export function CalendarioFamiliar() {
           </div>
 
           <aside className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Categorias</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-1 text-lg font-bold text-gray-900">Categorias</h3>
               <p className="mb-4 text-sm text-gray-500">Clique para ativar ou ocultar categorias do calendário.</p>
               <div className="space-y-3 text-sm text-gray-700">
                 {CALENDAR_CATEGORY_KEYS.map((category) => {
@@ -585,8 +602,8 @@ export function CalendarioFamiliar() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Aniversariantes</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-lg font-bold text-gray-900">Aniversariantes</h3>
               <div className="space-y-3">
                 {aniversariantesMes.length === 0 ? (
                   <p className="text-sm text-gray-500">Nenhum aniversário neste mês com os filtros atuais.</p>
@@ -598,7 +615,7 @@ export function CalendarioFamiliar() {
                       className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
                       <div>
-                        <p className="font-semibold text-sm text-gray-900">{evento.nome}</p>
+                        <p className="text-sm font-semibold text-gray-900">{evento.nome}</p>
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
                       <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.aniversarios.text }}>
@@ -610,8 +627,8 @@ export function CalendarioFamiliar() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Dias de falecimento</h3>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-lg font-bold text-gray-900">Dias de falecimento</h3>
               <div className="space-y-3">
                 {falecimentosMes.length === 0 ? (
                   <p className="text-sm text-gray-500">Nenhum dia de falecimento neste mês com os filtros atuais.</p>
@@ -623,7 +640,7 @@ export function CalendarioFamiliar() {
                       className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
                       <div>
-                        <p className="font-semibold text-sm text-gray-900">{evento.titulo}</p>
+                        <p className="text-sm font-semibold text-gray-900">{evento.titulo}</p>
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
                       <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
@@ -637,6 +654,46 @@ export function CalendarioFamiliar() {
           </aside>
         </section>
       </main>
+
+      <Dialog
+        open={selectedDayEvents.length > 0}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedDayEvents([]);
+            setSelectedDay(null);
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
+          <DialogTitle>
+            Eventos de {selectedDay ? `${selectedDay} de ${MESES[dataAtual.getMonth()]}` : 'do dia'}
+          </DialogTitle>
+          <div className="mt-3 space-y-3">
+            {selectedDayEvents.map((evento) => {
+              const category = getCalendarCategory(evento);
+              const colors = CALENDAR_CATEGORY_COLORS[category];
+              return (
+                <Link
+                  key={evento.id}
+                  to={evento.link || `/pessoa/${evento.pessoaId}`}
+                  className="block rounded-xl border px-3 py-3 text-sm transition hover:brightness-95"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }}
+                >
+                  <div className="flex items-center gap-2 font-semibold">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.dot }} />
+                    <span>{formatCalendarEventTitle(evento)}</span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed">{formatCalendarEventDescription(evento)}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
