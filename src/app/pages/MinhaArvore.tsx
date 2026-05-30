@@ -25,7 +25,6 @@ import {
 } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -81,7 +80,6 @@ import {
   validateLocation,
 } from '../utils/personFields';
 import { includesNormalizedText, normalizeSearchText } from '../utils/searchText';
-import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 import { toast } from 'sonner';
 
 type MemberScope = 'toda_arvore' | 'familia_direta' | 'ramo_materno' | 'ramo_paterno';
@@ -314,28 +312,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       <Label>{label}</Label>
       {children}
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
-    </div>
-  );
-}
-
-function ToggleField({
-  label,
-  description,
-  checked,
-  onCheckedChange,
-}: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <div className="space-y-1">
-        <Label>{label}</Label>
-        {description && <p className="text-xs leading-snug text-gray-500">{description}</p>}
-      </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
@@ -685,10 +661,7 @@ export function MinhaArvore() {
   const displayName = previewName;
   const avatarUrl = currentPhotoUrl || getAvatarUrl(pessoaBase);
   const pessoaInitials = getPessoaInitials(displayName);
-  const zodiacSign = useMemo(
-    () => getZodiacSignFromBirthDate(form.data_nascimento),
-    [form.data_nascimento],
-  );
+  
   const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
 
   const markFormDirty = () => {
@@ -1461,8 +1434,15 @@ export function MinhaArvore() {
         </section>
 
         {pessoaBase && (
-          <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+
+
+          <>
+
+
+            <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+
+
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Meus dados</h2>
                 <p className="mt-1 text-sm text-gray-500">
@@ -1517,9 +1497,7 @@ export function MinhaArvore() {
                   )}
                 </Field>
 
-                <Field label="Signo">
-                  <Input value={zodiacSign || 'Não identificado'} readOnly className="bg-gray-50 text-gray-700" />
-                </Field>
+                
 
                 <Field label="Local de nascimento" error={errors.local_nascimento}>
                   <Input
@@ -1677,40 +1655,18 @@ export function MinhaArvore() {
                 </Field>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <ToggleField
-                  label="Exibir minha data de nascimento para outros familiares"
-                  description="Controla a visualização da data no perfil."
-                  checked={form.permitir_exibir_data_nascimento !== false}
-                  onCheckedChange={(checked) => updateField('permitir_exibir_data_nascimento', checked)}
-                />
-                <ToggleField
-                  label="Exibir meu telefone para outros familiares"
-                  description="Controla a visualização do número no perfil."
-                  checked={form.permitir_exibir_telefone !== false}
-                  onCheckedChange={(checked) => updateField('permitir_exibir_telefone', checked)}
-                />
-                <ToggleField
-                  label="Exibir meu endereço para outros familiares"
-                  description="Controla a visualização do endereço no perfil."
-                  checked={form.permitir_exibir_endereco !== false}
-                  onCheckedChange={(checked) => updateField('permitir_exibir_endereco', checked)}
-                />
-                <ToggleField
-                  label="Exibir minha rede social para outros familiares"
-                  description="Controla a visualização da rede social no perfil."
-                  checked={form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false}
-                  onCheckedChange={(checked) => {
-                    updateField('permitir_exibir_rede_social', checked);
-                    updateField('permitir_exibir_instagram', checked);
-                  }}
-                />
-                <ToggleField
-                  label="Permitir mensagens por WhatsApp"
-                  description="Permite que familiares usem seu telefone para contato por WhatsApp."
-                  checked={form.permitir_mensagens_whatsapp !== false}
-                  onCheckedChange={(checked) => updateField('permitir_mensagens_whatsapp', checked)}
-                />
+              
+              </form>
+            </section>
+
+            <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Arquivos Hist?ricos</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Adicione, revise ou remova arquivos hist?ricos associados ao seu perfil familiar.
+                  </p>
+                </div>
               </div>
 
               <ArquivosHistoricos
@@ -1720,20 +1676,9 @@ export function MinhaArvore() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoaBase.id}
-              /><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                <Button type="submit" disabled={saving} className="sm:min-w-[220px]">
-                  {saving ? (
-                    'Salvando...'
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Salvar meus dados
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </section>
+              />
+            </section>
+          </>
         )}
 
         {pessoaBase && (
