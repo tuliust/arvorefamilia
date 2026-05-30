@@ -1981,7 +1981,7 @@ export function MinhaArvore() {
           <DialogHeader>
             <DialogTitle>Sair sem salvar?</DialogTitle>
             <DialogDescription>
-              Voc? tem altera??es pendentes nesta p?gina. Se sair agora, as altera??es n?o salvas ser?o descartadas.
+              Você tem alterações pendentes nesta página. Se sair agora, as alterações não salvas serão descartadas.
             </DialogDescription>
           </DialogHeader>
 
@@ -2260,7 +2260,7 @@ export function MinhaArvore() {
                 <UploadCloud className="mr-2 h-4 w-4" />
                 Arraste uma imagem ou clique para selecionar
               </span>
-              <span className="mt-1 text-xs text-gray-500">O corte final ser? quadrado.</span>
+              <span className="mt-1 text-xs text-gray-500">O corte final será quadrado.</span>
               <input
                 type="file"
                 accept="image/*"
@@ -2278,13 +2278,13 @@ export function MinhaArvore() {
               {currentPhotoUrl && (
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     handleRemovePhoto();
                     setPhotoDialogOpen(false);
                     setPhotoDialogMode('preview');
                   }}
-                  className="text-red-700 hover:bg-red-50"
+                  className="border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
                 >
                   Remover foto
                 </Button>
