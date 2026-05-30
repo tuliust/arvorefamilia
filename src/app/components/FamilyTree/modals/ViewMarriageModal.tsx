@@ -36,6 +36,11 @@ const RELATIONSHIP_VALUE_LABELS: Record<string, string> = {
   separado: 'Separado',
 };
 
+type InfoBlockItem = {
+  label: string;
+  value?: string;
+};
+
 function getRelationshipField(
   relationship: Record<string, unknown> | undefined,
   keys: string[]
@@ -63,6 +68,10 @@ function formatRelationshipValue(value?: string) {
 
   const key = normalizedValue.toLocaleLowerCase('pt-BR');
   return RELATIONSHIP_VALUE_LABELS[key] ?? normalizedValue.charAt(0).toLocaleUpperCase('pt-BR') + normalizedValue.slice(1);
+}
+
+function hasInfoValue(value?: string) {
+  return Boolean(String(value ?? '').trim());
 }
 
 export function ViewMarriageModal({
@@ -169,6 +178,18 @@ export function ViewMarriageModal({
     'notas',
   ]);
 
+  const infoBlocks: InfoBlockItem[] = [
+    { label: 'Cônjuge 1', value: marriage.person1?.nome_completo || marriage.person1Id },
+    { label: 'Cônjuge 2', value: marriage.person2?.nome_completo || marriage.person2Id },
+    { label: 'Status', value: STATUS_LABELS[status] },
+    { label: 'Tipo de relacionamento', value: tipoRelacionamento },
+    { label: 'Casamento', value: tipoUniao },
+    { label: 'Data do casamento', value: dataCasamento },
+    { label: 'Local do casamento', value: localCasamento },
+    { label: 'Data de separação', value: dataSeparacao },
+    { label: 'Local de separação', value: localSeparacao },
+  ].filter((item) => hasInfoValue(item.value));
+
   const handleArquivosChange = (nextArquivos: ArquivoHistorico[]) => {
     setArquivos(nextArquivos);
     setArchivesDirty(true);
@@ -195,7 +216,7 @@ export function ViewMarriageModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
       onMouseDown={onClose}
     >
       <div
@@ -235,24 +256,18 @@ export function ViewMarriageModal({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoBlock label="Cônjuge 1" value={marriage.person1?.nome_completo || marriage.person1Id} />
-            <InfoBlock label="Cônjuge 2" value={marriage.person2?.nome_completo || marriage.person2Id} />
-            <InfoBlock label="Status" value={STATUS_LABELS[status]} />
-            <InfoBlock label="Tipo de relacionamento" value={tipoRelacionamento} emptyText="Não informado" />
-            <InfoBlock label="Casamento" value={tipoUniao} emptyText="Não informado" />
-            <InfoBlock label="Data do casamento" value={dataCasamento} emptyText="Não informada" />
-            <InfoBlock label="Local do casamento" value={localCasamento} emptyText="Não informado" />
-            <InfoBlock label="Data de separação" value={dataSeparacao} emptyText="Não informada" />
-            <InfoBlock label="Local de separação" value={localSeparacao} emptyText="Não informado" />
+            {infoBlocks.map((item) => (
+              <InfoBlock key={item.label} label={item.label} value={item.value} />
+            ))}
           </div>
 
-          {isAdmin && (
+          {isAdmin && hasInfoValue(observacoes) && (
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">
+              <p className="mb-1 text-xs font-medium tracking-wide text-gray-500">
                 Observações
               </p>
               <div className="min-h-[84px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                {observacoes || 'Nenhuma observação cadastrada.'}
+                {observacoes}
               </div>
             </div>
           )}
@@ -298,17 +313,15 @@ export function ViewMarriageModal({
 function InfoBlock({
   label,
   value,
-  emptyText = '-',
 }: {
   label: string;
   value?: string;
-  emptyText?: string;
 }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
+      <p className="mb-1 text-xs font-medium tracking-wide text-gray-500">{label}</p>
       <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
-        {value || emptyText}
+        {value}
       </div>
     </div>
   );
