@@ -83,7 +83,7 @@ describe('getRelationshipResultSentence', () => {
       makeRelationship('r1', 'tulius', 'marcio', 'pai'),
       makeRelationship('r2', 'marcio', 'fabio', 'irmao'),
       makeRelationship('r3', 'caio', 'fabio', 'pai'),
-      makeRelationship('r4', 'cecilia', 'caio', 'filho'),
+      makeRelationship('r4', 'caio', 'cecilia', 'filho'),
     ];
 
     expect(calculateSentence({ origin: 'tulius', target: 'cecilia', people, relationships }))
