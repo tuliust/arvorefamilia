@@ -28,6 +28,14 @@ const STATUS_LABELS: Record<GenealogyMarriageStatus, string> = {
   unknown: 'Desconhecido',
 };
 
+const RELATIONSHIP_VALUE_LABELS: Record<string, string> = {
+  conjuge: 'Cônjuge',
+  casamento: 'Casamento',
+  uniao: 'União',
+  união: 'União',
+  separado: 'Separado',
+};
+
 function getRelationshipField(
   relationship: Record<string, unknown> | undefined,
   keys: string[]
@@ -47,6 +55,14 @@ function getRelationshipField(
   }
 
   return undefined;
+}
+
+function formatRelationshipValue(value?: string) {
+  const normalizedValue = value?.trim();
+  if (!normalizedValue) return undefined;
+
+  const key = normalizedValue.toLocaleLowerCase('pt-BR');
+  return RELATIONSHIP_VALUE_LABELS[key] ?? normalizedValue.charAt(0).toLocaleUpperCase('pt-BR') + normalizedValue.slice(1);
 }
 
 export function ViewMarriageModal({
@@ -136,11 +152,15 @@ export function ViewMarriageModal({
     'local_fim',
   ]);
 
-  const tipoUniao = getRelationshipField(relationship, [
+  const tipoRelacionamento = formatRelationshipValue(getRelationshipField(relationship, [
+    'tipo_relacionamento',
+  ]));
+
+  const tipoUniao = formatRelationshipValue(getRelationshipField(relationship, [
     'subtipo_relacionamento',
     'tipo_uniao',
     'tipo',
-  ]);
+  ]));
 
   const observacoes = getRelationshipField(relationship, [
     'observacoes',
@@ -218,13 +238,12 @@ export function ViewMarriageModal({
             <InfoBlock label="Cônjuge 1" value={marriage.person1?.nome_completo || marriage.person1Id} />
             <InfoBlock label="Cônjuge 2" value={marriage.person2?.nome_completo || marriage.person2Id} />
             <InfoBlock label="Status" value={STATUS_LABELS[status]} />
-            <InfoBlock label="Tipo de relacionamento" value={String(marriage.relationship?.tipo_relacionamento ?? '')} emptyText="Não informado" />
-            <InfoBlock label="Subtipo" value={tipoUniao} emptyText="Não informado" />
-            <InfoBlock label="Data do matrimônio" value={dataCasamento} emptyText="Não informada" />
-            <InfoBlock label="Local do matrimônio" value={localCasamento} emptyText="Não informado" />
+            <InfoBlock label="Tipo de relacionamento" value={tipoRelacionamento} emptyText="Não informado" />
+            <InfoBlock label="Casamento" value={tipoUniao} emptyText="Não informado" />
+            <InfoBlock label="Data do casamento" value={dataCasamento} emptyText="Não informada" />
+            <InfoBlock label="Local do casamento" value={localCasamento} emptyText="Não informado" />
             <InfoBlock label="Data de separação" value={dataSeparacao} emptyText="Não informada" />
             <InfoBlock label="Local de separação" value={localSeparacao} emptyText="Não informado" />
-            <InfoBlock label="ID do relacionamento" value={relacionamentoId ?? undefined} emptyText="Não informado" />
           </div>
 
           {isAdmin && (
