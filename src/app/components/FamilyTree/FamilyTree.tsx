@@ -933,7 +933,8 @@ function FamilyTreeComponent({
     const centralFocusPersonNode = realPersonNodes.find((node) => node.id === effectiveCentralPersonId);
     const useCentralFocusPanel =
       viewMode === 'minha-arvore' &&
-      Boolean(centralFocusPersonNode);
+      Boolean(centralFocusPersonNode) &&
+      (isMobile || realPersonNodes.length === 1);
     const focusPanelWidth = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_WIDTH : CENTRAL_FOCUS_PANEL_WIDTH;
     const focusPanelHeight = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_HEIGHT : CENTRAL_FOCUS_PANEL_HEIGHT;
     const focusAdjustedLayout = useCentralFocusPanel
