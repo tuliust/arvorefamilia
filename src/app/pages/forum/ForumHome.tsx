@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { MessageCircle, Plus, Search } from 'lucide-react';
+import { BookOpen, CalendarDays, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -109,8 +109,8 @@ export function ForumHome() {
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <Card className="min-w-0">
-          <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
-            <label className="relative block min-w-0">
+          <CardContent className="grid grid-cols-3 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
+            <label className="relative col-span-3 block min-w-0 md:col-span-1">
               <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 value={busca}
@@ -120,49 +120,61 @@ export function ForumHome() {
               />
             </label>
 
-            <select
-              value={categoriaId}
-              onChange={(event) => setCategoriaId(event.target.value)}
-              className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              aria-label="Filtrar por categoria"
-            >
-              <option value="todas">Todas as categorias</option>
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nome}
-                </option>
-              ))}
-            </select>
+            <label className="relative block min-w-0">
+              <Tags className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
+              <select
+                value={categoriaId}
+                onChange={(event) => setCategoriaId(event.target.value)}
+                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
+                aria-label="Filtrar por categoria"
+                title="Categorias"
+              >
+                <option value="todas">Todas as categorias</option>
+                {categorias.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={tipo}
-              onChange={(event) => setTipo(event.target.value as 'todos' | ForumTopicoTipo)}
-              className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              aria-label="Filtrar por tipo"
-            >
-              <option value="todos">Todos os tipos</option>
-              {Object.entries(TIPO_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value as 'todos' | ForumTopicoStatus)}
-              className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              aria-label="Filtrar por status"
-            >
-              <option value="todos">Todos os status</option>
-              {Object.entries(STATUS_LABELS)
-                .filter(([value]) => value !== 'oculto')
-                .map(([value, label]) => (
+            <label className="relative block min-w-0">
+              <ListFilter className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
+              <select
+                value={tipo}
+                onChange={(event) => setTipo(event.target.value as 'todos' | ForumTopicoTipo)}
+                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
+                aria-label="Filtrar por tipo"
+                title="Tipos"
+              >
+                <option value="todos">Todos os tipos</option>
+                {Object.entries(TIPO_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
                 ))}
-            </select>
+              </select>
+            </label>
+
+            <label className="relative block min-w-0">
+              <SlidersHorizontal className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
+              <select
+                value={status}
+                onChange={(event) => setStatus(event.target.value as 'todos' | ForumTopicoStatus)}
+                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
+                aria-label="Filtrar por status"
+                title="Status"
+              >
+                <option value="todos">Todos os status</option>
+                {Object.entries(STATUS_LABELS)
+                  .filter(([value]) => value !== 'oculto')
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+              </select>
+            </label>
           </CardContent>
         </Card>
 
@@ -175,21 +187,34 @@ export function ForumHome() {
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-3">
             <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
-            {categorias.map((categoria) => (
-              <button
-                key={categoria.id}
-                type="button"
-                onClick={() => setCategoriaId(categoria.id)}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                  categoriaId === categoria.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 bg-white hover:bg-gray-50'
-                }`}
-              >
-                <div className="break-words font-semibold text-gray-900">{categoria.nome}</div>
-                {categoria.descricao && <p className="mt-1 break-words text-sm text-gray-500">{categoria.descricao}</p>}
-              </button>
-            ))}
+            <div className="grid grid-cols-2 gap-3 lg:block lg:space-y-3">
+              {categorias.map((categoria) => {
+                const mobileMeta = getForumCategoryMobileMeta(categoria);
+                const MobileIcon = mobileMeta.icon;
+
+                return (
+                  <button
+                    key={categoria.id}
+                    type="button"
+                    onClick={() => setCategoriaId(categoria.id)}
+                    className={`min-h-24 w-full rounded-lg border p-3 text-center transition-colors lg:min-h-0 lg:p-4 lg:text-left ${
+                      categoriaId === categoria.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 lg:block">
+                      <MobileIcon className="h-5 w-5 text-blue-600 lg:hidden" />
+                      <div className="break-words font-semibold text-gray-900">
+                        <span className="lg:hidden">{mobileMeta.label}</span>
+                        <span className="hidden lg:inline">{categoria.nome}</span>
+                      </div>
+                      {categoria.descricao && <p className="mt-1 hidden break-words text-sm text-gray-500 lg:block">{categoria.descricao}</p>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="min-w-0 space-y-3">
@@ -270,3 +295,4 @@ export function ForumHome() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
 import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
@@ -996,12 +996,14 @@ export function MeusDados() {
           <div className="mt-5 grid grid-cols-1 gap-2">
             <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
               <Camera className="h-4 w-4" />
-              {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
+              <span className="md:hidden">{currentPhotoUrl ? 'Alterar' : 'Cadastrar'}</span>
+              <span className="hidden md:inline">{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</span>
             </Button>
             {currentPhotoUrl && (
               <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
                 <Trash2 className="h-4 w-4" />
-                Remover foto
+                <span className="md:hidden">Remover</span>
+                <span className="hidden md:inline">Remover foto</span>
               </Button>
             )}
           </div>
@@ -1094,7 +1096,8 @@ export function MeusDados() {
           <DialogFooter>
             {currentPhotoUrl && (
               <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="w-full text-red-700 hover:bg-red-50 sm:w-auto">
-                Remover foto
+                <span className="md:hidden">Remover</span>
+                <span className="hidden md:inline">Remover foto</span>
               </Button>
             )}
             {cropImageUrl ? (
@@ -1144,3 +1147,4 @@ function ToggleField({
     </div>
   );
 }
+
