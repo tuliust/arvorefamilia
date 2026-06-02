@@ -104,6 +104,7 @@ export function HomeHeader({
   userMenuSlot,
 }: HomeHeaderProps) {
   const searchRootRef = useRef<HTMLDivElement | null>(null);
+  const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
@@ -128,12 +129,14 @@ export function HomeHeader({
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (searchRootRef.current?.contains(target)) return;
+      if (mobileSearchRootRef.current?.contains(target)) return;
       setSearchSuggestionsDismissed(true);
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSearchSuggestionsDismissed(true);
+        onSearchExpandedChange(false);
       }
     };
 
@@ -144,7 +147,7 @@ export function HomeHeader({
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [searchExpanded]);
+  }, [searchExpanded, onSearchExpandedChange]);
 
   const handleSearchTermChange = (value: string) => {
     setSearchSuggestionsDismissed(false);
@@ -171,16 +174,93 @@ export function HomeHeader({
     navigateFromHome(page.path);
   };
 
+  const renderSearchSuggestions = (className: string) => (
+    hasSearchSuggestions && (
+      <div className={className}>
+        {pessoasFiltradas.length > 0 && (
+          <div className="border-b border-gray-100 bg-white py-1">
+            <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PESSOAS</p>
+            {pessoasFiltradas.slice(0, 6).map((pessoa) => {
+              const suggestionDetail = getPersonSuggestionDetail(pessoa);
+
+              return (
+                <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
+                  <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
+                    {suggestionDetail && <span className="mt-1 block truncate text-xs text-gray-500">{suggestionDetail}</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {effectivePageSuggestions.length > 0 && (
+          <div className="border-b border-gray-100 bg-white py-1 last:border-b-0">
+            <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PÁGINAS</p>
+            {effectivePageSuggestions.slice(0, 5).map((page) => (
+              <button key={page.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => selectPageSuggestion(page)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
+                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-gray-900">{page.title}</span>
+                  <span className="mt-1 block truncate text-xs text-gray-500">{page.description}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={submitSearch} className="flex w-full items-center gap-2 bg-white px-4 py-3 text-left text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50">
+          <Search className="h-4 w-4" />
+          Ver todos os resultados
+        </button>
+      </div>
+    )
+  );
+
   return (
     <header className="relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
       <div className="relative z-[501] flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible">
+        {searchExpanded && (
+          <div ref={mobileSearchRootRef} className="relative z-[505] flex w-full min-w-0 items-center gap-2 md:hidden">
+            <form className="min-w-0 flex-1" onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
+              <label className="relative block min-w-0">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar pessoa ou página..."
+                  value={searchTerm}
+                  onChange={(event) => handleSearchTermChange(event.target.value)}
+                  onFocus={() => setSearchSuggestionsDismissed(false)}
+                  className="h-10 rounded-xl bg-white pl-9 pr-3 text-base"
+                  autoFocus
+                />
+              </label>
+            </form>
+            <button
+              type="button"
+              className="shrink-0 rounded-lg px-2 py-2 text-sm font-semibold text-blue-700"
+              onClick={() => {
+                setSearchSuggestionsDismissed(false);
+                onSearchExpandedChange(false);
+              }}
+            >
+              Cancelar
+            </button>
+            {renderSearchSuggestions('absolute left-0 right-0 top-full z-[999] mt-2 max-h-[min(70dvh,28rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-2xl')}
+          </div>
+        )}
+
+        <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 flex-1 items-center gap-3 overflow-visible'].join(' ')}>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
             <Network className="h-6 w-6 text-white" />
           </div>
           <div className="min-w-0 flex-1 overflow-visible">
-            <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">Família Barros Souza</h1>
-            <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">{currentTreeViewLabel}</p>
+            <h1 className="whitespace-nowrap text-xl font-bold leading-tight text-gray-900 md:hidden">Barros Souza</h1>
+            <h1 className="hidden whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg md:block lg:truncate lg:whitespace-nowrap lg:text-xl">Família Barros Souza</h1>
+            <p className="hidden whitespace-normal text-xs leading-tight text-gray-500 md:block lg:truncate lg:whitespace-nowrap lg:text-sm">{currentTreeViewLabel}</p>
           </div>
         </div>
 
@@ -211,7 +291,7 @@ export function HomeHeader({
           </Button>
         </div>
 
-        <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-visible sm:gap-2">
+        <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-visible sm:gap-2'].join(' ')}>
           <div ref={searchRootRef} className="relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
             <Button
               variant="outline"
@@ -243,48 +323,7 @@ export function HomeHeader({
                   />
                 </form>
 
-                {hasSearchSuggestions && (
-                  <div className="absolute left-0 right-2 top-full z-[999] mt-2 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-2xl">
-                    {pessoasFiltradas.length > 0 && (
-                      <div className="border-b border-gray-100 bg-white py-1">
-                        <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PESSOAS</p>
-                        {pessoasFiltradas.slice(0, 6).map((pessoa) => {
-                          const suggestionDetail = getPersonSuggestionDetail(pessoa);
-
-                          return (
-                            <button key={pessoa.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => handleSearchSelect(pessoa)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
-                              <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-medium text-gray-900">{pessoa.nome_completo}</span>
-                                {suggestionDetail && <span className="mt-1 block truncate text-xs text-gray-500">{suggestionDetail}</span>}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {effectivePageSuggestions.length > 0 && (
-                      <div className="border-b border-gray-100 bg-white py-1 last:border-b-0">
-                        <p className="bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">PÁGINAS</p>
-                        {effectivePageSuggestions.slice(0, 5).map((page) => (
-                          <button key={page.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => selectPageSuggestion(page)} className="flex w-full gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-gray-50">
-                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-medium text-gray-900">{page.title}</span>
-                              <span className="mt-1 block truncate text-xs text-gray-500">{page.description}</span>
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={submitSearch} className="flex w-full items-center gap-2 bg-white px-4 py-3 text-left text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50">
-                      <Search className="h-4 w-4" />
-                      Ver todos os resultados
-                    </button>
-                  </div>
-                )}
+                {renderSearchSuggestions('absolute left-0 right-2 top-full z-[999] mt-2 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-2xl')}
               </div>
             </div>
           </div>
