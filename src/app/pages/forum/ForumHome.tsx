@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
+import { BookOpen, CalendarDays, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -123,14 +123,6 @@ export function ForumHome() {
   const [status, setStatus] = useState<'todos' | ForumTopicoStatus>('todos');
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
-  const categoriasScrollerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollCategorias = (direction: 'left' | 'right') => {
-    categoriasScrollerRef.current?.scrollBy({
-      left: direction === 'left' ? -220 : 220,
-      behavior: 'smooth',
-    });
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -206,39 +198,12 @@ export function ForumHome() {
   }, [busca, categoriaId, tipo, status, gruposCategorias]);
 
   const renderCategorias = (variant: 'mobile' | 'desktop') => (
-    <div className={`min-w-0 space-y-3 ${variant === 'mobile' ? 'lg:hidden' : 'hidden lg:block'}`}>
-      <div className="flex items-center justify-between gap-2">
+    <div className={`min-w-0 ${variant === 'mobile' ? 'lg:hidden' : 'hidden space-y-3 lg:block'}`}>
+      {variant === 'desktop' && (
         <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
-        {variant === 'mobile' && (
-          <div className="flex items-center gap-1 lg:hidden">
-            <button
-              type="button"
-              onClick={() => scrollCategorias('left')}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
-              aria-label="Ver categorias anteriores"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollCategorias('right')}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
-              aria-label="Ver próximas categorias"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
-      <div
-        ref={variant === 'mobile' ? categoriasScrollerRef : undefined}
-        className={
-          variant === 'mobile'
-            ? 'flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]'
-            : 'space-y-3'
-        }
-      >
+      <div className={variant === 'mobile' ? 'grid grid-cols-4 gap-1.5' : 'space-y-3'}>
         {gruposCategorias.map((grupo) => {
           const CategoryIcon = grupo.icon;
 
@@ -247,14 +212,14 @@ export function ForumHome() {
               key={grupo.key}
               type="button"
               onClick={() => setCategoriaId(grupo.key)}
-              className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors lg:min-h-0 lg:w-full lg:items-start lg:p-4 lg:text-left lg:text-sm ${
+              className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-1 py-1.5 text-center text-[10.5px] font-semibold leading-tight transition-colors sm:text-xs lg:min-h-0 lg:w-full lg:items-start lg:p-4 lg:text-left lg:text-sm ${
                 categoriaId === grupo.key
                   ? 'border-blue-500 bg-blue-50 text-blue-800'
                   : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <CategoryIcon className="h-4 w-4 text-blue-600 lg:hidden" />
-              <span>{grupo.label}</span>
+              <CategoryIcon className="h-3.5 w-3.5 shrink-0 text-blue-600 lg:hidden" />
+              <span className="min-w-0 max-w-full truncate lg:whitespace-normal">{grupo.label}</span>
               <p className="mt-1 hidden break-words text-sm font-normal text-gray-500 lg:block">{grupo.description}</p>
             </button>
           );
