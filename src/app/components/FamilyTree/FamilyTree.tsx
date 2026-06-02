@@ -919,7 +919,7 @@ function FamilyTreeComponent({
       visiblePersonIds,
       visualLineFilters: directVisualLineFilters,
       edgeFilters,
-      isMobile: viewMode === 'minha-arvore' ? false : isMobile,
+      isMobile,
     });
   }, [
     dataHash,

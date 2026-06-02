@@ -1,4 +1,4 @@
-import { Edge, Node } from 'reactflow';
+﻿import { Edge, Node } from 'reactflow';
 import { Relacionamento } from '../../../types';
 import { isHumanFamilyMember, isPetFamilyMember } from '../../../utils/personEntity';
 import {
@@ -1344,7 +1344,8 @@ function addCentralPerson(
   centralPersonId: string,
   positionedNodes: Node[],
   positionedIds: Set<string>,
-  personNodeById: Map<string, Node>
+  personNodeById: Map<string, Node>,
+  isMobile = false
 ) {
   const node = personNodeById.get(centralPersonId);
   if (!node) return;
@@ -1918,7 +1919,7 @@ export function directFamilyDistributedLayout(
   const positionedNodes: Node[] = [];
   const positionedIds = new Set<string>();
 
-  addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById);
+  addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById, options.isMobile);
 
   const paternalGroups: GroupSpec[] = resolveSideStackGroups([
     { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { User, Dog, Eye, Pencil, Link2, Trash2 } from 'lucide-react';
 import { PersonNodeData } from './types';
@@ -414,7 +414,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     );
     const centralPaddingY = Math.max(18, Math.round(30 * cappedCardScale));
     const centralPaddingX = Math.max(30, Math.round(42 * cappedCardScale));
-    const centralNameFontSize = Math.max(36, Math.round((isMobile ? 54 : 50) * cappedCardScale * 1.08));
+    const centralNameFontSize = isMobile ? 20 : Math.max(36, Math.round(50 * cappedCardScale * 1.08));
     const centralDetailFontSize = clampNumber(
       Math.round((isMobile ? 38 : 34) * cappedCardScale),
       24,
@@ -446,7 +446,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         isMobile ? 13 : isCompactDirectCard ? 13 : 14,
         isMobile ? 22 : isCompactDirectCard ? 18 : isSmallDirectCard ? 20 : 21
       );
-    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 1.08 : 1.1) : 1;
+    const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 0.78 : 1.1) : 1;
     const avatarSize = isCentralDirectNode
       ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE * cardScale * mobileAvatarScale * 1.04
       : nonCentralImageSize;
@@ -585,7 +585,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div
             className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'flex min-w-0 flex-1 flex-col justify-center'}
             style={isCentralDirectNode
-              ? { marginTop: Math.max(20, Math.round(36 * cappedCardScale)) }
+              ? { marginTop: isMobile ? 10 : Math.max(20, Math.round(36 * cappedCardScale)) }
               : {
                 maxWidth: nonCentralTextWidth,
                 minHeight: nonCentralImageSize,
@@ -618,7 +618,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
                 <div
-                  className="mt-4 space-y-1.5 leading-[1.18]"
+                  className={isMobile ? "mt-1 space-y-0.5 leading-[1.08]" : "mt-4 space-y-1.5 leading-[1.18]"}
                   style={{ color: style.muted, fontSize: directDetailFontSize }}
                 >
                   {centralDetails.map((detail) => (
