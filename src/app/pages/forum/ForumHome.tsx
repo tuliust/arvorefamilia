@@ -1,7 +1,7 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { BookOpen, CalendarDays, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
+import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -35,11 +35,11 @@ function getForumCategoryMobileMeta(categoria: ForumCategoria) {
     .toLowerCase();
 
   if (normalizedName.includes('duvida')) {
-    return { label: 'Duvidas', icon: HelpCircle };
+    return { label: 'Dúvidas', icon: HelpCircle };
   }
 
   if (normalizedName.includes('memoria') || normalizedName.includes('historia')) {
-    return { label: 'Memorias', icon: BookOpen };
+    return { label: 'Memórias', icon: BookOpen };
   }
 
   if (normalizedName.includes('document') || normalizedName.includes('foto')) {
@@ -48,6 +48,10 @@ function getForumCategoryMobileMeta(categoria: ForumCategoria) {
 
   if (normalizedName.includes('evento') || normalizedName.includes('encontro')) {
     return { label: 'Eventos', icon: CalendarDays };
+  }
+
+  if (normalizedName.includes('ajuda')) {
+    return { label: 'Ajuda', icon: HelpCircle };
   }
 
   return { label: categoria.nome.split(/\s+/)[0] || categoria.nome, icon: Tags };
@@ -67,6 +71,14 @@ export function ForumHome() {
   const [status, setStatus] = useState<'todos' | ForumTopicoStatus>('todos');
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
+  const categoriasScrollerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollCategorias = (direction: 'left' | 'right') => {
+    categoriasScrollerRef.current?.scrollBy({
+      left: direction === 'left' ? -220 : 220,
+      behavior: 'smooth',
+    });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -211,8 +223,32 @@ export function ForumHome() {
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-3">
-            <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
-            <div className="grid grid-cols-2 gap-3 lg:block lg:space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
+              <div className="flex items-center gap-1 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => scrollCategorias('left')}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
+                  aria-label="Ver categorias anteriores"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollCategorias('right')}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
+                  aria-label="Ver próximas categorias"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={categoriasScrollerRef}
+              className="flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] lg:block lg:space-y-3 lg:overflow-visible lg:pb-0"
+            >
               {categorias.map((categoria) => {
                 const mobileMeta = getForumCategoryMobileMeta(categoria);
                 const MobileIcon = mobileMeta.icon;
@@ -222,20 +258,16 @@ export function ForumHome() {
                     key={categoria.id}
                     type="button"
                     onClick={() => setCategoriaId(categoria.id)}
-                    className={`min-h-24 w-full rounded-lg border p-3 text-center transition-colors lg:min-h-0 lg:p-4 lg:text-left ${
+                    className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors lg:min-h-0 lg:w-full lg:p-4 lg:text-left lg:text-sm ${
                       categoriaId === categoria.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                        : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex flex-col items-center justify-center gap-2 lg:block">
-                      <MobileIcon className="h-5 w-5 text-blue-600 lg:hidden" />
-                      <div className="break-words font-semibold text-gray-900">
-                        <span className="lg:hidden">{mobileMeta.label}</span>
-                        <span className="hidden lg:inline">{categoria.nome}</span>
-                      </div>
-                      {categoria.descricao && <p className="mt-1 hidden break-words text-sm text-gray-500 lg:block">{categoria.descricao}</p>}
-                    </div>
+                    <MobileIcon className="h-4 w-4 text-blue-600 lg:hidden" />
+                    <span className="lg:hidden">{mobileMeta.label}</span>
+                    <span className="hidden lg:inline">{categoria.nome}</span>
+                    {categoria.descricao && <p className="mt-1 hidden break-words text-sm font-normal text-gray-500 lg:block">{categoria.descricao}</p>}
                   </button>
                 );
               })}
