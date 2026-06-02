@@ -1397,6 +1397,48 @@ function FamilyTreeComponent({
     const instance = reactFlowRef.current;
     if (!instance || containerSize.width <= 0 || containerSize.height <= 0) return;
 
+    if (isMobile && viewMode === 'minha-arvore') {
+      const anchorGroupsByDirection: Record<typeof direction, string[]> = {
+        up: ['pai', 'mae'],
+        left: [
+          'tataravos-paternos',
+          'bisavos-paternos',
+          'avos-paternos',
+          'tios-paternos',
+          'primos-paternos',
+        ],
+        right: [
+          'tataravos-maternos',
+          'bisavos-maternos',
+          'avos-maternos',
+          'tios-maternos',
+          'primos-maternos',
+        ],
+        down: [
+          'irmaos',
+          'sobrinhos',
+          'conjuge',
+          'filhos',
+          'pets',
+          'netos',
+        ],
+      };
+
+      const anchorNodes = anchorGroupsByDirection[direction]
+        .map((key) => nodes.find((node) => node.id === `direct-group-box-${key}`))
+        .filter((node): node is Node => Boolean(node));
+
+      if (anchorNodes.length > 0) {
+        setHasUserInteractedWithViewport(true);
+        instance.fitView({
+          nodes: anchorNodes,
+          padding: 0.18,
+          duration: 260,
+        });
+        return;
+      }
+    }
+
     setHasUserInteractedWithViewport(true);
     const viewport = instance.getViewport();
     const horizontalFlowStep = (containerSize.width * TREE_MOBILE_DIRECTIONAL_PAN_RATIO) / viewport.zoom;
@@ -1427,7 +1469,7 @@ function FamilyTreeComponent({
     }
 
     instance.setViewport({ x: nextX, y: nextY, zoom: viewport.zoom }, { duration: 220 });
-  }, [containerSize.height, containerSize.width, activeTreeTranslateExtent]);
+  }, [containerSize.height, containerSize.width, activeTreeTranslateExtent, isMobile, nodes, viewMode]);
 
   const handlePrint = useCallback(async () => {
     try {
@@ -1568,7 +1610,7 @@ function FamilyTreeComponent({
           <button
             type="button"
             onClick={() => handleDirectionalPan('up')}
-            className="absolute left-1/2 top-20 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="absolute left-1/2 top-[9.75rem] z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label="Mover árvore para cima"
           >
             <ChevronUp className="h-5 w-5" />

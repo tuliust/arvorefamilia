@@ -1,4 +1,4 @@
-@media (max-width: 767px) {
+﻿@media (max-width: 767px) {
   .family-tree-export-root [aria-label="Mover árvore para cima"] {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 14.25rem);
@@ -97,5 +97,15 @@
 
   .family-tree-export-root .react-flow__node-directFamilyLabelNode:has(+ .react-flow__node-personNode > .relative > div[style*="width: 400px"][style*="height: 160px"]) {
     transform: translate(-80px, -820px);
+  }
+}
+
+/* mobile-direct-family-group-labels */
+@media (max-width: 767px) {
+  .family-tree-export-root .react-flow__node-directFamilyLabelNode > div:not([aria-label^="A árvore de"]) {
+    min-height: 24px !important;
+    font-size: 14px !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.02em !important;
   }
 }
