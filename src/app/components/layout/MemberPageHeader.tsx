@@ -185,7 +185,7 @@ export function MemberPageHeader({
             )}
 
             <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
-              <h1 className="whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
+              <h1 className="whitespace-normal text-lg font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
                 {title}
               </h1>
               <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">

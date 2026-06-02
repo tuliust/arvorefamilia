@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
@@ -384,7 +384,11 @@ export function CalendarioFamiliar() {
         </section>
 
         {user && (
-          <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+          <section className={[
+            showGoogleCalendarMobileCard ? 'block' : 'hidden',
+            'rounded-2xl border border-gray-200 bg-white p-4 shadow-sm',
+            'md:block md:p-5',
+          ].join(' ')}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
@@ -535,7 +539,7 @@ export function CalendarioFamiliar() {
                           {eventosDia.length > 0 && firstEventColors && (
                             <button
                               type="button"
-                              className="mx-auto mt-2 flex h-5 w-5 items-center justify-center rounded-full md:hidden"
+                              className="mx-auto mt-1 flex h-3 w-3 items-center justify-center rounded-full md:hidden"
                               style={{ backgroundColor: firstEventColors.dot }}
                               onClick={() => openDayEvents(dia, eventosDia)}
                               aria-label={`Abrir ${formatEventCount(eventosDia.length)} do dia ${dia}`}
@@ -714,3 +718,4 @@ export function CalendarioFamiliar() {
     </div>
   );
 }
+
