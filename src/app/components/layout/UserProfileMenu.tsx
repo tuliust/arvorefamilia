@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { isAdminUser } from '../../services/permissionService';
 import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
 import type { Pessoa } from '../../types';
 
@@ -55,6 +56,7 @@ export function UserProfileMenu() {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [linkedPerson, setLinkedPerson] = useState<Pessoa | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,18 +65,21 @@ export function UserProfileMenu() {
       if (!user?.id) {
         setProfile(null);
         setLinkedPerson(null);
+        setIsAdmin(false);
         return;
       }
 
-      const [profileResult, linkedPersonResult] = await Promise.all([
+      const [profileResult, linkedPersonResult, adminResult] = await Promise.all([
         getMemberProfile(user.id),
         getPrimaryLinkedPersonWithPessoa(user.id),
+        isAdminUser(user),
       ]);
 
       if (cancelled) return;
 
       setProfile(profileResult.data ?? null);
       setLinkedPerson(linkedPersonResult.data?.pessoa ?? null);
+      setIsAdmin(adminResult.isAdmin);
     }
 
     loadUserProfileMenuData();
@@ -82,7 +87,7 @@ export function UserProfileMenu() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user]);
 
   const displayName = String(
     linkedPerson?.nome_completo ||
@@ -146,7 +151,7 @@ export function UserProfileMenu() {
         aria-expanded={open}
       >
         {user && avatarUrl ? (
-          <img src={avatarUrl} alt={displayName || 'Usuario'} className="h-full w-full object-cover" />
+          <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
         ) : user && initials ? (
           <span>{initials}</span>
         ) : (
@@ -160,7 +165,7 @@ export function UserProfileMenu() {
             type="button"
             className="fixed inset-0 z-[80] bg-black/30 md:hidden"
             onClick={() => setOpen(false)}
-            aria-label="Fechar menu do usuario"
+            aria-label="Fechar menu do usuário"
           />
 
           <div
@@ -170,7 +175,7 @@ export function UserProfileMenu() {
             <div className="mb-3 flex items-start gap-3 border-b border-gray-100 pb-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-bold text-white">
                 {user && avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName || 'Usuario'} className="h-full w-full object-cover" />
+                  <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
                 ) : user && initials ? (
                   <span>{initials}</span>
                 ) : (
@@ -241,11 +246,11 @@ export function UserProfileMenu() {
                 </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/forum')}>
                   <MessageCircle className="h-5 w-5 text-blue-700" />
-                  Forum
+                  Fórum
                 </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/calendario-familiar')}>
                   <CalendarDays className="h-5 w-5 text-blue-700" />
-                  Calendario
+                  Calendário
                 </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/meus-favoritos')}>
                   <Star className="h-5 w-5 text-blue-700" />
@@ -253,8 +258,18 @@ export function UserProfileMenu() {
                 </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/notificacoes')}>
                   <Bell className="h-5 w-5 text-blue-700" />
-                  Notificacoes
+                  Notificações
                 </button>
+                <button type="button" className={itemClassName} onClick={() => goTo('/ajustar-notificacoes')}>
+                  <Bell className="h-5 w-5 text-blue-700" />
+                  Editar notificações
+                </button>
+                {isAdmin && (
+                  <button type="button" className={itemClassName} onClick={() => goTo('/admin')}>
+                    <Network className="h-5 w-5 text-blue-700" />
+                    Painel Admin
+                  </button>
+                )}
 
                 <div className="my-2 border-t border-gray-100" />
 
