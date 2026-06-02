@@ -1,8 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   Bell,
-  Home,
   CalendarDays,
+  Home,
   MessageCircle,
   Star,
 } from 'lucide-react';
@@ -21,7 +21,6 @@ interface HomeMobileNavProps {
 }
 
 export function HomeMobileNav({
-  onCuriosities,
   navigateFromHome,
 }: HomeMobileNavProps) {
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
@@ -84,4 +83,3 @@ export function HomeMobileNav({
     </nav>
   );
 }
-
