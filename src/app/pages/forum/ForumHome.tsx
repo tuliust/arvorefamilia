@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
@@ -28,33 +28,85 @@ const STATUS_LABELS: Record<ForumTopicoStatus, string> = {
   oculto: 'Oculto',
 };
 
-function getForumCategoryMobileMeta(categoria: ForumCategoria) {
-  const normalizedName = categoria.nome
+type ForumCategoryGroupKey = 'duvidas' | 'memorias' | 'documentos' | 'eventos';
+type ForumCategoryFilterValue = 'todas' | ForumCategoryGroupKey;
+
+type ForumCategoryGroupDefinition = {
+  key: ForumCategoryGroupKey;
+  label: string;
+  description: string;
+  icon: typeof HelpCircle;
+  matches: string[];
+};
+
+type ForumCategoryGroup = ForumCategoryGroupDefinition & {
+  ids: string[];
+};
+
+const FORUM_CATEGORY_GROUPS: ForumCategoryGroupDefinition[] = [
+  {
+    key: 'duvidas',
+    label: 'Dúvidas',
+    description: 'Perguntas, ajuda com a árvore e pedidos de orientação familiar.',
+    icon: HelpCircle,
+    matches: ['duvida', 'ajuda'],
+  },
+  {
+    key: 'memorias',
+    label: 'Memórias',
+    description: 'Histórias, lembranças, relatos e registros afetivos da família.',
+    icon: BookOpen,
+    matches: ['memoria', 'historia'],
+  },
+  {
+    key: 'documentos',
+    label: 'Documentos',
+    description: 'Fotos, certidões, achados e pedidos sobre registros familiares.',
+    icon: FileText,
+    matches: ['document', 'foto'],
+  },
+  {
+    key: 'eventos',
+    label: 'Eventos',
+    description: 'Aniversários, encontros, viagens e eventos familiares.',
+    icon: CalendarDays,
+    matches: ['evento', 'encontro'],
+  },
+];
+
+function normalizeForumCategoryText(value?: string | null) {
+  return (value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+}
 
-  if (normalizedName.includes('duvida')) {
-    return { label: 'Dúvidas', icon: HelpCircle };
-  }
+function getForumCategoryGroupKey(categoria?: ForumCategoria | null): ForumCategoryGroupKey | undefined {
+  if (!categoria) return undefined;
 
-  if (normalizedName.includes('memoria') || normalizedName.includes('historia')) {
-    return { label: 'Memórias', icon: BookOpen };
-  }
+  const normalizedText = normalizeForumCategoryText(`${categoria.nome} ${categoria.slug} ${categoria.descricao || ''}`);
+  return FORUM_CATEGORY_GROUPS.find((group) => group.matches.some((match) => normalizedText.includes(match)))?.key;
+}
 
-  if (normalizedName.includes('document') || normalizedName.includes('foto')) {
-    return { label: 'Documentos', icon: FileText };
-  }
+function buildForumCategoryGroups(categorias: ForumCategoria[]): ForumCategoryGroup[] {
+  return FORUM_CATEGORY_GROUPS.map((group) => ({
+    ...group,
+    ids: categorias
+      .filter((categoria) => getForumCategoryGroupKey(categoria) === group.key)
+      .map((categoria) => categoria.id),
+  }));
+}
 
-  if (normalizedName.includes('evento') || normalizedName.includes('encontro')) {
-    return { label: 'Eventos', icon: CalendarDays };
-  }
+function sortForumTopics(topicos: ForumTopico[]) {
+  return [...topicos].sort((a, b) => {
+    const fixadoDiff = Number(Boolean(b.fixado)) - Number(Boolean(a.fixado));
+    if (fixadoDiff !== 0) return fixadoDiff;
 
-  if (normalizedName.includes('ajuda')) {
-    return { label: 'Ajuda', icon: HelpCircle };
-  }
+    const destacadoDiff = Number(Boolean(b.destacado)) - Number(Boolean(a.destacado));
+    if (destacadoDiff !== 0) return destacadoDiff;
 
-  return { label: categoria.nome.split(/\s+/)[0] || categoria.nome, icon: Tags };
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  });
 }
 
 function formatarData(valor?: string) {
@@ -66,7 +118,7 @@ export function ForumHome() {
   const [categorias, setCategorias] = useState<ForumCategoria[]>([]);
   const [topicos, setTopicos] = useState<ForumTopico[]>([]);
   const [busca, setBusca] = useState('');
-  const [categoriaId, setCategoriaId] = useState('todas');
+  const [categoriaId, setCategoriaId] = useState<ForumCategoryFilterValue>('todas');
   const [tipo, setTipo] = useState<'todos' | ForumTopicoTipo>('todos');
   const [status, setStatus] = useState<'todos' | ForumTopicoStatus>('todos');
   const [loading, setLoading] = useState(true);
@@ -107,35 +159,115 @@ export function ForumHome() {
     };
   }, []);
 
+  const categoriasMap = useMemo(
+    () => new Map(categorias.map((categoria) => [categoria.id, categoria])),
+    [categorias]
+  );
+
+  const gruposCategorias = useMemo(() => buildForumCategoryGroups(categorias), [categorias]);
+
   useEffect(() => {
     let mounted = true;
     const timeout = window.setTimeout(async () => {
-      const filtros: ForumTopicoFiltros = { limite: 30 };
-      if (busca.trim()) filtros.busca = busca.trim();
-      if (categoriaId !== 'todas') filtros.categoriaId = categoriaId;
-      if (tipo !== 'todos') filtros.tipo = tipo;
-      if (status !== 'todos') filtros.status = status;
+      const filtrosBase: ForumTopicoFiltros = { limite: 30 };
+      if (busca.trim()) filtrosBase.busca = busca.trim();
+      if (tipo !== 'todos') filtrosBase.tipo = tipo;
+      if (status !== 'todos') filtrosBase.status = status;
 
-      const data = await listarTopicosForum(filtros);
-      if (mounted) setTopicos(data);
+      if (categoriaId === 'todas') {
+        const data = await listarTopicosForum(filtrosBase);
+        if (mounted) setTopicos(data);
+        return;
+      }
+
+      const grupo = gruposCategorias.find((item) => item.key === categoriaId);
+      const categoriaIds = grupo?.ids ?? [];
+
+      if (categoriaIds.length === 0) {
+        if (mounted) setTopicos([]);
+        return;
+      }
+
+      const resultados = await Promise.all(
+        categoriaIds.map((id) => listarTopicosForum({ ...filtrosBase, categoriaId: id }))
+      );
+      const topicosUnicos = Array.from(
+        new Map(resultados.flat().map((topico) => [topico.id, topico])).values()
+      );
+      const topicosOrdenados = sortForumTopics(topicosUnicos).slice(0, 30);
+
+      if (mounted) setTopicos(topicosOrdenados);
     }, 250);
 
     return () => {
       mounted = false;
       window.clearTimeout(timeout);
     };
-  }, [busca, categoriaId, tipo, status]);
+  }, [busca, categoriaId, tipo, status, gruposCategorias]);
 
-  const categoriasMap = useMemo(
-    () => new Map(categorias.map((categoria) => [categoria.id, categoria])),
-    [categorias]
+  const renderCategorias = (variant: 'mobile' | 'desktop') => (
+    <div className={`min-w-0 space-y-3 ${variant === 'mobile' ? 'lg:hidden' : 'hidden lg:block'}`}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
+        {variant === 'mobile' && (
+          <div className="flex items-center gap-1 lg:hidden">
+            <button
+              type="button"
+              onClick={() => scrollCategorias('left')}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
+              aria-label="Ver categorias anteriores"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollCategorias('right')}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
+              aria-label="Ver próximas categorias"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div
+        ref={variant === 'mobile' ? categoriasScrollerRef : undefined}
+        className={
+          variant === 'mobile'
+            ? 'flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]'
+            : 'space-y-3'
+        }
+      >
+        {gruposCategorias.map((grupo) => {
+          const CategoryIcon = grupo.icon;
+
+          return (
+            <button
+              key={grupo.key}
+              type="button"
+              onClick={() => setCategoriaId(grupo.key)}
+              className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors lg:min-h-0 lg:w-full lg:items-start lg:p-4 lg:text-left lg:text-sm ${
+                categoriaId === grupo.key
+                  ? 'border-blue-500 bg-blue-50 text-blue-800'
+                  : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <CategoryIcon className="h-4 w-4 text-blue-600 lg:hidden" />
+              <span>{grupo.label}</span>
+              <p className="mt-1 hidden break-words text-sm font-normal text-gray-500 lg:block">{grupo.description}</p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Fórum da Família"
-        subtitle="Espaço para perguntas, histórias, documentos, memórias e ajuda com a árvore."
+        subtitle="Espaço para dúvidas, memórias, documentos e eventos da família."
         icon={MessageCircle}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
@@ -145,6 +277,8 @@ export function ForumHome() {
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+        {renderCategorias('mobile')}
+
         <Card className="min-w-0">
           <CardContent className="grid grid-cols-3 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
             <label className="relative col-span-3 block min-w-0 md:col-span-1">
@@ -161,15 +295,15 @@ export function ForumHome() {
               <Tags className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
               <select
                 value={categoriaId}
-                onChange={(event) => setCategoriaId(event.target.value)}
+                onChange={(event) => setCategoriaId(event.target.value as ForumCategoryFilterValue)}
                 className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
                 aria-label="Filtrar por categoria"
                 title="Categorias"
               >
                 <option value="todas">Todas as categorias</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
+                {gruposCategorias.map((grupo) => (
+                  <option key={grupo.key} value={grupo.key}>
+                    {grupo.label}
                   </option>
                 ))}
               </select>
@@ -222,66 +356,16 @@ export function ForumHome() {
         )}
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
-          <div className="min-w-0 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
-              <div className="flex items-center gap-1 lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => scrollCategorias('left')}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
-                  aria-label="Ver categorias anteriores"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollCategorias('right')}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm"
-                  aria-label="Ver próximas categorias"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div
-              ref={categoriasScrollerRef}
-              className="flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] lg:block lg:space-y-3 lg:overflow-visible lg:pb-0"
-            >
-              {categorias.map((categoria) => {
-                const mobileMeta = getForumCategoryMobileMeta(categoria);
-                const MobileIcon = mobileMeta.icon;
-
-                return (
-                  <button
-                    key={categoria.id}
-                    type="button"
-                    onClick={() => setCategoriaId(categoria.id)}
-                    className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors lg:min-h-0 lg:w-full lg:p-4 lg:text-left lg:text-sm ${
-                      categoriaId === categoria.id
-                        ? 'border-blue-500 bg-blue-50 text-blue-800'
-                        : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <MobileIcon className="h-4 w-4 text-blue-600 lg:hidden" />
-                    <span className="lg:hidden">{mobileMeta.label}</span>
-                    <span className="hidden lg:inline">{categoria.nome}</span>
-                    {categoria.descricao && <p className="mt-1 hidden break-words text-sm font-normal text-gray-500 lg:block">{categoria.descricao}</p>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {renderCategorias('desktop')}
 
           <div className="min-w-0 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="break-words text-lg font-semibold text-gray-900">Tópicos recentes</h2>
+              <h2 className="hidden break-words text-lg font-semibold text-gray-900 sm:block">Tópicos recentes</h2>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="w-full sm:w-auto"
+                className="hidden w-full sm:inline-flex sm:w-auto"
                 onClick={() => {
                   setBusca('');
                   setCategoriaId('todas');
@@ -308,12 +392,15 @@ export function ForumHome() {
             ) : (
               topicos.map((topico) => {
                 const categoria = topico.categoria ?? categoriasMap.get(String(topico.categoria_id ?? ''));
+                const categoriaGrupoKey = getForumCategoryGroupKey(categoria);
+                const categoriaGrupo = gruposCategorias.find((grupo) => grupo.key === categoriaGrupoKey);
+
                 return (
                   <Link key={topico.id} to={`/forum/topico/${topico.id}`} className="block min-w-0">
                     <Card className="min-w-0 transition hover:border-blue-200 hover:shadow-md">
                       <CardHeader className="p-4 pb-2">
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                          {categoria?.nome && <span className="break-words">{categoria.nome}</span>}
+                          {categoriaGrupo?.label && <span className="break-words">{categoriaGrupo.label}</span>}
                           <span>{TIPO_LABELS[topico.tipo]}</span>
                           <span>{STATUS_LABELS[topico.status]}</span>
                           {topico.status === 'resolvido' && <span className="text-emerald-700">Resolvido</span>}
