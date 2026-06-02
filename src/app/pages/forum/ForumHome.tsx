@@ -28,6 +28,31 @@ const STATUS_LABELS: Record<ForumTopicoStatus, string> = {
   oculto: 'Oculto',
 };
 
+function getForumCategoryMobileMeta(categoria: ForumCategoria) {
+  const normalizedName = categoria.nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  if (normalizedName.includes('duvida')) {
+    return { label: 'Duvidas', icon: HelpCircle };
+  }
+
+  if (normalizedName.includes('memoria') || normalizedName.includes('historia')) {
+    return { label: 'Memorias', icon: BookOpen };
+  }
+
+  if (normalizedName.includes('document') || normalizedName.includes('foto')) {
+    return { label: 'Documentos', icon: FileText };
+  }
+
+  if (normalizedName.includes('evento') || normalizedName.includes('encontro')) {
+    return { label: 'Eventos', icon: CalendarDays };
+  }
+
+  return { label: categoria.nome.split(/\s+/)[0] || categoria.nome, icon: Tags };
+}
+
 function formatarData(valor?: string) {
   if (!valor) return '';
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(valor));
@@ -295,4 +320,3 @@ export function ForumHome() {
     </div>
   );
 }
-
