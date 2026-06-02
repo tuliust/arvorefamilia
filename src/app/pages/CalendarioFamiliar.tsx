@@ -78,12 +78,12 @@ const CALENDAR_CATEGORY_COLORS = {
 
 const CALENDAR_CATEGORY_KEYS = Object.keys(CALENDAR_CATEGORY_COLORS) as CalendarEventCategory[];
 
-const MOBILE_CALENDAR_LEGEND_ITEMS = [
-  { label: 'Aniversário', color: CALENDAR_CATEGORY_COLORS.aniversarios.dot },
-  { label: 'Casamento', color: CALENDAR_CATEGORY_COLORS.casamento.dot },
-  { label: 'Falecimento', color: CALENDAR_CATEGORY_COLORS.falecimento.dot },
-  { label: 'Outros', color: CALENDAR_CATEGORY_COLORS.eventos_historicos.dot },
-  { label: 'Reunião', color: CALENDAR_CATEGORY_COLORS.confraternizacoes.dot },
+const MOBILE_CALENDAR_LEGEND_ITEMS: Array<{ category: CalendarEventCategory; label: string }> = [
+  { category: 'aniversarios', label: 'Anivers\u00e1rio' },
+  { category: 'casamento', label: 'Casamento' },
+  { category: 'falecimento', label: 'Falecimento' },
+  { category: 'eventos_historicos', label: 'Outros' },
+  { category: 'confraternizacoes', label: 'Reuni\u00e3o' },
 ];
 
 const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
@@ -319,10 +319,17 @@ export function CalendarioFamiliar() {
     }));
   }
 
-  function openDayEvents(dia: number, eventosDia: EventoCalendarioFamiliar[]) {
+  function scrollToMonthSummary(eventosDia: EventoCalendarioFamiliar[]) {
     if (eventosDia.length === 0) return;
-    setSelectedDay(dia);
-    setSelectedDayEvents(eventosDia);
+
+    const hasBirthday = eventosDia.some((evento) => getCalendarCategory(evento) === 'aniversarios');
+    const hasMemory = eventosDia.some((evento) => getCalendarCategory(evento) === 'falecimento');
+    const targetId = hasBirthday ? 'aniversariantes' : hasMemory ? 'memoria' : 'categorias-calendario';
+    const target = document.getElementById(targetId);
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   const eventos = useMemo(
@@ -409,14 +416,31 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Legenda do calendário">
+        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calend\u00e1rio">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-gray-700 min-[390px]:grid-cols-3">
-            {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => (
-              <div key={item.label} className="flex min-w-0 items-center gap-1.5">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="truncate">{item.label}</span>
-              </div>
-            ))}
+            {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => {
+              const colors = CALENDAR_CATEGORY_COLORS[item.category];
+              const active = activeCategories[item.category];
+
+              return (
+                <button
+                  key={item.category}
+                  type="button"
+                  onClick={() => toggleCategory(item.category)}
+                  aria-pressed={active}
+                  className="flex min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left transition"
+                  style={{
+                    borderColor: active ? colors.border : '#E5E7EB',
+                    backgroundColor: active ? colors.background : '#FFFFFF',
+                    color: active ? colors.text : '#6B7280',
+                    opacity: active ? 1 : 0.62,
+                  }}
+                >
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.dot }} />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -561,7 +585,7 @@ export function CalendarioFamiliar() {
                           <div className="mb-2 flex items-center justify-between">
                             <span
                               className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
-                                isHoje ? 'bg-gray-500 text-white' : 'text-gray-900'
+                                isHoje ? 'bg-gray-200 text-gray-900 ring-1 ring-gray-300' : 'text-gray-900'
                               }`}
                             >
                               {dia}
@@ -578,7 +602,7 @@ export function CalendarioFamiliar() {
                               type="button"
                               className="mx-auto mt-1 flex h-3 w-3 items-center justify-center rounded-full md:hidden"
                               style={{ backgroundColor: firstEventColors.dot }}
-                              onClick={() => openDayEvents(dia, eventosDia)}
+                              onClick={() => scrollToMonthSummary(eventosDia)}
                               aria-label={`Abrir ${formatEventCount(eventosDia.length)} do dia ${dia}`}
                               title={formatEventCount(eventosDia.length)}
                             >
@@ -629,7 +653,7 @@ export function CalendarioFamiliar() {
           </div>
 
           <aside className="space-y-6">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div id="categorias-calendario" className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <h3 className="mb-1 text-lg font-bold text-gray-900">Categorias</h3>
               <p className="mb-4 text-sm text-gray-500">Clique para ativar ou ocultar categorias do calendário.</p>
               <div className="space-y-3 text-sm text-gray-700">
@@ -662,7 +686,7 @@ export function CalendarioFamiliar() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div id="aniversariantes" className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <h3 className="mb-4 text-lg font-bold text-gray-900">Aniversariantes</h3>
               <div className="space-y-3">
                 {aniversariantesMes.length === 0 ? (
