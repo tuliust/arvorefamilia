@@ -129,15 +129,29 @@ function getFirstDisplayName(nome: string) {
   return nome.trim().split(/\s+/)[0] || nome;
 }
 
+function getDeathAnniversaryYears(evento: EventoCalendarioFamiliar) {
+  const match = evento.titulo.match(/\b(\d+)\s+anos?\s+de\s+falecimento\b/i);
+  return match?.[1];
+}
+
 function formatCalendarEventTitle(evento: EventoCalendarioFamiliar) {
   if (evento.category === 'aniversarios' || evento.tipo === 'aniversario') {
     return `Aniversário de ${getFirstDisplayName(evento.nome)}`;
+  }
+
+  if (evento.category === 'falecimento' || evento.tipo === 'falecimento') {
+    const anos = getDeathAnniversaryYears(evento);
+    return anos ? `${anos} anos de falecimento` : 'Falecimento';
   }
 
   return evento.titulo;
 }
 
 function formatCalendarEventDescription(evento: EventoCalendarioFamiliar) {
+  if (evento.category === 'falecimento' || evento.tipo === 'falecimento') {
+    return `Falecimento de ${evento.nome}`;
+  }
+
   if (evento.category !== 'aniversarios' && evento.tipo !== 'aniversario') {
     return evento.descricao;
   }
@@ -146,6 +160,11 @@ function formatCalendarEventDescription(evento: EventoCalendarioFamiliar) {
   if (!match) return evento.descricao;
 
   return `Faz ${match[1]} anos`;
+}
+
+function formatDeathSidebarTitle(evento: EventoCalendarioFamiliar) {
+  const anos = getDeathAnniversaryYears(evento);
+  return anos ? `${anos} anos da morte de ${evento.nome}` : `Morte de ${evento.nome}`;
 }
 
 export function CalendarioFamiliar() {
@@ -331,19 +350,19 @@ export function CalendarioFamiliar() {
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="grid w-full max-w-md grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-3">
               <button
                 type="button"
                 onClick={() => setDataAtual(new Date(dataAtual.getFullYear(), dataAtual.getMonth() - 1, 1))}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
                 aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
 
-              <div>
+              <div className="min-w-0 text-center">
                 <p className="text-xs uppercase tracking-wide text-gray-500">Mês exibido</p>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="break-words text-2xl font-bold text-gray-900">
                   {MESES[dataAtual.getMonth()]} de {dataAtual.getFullYear()}
                 </h2>
               </div>
@@ -351,7 +370,7 @@ export function CalendarioFamiliar() {
               <button
                 type="button"
                 onClick={() => setDataAtual(new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 1))}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 hover:bg-gray-50"
                 aria-label="Próximo mês"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -541,14 +560,14 @@ export function CalendarioFamiliar() {
                                     color: colors.text,
                                   }}
                                 >
-                                  <div className="mb-1 flex items-center gap-1 font-semibold">
+                                  <div className="mb-1 flex min-w-0 items-center gap-1 font-semibold">
                                     <span
-                                      className="h-2 w-2 rounded-full"
+                                      className="h-2 w-2 shrink-0 rounded-full"
                                       style={{ backgroundColor: colors.dot }}
                                     />
-                                    <span>{formatCalendarEventTitle(evento)}</span>
+                                    <span className="min-w-0 break-words">{formatCalendarEventTitle(evento)}</span>
                                   </div>
-                                  <p>{formatCalendarEventDescription(evento)}</p>
+                                  <p className="break-words">{formatCalendarEventDescription(evento)}</p>
                                 </Link>
                               );
                             })}
@@ -637,11 +656,11 @@ export function CalendarioFamiliar() {
                       to={evento.link || `/pessoa/${evento.pessoaId}`}
                       className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{evento.titulo}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 break-words">{formatDeathSidebarTitle(evento)}</p>
                         <p className="text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
-                      <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
+                      <span className="shrink-0 text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
                         {CALENDAR_CATEGORY_COLORS.falecimento.label}
                       </span>
                     </Link>
@@ -681,11 +700,11 @@ export function CalendarioFamiliar() {
                     color: colors.text,
                   }}
                 >
-                  <div className="flex items-center gap-2 font-semibold">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.dot }} />
-                    <span>{formatCalendarEventTitle(evento)}</span>
+                  <div className="flex min-w-0 items-center gap-2 font-semibold">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.dot }} />
+                    <span className="min-w-0 break-words">{formatCalendarEventTitle(evento)}</span>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed">{formatCalendarEventDescription(evento)}</p>
+                  <p className="mt-1 break-words text-xs leading-relaxed">{formatCalendarEventDescription(evento)}</p>
                 </Link>
               );
             })}

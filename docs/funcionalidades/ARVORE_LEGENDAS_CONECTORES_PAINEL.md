@@ -978,6 +978,21 @@ Possiveis evolucoes:
 Esses itens nao bloqueiam o MVP.
 
 ---
+### 15.1 Nota de sincronizacao documental - Calendario Familiar
+
+Este documento permanece focado em arvore, legendas, conectores e painel lateral. Quando houver ajustes compartilhados de UX em paginas de membro, revisar tambem:
+
+```txt
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+```
+
+Regra relacionada ao ciclo atual:
+
+- ajustes de microcopy do `/calendario-familiar`, como falecimentos no grid e no card **Dias de falecimento**, nao devem alterar filtros, conectores, legendas ou layouts da arvore.
+
+---
 ## 16. Ajustes recentes e anti-regressao - ciclo 2026-05-30
 
 ### 16.1 `Legendas > Linhas > Todas`

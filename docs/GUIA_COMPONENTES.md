@@ -630,6 +630,30 @@ Cuidados:
 - preservar contagem de notificacoes;
 - preservar logout.
 
+### 6.3 `CalendarioFamiliar`
+
+Arquivo:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Responsabilidade:
+
+- renderizar a rota `/calendario-familiar`;
+- exibir grid mensal, categorias, aniversariantes e dias de falecimento;
+- formatar microcopy visual de eventos sem alterar o shape de `EventoCalendarioFamiliar`;
+- manter integracao visual com `MemberPageHeader`.
+
+Cuidados:
+
+- preferir ajustes de exibicao em `CalendarioFamiliar.tsx`, sem mexer em `familyDates.ts` quando a mudanca for apenas visual;
+- preservar filtros por categoria e contadores em `evento/eventos`;
+- aniversarios no grid devem continuar como **Aniversario de PrimeiroNome** e descricao **Faz X anos**;
+- falecimentos no grid devem usar titulo compacto, como **44 anos de falecimento**, com descricao **Falecimento de Nome Completo**;
+- o card **Dias de falecimento** deve usar **44 anos da morte de Nome Completo** ou **Morte de Nome Completo**;
+- o seletor de mes deve manter setas em botoes `type="button"` e texto centralizado entre elas.
+
 ---
 
 ## 7. Componentes de pessoa

@@ -695,6 +695,8 @@ Exemplos consolidados:
 | Acoes da arvore | Acoes |
 | Loading da Home | Buscando pessoas e relacionamentos... |
 | Busca | Buscar por nome ou local... |
+| Calendario - falecimento no grid | 44 anos de falecimento / Falecimento de Nome |
+| Calendario - card Dias de falecimento | 44 anos da morte de Nome |
 
 ---
 
@@ -799,6 +801,9 @@ Calendario Familiar:
 - categorias sao filtros clicaveis;
 - contadores usam singular/plural: **1 evento**, **2 eventos**;
 - aniversarios mostram **Faz X anos**.
+- no topo do mes, **MES EXIBIDO** e o nome do mes ficam centralizados entre as setas anterior/proximo;
+- no grid, falecimentos usam titulo compacto (**44 anos de falecimento**) e descricao separada (**Falecimento de Nome Completo**);
+- no card **Dias de falecimento**, falecimentos usam **44 anos da morte de Nome Completo** ou **Morte de Nome Completo**.
 
 Perfil e contato:
 

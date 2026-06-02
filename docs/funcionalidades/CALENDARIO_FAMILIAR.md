@@ -88,6 +88,9 @@ Regras:
 - Card de aniversario no grid usa primeiro nome para caber no espaco compacto.
 - Lista de aniversariantes pode manter nome completo.
 - Descricao de aniversario usa **Faz X anos**.
+- Eventos de falecimento no grid usam titulo compacto, como **44 anos de falecimento**, e descricao separada, como **Falecimento de Nome Completo**.
+- Card lateral **Dias de falecimento** usa microcopy propria: **44 anos da morte de Nome Completo** ou **Morte de Nome Completo** quando nao houver anos.
+- O controle do mes exibido usa estrutura visual em 3 colunas: seta anterior, texto centralizado e seta proximo.
 - Eventos do mes sao considerados para contadores da sidebar.
 
 ---
@@ -135,6 +138,11 @@ Regras de texto:
 - usar **Faz X anos** para idade/aniversario;
 - evitar nome completo no card compacto do grid quando o contexto for aniversario;
 - a lista lateral/inferior pode manter nome completo.
+- no grid, falecimento com anos deve separar:
+  `44 anos de falecimento de Jackson Souza Sobral` -> titulo `44 anos de falecimento` e descricao `Falecimento de Jackson Souza Sobral`;
+- no grid, falecimento sem anos usa titulo `Falecimento` e descricao `Falecimento de {evento.nome}`;
+- no card **Dias de falecimento**, falecimento com anos usa `{X} anos da morte de {evento.nome}`;
+- no card **Dias de falecimento**, falecimento sem anos usa `Morte de {evento.nome}`.
 
 Exemplos:
 
@@ -145,6 +153,10 @@ Exemplos:
 | Aniversario | `Faz X anos` |
 | Card compacto de aniversario | primeiro nome |
 | Lista de aniversariantes | nome completo permitido |
+| Card compacto de falecimento | `44 anos de falecimento` |
+| Descricao compacta de falecimento | `Falecimento de Nome Completo` |
+| Card Dias de falecimento com anos | `44 anos da morte de Nome Completo` |
+| Card Dias de falecimento sem anos | `Morte de Nome Completo` |
 
 ---
 
@@ -343,7 +355,10 @@ npm run test:e2e
 - validar singular/plural dos contadores;
 - validar aniversario no grid;
 - validar aniversario na lista;
+- validar falecimento no grid com titulo compacto e descricao separada;
+- validar card **Dias de falecimento** com texto **anos da morte de**;
 - validar que **Dias de falecimento** aparece apenas quando houver itens;
+- validar setas de mes anterior/proximo com o texto do mes centralizado;
 - validar dia atual destacado;
 - validar desktop;
 - validar 768px;
