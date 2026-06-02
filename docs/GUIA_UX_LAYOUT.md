@@ -431,6 +431,17 @@ A view **Minha Arvore** deve:
 
 A view pode considerar altura para fit inicial, desde que isso nao reduza a arvore a ponto de perder legibilidade.
 
+Quando a pessoa central tiver arvore direta esparsa, sem pais, ancestrais
+ou grupos laterais visiveis, `/minha-arvore` pode usar enquadramento vertical
+mais curto e aproximar os grupos inferiores do card central.
+
+Regras:
+
+- a compactacao deve ser detectada por estrutura renderizavel, nao por nome de pessoa;
+- arvores densas continuam com o layout distribuido atual;
+- filtros de grupos e filtros de linhas nao devem ser alterados;
+- conectores e anchors existentes devem continuar comandados pelo layout logico.
+
 ### 5.4 Genealogia
 
 A view **Genealogia** deve:

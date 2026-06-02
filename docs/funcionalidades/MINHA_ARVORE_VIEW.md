@@ -674,6 +674,45 @@ Regra:
 nao reintroduzir alignGroupStackToBottom() para grupos centrais sem mudanca explicita de objetivo visual.
 ```
 
+### 16.5 Arvore esparsa
+
+Quando a pessoa central nao possui pais, ancestrais ou grupos laterais visiveis,
+mas possui grupos inferiores diretos, a view usa uma composicao central mais
+compacta.
+
+Criterio tecnico:
+
+```txt
+sem grupos paternos/maternos renderizaveis
+sem Pai/Mae renderizaveis
+com pelo menos um grupo inferior renderizavel
+```
+
+Grupos inferiores considerados:
+
+```txt
+Irmaos
+Sobrinhos
+Conjuge
+Filhos
+Pets
+Netos
+```
+
+Comportamento:
+
+- os tamanhos dos cards sao preservados;
+- o Y inicial dos grupos inferiores usa `SPARSE_LOWER_GROUP_Y`;
+- o gap interno da pilha inferior usa `SPARSE_CENTRAL_LOWER_STACK_GAP`;
+- o viewport logico usa bounds verticais menores para melhorar o enquadramento inicial;
+- a regra nao e aplicada quando existem pais, ancestrais, tios, primos ou qualquer grupo lateral visivel.
+
+Objetivo:
+
+```txt
+evitar grande vazio vertical em arvores incompletas sem alterar a composicao de arvores densas.
+```
+
 ---
 
 ## 17. Cards de pessoa

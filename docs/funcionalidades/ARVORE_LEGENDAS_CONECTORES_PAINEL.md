@@ -512,6 +512,26 @@ Pets continuam separados dos filhos nos cards,
 mas a linha de Pets e controlada por Pais/filhos, ou seja, parentChild.
 ```
 
+### 7.1 Layout esparso da Minha Arvore
+
+Em `/minha-arvore`, quando a pessoa central nao possui pais, ancestrais
+ou grupos laterais visiveis, o layout direto pode usar composicao mais
+compacta para grupos inferiores.
+
+A compactacao e restrita a geometria:
+
+- aproximar Conjuge, Pets, Filhos, Netos, Irmaos e Sobrinhos do card central;
+- reduzir o bounds vertical usado no enquadramento inicial;
+- preservar os mesmos cards, anchors e conectores estruturais;
+- nao alterar `edgeFilters`, `visualLineFilters` ou `directRelativeFilters`.
+
+Anti-regressao:
+
+```txt
+Se houver pai, mae, ancestrais, tios, primos ou grupos laterais visiveis,
+usar o layout denso atual.
+```
+
 ---
 
 ## 8. Genealogia e Visao Completa
