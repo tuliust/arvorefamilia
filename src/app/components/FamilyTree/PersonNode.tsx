@@ -424,8 +424,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       ? centralNameFontSize
       : clampNumber(
         estimatedNameFontForTwoLines,
-        isMobile ? 18 : isCompactDirectCard ? 17 : 19,
-        isMobile ? 30 : isCompactDirectCard ? 26 : isSmallDirectCard ? 29 : 30
+        isMobile ? 11 : isCompactDirectCard ? 17 : 19,
+        isMobile ? 17 : isCompactDirectCard ? 26 : isSmallDirectCard ? 29 : 30
       );
     const directDetailSizingLines = detailLines.length > 0
       ? detailLines
@@ -443,8 +443,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       ? centralDetailFontSize
       : clampNumber(
         estimatedDetailFontForOneLine,
-        isMobile ? 13 : isCompactDirectCard ? 13 : 14,
-        isMobile ? 22 : isCompactDirectCard ? 18 : isSmallDirectCard ? 20 : 21
+        isMobile ? 9 : isCompactDirectCard ? 13 : 14,
+        isMobile ? 12 : isCompactDirectCard ? 18 : isSmallDirectCard ? 20 : 21
       );
     const mobileAvatarScale = isMobile ? (isCentralDirectNode ? 0.85 : 1.1) : 1;
     const avatarSize = isCentralDirectNode

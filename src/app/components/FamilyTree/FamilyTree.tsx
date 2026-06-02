@@ -1239,7 +1239,7 @@ function FamilyTreeComponent({
         : (isMobile ? DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING : DIRECT_FAMILY_TRANSLATE_PADDING)
     );
   }, [translateBounds, isGenealogyLayout, isMobile]);
-  const activeMinZoom = activeTreeViewport?.zoom ?? activeTreeFallbackMinZoom;
+  const activeMinZoom = isMobile ? activeTreeFallbackMinZoom : (activeTreeViewport?.zoom ?? activeTreeFallbackMinZoom);
   const canRenderReactFlow = Boolean(activeTreeViewport && viewportSignature);
 
   useEffect(() => {
@@ -1533,7 +1533,7 @@ function FamilyTreeComponent({
       </div>
 
 
-      {(!hasUserInteractedWithViewport || isAtMinZoom) && (
+      {(!hasUserInteractedWithViewport || (!isMobile && isAtMinZoom)) && (
         <div
           className="pointer-events-none absolute inset-x-0 z-10 text-center"
           style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
