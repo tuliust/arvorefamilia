@@ -177,6 +177,7 @@ export function CalendarioFamiliar() {
   const [loading, setLoading] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus>({ conectado: false });
+  const [showGoogleCalendarMobileCard, setShowGoogleCalendarMobileCard] = useState(false);
   const [incluirAniversarios, setIncluirAniversarios] = useState(true);
   const [incluirMemorias, setIncluirMemorias] = useState(true);
   const [ultimoResultadoSync, setUltimoResultadoSync] = useState<{
@@ -718,4 +719,5 @@ export function CalendarioFamiliar() {
     </div>
   );
 }
+
 
