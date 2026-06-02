@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import {
   Bell,
   CalendarDays,
@@ -7,6 +7,7 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
+  Network,
   Pencil,
   Star,
   UserCircle2,
@@ -40,9 +41,16 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || 'Conta';
 }
 
+const TREE_VIEW_OPTIONS = [
+  { label: 'Minha Árvore', path: '/minha-arvore' },
+  { label: 'Genealogia', path: '/genealogia' },
+  { label: 'Visão Completa', path: '/visao-completa' },
+];
+
 export function UserProfileMenu() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
@@ -128,7 +136,7 @@ export function UserProfileMenu() {
     'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800';
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative z-[520] shrink-0">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -193,6 +201,36 @@ export function UserProfileMenu() {
               </button>
             ) : (
               <div className="space-y-1">
+                <div className="mb-3 rounded-2xl border border-blue-100 bg-blue-50 p-2 md:hidden">
+                  <div className="mb-2 flex items-center gap-2 px-2 pt-1 text-xs font-bold uppercase tracking-wide text-blue-900">
+                    <Network className="h-4 w-4" />
+                    Visualização
+                  </div>
+                  <div className="grid grid-cols-1 gap-1">
+                    {TREE_VIEW_OPTIONS.map((option) => {
+                      const active = location.pathname === option.path || (option.path === '/minha-arvore' && location.pathname === '/');
+
+                      return (
+                        <button
+                          key={option.path}
+                          type="button"
+                          onClick={() => goTo(option.path)}
+                          className={[
+                            'flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-bold transition',
+                            active
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'bg-white text-blue-800 hover:bg-blue-100',
+                          ].join(' ')}
+                          aria-current={active ? 'page' : undefined}
+                        >
+                          <span>{option.label}</span>
+                          {active && <span className="text-xs font-semibold opacity-90">Atual</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <button type="button" className={itemClassName} onClick={() => goTo('/minha-arvore')}>
                   <Home className="h-5 w-5 text-blue-700" />
                   Home
