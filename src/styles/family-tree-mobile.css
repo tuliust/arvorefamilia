@@ -15,10 +15,35 @@
     transform: translateX(-50%);
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(.shadow-xl) > div[style] {
-    width: 560px !important;
-    min-height: 620px !important;
-    height: 620px !important;
-    margin: 10px 0 0 115px;
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"][style*="height: 760px"] {
+    width: 440px !important;
+    min-height: 440px !important;
+    height: 440px !important;
+    margin: 12px 0 0 90px;
+    padding: 28px 32px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"][style*="height: 760px"] > button[style] {
+    width: 220px !important;
+    height: 220px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"][style*="height: 760px"] > div[style] {
+    margin-top: 22px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"][style*="height: 760px"] h3 {
+    font-size: 34px !important;
+    line-height: 1.08 !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"][style*="height: 760px"] h3 + div {
+    margin-top: 10px !important;
+    font-size: 22px !important;
+    line-height: 1.12 !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 400px"][style*="height: 160px"] {
+    transform: translateY(-150px);
   }
 }
