@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
@@ -48,10 +48,10 @@ const CALENDAR_CATEGORY_COLORS = {
   },
   casamento: {
     label: 'Data de Casamento',
-    background: '#FDF2F8',
-    border: '#F9A8D4',
-    text: '#BE185D',
-    dot: '#EC4899',
+    background: '#FEF2F2',
+    border: '#FCA5A5',
+    text: '#B91C1C',
+    dot: '#EF4444',
   },
   falecimento: {
     label: 'Dia de Falecimento',
@@ -77,6 +77,14 @@ const CALENDAR_CATEGORY_COLORS = {
 } as const;
 
 const CALENDAR_CATEGORY_KEYS = Object.keys(CALENDAR_CATEGORY_COLORS) as CalendarEventCategory[];
+
+const MOBILE_CALENDAR_LEGEND_ITEMS = [
+  { label: 'Aniversário', color: CALENDAR_CATEGORY_COLORS.aniversarios.dot },
+  { label: 'Casamento', color: CALENDAR_CATEGORY_COLORS.casamento.dot },
+  { label: 'Falecimento', color: CALENDAR_CATEGORY_COLORS.falecimento.dot },
+  { label: 'Outros', color: CALENDAR_CATEGORY_COLORS.eventos_historicos.dot },
+  { label: 'Confraternização', color: CALENDAR_CATEGORY_COLORS.confraternizacoes.dot },
+];
 
 const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
   aniversarios: true,
@@ -344,7 +352,8 @@ export function CalendarioFamiliar() {
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
-          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },        ]}
+          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
+        ]}
         mobileCustomActions={user ? (
           <button
             type="button"
@@ -397,6 +406,17 @@ export function CalendarioFamiliar() {
             <p className="max-w-md text-sm text-gray-500">
               Use as categorias abaixo para filtrar aniversários, casamentos, falecimentos e eventos familiares.
             </p>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Legenda do calendário">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-gray-700 min-[390px]:grid-cols-3">
+            {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => (
+              <div key={item.label} className="flex min-w-0 items-center gap-1.5">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="truncate">{item.label}</span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -735,6 +755,3 @@ export function CalendarioFamiliar() {
     </div>
   );
 }
-
-
-
