@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   Heart,
   Link as LinkIcon,
@@ -77,6 +79,14 @@ export function MeusFavoritos() {
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const filtersScrollerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollFilters = (direction: 'left' | 'right') => {
+    filtersScrollerRef.current?.scrollBy({
+      left: direction === 'left' ? -220 : 220,
+      behavior: 'smooth',
+    });
+  };
 
   const recarregar = async () => {
     setLoading(true);
@@ -154,21 +164,44 @@ export function MeusFavoritos() {
               />
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-              {FILTERS.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setFiltro(item.value)}
-                  className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                    filtro === item.value
-                      ? 'border-blue-600 bg-blue-600 text-white'
-                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollFilters('left')}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm sm:hidden"
+                aria-label="Ver filtros anteriores"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div
+                ref={filtersScrollerRef}
+                className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] sm:flex-wrap sm:overflow-visible sm:pb-0"
+              >
+                {FILTERS.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setFiltro(item.value)}
+                    className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                      filtro === item.value
+                        ? 'border-blue-600 bg-blue-600 text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollFilters('right')}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm sm:hidden"
+                aria-label="Ver próximos filtros"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </section>
