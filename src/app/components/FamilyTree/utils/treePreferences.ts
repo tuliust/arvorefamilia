@@ -1,4 +1,4 @@
-import {
+﻿import {
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DirectRelativeFilters,
   DirectRelativeGroup,
@@ -12,18 +12,18 @@ const LEGACY_TREE_MODE_STORAGE_KEY = `familyTree:${'view'}${'Mode'}`;
 const LEGACY_TREE_GENERATION_STORAGE_KEY = `familyTree:${'active'}${'Generation'}`;
 
 export const MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {
-  pais: false,
-  avos: false,
-  bisavos: false,
-  tataravos: false,
-  conjuge: false,
-  filhos: false,
-  netos: false,
-  irmaos: false,
-  sobrinhos: false,
-  tios: false,
-  primos: false,
-  pets: false,
+  pais: true,
+  avos: true,
+  bisavos: true,
+  tataravos: true,
+  conjuge: true,
+  filhos: true,
+  netos: true,
+  irmaos: true,
+  sobrinhos: true,
+  tios: true,
+  primos: true,
+  pets: true,
 };
 
 function isMobileViewport() {
@@ -99,3 +99,4 @@ export function clearTreePreferences() {
 }
 
 export { STORAGE_KEYS as TREE_PREFERENCE_KEYS };
+

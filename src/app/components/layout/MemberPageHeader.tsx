@@ -1,5 +1,7 @@
 ﻿import React from 'react';
+import { useLocation } from 'react-router';
 import { AppLink as Link } from '../AppLink';
+import { UserProfileMenu } from './UserProfileMenu';
 import {
   ArrowLeft,
   Bell,
@@ -226,4 +228,5 @@ export const HEADER_ACTION_ICONS = {
   Settings,
   Star,
 };
+
 

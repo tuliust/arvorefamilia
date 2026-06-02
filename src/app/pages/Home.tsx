@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 
@@ -109,6 +109,7 @@ import { HomeTreeSection } from './home/HomeTreeSection';
 import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
 import { SidebarInfoPanel } from './home/SidebarInfoPanel';
 import { SidebarPanelTabs, type SidebarPanel } from './home/SidebarPanelTabs';
+import { UserProfileMenu } from '../components/layout/UserProfileMenu';
 
 const AI_QUESTION_EXAMPLES = [
   'Quem são meus bisavós paternos?',
@@ -574,11 +575,9 @@ export function Home() {
         setSelectedPersonId(pessoa.id);
       });
 
-      if (!isMobile) {
-        navigateToPersonProfile(pessoa.id);
-      }
+      navigateToPersonProfile(pessoa.id);
     },
-    [navigateToPersonProfile, isMobile]
+    [navigateToPersonProfile]
   );
 
   const handleSearchSelect = useCallback(
@@ -760,11 +759,17 @@ export function Home() {
   }, [pessoasVisiveisPorStatus]);
 
   const directRelativeFilters = useMemo(
-    () => ({
-      ...directRelativeFilterState.filters,
-      pets: true,
-    }),
-    [directRelativeFilterState.filters]
+    () => {
+      if (isMobile && treeViewMode === 'minha-arvore') {
+        return DEFAULT_DIRECT_RELATIVE_FILTERS;
+      }
+
+      return {
+        ...directRelativeFilterState.filters,
+        pets: true,
+      };
+    },
+    [directRelativeFilterState.filters, isMobile, treeViewMode]
   );
 
   const lifeStatusScopePeople = useMemo(() => {
@@ -1831,3 +1836,4 @@ function StateMessage({
     </div>
   );
 }
+
