@@ -2135,7 +2135,9 @@ export function directFamilyDistributedLayout(
   const spouseGroupBounds = groupBoundsByKey.get('conjuge');
   const childrenGroupBounds = groupBoundsByKey.get('filhos');
   const petsGroupBounds = groupBoundsByKey.get('pets');
-  const centralBottomY = CENTRAL_Y + CENTRAL_HEIGHT;
+  const centralNode = findPositionedNode(positionedNodes, centralPersonId);
+  const centralDimensions = centralNode ? getPositionedNodeDimensions(centralNode) : { width: CENTRAL_WIDTH, height: CENTRAL_HEIGHT };
+  const centralBottomY = centralNode ? centralNode.position.y + centralDimensions.height : CENTRAL_Y + CENTRAL_HEIGHT;
   const lowerGroupTopY = Math.min(
     siblingsGroupBounds?.minY ?? Number.POSITIVE_INFINITY,
     spouseGroupBounds?.minY ?? Number.POSITIVE_INFINITY

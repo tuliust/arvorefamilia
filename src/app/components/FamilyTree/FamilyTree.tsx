@@ -816,6 +816,7 @@ function FamilyTreeComponent({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = useState(false);
   const [hasUserInteractedWithViewport, setHasUserInteractedWithViewport] = useState(false);
+  const [mobileFocusedTreeArea, setMobileFocusedTreeArea] = useState<'central' | 'paternal' | 'maternal' | 'lower' | 'parents'>('central');
   const { NODE_WIDTH, NODE_HEIGHT } = TREE_CONSTANTS;
   const activeTreeFallbackMinZoom = isMobile ? DIRECT_FAMILY_MOBILE_FALLBACK_MIN_ZOOM : DIRECT_FAMILY_FALLBACK_MIN_ZOOM;
   const activeTreeMaxZoom = isMobile ? DIRECT_FAMILY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM;
@@ -1102,6 +1103,7 @@ function FamilyTreeComponent({
     setNodes(initialNodes);
     setEdges(initialEdges);
     setHasUserInteractedWithViewport(false);
+    setMobileFocusedTreeArea('central');
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   useEffect(() => {
@@ -1398,6 +1400,24 @@ function FamilyTreeComponent({
     if (!instance || containerSize.width <= 0 || containerSize.height <= 0) return;
 
     if (isMobile && viewMode === 'minha-arvore') {
+      const shouldReturnToCenter =
+        (mobileFocusedTreeArea === 'paternal' && direction === 'right') ||
+        (mobileFocusedTreeArea === 'maternal' && direction === 'left');
+
+      if (shouldReturnToCenter && activeTreeViewport) {
+        setHasUserInteractedWithViewport(true);
+        setMobileFocusedTreeArea('central');
+        instance.setViewport(activeTreeViewport, { duration: 260 });
+        return;
+      }
+
+      const targetAreaByDirection: Record<typeof direction, 'paternal' | 'maternal' | 'lower' | 'parents'> = {
+        up: 'parents',
+        left: 'paternal',
+        right: 'maternal',
+        down: 'lower',
+      };
+
       const anchorGroupsByDirection: Record<typeof direction, string[]> = {
         up: ['pai', 'mae'],
         left: [
@@ -1430,6 +1450,7 @@ function FamilyTreeComponent({
 
       if (anchorNodes.length > 0) {
         setHasUserInteractedWithViewport(true);
+        setMobileFocusedTreeArea(targetAreaByDirection[direction]);
         instance.fitView({
           nodes: anchorNodes,
           padding: 0.18,
@@ -1469,7 +1490,16 @@ function FamilyTreeComponent({
     }
 
     instance.setViewport({ x: nextX, y: nextY, zoom: viewport.zoom }, { duration: 220 });
-  }, [containerSize.height, containerSize.width, activeTreeTranslateExtent, isMobile, nodes, viewMode]);
+  }, [
+    activeTreeTranslateExtent,
+    activeTreeViewport,
+    containerSize.height,
+    containerSize.width,
+    isMobile,
+    mobileFocusedTreeArea,
+    nodes,
+    viewMode,
+  ]);
 
   const handlePrint = useCallback(async () => {
     try {
