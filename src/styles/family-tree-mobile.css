@@ -33,9 +33,9 @@
 
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"],
   .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) > div[style] {
-    width: 405px !important;
-    min-height: 390px !important;
-    height: 390px !important;
+    width: 350px !important;
+    min-height: 330px !important;
+    height: 330px !important;
     margin: 16px 0 0 108px !important;
     padding: 22px 24px !important;
   }
@@ -53,7 +53,7 @@
 
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"] h3,
   .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) h3 {
-    font-size: 25px !important;
+    font-size: 20px !important;
     line-height: 1.06 !important;
     letter-spacing: -0.025em !important;
   }
