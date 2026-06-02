@@ -16,9 +16,12 @@ Frentes envolvidas:
 - `/meus-favoritos`;
 - `/admin`;
 - `/minha-arvore/editar`;
-- menu do avatar/header.
+- menu do avatar/header;
+- documentacao historica e funcional relacionada.
 
-## 2. Commits de referencia citados no ciclo
+## 2. Commits de referencia do ciclo
+
+Commits citados ou produzidos durante o ciclo:
 
 ```txt
 66e1100 feat: adicionar seletor de visualizacao no menu mobile
@@ -31,6 +34,26 @@ c3f535c fix: aplicar layout mobile real na minha arvore
 9aa8087 fix: ajustar navegacao mobile da minha arvore
 455fdf2 fix: iniciar genealogia mobile na primeira coluna com pessoas
 5e82e04 fix: refinar ultimos ajustes mobile da arvore
+c269539 fix: ajustar seta mobile e dashboard admin
+d1916a3 fix: ajustar resumo e botoes da edicao da arvore
+8c98de0 fix: ajustar zoom mobile das views genealogicas
+abd6310 docs: registrar ajustes mobile recentes
+beb5438 fix: ajustar calendario mobile e filtros
+8a14c9f fix: ajustar menu do avatar
+1a6b03b fix: compactar filtros do calendario mobile
+d7a88d2 fix: subir card e alinhar seta mobile da arvore
+```
+
+Estado final registrado localmente apos o ciclo:
+
+```txt
+d7a88d2 (HEAD -> main, origin/main, origin/HEAD) fix: subir card e alinhar seta mobile da arvore
+1a6b03b fix: compactar filtros do calendario mobile
+8a14c9f fix: ajustar menu do avatar
+beb5438 fix: ajustar calendario mobile e filtros
+abd6310 docs: registrar ajustes mobile recentes
+8c98de0 fix: ajustar zoom mobile das views genealogicas
+d1916a3 fix: ajustar resumo e botoes da edicao da arvore
 c269539 fix: ajustar seta mobile e dashboard admin
 ```
 
@@ -66,7 +89,8 @@ Ajustes iterativos realizados:
 - ajustar fonte do nome e dos detalhes;
 - ajustar escala da foto/avatar;
 - deslocar pais para fora da area visivel inicial;
-- reposicionar card central para ficar mais alto na tela.
+- reposicionar card central para ficar mais alto na tela;
+- apos nova rodada, subir novamente o enquadramento mobile da `/minha-arvore`.
 
 Valores usados durante o ciclo:
 
@@ -76,7 +100,7 @@ centralHeight = 350
 centralNameFontSize = 16 / 20
 centralDetailFontSize = 12 / 14
 mobileAvatarScale = 0.85
-TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 12 / 24 / 36 / 60 / 100
+TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 12 / 24 / 36 / 60 / 96 / 100
 centralY = CENTRAL_Y - 120
 centralY = CENTRAL_Y - 220
 centralY = CENTRAL_Y - 400
@@ -84,16 +108,17 @@ centralY = CENTRAL_Y - 520
 centralY = CENTRAL_Y - 760
 ```
 
-Estado confirmado no ciclo:
+Estado final do ciclo:
 
-```ts
-const centralY = isMobile ? CENTRAL_Y - 760 : CENTRAL_Y;
+- a view mobile da `/minha-arvore` passou a usar alinhamento vertical `top` no calculo de viewport;
+- `TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA` foi ajustado para favorecer o card principal mais alto;
+- o card central deve ser validado visualmente em 320px, 375px, 390px e 430px.
+
+Commit de referencia:
+
+```txt
+d7a88d2 fix: subir card e alinhar seta mobile da arvore
 ```
-
-Pendente visual reportado apos o ultimo deploy:
-
-- subir ainda mais o card central, se necessario;
-- manter o card central visualmente centralizado entre os botoes laterais de seta.
 
 ### 4.3 Setas de navegacao mobile
 
@@ -111,11 +136,18 @@ Regra adicional:
 - se o usuario estiver no ramo paterno e tocar seta direita, voltar ao card central;
 - se o usuario estiver no ramo materno e tocar seta esquerda, voltar ao card central.
 
-Estado/ponto de atencao:
+Estado final do ciclo:
 
-- o botao de seta superior existe no JSX e recebeu reforco de CSS;
-- ainda foi solicitado alinhar a seta superior exatamente na mesma reta dos botoes `+` e `-`;
-- esse alinhamento deve ser padronizado nas tres views da Home.
+- a seta superior deixou de depender do posicionamento fixo antigo via CSS;
+- a seta superior foi reposicionada junto ao grupo visual dos botoes de zoom `+` e `-`;
+- o alinhamento deve ser padronizado nas tres views da Home: `/minha-arvore`, `/genealogia` e `/visao-completa`.
+
+Commits de referencia:
+
+```txt
+c269539 fix: ajustar seta mobile e dashboard admin
+d7a88d2 fix: subir card e alinhar seta mobile da arvore
+```
 
 ### 4.4 Grupos inferiores
 
@@ -144,32 +176,37 @@ Ajustes definidos:
 
 ## 5. `/genealogia` e `/visao-completa`
 
-Ajuste implementado no ciclo:
+Ajustes implementados no ciclo:
 
-- no mobile, iniciar a view na primeira coluna que contem cards de pessoas, em vez de enquadrar toda a arvore.
+- no mobile, iniciar a view na primeira coluna que contem cards de pessoas, em vez de enquadrar toda a arvore;
+- ampliar os cards/zoom inicial no mobile;
+- reduzir padding mobile do viewport para deixar a coluna inicial mais legivel;
+- igualar o comportamento mobile de `/visao-completa` ao de `/genealogia`.
 
-Commit de referencia:
+Commits de referencia:
 
 ```txt
 455fdf2 fix: iniciar genealogia mobile na primeira coluna com pessoas
+8c98de0 fix: ajustar zoom mobile das views genealogicas
 ```
 
-Ajustes ainda solicitados:
-
-- `/genealogia`: ampliar mais os cards;
-- `/genealogia`: deixar apenas uma coluna visivel no carregamento inicial;
-- `/genealogia`: garantir que cards e cabecalho **Geracao 1** fiquem abaixo do titulo/subtitulo **Familia de Tulius**;
-- `/visao-completa`: usar mesmo zoom e mesmo comportamento visual de `/genealogia`;
-- `/visao-completa`: garantir que cards e cabecalho **Geracao 1** fiquem abaixo de **Linha Genealogica de Tulius**.
-
-Valores tentados no ciclo:
+Valores finais de referencia no ciclo:
 
 ```txt
-GENEALOGY_MOBILE_MAX_ZOOM = 0.84
-TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 150
+GENEALOGY_MOBILE_MAX_ZOOM = 1.08
+TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96
+TREE_MOBILE_VIEWPORT_PADDING_X = 12
+TREE_MOBILE_VIEWPORT_PADDING_Y = 10
 fitMode mobile = contain
 verticalAlign mobile = top
 ```
+
+QA visual necessario:
+
+- `/genealogia`: confirmar uma coluna visivel no carregamento inicial;
+- `/genealogia`: confirmar cards maiores e legiveis;
+- `/visao-completa`: confirmar mesmo padrao de zoom e visualizacao de `/genealogia`;
+- validar que titulos/legendas da geracao nao ficam colados no topo nem escondidos pelo header.
 
 ## 6. `/calendario-familiar`
 
@@ -179,13 +216,34 @@ Ajustes definidos/aplicados no ciclo:
 - categorias da legenda: aniversario, casamento, falecimento, outros, reuniao/confraternizacao;
 - alterar cor de **Falecimento** para roxo;
 - alterar destaque do dia atual de azul para cinza;
-- trocar label **Confraternizacao** por **Reuniao**.
+- trocar label **Confraternizacao** por **Reuniao**;
+- clarear o cinza do dia atual;
+- no mobile, trocar clique da bolinha colorida do calendario por rolagem/ancora para cards de resumo;
+- fazer a legenda mobile funcionar como filtro de categorias;
+- compactar filtros do calendario mobile para melhorar encaixe em telas estreitas.
 
-Ajustes ainda solicitados:
+Commits de referencia:
 
-- deixar o cinza do dia atual mais claro;
-- clique na bolinha colorida de evento no calendario deve redirecionar/ancorar para o card **Aniversariantes** ou **Memoria**, em vez de abrir modal;
-- o card de legendas deve funcionar como filtro de categorias: clicar em uma legenda oculta/exibe eventos daquela categoria.
+```txt
+beb5438 fix: ajustar calendario mobile e filtros
+1a6b03b fix: compactar filtros do calendario mobile
+```
+
+Comportamento final esperado:
+
+- tocar em legenda/filtro mobile alterna a categoria via `activeCategories`/`toggleCategory`;
+- filtros usam estado visual ativo/inativo com `aria-pressed`;
+- tocar na bolinha de um dia com aniversario leva ao card **Aniversariantes**;
+- tocar na bolinha de um dia com falecimento/memoria leva ao card **Memoria**;
+- tocar em evento sem card especifico pode levar ao card **Categorias**;
+- o modal de eventos do dia deixa de ser o comportamento padrao da bolinha mobile;
+- o dia atual usa cinza claro, nao cinza escuro/azul.
+
+Documento canonico atualizado:
+
+```txt
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+```
 
 ## 7. `/meus-favoritos`
 
@@ -220,43 +278,57 @@ c269539 fix: ajustar seta mobile e dashboard admin
 
 ## 9. `/minha-arvore/editar`
 
-Ajustes solicitados e ainda pendentes de implementacao/validacao:
+Ajustes aplicados no ciclo:
 
-- exibir os cards **Pais**, **Irmaos**, **Conjuges** e **Filhos** em uma linha com quatro colunas;
-- no container **Meus Dados**, renomear botao **Alterar foto** para **Alterar**;
-- renomear botao **Remover foto** para **Remover**.
+- cards **Pais**, **Irmaos**, **Conjuges** e **Filhos** exibidos em uma linha com quatro colunas;
+- no container **Meus Dados**, botao **Alterar foto** renomeado para **Alterar**;
+- botao **Remover foto** renomeado para **Remover**.
+
+Commit de referencia:
+
+```txt
+d1916a3 fix: ajustar resumo e botoes da edicao da arvore
+```
+
+QA visual necessario:
+
+- validar legibilidade dos quatro cards em 320px;
+- confirmar que os botoes de foto continuam acionando os mesmos handlers.
 
 ## 10. Menu do avatar/header
 
 Ajustes realizados no ciclo:
 
 - corrigida abertura do menu do usuario no desktop;
-- menu mobile passou a incluir seletor de visualizacao da arvore.
+- menu mobile passou a incluir seletor de visualizacao da arvore;
+- corrigida acentuacao dos itens **Forum/Fórum**, **Calendario/Calendário** e **Notificacoes/Notificações**, conforme padrao final aplicado no codigo;
+- adicionado atalho **Painel Admin**, condicionado a permissao administrativa;
+- adicionado atalho **Editar notificacoes**.
 
-Ajustes ainda solicitados:
+Commits de referencia:
 
-- corrigir acentuacao dos itens:
-  - **Forum** -> **Forum** com acento: **Forum/Fórum** conforme padrao final do projeto;
-  - **Calendario** -> **Calendario** com acento: **Calendario/Calendário** conforme padrao final;
-  - **Notificacoes** -> **Notificacoes** com acento: **Notificações**;
-- adicionar botao **Painel Admin**;
-- adicionar botao **Editar notificacoes**.
+```txt
+8a14c9f fix: ajustar menu do avatar
+```
 
-Observacao: manter consistencia com os textos canonicos definidos em `MemberPageHeader`/menu do usuario.
+Ponto de atencao:
+
+- botao **Painel Admin** deve continuar condicionado a permissao real; UI nao substitui `ProtectedRoute`, RLS ou validacao de acesso.
 
 ## 11. Pendencias atuais rastreadas
 
-Pendencias de produto/UX ao final do ciclo:
+Pendencias de implementacao do ciclo: **nao ha pendencias de codigo abertas registradas neste historico para as frentes acima**.
 
-1. `/minha-arvore`: subir mais o card central, se necessario.
-2. `/minha-arvore`: alinhar seta superior com botoes de zoom `+`/`-` e padronizar nas tres views.
-3. `/genealogia`: ampliar cards e garantir uma coluna visivel no mobile.
-4. `/visao-completa`: igualar zoom e visualizacao a `/genealogia`.
-5. `/calendario-familiar`: clarear cinza do dia atual.
-6. `/calendario-familiar`: bolinhas do calendario devem ancorar para cards de resumo.
-7. `/calendario-familiar`: legenda mobile deve funcionar como filtro.
-8. `/minha-arvore/editar`: ajustar cards de vinculos e labels de botoes de foto.
-9. Menu do avatar: corrigir acentos e adicionar atalhos faltantes.
+Pendencias de QA/manual ainda recomendadas:
+
+1. `/minha-arvore`: confirmar em mobile que o card principal subiu o suficiente e nao ficou escondido pelo header/controles.
+2. `/minha-arvore`: confirmar que a seta superior esta alinhada visualmente aos botoes de zoom `+`/`-`.
+3. `/genealogia`: confirmar cards maiores e uma coluna visivel no carregamento inicial.
+4. `/visao-completa`: confirmar mesmo comportamento mobile de `/genealogia`.
+5. `/calendario-familiar`: validar filtro por legenda mobile em todas as categorias.
+6. `/calendario-familiar`: validar ancoragem da bolinha para **Aniversariantes**, **Memoria** ou **Categorias**, conforme evento do dia.
+7. `/minha-arvore/editar`: validar quatro cards em 320px e 375px.
+8. Menu do avatar: validar acentos, atalhos e exibicao condicional do **Painel Admin**.
 
 ## 12. QA recomendado para proxima rodada
 
@@ -291,5 +363,25 @@ Checklist minimo:
 - arvore navegavel por toque;
 - uma coluna por tela em Genealogia/Visao Completa mobile;
 - calendario filtra categorias sem perder contadores essenciais;
+- bolinhas do calendario mobile ancoram para cards de resumo;
+- dia atual do calendario permanece em cinza claro;
 - menu do avatar preserva rotas e permissao de admin;
 - build, testes e `git diff --check` passam antes do commit.
+
+## 13. Reflexo em documentos canonicos
+
+Atualizacoes realizadas neste ciclo documental:
+
+- `docs/historico/AJUSTES_MOBILE_2026-06-02.md`: consolidado como registro historico do ciclo.
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: atualizado para registrar comportamento especifico do calendario mobile.
+
+Documentos revisados sem alteracao nesta rodada:
+
+- `docs/GUIA_UX_LAYOUT.md`: regras gerais de responsividade, header, containers e mobile-first ja cobrem o padrao; evitar duplicar detalhes especificos do calendario.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: nao ha nova pendencia de implementacao; manter apenas QA manual no historico deste ciclo.
+
+Se algum comportamento visual da arvore mobile for confirmado como regra permanente apos QA final, avaliar atualizacao pontual em:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+```
