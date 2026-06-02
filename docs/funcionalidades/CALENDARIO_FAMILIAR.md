@@ -54,6 +54,7 @@ docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/arquitetura/ROTAS_E_GUARDS.md
 docs/funcionalidades/NOTIFICACOES.md
+docs/historico/AJUSTES_MOBILE_2026-06-02.md
 ```
 
 ---
@@ -77,11 +78,14 @@ Regras:
 
 - Navegacao por mes com botoes de mes anterior/proximo.
 - Grid mensal com dias da semana.
-- Dia atual destacado.
-- Ate 3 eventos visiveis por dia no grid compacto.
+- Dia atual destacado em cinza claro, sem usar azul nem cinza escuro dominante.
+- Ate 3 eventos visiveis por dia no grid desktop/tablet.
+- No mobile, o dia com evento exibe bolinha colorida compacta.
+- No mobile, tocar na bolinha colorida nao abre modal por padrao; deve rolar/ancorar para um card de resumo.
 - Lista lateral/inferior de aniversariantes e memoria do mes.
 - Card lateral **Memoria** so aparece quando houver ao menos um falecimento no mes exibido com os filtros atuais.
 - Sidebar **Categorias** com filtros clicaveis.
+- Legenda/filtros mobile tambem alternam categorias, usando o mesmo estado de filtro da sidebar.
 - Categorias ficam em `activeCategories`.
 - Categorias sao alternadas por `toggleCategory`.
 - Contadores usam singular/plural: **1 evento**, **2 eventos**.
@@ -127,9 +131,61 @@ Os contadores da sidebar consideram os eventos do mes exibido,
 nao apenas os eventos atualmente ativos no filtro.
 ```
 
+### 6.1 Legenda/filtros mobile
+
+No mobile, o card de legenda abaixo de **Mes exibido** deve funcionar tambem como filtro.
+
+Categorias exibidas no card mobile:
+
+```txt
+Aniversario
+Casamento
+Falecimento
+Outros
+Reuniao
+```
+
+Regras:
+
+- cada item deve ser botao clicavel;
+- cada item deve chamar `toggleCategory(category)`;
+- cada item deve refletir estado ativo/inativo via `activeCategories`;
+- cada item deve usar `aria-pressed`;
+- estado inativo pode usar opacidade reduzida e fundo branco;
+- estado ativo deve manter cor visual da categoria;
+- nao duplicar estado local de filtro apenas para o mobile.
+
 ---
 
-## 7. Microcopy
+## 7. Interacao mobile com bolinhas do calendario
+
+No mobile, a bolinha colorida do dia deve servir como atalho para o resumo do mes, nao como abertura do modal de eventos do dia.
+
+Regra de destino:
+
+| Evento do dia | Destino esperado |
+|---|---|
+| Aniversario | Card **Aniversariantes** |
+| Falecimento/memoria | Card **Memoria** |
+| Outros eventos sem card especifico | Card **Categorias** ou resumo equivalente |
+
+Implementacao esperada:
+
+```txt
+scrollToMonthSummary(eventosDia)
+```
+
+Comportamento:
+
+- se houver aniversario no dia, priorizar `#aniversariantes`;
+- se nao houver aniversario e houver falecimento, usar `#memoria`;
+- se nao houver card especifico, usar `#categorias-calendario`;
+- usar `scrollIntoView({ behavior: 'smooth', block: 'start' })` quando o alvo existir;
+- manter o modal de eventos apenas se uma decisao futura reintroduzir esse comportamento explicitamente.
+
+---
+
+## 8. Microcopy
 
 Regras de texto:
 
@@ -160,7 +216,7 @@ Exemplos:
 
 ---
 
-## 8. Google Agenda
+## 9. Google Agenda
 
 A UI permite:
 
@@ -182,7 +238,7 @@ Regras:
 
 ---
 
-## 9. Responsividade
+## 10. Responsividade
 
 Regras:
 
@@ -190,7 +246,9 @@ Regras:
 - sidebar pode virar bloco empilhado em telas menores;
 - grid mensal nao deve causar overflow horizontal global;
 - cards compactos devem truncar texto quando necessario;
-- lista inferior/lateral deve usar quebra de linha segura.
+- lista inferior/lateral deve usar quebra de linha segura;
+- filtros mobile devem caber em telas estreitas sem criar overflow horizontal;
+- o destaque do dia atual deve ser perceptivel sem escurecer demais o grid.
 
 Larguras de QA:
 
@@ -205,7 +263,7 @@ desktop
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### Categorias nao filtram
 
@@ -223,7 +281,27 @@ Correcao:
 
 - confirmar que o clique altera `activeCategories`;
 - confirmar que a lista filtrada usa categorias ativas;
-- confirmar que a sidebar nao esta apenas visualmente ativa.
+- confirmar que a sidebar nao esta apenas visualmente ativa;
+- confirmar que a legenda mobile nao criou estado paralelo ao da sidebar.
+
+---
+
+### Bolinha mobile ainda abre modal
+
+Verificar:
+
+```txt
+openDayEvents
+scrollToMonthSummary
+onClick da bolinha mobile
+selectedDayEvents
+```
+
+Regra:
+
+- a bolinha mobile deve chamar `scrollToMonthSummary(eventosDia)`;
+- nao deve chamar `openDayEvents(dia, eventosDia)` como comportamento padrao;
+- cards de destino devem ter IDs estaveis: `aniversariantes`, `memoria`, `categorias-calendario`.
 
 ---
 
@@ -330,7 +408,7 @@ import { AppLink as Link } from '../components/AppLink';
 
 ---
 
-## 11. Checklist de QA
+## 12. Checklist de QA
 
 ### QA tecnico
 
@@ -352,6 +430,7 @@ npm run test:e2e
 - trocar mes;
 - voltar mes;
 - clicar em categorias da sidebar;
+- clicar em categorias da legenda/filtro mobile;
 - validar singular/plural dos contadores;
 - validar aniversario no grid;
 - validar aniversario na lista;
@@ -359,7 +438,8 @@ npm run test:e2e
 - validar card **Memoria** com texto **anos da morte de**;
 - validar que **Memoria** aparece apenas quando houver itens;
 - validar setas de mes anterior/proximo com o texto do mes centralizado;
-- validar dia atual destacado;
+- validar dia atual destacado em cinza claro;
+- validar que bolinha mobile ancora para **Aniversariantes**, **Memoria** ou **Categorias**;
 - validar desktop;
 - validar 768px;
 - validar 430px;
@@ -371,7 +451,7 @@ npm run test:e2e
 
 ---
 
-## 12. Pos-MVP
+## 13. Pos-MVP
 
 Possiveis evolucoes:
 
@@ -391,7 +471,7 @@ Esses itens nao bloqueiam o MVP.
 
 ---
 
-## 13. Regras de manutencao
+## 14. Regras de manutencao
 
 Nao fazer:
 
