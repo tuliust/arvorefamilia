@@ -149,7 +149,7 @@ function formatCalendarEventTitle(evento: EventoCalendarioFamiliar) {
 
 function formatCalendarEventDescription(evento: EventoCalendarioFamiliar) {
   if (evento.category === 'falecimento' || evento.tipo === 'falecimento') {
-    return `Falecimento de ${evento.nome}`;
+    return `Memória de ${evento.nome}`;
   }
 
   if (evento.category !== 'aniversarios' && evento.tipo !== 'aniversario') {
@@ -648,7 +648,7 @@ export function CalendarioFamiliar() {
 
             {falecimentosMes.length > 0 && (
               <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-4 text-lg font-bold text-gray-900">Dias de falecimento</h3>
+                <h3 className="mb-4 text-lg font-bold text-gray-900">Memória</h3>
                 <div className="space-y-3">
                   {falecimentosMes.map((evento) => (
                     <Link

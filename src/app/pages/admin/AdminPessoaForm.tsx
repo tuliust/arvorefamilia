@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ import {
   SubtipoRelacionamento,
   LadoPessoa,
 } from '../../types';
-import { Save, Plus, X, User, Search, Link2, Settings, Trash2 } from 'lucide-react';
+import { Save, Plus, X, User, Search, Link2, Trash2 } from 'lucide-react';
 import { FotoUpload } from '../../components/FotoUpload';
 import { ArquivosHistoricos } from '../../components/ArquivosHistoricos';
 import {
@@ -879,16 +879,10 @@ export function AdminPessoaForm() {
         subtitle={isEdit ? 'Atualize os dados desta pessoa da árvore' : 'Cadastre uma nova pessoa na árvore familiar'}
         icon={User}
         actions={[
-          ...DEFAULT_MEMBER_HEADER_ACTIONS,
-          { label: 'Admin', to: '/admin', icon: Settings },
+          { label: 'Admin', to: '/admin', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Pessoas', to: '/admin/pessoas', icon: User },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
         ]}
-        customActions={(
-          <Button form="pessoa-form" type="submit" disabled={isSubmitting} className="w-full rounded-xl shadow-sm sm:w-auto">
-            <Save className="mr-2 h-4 w-4 shrink-0" />
-            {isSubmitting ? 'Salvando...' : 'Salvar'}
-          </Button>
-        )}
       />
 
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
@@ -1379,6 +1373,17 @@ export function AdminPessoaForm() {
           )}
         </form>
       </main>
+
+      <Button
+        form="pessoa-form"
+        type="submit"
+        disabled={isSubmitting}
+        className="fixed bottom-24 right-4 z-40 h-12 max-w-[calc(100vw-2rem)] rounded-xl px-4 shadow-lg md:bottom-6 md:right-6"
+        aria-label="Salvar"
+      >
+        <Save className="h-5 w-5 shrink-0" />
+        <span className="truncate">{isSubmitting ? 'Salvando...' : 'Salvar'}</span>
+      </Button>
 
       <ConfirmDialog
         open={showPrompt}

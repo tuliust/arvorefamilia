@@ -1,18 +1,24 @@
+import type React from 'react';
 import { MessageCircleQuestion } from 'lucide-react';
+import { AppLink as Link } from '../AppLink';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 
 type ForumEmptyStateProps = {
   titulo?: string;
   descricao?: string;
+  actionHref?: string;
   actionLabel?: string;
+  actionIcon?: React.ComponentType<{ className?: string }>;
   onAction?: () => void;
 };
 
 export function ForumEmptyState({
   titulo = 'Nenhum tópico encontrado',
   descricao = 'Ainda não há conteúdo para exibir nesta categoria ou busca.',
+  actionHref,
   actionLabel,
+  actionIcon: ActionIcon,
   onAction,
 }: ForumEmptyStateProps) {
   return (
@@ -23,6 +29,17 @@ export function ForumEmptyState({
         </span>
         <h3 className="text-lg font-semibold text-gray-900">{titulo}</h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">{descricao}</p>
+        {actionHref && actionLabel && (
+          <Link
+            to={actionHref}
+            className="mx-auto mt-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label={actionLabel}
+            title={actionLabel}
+          >
+            {ActionIcon && <ActionIcon className="h-5 w-5" />}
+            <span className="sr-only">{actionLabel}</span>
+          </Link>
+        )}
         {actionLabel && onAction && (
           <Button type="button" onClick={onAction} className="mt-5">
             {actionLabel}

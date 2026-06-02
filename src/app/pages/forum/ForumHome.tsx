@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { MessageCircle, Search } from 'lucide-react';
+import { MessageCircle, Plus, Search } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -104,7 +104,6 @@ export function ForumHome() {
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
-          { label: 'Criar tópico', to: '/forum/novo', icon: HEADER_ACTION_ICONS.Plus, variant: 'primary' },
         ]}
       />
 
@@ -220,6 +219,9 @@ export function ForumHome() {
               <ForumEmptyState
                 titulo="Nenhum tópico encontrado"
                 descricao="Não encontramos discussões para a combinação atual de termo, categoria, tipo e status."
+                actionHref="/forum/novo"
+                actionLabel="Criar tópico"
+                actionIcon={Plus}
               />
             ) : (
               topicos.map((topico) => {
@@ -256,6 +258,15 @@ export function ForumHome() {
           </div>
         </section>
       </main>
+
+      <Link
+        to="/forum/novo"
+        className="fixed bottom-24 right-4 z-40 inline-flex h-12 max-w-[calc(100vw-2rem)] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-medium text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:bottom-6 md:right-6"
+        aria-label="Criar tópico"
+      >
+        <Plus className="h-5 w-5 shrink-0" />
+        <span className="truncate">Criar tópico</span>
+      </Link>
     </div>
   );
 }

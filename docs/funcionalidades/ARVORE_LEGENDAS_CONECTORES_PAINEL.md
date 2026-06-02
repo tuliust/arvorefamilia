@@ -412,6 +412,14 @@ Regra:
 A secao Alianca nao deve virar filtro sem uma frente especifica.
 ```
 
+Modal aberto pela alianca:
+
+- titulo do header: **Relacionamento conjugal**;
+- nao exibir subtitulo com os dois nomes no header;
+- manter nomes completos abaixo dos avatares;
+- headline narrativa usa primeiro nome, sem `+` entre pessoas;
+- exemplos: **Nome1 e Nome2 sao casados.** ou **Nome1 e Nome2 foram casados.**
+
 ---
 
 ## 6. Classificacao de linhas na Minha Arvore

@@ -102,6 +102,29 @@ function getSafePersonName(person: Pessoa | undefined, fallback: string) {
   return person?.nome_completo?.trim() || fallback;
 }
 
+function getFirstName(name: string) {
+  return name.trim().split(/\s+/)[0] || name.trim();
+}
+
+function buildRelationshipHeadline(
+  status: GenealogyMarriageStatus,
+  person1Name: string,
+  person2Name: string
+) {
+  const name1 = getFirstName(person1Name);
+  const name2 = getFirstName(person2Name);
+
+  if (status === 'active') {
+    return `${name1} e ${name2} são casados.`;
+  }
+
+  if (status === 'divorced' || status === 'widowed') {
+    return `${name1} e ${name2} foram casados.`;
+  }
+
+  return `${name1} e ${name2} tiveram um relacionamento conjugal.`;
+}
+
 function getInitials(name: string) {
   const ignoredParts = new Set(['de', 'da', 'das', 'do', 'dos', 'e']);
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -139,19 +162,13 @@ function buildMarriageNarrative({
   relationship,
   person1,
   person2,
-  person1Fallback,
-  person2Fallback,
 }: {
   status: GenealogyMarriageStatus;
   relationship?: Relacionamento;
   person1?: Pessoa;
   person2?: Pessoa;
-  person1Fallback: string;
-  person2Fallback: string;
 }) {
   const relationshipRecord = (relationship || {}) as Record<string, unknown>;
-  const name1 = getSafePersonName(person1, person1Fallback);
-  const name2 = getSafePersonName(person2, person2Fallback);
   const marriageDateValue = getRelationshipField(relationshipRecord, [
     'data_casamento',
     'data_relacionamento',
@@ -177,8 +194,6 @@ function buildMarriageNarrative({
   const lines: string[] = [];
 
   if (status === 'active') {
-    lines.push(`"${name1}" é casada(o) com "${name2}".`);
-
     const weddingLine = appendDateAndPlace('Eles se casaram', marriageDateText, marriagePlace);
     if (weddingLine) lines.push(weddingLine);
 
@@ -186,8 +201,6 @@ function buildMarriageNarrative({
   }
 
   if (status === 'divorced') {
-    lines.push(`"${name1}" foi casada(o) com "${name2}".`);
-
     const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
     if (unionLine) lines.push(unionLine);
     if (separationDate) lines.push(`Eles se separaram em ${separationDate.formatted}.`);
@@ -196,9 +209,6 @@ function buildMarriageNarrative({
   }
 
   if (status === 'widowed') {
-    const durationText = durationYears !== undefined ? ` por ${durationYears} anos` : '';
-    lines.push(`"${name1}" foi casada(o)${durationText} com "${name2}".`);
-
     const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
     if (unionLine) lines.push(unionLine);
 
@@ -210,8 +220,6 @@ function buildMarriageNarrative({
 
     return lines;
   }
-
-  lines.push(`"${name1}" e "${name2}" tiveram um relacionamento conjugal.`);
 
   const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
   if (unionLine) lines.push(unionLine);
@@ -291,13 +299,12 @@ export function ViewMarriageModal({
   ]);
   const person1Name = getSafePersonName(marriage.person1, marriage.person1Id || 'Pessoa 1');
   const person2Name = getSafePersonName(marriage.person2, marriage.person2Id || 'Pessoa 2');
+  const relationshipHeadline = buildRelationshipHeadline(status, person1Name, person2Name);
   const narrativeLines = buildMarriageNarrative({
     status,
     relationship: marriage.relationship,
     person1: marriage.person1,
     person2: marriage.person2,
-    person1Fallback: marriage.person1Id || 'Pessoa 1',
-    person2Fallback: marriage.person2Id || 'Pessoa 2',
   });
 
   const handleArquivosChange = (nextArquivos: ArquivoHistorico[]) => {
@@ -346,11 +353,6 @@ export function ViewMarriageModal({
               <h2 id="view-marriage-modal-title" className="text-base font-semibold text-gray-900">
                 Relacionamento conjugal
               </h2>
-              <p className="mt-1 text-sm text-gray-500 break-words">
-                {person1Name}
-                {' e '}
-                {person2Name}
-              </p>
             </div>
           </div>
 
@@ -382,18 +384,18 @@ export function ViewMarriageModal({
 
             <div className="mt-5 min-w-0 rounded-xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm">
               <p className="text-center text-base font-semibold text-slate-900 sm:text-lg">
-                <span className="break-words">{person1Name}</span>
-                <span className="px-2 text-emerald-600">+</span>
-                <span className="break-words">{person2Name}</span>
+                <span className="break-words">{relationshipHeadline}</span>
               </p>
 
-              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                {narrativeLines.map((line) => (
-                  <p key={line} className="break-words">
-                    {line}
-                  </p>
-                ))}
-              </div>
+              {narrativeLines.length > 0 && (
+                <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                  {narrativeLines.map((line) => (
+                    <p key={line} className="break-words">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

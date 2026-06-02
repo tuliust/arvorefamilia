@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
-import { ArrowLeft, FileText, Search, UserRound } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router';
+import { FileText, Search, UserRound } from 'lucide-react';
 
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { searchGlobal, type GlobalSearchResults } from '../services/globalSearchService';
 
 export function BuscaResultados() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q')?.trim() || '';
   const [term, setTerm] = useState(query);
@@ -79,28 +79,19 @@ export function BuscaResultados() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="shrink-0 bg-white"
-            onClick={() => navigate('/minha-arvore')}
-            aria-label="Voltar para Minha Árvore"
-            title="Voltar para Minha Árvore"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+      <MemberPageHeader
+        title={title}
+        subtitle="Busque pessoas e páginas da árvore familiar."
+        icon={Search}
+        actions={[
+          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
+          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+        ]}
+      />
 
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Busca</p>
-            <h1 className="truncate text-lg font-bold text-gray-950 sm:text-xl">{title}</h1>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6`}>
+        <div className="mx-auto max-w-6xl">
         <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <label htmlFor="global-search-page-input" className="text-sm font-medium text-gray-900">
             Buscar pessoas ou páginas
@@ -196,6 +187,7 @@ export function BuscaResultados() {
             )}
           </div>
         </section>
+        </div>
       </main>
     </div>
   );
