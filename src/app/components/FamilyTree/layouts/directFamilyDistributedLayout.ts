@@ -212,11 +212,6 @@ const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
-const SPARSE_CENTRAL_LOWER_GROUP_GAP = 72;
-const SPARSE_CENTRAL_LOWER_STACK_GAP = 24;
-const SPARSE_LOWER_GROUP_Y = CENTRAL_Y + CENTRAL_HEIGHT + SPARSE_CENTRAL_LOWER_GROUP_GAP;
-const SPARSE_DESKTOP_VIEWPORT_HEIGHT = 1960;
-const SPARSE_MOBILE_VIEWPORT_HEIGHT = 2040;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: 3,
@@ -840,37 +835,6 @@ function resolveGroupColumns(spec: GroupSpec, ids = spec.ids, index?: Relationsh
 
 function visibleGroupHeight(ids: string[], maxPerRow: number, index?: RelationshipIndex, spec?: GroupSpec) {
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
-}
-
-function hasRenderableGroupMembers(
-  group: GroupSpec,
-  positionedIds: Set<string>,
-  personNodeById: Map<string, Node>
-) {
-  return group.ids.some((id) => !positionedIds.has(id) && personNodeById.has(id));
-}
-
-function isSparseDirectTreeLayout({
-  visiblePaternalGroups,
-  visibleMaternalGroups,
-  hasRenderableParents,
-  lowerGroups,
-  positionedIds,
-  personNodeById,
-}: {
-  visiblePaternalGroups: GroupSpec[];
-  visibleMaternalGroups: GroupSpec[];
-  hasRenderableParents: boolean;
-  lowerGroups: GroupSpec[];
-  positionedIds: Set<string>;
-  personNodeById: Map<string, Node>;
-}) {
-  const hasSideGroups = visiblePaternalGroups.length > 0 || visibleMaternalGroups.length > 0;
-  const hasLowerGroups = lowerGroups.some((group) =>
-    hasRenderableGroupMembers(group, positionedIds, personNodeById)
-  );
-
-  return !hasSideGroups && !hasRenderableParents && hasLowerGroups;
 }
 
 // Helpers legados de alinhamento vertical. A area central inferior da Minha Arvore
@@ -1906,13 +1870,13 @@ function addLegend(nodes: Node[]) {
   });
 }
 
-function getDirectFamilyViewportBounds(isMobile = false, isSparseLayout = false): TreeLayoutBounds {
+function getDirectFamilyViewportBounds(isMobile = false): TreeLayoutBounds {
   if (isMobile) {
     return {
       x: MOBILE_FRAME_LEFT,
       y: MOBILE_FRAME_TOP,
       width: MOBILE_FRAME_RIGHT - MOBILE_FRAME_LEFT,
-      height: isSparseLayout ? SPARSE_MOBILE_VIEWPORT_HEIGHT : MOBILE_FRAME_BOTTOM - MOBILE_FRAME_TOP,
+      height: MOBILE_FRAME_BOTTOM - MOBILE_FRAME_TOP,
     };
   }
 
@@ -1920,7 +1884,7 @@ function getDirectFamilyViewportBounds(isMobile = false, isSparseLayout = false)
     x: DIRECT_FRAME_LEFT,
     y: FRAME_TOP,
     width: DIRECT_FRAME_RIGHT - DIRECT_FRAME_LEFT,
-    height: isSparseLayout ? SPARSE_DESKTOP_VIEWPORT_HEIGHT : DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - FRAME_TOP,
+    height: DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y - FRAME_TOP,
   };
 }
 
@@ -1929,6 +1893,7 @@ export function directFamilyDistributedLayout(
   options: DirectFamilyLayoutOptions = {}
 ): TreeLayoutResult {
   const filters = options.filters || DEFAULT_DIRECT_RELATIVE_FILTERS;
+  const viewportBounds = getDirectFamilyViewportBounds(options.isMobile);
   const allPersonNodeById = new Map(graph.personNodes.map((node) => [node.id, node]));
   const pessoasById = new Map(graph.pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const index = buildRelationshipIndex(graph.relacionamentos);
@@ -2025,10 +1990,6 @@ export function directFamilyDistributedLayout(
     laneWidth: SIDE_PARENT_CARD_WIDTH + GROUP_BOX_PADDING_X * 2, cardWidth: SIDE_PARENT_CARD_WIDTH, cardHeight: SIDE_PARENT_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
 
-  const hasRenderableParents = [motherGroup, fatherGroup].some((group) =>
-    hasRenderableGroupMembers(group, positionedIds, personNodeById)
-  );
-
   placeGroup(motherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(fatherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
 
@@ -2107,22 +2068,10 @@ export function directFamilyDistributedLayout(
     laneWidth: lowerSplitLaneWidth, cardWidth: lowerSplitCardWidth, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
 
-  const isSparseLayout = isSparseDirectTreeLayout({
-    visiblePaternalGroups,
-    visibleMaternalGroups,
-    hasRenderableParents,
-    lowerGroups: [siblingGroup, nephewGroup, spouseGroup, childrenGroup, petGroup, grandchildrenGroup],
-    positionedIds,
-    personNodeById,
-  });
-  const viewportBounds = getDirectFamilyViewportBounds(options.isMobile, isSparseLayout);
-  const lowerGroupY = isSparseLayout ? SPARSE_LOWER_GROUP_Y : LOWER_GROUP_Y;
-  const lowerStackGap = isSparseLayout ? SPARSE_CENTRAL_LOWER_STACK_GAP : CENTRAL_LOWER_STACK_GAP;
-
   const leftLowerPositions = compactLowerGroupTopPositions(
     [siblingGroup, nephewGroup],
-    lowerGroupY,
-    lowerStackGap,
+    LOWER_GROUP_Y,
+    CENTRAL_LOWER_STACK_GAP,
     index
   );
 
@@ -2131,15 +2080,15 @@ export function directFamilyDistributedLayout(
   const childrenColumns = resolveGroupColumns(childrenGroup, childrenGroup.ids, index);
   const childrenHeight = visibleGroupHeight(childrenGroup.ids, childrenColumns, index, childrenGroup);
   const splitTopY = spouses.length > 0
-    ? lowerGroupY + spouseHeight + lowerStackGap
-    : lowerGroupY;
+    ? LOWER_GROUP_Y + spouseHeight + CENTRAL_LOWER_STACK_GAP
+    : LOWER_GROUP_Y;
   const grandchildrenTopY = children.length > 0
-    ? splitTopY + childrenHeight + lowerStackGap
+    ? splitTopY + childrenHeight + CENTRAL_LOWER_STACK_GAP
     : splitTopY;
 
-  placeGroup(siblingGroup, leftLowerPositions.get(siblingGroup.key) ?? lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(nephewGroup, leftLowerPositions.get(nephewGroup.key) ?? lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(spouseGroup, lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(siblingGroup, leftLowerPositions.get(siblingGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(nephewGroup, leftLowerPositions.get(nephewGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(childrenGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(petGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, grandchildrenTopY, positionedNodes, positionedIds, personNodeById, index);
