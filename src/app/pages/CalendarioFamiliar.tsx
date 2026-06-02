@@ -344,8 +344,24 @@ export function CalendarioFamiliar() {
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
-          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
-        ]}
+          { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },        ]}
+        mobileCustomActions={user ? (
+          <button
+            type="button"
+            onClick={() => setShowGoogleCalendarMobileCard((value) => !value)}
+            className={[
+              'inline-flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+              showGoogleCalendarMobileCard
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
+            ].join(' ')}
+            aria-label="Google Agenda"
+            title="Google Agenda"
+            aria-pressed={showGoogleCalendarMobileCard}
+          >
+            <CalendarSync className="h-5 w-5" />
+          </button>
+        ) : undefined}
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
@@ -719,5 +735,6 @@ export function CalendarioFamiliar() {
     </div>
   );
 }
+
 
 

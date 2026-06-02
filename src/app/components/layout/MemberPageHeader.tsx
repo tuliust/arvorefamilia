@@ -42,6 +42,7 @@ interface MemberPageHeaderProps {
   icon?: React.ComponentType<{ className?: string }>;
   actions?: HeaderAction[];
   customActions?: React.ReactNode;
+  mobileCustomActions?: React.ReactNode;
   className?: string;
 }
 
@@ -171,6 +172,7 @@ export function MemberPageHeader({
   icon: Icon = Network,
   actions = [],
   customActions,
+  mobileCustomActions,
   className = '',
 }: MemberPageHeaderProps) {
   return (
@@ -193,6 +195,12 @@ export function MemberPageHeader({
               </p>
             </div>
           </div>
+
+          {mobileCustomActions && (
+            <div className="flex shrink-0 items-center justify-end md:hidden">
+              {mobileCustomActions}
+            </div>
+          )}
 
           {(actions.length > 0 || customActions) && (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 sm:gap-2 md:flex">
