@@ -1,10 +1,15 @@
 ﻿@media (max-width: 767px) {
   .family-tree-export-root [aria-label="Mover árvore para cima"] {
-    position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 11.25rem);
-    left: 50vw;
-    right: auto;
-    transform: translateX(-50%);
+    position: fixed !important;
+    top: calc(env(safe-area-inset-top, 0px) + 13.5rem) !important;
+    left: 50vw !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
 
   .family-tree-export-root [aria-label="Mover árvore para baixo"] {
