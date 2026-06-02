@@ -415,7 +415,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const centralPaddingY = isMobile ? 10 : Math.max(18, Math.round(30 * cappedCardScale));
     const centralPaddingX = isMobile ? 16 : Math.max(30, Math.round(42 * cappedCardScale));
     const centralNameFontSize = isMobile ? 16 : Math.max(36, Math.round(50 * cappedCardScale * 1.08));
-    const centralDetailFontSize = isMobile ? 14 : clampNumber(
+    const centralDetailFontSize = isMobile ? 12 : clampNumber(
       Math.round(34 * cappedCardScale),
       24,
       32
