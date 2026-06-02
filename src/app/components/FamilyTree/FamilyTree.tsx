@@ -454,6 +454,20 @@ function normalizeTreeLayoutByPersonBounds(
   };
 }
 
+function shouldUseLogicalDirectFamilyBounds(
+  mode: LayoutNormalizationMode,
+  layout: TreeLayoutResult,
+  directFamilyGroupBounds: FlowBounds | null
+) {
+  if (mode !== 'direct-family') return false;
+  if (!layout.viewportBounds || !directFamilyGroupBounds) return false;
+
+  const widthRatio = directFamilyGroupBounds.width / Math.max(1, layout.viewportBounds.width);
+  const heightRatio = directFamilyGroupBounds.height / Math.max(1, layout.viewportBounds.height);
+
+  return widthRatio < 0.65 || heightRatio < 0.65;
+}
+
 function getLayoutNormalizationBounds(
   layout: TreeLayoutResult,
   mode: LayoutNormalizationMode,
@@ -479,6 +493,10 @@ function getLayoutNormalizationBounds(
   );
 
   if (!directFamilyGroupBounds) return personBounds;
+
+  if (shouldUseLogicalDirectFamilyBounds(mode, layout, directFamilyGroupBounds)) {
+    return layout.viewportBounds;
+  }
 
   const minY = Math.min(personBounds.y, directFamilyGroupBounds.y);
   const maxY = Math.max(
@@ -1642,3 +1660,4 @@ function FamilyTreeComponent({
 }
 
 export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
+
