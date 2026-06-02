@@ -417,7 +417,7 @@ export function CalendarioFamiliar() {
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calend\u00e1rio">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-gray-700 min-[390px]:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-1.5 gap-y-2 text-[9px] font-semibold text-gray-700 min-[390px]:grid-cols-3 min-[390px]:text-[10px]">
             {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => {
               const colors = CALENDAR_CATEGORY_COLORS[item.category];
               const active = activeCategories[item.category];
@@ -428,7 +428,7 @@ export function CalendarioFamiliar() {
                   type="button"
                   onClick={() => toggleCategory(item.category)}
                   aria-pressed={active}
-                  className="flex min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left transition"
+                  className="flex min-w-0 items-center gap-1 rounded-lg border px-1 py-1.5 text-left leading-tight transition"
                   style={{
                     borderColor: active ? colors.border : '#E5E7EB',
                     backgroundColor: active ? colors.background : '#FFFFFF',
@@ -437,7 +437,7 @@ export function CalendarioFamiliar() {
                   }}
                 >
                   <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.dot }} />
-                  <span className="truncate">{item.label}</span>
+                  <span className="min-w-0 whitespace-nowrap">{item.label}</span>
                 </button>
               );
             })}
