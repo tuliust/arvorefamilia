@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
+import type { Pessoa } from '../../types';
 
 function getInitials(displayName: string) {
   const cleanName = displayName.trim();
@@ -43,8 +45,40 @@ export function UserProfileMenu() {
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState<MemberProfile | null>(null);
+  const [linkedPerson, setLinkedPerson] = useState<Pessoa | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUserProfileMenuData() {
+      if (!user?.id) {
+        setProfile(null);
+        setLinkedPerson(null);
+        return;
+      }
+
+      const [profileResult, linkedPersonResult] = await Promise.all([
+        getMemberProfile(user.id),
+        getPrimaryLinkedPersonWithPessoa(user.id),
+      ]);
+
+      if (cancelled) return;
+
+      setProfile(profileResult.data ?? null);
+      setLinkedPerson(linkedPersonResult.data?.pessoa ?? null);
+    }
+
+    loadUserProfileMenuData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const displayName = String(
+    linkedPerson?.nome_completo ||
+    profile?.nome_exibicao ||
     user?.user_metadata?.nome_exibicao ||
     user?.user_metadata?.name ||
     user?.user_metadata?.full_name ||
@@ -53,7 +87,7 @@ export function UserProfileMenu() {
   ).trim();
 
   const firstName = getFirstName(displayName);
-  const avatarUrl = String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '').trim();
+  const avatarUrl = String(linkedPerson?.foto_principal_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '').trim();
   const initials = getInitials(displayName);
 
   useEffect(() => {
