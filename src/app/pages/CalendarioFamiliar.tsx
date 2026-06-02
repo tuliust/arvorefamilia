@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
@@ -55,10 +55,10 @@ const CALENDAR_CATEGORY_COLORS = {
   },
   falecimento: {
     label: 'Dia de Falecimento',
-    background: '#F8FAFC',
-    border: '#CBD5E1',
-    text: '#475569',
-    dot: '#64748B',
+    background: '#F5F3FF',
+    border: '#C4B5FD',
+    text: '#6D28D9',
+    dot: '#8B5CF6',
   },
   eventos_historicos: {
     label: 'Eventos Históricos',
@@ -68,7 +68,7 @@ const CALENDAR_CATEGORY_COLORS = {
     dot: '#EAB308',
   },
   confraternizacoes: {
-    label: 'Confraternizações',
+    label: 'Reuniões',
     background: '#F0FDF4',
     border: '#86EFAC',
     text: '#166534',
@@ -83,7 +83,7 @@ const MOBILE_CALENDAR_LEGEND_ITEMS = [
   { label: 'Casamento', color: CALENDAR_CATEGORY_COLORS.casamento.dot },
   { label: 'Falecimento', color: CALENDAR_CATEGORY_COLORS.falecimento.dot },
   { label: 'Outros', color: CALENDAR_CATEGORY_COLORS.eventos_historicos.dot },
-  { label: 'Confraternização', color: CALENDAR_CATEGORY_COLORS.confraternizacoes.dot },
+  { label: 'Reunião', color: CALENDAR_CATEGORY_COLORS.confraternizacoes.dot },
 ];
 
 const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
@@ -561,7 +561,7 @@ export function CalendarioFamiliar() {
                           <div className="mb-2 flex items-center justify-between">
                             <span
                               className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
-                                isHoje ? 'bg-blue-600 text-white' : 'text-gray-900'
+                                isHoje ? 'bg-gray-500 text-white' : 'text-gray-900'
                               }`}
                             >
                               {dia}

@@ -212,6 +212,8 @@ const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
+const MOBILE_LOWER_LEFT_GROUP_CENTER_X = VIEW_CENTER_X - 360;
+const MOBILE_LOWER_RIGHT_GROUP_CENTER_X = VIEW_CENTER_X + 360;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: 3,
@@ -1353,7 +1355,7 @@ function addCentralPerson(
   const centralWidth = isMobile ? 320 : CENTRAL_WIDTH;
   const centralHeight = isMobile ? 350 : CENTRAL_HEIGHT;
   const centralX = CENTRAL_X + (CENTRAL_WIDTH - centralWidth) / 2;
-  const centralY = isMobile ? CENTRAL_Y - 320 : CENTRAL_Y;
+  const centralY = isMobile ? CENTRAL_Y - 400 : CENTRAL_Y;
 
   positionedNodes.push(clonePersonNode(
     {
@@ -2013,12 +2015,14 @@ export function directFamilyDistributedLayout(
   const lowerSplitCardWidth = 360;
   const lowerSplitLaneWidth = Math.max(380, LOWER_LANE_WIDTH / 2 - LOWER_GROUP_GAP);
   const hasChildrenAndPets = children.length > 0 && pets.length > 0;
+  const lowerLeftGroupCenterX = options.isMobile ? MOBILE_LOWER_LEFT_GROUP_CENTER_X : LOWER_LEFT_GROUP_CENTER_X;
+  const lowerRightGroupCenterX = options.isMobile ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X : LOWER_RIGHT_GROUP_CENTER_X;
   const childrenPetsLeftCenterX = hasChildrenAndPets
-    ? LOWER_RIGHT_GROUP_CENTER_X - LOWER_LANE_WIDTH / 4
-    : LOWER_RIGHT_GROUP_CENTER_X;
+    ? lowerRightGroupCenterX - LOWER_LANE_WIDTH / 4
+    : lowerRightGroupCenterX;
   const childrenPetsRightCenterX = hasChildrenAndPets
-    ? LOWER_RIGHT_GROUP_CENTER_X + LOWER_LANE_WIDTH / 4
-    : LOWER_RIGHT_GROUP_CENTER_X;
+    ? lowerRightGroupCenterX + LOWER_LANE_WIDTH / 4
+    : lowerRightGroupCenterX;
 
   const siblingGroup: GroupSpec = {
     key: 'irmaos',
@@ -2026,7 +2030,7 @@ export function directFamilyDistributedLayout(
     ids: siblings,
     variant: 'sibling',
     maxPerRow: 1,
-    centerX: LOWER_LEFT_GROUP_CENTER_X,
+    centerX: lowerLeftGroupCenterX,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
   const nephewGroup: GroupSpec = {
@@ -2035,7 +2039,7 @@ export function directFamilyDistributedLayout(
     ids: nephews,
     variant: 'nephewNiece',
     maxPerRow: 3,
-    centerX: LOWER_LEFT_GROUP_CENTER_X,
+    centerX: lowerLeftGroupCenterX,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
   const spouseGroup: GroupSpec = {
@@ -2044,7 +2048,7 @@ export function directFamilyDistributedLayout(
     ids: spouses,
     variant: 'spouse',
     maxPerRow: 1,
-    centerX: LOWER_RIGHT_GROUP_CENTER_X,
+    centerX: lowerRightGroupCenterX,
     laneWidth: LOWER_LANE_WIDTH, cardWidth: LOWER_CARD_WIDTH, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
   const childrenGroup: GroupSpec = {

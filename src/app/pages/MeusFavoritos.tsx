@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
@@ -150,7 +150,7 @@ export function MeusFavoritos() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-6`}>
         <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex min-w-0 flex-col gap-4">
             <div className="relative min-w-0">
