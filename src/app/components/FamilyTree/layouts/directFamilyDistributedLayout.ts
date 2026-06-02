@@ -1356,7 +1356,7 @@ function addCentralPerson(
   const centralWidth = isMobile ? 320 : CENTRAL_WIDTH;
   const centralHeight = isMobile ? 350 : CENTRAL_HEIGHT;
   const centralX = CENTRAL_X + (CENTRAL_WIDTH - centralWidth) / 2;
-  const centralY = isMobile ? CENTRAL_Y - 680 : CENTRAL_Y;
+  const centralY = isMobile ? CENTRAL_Y - 760 : CENTRAL_Y;
 
   positionedNodes.push(clonePersonNode(
     {

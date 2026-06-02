@@ -1678,7 +1678,7 @@ function FamilyTreeComponent({
           <button
             type="button"
             onClick={() => handleDirectionalPan('up')}
-            className="absolute left-1/2 top-[8.75rem] z-[9999] flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-lg transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="fixed left-1/2 top-[9.25rem] z-[9999] flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-800 shadow-xl ring-1 ring-black/5 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label="Mover árvore para cima"
           >
             <ChevronUp className="h-5 w-5" />
