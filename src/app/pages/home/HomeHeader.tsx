@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from '../../components/ui/select';
+import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
@@ -288,7 +289,12 @@ export function HomeHeader({
             </div>
           </div>
 
-          {userMenuSlot}
+          <div className="md:hidden">
+            <UserProfileMenu />
+          </div>
+          <div className="hidden md:block">
+            {userMenuSlot}
+          </div>
         </div>
       </div>
     </header>
