@@ -110,7 +110,7 @@ const TREE_TITLE_TOP = 0;
 const TREE_TITLE_HEIGHT = 78;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
-const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 12;
+const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
@@ -1243,7 +1243,7 @@ function FamilyTreeComponent({
           ? 'contain'
           : 'contain',
       horizontalAlign: 'center',
-      verticalAlign: (isMobile && isGenealogyLayout) || (!isMobile && (isGenealogyLayout || viewMode === 'minha-arvore')) ? 'top' : 'center',
+      verticalAlign: (isMobile && (isGenealogyLayout || viewMode === 'minha-arvore')) || (!isMobile && (isGenealogyLayout || viewMode === 'minha-arvore')) ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 
@@ -1616,6 +1616,17 @@ function FamilyTreeComponent({
       )}
 
       <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        {isMobile && !isAreaSelectionOpen && (
+          <button
+            type="button"
+            onClick={() => handleDirectionalPan('up')}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Mover ?rvore para cima"
+            title="Mover ?rvore para cima"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        )}
         <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <button
             type="button"
@@ -1674,14 +1685,6 @@ function FamilyTreeComponent({
             aria-label="Mover árvore para a direita"
           >
             <ChevronRight className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDirectionalPan('up')}
-            className="fixed left-1/2 top-[14.25rem] z-[9999] flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover árvore para cima"
-          >
-            <ChevronUp className="h-5 w-5" />
           </button>
           <button
             type="button"
