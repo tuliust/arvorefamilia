@@ -31,38 +31,62 @@
     line-height: 3.25rem !important;
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"],
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) > div[style] {
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) > div[style] {
     width: 350px !important;
     min-height: 330px !important;
     height: 330px !important;
-    margin: 16px 0 0 108px !important;
-    padding: 22px 24px !important;
+    margin: 16px 0 0 205px !important;
+    padding: 10px !important;
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"] > button[style],
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) > div[style] > button[style] {
-    width: 188px !important;
-    height: 188px !important;
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] > div,
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) > div[style] > div {
+    padding: 10px !important;
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"] > div[style],
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) > div[style] > div[style] {
-    margin-top: 14px !important;
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] button[class*="h-[330px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] div[class*="h-[330px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) button[class*="h-[330px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) div[class*="h-[330px]"] {
+    height: 205px !important;
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"] h3,
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) h3 {
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] span[class*="text-[32px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] h3[class*="text-[32px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) span[class*="text-[32px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) h3[class*="text-[32px]"] {
     font-size: 20px !important;
-    line-height: 1.06 !important;
+    line-height: 1.05 !important;
     letter-spacing: -0.025em !important;
   }
 
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 620px"] h3 + div,
-  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 620px"]) h3 + div {
-    margin-top: 6px !important;
-    font-size: 15px !important;
-    line-height: 1.08 !important;
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] span[class*="bottom-0"],
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] div[class*="bottom-0"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) span[class*="bottom-0"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) div[class*="bottom-0"] {
+    padding: 2.5rem 0.75rem 0.75rem !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] [class*="mt-3"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) [class*="mt-3"] {
+    margin-top: 0.35rem !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] [class*="text-[14px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) [class*="text-[14px]"] {
+    font-size: 11px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] [class*="text-[15px]"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) [class*="text-[15px]"] {
+    font-size: 11px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"] [class*="py-2"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 760px"]) [class*="py-2"] {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
   }
 
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 400px"][style*="height: 160px"],
