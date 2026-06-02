@@ -10,7 +10,6 @@ import {
   Network,
   Plus,
   Settings,
-  Sparkles,
   Star,
 } from 'lucide-react';
 
@@ -129,7 +128,7 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
 }
 
 const MOBILE_BOTTOM_NAV_ITEMS = [
-  { label: 'Curiosidades', to: '/minha-arvore?curiosidades=1', icon: Sparkles },
+  { label: 'Home', to: '/minha-arvore', icon: Home },
   { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
   { label: 'Fórum', to: '/forum', icon: MessageCircle },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
@@ -227,3 +226,4 @@ export const HEADER_ACTION_ICONS = {
   Settings,
   Star,
 };
+

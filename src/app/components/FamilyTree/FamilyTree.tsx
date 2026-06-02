@@ -919,7 +919,7 @@ function FamilyTreeComponent({
       visiblePersonIds,
       visualLineFilters: directVisualLineFilters,
       edgeFilters,
-      isMobile,
+      isMobile: viewMode === 'minha-arvore' ? false : isMobile,
     });
   }, [
     dataHash,
@@ -952,7 +952,7 @@ function FamilyTreeComponent({
     const useCentralFocusPanel =
       viewMode === 'minha-arvore' &&
       Boolean(centralFocusPersonNode) &&
-      (isMobile || realPersonNodes.length === 1);
+      realPersonNodes.length === 1;
     const focusPanelWidth = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_WIDTH : CENTRAL_FOCUS_PANEL_WIDTH;
     const focusPanelHeight = isMobile ? CENTRAL_FOCUS_PANEL_MOBILE_HEIGHT : CENTRAL_FOCUS_PANEL_HEIGHT;
     const focusAdjustedLayout = useCentralFocusPanel
@@ -1660,4 +1660,5 @@ function FamilyTreeComponent({
 }
 
 export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
+
 
