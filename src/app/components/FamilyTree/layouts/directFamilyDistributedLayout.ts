@@ -1350,19 +1350,24 @@ function addCentralPerson(
   const node = personNodeById.get(centralPersonId);
   if (!node) return;
 
+  const centralWidth = isMobile ? 320 : CENTRAL_WIDTH;
+  const centralHeight = isMobile ? 300 : CENTRAL_HEIGHT;
+  const centralX = CENTRAL_X + (CENTRAL_WIDTH - centralWidth) / 2;
+  const centralY = isMobile ? CENTRAL_Y + 190 : CENTRAL_Y;
+
   positionedNodes.push(clonePersonNode(
     {
       ...node,
       data: {
         ...node.data,
-        width: CENTRAL_WIDTH,
-        height: CENTRAL_HEIGHT,
-        layoutWidth: CENTRAL_WIDTH,
-        layoutHeight: CENTRAL_HEIGHT,
+        width: centralWidth,
+        height: centralHeight,
+        layoutWidth: centralWidth,
+        layoutHeight: centralHeight,
       },
     },
-    CENTRAL_X,
-    CENTRAL_Y,
+    centralX,
+    centralY,
     'central',
     true
   ));
@@ -1991,8 +1996,9 @@ export function directFamilyDistributedLayout(
     laneWidth: SIDE_PARENT_CARD_WIDTH + GROUP_BOX_PADDING_X * 2, cardWidth: SIDE_PARENT_CARD_WIDTH, cardHeight: SIDE_PARENT_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
 
-  placeGroup(motherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(fatherGroup, CENTRAL_PARENT_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  const parentGroupY = options.isMobile ? CENTRAL_PARENT_GROUP_Y - 1050 : CENTRAL_PARENT_GROUP_Y;
+  placeGroup(motherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(fatherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
 
   const allSiblings = findSiblings(centralPersonId, index, pessoasById);
   const siblings = filters.irmaos ? allSiblings : [];
