@@ -1510,7 +1510,7 @@ export function MinhaArvore() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="mt-6 grid grid-cols-4 gap-2 sm:gap-4">
               <div className="rounded-2xl bg-green-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-green-700 font-semibold">Pais</p>
                 <p className="text-2xl font-bold text-green-900 mt-2">{resumo.pais.length}</p>
@@ -1558,7 +1558,7 @@ export function MinhaArvore() {
                   }}
                 >
                   <Camera className="mr-2 h-4 w-4" />
-                  {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
+                  {currentPhotoUrl ? 'Alterar' : 'Cadastrar'}
                 </Button>
                 {currentPhotoUrl && (
                   <Button
@@ -1568,7 +1568,7 @@ export function MinhaArvore() {
                     className="border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Remover foto
+                    Remover
                   </Button>
                 )}
               </div>
@@ -2286,7 +2286,7 @@ export function MinhaArvore() {
                   }}
                   className="border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
                 >
-                  Remover foto
+                  Remover
                 </Button>
               )}
             </div>
@@ -2299,7 +2299,7 @@ export function MinhaArvore() {
               {photoDialogMode === 'preview' && !cropImageUrl ? (
                 <Button type="button" onClick={() => setPhotoDialogMode('edit')}>
                   <Camera className="mr-2 h-4 w-4" />
-                  {currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}
+                  {currentPhotoUrl ? 'Alterar' : 'Cadastrar'}
                 </Button>
               ) : cropImageUrl ? (
                 <Button type="button" onClick={handleApplyCrop}>
