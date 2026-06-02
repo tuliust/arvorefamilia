@@ -190,16 +190,16 @@ export function MemberPageHeader({
 }: MemberPageHeaderProps) {
   return (
     <>
-      <header className={['shrink-0 border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
-        <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
+      <header className={['relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
+        <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible">
             {Icon && (
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 md:h-10 md:w-10">
                 <Icon className="h-6 w-6 text-white" />
               </div>
             )}
 
-            <div className="flex min-h-11 min-w-0 flex-1 items-center overflow-visible md:block md:min-h-0 lg:overflow-hidden">
+            <div className="flex min-h-11 min-w-0 flex-1 items-center overflow-visible md:block md:min-h-0">
               <h1 className="whitespace-normal text-xl font-bold leading-tight text-gray-900 md:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
                 {title}
               </h1>
@@ -214,7 +214,7 @@ export function MemberPageHeader({
           </div>
 
           {(actions.length > 0 || customActions) && (
-            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 sm:gap-2 md:flex">
+            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
               {actions.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
@@ -239,5 +239,3 @@ export const HEADER_ACTION_ICONS = {
   Settings,
   Star,
 };
-
-
