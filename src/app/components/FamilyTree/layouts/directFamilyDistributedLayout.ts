@@ -212,8 +212,9 @@ const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
-const MOBILE_LOWER_LEFT_GROUP_CENTER_X = VIEW_CENTER_X - 360;
-const MOBILE_LOWER_RIGHT_GROUP_CENTER_X = VIEW_CENTER_X + 360;
+const MOBILE_LOWER_LEFT_GROUP_CENTER_X = VIEW_CENTER_X - 220;
+const MOBILE_LOWER_RIGHT_GROUP_CENTER_X = VIEW_CENTER_X + 220;
+const MOBILE_LOWER_GROUP_Y = LOWER_GROUP_Y - 360;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: 3,
@@ -1355,7 +1356,7 @@ function addCentralPerson(
   const centralWidth = isMobile ? 320 : CENTRAL_WIDTH;
   const centralHeight = isMobile ? 350 : CENTRAL_HEIGHT;
   const centralX = CENTRAL_X + (CENTRAL_WIDTH - centralWidth) / 2;
-  const centralY = isMobile ? CENTRAL_Y - 400 : CENTRAL_Y;
+  const centralY = isMobile ? CENTRAL_Y - 520 : CENTRAL_Y;
 
   positionedNodes.push(clonePersonNode(
     {
@@ -2017,6 +2018,7 @@ export function directFamilyDistributedLayout(
   const hasChildrenAndPets = children.length > 0 && pets.length > 0;
   const lowerLeftGroupCenterX = options.isMobile ? MOBILE_LOWER_LEFT_GROUP_CENTER_X : LOWER_LEFT_GROUP_CENTER_X;
   const lowerRightGroupCenterX = options.isMobile ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X : LOWER_RIGHT_GROUP_CENTER_X;
+  const lowerGroupY = options.isMobile ? MOBILE_LOWER_GROUP_Y : LOWER_GROUP_Y;
   const childrenPetsLeftCenterX = hasChildrenAndPets
     ? lowerRightGroupCenterX - LOWER_LANE_WIDTH / 4
     : lowerRightGroupCenterX;
@@ -2066,7 +2068,7 @@ export function directFamilyDistributedLayout(
     ids: pets,
     variant: 'pet',
     maxPerRow: 2,
-    centerX: children.length > 0 ? childrenPetsRightCenterX : LOWER_RIGHT_GROUP_CENTER_X,
+    centerX: children.length > 0 ? childrenPetsRightCenterX : lowerRightGroupCenterX,
     laneWidth: lowerSplitLaneWidth, cardWidth: lowerSplitCardWidth, cardHeight: LOWER_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
   };
   const grandchildrenGroup: GroupSpec = {
@@ -2075,13 +2077,13 @@ export function directFamilyDistributedLayout(
     ids: grandchildren,
     variant: 'grandchild',
     maxPerRow: 2,
-    centerX: children.length > 0 ? childrenPetsLeftCenterX : LOWER_RIGHT_GROUP_CENTER_X,
+    centerX: children.length > 0 ? childrenPetsLeftCenterX : lowerRightGroupCenterX,
     laneWidth: lowerSplitLaneWidth, cardWidth: lowerSplitCardWidth, cardHeight: LOWER_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
 
   const leftLowerPositions = compactLowerGroupTopPositions(
     [siblingGroup, nephewGroup],
-    LOWER_GROUP_Y,
+    lowerGroupY,
     CENTRAL_LOWER_STACK_GAP,
     index
   );
@@ -2091,15 +2093,15 @@ export function directFamilyDistributedLayout(
   const childrenColumns = resolveGroupColumns(childrenGroup, childrenGroup.ids, index);
   const childrenHeight = visibleGroupHeight(childrenGroup.ids, childrenColumns, index, childrenGroup);
   const splitTopY = spouses.length > 0
-    ? LOWER_GROUP_Y + spouseHeight + CENTRAL_LOWER_STACK_GAP
-    : LOWER_GROUP_Y;
+    ? lowerGroupY + spouseHeight + CENTRAL_LOWER_STACK_GAP
+    : lowerGroupY;
   const grandchildrenTopY = children.length > 0
     ? splitTopY + childrenHeight + CENTRAL_LOWER_STACK_GAP
     : splitTopY;
 
-  placeGroup(siblingGroup, leftLowerPositions.get(siblingGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(nephewGroup, leftLowerPositions.get(nephewGroup.key) ?? LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
-  placeGroup(spouseGroup, LOWER_GROUP_Y, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(siblingGroup, leftLowerPositions.get(siblingGroup.key) ?? lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(nephewGroup, leftLowerPositions.get(nephewGroup.key) ?? lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
+  placeGroup(spouseGroup, lowerGroupY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(childrenGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(petGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, grandchildrenTopY, positionedNodes, positionedIds, personNodeById, index);

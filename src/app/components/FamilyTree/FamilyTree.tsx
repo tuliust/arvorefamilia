@@ -103,14 +103,15 @@ const DIRECT_FAMILY_MOBILE_VIEWPORT_PADDING = 16;
 const DIRECT_FAMILY_TRANSLATE_PADDING = 120;
 const DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING = 80;
 const GENEALOGY_MAX_ZOOM = 2;
-const GENEALOGY_MOBILE_MAX_ZOOM = 1.7;
+const GENEALOGY_MOBILE_MAX_ZOOM = 0.84;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
 const TREE_TITLE_TOP = 0;
 const TREE_TITLE_HEIGHT = 78;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
-const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 24;
+const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 12;
+const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 150;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
 const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
@@ -1232,17 +1233,17 @@ function FamilyTreeComponent({
       paddingBottomY: !isMobile && viewMode === 'minha-arvore'
         ? TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y
         : undefined,
-      titleSafeArea: isMobile ? TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA : 0,
+      titleSafeArea: isMobile ? (isGenealogyLayout ? TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA : TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA) : 0,
       maxZoom: isMobile
         ? (isGenealogyLayout ? GENEALOGY_MOBILE_MAX_ZOOM : DIRECT_FAMILY_MOBILE_MAX_ZOOM)
         : (isGenealogyLayout ? GENEALOGY_MAX_ZOOM : DIRECT_FAMILY_MAX_ZOOM),
       fitMode: isGenealogyLayout
-        ? (isMobile ? 'height' : 'width')
+        ? (isMobile ? 'contain' : 'width')
         : viewMode === 'minha-arvore'
           ? 'contain'
           : 'contain',
       horizontalAlign: 'center',
-      verticalAlign: !isMobile && (isGenealogyLayout || viewMode === 'minha-arvore') ? 'top' : 'center',
+      verticalAlign: (isMobile && isGenealogyLayout) || (!isMobile && (isGenealogyLayout || viewMode === 'minha-arvore')) ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
 
@@ -1677,7 +1678,7 @@ function FamilyTreeComponent({
           <button
             type="button"
             onClick={() => handleDirectionalPan('up')}
-            className="absolute left-1/2 top-[9.75rem] z-30 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="absolute left-1/2 top-[7.75rem] z-40 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label="Mover árvore para cima"
           >
             <ChevronUp className="h-5 w-5" />
