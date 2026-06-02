@@ -1158,12 +1158,49 @@ function FamilyTreeComponent({
     };
   }, [effectiveCentralPersonId, isMobile, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT, viewMode]);
 
+
+  const mobileGenealogyInitialColumnBounds = useMemo(() => {
+    if (!isMobile || !isGenealogyLayout) return null;
+
+    const visiblePersonNodes = layoutResult.nodes
+      .filter((node) => !node.hidden && node.type === 'personNode' && Boolean(node.data?.pessoa))
+      .sort((nodeA, nodeB) => nodeA.position.x - nodeB.position.x || nodeA.position.y - nodeB.position.y);
+
+    if (visiblePersonNodes.length === 0) return null;
+
+    const firstColumnX = visiblePersonNodes[0].position.x;
+    const columnTolerance = 24;
+    const firstColumnNodes = visiblePersonNodes.filter(
+      (node) => Math.abs(node.position.x - firstColumnX) <= columnTolerance
+    );
+
+    if (firstColumnNodes.length === 0) return null;
+
+    const minX = Math.min(...firstColumnNodes.map((node) => node.position.x));
+    const maxX = Math.max(...firstColumnNodes.map((node) => {
+      const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
+      return node.position.x + size.width;
+    }));
+    const minY = layoutResult.viewportBounds?.y ?? Math.min(...firstColumnNodes.map((node) => node.position.y));
+    const maxY = Math.max(...firstColumnNodes.map((node) => {
+      const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
+      return node.position.y + size.height;
+    }));
+
+    return {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    };
+  }, [isMobile, isGenealogyLayout, layoutResult.nodes, layoutResult.viewportBounds, NODE_WIDTH, NODE_HEIGHT]);
   const viewportContentBounds = useMemo(() => {
     return mobileCentralViewportBounds
+      ?? mobileGenealogyInitialColumnBounds
       ?? layoutResult.viewportBounds
       ?? getViewportContentBounds(nodes, NODE_WIDTH, NODE_HEIGHT)
       ?? getFlowBounds(nodes, NODE_WIDTH, NODE_HEIGHT);
-  }, [layoutResult.viewportBounds, mobileCentralViewportBounds, nodes, NODE_WIDTH, NODE_HEIGHT]);
+  }, [layoutResult.viewportBounds, mobileCentralViewportBounds, mobileGenealogyInitialColumnBounds, nodes, NODE_WIDTH, NODE_HEIGHT]);
 
   const translateBounds = useMemo(() => {
     return layoutResult.translateBounds
@@ -1204,7 +1241,7 @@ function FamilyTreeComponent({
         : viewMode === 'minha-arvore'
           ? 'contain'
           : 'contain',
-      horizontalAlign: isMobile && isGenealogyLayout ? 'left' : 'center',
+      horizontalAlign: 'center',
       verticalAlign: !isMobile && (isGenealogyLayout || viewMode === 'minha-arvore') ? 'top' : 'center',
     });
   }, [viewportContentBounds, containerSize, isGenealogyLayout, isMobile, viewMode]);
