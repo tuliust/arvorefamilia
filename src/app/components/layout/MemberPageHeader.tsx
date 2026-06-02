@@ -179,16 +179,16 @@ export function MemberPageHeader({
         <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:overflow-hidden lg:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible lg:overflow-hidden">
             {Icon && (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 md:h-10 md:w-10">
                 <Icon className="h-6 w-6 text-white" />
               </div>
             )}
 
-            <div className="min-w-0 flex-1 overflow-visible lg:overflow-hidden">
-              <h1 className="whitespace-normal text-lg font-bold leading-tight text-gray-900 sm:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
+            <div className="flex min-h-11 min-w-0 flex-1 items-center overflow-visible md:block md:min-h-0 lg:overflow-hidden">
+              <h1 className="whitespace-normal text-xl font-bold leading-tight text-gray-900 md:text-lg lg:truncate lg:whitespace-nowrap lg:text-xl">
                 {title}
               </h1>
-              <p className="whitespace-normal text-xs leading-tight text-gray-500 lg:truncate lg:whitespace-nowrap lg:text-sm">
+              <p className="hidden whitespace-normal text-xs leading-tight text-gray-500 md:block lg:truncate lg:whitespace-nowrap lg:text-sm">
                 {subtitle}
               </p>
             </div>
