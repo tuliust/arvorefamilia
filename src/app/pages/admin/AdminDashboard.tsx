@@ -175,83 +175,75 @@ export function AdminDashboard() {
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} py-6 sm:py-8`}>
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-4 gap-2 sm:mb-8 sm:gap-4 lg:grid-cols-4">
           <Card className="min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="break-words text-sm font-medium text-gray-600">
-                Total de Membros
-              </CardTitle>
+            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Membros</CardTitle>
               <Users className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats.totalPessoas}</div>
-              <p className="mt-1 break-words text-xs text-gray-500">
+            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalPessoas}</div>
+              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
                 {stats.totalHumanos} humanos, {stats.totalPets} pets
               </p>
             </CardContent>
           </Card>
 
           <Card className="min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="break-words text-sm font-medium text-gray-600">
-                Relacionamentos
-              </CardTitle>
+            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Relações</CardTitle>
               <Link2 className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">
+            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">
                 {stats.totalRelacionamentos}
               </div>
-              <p className="mt-1 break-words text-xs text-gray-500">
+              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
                 {stats.totalCasamentos} casamentos
               </p>
             </CardContent>
           </Card>
 
           <Card className="min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="break-words text-sm font-medium text-gray-600">
-                Solicitações pendentes
-              </CardTitle>
+            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Pendentes</CardTitle>
               <GitPullRequest className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats.pendingRelationshipRequests}</div>
-              <p className="mt-1 break-words text-xs text-gray-500">Vínculos aguardando revisão</p>
+            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.pendingRelationshipRequests}</div>
+              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Vínculos aguardando revisão</p>
             </CardContent>
           </Card>
 
           <Card className="min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="break-words text-sm font-medium text-gray-600">
-                In Memoriam
-              </CardTitle>
+            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Memória</CardTitle>
               <BarChart3 className="h-4 w-4 shrink-0 text-gray-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats.totalFalecidos}</div>
-              <p className="mt-1 break-words text-xs text-gray-500">Pessoas falecidas</p>
+            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalFalecidos}</div>
+              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Pessoas falecidas</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="mb-8">
           <h2 className="mb-4 break-words text-lg font-semibold text-gray-900">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {quickActions.map((action) => (
               <button
                 key={action.title}
                 onClick={action.onClick}
-	                className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 text-left transition-shadow hover:shadow-md sm:p-6"
+	                className="min-w-0 rounded-lg border border-gray-200 bg-white p-3 text-left transition-shadow hover:shadow-md sm:p-6"
                 type="button"
               >
                 <div
-	                  className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${action.color}`}
+	                  className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:h-12 sm:w-12 ${action.color}`}
                 >
-	                  <action.icon className="h-6 w-6 text-white" />
+	                  <action.icon className="h-5 w-5 text-white sm:h-6 sm:w-6" />
                 </div>
-	                <h3 className="mb-1 break-words font-semibold text-gray-900">{action.title}</h3>
-	                <p className="line-clamp-3 break-words text-sm text-gray-600">{action.description}</p>
+	                <h3 className="break-words text-sm font-semibold leading-tight text-gray-900 sm:mb-1 sm:text-base">{action.title}</h3>
+	                <p className="hidden line-clamp-3 break-words text-sm text-gray-600 sm:block">{action.description}</p>
               </button>
             ))}
           </div>
