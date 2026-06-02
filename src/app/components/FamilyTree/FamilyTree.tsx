@@ -110,7 +110,7 @@ const TREE_TITLE_TOP = 0;
 const TREE_TITLE_HEIGHT = 78;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
-const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
+const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
 const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
@@ -1615,19 +1615,20 @@ function FamilyTreeComponent({
         </div>
       )}
 
+      {isMobile && !isAreaSelectionOpen && (
+        <button
+          type="button"
+          onClick={() => handleDirectionalPan('up')}
+          className="absolute left-1/2 top-4 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          aria-label="Mover ?rvore para cima"
+          title="Mover ?rvore para cima"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </button>
+      )}
+
       <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
-        {isMobile && !isAreaSelectionOpen && (
-          <button
-            type="button"
-            onClick={() => handleDirectionalPan('up')}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover ?rvore para cima"
-            title="Mover ?rvore para cima"
-          >
-            <ChevronUp className="h-4 w-4" />
-          </button>
-        )}
-        <div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+<div className="flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <button
             type="button"
             onClick={handleZoomIn}

@@ -277,33 +277,48 @@ export function AdminPessoas() {
                 />
               </div>
               
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-row sm:flex-wrap">
                 <Button
                   variant={filter === 'todos' ? 'default' : 'outline'}
-                  className="w-full sm:w-auto"
+                  className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
                   onClick={() => setFilter('todos')}
+                  aria-label={`Todos: ${pessoas.length}`}
+                  title={`Todos: ${pessoas.length}`}
                 >
-                  Todos ({pessoas.length})
+                  <Search className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Todos ({pessoas.length})</span>
                 </Button>
                 <Button
                   variant={filter === 'humano' ? 'default' : 'outline'}
-                  className="w-full sm:w-auto"
+                  className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
                   onClick={() => setFilter('humano')}
+                  aria-label={`Humanos: ${pessoas.filter(p => p.humano_ou_pet === 'Humano').length}`}
+                  title={`Humanos: ${pessoas.filter(p => p.humano_ou_pet === 'Humano').length}`}
                 >
-                  Humanos ({pessoas.filter(p => p.humano_ou_pet === 'Humano').length})
+                  <User className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Humanos ({pessoas.filter(p => p.humano_ou_pet === 'Humano').length})</span>
                 </Button>
                 <Button
                   variant={filter === 'pet' ? 'default' : 'outline'}
-                  className="w-full sm:w-auto"
+                  className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
                   onClick={() => setFilter('pet')}
+                  aria-label={`Pets: ${pessoas.filter(p => p.humano_ou_pet === 'Pet').length}`}
+                  title={`Pets: ${pessoas.filter(p => p.humano_ou_pet === 'Pet').length}`}
                 >
-                  Pets ({pessoas.filter(p => p.humano_ou_pet === 'Pet').length})
+                  <Dog className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Pets ({pessoas.filter(p => p.humano_ou_pet === 'Pet').length})</span>
                 </Button>
-                <Button variant="outline" className="w-full sm:w-auto" onClick={openFilters}>
-                  <SlidersHorizontal className="mr-2 h-4 w-4 shrink-0" />
-                  Filtros
+                <Button
+                  variant="outline"
+                  className="relative h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
+                  onClick={openFilters}
+                  aria-label="Filtros"
+                  title="Filtros"
+                >
+                  <SlidersHorizontal className="h-4 w-4 shrink-0 sm:mr-2" />
+                  <span className="hidden sm:inline">Filtros</span>
                   {activeAdvancedFilterCount > 0 && (
-                    <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                    <span className="absolute right-1 top-1 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-blue-700 sm:static sm:ml-2 sm:px-2 sm:text-xs">
                       {activeAdvancedFilterCount}
                     </span>
                   )}
@@ -360,21 +375,25 @@ export function AdminPessoas() {
                       </div>
                     </div>
 
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                    <div className="flex w-full flex-row gap-2 sm:w-auto sm:flex-row">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full sm:w-auto"
+                        className="h-10 flex-1 sm:w-auto sm:flex-none"
                         onClick={() => navigate(`/admin/pessoas/${pessoa.id}/editar`)}
+                        aria-label={`Editar ${pessoa.nome_completo}`}
+                        title="Editar"
                       >
-                        <Edit className="mr-2 h-4 w-4 shrink-0" />
-                        Editar
+                        <Edit className="h-4 w-4 shrink-0 sm:mr-2" />
+                        <span className="hidden sm:inline">Editar</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setDeleteId(pessoa.id)}
-                        className="w-full text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
+                        className="h-10 flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:flex-none"
+                        aria-label={`Excluir ${pessoa.nome_completo}`}
+                        title="Excluir"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

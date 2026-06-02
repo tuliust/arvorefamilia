@@ -12,7 +12,7 @@ export function AjustarNotificacoes() {
       <div className="min-h-screen bg-gray-50 px-4 py-10">
         <div className="mx-auto w-full max-w-xl rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
           <Settings className="mx-auto mb-3 h-8 w-8 text-gray-500" />
-          <h1 className="break-words text-xl font-bold text-gray-900">Preferências de Notificações</h1>
+          <h1 className="break-words text-xl font-bold text-gray-900">Prefer\u00eancias</h1>
           <p className="mt-2 break-words text-sm text-gray-600">
             Faça login para gerenciar suas preferências de notificações familiares.
           </p>
@@ -30,7 +30,7 @@ export function AjustarNotificacoes() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Preferências de Notificações"
+        title="Prefer\u00eancias"
         subtitle="Escolha quais avisos deseja receber e por quais canais."
         icon={Settings}
         actions={[
