@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Archive,
   CalendarDays,
@@ -209,23 +209,23 @@ export function CentralPersonFocusPanel({
     const photo = pessoa.foto_principal_url && onOpenPhoto ? (
       <button
         type="button"
-        className="relative h-[330px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="relative h-[205px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         onClick={(event) => stopAndRun(event, () => onOpenPhoto(event))}
         onMouseDown={(event) => event.stopPropagation()}
         aria-label={`Ampliar foto de ${pessoa.nome_completo}`}
       >
         {avatar}
         <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/35 to-transparent px-4 pb-4 pt-10">
-          <span className="block break-words text-left text-[32px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
+          <span className="block break-words text-left text-[20px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
             {pessoa.nome_completo}
           </span>
         </span>
       </button>
     ) : (
-      <div className="relative h-[330px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm">
+      <div className="relative h-[205px] min-h-0 overflow-hidden rounded-lg bg-slate-100 shadow-sm">
         {avatar}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/35 to-transparent px-4 pb-4 pt-10">
-          <h3 className="break-words text-[32px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
+          <h3 className="break-words text-[20px] font-black leading-[1.02] text-white drop-shadow" title={pessoa.nome_completo}>
             {pessoa.nome_completo}
           </h3>
         </div>
@@ -233,10 +233,10 @@ export function CentralPersonFocusPanel({
     );
 
     return (
-      <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-3 text-left text-slate-900 shadow-xl">
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-2 text-left text-slate-900 shadow-xl">
         {photo}
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className={['inline-flex rounded-full px-3 py-1.5 text-[14px] font-extrabold uppercase leading-none ring-1', statusClassName].join(' ')}>
             {status}
           </span>
@@ -247,7 +247,7 @@ export function CentralPersonFocusPanel({
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {onView && (
             <button
               type="button"
@@ -270,7 +270,7 @@ export function CentralPersonFocusPanel({
           )}
         </div>
 
-        <div className="mt-3 grid min-h-0 gap-2">
+        <div className="hidden">
           <InfoCard icon={CalendarDays} label="Nascimento" value={birthSummary} />
           {!birthSummary && ageOrLifeSpan && (
             <InfoCard icon={HeartPulse} label="Tempo de vida" value={ageOrLifeSpan} />
