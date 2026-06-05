@@ -6,6 +6,7 @@ import {
   DirectRelationVariant,
   DirectRelativeFilters,
   EdgeFilters,
+  TREE_CONSTANTS,
   TreeLayoutBounds,
   TreeLayoutParams,
   TreeLayoutResult,
@@ -187,7 +188,8 @@ const ANCESTOR_COLUMN_GAP = 52;
 const ANCESTOR_ROW_GAP = 14;
 const IN_GROUP_SIBLING_COLUMN_GAP = 18;
 const IN_GROUP_SIBLING_ROW_GAP = 12;
-const MARRIAGE_NODE_SIZE = 40;
+const MARRIAGE_NODE_SIZE = TREE_CONSTANTS.MARRIAGE_NODE_WIDTH;
+const MIN_COUPLE_CARD_GAP = TREE_CONSTANTS.HORIZONTAL_GAP_BETWEEN_SPOUSES;
 const SIDE_GROUP_EXTRA_INNER_SPACE = 0;
 const SIDE_GROUP_WIDTH =
   SIDE_GROUP_COLUMNS * SIDE_COLLATERAL_CARD_WIDTH +
@@ -712,7 +714,7 @@ function getSpecCardHeight(spec?: Pick<GroupSpec, 'cardHeight'>) {
 }
 
 function getSpecColumnGap(spec?: Pick<GroupSpec, 'columnGap'>) {
-  return spec?.columnGap ?? COLUMN_GAP;
+  return Math.max(spec?.columnGap ?? COLUMN_GAP, MIN_COUPLE_CARD_GAP);
 }
 
 function getSpecRowGap(spec?: Pick<GroupSpec, 'rowGap'>) {

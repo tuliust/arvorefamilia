@@ -107,11 +107,11 @@ const GENEALOGY_MOBILE_MAX_ZOOM = 1.08;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
 const TREE_TITLE_TOP = 0;
-const TREE_TITLE_HEIGHT = 78;
-const TREE_DESKTOP_VISUAL_TOP_INSET = 70;
+const TREE_TITLE_HEIGHT = 58;
+const TREE_DESKTOP_VISUAL_TOP_INSET = 54;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
-const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
-const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
+const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
+const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 80;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
 const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
@@ -1660,10 +1660,10 @@ function FamilyTreeComponent({
           className="pointer-events-none absolute inset-x-0 z-10 text-center"
           style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
         >
-          <h2 className="text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
+          <h2 className="px-16 text-xl font-bold leading-tight text-slate-900 sm:px-24 sm:text-2xl lg:text-3xl">
             {treeTitle}
           </h2>
-          <p className="mt-1.5 text-base font-semibold leading-tight text-slate-600 sm:text-lg">
+          <p className="mt-1 px-16 text-sm font-normal leading-tight text-slate-600 sm:px-24 sm:text-base">
             Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
           </p>
         </div>
@@ -1774,5 +1774,4 @@ function FamilyTreeComponent({
 }
 
 export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
-
 
