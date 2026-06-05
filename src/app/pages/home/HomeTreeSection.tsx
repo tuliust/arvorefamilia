@@ -100,11 +100,11 @@ export function HomeTreeSection({
   }, [treeViewMode, treeLayoutRevision, centralReferencePersonId, pessoas.length]);
 
   return (
-    <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-[#F7F7F8]">
+    <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-white">
       <style>
         {`
           [data-export-root="family-tree"] {
-            background: #F7F7F8 !important;
+            background: #FFFFFF !important;
           }
 
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
@@ -125,13 +125,18 @@ export function HomeTreeSection({
           }
 
           [data-export-root="family-tree"] .react-flow__node-directFamilyGroupBoxNode > div {
-            border-color: #D6D6DA !important;
-            background: #D6D6DA !important;
-            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+            border-color: #F9F9F9 !important;
+            background: #F9F9F9 !important;
+            box-shadow: 0 8px 18px rgba(243, 243, 243, 0.92), 0 1px 3px rgba(209, 213, 219, 0.36) !important;
+          }
+
+          [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer,
+          [data-export-root="family-tree"] .react-flow__node-personNode > .relative > div {
+            box-shadow: 0 6px 14px rgba(243, 243, 243, 0.95), 0 1px 2px rgba(209, 213, 219, 0.35) !important;
           }
 
           [data-export-root="family-tree"] .react-flow__edge-path {
-            stroke: #D6D6DA !important;
+            stroke: #F9F9F9 !important;
             stroke-width: 4px !important;
             opacity: 1 !important;
           }
