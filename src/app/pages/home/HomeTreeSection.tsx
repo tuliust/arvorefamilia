@@ -126,14 +126,14 @@ export function HomeTreeSection({
 
           [data-export-root="family-tree"] .react-flow__node-directFamilyGroupBoxNode > div {
             border-color: #D6D6DA !important;
-            background: #F9F9FA !important;
+            background: #D6D6DA !important;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.08) !important;
           }
 
           [data-export-root="family-tree"] .react-flow__edge-path {
             stroke: #D6D6DA !important;
-            stroke-width: 1.7px !important;
-            opacity: 0.72 !important;
+            stroke-width: 4px !important;
+            opacity: 1 !important;
           }
         `}
       </style>
