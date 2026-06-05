@@ -38,10 +38,11 @@ function DirectFamilyAnchorNode() {
 function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeData>) {
   return React.createElement('div', {
     'aria-hidden': true,
-    className: 'pointer-events-none rounded-xl bg-white/[0.04]',
+    className: 'pointer-events-none rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.05)]',
     style: {
       width: data.width ?? 0,
       height: data.height ?? 0,
+      backgroundColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.background,
       borderColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.color,
       borderWidth: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.width,
       borderStyle: 'solid',
