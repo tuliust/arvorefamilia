@@ -114,7 +114,7 @@ export function HomeTreeSection({
           }
 
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-            font-size: 1.8rem !important;
+            font-size: 22px !important;
             line-height: 1.1 !important;
             text-transform: none !important;
           }
