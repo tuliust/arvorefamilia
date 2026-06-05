@@ -31,6 +31,17 @@ interface OrthogonalEdgeData {
   horizontalTolerance?: number;
 }
 
+function getEditorialEdgeStyle(style?: React.CSSProperties): React.CSSProperties {
+  return {
+    stroke: '#CBBDA6',
+    strokeWidth: 1.45,
+    opacity: 0.72,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    ...style,
+  };
+}
+
 function directBezierPath(sourceX: number, sourceY: number, targetX: number, targetY: number) {
   const midX = sourceX + (targetX - sourceX) / 2;
 
@@ -52,6 +63,8 @@ export function OrthogonalChildEdge({
   markerEnd,
   data,
 }: EdgeProps<OrthogonalEdgeData>) {
+  const edgeStyle = getEditorialEdgeStyle(style);
+
   if (data?.kind === 'directHorizontal') {
     const horizontalTolerance = data.horizontalTolerance ?? 4;
     const path = data.forceHorizontal && Math.abs(sourceY - targetY) <= horizontalTolerance
@@ -62,7 +75,7 @@ export function OrthogonalChildEdge({
       <BaseEdge
         id={id}
         path={path}
-        style={style}
+        style={edgeStyle}
         markerEnd={markerEnd}
       />
     );
@@ -77,7 +90,7 @@ export function OrthogonalChildEdge({
       `L ${targetX} ${targetY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'directSideElbow') {
@@ -89,7 +102,7 @@ export function OrthogonalChildEdge({
       `L ${targetX} ${targetY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'directSmooth') {
@@ -97,7 +110,7 @@ export function OrthogonalChildEdge({
       <BaseEdge
         id={id}
         path={directBezierPath(sourceX, sourceY, targetX, targetY)}
-        style={style}
+        style={edgeStyle}
         markerEnd={markerEnd}
       />
     );
@@ -119,7 +132,7 @@ export function OrthogonalChildEdge({
       `L ${targetX} ${targetY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'siblings') {
@@ -137,7 +150,7 @@ export function OrthogonalChildEdge({
       `L ${targetSideX} ${targetSideY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'singleParentChild') {
@@ -154,7 +167,7 @@ export function OrthogonalChildEdge({
       `L ${targetX} ${targetY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'generationChild') {
@@ -173,7 +186,7 @@ export function OrthogonalChildEdge({
       `L ${targetX} ${targetY}`,
     ].join(' ');
 
-    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+    return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
   }
 
   let midX: number;
@@ -195,5 +208,5 @@ export function OrthogonalChildEdge({
     `L ${targetX} ${targetY}`,
   ].join(' ');
 
-  return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+  return <BaseEdge id={id} path={path} style={edgeStyle} markerEnd={markerEnd} />;
 }
