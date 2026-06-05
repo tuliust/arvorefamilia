@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -84,7 +84,7 @@ export function HomeTreeSection({
 
   return (
     <section
-      className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
+      className="relative min-w-0 w-0 flex-1 overflow-hidden bg-[#F4EFE6]"
     >
       {isMobile && (
         <style>
@@ -97,7 +97,7 @@ export function HomeTreeSection({
               width: 2.75rem !important;
               height: 2.75rem !important;
               border-radius: 9999px !important;
-              box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
+              box-shadow: 0 4px 12px rgba(47, 42, 37, 0.14) !important;
             }
 
             [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"] {
@@ -181,19 +181,19 @@ export function HomeTreeSection({
 
       {isTreeResolving ? (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Buscando pessoas e relacionamentosâ€¦',
+          title: 'Carregando árvore',
+          message: 'Buscando pessoas e relacionamentos...',
         })
       ) : loadError ? (
         renderStateMessage({
-          title: 'Erro ao carregar a Ã¡rvore',
+          title: 'Erro ao carregar a árvore',
           message: loadError,
           tone: 'error',
         })
       ) : pessoas.length === 0 || !centralReferencePersonId ? (
         renderStateMessage({
           title: 'Nenhuma pessoa encontrada',
-          message: 'A tabela pessoas nÃ£o retornou registros para renderizar a Ã¡rvore.',
+          message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
       ) : canRenderTree ? (
         <FamilyTree
@@ -220,8 +220,8 @@ export function HomeTreeSection({
         />
       ) : (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Preparando a referÃªncia principal da Ã¡rvore.',
+          title: 'Carregando árvore',
+          message: 'Preparando a referência principal da árvore.',
         })
       )}
     </section>
