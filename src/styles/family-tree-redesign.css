@@ -1,0 +1,95 @@
+.family-tree-export-root {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(203, 189, 166, 0.22), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(168, 95, 69, 0.10), transparent 26%),
+    linear-gradient(180deg, #F4EFE6 0%, #EFE6D8 100%) !important;
+  color: #2F2A25;
+}
+
+.family-tree-export-root::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(47, 42, 37, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 42, 37, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+}
+
+.family-tree-export-root .react-flow {
+  background: transparent !important;
+}
+
+.family-tree-export-root .react-flow__pane,
+.family-tree-export-root .react-flow__renderer,
+.family-tree-export-root .react-flow__viewport {
+  background: transparent !important;
+}
+
+.family-tree-export-root .react-flow__edge-path {
+  filter: drop-shadow(0 1px 0 rgba(251, 248, 241, 0.72));
+}
+
+.family-tree-export-root > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+  color: #2F2A25 !important;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.family-tree-export-root > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+  color: #5B4636 !important;
+}
+
+.family-tree-export-root button[aria-label='Aumentar zoom'],
+.family-tree-export-root button[aria-label='Diminuir zoom'],
+.family-tree-export-root button[aria-label='Recolher painel'],
+.family-tree-export-root button[aria-label='Expandir painel'],
+.family-tree-export-root button[aria-label='Mover árvore para cima'],
+.family-tree-export-root button[aria-label='Mover árvore para baixo'],
+.family-tree-export-root button[aria-label='Mover árvore para a esquerda'],
+.family-tree-export-root button[aria-label='Mover árvore para a direita'] {
+  border-color: #CBBDA6 !important;
+  background: rgba(251, 248, 241, 0.94) !important;
+  color: #5B4636 !important;
+  box-shadow: 0 10px 24px rgba(47, 42, 37, 0.10) !important;
+}
+
+.family-tree-export-root button[aria-label='Aumentar zoom']:hover,
+.family-tree-export-root button[aria-label='Diminuir zoom']:hover,
+.family-tree-export-root button[aria-label='Recolher painel']:hover,
+.family-tree-export-root button[aria-label='Expandir painel']:hover,
+.family-tree-export-root button[aria-label='Mover árvore para cima']:hover,
+.family-tree-export-root button[aria-label='Mover árvore para baixo']:hover,
+.family-tree-export-root button[aria-label='Mover árvore para a esquerda']:hover,
+.family-tree-export-root button[aria-label='Mover árvore para a direita']:hover {
+  background: #F4EFE6 !important;
+  color: #A85F45 !important;
+}
+
+.family-tree-export-root button[aria-label='Aumentar zoom']:focus-visible,
+.family-tree-export-root button[aria-label='Diminuir zoom']:focus-visible,
+.family-tree-export-root button[aria-label='Recolher painel']:focus-visible,
+.family-tree-export-root button[aria-label='Expandir painel']:focus-visible,
+.family-tree-export-root button[aria-label='Mover árvore para cima']:focus-visible,
+.family-tree-export-root button[aria-label='Mover árvore para baixo']:focus-visible,
+.family-tree-export-root button[aria-label='Mover árvore para a esquerda']:focus-visible,
+.family-tree-export-root button[aria-label='Mover árvore para a direita']:focus-visible {
+  outline: 2px solid rgba(168, 95, 69, 0.42) !important;
+  outline-offset: 2px !important;
+}
+
+.family-tree-export-root .react-flow__attribution {
+  display: none;
+}
+
+.is-exporting-family-tree .family-tree-export-root::before {
+  display: none !important;
+}
+
+.is-exporting-family-tree .family-tree-export-root {
+  background: #ffffff !important;
+}
