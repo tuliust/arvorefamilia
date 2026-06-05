@@ -269,3 +269,85 @@ export function getSortableBirthValue(value?: string | number | null): number {
 
   return Number.POSITIVE_INFINITY;
 }
+
+export function getStablePersonComparator(
+  pessoas: Pessoa[],
+  childParentsMap?: Map<string, Set<string>>,
+  positionedNodes?: Node[],
+  marriageMap?: Map<string, string>,
+  marriageNodes?: Node[],
+  constants: LayoutConstants = TREE_CONSTANTS
+) {
+  return (personAId: string, personBId: string) => {
+    const getParentKey = (personId: string) => {
+      const parentIds = Array.from(childParentsMap?.get(personId) || []).sort();
+      return parentIds.join('::');
+    };
+
+    const getParentAnchorY = (personId: string) => {
+      const parentIds = Array.from(childParentsMap?.get(personId) || []).sort();
+      if (parentIds.length === 0) return Number.POSITIVE_INFINITY;
+
+      if (parentIds.length === 2 && marriageMap && marriageNodes) {
+        const marriageKey = parentIds.join('::');
+        const marriageNodeId = marriageMap.get(marriageKey);
+        const marriageNode = marriageNodeId
+          ? (positionedNodes || marriageNodes).find((node) => node.id === marriageNodeId)
+          : undefined;
+
+        if (marriageNode) {
+          return marriageNode.position.y + constants.MARRIAGE_NODE_WIDTH / 2;
+        }
+      }
+
+      if (positionedNodes) {
+        const parentCenters = parentIds
+          .map((parentId) => {
+            const parentNode = positionedNodes.find((node) => node.id === parentId);
+            if (!parentNode) return undefined;
+            return parentNode.position.y + constants.NODE_HEIGHT / 2;
+          })
+          .filter((y): y is number => typeof y === 'number');
+
+        if (parentCenters.length > 0) {
+          return Math.min(...parentCenters);
+        }
+      }
+
+      return Number.POSITIVE_INFINITY;
+    };
+
+    const parentKeyA = getParentKey(personAId);
+    const parentKeyB = getParentKey(personBId);
+
+    const anchorYA = getParentAnchorY(personAId);
+    const anchorYB = getParentAnchorY(personBId);
+
+    if (anchorYA !== anchorYB) {
+      return anchorYA - anchorYB;
+    }
+
+    if (parentKeyA !== parentKeyB) {
+      return parentKeyA.localeCompare(parentKeyB);
+    }
+
+    const pessoaA = pessoas.find((p) => p.id === personAId);
+    const pessoaB = pessoas.find((p) => p.id === personBId);
+
+    const sortableBirthA = getSortableBirthValue(pessoaA?.data_nascimento);
+    const sortableBirthB = getSortableBirthValue(pessoaB?.data_nascimento);
+
+    if (sortableBirthA !== sortableBirthB) {
+      return sortableBirthA - sortableBirthB;
+    }
+
+    const birthYearA = getBirthYear(pessoaA?.data_nascimento);
+    const birthYearB = getBirthYear(pessoaB?.data_nascimento);
+
+    if (birthYearA !== birthYearB) {
+      return birthYearA - birthYearB;
+    }
+
+    return (pessoaA?.nome_completo || '').localeCompare(pessoaB?.nome_completo || '');
+  };
+}
