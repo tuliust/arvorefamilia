@@ -5,7 +5,7 @@ import { MarriageNodeData, MarriageNodeDetails } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 import { ViewMarriageModal } from './modals/ViewMarriageModal';
 
-const FALLBACK_MARRIAGE_NODE_SIZE = 28;
+const FALLBACK_MARRIAGE_NODE_SIZE = 40;
 const FALLBACK_PERSON_NODE_WIDTH = 400;
 const FALLBACK_PERSON_NODE_HEIGHT = 160;
 
@@ -105,7 +105,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onPointerDown={(event) => event.stopPropagation()}
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
-        className="nodrag nopan relative z-40 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border bg-white text-sm leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+        className="nodrag nopan relative z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border bg-white text-base leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
         <Handle
