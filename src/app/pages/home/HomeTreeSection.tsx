@@ -120,7 +120,7 @@ export function HomeTreeSection({
           }
 
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-            margin-top: 0.45rem !important;
+            margin-top: 5px !important;
             font-size: 0.95rem !important;
           }
 
@@ -134,6 +134,10 @@ export function HomeTreeSection({
             stroke: #D6D6DA !important;
             stroke-width: 4px !important;
             opacity: 1 !important;
+          }
+
+          [data-export-root="family-tree"] .react-flow__node:not(.react-flow__node-directFamilyLabelNode) {
+            margin-top: 16px !important;
           }
         `}
       </style>
@@ -169,7 +173,7 @@ export function HomeTreeSection({
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-              margin-top: 0.2rem !important;
+              margin-top: 5px !important;
               font-size: 0.8rem !important;
               line-height: 1.18 !important;
             }
