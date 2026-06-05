@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -83,9 +83,7 @@ export function HomeTreeSection({
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
   return (
-    <section
-      className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
-    >
+    <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-white">
       {isMobile && (
         <style>
           {`
@@ -181,19 +179,19 @@ export function HomeTreeSection({
 
       {isTreeResolving ? (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Buscando pessoas e relacionamentosâ€¦',
+          title: 'Carregando árvore',
+          message: 'Buscando pessoas e relacionamentos...',
         })
       ) : loadError ? (
         renderStateMessage({
-          title: 'Erro ao carregar a Ã¡rvore',
+          title: 'Erro ao carregar a árvore',
           message: loadError,
           tone: 'error',
         })
       ) : pessoas.length === 0 || !centralReferencePersonId ? (
         renderStateMessage({
           title: 'Nenhuma pessoa encontrada',
-          message: 'A tabela pessoas nÃ£o retornou registros para renderizar a Ã¡rvore.',
+          message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
       ) : canRenderTree ? (
         <FamilyTree
@@ -220,8 +218,8 @@ export function HomeTreeSection({
         />
       ) : (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Preparando a referÃªncia principal da Ã¡rvore.',
+          title: 'Carregando árvore',
+          message: 'Preparando a referência principal da árvore.',
         })
       )}
     </section>
