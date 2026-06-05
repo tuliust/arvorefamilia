@@ -82,10 +82,31 @@ export function HomeTreeSection({
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
+  React.useEffect(() => {
+    const normalizeTreeTitle = () => {
+      const title = document.querySelector<HTMLHeadingElement>(
+        '[data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2'
+      );
+
+      if (title?.textContent?.startsWith('A árvore de ')) {
+        title.textContent = title.textContent.replace('A árvore de ', 'A Árvore de ');
+      }
+    };
+
+    normalizeTreeTitle();
+    const frame = window.requestAnimationFrame(normalizeTreeTitle);
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [treeViewMode, treeLayoutRevision, centralReferencePersonId, pessoas.length]);
+
   return (
-    <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-white">
+    <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-[#F7F7F8]">
       <style>
         {`
+          [data-export-root="family-tree"] {
+            background: #F7F7F8 !important;
+          }
+
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
             top: 0.75rem !important;
             height: 4.75rem !important;
@@ -95,7 +116,7 @@ export function HomeTreeSection({
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
             font-size: 1.8rem !important;
             line-height: 1.1 !important;
-            text-transform: capitalize;
+            text-transform: none !important;
           }
 
           [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
@@ -103,8 +124,14 @@ export function HomeTreeSection({
             font-size: 0.95rem !important;
           }
 
+          [data-export-root="family-tree"] .react-flow__node-directFamilyGroupBoxNode > div {
+            border-color: #D6D6DA !important;
+            background: #F9F9FA !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+          }
+
           [data-export-root="family-tree"] .react-flow__edge-path {
-            stroke: #CBD5E1 !important;
+            stroke: #D6D6DA !important;
             stroke-width: 1.7px !important;
             opacity: 0.72 !important;
           }
