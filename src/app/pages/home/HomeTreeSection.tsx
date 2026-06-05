@@ -84,6 +84,33 @@ export function HomeTreeSection({
 
   return (
     <section className="relative min-w-0 w-0 flex-1 overflow-hidden bg-white">
+      <style>
+        {`
+          [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+            top: 0.75rem !important;
+            height: 4.75rem !important;
+            padding-top: 0.25rem !important;
+          }
+
+          [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+            font-size: 1.8rem !important;
+            line-height: 1.1 !important;
+            text-transform: capitalize;
+          }
+
+          [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+            margin-top: 0.45rem !important;
+            font-size: 0.95rem !important;
+          }
+
+          [data-export-root="family-tree"] .react-flow__edge-path {
+            stroke: #CBD5E1 !important;
+            stroke-width: 1.7px !important;
+            opacity: 0.72 !important;
+          }
+        `}
+      </style>
+
       {isMobile && (
         <style>
           {`
@@ -110,13 +137,13 @@ export function HomeTreeSection({
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-              font-size: 1.25rem !important;
+              font-size: 1.15rem !important;
               line-height: 1.15 !important;
             }
 
             [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
               margin-top: 0.2rem !important;
-              font-size: 0.84rem !important;
+              font-size: 0.8rem !important;
               line-height: 1.18 !important;
             }
           `}
