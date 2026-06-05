@@ -1,4 +1,4 @@
-﻿@media (max-width: 767px) {
+@media (max-width: 767px) {
   .family-tree-export-root [aria-label="Mover árvore para cima"] {
     position: fixed !important;
     top: calc(env(safe-area-inset-top, 0px) + 14.25rem) !important;
@@ -20,9 +20,38 @@
     transform: translateX(-50%);
   }
 
+  .family-tree-export-root [aria-label="Mover árvore para cima"],
+  .family-tree-export-root [aria-label="Mover árvore para baixo"],
+  .family-tree-export-root [aria-label="Mover árvore para a esquerda"],
+  .family-tree-export-root [aria-label="Mover árvore para a direita"] {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-color: #CBBDA6 !important;
+    background: rgba(251, 248, 241, 0.96) !important;
+    color: #5B4636 !important;
+    box-shadow: 0 10px 22px rgba(47, 42, 37, 0.14) !important;
+    touch-action: manipulation;
+  }
+
+  .family-tree-export-root [aria-label="Mover árvore para cima"]:active,
+  .family-tree-export-root [aria-label="Mover árvore para baixo"]:active,
+  .family-tree-export-root [aria-label="Mover árvore para a esquerda"]:active,
+  .family-tree-export-root [aria-label="Mover árvore para a direita"]:active {
+    background: #F4EFE6 !important;
+    color: #A85F45 !important;
+    transform: scale(0.98);
+  }
+
+  .family-tree-export-root [aria-label="Mover árvore para cima"]:active,
+  .family-tree-export-root [aria-label="Mover árvore para baixo"]:active {
+    transform: translateX(-50%) scale(0.98) !important;
+  }
+
   .family-tree-export-root .react-flow__node-directFamilyLabelNode > div[aria-label^="A árvore de"] {
     transform: translateY(-18px) scale(1.16);
     transform-origin: center top;
+    color: #2F2A25 !important;
+    text-shadow: 0 1px 0 rgba(251, 248, 241, 0.78);
   }
 
   .family-tree-export-root .react-flow__node-directFamilyLabelNode > div[aria-label^="A árvore de"] > div:first-child {
@@ -34,6 +63,7 @@
     margin-top: 0.55rem !important;
     font-size: 2.75rem !important;
     line-height: 3.25rem !important;
+    color: #5B4636 !important;
   }
 
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 760px"],
@@ -109,8 +139,12 @@
 @media (max-width: 767px) {
   .family-tree-export-root .react-flow__node-directFamilyLabelNode > div:not([aria-label^="A árvore de"]) {
     min-height: 24px !important;
+    border-color: #CBBDA6 !important;
+    background: rgba(251, 248, 241, 0.82) !important;
+    color: #5B4636 !important;
     font-size: 14px !important;
     line-height: 1.05 !important;
     letter-spacing: 0.02em !important;
+    box-shadow: 0 8px 18px rgba(47, 42, 37, 0.08) !important;
   }
 }
