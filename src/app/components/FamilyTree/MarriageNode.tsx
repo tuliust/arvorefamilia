@@ -105,7 +105,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onPointerDown={(event) => event.stopPropagation()}
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
-        className="nodrag nopan relative z-40 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border bg-white text-sm leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+        className="nodrag nopan relative z-40 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border bg-[#FBF8F1] text-[13px] leading-none text-[#A85F45] shadow-sm shadow-[#2F2A25]/10 transition-colors hover:bg-[#F4EFE6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A85F45]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4EFE6]"
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
         <Handle
@@ -143,7 +143,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        {data.emoji || '💑'}
+        {data.emoji ? data.emoji : '♥'}
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'
