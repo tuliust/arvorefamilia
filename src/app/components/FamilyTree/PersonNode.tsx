@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { User, Dog, Eye, Pencil, Link2, Trash2 } from 'lucide-react';
 import { PersonNodeData } from './types';
@@ -26,11 +26,14 @@ import {
 } from '../ui/dialog';
 
 const DIRECT_FAMILY_PET_STYLE = {
-  background: '#D97706',
-  border: '#22C55E',
-  color: '#ffffff',
-  muted: 'rgba(255,255,255,0.82)',
+  background: FAMILY_TREE_COLORS.PAPER_MUTED,
+  border: FAMILY_TREE_COLORS.TERRACOTTA,
+  color: FAMILY_TREE_COLORS.TEXT_PRIMARY,
+  muted: FAMILY_TREE_COLORS.TEXT_SECONDARY,
 };
+
+const PERSON_CARD_SHADOW = '0 14px 30px rgba(47, 42, 37, 0.10)';
+const PERSON_CARD_SELECTED_SHADOW = '0 16px 34px rgba(168, 95, 69, 0.22)';
 
 function relationCardStyle(relationKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS) {
   return {
@@ -123,8 +126,10 @@ function ActionButton({
         onClick?.();
       }}
       className={[
-        'flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-left text-xs transition-colors',
-        danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100',
+        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+        danger
+          ? 'text-[#9F3A38] hover:bg-[#9F3A38]/10'
+          : 'text-[#5B4636] hover:bg-[#E7D8BF]/70 hover:text-[#2F2A25]',
       ].join(' ')}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -202,7 +207,7 @@ function PetMarker({ compact = false }: { compact?: boolean }) {
   return (
     <span
       className={[
-        'absolute rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-sm',
+        'absolute rounded-full border-2 border-[#FBF8F1] bg-[#A85F45] text-[#FBF8F1] shadow-sm',
         compact ? '-bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center' : 'bottom-0 right-0 flex h-7 w-7 items-center justify-center',
       ].join(' ')}
       title="Pet"
@@ -341,7 +346,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     menuOpen && (
       <div
         data-tree-node-menu="true"
-        className="absolute right-2 top-2 z-50 min-w-[170px] rounded-lg border border-gray-200 bg-white p-1 shadow-xl"
+        className="absolute right-2 top-2 z-50 min-w-[170px] rounded-lg border border-[#CBBDA6] bg-[#FBF8F1] p-1 shadow-xl shadow-[#2F2A25]/10"
       >
         <ActionButton
           label="Visualizar"
@@ -471,8 +476,8 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         <div className="relative" ref={menuRef}>
           <div
             className={[
-              'cursor-pointer rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
-              isSelected ? 'ring-2 ring-blue-300' : '',
+              'cursor-pointer rounded-2xl border-2 transition-all hover:-translate-y-0.5',
+              isSelected ? 'ring-2 ring-[#A85F45]/45 ring-offset-2 ring-offset-[#F4EFE6]' : '',
             ].join(' ')}
             onClick={handleClick}
             onContextMenu={handleContextMenu}
@@ -484,6 +489,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               background: style.background,
               borderColor: directBorderColor,
               color: style.color,
+              boxShadow: isSelected ? PERSON_CARD_SELECTED_SHADOW : PERSON_CARD_SHADOW,
             }}
           >
             <PersonHandles />
@@ -499,12 +505,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           {pessoa.foto_principal_url && (
             <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
               <DialogContent
-                className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
+                className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-[#CBBDA6] bg-[#2F2A25] p-4 text-[#FBF8F1] sm:max-w-[min(92vw,980px)]"
                 onClick={(event) => event.stopPropagation()}
                 onContextMenu={(event) => event.stopPropagation()}
               >
                 <DialogHeader>
-                  <DialogTitle className="pr-8 text-white">
+                  <DialogTitle className="pr-8 text-[#FBF8F1]">
                     Foto de {pessoa.nome_completo}
                   </DialogTitle>
                 </DialogHeader>
@@ -528,11 +534,11 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
       <div className="relative" ref={menuRef}>
         <div
           className={[
-            'cursor-pointer rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
+            'cursor-pointer rounded-2xl border-2 transition-all hover:-translate-y-0.5',
             isCentralDirectNode
               ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
               : 'flex items-center gap-4 px-3 py-2.5',
-            isSelected ? 'ring-2 ring-blue-300' : '',
+            isSelected ? 'ring-2 ring-[#A85F45]/45 ring-offset-2 ring-offset-[#F4EFE6]' : '',
           ].join(' ')}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
@@ -547,6 +553,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             background: style.background,
             borderColor: directBorderColor,
             color: style.color,
+            boxShadow: isSelected ? PERSON_CARD_SELECTED_SHADOW : PERSON_CARD_SHADOW,
           }}
         >
           <PersonHandles />
@@ -554,29 +561,29 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           {isCentralDirectNode && pessoa.foto_principal_url ? (
             <button
               type="button"
-              className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:ring-offset-2"
+              className="flex shrink-0 items-center justify-center rounded-full border border-[#CBBDA6] bg-[#FBF8F1] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#A85F45]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4EFE6]"
               style={{ width: avatarSize, height: avatarSize }}
               onClick={handleOpenPhotoDialog}
               onMouseDown={(event) => event.stopPropagation()}
               aria-label={`Ampliar foto de ${pessoa.nome_completo}`}
             >
-              {avatarContent('h-full w-full', 'h-28 w-28 text-slate-700')}
+              {avatarContent('h-full w-full', 'h-28 w-28 text-[#5B4636]')}
             </button>
           ) : (
             <div
               className={[
-                'relative flex shrink-0 items-center justify-center rounded-full',
-                isCentralDirectNode ? 'bg-gray-100' : 'bg-white/90',
+                'relative flex shrink-0 items-center justify-center rounded-full border border-[#CBBDA6] shadow-inner',
+                isCentralDirectNode ? 'bg-[#FBF8F1]' : 'bg-[#F4EFE6]',
               ].join(' ')}
               style={{ width: avatarSize, height: avatarSize }}
             >
               {avatarContent(
                 'h-full w-full',
                 isCentralDirectNode
-                  ? 'h-28 w-28 text-slate-700'
+                  ? 'h-28 w-28 text-[#5B4636]'
                   : isCompactDirectCard
-                    ? 'h-5 w-5 text-slate-700'
-                    : 'h-7 w-7 text-slate-700'
+                    ? 'h-5 w-5 text-[#5B4636]'
+                    : 'h-7 w-7 text-[#5B4636]'
               )}
               {!isCentralDirectNode && isPet && <PetMarker compact />}
             </div>
@@ -594,7 +601,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           >
             <h3
               className={[
-                'font-bold leading-tight',
+                'font-bold leading-tight text-[#2F2A25]',
                 isCentralDirectNode
                   ? 'whitespace-normal break-words'
                   : 'whitespace-normal break-words',
@@ -618,7 +625,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
                 <div
-                  className={isMobile ? "mt-2 space-y-0 leading-[1.02]" : "mt-4 space-y-1.5 leading-[1.18]"}
+                  className={isMobile ? 'mt-2 space-y-0 leading-[1.02]' : 'mt-4 space-y-1.5 leading-[1.18]'}
                   style={{ color: style.muted, fontSize: directDetailFontSize }}
                 >
                   {centralDetails.map((detail) => (
@@ -647,12 +654,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         {isCentralDirectNode && pessoa.foto_principal_url && (
           <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
             <DialogContent
-              className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
+              className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-[#CBBDA6] bg-[#2F2A25] p-4 text-[#FBF8F1] sm:max-w-[min(92vw,980px)]"
               onClick={(event) => event.stopPropagation()}
               onContextMenu={(event) => event.stopPropagation()}
             >
               <DialogHeader>
-                <DialogTitle className="pr-8 text-white">
+                <DialogTitle className="pr-8 text-[#FBF8F1]">
                   Foto de {pessoa.nome_completo}
                 </DialogTitle>
               </DialogHeader>
@@ -675,9 +682,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <div className="relative" ref={menuRef}>
       <div
-        className={`cursor-pointer rounded-lg border-[4px] px-3 py-2.5 shadow-md transition-all hover:shadow-lg ${
-          isSelected ? 'ring-2 ring-blue-300' : ''
-        }`}
+        className={[
+          'cursor-pointer rounded-2xl border-2 px-3 py-2.5 transition-all hover:-translate-y-0.5',
+          isSelected ? 'ring-2 ring-[#A85F45]/45 ring-offset-2 ring-offset-[#F4EFE6]' : '',
+        ].join(' ')}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
         style={{
@@ -687,16 +695,17 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          backgroundColor: '#ffffff',
+          backgroundColor: FAMILY_TREE_COLORS.PAPER_SURFACE,
           borderColor: getBorderColor(),
+          boxShadow: isSelected ? PERSON_CARD_SELECTED_SHADOW : '0 10px 24px rgba(47, 42, 37, 0.09)',
         }}
       >
         <PersonHandles />
 
         <div className={`flex items-center ${isMobile ? 'gap-5' : 'gap-4'}`}>
           <div
-            className={`relative flex ${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} flex-shrink-0 items-center justify-center rounded-full ${
-              isPet ? 'bg-amber-200' : isFalecido ? 'bg-gray-300' : 'bg-blue-200'
+            className={`relative flex ${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} flex-shrink-0 items-center justify-center rounded-full border border-[#CBBDA6] shadow-inner ${
+              isPet ? 'bg-[#E2D2BA]' : isFalecido ? 'bg-[#E7D8BF]' : 'bg-[#F4EFE6]'
             }`}
           >
             {pessoa.foto_principal_url ? (
@@ -706,9 +715,9 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
                 className={`${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} rounded-full object-cover`}
               />
             ) : isPet ? (
-              <Dog className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-amber-700`} />
+              <Dog className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-[#A85F45]`} />
             ) : (
-              <User className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-blue-700`} />
+              <User className={`${isMobile ? 'h-14 w-14' : 'h-12 w-12'} text-[#5B4636]`} />
             )}
             {isPet && <PetMarker compact />}
           </div>
@@ -716,13 +725,13 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2">
               <h3
-                className={`min-w-0 flex-1 whitespace-normal break-words ${isMobile ? 'text-[20px]' : 'text-[18px]'} font-extrabold leading-tight text-gray-900`}
+                className={`min-w-0 flex-1 whitespace-normal break-words ${isMobile ? 'text-[20px]' : 'text-[18px]'} font-bold leading-tight text-[#2F2A25]`}
                 title={pessoa.nome_completo}
               >
                 {pessoa.nome_completo}
               </h3>
               {isCentralPerson && (
-                <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-normal text-white">
+                <span className="shrink-0 rounded-full border border-[#A85F45]/30 bg-[#A85F45]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-normal text-[#A85F45]">
                   Você
                 </span>
               )}
@@ -730,7 +739,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
 
             <PersonDetailLines
               lines={detailLines}
-              className={`mt-1 space-y-0.5 font-bold leading-tight ${isMobile ? 'text-[14px]' : 'text-[13px]'} text-gray-800`}
+              className={`mt-1 space-y-0.5 font-semibold leading-tight ${isMobile ? 'text-[14px]' : 'text-[13px]'} text-[#5B4636]`}
             />
           </div>
         </div>
