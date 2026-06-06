@@ -38,10 +38,11 @@ function DirectFamilyAnchorNode() {
 function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeData>) {
   return React.createElement('div', {
     'aria-hidden': true,
-    className: 'pointer-events-none rounded-xl bg-white/[0.04]',
+    className: 'pointer-events-none rounded-xl',
     style: {
       width: data.width ?? 0,
       height: data.height ?? 0,
+      background: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.background,
       borderColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.color,
       borderWidth: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.width,
       borderStyle: 'solid',
@@ -88,10 +89,11 @@ function DirectFamilyLegendNode({ data }: NodeProps<DirectFamilyLegendNodeData>)
   return React.createElement(
     'div',
     {
-      className: 'pointer-events-none rounded-md border border-gray-200 bg-white/90 px-4 py-2.5 shadow-sm',
+      className: 'pointer-events-none rounded-md border border-gray-200 px-4 py-2.5 shadow-sm',
       style: {
         width: data.width ?? 760,
         height: data.height ?? 92,
+        background: 'var(--tree-palette-legend-bg, rgba(255, 255, 255, 0.9))',
       },
     },
     React.createElement(

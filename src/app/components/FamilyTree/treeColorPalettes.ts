@@ -1,0 +1,161 @@
+export type TreeColorPalette = 'white' | 'orange' | 'brown';
+
+export const TREE_COLOR_PALETTE_STORAGE_KEY = 'arvorefamilia.treeColorPalette';
+
+export const TREE_COLOR_PALETTE_CSS_VARIABLES = [
+  '--tree-palette-canvas-bg',
+  '--tree-palette-card-tataravos',
+  '--tree-palette-card-bisavos',
+  '--tree-palette-card-avos',
+  '--tree-palette-card-tios',
+  '--tree-palette-card-primos',
+  '--tree-palette-card-pais',
+  '--tree-palette-card-central',
+  '--tree-palette-card-irmaos',
+  '--tree-palette-card-sobrinhos',
+  '--tree-palette-card-netos',
+  '--tree-palette-card-pets',
+  '--tree-palette-border-tataravos',
+  '--tree-palette-border-bisavos',
+  '--tree-palette-border-avos',
+  '--tree-palette-border-tios',
+  '--tree-palette-border-primos',
+  '--tree-palette-border-pais',
+  '--tree-palette-border-central',
+  '--tree-palette-border-irmaos',
+  '--tree-palette-border-sobrinhos',
+  '--tree-palette-border-netos',
+  '--tree-palette-border-pets',
+  '--tree-palette-text-primary',
+  '--tree-palette-text-muted',
+  '--tree-palette-status-alive',
+  '--tree-palette-status-deceased',
+  '--tree-palette-card-border-pet',
+  '--tree-palette-edge-spouse',
+  '--tree-palette-edge-child',
+  '--tree-palette-edge-sibling',
+  '--tree-palette-group-bg',
+  '--tree-palette-group-border',
+  '--tree-palette-group-border-width',
+  '--tree-palette-legend-bg',
+] as const;
+
+type TreeColorPaletteCssVariable = typeof TREE_COLOR_PALETTE_CSS_VARIABLES[number];
+
+interface TreeColorPaletteDefinition {
+  label: string;
+  ariaLabel: string;
+  swatch: string;
+  swatchBorder: string;
+  cssVariables: Record<TreeColorPaletteCssVariable, string>;
+}
+
+const whitePaletteVariables: Record<TreeColorPaletteCssVariable, string> = {
+  '--tree-palette-canvas-bg': '#F8FAFC',
+  '--tree-palette-card-tataravos': '#B7AED6',
+  '--tree-palette-card-bisavos': '#D49BC5',
+  '--tree-palette-card-avos': '#E8A29B',
+  '--tree-palette-card-tios': '#EAB08F',
+  '--tree-palette-card-primos': '#E7B985',
+  '--tree-palette-card-pais': '#E4C37A',
+  '--tree-palette-card-central': '#E7E8E8',
+  '--tree-palette-card-irmaos': '#A9CB72',
+  '--tree-palette-card-sobrinhos': '#B8CEC2',
+  '--tree-palette-card-netos': '#BDD8DC',
+  '--tree-palette-card-pets': '#F4C7AB',
+  '--tree-palette-border-tataravos': '#B7AED6',
+  '--tree-palette-border-bisavos': '#D49BC5',
+  '--tree-palette-border-avos': '#E8A29B',
+  '--tree-palette-border-tios': '#EAB08F',
+  '--tree-palette-border-primos': '#E7B985',
+  '--tree-palette-border-pais': '#E4C37A',
+  '--tree-palette-border-central': '#E7E8E8',
+  '--tree-palette-border-irmaos': '#A9CB72',
+  '--tree-palette-border-sobrinhos': '#B8CEC2',
+  '--tree-palette-border-netos': '#BDD8DC',
+  '--tree-palette-border-pets': '#F4C7AB',
+  '--tree-palette-text-primary': '#111827',
+  '--tree-palette-text-muted': '#4B5563',
+  '--tree-palette-status-alive': '#3F7F72',
+  '--tree-palette-status-deceased': '#6B7280',
+  '--tree-palette-card-border-pet': '#f59e0b',
+  '--tree-palette-edge-spouse': '#f97316',
+  '--tree-palette-edge-child': '#eab308',
+  '--tree-palette-edge-sibling': '#eab308',
+  '--tree-palette-group-bg': 'rgba(255, 255, 255, 0.04)',
+  '--tree-palette-group-border': '#CBD5E1',
+  '--tree-palette-group-border-width': '3px',
+  '--tree-palette-legend-bg': 'rgba(255, 255, 255, 0.9)',
+};
+
+export const TREE_COLOR_PALETTES: Record<TreeColorPalette, TreeColorPaletteDefinition> = {
+  white: {
+    label: 'Padrão',
+    ariaLabel: 'Usar paleta padrão branca',
+    swatch: '#FFFFFF',
+    swatchBorder: '#CBD5E1',
+    cssVariables: whitePaletteVariables,
+  },
+  orange: {
+    label: 'Laranja',
+    ariaLabel: 'Usar paleta laranja',
+    swatch: '#F97316',
+    swatchBorder: '#EA580C',
+    cssVariables: {
+      ...whitePaletteVariables,
+      '--tree-palette-canvas-bg': '#FFF7ED',
+      '--tree-palette-group-bg': '#F8FAFC',
+      '--tree-palette-group-border-width': '4px',
+      '--tree-palette-legend-bg': 'rgba(255, 247, 237, 0.94)',
+      '--tree-palette-edge-child': '#EA580C',
+      '--tree-palette-edge-sibling': '#EA580C',
+    },
+  },
+  brown: {
+    label: 'Marrom',
+    ariaLabel: 'Usar paleta marrom premium',
+    swatch: '#8B5E34',
+    swatchBorder: '#5B4636',
+    cssVariables: {
+      '--tree-palette-canvas-bg': '#F3F1EC',
+      '--tree-palette-card-tataravos': '#D9C7AD',
+      '--tree-palette-card-bisavos': '#E0CCB0',
+      '--tree-palette-card-avos': '#E7D8BF',
+      '--tree-palette-card-tios': '#EADCC8',
+      '--tree-palette-card-primos': '#F4EFE6',
+      '--tree-palette-card-pais': '#FBF8F1',
+      '--tree-palette-card-central': '#FBF8F1',
+      '--tree-palette-card-irmaos': '#F4EFE6',
+      '--tree-palette-card-sobrinhos': '#E7D8BF',
+      '--tree-palette-card-netos': '#F4EFE6',
+      '--tree-palette-card-pets': '#E2D2BA',
+      '--tree-palette-border-tataravos': '#5B4636',
+      '--tree-palette-border-bisavos': '#A9825A',
+      '--tree-palette-border-avos': '#A9825A',
+      '--tree-palette-border-tios': '#CBBDA6',
+      '--tree-palette-border-primos': '#CBBDA6',
+      '--tree-palette-border-pais': '#A85F45',
+      '--tree-palette-border-central': '#A85F45',
+      '--tree-palette-border-irmaos': '#CBBDA6',
+      '--tree-palette-border-sobrinhos': '#66745B',
+      '--tree-palette-border-netos': '#66745B',
+      '--tree-palette-border-pets': '#A85F45',
+      '--tree-palette-text-primary': '#2F2A25',
+      '--tree-palette-text-muted': '#5B4636',
+      '--tree-palette-status-alive': '#66745B',
+      '--tree-palette-status-deceased': '#A9825A',
+      '--tree-palette-card-border-pet': '#A85F45',
+      '--tree-palette-edge-spouse': '#A85F45',
+      '--tree-palette-edge-child': '#66745B',
+      '--tree-palette-edge-sibling': '#A9825A',
+      '--tree-palette-group-bg': '#F3F1EC',
+      '--tree-palette-group-border': '#CBBDA6',
+      '--tree-palette-group-border-width': '2px',
+      '--tree-palette-legend-bg': 'rgba(251, 248, 241, 0.94)',
+    },
+  },
+} as const;
+
+export function isTreeColorPalette(value: unknown): value is TreeColorPalette {
+  return value === 'white' || value === 'orange' || value === 'brown';
+}

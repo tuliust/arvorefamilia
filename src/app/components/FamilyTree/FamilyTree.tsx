@@ -1598,7 +1598,11 @@ function FamilyTreeComponent({
         'relative h-full w-full overflow-hidden',
         'bg-slate-50',
       ].join(' ')}
-      style={{ width: '100%', height: '100%' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'var(--tree-palette-canvas-bg, #F8FAFC)',
+      }}
     >
       {showSidebarToggle && onToggleSidebar && (
         <div className="absolute left-4 top-4 z-20">
