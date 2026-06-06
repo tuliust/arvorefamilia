@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -11,6 +11,7 @@ import type {
 } from '../../components/FamilyTree/types';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import type { Pessoa, Relacionamento } from '../../types';
+import { GenealogyMobileStageTabs } from './GenealogyMobileStageTabs';
 
 interface StateMessageProps {
   title: string;
@@ -191,6 +192,13 @@ export function HomeTreeSection({
             ` : ''}
           `}
         </style>
+      )}
+
+      {isGenealogyMobile && (
+        <GenealogyMobileStageTabs
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+        />
       )}
 
       {isTreeResolving ? (
