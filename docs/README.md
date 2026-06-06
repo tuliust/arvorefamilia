@@ -210,3 +210,39 @@ Itens ainda pendentes ou em ajuste incremental devem ficar em `PLANO_PROXIMOS_PA
 - concluir ajustes de `/pessoa/:id`: remover signo, contato por WhatsApp no telefone e casamento/viuvez;
 - concluir ajustes de `/notificacoes`: acentuacao, tag **ESPECIAIS** e item inteiro clicavel;
 - revisar ocorrencias de encoding na origem quando surgirem novos textos corrompidos.
+
+---
+
+## 12. Ajustes recentes documentados - ciclo 2026-06-06
+
+Este ciclo documenta o PR #6:
+
+```txt
+feat: adicionar paletas visuais da arvore
+```
+
+Resumo:
+
+- seletor compacto de paletas visuais no dropdown da arvore;
+- paletas `white`, `orange` e `brown`;
+- persistencia em `localStorage`;
+- aplicacao por CSS variables;
+- botao/anel conjugal ampliado para `60px x 60px`.
+
+Documentos sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| UX do seletor de paletas | `GUIA_UX_LAYOUT.md` |
+| Componentes e tokens | `GUIA_COMPONENTES.md` |
+| Estado implementado | `GUIA_IMPLEMENTACOES.md` |
+| Legendas, conectores e camadas visuais | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Minha Arvore, containers e grupos | `funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Pendencias e QA visual | `PLANO_PROXIMOS_PASSOS.md` |
+| Erros recorrentes de script/merge | `GUIA_CORRECAO_ERROS.md` |
+
+Pendencias rastreadas:
+
+- validar visualmente as tres paletas em desktop, tablet e mobile;
+- confirmar comportamento nas tres views da arvore;
+- ajustar padding superior dos titulos dos grupos sem alterar o tamanho total dos containers.

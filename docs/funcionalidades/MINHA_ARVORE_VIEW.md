@@ -1261,3 +1261,39 @@ Checklist:
 - linhas de primos somem ao selecionar Todas;
 - cards nao cortam nomes na parte inferior;
 - alteracoes de largura nao quebram conexoes.
+
+---
+
+## Atualizacao 2026-06-06 - Paletas visuais e containers de grupo
+
+A view **Minha Arvore** respeita a paleta visual global escolhida no seletor da arvore.
+
+As paletas sao definidas em:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+```
+
+Impactos na view direta:
+
+- cards de parentes usam cores derivadas da paleta ativa;
+- containers de grupo usam background, borda e largura de borda por CSS variables;
+- a paleta branca preserva o visual padrao da `main`;
+- a paleta laranja incorpora a variacao visual `polish`;
+- a paleta marrom aplica identidade editorial bege/marrom inspirada no Suafamilia;
+- a escolha da paleta nao altera geometria, filtros, contadores ou dados.
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Pendencia visual ainda aberta:
+
+```txt
+Ajustar padding superior dos titulos de grupos, como BISAVOS PATERNOS e BISAVOS MATERNOS, sem alterar o tamanho total do container.
+```

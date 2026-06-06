@@ -1974,3 +1974,109 @@ Falecimento de conjuge gera viuvez, nao separacao.
 ```
 
 Nao inferir separacao apenas por `ativo=false`.
+
+---
+
+## Atualizacao 2026-06-06 - Scripts, cherry-pick e paletas visuais
+
+### Sintoma: cherry-pick gera conflito em `MarriageNode.tsx` e `GenealogySpouseEdge.tsx`
+
+Exemplo:
+
+```txt
+CONFLICT (content): Merge conflict in src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+CONFLICT (content): Merge conflict in src/app/components/FamilyTree/MarriageNode.tsx
+```
+
+Correcao segura:
+
+```bash
+git cherry-pick --abort
+```
+
+Depois, reaplicar o ajuste pontual manualmente ou por script conservador.
+
+### Sintoma: leftover conflict marker
+
+Exemplo:
+
+```txt
+leftover conflict marker
+``<<<<<<<` HEAD`
+`=======`
+`>>>>>>>`
+```
+
+Correcao:
+
+- nao rodar build antes de resolver ou abortar o conflito;
+- usar `git status --short` para identificar arquivos `UU`;
+- resolver manualmente ou abortar a operacao;
+- validar com:
+
+```bash
+git diff --check
+npm run build
+```
+
+### Sintoma: `Duplicate "style" attribute in JSX element`
+
+Causa provavel:
+
+- script adicionou um novo `style` em elemento JSX que ja possuia `style`.
+
+Correcao:
+
+- combinar as propriedades em um unico objeto `style`.
+
+Exemplo:
+
+```tsx
+style={{
+  width: '100%',
+  height: '100%',
+  backgroundColor: 'var(--tree-palette-canvas-bg, #F8FAFC)',
+}}
+```
+
+### Sintoma: script com substituicao rigida nao encontra trecho
+
+Exemplo:
+
+```txt
+Trecho nao encontrado em src/app/components/FamilyTree/nodeTypes.ts
+```
+
+Causa provavel:
+
+- arquivo ja mudou;
+- formatacao diverge;
+- script depende de bloco literal longo.
+
+Correcao:
+
+- usar patch menor;
+- buscar por nomes de propriedades/funcoes;
+- revisar `git diff`;
+- nao repetir script falho sem restaurar o estado.
+
+### Risco: encoding corrompido por script local
+
+Sintoma:
+
+```txt
+Arvore vira <C1>rvore
+genealogica vira geneal<F3>gica
+```
+
+Correcao:
+
+```bash
+git restore caminho/do/arquivo
+```
+
+Prevencao:
+
+- evitar scripts PowerShell com `Set-Content` em arquivos com acentuacao;
+- preferir script Node preservando UTF-8/BOM;
+- revisar `git diff` antes de commit.

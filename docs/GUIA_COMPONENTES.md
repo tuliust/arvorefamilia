@@ -1523,3 +1523,56 @@ Cuidados:
 - observacoes internas continuam restritas a admin;
 - nao salvar relacionamento ao apenas visualizar o modal;
 - nao expor metadados tecnicos desnecessarios.
+
+---
+
+## Atualizacao 2026-06-06 - Componentes de paletas visuais da arvore
+
+A arvore passou a ter seletor de paletas visuais centralizado em componentes da pasta:
+
+```txt
+src/app/components/FamilyTree
+```
+
+### `ViewModeToggle.tsx`
+
+Responsabilidade atualizada:
+
+- manter a alternancia entre **Minha Arvore**, **Genealogia** e **Visao Completa**;
+- renderizar abaixo dessas opcoes tres botoes circulares de paleta;
+- aplicar a paleta ativa no `document.documentElement`;
+- persistir a escolha em `localStorage`.
+
+Cuidados:
+
+- nao misturar paleta visual com rota;
+- nao alterar `TreeViewMode` ao clicar em paleta;
+- manter `aria-label`, `aria-pressed` e foco visivel.
+
+### `treeColorPalettes.ts`
+
+Novo arquivo central para:
+
+- tipo `TreeColorPalette = 'white' | 'orange' | 'brown'`;
+- chave `TREE_COLOR_PALETTE_STORAGE_KEY`;
+- lista de CSS variables da arvore;
+- mapa `TREE_COLOR_PALETTES`;
+- helper `isTreeColorPalette`.
+
+### `directFamilyColors.ts` e `visualTokens.ts`
+
+As cores visuais da arvore passaram a usar CSS variables com fallback. Isso permite alternar paletas sem alterar estrutura, dados, filtros ou permissao.
+
+### `nodeTypes.ts`
+
+`directFamilyGroupBoxNode` passou a receber background, borda e largura de borda por tokens dinâmicos da paleta ativa.
+
+### `MarriageNode.tsx` e `GenealogySpouseEdge.tsx`
+
+O botao/anel conjugal foi ampliado para `60px x 60px`.
+
+Anti-regressao:
+
+- o anel conjugal deve continuar clicavel;
+- o modal conjugal deve continuar abrindo;
+- a area clicavel maior nao deve deformar os cards.

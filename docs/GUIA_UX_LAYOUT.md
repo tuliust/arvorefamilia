@@ -977,3 +977,34 @@ Em `/privacidade` e `/termos`:
 
 - o header nao deve exibir **Arvore Genealogica** do lado direito;
 - a data oficial de ultima atualizacao e **01/06/2026**.
+
+---
+
+## Atualizacao 2026-06-06 - Paletas visuais da arvore
+
+O dropdown de visualizacao da arvore passou a incluir, abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, um seletor compacto de paleta visual com tres botoes circulares:
+
+- **branco**: paleta padrao da `main`;
+- **laranja**: variacao visual baseada na branch `polish/layout-components-main`;
+- **marrom**: variacao premium baseada na branch `redesign/suafamilia-tree-style`.
+
+Regras de UX:
+
+- os botoes de paleta devem ser discretos, circulares, sem texto visivel e com `aria-label`;
+- o estado ativo deve ser evidente por borda/ring;
+- a troca de paleta nao altera rota, `viewMode`, filtros, permissao, dados ou Supabase;
+- a escolha deve persistir em `localStorage`;
+- o seletor deve permanecer associado ao controle visual da arvore, nao ao painel lateral;
+- validar em desktop, tablet e mobile;
+- validar nas tres views: `/minha-arvore`, `/genealogia` e `/visao-completa`.
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+```

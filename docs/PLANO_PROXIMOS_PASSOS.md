@@ -736,3 +736,26 @@ A rodada so deve ser considerada fechada quando:
 - notificacoes exibirem label amigavel e card clicavel;
 - `/minha-arvore` nao perder legibilidade ao ajustar cards;
 - docs canônicos estiverem atualizados.
+
+---
+
+## Atualizacao 2026-06-06 - Pos-merge das paletas visuais
+
+Concluido:
+
+- PR #6 mergeado na `main`;
+- seletor de paletas visuais da arvore implementado;
+- paletas `white`, `orange` e `brown`;
+- botao/anel conjugal ampliado para `60px x 60px`;
+- build local aprovado apos merge;
+- Vercel Preview do PR aprovado antes do merge.
+
+Pendencias de QA visual:
+
+- validar os tres circulos no dropdown da arvore;
+- validar persistencia da paleta apos reload;
+- validar as tres paletas em desktop, tablet e mobile;
+- validar comportamento em `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- verificar se a paleta laranja esta suficientemente distinta da branca;
+- verificar se a paleta marrom reproduz bem o estilo premium/Suafamilia;
+- ajustar padding superior dos titulos dos grupos, como **BISAVOS PATERNOS**, sem alterar o tamanho geral dos containers.

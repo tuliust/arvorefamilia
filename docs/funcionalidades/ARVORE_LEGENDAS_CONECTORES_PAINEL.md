@@ -1109,3 +1109,42 @@ Principalmente se a alteracao impactar:
 - conectores entre grupos;
 - pan/zoom;
 - camadas de header ou legenda.
+
+---
+
+## Atualizacao 2026-06-06 - Paletas visuais
+
+A arvore passou a suportar paletas visuais globais selecionaveis no controle de visualizacao da Home.
+
+Paletas disponiveis:
+
+| Paleta | Origem | Uso |
+|---|---|---|
+| `white` | `main` | visual padrao |
+| `orange` | `polish/layout-components-main` | variacao laranja/polish |
+| `brown` | `redesign/suafamilia-tree-style` | variacao marrom/premium |
+
+Regra funcional:
+
+```txt
+Paleta visual nao e filtro.
+Paleta visual nao altera cards visiveis.
+Paleta visual nao altera edgeFilters.
+Paleta visual nao altera visualLineFilters.
+Paleta visual nao altera directRelativeFilters.
+Paleta visual nao altera genealogyFilters.
+Paleta visual nao altera dados no Supabase.
+```
+
+A paleta atua apenas sobre tokens visuais via CSS variables, incluindo:
+
+- fundos de cards;
+- bordas de cards;
+- texto primario/secundario;
+- status vivo/falecido;
+- linhas/conectores;
+- fundo e borda dos containers de grupo;
+- fundo da legenda;
+- fundo/canvas da arvore.
+
+O anel conjugal permanece funcional e foi ampliado para `60px x 60px`.

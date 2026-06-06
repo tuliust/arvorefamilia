@@ -1018,3 +1018,44 @@ Este arquivo deve permanecer como inventario consolidado. Para evitar repeticao:
 - detalhes de Minha Arvore devem permanecer em `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
 - detalhes de legenda, painel e conectores devem permanecer em `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
 - historico de commits e diagnosticos deve ir para `docs/historico/`, nao para este guia.
+
+---
+
+## Atualizacao 2026-06-06 - Paletas visuais da arvore
+
+Implementado e mergeado na `main` via PR #6:
+
+```txt
+feat: adicionar paletas visuais da arvore
+```
+
+Comportamento entregue:
+
+- seletor compacto de paletas no controle de visualizacao da arvore;
+- tres paletas: `white`, `orange` e `brown`;
+- `white` preserva a paleta padrao da `main`;
+- `orange` incorpora a variacao visual da branch `polish/layout-components-main`;
+- `brown` incorpora a variacao premium da branch `redesign/suafamilia-tree-style`;
+- persistencia em `localStorage`;
+- aplicacao por CSS variables;
+- botao/anel conjugal ampliado para `60px x 60px`.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+Validacoes registradas:
+
+- `npm run build` aprovado localmente apos merge na `main`;
+- PR #6 estava `MERGEABLE`;
+- Vercel Preview com status `SUCCESS`;
+- sem marcadores de conflito ``<<<<<<<``, ``=======`` ou ``>>>>>>>``.
