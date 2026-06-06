@@ -215,25 +215,29 @@ Itens ainda pendentes ou em ajuste incremental devem ficar em `PLANO_PROXIMOS_PA
 
 ## 12. Ajustes recentes documentados - ciclo 2026-06-06
 
-Este ciclo documenta o PR #6:
+Este ciclo documenta os PRs #6 e #7:
 
 ```txt
-feat: adicionar paletas visuais da arvore
+PR #6 - feat: adicionar paletas visuais da arvore
+PR #7 - fix: exibir paletas no header da arvore
 ```
 
 Resumo:
 
-- seletor compacto de paletas visuais no dropdown da arvore;
+- base tecnica de paletas visuais na arvore;
+- seletor compacto de paletas visuais no dropdown do `HomeHeader`;
 - paletas `white`, `orange` e `brown`;
 - persistencia em `localStorage`;
 - aplicacao por CSS variables;
-- botao/anel conjugal ampliado para `60px x 60px`.
+- botao/anel conjugal ampliado para `60px x 60px`;
+- producao estabilizada apos revert da tentativa anterior e reimplementacao segura via PR #7.
 
 Documentos sincronizados:
 
 | Frente | Documento canonico |
 |---|---|
 | UX do seletor de paletas | `GUIA_UX_LAYOUT.md` |
+| Exposicao das paletas no `HomeHeader` | `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md` e `GUIA_CORRECAO_ERROS.md` |
 | Componentes e tokens | `GUIA_COMPONENTES.md` |
 | Estado implementado | `GUIA_IMPLEMENTACOES.md` |
 | Legendas, conectores e camadas visuais | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
@@ -243,6 +247,6 @@ Documentos sincronizados:
 
 Pendencias rastreadas:
 
-- validar visualmente as tres paletas em desktop, tablet e mobile;
-- confirmar comportamento nas tres views da arvore;
-- ajustar padding superior dos titulos dos grupos sem alterar o tamanho total dos containers.
+- validar contraste das tres paletas quando tokens forem alterados;
+- avaliar acesso equivalente em mobile estreito, se o dropdown de views nao estiver disponivel;
+- ajustar padding superior dos titulos dos grupos sem alterar o tamanho total dos containers, se a demanda visual continuar ativa.

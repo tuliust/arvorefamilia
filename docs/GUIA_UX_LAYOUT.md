@@ -1,6 +1,6 @@
 # Guia de UX e Layout - Arvore Familia
 
-> Ultima revisao: 2026-05-30
+> Ultima revisao: 2026-06-06
 > Local canonico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -131,6 +131,7 @@ A Home pos-login mantem header proprio porque concentra:
 - nome da familia;
 - label da view atual;
 - seletor de visualizacao da arvore;
+- seletor compacto de paletas visuais da arvore;
 - busca expansivel;
 - atalhos para curiosidades, forum e calendario;
 - `UserMenu`;
@@ -143,6 +144,13 @@ Regras:
 - preservar busca expansivel;
 - preservar seletor de view;
 - seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a pagina;
+- abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, o dropdown deve exibir tres botoes circulares de paleta: branco, laranja e marrom;
+- a paleta branca e a opcao padrao herdada da `main`;
+- a paleta laranja representa a variacao visual de `polish/layout-components-main`;
+- a paleta marrom representa a variacao premium inspirada em `redesign/suafamilia-tree-style`;
+- a troca de paleta deve alterar apenas CSS variables/tokens visuais da arvore;
+- a troca de paleta nao deve alterar rota, `viewMode`, filtros, dados, permissao, Supabase ou regras de negocio;
+- a escolha de paleta deve persistir em `localStorage`;
 - search params existentes, especialmente `?pessoa=...`, devem ser preservados ao trocar view;
 - botao **Acoes** usa icone `Printer`;
 - no desktop, o botao pode exibir texto **Acoes**;
@@ -230,7 +238,8 @@ Regras consolidadas:
 - `DropdownMenuContent` deve abrir acima do header;
 - `DropdownMenuSubContent` deve abrir acima do header;
 - menus devem usar afastamento vertical suficiente para nao parecerem encaixados sob a barra;
-- sugestoes de busca, menu do usuario e seletor de views nao devem se sobrepor visualmente de forma indevida.
+- sugestoes de busca, menu do usuario e seletor de views nao devem se sobrepor visualmente de forma indevida;
+- os botoes circulares de paleta ficam dentro do `SelectContent` do seletor de views e devem manter clique/foco funcionais sem fechar por erro ou propagar evento indevido para a arvore.
 
 Padrao atual:
 
@@ -704,6 +713,7 @@ Exemplos consolidados:
 | Exportacao PNG | Salvar PNG |
 | Exportacao PDF | Salvar PDF |
 | Acoes da arvore | Acoes |
+| Paletas da arvore | Branco, laranja e marrom |
 | Loading da Home | Buscando pessoas e relacionamentos... |
 | Busca | Buscar por nome ou local... |
 | Calendario - falecimento no grid | 44 anos de falecimento / Memoria de Nome |
@@ -982,7 +992,14 @@ Em `/privacidade` e `/termos`:
 
 ## Atualizacao 2026-06-06 - Paletas visuais da arvore
 
-O dropdown de visualizacao da arvore passou a incluir, abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, um seletor compacto de paleta visual com tres botoes circulares:
+O ciclo de paletas foi concluido em duas etapas:
+
+```txt
+PR #6 - feat: adicionar paletas visuais da arvore
+PR #7 - fix: exibir paletas no header da arvore
+```
+
+O dropdown de visualizacao da arvore em `HomeHeader.tsx` inclui, abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, um seletor compacto de paleta visual com tres botoes circulares:
 
 - **branco**: paleta padrao da `main`;
 - **laranja**: variacao visual baseada na branch `polish/layout-components-main`;
@@ -992,19 +1009,32 @@ Regras de UX:
 
 - os botoes de paleta devem ser discretos, circulares, sem texto visivel e com `aria-label`;
 - o estado ativo deve ser evidente por borda/ring;
+- o clique em paleta deve usar `type="button"` e nao deve alterar a view selecionada;
 - a troca de paleta nao altera rota, `viewMode`, filtros, permissao, dados ou Supabase;
 - a escolha deve persistir em `localStorage`;
-- o seletor deve permanecer associado ao controle visual da arvore, nao ao painel lateral;
-- validar em desktop, tablet e mobile;
+- a aplicacao visual deve ocorrer por CSS variables/tokens, preservando estrutura e dados da arvore;
+- o seletor deve permanecer associado ao controle visual da arvore no header, nao ao painel lateral;
+- validar em desktop e tablet; em mobile estreito, confirmar se o dropdown do header esta disponivel ou se sera preciso acesso equivalente futuro;
 - validar nas tres views: `/minha-arvore`, `/genealogia` e `/visao-completa`.
 
 Arquivos relacionados:
 
 ```txt
-src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/pages/home/HomeHeader.tsx
 src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/components/FamilyTree/directFamilyColors.ts
 src/app/components/FamilyTree/visualTokens.ts
 src/app/components/FamilyTree/nodeTypes.ts
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 ```
+
+Historico de estabilizacao:
+
+- uma primeira tentativa de expor as paletas no header causou `treeColorPalette is not defined` em runtime;
+- o commit problemático foi revertido para restaurar producao;
+- a reimplementacao segura foi feita em branch/PR separado;
+- o PR #7 adicionou estado React, `applyTreePalette`, persistencia e botoes no `SelectContent`;
+- o build local e o Preview da Vercel foram validados antes do merge;
+- apos merge, a producao foi testada e voltou a exibir as paletas corretamente.

@@ -1,6 +1,6 @@
 # Guia de implementacoes - Arvore Familia
 
-> Ultima revisao: 2026-05-29
+> Ultima revisao: 2026-06-06
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -47,6 +47,7 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e texto Faz X anos. |
+| Paletas visuais da arvore | Concluida no frontend | Paletas `white`, `orange` e `brown` aplicadas por CSS variables, expostas no dropdown do `HomeHeader` e persistidas em `localStorage`; sem migration ou Supabase. |
 
 ---
 
@@ -88,6 +89,7 @@ Areas implementadas no MVP:
 - insights de nascimento;
 - exportacao de area da arvore;
 - legenda visual da arvore;
+- paletas visuais da arvore;
 - headers internos padronizados;
 - responsividade mobile/tablet.
 
@@ -222,7 +224,12 @@ Comportamento consolidado:
 - o botao de recolher/expandir painel lateral foi unificado para evitar duplicidade;
 - em desktop, o botao fica dentro ou junto ao painel;
 - em mobile/largura reduzida, apenas um botao de expandir/recolher deve aparecer;
-- loading atual: **Buscando pessoas e relacionamentos...**, sem complemento no Supabase.
+- loading atual: **Buscando pessoas e relacionamentos...**, sem complemento no Supabase;
+- `HomeHeader` exibe seletor compacto de paletas visuais dentro do dropdown de views;
+- paleta ativa e controlada por estado local no header;
+- escolha e aplicada no `document.documentElement` por CSS variables;
+- escolha e persistida em `localStorage`;
+- PR #7 reimplementou a exposicao no header apos revert da tentativa anterior que causou erro em runtime.
 
 Componentes extraidos da Home:
 
@@ -613,7 +620,9 @@ src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/pages/Home.tsx
+src/app/pages/home/HomeHeader.tsx
 src/app/pages/MinhaArvore.tsx
 ```
 
@@ -652,6 +661,33 @@ Commits de referencia:
 94add1e fix: padronizar viewport inicial da arvore
 e94ed6b fix: ajustar escala e titulo das views da arvore
 ```
+
+### 10.3 Paletas visuais da arvore
+
+Implementado:
+
+- tres paletas visuais: `white`, `orange` e `brown`;
+- `white` preserva a paleta padrao da `main`;
+- `orange` incorpora a variacao visual da branch `polish/layout-components-main`;
+- `brown` incorpora a variacao premium inspirada em `redesign/suafamilia-tree-style`;
+- o seletor aparece no dropdown do `HomeHeader`, abaixo das opcoes de view;
+- a aplicacao ocorre por CSS variables/tokens, sem alterar grafo, filtros, permissao ou dados;
+- a escolha persiste em `localStorage`;
+- o anel conjugal foi ampliado para `60px x 60px`.
+
+Historico:
+
+```txt
+PR #6 - feat: adicionar paletas visuais da arvore
+PR #7 - fix: exibir paletas no header da arvore
+```
+
+Validador anti-regressao:
+
+- `npm run build`;
+- `git diff --check`;
+- Preview da Vercel antes de merge;
+- teste manual do dropdown em `/minha-arvore`, `/genealogia` e `/visao-completa`.
 
 ---
 
@@ -1023,27 +1059,30 @@ Este arquivo deve permanecer como inventario consolidado. Para evitar repeticao:
 
 ## Atualizacao 2026-06-06 - Paletas visuais da arvore
 
-Implementado e mergeado na `main` via PR #6:
+Implementado e mergeado na `main` em duas etapas:
 
 ```txt
-feat: adicionar paletas visuais da arvore
+PR #6 - feat: adicionar paletas visuais da arvore
+PR #7 - fix: exibir paletas no header da arvore
 ```
 
 Comportamento entregue:
 
-- seletor compacto de paletas no controle de visualizacao da arvore;
+- base tecnica de paletas visuais na arvore;
+- seletor compacto de paletas no dropdown do `HomeHeader`;
 - tres paletas: `white`, `orange` e `brown`;
 - `white` preserva a paleta padrao da `main`;
 - `orange` incorpora a variacao visual da branch `polish/layout-components-main`;
 - `brown` incorpora a variacao premium da branch `redesign/suafamilia-tree-style`;
 - persistencia em `localStorage`;
-- aplicacao por CSS variables;
-- botao/anel conjugal ampliado para `60px x 60px`.
+- aplicacao por CSS variables no `document.documentElement`;
+- botao/anel conjugal ampliado para `60px x 60px`;
+- troca de paleta sem alteracao de rota, filtros, dados, permissoes ou Supabase.
 
 Arquivos principais:
 
 ```txt
-src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/pages/home/HomeHeader.tsx
 src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/components/FamilyTree/directFamilyColors.ts
 src/app/components/FamilyTree/visualTokens.ts
@@ -1056,6 +1095,15 @@ src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 Validacoes registradas:
 
 - `npm run build` aprovado localmente apos merge na `main`;
-- PR #6 estava `MERGEABLE`;
+- PR #6 e PR #7 estavam `MERGEABLE`;
 - Vercel Preview com status `SUCCESS`;
+- producao foi restaurada apos revert do commit quebrado;
+- producao foi revalidada apos merge do PR #7;
 - sem marcadores de conflito ``<<<<<<<``, ``=======`` ou ``>>>>>>>``.
+
+Incidente resolvido:
+
+- uma tentativa anterior inseriu JSX no `HomeHeader` usando `treeColorPalette` sem declarar estado/effect;
+- producao quebrou com `ReferenceError: treeColorPalette is not defined`;
+- o commit foi revertido;
+- a reimplementacao segura foi feita por branch/PR separado, com estado React e efeito de aplicacao/persistencia.

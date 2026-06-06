@@ -1,8 +1,6 @@
 # Plano de proximos passos - Arvore Familia
 
-> Ultima revisao: 2026-05-30
-
-> Ultima revisao: 2026-05-30
+> Ultima revisao: 2026-06-06
 > Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -54,6 +52,7 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC corrigida, migration aplicada e migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places com fallback para input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e Faz X anos. |
+| Paletas visuais da arvore | Concluidas | Paletas `white`, `orange` e `brown` expostas no `HomeHeader`, aplicadas por CSS variables e persistidas em `localStorage`. |
 
 ---
 
@@ -79,6 +78,7 @@ O MVP deve ser fechado com:
 - categoria historica em arquivos historicos;
 - `/minha-arvore` com dados conjugais salvos pelo botao geral;
 - rotas dedicadas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- paletas visuais da arvore no header;
 - headers internos padronizados;
 - responsividade mobile/tablet;
 - QA final de lancamento.
@@ -287,6 +287,41 @@ Validacao operacional registrada no historico:
 - `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` aplicada no ambiente Supabase remoto;
 - `supabase migration list` confirmou local/remoto alinhados ate `20260522173000`;
 - validacao tecnica pos-migration passou com build, testes, e2e e `git diff --check`.
+
+### 5.7 Paletas visuais da arvore
+
+Concluido:
+
+- PR #6 mergeado na `main` com a base tecnica das paletas;
+- PR #7 mergeado na `main` expondo as paletas no `HomeHeader`;
+- tres paletas disponiveis: `white`, `orange` e `brown`;
+- selecao por botoes circulares no dropdown de visualizacao da arvore;
+- persistencia em `localStorage`;
+- aplicacao por CSS variables;
+- botao/anel conjugal ampliado para `60px x 60px`;
+- producao reestabilizada apos revert da tentativa anterior quebrada;
+- producao validada apos merge do PR #7.
+
+Arquivos relacionados:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+QA de manutencao:
+
+- validar persistencia apos reload quando alterar o header;
+- validar contraste das tres paletas quando ajustar tokens;
+- validar desktop/tablet;
+- avaliar acesso equivalente em mobile estreito caso o dropdown de view nao esteja disponivel;
+- qualquer nova paleta deve atualizar `treeColorPalettes.ts`, `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md` e este plano.
 
 ---
 
@@ -744,18 +779,21 @@ A rodada so deve ser considerada fechada quando:
 Concluido:
 
 - PR #6 mergeado na `main`;
-- seletor de paletas visuais da arvore implementado;
+- PR #7 mergeado na `main`;
+- seletor de paletas visuais da arvore implementado no `HomeHeader`;
 - paletas `white`, `orange` e `brown`;
+- selecao por botoes circulares abaixo de **Minha Arvore**, **Genealogia** e **Visao Completa**;
+- persistencia da paleta em `localStorage`;
+- aplicacao por CSS variables;
 - botao/anel conjugal ampliado para `60px x 60px`;
 - build local aprovado apos merge;
-- Vercel Preview do PR aprovado antes do merge.
+- Vercel Preview do PR aprovado antes do merge;
+- producao validada apos o PR #7.
 
-Pendencias de QA visual:
+Pendencias/observacoes de manutencao:
 
-- validar os tres circulos no dropdown da arvore;
-- validar persistencia da paleta apos reload;
-- validar as tres paletas em desktop, tablet e mobile;
-- validar comportamento em `/minha-arvore`, `/genealogia` e `/visao-completa`;
-- verificar se a paleta laranja esta suficientemente distinta da branca;
+- validar contraste das paletas sempre que tokens forem alterados;
+- verificar se a paleta laranja permanece suficientemente distinta da branca;
 - verificar se a paleta marrom reproduz bem o estilo premium/Suafamilia;
-- ajustar padding superior dos titulos dos grupos, como **BISAVOS PATERNOS**, sem alterar o tamanho geral dos containers.
+- avaliar acesso equivalente ao seletor de paleta em mobile estreito, se o dropdown de views nao estiver disponivel;
+- ajustar padding superior dos titulos dos grupos, como **BISAVOS PATERNOS**, sem alterar o tamanho geral dos containers, se ainda for uma demanda visual ativa.

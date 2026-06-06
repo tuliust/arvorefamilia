@@ -1,6 +1,6 @@
 # Guia de componentes - Arvore Familia
 
-> Ultima atualizacao: 2026-05-30
+> Ultima atualizacao: 2026-06-06
 > Local canonico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -493,6 +493,37 @@ Cuidados:
 
 ---
 
+### 3.7 `treeColorPalettes`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+```
+
+Responsabilidade:
+
+- centralizar o tipo `TreeColorPalette = 'white' | 'orange' | 'brown'`;
+- expor `TREE_COLOR_PALETTE_STORAGE_KEY`;
+- expor `TREE_COLOR_PALETTE_CSS_VARIABLES`;
+- mapear `TREE_COLOR_PALETTES`;
+- validar valores persistidos com `isTreeColorPalette`;
+- fornecer swatch/label/ariaLabel para os botoes circulares do header.
+
+Uso atual:
+
+- `HomeHeader.tsx` usa o arquivo para renderizar os circulos, aplicar CSS variables e persistir a escolha;
+- `directFamilyColors.ts`, `visualTokens.ts`, `nodeTypes.ts` e `FamilyTree.tsx` consomem tokens/CSS variables para refletir a paleta ativa.
+
+Cuidados:
+
+- nao criar paleta nova sem atualizar documentacao, QA visual e labels acessiveis;
+- nao usar paleta como regra de negocio;
+- manter fallback seguro para a paleta `white`;
+- preservar compatibilidade com `localStorage` invalido ou ausente.
+
+---
+
 ## 4. Nodes e edges da arvore
 
 Arquivos principais:
@@ -574,6 +605,40 @@ Cuidados:
 - manter `UserMenu` montado pela Home e repassado ao header por slot, salvo nova refatoracao deliberada;
 - header e nav mobile devem receber o mesmo callback de troca de view;
 - grids de filtros nao devem alterar chaves de filtros nem contadores recebidos por props.
+
+### 5.2 `HomeHeader`
+
+Arquivo:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+```
+
+Responsabilidade:
+
+- exibir nome da familia e label da view atual;
+- renderizar o seletor **Minha Arvore** / **Genealogia** / **Visao Completa**;
+- renderizar, dentro do dropdown de views, os botoes circulares de paleta visual branco, laranja e marrom;
+- manter o estado local `treeColorPalette`;
+- aplicar a paleta ativa no `document.documentElement` por CSS variables;
+- persistir a paleta em `TREE_COLOR_PALETTE_STORAGE_KEY`;
+- preservar busca expansivel com sugestoes de pessoas e paginas;
+- receber `userMenuSlot` da Home para manter a montagem do menu sob controle de `Home.tsx`.
+
+Dependencias de paleta:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+```
+
+Cuidados:
+
+- paleta visual nao e rota, filtro ou `TreeViewMode`;
+- clique em paleta nao deve chamar `onTreeViewModeChange`;
+- os botoes de paleta devem manter `type="button"`, `aria-label` e `aria-pressed`;
+- o efeito de aplicacao da paleta deve existir junto do estado (`applyTreePalette(treeColorPalette)`);
+- antes de commitar ajuste nesse componente, buscar por `treeColorPalette`, `setTreeColorPalette`, `applyTreePalette(treeColorPalette)` e `TREE_COLOR_PALETTES`;
+- nao mover estado principal, carregamento Supabase ou filtros da arvore para o header.
 
 ## 6. Componentes de navegacao e menu
 
@@ -1528,44 +1593,50 @@ Cuidados:
 
 ## Atualizacao 2026-06-06 - Componentes de paletas visuais da arvore
 
-A arvore passou a ter seletor de paletas visuais centralizado em componentes da pasta:
+O ciclo de paletas visuais foi concluido em duas etapas:
 
 ```txt
-src/app/components/FamilyTree
+PR #6 - feat: adicionar paletas visuais da arvore
+PR #7 - fix: exibir paletas no header da arvore
 ```
 
-### `ViewModeToggle.tsx`
+### `HomeHeader.tsx`
 
 Responsabilidade atualizada:
 
-- manter a alternancia entre **Minha Arvore**, **Genealogia** e **Visao Completa**;
+- manter o seletor entre **Minha Arvore**, **Genealogia** e **Visao Completa**;
 - renderizar abaixo dessas opcoes tres botoes circulares de paleta;
-- aplicar a paleta ativa no `document.documentElement`;
-- persistir a escolha em `localStorage`.
+- manter `treeColorPalette` em estado React;
+- aplicar a paleta ativa no `document.documentElement` por `applyTreePalette`;
+- persistir a escolha em `localStorage`;
+- manter clique/foco acessiveis com `aria-label` e `aria-pressed`.
 
-Cuidados:
+Cuidados anti-regressao:
 
-- nao misturar paleta visual com rota;
-- nao alterar `TreeViewMode` ao clicar em paleta;
-- manter `aria-label`, `aria-pressed` e foco visivel.
+- nao usar `treeColorPalette` no JSX sem declarar o estado;
+- nao usar `setTreeColorPalette` sem importar e tipar `TreeColorPalette`;
+- nao remover `applyTreePalette(treeColorPalette)` do `useEffect`;
+- nao acionar troca de rota ao clicar nos circulos;
+- validar build e Preview da Vercel antes de mergear alteracao no header.
 
 ### `treeColorPalettes.ts`
 
-Novo arquivo central para:
+Arquivo central para:
 
 - tipo `TreeColorPalette = 'white' | 'orange' | 'brown'`;
 - chave `TREE_COLOR_PALETTE_STORAGE_KEY`;
 - lista de CSS variables da arvore;
 - mapa `TREE_COLOR_PALETTES`;
-- helper `isTreeColorPalette`.
+- helper `isTreeColorPalette`;
+- labels, `ariaLabel`, swatches e bordas dos botoes de paleta.
 
 ### `directFamilyColors.ts` e `visualTokens.ts`
 
-As cores visuais da arvore passaram a usar CSS variables com fallback. Isso permite alternar paletas sem alterar estrutura, dados, filtros ou permissao.
+As cores visuais da arvore usam CSS variables com fallback. Isso permite alternar paletas sem alterar estrutura, dados, filtros ou permissao.
 
 ### `nodeTypes.ts`
 
-`directFamilyGroupBoxNode` passou a receber background, borda e largura de borda por tokens dinâmicos da paleta ativa.
+`directFamilyGroupBoxNode` recebe background, borda e largura de borda por tokens dinamicos da paleta ativa.
 
 ### `MarriageNode.tsx` e `GenealogySpouseEdge.tsx`
 
@@ -1575,4 +1646,5 @@ Anti-regressao:
 
 - o anel conjugal deve continuar clicavel;
 - o modal conjugal deve continuar abrindo;
-- a area clicavel maior nao deve deformar os cards.
+- a area clicavel maior nao deve deformar os cards;
+- os tokens de paleta nao devem alterar dados, relacoes ou filtros.

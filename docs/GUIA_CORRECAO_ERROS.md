@@ -1,8 +1,7 @@
 # Guia de correcao de erros - Arvore Familia
 
-> Ultima revisao: 2026-05-30
-
-> Ultima atualizacao: 2026-05-30
+> Ultima revisao: 2026-06-06
+> Ultima atualizacao: 2026-06-06
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -224,6 +223,69 @@ Correcao:
 - buscar trechos por nomes de funcoes, nao por blocos inteiros;
 - preferir patch manual localizado;
 - se houver risco, recuperar backup e aplicar ajuste menor.
+
+### Erro: `treeColorPalette is not defined`
+
+Sintoma em producao:
+
+```txt
+Unexpected Application Error!
+treeColorPalette is not defined
+ReferenceError: treeColorPalette is not defined
+```
+
+Arquivo provavel:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+```
+
+Causa provavel:
+
+- JSX do dropdown usa `treeColorPalette` ou `setTreeColorPalette`;
+- o estado React `const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(...)` nao foi declarado;
+- o efeito `applyTreePalette(treeColorPalette)` nao foi adicionado;
+- uma substituicao/script aplicou apenas parte da implementacao.
+
+Correcao segura quando producao estiver quebrada:
+
+1. reverter o commit que adicionou o JSX quebrado;
+2. validar `npm run build`;
+3. enviar o revert para `main`;
+4. reimplementar em branch separada;
+5. abrir PR e validar Preview da Vercel antes de merge.
+
+Exemplo de estabilizacao ja usada:
+
+```bash
+git pull --rebase origin main
+git revert <commit-problematico> --no-edit
+npm run build
+git push origin main
+```
+
+Ao reimplementar, confirmar que `HomeHeader.tsx` contem:
+
+```txt
+TREE_COLOR_PALETTES
+const [treeColorPalette, setTreeColorPalette]
+applyTreePalette(treeColorPalette)
+setTreeColorPalette(paletteKey)
+aria-label="Paleta de cores da arvore"
+```
+
+Comando de verificacao:
+
+```bash
+Select-String -Path "src/app/pages/home/HomeHeader.tsx" -Pattern "const \[treeColorPalette|setTreeColorPalette|applyTreePalette\(treeColorPalette\)|TREE_COLOR_PALETTES|Paleta de cores"
+```
+
+Cuidados:
+
+- nao repetir script falho sem limpar scripts temporarios;
+- nao commitar `scripts/*.mjs` auxiliares usados apenas para patch;
+- nao fazer merge direto em `main` sem Preview da Vercel;
+- `npm run build` pode passar em alguns cenarios de runtime se a referencia for introduzida em caminho nao tipado; por isso, fazer busca textual obrigatoria.
 
 ---
 
@@ -2080,3 +2142,42 @@ Prevencao:
 - evitar scripts PowerShell com `Set-Content` em arquivos com acentuacao;
 - preferir script Node preservando UTF-8/BOM;
 - revisar `git diff` antes de commit.
+
+### Sintoma: script de paleta no `HomeHeader` nao encontra trechos
+
+Exemplos:
+
+```txt
+Trecho nao encontrado: helpers de paleta
+Trecho nao encontrado: effect searchTerm
+Nenhuma alteracao aplicada.
+```
+
+Causas provaveis:
+
+- `HomeHeader.tsx` ja foi alterado por commit posterior;
+- o script usa substituicao literal longa;
+- a primeira execucao aplicou parte do patch e a segunda execucao nao tem mais nada a alterar;
+- um script temporario antigo ficou em `scripts/`.
+
+Correcao segura:
+
+```bash
+Remove-Item scripts/apply-home-header-palettes-safe.mjs -Force -ErrorAction SilentlyContinue
+Remove-Item scripts/hotfix-home-header-palette-state.mjs -Force -ErrorAction SilentlyContinue
+git status --short
+```
+
+Depois:
+
+- conferir se `HomeHeader.tsx` foi modificado;
+- buscar os trechos obrigatorios com `Select-String`;
+- se o arquivo ja contem estado/effect/botoes, nao rodar o script novamente;
+- remover scripts auxiliares antes do commit;
+- validar com `git diff --check` e `npm run build`.
+
+Regra:
+
+```txt
+Erro "Nenhuma alteracao aplicada" depois de uma execucao bem-sucedida nao e falha da implementacao; indica que o patch ja foi aplicado.
+```
