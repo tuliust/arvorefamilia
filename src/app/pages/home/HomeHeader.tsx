@@ -11,13 +11,6 @@ import {
 } from '../../components/ui/select';
 import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
-import {
-  TREE_COLOR_PALETTE_CSS_VARIABLES,
-  TREE_COLOR_PALETTE_STORAGE_KEY,
-  TREE_COLOR_PALETTES,
-  isTreeColorPalette,
-  type TreeColorPalette,
-} from '../../components/FamilyTree/treeColorPalettes';
 import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
 
@@ -67,28 +60,6 @@ function getPersonSuggestionDetail(pessoa: Pessoa) {
   const birthPlace = String(pessoa.local_nascimento ?? '').trim();
   const birthDate = formatSuggestionBirthDate(pessoa.data_nascimento);
   return [birthPlace, birthDate].filter(Boolean).join(' – ');
-}
-
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
-
-function getStoredPalette(): TreeColorPalette {
-  if (typeof window === 'undefined') return 'white';
-
-  const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
-  return isTreeColorPalette(stored) ? stored : 'white';
-}
-
-function applyTreePalette(value: TreeColorPalette) {
-  if (typeof document === 'undefined') return;
-
-  const palette = TREE_COLOR_PALETTES[value];
-  const root = document.documentElement;
-
-  root.dataset.treeColorPalette = value;
-
-  TREE_COLOR_PALETTE_CSS_VARIABLES.forEach((variableName) => {
-    root.style.setProperty(variableName, palette.cssVariables[variableName]);
-  });
 }
 
 interface HomeHeaderProps {
@@ -303,41 +274,6 @@ export function HomeHeader({
               <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
               <SelectItem value="genealogia">Genealogia</SelectItem>
               <SelectItem value="visao-completa">Visão Completa</SelectItem>
-
-              <div className="mx-2 my-1 border-t border-gray-200 pt-2">
-                <div className="flex items-center gap-2 px-1 pb-1" aria-label="Paleta de cores da árvore">
-                  {paletteOptions.map((paletteKey) => {
-                    const palette = TREE_COLOR_PALETTES[paletteKey];
-                    const isActive = paletteKey === treeColorPalette;
-
-                    return (
-                      <button
-                        key={paletteKey}
-                        type="button"
-                        aria-label={palette.ariaLabel}
-                        aria-pressed={isActive}
-                        title={palette.label}
-                        className={[
-                          'h-5 w-5 rounded-full border transition',
-                          isActive
-                            ? 'scale-110 ring-2 ring-slate-900 ring-offset-2'
-                            : 'hover:scale-105 hover:ring-2 hover:ring-slate-300 hover:ring-offset-1',
-                        ].join(' ')}
-                        style={{
-                          backgroundColor: palette.swatch,
-                          borderColor: palette.swatchBorder,
-                        }}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setTreeColorPalette(paletteKey);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
             </SelectContent>
           </Select>
 
