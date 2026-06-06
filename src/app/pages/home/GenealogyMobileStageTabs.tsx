@@ -72,6 +72,21 @@ function buildGenealogyStages(pessoas: Pessoa[], visiblePersonIds?: Set<string>)
     });
 }
 
+function hasVisibleHumanMembers(pessoas: Pessoa[], visiblePersonIds?: Set<string>) {
+  return pessoas.some((pessoa) => {
+    if (!isHumanFamilyMember(pessoa)) return false;
+    if (visiblePersonIds && !visiblePersonIds.has(pessoa.id)) return false;
+
+    return true;
+  });
+}
+
+function getEmptyStageMessage(pessoas: Pessoa[], visiblePersonIds?: Set<string>) {
+  return hasVisibleHumanMembers(pessoas, visiblePersonIds)
+    ? 'Sem gerações definidas'
+    : 'Sem pessoas visíveis';
+}
+
 function getNextGeneration(
   stages: GenealogyStage[],
   activeGeneration: number | null | undefined,
@@ -97,6 +112,10 @@ export function GenealogyMobileStageTabs({
   const swipeStartRef = React.useRef<TouchPoint | null>(null);
   const stages = React.useMemo(
     () => buildGenealogyStages(pessoas, visiblePersonIds),
+    [pessoas, visiblePersonIds]
+  );
+  const emptyStageMessage = React.useMemo(
+    () => getEmptyStageMessage(pessoas, visiblePersonIds),
     [pessoas, visiblePersonIds]
   );
 
@@ -152,7 +171,15 @@ export function GenealogyMobileStageTabs({
     }
   }, [activeGeneration, onGenerationChange, stages]);
 
-  if (stages.length === 0) return null;
+  if (stages.length === 0) {
+    return (
+      <div className="pointer-events-none absolute left-3 right-[6.75rem] top-3 z-30">
+        <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-bold text-slate-500 shadow-sm backdrop-blur">
+          {emptyStageMessage}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pointer-events-none absolute left-3 right-[6.75rem] top-3 z-30">
