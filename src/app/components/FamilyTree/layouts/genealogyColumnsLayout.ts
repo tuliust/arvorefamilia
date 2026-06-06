@@ -379,10 +379,6 @@ function groupPeopleByGeneration(
     groupsByKey.get(key)!.push(pessoa);
   });
 
-  FIXED_GENERATION_KEYS.forEach((key) => {
-    if (!groupsByKey.has(key)) groupsByKey.set(key, []);
-  });
-
   const keys = Array.from(groupsByKey.keys())
     .filter((key) => key !== null || !options.hideUngenerated)
     .sort((keyA, keyB) => {

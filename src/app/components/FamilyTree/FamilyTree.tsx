@@ -344,6 +344,93 @@ function constrainEdgeDataToViewport(edge: Edge, viewportBounds: FlowBounds) {
   };
 }
 
+function inferGenealogyManualGenerations(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[],
+  centralPersonId?: string
+) {
+  if (!centralPersonId) return pessoas;
+
+  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
+  if (!peopleById.has(centralPersonId)) return pessoas;
+
+  const parentsByChild = new Map<string, Set<string>>();
+  const childrenByParent = new Map<string, Set<string>>();
+  const spousesByPerson = new Map<string, Set<string>>();
+
+  const addToMap = (map: Map<string, Set<string>>, key: string, value: string) => {
+    if (!map.has(key)) map.set(key, new Set());
+    map.get(key)!.add(value);
+  };
+
+  relacionamentos.forEach((relacionamento) => {
+    const origemId = relacionamento.pessoa_origem_id;
+    const destinoId = relacionamento.pessoa_destino_id;
+    if (!origemId || !destinoId) return;
+
+    if (
+      relacionamento.tipo_relacionamento === 'filiacao_sangue' ||
+      relacionamento.tipo_relacionamento === 'filiacao_adotiva'
+    ) {
+      addToMap(parentsByChild, destinoId, origemId);
+      addToMap(childrenByParent, origemId, destinoId);
+      return;
+    }
+
+    if (relacionamento.tipo_relacionamento === 'conjuge') {
+      addToMap(spousesByPerson, origemId, destinoId);
+      addToMap(spousesByPerson, destinoId, origemId);
+    }
+  });
+
+  const generationByPersonId = new Map<string, number>();
+  const queue: Array<{ personId: string; generation: number }> = [
+    { personId: centralPersonId, generation: 5 },
+  ];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) break;
+
+    const existingGeneration = generationByPersonId.get(current.personId);
+    if (existingGeneration !== undefined) {
+      const shouldKeepExisting =
+        Math.abs(existingGeneration - 5) <= Math.abs(current.generation - 5);
+      if (shouldKeepExisting) continue;
+    }
+
+    generationByPersonId.set(current.personId, current.generation);
+
+    parentsByChild.get(current.personId)?.forEach((parentId) => {
+      const parentGeneration = Math.max(1, current.generation - 1);
+      if (parentGeneration !== current.generation) {
+        queue.push({ personId: parentId, generation: parentGeneration });
+      }
+    });
+
+    childrenByParent.get(current.personId)?.forEach((childId) => {
+      const childGeneration = Math.min(6, current.generation + 1);
+      if (childGeneration !== current.generation) {
+        queue.push({ personId: childId, generation: childGeneration });
+      }
+    });
+
+    spousesByPerson.get(current.personId)?.forEach((spouseId) => {
+      queue.push({ personId: spouseId, generation: current.generation });
+    });
+  }
+
+  return pessoas.map((pessoa) => {
+    const inferredGeneration = generationByPersonId.get(pessoa.id);
+    if (inferredGeneration === undefined) return pessoa;
+
+    return {
+      ...pessoa,
+      manual_generation: inferredGeneration,
+    };
+  });
+}
+
 function normalizeTreeLayoutByPersonBounds(
   layout: TreeLayoutResult,
   mode: LayoutNormalizationMode,
@@ -899,14 +986,41 @@ function FamilyTreeComponent({
       : personalScopeGraph;
 
     const genealogyLayoutGraph = isGenealogyLayout
-      ? filterGraphToPersonalScope(
-          layoutGraph,
-          new Set(
-            layoutGraph.pessoas
-              .filter(isHumanFamilyMember)
-              .map((pessoa) => pessoa.id)
-          )
-        )
+      ? (() => {
+          const scopedGraph = filterGraphToPersonalScope(
+            layoutGraph,
+            new Set(
+              layoutGraph.pessoas
+                .filter(isHumanFamilyMember)
+                .map((pessoa) => pessoa.id)
+            )
+          );
+
+          const inferredPessoas = inferGenealogyManualGenerations(
+            scopedGraph.pessoas,
+            scopedGraph.relacionamentos,
+            effectiveCentralPersonId
+          );
+          const inferredPessoaById = new Map(inferredPessoas.map((pessoa) => [pessoa.id, pessoa]));
+          const inferredPersonNodes = scopedGraph.personNodes.map((node) => {
+            const inferredPessoa = inferredPessoaById.get(node.id);
+            if (!inferredPessoa || !node.data?.pessoa) return node;
+
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                pessoa: inferredPessoa,
+              },
+            };
+          });
+
+          return {
+            ...scopedGraph,
+            pessoas: inferredPessoas,
+            personNodes: inferredPersonNodes,
+          };
+        })()
       : layoutGraph;
 
     if (isGenealogyLayout) {
