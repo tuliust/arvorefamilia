@@ -6,10 +6,12 @@ import { isHumanFamilyMember } from '../../utils/personEntity';
 interface GenealogyMobileStageTabsProps {
   pessoas: Pessoa[];
   visiblePersonIds?: Set<string>;
+  activeGeneration?: number | null;
+  onGenerationChange?: (generation: number | null) => void;
 }
 
 type GenealogyStage = {
-  key: string;
+  generation: number;
   label: string;
   count: number;
 };
@@ -46,33 +48,40 @@ function buildGenealogyStages(pessoas: Pessoa[], visiblePersonIds?: Set<string>)
   return Array.from(countsByGeneration.entries())
     .sort(([generationA], [generationB]) => generationA - generationB)
     .map(([generation, count]) => ({
-      key: String(generation),
+      generation,
       label: GENERATION_LABELS[generation] ?? `Geração ${generation}`,
       count,
     }));
 }
 
-export function GenealogyMobileStageTabs({ pessoas, visiblePersonIds }: GenealogyMobileStageTabsProps) {
+export function GenealogyMobileStageTabs({
+  pessoas,
+  visiblePersonIds,
+  activeGeneration,
+  onGenerationChange,
+}: GenealogyMobileStageTabsProps) {
   const stages = React.useMemo(
     () => buildGenealogyStages(pessoas, visiblePersonIds),
     [pessoas, visiblePersonIds]
   );
-  const [activeStageKey, setActiveStageKey] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!onGenerationChange) return;
+
     if (stages.length === 0) {
-      setActiveStageKey(null);
+      if (activeGeneration !== null) {
+        onGenerationChange(null);
+      }
       return;
     }
 
-    setActiveStageKey((currentKey) => {
-      if (currentKey && stages.some((stage) => stage.key === currentKey)) {
-        return currentKey;
-      }
+    const hasActiveGeneration = typeof activeGeneration === 'number'
+      && stages.some((stage) => stage.generation === activeGeneration);
 
-      return stages[0].key;
-    });
-  }, [stages]);
+    if (!hasActiveGeneration) {
+      onGenerationChange(stages[0].generation);
+    }
+  }, [activeGeneration, onGenerationChange, stages]);
 
   if (stages.length === 0) return null;
 
@@ -85,11 +94,11 @@ export function GenealogyMobileStageTabs({ pessoas, visiblePersonIds }: Genealog
           aria-label="Navegação por gerações"
         >
           {stages.map((stage) => {
-            const isActive = stage.key === activeStageKey;
+            const isActive = stage.generation === activeGeneration;
 
             return (
               <button
-                key={stage.key}
+                key={stage.generation}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
@@ -99,7 +108,7 @@ export function GenealogyMobileStageTabs({ pessoas, visiblePersonIds }: Genealog
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                 ].join(' ')}
-                onClick={() => setActiveStageKey(stage.key)}
+                onClick={() => onGenerationChange?.(stage.generation)}
               >
                 <span>{stage.label}</span>
                 <span className={isActive ? 'ml-1 text-white/75' : 'ml-1 text-slate-400'}>
