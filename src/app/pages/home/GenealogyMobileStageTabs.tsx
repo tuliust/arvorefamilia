@@ -13,17 +13,22 @@ interface GenealogyMobileStageTabsProps {
 type GenealogyStage = {
   generation: number;
   label: string;
+  ariaLabel: string;
   count: number;
 };
 
 const GENERATION_LABELS: Record<number, string> = {
-  1: 'Geração 1',
-  2: 'Geração 2',
-  3: 'Geração 3',
-  4: 'Geração 4',
-  5: 'Geração 5',
-  6: 'Geração 6',
+  1: 'Tataravós',
+  2: 'Bisavós',
+  3: 'Avós',
+  4: 'Pais',
+  5: 'Núcleo',
+  6: 'Descendentes',
 };
+
+function getGenerationLabel(generation: number) {
+  return GENERATION_LABELS[generation] ?? `Geração ${generation}`;
+}
 
 function getGenerationKey(pessoa: Pessoa) {
   const generation = pessoa.manual_generation;
@@ -47,11 +52,16 @@ function buildGenealogyStages(pessoas: Pessoa[], visiblePersonIds?: Set<string>)
 
   return Array.from(countsByGeneration.entries())
     .sort(([generationA], [generationB]) => generationA - generationB)
-    .map(([generation, count]) => ({
-      generation,
-      label: GENERATION_LABELS[generation] ?? `Geração ${generation}`,
-      count,
-    }));
+    .map(([generation, count]) => {
+      const label = getGenerationLabel(generation);
+
+      return {
+        generation,
+        label,
+        ariaLabel: `${label}, geração ${generation}`,
+        count,
+      };
+    });
 }
 
 export function GenealogyMobileStageTabs({
@@ -101,7 +111,9 @@ export function GenealogyMobileStageTabs({
                 key={stage.generation}
                 type="button"
                 role="tab"
+                aria-label={stage.ariaLabel}
                 aria-selected={isActive}
+                title={`Geração ${stage.generation}: ${stage.label}`}
                 className={[
                   'snap-start whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition',
                   isActive
