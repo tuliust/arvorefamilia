@@ -112,7 +112,8 @@ const TREE_TITLE_HEIGHT = 58;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 54;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
-const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 80;
+const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
+const TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP = 76;
 const TREE_VIEWPORT_PADDING_X = 24;
 const TREE_VIEWPORT_PADDING_Y = 24;
 const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
@@ -1230,9 +1231,9 @@ function FamilyTreeComponent({
 
     return {
       x: targetBounds.x,
-      y: targetBounds.y,
+      y: targetBounds.y - TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP,
       width: targetBounds.width,
-      height: Math.max(1, referenceBounds.height),
+      height: Math.max(1, referenceBounds.height + TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP),
     };
   }, [activeGenealogyGeneration, isMobile, isGenealogyLayout, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT]);
   const viewportContentBounds = useMemo(() => {

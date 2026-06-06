@@ -139,7 +139,9 @@ export function HomeTreeSection({
               [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"],
               [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"],
               [data-export-root="family-tree"] button[aria-label="Mover árvore para a esquerda"],
-              [data-export-root="family-tree"] button[aria-label="Mover árvore para a direita"] {
+              [data-export-root="family-tree"] button[aria-label="Mover árvore para a direita"],
+              [data-export-root="family-tree"] button[aria-label="Aumentar zoom"],
+              [data-export-root="family-tree"] button[aria-label="Diminuir zoom"] {
                 display: none !important;
               }
             ` : ''}

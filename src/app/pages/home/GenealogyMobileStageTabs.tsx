@@ -14,7 +14,6 @@ type GenealogyStage = {
   generation: number;
   label: string;
   ariaLabel: string;
-  count: number;
 };
 
 type TouchPoint = {
@@ -67,7 +66,6 @@ function buildGenealogyStages(pessoas: Pessoa[], visiblePersonIds?: Set<string>)
         generation,
         label,
         ariaLabel: `${label}, geração ${generation}`,
-        count,
       };
     });
 }
@@ -173,7 +171,7 @@ export function GenealogyMobileStageTabs({
 
   if (stages.length === 0) {
     return (
-      <div className="pointer-events-none absolute left-3 right-[6.75rem] top-3 z-30">
+      <div className="pointer-events-none absolute left-3 right-3 top-3 z-30">
         <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-bold text-slate-500 shadow-sm backdrop-blur">
           {emptyStageMessage}
         </div>
@@ -182,7 +180,7 @@ export function GenealogyMobileStageTabs({
   }
 
   return (
-    <div className="pointer-events-none absolute left-3 right-[6.75rem] top-3 z-30">
+    <div className="pointer-events-none absolute left-3 right-3 top-3 z-30">
       <div className="pointer-events-auto overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur">
         <div
           className="flex snap-x gap-1 overflow-x-auto px-1.5 py-1.5"
@@ -211,9 +209,6 @@ export function GenealogyMobileStageTabs({
                 onClick={() => onGenerationChange?.(stage.generation)}
               >
                 <span>{stage.label}</span>
-                <span className={isActive ? 'ml-1 text-white/75' : 'ml-1 text-slate-400'}>
-                  {stage.count}
-                </span>
               </button>
             );
           })}
