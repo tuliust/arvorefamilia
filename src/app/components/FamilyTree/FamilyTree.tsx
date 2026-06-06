@@ -1215,15 +1215,19 @@ function FamilyTreeComponent({
       };
     };
 
+    const firstAvailableGeneration = visiblePersonNodes
+      .map((node) => getNodeGeneration(node))
+      .filter((generation): generation is number => typeof generation === 'number')
+      .sort((generationA, generationB) => generationA - generationB)[0] ?? null;
     const targetGeneration = typeof activeGenealogyGeneration === 'number'
       ? activeGenealogyGeneration
-      : REFERENCE_GENERATION;
+      : firstAvailableGeneration;
     const referenceColumnNodes = getColumnNodesByGeneration(REFERENCE_GENERATION);
     const targetColumnNodes = getColumnNodesByGeneration(targetGeneration);
     const firstColumnNodes = getColumnNodesByX(visiblePersonNodes[0].position.x);
     const targetBounds = getBoundsForColumnNodes(targetColumnNodes)
-      ?? getBoundsForColumnNodes(referenceColumnNodes)
-      ?? getBoundsForColumnNodes(firstColumnNodes);
+      ?? getBoundsForColumnNodes(firstColumnNodes)
+      ?? getBoundsForColumnNodes(referenceColumnNodes);
     const referenceBounds = getBoundsForColumnNodes(referenceColumnNodes)
       ?? targetBounds;
 
@@ -1231,9 +1235,9 @@ function FamilyTreeComponent({
 
     return {
       x: targetBounds.x,
-      y: Math.max(0, targetBounds.y - TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP),
+      y: targetBounds.y,
       width: targetBounds.width,
-      height: Math.max(1, referenceBounds.height + TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP),
+      height: Math.max(1, referenceBounds.height),
     };
   }, [activeGenealogyGeneration, isMobile, isGenealogyLayout, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT]);
   const viewportContentBounds = useMemo(() => {
