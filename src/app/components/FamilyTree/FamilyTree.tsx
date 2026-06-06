@@ -1231,7 +1231,7 @@ function FamilyTreeComponent({
 
     return {
       x: targetBounds.x,
-      y: targetBounds.y - TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP,
+      y: Math.max(0, targetBounds.y - TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP),
       width: targetBounds.width,
       height: Math.max(1, referenceBounds.height + TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP),
     };
