@@ -46,6 +46,13 @@ interface HomeTreeSectionProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
+function getPersonGeneration(pessoa: Pessoa) {
+  const generation = pessoa.manual_generation;
+  return typeof generation === 'number' && Number.isFinite(generation)
+    ? generation
+    : null;
+}
+
 export function HomeTreeSection({
   isTreeResolving,
   loadError,
@@ -74,6 +81,7 @@ export function HomeTreeSection({
 }: HomeTreeSectionProps) {
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
   const isGenealogyMobile = isMobile && treeViewMode === 'genealogia';
+  const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
     edgeFilters.conjugal ||
     edgeFilters.filiacao_sangue ||
@@ -82,7 +90,28 @@ export function HomeTreeSection({
   );
   const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
 
-  const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
+  React.useEffect(() => {
+    if (!isGenealogyMobile) {
+      setActiveGenealogyGeneration(null);
+    }
+  }, [isGenealogyMobile]);
+
+  const effectiveVisiblePersonIds = React.useMemo(() => {
+    if (!isGenealogyMobile || activeGenealogyGeneration === null) {
+      return visiblePersonIdsByLifeStatus;
+    }
+
+    const generationVisiblePersonIds = new Set<string>();
+
+    pessoas.forEach((pessoa) => {
+      if (getPersonGeneration(pessoa) !== activeGenealogyGeneration) return;
+      if (visiblePersonIdsByLifeStatus && !visiblePersonIdsByLifeStatus.has(pessoa.id)) return;
+
+      generationVisiblePersonIds.add(pessoa.id);
+    });
+
+    return generationVisiblePersonIds;
+  }, [activeGenealogyGeneration, isGenealogyMobile, pessoas, visiblePersonIdsByLifeStatus]);
 
   return (
     <section
@@ -197,7 +226,9 @@ export function HomeTreeSection({
       {isGenealogyMobile && (
         <GenealogyMobileStageTabs
           pessoas={pessoas}
-          visiblePersonIds={effectiveVisiblePersonIds}
+          visiblePersonIds={visiblePersonIdsByLifeStatus}
+          activeGeneration={activeGenealogyGeneration}
+          onGenerationChange={setActiveGenealogyGeneration}
         />
       )}
 
