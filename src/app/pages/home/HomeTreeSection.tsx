@@ -72,6 +72,7 @@ export function HomeTreeSection({
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
+  const isGenealogyMobile = isMobile && treeViewMode === 'genealogia';
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
     edgeFilters.conjugal ||
     edgeFilters.filiacao_sangue ||
@@ -121,6 +122,19 @@ export function HomeTreeSection({
               font-size: 0.84rem !important;
               line-height: 1.18 !important;
             }
+
+            ${isGenealogyMobile ? `
+              [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+                display: none !important;
+              }
+
+              [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"],
+              [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"],
+              [data-export-root="family-tree"] button[aria-label="Mover árvore para a esquerda"],
+              [data-export-root="family-tree"] button[aria-label="Mover árvore para a direita"] {
+                display: none !important;
+              }
+            ` : ''}
           `}
         </style>
       )}
@@ -181,19 +195,19 @@ export function HomeTreeSection({
 
       {isTreeResolving ? (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Buscando pessoas e relacionamentosâ€¦',
+          title: 'Carregando árvore',
+          message: 'Buscando pessoas e relacionamentos…',
         })
       ) : loadError ? (
         renderStateMessage({
-          title: 'Erro ao carregar a Ã¡rvore',
+          title: 'Erro ao carregar a árvore',
           message: loadError,
           tone: 'error',
         })
       ) : pessoas.length === 0 || !centralReferencePersonId ? (
         renderStateMessage({
           title: 'Nenhuma pessoa encontrada',
-          message: 'A tabela pessoas nÃ£o retornou registros para renderizar a Ã¡rvore.',
+          message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
       ) : canRenderTree ? (
         <FamilyTree
@@ -220,8 +234,8 @@ export function HomeTreeSection({
         />
       ) : (
         renderStateMessage({
-          title: 'Carregando Ã¡rvore',
-          message: 'Preparando a referÃªncia principal da Ã¡rvore.',
+          title: 'Carregando árvore',
+          message: 'Preparando a referência principal da árvore.',
         })
       )}
     </section>
