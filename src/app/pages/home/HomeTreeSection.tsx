@@ -82,6 +82,13 @@ export function HomeTreeSection({
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
   const isGenealogyMobile = isMobile && treeViewMode === 'genealogia';
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
+  const genealogyMobileStageRevision = isGenealogyMobile && activeGenealogyGeneration !== null
+    ? activeGenealogyGeneration
+    : 0;
+  const familyTreeLayoutRevision = treeLayoutRevision + genealogyMobileStageRevision;
+  const familyTreeInstanceKey = isGenealogyMobile
+    ? `genealogia-mobile-${activeGenealogyGeneration ?? 'initial'}-${familyTreeLayoutRevision}`
+    : treeViewMode;
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
     edgeFilters.conjugal ||
     edgeFilters.filiacao_sangue ||
@@ -250,6 +257,7 @@ export function HomeTreeSection({
         })
       ) : canRenderTree ? (
         <FamilyTree
+          key={familyTreeInstanceKey}
           ref={familyTreeRef}
           pessoas={pessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
@@ -265,7 +273,7 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           centralPersonId={centralReferencePersonId}
           isMobile={isMobile}
-          layoutRevision={treeLayoutRevision}
+          layoutRevision={familyTreeLayoutRevision}
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
