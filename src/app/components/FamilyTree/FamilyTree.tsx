@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
   useNodesState,
@@ -70,6 +70,7 @@ interface FamilyTreeProps {
   centralPersonId?: string;
   isMobile?: boolean;
   layoutRevision?: number;
+  activeGenealogyGeneration?: number | null;
   showSidebarToggle?: boolean;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
@@ -803,6 +804,7 @@ function FamilyTreeComponent({
   centralPersonId,
   isMobile = false,
   layoutRevision = 0,
+  activeGenealogyGeneration,
   showSidebarToggle = false,
   sidebarOpen = false,
   onToggleSidebar,
@@ -863,9 +865,10 @@ function FamilyTreeComponent({
       visiblePersonIds: visiblePersonIds ? Array.from(visiblePersonIds).sort() : undefined,
       centralPersonId: effectiveCentralPersonId,
       isMobile,
+      activeGenealogyGeneration,
       viewMode,
     });
-  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, genealogyVisualLineFilters, directVisualLineFilters, visiblePersonIds, effectiveCentralPersonId, isMobile, viewMode]);
+  }, [pessoas, relacionamentos, selectedPersonId, edgeFilters, directRelativeFilters, genealogyFilters, genealogyVisualLineFilters, directVisualLineFilters, visiblePersonIds, effectiveCentralPersonId, isMobile, activeGenealogyGeneration, viewMode]);
 
   const rawLayoutResult = useMemo(() => {
     const graph = buildTreeGraph({
@@ -1163,38 +1166,75 @@ function FamilyTreeComponent({
   const mobileGenealogyInitialColumnBounds = useMemo(() => {
     if (!isMobile || !isGenealogyLayout) return null;
 
+    const REFERENCE_GENERATION = 3;
+
     const visiblePersonNodes = layoutResult.nodes
       .filter((node) => !node.hidden && node.type === 'personNode' && Boolean(node.data?.pessoa))
       .sort((nodeA, nodeB) => nodeA.position.x - nodeB.position.x || nodeA.position.y - nodeB.position.y);
 
     if (visiblePersonNodes.length === 0) return null;
 
-    const firstColumnX = visiblePersonNodes[0].position.x;
     const columnTolerance = 24;
-    const firstColumnNodes = visiblePersonNodes.filter(
-      (node) => Math.abs(node.position.x - firstColumnX) <= columnTolerance
+
+    const getNodeGeneration = (node: Node) => {
+      const generation = node.data?.pessoa?.manual_generation;
+      return typeof generation === 'number' && Number.isFinite(generation)
+        ? generation
+        : null;
+    };
+
+    const getColumnNodesByGeneration = (generation: number | null) => {
+      if (generation === null) return [];
+      return visiblePersonNodes.filter((node) => getNodeGeneration(node) === generation);
+    };
+
+    const getColumnNodesByX = (x: number) => (
+      visiblePersonNodes.filter((node) => Math.abs(node.position.x - x) <= columnTolerance)
     );
 
-    if (firstColumnNodes.length === 0) return null;
+    const getBoundsForColumnNodes = (columnNodes: Node[]) => {
+      if (columnNodes.length === 0) return null;
 
-    const minX = Math.min(...firstColumnNodes.map((node) => node.position.x));
-    const maxX = Math.max(...firstColumnNodes.map((node) => {
-      const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
-      return node.position.x + size.width;
-    }));
-    const minY = layoutResult.viewportBounds?.y ?? Math.min(...firstColumnNodes.map((node) => node.position.y));
-    const maxY = Math.max(...firstColumnNodes.map((node) => {
-      const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
-      return node.position.y + size.height;
-    }));
+      const minX = Math.min(...columnNodes.map((node) => node.position.x));
+      const maxX = Math.max(...columnNodes.map((node) => {
+        const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
+        return node.position.x + size.width;
+      }));
+      const minY = Math.min(...columnNodes.map((node) => node.position.y));
+      const maxY = Math.max(...columnNodes.map((node) => {
+        const size = getNodeRenderSize(node, NODE_WIDTH, NODE_HEIGHT);
+        return node.position.y + size.height;
+      }));
+
+      return {
+        x: minX,
+        y: minY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY),
+      };
+    };
+
+    const targetGeneration = typeof activeGenealogyGeneration === 'number'
+      ? activeGenealogyGeneration
+      : REFERENCE_GENERATION;
+    const referenceColumnNodes = getColumnNodesByGeneration(REFERENCE_GENERATION);
+    const targetColumnNodes = getColumnNodesByGeneration(targetGeneration);
+    const firstColumnNodes = getColumnNodesByX(visiblePersonNodes[0].position.x);
+    const targetBounds = getBoundsForColumnNodes(targetColumnNodes)
+      ?? getBoundsForColumnNodes(referenceColumnNodes)
+      ?? getBoundsForColumnNodes(firstColumnNodes);
+    const referenceBounds = getBoundsForColumnNodes(referenceColumnNodes)
+      ?? targetBounds;
+
+    if (!targetBounds || !referenceBounds) return null;
 
     return {
-      x: minX,
-      y: minY,
-      width: Math.max(1, maxX - minX),
-      height: Math.max(1, maxY - minY),
+      x: targetBounds.x,
+      y: targetBounds.y,
+      width: targetBounds.width,
+      height: Math.max(1, referenceBounds.height),
     };
-  }, [isMobile, isGenealogyLayout, layoutResult.nodes, layoutResult.viewportBounds, NODE_WIDTH, NODE_HEIGHT]);
+  }, [activeGenealogyGeneration, isMobile, isGenealogyLayout, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT]);
   const viewportContentBounds = useMemo(() => {
     return mobileCentralViewportBounds
       ?? mobileGenealogyInitialColumnBounds

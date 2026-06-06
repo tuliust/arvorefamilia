@@ -46,13 +46,6 @@ interface HomeTreeSectionProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
-function getPersonGeneration(pessoa: Pessoa) {
-  const generation = pessoa.manual_generation;
-  return typeof generation === 'number' && Number.isFinite(generation)
-    ? generation
-    : null;
-}
-
 export function HomeTreeSection({
   isTreeResolving,
   loadError,
@@ -82,13 +75,6 @@ export function HomeTreeSection({
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
   const isGenealogyMobile = isMobile && treeViewMode === 'genealogia';
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
-  const genealogyMobileStageRevision = isGenealogyMobile && activeGenealogyGeneration !== null
-    ? activeGenealogyGeneration
-    : 0;
-  const familyTreeLayoutRevision = treeLayoutRevision + genealogyMobileStageRevision;
-  const familyTreeInstanceKey = isGenealogyMobile
-    ? `genealogia-mobile-${activeGenealogyGeneration ?? 'initial'}-${familyTreeLayoutRevision}`
-    : treeViewMode;
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
     edgeFilters.conjugal ||
     edgeFilters.filiacao_sangue ||
@@ -103,22 +89,7 @@ export function HomeTreeSection({
     }
   }, [isGenealogyMobile]);
 
-  const effectiveVisiblePersonIds = React.useMemo(() => {
-    if (!isGenealogyMobile || activeGenealogyGeneration === null) {
-      return visiblePersonIdsByLifeStatus;
-    }
-
-    const generationVisiblePersonIds = new Set<string>();
-
-    pessoas.forEach((pessoa) => {
-      if (getPersonGeneration(pessoa) !== activeGenealogyGeneration) return;
-      if (visiblePersonIdsByLifeStatus && !visiblePersonIdsByLifeStatus.has(pessoa.id)) return;
-
-      generationVisiblePersonIds.add(pessoa.id);
-    });
-
-    return generationVisiblePersonIds;
-  }, [activeGenealogyGeneration, isGenealogyMobile, pessoas, visiblePersonIdsByLifeStatus]);
+  const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
   return (
     <section
@@ -257,7 +228,6 @@ export function HomeTreeSection({
         })
       ) : canRenderTree ? (
         <FamilyTree
-          key={familyTreeInstanceKey}
           ref={familyTreeRef}
           pessoas={pessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
@@ -273,7 +243,8 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           centralPersonId={centralReferencePersonId}
           isMobile={isMobile}
-          layoutRevision={familyTreeLayoutRevision}
+          layoutRevision={treeLayoutRevision}
+          activeGenealogyGeneration={activeGenealogyGeneration}
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}

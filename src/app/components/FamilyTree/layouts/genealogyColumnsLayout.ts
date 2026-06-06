@@ -1,4 +1,4 @@
-﻿import { Edge, Node } from 'reactflow';
+import { Edge, Node } from 'reactflow';
 import { Pessoa, Relacionamento } from '../../../types';
 import type { GenealogyFamilyConnectorNodeData } from '../GenealogyFamilyConnectorNode';
 import {
@@ -95,7 +95,7 @@ const COLUMN_LABEL_HEIGHT = 30;
 const LABEL_TO_CARD_GAP = 16;
 const COLUMN_GAP = 82;
 const ROW_GAP = 18;
-const SPOUSE_ROW_EXTRA_GAP = 36;
+const SPOUSE_ROW_EXTRA_GAP = 72;
 const FAMILY_UNIT_GAP = 48;
 const FAMILY_CONNECTOR_CHILD_BUS_OFFSET = 24;
 const FAMILY_CONNECTOR_LANE_GAP = 10;
