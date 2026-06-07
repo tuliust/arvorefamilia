@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
 import { MarriageNodeData, MarriageNodeDetails } from './types';
@@ -67,6 +67,46 @@ function inferMarriageDetailsFromNearestPeople(marriageNodeId: string, nodes: No
   };
 }
 
+function MarriageRingIcon({ directFamily }: { directFamily: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 72 48"
+      width={directFamily ? 48 : 44}
+      height={directFamily ? 36 : 34}
+      className="pointer-events-none block overflow-visible"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle
+        cx="28"
+        cy="26"
+        r="13.5"
+        stroke={directFamily ? '#9A3412' : '#C2410C'}
+        strokeWidth={directFamily ? 7.2 : 6.4}
+      />
+      <circle
+        cx="44"
+        cy="26"
+        r="13.5"
+        stroke={directFamily ? '#B45309' : '#EA580C'}
+        strokeWidth={directFamily ? 7.2 : 6.4}
+      />
+      <path
+        d="M19.5 18.5c2.2-3.5 5.5-5.4 9.5-5.7"
+        stroke="#FDBA74"
+        strokeWidth={directFamily ? 3.2 : 2.8}
+      />
+      <path
+        d="M35.5 18.5c2.2-3.5 5.5-5.4 9.5-5.7"
+        stroke="#FED7AA"
+        strokeWidth={directFamily ? 3.2 : 2.8}
+      />
+    </svg>
+  );
+}
+
 export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData>) => {
   const { getNodes } = useReactFlow();
   const [localMarriageDetails, setLocalMarriageDetails] = React.useState<MarriageNodeDetails | null>(null);
@@ -107,7 +147,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
         className={[
-          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full text-sm leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2',
+          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2',
           isDirectFamilyVariant
             ? 'border-[3px] bg-white shadow-[0_0_0_4px_rgba(255,237,213,0.9),0_5px_14px_rgba(194,65,12,0.34)] hover:bg-orange-50 hover:shadow-[0_0_0_5px_rgba(255,237,213,0.95),0_6px_16px_rgba(194,65,12,0.42)]'
             : 'border-2 bg-orange-50 shadow-[0_3px_10px_rgba(234,88,12,0.22)] hover:bg-orange-100 hover:shadow-[0_4px_12px_rgba(234,88,12,0.3)]',
@@ -149,21 +189,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 64 44"
-          width={isDirectFamilyVariant ? 44 : 40}
-          height={isDirectFamilyVariant ? 36 : 32}
-          fill={isDirectFamilyVariant ? '#FFFFFF' : '#FFF7ED'}
-          stroke={isDirectFamilyVariant ? '#9A3412' : '#C2410C'}
-          strokeWidth={isDirectFamilyVariant ? 6.5 : 5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="23" cy="24" r="12" />
-          <circle cx="41" cy="24" r="12" />
-          <path d="M23 12l5-7h8l5 7" fill="none" />
-        </svg>
+        <MarriageRingIcon directFamily={isDirectFamilyVariant} />
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'
