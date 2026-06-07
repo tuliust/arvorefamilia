@@ -28,13 +28,12 @@ function getPersonGeneration(pessoa: Pessoa) {
 
 function getGenealogyMobileStageViewportOffset(generation: number | null) {
   switch (generation) {
-    case 1:
-    case 2:
-      return -132;
     case 4:
     case 5:
     case 6:
-      return -240;
+      return -100;
+    case 1:
+    case 2:
     case 3:
     default:
       return 0;
