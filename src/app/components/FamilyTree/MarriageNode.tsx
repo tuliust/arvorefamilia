@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
 import { MarriageNodeData, MarriageNodeDetails } from './types';
@@ -103,8 +103,8 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onClick={handleClick}
         onMouseDown={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
-        title="Ver vínculo do casal"
-        aria-label="Ver vínculo do casal"
+        title="Ver vÃ­nculo do casal"
+        aria-label="Ver vÃ­nculo do casal"
         className="nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border bg-white text-sm leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
@@ -143,7 +143,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        {data.emoji || '💑'}
+        {data.emoji || 'ðŸ’‘'}
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'

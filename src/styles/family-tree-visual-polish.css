@@ -53,3 +53,19 @@
     height: calc(100% - 0.5rem) !important;
   }
 }
+
+@media (min-width: 768px) {
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+    top: 0.75rem !important;
+    height: 2.5rem !important;
+  }
+
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+    display: none !important;
+  }
+
+  [data-export-root="family-tree"] .react-flow {
+    top: 0.25rem !important;
+    height: calc(100% - 0.25rem) !important;
+  }
+}
