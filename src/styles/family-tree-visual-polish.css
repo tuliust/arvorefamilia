@@ -16,7 +16,7 @@
 @media (min-width: 768px) {
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
     top: 1rem !important;
-    height: 4.5rem !important;
+    height: 5.25rem !important;
   }
 
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
@@ -30,8 +30,13 @@
   }
 
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    margin-top: 0.35rem !important;
+    margin-top: 0.45rem !important;
     font-size: 0.9rem !important;
     line-height: 1.25 !important;
+  }
+
+  [data-export-root="family-tree"] .react-flow {
+    top: 1.5rem !important;
+    height: calc(100% - 1.5rem) !important;
   }
 }
