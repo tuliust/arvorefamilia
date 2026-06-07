@@ -80,10 +80,12 @@ export function HomeTreeSection({
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
-  const isGenealogyMobile = isMobile && treeViewMode === 'genealogia';
+  const usesMobileGenerationStages = isMobile && (
+    treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
+  );
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
   const defaultGenealogyMobileGeneration = React.useMemo(() => {
-    if (!isGenealogyMobile) return null;
+    if (!usesMobileGenerationStages) return null;
 
     const availableGenerations = new Set<number>();
 
@@ -96,8 +98,8 @@ export function HomeTreeSection({
     });
 
     return Array.from(availableGenerations).sort((generationA, generationB) => generationA - generationB)[0] ?? null;
-  }, [isGenealogyMobile, pessoas, visiblePersonIdsByLifeStatus]);
-  const effectiveActiveGenealogyGeneration = isGenealogyMobile
+  }, [usesMobileGenerationStages, pessoas, visiblePersonIdsByLifeStatus]);
+  const effectiveActiveGenealogyGeneration = usesMobileGenerationStages
     ? activeGenealogyGeneration ?? defaultGenealogyMobileGeneration
     : null;
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
@@ -109,7 +111,7 @@ export function HomeTreeSection({
   const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
 
   React.useEffect(() => {
-    if (!isGenealogyMobile) {
+    if (!usesMobileGenerationStages) {
       setActiveGenealogyGeneration(null);
       return;
     }
@@ -117,7 +119,7 @@ export function HomeTreeSection({
     if (activeGenealogyGeneration === null && defaultGenealogyMobileGeneration !== null) {
       setActiveGenealogyGeneration(defaultGenealogyMobileGeneration);
     }
-  }, [activeGenealogyGeneration, defaultGenealogyMobileGeneration, isGenealogyMobile]);
+  }, [activeGenealogyGeneration, defaultGenealogyMobileGeneration, usesMobileGenerationStages]);
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
@@ -161,7 +163,7 @@ export function HomeTreeSection({
               line-height: 1.18 !important;
             }
 
-            ${isGenealogyMobile ? `
+            ${usesMobileGenerationStages ? `
               [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
                 display: none !important;
               }
@@ -233,7 +235,7 @@ export function HomeTreeSection({
         </style>
       )}
 
-      {isGenealogyMobile && (
+      {usesMobileGenerationStages && (
         <GenealogyMobileStageTabs
           pessoas={pessoas}
           visiblePersonIds={visiblePersonIdsByLifeStatus}
