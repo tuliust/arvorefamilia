@@ -39,9 +39,4 @@
     top: 1.5rem !important;
     height: calc(100% - 1.5rem) !important;
   }
-
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__renderer {
-    transform: scale(0.9) translateY(-24px) !important;
-    transform-origin: center top !important;
-  }
 }
