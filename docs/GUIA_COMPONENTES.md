@@ -1,7 +1,7 @@
 # Guia de componentes - Árvore Família
 
 > Última atualização: 2026-06-07  
-> Revisão complementar: menu compartilhado, título/viewport da árvore e alianças da Minha Árvore  
+> Revisão complementar: menu compartilhado, título/viewport da árvore, alianças da Minha Árvore e pendências visuais finais  
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -244,6 +244,7 @@ Comportamento consolidado:
 - `viewMode = visao-completa` usa `genealogyColumnsLayout` com base completa;
 - título da árvore é overlay fixo no próprio componente;
 - subtítulos internos abaixo do título foram removidos/ocultados nas views da árvore;
+- padding superior do título e espaço entre título e cards ainda estão em refinamento visual final;
 - viewport inicial usa bounds de `personNode`;
 - bounds de pan são separados dos bounds de viewport;
 - Genealogia/Visão Completa usam zoom por largura;
@@ -260,7 +261,8 @@ Cuidados:
 - não transformar `activeGenealogyGeneration` em filtro destrutivo de pessoas;
 - não persistir no banco a inferência visual de gerações feita para renderização;
 - não mexer em Supabase neste componente;
-- não corrigir espaçamento do título usando `transform`, `translate` ou `top` negativo em `.react-flow__viewport`.
+- não corrigir espaçamento do título usando `transform`, `translate` ou `top` negativo em `.react-flow__viewport`;
+- ajustar espaçamento título-canvas preferencialmente por constantes/cálculo em `FamilyTree.tsx`, validando corte superior de cards.
 
 ---
 
@@ -302,7 +304,8 @@ Cuidados:
 - group boxes e anchors não devem comandar zoom inicial;
 - alteração de constantes de posição pode afetar toda a composição visual;
 - validar em desktop e mobile após qualquer mudança;
-- marriage nodes criados para `/minha-arvore` devem usar `visualVariant: 'direct-family'` para reforçar a legibilidade da aliança sem alterar `/genealogia`.
+- marriage nodes criados para `/minha-arvore` podem usar `visualVariant: 'direct-family'` para reforçar a legibilidade da aliança sem alterar `/genealogia`;
+- cards de parentes da view direta devem manter padronização visual em torno de `340 × 136`, exceto o card da pessoa principal, salvo nova decisão de layout.
 
 ---
 
@@ -369,7 +372,7 @@ src/app/components/FamilyTree/types.ts
 Responsabilidade:
 
 - renderizar o botão/anel clicável de vínculo conjugal;
-- exibir SVG de alianças;
+- exibir SVG de alianças no lugar de emoji, evitando mojibake;
 - abrir modal de vínculo conjugal por `onMarriageClick`;
 - preservar handles invisíveis necessários ao ReactFlow.
 
@@ -386,7 +389,13 @@ export interface MarriageNodeData {
 Variantes visuais:
 
 - `default`: usada por `/genealogia` e `/visao-completa`;
-- `direct-family`: usada pelos marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`.
+- `direct-family`: prevista para marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`, quando implementada/confirmada no código.
+
+Estado atual de revisão:
+
+- o emoji conjugal corrompido foi removido/trocado por SVG;
+- a legibilidade visual das alianças em `/minha-arvore` ainda precisa de validação e possível reforço de tamanho, stroke, cor, halo ou contraste;
+- se `visualVariant` não estiver efetivamente ativa no código, a documentação deve ser ajustada ou a variante implementada em etapa pequena.
 
 Regras da variante `direct-family`:
 
@@ -659,7 +668,7 @@ Responsabilidade:
 - aplicar a paleta ativa no `document.documentElement` por CSS variables;
 - persistir a paleta em `TREE_COLOR_PALETTE_STORAGE_KEY`;
 - preservar busca expansível com sugestões de pessoas e páginas;
-- renderizar `UserProfileMenu` no header da árvore com `variant="home-header"`.
+- renderizar `UserProfileMenu` no header da árvore com `variant="home-header"`, salvo diagnóstico que comprove código legado ainda ativo.
 
 Regra atual de menu:
 
@@ -667,7 +676,7 @@ Regra atual de menu:
 <UserProfileMenu variant="home-header" />
 ```
 
-O antigo `UserMenu` local da Home foi removido. O botão visual compacto do header da árvore permanece, mas o painel aberto é o menu compartilhado de `UserProfileMenu`.
+O antigo `UserMenu` local da Home não deve ser recriado. O botão visual compacto do header da árvore deve permanecer; o painel aberto deve ser o menu compartilhado de `UserProfileMenu`. Prints recentes indicaram possível divergência visual entre o menu das views da árvore e o menu das páginas internas, portanto a implementação real deve ser conferida antes de declarar a unificação como concluída.
 
 Cuidados:
 
@@ -760,9 +769,9 @@ variant?: 'avatar' | 'home-header'
 - `avatar`: padrão usado nas páginas internas, com botão circular/avatar;
 - `home-header`: usado nas views da árvore para manter aparência compacta no header da Home.
 
-Comportamento consolidado:
+Comportamento desejado/consolidável:
 
-- o painel aberto é o mesmo nas duas variantes;
+- o painel aberto deve ser o mesmo nas duas variantes;
 - a área superior com avatar, nome e e-mail é clicável;
 - clique no cabeçalho redireciona usuário autenticado para `/minha-arvore/editar`;
 - visitante pode ser levado para `/entrar`;
@@ -790,6 +799,7 @@ Cuidados:
 - manter cabeçalho clicável acessível, com foco visível;
 - usar `event.stopPropagation()` no botão de fechar se necessário;
 - não duplicar menu local no `Home.tsx`;
+- se houver diferença visual entre menu da árvore e menu das páginas internas, confirmar se ela vem apenas da variante de botão ou de implementação duplicada;
 - não usar `window.location` para navegação interna quando `navigate` resolver;
 - não esconder botão admin como substituto de guard/RLS.
 
@@ -1320,15 +1330,17 @@ src/app/components/ui
 
 ## 22. Atualização recente - ciclo 2026-06-07
 
-Frente concluída:
+Frente documentada:
 
 ```txt
 3f50694 fix: refine member navigation and page actions
 ```
 
+Status: parcialmente consolidada; menu compartilhado, título/viewport e alianças ainda exigem validação visual final.
+
 Itens documentados neste ciclo:
 
-- `UserProfileMenu` passou a atender também o header da árvore via `variant="home-header"`;
+- `UserProfileMenu` deve atender também o header da árvore via `variant="home-header"`;
 - o antigo `UserMenu` local de `Home.tsx` foi removido;
 - o cabeçalho do menu do usuário ficou clicável e navega para `/minha-arvore/editar`;
 - o item **Editar notificações** foi removido do menu;
@@ -1336,7 +1348,13 @@ Itens documentados neste ciclo:
 - `/minha-arvore/editar` recebeu botão **Trocar Senha**;
 - `CalendarioFamiliar.tsx` recebeu correções de texto e microcopy visual;
 - `AjustarNotificacoes.tsx` e `NotificationPreferencesPanel.tsx` receberam correções de acentuação;
-- `MarriageNode` recebeu variante visual `direct-family` para melhorar legibilidade das alianças em `/minha-arvore`.
+- `MarriageNode` passou a usar SVG no lugar do emoji conjugal corrompido; a legibilidade das alianças em `/minha-arvore` ainda precisa ser confirmada/reforçada.
+
+Pendências relacionadas:
+
+- confirmar se o menu da árvore abre o mesmo painel das páginas internas;
+- ajustar padding superior do título e reduzir espaço título-cards em `FamilyTree.tsx`;
+- tornar o SVG de alianças legível em `/minha-arvore` sem degradar `/genealogia`.
 
 QA recomendado:
 

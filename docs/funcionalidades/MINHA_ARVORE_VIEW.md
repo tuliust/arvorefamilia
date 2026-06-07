@@ -1,6 +1,7 @@
 # Minha Árvore - view, layout e viewport
 
 > Última revisão: 2026-06-07  
+> Revisão complementar: refinamento visual de `/minha-arvore`, título/viewport, alianças e pendências de QA  
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.
 
@@ -74,6 +75,33 @@ Para decisões gerais de UX, use:
 
 ```txt
 docs/GUIA_UX_LAYOUT.md
+```
+
+---
+
+## 2.1 Estado de revisão visual atual
+
+Esta documentação diferencia **comportamento consolidado** de **refinamento visual ainda pendente**.
+
+### Consolidado
+
+- A view **Minha Árvore** mantém layout próprio, separado de **Genealogia** e **Visão Completa**.
+- O título principal é overlay único em `FamilyTree.tsx`; layouts internos não devem criar título principal.
+- Subtítulos abaixo dos títulos das views da árvore podem permanecer ocultos/removidos.
+- Ajustes de fundo, bordas, conectores e paletas devem ser feitos por tokens/CSS variables, sem alterar dados.
+- Ajustes visuais não devem criar migrations, alterar RLS, Supabase, permissões ou dados reais.
+
+### Em refinamento visual
+
+- O título da árvore ainda precisa de padding superior adequado: não deve ficar colado ao topo da área da árvore.
+- O espaço entre título e cards ainda precisa ser reduzido sem cortar cards superiores.
+- As alianças da view **Minha Árvore** devem ficar claramente visíveis; o problema não deve ser resolvido voltando a usar emoji.
+- O menu do usuário no header da árvore deve ser comparado com o menu das páginas internas para confirmar se ambos usam o mesmo painel compartilhado.
+
+Regra operacional:
+
+```txt
+Antes de documentar esses pontos como concluídos, validar em browser real nas rotas /minha-arvore, /genealogia e /visao-completa, nas paletas white, orange e brown.
 ```
 
 ---
@@ -258,11 +286,17 @@ O header da árvore usa:
 Comportamento esperado:
 
 - o botão visual permanece compacto no header;
-- o conteúdo aberto é o painel completo de `UserProfileMenu`;
+- o conteúdo aberto deve ser o painel completo de `UserProfileMenu`, equivalente ao menu das páginas internas;
 - o antigo `UserMenu` local de `Home.tsx` não deve ser recriado;
 - a área superior do painel com avatar, nome e e-mail é clicável e navega para `/minha-arvore/editar`;
 - o botão `X` apenas fecha o painel;
 - o item **Editar notificações** não aparece mais no menu.
+
+Ponto de verificação pendente:
+
+```txt
+Se os prints ou o ambiente atual mostrarem dropdown compacto nas views da árvore e painel completo nas páginas internas, investigar HomeHeader.tsx, UserProfileMenu.tsx e MemberPageHeader.tsx antes de considerar o menu como unificado.
+```
 
 ---
 
@@ -321,6 +355,17 @@ Regras:
 - o ajuste deve ser feito por constantes/cálculo em `FamilyTree.tsx`;
 - não usar `translate`, `transform`, `top` negativo ou manipulação de `.react-flow__viewport`;
 - `family-tree-visual-polish.css` não deve reposicionar o ReactFlow nem alterar bounds.
+- qualquer tentativa com `translate` em `.react-flow__viewport` deve ser removida se cortar cards superiores;
+- ajustes finos devem priorizar `TREE_TITLE_TOP`, `TREE_TITLE_HEIGHT`, `TREE_DESKTOP_VISUAL_TOP_INSET` e `TREE_DESKTOP_VISUAL_BOTTOM_INSET`.
+
+Status atual de QA visual:
+
+```txt
+Subtítulos: removidos/ocultos.
+Padding superior do título: pendente de refinamento.
+Espaço título ↔ cards: pendente de refinamento.
+Cards superiores cortados por translate: regressão conhecida; não repetir essa abordagem.
+```
 
 Constantes relevantes em `FamilyTree.tsx`:
 
@@ -491,7 +536,34 @@ Elementos principais:
 | Tios/primos | Cards colaterais adaptáveis |
 | Grupos inferiores centrais | Irmãos, cônjuge, filhos, netos etc. |
 
-### 12.3 Labels de grupo
+
+### 12.3 Padronização recente dos cards de parentes
+
+Diretriz visual da rodada de refinamento:
+
+```txt
+Todos os cards de parentes, exceto a pessoa principal, devem convergir para o tamanho base dos cards de tios/primos: 340 × 136.
+Pessoa principal mantém CENTRAL_WIDTH × 760.
+```
+
+Aplicação esperada em `/minha-arvore`:
+
+| Grupo | Tamanho visual esperado |
+|---|---:|
+| Tataravós, bisavós e avós | 340 × 136 |
+| Tios e primos | 340 × 136 |
+| Pai e mãe | 340 × 136 |
+| Irmãos, sobrinhos, cônjuge, filhos, pets e netos | 340 × 136 |
+| Pessoa principal | `CENTRAL_WIDTH × 760` |
+
+Cuidados:
+
+- validar se a alteração não desalinha anchors e conectores;
+- validar nomes longos e truncamento;
+- validar corte inferior em grupos de primos e sobrinhos;
+- validar as paletas `white`, `orange` e `brown`.
+
+### 12.4 Títulos de grupo
 
 Os labels de grupo usam dimensão lógica e tipografia própria em:
 
@@ -1149,6 +1221,56 @@ corte inferior de nomes -> consolidado
 redução de espaços laterais e ampliação de cards -> em ajuste incremental
 ```
 
+### 27.1 Ajustes recentes de geometria desktop
+
+A frente recente de refinamento de `/minha-arvore` desktop concentrou-se em:
+
+- reduzir linhas verticais laterais dos ramos paterno e materno;
+- reduzir espaços internos excessivos entre colunas de tios/primos;
+- aumentar o respiro entre as áreas esquerda, central e direita;
+- subir grupos e cards da área central quando houver sobra superior;
+- reduzir risco de corte dos grupos inferiores, especialmente primos e sobrinhos;
+- padronizar os cards de parentes no tamanho `340 × 136`, exceto pessoa principal.
+
+Constantes que costumam participar desse ajuste:
+
+```txt
+DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
+SIDE_AREA_CENTER_GAP_X
+CENTRAL_AREA_TARGET_RATIO
+SIDE_COLLATERAL_CARD_WIDTH
+SIDE_COLLATERAL_CARD_HEIGHT
+SIDE_COLUMN_GAP
+SIDE_ROW_GAP
+ANCESTOR_COLUMN_GAP
+ANCESTOR_ROW_GAP
+CENTRAL_AREA_SHIFT_DOWN
+CENTRAL_CORE_SHIFT_UP
+CENTRAL_LOWER_GROUP_GAP
+CENTRAL_LOWER_STACK_GAP
+STANDARD_GROUP_CARD_WIDTH
+SIDE_ANCESTOR_CARD_HEIGHT
+SIDE_PARENT_CARD_HEIGHT
+LOWER_CARD_WIDTH
+LOWER_CARD_HEIGHT
+```
+
+Regra:
+
+```txt
+Alterar essas constantes de forma incremental, validando visualmente antes de novo commit.
+```
+
+### 27.2 Pendências visuais específicas
+
+Permanecem como pendências de refinamento:
+
+- dar padding superior ao título sem aumentar o vazio abaixo dele;
+- reduzir o espaço entre título e cards por constantes em `FamilyTree.tsx`;
+- garantir que nenhum card superior seja cortado;
+- tornar o ícone de alianças claramente visível em `/minha-arvore`;
+- confirmar se o menu do header da árvore abriu o painel compartilhado ou um dropdown legado.
+
 ---
 
 ## 28. Paletas visuais e containers de grupo
@@ -1260,7 +1382,59 @@ Possíveis evoluções:
 
 ---
 
-## 31. Resumo do estado atual
+
+## 31. Revisão complementar - pendências pós-refinamento de layout
+
+Esta seção registra o estado a partir da validação visual recente.
+
+### 31.1 Concluído ou aceitável
+
+- Subtítulos abaixo dos títulos das três views foram removidos/ocultados.
+- A paleta `white` deve usar fundo branco puro na área da árvore.
+- Linhas estruturais devem acompanhar a cor da borda dos grupos por CSS variables.
+- Cards de parentes da **Minha Árvore** foram direcionados para padronização visual em `340 × 136`, exceto a pessoa principal.
+- A compactação vertical/horizontal de `/minha-arvore` desktop deve ser tratada no layout direto, não com escala global do renderer.
+
+### 31.2 Ainda pendente
+
+- Título da árvore precisa de padding superior.
+- Espaço abaixo do título ainda precisa ser reduzido sem `translate` no viewport.
+- Alianças em `/minha-arvore` ainda precisam ficar visualmente perceptíveis.
+- Diferença entre o menu do header da árvore e o menu das páginas internas precisa ser diagnosticada no código.
+
+### 31.3 Arquivos prioritários para próxima etapa
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+```
+
+### 31.4 Validação obrigatória
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Validação visual mínima:
+
+```txt
+/minha-arvore desktop/mobile nas paletas white, orange e brown
+/genealogia desktop/mobile nas paletas white, orange e brown
+/visao-completa desktop/mobile nas paletas white, orange e brown
+/calendario-familiar e /forum para comparação do menu do usuário
+```
+
+---
+
+## 32. Resumo do estado atual
 
 A view **Minha Árvore** está estruturada como composição de três áreas:
 

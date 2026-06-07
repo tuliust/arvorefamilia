@@ -2,6 +2,7 @@
 
 > Ultima revisao: 2026-06-07
 > Ultima atualizacao: 2026-06-07
+> Revisao complementar: sintomas pendentes de titulo/viewport, aliancas e menus de usuario
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -81,6 +82,26 @@ Regras:
 - nao commitar `backups/`, arquivos `.bak`, patches temporarios ou saidas de build;
 - nao apagar dados legados/base64 sem auditoria;
 - nao ampliar RLS para resolver bug de leitura sem entender a regra de negocio.
+
+---
+
+## 1.1 Sintomas visuais recentes que exigem atenção
+
+Estes sintomas foram observados na frente de refinamento das views da árvore e devem ser investigados antes de serem tratados como concluídos:
+
+| Sintoma | Status | Arquivos prováveis |
+|---|---|---|
+| Título da árvore colado no topo | Pendente | `FamilyTree.tsx`, `family-tree-visual-polish.css` |
+| Espaço grande entre título e cards | Pendente | `FamilyTree.tsx` |
+| Cards superiores cortados após ajuste visual | Regressão conhecida | CSS com `translate`/`transform` em ReactFlow |
+| Alianças de `/minha-arvore` pouco visíveis ou ausentes | Pendente | `MarriageNode.tsx`, `types.ts`, `directFamilyDistributedLayout.ts` |
+| Menu da árvore diferente do menu das páginas internas | Pendente de diagnóstico | `HomeHeader.tsx`, `UserProfileMenu.tsx`, `MemberPageHeader.tsx` |
+
+Regra:
+
+```txt
+Não marcar esses itens como resolvidos apenas porque o build passou. Eles exigem validação visual em browser real.
+```
 
 ---
 
@@ -1152,6 +1173,156 @@ Verificar:
 Correcao:
 
 - renderizar observacoes internas apenas quando `isAdmin = true`.
+
+
+### Título da árvore colado no topo ou distante demais dos cards
+
+Sintomas:
+
+```txt
+A árvore de Tulius aparece muito próxima do topo da área da árvore.
+Família de Tulius ou Linha Genealógica de Tulius ficam com grande vazio abaixo.
+Cards superiores são cortados após tentativa de subir o viewport.
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Verificar em `FamilyTree.tsx`:
+
+```txt
+TREE_TITLE_TOP
+TREE_TITLE_HEIGHT
+TREE_DESKTOP_VISUAL_TOP_INSET
+TREE_DESKTOP_VISUAL_BOTTOM_INSET
+TREE_VIEWPORT_PADDING_Y
+getNormalizedTreeViewport
+flowViewportStyle
+```
+
+Verificar em CSS:
+
+```txt
+.react-flow__viewport
+.react-flow
+[data-export-root="family-tree"]
+```
+
+Correção esperada:
+
+- dar padding superior ao título por constante/estrutura do overlay;
+- reduzir o espaço entre título e cards ajustando o inset real do wrapper/viewport em `FamilyTree.tsx`;
+- remover regras CSS que movam `.react-flow__viewport`;
+- não usar `translate`, `transform`, `top` negativo ou `height: calc(...)` para compensar o espaço;
+- validar se nenhum card superior foi cortado.
+
+Validação visual:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Em desktop e mobile, nas paletas:
+
+```txt
+white
+orange
+brown
+```
+
+### Alianças ausentes ou pouco visíveis em `/minha-arvore`
+
+Sintomas:
+
+```txt
+O botão conjugal aparece como círculo vazio.
+O emoji antigo aparece como ?? ou mojibake.
+O SVG existe no código, mas não é perceptível na interface.
+/genealogia parece correta, mas /minha-arvore não.
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+Verificar:
+
+- `MarriageNodeData` aceita `visualVariant?: 'default' | 'direct-family'`;
+- os marriage nodes de `/minha-arvore` recebem `visualVariant: 'direct-family'`;
+- `/genealogia` não recebe a variante direta sem decisão explícita;
+- o SVG tem `stroke`, `width`, `height`, `viewBox` e contraste suficientes;
+- `overflow`, `z-index`, handles invisíveis e classes do botão não escondem o SVG;
+- clique no botão ainda abre `ViewMarriageModal`.
+
+Correção esperada:
+
+- usar SVG estável, não emoji;
+- reforçar apenas a variante `direct-family` se o problema for exclusivo de `/minha-arvore`;
+- não alterar dimensão lógica do node sem revisar layout e anchors;
+- não quebrar o estilo aprovado em `/genealogia`.
+
+### Dois menus de usuário diferentes
+
+Sintomas:
+
+```txt
+Nas views da árvore, o botão MENU abre uma lista/dropdown compacto.
+Em /calendario-familiar, /forum, /notificacoes ou /meus-favoritos, abre painel maior com avatar, e-mail e botão X.
+A documentação diz que ambos usam UserProfileMenu, mas a UI mostra diferença.
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/Home.tsx
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/forum/ForumHome.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/MeusFavoritos.tsx
+```
+
+Verificar:
+
+- `HomeHeader.tsx` renderiza `UserProfileMenu variant="home-header"` ou componente local legado;
+- `MemberPageHeader.tsx` renderiza `UserProfileMenu variant="avatar"`;
+- `UserProfileMenu` realmente compartilha o mesmo conteúdo aberto nas duas variantes;
+- existe `UserMenu` local ainda ativo em `Home.tsx` ou `HomeHeader.tsx`;
+- o item **Editar notificações** foi removido de ambos;
+- o topo com avatar/nome/e-mail navega para `/minha-arvore/editar`;
+- botão `X` fecha sem navegar.
+
+Correção esperada:
+
+- manter botão compacto no header da árvore;
+- unificar conteúdo aberto quando for essa a decisão de UX;
+- se houver variação intencional, documentar explicitamente as diferenças por prop;
+- não duplicar lógica de permissões, admin ou logout.
+
+Validação:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+/forum
+/notificacoes
+/meus-favoritos
+```
 
 ---
 
@@ -2642,3 +2813,17 @@ Validar:
 /calendario-familiar tablet
 /calendario-familiar mobile
 ```
+
+
+### Nota complementar de status visual
+
+Mesmo quando o build passa, os seguintes pontos não devem ser considerados resolvidos sem validação visual:
+
+```txt
+titulo com padding superior adequado
+espaço título ↔ cards reduzido sem corte superior
+alianças visíveis em /minha-arvore
+menu da árvore coerente com o menu das páginas internas
+```
+
+Se algum desses pontos falhar, registrar como pendência em `PLANO_PROXIMOS_PASSOS.md`, não como implementação concluída em `GUIA_IMPLEMENTACOES.md`.

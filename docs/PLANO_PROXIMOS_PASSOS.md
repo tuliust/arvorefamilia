@@ -1,7 +1,7 @@
-# Plano de proximos passos - Arvore Familia
+# Plano de próximos passos - Árvore Família
 
-> Ultima revisao: 2026-06-07
-> Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`
+> Última revisão: 2026-06-07
+> Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
 
 ## Objetivo
@@ -28,7 +28,7 @@ Use tambem:
 
 ---
 
-## 1. Situacao atual do MVP
+## 1. Situação atual do MVP
 
 As frentes funcionais principais do MVP estao implementadas e testadas manualmente no escopo atual.
 
@@ -45,7 +45,7 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Refinamentos ficam pos-MVP. |
 | 7.10 Responsividade mobile/tablet | Concluida | QA final tecnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluidos | Header compartilhado nas paginas internas e Home pos-login preservada com header proprio. |
-| Viewport da arvore | Ajustado | Minha Arvore, Genealogia e Visao Completa tem regras finais de escala/titulo consolidadas; Genealogia mobile inicia na primeira geracao com cards reais. |
+| Viewport da árvore | Em refinamento visual final | Minha Árvore, Genealogia e Visão Completa têm regras de escala e título em ajuste; Genealogia mobile inicia na primeira geração com cards reais, mas padding superior do título e espaço título-cards ainda exigem validação. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; colunas vazias foram removidas; inferencia de geracoes ocorre em memoria pela pessoa central. |
 | Rotas das views da arvore | Concluidas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
 | Refatoracao incremental da Home | Em andamento seguro | Componentes visuais foram extraidos; `Home.tsx` segue como orquestradora. |
@@ -54,7 +54,7 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places com fallback para input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e Faz X anos. |
 | Paletas visuais da arvore | Concluidas | Paletas `white`, `orange` e `brown` expostas no `HomeHeader`, aplicadas por CSS variables e persistidas em `localStorage`. |
-| Menu compartilhado do usuario | Concluido no escopo atual | Header da arvore preserva botao compacto, mas abre `UserProfileMenu`; cabecalho do menu navega para `/minha-arvore/editar`; item **Editar notificacoes** removido. |
+| Menu compartilhado do usuário | Em diagnóstico visual final | A regra desejada é usar `UserProfileMenu` também no header da árvore, preservando botão compacto; prints recentes indicaram diferença entre o menu das views da árvore e o menu das páginas internas, exigindo comparação de código antes de declarar concluído. |
 | Acoes de perfil e notificacoes | Concluidas no escopo atual | `/minha-arvore/editar` recebeu **Trocar Senha**; `/notificacoes` recebeu **Personalizar Notificacoes** para `/ajustar-notificacoes`; textos de preferencias/notificacoes foram corrigidos. |
 
 ---
@@ -167,7 +167,7 @@ Blocos executados:
 
 ---
 
-## 5. Ajustes visuais recentes concluidos
+## 5. Ajustes visuais recentes concluídos
 
 Esta secao registra apenas itens concluidos que ajudam a orientar QA final. Detalhes de UX devem ficar em `docs/GUIA_UX_LAYOUT.md`.
 
@@ -384,12 +384,12 @@ QA especifico:
 - confirmar pan vertical/horizontal;
 - confirmar que `/minha-arvore` e `/visao-completa` nao regrediram.
 
-### 5.9 Menu compartilhado, titulo da arvore e paginas auxiliares
+### 5.9 Menu compartilhado, título da árvore e páginas auxiliares
 
-Concluido:
+Concluído ou parcialmente consolidado:
 
-- o header da arvore preserva a aparencia compacta do botao de usuario;
-- o clique no botao abre o painel compartilhado de `UserProfileMenu`;
+- o header da árvore preserva a aparência compacta do botão de usuário;
+- a regra desejada é que o clique no botão abra o painel compartilhado de `UserProfileMenu`;
 - `UserProfileMenu` possui variante visual para o header da arvore e variante padrao para paginas internas;
 - o cabecalho do menu, com avatar/nome/e-mail, navega para `/minha-arvore/editar`;
 - o item **Editar notificacoes** foi removido do menu;
@@ -397,8 +397,8 @@ Concluido:
 - `/minha-arvore/editar` ganhou botao **Trocar Senha**;
 - `/calendario-familiar` teve hierarquia visual refinada no grid: titulo do evento com peso maior e descricao **Faz X anos** menor;
 - titulos e textos com mojibake/Unicode escapado foram corrigidos nas paginas afetadas;
-- titulo e espacamento da arvore passaram a ser controlados por `FamilyTree.tsx`, sem `translate` em `.react-flow__viewport`;
-- `MarriageNode` recebeu tratamento visual especifico para a variante direta de `/minha-arvore`, preservando `/genealogia`.
+- título e espaçamento da árvore devem ser controlados por `FamilyTree.tsx`, sem `translate` em `.react-flow__viewport`;
+- `MarriageNode` passou a usar SVG no lugar de emoji corrompido, mas a visibilidade final das alianças ainda precisa de ajuste visual.
 
 Arquivos relacionados:
 
@@ -439,9 +439,56 @@ Pontos de atencao:
 - confirmar que o botao `X` do menu apenas fecha o painel;
 - confirmar que as tres paletas `white`, `orange` e `brown` continuam legiveis.
 
+
+### 5.10 Pendências visuais finais das views da árvore
+
+Status: pendente antes de considerar a rodada visual encerrada.
+
+Pendências:
+
+```txt
+/minha-arvore: título muito próximo do topo da área da árvore
+/minha-arvore: espaço ainda grande entre título e cards
+/minha-arvore: alianças ainda pouco visíveis ou ausentes no botão conjugal
+/genealogia: manter título compacto sem cortar labels ou cards
+/visao-completa: manter título compacto sem cortar labels ou cards
+menus: diagnosticar diferença entre menu da árvore e menu das páginas internas
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+```
+
+Regras:
+
+- não usar `translate` em `.react-flow__viewport`;
+- não criar migration para ajuste visual;
+- não alterar Supabase, RLS ou dados reais;
+- não reintroduzir `UserMenu` local sem decisão explícita;
+- validar paletas `white`, `orange` e `brown`;
+- validar desktop e mobile.
+
+Critérios de aceite:
+
+- título com padding superior suficiente;
+- espaço entre título e cards reduzido sem corte superior;
+- alianças legíveis em `/minha-arvore`;
+- estilo de alianças preservado em `/genealogia` e `/visao-completa`;
+- menu da árvore e menu das páginas internas explicados no código e na documentação, seja como componente único ou como variantes controladas.
+
+
 ---
 
-## 6. QA final de lancamento
+## 6. QA final de lançamento
 
 Status: validacao tecnica final executada e aprovada no historico recente. O QA visual amplo foi aprovado em 2026-05-19; a validacao tecnica pos-documentacao e pos-migration foi concluida em 2026-05-22.
 
@@ -960,9 +1007,9 @@ paletas white, orange e brown sem regressao visual
 ```
 ---
 
-## Atualizacao 2026-06-07 - Fechamento de ajustes de menu, arvore e paginas auxiliares
+## Atualização 2026-06-07 - Ajustes de menu, árvore e páginas auxiliares
 
-Concluido neste ciclo:
+Concluído/parcialmente consolidado neste ciclo:
 
 ```txt
 UserProfileMenu compartilhado com variante home-header
@@ -972,22 +1019,24 @@ botao Trocar Senha em /minha-arvore/editar
 botao Personalizar Notificacoes em /notificacoes
 correcao de titulos em /calendario-familiar e /ajustar-notificacoes
 hierarquia visual dos eventos do calendario
-ajuste conservador de titulo/espacamento da arvore por FamilyTree.tsx
+diretriz de ajuste conservador de título/espaçamento da árvore por `FamilyTree.tsx`
 limpeza de overrides conflitantes em family-tree-visual-polish.css
-variante visual direct-family para aliancas em /minha-arvore
+troca do emoji conjugal corrompido por SVG; visibilidade final das alianças ainda pendente
 ```
 
-Permanece como QA recomendado antes do deploy final:
+Permanece como QA e ajuste recomendado antes do deploy final:
 
 ```txt
 abrir /minha-arvore, /genealogia e /visao-completa em desktop/tablet/mobile
-validar botao do usuario e painel compartilhado
+validar botão do usuário e confirmar se o painel compartilhado é realmente o mesmo nas views da árvore e nas páginas internas
 validar que o cabecalho do menu navega para /minha-arvore/editar
 validar /calendario-familiar com evento de aniversario
 validar /minha-arvore/editar com Trocar Senha
 validar /notificacoes com Personalizar Notificacoes
 validar /ajustar-notificacoes sem mojibake
 validar paletas white, orange e brown
+validar padding superior do título e espaço entre título e cards
+validar alianças visíveis em /minha-arvore
 ```
 
 Regra para proximos ajustes:

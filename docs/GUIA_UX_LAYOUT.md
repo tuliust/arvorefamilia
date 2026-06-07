@@ -1,7 +1,7 @@
 # Guia de UX e Layout - Árvore Família
 
 > Última revisão: 2026-06-07  
-> Revisão complementar: menu compartilhado, espaçamento da árvore, alianças e páginas auxiliares  
+> Revisão complementar: menu compartilhado, espaçamento da árvore, alianças, paletas e pendências visuais finais  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`
 
@@ -27,6 +27,15 @@ Este documento não substitui:
 - `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore;
 - `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: legenda, conectores, painel lateral e filtros visuais;
 - `docs/funcionalidades/EXPORTACAO_ARVORE.md`: seleção de área, PNG, PDF e impressão.
+
+
+### Estado desta revisão
+
+Esta revisão separa o que já está consolidado do que ainda depende de validação visual:
+
+- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` mobile com chips por geração; compactação parcial de `/minha-arvore` desktop;
+- **em refinamento visual final**: padding superior do título da árvore, redução do espaço entre título e cards sem cortar cards superiores, legibilidade do SVG de alianças no botão conjugal e diagnóstico da diferença entre o menu do usuário nas views da árvore e o menu das páginas internas;
+- **regra de segurança visual**: não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir o espaçamento entre título e árvore, pois essa abordagem já causou corte de cards superiores.
 
 ---
 
@@ -165,7 +174,7 @@ Regras:
 
 ### 3.2 Menu do usuário no header da árvore
 
-O header da árvore usa `UserProfileMenu` com variante compacta:
+O header da árvore deve usar `UserProfileMenu` com variante compacta:
 
 ```tsx
 <UserProfileMenu variant="home-header" />
@@ -174,7 +183,7 @@ O header da árvore usa `UserProfileMenu` com variante compacta:
 Comportamento esperado:
 
 - o botão no header mantém aparência compacta, com avatar/iniciais, texto **MENU**, nome e seta;
-- ao clicar, abre o painel completo do `UserProfileMenu`, igual ao padrão das páginas internas;
+- ao clicar, deve abrir o painel compartilhado do `UserProfileMenu`, não um dropdown local legado;
 - o antigo dropdown local `UserMenu` de `Home.tsx` não deve ser recriado;
 - o painel deve ficar acima da árvore e do header;
 - o cabeçalho do painel com avatar, nome e e-mail é clicável e leva para `/minha-arvore/editar`;
@@ -182,6 +191,12 @@ Comportamento esperado:
 - o item **Editar notificações** não aparece mais;
 - **Painel Admin** continua condicional para administradores;
 - **Sair** deve manter o fluxo de logout e limpeza de estado/cache relevante.
+
+Estado de revisão visual:
+
+- prints recentes indicaram diferença entre o menu exibido nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa` e o menu exibido em páginas internas como `/calendario-familiar` e `/forum`;
+- antes de qualquer nova implementação, comparar `HomeHeader.tsx`, `UserProfileMenu.tsx` e `MemberPageHeader.tsx` para confirmar se há duplicação real de menu, variante visual esperada ou código legado ainda ativo;
+- a decisão final deve ser documentada neste guia e em `docs/GUIA_COMPONENTES.md`.
 
 ### 3.3 Header das páginas internas
 
@@ -407,6 +422,12 @@ Família de {primeiro nome}
 Linha Genealógica de {primeiro nome}
 ```
 
+Estado atual:
+
+- subtítulos abaixo desses títulos podem permanecer ocultos/removidos nas três views;
+- o título ainda precisa de refinamento visual final: padding superior maior e redução do espaço entre o título e os cards da árvore;
+- esse ajuste não está congelado e deve ser validado em `/minha-arvore`, `/genealogia` e `/visao-completa`.
+
 Regras:
 
 - não adicionar title node interno nos layouts;
@@ -414,9 +435,9 @@ Regras:
 - `genealogyColumnsLayout.ts` não deve criar título/subtítulo principal;
 - labels de geração e grupo podem existir, mas não devem duplicar o título principal;
 - o título deve ter pequeno espaçamento acima;
-- o espaço entre título e cards deve ser controlado por constantes de `FamilyTree.tsx`;
+- o espaço entre título e cards deve ser controlado por constantes de `FamilyTree.tsx`, como `TREE_TITLE_TOP`, `TREE_TITLE_HEIGHT`, `TREE_DESKTOP_VISUAL_TOP_INSET` e `TREE_DESKTOP_VISUAL_BOTTOM_INSET`;
 - não usar `translate`, `transform`, `top` negativo ou manipulação de `.react-flow__viewport` para aproximar a árvore;
-- CSS de polimento não deve reposicionar o canvas ReactFlow.
+- CSS de polimento não deve reposicionar o canvas ReactFlow nem alterar bounds.
 
 ### 5.2 Viewport inicial
 
@@ -473,13 +494,20 @@ Objetivo:
 - não alterar dimensão lógica do nó;
 - não alterar handles, edges, clique ou modal.
 
+Estado atual:
+
+- o emoji conjugal corrompido foi substituído por SVG;
+- visualmente, as alianças ainda podem aparecer discretas ou quase invisíveis em `/minha-arvore`;
+- a correção pendente é de legibilidade visual do SVG, não de regra de relacionamento.
+
 Critérios visuais:
 
 - botão não deve parecer círculo vazio;
 - ícone deve ter contraste suficiente;
-- halo/borda podem ser usados para leitura;
+- stroke, tamanho, halo e cor podem ser reforçados na variante direta;
 - botão não deve cobrir texto dos cards;
-- clique deve abrir o modal conjugal.
+- clique deve abrir o modal conjugal;
+- validar também `/genealogia` e `/visao-completa`, para não degradar o visual padrão do anel conjugal.
 
 ### 5.5 Genealogia
 
@@ -885,7 +913,65 @@ Exemplos consolidados:
 
 ---
 
-## 15. QA visual obrigatório após mudanças de layout
+
+## 15. Pendências visuais de árvore e navegação
+
+Esta seção deve permanecer ativa até validação final em browser real.
+
+### 15.1 Título e espaço da árvore
+
+Pendências:
+
+- dar padding superior ao título fixo;
+- reduzir bastante o espaço entre o título e os cards;
+- não cortar cards superiores;
+- não usar `translate` em `.react-flow__viewport`;
+- validar desktop e mobile nas três views.
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+### 15.2 Alianças
+
+Pendências:
+
+- tornar o SVG de alianças visível em `/minha-arvore`;
+- confirmar se `visualVariant: 'direct-family'` está aplicada aos marriage nodes do layout direto;
+- validar se a variante padrão continua correta em `/genealogia` e `/visao-completa`.
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+### 15.3 Menus de usuário
+
+Pendências:
+
+- comparar o menu aberto nas páginas da árvore com o menu aberto nas páginas internas;
+- confirmar se ambos usam `UserProfileMenu`;
+- confirmar se a diferença é apenas de variante visual ou se ainda existe dropdown legado;
+- decidir se o padrão final será painel compartilhado único ou duas variações documentadas.
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/Home.tsx
+```
+
+
+## 16. QA visual obrigatório após mudanças de layout
 
 Antes de commitar ajuste visual relevante:
 
@@ -947,7 +1033,7 @@ Validar:
 
 ---
 
-## 16. O que evitar
+## 17. O que evitar
 
 Não fazer:
 
@@ -967,7 +1053,7 @@ Não fazer:
 
 ---
 
-## 17. Arquivos de referência
+## 18. Arquivos de referência
 
 ```txt
 src/app/pages/Home.tsx
@@ -993,7 +1079,7 @@ src/app/pages/admin/AdminDashboard.tsx
 
 ---
 
-## 18. Manutenção documental
+## 19. Manutenção documental
 
 Este arquivo concentra decisões de UX e layout. Para evitar repetição:
 
@@ -1006,7 +1092,7 @@ Este arquivo concentra decisões de UX e layout. Para evitar repetição:
 
 ---
 
-## 19. Registro de ajustes recentes - ciclo 2026-06-07
+## 20. Registro de ajustes recentes - ciclo 2026-06-07
 
 Frente documentada:
 
@@ -1014,9 +1100,9 @@ Frente documentada:
 3f50694 fix: refine member navigation and page actions
 ```
 
-Ajustes consolidados:
+Ajustes concluídos ou parcialmente consolidados:
 
-- `UserProfileMenu` unificado entre páginas internas e header da árvore;
+- `UserProfileMenu` previsto como componente compartilhado entre páginas internas e header da árvore;
 - `variant="home-header"` preserva botão compacto no header da árvore;
 - antigo `UserMenu` local não deve ser recriado;
 - cabeçalho do menu global navega para `/minha-arvore/editar`;
@@ -1024,7 +1110,13 @@ Ajustes consolidados:
 - botão **Personalizar Notificações** adicionado em `/notificacoes`;
 - botão **Trocar Senha** adicionado em `/minha-arvore/editar`;
 - títulos e microcopy corrigidos em calendário e preferências;
-- `MarriageNode` ganhou variante `direct-family` para `/minha-arvore`;
+- `MarriageNode` foi direcionado para exibir SVG em vez de emoji corrompido;
 - espaçamento do título da árvore deve ser controlado por `FamilyTree.tsx`, não por transform no ReactFlow.
+
+Pendências desta frente:
+
+- confirmar se o menu da árvore abre o mesmo painel compartilhado das páginas internas;
+- melhorar a visibilidade do SVG de alianças em `/minha-arvore`;
+- ajustar padding superior do título e reduzir espaço título-cards sem cortar o topo da árvore.
 
 Validação obrigatória em browser real continua recomendada quando o navegador interno/sandbox não conseguir abrir as rotas.

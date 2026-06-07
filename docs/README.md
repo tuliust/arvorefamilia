@@ -1,10 +1,19 @@
 # Documentacao - Arvore Familia
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
+> Ultima revisao: 2026-06-07
+> Status: documentacao canonica com pendencias visuais finais rastreadas.
 
 Este diretorio concentra a documentacao tecnica e funcional do projeto **Arvore Familia**.
 
 Use este arquivo como ponto de entrada antes de consultar documentos antigos, historicos ou arquivos soltos na raiz do repositorio.
+
+Regra geral:
+
+- documentos na raiz de `docs/` sao canonicos para guias gerais;
+- documentos em `docs/funcionalidades/` sao canonicos para comportamento detalhado de funcionalidades especificas;
+- documentos historicos nao substituem os guias oficiais;
+- pendencias visuais ainda abertas devem ficar em `PLANO_PROXIMOS_PASSOS.md`, nao misturadas com estado consolidado.
 
 ---
 
@@ -14,11 +23,11 @@ Os guias oficiais ficam na raiz de `docs/` e devem ser tratados como documentaca
 
 | Arquivo | Quando usar |
 |---|---|
-| `GUIA_IMPLEMENTACOES.md` | Consultar o estado consolidado do que ja foi implementado, decisoes tecnicas e frentes concluidas. |
+| `GUIA_IMPLEMENTACOES.md` | Consultar o estado consolidado do que ja foi implementado, decisoes tecnicas e frentes concluidas. Deve separar implementado de refinamento visual pendente. |
 | `GUIA_COMPONENTES.md` | Localizar componentes reutilizaveis, responsabilidades, props, padroes de uso e cuidados contra regressoes. |
-| `GUIA_UX_LAYOUT.md` | Orientar decisoes visuais, responsividade, headers, containers, arvore, painel lateral e microcopy. |
-| `GUIA_CORRECAO_ERROS.md` | Investigar falhas por sintoma, build quebrado, permissoes, RLS, Storage, formularios, arvore e regressoes. |
-| `PLANO_PROXIMOS_PASSOS.md` | Acompanhar fechamento de MVP, criterios de bloqueio, QA final e backlog pos-MVP. |
+| `GUIA_UX_LAYOUT.md` | Orientar decisoes visuais, responsividade, headers, containers, arvore, painel lateral, menus e microcopy. |
+| `GUIA_CORRECAO_ERROS.md` | Investigar falhas por sintoma, build quebrado, permissoes, RLS, Storage, formularios, arvore e regressoes visuais. |
+| `PLANO_PROXIMOS_PASSOS.md` | Acompanhar fechamento de MVP, criterios de bloqueio, QA final, pendencias visuais finais e backlog pos-MVP. |
 
 ---
 
@@ -32,7 +41,7 @@ Documentos de arquitetura ficam em `docs/arquitetura/`.
 | `arquitetura/ROTAS_E_GUARDS.md` | Consultar rotas publicas, rotas de membro, rotas administrativas, guards de acesso e regras de navegacao. |
 | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Consultar estrutura de usuarios, pessoas, vinculos, perfis, tabelas de apoio e fluxos de dados. |
 
-Se houver divergencia entre um documento antigo e os guias em `docs/`, prevalece a documentacao canonica em `docs/`.
+Se houver divergencia entre documento antigo e guia canonico, prevalece a documentacao canonica em `docs/`.
 
 ---
 
@@ -46,7 +55,7 @@ Documentos de funcionalidades ficam em `docs/funcionalidades/`.
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendario familiar, datas familiares, categorias, sidebar, filtros e ajustes de exibicao. |
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportacao de area visivel da arvore em PNG/PDF/impressao e selecao retangular. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Regras especificas da Minha Arvore, filtros diretos, pets e regras de exibicao. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow e comportamento da view Minha Arvore. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow, area central, ramos paterno/materno e comportamento da view Minha Arvore. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Layout por geracoes, navegacao mobile por chips, viewport, inferencia visual e QA da view Genealogia. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edicao da propria arvore pelo membro, Meus Dados, avatar, arquivos historicos e saida sem salvar. |
 | `funcionalidades/NOTIFICACOES.md` | Notificacoes internas/e-mail, preferencias, logs, Edge Functions, rotina diaria e cron seguro. |
@@ -73,6 +82,7 @@ Regras operacionais de banco:
 - Nao aplicar SQL legado como schema principal de ambiente novo.
 - Nao rodar `supabase db push` sem revisar `supabase migration list`.
 - Nao versionar secrets, dumps, tokens ou service role.
+- Nao criar migration para ajuste visual de layout, paleta, titulo, menu ou ReactFlow.
 
 ---
 
@@ -98,6 +108,13 @@ Scripts auxiliares relacionados a documentacao ficam em `scripts/` e devem ser u
 |---|---|
 | `scripts/fix-docs-encoding.py` | Corrigir mojibake/encoding em Markdown. Usar com `--ascii` se o terminal Windows voltar a corromper acentos. |
 | `scripts/polir-documentacao-etapa1.py` | Script experimental de polimento textual. Nao usar sem revisar diff antes do commit. |
+
+Regras para scripts:
+
+- revisar `git diff` antes de commit;
+- evitar scripts PowerShell com `Set-Content` em arquivos com acentos quando houver risco de mojibake;
+- remover scripts temporarios antes de commit;
+- nao commitar `.bak`, patches locais ou saidas de build.
 
 ---
 
@@ -125,7 +142,7 @@ Esses arquivos sao referencia historica, diagnostico pontual ou checklist de uma
 | Tipo de informacao | Destino correto |
 |---|---|
 | Estado consolidado de uma frente implementada | `GUIA_IMPLEMENTACOES.md` |
-| Padrao visual, comportamento responsivo ou microcopy | `GUIA_UX_LAYOUT.md` |
+| Padrao visual, comportamento responsivo, menu ou microcopy | `GUIA_UX_LAYOUT.md` |
 | Componente, props, cuidados de uso e anti-regressao | `GUIA_COMPONENTES.md` |
 | Erro, sintoma, causa provavel e correcao | `GUIA_CORRECAO_ERROS.md` |
 | Pendencia, bloqueio, QA final ou pos-MVP | `PLANO_PROXIMOS_PASSOS.md` |
@@ -155,6 +172,7 @@ Esses arquivos sao referencia historica, diagnostico pontual ou checklist de uma
 10. Dumps, backups sensiveis, tokens, secrets e service role nao devem ser versionados.
 11. Documentos historicos devem ser identificados como historicos para evitar uso como fonte canonica.
 12. Quando uma informacao couber em mais de um arquivo, mantenha o detalhe tecnico em apenas um lugar e use links cruzados nos demais.
+13. Nao documentar como concluido item que ainda depende de validacao visual aberta.
 
 ---
 
@@ -167,6 +185,7 @@ Antes de criar um novo `.md`, verificar:
 - se o novo documento evita duplicidade;
 - se ha links cruzados para os guias relacionados;
 - se o documento deixa claro o que e canonico, historico ou pos-MVP;
+- se pendencias foram colocadas no plano, nao em guias de implementacao;
 - se o arquivo pertence mesmo a `docs/` ou se deve ficar fora do repositorio por conter dado sensivel.
 
 ---
@@ -285,24 +304,35 @@ Documentos que devem permanecer sincronizados:
 Pendencia rastreavel:
 
 - aplicar padrao semelhante em `/visao-completa` somente apos validacao da Genealogia.
+
 ---
 
 ## 14. Ajustes recentes documentados - ciclo 2026-06-07 / Menu, arvore e paginas auxiliares
 
-Este ciclo documenta os ajustes de navegacao do usuario, refinamento visual das views da arvore e acoes auxiliares de calendario, perfil e notificacoes.
+Este ciclo documenta ajustes de navegacao do usuario, refinamento visual das views da arvore e acoes auxiliares de calendario, perfil e notificacoes.
 
-Resumo:
+### 14.1 Consolidado
 
-- o header da arvore manteve o botao compacto de usuario, mas passou a abrir o painel compartilhado de `UserProfileMenu`;
-- `UserProfileMenu` passou a ter variante visual para o header da arvore;
-- o cabecalho do menu, com avatar, nome e e-mail, navega para `/minha-arvore/editar`;
+- o header da arvore deve manter o botao compacto de usuario;
+- o menu aberto nas views da arvore deve ser o painel compartilhado de `UserProfileMenu`;
+- `UserProfileMenu` tem variante visual para o header da arvore;
+- o cabecalho do menu, com avatar, nome e e-mail, deve navegar para `/minha-arvore/editar`;
 - o item **Editar notificacoes** foi removido do menu;
 - `/minha-arvore/editar` recebeu botao **Trocar Senha**;
 - `/notificacoes` recebeu botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
 - `/calendario-familiar` teve textos e hierarquia visual refinados no grid de eventos;
 - `/ajustar-notificacoes` teve titulos corrigidos;
-- as views da arvore tiveram titulo/espacamento revisados sem `translate` em `.react-flow__viewport`;
-- o botao de alianca em `/minha-arvore` recebeu variante visual `direct-family`, preservando `/genealogia`.
+- as views da arvore nao devem corrigir espacamento com `translate` em `.react-flow__viewport`.
+
+### 14.2 Pendencias visuais ainda abertas
+
+Nao documentar como concluido ate validacao visual final:
+
+- aliancas ainda podem aparecer pouco visiveis em `/minha-arvore`;
+- titulo da arvore pode estar muito proximo do topo;
+- espaco entre titulo e cards ainda pode estar grande;
+- pode haver divergencia visual entre menu das views da arvore e menu das paginas internas;
+- qualquer diferenca de menu deve ser diagnosticada em `HomeHeader.tsx`, `UserProfileMenu.tsx` e `MemberPageHeader.tsx` antes de unificacao.
 
 Documentos sincronizados neste ciclo:
 
@@ -310,7 +340,7 @@ Documentos sincronizados neste ciclo:
 |---|---|
 | Menu compartilhado e variante do header da arvore | `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
 | Titulo, viewport e aliancas da Minha Arvore | `funcionalidades/MINHA_ARVORE_VIEW.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
-| Estado consolidado dos ajustes | `GUIA_IMPLEMENTACOES.md` |
+| Estado implementado e refinamentos pendentes | `GUIA_IMPLEMENTACOES.md` |
 | Calendario familiar | `funcionalidades/CALENDARIO_FAMILIAR.md` |
 | Edicao do proprio perfil | `funcionalidades/MINHA_ARVORE_EDITAR.md` |
 | Notificacoes e preferencias | `funcionalidades/NOTIFICACOES.md` |
@@ -323,3 +353,30 @@ Checklist de manutencao:
 - manter `/notificacoes` como central/lista e `/ajustar-notificacoes` como pagina de preferencias;
 - manter troca de senha sem nova migration ou regra de banco;
 - validar manualmente `/minha-arvore`, `/genealogia`, `/visao-completa`, `/calendario-familiar`, `/minha-arvore/editar`, `/notificacoes` e `/ajustar-notificacoes`.
+
+---
+
+## 15. Validacao documental apos alteracoes
+
+Quando qualquer arquivo desta documentacao for atualizado:
+
+```bash
+git diff --check
+```
+
+Quando a documentacao acompanhar mudanca de codigo:
+
+```bash
+npm run build
+git status --short
+```
+
+Se houver commit documental:
+
+```bash
+git add docs/README.md docs/<outros-arquivos-especificos>
+git commit -m "docs: update tree layout and menu documentation"
+git push origin main
+```
+
+Nao usar `git add .`.

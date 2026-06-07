@@ -1,6 +1,7 @@
 # Guia de implementacoes - Arvore Familia
 
 > Ultima revisao: 2026-06-07
+> Revisao complementar: estado consolidado versus refinamentos visuais pendentes
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -42,8 +43,8 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Listagem, busca, filtros, abertura e remocao funcionais. |
 | 7.10 Responsividade mobile/tablet | Concluida | QA tecnico e visual aprovado em 2026-05-19 para as larguras obrigatorias. |
 | Home publica e legal | Implementada | `/entrar` configuravel no admin, aceite legal obrigatorio no primeiro acesso, `noindex/nofollow` em `index.html`. |
-| Headers, margens e menu do usuario | Implementados | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio; o menu do usuario foi consolidado em `UserProfileMenu`, com variante compacta `home-header` para o header da arvore. |
-| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; espacamento titulo-arvore e controlado em `FamilyTree.tsx`, sem `translate` na camada ReactFlow; Genealogia mobile inicia na primeira geracao com cards reais. |
+| Headers, margens e menu do usuario | Implementados com verificacao visual pendente | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio; o menu deve ser consolidado em `UserProfileMenu`, com variante compacta `home-header` para o header da arvore. Se a UI ainda mostrar dropdown compacto diferente do painel das paginas internas, diagnosticar antes de declarar unificacao final. |
+| Viewport das views da arvore | Ajustado parcialmente | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; subtitulos foram removidos/ocultados. O espacamento titulo-arvore deve ser controlado em `FamilyTree.tsx`, sem `translate` na camada ReactFlow, mas padding superior do titulo e reducao do vazio abaixo ainda exigem validacao visual. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; os chips focam/enquadram a geracao ativa sem remover as demais colunas; colunas vazias nao sao renderizadas. |
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
@@ -236,7 +237,8 @@ Comportamento consolidado:
 - escolha e aplicada no `document.documentElement` por CSS variables;
 - escolha e persistida em `localStorage`;
 - PR #7 reimplementou a exposicao no header apos revert da tentativa anterior que causou erro em runtime.
-- o menu do usuario do header da arvore usa `UserProfileMenu` com `variant="home-header"`, preservando o botao compacto e abrindo o painel compartilhado.
+- o menu do usuario do header da arvore deve usar `UserProfileMenu` com `variant="home-header"`, preservando o botao compacto e abrindo o painel compartilhado.
+- se o ambiente atual ainda mostrar dropdown compacto distinto do painel das paginas internas, investigar `HomeHeader.tsx`, `UserProfileMenu.tsx` e `MemberPageHeader.tsx` antes de considerar a unificacao concluida.
 - o antigo dropdown local `UserMenu` da Home nao deve ser reintroduzido sem decisao explicita.
 
 Componentes extraidos da Home:
@@ -676,6 +678,24 @@ Commits de referencia:
 e94ed6b fix: ajustar escala e titulo das views da arvore
 ```
 
+#### Estado visual ainda pendente
+
+Os seguintes pontos não devem ser tratados como encerrados apenas pela existência de código ou build aprovado:
+
+```txt
+padding superior do título da árvore
+redução do espaço entre título e cards sem corte superior
+visibilidade clara das alianças em /minha-arvore
+confirmação de que o menu da árvore abre o mesmo painel compartilhado das páginas internas
+```
+
+Regra:
+
+```txt
+Registrar como implementado somente depois de validação visual em browser real nas três views da árvore e nas páginas internas de comparação.
+```
+
+
 ### 10.3 Paletas visuais da arvore
 
 Implementado:
@@ -764,6 +784,36 @@ Cuidados:
 - nao substituir cadastro correto de `manual_generation`;
 - nao aplicar automaticamente a navegacao mobile por chips em `Visao Completa`;
 - validar conectores, aneis conjugais, paletas e exportacao apos mudancas no layout.
+
+
+### 10.6 Minha Arvore - refinamento desktop de layout direto
+
+Estado de implementação/ajuste visual:
+
+- `/minha-arvore` mantém layout próprio em torno da pessoa central;
+- áreas esquerda, central e direita foram refinadas de forma incremental;
+- cards de parentes devem convergir para `340 × 136`, exceto pessoa principal;
+- pessoa principal mantém dimensão lógica maior, baseada em `CENTRAL_WIDTH × 760`;
+- linhas verticais laterais e espaçamentos internos de tios/primos podem ser reduzidos para evitar corte inferior;
+- grupos centrais inferiores podem subir quando houver sobra superior;
+- não usar escala global do renderer para resolver corte inferior.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Status:
+
+```txt
+compactacao de /minha-arvore: em refinamento visual incremental
+cards de parentes: diretriz definida em 340 × 136
+alianças: pendente de validação visual final
+```
 
 ---
 
@@ -1263,17 +1313,25 @@ src/app/pages/Home.tsx
 
 ### Arvore: titulo, espacamento e anel conjugal
 
-Implementado:
+Implementado ou definido como regra:
 
 - titulo da arvore corrigido para evitar mojibake;
 - subtitulos das views da arvore podem permanecer ocultos;
-- espacamento superior do titulo e distancia ate a arvore sao controlados por `FamilyTree.tsx`;
+- espacamento superior do titulo e distancia ate a arvore devem ser controlados por `FamilyTree.tsx`;
 - `family-tree-visual-polish.css` nao deve deslocar `.react-flow__viewport`;
-- `MarriageNodeData` aceita `visualVariant?: 'default' | 'direct-family'`;
-- marriage nodes da view **Minha Arvore** recebem `visualVariant: 'direct-family'`;
-- a variante `direct-family` reforca contraste, halo, borda e SVG das aliancas;
+- `MarriageNodeData` pode aceitar `visualVariant?: 'default' | 'direct-family'`;
+- marriage nodes da view **Minha Arvore** devem receber `visualVariant: 'direct-family'` quando a variante estiver implementada;
+- a variante `direct-family` deve reforcar contraste, halo, borda e SVG das aliancas;
 - a view **Genealogia** preserva o estilo padrao do anel/alianca;
-- dimensoes do node, handles, edges e clique no modal conjugal nao foram alterados.
+- dimensoes do node, handles, edges e clique no modal conjugal nao devem ser alterados sem revisar layout.
+
+Pendencias de validacao visual:
+
+```txt
+confirmar se as aliancas aparecem claramente em /minha-arvore
+confirmar se o titulo tem padding superior adequado
+confirmar se o espaco titulo ↔ cards foi reduzido sem cortar cards superiores
+```
 
 Arquivos principais:
 
@@ -1327,3 +1385,17 @@ Validar:
 - titulos nao exibem mojibake;
 - botao **Trocar Senha** envia o fluxo esperado;
 - botao **Personalizar Notificacoes** navega corretamente.
+
+
+### Status complementar
+
+Esta atualização não deve ser lida como fechamento visual definitivo dos seguintes pontos:
+
+```txt
+menu da árvore versus menu das páginas internas
+título muito próximo do topo
+vazio abaixo do título
+alianças pouco visíveis em /minha-arvore
+```
+
+Esses itens permanecem rastreáveis em `PLANO_PROXIMOS_PASSOS.md` até validação visual conclusiva.

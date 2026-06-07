@@ -3,7 +3,8 @@
 > Local recomendado: `docs/funcionalidades/GENEALOGIA_VIEW.md`
 > Tipo: documentacao tecnica/funcional da view **Genealogia**.
 > Projeto: `tuliust/arvorefamilia`
-> Ultima atualizacao: 2026-06-06
+> Ultima atualizacao: 2026-06-07
+> Status: comportamento mobile por geracoes consolidado; ajustes transversais de titulo/menu/aliancas devem ser validados junto das demais views da arvore.
 
 ---
 
@@ -17,7 +18,7 @@ Este documento registra o comportamento consolidado da view **Genealogia**, aces
 
 A view **Genealogia** e a visualizacao genealogica pessoal da arvore familiar. Ela organiza pessoas em colunas por geracao, a partir da pessoa central, e deve permitir leitura progressiva dos ancestrais, nucleo familiar e descendentes.
 
-A partir do ciclo de ajustes de 2026-06-06, a view passou a ter uma experiencia mobile propria, inspirada no padrao de navegacao horizontal por etapas observado em tabelas mobile do Google Search.
+A partir do ciclo de ajustes de 2026-06-06, a view passou a ter experiencia mobile propria, inspirada no padrao de navegacao horizontal por etapas observado em tabelas mobile do Google Search.
 
 Este documento consolida:
 
@@ -28,6 +29,7 @@ Este documento consolida:
 - foco/enquadramento da geracao ativa;
 - inferencia de geracoes a partir da pessoa central;
 - regras de pan, zoom, chips e swipe;
+- regras transversais de titulo e menu compartilhadas com as demais views da arvore;
 - riscos de regressao;
 - checklist de QA.
 
@@ -44,6 +46,7 @@ Ela deve exibir, quando existirem dados e relacoes validas:
 - avos;
 - pais;
 - pessoa central/nucleo;
+- conjuges;
 - descendentes.
 
 A view nao deve ser confundida com:
@@ -60,13 +63,14 @@ Regras:
 - ajustes de **Minha Arvore** nao devem ser aplicados automaticamente aqui;
 - ajustes de **Visao Completa** devem ser avaliados separadamente;
 - o padrao mobile por chips foi implementado primeiro em **Genealogia**;
-- aplicar o mesmo padrao em **Visao Completa** continua como etapa futura.
+- aplicar o mesmo padrao em **Visao Completa** continua como etapa futura;
+- ajustes transversais de header, menu, titulo, paletas e ReactFlow devem ser validados nas tres views.
 
 ---
 
 ## 3. Arquivos principais
 
-### Pagina e shell da arvore
+### 3.1 Pagina e shell da arvore
 
 ```txt
 src/app/pages/Home.tsx
@@ -82,9 +86,10 @@ Responsabilidades:
 - manter o shell unico das rotas da arvore;
 - renderizar a area principal da arvore;
 - repassar props e estado para `FamilyTree`;
-- exibir a navegacao mobile por geracoes quando `viewMode = genealogia` e `isMobile = true`.
+- exibir a navegacao mobile por geracoes quando `viewMode = genealogia` e `isMobile = true`;
+- preservar search params, como `?pessoa=...`, ao trocar view.
 
-### Navegacao mobile por geracoes
+### 3.2 Navegacao mobile por geracoes
 
 ```txt
 src/app/pages/home/GenealogyMobileStageTabs.tsx
@@ -101,7 +106,7 @@ Responsabilidades:
 - nao exibir contadores;
 - ocupar a largura horizontal disponivel no mobile.
 
-### Componente da arvore
+### 3.3 Componente da arvore
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -115,9 +120,11 @@ Responsabilidades:
 - focar a geracao ativa no mobile;
 - manter pan/zoom;
 - inferir geracoes genealogicas em memoria quando necessario;
+- renderizar titulo fixo da arvore;
+- controlar area visual entre titulo e ReactFlow;
 - preservar exportacao, selecao de area e modal conjugal.
 
-### Layout por colunas
+### 3.4 Layout por colunas
 
 ```txt
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
@@ -135,7 +142,7 @@ Responsabilidades:
 - evitar colunas vazias;
 - preservar espacamento entre conjuges.
 
-### Escopo pessoal
+### 3.5 Escopo pessoal
 
 ```txt
 src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts
@@ -232,6 +239,7 @@ Regras:
 - labels de geracao sao permitidas;
 - titulo principal nao deve ser criado no layout;
 - titulo/subtitulo da arvore devem vir apenas do overlay fixo em `FamilyTree.tsx`;
+- subtitulos abaixo do titulo principal podem permanecer ocultos nas views da arvore;
 - o usuario deve poder navegar verticalmente quando houver muitos cards;
 - colunas sem pessoas nao devem ocupar espaco.
 
@@ -322,7 +330,7 @@ Ao carregar `/genealogia` no mobile:
 - os cards da primeira geracao devem estar visiveis no topo util;
 - a view nao deve iniciar em **Bisavos/Geracao 2** ou **Avos/Geracao 3** quando houver **Geracao 1** com cards.
 
-### 7.5 Gerações vazias
+### 7.5 Geracoes vazias
 
 Regras:
 
@@ -333,9 +341,90 @@ Regras:
 
 ---
 
-## 8. Pan e zoom
+## 8. Titulo fixo e espacamento da arvore
 
-### 8.1 Mobile
+A Genealogia compartilha com `/minha-arvore` e `/visao-completa` o titulo fixo renderizado por `FamilyTree.tsx`.
+
+Titulo esperado:
+
+```txt
+Familia de {primeiro nome}
+```
+
+Regras:
+
+- o titulo principal nao deve ser criado em `genealogyColumnsLayout.ts`;
+- labels `GERACAO X` podem continuar no layout;
+- subtitulo abaixo do titulo principal pode permanecer oculto/removido;
+- deve haver pequeno padding superior acima do titulo;
+- o espaco entre titulo e cards deve ser reduzido sem cortar cards superiores;
+- ajuste de espacamento deve acontecer por constantes/caculo em `FamilyTree.tsx`;
+- nao usar `translate`, `transform`, `top` negativo ou manipulacao de `.react-flow__viewport`;
+- `family-tree-visual-polish.css` deve ser polimento visual, nao reposicionamento estrutural do ReactFlow.
+
+Constantes relevantes a revisar em `FamilyTree.tsx`:
+
+```txt
+TREE_TITLE_TOP
+TREE_TITLE_HEIGHT
+TREE_DESKTOP_VISUAL_TOP_INSET
+TREE_DESKTOP_VISUAL_BOTTOM_INSET
+TREE_VIEWPORT_PADDING_X
+TREE_VIEWPORT_PADDING_Y
+getNormalizedTreeViewport
+```
+
+Status:
+
+```txt
+subtitulos ocultos/removidos -> consolidado
+padding superior do titulo -> pendente de validacao visual
+espaco titulo-cards -> pendente de ajuste fino
+uso de translate em .react-flow__viewport -> proibido para esta correcao
+```
+
+---
+
+## 9. Menu do usuario no header da arvore
+
+As rotas da arvore compartilham `HomeHeader`:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Comportamento esperado:
+
+- o botao do usuario no header da arvore permanece compacto;
+- o conteudo aberto deve ser o painel compartilhado de `UserProfileMenu`;
+- o antigo `UserMenu` local nao deve voltar;
+- o cabecalho do painel com avatar, nome e e-mail deve navegar para `/minha-arvore/editar`;
+- o botao `X` deve apenas fechar;
+- o item **Editar notificacoes** nao deve aparecer;
+- **Painel Admin** continua condicional para administradores.
+
+Arquivos provaveis em caso de divergencia:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/Home.tsx
+```
+
+Pendente de validacao visual:
+
+```txt
+confirmar se /genealogia abre o mesmo painel de usuario que /calendario-familiar, /forum, /notificacoes e /meus-favoritos
+```
+
+---
+
+## 10. Pan e zoom
+
+### 10.1 Mobile
 
 Na Genealogia mobile:
 
@@ -346,7 +435,7 @@ Na Genealogia mobile:
 - a ausencia dos botoes nao deve remover capacidade de navegacao por gesto;
 - a barra de chips nao deve bloquear pan na area da arvore.
 
-### 8.2 Desktop
+### 10.2 Desktop
 
 No desktop:
 
@@ -358,7 +447,7 @@ No desktop:
 
 ---
 
-## 9. Anel conjugal e espacamento
+## 11. Anel conjugal e espacamento
 
 A Genealogia exibe anel/alianca entre conjuges.
 
@@ -367,17 +456,19 @@ Regras:
 - o anel deve permanecer clicavel;
 - clique deve abrir modal conjugal;
 - area ampliada do anel nao pode bloquear clique nos cards;
-- cônjuges devem ter espacamento vertical suficiente para evitar sobreposicao;
-- ajustes de espacamento devem preservar conectores familiares.
+- conjuges devem ter espacamento vertical suficiente para evitar sobreposicao;
+- ajustes de espacamento devem preservar conectores familiares;
+- Genealogia deve manter a variante visual padrao, salvo decisao explicita.
 
 Historico recente:
 
 - o botao/anel conjugal foi ampliado para `60px x 60px` no ciclo de paletas visuais;
-- depois, a Genealogia recebeu aumento de espacamento entre conjuges para reduzir sobreposicao.
+- depois, a Genealogia recebeu aumento de espacamento entre conjuges para reduzir sobreposicao;
+- ajustes de visibilidade especificos da `/minha-arvore` nao devem degradar a Genealogia.
 
 ---
 
-## 10. Paletas visuais
+## 12. Paletas visuais
 
 A Genealogia deve respeitar as paletas visuais globais da arvore.
 
@@ -394,7 +485,8 @@ Regras:
 - a troca de paleta nao altera view, filtros ou dados;
 - a troca de paleta nao deve afetar inferencia de geracoes;
 - a troca de paleta nao deve alterar posicionamento ou conectores;
-- os tokens devem vir de `treeColorPalettes.ts`, `directFamilyColors.ts`, `visualTokens.ts` e componentes relacionados.
+- os tokens devem vir de `treeColorPalettes.ts`, `directFamilyColors.ts`, `visualTokens.ts` e componentes relacionados;
+- a paleta `white` deve manter fundo da area da arvore em branco quando essa for a regra visual vigente.
 
 Validar as tres paletas em:
 
@@ -406,7 +498,7 @@ Validar as tres paletas em:
 
 ---
 
-## 11. Exportacao
+## 13. Exportacao
 
 A frente de Genealogia mobile nao alterou diretamente a exportacao, mas a view continua integrada ao sistema de exportacao da arvore.
 
@@ -426,9 +518,9 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ---
 
-## 12. Acessibilidade e microcopy
+## 14. Acessibilidade e microcopy
 
-### 12.1 Chips mobile
+### 14.1 Chips mobile
 
 Regras:
 
@@ -449,7 +541,7 @@ Nucleo
 Descendentes
 ```
 
-### 12.2 Feedback vazio
+### 14.2 Feedback vazio
 
 Mensagens aceitas:
 
@@ -468,7 +560,7 @@ filtered graph empty
 
 ---
 
-## 13. Regras de anti-regressao
+## 15. Regras de anti-regressao
 
 Nao fazer:
 
@@ -481,15 +573,17 @@ Nao fazer:
 - alterar RLS, permissions ou Supabase nesta frente;
 - colocar titulo/subtitulo principal dentro de `genealogyColumnsLayout.ts`;
 - usar altura total para reduzir zoom inicial da Genealogia;
+- usar `translate` em `.react-flow__viewport` para aproximar titulo e cards;
 - recolocar botoes `+` e `-` sobre a barra mobile de chips;
 - impedir pan vertical no mobile;
-- permitir que o anel conjugal sobreponha cards.
+- permitir que o anel conjugal sobreponha cards;
+- aplicar automaticamente em `/visao-completa` o modelo mobile da Genealogia sem estudo separado.
 
 ---
 
-## 14. Troubleshooting rapido
+## 16. Troubleshooting rapido
 
-### 14.1 Genealogia inicia na geracao errada
+### 16.1 Genealogia inicia na geracao errada
 
 Sintoma:
 
@@ -505,7 +599,7 @@ Verificar:
 - se a geracao 1 tem cards reais ou apenas label;
 - se os tataravos estao no escopo pessoal.
 
-### 14.2 Geracao 1 aparece vazia
+### 16.2 Geracao 1 aparece vazia
 
 Sintoma:
 
@@ -520,7 +614,7 @@ Verificar:
 - se filtros removeram pessoas da coluna;
 - se a inferencia em memoria foi removida.
 
-### 14.3 Tataravos nao aparecem
+### 16.3 Tataravos nao aparecem
 
 Verificar:
 
@@ -531,7 +625,7 @@ Verificar:
 - se ha filtro de status de vida ocultando pessoas;
 - se RLS permite leitura dos relacionamentos necessarios.
 
-### 14.4 Chips nao mudam a arvore
+### 16.4 Chips nao mudam a arvore
 
 Verificar:
 
@@ -540,7 +634,7 @@ Verificar:
 - `FamilyTree.tsx` usando `activeGenealogyGeneration` no viewport;
 - diferenca entre foco e filtro: os chips nao devem remover outras colunas.
 
-### 14.5 Nao consigo arrastar verticalmente
+### 16.5 Nao consigo arrastar verticalmente
 
 Verificar:
 
@@ -550,7 +644,7 @@ Verificar:
 - CSS que possa estar impedindo gestos;
 - se o pointer event esta preso em overlay.
 
-### 14.6 Anel sobrepoe os cards
+### 16.6 Anel sobrepoe os cards
 
 Verificar:
 
@@ -559,11 +653,39 @@ Verificar:
 - handles usados pela edge;
 - z-index/click area do anel.
 
+### 16.7 Titulo colado no topo ou com grande vazio abaixo
+
+Verificar:
+
+- `TREE_TITLE_TOP`;
+- `TREE_TITLE_HEIGHT`;
+- `TREE_DESKTOP_VISUAL_TOP_INSET`;
+- `TREE_DESKTOP_VISUAL_BOTTOM_INSET`;
+- regras residuais em `family-tree-visual-polish.css`;
+- qualquer uso de `translate` em `.react-flow__viewport`.
+
+Correcao esperada:
+
+- ajustar constantes de `FamilyTree.tsx`;
+- remover overrides conflitantes;
+- validar se cards superiores nao foram cortados.
+
+### 16.8 Menu da Genealogia diferente do menu das paginas internas
+
+Verificar:
+
+- `HomeHeader.tsx`;
+- `UserProfileMenu.tsx`;
+- `MemberPageHeader.tsx`;
+- variante `home-header`;
+- se algum dropdown local antigo foi recriado;
+- z-index e portal do menu.
+
 ---
 
-## 15. QA obrigatorio
+## 17. QA obrigatorio
 
-### 15.1 Larguras
+### 17.1 Larguras
 
 Testar:
 
@@ -576,7 +698,7 @@ Testar:
 desktop
 ```
 
-### 15.2 Roteiro mobile
+### 17.2 Roteiro mobile
 
 Em `/genealogia`:
 
@@ -591,9 +713,10 @@ Em `/genealogia`:
 - arrastar para baixo/cima;
 - confirmar que botoes `+` e `-` nao aparecem;
 - confirmar que labels `GERACAO X` nao ficam cobertas pelos chips;
+- abrir menu do usuario;
 - testar paletas `white`, `orange` e `brown`.
 
-### 15.3 Roteiro desktop
+### 17.3 Roteiro desktop
 
 Em `/genealogia`:
 
@@ -604,9 +727,10 @@ Em `/genealogia`:
 - confirmar modal conjugal;
 - confirmar filtros de status de vida;
 - confirmar paletas;
+- confirmar titulo com respiro superior e sem vazio excessivo abaixo;
 - confirmar exportacao de area se a alteracao afetou ReactFlow/overlay.
 
-### 15.4 Regressao em outras views
+### 17.4 Regressao em outras views
 
 Validar:
 
@@ -622,11 +746,13 @@ Checar:
 - painel lateral continua operavel;
 - zoom/pan continuam funcionando;
 - exportacao continua disponivel;
-- legenda nao duplicou.
+- legenda nao duplicou;
+- menu do usuario abre corretamente;
+- titulo e cards nao sao cortados.
 
 ---
 
-## 16. Commits de referencia
+## 18. Commits de referencia
 
 Ciclo da Genealogia mobile por geracoes:
 
@@ -649,13 +775,13 @@ b668a59 fix: infer genealogy generations from central person
 
 Observacao:
 
-- o ciclo teve uma mudanca conceitual importante: a primeira implementacao filtrava a arvore pela geracao ativa;
+- o ciclo teve mudanca conceitual importante: a primeira implementacao filtrava a arvore pela geracao ativa;
 - a decisao final foi usar chips como **foco/enquadramento**, nao filtro;
 - a correcao final tambem passou a afetar desktop ao remover colunas vazias e inferir geracoes pela pessoa central.
 
 ---
 
-## 17. Relacao com outros documentos
+## 19. Relacao com outros documentos
 
 Consultar tambem:
 
@@ -681,13 +807,15 @@ Regras de manutencao documental:
 
 ---
 
-## 18. Pendencias futuras
+## 20. Pendencias futuras
 
 Fora do escopo desta frente:
 
-- aplicar padrao similar em **Visao Completa**;
+- aplicar padrao similar em **Visao Completa** somente apos estudo proprio;
 - avaliar refinamentos finos de zoom para arvores muito grandes;
 - revisar labels acentuados se o projeto migrar documentos/codigo para acentuacao plena sem risco de encoding;
 - avaliar exportacao completa da arvore;
 - integrar grau de parentesco visual diretamente na Genealogia;
-- criar controles avancados por ramo familiar.
+- criar controles avancados por ramo familiar;
+- finalizar ajuste transversal do titulo das tres views sem cortar cards;
+- confirmar comportamento unico do menu do usuario nas views da arvore e nas paginas internas.
