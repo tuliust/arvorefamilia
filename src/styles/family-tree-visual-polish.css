@@ -69,3 +69,24 @@
     height: calc(100% - 0.25rem) !important;
   }
 }
+/* Final desktop title spacing override */
+@media (min-width: 768px) {
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+    top: 0.35rem !important;
+    height: 2.25rem !important;
+  }
+
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.05 !important;
+  }
+
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+    display: none !important;
+  }
+
+  [data-export-root="family-tree"] .react-flow {
+    top: -0.5rem !important;
+    height: calc(100% + 0.5rem) !important;
+  }
+}

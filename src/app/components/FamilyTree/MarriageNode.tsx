@@ -143,7 +143,12 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        {data.emoji || 'ðŸ’‘'}
+        <span
+          aria-hidden="true"
+          className="text-base font-bold text-orange-500"
+        >
+          ∞
+        </span>
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'
