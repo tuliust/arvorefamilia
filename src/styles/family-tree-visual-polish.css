@@ -1,0 +1,31 @@
+/* Visual polish for the three tree views: /minha-arvore, /genealogia and /visao-completa. */
+
+[data-export-root="family-tree"] .react-flow__edge-path {
+  stroke: var(--tree-palette-group-border, #CBD5E1) !important;
+  opacity: 1 !important;
+}
+
+[data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg g {
+  opacity: 1 !important;
+}
+
+[data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg line {
+  stroke: var(--tree-palette-group-border, #CBD5E1) !important;
+}
+
+@media (min-width: 768px) {
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+    font-size: 1.625rem !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0.01em;
+  }
+
+  [data-export-root="family-tree"][data-export-view="visao-completa"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+    font-size: 1.5rem !important;
+  }
+
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+  }
+}
