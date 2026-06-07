@@ -51,7 +51,7 @@ interface TreeColorPaletteDefinition {
 }
 
 const whitePaletteVariables: Record<TreeColorPaletteCssVariable, string> = {
-  '--tree-palette-canvas-bg': '#F8FAFC',
+  '--tree-palette-canvas-bg': '#FFFFFF',
   '--tree-palette-card-tataravos': '#B7AED6',
   '--tree-palette-card-bisavos': '#D49BC5',
   '--tree-palette-card-avos': '#E8A29B',
