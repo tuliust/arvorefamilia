@@ -10,26 +10,30 @@ interface GenealogySpouseEdgeData {
   onMarriageClick?: (details: MarriageNodeDetails) => void;
 }
 
-const marriageStatusStyles: Record<GenealogyMarriageStatus, { background: string; border: string; color: string }> = {
+const marriageStatusStyles: Record<GenealogyMarriageStatus, { background: string; border: string; color: string; shadow: string }> = {
   active: {
     background: '#ffffff',
-    border: '#D1D5DB',
-    color: '#EA580C',
+    border: '#EA580C',
+    color: '#C2410C',
+    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.34)',
   },
   divorced: {
-    background: '#FEF3C7',
+    background: '#FFF7ED',
     border: '#F59E0B',
     color: '#B45309',
+    shadow: '0 0 0 4px rgba(254,243,199,0.9), 0 5px 14px rgba(180,83,9,0.28)',
   },
   widowed: {
-    background: '#E5E7EB',
-    border: '#9CA3AF',
-    color: '#4B5563',
+    background: '#ffffff',
+    border: '#EA580C',
+    color: '#C2410C',
+    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.28)',
   },
   unknown: {
     background: '#ffffff',
-    border: '#D1D5DB',
-    color: '#EA580C',
+    border: '#EA580C',
+    color: '#C2410C',
+    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.34)',
   },
 };
 
@@ -63,12 +67,13 @@ export function GenealogySpouseEdge({
       <EdgeLabelRenderer>
         <button
           type="button"
-          className="nodrag nopan pointer-events-auto absolute z-50 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border bg-white text-sm leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+          className="nodrag nopan pointer-events-auto absolute z-50 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full border-[3px] bg-white text-sm leading-none transition-colors hover:bg-orange-50 hover:text-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
           style={{
             transform: `translate(-50%, -50%) translate(${markerX}px, ${markerY}px)`,
             backgroundColor: markerStyle.background,
             borderColor: markerStyle.border,
             color: markerStyle.color,
+            boxShadow: markerStyle.shadow,
           }}
           onClick={handleRingClick}
           onMouseDown={(event) => event.stopPropagation()}
