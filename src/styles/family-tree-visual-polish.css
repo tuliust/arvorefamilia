@@ -14,18 +14,24 @@
 }
 
 @media (min-width: 768px) {
+  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+    top: 1rem !important;
+    height: 4.5rem !important;
+  }
+
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.625rem !important;
+    font-size: 1.375rem !important;
     line-height: 1.12 !important;
     letter-spacing: 0.01em;
   }
 
   [data-export-root="family-tree"][data-export-view="visao-completa"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.5rem !important;
+    font-size: 1.25rem !important;
   }
 
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    font-size: 0.95rem !important;
+    margin-top: 0.35rem !important;
+    font-size: 0.9rem !important;
     line-height: 1.25 !important;
   }
 }
