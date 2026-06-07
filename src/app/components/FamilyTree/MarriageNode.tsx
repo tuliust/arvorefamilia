@@ -5,7 +5,7 @@ import { MarriageNodeData, MarriageNodeDetails } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
 import { ViewMarriageModal } from './modals/ViewMarriageModal';
 
-const FALLBACK_MARRIAGE_NODE_SIZE = 28;
+const FALLBACK_MARRIAGE_NODE_SIZE = 60;
 const FALLBACK_PERSON_NODE_WIDTH = 400;
 const FALLBACK_PERSON_NODE_HEIGHT = 160;
 
