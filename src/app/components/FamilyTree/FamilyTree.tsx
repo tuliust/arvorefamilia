@@ -107,15 +107,15 @@ const GENEALOGY_MAX_ZOOM = 2;
 const GENEALOGY_MOBILE_MAX_ZOOM = 1.08;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
-const TREE_TITLE_TOP = 8;
+const TREE_TITLE_TOP = 10;
 const TREE_TITLE_HEIGHT = 24;
-const TREE_DESKTOP_VISUAL_TOP_INSET = 28;
+const TREE_DESKTOP_VISUAL_TOP_INSET = 32;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 6;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
 const TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP = 76;
 const TREE_VIEWPORT_PADDING_X = 24;
-const TREE_VIEWPORT_PADDING_Y = 24;
+const TREE_VIEWPORT_PADDING_Y = 8;
 const TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y = 0;
 const TREE_MOBILE_VIEWPORT_PADDING_X = 12;
 const TREE_MOBILE_VIEWPORT_PADDING_Y = 10;
@@ -815,7 +815,7 @@ function clampViewportCoordinate(value: number, min: number, max: number) {
 async function captureVisibleTree(container: HTMLDivElement | null) {
   const element = getExportableFlowElement(container);
   if (!element) {
-    throw new Error('Ãrea da Ã¡rvore nÃ£o encontrada para exportaÃ§Ã£o.');
+    throw new Error('Área da árvore não encontrada para exportação.');
   }
 
   return captureElementToCanvas(element);
@@ -826,7 +826,7 @@ async function printVisibleTree(container: HTMLDivElement | null) {
 
   try {
     const canvas = await captureVisibleTree(container);
-    printCanvas(canvas, 'Imprimir Ã¡rvore', printWindow);
+    printCanvas(canvas, 'Imprimir árvore', printWindow);
   } catch (error) {
     if (!printWindow.closed) {
       printWindow.close();
@@ -848,7 +848,7 @@ async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: Tr
           : 'visao-completa',
       'pdf'
     ),
-    'Ãrvore genealÃ³gica'
+    'Árvore genealógica'
   );
 }
 
@@ -869,7 +869,7 @@ function usesGenealogyLayout(viewMode: TreeViewMode) {
 
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
-  if (!clean) return 'FamÃ­lia';
+  if (!clean) return 'Família';
   return clean.split(/\s+/)[0] || clean;
 }
 
@@ -930,14 +930,14 @@ function FamilyTreeComponent({
   }, [effectiveCentralPersonId, pessoas]);
   const treeTitle = useMemo(() => {
     if (viewMode === 'minha-arvore') {
-      return `A Ã¡rvore de ${treeTitleFirstName}`;
+      return `A árvore de ${treeTitleFirstName}`;
     }
 
     if (viewMode === 'genealogia') {
-      return `FamÃ­lia de ${treeTitleFirstName}`;
+      return `Família de ${treeTitleFirstName}`;
     }
 
-    return `Linha GenealÃ³gica de ${treeTitleFirstName}`;
+    return `Linha Genealógica de ${treeTitleFirstName}`;
   }, [treeTitleFirstName, viewMode]);
 
   const dataHash = useMemo(() => {
@@ -1702,8 +1702,8 @@ function FamilyTreeComponent({
     try {
       await printVisibleTree(containerRef.current);
     } catch (error) {
-      console.error('Erro ao imprimir Ã¡rvore:', error);
-      toast.error(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel imprimir a Ã¡rvore.');
+      console.error('Erro ao imprimir árvore:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir a árvore.');
     }
   }, []);
 
@@ -1711,8 +1711,8 @@ function FamilyTreeComponent({
     try {
       await saveVisibleTreePdf(containerRef.current, viewMode);
     } catch (error) {
-      console.error('Erro ao exportar Ã¡rvore:', error);
-      toast.error('NÃ£o foi possÃ­vel gerar o PDF. As cores da Ã¡rvore foram ajustadas para exportaÃ§Ã£o; tente novamente.');
+      console.error('Erro ao exportar árvore:', error);
+      toast.error('Não foi possível gerar o PDF. As cores da árvore foram ajustadas para exportação; tente novamente.');
     }
   }, [viewMode]);
 
@@ -1720,14 +1720,14 @@ function FamilyTreeComponent({
     try {
       await saveVisibleTreeImage(containerRef.current, viewMode);
     } catch (error) {
-      console.error('Erro ao exportar imagem da Ã¡rvore:', error);
-      toast.error(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel gerar a imagem da Ã¡rvore.');
+      console.error('Erro ao exportar imagem da árvore:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem da árvore.');
     }
   }, [viewMode]);
 
   const handleStartAreaSelection = useCallback(() => {
     if (!getExportableFlowElement(containerRef.current)) {
-      toast.error('Ãrea da Ã¡rvore nÃ£o encontrada para seleÃ§Ã£o.');
+      toast.error('Área da árvore não encontrada para seleção.');
       return;
     }
 
@@ -1809,7 +1809,7 @@ function FamilyTreeComponent({
               'flex h-9 w-9 items-center justify-center text-gray-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
               isAtMinZoom ? 'cursor-not-allowed opacity-45' : 'hover:bg-gray-50',
             ].join(' ')}
-            title={isAtMinZoom ? 'Zoom mÃ­nimo' : 'Diminuir zoom'}
+            title={isAtMinZoom ? 'Zoom mínimo' : 'Diminuir zoom'}
             aria-label="Diminuir zoom"
           >
             <Minus className="h-4 w-4" />
@@ -1827,7 +1827,7 @@ function FamilyTreeComponent({
             {treeTitle}
           </h2>
           <p className="mt-1 px-16 text-sm font-normal leading-tight text-slate-600 sm:px-24 sm:text-base">
-            Use zoom, arraste a Ã¡rvore e clique nas pessoas para abrir detalhes.
+            Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
           </p>
         </div>
       )}

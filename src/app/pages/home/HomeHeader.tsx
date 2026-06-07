@@ -109,7 +109,6 @@ interface HomeHeaderProps {
   headerActionTextClassName: string;
   onCuriosities: () => void;
   navigateFromHome: (path: string) => void;
-  userMenuSlot: React.ReactNode;
 }
 
 export function HomeHeader({
@@ -130,7 +129,6 @@ export function HomeHeader({
   headerActionTextClassName,
   onCuriosities,
   navigateFromHome,
-  userMenuSlot,
 }: HomeHeaderProps) {
   const searchRootRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
@@ -402,7 +400,7 @@ export function HomeHeader({
             <UserProfileMenu />
           </div>
           <div className="hidden md:block">
-            {userMenuSlot}
+            <UserProfileMenu variant="home-header" />
           </div>
         </div>
       </div>

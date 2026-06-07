@@ -19,13 +19,6 @@ import {
 } from '../components/FamilyTree/utils/treePreferences';
 import { Button } from '../components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import {
   obterTodasPessoas,
   obterTodosRelacionamentos,
   buscarPessoas,
@@ -57,7 +50,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
-import { listarNotificacoes, listarNotificacoesSupabase } from '../services/userEngagementService';
 import {
   getInsightByType,
   obterInsightsGeradosPessoa,
@@ -75,21 +67,10 @@ import {
   Bot,
   Network,
   Monitor,
-  Settings,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  CalendarDays,
   Printer,
-  Star,
-  Bell,
-  UserCircle2,
-  Home as HomeIcon,
-  LogIn,
-  LogOut,
-  Pencil,
-  Sparkles,
-  MessageCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
@@ -109,7 +90,6 @@ import { HomeTreeSection } from './home/HomeTreeSection';
 import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
 import { SidebarInfoPanel } from './home/SidebarInfoPanel';
 import { SidebarPanelTabs, type SidebarPanel } from './home/SidebarPanelTabs';
-import { UserProfileMenu } from '../components/layout/UserProfileMenu';
 
 const AI_QUESTION_EXAMPLES = [
   'Quem são meus bisavós paternos?',
@@ -154,7 +134,7 @@ export function Home() {
   const [searchParams] = useSearchParams();
   const queryPersonId = searchParams.get('pessoa')?.trim() || undefined;
   const isMobile = useIsMobile();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -172,7 +152,6 @@ export function Home() {
   const [legendOpen, setLegendOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [directRelativeFilterState, setDirectRelativeFilterState] = useState<{
@@ -627,19 +606,6 @@ export function Home() {
     setConnectionTarget(null);
   }, []);
 
-  const handleSignOut = useCallback(async () => {
-    clearTreeDataCache();
-    setSelectedPersonId(undefined);
-    setLinkedPersonId(undefined);
-    setLinkedPersonResolved(false);
-    setTreeFocusPersonId(undefined);
-    setPessoas([]);
-    setRelacionamentos([]);
-    await signOut();
-    toast.success('Sessão encerrada.');
-    navigate('/');
-  }, [navigate, signOut]);
-
   const toggleFilter = useCallback((filterKey: keyof typeof edgeFilters) => {
     setEdgeFilters((prev) => ({
       ...prev,
@@ -874,44 +840,6 @@ export function Home() {
     user?.email ||
     ''
   ).trim();
-  const displayName = getShortDisplayName(fullDisplayName);
-  const accountFirstName = getFirstName(fullDisplayName);
-  const avatarUrl =
-    linkedPerson?.foto_principal_url ||
-    profile?.avatar_url ||
-    (user?.user_metadata?.avatar_url as string | undefined) ||
-    (user?.user_metadata?.picture as string | undefined) ||
-    null;
-  const initials = getInitials(displayName || fullDisplayName);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadNotificationCount() {
-      if (!user) {
-        setNotificationCount(0);
-        return;
-      }
-
-      try {
-        const notificacoes = await listarNotificacoesSupabase(user.id);
-        if (!cancelled) {
-          setNotificationCount(notificacoes.filter((notificacao) => !notificacao.lida).length);
-        }
-      } catch {
-        if (!cancelled) {
-          setNotificationCount(listarNotificacoes(user.id).filter((notificacao) => !notificacao.lida).length);
-        }
-      }
-    }
-
-    loadNotificationCount();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
   const directRelationCounts = useMemo(
     () =>
       calculateDirectRelationCounts(
@@ -1075,7 +1003,7 @@ export function Home() {
             stats,
             curiosities,
             centralPersonId: centralReferencePersonId,
-            centralPersonName: centralReferencePerson?.nome_completo || fullDisplayName || displayName,
+            centralPersonName: centralReferencePerson?.nome_completo || fullDisplayName,
             directRelationCounts,
             selectedCuriosityPerson,
             selectedCuriosityTopics,
@@ -1110,7 +1038,6 @@ export function Home() {
     centralReferencePerson,
     curiosities,
     directRelationCounts,
-    displayName,
     fullDisplayName,
     pessoas,
     relacionamentos,
@@ -1199,27 +1126,6 @@ export function Home() {
         headerActionTextClassName={headerActionTextClassName}
         onCuriosities={() => setAiDialogOpen(true)}
         navigateFromHome={navigateFromHome}
-        userMenuSlot={(
-          <UserMenu
-            isLoggedIn={Boolean(user)}
-            displayName={displayName}
-            firstName={accountFirstName}
-            avatarUrl={avatarUrl}
-            initials={initials}
-            notificationCount={notificationCount}
-            isAdmin={isAdmin}
-            onLogin={() => navigateFromHome('/entrar')}
-            onHome={() => navigateFromHome('/')}
-            onCuriosities={() => setAiDialogOpen(true)}
-            onForum={() => navigateFromHome('/forum')}
-            onEditProfile={() => navigateFromHome('/minha-arvore/editar')}
-            onFavorites={() => navigateFromHome('/meus-favoritos')}
-            onCalendar={() => navigateFromHome('/calendario-familiar')}
-            onNotifications={() => navigateFromHome('/notificacoes')}
-            onAdmin={() => navigateFromHome('/admin')}
-            onSignOut={handleSignOut}
-          />
-        )}
       />
 
       <main className="relative flex min-h-0 flex-1 overflow-hidden">
@@ -1433,170 +1339,6 @@ export function Home() {
         handleDiscoverConnection={handleDiscoverConnection}
       />
     </div>
-  );
-}
-
-function getInitials(displayName: string) {
-  const cleanName = displayName.trim();
-  if (!cleanName) return '';
-
-  const parts = cleanName.includes('@')
-    ? cleanName.split('@')[0].split(/[._\-\s]+/)
-    : cleanName.split(/\s+/);
-
-  return parts
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
-}
-
-function getShortDisplayName(name: string) {
-  const cleanName = name.trim();
-  if (!cleanName || cleanName.includes('@')) return cleanName;
-
-  const parts = cleanName.split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return cleanName;
-
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
-
-function getFirstName(value?: string | null) {
-  const clean = value?.trim();
-  if (!clean) return 'Conta';
-
-  const beforeEmail = clean.includes('@') ? clean.split('@')[0] : clean;
-  return beforeEmail.split(/\s+/)[0] || 'Conta';
-}
-
-function UserMenu({
-  isLoggedIn,
-  displayName,
-  firstName,
-  avatarUrl,
-  initials,
-  notificationCount,
-  isAdmin,
-  onLogin,
-  onHome,
-  onCuriosities,
-  onForum,
-  onEditProfile,
-  onFavorites,
-  onCalendar,
-  onNotifications,
-  onAdmin,
-  onSignOut,
-}: {
-  isLoggedIn: boolean;
-  displayName: string;
-  firstName: string;
-  avatarUrl: string | null;
-  initials: string;
-  notificationCount: number;
-  isAdmin: boolean;
-  onLogin: () => void;
-  onHome: () => void;
-  onCuriosities: () => void;
-  onForum: () => void;
-  onEditProfile: () => void;
-  onFavorites: () => void;
-  onCalendar: () => void;
-  onNotifications: () => void;
-  onAdmin: () => void;
-  onSignOut: () => void;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="group relative flex h-10 min-w-10 shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-1.5 py-1 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:min-h-12 sm:min-w-[154px] sm:px-2.5 sm:py-1.5"
-          title={isLoggedIn ? firstName || displayName || 'Conta do usuário' : 'Login'}
-          aria-label={isLoggedIn ? `Menu de ${firstName || displayName || 'usuário'}` : 'Login'}
-        >
-          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white sm:h-9 sm:w-9">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName || 'Usuário'}
-                className="h-full w-full object-cover"
-              />
-            ) : initials ? (
-              <span>{initials}</span>
-            ) : (
-              <UserCircle2 className="h-6 w-6" />
-            )}
-          </span>
-          {notificationCount > 0 && (
-            <span className="absolute right-1 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-              {notificationCount > 99 ? '99+' : notificationCount}
-            </span>
-          )}
-          <span className="hidden min-w-0 flex-1 leading-none sm:block">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">MENU</span>
-            <span className="mt-1 block whitespace-nowrap text-sm font-semibold text-gray-800">
-              {isLoggedIn ? firstName : 'Login'}
-            </span>
-          </span>
-          <ChevronDown className="hidden h-4 w-4 shrink-0 text-gray-500 transition group-data-[state=open]:rotate-180 sm:block" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        {!isLoggedIn ? (
-          <DropdownMenuItem onClick={onLogin}>
-            <LogIn className="h-4 w-4" />
-            Login
-          </DropdownMenuItem>
-        ) : (
-          <>
-            <DropdownMenuItem onClick={onHome}>
-              <HomeIcon className="h-4 w-4" />
-              Página Inicial
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onCuriosities}>
-              <Sparkles className="h-4 w-4" />
-              Curiosidades
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onForum}>
-              <MessageCircle className="h-4 w-4" />
-              Fórum
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onFavorites}>
-              <Star className="h-4 w-4" />
-              Meus favoritos
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onCalendar}>
-              <CalendarDays className="h-4 w-4" />
-              Calendário familiar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onNotifications}>
-              <Bell className="h-4 w-4" />
-              Notificações
-            </DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem onClick={onAdmin}>
-                <Settings className="h-4 w-4" />
-                Painel administrativo
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onEditProfile} className="py-1 text-xs text-gray-600">
-              <Pencil className="h-3.5 w-3.5" />
-              Atualizar Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onNotifications} className="py-1 text-xs text-gray-600">
-              <Bell className="h-3.5 w-3.5" />
-              Editar Notificações
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onSignOut} variant="destructive" className="py-1 text-xs">
-              <LogOut className="h-4 w-4" />
-              Sair
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

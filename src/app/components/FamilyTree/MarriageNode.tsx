@@ -103,9 +103,9 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onClick={handleClick}
         onMouseDown={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
-        title="Ver vÃ­nculo do casal"
-        aria-label="Ver vÃ­nculo do casal"
-        className="nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border bg-white text-sm leading-none shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+        title="Ver vínculo do casal"
+        aria-label="Ver vínculo do casal"
+        className="nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border-2 bg-orange-50 text-sm leading-none shadow-[0_3px_10px_rgba(234,88,12,0.22)] transition hover:bg-orange-100 hover:shadow-[0_4px_12px_rgba(234,88,12,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
         <Handle
@@ -146,17 +146,17 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         <svg
           aria-hidden="true"
           viewBox="0 0 64 44"
-          width="30"
-          height="24"
-          fill="none"
-          stroke="#F97316"
-          strokeWidth="4"
+          width="40"
+          height="32"
+          fill="#FFF7ED"
+          stroke="#C2410C"
+          strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
           <circle cx="23" cy="24" r="12" />
           <circle cx="41" cy="24" r="12" />
-          <path d="M23 12l5-7h8l5 7" />
+          <path d="M23 12l5-7h8l5 7" fill="none" />
         </svg>
       </button>
 

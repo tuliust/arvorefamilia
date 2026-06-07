@@ -566,9 +566,7 @@ function addMarriageNode(nodes: Node[], positionedIds: Set<string>, id: string, 
   nodes.push({
     id,
     type: 'marriageNode',
-    data: {
-      emoji: '??',
-    },
+    data: {},
     position: finitePosition(centerX - MARRIAGE_NODE_SIZE / 2, centerY - MARRIAGE_NODE_SIZE / 2),
     draggable: false,
     selectable: false,

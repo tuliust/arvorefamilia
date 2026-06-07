@@ -1,4 +1,4 @@
-﻿/* Visual polish for the three tree views: /minha-arvore, /genealogia and /visao-completa. */
+/* Visual polish for the three tree views: /minha-arvore, /genealogia and /visao-completa. */
 
 [data-export-root="family-tree"] .react-flow__edge-path {
   stroke: var(--tree-palette-group-border, #CBD5E1) !important;
@@ -14,102 +14,17 @@
 }
 
 @media (min-width: 768px) {
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-    top: 1rem !important;
-    height: 5.25rem !important;
-  }
-
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.375rem !important;
-    line-height: 1.12 !important;
+    font-size: 1.2rem !important;
+    line-height: 1.1 !important;
     letter-spacing: 0.01em;
   }
 
   [data-export-root="family-tree"][data-export-view="visao-completa"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.25rem !important;
-  }
-
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    margin-top: 0.45rem !important;
-    font-size: 0.9rem !important;
-    line-height: 1.25 !important;
-  }
-
-  [data-export-root="family-tree"] .react-flow {
-    top: 1.5rem !important;
-    height: calc(100% - 1.5rem) !important;
-  }
-
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-    height: 2.75rem !important;
-  }
-
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    display: none !important;
-  }
-
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow {
-    top: 0.5rem !important;
-    height: calc(100% - 0.5rem) !important;
-  }
-}
-
-@media (min-width: 768px) {
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-    top: 0.75rem !important;
-    height: 2.5rem !important;
+    font-size: 1.15rem !important;
   }
 
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
     display: none !important;
-  }
-
-  [data-export-root="family-tree"] .react-flow {
-    top: 0.25rem !important;
-    height: calc(100% - 0.25rem) !important;
-  }
-}
-/* Final desktop title spacing override */
-@media (min-width: 768px) {
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-    top: 0.35rem !important;
-    height: 2.25rem !important;
-  }
-
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.25rem !important;
-    line-height: 1.05 !important;
-  }
-
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    display: none !important;
-  }
-
-  [data-export-root="family-tree"] .react-flow {
-    top: -0.5rem !important;
-    height: calc(100% + 0.5rem) !important;
-  }
-}
-
-
-/* Safe desktop title spacing override */
-@media (min-width: 768px) {
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-    top: 0.15rem !important;
-    height: 1.75rem !important;
-  }
-
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
-    font-size: 1.2rem !important;
-    line-height: 1 !important;
-  }
-
-  [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
-    display: none !important;
-  }
-
-  [data-export-root="family-tree"] .react-flow {
-    top: 0 !important;
-    height: 100% !important;
   }
 }

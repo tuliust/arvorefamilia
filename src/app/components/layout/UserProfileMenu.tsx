@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router';
 import {
   Bell,
   CalendarDays,
+  ChevronDown,
   Home,
   LogIn,
   LogOut,
@@ -17,6 +18,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { isAdminUser } from '../../services/permissionService';
 import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
+import { clearTreeDataCache } from '../../services/treeDataCache';
 import type { Pessoa } from '../../types';
 
 function getInitials(displayName: string) {
@@ -48,7 +50,11 @@ const TREE_VIEW_OPTIONS = [
   { label: 'Visão Completa', path: '/visao-completa' },
 ];
 
-export function UserProfileMenu() {
+interface UserProfileMenuProps {
+  variant?: 'avatar' | 'home-header';
+}
+
+export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,29 +139,59 @@ export function UserProfileMenu() {
 
   const handleSignOut = async () => {
     setOpen(false);
+    clearTreeDataCache();
     await signOut();
     navigate('/', { replace: true });
   };
 
   const itemClassName =
     'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800';
+  const isHomeHeaderVariant = variant === 'home-header';
 
   return (
     <div className="relative z-[520] shrink-0">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-sm font-bold text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        className={
+          isHomeHeaderVariant
+            ? 'group relative flex h-10 min-w-[154px] shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:min-h-12 sm:py-1.5'
+            : 'relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-sm font-bold text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+        }
         aria-label={user ? `Menu de ${firstName}` : 'Login'}
         title={user ? `Menu de ${firstName}` : 'Login'}
         aria-expanded={open}
       >
-        {user && avatarUrl ? (
-          <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
-        ) : user && initials ? (
-          <span>{initials}</span>
-        ) : (
-          <UserCircle2 className="h-6 w-6" />
+        <span
+          className={
+            isHomeHeaderVariant
+              ? 'flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white sm:h-9 sm:w-9'
+              : 'flex h-full w-full items-center justify-center'
+          }
+        >
+          {user && avatarUrl ? (
+            <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
+          ) : user && initials ? (
+            <span>{initials}</span>
+          ) : (
+            <UserCircle2 className="h-6 w-6" />
+          )}
+        </span>
+        {isHomeHeaderVariant && (
+          <>
+            <span className="min-w-0 flex-1 leading-none">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">MENU</span>
+              <span className="mt-1 block truncate text-sm font-semibold text-gray-800">
+                {user ? firstName : 'Login'}
+              </span>
+            </span>
+            <ChevronDown
+              className={[
+                'h-4 w-4 shrink-0 text-gray-500 transition-transform',
+                open ? 'rotate-180' : '',
+              ].join(' ')}
+            />
+          </>
         )}
       </button>
 
