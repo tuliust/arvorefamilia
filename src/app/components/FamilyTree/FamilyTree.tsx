@@ -1349,7 +1349,7 @@ function FamilyTreeComponent({
 
     return {
       x: targetBounds.x,
-      y: targetBounds.y,
+      y: referenceBounds.y,
       width: targetBounds.width,
       height: Math.max(1, referenceBounds.height),
     };
