@@ -5,12 +5,44 @@
   opacity: 1 !important;
 }
 
+[data-export-root="family-tree"] .react-flow__edge-path[style*="--tree-palette-edge-spouse"] {
+  stroke: var(--tree-palette-edge-spouse, #EA580C) !important;
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+}
+
+[data-export-root="family-tree"] .react-flow__edge-path[style*="--tree-palette-edge-child"] {
+  stroke: var(--tree-palette-edge-child, #CA8A04) !important;
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+}
+
+[data-export-root="family-tree"] .react-flow__edge-path[style*="--tree-palette-edge-sibling"] {
+  stroke: var(--tree-palette-edge-sibling, #2563EB) !important;
+  stroke-width: 5px !important;
+  stroke-dasharray: 8 6 !important;
+  opacity: 1 !important;
+}
+
 [data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg g {
   opacity: 1 !important;
 }
 
 [data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg line {
   stroke: var(--tree-palette-group-border, #CBD5E1) !important;
+}
+
+[data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg line[stroke*="--tree-palette-edge-child"] {
+  stroke: var(--tree-palette-edge-child, #CA8A04) !important;
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+}
+
+[data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg line[stroke*="--tree-palette-edge-sibling"] {
+  stroke: var(--tree-palette-edge-sibling, #2563EB) !important;
+  stroke-width: 5px !important;
+  stroke-dasharray: 8 6 !important;
+  opacity: 1 !important;
 }
 
 @media (min-width: 768px) {
@@ -26,5 +58,33 @@
 
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center p {
     display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  section[aria-label="Filtros do calendário"] .grid {
+    gap: 0.25rem !important;
+    font-size: 7px !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button {
+    gap: 0.2rem !important;
+    padding: 0.35rem 0.25rem !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button span:last-child {
+    font-size: 7px !important;
+    letter-spacing: -0.01em;
+  }
+
+  #categorias-calendario {
+    display: none !important;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 767px) {
+  section[aria-label="Filtros do calendário"] .grid,
+  section[aria-label="Filtros do calendário"] button span:last-child {
+    font-size: 8px !important;
   }
 }
