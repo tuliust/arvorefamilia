@@ -13,27 +13,27 @@ interface GenealogySpouseEdgeData {
 const marriageStatusStyles: Record<GenealogyMarriageStatus, { background: string; border: string; color: string; shadow: string }> = {
   active: {
     background: '#ffffff',
-    border: '#EA580C',
-    color: '#C2410C',
-    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.34)',
+    border: '#94A3B8',
+    color: '#64748B',
+    shadow: '0 0 0 4px rgba(241,245,249,0.95), 0 5px 14px rgba(71,85,105,0.22)',
   },
   divorced: {
-    background: '#FFF7ED',
-    border: '#F59E0B',
-    color: '#B45309',
-    shadow: '0 0 0 4px rgba(254,243,199,0.9), 0 5px 14px rgba(180,83,9,0.28)',
+    background: '#F8FAFC',
+    border: '#94A3B8',
+    color: '#64748B',
+    shadow: '0 0 0 4px rgba(241,245,249,0.95), 0 5px 14px rgba(71,85,105,0.22)',
   },
   widowed: {
-    background: '#ffffff',
-    border: '#EA580C',
-    color: '#C2410C',
-    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.28)',
+    background: '#F8FAFC',
+    border: '#94A3B8',
+    color: '#64748B',
+    shadow: '0 0 0 4px rgba(241,245,249,0.95), 0 5px 14px rgba(71,85,105,0.22)',
   },
   unknown: {
     background: '#ffffff',
-    border: '#EA580C',
-    color: '#C2410C',
-    shadow: '0 0 0 4px rgba(255,237,213,0.9), 0 5px 14px rgba(194,65,12,0.34)',
+    border: '#94A3B8',
+    color: '#64748B',
+    shadow: '0 0 0 4px rgba(241,245,249,0.95), 0 5px 14px rgba(71,85,105,0.22)',
   },
 };
 
@@ -67,7 +67,7 @@ export function GenealogySpouseEdge({
       <EdgeLabelRenderer>
         <button
           type="button"
-          className="nodrag nopan pointer-events-auto absolute z-50 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full border-[3px] bg-white text-sm leading-none transition-colors hover:bg-orange-50 hover:text-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+          className="nodrag nopan pointer-events-auto absolute z-50 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full border-[3px] bg-white text-sm leading-none transition-colors hover:bg-slate-50 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
           style={{
             transform: `translate(-50%, -50%) translate(${markerX}px, ${markerY}px)`,
             backgroundColor: markerStyle.background,
