@@ -1429,6 +1429,7 @@ function FamilyTreeComponent({
     viewportSignature !== null && appliedViewportSignature === viewportSignature;
 
   const activeTreeTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
+    if (isMobile && isGenealogyLayout) return undefined;
     if (!translateBounds) return undefined;
 
     return getDirectFamilyTranslateExtent(
