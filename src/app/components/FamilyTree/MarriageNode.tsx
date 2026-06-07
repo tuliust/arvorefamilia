@@ -3,12 +3,12 @@ import { createPortal } from 'react-dom';
 import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
 import { Blend } from 'lucide-react';
 import { MarriageNodeData, MarriageNodeDetails } from './types';
-import { FAMILY_TREE_COLORS } from './visualTokens';
 import { ViewMarriageModal } from './modals/ViewMarriageModal';
 
 const FALLBACK_MARRIAGE_NODE_SIZE = 60;
 const FALLBACK_PERSON_NODE_WIDTH = 400;
 const FALLBACK_PERSON_NODE_HEIGHT = 160;
+const MARRIAGE_BUTTON_BORDER = '#94A3B8';
 
 function getNodeSize(node: Node) {
   const width = Number(node.data?.layoutWidth ?? node.data?.width);
@@ -108,12 +108,12 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
         className={[
-          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2',
+          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2',
           isDirectFamilyVariant
-            ? 'border-[3px] bg-white text-orange-700 shadow-[0_0_0_4px_rgba(255,237,213,0.9),0_5px_14px_rgba(194,65,12,0.34)] hover:bg-orange-50 hover:text-orange-800 hover:shadow-[0_0_0_5px_rgba(255,237,213,0.95),0_6px_16px_rgba(194,65,12,0.42)]'
-            : 'border-2 bg-orange-50 text-orange-700 shadow-[0_3px_10px_rgba(234,88,12,0.22)] hover:bg-orange-100 hover:text-orange-800 hover:shadow-[0_4px_12px_rgba(234,88,12,0.3)]',
+            ? 'border-[3px] bg-white shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)] hover:bg-slate-50 hover:text-slate-700 hover:shadow-[0_0_0_5px_rgba(241,245,249,1),0_6px_16px_rgba(71,85,105,0.28)]'
+            : 'border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
         ].join(' ')}
-        style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
+        style={{ borderColor: MARRIAGE_BUTTON_BORDER }}
       >
         <Handle type="target" position={Position.Top} id="top" style={{ ...hiddenHandle, top: 0, left: '50%' }} />
         <Handle type="source" position={Position.Bottom} id="bottom" style={{ ...hiddenHandle, bottom: 0, left: '50%' }} />
