@@ -9,6 +9,7 @@ import {
   Filter,
   ImagePlus,
   Info,
+  KeyRound,
   Link2,
   Plus,
   Save,
@@ -28,6 +29,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import {
   GoogleAddressComponent,
   GooglePlaceResult,
@@ -344,6 +346,7 @@ export function MinhaArvore() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [passwordResetting, setPasswordResetting] = useState(false);
   const [addRelativeDialog, setAddRelativeDialog] = useState<AddRelativeDialogState>(null);
   const [addRelativeForm, setAddRelativeForm] = useState<AddRelativeForm>(() => createEmptyAddRelativeForm());
   const [relationshipSaving, setRelationshipSaving] = useState(false);
@@ -1436,6 +1439,27 @@ export function MinhaArvore() {
     requestLogout();
   };
 
+  const handlePasswordReset = async () => {
+    const email = user?.email?.trim().toLowerCase();
+    if (!email) {
+      toast.error('Não foi possível identificar o e-mail da sua conta.');
+      return;
+    }
+
+    setPasswordResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/entrar`,
+    });
+    setPasswordResetting(false);
+
+    if (error) {
+      toast.error(error.message || 'Não foi possível iniciar a troca de senha.');
+      return;
+    }
+
+    toast.success('Enviamos um e-mail com instruções para trocar sua senha.');
+  };
+
   const semVinculo = !loading && !linkLoading && !pessoaBase;
 
   return (
@@ -1500,13 +1524,23 @@ export function MinhaArvore() {
                   Foto
                 </span>
               </button>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {displayName}
                 </h2>
                 <p className="text-sm text-gray-600 mt-2">
                   Esta área reúne seus dados, vínculos familiares e o escopo de visualização da sua árvore.
                 </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4 gap-2"
+                  onClick={handlePasswordReset}
+                  disabled={passwordResetting}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {passwordResetting ? 'Enviando...' : 'Trocar Senha'}
+                </Button>
               </div>
             </div>
 

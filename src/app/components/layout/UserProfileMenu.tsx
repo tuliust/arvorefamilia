@@ -208,21 +208,28 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
             ref={menuRef}
             className="fixed left-4 right-4 top-20 z-[90] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
           >
-            <div className="mb-3 flex items-start gap-3 border-b border-gray-100 pb-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-bold text-white">
-                {user && avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
-                ) : user && initials ? (
-                  <span>{initials}</span>
-                ) : (
-                  <UserCircle2 className="h-8 w-8" />
-                )}
-              </div>
+            <div className="mb-3 flex items-start gap-2 border-b border-gray-100 pb-4">
+              <button
+                type="button"
+                onClick={() => goTo(user ? '/minha-arvore/editar' : '/entrar')}
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-1 text-left transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                title={user ? 'Atualizar perfil' : 'Entrar'}
+              >
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-bold text-white">
+                  {user && avatarUrl ? (
+                    <img src={avatarUrl} alt={displayName || 'Usuário'} className="h-full w-full object-cover" />
+                  ) : user && initials ? (
+                    <span>{initials}</span>
+                  ) : (
+                    <UserCircle2 className="h-8 w-8" />
+                  )}
+                </span>
 
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-bold text-gray-900">{user ? firstName : 'Visitante'}</p>
-                <p className="truncate text-xs text-gray-500">{user?.email || 'Entre para acessar sua conta'}</p>
-              </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-bold text-gray-900">{user ? firstName : 'Visitante'}</span>
+                  <span className="block truncate text-xs text-gray-500">{user?.email || 'Entre para acessar sua conta'}</span>
+                </span>
+              </button>
 
               <button
                 type="button"
@@ -295,10 +302,6 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                 <button type="button" className={itemClassName} onClick={() => goTo('/notificacoes')}>
                   <Bell className="h-5 w-5 text-blue-700" />
                   Notificações
-                </button>
-                <button type="button" className={itemClassName} onClick={() => goTo('/ajustar-notificacoes')}>
-                  <Bell className="h-5 w-5 text-blue-700" />
-                  Editar notificações
                 </button>
                 {isAdmin && (
                   <button type="button" className={itemClassName} onClick={() => goTo('/admin')}>

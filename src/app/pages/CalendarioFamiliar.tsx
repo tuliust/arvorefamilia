@@ -79,11 +79,11 @@ const CALENDAR_CATEGORY_COLORS = {
 const CALENDAR_CATEGORY_KEYS = Object.keys(CALENDAR_CATEGORY_COLORS) as CalendarEventCategory[];
 
 const MOBILE_CALENDAR_LEGEND_ITEMS: Array<{ category: CalendarEventCategory; label: string }> = [
-  { category: 'aniversarios', label: 'Anivers\u00e1rio' },
+  { category: 'aniversarios', label: 'Aniversário' },
   { category: 'casamento', label: 'Casamento' },
   { category: 'falecimento', label: 'Falecimento' },
   { category: 'eventos_historicos', label: 'Outros' },
-  { category: 'confraternizacoes', label: 'Reuni\u00e3o' },
+  { category: 'confraternizacoes', label: 'Reunião' },
 ];
 
 const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
@@ -353,7 +353,7 @@ export function CalendarioFamiliar() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
-        title="Calend\u00e1rio"
+        title="Calendário"
         subtitle="Aniversários e datas de memória da árvore genealógica"
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
@@ -416,7 +416,7 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calend\u00e1rio">
+        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calendário">
           <div className="grid grid-cols-3 gap-1 text-[8px] font-semibold text-gray-700 min-[390px]:text-[9px]">
             {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => {
               const colors = CALENDAR_CATEGORY_COLORS[item.category];
@@ -625,14 +625,14 @@ export function CalendarioFamiliar() {
                                     color: colors.text,
                                   }}
                                 >
-                                  <div className="mb-1 flex min-w-0 items-center gap-1 font-semibold">
+                                  <div className="mb-1 flex min-w-0 items-center gap-1 font-bold">
                                     <span
                                       className="h-2 w-2 shrink-0 rounded-full"
                                       style={{ backgroundColor: colors.dot }}
                                     />
                                     <span className="min-w-0 break-words">{formatCalendarEventTitle(evento)}</span>
                                   </div>
-                                  <p className="break-words">{formatCalendarEventDescription(evento)}</p>
+                                  <p className="break-words text-[10px]">{formatCalendarEventDescription(evento)}</p>
                                 </Link>
                               );
                             })}

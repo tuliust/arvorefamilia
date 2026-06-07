@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, BellRing, CheckCheck, ExternalLink, Inbox, Trash2 } from 'lucide-react';
+import { Bell, BellRing, CheckCheck, ExternalLink, Inbox, Settings, Trash2 } from 'lucide-react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { Button } from '../components/ui/button';
@@ -158,10 +158,21 @@ export function Notificacoes() {
                 </div>
               </div>
 
-              <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={marcarTodas} disabled={naoLidas === 0}>
-                <CheckCheck className="h-4 w-4" />
-                Marcar todas como lidas
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate('/ajustar-notificacoes')}
+                >
+                  <Settings className="h-4 w-4" />
+                  Personalizar Notificações
+                </Button>
+                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={marcarTodas} disabled={naoLidas === 0}>
+                  <CheckCheck className="h-4 w-4" />
+                  Marcar todas como lidas
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -145,7 +145,7 @@ export function NotificationPreferencesPanel({ userId }: NotificationPreferences
             <Mail className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <CardTitle className="break-words text-base">Notifica\u00e7\u00f5es</CardTitle>
+            <CardTitle className="break-words text-base">Notificações</CardTitle>
             <p className="break-words text-xs text-gray-500">
               A lista interna continua visível mesmo com canais desligados.
             </p>
