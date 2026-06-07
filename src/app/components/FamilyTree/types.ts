@@ -214,6 +214,20 @@ export const TREE_CONSTANTS: LayoutConstants = {
   INITIAL_Y: 100,
 };
 
+export function getSortableBirthValue(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return Number.POSITIVE_INFINITY;
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+  }
+
+  const normalizedValue = String(value).trim();
+  if (!normalizedValue) return Number.POSITIVE_INFINITY;
+
+  const timestamp = Date.parse(normalizedValue);
+  return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
+}
+
 export function isLeftSidePerson(pessoa?: Pessoa) {
   return (pessoa?.lado || 'esquerda') === 'esquerda';
 }
