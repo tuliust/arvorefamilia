@@ -1,5 +1,6 @@
 # Calendario Familiar
 
+> Ultima revisao: 2026-06-07
 > Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
 > Tipo: documentacao funcional especifica.
 
@@ -8,6 +9,7 @@
 ## 1. Status
 
 - Funcional no escopo atual do MVP.
+- Header e microcopy revisados para evitar mojibake em **Calendario**, **Reuniao** e labels relacionadas.
 - Rota: `/calendario-familiar`.
 - Protecao: `MemberRoute`.
 - Usa eventos derivados de pessoas, relacionamentos e datas familiares.
@@ -92,6 +94,8 @@ Regras:
 - Card de aniversario no grid usa primeiro nome para caber no espaco compacto.
 - Lista de aniversariantes pode manter nome completo.
 - Descricao de aniversario usa **Faz X anos**.
+- No grid desktop/tablet, o titulo compacto do evento deve aparecer em negrito ou peso forte.
+- No grid desktop/tablet, a descricao secundaria, como **Faz X anos**, deve usar fonte menor.
 - Eventos de falecimento no grid usam titulo compacto, como **44 anos de falecimento**, e descricao separada, como **Memoria de Nome Completo**.
 - Card lateral **Memoria** usa microcopy propria: **44 anos da morte de Nome Completo** ou **Morte de Nome Completo** quando nao houver anos.
 - O controle do mes exibido usa estrutura visual em 3 colunas: seta anterior, texto centralizado e seta proximo.
@@ -145,6 +149,11 @@ Outros
 Reuniao
 ```
 
+Regra de encoding:
+
+- a UI nao deve exibir `Reuni\u00e3o`, `ReuniÃ£o`, `Reuni?o` ou variantes corrompidas;
+- se o ambiente estiver com UTF-8 pleno, validar **Reunião** visualmente.
+
 Regras:
 
 - cada item deve ser botao clicavel;
@@ -192,6 +201,8 @@ Regras de texto:
 - nao usar **item(ns)**;
 - usar **evento** e **eventos**;
 - usar **Faz X anos** para idade/aniversario;
+- no grid, o titulo do evento deve ter peso forte/negrito;
+- no grid, a descricao secundaria deve usar fonte menor que o titulo;
 - evitar nome completo no card compacto do grid quando o contexto for aniversario;
 - a lista lateral/inferior pode manter nome completo.
 - no grid, falecimento com anos deve separar:
@@ -207,6 +218,8 @@ Exemplos:
 | 1 evento | `1 evento` |
 | 2 ou mais eventos | `N eventos` |
 | Aniversario | `Faz X anos` |
+| Titulo de aniversario no grid | primeiro nome em negrito/peso forte |
+| Descricao de aniversario no grid | `Faz X anos` em fonte menor |
 | Card compacto de aniversario | primeiro nome |
 | Lista de aniversariantes | nome completo permitido |
 | Card compacto de falecimento | `44 anos de falecimento` |
@@ -393,6 +406,41 @@ Correcao:
 
 ---
 
+### Texto do header ou categorias aparece com mojibake
+
+Sintomas:
+
+```txt
+Calend\u00e1rio
+CalendÃ¡rio
+Calend?rio
+Reuni\u00e3o
+ReuniÃ£o
+```
+
+Correcao:
+
+- revisar strings literais em `CalendarioFamiliar.tsx`;
+- salvar o arquivo em UTF-8;
+- validar visualmente o header e a legenda/filtro mobile;
+- rodar `git diff --check` e `npm run build`.
+
+---
+
+### Evento de aniversario sem hierarquia visual
+
+Sintoma:
+
+- `Aniversario de Nome` e `Faz X anos` aparecem com o mesmo peso/tamanho no grid.
+
+Correcao:
+
+- aplicar peso forte ao titulo do evento;
+- aplicar texto menor na descricao secundaria;
+- preservar truncamento e altura compacta do card.
+
+---
+
 ### Pagina quebra com `Link is not defined`
 
 Causa provavel:
@@ -433,6 +481,8 @@ npm run test:e2e
 - clicar em categorias da legenda/filtro mobile;
 - validar singular/plural dos contadores;
 - validar aniversario no grid;
+- validar titulo de aniversario em negrito/peso forte;
+- validar **Faz X anos** em fonte menor;
 - validar aniversario na lista;
 - validar falecimento no grid com titulo compacto e descricao separada;
 - validar card **Memoria** com texto **anos da morte de**;
@@ -489,3 +539,35 @@ Fazer:
 - validar mobile;
 - preservar fallback de erros;
 - documentar mudanca funcional neste arquivo.
+
+---
+
+## 15. Atualizacao 2026-06-07 - Header, microcopy e hierarquia dos eventos
+
+Ajustes consolidados:
+
+- o header da pagina deve exibir **Calendario** sem texto escapado ou mojibake;
+- se a UI final estiver com UTF-8 pleno, validar visualmente **Calendário**;
+- a categoria mobile **Reuniao** nao deve aparecer com escape ou caracteres corrompidos;
+- no grid do calendario, aniversarios devem ter hierarquia visual clara:
+  - titulo do evento em peso forte/negrito;
+  - descricao, como **Faz X anos**, em fonte menor;
+- esses ajustes sao apenas de renderizacao e nao mudam `EventoCalendarioFamiliar`, `familyDates.ts`, Google Agenda, Supabase ou regras de permissao.
+
+Arquivos relacionados:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/app/components/layout/MemberPageHeader.tsx
+```
+
+Checklist anti-regressao:
+
+```txt
+Header -> Calendario/Calendário sem mojibake
+Filtro mobile -> Reuniao/Reunião sem mojibake
+Grid -> titulo do aniversario em peso forte
+Grid -> Faz X anos em fonte menor
+Mobile -> bolinha continua funcionando como atalho para resumo
+Google Agenda -> shape dos eventos preservado
+```

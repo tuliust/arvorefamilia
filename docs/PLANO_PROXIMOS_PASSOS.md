@@ -1,6 +1,6 @@
 # Plano de proximos passos - Arvore Familia
 
-> Ultima revisao: 2026-06-06
+> Ultima revisao: 2026-06-07
 > Local canonico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -54,6 +54,8 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places com fallback para input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e Faz X anos. |
 | Paletas visuais da arvore | Concluidas | Paletas `white`, `orange` e `brown` expostas no `HomeHeader`, aplicadas por CSS variables e persistidas em `localStorage`. |
+| Menu compartilhado do usuario | Concluido no escopo atual | Header da arvore preserva botao compacto, mas abre `UserProfileMenu`; cabecalho do menu navega para `/minha-arvore/editar`; item **Editar notificacoes** removido. |
+| Acoes de perfil e notificacoes | Concluidas no escopo atual | `/minha-arvore/editar` recebeu **Trocar Senha**; `/notificacoes` recebeu **Personalizar Notificacoes** para `/ajustar-notificacoes`; textos de preferencias/notificacoes foram corrigidos. |
 
 ---
 
@@ -83,6 +85,9 @@ O MVP deve ser fechado com:
 - Genealogia sem colunas vazias e com inferencia de geracoes em memoria;
 - paletas visuais da arvore no header;
 - headers internos padronizados;
+- menu compartilhado do usuario com variante compacta no header da arvore;
+- botao Trocar Senha na edicao do proprio perfil;
+- atalho Personalizar Notificacoes na central de notificacoes;
 - responsividade mobile/tablet;
 - QA final de lancamento.
 
@@ -379,6 +384,61 @@ QA especifico:
 - confirmar pan vertical/horizontal;
 - confirmar que `/minha-arvore` e `/visao-completa` nao regrediram.
 
+### 5.9 Menu compartilhado, titulo da arvore e paginas auxiliares
+
+Concluido:
+
+- o header da arvore preserva a aparencia compacta do botao de usuario;
+- o clique no botao abre o painel compartilhado de `UserProfileMenu`;
+- `UserProfileMenu` possui variante visual para o header da arvore e variante padrao para paginas internas;
+- o cabecalho do menu, com avatar/nome/e-mail, navega para `/minha-arvore/editar`;
+- o item **Editar notificacoes** foi removido do menu;
+- `/notificacoes` ganhou botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
+- `/minha-arvore/editar` ganhou botao **Trocar Senha**;
+- `/calendario-familiar` teve hierarquia visual refinada no grid: titulo do evento com peso maior e descricao **Faz X anos** menor;
+- titulos e textos com mojibake/Unicode escapado foram corrigidos nas paginas afetadas;
+- titulo e espacamento da arvore passaram a ser controlados por `FamilyTree.tsx`, sem `translate` em `.react-flow__viewport`;
+- `MarriageNode` recebeu tratamento visual especifico para a variante direta de `/minha-arvore`, preservando `/genealogia`.
+
+Arquivos relacionados:
+
+```txt
+src/app/components/layout/UserProfileMenu.tsx
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/types.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+```
+
+Validacao visual recomendada:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+/minha-arvore/editar
+/notificacoes
+/ajustar-notificacoes
+```
+
+Pontos de atencao:
+
+- confirmar que as aliancas estao visiveis em `/minha-arvore`;
+- confirmar que `/genealogia` nao perdeu o estilo correto das aliancas;
+- confirmar que nenhum card superior da arvore foi cortado;
+- confirmar que o cabecalho do menu navega para `/minha-arvore/editar`;
+- confirmar que o botao `X` do menu apenas fecha o painel;
+- confirmar que as tres paletas `white`, `orange` e `brown` continuam legiveis.
+
 ---
 
 ## 6. QA final de lancamento
@@ -460,6 +520,14 @@ Roteiro visual minimo para revalidacao antes de deploy:
 
 Verificar:
 
+- menu compartilhado do usuario funcionando em paginas internas e views da arvore;
+- botao compacto do header da arvore abrindo o painel completo do menu;
+- cabecalho do menu navegando para `/minha-arvore/editar`;
+- item **Editar notificacoes** ausente do menu;
+- botao **Trocar Senha** em `/minha-arvore/editar`;
+- botao **Personalizar Notificacoes** em `/notificacoes`;
+- textos **Calendario/Calendário**, **Preferencias/Preferências** e **Notificacoes/Notificações** sem mojibake;
+- aliancas visiveis em `/minha-arvore` e preservadas em `/genealogia`;
 - sem overflow horizontal global;
 - painel lateral operavel;
 - legenda visivel e nao duplicada;
@@ -890,4 +958,42 @@ colunas vazias nao aparecem
 /visao-completa sem regressao
 paletas white, orange e brown sem regressao visual
 ```
+---
 
+## Atualizacao 2026-06-07 - Fechamento de ajustes de menu, arvore e paginas auxiliares
+
+Concluido neste ciclo:
+
+```txt
+UserProfileMenu compartilhado com variante home-header
+cabecalho do menu clicavel para /minha-arvore/editar
+remocao do item Editar notificacoes do menu
+botao Trocar Senha em /minha-arvore/editar
+botao Personalizar Notificacoes em /notificacoes
+correcao de titulos em /calendario-familiar e /ajustar-notificacoes
+hierarquia visual dos eventos do calendario
+ajuste conservador de titulo/espacamento da arvore por FamilyTree.tsx
+limpeza de overrides conflitantes em family-tree-visual-polish.css
+variante visual direct-family para aliancas em /minha-arvore
+```
+
+Permanece como QA recomendado antes do deploy final:
+
+```txt
+abrir /minha-arvore, /genealogia e /visao-completa em desktop/tablet/mobile
+validar botao do usuario e painel compartilhado
+validar que o cabecalho do menu navega para /minha-arvore/editar
+validar /calendario-familiar com evento de aniversario
+validar /minha-arvore/editar com Trocar Senha
+validar /notificacoes com Personalizar Notificacoes
+validar /ajustar-notificacoes sem mojibake
+validar paletas white, orange e brown
+```
+
+Regra para proximos ajustes:
+
+- nao reintroduzir `UserMenu` local em `Home.tsx`;
+- nao usar `translate` em `.react-flow__viewport` para corrigir espacamento;
+- nao alterar Supabase, migrations, RLS ou permissoes em ajustes visuais;
+- nao recolocar **Editar notificacoes** no menu sem decisao de produto;
+- documentar qualquer nova acao de pagina interna no guia funcional correspondente.

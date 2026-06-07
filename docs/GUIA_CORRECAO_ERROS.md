@@ -1,7 +1,7 @@
 # Guia de correcao de erros - Arvore Familia
 
-> Ultima revisao: 2026-06-06
-> Ultima atualizacao: 2026-06-06
+> Ultima revisao: 2026-06-07
+> Ultima atualizacao: 2026-06-07
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -2368,4 +2368,277 @@ Regras anti-regressao:
 - tataravos devem aparecer se houver cadeia valida de filiacao ate a pessoa central;
 - a inferencia de geracoes e apenas em memoria, sem alteracao de Supabase;
 - `Visao Completa` ainda nao recebeu a navegacao mobile por chips e deve ser tratada em frente separada.
+---
 
+## Atualizacao 2026-06-07 - Menu compartilhado, titulo da arvore e paginas auxiliares
+
+Esta secao registra sintomas e correcoes relacionados ao ciclo de ajustes de menu, espacamento da arvore, aliancas, calendario, edicao de perfil e notificacoes.
+
+### Sintoma: menu da arvore voltou ao dropdown compacto antigo
+
+Sintomas possiveis:
+
+```txt
+Nas rotas /minha-arvore, /genealogia ou /visao-completa, o clique no botao MENU abre uma lista compacta antiga.
+O painel com avatar, nome, e-mail e botao fechar nao aparece.
+O item Editar notificacoes voltou a aparecer no menu.
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
+```
+
+Regra consolidada:
+
+```txt
+O header da arvore preserva a aparencia compacta do botao, mas o conteudo aberto deve ser o UserProfileMenu compartilhado.
+```
+
+Verificar:
+
+- `HomeHeader.tsx` deve renderizar `UserProfileMenu` na variante compacta do header da arvore;
+- nao recriar `UserMenu` local em `Home.tsx`;
+- o painel deve ser o mesmo menu compartilhado usado nas paginas internas;
+- o cabecalho do menu, com avatar/nome/e-mail, deve navegar para `/minha-arvore/editar`;
+- o botao de fechar deve apenas fechar o painel e nao disparar navegacao;
+- o item **Editar notificacoes** nao deve aparecer no menu.
+
+Correcao esperada:
+
+- usar `UserProfileMenu` com variante visual do header da arvore, por exemplo `variant="home-header"`;
+- manter a variante padrao para paginas internas;
+- remover logica local antiga somente se o build confirmar que ficou sem uso;
+- preservar permissao condicional do botao **Painel Admin**.
+
+Validar:
+
+```bash
+npm run build
+git diff --check
+```
+
+E visualmente:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+/forum
+/notificacoes
+/favoritos
+```
+
+### Sintoma: cabecalho do menu nao leva para edicao do perfil
+
+Sintoma:
+
+```txt
+O usuario clica na area superior do menu com avatar, nome e e-mail, mas nada acontece.
+```
+
+Arquivo provavel:
+
+```txt
+src/app/components/layout/UserProfileMenu.tsx
+```
+
+Verificar:
+
+- o bloco superior precisa ser elemento clicavel acessivel;
+- clique deve fechar o menu e navegar para `/minha-arvore/editar`;
+- para visitante, se aplicavel, navegar para `/entrar`;
+- o botao `X` deve usar `stopPropagation` ou estrutura equivalente para nao acionar a navegacao do cabecalho.
+
+### Sintoma: titulo da arvore com mojibake ou espacamento incorreto
+
+Sintomas:
+
+```txt
+A Ã¡rvore de Tulius
+FamÃ­lia de ...
+Linha GenealÃ³gica de ...
+titulo encostado no topo da area da arvore
+grande vazio entre titulo e cards
+cards superiores cortados apos ajuste visual
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Regras consolidadas:
+
+- corrigir textos na origem em UTF-8;
+- controlar titulo, area visual do ReactFlow e viewport por constantes em `FamilyTree.tsx`;
+- nao usar `transform`, `translate` ou `top` negativo em `.react-flow__viewport` para aproximar a arvore;
+- `family-tree-visual-polish.css` deve ser polimento visual, nao fonte de reposicionamento estrutural do ReactFlow;
+- subtitulos abaixo do titulo podem permanecer ocultos se a decisao de UX assim definir.
+
+Verificar em `FamilyTree.tsx`:
+
+```txt
+TREE_TITLE_TOP
+TREE_TITLE_HEIGHT
+TREE_DESKTOP_VISUAL_TOP_INSET
+TREE_DESKTOP_VISUAL_BOTTOM_INSET
+TREE_VIEWPORT_PADDING_Y
+getNormalizedTreeViewport
+```
+
+Verificar em CSS:
+
+```txt
+.react-flow__viewport
+.family-tree-title
+.family-tree-subtitle
+```
+
+Correcao esperada:
+
+- remover overrides conflitantes;
+- ajustar constantes de forma conservadora;
+- manter cards superiores inteiros;
+- validar as tres views da arvore em desktop, tablet e mobile.
+
+### Sintoma: icone de alianca aparece em /genealogia, mas nao em /minha-arvore
+
+Arquivos provaveis:
+
+```txt
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+Regra consolidada:
+
+```txt
+/genealogia preserva a variante visual padrao; /minha-arvore pode usar variante visual direct-family para aumentar legibilidade.
+```
+
+Verificar:
+
+- `MarriageNodeData` deve aceitar uma variante visual, como `visualVariant?: 'default' | 'direct-family'`;
+- os marriage nodes criados por `directFamilyDistributedLayout.ts` devem receber `visualVariant: 'direct-family'`;
+- os nodes/edges da Genealogia devem continuar sem essa variante, preservando o estilo padrao;
+- o SVG deve ter contraste suficiente;
+- dimensao do no, handles, edges e clique nao devem ser alterados sem decisao especifica;
+- o clique deve continuar abrindo `ViewMarriageModal`.
+
+Correcao esperada:
+
+- reforcar SVG, borda, halo ou contraste apenas na variante direta;
+- nao mexer globalmente no estilo da Genealogia se ela ja estiver correta.
+
+### Sintoma: textos de paginas internas aparecem como Unicode escapado ou mojibake
+
+Sintomas:
+
+```txt
+Calend\u00e1rio
+Prefer\u00eancias
+Notifica\u00e7\u00f5es
+CalendÃ¡rio
+PreferÃªncias
+NotificaÃ§Ãµes
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+src/app/components/layout/MemberPageHeader.tsx
+```
+
+Correcao:
+
+- corrigir a string literal no arquivo-fonte;
+- salvar em UTF-8;
+- revisar `git diff` para garantir que nao houve nova corrupcao;
+- evitar scripts PowerShell com `Set-Content` quando houver acentos.
+
+Validar visualmente:
+
+```txt
+/calendario-familiar -> Calendario/Calendário conforme politica da UI
+/ajustar-notificacoes -> Preferencias/Preferências e Notificacoes/Notificações
+```
+
+### Sintoma: /notificacoes nao oferece atalho para preferencias
+
+Arquivo provavel:
+
+```txt
+src/app/pages/Notificacoes.tsx
+```
+
+Regra consolidada:
+
+- `/notificacoes` permanece a central/lista de notificacoes;
+- preferencias ficam em `/ajustar-notificacoes`;
+- a central deve oferecer botao **Personalizar Notificacoes** apontando para `/ajustar-notificacoes`.
+
+Verificar:
+
+- acao no header ou bloco superior;
+- navegacao client-side;
+- preservar acoes existentes, como **Marcar todas como lidas**.
+
+### Sintoma: /minha-arvore/editar nao exibe Trocar Senha
+
+Arquivo provavel:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+Regra consolidada:
+
+- a pagina de edicao do proprio perfil deve oferecer botao **Trocar Senha**;
+- o fluxo deve usar mecanismo existente de Supabase Auth quando disponivel;
+- nao criar migration, tabela ou RLS para esse ajuste;
+- o botao nao participa do salvamento flutuante dos dados familiares;
+- erro/sucesso devem aparecer como feedback de UI.
+
+Verificar:
+
+```txt
+supabase.auth.resetPasswordForEmail
+email do usuario autenticado
+estado de loading como Enviando...
+toast de sucesso/erro
+```
+
+### Sintoma: calendario mostra aniversario sem hierarquia visual
+
+Arquivo provavel:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Regra consolidada:
+
+- no grid do calendario, o titulo do evento deve ter peso visual maior;
+- a descricao, como **Faz X anos**, deve ter fonte menor;
+- nao alterar `familyDates.ts` quando a mudanca for apenas visual;
+- preservar Google Agenda e o shape de `EventoCalendarioFamiliar`.
+
+Validar:
+
+```txt
+/calendario-familiar desktop
+/calendario-familiar tablet
+/calendario-familiar mobile
+```

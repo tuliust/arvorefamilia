@@ -1,6 +1,6 @@
 # Minha Arvore - edicao do proprio perfil
 
-> Ultima revisao: 2026-05-30
+> Ultima revisao: 2026-06-07
 
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentacao funcional e tecnica da rota `/minha-arvore/editar`.
@@ -24,7 +24,7 @@ Componente principal:
 src/app/pages/MinhaArvore.tsx
 ```
 
-A pagina permite que o usuario autenticado revise e edite dados da pessoa vinculada ao seu perfil, mantendo um fluxo mais amplo do que `/meus-dados`, pois tambem inclui vinculos familiares, arquivos historicos, avatar e confirmacao de saida sem salvar.
+A pagina permite que o usuario autenticado revise e edite dados da pessoa vinculada ao seu perfil, mantendo um fluxo mais amplo do que `/meus-dados`, pois tambem inclui vinculos familiares, arquivos historicos, avatar, troca de senha e confirmacao de saida sem salvar.
 
 ---
 
@@ -58,6 +58,7 @@ src/app/components/ArquivosHistoricos.tsx
 src/app/components/layout/MemberPageHeader.tsx
 src/app/components/ui/dialog.tsx
 src/app/components/ui/button.tsx
+src/app/lib/supabaseClient.ts
 src/app/services/memberProfileService.ts
 src/app/services/arquivosHistoricosService.ts
 src/app/services/storageService.ts
@@ -77,6 +78,7 @@ uploadPersonAvatarFile
 buildEditablePersonFormState
 cleanPersonPayload
 validateEditablePersonForm
+supabase.auth.resetPasswordForEmail
 ```
 
 ---
@@ -102,6 +104,7 @@ A pagina usa:
 - `MemberPageHeader`;
 - container padronizado por `PAGE_CONTAINER_CLASS`;
 - card superior com avatar/nome;
+- acao **Trocar Senha** no topo ou no card superior;
 - bloco **Meus dados**;
 - bloco separado **Arquivos Historicos**;
 - secoes de vinculos familiares;
@@ -113,7 +116,8 @@ Regras visuais:
 - manter acao principal de salvar no botao flutuante;
 - evitar botoes duplicados de salvamento dentro dos containers;
 - manter espacamento consistente entre cards;
-- preservar responsividade mobile.
+- preservar responsividade mobile;
+- a acao **Trocar Senha** nao deve competir com o botao flutuante de salvamento nem submeter o formulario.
 
 ---
 
@@ -248,7 +252,54 @@ O corte final será quadrado.
 
 ---
 
-## 9. Salvamento
+
+## 9. Trocar senha
+
+A pagina exibe a acao **Trocar Senha** para o usuario autenticado.
+
+Objetivo:
+
+- permitir que o membro inicie o fluxo seguro de troca/redefinicao de senha;
+- evitar criar backend paralelo;
+- reaproveitar o fluxo padrao do Supabase Auth;
+- manter a troca de senha separada do salvamento de dados familiares.
+
+Comportamento esperado:
+
+1. O usuario clica em **Trocar Senha**.
+2. A acao usa o e-mail do usuario autenticado.
+3. O sistema chama o fluxo de reset de senha do Supabase Auth.
+4. O botao pode exibir estado de carregamento, como **Enviando...**.
+5. Em sucesso, exibir toast informando que as instrucoes foram enviadas.
+6. Em erro, exibir toast com mensagem amigavel.
+7. A acao nao deve marcar o formulario como alterado.
+8. A acao nao deve limpar rascunho, foto, arquivos historicos ou dados de casamento.
+
+Implementacao esperada:
+
+```txt
+supabase.auth.resetPasswordForEmail(...)
+```
+
+Regras:
+
+- nao criar migration;
+- nao alterar RLS;
+- nao expor service role;
+- nao salvar senha no frontend;
+- nao registrar senha em log;
+- nao submeter o formulario principal;
+- botao deve usar `type="button"`.
+
+Cuidados de UX:
+
+- se o usuario nao tiver e-mail disponivel, mostrar erro claro;
+- se o fluxo depender de configuracao externa de redirect, validar no ambiente publicado;
+- nao prometer que a senha foi alterada imediatamente; o fluxo apenas envia/inicia a redefinicao.
+
+---
+
+## 10. Salvamento
 
 O salvamento principal acontece pelo botao flutuante.
 
@@ -275,7 +326,7 @@ Regras:
 
 ---
 
-## 10. Rascunho local
+## 11. Rascunho local
 
 A pagina usa rascunho auxiliar em `sessionStorage`.
 
@@ -300,7 +351,7 @@ Cuidados:
 
 ---
 
-## 11. Confirmacao de saida sem salvar
+## 12. Confirmacao de saida sem salvar
 
 Quando houver alteracoes pendentes, a pagina deve exibir modal de confirmacao antes de abandonar a edicao.
 
@@ -338,7 +389,7 @@ Observacao de encoding:
 
 ---
 
-## 12. Vinculos familiares
+## 13. Vinculos familiares
 
 A pagina permite revisar grupos familiares ligados a pessoa base.
 
@@ -361,7 +412,7 @@ Regras:
 
 ---
 
-## 13. Dados de casamento
+## 14. Dados de casamento
 
 Quando houver conjuges, a pagina pode exibir/editar:
 
@@ -377,11 +428,14 @@ Regras:
 
 ---
 
-## 14. Checklist de validacao
+## 15. Checklist de validacao
 
 ### Meus dados
 
 - campo **Signo** nao aparece;
+- botao **Trocar Senha** aparece no topo/card superior;
+- botao **Trocar Senha** nao submete o formulario;
+- acao de senha nao marca o formulario como alterado;
 - preferencias de notificacao nao aparecem;
 - container fecha apos **Curiosidades da Vida**;
 - nao existe botao interno **Salvar meus dados**;
@@ -420,19 +474,20 @@ Regras:
 
 ---
 
-## 15. Pendencias conhecidas
+## 16. Pendencias conhecidas
 
 Pendencias mapeadas apos os ajustes recentes:
 
 - conferir acentuacao final do modal **Sair sem salvar?** no ambiente publicado;
 - conferir acentuacao de **Arquivos Historicos** no ambiente publicado;
 - conferir texto **sera/será** no modal de foto;
+- validar botao **Trocar Senha** no ambiente publicado, incluindo recebimento do e-mail de redefinicao;
 - garantir borda visual em **Remover foto**;
 - revisar se o fluxo de casamento cobre corretamente viuvez e separacao em todos os cenarios.
 
 ---
 
-## 16. Anti-regressoes
+## 17. Anti-regressoes
 
 Nao reintroduzir:
 
@@ -443,10 +498,11 @@ Nao reintroduzir:
 - saida sem confirmacao quando houver alteracoes pendentes;
 - avatar sem acao de visualizacao;
 - botao **Remover foto** como texto solto sem borda;
-- strings quebradas por encoding.
+- strings quebradas por encoding;
+- botao **Trocar Senha** que salva formulario, limpa rascunho ou altera dados familiares.
 
 ---
-## 17. Atualizacao de rastreabilidade - ciclo 2026-05-30
+## 18. Atualizacao de rastreabilidade - ciclo 2026-05-30
 
 Esta secao registra o estado consolidado dos ajustes recentes da rota `/minha-arvore/editar`.
 
@@ -466,6 +522,7 @@ visualizacao ampliada de foto -> implementado
 alterar foto com upload/crop -> implementado
 remover foto pelo modal -> implementado
 confirmar saida sem salvar -> implementado
+trocar senha via Supabase Auth -> implementado
 ```
 
 ### 17.2 Ajustes visuais ainda sujeitos a conferencia
@@ -477,6 +534,7 @@ botao Remover foto com borda visivel
 texto O corte final sera/será quadrado
 texto Arquivos Historicos/Históricos sem encoding quebrado
 modal Sair sem salvar? sem Voc?, altera??es, p?gina, n?o ou ser?o
+botao Trocar Senha visivel e sem submissao do formulario
 ```
 
 Se o ambiente final estiver usando acentos normalmente, preferir UI acentuada. Se houver risco de terminal Windows corromper arquivos, manter ASCII no Markdown e corrigir a UI na origem TSX com UTF-8 validado.
@@ -520,3 +578,33 @@ Nao reintroduzir:
 - modal de foto sem opcao de remocao;
 - saida sem confirmacao quando houver alteracoes pendentes;
 - textos quebrados por encoding.
+
+---
+
+## 19. Atualizacao 2026-06-07 - Menu do usuario e troca de senha
+
+A rota `/minha-arvore/editar` passou a ser tambem o destino principal do cabecalho clicavel do `UserProfileMenu`.
+
+Comportamento consolidado:
+
+- no menu do usuario, clicar na area superior com avatar, nome e e-mail navega para `/minha-arvore/editar`;
+- o item **Atualizar perfil** pode continuar apontando para a mesma rota;
+- o item **Editar notificacoes** foi removido do menu global;
+- preferencias de notificacao continuam pertencendo a `/ajustar-notificacoes`;
+- a central `/notificacoes` deve oferecer o botao **Personalizar Notificacoes**.
+
+Na propria pagina `/minha-arvore/editar`:
+
+- o botao **Trocar Senha** inicia o fluxo de redefinicao de senha;
+- a acao e independente do salvamento de dados familiares;
+- a acao nao cria migration, nao altera RLS e nao usa service role;
+- validar em desktop e mobile que o botao nao compete com o botao flutuante de salvamento.
+
+Arquivos relacionados:
+
+```txt
+src/app/components/layout/UserProfileMenu.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+```

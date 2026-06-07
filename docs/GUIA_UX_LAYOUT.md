@@ -1,60 +1,65 @@
-# Guia de UX e Layout - Arvore Familia
+# Guia de UX e Layout - Árvore Família
 
-> Ultima revisao: 2026-06-06
-> Revisao complementar: Genealogia mobile por geracoes
-> Local canonico: `docs/GUIA_UX_LAYOUT.md`
+> Última revisão: 2026-06-07  
+> Revisão complementar: menu compartilhado, espaçamento da árvore, alianças e páginas auxiliares  
+> Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`
 
 ## Objetivo
 
-Este documento registra as decisoes consolidadas de experiencia, layout, responsividade e comportamento visual do projeto **Arvore Familia**.
+Este documento registra as decisões consolidadas de experiência, layout, responsividade e comportamento visual do projeto **Árvore Família**.
 
 Use este guia para orientar:
 
 - ajustes de interface;
-- revisao visual de telas;
-- padronizacao de headers, containers e margens;
-- comportamento da arvore em desktop, tablet e mobile;
-- validacao visual antes de lancamento;
-- decisoes de UX que nao devem ser reabertas sem motivo tecnico ou de produto.
+- revisão visual de telas;
+- padronização de headers, containers e margens;
+- comportamento da árvore em desktop, tablet e mobile;
+- validação visual antes de lançamento;
+- decisões de UX que não devem ser reabertas sem motivo técnico ou de produto.
 
-Este documento nao substitui:
+Este documento não substitui:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: inventario funcional e tecnico do que ja foi implementado.
-- `docs/GUIA_COMPONENTES.md`: catalogo tecnico dos componentes reutilizaveis.
-- `docs/GUIA_CORRECAO_ERROS.md`: investigacao por sintoma.
-- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap, pendencias e backlog.
-- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento especifico da view Minha Arvore.
-- `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: legenda, conectores, painel lateral e filtros visuais.
-- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: selecao de area, PNG, PDF e impressao.
+- `docs/GUIA_IMPLEMENTACOES.md`: inventário funcional e técnico do que já foi implementado;
+- `docs/GUIA_COMPONENTES.md`: catálogo técnico dos componentes reutilizáveis;
+- `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma;
+- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap, pendências e backlog;
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore;
+- `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: legenda, conectores, painel lateral e filtros visuais;
+- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: seleção de área, PNG, PDF e impressão.
 
 ---
 
-## 1. Principios gerais de UX
+## 1. Princípios gerais de UX
 
-O projeto deve manter uma experiencia:
+O projeto deve manter uma experiência:
 
-- clara para usuarios familiares nao tecnicos;
+- clara para usuários familiares não técnicos;
 - objetiva para administradores;
-- visualmente estavel entre telas;
+- visualmente estável entre telas;
 - responsiva em mobile, tablet e desktop;
-- segura quanto a permissoes;
-- conservadora em mudancas de layout de arvore, para evitar regressoes visuais.
+- segura quanto a permissões;
+- conservadora em mudanças de layout de árvore, para evitar regressões visuais.
 
-Principios obrigatorios:
+Princípios obrigatórios:
 
-1. **Nao esconder erro funcional com ajuste visual.**
-   Se uma tela quebra por dados, permissao ou service, corrigir a causa.
-2. **Nao resolver problema de layout alterando regra de negocio.**
-   Ajustes de Tailwind, scroll, largura e agrupamento nao devem mudar payloads, RLS, migrations ou services.
-3. **Mobile-first para telas comuns.**
-   Area do usuario, perfil, favoritos, notificacoes e forum devem ser confortaveis em 320px+.
-4. **Admin operavel, nao necessariamente perfeito, em mobile.**
-   O painel administrativo pode usar scroll horizontal controlado em listas/tabelas, mas formularios e acoes criticas precisam continuar acessiveis.
-5. **Arvore e uma superficie interativa propria.**
-   Pan, zoom, exportacao, legenda e selecao de area devem ser tratados como experiencia de canvas, nao como pagina tradicional.
-6. **Mudanca visual nao pode enfraquecer permissao.**
-   Botao escondido nao substitui `ProtectedRoute`, RLS, RPC segura ou validacao server-side.
+1. **Não esconder erro funcional com ajuste visual.**  
+   Se uma tela quebra por dados, permissão ou service, corrigir a causa.
+
+2. **Não resolver problema de layout alterando regra de negócio.**  
+   Ajustes de Tailwind, scroll, largura e agrupamento não devem mudar payloads, RLS, migrations ou services.
+
+3. **Mobile-first para telas comuns.**  
+   Área do usuário, perfil, favoritos, notificações, calendário e fórum devem ser confortáveis em 320px+.
+
+4. **Admin operável, não necessariamente perfeito, em mobile.**  
+   O painel administrativo pode usar scroll horizontal controlado em listas/tabelas, mas formulários e ações críticas precisam continuar acessíveis.
+
+5. **Árvore é uma superfície interativa própria.**  
+   Pan, zoom, exportação, legenda e seleção de área devem ser tratados como experiência de canvas, não como página tradicional.
+
+6. **Mudança visual não pode enfraquecer permissão.**  
+   Botão escondido não substitui `ProtectedRoute`, RLS, RPC segura ou validação server-side.
 
 ---
 
@@ -71,22 +76,22 @@ A UI usa:
 - `lucide-react`;
 - componentes locais em `src/app/components`;
 - componentes de UI base em `src/app/components/ui`;
-- React Flow para arvore.
+- React Flow para árvore.
 
-A identidade visual predominante usa:
+Identidade visual predominante:
 
 - fundo geral cinza claro;
-- cartoes brancos com bordas suaves;
+- cartões brancos com bordas suaves;
 - sombras discretas;
-- botoes arredondados;
-- azul como cor principal de acao/estado ativo;
+- botões arredondados;
+- azul como cor principal de ação/estado ativo;
 - estados de erro em vermelho;
-- estados de alerta em ambar;
+- estados de alerta em âmbar;
 - texto principal em tons de slate/gray.
 
 ### 2.2 Containers
 
-As paginas internas usam container centralizado com largura maxima consistente.
+As páginas internas usam container centralizado com largura máxima consistente.
 
 Classe consolidada:
 
@@ -94,7 +99,7 @@ Classe consolidada:
 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8
 ```
 
-Essa classe esta exportada como `PAGE_CONTAINER_CLASS` em:
+Essa classe é exportada como `PAGE_CONTAINER_CLASS` em:
 
 ```txt
 src/app/components/layout/MemberPageHeader.tsx
@@ -102,18 +107,18 @@ src/app/components/layout/MemberPageHeader.tsx
 
 Uso esperado:
 
-- paginas internas devem usar `PAGE_CONTAINER_CLASS` para alinhar header e conteudo;
-- nao criar variacoes locais de margem sem necessidade;
-- evitar containers com `max-w` divergente em paginas de membro;
+- páginas internas devem usar `PAGE_CONTAINER_CLASS` para alinhar header e conteúdo;
+- não criar variações locais de margem sem necessidade;
+- evitar containers com `max-w` divergente em páginas de membro;
 - preservar `min-w-0` em wrappers flex/grid para impedir overflow;
-- conteudo de usuario deve usar `break-words` quando houver risco de texto longo;
-- IDs, e-mails, URLs e valores tecnicos longos devem usar `break-all`.
+- conteúdo de usuário deve usar `break-words`;
+- IDs, e-mails, URLs e valores técnicos longos devem usar `break-all`.
 
 ---
 
-## 3. Headers
+## 3. Headers e menu do usuário
 
-### 3.1 Header da Home pos-login
+### 3.1 Header da Home pós-login
 
 Arquivo principal:
 
@@ -121,47 +126,64 @@ Arquivo principal:
 src/app/pages/Home.tsx
 ```
 
-Componente visual extraido:
+Componente visual extraído:
 
 ```txt
 src/app/pages/home/HomeHeader.tsx
 ```
 
-A Home pos-login mantem header proprio porque concentra:
+A Home pós-login mantém header próprio porque concentra:
 
-- nome da familia;
+- nome da família;
 - label da view atual;
-- seletor de visualizacao da arvore;
-- seletor compacto de paletas visuais da arvore;
-- busca expansivel;
-- atalhos para curiosidades, forum e calendario;
-- `UserMenu`;
-- integracao com estado da arvore.
+- seletor de visualização da árvore;
+- seletor compacto de paletas visuais da árvore;
+- busca expansível;
+- atalhos para curiosidades, fórum e calendário;
+- menu do usuário com `UserProfileMenu variant="home-header"`;
+- integração com estado da árvore.
 
 Regras:
 
-- nao substituir o header da Home por `MemberPageHeader`;
+- não substituir o header da Home por `MemberPageHeader`;
 - manter altura compacta;
-- preservar busca expansivel;
+- preservar busca expansível;
 - preservar seletor de view;
-- seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a pagina;
-- abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, o dropdown deve exibir tres botoes circulares de paleta: branco, laranja e marrom;
-- a paleta branca e a opcao padrao herdada da `main`;
-- a paleta laranja representa a variacao visual de `polish/layout-components-main`;
-- a paleta marrom representa a variacao premium inspirada em `redesign/suafamilia-tree-style`;
-- a troca de paleta deve alterar apenas CSS variables/tokens visuais da arvore;
-- a troca de paleta nao deve alterar rota, `viewMode`, filtros, dados, permissao, Supabase ou regras de negocio;
+- seletor de view deve navegar entre `/minha-arvore`, `/genealogia` e `/visao-completa` sem recarregar a página;
+- abaixo das opções **Minha Árvore**, **Genealogia** e **Visão Completa**, o dropdown deve exibir três botões circulares de paleta: branco, laranja e marrom;
+- a troca de paleta deve alterar apenas CSS variables/tokens visuais da árvore;
+- a troca de paleta não deve alterar rota, `viewMode`, filtros, dados, permissão, Supabase ou regras de negócio;
 - a escolha de paleta deve persistir em `localStorage`;
 - search params existentes, especialmente `?pessoa=...`, devem ser preservados ao trocar view;
-- botao **Acoes** usa icone `Printer`;
-- no desktop, o botao pode exibir texto **Acoes**;
-- no mobile, o botao deve aparecer apenas como icone;
-- **Acoes** abre o painel/acao de informacoes, nao uma terceira aba persistente na toggle principal;
-- loading da Home deve usar **Buscando pessoas e relacionamentos...**, sem no Supabase;
-- evitar acoes que causem overflow horizontal;
-- em breakpoints menores, esconder textos e priorizar icones.
+- botão **Ações** usa ícone `Printer`;
+- no desktop, o botão pode exibir texto **Ações**;
+- no mobile, o botão deve aparecer apenas como ícone;
+- **Ações** abre painel/ação de informações, não uma terceira aba persistente na toggle principal;
+- loading da Home deve usar **Buscando pessoas e relacionamentos...**;
+- evitar ações que causem overflow horizontal;
+- em breakpoints menores, esconder textos e priorizar ícones.
 
-### 3.2 Header das paginas internas
+### 3.2 Menu do usuário no header da árvore
+
+O header da árvore usa `UserProfileMenu` com variante compacta:
+
+```tsx
+<UserProfileMenu variant="home-header" />
+```
+
+Comportamento esperado:
+
+- o botão no header mantém aparência compacta, com avatar/iniciais, texto **MENU**, nome e seta;
+- ao clicar, abre o painel completo do `UserProfileMenu`, igual ao padrão das páginas internas;
+- o antigo dropdown local `UserMenu` de `Home.tsx` não deve ser recriado;
+- o painel deve ficar acima da árvore e do header;
+- o cabeçalho do painel com avatar, nome e e-mail é clicável e leva para `/minha-arvore/editar`;
+- o botão `X` fecha o menu sem navegar;
+- o item **Editar notificações** não aparece mais;
+- **Painel Admin** continua condicional para administradores;
+- **Sair** deve manter o fluxo de logout e limpeza de estado/cache relevante.
+
+### 3.3 Header das páginas internas
 
 Arquivo principal:
 
@@ -169,7 +191,7 @@ Arquivo principal:
 src/app/components/layout/MemberPageHeader.tsx
 ```
 
-Paginas internas padronizadas:
+Páginas internas padronizadas:
 
 ```txt
 src/app/pages/MinhaArvore.tsx
@@ -183,26 +205,26 @@ src/app/pages/admin/AdminDashboard.tsx
 
 O header interno possui:
 
-- icone opcional;
-- titulo;
-- subtitulo;
-- acoes opcionais;
+- ícone opcional;
+- título;
+- subtítulo;
+- ações opcionais;
 - layout responsivo em coluna no mobile e linha no desktop;
-- `PAGE_CONTAINER_CLASS` para alinhamento.
+- `PAGE_CONTAINER_CLASS` para alinhamento;
+- `UserProfileMenu` padrão com `variant="avatar"`.
 
 Regras:
 
-- usar `MemberPageHeader` para novas paginas internas de usuario/admin, salvo excecao justificada;
-- acoes do header devem usar `actions`;
-- botoes devem preservar foco visivel;
-- botoes de header e acoes internas nao devem quebrar texto em duas linhas;
-- icones devem vir de `HEADER_ACTION_ICONS` quando ja existirem ali;
-- titulos e subtitulos devem usar textos curtos, pois sao truncados em tela estreita.
+- usar `MemberPageHeader` para novas páginas internas de usuário/admin, salvo exceção justificada;
+- ações do header devem usar `actions`;
+- botões devem preservar foco visível;
+- botões de header e ações internas não devem quebrar texto em duas linhas;
+- ícones devem vir de `HEADER_ACTION_ICONS` quando já existirem ali;
+- títulos e subtítulos devem usar textos curtos, pois são truncados em tela estreita.
 
+### 3.4 Busca expansível no header da árvore
 
-### 3.3 Busca expansivel no header da arvore
-
-A busca do header da Home pos-login deve funcionar nas rotas:
+Rotas:
 
 ```txt
 /minha-arvore
@@ -212,63 +234,42 @@ A busca do header da Home pos-login deve funcionar nas rotas:
 
 Comportamento consolidado:
 
-- o botao de busca precisa ser clicavel em toda a area visual;
-- ao expandir, o campo deve usar o placeholder **Buscar pessoa ou pagina...**;
-- a busca deve sugerir pessoas e paginas;
-- a lista local de paginas deve incluir rotas de uso recorrente, como **Notificacoes** e **Ajustar Notificacoes**;
-- a busca deve oferecer atalho para a pagina completa de resultados;
-- sugestoes devem fechar ao clicar fora da area de busca;
-- sugestoes devem fechar ao pressionar `Esc`;
-- sugestoes devem ficar acima da arvore e nao podem usar fundo transparente.
+- botão de busca precisa ser clicável em toda a área visual;
+- ao expandir, o campo usa placeholder **Buscar pessoa ou página...**;
+- busca sugere pessoas e páginas;
+- lista local de páginas inclui rotas recorrentes, como **Notificações** e **Ajustar Notificações**;
+- busca oferece atalho para página completa de resultados;
+- sugestões fecham ao clicar fora;
+- sugestões fecham ao pressionar `Esc`;
+- sugestões ficam acima da árvore e não usam fundo transparente.
 
-Para sugestoes de pessoas, a linha secundaria deve seguir o padrao:
+Para sugestões de pessoas, a linha secundária segue:
 
 ```txt
 Cidade de nascimento – DD/MM/AAAA
 ```
 
-Se faltar cidade ou data, exibir apenas a informacao disponivel. Se ambas estiverem ausentes, ocultar a linha secundaria.
+Se faltar cidade ou data, exibir apenas a informação disponível. Se ambas estiverem ausentes, ocultar a linha secundária.
 
-### 3.4 Camadas de dropdowns no header
+### 3.5 Camadas de dropdowns no header
 
-O header da Home usa camada elevada para permanecer acima da arvore. Por isso, menus em portal precisam ter camada superior a do header.
+O header da Home usa camada elevada para permanecer acima da árvore. Conteúdos em portal precisam ficar acima do header.
 
 Regras consolidadas:
 
 - `SelectContent` deve abrir acima do header;
 - `DropdownMenuContent` deve abrir acima do header;
 - `DropdownMenuSubContent` deve abrir acima do header;
-- menus devem usar afastamento vertical suficiente para nao parecerem encaixados sob a barra;
-- sugestoes de busca, menu do usuario e seletor de views nao devem se sobrepor visualmente de forma indevida;
-- os botoes circulares de paleta ficam dentro do `SelectContent` do seletor de views e devem manter clique/foco funcionais sem fechar por erro ou propagar evento indevido para a arvore.
+- menus devem usar afastamento vertical suficiente para não parecerem encaixados sob a barra;
+- sugestões de busca, menu do usuário e seletor de views não devem se sobrepor visualmente de forma indevida;
+- botões circulares de paleta ficam dentro do `SelectContent` e devem manter clique/foco funcionais.
 
-Padrao atual:
+Padrão atual:
 
 ```txt
-conteudos Radix em portal -> z-[1000]
-sideOffset padrao -> 8
+conteúdos Radix em portal -> z-[1000]
+sideOffset padrão -> 8
 ```
-
-Esse padrao evita regressao em que o menu do usuario e o dropdown de views ficavam com a parte superior coberta pelo header.
-
-### 3.5 Modal Curiosidades - Voce Sabia
-
-No modal **Curiosidades**, a aba **Voce Sabia?** usa cards estatisticos com cores distintas para facilitar leitura rapida:
-
-| Card | Tratamento visual |
-|---|---|
-| Pessoas cadastradas | Azul |
-| Vivos | Verde |
-| Falecidos | Slate/cinza |
-| Pets | Ambar |
-
-Regras:
-
-- manter contraste suficiente entre fundo, label e numero;
-- preservar grid responsivo;
-- nao misturar a cor dos cards estatisticos com status de permissao ou erro;
-- novas estatisticas devem seguir variacao cromatica discreta e coerente com Tailwind ja usado no projeto.
-
 
 ---
 
@@ -280,15 +281,15 @@ Arquivo principal:
 src/app/pages/Home.tsx
 ```
 
-A Home pos-login e composta por:
+A Home pós-login é composta por:
 
 - header no topo da viewport;
-- area principal `main` com altura restante;
+- área principal `main` com altura restante;
 - painel lateral;
-- area da arvore;
-- modais globais da arvore.
+- área da árvore;
+- modais globais da árvore.
 
-Componentes visuais extraidos:
+Componentes visuais extraídos:
 
 ```txt
 HomeHeader
@@ -307,9 +308,9 @@ ConnectionDiscoveryPanel
 AiQuestionPanel
 ```
 
-Regra de refatoracao:
+Regra de refatoração:
 
-> A extracao e incremental. Nao mover estado principal, handlers complexos, chamadas Supabase ou regras da arvore para esses componentes sem nova revisao.
+> A extração é incremental. Não mover estado principal, handlers complexos, chamadas Supabase ou regras da árvore para esses componentes sem nova revisão.
 
 ### 4.1 Painel lateral desktop
 
@@ -317,43 +318,43 @@ No desktop:
 
 - painel aberto usa largura aproximada `w-80`;
 - painel recolhido usa largura estreita, como `w-14`;
-- botao de recolher/expandir deve ficar dentro ou junto ao painel;
-- conteudo interno do painel rola verticalmente;
-- area da arvore ocupa o espaco restante.
+- botão de recolher/expandir deve ficar dentro ou junto ao painel;
+- conteúdo interno do painel rola verticalmente;
+- área da árvore ocupa o espaço restante.
 
 Regra consolidada:
 
-> Deve existir apenas um controle de expandir/recolher painel lateral. Nao duplicar botao dentro da arvore.
+> Deve existir apenas um controle de expandir/recolher painel lateral. Não duplicar botão dentro da árvore.
 
 ### 4.2 Painel lateral mobile
 
 No mobile:
 
-- painel aparece como secao acima da arvore quando aberto;
-- ha botao para recolher;
-- quando fechado, aparece botao de expandir sobre a area da arvore;
-- conteudo do painel deve ser legivel e compacto;
-- a arvore continua ocupando o espaco restante;
+- painel aparece como seção acima da árvore quando aberto;
+- há botão para recolher;
+- quando fechado, aparece botão de expandir sobre a área da árvore;
+- conteúdo do painel deve ser legível e compacto;
+- árvore continua ocupando o espaço restante;
 - textos longos devem truncar ou quebrar sem gerar overflow horizontal.
 
 ### 4.3 Abas do painel lateral
 
-O painel lateral organiza conteudos por abas principais:
+O painel lateral organiza conteúdos por abas principais:
 
 ```txt
 Filtros
 Legendas
 ```
 
-A aba **Informacoes** nao deve aparecer na toggle principal. Ela e acionada pelo botao externo **Acoes**.
+A aba **Informações** não deve aparecer na toggle principal. Ela é acionada pelo botão externo **Ações**.
 
-A aba **Legendas** foi simplificada. Nao deve exibir:
+A aba **Legendas** foi simplificada. Não deve exibir:
 
-- subtitulo Cores, linhas, aneis e modos da arvore.;
-- label Visualizacao atual;
-- card azul da view atual;
-- area Views no final;
-- subtitulos dentro dos cards de Cards, Linhas e Anel de casamento.
+- subtítulo **Cores, linhas, anéis e modos da árvore**;
+- label **Visualização atual**;
+- card azul da view ativa;
+- área **Views** no final;
+- subtítulos dentro dos cards de Cards, Linhas e Anel de casamento.
 
 Texto consolidado do status conjugal:
 
@@ -361,17 +362,17 @@ Texto consolidado do status conjugal:
 Em relacionamento
 ```
 
-Alem de legenda, `TreeLegend` tambem pode controlar filtros/camadas visuais reais:
+Além de legenda, `TreeLegend` também pode controlar filtros/camadas visuais reais:
 
 - `visualLineFilters.parentChildHighlight`;
 - `visualLineFilters.siblingHighlight`;
 - `parentChildHighlight` respeita `edgeFilters.filiacao_sangue || edgeFilters.filiacao_adotiva`;
 - `siblingHighlight` respeita `edgeFilters.irmaos`;
-- estado padrao desligado mantem o visual original.
+- estado padrão desligado mantém o visual original.
 
 ---
 
-## 5. Arvore: views e comportamento visual
+## 5. Árvore: views e comportamento visual
 
 Arquivos principais:
 
@@ -379,6 +380,7 @@ Arquivos principais:
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+src/app/components/FamilyTree/MarriageNode.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/pages/Home.tsx
 ```
@@ -387,29 +389,34 @@ Views existentes:
 
 | View | Rota | Uso |
 |---|---|---|
-| Minha Arvore | `/minha-arvore` | Escopo em torno da pessoa central. |
-| Genealogia | `/genealogia` | Escopo pessoal por geracoes. |
-| Visao Completa | `/visao-completa` | Base familiar completa por geracoes. |
+| Minha Árvore | `/minha-arvore` | Escopo em torno da pessoa central. |
+| Genealogia | `/genealogia` | Escopo pessoal por gerações. |
+| Visão Completa | `/visao-completa` | Base familiar completa por gerações. |
 
-`/` redireciona para `/minha-arvore` preservando search params. As tres rotas usam o mesmo shell `Home`, e a mudanca de view deve alterar apenas a area principal da arvore e controles condicionados por `viewMode`.
+`/` redireciona para `/minha-arvore` preservando search params. As três rotas usam o mesmo shell `Home`, e a mudança de view deve alterar apenas a área principal da árvore e controles condicionados por `viewMode`.
 
-### 5.1 Titulo fixo da arvore
+### 5.1 Título fixo da árvore
 
-O titulo/subtitulo da arvore deve ser renderizado apenas como overlay fixo em `FamilyTree.tsx`.
+O título da árvore deve ser renderizado apenas como overlay fixo em `FamilyTree.tsx`.
 
-Texto atual:
+Textos atuais esperados:
 
 ```txt
-Linha Genealogica de {primeiro nome}
-Use zoom, arraste a arvore e clique nas pessoas para abrir detalhes.
+A árvore de {primeiro nome}
+Família de {primeiro nome}
+Linha Genealógica de {primeiro nome}
 ```
 
 Regras:
 
-- nao adicionar title node interno nos layouts;
-- `directFamilyDistributedLayout.ts` nao deve criar titulo principal da arvore;
-- `genealogyColumnsLayout.ts` nao deve criar titulo/subtitulo principal;
-- labels de geracao e grupo podem existir, mas nao devem duplicar o titulo principal.
+- não adicionar title node interno nos layouts;
+- `directFamilyDistributedLayout.ts` não deve criar título principal da árvore;
+- `genealogyColumnsLayout.ts` não deve criar título/subtítulo principal;
+- labels de geração e grupo podem existir, mas não devem duplicar o título principal;
+- o título deve ter pequeno espaçamento acima;
+- o espaço entre título e cards deve ser controlado por constantes de `FamilyTree.tsx`;
+- não usar `translate`, `transform`, `top` negativo ou manipulação de `.react-flow__viewport` para aproximar a árvore;
+- CSS de polimento não deve reposicionar o canvas ReactFlow.
 
 ### 5.2 Viewport inicial
 
@@ -421,117 +428,140 @@ O viewport inicial separa:
 Regra consolidada:
 
 - zoom inicial deve considerar cards reais (`personNode`) como base visual;
-- elementos auxiliares nao devem reduzir a arvore;
-- labels, group boxes, legend nodes e anchors nao devem comandar o zoom inicial;
-- bounds de pan podem considerar mais elementos para permitir navegacao segura;
-- titulo fixo nao participa do bounds da arvore.
+- elementos auxiliares não devem reduzir a árvore;
+- labels, group boxes, legend nodes e anchors não devem comandar o zoom inicial;
+- bounds de pan podem considerar mais elementos para permitir navegação segura;
+- título fixo não participa do bounds da árvore;
+- `FamilyTree.tsx` deve ser a fonte principal do espaçamento entre título, área visual e viewport.
 
-### 5.3 Minha Arvore
+### 5.3 Minha Árvore
 
-A view **Minha Arvore** deve:
+A view **Minha Árvore** deve:
 
-- carregar legivel apos login;
-- nao aparecer minuscula no centro;
+- carregar legível após login;
+- não aparecer minúscula no centro;
 - caber de forma equilibrada no container;
 - usar bounds de cards reais;
-- permitir zoom maximo perceptivel;
-- recentralizar apenas quando necessario;
+- permitir zoom máximo perceptível;
+- recentralizar apenas quando necessário;
 - preservar layout de grupos diretos;
 - manter filtros diretos e KPIs em sincronia com a pessoa central.
 
-A view pode considerar altura para fit inicial, desde que isso nao reduza a arvore a ponto de perder legibilidade.
+A view pode considerar altura para fit inicial, desde que isso não reduza a árvore a ponto de perder legibilidade.
 
-Quando a pessoa central tiver arvore direta esparsa, sem pais, ancestrais
-ou grupos laterais visiveis, `/minha-arvore` pode usar enquadramento vertical
-mais curto e aproximar os grupos inferiores do card central.
+Quando a pessoa central tiver árvore direta esparsa, sem pais, ancestrais ou grupos laterais visíveis, `/minha-arvore` pode usar enquadramento vertical mais curto e aproximar os grupos inferiores do card central.
 
 Regras:
 
-- a compactacao deve ser detectada por estrutura renderizavel, nao por nome de pessoa;
-- arvores densas continuam com o layout distribuido atual;
-- filtros de grupos e filtros de linhas nao devem ser alterados;
-- conectores e anchors existentes devem continuar comandados pelo layout logico.
+- compactação deve ser detectada por estrutura renderizável, não por nome de pessoa;
+- árvores densas continuam com o layout distribuído atual;
+- filtros de grupos e filtros de linhas não devem ser alterados;
+- conectores e anchors existentes continuam comandados pelo layout lógico.
 
-### 5.4 Genealogia
+### 5.4 Alianças na Minha Árvore
+
+Em `/minha-arvore`, marriage nodes podem usar variante visual própria:
+
+```txt
+visualVariant: 'direct-family'
+```
+
+Objetivo:
+
+- tornar o ícone de alianças claramente visível dentro dos grupos diretos;
+- preservar o estilo padrão já aprovado em `/genealogia`;
+- não alterar dimensão lógica do nó;
+- não alterar handles, edges, clique ou modal.
+
+Critérios visuais:
+
+- botão não deve parecer círculo vazio;
+- ícone deve ter contraste suficiente;
+- halo/borda podem ser usados para leitura;
+- botão não deve cobrir texto dos cards;
+- clique deve abrir o modal conjugal.
+
+### 5.5 Genealogia
 
 A view **Genealogia** deve:
 
 - usar zoom por largura;
-- nao reduzir zoom por causa da altura total;
+- não reduzir zoom por causa da altura total;
 - iniciar no mesmo topo visual das demais views;
-- manter largura visual equivalente a Minha Arvore;
-- permitir que o usuario arraste/deslize para baixo quando houver muitos cards verticais;
-- preservar labels de geracao;
-- preservar aneis conjugais e conectores ortogonais;
-- no mobile, oferecer navegacao horizontal por geracoes, com chips superiores e suporte a swipe lateral.
+- manter largura visual equivalente a Minha Árvore;
+- permitir que o usuário arraste/deslize para baixo quando houver muitos cards verticais;
+- preservar labels de geração;
+- preservar anéis conjugais e conectores ortogonais;
+- manter variante padrão do anel/aliança;
+- no mobile, oferecer navegação horizontal por gerações, com chips superiores e suporte a swipe lateral.
 
-#### 5.4.1 Genealogia mobile por geracoes
+#### 5.5.1 Genealogia mobile por gerações
 
-No mobile, a view **Genealogia** adota um padrao inspirado em navegacao horizontal por etapas:
+No mobile, a view **Genealogia** adota navegação horizontal por etapas:
 
 ```txt
-Tataravos
-Bisavos
-Avos
+Tataravós
+Bisavós
+Avós
 Pais
-Nucleo
+Núcleo
 Descendentes
 ```
 
 Regras consolidadas:
 
-- a barra de chips aparece apenas em `/genealogia` mobile;
-- os chips ocupam a largura horizontal disponivel da area da arvore;
-- os chips nao exibem contagem numerica;
-- a geracao ativa deve ter estado visual claro;
-- toque/click em chip deve focar a respectiva geracao;
-- swipe lateral nos chips deve avancar ou voltar geracao;
-- os chips focam/enquadram a geracao, mas nao removem as demais colunas do ReactFlow;
-- ao reduzir zoom, o usuario deve conseguir ver as demais colunas com cards reais;
-- a tela inicial deve focar a primeira geracao renderizada com cards reais;
-- se a pessoa central tiver tataravos conectados, a primeira coluna deve aparecer com esses cards;
-- colunas sem cards nao devem ser exibidas;
-- labels `GERACAO X` nao devem ficar sobrepostos ao menu de chips;
-- em Genealogia mobile, botoes `+` e `-` podem ficar ocultos para evitar disputa de espaco com a barra de chips;
-- pan vertical e horizontal por touch deve continuar disponivel na area da arvore.
+- barra de chips aparece apenas em `/genealogia` mobile;
+- chips ocupam a largura horizontal disponível da área da árvore;
+- chips não exibem contagem numérica;
+- geração ativa deve ter estado visual claro;
+- toque/click em chip deve focar a respectiva geração;
+- swipe lateral nos chips deve avançar ou voltar geração;
+- chips focam/enquadram a geração, mas não removem as demais colunas do ReactFlow;
+- ao reduzir zoom, usuário deve conseguir ver as demais colunas com cards reais;
+- tela inicial deve focar a primeira geração renderizada com cards reais;
+- se a pessoa central tiver tataravós conectados, a primeira coluna deve aparecer com esses cards;
+- colunas sem cards não devem ser exibidas;
+- labels `GERAÇÃO X` não devem ficar sobrepostos ao menu de chips;
+- em Genealogia mobile, botões `+` e `-` podem ficar ocultos para evitar disputa de espaço com a barra;
+- pan vertical e horizontal por touch deve continuar disponível na área da árvore.
 
-A inferencia de geracao deve ser tratada como regra de renderizacao em memoria. Ela nao deve alterar dados reais, migrations, RLS ou Supabase.
+A inferência de geração é regra de renderização em memória. Ela não deve alterar dados reais, migrations, RLS ou Supabase.
 
-### 5.5 Visao Completa
+### 5.6 Visão Completa
 
-A view **Visao Completa** segue a mesma regra de UX da Genealogia:
+A view **Visão Completa** segue a mesma regra de UX da Genealogia:
 
 - zoom por largura;
-- mesma posicao inicial vertical;
-- altura total nao reduz zoom;
-- navegacao vertical por pan/arraste;
-- base completa da familia;
-- sem titulo/subtitulo duplicado.
+- mesma posição inicial vertical;
+- altura total não reduz zoom;
+- navegação vertical por pan/arraste;
+- base completa da família;
+- sem título/subtítulo duplicado.
 
-### 5.6 Pan e zoom
+### 5.7 Pan e zoom
 
 Controles esperados:
 
-- botao `+`;
-- botao `-`;
+- botão `+`;
+- botão `-`;
 - scroll/pinch quando habilitados;
 - pan por arraste quando permitido.
 
 Regras:
 
-- botoes de zoom ficam no canto superior direito da area da arvore, por exemplo `right-4 top-4`;
-- em Genealogia mobile, os botoes `+` e `-` podem ser ocultados para priorizar a barra horizontal de geracoes;
-- durante selecao de area, pan/zoom devem ser bloqueados;
-- ao cancelar/concluir selecao, pan/zoom devem voltar;
-- Genealogia e Visao Completa sempre precisam permitir pan vertical;
-- Minha Arvore pode restringir pan quando esta no zoom de fit, para evitar deslocamento acidental;
-- swipe nos chips de geracao nao deve bloquear o pan/zoom do canvas fora da barra.
+- botões de zoom ficam no canto superior direito da área da árvore, por exemplo `right-4 top-4`;
+- em Genealogia mobile, botões `+` e `-` podem ser ocultados;
+- durante seleção de área, pan/zoom devem ser bloqueados;
+- ao cancelar/concluir seleção, pan/zoom devem voltar;
+- Genealogia e Visão Completa sempre precisam permitir pan vertical;
+- Minha Árvore pode restringir pan quando está no zoom de fit;
+- swipe nos chips de geração não deve bloquear pan/zoom do canvas fora da barra.
 
 ---
 
-## 6. Layouts da arvore
+## 6. Layouts da árvore
 
-### 6.1 Minha Arvore - layout distribuido
+### 6.1 Minha Árvore - layout distribuído
 
 Arquivo:
 
@@ -539,25 +569,27 @@ Arquivo:
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 ```
 
-Caracteristicas:
+Características:
 
 - pessoa central destacada;
 - grupos laterais paternos/maternos;
-- pais, avos, bisavos e demais grupos;
+- pais, avós, bisavós e demais grupos;
 - labels de grupo;
 - caixas de agrupamento;
 - anchors estruturais;
-- edges estruturais.
+- edges estruturais;
+- marriage nodes diretos com variante visual específica quando aplicável.
 
 Regras de UX:
 
-- grupos devem ter alinhamento visual estavel;
-- labels de grupo sao permitidas;
-- titulo geral da arvore nao deve ser criado aqui;
-- caixas e anchors nao devem controlar zoom inicial;
-- cards devem continuar clicaveis via `FamilyTree`.
+- grupos devem ter alinhamento visual estável;
+- labels de grupo são permitidas;
+- título geral da árvore não deve ser criado aqui;
+- caixas e anchors não devem controlar zoom inicial;
+- cards devem continuar clicáveis via `FamilyTree`;
+- marriage nodes do layout direto devem receber `visualVariant: 'direct-family'`.
 
-### 6.2 Genealogia/Visao Completa - layout por colunas
+### 6.2 Genealogia/Visão Completa - layout por colunas
 
 Arquivo:
 
@@ -565,35 +597,119 @@ Arquivo:
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
 
-Caracteristicas:
+Características:
 
-- colunas por geracao;
-- cards ordenados por geracao;
-- ordenacao por nascimento/nome;
-- conjuges proximos;
-- aneis de casamento;
+- colunas por geração;
+- cards ordenados por geração;
+- ordenação por nascimento/nome;
+- cônjuges próximos;
+- anéis de casamento;
 - conectores familiares ortogonais;
-- labels de geracao;
-- suporte a filtros por geracao;
-- colunas vazias nao devem ser renderizadas;
-- espacamento vertical entre conjuges deve evitar sobreposicao do anel.
+- labels de geração;
+- suporte a filtros por geração;
+- colunas vazias não devem ser renderizadas;
+- espaçamento vertical entre cônjuges deve evitar sobreposição do anel.
 
 Regras de UX:
 
-- `COLUMN_TOP` define o inicio estrutural das colunas;
-- labels de geracao sao permitidas;
-- titulo/subtitulo principal nao deve ser renderizado aqui;
+- `COLUMN_TOP` define o início estrutural das colunas;
+- labels de geração são permitidas;
+- título/subtítulo principal não deve ser renderizado aqui;
 - altura vertical pode exceder a viewport;
-- usuario deve navegar por pan/arraste;
-- conectores devem continuar legiveis mesmo com filtros ativos;
+- usuário deve navegar por pan/arraste;
+- conectores devem continuar legíveis mesmo com filtros ativos;
 - em Genealogia, a primeira coluna com cards reais deve ser tratada como ponto inicial de leitura;
-- no mobile, a barra de geracoes deve focar colunas reais, nao colunas vazias.
+- no mobile, barra de gerações deve focar colunas reais, não colunas vazias.
 
 ---
 
-## 7. Legendas visuais
+## 7. Calendário Familiar
 
-Documentacao especifica recomendada:
+Rota:
+
+```txt
+/calendario-familiar
+```
+
+Arquivo:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Regras de UX:
+
+- header deve exibir **Calendário**;
+- subtítulo deve manter acentuação correta;
+- categoria de confraternizações deve aparecer como **Reunião**;
+- aria-label de filtros deve usar **Filtros do calendário**;
+- título do evento no grid deve ser mais forte, como **Aniversário de Fábio** em negrito;
+- descrição do evento, como **Faz 60 anos**, deve usar fonte menor;
+- lista lateral/inferior pode manter nome completo;
+- grid mensal não deve causar overflow horizontal;
+- filtros por categoria devem permanecer clicáveis.
+
+---
+
+## 8. Notificações e preferências
+
+Rotas:
+
+```txt
+/notificacoes
+/ajustar-notificacoes
+```
+
+Arquivos:
+
+```txt
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+```
+
+Regras de UX:
+
+- `/notificacoes` deve exibir botão **Personalizar Notificações**;
+- botão navega para `/ajustar-notificacoes`;
+- ação **Marcar todas como lidas** permanece disponível;
+- `/ajustar-notificacoes` deve exibir **Preferências**;
+- painel interno deve exibir **Notificações**;
+- toggles e lógica de preferências devem ser preservados;
+- item **Editar notificações** não deve aparecer no menu global do usuário.
+
+---
+
+## 9. Edição do perfil
+
+Rota:
+
+```txt
+/minha-arvore/editar
+```
+
+Arquivo:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+Regras de UX:
+
+- página usa `MemberPageHeader`;
+- avatar do topo é clicável;
+- modal de foto permite visualizar, alterar, cortar e remover imagem;
+- saída sem salvar deve exibir confirmação quando houver alterações pendentes;
+- página não deve exibir preferências de notificação nem campo de edição de signo;
+- botão **Trocar Senha** deve aparecer no card superior do perfil;
+- botão **Trocar Senha** deve exibir estado **Enviando...** durante a solicitação;
+- fluxo de troca de senha usa reset por e-mail e não participa do salvamento dos dados familiares.
+
+---
+
+## 10. Legendas visuais
+
+Documentação específica recomendada:
 
 ```txt
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
@@ -609,34 +725,34 @@ Estado atual:
 
 - legenda visual simplificada;
 - modo compacto para painel lateral;
-- modo nao compacto preservado para uso futuro;
-- sem descricao da view atual;
-- sem secao Views;
-- sem subtitulos internos nos itens;
-- item Em relacionamento para uniao ativa.
+- modo não compacto preservado para uso futuro;
+- sem descrição da view atual;
+- sem seção Views;
+- sem subtítulos internos nos itens;
+- item **Em relacionamento** para união ativa.
 
-Secoes atuais:
+Seções atuais:
 
 - Cards;
 - Linhas;
-- Camadas extras, quando disponiveis;
+- Camadas extras, quando disponíveis;
 - Anel de casamento;
-- Cores dos grupos, quando houver altura util.
+- Cores dos grupos, quando houver altura útil.
 
 Regras:
 
-- a legenda deve explicar o essencial, nao repetir textos de tutorial;
-- nao deve bloquear pan/zoom;
-- deve ser ignorada em exportacoes;
-- nao deve criar dependencia com Supabase;
-- nao deve alterar calculo de status conjugal;
-- alteracoes de copy devem ser feitas em `TreeLegend.tsx` e refletidas na documentacao especifica.
+- legenda deve explicar o essencial, não repetir textos de tutorial;
+- não deve bloquear pan/zoom;
+- deve ser ignorada em exportações;
+- não deve criar dependência com Supabase;
+- não deve alterar cálculo de status conjugal;
+- alterações de copy devem ser refletidas na documentação específica.
 
 ---
 
-## 8. Exportacao e selecao de area
+## 11. Exportação e seleção de área
 
-Documentacao especifica recomendada:
+Documentação específica recomendada:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
@@ -652,37 +768,37 @@ src/app/components/FamilyTree/FamilyTree.tsx
 
 UX implementada:
 
-- botao de selecao de area;
-- overlay sobre a area visivel da arvore;
-- instrucao **Arraste para selecionar uma area visivel da arvore.**;
-- retangulo de selecao;
+- botão de seleção de área;
+- overlay sobre a área visível da árvore;
+- instrução **Arraste para selecionar uma área visível da árvore.**;
+- retângulo de seleção;
 - toolbar contextual para Salvar PNG, Salvar PDF, Imprimir e Cancelar;
-- cancelamento por botao ou `Esc`;
-- bloqueio temporario de pan/zoom durante selecao.
+- cancelamento por botão ou `Esc`;
+- bloqueio temporário de pan/zoom durante seleção.
 
 Regras:
 
-- selecao minima: 80 x 80px;
-- limite de seguranca: 12.000.000 pixels estimados;
-- exportacao opera sobre viewport visivel, nao arvore completa;
-- controles ReactFlow, minimap, menus, overlay e legenda sao ignorados;
-- imagens externas sem CORS podem falhar com erro amigavel;
-- exportacao nao deve salvar no Supabase nem criar log persistido.
+- seleção mínima: 80 x 80px;
+- limite de segurança: 12.000.000 pixels estimados;
+- exportação opera sobre viewport visível, não árvore completa;
+- controles ReactFlow, minimap, menus, overlay e legenda são ignorados;
+- imagens externas sem CORS podem falhar com erro amigável;
+- exportação não deve salvar no Supabase nem criar log persistido.
 
 ---
 
-## 9. Modais, dialogs e overlays
+## 12. Modais, dialogs e overlays
 
-Padroes:
+Padrões:
 
-- modais longos usam altura maxima e rolagem interna;
+- modais longos usam altura máxima e rolagem interna;
 - em mobile, largura deve ser `calc(100vw - margem)`;
-- botoes internos que nao salvam devem usar `type="button"`;
-- overlays interativos devem impedir propagacao quando necessario;
-- modais administrativos devem manter acoes destrutivas protegidas por confirmacao;
-- modais nao devem esconder erros funcionais com fechamento automatico.
+- botões internos que não salvam devem usar `type="button"`;
+- overlays interativos devem impedir propagação quando necessário;
+- modais administrativos devem manter ações destrutivas protegidas por confirmação;
+- modais não devem esconder erros funcionais com fechamento automático.
 
-Exemplos relevantes:
+Exemplos:
 
 ```txt
 src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
@@ -693,75 +809,83 @@ src/app/pages/Home.tsx
 
 ---
 
-## 10. Responsividade
+## 13. Responsividade
 
-Larguras obrigatorias de QA:
+Larguras obrigatórias de QA:
 
-- 320px;
-- 375px;
-- 390px;
-- 430px;
-- 768px;
-- desktop.
+```txt
+320px
+375px
+390px
+430px
+768px
+desktop
+```
 
-Padroes obrigatorios:
+Padrões obrigatórios:
 
 - `min-w-0` em containers flex/grid;
-- `break-words` para textos de usuario;
-- `break-all` para IDs, e-mails, URLs e valores tecnicos longos;
-- botoes em `w-full sm:w-auto` quando houver risco de overflow;
+- `break-words` para textos de usuário;
+- `break-all` para IDs, e-mails, URLs e valores técnicos longos;
+- botões em `w-full sm:w-auto` quando houver risco de overflow;
 - headers com `flex-col gap-2 sm:flex-row`;
 - listas/tabelas largas com `overflow-x-auto` contido;
 - modais com `max-h` e scroll interno;
 - cards empilhados no mobile;
-- textos e botoes truncados quando necessario.
+- textos e botões truncados quando necessário.
 
-Criterios gerais:
+Critérios gerais:
 
 - sem overflow horizontal global indevido;
-- acoes principais acessiveis;
-- menus operaveis;
+- ações principais acessíveis;
+- menus operáveis;
 - modais cabem ou rolam internamente;
-- arvore utilizavel em touch;
-- legenda nao bloqueia a arvore;
-- admin operavel em telas menores.
+- árvore utilizável em touch;
+- legenda não bloqueia a árvore;
+- admin operável em telas menores.
 
 ---
 
-## 11. Padroes de conteudo e microcopy
+## 14. Padrões de conteúdo e microcopy
 
 Diretrizes:
 
-- titulos curtos;
-- subtitulos informativos, mas nao redundantes;
-- botoes com verbo claro;
-- mensagens de erro orientadas a acao;
-- evitar jargao tecnico para usuario comum;
-- preservar termos tecnicos no admin quando necessario.
+- títulos curtos;
+- subtítulos informativos, mas não redundantes;
+- botões com verbo claro;
+- mensagens de erro orientadas à ação;
+- evitar jargão técnico para usuário comum;
+- preservar termos técnicos no admin quando necessário;
+- manter arquivos-fonte em UTF-8.
 
 Exemplos consolidados:
 
 | Contexto | Texto |
 |---|---|
-| View principal | Minha Arvore |
-| View genealogica | Genealogia |
-| View completa | Visao Completa |
-| Titulo da arvore | Linha Genealogica de {primeiro nome} |
-| Subtitulo da arvore | Use zoom, arraste a arvore e clique nas pessoas para abrir detalhes. |
+| View principal | Minha Árvore |
+| View genealógica | Genealogia |
+| View completa | Visão Completa |
+| Título da árvore | A árvore de {primeiro nome} |
+| Título genealógico | Linha Genealógica de {primeiro nome} |
 | Status conjugal ativo | Em relacionamento |
-| Exportacao | Selecionar area |
-| Exportacao PNG | Salvar PNG |
-| Exportacao PDF | Salvar PDF |
-| Acoes da arvore | Acoes |
-| Paletas da arvore | Branco, laranja e marrom |
+| Exportação | Selecionar área |
+| Exportação PNG | Salvar PNG |
+| Exportação PDF | Salvar PDF |
+| Ações da árvore | Ações |
+| Paletas da árvore | Branco, laranja e marrom |
 | Loading da Home | Buscando pessoas e relacionamentos... |
-| Busca | Buscar por nome ou local... |
-| Calendario - falecimento no grid | 44 anos de falecimento / Memoria de Nome |
-| Calendario - card Memoria | 44 anos da morte de Nome |
+| Busca | Buscar pessoa ou página... |
+| Calendário | Calendário |
+| Calendário - aniversário | Aniversário de PrimeiroNome / Faz X anos |
+| Calendário - falecimento no grid | 44 anos de falecimento / Memória de Nome |
+| Calendário - card Memória | 44 anos da morte de Nome |
+| Preferências de notificações | Preferências / Notificações |
+| Perfil | Trocar Senha |
+| Notificações | Personalizar Notificações |
 
 ---
 
-## 12. QA visual obrigatorio apos mudancas de layout
+## 15. QA visual obrigatório após mudanças de layout
 
 Antes de commitar ajuste visual relevante:
 
@@ -772,137 +896,87 @@ npm test
 git diff --check
 ```
 
-Quando houver mudanca em arvore, painel ou responsividade:
+Quando houver mudança em árvore, painel ou responsividade:
 
 ```bash
 npm run test:e2e
 ```
 
-Checklist manual minimo:
+Checklist manual mínimo:
 
-- abrir Home pos-login;
-- testar Minha Arvore;
+- abrir Home pós-login;
+- testar Minha Árvore;
 - testar Genealogia;
-- testar Visao Completa;
+- testar Visão Completa;
 - abrir/recolher painel lateral;
 - abrir aba Legendas;
 - usar zoom `+` e `-`;
-- arrastar arvore;
+- arrastar árvore;
+- abrir menu do usuário pelo header da árvore;
+- abrir menu do usuário por página interna;
 - testar mobile estreito;
-- testar exportacao de area se algo afetou overlay/ReactFlow;
-- garantir que usuario comum nao ve acoes admin.
+- testar exportação de área se algo afetou overlay/ReactFlow;
+- garantir que usuário comum não vê ações admin.
+
+Checklist específico do ciclo 2026-06-07:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+/minha-arvore/editar
+/notificacoes
+/ajustar-notificacoes
+```
+
+Validar:
+
+- menu compacto da árvore abre painel completo;
+- cabeçalho do menu leva para `/minha-arvore/editar`;
+- botão `X` apenas fecha;
+- item `Editar notificações` não aparece;
+- alianças estão visíveis em `/minha-arvore`;
+- alianças permanecem corretas em `/genealogia`;
+- títulos da árvore não têm mojibake;
+- nenhum card superior é cortado;
+- calendário mostra título em negrito e descrição menor;
+- **Trocar Senha** aparece;
+- **Personalizar Notificações** navega corretamente;
+- **Preferências** e **Notificações** aparecem com acentuação correta.
 
 ---
 
-## 13. Alteracoes recentes registradas
+## 16. O que evitar
 
-### 13.1 Header e margens internas
+Não fazer:
 
-- criado/padronizado `MemberPageHeader`;
-- consolidado `PAGE_CONTAINER_CLASS`;
-- paginas internas passaram a seguir o mesmo padrao visual de header;
-- Home pos-login permaneceu com header proprio.
-
-### 13.2 Painel lateral
-
-- removida duplicidade de botoes de recolher/expandir painel;
-- controle passou a ficar junto ao painel;
-- mobile mantem botao de expandir sobre a arvore quando painel esta fechado;
-- toggle principal ficou restrita a **Filtros** e **Legendas**;
-- **Informacoes** saiu da toggle e passou a ser acionada por **Acoes**.
-
-### 13.3 Viewport da arvore
-
-- zoom inicial passou a usar bounds de cards reais;
-- bounds de viewport foram separados de bounds de pan;
-- Genealogia/Visao Completa passaram a usar zoom por largura;
-- altura total nao reduz mais a escala dessas views;
-- titulo/subtitulo interno das views genealogicas foi removido;
-- overlay fixo em `FamilyTree.tsx` tornou-se a fonte unica do titulo.
-
-### 13.4 Legendas
-
-- removido subtitulo da legenda;
-- removida Visualizacao atual;
-- removido card azul da view atual;
-- removida secao Views;
-- removidas descricoes internas dos itens;
-- Ativa foi trocado por Em relacionamento;
-- legenda tambem controla filtros/camadas visuais quando callbacks sao fornecidos;
-- controles de camadas extras incluem destaque opcional de pais/filhos e irmaos.
-
-### 13.5 Arquivos historicos
-
-- apos upload, o input nativo fica oculto;
-- campos e botoes **Cancelar**/**Adicionar** ficam ocultos imediatamente;
-- mensagem verde **a Arquivo carregado** permanece visivel;
-- imagens mostram thumbnail;
-- PDF mostra card/icone/label PDF;
-- botao **Adicionar Arquivo** reabre campos sem apagar a miniatura carregada;
-- usuario ainda pode preencher titulo, descricao, ano e categoria depois do upload.
-
-### 13.6 Minha Arvore
-
-- cards de **Escopo da visualizacao** exibem avatar circular com foto ou iniciais;
-- botao individual **Salvar casamento** foi removido;
-- botao geral **Salvar meus dados** salva dados pessoais e processa dados conjugais;
-- local de casamento invalido nao bloqueia os dados pessoais, mas deixa casamento sem salvar e mostra aviso.
-
-### 13.7 Ajustes pos-PDF
-
-Notificacoes:
-
-- `/notificacoes` e lista/central em cards;
-- `/ajustar-notificacoes` e pagina dedicada de preferencias.
-
-Calendario Familiar:
-
-- bloco superior de **Categorias** foi removido;
-- sidebar mantem o titulo **Categorias**;
-- categorias sao filtros clicaveis;
-- contadores usam singular/plural: **1 evento**, **2 eventos**;
-- aniversarios mostram **Faz X anos**.
-- no topo do mes, **MES EXIBIDO** e o nome do mes ficam centralizados entre as setas anterior/proximo;
-- no grid, falecimentos usam titulo compacto (**44 anos de falecimento**) e descricao separada (**Memoria de Nome Completo**);
-- no card **Memoria**, falecimentos usam **44 anos da morte de Nome Completo** ou **Morte de Nome Completo**.
-
-Perfil e contato:
-
-- cards vazios de insights nao devem renderizar no perfil publico;
-- botao WhatsApp deve manter o mesmo peso visual dos botoes de acao/header.
-
-Admin:
-
-- erro de listagem de usuarios para vinculo aparece inline;
-- evitar toast repetitivo para a mesma falha de listagem;
-- autocomplete de endereco nao bloqueia o formulario se o Google falhar.
-
----
-
-## 14. O que evitar
-
-Nao fazer:
-
-- adicionar novo titulo dentro de layouts da arvore;
-- usar altura total da Genealogia/Visao Completa para reduzir zoom inicial;
+- adicionar novo título dentro de layouts da árvore;
+- usar altura total da Genealogia/Visão Completa para reduzir zoom inicial;
+- usar `translate` em `.react-flow__viewport` para corrigir espaçamento do título;
 - duplicar controles de painel lateral;
+- recriar `UserMenu` local em `Home.tsx`;
 - criar nova classe de container se `PAGE_CONTAINER_CLASS` resolver;
-- alterar service/RLS/migration para correcao visual;
-- colocar legenda dentro da exportacao;
-- salvar estado visual transitorio no banco;
-- criar nova view de arvore sem documentar comportamento de zoom/pan;
-- commitar arquivos de backup, `.bak`, patches temporarios ou dumps;
-- usar `window.location` para navegacao interna quando `navigate` resolver;
-- transformar ajuste de copy em alteracao de regra de negocio.
+- alterar service/RLS/migration para correção visual;
+- colocar legenda dentro da exportação;
+- salvar estado visual transitório no banco;
+- criar nova view de árvore sem documentar comportamento de zoom/pan;
+- commitar arquivos de backup, `.bak`, patches temporários ou dumps;
+- usar `window.location` para navegação interna quando `navigate` resolver;
+- transformar ajuste de copy em alteração de regra de negócio.
 
 ---
 
-## 15. Arquivos de referencia
+## 17. Arquivos de referência
 
 ```txt
 src/app/pages/Home.tsx
+src/app/pages/home/HomeHeader.tsx
 src/app/components/layout/MemberPageHeader.tsx
+src/app/components/layout/UserProfileMenu.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
@@ -919,209 +993,38 @@ src/app/pages/admin/AdminDashboard.tsx
 
 ---
 
-## 16. Manutencao documental
+## 18. Manutenção documental
 
-Este arquivo deve concentrar decisoes de UX e layout. Para evitar repeticao:
+Este arquivo concentra decisões de UX e layout. Para evitar repetição:
 
-- detalhes tecnicos de componentes ficam em `docs/GUIA_COMPONENTES.md`;
+- detalhes técnicos de componentes ficam em `docs/GUIA_COMPONENTES.md`;
 - troubleshooting fica em `docs/GUIA_CORRECAO_ERROS.md`;
 - estado implementado fica em `docs/GUIA_IMPLEMENTACOES.md`;
-- exportacao da arvore deve ser detalhada em `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
+- exportação da árvore deve ser detalhada em `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
 - legenda/painel/conectores devem ser detalhados em `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
 - rotas e guards devem ficar em `docs/arquitetura/ROTAS_E_GUARDS.md`.
 
 ---
-## 13. Registro de ajustes recentes - ciclo 2026-05-30
 
-Esta secao consolida decisoes de UX validadas durante o ciclo recente de ajustes. Quando houver divergencia entre prints, PDFs antigos ou documentos historicos, prevalecem as regras abaixo junto aos documentos funcionais especificos.
+## 19. Registro de ajustes recentes - ciclo 2026-06-07
 
-### 13.1 Header da arvore: busca, sugestoes e pagina de resultados
-
-Rotas afetadas:
+Frente documentada:
 
 ```txt
-/minha-arvore
-/genealogia
-/visao-completa
+3f50694 fix: refine member navigation and page actions
 ```
 
-Regras consolidadas:
+Ajustes consolidados:
 
-- o botao de busca deve ser clicavel em toda a area visual;
-- a busca deve sugerir automaticamente **pessoas** e **paginas**;
-- a busca deve oferecer acesso para a pagina completa de resultados;
-- o placeholder oficial e **Buscar pessoa ou pagina...**;
-- sugestoes fecham ao clicar fora;
-- sugestoes fecham com `Esc`;
-- sugestoes devem ficar em camada acima da arvore;
-- sugestoes devem usar fundo solido, nunca transparente;
-- a lista local de paginas deve contemplar rotas recorrentes, incluindo **Notificacoes** e **Ajustar Notificacoes**.
+- `UserProfileMenu` unificado entre páginas internas e header da árvore;
+- `variant="home-header"` preserva botão compacto no header da árvore;
+- antigo `UserMenu` local não deve ser recriado;
+- cabeçalho do menu global navega para `/minha-arvore/editar`;
+- item **Editar notificações** removido do menu;
+- botão **Personalizar Notificações** adicionado em `/notificacoes`;
+- botão **Trocar Senha** adicionado em `/minha-arvore/editar`;
+- títulos e microcopy corrigidos em calendário e preferências;
+- `MarriageNode` ganhou variante `direct-family` para `/minha-arvore`;
+- espaçamento do título da árvore deve ser controlado por `FamilyTree.tsx`, não por transform no ReactFlow.
 
-Linha secundaria das sugestoes de pessoas:
-
-```txt
-Cidade de nascimento – DD/MM/AAAA
-```
-
-Se uma das informacoes estiver ausente, exibir apenas o dado disponivel. Se ambas estiverem ausentes, ocultar a linha secundaria.
-
-### 13.2 Header da arvore: camadas de menus
-
-O header da arvore usa camada elevada para ficar acima do canvas. Conteudos Radix em portal precisam ficar acima do header.
-
-Padrao consolidado:
-
-```txt
-SelectContent -> z-[1000]
-DropdownMenuContent -> z-[1000]
-DropdownMenuSubContent -> z-[1000]
-sideOffset -> 8
-```
-
-Esse padrao evita regressao em que o menu do usuario e o dropdown de views aparecem parcialmente cobertos pelo header.
-
-### 13.3 Modal Curiosidades > Voce Sabia
-
-A aba **Voce Sabia?** deve manter cards estatisticos com cores distintas:
-
-| Card | Cor |
-|---|---|
-| Pessoas cadastradas | Azul |
-| Vivos | Verde |
-| Falecidos | Slate/cinza |
-| Pets | Ambar |
-
-A cor serve para leitura rapida e nao deve ser usada como estado de permissao, erro ou alerta.
-
-### 13.4 /minha-arvore/editar
-
-A experiencia da rota `/minha-arvore/editar` possui documento funcional proprio:
-
-```txt
-docs/funcionalidades/MINHA_ARVORE_EDITAR.md
-```
-
-Regras de UX a preservar:
-
-- avatar do topo e clicavel;
-- modal de foto permite visualizar, alterar, cortar e remover imagem;
-- botao **Remover foto** deve ter borda visivel e tratamento destrutivo discreto;
-- saida sem salvar deve exibir confirmacao quando houver alteracoes pendentes;
-- o modal **Sair sem salvar?** deve manter microcopy acentuada corretamente;
-- a pagina nao deve exibir preferencias de notificacao nem campo de edicao de signo.
-
-### 13.5 Textos, acentuacao e encoding
-
-Textos de UI devem ser mantidos em UTF-8. A existencia de camada defensiva de reparo de texto renderizado nao substitui a correcao dos arquivos-fonte.
-
-Validar visualmente:
-
-- **Arquivos Historicos**;
-- **voce / alteracoes / pagina / nao / serao** em modais;
-- **O corte final sera quadrado.** com acentuacao correta no ambiente final;
-- labels de relacionamento como **Conjuge** e **Casamento** quando a UI estiver em ASCII, ou **Cônjuge** quando o arquivo-fonte permitir acentos sem corromper.
-
-### 13.6 Paginas legais
-
-Em `/privacidade` e `/termos`:
-
-- o header nao deve exibir **Arvore Genealogica** do lado direito;
-- a data oficial de ultima atualizacao e **01/06/2026**.
-
----
-
-## Atualizacao 2026-06-06 - Paletas visuais da arvore
-
-O ciclo de paletas foi concluido em duas etapas:
-
-```txt
-PR #6 - feat: adicionar paletas visuais da arvore
-PR #7 - fix: exibir paletas no header da arvore
-```
-
-O dropdown de visualizacao da arvore em `HomeHeader.tsx` inclui, abaixo das opcoes **Minha Arvore**, **Genealogia** e **Visao Completa**, um seletor compacto de paleta visual com tres botoes circulares:
-
-- **branco**: paleta padrao da `main`;
-- **laranja**: variacao visual baseada na branch `polish/layout-components-main`;
-- **marrom**: variacao premium baseada na branch `redesign/suafamilia-tree-style`.
-
-Regras de UX:
-
-- os botoes de paleta devem ser discretos, circulares, sem texto visivel e com `aria-label`;
-- o estado ativo deve ser evidente por borda/ring;
-- o clique em paleta deve usar `type="button"` e nao deve alterar a view selecionada;
-- a troca de paleta nao altera rota, `viewMode`, filtros, permissao, dados ou Supabase;
-- a escolha deve persistir em `localStorage`;
-- a aplicacao visual deve ocorrer por CSS variables/tokens, preservando estrutura e dados da arvore;
-- o seletor deve permanecer associado ao controle visual da arvore no header, nao ao painel lateral;
-- validar em desktop e tablet; em mobile estreito, confirmar se o dropdown do header esta disponivel ou se sera preciso acesso equivalente futuro;
-- validar nas tres views: `/minha-arvore`, `/genealogia` e `/visao-completa`.
-
-Arquivos relacionados:
-
-```txt
-src/app/pages/home/HomeHeader.tsx
-src/app/components/FamilyTree/treeColorPalettes.ts
-src/app/components/FamilyTree/directFamilyColors.ts
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/nodeTypes.ts
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-```
-
-Historico de estabilizacao:
-
-- uma primeira tentativa de expor as paletas no header causou `treeColorPalette is not defined` em runtime;
-- o commit problemático foi revertido para restaurar producao;
-- a reimplementacao segura foi feita em branch/PR separado;
-- o PR #7 adicionou estado React, `applyTreePalette`, persistencia e botoes no `SelectContent`;
-- o build local e o Preview da Vercel foram validados antes do merge;
-- apos merge, a producao foi testada e voltou a exibir as paletas corretamente.
-
----
-
-## Atualizacao 2026-06-06 - UX da Genealogia mobile por geracoes
-
-A view `/genealogia` recebeu uma navegacao mobile por geracoes inspirada em tabs/chips horizontais de etapas.
-
-### Decisoes de UX
-
-- aplicar inicialmente apenas em **Genealogia**;
-- deixar **Visao Completa** como etapa futura;
-- evitar empilhar todas as geracoes verticalmente no mobile;
-- usar chips horizontais para selecao direta;
-- permitir swipe lateral entre chips;
-- manter o canvas ReactFlow como superficie interativa de pan/zoom;
-- focar a geracao ativa sem esconder as demais colunas;
-- iniciar na primeira geracao com cards reais;
-- remover contagens dos chips para reduzir ruído visual;
-- ocultar controles `+` e `-` em Genealogia mobile para liberar espaco ao menu;
-- manter pan vertical para colunas altas;
-- remover colunas vazias da Genealogia.
-
-### QA visual obrigatorio
-
-Testar `/genealogia` em:
-
-```txt
-320px
-375px
-390px
-430px
-768px
-desktop
-```
-
-Validar:
-
-- barra de chips sem contagem;
-- chip ativo coerente com a coluna focada;
-- primeira coluna real visivel no carregamento;
-- tataravos visiveis quando existirem na cadeia de filiacao;
-- labels de geracao sem sobreposicao com chips;
-- pan vertical funcional;
-- zoom por gesto funcional;
-- desktop sem coluna vazia;
-- `/minha-arvore` e `/visao-completa` sem regressao.
-
+Validação obrigatória em browser real continua recomendada quando o navegador interno/sandbox não conseguir abrir as rotas.

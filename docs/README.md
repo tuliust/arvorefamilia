@@ -285,3 +285,41 @@ Documentos que devem permanecer sincronizados:
 Pendencia rastreavel:
 
 - aplicar padrao semelhante em `/visao-completa` somente apos validacao da Genealogia.
+---
+
+## 14. Ajustes recentes documentados - ciclo 2026-06-07 / Menu, arvore e paginas auxiliares
+
+Este ciclo documenta os ajustes de navegacao do usuario, refinamento visual das views da arvore e acoes auxiliares de calendario, perfil e notificacoes.
+
+Resumo:
+
+- o header da arvore manteve o botao compacto de usuario, mas passou a abrir o painel compartilhado de `UserProfileMenu`;
+- `UserProfileMenu` passou a ter variante visual para o header da arvore;
+- o cabecalho do menu, com avatar, nome e e-mail, navega para `/minha-arvore/editar`;
+- o item **Editar notificacoes** foi removido do menu;
+- `/minha-arvore/editar` recebeu botao **Trocar Senha**;
+- `/notificacoes` recebeu botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
+- `/calendario-familiar` teve textos e hierarquia visual refinados no grid de eventos;
+- `/ajustar-notificacoes` teve titulos corrigidos;
+- as views da arvore tiveram titulo/espacamento revisados sem `translate` em `.react-flow__viewport`;
+- o botao de alianca em `/minha-arvore` recebeu variante visual `direct-family`, preservando `/genealogia`.
+
+Documentos sincronizados neste ciclo:
+
+| Frente | Documento canonico |
+|---|---|
+| Menu compartilhado e variante do header da arvore | `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
+| Titulo, viewport e aliancas da Minha Arvore | `funcionalidades/MINHA_ARVORE_VIEW.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
+| Estado consolidado dos ajustes | `GUIA_IMPLEMENTACOES.md` |
+| Calendario familiar | `funcionalidades/CALENDARIO_FAMILIAR.md` |
+| Edicao do proprio perfil | `funcionalidades/MINHA_ARVORE_EDITAR.md` |
+| Notificacoes e preferencias | `funcionalidades/NOTIFICACOES.md` |
+| QA e pendencias finais | `PLANO_PROXIMOS_PASSOS.md` |
+
+Checklist de manutencao:
+
+- nao reintroduzir `UserMenu` local no shell da Home;
+- nao usar reposicionamento visual agressivo do ReactFlow para corrigir espacamento;
+- manter `/notificacoes` como central/lista e `/ajustar-notificacoes` como pagina de preferencias;
+- manter troca de senha sem nova migration ou regra de banco;
+- validar manualmente `/minha-arvore`, `/genealogia`, `/visao-completa`, `/calendario-familiar`, `/minha-arvore/editar`, `/notificacoes` e `/ajustar-notificacoes`.

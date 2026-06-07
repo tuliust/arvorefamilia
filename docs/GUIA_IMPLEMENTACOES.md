@@ -1,6 +1,6 @@
 # Guia de implementacoes - Arvore Familia
 
-> Ultima revisao: 2026-06-06
+> Ultima revisao: 2026-06-07
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -31,7 +31,7 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 
 | Frente | Status MVP | Decisao consolidada |
 |---|---|---|
-| 7.1 Notificacoes | Concluida tecnicamente | Central em `/notificacoes`, preferencias em `/ajustar-notificacoes`, canal interno, e-mail real via provider configuravel, rotina manual, Edge Function diaria preparada, logs e deduplicacao. Cron automatico depende de configuracao segura externa. |
+| 7.1 Notificacoes | Concluida tecnicamente | Central em `/notificacoes`, preferencias em `/ajustar-notificacoes`, botao **Personalizar Notificacoes** na central, canal interno, e-mail real via provider configuravel, rotina manual, Edge Function diaria preparada, logs e deduplicacao. Cron automatico depende de configuracao segura externa. |
 | 7.2 Astrologia e acontecimentos do nascimento | Concluida no escopo atual | Perfil le insights persistidos. Geracao/regeneracao e acao admin. Cards vazios nao aparecem no perfil publico. |
 | 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes; edicao avancada, upload por evento, privacidade por evento e PDF ficam pos-MVP. |
 | 7.4 WhatsApp no perfil | Concluido no frontend | Botao/link controlado por telefone e permissoes; sem WhatsApp Business API no MVP. |
@@ -42,12 +42,12 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Listagem, busca, filtros, abertura e remocao funcionais. |
 | 7.10 Responsividade mobile/tablet | Concluida | QA tecnico e visual aprovado em 2026-05-19 para as larguras obrigatorias. |
 | Home publica e legal | Implementada | `/entrar` configuravel no admin, aceite legal obrigatorio no primeiro acesso, `noindex/nofollow` em `index.html`. |
-| Headers e margens internas | Implementados | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio. |
-| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; Genealogia mobile inicia na primeira geracao com cards reais. |
+| Headers, margens e menu do usuario | Implementados | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio; o menu do usuario foi consolidado em `UserProfileMenu`, com variante compacta `home-header` para o header da arvore. |
+| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; espacamento titulo-arvore e controlado em `FamilyTree.tsx`, sem `translate` na camada ReactFlow; Genealogia mobile inicia na primeira geracao com cards reais. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; os chips focam/enquadram a geracao ativa sem remover as demais colunas; colunas vazias nao sao renderizadas. |
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
-| Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e texto Faz X anos. |
+| Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao, titulo sem mojibake, evento do grid com titulo em negrito e descricao **Faz X anos** em fonte menor. |
 | Paletas visuais da arvore | Concluida no frontend | Paletas `white`, `orange` e `brown` aplicadas por CSS variables, expostas no dropdown do `HomeHeader` e persistidas em `localStorage`; sem migration ou Supabase. |
 
 ---
@@ -85,6 +85,8 @@ Areas implementadas no MVP:
 - forum;
 - Google Calendar;
 - notificacoes;
+- menu de usuario compartilhado com variante compacta no header da arvore;
+- troca de senha via fluxo de reset do Supabase Auth na edicao do perfil;
 - timeline;
 - favoritos;
 - insights de nascimento;
@@ -134,6 +136,7 @@ Comportamento consolidado:
 - `/minha-arvore`, `/genealogia` e `/visao-completa` usam o mesmo shell `Home` protegido por `TreeAccessRoute`;
 - `viewMode` e derivado da rota por helpers em `treeViewMode.ts`;
 - a pagina antiga de edicao/dados da arvore pessoal permanece em `/minha-arvore/editar` com `MemberRoute`;
+- o cabecalho clicavel do menu do usuario tambem redireciona para `/minha-arvore/editar`;
 - o botao **Painel administrativo** aparece apenas para administradores;
 - usuario comum nao deve acessar rotas administrativas;
 - admin acessa `/admin` diretamente;
@@ -233,6 +236,8 @@ Comportamento consolidado:
 - escolha e aplicada no `document.documentElement` por CSS variables;
 - escolha e persistida em `localStorage`;
 - PR #7 reimplementou a exposicao no header apos revert da tentativa anterior que causou erro em runtime.
+- o menu do usuario do header da arvore usa `UserProfileMenu` com `variant="home-header"`, preservando o botao compacto e abrindo o painel compartilhado.
+- o antigo dropdown local `UserMenu` da Home nao deve ser reintroduzido sem decisao explicita.
 
 Componentes extraidos da Home:
 
@@ -279,6 +284,9 @@ Comportamento implementado:
 - margens laterais sao padronizadas com `PAGE_CONTAINER_CLASS`;
 - acoes de navegacao ficam agrupadas de forma responsiva;
 - Home pos-login continua com header proprio por regra de produto.
+- o painel do `UserProfileMenu` e o padrao compartilhado de menu do usuario em paginas internas e nas views da arvore.
+- a area superior do menu, com avatar, nome e e-mail, e clicavel e navega para `/minha-arvore/editar`.
+- o item **Editar notificacoes** foi removido do menu; o acesso a preferencias fica na central `/notificacoes` e pela rota `/ajustar-notificacoes`.
 
 ---
 
@@ -644,7 +652,8 @@ Comportamentos consolidados:
 - anel de casamento aparece entre conjuges;
 - anel e clicavel;
 - anel abre modal conjugal;
-- status visual do anel respeita uniao ativa, separacao/divorcio, viuvez ou desconhecido.
+- status visual do anel respeita uniao ativa, separacao/divorcio, viuvez ou desconhecido;
+- `MarriageNode` aceita variante visual por dados, incluindo `visualVariant: 'direct-family'` para reforcar a leitura do anel na view **Minha Arvore** sem alterar o estilo padrao da **Genealogia**.
 
 ### 10.2 Viewport e escala inicial
 
@@ -657,7 +666,8 @@ Comportamento consolidado:
 - **Genealogia** e **Visao Completa** usam zoom inicial por largura;
 - altura total nao reduz a escala de Genealogia/Visao Completa;
 - se houver muitos cards verticalmente, o usuario deve arrastar/deslizar para baixo;
-- botoes `+` e `-` continuam controlando zoom conforme limites definidos.
+- botoes `+` e `-` continuam controlando zoom conforme limites definidos;
+- o espacamento entre titulo e arvore deve ser ajustado por constantes de `FamilyTree.tsx`, nao por `transform`, `translate` ou deslocamento manual de `.react-flow__viewport`.
 
 Commits de referencia:
 
@@ -910,7 +920,7 @@ docs/funcionalidades/NOTIFICACOES.md
 
 Implementado:
 
-- `/notificacoes` e central/lista de notificacoes em cards;
+- `/notificacoes` e central/lista de notificacoes em cards, com botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
 - `/ajustar-notificacoes` e pagina dedicada de preferencias;
 - `NotificationPreferencesPanel` foi extraido para toggles e salvamento;
 - lista mantem marcar como lida, marcar todas como lidas, remover, loading, vazio e erro;
@@ -1037,7 +1047,9 @@ Comportamento consolidado:
 - categorias da sidebar sao filtros clicaveis;
 - contadores usam singular/plural: **1 evento**, **2 eventos**;
 - aniversario mostra primeiro nome no card do calendario e nome completo na lista inferior;
-- idade aparece como **Faz X anos**.
+- titulo de aniversario no grid deve ter peso visual forte/negrito;
+- idade aparece como **Faz X anos** em texto secundario menor;
+- titulo do header deve ser **Calendario** sem mojibake; se a UI estiver em UTF-8 pleno, validar **Calendário**.
 
 ### 14.2 Forum
 
@@ -1221,3 +1233,97 @@ pan vertical e horizontal
 exportacao de area visivel
 ```
 
+
+---
+
+## Atualizacao 2026-06-07 - Menu compartilhado, arvore e paginas auxiliares
+
+Esta atualizacao consolida ajustes visuais e de navegacao feitos apos a frente de paletas e Genealogia mobile.
+
+### Menu do usuario
+
+Implementado:
+
+- `UserProfileMenu` passou a ser o componente compartilhado do menu do usuario;
+- a variante padrao permanece adequada para paginas internas;
+- a variante `home-header` preserva o botao compacto do header da arvore;
+- as views `/minha-arvore`, `/genealogia` e `/visao-completa` abrem o painel compartilhado do `UserProfileMenu`;
+- o antigo `UserMenu` local da Home foi removido;
+- o topo do painel, com avatar, nome e e-mail, e area clicavel e navega para `/minha-arvore/editar`;
+- o botao de fechar do painel deve apenas fechar, sem disparar a navegacao do topo;
+- o item **Editar notificacoes** foi removido do menu global.
+
+Arquivos principais:
+
+```txt
+src/app/components/layout/UserProfileMenu.tsx
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/Home.tsx
+```
+
+### Arvore: titulo, espacamento e anel conjugal
+
+Implementado:
+
+- titulo da arvore corrigido para evitar mojibake;
+- subtitulos das views da arvore podem permanecer ocultos;
+- espacamento superior do titulo e distancia ate a arvore sao controlados por `FamilyTree.tsx`;
+- `family-tree-visual-polish.css` nao deve deslocar `.react-flow__viewport`;
+- `MarriageNodeData` aceita `visualVariant?: 'default' | 'direct-family'`;
+- marriage nodes da view **Minha Arvore** recebem `visualVariant: 'direct-family'`;
+- a variante `direct-family` reforca contraste, halo, borda e SVG das aliancas;
+- a view **Genealogia** preserva o estilo padrao do anel/alianca;
+- dimensoes do node, handles, edges e clique no modal conjugal nao foram alterados.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/styles/family-tree-visual-polish.css
+```
+
+### Paginas auxiliares
+
+Implementado:
+
+- `/calendario-familiar`: header sem mojibake, aniversario do grid com titulo em negrito e descricao **Faz X anos** em fonte menor;
+- `/minha-arvore/editar`: botao **Trocar Senha**, usando fluxo de reset de senha do Supabase Auth;
+- `/notificacoes`: botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
+- `/ajustar-notificacoes`: titulos **Preferencias** e **Notificacoes** corrigidos na origem para evitar mojibake.
+
+Arquivos principais:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+```
+
+### Validacao recomendada
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+/minha-arvore/editar
+/notificacoes
+/ajustar-notificacoes
+```
+
+Validar:
+
+- menu compacto do header da arvore abre o painel compartilhado;
+- topo do menu navega para `/minha-arvore/editar`;
+- item **Editar notificacoes** nao aparece no menu;
+- anel/alianca permanece clicavel e abre modal conjugal;
+- aliancas em `/minha-arvore` estao visiveis;
+- aliancas em `/genealogia` nao regrediram;
+- titulos nao exibem mojibake;
+- botao **Trocar Senha** envia o fluxo esperado;
+- botao **Personalizar Notificacoes** navega corretamente.
