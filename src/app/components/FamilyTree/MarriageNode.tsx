@@ -143,12 +143,20 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        <span
+        <svg
           aria-hidden="true"
-          className="text-base font-bold text-orange-500"
+          viewBox="0 0 48 48"
+          className="h-5 w-5 text-orange-500"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          ∞
-        </span>
+          <circle cx="18" cy="28" r="9" />
+          <circle cx="30" cy="28" r="9" />
+          <path d="M18 19l3-5h6l3 5" />
+        </svg>
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'

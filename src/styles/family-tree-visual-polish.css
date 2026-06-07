@@ -90,3 +90,14 @@
     height: calc(100% + 0.5rem) !important;
   }
 }
+
+/* Final tree canvas vertical alignment override */
+@media (min-width: 768px) {
+  [data-export-root="family-tree"] .react-flow__viewport {
+    translate: 0 -44px;
+  }
+
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__viewport {
+    translate: 0 -58px;
+  }
+}
