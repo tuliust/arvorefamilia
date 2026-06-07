@@ -13,29 +13,6 @@
   stroke: var(--tree-palette-group-border, #CBD5E1) !important;
 }
 
-@media (max-width: 767px) {
-  body:has(button[role="tab"][title="Geração 1: Tataravós"][aria-selected="true"])
-    [data-export-root="family-tree"][data-export-view="genealogia"]
-    .react-flow__renderer,
-  body:has(button[role="tab"][title="Geração 2: Bisavós"][aria-selected="true"])
-    [data-export-root="family-tree"][data-export-view="genealogia"]
-    .react-flow__renderer {
-    transform: translateY(-3.25rem);
-  }
-
-  body:has(button[role="tab"][title="Geração 4: Pais"][aria-selected="true"])
-    [data-export-root="family-tree"][data-export-view="genealogia"]
-    .react-flow__renderer,
-  body:has(button[role="tab"][title="Geração 5: Núcleo"][aria-selected="true"])
-    [data-export-root="family-tree"][data-export-view="genealogia"]
-    .react-flow__renderer,
-  body:has(button[role="tab"][title="Geração 6: Descendentes"][aria-selected="true"])
-    [data-export-root="family-tree"][data-export-view="genealogia"]
-    .react-flow__renderer {
-    transform: translateY(-5.25rem);
-  }
-}
-
 @media (min-width: 768px) {
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
     font-size: 1.625rem !important;
