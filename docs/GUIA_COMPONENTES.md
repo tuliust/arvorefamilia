@@ -1,6 +1,7 @@
 # Guia de componentes - Arvore Familia
 
 > Ultima atualizacao: 2026-06-06
+> Revisao complementar: Genealogia mobile por geracoes
 > Local canonico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -192,6 +193,7 @@ selectedPersonId
 edgeFilters
 directRelativeFilters
 genealogyFilters
+activeGenealogyGeneration
 isMobile
 layoutRevision
 onPersonClick
@@ -201,6 +203,8 @@ onPersonAddConnection
 onPersonRemove
 onMarriageClick
 ```
+
+`activeGenealogyGeneration` e usado pela view **Genealogia** em mobile para enquadrar/focar a geracao ativa escolhida nos chips superiores. Essa prop nao deve ser usada para remover as demais colunas da arvore; a decisao consolidada e manter todas as colunas renderizadas e alterar apenas o foco/viewport.
 
 `TreeViewMode` fica em:
 
@@ -239,6 +243,9 @@ Comportamento consolidado:
 - viewport inicial usa bounds de `personNode`;
 - bounds de pan sao separados dos bounds de viewport;
 - Genealogia/Visao Completa usam zoom por largura;
+- Genealogia mobile pode receber `activeGenealogyGeneration` para foco visual por geracao;
+- Genealogia infere `manual_generation` em memoria a partir da pessoa central quando necessario, sem persistir no Supabase;
+- Genealogia mobile deve iniciar na primeira coluna real renderizada, e nao em coluna vazia ou fallback visual para Avos;
 - selecao de area bloqueia pan/zoom temporariamente.
 
 Cuidados:
@@ -247,6 +254,8 @@ Cuidados:
 - nao usar altura total para reduzir zoom de Genealogia/Visao Completa;
 - nao incluir labels/group boxes/anchors no bounds visual de zoom;
 - nao alterar filtros sem revisar `Home.tsx`;
+- nao transformar `activeGenealogyGeneration` em filtro destrutivo de pessoas;
+- nao persistir no banco a inferencia visual de geracoes feita para renderizacao;
 - nao mexer em Supabase neste componente.
 
 ---
@@ -307,7 +316,9 @@ Responsabilidade:
 - criar labels de geracao;
 - criar conectores ortogonais de familia;
 - criar edges conjugais com anel;
-- aplicar filtros de geracao.
+- aplicar filtros de geracao;
+- nao criar colunas fixas vazias quando nao houver cards renderizaveis;
+- manter espacamento vertical suficiente entre conjuges para evitar sobreposicao do anel.
 
 Funcoes/conceitos importantes:
 
@@ -321,6 +332,8 @@ addGenealogySpouseEdge
 genealogyColumnsLayout
 ```
 
+A inferencia complementar de geracoes da view **Genealogia** fica em `FamilyTree.tsx`, antes do layout por colunas. O layout deve receber pessoas ja preparadas para renderizacao, sem executar leitura ou escrita em banco.
+
 Cuidados:
 
 - nao adicionar titulo/subtitulo geral da arvore;
@@ -328,6 +341,8 @@ Cuidados:
 - altura pode exceder a viewport;
 - preservar conectores entre pais e filhos;
 - preservar status visual do anel de casamento;
+- nao reintroduzir colunas vazias apenas para manter a sequencia numerica `1..6`;
+- validar desktop e mobile quando alterar `manual_generation`, filtros ou agrupamento;
 - testar filtros de geracao apos mudancas.
 
 ---
@@ -578,6 +593,7 @@ Componentes principais:
 HomeHeader
 HomeTreeSection
 HomeMobileNav
+GenealogyMobileStageTabs
 DirectRelationKpiGrid
 DirectRelativeFilterGrid
 GenealogyFilterGrid
@@ -639,6 +655,41 @@ Cuidados:
 - o efeito de aplicacao da paleta deve existir junto do estado (`applyTreePalette(treeColorPalette)`);
 - antes de commitar ajuste nesse componente, buscar por `treeColorPalette`, `setTreeColorPalette`, `applyTreePalette(treeColorPalette)` e `TREE_COLOR_PALETTES`;
 - nao mover estado principal, carregamento Supabase ou filtros da arvore para o header.
+
+### 5.3 `GenealogyMobileStageTabs`
+
+Arquivo:
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+```
+
+Responsabilidade:
+
+- renderizar a navegacao mobile da view **Genealogia** por geracoes;
+- exibir chips horizontais com labels humanos, como **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
+- controlar selecao direta por toque/clique;
+- controlar swipe lateral entre geracoes;
+- indicar a geracao ativa;
+- exibir estado vazio quando nao houver geracoes visiveis;
+- ocupar a extensao horizontal disponivel na area da arvore em mobile.
+
+Contrato de UX:
+
+- os chips focam/enquadram a geracao ativa, mas nao removem as demais colunas da arvore;
+- a contagem numerica ao lado do label nao deve ser exibida;
+- a barra deve preservar espaco vertical suficiente para nao sobrepor os labels `GERACAO X`;
+- em Genealogia mobile, os botoes de zoom `+` e `-` podem ficar ocultos para priorizar a barra de navegacao;
+- swipe nos chips nao deve bloquear o pan/zoom do canvas ReactFlow.
+
+Cuidados:
+
+- nao mover a logica de carregamento de pessoas para este componente;
+- nao consultar Supabase diretamente;
+- nao persistir geracao ativa no banco;
+- validar 320px, 375px, 390px, 430px, 768px e desktop apos mudancas;
+- manter acessibilidade por `aria-label`, foco visivel e semantica de botoes.
+
 
 ## 6. Componentes de navegacao e menu
 
@@ -1648,3 +1699,43 @@ Anti-regressao:
 - o modal conjugal deve continuar abrindo;
 - a area clicavel maior nao deve deformar os cards;
 - os tokens de paleta nao devem alterar dados, relacoes ou filtros.
+
+---
+
+## Atualizacao 2026-06-06 - Genealogia mobile por geracoes
+
+Frente implementada na `main` para melhorar a visualizacao `/genealogia` em mobile, inspirada no padrao de navegacao horizontal por etapas do Google Search.
+
+### Componentes e arquivos afetados
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+### Comportamento consolidado
+
+- a navegacao mobile da Genealogia usa chips horizontais por geracao;
+- labels humanos substituem `Geracao 1`, `Geracao 2` etc. nos chips;
+- os chips nao exibem contagem;
+- swipe lateral nos chips troca a geracao ativa;
+- geracao ativa controla foco/enquadramento, nao filtro destrutivo;
+- todas as colunas com cards reais permanecem renderizadas;
+- colunas vazias nao devem aparecer;
+- a tela inicial mobile deve focar a primeira coluna real renderizada;
+- tataravos conectados por cadeia de filiacao devem aparecer na primeira geracao quando a pessoa central permitir essa inferencia;
+- inferencia de `manual_generation` acontece em memoria e nao altera Supabase;
+- em Genealogia mobile, botoes de zoom `+` e `-` foram ocultados para liberar espaco horizontal para os chips;
+- pan vertical deve continuar disponivel.
+
+### Anti-regressao
+
+- nao reintroduzir filtro que esconda colunas nao ativas;
+- nao usar Avos como fallback visual fixo quando existir geracao anterior renderizavel;
+- nao criar colunas vazias `1..6` por padrao;
+- nao persistir geracoes inferidas no banco;
+- validar desktop e mobile, pois a inferencia de geracoes afeta a Genealogia em ambos;
+- manter **Visao Completa** fora desta navegacao mobile ate decisao futura de produto.
+

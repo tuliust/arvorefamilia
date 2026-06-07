@@ -318,6 +318,7 @@ Untracked files:
   backups/
   *.bak
   *.patch
+  apply-*.py
 ```
 
 Regra:
@@ -330,6 +331,7 @@ Correcao:
 ```bash
 rm -rf backups/
 rm -f *.bak *.patch
+rm -f apply-*.py
 git status
 ```
 
@@ -987,6 +989,153 @@ Verificar:
 - cache de dados;
 - RLS;
 - modo de visualizacao selecionado.
+
+### Genealogia inicia na geracao errada ou centraliza a Geracao 2
+
+Sintomas:
+
+```txt
+/genealogia mobile abre com a Geracao 2 ao centro
+chip Tataravos aparece ativo, mas os cards da Geracao 1 nao ficam visiveis
+a primeira coluna real nao e enquadrada no carregamento inicial
+```
+
+Arquivos provaveis:
+
+```txt
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+Verificar:
+
+- `activeGenealogyGeneration`;
+- `effectiveActiveGenealogyGeneration`;
+- calculo de `mobileGenealogyInitialColumnBounds`;
+- primeira geracao real renderizada em `layoutResult.nodes`;
+- fallback indevido para `REFERENCE_GENERATION = 3`;
+- se a geracao ativa esta sendo usada apenas para foco, nao para ocultar nodes.
+
+Correcao esperada:
+
+- o carregamento inicial da Genealogia mobile deve focar a primeira geracao com cards reais;
+- no caso de Tulius, se Amalia Tsangaropoulos e Dimitri Tsangaropoulos estiverem conectados por filiacao, a primeira coluna deve ser Tataravos/Geracao 1;
+- o chip ativo e o viewport inicial devem apontar para a mesma geracao;
+- nao usar Avos como fallback de foco inicial quando houver geracao anterior renderizavel.
+
+### Genealogia mostra Geracao 1 vazia ou nao mostra tataravos
+
+Sintomas:
+
+```txt
+Geracao 1 aparece sem cards
+Tataravos cadastrados aparecem em outra view, mas nao aparecem em /genealogia
+coluna vazia ocupa espaco no desktop e no mobile
+```
+
+Causas provaveis:
+
+- `genealogyColumnsLayout.ts` criou colunas fixas vazias;
+- pessoas ancestrais nao possuem `manual_generation` coerente;
+- a view Genealogia depende de `manual_generation`, mas a cadeia de filiacao permite inferir a geracao;
+- relacoes de filiacao entre a pessoa central e os ancestrais estao ausentes ou invertidas.
+
+Correcao consolidada:
+
+- nao criar colunas fixas vazias em Genealogia;
+- inferir `manual_generation` em memoria a partir da pessoa central quando a view for Genealogia;
+- pais sobem uma geracao, filhos descem uma geracao e conjuges permanecem na mesma geracao;
+- nao alterar dados reais no Supabase durante a inferencia de renderizacao.
+
+Validar:
+
+```txt
+/genealogia desktop
+/genealogia mobile
+Tataravos
+Bisavos
+Avos
+Pais
+Nucleo
+Descendentes
+```
+
+Se os tataravos ainda nao aparecerem:
+
+1. verificar se existe cadeia completa de `filiacao_sangue` ou `filiacao_adotiva` ate a pessoa central;
+2. verificar se a origem/destino das relacoes esta correta;
+3. confirmar que as pessoas sao humanas (`isHumanFamilyMember`);
+4. confirmar que filtros de vida/status nao ocultam os cards;
+5. confirmar que RLS/cache nao esta omitindo relacionamentos.
+
+### Chips da Genealogia mobile escondem colunas
+
+Sintoma:
+
+```txt
+ao selecionar Tataravos, Bisavos ou Avos, as demais colunas somem
+ao reduzir zoom, nao e possivel ver a arvore completa
+```
+
+Regra consolidada:
+
+```txt
+chips da Genealogia mobile controlam foco/enquadramento, nao filtragem estrutural da arvore
+```
+
+Correcao esperada:
+
+- `visiblePersonIds` deve continuar representando filtros gerais;
+- `activeGenealogyGeneration` deve ser passado ao `FamilyTree` apenas para foco;
+- todos os cards renderizaveis da Genealogia devem permanecer no ReactFlow;
+- pan/zoom deve continuar considerando a arvore inteira.
+
+### Menu de geracoes sobrepoe labels ou botoes de zoom no mobile
+
+Sintomas:
+
+```txt
+Tataravos/Bisavos/Avos sobrepoem GERACAO 1/2/3
+botoes + e - reduzem area util da barra superior
+a barra de chips fica curta no mobile
+```
+
+Correcao consolidada:
+
+- barra de chips em `GenealogyMobileStageTabs` deve usar largura horizontal disponivel;
+- contagem numerica dos chips nao deve aparecer;
+- botoes `+` e `-` ficam ocultos somente em Genealogia mobile;
+- safe area superior deve evitar sobreposicao entre barra e labels de geracao;
+- pan/zoom por gesto continua permitido.
+
+### Anel conjugal sobreposto em Genealogia
+
+Sintoma:
+
+```txt
+anel de casamento fica sobreposto ou colado aos cards de conjuges
+```
+
+Arquivo provavel:
+
+```txt
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+Verificar:
+
+- `SPOUSE_ROW_EXTRA_GAP`;
+- tamanho visual atual do anel conjugal;
+- distancia vertical entre cards de conjuges;
+- status visual do anel em `GenealogySpouseEdge`.
+
+Correcao consolidada:
+
+- aumentar o gap vertical especifico entre conjuges;
+- preservar conectores e clique no anel;
+- validar com paletas `white`, `orange` e `brown`.
 
 ### Anel nao abre modal
 
@@ -2181,3 +2330,42 @@ Regra:
 ```txt
 Erro "Nenhuma alteracao aplicada" depois de uma execucao bem-sucedida nao e falha da implementacao; indica que o patch ja foi aplicado.
 ```
+---
+
+## Atualizacao 2026-06-06 - Genealogia mobile e inferencia de geracoes
+
+Frente concluida nesta rodada:
+
+```txt
+/genealogia mobile com navegacao horizontal por geracoes
+Genealogia desktop/mobile sem colunas vazias
+inferencia de geracoes por pessoa central em memoria
+```
+
+Commits de referencia:
+
+```txt
+60a6cd0 feat: add genealogy mobile stage tabs
+8d369f8 feat: show genealogy mobile stage tabs
+096d005 feat: control genealogy mobile stage tabs
+777d8fd feat: filter genealogy mobile tree by active stage
+50609f0 feat: reset genealogy mobile viewport by stage
+bd0d24f feat: refine genealogy mobile stage labels
+ca593a6 feat: add swipe navigation to genealogy mobile stages
+05742bb feat: show empty genealogy mobile stage feedback
+af17ffb fix: improve genealogy mobile stage focus
+f23e353 fix: refine genealogy mobile stage navigation
+9c13e22 fix: focus first genealogy mobile stage on load
+189303a fix: start genealogy mobile on first rendered column
+b668a59 fix: infer genealogy generations from central person
+```
+
+Regras anti-regressao:
+
+- chips da Genealogia mobile focam geracoes, mas nao escondem as demais colunas;
+- a primeira visualizacao mobile deve focar a primeira geracao com cards reais;
+- colunas vazias nao devem ser renderizadas;
+- tataravos devem aparecer se houver cadeia valida de filiacao ate a pessoa central;
+- a inferencia de geracoes e apenas em memoria, sem alteracao de Supabase;
+- `Visao Completa` ainda nao recebeu a navegacao mobile por chips e deve ser tratada em frente separada.
+

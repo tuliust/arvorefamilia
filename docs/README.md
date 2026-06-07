@@ -47,6 +47,7 @@ Documentos de funcionalidades ficam em `docs/funcionalidades/`.
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportacao de area visivel da arvore em PNG/PDF/impressao e selecao retangular. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Regras especificas da Minha Arvore, filtros diretos, pets e regras de exibicao. |
 | `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow e comportamento da view Minha Arvore. |
+| `funcionalidades/GENEALOGIA_VIEW.md` | Layout por geracoes, navegacao mobile por chips, viewport, inferencia visual e QA da view Genealogia. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edicao da propria arvore pelo membro, Meus Dados, avatar, arquivos historicos e saida sem salvar. |
 | `funcionalidades/NOTIFICACOES.md` | Notificacoes internas/e-mail, preferencias, logs, Edge Functions, rotina diaria e cron seguro. |
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil publico, admin de pessoa, dados pessoais, privacidade, vinculos e edicao. |
@@ -250,3 +251,37 @@ Pendencias rastreadas:
 - validar contraste das tres paletas quando tokens forem alterados;
 - avaliar acesso equivalente em mobile estreito, se o dropdown de views nao estiver disponivel;
 - ajustar padding superior dos titulos dos grupos sem alterar o tamanho total dos containers, se a demanda visual continuar ativa.
+
+---
+
+## 13. Ajustes recentes documentados - ciclo 2026-06-06 / Genealogia mobile
+
+Este ciclo documenta a frente de navegacao mobile da view **Genealogia**.
+
+Resumo:
+
+- `/genealogia` mobile passou a usar chips horizontais por geracao;
+- labels dos chips foram refinados para **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
+- chips nao exibem contagem;
+- swipe lateral entre geracoes foi implementado;
+- chips focam/enquadram a geracao ativa, mas nao escondem as demais colunas;
+- colunas vazias foram removidas;
+- inferencia de `manual_generation` em memoria foi adicionada para a Genealogia com base na pessoa central;
+- a tela inicial mobile deve focar a primeira coluna real renderizada;
+- o ajuste estrutural tambem beneficia desktop quando havia `Geracao 1` vazia;
+- botoes de zoom `+` e `-` foram ocultados apenas na Genealogia mobile;
+- nenhuma migration, RLS, permissao ou dado real foi alterado.
+
+Documentos que devem permanecer sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| UX da Genealogia mobile | `GUIA_UX_LAYOUT.md` e `funcionalidades/GENEALOGIA_VIEW.md` |
+| Componentes da Genealogia | `GUIA_COMPONENTES.md` |
+| Estado implementado | `GUIA_IMPLEMENTACOES.md` |
+| Troubleshooting de geracoes/viewport | `GUIA_CORRECAO_ERROS.md` |
+| Pendencia de aplicar padrao em Visao Completa | `PLANO_PROXIMOS_PASSOS.md` |
+
+Pendencia rastreavel:
+
+- aplicar padrao semelhante em `/visao-completa` somente apos validacao da Genealogia.

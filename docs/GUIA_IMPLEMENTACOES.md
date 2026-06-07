@@ -43,7 +43,8 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | 7.10 Responsividade mobile/tablet | Concluida | QA tecnico e visual aprovado em 2026-05-19 para as larguras obrigatorias. |
 | Home publica e legal | Implementada | `/entrar` configuravel no admin, aceite legal obrigatorio no primeiro acesso, `noindex/nofollow` em `index.html`. |
 | Headers e margens internas | Implementados | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio. |
-| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico. |
+| Viewport das views da arvore | Ajustado | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; Genealogia mobile inicia na primeira geracao com cards reais. |
+| Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; os chips focam/enquadram a geracao ativa sem remover as demais colunas; colunas vazias nao sao renderizadas. |
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e texto Faz X anos. |
@@ -90,6 +91,8 @@ Areas implementadas no MVP:
 - exportacao de area da arvore;
 - legenda visual da arvore;
 - paletas visuais da arvore;
+- navegacao mobile da Genealogia por geracoes;
+- inferencia em memoria de geracoes genealogicas a partir da pessoa central;
 - headers internos padronizados;
 - responsividade mobile/tablet.
 
@@ -240,6 +243,7 @@ src/app/pages/home/HomeMobileNav.tsx
 src/app/pages/home/DirectRelationKpiGrid.tsx
 src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/GenealogyMobileStageTabs.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/pages/home/SidebarInfoPanel.tsx
@@ -689,6 +693,68 @@ Validador anti-regressao:
 - Preview da Vercel antes de merge;
 - teste manual do dropdown em `/minha-arvore`, `/genealogia` e `/visao-completa`.
 
+### 10.4 Genealogia mobile por geracoes
+
+Implementado:
+
+- `/genealogia` em mobile possui navegacao horizontal por geracoes;
+- chips/tabs superiores exibem nomes humanos: **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
+- os chips nao exibem contagem numerica;
+- toque no chip altera a geracao ativa;
+- swipe lateral na barra de chips avanca ou volta geracao;
+- barra de chips ocupa a largura horizontal disponivel;
+- botoes `+` e `-` ficam ocultos somente em Genealogia mobile;
+- labels `GERACAO X` recebem area segura para nao sobrepor o menu superior;
+- estado vazio exibe mensagem amigavel quando nao houver geracoes ou pessoas visiveis.
+
+Arquivos principais:
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+Decisao consolidada:
+
+```txt
+chips focam/enquadram a geracao ativa, mas nao filtram/removem as demais colunas do ReactFlow
+```
+
+Motivo:
+
+- o usuario deve poder reduzir zoom e enxergar a arvore inteira;
+- o pan/zoom do ReactFlow precisa continuar considerando todos os nodes renderizaveis;
+- a navegacao mobile deve funcionar como foco progressivo, nao como filtro destrutivo.
+
+### 10.5 Genealogia - inferencia de geracoes e colunas vazias
+
+Implementado:
+
+- a view Genealogia pode inferir `manual_generation` em memoria a partir da pessoa central;
+- pais sobem uma geracao;
+- filhos descem uma geracao;
+- conjuges permanecem na mesma geracao;
+- a inferencia nao altera dados no Supabase;
+- colunas vazias nao sao renderizadas;
+- `Geração 1` nao deve aparecer sem cards;
+- tataravos aparecem se estiverem conectados por cadeia valida de `filiacao_sangue` ou `filiacao_adotiva`.
+
+Comportamento esperado:
+
+- em desktop e mobile, a primeira coluna da Genealogia deve ser a primeira geracao com cards reais;
+- no caso de uma pessoa central com tataravos cadastrados e conectados, `Tataravos/Geracao 1` deve aparecer como primeira coluna;
+- se nao houver pessoas em uma geracao, a coluna correspondente nao aparece;
+- filtros de vida/status ainda podem ocultar pessoas conforme configuracao.
+
+Cuidados:
+
+- nao persistir a geracao inferida no banco;
+- nao substituir cadastro correto de `manual_generation`;
+- nao aplicar automaticamente a navegacao mobile por chips em `Visao Completa`;
+- validar conectores, aneis conjugais, paletas e exportacao apos mudancas no layout.
+
 ---
 
 ## 11. Painel lateral e legendas visuais da arvore - 7.7
@@ -1107,3 +1173,51 @@ Incidente resolvido:
 - producao quebrou com `ReferenceError: treeColorPalette is not defined`;
 - o commit foi revertido;
 - a reimplementacao segura foi feita por branch/PR separado, com estado React e efeito de aplicacao/persistencia.
+---
+
+## Atualizacao 2026-06-06 - Genealogia mobile e geracoes inferidas
+
+Implementado na `main` em commits incrementais:
+
+```txt
+60a6cd0 feat: add genealogy mobile stage tabs
+8d369f8 feat: show genealogy mobile stage tabs
+096d005 feat: control genealogy mobile stage tabs
+777d8fd feat: filter genealogy mobile tree by active stage
+50609f0 feat: reset genealogy mobile viewport by stage
+bd0d24f feat: refine genealogy mobile stage labels
+ca593a6 feat: add swipe navigation to genealogy mobile stages
+05742bb feat: show empty genealogy mobile stage feedback
+af17ffb fix: improve genealogy mobile stage focus
+f23e353 fix: refine genealogy mobile stage navigation
+9c13e22 fix: focus first genealogy mobile stage on load
+189303a fix: start genealogy mobile on first rendered column
+b668a59 fix: infer genealogy generations from central person
+```
+
+Resumo entregue:
+
+- Genealogia mobile passou a ter navegacao horizontal por geracoes;
+- chips controlam foco/enquadramento e nao filtram estruturalmente a arvore;
+- barra mobile remove contagem e ocupa a largura disponivel;
+- swipe lateral entre geracoes foi implementado;
+- botoes de zoom foram ocultados apenas em Genealogia mobile;
+- gap entre conjuges foi ampliado para reduzir sobreposicao do anel;
+- Genealogia desktop/mobile deixou de renderizar colunas vazias;
+- geracoes podem ser inferidas em memoria pela cadeia de filiacao da pessoa central;
+- nenhuma migration, RLS ou alteracao de dados reais foi criada nesta frente.
+
+Validacao recomendada:
+
+```txt
+/genealogia mobile em 320px, 375px, 390px, 430px e 768px
+/genealogia desktop
+/minha-arvore para regressao
+/visao-completa para regressao
+paletas white, orange e brown
+clique em pessoa
+clique em anel conjugal
+pan vertical e horizontal
+exportacao de area visivel
+```
+

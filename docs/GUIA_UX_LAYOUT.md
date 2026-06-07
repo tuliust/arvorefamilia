@@ -1,6 +1,7 @@
 # Guia de UX e Layout - Arvore Familia
 
 > Ultima revisao: 2026-06-06
+> Revisao complementar: Genealogia mobile por geracoes
 > Local canonico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -461,7 +462,40 @@ A view **Genealogia** deve:
 - manter largura visual equivalente a Minha Arvore;
 - permitir que o usuario arraste/deslize para baixo quando houver muitos cards verticais;
 - preservar labels de geracao;
-- preservar aneis conjugais e conectores ortogonais.
+- preservar aneis conjugais e conectores ortogonais;
+- no mobile, oferecer navegacao horizontal por geracoes, com chips superiores e suporte a swipe lateral.
+
+#### 5.4.1 Genealogia mobile por geracoes
+
+No mobile, a view **Genealogia** adota um padrao inspirado em navegacao horizontal por etapas:
+
+```txt
+Tataravos
+Bisavos
+Avos
+Pais
+Nucleo
+Descendentes
+```
+
+Regras consolidadas:
+
+- a barra de chips aparece apenas em `/genealogia` mobile;
+- os chips ocupam a largura horizontal disponivel da area da arvore;
+- os chips nao exibem contagem numerica;
+- a geracao ativa deve ter estado visual claro;
+- toque/click em chip deve focar a respectiva geracao;
+- swipe lateral nos chips deve avancar ou voltar geracao;
+- os chips focam/enquadram a geracao, mas nao removem as demais colunas do ReactFlow;
+- ao reduzir zoom, o usuario deve conseguir ver as demais colunas com cards reais;
+- a tela inicial deve focar a primeira geracao renderizada com cards reais;
+- se a pessoa central tiver tataravos conectados, a primeira coluna deve aparecer com esses cards;
+- colunas sem cards nao devem ser exibidas;
+- labels `GERACAO X` nao devem ficar sobrepostos ao menu de chips;
+- em Genealogia mobile, botoes `+` e `-` podem ficar ocultos para evitar disputa de espaco com a barra de chips;
+- pan vertical e horizontal por touch deve continuar disponivel na area da arvore.
+
+A inferencia de geracao deve ser tratada como regra de renderizacao em memoria. Ela nao deve alterar dados reais, migrations, RLS ou Supabase.
 
 ### 5.5 Visao Completa
 
@@ -486,10 +520,12 @@ Controles esperados:
 Regras:
 
 - botoes de zoom ficam no canto superior direito da area da arvore, por exemplo `right-4 top-4`;
+- em Genealogia mobile, os botoes `+` e `-` podem ser ocultados para priorizar a barra horizontal de geracoes;
 - durante selecao de area, pan/zoom devem ser bloqueados;
 - ao cancelar/concluir selecao, pan/zoom devem voltar;
 - Genealogia e Visao Completa sempre precisam permitir pan vertical;
-- Minha Arvore pode restringir pan quando esta no zoom de fit, para evitar deslocamento acidental.
+- Minha Arvore pode restringir pan quando esta no zoom de fit, para evitar deslocamento acidental;
+- swipe nos chips de geracao nao deve bloquear o pan/zoom do canvas fora da barra.
 
 ---
 
@@ -538,7 +574,9 @@ Caracteristicas:
 - aneis de casamento;
 - conectores familiares ortogonais;
 - labels de geracao;
-- suporte a filtros por geracao.
+- suporte a filtros por geracao;
+- colunas vazias nao devem ser renderizadas;
+- espacamento vertical entre conjuges deve evitar sobreposicao do anel.
 
 Regras de UX:
 
@@ -547,7 +585,9 @@ Regras de UX:
 - titulo/subtitulo principal nao deve ser renderizado aqui;
 - altura vertical pode exceder a viewport;
 - usuario deve navegar por pan/arraste;
-- conectores devem continuar legiveis mesmo com filtros ativos.
+- conectores devem continuar legiveis mesmo com filtros ativos;
+- em Genealogia, a primeira coluna com cards reais deve ser tratada como ponto inicial de leitura;
+- no mobile, a barra de geracoes deve focar colunas reais, nao colunas vazias.
 
 ---
 
@@ -1038,3 +1078,50 @@ Historico de estabilizacao:
 - o PR #7 adicionou estado React, `applyTreePalette`, persistencia e botoes no `SelectContent`;
 - o build local e o Preview da Vercel foram validados antes do merge;
 - apos merge, a producao foi testada e voltou a exibir as paletas corretamente.
+
+---
+
+## Atualizacao 2026-06-06 - UX da Genealogia mobile por geracoes
+
+A view `/genealogia` recebeu uma navegacao mobile por geracoes inspirada em tabs/chips horizontais de etapas.
+
+### Decisoes de UX
+
+- aplicar inicialmente apenas em **Genealogia**;
+- deixar **Visao Completa** como etapa futura;
+- evitar empilhar todas as geracoes verticalmente no mobile;
+- usar chips horizontais para selecao direta;
+- permitir swipe lateral entre chips;
+- manter o canvas ReactFlow como superficie interativa de pan/zoom;
+- focar a geracao ativa sem esconder as demais colunas;
+- iniciar na primeira geracao com cards reais;
+- remover contagens dos chips para reduzir ruído visual;
+- ocultar controles `+` e `-` em Genealogia mobile para liberar espaco ao menu;
+- manter pan vertical para colunas altas;
+- remover colunas vazias da Genealogia.
+
+### QA visual obrigatorio
+
+Testar `/genealogia` em:
+
+```txt
+320px
+375px
+390px
+430px
+768px
+desktop
+```
+
+Validar:
+
+- barra de chips sem contagem;
+- chip ativo coerente com a coluna focada;
+- primeira coluna real visivel no carregamento;
+- tataravos visiveis quando existirem na cadeia de filiacao;
+- labels de geracao sem sobreposicao com chips;
+- pan vertical funcional;
+- zoom por gesto funcional;
+- desktop sem coluna vazia;
+- `/minha-arvore` e `/visao-completa` sem regressao.
+

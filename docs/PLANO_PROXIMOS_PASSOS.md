@@ -45,7 +45,8 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Refinamentos ficam pos-MVP. |
 | 7.10 Responsividade mobile/tablet | Concluida | QA final tecnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluidos | Header compartilhado nas paginas internas e Home pos-login preservada com header proprio. |
-| Viewport da arvore | Ajustado | Minha Arvore, Genealogia e Visao Completa tem regras finais de escala/titulo consolidadas. |
+| Viewport da arvore | Ajustado | Minha Arvore, Genealogia e Visao Completa tem regras finais de escala/titulo consolidadas; Genealogia mobile inicia na primeira geracao com cards reais. |
+| Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; colunas vazias foram removidas; inferencia de geracoes ocorre em memoria pela pessoa central. |
 | Rotas das views da arvore | Concluidas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
 | Refatoracao incremental da Home | Em andamento seguro | Componentes visuais foram extraidos; `Home.tsx` segue como orquestradora. |
 | Minha Arvore e arquivos historicos | Atualizados | Categoria historica, preview pos-upload, botao **Acoes** e casamento salvo pelo botao geral consolidados. |
@@ -78,6 +79,8 @@ O MVP deve ser fechado com:
 - categoria historica em arquivos historicos;
 - `/minha-arvore` com dados conjugais salvos pelo botao geral;
 - rotas dedicadas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- Genealogia mobile navegavel por geracoes;
+- Genealogia sem colunas vazias e com inferencia de geracoes em memoria;
 - paletas visuais da arvore no header;
 - headers internos padronizados;
 - responsividade mobile/tablet;
@@ -323,6 +326,59 @@ QA de manutencao:
 - avaliar acesso equivalente em mobile estreito caso o dropdown de view nao esteja disponivel;
 - qualquer nova paleta deve atualizar `treeColorPalettes.ts`, `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md` e este plano.
 
+### 5.8 Genealogia mobile por geracoes
+
+Concluido:
+
+- criada navegacao horizontal por geracoes em `/genealogia` mobile;
+- chips exibem **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
+- chips nao exibem contagem numerica;
+- swipe lateral alterna entre geracoes;
+- chips controlam foco/enquadramento, nao removem colunas da arvore;
+- todas as colunas renderizaveis continuam presentes no ReactFlow;
+- botoes `+` e `-` foram ocultados apenas em Genealogia mobile;
+- barra de chips ocupa a largura horizontal disponivel;
+- labels `GERACAO X` nao devem sobrepor o menu;
+- colunas vazias nao sao renderizadas;
+- inferencia de geracoes em memoria foi adicionada para a Genealogia;
+- tataravos aparecem quando conectados por filiacao valida ate a pessoa central;
+- sem migration, RLS, alteracao de schema ou alteracao de dados reais.
+
+Arquivos relacionados:
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+```
+
+Commits de referencia:
+
+```txt
+60a6cd0 feat: add genealogy mobile stage tabs
+8d369f8 feat: show genealogy mobile stage tabs
+096d005 feat: control genealogy mobile stage tabs
+777d8fd feat: filter genealogy mobile tree by active stage
+50609f0 feat: reset genealogy mobile viewport by stage
+bd0d24f feat: refine genealogy mobile stage labels
+ca593a6 feat: add swipe navigation to genealogy mobile stages
+05742bb feat: show empty genealogy mobile stage feedback
+af17ffb fix: improve genealogy mobile stage focus
+f23e353 fix: refine genealogy mobile stage navigation
+9c13e22 fix: focus first genealogy mobile stage on load
+189303a fix: start genealogy mobile on first rendered column
+b668a59 fix: infer genealogy generations from central person
+```
+
+QA especifico:
+
+- validar `/genealogia` em 320px, 375px, 390px, 430px, 768px e desktop;
+- confirmar que a primeira coluna tem cards reais;
+- confirmar que Tataravos aparecem quando cadastrados e conectados;
+- confirmar pan vertical/horizontal;
+- confirmar que `/minha-arvore` e `/visao-completa` nao regrediram.
+
 ---
 
 ## 6. QA final de lancamento
@@ -559,6 +615,7 @@ Nao bloqueiam lancamento, se documentados:
 | Legado SQL | Revisar scripts antigos de forum/Google Calendar. |
 | Logs | Remover ruidos tecnicos como `lado` dos `changed_fields`, se confirmado como ruido. |
 | Viewport arvore | Avaliar melhorias finas para arvores muito grandes apos uso real. |
+| Visao Completa mobile | Avaliar aplicacao do padrao de navegacao horizontal por blocos/geracoes depois da validacao completa da Genealogia. |
 | Legenda | Avaliar versao administrativa/configuravel pos-MVP, se necessario. |
 | Documentacao | Manter `docs/arquitetura/ROTAS_E_GUARDS.md`, `docs/funcionalidades/EXPORTACAO_ARVORE.md` e demais guias canonicos sincronizados com o codigo. |
 
@@ -797,3 +854,40 @@ Pendencias/observacoes de manutencao:
 - verificar se a paleta marrom reproduz bem o estilo premium/Suafamilia;
 - avaliar acesso equivalente ao seletor de paleta em mobile estreito, se o dropdown de views nao estiver disponivel;
 - ajustar padding superior dos titulos dos grupos, como **BISAVOS PATERNOS**, sem alterar o tamanho geral dos containers, se ainda for uma demanda visual ativa.
+---
+
+## Atualizacao 2026-06-06 - Fechamento da frente Genealogia mobile
+
+Concluido:
+
+- navegacao mobile por chips de geracao em `/genealogia`;
+- swipe lateral entre geracoes;
+- chips sem contagem numerica;
+- foco por geracao sem esconder as demais colunas;
+- primeira visualizacao focada na primeira geracao com cards reais;
+- colunas vazias removidas da Genealogia;
+- inferencia de geracoes em memoria a partir da pessoa central;
+- ajuste de espacamento vertical entre conjuges;
+- ocultacao dos botoes `+` e `-` somente em Genealogia mobile;
+- sem alteracao de Supabase, migrations, RLS ou dados reais.
+
+Permanece fora desta frente:
+
+- aplicar o mesmo padrao mobile em `/visao-completa`;
+- transformar a inferencia em dado persistido;
+- criar configuracao administrativa para labels/geracoes;
+- alterar regras de permissao ou banco.
+
+Checklist minimo antes de considerar a frente totalmente encerrada em producao:
+
+```txt
+/genealogia mobile carrega na primeira geracao com cards reais
+Tataravos aparecem quando conectados por filiacao ate a pessoa central
+chips alternam foco sem esconder colunas
+pan vertical e horizontal funcionam
+colunas vazias nao aparecem
+/minha-arvore sem regressao
+/visao-completa sem regressao
+paletas white, orange e brown sem regressao visual
+```
+
