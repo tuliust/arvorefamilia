@@ -1,6 +1,7 @@
 # Arvore - legendas, conectores, filtros e painel lateral
 
-> Ultima revisao: 2026-05-30
+> Ultima revisao: 2026-06-07
+> Revisao complementar: destaques de linhas por cor, botao conjugal `Blend` cinza e anti-regressao de conectores.
 
 > Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentacao funcional/tecnica especifica da arvore.
@@ -385,9 +386,25 @@ Destaque Todas:
   destaca todos os grupos de linhas visiveis.
 ```
 
+Padrao visual consolidado:
+
+| Controle de destaque | Cor/estilo esperado |
+|---|---|
+| `Conjuges` / `spouseHighlight` | laranja, linha solida, maior contraste |
+| `Pais/Filhos` / `parentChildHighlight` | amarelo/dourado, linha solida, maior contraste |
+| `Irmaos` / `siblingHighlight` | azul, linha tracejada, maior contraste |
+| `Todas` | aplica os tres estilos acima apenas em linhas visiveis |
+
+Regra de prioridade:
+
+- destaque visual deve vencer a cor normal da paleta;
+- linha oculta por `edgeFilters` continua oculta;
+- `family-tree-visual-polish.css` nao deve sobrescrever os destaques com uma cor unica de borda/grupo;
+- se houver conflito entre CSS global e estilo inline da edge, revisar seletores com `!important`.
+
 ---
 
-### 5.4 Alianca
+### 5.4 Botao conjugal / alianca
 
 Exemplos:
 
@@ -401,10 +418,19 @@ Uniao Estavel
 Funcao atual:
 
 - legenda visual;
+- ponto de acesso ao modal conjugal quando renderizado como botao na arvore;
 - nao filtra;
 - nao destaca;
 - nao altera arvore;
 - nao altera relacao no banco.
+
+Padrao visual consolidado no ciclo atual:
+
+- icone `Blend` de `lucide-react`;
+- estilo cinza/neutro nas tres views;
+- nao usar emoji de alianca;
+- manter botao clicavel e com `aria-label`/`title`;
+- manter handles invisiveis e edges do ReactFlow.
 
 Regra:
 
@@ -566,7 +592,7 @@ Comportamento:
 
 ```txt
 Conjugal:
-  oculta/exibe linhas conjugais e icone de alianca.
+  oculta/exibe linhas conjugais e o botao conjugal quando a arquitetura da view o vincular a esse filtro.
 
 Pais/filhos:
   oculta/exibe conectores familiares entre geracoes.
@@ -589,6 +615,30 @@ Destaque nao exibe linha oculta.
 Destaque nao altera cards.
 Destaque nao altera contadores.
 ```
+
+Cores/estilos esperados:
+
+```txt
+Conjuges -> laranja solido
+Pais/filhos -> amarelo/dourado solido
+Irmaos -> azul tracejado
+Todas -> aplica os tres destaques simultaneamente
+```
+
+Arquivos que podem interferir:
+
+```txt
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Anti-regressao:
+
+- o CSS global nao deve forcar todas as edges para `--tree-palette-group-border` quando houver destaque ativo;
+- `GenealogyFamilyConnectorNode` deve aumentar stroke/opacidade quando `parentChildHighlight` ou `siblingHighlight` estiverem ativos;
+- irmaos devem permanecer tracejados e azuis, inclusive nos conectores SVG internos.
 
 ---
 
@@ -697,7 +747,7 @@ os bracos horizontais ate cada irmao tambem ficam no estilo de irmaos.
 Estilo esperado:
 
 ```txt
-amarelo
+azul
 tracejado
 ```
 
@@ -714,6 +764,24 @@ Motivo:
 ```txt
 A funcao criava uma segunda linha visual, duplicando a ramificacao ja existente.
 ```
+
+### 9.5 Botao conjugal em Genealogia/Visao Completa
+
+A Genealogia e a Visao Completa usam:
+
+```txt
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+Padrao consolidado:
+
+- renderizar `Blend` de `lucide-react`;
+- usar cor cinza/neutra;
+- manter botao circular de `60px x 60px`;
+- manter clique no modal de relacionamento conjugal;
+- preservar `EdgeLabelRenderer`;
+- nao usar emoji como conteudo visual principal;
+- nao deixar o container cinza apagado se a decisao visual vigente for botao branco com borda cinza.
 
 ---
 
@@ -810,10 +878,11 @@ Pais/Filhos:
   apenas linhas parentais visiveis destacam.
 
 Irmaos:
-  trechos de irmaos visiveis destacam.
+  trechos de irmaos visiveis destacam em azul tracejado.
 
 Todas:
-  todas as linhas visiveis destacam.
+  todas as linhas visiveis destacam, respeitando laranja para conjuges,
+  amarelo/dourado para pais/filhos e azul tracejado para irmaos.
 ```
 
 Regra obrigatoria:
@@ -847,7 +916,7 @@ Validar:
 scroll/pan vertical nao volta sozinho ao topo;
 console sem erro sibling-left;
 destaque de irmaos nao cria linha duplicada;
-ramificacao existente fica amarela e tracejada;
+ramificacao existente fica azul e tracejada;
 linha pais/casal -> ramificacao mantem estilo de pais/filhos.
 ```
 
@@ -1147,4 +1216,42 @@ A paleta atua apenas sobre tokens visuais via CSS variables, incluindo:
 - fundo da legenda;
 - fundo/canvas da arvore.
 
-O anel conjugal permanece funcional e foi ampliado para `60px x 60px`.
+O botao conjugal permanece funcional, foi padronizado em `60px x 60px`, usa `Blend` de `lucide-react` e deve permanecer em cinza/neutro salvo nova decisao visual.
+
+
+---
+
+## 17. Atualizacao 2026-06-07 - Destaques e icones vetoriais
+
+Ajustes consolidados no ciclo atual:
+
+- emojis de data nos cards de pessoa foram substituidos por `Star` e `Cross` de `lucide-react`;
+- botao conjugal passou a usar `Blend` de `lucide-react`;
+- estilo final do botao conjugal nas tres views: cinza/neutro;
+- destaques de linhas foram reforcados para ficarem perceptiveis nas paletas `white`, `orange` e `brown`;
+- a cor de destaque de irmaos foi consolidada como azul tracejado;
+- conectores SVG internos de `GenealogyFamilyConnectorNode` devem aumentar stroke/opacidade quando destacados.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-tree-visual-polish.css
+```
+
+Checklist anti-regressao:
+
+```txt
+/minha-arvore -> Blend cinza no botao conjugal
+/genealogia -> Blend cinza no botao conjugal
+/visao-completa -> Blend cinza no botao conjugal
+Destacar Conjuges -> laranja
+Destacar Pais/Filhos -> amarelo/dourado
+Destacar Irmaos -> azul tracejado
+Destacar Todas -> aplica os tres estilos sem recriar linhas ocultas
+```

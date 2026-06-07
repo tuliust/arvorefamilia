@@ -2,7 +2,7 @@
 
 > Ultima revisao: 2026-06-07
 > Ultima atualizacao: 2026-06-07
-> Revisao complementar: sintomas pendentes de titulo/viewport, aliancas e menus de usuario
+> Revisao complementar: Genealogia mobile, botão conjugal Blend, destaques de linhas e Calendário mobile
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -94,7 +94,7 @@ Estes sintomas foram observados na frente de refinamento das views da árvore e 
 | Título da árvore colado no topo | Pendente | `FamilyTree.tsx`, `family-tree-visual-polish.css` |
 | Espaço grande entre título e cards | Pendente | `FamilyTree.tsx` |
 | Cards superiores cortados após ajuste visual | Regressão conhecida | CSS com `translate`/`transform` em ReactFlow |
-| Alianças de `/minha-arvore` pouco visíveis ou ausentes | Pendente | `MarriageNode.tsx`, `types.ts`, `directFamilyDistributedLayout.ts` |
+| Botão conjugal `Blend` cinza ausente, laranja ou inconsistente entre views | Validar | `MarriageNode.tsx`, `GenealogySpouseEdge.tsx`, `types.ts`, `directFamilyDistributedLayout.ts` |
 | Menu da árvore diferente do menu das páginas internas | Pendente de diagnóstico | `HomeHeader.tsx`, `UserProfileMenu.tsx`, `MemberPageHeader.tsx` |
 
 Regra:
@@ -1131,6 +1131,106 @@ Correcao consolidada:
 - safe area superior deve evitar sobreposicao entre barra e labels de geracao;
 - pan/zoom por gesto continua permitido.
 
+
+### Genealogia mobile abre cada chip em altura diferente
+
+Sintomas:
+
+```txt
+Tataravós e Bisavós abrem mais baixos que Avós.
+Pais e Núcleo abrem abaixo da régua visual esperada.
+Descendentes abre tão baixo que os cabeçalhos GERAÇÃO X somem.
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+```
+
+Causa provável:
+
+```txt
+mobileGenealogyInitialColumnBounds usa y: targetBounds.y.
+```
+
+Correção esperada:
+
+```ts
+return {
+  x: targetBounds.x,
+  y: referenceBounds.y,
+  width: targetBounds.width,
+  height: Math.max(1, referenceBounds.height),
+};
+```
+
+Regra:
+
+- o eixo X deve seguir a geração ativa;
+- o eixo Y deve seguir a referência visual de Avós/Geração 3;
+- não usar `translate`, `transform`, `top` negativo ou deslocamento em `.react-flow__viewport`.
+
+Validação:
+
+```txt
+/genealogia mobile
+Tataravós
+Bisavós
+Avós
+Pais
+Núcleo
+Descendentes
+```
+
+Todos os chips devem manter os cabeçalhos `GERAÇÃO X` na mesma régua vertical.
+
+### Genealogia mobile não permite recuperar cabeçalhos ao arrastar
+
+Sintomas:
+
+```txt
+O alinhamento inicial está correto, mas ao deslizar/arrastar a árvore os cabeçalhos somem.
+Não é possível arrastar para cima/baixo para recuperar a área superior.
+```
+
+Arquivo provável:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Causa provável:
+
+```txt
+translateExtent limita o pan mobile em /genealogia.
+```
+
+Correção esperada:
+
+```ts
+const activeTreeTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
+  if (isMobile && isGenealogyLayout) return undefined;
+  if (!translateBounds) return undefined;
+
+  return getDirectFamilyTranslateExtent(
+    translateBounds,
+    isGenealogyLayout
+      ? (isMobile ? GENEALOGY_MOBILE_TRANSLATE_PADDING : GENEALOGY_TRANSLATE_PADDING)
+      : (isMobile ? DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING : DIRECT_FAMILY_TRANSLATE_PADDING)
+  );
+}, [translateBounds, isGenealogyLayout, isMobile]);
+```
+
+Regra:
+
+- remover a trava de pan apenas para `/genealogia` mobile;
+- não alterar Supabase, migrations, RLS ou dados;
+- não usar CSS de deslocamento em `.react-flow__viewport`.
+
+
 ### Anel conjugal sobreposto em Genealogia
 
 Sintoma:
@@ -1236,15 +1336,15 @@ orange
 brown
 ```
 
-### Alianças ausentes ou pouco visíveis em `/minha-arvore`
+### Botão conjugal aparece laranja, vazio ou diferente entre views
 
 Sintomas:
 
 ```txt
-O botão conjugal aparece como círculo vazio.
+O botão conjugal aparece laranja quando o padrão atual deveria ser cinza.
+O botão conjugal parece vazio ou sem ícone.
 O emoji antigo aparece como ?? ou mojibake.
-O SVG existe no código, mas não é perceptível na interface.
-/genealogia parece correta, mas /minha-arvore não.
+O botão em /genealogia tem formatação diferente de /minha-arvore.
 ```
 
 Arquivos prováveis:
@@ -1258,19 +1358,20 @@ src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 
 Verificar:
 
+- `MarriageNode.tsx` importa e renderiza `Blend` de `lucide-react`;
+- `GenealogySpouseEdge.tsx` importa e renderiza `Blend` de `lucide-react`;
+- os estilos usam cinza/neutro (`slate`) para ícone, borda, hover/focus e shadow;
+- não restam emojis `💍`, `??` ou SVG customizado de alianças;
 - `MarriageNodeData` aceita `visualVariant?: 'default' | 'direct-family'`;
 - os marriage nodes de `/minha-arvore` recebem `visualVariant: 'direct-family'`;
-- `/genealogia` não recebe a variante direta sem decisão explícita;
-- o SVG tem `stroke`, `width`, `height`, `viewBox` e contraste suficientes;
-- `overflow`, `z-index`, handles invisíveis e classes do botão não escondem o SVG;
 - clique no botão ainda abre `ViewMarriageModal`.
 
 Correção esperada:
 
-- usar SVG estável, não emoji;
-- reforçar apenas a variante `direct-family` se o problema for exclusivo de `/minha-arvore`;
+- usar `Blend` estável de `lucide-react`, não emoji;
+- manter botão cinza/neutro nas três views;
 - não alterar dimensão lógica do node sem revisar layout e anchors;
-- não quebrar o estilo aprovado em `/genealogia`.
+- preservar handles, edges, modal e clique dos cards.
 
 ### Dois menus de usuário diferentes
 
@@ -2031,6 +2132,37 @@ Verificar:
 - cards do calendario usando primeiro nome;
 - lista inferior usando nome completo.
 
+### Card Categorias aparece abaixo do calendário no mobile
+
+Sintoma:
+
+```txt
+/calendario-familiar mobile mostra o card Categorias abaixo do calendário, ocupando espaço excessivo.
+```
+
+Arquivo provável:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Correção esperada:
+
+- no mobile, os filtros/chips superiores de categorias continuam visíveis e clicáveis;
+- no mobile, `#categorias-calendario` deve ficar oculto;
+- desktop/tablet podem manter o card de categorias;
+- se `scrollToMonthSummary` usar `#categorias-calendario` como fallback, deve haver fallback alternativo visível quando o card estiver oculto.
+
+### Filtros superiores do calendário estouram no mobile
+
+Verificar:
+
+- tamanho de fonte dos chips Aniversário, Casamento, Falecimento, Outros e Reunião;
+- padding horizontal dos botões;
+- truncamento seguro em 320px, 375px, 390px e 430px;
+- ausência de overflow horizontal global.
+
 ---
 
 ## 23. Troubleshooting recente - legenda funcional, camadas visuais e painel lateral
@@ -2063,7 +2195,7 @@ Verificar:
 - repasse para `directFamilyDistributedLayout` e `genealogyColumnsLayout`;
 - `GenealogyFamilyConnectorNode` recebendo `parentChildHighlight`.
 
-### Botao Destacar irmaos nao tem efeito
+### Botao Destacar irmaos nao tem efeito ou fica com cor errada
 
 Verificar:
 
@@ -2071,7 +2203,24 @@ Verificar:
 - `edgeFilters.irmaos`;
 - relacoes explicitas `irmao`;
 - handles usados nas edges de irmaos;
-- restricoes contra linhas longas em Genealogia/Visao Completa.
+- restricoes contra linhas longas em Genealogia/Visao Completa;
+- `family-tree-visual-polish.css` sobrescrevendo `stroke` com `!important`;
+- `GenealogyFamilyConnectorNode.tsx` recebendo `siblingHighlight`.
+
+Padrão esperado:
+
+```txt
+Cônjuges -> laranja
+Pais/Filhos -> amarelo/dourado
+Irmãos -> azul tracejado
+Todas -> aplica os três estilos nas linhas visíveis
+```
+
+Correção esperada:
+
+- destaque não cria linha nova;
+- destaque não reexibe linha oculta por `edgeFilters`;
+- irmãos em Genealogia/Visão Completa devem estilizar a ramificação SVG existente, não criar edge duplicada.
 
 ### Informacoes voltou para dentro da toggle
 
@@ -2827,3 +2976,34 @@ menu da árvore coerente com o menu das páginas internas
 ```
 
 Se algum desses pontos falhar, registrar como pendência em `PLANO_PROXIMOS_PASSOS.md`, não como implementação concluída em `GUIA_IMPLEMENTACOES.md`.
+
+
+---
+
+## Atualizacao 2026-06-07 - Ajustes visuais finais de arvore e calendario
+
+Itens consolidados neste ciclo:
+
+- cards de pessoas usam `Star` e `Cross` de `lucide-react` para nascimento/falecimento, substituindo emojis;
+- botão conjugal usa `Blend` de `lucide-react` em cinza/neutro nas três views da árvore;
+- destaques de linhas seguem o padrão: cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado;
+- Genealogia mobile usa Avós/Geração 3 como referência vertical para os chips superiores;
+- Genealogia mobile deve permitir pan vertical suficiente para recuperar cabeçalhos;
+- Calendário Familiar mobile usa filtros superiores compactos e oculta o card **Categorias** inferior.
+
+Comandos de validação recomendados:
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Validação visual mínima:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/calendario-familiar
+```

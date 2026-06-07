@@ -1,7 +1,7 @@
 # Guia de componentes - Árvore Família
 
 > Última atualização: 2026-06-07  
-> Revisão complementar: menu compartilhado, título/viewport da árvore, alianças da Minha Árvore e pendências visuais finais  
+> Revisão complementar: ícones lucide, botão conjugal neutro, destaques de conectores, Genealogia mobile e Calendário mobile  
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -250,6 +250,9 @@ Comportamento consolidado:
 - Genealogia/Visão Completa usam zoom por largura;
 - Genealogia infere `manual_generation` em memória a partir da pessoa central quando necessário, sem persistir no Supabase;
 - Genealogia mobile inicia na primeira coluna real renderizada;
+- Genealogia mobile usa a geração 3/Avós como referência vertical de enquadramento quando o usuário alterna chips superiores;
+- em Genealogia mobile, o eixo X acompanha a geração ativa, mas o eixo Y deve permanecer ancorado em `referenceBounds.y` para evitar saltos verticais entre Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes;
+- em Genealogia mobile, o `translateExtent` não deve impedir o usuário de arrastar a árvore para recuperar cabeçalhos/área superior;
 - seleção de área bloqueia pan/zoom temporariamente.
 
 Cuidados:
@@ -371,8 +374,8 @@ src/app/components/FamilyTree/types.ts
 
 Responsabilidade:
 
-- renderizar o botão/anel clicável de vínculo conjugal;
-- exibir SVG de alianças no lugar de emoji, evitando mojibake;
+- renderizar o botão clicável de vínculo conjugal na view `/minha-arvore`;
+- exibir o ícone `Blend` de `lucide-react`, substituindo emoji/SVG customizado de alianças;
 - abrir modal de vínculo conjugal por `onMarriageClick`;
 - preservar handles invisíveis necessários ao ReactFlow.
 
@@ -386,32 +389,30 @@ export interface MarriageNodeData {
 }
 ```
 
-Variantes visuais:
+Padrão visual atual:
 
-- `default`: usada por `/genealogia` e `/visao-completa`;
-- `direct-family`: prevista para marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`, quando implementada/confirmada no código.
-
-Estado atual de revisão:
-
-- o emoji conjugal corrompido foi removido/trocado por SVG;
-- a legibilidade visual das alianças em `/minha-arvore` ainda precisa de validação e possível reforço de tamanho, stroke, cor, halo ou contraste;
-- se `visualVariant` não estiver efetivamente ativa no código, a documentação deve ser ajustada ou a variante implementada em etapa pequena.
+- ícone: `Blend` de `lucide-react`;
+- cor do ícone: cinza/neutra (`text-slate-*` ou equivalente);
+- borda do botão: cinza/neutra;
+- halo/shadow: cinza suave;
+- `direct-family`: usada em marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`.
 
 Regras da variante `direct-family`:
 
-- reforçar borda, halo, tamanho do SVG e contraste do stroke;
+- reforçar legibilidade do botão conjugal sem usar laranja como padrão final;
 - não alterar dimensão lógica do node;
 - não alterar handles;
 - não alterar edges;
 - não alterar clique/modal;
-- não degradar o visual já aprovado em `/genealogia`.
+- manter coerência com `GenealogySpouseEdge` em `/genealogia` e `/visao-completa`.
 
 Cuidados:
 
 - não voltar a usar emoji como conteúdo visual principal;
-- remover resíduos como `emoji: '??'`;
+- remover resíduos como `emoji: '??'`, `💍`, `⭐` ou `✝` nos cards/nodes;
 - manter `aria-label` e `title` legíveis;
-- validar `/minha-arvore` e `/genealogia` após qualquer mudança.
+- validar `/minha-arvore`, `/genealogia` e `/visao-completa` após qualquer mudança;
+- preservar clique no modal conjugal e não bloquear clique dos cards próximos.
 
 ---
 
@@ -596,8 +597,15 @@ Responsabilidades:
 - `DirectFamilyGroupBoxNode`: caixas visuais de agrupamento;
 - `DirectFamilyAnchorNode`: pontos estruturais para edges;
 - `GenealogyFamilyConnectorNode`: conectores ortogonais entre pais e filhos;
-- `GenealogySpouseEdge`: linha conjugal com anel clicável nas views por geração;
-- `MarriageNode`: botão/anel conjugal clicável usado no layout direto.
+- `GenealogySpouseEdge`: linha conjugal com botão clicável nas views por geração;
+- `MarriageNode`: botão conjugal clicável usado no layout direto.
+
+Padrões recentes:
+
+- `PersonNode` deve usar `Star` e `Cross` de `lucide-react` para nascimento e falecimento, no lugar dos emojis `⭐` e `✝`;
+- `GenealogySpouseEdge` deve usar `Blend` de `lucide-react`, com estilo cinza/neutro, para o botão conjugal em `/genealogia` e `/visao-completa`;
+- `MarriageNode` deve usar `Blend` de `lucide-react`, com estilo cinza/neutro, para o botão conjugal em `/minha-arvore`;
+- `GenealogyFamilyConnectorNode` deve diferenciar os destaques: pais/filhos em amarelo/dourado e irmãos em azul tracejado.
 
 Cuidados:
 
@@ -711,7 +719,9 @@ Contrato de UX:
 - contagem numérica ao lado do label não deve ser exibida;
 - barra deve preservar espaço vertical suficiente para não sobrepor labels `GERAÇÃO X`;
 - em Genealogia mobile, botões de zoom `+` e `-` podem ficar ocultos;
-- swipe nos chips não deve bloquear pan/zoom do canvas ReactFlow fora da barra.
+- clique em chip deve mudar o enquadramento horizontal, mas manter a régua vertical baseada em Avós/Geração 3;
+- swipe nos chips não deve bloquear pan/zoom do canvas ReactFlow fora da barra;
+- o `translateExtent` não deve impedir o usuário de arrastar a árvore para cima/baixo e recuperar os cabeçalhos.
 
 ---
 
@@ -829,7 +839,10 @@ Cuidados:
 - falecimentos no grid devem usar título compacto, como **44 anos de falecimento**, com descrição **Memória de Nome Completo**;
 - o card **Memória** deve usar **44 anos da morte de Nome Completo** ou **Morte de Nome Completo**;
 - o seletor de mês deve manter setas em botões `type="button"` e texto centralizado entre elas;
-- textos do header devem estar em UTF-8 correto: **Calendário**, **Reunião**, **Filtros do calendário**.
+- textos do header devem estar em UTF-8 correto: **Calendário**, **Reunião**, **Filtros do calendário**;
+- no mobile, os filtros/chips superiores de categorias devem usar fonte compacta para caber em telas estreitas;
+- no mobile, o card **Categorias** abaixo do calendário fica oculto; desktop/tablet podem manter o bloco de categorias;
+- se a bolinha mobile não encontrar card específico de destino, o fallback deve rolar para um resumo visível, não para um elemento oculto.
 
 ---
 
@@ -1348,13 +1361,18 @@ Itens documentados neste ciclo:
 - `/minha-arvore/editar` recebeu botão **Trocar Senha**;
 - `CalendarioFamiliar.tsx` recebeu correções de texto e microcopy visual;
 - `AjustarNotificacoes.tsx` e `NotificationPreferencesPanel.tsx` receberam correções de acentuação;
-- `MarriageNode` passou a usar SVG no lugar do emoji conjugal corrompido; a legibilidade das alianças em `/minha-arvore` ainda precisa ser confirmada/reforçada.
+- `MarriageNode` e `GenealogySpouseEdge` passaram a usar `Blend` de `lucide-react` com estilo cinza/neutro no lugar de emoji/SVG customizado;
+- `PersonNode` passou a usar `Star` e `Cross` de `lucide-react` no lugar dos emojis de nascimento/falecimento;
+- destaques de linhas foram padronizados: cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado;
+- `/genealogia` mobile passou a alinhar o eixo Y dos chips pela referência visual de Avós/Geração 3;
+- `/calendario-familiar` mobile passou a usar filtros superiores mais compactos e ocultar o card **Categorias** inferior.
 
 Pendências relacionadas:
 
 - confirmar se o menu da árvore abre o mesmo painel das páginas internas;
 - ajustar padding superior do título e reduzir espaço título-cards em `FamilyTree.tsx`;
-- tornar o SVG de alianças legível em `/minha-arvore` sem degradar `/genealogia`.
+- validar o botão conjugal `Blend` cinza nas três views e confirmar clique/modal em browser real.
+- validar pan vertical superior em `/genealogia` mobile após ajuste de `translateExtent`.
 
 QA recomendado:
 

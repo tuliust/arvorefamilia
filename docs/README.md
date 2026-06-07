@@ -2,7 +2,7 @@
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
 > Ultima revisao: 2026-06-07
-> Status: documentacao canonica com pendencias visuais finais rastreadas.
+> Status: documentacao canonica com ajustes recentes de árvore, calendário mobile e Genealogia mobile rastreados.
 
 Este diretorio concentra a documentacao tecnica e funcional do projeto **Arvore Familia**.
 
@@ -356,7 +356,49 @@ Checklist de manutencao:
 
 ---
 
-## 15. Validacao documental apos alteracoes
+
+## 15. Ajustes recentes documentados - ciclo 2026-06-07 / Ícones, linhas, calendário mobile e Genealogia mobile
+
+Este ciclo documenta ajustes visuais e comportamentais nas três views da árvore e em `/calendario-familiar`.
+
+### 15.1 Consolidado
+
+- cards de pessoa usam `Star` e `Cross` do `lucide-react` para nascimento e falecimento;
+- botão conjugal usa `Blend` do `lucide-react`;
+- botão conjugal usa estilo cinza/neutro nas três views da árvore;
+- `/minha-arvore` usa `MarriageNode.tsx` para o botão conjugal;
+- `/genealogia` e `/visao-completa` usam `GenealogySpouseEdge.tsx`;
+- destaques de linhas foram padronizados:
+  - cônjuges em laranja;
+  - pais/filhos em amarelo/dourado;
+  - irmãos em azul tracejado;
+- `/calendario-familiar` mobile usa filtros superiores compactos;
+- card **Categorias** abaixo do calendário fica oculto no mobile;
+- `/genealogia` mobile deve manter os cabeçalhos de geração na mesma régua vertical, usando `Avós/Geração 3` como referência.
+
+### 15.2 Documentos sincronizados
+
+| Frente | Documento canônico |
+|---|---|
+| Ícones e componentes da árvore | `GUIA_COMPONENTES.md` |
+| UX da árvore, botão conjugal e calendário mobile | `GUIA_UX_LAYOUT.md` |
+| Troubleshooting de chips, pan e destaques | `GUIA_CORRECAO_ERROS.md` |
+| Conectores e destaques de linhas | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Calendário mobile | `funcionalidades/CALENDARIO_FAMILIAR.md` |
+| Genealogia mobile | `funcionalidades/GENEALOGIA_VIEW.md` |
+| Minha Árvore | `funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Pendências e QA | `PLANO_PROXIMOS_PASSOS.md` |
+
+### 15.3 Pendências rastreáveis
+
+- confirmar commit do ajuste `y: referenceBounds.y` em `FamilyTree.tsx`, quando aplicado localmente;
+- validar se `/genealogia` mobile permite pan vertical para recuperar cabeçalhos;
+- se necessário, liberar `translateExtent` apenas em `/genealogia` mobile;
+- validar as paletas `white`, `orange` e `brown`.
+
+---
+
+## 16. Validacao documental apos alteracoes
 
 Quando qualquer arquivo desta documentacao for atualizado:
 

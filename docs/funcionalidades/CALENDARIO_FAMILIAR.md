@@ -1,6 +1,7 @@
 # Calendario Familiar
 
 > Ultima revisao: 2026-06-07
+> Revisao complementar: legenda mobile compacta, ocultacao do card Categorias no mobile e fallback de ancoragem.
 > Local recomendado: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
 > Tipo: documentacao funcional especifica.
 
@@ -15,6 +16,7 @@
 - Usa eventos derivados de pessoas, relacionamentos e datas familiares.
 - Integracao com Google Agenda existe na UI e deve ser tratada com cuidado, porque depende do shape dos eventos.
 - Tokens/secrets de Google Agenda nao devem ser expostos no frontend.
+- No mobile, o card **Categorias** abaixo do calendario fica oculto; os filtros principais permanecem no card compacto acima do grid.
 
 ---
 
@@ -87,7 +89,9 @@ Regras:
 - Lista lateral/inferior de aniversariantes e memoria do mes.
 - Card lateral **Memoria** so aparece quando houver ao menos um falecimento no mes exibido com os filtros atuais.
 - Sidebar **Categorias** com filtros clicaveis.
-- Legenda/filtros mobile tambem alternam categorias, usando o mesmo estado de filtro da sidebar.
+- Legenda/filtros mobile acima do calendario tambem alternam categorias, usando o mesmo estado de filtro da sidebar.
+- No mobile, os labels dessa legenda compacta devem usar fonte menor para caber em telas estreitas.
+- No mobile, o card **Categorias** abaixo do calendario deve ficar oculto para reduzir rolagem e duplicidade visual.
 - Categorias ficam em `activeCategories`.
 - Categorias sao alternadas por `toggleCategory`.
 - Contadores usam singular/plural: **1 evento**, **2 eventos**.
@@ -137,7 +141,7 @@ nao apenas os eventos atualmente ativos no filtro.
 
 ### 6.1 Legenda/filtros mobile
 
-No mobile, o card de legenda abaixo de **Mes exibido** deve funcionar tambem como filtro.
+No mobile, o card de legenda abaixo de **Mes exibido** deve funcionar tambem como filtro principal de categorias.
 
 Categorias exibidas no card mobile:
 
@@ -162,7 +166,35 @@ Regras:
 - cada item deve usar `aria-pressed`;
 - estado inativo pode usar opacidade reduzida e fundo branco;
 - estado ativo deve manter cor visual da categoria;
-- nao duplicar estado local de filtro apenas para o mobile.
+- nao duplicar estado local de filtro apenas para o mobile;
+- usar fonte compacta nos labels para evitar quebra/overflow em 320px-430px;
+- manter o card abaixo do calendario oculto no mobile quando ele duplicar os mesmos filtros;
+- preservar a sidebar/card de categorias no desktop/tablet quando houver espaco.
+
+### 6.2 Card Categorias abaixo do calendario
+
+Comportamento consolidado:
+
+- no desktop/tablet, o card **Categorias** pode continuar aparecendo como resumo/filtro lateral ou inferior;
+- no mobile, o card **Categorias** abaixo do calendario deve ficar oculto;
+- o estado de filtro continua unico e controlado por `activeCategories`;
+- ocultar o card nao deve remover a capacidade de filtrar, pois os botoes compactos acima do calendario continuam ativos.
+
+Motivo:
+
+- reduzir altura total da pagina em mobile;
+- evitar duplicidade entre filtros superiores e card inferior;
+- manter a leitura do calendario mais direta em telas pequenas.
+
+Anti-regressao:
+
+```txt
+Nao remover activeCategories.
+Nao remover toggleCategory.
+Nao remover aria-pressed dos botoes de filtro.
+Nao ocultar filtros superiores no mobile.
+Nao alterar Google Agenda por ajuste visual.
+```
 
 ---
 
@@ -176,7 +208,7 @@ Regra de destino:
 |---|---|
 | Aniversario | Card **Aniversariantes** |
 | Falecimento/memoria | Card **Memoria** |
-| Outros eventos sem card especifico | Card **Categorias** ou resumo equivalente |
+| Outros eventos sem card especifico | Card **Categorias** no desktop/tablet; no mobile, fallback para o primeiro resumo disponivel ou sem scroll se nao houver alvo |
 
 Implementacao esperada:
 
@@ -188,8 +220,9 @@ Comportamento:
 
 - se houver aniversario no dia, priorizar `#aniversariantes`;
 - se nao houver aniversario e houver falecimento, usar `#memoria`;
-- se nao houver card especifico, usar `#categorias-calendario`;
-- usar `scrollIntoView({ behavior: 'smooth', block: 'start' })` quando o alvo existir;
+- se nao houver card especifico, tentar `#categorias-calendario` apenas quando o card estiver visivel/disponivel;
+- no mobile, se `#categorias-calendario` estiver oculto, usar um resumo alternativo visivel ou nao executar scroll;
+- usar `scrollIntoView({ behavior: 'smooth', block: 'start' })` quando o alvo existir e estiver disponivel;
 - manter o modal de eventos apenas se uma decisao futura reintroduzir esse comportamento explicitamente.
 
 ---
@@ -261,6 +294,8 @@ Regras:
 - cards compactos devem truncar texto quando necessario;
 - lista inferior/lateral deve usar quebra de linha segura;
 - filtros mobile devem caber em telas estreitas sem criar overflow horizontal;
+- labels dos filtros compactos mobile devem ter fonte reduzida quando necessario;
+- card **Categorias** abaixo do calendario deve permanecer oculto no mobile;
 - o destaque do dia atual deve ser perceptivel sem escurecer demais o grid.
 
 Larguras de QA:
@@ -295,7 +330,8 @@ Correcao:
 - confirmar que o clique altera `activeCategories`;
 - confirmar que a lista filtrada usa categorias ativas;
 - confirmar que a sidebar nao esta apenas visualmente ativa;
-- confirmar que a legenda mobile nao criou estado paralelo ao da sidebar.
+- confirmar que a legenda mobile nao criou estado paralelo ao da sidebar;
+- confirmar que o card inferior **Categorias** estar oculto no mobile nao removeu os botoes compactos superiores.
 
 ---
 
@@ -314,7 +350,34 @@ Regra:
 
 - a bolinha mobile deve chamar `scrollToMonthSummary(eventosDia)`;
 - nao deve chamar `openDayEvents(dia, eventosDia)` como comportamento padrao;
-- cards de destino devem ter IDs estaveis: `aniversariantes`, `memoria`, `categorias-calendario`.
+- cards de destino devem ter IDs estaveis: `aniversariantes`, `memoria`, `categorias-calendario`;
+- no mobile, se `categorias-calendario` estiver oculto, o fallback nao deve gerar erro nem tentar rolar para um elemento indisponivel.
+
+---
+
+### Card Categorias aparece no mobile
+
+Sintoma:
+
+```txt
+Apos o calendario, aparece um card Categorias grande duplicando os filtros superiores.
+```
+
+Verificar:
+
+```txt
+#categorias-calendario
+breakpoints mobile
+classes responsivas
+family-tree-visual-polish.css
+CalendarioFamiliar.tsx
+```
+
+Regra:
+
+- no mobile, o card inferior **Categorias** deve ficar oculto;
+- os filtros compactos acima do calendario devem permanecer visiveis;
+- no desktop/tablet, o card pode continuar disponivel.
 
 ---
 
@@ -479,6 +542,8 @@ npm run test:e2e
 - voltar mes;
 - clicar em categorias da sidebar;
 - clicar em categorias da legenda/filtro mobile;
+- validar que os labels dos filtros compactos cabem em 320px, 375px, 390px e 430px;
+- validar que o card **Categorias** abaixo do calendario nao aparece no mobile;
 - validar singular/plural dos contadores;
 - validar aniversario no grid;
 - validar titulo de aniversario em negrito/peso forte;
@@ -489,7 +554,7 @@ npm run test:e2e
 - validar que **Memoria** aparece apenas quando houver itens;
 - validar setas de mes anterior/proximo com o texto do mes centralizado;
 - validar dia atual destacado em cinza claro;
-- validar que bolinha mobile ancora para **Aniversariantes**, **Memoria** ou **Categorias**;
+- validar que bolinha mobile ancora para **Aniversariantes**, **Memoria** ou fallback seguro quando **Categorias** estiver oculto;
 - validar desktop;
 - validar 768px;
 - validar 430px;
@@ -549,6 +614,8 @@ Ajustes consolidados:
 - o header da pagina deve exibir **Calendario** sem texto escapado ou mojibake;
 - se a UI final estiver com UTF-8 pleno, validar visualmente **Calendário**;
 - a categoria mobile **Reuniao** nao deve aparecer com escape ou caracteres corrompidos;
+- filtros compactos mobile devem usar fonte reduzida para caber na largura;
+- o card **Categorias** abaixo do calendario deve ficar oculto no mobile;
 - no grid do calendario, aniversarios devem ter hierarquia visual clara:
   - titulo do evento em peso forte/negrito;
   - descricao, como **Faz X anos**, em fonte menor;
@@ -568,6 +635,49 @@ Header -> Calendario/Calendário sem mojibake
 Filtro mobile -> Reuniao/Reunião sem mojibake
 Grid -> titulo do aniversario em peso forte
 Grid -> Faz X anos em fonte menor
-Mobile -> bolinha continua funcionando como atalho para resumo
+Mobile -> bolinha continua funcionando como atalho para resumo/fallback seguro
+Mobile -> card Categorias inferior oculto
+Mobile -> filtros compactos cabem sem overflow
 Google Agenda -> shape dos eventos preservado
 ```
+
+
+---
+
+## 16. Atualizacao 2026-06-07 - Ajuste mobile dos filtros de categoria
+
+Ajuste consolidado:
+
+```txt
+No mobile, os filtros compactos acima do calendario continuam ativos.
+O card Categorias abaixo do calendario fica oculto.
+```
+
+Escopo:
+
+- alteracao visual/responsiva;
+- nao altera `CalendarEventCategory`;
+- nao altera `activeCategories`;
+- nao altera `toggleCategory`;
+- nao altera `familyDates.ts`;
+- nao altera Google Agenda;
+- nao altera Supabase, RLS ou permissoes.
+
+Arquivos relacionados:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+Validacao minima:
+
+```txt
+320px -> filtros compactos sem overflow; card Categorias inferior oculto
+375px -> filtros compactos legiveis; card Categorias inferior oculto
+390px -> filtros compactos legiveis; card Categorias inferior oculto
+430px -> filtros compactos legiveis; card Categorias inferior oculto
+desktop -> categorias continuam disponiveis quando previsto
+```
+
+Se algum evento nao tiver card especifico de resumo no mobile, `scrollToMonthSummary` deve usar fallback seguro e nao tentar rolar para elemento oculto ou inexistente.

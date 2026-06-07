@@ -4,7 +4,8 @@
 > Tipo: documentacao tecnica/funcional da view **Genealogia**.
 > Projeto: `tuliust/arvorefamilia`
 > Ultima atualizacao: 2026-06-07
-> Status: comportamento mobile por geracoes consolidado; ajustes transversais de titulo/menu/aliancas devem ser validados junto das demais views da arvore.
+> Revisao complementar: alinhamento vertical dos chips mobile, pan da arvore, icone conjugal `Blend` e anti-regressao de viewport.
+> Status: comportamento mobile por geracoes consolidado; alinhamento por `Avos/Geracao 3` definido como referencia vertical; ajustes transversais devem ser validados nas tres views da arvore.
 
 ---
 
@@ -27,8 +28,9 @@ Este documento consolida:
 - layout por colunas;
 - navegacao mobile por geracoes;
 - foco/enquadramento da geracao ativa;
+- alinhamento vertical padronizado dos chips mobile usando `Avos/Geracao 3` como referencia;
 - inferencia de geracoes a partir da pessoa central;
-- regras de pan, zoom, chips e swipe;
+- regras de pan, zoom, chips, swipe e `translateExtent`;
 - regras transversais de titulo e menu compartilhadas com as demais views da arvore;
 - riscos de regressao;
 - checklist de QA.
@@ -118,7 +120,8 @@ Responsabilidades:
 - receber `activeGenealogyGeneration`;
 - calcular viewport inicial;
 - focar a geracao ativa no mobile;
-- manter pan/zoom;
+- calcular bounds mobile mantendo o eixo X da geracao ativa e o eixo Y da referencia `Avos/Geracao 3`;
+- manter pan/zoom e permitir recuperacao da area superior por arraste;
 - inferir geracoes genealogicas em memoria quando necessario;
 - renderizar titulo fixo da arvore;
 - controlar area visual entre titulo e ReactFlow;
@@ -341,6 +344,53 @@ Regras:
 
 ---
 
+### 7.6 Alinhamento vertical dos chips por geracao
+
+Comportamento consolidado no mobile:
+
+```txt
+O chip ativo muda o enquadramento horizontal da arvore, mas nao deve mudar a regua vertical dos cabecalhos/cards.
+```
+
+Referencia visual:
+
+```txt
+Avos / Geracao 3
+```
+
+Regra tecnica:
+
+- `targetBounds.x` deve continuar vindo da geracao clicada;
+- `y` deve usar `referenceBounds.y`, com referencia em `Avos/Geracao 3`;
+- `height` deve usar a altura de referencia, nao a altura real de cada geracao;
+- isso evita que **Tataravos**, **Bisavos**, **Pais**, **Nucleo** e **Descendentes** abram mais abaixo ou mais acima que o padrao visual.
+
+Exemplo esperado em `FamilyTree.tsx`:
+
+```ts
+return {
+  x: targetBounds.x,
+  y: referenceBounds.y,
+  width: targetBounds.width,
+  height: Math.max(1, referenceBounds.height),
+};
+```
+
+Nao fazer:
+
+- usar `targetBounds.y` para mobile quando o objetivo for padronizar a altura dos chips;
+- corrigir a diferenca usando `translate`, `transform`, `top` negativo ou deslocamento em `.react-flow__viewport`;
+- transformar chip em filtro destrutivo.
+
+Validador visual:
+
+```txt
+Ao alternar Tataravos, Bisavos, Avos, Pais, Nucleo e Descendentes,
+os labels GERACAO X devem permanecer na mesma altura vertical base.
+```
+
+---
+
 ## 8. Titulo fixo e espacamento da arvore
 
 A Genealogia compartilha com `/minha-arvore` e `/visao-completa` o titulo fixo renderizado por `FamilyTree.tsx`.
@@ -429,11 +479,29 @@ confirmar se /genealogia abre o mesmo painel de usuario que /calendario-familiar
 Na Genealogia mobile:
 
 - pan horizontal e vertical devem funcionar;
-- o usuario deve conseguir arrastar para baixo/cima;
+- o usuario deve conseguir arrastar para baixo/cima e recuperar cabecalhos/camadas superiores depois de mover a arvore;
+- quando o `translateExtent` impedir a recuperacao dos cabecalhos, a solucao esperada e liberar o extent apenas para `isMobile && isGenealogyLayout`;
 - o usuario deve conseguir reduzir/ampliar por gesto conforme ReactFlow permitir;
 - botoes `+` e `-` devem ficar ocultos na Genealogia mobile;
 - a ausencia dos botoes nao deve remover capacidade de navegacao por gesto;
 - a barra de chips nao deve bloquear pan na area da arvore.
+
+Regra tecnica de pan:
+
+```ts
+const activeTreeTranslateExtent = useMemo<CoordinateExtent | undefined>(() => {
+  if (isMobile && isGenealogyLayout) return undefined;
+  if (!translateBounds) return undefined;
+
+  return getDirectFamilyTranslateExtent(...);
+}, [translateBounds, isGenealogyLayout, isMobile]);
+```
+
+Objetivo:
+
+- manter pan controlado nas demais views;
+- liberar o pan vertical/horizontal na Genealogia mobile quando necessario para o usuario recuperar os cabecalhos;
+- nao alterar dados, filtros ou layout logico.
 
 ### 10.2 Desktop
 
@@ -447,23 +515,32 @@ No desktop:
 
 ---
 
-## 11. Anel conjugal e espacamento
+## 11. Botao conjugal e espacamento
 
-A Genealogia exibe anel/alianca entre conjuges.
+A Genealogia exibe um botao conjugal clicavel entre conjuges. O padrao visual consolidado no ciclo atual usa o icone `Blend` de `lucide-react`, em estilo cinza/neutro, no lugar de emoji ou SVG customizado de aliancas.
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+```
 
 Regras:
 
-- o anel deve permanecer clicavel;
+- o botao deve permanecer clicavel;
 - clique deve abrir modal conjugal;
-- area ampliada do anel nao pode bloquear clique nos cards;
+- area ampliada do botao nao pode bloquear clique nos cards;
 - conjuges devem ter espacamento vertical suficiente para evitar sobreposicao;
 - ajustes de espacamento devem preservar conectores familiares;
 - Genealogia deve manter a variante visual padrao, salvo decisao explicita.
 
 Historico recente:
 
-- o botao/anel conjugal foi ampliado para `60px x 60px` no ciclo de paletas visuais;
+- o botao conjugal foi ampliado para `60px x 60px` no ciclo de paletas visuais;
 - depois, a Genealogia recebeu aumento de espacamento entre conjuges para reduzir sobreposicao;
+- o conteudo visual foi padronizado como `Blend` de `lucide-react`;
+- a cor final solicitada para as tres views e cinza/neutra;
 - ajustes de visibilidade especificos da `/minha-arvore` nao devem degradar a Genealogia.
 
 ---
@@ -574,6 +651,7 @@ Nao fazer:
 - colocar titulo/subtitulo principal dentro de `genealogyColumnsLayout.ts`;
 - usar altura total para reduzir zoom inicial da Genealogia;
 - usar `translate` em `.react-flow__viewport` para aproximar titulo e cards;
+- usar `targetBounds.y` para variar a altura vertical dos chips mobile quando a referencia correta for `Avos/Geracao 3`;
 - recolocar botoes `+` e `-` sobre a barra mobile de chips;
 - impedir pan vertical no mobile;
 - permitir que o anel conjugal sobreponha cards;
@@ -639,12 +717,62 @@ Verificar:
 Verificar:
 
 - `translateExtent` e bounds de pan;
+- se `activeTreeTranslateExtent` esta limitando a Genealogia mobile;
 - bloqueio temporario de pan por selecao de area;
 - handlers de toque da barra de chips;
 - CSS que possa estar impedindo gestos;
 - se o pointer event esta preso em overlay.
 
-### 16.6 Anel sobrepoe os cards
+Correcao esperada quando o problema for restrito a `/genealogia` mobile:
+
+```ts
+if (isMobile && isGenealogyLayout) return undefined;
+```
+
+A correcao deve liberar o pan da Genealogia mobile sem alterar pan/zoom das demais views.
+
+### 16.6 Chips abrem em alturas diferentes
+
+Sintoma:
+
+```txt
+Tataravos, Bisavos, Pais, Nucleo ou Descendentes abrem abaixo/acima do padrao visual de Avos.
+```
+
+Causa provavel:
+
+```txt
+mobileGenealogyInitialColumnBounds usando y: targetBounds.y.
+```
+
+Correcao esperada:
+
+```ts
+return {
+  x: targetBounds.x,
+  y: referenceBounds.y,
+  width: targetBounds.width,
+  height: Math.max(1, referenceBounds.height),
+};
+```
+
+Regra:
+
+- `x` muda com a geracao clicada;
+- `y` permanece fixo pela referencia `Avos/Geracao 3`;
+- nao usar `translate` ou deslocamento de `.react-flow__viewport`.
+
+### 16.7 Botao conjugal com visual diferente entre views
+
+Verificar:
+
+- `MarriageNode.tsx` em `/minha-arvore`;
+- `GenealogySpouseEdge.tsx` em `/genealogia` e `/visao-completa`;
+- se ambos usam `Blend` de `lucide-react`;
+- se a cor do botao e do icone esta cinza/neutra;
+- se `title` e `aria-label` continuam como **Ver vinculo do casal**.
+
+### 16.8 Anel/botao conjugal sobrepoe os cards
 
 Verificar:
 
@@ -653,7 +781,7 @@ Verificar:
 - handles usados pela edge;
 - z-index/click area do anel.
 
-### 16.7 Titulo colado no topo ou com grande vazio abaixo
+### 16.9 Titulo colado no topo ou com grande vazio abaixo
 
 Verificar:
 
@@ -670,7 +798,7 @@ Correcao esperada:
 - remover overrides conflitantes;
 - validar se cards superiores nao foram cortados.
 
-### 16.8 Menu da Genealogia diferente do menu das paginas internas
+### 16.10 Menu da Genealogia diferente do menu das paginas internas
 
 Verificar:
 
@@ -707,10 +835,13 @@ Em `/genealogia`:
 - se houver tataravos, confirmar que **Tataravos** abre primeiro;
 - confirmar que os cards da primeira coluna aparecem no topo;
 - tocar em cada chip;
+- confirmar que Tataravos, Bisavos, Avos, Pais, Nucleo e Descendentes mantem a mesma regua vertical dos cabecalhos;
+- confirmar que Avos/Geracao 3 continua como referencia visual de altura;
 - testar swipe esquerda/direita;
 - reduzir zoom por gesto;
 - confirmar que demais colunas continuam renderizadas;
 - arrastar para baixo/cima;
+- confirmar que e possivel recuperar os cabecalhos apos pan manual;
 - confirmar que botoes `+` e `-` nao aparecem;
 - confirmar que labels `GERACAO X` nao ficam cobertas pelos chips;
 - abrir menu do usuario;
@@ -771,6 +902,7 @@ f23e353 fix: refine genealogy mobile stage navigation
 9c13e22 fix: focus first genealogy mobile stage on load
 189303a fix: start genealogy mobile on first rendered column
 b668a59 fix: infer genealogy generations from central person
+79f44f4 fix: keep genealogy mobile generations vertically aligned
 ```
 
 Observacao:

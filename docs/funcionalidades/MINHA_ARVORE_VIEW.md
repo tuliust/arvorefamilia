@@ -1,7 +1,7 @@
 # Minha Árvore - view, layout e viewport
 
 > Última revisão: 2026-06-07  
-> Revisão complementar: refinamento visual de `/minha-arvore`, título/viewport, alianças e pendências de QA  
+> Revisão complementar: refinamento visual de `/minha-arvore`, título/viewport, botão conjugal com `Blend`, ícones de data e pendências de QA  
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.
 
@@ -39,7 +39,7 @@ e consolida decisões sobre:
 - título fixo da árvore;
 - viewport;
 - constantes de layout;
-- alianças/vínculos conjugais na view direta.
+- botão conjugal/vínculos conjugais na view direta.
 
 ---
 
@@ -93,10 +93,18 @@ Esta documentação diferencia **comportamento consolidado** de **refinamento vi
 
 ### Em refinamento visual
 
-- O título da árvore ainda precisa de padding superior adequado: não deve ficar colado ao topo da área da árvore.
-- O espaço entre título e cards ainda precisa ser reduzido sem cortar cards superiores.
-- As alianças da view **Minha Árvore** devem ficar claramente visíveis; o problema não deve ser resolvido voltando a usar emoji.
-- O menu do usuário no header da árvore deve ser comparado com o menu das páginas internas para confirmar se ambos usam o mesmo painel compartilhado.
+- O título da árvore ainda precisa de validação final de padding superior: não deve ficar colado ao topo da área da árvore.
+- O espaço entre título e cards deve continuar sendo ajustado apenas por constantes/cálculo em `FamilyTree.tsx`, sem cortar cards superiores.
+- O comportamento de pan/viewport da Genealogia mobile deve ser validado após a correção que usa `Avós/Geração 3` como régua vertical.
+- O menu do usuário no header da árvore deve ser mantido como `UserProfileMenu` compartilhado, com variação visual apenas no botão compacto quando necessário.
+
+### Consolidado no ciclo recente
+
+- O botão conjugal da **Minha Árvore** passou a usar `Blend` do `lucide-react`, com tratamento visual cinza/neutro.
+- O botão conjugal das views por geração usa o caminho separado `GenealogySpouseEdge.tsx`, também com `Blend` cinza/neutro.
+- Não usar emoji para vínculo conjugal.
+- Os ícones de nascimento e falecimento dos cards de pessoa usam `Star` e `Cross` do `lucide-react`, respectivamente.
+- Os destaques de linhas usam padrão visual consolidado: cônjuges em laranja, pais/filhos em amarelo/dourado e irmãos em azul tracejado.
 
 Regra operacional:
 
@@ -843,6 +851,8 @@ Regras:
 
 - nome em cards comuns deve ocupar no máximo 2 linhas;
 - nascimento/falecimento em cards comuns devem caber com ellipsis quando necessário;
+- nascimento deve usar `Star` do `lucide-react`, não emoji;
+- falecimento deve usar `Cross` do `lucide-react`, não emoji;
 - mudanças de largura devem preservar conectores e anchors;
 - evitar corte inferior de nomes/informações.
 
@@ -991,7 +1001,7 @@ DIRECT_STRUCTURAL_EDGE_STYLE
 
 ---
 
-## 22. Alianças e vínculo conjugal
+## 22. Botão conjugal e vínculo conjugal
 
 ### 22.1 Componente
 
@@ -1011,7 +1021,29 @@ Campo relevante:
 visualVariant?: 'default' | 'direct-family';
 ```
 
-### 22.2 Variante `direct-family`
+### 22.2 Ícone atual
+
+O botão conjugal da view **Minha Árvore** usa:
+
+```ts
+Blend
+```
+
+Origem:
+
+```ts
+lucide-react
+```
+
+Decisão consolidada:
+
+- não usar emoji;
+- não usar SVG customizado de alianças como padrão atual;
+- manter ícone vetorial estável;
+- usar estilo cinza/neutro para não competir com as cores dos cards, grupos e destaques de linhas;
+- manter `title` e `aria-label` como **Ver vínculo do casal**.
+
+### 22.3 Variante `direct-family`
 
 Os marriage nodes criados pelo layout direto devem receber:
 
@@ -1021,34 +1053,39 @@ visualVariant: 'direct-family'
 
 Objetivo:
 
-- melhorar visibilidade das alianças em `/minha-arvore`;
-- reforçar borda/halo/contraste do SVG;
+- ajustar tamanho/força visual do `Blend` na view direta;
 - preservar clique no modal conjugal;
-- preservar dimensão do nó;
+- preservar dimensão lógica do nó;
 - preservar handles invisíveis;
-- preservar edges.
+- preservar edges;
+- evitar interferência no clique dos cards próximos.
 
-### 22.3 Variante padrão
+### 22.4 Views por geração
 
-Views por geração, especialmente `/genealogia`, devem manter o visual padrão já aprovado.
+`/genealogia` e `/visao-completa` usam caminho visual separado:
+
+```txt
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
 
 Regras:
 
-- não aplicar `direct-family` em nodes de Genealogia sem nova decisão;
-- não degradar o anel conjugal da Genealogia;
-- validar `/genealogia` após qualquer ajuste em `MarriageNode`.
+- também deve usar `Blend` do `lucide-react`;
+- deve manter o mesmo tratamento cinza/neutro;
+- deve preservar `onMarriageClick`, `marriageDetails`, `event.stopPropagation()` e abertura de `ViewMarriageModal`;
+- qualquer ajuste visual no botão conjugal precisa validar os dois caminhos: `MarriageNode.tsx` e `GenealogySpouseEdge.tsx`.
 
-### 22.4 Anti-regressão
+### 22.5 Anti-regressão
 
 Não fazer:
 
 - voltar a exibir emoji corrompido como `??`;
-- remover SVG de alianças;
-- esconder ícone por stroke/fill sem contraste;
+- reintroduzir emoji de aliança;
+- manter um caminho com `Blend` e outro com emoji/SVG antigo;
+- usar laranja permanente no botão conjugal se a diretriz atual for cinza/neutro;
+- esconder o ícone por falta de contraste;
 - alterar dimensão lógica do node para resolver problema visual sem recalcular layout;
 - quebrar clique no modal conjugal.
-
----
 
 ## 23. Pontos sensíveis
 
@@ -1268,7 +1305,7 @@ Permanecem como pendências de refinamento:
 - dar padding superior ao título sem aumentar o vazio abaixo dele;
 - reduzir o espaço entre título e cards por constantes em `FamilyTree.tsx`;
 - garantir que nenhum card superior seja cortado;
-- tornar o ícone de alianças claramente visível em `/minha-arvore`;
+- manter o ícone `Blend` cinza claramente visível em `/minha-arvore`;
 - confirmar se o menu do header da árvore abriu o painel compartilhado ou um dropdown legado.
 
 ---
@@ -1346,15 +1383,15 @@ Após qualquer ajuste futuro nesta view, validar:
 - [ ] Foto central não empurra conteúdo para fora.
 - [ ] Margem entre foto e texto central permanece adequada.
 
-### Labels, linhas e alianças
+### Labels, linhas e botão conjugal
 
 - [ ] Títulos dos grupos estão legíveis.
 - [ ] Linhas estruturais conectam anchors corretos.
 - [ ] Linhas não atravessam cards de forma visualmente problemática.
 - [ ] Highlights continuam funcionando.
 - [ ] Legendas > Linhas > Todas oculta linhas de primos.
-- [ ] Alianças em `/minha-arvore` estão visíveis.
-- [ ] Alianças em `/genealogia` permanecem corretas.
+- [ ] Botão conjugal com `Blend` cinza está visível em `/minha-arvore`.
+- [ ] Botão conjugal com `Blend` cinza permanece correto em `/genealogia` e `/visao-completa`.
 - [ ] Clique na aliança abre modal conjugal.
 
 ### Técnico
@@ -1399,7 +1436,7 @@ Esta seção registra o estado a partir da validação visual recente.
 
 - Título da árvore precisa de padding superior.
 - Espaço abaixo do título ainda precisa ser reduzido sem `translate` no viewport.
-- Alianças em `/minha-arvore` ainda precisam ficar visualmente perceptíveis.
+- Botão conjugal com `Blend` cinza deve permanecer visualmente perceptível em `/minha-arvore`.
 - Diferença entre o menu do header da árvore e o menu das páginas internas precisa ser diagnosticada no código.
 
 ### 31.3 Arquivos prioritários para próxima etapa
@@ -1434,7 +1471,77 @@ Validação visual mínima:
 
 ---
 
-## 32. Resumo do estado atual
+
+## 32. Atualização 2026-06-07 - Ícones, destaques e calendário relacionado
+
+Esta atualização registra ajustes recentes que impactam a validação da view **Minha Árvore**, mesmo quando alguns arquivos também atendem **Genealogia** e **Visão Completa**.
+
+### 32.1 Ícones dos cards
+
+Os cards de pessoa não devem usar emojis para nascimento/falecimento.
+
+Padrão atual:
+
+```txt
+Nascimento -> Star, de lucide-react
+Falecimento -> Cross, de lucide-react
+```
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+```
+
+### 32.2 Botão conjugal
+
+Padrão atual:
+
+```txt
+Ícone -> Blend, de lucide-react
+Cor -> cinza/neutro
+```
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+```
+
+Regra:
+
+```txt
+/minha-arvore usa MarriageNode.
+/genealogia e /visao-completa usam GenealogySpouseEdge.
+```
+
+Validar os dois caminhos antes de considerar o ajuste concluído.
+
+### 32.3 Destaques de linhas
+
+Na aba **Legendas**, seção **Destacar**, as linhas visíveis devem seguir:
+
+```txt
+Cônjuges -> laranja
+Pais/Filhos -> amarelo/dourado
+Irmãos -> azul tracejado
+Todas -> aplica os três padrões acima
+```
+
+Destaque não cria linha nova e não reexibe linha oculta por **Linhas**.
+
+### 32.4 Relação com calendário familiar
+
+O ajuste mobile de `/calendario-familiar` não altera a árvore, mas deve ser acompanhado no QA geral do ciclo:
+
+- filtros/categorias superiores mais compactos no mobile;
+- card **Categorias** abaixo do calendário oculto no mobile;
+- desktop preservado.
+
+---
+
+## 33. Resumo do estado atual
 
 A view **Minha Árvore** está estruturada como composição de três áreas:
 

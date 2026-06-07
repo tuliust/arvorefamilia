@@ -45,16 +45,16 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | 7.9 Pagina de favoritos | Primeira versao aprovada | Refinamentos ficam pos-MVP. |
 | 7.10 Responsividade mobile/tablet | Concluida | QA final tecnico e visual aprovado em 2026-05-19. |
 | Headers e margens internas | Concluidos | Header compartilhado nas paginas internas e Home pos-login preservada com header proprio. |
-| Viewport da árvore | Em refinamento visual final | Minha Árvore, Genealogia e Visão Completa têm regras de escala e título em ajuste; Genealogia mobile inicia na primeira geração com cards reais, mas padding superior do título e espaço título-cards ainda exigem validação. |
+| Viewport da árvore | Em refinamento visual final | Minha Árvore, Genealogia e Visão Completa têm regras de escala e título em ajuste; Genealogia mobile usa Avós/Geração 3 como régua vertical de enquadramento e ainda exige validação de pan para recuperar cabeçalhos. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; colunas vazias foram removidas; inferencia de geracoes ocorre em memoria pela pessoa central. |
 | Rotas das views da arvore | Concluidas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
 | Refatoracao incremental da Home | Em andamento seguro | Componentes visuais foram extraidos; `Home.tsx` segue como orquestradora. |
 | Minha Arvore e arquivos historicos | Atualizados | Categoria historica, preview pos-upload, botao **Acoes** e casamento salvo pelo botao geral consolidados. |
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC corrigida, migration aplicada e migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places com fallback para input normal. |
-| Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao e Faz X anos. |
+| Calendario familiar | Ajustes residuais concluidos | Categorias/filtros clicáveis, pluralização, Faz X anos; no mobile, filtros superiores compactos e card Categorias abaixo do calendário oculto. |
 | Paletas visuais da arvore | Concluidas | Paletas `white`, `orange` e `brown` expostas no `HomeHeader`, aplicadas por CSS variables e persistidas em `localStorage`. |
-| Menu compartilhado do usuário | Em diagnóstico visual final | A regra desejada é usar `UserProfileMenu` também no header da árvore, preservando botão compacto; prints recentes indicaram diferença entre o menu das views da árvore e o menu das páginas internas, exigindo comparação de código antes de declarar concluído. |
+| Menu compartilhado do usuário | Consolidado com validação visual recomendada | Regra atual: `UserProfileMenu` também no header da árvore, preservando botão compacto; diferenças visuais devem ser tratadas como variante controlada, não como menu legado duplicado. |
 | Acoes de perfil e notificacoes | Concluidas no escopo atual | `/minha-arvore/editar` recebeu **Trocar Senha**; `/notificacoes` recebeu **Personalizar Notificacoes** para `/ajustar-notificacoes`; textos de preferencias/notificacoes foram corrigidos. |
 
 ---
@@ -432,8 +432,8 @@ Validacao visual recomendada:
 
 Pontos de atencao:
 
-- confirmar que as aliancas estao visiveis em `/minha-arvore`;
-- confirmar que `/genealogia` nao perdeu o estilo correto das aliancas;
+- confirmar que o botão conjugal `Blend` cinza está visível em `/minha-arvore`;
+- confirmar que `/genealogia` e `/visao-completa` mantêm o botão conjugal `Blend` cinza;
 - confirmar que nenhum card superior da arvore foi cortado;
 - confirmar que o cabecalho do menu navega para `/minha-arvore/editar`;
 - confirmar que o botao `X` do menu apenas fecha o painel;
@@ -442,17 +442,20 @@ Pontos de atencao:
 
 ### 5.10 Pendências visuais finais das views da árvore
 
-Status: pendente antes de considerar a rodada visual encerrada.
+Status: pendente de validação visual antes de considerar a rodada encerrada.
 
 Pendências:
 
 ```txt
 /minha-arvore: título muito próximo do topo da área da árvore
 /minha-arvore: espaço ainda grande entre título e cards
-/minha-arvore: alianças ainda pouco visíveis ou ausentes no botão conjugal
+/minha-arvore: manter botão conjugal Blend cinza visível e clicável
+/genealogia mobile: validar que os chips usam Avós/Geração 3 como régua vertical
+/genealogia mobile: permitir pan vertical para recuperar cabeçalhos após arraste
 /genealogia: manter título compacto sem cortar labels ou cards
 /visao-completa: manter título compacto sem cortar labels ou cards
-menus: diagnosticar diferença entre menu da árvore e menu das páginas internas
+menus: manter UserProfileMenu compartilhado, aceitando apenas variantes visuais controladas
+/calendario-familiar mobile: manter filtros superiores compactos e card Categorias inferior oculto
 ```
 
 Arquivos prováveis:
@@ -574,7 +577,7 @@ Verificar:
 - botao **Trocar Senha** em `/minha-arvore/editar`;
 - botao **Personalizar Notificacoes** em `/notificacoes`;
 - textos **Calendario/Calendário**, **Preferencias/Preferências** e **Notificacoes/Notificações** sem mojibake;
-- aliancas visiveis em `/minha-arvore` e preservadas em `/genealogia`;
+- botão conjugal `Blend` cinza visível em `/minha-arvore` e preservado em `/genealogia`/`/visao-completa`;
 - sem overflow horizontal global;
 - painel lateral operavel;
 - legenda visivel e nao duplicada;
@@ -692,9 +695,147 @@ Nao bloqueiam lancamento, se documentados:
 
 ---
 
+
+## Atualização 2026-06-07 - Ícones, destaques de linhas, calendário mobile e Genealogia mobile
+
+Concluído neste ciclo:
+
+```txt
+cards de pessoa trocaram emojis por Star e Cross do lucide-react
+botão conjugal passou a usar Blend do lucide-react
+botão conjugal adotou estilo cinza/neutro nas três views
+GenealogySpouseEdge foi alinhado ao padrão visual do MarriageNode
+destaques de linhas foram reforçados: cônjuges laranja, pais/filhos amarelo/dourado, irmãos azul tracejado
+/calendario-familiar mobile recebeu filtros superiores mais compactos
+/calendario-familiar mobile passou a ocultar o card Categorias abaixo do calendário
+/genealogia mobile removeu offset variável por geração
+/genealogia mobile deve usar Avós/Geração 3 como referência vertical de enquadramento
+```
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/home/HomeTreeSection.tsx
+```
+
+Permanece como validação/ajuste recomendado:
+
+```txt
+confirmar se o ajuste y: referenceBounds.y foi commitado em FamilyTree.tsx
+confirmar se /genealogia mobile permite pan para recuperar cabeçalhos
+se necessário, liberar translateExtent apenas em /genealogia mobile
+validar os chips Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes
+validar /minha-arvore, /genealogia e /visao-completa nas paletas white, orange e brown
+```
+
+Critérios de aceite:
+
+```txt
+Star/Cross aparecem nos cards sem emoji/mojibake
+Blend cinza aparece no botão conjugal das três views
+clique no botão conjugal abre modal conjugal
+Destacar Cônjuges deixa linhas laranja
+Destacar Pais/Filhos deixa linhas amarelo/dourado
+Destacar Irmãos deixa linhas azuis tracejadas
+Destaque não recria linha oculta
+Genealogia mobile mantém cabeçalhos na mesma régua vertical de Avós
+Genealogia mobile permite recuperar cabeçalhos por pan/arraste
+Calendário mobile não exibe card Categorias abaixo do calendário
+```
+
+Comandos de validação:
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Não usar `git add .`.
+
+---
+
 # Pos-MVP
 
-## Pos-MVP imediato
+#
+## Atualização 2026-06-07 - Ícones, destaques de linhas, calendário mobile e Genealogia mobile
+
+Concluído neste ciclo:
+
+```txt
+cards de pessoa trocaram emojis por Star e Cross do lucide-react
+botão conjugal passou a usar Blend do lucide-react
+botão conjugal adotou estilo cinza/neutro nas três views
+GenealogySpouseEdge foi alinhado ao padrão visual do MarriageNode
+destaques de linhas foram reforçados: cônjuges laranja, pais/filhos amarelo/dourado, irmãos azul tracejado
+/calendario-familiar mobile recebeu filtros superiores mais compactos
+/calendario-familiar mobile passou a ocultar o card Categorias abaixo do calendário
+/genealogia mobile removeu offset variável por geração
+/genealogia mobile deve usar Avós/Geração 3 como referência vertical de enquadramento
+```
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/home/HomeTreeSection.tsx
+```
+
+Permanece como validação/ajuste recomendado:
+
+```txt
+confirmar se o ajuste y: referenceBounds.y foi commitado em FamilyTree.tsx
+confirmar se /genealogia mobile permite pan para recuperar cabeçalhos
+se necessário, liberar translateExtent apenas em /genealogia mobile
+validar os chips Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes
+validar /minha-arvore, /genealogia e /visao-completa nas paletas white, orange e brown
+```
+
+Critérios de aceite:
+
+```txt
+Star/Cross aparecem nos cards sem emoji/mojibake
+Blend cinza aparece no botão conjugal das três views
+clique no botão conjugal abre modal conjugal
+Destacar Cônjuges deixa linhas laranja
+Destacar Pais/Filhos deixa linhas amarelo/dourado
+Destacar Irmãos deixa linhas azuis tracejadas
+Destaque não recria linha oculta
+Genealogia mobile mantém cabeçalhos na mesma régua vertical de Avós
+Genealogia mobile permite recuperar cabeçalhos por pan/arraste
+Calendário mobile não exibe card Categorias abaixo do calendário
+```
+
+Comandos de validação:
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Não usar `git add .`.
+
+---
+
+# Pos-MVP imediato
 
 | Frente | Implementacao |
 |---|---|
@@ -708,7 +849,76 @@ Nao bloqueiam lancamento, se documentados:
 
 ---
 
-## Pos-MVP tecnico
+#
+## Atualização 2026-06-07 - Ícones, destaques de linhas, calendário mobile e Genealogia mobile
+
+Concluído neste ciclo:
+
+```txt
+cards de pessoa trocaram emojis por Star e Cross do lucide-react
+botão conjugal passou a usar Blend do lucide-react
+botão conjugal adotou estilo cinza/neutro nas três views
+GenealogySpouseEdge foi alinhado ao padrão visual do MarriageNode
+destaques de linhas foram reforçados: cônjuges laranja, pais/filhos amarelo/dourado, irmãos azul tracejado
+/calendario-familiar mobile recebeu filtros superiores mais compactos
+/calendario-familiar mobile passou a ocultar o card Categorias abaixo do calendário
+/genealogia mobile removeu offset variável por geração
+/genealogia mobile deve usar Avós/Geração 3 como referência vertical de enquadramento
+```
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/home/HomeTreeSection.tsx
+```
+
+Permanece como validação/ajuste recomendado:
+
+```txt
+confirmar se o ajuste y: referenceBounds.y foi commitado em FamilyTree.tsx
+confirmar se /genealogia mobile permite pan para recuperar cabeçalhos
+se necessário, liberar translateExtent apenas em /genealogia mobile
+validar os chips Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes
+validar /minha-arvore, /genealogia e /visao-completa nas paletas white, orange e brown
+```
+
+Critérios de aceite:
+
+```txt
+Star/Cross aparecem nos cards sem emoji/mojibake
+Blend cinza aparece no botão conjugal das três views
+clique no botão conjugal abre modal conjugal
+Destacar Cônjuges deixa linhas laranja
+Destacar Pais/Filhos deixa linhas amarelo/dourado
+Destacar Irmãos deixa linhas azuis tracejadas
+Destaque não recria linha oculta
+Genealogia mobile mantém cabeçalhos na mesma régua vertical de Avós
+Genealogia mobile permite recuperar cabeçalhos por pan/arraste
+Calendário mobile não exibe card Categorias abaixo do calendário
+```
+
+Comandos de validação:
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Não usar `git add .`.
+
+---
+
+# Pos-MVP tecnico
 
 | Frente | Implementacao |
 |---|---|
@@ -748,7 +958,76 @@ Pontos identificados em paginas e componentes principais:
 
 ---
 
-## Pos-MVP produto
+#
+## Atualização 2026-06-07 - Ícones, destaques de linhas, calendário mobile e Genealogia mobile
+
+Concluído neste ciclo:
+
+```txt
+cards de pessoa trocaram emojis por Star e Cross do lucide-react
+botão conjugal passou a usar Blend do lucide-react
+botão conjugal adotou estilo cinza/neutro nas três views
+GenealogySpouseEdge foi alinhado ao padrão visual do MarriageNode
+destaques de linhas foram reforçados: cônjuges laranja, pais/filhos amarelo/dourado, irmãos azul tracejado
+/calendario-familiar mobile recebeu filtros superiores mais compactos
+/calendario-familiar mobile passou a ocultar o card Categorias abaixo do calendário
+/genealogia mobile removeu offset variável por geração
+/genealogia mobile deve usar Avós/Geração 3 como referência vertical de enquadramento
+```
+
+Arquivos relacionados:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-tree-visual-polish.css
+src/app/pages/CalendarioFamiliar.tsx
+src/app/pages/home/HomeTreeSection.tsx
+```
+
+Permanece como validação/ajuste recomendado:
+
+```txt
+confirmar se o ajuste y: referenceBounds.y foi commitado em FamilyTree.tsx
+confirmar se /genealogia mobile permite pan para recuperar cabeçalhos
+se necessário, liberar translateExtent apenas em /genealogia mobile
+validar os chips Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes
+validar /minha-arvore, /genealogia e /visao-completa nas paletas white, orange e brown
+```
+
+Critérios de aceite:
+
+```txt
+Star/Cross aparecem nos cards sem emoji/mojibake
+Blend cinza aparece no botão conjugal das três views
+clique no botão conjugal abre modal conjugal
+Destacar Cônjuges deixa linhas laranja
+Destacar Pais/Filhos deixa linhas amarelo/dourado
+Destacar Irmãos deixa linhas azuis tracejadas
+Destaque não recria linha oculta
+Genealogia mobile mantém cabeçalhos na mesma régua vertical de Avós
+Genealogia mobile permite recuperar cabeçalhos por pan/arraste
+Calendário mobile não exibe card Categorias abaixo do calendário
+```
+
+Comandos de validação:
+
+```bash
+git diff --check
+npm run build
+git status --short
+```
+
+Não usar `git add .`.
+
+---
+
+# Pos-MVP produto
 
 | Modulo | Implementacoes |
 |---|---|

@@ -1,7 +1,7 @@
 # Guia de UX e Layout - Árvore Família
 
 > Última revisão: 2026-06-07  
-> Revisão complementar: menu compartilhado, espaçamento da árvore, alianças, paletas e pendências visuais finais  
+> Revisão complementar: botão conjugal neutro, destaques de conectores, Genealogia mobile e Calendário mobile  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`
 
@@ -33,8 +33,8 @@ Este documento não substitui:
 
 Esta revisão separa o que já está consolidado do que ainda depende de validação visual:
 
-- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` mobile com chips por geração; compactação parcial de `/minha-arvore` desktop;
-- **em refinamento visual final**: padding superior do título da árvore, redução do espaço entre título e cards sem cortar cards superiores, legibilidade do SVG de alianças no botão conjugal e diagnóstico da diferença entre o menu do usuário nas views da árvore e o menu das páginas internas;
+- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` mobile com chips por geração; compactação parcial de `/minha-arvore` desktop; botão conjugal com `Blend` cinza; ícones `Star`/`Cross` nos cards; destaque de linhas com cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado; filtros mobile compactos no calendário;
+- **em refinamento visual final**: padding superior do título da árvore, redução do espaço entre título e cards sem cortar cards superiores, pan vertical superior em `/genealogia` mobile e diagnóstico da diferença entre o menu do usuário nas views da árvore e o menu das páginas internas;
 - **regra de segurança visual**: não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir o espaçamento entre título e árvore, pois essa abordagem já causou corte de cards superiores.
 
 ---
@@ -551,7 +551,10 @@ Regras consolidadas:
 - colunas sem cards não devem ser exibidas;
 - labels `GERAÇÃO X` não devem ficar sobrepostos ao menu de chips;
 - em Genealogia mobile, botões `+` e `-` podem ficar ocultos para evitar disputa de espaço com a barra;
-- pan vertical e horizontal por touch deve continuar disponível na área da árvore.
+- pan vertical e horizontal por touch deve continuar disponível na área da árvore;
+- ao trocar chips, o eixo X muda conforme a geração ativa, mas o eixo Y deve permanecer ancorado na referência visual de Avós/Geração 3;
+- Tataravós, Bisavós, Pais, Núcleo e Descendentes não devem abrir mais baixos do que Avós;
+- o usuário deve conseguir arrastar para recuperar cabeçalhos e área superior; se isso falhar, revisar `translateExtent` em `FamilyTree.tsx`.
 
 A inferência de geração é regra de renderização em memória. Ela não deve alterar dados reais, migrations, RLS ou Supabase.
 
@@ -579,6 +582,7 @@ Regras:
 
 - botões de zoom ficam no canto superior direito da área da árvore, por exemplo `right-4 top-4`;
 - em Genealogia mobile, botões `+` e `-` podem ser ocultados;
+- em Genealogia mobile, `translateExtent` não deve impedir pan vertical para recuperar cabeçalhos;
 - durante seleção de área, pan/zoom devem ser bloqueados;
 - ao cancelar/concluir seleção, pan/zoom devem voltar;
 - Genealogia e Visão Completa sempre precisam permitir pan vertical;
@@ -675,7 +679,10 @@ Regras de UX:
 - descrição do evento, como **Faz 60 anos**, deve usar fonte menor;
 - lista lateral/inferior pode manter nome completo;
 - grid mensal não deve causar overflow horizontal;
-- filtros por categoria devem permanecer clicáveis.
+- filtros por categoria devem permanecer clicáveis;
+- no mobile, os chips superiores de categorias devem usar fonte reduzida/compacta para caber no card acima do calendário;
+- no mobile, o card **Categorias** abaixo do calendário deve ficar oculto;
+- no desktop/tablet, o card/lista de categorias pode permanecer visível.
 
 ---
 
@@ -757,7 +764,8 @@ Estado atual:
 - sem descrição da view atual;
 - sem seção Views;
 - sem subtítulos internos nos itens;
-- item **Em relacionamento** para união ativa.
+- item **Em relacionamento** para união ativa;
+- seção **Destacar** usa cônjuges em laranja, pais/filhos em amarelo/dourado e irmãos em azul tracejado.
 
 Seções atuais:
 
@@ -935,19 +943,26 @@ src/app/components/FamilyTree/FamilyTree.tsx
 src/styles/family-tree-visual-polish.css
 ```
 
-### 15.2 Alianças
+### 15.2 Botão conjugal
 
-Pendências:
+Status:
 
-- tornar o SVG de alianças visível em `/minha-arvore`;
-- confirmar se `visualVariant: 'direct-family'` está aplicada aos marriage nodes do layout direto;
-- validar se a variante padrão continua correta em `/genealogia` e `/visao-completa`.
+- o padrão atual usa `Blend` de `lucide-react`, em cinza/neutro;
+- `/minha-arvore` usa `MarriageNode.tsx`;
+- `/genealogia` e `/visao-completa` usam `GenealogySpouseEdge.tsx`.
+
+Pendências de validação:
+
+- confirmar clique e abertura do modal conjugal nas três views;
+- confirmar se o botão não cobre cards em layouts densos;
+- confirmar contraste nas paletas `white`, `orange` e `brown`.
 
 Arquivos prováveis:
 
 ```txt
 src/app/components/FamilyTree/MarriageNode.tsx
 src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
@@ -1022,8 +1037,8 @@ Validar:
 - cabeçalho do menu leva para `/minha-arvore/editar`;
 - botão `X` apenas fecha;
 - item `Editar notificações` não aparece;
-- alianças estão visíveis em `/minha-arvore`;
-- alianças permanecem corretas em `/genealogia`;
+- botão conjugal `Blend` cinza está visível em `/minha-arvore`;
+- botão conjugal `Blend` cinza permanece coerente em `/genealogia` e `/visao-completa`;
 - títulos da árvore não têm mojibake;
 - nenhum card superior é cortado;
 - calendário mostra título em negrito e descrição menor;
@@ -1110,13 +1125,18 @@ Ajustes concluídos ou parcialmente consolidados:
 - botão **Personalizar Notificações** adicionado em `/notificacoes`;
 - botão **Trocar Senha** adicionado em `/minha-arvore/editar`;
 - títulos e microcopy corrigidos em calendário e preferências;
-- `MarriageNode` foi direcionado para exibir SVG em vez de emoji corrompido;
+- `MarriageNode` e `GenealogySpouseEdge` usam `Blend` de `lucide-react` em cinza/neutro no lugar de emoji/SVG customizado;
+- `PersonNode` usa `Star` e `Cross` de `lucide-react` no lugar de emojis de nascimento/falecimento;
+- destaques de linhas foram padronizados: cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado;
+- `/genealogia` mobile deve manter alinhamento vertical dos chips com referência em Avós/Geração 3;
+- `/calendario-familiar` mobile usa chips superiores compactos e oculta o card **Categorias** inferior;
 - espaçamento do título da árvore deve ser controlado por `FamilyTree.tsx`, não por transform no ReactFlow.
 
 Pendências desta frente:
 
 - confirmar se o menu da árvore abre o mesmo painel compartilhado das páginas internas;
-- melhorar a visibilidade do SVG de alianças em `/minha-arvore`;
-- ajustar padding superior do título e reduzir espaço título-cards sem cortar o topo da árvore.
+- validar o botão conjugal `Blend` cinza nas três views;
+- ajustar padding superior do título e reduzir espaço título-cards sem cortar o topo da árvore;
+- validar pan vertical superior em `/genealogia` mobile.
 
 Validação obrigatória em browser real continua recomendada quando o navegador interno/sandbox não conseguir abrir as rotas.
