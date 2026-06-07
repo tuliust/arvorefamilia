@@ -115,30 +115,10 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         ].join(' ')}
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
-        <Handle
-          type="target"
-          position={Position.Top}
-          id="top"
-          style={{ ...hiddenHandle, top: 0, left: '50%' }}
-        />
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          id="bottom"
-          style={{ ...hiddenHandle, bottom: 0, left: '50%' }}
-        />
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="right"
-          style={{ ...hiddenHandle, right: 0, top: '50%' }}
-        />
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="left"
-          style={{ ...hiddenHandle, left: 0, top: '50%' }}
-        />
+        <Handle type="target" position={Position.Top} id="top" style={{ ...hiddenHandle, top: 0, left: '50%' }} />
+        <Handle type="source" position={Position.Bottom} id="bottom" style={{ ...hiddenHandle, bottom: 0, left: '50%' }} />
+        <Handle type="source" position={Position.Right} id="right" style={{ ...hiddenHandle, right: 0, top: '50%' }} />
+        <Handle type="target" position={Position.Left} id="left" style={{ ...hiddenHandle, left: 0, top: '50%' }} />
         <Handle
           type="source"
           position={Position.Right}
@@ -150,7 +130,10 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        <Blend className={isDirectFamilyVariant ? 'h-8 w-8 stroke-[2.6]' : 'h-7 w-7 stroke-[2.4]'} aria-hidden="true" />
+        <Blend
+          className={isDirectFamilyVariant ? 'h-9 w-9 stroke-[3]' : 'h-8 w-8 stroke-[2.8]'}
+          aria-hidden="true"
+        />
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'
