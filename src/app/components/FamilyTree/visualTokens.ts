@@ -1,10 +1,10 @@
-﻿export const FAMILY_TREE_COLORS = {
+export const FAMILY_TREE_COLORS = {
   CARD_BORDER_ALIVE: 'var(--tree-palette-status-alive, #3b82f6)',
   CARD_BORDER_DECEASED: 'var(--tree-palette-status-deceased, #8b5cf6)',
   CARD_BORDER_PET: 'var(--tree-palette-card-border-pet, #f59e0b)',
-  EDGE_SPOUSE: 'var(--tree-palette-edge-spouse, #f97316)',
-  EDGE_CHILD: 'var(--tree-palette-edge-child, #eab308)',
-  EDGE_SIBLING: 'var(--tree-palette-edge-sibling, #eab308)',
+  EDGE_SPOUSE: 'var(--tree-palette-edge-spouse, #ea580c)',
+  EDGE_CHILD: 'var(--tree-palette-edge-child, #ca8a04)',
+  EDGE_SIBLING: 'var(--tree-palette-edge-sibling, #2563eb)',
 } as const;
 
 export const DIRECT_FAMILY_TOKENS = {
