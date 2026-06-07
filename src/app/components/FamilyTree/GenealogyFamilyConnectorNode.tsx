@@ -31,19 +31,20 @@ export function GenealogyFamilyConnectorNode({
   const isSingleChildAligned = singleChildPoint
     ? Math.abs(data.originY - singleChildPoint.y) <= ALIGNED_Y_TOLERANCE
     : false;
+  const hasHighlight = Boolean(data.parentChildHighlight || data.siblingHighlight);
 
   const parentChildStroke = data.parentChildHighlight
     ? FAMILY_TREE_COLORS.EDGE_CHILD
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE;
   const parentChildStrokeWidth = data.parentChildHighlight
-    ? 2.25
+    ? 3
     : DIRECT_FAMILY_TOKENS.EDGE_STROKE_WIDTH;
 
   const siblingBranchStroke = data.siblingHighlight
     ? FAMILY_TREE_COLORS.EDGE_SIBLING
     : parentChildStroke;
   const siblingBranchStrokeWidth = data.siblingHighlight
-    ? 2.25
+    ? 3
     : parentChildStrokeWidth;
   const siblingBranchStrokeDasharray = data.siblingHighlight ? '5,5' : undefined;
 
@@ -60,7 +61,7 @@ export function GenealogyFamilyConnectorNode({
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={DIRECT_FAMILY_TOKENS.EDGE_OPACITY}
+        opacity={hasHighlight ? 0.92 : DIRECT_FAMILY_TOKENS.EDGE_OPACITY}
       >
         {singleChildPoint && isSingleChildAligned ? (
           <line
