@@ -76,7 +76,7 @@ export function GenealogySpouseEdge({
           title="Ver vínculo do casal"
           aria-label="Ver vínculo do casal"
         >
-          <Blend className="h-7 w-7 stroke-[2.4]" aria-hidden="true" />
+          <Blend className="h-8 w-8 stroke-[2.8]" aria-hidden="true" />
         </button>
       </EdgeLabelRenderer>
     </>
