@@ -116,7 +116,7 @@ const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = SIDE_GROUPS_BOTTOM;
 // Extra logical room used only by Minha Árvore so lower groups reach the filter panel's visual base.
-const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 600;
+const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 320;
 const DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y =
   DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y + DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET;
 const CENTRAL_GROUP_BOTTOM = DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y;
@@ -134,17 +134,17 @@ const SIDE_GROUP_MIN_GAP = 10;
 const CENTRAL_X = VIEW_CENTER_X - CENTRAL_WIDTH / 2;
 const CENTRAL_AREA_VERTICAL_CENTER_Y = (SIDE_GROUPS_TOP + DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y) / 2;
 const CENTRAL_LOWER_REFERENCE_HEIGHT = 620;
-const CENTRAL_AREA_SHIFT_DOWN = 60;
+const CENTRAL_AREA_SHIFT_DOWN = 20;
 const CENTRAL_BASE_Y = CENTRAL_AREA_VERTICAL_CENTER_Y - CENTRAL_LOWER_REFERENCE_HEIGHT / 2 + CENTRAL_AREA_SHIFT_DOWN;
-const CENTRAL_CORE_SHIFT_UP = 180;
+const CENTRAL_CORE_SHIFT_UP = 210;
 const CENTRAL_Y = CENTRAL_BASE_Y - CENTRAL_CORE_SHIFT_UP;
 const CENTRAL_PARENT_GAP = 120;
 const CENTRAL_LOWER_GROUP_GAP = 120;
 const CENTRAL_LOWER_STACK_GAP = 34;
 const CENTRAL_SIDE_GROUP_WIDTH = CARD_WIDTH + GROUP_BOX_PADDING_X * 2;
 const SIDE_AREA_OUTER_INSET_X = 8;
-const SIDE_AREA_CENTER_GAP_X = 24;
-const CENTRAL_AREA_TARGET_RATIO = 0.3;
+const SIDE_AREA_CENTER_GAP_X = 180;
+const CENTRAL_AREA_TARGET_RATIO = 0.28;
 const DIRECT_USEFUL_LEFT = DIRECT_FRAME_LEFT + SIDE_AREA_OUTER_INSET_X;
 const DIRECT_USEFUL_RIGHT = DIRECT_FRAME_RIGHT - SIDE_AREA_OUTER_INSET_X;
 const DIRECT_AREA_CONTENT_WIDTH = DIRECT_USEFUL_RIGHT - DIRECT_USEFUL_LEFT - SIDE_AREA_CENTER_GAP_X * 2;
@@ -173,8 +173,8 @@ const STANDARD_GROUP_CARD_WIDTH = 400;
 const STANDARD_GROUP_CARD_HEIGHT = DIRECT_FAMILY_TOKENS.CARD_HEIGHT;
 const SIDE_ANCESTOR_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
 const SIDE_ANCESTOR_CARD_HEIGHT = 160;
-const SIDE_COLLATERAL_CARD_WIDTH = 386;
-const SIDE_COLLATERAL_CARD_HEIGHT = 142;
+const SIDE_COLLATERAL_CARD_WIDTH = 340;
+const SIDE_COLLATERAL_CARD_HEIGHT = 136;
 const SIDE_COLLATERAL_CARD_SCALE_STEP = 0.04;
 const SIDE_COLLATERAL_CARD_MAX_SCALE = 1.48;
 const SIDE_PARENT_CARD_WIDTH = STANDARD_GROUP_CARD_WIDTH;
@@ -182,9 +182,9 @@ const SIDE_PARENT_CARD_HEIGHT = 160;
 const CENTRAL_PARENT_GROUP_Y = CENTRAL_Y - CENTRAL_PARENT_GAP - SIDE_PARENT_CARD_HEIGHT;
 const LOWER_CARD_WIDTH = 400;
 const LOWER_CARD_HEIGHT = 120;
-const SIDE_COLUMN_GAP = 16;
-const SIDE_ROW_GAP = 12;
-const ANCESTOR_COLUMN_GAP = 52;
+const SIDE_COLUMN_GAP = 8;
+const SIDE_ROW_GAP = 10;
+const ANCESTOR_COLUMN_GAP = 32;
 const ANCESTOR_ROW_GAP = 14;
 const IN_GROUP_SIBLING_COLUMN_GAP = 18;
 const IN_GROUP_SIBLING_ROW_GAP = 12;
@@ -567,7 +567,7 @@ function addMarriageNode(nodes: Node[], positionedIds: Set<string>, id: string, 
     id,
     type: 'marriageNode',
     data: {
-      emoji: '💍',
+      emoji: '??',
     },
     position: finitePosition(centerX - MARRIAGE_NODE_SIZE / 2, centerY - MARRIAGE_NODE_SIZE / 2),
     draggable: false,
@@ -842,11 +842,11 @@ function visibleGroupHeight(ids: string[], maxPerRow: number, index?: Relationsh
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
 }
 
-// Helpers legados de alinhamento vertical. A area central inferior da Minha Arvore
+// Helpers legados de alinhamento vertical. A area central inferior da Minha Árvore
 // nao deve usar alinhamento pelo bottom logico da view: Irmaos, Sobrinhos,
 // Conjuge, Filhos e Netos devem permanecer compactados a partir de
 // compactLowerGroupTopPositions(). Qualquer mudanca nesse comportamento precisa
-// ser deliberada e testada visualmente na view Minha Arvore.
+// ser deliberada e testada visualmente na view Minha Árvore.
 function lowerGroupTopPositions(
   groups: GroupSpec[],
   minTopY: number,
@@ -1307,7 +1307,7 @@ function shiftPlacedGroupY(
 }
 
 // Helper auxiliar legado para casos pontuais de alinhamento ao bottom.
-// Nao aplicar aos grupos inferiores centrais da Minha Arvore.
+// Nao aplicar aos grupos inferiores centrais da Minha Árvore.
 function alignGroupToBottom(
   nodes: Node[],
   spec: GroupSpec,
@@ -1322,7 +1322,7 @@ function alignGroupToBottom(
 
 // Helper auxiliar legado para pilhas alinhadas ao bottom.
 // Nao usar para Irmaos, Sobrinhos, Conjuge, Filhos e Netos na area central
-// inferior da Minha Arvore; esses grupos devem continuar com
+// inferior da Minha Árvore; esses grupos devem continuar com
 // compactLowerGroupTopPositions(), sem serem empurrados para o bottom logico.
 function alignGroupStackToBottom(
   nodes: Node[],
