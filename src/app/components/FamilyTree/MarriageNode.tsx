@@ -70,6 +70,7 @@ function inferMarriageDetailsFromNearestPeople(marriageNodeId: string, nodes: No
 export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData>) => {
   const { getNodes } = useReactFlow();
   const [localMarriageDetails, setLocalMarriageDetails] = React.useState<MarriageNodeDetails | null>(null);
+  const isDirectFamilyVariant = data.visualVariant === 'direct-family';
   const hiddenHandle = {
     width: 1,
     height: 1,
@@ -105,7 +106,12 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onPointerDown={(event) => event.stopPropagation()}
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
-        className="nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border-2 bg-orange-50 text-sm leading-none shadow-[0_3px_10px_rgba(234,88,12,0.22)] transition hover:bg-orange-100 hover:shadow-[0_4px_12px_rgba(234,88,12,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+        className={[
+          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full text-sm leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2',
+          isDirectFamilyVariant
+            ? 'border-[3px] bg-white shadow-[0_0_0_4px_rgba(255,237,213,0.9),0_5px_14px_rgba(194,65,12,0.34)] hover:bg-orange-50 hover:shadow-[0_0_0_5px_rgba(255,237,213,0.95),0_6px_16px_rgba(194,65,12,0.42)]'
+            : 'border-2 bg-orange-50 shadow-[0_3px_10px_rgba(234,88,12,0.22)] hover:bg-orange-100 hover:shadow-[0_4px_12px_rgba(234,88,12,0.3)]',
+        ].join(' ')}
         style={{ borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE }}
       >
         <Handle
@@ -146,11 +152,11 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         <svg
           aria-hidden="true"
           viewBox="0 0 64 44"
-          width="40"
-          height="32"
-          fill="#FFF7ED"
-          stroke="#C2410C"
-          strokeWidth="5"
+          width={isDirectFamilyVariant ? 44 : 40}
+          height={isDirectFamilyVariant ? 36 : 32}
+          fill={isDirectFamilyVariant ? '#FFFFFF' : '#FFF7ED'}
+          stroke={isDirectFamilyVariant ? '#9A3412' : '#C2410C'}
+          strokeWidth={isDirectFamilyVariant ? 6.5 : 5}
           strokeLinecap="round"
           strokeLinejoin="round"
         >

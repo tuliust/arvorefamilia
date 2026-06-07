@@ -160,6 +160,7 @@ export interface PersonNodeData extends PersonNodeContextActions {
 
 export interface MarriageNodeData {
   emoji?: string;
+  visualVariant?: 'default' | 'direct-family';
   details?: MarriageNodeDetails;
   onClickMarriage?: (details: MarriageNodeDetails) => void;
 }
