@@ -26,20 +26,6 @@ function getPersonGeneration(pessoa: Pessoa) {
     : null;
 }
 
-function getGenealogyMobileStageViewportOffset(generation: number | null) {
-  switch (generation) {
-    case 4:
-    case 5:
-    case 6:
-      return -100;
-    case 1:
-    case 2:
-    case 3:
-    default:
-      return 0;
-  }
-}
-
 interface HomeTreeSectionProps {
   isTreeResolving: boolean;
   loadError: string | null;
@@ -114,9 +100,6 @@ export function HomeTreeSection({
   const effectiveActiveGenealogyGeneration = isGenealogyMobile
     ? activeGenealogyGeneration ?? defaultGenealogyMobileGeneration
     : null;
-  const genealogyMobileStageViewportOffset = isGenealogyMobile
-    ? getGenealogyMobileStageViewportOffset(effectiveActiveGenealogyGeneration)
-    : 0;
   const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
     edgeFilters.conjugal ||
     edgeFilters.filiacao_sangue ||
@@ -190,10 +173,6 @@ export function HomeTreeSection({
               [data-export-root="family-tree"] button[aria-label="Aumentar zoom"],
               [data-export-root="family-tree"] button[aria-label="Diminuir zoom"] {
                 display: none !important;
-              }
-
-              [data-export-root="family-tree"][data-export-view="genealogia"] .react-flow__viewport {
-                translate: 0 ${genealogyMobileStageViewportOffset}px;
               }
             ` : ''}
           `}
