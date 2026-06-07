@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { User, Dog, Eye, Pencil, Link2, Trash2 } from 'lucide-react';
+import { User, Dog, Eye, Pencil, Link2, Trash2, Star, Cross } from 'lucide-react';
 import { PersonNodeData } from './types';
 import {
   DIRECT_FAMILY_TOKENS,
@@ -14,8 +14,8 @@ import {
 } from './directFamilyColors';
 import {
   extractYear,
-  getPersonCardDetailLines,
-  getPersonCardSecondaryText,
+  formatDateBR,
+  normalizeBirthPlace,
 } from './utils/personCardText';
 import { CentralPersonFocusPanel } from './CentralPersonFocusPanel';
 import {
@@ -32,6 +32,11 @@ const DIRECT_FAMILY_PET_STYLE = {
   muted: 'rgba(255,255,255,0.82)',
 };
 
+type PersonDetailItem = {
+  kind: 'birth' | 'death';
+  text: string;
+};
+
 function relationCardStyle(relationKey: keyof typeof DIRECT_FAMILY_RELATION_COLORS) {
   return {
     background: DIRECT_FAMILY_RELATION_COLORS[relationKey].background,
@@ -41,44 +46,55 @@ function relationCardStyle(relationKey: keyof typeof DIRECT_FAMILY_RELATION_COLO
   };
 }
 
+function joinDateAndPlace(date?: string, place?: string) {
+  if (date && place) return `${date} - ${place}`;
+  return date || place;
+}
+
+function getPersonDetailItems(pessoa: PersonNodeData['pessoa']): PersonDetailItem[] {
+  const birthText = joinDateAndPlace(
+    formatDateBR(pessoa.data_nascimento),
+    normalizeBirthPlace(pessoa.local_nascimento)
+  );
+  const deathText = joinDateAndPlace(
+    formatDateBR(pessoa.data_falecimento),
+    normalizeBirthPlace(pessoa.local_falecimento)
+  );
+  const items: PersonDetailItem[] = [];
+
+  if (birthText) {
+    items.push({ kind: 'birth', text: birthText });
+  }
+
+  if (deathText) {
+    items.push({ kind: 'death', text: deathText });
+  } else if (isPersonDeceased(pessoa)) {
+    items.push({ kind: 'death', text: 'Falecido(a)' });
+  }
+
+  return items;
+}
+
 function PersonHandles() {
   const hiddenHandle = { background: 'transparent', border: 'none' };
 
   return (
     <>
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top"
-        style={{ top: -1, left: '50%', ...hiddenHandle }}
-      />
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-source"
-        style={{ top: -1, left: '50%', ...hiddenHandle }}
-      />
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top-source-secondary"
-        style={{ top: -1, left: '60%', ...hiddenHandle }}
-      />
-
+      <Handle type="target" position={Position.Top} id="top" style={{ top: -1, left: '50%', ...hiddenHandle }} />
+      <Handle type="source" position={Position.Top} id="top-source" style={{ top: -1, left: '50%', ...hiddenHandle }} />
+      <Handle type="target" position={Position.Top} id="top-source-secondary" style={{ top: -1, left: '60%', ...hiddenHandle }} />
       <Handle type="source" position={Position.Right} id="right-source" style={{ right: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Right} id="right-target" style={{ right: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="source" position={Position.Right} id="spouse-right" style={{ right: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Right} id="spouse-right-target" style={{ right: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="source" position={Position.Right} id="child-right" style={{ right: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Right} id="sibling-right" style={{ right: 0, top: '50%', ...hiddenHandle }} />
-
       <Handle type="source" position={Position.Left} id="left-source" style={{ left: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Left} id="left-target" style={{ left: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Left} id="spouse-left" style={{ left: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="source" position={Position.Left} id="spouse-left-source" style={{ left: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="target" position={Position.Left} id="child-left" style={{ left: 0, top: '50%', ...hiddenHandle }} />
       <Handle type="source" position={Position.Left} id="sibling-left" style={{ left: 0, top: '50%', ...hiddenHandle }} />
-
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ bottom: 0, left: '50%', ...hiddenHandle }} />
     </>
   );
@@ -138,7 +154,7 @@ function getLifeYearsLabel(pessoa: PersonNodeData['pessoa']) {
   const deathYear = extractYear(pessoa.data_falecimento);
 
   if (birthYear && deathYear) return `${birthYear}-${deathYear}`;
-  if (deathYear) return `†${deathYear}`;
+  if (deathYear) return deathYear;
   if (birthYear) return birthYear;
   return undefined;
 }
@@ -214,27 +230,39 @@ function PetMarker({ compact = false }: { compact?: boolean }) {
 }
 
 function PersonDetailLines({
-  lines,
+  items,
   className = '',
   style,
   lineClassName = 'whitespace-normal break-words',
   lineStyle,
 }: {
-  lines: string[];
+  items: PersonDetailItem[];
   className?: string;
   style?: React.CSSProperties;
   lineClassName?: string;
   lineStyle?: React.CSSProperties;
 }) {
-  if (lines.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
-    <div className={className} style={style} title={lines.join('\n')}>
-      {lines.map((line) => (
-        <p key={line} className={lineClassName} style={lineStyle}>
-          {line}
-        </p>
-      ))}
+    <div className={className} style={style} title={items.map((item) => item.text).join('\n')}>
+      {items.map((item) => {
+        const Icon = item.kind === 'birth' ? Star : Cross;
+        const iconClassName = item.kind === 'birth'
+          ? 'h-[0.95em] w-[0.95em] shrink-0 fill-yellow-300 text-yellow-500 stroke-[2.4]'
+          : 'h-[0.95em] w-[0.95em] shrink-0 text-violet-500 stroke-[2.4]';
+
+        return (
+          <p
+            key={`${item.kind}-${item.text}`}
+            className={`flex min-w-0 items-center gap-1.5 ${lineClassName}`}
+            style={lineStyle}
+          >
+            <Icon className={iconClassName} aria-hidden="true" />
+            <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{item.text}</span>
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -267,6 +295,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
 
   const isPet = pessoa.humano_ou_pet === 'Pet';
   const isFalecido = isPersonDeceased(pessoa);
+  const detailItems = getPersonDetailItems(pessoa);
 
   const handleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
@@ -316,9 +345,6 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     return FAMILY_TREE_COLORS.CARD_BORDER_ALIVE;
   };
 
-  const secondaryText = getPersonCardSecondaryText(pessoa);
-  const detailLines = getPersonCardDetailLines(pessoa);
-
   const avatarContent = (avatarClassName: string, iconClassName: string) => {
     if (pessoa.foto_principal_url) {
       return (
@@ -343,41 +369,35 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         data-tree-node-menu="true"
         className="absolute right-2 top-2 z-50 min-w-[170px] rounded-lg border border-gray-200 bg-white p-1 shadow-xl"
       >
-        <ActionButton
-          label="Visualizar"
-          Icon={Eye}
-          onClick={() => {
-            setMenuOpen(false);
-            onView?.(pessoa);
-          }}
-        />
-        <ActionButton
-          label="Editar"
-          Icon={Pencil}
-          onClick={() => {
-            setMenuOpen(false);
-            onEdit?.(pessoa);
-          }}
-        />
-        <ActionButton
-          label="Adicionar conexão"
-          Icon={Link2}
-          onClick={() => {
-            setMenuOpen(false);
-            onAddConnection?.(pessoa);
-          }}
-        />
-        <ActionButton
-          label="Remover"
-          Icon={Trash2}
-          danger
-          onClick={() => {
-            setMenuOpen(false);
-            onRemove?.(pessoa);
-          }}
-        />
+        <ActionButton label="Visualizar" Icon={Eye} onClick={() => { setMenuOpen(false); onView?.(pessoa); }} />
+        <ActionButton label="Editar" Icon={Pencil} onClick={() => { setMenuOpen(false); onEdit?.(pessoa); }} />
+        <ActionButton label="Adicionar conexão" Icon={Link2} onClick={() => { setMenuOpen(false); onAddConnection?.(pessoa); }} />
+        <ActionButton label="Remover" Icon={Trash2} danger onClick={() => { setMenuOpen(false); onRemove?.(pessoa); }} />
       </div>
     )
+  );
+
+  const renderPhotoDialog = () => (
+    pessoa.foto_principal_url ? (
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent
+          className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
+          onClick={(event) => event.stopPropagation()}
+          onContextMenu={(event) => event.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle className="pr-8 text-white">Foto de {pessoa.nome_completo}</DialogTitle>
+          </DialogHeader>
+          <div className="flex max-h-[calc(100dvh-8rem)] items-center justify-center overflow-hidden rounded-md bg-black/30">
+            <img
+              src={pessoa.foto_principal_url}
+              alt={`Foto de ${pessoa.nome_completo}`}
+              className="max-h-[calc(100dvh-8rem)] max-w-full object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    ) : null
   );
 
   if (directRelation) {
@@ -415,11 +435,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const centralPaddingY = isMobile ? 10 : Math.max(18, Math.round(30 * cappedCardScale));
     const centralPaddingX = isMobile ? 16 : Math.max(30, Math.round(42 * cappedCardScale));
     const centralNameFontSize = isMobile ? 16 : Math.max(36, Math.round(50 * cappedCardScale * 1.08));
-    const centralDetailFontSize = isMobile ? 12 : clampNumber(
-      Math.round(34 * cappedCardScale),
-      24,
-      32
-    );
+    const centralDetailFontSize = isMobile ? 12 : clampNumber(Math.round(34 * cappedCardScale), 24, 32);
     const directNameFontSize = isCentralDirectNode
       ? centralNameFontSize
       : clampNumber(
@@ -427,10 +443,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         isMobile ? 11 : isCompactDirectCard ? 17 : 19,
         isMobile ? 17 : isCompactDirectCard ? 26 : isSmallDirectCard ? 29 : 30
       );
-    const directDetailSizingLines = detailLines.length > 0
-      ? detailLines
-      : secondaryText || getLifeYearsLabel(pessoa)
-        ? [secondaryText || getLifeYearsLabel(pessoa) || '']
+    const directDetailSizingLines = detailItems.length > 0
+      ? detailItems.map((item) => item.text)
+      : getLifeYearsLabel(pessoa)
+        ? [getLifeYearsLabel(pessoa) || '']
         : [];
     const longestDirectDetailLine = directDetailSizingLines.reduce(
       (longest, line) => line.length > longest.length ? line : longest,
@@ -450,12 +466,6 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
     const avatarSize = isCentralDirectNode
       ? DIRECT_FAMILY_TOKENS.CENTRAL_AVATAR_SIZE * cardScale * mobileAvatarScale * 1.04
       : nonCentralImageSize;
-    const directSecondaryText = secondaryText || getLifeYearsLabel(pessoa);
-    const directDetailLines = detailLines.length > 0
-      ? detailLines
-      : directSecondaryText
-        ? [directSecondaryText]
-        : [];
     const centralDetails = [
       getAgeLabel(pessoa.data_nascimento),
       pessoa.local_nascimento
@@ -495,30 +505,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
               onOpenPhoto={pessoa.foto_principal_url ? handleOpenPhotoDialog : undefined}
             />
           </div>
-
-          {pessoa.foto_principal_url && (
-            <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
-              <DialogContent
-                className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
-                onClick={(event) => event.stopPropagation()}
-                onContextMenu={(event) => event.stopPropagation()}
-              >
-                <DialogHeader>
-                  <DialogTitle className="pr-8 text-white">
-                    Foto de {pessoa.nome_completo}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="flex max-h-[calc(100dvh-8rem)] items-center justify-center overflow-hidden rounded-md bg-black/30">
-                  <img
-                    src={pessoa.foto_principal_url}
-                    alt={`Foto de ${pessoa.nome_completo}`}
-                    className="max-h-[calc(100dvh-8rem)] max-w-full object-contain"
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-
+          {renderPhotoDialog()}
           {renderMenu()}
         </div>
       );
@@ -529,9 +516,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         <div
           className={[
             'cursor-pointer rounded-lg border-[4px] shadow-lg transition-all hover:shadow-xl',
-            isCentralDirectNode
-              ? 'flex flex-col items-center justify-start px-12 py-10 text-center'
-              : 'flex items-center gap-4 px-3 py-2.5',
+            isCentralDirectNode ? 'flex flex-col items-center justify-start px-12 py-10 text-center' : 'flex items-center gap-4 px-3 py-2.5',
             isSelected ? 'ring-2 ring-blue-300' : '',
           ].join(' ')}
           onClick={handleClick}
@@ -550,7 +535,6 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
           }}
         >
           <PersonHandles />
-
           {isCentralDirectNode && pessoa.foto_principal_url ? (
             <button
               type="button"
@@ -586,19 +570,10 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             className={isCentralDirectNode ? 'min-w-0 max-w-full' : 'flex min-w-0 flex-1 flex-col justify-center'}
             style={isCentralDirectNode
               ? { marginTop: isMobile ? 14 : Math.max(20, Math.round(36 * cappedCardScale)) }
-              : {
-                maxWidth: nonCentralTextWidth,
-                minHeight: nonCentralImageSize,
-              }
-            }
+              : { maxWidth: nonCentralTextWidth, minHeight: nonCentralImageSize }}
           >
             <h3
-              className={[
-                'font-bold leading-tight',
-                isCentralDirectNode
-                  ? 'whitespace-normal break-words'
-                  : 'whitespace-normal break-words',
-              ].join(' ')}
+              className="whitespace-normal break-words font-bold leading-tight"
               style={{
                 fontSize: directNameFontSize,
                 lineHeight: isCentralDirectNode ? undefined : isCompactDirectCard ? 1.08 : 1.1,
@@ -618,19 +593,17 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             {isCentralDirectNode ? (
               centralDetails.length > 0 && (
                 <div
-                  className={isMobile ? "mt-2 space-y-0 leading-[1.02]" : "mt-4 space-y-1.5 leading-[1.18]"}
+                  className={isMobile ? 'mt-2 space-y-0 leading-[1.02]' : 'mt-4 space-y-1.5 leading-[1.18]'}
                   style={{ color: style.muted, fontSize: directDetailFontSize }}
                 >
                   {centralDetails.map((detail) => (
-                    <p key={detail} className="whitespace-normal break-words">
-                      {detail}
-                    </p>
+                    <p key={detail} className="whitespace-normal break-words">{detail}</p>
                   ))}
                 </div>
               )
             ) : (
               <PersonDetailLines
-                lines={directDetailLines}
+                items={detailItems}
                 className={[
                   isCompactDirectCard
                     ? 'mt-[8px] space-y-[6px] font-semibold leading-[1.22]'
@@ -643,30 +616,7 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             )}
           </div>
         </div>
-
-        {isCentralDirectNode && pessoa.foto_principal_url && (
-          <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
-            <DialogContent
-              className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden border-slate-800 bg-slate-950 p-4 text-white sm:max-w-[min(92vw,980px)]"
-              onClick={(event) => event.stopPropagation()}
-              onContextMenu={(event) => event.stopPropagation()}
-            >
-              <DialogHeader>
-                <DialogTitle className="pr-8 text-white">
-                  Foto de {pessoa.nome_completo}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="flex max-h-[calc(100dvh-8rem)] items-center justify-center overflow-hidden rounded-md bg-black/30">
-                <img
-                  src={pessoa.foto_principal_url}
-                  alt={`Foto de ${pessoa.nome_completo}`}
-                  className="max-h-[calc(100dvh-8rem)] max-w-full object-contain"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
+        {renderPhotoDialog()}
         {renderMenu()}
       </div>
     );
@@ -692,7 +642,6 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
         }}
       >
         <PersonHandles />
-
         <div className={`flex items-center ${isMobile ? 'gap-5' : 'gap-4'}`}>
           <div
             className={`relative flex ${isMobile ? 'h-[104px] w-[104px]' : 'h-[98px] w-[98px]'} flex-shrink-0 items-center justify-center rounded-full ${
@@ -729,13 +678,12 @@ export const PersonNode = React.memo(({ data }: NodeProps<PersonNodeData>) => {
             </div>
 
             <PersonDetailLines
-              lines={detailLines}
+              items={detailItems}
               className={`mt-1 space-y-0.5 font-bold leading-tight ${isMobile ? 'text-[14px]' : 'text-[13px]'} text-gray-800`}
             />
           </div>
         </div>
       </div>
-
       {renderMenu()}
     </div>
   );
