@@ -145,17 +145,18 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         />
         <svg
           aria-hidden="true"
-          viewBox="0 0 48 48"
-          className="h-5 w-5 text-orange-500"
+          viewBox="0 0 64 44"
+          width="30"
+          height="24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
+          stroke="#F97316"
+          strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <circle cx="18" cy="28" r="9" />
-          <circle cx="30" cy="28" r="9" />
-          <path d="M18 19l3-5h6l3 5" />
+          <circle cx="23" cy="24" r="12" />
+          <circle cx="41" cy="24" r="12" />
+          <path d="M23 12l5-7h8l5 7" />
         </svg>
       </button>
 

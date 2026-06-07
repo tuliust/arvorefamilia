@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+﻿import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
   useNodesState,
@@ -107,10 +107,10 @@ const GENEALOGY_MAX_ZOOM = 2;
 const GENEALOGY_MOBILE_MAX_ZOOM = 1.08;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
-const TREE_TITLE_TOP = 0;
-const TREE_TITLE_HEIGHT = 58;
-const TREE_DESKTOP_VISUAL_TOP_INSET = 54;
-const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 16;
+const TREE_TITLE_TOP = 8;
+const TREE_TITLE_HEIGHT = 24;
+const TREE_DESKTOP_VISUAL_TOP_INSET = 28;
+const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 6;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
 const TREE_GENEALOGY_MOBILE_STAGE_LABEL_SAFE_GAP = 76;
@@ -815,7 +815,7 @@ function clampViewportCoordinate(value: number, min: number, max: number) {
 async function captureVisibleTree(container: HTMLDivElement | null) {
   const element = getExportableFlowElement(container);
   if (!element) {
-    throw new Error('Área da árvore não encontrada para exportação.');
+    throw new Error('Ãrea da Ã¡rvore nÃ£o encontrada para exportaÃ§Ã£o.');
   }
 
   return captureElementToCanvas(element);
@@ -826,7 +826,7 @@ async function printVisibleTree(container: HTMLDivElement | null) {
 
   try {
     const canvas = await captureVisibleTree(container);
-    printCanvas(canvas, 'Imprimir árvore', printWindow);
+    printCanvas(canvas, 'Imprimir Ã¡rvore', printWindow);
   } catch (error) {
     if (!printWindow.closed) {
       printWindow.close();
@@ -848,7 +848,7 @@ async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: Tr
           : 'visao-completa',
       'pdf'
     ),
-    'Árvore genealógica'
+    'Ãrvore genealÃ³gica'
   );
 }
 
@@ -869,7 +869,7 @@ function usesGenealogyLayout(viewMode: TreeViewMode) {
 
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
-  if (!clean) return 'Família';
+  if (!clean) return 'FamÃ­lia';
   return clean.split(/\s+/)[0] || clean;
 }
 
@@ -930,14 +930,14 @@ function FamilyTreeComponent({
   }, [effectiveCentralPersonId, pessoas]);
   const treeTitle = useMemo(() => {
     if (viewMode === 'minha-arvore') {
-      return `A árvore de ${treeTitleFirstName}`;
+      return `A Ã¡rvore de ${treeTitleFirstName}`;
     }
 
     if (viewMode === 'genealogia') {
-      return `Família de ${treeTitleFirstName}`;
+      return `FamÃ­lia de ${treeTitleFirstName}`;
     }
 
-    return `Linha Genealógica de ${treeTitleFirstName}`;
+    return `Linha GenealÃ³gica de ${treeTitleFirstName}`;
   }, [treeTitleFirstName, viewMode]);
 
   const dataHash = useMemo(() => {
@@ -1153,7 +1153,7 @@ function FamilyTreeComponent({
     if (logicalViewportBounds) {
       debugNodes.push(createDebugBoundsNode({
         id: `${viewMode}-logical-viewport`,
-        label: 'GRADE LÓGICA / VIEWPORT BOUNDS',
+        label: 'GRADE LÃ“GICA / VIEWPORT BOUNDS',
         bounds: logicalViewportBounds,
         borderColor: 'rgba(245, 158, 11, 0.95)',
         backgroundColor: 'rgba(245, 158, 11, 0.08)',
@@ -1165,7 +1165,7 @@ function FamilyTreeComponent({
     if (renderedContentBounds) {
       debugNodes.push(createDebugBoundsNode({
         id: `${viewMode}-rendered-content`,
-        label: 'CONTEÚDO RENDERIZADO / FLOW BOUNDS',
+        label: 'CONTEÃšDO RENDERIZADO / FLOW BOUNDS',
         bounds: renderedContentBounds,
         borderColor: 'rgba(59, 130, 246, 0.95)',
         backgroundColor: 'rgba(59, 130, 246, 0.06)',
@@ -1702,8 +1702,8 @@ function FamilyTreeComponent({
     try {
       await printVisibleTree(containerRef.current);
     } catch (error) {
-      console.error('Erro ao imprimir árvore:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir a árvore.');
+      console.error('Erro ao imprimir Ã¡rvore:', error);
+      toast.error(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel imprimir a Ã¡rvore.');
     }
   }, []);
 
@@ -1711,8 +1711,8 @@ function FamilyTreeComponent({
     try {
       await saveVisibleTreePdf(containerRef.current, viewMode);
     } catch (error) {
-      console.error('Erro ao exportar árvore:', error);
-      toast.error('Não foi possível gerar o PDF. As cores da árvore foram ajustadas para exportação; tente novamente.');
+      console.error('Erro ao exportar Ã¡rvore:', error);
+      toast.error('NÃ£o foi possÃ­vel gerar o PDF. As cores da Ã¡rvore foram ajustadas para exportaÃ§Ã£o; tente novamente.');
     }
   }, [viewMode]);
 
@@ -1720,14 +1720,14 @@ function FamilyTreeComponent({
     try {
       await saveVisibleTreeImage(containerRef.current, viewMode);
     } catch (error) {
-      console.error('Erro ao exportar imagem da árvore:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem da árvore.');
+      console.error('Erro ao exportar imagem da Ã¡rvore:', error);
+      toast.error(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel gerar a imagem da Ã¡rvore.');
     }
   }, [viewMode]);
 
   const handleStartAreaSelection = useCallback(() => {
     if (!getExportableFlowElement(containerRef.current)) {
-      toast.error('Área da árvore não encontrada para seleção.');
+      toast.error('Ãrea da Ã¡rvore nÃ£o encontrada para seleÃ§Ã£o.');
       return;
     }
 
@@ -1809,7 +1809,7 @@ function FamilyTreeComponent({
               'flex h-9 w-9 items-center justify-center text-gray-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
               isAtMinZoom ? 'cursor-not-allowed opacity-45' : 'hover:bg-gray-50',
             ].join(' ')}
-            title={isAtMinZoom ? 'Zoom mínimo' : 'Diminuir zoom'}
+            title={isAtMinZoom ? 'Zoom mÃ­nimo' : 'Diminuir zoom'}
             aria-label="Diminuir zoom"
           >
             <Minus className="h-4 w-4" />
@@ -1827,7 +1827,7 @@ function FamilyTreeComponent({
             {treeTitle}
           </h2>
           <p className="mt-1 px-16 text-sm font-normal leading-tight text-slate-600 sm:px-24 sm:text-base">
-            Use zoom, arraste a árvore e clique nas pessoas para abrir detalhes.
+            Use zoom, arraste a Ã¡rvore e clique nas pessoas para abrir detalhes.
           </p>
         </div>
       )}
@@ -1838,7 +1838,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('left')}
             className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover árvore para a esquerda"
+            aria-label="Mover Ã¡rvore para a esquerda"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -1846,7 +1846,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('right')}
             className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover árvore para a direita"
+            aria-label="Mover Ã¡rvore para a direita"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -1854,7 +1854,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('down')}
             className="absolute bottom-[5.75rem] left-1/2 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover árvore para baixo"
+            aria-label="Mover Ã¡rvore para baixo"
           >
             <ChevronDown className="h-5 w-5" />
           </button>
@@ -1865,13 +1865,13 @@ function FamilyTreeComponent({
         <div className="pointer-events-none absolute inset-0 z-30 border-4 border-dashed border-red-500/80 bg-red-500/[0.02]">
           <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
             <div>DEBUG TREE BOUNDS</div>
-            <div>Vermelho: área total visível do componente</div>
+            <div>Vermelho: Ã¡rea total visÃ­vel do componente</div>
             <div>ReactFlow: top {isMobile ? 0 : TREE_DESKTOP_VISUAL_TOP_INSET}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
-            <div>Amarelo: grade lógica / viewportBounds</div>
-            <div>Azul: conteúdo renderizado / flowBounds</div>
-            <div>Rosa: área preenchida por cards / personNodes</div>
+            <div>Amarelo: grade lÃ³gica / viewportBounds</div>
+            <div>Azul: conteÃºdo renderizado / flowBounds</div>
+            <div>Rosa: Ã¡rea preenchida por cards / personNodes</div>
             <div>View atual: {viewMode}</div>
-            <div>Container: {containerSize.width}px × {containerSize.height}px</div>
+            <div>Container: {containerSize.width}px Ã— {containerSize.height}px</div>
             <div>Zoom inicial: {activeTreeViewport?.zoom.toFixed(6) ?? 'pendente'}</div>
           </div>
         </div>
@@ -1928,7 +1928,7 @@ function FamilyTreeComponent({
                 ? 'genealogia'
                 : 'visao-completa'
           }
-          title="Área selecionada da árvore"
+          title="Ãrea selecionada da Ã¡rvore"
           onClose={handleCloseAreaSelection}
         />
       )}
