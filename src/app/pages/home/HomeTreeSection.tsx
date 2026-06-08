@@ -125,7 +125,7 @@ export function HomeTreeSection({
 
   return (
     <section
-      className="relative min-w-0 w-0 flex-1 overflow-hidden bg-gray-100"
+      className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100"
     >
       {isMobile && (
         <style>

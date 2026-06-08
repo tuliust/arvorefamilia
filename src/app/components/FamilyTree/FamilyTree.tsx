@@ -108,8 +108,10 @@ const GENEALOGY_MOBILE_MAX_ZOOM = 1.08;
 const GENEALOGY_TRANSLATE_PADDING = 220;
 const GENEALOGY_MOBILE_TRANSLATE_PADDING = 140;
 const TREE_TITLE_TOP = 10;
+const TREE_DIRECT_FAMILY_TITLE_TOP = 18;
 const TREE_TITLE_HEIGHT = 24;
 const TREE_DESKTOP_VISUAL_TOP_INSET = 32;
+const TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET = 54;
 const TREE_DESKTOP_VISUAL_BOTTOM_INSET = 6;
 const TREE_MOBILE_VIEWPORT_TOP_SAFE_AREA = 96;
 const TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA = 132;
@@ -917,10 +919,14 @@ function FamilyTreeComponent({
   const activeMaxZoom = isGenealogyLayout
     ? (isMobile ? GENEALOGY_MOBILE_MAX_ZOOM : GENEALOGY_MAX_ZOOM)
     : activeTreeMaxZoom;
+  const titleTop = viewMode === 'minha-arvore' ? TREE_DIRECT_FAMILY_TITLE_TOP : TREE_TITLE_TOP;
+  const desktopVisualTopInset = viewMode === 'minha-arvore'
+    ? TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET
+    : TREE_DESKTOP_VISUAL_TOP_INSET;
   const flowViewportStyle = isMobile
     ? undefined
     : {
-        top: TREE_DESKTOP_VISUAL_TOP_INSET,
+        top: desktopVisualTopInset,
         bottom: TREE_DESKTOP_VISUAL_BOTTOM_INSET,
       };
   const effectiveCentralPersonId = centralPersonId || selectedPersonId || pessoas[0]?.id;
@@ -1822,7 +1828,7 @@ function FamilyTreeComponent({
       {(!hasUserInteractedWithViewport || (!isMobile && isAtMinZoom)) && (
         <div
           className="pointer-events-none absolute inset-x-0 z-10 text-center"
-          style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
+          style={{ top: titleTop, height: TREE_TITLE_HEIGHT }}
         >
           <h2 className="px-16 text-xl font-bold leading-tight text-slate-900 sm:px-24 sm:text-2xl lg:text-3xl">
             {treeTitle}
@@ -1867,7 +1873,7 @@ function FamilyTreeComponent({
           <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
             <div>DEBUG TREE BOUNDS</div>
             <div>Vermelho: Ã¡rea total visÃ­vel do componente</div>
-            <div>ReactFlow: top {isMobile ? 0 : TREE_DESKTOP_VISUAL_TOP_INSET}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
+            <div>ReactFlow: top {isMobile ? 0 : desktopVisualTopInset}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
             <div>Amarelo: grade lÃ³gica / viewportBounds</div>
             <div>Azul: conteÃºdo renderizado / flowBounds</div>
             <div>Rosa: Ã¡rea preenchida por cards / personNodes</div>

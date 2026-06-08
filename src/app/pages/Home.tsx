@@ -1110,7 +1110,7 @@ export function Home() {
   const headerActionTextClassName = isSearchExpanded ? 'hidden' : 'hidden xl:inline-flex';
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-gray-50">
       <HomeHeader
         currentTreeViewLabel={currentTreeViewLabel}
         treeViewMode={treeViewMode}
@@ -1128,7 +1128,7 @@ export function Home() {
         navigateFromHome={navigateFromHome}
       />
 
-      <main className="relative flex min-h-0 flex-1 overflow-hidden">
+      <main className="relative flex min-h-0 flex-1 overflow-hidden overscroll-none">
         {!isMobile && (
           <aside
             className={[

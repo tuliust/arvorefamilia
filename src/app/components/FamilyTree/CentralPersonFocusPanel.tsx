@@ -233,7 +233,7 @@ export function CentralPersonFocusPanel({
     );
 
     return (
-      <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-2 text-left text-slate-900 shadow-xl">
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-slate-50 p-2 text-left text-slate-900 shadow-xl">
         {photo}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -284,7 +284,7 @@ export function CentralPersonFocusPanel({
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-slate-900 shadow-xl">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-slate-50 p-4 text-left text-slate-900 shadow-xl">
       <div className="grid min-h-0 grid-cols-[220px_minmax(0,1fr)] gap-4">
         {pessoa.foto_principal_url && onOpenPhoto ? (
           <button

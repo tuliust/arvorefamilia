@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseEdge, EdgeLabelRenderer, EdgeProps } from 'reactflow';
 import { Blend } from 'lucide-react';
+import { FAMILY_TREE_COLORS } from './visualTokens';
 import type { GenealogyMarriageStatus } from './layouts/genealogyColumnsLayout';
 import type { MarriageNodeDetails } from './types';
 
@@ -71,8 +72,8 @@ export function GenealogySpouseEdge({
           style={{
             transform: `translate(-50%, -50%) translate(${markerX}px, ${markerY}px)`,
             backgroundColor: markerStyle.background,
-            borderColor: markerStyle.border,
-            color: markerStyle.color,
+            borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE,
+            color: FAMILY_TREE_COLORS.EDGE_SPOUSE,
             boxShadow: markerStyle.shadow,
           }}
           onClick={handleRingClick}
