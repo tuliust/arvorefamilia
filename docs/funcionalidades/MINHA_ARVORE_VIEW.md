@@ -1,7 +1,7 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-07  
-> Revisão complementar: refinamento visual de `/minha-arvore`, título/viewport, botão conjugal com `Blend`, ícones de data e pendências de QA  
+> Última revisão: 2026-06-08  
+> Revisão complementar: ajustes de `/minha-arvore`, scroll externo, título/cards, botão conjugal, borda do card principal e paletas visuais  
 > Local recomendado: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.
 
@@ -19,27 +19,23 @@ A view funciona como uma visão geral individual da pessoa central, exibindo:
 - cônjuge;
 - irmãos;
 - descendentes;
+- pets, quando vinculados;
 - filtros laterais;
 - painel lateral;
 - ReactFlow.
 
-Este documento substitui a versão anterior:
+Este documento consolida decisões sobre:
 
-```txt
-docs/VIEW_VISAO_GERAL.md
-```
-
-e consolida decisões sobre:
-
-- ocupação vertical dos ramos paterno e materno;
-- distribuição da área central;
-- altura e tipografia dos cards;
-- controle do flash inicial do ReactFlow;
-- títulos de grupos;
 - título fixo da árvore;
-- viewport;
-- constantes de layout;
-- botão conjugal/vínculos conjugais na view direta.
+- viewport e fit inicial;
+- comportamento de scroll/pan/zoom;
+- distribuição da área central;
+- ramos paterno e materno;
+- cards;
+- conectores;
+- botão conjugal;
+- paletas visuais;
+- anti-regressões de layout.
 
 ---
 
@@ -51,6 +47,12 @@ Para filtros, pets e regras de exibição, use:
 
 ```txt
 docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+```
+
+Para edição do próprio perfil, use:
+
+```txt
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
 ```
 
 Para linhas, conectores, destaques e legenda, use:
@@ -79,42 +81,32 @@ docs/GUIA_UX_LAYOUT.md
 
 ---
 
-## 2.1 Estado de revisão visual atual
+## 3. Estado consolidado em 2026-06-08
 
-Esta documentação diferencia **comportamento consolidado** de **refinamento visual ainda pendente**.
+A rodada de ajustes de layout em `/minha-arvore` consolidou:
 
-### Consolidado
+- shell da Home fixado na viewport;
+- scroll externo da página bloqueado quando não há conteúdo fora da área visível;
+- zoom inicial no mínimo preservado;
+- pan/zoom interno do ReactFlow preservado;
+- título da árvore reposicionado um pouco mais abaixo;
+- cards/reposicionamento visual ajustados especificamente para `/minha-arvore`;
+- ícone conjugal alinhado à cor das linhas conectoras;
+- borda extra do card principal removida;
+- borda por status vivo/falecido preservada;
+- paletas `white`, `orange` e `brown` preservadas;
+- nenhuma alteração de dados, RLS ou Supabase para ajuste visual.
 
-- A view **Minha Árvore** mantém layout próprio, separado de **Genealogia** e **Visão Completa**.
-- O título principal é overlay único em `FamilyTree.tsx`; layouts internos não devem criar título principal.
-- Subtítulos abaixo dos títulos das views da árvore podem permanecer ocultos/removidos.
-- Ajustes de fundo, bordas, conectores e paletas devem ser feitos por tokens/CSS variables, sem alterar dados.
-- Ajustes visuais não devem criar migrations, alterar RLS, Supabase, permissões ou dados reais.
-
-### Em refinamento visual
-
-- O título da árvore ainda precisa de validação final de padding superior: não deve ficar colado ao topo da área da árvore.
-- O espaço entre título e cards deve continuar sendo ajustado apenas por constantes/cálculo em `FamilyTree.tsx`, sem cortar cards superiores.
-- O comportamento de pan/viewport da Genealogia mobile deve ser validado após a correção que usa `Avós/Geração 3` como régua vertical.
-- O menu do usuário no header da árvore deve ser mantido como `UserProfileMenu` compartilhado, com variação visual apenas no botão compacto quando necessário.
-
-### Consolidado no ciclo recente
-
-- O botão conjugal da **Minha Árvore** passou a usar `Blend` do `lucide-react`, com tratamento visual cinza/neutro.
-- O botão conjugal das views por geração usa o caminho separado `GenealogySpouseEdge.tsx`, também com `Blend` cinza/neutro.
-- Não usar emoji para vínculo conjugal.
-- Os ícones de nascimento e falecimento dos cards de pessoa usam `Star` e `Cross` do `lucide-react`, respectivamente.
-- Os destaques de linhas usam padrão visual consolidado: cônjuges em laranja, pais/filhos em amarelo/dourado e irmãos em azul tracejado.
-
-Regra operacional:
+Regra importante:
 
 ```txt
-Antes de documentar esses pontos como concluídos, validar em browser real nas rotas /minha-arvore, /genealogia e /visao-completa, nas paletas white, orange e brown.
+O scroll de mouse não deve mover a página externa quando a árvore já ocupa a viewport.
+O scroll/pan/zoom do ReactFlow deve continuar funcionando conforme a configuração da árvore.
 ```
 
 ---
 
-## 3. Contexto técnico
+## 4. Contexto técnico
 
 Stack:
 
@@ -123,12 +115,21 @@ Stack:
 - TypeScript;
 - Tailwind;
 - Supabase;
-- ReactFlow.
+- ReactFlow;
+- `lucide-react`.
 
 Página funcional:
 
 ```txt
 src/app/pages/Home.tsx
+```
+
+Componentes do shell da Home:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeMobileNav.tsx
 ```
 
 Componente principal da árvore:
@@ -143,40 +144,29 @@ Layout da view direta:
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 ```
 
-Componente visual dos cards de pessoa:
+Componentes visuais principais:
 
 ```txt
 src/app/components/FamilyTree/PersonNode.tsx
-```
-
-Componente visual dos títulos de grupo:
-
-```txt
+src/app/components/FamilyTree/CentralPersonFocusPanel.tsx
 src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
-```
-
-Componente visual do vínculo conjugal direto:
-
-```txt
 src/app/components/FamilyTree/MarriageNode.tsx
-```
-
-Tipo relacionado:
-
-```txt
-src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/directFamilyColors.ts
+src/app/components/FamilyTree/visualTokens.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
 ```
 
 ---
 
-## 4. Views existentes na Home
+## 5. Views existentes na Home
 
 A página `Home.tsx` possui três views principais:
 
 | View na UI | `viewMode` | Papel |
 |---|---|---|
 | Minha Árvore | `minha-arvore` | Visão direta individual da pessoa central |
-| Genealogia | `genealogia` | Visão genealógica preservada separadamente |
+| Genealogia | `genealogia` | Visão genealógica por gerações |
 | Visão Completa | `visao-completa` | Árvore expandida/completa |
 
 Regras:
@@ -184,63 +174,8 @@ Regras:
 - os ajustes deste documento se aplicam à view **Minha Árvore**;
 - **Genealogia** e **Visão Completa** continuam isoladas por `viewMode`;
 - não aplicar automaticamente lógica da Minha Árvore nas views por geração;
-- as três views compartilham o shell `Home`, mas cada layout preserva regras próprias.
-
----
-
-## 5. Arquivos relacionados
-
-### 5.1 Página e viewport
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/*
-src/app/components/FamilyTree/treeViewMode.ts
-src/app/components/FamilyTree/FamilyTree.tsx
-```
-
-Responsabilidades:
-
-- estrutura da página;
-- header;
-- painel lateral;
-- área principal da árvore;
-- renderização de `FamilyTree`;
-- repasse de `layoutRevision`;
-- shell único das rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
-- cálculo e aplicação do viewport;
-- controle de visibilidade do canvas;
-- prevenção do flash inicial;
-- zoom, pan e bounds.
-
-### 5.2 Layout lógico da Minha Árvore
-
-```txt
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-```
-
-Responsabilidades:
-
-- frame lógico desktop e mobile;
-- divisão horizontal `35% / 30% / 35%`;
-- posições dos ramos paterno, central e materno;
-- distribuição vertical dos grupos laterais;
-- distribuição compacta dos grupos centrais inferiores;
-- dimensões dos cards;
-- anchors;
-- linhas estruturais;
-- marriage nodes diretos com variante visual `direct-family`.
-
-### 5.3 Componentes visuais
-
-```txt
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/directFamilyColors.ts
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/utils/personCardText.ts
-```
+- as três views compartilham o shell `Home`, mas cada layout preserva regras próprias;
+- qualquer ajuste condicionado à view deve usar `viewMode === 'minha-arvore'`.
 
 ---
 
@@ -255,6 +190,14 @@ bg-gray-50
 header no topo
 main com flex-1 overflow-hidden
 ```
+
+Regra consolidada em 2026-06-08:
+
+```txt
+O shell da Home deve ocupar a viewport e usar overflow-hidden/overscroll-none para impedir scroll externo indevido.
+```
+
+Isso evita que o usuário role a página com o botão de scroll do mouse quando a árvore já ocupa toda a área visível.
 
 No desktop, o painel lateral fica em um `aside`:
 
@@ -283,7 +226,9 @@ A Home é o shell comum das três rotas da árvore:
 
 `/` redireciona para `/minha-arvore` preservando search params. A troca de view pelo header ou pela navegação mobile usa navegação client-side e mantém parâmetros como `pessoa=...`.
 
-### 6.1 Menu do usuário no header da árvore
+---
+
+## 7. Menu do usuário no header da árvore
 
 O header da árvore usa:
 
@@ -300,15 +245,9 @@ Comportamento esperado:
 - o botão `X` apenas fecha o painel;
 - o item **Editar notificações** não aparece mais no menu.
 
-Ponto de verificação pendente:
-
-```txt
-Se os prints ou o ambiente atual mostrarem dropdown compacto nas views da árvore e painel completo nas páginas internas, investigar HomeHeader.tsx, UserProfileMenu.tsx e MemberPageHeader.tsx antes de considerar o menu como unificado.
-```
-
 ---
 
-## 7. Filtros exibidos
+## 8. Filtros exibidos
 
 A grade de filtros da família direta inclui grupos como:
 
@@ -323,6 +262,7 @@ Irmãos
 Filhos
 Sobrinhos
 Netos
+Pets
 ```
 
 O bloco inferior de status/tipo inclui:
@@ -341,7 +281,7 @@ docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 
 ---
 
-## 8. Título fixo e viewport da árvore
+## 9. Título fixo e viewport da árvore
 
 Em `FamilyTree.tsx`, o título da árvore é renderizado como overlay fixo acima do ReactFlow.
 
@@ -358,24 +298,18 @@ Regras:
 - o título geral não deve ser criado em `directFamilyDistributedLayout.ts`;
 - o título geral não deve ser criado em `genealogyColumnsLayout.ts`;
 - subtítulos abaixo do título podem permanecer ocultos/removidos nas views da árvore;
-- deve haver pequeno espaçamento vertical acima do título;
-- o espaço entre título e cards deve ser reduzido sem cortar cards superiores;
-- o ajuste deve ser feito por constantes/cálculo em `FamilyTree.tsx`;
+- em `/minha-arvore`, o título pode ter ajuste vertical específico por `viewMode`;
+- o espaço entre título e cards deve ser controlado por constantes/cálculo em `FamilyTree.tsx`;
 - não usar `translate`, `transform`, `top` negativo ou manipulação de `.react-flow__viewport`;
 - `family-tree-visual-polish.css` não deve reposicionar o ReactFlow nem alterar bounds.
-- qualquer tentativa com `translate` em `.react-flow__viewport` deve ser removida se cortar cards superiores;
-- ajustes finos devem priorizar `TREE_TITLE_TOP`, `TREE_TITLE_HEIGHT`, `TREE_DESKTOP_VISUAL_TOP_INSET` e `TREE_DESKTOP_VISUAL_BOTTOM_INSET`.
 
-Status atual de QA visual:
+Estado consolidado:
 
 ```txt
-Subtítulos: removidos/ocultos.
-Padding superior do título: pendente de refinamento.
-Espaço título ↔ cards: pendente de refinamento.
-Cards superiores cortados por translate: regressão conhecida; não repetir essa abordagem.
+/minha-arvore recebeu ajuste para descer levemente o título e os cards sem alterar o layout lógico das demais views.
 ```
 
-Constantes relevantes em `FamilyTree.tsx`:
+Constantes e pontos relevantes em `FamilyTree.tsx`:
 
 ```txt
 TREE_TITLE_TOP
@@ -390,21 +324,30 @@ DIRECT_FAMILY_MAX_ZOOM
 DIRECT_FAMILY_FALLBACK_MIN_ZOOM
 ```
 
-> Observação: os valores numéricos dessas constantes devem ser conferidos diretamente em `FamilyTree.tsx` antes de qualquer nova alteração. Documentar valores fixos aqui só é seguro quando a frente de layout estiver congelada.
+---
+
+## 10. Viewport inicial, pan e zoom
 
 A view **Minha Árvore** usa:
 
-- `fitMode = contain`;
-- alinhamento horizontal central;
-- alinhamento vertical `top` no desktop;
-- `minZoom` calculado a partir do viewport normalizado;
-- `maxZoom = 2`;
-- drag bloqueado no zoom mínimo;
-- restauração do viewport inicial quando o usuário reduz o zoom até perto do mínimo.
+- fit inicial com zoom mínimo calculado;
+- bounds baseados em cards reais;
+- filtros e elementos auxiliares sem comandar zoom inicial;
+- pan/zoom controlado pelo ReactFlow;
+- scroll externo da página bloqueado no shell da Home.
+
+Regras:
+
+- zoom inicial deve considerar cards reais (`personNode`) como base visual;
+- labels, group boxes, anchors e legendas não devem reduzir o zoom inicial;
+- elementos auxiliares podem participar dos bounds de pan, quando necessário;
+- título fixo não participa dos bounds da árvore;
+- o usuário não deve conseguir rolar a página externa quando não há conteúdo fora da viewport;
+- não confundir bloqueio de scroll externo com bloqueio de pan/zoom interno da árvore.
 
 ---
 
-## 9. Prevenção do flash inicial
+## 11. Prevenção do flash inicial
 
 Foi ajustado o carregamento inicial da árvore para evitar que uma versão ampliada apareça por um frame antes do enquadramento final.
 
@@ -443,55 +386,13 @@ Regras:
 
 ---
 
-## 10. Layout lógico da Minha Árvore
+## 12. Layout lógico da Minha Árvore
 
 Arquivo:
 
 ```txt
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 ```
-
-### 10.1 Frame desktop
-
-Valores e constantes estruturais devem ser conferidos no arquivo antes de alteração. Pontos principais:
-
-```txt
-DIRECT_FRAME_EXTRA_HORIZONTAL_SPACE
-DIRECT_FRAME_LEFT
-DIRECT_FRAME_RIGHT
-FRAME_TOP
-FRAME_BOTTOM
-SIDE_GROUPS_TOP
-SIDE_GROUPS_BOTTOM
-DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
-CENTRAL_GROUP_BOTTOM
-```
-
-A altura lógica útil da view direta é baseada na diferença entre o bottom lógico dos grupos e o topo do frame.
-
-### 10.2 Frame mobile
-
-O frame mobile permanece separado e deve ser revisado de forma isolada.
-
-Constantes relevantes:
-
-```txt
-MOBILE_FRAME_LEFT
-MOBILE_FRAME_RIGHT
-MOBILE_FRAME_TOP
-MOBILE_FRAME_BOTTOM
-```
-
-Regras:
-
-- não ajustar frame mobile como efeito colateral de correção desktop;
-- validar 320px, 375px, 390px, 430px e 768px após mudanças.
-
----
-
-## 11. Distribuição horizontal
 
 A distribuição horizontal continua baseada em três áreas:
 
@@ -501,223 +402,17 @@ A distribuição horizontal continua baseada em três áreas:
 | Centro | Pais, pessoa central, irmãos, cônjuge e descendentes diretos | ~30% |
 | Direita | Ramo materno | ~35% |
 
-Valores principais:
-
-```txt
-SIDE_AREA_OUTER_INSET_X
-SIDE_AREA_CENTER_GAP_X
-CENTRAL_AREA_TARGET_RATIO
-```
-
 Regras:
 
-- layout não usa offsets específicos por pessoa ou família para alinhar os lados;
+- layout não usa offsets específicos por pessoa ou família para alinhar lados;
 - separação horizontal permanece sistemática;
 - não introduzir ajustes manuais por família sem decisão explícita;
-- reduzir espaços laterais ociosos deve preservar gap entre colunas.
+- reduzir espaços laterais ociosos deve preservar gap entre colunas;
+- mudanças visuais devem ser incrementais e validadas nas três paletas.
 
 ---
 
-## 12. Dimensões principais
-
-### 12.1 Tokens base
-
-Em `visualTokens.ts`, conferir:
-
-```txt
-CARD_WIDTH
-CARD_HEIGHT
-CENTRAL_WIDTH
-CENTRAL_HEIGHT
-CENTRAL_AVATAR_SIZE
-```
-
-### 12.2 Layout direto
-
-Elementos principais:
-
-| Elemento | Observação |
-|---|---|
-| Pessoa central lógica | Maior e visualmente destacada |
-| Pais | Cards acima da pessoa central |
-| Ancestrais laterais | Ramos paterno/materno |
-| Tios/primos | Cards colaterais adaptáveis |
-| Grupos inferiores centrais | Irmãos, cônjuge, filhos, netos etc. |
-
-
-### 12.3 Padronização recente dos cards de parentes
-
-Diretriz visual da rodada de refinamento:
-
-```txt
-Todos os cards de parentes, exceto a pessoa principal, devem convergir para o tamanho base dos cards de tios/primos: 340 × 136.
-Pessoa principal mantém CENTRAL_WIDTH × 760.
-```
-
-Aplicação esperada em `/minha-arvore`:
-
-| Grupo | Tamanho visual esperado |
-|---|---:|
-| Tataravós, bisavós e avós | 340 × 136 |
-| Tios e primos | 340 × 136 |
-| Pai e mãe | 340 × 136 |
-| Irmãos, sobrinhos, cônjuge, filhos, pets e netos | 340 × 136 |
-| Pessoa principal | `CENTRAL_WIDTH × 760` |
-
-Cuidados:
-
-- validar se a alteração não desalinha anchors e conectores;
-- validar nomes longos e truncamento;
-- validar corte inferior em grupos de primos e sobrinhos;
-- validar as paletas `white`, `orange` e `brown`.
-
-### 12.4 Títulos de grupo
-
-Os labels de grupo usam dimensão lógica e tipografia própria em:
-
-```txt
-src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
-```
-
-Regras:
-
-- se alterar fonte dos títulos de grupo, revisar também altura lógica do label;
-- labels de grupo são permitidas;
-- título principal da árvore não deve ser criado por labels de grupo.
-
----
-
-## 13. Containers de grupo
-
-Cada grupo visível gera:
-
-1. node de label (`directFamilyLabelNode`);
-2. node de container (`directFamilyGroupBoxNode`);
-3. nodes de pessoa posicionados dentro do container;
-4. anchors invisíveis de borda quando o grupo participa de conexões.
-
-Altura de grupo é calculada por:
-
-```txt
-GROUP_BOX_PADDING_Y * 2 + LABEL_HEIGHT + LABEL_TO_CARD_GAP + cardsHeight
-```
-
-Constantes relevantes:
-
-```txt
-GROUP_BOX_PADDING_X
-GROUP_BOX_PADDING_Y
-LABEL_HEIGHT
-LABEL_TO_CARD_GAP
-```
-
-### 13.1 Largura dos grupos
-
-A função `getGroupWidth()` evita que grupos colaterais com muitas colunas ocupem automaticamente toda a largura da lane.
-
-Regra:
-
-- tios e primos com várias colunas não devem criar sobras laterais internas desnecessárias;
-- grupos só devem preencher a largura disponível quando `fillAvailableWidth` estiver explicitamente ligado.
-
----
-
-## 14. Regras de colunas
-
-Colunas laterais adaptativas:
-
-- 1 item: 1 coluna;
-- 2 itens: 2 colunas;
-- 3 itens: 3 colunas;
-- 4 itens: 4 colunas;
-- 5 ou 6 itens: preferência por 3 colunas;
-- 7 ou mais itens: preferência por 4 colunas;
-- sempre respeitando a largura disponível da lane.
-
-O layout pode reduzir colunas de grupos colaterais quando há sobra vertical grande e a redução ainda cabe na largura lateral.
-
----
-
-## 15. Ramos laterais: paterno e materno
-
-Ramo paterno:
-
-- Tataravós paternos;
-- Bisavós paternos;
-- Avós paternos;
-- Tios paternos;
-- Primos paternos.
-
-Ramo materno:
-
-- Tataravós maternos;
-- Bisavós maternos;
-- Avós maternos;
-- Tios maternos;
-- Primos maternos.
-
-### 15.1 Bottom lógico
-
-Os ramos laterais usam bottom lógico calibrado contra a Home atual.
-
-Constantes relevantes:
-
-```txt
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
-```
-
-Se mudarem:
-
-- altura do header;
-- padding do painel lateral;
-- top/bottom visual do ReactFlow;
-- layout do painel de filtros;
-
-revisar:
-
-```txt
-TREE_DESKTOP_VISUAL_BOTTOM_INSET
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
-```
-
-### 15.2 Redistribuição vertical
-
-A função:
-
-```txt
-redistributeSideStackPlanToBottom()
-```
-
-redistribui a pilha lateral inteira entre o topo lateral e o bottom lógico.
-
-Objetivo:
-
-- evitar que apenas o último grupo seja empurrado para o bottom;
-- melhorar uniformidade visual entre ramo paterno e ramo materno.
-
-### 15.3 Escala compartilhada
-
-O layout calcula a escala máxima segura para o lado paterno e para o lado materno.
-
-Quando ambos existem, usa a menor escala máxima entre eles como escala compartilhada.
-
-Objetivo:
-
-```txt
-evitar assimetria visual entre tios/primos paternos e maternos
-```
-
----
-
-## 16. Área central
-
-Os ajustes desta seção se aplicam apenas à view **Minha Árvore**.
-
-A área central foi redesenhada para deixar de seguir regras rígidas dos ramos laterais.
-
-### 16.1 Estrutura central
+## 13. Área central
 
 A área central contém:
 
@@ -727,108 +422,24 @@ A área central contém:
 - Irmãos;
 - Sobrinhos;
 - Cônjuge;
-- Filhos;
-- Netos;
-- Pets, quando aplicável.
+- Filhos humanos;
+- Pets, quando aplicável;
+- Netos.
 
-### 16.2 Pessoa central
-
-A pessoa principal é centralizada com base no intervalo útil vertical da árvore.
-
-Constantes/conceitos relevantes:
-
-```txt
-CENTRAL_AREA_VERTICAL_CENTER_Y
-CENTRAL_BASE_Y
-CENTRAL_Y
-CENTRAL_HEIGHT
-CENTRAL_LOWER_REFERENCE_HEIGHT
-CENTRAL_AREA_SHIFT_DOWN
-CENTRAL_CORE_SHIFT_UP
-```
-
-### 16.3 Grupos superiores
-
-Pai e Mãe são posicionados acima da pessoa principal.
-
-Constantes/conceitos relevantes:
+A área central usa lógica própria:
 
 ```txt
 CENTRAL_PARENT_GAP
-SIDE_PARENT_CARD_HEIGHT
-CENTRAL_PARENT_GROUP_Y
-```
-
-### 16.4 Grupos inferiores
-
-Os grupos inferiores partem de referência vertical própria, baseada em `CENTRAL_BASE_Y`.
-
-Constantes/conceitos relevantes:
-
-```txt
-LOWER_GROUP_Y
 CENTRAL_LOWER_GROUP_GAP
 CENTRAL_LOWER_STACK_GAP
 compactLowerGroupTopPositions()
 ```
 
-Coluna esquerda central:
-
-- Irmãos;
-- Sobrinhos.
-
-Coluna direita central:
-
-- Cônjuge;
-- Filhos;
-- Netos.
-
-Regra:
-
-```txt
-não reintroduzir alignGroupStackToBottom() para grupos centrais sem mudança explícita de objetivo visual
-```
-
-### 16.5 Árvore esparsa
-
-Quando a pessoa central não possui pais, ancestrais ou grupos laterais visíveis, mas possui grupos inferiores diretos, a view usa composição central mais compacta.
-
-Critério técnico:
-
-```txt
-sem grupos paternos/maternos renderizáveis
-sem Pai/Mãe renderizáveis
-com pelo menos um grupo inferior renderizável
-```
-
-Grupos inferiores considerados:
-
-```txt
-Irmãos
-Sobrinhos
-Cônjuge
-Filhos
-Pets
-Netos
-```
-
-Comportamento:
-
-- tamanhos dos cards são preservados;
-- Y inicial dos grupos inferiores usa constante específica de árvore esparsa;
-- gap interno da pilha inferior usa constante específica;
-- viewport lógico usa bounds verticais menores para melhorar enquadramento inicial;
-- regra não é aplicada quando existem pais, ancestrais, tios, primos ou qualquer grupo lateral visível.
-
-Objetivo:
-
-```txt
-evitar grande vazio vertical em árvores incompletas sem alterar a composição de árvores densas
-```
+Não reintroduzir alinhamento inferior rígido nos grupos centrais sem decisão explícita de UX.
 
 ---
 
-## 17. Cards de pessoa
+## 14. Cards de pessoa
 
 Cards são renderizados por:
 
@@ -858,7 +469,7 @@ Regras:
 
 ---
 
-## 18. Card da pessoa principal
+## 15. Card da pessoa principal
 
 A pessoa principal usa tratamento especial:
 
@@ -872,77 +483,23 @@ A pessoa principal usa tratamento especial:
 - borda por status vivo/falecido;
 - foto clicável abre dialog com imagem ampliada.
 
-### 18.1 Dimensão lógica
-
-No layout direto:
+Regra consolidada em 2026-06-08:
 
 ```txt
-CENTRAL_WIDTH
-CENTRAL_HEIGHT
+A borda extra/moldura interna do card principal foi removida.
+Permanece apenas a borda externa relevante por status vivo/falecido e eventuais rings de foco/seleção.
 ```
 
-### 18.2 Altura visual automática
+Anti-regressão:
 
-No `PersonNode.tsx`, o card central pode usar altura visual automática com altura mínima lógica.
-
-Isso significa:
-
-- `CENTRAL_HEIGHT` funciona como altura mínima lógica;
-- se foto + nome + detalhes exigirem mais espaço, o card central pode crescer visualmente;
-- a foto não precisa ser reduzida apenas para impedir vazamento;
-- a margem entre foto e texto é preservada.
-
-### 18.3 Conteúdo central exibido
-
-O card central prioriza:
-
-1. idade calculada a partir da data de nascimento;
-2. local de nascimento com data;
-3. local atual.
-
-Exemplo:
-
-```txt
-36 anos
-Natural de Natal (01/02/1989)
-Mora atualmente em Porto Alegre
-```
+- não reintroduzir uma segunda borda visual em outra cor ao redor da pessoa principal;
+- não remover a borda de status vivo/falecido;
+- não remover feedback de foco/seleção;
+- validar nas paletas `white`, `orange` e `brown`.
 
 ---
 
-## 19. Labels de grupo
-
-Títulos de grupos são renderizados por:
-
-```txt
-src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
-```
-
-Exemplos:
-
-- BISAVÓS PATERNOS;
-- AVÓS MATERNOS;
-- TIOS PATERNOS;
-- PRIMOS MATERNOS;
-- IRMÃOS;
-- CÔNJUGE;
-- FILHOS.
-
-Regra:
-
-```txt
-o título principal da árvore não deve ser criado por este layout
-```
-
-O título principal fica como overlay em:
-
-```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-```
-
----
-
-## 20. Linhas e anchors
+## 16. Labels, linhas e anchors
 
 As linhas são criadas depois do posicionamento dos grupos.
 
@@ -976,40 +533,16 @@ Isso permite que mudanças de escala, colunas, altura de containers e reposicion
 
 ---
 
-## 21. Conexões principais
+## 17. Botão conjugal e vínculo conjugal
 
-Conexões estruturais incluem:
-
-- Pai → ponto médio dos pais;
-- ponto médio dos pais → Mãe;
-- ponto médio dos pais → topo do card central;
-- Pai → Tios paternos;
-- Mãe → Tios maternos;
-- centro → Irmãos;
-- centro → Cônjuge;
-- pilhas laterais consecutivas:
-  - Tataravós → Bisavós → Avós → Tios → Primos;
-- pilhas inferiores:
-  - Irmãos → Sobrinhos;
-  - Cônjuge → Filhos → Netos.
-
-Estilo estrutural:
-
-```txt
-DIRECT_STRUCTURAL_EDGE_STYLE
-```
-
----
-
-## 22. Botão conjugal e vínculo conjugal
-
-### 22.1 Componente
+### 17.1 Componentes
 
 ```txt
 src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 ```
 
-Tipo:
+Tipo relacionado:
 
 ```txt
 src/app/components/FamilyTree/types.ts
@@ -1021,29 +554,21 @@ Campo relevante:
 visualVariant?: 'default' | 'direct-family';
 ```
 
-### 22.2 Ícone atual
+### 17.2 Ícone atual
 
-O botão conjugal da view **Minha Árvore** usa:
+O botão conjugal usa ícone vetorial de `lucide-react`, conforme implementação vigente.
 
-```ts
-Blend
-```
-
-Origem:
-
-```ts
-lucide-react
-```
-
-Decisão consolidada:
+Regras consolidadas:
 
 - não usar emoji;
-- não usar SVG customizado de alianças como padrão atual;
-- manter ícone vetorial estável;
-- usar estilo cinza/neutro para não competir com as cores dos cards, grupos e destaques de linhas;
-- manter `title` e `aria-label` como **Ver vínculo do casal**.
+- não usar SVG quebrado/mojibake;
+- manter ícone estável;
+- o ícone em `/minha-arvore` deve usar a mesma cor das linhas conectoras;
+- `MarriageNode` deve respeitar tokens/variáveis de paleta;
+- `GenealogySpouseEdge` deve preservar seu caminho visual próprio nas views por geração;
+- manter `title` e `aria-label` como **Ver vínculo do casal** ou equivalente aprovado.
 
-### 22.3 Variante `direct-family`
+### 17.3 Variante `direct-family`
 
 Os marriage nodes criados pelo layout direto devem receber:
 
@@ -1053,114 +578,58 @@ visualVariant: 'direct-family'
 
 Objetivo:
 
-- ajustar tamanho/força visual do `Blend` na view direta;
+- ajustar tamanho/força visual na view direta;
 - preservar clique no modal conjugal;
 - preservar dimensão lógica do nó;
 - preservar handles invisíveis;
 - preservar edges;
 - evitar interferência no clique dos cards próximos.
 
-### 22.4 Views por geração
-
-`/genealogia` e `/visao-completa` usam caminho visual separado:
-
-```txt
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-```
-
-Regras:
-
-- também deve usar `Blend` do `lucide-react`;
-- deve manter o mesmo tratamento cinza/neutro;
-- deve preservar `onMarriageClick`, `marriageDetails`, `event.stopPropagation()` e abertura de `ViewMarriageModal`;
-- qualquer ajuste visual no botão conjugal precisa validar os dois caminhos: `MarriageNode.tsx` e `GenealogySpouseEdge.tsx`.
-
-### 22.5 Anti-regressão
+### 17.4 Anti-regressão
 
 Não fazer:
 
 - voltar a exibir emoji corrompido como `??`;
 - reintroduzir emoji de aliança;
-- manter um caminho com `Blend` e outro com emoji/SVG antigo;
-- usar laranja permanente no botão conjugal se a diretriz atual for cinza/neutro;
+- deixar o botão parecendo círculo vazio;
+- usar cor fixa que ignore paleta ativa;
 - esconder o ícone por falta de contraste;
 - alterar dimensão lógica do node para resolver problema visual sem recalcular layout;
 - quebrar clique no modal conjugal.
 
-## 23. Pontos sensíveis
+---
 
-### 23.1 Altura visual automática do card central
+## 18. Paletas visuais e containers de grupo
 
-O card central pode crescer além do `CENTRAL_HEIGHT` lógico.
+A view **Minha Árvore** respeita a paleta visual global escolhida no seletor da árvore.
 
-Riscos:
-
-- ReactFlow e anchors continuam baseados no layout lógico;
-- se crescimento visual for muito maior que o lógico, pode haver desalinhamento entre borda visual e linhas.
-
-Se o conteúdo central crescer muito, revisar:
+Paletas definidas em:
 
 ```txt
-CENTRAL_HEIGHT
-centralNameFontSize
-centralDetailFontSize
-avatarSize
+src/app/components/FamilyTree/treeColorPalettes.ts
 ```
 
-### 23.2 Bottom lógico lateral
-
-Se mudarem:
-
-- altura do header;
-- padding do painel lateral;
-- top/bottom visual do ReactFlow;
-- layout do painel de filtros;
-
-revisar:
+Paletas atuais:
 
 ```txt
-TREE_DESKTOP_VISUAL_BOTTOM_INSET
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y
+white
+orange
+brown
 ```
 
-### 23.3 Labels maiores
+Impactos na view direta:
 
-Se mudar a fonte dos títulos de grupo, revisar simultaneamente:
-
-```txt
-LABEL_HEIGHT
-DirectFamilyLabelNode.tsx
-```
-
-### 23.4 Área central independente
-
-A área central usa lógica própria:
-
-```txt
-CENTRAL_PARENT_GAP
-CENTRAL_LOWER_GROUP_GAP
-CENTRAL_LOWER_STACK_GAP
-compactLowerGroupTopPositions()
-```
-
-Não reintroduzir alinhamento inferior rígido nos grupos centrais sem decisão explícita de UX.
-
-### 23.5 Espaçamento título ↔ árvore
-
-O espaçamento entre título e cards é sensível.
-
-Regras:
-
-- ajustar por constantes em `FamilyTree.tsx`;
-- não mover `.react-flow__viewport`;
-- não usar `translate`;
-- não usar CSS com `height: calc(...)` para ampliar artificialmente canvas;
-- validar se cards superiores não foram cortados.
+- cards de parentes usam cores derivadas da paleta ativa;
+- containers de grupo usam background, borda e largura de borda por CSS variables;
+- paleta branca preserva visual padrão;
+- paleta laranja incorpora variação visual quente;
+- paleta marrom aplica identidade editorial bege/marrom;
+- escolha da paleta não altera geometria, filtros, contadores ou dados;
+- conectores e ícone conjugal devem acompanhar tokens de linhas.
 
 ---
 
-## 24. Busca no header da árvore
+## 19. Busca no header da árvore
 
 A busca do header é compartilhada pelas rotas:
 
@@ -1192,33 +661,7 @@ Não exibir cidade atual nessa linha.
 
 ---
 
-## 25. Dropdowns do header
-
-O header da árvore possui:
-
-- seletor de view;
-- seletor de paletas;
-- menu do usuário;
-- busca expansível;
-- atalhos para curiosidades, fórum e calendário.
-
-Regras de camada:
-
-- sugestões de busca devem ficar acima da árvore;
-- menu do usuário não pode ficar coberto pelo header;
-- dropdown de views não pode ficar coberto pelo header;
-- componentes base Radix devem usar camada superior ao header.
-
-Componentes base relacionados:
-
-```txt
-src/app/components/ui/select.tsx
-src/app/components/ui/dropdown-menu.tsx
-```
-
----
-
-## 26. Legendas > Linhas
+## 20. Legendas > Linhas
 
 A opção **Todas** em **Legendas > Linhas** deve ocultar todas as linhas da árvore.
 
@@ -1237,116 +680,16 @@ se usuário desliga Todas, nenhuma linha estrutural de primos deve permanecer vi
 
 ---
 
-## 27. Cards e espaços laterais da Minha Árvore
-
-Ajustes de layout da view direta devem obedecer estas regras:
-
-- reduzir espaços laterais ociosos sem comprimir a leitura;
-- ampliar cards quando houver área disponível;
-- ampliar grupos de parentes usando espaços externos;
-- preservar gap entre colunas;
-- usar melhor o lado esquerdo dos grupos paternos;
-- usar melhor o lado direito dos grupos maternos;
-- evitar truncamento excessivo de nomes;
-- evitar corte inferior de nomes e informações.
-
-Status:
-
-```txt
-linhas de primos no filtro Todas -> consolidado
-corte inferior de nomes -> consolidado
-redução de espaços laterais e ampliação de cards -> em ajuste incremental
-```
-
-### 27.1 Ajustes recentes de geometria desktop
-
-A frente recente de refinamento de `/minha-arvore` desktop concentrou-se em:
-
-- reduzir linhas verticais laterais dos ramos paterno e materno;
-- reduzir espaços internos excessivos entre colunas de tios/primos;
-- aumentar o respiro entre as áreas esquerda, central e direita;
-- subir grupos e cards da área central quando houver sobra superior;
-- reduzir risco de corte dos grupos inferiores, especialmente primos e sobrinhos;
-- padronizar os cards de parentes no tamanho `340 × 136`, exceto pessoa principal.
-
-Constantes que costumam participar desse ajuste:
-
-```txt
-DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET
-SIDE_AREA_CENTER_GAP_X
-CENTRAL_AREA_TARGET_RATIO
-SIDE_COLLATERAL_CARD_WIDTH
-SIDE_COLLATERAL_CARD_HEIGHT
-SIDE_COLUMN_GAP
-SIDE_ROW_GAP
-ANCESTOR_COLUMN_GAP
-ANCESTOR_ROW_GAP
-CENTRAL_AREA_SHIFT_DOWN
-CENTRAL_CORE_SHIFT_UP
-CENTRAL_LOWER_GROUP_GAP
-CENTRAL_LOWER_STACK_GAP
-STANDARD_GROUP_CARD_WIDTH
-SIDE_ANCESTOR_CARD_HEIGHT
-SIDE_PARENT_CARD_HEIGHT
-LOWER_CARD_WIDTH
-LOWER_CARD_HEIGHT
-```
-
-Regra:
-
-```txt
-Alterar essas constantes de forma incremental, validando visualmente antes de novo commit.
-```
-
-### 27.2 Pendências visuais específicas
-
-Permanecem como pendências de refinamento:
-
-- dar padding superior ao título sem aumentar o vazio abaixo dele;
-- reduzir o espaço entre título e cards por constantes em `FamilyTree.tsx`;
-- garantir que nenhum card superior seja cortado;
-- manter o ícone `Blend` cinza claramente visível em `/minha-arvore`;
-- confirmar se o menu do header da árvore abriu o painel compartilhado ou um dropdown legado.
-
----
-
-## 28. Paletas visuais e containers de grupo
-
-A view **Minha Árvore** respeita a paleta visual global escolhida no seletor da árvore.
-
-Paletas definidas em:
-
-```txt
-src/app/components/FamilyTree/treeColorPalettes.ts
-```
-
-Impactos na view direta:
-
-- cards de parentes usam cores derivadas da paleta ativa;
-- containers de grupo usam background, borda e largura de borda por CSS variables;
-- paleta branca preserva visual padrão da `main`;
-- paleta laranja incorpora variação visual `polish`;
-- paleta marrom aplica identidade editorial bege/marrom inspirada no Sua Família;
-- escolha da paleta não altera geometria, filtros, contadores ou dados.
-
-Arquivos relacionados:
-
-```txt
-src/app/components/FamilyTree/directFamilyColors.ts
-src/app/components/FamilyTree/nodeTypes.ts
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/FamilyTree.tsx
-```
-
----
-
-## 29. Validação visual obrigatória
+## 21. Validação visual obrigatória
 
 Após qualquer ajuste futuro nesta view, validar:
 
 ### View
 
 - [ ] Minha Árvore abre sem flash ampliado inicial.
+- [ ] Zoom inicial fica no mínimo esperado.
+- [ ] Página externa não rola com mouse quando não há conteúdo fora da viewport.
+- [ ] ReactFlow continua permitindo interações previstas.
 - [ ] Genealogia permanece funcional.
 - [ ] Visão Completa permanece funcional.
 
@@ -1360,188 +703,79 @@ Após qualquer ajuste futuro nesta view, validar:
 - [ ] Cabeçalho do menu navega para `/minha-arvore/editar`.
 - [ ] Botão `X` apenas fecha.
 
-### Ramos laterais
+### Título e cards
 
-- [ ] Ramo paterno ocupa bem a altura disponível.
-- [ ] Ramo materno ocupa bem a altura disponível.
-- [ ] Primos/tios não têm sobras internas exageradas.
-- [ ] Grupos laterais não sobrepõem painel, título ou bordas.
+- [ ] Título aparece com respiro superior.
+- [ ] Cards ficam próximos o suficiente do título sem corte.
+- [ ] Nenhum card superior é cortado.
+- [ ] Ajuste de `/minha-arvore` não altera `/genealogia` e `/visao-completa`.
 
-### Área central
+### Card principal
 
-- [ ] Pai e Mãe não ficam colados ao topo.
-- [ ] Pai e Mãe têm distância adequada do card central.
-- [ ] Pessoa principal fica visualmente central.
-- [ ] Card principal exibe foto, nome e detalhes dentro da borda.
-- [ ] Irmãos, Cônjuge, Sobrinhos, Filhos e Netos ficam abaixo do card central com espaçamento uniforme.
+- [ ] Borda extra foi removida.
+- [ ] Borda por status vivo/falecido permanece.
+- [ ] Foco/seleção continuam visíveis.
+- [ ] Paletas `white`, `orange` e `brown` continuam legíveis.
 
-### Cards
-
-- [ ] Nome em cards comuns ocupa no máximo 2 linhas.
-- [ ] Nascimento/falecimento em cards comuns ocupam 1 linha cada, com ellipsis se necessário.
-- [ ] Detalhes do card central têm fonte legível.
-- [ ] Foto central não empurra conteúdo para fora.
-- [ ] Margem entre foto e texto central permanece adequada.
-
-### Labels, linhas e botão conjugal
+### Linhas e botão conjugal
 
 - [ ] Títulos dos grupos estão legíveis.
 - [ ] Linhas estruturais conectam anchors corretos.
-- [ ] Linhas não atravessam cards de forma visualmente problemática.
 - [ ] Highlights continuam funcionando.
 - [ ] Legendas > Linhas > Todas oculta linhas de primos.
-- [ ] Botão conjugal com `Blend` cinza está visível em `/minha-arvore`.
-- [ ] Botão conjugal com `Blend` cinza permanece correto em `/genealogia` e `/visao-completa`.
+- [ ] Botão conjugal está visível em `/minha-arvore`.
+- [ ] Ícone conjugal usa cor compatível com linhas conectoras.
 - [ ] Clique na aliança abre modal conjugal.
 
 ### Técnico
 
 ```bash
 npm run build
-npm test
 git diff --check
+git status --short
+```
+
+Se houver scripts disponíveis:
+
+```bash
+npm test
+npm run test:e2e
 ```
 
 ---
 
-## 30. Sugestões futuras
+## 22. Anti-regressões
+
+Não fazer:
+
+- reativar scroll externo da Home quando a árvore ocupa a viewport;
+- resolver espaço do título com `translate` em `.react-flow__viewport`;
+- alterar `/genealogia` e `/visao-completa` por efeito colateral de ajuste da Minha Árvore;
+- reintroduzir borda dupla no card principal;
+- fixar cor do ícone conjugal ignorando paletas;
+- trocar ajuste visual por migration ou alteração de banco;
+- criar offsets por nome de pessoa/família;
+- duplicar menu do usuário no header;
+- usar emoji para nascimento, falecimento ou casamento;
+- quebrar exportação, legenda ou seleção de área.
+
+---
+
+## 23. Sugestões futuras
 
 Possíveis evoluções:
 
 1. Medir altura real do card central.
 2. Transformar constantes em parâmetros configuráveis.
-3. Registrar commits de geometria da árvore.
-4. Separar tokens exclusivos da Minha Árvore.
-5. Criar modo debug de geometria central.
-6. Criar documentação visual com imagens de antes/depois.
-7. Criar QA automatizado específico para presença visual de alianças.
-8. Criar snapshot visual controlado para as três views da árvore.
+3. Registrar snapshots visuais por paleta.
+4. Criar modo debug de geometria central.
+5. Criar documentação visual com imagens de antes/depois.
+6. Criar QA automatizado específico para presença visual de alianças.
+7. Criar snapshot visual controlado para as três views da árvore.
 
 ---
 
-
-## 31. Revisão complementar - pendências pós-refinamento de layout
-
-Esta seção registra o estado a partir da validação visual recente.
-
-### 31.1 Concluído ou aceitável
-
-- Subtítulos abaixo dos títulos das três views foram removidos/ocultados.
-- A paleta `white` deve usar fundo branco puro na área da árvore.
-- Linhas estruturais devem acompanhar a cor da borda dos grupos por CSS variables.
-- Cards de parentes da **Minha Árvore** foram direcionados para padronização visual em `340 × 136`, exceto a pessoa principal.
-- A compactação vertical/horizontal de `/minha-arvore` desktop deve ser tratada no layout direto, não com escala global do renderer.
-
-### 31.2 Ainda pendente
-
-- Título da árvore precisa de padding superior.
-- Espaço abaixo do título ainda precisa ser reduzido sem `translate` no viewport.
-- Botão conjugal com `Blend` cinza deve permanecer visualmente perceptível em `/minha-arvore`.
-- Diferença entre o menu do header da árvore e o menu das páginas internas precisa ser diagnosticada no código.
-
-### 31.3 Arquivos prioritários para próxima etapa
-
-```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/types.ts
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/styles/family-tree-visual-polish.css
-src/app/pages/home/HomeHeader.tsx
-src/app/components/layout/UserProfileMenu.tsx
-src/app/components/layout/MemberPageHeader.tsx
-```
-
-### 31.4 Validação obrigatória
-
-```bash
-git diff --check
-npm run build
-git status --short
-```
-
-Validação visual mínima:
-
-```txt
-/minha-arvore desktop/mobile nas paletas white, orange e brown
-/genealogia desktop/mobile nas paletas white, orange e brown
-/visao-completa desktop/mobile nas paletas white, orange e brown
-/calendario-familiar e /forum para comparação do menu do usuário
-```
-
----
-
-
-## 32. Atualização 2026-06-07 - Ícones, destaques e calendário relacionado
-
-Esta atualização registra ajustes recentes que impactam a validação da view **Minha Árvore**, mesmo quando alguns arquivos também atendem **Genealogia** e **Visão Completa**.
-
-### 32.1 Ícones dos cards
-
-Os cards de pessoa não devem usar emojis para nascimento/falecimento.
-
-Padrão atual:
-
-```txt
-Nascimento -> Star, de lucide-react
-Falecimento -> Cross, de lucide-react
-```
-
-Arquivo:
-
-```txt
-src/app/components/FamilyTree/PersonNode.tsx
-```
-
-### 32.2 Botão conjugal
-
-Padrão atual:
-
-```txt
-Ícone -> Blend, de lucide-react
-Cor -> cinza/neutro
-```
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-```
-
-Regra:
-
-```txt
-/minha-arvore usa MarriageNode.
-/genealogia e /visao-completa usam GenealogySpouseEdge.
-```
-
-Validar os dois caminhos antes de considerar o ajuste concluído.
-
-### 32.3 Destaques de linhas
-
-Na aba **Legendas**, seção **Destacar**, as linhas visíveis devem seguir:
-
-```txt
-Cônjuges -> laranja
-Pais/Filhos -> amarelo/dourado
-Irmãos -> azul tracejado
-Todas -> aplica os três padrões acima
-```
-
-Destaque não cria linha nova e não reexibe linha oculta por **Linhas**.
-
-### 32.4 Relação com calendário familiar
-
-O ajuste mobile de `/calendario-familiar` não altera a árvore, mas deve ser acompanhado no QA geral do ciclo:
-
-- filtros/categorias superiores mais compactos no mobile;
-- card **Categorias** abaixo do calendário oculto no mobile;
-- desktop preservado.
-
----
-
-## 33. Resumo do estado atual
+## 24. Resumo do estado atual
 
 A view **Minha Árvore** está estruturada como composição de três áreas:
 
@@ -1549,14 +783,12 @@ A view **Minha Árvore** está estruturada como composição de três áreas:
 - área central independente;
 - ramo materno à direita.
 
-Os ramos laterais usam distribuição vertical até bottom lógico próprio, com redistribuição da pilha inteira e escala compartilhada de colaterais.
-
-A área central usa lógica própria, com pessoa principal maior, card central com altura visual automática, Pai/Mãe deslocados para baixo em relação ao topo original e grupos inferiores posicionados em pilhas compactas.
+A área central usa lógica própria, com pessoa principal maior, Pai/Mãe acima e grupos inferiores posicionados em pilhas compactas.
 
 O ReactFlow só aparece após o viewport final estar calculado e aplicado, evitando flash inicial de árvore ampliada.
 
-Os cards foram refinados para melhorar legibilidade, aumentar presença da pessoa principal, reduzir sobras internas e garantir que as informações centrais fiquem dentro do card.
+O shell da Home bloqueia scroll externo indevido. O título e os cards da `/minha-arvore` têm ajuste visual específico, sem alterar o layout lógico das views por geração.
 
-O título fixo da árvore é controlado por `FamilyTree.tsx`. Correções de espaçamento não devem mover `.react-flow__viewport`.
+O card principal mantém apenas a borda externa por status/foco. O botão conjugal acompanha a cor das linhas conectoras e deve respeitar as paletas `white`, `orange` e `brown`.
 
-As alianças da **Minha Árvore** usam variante `direct-family` para melhorar legibilidade sem alterar o estilo já aprovado em **Genealogia**.
+---

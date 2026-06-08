@@ -1,42 +1,44 @@
 # Migrations Supabase
 
-> Local recomendado: `docs/operacao/MIGRATIONS_SUPABASE.md`
-> Tipo: documentacao operacional canonica.
+> Última revisão: 2026-06-08  
+> Local recomendado: `docs/operacao/MIGRATIONS_SUPABASE.md`  
+> Tipo: documentação operacional canônica.
 
 ---
 
 ## 1. Objetivo
 
-Este documento define o fluxo seguro para trabalhar com migrations, schema Supabase, scripts SQL legados e alteracoes de banco no projeto **Arvore Familia**.
+Este documento define o fluxo seguro para trabalhar com migrations, schema Supabase, scripts SQL legados e alterações de banco no projeto **Árvore Família**.
 
 Use este arquivo antes de:
 
 - criar migration;
 - aplicar migration local/remota;
 - rodar `supabase db push`;
-- revisar divergencia entre local e remoto;
+- revisar divergência entre local e remoto;
 - lidar com schema cache;
 - decidir se um SQL solto deve ser mantido, movido ou removido;
-- auditar objetos legados.
+- auditar objetos legados;
+- aplicar alterações que impactam RLS, constraints, RPCs, triggers ou Edge Functions.
 
 ---
 
 ## 2. Regra principal
 
 ```txt
-supabase/migrations e a fonte da verdade do schema.
+supabase/migrations é a fonte da verdade do schema.
 ```
 
 Scripts SQL soltos podem existir como:
 
-- historico;
-- diagnostico;
-- referencia;
-- operacao pontual;
+- histórico;
+- diagnóstico;
+- referência;
+- operação pontual;
 - dry-run;
-- correcao manual documentada.
+- correção manual documentada.
 
-Eles **nao devem substituir migrations** em novos ambientes.
+Eles **não devem substituir migrations** em novos ambientes.
 
 ---
 
@@ -49,17 +51,20 @@ supabase/config.toml
 docs/operacao/MIGRATIONS_SUPABASE.md
 docs/operacao/STORAGE_MAINTENANCE.md
 docs/GUIA_CORRECAO_ERROS.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/funcionalidades/NOTIFICACOES.md
+docs/funcionalidades/FORUM.md
 DEPLOYMENT.md
 README.md
 ```
 
-Scripts SQL soltos antigos, quando existirem, devem ser tratados como referencia historica ou operacional, nao como schema principal.
+Scripts SQL soltos antigos, quando existirem, devem ser tratados como referência histórica ou operacional, não como schema principal.
 
 ---
 
 ## 4. Checklist antes de alterar banco
 
-Antes de qualquer alteracao de schema:
+Antes de qualquer alteração de schema:
 
 ```bash
 git status
@@ -69,22 +74,24 @@ git diff --check
 supabase migration list
 ```
 
-Perguntas obrigatorias:
+Perguntas obrigatórias:
 
-1. A alteracao realmente exige banco?
-2. E ajuste funcional ou apenas visual?
-3. A coluna/tabela/RPC ja existe em migration?
-4. O ambiente remoto esta alinhado com local?
+1. A alteração realmente exige banco?
+2. É ajuste funcional ou apenas visual?
+3. A coluna/tabela/RPC já existe em migration?
+4. O ambiente remoto está alinhado com local?
 5. Existe risco de perda de dados?
-6. Ha backup ou rollback manual?
-7. O frontend ja envia payload para a nova coluna?
+6. Há backup ou rollback manual?
+7. O frontend já envia payload para a nova coluna?
 8. RLS precisa ser alterada?
 9. Existe teste ou QA manual para o fluxo?
+10. A alteração cria constraint que pode falhar por dados duplicados existentes?
+11. A alteração precisa de deduplicação prévia?
 
 Regra:
 
 ```txt
-Nao criar migration para ajuste puramente visual.
+Não criar migration para ajuste puramente visual.
 ```
 
 ---
@@ -103,15 +110,17 @@ Exemplo esperado:
 20260522121000_add_historical_file_event_category.sql
 ```
 
-Boas praticas:
+Boas práticas:
 
 - usar nomes objetivos;
-- evitar migration generica como `fix`;
+- evitar migration genérica como `fix`;
 - comentar SQL complexo;
-- tornar alteracao idempotente quando seguro;
+- tornar alteração idempotente quando seguro;
 - revisar locks e impactos;
 - incluir constraints/checks com cuidado;
-- revisar RLS se a tabela/coluna for sensivel.
+- revisar RLS se a tabela/coluna for sensível;
+- quando criar constraint de unicidade, deduplicar dados antigos antes de `ADD CONSTRAINT`;
+- quando alterar defaults, confirmar que se trata de booleano real, não string.
 
 ---
 
@@ -127,7 +136,7 @@ npm test
 git diff --check
 ```
 
-Quando `db reset` for destrutivo para dados locais importantes, nao executar sem backup.
+Quando `db reset` for destrutivo para dados locais importantes, não executar sem backup.
 
 Alternativa controlada:
 
@@ -135,7 +144,7 @@ Alternativa controlada:
 supabase db push
 ```
 
-Usar apenas quando o alvo estiver correto e houver revisao previa.
+Usar apenas quando o alvo estiver correto e houver revisão prévia.
 
 ---
 
@@ -169,7 +178,7 @@ git diff --check
 Regra:
 
 ```txt
-Nao rodar supabase db push em producao sem autorizacao explicita, backup e revisao do SQL.
+Não rodar supabase db push em produção sem autorização explícita, backup e revisão do SQL.
 ```
 
 ---
@@ -178,18 +187,18 @@ Nao rodar supabase db push em producao sem autorizacao explicita, backup e revis
 
 Usar `migration repair` apenas quando:
 
-- a migration ja foi aplicada manualmente no banco;
-- o schema remoto comprovadamente reflete o conteudo da migration;
-- o historico de migrations esta divergente;
+- a migration já foi aplicada manualmente no banco;
+- o schema remoto comprovadamente reflete o conteúdo da migration;
+- o histórico de migrations está divergente;
 - houve auditoria do SQL;
-- a decisao foi registrada.
+- a decisão foi registrada.
 
-Nao usar para:
+Não usar para:
 
-- mascarar migration nao aplicada;
-- fazer sumir divergencia sem conferir banco;
+- mascarar migration não aplicada;
+- fazer sumir divergência sem conferir banco;
 - corrigir erro de SQL;
-- pular validacao.
+- pular validação.
 
 ---
 
@@ -197,18 +206,18 @@ Nao usar para:
 
 Sintomas de schema cache:
 
-- coluna recem-criada nao aparece para PostgREST;
-- insert/update falha dizendo que coluna nao existe;
+- coluna recém-criada não aparece para PostgREST;
+- insert/update falha dizendo que coluna não existe;
 - RPC corrigida continua parecendo antiga;
-- frontend falha mesmo apos migration aplicada.
+- frontend falha mesmo após migration aplicada.
 
-Acoes:
+Ações:
 
 1. confirmar `supabase migration list`;
 2. confirmar que a coluna/RPC existe no banco;
 3. aguardar/recarregar schema cache;
 4. testar novamente;
-5. evitar alterar frontend para contornar schema ainda nao refletido.
+5. evitar alterar frontend para contornar schema ainda não refletido.
 
 Exemplo conhecido:
 
@@ -226,18 +235,18 @@ Se a migration foi aplicada, mas o PostgREST ainda reclama, avaliar cache antes 
 
 Escopo:
 
-- configuracoes visuais da home publica;
+- configurações visuais da home pública;
 - usada por `/entrar`;
-- nao deve ser substituida por configuracao hardcoded.
+- não deve ser substituída por configuração hardcoded.
 
 ### `20260522121000_add_historical_file_event_category.sql`
 
 Escopo:
 
 - adiciona `categoria_evento` em `public.arquivos_historicos`;
-- permite categorias historicas em arquivos.
+- permite categorias históricas em arquivos.
 
-Pre-requisito:
+Pré-requisito:
 
 ```txt
 Aplicar antes de deploy que envie categoria_evento no payload.
@@ -246,7 +255,7 @@ Aplicar antes de deploy que envie categoria_evento no payload.
 Sintoma se ausente:
 
 ```txt
-insert/update em arquivos_historicos falha porque categoria_evento nao existe.
+insert/update em arquivos_historicos falha porque categoria_evento não existe.
 ```
 
 ### `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`
@@ -254,15 +263,130 @@ insert/update em arquivos_historicos falha porque categoria_evento nao existe.
 Escopo:
 
 - corrige RPC `admin_list_profiles_for_linking`;
-- usada no vinculo admin usuario-pessoa;
+- usada no vínculo admin usuário-pessoa;
 - evita fallback inseguro de consulta direta em `profiles`.
 
-Validacao esperada:
+Validação esperada:
 
-- card de usuarios vinculaveis carrega no admin;
-- usuarios ja vinculados nao aparecem;
-- botao Recarregar funciona;
+- card de usuários vinculáveis carrega no admin;
+- usuários já vinculados não aparecem;
+- botão Recarregar funciona;
 - erro de schema cache da RPC desaparece.
+
+### `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql`
+
+Escopo:
+
+- ajusta defaults booleanos de privacidade/contato em `pessoas` para `true`;
+- cria ou atualiza RPC administrativa `admin_reset_person_profile`;
+- permite reset controlado de dados complementares do perfil;
+- não apaga relações familiares.
+
+Campos de privacidade/contato envolvidos:
+
+```txt
+permitir_exibir_instagram
+permitir_mensagens_whatsapp
+permitir_exibir_data_nascimento
+permitir_exibir_endereco
+permitir_exibir_telefone
+```
+
+Cuidados:
+
+- usar booleano real `true`, não string `'TRUE'`;
+- validar que a RPC não executa `delete` em `relacionamentos`;
+- validar que favoritos relacionados à pessoa são removidos conforme regra do produto;
+- validar que preferências de notificação retornam para `true` quando aplicável.
+
+Validação esperada:
+
+```bash
+npm run build
+git diff --check
+```
+
+SQL útil para verificar defaults:
+
+```sql
+select column_name, column_default
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'pessoas'
+  and column_name in (
+    'permitir_exibir_instagram',
+    'permitir_mensagens_whatsapp',
+    'permitir_exibir_data_nascimento',
+    'permitir_exibir_endereco',
+    'permitir_exibir_telefone'
+  )
+order by column_name;
+```
+
+### `20260608143000_create_person_profile_suggestions.sql`
+
+Escopo:
+
+- cria estrutura de sugestões de informações de perfil;
+- usada quando usuário sem permissão direta aciona **Inserir Informações**;
+- integrada ao painel `/admin/solicitacoes-vinculos`.
+
+Fluxos impactados:
+
+- `/pessoa/:id`;
+- modal de relacionamento conjugal;
+- sugestões de informações sobre pessoa ou relacionamento.
+
+Cuidados:
+
+- não substituir RLS por validação apenas visual;
+- sugestões não devem alterar dados reais sem revisão quando o usuário não tem permissão;
+- metadata da sugestão deve ser mínima e sem dados sensíveis desnecessários.
+
+Validação esperada:
+
+- usuário autorizado segue fluxo direto;
+- usuário não autorizado cria sugestão;
+- admin vê sugestão pendente;
+- admin pode marcar como revisada ou descartar.
+
+### `20260608180000_enforce_single_forum_reaction.sql`
+
+Escopo:
+
+- garante uma reação por usuário por alvo no fórum;
+- deduplica reações antigas preservando a mais recente;
+- remove constraint antiga por `user_id, alvo_tipo, alvo_id, tipo`, se existir;
+- cria constraint única por `user_id, alvo_tipo, alvo_id`.
+
+Constraint esperada:
+
+```txt
+forum_reacoes_user_id_alvo_tipo_alvo_id_key
+```
+
+Regra funcional:
+
+- usuário pode ter no máximo uma reação por tópico/resposta/comentário;
+- escolher reação diferente substitui a anterior;
+- clicar novamente na mesma reação remove.
+
+SQL de pré/pós-validação:
+
+```sql
+select user_id, alvo_tipo, alvo_id, count(*)
+from public.forum_reacoes
+group by user_id, alvo_tipo, alvo_id
+having count(*) > 1;
+```
+
+Se a query retornar linhas após a migration, a constraint não foi aplicada corretamente ou existem dados inconsistentes.
+
+Cuidados:
+
+- revisar dados duplicados antes de aplicar em produção;
+- confirmar backup;
+- confirmar se o frontend já foi atualizado para não depender de múltiplas reações simultâneas por usuário.
 
 ---
 
@@ -277,29 +401,29 @@ scripts/
 docs/historico/documentacao-antiga/
 ```
 
-Classificacao recomendada:
+Classificação recomendada:
 
 | Tipo | Destino |
 |---|---|
-| Diagnostico manual | `docs/historico/` ou `scripts/` com aviso claro |
-| Correcao operacional pontual | `scripts/` com dry-run e instrucao |
-| Schema antigo substituido por migrations | `docs/historico/documentacao-antiga/` |
-| Script destrutivo | `scripts/` com comentarios, bloqueios e confirmacao |
+| Diagnóstico manual | `docs/historico/` ou `scripts/` com aviso claro |
+| Correção operacional pontual | `scripts/` com dry-run e instrução |
+| Schema antigo substituído por migrations | `docs/historico/documentacao-antiga/` |
+| Script destrutivo | `scripts/` com comentários, bloqueios e confirmação |
 | Migration real | `supabase/migrations/` |
 
 Regra:
 
 ```txt
-Nao aplicar database-schema.sql como schema principal em novo ambiente.
+Não aplicar database-schema.sql como schema principal em novo ambiente.
 ```
 
 ---
 
-## 12. RLS e permissoes
+## 12. RLS e permissões
 
-Ao alterar tabela sensivel, revisar RLS.
+Ao alterar tabela sensível, revisar RLS.
 
-Tabelas sensiveis:
+Tabelas sensíveis:
 
 ```txt
 profiles
@@ -307,6 +431,7 @@ user_person_links
 pessoas
 relacionamentos
 relationship_change_requests
+person_profile_suggestions
 activity_logs
 notificacoes_usuario
 preferencias_notificacao
@@ -315,16 +440,24 @@ arquivos_historicos
 person_events
 person_generated_insights
 user_favorites
+forum_topicos
+forum_respostas
+forum_comentarios
+forum_reacoes
+forum_denuncias
+forum_topico_pessoas
 ```
 
 Checklist:
 
-- SELECT de usuario comum esta restrito?
+- SELECT de usuário comum está restrito?
 - INSERT/UPDATE/DELETE exigem dono/admin?
 - Admin usa RPC ou policy adequada?
 - Service role fica apenas server-side?
-- Usuario comum nao consegue alterar relacionamento real diretamente?
-- Solicitacoes usam `relationship_change_requests`?
+- Usuário comum não consegue alterar relacionamento real diretamente?
+- Solicitações usam `relationship_change_requests` ou `person_profile_suggestions`?
+- Notificações para terceiros são criadas apenas por fluxos controlados?
+- Fórum impede alteração indevida de conteúdo alheio?
 
 ---
 
@@ -332,13 +465,13 @@ Checklist:
 
 Regras:
 
-- secrets nao entram em migration;
-- service role nao entra no frontend;
-- Edge Functions usam variaveis/segredos do ambiente;
-- migrations nao devem hardcodar tokens;
-- cron automatico que chama Edge Function precisa de segredo seguro fora do repositorio.
+- secrets não entram em migration;
+- service role não entra no frontend;
+- Edge Functions usam variáveis/segredos do ambiente;
+- migrations não devem hardcodar tokens;
+- cron automático que chama Edge Function precisa de segredo seguro fora do repositório.
 
-Exemplo:
+Exemplos:
 
 ```txt
 run-daily-notifications
@@ -346,11 +479,11 @@ send-notification-email
 generate-person-insights
 ```
 
-Para notificacoes diarias:
+Para notificações diárias:
 
 - rotina manual pode existir;
 - Edge Function pode estar preparada;
-- cron automatico so deve ser ativado apos segredo seguro externo.
+- cron automático só deve ser ativado após segredo seguro externo.
 
 ---
 
@@ -361,7 +494,7 @@ Para notificacoes diarias:
 3. Aplicar em local/staging.
 4. Rodar build/testes.
 5. Validar fluxo manual.
-6. Aplicar remoto com autorizacao.
+6. Aplicar remoto com autorização.
 7. Confirmar `supabase migration list`.
 8. Validar tela afetada.
 9. Fazer deploy frontend.
@@ -378,11 +511,23 @@ npm run test:e2e
 git diff --check
 ```
 
+Para migrations recentes deste ciclo, validar especialmente:
+
+```txt
+/admin/pessoas
+/pessoa/:id
+/admin/solicitacoes-vinculos
+/forum/novo
+/forum/topico/:id
+/ajustar-notificacoes
+/notificacoes
+```
+
 ---
 
 ## 15. Troubleshooting
 
-### Migration aparece local, mas nao remota
+### Migration aparece local, mas não remota
 
 Verificar:
 
@@ -390,13 +535,11 @@ Verificar:
 supabase migration list
 ```
 
-Correcao:
+Correção:
 
 - revisar SQL;
 - aplicar com `supabase db push`;
 - validar ambiente correto.
-
----
 
 ### Migration remota aplicada, mas local divergente
 
@@ -406,16 +549,14 @@ Causas:
 - migration repair feito incorretamente;
 - branch local desatualizada.
 
-Correcao:
+Correção:
 
-- puxar main;
+- puxar `main`;
 - revisar migrations;
 - comparar schema;
-- usar `migration repair` apenas se o schema ja estiver comprovadamente aplicado.
+- usar `migration repair` apenas se o schema já estiver comprovadamente aplicado.
 
----
-
-### Frontend envia coluna que nao existe
+### Frontend envia coluna que não existe
 
 Exemplo:
 
@@ -423,13 +564,11 @@ Exemplo:
 categoria_evento
 ```
 
-Correcao:
+Correção:
 
 - aplicar migration correta;
-- nao remover campo do payload so para contornar ambiente desatualizado;
-- se necessario, bloquear deploy frontend ate banco estar pronto.
-
----
+- não remover campo do payload só para contornar ambiente desatualizado;
+- se necessário, bloquear deploy frontend até banco estar pronto.
 
 ### RPC corrigida ainda falha
 
@@ -438,15 +577,72 @@ Verificar:
 - migration aplicada;
 - schema cache;
 - assinatura da RPC;
-- permissoes;
+- permissões;
 - chamada do service;
 - erro real no console/Supabase.
 
+### Reset de perfil falha
+
+Verificar:
+
+- migration `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql` aplicada;
+- existência da RPC `admin_reset_person_profile`;
+- usuário logado é admin;
+- policies/RPC permitem execução;
+- schema cache;
+- se o erro vem da remoção de favoritos, insights ou preferências.
+
+### Sugestão de perfil não aparece no admin
+
+Verificar:
+
+- migration `20260608143000_create_person_profile_suggestions.sql` aplicada;
+- tabela `person_profile_suggestions`;
+- service `personProfileSuggestionService.ts`;
+- página `/admin/solicitacoes-vinculos`;
+- RLS/policies.
+
+### Reações duplicadas no fórum
+
+Verificar:
+
+```sql
+select user_id, alvo_tipo, alvo_id, count(*)
+from public.forum_reacoes
+group by user_id, alvo_tipo, alvo_id
+having count(*) > 1;
+```
+
+Se houver linhas:
+
+- a migration `20260608180000_enforce_single_forum_reaction.sql` pode não ter rodado;
+- a constraint pode ter falhado;
+- houve inserção manual inconsistente;
+- revisar `forumService.ts`.
+
+### Build falha por ícone do `lucide-react`
+
+Exemplo conhecido:
+
+```txt
+"Rose" is not exported by "lucide-react"
+```
+
+Correção aplicada:
+
+- usar `Flower2` como alternativa disponível para a reação **Orações**.
+
+Regra:
+
+```txt
+Antes de usar ícone novo do lucide-react, confirmar se ele existe na versão instalada.
+```
+
 ---
 
-## 16. O que nao fazer
+## 16. O que não fazer
 
-Nao fazer:
+Não fazer:
 
 - commitar secrets;
 - commitar dumps;
@@ -454,10 +650,13 @@ Nao fazer:
 - aplicar SQL legado como schema novo;
 - rodar `db push` sem revisar;
 - usar `migration repair` como atalho;
-- criar migration para mudanca visual;
-- ampliar RLS para resolver rapido bug de frontend;
+- criar migration para mudança visual;
+- ampliar RLS para resolver rápido bug de frontend;
 - apagar coluna/tabela legada sem auditoria;
-- apagar base64 legado sem dry-run.
+- apagar base64 legado sem dry-run;
+- criar nova tabela de eventos se `person_events` atende;
+- criar preferência nova de fórum se `receber_avisos_gerais` atende ao escopo;
+- criar constraint única sem deduplicar dados antigos.
 
 ---
 
@@ -469,18 +668,24 @@ Fazer:
 - manter migrations pequenas e nomeadas;
 - validar local antes de remoto;
 - preservar backup;
+- usar deduplicação antes de constraints novas;
 - documentar scripts destrutivos;
 - usar dry-run para limpeza;
 - testar fluxo afetado;
-- atualizar documentacao relacionada;
-- registrar pos-MVP quando a correcao nao bloquear lancamento.
+- atualizar documentação relacionada;
+- registrar pós-MVP quando a correção não bloquear lançamento.
 
 ---
 
-## 18. Relacao com outras documentacoes
+## 18. Relação com outras documentações
 
 - Estado funcional: `docs/GUIA_IMPLEMENTACOES.md`
 - Troubleshooting por sintoma: `docs/GUIA_CORRECAO_ERROS.md`
 - QA final: `docs/historico/QA_FINAL_MVP.md`
 - Storage: `docs/operacao/STORAGE_MAINTENANCE.md`
 - Rotas/guards: `docs/arquitetura/ROTAS_E_GUARDS.md`
+- Banco/usuários: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
+- Fórum: `docs/funcionalidades/FORUM.md`
+- Notificações: `docs/funcionalidades/NOTIFICACOES.md`
+
+---

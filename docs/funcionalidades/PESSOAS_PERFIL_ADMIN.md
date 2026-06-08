@@ -1,9 +1,8 @@
-# Pessoas, perfil publico e admin de pessoa
+# Pessoas, perfil público e admin de pessoa
 
-> Ultima revisao: 2026-05-30
-
-> Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
-> Tipo: documentacao funcional especifica.
+> Última revisão: 2026-06-08  
+> Local recomendado: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`  
+> Tipo: documentação funcional específica.
 
 ---
 
@@ -16,25 +15,33 @@ Rotas principais:
 ```txt
 /pessoa/:id
 /pessoas/:id
+/admin/pessoas
 /admin/pessoas/nova
 /admin/pessoas/:id
 /admin/pessoas/:id/editar
 /meus-dados
+/minha-arvore/editar
+/admin/solicitacoes-vinculos
 ```
 
 Inclui:
 
-- perfil publico/interno de pessoa;
+- perfil público/interno de pessoa;
 - admin de pessoa;
-- edicao dos proprios dados;
-- vinculos usuario-pessoa;
+- listagem administrativa de pessoas;
+- reset administrativo de perfil;
+- edição dos próprios dados;
+- sugestões de alteração de perfil;
+- vínculos usuário-pessoa;
+- relacionamento conjugal;
 - insights;
 - WhatsApp;
-- autocomplete de endereco;
+- autocomplete de endereço;
 - privacidade;
 - pets;
 - eventos pessoais;
-- arquivos historicos.
+- arquivos históricos;
+- favoritos.
 
 ---
 
@@ -43,27 +50,48 @@ Inclui:
 ```txt
 src/app/pages/PersonProfile.tsx
 src/app/components/person/PersonDataView.tsx
+src/app/pages/admin/AdminPessoas.tsx
 src/app/pages/admin/AdminPessoaForm.tsx
+src/app/pages/admin/AdminSolicitacoesVinculos.tsx
 src/app/pages/MeusDados.tsx
+src/app/pages/MinhaArvore.tsx
 src/app/components/person/PersonContactFields.tsx
 src/app/components/person/AddressAutocompleteInput.tsx
 src/app/components/person/SocialProfilesEditor.tsx
 src/app/components/person/PersonEventsEditor.tsx
 src/app/components/ArquivosHistoricos.tsx
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/components/relationships/MarriageDetailsEditor.tsx
+src/app/components/ConfirmDialog.tsx
 src/app/utils/googleAddress.ts
 src/app/utils/personFields.ts
+src/app/utils/whatsapp.ts
+src/app/services/dataService.ts
 src/app/services/memberProfileService.ts
 src/app/services/personInsightsService.ts
-src/app/utils/whatsapp.ts
+src/app/services/personProfileSuggestionService.ts
+src/app/services/permissionService.ts
+src/app/services/favoritesService.ts
+```
+
+Migrations recentes relacionadas:
+
+```txt
+supabase/migrations/20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+supabase/migrations/20260608143000_create_person_profile_suggestions.sql
 ```
 
 Documentos relacionados:
 
 ```txt
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 docs/funcionalidades/TIMELINE.md
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
+docs/funcionalidades/NOTIFICACOES.md
 docs/operacao/MIGRATIONS_SUPABASE.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 docs/GUIA_CORRECAO_ERROS.md
 ```
 
@@ -71,60 +99,170 @@ docs/GUIA_CORRECAO_ERROS.md
 
 ## 3. Rotas
 
-| Rota | Protecao | Funcao |
+| Rota | Proteção | Função |
 |---|---|---|
-| `/pessoa/:id` | `MemberRoute` | Perfil publico/interno de pessoa. |
+| `/pessoa/:id` | `MemberRoute` | Perfil público/interno de pessoa. |
 | `/pessoas/:id` | `MemberRoute` | Alias do perfil de pessoa. |
+| `/admin/pessoas` | `ProtectedRoute` | Listagem administrativa de pessoas. |
 | `/admin/pessoas/nova` | `ProtectedRoute` | Criar pessoa. |
 | `/admin/pessoas/:id/editar` | `ProtectedRoute` | Editar pessoa. |
-| `/admin/pessoas/:id` | `ProtectedRoute` | Alias admin de edicao/visualizacao. |
-| `/meus-dados` | `MemberRoute` | Usuario edita dados da pessoa vinculada. |
+| `/admin/pessoas/:id` | `ProtectedRoute` | Alias admin de edição/visualização. |
+| `/meus-dados` | `MemberRoute` | Usuário edita dados da pessoa vinculada. |
+| `/minha-arvore/editar` | `MemberRoute` | Usuário edita perfil próprio ampliado. |
+| `/admin/solicitacoes-vinculos` | `ProtectedRoute` | Admin revisa vínculos e sugestões de alteração. |
 
 ---
 
-## 4. Perfil publico/interno
+## 4. Perfil público/interno
 
-O perfil exibe, conforme dados e permissoes:
+O perfil exibe, conforme dados e permissões:
 
-- dados basicos;
+- dados básicos;
 - foto principal;
-- informacoes biograficas;
+- informações biográficas;
 - relacionamentos;
 - eventos;
 - timeline;
-- arquivos historicos;
+- arquivos históricos;
 - redes sociais;
 - contato;
-- insights persistidos.
+- insights persistidos;
+- botão de favorito;
+- ação de edição quando o usuário tiver permissão.
 
 Regras:
 
-- foto principal e ampliavel quando existe;
-- dados sensiveis respeitam flags de privacidade;
-- WhatsApp depende de telefone valido e permissao de contato;
-- cards de astrologia/acontecimentos so aparecem com conteudo, loading, erro ou fallback explicito;
-- o texto **Conteudo ainda nao gerado.** nao deve aparecer publicamente;
-- pet nao exibe astrologia/acontecimentos.
+- foto principal é ampliável quando existe;
+- dados sensíveis respeitam flags de privacidade;
+- WhatsApp depende de telefone válido e permissão de contato;
+- cards de astrologia/acontecimentos só aparecem com conteúdo, loading, erro ou fallback explícito;
+- o texto **Conteúdo ainda não gerado.** não deve aparecer publicamente;
+- pet não exibe astrologia/acontecimentos.
 
 ---
 
-## 5. Privacidade
+## 5. Botão de editar no perfil `/pessoa/:id`
 
-### 5.1 Telefone
+Regra consolidada:
 
-Telefone textual so aparece com:
+```txt
+O botão Editar saiu do header e fica ao lado do botão de favoritar.
+```
+
+Comportamento esperado:
+
+- botão redondo;
+- apenas ícone de lápis;
+- sem título visível no botão;
+- título/descrição apenas por `title`/tooltip/aria-label;
+- visual alinhado ao botão de favorito;
+- exibido somente para:
+  - admin;
+  - responsável pelo perfil;
+  - próprio usuário;
+  - usuário com vínculo direto e `can_edit !== false`.
+
+Permissão reutilizada:
+
+```txt
+canEditPerson
+isAdminUser
+getLinkedPersonWithPessoa(user.id, pessoa.id)
+canEditLinkedPersonRecord
+```
+
+Regra:
+
+- esconder o botão no frontend não substitui validação de service/RLS;
+- usuário sem permissão não deve conseguir editar diretamente por URL.
+
+---
+
+## 6. Inserir Informações e sugestões de perfil
+
+A página `/pessoa/:id` possui ação **Inserir Informações**.
+
+Comportamento:
+
+- se o usuário for responsável pelo perfil, admin ou tiver permissão direta, entra no fluxo de edição;
+- se não tiver permissão direta, envia sugestão para revisão administrativa;
+- sugestões aparecem no painel admin;
+- admin pode marcar como revisada ou descartar.
+
+Service:
+
+```txt
+src/app/services/personProfileSuggestionService.ts
+```
+
+Migration:
+
+```txt
+20260608143000_create_person_profile_suggestions.sql
+```
+
+Admin relacionado:
+
+```txt
+src/app/pages/admin/AdminSolicitacoesVinculos.tsx
+```
+
+Regras:
+
+- sugestão não altera dado real imediatamente;
+- sugestão deve guardar contexto suficiente para revisão;
+- não expor informações internas desnecessárias ao usuário comum;
+- falha ao enviar sugestão deve exibir feedback amigável.
+
+---
+
+## 7. Privacidade
+
+### 7.1 Defaults de privacidade
+
+Migration relacionada:
+
+```txt
+20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+```
+
+Todas as colunas abaixo da tabela `pessoas` começam com valor padrão `true`:
+
+```txt
+permitir_exibir_instagram
+permitir_mensagens_whatsapp
+permitir_exibir_data_nascimento
+permitir_exibir_endereco
+permitir_exibir_telefone
+```
+
+Regra de UX:
+
+```txt
+No primeiro acesso, o usuário vê todos os campos marcados e pode desmarcar se quiser.
+```
+
+Regras:
+
+- usar boolean `true`, não string `"TRUE"`;
+- defaults não devem sobrescrever escolha explícita do usuário já salva;
+- reset administrativo pode retornar esses campos para `true`, conforme seção de reset.
+
+### 7.2 Telefone
+
+Telefone textual só aparece com:
 
 ```txt
 permitir_exibir_telefone = true
 ```
 
-### 5.2 WhatsApp
+### 7.3 WhatsApp
 
 WhatsApp depende de:
 
-- telefone valido;
-- flags de permissao;
-- avaliacao por `canUseWhatsAppContact`.
+- telefone válido;
+- flags de permissão;
+- avaliação por `canUseWhatsAppContact`.
 
 Arquivo:
 
@@ -132,15 +270,21 @@ Arquivo:
 src/app/utils/whatsapp.ts
 ```
 
-### 5.3 Endereco
+Campo relacionado:
 
-Endereco so aparece com:
+```txt
+permitir_mensagens_whatsapp
+```
+
+### 7.4 Endereço
+
+Endereço só aparece com:
 
 ```txt
 permitir_exibir_endereco = true
 ```
 
-### 5.4 Data de nascimento
+### 7.5 Data de nascimento
 
 Data de nascimento respeita:
 
@@ -148,38 +292,63 @@ Data de nascimento respeita:
 permitir_exibir_data_nascimento
 ```
 
-### 5.5 Rede social
+### 7.6 Redes sociais
 
-Rede social respeita:
+Instagram respeita:
 
 ```txt
-permitir_exibir_rede_social
 permitir_exibir_instagram
 ```
+
+Quando houver campos legados de rede social, manter compatibilidade sem burlar o novo campo específico.
 
 Regra:
 
 ```txt
-Nao resolver privacidade apenas escondendo UI se o service/RLS expoe dados indevidos.
+Não resolver privacidade apenas escondendo UI se o service/RLS expõe dados indevidos.
 ```
 
 ---
 
-## 6. Admin de pessoa
+## 8. Admin de pessoas
 
-O formulario admin e dividido por blocos:
+### 8.1 Listagem `/admin/pessoas`
 
-- foto;
-- dados basicos;
-- datas/locais;
-- biografia;
-- contato;
-- privacidade;
-- eventos;
-- arquivos historicos;
-- relacionamentos;
-- vinculos;
-- insights.
+Arquivo principal:
+
+```txt
+src/app/pages/admin/AdminPessoas.tsx
+```
+
+A listagem possui, em cada pessoa:
+
+- botão **Editar**;
+- botão **Excluir**;
+- botão apenas com ícone para copiar ID.
+
+Regra consolidada:
+
+```txt
+O terceiro botão copia automaticamente o ID da pessoa da tabela pessoas.
+```
+
+Exemplo:
+
+```txt
+25cddc2d-3927-4b68-8dcb-9993d203f3e5
+```
+
+Comportamento esperado:
+
+- botão sem título visível;
+- ícone claro de copiar;
+- `title`/`aria-label` para acessibilidade;
+- feedback visual/toast de cópia;
+- não navegar;
+- não alterar dados;
+- não expor outro identificador por engano.
+
+### 8.2 Formulário admin
 
 Arquivo principal:
 
@@ -187,32 +356,117 @@ Arquivo principal:
 src/app/pages/admin/AdminPessoaForm.tsx
 ```
 
+O formulário admin é dividido por blocos:
+
+- foto;
+- dados básicos;
+- datas/locais;
+- biografia;
+- contato;
+- privacidade;
+- eventos;
+- arquivos históricos;
+- relacionamentos;
+- vínculos;
+- insights.
+
 Comportamento:
 
-- rascunho usa `sessionStorage` com chave por criacao/edicao;
+- rascunho usa `sessionStorage` com chave por criação/edição;
 - eventos da vida usam `PersonEventsEditor`;
-- arquivos historicos usam `ArquivosHistoricos`;
+- arquivos históricos usam `ArquivosHistoricos`;
 - redes sociais usam componentes compartilhados;
-- privacidade controla exibicao publica;
-- dados conjugais aparecem quando aplicavel;
-- insights sao gerados/regenerados por acao explicita do admin via `generate-person-insights`;
-- card de insights no admin so aparece quando ha acao possivel, conteudo existente, loading ou erro.
+- privacidade controla exibição pública;
+- dados conjugais aparecem quando aplicável;
+- insights são gerados/regenerados por ação explícita do admin via `generate-person-insights`;
+- card de insights no admin só aparece quando há ação possível, conteúdo existente, loading ou erro.
 
 ---
 
-## 7. Area do usuario - `/meus-dados`
+## 9. Resetar Perfil no admin
 
-A pagina `/meus-dados` permite que o usuario edite dados da pessoa vinculada quando tiver permissao.
+### 9.1 Objetivo
+
+O botão **Resetar Perfil** permite ao admin devolver os dados customizados do perfil para a versão atualmente existente na tabela `pessoas`, removendo personalizações e preferências alteradas.
+
+Arquivo principal:
+
+```txt
+src/app/pages/admin/AdminPessoas.tsx
+src/app/services/dataService.ts
+src/app/components/ConfirmDialog.tsx
+```
+
+Migration/RPC:
+
+```txt
+20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+admin_reset_person_profile
+```
+
+### 9.2 Comportamento esperado
+
+Ao resetar uma pessoa:
+
+- todos os dados relacionados à pessoa voltam para a versão atualmente persistida na tabela `pessoas`;
+- remove foto de perfil;
+- remove informações de astrologia;
+- remove fatos do dia de nascimento;
+- remove todos os favoritos da pessoa;
+- retorna preferências de notificações para `true`;
+- retorna preferências de exibição/contato para `true`;
+- mantém relações com parentes atualmente existentes no banco;
+- não apaga relacionamentos familiares;
+- não apaga pessoa;
+- não altera histórico de parentesco.
+
+Campos de privacidade que voltam para `true`:
+
+```txt
+permitir_exibir_instagram
+permitir_mensagens_whatsapp
+permitir_exibir_data_nascimento
+permitir_exibir_endereco
+permitir_exibir_telefone
+```
+
+### 9.3 Proteções
+
+Regras:
+
+- ação disponível apenas para admin;
+- exigir confirmação antes de executar;
+- RPC deve validar permissão admin;
+- não executar deletes em relações familiares;
+- não executar cascade destrutivo em `relacionamentos`;
+- falha deve exibir erro claro;
+- sucesso deve recarregar dados/listagem.
+
+Checklist anti-regressão:
+
+```txt
+Reset remove favoritos.
+Reset remove foto.
+Reset limpa astrologia/fatos.
+Reset retorna booleans para true.
+Reset não remove pais, filhos, irmãos, cônjuges ou demais relacionamentos.
+```
+
+---
+
+## 10. Área do usuário - `/meus-dados`
+
+A página `/meus-dados` permite que o usuário edite dados da pessoa vinculada quando tiver permissão.
 
 Regras:
 
 - respeitar `user_person_links.can_edit`;
-- confirmar dados quando aplicavel;
-- nao permitir edicao de pessoa sem vinculo;
-- usar componentes compartilhados sempre que possivel;
-- preservar autocomplete de endereco;
-- preservar validacoes de humano/pet;
-- nao expor acao admin.
+- confirmar dados quando aplicável;
+- não permitir edição de pessoa sem vínculo;
+- usar componentes compartilhados sempre que possível;
+- preservar autocomplete de endereço;
+- preservar validações de humano/pet;
+- não expor ação admin.
 
 Services relacionados:
 
@@ -226,9 +480,9 @@ userEngagementService.ts
 
 ---
 
-## 8. Pets
+## 11. Pets
 
-Regras de validacao:
+Regras de validação:
 
 ```txt
 Pet:
@@ -238,12 +492,13 @@ Humano:
   exige pelo menos nome e sobrenome com duas letras ou mais.
 ```
 
-Regras de exibicao:
+Regras de exibição:
 
-- pets nao exibem astrologia/acontecimentos;
+- pets não exibem astrologia/acontecimentos;
 - pets podem aparecer no perfil;
-- pets aparecem em card proprio quando relacionados como filho tecnico;
-- pets usam regra semantica de `humano_ou_pet`.
+- pets aparecem em card próprio quando relacionados como filho técnico;
+- pets não devem ser contados como filhos humanos;
+- pets usam regra semântica de `humano_ou_pet`.
 
 Arquivo relacionado:
 
@@ -259,9 +514,9 @@ docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 
 ---
 
-## 9. Vinculo usuario-pessoa no admin
+## 12. Vínculo usuário-pessoa no admin
 
-A listagem de usuarios depende de:
+A listagem de usuários depende de:
 
 ```txt
 adminListProfilesForLinking
@@ -281,15 +536,15 @@ Migration relacionada:
 
 Regras:
 
-- dropdown exclui usuarios ja vinculados a pessoa;
+- dropdown exclui usuários já vinculados à pessoa;
 - erro de listagem aparece inline no card;
-- botao **Recarregar** tenta buscar novamente;
-- nao usar fallback inseguro de consulta direta em `profiles`;
-- usuario logado precisa ser admin.
+- botão **Recarregar** tenta buscar novamente;
+- não usar fallback inseguro de consulta direta em `profiles`;
+- usuário logado precisa ser admin.
 
 ---
 
-## 10. Autocomplete de endereco
+## 13. Autocomplete de endereço
 
 Componente:
 
@@ -320,7 +575,7 @@ Usado em:
 - `/meus-dados`;
 - admin de pessoa via `PersonContactFields`.
 
-Formatacao centralizada em:
+Formatação centralizada em:
 
 ```txt
 src/app/utils/googleAddress.ts
@@ -329,12 +584,12 @@ src/app/utils/googleAddress.ts
 Regra:
 
 ```txt
-falha do Google nao pode bloquear salvamento do formulario.
+falha do Google não pode bloquear salvamento do formulário.
 ```
 
 ---
 
-## 11. Eventos pessoais
+## 14. Eventos pessoais
 
 Componente:
 
@@ -357,9 +612,10 @@ person_events
 Uso:
 
 - admin cria/edita eventos pessoais;
+- usuário pode adicionar eventos manuais onde permitido;
 - perfil pode exibir eventos;
 - timeline pode consumir eventos pessoais;
-- eventos nao devem quebrar perfil se ausentes.
+- eventos não devem quebrar perfil se ausentes.
 
 Documento complementar:
 
@@ -369,7 +625,7 @@ docs/funcionalidades/TIMELINE.md
 
 ---
 
-## 12. Arquivos historicos
+## 15. Arquivos históricos
 
 Componente:
 
@@ -390,7 +646,7 @@ Uso:
 - arquivos associados a relacionamento;
 - preview;
 - download;
-- edicao de titulo, descricao, ano e categoria;
+- edição de título, descrição, ano e categoria;
 - compatibilidade com base64 legado.
 
 Migration relevante:
@@ -407,7 +663,7 @@ se o frontend envia categoria_evento, a migration precisa estar aplicada no ambi
 
 ---
 
-## 13. Insights
+## 16. Insights
 
 Arquivos:
 
@@ -420,44 +676,158 @@ supabase/functions/generate-person-insights/index.ts
 
 Regras:
 
-- perfil apenas le insights persistidos;
+- perfil apenas lê insights persistidos;
 - admin gera/regenera explicitamente;
 - secrets ficam server-side;
-- perfil publico nao renderiza card vazio;
-- texto **Conteudo ainda nao gerado.** nao deve aparecer publicamente;
-- pet nao exibe astrologia/acontecimentos;
-- card admin aparece se houver acao possivel, conteudo, loading ou erro.
+- perfil público não renderiza card vazio;
+- texto **Conteúdo ainda não gerado.** não deve aparecer publicamente;
+- pet não exibe astrologia/acontecimentos;
+- card admin aparece se houver ação possível, conteúdo, loading ou erro.
+
+Reset admin pode limpar os dados de astrologia e fatos do nascimento, conforme regra da seção **Resetar Perfil**.
 
 ---
 
-## 14. Troubleshooting
+## 17. Modal de relacionamento conjugal
 
-### Usuario nao aparece no dropdown
+O modal aberto ao clicar no anel/aliança de relacionamento deve apresentar dados legíveis para usuário final.
+
+Arquivo principal:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+```
+
+### 17.1 Layout do modal
+
+Regras consolidadas:
+
+- título do modal centralizado;
+- botão `X` de fechar alinhado corretamente com o ícone;
+- não exibir ID técnico do relacionamento para usuário final;
+- informações técnicas internas não devem aparecer para usuário comum;
+- observações podem aparecer quando fizerem sentido para admin;
+- arquivos históricos do relacionamento permanecem no modal.
+
+### 17.2 Texto principal
+
+Trocar texto genérico:
+
+```txt
+Fulana e Secundino tiveram um relacionamento conjugal.
+```
+
+por:
+
+```txt
+Fulana e Secundino foram casados.
+```
+
+Quando houver dados adicionais, exibir em subtítulo.
+
+Exemplo:
+
+```txt
+O matrimônio aconteceu entre DD/MM/AAAA e DD/MM/AAAA. A cerimônia foi realizada em Cidade/UF.
+```
+
+Regras:
+
+- usar data de casamento quando existir;
+- usar data de separação/fim apenas quando for semanticamente correta;
+- não exibir separação quando o relacionamento terminou por falecimento;
+- status de viuvez deve ser tratado de forma distinta de separação/divórcio;
+- não inventar cidade/data ausente.
+
+### 17.3 Inserir Informações no relacionamento
+
+O modal possui botão **Inserir Informações**.
+
+Comportamento:
+
+- usuário com permissão direta/admin/responsável entra no fluxo de edição;
+- usuário sem permissão envia sugestão para confirmação no painel admin;
+- sugestão deve incluir contexto do casal e ID do relacionamento;
+- sugestão não altera dados reais imediatamente.
+
+### 17.4 Arquivos Históricos do relacionamento
+
+Na área de **Arquivos Históricos** do modal:
+
+- existe botão compacto **+**;
+- admin pode gravar diretamente quando o service exigir admin;
+- usuários sem permissão direta devem enviar sugestão/admin, quando aplicável;
+- arquivos continuam associados ao relacionamento, não à pessoa individual.
+
+Regras técnicas:
+
+```txt
+relacionamento_id preenchido
+pessoa_id nulo
+```
+
+---
+
+## 18. Troubleshooting
+
+### Usuário não aparece no dropdown
 
 Verificar:
 
 - `adminListProfilesForLinking`;
-- se a pessoa ja nao tem vinculo com esse usuario;
+- se a pessoa já não tem vínculo com esse usuário;
 - erro inline;
-- botao **Recarregar**;
-- usuario logado como admin.
+- botão **Recarregar**;
+- usuário logado como admin.
 
 ### Erro de schema cache da RPC
 
-Mensagem tipica:
+Mensagem típica:
 
 ```txt
 Could not find the function public.admin_list_profiles_for_linking without parameters in the schema cache
 ```
 
-Correcao:
+Correção:
 
 - aplicar `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql` no Supabase remoto;
-- conferir assinatura `public.admin_list_profiles_for_linking()` sem parametros;
-- aguardar/recarregar schema cache, se necessario;
-- nao trocar por consulta direta insegura em `profiles`.
+- conferir assinatura `public.admin_list_profiles_for_linking()` sem parâmetros;
+- aguardar/recarregar schema cache, se necessário;
+- não trocar por consulta direta insegura em `profiles`.
 
-### Campo endereco nao mostra sugestoes
+### Reset de perfil não funciona
+
+Verificar:
+
+- migration `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql` aplicada;
+- RPC `admin_reset_person_profile` existe;
+- usuário logado é admin;
+- `dataService.ts` chama a RPC correta;
+- `ConfirmDialog` confirma antes de executar;
+- erro Supabase é exibido ao admin.
+
+### Reset removeu parentes
+
+P0 funcional.
+
+Verificar imediatamente:
+
+- RPC não deve deletar registros de `relacionamentos`;
+- não deve apagar relações de filiação, irmãos ou cônjuges;
+- revisar migration e logs;
+- restaurar dados se houve execução indevida.
+
+### Botão copiar ID não copia
+
+Verificar:
+
+- uso de `navigator.clipboard`;
+- fallback se navegador bloquear clipboard;
+- ID copiado é `pessoas.id`;
+- toast/feedback visual;
+- botão não dispara navegação/edição/exclusão.
+
+### Campo endereço não mostra sugestões
 
 Verificar:
 
@@ -466,23 +836,16 @@ Verificar:
 - uso de `AddressAutocompleteInput`;
 - fallback para input normal.
 
-### API key ausente
-
-Comportamento esperado:
-
-- pode aparecer aviso no console em desenvolvimento;
-- formulario continua salvavel com input normal.
-
 ### Card de insights aparece vazio
 
 Verificar:
 
 - `PersonDataView.tsx`;
-- se ha conteudo/loading/erro/fallback;
+- se há conteúdo/loading/erro/fallback;
 - pet;
-- regra publica versus admin.
+- regra pública versus admin.
 
-### Pet exige sobrenome por regressao
+### Pet exige sobrenome por regressão
 
 Verificar:
 
@@ -491,15 +854,15 @@ Verificar:
 - `hasValidPetName`;
 - humano continua usando `hasFirstAndLastName`.
 
-### Botao WhatsApp aparece sem permissao
+### Botão WhatsApp aparece sem permissão
 
 Verificar:
 
 - `canUseWhatsAppContact`;
-- telefone valido;
+- telefone válido;
 - flags de privacidade/contato da pessoa.
 
-### Arquivo historico falha ao salvar categoria
+### Arquivo histórico falha ao salvar categoria
 
 Verificar:
 
@@ -508,25 +871,39 @@ Verificar:
 - payload de `ArquivosHistoricos`;
 - coluna `categoria_evento`.
 
+### Sugestão de informação não aparece no admin
+
+Verificar:
+
+- migration `20260608143000_create_person_profile_suggestions.sql`;
+- service `personProfileSuggestionService.ts`;
+- status pendente;
+- tela `/admin/solicitacoes-vinculos`;
+- RLS/policy de leitura admin.
+
 ---
 
-## 15. Checklist de QA
+## 19. Checklist de QA
 
 ### Perfil
 
-- perfil publico humano com insights;
-- perfil publico humano sem insights;
-- perfil publico de pet;
-- foto ampliavel;
+- perfil público humano com insights;
+- perfil público humano sem insights;
+- perfil público de pet;
+- foto ampliável;
 - timeline;
-- arquivos historicos;
-- WhatsApp com permissao;
-- WhatsApp sem permissao;
+- arquivos históricos;
+- WhatsApp com permissão;
+- WhatsApp sem permissão;
 - telefone oculto;
-- endereco oculto;
-- nascimento oculto.
+- endereço oculto;
+- nascimento oculto;
+- botão favorito;
+- botão editar ao lado do favorito para quem tem permissão;
+- botão editar ausente para quem não tem permissão;
+- botão **Inserir Informações** envia sugestão quando usuário não tem permissão.
 
-### Admin
+### Admin pessoas
 
 - criar pessoa;
 - editar pessoa;
@@ -536,177 +913,86 @@ Verificar:
 - salvar local exterior;
 - salvar redes sociais;
 - salvar eventos;
-- salvar arquivos historicos;
-- vinculo usuario-pessoa no admin;
-- botao Recarregar;
-- insights admin.
+- salvar arquivos históricos;
+- copiar ID na listagem;
+- resetar perfil;
+- reset não remove parentes;
+- reset remove favoritos/foto/astrologia/fatos;
+- reset retorna privacidade para `true`.
 
-### `/meus-dados`
+### Modal conjugal
 
-- editar dados proprios;
-- salvar endereco;
+- título centralizado;
+- botão X alinhado;
+- texto **foram casados**;
+- subtítulo com matrimônio quando houver dados;
+- sem ID técnico;
+- arquivos históricos com botão **+**;
+- inserir informações direto para quem tem permissão;
+- sugestão admin para quem não tem permissão.
+
+### `/meus-dados` e `/minha-arvore/editar`
+
+- editar dados próprios;
+- salvar endereço;
 - autocomplete com API key;
 - fallback sem API key;
 - validar privacidade;
-- confirmar dados quando aplicavel.
+- confirmar dados quando aplicável;
+- card **FILHOS** conta humanos;
+- card **PETS** separa pets;
+- eventos da vida aparecem.
 
-### Tecnico
+### Técnico
 
 ```bash
 npm run build
-npm test
 git diff --check
+git status --short
 ```
 
-Se envolver rota/admin/vinculo:
+Se houver scripts disponíveis:
 
 ```bash
+npm test
 npm run test:e2e
 supabase migration list
 ```
 
 ---
 
-## 16. Pos-MVP
+## 20. Anti-regressões
 
-Possiveis evolucoes:
+Não reintroduzir:
+
+- botão Editar no header de `/pessoa/:id`;
+- botão editar textual quando a regra pede botão redondo só com ícone;
+- campo `Signo` editável no perfil público;
+- botão separado de WhatsApp duplicando telefone-link, se a decisão vigente for telefone clicável;
+- defaults de privacidade como string `"TRUE"`;
+- reset que apaga parentes;
+- reset sem confirmação;
+- sugestão que altera dado real sem revisão;
+- ID técnico no modal conjugal;
+- texto **tiveram um relacionamento conjugal** quando a copy aprovada é **foram casados**;
+- arquivos de relacionamento salvos como arquivo de pessoa;
+- ações admin disponíveis para usuário comum.
+
+---
+
+## 21. Pós-MVP
+
+Possíveis evoluções:
 
 - refatorar `AdminPessoaForm` em blocos menores;
 - reaproveitar mais componentes entre admin e `/meus-dados`;
-- persistencia semantica de pet/tutor;
+- persistência semântica de pet/tutor;
 - privacidade por evento;
 - arquivos por evento;
 - insights adicionais;
-- historico de alteracoes por campo;
-- validacao mais detalhada de endereco;
-- controles administrativos de exibicao publica.
-
-Esses itens nao bloqueiam o MVP.
-
----
-
-## 18. Modal de relacionamento conjugal
-
-O modal aberto ao clicar no anel/alianca de relacionamento deve apresentar dados legiveis para usuario final.
-
-Arquivo principal:
-
-```txt
-src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
-```
-
-Regras consolidadas de exibicao:
-
-- `conjuge` deve ser exibido como **Conjuge**;
-- `casamento` deve ser exibido como **Casamento**;
-- o campo **ID do relacionamento** nao deve ser exibido ao usuario;
-- informacoes tecnicas internas nao devem aparecer para usuario comum;
-- observacoes podem aparecer quando fizerem sentido para admin;
-- arquivos historicos do relacionamento permanecem no modal.
-
-Campos uteis no modal:
-
-- Conjuge 1;
-- Conjuge 2;
-- Status;
-- Tipo de relacionamento;
-- Casamento;
-- Data do casamento;
-- Local do casamento;
-- Data de separacao, quando houver;
-- Local de separacao, quando houver;
-- Observacoes, quando permitido;
-- Arquivos historicos.
-
-Cuidados:
-
-- nao exibir separacao quando o relacionamento terminou por falecimento;
-- status de viuvez deve ser tratado de forma distinta de separacao/divorcio;
-- data de casamento deve usar `data_casamento` quando existir;
-- nao voltar a exibir IDs tecnicos no modal publico.
-
-## 19. Pendencias mapeadas para perfil publico
-
-Itens ainda pendentes ou em validacao visual:
-
-- remover **Signo** do topo do perfil publico;
-- remover botao separado **Entrar em contato por WhatsApp**;
-- transformar o numero de telefone em link para WhatsApp quando permitido;
-- usar estilo visual de link semelhante ao de redes sociais;
-- corrigir timeline para casamento salvo como `30/07/1988` quando ainda aparecer como **Data desconhecida**;
-- evitar evento de separacao quando o relacionamento terminou por falecimento da conjuge.
+- histórico de alterações por campo;
+- validação mais detalhada de endereço;
+- controles administrativos de exibição pública;
+- painel dedicado para sugestões de perfil, separado de vínculos, se o volume crescer.
 
 ---
-## 20. Ajustes recentes e pendencias - ciclo 2026-05-30
-
-### 20.1 Modal de relacionamento conjugal
-
-Status consolidado:
-
-```txt
-remover ID tecnico do relacionamento -> implementado
-exibir conjuge como Conjuge/Conjuge acentuado conforme politica de encoding -> implementado
-exibir casamento como Casamento -> implementado
-manter arquivos historicos do relacionamento -> implementado
-```
-
-Regras:
-
-- o modal aberto pela alianca deve priorizar informacao legivel;
-- IDs tecnicos nao devem aparecer para usuario final;
-- observacoes internas continuam condicionadas a admin;
-- arquivos historicos do relacionamento continuam disponiveis quando houver relacionamento persistido.
-
-### 20.2 Perfil publico `/pessoa/:id`
-
-Pendencias mapeadas:
-
-```txt
-remover campo Signo do topo do perfil publico
-remover botao separado Entrar em contato por WhatsApp
-transformar Telefone em link para WhatsApp quando permitido
-usar estilo de link semelhante ao de redes sociais
-```
-
-Regras para implementacao:
-
-- signo e derivado da data de nascimento e nao deve ocupar destaque no perfil publico;
-- WhatsApp nao deve revelar telefone se a privacidade nao permitir;
-- se `canUseWhatsAppContact` retornar falso, o telefone pode continuar texto normal ou oculto conforme permissao;
-- se telefone for clicavel, usar `target="_blank"` e `rel="noopener noreferrer"`;
-- nao duplicar contato exibindo ao mesmo tempo telefone-link e botao separado de WhatsApp.
-
-### 20.3 Casamento, separacao e viuvez
-
-Pendencias mapeadas:
-
-```txt
-data_casamento salva como 30/07/1988 nao pode aparecer como Data desconhecida
-relacionamento encerrado por falecimento nao deve aparecer como separacao
-evento Separacao nao deve ser criado quando o caso e viuvez
-```
-
-Regras esperadas:
-
-- timeline e secoes de relacionamento devem ler `data_casamento` quando existir;
-- aceitar formato ISO e, quando aplicavel, `DD/MM/AAAA`;
-- separacao/divorcio dependem de campo explicito de separacao/fim;
-- falecimento de conjuge deve gerar estado de viuvez, nao separacao;
-- nao inferir separacao apenas porque um relacionamento nao esta ativo.
-
-### 20.4 Checklist de validacao do perfil
-
-Validar:
-
-```txt
-/pessoa/:id humano vivo
-/pessoa/:id humano falecido
-/pessoa/:id com telefone publico
-/pessoa/:id com telefone privado
-/pessoa/:id com WhatsApp permitido
-/pessoa/:id com WhatsApp nao permitido
-/pessoa/:id com casamento e data_casamento
-/pessoa/:id com conjuge falecido
-modal da alianca sem ID tecnico
-timeline sem Data desconhecida quando ha data de casamento
-```

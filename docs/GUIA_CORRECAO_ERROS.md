@@ -1,8 +1,8 @@
 # Guia de correcao de erros - Arvore Familia
 
-> Ultima revisao: 2026-06-07
-> Ultima atualizacao: 2026-06-07
-> Revisao complementar: Genealogia mobile, botão conjugal Blend, destaques de linhas e Calendário mobile
+> Ultima revisao: 2026-06-08
+> Ultima atualizacao: 2026-06-08
+> Revisao complementar: reset de perfil, Minha Arvore, forum, notificacoes, reacoes e icones lucide
 > Local canonico: `docs/GUIA_CORRECAO_ERROS.md`
 
 ## Objetivo
@@ -3007,3 +3007,334 @@ Validação visual mínima:
 /visao-completa
 /calendario-familiar
 ```
+
+---
+
+## Atualização 2026-06-08 - Reset de perfil, fórum, notificações e reações
+
+Esta seção cobre sintomas introduzidos ou consolidados nos prompts 1 a 8.
+
+### Erro de build: `Rose` não é exportado por `lucide-react`
+
+Sintoma:
+
+```txt
+"Rose" is not exported by "node_modules/lucide-react/dist/esm/lucide-react.js"
+```
+
+Arquivo provável:
+
+```txt
+src/app/pages/forum/ForumTopico.tsx
+```
+
+Causa:
+
+- a documentação/brief solicitou ícone `rose`;
+- a versão atual de `lucide-react` do projeto não exporta `Rose`.
+
+Correção aplicada:
+
+```tsx
+import { Flower2 } from 'lucide-react';
+```
+
+E no mapa de reações:
+
+```tsx
+lembrar: {
+  label: 'Orações',
+  Icon: Flower2,
+}
+```
+
+Regra:
+
+- antes de usar novo ícone `lucide-react`, confirmar se ele existe na versão instalada;
+- se o nome solicitado não existir, usar equivalente visual próximo e registrar no relatório.
+
+Validação:
+
+```bash
+npm run build
+git diff --check
+git status --short
+```
+
+### Reações duplicadas no fórum
+
+Sintomas:
+
+```txt
+O mesmo usuário consegue reagir duas ou mais vezes ao mesmo tópico/resposta.
+Contadores aumentam quando deveria trocar a reação.
+Clicar na mesma reação não remove a reação.
+```
+
+Arquivos prováveis:
+
+```txt
+src/app/services/forumService.ts
+src/app/pages/forum/ForumTopico.tsx
+supabase/migrations/20260608180000_enforce_single_forum_reaction.sql
+```
+
+Verificar:
+
+- existe constraint única em `forum_reacoes` para `user_id, alvo_tipo, alvo_id`;
+- `reagirAoConteudo` busca a reação atual do usuário;
+- se a reação atual for igual à clicada, remove;
+- se a reação atual for diferente, apaga a anterior e insere a nova;
+- resumo/contadores são recarregados depois da ação.
+
+Correção esperada:
+
+```txt
+uma reação por pessoa por alvo
+troca substitui a anterior
+clique repetido remove
+```
+
+Se o banco remoto não recebeu a migration, aplicar conforme fluxo de `docs/operacao/MIGRATIONS_SUPABASE.md`.
+
+### Migration de unicidade das reações falha
+
+Arquivo:
+
+```txt
+supabase/migrations/20260608180000_enforce_single_forum_reaction.sql
+```
+
+A migration deve:
+
+- deduplicar mantendo a reação mais recente;
+- remover constraint antiga por `user_id, alvo_tipo, alvo_id, tipo`, se existir;
+- criar constraint única por `user_id, alvo_tipo, alvo_id`.
+
+Se falhar:
+
+1. revisar se a tabela `forum_reacoes` existe;
+2. verificar se há registros órfãos ou `created_at` nulo;
+3. executar diagnóstico em ambiente seguro;
+4. não apagar reações manualmente sem backup/auditoria;
+5. não remover a regra de unicidade do frontend para contornar erro de banco.
+
+### Notificações de menção não chegam
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/forum/ForumNovoTopico.tsx
+src/app/services/notificationRecipientsService.ts
+src/app/services/notificationTriggersService.ts
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+```
+
+Verificar:
+
+- pessoa mencionada com `@Nome Completo` existe entre pessoas relacionadas/mapeáveis;
+- pessoa relacionada ao tópico foi salva em `forum_topico_pessoas`;
+- destinatário tem vínculo de usuário/pessoa resolvível;
+- autor do tópico é excluído dos destinatários;
+- duplicidade entre menção e pessoa relacionada foi removida;
+- preferência `receber_avisos_gerais` não está desabilitada;
+- falha de notificação não bloqueia criação do tópico.
+
+Regra:
+
+```txt
+menção tem prioridade sobre pessoa apenas relacionada quando a mesma pessoa cair nos dois grupos
+```
+
+### Dropdown de Pessoas Relacionadas não fecha ou não filtra
+
+Arquivo provável:
+
+```txt
+src/app/pages/forum/ForumNovoTopico.tsx
+```
+
+Verificar:
+
+- o dropdown possui campo de busca como primeira linha;
+- busca filtra por nome normalizado;
+- clique fora fecha o dropdown;
+- `Escape`, se suportado, não deixa o dropdown preso;
+- seleção de pessoa não duplica item;
+- estado de busca é limpo quando necessário.
+
+### Menções aparecem como texto comum no tópico
+
+Arquivo provável:
+
+```txt
+src/app/pages/forum/ForumTopico.tsx
+```
+
+Verificar:
+
+- tópico carrega `listarPessoasDoTopico`;
+- `MentionedContent` recebe a lista de pessoas relacionadas;
+- o conteúdo contém `@Nome Completo` correspondente;
+- nomes são ordenados do maior para o menor para evitar match parcial;
+- link aponta para `/pessoa/:id`;
+- menção sem correspondência segura permanece texto comum.
+
+### Reset de perfil apagou relacionamento familiar
+
+P0 funcional.
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/admin/AdminPessoas.tsx
+src/app/services/dataService.ts
+supabase/migrations/20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+```
+
+Regra da RPC `admin_reset_person_profile`:
+
+- não deve executar `delete` em relações familiares;
+- mantém os relacionamentos atuais do banco;
+- remove dados complementares do perfil;
+- remove foto de perfil;
+- remove astrologia/fatos do dia de nascimento;
+- remove favoritos da pessoa;
+- retorna preferências de notificações para `true`;
+- retorna preferências de exibição/contato para `true`;
+- não usa string `"TRUE"`; usa booleano `true`.
+
+Se ocorrer perda de relacionamento:
+
+1. parar deploy/uso da ação;
+2. revisar a RPC;
+3. restaurar dados a partir de backup/log se necessário;
+4. criar teste ou checklist manual antes de reativar.
+
+### Botão copiar ID da pessoa não copia
+
+Arquivo provável:
+
+```txt
+src/app/pages/admin/AdminPessoas.tsx
+```
+
+Verificar:
+
+- botão usa apenas ícone e possui `aria-label/title`;
+- usa o campo `id` da tabela `pessoas`;
+- usa `navigator.clipboard.writeText`;
+- exibe toast de sucesso/erro;
+- não copia ID de usuário, relacionamento ou índice da lista.
+
+### `/minha-arvore` voltou a ter scroll externo
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/FamilyTree.tsx
+```
+
+Verificar:
+
+- shell da Home está preso à viewport;
+- containers usam `overflow-hidden`/`overscroll-none` onde aplicável;
+- ReactFlow mantém pan/zoom interno;
+- não há conteúdo externo empurrando altura da página;
+- alteração não removeu `panOnScroll`/`zoomOnScroll` necessário no canvas.
+
+### `/minha-arvore/editar` mostra botões duplicados de foto
+
+Arquivo provável:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+Regra:
+
+- edição/remoção de foto deve ocorrer pelo avatar superior/modal;
+- botões **Alterar** e **Remover** no card de dados não devem reaparecer;
+- o fluxo de avatar/crop continua ativo.
+
+### Arquivos Históricos em `/minha-arvore/editar` mostra título duplicado
+
+Arquivo provável:
+
+```txt
+src/app/components/ArquivosHistoricos.tsx
+```
+
+Regra:
+
+- quando o componente for renderizado dentro de seção já titulada, ocultar título interno;
+- botão de adicionar pode ser compacto `+`;
+- mensagem **Nenhum arquivo histórico adicionado.** deve permanecer clara.
+
+### Modal de relacionamento conjugal mostra texto antigo
+
+Arquivo provável:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+```
+
+Texto antigo a evitar:
+
+```txt
+Fulana e Secundino tiveram um relacionamento conjugal.
+```
+
+Texto esperado para casamento:
+
+```txt
+Fulana e Secundino foram casados.
+```
+
+Quando houver dados adicionais, subtítulo deve compor:
+
+```txt
+O matrimônio aconteceu entre DD/MM/AAAA e DD/MM/AAAA. A cerimônia foi realizada em Cidade/UF.
+```
+
+### `Inserir Informações` não respeita permissão
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/PersonProfile.tsx
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/services/permissionService.ts
+src/app/services/personProfileSuggestionService.ts
+src/app/pages/admin/AdminSolicitacoesVinculos.tsx
+```
+
+Regra:
+
+- admin, próprio usuário ou responsável com permissão podem editar diretamente;
+- usuário sem permissão cria sugestão para revisão admin;
+- sugestão deve aparecer em `/admin/solicitacoes-vinculos`;
+- usuário comum não deve alterar pessoa/relacionamento real diretamente.
+
+### Validação visual autenticada indisponível
+
+Quando o ambiente local redirecionar para `/entrar` por ausência de sessão:
+
+```txt
+Validação visual autenticada não executada por ausência de sessão local.
+```
+
+Isso não bloqueia o commit se:
+
+```txt
+npm run build
+git diff --check
+git status --short
+```
+
+passarem e a revisão de código confirmar os requisitos.
+
+Não criar usuário, alterar dados reais ou executar fluxo de login apenas para contornar essa limitação durante tarefas pontuais por conector.
+

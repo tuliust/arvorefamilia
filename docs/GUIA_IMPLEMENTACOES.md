@@ -1,7 +1,7 @@
 # Guia de implementacoes - Arvore Familia
 
-> Ultima revisao: 2026-06-07
-> Revisao complementar: estado consolidado versus refinamentos visuais pendentes
+> Ultima revisao: 2026-06-08
+> Revisao complementar: perfil, reset admin, Minha Arvore, edicao, forum, notificacoes e reacoes
 > Local canonico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -32,9 +32,9 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 
 | Frente | Status MVP | Decisao consolidada |
 |---|---|---|
-| 7.1 Notificacoes | Concluida tecnicamente | Central em `/notificacoes`, preferencias em `/ajustar-notificacoes`, botao **Personalizar Notificacoes** na central, canal interno, e-mail real via provider configuravel, rotina manual, Edge Function diaria preparada, logs e deduplicacao. Cron automatico depende de configuracao segura externa. |
+| 7.1 Notificacoes | Concluida tecnicamente | Central em `/notificacoes`, preferencias em `/ajustar-notificacoes`, botao **Personalizar Notificacoes** na central, canal interno, e-mail real via provider configuravel, rotina manual, Edge Function diaria preparada, logs e deduplicacao. Forum dispara notificacoes internas para autores, pessoas relacionadas e pessoas mencionadas por `@`, respeitando preferencias. Cron automatico depende de configuracao segura externa. |
 | 7.2 Astrologia e acontecimentos do nascimento | Concluida no escopo atual | Perfil le insights persistidos. Geracao/regeneracao e acao admin. Cards vazios nao aparecem no perfil publico. |
-| 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes; edicao avancada, upload por evento, privacidade por evento e PDF ficam pos-MVP. |
+| 7.3 Timeline | Implementada funcionalmente | Linha do tempo derivada dos dados existentes e eventos manuais. Em `/minha-arvore/editar`, a area **Eventos da Vida** exibe fatos automaticos e permite eventos manuais; upload por evento, privacidade por evento e PDF ficam pos-MVP. |
 | 7.4 WhatsApp no perfil | Concluido no frontend | Botao/link controlado por telefone e permissoes; sem WhatsApp Business API no MVP. |
 | 7.5 Grau de parentesco/vinculo | Consolidado funcionalmente | Utilitario puro, testes unitarios e integracao em Home/perfil. Integracoes visuais mais profundas ficam pos-MVP. |
 | 7.6 Exportacao de area da arvore | Concluida no escopo atual | Exporta area visivel/selecionada da arvore como PNG, PDF ou impressao por selecao retangular; arvore completa fica pos-MVP. |
@@ -44,12 +44,14 @@ As frentes principais do MVP estao implementadas no escopo atual. Algumas depend
 | 7.10 Responsividade mobile/tablet | Concluida | QA tecnico e visual aprovado em 2026-05-19 para as larguras obrigatorias. |
 | Home publica e legal | Implementada | `/entrar` configuravel no admin, aceite legal obrigatorio no primeiro acesso, `noindex/nofollow` em `index.html`. |
 | Headers, margens e menu do usuario | Implementados com verificacao visual pendente | Paginas internas usam `MemberPageHeader`; Home pos-login mantem header proprio; o menu deve ser consolidado em `UserProfileMenu`, com variante compacta `home-header` para o header da arvore. Se a UI ainda mostrar dropdown compacto diferente do painel das paginas internas, diagnosticar antes de declarar unificacao final. |
-| Viewport das views da arvore | Ajustado parcialmente | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; subtitulos foram removidos/ocultados. O espacamento titulo-arvore deve ser controlado em `FamilyTree.tsx`, sem `translate` na camada ReactFlow, mas padding superior do titulo e reducao do vazio abaixo ainda exigem validacao visual. |
+| Viewport das views da arvore | Ajustado tecnicamente | Minha Arvore usa bounds reais de cards; Genealogia/Visao Completa usam zoom por largura e titulo fixo unico; subtitulos foram removidos/ocultados. `/minha-arvore` teve titulo/cards reposicionados e scroll externo bloqueado no shell, preservando pan/zoom do ReactFlow. Ajustes visuais devem continuar concentrados em `FamilyTree.tsx`, sem `translate` na camada ReactFlow. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; os chips focam/enquadram a geracao ativa sem remover as demais colunas; colunas vazias nao sao renderizadas. |
 | Vinculo admin usuario-pessoa | Corrigido e validado | RPC `admin_list_profiles_for_linking` corrigida; migrations local/remoto alinhadas no historico recente. |
 | Autocomplete de endereco | Concluido no frontend | Admin e dados do usuario usam Google Places quando houver chave; fallback mantem input normal. |
 | Calendario familiar | Ajustes residuais concluidos | Categorias na sidebar, filtros clicaveis, pluralizacao, titulo sem mojibake, evento do grid com titulo em negrito e descricao **Faz X anos** em fonte menor. |
-| Paletas visuais da arvore | Concluida no frontend | Paletas `white`, `orange` e `brown` aplicadas por CSS variables, expostas no dropdown do `HomeHeader` e persistidas em `localStorage`; sem migration ou Supabase. |
+| Paletas visuais da arvore | Concluida no frontend | Paletas `white`, `orange` e `brown` aplicadas por CSS variables, expostas no dropdown do `HomeHeader` e persistidas em `localStorage`; sem migration ou Supabase. Botao conjugal acompanha a cor dos conectores conjugais por tokens/paletas. |
+| Perfil, admin de pessoas e privacidade | Atualizado | Admin pode resetar perfil por RPC sem apagar relacionamentos familiares; lista de pessoas copia ID por botao de icone; novos registros de `pessoas` iniciam flags de privacidade/contato como `true`; `/pessoa/:id` moveu edicao para botao redondo ao lado do favorito e usa sugestoes quando usuario nao tem permissao direta. |
+| Forum familiar | Atualizado | Criacao de topico usa categorias por cards, busca em pessoas relacionadas, aviso de mencao por `@` e notificacoes. Topico exibe badges, avatares, mencoes clicaveis e reacoes por icone, com uma reacao por usuario/alvo. |
 
 ---
 
@@ -84,6 +86,9 @@ Areas implementadas no MVP:
 - arquivos historicos;
 - historico de atividades;
 - forum;
+- criacao de topicos com mencoes, pessoas relacionadas e reacoes unicas por usuario/alvo;
+- sugestoes de informacoes de perfil para revisao admin;
+- reset administrativo de perfil sem remover relacionamentos;
 - Google Calendar;
 - notificacoes;
 - menu de usuario compartilhado com variante compacta no header da arvore;
@@ -376,7 +381,59 @@ Comportamento esperado:
 - `Marcio` encontra `Marcio`;
 - `Sao Paulo` encontra `Sao Paulo`.
 
-### 5.4 Vinculo admin usuario-pessoa
+### 5.4 Reset administrativo de perfil e defaults de privacidade
+
+Implementado:
+
+- `/admin/pessoas` exibe botao de icone para copiar o ID da pessoa;
+- admin pode acionar **Resetar Perfil** para retornar dados relacionados ao perfil ao estado base atual de `pessoas`;
+- reset remove foto de perfil, astrologia/acontecimentos gerados, favoritos e preferencias customizadas associadas ao perfil;
+- reset preserva relacionamentos familiares existentes;
+- preferencias de notificacoes retornam para `true`;
+- flags de exibicao/contato retornam para `true`;
+- novos registros da tabela `pessoas` iniciam como `true` em:
+  - `permitir_exibir_instagram`;
+  - `permitir_mensagens_whatsapp`;
+  - `permitir_exibir_data_nascimento`;
+  - `permitir_exibir_endereco`;
+  - `permitir_exibir_telefone`.
+
+Migration relacionada:
+
+```txt
+20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+```
+
+RPC relacionada:
+
+```txt
+admin_reset_person_profile
+```
+
+Regra anti-regressao:
+
+```txt
+O reset nao deve executar delete em relacionamentos familiares.
+```
+
+### 5.5 Perfil publico e sugestoes de informacoes
+
+Implementado:
+
+- em `/pessoa/:id`, o botao **Editar** saiu do header e fica ao lado do favorito;
+- o botao e redondo, apenas com icone de lapis e texto somente em `title`/hover;
+- o botao aparece para admin, responsavel pelo perfil ou propria pessoa vinculada;
+- botao **Inserir Informacoes** usa permissao direta quando o usuario pode editar;
+- quando nao pode editar, os dados viram sugestao para revisao admin;
+- admin visualiza sugestoes em `/admin/solicitacoes-vinculos`.
+
+Migration relacionada:
+
+```txt
+20260608143000_create_person_profile_suggestions.sql
+```
+
+### 5.6 Vinculo admin usuario-pessoa
 
 Implementado:
 
@@ -499,6 +556,7 @@ Comportamento implementado:
 - imagem carregada mostra thumbnail;
 - PDF carregado mostra card com icone/label PDF;
 - clicar em **Adicionar Arquivo** reabre campos mantendo a miniatura carregada;
+- em areas compactas, especialmente `/minha-arvore/editar` e modal conjugal, a acao de adicionar pode ser representada por botao `+` com `aria-label` adequado;
 - apos upload, usuario ainda pode preencher titulo, descricao, ano e categoria;
 - arquivos existentes permitem editar titulo, ano, descricao e categoria historica;
 - arquivos de pessoa usam `pessoa_id`;
@@ -581,7 +639,29 @@ relationship_change_rejected
 relationship_change_cancelled
 ```
 
-### 9.1 Dados conjugais
+### 9.1 Modal de relacionamento conjugal
+
+Implementado:
+
+- titulo do modal e botao de fechar ficam alinhados/centralizados conforme layout do dialog;
+- texto publico usa linguagem humana, por exemplo **Fulana e Secundino foram casados**;
+- subtitulo exibe informacoes complementares quando houver dados, como periodo do matrimonio e cidade/UF da cerimonia;
+- botao **Inserir Informacoes** respeita permissao:
+  - admin/responsavel edita diretamente;
+  - usuario sem permissao envia sugestao para revisao admin;
+- arquivos historicos do relacionamento usam o componente compartilhado e podem usar botao compacto `+`;
+- IDs tecnicos permanecem ocultos para usuario final.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/services/personProfileSuggestionService.ts
+src/app/services/permissionService.ts
+```
+
+### 9.2 Dados conjugais
 
 Componente:
 
@@ -810,10 +890,20 @@ src/styles/family-tree-visual-polish.css
 Status:
 
 ```txt
-compactacao de /minha-arvore: em refinamento visual incremental
+compactacao de /minha-arvore: ajustada tecnicamente
 cards de parentes: diretriz definida em 340 × 136
-alianças: pendente de validação visual final
+alianças: icone acompanha cor dos conectores conjugais
+scroll externo da Home: bloqueado quando nao ha conteudo fora da viewport
+borda extra da pessoa principal: removida
 ```
+
+Cuidados:
+
+- preservar `panOnScroll` e `zoomOnScroll` internos do ReactFlow;
+- nao permitir scroll externo da pagina quando a arvore ja ocupa a viewport;
+- aplicar deslocamentos verticais apenas em `viewMode === 'minha-arvore'`;
+- nao propagar ajustes da Minha Arvore para `/genealogia` e `/visao-completa` sem validacao especifica;
+- validar paletas `white`, `orange` e `brown`.
 
 ---
 
@@ -1103,12 +1193,39 @@ Comportamento consolidado:
 
 ### 14.2 Forum
 
+Documentacao especifica:
+
+```txt
+docs/funcionalidades/FORUM.md
+```
+
 Status:
 
-- schema versionado em migration;
+- schema versionado em migrations;
 - categorias, topicos, respostas, comentarios, reacoes, denuncias e solucao;
+- `/forum/novo` usa categorias por botoes/cards de selecao unica;
+- dropdown de pessoas relacionadas possui busca interna e fecha ao clicar fora;
+- conteudo orienta **Digite @ para marcar alguem na publicacao**;
+- pessoas relacionadas e pessoas mencionadas recebem notificacao interna quando permitido;
+- `/forum/topico/:id` usa badges pequenas/coloridas para categoria, tipo e status;
+- autores de topicos, respostas e comentarios exibem avatar ou fallback por iniciais;
+- mencoes `@Nome Completo` sao negritadas e clicaveis para `/pessoa/:id`;
+- respostas nao exibem mais **Marcar solucao** nem **Ocultar**;
+- reacoes usam icones e labels finais:
+  - **Amei** (`curtir`, `HeartHandshake`, vermelho);
+  - **Apoiar** (`apoiar`, `Handshake`, verde);
+  - **Oracoes** (`lembrar`, `Flower2`, azul);
+  - **Parabens** (`celebrar`, `PartyPopper`, laranja);
+- uma pessoa so pode manter uma reacao por alvo;
+- clicar na mesma reacao remove a reacao;
 - admin usa funcao consolidada por `is_admin_user`;
 - fluxo basico entra no MVP conforme QA manual.
+
+Migration relacionada:
+
+```txt
+20260608180000_enforce_single_forum_reaction.sql
+```
 
 ### 14.3 Google Calendar
 
@@ -1399,3 +1516,61 @@ alianças pouco visíveis em /minha-arvore
 ```
 
 Esses itens permanecem rastreáveis em `PLANO_PROXIMOS_PASSOS.md` até validação visual conclusiva.
+
+---
+
+## Atualizacao 2026-06-08 - Perfil, Minha Arvore, Forum e reacoes
+
+Esta atualizacao consolida os prompts 1 a 8 da rodada de ajustes.
+
+Commits de referencia:
+
+```txt
+657e39a feat: add profile reset and admin person id copy
+b5608ee feat: add profile suggestion and move edit button
+228713d feat: refine conjugal relationship modal
+873cd4b fix: refine my tree layout interactions
+8b5d93e feat: refine my tree edit page
+c305ef7 feat: refine forum topic creation
+29ab5b1 feat: notify mentioned and related forum people
+4d51bc3 feat: refine forum topic view
+0eef06c feat: update forum reactions
+568ed5e fix: use available icon for forum prayer reaction
+```
+
+### Consolidado
+
+- reset admin de perfil preserva relacoes familiares e remove dados derivados/usuario;
+- defaults booleanos de privacidade e contato em `pessoas` passam a `true`;
+- lista admin de pessoas copia ID por botao de icone;
+- `/pessoa/:id` move edicao para botao redondo ao lado do favorito;
+- sugestoes de informacoes entram em revisao admin quando o usuario nao tem permissao;
+- modal conjugal usa texto humano e permite sugestoes;
+- `/minha-arvore` bloqueia scroll externo, ajusta titulo/cards, remove borda extra da pessoa principal e colore alianca pelos conectores;
+- `/minha-arvore/editar` separa filhos humanos de pets, concentra foto no avatar, remove botao Sair, adiciona Eventos da Vida e ajusta Arquivos Historicos;
+- `/forum/novo` usa categorias por cards e busca em pessoas relacionadas;
+- forum dispara notificacoes para pessoas relacionadas/mencionadas;
+- `/forum/topico/:id` usa badges, avatares, mencoes clicaveis e reacoes por icone;
+- reacoes sao unicas por usuario/alvo.
+
+### Validacao registrada
+
+- builds locais foram executados apos os prompts;
+- falha por `Rose` inexistente em `lucide-react` foi corrigida com `Flower2`;
+- `git diff --check` passou nas validacoes relatadas.
+
+### Validacao ainda recomendada
+
+```txt
+/minha-arvore
+/minha-arvore/editar
+/pessoa/:id
+/admin/pessoas
+/admin/solicitacoes-vinculos
+/forum/novo
+/forum/topico/:id
+/ajustar-notificacoes
+```
+
+Validar em desktop, tablet e mobile quando houver sessao autenticada disponivel.
+

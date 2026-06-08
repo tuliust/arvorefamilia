@@ -1,7 +1,7 @@
 # Guia de componentes - Árvore Família
 
 > Última atualização: 2026-06-08  
-> Revisão complementar: ícones lucide, botão conjugal neutro, destaques de conectores, Genealogia/Visão Completa mobile e Calendário mobile  
+> Revisão complementar: perfil, Minha Árvore, fórum, notificações, reações, ícones lucide, conectores e views mobile  
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -244,7 +244,8 @@ Comportamento consolidado:
 - `viewMode = visao-completa` usa `genealogyColumnsLayout` com base completa;
 - título da árvore é overlay fixo no próprio componente;
 - subtítulos internos abaixo do título foram removidos/ocultados nas views da árvore;
-- padding superior do título e espaço entre título e cards ainda estão em refinamento visual final;
+- `/minha-arvore` teve título/cards reposicionados tecnicamente sem alterar `/genealogia` e `/visao-completa`;
+- scroll externo do shell da Home fica bloqueado quando não há conteúdo fora da viewport, preservando pan/zoom interno do ReactFlow;
 - viewport inicial usa bounds de `personNode`;
 - bounds de pan são separados dos bounds de viewport;
 - Genealogia/Visão Completa usam zoom por largura;
@@ -266,7 +267,8 @@ Cuidados:
 - não persistir no banco a inferência visual de gerações feita para renderização;
 - não mexer em Supabase neste componente;
 - não corrigir espaçamento do título usando `transform`, `translate` ou `top` negativo em `.react-flow__viewport`;
-- ajustar espaçamento título-canvas preferencialmente por constantes/cálculo em `FamilyTree.tsx`, validando corte superior de cards.
+- ajustar espaçamento título-canvas preferencialmente por constantes/cálculo em `FamilyTree.tsx`, validando corte superior de cards;
+- não reintroduzir scroll externo da página em `/minha-arvore` quando a árvore já ocupa a viewport.
 
 ---
 
@@ -308,7 +310,7 @@ Cuidados:
 - group boxes e anchors não devem comandar zoom inicial;
 - alteração de constantes de posição pode afetar toda a composição visual;
 - validar em desktop e mobile após qualquer mudança;
-- marriage nodes criados para `/minha-arvore` podem usar `visualVariant: 'direct-family'` para reforçar a legibilidade da aliança sem alterar `/genealogia`;
+- marriage nodes criados para `/minha-arvore` devem usar os tokens/cores de conectores conjugais para reforçar a legibilidade da aliança sem alterar `/genealogia`;
 - cards de parentes da view direta devem manter padronização visual em torno de `340 × 136`, exceto o card da pessoa principal, salvo nova decisão de layout.
 
 ---
@@ -393,14 +395,13 @@ export interface MarriageNodeData {
 Padrão visual atual:
 
 - ícone: `Blend` de `lucide-react`;
-- cor do ícone: cinza/neutra (`text-slate-*` ou equivalente);
-- borda do botão: cinza/neutra;
-- halo/shadow: cinza suave;
+- cor do ícone: deve acompanhar a cor dos conectores conjugais da árvore;
+- borda/halo/shadow: devem usar tokens compatíveis com as paletas `white`, `orange` e `brown`;
 - `direct-family`: usada em marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`.
 
 Regras da variante `direct-family`:
 
-- reforçar legibilidade do botão conjugal sem usar laranja como padrão final;
+- reforçar legibilidade do botão conjugal usando os tokens de conectores conjugais, sem hardcode de cor fora das paletas;
 - não alterar dimensão lógica do node;
 - não alterar handles;
 - não alterar edges;
@@ -887,6 +888,13 @@ Responsabilidades gerais:
 
 Regra recente em `/minha-arvore/editar`:
 
+- botões duplicados **Alterar** e **Remover** foto foram removidos do bloco de dados;
+- edição e remoção de foto ficam concentradas no avatar superior ao lado do nome;
+- card **FILHOS** conta apenas filhos humanos;
+- card **PETS** lista pets vinculados como filhos técnicos;
+- botão **Sair** foi removido do header;
+- proteção de saída sem salvar usa a mensagem **Deseja sair sem salvar os ajustes?**;
+- área **Eventos da Vida** combina eventos automáticos e eventos manuais;
 - botão **Trocar Senha** aparece no card superior do perfil;
 - usa o e-mail do usuário autenticado;
 - chama `supabase.auth.resetPasswordForEmail`;
@@ -929,6 +937,14 @@ Responsabilidades:
 - criar solicitação de vínculo para usuário comum;
 - aprovar/rejeitar vínculo no admin.
 
+Regras recentes do modal conjugal:
+
+- título e botão `X` devem estar visualmente alinhados no header do modal;
+- texto público usa forma humana, como **Fulana e Secundino foram casados**;
+- subtítulo mostra período e local da cerimônia quando houver dados;
+- **Inserir Informações** edita diretamente quando o usuário tem permissão e envia sugestão quando não tem;
+- arquivos históricos do relacionamento podem usar botão compacto `+`.
+
 Cuidados:
 
 - usuário comum não altera relacionamento real diretamente;
@@ -959,13 +975,15 @@ Responsabilidades:
 - remoção;
 - compatibilidade com base64 legado;
 - arquivos de pessoa e relacionamento;
-- edição de título, ano, descrição e categoria histórica.
+- edição de título, ano, descrição e categoria histórica;
+- estado vazio com ação compacta por botão `+` quando usado em áreas de perfil/relacionamento.
 
 Cuidados:
 
 - novos arquivos devem ir para Storage;
 - preview/download não deve limpar formulário;
-- botões de visualizar/baixar/remover devem usar `type="button"`;
+- botões de visualizar/baixar/remover/adicionar devem usar `type="button"`;
+- botão `+` deve ter `aria-label`/`title` claro quando não houver texto visível;
 - não apagar base64 legado automaticamente;
 - não criar limpeza automática de órfãos sem auditoria;
 - migration `20260522121000_add_historical_file_event_category.sql` precisa estar aplicada antes de deploy que envie `categoria_evento`.
@@ -1027,6 +1045,12 @@ Cuidados:
 
 ## 13. Componentes de fórum
 
+Documentação específica recomendada:
+
+```txt
+docs/funcionalidades/FORUM.md
+```
+
 Arquivos principais:
 
 ```txt
@@ -1036,24 +1060,120 @@ src/app/pages/forum/ForumNovoTopico.tsx
 src/app/pages/forum/ForumEditarTopico.tsx
 src/app/components/forum
 src/app/services/forumService.ts
+src/app/services/notificationRecipientsService.ts
+src/app/services/notificationTriggersService.ts
 ```
+
+### 13.1 `ForumNovoTopico`
 
 Responsabilidades:
 
-- listar tópicos;
 - criar tópico;
-- editar tópico;
-- exibir tópico;
-- respostas/comentários;
-- categorias;
-- ações de moderação conforme permissão.
+- selecionar categoria por botões/cards de seleção única;
+- exibir ícone centralizado e título da categoria em até duas linhas;
+- aplicar estado visual diferente na categoria selecionada;
+- remover o dropdown de **Tipo** da UI;
+- permitir seleção de pessoas relacionadas com dropdown pesquisável;
+- fechar dropdown de pessoas relacionadas ao clicar fora;
+- exibir aviso **Digite @ para marcar alguém na publicação** acima do campo de conteúdo;
+- salvar vínculos em `forum_topico_pessoas`;
+- acionar notificações para pessoas relacionadas/mencionadas quando aplicável.
 
 Cuidados:
+
+- dropdown com busca deve preservar navegação por teclado quando possível;
+- clique fora deve fechar sem perder seleção já feita;
+- categorias devem ser botões `type="button"`;
+- conteúdo com `@` não deve quebrar salvamento se a pessoa não for resolvida;
+- notificações não devem bloquear criação do tópico se falharem.
+
+### 13.2 `ForumTopico`
+
+Responsabilidades:
+
+- exibir tópico;
+- exibir badges pequenas/coloridas para categoria, tipo e status;
+- exibir avatar/fallback de iniciais para autor do tópico, respostas e comentários;
+- renderizar menções `@Nome Completo` em negrito e como link para `/pessoa/:id`;
+- responder/comentar;
+- editar/excluir conforme permissão;
+- exibir reações.
+
+Regras recentes:
+
+- botão **Ocultar** não aparece no header;
+- respostas não exibem mais **Marcar solução** nem **Ocultar**;
+- categoria, tipo e status ficam em badges;
+- pessoa relacionada usa foto do perfil quando disponível;
+- autores usam `profiles.avatar_url` quando disponível;
+- fallback de autor usa iniciais;
+- IDs técnicos não devem aparecer na UI pública.
+
+### 13.3 Reações do fórum
+
+Tipos internos e apresentação:
+
+| Tipo interno | Label | Ícone `lucide-react` | Cor |
+|---|---|---|---|
+| `curtir` | `Amei` | `HeartHandshake` | vermelho |
+| `apoiar` | `Apoiar` | `Handshake` | verde |
+| `lembrar` | `Orações` | `Flower2` | azul |
+| `celebrar` | `Parabéns` | `PartyPopper` | laranja |
+
+Comportamento:
+
+- botão exibe apenas ícone por padrão;
+- label aparece em `title`/hover e quando a reação está selecionada;
+- contador pode aparecer quando houver reações;
+- `aria-pressed` indica seleção;
+- uma pessoa só pode manter uma reação por alvo;
+- clicar em reação diferente substitui a anterior;
+- clicar novamente na mesma reação remove a reação.
+
+Cuidados:
+
+- não usar `Rose`: essa exportação não existe na versão atual de `lucide-react`;
+- usar `Flower2` para a reação **Orações**;
+- não voltar a permitir múltiplas reações do mesmo usuário no mesmo alvo;
+- manter migration de unicidade aplicada antes de depender da regra em produção.
+
+Migration relacionada:
+
+```txt
+20260608180000_enforce_single_forum_reaction.sql
+```
+
+### 13.4 Notificações do fórum
+
+Services relacionados:
+
+```txt
+notificationRecipientsService.ts
+notificationTriggersService.ts
+```
+
+Comportamento:
+
+- nova resposta notifica autor do tópico, quando não for o próprio autor da resposta;
+- novo comentário notifica autor da resposta, quando não for o próprio autor do comentário;
+- tópico novo pode notificar pessoas relacionadas e pessoas mencionadas;
+- pessoas duplicadas entre relacionadas e mencionadas devem ser deduplicadas;
+- preferências de notificação devem ser respeitadas.
+
+Cuidados:
+
+- não salvar telefone, e-mail completo, token, URL privada ou base64 em metadata;
+- falha de notificação não deve desfazer publicação;
+- notificações devem apontar para `/forum/topico/:id`.
+
+Cuidados gerais do fórum:
 
 - textos de usuário precisam quebrar linha;
 - editores/textareas devem funcionar em mobile;
 - ações destrutivas devem ser protegidas;
-- manter filtros sem overflow.
+- manter filtros sem overflow;
+- manter `break-words` no conteúdo;
+- manter `min-w-0` nos containers flex/grid.
 
 ---
 
@@ -1084,7 +1204,7 @@ Responsabilidades:
 
 - `Notificacoes.tsx`: lista/central em cards, leitura, marcação, remoção e atalho **Personalizar Notificações**;
 - `AjustarNotificacoes.tsx`: página dedicada de preferências;
-- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferências;
+- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferências, incluindo preferências usadas por publicações e interações no fórum;
 - administração/testes;
 - disparos internos/e-mail;
 - logs e deduplicação.
@@ -1139,7 +1259,10 @@ Cuidados:
 - formulários precisam ser operáveis em mobile;
 - vínculo usuário-pessoa depende da RPC `admin_list_profiles_for_linking`;
 - não substituir falha da RPC por consulta direta insegura em `profiles`;
-- ações destrutivas precisam de confirmação.
+- ações destrutivas precisam de confirmação;
+- `AdminPessoas.tsx` deve manter ação de copiar ID por botão apenas com ícone;
+- `AdminPessoas.tsx` deve manter reset de perfil protegido por confirmação;
+- `AdminSolicitacoesVinculos.tsx` também recebe sugestões de informações de perfil, além de vínculos/relacionamentos.
 
 ---
 
@@ -1429,3 +1552,74 @@ Anti-regressão:
 - não alterar Supabase, migrations, RLS ou dados reais para ajuste visual;
 - validar `/genealogia` e `/visao-completa` mobile nas larguras 320px, 375px, 390px e 430px;
 - validar paletas `white`, `orange` e `brown`.
+
+---
+
+## 24. Atualização recente - ciclo 2026-06-08 / Perfil, Minha Árvore e Fórum
+
+Frentes documentadas:
+
+```txt
+prompts 1 a 8 - reset admin, perfil, modal conjugal, Minha Árvore, edição, fórum, notificações e reações
+```
+
+Status: implementado tecnicamente; validação visual autenticada pode depender de sessão local.
+
+### 24.1 Componentes atualizados
+
+| Componente/arquivo | Ajuste |
+|---|---|
+| `AdminPessoas.tsx` | Reset de perfil e botão de copiar ID. |
+| `ConfirmDialog.tsx` | Confirmação para ação administrativa sensível. |
+| `PersonProfile.tsx` | Botão editar redondo ao lado do favorito e fluxo **Inserir Informações**. |
+| `AdminSolicitacoesVinculos.tsx` | Revisão de sugestões de informações de perfil. |
+| `ViewMarriageModal.tsx` | Header alinhado, texto humano do casamento, sugestão de informações e arquivos históricos. |
+| `ArquivosHistoricos.tsx` | Título interno opcional e botão compacto `+`. |
+| `FamilyTree.tsx` | Reposicionamento de título/cards em `/minha-arvore` e bloqueio de scroll externo pelo shell. |
+| `MarriageNode.tsx` / `GenealogySpouseEdge.tsx` | Ícone conjugal com cor de conectores. |
+| `CentralPersonFocusPanel.tsx` | Remoção de moldura/borda extra da pessoa principal. |
+| `MinhaArvore.tsx` | Edição de foto via avatar, filhos humanos, pets, Eventos da Vida e modal de saída. |
+| `PersonTimeline.tsx` | Consumo de eventos automáticos e manuais. |
+| `ForumNovoTopico.tsx` | Categorias por cards, pessoas relacionadas pesquisáveis e aviso de menção. |
+| `ForumTopico.tsx` | Badges, avatares, menções clicáveis e reações por ícone. |
+| `forumService.ts` | Reação única por usuário/alvo. |
+| `NotificationPreferencesPanel.tsx` | Preferências usadas pelos disparos de fórum. |
+| `notificationRecipientsService.ts` / `notificationTriggersService.ts` | Notificações de pessoas relacionadas/mencionadas no fórum. |
+
+### 24.2 Anti-regressões novas
+
+Não reintroduzir:
+
+- botão de foto duplicado dentro do bloco de dados em `/minha-arvore/editar`;
+- contagem de pets dentro do card **FILHOS**;
+- botão **Sair** no header de `/minha-arvore/editar`;
+- texto antigo **tiveram um relacionamento conjugal** quando o registro representa casamento;
+- dropdown de **Tipo** em `/forum/novo`;
+- categoria de fórum como dropdown simples;
+- botão **Ocultar** no header de `/forum/topico/:id`;
+- botões **Marcar solução** e **Ocultar** nas respostas;
+- múltiplas reações por usuário no mesmo alvo;
+- `Rose` como import de `lucide-react`;
+- scroll externo da página em `/minha-arvore` quando não há conteúdo fora da viewport;
+- borda extra adicional ao redor do card da pessoa principal.
+
+### 24.3 Validação recomendada
+
+```txt
+/admin/pessoas
+/pessoa/:id
+/admin/solicitacoes-vinculos
+/minha-arvore
+/minha-arvore/editar
+/forum/novo
+/forum/topico/:id
+/ajustar-notificacoes
+```
+
+Executar:
+
+```bash
+npm run build
+git diff --check
+```
+

@@ -2,7 +2,7 @@
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
 > Ultima revisao: 2026-06-08
-> Status: documentacao canonica com ajustes recentes de árvore, calendário mobile, Genealogia mobile e Visao Completa mobile rastreados.
+> Status: documentacao canonica com ajustes recentes de perfil, Minha Arvore, forum, notificacoes, arvore, calendario mobile, Genealogia mobile e Visao Completa mobile rastreados.
 
 Este diretorio concentra a documentacao tecnica e funcional do projeto **Arvore Familia**.
 
@@ -54,6 +54,7 @@ Documentos de funcionalidades ficam em `docs/funcionalidades/`.
 | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legenda visual, conectores, painel lateral, filtros de linhas e camadas visuais da arvore. |
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendario familiar, datas familiares, categorias, sidebar, filtros e ajustes de exibicao. |
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportacao de area visivel da arvore em PNG/PDF/impressao e selecao retangular. |
+| `funcionalidades/FORUM.md` | Forum familiar, criacao de topicos, categorias, pessoas relacionadas, mencoes, notificacoes, badges, avatares, comentarios e reacoes. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Regras especificas da Minha Arvore, filtros diretos, pets e regras de exibicao. |
 | `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow, area central, ramos paterno/materno e comportamento da view Minha Arvore. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Layout por geracoes, navegacao mobile por chips, viewport, inferencia visual e QA da view Genealogia. |
@@ -398,7 +399,113 @@ Este ciclo documenta ajustes visuais e comportamentais nas três views da árvor
 
 ---
 
-## 16. Validacao documental apos alteracoes
+---
+
+## 18. Ajustes recentes documentados - ciclo 2026-06-08 / Perfil, Minha Arvore e Forum
+
+Este ciclo consolida as implementacoes realizadas nos prompts 1 a 8 da rodada de ajustes de layout, perfil, forum e notificacoes.
+
+### 18.1 Pessoas, perfil publico e admin
+
+Itens consolidados:
+
+- `/admin/pessoas` recebeu acao de copiar ID da pessoa diretamente na lista;
+- admin possui fluxo de **Resetar Perfil** por RPC, retornando dados relacionados ao perfil para a versao atual da tabela `pessoas`, removendo foto de perfil, astrologia/acontecimentos do nascimento, favoritos e preferencias customizadas relacionadas ao perfil;
+- reset preserva relacionamentos familiares existentes no banco;
+- defaults booleanos de privacidade/contato em `pessoas` passam a iniciar como `true` para novos registros;
+- `/pessoa/:id` moveu o botao **Editar** para o bloco de acoes ao lado do favorito, em botao redondo com icone;
+- botao de edicao do perfil aparece apenas para admin, responsavel pelo perfil ou propria pessoa vinculada;
+- fluxo **Inserir Informacoes** envia sugestoes para revisao admin quando o usuario nao tem permissao direta.
+
+Documentos que devem permanecer sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| Perfil publico e admin de pessoa | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
+| Estrutura de usuarios, defaults e RPCs | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
+| Migrations e operacao Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
+
+### 18.2 Relacionamento conjugal e arquivos historicos
+
+Itens consolidados:
+
+- modal de relacionamento conjugal centraliza titulo e botao de fechamento;
+- texto publico passa a usar forma humana, como **Fulana e Secundino foram casados**;
+- subtitulo exibe periodo, data e local da cerimonia quando houver dados;
+- acao **Inserir Informacoes** respeita permissao: responsavel/admin edita diretamente; demais usuarios enviam sugestao;
+- area de **Arquivos Historicos** usa botao compacto de `+` quando aplicavel;
+- arquivos de relacionamento continuam ligados a `relacionamento_id`.
+
+### 18.3 `/minha-arvore`
+
+Itens consolidados tecnicamente:
+
+- titulo **A arvore de {nome}** e cards foram reposicionados apenas no contexto de `viewMode === 'minha-arvore'`;
+- shell da Home foi ajustado para bloquear scroll externo quando nao ha conteudo fora da viewport;
+- zoom/pan interno do ReactFlow permanece preservado;
+- icone de alianca usa a cor dos conectores conjugais conforme tokens/paletas;
+- borda extra do card da pessoa principal foi removida, preservando a borda de status vivo/falecido.
+
+Validacao visual recomendada:
+
+```txt
+/minha-arvore desktop, tablet e mobile
+paletas white, orange e brown
+zoom minimo
+scroll do mouse
+clique no anel conjugal
+```
+
+### 18.4 `/minha-arvore/editar`
+
+Itens consolidados:
+
+- botoes duplicados **Alterar** e **Remover** foto foram removidos do bloco de dados;
+- edicao/remocao de foto fica concentrada no avatar superior;
+- card **FILHOS** conta apenas filhos humanos;
+- novo card **PETS** separa pets vinculados como filhos tecnicos;
+- botao **Sair** foi removido do header;
+- tentativa de sair com alteracoes pendentes exibe a mensagem **Deseja sair sem salvar os ajustes?**;
+- titulo duplicado de **Arquivos Historicos** na area inferior foi removido;
+- botao **Adicionar Arquivo** foi substituido por botao compacto `+` no estado vazio;
+- area **Eventos da Vida** foi adicionada, combinando eventos automaticos e eventos manuais.
+
+### 18.5 Forum, mencoes, notificacoes e reacoes
+
+Itens consolidados:
+
+- `/forum/novo` removeu dropdown de **Tipo**;
+- **Categoria** passou a usar selecao unica por botoes/cards com icone e estado selecionado;
+- dropdown de pessoas relacionadas passou a ter campo de busca interno e fechamento ao clicar fora;
+- aviso **Digite @ para marcar alguem na publicacao** aparece acima do conteudo;
+- pessoas marcadas por `@` e pessoas relacionadas recebem notificacao interna quando as preferencias permitem;
+- mencoes no post aparecem em negrito, com link para `/pessoa/:id`;
+- `/forum/topico/:id` removeu o botao **Ocultar** do header e das respostas;
+- badges pequenas/coloridas substituem tags textuais grandes de categoria, tipo e status;
+- autores de topico, respostas e comentarios exibem avatar/fallback de iniciais;
+- respostas nao exibem mais **Marcar solucao** nem **Ocultar**;
+- reacoes foram renomeadas e usam icones/coloracao especifica:
+  - `curtir` -> **Amei**, `HeartHandshake`, vermelho;
+  - `apoiar` -> **Apoiar**, `Handshake`, verde;
+  - `lembrar` -> **Oracoes**, `Flower2`, azul;
+  - `celebrar` -> **Parabens**, `PartyPopper`, laranja;
+- apenas uma reacao por usuario e alvo e permitida;
+- clicar na mesma reacao remove a reacao;
+- migration `20260608180000_enforce_single_forum_reaction.sql` deduplica historico e aplica unique por `user_id, alvo_tipo, alvo_id`.
+
+Documentos que devem permanecer sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| Forum | `funcionalidades/FORUM.md` |
+| Notificacoes | `funcionalidades/NOTIFICACOES.md` |
+| Componentes do forum | `GUIA_COMPONENTES.md` |
+| Banco e migrations | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` e `operacao/MIGRATIONS_SUPABASE.md` |
+
+---
+
+
+## 19. Validacao documental apos alteracoes
 
 Quando qualquer arquivo desta documentacao for atualizado:
 
@@ -425,7 +532,7 @@ Nao usar `git add .`.
 
 ---
 
-## 17. Ajustes recentes documentados - ciclo 2026-06-08 / Visão Completa mobile
+## 20. Ajustes recentes documentados - ciclo 2026-06-08 / Visão Completa mobile
 
 Este ciclo documenta a aplicação do padrão de navegação por chips também em `/visao-completa` mobile.
 

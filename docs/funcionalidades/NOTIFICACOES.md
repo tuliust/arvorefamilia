@@ -1,51 +1,56 @@
-# Notificacoes
+# Notificações
 
-> Ultima revisao: 2026-05-30
-
-> Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`
-> Tipo: documentacao funcional e operacional especifica.
+> Última revisão: 2026-06-08  
+> Local recomendado: `docs/funcionalidades/NOTIFICACOES.md`  
+> Tipo: documentação funcional e operacional específica.
 
 ---
 
 ## 1. Status
 
-Frente 7.1 concluida tecnicamente no escopo atual do MVP.
+Frente funcional consolidada no escopo atual do MVP.
 
 ### Pronto
 
-- Central do usuario em `/notificacoes`, dedicada a lista em cards.
-- Preferencias do usuario em `/ajustar-notificacoes`.
+- Central do usuário em `/notificacoes`, dedicada à lista em cards.
+- Preferências do usuário em `/ajustar-notificacoes`.
 - Componente `NotificationPreferencesPanel`.
 - Painel admin em `/admin/notificacoes`.
-- Notificacoes internas.
-- Preferencias por categoria e canal.
+- Notificações internas.
+- Preferências por categoria e canal.
 - Logs em `notification_dispatch_logs`.
-- Deduplicacao de recorrencias em `notification_occurrences`.
-- Rotina manual de aniversarios e memorias.
+- Deduplicação de recorrências em `notification_occurrences`.
+- Rotina manual de aniversários e memórias.
 - Edge Function `run-daily-notifications` preparada e deployada.
 - Edge Function `send-notification-email` com provider Resend e teste controlado admin.
+- Notificações internas de fórum para menções `@` e pessoas relacionadas a tópicos.
+- Deduplicação de destinatários em notificações de fórum.
+- Preferência `receber_avisos_gerais` reutilizada para notificações internas de publicações/menções.
 
 ### Futuro
 
 - push real;
 - WhatsApp real;
-- fila/retry avancado;
-- cron automatico somente depois de configurar segredo seguro fora do repositorio.
+- fila/retry avançado;
+- cron automático somente depois de configurar segredo seguro fora do repositório;
+- preferências mais granulares por fórum, caso o produto precise separar menções, respostas e pessoas relacionadas.
 
 ---
 
 ## 2. Rotas
 
-| Rota | Protecao | Funcao |
+| Rota | Proteção | Função |
 |---|---|---|
-| `/notificacoes` | `MemberRoute` | Central/lista de notificacoes em cards. |
-| `/ajustar-notificacoes` | `MemberRoute` | Preferencias de notificacoes do usuario. |
-| `/admin/notificacoes` | `ProtectedRoute` | Diagnostico, testes e rotinas administrativas. |
+| `/notificacoes` | `MemberRoute` | Central/lista de notificações em cards. |
+| `/ajustar-notificacoes` | `MemberRoute` | Preferências de notificações do usuário. |
+| `/admin/notificacoes` | `ProtectedRoute` | Diagnóstico, testes e rotinas administrativas. |
 
-Documentacao complementar:
+Documentação complementar:
 
 ```txt
 docs/arquitetura/ROTAS_E_GUARDS.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/funcionalidades/FORUM.md
 docs/operacao/MIGRATIONS_SUPABASE.md
 docs/GUIA_CORRECAO_ERROS.md
 ```
@@ -63,20 +68,20 @@ notificationTriggersService.ts
 notificationScheduledService.ts
 notificationAdminService.ts
 userEngagementService.ts
+forumService.ts
 ```
 
 Responsabilidades:
 
 | Service | Responsabilidade |
 |---|---|
-| `notificationDispatchService.ts` | Orquestra canais, preferencias e logs. |
-| `notificationRecipientsService.ts` | Resolve admins e usuarios vinculados. |
-| `notificationTriggersService.ts` | Integra gatilhos event-driven. |
-| `notificationScheduledService.ts` | Rotina manual de aniversarios/memorias. |
-| `notificationAdminService.ts` | Diagnostico admin. |
-| `userEngagementService.ts` | Preferencias e lista do usuario. |
-
----
+| `notificationDispatchService.ts` | Orquestra canais, preferências e logs. |
+| `notificationRecipientsService.ts` | Resolve admins, usuários vinculados a pessoas, participantes de fórum e destinatários relacionados. |
+| `notificationTriggersService.ts` | Integra gatilhos event-driven: arquivos históricos, novo vínculo de usuário, fórum, respostas e comentários. |
+| `notificationScheduledService.ts` | Rotina manual de aniversários/memórias. |
+| `notificationAdminService.ts` | Diagnóstico admin. |
+| `userEngagementService.ts` | Preferências e lista do usuário. |
+| `forumService.ts` | Cria tópicos, respostas/comentários e aciona notificações de fórum quando aplicável. |
 
 ### 3.2 UI principal
 
@@ -85,16 +90,20 @@ src/app/pages/Notificacoes.tsx
 src/app/pages/AjustarNotificacoes.tsx
 src/app/components/notifications/NotificationPreferencesPanel.tsx
 src/app/pages/admin/AdminNotificacoes.tsx
+src/app/pages/forum/ForumNovoTopico.tsx
+src/app/pages/forum/ForumTopico.tsx
 ```
 
 Responsabilidades:
 
-| Arquivo | Funcao |
+| Arquivo | Função |
 |---|---|
 | `Notificacoes.tsx` | Central/lista, marcar como lida, marcar todas e remover. |
-| `AjustarNotificacoes.tsx` | Pagina dedicada de preferencias. |
-| `NotificationPreferencesPanel.tsx` | Toggles e salvamento. |
-| `AdminNotificacoes.tsx` | Diagnostico, testes e rotinas. |
+| `AjustarNotificacoes.tsx` | Página dedicada de preferências. |
+| `NotificationPreferencesPanel.tsx` | Toggles e salvamento. O label de avisos gerais cobre publicações e menções do fórum. |
+| `AdminNotificacoes.tsx` | Diagnóstico, testes e rotinas. |
+| `ForumNovoTopico.tsx` | Criação de tópico; coleta pessoas relacionadas e menções `@`. |
+| `ForumTopico.tsx` | Visualização do tópico; link de destino das notificações. |
 
 ---
 
@@ -107,31 +116,34 @@ notification_dispatch_logs
 notification_occurrences
 user_person_links
 profiles
+forum_topicos
+forum_topico_pessoas
 ```
 
 ### 4.1 `notificacoes_usuario`
 
 Uso:
 
-- notificacao interna;
-- lista do usuario;
-- status lida/nao lida;
-- remocao;
+- notificação interna;
+- lista do usuário;
+- status lida/não lida;
+- remoção;
+- link de destino;
 - metadata sanitizada.
 
 ### 4.2 `preferencias_notificacao`
 
 Uso:
 
-- preferencias gerais;
-- preferencias por canal;
-- preferencias especificas de e-mail.
+- preferências gerais;
+- preferências por canal;
+- preferências específicas de e-mail.
 
 ### 4.3 `notification_dispatch_logs`
 
 Uso:
 
-- log tecnico de tentativa de envio;
+- log técnico de tentativa de envio;
 - status por canal;
 - provider;
 - erro;
@@ -141,10 +153,20 @@ Uso:
 
 Uso:
 
-- deduplicacao de recorrencias;
-- aniversarios;
-- datas de memoria;
-- rotina diaria/manual.
+- deduplicação de recorrências;
+- aniversários;
+- datas de memória;
+- rotina diária/manual.
+
+### 4.5 Tabelas de fórum usadas como origem
+
+| Tabela | Uso em notificações |
+|---|---|
+| `forum_topicos` | Origem do tópico e link `/forum/topico/:id`. |
+| `forum_topico_pessoas` | Pessoas relacionadas ao tópico. |
+| `user_person_links` | Resolve destinatários a partir de `pessoa_id`. |
+| `forum_respostas` | Participantes notificados quando há nova resposta. |
+| `forum_comentarios` | Participantes notificados quando há novo comentário. |
 
 ---
 
@@ -158,10 +180,12 @@ list_admin_user_ids
 
 Regras:
 
-- usuario comum nao deve acionar envio para terceiros;
+- usuário comum não deve acionar envio para terceiros de forma arbitrária;
+- fluxos event-driven podem resolver destinatários via services controlados;
 - admin pode executar testes controlados;
 - service role deve ficar apenas no backend/Edge Function;
-- falha de canal externo nao deve desfazer notificacao interna.
+- falha de canal externo não deve desfazer notificação interna;
+- falha de notificação de fórum não deve impedir a criação do tópico.
 
 ---
 
@@ -179,8 +203,8 @@ O canal `email` depende de:
 - Edge Function `send-notification-email`;
 - provider Resend;
 - secrets configurados;
-- destino valido;
-- preferencia do usuario.
+- destino válido;
+- preferência do usuário.
 
 ### 6.2 Futuros
 
@@ -192,14 +216,14 @@ whatsapp
 Regra:
 
 ```txt
-Push e WhatsApp devem permanecer como not_configured/ignorado ate haver provider real.
+Push e WhatsApp devem permanecer como not_configured/ignorado até haver provider real.
 ```
 
 ---
 
-## 7. Preferencias
+## 7. Preferências
 
-### 7.1 Preferencias gerais
+### 7.1 Preferências gerais
 
 ```txt
 receber_aniversarios
@@ -211,7 +235,7 @@ receber_push
 receber_whatsapp
 ```
 
-### 7.2 Preferencias especificas de e-mail
+### 7.2 Preferências específicas de e-mail
 
 ```txt
 receber_email_novo_usuario
@@ -221,16 +245,124 @@ receber_email_novos_registros_historicos
 receber_email_evento_historico_familia
 ```
 
+### 7.3 Fórum e publicações
+
+No ciclo atual, notificações internas de fórum usam o tipo:
+
+```txt
+novas_mensagens_forum
+```
+
+Para canal interno, o controle principal é:
+
+```txt
+receber_avisos_gerais
+```
+
+Motivo:
+
+- a estrutura atual já possui preferência geral para avisos/publicações;
+- não foi criada migration para uma nova coluna específica de fórum;
+- o label da UI em `NotificationPreferencesPanel` deve deixar claro que essa opção cobre publicações, menções e comunicados importantes.
+
+Para e-mail de fórum, quando/onde usado, a preferência específica é:
+
+```txt
+receber_email_novas_mensagens_forum
+```
+
 Regras:
 
-- preferencia geral de canal deve ser respeitada;
-- preferencia especifica deve ser respeitada;
+- preferência geral de canal deve ser respeitada;
+- preferência específica deve ser respeitada quando o canal for e-mail;
 - canal ausente/configurado incorretamente deve retornar status apropriado;
-- usuario deve poder alterar preferencias em `/ajustar-notificacoes`.
+- usuário deve poder alterar preferências em `/ajustar-notificacoes`.
 
 ---
 
-## 8. Rotina manual
+## 8. Notificações de fórum
+
+### 8.1 Criação de tópico com menção `@`
+
+Quando um usuário cria um tópico e menciona uma pessoa no conteúdo com `@Nome Completo`:
+
+1. `ForumNovoTopico.tsx` identifica as pessoas mencionadas.
+2. A pessoa mencionada também é vinculada ao tópico quando aplicável.
+3. `notifyForumTopicCreated` recebe `mentionedPessoaIds`.
+4. `notificationRecipientsService.ts` resolve usuários vinculados a essas pessoas via `user_person_links`.
+5. `notificationDispatchService.ts` cria notificação interna do tipo `novas_mensagens_forum`.
+
+Mensagem sugerida/implementada:
+
+```txt
+Você foi mencionado em uma publicação.
+```
+
+Link:
+
+```txt
+/forum/topico/:id
+```
+
+### 8.2 Pessoa relacionada ao tópico
+
+Quando uma pessoa é selecionada em **Pessoas Relacionadas** no tópico:
+
+1. `forum_topico_pessoas` registra a associação.
+2. `notifyForumTopicCreated` recebe `relatedPessoaIds`.
+3. usuários vinculados a essas pessoas recebem notificação interna.
+
+Mensagem sugerida/implementada:
+
+```txt
+Você foi relacionado a uma publicação.
+```
+
+Link:
+
+```txt
+/forum/topico/:id
+```
+
+### 8.3 Deduplicação
+
+Regra:
+
+- cada usuário deve receber no máximo uma notificação por tópico criado;
+- se a mesma pessoa foi mencionada e relacionada, prevalece a mensagem de menção;
+- o autor do tópico não recebe notificação sobre a própria publicação;
+- pessoas sem usuário vinculado não geram destinatário;
+- duplicidades por múltiplas menções no conteúdo são removidas antes do dispatch.
+
+### 8.4 Falhas
+
+Regra de resiliência:
+
+```txt
+Falha ao criar notificação não deve impedir a criação/publicação do tópico.
+```
+
+O erro deve ser registrado de forma controlada no console/service, sem vazar dados sensíveis.
+
+### 8.5 Respostas e comentários
+
+O sistema também possui gatilhos para:
+
+```txt
+notifyForumReplyCreated
+notifyForumCommentCreated
+```
+
+Comportamento esperado:
+
+- notificar participantes relevantes do tópico/conversa;
+- excluir o autor da nova resposta/comentário;
+- respeitar `receber_avisos_gerais`/tipo `novas_mensagens_forum`;
+- apontar para `/forum/topico/:id`.
+
+---
+
+## 9. Rotina manual
 
 A rotina manual fica em:
 
@@ -244,13 +376,13 @@ Card:
 Rotinas manuais
 ```
 
-Botao:
+Botão:
 
 ```txt
-Verificar aniversarios e memorias de hoje
+Verificar aniversários e memórias de hoje
 ```
 
-Funcao chamada:
+Função chamada:
 
 ```txt
 runDailyNotificationChecks
@@ -259,11 +391,11 @@ runDailyNotificationChecks
 Regras:
 
 - rotina usa apenas canal interno;
-- respeita preferencias;
+- respeita preferências;
 - deduplica por `notification_occurrences.occurrence_key`;
-- nao envia email/push/WhatsApp nessa rotina manual, salvo alteracao futura explicita.
+- não envia email/push/WhatsApp nessa rotina manual, salvo alteração futura explícita.
 
-Padrao de chave:
+Padrão de chave:
 
 ```txt
 aniversario:YYYY-MM-DD:userId:pessoaId
@@ -272,7 +404,7 @@ memoria_falecimento:YYYY-MM-DD:userId:pessoaId
 
 ---
 
-## 9. Edge Function diaria
+## 10. Edge Function diária
 
 Function:
 
@@ -294,7 +426,7 @@ Aceita `POST` com body opcional:
 }
 ```
 
-Se `referenceDate` nao for enviado, a data atual em `America/Sao_Paulo` e usada.
+Se `referenceDate` não for enviado, a data atual em `America/Sao_Paulo` é usada.
 
 Resposta esperada:
 
@@ -314,36 +446,31 @@ Resposta esperada:
 }
 ```
 
-Observacao:
-
-- os nomes acima seguem o resumo retornado pelo service `notificationScheduledService.ts`;
-- se a Edge Function converter ou omitir campos para resposta publica, a documentacao deve ser atualizada junto com a function.
-
-Seguranca:
+Segurança:
 
 - usa `SUPABASE_SERVICE_ROLE_KEY` somente dentro da Edge Function;
 - aceita `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` ou `x-daily-notifications-secret`;
-- nao envia email/push/WhatsApp.
+- não envia email/push/WhatsApp.
 
 ---
 
-## 10. Agendamento automatico
+## 11. Agendamento automático
 
 Status atual:
 
 ```txt
-preparado, mas nao ativado por migration.
+preparado, mas não ativado por migration.
 ```
 
 Motivo:
 
 ```txt
-para chamar a Edge Function via pg_cron com seguranca,
+para chamar a Edge Function via pg_cron com segurança,
 o segredo precisa estar no ambiente/secret manager do projeto,
-nao hardcoded em migration.
+não hardcoded em migration.
 ```
 
-Horario planejado:
+Horário planejado:
 
 - 08:00 `America/Sao_Paulo`;
 - 11:00 UTC.
@@ -367,7 +494,7 @@ select cron.schedule(
 );
 ```
 
-Verificacao util:
+Verificação útil:
 
 ```sql
 select *
@@ -375,17 +502,9 @@ from cron.job
 where jobname = 'run-daily-notifications-0800-brt';
 ```
 
-Regra consolidada:
-
-- a Edge Function esta preparada;
-- a rotina manual/admin e suportada;
-- a ativacao automatica por cron depende de ambiente/secret seguro;
-- nao versionar segredo em migration;
-- antes de marcar cron como ativo em producao, confirmar no Supabase se o job esta agendado e operacional.
-
 ---
 
-## 11. E-mail real
+## 12. E-mail real
 
 Provider escolhido:
 
@@ -399,7 +518,7 @@ Function:
 supabase/functions/send-notification-email/index.ts
 ```
 
-Secrets necessarios:
+Secrets necessários:
 
 ```bash
 supabase secrets set RESEND_API_KEY="..."
@@ -408,28 +527,21 @@ supabase secrets set NOTIFICATION_EMAIL_REPLY_TO="contato@seudominio.com"
 supabase secrets set SITE_URL="https://seudominio.com"
 ```
 
-Observacoes:
-
-- `NOTIFICATION_EMAIL_FROM` e o remetente preferencial;
-- `EMAIL_FROM` tambem e aceito como fallback pela Edge Function;
-- `NOTIFICATION_EMAIL_REPLY_TO` e opcional;
-- `SITE_URL` define a base dos links absolutos enviados no e-mail.
-
 Deploy:
 
 ```bash
 supabase functions deploy send-notification-email
 ```
 
-Seguranca:
+Segurança:
 
 - secrets ficam apenas no Supabase;
 - frontend nunca recebe `RESEND_API_KEY`;
-- usuario comum so pode acionar e-mail para si mesmo;
-- admin pode executar teste controlado para o proprio usuario pelo painel;
-- falha de e-mail nao desfaz notificacao interna.
+- usuário comum só pode acionar e-mail para si mesmo;
+- admin pode executar teste controlado para o próprio usuário pelo painel;
+- falha de e-mail não desfaz notificação interna.
 
-Status possiveis:
+Status possíveis:
 
 ```txt
 sent
@@ -439,43 +551,51 @@ missing_destination
 disabled_by_preferences
 ```
 
-Para desativar temporariamente envio real:
-
-```txt
-remova/desative RESEND_API_KEY, NOTIFICATION_EMAIL_FROM e, se estiver em uso, EMAIL_FROM nos secrets.
-```
-
-A function deve retornar:
-
-```txt
-not_configured
-```
-
 ---
 
-## 12. Metadata e privacidade
+## 13. Metadata e privacidade
 
-Nao salvar metadata com:
+Não salvar metadata com:
 
 - telefone;
-- endereco;
+- endereço;
 - e-mail completo;
 - token;
 - secret;
 - base64;
 - URL completa de arquivo;
-- dados sensiveis desnecessarios.
+- dados sensíveis desnecessários.
 
 Regras:
 
-- metadata deve ser minima;
-- metadata deve ser util para diagnostico e navegacao;
-- metadata nao deve vazar informacao sensivel;
-- logs tecnicos nao devem virar exposicao ao usuario comum.
+- metadata deve ser mínima;
+- metadata deve ser útil para diagnóstico e navegação;
+- metadata não deve vazar informação sensível;
+- logs técnicos não devem virar exposição ao usuário comum.
+
+Metadata típica de fórum:
+
+```json
+{
+  "topic_id": "uuid",
+  "notification_reason": "mention",
+  "mentioned_pessoa_ids": ["uuid"]
+}
+```
+
+ou:
+
+```json
+{
+  "topic_id": "uuid",
+  "notification_reason": "related_person",
+  "related_pessoa_ids": ["uuid"]
+}
+```
 
 ---
 
-## 13. Consultas SQL uteis
+## 14. Consultas SQL úteis
 
 ```sql
 select id, user_id, titulo, mensagem, tipo, canal, lida, metadata, created_at
@@ -505,32 +625,50 @@ order by updated_at desc nulls last
 limit 50;
 ```
 
+```sql
+select id, topico_id, pessoa_id, created_at
+from public.forum_topico_pessoas
+order by created_at desc
+limit 50;
+```
+
 ---
 
-## 14. Testes
+## 15. Testes
 
-### 14.1 Admin
+### 15.1 Admin
 
 1. Login admin.
 2. Abrir `/admin/notificacoes`.
-3. Verificar cards, logs e diagnosticos.
+3. Verificar cards, logs e diagnósticos.
 4. Clicar em **Teste interno**.
-5. Clicar em **Verificar aniversarios e memorias de hoje**.
+5. Clicar em **Verificar aniversários e memórias de hoje**.
 6. Para e-mail, clicar em **Enviar e-mail de teste para mim** e confirmar.
 
-### 14.2 Usuario comum
+### 15.2 Usuário comum
 
-1. Login usuario comum.
+1. Login usuário comum.
 2. Abrir `/notificacoes`.
 3. Validar lista.
-4. Marcar notificacao como lida.
+4. Marcar notificação como lida.
 5. Marcar todas como lidas.
-6. Remover notificacao.
+6. Remover notificação.
 7. Abrir `/ajustar-notificacoes`.
-8. Alterar preferencias.
-9. Confirmar persistencia.
+8. Alterar preferências.
+9. Confirmar persistência.
 
-### 14.3 Tecnico
+### 15.3 Fórum
+
+1. Criar tópico em `/forum/novo` com pessoa relacionada.
+2. Criar tópico com menção `@Nome Completo`.
+3. Confirmar que o autor não recebeu notificação própria.
+4. Confirmar que a pessoa relacionada recebeu notificação, se tiver usuário vinculado.
+5. Confirmar que a pessoa mencionada recebeu notificação, se tiver usuário vinculado.
+6. Confirmar que menção + pessoa relacionada não geram duplicidade para o mesmo usuário.
+7. Confirmar que o link abre `/forum/topico/:id`.
+8. Desligar `receber_avisos_gerais` e confirmar que a notificação interna não é criada para aquele usuário.
+
+### 15.4 Técnico
 
 ```bash
 npm run build
@@ -538,7 +676,7 @@ npm test
 git diff --check
 ```
 
-Se houver alteracao de Edge Function ou integracao:
+Se houver alteração de Edge Function ou integração:
 
 ```bash
 supabase functions list
@@ -547,9 +685,9 @@ supabase migration list
 
 ---
 
-## 15. Troubleshooting
+## 16. Troubleshooting
 
-### Notificacao interna nao aparece
+### Notificação interna não aparece
 
 Verificar:
 
@@ -561,7 +699,38 @@ Verificar:
 - filtro de lida/removida;
 - erros no console.
 
-### Preferencia nao salva
+### Menção de fórum não notifica
+
+Verificar:
+
+- se o conteúdo contém `@Nome Completo` exatamente compatível com pessoa cadastrada;
+- `ForumNovoTopico.tsx` e extração de menções;
+- se a pessoa mencionada possui usuário vinculado em `user_person_links`;
+- `notifyForumTopicCreated`;
+- `listLinkedUserIdsForPessoas`;
+- preferência `receber_avisos_gerais` do destinatário.
+
+### Pessoa relacionada não notifica
+
+Verificar:
+
+- se `forum_topico_pessoas` recebeu o vínculo;
+- se `relatedPessoaIds` foi enviado ao trigger;
+- se a pessoa possui usuário vinculado;
+- se o autor não é o próprio destinatário;
+- preferência `receber_avisos_gerais`.
+
+### Duplicidade de notificações de fórum
+
+Verificar:
+
+- deduplicação em `notifyForumTopicCreated`;
+- união de `mentionedPessoaIds` e `relatedPessoaIds`;
+- prioridade da mensagem de menção;
+- múltiplos vínculos do mesmo usuário a pessoas diferentes;
+- duplicidades de `user_person_links`.
+
+### Preferência não salva
 
 Verificar:
 
@@ -586,11 +755,11 @@ SITE_URL
 Verificar:
 
 - `receber_email`;
-- preferencia especifica do tipo de e-mail;
-- destino do usuario;
+- preferência específica do tipo de e-mail;
+- destino do usuário;
 - logs em `notification_dispatch_logs`.
 
-### Cron nao roda
+### Cron não roda
 
 Verificar:
 
@@ -608,73 +777,45 @@ Confirmar:
 - logs HTTP/Supabase;
 - Edge Function deployada.
 
-### Duplicidade de notificacoes
-
-Verificar:
-
-- `notification_occurrences`;
-- `occurrence_key`;
-- referenceDate;
-- timezone;
-- reexecucao manual;
-- logica de deduplicacao.
-
 ---
 
-## 16. Cuidados
+## 17. Cuidados
 
-Nao fazer:
+Não fazer:
 
 - commitar service role key;
 - commitar Resend API key;
 - commitar secrets;
-- usar testes de e-mail para todos os usuarios;
-- salvar metadata sensivel;
-- apagar logs de producao sem confirmacao explicita;
+- usar testes de e-mail para todos os usuários;
+- salvar metadata sensível;
+- apagar logs de produção sem confirmação explícita;
 - hardcodar segredo de cron em migration;
-- marcar push/WhatsApp como ativo sem provider real.
+- marcar push/WhatsApp como ativo sem provider real;
+- criar nova coluna de preferência para fórum sem necessidade real;
+- bloquear criação de tópico por falha de notificação.
 
 Fazer:
 
-- manter logs minimos;
-- tratar falha de canal externo sem desfazer notificacao interna;
-- testar admin e usuario comum;
-- manter cron automatico separado de migration com secret;
-- atualizar `docs/operacao/MIGRATIONS_SUPABASE.md` se houver alteracao de banco/cron.
+- manter logs mínimos;
+- tratar falha de canal externo sem desfazer notificação interna;
+- testar admin e usuário comum;
+- manter cron automático separado de migration com secret;
+- atualizar `docs/operacao/MIGRATIONS_SUPABASE.md` se houver alteração de banco/cron.
 
 ---
 
-## 17. Pos-MVP
+## 18. Ajustes recentes e pendências - ciclo 2026-05-30
 
-Possiveis evolucoes:
-
-- push real;
-- WhatsApp real;
-- fila/retry avancado;
-- preferencias mais granulares;
-- digest semanal;
-- notificacoes por forum;
-- notificacoes por novos arquivos historicos;
-- notificacoes por eventos familiares;
-- painel de metricas;
-- retry de e-mail;
-- templates transacionais.
-
-Esses itens nao bloqueiam o MVP.
-
----
-## 18. Ajustes recentes e pendencias - ciclo 2026-05-30
-
-Esta secao registra os ajustes mapeados para a central de notificacoes apos a rodada recente de QA visual.
+Esta seção registra os ajustes mapeados para a central de notificações após rodada de QA visual.
 
 ### 18.1 Ajustes pendentes na central `/notificacoes`
 
-Pendencias mapeadas:
+Pendências mapeadas:
 
 ```txt
-corrigir acentuacao de textos exibidos, como memoria
+corrigir acentuação de textos exibidos, como memória
 trocar tag DATAS_ESPECIAIS por ESPECIAIS
-tornar toda a area do item de notificacao clicavel para abrir o conteudo
+tornar toda a área do item de notificação clicável para abrir o conteúdo
 ```
 
 Arquivo principal:
@@ -683,17 +824,9 @@ Arquivo principal:
 src/app/pages/Notificacoes.tsx
 ```
 
-Services relacionados:
+### 18.2 Label amigável para tipo de notificação
 
-```txt
-src/app/services/userEngagementService.ts
-src/app/services/notificationTriggersService.ts
-src/app/services/notificationScheduledService.ts
-```
-
-### 18.2 Label amigavel para tipo de notificacao
-
-A UI nao deve expor necessariamente o valor tecnico cru do tipo da notificacao.
+A UI não deve expor necessariamente o valor técnico cru do tipo da notificação.
 
 Regra esperada:
 
@@ -701,70 +834,54 @@ Regra esperada:
 DATAS_ESPECIAIS -> ESPECIAIS
 ```
 
-Outros tipos podem continuar com label derivado desde que legivel, mas a exibicao deve evitar underscore tecnico quando houver label amigavel.
+Outros tipos podem continuar com label derivado desde que legível, mas a exibição deve evitar underscore técnico quando houver label amigável.
 
-Implementacao recomendada:
+### 18.3 Acentuação
 
-- criar helper local ou utilitario de formatacao de label;
-- manter o valor tecnico no banco;
-- alterar apenas a apresentacao;
-- nao criar migration para essa troca visual.
-
-### 18.3 Acentuacao
-
-Textos exibidos ao usuario devem respeitar acentuacao.
+Textos exibidos ao usuário devem respeitar acentuação.
 
 Exemplos esperados:
 
 ```txt
-memoria -> memória, se a UI estiver usando acentos
-notificacoes -> notificações, se a UI estiver usando acentos
-aniversarios -> aniversários, se a UI estiver usando acentos
+memória
+notificações
+aniversários
 ```
 
-Se o projeto optar por manter Markdown em ASCII por compatibilidade de terminal, a UI final ainda deve ser validada visualmente para nao exibir caracteres quebrados como:
+Se o projeto optar por manter Markdown em ASCII por compatibilidade de terminal, a UI final ainda deve ser validada visualmente para não exibir caracteres quebrados como:
 
 ```txt
 mem?ria
 notifica??es
 ```
 
-### 18.4 Item inteiro clicavel
+### 18.4 Item inteiro clicável
 
 Comportamento esperado:
 
-- clicar em qualquer area util do card deve abrir o conteudo/detalhe da notificacao;
-- botoes internos, como remover, nao devem disparar a abertura;
-- se houver botao interno, usar `event.stopPropagation()`;
+- clicar em qualquer área útil do card deve abrir o conteúdo/detalhe da notificação;
+- botões internos, como remover, não devem disparar a abertura;
+- se houver botão interno, usar `event.stopPropagation()`;
 - manter suporte a teclado quando o card for interativo.
 
-Implementacao recomendada:
+---
 
-- usar `<button type="button">` como container quando semanticamente adequado; ou
-- usar `role="button"` com `tabIndex={0}` e handlers de `Enter`/`Space`;
-- preservar estilos de card;
-- garantir foco visivel.
+## 19. Pós-MVP
 
-### 18.5 Checklist de validacao
+Possíveis evoluções:
 
-Validar em `/notificacoes`:
+- push real;
+- WhatsApp real;
+- fila/retry avançado;
+- preferências mais granulares;
+- digest semanal;
+- notificações por fórum separadas por menção, resposta e pessoa relacionada;
+- notificações por novos arquivos históricos;
+- notificações por eventos familiares;
+- painel de métricas;
+- retry de e-mail;
+- templates transacionais.
 
-```txt
-tag DATAS_ESPECIAIS nao aparece para usuario final
-tag ESPECIAIS aparece quando aplicavel
-palavra memoria aparece corretamente acentuada
-clicar no corpo do card abre a notificacao
-clicar em remover nao abre a notificacao
-marcar como lida continua funcionando
-marcar todas como lidas continua funcionando
-remover notificacao continua filtrando por id e user_id
-```
+Esses itens não bloqueiam o MVP.
 
-Validar tambem:
-
-```txt
-/ajustar-notificacoes
-/admin/notificacoes
-```
-
-para confirmar que a alteracao visual da central nao quebrou preferencias nem diagnostico admin.
+---

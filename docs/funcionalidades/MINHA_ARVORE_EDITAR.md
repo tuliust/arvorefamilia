@@ -1,16 +1,14 @@
-# Minha Arvore - edicao do proprio perfil
+# Minha Árvore - edição do próprio perfil
 
-> Ultima revisao: 2026-06-07
-
-> Local recomendado: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
-> Tipo: documentacao funcional e tecnica da rota `/minha-arvore/editar`.
-> Status: documento criado para consolidar ajustes recentes da edicao feita pelo membro.
+> Última revisão: 2026-06-08  
+> Local recomendado: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`  
+> Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
 
 ---
 
 ## 1. Objetivo
 
-Este documento registra o comportamento esperado da pagina em que o membro edita os proprios dados familiares.
+Este documento registra o comportamento esperado da página em que o membro edita os próprios dados familiares.
 
 Rota principal:
 
@@ -24,7 +22,7 @@ Componente principal:
 src/app/pages/MinhaArvore.tsx
 ```
 
-A pagina permite que o usuario autenticado revise e edite dados da pessoa vinculada ao seu perfil, mantendo um fluxo mais amplo do que `/meus-dados`, pois tambem inclui vinculos familiares, arquivos historicos, avatar, troca de senha e confirmacao de saida sem salvar.
+A página permite que o usuário autenticado revise e edite dados da pessoa vinculada ao seu perfil. Ela é mais completa do que `/meus-dados`, pois também inclui avatar, vínculos familiares, arquivos históricos, eventos da vida, troca de senha e proteção contra saída sem salvar.
 
 ---
 
@@ -39,14 +37,17 @@ docs/arquitetura/ROTAS_E_GUARDS.md
 docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+docs/funcionalidades/NOTIFICACOES.md
+docs/funcionalidades/TIMELINE.md
 docs/operacao/MIGRATIONS_SUPABASE.md
 ```
 
-Este documento nao substitui:
+Este documento não substitui:
 
-- `PESSOAS_PERFIL_ADMIN.md`, que cobre perfil publico, admin de pessoa e `/meus-dados`;
-- `MINHA_ARVORE_VIEW.md`, que cobre a visualizacao da arvore;
-- `ROTAS_E_GUARDS.md`, que define protecao e redirecionamentos.
+- `PESSOAS_PERFIL_ADMIN.md`, que cobre perfil público, admin de pessoa, reset de perfil e fluxos de sugestão;
+- `MINHA_ARVORE_VIEW.md`, que cobre a visualização da árvore;
+- `TIMELINE.md`, que cobre regras gerais de timeline quando aplicável;
+- `ROTAS_E_GUARDS.md`, que define proteção e redirecionamentos.
 
 ---
 
@@ -55,14 +56,19 @@ Este documento nao substitui:
 ```txt
 src/app/pages/MinhaArvore.tsx
 src/app/components/ArquivosHistoricos.tsx
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/components/person/PersonEventsEditor.tsx
 src/app/components/layout/MemberPageHeader.tsx
 src/app/components/ui/dialog.tsx
 src/app/components/ui/button.tsx
 src/app/lib/supabaseClient.ts
 src/app/services/memberProfileService.ts
 src/app/services/arquivosHistoricosService.ts
+src/app/services/personEventsService.ts
 src/app/services/storageService.ts
+src/app/utils/buildPersonTimeline.ts
 src/app/utils/personFields.ts
+src/app/utils/personEntity.ts
 ```
 
 Services e utils relacionados:
@@ -75,6 +81,9 @@ resolveFirstAccessLinkForUser
 listarArquivosHistoricosPorPessoa
 substituirArquivosHistoricosDaPessoa
 uploadPersonAvatarFile
+buildPersonTimeline
+isHumanFamilyMember
+isPetFamilyMember
 buildEditablePersonFormState
 cleanPersonPayload
 validateEditablePersonForm
@@ -83,57 +92,59 @@ supabase.auth.resetPasswordForEmail
 
 ---
 
-## 4. Protecao de rota
+## 4. Proteção de rota
 
 A rota usa `MemberRoute`.
 
 Regra:
 
-- usuario nao autenticado deve ir para `/entrar`;
-- usuario autenticado pode acessar a area de edicao conforme vinculo e permissoes;
-- permissoes sensiveis continuam dependendo de service/RLS, nao apenas da UI.
-
-Nao usar `TreeAccessRoute` nesta rota.
+- usuário não autenticado deve ir para `/entrar`;
+- usuário autenticado pode acessar a área de edição conforme vínculo e permissões;
+- permissões sensíveis continuam dependendo de service/RLS, não apenas da UI;
+- não usar `TreeAccessRoute` nesta rota.
 
 ---
 
-## 5. Estrutura visual da pagina
+## 5. Estrutura visual da página
 
-A pagina usa:
+A página usa:
 
 - `MemberPageHeader`;
 - container padronizado por `PAGE_CONTAINER_CLASS`;
 - card superior com avatar/nome;
-- acao **Trocar Senha** no topo ou no card superior;
+- ação **Trocar Senha**;
 - bloco **Meus dados**;
-- bloco separado **Arquivos Historicos**;
-- secoes de vinculos familiares;
-- botao flutuante de salvamento.
+- seções de vínculos familiares;
+- cards/resumos de relações;
+- bloco separado **Arquivos Históricos**;
+- bloco **Eventos da Vida**;
+- botão flutuante de salvamento.
 
-Regras visuais:
+Regras visuais consolidadas:
 
-- nao criar header proprio se `MemberPageHeader` atender;
-- manter acao principal de salvar no botao flutuante;
-- evitar botoes duplicados de salvamento dentro dos containers;
-- manter espacamento consistente entre cards;
+- não criar header próprio se `MemberPageHeader` atender;
+- o botão **Sair** não deve aparecer no header desta página;
+- manter ação principal de salvar no botão flutuante;
+- evitar botões duplicados de salvamento dentro dos containers;
+- manter espaçamento consistente entre cards;
 - preservar responsividade mobile;
-- a acao **Trocar Senha** nao deve competir com o botao flutuante de salvamento nem submeter o formulario.
+- a ação **Trocar Senha** não deve competir com o botão flutuante de salvamento nem submeter o formulário.
 
 ---
 
 ## 6. Bloco Meus dados
 
-O bloco **Meus dados** deve conter campos pessoais editaveis e terminar apos o campo **Curiosidades da Vida**.
+O bloco **Meus dados** deve conter campos pessoais editáveis e terminar após o campo **Curiosidades da Vida**.
 
 Campos esperados:
 
 - Nome completo;
 - Data de nascimento;
 - Local de nascimento;
-- Cidade de residencia;
-- Profissao;
+- Cidade de residência;
+- Profissão;
 - Telefone;
-- Endereco;
+- Endereço;
 - Complemento;
 - Redes sociais;
 - Mini bio;
@@ -141,63 +152,30 @@ Campos esperados:
 
 Regras consolidadas:
 
-- nao exibir campo de edicao de **Signo**;
-- nao exibir preferencias de notificacao nesta pagina;
-- nao exibir botao interno **Salvar meus dados**;
-- salvamento deve ocorrer pelo botao flutuante;
-- alteracoes nos campos devem marcar o formulario como alterado.
+- não exibir campo de edição de **Signo**;
+- não exibir preferências de notificação nesta página;
+- não exibir botão interno **Salvar meus dados**;
+- salvamento deve ocorrer pelo botão flutuante;
+- alterações nos campos devem marcar o formulário como alterado.
 
 Motivo:
 
 ```txt
-Signo e derivado da data de nascimento e nao deve ser editado manualmente.
-Preferencias de notificacao pertencem a /ajustar-notificacoes.
+Signo é derivado da data de nascimento e não deve ser editado manualmente.
+Preferências de notificação pertencem a /ajustar-notificacoes.
 ```
 
 ---
 
-## 7. Arquivos Historicos
+## 7. Avatar e foto do perfil
 
-A area **Arquivos Historicos** deve ficar em container proprio, separado de **Meus dados**.
-
-Componente:
-
-```txt
-src/app/components/ArquivosHistoricos.tsx
-```
-
-Regras:
-
-- exibir titulo **Arquivos Historicos**;
-- permitir adicionar arquivo;
-- permitir revisar arquivo;
-- permitir remover arquivo;
-- alteracoes em arquivos devem marcar o formulario como alterado;
-- arquivos devem ser salvos junto com o fluxo principal da pagina;
-- estado vazio deve exibir mensagem amigavel.
-
-Texto esperado:
-
-```txt
-Arquivos Historicos
-Adicione, revise ou remova arquivos historicos associados ao seu perfil familiar.
-```
-
-Observacao operacional:
-
-- se o ambiente exibir `Hist?ricos`, `hist?ricos` ou outro texto com `?`, revisar encoding do arquivo e salvar como UTF-8.
-
----
-
-## 8. Avatar e foto do perfil
-
-O avatar/foto ao lado do nome deve ser clicavel.
+O avatar/foto ao lado do nome, na área superior da página, é o ponto único para edição/exclusão de foto.
 
 Comportamento esperado:
 
 1. Clicar no avatar abre modal de foto.
 2. Se houver foto, exibir imagem ampliada.
-3. Se nao houver foto, exibir estado para cadastrar imagem.
+3. Se não houver foto, exibir estado para cadastrar imagem.
 4. O modal permite:
    - visualizar foto;
    - alterar foto;
@@ -212,39 +190,40 @@ Biblioteca usada para corte:
 react-easy-crop
 ```
 
-Fluxo de alteracao:
+Regra consolidada em 2026-06-08:
+
+```txt
+Os botões duplicados "Alterar" e "Remover" não devem aparecer no corpo do formulário.
+A edição e exclusão da foto devem ocorrer apenas pelo avatar superior.
+```
+
+Fluxo de alteração:
 
 - selecionar arquivo;
 - abrir crop;
-- ajustar zoom/posicao;
+- ajustar zoom/posição;
 - aplicar corte;
 - manter preview local;
-- marcar formulario como alterado;
+- marcar formulário como alterado;
 - salvar definitivamente apenas no submit principal.
 
-Fluxo de remocao:
+Fluxo de remoção:
 
 - remover preview local;
 - limpar crop;
-- marcar foto para remocao;
-- marcar formulario como alterado;
-- persistir remocao no submit principal.
+- marcar foto para remoção;
+- marcar formulário como alterado;
+- persistir remoção no submit principal.
 
-Botao **Remover foto**:
+Regras:
 
-- deve ter borda visivel;
-- deve usar texto vermelho;
-- hover pode usar fundo vermelho claro;
-- deve usar `type="button"`;
-- nao deve submeter formulario.
+- botões internos do modal usam `type="button"`;
+- remover foto não deve submeter o formulário;
+- a ação de foto participa do dirty state;
+- salvar persiste foto nova ou remoção;
+- cancelar/fechar modal não deve salvar sem o botão principal.
 
 Texto do modal:
-
-```txt
-O corte final sera quadrado.
-```
-
-Se o projeto estiver usando acentuacao plena na UI, validar visualmente:
 
 ```txt
 O corte final será quadrado.
@@ -252,30 +231,29 @@ O corte final será quadrado.
 
 ---
 
+## 8. Trocar senha
 
-## 9. Trocar senha
-
-A pagina exibe a acao **Trocar Senha** para o usuario autenticado.
+A página exibe a ação **Trocar Senha** para o usuário autenticado.
 
 Objetivo:
 
-- permitir que o membro inicie o fluxo seguro de troca/redefinicao de senha;
-- evitar criar backend paralelo;
-- reaproveitar o fluxo padrao do Supabase Auth;
+- permitir que o membro inicie o fluxo seguro de troca/redefinição de senha;
+- evitar backend paralelo;
+- reaproveitar o fluxo padrão do Supabase Auth;
 - manter a troca de senha separada do salvamento de dados familiares.
 
 Comportamento esperado:
 
-1. O usuario clica em **Trocar Senha**.
-2. A acao usa o e-mail do usuario autenticado.
+1. O usuário clica em **Trocar Senha**.
+2. A ação usa o e-mail do usuário autenticado.
 3. O sistema chama o fluxo de reset de senha do Supabase Auth.
-4. O botao pode exibir estado de carregamento, como **Enviando...**.
-5. Em sucesso, exibir toast informando que as instrucoes foram enviadas.
-6. Em erro, exibir toast com mensagem amigavel.
-7. A acao nao deve marcar o formulario como alterado.
-8. A acao nao deve limpar rascunho, foto, arquivos historicos ou dados de casamento.
+4. O botão pode exibir estado de carregamento, como **Enviando...**.
+5. Em sucesso, exibir toast informando que as instruções foram enviadas.
+6. Em erro, exibir toast com mensagem amigável.
+7. A ação não deve marcar o formulário como alterado.
+8. A ação não deve limpar rascunho, foto, arquivos históricos ou dados de casamento.
 
-Implementacao esperada:
+Implementação esperada:
 
 ```txt
 supabase.auth.resetPasswordForEmail(...)
@@ -283,52 +261,204 @@ supabase.auth.resetPasswordForEmail(...)
 
 Regras:
 
-- nao criar migration;
-- nao alterar RLS;
-- nao expor service role;
-- nao salvar senha no frontend;
-- nao registrar senha em log;
-- nao submeter o formulario principal;
-- botao deve usar `type="button"`.
-
-Cuidados de UX:
-
-- se o usuario nao tiver e-mail disponivel, mostrar erro claro;
-- se o fluxo depender de configuracao externa de redirect, validar no ambiente publicado;
-- nao prometer que a senha foi alterada imediatamente; o fluxo apenas envia/inicia a redefinicao.
+- não criar migration;
+- não alterar RLS;
+- não expor service role;
+- não salvar senha no frontend;
+- não registrar senha em log;
+- não submeter o formulário principal;
+- botão deve usar `type="button"`.
 
 ---
 
-## 10. Salvamento
+## 9. Cards de vínculos familiares
 
-O salvamento principal acontece pelo botao flutuante.
+A página permite revisar grupos familiares ligados à pessoa base.
+
+Grupos principais:
+
+```txt
+pais
+irmaos
+conjuges
+filhos
+pets
+```
+
+Regra consolidada:
+
+```txt
+O card FILHOS deve contar apenas filhos humanos.
+Pets vinculados tecnicamente como filhos devem ser separados no card PETS.
+```
+
+Critérios:
+
+- usar helper semântico para humanos e pets, como `isHumanFamilyMember` e `isPetFamilyMember`;
+- não misturar pets na contagem de filhos humanos;
+- manter pets visíveis quando houver vínculo técnico;
+- não alterar relacionamento real no banco apenas por mudança de contagem visual.
+
+Comportamento esperado:
+
+- grupos vazios usam mensagens claras;
+- adição de parente pode usar pessoa existente ou nova pessoa simples, quando o fluxo permitir;
+- cônjuges podem ter campos de casamento;
+- alterações de casamento podem ser salvas diretamente ou enviadas como solicitação, conforme permissão;
+- falhas de relacionamento não devem apagar dados pessoais já salvos.
+
+---
+
+## 10. Dados de casamento
+
+Quando houver cônjuges, a página pode exibir/editar:
+
+- data de casamento;
+- local de casamento.
+
+Regras:
+
+- alteração em casamento deve marcar formulário como alterado;
+- salvamento deve preservar demais dados da pessoa;
+- se o usuário não puder editar diretamente, criar solicitação de alteração quando previsto;
+- erros devem ser destacados no campo correspondente;
+- falecimento de cônjuge não deve ser tratado automaticamente como separação.
+
+---
+
+## 11. Arquivos Históricos
+
+A área **Arquivos Históricos** deve ficar em container próprio, separado de **Meus dados**.
+
+Componente:
+
+```txt
+src/app/components/ArquivosHistoricos.tsx
+```
+
+Regras consolidadas em 2026-06-08:
+
+- exibir título externo da seção uma única vez;
+- remover título duplicado interno na área inferior;
+- estado vazio deve exibir mensagem amigável;
+- o botão de adicionar deve ser um botão compacto de **+** acima da mensagem de estado vazio;
+- não usar o texto longo **Adicionar Arquivo** quando o layout pede o botão compacto;
+- permitir adicionar arquivo;
+- permitir revisar arquivo;
+- permitir remover arquivo;
+- alterações em arquivos devem marcar o formulário como alterado;
+- arquivos devem ser salvos junto com o fluxo principal da página.
+
+Texto de estado vazio:
+
+```txt
+Nenhum arquivo histórico adicionado.
+```
+
+Descrição sugerida:
+
+```txt
+Adicione, revise ou remova arquivos históricos associados ao seu perfil familiar.
+```
+
+Observação operacional:
+
+- se o ambiente exibir `Hist?ricos`, `hist?ricos` ou outro texto com `?`, revisar encoding do arquivo e salvar como UTF-8.
+
+---
+
+## 12. Eventos da Vida
+
+A página possui uma área de **Eventos da Vida**, também tratada como timeline do perfil.
+
+Componentes relacionados:
+
+```txt
+src/app/components/Timeline/PersonTimeline.tsx
+src/app/components/person/PersonEventsEditor.tsx
+src/app/utils/buildPersonTimeline.ts
+src/app/services/personEventsService.ts
+```
+
+Objetivo:
+
+- exibir fatos derivados automaticamente dos dados já existentes;
+- permitir cadastro de eventos manuais;
+- manter timeline ordenada cronologicamente;
+- separar eventos reais persistidos de eventos calculados em memória.
+
+### 12.1 Eventos automáticos
+
+A timeline pode exibir eventos derivados de:
+
+- nascimento;
+- nascimento de filho;
+- casamento;
+- falecimento;
+- falecimento de cônjuge;
+- outros eventos inferidos a partir de dados já existentes.
+
+Regras:
+
+- eventos automáticos não exigem cadastro manual;
+- eventos automáticos não devem duplicar eventos manuais equivalentes sem critério;
+- casamento deve usar `data_casamento` quando disponível;
+- quando a data estiver ausente ou inválida, usar fallback claro, sem inventar data;
+- viuvez deve ser tratada separadamente de separação/divórcio.
+
+### 12.2 Eventos manuais
+
+O usuário pode adicionar eventos como:
+
+- alistamento militar;
+- mudança de cidade;
+- imigração;
+- formatura;
+- profissão;
+- viagem marcante;
+- outros acontecimentos relevantes.
+
+Regras:
+
+- eventos manuais devem ser persistidos por service próprio;
+- edição/criação de evento manual marca a página como alterada quando o fluxo estiver acoplado ao formulário;
+- eventos devem ter título claro;
+- data pode ser completa ou parcial, conforme suporte do componente;
+- ausência de eventos manuais não deve quebrar a timeline.
+
+---
+
+## 13. Salvamento
+
+O salvamento principal acontece pelo botão flutuante.
 
 Fluxo esperado:
 
 1. Normalizar campos.
-2. Validar dados editaveis.
+2. Validar dados editáveis.
 3. Preparar payload com `cleanPersonPayload`.
-4. Se foto foi removida, enviar `foto_principal_url = ''`.
+4. Se foto foi removida, enviar `foto_principal_url = ''` ou valor aceito pelo service.
 5. Se nova foto/corte existe, fazer upload e usar URL retornada.
 6. Atualizar pessoa via `updateOwnLinkedPerson`.
 7. Atualizar perfil via `ensureMemberProfile`.
-8. Salvar arquivos historicos.
-9. Salvar/corrigir dados de casamento quando aplicavel.
-10. Limpar rascunho.
-11. Marcar `isDirtyRef.current = false`.
-12. Exibir toast de sucesso ou alerta parcial.
+8. Salvar arquivos históricos.
+9. Salvar/corrigir dados de casamento quando aplicável.
+10. Salvar eventos manuais, quando o fluxo estiver integrado ao submit.
+11. Limpar rascunho.
+12. Marcar `isDirtyRef.current = false`.
+13. Exibir toast de sucesso ou alerta parcial.
 
 Regras:
 
 - erro no upload da foto deve interromper salvamento;
-- erro em arquivos historicos deve informar que dados pessoais foram salvos, mas arquivos falharam;
-- apos salvamento com sucesso, sair da pagina nao deve abrir modal de alteracoes pendentes.
+- erro em arquivos históricos deve informar que dados pessoais foram salvos, mas arquivos falharam;
+- após salvamento com sucesso, sair da página não deve abrir modal de alterações pendentes.
 
 ---
 
-## 11. Rascunho local
+## 14. Rascunho local
 
-A pagina usa rascunho auxiliar em `sessionStorage`.
+A página usa rascunho auxiliar em `sessionStorage`.
 
 Chave:
 
@@ -338,22 +468,22 @@ minha-arvore-draft:{userId}:{pessoaId}
 
 Responsabilidade:
 
-- proteger edicoes em andamento;
+- proteger edições em andamento;
 - restaurar dados se a tela for re-renderizada;
 - remover rascunho ao salvar;
-- remover rascunho ao confirmar saida sem salvar.
+- remover rascunho ao confirmar saída sem salvar.
 
 Cuidados:
 
-- rascunho nao substitui persistencia no banco;
-- falha de storage nao deve bloquear a edicao;
-- rascunho deve ser por usuario e pessoa.
+- rascunho não substitui persistência no banco;
+- falha de storage não deve bloquear a edição;
+- rascunho deve ser por usuário e pessoa.
 
 ---
 
-## 12. Confirmacao de saida sem salvar
+## 15. Confirmação de saída sem salvar
 
-Quando houver alteracoes pendentes, a pagina deve exibir modal de confirmacao antes de abandonar a edicao.
+Quando houver alterações pendentes, a página deve exibir modal de confirmação antes de abandonar a edição.
 
 Eventos interceptados:
 
@@ -362,14 +492,13 @@ Eventos interceptados:
 - troca de rota;
 - refresh/fechamento de aba com aviso nativo do navegador.
 
-Modal esperado:
+Mensagem consolidada:
 
 ```txt
-Sair sem salvar?
-Voce tem alteracoes pendentes nesta pagina. Se sair agora, as alteracoes nao salvas serao descartadas.
+Deseja sair sem salvar os ajustes?
 ```
 
-Botoes:
+Botões esperados:
 
 ```txt
 Continuar editando
@@ -378,233 +507,121 @@ Sair sem salvar
 
 Comportamento:
 
-- **Continuar editando** fecha o modal e mantem o usuario na pagina;
-- **Sair sem salvar** descarta rascunho e continua a navegacao/logout;
-- se nao houver alteracoes pendentes, navegacao deve ocorrer sem modal;
-- apos salvar pelo botao flutuante, `isDirtyRef.current` deve ficar `false`.
-
-Observacao de encoding:
-
-- se a UI exibir `Voc?`, `altera??es`, `p?gina`, `n?o` ou `ser?o`, revisar o arquivo em UTF-8 e corrigir as strings.
+- **Continuar editando** fecha o modal e mantém o usuário na página;
+- **Sair sem salvar** descarta rascunho e continua a navegação/logout;
+- se não houver alterações pendentes, navegação deve ocorrer sem modal;
+- após salvar pelo botão flutuante, `isDirtyRef.current` deve ficar `false`.
 
 ---
 
-## 13. Vinculos familiares
-
-A pagina permite revisar grupos familiares ligados a pessoa base.
-
-Grupos:
-
-```txt
-pais
-irmaos
-conjuges
-filhos
-```
-
-Regras:
-
-- adicao de parente pode usar pessoa existente ou nova pessoa simples;
-- conjuges podem ter campos de casamento;
-- alteracoes de casamento podem ser salvas diretamente ou enviadas como solicitacao, conforme permissao;
-- falhas de relacionamento nao devem apagar dados pessoais ja salvos;
-- grupos vazios devem usar mensagens claras.
-
----
-
-## 14. Dados de casamento
-
-Quando houver conjuges, a pagina pode exibir/editar:
-
-- data de casamento;
-- local de casamento.
-
-Regras:
-
-- alteracao em casamento deve marcar formulario como alterado;
-- salvamento deve preservar demais dados da pessoa;
-- se o usuario nao puder editar diretamente, criar solicitacao de alteracao quando previsto;
-- erros devem ser destacados no campo correspondente.
-
----
-
-## 15. Checklist de validacao
+## 16. Checklist de validação
 
 ### Meus dados
 
-- campo **Signo** nao aparece;
-- botao **Trocar Senha** aparece no topo/card superior;
-- botao **Trocar Senha** nao submete o formulario;
-- acao de senha nao marca o formulario como alterado;
-- preferencias de notificacao nao aparecem;
-- container fecha apos **Curiosidades da Vida**;
-- nao existe botao interno **Salvar meus dados**;
-- botao flutuante salva os dados.
-
-### Arquivos Historicos
-
-- container separado aparece abaixo de **Meus dados**;
-- titulo e descricao aparecem sem erro de encoding;
-- adicionar/remover arquivo marca formulario como alterado;
-- salvar persiste arquivos.
+- campo **Signo** não aparece;
+- botão **Trocar Senha** aparece no topo/card superior;
+- botão **Trocar Senha** não submete o formulário;
+- ação de senha não marca o formulário como alterado;
+- preferências de notificação não aparecem;
+- container fecha após **Curiosidades da Vida**;
+- não existe botão interno **Salvar meus dados**;
+- botão flutuante salva os dados.
 
 ### Avatar/foto
 
-- clicar no avatar abre modal;
+- clicar no avatar superior abre modal;
 - foto existente aparece ampliada;
-- **Alterar foto** abre upload/crop;
-- **Aplicar corte** atualiza preview;
-- **Remover foto** tem borda e remove a foto;
-- salvar persiste a alteracao.
+- upload/crop funciona;
+- remover foto funciona pelo modal;
+- botões duplicados **Alterar** e **Remover** não aparecem no corpo do formulário;
+- salvar persiste a alteração.
 
-### Saida sem salvar
+### Vínculos
+
+- card **FILHOS** conta apenas filhos humanos;
+- card **PETS** aparece quando houver pets;
+- pets não entram na contagem de filhos humanos;
+- cônjuges continuam exibindo dados conjugais quando houver.
+
+### Arquivos Históricos
+
+- container separado aparece abaixo de **Meus dados**;
+- título duplicado interno não aparece;
+- botão compacto **+** aparece acima da mensagem vazia;
+- adicionar/remover arquivo marca formulário como alterado;
+- salvar persiste arquivos.
+
+### Eventos da Vida
+
+- timeline aparece em área própria;
+- eventos automáticos aparecem quando há dados;
+- eventos manuais podem ser adicionados;
+- eventos ficam em ordem cronológica;
+- ausência de eventos não quebra a UI.
+
+### Saída sem salvar
 
 - editar um campo e clicar em link interno abre modal;
-- **Continuar editando** mantem na pagina;
+- modal usa o texto **Deseja sair sem salvar os ajustes?**;
+- **Continuar editando** mantém na página;
 - **Sair sem salvar** descarta rascunho e navega;
-- logout com alteracoes pendentes tambem abre modal;
+- logout com alterações pendentes também abre modal;
 - refresh/fechamento de aba exibe aviso nativo;
-- depois de salvar, navegar nao exibe modal.
+- depois de salvar, navegar não exibe modal.
 
-### Encoding
+### Técnico
 
-- nao ha `?` substituindo acentos em textos da pagina;
-- nao ha mojibake como `SÃ`, `famÃ` ou `proteÃ`;
-- arquivos Markdown e TSX devem permanecer em UTF-8.
+```bash
+npm run build
+git diff --check
+git status --short
+```
 
----
+Se houver scripts disponíveis:
 
-## 16. Pendencias conhecidas
-
-Pendencias mapeadas apos os ajustes recentes:
-
-- conferir acentuacao final do modal **Sair sem salvar?** no ambiente publicado;
-- conferir acentuacao de **Arquivos Historicos** no ambiente publicado;
-- conferir texto **sera/será** no modal de foto;
-- validar botao **Trocar Senha** no ambiente publicado, incluindo recebimento do e-mail de redefinicao;
-- garantir borda visual em **Remover foto**;
-- revisar se o fluxo de casamento cobre corretamente viuvez e separacao em todos os cenarios.
+```bash
+npm test
+npm run test:e2e
+```
 
 ---
 
-## 17. Anti-regressoes
+## 17. Anti-regressões
 
-Nao reintroduzir:
+Não reintroduzir:
 
-- campo **Signo** editavel;
-- preferencias de notificacao nesta pagina;
-- botao interno **Salvar meus dados** dentro do bloco **Meus dados**;
-- arquivos historicos dentro do container de dados pessoais;
-- saida sem confirmacao quando houver alteracoes pendentes;
-- avatar sem acao de visualizacao;
-- botao **Remover foto** como texto solto sem borda;
+- campo **Signo** editável;
+- preferências de notificação nesta página;
+- botão interno **Salvar meus dados** dentro do bloco **Meus dados**;
+- botão **Sair** no header;
+- botões duplicados de foto no corpo do formulário;
+- contagem de pets dentro de **FILHOS**;
+- ausência do card **PETS** quando houver pets;
+- arquivos históricos dentro do container de dados pessoais;
+- título duplicado em **Arquivos Históricos**;
+- botão longo **Adicionar Arquivo** no estado vazio quando o layout consolidado pede **+**;
+- saída sem confirmação quando houver alterações pendentes;
+- avatar sem ação de visualização/edição;
 - strings quebradas por encoding;
-- botao **Trocar Senha** que salva formulario, limpa rascunho ou altera dados familiares.
-
----
-## 18. Atualizacao de rastreabilidade - ciclo 2026-05-30
-
-Esta secao registra o estado consolidado dos ajustes recentes da rota `/minha-arvore/editar`.
-
-### 17.1 Ajustes implementados
-
-Status funcional consolidado:
-
-```txt
-remover campo Signo -> implementado
-remover preferencias de notificacao -> implementado
-fechar Meus dados apos Curiosidades da Vida -> implementado
-criar container separado de Arquivos Historicos -> implementado
-remover botao interno Salvar meus dados -> implementado
-manter botao flutuante de salvar -> implementado
-avatar clicavel com modal de foto -> implementado
-visualizacao ampliada de foto -> implementado
-alterar foto com upload/crop -> implementado
-remover foto pelo modal -> implementado
-confirmar saida sem salvar -> implementado
-trocar senha via Supabase Auth -> implementado
-```
-
-### 17.2 Ajustes visuais ainda sujeitos a conferencia
-
-Itens que devem ser conferidos sempre que a tela for validada em ambiente publicado:
-
-```txt
-botao Remover foto com borda visivel
-texto O corte final sera/será quadrado
-texto Arquivos Historicos/Históricos sem encoding quebrado
-modal Sair sem salvar? sem Voc?, altera??es, p?gina, n?o ou ser?o
-botao Trocar Senha visivel e sem submissao do formulario
-```
-
-Se o ambiente final estiver usando acentos normalmente, preferir UI acentuada. Se houver risco de terminal Windows corromper arquivos, manter ASCII no Markdown e corrigir a UI na origem TSX com UTF-8 validado.
-
-### 17.3 Regras de dirty state
-
-Toda acao abaixo deve marcar a tela como alterada:
-
-- edicao de campo de dados pessoais;
-- edicao de complemento;
-- edicao de redes sociais;
-- adicionar, remover ou editar arquivo historico;
-- alterar foto;
-- remover foto;
-- alterar data/local de casamento;
-- adicionar/remover parente quando a pagina permitir.
-
-O modal de saida sem salvar so deve aparecer se `isDirtyRef.current === true`.
-
-### 17.4 Fluxo esperado apos salvar
-
-Ao concluir salvamento com sucesso:
-
-1. dados da pessoa persistidos;
-2. foto removida ou atualizada, se aplicavel;
-3. arquivos historicos salvos;
-4. dados de casamento tratados;
-5. rascunho local removido;
-6. `isDirtyRef.current = false`;
-7. navegacao interna liberada sem modal.
-
-### 17.5 Anti-regressao especifica
-
-Nao reintroduzir:
-
-- componente de preferencias de notificacao nesta rota;
-- campo editavel de signo;
-- botao interno de salvamento dentro do bloco **Meus dados**;
-- arquivos historicos dentro do mesmo container de dados pessoais;
-- avatar sem clique;
-- modal de foto sem opcao de remocao;
-- saida sem confirmacao quando houver alteracoes pendentes;
-- textos quebrados por encoding.
+- botão **Trocar Senha** que salva formulário, limpa rascunho ou altera dados familiares.
 
 ---
 
-## 19. Atualizacao 2026-06-07 - Menu do usuario e troca de senha
+## 18. Pendências e validação visual
 
-A rota `/minha-arvore/editar` passou a ser tambem o destino principal do cabecalho clicavel do `UserProfileMenu`.
-
-Comportamento consolidado:
-
-- no menu do usuario, clicar na area superior com avatar, nome e e-mail navega para `/minha-arvore/editar`;
-- o item **Atualizar perfil** pode continuar apontando para a mesma rota;
-- o item **Editar notificacoes** foi removido do menu global;
-- preferencias de notificacao continuam pertencendo a `/ajustar-notificacoes`;
-- a central `/notificacoes` deve oferecer o botao **Personalizar Notificacoes**.
-
-Na propria pagina `/minha-arvore/editar`:
-
-- o botao **Trocar Senha** inicia o fluxo de redefinicao de senha;
-- a acao e independente do salvamento de dados familiares;
-- a acao nao cria migration, nao altera RLS e nao usa service role;
-- validar em desktop e mobile que o botao nao compete com o botao flutuante de salvamento.
-
-Arquivos relacionados:
+Pontos recomendados para QA em browser real:
 
 ```txt
-src/app/components/layout/UserProfileMenu.tsx
-src/app/pages/MinhaArvore.tsx
-src/app/pages/Notificacoes.tsx
-src/app/pages/AjustarNotificacoes.tsx
+/minha-arvore/editar em 320px, 375px, 390px, 430px, 768px e desktop
+avatar superior e modal de foto
+botão Trocar Senha
+card FILHOS somente humanos
+card PETS
+Arquivos Históricos com botão +
+Eventos da Vida
+modal de saída sem salvar
 ```
+
+A ausência de sessão local não deve bloquear validação técnica por build, diff e revisão de código.
+
+---

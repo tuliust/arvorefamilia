@@ -1,7 +1,7 @@
 # Guia de UX e Layout - Árvore Família
 
 > Última revisão: 2026-06-08  
-> Revisão complementar: botão conjugal neutro, destaques de conectores, Genealogia/Visão Completa mobile e Calendário mobile  
+> Revisão complementar: perfil/admin, relacionamento conjugal, Minha Árvore, edição do perfil, fórum, notificações e reações  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`
 
@@ -33,8 +33,8 @@ Este documento não substitui:
 
 Esta revisão separa o que já está consolidado do que ainda depende de validação visual:
 
-- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` e `/visao-completa` mobile com chips por geração/bloco; compactação parcial de `/minha-arvore` desktop; botão conjugal com `Blend` cinza; ícones `Star`/`Cross` nos cards; destaque de linhas com cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado; filtros mobile compactos no calendário;
-- **em refinamento visual final**: padding superior do título da árvore, redução do espaço entre título e cards sem cortar cards superiores, pan vertical superior em `/genealogia` mobile e diagnóstico da diferença entre o menu do usuário nas views da árvore e o menu das páginas internas;
+- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` e `/visao-completa` mobile com chips por geração/bloco; `/minha-arvore` com scroll externo bloqueado, título/cards reposicionados, ícone conjugal na cor dos conectores e borda extra da pessoa central removida; botão conjugal com `Blend`; ícones `Star`/`Cross` nos cards; destaque de linhas com cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado; filtros mobile compactos no calendário; `/minha-arvore/editar` com foto concentrada no avatar superior, card de pets, arquivos históricos com botão `+` e timeline/eventos da vida; fórum com criação por categorias em botões, busca no dropdown de pessoas relacionadas, menções `@`, badges, avatares e reações por ícone;
+- **em validação visual final**: conforto do título/cards nas três views da árvore, pan vertical superior em `/genealogia`/`/visao-completa` mobile, contraste do ícone conjugal nas três paletas e consistência do menu do usuário entre header da árvore e páginas internas;
 - **regra de segurança visual**: não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir o espaçamento entre título e árvore, pois essa abordagem já causou corte de cards superiores.
 
 ---
@@ -466,7 +466,12 @@ A view **Minha Árvore** deve:
 - permitir zoom máximo perceptível;
 - recentralizar apenas quando necessário;
 - preservar layout de grupos diretos;
-- manter filtros diretos e KPIs em sincronia com a pessoa central.
+- manter filtros diretos e KPIs em sincronia com a pessoa central;
+- bloquear scroll externo da página quando não houver conteúdo fora da viewport;
+- preservar pan/zoom interno do ReactFlow sem permitir rolagem do shell da Home;
+- manter título e cards um pouco mais baixos do que a versão anterior, sem corte superior;
+- exibir apenas a borda de status da pessoa central, sem segunda borda/moldura interna concorrente;
+- exibir o ícone conjugal na mesma cor das linhas conectoras da paleta ativa.
 
 A view pode considerar altura para fit inicial, desde que isso não reduza a árvore a ponto de perder legibilidade.
 
@@ -477,7 +482,10 @@ Regras:
 - compactação deve ser detectada por estrutura renderizável, não por nome de pessoa;
 - árvores densas continuam com o layout distribuído atual;
 - filtros de grupos e filtros de linhas não devem ser alterados;
-- conectores e anchors existentes continuam comandados pelo layout lógico.
+- conectores e anchors existentes continuam comandados pelo layout lógico;
+- a correção de scroll deve ficar no shell/containers da Home, não em alterações de dados ou filtros;
+- não reintroduzir moldura visual adicional no card principal;
+- testar as paletas `white`, `orange` e `brown` quando alterar cor de conector, aliança ou borda.
 
 ### 5.4 Alianças na Minha Árvore
 
@@ -490,15 +498,16 @@ visualVariant: 'direct-family'
 Objetivo:
 
 - tornar o ícone de alianças claramente visível dentro dos grupos diretos;
-- preservar o estilo padrão já aprovado em `/genealogia`;
+- usar a cor das linhas conectoras da paleta ativa;
+- preservar o estilo padrão já aprovado em `/genealogia` e `/visao-completa`;
 - não alterar dimensão lógica do nó;
 - não alterar handles, edges, clique ou modal.
 
 Estado atual:
 
-- o emoji conjugal corrompido foi substituído por SVG;
-- visualmente, as alianças ainda podem aparecer discretas ou quase invisíveis em `/minha-arvore`;
-- a correção pendente é de legibilidade visual do SVG, não de regra de relacionamento.
+- o emoji conjugal corrompido foi substituído por ícone `Blend` de `lucide-react`;
+- o ícone da view direta passou a acompanhar a cor dos conectores;
+- a validação restante é de contraste e clique em browser real nas três paletas.
 
 Critérios visuais:
 
@@ -735,13 +744,95 @@ src/app/pages/MinhaArvore.tsx
 Regras de UX:
 
 - página usa `MemberPageHeader`;
+- o botão **Sair** não deve aparecer no header;
 - avatar do topo é clicável;
+- a edição e remoção de foto devem ficar concentradas no avatar superior/modal;
+- os botões internos **Alterar** e **Remover** do card de dados não devem reaparecer;
 - modal de foto permite visualizar, alterar, cortar e remover imagem;
 - saída sem salvar deve exibir confirmação quando houver alterações pendentes;
+- o texto do modal de saída é: **Deseja sair sem salvar os ajustes?**;
 - página não deve exibir preferências de notificação nem campo de edição de signo;
 - botão **Trocar Senha** deve aparecer no card superior do perfil;
 - botão **Trocar Senha** deve exibir estado **Enviando...** durante a solicitação;
-- fluxo de troca de senha usa reset por e-mail e não participa do salvamento dos dados familiares.
+- fluxo de troca de senha usa reset por e-mail e não participa do salvamento dos dados familiares;
+- o card **FILHOS** deve contar apenas filhos humanos;
+- pets devem aparecer em card próprio **PETS**;
+- a área **Arquivos Históricos** não deve repetir título interno duplicado;
+- quando não houver arquivo, o botão compacto `+` aparece acima da mensagem **Nenhum arquivo histórico adicionado.**;
+- a seção **Eventos da Vida** deve exibir timeline com eventos derivados e permitir eventos manuais;
+- eventos derivados incluem nascimento, nascimento de filho, casamento, falecimento e outros dados existentes;
+- eventos manuais incluem alistamento militar, mudança de cidade, imigração, formatura, profissão, viagem marcante e outros acontecimentos relevantes.
+
+---
+
+
+## 9.1 Fórum
+
+Rotas:
+
+```txt
+/forum/novo
+/forum/topico/:id
+```
+
+Arquivos principais:
+
+```txt
+src/app/pages/forum/ForumNovoTopico.tsx
+src/app/pages/forum/ForumTopico.tsx
+src/app/services/forumService.ts
+src/app/services/notificationRecipientsService.ts
+src/app/services/notificationTriggersService.ts
+```
+
+### Criação de tópico
+
+Regras de UX para `/forum/novo`:
+
+- o campo dropdown **Tipo** não deve aparecer;
+- **Categoria** deve ser seleção única em botões quadrados com bordas arredondadas;
+- cada botão de categoria deve ter ícone centralizado na parte superior e título na parte inferior;
+- categoria selecionada deve ter background/estado visual diferente;
+- o dropdown de **Pessoas Relacionadas** deve abrir com campo de busca na primeira linha;
+- o dropdown deve filtrar opções conforme busca;
+- clicar fora do dropdown deve fechá-lo;
+- acima do campo **Conteúdo**, exibir o aviso **Digite @ para marcar alguém na publicação**;
+- pessoas mencionadas com `@` e pessoas relacionadas devem receber notificação interna quando permitido;
+- falhas de notificação não devem bloquear a publicação.
+
+### Visualização de tópico
+
+Regras de UX para `/forum/topico/:id`:
+
+- remover botão **Ocultar** do header do post;
+- categoria, tipo e status devem aparecer como badges pequenas/coloridas;
+- autor do tópico, respostas e comentários devem exibir avatar;
+- avatar usa `profiles.avatar_url` quando disponível e fallback por iniciais/ícone quando ausente;
+- respostas não devem exibir os botões **Marcar solução** e **Ocultar**;
+- menções `@Nome Completo` devem renderizar em negrito e como link para `/pessoa/:id` quando houver correspondência segura;
+- não transformar `@` em link se não houver pessoa correspondente.
+
+### Reações
+
+Regras de UX das reações:
+
+| Tipo interno | Label visual | Ícone | Cor |
+|---|---|---|---|
+| `curtir` | Amei | `HeartHandshake` | vermelho |
+| `apoiar` | Apoiar | `Handshake` | verde |
+| `lembrar` | Orações | `Flower2` | azul |
+| `celebrar` | Parabéns | `PartyPopper` | laranja |
+
+Regras:
+
+- por padrão, os botões exibem apenas ícone;
+- o texto aparece no `title`/hover e no botão selecionado;
+- botão selecionado deve ter `aria-pressed=true`;
+- apenas uma reação por pessoa por alvo;
+- clicar em outra reação substitui a anterior;
+- clicar novamente na reação selecionada remove a reação;
+- contadores devem ser recalculados após troca ou remoção;
+- `Flower2` é o equivalente usado para **Orações**, pois `Rose` não está disponível na versão atual de `lucide-react`.
 
 ---
 
@@ -827,6 +918,26 @@ Regras:
 ---
 
 ## 12. Modais, dialogs e overlays
+
+### 12.1 Modal de relacionamento conjugal
+
+Arquivo principal:
+
+```txt
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+```
+
+Regras de UX:
+
+- título do modal deve ficar centralizado;
+- botão `X` deve ficar alinhado visualmente ao ícone de fechar;
+- substituir texto genérico como **Fulana e Secundino tiveram um relacionamento conjugal.** por **Fulana e Secundino foram casados.** quando o vínculo for casamento;
+- subtítulo deve exibir mais informações quando houver dados, por exemplo: **O matrimônio aconteceu entre DD/MM/AAAA e DD/MM/AAAA. A cerimônia foi realizada em Cidade/UF.**;
+- botão **Inserir Informações** deve aparecer no modal conjugal;
+- usuários com permissão editam diretamente;
+- usuários sem permissão enviam sugestão para confirmação no painel admin;
+- área de **Arquivos Históricos** do relacionamento deve permitir ação por botão `+` quando aplicável;
+- arquivos de relacionamento devem manter associação por `relacionamento_id`.
 
 Padrões:
 
@@ -1181,3 +1292,63 @@ Checklist visual recomendado:
 /minha-arvore: sem regressão
 paletas white, orange e brown: legíveis
 ```
+
+---
+
+## 22. Atualização 2026-06-08 - Perfil, Minha Árvore, fórum e reações
+
+Frentes consolidadas neste ciclo:
+
+```txt
+657e39a feat: add profile reset and admin person id copy
+b5608ee feat: move profile edit action and add profile suggestions
+228713d feat: refine conjugal relationship modal
+873cd4b fix: refine my tree layout interactions
+8b5d93e feat: refine my tree edit page
+c305ef7 feat: refine forum topic creation
+29ab5b1 feat: add forum mention notifications
+4d51bc3 feat: refine forum topic view
+0eef06c feat: update forum reactions
+568ed5e fix: use available icon for forum prayer reaction
+```
+
+Consolidado:
+
+- `/admin/pessoas` permite resetar dados complementares do perfil sem apagar relações familiares;
+- `/admin/pessoas` possui botão de copiar ID da pessoa;
+- os campos de privacidade/contato de `pessoas` iniciam como `true` para novos registros;
+- `/pessoa/:id` moveu o botão de edição para junto do favorito, como botão redondo de ícone;
+- **Inserir Informações** passou a encaminhar usuários sem permissão para sugestão/admin;
+- modal conjugal passou a ter título centralizado, texto de casamento mais direto e ações de sugestão;
+- `/minha-arvore` teve scroll externo bloqueado, título/cards reposicionados, aliança na cor dos conectores e borda extra removida;
+- `/minha-arvore/editar` removeu botões duplicados de foto, separou humanos/pets, removeu **Sair**, refinou arquivos históricos e adicionou eventos da vida;
+- `/forum/novo` substituiu dropdown de tipo/categoria por seleção de categorias por botões e adicionou busca em pessoas relacionadas;
+- menções `@` e pessoas relacionadas geram notificação interna;
+- `/forum/topico/:id` passou a usar badges, avatares e menções clicáveis;
+- reações do fórum foram renomeadas e passaram a permitir apenas uma reação por pessoa por alvo.
+
+Validação recomendada:
+
+```txt
+/admin/pessoas
+/pessoa/:id
+/minha-arvore
+/minha-arvore/editar
+/forum/novo
+/forum/topico/:id
+/admin/solicitacoes-vinculos
+/notificacoes
+/ajustar-notificacoes
+```
+
+Pontos de QA visual:
+
+- modal conjugal centralizado e com `X` alinhado;
+- botão **Inserir Informações** visível onde previsto;
+- scroll externo de `/minha-arvore` bloqueado, mas pan/zoom do ReactFlow preservado;
+- categoria selecionada em `/forum/novo` com background distinto;
+- dropdown de pessoas relacionadas fecha ao clicar fora;
+- menções aparecem em negrito e clicáveis;
+- reações exibem apenas ícones por padrão e texto no selecionado;
+- `Flower2` aparece corretamente em **Orações**.
+
