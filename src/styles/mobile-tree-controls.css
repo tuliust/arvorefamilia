@@ -102,4 +102,42 @@
   .mobile-tree-controls-arrows-hidden .family-tree-export-root button[aria-label^="Mover"] {
     display: none !important;
   }
+
+  .mobile-user-menu-palette-portal {
+    position: fixed;
+    left: 1.5rem;
+    right: 1.5rem;
+    top: 14.85rem;
+    z-index: 610;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    pointer-events: auto;
+  }
+
+  .mobile-user-menu-palette-portal::before {
+    content: 'Cores da árvore';
+    margin-right: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(30, 64, 175);
+  }
+
+  .mobile-user-menu-palette-portal button {
+    height: 1.55rem;
+    width: 1.55rem;
+    border-radius: 9999px;
+    border-width: 1px;
+    border-style: solid;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .mobile-user-menu-palette-portal button.is-active {
+    transform: scale(1.14);
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px rgb(15, 23, 42);
+  }
 }
