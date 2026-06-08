@@ -4,13 +4,17 @@ import { AppLink as Link } from '../../components/AppLink';
 import {
   CheckCircle2,
   Edit,
-  Heart,
+  Handshake,
+  HeartHandshake,
   MessageCircle,
   MessageSquare,
+  PartyPopper,
+  Rose,
   Send,
   Trash2,
   UserRound,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -30,6 +34,7 @@ import {
   listarComentariosDaResposta,
   listarPessoasDoTopico,
   listarRespostasDoTopico,
+  obterMinhaReacaoForum,
   obterResumoReacoes,
   obterTopicoForumPorId,
   reagirAoConteudo,
@@ -46,11 +51,31 @@ import {
   Pessoa,
 } from '../../types';
 
-const REACAO_LABELS: Record<ForumReacaoTipo, string> = {
-  curtir: 'Curtir',
-  apoiar: 'Apoiar',
-  lembrar: 'Lembrar',
-  celebrar: 'Celebrar',
+const REACAO_OPTIONS: Record<ForumReacaoTipo, { label: string; Icon: LucideIcon; classes: string; selectedClasses: string }> = {
+  curtir: {
+    label: 'Amei',
+    Icon: HeartHandshake,
+    classes: 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700',
+    selectedClasses: 'border-red-300 bg-red-50 text-red-700',
+  },
+  apoiar: {
+    label: 'Apoiar',
+    Icon: Handshake,
+    classes: 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700',
+    selectedClasses: 'border-emerald-300 bg-emerald-50 text-emerald-700',
+  },
+  lembrar: {
+    label: 'Orações',
+    Icon: Rose,
+    classes: 'border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700',
+    selectedClasses: 'border-blue-300 bg-blue-50 text-blue-700',
+  },
+  celebrar: {
+    label: 'Parabéns',
+    Icon: PartyPopper,
+    classes: 'border-orange-200 text-orange-600 hover:bg-orange-50 hover:text-orange-700',
+    selectedClasses: 'border-orange-300 bg-orange-50 text-orange-700',
+  },
 };
 
 const TOPICO_TIPO_LABELS: Record<string, string> = {
@@ -196,32 +221,58 @@ function ReactionBar({
   alvoTipo,
   alvoId,
   resumo,
+  selectedReaction,
   onChange,
+  onSelectedChange,
 }: {
   alvoTipo: ForumAlvoTipo;
   alvoId: string;
   resumo: ResumoReacoesForum;
+  selectedReaction: ForumReacaoTipo | null;
   onChange: (resumo: ResumoReacoesForum) => void;
+  onSelectedChange: (tipo: ForumReacaoTipo | null) => void;
 }) {
   async function reagir(tipo: ForumReacaoTipo) {
     const reacao = await reagirAoConteudo(alvoTipo, alvoId, tipo);
-    if (!reacao) {
+    if (reacao === undefined) {
       toast.error('Não foi possível registrar a reação.');
       return;
     }
 
+    onSelectedChange(reacao?.tipo ?? null);
     const atualizado = await obterResumoReacoes(alvoTipo, alvoId);
     onChange(atualizado);
   }
 
   return (
     <div className="flex min-w-0 flex-wrap gap-2">
-      {(Object.keys(REACAO_LABELS) as ForumReacaoTipo[]).map((tipo) => (
-        <Button key={tipo} type="button" variant="outline" size="sm" className="min-w-0" onClick={() => reagir(tipo)}>
-          <Heart className="mr-1 h-3 w-3 shrink-0" />
-          {REACAO_LABELS[tipo]} {resumo[tipo] ? `(${resumo[tipo]})` : ''}
-        </Button>
-      ))}
+      {(Object.keys(REACAO_OPTIONS) as ForumReacaoTipo[]).map((tipo) => {
+        const option = REACAO_OPTIONS[tipo];
+        const Icon = option.Icon;
+        const selected = selectedReaction === tipo;
+        const count = resumo[tipo] || 0;
+        const label = `${option.label}${count ? ` (${count})` : ''}`;
+
+        return (
+          <Button
+            key={tipo}
+            type="button"
+            variant="outline"
+            size="sm"
+            className={[
+              'min-w-0 gap-1 rounded-full px-2 transition',
+              selected ? option.selectedClasses : option.classes,
+            ].join(' ')}
+            title={`Reagir com ${option.label}`}
+            aria-label={`Reagir com ${option.label}`}
+            aria-pressed={selected}
+            onClick={() => reagir(tipo)}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {selected ? <span className="text-xs font-medium">{label}</span> : count > 0 ? <span className="text-xs font-medium">{count}</span> : null}
+          </Button>
+        );
+      })}
     </div>
   );
 }
@@ -237,6 +288,8 @@ export function ForumTopico() {
   const [authorProfiles, setAuthorProfiles] = useState<Record<string, AuthorProfile>>({});
   const [resumoTopico, setResumoTopico] = useState<ResumoReacoesForum>(RESUMO_VAZIO);
   const [resumosRespostas, setResumosRespostas] = useState<Record<string, ResumoReacoesForum>>({});
+  const [minhaReacaoTopico, setMinhaReacaoTopico] = useState<ForumReacaoTipo | null>(null);
+  const [minhasReacoesRespostas, setMinhasReacoesRespostas] = useState<Record<string, ForumReacaoTipo | null>>({});
   const [respostaTexto, setRespostaTexto] = useState('');
   const [comentarioTexto, setComentarioTexto] = useState<Record<string, string>>({});
   const [editandoRespostaId, setEditandoRespostaId] = useState<string | null>(null);
@@ -290,16 +343,20 @@ export function ForumTopico() {
       setTopico(null);
       setRespostas([]);
       setPessoasRelacionadas([]);
+      setMinhaReacaoTopico(null);
+      setMinhasReacoesRespostas({});
       setErro('Não foi possível carregar este tópico. Ele pode ter sido removido ou ocultado.');
       setLoading(false);
       return;
     }
     const respostasData = await listarRespostasDoTopico(id);
-    const [comentariosData, resumoTopicoData, resumosData, pessoasDoTopico] = await Promise.all([
+    const [comentariosData, resumoTopicoData, resumosData, pessoasDoTopico, minhaReacaoTopicoData, minhasReacoesData] = await Promise.all([
       Promise.all(respostasData.map(async (resposta) => [resposta.id, await listarComentariosDaResposta(resposta.id)] as const)),
       obterResumoReacoes('topico', id),
       Promise.all(respostasData.map(async (resposta) => [resposta.id, await obterResumoReacoes('resposta', resposta.id)] as const)),
       listarPessoasDoTopico(id),
+      obterMinhaReacaoForum('topico', id),
+      Promise.all(respostasData.map(async (resposta) => [resposta.id, await obterMinhaReacaoForum('resposta', resposta.id)] as const)),
     ]);
     const comentariosMap = Object.fromEntries(comentariosData);
 
@@ -309,6 +366,8 @@ export function ForumTopico() {
     setPessoasRelacionadas(pessoasDoTopico);
     setResumoTopico(resumoTopicoData);
     setResumosRespostas(Object.fromEntries(resumosData));
+    setMinhaReacaoTopico(minhaReacaoTopicoData);
+    setMinhasReacoesRespostas(Object.fromEntries(minhasReacoesData));
     await carregarAutores(topicoData, respostasData, comentariosMap);
     setLoading(false);
   }
@@ -316,7 +375,7 @@ export function ForumTopico() {
   useEffect(() => {
     carregar();
     if (id) incrementarVisualizacaoTopico(id);
-  }, [id]);
+  }, [id, user?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -608,7 +667,9 @@ export function ForumTopico() {
               alvoTipo="topico"
               alvoId={topico.id}
               resumo={resumoTopico}
+              selectedReaction={minhaReacaoTopico}
               onChange={setResumoTopico}
+              onSelectedChange={setMinhaReacaoTopico}
             />
           </CardContent>
         </Card>
@@ -691,7 +752,9 @@ export function ForumTopico() {
                       alvoTipo="resposta"
                       alvoId={resposta.id}
                       resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO}
+                      selectedReaction={minhasReacoesRespostas[resposta.id] ?? null}
                       onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))}
+                      onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))}
                     />
 
                     <div className="space-y-3 border-t border-gray-100 pt-4">
