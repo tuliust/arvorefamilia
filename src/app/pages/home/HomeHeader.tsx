@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, UserRound } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
 } from '../../components/ui/select';
 import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
+import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import {
   TREE_COLOR_PALETTE_CSS_VARIABLES,
@@ -18,19 +20,9 @@ import {
   isTreeColorPalette,
   type TreeColorPalette,
 } from '../../components/FamilyTree/treeColorPalettes';
+import { FAVORITE_PAGES } from '../../constants/favoritePages';
 import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
-
-const DEFAULT_PAGE_SUGGESTIONS: GlobalSearchPageResult[] = [
-  { id: 'minha-arvore', title: 'Minha Árvore', description: 'Visualização principal da árvore familiar.', path: '/minha-arvore', keywords: ['arvore', 'árvore', 'familia', 'família'] },
-  { id: 'genealogia', title: 'Genealogia', description: 'Visualização por gerações e ramos familiares.', path: '/genealogia', keywords: ['genealogia', 'geracoes', 'gerações'] },
-  { id: 'visao-completa', title: 'Visão Completa', description: 'Visualização ampliada da árvore.', path: '/visao-completa', keywords: ['visao', 'visão', 'completa'] },
-  { id: 'meus-dados', title: 'Meus Dados', description: 'Revisão e atualização dos dados pessoais.', path: '/meus-dados', keywords: ['dados', 'perfil'] },
-  { id: 'notificacoes', title: 'Notificações', description: 'Central de notificações e avisos relacionados à família.', path: '/notificacoes', keywords: ['notificacoes', 'notificações', 'avisos', 'alertas', 'novidades'] },
-  { id: 'ajustar-notificacoes', title: 'Ajustar Notificações', description: 'Preferências de recebimento e configuração das notificações familiares.', path: '/ajustar-notificacoes', keywords: ['notificacoes', 'notificações', 'ajustar notificacoes', 'ajustar notificações', 'preferencias', 'preferências', 'configurar notificacoes', 'configurar notificações'] },
-  { id: 'forum', title: 'Fórum', description: 'Discussões entre membros da família.', path: '/forum', keywords: ['forum', 'fórum', 'topicos', 'tópicos'] },
-  { id: 'calendario', title: 'Calendário Familiar', description: 'Datas, aniversários e eventos familiares.', path: '/calendario-familiar', keywords: ['calendario', 'calendário', 'aniversarios', 'aniversários'] },
-];
 
 function normalizeSearchText(value: unknown) {
   return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
@@ -40,7 +32,7 @@ function filterDefaultPages(term: string) {
   const normalizedTerm = normalizeSearchText(term);
   if (!normalizedTerm) return [];
 
-  return DEFAULT_PAGE_SUGGESTIONS.filter((page) => {
+  return FAVORITE_PAGES.filter((page) => {
     const haystack = [page.title, page.description, ...page.keywords].map(normalizeSearchText).join(' ');
     return haystack.includes(normalizedTerm);
   });
@@ -130,6 +122,7 @@ export function HomeHeader({
   onCuriosities,
   navigateFromHome,
 }: HomeHeaderProps) {
+  const location = useLocation();
   const searchRootRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
@@ -345,6 +338,7 @@ export function HomeHeader({
             </SelectContent>
           </Select>
 
+          <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
           <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3" title="Curiosidades" aria-label="Abrir Curiosidades" onClick={onCuriosities}>
             <Sparkles className="h-4 w-4" />
             <span className={headerActionTextClassName}>Curiosidades</span>
@@ -396,6 +390,9 @@ export function HomeHeader({
             </div>
           </div>
 
+          <div className="md:hidden">
+            <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
+          </div>
           <div className="md:hidden">
             <UserProfileMenu />
           </div>
