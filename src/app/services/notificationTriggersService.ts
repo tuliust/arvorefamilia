@@ -5,6 +5,7 @@ import {
   listAdminUserIds,
   listForumCommentParticipantUserIds,
   listForumTopicParticipantUserIds,
+  listLinkedUserIdsForPessoas,
   listRelevantUserIdsForHistoricalFile,
   uniqueUserIds,
 } from './notificationRecipientsService';
@@ -23,6 +24,13 @@ type NewUserLinkedParams = {
   pessoaId: string;
   linkId?: string | null;
   actorUserId?: string | null;
+};
+
+type ForumTopicCreatedParams = {
+  topicId: string;
+  actorUserId: string;
+  mentionedPessoaIds?: string[];
+  relatedPessoaIds?: string[];
 };
 
 type ForumReplyCreatedParams = {
@@ -120,6 +128,58 @@ export async function notifyNewUserLinked(params: NewUserLinkedParams) {
       link_id: params.linkId ?? undefined,
     },
   });
+}
+
+export async function notifyForumTopicCreated(params: ForumTopicCreatedParams) {
+  const mentionedPessoaIds = Array.from(new Set((params.mentionedPessoaIds || []).filter(Boolean)));
+  const relatedPessoaIds = Array.from(new Set((params.relatedPessoaIds || []).filter(Boolean)));
+  const pessoaIds = Array.from(new Set([...mentionedPessoaIds, ...relatedPessoaIds]));
+
+  if (pessoaIds.length === 0) return;
+
+  const userIdsByPessoa = await listLinkedUserIdsForPessoas(pessoaIds);
+  const mentionedRecipients = excludeActor(
+    uniqueUserIds(mentionedPessoaIds.flatMap((pessoaId) => userIdsByPessoa[pessoaId] || [])),
+    params.actorUserId
+  );
+  const mentionedRecipientSet = new Set(mentionedRecipients);
+  const relatedRecipients = excludeActor(
+    uniqueUserIds(relatedPessoaIds.flatMap((pessoaId) => userIdsByPessoa[pessoaId] || [])),
+    params.actorUserId
+  ).filter((userId) => !mentionedRecipientSet.has(userId));
+
+  const link = `/forum/topico/${params.topicId}`;
+
+  await Promise.all([
+    mentionedRecipients.length > 0
+      ? dispatchInternalToRecipients({
+          userIds: mentionedRecipients,
+          type: 'novas_mensagens_forum',
+          titulo: 'Você foi mencionado no fórum',
+          mensagem: 'Você foi mencionado em uma publicação.',
+          link,
+          metadata: {
+            topic_id: params.topicId,
+            notification_reason: 'mention',
+            mentioned_pessoa_ids: mentionedPessoaIds,
+          },
+        })
+      : Promise.resolve(),
+    relatedRecipients.length > 0
+      ? dispatchInternalToRecipients({
+          userIds: relatedRecipients,
+          type: 'novas_mensagens_forum',
+          titulo: 'Você foi relacionado a uma publicação',
+          mensagem: 'Você foi relacionado a uma publicação.',
+          link,
+          metadata: {
+            topic_id: params.topicId,
+            notification_reason: 'related_person',
+            related_pessoa_ids: relatedPessoaIds,
+          },
+        })
+      : Promise.resolve(),
+  ]);
 }
 
 export async function notifyForumReplyCreated(params: ForumReplyCreatedParams) {
