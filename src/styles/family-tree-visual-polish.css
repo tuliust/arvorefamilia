@@ -45,6 +45,18 @@
   opacity: 1 !important;
 }
 
+[role="dialog"] [title] > [class*="top-[calc(100%+0.35rem)]"] {
+  position: fixed !important;
+  left: auto !important;
+  right: clamp(1rem, 4vw, 3rem) !important;
+  top: auto !important;
+  bottom: clamp(1rem, 4vh, 2.25rem) !important;
+  width: min(32rem, calc(100vw - 2rem)) !important;
+  max-height: min(50vh, 24rem) !important;
+  overflow-y: auto !important;
+  z-index: 9999 !important;
+}
+
 @media (min-width: 768px) {
   main > aside [class*="overflow-y-auto"] {
     overflow-y: hidden !important;
