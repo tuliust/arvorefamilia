@@ -425,13 +425,14 @@ function buildCousinNarrative(result: RelationshipDegreeResult, people: Pessoa[]
   const originParentShortName = getShortPersonName(originParentName);
   const targetParentShortName = getShortPersonName(targetParentName);
 
-  const originParentLabel = getParentLabelFromIncomingStep(result, 0);
-  const targetParentLabel = getParentLabelFromIncomingStep(result, 2);
+  const originParentLabel = getParentLabelByPersonName(originParentName);
+  const targetParentLabel = getParentLabelByPersonName(targetParentName);
   const siblingLabel = getSiblingLabelByPersonName(targetParentName);
+  const targetParentArticle = targetParentLabel === 'mãe' ? 'A' : 'O';
 
   return {
     title: `${originShortName} e ${targetShortName} são primos`,
-    summary: `A ${originParentLabel} de ${originShortName}, ${originParentShortName}, é ${siblingLabel} de ${targetParentShortName}, que é ${targetParentLabel} de ${targetShortName}.`,
+    summary: `${targetParentArticle} ${targetParentLabel} de ${targetShortName}, ${targetParentShortName}, é ${siblingLabel} de ${originParentShortName}, ${originParentLabel} de ${originShortName}.`,
   };
 }
 
@@ -456,4 +457,3 @@ export function getRelationshipNarrative(result: RelationshipDegreeResult, peopl
     summary: getRelationshipResultMessage(result),
   };
 }
-
