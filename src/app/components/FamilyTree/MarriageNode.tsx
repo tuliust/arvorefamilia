@@ -4,11 +4,11 @@ import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
 import { Blend } from 'lucide-react';
 import { MarriageNodeData, MarriageNodeDetails } from './types';
 import { ViewMarriageModal } from './modals/ViewMarriageModal';
-import { FAMILY_TREE_COLORS } from './visualTokens';
 
 const FALLBACK_MARRIAGE_NODE_SIZE = 60;
 const FALLBACK_PERSON_NODE_WIDTH = 400;
 const FALLBACK_PERSON_NODE_HEIGHT = 160;
+const CONNECTOR_COLOR = 'var(--tree-palette-group-border, #CBD5E1)';
 
 function getNodeSize(node: Node) {
   const width = Number(node.data?.layoutWidth ?? node.data?.width);
@@ -114,25 +114,14 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             : 'border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
         ].join(' ')}
         style={{
-          borderColor: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-          color: FAMILY_TREE_COLORS.EDGE_SPOUSE,
+          borderColor: CONNECTOR_COLOR,
+          color: CONNECTOR_COLOR,
         }}
       >
         <Handle type="target" position={Position.Top} id="top" style={{ ...hiddenHandle, top: 0, left: '50%' }} />
         <Handle type="source" position={Position.Bottom} id="bottom" style={{ ...hiddenHandle, bottom: 0, left: '50%' }} />
         <Handle type="source" position={Position.Right} id="right" style={{ ...hiddenHandle, right: 0, top: '50%' }} />
         <Handle type="target" position={Position.Left} id="left" style={{ ...hiddenHandle, left: 0, top: '50%' }} />
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="family-center"
-          style={{
-            ...hiddenHandle,
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
         <Blend
           className={isDirectFamilyVariant ? 'h-9 w-9 stroke-[3]' : 'h-8 w-8 stroke-[2.8]'}
           aria-hidden="true"
