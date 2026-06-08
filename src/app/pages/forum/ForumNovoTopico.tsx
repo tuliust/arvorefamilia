@@ -1,6 +1,18 @@
 import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Check, ChevronDown, MessageCircle, Send } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  ChevronDown,
+  HelpCircle,
+  LifeBuoy,
+  Megaphone,
+  MessageCircle,
+  Search,
+  Send,
+  UsersRound,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -12,13 +24,7 @@ import { obterTodasPessoas } from '../../services/dataService';
 import { criarTopicoForum, listarCategoriasForum, vincularPessoasAoTopico } from '../../services/forumService';
 import { ForumCategoria, ForumTopicoTipo, Pessoa } from '../../types';
 
-const TIPO_OPTIONS: Array<{ value: ForumTopicoTipo; label: string }> = [
-  { value: 'pergunta', label: 'Pergunta' },
-  { value: 'discussao', label: 'Discussão' },
-  { value: 'aviso', label: 'Aviso' },
-  { value: 'memoria', label: 'Memória' },
-  { value: 'ajuda', label: 'Ajuda' },
-];
+const DEFAULT_TOPIC_TYPE: ForumTopicoTipo = 'discussao';
 
 function criarSlug(texto: string) {
   return texto
@@ -38,6 +44,45 @@ function normalizeSearch(value: string) {
     .trim();
 }
 
+function getCategoryIcon(categoria: ForumCategoria): LucideIcon {
+  const key = normalizeSearch(`${categoria.slug} ${categoria.nome} ${categoria.icone || ''}`);
+
+  if (key.includes('duvida') || key.includes('pergunta') || key.includes('question')) {
+    return HelpCircle;
+  }
+
+  if (key.includes('memoria') || key.includes('historia') || key.includes('documento')) {
+    return BookOpen;
+  }
+
+  if (key.includes('aviso') || key.includes('comunicado') || key.includes('anuncio')) {
+    return Megaphone;
+  }
+
+  if (key.includes('ajuda') || key.includes('apoio') || key.includes('suporte')) {
+    return LifeBuoy;
+  }
+
+  if (key.includes('familia') || key.includes('pessoa')) {
+    return UsersRound;
+  }
+
+  return MessageCircle;
+}
+
+function extractMentionedPersonIds(conteudo: string, pessoas: Pessoa[]) {
+  const normalizedContent = normalizeSearch(conteudo);
+
+  if (!normalizedContent.includes('@')) return [];
+
+  return pessoas
+    .filter((pessoa) => {
+      const mention = `@${normalizeSearch(pessoa.nome_completo)}`;
+      return normalizedContent.includes(mention);
+    })
+    .map((pessoa) => pessoa.id);
+}
+
 export function ForumNovoTopico() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -46,16 +91,17 @@ export function ForumNovoTopico() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [titulo, setTitulo] = useState('');
   const [categoriaId, setCategoriaId] = useState('');
-  const [tipo, setTipo] = useState<ForumTopicoTipo>('discussao');
   const [conteudo, setConteudo] = useState('');
   const [selectedRelatedPersonIds, setSelectedRelatedPersonIds] = useState<string[]>([]);
   const [relatedDropdownOpen, setRelatedDropdownOpen] = useState(false);
+  const [relatedPersonQuery, setRelatedPersonQuery] = useState('');
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
   const [mentionCursorIndex, setMentionCursorIndex] = useState<number | null>(null);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const relatedDropdownRef = useRef<HTMLDivElement | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -84,6 +130,28 @@ export function ForumNovoTopico() {
     };
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!relatedDropdownOpen) return undefined;
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const target = event.target;
+
+      if (!(target instanceof Node)) return;
+
+      if (!relatedDropdownRef.current?.contains(target)) {
+        setRelatedDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [relatedDropdownOpen]);
+
   const selectedRelatedPeople = useMemo(
     () => pessoas.filter((pessoa) => selectedRelatedPersonIds.includes(pessoa.id)),
     [pessoas, selectedRelatedPersonIds]
@@ -94,6 +162,14 @@ export function ForumNovoTopico() {
     if (selectedRelatedPersonIds.length === 1) return '1 pessoa selecionada';
     return `${selectedRelatedPersonIds.length} pessoas selecionadas`;
   }, [selectedRelatedPersonIds.length]);
+
+  const filteredRelatedPeople = useMemo(() => {
+    const query = normalizeSearch(relatedPersonQuery);
+
+    if (!query) return pessoas;
+
+    return pessoas.filter((pessoa) => normalizeSearch(pessoa.nome_completo).includes(query));
+  }, [pessoas, relatedPersonQuery]);
 
   const filteredMentionPeople = useMemo(() => {
     const query = normalizeSearch(mentionQuery);
@@ -210,14 +286,17 @@ export function ForumNovoTopico() {
     }
 
     setSalvando(true);
-    const uniqueRelatedPersonIds = Array.from(new Set(selectedRelatedPersonIds.filter(Boolean)));
+    const mentionedPersonIds = extractMentionedPersonIds(conteudo, pessoas);
+    const uniqueRelatedPersonIds = Array.from(
+      new Set([...selectedRelatedPersonIds, ...mentionedPersonIds].filter(Boolean))
+    );
     const topico = await criarTopicoForum({
       autor_id: user.id,
       categoria_id: categoriaId || null,
       titulo: titulo.trim(),
       slug: `${criarSlug(titulo) || 'topico'}-${Date.now()}`,
       conteudo: conteudo.trim(),
-      tipo,
+      tipo: DEFAULT_TOPIC_TYPE,
       pessoa_relacionada_id: uniqueRelatedPersonIds[0] || null,
     });
 
@@ -262,33 +341,47 @@ export function ForumNovoTopico() {
                 <Input id="titulo" value={titulo} onChange={(event) => setTitulo(event.target.value)} />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="min-w-0 space-y-2">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="categoria">Categoria</label>
-                  <select
-                    id="categoria"
-                    value={categoriaId}
-                    onChange={(event) => setCategoriaId(event.target.value)}
-                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    {categorias.map((categoria) => (
-                      <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="min-w-0 space-y-3">
+                <span className="block text-sm font-medium text-gray-700" id="categoria-label">
+                  Categoria
+                </span>
+                <div
+                  aria-labelledby="categoria-label"
+                  className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+                  role="group"
+                >
+                  {categorias.map((categoria) => {
+                    const selected = categoriaId === categoria.id;
+                    const Icon = getCategoryIcon(categoria);
 
-                <div className="min-w-0 space-y-2">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="tipo">Tipo</label>
-                  <select
-                    id="tipo"
-                    value={tipo}
-                    onChange={(event) => setTipo(event.target.value as ForumTopicoTipo)}
-                    className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    {TIPO_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                    return (
+                      <button
+                        key={categoria.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setCategoriaId(categoria.id)}
+                        className={[
+                          'flex min-h-28 min-w-0 flex-col items-center justify-between rounded-2xl border px-3 py-4 text-center text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+                          selected
+                            ? 'border-blue-600 bg-blue-50 text-blue-800 shadow-md'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-gray-50',
+                        ].join(' ')}
+                      >
+                        <span
+                          className={[
+                            'flex h-10 w-10 items-center justify-center rounded-full',
+                            selected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600',
+                          ].join(' ')}
+                          aria-hidden="true"
+                        >
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className="mt-3 line-clamp-2 min-w-0 break-words font-medium leading-snug">
+                          {categoria.nome}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -296,12 +389,14 @@ export function ForumNovoTopico() {
                 <label className="text-sm font-medium text-gray-700" htmlFor="pessoas-relacionadas">
                   Pessoas Relacionadas
                 </label>
-                <div className="relative min-w-0">
+                <div className="relative min-w-0" ref={relatedDropdownRef}>
                   <button
                     id="pessoas-relacionadas"
                     type="button"
                     onClick={() => setRelatedDropdownOpen((current) => !current)}
                     className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    aria-expanded={relatedDropdownOpen}
+                    aria-haspopup="listbox"
                   >
                     <span className={`min-w-0 truncate ${selectedRelatedPersonIds.length ? 'text-gray-900' : 'text-gray-500'}`}>
                       {relatedSummary}
@@ -310,29 +405,53 @@ export function ForumNovoTopico() {
                   </button>
 
                   {relatedDropdownOpen && (
-                    <div className="absolute left-0 right-0 z-40 mt-1 max-h-72 overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg">
-                      {pessoas.map((pessoa) => {
-                        const checked = selectedRelatedPersonIds.includes(pessoa.id);
-                        return (
-                          <button
-                            key={pessoa.id}
-                            type="button"
-                            onClick={() => toggleRelatedPerson(pessoa.id)}
-                            className="flex w-full min-w-0 items-center gap-3 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            <span
-                              className={[
-                                'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 bg-white',
-                              ].join(' ')}
-                              aria-hidden="true"
-                            >
-                              {checked && <Check className="h-3 w-3" />}
-                            </span>
-                            <span className="min-w-0 truncate">{pessoa.nome_completo}</span>
-                          </button>
-                        );
-                      })}
+                    <div className="absolute left-0 right-0 z-40 mt-1 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                      <div className="border-b border-gray-100 p-2">
+                        <label htmlFor="buscar-pessoas-relacionadas" className="sr-only">
+                          Buscar pessoas relacionadas
+                        </label>
+                        <div className="relative">
+                          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                          <Input
+                            id="buscar-pessoas-relacionadas"
+                            value={relatedPersonQuery}
+                            onChange={(event) => setRelatedPersonQuery(event.target.value)}
+                            placeholder="Buscar pessoa..."
+                            className="h-9 pl-9 text-sm"
+                            autoComplete="off"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto p-1" role="listbox" aria-multiselectable="true">
+                        {filteredRelatedPeople.length > 0 ? (
+                          filteredRelatedPeople.map((pessoa) => {
+                            const checked = selectedRelatedPersonIds.includes(pessoa.id);
+                            return (
+                              <button
+                                key={pessoa.id}
+                                type="button"
+                                onClick={() => toggleRelatedPerson(pessoa.id)}
+                                className="flex w-full min-w-0 items-center gap-3 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                role="option"
+                                aria-selected={checked}
+                              >
+                                <span
+                                  className={[
+                                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                                    checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 bg-white',
+                                  ].join(' ')}
+                                  aria-hidden="true"
+                                >
+                                  {checked && <Check className="h-3 w-3" />}
+                                </span>
+                                <span className="min-w-0 truncate">{pessoa.nome_completo}</span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <p className="px-3 py-3 text-sm text-gray-500">Nenhuma pessoa encontrada.</p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -353,7 +472,10 @@ export function ForumNovoTopico() {
               </div>
 
               <div className="min-w-0 space-y-2">
-                <label className="text-sm font-medium text-gray-700" htmlFor="conteudo">Conteúdo</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700" htmlFor="conteudo">Conteúdo</label>
+                  <p className="text-xs text-gray-500">Digite @ para marcar alguém na publicação</p>
+                </div>
                 <div className="relative min-w-0">
                   <Textarea
                     ref={textareaRef}
