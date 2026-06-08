@@ -122,6 +122,17 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         <Handle type="source" position={Position.Bottom} id="bottom" style={{ ...hiddenHandle, bottom: 0, left: '50%' }} />
         <Handle type="source" position={Position.Right} id="right" style={{ ...hiddenHandle, right: 0, top: '50%' }} />
         <Handle type="target" position={Position.Left} id="left" style={{ ...hiddenHandle, left: 0, top: '50%' }} />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="family-center"
+          style={{
+            ...hiddenHandle,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
         <Blend
           className={isDirectFamilyVariant ? 'h-9 w-9 stroke-[3]' : 'h-8 w-8 stroke-[2.8]'}
           aria-hidden="true"
