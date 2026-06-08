@@ -4,6 +4,8 @@ import Cropper, { Area } from 'react-easy-crop';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
+import { PersonTimeline } from '../components/Timeline/PersonTimeline';
+import { PersonEventsEditor } from '../components/person/PersonEventsEditor';
 import {
   Camera,
   Filter,
@@ -66,7 +68,13 @@ import {
   listarArquivosHistoricosPorPessoa,
   substituirArquivosHistoricosDaPessoa,
 } from '../services/arquivosHistoricosService';
-import { ArquivoHistorico, Pessoa, Relacionamento } from '../types';
+import {
+  listarEventosDaPessoa,
+  salvarEventosDaPessoa,
+} from '../services/personEventsService';
+import { ArquivoHistorico, PersonEvent, Pessoa, Relacionamento } from '../types';
+import { buildPersonTimeline } from '../utils/buildPersonTimeline';
+import { isHumanFamilyMember, isPetFamilyMember } from '../utils/personEntity';
 import {
   buildEditablePersonFormState,
   cleanPersonPayload,
@@ -119,6 +127,7 @@ type MinhaArvoreDraft = {
   form: EditableOwnPersonPayload;
   complemento: string;
   socialProfiles: SocialProfileForm[];
+  personEvents: PersonEvent[];
 };
 
 const AVATAR_SIZE = 512;
@@ -206,6 +215,7 @@ function readMinhaArvoreDraft(key: string): MinhaArvoreDraft | null {
       form: draft.form,
       complemento: draft.complemento ?? '',
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
+      personEvents: Array.isArray(draft.personEvents) ? draft.personEvents as PersonEvent[] : [],
     };
   } catch {
     return null;
@@ -354,6 +364,7 @@ export function MinhaArvore() {
   const [marriageForms, setMarriageForms] = useState<MarriageFormState>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
+  const [personEvents, setPersonEvents] = useState<PersonEvent[]>([]);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [pendingLeaveAction, setPendingLeaveAction] = useState<PendingLeaveAction | null>(null);
 
@@ -447,14 +458,24 @@ export function MinhaArvore() {
     [pessoas, scope, resumo]
   );
 
+  const filhosHumanos = useMemo(
+    () => uniquePeople(resumo.filhos).filter(isHumanFamilyMember),
+    [resumo.filhos]
+  );
+
+  const petsVinculados = useMemo(
+    () => uniquePeople(resumo.filhos).filter(isPetFamilyMember),
+    [resumo.filhos]
+  );
+
   const relationshipGroups = useMemo(
     () => ({
       pais: uniquePeople(resumo.pais),
       irmaos: uniquePeople(resumo.irmaos),
       conjuges: uniquePeople(resumo.conjuges),
-      filhos: uniquePeople(resumo.filhos),
+      filhos: filhosHumanos,
     }),
-    [resumo.pais, resumo.irmaos, resumo.conjuges, resumo.filhos]
+    [filhosHumanos, resumo.pais, resumo.irmaos, resumo.conjuges]
   );
 
   const selectedGroupPeople = addRelativeDialog ? relationshipGroups[addRelativeDialog.group] : [];
@@ -525,6 +546,7 @@ export function MinhaArvore() {
         ),
       ]);
       setComplemento(draft?.complemento ?? '');
+      setPersonEvents(draft?.personEvents ?? []);
       isDirtyRef.current = Boolean(draft);
     }
 
@@ -558,6 +580,35 @@ export function MinhaArvore() {
     }
 
     loadArchives();
+
+    return () => {
+      mounted = false;
+    };
+  }, [pessoaBase?.id]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPersonEvents() {
+      if (!pessoaBase?.id) {
+        setPersonEvents([]);
+        return;
+      }
+
+      const samePessoa = initializedPessoaIdRef.current === pessoaBase.id;
+      if (hasInitializedFormRef.current && isDirtyRef.current && samePessoa) return;
+
+      try {
+        const nextEvents = await listarEventosDaPessoa(pessoaBase.id);
+        if (mounted) setPersonEvents(nextEvents);
+      } catch (error) {
+        if (mounted) {
+          toast.error(error instanceof Error ? error.message : 'Não foi possível carregar eventos da vida.');
+        }
+      }
+    }
+
+    loadPersonEvents();
 
     return () => {
       mounted = false;
@@ -671,8 +722,9 @@ export function MinhaArvore() {
       form,
       complemento,
       socialProfiles,
+      personEvents,
     });
-  }, [complemento, form, pessoaBase?.id, socialProfiles, user?.id]);
+  }, [complemento, form, personEvents, pessoaBase?.id, socialProfiles, user?.id]);
 
   const previewName = useMemo(() => {
     const name = formatPersonName(String(form.nome_completo ?? '').trim());
@@ -684,9 +736,26 @@ export function MinhaArvore() {
   const pessoaInitials = getPessoaInitials(displayName);
   
   const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
+  const timelineItems = useMemo(() => {
+    if (!pessoaBase) return [];
+
+    return buildPersonTimeline({
+      pessoa: pessoaBase,
+      relacionamentos,
+      pessoas,
+      filhos: filhosHumanos,
+      arquivosHistoricosPessoa: archives,
+      eventosPessoais: personEvents,
+    });
+  }, [archives, filhosHumanos, pessoaBase, pessoas, personEvents, relacionamentos]);
 
   const markFormDirty = () => {
     isDirtyRef.current = true;
+  };
+
+  const handlePersonEventsChange = (eventos: PersonEvent[]) => {
+    markFormDirty();
+    setPersonEvents(eventos);
   };
 
   const updateField = (field: keyof EditableOwnPersonPayload, value: string | boolean) => {
@@ -869,6 +938,12 @@ export function MinhaArvore() {
       return;
     }
 
+    const incompletePersonEvent = personEvents.find((evento) => !evento.titulo.trim());
+    if (incompletePersonEvent) {
+      toast.error('Informe o título dos eventos da vida antes de salvar.');
+      return;
+    }
+
     setSaving(true);
 
     // TODO: extrair este formulário junto com /meus-dados e persistir múltiplas redes em pessoa_social_profiles.
@@ -916,6 +991,19 @@ export function MinhaArvore() {
         archivesError instanceof Error
           ? `Dados pessoais salvos, mas não foi possível salvar arquivos históricos: ${archivesError.message}`
           : 'Dados pessoais salvos, mas não foi possível salvar arquivos históricos.',
+      );
+      return;
+    }
+
+    try {
+      const savedPersonEvents = await salvarEventosDaPessoa(pessoaBase.id, personEvents);
+      setPersonEvents(savedPersonEvents);
+    } catch (personEventsError) {
+      setSaving(false);
+      toast.error(
+        personEventsError instanceof Error
+          ? `Dados pessoais salvos, mas não foi possível salvar eventos da vida: ${personEventsError.message}`
+          : 'Dados pessoais salvos, mas não foi possível salvar eventos da vida.',
       );
       return;
     }
@@ -1472,7 +1560,6 @@ export function MinhaArvore() {
           { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
           { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
           { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
-          { label: 'Sair', onClick: handleLogout, icon: HEADER_ACTION_ICONS.LogOut, variant: 'danger' },
         ]}
       />
 
@@ -1544,7 +1631,7 @@ export function MinhaArvore() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-4 gap-2 sm:gap-4">
+            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-4">
               <div className="rounded-2xl bg-green-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-green-700 font-semibold">Pais</p>
                 <p className="text-2xl font-bold text-green-900 mt-2">{resumo.pais.length}</p>
@@ -1559,7 +1646,11 @@ export function MinhaArvore() {
               </div>
               <div className="rounded-2xl bg-sky-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-sky-700 font-semibold">Filhos</p>
-                <p className="text-2xl font-bold text-sky-900 mt-2">{resumo.filhos.length}</p>
+                <p className="text-2xl font-bold text-sky-900 mt-2">{filhosHumanos.length}</p>
+              </div>
+              <div className="rounded-2xl bg-rose-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-rose-700 font-semibold">Pets</p>
+                <p className="text-2xl font-bold text-rose-900 mt-2">{petsVinculados.length}</p>
               </div>
             </div>
           </div>
@@ -1574,37 +1665,13 @@ export function MinhaArvore() {
             <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
 
 
-              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="mb-5">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Meus dados</h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Edite suas informações pessoais, foto, permissões, arquivos históricos e dados familiares.
+                  Edite suas informações pessoais, permissões, arquivos históricos e dados familiares.
                 
                 </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setPhotoDialogMode('edit');
-                    setPhotoDialogOpen(true);
-                  }}
-                >
-                  <Camera className="mr-2 h-4 w-4" />
-                  {currentPhotoUrl ? 'Alterar' : 'Cadastrar'}
-                </Button>
-                {currentPhotoUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRemovePhoto}
-                    className="border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Remover
-                  </Button>
-                )}
               </div>
             </div>
 
@@ -1815,7 +1882,41 @@ export function MinhaArvore() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoaBase.id}
+                addButtonVariant="icon"
+                showTitle={false}
               />
+            </section>
+
+            <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+              <div className="mb-5">
+                <h2 className="text-xl font-bold text-gray-900">Eventos da Vida</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Revise a linha do tempo derivada dos dados existentes e inclua acontecimentos relevantes do perfil.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                <PersonTimeline
+                  items={timelineItems}
+                  isAdmin={isAdmin}
+                  title="Eventos automáticos e manuais"
+                  subtitle="Eventos ordenados a partir de nascimento, vínculos familiares, arquivos históricos e registros manuais."
+                  embedded
+                />
+
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-gray-900">Adicionar evento manual</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Use para alistamento militar, mudança de cidade, imigração, formatura, profissão, viagens marcantes ou outros acontecimentos.
+                    </p>
+                  </div>
+                  <PersonEventsEditor
+                    eventos={personEvents}
+                    onChange={handlePersonEventsChange}
+                  />
+                </div>
+              </div>
             </section>
           </>
         )}
@@ -2013,7 +2114,7 @@ export function MinhaArvore() {
       <Dialog open={leaveConfirmOpen} onOpenChange={(open) => (!open ? cancelLeaveWithoutSaving() : undefined)}>
         <DialogContent className="bg-white sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Sair sem salvar?</DialogTitle>
+            <DialogTitle>Deseja sair sem salvar os ajustes?</DialogTitle>
             <DialogDescription>
               Você tem alterações pendentes nesta página. Se sair agora, as alterações não salvas serão descartadas.
             </DialogDescription>

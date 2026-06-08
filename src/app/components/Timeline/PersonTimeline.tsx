@@ -17,6 +17,9 @@ import type { PersonTimelineItem, PersonTimelineItemType } from '../../utils/bui
 type PersonTimelineProps = {
   items?: PersonTimelineItem[];
   isAdmin?: boolean;
+  title?: string;
+  subtitle?: string;
+  embedded?: boolean;
 };
 
 const TYPE_LABELS: Record<PersonTimelineItemType, string> = {
@@ -80,14 +83,27 @@ function getDateLabel(item: PersonTimelineItem) {
   return undefined;
 }
 
-export function PersonTimeline({ items = [], isAdmin = false }: PersonTimelineProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Linha do tempo</CardTitle>
-        <p className="text-sm text-gray-500">Eventos importantes registrados a partir dos dados disponíveis.</p>
-      </CardHeader>
-      <CardContent>
+export function PersonTimeline({
+  items = [],
+  isAdmin = false,
+  title = 'Linha do tempo',
+  subtitle = 'Eventos importantes registrados a partir dos dados disponíveis.',
+  embedded = false,
+}: PersonTimelineProps) {
+  const content = (
+    <>
+      {embedded ? (
+        <div>
+          <h3 className="font-semibold text-gray-900">{title}</h3>
+          <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+        </div>
+      ) : (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <p className="text-sm text-gray-500">{subtitle}</p>
+        </CardHeader>
+      )}
+      <CardContent className={embedded ? 'px-0 pb-0 pt-0' : undefined}>
         {items.length === 0 ? (
           <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
             Ainda não há eventos suficientes para montar a linha do tempo desta pessoa.
@@ -142,6 +158,16 @@ export function PersonTimeline({ items = [], isAdmin = false }: PersonTimelinePr
           </div>
         )}
       </CardContent>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-4">{content}</div>;
+  }
+
+  return (
+    <Card>
+      {content}
     </Card>
   );
 }

@@ -98,6 +98,7 @@ interface ArquivosHistoricosProps {
   readOnly?: boolean;
   onRequestAdd?: () => void;
   addButtonVariant?: 'full' | 'icon';
+  showTitle?: boolean;
 }
 
 export function ArquivosHistoricos({
@@ -108,6 +109,7 @@ export function ArquivosHistoricos({
   readOnly = false,
   onRequestAdd,
   addButtonVariant = 'full',
+  showTitle = true,
 }: ArquivosHistoricosProps) {
   const [novoArquivo, setNovoArquivo] = useState({
     titulo: '',
@@ -235,31 +237,33 @@ export function ArquivosHistoricos({
   return (
     <>
       <Card className="min-w-0">
-        <CardHeader>
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="break-words">Arquivos Históricos</CardTitle>
-            {(!readOnly || onRequestAdd) && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                className={readOnly || addButtonVariant === 'icon' ? 'h-9 w-9 shrink-0 rounded-full p-0' : 'w-full sm:w-auto'}
-                onClick={handleToggleAddFile}
-                aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
-                title={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
-              >
-                {readOnly || addButtonVariant === 'icon' ? (
-                  <Plus className="h-4 w-4" />
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4" />
-                    Adicionar Arquivo
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+        {(showTitle || !readOnly || onRequestAdd) && (
+          <CardHeader>
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {showTitle ? <CardTitle className="break-words">Arquivos Históricos</CardTitle> : <div />}
+              {(!readOnly || onRequestAdd) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={readOnly || addButtonVariant === 'icon' ? 'h-9 w-9 shrink-0 rounded-full p-0' : 'w-full sm:w-auto'}
+                  onClick={handleToggleAddFile}
+                  aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
+                  title={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
+                >
+                  {readOnly || addButtonVariant === 'icon' ? (
+                    <Plus className="h-4 w-4" />
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Adicionar Arquivo
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+        )}
         <CardContent className="space-y-4">
           {(isAddingFile || hasUploadedDraftFile) && !readOnly && (
             <div className="space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
