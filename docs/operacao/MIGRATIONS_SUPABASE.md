@@ -41,8 +41,8 @@ Não aplicar como schema principal:
 database-schema.sql
 supabase/forum-schema.sql
 supabase/google-calendar-schema.sql
-scripts SQL antigos em docs/historico/
-scripts SQL antigos em docs/historico/documentacao-antiga/
+scripts SQL antigos fora de `supabase/migrations/`
+scripts SQL removidos de `docs/historico/sql-legado/` ou `docs/historico/documentacao-antiga/`
 ```
 
 ---
@@ -490,17 +490,18 @@ Classificação recomendada:
 
 | Tipo | Destino |
 |---|---|
-| Diagnóstico manual | `docs/historico/` ou `scripts/` com aviso claro |
+| Diagnóstico manual | `scripts/` ou documento canônico com aviso claro, se ainda for útil |
 | Correção operacional pontual | `scripts/` com dry-run e instrução |
-| Schema antigo substituído por migrations | `docs/historico/documentacao-antiga/` |
+| Schema antigo substituído por migrations | Remover; não recriar `docs/historico/documentacao-antiga/` nem `docs/historico/sql-legado/` |
 | Script destrutivo | `scripts/` com comentários, bloqueios e confirmação |
 | Migration real | `supabase/migrations/` |
 
 Regras:
 
 - não aplicar SQL legado como schema de ambiente novo;
-- não remover arquivo legado sem confirmar se outro documento ainda o referencia;
-- se um SQL legado ainda for útil, marcar como histórico ou operacional;
+- não recriar arquivo legado apenas para arquivar SQL antigo;
+- se um SQL legado ainda for útil, mover para `scripts/` como operacional, com aviso claro;
+- se for apenas histórico, resumir em `docs/historico/README.md` ou remover;
 - se for destrutivo, exigir dry-run, backup e confirmação explícita.
 
 ---

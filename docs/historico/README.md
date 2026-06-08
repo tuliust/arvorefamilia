@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/historico/README.md`  
 > Tipo: consolidação histórica e índice da pasta `docs/historico/`.  
-> Status: substitui os documentos históricos individuais preservados anteriormente nesta pasta.
+> Status: único resumo histórico consolidado; substitui arquivos históricos individuais removidos.
 
 ---
 
@@ -38,7 +38,7 @@ Se houver divergência entre este histórico consolidado e a documentação can�
 Durante a revisão final da documentação, foi adotada a seguinte decisão para o grupo histórico:
 
 ```txt
-Consolidar tudo em docs/historico/README.md e depois remover os arquivos históricos individuais.
+Consolidar tudo em docs/historico/README.md e remover os arquivos históricos individuais.
 ```
 
 Motivos:
@@ -51,19 +51,20 @@ Motivos:
 
 ---
 
-## 3. Arquivos históricos consolidados
+## 3. Arquivos históricos consolidados e removidos
 
 Os conteúdos relevantes dos arquivos abaixo foram consolidados neste README ou já foram absorvidos pelos documentos canônicos atuais.
 
 | Arquivo antigo | Decisão | Destino atual da informação útil |
 |---|---|---|
-| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | Remover após consolidação. | Revisão documental atual e `docs/PLANO_PROXIMOS_PASSOS.md`. |
-| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Remover após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo neste README. |
-| `QA_7_6_EXPORTACAO_ARVORE.md` | Remover após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo de QA neste README. |
-| `QA_FINAL_MVP.md` | Remover após consolidação. | Critérios permanentes em `docs/PLANO_PROXIMOS_PASSOS.md` + checklist resumido neste README. |
-| `RESPONSIVIDADE_MOBILE_TABLET.md` | Remover após consolidação. | `docs/GUIA_UX_LAYOUT.md` + checklist resumido neste README. |
-| `AJUSTES_MOBILE_2026-06-02.md` | Remover após consolidação. | `docs/GUIA_UX_LAYOUT.md`, documentos funcionais de árvore/calendário/fórum/admin + resumo neste README. |
-| `documentacao-antiga/*` | Remover após checagem final. | Informação útil deve estar nos guias canônicos ou neste README. |
+| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | Removido após consolidação. | Revisão documental atual e `docs/PLANO_PROXIMOS_PASSOS.md`. |
+| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Removido após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo neste README. |
+| `QA_7_6_EXPORTACAO_ARVORE.md` | Removido após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo de QA neste README. |
+| `QA_FINAL_MVP.md` | Removido após consolidação. | Critérios permanentes em `docs/PLANO_PROXIMOS_PASSOS.md` + checklist resumido neste README. |
+| `RESPONSIVIDADE_MOBILE_TABLET.md` | Removido após consolidação. | `docs/GUIA_UX_LAYOUT.md` + checklist resumido neste README. |
+| `AJUSTES_MOBILE_2026-06-02.md` | Removido após consolidação. | `docs/GUIA_UX_LAYOUT.md`, documentos funcionais de árvore/calendário/fórum/admin + resumo neste README. |
+| `documentacao-antiga/*` | Removido após consolidação. | Informação útil deve estar nos guias canônicos ou neste README. |
+| `sql-legado/*` | Removido após consolidação. | `supabase/migrations/` permanece como fonte de verdade do schema; SQL operacional útil deve ficar em `scripts/` com aviso claro. |
 
 ---
 
@@ -253,34 +254,16 @@ docs/GUIA_COMPONENTES.md
 
 ---
 
-## 5. Documentação antiga
+## 5. Documentação antiga e SQL legado removidos
 
-A antiga pasta:
+As antigas pastas abaixo foram removidas após consolidação:
 
 ```txt
 docs/historico/documentacao-antiga/
+docs/historico/sql-legado/
 ```
 
-foi classificada como arquivo morto. Documentos antigos dessa pasta não devem ser usados como fonte atual de banco, rotas, migrations, erros, irmãos, setup ou arquitetura.
-
-Regra:
-
-```txt
-Se algum conteúdo ainda for útil, migrar para o documento canônico adequado antes de remover o arquivo antigo.
-```
-
-Possíveis documentos antigos que podem ser removidos após consolidação:
-
-```txt
-INDICE-DOCUMENTACAO.md
-README-DOCUMENTACAO.md
-MIGRATION-GUIDE.md
-SETUP-BANCO-DADOS.md
-RESPOSTA-RAPIDA-IRMAOS.md
-COMO-FUNCIONA-IRMAOS.md
-RELATORIO-DIAGNOSTICO-COMPLETO.md
-ERROS-E-SOLUCOES.md
-```
+Esses conteúdos não devem ser recriados como fonte operacional. Se algum conteúdo antigo ainda for necessário, ele deve ser migrado para o documento canônico adequado ou para um script operacional seguro.
 
 Destinos canônicos:
 
@@ -294,29 +277,31 @@ Destinos canônicos:
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 | Usuários e banco | `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
 | Funcionalidades específicas | `docs/funcionalidades/*.md` |
+| SQL operacional pontual ainda útil | `scripts/`, com aviso, dry-run quando aplicável e confirmação explícita para ação destrutiva |
+| Schema real do banco | `supabase/migrations/` |
 
 ---
 
-## 6. Arquivos que podem ser removidos após substituição manual
+## 6. Estrutura histórica esperada
 
-Depois que este README consolidado for salvo em `docs/historico/README.md`, os arquivos abaixo podem ser removidos do repositório, desde que não haja mudança local não revisada:
+Após a revisão e os commits documentais, a estrutura histórica esperada é:
 
-```bash
-git rm docs/historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md
-git rm docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
-git rm docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
-git rm docs/historico/QA_FINAL_MVP.md
-git rm docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
-git rm docs/historico/AJUSTES_MOBILE_2026-06-02.md
+```txt
+docs/historico/README.md
 ```
 
-Para a documentação antiga:
+Não devem existir novamente, salvo decisão explícita futura:
 
-```bash
-git rm -r docs/historico/documentacao-antiga
+```txt
+docs/historico/documentacao-antiga/
+docs/historico/sql-legado/
+docs/historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md
+docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
+docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
+docs/historico/QA_FINAL_MVP.md
+docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
+docs/historico/AJUSTES_MOBILE_2026-06-02.md
 ```
-
-Executar apenas depois de confirmar que nenhum arquivo útil ficou fora dos documentos canônicos.
 
 ---
 
@@ -327,8 +312,10 @@ Não fazer:
 - usar documento histórico como guia atual;
 - manter diagnóstico antigo como fonte de verdade;
 - duplicar QA antigo nos documentos funcionais;
-- remover arquivos históricos antes de substituir este README consolidado;
-- remover SQL ou documentação antiga sem checar se há conteúdo único ainda não migrado;
+- recriar arquivos históricos individuais sem necessidade explícita;
+- recriar `documentacao-antiga/` ou `sql-legado/` como arquivo morto;
+- aplicar SQL legado como schema principal;
+- remover conteúdo histórico futuro sem checar se há conteúdo único ainda não migrado;
 - manter backups temporários dentro de `docs/historico/`;
 - documentar nova pendência em histórico em vez de usar `docs/PLANO_PROXIMOS_PASSOS.md`.
 
@@ -344,7 +331,7 @@ Fazer:
 - registrar troubleshooting em `docs/GUIA_CORRECAO_ERROS.md`;
 - registrar decisões visuais em `docs/GUIA_UX_LAYOUT.md`;
 - registrar operação em `docs/operacao/`;
-- revisar `docs/README.md` por último para refletir a nova estrutura.
+- revisar `docs/README.md` quando a estrutura documental mudar.
 
 ---
 
@@ -357,7 +344,3 @@ Depois desta revisão, a estrutura recomendada é:
 ```txt
 docs/historico/README.md
 ```
-
-como único arquivo histórico consolidado.
-
-Os arquivos históricos individuais podem ser removidos depois da substituição manual, pois seus pontos úteis foram absorvidos nos guias canônicos ou resumidos neste arquivo.

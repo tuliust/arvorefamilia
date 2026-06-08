@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisão final da documentação concluída; manter apenas pendências reais futuras.
+> Status: plano vivo da revisão final da documentação.
 
 ## Objetivo
 
@@ -22,7 +22,7 @@ O estado consolidado do que já foi implementado deve permanecer em `docs/GUIA_I
 
 As pendências funcionais e visuais anteriormente registradas neste arquivo foram consideradas finalizadas e validadas.
 
-A revisão arquivo por arquivo de `docs/` foi concluída. Qualquer divergência futura entre documentação e código deve ser registrada nas seções abaixo, sem alteração de código, sem migration e sem modificação direta no repositório.
+Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova entre documentação e código deve ser registrada nas seções abaixo, sem alteração de código, sem migration e sem modificação direta no repositório.
 
 ---
 
@@ -91,7 +91,7 @@ A revisão arquivo por arquivo de `docs/` foi concluída. Qualquer divergência 
 | Ordem | Documento | Status | Observações |
 |---:|---|---|---|
 | 1 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado | Plano limpo e atualizado durante a auditoria. |
-| 2 | `docs/README.md` | Revisado nesta etapa | Índice canônico final alinhado à documentação consolidada e ao histórico resumido. |
+| 2 | `docs/README.md` | Pendente | Revisar por último. |
 | 3 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado | Inventário consolidado. |
 | 4 | `docs/GUIA_UX_LAYOUT.md` | Revisado | Guia visual reorganizado. |
 | 5 | `docs/GUIA_COMPONENTES.md` | Revisado | Catálogo técnico revisado. |
@@ -111,14 +111,14 @@ A revisão arquivo por arquivo de `docs/` foi concluída. Qualquer divergência 
 | 19 | `docs/funcionalidades/CALENDARIO_FAMILIAR.md` | Revisado nesta etapa | Calendário, filtros mobile e Google Agenda. |
 | 20 | `docs/funcionalidades/TIMELINE.md` | Revisado nesta etapa | Timeline alinhada a `person_events` e `/minha-arvore/editar`. |
 | 21 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Revisado nesta etapa | Exportação da área visível da árvore. |
-| 22 | `docs/operacao/README.md` | Pendente | Validar índice operacional. |
-| 23 | `docs/operacao/DEPLOYMENT.md` | Pendente | Validar deploy, variáveis e build. |
-| 24 | `docs/operacao/STORAGE_MAINTENANCE.md` | Pendente | Validar manutenção de Storage e limpeza auditada. |
-| 25 | `docs/comandos/GIT_RESPONSIVIDADE.md` | Pendente | Confirmar se permanece como histórico/checklist. |
-| 26 | `docs/ATTRIBUTIONS.md` | Pendente | Validar licenças e atribuições. |
-| 27 | `docs/historico/README.md` | Pendente | Validar classificação histórica. |
-| 28 | `docs/historico/*` | Pendente | Marcar como histórico e evitar conflito com guias canônicos. |
-| 29 | `docs/historico/documentacao-antiga/*` | Pendente | Sugerir manter, fundir, mover ou remover em etapa posterior. |
+| 22 | `docs/operacao/README.md` | Revisado | Índice operacional enxuto. |
+| 23 | `docs/operacao/DEPLOYMENT.md` | Revisado | Deploy, variáveis, build, Supabase e secrets. |
+| 24 | `docs/operacao/STORAGE_MAINTENANCE.md` | Revisado | Storage, dry-run, base64 legado e service role. |
+| 25 | `docs/comandos/GIT_RESPONSIVIDADE.md` | Revisado | Mantido como checklist operacional/histórico. |
+| 26 | `docs/ATTRIBUTIONS.md` | Revisado | Atribuições e cuidados de licenças consolidados. |
+| 27 | `docs/historico/README.md` | Revisado | Índice histórico consolidado; passa a substituir os arquivos históricos individuais. |
+| 28 | `docs/historico/*` | Consolidado nesta etapa | Conteúdo útil reunido em `docs/historico/README.md`; remover arquivos históricos individuais após substituição manual. |
+| 29 | `docs/historico/documentacao-antiga/*` | Consolidado nesta etapa | Arquivo morto; remover após confirmar que conteúdo útil já foi absorvido nos canônicos. |
 
 ---
 
