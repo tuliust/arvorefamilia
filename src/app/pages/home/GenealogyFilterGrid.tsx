@@ -38,8 +38,8 @@ export function GenealogyFilterGrid({
 }: GenealogyFilterGridProps) {
   return (
     <section>
-      <h2 className="mb-[clamp(0.25rem,0.75vh,0.45rem)] text-[clamp(14px,2.1vh,16px)] font-semibold leading-tight text-gray-900">Filtros</h2>
-      <p className="mb-[clamp(0.7rem,1.55vh,1rem)] text-[clamp(11px,1.6vh,13px)] leading-snug text-gray-500">
+      <h2 className="mb-[clamp(0.3rem,0.85vh,0.5rem)] text-[clamp(15px,2.35vh,18px)] font-semibold leading-tight text-gray-900">Filtros</h2>
+      <p className="mb-[clamp(0.95rem,1.9vh,1.35rem)] text-[clamp(12px,1.8vh,14px)] leading-snug text-gray-500">
         Clique nos cards abaixo para exibir ou ocultar gerações na genealogia.
       </p>
       <div className="grid grid-cols-2 gap-[clamp(0.4rem,1.15vh,0.7rem)]">
