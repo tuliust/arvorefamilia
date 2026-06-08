@@ -1,66 +1,29 @@
-# Exportacao da arvore
+# Exportação da árvore
 
-> Documento canonico da funcionalidade de exportacao de area visivel da arvore.
-> Local recomendado: `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
+> Última revisão: 2026-06-08  
+> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
+> Tipo: documentação funcional e técnica da exportação da área visível da árvore.
 
 ---
 
 ## 1. Objetivo
 
-Este documento consolida a funcionalidade de exportacao da arvore familiar no projeto **Arvore Familia**.
+A exportação permite gerar PNG, PDF ou impressão a partir de uma área visível da árvore.
 
-A exportacao atual permite ao usuario selecionar uma area visivel da arvore e gerar:
-
-- imagem PNG;
-- arquivo PDF;
-- impressao.
-
-A funcionalidade atua sobre a **viewport visivel** da arvore, nao sobre a arvore completa.
+O escopo atual é **exportar a área visível/selecionada**, não a árvore completa.
 
 ---
 
-## 2. Escopo atual
-
-### Implementado
-
-- Selecao retangular de area visivel da arvore.
-- Exportacao da selecao em PNG.
-- Exportacao da selecao em PDF.
-- Impressao da selecao.
-- Cancelamento por botao.
-- Cancelamento por tecla `Esc`.
-- Bloqueio temporario de pan/zoom enquanto a selecao esta ativa.
-- Exclusao de controles, overlays, legendas e menus na captura.
-- Mensagens amigaveis de erro quando a captura falha.
-
-### Fora do escopo atual
-
-- Exportacao automatica da arvore completa.
-- Exportacao com escala automatica de toda a arvore.
-- Exportacao server-side.
-- Salvamento da exportacao no Supabase Storage.
-- Log persistido de exportacao.
-- Historico de exportacoes do usuario.
-- Exportacao por lote.
-- Exportacao vetorial/SVG.
-
----
-
-## 3. Arquivos principais
+## 2. Arquivos principais
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
-src/app/pages/Home.tsx
-```
-
-Arquivos relacionados:
-
-```txt
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/types.ts
+src/app/pages/Home.tsx
 ```
 
 Documentos relacionados:
@@ -70,28 +33,56 @@ docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/arquitetura/ROTAS_E_GUARDS.md
 docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
 docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
 ```
 
 ---
 
-## 4. Componentes e responsabilidades
+## 3. Escopo atual
 
-### 4.1 `FamilyTree.tsx`
+Implementado:
 
-Responsabilidades relacionadas a exportacao:
+- seleção retangular de área visível;
+- exportação PNG;
+- exportação PDF;
+- impressão;
+- cancelamento por botão;
+- cancelamento por `Esc`;
+- seleção mínima de `80 x 80px`;
+- limite estimado de 12.000.000 pixels;
+- bloqueio de pan/zoom durante seleção;
+- exclusão de controles/overlays/legendas da captura;
+- mensagens de erro amigáveis.
 
-- expor acao imperativa `startAreaSelection`;
-- acionar o modo de selecao de area;
-- bloquear pan/zoom enquanto o overlay esta ativo;
+Fora do escopo atual:
+
+- exportar automaticamente a árvore completa;
+- exportar árvore completa com escala automática;
+- exportação server-side;
+- salvar exportações no Supabase Storage;
+- histórico de exportações;
+- exportação SVG/vetorial;
+- PDF multipágina automático.
+
+---
+
+## 4. Componentes
+
+### `FamilyTree.tsx`
+
+Responsabilidades:
+
+- expor ações por ref;
+- iniciar seleção de área;
+- bloquear interações durante seleção;
 - renderizar `TreeAreaSelectionOverlay`;
-- fornecer elemento alvo da captura;
-- preservar o funcionamento normal da arvore apos cancelar/concluir a selecao.
+- fornecer elemento alvo para captura;
+- manter viewport/filtros após cancelar ou concluir.
 
-Acoes expostas via `ref`:
+Ações expostas:
 
 ```txt
 zoomIn
@@ -102,125 +93,26 @@ saveImage
 startAreaSelection
 ```
 
-Observacao:
-
-- `print`, `savePdf` e `saveImage` continuam existindo como acoes de exportacao direta/legada quando aplicavel.
-- A selecao de area e a experiencia recomendada para o MVP.
-
----
-
-### 4.2 `TreeAreaSelectionOverlay.tsx`
+### `TreeAreaSelectionOverlay.tsx`
 
 Responsabilidades:
 
-- renderizar a camada de selecao;
-- capturar inicio, movimento e final da selecao retangular;
-- validar area minima;
+- capturar arraste de seleção;
+- validar área mínima;
+- exibir instrução;
 - exibir toolbar contextual;
-- chamar exportacao PNG/PDF/impressao;
-- cancelar por botao ou `Esc`;
-- exibir erro local quando a operacao falha;
-- fechar apos exportacao bem-sucedida.
+- exportar PNG/PDF/impressão;
+- cancelar por botão ou `Esc`;
+- fechar após sucesso;
+- exibir erro local se a exportação falhar.
 
-Props esperadas:
-
-```txt
-getTargetElement
-filenameLabel
-title
-onClose
-```
-
-Regras implementadas:
-
-- selecao minima de `80 x 80px`;
-- limite maximo de exportacao estimado;
-- bloqueio de propagacao de eventos;
-- fechamento apos sucesso;
-- manutencao de pan/zoom bloqueados enquanto a selecao esta ativa.
-
----
-
-### 4.3 `treeExport.ts`
-
-Responsabilidades:
-
-- gerar nome de arquivo;
-- capturar elemento HTML com `html2canvas`;
-- sanitizar cores nao suportadas;
-- recortar canvas conforme selecao;
-- salvar PNG;
-- gerar PDF;
-- abrir janela de impressao;
-- imprimir canvas;
-- ignorar elementos que nao devem aparecer na captura.
-
-Funcoes principais:
+Texto atual:
 
 ```txt
-buildTreeExportFilename
-getDefaultTreeExportIgnoreElements
-captureElementToCanvas
-cropCanvas
-downloadCanvasAsPng
-exportCanvasAsPdf
-openTreePrintWindow
-printCanvas
+Arraste para selecionar uma área visível da árvore.
 ```
 
----
-
-## 5. Fluxo de uso
-
-Fluxo funcional esperado:
-
-```txt
-Usuario abre a arvore
-
-Usuario abre Acoes
-
-Usuario escolhe Selecionar area
-
-Overlay e exibido sobre a arvore
-
-Usuario arrasta para selecionar uma area visivel
-
-Toolbar contextual aparece
-
-Usuario escolhe Salvar PNG, Salvar PDF ou Imprimir
-
-Sistema captura a area selecionada
-
-Sistema baixa arquivo ou abre impressao
-
-Overlay fecha apos sucesso
-```
-
-Cancelamento:
-
-```txt
-Overlay ativo
-
-Usuario clica em Cancelar ou pressiona Esc
-
-Overlay fecha
-
-Pan/zoom voltam ao comportamento normal
-```
-
----
-
-## 6. Regras de UX
-
-### 6.1 Texto e instrucao
-
-Texto esperado no overlay:
-
-```txt
-Arraste para selecionar uma area visivel da arvore.
-```
-
-Botoes/acoes esperados:
+Ações atuais:
 
 ```txt
 Salvar PNG
@@ -229,45 +121,69 @@ Imprimir
 Cancelar
 ```
 
-Observacao:
+### `treeExport.ts`
 
-- os labels devem acompanhar a UI real do `TreeAreaSelectionOverlay.tsx`;
-- se a UI mudar, atualizar este documento junto.
+Responsabilidades:
 
-### 6.2 Selecao
-
-Regras:
-
-- a selecao deve ser retangular;
-- a selecao deve acontecer sobre a area visivel;
-- a area minima deve impedir cliques acidentais;
-- a selecao nao deve alterar dados da arvore;
-- a selecao nao deve alterar filtros, view ou pessoa central.
-
-### 6.3 Pan e zoom
-
-Durante selecao:
-
-- pan deve ficar bloqueado;
-- zoom deve ficar bloqueado;
-- clique em pessoa deve ficar bloqueado;
-- clique em casamento/anel deve ficar bloqueado;
-- menus contextuais da arvore nao devem abrir.
-
-Apos cancelar ou concluir:
-
-- pan volta ao estado anterior;
-- zoom volta ao estado anterior;
-- arvore permanece na mesma view;
-- filtros e pessoa central sao preservados.
+- montar nome de arquivo;
+- capturar elemento com `html2canvas`;
+- recortar canvas;
+- baixar PNG;
+- gerar PDF;
+- abrir janela de impressão;
+- imprimir canvas;
+- ignorar elementos de UI não exportáveis.
 
 ---
 
-## 7. Elementos ignorados na exportacao
+## 5. Fluxo de uso
 
-A exportacao deve ignorar elementos de UI que nao fazem parte da arvore capturada.
+```txt
+Usuário abre a árvore
+Usuário escolhe ação de exportação/seleção
+Overlay aparece sobre a árvore
+Usuário arrasta uma área visível
+Toolbar aparece
+Usuário escolhe PNG, PDF ou Imprimir
+Sistema captura a área
+Sistema baixa arquivo ou abre impressão
+Overlay fecha após sucesso
+```
 
-Seletores esperados:
+Cancelamento:
+
+```txt
+Cancelar ou Esc
+-> overlay fecha
+-> pan/zoom voltam ao normal
+-> filtros, view e pessoa central são preservados
+```
+
+---
+
+## 6. Regras de interação
+
+Durante a seleção:
+
+- pan bloqueado;
+- zoom bloqueado;
+- clique em pessoa bloqueado;
+- clique em casamento bloqueado;
+- menus contextuais não abrem;
+- eventos do overlay não propagam para ReactFlow.
+
+Após concluir/cancelar:
+
+- árvore mantém a mesma view;
+- filtros não são alterados;
+- pessoa central não muda;
+- pan/zoom voltam ao comportamento normal.
+
+---
+
+## 7. Elementos ignorados
+
+Seletores relevantes:
 
 ```txt
 .react-flow__controls
@@ -279,259 +195,161 @@ Seletores esperados:
 
 Regras:
 
-- controles de zoom nao devem aparecer no PNG/PDF/impressao;
-- menus de node nao devem aparecer;
-- overlay de selecao nao deve aparecer;
-- legenda lateral nao deve aparecer quando marcada com `data-tree-legend="true"`;
-- elementos de navegacao da pagina nao devem aparecer;
-- se novo overlay/menu for criado na arvore, adicionar seletor de ignore correspondente.
+- controles de zoom não devem aparecer;
+- menu de node não deve aparecer;
+- overlay de seleção não deve aparecer;
+- legenda marcada com `data-tree-legend="true"` não deve aparecer;
+- novos overlays/menus devem receber seletor de ignore.
 
 ---
 
-## 8. Restricoes tecnicas
+## 8. Restrições técnicas
 
-### 8.1 CORS
+### CORS
 
 A captura usa `html2canvas`.
 
-Configuracoes esperadas:
+Configurações esperadas:
 
 ```txt
 useCORS: true
 allowTaint: false
 ```
 
-Risco:
+Não resolver erro de CORS com `allowTaint: true` sem revisão técnica.
 
-- imagens externas sem CORS adequado podem quebrar a captura;
-- avatares ou arquivos remotos precisam ter acesso compativel;
-- erro deve ser tratado com mensagem amigavel.
+### Cores
 
-Regra:
+Manter sanitização/fallback de cores não suportadas por `html2canvas`.
 
-- nao resolver erro de CORS removendo seguranca ou permitindo canvas tainted sem avaliacao.
+### Tamanho
 
----
-
-### 8.2 Cores nao suportadas
-
-Algumas cores CSS modernas podem nao ser suportadas pela captura.
-
-Regra:
-
-- preservar sanitizacao de cores;
-- nao remover fallback de cores;
-- validar captura apos mudanca visual na arvore.
-
----
-
-### 8.3 Limite de tamanho
-
-A exportacao possui limite de seguranca para evitar canvas grande demais.
-
-Regra atual:
+Limite estimado:
 
 ```txt
-limite estimado: 12.000.000 pixels
+12.000.000 pixels
 ```
 
-Se o usuario selecionar area muito grande:
+Se a seleção exceder o limite:
 
-- exibir erro amigavel;
-- orientar selecao menor;
-- nao travar a pagina.
-
----
-
-## 9. Regras por view da arvore
-
-### Minha Arvore
-
-- Exporta apenas a area visivel selecionada.
-- Deve preservar layout direto e grupos familiares.
-- Labels e group boxes podem aparecer se estiverem dentro da selecao.
-- Painel lateral nao deve aparecer.
-
-### Genealogia
-
-- Exporta apenas a area visivel selecionada.
-- Como a arvore pode ser verticalmente longa, o usuario deve pan/arrastar ate a regiao desejada antes de selecionar.
-- A exportacao nao deve tentar capturar automaticamente toda a altura.
-
-### Visao Completa
-
-- Exporta apenas a area visivel selecionada.
-- A arvore completa pode ser maior que a viewport.
-- Exportar toda a arvore fica pos-MVP.
+- mostrar erro amigável;
+- orientar seleção menor;
+- não travar a página.
 
 ---
 
-## 10. QA obrigatorio
+## 9. Regras por view
 
-Apos alterar exportacao, arvore, ReactFlow, painel lateral ou legenda:
+| View | Regra |
+|---|---|
+| `/minha-arvore` | Exporta apenas área visível selecionada. |
+| `/genealogia` | Exporta área visível; usuário deve navegar até a região desejada. |
+| `/visao-completa` | Exporta área visível; árvore completa é pós-MVP. |
+
+---
+
+## 10. QA
+
+### Técnico
 
 ```bash
 npm run build
-npm test
-npm run test:e2e
 git diff --check
+git status --short
 ```
 
-QA manual minimo:
+### Manual
 
 - abrir `/minha-arvore`;
-- iniciar selecao de area;
-- cancelar por botao;
-- iniciar selecao novamente;
+- iniciar seleção;
+- cancelar por botão;
+- iniciar seleção;
 - cancelar por `Esc`;
-- selecionar area valida;
-- exportar PNG pelo botao Salvar PNG;
-- exportar PDF pelo botao Salvar PDF;
+- selecionar área válida;
+- salvar PNG;
+- salvar PDF;
 - imprimir;
-- testar selecao pequena demais;
+- testar seleção pequena demais;
+- testar área grande demais;
 - testar com painel lateral aberto;
 - testar com painel lateral recolhido;
-- testar em Genealogia;
-- testar em Visao Completa;
-- confirmar que pan/zoom voltam apos cancelar/concluir;
-- confirmar que legenda/overlay/menus nao aparecem na exportacao.
+- testar em `/genealogia`;
+- testar em `/visao-completa`;
+- confirmar que overlays/controles não aparecem na captura;
+- confirmar que pan/zoom voltam após finalizar.
 
-Larguras recomendadas:
+Larguras úteis:
 
-- desktop;
-- 768px;
-- 430px;
-- 390px;
-- 375px;
-- 320px.
+```txt
+320px
+375px
+390px
+430px
+768px
+desktop
+```
 
 ---
 
 ## 11. Troubleshooting
 
-### Exportacao falha com imagem externa
+### Exportação falha com imagem externa
 
-Causa provavel:
+Possíveis causas:
 
 - imagem sem CORS;
 - avatar externo;
 - arquivo remoto sem headers adequados.
 
-Correcao:
-
-- validar origem da imagem;
-- preferir arquivos servidos por Storage com politica compativel;
-- manter `useCORS: true`;
-- nao usar `allowTaint: true` sem revisao.
-
----
+Verificar origem da imagem e Storage.
 
 ### Controles aparecem no PNG/PDF
-
-Causa provavel:
-
-- seletor de ignore incompleto;
-- elemento sem atributo esperado;
-- classe ReactFlow alterada.
 
 Verificar:
 
 ```txt
 getDefaultTreeExportIgnoreElements
-data-tree-selection-overlay="true"
-data-tree-legend="true"
-data-tree-node-menu="true"
+data-tree-selection-overlay
+data-tree-legend
+data-tree-node-menu
 ```
 
----
+### Seleção não bloqueia pan
 
-### Selecao nao bloqueia pan
+Verificar propagação de eventos no overlay e props repassadas ao ReactFlow.
 
-Causa provavel:
+### PDF cortado
 
-- eventos propagando para ReactFlow;
-- overlay sem interceptar `mousedown`, `mousemove` ou `click`;
-- estado de selecao nao repassado ao `FamilyTree`.
+Verificar proporção, tamanho da seleção e `exportCanvasAsPdf`.
 
-Correcao:
+### Impressão abre em branco
 
-- revisar `TreeAreaSelectionOverlay`;
-- revisar bloqueio de pan/zoom em `FamilyTree`;
-- confirmar `stopPropagation` nos pontos necessarios.
+Verificar popup bloqueado, `openTreePrintWindow`, carregamento do canvas e CORS.
 
 ---
 
-### PDF fica cortado
+## 12. Pós-MVP
 
-Causa provavel:
-
-- selecao muito grande;
-- proporcao incompativel;
-- escala do canvas;
-- limite de pagina.
-
-Correcao:
-
-- testar selecao menor;
-- revisar geracao em `exportCanvasAsPdf`;
-- validar orientacao e proporcao.
+- exportar árvore completa;
+- exportar ramo específico;
+- exportar por geração;
+- incluir legenda opcional;
+- incluir título/metadados;
+- salvar no Storage;
+- histórico de exportações;
+- PDF multipágina;
+- SVG/vetor.
 
 ---
 
-### Impressao abre em branco
+## 13. Anti-regressões
 
-Causa provavel:
+Não reintroduzir:
 
-- janela de impressao bloqueada;
-- canvas nao carregou a tempo;
-- erro de CORS;
-- browser bloqueou popup.
-
-Correcao:
-
-- revisar `openTreePrintWindow`;
-- garantir que canvas foi criado antes de chamar print;
-- testar em outro navegador.
-
----
-
-## 12. Pos-MVP
-
-Possiveis evolucoes:
-
-- exportar arvore completa;
-- exportar arvore completa com escala automatica;
-- exportar ramo especifico;
-- exportar por geracao;
-- exportar com legenda embutida opcional;
-- exportar com titulo e metadados;
-- exportar com data/hora e nome da pessoa central;
-- salvar exportacoes no Storage;
-- criar historico de exportacoes;
-- gerar PDF multipagina;
-- gerar SVG/vetor.
-
-Esses itens nao bloqueiam o MVP.
-
----
-
-## 13. Regras de manutencao
-
-Nao fazer:
-
-- salvar exportacao automaticamente no banco;
-- criar migration para ajuste visual de exportacao;
-- capturar painel lateral junto com a arvore;
-- capturar overlay de selecao;
-- remover protecao contra canvas grande;
-- remover tratamento de erro de CORS;
-- alterar viewport da arvore para resolver bug de exportacao sem validar UX;
-- confundir exportacao da area visivel com exportacao da arvore completa.
-
-Fazer:
-
-- manter exportacao isolada em componentes/utils da arvore;
-- manter mensagens de erro compreensiveis;
-- testar em todas as views;
-- preservar compatibilidade com mobile/tablet;
-- documentar qualquer mudanca de escopo neste arquivo.
+- confusão entre área visível e árvore completa;
+- captura do painel lateral;
+- captura do overlay de seleção;
+- remoção do limite de canvas;
+- `allowTaint: true` sem revisão;
+- alteração de viewport para “corrigir” exportação sem QA visual;
+- salvamento automático em banco/Storage sem decisão de produto.

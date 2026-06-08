@@ -1,138 +1,153 @@
-# Linha do tempo do usuario
+# Timeline
 
-> Ultima revisao: 2026-05-30
-
-> Local recomendado: `docs/funcionalidades/TIMELINE.md`
-> Tipo: documentacao funcional especifica.
-
----
-
-## 1. Status
-
-A linha do tempo do usuario foi implementada funcionalmente no topico 7.3.
-
-Escopo atual:
-
-- primeira versao derivada dos dados existentes;
-- sem tabela propria de timeline;
-- sem migration;
-- sem edicao manual de eventos da timeline;
-- renderizada no perfil da pessoa.
-
-A timeline usa dados de:
-
-- perfil;
-- relacionamentos;
-- arquivos historicos;
-- eventos pessoais;
-- filhos;
-- eventos familiares globais, quando fornecidos futuramente.
+> Última revisão: 2026-06-08  
+> Local canônico: `docs/funcionalidades/TIMELINE.md`  
+> Tipo: documentação funcional e técnica da linha do tempo de pessoa.
 
 ---
 
-## 2. Arquitetura
+## 1. Objetivo
 
-O fluxo e dividido em tres partes:
+A timeline organiza eventos relevantes da vida de uma pessoa em ordem cronológica.
 
-```txt
-PersonProfile carrega os dados disponiveis para a pessoa.
-
-buildPersonTimeline normaliza, deduplica e ordena os itens.
-
-PersonTimeline renderiza a lista no perfil da pessoa.
-```
-
-O builder `buildPersonTimeline`:
-
-- nao acessa Supabase;
-- nao faz fetch;
-- nao depende de estado React;
-- nao acessa variaveis de ambiente;
-- e uma funcao pura;
-- recebe dados ja carregados;
-- retorna `PersonTimelineItem[]`.
+Ela aparece no perfil da pessoa e também é usada na edição do próprio perfil em `/minha-arvore/editar`, onde eventos manuais podem ser revisados e salvos.
 
 ---
 
-## 3. Arquivos principais
+## 2. Arquivos principais
 
 ```txt
 src/app/utils/buildPersonTimeline.ts
 src/app/components/Timeline/PersonTimeline.tsx
+src/app/components/person/PersonEventsEditor.tsx
 src/app/pages/PersonProfile.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/services/personEventsService.ts
+src/app/services/arquivosHistoricosService.ts
 src/app/services/dataService.ts
 ```
 
-Responsabilidades:
-
-| Arquivo | Responsabilidade |
-|---|---|
-| `buildPersonTimeline.ts` | Define tipos, normaliza eventos, deduplica e ordena. |
-| `PersonTimeline.tsx` | Renderiza a timeline no perfil e trata estado vazio. |
-| `PersonProfile.tsx` | Carrega dados e monta `timelineItems`. |
-| `dataService.ts` | Expoe relacionamentos detalhados da pessoa. |
-
-Funcoes relevantes:
+Documentos relacionados:
 
 ```txt
-buildPersonTimeline
-parseTimelineDate
-dedupeTimelineItems
-sortTimelineItems
+docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+docs/operacao/MIGRATIONS_SUPABASE.md
 ```
 
 ---
 
-## 4. Dados usados
+## 3. Estado atual
 
-A timeline pode receber:
+Implementado:
 
-- pessoa;
-- eventos pessoais;
-- arquivos historicos da pessoa;
-- `categoria_evento`, quando disponivel;
-- filhos;
-- pessoas carregadas;
-- relacionamentos brutos/detalhados;
-- arquivos historicos de relacionamentos conjugais;
-- eventos familiares globais, se forem fornecidos futuramente ao builder.
-
-Regra:
-
-```txt
-a timeline deve renderizar com os dados disponiveis e nao quebrar quando um conjunto opcional estiver ausente.
-```
-
----
-
-## 5. Eventos suportados
-
-A primeira versao suporta:
-
-- nascimento;
-- falecimento com data;
-- falecimento informado sem data;
-- casamento;
-- uniao;
-- separacao;
+- timeline derivada de dados existentes;
+- eventos de nascimento e falecimento;
+- eventos conjugais;
 - nascimento de filhos;
-- arquivos historicos da pessoa;
-- arquivos historicos de relacionamento;
-- `person_events`;
-- memorias;
-- eventos familiares globais, quando fornecidos ao builder.
+- arquivos históricos da pessoa;
+- arquivos históricos de relacionamento;
+- eventos pessoais manuais via `person_events`;
+- sanitização de metadata;
+- deduplicação;
+- ordenação cronológica;
+- estado vazio seguro.
+
+Não implementado no escopo atual:
+
+- upload próprio por evento da timeline;
+- privacidade por evento;
+- exportação PDF da timeline;
+- modal detalhado por item;
+- timeline familiar global.
 
 ---
 
-## 6. Parser de datas
+## 4. Arquitetura
 
-Helper:
+Fluxo:
+
+```txt
+PersonProfile / MinhaArvore
+  -> carrega dados necessários
+  -> envia dados para buildPersonTimeline
+  -> PersonTimeline renderiza itens
+```
+
+`buildPersonTimeline` é função pura:
+
+- não acessa Supabase;
+- não faz fetch;
+- não depende de React;
+- não lê variável de ambiente;
+- recebe dados já carregados;
+- retorna `PersonTimelineItem[]`.
+
+---
+
+## 5. Dados aceitos pelo builder
+
+Interface principal:
+
+```txt
+BuildPersonTimelineInput
+```
+
+Entradas relevantes:
+
+- `pessoa`;
+- `relacionamentos`;
+- `pessoas`;
+- `filhos`;
+- `arquivosHistoricosPessoa`;
+- `arquivosHistoricosRelacionamentos`;
+- `eventosPessoais`;
+- `eventosFamiliares`.
+
+A timeline deve renderizar com o que estiver disponível. Dados opcionais ausentes não podem quebrar a UI.
+
+---
+
+## 6. Tipos de item
+
+Tipos atuais:
+
+```txt
+birth
+death
+marriage
+union
+separation
+child_birth
+historical_file
+person_event
+family_event
+memory
+other
+```
+
+Fontes atuais:
+
+```txt
+person
+relationship
+historical_file
+person_event
+family_event
+```
+
+---
+
+## 7. Parser de datas
+
+Função:
 
 ```txt
 parseTimelineDate
 ```
 
-Suporta:
+Formatos aceitos:
 
 ```txt
 DD/MM/AAAA
@@ -140,253 +155,238 @@ D/M/AAAA
 AAAA-MM-DD
 AAAA-MM
 AAAA
-valores ausentes ou invalidos como unknown
 ```
 
-Regras importantes:
+Regras:
 
-- data completa preserva precisao `day`;
-- ano puro preserva precisao `year`;
-- ano puro nao vira `01/01/AAAA`;
-- itens com precisao `unknown` vao para o final da ordenacao.
+- ano puro mantém precisão `year`;
+- ano puro não vira `01/01/AAAA`;
+- data inválida vira precisão `unknown`;
+- itens sem data válida vão para o fim da ordenação;
+- `dateLabel` deve ser amigável.
 
 ---
 
-## 7. Deduplicacao
+## 8. Relacionamentos conjugais
 
-Helper:
+A timeline deve diferenciar:
+
+| Situação | Regra |
+|---|---|
+| casamento/união | usar `data_casamento` quando disponível. |
+| separação/divórcio | usar `data_separacao` ou subtipo explícito. |
+| viuvez/falecimento de cônjuge | não inferir separação apenas por falecimento. |
+
+Funções relevantes:
+
+```txt
+getPreferredConjugalRelationships
+hasExplicitSeparationData
+isRelationshipEndedByWidowhood
+shouldCreateRelationshipSeparation
+```
+
+Regra crítica:
+
+```txt
+ativo = false
+```
+
+não deve, sozinho, gerar separação se a relação foi encerrada por falecimento de cônjuge.
+
+---
+
+## 9. Deduplicação
+
+Função:
 
 ```txt
 dedupeTimelineItems
 ```
 
-Evita duplicacoes usando chaves estaveis.
+Objetivo:
 
-Criterios:
+- evitar duplicidade por relacionamento nos dois sentidos;
+- evitar duplicidade de arquivos;
+- evitar duplicidade de eventos pessoais/familiares.
 
-- casamento/uniao por par de pessoas, tipo e data;
-- separacao por par de pessoas e data;
-- arquivos por `id`;
+Chaves estáveis incluem:
+
+- nascimento/falecimento por pessoa;
+- casamento/união por par de pessoas, tipo e data;
+- separação por par e data;
+- arquivo histórico por `id`;
 - `person_events` por `id`;
 - `family_events` por `id`.
 
-Objetivo:
-
-```txt
-evitar duplicacao quando um relacionamento conjugal aparece nos dois sentidos.
-```
-
 ---
 
-## 8. Ordenacao
+## 10. Ordenação
 
-Helper:
+Função:
 
 ```txt
 sortTimelineItems
 ```
 
-Ordena:
+Critérios:
 
-- datas completas por ano, mes e dia;
-- datas com ano e mes por ano/mes;
-- datas com ano por ano;
-- itens `unknown` no final.
+1. valor cronológico;
+2. prioridade por tipo;
+3. título em `pt-BR`.
 
-Em empates, a prioridade por tipo e:
+Prioridade atual:
 
-1. `birth`
-2. `child_birth`
-3. `union`
-4. `marriage`
-5. `separation`
-6. `person_event`
-7. `family_event`
-8. `historical_file`
-9. `memory`
-10. `death`
-11. `other`
-
-Persistindo o empate, a ordenacao final usa o titulo.
+```txt
+birth
+child_birth
+union
+marriage
+separation
+person_event
+family_event
+historical_file
+memory
+death
+other
+```
 
 ---
 
-## 9. Seguranca e privacidade
+## 11. Eventos manuais
 
-A timeline nao deve expor dados sensiveis.
+Eventos manuais vêm de:
+
+```txt
+person_events
+personEventsService.ts
+PersonEventsEditor.tsx
+```
+
+Uso atual:
+
+- exibidos na timeline;
+- editáveis na página `/minha-arvore/editar`;
+- salvos no fluxo principal da edição;
+- não possuem upload próprio por evento no escopo atual.
 
 Regras:
 
-- metadata sensivel e sanitizada;
-- URLs completas nao devem ir para metadata;
-- base64 e data URL nao devem aparecer;
-- telefone nao deve aparecer;
-- endereco nao deve aparecer;
-- e-mail nao deve aparecer;
-- tokens, secrets e keys sensiveis sao removidos;
-- IDs tecnicos nao sao exibidos na UI;
-- metadata bruta nao e renderizada por `PersonTimeline`;
-- arquivos historicos nao sao abertos ou baixados pela timeline nesta versao.
+- evento manual precisa de título;
+- ausência de eventos manuais não quebra timeline;
+- salvar eventos deve respeitar RLS/service;
+- se salvar eventos falhar após dados pessoais, exibir erro parcial.
 
 ---
 
-## 10. Permissoes
+## 12. Arquivos históricos
 
-Regras:
+A timeline pode incluir:
 
-- a timeline respeita os dados carregados pelo perfil;
-- usuario comum nao ganha acesso administrativo por causa da timeline;
-- admin mantem a visualizacao ja permitida pelo perfil;
-- RLS nao foi alterada por causa da timeline;
-- nao foi criada policy nova para timeline;
-- nao foi usado service role no frontend.
+- arquivos históricos da pessoa;
+- arquivos históricos de relacionamento conjugal;
+- `categoria_evento`, quando disponível.
+
+A migration relacionada à categoria de evento é:
+
+```txt
+20260522121000_add_historical_file_event_category.sql
+```
+
+Se `categoria_evento` for enviado para ambiente sem coluna aplicada, inserts/updates podem falhar.
 
 ---
 
-## 11. Estado vazio e tolerancia a erro
+## 13. Segurança e privacidade
 
-`PersonTimeline` deve renderizar estado vazio quando nao ha itens.
+A timeline não deve expor:
+
+- telefone;
+- endereço;
+- e-mail;
+- URLs completas sensíveis;
+- base64/data URL;
+- tokens;
+- secrets;
+- service role;
+- metadata bruta não sanitizada.
+
+Função relevante:
+
+```txt
+sanitizeTimelineMetadata
+```
+
+`PersonTimeline` não deve renderizar metadata bruta ao usuário.
+
+---
+
+## 14. Estado vazio
 
 Mensagem esperada:
 
 ```txt
-Ainda nao ha eventos suficientes para montar a linha do tempo desta pessoa.
+Ainda não há eventos suficientes para montar a linha do tempo desta pessoa.
 ```
 
 Regras:
 
 - componente aceita `items` opcional;
 - fallback para array vazio;
-- falhas ao carregar arquivos historicos de relacionamento nao quebram o perfil;
-- se dados adicionais nao estiverem disponiveis, timeline renderiza com o que ja foi carregado.
+- falhas de dados complementares não quebram o perfil;
+- se houver apenas dados parciais, renderizar o que for possível.
 
 ---
 
-## 12. Limitacoes da versao atual
+## 15. Troubleshooting
 
-Ainda nao foram implementados:
-
-- edicao manual de eventos da timeline;
-- upload por evento;
-- privacidade por evento;
-- exportacao PDF;
-- modal detalhado por item;
-- consolidacao visual com `PersonEventsList`.
-
-Esses itens ficam pos-MVP.
-
----
-
-## 13. QA realizado
-
-Validacoes registradas:
-
-- `npm run build` passou;
-- `git diff --check` passou;
-- QA em browser com perfil real;
-- mobile checado;
-- console sem erro de runtime;
-- validacao visual de nascimento;
-- validacao visual de nascimento de filho;
-- validacao visual de casamento;
-- validacao visual de falecimento informado.
-
----
-
-## 14. Troubleshooting
-
-### Timeline vazia
+### Casamento aparece como data desconhecida
 
 Verificar:
 
 ```txt
-src/app/pages/PersonProfile.tsx
-dados enviados ao buildPersonTimeline
-src/app/components/Timeline/PersonTimeline.tsx
-estado vazio do componente
-```
-
-### Casamento/uniao nao aparece
-
-Verificar:
-
-```txt
-relacionamentos detalhados
-tipo_relacionamento = conjuge
-subtipo_relacionamento
 data_casamento
-src/app/utils/buildPersonTimeline.ts
+parseTimelineDate
+buildPersonTimeline
+PersonTimeline
 ```
 
-### Badge Casamento aparece duplicada com Relacionamento
+### Separação indevida por viuvez
 
 Verificar:
 
 ```txt
-src/app/components/Timeline/PersonTimeline.tsx
-item.type === 'marriage'
-item.source === 'relationship'
+ativo
+data_separacao
+subtipo_relacionamento
+isRelationshipEndedByWidowhood
+shouldCreateRelationshipSeparation
 ```
 
-Regra:
-
-- item `marriage` nao deve renderizar badge de tipo **Casamento**;
-- quando aplicavel, a badge **Relacionamento** deve ser mantida;
-- o titulo, a descricao, o icone e a data do casamento devem permanecer visiveis.
-
-### Badge de obito voltou como Falecimento
+### Evento manual não aparece
 
 Verificar:
 
 ```txt
-src/app/components/Timeline/PersonTimeline.tsx
-TYPE_LABELS.death
-```
-
-Regra:
-
-- o label publico para `death` deve ser **Obito**.
-
-### Separacao duplicada
-
-Verificar:
-
-```txt
-dedupeTimelineItems
-chave relationship-separation
-normalizacao do par de pessoas
-relacionamentos inversos
-```
-
-### Arquivos historicos nao aparecem
-
-Verificar:
-
-```txt
-src/app/services/arquivosHistoricosService.ts
-arquivos historicos da pessoa
-arquivos historicos de relacionamento
-dados enviados por PersonProfile
-mapeamento em buildPersonTimeline
-```
-
-Se o problema acontecer apos editar/salvar arquivos historicos:
-
-- confirmar se `20260522121000_add_historical_file_event_category.sql` foi aplicada no ambiente;
-- insert/update pode falhar quando o payload inclui `categoria_evento` e a coluna ainda nao existe.
-
-### Eventos pessoais nao aparecem
-
-Verificar:
-
-```txt
-src/app/services/personEventsService.ts
+person_events
 listarEventosDaPessoa
-estado personEvents em PersonProfile
-mapeamento em buildPersonTimeline
+salvarEventosDaPessoa
+eventosPessoais
+buildPersonTimeline
 ```
 
-### Datas em ordem errada
+### Arquivos históricos não aparecem
+
+Verificar:
+
+```txt
+listarArquivosHistoricosPorPessoa
+arquivosHistoricosPessoa
+arquivosHistoricosRelacionamentos
+categoria_evento
+```
+
+### Datas fora de ordem
 
 Verificar:
 
@@ -395,185 +395,65 @@ parseTimelineDate
 sortTimelineItems
 precision
 dateValue
-year
-month
-day
-```
-
-### Usuario comum nao ve algum item
-
-Verificar:
-
-```txt
-RLS
-dados disponiveis no perfil
-permissoes do service correspondente
-se o dado deveria aparecer para usuario comum
 ```
 
 ---
 
-## 15. Checklist de QA
+## 16. QA
 
-### Perfil
+### Perfil público
 
-- abrir perfil com nascimento;
-- abrir perfil com falecimento;
-- abrir perfil com casamento;
-- abrir perfil com separacao;
-- abrir perfil com filhos;
-- abrir perfil com arquivos historicos;
-- abrir perfil com eventos pessoais;
-- abrir perfil sem eventos suficientes;
-- validar estado vazio;
-- validar que `death` aparece como **Obito**;
-- validar que casamento nao mostra badge **Casamento** duplicada com **Relacionamento**;
-- validar mobile.
+- pessoa com nascimento;
+- pessoa com falecimento;
+- pessoa com casamento;
+- pessoa com separação real;
+- pessoa viúva;
+- pessoa com filhos;
+- pessoa com arquivos históricos;
+- pessoa com eventos pessoais;
+- pessoa sem eventos suficientes.
 
-### Tecnico
+### Edição
+
+- abrir `/minha-arvore/editar`;
+- adicionar evento manual;
+- salvar;
+- confirmar persistência;
+- reabrir perfil e conferir timeline.
+
+### Técnico
 
 ```bash
 npm run build
-npm test
 git diff --check
-```
-
-Se envolver carregamento/rota/permissao:
-
-```bash
-npm run test:e2e
+git status --short
 ```
 
 ---
 
-## 16. Pos-MVP
+## 17. Pós-MVP
 
-Possiveis evolucoes:
-
-- edicao manual de eventos da timeline;
 - upload por evento;
 - privacidade por evento;
-- exportacao PDF;
+- exportação PDF;
 - modal detalhado por item;
-- consolidacao visual com `PersonEventsList`;
-- integracao com calendario familiar;
+- filtros por tipo;
+- busca na timeline;
 - timeline familiar global;
-- filtros por tipo de evento;
-- busca dentro da timeline;
-- impressao/exportacao.
+- integração visual ampliada com calendário;
+- impressão/exportação.
 
-Esses itens nao bloqueiam o MVP.
+Esses itens não bloqueiam o MVP.
 
 ---
-## 17. Ajustes recentes e pendencias - ciclo 2026-05-30
 
-Esta secao registra pendencias mapeadas para casamento, separacao e viuvez no perfil publico e na timeline.
+## 18. Anti-regressões
 
-### 17.1 Data de casamento
+Não reintroduzir:
 
-Problema mapeado:
-
-```txt
-Data de casamento salva como 30/07/1988 aparece como Data desconhecida.
-```
-
-Regra esperada:
-
-- se `data_casamento` existir, a timeline e as secoes de relacionamento devem usar essa data;
-- aceitar `DD/MM/AAAA`, `D/M/AAAA`, `AAAA-MM-DD`, `AAAA-MM`, `AAAA`;
-- apenas exibir **Data desconhecida** quando realmente nao houver data valida;
-- nao converter ano puro para `01/01/AAAA`.
-
-Arquivos provaveis:
-
-```txt
-src/app/utils/buildPersonTimeline.ts
-src/app/pages/PersonProfile.tsx
-src/app/components/Timeline/PersonTimeline.tsx
-src/app/services/dataService.ts
-```
-
-### 17.2 Separacao versus viuvez
-
-Problema mapeado:
-
-```txt
-Relacionamento encerrado por falecimento da conjuge nao deve aparecer como separacao.
-```
-
-Regra esperada:
-
-- separacao/divorcio dependem de campo explicito de separacao, fim ou status equivalente;
-- falecimento de conjuge deve gerar estado de viuvez;
-- relacionamento inativo por falecimento nao deve criar evento **Separacao**;
-- a timeline nao deve inferir separacao apenas por `ativo = false`.
-
-### 17.3 Regras para o builder
-
-`buildPersonTimeline` deve diferenciar:
-
-```txt
-marriage/union -> data_casamento ou data_relacionamento
-separation -> data_separacao/data_fim quando houver separacao real
-widowhood -> derivado de falecimento de conjuge quando aplicavel
-```
-
-Se a versao atual ainda nao tiver tipo especifico de item para viuvez, a implementacao deve escolher entre:
-
-1. criar tipo especifico, documentando impacto visual; ou
-2. ajustar apenas para nao renderizar separacao indevida, mantendo falecimento do conjuge como evento proprio.
-
-Nao inferir separacao apenas por:
-
-```txt
-ativo = false
-```
-
-sem campo explicito de separacao/fim.
-
-### 17.4 Labels visuais da timeline
-
-Regras consolidadas:
-
-- `death` deve aparecer como **Obito**;
-- `marriage` nao deve exibir badge **Casamento** quando a UI ja mostra o contexto no titulo/texto;
-- a badge **Relacionamento** deve permanecer quando `item.source === 'relationship'` e a visualizacao admin estiver ativa;
-- ajustes de badge em `PersonTimeline.tsx` nao devem alterar parser, ordenacao, RLS ou shape dos itens.
-
-### 17.5 Checklist de validacao
-
-Validar perfil com:
-
-```txt
-casamento com data_casamento = 30/07/1988
-casamento sem data_casamento
-relacionamento com separacao real
-relacionamento com divorcio real
-relacionamento encerrado por falecimento de conjuge
-relacionamento ativo
-```
-
-Resultado esperado:
-
-```txt
-casamento com data -> mostra 30/07/1988
-casamento sem data -> mostra Data desconhecida apenas quando inevitavel
-separacao real -> mostra Separacao
-falecimento de conjuge -> nao mostra Separacao indevida
-viuvez -> status/representacao propria quando suportado
-```
-
-### 17.6 Relacao com modal conjugal
-
-O modal da alianca ja possui regras documentadas em:
-
-```txt
-docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-```
-
-A timeline deve permanecer coerente com esse modal:
-
-- nao exibir ID tecnico;
-- usar labels amigaveis;
-- respeitar `data_casamento`;
-- distinguir viuvez de separacao.
+- “sem edição manual” como descrição do estado atual;
+- separação inferida apenas por `ativo = false`;
+- ano puro convertido para `01/01`;
+- metadata sensível na UI;
+- quebra quando dados opcionais faltam;
+- badge/label técnica confusa para evento público.

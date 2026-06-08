@@ -1,29 +1,34 @@
-# Rotas e guards de acesso
+# Rotas e guards de acesso - Árvore Família
 
-> Ultima revisao: 2026-05-30
+> Última revisão: 2026-06-08  
+> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
+> Projeto: `tuliust/arvorefamilia`
 
-> Documento canonico de rotas, navegacao e protecao de acesso.
-> Local recomendado: `docs/arquitetura/ROTAS_E_GUARDS.md`.
+## Objetivo
 
----
+Este documento consolida as rotas atuais, os guards de acesso e as regras de navegação do projeto **Árvore Família**.
 
-## 1. Objetivo
+Use este arquivo para:
 
-Este documento consolida as rotas do projeto **Arvore Familia**, os guards de acesso e as regras de navegacao entre paginas publicas, area de membros, arvore e administracao.
-
-Use este arquivo quando precisar:
-
-- adicionar rota;
-- alterar protecao de rota;
-- revisar fluxo de login/primeiro acesso;
-- entender diferenca entre `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`;
+- adicionar ou revisar rotas;
+- validar `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`;
+- entender o fluxo de login, primeiro acesso e vínculo com pessoa;
 - corrigir redirecionamentos;
-- revisar navegacao entre `/minha-arvore`, `/genealogia` e `/visao-completa`;
-- validar que usuario comum nao acessa admin.
+- revisar navegação entre `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- garantir que usuário comum não acesse admin.
+
+Documentos relacionados:
+
+- `docs/arquitetura/ARCHITECTURE.md`;
+- `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`;
+- `docs/GUIA_CORRECAO_ERROS.md`;
+- `docs/GUIA_UX_LAYOUT.md`;
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`.
 
 ---
 
-## 2. Arquivos principais
+## 1. Arquivos principais
 
 ```txt
 src/app/routes.tsx
@@ -32,50 +37,31 @@ src/app/components/MemberRoute.tsx
 src/app/components/TreeAccessRoute.tsx
 src/app/contexts/AuthContext.tsx
 src/app/services/permissionService.ts
+src/app/services/memberProfileService.ts
 src/app/pages/Home.tsx
 src/app/components/FamilyTree/treeViewMode.ts
-```
-
-Documentos relacionados:
-
-```txt
-docs/GUIA_IMPLEMENTACOES.md
-docs/GUIA_CORRECAO_ERROS.md
-docs/GUIA_UX_LAYOUT.md
-docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
 ```
 
 ---
 
-## 3. Conceitos de acesso
+## 2. Níveis de acesso
 
-O sistema separa quatro niveis de navegacao:
+| Nível | Exige login | Exige vínculo com pessoa | Exige admin | Guard |
+|---|---:|---:|---:|---|
+| Público | Não | Não | Não | Nenhum |
+| Árvore | Sim | Sim, resolvido pelo fluxo de primeiro acesso | Não | `TreeAccessRoute` |
+| Membro | Sim | Não obrigatoriamente no guard | Não | `MemberRoute` |
+| Admin | Sim | Não | Sim | `ProtectedRoute` |
 
-1. **Rotas publicas**
-   - nao exigem login;
-   - usadas para entrada, termos e privacidade.
-
-2. **Rotas de arvore**
-   - exigem login;
-   - exigem acesso confirmado a arvore;
-   - protegidas por `TreeAccessRoute`.
-
-3. **Rotas de membro**
-   - exigem login;
-   - usadas por usuarios autenticados com area pessoal;
-   - protegidas por `MemberRoute`.
-
-4. **Rotas administrativas**
-   - exigem login;
-   - exigem permissao administrativa;
-   - protegidas por `ProtectedRoute`.
+Observação: RLS, RPCs e services continuam obrigatórios. Guard de rota não substitui regra de banco.
 
 ---
 
-## 4. Guards
+## 3. Guards
 
-### 4.1 `TreeAccessRoute`
+### 3.1 `TreeAccessRoute`
 
 Arquivo:
 
@@ -85,10 +71,12 @@ src/app/components/TreeAccessRoute.tsx
 
 Responsabilidade:
 
-- proteger a arvore principal;
-- exigir usuario autenticado;
-- validar acesso/vinculo necessario para visualizar a arvore;
-- direcionar usuarios sem vinculo confirmado para o fluxo adequado.
+- proteger as views principais da árvore;
+- exigir usuário autenticado;
+- exigir login recente;
+- resolver vínculo de primeiro acesso via `resolveFirstAccessLinkForUser`;
+- redirecionar usuário sem acesso para `/entrar`;
+- redirecionar vínculo recém-criado com dados não confirmados para `/meus-dados`.
 
 Rotas protegidas:
 
@@ -97,31 +85,28 @@ Rotas protegidas:
 /minha-arvore
 /genealogia
 /visao-completa
+/busca
 ```
 
-Comportamento esperado:
-
-- usuario sem sessao nao acessa a arvore;
-- usuario sem vinculo nao deve ver dados da arvore;
-- arvore so renderiza apos validacao de acesso;
-- `/` redireciona para `/minha-arvore` preservando search params;
-- vinculo criado durante o primeiro acesso e ainda nao confirmado pode direcionar para `/meus-dados`;
-- vinculo ja existente nao deve causar redirecionamento recorrente para `/meus-dados`, mesmo quando `dados_confirmados=false`.
-
-Regra consolidada do primeiro acesso:
+Fluxo consolidado:
 
 ```txt
-sem sessao -> /entrar
-sem vinculo -> /entrar ou fluxo de primeiro acesso
-vinculo recem-criado e dados_confirmados=false -> /meus-dados
-vinculo existente -> libera rotas da arvore
+loading -> tela de verificação
+sem sessão -> /entrar
+sessão sem login recente -> /entrar
+sem vínculo resolvido -> /entrar
+vínculo recém-criado + dados_confirmados=false -> /meus-dados
+vínculo existente ou resolvido -> libera árvore
 ```
 
-Essa regra evita regressao em que usuarios ja vinculados eram enviados para `/meus-dados` ao acessar qualquer view da arvore.
+Cuidados:
 
----
+- não remover preservação de search params do redirect `/` → `/minha-arvore`;
+- não liberar árvore para usuário sem vínculo resolvido;
+- não transformar `dados_confirmados=false` de vínculo antigo em loop permanente para `/meus-dados` sem validar regra de produto;
+- não resolver acesso apenas no frontend se RLS exigir ajuste.
 
-### 4.2 `MemberRoute`
+### 3.2 `MemberRoute`
 
 Arquivo:
 
@@ -131,9 +116,9 @@ src/app/components/MemberRoute.tsx
 
 Responsabilidade:
 
-- proteger paginas da area de membro;
-- exigir usuario autenticado;
-- permitir acesso a paginas pessoais, forum, notificacoes, calendario e perfil.
+- proteger páginas de usuário autenticado;
+- redirecionar visitante para `/entrar`;
+- permitir que regras específicas de dados sejam tratadas por service/RLS.
 
 Rotas protegidas:
 
@@ -154,15 +139,13 @@ Rotas protegidas:
 /forum/topico/:id/editar
 ```
 
-Comportamento esperado:
+Cuidados:
 
-- usuario nao autenticado e redirecionado para entrada/login;
-- usuario autenticado acessa area de membro conforme regras de produto e RLS;
-- dados sensiveis continuam protegidos por service/RLS, nao apenas por UI.
+- não usar `ProtectedRoute` em página de membro;
+- não assumir que todo usuário autenticado pode editar qualquer pessoa;
+- perfil, sugestões, arquivos, favoritos e fórum devem respeitar permissões e RLS próprias.
 
----
-
-### 4.3 `ProtectedRoute`
+### 3.3 `ProtectedRoute`
 
 Arquivo:
 
@@ -172,10 +155,17 @@ src/app/components/ProtectedRoute.tsx
 
 Responsabilidade:
 
-- proteger paginas administrativas;
-- exigir usuario autenticado;
-- validar perfil admin;
-- bloquear usuario comum.
+- proteger área administrativa;
+- exigir usuário autenticado;
+- consultar `permissionService.isAdminUser`;
+- bloquear usuário comum.
+
+Validação de admin:
+
+```txt
+permissionService.isAdminUser(user)
+  -> supabase.rpc('is_admin_user', { target_user_id: user.id })
+```
 
 Rotas protegidas:
 
@@ -198,55 +188,53 @@ Rotas protegidas:
 /admin/solicitacoes-vinculos
 ```
 
-Comportamento esperado:
+Cuidados:
 
-- usuario comum nao acessa admin;
-- botao **Painel administrativo** so aparece para admin;
-- falha de verificacao deve bloquear, nao liberar;
-- UI nao substitui RLS;
-- dados administrativos precisam continuar protegidos no banco.
-
----
-
-## 5. Rotas publicas
-
-| Rota | Componente | Protecao | Funcao |
-|---|---|---|---|
-| `/entrar` | `Entrar` | publica | Login, cadastro, primeiro acesso e aceite legal. |
-| `/termos` | `Termos` | publica | Termos de uso. |
-| `/privacidade` | `Privacidade` | publica | Politica de privacidade. |
-| `/admin/login` | `AdminLogin` | publica | Entrada administrativa legada/especifica. |
-
-Observacao:
-
-- `/admin/login` nao deve ser usado como caminho principal do menu do usuario.
-- Admin autenticado deve acessar `/admin` ou `/admin/dashboard`.
+- falha de verificação deve bloquear;
+- botão **Painel Admin** no menu não substitui guard;
+- dados administrativos devem continuar protegidos por RLS/RPC;
+- `/admin/login` é rota pública/legada, não caminho principal do menu do usuário.
 
 ---
 
-## 6. Rotas da arvore
+## 4. Rotas públicas
 
-| Rota | Componente | Protecao | View |
-|---|---|---|---|
-| `/` | redireciona para `/minha-arvore` | `TreeAccessRoute` | Entrada canonica com redirect. |
-| `/minha-arvore` | `Home` | `TreeAccessRoute` | `minha-arvore` |
-| `/genealogia` | `Home` | `TreeAccessRoute` | `genealogia` |
-| `/visao-completa` | `Home` | `TreeAccessRoute` | `visao-completa` |
+| Rota | Componente | Função |
+|---|---|---|
+| `/entrar` | `Entrar` | Login, cadastro, primeiro acesso e aceite legal |
+| `/termos` | `Termos` | Termos de uso |
+| `/privacidade` | `Privacidade` | Política de privacidade |
+| `/admin/login` | `AdminLogin` | Entrada administrativa específica/legada |
 
 Regras:
 
-- `/` redireciona para `/minha-arvore`;
-- o redirect preserva search params, como `?pessoa=...`;
-- as tres views usam o mesmo shell `Home`;
-- `Home.tsx` deriva `treeViewMode` a partir da rota atual;
-- troca de view deve usar navegacao client-side;
-- troca de view deve preservar search params;
-- nao usar `window.location` para trocar view se `navigate` resolver;
-- evitar estado local de view separado da URL.
+- `/entrar` não deve exigir sessão;
+- termos e privacidade devem permanecer acessíveis sem login;
+- `/admin/login` não deve ser usado como item principal de navegação.
 
 ---
 
-## 7. Helpers de view da arvore
+## 5. Rotas da árvore
+
+| Rota | Componente | Guard | View |
+|---|---|---|---|
+| `/` | `RedirectToMinhaArvore` | `TreeAccessRoute` | redireciona para `minha-arvore` |
+| `/minha-arvore` | `Home` | `TreeAccessRoute` | `minha-arvore` |
+| `/genealogia` | `Home` | `TreeAccessRoute` | `genealogia` |
+| `/visao-completa` | `Home` | `TreeAccessRoute` | `visao-completa` |
+| `/busca` | `BuscaResultados` | `TreeAccessRoute` | busca global protegida |
+
+Regras:
+
+- as três views usam o mesmo shell `Home`;
+- `Home.tsx` deriva `treeViewMode` de `location.pathname`;
+- troca de view deve usar navegação client-side;
+- search params devem ser preservados, especialmente `?pessoa=...`;
+- não manter estado paralelo de view quando a URL já define a view.
+
+---
+
+## 6. Helpers de view da árvore
 
 Arquivo:
 
@@ -254,16 +242,10 @@ Arquivo:
 src/app/components/FamilyTree/treeViewMode.ts
 ```
 
-Responsabilidade:
-
-- centralizar o tipo `TreeViewMode`;
-- mapear view para rota;
-- mapear rota para view;
-- evitar divergencia entre URL e `viewMode`.
-
-Helpers esperados:
+Contrato atual:
 
 ```txt
+TreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa'
 VIEW_MODE_TO_PATH
 PATH_TO_VIEW_MODE
 getTreeViewModeFromPath
@@ -272,431 +254,137 @@ getPathForTreeViewMode
 
 Regras:
 
-- qualquer novo link entre views deve usar os helpers;
-- nao duplicar mapeamento de paths em componentes;
-- preservar `?pessoa=...` ao navegar;
-- manter nomes de view estaveis.
+- qualquer link interno entre views deve usar helper ou rota canônica equivalente;
+- não duplicar mapeamento manual em vários componentes;
+- preservar nomes de view, pois eles orientam layout e filtros.
 
 ---
 
-## 8. Rotas de membro
+## 7. Rotas de membro
 
-| Rota | Componente | Protecao | Funcao |
-|---|---|---|---|
-| `/minha-arvore/editar` | `MinhaArvore` | `MemberRoute` | Edicao da propria arvore/dados pelo membro. |
-| `/meus-dados` | `MeusDados` | `MemberRoute` | Edicao dos dados da pessoa vinculada ao usuario. |
-| `/meus-vinculos` | `MeusVinculos` | `MemberRoute` | Gestao/visualizacao de vinculos do usuario. |
-| `/vincular-perfil` | `VincularPerfil` | `MemberRoute` | Solicitacao/criacao de vinculo adicional. |
-| `/pessoa/:id` | `PersonProfile` | `MemberRoute` | Perfil publico/interno de pessoa da arvore. |
-| `/pessoas/:id` | `PersonProfile` | `MemberRoute` | Alias do perfil de pessoa. |
-| `/calendario-familiar` | `CalendarioFamiliar` | `MemberRoute` | Calendario familiar. |
-| `/meus-favoritos` | `MeusFavoritos` | `MemberRoute` | Favoritos do usuario. |
-| `/notificacoes` | `Notificacoes` | `MemberRoute` | Central/lista de notificacoes. |
-| `/ajustar-notificacoes` | `AjustarNotificacoes` | `MemberRoute` | Preferencias de notificacoes. |
-| `/forum` | `ForumHome` | `MemberRoute` | Home do forum. |
-| `/forum/novo` | `ForumNovoTopico` | `MemberRoute` | Criacao de topico. |
-| `/forum/topico/:id` | `ForumTopico` | `MemberRoute` | Visualizacao de topico. |
-| `/forum/topico/:id/editar` | `ForumEditarTopico` | `MemberRoute` | Edicao de topico. |
+| Rota | Componente | Função |
+|---|---|---|
+| `/minha-arvore/editar` | `MinhaArvore` | Edição da própria árvore/dados pelo membro |
+| `/meus-dados` | `MeusDados` | Edição dos dados da pessoa vinculada |
+| `/meus-vinculos` | `MeusVinculos` | Gestão/visualização de vínculos |
+| `/vincular-perfil` | `VincularPerfil` | Solicitação/criação de vínculo adicional |
+| `/pessoa/:id` | `PersonProfile` | Perfil público/interno de pessoa |
+| `/pessoas/:id` | `PersonProfile` | Alias do perfil de pessoa |
+| `/calendario-familiar` | `CalendarioFamiliar` | Calendário familiar e Google Agenda |
+| `/meus-favoritos` | `MeusFavoritos` | Favoritos do usuário |
+| `/notificacoes` | `Notificacoes` | Central de notificações |
+| `/ajustar-notificacoes` | `AjustarNotificacoes` | Preferências de notificações |
+| `/forum` | `ForumHome` | Home do fórum |
+| `/forum/novo` | `ForumNovoTopico` | Criação de tópico |
+| `/forum/topico/:id` | `ForumTopico` | Visualização de tópico |
+| `/forum/topico/:id/editar` | `ForumEditarTopico` | Edição de tópico |
 
 Regras:
 
-- rotas de membro nao devem usar `ProtectedRoute`;
-- acoes administrativas dentro de rotas de membro devem ser condicionais;
-- links internos devem usar navegacao client-side quando possivel;
-- dados pessoais devem respeitar privacidade e RLS.
+- rotas de membro usam `MemberRoute`;
+- ações administrativas dentro dessas rotas devem ser condicionais;
+- acesso à edição de pessoa depende de permissão específica, não apenas da rota;
+- navegação deve usar React Router/AppLink quando possível.
 
 ---
 
-## 9. Rotas administrativas
+## 8. Rotas administrativas
 
-| Rota | Componente | Protecao | Funcao |
-|---|---|---|---|
-| `/admin` | `AdminDashboard` | `ProtectedRoute` | Dashboard admin. |
-| `/admin/dashboard` | `AdminDashboard` | `ProtectedRoute` | Alias/dashboard admin. |
-| `/admin/home` | `AdminHomeSettings` | `ProtectedRoute` | Configuracoes visuais da home publica. |
-| `/admin/pessoas` | `AdminPessoas` | `ProtectedRoute` | Listagem de pessoas. |
-| `/admin/pessoas/nova` | `AdminPessoaForm` | `ProtectedRoute` | Criacao de pessoa. |
-| `/admin/pessoas/:id` | `AdminPessoaForm` | `ProtectedRoute` | Alias de edicao/visualizacao admin. |
-| `/admin/pessoas/:id/editar` | `AdminPessoaForm` | `ProtectedRoute` | Edicao de pessoa. |
-| `/admin/relacionamentos` | `AdminRelacionamentos` | `ProtectedRoute` | Gestao de relacionamentos. |
-| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm` | `ProtectedRoute` | Criacao de relacionamento. |
-| `/admin/importacao` | `AdminImportacao` | `ProtectedRoute` | Importacao. |
-| `/admin/migrar-dados` | `AdminMigrarDados` | `ProtectedRoute` | Ferramenta destrutiva de migracao de seed. |
-| `/admin/diagnostico` | `AdminDiagnostico` | `ProtectedRoute` | Diagnostico de integridade. |
-| `/admin/integridade` | `AdminIntegridade` | `ProtectedRoute` | Integridade de dados. |
-| `/admin/atividades` | `AdminAtividades` | `ProtectedRoute` | Historico de atividades. |
-| `/admin/notificacoes` | `AdminNotificacoes` | `ProtectedRoute` | Diagnostico/gestao de notificacoes. |
-| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos` | `ProtectedRoute` | Solicitacoes de vinculo/relacionamento. |
+| Rota | Componente | Função |
+|---|---|---|
+| `/admin` | `AdminDashboard` | Dashboard admin |
+| `/admin/dashboard` | `AdminDashboard` | Alias/dashboard admin |
+| `/admin/home` | `AdminHomeSettings` | Configurações visuais da home pública |
+| `/admin/pessoas` | `AdminPessoas` | Listagem de pessoas |
+| `/admin/pessoas/nova` | `AdminPessoaForm` | Criação de pessoa |
+| `/admin/pessoas/:id` | `AdminPessoaForm` | Alias de edição/visualização admin |
+| `/admin/pessoas/:id/editar` | `AdminPessoaForm` | Edição de pessoa |
+| `/admin/relacionamentos` | `AdminRelacionamentos` | Gestão de relacionamentos |
+| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm` | Criação de relacionamento |
+| `/admin/importacao` | `AdminImportacao` | Importação |
+| `/admin/migrar-dados` | `AdminMigrarDados` | Ferramenta destrutiva de migração de seed |
+| `/admin/diagnostico` | `AdminDiagnostico` | Diagnóstico de integridade |
+| `/admin/integridade` | `AdminIntegridade` | Integridade de dados |
+| `/admin/atividades` | `AdminAtividades` | Histórico de atividades |
+| `/admin/notificacoes` | `AdminNotificacoes` | Diagnóstico/gestão de notificações |
+| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos` | Solicitações de vínculo, sugestões de perfil e relacionamento |
 
 Regras:
 
-- toda rota `/admin/*`, salvo `/admin/login`, deve usar `ProtectedRoute`;
-- ferramentas destrutivas devem ter protecao adicional;
-- `/admin/migrar-dados` nao deve ficar liberada em producao sem variavel explicita e confirmacao textual;
-- admin no frontend nao substitui RLS/policies no banco;
-- usuario comum nunca deve alterar dados reais por rota administrativa.
+- toda rota `/admin/*`, exceto `/admin/login`, deve usar `ProtectedRoute`;
+- `/admin/migrar-dados` exige proteção adicional por flag e confirmação textual;
+- alterações em relacionamento real, reset de perfil, moderação e diagnóstico devem permanecer restritas a admin.
 
 ---
 
-## 10. Rota 404
+## 9. Navegação global
 
-Comportamento atual esperado:
+### Home pós-login
 
-- rota `*` renderiza tela 404;
-- deve oferecer retorno seguro para a home/arvore;
-- idealmente usar navegacao client-side em momento seguro.
+`HomeHeader` contém:
 
-Pos-MVP tecnico:
+- seletor de view;
+- seletor de paleta;
+- busca de pessoa/página;
+- atalhos de fórum/calendário/curiosidades;
+- `UserProfileMenu variant="home-header"`.
 
-- revisar link 404 que usa `<a href="/">`;
-- trocar por navegacao client-side, se nao houver impacto colateral;
-- decidir se destino deve ser `/` ou `/minha-arvore`.
+### Páginas internas
 
----
+`MemberPageHeader` contém:
 
-## 11. Primeiro acesso e vinculo
+- título/subtítulo;
+- ações responsivas;
+- `UserProfileMenu` padrão;
+- navegação inferior mobile fixa com atalhos para Home, Calendário, Fórum, Favoritos e Notificações.
 
-Fluxo resumido:
+### Menu do usuário
 
-```txt
-Usuario acessa /entrar
+`UserProfileMenu` contém:
 
-Informa codigo de primeiro acesso
+- topo clicável para `/minha-arvore/editar`;
+- Home;
+- Atualizar perfil;
+- Fórum;
+- Calendário;
+- Favoritos;
+- Notificações;
+- Painel Admin condicional;
+- Sair.
 
-Sistema valida codigo contra uma pessoa existente
-
-Usuario cria conta no Supabase Auth
-
-Sistema cria/resolve profile
-
-Sistema cria/resolve vinculo em user_person_links
-
-Usuario confirma dados proprios
-
-Usuario passa a acessar area de membro/arvore
-```
-
-Services relacionados:
-
-```txt
-src/app/services/memberProfileService.ts
-src/app/services/permissionService.ts
-src/app/contexts/AuthContext.tsx
-```
-
-Regras:
-
-- usuario autenticado deve estar ligado a `auth.users`;
-- `profiles` complementa dados e role;
-- `user_person_links` conecta usuario a pessoa da arvore;
-- vinculo principal define a pessoa de referencia;
-- `dados_confirmados` controla confirmacao de dados;
-- `can_edit` controla permissao de edicao;
-- admin pode gerenciar vinculos por fluxo proprio.
+No mobile, também apresenta seleção rápida das views da árvore.
 
 ---
 
-## 12. Permissoes administrativas
+## 10. Regras anti-regressão
 
-Arquivos relacionados:
-
-```txt
-src/app/services/permissionService.ts
-src/app/components/ProtectedRoute.tsx
-src/app/pages/Home.tsx
-src/app/components/UserMenu.tsx
-```
-
-Regra principal:
-
-- admin deve ser identificado por `profiles.role = 'admin'` ou mecanismo consolidado no service/RPC.
-
-Verificacoes esperadas:
-
-- `isAdminUser(user)`;
-- RPC `is_admin_user`, quando aplicavel;
-- role em `profiles`;
-- fallback temporario por e-mail, se ainda existir, deve ser tratado como divida tecnica;
-- falhas devem bloquear acesso administrativo.
-
-Regras de UI:
-
-- botao **Painel administrativo** apenas para admin;
-- acoes destrutivas apenas em telas admin;
-- usuario comum nao deve ver nem acionar acoes administrativas reais.
+- Não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
+- Não proteger `/entrar`, `/termos` ou `/privacidade`.
+- Não expor admin por link sem `ProtectedRoute`.
+- Não usar e-mail hardcoded como regra de admin.
+- Não redirecionar usuário já vinculado em loop para `/meus-dados`.
+- Não usar `window.location` para navegação interna quando `navigate` resolver.
+- Não quebrar preservação de `?pessoa=...`.
+- Não duplicar mapeamento de `TreeViewMode` fora de `treeViewMode.ts` sem justificativa.
+- Não usar botão escondido como única proteção de dados.
 
 ---
 
-## 13. Navegacao e links internos
+## 11. Checklist de validação
 
-Regras gerais:
-
-- preferir `AppLink` ou navegacao client-side;
-- evitar `<a href="/">` quando reload nao for necessario;
-- preservar search params quando a intencao do usuario depender deles;
-- nao trocar view da arvore por estado local isolado;
-- nao usar `window.location` para navegacao interna se `navigate` resolver.
-
-Casos especificos:
-
-- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` deve preservar `location.search`;
-- links para pessoa devem usar `/pessoa/:id` ou `/pessoas/:id` conforme padrao atual;
-- navegacao de admin deve ir para `/admin` ou `/admin/dashboard`;
-- retorno da 404 pode usar `/` por compatibilidade, mas deve ser revisado pos-MVP.
-
----
-
-## 14. Seguranca e RLS
-
-Regras:
-
-- guard de frontend melhora UX, mas nao substitui RLS;
-- operacao sensivel precisa ter policy/RPC/service compativel;
-- usuario comum nao deve escrever diretamente em tabelas sensiveis;
-- alteracoes reais de relacionamento por usuario comum devem virar solicitacao;
-- admin deve ser validado no banco para operacoes criticas;
-- tokens, secrets e service role nao podem ser expostos no frontend;
-- Edge Functions devem manter secrets server-side.
-
-Tabelas sensiveis:
-
-```txt
-profiles
-user_person_links
-pessoas
-relacionamentos
-relationship_change_requests
-activity_logs
-notificacoes_usuario
-preferencias_notificacao
-google_calendar_connections
-```
-
----
-
-## 15. QA de rotas e guards
-
-Antes de alterar rotas:
-
-```bash
-npm run build
-npm test
-npm run test:e2e
-git diff --check
-```
-
-Checklist manual minimo:
-
-- usuario deslogado acessa `/entrar`;
-- usuario deslogado nao acessa `/minha-arvore`;
-- usuario deslogado nao acessa `/admin`;
-- usuario comum acessa `/meus-dados`;
-- usuario comum acessa `/notificacoes`;
-- usuario comum acessa `/forum`;
-- usuario comum nao acessa `/admin`;
-- admin acessa `/admin`;
-- admin acessa `/admin/pessoas`;
-- `/` redireciona para `/minha-arvore`;
-- `/?pessoa=ID` redireciona para `/minha-arvore?pessoa=ID`;
-- trocar de `/minha-arvore?pessoa=ID` para `/genealogia?pessoa=ID` preserva `?pessoa=ID`;
-- trocar de `/genealogia?pessoa=ID` para `/visao-completa?pessoa=ID` preserva `?pessoa=ID`;
-- rota inexistente mostra 404.
-
----
-
-## 16. Troubleshooting
-
-### Usuario comum acessa admin
-
-Verificar:
-
-```txt
-src/app/routes.tsx
-src/app/components/ProtectedRoute.tsx
-src/app/services/permissionService.ts
-profiles.role
-RLS/policies
-```
-
-Correcao:
-
-- garantir `ProtectedRoute`;
-- corrigir `isAdminUser`;
-- bloquear por erro/falha;
-- corrigir RLS;
-- nao resolver apenas escondendo botao.
-
----
-
-### Admin nao ve painel administrativo
-
-Verificar:
-
-```txt
-profiles.role
-is_admin_user
-permissionService.ts
-UserMenu
-Home.tsx
-sessao Supabase
-```
-
-Correcao:
-
-- confirmar role no banco;
-- limpar sessao/cache se necessario;
-- corrigir service/RPC;
-- validar loading/erro.
-
----
-
-### `?pessoa=...` desaparece ao trocar view
-
-Verificar:
-
-```txt
-Home.tsx
-treeViewMode.ts
-HomeHeader.tsx
-HomeMobileNav.tsx
-```
-
-Correcao:
-
-- usar helper de path;
-- concatenar `location.search`;
-- evitar substituicao por rota sem query string.
-
----
-
-### View abre publica por engano
-
-Verificar:
-
-```txt
-src/app/routes.tsx
-TreeAccessRoute
-MemberRoute
-ProtectedRoute
-```
-
-Correcao:
-
-- aplicar guard correto;
-- validar comportamento sem sessao;
-- validar comportamento com usuario comum;
-- validar comportamento admin.
-
----
-
-### Rota admin quebra apos refatoracao
-
-Verificar:
-
-- import lazy;
-- nome do componente exportado;
-- path da rota;
-- `ProtectedRoute`;
-- fallback de Suspense;
-- build.
-
-Correcao:
+Após alterar rotas/guards:
 
 ```bash
 npm run build
 git diff --check
 ```
 
----
+Validar manualmente, sem alterar dados reais:
 
-## 17. Pos-MVP tecnico
-
-Itens recomendados:
-
-- avaliar rota pai/layout compartilhado para `/minha-arvore`, `/genealogia` e `/visao-completa`;
-- revisar se troca de view remonta `Home`;
-- revisar navegacoes internas ainda apontando para `/`;
-- trocar link 404 por navegacao client-side;
-- remover fallback temporario por e-mail de admin quando `profiles.role` estiver garantido;
-- documentar matriz final de permissoes por tabela/RPC;
-- ampliar testes e2e de acesso por perfil.
-
-Esses itens nao bloqueiam o MVP se nao houver falha P0/P1.
-
----
-## 18. Ajustes recentes de acesso - ciclo 2026-05-30
-
-### 18.1 Correcao de redirecionamento recorrente para `/meus-dados`
-
-Problema observado:
-
-```txt
-Ao acessar paginas da arvore, usuario ja autenticado era redirecionado repetidamente para /meus-dados.
-```
-
-Causa funcional:
-
-```txt
-TreeAccessRoute tratava qualquer vinculo com dados_confirmados=false como motivo para redirecionar para /meus-dados.
-```
-
-Regra corrigida:
-
-```txt
-sem sessao -> /entrar
-sem vinculo -> /entrar ou fluxo de primeiro acesso
-vinculo recem-criado e dados_confirmados=false -> /meus-dados
-vinculo existente -> libera /minha-arvore, /genealogia e /visao-completa
-```
-
-Objetivo:
-
-- preservar o fluxo de primeiro acesso;
-- evitar loop para usuario ja vinculado;
-- nao bloquear acesso recorrente a arvore por `dados_confirmados=false`.
-
-### 18.2 Diferenca entre `/meus-dados` e `/minha-arvore/editar`
-
-```txt
-/meus-dados -> edicao/confirmacao de dados vinculados ao usuario.
-/minha-arvore/editar -> edicao ampliada do proprio perfil familiar, avatar, arquivos historicos e vinculos.
-```
-
-Regras:
-
-- `/meus-dados` permanece rota de membro;
-- `/minha-arvore/editar` tambem permanece rota de membro;
-- nenhuma das duas deve usar `TreeAccessRoute`;
-- alteracoes de guard devem ser documentadas aqui antes de implementadas.
-
-### 18.3 Paginas legais
-
-Rotas publicas:
-
-```txt
-/termos
-/privacidade
-```
-
-Regras de UX recentes:
-
-- nao exibir texto **Arvore Genealogica** no lado direito do header;
-- data oficial de ultima atualizacao legal: **01/06/2026**.
-
-Essas rotas continuam publicas e nao devem passar por `MemberRoute`, `TreeAccessRoute` ou `ProtectedRoute`.
-
-### 18.4 Checklist anti-regressao de guards
-
-Validar apos alteracoes:
-
-```txt
-deslogado em /minha-arvore -> /entrar
-deslogado em /pessoa/:id -> /entrar
-usuario comum em /admin -> bloqueado
-usuario vinculado existente em /minha-arvore -> acessa arvore
-usuario vinculado existente em /genealogia -> acessa genealogia
-usuario vinculado existente em /visao-completa -> acessa visao completa
-vinculo recem-criado e dados_confirmados=false -> /meus-dados
-/minha-arvore/editar -> MemberRoute
-/notificacoes -> MemberRoute
-```
+- visitante acessa `/entrar`, `/termos`, `/privacidade`;
+- visitante não acessa área de membro/admin;
+- membro acessa `/minha-arvore/editar`, fórum, favoritos, notificações e calendário;
+- membro sem admin não acessa `/admin`;
+- admin acessa `/admin` e páginas administrativas;
+- `/` redireciona para `/minha-arvore` preservando search params;
+- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` mantém navegação client-side.

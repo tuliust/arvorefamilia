@@ -1,566 +1,254 @@
-# Documentacao - Arvore Familia
+# Documentação - Árvore Família
 
-> Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
-> Ultima revisao: 2026-06-08
-> Status: documentacao canonica com ajustes recentes de perfil, Minha Arvore, forum, notificacoes, arvore, calendario mobile, Genealogia mobile e Visao Completa mobile rastreados.
+> Última revisão: 2026-06-08  
+> Local canônico: `docs/README.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: índice canônico da documentação revisada.
 
-Este diretorio concentra a documentacao tecnica e funcional do projeto **Arvore Familia**.
+Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
-Use este arquivo como ponto de entrada antes de consultar documentos antigos, historicos ou arquivos soltos na raiz do repositorio.
-
-Regra geral:
-
-- documentos na raiz de `docs/` sao canonicos para guias gerais;
-- documentos em `docs/funcionalidades/` sao canonicos para comportamento detalhado de funcionalidades especificas;
-- documentos historicos nao substituem os guias oficiais;
-- pendencias visuais ainda abertas devem ficar em `PLANO_PROXIMOS_PASSOS.md`, nao misturadas com estado consolidado.
+Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação foi consolidada para reduzir duplicidade, separar estado atual de histórico e evitar que arquivos antigos sejam usados como fonte de verdade.
 
 ---
 
-## 1. Guias oficiais
+## 1. Regras de uso da documentação
 
-Os guias oficiais ficam na raiz de `docs/` e devem ser tratados como documentacao canonica.
+Regras gerais:
 
-| Arquivo | Quando usar |
+- arquivos na raiz de `docs/` são guias canônicos gerais;
+- arquivos em `docs/funcionalidades/` são guias canônicos de comportamento funcional específico;
+- arquivos em `docs/arquitetura/` são guias canônicos de rotas, guards, arquitetura e modelo de usuários/dados;
+- arquivos em `docs/operacao/` são procedimentos operacionais e de manutenção;
+- arquivos em `docs/comandos/` são checklists/comandos auxiliares;
+- `docs/historico/README.md` é o único resumo histórico consolidado;
+- pendências reais, bugs prováveis e decisões futuras devem ficar em `PLANO_PROXIMOS_PASSOS.md`;
+- scripts SQL soltos, diagnósticos antigos e documentação removida não substituem `supabase/migrations` nem os guias canônicos.
+
+Quando houver divergência entre um guia atual e conteúdo histórico, prevalece o guia atual.
+
+---
+
+## 2. Guias oficiais na raiz de `docs/`
+
+| Arquivo | Uso |
 |---|---|
-| `GUIA_IMPLEMENTACOES.md` | Consultar o estado consolidado do que ja foi implementado, decisoes tecnicas e frentes concluidas. Deve separar implementado de refinamento visual pendente. |
-| `GUIA_COMPONENTES.md` | Localizar componentes reutilizaveis, responsabilidades, props, padroes de uso e cuidados contra regressoes. |
-| `GUIA_UX_LAYOUT.md` | Orientar decisoes visuais, responsividade, headers, containers, arvore, painel lateral, menus e microcopy. |
-| `GUIA_CORRECAO_ERROS.md` | Investigar falhas por sintoma, build quebrado, permissoes, RLS, Storage, formularios, arvore e regressoes visuais. |
-| `PLANO_PROXIMOS_PASSOS.md` | Acompanhar fechamento de MVP, criterios de bloqueio, QA final, pendencias visuais finais e backlog pos-MVP. |
+| `README.md` | Índice canônico da documentação. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já foi implementado. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus e microcopy. |
+| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. |
+| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, bloqueios, QA futuro e backlog pós-MVP. |
+| `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. |
 
 ---
 
-## 2. Arquitetura
+## 3. Arquitetura
 
-Documentos de arquitetura ficam em `docs/arquitetura/`.
+Pasta:
 
-| Arquivo | Quando usar |
+```txt
+docs/arquitetura/
+```
+
+| Arquivo | Uso |
 |---|---|
-| `arquitetura/ARCHITECTURE.md` | Consultar a visao sintetica da arquitetura atual do projeto. |
-| `arquitetura/ROTAS_E_GUARDS.md` | Consultar rotas publicas, rotas de membro, rotas administrativas, guards de acesso e regras de navegacao. |
-| `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Consultar estrutura de usuarios, pessoas, vinculos, perfis, tabelas de apoio e fluxos de dados. |
-
-Se houver divergencia entre documento antigo e guia canonico, prevalece a documentacao canonica em `docs/`.
+| `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas e integrações. |
+| `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, rotas de membro, rotas administrativas, guards e redirecionamentos. |
+| `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações e objetos legados. |
 
 ---
 
-## 3. Funcionalidades especificas
+## 4. Funcionalidades
 
-Documentos de funcionalidades ficam em `docs/funcionalidades/`.
+Pasta:
+
+```txt
+docs/funcionalidades/
+```
 
 | Arquivo | Escopo |
 |---|---|
-| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legenda visual, conectores, painel lateral, filtros de linhas e camadas visuais da arvore. |
-| `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendario familiar, datas familiares, categorias, sidebar, filtros e ajustes de exibicao. |
-| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportacao de area visivel da arvore em PNG/PDF/impressao e selecao retangular. |
-| `funcionalidades/FORUM.md` | Forum familiar, criacao de topicos, categorias, pessoas relacionadas, mencoes, notificacoes, badges, avatares, comentarios e reacoes. |
-| `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Regras especificas da Minha Arvore, filtros diretos, pets e regras de exibicao. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | Layout, viewport, ReactFlow, area central, ramos paterno/materno e comportamento da view Minha Arvore. |
-| `funcionalidades/GENEALOGIA_VIEW.md` | Layout por geracoes, navegacao mobile por chips, viewport, inferencia visual e QA da view Genealogia. |
-| `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edicao da propria arvore pelo membro, Meus Dados, avatar, arquivos historicos e saida sem salvar. |
-| `funcionalidades/NOTIFICACOES.md` | Notificacoes internas/e-mail, preferencias, logs, Edge Functions, rotina diaria e cron seguro. |
-| `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil publico, admin de pessoa, dados pessoais, privacidade, vinculos e edicao. |
-| `funcionalidades/TIMELINE.md` | Linha do tempo, eventos derivados, eventos pessoais e evolucao pos-MVP. |
+| `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, filtros diretos e mobile. |
+| `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, inferência visual e QA. |
+| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques e painel lateral. |
+| `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios e saída sem salvar. |
+| `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
+| `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, pessoas relacionadas, menções, respostas, comentários, reações e favoritos. |
+| `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
+| `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, microcopy e QA. |
+| `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
+| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão. |
 
 ---
 
-## 4. Operacao e manutencao
+## 5. Operação e manutenção
 
-Documentos operacionais ficam em `docs/operacao/`.
+Pasta:
 
-| Arquivo | Quando usar |
-|---|---|
-| `operacao/README.md` | Indice da pasta de operacao e manutencao. |
-| `operacao/DEPLOYMENT.md` | Deploy, variaveis de ambiente, Supabase, build e publicacao estatica. |
-| `operacao/STORAGE_MAINTENANCE.md` | Manutencao controlada de Storage, dry-run, orfaos e auditoria. |
-| `operacao/MIGRATIONS_SUPABASE.md` | Fluxo de migrations, Supabase, `db push`, scripts SQL legados e seguranca operacional. |
-
-Regras operacionais de banco:
-
-- `supabase/migrations` e a fonte da verdade do schema.
-- Scripts SQL soltos sao historicos ou operacionais.
-- Nao aplicar SQL legado como schema principal de ambiente novo.
-- Nao rodar `supabase db push` sem revisar `supabase migration list`.
-- Nao versionar secrets, dumps, tokens ou service role.
-- Nao criar migration para ajuste visual de layout, paleta, titulo, menu ou ReactFlow.
-
----
-
-## 5. Licencas e atribuicoes
+```txt
+docs/operacao/
+```
 
 | Arquivo | Uso |
 |---|---|
-| `ATTRIBUTIONS.md` | Atribuicoes e licencas de componentes, bibliotecas ou assets externos. |
+| `operacao/README.md` | Índice da pasta operacional. |
+| `operacao/DEPLOYMENT.md` | Deploy, variáveis, build, publicação, Supabase, Edge Functions e secrets. |
+| `operacao/MIGRATIONS_SUPABASE.md` | Migrations, Supabase, `db push`, SQL legado, RLS, schema cache e operação segura. |
+| `operacao/STORAGE_MAINTENANCE.md` | Storage, dry-run, órfãos, base64 legado, scripts administrativos e service role. |
+
+Regras operacionais permanentes:
+
+- `supabase/migrations` é a fonte da verdade do schema;
+- SQL legado não deve ser aplicado como schema principal de ambiente novo;
+- `supabase db push` só deve ser executado com revisão explícita;
+- service role, dumps, tokens e secrets não devem ser versionados;
+- ajuste visual não deve gerar migration;
+- limpeza de Storage exige dry-run, revisão e flag explícita.
 
 ---
 
-## 6. Comandos e checklists tecnicos
+## 6. Comandos auxiliares
 
-Documentos de comandos ficam em `docs/comandos/`.
+Pasta:
+
+```txt
+docs/comandos/
+```
 
 | Arquivo | Uso |
 |---|---|
-| `comandos/GIT_RESPONSIVIDADE.md` | Comandos, checkpoints e historico tecnico da frente de responsividade. |
+| `comandos/GIT_RESPONSIVIDADE.md` | Checklist operacional/histórico de Git, responsividade e validações antes de commit. |
 
-Scripts auxiliares relacionados a documentacao ficam em `scripts/` e devem ser usados com cuidado:
+Esse documento não substitui `GUIA_UX_LAYOUT.md` nem `PLANO_PROXIMOS_PASSOS.md`.
 
-| Script | Uso |
+---
+
+## 7. Histórico consolidado
+
+Pasta:
+
+```txt
+docs/historico/
+```
+
+| Arquivo | Uso |
 |---|---|
-| `scripts/fix-docs-encoding.py` | Corrigir mojibake/encoding em Markdown. Usar com `--ascii` se o terminal Windows voltar a corromper acentos. |
-| `scripts/polir-documentacao-etapa1.py` | Script experimental de polimento textual. Nao usar sem revisar diff antes do commit. |
+| `historico/README.md` | Resumo histórico consolidado das auditorias, QA, responsividade, exportação e documentação antiga. |
 
-Regras para scripts:
+A pasta histórica foi consolidada. Os arquivos históricos individuais e `docs/historico/documentacao-antiga/*` foram substituídos pelo resumo consolidado em `docs/historico/README.md`.
 
-- revisar `git diff` antes de commit;
-- evitar scripts PowerShell com `Set-Content` em arquivos com acentos quando houver risco de mojibake;
-- remover scripts temporarios antes de commit;
-- nao commitar `.bak`, patches locais ou saidas de build.
+Não recriar documentos históricos individuais salvo necessidade explícita de rastreabilidade futura. Se um novo diagnóstico for criado, ele deve declarar que é histórico e não substitui os guias canônicos.
 
 ---
 
-## 7. Historico, diagnosticos e QA
+## 8. Onde documentar cada tipo de informação
 
-Documentos historicos ficam em `docs/historico/`.
-
-Esses arquivos sao referencia historica, diagnostico pontual ou checklist de uma fase especifica. Eles **nao substituem os guias oficiais**.
-
-| Arquivo/pasta | Uso |
+| Tipo de informação | Destino correto |
 |---|---|
-| `historico/README.md` | Indice da pasta historica. |
-| `historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | Diagnostico de documentacao em uma fase especifica. |
-| `historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Diagnostico historico da frente de exportacao da arvore. |
-| `historico/QA_7_6_EXPORTACAO_ARVORE.md` | QA historico da frente de exportacao da arvore. |
-| `historico/QA_FINAL_MVP.md` | Checklist e rastreabilidade da validacao final do MVP. |
-| `historico/RESPONSIVIDADE_MOBILE_TABLET.md` | Checklist/historico da frente de responsividade. |
-| `historico/documentacao-antiga/` | Documentos antigos movidos da raiz do repositorio. |
-| `historico/sql-legado/` | SQLs antigos, diagnosticos ou referencia historica que nao substituem migrations. |
+| Estado consolidado de implementação | `GUIA_IMPLEMENTACOES.md` |
+| Layout, responsividade, visual, menu, header, microcopy | `GUIA_UX_LAYOUT.md` |
+| Componentes, props, responsabilidades e anti-regressões | `GUIA_COMPONENTES.md` |
+| Sintoma, erro, causa provável e correção | `GUIA_CORRECAO_ERROS.md` |
+| Pendência real, bug provável, decisão futura ou pós-MVP | `PLANO_PROXIMOS_PASSOS.md` |
+| Rota, guard, permissão ou navegação | `arquitetura/ROTAS_E_GUARDS.md` |
+| Usuários, pessoas, vínculos e estrutura de dados | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
+| Arquitetura geral | `arquitetura/ARCHITECTURE.md` |
+| Deploy e publicação | `operacao/DEPLOYMENT.md` |
+| Migrations, RLS, schema cache e SQL legado | `operacao/MIGRATIONS_SUPABASE.md` |
+| Storage, órfãos, base64 legado e scripts administrativos | `operacao/STORAGE_MAINTENANCE.md` |
+| Funcionalidade específica | `funcionalidades/<NOME>.md` |
+| Licenças e atribuições | `ATTRIBUTIONS.md` |
+| Histórico consolidado | `historico/README.md` |
 
 ---
 
-## 8. Como decidir onde documentar
+## 9. Pendências reais abertas
 
-| Tipo de informacao | Destino correto |
-|---|---|
-| Estado consolidado de uma frente implementada | `GUIA_IMPLEMENTACOES.md` |
-| Padrao visual, comportamento responsivo, menu ou microcopy | `GUIA_UX_LAYOUT.md` |
-| Componente, props, cuidados de uso e anti-regressao | `GUIA_COMPONENTES.md` |
-| Erro, sintoma, causa provavel e correcao | `GUIA_CORRECAO_ERROS.md` |
-| Pendencia, bloqueio, QA final ou pos-MVP | `PLANO_PROXIMOS_PASSOS.md` |
-| Rota, guard, permissao de acesso ou navegacao | `arquitetura/ROTAS_E_GUARDS.md` |
-| Usuario, pessoa, perfil, vinculo e modelo de dados | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
-| Arquitetura sintetica do projeto | `arquitetura/ARCHITECTURE.md` |
-| Deploy, variaveis e publicacao | `operacao/DEPLOYMENT.md` |
-| Migration, Supabase, schema, SQL legado ou `db push` | `operacao/MIGRATIONS_SUPABASE.md` |
-| Storage, orfaos, base64 legado ou limpeza de midia | `operacao/STORAGE_MAINTENANCE.md` |
-| Comportamento detalhado de funcionalidade especifica | `funcionalidades/<NOME_DA_FUNCIONALIDADE>.md` |
-| Licencas e atribuicoes externas | `ATTRIBUTIONS.md` |
-| Diagnostico antigo, relatorio pontual ou QA de fase | `historico/` |
+As pendências abertas da revisão documental ficam apenas em:
 
----
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```
 
-## 9. Regras de organizacao
+No fechamento desta revisão documental, o plano mantém três itens abertos:
 
-1. Guias oficiais ficam na raiz de `docs/`.
-2. Funcionalidades especificas ficam em `docs/funcionalidades/`.
-3. Procedimentos operacionais ficam em `docs/operacao/`.
-4. Arquitetura fica em `docs/arquitetura/`.
-5. Licencas e atribuicoes ficam em `docs/ATTRIBUTIONS.md`.
-6. Comandos auxiliares e checklists pontuais ficam em `docs/comandos/`.
-7. Diagnosticos, relatorios antigos, QA e documentos de fase ficam em `docs/historico/`.
-8. Documentos antigos da raiz do repositorio devem ficar em `docs/historico/documentacao-antiga/`.
-9. Scripts SQL soltos sao historicos ou operacionais; a fonte da verdade do banco deve continuar sendo `supabase/migrations`.
-10. Dumps, backups sensiveis, tokens, secrets e service role nao devem ser versionados.
-11. Documentos historicos devem ser identificados como historicos para evitar uso como fonte canonica.
-12. Quando uma informacao couber em mais de um arquivo, mantenha o detalhe tecnico em apenas um lugar e use links cruzados nos demais.
-13. Nao documentar como concluido item que ainda depende de validacao visual aberta.
+| ID | Origem | Tipo |
+|---|---|---|
+| `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA |
+| `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste visual / encoding |
+| `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente |
+
+Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 
 ---
 
-## 10. Checklist antes de criar nova documentacao
+## 10. Critérios permanentes de bloqueio
+
+Antes de lançamento, commit final ou deploy, bloquear se houver:
+
+- build quebrado;
+- login quebrado;
+- usuário comum acessando admin;
+- usuário comum alterando dado restrito diretamente;
+- RLS liberando escrita indevida;
+- perda ou corrupção de dados;
+- secret, token, dump, backup sensível ou service role no frontend/repositório;
+- migration obrigatória ausente no ambiente final;
+- documentação canônica orientando ação insegura de Supabase, Storage, Auth ou migrations;
+- responsividade impedindo uso em mobile;
+- árvore principal, perfil de pessoa, fórum, notificações ou edição da própria árvore inutilizáveis.
+
+---
+
+## 11. Checklist antes de criar nova documentação
 
 Antes de criar um novo `.md`, verificar:
 
-- se o tema ja esta coberto por um guia oficial;
-- se o conteudo e funcional, operacional, arquitetural, legal ou historico;
-- se o novo documento evita duplicidade;
-- se ha links cruzados para os guias relacionados;
-- se o documento deixa claro o que e canonico, historico ou pos-MVP;
-- se pendencias foram colocadas no plano, nao em guias de implementacao;
-- se o arquivo pertence mesmo a `docs/` ou se deve ficar fora do repositorio por conter dado sensivel.
+- se o tema já está coberto por guia canônico;
+- se o conteúdo é funcional, operacional, arquitetural, legal ou histórico;
+- se o documento evita duplicidade;
+- se pendências foram registradas no plano;
+- se há referência cruzada para o documento canônico correto;
+- se há dado sensível, secret, dump, token ou conteúdo privado que não deve ser versionado;
+- se o arquivo precisa mesmo existir ou se o conteúdo pode ser incorporado a um documento existente.
 
 ---
 
-## 11. Ajustes recentes documentados - ciclo 2026-05-30
+## 12. Validação final da documentação
 
-Este ciclo consolidou ajustes em header da arvore, busca, dropdowns, modal de curiosidades, edicao da propria arvore, modal de relacionamento e guard de acesso.
-
-Documentos que devem permanecer sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| Header da arvore, busca, sugestoes e camadas | `GUIA_UX_LAYOUT.md` e `funcionalidades/MINHA_ARVORE_VIEW.md` |
-| Componentes base Radix, modais e utilitarios visuais | `GUIA_COMPONENTES.md` |
-| Edicao da propria arvore pelo membro | `funcionalidades/MINHA_ARVORE_EDITAR.md` |
-| Perfil publico, contato, relacionamento e modal conjugal | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
-| Rotas, guards e redirecionamento para `/meus-dados` | `arquitetura/ROTAS_E_GUARDS.md` |
-| Sintomas, encoding e correcoes por regressao | `GUIA_CORRECAO_ERROS.md` |
-| Linhas, conectores e legenda da arvore | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-
-### 11.1 Estado consolidado
-
-Itens concluidos e que devem ser tratados como anti-regressao:
-
-- `/privacidade` e `/termos` sem texto **Arvore Genealogica** no lado direito do header;
-- data oficial de ultima atualizacao legal: **01/06/2026**;
-- `Legendas > Linhas > Todas` oculta tambem linhas de primos;
-- header da arvore possui busca com sugestoes de pessoas e paginas;
-- busca possui pagina completa de resultados;
-- dropdown de views e menu do usuario abrem acima do header;
-- cards estatisticos de **Curiosidades > Voce Sabia?** possuem cores distintas;
-- `/minha-arvore/editar` possui modal de foto, arquivos historicos separados e saida sem salvar;
-- modal conjugal nao exibe ID tecnico;
-- `TreeAccessRoute` nao deve redirecionar recorrentemente usuarios ja vinculados para `/meus-dados`.
-
-### 11.2 Pendencias a manter rastreaveis
-
-Itens ainda pendentes ou em ajuste incremental devem ficar em `PLANO_PROXIMOS_PASSOS.md` ou no documento funcional correspondente:
-
-- reduzir espacos laterais e ampliar cards da view `/minha-arvore`;
-- reduzir truncamento excessivo de nomes;
-- concluir ajustes de `/pessoa/:id`: remover signo, contato por WhatsApp no telefone e casamento/viuvez;
-- concluir ajustes de `/notificacoes`: acentuacao, tag **ESPECIAIS** e item inteiro clicavel;
-- revisar ocorrencias de encoding na origem quando surgirem novos textos corrompidos.
-
----
-
-## 12. Ajustes recentes documentados - ciclo 2026-06-06
-
-Este ciclo documenta os PRs #6 e #7:
-
-```txt
-PR #6 - feat: adicionar paletas visuais da arvore
-PR #7 - fix: exibir paletas no header da arvore
-```
-
-Resumo:
-
-- base tecnica de paletas visuais na arvore;
-- seletor compacto de paletas visuais no dropdown do `HomeHeader`;
-- paletas `white`, `orange` e `brown`;
-- persistencia em `localStorage`;
-- aplicacao por CSS variables;
-- botao/anel conjugal ampliado para `60px x 60px`;
-- producao estabilizada apos revert da tentativa anterior e reimplementacao segura via PR #7.
-
-Documentos sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| UX do seletor de paletas | `GUIA_UX_LAYOUT.md` |
-| Exposicao das paletas no `HomeHeader` | `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md` e `GUIA_CORRECAO_ERROS.md` |
-| Componentes e tokens | `GUIA_COMPONENTES.md` |
-| Estado implementado | `GUIA_IMPLEMENTACOES.md` |
-| Legendas, conectores e camadas visuais | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Minha Arvore, containers e grupos | `funcionalidades/MINHA_ARVORE_VIEW.md` |
-| Pendencias e QA visual | `PLANO_PROXIMOS_PASSOS.md` |
-| Erros recorrentes de script/merge | `GUIA_CORRECAO_ERROS.md` |
-
-Pendencias rastreadas:
-
-- validar contraste das tres paletas quando tokens forem alterados;
-- avaliar acesso equivalente em mobile estreito, se o dropdown de views nao estiver disponivel;
-- ajustar padding superior dos titulos dos grupos sem alterar o tamanho total dos containers, se a demanda visual continuar ativa.
-
----
-
-## 13. Ajustes recentes documentados - ciclo 2026-06-06 / Genealogia mobile
-
-Este ciclo documenta a frente de navegacao mobile da view **Genealogia**.
-
-Resumo:
-
-- `/genealogia` mobile passou a usar chips horizontais por geracao;
-- labels dos chips foram refinados para **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
-- chips nao exibem contagem;
-- swipe lateral entre geracoes foi implementado;
-- chips focam/enquadram a geracao ativa, mas nao escondem as demais colunas;
-- colunas vazias foram removidas;
-- inferencia de `manual_generation` em memoria foi adicionada para a Genealogia com base na pessoa central;
-- a tela inicial mobile deve focar a primeira coluna real renderizada;
-- o ajuste estrutural tambem beneficia desktop quando havia `Geracao 1` vazia;
-- na frente inicial de 2026-06-06, botoes de zoom `+` e `-` foram ocultados apenas na Genealogia mobile; em 2026-06-08, o mesmo criterio passou a valer tambem para `/visao-completa` mobile quando os chips estao ativos;
-- nenhuma migration, RLS, permissao ou dado real foi alterado.
-
-Documentos que devem permanecer sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| UX da Genealogia mobile | `GUIA_UX_LAYOUT.md` e `funcionalidades/GENEALOGIA_VIEW.md` |
-| Componentes da Genealogia | `GUIA_COMPONENTES.md` |
-| Estado implementado | `GUIA_IMPLEMENTACOES.md` |
-| Troubleshooting de geracoes/viewport | `GUIA_CORRECAO_ERROS.md` |
-| Visao Completa mobile por chips | `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md`, `funcionalidades/GENEALOGIA_VIEW.md` e `PLANO_PROXIMOS_PASSOS.md` |
-
-Pendencia rastreavel:
-
-- frente concluida em `c5988a9 feat: add full tree mobile stage navigation`; manter apenas QA visual de regressao em `/visao-completa` mobile.
-
----
-
-## 14. Ajustes recentes documentados - ciclo 2026-06-07 / Menu, arvore e paginas auxiliares
-
-Este ciclo documenta ajustes de navegacao do usuario, refinamento visual das views da arvore e acoes auxiliares de calendario, perfil e notificacoes.
-
-### 14.1 Consolidado
-
-- o header da arvore deve manter o botao compacto de usuario;
-- o menu aberto nas views da arvore deve ser o painel compartilhado de `UserProfileMenu`;
-- `UserProfileMenu` tem variante visual para o header da arvore;
-- o cabecalho do menu, com avatar, nome e e-mail, deve navegar para `/minha-arvore/editar`;
-- o item **Editar notificacoes** foi removido do menu;
-- `/minha-arvore/editar` recebeu botao **Trocar Senha**;
-- `/notificacoes` recebeu botao **Personalizar Notificacoes** para `/ajustar-notificacoes`;
-- `/calendario-familiar` teve textos e hierarquia visual refinados no grid de eventos;
-- `/ajustar-notificacoes` teve titulos corrigidos;
-- as views da arvore nao devem corrigir espacamento com `translate` em `.react-flow__viewport`.
-
-### 14.2 Pendencias visuais ainda abertas
-
-Nao documentar como concluido ate validacao visual final:
-
-- aliancas ainda podem aparecer pouco visiveis em `/minha-arvore`;
-- titulo da arvore pode estar muito proximo do topo;
-- espaco entre titulo e cards ainda pode estar grande;
-- pode haver divergencia visual entre menu das views da arvore e menu das paginas internas;
-- qualquer diferenca de menu deve ser diagnosticada em `HomeHeader.tsx`, `UserProfileMenu.tsx` e `MemberPageHeader.tsx` antes de unificacao.
-
-Documentos sincronizados neste ciclo:
-
-| Frente | Documento canonico |
-|---|---|
-| Menu compartilhado e variante do header da arvore | `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
-| Titulo, viewport e aliancas da Minha Arvore | `funcionalidades/MINHA_ARVORE_VIEW.md`, `GUIA_UX_LAYOUT.md` e `GUIA_CORRECAO_ERROS.md` |
-| Estado implementado e refinamentos pendentes | `GUIA_IMPLEMENTACOES.md` |
-| Calendario familiar | `funcionalidades/CALENDARIO_FAMILIAR.md` |
-| Edicao do proprio perfil | `funcionalidades/MINHA_ARVORE_EDITAR.md` |
-| Notificacoes e preferencias | `funcionalidades/NOTIFICACOES.md` |
-| QA e pendencias finais | `PLANO_PROXIMOS_PASSOS.md` |
-
-Checklist de manutencao:
-
-- nao reintroduzir `UserMenu` local no shell da Home;
-- nao usar reposicionamento visual agressivo do ReactFlow para corrigir espacamento;
-- manter `/notificacoes` como central/lista e `/ajustar-notificacoes` como pagina de preferencias;
-- manter troca de senha sem nova migration ou regra de banco;
-- validar manualmente `/minha-arvore`, `/genealogia`, `/visao-completa`, `/calendario-familiar`, `/minha-arvore/editar`, `/notificacoes` e `/ajustar-notificacoes`.
-
----
-
-
-## 15. Ajustes recentes documentados - ciclo 2026-06-07 / Ícones, linhas, calendário mobile e Genealogia mobile
-
-Este ciclo documenta ajustes visuais e comportamentais nas três views da árvore e em `/calendario-familiar`.
-
-### 15.1 Consolidado
-
-- cards de pessoa usam `Star` e `Cross` do `lucide-react` para nascimento e falecimento;
-- botão conjugal usa `Blend` do `lucide-react`;
-- botão conjugal usa estilo cinza/neutro nas três views da árvore;
-- `/minha-arvore` usa `MarriageNode.tsx` para o botão conjugal;
-- `/genealogia` e `/visao-completa` usam `GenealogySpouseEdge.tsx`;
-- destaques de linhas foram padronizados:
-  - cônjuges em laranja;
-  - pais/filhos em amarelo/dourado;
-  - irmãos em azul tracejado;
-- `/calendario-familiar` mobile usa filtros superiores compactos;
-- card **Categorias** abaixo do calendário fica oculto no mobile;
-- `/genealogia` mobile deve manter os cabeçalhos de geração na mesma régua vertical, usando `Avós/Geração 3` como referência.
-
-### 15.2 Documentos sincronizados
-
-| Frente | Documento canônico |
-|---|---|
-| Ícones e componentes da árvore | `GUIA_COMPONENTES.md` |
-| UX da árvore, botão conjugal e calendário mobile | `GUIA_UX_LAYOUT.md` |
-| Troubleshooting de chips, pan e destaques | `GUIA_CORRECAO_ERROS.md` |
-| Conectores e destaques de linhas | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Calendário mobile | `funcionalidades/CALENDARIO_FAMILIAR.md` |
-| Genealogia mobile | `funcionalidades/GENEALOGIA_VIEW.md` |
-| Minha Árvore | `funcionalidades/MINHA_ARVORE_VIEW.md` |
-| Pendências e QA | `PLANO_PROXIMOS_PASSOS.md` |
-
-### 15.3 Pendências rastreáveis
-
-- confirmar commit do ajuste `y: referenceBounds.y` em `FamilyTree.tsx`, quando aplicado localmente;
-- validar se `/genealogia` mobile permite pan vertical para recuperar cabeçalhos;
-- se necessário, liberar `translateExtent` apenas nas views por geracao mobile;
-- validar as paletas `white`, `orange` e `brown`.
-
----
-
----
-
-## 18. Ajustes recentes documentados - ciclo 2026-06-08 / Perfil, Minha Arvore e Forum
-
-Este ciclo consolida as implementacoes realizadas nos prompts 1 a 8 da rodada de ajustes de layout, perfil, forum e notificacoes.
-
-### 18.1 Pessoas, perfil publico e admin
-
-Itens consolidados:
-
-- `/admin/pessoas` recebeu acao de copiar ID da pessoa diretamente na lista;
-- admin possui fluxo de **Resetar Perfil** por RPC, retornando dados relacionados ao perfil para a versao atual da tabela `pessoas`, removendo foto de perfil, astrologia/acontecimentos do nascimento, favoritos e preferencias customizadas relacionadas ao perfil;
-- reset preserva relacionamentos familiares existentes no banco;
-- defaults booleanos de privacidade/contato em `pessoas` passam a iniciar como `true` para novos registros;
-- `/pessoa/:id` moveu o botao **Editar** para o bloco de acoes ao lado do favorito, em botao redondo com icone;
-- botao de edicao do perfil aparece apenas para admin, responsavel pelo perfil ou propria pessoa vinculada;
-- fluxo **Inserir Informacoes** envia sugestoes para revisao admin quando o usuario nao tem permissao direta.
-
-Documentos que devem permanecer sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| Perfil publico e admin de pessoa | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
-| Estrutura de usuarios, defaults e RPCs | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
-| Migrations e operacao Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
-
-### 18.2 Relacionamento conjugal e arquivos historicos
-
-Itens consolidados:
-
-- modal de relacionamento conjugal centraliza titulo e botao de fechamento;
-- texto publico passa a usar forma humana, como **Fulana e Secundino foram casados**;
-- subtitulo exibe periodo, data e local da cerimonia quando houver dados;
-- acao **Inserir Informacoes** respeita permissao: responsavel/admin edita diretamente; demais usuarios enviam sugestao;
-- area de **Arquivos Historicos** usa botao compacto de `+` quando aplicavel;
-- arquivos de relacionamento continuam ligados a `relacionamento_id`.
-
-### 18.3 `/minha-arvore`
-
-Itens consolidados tecnicamente:
-
-- titulo **A arvore de {nome}** e cards foram reposicionados apenas no contexto de `viewMode === 'minha-arvore'`;
-- shell da Home foi ajustado para bloquear scroll externo quando nao ha conteudo fora da viewport;
-- zoom/pan interno do ReactFlow permanece preservado;
-- icone de alianca usa a cor dos conectores conjugais conforme tokens/paletas;
-- borda extra do card da pessoa principal foi removida, preservando a borda de status vivo/falecido.
-
-Validacao visual recomendada:
-
-```txt
-/minha-arvore desktop, tablet e mobile
-paletas white, orange e brown
-zoom minimo
-scroll do mouse
-clique no anel conjugal
-```
-
-### 18.4 `/minha-arvore/editar`
-
-Itens consolidados:
-
-- botoes duplicados **Alterar** e **Remover** foto foram removidos do bloco de dados;
-- edicao/remocao de foto fica concentrada no avatar superior;
-- card **FILHOS** conta apenas filhos humanos;
-- novo card **PETS** separa pets vinculados como filhos tecnicos;
-- botao **Sair** foi removido do header;
-- tentativa de sair com alteracoes pendentes exibe a mensagem **Deseja sair sem salvar os ajustes?**;
-- titulo duplicado de **Arquivos Historicos** na area inferior foi removido;
-- botao **Adicionar Arquivo** foi substituido por botao compacto `+` no estado vazio;
-- area **Eventos da Vida** foi adicionada, combinando eventos automaticos e eventos manuais.
-
-### 18.5 Forum, mencoes, notificacoes e reacoes
-
-Itens consolidados:
-
-- `/forum/novo` removeu dropdown de **Tipo**;
-- **Categoria** passou a usar selecao unica por botoes/cards com icone e estado selecionado;
-- dropdown de pessoas relacionadas passou a ter campo de busca interno e fechamento ao clicar fora;
-- aviso **Digite @ para marcar alguem na publicacao** aparece acima do conteudo;
-- pessoas marcadas por `@` e pessoas relacionadas recebem notificacao interna quando as preferencias permitem;
-- mencoes no post aparecem em negrito, com link para `/pessoa/:id`;
-- `/forum/topico/:id` removeu o botao **Ocultar** do header e das respostas;
-- badges pequenas/coloridas substituem tags textuais grandes de categoria, tipo e status;
-- autores de topico, respostas e comentarios exibem avatar/fallback de iniciais;
-- respostas nao exibem mais **Marcar solucao** nem **Ocultar**;
-- reacoes foram renomeadas e usam icones/coloracao especifica:
-  - `curtir` -> **Amei**, `HeartHandshake`, vermelho;
-  - `apoiar` -> **Apoiar**, `Handshake`, verde;
-  - `lembrar` -> **Oracoes**, `Flower2`, azul;
-  - `celebrar` -> **Parabens**, `PartyPopper`, laranja;
-- apenas uma reacao por usuario e alvo e permitida;
-- clicar na mesma reacao remove a reacao;
-- migration `20260608180000_enforce_single_forum_reaction.sql` deduplica historico e aplica unique por `user_id, alvo_tipo, alvo_id`.
-
-Documentos que devem permanecer sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| Forum | `funcionalidades/FORUM.md` |
-| Notificacoes | `funcionalidades/NOTIFICACOES.md` |
-| Componentes do forum | `GUIA_COMPONENTES.md` |
-| Banco e migrations | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` e `operacao/MIGRATIONS_SUPABASE.md` |
-
----
-
-
-## 19. Validacao documental apos alteracoes
-
-Quando qualquer arquivo desta documentacao for atualizado:
+Antes do commit final:
 
 ```bash
-git diff --check
-```
-
-Quando a documentacao acompanhar mudanca de codigo:
-
-```bash
-npm run build
 git status --short
+git diff --check
+npm run build
 ```
 
-Se houver commit documental:
+Se algum documento operacional, migration, Edge Function ou script for alterado futuramente, validar também o comando específico documentado no guia correspondente.
+
+---
+
+## 13. Commit documental final
+
+Usar `git add` explícito, não `git add .`.
+
+Sugestão:
 
 ```bash
-git add docs/README.md docs/<outros-arquivos-especificos>
-git commit -m "docs: update tree layout and menu documentation"
+git add docs/README.md docs/GUIA_IMPLEMENTACOES.md docs/GUIA_COMPONENTES.md docs/GUIA_UX_LAYOUT.md docs/GUIA_CORRECAO_ERROS.md docs/PLANO_PROXIMOS_PASSOS.md
+
+git add docs/arquitetura/ARCHITECTURE.md docs/arquitetura/ROTAS_E_GUARDS.md docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+
+git add docs/operacao/README.md docs/operacao/DEPLOYMENT.md docs/operacao/STORAGE_MAINTENANCE.md docs/operacao/MIGRATIONS_SUPABASE.md
+
+git add docs/funcionalidades/*.md docs/comandos/GIT_RESPONSIVIDADE.md docs/ATTRIBUTIONS.md docs/historico/README.md
+
+git commit -m "docs: revise final project documentation"
+
+git pull --rebase origin main
+
 git push origin main
 ```
 
-Nao usar `git add .`.
-
----
-
-## 20. Ajustes recentes documentados - ciclo 2026-06-08 / Visão Completa mobile
-
-Este ciclo documenta a aplicação do padrão de navegação por chips também em `/visao-completa` mobile.
-
-Resumo:
-
-- `/visao-completa` mobile passou a reutilizar `GenealogyMobileStageTabs`;
-- `HomeTreeSection.tsx` passou a usar `usesMobileGenerationStages`;
-- `usesMobileGenerationStages` cobre `/genealogia` e `/visao-completa` no mobile;
-- chips focam/enquadram gerações/blocos e não removem nodes;
-- `/visao-completa` desktop/tablet e `/minha-arvore` não foram alteradas;
-- build local aprovado e Vercel retornou sucesso.
-
-Commit de referência:
-
-```txt
-c5988a9 feat: add full tree mobile stage navigation
-```
-
-Documentos sincronizados:
-
-| Frente | Documento canonico |
-|---|---|
-| UX da Visão Completa mobile | `GUIA_UX_LAYOUT.md` |
-| Componente e props da barra mobile | `GUIA_COMPONENTES.md` |
-| Relação com padrão da Genealogia | `funcionalidades/GENEALOGIA_VIEW.md` |
-| Plano e status de fechamento | `PLANO_PROXIMOS_PASSOS.md` |
-| Legendas/conectores/painel | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-
-Pendência restante:
-
-- QA visual em mobile real/devtools para confirmar pan, cabeçalhos, chips, conectores, botão conjugal e paletas.
+Arquivos removidos por consolidação histórica devem permanecer staged como `D` no commit final.

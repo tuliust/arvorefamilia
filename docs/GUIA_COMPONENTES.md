@@ -1,78 +1,50 @@
 # Guia de componentes - Árvore Família
 
 > Última atualização: 2026-06-08  
-> Revisão complementar: perfil, Minha Árvore, fórum, notificações, reações, ícones lucide, conectores e views mobile  
-> Local canônico: `docs/GUIA_COMPONENTES.md`
+> Local canônico: `docs/GUIA_COMPONENTES.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: guia canônico revisado para manutenção final.
 
 ## Objetivo
 
-Este documento registra os principais componentes reutilizáveis do projeto **Árvore Família**, suas responsabilidades, arquivos relacionados, padrões de uso e cuidados contra regressões.
+Este documento identifica os principais componentes reutilizáveis do projeto **Árvore Família**, suas responsabilidades, arquivos relacionados e cuidados contra regressões.
 
-Use este guia para:
-
-- localizar rapidamente componentes relevantes;
-- saber onde alterar UI sem mexer em regra de negócio;
-- evitar duplicação de componentes;
-- preservar padrões de props, layout e acessibilidade;
-- orientar novos prompts de implementação.
+Use este guia para decidir **qual componente alterar** antes de editar UI, layout, responsividade ou padrões de interação.
 
 Este documento não substitui:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: visão funcional consolidada;
-- `docs/GUIA_UX_LAYOUT.md`: decisões visuais e regras de layout;
+- `docs/GUIA_IMPLEMENTACOES.md`: inventário consolidado das funcionalidades;
+- `docs/GUIA_UX_LAYOUT.md`: decisões visuais e padrões de layout;
 - `docs/GUIA_CORRECAO_ERROS.md`: investigação por sintoma;
-- `docs/PLANO_PROXIMOS_PASSOS.md`: roadmap e pós-MVP;
-- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e regras de acesso;
-- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`: comportamento específico da view Minha Árvore;
-- `docs/funcionalidades/EXPORTACAO_ARVORE.md`: regra funcional de exportação.
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas e guards;
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: migrations, Supabase e operação;
+- `docs/funcionalidades/*.md`: comportamento detalhado por funcionalidade.
 
 ---
 
-## Escopo deste guia
-
-Este guia responde a três perguntas:
-
-1. **qual componente alterar**;
-2. **qual responsabilidade ele possui**;
-3. **quais cuidados evitam regressão**.
-
-Quando a dúvida envolver regra de negócio, Supabase, RLS, migrations ou fluxo de produto, consulte primeiro o documento funcional ou operacional correspondente. Componentes visuais não devem se tornar ponto de entrada para regras de banco.
-
----
-
-## 1. Convenções gerais de componentes
+## 1. Convenções gerais
 
 ### 1.1 Organização
 
-Componentes ficam principalmente em:
+| Área | Caminho |
+|---|---|
+| Componentes gerais | `src/app/components/` |
+| UI base | `src/app/components/ui/` |
+| Layout/header/menu | `src/app/components/layout/` |
+| Árvore | `src/app/components/FamilyTree/` |
+| Pessoa/perfil | `src/app/components/person/` |
+| Relacionamentos | `src/app/components/relationships/` |
+| Timeline | `src/app/components/Timeline/` |
+| Favoritos | `src/app/components/favorites/` |
+| Páginas da Home pós-login | `src/app/pages/home/` |
+| Fórum | `src/app/pages/forum/` e services relacionados |
+
+Services, utils e types devem permanecer fora de componentes visuais:
 
 ```txt
-src/app/components
-src/app/components/ui
-src/app/components/layout
-src/app/components/FamilyTree
-src/app/components/person
-src/app/components/relationships
-src/app/components/Timeline
-src/app/components/favorites
-src/app/components/forum
-```
-
-Páginas ficam em:
-
-```txt
-src/app/pages
-src/app/pages/admin
-src/app/pages/forum
-src/app/pages/home
-```
-
-Services, utils e types não devem ser misturados com componentes:
-
-```txt
-src/app/services
-src/app/utils
-src/app/types
+src/app/services/
+src/app/utils/
+src/app/types/
 ```
 
 ### 1.2 Regras de alteração
@@ -80,29 +52,27 @@ src/app/types
 Ao alterar componente:
 
 - manter props tipadas;
-- evitar lógica de banco dentro de componente visual;
-- usar services para Supabase quando houver persistência;
-- usar utils para cálculo puro;
-- não introduzir side effects em componentes de exibição;
-- manter `type="button"` em botões internos que não submetem formulário;
-- preservar estados de loading, erro e vazio;
-- preservar acessibilidade básica: `aria-label`, foco visível, semântica e navegação por teclado;
+- não inserir lógica de banco em componente visual;
+- usar `services` para Supabase;
+- usar `utils` para cálculo puro;
+- preservar loading, erro e estado vazio;
+- usar `type="button"` em botões internos que não submetem formulário;
+- preservar `aria-label`, foco visível e navegação básica por teclado;
 - validar `npm run build` e `git diff --check`.
 
-### 1.3 Padrões de estilo
+### 1.3 Padrões visuais
 
-- Tailwind local no JSX;
 - `min-w-0` em wrappers flex/grid;
-- `shrink-0` em ícones/avatares;
-- `truncate` quando texto precisa caber em uma linha;
+- `shrink-0` em ícones e avatares;
+- `truncate` quando o texto precisa ficar em uma linha;
 - `break-words` para conteúdo de usuário;
-- `break-all` para valores técnicos;
+- `break-all` para valores técnicos longos;
 - `w-full sm:w-auto` em botões responsivos;
-- modais com `max-h` e rolagem interna.
+- modais com altura máxima e rolagem interna.
 
 ---
 
-## 2. Componentes de layout
+## 2. Layout, header e menu
 
 ### 2.1 `MemberPageHeader`
 
@@ -112,14 +82,6 @@ Arquivo:
 src/app/components/layout/MemberPageHeader.tsx
 ```
 
-Responsabilidade:
-
-- padronizar header de páginas internas;
-- fornecer título, subtítulo, ícone e ações;
-- exportar classe global de container;
-- exportar ícones comuns para ações;
-- renderizar o menu do usuário por meio de `UserProfileMenu`.
-
 Exports principais:
 
 ```txt
@@ -128,13 +90,24 @@ PAGE_CONTAINER_CLASS
 HEADER_ACTION_ICONS
 ```
 
-Props principais:
+Responsabilidade:
+
+- padronizar headers de páginas internas;
+- renderizar título, subtítulo, ícone e ações;
+- exportar `PAGE_CONTAINER_CLASS`;
+- renderizar `UserProfileMenu` padrão;
+- renderizar navegação inferior mobile fixa.
+
+Props relevantes:
 
 ```txt
-title: string
-subtitle: string
-icon: React.ComponentType
-actions: HeaderAction[]
+title
+subtitle
+icon
+actions
+customActions
+mobileCustomActions
+className
 ```
 
 `HeaderAction` aceita:
@@ -145,28 +118,95 @@ to
 onClick
 icon
 variant: default | primary | danger | ghost
+responsiveLabel: always | lg | xl | never
+disabled
 ```
-
-Uso esperado:
-
-- páginas internas de usuário;
-- páginas internas administrativas;
-- páginas que precisam seguir o padrão visual de `/minha-arvore/editar`, `/calendario-familiar`, `/notificacoes`, `/forum` e afins.
-
-Não usar em:
-
-- Home pós-login (`src/app/pages/Home.tsx`), que possui header próprio integrado à árvore.
 
 Cuidados:
 
-- não duplicar botões de navegação que já existam no conteúdo;
-- manter textos curtos, pois o header trunca título/subtítulo;
-- não criar novo container se `PAGE_CONTAINER_CLASS` atender;
-- ações de header devem ser botões/links acessíveis e não devem quebrar texto em telas estreitas.
+- não usar em `src/app/pages/Home.tsx`, que possui `HomeHeader`;
+- não criar container divergente quando `PAGE_CONTAINER_CLASS` atender;
+- manter textos curtos porque título/subtítulo truncam em telas estreitas;
+- ações devem ser links/botões acessíveis;
+- preservar `MemberMobileBottomNav` em mobile.
+
+### 2.2 `UserProfileMenu`
+
+Arquivo:
+
+```txt
+src/app/components/layout/UserProfileMenu.tsx
+```
+
+Variantes:
+
+```txt
+avatar
+home-header
+```
+
+Responsabilidade:
+
+- exibir botão de menu do usuário;
+- carregar dados do perfil, pessoa vinculada e status admin;
+- abrir painel compartilhado de navegação;
+- direcionar o cabeçalho do painel para `/minha-arvore/editar`;
+- limpar cache da árvore no logout.
+
+Comportamento consolidado:
+
+- páginas internas usam `UserProfileMenu` padrão;
+- o header da árvore usa `UserProfileMenu variant="home-header"`;
+- o menu mobile inclui bloco de troca de view da árvore;
+- o item **Editar notificações** não existe mais;
+- **Painel Admin** aparece apenas para administradores;
+- **Sair** executa logout e limpa `treeDataCache`.
+
+Cuidados:
+
+- não recriar dropdown local dentro de `Home.tsx`;
+- não fazer o botão de fechar navegar para perfil;
+- preservar fechamento por clique fora e `Escape`;
+- não expor rota admin para usuário comum apenas por ocultação visual.
+
+### 2.3 `HomeHeader`
+
+Arquivo:
+
+```txt
+src/app/pages/home/HomeHeader.tsx
+```
+
+Responsabilidade:
+
+- header específico das views da árvore;
+- seletor de view: `/minha-arvore`, `/genealogia`, `/visao-completa`;
+- seletor de paletas `white`, `orange`, `brown`;
+- busca expansível por pessoa e página;
+- atalhos para curiosidades, fórum e calendário;
+- menu compacto do usuário.
+
+Arquivos relacionados:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/layout/UserProfileMenu.tsx
+```
+
+Cuidados:
+
+- preservar search params, especialmente `?pessoa=...`;
+- troca de paleta só altera CSS variables e `localStorage`;
+- não alterar rota, dados, filtros, permissões ou Supabase ao trocar paleta;
+- manter sugestões de busca acima da árvore;
+- garantir estado React para `treeColorPalette` antes de renderizar botões de paleta;
+- não reintroduzir `UserMenu` local legado.
 
 ---
 
-## 3. Componentes da árvore
+## 3. Árvore familiar
 
 ### 3.1 `FamilyTree`
 
@@ -179,25 +219,27 @@ src/app/components/FamilyTree/FamilyTree.tsx
 Responsabilidade:
 
 - renderizar React Flow;
-- selecionar layout conforme view;
-- gerenciar viewport inicial;
+- selecionar layout por `viewMode`;
+- calcular viewport inicial;
 - controlar pan/zoom;
 - expor ações imperativas;
 - renderizar título fixo da árvore;
-- integrar exportação de área;
-- integrar clique em pessoa e casamento.
+- integrar seleção/exportação de área;
+- integrar clique em pessoa e em relacionamento conjugal.
 
 Props principais:
 
 ```txt
 pessoas
 relacionamentos
+visiblePersonIds
 viewMode
 centralPersonId
 selectedPersonId
 edgeFilters
 directRelativeFilters
 genealogyFilters
+visualLineFilters
 activeGenealogyGeneration
 isMobile
 layoutRevision
@@ -207,26 +249,10 @@ onPersonEdit
 onPersonAddConnection
 onPersonRemove
 onMarriageClick
+onDirectRelationRenderedCounts
 ```
 
-`activeGenealogyGeneration` é usado pelas views **Genealogia** e **Visão Completa** em mobile para enquadrar/focar a geração ativa escolhida nos chips superiores. Essa prop não deve ser usada para remover as demais colunas da árvore.
-
-`TreeViewMode` fica em:
-
-```txt
-src/app/components/FamilyTree/treeViewMode.ts
-```
-
-Helpers principais:
-
-```txt
-VIEW_MODE_TO_PATH
-PATH_TO_VIEW_MODE
-getTreeViewModeFromPath
-getPathForTreeViewMode
-```
-
-Ações expostas via `ref`:
+Ações expostas via ref:
 
 ```txt
 zoomIn
@@ -237,42 +263,24 @@ saveImage
 startAreaSelection
 ```
 
-Comportamento consolidado:
+Comportamento por view:
 
-- `viewMode = minha-arvore` usa `directFamilyDistributedLayout`;
-- `viewMode = genealogia` usa `genealogyColumnsLayout` com escopo pessoal;
-- `viewMode = visao-completa` usa `genealogyColumnsLayout` com base completa;
-- título da árvore é overlay fixo no próprio componente;
-- subtítulos internos abaixo do título foram removidos/ocultados nas views da árvore;
-- `/minha-arvore` teve título/cards reposicionados tecnicamente sem alterar `/genealogia` e `/visao-completa`;
-- scroll externo do shell da Home fica bloqueado quando não há conteúdo fora da viewport, preservando pan/zoom interno do ReactFlow;
-- viewport inicial usa bounds de `personNode`;
-- bounds de pan são separados dos bounds de viewport;
-- Genealogia/Visão Completa usam zoom por largura;
-- Genealogia infere `manual_generation` em memória a partir da pessoa central quando necessário, sem persistir no Supabase;
-- Genealogia mobile inicia na primeira coluna real renderizada;
-- Visão Completa mobile também usa navegação por chips de geração/bloco quando há gerações disponíveis;
-- Genealogia e Visão Completa mobile usam a geração 3/Avós como referência vertical de enquadramento quando o usuário alterna chips superiores;
-- em Genealogia e Visão Completa mobile, o eixo X acompanha a geração ativa, mas o eixo Y deve permanecer ancorado em `referenceBounds.y` para evitar saltos verticais entre Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes;
-- em Genealogia e Visão Completa mobile, o `translateExtent` não deve impedir o usuário de arrastar a árvore para recuperar cabeçalhos/área superior;
-- seleção de área bloqueia pan/zoom temporariamente.
+| `viewMode` | Layout |
+|---|---|
+| `minha-arvore` | `directFamilyDistributedLayout` |
+| `genealogia` | `genealogyColumnsLayout` com escopo pessoal |
+| `visao-completa` | `genealogyColumnsLayout` com base completa |
 
 Cuidados:
 
-- não recolocar title nodes nos layouts;
-- não usar altura total para reduzir zoom de Genealogia/Visão Completa;
-- não incluir labels/group boxes/anchors no bounds visual de zoom;
-- não alterar filtros sem revisar `Home.tsx`;
-- não transformar `activeGenealogyGeneration` em filtro destrutivo de pessoas;
-- não persistir no banco a inferência visual de gerações feita para renderização;
-- não mexer em Supabase neste componente;
-- não corrigir espaçamento do título usando `transform`, `translate` ou `top` negativo em `.react-flow__viewport`;
-- ajustar espaçamento título-canvas preferencialmente por constantes/cálculo em `FamilyTree.tsx`, validando corte superior de cards;
-- não reintroduzir scroll externo da página em `/minha-arvore` quando a árvore já ocupa a viewport.
+- não recolocar título geral dentro dos layouts;
+- não usar `transform`, `translate` ou `top` negativo em `.react-flow__viewport` para resolver espaçamento;
+- não persistir no Supabase a inferência visual de gerações;
+- não transformar `activeGenealogyGeneration` em filtro destrutivo;
+- não misturar pan/zoom do React Flow com scroll externo da página;
+- seleção de área deve bloquear pan/zoom temporariamente.
 
----
-
-### 3.2 Layout `directFamilyDistributedLayout`
+### 3.2 Layout direto: `directFamilyDistributedLayout`
 
 Arquivo:
 
@@ -282,40 +290,33 @@ src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 
 Responsabilidade:
 
-- posicionar a view **Minha Árvore**;
-- montar pessoa central;
-- agrupar parentes por lado paterno/materno;
-- criar labels de grupos;
-- criar group boxes;
-- criar anchors estruturais;
-- criar edges estruturais;
-- criar marriage nodes do layout direto quando necessário.
+- montar a view **Minha Árvore**;
+- posicionar pessoa central;
+- distribuir parentes diretos por grupos;
+- criar labels, group boxes, anchors e edges;
+- criar marriage nodes quando necessário.
 
-Elementos relevantes:
+Nodes/edges relevantes:
 
 ```txt
+personNode
+marriageNode
 directFamilyGroupBoxNode
 directFamilyLabelNode
 directFamilyAnchorNode
-personNode
-marriageNode
 spouseEdge
 childEdge
+siblingEdge
 ```
 
 Cuidados:
 
-- labels de grupo podem permanecer;
-- título geral da árvore não deve ser criado aqui;
-- group boxes e anchors não devem comandar zoom inicial;
-- alteração de constantes de posição pode afetar toda a composição visual;
-- validar em desktop e mobile após qualquer mudança;
-- marriage nodes criados para `/minha-arvore` devem usar os tokens/cores de conectores conjugais para reforçar a legibilidade da aliança sem alterar `/genealogia`;
-- cards de parentes da view direta devem manter padronização visual em torno de `340 × 136`, exceto o card da pessoa principal, salvo nova decisão de layout.
+- group boxes, labels e anchors não devem comandar zoom inicial;
+- alteração de constantes afeta toda a composição;
+- marriage nodes da Minha Árvore podem usar `visualVariant: 'direct-family'`;
+- validar desktop e mobile quando mexer em espaçamentos.
 
----
-
-### 3.3 Layout `genealogyColumnsLayout`
+### 3.3 Layout por gerações: `genealogyColumnsLayout`
 
 Arquivo:
 
@@ -325,43 +326,55 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 Responsabilidade:
 
-- posicionar **Genealogia** e **Visão Completa**;
-- agrupar pessoas por `manual_generation`;
-- ordenar por data de nascimento e nome;
+- montar **Genealogia** e **Visão Completa**;
+- agrupar por `manual_generation`;
+- inferir gerações visualmente quando necessário;
 - posicionar cônjuges;
 - criar labels de geração;
-- criar conectores ortogonais de família;
-- criar edges conjugais com anel;
-- aplicar filtros de geração;
-- não criar colunas fixas vazias quando não houver cards renderizáveis;
-- manter espaçamento vertical suficiente entre cônjuges para evitar sobreposição do anel.
-
-Funções/conceitos importantes:
-
-```txt
-getGenealogyMarriageStatus
-groupPeopleByGeneration
-addLabelNode
-appendPlacementNodes
-createGenealogyFamilyConnectorNode
-addGenealogySpouseEdge
-genealogyColumnsLayout
-```
+- criar conectores ortogonais e edges conjugais.
 
 Cuidados:
 
-- não adicionar título/subtítulo geral da árvore;
-- labels de geração são permitidas;
-- altura pode exceder a viewport;
-- preservar conectores entre pais e filhos;
-- preservar status visual do anel de casamento;
-- não reintroduzir colunas vazias apenas para manter a sequência numérica `1..6`;
-- validar desktop e mobile quando alterar `manual_generation`, filtros ou agrupamento;
-- `/genealogia` deve manter a variante padrão do anel conjugal, sem `visualVariant: 'direct-family'`.
+- não criar colunas vazias apenas para manter sequência numérica;
+- preservar conectores pais/filhos;
+- preservar status visual do anel conjugal;
+- manter anel padrão em Genealogia/Visão Completa;
+- validar chips mobile quando alterar geração, filtros ou agrupamento.
 
----
+### 3.4 `PersonNode`
 
-### 3.4 `MarriageNode`
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/PersonNode.tsx
+```
+
+Responsabilidade:
+
+- renderizar card de pessoa no React Flow;
+- exibir avatar/fallback;
+- exibir nome, datas, locais e idade quando aplicável;
+- indicar pessoa falecida;
+- indicar pet;
+- exibir ações de visualizar, editar, vincular e remover conforme props;
+- abrir painel central de foco quando aplicável.
+
+Padrões consolidados:
+
+- nascimento usa ícone `Star`;
+- falecimento usa ícone `Cross`;
+- pet usa marcador com `Dog`;
+- textos longos usam truncamento/quebra controlada;
+- handles do React Flow permanecem invisíveis.
+
+Cuidados:
+
+- não trocar ícones por caracteres textuais;
+- não remover `stopPropagation` das ações;
+- não alterar dimensões sem validar a árvore inteira;
+- não misturar permissão de edição dentro do card; receber callbacks já resolvidos.
+
+### 3.5 `MarriageNode`
 
 Arquivo:
 
@@ -369,56 +382,48 @@ Arquivo:
 src/app/components/FamilyTree/MarriageNode.tsx
 ```
 
-Tipo relacionado:
+Responsabilidade:
+
+- renderizar botão/anel conjugal na Minha Árvore;
+- abrir `ViewMarriageModal`;
+- inferir pessoas próximas quando detalhes não chegam por props;
+- usar ícone `Blend`.
+
+Padrões consolidados:
+
+- tamanho base: `60px × 60px`;
+- cor acompanha `FAMILY_TREE_COLORS.EDGE_SPOUSE`;
+- variante `direct-family` reforça contraste na Minha Árvore;
+- clique deve parar propagação para não mover/selecionar indevidamente o canvas.
+
+Cuidados:
+
+- preservar handles invisíveis;
+- não alterar dimensão sem revisar layout;
+- não remover fallback de inferência;
+- não usar cor fixa fora dos tokens.
+
+### 3.6 `GenealogySpouseEdge`
+
+Arquivo:
 
 ```txt
-src/app/components/FamilyTree/types.ts
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 ```
 
 Responsabilidade:
 
-- renderizar o botão clicável de vínculo conjugal na view `/minha-arvore`;
-- exibir o ícone `Blend` de `lucide-react`, substituindo emoji/SVG customizado de alianças;
-- abrir modal de vínculo conjugal por `onMarriageClick`;
-- preservar handles invisíveis necessários ao ReactFlow.
-
-Tipo de dados:
-
-```ts
-export interface MarriageNodeData {
-  visualVariant?: 'default' | 'direct-family';
-  details?: MarriageNodeDetails;
-  onClickMarriage?: (details: MarriageNodeDetails) => void;
-}
-```
-
-Padrão visual atual:
-
-- ícone: `Blend` de `lucide-react`;
-- cor do ícone: deve acompanhar a cor dos conectores conjugais da árvore;
-- borda/halo/shadow: devem usar tokens compatíveis com as paletas `white`, `orange` e `brown`;
-- `direct-family`: usada em marriage nodes criados em `directFamilyDistributedLayout.ts` para `/minha-arvore`.
-
-Regras da variante `direct-family`:
-
-- reforçar legibilidade do botão conjugal usando os tokens de conectores conjugais, sem hardcode de cor fora das paletas;
-- não alterar dimensão lógica do node;
-- não alterar handles;
-- não alterar edges;
-- não alterar clique/modal;
-- manter coerência com `GenealogySpouseEdge` em `/genealogia` e `/visao-completa`.
+- representar vínculo conjugal nas views por gerações;
+- manter interação com o modal conjugal quando suportada;
+- preservar estilo padrão da Genealogia/Visão Completa.
 
 Cuidados:
 
-- não voltar a usar emoji como conteúdo visual principal;
-- remover resíduos como `emoji: '??'`, `💍`, `⭐` ou `✝` nos cards/nodes;
-- manter `aria-label` e `title` legíveis;
-- validar `/minha-arvore`, `/genealogia` e `/visao-completa` após qualquer mudança;
-- preservar clique no modal conjugal e não bloquear clique dos cards próximos.
+- não aplicar variante visual da Minha Árvore automaticamente;
+- preservar clique no vínculo conjugal;
+- validar paletas e filtros de linha.
 
----
-
-### 3.5 `TreeLegend`
+### 3.7 `TreeLegend`
 
 Arquivo:
 
@@ -428,537 +433,148 @@ src/app/components/FamilyTree/TreeLegend.tsx
 
 Responsabilidade:
 
-- explicar elementos visuais da árvore;
-- controlar filtros reais/camadas visuais quando recebe callbacks;
-- renderizar modo compacto no painel lateral;
-- renderizar modo expandido se necessário;
-- mostrar cards, linhas, anel e cores dos grupos.
-
-Props relevantes:
-
-```txt
-viewMode
-compact
-className
-showTitle
-personFilters
-edgeFilters
-directRelativeFilters
-visualLineFilters
-onTogglePersonFilter
-onToggleEdgeFilter
-onToggleDirectRelativeFilter
-onToggleVisualLineFilter
-```
-
-Seções atuais:
-
-```txt
-Cards
-Linhas
-Camadas extras
-Anel de casamento
-Cores dos grupos
-```
+- exibir legenda visual;
+- controlar filtros/camadas visuais quando recebe callbacks;
+- orientar cores, linhas, anéis e estados.
 
 Cuidados:
 
-- não reintroduzir descrições redundantes sem decisão de UX;
-- não conectar a legenda a Supabase;
-- não alterar regra do status conjugal aqui;
-- se adicionar item, validar painel lateral em mobile;
-- `Legendas > Linhas > Todas` deve ocultar todas as linhas estruturais, inclusive linhas de primos.
+- legenda não deve ser apenas decorativa quando conectada a callbacks;
+- elementos de legenda não devem aparecer na exportação;
+- filtros visuais não devem virar regra de banco;
+- manter estado padrão conservador.
 
----
+### 3.8 Exportação da árvore
 
-### 3.6 `TreeAreaSelectionOverlay`
-
-Arquivo:
+Arquivos:
 
 ```txt
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-```
-
-Responsabilidade:
-
-- permitir seleção retangular de área visível da árvore;
-- exportar seleção em PNG pelo botão **Salvar PNG**;
-- exportar seleção em PDF pelo botão **Salvar PDF**;
-- imprimir seleção;
-- cancelar por botão ou `Esc`.
-
-Props:
-
-```txt
-getTargetElement
-filenameLabel
-title
-onClose
-```
-
-Cuidados:
-
-- não usar para exportar árvore completa;
-- não salvar arquivo no Storage;
-- não criar log persistido;
-- manter pan/zoom bloqueados enquanto overlay estiver aberto;
-- manter `data-tree-selection-overlay="true"` para exclusão na captura.
-
----
-
-### 3.7 Utils de exportação da árvore
-
-Arquivo:
-
-```txt
 src/app/components/FamilyTree/utils/treeExport.ts
+src/app/components/FamilyTree/FamilyTree.tsx
 ```
 
 Responsabilidade:
 
-- gerar nome de arquivo;
-- capturar elemento com `html2canvas`;
-- sanitizar cores não suportadas;
-- recortar canvas;
-- salvar PNG;
-- gerar PDF;
-- abrir janela de impressão;
-- imprimir canvas;
-- ignorar elementos que não devem aparecer na exportação.
-
-Elementos ignorados:
-
-```txt
-.react-flow__controls
-.react-flow__minimap
-[data-tree-node-menu="true"]
-[data-tree-selection-overlay="true"]
-[data-tree-legend="true"]
-```
+- seleção retangular de área visível;
+- exportação PNG;
+- exportação PDF;
+- impressão.
 
 Cuidados:
 
-- preservar `useCORS: true`;
-- preservar `allowTaint: false`;
-- manter mensagens amigáveis para erro de CORS;
-- não remover sanitização de cores;
-- não capturar overlay/legenda/menus.
+- sem Storage;
+- sem migration;
+- sem log persistido;
+- overlay/legenda não devem poluir exportação;
+- exportação da árvore completa continua evolução futura.
 
 ---
 
-### 3.8 `treeColorPalettes`
+## 4. Home pós-login
 
-Arquivo:
+Componentes extraídos de `Home.tsx`:
 
 ```txt
-src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/SidebarInfoPanel.tsx
+src/app/pages/home/HomeCuriositiesDialog.tsx
+src/app/pages/home/DiscoverResultCard.tsx
+src/app/pages/home/ContactInfo.tsx
+src/app/pages/home/ConnectionDiscoveryPanel.tsx
+src/app/pages/home/AiQuestionPanel.tsx
+src/app/pages/home/homeCuriositiesUtils.ts
+src/app/pages/home/homeAiContext.ts
 ```
 
-Responsabilidade:
+Regra de responsabilidade:
 
-- centralizar `TreeColorPalette = 'white' | 'orange' | 'brown'`;
-- expor `TREE_COLOR_PALETTE_STORAGE_KEY`;
-- expor `TREE_COLOR_PALETTE_CSS_VARIABLES`;
-- mapear `TREE_COLOR_PALETTES`;
-- validar valores persistidos com `isTreeColorPalette`;
-- fornecer swatch/label/ariaLabel para os botões circulares do header.
-
-Uso atual:
-
-- `HomeHeader.tsx` renderiza os círculos, aplica CSS variables e persiste a escolha;
-- `directFamilyColors.ts`, `visualTokens.ts`, `nodeTypes.ts` e `FamilyTree.tsx` consomem tokens/CSS variables.
-
-Cuidados:
-
-- não criar paleta nova sem atualizar documentação, QA visual e labels acessíveis;
-- não usar paleta como regra de negócio;
-- manter fallback seguro para a paleta `white`;
-- preservar compatibilidade com `localStorage` inválido ou ausente.
+- `Home.tsx` continua orquestrando estado principal, carregamento, Supabase, filtros e handlers;
+- componentes extraídos cuidam de apresentação e interação localizada;
+- novos dados persistentes devem entrar via service, não direto no componente visual.
 
 ---
 
-## 4. Nodes e edges da árvore
-
-Arquivos principais:
-
-```txt
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/DirectFamilyLabelNode.tsx
-src/app/components/FamilyTree/DirectFamilyGroupBoxNode.tsx
-src/app/components/FamilyTree/DirectFamilyAnchorNode.tsx
-src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/edges
-```
-
-Responsabilidades:
-
-- `PersonNode`: card visual da pessoa;
-- `DirectFamilyLabelNode`: labels de grupos/gerações;
-- `DirectFamilyGroupBoxNode`: caixas visuais de agrupamento;
-- `DirectFamilyAnchorNode`: pontos estruturais para edges;
-- `GenealogyFamilyConnectorNode`: conectores ortogonais entre pais e filhos;
-- `GenealogySpouseEdge`: linha conjugal com botão clicável nas views por geração;
-- `MarriageNode`: botão conjugal clicável usado no layout direto.
-
-Padrões recentes:
-
-- `PersonNode` deve usar `Star` e `Cross` de `lucide-react` para nascimento e falecimento, no lugar dos emojis `⭐` e `✝`;
-- `GenealogySpouseEdge` deve usar `Blend` de `lucide-react`, com estilo cinza/neutro, para o botão conjugal em `/genealogia` e `/visao-completa`;
-- `MarriageNode` deve usar `Blend` de `lucide-react`, com estilo cinza/neutro, para o botão conjugal em `/minha-arvore`;
-- `GenealogyFamilyConnectorNode` deve diferenciar os destaques: pais/filhos em amarelo/dourado e irmãos em azul tracejado.
-
-Cuidados:
-
-- nodes estruturais não devem comandar zoom inicial;
-- edges devem checar se source/target estão visíveis;
-- anel conjugal deve preservar clique no modal;
-- observações internas não devem aparecer para usuário comum.
-
----
-
-## 5. Componentes da Home
-
-### 5.1 Componentes extraídos da Home
-
-Pasta:
-
-```txt
-src/app/pages/home
-```
-
-Responsabilidade:
-
-- reduzir o tamanho de `Home.tsx`;
-- manter componentes visuais simples, tipados e orientados por props;
-- preservar `Home.tsx` como orquestrador de estado, carregamento, filtros, IA, conexão e navegação.
+## 5. Perfil, pessoa e dados pessoais
 
 Componentes principais:
 
 ```txt
-HomeHeader
-HomeTreeSection
-HomeMobileNav
-GenealogyMobileStageTabs
-DirectRelationKpiGrid
-DirectRelativeFilterGrid
-GenealogyFilterGrid
-LifeStatusKpiGrid
-SidebarPanelTabs
-SidebarInfoPanel
-HomeCuriositiesDialog
-DiscoverResultCard
-ContactInfo
-ConnectionDiscoveryPanel
-AiQuestionPanel
-```
-
-Cuidados:
-
-- não mover estado principal para esses componentes sem decisão explícita;
-- preservar textos, labels, `aria-labels`, classes Tailwind e ordem visual;
-- header e nav mobile devem receber o mesmo callback de troca de view;
-- grids de filtros não devem alterar chaves de filtros nem contadores recebidos por props.
-
-### 5.2 `HomeHeader`
-
-Arquivo:
-
-```txt
-src/app/pages/home/HomeHeader.tsx
-```
-
-Responsabilidade:
-
-- exibir nome da família e label da view atual;
-- renderizar o seletor **Minha Árvore** / **Genealogia** / **Visão Completa**;
-- renderizar, dentro do dropdown de views, os botões circulares de paleta visual branco, laranja e marrom;
-- manter o estado local `treeColorPalette`;
-- aplicar a paleta ativa no `document.documentElement` por CSS variables;
-- persistir a paleta em `TREE_COLOR_PALETTE_STORAGE_KEY`;
-- preservar busca expansível com sugestões de pessoas e páginas;
-- renderizar `UserProfileMenu` no header da árvore com `variant="home-header"`, salvo diagnóstico que comprove código legado ainda ativo.
-
-Regra atual de menu:
-
-```tsx
-<UserProfileMenu variant="home-header" />
-```
-
-O antigo `UserMenu` local da Home não deve ser recriado. O botão visual compacto do header da árvore deve permanecer; o painel aberto deve ser o menu compartilhado de `UserProfileMenu`. Prints recentes indicaram possível divergência visual entre o menu das views da árvore e o menu das páginas internas, portanto a implementação real deve ser conferida antes de declarar a unificação como concluída.
-
-Cuidados:
-
-- paleta visual não é rota, filtro ou `TreeViewMode`;
-- clique em paleta não deve chamar `onTreeViewModeChange`;
-- os botões de paleta devem manter `type="button"`, `aria-label` e `aria-pressed`;
-- não recriar `UserMenu` local em `Home.tsx`;
-- não restaurar `userMenuSlot` sem decisão explícita;
-- não mover estado principal, carregamento Supabase ou filtros da árvore para o header.
-
-### 5.3 `GenealogyMobileStageTabs`
-
-Arquivo:
-
-```txt
-src/app/pages/home/GenealogyMobileStageTabs.tsx
-```
-
-Responsabilidade:
-
-- renderizar a navegação mobile das views **Genealogia** e **Visão Completa** por gerações/blocos;
-- exibir chips horizontais com labels humanos, como **Tataravós**, **Bisavós**, **Avós**, **Pais**, **Núcleo** e **Descendentes**;
-- controlar seleção direta por toque/clique;
-- controlar swipe lateral entre gerações;
-- indicar a geração ativa;
-- exibir estado vazio quando não houver gerações visíveis;
-- ocupar a extensão horizontal disponível na área da árvore em mobile.
-
-Nota de uso atual:
-
-- o componente mantém o nome histórico `GenealogyMobileStageTabs`, mas desde o commit `c5988a9 feat: add full tree mobile stage navigation` também é usado em `/visao-completa` mobile;
-- a ativação fica em `HomeTreeSection.tsx` por meio de `usesMobileGenerationStages`;
-- o componente continua apenas controlando foco/enquadramento, não filtros destrutivos de nodes.
-
-Contrato de UX:
-
-- chips focam/enquadram a geração ativa, mas não removem as demais colunas;
-- contagem numérica ao lado do label não deve ser exibida;
-- barra deve preservar espaço vertical suficiente para não sobrepor labels `GERAÇÃO X`;
-- em Genealogia e Visão Completa mobile, botões de zoom `+` e `-` podem ficar ocultos;
-- clique em chip deve mudar o enquadramento horizontal, mas manter a régua vertical baseada em Avós/Geração 3;
-- swipe nos chips não deve bloquear pan/zoom do canvas ReactFlow fora da barra;
-- o `translateExtent` não deve impedir o usuário de arrastar a árvore para cima/baixo e recuperar os cabeçalhos.
-
----
-
-## 6. Componentes de navegação e menu
-
-### 6.1 `AppLink`
-
-Arquivo:
-
-```txt
-src/app/components/AppLink.tsx
-```
-
-Responsabilidade:
-
-- padronizar links internos do app;
-- evitar inconsistência entre navegação por rota e links visuais.
-
-Uso:
-
-- headers;
-- páginas internas;
-- cards de navegação;
-- botões com `to`.
-
-Cuidados:
-
-- ao remover import de `AppLink as Link`, confirmar se a página ainda usa `<Link>`;
-- erro conhecido corrigido: `Link is not defined` em `CalendarioFamiliar.tsx`.
-
-### 6.2 `UserProfileMenu`
-
-Arquivo:
-
-```txt
-src/app/components/layout/UserProfileMenu.tsx
-```
-
-Responsabilidade:
-
-- renderizar menu do usuário autenticado;
-- renderizar estado de visitante quando necessário;
-- exibir avatar, nome e e-mail;
-- oferecer atalhos de navegação;
-- condicionar acesso ao Painel Admin;
-- executar logout;
-- unificar o menu das páginas internas e das views da árvore.
-
-Variantes:
-
-```ts
-variant?: 'avatar' | 'home-header'
-```
-
-- `avatar`: padrão usado nas páginas internas, com botão circular/avatar;
-- `home-header`: usado nas views da árvore para manter aparência compacta no header da Home.
-
-Comportamento desejado/consolidável:
-
-- o painel aberto deve ser o mesmo nas duas variantes;
-- a área superior com avatar, nome e e-mail é clicável;
-- clique no cabeçalho redireciona usuário autenticado para `/minha-arvore/editar`;
-- visitante pode ser levado para `/entrar`;
-- botão `X` fecha o menu e não dispara navegação;
-- item **Editar notificações** não aparece mais no menu;
-- item **Atualizar perfil** continua disponível;
-- **Painel Admin** aparece apenas para administradores;
-- logout deve limpar estado/cache relevante antes de sair.
-
-Itens principais:
-
-```txt
-Home
-Atualizar perfil
-Fórum
-Calendário
-Favoritos
-Notificações
-Painel Admin
-Sair
-```
-
-Cuidados:
-
-- manter cabeçalho clicável acessível, com foco visível;
-- usar `event.stopPropagation()` no botão de fechar se necessário;
-- não duplicar menu local no `Home.tsx`;
-- se houver diferença visual entre menu da árvore e menu das páginas internas, confirmar se ela vem apenas da variante de botão ou de implementação duplicada;
-- não usar `window.location` para navegação interna quando `navigate` resolver;
-- não esconder botão admin como substituto de guard/RLS.
-
----
-
-## 7. Componentes de calendário familiar
-
-Arquivo:
-
-```txt
-src/app/pages/CalendarioFamiliar.tsx
-```
-
-Responsabilidade:
-
-- renderizar rota `/calendario-familiar`;
-- exibir grid mensal, categorias, aniversariantes e dias de falecimento;
-- formatar microcopy visual de eventos sem alterar o shape de `EventoCalendarioFamiliar`;
-- manter integração visual com `MemberPageHeader`.
-
-Cuidados:
-
-- preferir ajustes de exibição em `CalendarioFamiliar.tsx`, sem mexer em `familyDates.ts` quando a mudança for apenas visual;
-- preservar filtros por categoria e contadores em `evento/eventos`;
-- aniversários no grid devem usar título compacto, em peso forte, como **Aniversário de PrimeiroNome**;
-- descrição de aniversário deve usar **Faz X anos** em fonte menor;
-- falecimentos no grid devem usar título compacto, como **44 anos de falecimento**, com descrição **Memória de Nome Completo**;
-- o card **Memória** deve usar **44 anos da morte de Nome Completo** ou **Morte de Nome Completo**;
-- o seletor de mês deve manter setas em botões `type="button"` e texto centralizado entre elas;
-- textos do header devem estar em UTF-8 correto: **Calendário**, **Reunião**, **Filtros do calendário**;
-- no mobile, os filtros/chips superiores de categorias devem usar fonte compacta para caber em telas estreitas;
-- no mobile, o card **Categorias** abaixo do calendário fica oculto; desktop/tablet podem manter o bloco de categorias;
-- se a bolinha mobile não encontrar card específico de destino, o fallback deve rolar para um resumo visível, não para um elemento oculto.
-
----
-
-## 8. Componentes de pessoa e edição de perfil
-
-Documentação específica:
-
-```txt
-docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-docs/funcionalidades/MINHA_ARVORE_EDITAR.md
-```
-
-Arquivos principais:
-
-```txt
-src/app/pages/MinhaArvore.tsx
+src/app/components/person/PersonDataView.tsx
+src/app/components/person/PersonContactFields.tsx
+src/app/components/person/AddressAutocompleteInput.tsx
+src/app/components/person/SocialProfilesEditor.tsx
+src/app/components/person/PersonEventsEditor.tsx
+src/app/components/person/PersonEventsList.tsx
+src/app/components/person/RelationshipFinder.tsx
+src/app/pages/PersonProfile.tsx
+src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/MeusDados.tsx
-src/app/components/person
-src/app/services/memberProfileService.ts
-src/app/utils/personFields.ts
-```
-
-Responsabilidades gerais:
-
-- exibição e edição de dados pessoais;
-- formulário de dados pessoais;
-- datas e locais;
-- privacidade;
-- redes sociais;
-- WhatsApp;
-- eventos pessoais;
-- grau de parentesco;
-- dados gerados de astrologia/acontecimentos;
-- autocomplete de endereço em formulários de contato.
-
-Regra recente em `/minha-arvore/editar`:
-
-- botões duplicados **Alterar** e **Remover** foto foram removidos do bloco de dados;
-- edição e remoção de foto ficam concentradas no avatar superior ao lado do nome;
-- card **FILHOS** conta apenas filhos humanos;
-- card **PETS** lista pets vinculados como filhos técnicos;
-- botão **Sair** foi removido do header;
-- proteção de saída sem salvar usa a mensagem **Deseja sair sem salvar os ajustes?**;
-- área **Eventos da Vida** combina eventos automáticos e eventos manuais;
-- botão **Trocar Senha** aparece no card superior do perfil;
-- usa o e-mail do usuário autenticado;
-- chama `supabase.auth.resetPasswordForEmail`;
-- exibe estado **Enviando...**;
-- mostra toast de sucesso/erro;
-- não altera dados da pessoa;
-- não participa do fluxo de salvamento do formulário;
-- não cria migration, service novo ou alteração de RLS.
-
-Cuidados:
-
-- perfil não deve gerar IA automaticamente;
-- WhatsApp não deve revelar número se privacidade não permitir;
-- botões internos em formulários devem usar `type="button"`;
-- componentes visuais não devem persistir Supabase diretamente quando já existir service;
-- exceções pontuais, como reset de senha via Supabase Auth na página de perfil, devem ficar documentadas.
-
----
-
-## 9. Componentes de relacionamentos
-
-Arquivos principais:
-
-```txt
-src/app/components/relationships/MarriageDetailsEditor.tsx
-src/app/components/RelacionamentoManager.tsx
-src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
-src/app/components/FamilyTree/modals/AddConnectionModal.tsx
-src/app/pages/admin/AdminRelacionamentos.tsx
-src/app/pages/admin/AdminRelacionamentoForm.tsx
-src/app/pages/admin/AdminSolicitacoesVinculos.tsx
-src/app/pages/MeusVinculos.tsx
 ```
 
 Responsabilidades:
 
-- criar/editar relacionamento;
-- editar dados conjugais;
-- abrir modal conjugal;
-- criar solicitação de vínculo para usuário comum;
-- aprovar/rejeitar vínculo no admin.
-
-Regras recentes do modal conjugal:
-
-- título e botão `X` devem estar visualmente alinhados no header do modal;
-- texto público usa forma humana, como **Fulana e Secundino foram casados**;
-- subtítulo mostra período e local da cerimônia quando houver dados;
-- **Inserir Informações** edita diretamente quando o usuário tem permissão e envia sugestão quando não tem;
-- arquivos históricos do relacionamento podem usar botão compacto `+`.
+| Componente | Responsabilidade |
+|---|---|
+| `PersonDataView` | Exibir dados públicos do perfil respeitando privacidade. |
+| `PersonContactFields` | Editar contato, privacidade e dados correlatos. |
+| `AddressAutocompleteInput` | Autocomplete Google Places com fallback para input comum. |
+| `SocialProfilesEditor` | Editar redes sociais e manter compatibilidade com campos legados. |
+| `PersonEventsEditor` | Criar/editar eventos pessoais. |
+| `PersonEventsList` | Exibir eventos pessoais. |
+| `RelationshipFinder` | Exibir cálculo de vínculo/grau de parentesco. |
 
 Cuidados:
 
-- usuário comum não altera relacionamento real diretamente;
-- observações conjugais internas só aparecem para admin;
-- modal não deve salvar antes do botão principal;
-- rejeição de solicitação não altera dado real;
-- arquivos de relacionamento usam `relacionamento_id`;
-- anel/aliança conjugal deve continuar abrindo `ViewMarriageModal`.
+- campos de privacidade devem ser respeitados na exibição;
+- autocomplete não pode ser obrigatório;
+- sem `VITE_GOOGLE_MAPS_API_KEY`, o input deve continuar funcional;
+- botão de favorito no perfil deve usar `FavoriteButton`;
+- botão de edição no perfil público deve respeitar permissão já resolvida pela página/service;
+- sugestão de informação para admin deve passar por `personProfileSuggestionService`.
 
 ---
 
-## 10. Componentes de arquivos históricos
+## 6. Relacionamentos e vínculo conjugal
 
-Arquivos principais:
+Componentes principais:
+
+```txt
+src/app/components/relationships/MarriageDetailsEditor.tsx
+src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
+src/app/components/RelacionamentoManager.tsx
+src/app/pages/admin/AdminRelacionamentos.tsx
+src/app/pages/admin/AdminSolicitacoesVinculos.tsx
+```
+
+Responsabilidades:
+
+| Componente | Responsabilidade |
+|---|---|
+| `MarriageDetailsEditor` | Editar dados conjugais em contexto admin ou formulário permitido. |
+| `ViewMarriageModal` | Exibir relacionamento conjugal de forma pública/humana. |
+| `RelacionamentoManager` | Gerenciar relacionamentos no contexto de formulário/admin. |
+
+Cuidados:
+
+- observações internas aparecem apenas para admin;
+- modal conjugal não deve exibir ID técnico para usuário final;
+- usuário sem permissão envia sugestão/solicitação, não altera relacionamento real;
+- arquivos históricos de relacionamento usam `relacionamento_id`;
+- botão compacto `+` pode ser usado em áreas de espaço reduzido.
+
+---
+
+## 7. Arquivos históricos e upload
+
+Componentes/services principais:
 
 ```txt
 src/app/components/ArquivosHistoricos.tsx
@@ -967,659 +583,259 @@ src/app/services/arquivosHistoricosService.ts
 src/app/services/storageService.ts
 ```
 
-Responsabilidades:
+Responsabilidade:
 
-- upload;
-- preview;
-- download;
-- remoção;
+- upload/preview de imagem e PDF;
+- edição de título, descrição, ano e categoria;
+- suporte a pessoa ou relacionamento;
 - compatibilidade com base64 legado;
-- arquivos de pessoa e relacionamento;
-- edição de título, ano, descrição e categoria histórica;
-- estado vazio com ação compacta por botão `+` quando usado em áreas de perfil/relacionamento.
+- uso de Storage para novos arquivos.
 
 Cuidados:
 
-- novos arquivos devem ir para Storage;
-- preview/download não deve limpar formulário;
-- botões de visualizar/baixar/remover/adicionar devem usar `type="button"`;
-- botão `+` deve ter `aria-label`/`title` claro quando não houver texto visível;
-- não apagar base64 legado automaticamente;
-- não criar limpeza automática de órfãos sem auditoria;
-- migration `20260522121000_add_historical_file_event_category.sql` precisa estar aplicada antes de deploy que envie `categoria_evento`.
+- novos uploads não devem salvar base64;
+- preview/download não pode limpar formulário;
+- bucket de avatar é diferente de bucket de arquivos históricos;
+- categoria histórica depende de migration aplicada;
+- não apagar legado sem auditoria.
 
 ---
 
-## 11. Componentes de timeline
+## 8. Favoritos
 
-Arquivos principais:
+Componentes/services:
+
+```txt
+src/app/components/favorites/FavoriteButton.tsx
+src/app/services/favoritesService.ts
+src/app/pages/MeusFavoritos.tsx
+```
+
+Responsabilidade:
+
+- favoritar/desfavoritar entidade;
+- exibir estado ativo;
+- chamar `toggleFavorite`;
+- preservar metadados sanitizados.
+
+Props principais:
+
+```txt
+entityType
+entityId
+label
+description
+href
+metadata
+size: sm | md
+variant: icon | button
+onChange
+```
+
+Estado atual:
+
+- botão implementado e usado para pessoa;
+- `FavoriteEntityType` já prevê outras entidades;
+- expansão de favoritos para outros tipos deve ser validada funcionalmente antes de expor novos botões.
+
+Cuidados:
+
+- não enviar URL, telefone, token, base64 ou dado sensível em `metadata`;
+- usar `href` navegável;
+- usar `variant="icon"` para ações compactas como perfil/card;
+- expansão para novas entidades deve considerar schema, UI e página `/meus-favoritos`.
+
+---
+
+## 9. Fórum
+
+Páginas/componentes relevantes:
+
+```txt
+src/app/pages/forum/ForumHome.tsx
+src/app/pages/forum/ForumNovoTopico.tsx
+src/app/pages/forum/ForumTopico.tsx
+src/app/pages/forum/ForumEditarTopico.tsx
+src/app/services/forumService.ts
+src/app/services/notificationTriggersService.ts
+```
+
+Responsabilidades consolidadas:
+
+| Área | Responsabilidade |
+|---|---|
+| `ForumNovoTopico` | Criar tópico, selecionar categoria, relacionar pessoas, detectar/inserir menções `@`. |
+| `ForumTopico` | Exibir tópico, respostas, comentários, badges, avatares, menções e reações. |
+| `forumService` | Persistência de tópicos, respostas, comentários, reações e denúncias. |
+| `notificationTriggersService` | Notificar pessoas mencionadas/relacionadas e participantes. |
+
+Padrões consolidados:
+
+- tipo do tópico não aparece como dropdown na criação;
+- categoria usa botões/cards;
+- pessoas relacionadas usam dropdown com busca e clique fora;
+- menções usam `@Nome Completo`;
+- reações usam `HeartHandshake`, `Handshake`, `Flower2` e `PartyPopper`;
+- uma reação por usuário/alvo;
+- clicar na mesma reação remove; clicar em outra substitui.
+
+Cuidados:
+
+- não reintroduzir `Marcar solução` ou `Ocultar` nas respostas se a decisão visual continuar vigente;
+- não quebrar deduplicação entre menção e pessoa relacionada;
+- falha de notificação não deve impedir publicação do tópico;
+- ao alterar reações, validar migration/constraint de unicidade.
+
+---
+
+## 10. Notificações
+
+Componentes/services principais:
+
+```txt
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/pages/admin/AdminNotificacoes.tsx
+src/app/services/notificationDispatchService.ts
+src/app/services/notificationTriggersService.ts
+src/app/services/notificationRecipientsService.ts
+```
+
+Responsabilidades:
+
+| Componente/service | Responsabilidade |
+|---|---|
+| `NotificationPreferencesPanel` | Toggles e salvamento de preferências. |
+| `Notificacoes` | Central/lista de notificações. |
+| `AjustarNotificacoes` | Página dedicada de preferências. |
+| `AdminNotificacoes` | Rotina/admin de notificações. |
+| `notificationTriggersService` | Gatilhos de domínio. |
+| `notificationDispatchService` | Criação/despacho respeitando canais e preferências. |
+
+Cuidados:
+
+- separar central `/notificacoes` de preferências `/ajustar-notificacoes`;
+- falha de dispatch não deve quebrar ação principal;
+- e-mail real depende de provider/secrets;
+- push/WhatsApp não devem simular envio real;
+- cron externo deve ser configurado fora do frontend.
+
+---
+
+## 11. Calendário familiar
+
+Página principal:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Componentes/conceitos internos:
+
+```txt
+MemberPageHeader
+PAGE_CONTAINER_CLASS
+CALENDAR_CATEGORY_COLORS
+MOBILE_CALENDAR_LEGEND_ITEMS
+Google Agenda card
+```
+
+Responsabilidade:
+
+- exibir eventos familiares por mês;
+- filtrar categorias;
+- destacar aniversários, casamentos, falecimentos e eventos históricos;
+- integrar conexão/sincronização com Google Agenda quando configurada.
+
+Cuidados:
+
+- filtros mobile compactos ficam acima do calendário;
+- card Google Agenda pode ser oculto/mostrado no mobile;
+- título deve ser **Calendário**;
+- textos de idade usam **Faz X anos** quando aplicável;
+- tokens/cores do calendário são locais à página.
+
+---
+
+## 12. Timeline e eventos da vida
+
+Componentes/utils:
 
 ```txt
 src/app/components/Timeline/PersonTimeline.tsx
 src/app/utils/buildPersonTimeline.ts
-src/app/pages/PersonProfile.tsx
+src/app/components/person/PersonEventsEditor.tsx
+src/app/components/person/PersonEventsList.tsx
 ```
 
-Responsabilidades:
+Responsabilidade:
 
-- exibir linha do tempo derivada;
-- ordenar eventos;
-- mostrar eventos de nascimento, falecimento, relacionamentos, filhos, arquivos e eventos pessoais;
-- exibir estado vazio.
+- montar linha do tempo derivada;
+- exibir nascimento, falecimento, vínculos, filhos, arquivos históricos e eventos pessoais;
+- permitir eventos manuais em contextos editáveis.
 
 Cuidados:
 
-- não renderizar metadata bruta;
-- preservar precisão de data;
-- evitar duplicação de eventos;
-- edição manual fica pós-MVP.
+- upload por evento, privacidade por evento e PDF são evolução futura;
+- não duplicar dados já derivados;
+- manter eventos manuais separados de fatos automáticos quando necessário.
 
 ---
 
-## 12. Componentes de favoritos
+## 13. UI base
 
-Arquivos principais:
+Componentes em:
 
 ```txt
-src/app/components/favorites/FavoriteButton.tsx
-src/app/pages/MeusFavoritos.tsx
-src/app/services/favoritesService.ts
+src/app/components/ui/
 ```
 
-Responsabilidades:
+Uso esperado:
 
-- favoritar pessoa;
-- remover favorito;
-- listar favoritos;
-- filtrar/buscar favoritos;
-- abrir links internos.
+- botões;
+- cards;
+- inputs;
+- textareas;
+- dialogs;
+- tabs;
+- selects;
+- switches;
+- tooltips;
+- demais primitivas visuais.
 
 Cuidados:
 
-- metadata deve ser sanitizada no service;
-- botão precisa ser clicável em mobile;
-- isolamento por usuário depende de RLS/service;
-- expansão para outras entidades fica pós-MVP.
+- preservar compatibilidade com Radix quando aplicável;
+- não customizar globalmente componente base para resolver problema isolado;
+- preferir composição local quando a variação for específica de tela;
+- validar acessibilidade mínima.
 
 ---
 
-## 13. Componentes de fórum
+## 14. Checklist anti-regressão por alteração
 
-Documentação específica recomendada:
-
-```txt
-docs/funcionalidades/FORUM.md
-```
-
-Arquivos principais:
-
-```txt
-src/app/pages/forum/ForumHome.tsx
-src/app/pages/forum/ForumTopico.tsx
-src/app/pages/forum/ForumNovoTopico.tsx
-src/app/pages/forum/ForumEditarTopico.tsx
-src/app/components/forum
-src/app/services/forumService.ts
-src/app/services/notificationRecipientsService.ts
-src/app/services/notificationTriggersService.ts
-```
-
-### 13.1 `ForumNovoTopico`
-
-Responsabilidades:
-
-- criar tópico;
-- selecionar categoria por botões/cards de seleção única;
-- exibir ícone centralizado e título da categoria em até duas linhas;
-- aplicar estado visual diferente na categoria selecionada;
-- remover o dropdown de **Tipo** da UI;
-- permitir seleção de pessoas relacionadas com dropdown pesquisável;
-- fechar dropdown de pessoas relacionadas ao clicar fora;
-- exibir aviso **Digite @ para marcar alguém na publicação** acima do campo de conteúdo;
-- salvar vínculos em `forum_topico_pessoas`;
-- acionar notificações para pessoas relacionadas/mencionadas quando aplicável.
-
-Cuidados:
-
-- dropdown com busca deve preservar navegação por teclado quando possível;
-- clique fora deve fechar sem perder seleção já feita;
-- categorias devem ser botões `type="button"`;
-- conteúdo com `@` não deve quebrar salvamento se a pessoa não for resolvida;
-- notificações não devem bloquear criação do tópico se falharem.
-
-### 13.2 `ForumTopico`
-
-Responsabilidades:
-
-- exibir tópico;
-- exibir badges pequenas/coloridas para categoria, tipo e status;
-- exibir avatar/fallback de iniciais para autor do tópico, respostas e comentários;
-- renderizar menções `@Nome Completo` em negrito e como link para `/pessoa/:id`;
-- responder/comentar;
-- editar/excluir conforme permissão;
-- exibir reações.
-
-Regras recentes:
-
-- botão **Ocultar** não aparece no header;
-- respostas não exibem mais **Marcar solução** nem **Ocultar**;
-- categoria, tipo e status ficam em badges;
-- pessoa relacionada usa foto do perfil quando disponível;
-- autores usam `profiles.avatar_url` quando disponível;
-- fallback de autor usa iniciais;
-- IDs técnicos não devem aparecer na UI pública.
-
-### 13.3 Reações do fórum
-
-Tipos internos e apresentação:
-
-| Tipo interno | Label | Ícone `lucide-react` | Cor |
-|---|---|---|---|
-| `curtir` | `Amei` | `HeartHandshake` | vermelho |
-| `apoiar` | `Apoiar` | `Handshake` | verde |
-| `lembrar` | `Orações` | `Flower2` | azul |
-| `celebrar` | `Parabéns` | `PartyPopper` | laranja |
-
-Comportamento:
-
-- botão exibe apenas ícone por padrão;
-- label aparece em `title`/hover e quando a reação está selecionada;
-- contador pode aparecer quando houver reações;
-- `aria-pressed` indica seleção;
-- uma pessoa só pode manter uma reação por alvo;
-- clicar em reação diferente substitui a anterior;
-- clicar novamente na mesma reação remove a reação.
-
-Cuidados:
-
-- não usar `Rose`: essa exportação não existe na versão atual de `lucide-react`;
-- usar `Flower2` para a reação **Orações**;
-- não voltar a permitir múltiplas reações do mesmo usuário no mesmo alvo;
-- manter migration de unicidade aplicada antes de depender da regra em produção.
-
-Migration relacionada:
-
-```txt
-20260608180000_enforce_single_forum_reaction.sql
-```
-
-### 13.4 Notificações do fórum
-
-Services relacionados:
-
-```txt
-notificationRecipientsService.ts
-notificationTriggersService.ts
-```
-
-Comportamento:
-
-- nova resposta notifica autor do tópico, quando não for o próprio autor da resposta;
-- novo comentário notifica autor da resposta, quando não for o próprio autor do comentário;
-- tópico novo pode notificar pessoas relacionadas e pessoas mencionadas;
-- pessoas duplicadas entre relacionadas e mencionadas devem ser deduplicadas;
-- preferências de notificação devem ser respeitadas.
-
-Cuidados:
-
-- não salvar telefone, e-mail completo, token, URL privada ou base64 em metadata;
-- falha de notificação não deve desfazer publicação;
-- notificações devem apontar para `/forum/topico/:id`.
-
-Cuidados gerais do fórum:
-
-- textos de usuário precisam quebrar linha;
-- editores/textareas devem funcionar em mobile;
-- ações destrutivas devem ser protegidas;
-- manter filtros sem overflow;
-- manter `break-words` no conteúdo;
-- manter `min-w-0` nos containers flex/grid.
-
----
-
-## 14. Componentes de notificações
-
-Documentação específica:
-
-```txt
-docs/funcionalidades/NOTIFICACOES.md
-```
-
-Arquivos principais:
-
-```txt
-src/app/pages/Notificacoes.tsx
-src/app/pages/AjustarNotificacoes.tsx
-src/app/components/notifications/NotificationPreferencesPanel.tsx
-src/app/pages/admin/AdminNotificacoes.tsx
-src/app/services/userEngagementService.ts
-src/app/services/notificationDispatchService.ts
-src/app/services/notificationRecipientsService.ts
-src/app/services/notificationTriggersService.ts
-src/app/services/notificationScheduledService.ts
-src/app/services/notificationAdminService.ts
-```
-
-Responsabilidades:
-
-- `Notificacoes.tsx`: lista/central em cards, leitura, marcação, remoção e atalho **Personalizar Notificações**;
-- `AjustarNotificacoes.tsx`: página dedicada de preferências;
-- `NotificationPreferencesPanel.tsx`: toggles e salvamento de preferências, incluindo preferências usadas por publicações e interações no fórum;
-- administração/testes;
-- disparos internos/e-mail;
-- logs e deduplicação.
-
-Cuidados:
-
-- marcar/remover sempre filtrar por `id` e `user_id`;
-- admin não deve disparar massa por acidente;
-- WhatsApp/push sem provider real devem retornar status não configurado;
-- preferências `false` não devem ser sobrescritas por defaults;
-- títulos devem usar UTF-8 correto: **Preferências** e **Notificações**.
-
----
-
-## 15. Componentes administrativos
-
-Arquivos principais:
-
-```txt
-src/app/pages/admin/AdminDashboard.tsx
-src/app/pages/admin/AdminPessoas.tsx
-src/app/pages/admin/AdminPessoaForm.tsx
-src/app/pages/admin/AdminRelacionamentos.tsx
-src/app/pages/admin/AdminRelacionamentoForm.tsx
-src/app/pages/admin/AdminSolicitacoesVinculos.tsx
-src/app/pages/admin/AdminAtividades.tsx
-src/app/pages/admin/AdminIntegridade.tsx
-src/app/pages/admin/AdminNotificacoes.tsx
-src/app/pages/admin/AdminDiagnostico.tsx
-src/app/pages/admin/AdminImportacao.tsx
-src/app/pages/admin/AdminMigrarDados.tsx
-src/app/pages/admin/AdminHomeSettings.tsx
-```
-
-Responsabilidades:
-
-- administração de dados;
-- formulários longos;
-- vínculo usuário-pessoa no card **Usuários vinculados a esta pessoa**;
-- diagnóstico;
-- integridade;
-- atividades;
-- notificações;
-- home pública;
-- importação/migração.
-
-Cuidados:
-
-- rotas admin devem usar `ProtectedRoute`;
-- usuário comum não deve acessar;
-- tabelas podem usar scroll horizontal controlado;
-- formulários precisam ser operáveis em mobile;
-- vínculo usuário-pessoa depende da RPC `admin_list_profiles_for_linking`;
-- não substituir falha da RPC por consulta direta insegura em `profiles`;
-- ações destrutivas precisam de confirmação;
-- `AdminPessoas.tsx` deve manter ação de copiar ID por botão apenas com ícone;
-- `AdminPessoas.tsx` deve manter reset de perfil protegido por confirmação;
-- `AdminSolicitacoesVinculos.tsx` também recebe sugestões de informações de perfil, além de vínculos/relacionamentos.
-
----
-
-## 16. Componentes UI base
-
-Pasta:
-
-```txt
-src/app/components/ui
-```
-
-Componentes comuns:
-
-```txt
-button
-input
-textarea
-select
-dialog
-checkbox
-switch
-label
-card
-badge
-dropdown-menu
-```
-
-Regras:
-
-- usar componentes UI base antes de criar botão/input próprio;
-- preservar variantes existentes;
-- não quebrar classes responsivas;
-- manter foco visível;
-- não acoplar UI base a regras de negócio.
-
-### 16.1 `SelectContent`, `DropdownMenuContent` e `DropdownMenuSubContent`
-
-Arquivos:
-
-```txt
-src/app/components/ui/select.tsx
-src/app/components/ui/dropdown-menu.tsx
-```
-
-Padrão consolidado:
-
-```txt
-z-[1000]
-sideOffset = 8
-```
-
-Motivo:
-
-- o header da árvore usa camada elevada;
-- menus com `z-50` podem ficar parcialmente cobertos;
-- seletor de views e menu do usuário precisam abrir integralmente acima do header.
-
-Cuidados:
-
-- antes de reduzir `z-index`, testar `/minha-arvore`, `/genealogia` e `/visao-completa`;
-- ajustes globais impactam selects e menus de todo o app;
-- se houver conflito local, preferir `className` local.
-
----
-
-## 17. Estados vazios, loading e erro
-
-Padrão esperado:
-
-- toda página com carregamento deve ter estado de loading;
-- toda consulta vazia deve ter estado vazio compreensível;
-- erros devem explicar o problema sem expor stack/secrets;
-- botões de retry devem existir quando fizer sentido.
-
-Exemplos:
-
-```txt
-StateMessage em Home
-ForumEmptyState no forum
-Estados vazios em MeusFavoritos, Notificacoes e Timeline
-```
-
----
-
-## 18. Textos, acentuação e encoding
-
-Regras:
-
-- arquivos-fonte devem ser salvos em UTF-8;
-- corrigir mojibake na origem sempre que possível;
-- evitar strings escapadas visíveis como `Calend\u00e1rio`, `Prefer\u00eancias` e `Notifica\u00e7\u00f5es`;
-- a camada defensiva `textEncodingRepair` não substitui correção no arquivo-fonte.
-
-Textos validados recentemente:
-
-```txt
-Calendário
-Reunião
-Filtros do calendário
-Preferências
-Notificações
-Aniversário de Fábio
-Faz 60 anos
-Trocar Senha
-Personalizar Notificações
-```
-
----
-
-## 19. Checklist antes de alterar componentes críticos
-
-Para componentes da árvore:
-
-```bash
-npm run build
-npm test
-git diff --check
-```
-
-Validar manualmente:
-
-- Minha Árvore;
-- Genealogia;
-- Visão Completa;
-- zoom `+` e `-`;
-- pan/arraste;
-- painel lateral;
-- aba Legendas;
-- seleção/exportação de área;
-- modal conjugal;
-- mobile.
-
-Para componentes de formulário:
-
-```bash
-npm run build
-npm test
-git diff --check
-```
-
-Validar:
-
-- salvar;
-- cancelar;
-- preview/download;
-- rascunho;
-- botões internos;
-- permissões.
-
-Para componentes admin:
-
-- validar admin autenticado;
-- validar usuário comum bloqueado;
-- checar tabelas/listas em mobile;
-- checar ações destrutivas;
-- checar RLS quando houver service novo.
-
----
-
-## 20. O que evitar
-
-Não fazer:
-
-- duplicar componente já existente;
-- recriar `UserMenu` local no `Home.tsx`;
-- colocar chamada Supabase em componente puramente visual sem necessidade documentada;
-- criar title node da árvore dentro de layouts;
-- usar `git add .` sem checar arquivos temporários;
-- commitar backups;
-- alterar migrations em ajuste visual;
-- remover `AppLink` sem procurar `<Link>`;
-- remover `type="button"` de botões internos;
-- renderizar observações internas para usuário comum;
-- salvar telefone, e-mail, URL privada, base64, token ou secret em logs/metadata;
-- expandir comportamento pós-MVP dentro de ajuste de componente.
-
----
-
-## 21. Arquivos de referência rápida
-
-```txt
-src/app/components/layout/MemberPageHeader.tsx
-src/app/components/layout/UserProfileMenu.tsx
-src/app/pages/Home.tsx
-src/app/pages/home/HomeHeader.tsx
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/types.ts
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/utils/treeExport.ts
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-src/app/pages/CalendarioFamiliar.tsx
-src/app/pages/MinhaArvore.tsx
-src/app/pages/Notificacoes.tsx
-src/app/pages/AjustarNotificacoes.tsx
-src/app/components/notifications/NotificationPreferencesPanel.tsx
-src/app/components/person
-src/app/components/relationships
-src/app/components/Timeline
-src/app/components/favorites
-src/app/components/forum
-src/app/components/ui
-```
-
----
-
-## 22. Atualização recente - ciclo 2026-06-07
-
-Frente documentada:
-
-```txt
-3f50694 fix: refine member navigation and page actions
-```
-
-Status: parcialmente consolidada; menu compartilhado, título/viewport e alianças ainda exigem validação visual final.
-
-Itens documentados neste ciclo:
-
-- `UserProfileMenu` deve atender também o header da árvore via `variant="home-header"`;
-- o antigo `UserMenu` local de `Home.tsx` foi removido;
-- o cabeçalho do menu do usuário ficou clicável e navega para `/minha-arvore/editar`;
-- o item **Editar notificações** foi removido do menu;
-- `/notificacoes` recebeu botão **Personalizar Notificações**;
-- `/minha-arvore/editar` recebeu botão **Trocar Senha**;
-- `CalendarioFamiliar.tsx` recebeu correções de texto e microcopy visual;
-- `AjustarNotificacoes.tsx` e `NotificationPreferencesPanel.tsx` receberam correções de acentuação;
-- `MarriageNode` e `GenealogySpouseEdge` passaram a usar `Blend` de `lucide-react` com estilo cinza/neutro no lugar de emoji/SVG customizado;
-- `PersonNode` passou a usar `Star` e `Cross` de `lucide-react` no lugar dos emojis de nascimento/falecimento;
-- destaques de linhas foram padronizados: cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado;
-- `/genealogia` mobile passou a alinhar o eixo Y dos chips pela referência visual de Avós/Geração 3;
-- `/calendario-familiar` mobile passou a usar filtros superiores mais compactos e ocultar o card **Categorias** inferior.
-
-Pendências relacionadas:
-
-- confirmar se o menu da árvore abre o mesmo painel das páginas internas;
-- ajustar padding superior do título e reduzir espaço título-cards em `FamilyTree.tsx`;
-- validar o botão conjugal `Blend` cinza nas três views e confirmar clique/modal em browser real.
-- validar pan vertical superior em `/genealogia` mobile após ajuste de `translateExtent`.
-
-QA recomendado:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-/calendario-familiar
-/minha-arvore/editar
-/notificacoes
-/ajustar-notificacoes
-```
-
----
-
-## 23. Atualização recente - ciclo 2026-06-08
-
-Frente documentada:
-
-```txt
-c5988a9 feat: add full tree mobile stage navigation
-```
-
-Status: concluída tecnicamente; build local aprovado e Vercel retornou sucesso.
-
-Itens documentados neste ciclo:
-
-- `/visao-completa` mobile passou a reutilizar `GenealogyMobileStageTabs`;
-- `HomeTreeSection.tsx` substituiu a condição exclusiva `isGenealogyMobile` por `usesMobileGenerationStages`;
-- `usesMobileGenerationStages` vale para `isMobile && (treeViewMode === 'genealogia' || treeViewMode === 'visao-completa')`;
-- a prop `activeGenealogyGeneration` continua sendo foco/enquadramento, sem remover nodes ou colunas do ReactFlow;
-- os botões móveis de zoom/direção podem ficar ocultos nas duas views por geração para não competir com a barra de chips;
-- `/minha-arvore` não foi alterada por esta frente.
-
-Validação registrada:
-
-```bash
-npm run build
-```
-
-Resultado: aprovado.
-
-Anti-regressão:
-
-- não transformar chips em filtro de pessoas;
-- não reintroduzir colunas vazias;
-- não alterar Supabase, migrations, RLS ou dados reais para ajuste visual;
-- validar `/genealogia` e `/visao-completa` mobile nas larguras 320px, 375px, 390px e 430px;
-- validar paletas `white`, `orange` e `brown`.
-
----
-
-## 24. Atualização recente - ciclo 2026-06-08 / Perfil, Minha Árvore e Fórum
-
-Frentes documentadas:
-
-```txt
-prompts 1 a 8 - reset admin, perfil, modal conjugal, Minha Árvore, edição, fórum, notificações e reações
-```
-
-Status: implementado tecnicamente; validação visual autenticada pode depender de sessão local.
-
-### 24.1 Componentes atualizados
-
-| Componente/arquivo | Ajuste |
+| Alteração | Validar |
 |---|---|
-| `AdminPessoas.tsx` | Reset de perfil e botão de copiar ID. |
-| `ConfirmDialog.tsx` | Confirmação para ação administrativa sensível. |
-| `PersonProfile.tsx` | Botão editar redondo ao lado do favorito e fluxo **Inserir Informações**. |
-| `AdminSolicitacoesVinculos.tsx` | Revisão de sugestões de informações de perfil. |
-| `ViewMarriageModal.tsx` | Header alinhado, texto humano do casamento, sugestão de informações e arquivos históricos. |
-| `ArquivosHistoricos.tsx` | Título interno opcional e botão compacto `+`. |
-| `FamilyTree.tsx` | Reposicionamento de título/cards em `/minha-arvore` e bloqueio de scroll externo pelo shell. |
-| `MarriageNode.tsx` / `GenealogySpouseEdge.tsx` | Ícone conjugal com cor de conectores. |
-| `CentralPersonFocusPanel.tsx` | Remoção de moldura/borda extra da pessoa principal. |
-| `MinhaArvore.tsx` | Edição de foto via avatar, filhos humanos, pets, Eventos da Vida e modal de saída. |
-| `PersonTimeline.tsx` | Consumo de eventos automáticos e manuais. |
-| `ForumNovoTopico.tsx` | Categorias por cards, pessoas relacionadas pesquisáveis e aviso de menção. |
-| `ForumTopico.tsx` | Badges, avatares, menções clicáveis e reações por ícone. |
-| `forumService.ts` | Reação única por usuário/alvo. |
-| `NotificationPreferencesPanel.tsx` | Preferências usadas pelos disparos de fórum. |
-| `notificationRecipientsService.ts` / `notificationTriggersService.ts` | Notificações de pessoas relacionadas/mencionadas no fórum. |
+| Header/menu | `HomeHeader`, `MemberPageHeader`, `UserProfileMenu`, mobile e desktop. |
+| Árvore | `/minha-arvore`, `/genealogia`, `/visao-completa`, pan/zoom, paletas e modal conjugal. |
+| Cards de pessoa | ícones, texto, truncamento, avatar, pets, falecidos e ações. |
+| Fórum | criação, tópico, respostas, comentários, menções, pessoas relacionadas e reações. |
+| Notificações | central, preferências, triggers e falha sem bloquear fluxo principal. |
+| Favoritos | botão, página `/meus-favoritos`, sanitização de metadata e remoção. |
+| Calendário | filtros mobile, Google Agenda, grid e lista do mês. |
+| Upload/Storage | preview, bucket correto, edição de metadados e legado base64. |
 
-### 24.2 Anti-regressões novas
-
-Não reintroduzir:
-
-- botão de foto duplicado dentro do bloco de dados em `/minha-arvore/editar`;
-- contagem de pets dentro do card **FILHOS**;
-- botão **Sair** no header de `/minha-arvore/editar`;
-- texto antigo **tiveram um relacionamento conjugal** quando o registro representa casamento;
-- dropdown de **Tipo** em `/forum/novo`;
-- categoria de fórum como dropdown simples;
-- botão **Ocultar** no header de `/forum/topico/:id`;
-- botões **Marcar solução** e **Ocultar** nas respostas;
-- múltiplas reações por usuário no mesmo alvo;
-- `Rose` como import de `lucide-react`;
-- scroll externo da página em `/minha-arvore` quando não há conteúdo fora da viewport;
-- borda extra adicional ao redor do card da pessoa principal.
-
-### 24.3 Validação recomendada
-
-```txt
-/admin/pessoas
-/pessoa/:id
-/admin/solicitacoes-vinculos
-/minha-arvore
-/minha-arvore/editar
-/forum/novo
-/forum/topico/:id
-/ajustar-notificacoes
-```
-
-Executar:
+Comandos mínimos:
 
 ```bash
 npm run build
 git diff --check
 ```
 
+Quando houver testes relacionados:
+
+```bash
+npm test
+npm run test:e2e
+```

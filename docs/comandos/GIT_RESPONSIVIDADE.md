@@ -1,114 +1,126 @@
-# Git - comandos de responsividade mobile/tablet
+# Git — comandos de responsividade mobile/tablet
 
-> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`
-> Tipo: comando/checklist tecnico pontual.
-> Status: referencia operacional, nao documentacao funcional canonica.
+> Última revisão: 2026-06-08  
+> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`  
+> Tipo: referência operacional histórica.  
+> Status: manter como checklist auxiliar; não é documentação funcional canônica.
 
 ---
 
 ## 1. Objetivo
 
-Este documento registra comandos Git usados durante a frente de **responsividade mobile/tablet**.
+Este documento preserva comandos Git usados durante a frente de responsividade mobile/tablet.
 
-Use apenas como referencia rapida para situacoes de branch, push, revisao de diff e validacao antes de commit.
+Use este arquivo apenas para:
 
-Para documentacao canonica de UX/responsividade, use:
+- conferir branch;
+- revisar diff;
+- validar alterações antes de commit;
+- evitar inclusão de lixo local;
+- entender o fluxo usado naquela frente histórica.
+
+Para decisões atuais de UX, mobile e responsividade, use:
 
 ```txt
 docs/GUIA_UX_LAYOUT.md
-docs/PLANO_PROXIMOS_PASSOS.md
+docs/GUIA_COMPONENTES.md
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
 ```
 
 ---
 
-## 2. Enviar branch nova para o GitHub
+## 2. Regra atual
 
-Usar quando aparecer o erro:
-
-```txt
-fatal: The current branch feat/responsividade-mobile-tablet has no upstream branch.
-```
-
-Comando:
+O projeto está na branch principal:
 
 ```bash
-git push --set-upstream origin feat/responsividade-mobile-tablet
+main
 ```
 
-Forma curta equivalente:
+Este documento cita a branch histórica:
 
 ```bash
-git push -u origin feat/responsividade-mobile-tablet
+feat/responsividade-mobile-tablet
 ```
+
+Essa branch deve ser entendida como referência de fase. Para novas frentes, substituir o nome da branch pelos nomes reais usados no momento.
 
 ---
 
-## 3. Conferir branch atual
+## 3. Conferir estado local
 
 ```bash
 git branch --show-current
-```
-
-Conferir estado local:
-
-```bash
 git status --short
+git branch -vv
 ```
 
-Conferir relacao com remoto:
+Antes de qualquer commit documental, confirmar:
 
 ```bash
-git branch -vv
+git diff --check
+npm run build
+```
+
+Se houver alteração funcional ou visual relevante:
+
+```bash
+npm test
+npm run test:e2e
 ```
 
 ---
 
-## 4. Atualizar branch local antes de trabalhar
+## 4. Atualizar branch antes de trabalhar
 
 Na branch principal:
 
 ```bash
 git checkout main
-git pull
+git pull --rebase origin main
 ```
 
-Na branch de trabalho:
+Em branch de trabalho, quando aplicável:
 
 ```bash
-git checkout feat/responsividade-mobile-tablet
-git merge main
-```
-
-ou, se o fluxo do projeto preferir rebase:
-
-```bash
-git checkout feat/responsividade-mobile-tablet
+git checkout <nome-da-branch>
 git rebase main
 ```
 
 Regra:
 
-- nao usar `rebase` em branch compartilhada sem alinhamento previo;
-- se houver conflito, resolver arquivo por arquivo e rodar validacao antes do push.
+- não usar `rebase` em branch compartilhada sem alinhamento prévio;
+- se houver conflito, resolver arquivo por arquivo;
+- depois de resolver conflitos, rodar build e `git diff --check`.
 
 ---
 
-## 5. Validar antes de commit
+## 5. Enviar branch nova para o GitHub
 
-Checklist minimo:
+Quando aparecer:
 
-```bash
-git status
-npm run build
-npm test
-git diff --check
+```txt
+fatal: The current branch <branch> has no upstream branch.
 ```
 
-Quando a alteracao envolver layout, arvore, painel lateral ou responsividade:
+Usar:
 
 ```bash
-npm run test:e2e
+git push --set-upstream origin <branch>
+```
+
+Forma curta:
+
+```bash
+git push -u origin <branch>
+```
+
+Exemplo histórico:
+
+```bash
+git push -u origin feat/responsividade-mobile-tablet
 ```
 
 ---
@@ -127,7 +139,7 @@ Diff completo:
 git diff
 ```
 
-Diff de arquivo especifico:
+Diff de arquivo específico:
 
 ```bash
 git diff -- caminho/do/arquivo
@@ -142,12 +154,18 @@ git diff --cached
 
 ---
 
-## 7. Commit
+## 7. Commit seguro
 
-Adicionar alteracoes:
+Adicionar apenas o necessário:
 
 ```bash
-git add -A
+git add caminho/do/arquivo
+```
+
+Evitar:
+
+```bash
+git add .
 ```
 
 Conferir staged:
@@ -157,23 +175,24 @@ git status --short
 git diff --cached --stat
 ```
 
-Commit:
+Commit de documentação final sugerido nesta frente:
 
 ```bash
-git commit -m "style: ajustar responsividade mobile e tablet"
+git commit -m "docs: revise final project documentation"
 ```
 
 Push:
 
 ```bash
-git push
+git pull --rebase origin main
+git push origin main
 ```
 
 ---
 
 ## 8. Evitar commitar lixo local
 
-Nao commitar:
+Não commitar:
 
 ```txt
 dist/
@@ -187,13 +206,7 @@ backups/
 .env.local
 ```
 
-Se aparecerem no status:
-
-```bash
-git status --short
-```
-
-Remover exemplos comuns:
+Limpeza em shell Unix:
 
 ```bash
 rm -rf test-results/ playwright-report/
@@ -201,7 +214,7 @@ rm -rf backups/
 find . -name "*.bak" -type f -delete
 ```
 
-No PowerShell:
+Limpeza em PowerShell:
 
 ```powershell
 Remove-Item -Recurse -Force test-results, playwright-report -ErrorAction SilentlyContinue
@@ -211,27 +224,53 @@ Get-ChildItem -Recurse -Filter *.bak | Remove-Item -Force
 
 ---
 
-## 9. Quando este arquivo deve ser revisado
+## 9. Relação com a frente documental atual
 
-Revisar este documento se:
+Para substituir manualmente arquivos revisados em `docs/`, usar `git add` explícito por arquivo ou grupo controlado.
 
-- o fluxo de branches mudar;
-- o projeto passar a usar PR obrigatorio;
-- os comandos de validacao mudarem;
-- `npm test` ou `npm run test:e2e` forem substituidos;
-- a frente de responsividade deixar de ser uma branch especifica e virar checklist permanente.
+Exemplo:
+
+```bash
+git add docs/PLANO_PROXIMOS_PASSOS.md
+git add docs/GUIA_IMPLEMENTACOES.md
+git add docs/funcionalidades/FORUM.md
+```
+
+O comando consolidado do commit final deve permanecer em:
+
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```
 
 ---
 
-## 10. Observacao documental
+## 10. Quando revisar este arquivo
 
-Depois da fase 7.10, este arquivo deve ser usado apenas como referencia historica/operacional. Para ajustes correntes de documentacao, preferir os comandos usuais da branch atual do projeto.
+Revisar este documento apenas se:
 
-Este arquivo e um comando auxiliar. Nao deve acumular diagnostico, decisoes de UX, checklist final de QA ou historico longo.
+- o fluxo de branches mudar;
+- o projeto passar a exigir PR obrigatório;
+- os comandos de validação mudarem;
+- `npm test` ou `npm run test:e2e` forem substituídos;
+- a documentação histórica de responsividade for movida ou removida.
 
-Se o conteudo crescer, separar em:
+---
+
+## 11. Anti-regressões
+
+Não transformar este arquivo em:
+
+- guia de UX;
+- histórico longo de QA;
+- plano de próximos passos;
+- documentação de componentes;
+- documento canônico de responsividade.
+
+Se aparecer conteúdo funcional ou visual novo, mover para:
 
 ```txt
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
+docs/funcionalidades/
 docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
-docs/historico/QA_FINAL_MVP.md
 ```
