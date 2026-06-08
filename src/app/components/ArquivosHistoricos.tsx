@@ -6,6 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
 import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye, Plus } from 'lucide-react';
 import { uploadHistoricalFile } from '../services/storageService';
+import { HistoricalFileFavoriteButton } from './favorites/HistoricalFileFavoriteButton';
 
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEventCategory; label: string }> = [
@@ -145,7 +146,7 @@ export function ArquivosHistoricos({
     if (!file) return;
 
     const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
-    
+
     if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
       alert('Apenas JPG, PNG, WebP e PDF são permitidos');
       return;
@@ -466,7 +467,13 @@ export function ArquivosHistoricos({
                           />
                         </div>
                       )}
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <HistoricalFileFavoriteButton
+                          arquivo={arquivo}
+                          pessoaId={pessoaId}
+                          relacionamentoId={relacionamentoId}
+                          className="h-8 w-8 border-gray-200"
+                        />
                         <button
                           type="button"
                           onClick={() => handleViewFile(arquivo)}
@@ -544,7 +551,7 @@ export function ArquivosHistoricos({
           {previewFile && (
             <div className="min-h-0 overflow-auto rounded-lg border bg-gray-50 p-3">
               {previewFile.tipo === 'imagem' || previewFile.url.startsWith('data:image') ? (
-                <img 
+                <img
                   src={previewFile.url}
                   alt={previewFile.titulo || 'Arquivo histórico'}
                   className="mx-auto max-h-[68vh] w-auto max-w-full rounded object-contain"
