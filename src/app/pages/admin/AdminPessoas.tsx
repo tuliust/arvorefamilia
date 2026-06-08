@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { obterTodasPessoas, deletarPessoa } from '../../services/dataService';
+import { obterTodasPessoas, deletarPessoa, resetarPerfilPessoa } from '../../services/dataService';
 import { Pessoa } from '../../types';
 import { 
   Search, 
@@ -22,7 +23,9 @@ import {
   Dog,
   User,
   Settings,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Copy,
+  RotateCcw
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { includesNormalizedText } from '../../utils/searchText';
@@ -166,6 +169,9 @@ export function AdminPessoas() {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [resetId, setResetId] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const activeAdvancedFilterCount = countAdvancedFilters(advancedFilters);
 
@@ -194,6 +200,50 @@ export function AdminPessoas() {
       alert('Erro ao deletar pessoa. Tente novamente.');
     }
     setIsDeleting(false);
+  };
+
+  const handleResetProfile = async () => {
+    if (!resetId) return;
+
+    setIsResetting(true);
+    try {
+      const result = await resetarPerfilPessoa(resetId);
+      await loadPessoas();
+      setResetId(null);
+      toast.success(
+        `Perfil resetado. ${result.deleted_insights} conteúdo(s) gerado(s) e ${result.deleted_favorites} favorito(s) removido(s).`
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao resetar perfil. Tente novamente.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const copyPersonId = async (id: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(id);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = id;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      setCopiedId(id);
+      toast.success('ID copiado.');
+      window.setTimeout(() => {
+        setCopiedId((current) => (current === id ? null : current));
+      }, 1400);
+    } catch (error) {
+      toast.error('Não foi possível copiar o ID.');
+    }
   };
 
   const openFilters = () => {
@@ -389,6 +439,26 @@ export function AdminPessoas() {
                       </Button>
                       <Button
                         variant="outline"
+                        size="icon"
+                        onClick={() => copyPersonId(pessoa.id)}
+                        className={`h-10 w-10 shrink-0 ${copiedId === pessoa.id ? 'border-green-300 bg-green-50 text-green-700' : ''}`}
+                        aria-label="Copiar ID"
+                        title="Copiar ID"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setResetId(pessoa.id)}
+                        className="h-10 w-10 shrink-0 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                        aria-label={`Resetar perfil de ${pessoa.nome_completo}`}
+                        title="Resetar Perfil"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => setDeleteId(pessoa.id)}
                         className="h-10 flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:flex-none"
@@ -417,6 +487,18 @@ export function AdminPessoas() {
         onConfirm={handleDelete}
         variant="danger"
         loading={isDeleting}
+      />
+
+      <ConfirmDialog
+        open={!!resetId}
+        onOpenChange={(open) => !open && setResetId(null)}
+        title="Resetar perfil"
+        description={`Tem certeza que deseja resetar o perfil de "${pessoas.find(p => p.id === resetId)?.nome_completo}"? Esta ação remove foto, conteúdos gerados e favoritos da pessoa, mas mantém o cadastro e os relacionamentos familiares.`}
+        confirmText="Resetar Perfil"
+        cancelText="Cancelar"
+        onConfirm={handleResetProfile}
+        variant="warning"
+        loading={isResetting}
       />
 
       <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>

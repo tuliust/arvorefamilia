@@ -19,6 +19,7 @@ interface ConfirmDialogProps {
   cancelText?: string;
   onConfirm: () => void;
   variant?: 'danger' | 'warning';
+  loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -29,7 +30,8 @@ export function ConfirmDialog({
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   onConfirm,
-  variant = 'danger'
+  variant = 'danger',
+  loading = false
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -39,12 +41,13 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            disabled={loading}
             className={variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
           >
-            {confirmText}
+            {loading ? 'Processando...' : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -71,6 +71,12 @@ type RelacionamentoPayload = Omit<Relacionamento, 'id' | 'ativo'> & { ativo?: bo
 type InverseOptions = {
   inverseTipoForFilho?: 'pai' | 'mae';
 };
+export type PersonProfileResetResult = {
+  updated_people: number;
+  deleted_insights: number;
+  deleted_favorites: number;
+  notification_preferences_reset: number;
+};
 
 function logSupabaseError(context: string, error: SupabaseErrorLike) {
   console.error(`[Supabase] ${context}: ${error.message || 'Erro desconhecido'}`, {
@@ -351,6 +357,26 @@ export async function deletarPessoa(id: string): Promise<boolean> {
 }
 
 export const excluirPessoa = deletarPessoa;
+
+export async function resetarPerfilPessoa(id: string): Promise<PersonProfileResetResult> {
+  const { data, error } = await supabase.rpc('admin_reset_person_profile', {
+    target_pessoa_id: id,
+  });
+
+  if (error) {
+    logSupabaseError(`Erro ao resetar perfil da pessoa ${id}`, error);
+    throw new Error(error.message || 'Erro ao resetar perfil da pessoa.');
+  }
+
+  emitTreeDataChanged();
+
+  return {
+    updated_people: Number(data?.updated_people ?? 0),
+    deleted_insights: Number(data?.deleted_insights ?? 0),
+    deleted_favorites: Number(data?.deleted_favorites ?? 0),
+    notification_preferences_reset: Number(data?.notification_preferences_reset ?? 0),
+  };
+}
 
 // =====================================================
 // RELACIONAMENTOS - CRUD
