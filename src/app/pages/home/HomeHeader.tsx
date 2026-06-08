@@ -21,6 +21,8 @@ import {
   type TreeColorPalette,
 } from '../../components/FamilyTree/treeColorPalettes';
 import { FAVORITE_PAGES } from '../../constants/favoritePages';
+import { useAuth } from '../../contexts/AuthContext';
+import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
 import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
 
@@ -59,6 +61,14 @@ function getPersonSuggestionDetail(pessoa: Pessoa) {
   const birthPlace = String(pessoa.local_nascimento ?? '').trim();
   const birthDate = formatSuggestionBirthDate(pessoa.data_nascimento);
   return [birthPlace, birthDate].filter(Boolean).join(' – ');
+}
+
+function getFirstName(value?: string | null) {
+  const clean = value?.trim();
+  if (!clean) return '';
+
+  const beforeEmail = clean.includes('@') ? clean.split('@')[0] : clean;
+  return beforeEmail.split(/\s+/)[0] || '';
 }
 
 const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
@@ -123,10 +133,12 @@ export function HomeHeader({
   navigateFromHome,
 }: HomeHeaderProps) {
   const location = useLocation();
+  const { user } = useAuth();
   const searchRootRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
+  const [mobileHeaderFirstName, setMobileHeaderFirstName] = useState('');
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
   const hasSearchSuggestions = Boolean(
@@ -144,6 +156,44 @@ export function HomeHeader({
     applyTreePalette(treeColorPalette);
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMobileHeaderName() {
+      if (!user?.id) {
+        setMobileHeaderFirstName('');
+        return;
+      }
+
+      const metadataName = String(
+        user.user_metadata?.nome_exibicao ||
+        user.user_metadata?.name ||
+        user.user_metadata?.full_name ||
+        user.email ||
+        ''
+      );
+      setMobileHeaderFirstName(getFirstName(metadataName));
+
+      try {
+        const linkedPersonResult = await getPrimaryLinkedPersonWithPessoa(user.id);
+        if (cancelled) return;
+
+        const linkedPersonName = linkedPersonResult.data?.pessoa?.nome_completo;
+        setMobileHeaderFirstName(getFirstName(linkedPersonName) || getFirstName(metadataName));
+      } catch {
+        if (!cancelled) {
+          setMobileHeaderFirstName(getFirstName(metadataName));
+        }
+      }
+    }
+
+    loadMobileHeaderName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!searchExpanded) {
@@ -245,6 +295,8 @@ export function HomeHeader({
     )
   );
 
+  const mobileTitle = mobileHeaderFirstName ? `Família de ${mobileHeaderFirstName}` : 'Família';
+
   return (
     <header className="relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
       <div className="relative z-[501] flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
@@ -284,7 +336,7 @@ export function HomeHeader({
             <Network className="h-6 w-6 text-white" />
           </div>
           <div className="min-w-0 flex-1 overflow-visible">
-            <h1 className="whitespace-nowrap text-xl font-bold leading-tight text-gray-900 md:hidden">Barros Souza</h1>
+            <h1 className="whitespace-nowrap text-xl font-bold leading-tight text-gray-900 md:hidden">{mobileTitle}</h1>
             <h1 className="hidden whitespace-normal text-base font-bold leading-tight text-gray-900 sm:text-lg md:block lg:truncate lg:whitespace-nowrap lg:text-xl">Família Barros Souza</h1>
             <p className="hidden whitespace-normal text-xs leading-tight text-gray-500 md:block lg:truncate lg:whitespace-nowrap lg:text-sm">{currentTreeViewLabel}</p>
           </div>
