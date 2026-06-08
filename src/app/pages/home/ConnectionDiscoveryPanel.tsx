@@ -11,7 +11,11 @@ import {
 } from '../../components/ui/select';
 import type { Pessoa } from '../../types';
 import type { RelationshipDegreeResult } from '../../utils/relationshipDegree';
-import { formatShortName, getRelationshipResultSentence } from '../../utils/relationshipDegreeDisplay';
+import {
+  formatShortName,
+  getRelationshipNarrative,
+  getRelationshipResultSentence,
+} from '../../utils/relationshipDegreeDisplay';
 
 interface ConnectionDiscoveryPanelProps {
   pessoas: Pessoa[];
@@ -51,6 +55,10 @@ function PersonAvatar({ pessoa }: { pessoa?: Pessoa }) {
 function ConnectionResultCard({ result, pessoas }: { result: RelationshipDegreeResult; pessoas: Pessoa[] }) {
   const origin = getPessoaById(pessoas, result.originPersonId);
   const target = getPessoaById(pessoas, result.targetPersonId);
+  const resultSentence = getRelationshipResultSentence(result, pessoas);
+  const narrative = getRelationshipNarrative(result, pessoas);
+  const narrativeSummary = narrative.summary.trim();
+  const shouldShowNarrative = narrativeSummary && narrativeSummary !== resultSentence;
 
   return (
     <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-5 shadow-sm sm:px-6">
@@ -62,8 +70,13 @@ function ConnectionResultCard({ result, pessoas }: { result: RelationshipDegreeR
         <PersonAvatar pessoa={target} />
       </div>
       <p className="mt-5 text-center text-lg font-bold leading-relaxed text-slate-950 sm:text-xl">
-        {getRelationshipResultSentence(result, pessoas)}
+        {resultSentence}
       </p>
+      {shouldShowNarrative && (
+        <p className="mx-auto mt-2 max-w-2xl text-center text-sm leading-relaxed text-slate-600 sm:text-base">
+          {narrativeSummary}
+        </p>
+      )}
     </div>
   );
 }
