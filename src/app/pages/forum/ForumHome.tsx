@@ -11,6 +11,7 @@ import {
   ForumTopicoFiltros,
 } from '../../services/forumService';
 import { ForumEmptyState } from '../../components/forum/ForumEmptyState';
+import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicFavoriteButton';
 import { ForumCategoria, ForumTopico, ForumTopicoStatus, ForumTopicoTipo } from '../../types';
 
 const TIPO_LABELS: Record<ForumTopicoTipo, string> = {
@@ -361,20 +362,26 @@ export function ForumHome() {
                 const categoriaGrupo = gruposCategorias.find((grupo) => grupo.key === categoriaGrupoKey);
 
                 return (
-                  <Link key={topico.id} to={`/forum/topico/${topico.id}`} className="block min-w-0">
-                    <Card className="min-w-0 transition hover:border-blue-200 hover:shadow-md">
-                      <CardHeader className="p-4 pb-2">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                          {categoriaGrupo?.label && <span className="break-words">{categoriaGrupo.label}</span>}
-                          <span>{TIPO_LABELS[topico.tipo]}</span>
-                          <span>{STATUS_LABELS[topico.status]}</span>
-                          {topico.status === 'resolvido' && <span className="text-emerald-700">Resolvido</span>}
-                          {topico.status === 'fechado' && <span className="text-gray-700">Fechado</span>}
-                          {topico.fixado && <span className="text-blue-700">Fixado</span>}
-                        </div>
-                        <CardTitle className="break-words text-lg leading-snug">{topico.titulo}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
+                  <Card key={topico.id} className="min-w-0 transition hover:border-blue-200 hover:shadow-md">
+                    <CardHeader className="p-4 pb-2">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <Link to={`/forum/topico/${topico.id}`} className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            {categoriaGrupo?.label && <span className="break-words">{categoriaGrupo.label}</span>}
+                            <span>{TIPO_LABELS[topico.tipo]}</span>
+                            <span>{STATUS_LABELS[topico.status]}</span>
+                            {topico.status === 'resolvido' && <span className="text-emerald-700">Resolvido</span>}
+                            {topico.status === 'fechado' && <span className="text-gray-700">Fechado</span>}
+                            {topico.fixado && <span className="text-blue-700">Fixado</span>}
+                          </div>
+                          <CardTitle className="mt-2 break-words text-lg leading-snug">{topico.titulo}</CardTitle>
+                        </Link>
+
+                        <ForumTopicFavoriteButton topico={topico} className="h-8 w-8 border-gray-200" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <Link to={`/forum/topico/${topico.id}`} className="block min-w-0">
                         <p className="line-clamp-2 break-words text-sm text-gray-600">{topico.conteudo}</p>
                         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                           <span className="inline-flex items-center gap-1">
@@ -383,9 +390,9 @@ export function ForumHome() {
                           </span>
                           <span className="break-words">{formatarData(topico.created_at)}</span>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 );
               })
             )}
