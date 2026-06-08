@@ -1,26 +1,26 @@
 @media (max-width: 767px) {
-  main section:first-of-type > div:first-child {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child {
     padding: 1rem !important;
   }
 
-  main section:first-of-type > div:first-child > div:first-child {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child > div:first-child {
     display: grid !important;
     grid-template-columns: 4rem minmax(0, 1fr) !important;
     column-gap: 0.9rem !important;
     align-items: start !important;
   }
 
-  main section:first-of-type > div:first-child > div:first-child > button:first-child {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child > div:first-child > button:first-child {
     height: 4rem !important;
     width: 4rem !important;
     border-radius: 1rem !important;
   }
 
-  main section:first-of-type > div:first-child > div:first-child > div:nth-child(2) {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child > div:first-child > div:nth-child(2) {
     min-width: 0 !important;
   }
 
-  main section:first-of-type > div:first-child h2:first-of-type {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child h2:first-of-type {
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
@@ -30,7 +30,7 @@
     letter-spacing: -0.04em !important;
   }
 
-  main section:first-of-type > div:first-child h2:first-of-type + p {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child h2:first-of-type + p {
     margin-left: calc(-4rem - 0.9rem) !important;
     margin-top: 0.85rem !important;
     font-size: 0.86rem !important;
@@ -38,28 +38,28 @@
     color: rgb(75, 85, 99) !important;
   }
 
-  main section:first-of-type > div:first-child h2:first-of-type + p + button,
-  main section:first-of-type > div:first-child h2:first-of-type + p + .inline-flex {
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child h2:first-of-type + p + button,
+  main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child h2:first-of-type + p + .inline-flex {
     margin-top: 0.85rem !important;
     height: 2.45rem !important;
     padding-inline: 0.8rem !important;
     font-size: 0.82rem !important;
   }
 
-  main section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 {
+  main:has(#minha-arvore-edit-form) section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 {
     margin-top: 1rem !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     gap: 0.35rem !important;
   }
 
-  main section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div {
+  main:has(#minha-arvore-edit-form) section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div {
     min-height: 3.85rem !important;
     border-radius: 0.9rem !important;
     padding: 0.55rem 0.35rem !important;
     text-align: center !important;
   }
 
-  main section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div > p:first-child {
+  main:has(#minha-arvore-edit-form) section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div > p:first-child {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
@@ -68,7 +68,7 @@
     letter-spacing: 0.035em !important;
   }
 
-  main section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div > p:last-child {
+  main:has(#minha-arvore-edit-form) section:first-of-type div.mt-6.grid.grid-cols-2.gap-2 > div > p:last-child {
     margin-top: 0.4rem !important;
     font-size: 1.35rem !important;
     line-height: 1 !important;
