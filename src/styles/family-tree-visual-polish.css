@@ -57,6 +57,19 @@
   z-index: 9999 !important;
 }
 
+main section h1 + p {
+  font-size: 0 !important;
+  color: transparent !important;
+}
+
+main section h1 + p::after {
+  content: "Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.";
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: rgb(75 85 99);
+}
+
 @media (min-width: 768px) {
   main > aside [class*="overflow-y-auto"] {
     overflow-y: hidden !important;
