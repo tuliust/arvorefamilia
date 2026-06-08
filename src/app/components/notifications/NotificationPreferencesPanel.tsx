@@ -41,8 +41,8 @@ const GENERAL_OPTIONS: Array<{ key: GeneralPreferenceKey; label: string; descrip
   },
   {
     key: 'receber_avisos_gerais',
-    label: 'Avisos gerais',
-    description: 'Comunicados importantes da plataforma.',
+    label: 'Publicações e avisos gerais',
+    description: 'Menções, pessoas relacionadas em publicações e comunicados importantes da plataforma.',
   },
   {
     key: 'receber_push',
@@ -70,7 +70,7 @@ const EMAIL_OPTIONS: Array<{ key: EmailPreferenceKey; label: string; description
   {
     key: 'receber_email_novas_mensagens_forum',
     label: 'Novas mensagens no fórum',
-    description: 'Atualizações em conversas e tópicos familiares.',
+    description: 'Atualizações, menções e relações em conversas e tópicos familiares.',
   },
   {
     key: 'receber_email_novos_registros_historicos',
@@ -242,4 +242,3 @@ function PreferenceToggle({
     </div>
   );
 }
-
