@@ -39,6 +39,31 @@ export async function listLinkedUserIdsForPessoa(pessoaId: string): Promise<stri
   return uniqueUserIds(((data || []) as UserIdRow[]).map((row) => row.user_id));
 }
 
+export async function listLinkedUserIdsForPessoas(pessoaIds: string[]): Promise<Record<string, string[]>> {
+  const uniquePessoaIds = Array.from(new Set(pessoaIds.filter(Boolean)));
+
+  if (uniquePessoaIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('pessoa_id,user_id')
+    .in('pessoa_id', uniquePessoaIds);
+
+  if (error) {
+    console.warn('[Supabase] Não foi possível listar usuários vinculados às pessoas:', error.message);
+    return {};
+  }
+
+  return ((data || []) as Array<{ pessoa_id?: string | null; user_id?: string | null }>).reduce<Record<string, string[]>>(
+    (acc, row) => {
+      if (!row.pessoa_id || !row.user_id) return acc;
+      acc[row.pessoa_id] = uniqueUserIds([...(acc[row.pessoa_id] || []), row.user_id]);
+      return acc;
+    },
+    {}
+  );
+}
+
 async function listPessoaIdsForRelationship(relacionamentoId: string) {
   const { data, error } = await supabase
     .from('relacionamentos')
