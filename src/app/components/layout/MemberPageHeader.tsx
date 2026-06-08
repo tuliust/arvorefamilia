@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
+import { PageFavoriteButton } from '../favorites/PageFavoriteButton';
 import {
   ArrowLeft,
   Bell,
@@ -188,6 +189,8 @@ export function MemberPageHeader({
   mobileCustomActions,
   className = '',
 }: MemberPageHeaderProps) {
+  const location = useLocation();
+
   return (
     <>
       <header className={['relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
@@ -209,6 +212,7 @@ export function MemberPageHeader({
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
+            <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
             {mobileCustomActions}
             <UserProfileMenu />
           </div>
@@ -218,6 +222,7 @@ export function MemberPageHeader({
               {actions.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
+              <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
               {customActions}
               <UserProfileMenu />
             </div>
