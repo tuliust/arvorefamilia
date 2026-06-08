@@ -162,9 +162,18 @@ export function HomeTreeSection({
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
+  const handleTreeWheelCapture = React.useCallback((event: React.WheelEvent<HTMLElement>) => {
+    if (isMobile || treeViewMode !== 'minha-arvore') return;
+    if (event.deltaY >= 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+  }, [isMobile, treeViewMode]);
+
   return (
     <section
       className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100"
+      onWheelCapture={handleTreeWheelCapture}
     >
       {!isMobile && (
         <>
