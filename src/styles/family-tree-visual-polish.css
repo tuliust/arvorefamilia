@@ -63,8 +63,9 @@ main section h1 + p {
 }
 
 main section h1 + p::after {
-  content: "Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.";
+  content: "Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.\A\A A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.";
   display: block;
+  white-space: pre-line;
   font-size: 1rem;
   line-height: 1.5rem;
   color: rgb(75 85 99);
