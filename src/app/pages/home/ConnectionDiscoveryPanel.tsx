@@ -34,6 +34,58 @@ function getPessoaById(pessoas: Pessoa[], id: string) {
   return pessoas.find((pessoa) => pessoa.id === id);
 }
 
+function getFirstName(value?: string | null) {
+  const clean = value?.trim();
+  if (!clean) return 'Pessoa';
+  return clean.split(/\s+/)[0] || 'Pessoa';
+}
+
+function getParentLabelFromRelationshipType(type?: string) {
+  if (type === 'mae') return 'mãe';
+  if (type === 'pai') return 'pai';
+  return 'pai/mãe';
+}
+
+function getSiblingLabelByName(value?: string | null) {
+  const firstName = getFirstName(value).toLocaleLowerCase('pt-BR');
+  const knownFemaleNames = new Set(['bianca', 'condilênia', 'condilenia', 'ivania', 'ivânia', 'maria', 'tathiane']);
+  const knownMaleNames = new Set(['absalon', 'athanase', 'charalambos', 'márcio', 'marcio', 'mauro', 'titus']);
+  const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da', 'eli'];
+
+  if (knownFemaleNames.has(firstName)) return 'irmã';
+  if (knownMaleNames.has(firstName)) return 'irmão';
+  return likelyFemaleEndings.some((ending) => firstName.endsWith(ending)) ? 'irmã' : 'irmão';
+}
+
+function getRelationshipPattern(result: RelationshipDegreeResult) {
+  return result.path.map((step) => step.edge.normalizedType).join('>');
+}
+
+function buildUncleOrAuntNarrative(result: RelationshipDegreeResult, pessoas: Pessoa[]) {
+  if (!result.found || getRelationshipPattern(result) !== 'child>sibling') return '';
+
+  const origin = getPessoaById(pessoas, result.originPersonId);
+  const target = getPessoaById(pessoas, result.targetPersonId);
+  const parent = getPessoaById(pessoas, result.path[0]?.to);
+  if (!origin || !target || !parent) return '';
+
+  const targetFirstName = getFirstName(target.nome_completo);
+  const parentFirstName = getFirstName(parent.nome_completo);
+  const originFirstName = getFirstName(origin.nome_completo);
+  const siblingLabel = getSiblingLabelByName(target.nome_completo);
+  const parentLabel = getParentLabelFromRelationshipType(result.path[0]?.edge.type);
+
+  return `${targetFirstName} é ${siblingLabel} de ${parentFirstName}, ${parentLabel} de ${originFirstName}.`;
+}
+
+function shouldUseNarrativeSummary(summary: string, resultSentence: string) {
+  if (!summary) return false;
+  if (summary === resultSentence) return false;
+  if (/sem classificação específica/i.test(summary)) return false;
+  if (/^há um caminho familiar entre/i.test(summary)) return false;
+  return true;
+}
+
 function PersonAvatar({ pessoa }: { pessoa?: Pessoa }) {
   const name = formatShortName(pessoa?.nome_completo) || 'Pessoa';
   const imageUrl = pessoa?.foto_principal_url?.trim();
@@ -47,7 +99,7 @@ function PersonAvatar({ pessoa }: { pessoa?: Pessoa }) {
           <UserRound className="h-7 w-7 text-blue-500" />
         )}
       </div>
-      <span className="max-w-[10rem] truncate text-sm font-semibold text-slate-900">{name}</span>
+      <span className="max-w-[18rem] text-sm font-semibold leading-tight text-slate-900">{name}</span>
     </div>
   );
 }
@@ -57,8 +109,9 @@ function ConnectionResultCard({ result, pessoas }: { result: RelationshipDegreeR
   const target = getPessoaById(pessoas, result.targetPersonId);
   const resultSentence = getRelationshipResultSentence(result, pessoas);
   const narrative = getRelationshipNarrative(result, pessoas);
-  const narrativeSummary = narrative.summary.trim();
-  const shouldShowNarrative = narrativeSummary && narrativeSummary !== resultSentence;
+  const fallbackNarrative = buildUncleOrAuntNarrative(result, pessoas);
+  const narrativeSummary = (fallbackNarrative || narrative.summary).trim();
+  const shouldShowNarrative = shouldUseNarrativeSummary(narrativeSummary, resultSentence);
 
   return (
     <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-5 shadow-sm sm:px-6">
