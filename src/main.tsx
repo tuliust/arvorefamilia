@@ -4,6 +4,7 @@ import { MobileTreeControlsPortal } from "./app/components/FamilyTree/MobileTree
 import { MobileUserMenuPalettePortal } from "./app/components/layout/MobileUserMenuPalettePortal.tsx";
 import "./styles/index.css";
 import "./styles/mobile-tree-controls.css";
+import "./styles/mobile-edit-profile.css";
 
 createRoot(document.getElementById("root")!).render(
   <>
