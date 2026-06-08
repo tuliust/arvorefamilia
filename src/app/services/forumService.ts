@@ -358,7 +358,7 @@ export async function criarRespostaForum(payload: CriarRespostaForumPayload): Pr
         actorUserId: resposta.autor_id,
       });
     } catch (notificationError) {
-      console.warn('[Notificações] Falha ao notificar nova resposta no fórum:', notificationError);
+      console.warn('[Notificações] Resposta criada, mas notificação não foi concluída:', notificationError);
     }
   }
 
@@ -377,7 +377,7 @@ export async function atualizarRespostaForum(
     .single();
 
   if (error) {
-    logSupabaseError(`Erro ao atualizar resposta do fórum ${id}`, error);
+    logSupabaseError(`Erro ao atualizar resposta ${id}`, error);
     return undefined;
   }
 
@@ -391,7 +391,7 @@ export async function deletarRespostaForum(id: string): Promise<boolean> {
     .eq('id', id);
 
   if (error) {
-    logSupabaseError(`Erro ao deletar resposta do fórum ${id}`, error);
+    logSupabaseError(`Erro ao deletar resposta ${id}`, error);
     return false;
   }
 
@@ -454,7 +454,7 @@ export async function criarComentarioForum(payload: CriarComentarioForumPayload)
         actorUserId: comentario.autor_id,
       });
     } catch (notificationError) {
-      console.warn('[Notificações] Falha ao notificar novo comentário no fórum:', notificationError);
+      console.warn('[Notificações] Comentário criado, mas notificação não foi concluída:', notificationError);
     }
   }
 
@@ -473,7 +473,7 @@ export async function atualizarComentarioForum(
     .single();
 
   if (error) {
-    logSupabaseError(`Erro ao atualizar comentário do fórum ${id}`, error);
+    logSupabaseError(`Erro ao atualizar comentário ${id}`, error);
     return undefined;
   }
 
@@ -487,7 +487,7 @@ export async function deletarComentarioForum(id: string): Promise<boolean> {
     .eq('id', id);
 
   if (error) {
-    logSupabaseError(`Erro ao deletar comentário do fórum ${id}`, error);
+    logSupabaseError(`Erro ao deletar comentário ${id}`, error);
     return false;
   }
 
@@ -498,11 +498,37 @@ export async function deletarComentarioForum(id: string): Promise<boolean> {
 // REAÇÕES
 // =====================================================
 
+export async function obterMinhaReacaoForum(
+  alvoTipo: ForumAlvoTipo,
+  alvoId: string
+): Promise<ForumReacaoTipo | null> {
+  const userId = await obterUsuarioAtualId();
+
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from('forum_reacoes')
+    .select('tipo')
+    .eq('user_id', userId)
+    .eq('alvo_tipo', alvoTipo)
+    .eq('alvo_id', alvoId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    logSupabaseError(`Erro ao obter reação atual em ${alvoTipo} ${alvoId}`, error);
+    return null;
+  }
+
+  return data?.tipo ? (data.tipo as ForumReacaoTipo) : null;
+}
+
 export async function reagirAoConteudo(
   alvoTipo: ForumAlvoTipo,
   alvoId: string,
   tipo: ForumReacaoTipo
-): Promise<ForumReacao | undefined> {
+): Promise<ForumReacao | null | undefined> {
   const userId = await obterUsuarioAtualId();
 
   if (!userId) {
@@ -510,17 +536,33 @@ export async function reagirAoConteudo(
     return undefined;
   }
 
+  const currentReaction = await obterMinhaReacaoForum(alvoTipo, alvoId);
+
+  if (currentReaction === tipo) {
+    const removed = await removerReacao(alvoTipo, alvoId);
+    return removed ? null : undefined;
+  }
+
+  const { error: deleteError } = await supabase
+    .from('forum_reacoes')
+    .delete()
+    .eq('user_id', userId)
+    .eq('alvo_tipo', alvoTipo)
+    .eq('alvo_id', alvoId);
+
+  if (deleteError) {
+    logSupabaseError(`Erro ao substituir reação em ${alvoTipo} ${alvoId}`, deleteError);
+    return undefined;
+  }
+
   const { data, error } = await supabase
     .from('forum_reacoes')
-    .upsert(
-      {
-        user_id: userId,
-        alvo_tipo: alvoTipo,
-        alvo_id: alvoId,
-        tipo,
-      },
-      { onConflict: 'user_id,alvo_tipo,alvo_id,tipo' }
-    )
+    .insert({
+      user_id: userId,
+      alvo_tipo: alvoTipo,
+      alvo_id: alvoId,
+      tipo,
+    })
     .select('*')
     .single();
 
@@ -535,7 +577,7 @@ export async function reagirAoConteudo(
 export async function removerReacao(
   alvoTipo: ForumAlvoTipo,
   alvoId: string,
-  tipo: ForumReacaoTipo
+  tipo?: ForumReacaoTipo
 ): Promise<boolean> {
   const userId = await obterUsuarioAtualId();
 
@@ -544,16 +586,21 @@ export async function removerReacao(
     return false;
   }
 
-  const { error } = await supabase
+  let query = supabase
     .from('forum_reacoes')
     .delete()
     .eq('user_id', userId)
     .eq('alvo_tipo', alvoTipo)
-    .eq('alvo_id', alvoId)
-    .eq('tipo', tipo);
+    .eq('alvo_id', alvoId);
+
+  if (tipo) {
+    query = query.eq('tipo', tipo);
+  }
+
+  const { error } = await query;
 
   if (error) {
-    logSupabaseError(`Erro ao remover reação ${tipo} de ${alvoTipo} ${alvoId}`, error);
+    logSupabaseError(`Erro ao remover reação de ${alvoTipo} ${alvoId}`, error);
     return false;
   }
 
