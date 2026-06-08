@@ -23,6 +23,11 @@ import {
   rejectRelationshipChangeRequest,
 } from '../../services/relationshipChangeRequestService';
 import {
+  listPendingPersonProfileSuggestions,
+  PersonProfileSuggestion,
+  reviewPersonProfileSuggestion,
+} from '../../services/personProfileSuggestionService';
+import {
   Pessoa,
   Relacionamento,
   RelationshipChangeRequest,
@@ -174,6 +179,7 @@ function getSafeComparisonRows(request: RelationshipChangeRequest, current?: Rel
 
 export function AdminSolicitacoesVinculos() {
   const [requests, setRequests] = useState<RelationshipChangeRequest[]>([]);
+  const [profileSuggestions, setProfileSuggestions] = useState<PersonProfileSuggestion[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
@@ -193,14 +199,16 @@ export function AdminSolicitacoesVinculos() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [requestsData, pessoasData, relacionamentosData, profilesResult] = await Promise.all([
+      const [requestsData, profileSuggestionsData, pessoasData, relacionamentosData, profilesResult] = await Promise.all([
         listAllRelationshipChangeRequests({ limit: 300 }),
+        listPendingPersonProfileSuggestions(),
         obterTodasPessoas(),
         obterTodosRelacionamentos(),
         supabase.from('profiles').select('id,nome_exibicao'),
       ]);
 
       setRequests(requestsData);
+      setProfileSuggestions(profileSuggestionsData);
       setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
       setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
       setProfiles((profilesResult.data || []) as ProfileSummary[]);
@@ -319,6 +327,25 @@ export function AdminSolicitacoesVinculos() {
 
   const handleClearFilters = () => {
     setFilters({ ...INITIAL_FILTERS, status: 'all' });
+  };
+
+  const handleReviewProfileSuggestion = async (
+    suggestion: PersonProfileSuggestion,
+    status: 'reviewed' | 'dismissed'
+  ) => {
+    setReviewing(true);
+    try {
+      await reviewPersonProfileSuggestion({
+        suggestionId: suggestion.id,
+        status,
+      });
+      toast.success(status === 'reviewed' ? 'Sugestão marcada como revisada.' : 'Sugestão descartada.');
+      await loadData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível revisar a sugestão.');
+    } finally {
+      setReviewing(false);
+    }
   };
 
   return (
@@ -442,6 +469,66 @@ export function AdminSolicitacoesVinculos() {
                 </Button>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6 min-w-0">
+          <CardHeader>
+            <CardTitle className="break-words">Sugestões de perfil ({profileSuggestions.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="py-6 text-center text-sm text-gray-500">Carregando sugestões...</div>
+            ) : profileSuggestions.length === 0 ? (
+              <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">Nenhuma sugestão de perfil pendente.</div>
+            ) : (
+              <div className="space-y-3">
+                {profileSuggestions.map((suggestion) => (
+                  <div key={suggestion.id} className="rounded-lg border border-gray-200 p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="default">Pendente</Badge>
+                          <span className="break-words text-sm font-semibold text-gray-900">
+                            {getPessoaName(pessoasMap, suggestion.target_pessoa_id)}
+                          </span>
+                          <span className="text-xs text-gray-500">{formatDateTime(suggestion.created_at)}</span>
+                        </div>
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700">
+                          {suggestion.suggestion_text}
+                        </p>
+                        <p className="break-all text-xs text-gray-500">
+                          Solicitante: {getPessoaName(pessoasMap, suggestion.requester_pessoa_id) || suggestion.requester_user_id}
+                        </p>
+                      </div>
+                      <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full lg:w-auto"
+                          onClick={() => void handleReviewProfileSuggestion(suggestion, 'reviewed')}
+                          disabled={reviewing}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4 shrink-0" />
+                          Revisada
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-red-700 hover:bg-red-50 hover:text-red-800 lg:w-auto"
+                          onClick={() => void handleReviewProfileSuggestion(suggestion, 'dismissed')}
+                          disabled={reviewing}
+                        >
+                          <XCircle className="mr-2 h-4 w-4 shrink-0" />
+                          Descartar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

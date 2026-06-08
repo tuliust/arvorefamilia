@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { AppLink as Link } from '../components/AppLink';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
 import {
   obterPessoaPorId,
   obterRelacionamentosDaPessoa,
@@ -36,6 +46,8 @@ import { PersonTimeline } from '../components/Timeline/PersonTimeline';
 import { FavoriteButton } from '../components/favorites/FavoriteButton';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../components/layout/MemberPageHeader';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
+import { getLinkedPersonWithPessoa } from '../services/memberProfileService';
+import { createPersonProfileSuggestion } from '../services/personProfileSuggestionService';
 
 type ProfileRelationships = {
   pais: Pessoa[];
@@ -67,13 +79,17 @@ export function PersonProfile() {
   const [relationshipHistoricalFiles, setRelationshipHistoricalFiles] = useState<ArquivoHistorico[]>([]);
   const [forumLoading, setForumLoading] = useState(false);
   const [linkedPessoaId, setLinkedPessoaId] = useState<string | null>(null);
+  const [currentPersonCanEditLink, setCurrentPersonCanEditLink] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allPeople, setAllPeople] = useState<Pessoa[]>([]);
   const [allRelationships, setAllRelationships] = useState<Relacionamento[]>([]);
   const [relationshipDegreeContextComplete, setRelationshipDegreeContextComplete] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
   const canEdit = useMemo(
-    () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }),
-    [id, linkedPessoaId, user, isAdmin],
+    () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }) || currentPersonCanEditLink,
+    [id, linkedPessoaId, user, isAdmin, currentPersonCanEditLink],
   );
   const timelineItems = useMemo(() => {
     if (!pessoa) return [];
@@ -138,18 +154,29 @@ export function PersonProfile() {
     async function loadPermissionContext() {
       if (!user) {
         setLinkedPessoaId(null);
+        setCurrentPersonCanEditLink(false);
         setIsAdmin(false);
         return;
       }
 
-      const [{ data }, adminResult] = await Promise.all([
+      const [{ data }, adminResult, targetLinkResult] = await Promise.all([
         getLinkedPessoaIdForUser(user.id),
         isAdminUser(user),
+        id ? getLinkedPersonWithPessoa(user.id, id) : Promise.resolve({ error: undefined, data: null }),
       ]);
 
       if (mounted) {
         setLinkedPessoaId(data);
         setIsAdmin(adminResult.isAdmin);
+        setCurrentPersonCanEditLink(
+          Boolean(
+            targetLinkResult.data &&
+            (
+              targetLinkResult.data.can_edit !== false ||
+              targetLinkResult.data.relacao_com_perfil === 'Sou esta pessoa'
+            )
+          )
+        );
       }
     }
 
@@ -158,7 +185,7 @@ export function PersonProfile() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [id, user]);
 
   useEffect(() => {
     let mounted = true;
@@ -219,6 +246,38 @@ export function PersonProfile() {
       mounted = false;
     };
   }, [id, pessoa]);
+
+  const handleEditProfile = () => {
+    navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados');
+  };
+
+  const handleInsertInformation = () => {
+    if (canEdit) {
+      handleEditProfile();
+      return;
+    }
+
+    setSuggestionOpen(true);
+  };
+
+  const handleSubmitSuggestion = async () => {
+    if (!id || suggestionLoading) return;
+
+    setSuggestionLoading(true);
+    try {
+      await createPersonProfileSuggestion({
+        targetPessoaId: id,
+        suggestionText,
+      });
+      setSuggestionText('');
+      setSuggestionOpen(false);
+      toast.success('Sugestão enviada para revisão administrativa.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a sugestão.');
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -333,20 +392,6 @@ export function PersonProfile() {
         subtitle="Perfil individual da árvore familiar"
         icon={UserCircle2}
         actions={DEFAULT_MEMBER_HEADER_ACTIONS}
-        customActions={(
-          <>
-            {canEdit && (
-              <Button
-                variant="outline"
-                className="w-full rounded-xl shadow-sm sm:w-auto"
-                onClick={() => navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados')}
-              >
-                <Pencil className="h-4 w-4" />
-                Editar
-              </Button>
-            )}
-          </>
-        )}
       />
 
       {/* Main Content */}
@@ -354,19 +399,52 @@ export function PersonProfile() {
         <PersonDataView
           pessoa={pessoa}
           headerAction={(
-            <FavoriteButton
-              entityType="person"
-              entityId={pessoa.id}
-              label={pessoa.nome_completo}
-              description="Perfil individual da árvore familiar"
-              href={`/pessoa/${pessoa.id}`}
-              metadata={{ source: 'person_profile' }}
-              variant="icon"
-              size="sm"
-              className="shadow-sm"
-            />
+            <div className="flex items-center gap-2">
+              <FavoriteButton
+                entityType="person"
+                entityId={pessoa.id}
+                label={pessoa.nome_completo}
+                description="Perfil individual da árvore familiar"
+                href={`/pessoa/${pessoa.id}`}
+                metadata={{ source: 'person_profile' }}
+                variant="icon"
+                size="sm"
+                className="shadow-sm"
+              />
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={handleEditProfile}
+                  aria-label="Editar perfil"
+                  title="Editar perfil"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           )}
         />
+
+        <Card>
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="min-w-0">
+              <h2 className="break-words text-lg font-semibold text-gray-900">Informações do perfil</h2>
+              <p className="mt-1 break-words text-sm text-gray-500">
+                Complete dados, histórias, contato, eventos ou correções sobre esta pessoa.
+              </p>
+            </div>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={handleInsertInformation}
+              aria-label="Inserir Informações"
+            >
+              <Plus className="h-4 w-4" />
+              Inserir Informações
+            </Button>
+          </CardContent>
+        </Card>
 
         <PersonRelationshipsView relationships={relacionamentos} loading={relationshipsLoading} />
 
@@ -450,6 +528,43 @@ export function PersonProfile() {
           />
         )}
       </main>
+
+      <Dialog open={suggestionOpen} onOpenChange={setSuggestionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inserir Informações</DialogTitle>
+            <DialogDescription>
+              Envie uma sugestão para revisão no painel administrativo. Ela não altera o perfil automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={suggestionText}
+            onChange={(event) => setSuggestionText(event.target.value)}
+            rows={6}
+            placeholder="Descreva a informação, correção ou história que deseja sugerir."
+            aria-label="Informação sugerida"
+          />
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSuggestionOpen(false)}
+              disabled={suggestionLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitSuggestion}
+              disabled={suggestionLoading || !suggestionText.trim()}
+            >
+              {suggestionLoading ? 'Enviando...' : 'Enviar sugestão'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
