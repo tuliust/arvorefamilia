@@ -1,0 +1,105 @@
+@media (max-width: 767px) {
+  .family-tree-export-root button[aria-label="Aumentar zoom"],
+  .family-tree-export-root button[aria-label="Diminuir zoom"] {
+    display: none !important;
+  }
+
+  .mobile-tree-controls-portal {
+    position: fixed;
+    right: 0.85rem;
+    top: calc(env(safe-area-inset-top, 0px) + 5.25rem);
+    z-index: 10000;
+    pointer-events: none;
+  }
+
+  .mobile-tree-controls-trigger {
+    pointer-events: auto;
+    display: flex;
+    height: 2.75rem;
+    width: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(226, 232, 240, 1);
+    background: rgba(255, 255, 255, 0.97);
+    color: rgb(30, 41, 59);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+  }
+
+  .mobile-tree-controls-panel {
+    pointer-events: auto;
+    position: absolute;
+    right: 0;
+    top: 3.25rem;
+    width: min(20.5rem, calc(100vw - 1.5rem));
+    border-radius: 1.35rem;
+    border: 1px solid rgba(226, 232, 240, 1);
+    background: rgba(255, 255, 255, 0.98);
+    padding: 0.75rem;
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+  }
+
+  .mobile-tree-controls-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.15rem 0.1rem 0.6rem;
+  }
+
+  .mobile-tree-controls-panel-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: rgb(15, 23, 42);
+  }
+
+  .mobile-tree-controls-panel-header button {
+    display: flex;
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(226, 232, 240, 1);
+    background: white;
+    color: rgb(71, 85, 105);
+  }
+
+  .mobile-tree-controls-eyebrow {
+    margin: 0 0 0.15rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(37, 99, 235);
+  }
+
+  .mobile-tree-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .mobile-tree-controls-grid button {
+    display: flex;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(226, 232, 240, 1);
+    background: rgb(248, 250, 252);
+    padding: 0.55rem 0.5rem;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 750;
+    line-height: 1.05;
+    color: rgb(30, 41, 59);
+  }
+
+  .mobile-tree-controls-arrows-hidden .family-tree-export-root button[aria-label^="Mover"] {
+    display: none !important;
+  }
+}
