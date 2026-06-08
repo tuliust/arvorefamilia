@@ -571,14 +571,19 @@ export function Entrar() {
           <section className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
             <img
               src={logoMediaUrl}
-              alt="Árvore Genealógica da Família"
+              alt="Família Souza Barros"
               className="mb-6 h-auto w-24 max-w-full object-contain sm:w-28 lg:w-32"
             />
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Árvore Genealógica</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">Família Barros Souza</h1>
-            <p className="mt-4 max-w-xl text-base text-gray-600">
-              Use o código de primeiro acesso para ativar sua conta e revisar seus dados na árvore.
-            </p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Plataforma familiar privada</p>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">Família Souza Barros</h1>
+            <div className="mt-4 max-w-xl space-y-3 text-base leading-7 text-gray-600">
+              <p>
+                Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
+              </p>
+              <p>
+                A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
+              </p>
+            </div>
           </section>
 
           <Card className="border-gray-200 shadow-xl">
