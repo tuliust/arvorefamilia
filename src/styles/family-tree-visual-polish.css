@@ -45,6 +45,15 @@
   opacity: 1 !important;
 }
 
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode > .relative > .cursor-pointer[style*="width: 340px"] {
+  width: 360px !important;
+}
+
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode[style*="translate(2"] > .relative > .cursor-pointer[style*="width: 340px"],
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode[style*="translate(3"] > .relative > .cursor-pointer[style*="width: 340px"] {
+  transform: translateX(-20px);
+}
+
 [role="dialog"] [title] > [class*="top-[calc(100%+0.35rem)]"] {
   position: fixed !important;
   left: auto !important;
