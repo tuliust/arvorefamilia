@@ -84,8 +84,8 @@ export function HomeTreeSection({
     treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
   );
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
-  const defaultGenealogyMobileGeneration = React.useMemo(() => {
-    if (!usesMobileGenerationStages) return null;
+  const availableMobileGenerations = React.useMemo(() => {
+    if (!usesMobileGenerationStages) return [];
 
     const availableGenerations = new Set<number>();
 
@@ -97,8 +97,13 @@ export function HomeTreeSection({
       availableGenerations.add(generation);
     });
 
-    return Array.from(availableGenerations).sort((generationA, generationB) => generationA - generationB)[0] ?? null;
+    return Array.from(availableGenerations).sort((generationA, generationB) => generationA - generationB);
   }, [usesMobileGenerationStages, pessoas, visiblePersonIdsByLifeStatus]);
+  const mobileGenerationSignature = React.useMemo(
+    () => availableMobileGenerations.join('|'),
+    [availableMobileGenerations]
+  );
+  const defaultGenealogyMobileGeneration = availableMobileGenerations[0] ?? null;
   const effectiveActiveGenealogyGeneration = usesMobileGenerationStages
     ? activeGenealogyGeneration ?? defaultGenealogyMobileGeneration
     : null;
@@ -116,10 +121,14 @@ export function HomeTreeSection({
       return;
     }
 
-    if (activeGenealogyGeneration === null && defaultGenealogyMobileGeneration !== null) {
-      setActiveGenealogyGeneration(defaultGenealogyMobileGeneration);
-    }
-  }, [activeGenealogyGeneration, defaultGenealogyMobileGeneration, usesMobileGenerationStages]);
+    setActiveGenealogyGeneration(defaultGenealogyMobileGeneration);
+  }, [
+    centralReferencePersonId,
+    defaultGenealogyMobileGeneration,
+    mobileGenerationSignature,
+    treeViewMode,
+    usesMobileGenerationStages,
+  ]);
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
