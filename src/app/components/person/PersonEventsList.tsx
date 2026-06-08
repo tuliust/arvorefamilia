@@ -1,6 +1,7 @@
 import { CalendarDays, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { PersonEvent } from '../../types';
+import { PersonEventFavoriteButton } from '../favorites/PersonEventFavoriteButton';
 import { getPersonEventTypeLabel } from './PersonEventsEditor';
 
 type PersonEventsListProps = {
@@ -32,19 +33,23 @@ export function PersonEventsList({ eventos }: PersonEventsListProps) {
         <div className="space-y-3">
           {visibleEvents.map((evento) => (
             <article key={evento.id} className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                     {getPersonEventTypeLabel(evento.tipo)}
                   </p>
-                  <h3 className="mt-1 font-semibold text-gray-900">{evento.titulo}</h3>
+                  <h3 className="mt-1 break-words font-semibold text-gray-900">{evento.titulo}</h3>
                 </div>
-                {evento.data_evento && (
-                  <span className="inline-flex items-center gap-1 text-sm text-gray-600">
-                    <CalendarDays className="h-4 w-4" />
-                    {evento.data_evento}
-                  </span>
-                )}
+
+                <div className="flex shrink-0 items-center gap-2 sm:justify-end">
+                  {evento.data_evento && (
+                    <span className="inline-flex min-w-0 items-center gap-1 text-sm text-gray-600">
+                      <CalendarDays className="h-4 w-4 shrink-0" />
+                      <span className="break-words">{evento.data_evento}</span>
+                    </span>
+                  )}
+                  <PersonEventFavoriteButton evento={evento} className="h-8 w-8 border-gray-200" />
+                </div>
               </div>
 
               {evento.local && (
@@ -55,7 +60,7 @@ export function PersonEventsList({ eventos }: PersonEventsListProps) {
               )}
 
               {evento.descricao && (
-                <p className="mt-3 whitespace-pre-line text-sm leading-6 text-gray-700">{evento.descricao}</p>
+                <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-gray-700">{evento.descricao}</p>
               )}
             </article>
           ))}
