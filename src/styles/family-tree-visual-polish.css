@@ -54,6 +54,25 @@
   transform: translateX(-20px);
 }
 
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode > .relative > .cursor-pointer[style*="width: 340px"] > div:last-child {
+  max-width: 170px !important;
+}
+
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode > .relative > .cursor-pointer[style*="width: 340px"] h3 {
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  font-size: clamp(15px, 1.35vw, 19px) !important;
+  line-height: 1.08 !important;
+}
+
+[data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__node-personNode > .relative > .cursor-pointer[style*="width: 340px"] h3 + div {
+  margin-top: 6px !important;
+}
+
 [role="dialog"] [title] > [class*="top-[calc(100%+0.35rem)]"] {
   position: fixed !important;
   left: auto !important;
