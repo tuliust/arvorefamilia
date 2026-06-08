@@ -26,6 +26,24 @@ function getPersonGeneration(pessoa: Pessoa) {
     : null;
 }
 
+function getTreeTitleFirstName(value?: string | null) {
+  const clean = value?.trim();
+  if (!clean) return 'Família';
+  return clean.split(/\s+/)[0] || clean;
+}
+
+function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
+  if (viewMode === 'minha-arvore') {
+    return `Árvore de ${firstName}`;
+  }
+
+  if (viewMode === 'genealogia') {
+    return `Família de ${firstName}`;
+  }
+
+  return `Linha Genealógica de ${firstName}`;
+}
+
 interface HomeTreeSectionProps {
   isTreeResolving: boolean;
   loadError: string | null;
@@ -84,6 +102,15 @@ export function HomeTreeSection({
     treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
   );
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
+  const desktopTitleFirstName = React.useMemo(() => {
+    const centralPerson = pessoas.find((pessoa) => pessoa.id === centralReferencePersonId);
+    return getTreeTitleFirstName(centralPerson?.nome_completo);
+  }, [centralReferencePersonId, pessoas]);
+  const desktopTreeTitle = React.useMemo(
+    () => getDesktopTreeTitle(treeViewMode, desktopTitleFirstName),
+    [desktopTitleFirstName, treeViewMode]
+  );
+  const desktopTreeViewportTop = treeViewMode === 'minha-arvore' ? 86 : 82;
   const availableMobileGenerations = React.useMemo(() => {
     if (!usesMobileGenerationStages) return [];
 
@@ -136,6 +163,27 @@ export function HomeTreeSection({
     <section
       className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100"
     >
+      {!isMobile && (
+        <>
+          <style>
+            {`
+              [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
+                display: none !important;
+              }
+
+              [data-export-root="family-tree"] > div.absolute.left-0.right-0 {
+                top: ${desktopTreeViewportTop}px !important;
+              }
+            `}
+          </style>
+          <div className="pointer-events-none absolute inset-x-0 top-5 z-20 text-center">
+            <h1 className="px-20 text-[clamp(1.65rem,2.1vw,2.25rem)] font-bold leading-tight text-slate-950">
+              {desktopTreeTitle}
+            </h1>
+          </div>
+        </>
+      )}
+
       {isMobile && (
         <style>
           {`
