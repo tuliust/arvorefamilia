@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import type {
@@ -10,6 +11,7 @@ import type {
   VisualLineFilters,
 } from '../../components/FamilyTree/types';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
+import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { Pessoa, Relacionamento } from '../../types';
 import { GenealogyMobileStageTabs } from './GenealogyMobileStageTabs';
 
@@ -97,6 +99,7 @@ export function HomeTreeSection({
   renderStateMessage,
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
+  const location = useLocation();
   const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
   const usesMobileGenerationStages = isMobile && (
     treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
@@ -167,6 +170,11 @@ export function HomeTreeSection({
         <>
           <style>
             {`
+              header button[aria-label="Adicionar aos favoritos"],
+              header button[aria-label="Remover dos favoritos"] {
+                display: none !important;
+              }
+
               [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
                 display: none !important;
               }
@@ -180,6 +188,9 @@ export function HomeTreeSection({
             <h1 className="px-20 text-[clamp(1.65rem,2.1vw,2.25rem)] font-bold leading-tight text-slate-950">
               {desktopTreeTitle}
             </h1>
+          </div>
+          <div className="absolute right-[6.75rem] top-4 z-30">
+            <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
           </div>
         </>
       )}
