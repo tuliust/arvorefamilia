@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
@@ -33,13 +33,9 @@ const FILTERS: Array<{ value: 'all' | FavoriteEntityType; label: string }> = [
   { value: 'all', label: 'Todos' },
   { value: 'person', label: 'Pessoas' },
   { value: 'historical_file', label: 'Arquivos históricos' },
-  { value: 'relationship', label: 'Relacionamentos' },
   { value: 'forum_topic', label: 'Fórum' },
-  { value: 'family_event', label: 'Eventos familiares' },
   { value: 'person_event', label: 'Eventos pessoais' },
   { value: 'page', label: 'Páginas' },
-  { value: 'timeline_item', label: 'Timeline' },
-  { value: 'story', label: 'Histórias' },
 ];
 
 function getFavoriteIcon(entityType: FavoriteEntityType) {
