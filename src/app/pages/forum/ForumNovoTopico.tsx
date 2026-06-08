@@ -22,6 +22,7 @@ import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/M
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas } from '../../services/dataService';
 import { criarTopicoForum, listarCategoriasForum, vincularPessoasAoTopico } from '../../services/forumService';
+import { notifyForumTopicCreated } from '../../services/notificationTriggersService';
 import { ForumCategoria, ForumTopicoTipo, Pessoa } from '../../types';
 
 const DEFAULT_TOPIC_TYPE: ForumTopicoTipo = 'discussao';
@@ -310,6 +311,17 @@ export function ForumNovoTopico() {
       await vincularPessoasAoTopico(topico.id, uniqueRelatedPersonIds);
     } catch {
       toast.warning('O tópico foi publicado, mas não foi possível vincular todas as pessoas relacionadas.');
+    }
+
+    try {
+      await notifyForumTopicCreated({
+        topicId: topico.id,
+        actorUserId: user.id,
+        mentionedPessoaIds: mentionedPersonIds,
+        relatedPessoaIds: selectedRelatedPersonIds,
+      });
+    } catch (error) {
+      console.warn('[Notificações] O tópico foi publicado, mas as notificações de menção não foram concluídas:', error);
     } finally {
       setSalvando(false);
     }
