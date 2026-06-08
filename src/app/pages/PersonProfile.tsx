@@ -39,7 +39,7 @@ import { PersonRelationshipsView } from '../components/person/PersonRelationship
 import { RelationshipFinder } from '../components/person/RelationshipFinder';
 import { PersonEventsList } from '../components/person/PersonEventsList';
 import { useAuth } from '../contexts/AuthContext';
-import { canEditPerson, getLinkedPessoaIdForUser, isAdminUser } from '../services/permissionService';
+import { canEditLinkedPersonRecord, canEditPerson, getLinkedPessoaIdForUser, isAdminUser } from '../services/permissionService';
 import { getCachedTreeData } from '../services/treeDataCache';
 import { ForumEmptyState } from '../components/forum/ForumEmptyState';
 import { PersonTimeline } from '../components/Timeline/PersonTimeline';
@@ -168,15 +168,7 @@ export function PersonProfile() {
       if (mounted) {
         setLinkedPessoaId(data);
         setIsAdmin(adminResult.isAdmin);
-        setCurrentPersonCanEditLink(
-          Boolean(
-            targetLinkResult.data &&
-            (
-              targetLinkResult.data.can_edit !== false ||
-              targetLinkResult.data.relacao_com_perfil === 'Sou esta pessoa'
-            )
-          )
-        );
+        setCurrentPersonCanEditLink(canEditLinkedPersonRecord(targetLinkResult.data));
       }
     }
 

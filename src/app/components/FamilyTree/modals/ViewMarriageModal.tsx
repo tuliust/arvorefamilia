@@ -1,17 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { X, Heart } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Heart, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../ui/dialog';
+import { Textarea } from '../../ui/textarea';
 import { ArquivosHistoricos } from '../../ArquivosHistoricos';
 import { ArquivoHistorico, Pessoa, Relacionamento } from '../../../types';
+import { useAuth } from '../../../contexts/AuthContext';
 import {
   listarArquivosHistoricosDoRelacionamento,
   salvarArquivosHistoricosDoRelacionamento,
 } from '../../../services/arquivosHistoricosService';
-import {
-  GenealogyMarriageStatus,
-  getGenealogyMarriageStatus,
-} from '../layouts/genealogyColumnsLayout';
+import { getLinkedPersonWithPessoa } from '../../../services/memberProfileService';
+import { createPersonProfileSuggestion } from '../../../services/personProfileSuggestionService';
+import { canEditLinkedPersonRecord, isAdminUser } from '../../../services/permissionService';
 import { MarriageNodeDetails } from '../types';
 
 interface ViewMarriageModalProps {
@@ -80,24 +89,6 @@ function parseDateValue(value?: string | number | null): ParsedDate | undefined 
   };
 }
 
-function formatDateBR(value?: string | number | null) {
-  return parseDateValue(value)?.formatted;
-}
-
-function calculateCompleteYears(start?: Date, end?: Date) {
-  if (!start || !end || end < start) return undefined;
-
-  let years = end.getUTCFullYear() - start.getUTCFullYear();
-  const endMonth = end.getUTCMonth();
-  const startMonth = start.getUTCMonth();
-
-  if (endMonth < startMonth || (endMonth === startMonth && end.getUTCDate() < start.getUTCDate())) {
-    years -= 1;
-  }
-
-  return years >= 0 ? years : undefined;
-}
-
 function getSafePersonName(person: Pessoa | undefined, fallback: string) {
   return person?.nome_completo?.trim() || fallback;
 }
@@ -106,23 +97,15 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || name.trim();
 }
 
-function buildRelationshipHeadline(
-  status: GenealogyMarriageStatus,
-  person1Name: string,
-  person2Name: string
-) {
-  const name1 = getFirstName(person1Name);
-  const name2 = getFirstName(person2Name);
+function buildRelationshipHeadline(person1Name?: string, person2Name?: string) {
+  const name1 = person1Name?.trim() ? getFirstName(person1Name) : undefined;
+  const name2 = person2Name?.trim() ? getFirstName(person2Name) : undefined;
 
-  if (status === 'active') {
-    return `${name1} e ${name2} são casados.`;
-  }
+  if (name1 && name2) return `${name1} e ${name2} foram casados.`;
+  if (name1) return `${name1} teve um casamento registrado.`;
+  if (name2) return `${name2} teve um casamento registrado.`;
 
-  if (status === 'divorced' || status === 'widowed') {
-    return `${name1} e ${name2} foram casados.`;
-  }
-
-  return `${name1} e ${name2} tiveram um relacionamento conjugal.`;
+  return 'Casamento registrado na árvore familiar.';
 }
 
 function getInitials(name: string) {
@@ -136,93 +119,56 @@ function getInitials(name: string) {
   return `${first}${second}`.toLocaleUpperCase('pt-BR') || '??';
 }
 
-function isPersonDeceasedLocally(person?: Pessoa) {
-  return Boolean(
-    person?.falecido ||
-    String(person?.data_falecimento ?? '').trim() ||
-    String(person?.local_falecimento ?? '').trim()
-  );
+function normalizeLocationPart(value?: string) {
+  const text = String(value ?? '').trim();
+  const normalized = text.toLowerCase();
+
+  if (!text || normalized === 'null' || normalized === 'undefined') return undefined;
+
+  return text;
 }
 
-function getDeceasedPerson(person1?: Pessoa, person2?: Pessoa) {
-  if (isPersonDeceasedLocally(person1)) return person1;
-  if (isPersonDeceasedLocally(person2)) return person2;
-  return undefined;
+function formatMarriagePlace(place?: string) {
+  const text = normalizeLocationPart(place);
+  if (!text) return undefined;
+
+  if (!text.includes('/')) return text;
+
+  const [city, uf] = text.split('/').map(normalizeLocationPart);
+  if (city && uf) return `${city}/${uf}`;
+
+  return city || uf;
 }
 
-function appendDateAndPlace(prefix: string, date?: string, place?: string) {
-  if (date && place) return `${prefix} em ${date} em "${place}".`;
-  if (date) return `${prefix} em ${date}.`;
-  if (place) return `${prefix} em "${place}".`;
-  return undefined;
-}
-
-function buildMarriageNarrative({
-  status,
-  relationship,
-  person1,
-  person2,
-}: {
-  status: GenealogyMarriageStatus;
-  relationship?: Relacionamento;
-  person1?: Pessoa;
-  person2?: Pessoa;
-}) {
+function buildMarriageNarrative(relationship?: Relacionamento) {
   const relationshipRecord = (relationship || {}) as Record<string, unknown>;
-  const marriageDateValue = getRelationshipField(relationshipRecord, [
+  const marriageDate = parseDateValue(getRelationshipField(relationshipRecord, [
     'data_casamento',
     'data_relacionamento',
     'data_inicio',
-  ]);
-  const marriageDate = parseDateValue(marriageDateValue);
-  const marriageDateText = formatDateBR(marriageDateValue);
-  const marriagePlace = getRelationshipField(relationshipRecord, [
-    'local_casamento',
-    'local_relacionamento',
-    'local_inicio',
-  ]);
+  ]));
   const separationDate = parseDateValue(getRelationshipField(relationshipRecord, [
     'data_separacao',
     'data_fim',
   ]));
-  const deceasedPerson = getDeceasedPerson(person1, person2);
-  const deathDate = parseDateValue(deceasedPerson?.data_falecimento);
-  const durationYears = calculateCompleteYears(
-    marriageDate?.date,
-    status === 'divorced' ? separationDate?.date : deathDate?.date
-  );
+  const marriagePlace = formatMarriagePlace(getRelationshipField(relationshipRecord, [
+    'local_casamento',
+    'local_relacionamento',
+    'local_inicio',
+  ]));
   const lines: string[] = [];
 
-  if (status === 'active') {
-    const weddingLine = appendDateAndPlace('Eles se casaram', marriageDateText, marriagePlace);
-    if (weddingLine) lines.push(weddingLine);
-
-    return lines;
+  if (marriageDate && separationDate) {
+    lines.push(`O matrimônio aconteceu entre ${marriageDate.formatted} e ${separationDate.formatted}.`);
+  } else if (marriageDate) {
+    lines.push(`O matrimônio aconteceu em ${marriageDate.formatted}.`);
+  } else if (separationDate) {
+    lines.push(`O matrimônio terminou em ${separationDate.formatted}.`);
   }
 
-  if (status === 'divorced') {
-    const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
-    if (unionLine) lines.push(unionLine);
-    if (separationDate) lines.push(`Eles se separaram em ${separationDate.formatted}.`);
-
-    return lines;
+  if (marriagePlace) {
+    lines.push(`A cerimônia foi realizada em ${marriagePlace}.`);
   }
-
-  if (status === 'widowed') {
-    const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
-    if (unionLine) lines.push(unionLine);
-
-    if (durationYears !== undefined && deceasedPerson && deathDate) {
-      lines.push(`A união durou por ${durationYears} anos até o falecimento de "${getSafePersonName(deceasedPerson, 'Pessoa falecida')}", em ${deathDate.formatted}.`);
-    } else if (deceasedPerson && deathDate) {
-      lines.push(`A união durou até o falecimento de "${getSafePersonName(deceasedPerson, 'Pessoa falecida')}", em ${deathDate.formatted}.`);
-    }
-
-    return lines;
-  }
-
-  const unionLine = appendDateAndPlace('A união aconteceu', marriageDateText, marriagePlace);
-  if (unionLine) lines.push(unionLine);
 
   return lines;
 }
@@ -233,11 +179,19 @@ export function ViewMarriageModal({
   isAdmin = false,
   onClose,
 }: ViewMarriageModalProps) {
+  const { user } = useAuth();
   const [arquivos, setArquivos] = useState<ArquivoHistorico[]>([]);
   const [loadingArquivos, setLoadingArquivos] = useState(false);
   const [savingArquivos, setSavingArquivos] = useState(false);
   const [archivesDirty, setArchivesDirty] = useState(false);
+  const [resolvedIsAdmin, setResolvedIsAdmin] = useState(isAdmin);
+  const [canEditLinkedPeople, setCanEditLinkedPeople] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
   const relacionamentoId = marriage?.relationship?.id ?? marriage?.id ?? null;
+  const canManageRelationshipDirectly = resolvedIsAdmin && Boolean(relacionamentoId);
+  const canInsertRelationshipInfo = resolvedIsAdmin || canEditLinkedPeople;
 
   useEffect(() => {
     if (!open) return;
@@ -283,10 +237,44 @@ export function ViewMarriageModal({
     };
   }, [open, relacionamentoId]);
 
-  const status = useMemo(
-    () => getGenealogyMarriageStatus(marriage?.relationship, marriage?.person1, marriage?.person2),
-    [marriage]
-  );
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPermissionContext() {
+      setResolvedIsAdmin(isAdmin);
+      setCanEditLinkedPeople(false);
+
+      if (!open || !user) return;
+
+      const personIds = Array.from(new Set([
+        marriage?.person1?.id ?? marriage?.person1Id,
+        marriage?.person2?.id ?? marriage?.person2Id,
+      ].filter(Boolean) as string[]));
+
+      try {
+        const [adminResult, ...linkResults] = await Promise.all([
+          isAdminUser(user),
+          ...personIds.map((personId) => getLinkedPersonWithPessoa(user.id, personId)),
+        ]);
+
+        if (!mounted) return;
+
+        setResolvedIsAdmin(Boolean(isAdmin || adminResult.isAdmin));
+        setCanEditLinkedPeople(linkResults.some((result) => canEditLinkedPersonRecord(result.data)));
+      } catch {
+        if (mounted) {
+          setResolvedIsAdmin(isAdmin);
+          setCanEditLinkedPeople(false);
+        }
+      }
+    }
+
+    loadPermissionContext();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin, marriage, open, user]);
 
   if (!open || !marriage) return null;
 
@@ -299,13 +287,12 @@ export function ViewMarriageModal({
   ]);
   const person1Name = getSafePersonName(marriage.person1, marriage.person1Id || 'Pessoa 1');
   const person2Name = getSafePersonName(marriage.person2, marriage.person2Id || 'Pessoa 2');
-  const relationshipHeadline = buildRelationshipHeadline(status, person1Name, person2Name);
-  const narrativeLines = buildMarriageNarrative({
-    status,
-    relationship: marriage.relationship,
-    person1: marriage.person1,
-    person2: marriage.person2,
-  });
+  const relationshipHeadline = buildRelationshipHeadline(
+    marriage.person1?.nome_completo,
+    marriage.person2?.nome_completo
+  );
+  const narrativeLines = buildMarriageNarrative(marriage.relationship);
+  const targetPessoaId = marriage.person1?.id ?? marriage.person1Id ?? marriage.person2?.id ?? marriage.person2Id;
 
   const handleArquivosChange = (nextArquivos: ArquivoHistorico[]) => {
     setArquivos(nextArquivos);
@@ -331,6 +318,52 @@ export function ViewMarriageModal({
     }
   };
 
+  const handleInsertInformation = () => {
+    if (!user) {
+      toast.error('Entre na sua conta para sugerir informações sobre este relacionamento.');
+      return;
+    }
+
+    if (canManageRelationshipDirectly) {
+      toast.info('Use o botão + em Arquivos Históricos para inserir diretamente neste relacionamento.');
+      return;
+    }
+
+    setSuggestionOpen(true);
+  };
+
+  const handleRequestAddHistoricalFile = () => {
+    if (canManageRelationshipDirectly) return;
+    handleInsertInformation();
+  };
+
+  const handleSubmitSuggestion = async () => {
+    if (!targetPessoaId || suggestionLoading) return;
+
+    setSuggestionLoading(true);
+    try {
+      const context = [
+        `Relacionamento conjugal: ${person1Name} e ${person2Name}.`,
+        relacionamentoId ? `ID do relacionamento: ${relacionamentoId}.` : undefined,
+        canInsertRelationshipInfo
+          ? 'Solicitação enviada por pessoa autorizada para este contexto, sem fluxo direto disponível no modal.'
+          : 'Sugestão enviada por usuário sem permissão direta.',
+      ].filter(Boolean).join(' ');
+
+      await createPersonProfileSuggestion({
+        targetPessoaId,
+        suggestionText: `${context}\n\n${suggestionText.trim()}`,
+      });
+      setSuggestionText('');
+      setSuggestionOpen(false);
+      toast.success('Sugestão enviada para revisão administrativa.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a sugestão.');
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
@@ -343,26 +376,23 @@ export function ViewMarriageModal({
         aria-modal="true"
         aria-labelledby="view-marriage-modal-title"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-              <Heart className="h-5 w-5" />
-            </div>
-
-            <div className="min-w-0">
-              <h2 id="view-marriage-modal-title" className="text-base font-semibold text-gray-900">
-                Relacionamento conjugal
-              </h2>
-            </div>
+        <div className="grid grid-cols-[2.5rem,minmax(0,1fr),2.5rem] items-center gap-3 border-b border-gray-200 px-5 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <Heart className="h-5 w-5" />
           </div>
+
+          <h2 id="view-marriage-modal-title" className="min-w-0 text-center text-base font-semibold text-gray-900">
+            Relacionamento conjugal
+          </h2>
 
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center justify-self-end rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             aria-label="Fechar modal"
+            title="Fechar modal"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -399,7 +429,29 @@ export function ViewMarriageModal({
             </div>
           </div>
 
-          {isAdmin && hasInfoValue(observacoes) && (
+          <section className="rounded-xl border border-gray-200 bg-white px-4 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="break-words text-sm font-semibold text-gray-900">
+                  Informações do relacionamento
+                </h3>
+                <p className="mt-1 break-words text-sm text-gray-500">
+                  Sugira datas, locais, histórias ou correções sobre este matrimônio.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={handleInsertInformation}
+                className="w-full sm:w-auto"
+                aria-label="Inserir Informações"
+              >
+                <Plus className="h-4 w-4" />
+                Inserir Informações
+              </Button>
+            </div>
+          </section>
+
+          {resolvedIsAdmin && hasInfoValue(observacoes) && (
             <div>
               <p className="mb-1 text-xs font-medium tracking-wide text-gray-500">
                 Observações
@@ -420,11 +472,13 @@ export function ViewMarriageModal({
                 arquivos={arquivos}
                 onChange={handleArquivosChange}
                 relacionamentoId={relacionamentoId}
-                readOnly={!isAdmin || !relacionamentoId}
+                readOnly={!canManageRelationshipDirectly}
+                onRequestAdd={handleRequestAddHistoricalFile}
+                addButtonVariant="icon"
               />
             )}
 
-            {isAdmin && relacionamentoId && (
+            {canManageRelationshipDirectly && (
               <div className="flex justify-end">
                 <Button
                   type="button"
@@ -444,6 +498,43 @@ export function ViewMarriageModal({
           </Button>
         </div>
       </div>
+
+      <Dialog open={suggestionOpen} onOpenChange={setSuggestionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inserir Informações</DialogTitle>
+            <DialogDescription>
+              Envie uma sugestão para revisão no painel administrativo. Ela não altera o relacionamento automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={suggestionText}
+            onChange={(event) => setSuggestionText(event.target.value)}
+            rows={6}
+            placeholder="Descreva a informação, correção, história ou arquivo histórico que deseja sugerir."
+            aria-label="Informação sugerida"
+          />
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSuggestionOpen(false)}
+              disabled={suggestionLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitSuggestion}
+              disabled={suggestionLoading || !suggestionText.trim() || !targetPessoaId}
+            >
+              {suggestionLoading ? 'Enviando...' : 'Enviar sugestão'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

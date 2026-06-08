@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
-import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye, Plus } from 'lucide-react';
 import { uploadHistoricalFile } from '../services/storageService';
 
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
@@ -96,9 +96,19 @@ interface ArquivosHistoricosProps {
   pessoaId?: string | null;
   relacionamentoId?: string | null;
   readOnly?: boolean;
+  onRequestAdd?: () => void;
+  addButtonVariant?: 'full' | 'icon';
 }
 
-export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionamentoId, readOnly = false }: ArquivosHistoricosProps) {
+export function ArquivosHistoricos({
+  arquivos,
+  onChange,
+  pessoaId,
+  relacionamentoId,
+  readOnly = false,
+  onRequestAdd,
+  addButtonVariant = 'full',
+}: ArquivosHistoricosProps) {
   const [novoArquivo, setNovoArquivo] = useState({
     titulo: '',
     descricao: '',
@@ -120,6 +130,11 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
   };
 
   const handleToggleAddFile = () => {
+    if (readOnly) {
+      onRequestAdd?.();
+      return;
+    }
+
     setIsAddingFile((current) => !current);
   };
 
@@ -223,16 +238,24 @@ export function ArquivosHistoricos({ arquivos, onChange, pessoaId, relacionament
         <CardHeader>
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="break-words">Arquivos Históricos</CardTitle>
-            {!readOnly && (
+            {(!readOnly || onRequestAdd) && (
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
-                className="w-full sm:w-auto"
+                className={readOnly || addButtonVariant === 'icon' ? 'h-9 w-9 shrink-0 rounded-full p-0' : 'w-full sm:w-auto'}
                 onClick={handleToggleAddFile}
+                aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
+                title={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
               >
-                <Upload className="h-4 w-4" />
-                Adicionar Arquivo
+                {readOnly || addButtonVariant === 'icon' ? (
+                  <Plus className="h-4 w-4" />
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Adicionar Arquivo
+                  </>
+                )}
               </Button>
             )}
           </div>
