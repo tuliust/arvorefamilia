@@ -46,6 +46,10 @@
 }
 
 @media (min-width: 768px) {
+  main > aside [class*="overflow-y-auto"] {
+    overflow-y: hidden !important;
+  }
+
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
     font-size: 1.2rem !important;
     line-height: 1.1 !important;
