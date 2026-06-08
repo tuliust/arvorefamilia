@@ -333,9 +333,7 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
   }
 
   if (pattern === 'child>sibling>parent>parent') {
-    const targetParentName = getFirstName(getParentPersonNameFromSecondDegreeCousinPath(result, people));
-    const { article, parentLabel, cousinLabel } = getSecondDegreeCousinParentLabels(result, people);
-    return `${originFirstName} e ${targetFirstName} são primos de segundo grau. ${article} ${parentLabel} de ${targetFirstName}, ${targetParentName}, é ${cousinLabel} de ${originFirstName}.`;
+    return `${originFirstName} e ${targetFirstName} são primos de segundo grau.`;
   }
 
   if (pattern === 'child>sibling>parent' && result.label === 'primo(a)') {
@@ -436,9 +434,28 @@ function buildCousinNarrative(result: RelationshipDegreeResult, people: Pessoa[]
   };
 }
 
+function buildSecondDegreeCousinNarrative(result: RelationshipDegreeResult, people: Pessoa[]) {
+  if (!result.found || result.path.length !== 4) return null;
+
+  const relationPattern = result.path.map((step) => step.edge.normalizedType).join('>');
+  if (relationPattern !== 'child>sibling>parent>parent') return null;
+
+  const { originFirstName, targetFirstName } = getRelationshipPeople(result, people);
+  const targetParentName = getFirstName(getParentPersonNameFromSecondDegreeCousinPath(result, people));
+  const { article, parentLabel, cousinLabel } = getSecondDegreeCousinParentLabels(result, people);
+
+  return {
+    title: `${originFirstName} e ${targetFirstName} são primos de segundo grau`,
+    summary: `${article} ${parentLabel} de ${targetFirstName}, ${targetParentName}, é ${cousinLabel} de ${originFirstName}.`,
+  };
+}
+
 export function getRelationshipNarrative(result: RelationshipDegreeResult, people: Pessoa[]) {
   const cousinNarrative = buildCousinNarrative(result, people);
   if (cousinNarrative) return cousinNarrative;
+
+  const secondDegreeCousinNarrative = buildSecondDegreeCousinNarrative(result, people);
+  if (secondDegreeCousinNarrative) return secondDegreeCousinNarrative;
 
   if (result.found) {
     const peopleById = new Map(people.map((person) => [person.id, person]));
@@ -448,7 +465,7 @@ export function getRelationshipNarrative(result: RelationshipDegreeResult, peopl
 
     return {
       title: `${originName} e ${targetName}: ${label}`,
-      summary: getRelationshipResultMessage(result),
+      summary: '',
     };
   }
 
