@@ -90,13 +90,16 @@ export function PersonTimeline({
   subtitle = 'Eventos importantes registrados a partir dos dados disponíveis.',
   embedded = false,
 }: PersonTimelineProps) {
+  const shouldHideEmbeddedHeader = embedded && title === 'Eventos automáticos e manuais';
   const content = (
     <>
       {embedded ? (
-        <div>
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
-        </div>
+        !shouldHideEmbeddedHeader && (
+          <div>
+            <h3 className="font-semibold text-gray-900">{title}</h3>
+            <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+          </div>
+        )
       ) : (
         <CardHeader>
           <CardTitle>{title}</CardTitle>
