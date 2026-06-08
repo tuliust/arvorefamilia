@@ -4,12 +4,12 @@ import { AppLink as Link } from '../../components/AppLink';
 import {
   CheckCircle2,
   Edit,
+  Flower2,
   Handshake,
   HeartHandshake,
   MessageCircle,
   MessageSquare,
   PartyPopper,
-  Rose,
   Send,
   Trash2,
   UserRound,
@@ -66,7 +66,7 @@ const REACAO_OPTIONS: Record<ForumReacaoTipo, { label: string; Icon: LucideIcon;
   },
   lembrar: {
     label: 'Orações',
-    Icon: Rose,
+    Icon: Flower2,
     classes: 'border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700',
     selectedClasses: 'border-blue-300 bg-blue-50 text-blue-700',
   },
