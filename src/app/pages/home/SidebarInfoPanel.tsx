@@ -16,10 +16,10 @@ export function SidebarInfoPanel({
   onPrint,
 }: SidebarInfoPanelProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col gap-[clamp(0.75rem,1.65vh,1.1rem)]">
+    <section className="flex h-full min-h-0 flex-col gap-[clamp(0.95rem,1.9vh,1.35rem)]">
       <div>
-        <h2 className="text-[clamp(14px,2.1vh,16px)] font-semibold leading-tight text-gray-900">Informações da árvore</h2>
-        <p className="mt-[clamp(0.25rem,0.75vh,0.45rem)] text-[clamp(11px,1.6vh,13px)] leading-snug text-gray-500">
+        <h2 className="text-[clamp(15px,2.35vh,18px)] font-semibold leading-tight text-gray-900">Informações da árvore</h2>
+        <p className="mt-[clamp(0.3rem,0.85vh,0.5rem)] text-[clamp(12px,1.8vh,14px)] leading-snug text-gray-500">
           Ações para exportar ou compartilhar a visualização atual da árvore.
         </p>
       </div>
