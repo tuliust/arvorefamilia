@@ -50,6 +50,21 @@
     overflow-y: hidden !important;
   }
 
+  main > aside section[aria-label="Legenda visual da árvore"] {
+    gap: clamp(0.95rem, 1.9vh, 1.35rem) !important;
+  }
+
+  main > aside section[aria-label="Legenda visual da árvore"] h2 {
+    font-size: clamp(15px, 2.35vh, 18px) !important;
+    line-height: 1.15 !important;
+  }
+
+  main > aside section[aria-label="Legenda visual da árvore"] h2 + p {
+    margin-top: clamp(0.3rem, 0.85vh, 0.5rem) !important;
+    font-size: clamp(12px, 1.8vh, 14px) !important;
+    line-height: 1.35 !important;
+  }
+
   [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
     font-size: 1.2rem !important;
     line-height: 1.1 !important;
