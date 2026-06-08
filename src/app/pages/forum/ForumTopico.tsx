@@ -1,4 +1,4 @@
-﻿import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { AppLink as Link } from '../../components/AppLink';
 import {
@@ -20,6 +20,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Textarea } from '../../components/ui/textarea';
 import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicFavoriteButton';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import {
@@ -612,19 +613,22 @@ export function ForumTopico() {
                 <TopicBadge tone={statusTone(topico.status)}>{TOPICO_STATUS_LABELS[topico.status]}</TopicBadge>
               </div>
 
-              {podeEditarTopico && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="w-full shrink-0 sm:w-auto"
-                  onClick={removerTopico}
-                  disabled={excluindoTopico}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {excluindoTopico ? 'Excluindo...' : 'Excluir'}
-                </Button>
-              )}
+              <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
+                <ForumTopicFavoriteButton topico={topico} className="h-9 w-9 border-gray-200" />
+                {podeEditarTopico && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="min-w-0 flex-1 sm:flex-none"
+                    onClick={removerTopico}
+                    disabled={excluindoTopico}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {excluindoTopico ? 'Excluindo...' : 'Excluir'}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="flex min-w-0 items-start gap-3">
