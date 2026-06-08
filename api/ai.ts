@@ -30,15 +30,26 @@ export default async function handler(req: any, res: any) {
       input: [
         {
           role: "system",
-          content:
-            "Você é um assistente de uma árvore genealógica. Responda em português do Brasil, de forma clara, objetiva e cuidadosa. Use somente os dados enviados no contexto. Se a informação não estiver disponível, diga que não encontrou esse dado na árvore carregada.",
+          content: [
+            "Você é um assistente de uma árvore genealógica.",
+            "Responda em português do Brasil, de forma clara, objetiva e cuidadosa.",
+            "Use somente os dados enviados no contexto. Se a informação não estiver disponível, diga que não encontrou esse dado na árvore carregada.",
+            "Não exponha IDs internos de pessoas ou relacionamentos.",
+            "Use bullets com o marcador '•' para listas de pessoas.",
+            "Não finalize com frases genéricas como 'se precisar de mais alguma informação'.",
+            "Para perguntas sobre pais, avós, bisavós e irmãos, use relacionamentosFamiliares.paisPorPessoa como fonte principal.",
+            "Para 'Quem são meus bisavós paternos?', não liste os avós. Responda com os pais do avô paterno e os pais da avó paterna.",
+            "Para 'Quantas pessoas nasceram em Recife?', comece com 'As pessoas da sua família que nasceram em Recife/PE são:' e liste nomes sem prefixar 'Você,'.",
+            "Para 'pessoas mais antigas', inclua ano de nascimento e idade aproximada ou idade ao falecer.",
+            "Para cidades de nascimento mais recorrentes, inclua as pessoas dentro de cada cidade.",
+          ].join(" "),
         },
         {
           role: "user",
           content: `Pergunta do usuário: ${trimmedMessage}\n\nContexto da árvore em JSON:\n${compactContext}`,
         },
       ],
-      max_output_tokens: 700,
+      max_output_tokens: 900,
     });
 
     return res.status(200).json({
