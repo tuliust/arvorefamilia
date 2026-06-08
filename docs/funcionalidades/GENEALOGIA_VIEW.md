@@ -3,9 +3,9 @@
 > Local recomendado: `docs/funcionalidades/GENEALOGIA_VIEW.md`
 > Tipo: documentacao tecnica/funcional da view **Genealogia**.
 > Projeto: `tuliust/arvorefamilia`
-> Ultima atualizacao: 2026-06-07
-> Revisao complementar: alinhamento vertical dos chips mobile, pan da arvore, icone conjugal `Blend` e anti-regressao de viewport.
-> Status: comportamento mobile por geracoes consolidado; alinhamento por `Avos/Geracao 3` definido como referencia vertical; ajustes transversais devem ser validados nas tres views da arvore.
+> Ultima atualizacao: 2026-06-08
+> Revisao complementar: alinhamento vertical dos chips mobile, pan da arvore, icone conjugal `Blend`, Visao Completa mobile por chips e anti-regressao de viewport.
+> Status: comportamento mobile por geracoes consolidado em `/genealogia`; padrao aplicado tambem em `/visao-completa` mobile no commit `c5988a9`; alinhamento por `Avos/Geracao 3` definido como referencia vertical; ajustes transversais devem ser validados nas tres views da arvore.
 
 ---
 
@@ -63,9 +63,9 @@ Regras:
 
 - este documento trata apenas de **Genealogia**;
 - ajustes de **Minha Arvore** nao devem ser aplicados automaticamente aqui;
-- ajustes de **Visao Completa** devem ser avaliados separadamente;
+- ajustes de **Visao Completa** devem ser avaliados separadamente quando alterarem escopo, filtros ou layout lógico;
 - o padrao mobile por chips foi implementado primeiro em **Genealogia**;
-- aplicar o mesmo padrao em **Visao Completa** continua como etapa futura;
+- o mesmo padrão de foco/enquadramento foi aplicado em **Visao Completa** mobile no commit `c5988a9 feat: add full tree mobile stage navigation`;
 - ajustes transversais de header, menu, titulo, paletas e ReactFlow devem ser validados nas tres views.
 
 ---
@@ -88,7 +88,7 @@ Responsabilidades:
 - manter o shell unico das rotas da arvore;
 - renderizar a area principal da arvore;
 - repassar props e estado para `FamilyTree`;
-- exibir a navegacao mobile por geracoes quando `viewMode = genealogia` e `isMobile = true`;
+- exibir a navegacao mobile por geracoes quando `isMobile = true` e `viewMode` for `genealogia` ou `visao-completa`;
 - preservar search params, como `?pessoa=...`, ao trocar view.
 
 ### 3.2 Navegacao mobile por geracoes
@@ -117,7 +117,7 @@ src/app/components/FamilyTree/FamilyTree.tsx
 Responsabilidades:
 
 - renderizar ReactFlow;
-- receber `activeGenealogyGeneration`;
+- receber `activeGenealogyGeneration` para foco mobile em `/genealogia` e `/visao-completa`;
 - calcular viewport inicial;
 - focar a geracao ativa no mobile;
 - calcular bounds mobile mantendo o eixo X da geracao ativa e o eixo Y da referencia `Avos/Geracao 3`;
@@ -250,7 +250,7 @@ Regras:
 
 ## 7. Layout mobile
 
-No mobile, a Genealogia usa um padrao proprio de navegacao por etapas.
+No mobile, a Genealogia usa um padrao proprio de navegacao por etapas. Desde `c5988a9`, a Visao Completa mobile reutiliza o mesmo padrao de foco/enquadramento para a base familiar completa.
 
 Referencia conceitual:
 
@@ -273,7 +273,7 @@ Equivalencia:
 
 A barra superior deve:
 
-- aparecer somente em `/genealogia` no mobile;
+- aparecer em `/genealogia` e `/visao-completa` no mobile;
 - ocupar a largura horizontal disponivel;
 - ficar acima da area da arvore;
 - nao competir com botoes de zoom;
@@ -332,6 +332,8 @@ Ao carregar `/genealogia` no mobile:
 - se houver tataravos, iniciar em **Tataravos/Geracao 1**;
 - os cards da primeira geracao devem estar visiveis no topo util;
 - a view nao deve iniciar em **Bisavos/Geracao 2** ou **Avos/Geracao 3** quando houver **Geracao 1** com cards.
+
+Em `/visao-completa` mobile, a geração inicial deve seguir a primeira geração/bloco disponível na base completa, respeitando os mesmos princípios: focar cards reais e não criar colunas vazias.
 
 ### 7.5 Geracoes vazias
 
@@ -655,7 +657,7 @@ Nao fazer:
 - recolocar botoes `+` e `-` sobre a barra mobile de chips;
 - impedir pan vertical no mobile;
 - permitir que o anel conjugal sobreponha cards;
-- aplicar automaticamente em `/visao-completa` o modelo mobile da Genealogia sem estudo separado.
+- aplicar novos comportamentos de `/genealogia` em `/visao-completa` sem avaliação separada quando envolver filtros, escopo ou layout lógico. O padrão básico de chips por foco/enquadramento já foi aplicado em `/visao-completa` mobile no commit `c5988a9`.
 
 ---
 
@@ -872,7 +874,8 @@ Validar:
 
 Checar:
 
-- layout nao foi alterado indevidamente;
+- em `/visao-completa` mobile, chips aparecem e focam geracoes/blocos sem remover colunas;
+- em `/visao-completa` desktop/tablet, layout nao foi alterado indevidamente;
 - paletas continuam funcionando;
 - painel lateral continua operavel;
 - zoom/pan continuam funcionando;
@@ -951,3 +954,39 @@ Fora do escopo desta frente:
 - criar controles avancados por ramo familiar;
 - finalizar ajuste transversal do titulo das tres views sem cortar cards;
 - confirmar comportamento unico do menu do usuario nas views da arvore e nas paginas internas.
+
+---
+
+## 20. Nota transversal - Visao Completa mobile por chips
+
+Embora este documento continue sendo canônico para a view **Genealogia**, a frente abaixo reaproveitou o padrão mobile validado aqui em `/visao-completa`.
+
+Commit:
+
+```txt
+c5988a9 feat: add full tree mobile stage navigation
+```
+
+Mudança técnica:
+
+- `HomeTreeSection.tsx` passou a usar `usesMobileGenerationStages`;
+- `usesMobileGenerationStages` é verdadeiro quando `isMobile` e `treeViewMode` é `genealogia` ou `visao-completa`;
+- `GenealogyMobileStageTabs` continua sendo o componente usado para os chips;
+- `activeGenealogyGeneration` continua sendo foco/enquadramento, não filtro destrutivo.
+
+Regras mantidas para `/visao-completa` mobile:
+
+- chips não removem nodes/colunas do ReactFlow;
+- cabeçalhos `GERACAO X` devem manter régua vertical consistente;
+- pan horizontal e vertical deve continuar disponível;
+- conectores familiares e botão conjugal devem continuar visíveis e clicáveis;
+- botões `+` e `-` podem ficar ocultos para não competir com a barra;
+- desktop/tablet não devem ser impactados.
+
+Validação registrada:
+
+```bash
+npm run build
+```
+
+Resultado: aprovado.

@@ -1,8 +1,8 @@
 # Documentacao - Arvore Familia
 
 > Indice canonico da documentacao do projeto `tuliust/arvorefamilia`.
-> Ultima revisao: 2026-06-07
-> Status: documentacao canonica com ajustes recentes de árvore, calendário mobile e Genealogia mobile rastreados.
+> Ultima revisao: 2026-06-08
+> Status: documentacao canonica com ajustes recentes de árvore, calendário mobile, Genealogia mobile e Visao Completa mobile rastreados.
 
 Este diretorio concentra a documentacao tecnica e funcional do projeto **Arvore Familia**.
 
@@ -288,7 +288,7 @@ Resumo:
 - inferencia de `manual_generation` em memoria foi adicionada para a Genealogia com base na pessoa central;
 - a tela inicial mobile deve focar a primeira coluna real renderizada;
 - o ajuste estrutural tambem beneficia desktop quando havia `Geracao 1` vazia;
-- botoes de zoom `+` e `-` foram ocultados apenas na Genealogia mobile;
+- na frente inicial de 2026-06-06, botoes de zoom `+` e `-` foram ocultados apenas na Genealogia mobile; em 2026-06-08, o mesmo criterio passou a valer tambem para `/visao-completa` mobile quando os chips estao ativos;
 - nenhuma migration, RLS, permissao ou dado real foi alterado.
 
 Documentos que devem permanecer sincronizados:
@@ -299,11 +299,11 @@ Documentos que devem permanecer sincronizados:
 | Componentes da Genealogia | `GUIA_COMPONENTES.md` |
 | Estado implementado | `GUIA_IMPLEMENTACOES.md` |
 | Troubleshooting de geracoes/viewport | `GUIA_CORRECAO_ERROS.md` |
-| Pendencia de aplicar padrao em Visao Completa | `PLANO_PROXIMOS_PASSOS.md` |
+| Visao Completa mobile por chips | `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md`, `funcionalidades/GENEALOGIA_VIEW.md` e `PLANO_PROXIMOS_PASSOS.md` |
 
 Pendencia rastreavel:
 
-- aplicar padrao semelhante em `/visao-completa` somente apos validacao da Genealogia.
+- frente concluida em `c5988a9 feat: add full tree mobile stage navigation`; manter apenas QA visual de regressao em `/visao-completa` mobile.
 
 ---
 
@@ -393,7 +393,7 @@ Este ciclo documenta ajustes visuais e comportamentais nas três views da árvor
 
 - confirmar commit do ajuste `y: referenceBounds.y` em `FamilyTree.tsx`, quando aplicado localmente;
 - validar se `/genealogia` mobile permite pan vertical para recuperar cabeçalhos;
-- se necessário, liberar `translateExtent` apenas em `/genealogia` mobile;
+- se necessário, liberar `translateExtent` apenas nas views por geracao mobile;
 - validar as paletas `white`, `orange` e `brown`.
 
 ---
@@ -422,3 +422,38 @@ git push origin main
 ```
 
 Nao usar `git add .`.
+
+---
+
+## 17. Ajustes recentes documentados - ciclo 2026-06-08 / Visão Completa mobile
+
+Este ciclo documenta a aplicação do padrão de navegação por chips também em `/visao-completa` mobile.
+
+Resumo:
+
+- `/visao-completa` mobile passou a reutilizar `GenealogyMobileStageTabs`;
+- `HomeTreeSection.tsx` passou a usar `usesMobileGenerationStages`;
+- `usesMobileGenerationStages` cobre `/genealogia` e `/visao-completa` no mobile;
+- chips focam/enquadram gerações/blocos e não removem nodes;
+- `/visao-completa` desktop/tablet e `/minha-arvore` não foram alteradas;
+- build local aprovado e Vercel retornou sucesso.
+
+Commit de referência:
+
+```txt
+c5988a9 feat: add full tree mobile stage navigation
+```
+
+Documentos sincronizados:
+
+| Frente | Documento canonico |
+|---|---|
+| UX da Visão Completa mobile | `GUIA_UX_LAYOUT.md` |
+| Componente e props da barra mobile | `GUIA_COMPONENTES.md` |
+| Relação com padrão da Genealogia | `funcionalidades/GENEALOGIA_VIEW.md` |
+| Plano e status de fechamento | `PLANO_PROXIMOS_PASSOS.md` |
+| Legendas/conectores/painel | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+
+Pendência restante:
+
+- QA visual em mobile real/devtools para confirmar pan, cabeçalhos, chips, conectores, botão conjugal e paletas.

@@ -1,6 +1,6 @@
 # Plano de próximos passos - Árvore Família
 
-> Última revisão: 2026-06-07
+> Última revisão: 2026-06-08
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
 
@@ -47,6 +47,7 @@ As frentes funcionais principais do MVP estao implementadas e testadas manualmen
 | Headers e margens internas | Concluidos | Header compartilhado nas paginas internas e Home pos-login preservada com header proprio. |
 | Viewport da árvore | Em refinamento visual final | Minha Árvore, Genealogia e Visão Completa têm regras de escala e título em ajuste; Genealogia mobile usa Avós/Geração 3 como régua vertical de enquadramento e ainda exige validação de pan para recuperar cabeçalhos. |
 | Genealogia mobile por geracoes | Concluida no escopo atual | `/genealogia` mobile usa chips horizontais e swipe por geracao; colunas vazias foram removidas; inferencia de geracoes ocorre em memoria pela pessoa central. |
+| Visao Completa mobile por geracoes | Concluida tecnicamente | `/visao-completa` mobile reutiliza os chips de geracao/bloco para foco/enquadramento; build aprovado e Vercel retornou sucesso no commit `c5988a9`. |
 | Rotas das views da arvore | Concluidas | `/minha-arvore`, `/genealogia` e `/visao-completa` usam shell Home protegido por `TreeAccessRoute`; `/` redireciona para `/minha-arvore` preservando query string. |
 | Refatoracao incremental da Home | Em andamento seguro | Componentes visuais foram extraidos; `Home.tsx` segue como orquestradora. |
 | Minha Arvore e arquivos historicos | Atualizados | Categoria historica, preview pos-upload, botao **Acoes** e casamento salvo pelo botao geral consolidados. |
@@ -82,6 +83,7 @@ O MVP deve ser fechado com:
 - `/minha-arvore` com dados conjugais salvos pelo botao geral;
 - rotas dedicadas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - Genealogia mobile navegavel por geracoes;
+- Visao Completa mobile navegavel por geracoes/blocos;
 - Genealogia sem colunas vazias e com inferencia de geracoes em memoria;
 - paletas visuais da arvore no header;
 - headers internos padronizados;
@@ -331,17 +333,18 @@ QA de manutencao:
 - avaliar acesso equivalente em mobile estreito caso o dropdown de view nao esteja disponivel;
 - qualquer nova paleta deve atualizar `treeColorPalettes.ts`, `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md` e este plano.
 
-### 5.8 Genealogia mobile por geracoes
+### 5.8 Genealogia e Visao Completa mobile por geracoes
 
 Concluido:
 
 - criada navegacao horizontal por geracoes em `/genealogia` mobile;
+- aplicada navegacao horizontal por geracoes/blocos em `/visao-completa` mobile no commit `c5988a9 feat: add full tree mobile stage navigation`;
 - chips exibem **Tataravos**, **Bisavos**, **Avos**, **Pais**, **Nucleo** e **Descendentes**;
 - chips nao exibem contagem numerica;
 - swipe lateral alterna entre geracoes;
 - chips controlam foco/enquadramento, nao removem colunas da arvore;
 - todas as colunas renderizaveis continuam presentes no ReactFlow;
-- botoes `+` e `-` foram ocultados apenas em Genealogia mobile;
+- botoes `+` e `-` foram ocultados nas views por geracao mobile quando a barra de chips esta ativa;
 - barra de chips ocupa a largura horizontal disponivel;
 - labels `GERACAO X` nao devem sobrepor o menu;
 - colunas vazias nao sao renderizadas;
@@ -378,11 +381,12 @@ b668a59 fix: infer genealogy generations from central person
 
 QA especifico:
 
-- validar `/genealogia` em 320px, 375px, 390px, 430px, 768px e desktop;
+- validar `/genealogia` e `/visao-completa` em 320px, 375px, 390px, 430px, 768px e desktop;
 - confirmar que a primeira coluna tem cards reais;
 - confirmar que Tataravos aparecem quando cadastrados e conectados;
 - confirmar pan vertical/horizontal;
-- confirmar que `/minha-arvore` e `/visao-completa` nao regrediram.
+- confirmar que `/minha-arvore` nao regrediu.
+- confirmar que `/visao-completa` desktop/tablet nao regrediu.
 
 ### 5.9 Menu compartilhado, título da árvore e páginas auxiliares
 
@@ -940,7 +944,6 @@ Não usar `git add .`.
 | Legado SQL | Revisar scripts antigos de forum/Google Calendar. |
 | Logs | Remover ruidos tecnicos como `lado` dos `changed_fields`, se confirmado como ruido. |
 | Viewport arvore | Avaliar melhorias finas para arvores muito grandes apos uso real. |
-| Visao Completa mobile | Avaliar aplicacao do padrao de navegacao horizontal por blocos/geracoes depois da validacao completa da Genealogia. |
 | Legenda | Avaliar versao administrativa/configuravel pos-MVP, se necessario. |
 | Documentacao | Manter `docs/arquitetura/ROTAS_E_GUARDS.md`, `docs/funcionalidades/EXPORTACAO_ARVORE.md` e demais guias canonicos sincronizados com o codigo. |
 
@@ -1267,7 +1270,6 @@ Concluido:
 
 Permanece fora desta frente:
 
-- aplicar o mesmo padrao mobile em `/visao-completa`;
 - transformar a inferencia em dado persistido;
 - criar configuracao administrativa para labels/geracoes;
 - alterar regras de permissao ou banco.
@@ -1325,3 +1327,46 @@ Regra para proximos ajustes:
 - nao alterar Supabase, migrations, RLS ou permissoes em ajustes visuais;
 - nao recolocar **Editar notificacoes** no menu sem decisao de produto;
 - documentar qualquer nova acao de pagina interna no guia funcional correspondente.
+
+---
+
+## Atualização 2026-06-08 - Fechamento da frente Visão Completa mobile
+
+Concluído:
+
+- `/visao-completa` mobile passou a usar a barra superior de chips por geração/bloco;
+- a implementação foi feita em `HomeTreeSection.tsx` por meio de `usesMobileGenerationStages`;
+- o comportamento vale para `isMobile && (treeViewMode === 'genealogia' || treeViewMode === 'visao-completa')`;
+- os chips alteram foco/enquadramento e não removem colunas/nodes do ReactFlow;
+- `/visao-completa` desktop/tablet não teve comportamento alterado;
+- `/minha-arvore` não foi alterada;
+- sem migration, RLS, alteração de schema, service role ou dados reais.
+
+Commit de referência:
+
+```txt
+c5988a9 feat: add full tree mobile stage navigation
+```
+
+Validação técnica registrada:
+
+```bash
+npm run build
+```
+
+Resultado: aprovado.
+
+Validação visual recomendada antes de encerrar a rodada em ambiente final:
+
+```txt
+/visao-completa mobile: chips aparecem no topo
+/visao-completa mobile: clique nos chips muda o foco horizontal
+/visao-completa mobile: cabeçalhos GERACAO X mantêm régua vertical estável
+/visao-completa mobile: pan horizontal e vertical continuam disponíveis
+/visao-completa mobile: conectores e botão conjugal continuam clicáveis
+/genealogia mobile: comportamento anterior preservado
+/minha-arvore: sem regressão
+paletas white, orange e brown: legíveis
+```
+
+Esta frente deixa de ser pendência pós-MVP.

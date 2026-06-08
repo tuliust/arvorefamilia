@@ -1,7 +1,7 @@
 # Arvore - legendas, conectores, filtros e painel lateral
 
-> Ultima revisao: 2026-06-07
-> Revisao complementar: destaques de linhas por cor, botao conjugal `Blend` cinza e anti-regressao de conectores.
+> Ultima revisao: 2026-06-08
+> Revisao complementar: destaques de linhas por cor, botao conjugal `Blend` cinza, Visao Completa mobile por chips e anti-regressao de conectores.
 
 > Local recomendado: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentacao funcional/tecnica especifica da arvore.
@@ -138,7 +138,8 @@ Caracteristicas:
 - base familiar completa;
 - organizacao por geracoes;
 - mesma arquitetura visual da Genealogia;
-- regras proprias de recorte/exibicao conforme o `viewMode`.
+- regras proprias de recorte/exibicao conforme o `viewMode`;
+- no mobile, navegação superior por chips de geração/bloco para foco/enquadramento, sem remover nodes ou colunas.
 
 ---
 
@@ -913,6 +914,7 @@ Pets continuam separados nos cards.
 Validar:
 
 ```txt
+em mobile, chips focam/enquadram geracoes/blocos sem remover colunas;
 scroll/pan vertical nao volta sozinho ao topo;
 console sem erro sibling-left;
 destaque de irmaos nao cria linha duplicada;
@@ -1254,4 +1256,29 @@ Destacar Conjuges -> laranja
 Destacar Pais/Filhos -> amarelo/dourado
 Destacar Irmaos -> azul tracejado
 Destacar Todas -> aplica os tres estilos sem recriar linhas ocultas
+```
+
+---
+
+## 18. Atualizacao 2026-06-08 - Visao Completa mobile por chips
+
+A frente `c5988a9 feat: add full tree mobile stage navigation` ativou a barra superior de chips também em `/visao-completa` mobile.
+
+Escopo desta documentação:
+
+- a alteração não muda `edgeFilters`, `visualLineFilters`, `personFilters`, `directRelativeFilters` ou `genealogyFilters`;
+- os chips não são filtros de linhas nem filtros de cards;
+- os chips apenas alteram foco/enquadramento da área ReactFlow;
+- conectores, destaques, botão conjugal e aba Legendas devem continuar funcionando como antes;
+- `/visao-completa` desktop/tablet não teve comportamento alterado.
+
+Validação específica:
+
+```txt
+/visao-completa mobile: chips aparecem
+/visao-completa mobile: linhas e destaques continuam funcionando
+/visao-completa mobile: botão conjugal Blend permanece clicável
+/visao-completa mobile: pan horizontal e vertical continuam disponíveis
+/genealogia mobile: sem regressão
+/minha-arvore: sem regressão
 ```

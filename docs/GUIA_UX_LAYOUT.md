@@ -1,7 +1,7 @@
 # Guia de UX e Layout - Árvore Família
 
-> Última revisão: 2026-06-07  
-> Revisão complementar: botão conjugal neutro, destaques de conectores, Genealogia mobile e Calendário mobile  
+> Última revisão: 2026-06-08  
+> Revisão complementar: botão conjugal neutro, destaques de conectores, Genealogia/Visão Completa mobile e Calendário mobile  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`
 
@@ -33,7 +33,7 @@ Este documento não substitui:
 
 Esta revisão separa o que já está consolidado do que ainda depende de validação visual:
 
-- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` mobile com chips por geração; compactação parcial de `/minha-arvore` desktop; botão conjugal com `Blend` cinza; ícones `Star`/`Cross` nos cards; destaque de linhas com cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado; filtros mobile compactos no calendário;
+- **consolidado**: paletas `white`, `orange` e `brown`; subtítulos removidos nas views da árvore; linhas/conectores usando tokens visuais; `/genealogia` e `/visao-completa` mobile com chips por geração/bloco; compactação parcial de `/minha-arvore` desktop; botão conjugal com `Blend` cinza; ícones `Star`/`Cross` nos cards; destaque de linhas com cônjuges laranja, pais/filhos amarelo/dourado e irmãos azul tracejado; filtros mobile compactos no calendário;
 - **em refinamento visual final**: padding superior do título da árvore, redução do espaço entre título e cards sem cortar cards superiores, pan vertical superior em `/genealogia` mobile e diagnóstico da diferença entre o menu do usuário nas views da árvore e o menu das páginas internas;
 - **regra de segurança visual**: não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir o espaçamento entre título e árvore, pois essa abordagem já causou corte de cards superiores.
 
@@ -523,9 +523,9 @@ A view **Genealogia** deve:
 - manter variante padrão do anel/aliança;
 - no mobile, oferecer navegação horizontal por gerações, com chips superiores e suporte a swipe lateral.
 
-#### 5.5.1 Genealogia mobile por gerações
+#### 5.5.1 Views por geração no mobile
 
-No mobile, a view **Genealogia** adota navegação horizontal por etapas:
+No mobile, as views **Genealogia** e **Visão Completa** adotam navegação horizontal por etapas quando há gerações renderizáveis:
 
 ```txt
 Tataravós
@@ -538,7 +538,7 @@ Descendentes
 
 Regras consolidadas:
 
-- barra de chips aparece apenas em `/genealogia` mobile;
+- barra de chips aparece em `/genealogia` e `/visao-completa` no mobile;
 - chips ocupam a largura horizontal disponível da área da árvore;
 - chips não exibem contagem numérica;
 - geração ativa deve ter estado visual claro;
@@ -550,13 +550,13 @@ Regras consolidadas:
 - se a pessoa central tiver tataravós conectados, a primeira coluna deve aparecer com esses cards;
 - colunas sem cards não devem ser exibidas;
 - labels `GERAÇÃO X` não devem ficar sobrepostos ao menu de chips;
-- em Genealogia mobile, botões `+` e `-` podem ficar ocultos para evitar disputa de espaço com a barra;
+- em Genealogia e Visão Completa mobile, botões `+` e `-` podem ficar ocultos para evitar disputa de espaço com a barra;
 - pan vertical e horizontal por touch deve continuar disponível na área da árvore;
 - ao trocar chips, o eixo X muda conforme a geração ativa, mas o eixo Y deve permanecer ancorado na referência visual de Avós/Geração 3;
 - Tataravós, Bisavós, Pais, Núcleo e Descendentes não devem abrir mais baixos do que Avós;
 - o usuário deve conseguir arrastar para recuperar cabeçalhos e área superior; se isso falhar, revisar `translateExtent` em `FamilyTree.tsx`.
 
-A inferência de geração é regra de renderização em memória. Ela não deve alterar dados reais, migrations, RLS ou Supabase.
+A inferência de geração na Genealogia é regra de renderização em memória. Na Visão Completa, a barra usa as gerações disponíveis na base completa. Nenhuma dessas navegações deve alterar dados reais, migrations, RLS ou Supabase.
 
 ### 5.6 Visão Completa
 
@@ -567,7 +567,10 @@ A view **Visão Completa** segue a mesma regra de UX da Genealogia:
 - altura total não reduz zoom;
 - navegação vertical por pan/arraste;
 - base completa da família;
-- sem título/subtítulo duplicado.
+- sem título/subtítulo duplicado;
+- no mobile, navegação superior por chips de geração/bloco, reutilizando o padrão de foco/enquadramento da Genealogia;
+- chips focam colunas/blocos disponíveis, sem remover nodes do ReactFlow;
+- cabeçalhos de geração devem manter a mesma régua vertical usada pela Genealogia mobile.
 
 ### 5.7 Pan e zoom
 
@@ -581,8 +584,8 @@ Controles esperados:
 Regras:
 
 - botões de zoom ficam no canto superior direito da área da árvore, por exemplo `right-4 top-4`;
-- em Genealogia mobile, botões `+` e `-` podem ser ocultados;
-- em Genealogia mobile, `translateExtent` não deve impedir pan vertical para recuperar cabeçalhos;
+- em Genealogia e Visão Completa mobile, botões `+` e `-` podem ser ocultados;
+- em Genealogia e Visão Completa mobile, `translateExtent` não deve impedir pan vertical para recuperar cabeçalhos;
 - durante seleção de área, pan/zoom devem ser bloqueados;
 - ao cancelar/concluir seleção, pan/zoom devem voltar;
 - Genealogia e Visão Completa sempre precisam permitir pan vertical;
@@ -1140,3 +1143,41 @@ Pendências desta frente:
 - validar pan vertical superior em `/genealogia` mobile.
 
 Validação obrigatória em browser real continua recomendada quando o navegador interno/sandbox não conseguir abrir as rotas.
+
+---
+
+## 21. Atualização 2026-06-08 - Visão Completa mobile por chips
+
+Frente documentada:
+
+```txt
+c5988a9 feat: add full tree mobile stage navigation
+```
+
+Consolidado:
+
+- `/visao-completa` mobile passou a exibir a mesma barra superior de chips usada em `/genealogia`;
+- os chips usam as gerações disponíveis para alterar foco/enquadramento horizontal;
+- as demais colunas/nodes permanecem renderizadas no ReactFlow;
+- os botões móveis de zoom/direção podem ficar ocultos quando a barra de chips está ativa;
+- a régua vertical dos cabeçalhos deve seguir o mesmo critério da Genealogia mobile, com referência em Avós/Geração 3 quando disponível;
+- `/visao-completa` desktop/tablet não teve comportamento alterado.
+
+Validação técnica registrada:
+
+```bash
+npm run build
+```
+
+Resultado: aprovado.
+
+Checklist visual recomendado:
+
+```txt
+/visao-completa mobile: chips aparecem e mudam foco
+/visao-completa mobile: pan horizontal e vertical continua funcionando
+/visao-completa mobile: cabeçalhos GERACAO X não saltam verticalmente
+/genealogia mobile: comportamento anterior preservado
+/minha-arvore: sem regressão
+paletas white, orange e brown: legíveis
+```

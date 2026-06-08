@@ -1,7 +1,7 @@
 # Guia de componentes - Árvore Família
 
-> Última atualização: 2026-06-07  
-> Revisão complementar: ícones lucide, botão conjugal neutro, destaques de conectores, Genealogia mobile e Calendário mobile  
+> Última atualização: 2026-06-08  
+> Revisão complementar: ícones lucide, botão conjugal neutro, destaques de conectores, Genealogia/Visão Completa mobile e Calendário mobile  
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 
 ## Objetivo
@@ -209,7 +209,7 @@ onPersonRemove
 onMarriageClick
 ```
 
-`activeGenealogyGeneration` é usado pela view **Genealogia** em mobile para enquadrar/focar a geração ativa escolhida nos chips superiores. Essa prop não deve ser usada para remover as demais colunas da árvore.
+`activeGenealogyGeneration` é usado pelas views **Genealogia** e **Visão Completa** em mobile para enquadrar/focar a geração ativa escolhida nos chips superiores. Essa prop não deve ser usada para remover as demais colunas da árvore.
 
 `TreeViewMode` fica em:
 
@@ -250,9 +250,10 @@ Comportamento consolidado:
 - Genealogia/Visão Completa usam zoom por largura;
 - Genealogia infere `manual_generation` em memória a partir da pessoa central quando necessário, sem persistir no Supabase;
 - Genealogia mobile inicia na primeira coluna real renderizada;
-- Genealogia mobile usa a geração 3/Avós como referência vertical de enquadramento quando o usuário alterna chips superiores;
-- em Genealogia mobile, o eixo X acompanha a geração ativa, mas o eixo Y deve permanecer ancorado em `referenceBounds.y` para evitar saltos verticais entre Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes;
-- em Genealogia mobile, o `translateExtent` não deve impedir o usuário de arrastar a árvore para recuperar cabeçalhos/área superior;
+- Visão Completa mobile também usa navegação por chips de geração/bloco quando há gerações disponíveis;
+- Genealogia e Visão Completa mobile usam a geração 3/Avós como referência vertical de enquadramento quando o usuário alterna chips superiores;
+- em Genealogia e Visão Completa mobile, o eixo X acompanha a geração ativa, mas o eixo Y deve permanecer ancorado em `referenceBounds.y` para evitar saltos verticais entre Tataravós, Bisavós, Avós, Pais, Núcleo e Descendentes;
+- em Genealogia e Visão Completa mobile, o `translateExtent` não deve impedir o usuário de arrastar a árvore para recuperar cabeçalhos/área superior;
 - seleção de área bloqueia pan/zoom temporariamente.
 
 Cuidados:
@@ -705,7 +706,7 @@ src/app/pages/home/GenealogyMobileStageTabs.tsx
 
 Responsabilidade:
 
-- renderizar a navegação mobile da view **Genealogia** por gerações;
+- renderizar a navegação mobile das views **Genealogia** e **Visão Completa** por gerações/blocos;
 - exibir chips horizontais com labels humanos, como **Tataravós**, **Bisavós**, **Avós**, **Pais**, **Núcleo** e **Descendentes**;
 - controlar seleção direta por toque/clique;
 - controlar swipe lateral entre gerações;
@@ -713,12 +714,18 @@ Responsabilidade:
 - exibir estado vazio quando não houver gerações visíveis;
 - ocupar a extensão horizontal disponível na área da árvore em mobile.
 
+Nota de uso atual:
+
+- o componente mantém o nome histórico `GenealogyMobileStageTabs`, mas desde o commit `c5988a9 feat: add full tree mobile stage navigation` também é usado em `/visao-completa` mobile;
+- a ativação fica em `HomeTreeSection.tsx` por meio de `usesMobileGenerationStages`;
+- o componente continua apenas controlando foco/enquadramento, não filtros destrutivos de nodes.
+
 Contrato de UX:
 
 - chips focam/enquadram a geração ativa, mas não removem as demais colunas;
 - contagem numérica ao lado do label não deve ser exibida;
 - barra deve preservar espaço vertical suficiente para não sobrepor labels `GERAÇÃO X`;
-- em Genealogia mobile, botões de zoom `+` e `-` podem ficar ocultos;
+- em Genealogia e Visão Completa mobile, botões de zoom `+` e `-` podem ficar ocultos;
 - clique em chip deve mudar o enquadramento horizontal, mas manter a régua vertical baseada em Avós/Geração 3;
 - swipe nos chips não deve bloquear pan/zoom do canvas ReactFlow fora da barra;
 - o `translateExtent` não deve impedir o usuário de arrastar a árvore para cima/baixo e recuperar os cabeçalhos.
@@ -1385,3 +1392,40 @@ QA recomendado:
 /notificacoes
 /ajustar-notificacoes
 ```
+
+---
+
+## 23. Atualização recente - ciclo 2026-06-08
+
+Frente documentada:
+
+```txt
+c5988a9 feat: add full tree mobile stage navigation
+```
+
+Status: concluída tecnicamente; build local aprovado e Vercel retornou sucesso.
+
+Itens documentados neste ciclo:
+
+- `/visao-completa` mobile passou a reutilizar `GenealogyMobileStageTabs`;
+- `HomeTreeSection.tsx` substituiu a condição exclusiva `isGenealogyMobile` por `usesMobileGenerationStages`;
+- `usesMobileGenerationStages` vale para `isMobile && (treeViewMode === 'genealogia' || treeViewMode === 'visao-completa')`;
+- a prop `activeGenealogyGeneration` continua sendo foco/enquadramento, sem remover nodes ou colunas do ReactFlow;
+- os botões móveis de zoom/direção podem ficar ocultos nas duas views por geração para não competir com a barra de chips;
+- `/minha-arvore` não foi alterada por esta frente.
+
+Validação registrada:
+
+```bash
+npm run build
+```
+
+Resultado: aprovado.
+
+Anti-regressão:
+
+- não transformar chips em filtro de pessoas;
+- não reintroduzir colunas vazias;
+- não alterar Supabase, migrations, RLS ou dados reais para ajuste visual;
+- validar `/genealogia` e `/visao-completa` mobile nas larguras 320px, 375px, 390px e 430px;
+- validar paletas `white`, `orange` e `brown`.
