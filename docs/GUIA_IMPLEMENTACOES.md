@@ -1,9 +1,9 @@
 # Guia de implementações - Árvore Família
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de fórum, favoritos, relacionamento conjugal, cache/deploy, reset de perfil e views da árvore.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de árvore, painel lateral, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy e views responsivas.
 
 ## Objetivo
 
@@ -48,7 +48,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Frente | Estado atual | Observação de manutenção |
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
-| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. Cards e grupos centrais possuem largura ampliada controlada. |
+| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. Cards compactos de grupos laterais/inferiores usam ampliação visual recente para `360px`; o card central mantém padrão próprio e Genealogia/Visão Completa não herdam essa largura. |
 | Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
 | Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
@@ -59,18 +59,19 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Eventos da vida / timeline | Implementados no escopo atual | Eventos derivados e manuais existem; título redundante embutido é ocultado em `/minha-arvore/editar`; upload por evento, privacidade por evento e PDF ficam como evolução futura. |
 | Astrologia/acontecimentos | Implementados no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin/server-side. |
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
-| Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe e tutor de pet. |
+| Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe, primos, tio/sobrinho e tutor de pet. |
+| Curiosidades, conexão e IA | Implementadas no escopo atual | Modal de Curiosidades reúne abas informativas, descoberta de conexão familiar e painel de perguntas à IA. Respostas genealógicas usam contexto estruturado, regras de privacidade e fallback determinístico quando aplicável. |
 | Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa, tópicos de fórum e arquivos históricos quando o componente expõe a ação. Expansão para outras entidades deve ser estudada. |
 | Página de favoritos | Implementada | Lista, busca, filtros, remoção e cards inteiros clicáveis. O botão textual **Abrir conteúdo** foi removido; a lixeira não deve disparar abertura do card. |
 | Fórum | Implementado no escopo atual | Categorias, tópicos, respostas diretas, menções, vínculos automáticos com pessoas mencionadas, avatares, favoritos e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição; `/forum/topico/:id` não exibe box de pessoa relacionada nem comentários aninhados na UI atual. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
-| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros e ajustes de mobile. |
-| Home pública/legal | Implementada | `/entrar`, aceite legal no primeiro acesso, páginas legais e `noindex/nofollow`. |
+| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. A comunicação pública da integração precisa permanecer visível em `/entrar` para validação OAuth. |
+| Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso, aceite legal e ponto de compliance OAuth. Deve exibir nome do app e finalidade da integração com Google Agenda diretamente no JSX. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`, incluindo exibição no menu mobile. |
 | Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido; exportação integral fica pós-MVP. |
-| Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. |
+| Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. Rotas `/api/*`, incluindo `/api/ai` quando ativa, devem ser preservadas fora do fallback SPA. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
 
 ---
@@ -110,10 +111,12 @@ Stack em uso:
 - favoritos;
 - insights persistidos;
 - grau de parentesco;
+- Curiosidades, descoberta de conexão familiar e IA assistida;
 - exportação de área da árvore;
 - paletas visuais da árvore;
 - responsividade mobile/tablet;
-- fallback e cache de SPA.
+- fallback e cache de SPA;
+- comunicação pública de Google Agenda/OAuth em `/entrar`.
 
 Regras de arquitetura:
 
@@ -259,7 +262,10 @@ Comportamento consolidado:
 - paletas não alteram dados, permissões, Supabase, filtros ou grafo;
 - `MobileTreeControlsPortal` concentra controles mobile da árvore nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - o painel mobile permite zoom, reajuste, ocultar/exibir setas, exportação PDF/imagem e impressão;
-- `/genealogia` e `/visao-completa` resetam a geração ativa ao alternar view, pessoa central ou conjunto de gerações disponíveis.
+- `/genealogia` e `/visao-completa` resetam a geração ativa ao alternar view, pessoa central ou conjunto de gerações disponíveis;
+- títulos desktop das views da árvore usam hierarquia maior e externa ao canvas, evitando duplicidade de título interno;
+- na `/minha-arvore`, o botão de favorito da página fica próximo aos controles de zoom para reduzir dispersão no header;
+- o painel lateral desktop usa ritmo visual ampliado em títulos, subtítulos, cards e ações, sem scroll vertical interno quando o conteúdo cabe na viewport.
 
 Regras anti-regressão:
 
@@ -625,6 +631,8 @@ Comportamento consolidado:
 - status visual do anel considera união ativa, separação/divórcio, viuvez ou indefinido;
 - `/minha-arvore` aplica ajustes visuais próprios sem contaminar Genealogia/Visão Completa;
 - cards centrais de pai, mãe, irmãos, sobrinhos, cônjuge, filhos, netos e pets possuem largura ampliada na Minha Árvore;
+- cards compactos laterais/inferiores da Minha Árvore receberam ampliação visual recente para `360px`, com crescimento direcionado ao centro quando necessário;
+- nomes longos nesses cards devem quebrar linha de forma controlada, sem reticências prematuras;
 - grupos, labels e anchors da área central acompanham a largura ampliada;
 - título da árvore é overlay único em `FamilyTree.tsx`;
 - Genealogia e Visão Completa não devem renderizar título duplicado;
@@ -642,7 +650,7 @@ Regras anti-regressão:
 - não salvar filtros visuais como regra de negócio;
 - não alterar nodes, edges, handles ou dimensões do botão conjugal sem QA visual;
 - manter diferenças intencionais entre `/minha-arvore` e views por gerações;
-- não permitir que largura ampliada da Minha Árvore afete `/genealogia` ou `/visao-completa`;
+- não permitir que largura ampliada ou overrides visuais da Minha Árvore afetem `/genealogia` ou `/visao-completa`;
 - não duplicar controles mobile;
 - não permitir que `/visao-completa` herde geração ativa obsoleta de `/genealogia`.
 
@@ -675,7 +683,46 @@ Comportamento consolidado:
 
 ---
 
-## 13. Favoritos
+
+## 13. Curiosidades, conexão familiar e IA
+
+Documentação detalhada: `docs/funcionalidades/CURIOSIDADES_E_IA.md`.
+
+Arquivos principais:
+
+```txt
+src/app/pages/home/HomeCuriositiesDialog.tsx
+src/app/pages/home/ConnectionDiscoveryPanel.tsx
+src/app/pages/home/AiQuestionPanel.tsx
+src/app/pages/home/homeCuriositiesUtils.ts
+src/app/pages/home/homeAiContext.ts
+src/app/utils/relationshipDegreeDisplay.ts
+api/ai.ts
+```
+
+Comportamento consolidado:
+
+- o modal **Curiosidades** concentra abas de exploração familiar a partir dos dados já carregados pela Home;
+- tooltips de cidades em blocos como **Onde moram** e **Onde nasceram** devem ser estáveis e não provocar tremor/resize do modal;
+- a aba **Qual a minha conexão com alguém?** compara duas pessoas e exibe título de parentesco, subtítulo narrativo e caminho familiar;
+- narrativas de parentesco devem priorizar linguagem humana, como pai, mãe, irmão, primo, tio, sobrinho e tutor de pet;
+- nomes longos nos cards da conexão devem quebrar linha sem truncamento prematuro;
+- a aba **Pergunte à IA** usa contexto estruturado de pessoas, relacionamentos, cidades, gerações, irmãos e ancestrais;
+- respostas sobre bisavós, nascidos por cidade, irmãos, pessoas mais antigas, cidades recorrentes e resumo genealógico podem usar fallback determinístico para reduzir alucinação;
+- a IA não deve inferir condição financeira, saúde, orientação sexual, aparência, acusações, causa da morte não cadastrada ou dados privados sem base nos dados do sistema;
+- IDs técnicos, UUIDs e detalhes internos não devem aparecer para o usuário final.
+
+Regras anti-regressão:
+
+- não enviar secrets de IA para o frontend;
+- não expor dados ocultos por privacidade em resposta de IA;
+- não inventar parentesco quando o grafo não sustentar a relação;
+- não usar IA para gravar dados, alterar vínculos ou aprovar solicitações;
+- não transformar respostas probabilísticas em dado cadastral;
+- não deixar falha da IA quebrar o modal de Curiosidades.
+
+
+## 14. Favoritos
 
 Arquivos principais:
 
@@ -729,7 +776,7 @@ Regra anti-regressão:
 - não reintroduzir botão textual **Abrir conteúdo** sem decisão explícita de produto;
 - não permitir que a lixeira dispare navegação do card.
 
-## 14. Notificações
+## 15. Notificações
 
 Documentação detalhada: `docs/funcionalidades/NOTIFICACOES.md`.
 
@@ -769,7 +816,7 @@ Fora do MVP:
 
 ---
 
-## 15. Fórum
+## 16. Fórum
 
 Documentação detalhada: `docs/funcionalidades/FORUM.md`.
 
@@ -833,7 +880,7 @@ Regras anti-regressão:
 - não remover constraint de unicidade de `forum_reacoes`;
 - não interromper criação de tópico/resposta por falha de notificação.
 
-## 16. Calendário familiar e Google Calendar
+## 17. Calendário familiar e Google Calendar
 
 Documentação detalhada: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`.
 
@@ -859,11 +906,13 @@ Google Calendar:
 
 - integração está versionada em migration;
 - tokens devem ficar restritos a Edge Functions/service role;
-- OAuth, sincronização e proteção de tokens exigem validação operacional quando a frente for priorizada.
+- OAuth, sincronização e proteção de tokens exigem validação operacional quando a frente for priorizada;
+- `/entrar` deve exibir diretamente no JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda;
+- o app OAuth do Google deve corresponder visualmente ao nome e ao domínio público exibidos na home.
 
 ---
 
-## 17. Exportação da árvore
+## 18. Exportação da árvore
 
 Documentação detalhada: `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
@@ -899,7 +948,7 @@ Ponto técnico:
 
 ---
 
-## 18. Deploy, cache e recuperação de chunks
+## 19. Deploy, cache e recuperação de chunks
 
 Documentação detalhada: `docs/operacao/DEPLOYMENT.md` e `docs/GUIA_CORRECAO_ERROS.md`.
 
@@ -909,6 +958,7 @@ Arquivos principais:
 src/main.tsx
 vercel.json
 vite.config.ts
+api/ai.ts
 ```
 
 Comportamento consolidado:
@@ -917,7 +967,9 @@ Comportamento consolidado:
 - `index.html` deve ser servido sem cache forte;
 - `/assets/*` pode usar cache longo por conter hash;
 - `src/main.tsx` captura erros de dynamic import e faz reload controlado;
-- erro de MIME `text/html` para `.js` geralmente indica HTML antigo apontando para chunk removido.
+- erro de MIME `text/html` para `.js` geralmente indica HTML antigo apontando para chunk removido;
+- `/api/ai` é rota serverless do provedor quando a frente de IA está ativa e deve permanecer protegida por secrets server-side;
+- fallback SPA não deve capturar `/api/*`.
 
 Regra anti-regressão:
 
@@ -927,7 +979,7 @@ Regra anti-regressão:
 
 ---
 
-## 19. Banco, migrations e objetos legados
+## 20. Banco, migrations e objetos legados
 
 Documentação detalhada: `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
@@ -958,7 +1010,7 @@ Objetos legados/compatibilidade:
 
 ---
 
-## 20. Regras de segurança permanentes
+## 21. Regras de segurança permanentes
 
 Não deve acontecer:
 
@@ -981,7 +1033,7 @@ Não deve acontecer:
 
 ---
 
-## 21. Manutenção documental
+## 22. Manutenção documental
 
 Este guia deve permanecer como inventário consolidado.
 

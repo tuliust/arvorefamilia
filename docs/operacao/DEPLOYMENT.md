@@ -1,9 +1,9 @@
 # Deploy e operação
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/operacao/DEPLOYMENT.md`  
-> Tipo: checklist operacional de build, deploy e publicação.  
-> Status: revisado com política de cache real para SPA Vite/Vercel, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/operacao/DEPLOYMENT.md`
+> Tipo: checklist operacional de build, deploy e publicação.
+> Status: revisado com política de cache real para SPA Vite/Vercel, rotas serverless `/api/*`, IA, Google Agenda/OAuth, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
 
 ## 1. Objetivo
 
@@ -17,6 +17,8 @@ Use este arquivo para:
 - publicar SPA estática;
 - configurar cache e fallback de SPA;
 - checar Edge Functions;
+- checar rotas serverless do provedor, especialmente `/api/ai` quando ativa;
+- validar requisitos públicos de Google OAuth/Agenda;
 - evitar exposição de secrets;
 - separar deploy frontend de migration de banco.
 
@@ -78,9 +80,11 @@ Regras:
 
 ---
 
-## 5. Secrets server-side e Edge Functions
+## 5. Secrets server-side, Edge Functions e rotas `/api/*`
 
 Secrets de Edge Functions devem ficar no Supabase, não no repositório.
+
+Secrets de rotas serverless do provedor, como Vercel Functions em `api/`, devem ficar no painel do provedor de deploy, nunca no frontend e nunca prefixados com `VITE_`.
 
 Exemplos usados pelo projeto:
 
@@ -95,7 +99,23 @@ Rotinas/documentos relacionados:
 
 - `docs/funcionalidades/NOTIFICACOES.md`;
 - `docs/funcionalidades/CALENDARIO_FAMILIAR.md`;
+- `docs/funcionalidades/CURIOSIDADES_E_IA.md`;
 - `docs/operacao/MIGRATIONS_SUPABASE.md`.
+
+Variáveis server-side esperadas quando a frente de IA estiver ativa:
+
+```env
+OPENAI_API_KEY=<server-side-secret>
+OPENAI_MODEL=<modelo-opcional-ou-padrão-do-endpoint>
+```
+
+Regras para IA:
+
+- `OPENAI_API_KEY` não pode existir no frontend;
+- não usar prefixo `VITE_` para chave da OpenAI;
+- `api/ai.ts` deve executar apenas em ambiente serverless/backend;
+- falha da IA deve retornar erro controlado para a UI, sem quebrar o restante da Home;
+- logs não devem registrar prompt completo se houver dados pessoais sensíveis.
 
 ---
 
@@ -154,7 +174,8 @@ Regras para SPA:
 - conferir variáveis no ambiente correto;
 - não publicar build local com variáveis de projeto errado;
 - garantir que `index.html` não seja servido com cache forte;
-- garantir que assets versionados em `/assets/*` possam usar cache longo.
+- garantir que assets versionados em `/assets/*` possam usar cache longo;
+- preservar rewrites de `/api/(.*)` antes do fallback amplo para `index.html`.
 
 ---
 
@@ -237,6 +258,7 @@ Regras:
 ```txt
 Nunca deixar index.html com cache imutável em SPA Vite com code splitting.
 Não remover o fallback de /api/(.*) se houver rotas/API servidas pelo provedor.
+A regra de /api/(.*) deve vir antes do fallback amplo para index.html.
 ```
 
 ---
@@ -418,7 +440,86 @@ Regras:
 
 ---
 
-## 14. Checklist antes do deploy
+## 14. Google Agenda, OAuth e home pública
+
+A integração com Google Agenda exige consistência entre:
+
+- domínio final publicado;
+- nome do app exibido na tela pública;
+- nome configurado na tela de consentimento OAuth;
+- finalidade da integração declarada ao usuário;
+- escopos solicitados;
+- política de privacidade acessível.
+
+Arquivos relevantes:
+
+```txt
+src/app/pages/Entrar.tsx
+src/app/pages/CalendarioFamiliar.tsx
+src/app/services/googleCalendarService.ts
+supabase/functions/google-calendar-auth/index.ts
+supabase/functions/google-calendar-callback/index.ts
+supabase/functions/google-calendar-sync/index.ts
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+docs/funcionalidades/CURIOSIDADES_E_IA.md
+docs/arquitetura/ROTAS_E_GUARDS.md
+```
+
+Checklist de compliance antes de reenviar validação OAuth:
+
+- `/entrar` deve estar acessível publicamente sem login;
+- o título principal deve exibir **Família Souza Barros**;
+- o texto institucional deve explicar que a plataforma organiza árvore genealógica, perfis, fotos, documentos, memórias e datas familiares;
+- o texto sobre Google Agenda deve explicar sincronização de aniversários e datas de memória mediante autorização explícita;
+- esses textos devem estar renderizados diretamente no JSX/DOM, não apenas via pseudo-elemento CSS;
+- `/privacidade` e `/termos` devem permanecer acessíveis sem autenticação;
+- o domínio final deve corresponder ao domínio cadastrado no Google Cloud;
+- secrets OAuth devem ficar em Supabase/Edge Functions, não no frontend.
+
+Validação manual recomendada:
+
+```txt
+1. Abrir /entrar em janela anônima.
+2. Confirmar nome Família Souza Barros no hero.
+3. Confirmar texto de Google Agenda visível.
+4. Abrir /privacidade sem login.
+5. Abrir /termos sem login.
+6. Entrar com usuário autorizado.
+7. Abrir /calendario-familiar.
+8. Testar fluxo de conectar Google Agenda em ambiente autorizado.
+```
+
+---
+
+## 15. Serverless `/api/ai`
+
+O endpoint `api/ai.ts`, quando ativo no deploy, é uma rota serverless do provedor, não uma Supabase Edge Function.
+
+Regras:
+
+- preservar rewrite de `/api/(.*)` no `vercel.json`;
+- configurar `OPENAI_API_KEY` apenas no ambiente server-side do provedor;
+- não commitar `.env.local`;
+- não retornar stack trace ou segredo em erro;
+- limitar logs para evitar exposição de dados pessoais do contexto familiar;
+- testar resposta controlada no ambiente final;
+- se a chave não estiver configurada, a UI deve tratar o erro de forma amigável.
+
+Checklist manual:
+
+```txt
+1. Abrir /minha-arvore.
+2. Abrir Curiosidades.
+3. Abrir Pergunte à IA.
+4. Fazer pergunta simples coberta pelo contexto.
+5. Confirmar resposta sem UUIDs.
+6. Confirmar console sem erro crítico.
+7. Se a IA falhar, confirmar que o modal continua utilizável.
+```
+
+---
+
+## 16. Checklist antes do deploy
 
 ```bash
 git status --short
@@ -440,7 +541,8 @@ supabase functions list
 
 Verificar manualmente, conforme escopo alterado:
 
-- `/entrar`;
+- `/entrar` com nome **Família Souza Barros** e texto de Google Agenda;
+- `/api/ai` quando a frente de IA estiver ativa;
 - `/minha-arvore`;
 - `/genealogia`;
 - `/visao-completa`;
@@ -456,7 +558,7 @@ Verificar manualmente, conforme escopo alterado:
 
 ---
 
-## 15. Checklist depois do deploy
+## 17. Checklist depois do deploy
 
 - Abrir domínio final.
 - Conferir login.
@@ -470,11 +572,13 @@ Verificar manualmente, conforme escopo alterado:
 - Conferir console sem erro crítico.
 - Conferir Supabase Auth/Storage quando a frente afetar arquivos.
 - Conferir Edge Functions quando a frente afetar notificações/e-mail/Google Agenda.
+- Conferir rota serverless `/api/ai` quando a frente de IA estiver ativa.
+- Conferir `/entrar` em janela anônima quando houver alteração de OAuth, login ou Google Agenda.
 - Conferir se nenhuma migration pendente ficou sem aplicar quando o frontend depende dela.
 
 ---
 
-## 16. Troubleshooting rápido pós-deploy
+## 18. Troubleshooting rápido pós-deploy
 
 | Sintoma | Causa provável | Ação |
 |---|---|---|
@@ -486,10 +590,13 @@ Verificar manualmente, conforme escopo alterado:
 | Upload falha | bucket/policy/env incorreto | revisar Storage/RLS e `storageService.ts` |
 | Admin comum acessando rota | guard/RPC/RLS incorretos | revisar `ProtectedRoute`, `is_admin_user` e policies |
 | Tela branca sem build error | erro runtime/lazy import | abrir console, testar anônimo, checar chunks e imports |
+| `/api/ai` retorna HTML | fallback SPA capturou `/api/*` | revisar ordem dos rewrites no `vercel.json` |
+| IA falha em produção | `OPENAI_API_KEY` ausente/inválida ou endpoint serverless com erro | revisar variável server-side no provedor e logs sem expor dados pessoais |
+| Google rejeita OAuth | home pública não mostra nome/finalidade do app ou domínio divergente | revisar `/entrar`, tela OAuth, `/privacidade`, `/termos` e domínio autorizado |
 
 ---
 
-## 17. Não fazer
+## 19. Não fazer
 
 - Não usar `git add .` no commit documental final.
 - Não commitar `.env.local`.
@@ -499,18 +606,21 @@ Verificar manualmente, conforme escopo alterado:
 - Não liberar ferramenta destrutiva em produção por conveniência.
 - Não tratar warning de chunk grande como erro de deploy se o build passou e o warning já for conhecido.
 - Não cachear `index.html` como imutável.
+- Não deixar fallback SPA capturar `/api/ai`.
 - Não contornar migration ausente removendo payload de campo novo no frontend.
 - Não corrigir permissão apenas escondendo botão visual.
+- Não expor `OPENAI_API_KEY` ou secrets OAuth com prefixo `VITE_`.
 
 ---
 
-## 18. Documentos relacionados
+## 20. Documentos relacionados
 
 ```txt
 docs/operacao/MIGRATIONS_SUPABASE.md
 docs/operacao/STORAGE_MAINTENANCE.md
 docs/funcionalidades/NOTIFICACOES.md
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
+docs/funcionalidades/CURIOSIDADES_E_IA.md
 docs/arquitetura/ROTAS_E_GUARDS.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/FORUM.md

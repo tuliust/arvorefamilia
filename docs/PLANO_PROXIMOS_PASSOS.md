@@ -1,9 +1,9 @@
 # Plano de próximos passos - Árvore Família
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: plano vivo de pendências reais, divergências entre UI e documentação, QA futuro e backlog pós-MVP.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: plano vivo de pendências reais, divergências entre UI e documentação, QA futuro, dívida técnica e backlog pós-MVP após revisão de árvore, IA, Google/OAuth e deploy.
 
 ## Objetivo
 
@@ -37,6 +37,8 @@ Durante a revisão desta rodada, havia conflito Git não resolvido neste arquivo
 
 Também foi registrada a divergência ainda aberta na UI de `/forum`: a documentação prevê a remoção dos filtros de tipo/status, mas a validação visual indicou que os dropdowns ainda aparecem.
 
+Nesta revisão, foram acrescentadas pendências específicas dos ajustes recentes: consolidação estrutural de CSS visual da árvore, validação de cards compactos em `360px`, QA das respostas de IA, compliance OAuth/Google Agenda e operação do endpoint serverless `/api/ai`.
+
 ---
 
 ## 2. Pendências abertas
@@ -49,6 +51,12 @@ Também foi registrada a divergência ainda aberta na UI de `/forum`: a document
 | DOC-004 | `/minha-arvore` mobile | bug visual / conector inferior | Refazer a conexão inferior do card principal no mobile sem depender de CSS de bordas. O desenho desejado é uma haste central curta até uma linha horizontal, com uma haste à esquerda para **Irmãos** e uma haste à direita para **Cônjuge**, sem linha central prolongada entre os grupos. | Aberto |
 | DOC-005 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento mobile | Validar se a exportação rápida do `MobileTreeControlsPortal` deve reutilizar `treeExport.ts` ou manter implementação própria. Confirmar também política de `html2canvas`, CORS, elementos ignorados e comportamento de seleção manual no mobile. | Aberto |
 | DOC-006 | `src/app/pages/forum/ForumHome.tsx` / `docs/funcionalidades/FORUM.md` | divergência UI/documentação | Aplicar ou revisar a remoção real dos dropdowns **Todos os tipos** e **Todos os status** em `/forum`. A UI esperada deve manter apenas busca, categoria e botão icon-only de limpar filtros ao lado do dropdown de categoria. | Aberto |
+| DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. O arquivo hoje concentra árvore, modal, login/OAuth e ajustes pontuais. | Aberto |
+| DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
+| DOC-009 | `src/app/pages/home/homeAiContext.ts` / `api/ai.ts` | QA funcional / IA | Validar em produção ou preview as respostas de IA para bisavós paternos, nascidos em Recife, irmãos de Márcio, pessoas mais antigas, cidades recorrentes e resumo genealógico, garantindo ausência de IDs e de inferências sensíveis. | Aberto |
+| DOC-010 | `/entrar` / Google OAuth | compliance / validação externa | Confirmar se a home pública exibe no DOM/JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda de forma compatível com a revisão OAuth do Google. | Aberto |
+| DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
+| DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o novo documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
 
 Regras:
 
@@ -251,7 +259,74 @@ Em mobile, os controles podem quebrar linha conforme largura, mas não devem rei
 
 ---
 
-## 6. Backlog futuro confirmado
+## 6. Pendências específicas: árvore, IA e OAuth
+
+### 6.1 Consolidação de CSS visual da árvore
+
+A camada `src/styles/family-tree-visual-polish.css` acumulou ajustes de:
+
+- cores de linhas e conectores;
+- largura visual de cards compactos na `/minha-arvore`;
+- deslocamento de cards do lado direito em direção ao centro;
+- quebra de nomes longos sem reticências;
+- estabilização de tooltip em modal;
+- overrides antigos relacionados à home pública.
+
+Critério de aceite futuro:
+
+- mover regras estáveis para componentes, tokens ou cálculos de layout;
+- reduzir seletores baseados em `style*="width: 340px"` e `translate(...)`;
+- preservar isolamento de `/minha-arvore`;
+- validar que `/genealogia` e `/visao-completa` não herdam ajustes da view direta.
+
+### 6.2 Cards compactos de `360px` na `/minha-arvore`
+
+A decisão visual recente ampliou cards compactos de grupos laterais/inferiores para `360px`.
+
+Critérios de QA:
+
+- pais, irmãos, sobrinhos, cônjuge, filhos, netos e pets legíveis;
+- avós, bisavós, tios e primos sem linhas horizontais excessivamente longas;
+- cards do lado direito crescendo em direção ao centro;
+- nomes longos com quebra natural e sem `...` prematuro;
+- card central da pessoa foco sem ampliação indevida;
+- nenhuma alteração visual herdada por `/genealogia` ou `/visao-completa`.
+
+### 6.3 IA e Curiosidades
+
+Perguntas prioritárias para validação:
+
+```txt
+Quem são meus bisavós paternos?
+Quantas pessoas nasceram em Recife?
+Quem são os irmãos de Márcio Ailton?
+Quais são as pessoas mais antigas?
+Quais cidades aparecem mais vezes como local de nascimento?
+Monte um resumo da linha genealógica de Tulius.
+```
+
+Critérios:
+
+- resposta sem UUIDs ou IDs técnicos;
+- uso de `você/seu/sua` quando a referência for a pessoa central;
+- ausência de inferência sobre saúde, dinheiro, orientação sexual, aparência ou acusações;
+- fallback determinístico quando o dado estiver no contexto estruturado;
+- falha da IA não deve quebrar o modal.
+
+### 6.4 Google Agenda/OAuth
+
+Critérios para considerar a pendência fechada:
+
+- `/entrar` mostra **Família Souza Barros** como nome principal do app;
+- `/entrar` explica que a plataforma organiza árvore, perfis, fotos, documentos, memórias e datas familiares;
+- `/entrar` explica que Google Agenda sincroniza aniversários e datas de memória mediante autorização explícita;
+- o texto existe diretamente no JSX/DOM, não apenas em pseudo-elemento CSS;
+- domínio, nome do app e finalidade declarada são coerentes com a tela de consentimento OAuth.
+
+---
+
+
+## 7. Backlog futuro confirmado
 
 | Frente | Direção futura | Status |
 |---|---|---|
@@ -268,7 +343,7 @@ Em mobile, os controles podem quebrar linha conforme largura, mas não devem rei
 
 ---
 
-## 7. Critérios permanentes de bloqueio
+## 8. Critérios permanentes de bloqueio
 
 - build quebrado;
 - login quebrado;
@@ -285,7 +360,7 @@ Em mobile, os controles podem quebrar linha conforme largura, mas não devem rei
 
 ---
 
-## 8. Regras para alteração documental
+## 9. Regras para alteração documental
 
 - não alterar código do sistema durante uma frente apenas documental;
 - não aplicar migration;
@@ -299,21 +374,22 @@ Em mobile, os controles podem quebrar linha conforme largura, mas não devem rei
 
 ---
 
-## 9. Controle da revisão documental
+## 10. Controle da revisão documental
 
 | Ordem | Documento | Status | Observações |
 |---:|---|---|---|
 | 1 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado | Conflitos Git resolvidos; DOC-004 e DOC-005 separados; DOC-006 adicionado para filtros da home do fórum. |
 | 2 | `docs/README.md` | Revisar se necessário | Atualizar lista de pendências abertas após substituição deste plano. |
-| 3 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inventário consolidado ajustado para fórum, favoritos e pendências reais. |
+| 3 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inventário consolidado ajustado para árvore, IA, Google/OAuth, fórum, favoritos e pendências reais. |
 | 4 | `docs/GUIA_UX_LAYOUT.md` | Revisar em seguida | Atualizar padrões visuais de fórum e favoritos. |
 | 5 | `docs/GUIA_COMPONENTES.md` | Revisar em seguida | Atualizar responsabilidades de `ForumTopico`, `ForumHome` e `MeusFavoritos`. |
 | 6 | `docs/funcionalidades/FORUM.md` | Revisado nesta rodada | Alinhado ao padrão atual: categoria, respostas diretas, sem box de pessoa relacionada e sem comentário aninhado na UI. |
-| 7 | `docs/operacao/DEPLOYMENT.md` | Revisão leve recomendada | Conferir se exemplo de cache corresponde exatamente ao `vercel.json` versionado. |
+| 7 | `docs/operacao/DEPLOYMENT.md` | Revisado nesta rodada | Inclui `/api/ai`, variáveis server-side, Google/OAuth e checklist pós-deploy. |
+| 8 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | Criado nesta rodada | Novo guia funcional para Curiosidades, conexão familiar e IA. |
 
 ---
 
-## 10. Comandos para commit documental
+## 11. Comandos para commit documental
 
 Executar apenas quando todos os arquivos revisados forem substituídos manualmente:
 
@@ -326,9 +402,9 @@ npm run build
 Commit sugerido para os documentos desta rodada:
 
 ```bash
-git add docs/PLANO_PROXIMOS_PASSOS.md docs/GUIA_IMPLEMENTACOES.md docs/funcionalidades/FORUM.md
-git add docs/GUIA_UX_LAYOUT.md docs/GUIA_COMPONENTES.md docs/README.md docs/operacao/DEPLOYMENT.md
-git commit -m "docs: align forum favorites and pending plan"
+git add docs/PLANO_PROXIMOS_PASSOS.md docs/GUIA_IMPLEMENTACOES.md docs/operacao/DEPLOYMENT.md
+git add docs/funcionalidades/CURIOSIDADES_E_IA.md
+git commit -m "docs: align implementation plan deployment and AI"
 git pull --rebase origin main
 git push origin main
 ```
