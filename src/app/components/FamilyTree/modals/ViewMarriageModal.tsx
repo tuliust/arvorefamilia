@@ -10,9 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../ui/dialog';
+import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { ArquivosHistoricos } from '../../ArquivosHistoricos';
-import { ArquivoHistorico, Pessoa, Relacionamento } from '../../../types';
+import { ArquivoHistorico, HistoricalFileEventCategory, Pessoa, Relacionamento } from '../../../types';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   listarArquivosHistoricosDoRelacionamento,
@@ -33,6 +34,19 @@ interface ViewMarriageModalProps {
 type ParsedDate = {
   date: Date;
   formatted: string;
+};
+
+const MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEventCategory; label: string }> = [
+  { value: 'certidao_casamento', label: 'Certidão de Casamento' },
+  { value: 'divorcio', label: 'Divórcio' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const EMPTY_SUGGESTION_FORM = {
+  informacoes: '',
+  data: '',
+  local: '',
+  outros: '',
 };
 
 function getRelationshipField(
@@ -218,7 +232,7 @@ export function ViewMarriageModal({
   const [resolvedIsAdmin, setResolvedIsAdmin] = useState(isAdmin);
   const [canEditLinkedPeople, setCanEditLinkedPeople] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
-  const [suggestionText, setSuggestionText] = useState('');
+  const [suggestionForm, setSuggestionForm] = useState(EMPTY_SUGGESTION_FORM);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const relacionamentoId = marriage?.relationship?.id ?? marriage?.id ?? null;
   const canManageRelationshipDirectly = resolvedIsAdmin && Boolean(relacionamentoId);
@@ -327,6 +341,7 @@ export function ViewMarriageModal({
   );
   const narrativeLines = buildMarriageNarrative(marriage.relationship);
   const targetPessoaId = marriage.person1?.id ?? marriage.person1Id ?? marriage.person2?.id ?? marriage.person2Id;
+  const hasSuggestionContent = Object.values(suggestionForm).some((value) => value.trim());
 
   const handleArquivosChange = (nextArquivos: ArquivoHistorico[]) => {
     setArquivos(nextArquivos);
@@ -358,11 +373,7 @@ export function ViewMarriageModal({
       return;
     }
 
-    if (canManageRelationshipDirectly) {
-      toast.info('Use o botão + em Arquivos Históricos para inserir diretamente neste relacionamento.');
-      return;
-    }
-
+    setSuggestionForm(EMPTY_SUGGESTION_FORM);
     setSuggestionOpen(true);
   };
 
@@ -372,7 +383,7 @@ export function ViewMarriageModal({
   };
 
   const handleSubmitSuggestion = async () => {
-    if (!targetPessoaId || suggestionLoading) return;
+    if (!targetPessoaId || suggestionLoading || !hasSuggestionContent) return;
 
     setSuggestionLoading(true);
     try {
@@ -383,12 +394,18 @@ export function ViewMarriageModal({
           ? 'Solicitação enviada por pessoa autorizada para este contexto, sem fluxo direto disponível no modal.'
           : 'Sugestão enviada por usuário sem permissão direta.',
       ].filter(Boolean).join(' ');
+      const suggestionLines = [
+        `Informações: ${suggestionForm.informacoes.trim() || 'Não informado'}`,
+        `Data: ${suggestionForm.data.trim() || 'Não informado'}`,
+        `Local: ${suggestionForm.local.trim() || 'Não informado'}`,
+        `Outros: ${suggestionForm.outros.trim() || 'Não informado'}`,
+      ].join('\n');
 
       await createPersonProfileSuggestion({
         targetPessoaId,
-        suggestionText: `${context}\n\n${suggestionText.trim()}`,
+        suggestionText: `${context}\n\n${suggestionLines}`,
       });
-      setSuggestionText('');
+      setSuggestionForm(EMPTY_SUGGESTION_FORM);
       setSuggestionOpen(false);
       toast.success('Sugestão enviada para revisão administrativa.');
     } catch (error) {
@@ -509,6 +526,7 @@ export function ViewMarriageModal({
                 readOnly={!canManageRelationshipDirectly}
                 onRequestAdd={handleRequestAddHistoricalFile}
                 addButtonVariant="icon"
+                eventCategoryOptions={MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS}
               />
             )}
 
@@ -542,13 +560,59 @@ export function ViewMarriageModal({
             </DialogDescription>
           </DialogHeader>
 
-          <Textarea
-            value={suggestionText}
-            onChange={(event) => setSuggestionText(event.target.value)}
-            rows={6}
-            placeholder="Descreva a informação, correção, história ou arquivo histórico que deseja sugerir."
-            aria-label="Informação sugerida"
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700" htmlFor="relationship-info">
+                Informações
+              </label>
+              <Textarea
+                id="relationship-info"
+                value={suggestionForm.informacoes}
+                onChange={(event) => setSuggestionForm((current) => ({ ...current, informacoes: event.target.value }))}
+                rows={4}
+                placeholder="Descreva a informação, correção ou história sobre este relacionamento."
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700" htmlFor="relationship-date">
+                  Data
+                </label>
+                <Input
+                  id="relationship-date"
+                  value={suggestionForm.data}
+                  onChange={(event) => setSuggestionForm((current) => ({ ...current, data: event.target.value }))}
+                  placeholder="Ex: 24/09/2009"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700" htmlFor="relationship-place">
+                  Local
+                </label>
+                <Input
+                  id="relationship-place"
+                  value={suggestionForm.local}
+                  onChange={(event) => setSuggestionForm((current) => ({ ...current, local: event.target.value }))}
+                  placeholder="Ex: Natal/RN"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700" htmlFor="relationship-other">
+                Outros
+              </label>
+              <Textarea
+                id="relationship-other"
+                value={suggestionForm.outros}
+                onChange={(event) => setSuggestionForm((current) => ({ ...current, outros: event.target.value }))}
+                rows={3}
+                placeholder="Observações adicionais."
+              />
+            </div>
+          </div>
 
           <DialogFooter>
             <Button
@@ -562,7 +626,7 @@ export function ViewMarriageModal({
             <Button
               type="button"
               onClick={handleSubmitSuggestion}
-              disabled={suggestionLoading || !suggestionText.trim() || !targetPessoaId}
+              disabled={suggestionLoading || !hasSuggestionContent || !targetPessoaId}
             >
               {suggestionLoading ? 'Enviando...' : 'Enviar sugestão'}
             </Button>
