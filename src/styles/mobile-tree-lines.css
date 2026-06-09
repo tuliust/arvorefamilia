@@ -1,16 +1,22 @@
 @media (max-width: 767px) {
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-siblings-group,
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-spouse-group,
   [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-children-group,
   [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-pets-group,
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-central-to-siblings-group"],
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-central-to-spouse-group"],
   [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-central-to-children-group"],
   [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-central-to-pets-group"],
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] [id="react-flow__edge-direct-central-to-siblings-group"],
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] [id="react-flow__edge-direct-central-to-spouse-group"],
   [data-export-root="family-tree"][data-export-view="minha-arvore"] [id="react-flow__edge-direct-central-to-children-group"],
   [data-export-root="family-tree"][data-export-view="minha-arvore"] [id="react-flow__edge-direct-central-to-pets-group"] {
     display: none !important;
+  }
+
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-irmaos {
+    border-right-color: transparent !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-conjuge {
+    border-left-color: transparent !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
   }
 }
