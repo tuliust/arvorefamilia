@@ -97,13 +97,44 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || name.trim();
 }
 
-function buildRelationshipHeadline(person1Name?: string, person2Name?: string) {
+function isPersonDeceased(person?: Pessoa) {
+  return Boolean(person?.falecido || person?.data_falecimento || person?.local_falecimento);
+}
+
+function isRelationshipInactive(relationship?: Relacionamento) {
+  const relationshipRecord = (relationship || {}) as Record<string, unknown>;
+  const separationDate = getRelationshipField(relationshipRecord, [
+    'data_separacao',
+    'data_fim',
+  ]);
+  const activeValue = relationshipRecord.ativo;
+  const subtype = String(relationshipRecord.subtipo_relacionamento ?? '').trim().toLowerCase();
+
+  return Boolean(
+    separationDate ||
+    activeValue === false ||
+    subtype === 'separado'
+  );
+}
+
+function buildRelationshipHeadline(
+  person1Name?: string,
+  person2Name?: string,
+  relationship?: Relacionamento,
+  person1?: Pessoa,
+  person2?: Pessoa
+) {
   const name1 = person1Name?.trim() ? getFirstName(person1Name) : undefined;
   const name2 = person2Name?.trim() ? getFirstName(person2Name) : undefined;
+  const shouldUsePresent = Boolean(
+    !isRelationshipInactive(relationship) &&
+    !isPersonDeceased(person1) &&
+    !isPersonDeceased(person2)
+  );
 
-  if (name1 && name2) return `${name1} e ${name2} foram casados.`;
-  if (name1) return `${name1} teve um casamento registrado.`;
-  if (name2) return `${name2} teve um casamento registrado.`;
+  if (name1 && name2) return `${name1} e ${name2} ${shouldUsePresent ? 'são' : 'foram'} casados.`;
+  if (name1) return `${name1} ${shouldUsePresent ? 'tem' : 'teve'} um casamento registrado.`;
+  if (name2) return `${name2} ${shouldUsePresent ? 'tem' : 'teve'} um casamento registrado.`;
 
   return 'Casamento registrado na árvore familiar.';
 }
@@ -289,7 +320,10 @@ export function ViewMarriageModal({
   const person2Name = getSafePersonName(marriage.person2, marriage.person2Id || 'Pessoa 2');
   const relationshipHeadline = buildRelationshipHeadline(
     marriage.person1?.nome_completo,
-    marriage.person2?.nome_completo
+    marriage.person2?.nome_completo,
+    marriage.relationship,
+    marriage.person1,
+    marriage.person2
   );
   const narrativeLines = buildMarriageNarrative(marriage.relationship);
   const targetPessoaId = marriage.person1?.id ?? marriage.person1Id ?? marriage.person2?.id ?? marriage.person2Id;
