@@ -20,6 +20,13 @@ import { isAdminUser } from '../../services/permissionService';
 import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
 import { clearTreeDataCache } from '../../services/treeDataCache';
 import type { Pessoa } from '../../types';
+import {
+  TREE_COLOR_PALETTE_CSS_VARIABLES,
+  TREE_COLOR_PALETTE_STORAGE_KEY,
+  TREE_COLOR_PALETTES,
+  isTreeColorPalette,
+  type TreeColorPalette,
+} from '../FamilyTree/treeColorPalettes';
 
 function getInitials(displayName: string) {
   const cleanName = displayName.trim();
@@ -50,6 +57,28 @@ const TREE_VIEW_OPTIONS = [
   { label: 'Visão Completa', path: '/visao-completa' },
 ];
 
+const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
+
+function getStoredPalette(): TreeColorPalette {
+  if (typeof window === 'undefined') return 'white';
+
+  const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
+  return isTreeColorPalette(stored) ? stored : 'white';
+}
+
+function applyTreePalette(value: TreeColorPalette) {
+  if (typeof document === 'undefined') return;
+
+  const palette = TREE_COLOR_PALETTES[value];
+  const root = document.documentElement;
+
+  root.dataset.treeColorPalette = value;
+
+  TREE_COLOR_PALETTE_CSS_VARIABLES.forEach((variableName) => {
+    root.style.setProperty(variableName, palette.cssVariables[variableName]);
+  });
+}
+
 interface UserProfileMenuProps {
   variant?: 'avatar' | 'home-header';
 }
@@ -63,6 +92,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [linkedPerson, setLinkedPerson] = useState<Pessoa | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +124,21 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
       cancelled = true;
     };
   }, [user]);
+
+  useEffect(() => {
+    applyTreePalette(treeColorPalette);
+    window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
+  }, [treeColorPalette]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    document.documentElement.classList.toggle('mobile-user-menu-open', open);
+
+    return () => {
+      document.documentElement.classList.remove('mobile-user-menu-open');
+    };
+  }, [open]);
 
   const displayName = String(
     linkedPerson?.nome_completo ||
@@ -199,14 +244,14 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[80] bg-black/30 md:hidden"
+            className="fixed inset-0 z-[10000] bg-black/30 md:hidden"
             onClick={() => setOpen(false)}
             aria-label="Fechar menu do usuário"
           />
 
           <div
             ref={menuRef}
-            className="fixed left-4 right-4 top-20 z-[90] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
+            className="fixed left-4 right-4 top-20 z-[10020] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
           >
             <div className="mb-3 flex items-start gap-2 border-b border-gray-100 pb-4">
               <button
@@ -276,6 +321,37 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                         </button>
                       );
                     })}
+                  </div>
+
+                  <div className="mt-3 border-t border-blue-100 px-1 pt-3">
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-900">Cores da árvore</div>
+                    <div className="flex items-center gap-3">
+                      {paletteOptions.map((paletteKey) => {
+                        const palette = TREE_COLOR_PALETTES[paletteKey];
+                        const isActive = paletteKey === treeColorPalette;
+
+                        return (
+                          <button
+                            key={paletteKey}
+                            type="button"
+                            aria-label={palette.ariaLabel}
+                            aria-pressed={isActive}
+                            title={palette.label}
+                            className={[
+                              'h-7 w-7 rounded-full border transition',
+                              isActive
+                                ? 'scale-110 ring-2 ring-slate-900 ring-offset-2'
+                                : 'hover:scale-105 hover:ring-2 hover:ring-slate-300 hover:ring-offset-1',
+                            ].join(' ')}
+                            style={{
+                              backgroundColor: palette.swatch,
+                              borderColor: palette.swatchBorder,
+                            }}
+                            onClick={() => setTreeColorPalette(paletteKey)}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
