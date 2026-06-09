@@ -1,4 +1,5 @@
-﻿import type { Pessoa } from '../types';
+import type { Pessoa } from '../types';
+import { isPetFamilyMember } from './personEntity';
 import { isPersonDeceased } from './personFields';
 import type {
   RelationshipConfidence,
@@ -188,8 +189,8 @@ function getFirstNameToken(name: string) {
 }
 function getParentLabelByPersonName(name: string) {
   const firstName = getFirstNameToken(name);
-  const knownFemaleNames = new Set(['bianca', 'lourdes', 'monika', 'monica', 'roseli', 'rosely']);
-  const knownMaleNames = new Set(['caio', 'fabio', 'fábio', 'marcio', 'márcio', 'yuri', 'tulius', 'tassius', 'absalon']);
+  const knownFemaleNames = new Set(['bianca', 'condilênia', 'condilenia', 'ivania', 'ivânia', 'lourdes', 'monika', 'monica', 'roseli', 'rosely']);
+  const knownMaleNames = new Set(['absalon', 'caio', 'fabio', 'fábio', 'marcio', 'márcio', 'tulius', 'tassius', 'yuri']);
   const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da', 'eli'];
 
   if (knownMaleNames.has(firstName)) return 'pai';
@@ -309,6 +310,8 @@ function getSiblingSpouseSentence(result: RelationshipDegreeResult, people: Pess
 
 export function getRelationshipResultSentence(result: RelationshipDegreeResult, people: Pessoa[]) {
   const { originName, targetName, originFirstName, targetFirstName } = getRelationshipPeople(result, people);
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const targetPerson = peopleById.get(result.targetPersonId);
 
   if (!result.found) {
     return `Não foi encontrado vínculo familiar entre ${originName} e ${targetName}.`;
@@ -350,6 +353,10 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
   }
 
   if (pattern === 'parent') {
+    if (isPetFamilyMember(targetPerson)) {
+      return `${originName} é tutor de ${targetName}.`;
+    }
+
     return `${originName} é ${getDirectParentPresentationLabel(result)} de ${targetName}.`;
   }
 
