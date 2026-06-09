@@ -5,6 +5,7 @@ import { MarriageNode } from './MarriageNode';
 import { DirectFamilyLabelNode } from './DirectFamilyLabelNode';
 import { GenealogyFamilyConnectorNode } from './GenealogyFamilyConnectorNode';
 import { FAMILY_TREE_COLORS } from './visualTokens';
+import { PersonNodeData } from './types';
 import {
   DIRECT_FAMILY_GROUP_CONTAINER_BORDER,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
@@ -20,6 +21,18 @@ interface DirectFamilyLegendNodeData {
   height?: number;
 }
 
+const CENTRAL_AREA_CARD_EXTRA_WIDTH = 80;
+const DIRECT_FAMILY_LOGICAL_CENTER_X = 1610;
+const CENTRAL_AREA_CARD_RELATIONS = new Set([
+  'parent',
+  'sibling',
+  'nephewNiece',
+  'spouse',
+  'child',
+  'grandchild',
+  'pet',
+]);
+
 function DirectFamilyAnchorNode() {
   const hiddenHandle = { background: 'transparent', border: 'none', width: 1, height: 1 };
 
@@ -32,6 +45,43 @@ function DirectFamilyAnchorNode() {
     React.createElement(Handle, { type: 'target', position: Position.Right, id: 'right', style: { right: 0, top: 0, ...hiddenHandle } }),
     React.createElement(Handle, { type: 'source', position: Position.Left, id: 'left', style: { left: 0, top: 0, ...hiddenHandle } }),
     React.createElement(Handle, { type: 'target', position: Position.Left, id: 'left', style: { left: 0, top: 0, ...hiddenHandle } })
+  );
+}
+
+function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
+  const relation = props.data?.directRelation;
+  const shouldStretchCard = Boolean(
+    relation &&
+    !props.data?.isCentralPerson &&
+    CENTRAL_AREA_CARD_RELATIONS.has(relation)
+  );
+
+  if (!shouldStretchCard) {
+    return React.createElement(PersonNode, props);
+  }
+
+  const currentWidth = Number(props.data?.layoutWidth || props.data?.width);
+  const nextWidth = Number.isFinite(currentWidth) && currentWidth > 0
+    ? currentWidth + CENTRAL_AREA_CARD_EXTRA_WIDTH
+    : currentWidth;
+  const shouldStretchLeft = typeof props.xPos === 'number' && props.xPos > DIRECT_FAMILY_LOGICAL_CENTER_X;
+  const nextProps = {
+    ...props,
+    data: {
+      ...props.data,
+      width: nextWidth,
+      layoutWidth: nextWidth,
+    },
+  };
+
+  return React.createElement(
+    'div',
+    {
+      style: {
+        transform: shouldStretchLeft ? `translateX(-${CENTRAL_AREA_CARD_EXTRA_WIDTH}px)` : undefined,
+      },
+    },
+    React.createElement(PersonNode, nextProps)
   );
 }
 
@@ -115,7 +165,7 @@ function DirectFamilyLegendNode({ data }: NodeProps<DirectFamilyLegendNodeData>)
 }
 
 export const nodeTypes: NodeTypes = {
-  personNode: PersonNode,
+  personNode: CentralAreaPersonNode,
   marriageNode: MarriageNode,
   directFamilyLabelNode: DirectFamilyLabelNode,
   directFamilyAnchorNode: DirectFamilyAnchorNode,
