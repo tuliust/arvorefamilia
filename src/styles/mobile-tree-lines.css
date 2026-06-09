@@ -1,0 +1,8 @@
+@media (max-width: 767px) {
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-siblings-group,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-spouse-group,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-children-group,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .react-flow__edge-direct-central-to-pets-group {
+    display: none !important;
+  }
+}
