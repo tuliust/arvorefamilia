@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import {
   ChevronDown,
   Download,
@@ -17,10 +15,41 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const TREE_PATHS = new Set(['/minha-arvore', '/genealogia', '/visao-completa']);
+import {
+  buildTreeExportFilename,
+  captureElementToCanvas,
+  downloadCanvasAsPng,
+  exportCanvasAsPdf,
+  openTreePrintWindow,
+  printCanvas,
+} from './utils/treeExport';
+
+type TreeRouteConfig = {
+  label: string;
+  title: string;
+};
+
+const TREE_ROUTES: Record<string, TreeRouteConfig> = {
+  '/minha-arvore': {
+    label: 'minha-arvore',
+    title: 'Minha Árvore',
+  },
+  '/genealogia': {
+    label: 'genealogia',
+    title: 'Genealogia',
+  },
+  '/visao-completa': {
+    label: 'visao-completa',
+    title: 'Visão Completa',
+  },
+};
 
 function getCurrentPath() {
   return window.location.pathname.replace(/\/$/, '') || '/';
+}
+
+function getCurrentTreeRoute() {
+  return TREE_ROUTES[getCurrentPath()] ?? TREE_ROUTES['/minha-arvore'];
 }
 
 function getTreeRoot() {
@@ -34,102 +63,67 @@ function getTreeCaptureElement() {
 function clickTreeButton(label: string) {
   const root = getTreeRoot();
   const button = root?.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
-  if (!button || button.disabled) return false;
+
+  if (!button || button.disabled) {
+    return false;
+  }
+
   button.click();
   return true;
 }
 
-function getFilename(extension: string) {
-  const path = getCurrentPath();
-  const prefix = path === '/genealogia'
-    ? 'genealogia'
-    : path === '/visao-completa'
-      ? 'visao-completa'
-      : 'minha-arvore';
-  const timestamp = new Date().toISOString().slice(0, 10);
-  return `${prefix}-${timestamp}.${extension}`;
+function runTreeButton(label: string, fallbackMessage: string) {
+  if (!clickTreeButton(label)) {
+    toast.info(fallbackMessage);
+  }
 }
 
 async function captureTreeCanvas() {
   const element = getTreeCaptureElement() ?? getTreeRoot();
+
   if (!element) {
     throw new Error('Área da árvore não encontrada.');
   }
 
-  return html2canvas(element, {
-    backgroundColor: '#ffffff',
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    scale: Math.min(2, window.devicePixelRatio || 1),
-  });
-}
-
-function downloadCanvas(canvas: HTMLCanvasElement, filename: string) {
-  const link = document.createElement('a');
-  link.href = canvas.toDataURL('image/png');
-  link.download = filename;
-  link.click();
+  return captureElementToCanvas(element);
 }
 
 async function saveTreeImage() {
+  const { label } = getCurrentTreeRoute();
   const canvas = await captureTreeCanvas();
-  downloadCanvas(canvas, getFilename('png'));
+
+  downloadCanvasAsPng(canvas, buildTreeExportFilename(label, 'png'));
 }
 
 async function saveTreePdf() {
+  const { label, title } = getCurrentTreeRoute();
   const canvas = await captureTreeCanvas();
-  const imageData = canvas.toDataURL('image/png');
-  const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
-  const pdf = new jsPDF({ orientation, unit: 'pt', format: 'a4' });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
-  const width = canvas.width * ratio;
-  const height = canvas.height * ratio;
-  const x = (pageWidth - width) / 2;
-  const y = (pageHeight - height) / 2;
 
-  pdf.addImage(imageData, 'PNG', x, y, width, height);
-  pdf.save(getFilename('pdf'));
+  await exportCanvasAsPdf(
+    canvas,
+    buildTreeExportFilename(label, 'pdf'),
+    title,
+  );
 }
 
 async function printTree() {
+  const { title } = getCurrentTreeRoute();
+  const printWindow = openTreePrintWindow();
   const canvas = await captureTreeCanvas();
-  const imageData = canvas.toDataURL('image/png');
-  const printWindow = window.open('', '_blank', 'noopener,noreferrer');
 
-  if (!printWindow) {
-    throw new Error('Não foi possível abrir a janela de impressão.');
-  }
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Imprimir árvore</title>
-        <style>
-          body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fff; }
-          img { max-width: 100vw; max-height: 100vh; object-fit: contain; }
-        </style>
-      </head>
-      <body>
-        <img src="${imageData}" alt="Árvore genealógica" />
-        <script>window.onload = () => { window.focus(); window.print(); };</script>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
+  printCanvas(canvas, title, printWindow);
 }
 
 export function MobileTreeControlsPortal() {
   const [path, setPath] = useState(() => getCurrentPath());
   const [panelOpen, setPanelOpen] = useState(false);
   const [arrowsVisible, setArrowsVisible] = useState(true);
-  const isTreePage = useMemo(() => TREE_PATHS.has(path), [path]);
+  const isTreePage = useMemo(() => Boolean(TREE_ROUTES[path]), [path]);
 
   useEffect(() => {
     const updatePath = () => setPath(getCurrentPath());
     const interval = window.setInterval(updatePath, 350);
+
     window.addEventListener('popstate', updatePath);
 
     return () => {
@@ -140,17 +134,29 @@ export function MobileTreeControlsPortal() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('mobile-tree-controls-arrows-hidden', isTreePage && !arrowsVisible);
+
     return () => {
       document.documentElement.classList.remove('mobile-tree-controls-arrows-hidden');
     };
   }, [arrowsVisible, isTreePage]);
+
+  useEffect(() => {
+    if (!isTreePage) {
+      setPanelOpen(false);
+      setArrowsVisible(true);
+    }
+  }, [isTreePage]);
 
   if (!isTreePage) return null;
 
   const runAction = async (action: () => void | Promise<void>, successMessage?: string) => {
     try {
       await action();
-      if (successMessage) toast.success(successMessage);
+      setPanelOpen(false);
+
+      if (successMessage) {
+        toast.success(successMessage);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível concluir a ação.');
     }
@@ -171,11 +177,17 @@ export function MobileTreeControlsPortal() {
           </div>
 
           <div className="mobile-tree-controls-grid">
-            <button type="button" onClick={() => clickTreeButton('Aumentar zoom')}>
+            <button
+              type="button"
+              onClick={() => runTreeButton('Aumentar zoom', 'Controle de zoom indisponível nesta visualização.')}
+            >
               <Plus className="h-4 w-4" />
               Zoom +
             </button>
-            <button type="button" onClick={() => clickTreeButton('Diminuir zoom')}>
+            <button
+              type="button"
+              onClick={() => runTreeButton('Diminuir zoom', 'Controle de zoom indisponível nesta visualização.')}
+            >
               <Minus className="h-4 w-4" />
               Zoom -
             </button>
@@ -187,15 +199,15 @@ export function MobileTreeControlsPortal() {
               {arrowsVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               {arrowsVisible ? 'Ocultar setas' : 'Exibir setas'}
             </button>
-            <button type="button" onClick={() => runAction(saveTreePdf, 'PDF gerado.')}>
+            <button type="button" onClick={() => void runAction(saveTreePdf, 'PDF gerado.')}>
               <FileText className="h-4 w-4" />
               PDF
             </button>
-            <button type="button" onClick={() => runAction(saveTreeImage, 'Imagem gerada.')}>
+            <button type="button" onClick={() => void runAction(saveTreeImage, 'Imagem gerada.')}>
               <FileImage className="h-4 w-4" />
               Imagem
             </button>
-            <button type="button" onClick={() => runAction(printTree)}>
+            <button type="button" onClick={() => void runAction(printTree)}>
               <Printer className="h-4 w-4" />
               Imprimir
             </button>
