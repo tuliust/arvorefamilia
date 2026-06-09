@@ -235,21 +235,26 @@ export function ViewMarriageModal({
   const [suggestionForm, setSuggestionForm] = useState(EMPTY_SUGGESTION_FORM);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const relacionamentoId = marriage?.relationship?.id ?? marriage?.id ?? null;
-  const canManageRelationshipDirectly = resolvedIsAdmin && Boolean(relacionamentoId);
   const canInsertRelationshipInfo = resolvedIsAdmin || canEditLinkedPeople;
+  const canManageHistoricalFiles = Boolean(relacionamentoId);
 
   useEffect(() => {
     if (!open) return;
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (suggestionOpen) {
+          setSuggestionOpen(false);
+          return;
+        }
+
         onClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [open, onClose]);
+  }, [open, onClose, suggestionOpen]);
 
   useEffect(() => {
     let mounted = true;
@@ -375,11 +380,6 @@ export function ViewMarriageModal({
 
     setSuggestionForm(EMPTY_SUGGESTION_FORM);
     setSuggestionOpen(true);
-  };
-
-  const handleRequestAddHistoricalFile = () => {
-    if (canManageRelationshipDirectly) return;
-    handleInsertInformation();
   };
 
   const handleSubmitSuggestion = async () => {
@@ -523,14 +523,13 @@ export function ViewMarriageModal({
                 arquivos={arquivos}
                 onChange={handleArquivosChange}
                 relacionamentoId={relacionamentoId}
-                readOnly={!canManageRelationshipDirectly}
-                onRequestAdd={handleRequestAddHistoricalFile}
+                readOnly={!canManageHistoricalFiles}
                 addButtonVariant="icon"
                 eventCategoryOptions={MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS}
               />
             )}
 
-            {canManageRelationshipDirectly && (
+            {canManageHistoricalFiles && (
               <div className="flex justify-end">
                 <Button
                   type="button"
