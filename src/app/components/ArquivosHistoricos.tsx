@@ -21,6 +21,8 @@ const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEvent
   { value: 'outro', label: 'Outro' },
 ];
 
+type HistoricalFileCategoryOption = { value: HistoricalFileEventCategory; label: string };
+
 function sanitizeFileName(value: string) {
   return value
     .normalize('NFD')
@@ -100,6 +102,7 @@ interface ArquivosHistoricosProps {
   onRequestAdd?: () => void;
   addButtonVariant?: 'full' | 'icon';
   showTitle?: boolean;
+  eventCategoryOptions?: HistoricalFileCategoryOption[];
 }
 
 export function ArquivosHistoricos({
@@ -111,6 +114,7 @@ export function ArquivosHistoricos({
   onRequestAdd,
   addButtonVariant = 'full',
   showTitle = true,
+  eventCategoryOptions = HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS,
 }: ArquivosHistoricosProps) {
   const [novoArquivo, setNovoArquivo] = useState({
     titulo: '',
@@ -163,7 +167,6 @@ export function ArquivosHistoricos({
         mime_type: file.type || 'application/octet-stream',
         tipo: isImage ? 'imagem' : 'pdf'
       }));
-      setIsAddingFile(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
     } finally {
@@ -275,11 +278,9 @@ export function ArquivosHistoricos({
                     <p className="mt-1 break-words text-xs text-green-600">
                       ✓ Arquivo carregado ({novoArquivo.tipo})
                     </p>
-                    {!isAddingFile && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        Clique em Adicionar Arquivo para preencher os dados e adicionar.
-                      </p>
-                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Preencha os dados abaixo e clique em Adicionar.
+                    </p>
                   </div>
                 </div>
               )}
@@ -288,7 +289,7 @@ export function ArquivosHistoricos({
                 <>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Arquivo (imagem ou PDF) *
+                      Arquivo *
                     </label>
                     <Input
                       type="file"
@@ -312,7 +313,7 @@ export function ArquivosHistoricos({
                       type="text"
                       value={novoArquivo.titulo}
                       onChange={(e) => setNovoArquivo(prev => ({ ...prev, titulo: e.target.value }))}
-                      placeholder="Ex: Certidão de nascimento"
+                      placeholder="Ex: Certidão de casamento"
                     />
                   </div>
 
@@ -343,7 +344,7 @@ export function ArquivosHistoricos({
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Categoria histórica
+                      Categoria
                     </label>
                     <select
                       value={novoArquivo.categoria_evento}
@@ -354,7 +355,7 @@ export function ArquivosHistoricos({
                       className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                     >
                       <option value="">Sem categoria</option>
-                      {HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.map((option) => (
+                      {eventCategoryOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -452,7 +453,7 @@ export function ArquivosHistoricos({
                             aria-label="Categoria histórica"
                           >
                             <option value="">Sem categoria</option>
-                            {HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.map((option) => (
+                            {eventCategoryOptions.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>
@@ -538,7 +539,6 @@ export function ArquivosHistoricos({
         </CardContent>
       </Card>
 
-      {/* Modal de visualização */}
       <Dialog open={!!previewFile} onOpenChange={(open) => {
         if (!open) setPreviewFile(null);
       }}>
