@@ -10,21 +10,38 @@
   section[aria-label="Filtros do calendário"] > div {
     justify-items: center !important;
     gap: 0.55rem !important;
-    font-size: 0.8rem !important;
+    font-size: 0.95rem !important;
   }
 
   section[aria-label="Filtros do calendário"] button {
     width: min(100%, 10.5rem) !important;
-    min-height: 2.15rem !important;
-    padding: 0.42rem 0.65rem !important;
-    font-size: 0.8rem !important;
-    font-weight: 700 !important;
+    min-height: 2.3rem !important;
+    padding: 0.42rem 0.55rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
     justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button span:first-child {
+    width: 0.72rem !important;
+    height: 0.72rem !important;
   }
 
   section[aria-label="Filtros do calendário"] button span:last-child {
     overflow: visible !important;
     text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
+  main section:first-of-type p.text-xs.uppercase.tracking-wide.text-gray-500 {
+    font-size: 0 !important;
+  }
+
+  main section:first-of-type p.text-xs.uppercase.tracking-wide.text-gray-500::after {
+    content: 'MÊS';
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
   }
 
   form [aria-labelledby="categoria-label"] {
