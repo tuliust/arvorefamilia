@@ -1,3 +1,31 @@
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 {
+  font-size: 0 !important;
+}
+
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2::after {
+  content: 'Arquivos Históricos';
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 + p {
+  font-size: 0 !important;
+}
+
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 + p::after {
+  content: 'Adicione, revise ou remova arquivos históricos associados ao seu perfil familiar.';
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .mb-4 {
+  display: none !important;
+}
+
+main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .space-y-4 > p {
+  display: none !important;
+}
+
 @media (max-width: 767px) {
   main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child {
     padding: 1rem !important;
