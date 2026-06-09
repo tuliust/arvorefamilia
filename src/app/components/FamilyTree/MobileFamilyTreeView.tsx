@@ -24,6 +24,12 @@ type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
 type GroupColumns = 'single' | 'double' | 'triple';
 
+type AncestorSubgroup = {
+  id: string;
+  title: string;
+  people: Pessoa[];
+};
+
 interface MobileFamilyTreeViewProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
@@ -273,6 +279,46 @@ function SiblingPersonCard({
   );
 }
 
+function AncestorPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className="flex h-[60px] w-full min-w-0 items-center gap-1.5 rounded-[0.85rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-1.5 text-left text-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className="h-[34px] w-[34px] border-2"
+        iconClassName="h-4 w-4"
+      />
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span
+          className="w-full overflow-hidden text-[8.5px] font-extrabold uppercase leading-[1.05]"
+          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+        >
+          {displayName}
+        </span>
+        <VitalLines
+          birthLine={birthLine}
+          deathLine={deathLine}
+          showDeathLine={showDeathLine}
+          align="left"
+          compact
+        />
+      </span>
+    </button>
+  );
+}
+
 function MiniPersonCard({
   person,
   onClick,
@@ -478,13 +524,77 @@ function VerticalRelativeScreen({
   );
 }
 
+function distributeAncestorSubgroups(groups: AncestorSubgroup[], maxTotal = 6) {
+  const nonEmptyGroups = groups.filter((group) => group.people.length > 0);
+  if (nonEmptyGroups.length === 0) return [];
+
+  const maxPerGroup = nonEmptyGroups.length >= 3 ? 2 : nonEmptyGroups.length === 2 ? 3 : maxTotal;
+  let remaining = maxTotal;
+
+  return nonEmptyGroups
+    .map((group) => {
+      const people = group.people.slice(0, Math.min(maxPerGroup, remaining));
+      remaining -= people.length;
+      return { ...group, people };
+    })
+    .filter((group) => group.people.length > 0);
+}
+
+function AncestorGroupsScreen({
+  title,
+  groups,
+  onPersonClick,
+}: {
+  title: string;
+  groups: AncestorSubgroup[];
+  onPersonClick: (person: Pessoa) => void;
+}) {
+  const visibleGroups = distributeAncestorSubgroups(groups);
+
+  return (
+    <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
+      <div className="mx-auto mt-4 w-full max-w-[360px]">
+        <section className="relative pb-9 pt-9">
+          <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+          <div className="rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
+            <h2 className="mb-2 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">
+              {title}
+            </h2>
+            {visibleGroups.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-white/70 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+                Nenhum ancestral cadastrado neste ramo.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {visibleGroups.map((group) => (
+                  <div key={group.id} className="rounded-[1rem] border border-cyan-100 bg-cyan-50/35 p-2">
+                    <h3 className="mb-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-700">
+                      {group.title}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {group.people.map((person) => (
+                        <AncestorPersonCard key={person.id} person={person} onClick={onPersonClick} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-0 left-1/2 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+        </section>
+      </div>
+    </div>
+  );
+}
+
 function ParentBranchSwipeScreen({
   side,
   title,
   ancestorsTitle,
   cousinsTitle,
   uncles,
-  ancestors,
+  ancestorGroups,
   cousins,
   expandedGroups,
   onToggle,
@@ -495,7 +605,7 @@ function ParentBranchSwipeScreen({
   ancestorsTitle: string;
   cousinsTitle: string;
   uncles: Pessoa[];
-  ancestors: Pessoa[];
+  ancestorGroups: AncestorSubgroup[];
   cousins: Pessoa[];
   expandedGroups: Set<string>;
   onToggle: (id: string) => void;
@@ -519,15 +629,10 @@ function ParentBranchSwipeScreen({
         ref={verticalScrollRef}
         className="flex h-full w-full snap-y snap-mandatory flex-col overflow-y-auto overflow-x-hidden scroll-smooth overscroll-y-contain"
       >
-        <VerticalRelativeScreen
+        <AncestorGroupsScreen
           title={ancestorsTitle}
-          people={ancestors}
-          groupId={`${prefix}-ancestors`}
-          expanded={expandedGroups.has(`${prefix}-ancestors`)}
-          onToggle={onToggle}
+          groups={ancestorGroups}
           onPersonClick={onPersonClick}
-          columns="double"
-          maxCollapsedItems={6}
         />
         <VerticalRelativeScreen
           title={title}
@@ -680,15 +785,15 @@ export function MobileFamilyTreeView({
   const visibleChildren = filterVisible(model.children);
   const visiblePets = filterVisible(model.pets);
   const visibleGrandchildren = filterVisible(model.grandchildren);
-  const visiblePaternalAncestors = [
-    ...visiblePaternal.greatGreatGrandparents,
-    ...visiblePaternal.greatGrandparents,
-    ...visiblePaternal.grandparents,
+  const paternalAncestorGroups: AncestorSubgroup[] = [
+    { id: 'paternal-great-great-grandparents', title: 'Tataravós', people: visiblePaternal.greatGreatGrandparents },
+    { id: 'paternal-great-grandparents', title: 'Bisavós', people: visiblePaternal.greatGrandparents },
+    { id: 'paternal-grandparents', title: 'Avós', people: visiblePaternal.grandparents },
   ];
-  const visibleMaternalAncestors = [
-    ...visibleMaternal.greatGreatGrandparents,
-    ...visibleMaternal.greatGrandparents,
-    ...visibleMaternal.grandparents,
+  const maternalAncestorGroups: AncestorSubgroup[] = [
+    { id: 'maternal-great-great-grandparents', title: 'Tataravós', people: visibleMaternal.greatGreatGrandparents },
+    { id: 'maternal-great-grandparents', title: 'Bisavós', people: visibleMaternal.greatGrandparents },
+    { id: 'maternal-grandparents', title: 'Avós', people: visibleMaternal.grandparents },
   ];
 
   return (
@@ -755,7 +860,7 @@ export function MobileFamilyTreeView({
                 ancestorsTitle="Ancestrais Paternos"
                 cousinsTitle="Primos Paternos"
                 uncles={visiblePaternal.uncles}
-                ancestors={visiblePaternalAncestors}
+                ancestorGroups={paternalAncestorGroups}
                 cousins={visiblePaternal.cousins}
                 expandedGroups={expandedGroups}
                 onToggle={toggleGroup}
@@ -876,7 +981,7 @@ export function MobileFamilyTreeView({
                 ancestorsTitle="Ancestrais Maternos"
                 cousinsTitle="Primos Maternos"
                 uncles={visibleMaternal.uncles}
-                ancestors={visibleMaternalAncestors}
+                ancestorGroups={maternalAncestorGroups}
                 cousins={visibleMaternal.cousins}
                 expandedGroups={expandedGroups}
                 onToggle={toggleGroup}
