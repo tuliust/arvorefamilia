@@ -7,8 +7,6 @@ import {
   Handshake,
   HeartHandshake,
   MessageCircle,
-  MessageSquare,
-  MoreHorizontal,
   PartyPopper,
   Send,
   Trash2,
@@ -23,11 +21,8 @@ import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicF
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  criarComentarioForum,
   criarRespostaForum,
-  atualizarComentarioForum,
   atualizarRespostaForum,
-  deletarComentarioForum,
   deletarRespostaForum,
   deletarTopicoForum,
   incrementarVisualizacaoTopico,
@@ -119,6 +114,22 @@ function formatarData(valor?: string) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(data);
+}
+
+function normalizeText(value?: string | null) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function formatarCategoriaForum(nome?: string | null) {
+  const normalized = normalizeText(nome);
+  if (normalized.includes('duvida')) return 'Dúvidas';
+  if (normalized.includes('memoria')) return 'Memórias';
+  if (normalized.includes('document')) return 'Documentos';
+  if (normalized.includes('evento')) return 'Eventos';
+  return nome || '';
 }
 
 function nomeAutor(autorId: string, userId?: string, profile?: AuthorProfile) {
@@ -233,11 +244,8 @@ export function ForumTopico() {
   const [minhaReacaoTopico, setMinhaReacaoTopico] = useState<ForumReacaoTipo | null>(null);
   const [minhasReacoesRespostas, setMinhasReacoesRespostas] = useState<Record<string, ForumReacaoTipo | null>>({});
   const [respostaTexto, setRespostaTexto] = useState('');
-  const [comentarioTexto, setComentarioTexto] = useState<Record<string, string>>({});
   const [editandoRespostaId, setEditandoRespostaId] = useState<string | null>(null);
   const [respostaEditada, setRespostaEditada] = useState('');
-  const [editandoComentarioId, setEditandoComentarioId] = useState<string | null>(null);
-  const [comentarioEditado, setComentarioEditado] = useState('');
   const [loading, setLoading] = useState(true);
   const [enviandoResposta, setEnviandoResposta] = useState(false);
   const [erro, setErro] = useState('');
@@ -360,29 +368,6 @@ export function ForumTopico() {
     await carregar();
   }
 
-  async function comentar(respostaId: string) {
-    if (!user) {
-      toast.error('Entre para comentar.');
-      return;
-    }
-    const conteudo = comentarioTexto[respostaId]?.trim();
-    if (!conteudo) {
-      toast.error('Escreva um comentário.');
-      return;
-    }
-
-    const comentario = await criarComentarioForum({ resposta_id: respostaId, autor_id: user.id, conteudo });
-    if (!comentario) {
-      toast.error('Não foi possível publicar o comentário.');
-      return;
-    }
-
-    setComentarioTexto((prev) => ({ ...prev, [respostaId]: '' }));
-    setComentarios((prev) => ({ ...prev, [respostaId]: [...(prev[respostaId] ?? []), comentario] }));
-    setAuthorProfiles((prev) => ({ ...prev, [comentario.autor_id]: prev[comentario.autor_id] ?? { id: comentario.autor_id } }));
-    toast.success('Comentário publicado.');
-  }
-
   async function removerTopico() {
     if (!topico || excluindoTopico) return;
     if (!user || (topico.autor_id !== user.id && !admin)) {
@@ -434,41 +419,6 @@ export function ForumTopico() {
     await carregar();
   }
 
-  async function removerComentario(respostaId: string, comentarioId: string) {
-    if (!window.confirm('Deseja excluir este comentário?')) return;
-    const ok = await deletarComentarioForum(comentarioId);
-    if (!ok) {
-      toast.error('Não foi possível excluir o comentário.');
-      return;
-    }
-    setComentarios((prev) => ({ ...prev, [respostaId]: (prev[respostaId] ?? []).filter((comentario) => comentario.id !== comentarioId) }));
-    toast.success('Comentário excluído.');
-  }
-
-  function iniciarEdicaoComentario(comentario: ForumComentario) {
-    setEditandoComentarioId(comentario.id);
-    setComentarioEditado(comentario.conteudo);
-  }
-
-  async function salvarComentarioEditado(respostaId: string, comentarioId: string) {
-    if (!comentarioEditado.trim()) {
-      toast.error('O comentário não pode ficar vazio.');
-      return;
-    }
-    const atualizado = await atualizarComentarioForum(comentarioId, { conteudo: comentarioEditado.trim() });
-    if (!atualizado) {
-      toast.error('Não foi possível atualizar o comentário.');
-      return;
-    }
-    setComentarios((prev) => ({
-      ...prev,
-      [respostaId]: (prev[respostaId] ?? []).map((comentario) => comentario.id === comentarioId ? atualizado : comentario),
-    }));
-    setEditandoComentarioId(null);
-    setComentarioEditado('');
-    toast.success('Comentário atualizado.');
-  }
-
   if (loading) return <div className="min-h-screen bg-gray-50 p-6 text-center text-gray-500">Carregando tópico...</div>;
   if (!topico) return <div className="min-h-screen bg-gray-50 p-6 text-center text-gray-500">{erro || 'Tópico não encontrado.'}</div>;
 
@@ -477,6 +427,7 @@ export function ForumTopico() {
   const currentUserName = user?.user_metadata?.nome_exibicao || user?.user_metadata?.name || user?.email || 'você';
   const currentUserAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const pessoasParaMencoes = pessoasRelacionadas.length > 0 ? pessoasRelacionadas : topico.pessoa_relacionada ? [topico.pessoa_relacionada] : [];
+  const categoriaLabel = formatarCategoriaForum(topico.categoria?.nome);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -499,7 +450,7 @@ export function ForumTopico() {
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
                     <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
-                    {topico.categoria?.nome && <TopicBadge>{topico.categoria.nome}</TopicBadge>}
+                    {categoriaLabel && <TopicBadge>{categoriaLabel}</TopicBadge>}
                   </div>
                   <p className="mt-0.5 text-xs text-gray-500">{formatarData(topico.created_at)}</p>
                 </div>
@@ -520,9 +471,6 @@ export function ForumTopico() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-gray-500" aria-label="Mais opções">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
                 </div>
               </header>
 
@@ -593,48 +541,6 @@ export function ForumTopico() {
                         </div>
 
                         <ReactionBar alvoTipo="resposta" alvoId={resposta.id} resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO} selectedReaction={minhasReacoesRespostas[resposta.id] ?? null} onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))} onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))} compact />
-
-                        {(comentarios[resposta.id] ?? []).map((comentario) => {
-                          const podeAlterarComentario = Boolean(user && (comentario.autor_id === user.id || admin));
-                          const comentarioAuthorProfile = authorProfiles[comentario.autor_id];
-                          const comentarioAuthorName = nomeAutor(comentario.autor_id, user?.id, comentarioAuthorProfile);
-
-                          return (
-                            <div key={comentario.id} className="ml-6 flex min-w-0 items-start gap-2">
-                              <AuthorAvatar name={comentarioAuthorName} src={comentarioAuthorProfile?.avatar_url} size="sm" />
-                              <div className="min-w-0 flex-1 rounded-2xl bg-white p-3 text-sm shadow-sm ring-1 ring-gray-100">
-                                <div className="flex min-w-0 items-start justify-between gap-2">
-                                  <p className="break-words text-xs font-semibold text-gray-700">{comentarioAuthorName}</p>
-                                  {podeAlterarComentario && (
-                                    <div className="flex shrink-0 gap-1">
-                                      <button type="button" onClick={() => iniciarEdicaoComentario(comentario)} className="text-gray-400 hover:text-blue-600" aria-label="Editar comentário"><Edit className="h-4 w-4" /></button>
-                                      <button type="button" onClick={() => removerComentario(resposta.id, comentario.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir comentário"><Trash2 className="h-4 w-4" /></button>
-                                    </div>
-                                  )}
-                                </div>
-                                {editandoComentarioId === comentario.id ? (
-                                  <div className="mt-2 space-y-2">
-                                    <Textarea value={comentarioEditado} onChange={(event) => setComentarioEditado(event.target.value)} className="min-h-16" />
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                      <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarComentarioEditado(resposta.id, comentario.id)}>Salvar</Button>
-                                      <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoComentarioId(null)}>Cancelar</Button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <p className="mt-1 whitespace-pre-wrap break-words text-gray-700">{comentario.conteudo}</p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        <div className="ml-6 flex min-w-0 items-start gap-2">
-                          <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
-                          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
-                            <Textarea value={comentarioTexto[resposta.id] ?? ''} onChange={(event) => setComentarioTexto((prev) => ({ ...prev, [resposta.id]: event.target.value }))} placeholder="Comentar" className="min-h-10 rounded-2xl bg-white text-sm" />
-                            <Button type="button" size="sm" onClick={() => comentar(resposta.id)} className="sm:self-start">Comentar</Button>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   );
