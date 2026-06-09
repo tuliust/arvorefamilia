@@ -326,6 +326,8 @@ function FamilyGroup({
   onPersonClick,
   columns = 'double',
   cardVariant = 'default',
+  maxCollapsedItems = 4,
+  bottomConnector = false,
 }: {
   id: string;
   title: string;
@@ -335,13 +337,15 @@ function FamilyGroup({
   onPersonClick: (person: Pessoa) => void;
   columns?: 'single' | 'double';
   cardVariant?: CardVariant;
+  maxCollapsedItems?: number;
+  bottomConnector?: boolean;
 }) {
   if (people.length === 0) return null;
-  const visiblePeople = people.length > 4 && !expanded ? people.slice(0, 3) : people;
+  const visiblePeople = people.length > maxCollapsedItems && !expanded ? people.slice(0, maxCollapsedItems) : people;
   const usePetCards = cardVariant === 'pet';
 
   return (
-    <section className="relative pt-9">
+    <section className={bottomConnector ? 'relative pb-9 pt-9' : 'relative pt-9'}>
       <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
       <div className={usePetCards
         ? 'rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
@@ -367,7 +371,7 @@ function FamilyGroup({
             return <PersonCard key={person.id} person={person} onClick={onPersonClick} />;
           })}
         </div>
-        {people.length > 4 && (
+        {people.length > maxCollapsedItems && (
           <button
             type="button"
             onClick={() => onToggle(id)}
@@ -377,6 +381,9 @@ function FamilyGroup({
           </button>
         )}
       </div>
+      {bottomConnector && (
+        <div className="absolute bottom-0 left-1/2 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+      )}
     </section>
   );
 }
@@ -396,22 +403,26 @@ function ParentSiblingsScreen({
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
 }) {
+  const groupId = `core-parent-siblings-${side}`;
+
   return (
     <div className="relative min-h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
       <div className={[
         'pointer-events-none absolute top-[92px] h-px bg-cyan-600',
         side === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
       ].join(' ')} />
-      <div className="mx-auto mt-4 w-full max-w-[300px]">
+      <div className="mx-auto mt-4 w-full max-w-[360px]">
         <FamilyGroup
-          id={`core-parent-siblings-${side}`}
+          id={groupId}
           title={title}
           people={people}
           expanded={expanded}
-          onToggle={() => onToggle(`core-parent-siblings-${side}`)}
+          onToggle={onToggle}
           onPersonClick={onPersonClick}
-          columns="single"
+          columns="double"
           cardVariant="sibling"
+          maxCollapsedItems={6}
+          bottomConnector
         />
       </div>
     </div>
@@ -604,7 +615,7 @@ export function MobileFamilyTreeView({
             >
               <ParentSiblingsScreen
                 side="left"
-                title="Irmãos do pai"
+                title="Tios Paternos"
                 people={visiblePaternal.uncles}
                 expanded={expandedGroups.has('core-parent-siblings-left')}
                 onToggle={toggleGroup}
@@ -721,7 +732,7 @@ export function MobileFamilyTreeView({
 
               <ParentSiblingsScreen
                 side="right"
-                title="Irmãos da mãe"
+                title="Tios Maternos"
                 people={visibleMaternal.uncles}
                 expanded={expandedGroups.has('core-parent-siblings-right')}
                 onToggle={toggleGroup}
