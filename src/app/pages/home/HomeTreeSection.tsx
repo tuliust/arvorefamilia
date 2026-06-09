@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
+import { MobileFamilyTreeView } from '../../components/FamilyTree/MobileFamilyTreeView';
 import type {
   DirectRelativeFilters,
   DirectRelativeGroup,
@@ -430,6 +431,27 @@ export function HomeTreeSection({
           title: 'Nenhuma pessoa encontrada',
           message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
+      ) : canRenderTree && isMobile && treeViewMode === 'minha-arvore' ? (
+        <MobileFamilyTreeView
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          familyTreeRef={familyTreeRef}
+          onPersonClick={onPersonClick}
+          onPersonView={onPersonView}
+          onPersonEdit={onPersonEdit}
+          onPersonAddConnection={onPersonAddConnection}
+          onPersonRemove={onPersonRemove}
+          onMarriageClick={onMarriageClick}
+          selectedPersonId={selectedPersonId}
+          edgeFilters={edgeFilters}
+          directRelativeFilters={directRelativeFilters}
+          genealogyFilters={genealogyFilters}
+          visualLineFilters={visualLineFilters}
+          layoutRevision={treeLayoutRevision}
+          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
+        />
       ) : canRenderTree ? (
         <FamilyTree
           ref={familyTreeRef}
