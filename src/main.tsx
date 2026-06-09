@@ -68,3 +68,7 @@ createRoot(document.getElementById("root")!).render(
     <MobileTreeControlsPortal />
   </>
 );
+
+window.setTimeout(() => {
+  sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
+}, 5000);
