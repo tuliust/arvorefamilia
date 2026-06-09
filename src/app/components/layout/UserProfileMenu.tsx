@@ -298,7 +298,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   <div className="mb-2 px-2 pt-1 text-xs font-bold uppercase tracking-wide text-blue-900">
                     Visualização
                   </div>
-                  <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/80 p-1 shadow-inner">
+                  <div className="grid grid-cols-3 gap-0.5 rounded-2xl bg-white/80 p-0.5 shadow-inner">
                     {TREE_VIEW_OPTIONS.map((option) => {
                       const active = location.pathname === option.path || (option.path === '/minha-arvore' && location.pathname === '/');
 
@@ -308,7 +308,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                           type="button"
                           onClick={() => goTo(option.path)}
                           className={[
-                            'flex min-h-10 w-full items-center justify-center rounded-xl px-1.5 py-2 text-center text-[11px] font-bold leading-tight transition',
+                            'flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-xl px-0.5 py-1.5 text-center text-[10px] font-bold leading-none tracking-[-0.02em] transition min-[390px]:text-[11px]',
                             active
                               ? 'bg-blue-600 text-white shadow-sm'
                               : 'text-blue-800 hover:bg-blue-100',
