@@ -32,6 +32,27 @@ const CENTRAL_AREA_CARD_RELATIONS = new Set([
   'grandchild',
   'pet',
 ]);
+const CENTRAL_AREA_GROUPS = new Set([
+  'pai',
+  'mae',
+  'irmaos',
+  'sobrinhos',
+  'conjuge',
+  'filhos',
+  'netos',
+  'pets',
+]);
+const CENTRAL_AREA_RIGHT_GROUPS = new Set([
+  'mae',
+  'conjuge',
+  'filhos',
+  'netos',
+  'pets',
+]);
+
+function getDirectFamilyGroupKey(id?: string) {
+  return id?.replace(/^direct-group-box-/, '');
+}
 
 function DirectFamilyAnchorNode() {
   const hiddenHandle = { background: 'transparent', border: 'none', width: 1, height: 1 };
@@ -86,12 +107,19 @@ function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
 }
 
 function DirectFamilyGroupBoxNode({ data, id }: NodeProps<DirectFamilyGroupBoxNodeData>) {
+  const groupKey = getDirectFamilyGroupKey(id);
+  const shouldStretchGroup = Boolean(groupKey && CENTRAL_AREA_GROUPS.has(groupKey));
+  const shouldStretchLeft = Boolean(groupKey && CENTRAL_AREA_RIGHT_GROUPS.has(groupKey));
+  const currentWidth = data.width ?? 0;
+  const width = shouldStretchGroup ? currentWidth + CENTRAL_AREA_CARD_EXTRA_WIDTH : currentWidth;
+
   return React.createElement('div', {
     'aria-hidden': true,
     className: `pointer-events-none rounded-xl direct-family-group-box ${id}`,
     style: {
-      width: data.width ?? 0,
+      width,
       height: data.height ?? 0,
+      transform: shouldStretchLeft ? `translateX(-${CENTRAL_AREA_CARD_EXTRA_WIDTH}px)` : undefined,
       background: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.background,
       borderColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.color,
       borderWidth: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.width,
