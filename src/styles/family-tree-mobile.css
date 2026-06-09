@@ -287,3 +287,55 @@
     line-height: 1 !important;
   }
 }
+
+@media (max-width: 767px) {
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] {
+    min-height: 430px !important;
+    height: 430px !important;
+    padding: 24px 18px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > button,
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > div:first-of-type {
+    width: 150px !important;
+    height: 150px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > div:last-of-type {
+    margin-top: 22px !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] h3 {
+    font-size: 23px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] h3 + div,
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] p,
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] span {
+    font-size: 16px !important;
+    line-height: 1.18 !important;
+  }
+
+  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 400px"][style*="height: 160px"],
+  .family-tree-export-root .react-flow__node-personNode > .relative:has(> div[style*="width: 400px"][style*="height: 160px"]) > div[style] {
+    transform: translate(-112px, -826px) scale(0.78) !important;
+    transform-origin: center bottom !important;
+  }
+
+  .family-tree-export-root .react-flow__node-directFamilyLabelNode:has(+ .react-flow__node-personNode > .relative > div[style*="width: 400px"][style*="height: 160px"]) {
+    transform: translate(-112px, -826px) scale(0.86) !important;
+    transform-origin: center bottom !important;
+  }
+
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-irmaos"] > div,
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-conjuge"] > div,
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-sobrinhos"] > div,
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-filhos"] > div,
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-pets"] > div,
+  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-netos"] > div {
+    transform: scaleX(0.82) !important;
+    transform-origin: center top !important;
+  }
+}
