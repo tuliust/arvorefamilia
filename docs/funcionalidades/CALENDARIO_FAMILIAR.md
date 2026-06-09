@@ -1,8 +1,9 @@
 # Calendário Familiar
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`  
+> Última revisão: 2026-06-09
+> Local canônico: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
 > Tipo: documentação funcional e técnica da rota `/calendario-familiar`.
+> Status: revisado após ajustes de compliance OAuth/Google Agenda e exposição pública da finalidade da integração em `/entrar`.
 
 ---
 
@@ -21,6 +22,8 @@ A funcionalidade cobre:
 
 Este documento registra apenas o comportamento atual e os cuidados de manutenção. Histórico de ajustes mobile ou QA antigo deve permanecer em `docs/historico/`.
 
+A integração com Google Agenda também tem implicação de compliance/OAuth: a home pública `/entrar` deve declarar o nome do app e a finalidade da sincronização antes da autorização do usuário.
+
 ---
 
 ## 2. Arquivos principais
@@ -29,6 +32,7 @@ Este documento registra apenas o comportamento atual e os cuidados de manutenç�
 src/app/pages/CalendarioFamiliar.tsx
 src/app/utils/familyDates.ts
 src/app/services/googleCalendarService.ts
+src/app/pages/Entrar.tsx
 src/app/components/layout/MemberPageHeader.tsx
 src/app/components/AppLink.tsx
 src/app/routes.tsx
@@ -234,13 +238,52 @@ sincronizarGoogleCalendar
 desconectarGoogleCalendar
 ```
 
+### 9.1 Finalidade da integração
+
+A integração existe para sincronizar no calendário do usuário, mediante autorização explícita:
+
+- aniversários familiares;
+- datas de memória/falecimento;
+- datas familiares relevantes suportadas pela funcionalidade.
+
+Microcopy pública obrigatória na home `/entrar`:
+
+```txt
+Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
+
+A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
+```
+
+Regras:
+
+- o texto deve existir diretamente no JSX de `src/app/pages/Entrar.tsx`, não apenas via CSS;
+- o nome público do app deve aparecer como **Família Souza Barros**;
+- a home pública deve permitir ao Google validar a finalidade do app antes do login;
+- o texto não deve prometer sincronização automática sem autorização;
+- se o nome do app no Google Cloud mudar, revisar também `/entrar`.
+
+### 9.2 Segurança
+
 Regras de segurança:
 
 - tokens/secrets não devem ir para o frontend;
 - não expor credenciais do Google em logs;
 - alterações no shape de `EventoCalendarioFamiliar` devem avaliar impacto em sincronização;
 - erros de token/permissão devem virar toast amigável;
-- não alterar `familyDates.ts` por ajuste visual sem revisar Google Agenda.
+- não alterar `familyDates.ts` por ajuste visual sem revisar Google Agenda;
+- desconexão deve revogar/remover o vínculo local conforme o service atual;
+- sincronização deve respeitar escopos concedidos pelo usuário.
+
+### 9.3 QA específico de OAuth
+
+Validar após alteração relacionada ao Google:
+
+- `/entrar` exibe **Família Souza Barros** como nome principal;
+- `/entrar` explica que a plataforma organiza árvore, perfis, fotos, documentos, memórias e datas importantes;
+- `/entrar` explica que Google Agenda sincroniza aniversários e datas de memória mediante autorização;
+- `/calendario-familiar` continua exibindo status da conexão;
+- conectar, sincronizar e desconectar continuam funcionando;
+- nenhum token aparece em console, DOM, URL persistida ou bundle frontend.
 
 ---
 
@@ -311,6 +354,16 @@ criarEventosDoCalendario
 googleCalendarService
 ```
 
+### Google solicita correção na tela inicial/OAuth
+
+Verificar:
+
+```txt
+src/app/pages/Entrar.tsx
+```
+
+Conferir se o JSX da rota pública `/entrar` contém o nome **Família Souza Barros** e a descrição explícita da integração com Google Agenda. Não resolver essa exigência apenas com pseudo-elemento CSS.
+
 ### Mojibake em textos
 
 Verificar strings literais e encoding UTF-8. Exemplos que não podem aparecer:
@@ -345,6 +398,7 @@ git status --short
 - validar card Memória apenas quando houver itens;
 - validar bolinha mobile;
 - validar Google Agenda se a área foi alterada;
+- validar `/entrar` como home pública exigida pelo OAuth;
 - validar mobile e desktop.
 
 ---
@@ -376,5 +430,7 @@ Não reintroduzir:
 - texto `item(ns)`;
 - alteração de shape de evento sem revisar Google Agenda;
 - secrets de Google no frontend;
+- texto de finalidade do Google Agenda ausente da home `/entrar`;
+- nome público diferente de **Família Souza Barros** na home OAuth;
 - bolinha mobile abrindo modal como padrão;
 - mojibake em labels do calendário.

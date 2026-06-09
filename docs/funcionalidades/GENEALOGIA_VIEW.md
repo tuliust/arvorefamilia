@@ -1,9 +1,9 @@
 # Genealogia - view, layout e navegação mobile
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`  
-> Tipo: documentação técnica/funcional da view **Genealogia**.  
-> Status: revisado após ajustes de largura da Minha Árvore, correção de anti-regressões entre views e frente mobile.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`
+> Tipo: documentação técnica/funcional da view **Genealogia**.
+> Status: revisado após ajustes de largura da Minha Árvore, formatação de cabeçalhos de geração, títulos das views, anti-regressões entre views e frente mobile.
 
 ## 1. Função deste documento
 
@@ -25,6 +25,7 @@ Use este arquivo para manter:
 - reset de geração ativa por view;
 - distinção entre Genealogia e Visão Completa;
 - padrão de tamanho dos cards em views por geração;
+- formatação dos cabeçalhos de coluna `Geração N`;
 - anti-regressões de pan/zoom/ReactFlow;
 - isolamento entre ajustes da Minha Árvore e views por geração.
 
@@ -83,6 +84,7 @@ Regras:
 
 - chips usam labels humanos;
 - labels técnicos de coluna podem continuar como `Geração N`;
+- cabeçalhos de coluna `Geração N` devem usar peso `font-bold` e cor cinza (`text-slate-600` ou equivalente);
 - colunas vazias não devem ser renderizadas;
 - gerações sem pessoas não devem aparecer nos chips;
 - pessoas sem geração podem ser ocultadas em `/visao-completa` quando `hideUngenerated` estiver ativo;
@@ -156,7 +158,7 @@ Sempre que houver discrepância entre chips e pessoas exibidas, revisar a origem
 Regras:
 
 - título geral não deve ser criado pelo layout;
-- labels de geração são permitidos;
+- labels de geração são permitidos e devem usar peso forte moderado (`font-bold`) e cinza, não `font-black` com preto absoluto;
 - zoom desktop usa largura como referência;
 - altura total da árvore não deve reduzir excessivamente o zoom;
 - usuário deve conseguir navegar verticalmente quando houver muitos cards;
@@ -168,33 +170,85 @@ Regras:
 
 As views por geração devem manter **padrão próprio de tamanho dos cards**.
 
+Dimensão de referência:
+
+| View | Largura do card | Altura do card |
+|---|---:|---:|
+| `/genealogia` | `410px` | `190px` |
+| `/visao-completa` | `410px` | `190px` |
+
 Regra consolidada após regressão corrigida:
 
 ```txt
-A expansão de cards da área central da Minha Árvore não deve afetar /genealogia nem /visao-completa.
+A expansão de cards compactos da Minha Árvore não deve afetar /genealogia nem /visao-completa.
 ```
 
 Contexto técnico:
 
-- ajustes recentes em `nodeTypes.ts` aumentaram visualmente cards centrais compactos de `/minha-arvore`;
-- essa ampliação foi restringida por largura-base compacta e relação direta;
+- a `/minha-arvore` pode exibir cards compactos com largura visual de referência de `360px`;
 - cards de `/genealogia` e `/visao-completa` não devem receber esse acréscimo visual;
-- se `PersonNode` ou `nodeTypes.ts` forem alterados, validar que as três views continuam com padrões distintos.
+- o layout por gerações depende de largura estável para colunas, conectores e espaçamento entre cônjuges;
+- se `PersonNode`, `nodeTypes.ts` ou CSS de árvore forem alterados, validar que as três views continuam com padrões distintos.
 
 Checklist específico:
 
 - abrir `/genealogia` e comparar cards de diferentes gerações;
-- abrir `/visao-completa` e confirmar que os cards não foram esticados como na área central da Minha Árvore;
-- abrir `/minha-arvore` e confirmar que apenas os grupos centrais diretos seguem com a ampliação prevista;
-- validar que cônjuges em Genealogia mantêm alinhamento e espaçamento.
+- abrir `/visao-completa` e confirmar que os cards não foram esticados como na `/minha-arvore`;
+- abrir `/minha-arvore` e confirmar que seus cards compactos mantêm o padrão próprio da view direta;
+- validar que cônjuges em Genealogia mantêm alinhamento e espaçamento;
+- validar que o cabeçalho `Geração N` permanece em `font-bold` e cinza.
 
 Não fazer:
 
 - condicionar largura apenas por `directRelation` sem considerar a view/largura-base;
-- aplicar `CENTRAL_AREA_CARD_EXTRA_WIDTH` em cards das views por geração;
-- deslocar cards de Genealogia com `translateX` criado para a Minha Árvore.
+- aplicar largura de `360px` em cards das views por geração;
+- deslocar cards de Genealogia com `translateX` criado para a Minha Árvore;
+- usar CSS de `/minha-arvore` sem escopo por `data-export-view`.
 
----
+## 8.1 Títulos das views e cabeçalhos de geração
+
+Títulos das views:
+
+| Rota | Título esperado |
+|---|---|
+| `/minha-arvore` | `Árvore de {primeiro nome}` |
+| `/genealogia` | `Família de {primeiro nome}` |
+| `/visao-completa` | `Linha Genealógica de {primeiro nome}` |
+
+Formatação visual de referência dos títulos:
+
+```txt
+font-bold
+text-slate-950
+text-center
+text-[clamp(1.65rem,2.1vw,2.25rem)]
+leading-tight
+```
+
+Cabeçalhos das colunas:
+
+```txt
+Geração 1
+Geração 2
+Geração 3
+...
+```
+
+Formatação esperada:
+
+```txt
+font-bold
+text-slate-600
+uppercase
+tracking visual moderado quando aplicável
+```
+
+Regras:
+
+- não usar `font-black` nos cabeçalhos de geração;
+- não usar preto absoluto como padrão dos cabeçalhos;
+- manter contraste suficiente em desktop/tablet;
+- validar que os cabeçalhos continuam alinhados ao centro de cada coluna.
 
 ## 9. Chips mobile
 
@@ -395,50 +449,40 @@ Regras:
 
 ## 17. QA mínimo
 
-Validar após alteração:
+Validar após alteração em `/genealogia` e `/visao-completa`:
 
-### Desktop
-
-- `/genealogia` abre com colunas por geração;
-- `/visao-completa` abre com base completa;
-- labels de geração aparecem;
-- conectores parentais permanecem legíveis;
-- cônjuges mantêm espaçamento;
-- anel conjugal abre modal;
-- filtros não deixam edges soltas;
-- cards mantêm largura padrão das views por geração;
-- ajustes recentes de `/minha-arvore` não esticam cards em `/genealogia` ou `/visao-completa`.
-
-### Mobile
-
-- chips aparecem em `/genealogia`;
-- chips aparecem em `/visao-completa`;
-- chips mostram apenas gerações disponíveis;
-- clique no chip muda foco;
-- swipe horizontal funciona na barra;
-- pan da árvore continua possível;
-- eixo Y não salta entre gerações;
-- área superior pode ser recuperada;
-- ao alternar entre `/genealogia` e `/visao-completa`, a geração ativa reseta corretamente;
-- ao mudar pessoa central, a primeira geração disponível é recalculada;
-- controles mobile aparecem apenas nas rotas da árvore;
-- pessoas inferidas por relacionamento aparecem e os chips correspondentes devem ser verificados.
-
----
+- desktop: 1366px, 1440px e largura maior;
+- mobile: 320px, 375px, 390px e 430px;
+- títulos das views com hierarquia correta;
+- `/genealogia`: **Família de {nome}**;
+- `/visao-completa`: **Linha Genealógica de {nome}**;
+- cabeçalhos `Geração N` em `font-bold` e cinza;
+- cards de pessoas com `410px × 190px`;
+- cards não herdando largura visual de `360px` da `/minha-arvore`;
+- chips mobile aparecem apenas em `/genealogia` e `/visao-completa`;
+- chips mostram labels humanos;
+- troca entre `/genealogia` e `/visao-completa` reseta geração ativa;
+- pan/zoom funcional;
+- cônjuges permanecem alinhados;
+- anéis conjugais acompanham a cor dos conectores/paleta;
+- edges parentais não ficam soltas;
+- pets não entram no layout genealógico;
+- filtros não persistem alteração no Supabase;
+- exportação continua funcionando;
+- botão de favorito junto ao zoom não quebra controles de pan/zoom no desktop.
 
 ## 18. Anti-regressões
 
 Não fazer:
 
-- transformar chips em filtro destrutivo;
-- persistir geração inferida no banco;
-- criar colunas vazias fixas;
-- usar altura total para reduzir zoom desktop;
-- aplicar layout da Minha Árvore na Genealogia;
-- aplicar largura ampliada da área central da Minha Árvore em Genealogia/Visão Completa;
-- incluir pets no layout genealógico;
-- bloquear pan mobile com `translateExtent` restritivo;
-- criar migration para ajuste visual;
-- alterar RLS para corrigir problema de renderização;
+- aplicar largura de `360px` da `/minha-arvore` em `/genealogia` ou `/visao-completa`;
+- alterar cards por geração sem revisar conectores;
+- usar `font-black` e preto absoluto nos cabeçalhos `Geração N`;
+- criar colunas vazias para manter sequência visual;
+- transformar chips mobile em filtro destrutivo;
+- persistir geração inferida no Supabase;
+- inserir pets no layout por gerações;
+- aplicar `translateX` de cards da Minha Árvore em Genealogia;
 - deixar `/visao-completa` herdar estado de geração obsoleto de `/genealogia`;
-- corrigir um card isolado com `transform` global que afete todas as views.
+- corrigir um card isolado com `transform` global que afete todas as views;
+- usar cor fixa no anel conjugal quando a paleta define outra cor para conectores.

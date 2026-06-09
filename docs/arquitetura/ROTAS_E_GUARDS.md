@@ -1,8 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
+> Última revisão: 2026-06-09
+> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Projeto: `tuliust/arvorefamilia`
+> Status: revisado após ajuste da home pública `/entrar` para compliance Google/OAuth e exposição direta do nome **Família Souza Barros**.
 
 ## Objetivo
 
@@ -38,6 +39,7 @@ src/app/components/TreeAccessRoute.tsx
 src/app/contexts/AuthContext.tsx
 src/app/services/permissionService.ts
 src/app/services/memberProfileService.ts
+src/app/pages/Entrar.tsx
 src/app/pages/Home.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/layout/UserProfileMenu.tsx
@@ -201,7 +203,7 @@ Cuidados:
 
 | Rota | Componente | Função |
 |---|---|---|
-| `/entrar` | `Entrar` | Login, cadastro, primeiro acesso e aceite legal |
+| `/entrar` | `Entrar` | Home pública, login, cadastro, primeiro acesso, aceite legal e apresentação da integração Google Agenda |
 | `/termos` | `Termos` | Termos de uso |
 | `/privacidade` | `Privacidade` | Política de privacidade |
 | `/admin/login` | `AdminLogin` | Entrada administrativa específica/legada |
@@ -210,7 +212,28 @@ Regras:
 
 - `/entrar` não deve exigir sessão;
 - termos e privacidade devem permanecer acessíveis sem login;
-- `/admin/login` não deve ser usado como item principal de navegação.
+- `/admin/login` não deve ser usado como item principal de navegação;
+- `/entrar` também é a tela pública usada para validação de identidade/finalidade do app em fluxos OAuth;
+- o título principal da home pública deve ser **Família Souza Barros**;
+- o texto institucional e a finalidade da integração com Google Agenda devem existir diretamente no JSX de `src/app/pages/Entrar.tsx`;
+- não resolver exigências de OAuth apenas com CSS, pseudo-elementos ou conteúdo invisível.
+
+### 4.1 Conteúdo obrigatório em `/entrar`
+
+A home pública deve comunicar claramente:
+
+```txt
+Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
+
+A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
+```
+
+Regras de compliance:
+
+- o nome exibido deve corresponder ao nome público do app submetido à validação;
+- a integração com Google Agenda deve ser apresentada como opcional e autorizada pelo usuário;
+- não ocultar esse texto atrás de login, modal, tooltip ou menu;
+- manter links públicos para `/termos` e `/privacidade`.
 
 ---
 
@@ -319,6 +342,17 @@ Regras:
 
 ## 9. Navegação global
 
+### Home pública
+
+`Entrar.tsx` contém:
+
+- nome público **Família Souza Barros**;
+- texto institucional da plataforma familiar privada;
+- explicação da integração com Google Agenda;
+- login;
+- primeiro acesso;
+- links públicos para termos e privacidade.
+
 ### Home pós-login
 
 `HomeHeader` contém:
@@ -360,6 +394,8 @@ No mobile, também apresenta seleção rápida das views da árvore.
 
 - Não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
 - Não proteger `/entrar`, `/termos` ou `/privacidade`.
+- Não remover de `/entrar` o nome **Família Souza Barros** nem a descrição da integração com Google Agenda.
+- Não resolver texto de compliance OAuth apenas por CSS.
 - Não expor admin por link sem `ProtectedRoute`.
 - Não usar e-mail hardcoded como regra de admin.
 - Não redirecionar usuário já vinculado em loop para `/meus-dados`.
@@ -382,6 +418,8 @@ git diff --check
 Validar manualmente, sem alterar dados reais:
 
 - visitante acessa `/entrar`, `/termos`, `/privacidade`;
+- `/entrar` exibe nome **Família Souza Barros**;
+- `/entrar` exibe finalidade da plataforma e integração Google Agenda antes do login;
 - visitante não acessa área de membro/admin;
 - membro acessa `/minha-arvore/editar`, fórum, favoritos, notificações e calendário;
 - membro sem admin não acessa `/admin`;

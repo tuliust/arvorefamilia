@@ -1,9 +1,9 @@
 # Guia de UX e Layout - Árvore Família
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/GUIA_UX_LAYOUT.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com ajustes recentes de fórum, favoritos, cache/deploy e frente mobile.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/GUIA_UX_LAYOUT.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, home pública/OAuth, fórum, cache/deploy e frente mobile.
 
 ## Objetivo
 
@@ -41,7 +41,7 @@ Este documento não substitui:
 | Árvore como canvas | Pan, zoom, seleção, exportação, legenda e paletas pertencem à experiência de canvas. |
 | Permissão não é visual | Esconder botão não substitui `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute`, RLS, RPC segura ou validação em service. |
 | Ajuste visual não muda regra de negócio | Tailwind, espaçamento, scroll e responsividade não devem alterar payloads, Supabase, migrations, services ou RLS. |
-| Sem correção agressiva no ReactFlow | Não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir espaçamento da árvore. |
+| Sem correção agressiva no ReactFlow | Não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir espaçamento da árvore. Ajustes provisórios em CSS devem ser escopados e migrados para layout estrutural quando possível. |
 | Escopo visual explícito | CSS novo deve ser restrito por rota, container, data attribute ou seletor estrutural confiável para não vazar para outras telas. |
 
 ---
@@ -124,7 +124,8 @@ O header da Home concentra:
 - busca expansível;
 - atalhos para curiosidades, fórum e calendário;
 - menu do usuário;
-- integração com estado da árvore.
+- integração com estado da árvore;
+- botão de favorito de página renderizado na superfície da árvore, junto aos controles de zoom no desktop.
 
 Regras:
 
@@ -134,6 +135,7 @@ Regras:
 - preservar search params ao trocar view, especialmente `?pessoa=...`;
 - esconder textos e priorizar ícones em breakpoints menores;
 - manter dropdowns e sugestões acima da árvore;
+- manter o botão de favorito da view próximo aos controles `+` e `-` no desktop;
 - evitar overflow horizontal;
 - no mobile, o título deve priorizar identificação pessoal da árvore, como `Família de {primeiro nome}` quando houver pessoa vinculada.
 
@@ -311,14 +313,17 @@ Comportamento visual consolidado:
 
 - layout em torno da pessoa central;
 - bounds reais de cards `personNode` para evitar zoom inicial excessivamente pequeno;
-- título **A árvore de {nome}** no desktop/tablet quando aplicável;
+- título **Árvore de {nome}** no desktop/tablet quando aplicável;
 - no mobile, overlays textuais redundantes devem ficar ocultos;
 - borda extra do card central removida;
 - borda de status vivo/falecido preservada;
 - linhas diretas, grupos e conectores respeitam filtros;
 - anel conjugal usa `MarriageNode` com variante visual `direct-family` quando aplicável;
 - esconder todas as linhas quando todos os filtros diretos estiverem desligados;
-- desligar filtro de irmãos também oculta linhas de primos diretos quando necessário.
+- desligar filtro de irmãos também oculta linhas de primos diretos quando necessário;
+- cards compactos da Minha Árvore podem ser exibidos com largura visual de referência de `360px`, sem afetar `/genealogia` e `/visao-completa`;
+- nomes longos em cards compactos devem quebrar linha quando houver espaço, evitando `...` desnecessário;
+- no desktop, wheel para cima não deve deslocar a árvore quando não há conteúdo acima.
 
 Não fazer:
 
@@ -402,18 +407,21 @@ src/app/components/FamilyTree/FamilyTree.tsx
 
 Regras:
 
-- título da árvore é overlay fixo único;
+- título da árvore é visualmente único na view;
 - subtítulos internos de layout não devem voltar;
 - **Minha Árvore** usa bounds de cards reais;
 - **Genealogia** e **Visão Completa** usam zoom inicial por largura;
 - altura total não deve reduzir excessivamente a escala em views por geração;
 - se houver muitos cards verticalmente, o usuário deve conseguir arrastar/deslizar;
-- ajustes de distância entre título e árvore devem ser feitos em constantes e cálculos de viewport, não em CSS agressivo.
+- ajustes de distância entre título e árvore devem ser feitos preferencialmente em constantes e cálculos de viewport, não em CSS agressivo;
+- títulos desktop das views usam peso forte, centro visual e tamanho responsivo de referência `clamp(1.65rem, 2.1vw, 2.25rem)`;
+- `/minha-arvore` usa **Árvore de {nome}**, `/genealogia` usa **Família de {nome}** e `/visao-completa` usa **Linha Genealógica de {nome}**.
 
 ### 4.7 Botões e painel de controle da árvore
 
 Controles esperados no conjunto da experiência:
 
+- favorito da view, posicionado junto ao grupo de zoom no desktop;
 - zoom in;
 - zoom out;
 - pan direcional;
@@ -464,6 +472,7 @@ Padrões:
 - falecimento usa ícone `Cross`;
 - linhas de nascimento/falecimento combinam data e local quando houver;
 - textos devem tolerar ausência de dados;
+- na `/minha-arvore`, cards compactos com espaço suficiente devem preferir quebra de linha a reticências;
 - ações internas do card devem interromper propagação para não disparar clique no node;
 - no mobile, não deve haver anel azul duplicado competindo com borda/status visual do card central.
 
@@ -480,7 +489,7 @@ Padrões:
 
 - ícone `Blend`;
 - tamanho visual de referência: `60px x 60px`;
-- cor acompanha token de conector conjugal;
+- cor acompanha o token/cor efetiva dos conectores conforme a paleta ativa;
 - clique abre modal conjugal;
 - variante `direct-family` reforça halo, borda, sombra e stroke na Minha Árvore;
 - Genealogia e Visão Completa preservam estilo padrão;
@@ -490,7 +499,7 @@ Padrões:
 
 | Relação | Destaque |
 |---|---|
-| Cônjuges | Laranja/conector conjugal |
+| Cônjuges | Token/cor efetiva do conector conjugal da paleta ativa |
 | Pais/filhos | Amarelo/dourado quando destaque ativo |
 | Irmãos | Azul tracejado quando destaque ativo |
 | Linhas diretas desativadas | Ocultas conforme filtros |
@@ -513,15 +522,29 @@ src/app/pages/Home.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/pages/home/SidebarInfoPanel.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
 ```
 
 O painel lateral da árvore contém:
 
 - aba **Filtros**;
 - aba **Legendas**;
-- ações/informações auxiliares conforme contexto.
+- aba **Ações**.
 
-Regras:
+Padrão visual desktop consolidado:
+
+- o painel lateral não deve ter scroll vertical interno;
+- o conteúdo deve aproveitar melhor a extensão vertical disponível;
+- títulos das abas devem ser maiores e mais legíveis;
+- subtítulos devem ter tamanho e entrelinha confortáveis;
+- o espaçamento entre subtítulo e cards deve ser maior que o padrão compacto anterior;
+- cards de filtros/KPIs podem ter altura maior;
+- botões da aba **Ações** devem ter altura e espaçamento compatíveis com o painel;
+- se o conteúdo não couber sem scroll, revisar densidade, quantidade de itens ou comportamento por breakpoint.
+
+Regras funcionais:
 
 - manter apenas um controle visível de expandir/recolher;
 - evitar botão flutuante duplicado de legenda;
@@ -530,9 +553,59 @@ Regras:
 - elementos da legenda não devem aparecer na exportação;
 - em mobile, painel deve priorizar legibilidade e não competir com chips de geração nem com o painel de controles da árvore.
 
----
+Aba **Filtros**:
+
+- `/minha-arvore` usa cards de grupos diretos e KPIs de vivos/falecidos/pets;
+- `/genealogia` e `/visao-completa` usam filtros de gerações/grupos, quando aplicável;
+- cards devem permanecer clicáveis e indicar estado ativo/inativo.
+
+Aba **Legendas**:
+
+- deve explicar cards, linhas e destaques;
+- botões interativos devem usar `aria-pressed`;
+- controles desabilitados devem ter contraste e affordance suficientes.
+
+Aba **Ações**:
+
+- concentra exportação, PDF, imagem, impressão e seleção de área;
+- botões devem manter ícone, texto e foco visível;
+- nenhuma ação da aba deve alterar dados reais da árvore.
 
 ## 7. Páginas internas e padrões por área
+
+### 7.0 `/entrar` como home pública e compliance OAuth
+
+Arquivo principal:
+
+```txt
+src/app/pages/Entrar.tsx
+```
+
+A rota `/entrar` é login, primeiro acesso e também a home pública do app para validação externa.
+
+Padrões obrigatórios:
+
+- o título principal visível deve conter exatamente **Família Souza Barros** quando esse for o nome configurado no OAuth;
+- evitar nome predominante divergente, como **Árvore Família**, quando a validação externa espera **Família Souza Barros**;
+- a página deve explicar claramente o que é o app;
+- a página deve explicar a finalidade da integração com Google Agenda quando esse escopo for solicitado.
+
+Textos institucionais vigentes:
+
+```txt
+Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
+```
+
+```txt
+A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
+```
+
+Regras:
+
+- esses textos devem estar no JSX/HTML renderizado, não apenas em pseudo-elemento CSS;
+- `alt` do logo deve reforçar o nome do app quando aplicável;
+- microcopy de login não deve esconder a descrição pública do produto;
+- mudanças de copy nessa tela devem considerar revisão de OAuth/Google.
 
 ### 7.1 `/minha-arvore/editar`
 
@@ -757,6 +830,48 @@ desktop
 - overlays devem fechar com clique fora/ESC quando aplicável.
 
 ---
+
+### 9.0 Modal Curiosidades, conexão familiar e IA
+
+Arquivos principais:
+
+```txt
+src/app/pages/home/HomeCuriositiesDialog.tsx
+src/app/pages/home/ConnectionDiscoveryPanel.tsx
+src/app/pages/home/AiQuestionPanel.tsx
+src/app/pages/home/homeAiContext.ts
+src/app/utils/relationshipDegreeDisplay.ts
+api/ai.ts
+```
+
+Padrões UX:
+
+- abas do modal devem manter títulos claros e ícones consistentes;
+- tooltips de listas como **Onde moram** e **Onde nasceram** devem ficar estáveis durante hover, sem tremor causado por scroll ou reposicionamento;
+- quando necessário, tooltips podem usar posicionamento fixo, largura máxima, `max-height` e rolagem interna;
+- a aba **Qual a minha conexão com alguém?** deve exibir título curto e subtítulo explicativo apenas quando houver complemento real;
+- subtítulos não devem repetir literalmente a informação do título;
+- nomes nos cards visuais não devem truncar com `...` quando há espaço suficiente;
+- respostas da aba **Pergunte à IA** devem evitar IDs internos, linguagem genérica de encerramento e inferências fora dos dados da árvore.
+
+Exemplos de microcopy correta:
+
+```txt
+Tulius Souza e Eike são primos.
+O pai de Eike, Absalon Jr, é irmão de Márcio, pai de Tulius.
+```
+
+```txt
+Tulius Souza é sobrinho de Athanase Tsangaropoulos.
+Athanase é irmão de Condilênia, mãe de Tulius.
+```
+
+Regras:
+
+- não exibir subtítulo quando não houver complemento definido;
+- mover explicações longas para subtítulo, mantendo o título como classificação de parentesco;
+- IA deve responder apenas com base no contexto fornecido da árvore;
+- perguntas sobre dados sensíveis, inferências pessoais ou fofoca devem ser recusadas ou limitadas ao que está cadastrado.
 
 ## 9. Modais, diálogos e overlays
 

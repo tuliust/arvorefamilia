@@ -1,13 +1,15 @@
 # Documentação - Árvore Família
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/README.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico da documentação revisada e alinhada aos ajustes recentes de fórum, favoritos, cache/deploy e frente mobile.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/README.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: índice canônico da documentação revisada e alinhada aos ajustes recentes de árvore, painel lateral, cards de 360px, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy e frente mobile.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
 Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação foi consolidada para reduzir duplicidade, separar estado atual de histórico e evitar que arquivos antigos sejam usados como fonte de verdade.
+
+A revisão mais recente também registra que `/entrar` funciona como home pública do app **Família Souza Barros** para fins de validação/OAuth, incluindo explicação direta da integração com Google Agenda.
 
 ---
 
@@ -53,7 +55,7 @@ docs/arquitetura/
 | Arquivo | Uso |
 |---|---|
 | `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas e integrações. |
-| `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, rotas de membro, rotas administrativas, guards e redirecionamentos. |
+| `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, home `/entrar`, rotas de membro, rotas administrativas, guards, OAuth/compliance e redirecionamentos. |
 | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações e objetos legados. |
 
 ---
@@ -69,14 +71,14 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, filtros diretos, mobile e controles mobile. |
-| `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, reset de geração ativa, inferência visual e QA. |
-| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques e painel lateral. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, cards compactos de 360px, filtros diretos, mobile e controles mobile. |
+| `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
+| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques, painel lateral sem scroll desktop, aliança dinâmica e ações. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
 | `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. |
 | `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
-| `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, microcopy e QA. |
+| `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; inclui fluxo de seleção e fluxo mobile rápido. |
 
@@ -158,6 +160,7 @@ Não recriar documentos históricos individuais salvo necessidade explícita de 
 | Migrations, RLS, schema cache e SQL legado | `operacao/MIGRATIONS_SUPABASE.md` |
 | Storage, órfãos, base64 legado e scripts administrativos | `operacao/STORAGE_MAINTENANCE.md` |
 | Funcionalidade específica | `funcionalidades/<NOME>.md` |
+| Curiosidades, conexão familiar e IA | criar/complementar `funcionalidades/CURIOSIDADES_E_IA.md` quando essa frente for documentada como arquivo próprio |
 | Licenças e atribuições | `ATTRIBUTIONS.md` |
 | Histórico consolidado | `historico/README.md` |
 
@@ -171,7 +174,7 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano mantém seis itens abertos:
+No fechamento desta revisão documental, o plano deve contemplar pelo menos estes grupos de pendências:
 
 | ID | Origem | Tipo |
 |---|---|---|
@@ -181,6 +184,10 @@ No fechamento desta revisão documental, o plano mantém seis itens abertos:
 | `DOC-004` | `/minha-arvore` mobile | bug visual / conector inferior |
 | `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento de exportação mobile |
 | `DOC-006` | `/forum` | divergência UI/documentação / filtros tipo-status |
+| `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
+| `DOC-008` | Curiosidades/IA | documentação funcional específica a criar |
+| `DOC-009` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
+| `DOC-010` | `/minha-arvore` desktop | QA visual dos cards compactos de 360px e nomes longos |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 
@@ -200,6 +207,7 @@ Antes de lançamento, commit final ou deploy, bloquear se houver:
 - migration obrigatória ausente no ambiente final;
 - documentação canônica orientando ação insegura de Supabase, Storage, Auth ou migrations;
 - responsividade impedindo uso em mobile;
+- home `/entrar` sem nome público **Família Souza Barros** ou sem explicação da integração Google Agenda quando houver validação OAuth pendente;
 - árvore principal, perfil de pessoa, fórum, notificações ou edição da própria árvore inutilizáveis.
 
 ---
@@ -213,6 +221,7 @@ Antes de criar um novo `.md`, verificar:
 - se o documento evita duplicidade;
 - se pendências foram registradas no plano;
 - se há referência cruzada para o documento canônico correto;
+- se uma frente grande, como Curiosidades/IA, já exige arquivo próprio;
 - se há dado sensível, secret, dump, token ou conteúdo privado que não deve ser versionado;
 - se o arquivo precisa mesmo existir ou se o conteúdo pode ser incorporado a um documento existente.
 

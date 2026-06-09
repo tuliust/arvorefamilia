@@ -1,9 +1,9 @@
 # Guia de componentes - Árvore Família
 
-> Última atualização: 2026-06-09  
-> Local canônico: `docs/GUIA_COMPONENTES.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir os ajustes recentes de fórum, favoritos, modal conjugal, arquivos históricos, parentesco, cache/deploy e RPCs.
+> Última atualização: 2026-06-09
+> Local canônico: `docs/GUIA_COMPONENTES.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: guia canônico revisado para refletir ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, modal conjugal, arquivos históricos, parentesco, cache/deploy e RPCs.
 
 ## Objetivo
 
@@ -66,6 +66,7 @@ Ao alterar componente:
 - `min-w-0` em wrappers flex/grid;
 - `shrink-0` em ícones e avatares;
 - `truncate` quando o texto precisa ficar em uma linha;
+- evitar `truncate` em cards de árvore quando houver espaço para quebra de linha útil;
 - `break-words` para conteúdo de usuário;
 - `break-all` para valores técnicos longos;
 - `w-full sm:w-auto` em botões responsivos;
@@ -398,8 +399,8 @@ Cuidados:
 
 - group boxes, labels e anchors não devem comandar zoom inicial;
 - alteração de constantes afeta toda a composição;
-- cards e grupos centrais da Minha Árvore podem ter largura ampliada sem alterar o card central nem os grupos laterais;
-- labels de grupos centrais devem permanecer centralizadas dentro do group box visual;
+- cards compactos da Minha Árvore podem ter largura visual ampliada sem alterar o card central nem contaminar Genealogia/Visão Completa;
+- labels de grupos devem permanecer centralizadas dentro do group box visual;
 - edges/linhas estruturais devem conectar as bordas/anchors reais dos grupos após qualquer ajuste de largura;
 - ajustes de largura da Minha Árvore não devem vazar para `/genealogia` ou `/visao-completa`;
 - marriage nodes da Minha Árvore podem usar `visualVariant: 'direct-family'`;
@@ -453,16 +454,28 @@ Padrões consolidados:
 - nascimento usa ícone `Star`;
 - falecimento usa ícone `Cross`;
 - pet usa marcador com `Dog`;
-- textos longos usam truncamento/quebra controlada;
+- textos longos usam truncamento ou quebra conforme o contexto visual;
+- na `/minha-arvore`, cards compactos com espaço suficiente devem preferir quebra de linha a reticências;
+- em `/genealogia` e `/visao-completa`, preservar proporção e legibilidade dos cards `410px × 190px`;
 - handles do React Flow permanecem invisíveis;
 - no mobile, anéis/bordas duplicadas não devem competir com a borda principal do card.
+
+Dimensões de referência:
+
+| Contexto | Largura | Altura | Observação |
+|---|---:|---:|---|
+| Card central da `/minha-arvore` | `620px` | `760px` | Card de foco, sem ampliação compacta. |
+| Card compacto da `/minha-arvore` | `340px` base, `360px` visual | `136px` | Ampliação visual escopada à view direta. |
+| Card de `/genealogia` e `/visao-completa` | `410px` | `190px` | Não deve herdar `360px`. |
 
 Cuidados:
 
 - não trocar ícones por caracteres textuais;
 - não remover `stopPropagation` das ações;
 - não alterar dimensões sem validar a árvore inteira;
-- não misturar permissão de edição dentro do card; receber callbacks já resolvidos.
+- não misturar permissão de edição dentro do card; receber callbacks já resolvidos;
+- não aplicar regra de `line-clamp` que gere `...` desnecessário em nomes da `/minha-arvore`;
+- validar nomes longos como mãe, irmãos e sobrinhos após qualquer alteração de largura.
 
 ### 3.6 `MarriageNode`
 
@@ -482,7 +495,8 @@ Responsabilidade:
 Padrões consolidados:
 
 - tamanho base: `60px × 60px`;
-- cor acompanha `FAMILY_TREE_COLORS.EDGE_SPOUSE`;
+- cor do ícone e da borda deve acompanhar a cor efetiva dos conectores da árvore conforme a paleta ativa;
+- não usar laranja/marrom fixo quando o modo de cor define outra cor para os conectores;
 - variante `direct-family` reforça contraste na Minha Árvore;
 - clique deve parar propagação para não mover/selecionar indevidamente o canvas.
 
@@ -491,7 +505,8 @@ Cuidados:
 - preservar handles invisíveis;
 - não alterar dimensão sem revisar layout;
 - não remover fallback de inferência;
-- não usar cor fixa fora dos tokens.
+- não usar cor fixa fora dos tokens/CSS variables;
+- validar paletas `white`, `orange` e `brown` após alteração visual.
 
 ### 3.7 `GenealogySpouseEdge`
 
@@ -601,13 +616,27 @@ Responsabilidade:
 - decidir quando usar chips mobile de geração;
 - passar `activeGenealogyGeneration` para `FamilyTree`;
 - aplicar estilos condicionais por view/mobile;
-- renderizar estados de loading/erro/vazio.
+- renderizar estados de loading/erro/vazio;
+- renderizar título desktop/tablet da view;
+- posicionar o botão de favorito da página junto aos controles de zoom no desktop;
+- controlar bloqueios de scroll externo/indevido quando a árvore ocupa a viewport.
+
+Padrões atuais:
+
+| View | Título visível |
+|---|---|
+| `/minha-arvore` | `Árvore de {primeiro nome}` |
+| `/genealogia` | `Família de {primeiro nome}` |
+| `/visao-completa` | `Linha Genealógica de {primeiro nome}` |
 
 Cuidados:
 
 - resetar geração ativa quando mudar view, pessoa central ou assinatura de gerações disponíveis;
 - não transformar chips mobile em filtro destrutivo;
-- não vazar estilos da Minha Árvore para Genealogia/Visão Completa.
+- não vazar estilos da Minha Árvore para Genealogia/Visão Completa;
+- não reintroduzir botão de favorito duplicado no header desktop;
+- no desktop da `/minha-arvore`, wheel para cima não deve deslocar a árvore quando não há conteúdo acima;
+- manter controles de zoom, favorito e overlays acima do ReactFlow sem bloquear pan/zoom.
 
 ### 4.2 `GenealogyMobileStageTabs`
 
@@ -631,7 +660,28 @@ Responsabilidade:
 - comparar duas pessoas da árvore;
 - exibir resumo de parentesco e caminho familiar;
 - renderizar resultado visual na aba **Qual a minha conexão com alguém?**;
-- tratar pessoas humanas e pets de forma semanticamente distinta.
+- tratar pessoas humanas e pets de forma semanticamente distinta;
+- separar título curto de parentesco e subtítulo explicativo quando existir complemento real.
+
+Padrões consolidados:
+
+- título deve classificar a relação de forma direta;
+- subtítulo deve explicar o caminho familiar, sem repetir literalmente o título;
+- quando não houver complemento definido, não exibir subtítulo genérico;
+- nomes nos cards visuais podem quebrar linha quando houver espaço;
+- explicações longas devem sair do título e ir para o subtítulo.
+
+Exemplos:
+
+```txt
+Tulius Souza e Eike são primos.
+O pai de Eike, Absalon Jr, é irmão de Márcio, pai de Tulius.
+```
+
+```txt
+Tulius Souza é sobrinho de Athanase Tsangaropoulos.
+Athanase é irmão de Condilênia, mãe de Tulius.
+```
 
 Cuidados:
 
@@ -639,9 +689,68 @@ Cuidados:
 - exibir **pai** para relação paterna e **mãe** para relação materna;
 - quando o destino for pet, usar relação de tutela, como `Tulius Souza é tutor de Populos`;
 - não classificar pet como filho humano;
-- manter nomes curtos no card visual e frase completa no resultado textual.
+- manter card visual legível e frase textual completa;
+- não truncar nome com `...` quando houver espaço para o nome completo.
 
----
+### 4.4 `AiQuestionPanel`
+
+Arquivo:
+
+```txt
+src/app/pages/home/AiQuestionPanel.tsx
+```
+
+Responsabilidade:
+
+- renderizar a aba **Pergunte à IA** no modal de Curiosidades;
+- receber pergunta do usuário;
+- enviar contexto estruturado da árvore;
+- exibir resposta em português, sem expor IDs internos;
+- permitir nova pergunta após resposta.
+
+Cuidados:
+
+- não enviar secrets para o frontend;
+- não exibir IDs internos de pessoas ou relacionamentos;
+- não finalizar respostas com frases genéricas;
+- usar bullets com `•` para listas curtas de pessoas;
+- perguntas sem suporte nos dados devem receber resposta limitada ao contexto;
+- respostas devem diferenciar humanos, pets, cônjuges e relações de tutela;
+- perguntas sensíveis, inferenciais ou de fofoca não devem ser respondidas fora do dado cadastrado.
+
+### 4.5 `homeAiContext`
+
+Arquivo:
+
+```txt
+src/app/pages/home/homeAiContext.ts
+```
+
+Responsabilidade:
+
+- montar contexto estruturado para a IA;
+- normalizar vínculos pai/mãe;
+- separar filhos humanos de pets;
+- gerar respostas diretas sugeridas para perguntas frequentes;
+- evitar que a IA precise inferir relações básicas a partir de dados brutos.
+
+Respostas diretas/casos determinísticos esperados:
+
+- bisavós paternos da pessoa central;
+- pessoas nascidas em Recife/PE;
+- irmãos de uma pessoa por pais compartilhados;
+- pessoas mais antigas com ano de nascimento e idade aproximada;
+- cidades de nascimento mais recorrentes com nomes por cidade;
+- resumo da linha genealógica da pessoa central.
+
+Cuidados:
+
+- manter funções puras e testáveis quando possível;
+- não expor IDs na resposta final ao usuário;
+- não confundir avós com bisavós;
+- não classificar pets como filhos humanos;
+- manter respostas em linguagem familiar, não em linguagem de banco;
+- atualizar `api/ai.ts` quando a estrutura do contexto mudar.
 
 ## 5. Perfil, pessoa e dados pessoais
 

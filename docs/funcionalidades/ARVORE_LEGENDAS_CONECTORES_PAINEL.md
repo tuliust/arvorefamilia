@@ -1,8 +1,9 @@
 # Árvore - legendas, conectores, filtros e painel lateral
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
+> Última revisão: 2026-06-09
+> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentação funcional/técnica específica da árvore.
+> Status: revisado após ajustes de painel lateral desktop sem scroll, ritmo visual das abas, cores dinâmicas de conectores/alianças, favorito na área da árvore e cards de 360px na Minha Árvore.
 
 ## 1. Função deste documento
 
@@ -53,6 +54,21 @@ Destaque não reexibe linha oculta.
 Destaque não altera cards.
 Destaque não altera contadores.
 ```
+
+
+### 2.1 Atualizações consolidadas em 2026-06-09
+
+A experiência da árvore passou a considerar os seguintes padrões visuais recentes:
+
+- o painel lateral desktop não deve ter scroll vertical interno;
+- abas **Filtros**, **Legendas** e **Ações** devem usar mais respiro vertical;
+- títulos e subtítulos do painel lateral são maiores do que o padrão compacto anterior;
+- cards/botões do painel lateral têm altura maior e espaçamento mais confortável;
+- o botão de favoritar da página da árvore fica na área do canvas, junto aos controles de zoom, e não duplicado no header desktop;
+- ícones/aneis de aliança devem acompanhar a cor do conector conjugal conforme a paleta ativa;
+- cards compactos da `/minha-arvore` foram ampliados visualmente para 360px e devem permitir quebra de linha nos nomes, evitando reticências indevidas.
+
+Essas regras devem ser tratadas como estado atual da UI, não como experimento visual.
 
 ---
 
@@ -171,14 +187,52 @@ No desktop, a Home renderiza uma sidebar com três abas:
 | Legendas | `TreeLegend` |
 | Ações | `SidebarInfoPanel` |
 
+### 4.1 Regras desktop
+
+Regras consolidadas:
+
+- o painel lateral desktop não deve gerar scroll vertical interno;
+- o conteúdo deve usar a extensão vertical disponível com respiro entre título, subtítulo, cards e botões;
+- títulos das abas devem ser maiores que o padrão anterior de texto compacto;
+- subtítulos devem ter tamanho legível e espaçamento inferior suficiente antes dos cards;
+- cards de filtros e KPIs podem ter altura maior para melhorar leitura;
+- botões da aba **Ações** devem manter altura confortável e espaçamento vertical consistente;
+- a remoção de scroll não deve cortar conteúdo em alturas comuns de notebook;
+- se a altura útil ficar insuficiente, reduzir densidade por `clamp()` antes de reintroduzir scroll.
+
+Componentes afetados:
+
+```txt
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
+src/app/pages/home/SidebarInfoPanel.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
+src/styles/family-tree-visual-polish.css
+```
+
+### 4.2 Regras mobile
+
 No mobile:
 
 - não há sidebar lateral;
 - `HomeMobileNav` abre o painel inferior;
 - painel inferior reaproveita `sidebarPanelContent`;
 - altura máxima é limitada;
-- conteúdo rola internamente;
-- overlay fecha o painel.
+- conteúdo pode rolar internamente;
+- overlay fecha o painel;
+- chips de geração e painel de controles da árvore têm prioridade visual sobre abas laterais.
+
+### 4.3 Anti-regressões do painel
+
+Não fazer:
+
+- reintroduzir scroll vertical no painel lateral desktop sem decisão explícita;
+- duplicar controle de legenda fora da aba **Legendas**;
+- fazer a aba **Ações** competir com botões do canvas;
+- esconder filtros importantes para caber visualmente;
+- misturar filtros de linha com filtros de cards;
+- aplicar regra desktop ao painel inferior mobile sem validação.
 
 ---
 
@@ -287,6 +341,10 @@ auxiliary
 
 Regras:
 
+- cards compactos de relação direta na `/minha-arvore` usam largura visual atual de 360px quando aplicável;
+- nomes em cards compactos devem quebrar linha quando necessário, sem reticências indevidas;
+- linhas de tios/primos devem continuar conectando bordas/anchors atuais após aumento visual dos cards;
+- cards do lado direito podem crescer em direção ao centro para evitar expansão para fora da tela;
 - `isDirectLineVisible` aplica `edgeFilters`;
 - `getDirectLineStyle` aplica `visualLineFilters`;
 - grupos ocultos por `directRelativeFilters` não devem gerar cards visíveis;
@@ -339,9 +397,22 @@ Regras:
 - deve abrir `ViewMarriageModal`;
 - não é filtro;
 - não altera relacionamento no banco;
-- não deve ser substituído por emoji.
+- não deve ser substituído por emoji;
+- ícone de aliança e borda/anel devem acompanhar a cor do conector conjugal da paleta ativa;
+- não usar cor fixa laranja ou marrom quando a paleta define outro token de conector;
+- em Genealogia/Visão Completa, a edge conjugal usa `GenealogySpouseEdge` e dados de `marriageStatus`.
 
-Em Genealogia/Visão Completa, a edge conjugal usa `GenealogySpouseEdge` e dados de `marriageStatus`.
+Regra de paleta:
+
+```txt
+A aliança e sua borda devem seguir a mesma família visual das linhas/conectores.
+```
+
+Anti-regressão:
+
+- alternar paleta `white`, `orange` e `brown` deve alterar linhas e anéis de forma coerente;
+- a cor do anel não deve ficar presa ao modo anterior após troca de paleta;
+- a aliança não deve virar controle de filtro.
 
 ---
 
@@ -367,7 +438,11 @@ Regras:
 
 ## 12. Ações da árvore
 
-A aba **Ações** usa `SidebarInfoPanel` e chama métodos expostos por `FamilyTreeActions`:
+A aba **Ações** usa `SidebarInfoPanel` e chama métodos expostos por `FamilyTreeActions`.
+
+O botão de favoritar da página da árvore não pertence mais ao header desktop nessa experiência: ele deve ficar dentro da área do canvas, próximo aos controles de zoom `+` e `-`, usando `PageFavoriteButton`.
+
+Métodos expostos por `FamilyTreeActions`:
 
 ```txt
 startAreaSelection
@@ -381,6 +456,7 @@ Regras:
 - exportação deve capturar a área visível ou a área selecionada;
 - seleção de área bloqueia pan/zoom temporariamente;
 - envio por WhatsApp permanece futuro/pós-MVP;
+- o favorito da página deve manter comportamento de favoritar/desfavoritar rota sem duplicidade no header;
 - detalhes ficam em `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
 ---
@@ -400,8 +476,12 @@ Validar após alteração:
 - filtros diretos alteram grupos na Minha Árvore;
 - filtros de geração alteram Genealogia/Visão Completa;
 - painel desktop abre/recolhe sem quebrar viewport;
+- painel desktop não cria scroll vertical interno;
+- títulos/subtítulos/cards do painel lateral têm respiro suficiente;
 - painel mobile abre/fecha e rola internamente;
 - modal conjugal abre pelo anel;
+- aliança e borda do anel acompanham a cor dos conectores em todas as paletas;
+- botão de favoritar aparece próximo ao zoom no desktop e não fica duplicado no header;
 - exportação ainda funciona.
 
 ---
@@ -419,4 +499,7 @@ Não fazer:
 - quebrar acessibilidade de botões interativos;
 - usar CSS global que sobrescreva todas as linhas com a mesma cor;
 - remover `aria-pressed` dos controles;
-- fazer a seção Aliança virar filtro sem nova decisão funcional.
+- fazer a seção Aliança virar filtro sem nova decisão funcional;
+- fixar cor de aliança/conector fora dos tokens de paleta;
+- reintroduzir scroll vertical no painel lateral desktop;
+- voltar a truncar nomes com `...` em cards compactos da Minha Árvore quando houver espaço para quebra de linha.
