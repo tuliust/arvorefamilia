@@ -69,6 +69,69 @@ function formatVitalLine(place?: string, date?: string | number) {
   return [normalizedPlace, year].filter(Boolean).join(' ');
 }
 
+function PersonAvatar({
+  person,
+  pet,
+  className,
+  iconClassName,
+}: {
+  person: Pessoa;
+  pet: boolean;
+  className: string;
+  iconClassName: string;
+}) {
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner ${className}`}
+    >
+      {person.foto_principal_url ? (
+        <img
+          src={person.foto_principal_url}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      ) : pet ? (
+        <PawPrint className={iconClassName} aria-hidden="true" />
+      ) : (
+        <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
+      )}
+    </span>
+  );
+}
+
+function VitalLines({
+  birthLine,
+  deathLine,
+  showDeathLine,
+  align = 'center',
+  compact = false,
+}: {
+  birthLine: string;
+  deathLine: string;
+  showDeathLine: boolean;
+  align?: 'center' | 'left';
+  compact?: boolean;
+}) {
+  const alignment = align === 'left' ? 'justify-start text-left' : 'justify-center text-center';
+  const textSize = compact ? 'text-[10px]' : 'text-[11px]';
+  const gap = compact ? 'gap-0.5' : 'gap-1';
+
+  return (
+    <>
+      <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+        <Star className="h-3 w-3 shrink-0 fill-current" aria-hidden="true" />
+        <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
+      </span>
+      {showDeathLine && (
+        <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+          <Cross className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
+        </span>
+      )}
+    </>
+  );
+}
+
 function PersonCard({
   person,
   label,
@@ -102,37 +165,60 @@ function PersonCard({
           {label}
         </span>
       )}
-      <span
-        className={[
-          'flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner',
-          central ? 'h-[66px] w-[66px]' : 'h-[64px] w-[64px]',
-        ].join(' ')}
-      >
-        {person.foto_principal_url ? (
-          <img
-            src={person.foto_principal_url}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : pet ? (
-          <PawPrint className={central ? 'h-8 w-8' : 'h-7 w-7'} aria-hidden="true" />
-        ) : (
-          <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
-        )}
-      </span>
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={central ? 'h-[66px] w-[66px]' : 'h-[64px] w-[64px]'}
+        iconClassName={central ? 'h-8 w-8' : 'h-7 w-7'}
+      />
       <span className="mt-1.5 w-full truncate whitespace-nowrap text-[12px] font-extrabold uppercase leading-none">
         {displayName}
       </span>
-      <span className="mt-1.5 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
-        <Star className="h-3 w-3 shrink-0 fill-current" aria-hidden="true" />
-        <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
-      </span>
-      {showDeathLine && (
-        <span className="mt-0.5 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
-          <Cross className="h-3 w-3 shrink-0" aria-hidden="true" />
-          <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
+      <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={showDeathLine} />
+    </button>
+  );
+}
+
+function SiblingPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const pet = isPetFamilyMember(person);
+  const displayName = getFirstTwoNames(person.nome_completo) || person.nome_completo;
+  const birthLine = formatVitalLine(person.local_nascimento, person.data_nascimento);
+  const deathLine = formatVitalLine(person.local_falecimento, person.data_falecimento);
+  const showDeathLine = Boolean(person.falecido || person.data_falecimento || person.local_falecimento);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className="flex h-[82px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className="h-[50px] w-[50px]"
+        iconClassName="h-6 w-6"
+      />
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span
+          className="w-full overflow-hidden text-[11px] font-extrabold uppercase leading-[1.05]"
+          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+        >
+          {displayName}
         </span>
-      )}
+        <VitalLines
+          birthLine={birthLine}
+          deathLine={deathLine}
+          showDeathLine={showDeathLine}
+          align="left"
+          compact
+        />
+      </span>
     </button>
   );
 }
@@ -154,6 +240,7 @@ function FamilyGroup({
   onToggle,
   onPersonClick,
   columns = 'double',
+  compactCards = false,
 }: {
   id: string;
   title: string;
@@ -162,6 +249,7 @@ function FamilyGroup({
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
   columns?: 'single' | 'double';
+  compactCards?: boolean;
 }) {
   if (people.length === 0) return null;
   const visiblePeople = people.length > 4 && !expanded ? people.slice(0, 3) : people;
@@ -180,7 +268,9 @@ function FamilyGroup({
           ].join(' ')}
         >
           {visiblePeople.map((person) => (
-            <PersonCard key={person.id} person={person} onClick={onPersonClick} />
+            compactCards
+              ? <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />
+              : <PersonCard key={person.id} person={person} onClick={onPersonClick} />
           ))}
         </div>
         {people.length > 4 && (
@@ -413,6 +503,7 @@ export function MobileFamilyTreeView({
                     onToggle={toggleGroup}
                     onPersonClick={onPersonClick}
                     columns="single"
+                    compactCards
                   />
                   <FamilyGroup
                     id="core-nephews"
