@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AppLink as Link } from '../components/AppLink';
+import React, { KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
   ChevronLeft,
@@ -62,6 +62,7 @@ function isInternalHref(href?: string | null) {
 }
 
 export function MeusFavoritos() {
+  const navigate = useNavigate();
   const [favoritos, setFavoritos] = useState<UserFavorite[]>([]);
   const [filtro, setFiltro] = useState<'all' | FavoriteEntityType>('all');
   const [busca, setBusca] = useState('');
@@ -112,7 +113,27 @@ export function MeusFavoritos() {
     });
   }, [busca, favoritos, filtro]);
 
-  const handleRemove = async (favorito: UserFavorite) => {
+  const openFavorite = (favorito: UserFavorite) => {
+    if (!favorito.href) return;
+
+    if (isInternalHref(favorito.href)) {
+      navigate(favorito.href);
+      return;
+    }
+
+    window.open(favorito.href, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleFavoriteKeyDown = (event: KeyboardEvent<HTMLDivElement>, favorito: UserFavorite) => {
+    if (!favorito.href) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    openFavorite(favorito);
+  };
+
+  const handleRemove = async (event: MouseEvent<HTMLButtonElement>, favorito: UserFavorite) => {
+    event.stopPropagation();
     setRemovingId(favorito.id);
 
     try {
@@ -215,11 +236,21 @@ export function MeusFavoritos() {
               favoritosFiltrados.map((favorito) => {
                 const createdAt = formatDate(favorito.created_at);
                 const badgeClass = FAVORITE_BADGE_CLASSES[favorito.entity_type] ?? FAVORITE_BADGE_CLASSES.page;
+                const hasHref = Boolean(favorito.href);
 
                 return (
                   <div
                     key={favorito.id}
-                    className="flex min-w-0 flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
+                    role={hasHref ? 'link' : undefined}
+                    tabIndex={hasHref ? 0 : undefined}
+                    onClick={() => openFavorite(favorito)}
+                    onKeyDown={(event) => handleFavoriteKeyDown(event, favorito)}
+                    className={`flex min-w-0 flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition sm:p-5 ${
+                      hasHref
+                        ? 'cursor-pointer hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+                        : ''
+                    }`}
+                    aria-label={hasHref ? `Abrir ${favorito.label}` : undefined}
                   >
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -236,7 +267,7 @@ export function MeusFavoritos() {
 
                       <button
                         type="button"
-                        onClick={() => handleRemove(favorito)}
+                        onClick={(event) => handleRemove(event, favorito)}
                         disabled={removingId === favorito.id}
                         className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                         aria-label="Remover dos favoritos"
@@ -248,30 +279,6 @@ export function MeusFavoritos() {
                     {createdAt && (
                       <p className="break-words text-xs text-gray-400">Salvo em {createdAt}</p>
                     )}
-
-                    <div className="mt-auto min-w-0">
-                      {isInternalHref(favorito.href) ? (
-                        <Link
-                          to={favorito.href ?? '/'}
-                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          Abrir conteúdo
-                        </Link>
-                      ) : favorito.href ? (
-                        <a
-                          href={favorito.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          Abrir conteúdo
-                        </a>
-                      ) : (
-                        <span className="inline-flex w-full items-center justify-center rounded-xl bg-gray-100 px-4 py-3 text-center text-sm font-medium text-gray-500">
-                          Link indisponível
-                        </span>
-                      )}
-                    </div>
                   </div>
                 );
               })
