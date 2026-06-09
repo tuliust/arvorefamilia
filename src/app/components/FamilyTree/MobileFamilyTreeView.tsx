@@ -366,9 +366,9 @@ export function MobileFamilyTreeView({
       ) : (
         <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-y-auto overflow-x-hidden overscroll-contain">
           {activeTab === 'core' && (
-            <div className="mx-auto w-full max-w-[430px] px-3 pb-28 pt-10">
-              <div className="mx-auto w-full max-w-[390px] px-4">
-                <div className="grid grid-cols-2 gap-5">
+            <div className="mx-auto w-full max-w-[430px] px-1 pb-28 pt-10">
+              <div className="mx-auto w-full max-w-[390px] px-1">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="relative">
                     {isVisible(model.father)
                       ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
@@ -385,13 +385,13 @@ export function MobileFamilyTreeView({
                 </div>
 
                 <div className="pointer-events-none relative h-12">
-                  <div className="absolute left-[23.5%] right-[23.5%] top-7 h-px bg-cyan-600" />
+                  <div className="absolute left-1/4 right-1/4 top-7 h-px bg-cyan-600" />
                   <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
                 </div>
               </div>
 
               {isVisible(model.central) && (
-                <div className="relative mx-auto mt-0 w-[min(166px,calc((100vw-5.75rem)/2))]">
+                <div className="relative mx-auto mt-0 w-[min(181px,calc((100vw-1.75rem)/2))]">
                   <PersonCard person={model.central} label="Você" central onClick={onPersonClick} />
                 </div>
               )}
