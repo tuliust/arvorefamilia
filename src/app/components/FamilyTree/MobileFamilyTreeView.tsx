@@ -20,7 +20,9 @@ import type {
 
 type MobileTreeTab = 'core' | 'paternal' | 'maternal' | 'complete';
 
-type CardVariant = 'default' | 'sibling' | 'pet';
+type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
+
+type GroupColumns = 'single' | 'double' | 'triple';
 
 interface MobileFamilyTreeViewProps {
   pessoas: Pessoa[];
@@ -271,6 +273,43 @@ function SiblingPersonCard({
   );
 }
 
+function MiniPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className="flex h-[104px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className="h-[36px] w-[36px] border-2"
+        iconClassName="h-5 w-5"
+      />
+      <span
+        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
+        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+      >
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        compact
+      />
+    </button>
+  );
+}
+
 function PetPersonCard({
   person,
   onClick,
@@ -317,6 +356,12 @@ function EmptyCard({ label }: { label: string }) {
   );
 }
 
+function getGridColumnsClass(columns: GroupColumns) {
+  if (columns === 'single') return 'grid-cols-1';
+  if (columns === 'triple') return 'grid-cols-3';
+  return 'grid-cols-2';
+}
+
 function FamilyGroup({
   id,
   title,
@@ -335,7 +380,7 @@ function FamilyGroup({
   expanded: boolean;
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
-  columns?: 'single' | 'double';
+  columns?: GroupColumns;
   cardVariant?: CardVariant;
   maxCollapsedItems?: number;
   bottomConnector?: boolean;
@@ -360,14 +405,12 @@ function FamilyGroup({
         <div
           className={usePetCards
             ? 'grid min-w-0 grid-cols-1 gap-2'
-            : [
-              'grid min-w-0 gap-2.5',
-              columns === 'single' ? 'grid-cols-1' : 'grid-cols-2',
-            ].join(' ')}
+            : ['grid min-w-0 gap-2.5', getGridColumnsClass(columns)].join(' ')}
         >
           {visiblePeople.map((person) => {
             if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
             if (cardVariant === 'pet') return <PetPersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            if (cardVariant === 'mini') return <MiniPersonCard key={person.id} person={person} onClick={onPersonClick} />;
             return <PersonCard key={person.id} person={person} onClick={onPersonClick} />;
           })}
         </div>
@@ -388,29 +431,35 @@ function FamilyGroup({
   );
 }
 
-function ParentSiblingsScreen({
-  side,
+function VerticalRelativeScreen({
   title,
   people,
+  groupId,
   expanded,
   onToggle,
   onPersonClick,
+  columns,
+  maxCollapsedItems,
+  connectHorizontal,
 }: {
-  side: 'left' | 'right';
   title: string;
   people: Pessoa[];
+  groupId: string;
   expanded: boolean;
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
+  columns: GroupColumns;
+  maxCollapsedItems: number;
+  connectHorizontal?: 'left' | 'right';
 }) {
-  const groupId = `core-parent-siblings-${side}`;
-
   return (
-    <div className="relative min-h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
-      <div className={[
-        'pointer-events-none absolute top-[92px] h-px bg-cyan-600',
-        side === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
-      ].join(' ')} />
+    <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
+      {connectHorizontal && (
+        <div className={[
+          'pointer-events-none absolute top-[92px] h-px bg-cyan-600',
+          connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
+        ].join(' ')} />
+      )}
       <div className="mx-auto mt-4 w-full max-w-[360px]">
         <FamilyGroup
           id={groupId}
@@ -419,10 +468,87 @@ function ParentSiblingsScreen({
           expanded={expanded}
           onToggle={onToggle}
           onPersonClick={onPersonClick}
-          columns="double"
-          cardVariant="sibling"
-          maxCollapsedItems={6}
+          columns={columns}
+          cardVariant={columns === 'double' ? 'sibling' : 'mini'}
+          maxCollapsedItems={maxCollapsedItems}
           bottomConnector
+        />
+      </div>
+    </div>
+  );
+}
+
+function ParentBranchSwipeScreen({
+  side,
+  title,
+  ancestorsTitle,
+  cousinsTitle,
+  uncles,
+  ancestors,
+  cousins,
+  expandedGroups,
+  onToggle,
+  onPersonClick,
+}: {
+  side: 'left' | 'right';
+  title: string;
+  ancestorsTitle: string;
+  cousinsTitle: string;
+  uncles: Pessoa[];
+  ancestors: Pessoa[];
+  cousins: Pessoa[];
+  expandedGroups: Set<string>;
+  onToggle: (id: string) => void;
+  onPersonClick: (person: Pessoa) => void;
+}) {
+  const verticalScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const prefix = `core-parent-branch-${side}`;
+
+  React.useEffect(() => {
+    const container = verticalScrollRef.current;
+    if (!container) return;
+
+    requestAnimationFrame(() => {
+      container.scrollTop = container.clientHeight;
+    });
+  }, [side, title]);
+
+  return (
+    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden">
+      <div
+        ref={verticalScrollRef}
+        className="flex h-full w-full snap-y snap-mandatory flex-col overflow-y-auto overflow-x-hidden scroll-smooth overscroll-y-contain"
+      >
+        <VerticalRelativeScreen
+          title={ancestorsTitle}
+          people={ancestors}
+          groupId={`${prefix}-ancestors`}
+          expanded={expandedGroups.has(`${prefix}-ancestors`)}
+          onToggle={onToggle}
+          onPersonClick={onPersonClick}
+          columns="double"
+          maxCollapsedItems={6}
+        />
+        <VerticalRelativeScreen
+          title={title}
+          people={uncles}
+          groupId={`${prefix}-uncles`}
+          expanded={expandedGroups.has(`${prefix}-uncles`)}
+          onToggle={onToggle}
+          onPersonClick={onPersonClick}
+          columns="double"
+          maxCollapsedItems={6}
+          connectHorizontal={side}
+        />
+        <VerticalRelativeScreen
+          title={cousinsTitle}
+          people={cousins}
+          groupId={`${prefix}-cousins`}
+          expanded={expandedGroups.has(`${prefix}-cousins`)}
+          onToggle={onToggle}
+          onPersonClick={onPersonClick}
+          columns="triple"
+          maxCollapsedItems={9}
         />
       </div>
     </div>
@@ -554,6 +680,16 @@ export function MobileFamilyTreeView({
   const visibleChildren = filterVisible(model.children);
   const visiblePets = filterVisible(model.pets);
   const visibleGrandchildren = filterVisible(model.grandchildren);
+  const visiblePaternalAncestors = [
+    ...visiblePaternal.greatGreatGrandparents,
+    ...visiblePaternal.greatGrandparents,
+    ...visiblePaternal.grandparents,
+  ];
+  const visibleMaternalAncestors = [
+    ...visibleMaternal.greatGreatGrandparents,
+    ...visibleMaternal.greatGrandparents,
+    ...visibleMaternal.grandparents,
+  ];
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]">
@@ -607,22 +743,26 @@ export function MobileFamilyTreeView({
           />
         </div>
       ) : (
-        <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-y-auto overflow-x-hidden overscroll-contain">
+        <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain">
           {activeTab === 'core' && (
             <div
               ref={coreScrollRef}
-              className="flex min-h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-visible scroll-smooth overscroll-x-contain"
+              className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth overscroll-x-contain"
             >
-              <ParentSiblingsScreen
+              <ParentBranchSwipeScreen
                 side="left"
                 title="Tios Paternos"
-                people={visiblePaternal.uncles}
-                expanded={expandedGroups.has('core-parent-siblings-left')}
+                ancestorsTitle="Ancestrais Paternos"
+                cousinsTitle="Primos Paternos"
+                uncles={visiblePaternal.uncles}
+                ancestors={visiblePaternalAncestors}
+                cousins={visiblePaternal.cousins}
+                expandedGroups={expandedGroups}
                 onToggle={toggleGroup}
                 onPersonClick={onPersonClick}
               />
 
-              <div className="relative min-h-full w-full shrink-0 snap-center">
+              <div className="relative h-full w-full shrink-0 snap-center overflow-y-auto">
                 <div className="pointer-events-none absolute left-0 top-[92px] h-px w-[calc((100%-0.75rem)/4)] bg-cyan-600" />
                 <div className="pointer-events-none absolute right-0 top-[92px] h-px w-[calc((100%-0.75rem)/4)] bg-cyan-600" />
                 <div className="mx-auto w-full max-w-[430px] px-1 pb-28 pt-10">
@@ -730,11 +870,15 @@ export function MobileFamilyTreeView({
                 </div>
               </div>
 
-              <ParentSiblingsScreen
+              <ParentBranchSwipeScreen
                 side="right"
                 title="Tios Maternos"
-                people={visibleMaternal.uncles}
-                expanded={expandedGroups.has('core-parent-siblings-right')}
+                ancestorsTitle="Ancestrais Maternos"
+                cousinsTitle="Primos Maternos"
+                uncles={visibleMaternal.uncles}
+                ancestors={visibleMaternalAncestors}
+                cousins={visibleMaternal.cousins}
+                expandedGroups={expandedGroups}
                 onToggle={toggleGroup}
                 onPersonClick={onPersonClick}
               />
