@@ -295,11 +295,10 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
             ) : (
               <div className="space-y-1">
                 <div className="mb-3 rounded-2xl border border-blue-100 bg-blue-50 p-2 md:hidden">
-                  <div className="mb-2 flex items-center gap-2 px-2 pt-1 text-xs font-bold uppercase tracking-wide text-blue-900">
-                    <Network className="h-4 w-4" />
+                  <div className="mb-2 px-2 pt-1 text-xs font-bold uppercase tracking-wide text-blue-900">
                     Visualização
                   </div>
-                  <div className="grid grid-cols-1 gap-1">
+                  <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/80 p-1 shadow-inner">
                     {TREE_VIEW_OPTIONS.map((option) => {
                       const active = location.pathname === option.path || (option.path === '/minha-arvore' && location.pathname === '/');
 
@@ -309,15 +308,15 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                           type="button"
                           onClick={() => goTo(option.path)}
                           className={[
-                            'flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-bold transition',
+                            'flex min-h-10 w-full items-center justify-center rounded-xl px-1.5 py-2 text-center text-[11px] font-bold leading-tight transition',
                             active
                               ? 'bg-blue-600 text-white shadow-sm'
-                              : 'bg-white text-blue-800 hover:bg-blue-100',
+                              : 'text-blue-800 hover:bg-blue-100',
                           ].join(' ')}
                           aria-current={active ? 'page' : undefined}
+                          title={option.label}
                         >
-                          <span>{option.label}</span>
-                          {active && <span className="text-xs font-semibold opacity-90">Atual</span>}
+                          {option.label}
                         </button>
                       );
                     })}
