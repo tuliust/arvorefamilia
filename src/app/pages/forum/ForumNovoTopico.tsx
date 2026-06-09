@@ -2,13 +2,10 @@ import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState }
 import { useNavigate, useSearchParams } from 'react-router';
 import {
   BookOpen,
-  Check,
-  ChevronDown,
   HelpCircle,
   LifeBuoy,
   Megaphone,
   MessageCircle,
-  Search,
   Send,
   UsersRound,
 } from 'lucide-react';
@@ -94,15 +91,12 @@ export function ForumNovoTopico() {
   const [categoriaId, setCategoriaId] = useState('');
   const [conteudo, setConteudo] = useState('');
   const [selectedRelatedPersonIds, setSelectedRelatedPersonIds] = useState<string[]>([]);
-  const [relatedDropdownOpen, setRelatedDropdownOpen] = useState(false);
-  const [relatedPersonQuery, setRelatedPersonQuery] = useState('');
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
   const [mentionCursorIndex, setMentionCursorIndex] = useState<number | null>(null);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const relatedDropdownRef = useRef<HTMLDivElement | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -131,47 +125,6 @@ export function ForumNovoTopico() {
     };
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!relatedDropdownOpen) return undefined;
-
-    function handlePointerDown(event: MouseEvent | TouchEvent) {
-      const target = event.target;
-
-      if (!(target instanceof Node)) return;
-
-      if (!relatedDropdownRef.current?.contains(target)) {
-        setRelatedDropdownOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [relatedDropdownOpen]);
-
-  const selectedRelatedPeople = useMemo(
-    () => pessoas.filter((pessoa) => selectedRelatedPersonIds.includes(pessoa.id)),
-    [pessoas, selectedRelatedPersonIds]
-  );
-
-  const relatedSummary = useMemo(() => {
-    if (selectedRelatedPersonIds.length === 0) return 'Nenhuma pessoa selecionada';
-    if (selectedRelatedPersonIds.length === 1) return '1 pessoa selecionada';
-    return `${selectedRelatedPersonIds.length} pessoas selecionadas`;
-  }, [selectedRelatedPersonIds.length]);
-
-  const filteredRelatedPeople = useMemo(() => {
-    const query = normalizeSearch(relatedPersonQuery);
-
-    if (!query) return pessoas;
-
-    return pessoas.filter((pessoa) => normalizeSearch(pessoa.nome_completo).includes(query));
-  }, [pessoas, relatedPersonQuery]);
-
   const filteredMentionPeople = useMemo(() => {
     const query = normalizeSearch(mentionQuery);
     return pessoas
@@ -181,14 +134,6 @@ export function ForumNovoTopico() {
       })
       .slice(0, 8);
   }, [pessoas, mentionQuery]);
-
-  function toggleRelatedPerson(personId: string) {
-    setSelectedRelatedPersonIds((current) =>
-      current.includes(personId)
-        ? current.filter((id) => id !== personId)
-        : [...current, personId]
-    );
-  }
 
   function addRelatedPerson(personId: string) {
     setSelectedRelatedPersonIds((current) =>
@@ -359,7 +304,7 @@ export function ForumNovoTopico() {
                 </span>
                 <div
                   aria-labelledby="categoria-label"
-                  className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+                  className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
                   role="group"
                 >
                   {categorias.map((categoria) => {
@@ -395,92 +340,6 @@ export function ForumNovoTopico() {
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="min-w-0 space-y-2">
-                <label className="text-sm font-medium text-gray-700" htmlFor="pessoas-relacionadas">
-                  Pessoas Relacionadas
-                </label>
-                <div className="relative min-w-0" ref={relatedDropdownRef}>
-                  <button
-                    id="pessoas-relacionadas"
-                    type="button"
-                    onClick={() => setRelatedDropdownOpen((current) => !current)}
-                    className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    aria-expanded={relatedDropdownOpen}
-                    aria-haspopup="listbox"
-                  >
-                    <span className={`min-w-0 truncate ${selectedRelatedPersonIds.length ? 'text-gray-900' : 'text-gray-500'}`}>
-                      {relatedSummary}
-                    </span>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
-                  </button>
-
-                  {relatedDropdownOpen && (
-                    <div className="absolute left-0 right-0 z-40 mt-1 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
-                      <div className="border-b border-gray-100 p-2">
-                        <label htmlFor="buscar-pessoas-relacionadas" className="sr-only">
-                          Buscar pessoas relacionadas
-                        </label>
-                        <div className="relative">
-                          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                          <Input
-                            id="buscar-pessoas-relacionadas"
-                            value={relatedPersonQuery}
-                            onChange={(event) => setRelatedPersonQuery(event.target.value)}
-                            placeholder="Buscar pessoa..."
-                            className="h-9 pl-9 text-sm"
-                            autoComplete="off"
-                          />
-                        </div>
-                      </div>
-                      <div className="max-h-64 overflow-y-auto p-1" role="listbox" aria-multiselectable="true">
-                        {filteredRelatedPeople.length > 0 ? (
-                          filteredRelatedPeople.map((pessoa) => {
-                            const checked = selectedRelatedPersonIds.includes(pessoa.id);
-                            return (
-                              <button
-                                key={pessoa.id}
-                                type="button"
-                                onClick={() => toggleRelatedPerson(pessoa.id)}
-                                className="flex w-full min-w-0 items-center gap-3 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                role="option"
-                                aria-selected={checked}
-                              >
-                                <span
-                                  className={[
-                                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                                    checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 bg-white',
-                                  ].join(' ')}
-                                  aria-hidden="true"
-                                >
-                                  {checked && <Check className="h-3 w-3" />}
-                                </span>
-                                <span className="min-w-0 truncate">{pessoa.nome_completo}</span>
-                              </button>
-                            );
-                          })
-                        ) : (
-                          <p className="px-3 py-3 text-sm text-gray-500">Nenhuma pessoa encontrada.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {selectedRelatedPeople.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedRelatedPeople.map((pessoa) => (
-                      <button
-                        key={pessoa.id}
-                        type="button"
-                        onClick={() => toggleRelatedPerson(pessoa.id)}
-                        className="max-w-full rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                      >
-                        <span className="block truncate">{pessoa.nome_completo}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="min-w-0 space-y-2">
