@@ -254,6 +254,72 @@ docs/GUIA_COMPONENTES.md
 
 ---
 
+### 4.6 Frente mobile final de 2026-06-08
+
+A frente mobile final de 2026-06-08 consolidou ajustes visuais e de usabilidade apenas para mobile, preservando tablet/desktop.
+
+Escopo histórico:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+/minha-arvore/editar
+menu mobile do usuário
+modal de login/dica
+controles mobile da árvore
+```
+
+Itens concluídos:
+
+- overlay do modal de login/dica com fundo da página e opacidade preta;
+- header mobile da árvore com título personalizado **Família de {primeiro nome}**;
+- remoção do texto overlay mobile sobre a árvore;
+- padronização dos botões direcionais da árvore;
+- possibilidade de ocultar/exibir setas mobile;
+- painel mobile de controles da árvore via `MobileTreeControlsPortal`;
+- controles mobile para zoom, reajuste, PDF, imagem e impressão;
+- paleta de cores no menu mobile via `MobileUserMenuPalettePortal`;
+- reset de geração ativa ao alternar `/genealogia` e `/visao-completa`;
+- acabamento mobile de `/minha-arvore/editar` via `mobile-edit-profile.css`;
+- escopo do CSS de edição restrito por `main:has(#minha-arvore-edit-form)`.
+
+Arquivos relevantes:
+
+```txt
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/app/components/layout/MobileUserMenuPalettePortal.tsx
+src/styles/mobile-tree-controls.css
+src/styles/mobile-edit-profile.css
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/Timeline/PersonTimeline.tsx
+src/styles/family-tree-mobile.css
+src/main.tsx
+```
+
+Validações técnicas registradas no ciclo:
+
+```bash
+npm run build
+git diff --check
+```
+
+Documentos canônicos atualizados ou a atualizar:
+
+```txt
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_IMPLEMENTACOES.md
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/GENEALOGIA_VIEW.md
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+docs/PLANO_PROXIMOS_PASSOS.md
+```
+
+---
+
 ## 5. Documentação antiga e SQL legado removidos
 
 As antigas pastas abaixo foram removidas após consolidação:

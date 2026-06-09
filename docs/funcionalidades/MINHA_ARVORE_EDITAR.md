@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`  
 > Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.  
-> Status: revisado na auditoria documental final.
+> Status: revisado após frente mobile de 2026-06-08.
 
 ---
 
@@ -33,6 +33,8 @@ docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 docs/funcionalidades/TIMELINE.md
 docs/funcionalidades/NOTIFICACOES.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
 docs/arquitetura/ROTAS_E_GUARDS.md
 docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 docs/operacao/MIGRATIONS_SUPABASE.md
@@ -59,6 +61,7 @@ src/app/services/permissionService.ts
 src/app/utils/buildPersonTimeline.ts
 src/app/utils/personFields.ts
 src/app/utils/personEntity.ts
+src/styles/mobile-edit-profile.css
 ```
 
 Dependências relevantes:
@@ -111,7 +114,50 @@ Regras visuais:
 - o salvamento principal fica no botão flutuante;
 - não reintroduzir botão interno **Salvar meus dados** no bloco de dados;
 - `Trocar Senha` deve ser ação independente, sem submeter formulário;
-- preservar responsividade em mobile.
+- preservar responsividade em mobile;
+- ajustes visuais mobile devem permanecer restritos à rota/tela da edição.
+
+### 4.1 Acabamento mobile consolidado
+
+A frente mobile de 2026-06-08 adicionou ajustes específicos para telas estreitas.
+
+Arquivo de estilo:
+
+```txt
+src/styles/mobile-edit-profile.css
+```
+
+Esse CSS é importado em:
+
+```txt
+src/main.tsx
+```
+
+Escopo:
+
+```css
+main:has(#minha-arvore-edit-form)
+```
+
+Regras consolidadas:
+
+- o CSS mobile da página deve ser escopado pelo formulário `#minha-arvore-edit-form`;
+- não usar seletores genéricos como `main section:first-of-type` sem escopo;
+- o card superior deve ficar compacto em mobile;
+- o avatar superior permanece como ação principal de foto;
+- o nome do membro deve ficar menor e limitado a duas linhas;
+- o subtítulo do card superior deve começar abaixo da foto, alinhado à esquerda;
+- o botão **Trocar Senha** deve ficar menor em mobile;
+- os cards **Pais**, **Irmãos**, **Cônjuges**, **Filhos** e **Pets** devem ficar em uma única linha de cinco colunas;
+- os cards de resumo devem preservar legibilidade em 320px, 375px, 390px e 430px;
+- placeholders de **Mini bio** e **Curiosidades de Vida** devem ser menores em mobile para evitar blocos visualmente pesados.
+
+Não fazer:
+
+- aplicar esse CSS a páginas internas genéricas;
+- esconder informação crítica apenas para caber em 320px;
+- remover `aria-label`/`title` de ações compactas;
+- alterar payload, schema ou validação por causa de ajuste visual.
 
 ---
 
@@ -308,6 +354,7 @@ salvarEventosDaPessoa
 Regras:
 
 - `PersonTimeline` exibe eventos automáticos e manuais;
+- quando `PersonTimeline` é usado de forma embutida na edição, o título redundante **Eventos automáticos e manuais** deve permanecer oculto;
 - `PersonEventsEditor` permite edição de eventos manuais;
 - evento manual sem título bloqueia salvamento;
 - eventos são salvos no submit principal;
@@ -424,10 +471,12 @@ Não reintroduzir:
 - ausência do card **Pets** quando houver pets;
 - arquivos históricos dentro do container de dados pessoais;
 - título duplicado dentro de `ArquivosHistoricos`;
+- título redundante **Eventos automáticos e manuais** dentro da área embutida;
 - saída sem confirmação quando houver alterações pendentes;
 - avatar sem ação de visualização/edição;
 - botão **Trocar Senha** que salva formulário ou limpa rascunho;
-- strings quebradas por encoding.
+- strings quebradas por encoding;
+- CSS mobile não escopado afetando outras páginas.
 
 ---
 
@@ -436,6 +485,11 @@ Não reintroduzir:
 Validar manualmente:
 
 - `/minha-arvore/editar` em mobile, tablet e desktop;
+- mobile em 320px, 375px, 390px e 430px;
+- card superior com nome em até duas linhas;
+- subtítulo abaixo da foto;
+- cards **Pais**, **Irmãos**, **Cônjuges**, **Filhos** e **Pets** em uma linha no mobile;
+- placeholders de **Mini bio** e **Curiosidades de Vida** legíveis e menores;
 - carregar usuário com vínculo;
 - editar dados e salvar;
 - editar foto com crop;

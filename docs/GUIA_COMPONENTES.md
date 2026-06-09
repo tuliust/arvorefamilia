@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-08  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para manutenção final.
+> Status: guia canônico revisado para manutenção final, atualizado com os componentes mobile recentes.
 
 ## Objetivo
 
@@ -38,6 +38,7 @@ Este documento não substitui:
 | Favoritos | `src/app/components/favorites/` |
 | Páginas da Home pós-login | `src/app/pages/home/` |
 | Fórum | `src/app/pages/forum/` e services relacionados |
+| Estilos globais complementares | `src/styles/` |
 
 Services, utils e types devem permanecer fora de componentes visuais:
 
@@ -68,7 +69,8 @@ Ao alterar componente:
 - `break-words` para conteúdo de usuário;
 - `break-all` para valores técnicos longos;
 - `w-full sm:w-auto` em botões responsivos;
-- modais com altura máxima e rolagem interna.
+- modais com altura máxima e rolagem interna;
+- CSS mobile específico deve ser escopado por seletor confiável.
 
 ---
 
@@ -169,7 +171,43 @@ Cuidados:
 - preservar fechamento por clique fora e `Escape`;
 - não expor rota admin para usuário comum apenas por ocultação visual.
 
-### 2.3 `HomeHeader`
+### 2.3 `MobileUserMenuPalettePortal`
+
+Arquivo:
+
+```txt
+src/app/components/layout/MobileUserMenuPalettePortal.tsx
+```
+
+Montagem:
+
+```txt
+src/main.tsx
+```
+
+Estilo relacionado:
+
+```txt
+src/styles/mobile-tree-controls.css
+```
+
+Responsabilidade:
+
+- detectar quando o menu mobile do usuário está aberto;
+- exibir linha compacta **Cores da árvore**;
+- renderizar botões circulares das paletas `white`, `orange` e `brown`;
+- aplicar CSS variables da paleta em `document.documentElement`;
+- persistir a escolha em `localStorage`.
+
+Cuidados:
+
+- deve aparecer apenas em mobile;
+- não deve alterar rota, filtros, dados, Supabase, permissões ou sessão;
+- não deve substituir o seletor de paleta do `HomeHeader` em desktop/tablet;
+- deve usar as mesmas chaves e tokens definidos em `treeColorPalettes.ts`;
+- se o menu mobile mudar estrutura/label de fechamento, validar detecção do portal.
+
+### 2.4 `HomeHeader`
 
 Arquivo:
 
@@ -184,7 +222,8 @@ Responsabilidade:
 - seletor de paletas `white`, `orange`, `brown`;
 - busca expansível por pessoa e página;
 - atalhos para curiosidades, fórum e calendário;
-- menu compacto do usuário.
+- menu compacto do usuário;
+- título mobile personalizado por pessoa vinculada quando aplicável.
 
 Arquivos relacionados:
 
@@ -193,6 +232,7 @@ src/app/pages/Home.tsx
 src/app/pages/home/HomeMobileNav.tsx
 src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MobileUserMenuPalettePortal.tsx
 ```
 
 Cuidados:
@@ -280,7 +320,52 @@ Cuidados:
 - não misturar pan/zoom do React Flow com scroll externo da página;
 - seleção de área deve bloquear pan/zoom temporariamente.
 
-### 3.2 Layout direto: `directFamilyDistributedLayout`
+### 3.2 `MobileTreeControlsPortal`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+```
+
+Montagem:
+
+```txt
+src/main.tsx
+```
+
+Estilo relacionado:
+
+```txt
+src/styles/mobile-tree-controls.css
+```
+
+Responsabilidade:
+
+- renderizar botão circular de controles da árvore em mobile;
+- abrir painel compacto nas rotas de árvore;
+- oferecer ações rápidas de zoom, reajuste, ocultar/exibir setas, PDF, imagem e impressão;
+- esconder visualmente os botões antigos `+` e `-` no mobile;
+- controlar classe global para ocultar/exibir setas de navegação;
+- manter desktop/tablet fora do escopo.
+
+Rotas onde aparece:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Cuidados:
+
+- não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
+- ações devem manter `aria-label`/texto acessível;
+- se exportação falhar por CORS/canvas, revisar alinhamento com `treeExport.ts`;
+- se a implementação for migrada para dentro de `FamilyTree`, remover o portal e atualizar esta seção;
+- não usar o portal para alterar dados, filtros, Supabase ou permissões.
+
+### 3.3 Layout direto: `directFamilyDistributedLayout`
 
 Arquivo:
 
@@ -316,7 +401,7 @@ Cuidados:
 - marriage nodes da Minha Árvore podem usar `visualVariant: 'direct-family'`;
 - validar desktop e mobile quando mexer em espaçamentos.
 
-### 3.3 Layout por gerações: `genealogyColumnsLayout`
+### 3.4 Layout por gerações: `genealogyColumnsLayout`
 
 Arquivo:
 
@@ -341,7 +426,7 @@ Cuidados:
 - manter anel padrão em Genealogia/Visão Completa;
 - validar chips mobile quando alterar geração, filtros ou agrupamento.
 
-### 3.4 `PersonNode`
+### 3.5 `PersonNode`
 
 Arquivo:
 
@@ -365,7 +450,8 @@ Padrões consolidados:
 - falecimento usa ícone `Cross`;
 - pet usa marcador com `Dog`;
 - textos longos usam truncamento/quebra controlada;
-- handles do React Flow permanecem invisíveis.
+- handles do React Flow permanecem invisíveis;
+- no mobile, anéis/bordas duplicadas não devem competir com a borda principal do card.
 
 Cuidados:
 
@@ -374,7 +460,7 @@ Cuidados:
 - não alterar dimensões sem validar a árvore inteira;
 - não misturar permissão de edição dentro do card; receber callbacks já resolvidos.
 
-### 3.5 `MarriageNode`
+### 3.6 `MarriageNode`
 
 Arquivo:
 
@@ -403,7 +489,7 @@ Cuidados:
 - não remover fallback de inferência;
 - não usar cor fixa fora dos tokens.
 
-### 3.6 `GenealogySpouseEdge`
+### 3.7 `GenealogySpouseEdge`
 
 Arquivo:
 
@@ -423,7 +509,7 @@ Cuidados:
 - preservar clique no vínculo conjugal;
 - validar paletas e filtros de linha.
 
-### 3.7 `TreeLegend`
+### 3.8 `TreeLegend`
 
 Arquivo:
 
@@ -444,7 +530,7 @@ Cuidados:
 - filtros visuais não devem virar regra de banco;
 - manter estado padrão conservador.
 
-### 3.8 Exportação da árvore
+### 3.9 Exportação da árvore
 
 Arquivos:
 
@@ -452,14 +538,16 @@ Arquivos:
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 ```
 
 Responsabilidade:
 
 - seleção retangular de área visível;
-- exportação PNG;
+- exportação PNG/imagem;
 - exportação PDF;
-- impressão.
+- impressão;
+- acesso mobile rápido a ações de exportação.
 
 Cuidados:
 
@@ -467,7 +555,8 @@ Cuidados:
 - sem migration;
 - sem log persistido;
 - overlay/legenda não devem poluir exportação;
-- exportação da árvore completa continua evolução futura.
+- exportação da árvore completa continua evolução futura;
+- divergências entre exportação desktop e mobile devem ser registradas em `PLANO_PROXIMOS_PASSOS.md`.
 
 ---
 
@@ -500,6 +589,37 @@ Regra de responsabilidade:
 - componentes extraídos cuidam de apresentação e interação localizada;
 - novos dados persistentes devem entrar via service, não direto no componente visual.
 
+### 4.1 `HomeTreeSection`
+
+Responsabilidade:
+
+- renderizar a superfície principal da árvore;
+- decidir quando usar chips mobile de geração;
+- passar `activeGenealogyGeneration` para `FamilyTree`;
+- aplicar estilos condicionais por view/mobile;
+- renderizar estados de loading/erro/vazio.
+
+Cuidados:
+
+- resetar geração ativa quando mudar view, pessoa central ou assinatura de gerações disponíveis;
+- não transformar chips mobile em filtro destrutivo;
+- não vazar estilos da Minha Árvore para Genealogia/Visão Completa.
+
+### 4.2 `GenealogyMobileStageTabs`
+
+Responsabilidade:
+
+- exibir chips mobile por geração;
+- aceitar geração ativa;
+- disparar alteração por clique/swipe;
+- não remover nodes do canvas.
+
+Cuidados:
+
+- chips dependem das gerações disponíveis no shell;
+- se a inferência visual de gerações mudar, validar DOC-001;
+- labels devem permanecer humanos e curtos.
+
 ---
 
 ## 5. Perfil, pessoa e dados pessoais
@@ -517,6 +637,7 @@ src/app/components/person/RelationshipFinder.tsx
 src/app/pages/PersonProfile.tsx
 src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/MeusDados.tsx
+src/app/pages/MinhaArvore.tsx
 ```
 
 Responsabilidades:
@@ -530,6 +651,7 @@ Responsabilidades:
 | `PersonEventsEditor` | Criar/editar eventos pessoais. |
 | `PersonEventsList` | Exibir eventos pessoais. |
 | `RelationshipFinder` | Exibir cálculo de vínculo/grau de parentesco. |
+| `MinhaArvore` | Editar dados próprios, avatar, arquivos, eventos e vínculos do membro autenticado. |
 
 Cuidados:
 
@@ -538,7 +660,8 @@ Cuidados:
 - sem `VITE_GOOGLE_MAPS_API_KEY`, o input deve continuar funcional;
 - botão de favorito no perfil deve usar `FavoriteButton`;
 - botão de edição no perfil público deve respeitar permissão já resolvida pela página/service;
-- sugestão de informação para admin deve passar por `personProfileSuggestionService`.
+- sugestão de informação para admin deve passar por `personProfileSuggestionService`;
+- CSS mobile de `/minha-arvore/editar` deve permanecer escopado por `#minha-arvore-edit-form`.
 
 ---
 
@@ -607,6 +730,8 @@ Componentes/services:
 
 ```txt
 src/app/components/favorites/FavoriteButton.tsx
+src/app/components/favorites/ForumTopicFavoriteButton.tsx
+src/app/components/favorites/PageFavoriteButton.tsx
 src/app/services/favoritesService.ts
 src/app/pages/MeusFavoritos.tsx
 ```
@@ -635,6 +760,7 @@ onChange
 Estado atual:
 
 - botão implementado e usado para pessoa;
+- há componentes auxiliares para fórum/páginas;
 - `FavoriteEntityType` já prevê outras entidades;
 - expansão de favoritos para outros tipos deve ser validada funcionalmente antes de expor novos botões.
 
@@ -669,16 +795,6 @@ Responsabilidades consolidadas:
 | `forumService` | Persistência de tópicos, respostas, comentários, reações e denúncias. |
 | `notificationTriggersService` | Notificar pessoas mencionadas/relacionadas e participantes. |
 
-Padrões consolidados:
-
-- tipo do tópico não aparece como dropdown na criação;
-- categoria usa botões/cards;
-- pessoas relacionadas usam dropdown com busca e clique fora;
-- menções usam `@Nome Completo`;
-- reações usam `HeartHandshake`, `Handshake`, `Flower2` e `PartyPopper`;
-- uma reação por usuário/alvo;
-- clicar na mesma reação remove; clicar em outra substitui.
-
 Cuidados:
 
 - não reintroduzir `Marcar solução` ou `Ocultar` nas respostas se a decisão visual continuar vigente;
@@ -701,17 +817,6 @@ src/app/services/notificationDispatchService.ts
 src/app/services/notificationTriggersService.ts
 src/app/services/notificationRecipientsService.ts
 ```
-
-Responsabilidades:
-
-| Componente/service | Responsabilidade |
-|---|---|
-| `NotificationPreferencesPanel` | Toggles e salvamento de preferências. |
-| `Notificacoes` | Central/lista de notificações. |
-| `AjustarNotificacoes` | Página dedicada de preferências. |
-| `AdminNotificacoes` | Rotina/admin de notificações. |
-| `notificationTriggersService` | Gatilhos de domínio. |
-| `notificationDispatchService` | Criação/despacho respeitando canais e preferências. |
 
 Cuidados:
 
@@ -779,7 +884,8 @@ Cuidados:
 
 - upload por evento, privacidade por evento e PDF são evolução futura;
 - não duplicar dados já derivados;
-- manter eventos manuais separados de fatos automáticos quando necessário.
+- manter eventos manuais separados de fatos automáticos quando necessário;
+- em modo `embedded`, evitar título redundante quando a página já contextualiza a seção.
 
 ---
 
@@ -817,14 +923,15 @@ Cuidados:
 
 | Alteração | Validar |
 |---|---|
-| Header/menu | `HomeHeader`, `MemberPageHeader`, `UserProfileMenu`, mobile e desktop. |
-| Árvore | `/minha-arvore`, `/genealogia`, `/visao-completa`, pan/zoom, paletas e modal conjugal. |
+| Header/menu | `HomeHeader`, `MemberPageHeader`, `UserProfileMenu`, `MobileUserMenuPalettePortal`, mobile e desktop. |
+| Árvore | `/minha-arvore`, `/genealogia`, `/visao-completa`, pan/zoom, paletas, `MobileTreeControlsPortal` e modal conjugal. |
 | Cards de pessoa | ícones, texto, truncamento, avatar, pets, falecidos e ações. |
 | Fórum | criação, tópico, respostas, comentários, menções, pessoas relacionadas e reações. |
 | Notificações | central, preferências, triggers e falha sem bloquear fluxo principal. |
 | Favoritos | botão, página `/meus-favoritos`, sanitização de metadata e remoção. |
 | Calendário | filtros mobile, Google Agenda, grid e lista do mês. |
 | Upload/Storage | preview, bucket correto, edição de metadados e legado base64. |
+| Edição própria | `/minha-arvore/editar`, CSS escopado, avatar, cards compactos e nav inferior. |
 
 Comandos mínimos:
 

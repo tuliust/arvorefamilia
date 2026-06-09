@@ -2,15 +2,22 @@
 
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
-> Tipo: documentação funcional e técnica da exportação da área visível da árvore.
+> Tipo: documentação funcional e técnica da exportação da árvore.  
+> Status: revisado para distinguir exportação por seleção/overlay e controles mobile.
 
 ---
 
 ## 1. Objetivo
 
-A exportação permite gerar PNG, PDF ou impressão a partir de uma área visível da árvore.
+A exportação permite gerar imagem, PDF ou impressão a partir da árvore exibida no ReactFlow.
 
-O escopo atual é **exportar a área visível/selecionada**, não a árvore completa.
+O escopo atual é:
+
+```txt
+Exportar a área visível/selecionada ou a captura disponível da árvore, não a árvore completa calculada server-side.
+```
+
+A exportação completa de toda a árvore, com escala automática integral, multipágina ou processamento server-side, permanece fora do escopo atual.
 
 ---
 
@@ -20,10 +27,13 @@ O escopo atual é **exportar a área visível/selecionada**, não a árvore comp
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/types.ts
 src/app/pages/Home.tsx
+src/main.tsx
+src/styles/mobile-tree-controls.css
 ```
 
 Documentos relacionados:
@@ -35,15 +45,16 @@ docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
-docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
+docs/historico/README.md
 ```
+
+Observação: diagnósticos históricos individuais de exportação foram consolidados em `docs/historico/README.md`. Não referenciar arquivos históricos removidos como fonte viva.
 
 ---
 
 ## 3. Escopo atual
 
-Implementado:
+Implementado no fluxo principal:
 
 - seleção retangular de área visível;
 - exportação PNG;
@@ -57,6 +68,15 @@ Implementado:
 - exclusão de controles/overlays/legendas da captura;
 - mensagens de erro amigáveis.
 
+Implementado no fluxo mobile rápido:
+
+- painel mobile de controles da árvore;
+- ação de imagem;
+- ação de PDF;
+- ação de impressão;
+- acesso sem abrir overlay manual de seleção;
+- visibilidade restrita às rotas de árvore.
+
 Fora do escopo atual:
 
 - exportar automaticamente a árvore completa;
@@ -69,9 +89,75 @@ Fora do escopo atual:
 
 ---
 
-## 4. Componentes
+## 4. Fluxos de exportação
 
-### `FamilyTree.tsx`
+### 4.1 Fluxo principal com seleção de área
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
+src/app/components/FamilyTree/utils/treeExport.ts
+```
+
+Fluxo:
+
+```txt
+Usuário abre a árvore
+Usuário escolhe seleção/exportação
+Overlay aparece sobre a árvore
+Usuário arrasta uma área visível
+Toolbar aparece
+Usuário escolhe PNG, PDF ou Imprimir
+Sistema captura a área
+Sistema baixa arquivo ou abre impressão
+Overlay fecha após sucesso
+```
+
+Cancelamento:
+
+```txt
+Cancelar ou Esc
+-> overlay fecha
+-> pan/zoom voltam ao normal
+-> filtros, view e pessoa central são preservados
+```
+
+### 4.2 Fluxo mobile rápido
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/styles/mobile-tree-controls.css
+src/main.tsx
+```
+
+Fluxo:
+
+```txt
+Usuário abre /minha-arvore, /genealogia ou /visao-completa no mobile
+Botão circular de controles aparece
+Usuário abre o painel
+Usuário escolhe PDF, Imagem ou Imprimir
+Sistema captura a área disponível da árvore
+Sistema baixa arquivo ou abre impressão
+```
+
+Regras:
+
+- o portal mobile deve aparecer apenas nas rotas de árvore;
+- não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
+- o painel mobile não altera dados, filtros, permissões, Supabase ou migrations;
+- a captura mobile deve evitar menus/overlays sempre que tecnicamente possível;
+- divergências entre captura mobile e `treeExport.ts` devem ser tratadas como pendência técnica.
+
+---
+
+## 5. Componentes
+
+### 5.1 `FamilyTree.tsx`
 
 Responsabilidades:
 
@@ -93,7 +179,7 @@ saveImage
 startAreaSelection
 ```
 
-### `TreeAreaSelectionOverlay.tsx`
+### 5.2 `TreeAreaSelectionOverlay.tsx`
 
 Responsabilidades:
 
@@ -121,7 +207,7 @@ Imprimir
 Cancelar
 ```
 
-### `treeExport.ts`
+### 5.3 `treeExport.ts`
 
 Responsabilidades:
 
@@ -134,36 +220,28 @@ Responsabilidades:
 - imprimir canvas;
 - ignorar elementos de UI não exportáveis.
 
----
+### 5.4 `MobileTreeControlsPortal.tsx`
 
-## 5. Fluxo de uso
+Responsabilidades:
 
-```txt
-Usuário abre a árvore
-Usuário escolhe ação de exportação/seleção
-Overlay aparece sobre a árvore
-Usuário arrasta uma área visível
-Toolbar aparece
-Usuário escolhe PNG, PDF ou Imprimir
-Sistema captura a área
-Sistema baixa arquivo ou abre impressão
-Overlay fecha após sucesso
-```
+- renderizar painel mobile de ações da árvore;
+- oferecer atalhos para PDF, imagem e impressão;
+- usar captura direta da área da árvore quando acionado no mobile;
+- ocultar visualmente controles mobile concorrentes;
+- permitir ocultar/exibir setas de navegação.
 
-Cancelamento:
+Cuidados:
 
-```txt
-Cancelar ou Esc
--> overlay fecha
--> pan/zoom voltam ao normal
--> filtros, view e pessoa central são preservados
-```
+- validar se o comportamento deve continuar independente ou ser refatorado para reutilizar `treeExport.ts`;
+- manter o portal restrito a mobile e rotas de árvore;
+- evitar captura de botões, menus, paletas ou overlays;
+- manter mensagens amigáveis quando a captura falhar.
 
 ---
 
 ## 6. Regras de interação
 
-Durante a seleção:
+Durante a seleção pelo overlay:
 
 - pan bloqueado;
 - zoom bloqueado;
@@ -179,11 +257,18 @@ Após concluir/cancelar:
 - pessoa central não muda;
 - pan/zoom voltam ao comportamento normal.
 
+No painel mobile rápido:
+
+- pan/zoom da árvore permanecem como estão;
+- a ação de exportar não deve modificar viewport;
+- ocultar/exibir setas é apenas estado visual local/global de UI;
+- falhas de exportação devem exibir aviso amigável.
+
 ---
 
-## 7. Elementos ignorados
+## 7. Elementos ignorados na exportação
 
-Seletores relevantes:
+Seletores relevantes no fluxo principal:
 
 ```txt
 .react-flow__controls
@@ -199,17 +284,18 @@ Regras:
 - menu de node não deve aparecer;
 - overlay de seleção não deve aparecer;
 - legenda marcada com `data-tree-legend="true"` não deve aparecer;
-- novos overlays/menus devem receber seletor de ignore.
+- novos overlays/menus devem receber seletor de ignore;
+- o painel `MobileTreeControlsPortal` não deve aparecer na captura final.
 
 ---
 
 ## 8. Restrições técnicas
 
-### CORS
+### 8.1 CORS
 
 A captura usa `html2canvas`.
 
-Configurações esperadas:
+Configurações esperadas para o fluxo canônico:
 
 ```txt
 useCORS: true
@@ -218,138 +304,120 @@ allowTaint: false
 
 Não resolver erro de CORS com `allowTaint: true` sem revisão técnica.
 
-### Cores
+Se o fluxo mobile usar configuração diferente, registrar no plano:
 
-Manter sanitização/fallback de cores não suportadas por `html2canvas`.
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```
 
-### Tamanho
+### 8.2 Tamanho de canvas
 
-Limite estimado:
+Manter limite preventivo para evitar travamento do navegador em dispositivos móveis ou máquinas com pouca memória.
+
+Referência atual:
 
 ```txt
 12.000.000 pixels
 ```
 
-Se a seleção exceder o limite:
+### 8.3 PDF
 
-- mostrar erro amigável;
-- orientar seleção menor;
-- não travar a página.
+Regras:
+
+- respeitar proporção da área capturada;
+- evitar esticar imagem;
+- não prometer PDF multipágina automático;
+- não prometer árvore completa em PDF no escopo atual.
+
+### 8.4 Impressão
+
+Regras:
+
+- abrir fluxo de impressão com imagem capturada;
+- exibir erro se popup/janela de impressão falhar;
+- não depender de Storage;
+- não salvar arquivo automaticamente no banco.
 
 ---
 
-## 9. Regras por view
+## 9. Acessibilidade e UX
 
-| View | Regra |
-|---|---|
-| `/minha-arvore` | Exporta apenas área visível selecionada. |
-| `/genealogia` | Exporta área visível; usuário deve navegar até a região desejada. |
-| `/visao-completa` | Exporta área visível; árvore completa é pós-MVP. |
+Regras:
+
+- ações de exportação devem ter texto ou `aria-label`;
+- cancelar seleção deve ser possível por botão e `Esc`;
+- mensagens devem ser compreensíveis;
+- não exibir IDs técnicos;
+- não bloquear a árvore após erro;
+- em mobile, painel de controles deve ser fácil de fechar e não cobrir permanentemente a navegação principal.
 
 ---
 
-## 10. QA
+## 10. QA recomendado
 
-### Técnico
+Validar desktop/tablet:
 
-```bash
-npm run build
-git diff --check
-git status --short
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
 ```
 
-### Manual
-
-- abrir `/minha-arvore`;
-- iniciar seleção;
-- cancelar por botão;
-- iniciar seleção;
-- cancelar por `Esc`;
-- selecionar área válida;
-- salvar PNG;
-- salvar PDF;
-- imprimir;
-- testar seleção pequena demais;
-- testar área grande demais;
-- testar com painel lateral aberto;
-- testar com painel lateral recolhido;
-- testar em `/genealogia`;
-- testar em `/visao-completa`;
-- confirmar que overlays/controles não aparecem na captura;
-- confirmar que pan/zoom voltam após finalizar.
-
-Larguras úteis:
+Validar mobile:
 
 ```txt
 320px
 375px
 390px
 430px
-768px
-desktop
 ```
+
+Checklist:
+
+- seleção retangular aparece;
+- cancelar por botão funciona;
+- cancelar por `Esc` funciona;
+- PNG baixa arquivo;
+- PDF baixa arquivo;
+- impressão abre janela/diálogo;
+- seleção pequena demais mostra aviso;
+- legenda/menus/overlays não aparecem na captura;
+- painel mobile aparece apenas nas rotas da árvore;
+- PDF/imagem/impressão do painel mobile não quebram a página;
+- desktop/tablet não são afetados pelo portal mobile.
 
 ---
 
-## 11. Troubleshooting
+## 11. Pendências conhecidas
 
-### Exportação falha com imagem externa
-
-Possíveis causas:
-
-- imagem sem CORS;
-- avatar externo;
-- arquivo remoto sem headers adequados.
-
-Verificar origem da imagem e Storage.
-
-### Controles aparecem no PNG/PDF
-
-Verificar:
+Registrar em `docs/PLANO_PROXIMOS_PASSOS.md` se confirmado:
 
 ```txt
-getDefaultTreeExportIgnoreElements
-data-tree-selection-overlay
-data-tree-legend
-data-tree-node-menu
+DOC-004
+Confirmar se o fluxo mobile de exportação pelo MobileTreeControlsPortal deve reutilizar integralmente treeExport.ts ou manter captura própria. Validar política de CORS, allowTaint e consistência entre desktop e mobile.
 ```
 
-### Seleção não bloqueia pan
-
-Verificar propagação de eventos no overlay e props repassadas ao ReactFlow.
-
-### PDF cortado
-
-Verificar proporção, tamanho da seleção e `exportCanvasAsPdf`.
-
-### Impressão abre em branco
-
-Verificar popup bloqueado, `openTreePrintWindow`, carregamento do canvas e CORS.
-
 ---
 
-## 12. Pós-MVP
+## 12. Anti-regressão
 
-- exportar árvore completa;
-- exportar ramo específico;
-- exportar por geração;
-- incluir legenda opcional;
-- incluir título/metadados;
-- salvar no Storage;
-- histórico de exportações;
-- PDF multipágina;
-- SVG/vetor.
+Não fazer:
 
----
+- transformar exportação em upload automático;
+- salvar imagem/PDF no Supabase sem nova frente;
+- usar service role no frontend;
+- aplicar migration por ajuste visual;
+- exportar árvore completa dizendo que é apenas área visível;
+- capturar dados privados ocultos por filtros/privacidade;
+- deixar seleção de área bloquear pan/zoom após cancelamento;
+- deixar o painel mobile aparecer em páginas fora da árvore.
 
-## 13. Anti-regressões
+Onde documentar mudanças futuras:
 
-Não reintroduzir:
-
-- confusão entre área visível e árvore completa;
-- captura do painel lateral;
-- captura do overlay de seleção;
-- remoção do limite de canvas;
-- `allowTaint: true` sem revisão;
-- alteração de viewport para “corrigir” exportação sem QA visual;
-- salvamento automático em banco/Storage sem decisão de produto.
+| Mudança | Documento |
+|---|---|
+| Exportação de árvore completa | `docs/PLANO_PROXIMOS_PASSOS.md` e depois este arquivo |
+| Mudança em `treeExport.ts` | Este arquivo + `GUIA_COMPONENTES.md` |
+| Mudança visual dos controles | `GUIA_UX_LAYOUT.md` |
+| Bug de captura/CORS | `GUIA_CORRECAO_ERROS.md` |
+| Upload/histórico de exportações | `docs/operacao/STORAGE_MAINTENANCE.md` e migration específica |

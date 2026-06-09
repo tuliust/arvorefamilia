@@ -2,7 +2,8 @@
 
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`  
-> Tipo: documentação técnica/funcional da view **Genealogia**.
+> Tipo: documentação técnica/funcional da view **Genealogia**.  
+> Status: revisado após frente mobile de 2026-06-08.
 
 ## 1. Função deste documento
 
@@ -21,6 +22,7 @@ Use este arquivo para manter:
 - inferência visual de geração;
 - chips mobile;
 - foco/enquadramento;
+- reset de geração ativa por view;
 - distinção entre Genealogia e Visão Completa;
 - anti-regressões de pan/zoom/ReactFlow.
 
@@ -51,6 +53,7 @@ Regras:
 | Área principal da árvore | `src/app/pages/home/HomeTreeSection.tsx` |
 | Chips mobile | `src/app/pages/home/GenealogyMobileStageTabs.tsx` |
 | Componente ReactFlow | `src/app/components/FamilyTree/FamilyTree.tsx` |
+| Controles mobile da árvore | `src/app/components/FamilyTree/MobileTreeControlsPortal.tsx` |
 | Layout por gerações | `src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts` |
 | Filtro de escopo pessoal | `src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts` |
 | Tipos/filtros | `src/app/components/FamilyTree/types.ts` |
@@ -192,7 +195,38 @@ Descendentes
 
 ---
 
-## 9. Foco mobile: foco, não filtro
+## 9. Estado da geração ativa
+
+O estado de geração ativa é coordenado por `HomeTreeSection.tsx`.
+
+Estados/conceitos:
+
+```txt
+availableMobileGenerations
+defaultGenealogyMobileGeneration
+activeGenealogyGeneration
+effectiveActiveGenealogyGeneration
+mobileGenerationSignature
+```
+
+Regras consolidadas após a frente mobile:
+
+- em `/genealogia` e `/visao-completa`, a geração inicial deve ser a menor geração disponível entre as pessoas visíveis;
+- ao alternar entre `/genealogia` e `/visao-completa`, a geração ativa deve resetar para a primeira geração disponível da nova view;
+- ao mudar pessoa central, a geração ativa também deve ser recalculada;
+- ao mudar o conjunto de gerações disponíveis, a geração ativa deve acompanhar a nova assinatura;
+- ao sair das views com chips mobile, o estado deve ser limpo;
+- a geração ativa não deve se transformar em filtro destrutivo.
+
+Objetivo:
+
+```txt
+Evitar que /visao-completa herde indevidamente geração ou enquadramento anterior de /genealogia.
+```
+
+---
+
+## 10. Foco mobile: foco, não filtro
 
 Decisão consolidada:
 
@@ -214,7 +248,7 @@ Regras:
 
 ---
 
-## 10. Enquadramento mobile
+## 11. Enquadramento mobile
 
 Em `FamilyTree.tsx`, o enquadramento mobile genealógico:
 
@@ -234,7 +268,22 @@ Regras:
 
 ---
 
-## 11. Filtros de Genealogia
+## 12. Controles mobile nas views por geração
+
+As rotas `/genealogia` e `/visao-completa` também recebem `MobileTreeControlsPortal`.
+
+Regras:
+
+- chips continuam sendo a navegação principal por geração;
+- botões direcionais e zoom antigos do canvas podem ficar ocultos para não competir com chips;
+- o painel mobile pode concentrar ações como exportação, imagem, PDF e impressão;
+- ocultar/exibir setas não deve alterar dados nem filtros;
+- controles mobile devem aparecer apenas nas rotas de árvore;
+- a experiência de seleção manual de área em mobile deve ser tratada com cuidado.
+
+---
+
+## 13. Filtros de Genealogia
 
 `GenealogyFilters` possui:
 
@@ -260,7 +309,7 @@ Regras:
 
 ---
 
-## 12. Linhas e conectores
+## 14. Linhas e conectores
 
 A Genealogia usa:
 
@@ -281,7 +330,7 @@ Regras:
 
 ---
 
-## 13. Visão Completa
+## 15. Visão Completa
 
 `/visao-completa` compartilha `genealogyColumnsLayout`, mas usa a base completa.
 
@@ -290,16 +339,18 @@ Diferenças:
 - não restringe ao escopo pessoal;
 - pode ocultar pessoas sem geração (`hideUngenerated`);
 - no mobile, usa os mesmos chips de geração;
-- o foco por chip continua sendo enquadramento, não filtro.
+- o foco por chip continua sendo enquadramento, não filtro;
+- a geração ativa deve resetar ao entrar ou alternar a partir de `/genealogia`.
 
 Regras:
 
 - mudanças que alterem escopo devem ser validadas separadamente em `/genealogia` e `/visao-completa`;
-- não assumir que contadores ou chips das duas rotas terão os mesmos resultados.
+- não assumir que contadores ou chips das duas rotas terão os mesmos resultados;
+- `/visao-completa` não deve reaproveitar geração ativa obsoleta de outra view.
 
 ---
 
-## 14. QA mínimo
+## 16. QA mínimo
 
 Validar após alteração:
 
@@ -323,11 +374,14 @@ Validar após alteração:
 - pan da árvore continua possível;
 - eixo Y não salta entre gerações;
 - área superior pode ser recuperada;
+- ao alternar entre `/genealogia` e `/visao-completa`, a geração ativa reseta corretamente;
+- ao mudar pessoa central, a primeira geração disponível é recalculada;
+- controles mobile aparecem apenas nas rotas da árvore;
 - pessoas inferidas por relacionamento aparecem e os chips correspondentes devem ser verificados.
 
 ---
 
-## 15. Anti-regressões
+## 17. Anti-regressões
 
 Não fazer:
 
@@ -339,4 +393,5 @@ Não fazer:
 - incluir pets no layout genealógico;
 - bloquear pan mobile com `translateExtent` restritivo;
 - criar migration para ajuste visual;
-- alterar RLS para corrigir problema de renderização.
+- alterar RLS para corrigir problema de renderização;
+- deixar `/visao-completa` herdar estado de geração obsoleto de `/genealogia`.

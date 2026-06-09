@@ -3,11 +3,11 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico de decisões visuais, responsividade e padrões de interface.
+> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com a frente mobile recente.
 
 ## Objetivo
 
-Este documento registra as decisões consolidadas de experiência, layout, responsividade e comportamento visual do projeto **Árvore Família**.
+Este documento registra decisões consolidadas de experiência, layout, responsividade e comportamento visual do projeto **Árvore Família**.
 
 Use este guia para orientar:
 
@@ -42,6 +42,7 @@ Este documento não substitui:
 | Permissão não é visual | Esconder botão não substitui `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute`, RLS, RPC segura ou validação em service. |
 | Ajuste visual não muda regra de negócio | Tailwind, espaçamento, scroll e responsividade não devem alterar payloads, Supabase, migrations, services ou RLS. |
 | Sem correção agressiva no ReactFlow | Não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir espaçamento da árvore. |
+| Escopo visual explícito | CSS novo deve ser restrito por rota, container, data attribute ou seletor estrutural confiável para não vazar para outras telas. |
 
 ---
 
@@ -55,6 +56,7 @@ A UI usa:
 - Vite;
 - TypeScript;
 - Tailwind CSS;
+- CSS complementar em `src/styles/`;
 - componentes locais em `src/app/components`;
 - componentes base em `src/app/components/ui`;
 - `lucide-react`;
@@ -62,8 +64,6 @@ A UI usa:
 - Radix UI em componentes base.
 
 ### 2.2 Identidade visual
-
-Padrão visual predominante:
 
 | Elemento | Padrão |
 |---|---|
@@ -98,7 +98,7 @@ Regras:
 
 ## 3. Headers, menus e navegação
 
-## 3.1 Header da Home pós-login
+### 3.1 Header da Home pós-login
 
 Arquivos principais:
 
@@ -134,7 +134,8 @@ Regras:
 - preservar search params ao trocar view, especialmente `?pessoa=...`;
 - esconder textos e priorizar ícones em breakpoints menores;
 - manter dropdowns e sugestões acima da árvore;
-- evitar overflow horizontal.
+- evitar overflow horizontal;
+- no mobile, o título deve priorizar identificação pessoal da árvore, como `Família de {primeiro nome}` quando houver pessoa vinculada.
 
 ### 3.2 Seletor de views e paletas da árvore
 
@@ -146,7 +147,7 @@ Genealogia -> /genealogia
 Visão Completa -> /visao-completa
 ```
 
-Dentro do dropdown, abaixo das opções de view, ficam os botões circulares de paleta:
+Paletas disponíveis:
 
 | Paleta | Chave |
 |---|---|
@@ -159,8 +160,9 @@ Regras:
 - paletas alteram apenas CSS variables/tokens visuais;
 - paletas não alteram rota, filtros, permissões, dados, Supabase ou regras de negócio;
 - a escolha persiste em `localStorage`;
-- o estado é controlado no `HomeHeader`;
-- a aplicação ocorre no `document.documentElement`.
+- a aplicação ocorre no `document.documentElement`;
+- em desktop/tablet, o controle principal de paleta fica associado ao header da árvore;
+- em mobile, a paleta também pode aparecer no menu do usuário via `MobileUserMenuPalettePortal`.
 
 ### 3.3 Menu do usuário
 
@@ -168,6 +170,7 @@ Arquivo principal:
 
 ```txt
 src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MobileUserMenuPalettePortal.tsx
 ```
 
 Variantes:
@@ -176,7 +179,7 @@ Variantes:
 |---|---|
 | Header da árvore | `<UserProfileMenu variant="home-header" />` |
 | Páginas internas | `<UserProfileMenu />` |
-| Mobile | Painel fixo com overlay escuro e navegação adaptada |
+| Mobile | Painel fixo com overlay escuro, navegação adaptada e linha de paleta |
 
 Comportamento consolidado:
 
@@ -188,7 +191,8 @@ Comportamento consolidado:
 - item **Editar notificações** não existe no menu;
 - **Painel Admin** aparece apenas para administradores;
 - **Sair** limpa cache da árvore e executa logout;
-- no mobile, o painel inclui bloco de visualização para alternar entre **Minha Árvore**, **Genealogia** e **Visão Completa**.
+- no mobile, o painel inclui bloco de visualização para alternar entre **Minha Árvore**, **Genealogia** e **Visão Completa**;
+- no mobile, a linha **Cores da árvore** exibe botões circulares de paleta via portal.
 
 Regra anti-regressão:
 
@@ -216,17 +220,6 @@ Elementos suportados:
 - `mobileCustomActions`;
 - `UserProfileMenu`;
 - navegação inferior mobile.
-
-Ações de header:
-
-| Propriedade | Uso |
-|---|---|
-| `label` | Texto acessível e `title` |
-| `to` | Link interno |
-| `onClick` | Ação local |
-| `icon` | Ícone opcional |
-| `variant` | `default`, `primary`, `danger`, `ghost` |
-| `responsiveLabel` | `always`, `lg`, `xl`, `never` |
 
 Regras:
 
@@ -286,7 +279,7 @@ Se faltar cidade ou data, exibir apenas o dado disponível. Se ambos estiverem a
 
 ## 4. Views da árvore
 
-## 4.1 Shell e superfície
+### 4.1 Shell e superfície
 
 Arquivos principais:
 
@@ -294,6 +287,7 @@ Arquivos principais:
 src/app/pages/Home.tsx
 src/app/pages/home/HomeTreeSection.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 ```
 
 Regras gerais:
@@ -302,7 +296,8 @@ Regras gerais:
 - pan e zoom internos do ReactFlow devem ser preservados;
 - a página não deve gerar scroll externo quando a árvore já ocupa a viewport;
 - overlays, botões e menus devem respeitar camadas acima do ReactFlow;
-- ajustes visuais específicos de uma view não devem vazar para as demais.
+- ajustes visuais específicos de uma view não devem vazar para as demais;
+- controles mobile fixos não devem competir com navegação inferior de páginas internas.
 
 ### 4.2 Minha Árvore
 
@@ -316,13 +311,12 @@ Comportamento visual consolidado:
 
 - layout em torno da pessoa central;
 - bounds reais de cards `personNode` para evitar zoom inicial excessivamente pequeno;
-- título **A árvore de {nome}**;
-- reposicionamentos de título/cards restritos a `viewMode === 'minha-arvore'`;
+- título **A árvore de {nome}** no desktop/tablet quando aplicável;
+- no mobile, overlays textuais redundantes devem ficar ocultos;
 - borda extra do card central removida;
 - borda de status vivo/falecido preservada;
 - linhas diretas, grupos e conectores respeitam filtros;
 - anel conjugal usa `MarriageNode` com variante visual `direct-family` quando aplicável;
-- ícone conjugal usa `Blend` e cor dos conectores conjugais;
 - esconder todas as linhas quando todos os filtros diretos estiverem desligados;
 - desligar filtro de irmãos também oculta linhas de primos diretos quando necessário.
 
@@ -366,7 +360,8 @@ Comportamento:
 - compartilha parte do padrão visual da Genealogia;
 - em mobile, reutiliza navegação por chips/blocos;
 - não deve herdar regras específicas de Minha Árvore;
-- mantém todos os nodes renderizáveis; chips focam/enquadram, não filtram estruturalmente.
+- mantém todos os nodes renderizáveis; chips focam/enquadram, não filtram estruturalmente;
+- ao entrar no mobile, não deve herdar indevidamente a geração ativa de `/genealogia`.
 
 ### 4.5 Chips mobile por geração/bloco
 
@@ -374,6 +369,7 @@ Arquivo principal:
 
 ```txt
 src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/HomeTreeSection.tsx
 ```
 
 Aplicado em mobile para:
@@ -392,8 +388,9 @@ Regras:
 - swipe lateral na barra avança/volta quando suportado;
 - chips focam/enquadram a geração ativa;
 - chips não removem nodes do ReactFlow;
-- botões direcionais e zoom `+`/`-` ficam ocultos quando os chips mobile estão ativos;
-- título overlay da árvore fica oculto nesse modo para evitar sobreposição.
+- botões direcionais e zoom `+`/`-` antigos ficam ocultos quando os chips mobile estão ativos;
+- título overlay da árvore fica oculto nesse modo para evitar sobreposição;
+- a geração ativa deve resetar quando mudar `viewMode`, pessoa central ou conjunto de gerações disponíveis.
 
 ### 4.6 Título, viewport e zoom
 
@@ -413,24 +410,38 @@ Regras:
 - se houver muitos cards verticalmente, o usuário deve conseguir arrastar/deslizar;
 - ajustes de distância entre título e árvore devem ser feitos em constantes e cálculos de viewport, não em CSS agressivo.
 
-### 4.7 Botões de controle da árvore
+### 4.7 Botões e painel de controle da árvore
 
-Controles esperados:
+Controles esperados no conjunto da experiência:
 
 - zoom in;
 - zoom out;
 - pan direcional;
+- reajuste/centralização;
 - impressão;
-- exportação PNG;
+- exportação PNG/imagem;
 - exportação PDF;
-- seleção de área.
+- seleção de área;
+- ocultar/exibir setas no mobile.
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/styles/mobile-tree-controls.css
+```
 
 Regras:
 
 - controles devem ser acessíveis por `aria-label`;
-- em mobile com chips por geração/bloco, controles de pan/zoom podem ser ocultados para reduzir conflito visual;
+- em mobile, os botões antigos `+` e `-` ficam ocultos;
+- em mobile, um botão circular abre painel compacto de controles;
+- o painel mobile aparece apenas nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- a ação de ocultar/exibir setas altera apenas camada visual;
 - exportação não deve capturar legenda, menus ou overlays marcados para exclusão;
-- seleção de área deve ficar contida na superfície da árvore.
+- seleção de área deve ficar contida na superfície da árvore;
+- desktop/tablet não devem ser alterados pelo portal mobile.
 
 ---
 
@@ -453,7 +464,8 @@ Padrões:
 - falecimento usa ícone `Cross`;
 - linhas de nascimento/falecimento combinam data e local quando houver;
 - textos devem tolerar ausência de dados;
-- ações internas do card devem interromper propagação para não disparar clique no node.
+- ações internas do card devem interromper propagação para não disparar clique no node;
+- no mobile, não deve haver anel azul duplicado competindo com borda/status visual do card central.
 
 ### 5.2 Anel/botão conjugal
 
@@ -475,8 +487,6 @@ Padrões:
 - IDs técnicos não devem aparecer para usuário final.
 
 ### 5.3 Cores e destaques de linhas
-
-Padrão visual consolidado:
 
 | Relação | Destaque |
 |---|---|
@@ -518,7 +528,7 @@ Regras:
 - a legenda não é apenas informativa: quando recebe callbacks, controla filtros/camadas visuais;
 - `TreeLegend` deve respeitar `edgeFilters` e `visualLineFilters`;
 - elementos da legenda não devem aparecer na exportação;
-- em mobile, painel deve priorizar legibilidade e não competir com os chips de geração.
+- em mobile, painel deve priorizar legibilidade e não competir com chips de geração nem com o painel de controles da árvore.
 
 ---
 
@@ -530,6 +540,7 @@ Arquivo principal:
 
 ```txt
 src/app/pages/MinhaArvore.tsx
+src/styles/mobile-edit-profile.css
 ```
 
 Padrões visuais consolidados:
@@ -544,7 +555,17 @@ Padrões visuais consolidados:
 - tentativa de sair com alterações pendentes mostra **Deseja sair sem salvar os ajustes?**;
 - arquivos históricos não devem ter título duplicado;
 - estado vazio de arquivos usa botão compacto `+`;
-- seção **Eventos da Vida** combina eventos derivados e manuais.
+- seção **Eventos da Vida** combina eventos derivados e manuais;
+- em mobile, o cabeçalho do perfil deve manter nome em até duas linhas;
+- em mobile, subtítulo do perfil começa abaixo da foto e alinhado à esquerda;
+- em mobile, cards **Pais**, **Irmãos**, **Cônjuges**, **Filhos** e **Pets** ficam em uma linha compacta;
+- em mobile, placeholders de **Mini bio** e **Curiosidades de Vida** devem ser menores e legíveis.
+
+Regra de escopo:
+
+```txt
+O CSS mobile específico desta tela deve permanecer escopado por #minha-arvore-edit-form ou seletor equivalente.
+```
 
 ### 7.2 `/pessoa/:id`
 
@@ -559,7 +580,7 @@ Padrões:
 - botão de favoritar aparece como botão redondo com ícone de estrela;
 - botão **Editar** fica ao lado do favorito em formato redondo com ícone;
 - botão **Editar** aparece apenas para admin, responsável pelo perfil ou própria pessoa vinculada;
-- **Inserir Informações** deve respeitar permissão: edição direta quando permitido, sugestão admin quando não permitido;
+- **Inserir Informações** deve respeitar permissão;
 - dados ocultos por privacidade não devem aparecer por microcopy ou tooltip;
 - WhatsApp só aparece quando houver telefone válido e permissão.
 
@@ -593,7 +614,7 @@ Padrões:
 
 - modal com título centralizado;
 - botão `X` alinhado;
-- texto público em linguagem humana, por exemplo **Fulana e Secundino foram casados**;
+- texto público em linguagem humana;
 - subtítulo pode exibir período, data e local de cerimônia;
 - botão **Inserir Informações** respeita permissão;
 - arquivos históricos do relacionamento usam botão compacto `+` quando aplicável;
@@ -619,16 +640,10 @@ Padrões consolidados:
 - aviso **Digite @ para marcar alguém na publicação** aparece acima do conteúdo;
 - menções `@Nome Completo` aparecem em negrito/link para `/pessoa/:id`;
 - tópico usa badges pequenas/coloridas para categoria, tipo e status;
-- autores de tópico, respostas e comentários exibem avatar ou fallback de iniciais;
+- autores exibem avatar ou fallback de iniciais;
 - respostas não exibem **Marcar solução** nem **Ocultar** na UI final;
-- reações usam ícones e cores:
-  - **Amei**: `HeartHandshake`, vermelho;
-  - **Apoiar**: `Handshake`, verde;
-  - **Orações**: `Flower2`, azul;
-  - **Parabéns**: `PartyPopper`, laranja;
-- apenas uma reação por usuário/alvo deve ficar ativa;
-- clicar na mesma reação remove;
-- clicar em outra reação substitui.
+- reações usam ícones e cores;
+- apenas uma reação por usuário/alvo deve ficar ativa.
 
 ### 7.6 Notificações
 
@@ -720,6 +735,7 @@ desktop
 - `/minha-arvore` mantém canvas com pan/zoom;
 - `/genealogia` e `/visao-completa` usam chips mobile por geração/bloco;
 - controles concorrentes com chips podem ser ocultados;
+- o painel mobile de controles concentra ações rápidas;
 - header da árvore precisa manter ações prioritárias sem overflow;
 - menu do usuário não deve cobrir permanentemente a navegação;
 - overlays devem fechar com clique fora/ESC quando aplicável.
@@ -737,7 +753,8 @@ Regras gerais:
 - ações primárias e secundárias bem separadas;
 - não exibir ID técnico em modal público;
 - `DialogContent` deve respeitar largura mobile;
-- overlays da árvore, menu e busca devem ter z-index compatível com ReactFlow.
+- overlays da árvore, menu e busca devem ter z-index compatível com ReactFlow;
+- overlays de login/dica podem usar fundo escuro sem remover a página subjacente.
 
 Modais recorrentes:
 
@@ -751,8 +768,6 @@ Modais recorrentes:
 ---
 
 ## 10. Microcopy e padronização de termos
-
-Termos padronizados:
 
 | Usar | Evitar |
 |---|---|
@@ -802,9 +817,11 @@ Antes de alterar layout, verificar:
 
 - `HomeHeader.tsx`;
 - `UserProfileMenu.tsx`;
+- `MobileUserMenuPalettePortal.tsx`;
 - `MemberPageHeader.tsx`;
 - `HomeTreeSection.tsx`;
 - `FamilyTree.tsx`;
+- `MobileTreeControlsPortal.tsx`;
 - `PersonNode.tsx`;
 - `MarriageNode.tsx`;
 - `TreeLegend.tsx`;
@@ -818,6 +835,7 @@ Checklist rápido:
 - menu abre acima da árvore;
 - busca fecha corretamente;
 - árvore mantém pan/zoom;
+- painel mobile de controles aparece apenas nas rotas corretas;
 - chips mobile não removem nodes;
 - botão conjugal continua clicável;
 - favoritos, fórum e notificações mantêm ações acessíveis;
@@ -838,6 +856,8 @@ Checklist rápido:
 | Minha Árvore | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
 | Genealogia/Visão Completa | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
 | Legenda/conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Edição do próprio perfil | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` |
+| Exportação da árvore | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
 | Perfil/admin | `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
 | Fórum | `docs/funcionalidades/FORUM.md` |
 | Notificações | `docs/funcionalidades/NOTIFICACOES.md` |

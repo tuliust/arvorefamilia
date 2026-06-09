@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir o estado implementado do MVP.
+> Status: guia canônico revisado para refletir o estado implementado do MVP após frente mobile.
 
 ## Objetivo
 
@@ -47,15 +47,15 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Frente | Estado atual | Observação de manutenção |
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
-| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores e botão conjugal. |
-| Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário. |
-| Visão Completa | Implementada | Layout por gerações/blocos e navegação mobile por chips. |
+| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. |
+| Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário e reset mobile de geração ativa por view. |
+| Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips e reset de geração ao alternar views. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
 | Admin de pessoas | Implementado | Criação/edição, copiar ID e reset de perfil por RPC sem apagar relacionamentos. |
 | Relacionamentos | Implementados | Admin altera dados reais; usuário comum envia solicitação/sugestão conforme permissão. |
 | Relacionamento conjugal | Implementado | Modal público, texto humano, dados de casamento/separação/viuvez e arquivos históricos vinculados ao relacionamento. |
 | Arquivos históricos | Implementados | Storage para novos arquivos, compatibilidade com base64 legado e categoria histórica. |
-| Eventos da vida / timeline | Implementados no escopo atual | Eventos derivados e manuais existem; upload por evento, privacidade por evento e PDF ficam como evolução futura. |
+| Eventos da vida / timeline | Implementados no escopo atual | Eventos derivados e manuais existem; título redundante embutido é ocultado em `/minha-arvore/editar`; upload por evento, privacidade por evento e PDF ficam como evolução futura. |
 | Astrologia/acontecimentos | Implementados no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin/server-side. |
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
 | Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. |
@@ -66,10 +66,10 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
 | Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros e ajustes de mobile. |
 | Home pública/legal | Implementada | `/entrar`, aceite legal no primeiro acesso, páginas legais e `noindex/nofollow`. |
-| Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`. |
-| Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`. |
-| Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão. Exportação integral fica pós-MVP. |
-| Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil e modais. |
+| Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
+| Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`, incluindo exibição no menu mobile. |
+| Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido; exportação integral fica pós-MVP. |
+| Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
 
 ---
 
@@ -210,7 +210,7 @@ Rotas administrativas:
 
 ---
 
-## 4. Home, headers, menu e paletas
+## 4. Home, headers, menu, paletas e controles mobile
 
 Documentação detalhada:
 
@@ -227,7 +227,12 @@ src/app/pages/home/HomeTreeSection.tsx
 src/app/pages/home/HomeMobileNav.tsx
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
+src/app/components/layout/MobileUserMenuPalettePortal.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/mobile-tree-controls.css
+src/styles/mobile-edit-profile.css
+src/main.tsx
 ```
 
 Comportamento consolidado:
@@ -242,17 +247,23 @@ Comportamento consolidado:
 - busca do header pesquisa pessoas e páginas;
 - busca possui sugestões e rota completa `/busca`;
 - seletor de view permite alternar entre **Minha Árvore**, **Genealogia** e **Visão Completa**;
-- seletor de paleta fica no dropdown de views;
+- seletor de paleta fica no dropdown de views em desktop/tablet;
+- no mobile, paletas também aparecem no menu do usuário por `MobileUserMenuPalettePortal`;
 - paletas `white`, `orange` e `brown` são aplicadas por CSS variables no `document.documentElement`;
 - paleta ativa é persistida em `localStorage`;
-- paletas não alteram dados, permissões, Supabase, filtros ou grafo.
+- paletas não alteram dados, permissões, Supabase, filtros ou grafo;
+- `MobileTreeControlsPortal` concentra controles mobile da árvore nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- o painel mobile permite zoom, reajuste, ocultar/exibir setas, exportação PDF/imagem e impressão;
+- `/genealogia` e `/visao-completa` resetam a geração ativa ao alternar view, pessoa central ou conjunto de gerações disponíveis.
 
 Regras anti-regressão:
 
 - não reintroduzir menu local antigo da Home;
 - não usar `translate` ou deslocamento manual da camada `.react-flow__viewport` para corrigir espaçamento;
 - não mover estado principal da Home para componentes de apresentação sem necessidade clara;
-- não persistir preferência visual de paleta no banco sem decisão de produto.
+- não persistir preferência visual de paleta no banco sem decisão de produto;
+- não deixar controles mobile aparecerem fora das rotas da árvore;
+- não duplicar controles `+`/`-` antigos com painel mobile.
 
 ---
 
@@ -412,6 +423,7 @@ Comportamento consolidado:
 - eventos pessoais podem ser criados/editados no escopo implementado;
 - `/minha-arvore/editar` possui área **Eventos da Vida**;
 - timeline combina fatos derivados e eventos manuais;
+- em contexto embutido da edição, título redundante **Eventos automáticos e manuais** fica oculto;
 - fontes derivadas incluem nascimento, falecimento, relacionamentos, filhos, arquivos históricos e eventos pessoais.
 
 Migration relacionada:
@@ -540,7 +552,7 @@ Regra anti-regressão:
 
 ---
 
-## 11. Árvore, layouts, conectores e paletas
+## 11. Árvore, layouts, conectores, paletas e controles mobile
 
 Documentação detalhada:
 
@@ -554,6 +566,7 @@ Arquivos principais:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/FamilyTree/buildTreeGraph.ts
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts
@@ -566,6 +579,7 @@ src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/pages/Home.tsx
 src/app/pages/home/HomeTreeSection.tsx
 src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/styles/mobile-tree-controls.css
 ```
 
 Modos de visualização:
@@ -590,7 +604,8 @@ Comportamento consolidado:
 - scroll externo da página deve ser bloqueado quando a árvore ocupa a viewport;
 - em mobile, `/genealogia` e `/visao-completa` usam chips de navegação por gerações/blocos;
 - chips focam/enquadram a geração ativa, mas não removem estruturalmente as demais colunas;
-- botões de pan/zoom podem ser ocultados em mobile quando os chips assumem a navegação principal;
+- botões de pan/zoom antigos podem ser ocultados em mobile quando os chips ou o painel mobile assumem a navegação principal;
+- `MobileTreeControlsPortal` fornece painel compacto de ações em mobile nas rotas da árvore;
 - paletas `white`, `orange` e `brown` alteram apenas tokens visuais.
 
 Regras anti-regressão:
@@ -598,7 +613,9 @@ Regras anti-regressão:
 - não usar deslocamento manual em `.react-flow__viewport`;
 - não salvar filtros visuais como regra de negócio;
 - não alterar nodes, edges, handles ou dimensões do botão conjugal sem QA visual;
-- manter diferenças intencionais entre `/minha-arvore` e views por gerações.
+- manter diferenças intencionais entre `/minha-arvore` e views por gerações;
+- não duplicar controles mobile;
+- não permitir que `/visao-completa` herde geração ativa obsoleta de `/genealogia`.
 
 ---
 
@@ -800,15 +817,17 @@ Arquivos principais:
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/pages/Home.tsx
 ```
 
 Comportamento consolidado:
 
-- usuário pode selecionar área visível da árvore;
+- usuário pode selecionar área visível da árvore em fluxo padrão;
 - exportação suporta PNG;
 - exportação suporta PDF;
 - impressão é suportada;
+- mobile possui painel rápido de ações;
 - exportação não usa Storage;
 - exportação não cria migration;
 - legenda/overlays auxiliares não devem aparecer no artefato exportado quando marcados para exclusão.
@@ -817,6 +836,10 @@ Fora do MVP:
 
 - exportação da árvore completa fora da viewport;
 - persistência/log de exportações.
+
+Ponto técnico:
+
+- manter alinhamento entre o fluxo padrão `treeExport.ts` e qualquer captura direta usada pelo portal mobile.
 
 ---
 

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico da documentação revisada.
+> Status: índice canônico da documentação revisada e alinhada à frente mobile final.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -35,7 +35,7 @@ Quando houver divergência entre um guia atual e conteúdo histórico, prevalece
 | `README.md` | Índice canônico da documentação. |
 | `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já foi implementado. |
 | `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus e microcopy. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus, portais mobile e microcopy. |
 | `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, bloqueios, QA futuro e backlog pós-MVP. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. |
@@ -69,16 +69,16 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, filtros diretos e mobile. |
-| `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, inferência visual e QA. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, filtros diretos, mobile e controles mobile. |
+| `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, reset de geração ativa, inferência visual e QA. |
 | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques e painel lateral. |
-| `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios e saída sem salvar. |
+| `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
 | `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, pessoas relacionadas, menções, respostas, comentários, reações e favoritos. |
 | `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
-| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão. |
+| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; inclui fluxo de seleção e fluxo mobile rápido. |
 
 ---
 
@@ -134,9 +134,9 @@ docs/historico/
 
 | Arquivo | Uso |
 |---|---|
-| `historico/README.md` | Resumo histórico consolidado das auditorias, QA, responsividade, exportação e documentação antiga. |
+| `historico/README.md` | Resumo histórico consolidado das auditorias, QA, responsividade, exportação, frente mobile de 2026-06-08 e documentação antiga. |
 
-A pasta histórica foi consolidada. Os arquivos históricos individuais e `docs/historico/documentacao-antiga/*` foram substituídos pelo resumo consolidado em `docs/historico/README.md`.
+A pasta histórica foi consolidada. Os arquivos históricos individuais, `docs/historico/documentacao-antiga/*` e `docs/historico/sql-legado/*` foram substituídos pelo resumo consolidado em `docs/historico/README.md` ou pelos guias canônicos correspondentes.
 
 Não recriar documentos históricos individuais salvo necessidade explícita de rastreabilidade futura. Se um novo diagnóstico for criado, ele deve declarar que é histórico e não substitui os guias canônicos.
 
@@ -147,7 +147,7 @@ Não recriar documentos históricos individuais salvo necessidade explícita de 
 | Tipo de informação | Destino correto |
 |---|---|
 | Estado consolidado de implementação | `GUIA_IMPLEMENTACOES.md` |
-| Layout, responsividade, visual, menu, header, microcopy | `GUIA_UX_LAYOUT.md` |
+| Layout, responsividade, visual, menu, header, microcopy e portais mobile | `GUIA_UX_LAYOUT.md` |
 | Componentes, props, responsabilidades e anti-regressões | `GUIA_COMPONENTES.md` |
 | Sintoma, erro, causa provável e correção | `GUIA_CORRECAO_ERROS.md` |
 | Pendência real, bug provável, decisão futura ou pós-MVP | `PLANO_PROXIMOS_PASSOS.md` |
@@ -171,13 +171,14 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano mantém três itens abertos:
+No fechamento desta revisão documental, o plano mantém quatro itens abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
 | `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA |
-| `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste visual / encoding |
+| `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste técnico / encoding |
 | `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente |
+| `DOC-004` | `funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento de exportação mobile |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

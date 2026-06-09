@@ -2,7 +2,8 @@
 
 > Última revisão: 2026-06-08  
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
-> Tipo: documentação técnica/funcional da view **Minha Árvore**.
+> Tipo: documentação técnica/funcional da view **Minha Árvore**.  
+> Status: revisado após frente mobile de 2026-06-08.
 
 ## 1. Função deste documento
 
@@ -19,6 +20,7 @@ Use este arquivo para manter:
 - distribuição da pessoa central e dos grupos diretos;
 - regras de filtros diretos;
 - integração com painel lateral, legenda e ações;
+- controles mobile da árvore;
 - anti-regressões específicas da view direta.
 
 Não use este documento para detalhar:
@@ -54,7 +56,8 @@ Ela renderiza uma visão individual da pessoa central, com:
 - linhas de parentesco e destaques;
 - clique em pessoa para abrir perfil;
 - clique em relacionamento conjugal para abrir modal;
-- ações de exportação pelo painel lateral.
+- ações de exportação pelo painel lateral no desktop;
+- painel compacto de controles no mobile.
 
 ---
 
@@ -67,6 +70,8 @@ Ela renderiza uma visão individual da pessoa central, com:
 | Área principal da árvore | `src/app/pages/home/HomeTreeSection.tsx` |
 | Navegação mobile da Home | `src/app/pages/home/HomeMobileNav.tsx` |
 | Componente ReactFlow | `src/app/components/FamilyTree/FamilyTree.tsx` |
+| Controles mobile da árvore | `src/app/components/FamilyTree/MobileTreeControlsPortal.tsx` |
+| Estilos dos controles mobile | `src/styles/mobile-tree-controls.css` |
 | Layout direto | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
 | Cards de pessoa | `src/app/components/FamilyTree/PersonNode.tsx` |
 | Painel especial da pessoa central | `src/app/components/FamilyTree/CentralPersonFocusPanel.tsx` |
@@ -270,6 +275,7 @@ A árvore de {primeiro nome}
 Regras:
 
 - título é overlay fixo em `FamilyTree.tsx`;
+- no mobile, o texto de orientação sobre a árvore deve permanecer oculto quando competir com a navegação;
 - não criar title node no layout;
 - não duplicar subtítulo dentro do canvas;
 - espaçamento entre título e cards deve ser ajustado por constantes/cálculo em `FamilyTree.tsx`;
@@ -294,7 +300,8 @@ Regras:
 - `edgeFilters.irmaos` controla linhas/trechos de irmãos quando suportado;
 - destaque visual só altera estilo de linhas visíveis;
 - linha oculta por filtro permanece oculta mesmo com destaque ativo;
-- o nó conjugal usa `MarriageNode` e abre `ViewMarriageModal`.
+- o nó conjugal usa `MarriageNode` e abre `ViewMarriageModal`;
+- a borda/anel azul duplicado do card principal não deve voltar no mobile.
 
 ---
 
@@ -323,7 +330,58 @@ No mobile:
 
 ---
 
-## 13. Paletas
+## 13. Controles mobile da árvore
+
+A frente mobile adicionou um painel compacto de controles por portal.
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/styles/mobile-tree-controls.css
+src/main.tsx
+```
+
+Rotas atendidas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Ações esperadas no painel mobile:
+
+```txt
+Zoom +
+Zoom -
+Reajustar
+Ocultar/Exibir setas
+PDF
+Imagem
+Imprimir
+Seleção
+```
+
+Regras:
+
+- o portal deve aparecer apenas nas rotas da árvore;
+- os botões `+` e `-` antigos do canvas devem ficar ocultos no mobile;
+- o botão de seta para cima deve manter a mesma formatação dos demais botões direcionais;
+- o usuário deve conseguir ocultar/exibir setas direcionais;
+- ações de exportação mobile não devem alterar estado de dados;
+- em `/genealogia` e `/visao-completa`, os chips continuam sendo a navegação primária por geração;
+- a ação **Seleção** no mobile deve ser tratada com cuidado porque a seleção manual de área é uma experiência sensível em telas pequenas.
+
+Ponto técnico de atenção:
+
+```txt
+Se a exportação mobile usar captura direta própria, manter documentação alinhada em docs/funcionalidades/EXPORTACAO_ARVORE.md.
+```
+
+---
+
+## 14. Paletas
 
 A view direta respeita as paletas globais da árvore:
 
@@ -336,13 +394,14 @@ brown
 Regras:
 
 - paleta é decisão visual da Home/header;
+- no mobile, a paleta também pode aparecer no menu do usuário via `MobileUserMenuPalettePortal`;
 - componentes da árvore devem consumir tokens/CSS variables;
 - não hardcodar cor nova sem checar `treeColorPalettes.ts`;
 - o modo direto deve preservar contraste dos cards e linhas.
 
 ---
 
-## 14. Exportação
+## 15. Exportação
 
 A exportação usa ações expostas por `FamilyTreeActions`:
 
@@ -357,16 +416,17 @@ Regras:
 
 - exporta a área visível/capturada, não necessariamente a árvore completa;
 - seleção de área bloqueia pan/zoom temporariamente;
+- no mobile, há painel rápido de exportação por `MobileTreeControlsPortal`;
 - detalhes funcionais ficam em `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
 ---
 
-## 15. QA mínimo
+## 16. QA mínimo
 
 Validar após alteração em `/minha-arvore`:
 
 - desktop: 1366px, 1440px e largura maior;
-- mobile: 375px, 390px e 430px;
+- mobile: 320px, 375px, 390px e 430px;
 - header sem scroll externo;
 - pan/zoom interno funcional;
 - pessoa central visível;
@@ -375,12 +435,14 @@ Validar após alteração em `/minha-arvore`:
 - filtros de linhas não removem cards;
 - destaque não recria linha oculta;
 - pets não entram como filhos humanos;
+- controles mobile aparecem apenas nas rotas da árvore;
+- botão de ocultar/exibir setas funciona;
 - exportação continua funcionando;
 - troca para `/genealogia` e `/visao-completa` sem regressão.
 
 ---
 
-## 16. Anti-regressões
+## 17. Anti-regressões
 
 Não fazer:
 
@@ -391,4 +453,6 @@ Não fazer:
 - remover `overflow-hidden` do shell fixo sem testar scroll;
 - usar `window.location` para trocar view;
 - criar migration para ajuste visual;
-- alterar RLS/Storage/Auth para corrigir problema de layout.
+- alterar RLS/Storage/Auth para corrigir problema de layout;
+- criar novo controle mobile fora do portal sem remover o anterior;
+- deixar controles fixos competindo com navegação inferior mobile.
