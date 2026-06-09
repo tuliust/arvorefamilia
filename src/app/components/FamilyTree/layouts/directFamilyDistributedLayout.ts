@@ -96,7 +96,7 @@ const FRAME_BOTTOM = 1810;
 const MOBILE_FRAME_LEFT = -70;
 const MOBILE_FRAME_RIGHT = 3290;
 const MOBILE_FRAME_TOP = -30;
-const MOBILE_FRAME_BOTTOM = 2230;
+const MOBILE_FRAME_BOTTOM = 4200;
 const TITLE_TOP = FRAME_TOP + 10;
 const TITLE_WIDTH = 1540;
 const TITLE_RESERVED_HEIGHT = 80;
@@ -186,6 +186,20 @@ const MOBILE_LOWER_CARD_WIDTH = 250;
 const MOBILE_LOWER_CARD_HEIGHT = 124;
 const MOBILE_LOWER_LANE_WIDTH = 620;
 const MOBILE_LOWER_SPLIT_CARD_WIDTH = 230;
+const MOBILE_DIRECT_GROUP_WIDTH = 760;
+const MOBILE_DIRECT_CARD_WIDTH = 230;
+const MOBILE_DIRECT_CARD_HEIGHT = 118;
+const MOBILE_DIRECT_COLUMN_GAP = 12;
+const MOBILE_DIRECT_ROW_GAP = 12;
+const MOBILE_DIRECT_CENTER_X = VIEW_CENTER_X;
+const MOBILE_DIRECT_PARENT_CENTER_GAP = 280;
+const MOBILE_DIRECT_PARENT_Y = 20;
+const MOBILE_DIRECT_CENTRAL_Y = 260;
+const MOBILE_DIRECT_LOWER_Y = 760;
+const MOBILE_DIRECT_STACK_GAP = 54;
+const MOBILE_DIRECT_BOUNDS_PADDING_X = 90;
+const MOBILE_DIRECT_BOUNDS_PADDING_TOP = 80;
+const MOBILE_DIRECT_BOUNDS_PADDING_BOTTOM = 520;
 const SIDE_COLUMN_GAP = 8;
 const SIDE_ROW_GAP = 6;
 const ANCESTOR_COLUMN_GAP = 32;
@@ -220,7 +234,6 @@ const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
 const MOBILE_LOWER_LEFT_GROUP_CENTER_X = VIEW_CENTER_X - 220;
 const MOBILE_LOWER_RIGHT_GROUP_CENTER_X = VIEW_CENTER_X + 220;
-const MOBILE_LOWER_GROUP_Y = LOWER_GROUP_Y - 360;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
   stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
   strokeWidth: 3,
@@ -1362,7 +1375,7 @@ function addCentralPerson(
   const centralWidth = isMobile ? 320 : CENTRAL_WIDTH;
   const centralHeight = isMobile ? 410 : CENTRAL_HEIGHT;
   const centralX = CENTRAL_X + (CENTRAL_WIDTH - centralWidth) / 2;
-  const centralY = isMobile ? CENTRAL_Y - 760 : CENTRAL_Y;
+  const centralY = isMobile ? MOBILE_DIRECT_CENTRAL_Y : CENTRAL_Y;
 
   positionedNodes.push(clonePersonNode(
     {
@@ -1501,6 +1514,29 @@ function getPositionedNodeDimensions(node: Node) {
   return {
     width: Number(node.data?.layoutWidth || node.data?.width) || CARD_WIDTH,
     height: Number(node.data?.layoutHeight || node.data?.height) || CARD_HEIGHT,
+  };
+}
+
+function getVisiblePersonNodeBounds(nodes: Node[]): TreeLayoutBounds | null {
+  const personNodes = nodes.filter((node) => node.type === 'personNode' && !node.hidden);
+  if (personNodes.length === 0) return null;
+
+  const minX = Math.min(...personNodes.map((node) => node.position.x));
+  const minY = Math.min(...personNodes.map((node) => node.position.y));
+  const maxX = Math.max(...personNodes.map((node) => {
+    const { width } = getPositionedNodeDimensions(node);
+    return node.position.x + width;
+  }));
+  const maxY = Math.max(...personNodes.map((node) => {
+    const { height } = getPositionedNodeDimensions(node);
+    return node.position.y + height;
+  }));
+
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
   };
 }
 
@@ -1935,21 +1971,40 @@ export function directFamilyDistributedLayout(
 
   addCentralPerson(centralPersonId, positionedNodes, positionedIds, personNodeById, options.isMobile);
 
-  const paternalGroups: GroupSpec[] = resolveSideStackGroups([
+  const resolveDirectGroups = (groups: GroupSpec[]) => {
+    if (!options.isMobile) return resolveSideStackGroups(groups, index);
+
+    return groups.map((group) => ({
+      ...group,
+      maxPerRow: group.variant === 'uncleAunt' || group.variant === 'cousin'
+        ? 3
+        : Math.min(group.maxPerRow, 3),
+      centerX: MOBILE_DIRECT_CENTER_X,
+      side: undefined,
+      laneWidth: MOBILE_DIRECT_GROUP_WIDTH,
+      cardWidth: MOBILE_DIRECT_CARD_WIDTH,
+      cardHeight: MOBILE_DIRECT_CARD_HEIGHT,
+      columnGap: MOBILE_DIRECT_COLUMN_GAP,
+      rowGap: MOBILE_DIRECT_ROW_GAP,
+      alignBoundary: undefined,
+    }));
+  };
+
+  const paternalGroups: GroupSpec[] = resolveDirectGroups([
     { key: 'tataravos-paternos', label: 'Tataravós paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'bisavos-paternos', label: 'Bisavós paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'avos-paternos', label: 'Avós paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-  ], index);
+  ]);
 
-  const maternalGroups: GroupSpec[] = resolveSideStackGroups([
+  const maternalGroups: GroupSpec[] = resolveDirectGroups([
     { key: 'tataravos-maternos', label: 'Tataravós maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'bisavos-maternos', label: 'Bisavós maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'avos-maternos', label: 'Avós maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-  ], index);
+  ]);
 
   const visiblePaternalGroups = paternalGroups
     .map((group) => ({
@@ -1963,28 +2018,30 @@ export function directFamilyDistributedLayout(
       ids: group.ids.filter((id) => !positionedIds.has(id) && personNodeById.has(id)),
     }))
     .filter((group) => group.ids.length > 0);
-  const paternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visiblePaternalGroups, index);
-  const maternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visibleMaternalGroups, index);
-  const sideMaxScales = [paternalSideMaxScale, maternalSideMaxScale]
-    .filter((scale): scale is number => typeof scale === 'number' && Number.isFinite(scale));
-  const sharedSideMaxScale = sideMaxScales.length > 1
-    ? Math.min(...sideMaxScales)
-    : sideMaxScales[0] ?? SIDE_COLLATERAL_CARD_MAX_SCALE;
+  if (!options.isMobile) {
+    const paternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visiblePaternalGroups, index);
+    const maternalSideMaxScale = resolveAdaptiveSideStackMaxScale(visibleMaternalGroups, index);
+    const sideMaxScales = [paternalSideMaxScale, maternalSideMaxScale]
+      .filter((scale): scale is number => typeof scale === 'number' && Number.isFinite(scale));
+    const sharedSideMaxScale = sideMaxScales.length > 1
+      ? Math.min(...sideMaxScales)
+      : sideMaxScales[0] ?? SIDE_COLLATERAL_CARD_MAX_SCALE;
 
-  placeGroupStackPlan(
-    resolveAdaptiveSideStackPlan(visiblePaternalGroups, index, sharedSideMaxScale),
-    positionedNodes,
-    positionedIds,
-    personNodeById,
-    index
-  );
-  placeGroupStackPlan(
-    resolveAdaptiveSideStackPlan(visibleMaternalGroups, index, sharedSideMaxScale),
-    positionedNodes,
-    positionedIds,
-    personNodeById,
-    index
-  );
+    placeGroupStackPlan(
+      resolveAdaptiveSideStackPlan(visiblePaternalGroups, index, sharedSideMaxScale),
+      positionedNodes,
+      positionedIds,
+      personNodeById,
+      index
+    );
+    placeGroupStackPlan(
+      resolveAdaptiveSideStackPlan(visibleMaternalGroups, index, sharedSideMaxScale),
+      positionedNodes,
+      positionedIds,
+      personNodeById,
+      index
+    );
+  }
 
   const motherGroup: GroupSpec = {
     key: 'mae',
@@ -1992,8 +2049,14 @@ export function directFamilyDistributedLayout(
     ids: sides.maternal.parent,
     variant: 'parent',
     maxPerRow: 1,
-    centerX: MOTHER_GROUP_CENTER_X,
-    laneWidth: SIDE_PARENT_CARD_WIDTH + GROUP_BOX_PADDING_X * 2, cardWidth: SIDE_PARENT_CARD_WIDTH, cardHeight: SIDE_PARENT_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
+    centerX: options.isMobile
+      ? MOBILE_DIRECT_CENTER_X + MOBILE_DIRECT_PARENT_CENTER_GAP / 2
+      : MOTHER_GROUP_CENTER_X,
+    laneWidth: (options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
+    cardWidth: options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
+    cardHeight: options.isMobile ? MOBILE_LOWER_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
+    columnGap: SIDE_COLUMN_GAP,
+    rowGap: SIDE_ROW_GAP,
   };
   const fatherGroup: GroupSpec = {
     key: 'pai',
@@ -2001,11 +2064,17 @@ export function directFamilyDistributedLayout(
     ids: sides.paternal.parent,
     variant: 'parent',
     maxPerRow: 1,
-    centerX: FATHER_GROUP_CENTER_X,
-    laneWidth: SIDE_PARENT_CARD_WIDTH + GROUP_BOX_PADDING_X * 2, cardWidth: SIDE_PARENT_CARD_WIDTH, cardHeight: SIDE_PARENT_CARD_HEIGHT, columnGap: SIDE_COLUMN_GAP, rowGap: SIDE_ROW_GAP,
+    centerX: options.isMobile
+      ? MOBILE_DIRECT_CENTER_X - MOBILE_DIRECT_PARENT_CENTER_GAP / 2
+      : FATHER_GROUP_CENTER_X,
+    laneWidth: (options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
+    cardWidth: options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
+    cardHeight: options.isMobile ? MOBILE_LOWER_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
+    columnGap: SIDE_COLUMN_GAP,
+    rowGap: SIDE_ROW_GAP,
   };
 
-  const parentGroupY = options.isMobile ? CENTRAL_PARENT_GROUP_Y - 1050 : CENTRAL_PARENT_GROUP_Y;
+  const parentGroupY = options.isMobile ? MOBILE_DIRECT_PARENT_Y : CENTRAL_PARENT_GROUP_Y;
   placeGroup(motherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(fatherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
 
@@ -2029,7 +2098,7 @@ export function directFamilyDistributedLayout(
   const hasChildrenAndPets = children.length > 0 && pets.length > 0;
   const lowerLeftGroupCenterX = options.isMobile ? MOBILE_LOWER_LEFT_GROUP_CENTER_X : LOWER_LEFT_GROUP_CENTER_X;
   const lowerRightGroupCenterX = options.isMobile ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X : LOWER_RIGHT_GROUP_CENTER_X;
-  const lowerGroupY = options.isMobile ? MOBILE_LOWER_GROUP_Y : LOWER_GROUP_Y;
+  const lowerGroupY = options.isMobile ? MOBILE_DIRECT_LOWER_Y : LOWER_GROUP_Y;
   const childrenPetsLeftCenterX = hasChildrenAndPets
     ? lowerRightGroupCenterX - lowerLaneWidth / 4
     : lowerRightGroupCenterX;
@@ -2117,6 +2186,18 @@ export function directFamilyDistributedLayout(
   placeGroup(petGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, grandchildrenTopY, positionedNodes, positionedIds, personNodeById, index);
 
+  if (options.isMobile) {
+    const currentBounds = getVisiblePersonNodeBounds(positionedNodes);
+    let nextGroupY = (currentBounds ? currentBounds.y + currentBounds.height : lowerGroupY)
+      + MOBILE_DIRECT_STACK_GAP;
+
+    [...visiblePaternalGroups, ...visibleMaternalGroups].forEach((group) => {
+      placeGroup(group, nextGroupY, positionedNodes, positionedIds, personNodeById, index);
+      const columns = resolveGroupColumns(group, group.ids, index);
+      nextGroupY += groupHeight(group.ids, columns, index, group) + MOBILE_DIRECT_STACK_GAP;
+    });
+  }
+
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [
     'tataravos-paternos',
@@ -2154,6 +2235,7 @@ export function directFamilyDistributedLayout(
   const petsGroupBounds = groupBoundsByKey.get('pets');
   const centralNode = findPositionedNode(positionedNodes, centralPersonId);
   const centralDimensions = centralNode ? getPositionedNodeDimensions(centralNode) : { width: CENTRAL_WIDTH, height: CENTRAL_HEIGHT };
+  const centralTopY = centralNode?.position.y ?? CENTRAL_Y;
   const centralBottomY = centralNode ? centralNode.position.y + centralDimensions.height : CENTRAL_Y + CENTRAL_HEIGHT;
   const lowerGroupTopY = Math.min(
     siblingsGroupBounds?.minY ?? Number.POSITIVE_INFINITY,
@@ -2170,12 +2252,12 @@ export function directFamilyDistributedLayout(
     if (isDirectLineVisible('spouse', options.edgeFilters)) {
       addMarriageNode(positionedNodes, positionedIds, 'direct-parent-marriage-node', parentCoupleMidX, parentCoupleMidY);
     }
-    addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, CENTRAL_Y);
+    addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, centralTopY);
   } else if (fatherGroupBounds || motherGroupBounds) {
     const singleParentBounds = fatherGroupBounds || motherGroupBounds;
     if (singleParentBounds) {
       addAnchor(positionedNodes, positionedIds, 'direct-single-parent-bottom-anchor', singleParentBounds.centerX, singleParentBounds.maxY);
-      addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, CENTRAL_Y);
+      addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, centralTopY);
     }
   }
 
@@ -2245,7 +2327,7 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'bottom',
         targetHandle: 'top',
-        elbowY: CENTRAL_Y - 22,
+        elbowY: centralTopY - 22,
         lineGroup: 'parentChild',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
@@ -2261,7 +2343,7 @@ export function directFamilyDistributedLayout(
       {
         sourceHandle: 'bottom',
         targetHandle: 'top',
-        elbowY: CENTRAL_Y - 22,
+        elbowY: centralTopY - 22,
         lineGroup: 'parentChild',
         edgeFilters: options.edgeFilters,
         visualLineFilters: options.visualLineFilters,
@@ -2273,10 +2355,17 @@ export function directFamilyDistributedLayout(
     addDirectStructuralEdge(
       addEdge,
       'direct-father-to-paternal-uncles',
-      'direct-group-pai-left-anchor',
-      'direct-group-tios-paternos-right-anchor',
-      'directSideElbow',
-      {
+      options.isMobile ? 'direct-group-pai-bottom-anchor' : 'direct-group-pai-left-anchor',
+      options.isMobile ? 'direct-group-tios-paternos-top-anchor' : 'direct-group-tios-paternos-right-anchor',
+      options.isMobile ? 'directElbowFromCenter' : 'directSideElbow',
+      options.isMobile ? {
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        elbowY: (fatherGroupBounds.maxY + paternalUnclesGroupBounds.minY) / 2,
+        lineGroup: 'sibling',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
+      } : {
         sourceHandle: 'left',
         targetHandle: 'right',
         elbowX: (paternalUnclesGroupBounds.maxX + fatherGroupBounds.minX) / 2,
@@ -2291,10 +2380,17 @@ export function directFamilyDistributedLayout(
     addDirectStructuralEdge(
       addEdge,
       'direct-mother-to-maternal-uncles',
-      'direct-group-mae-right-anchor',
-      'direct-group-tios-maternos-left-anchor',
-      'directSideElbow',
-      {
+      options.isMobile ? 'direct-group-mae-bottom-anchor' : 'direct-group-mae-right-anchor',
+      options.isMobile ? 'direct-group-tios-maternos-top-anchor' : 'direct-group-tios-maternos-left-anchor',
+      options.isMobile ? 'directElbowFromCenter' : 'directSideElbow',
+      options.isMobile ? {
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+        elbowY: (motherGroupBounds.maxY + maternalUnclesGroupBounds.minY) / 2,
+        lineGroup: 'sibling',
+        edgeFilters: options.edgeFilters,
+        visualLineFilters: options.visualLineFilters,
+      } : {
         sourceHandle: 'right',
         targetHandle: 'left',
         elbowX: (motherGroupBounds.maxX + maternalUnclesGroupBounds.minX) / 2,
@@ -2518,10 +2614,25 @@ export function directFamilyDistributedLayout(
   addAncestorSpouseEdges(addEdge, sides.paternal.grandparents, positionedNodes, positionedIds, index, spouseLineOptions);
   addAncestorSpouseEdges(addEdge, sides.maternal.grandparents, positionedNodes, positionedIds, index, spouseLineOptions);
 
+  const renderedPersonBounds = options.isMobile
+    ? getVisiblePersonNodeBounds(positionedNodes)
+    : null;
+  const mobileViewportBounds = renderedPersonBounds
+    ? {
+      x: renderedPersonBounds.x - MOBILE_DIRECT_BOUNDS_PADDING_X,
+      y: renderedPersonBounds.y - MOBILE_DIRECT_BOUNDS_PADDING_TOP,
+      width: renderedPersonBounds.width + MOBILE_DIRECT_BOUNDS_PADDING_X * 2,
+      height:
+        renderedPersonBounds.height
+        + MOBILE_DIRECT_BOUNDS_PADDING_TOP
+        + MOBILE_DIRECT_BOUNDS_PADDING_BOTTOM,
+    }
+    : viewportBounds;
+
   return {
     nodes: positionedNodes,
     edges,
-    viewportBounds,
-    translateBounds: viewportBounds,
+    viewportBounds: options.isMobile ? mobileViewportBounds : viewportBounds,
+    translateBounds: options.isMobile ? mobileViewportBounds : viewportBounds,
   };
 }
