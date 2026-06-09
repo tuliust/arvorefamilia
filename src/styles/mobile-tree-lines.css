@@ -8,13 +8,17 @@
     display: none !important;
   }
 
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-irmaos {
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-irmaos,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-group-box-irmaos"] .direct-family-group-box,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-group-box-irmaos"] > div {
     border-right-color: transparent !important;
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
   }
 
-  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-conjuge {
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] .direct-family-group-box.direct-group-box-conjuge,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-group-box-conjuge"] .direct-family-group-box,
+  [data-export-root="family-tree"][data-export-view="minha-arvore"] [data-id="direct-group-box-conjuge"] > div {
     border-left-color: transparent !important;
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
