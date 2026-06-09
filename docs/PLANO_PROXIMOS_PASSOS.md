@@ -33,6 +33,7 @@ Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova en
 | DOC-001 | `docs/funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA | Avaliar se `GenealogyMobileStageTabs` deve usar gerações inferidas pelo layout. O componente monta chips a partir de `pessoas[].manual_generation`, enquanto `FamilyTree` infere gerações internamente antes do layout. | Aberto |
 | DOC-002 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | necessidade de ajuste visual / encoding | Corrigir strings quebradas por encoding em `src/app/pages/MinhaArvore.tsx`, como `Arquivos Hist?ricos`, `hist?ricos` e `Sess?o encerrada.`. | Aberto |
 | DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente | Definir se `Complemento` e múltiplas redes sociais devem persistir em schema próprio. Hoje `Complemento` é campo visual local e múltiplas redes são parcialmente sincronizadas apenas para campos legados da primeira rede. | Aberto |
+| DOC-004 | `/minha-arvore` mobile | bug visual / conector inferior | Refazer a conexão inferior do card principal no mobile sem depender de CSS de bordas. O desenho desejado é uma haste central curta até uma linha horizontal, com uma haste à esquerda para **Irmãos** e uma haste à direita para **Cônjuge**, sem linha central prolongada entre os grupos. | Aberto |
 
 ---
 
@@ -53,7 +54,94 @@ Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova en
 
 ---
 
-## 4. Critérios permanentes de bloqueio
+## 4. Pendência específica: conector inferior da `/minha-arvore` mobile
+
+### Contexto
+
+Na página `/minha-arvore`, em viewport mobile, a conexão inferior do card principal ainda não ficou com o desenho desejado.
+
+Comportamento desejado:
+
+```txt
+card principal
+     |
+-----+-----
+|         |
+irmãos    cônjuge
+```
+
+Requisitos visuais:
+
+- uma linha vertical curta saindo da base do card principal;
+- uma linha horizontal superior conectando os dois ramos;
+- uma linha vertical à esquerda descendo até o grupo **Irmãos**;
+- uma linha vertical à direita descendo até o grupo **Cônjuge**;
+- nenhuma linha vertical central prolongada entre os dois grupos.
+
+### Estado observado
+
+Mesmo após os ajustes anteriores, a área inferior ainda exibe uma linha central prolongada. O print mais recente mostra que a linha vertical central continua descendo abaixo da linha horizontal, até a região entre os grupos inferiores.
+
+### Ajustes já tentados
+
+1. Ocultar edges centrais via CSS em `src/styles/mobile-tree-lines.css`.
+2. Suprimir alguns edges no renderer `src/app/components/FamilyTree/OrthogonalChildEdge.tsx`.
+3. Reexibir `direct-central-to-siblings-group` e `direct-central-to-spouse-group` para recuperar o split entre **Irmãos** e **Cônjuge**.
+4. Tentar reduzir o `elbowY` mobile dos edges mantidos.
+5. Marcar group boxes em `src/app/components/FamilyTree/nodeTypes.ts` e remover bordas internas via CSS.
+
+### Hipótese técnica atual
+
+A correção robusta deve ser feita na geração do layout em:
+
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
+Pontos relevantes:
+
+- `direct-center-bottom-anchor` é criado na base do card central;
+- `direct-siblings-group-top-anchor` e `direct-spouse-group-top-anchor` são criados no topo dos grupos;
+- `lowerConnectionElbowY` define a altura da linha horizontal;
+- os edges `direct-central-to-siblings-group` e `direct-central-to-spouse-group` desenham caminhos completos até os grupos.
+
+### Próxima abordagem recomendada
+
+Criar uma conexão estrutural mobile específica para o primeiro split inferior:
+
+1. Criar um anchor intermediário central no `lowerConnectionElbowY`, por exemplo:
+
+```txt
+direct-mobile-lower-split-anchor
+```
+
+2. No mobile, trocar os dois edges completos por três trechos explícitos:
+
+```txt
+direct-center-bottom-anchor -> direct-mobile-lower-split-anchor
+
+direct-mobile-lower-split-anchor -> direct-siblings-group-top-anchor
+
+direct-mobile-lower-split-anchor -> direct-spouse-group-top-anchor
+```
+
+3. Garantir que o trecho central termine exatamente no `lowerConnectionElbowY` e não continue descendo.
+4. Manter a lógica desktop intacta.
+
+### Critério de aceite
+
+No mobile, abaixo do card principal, deve aparecer apenas:
+
+- haste central curta até a linha horizontal;
+- linha horizontal conectando os ramos;
+- uma haste vertical à esquerda até **Irmãos**;
+- uma haste vertical à direita até **Cônjuge**.
+
+Não deve haver linha central descendo entre os grupos.
+
+---
+
+## 5. Critérios permanentes de bloqueio
 
 - build quebrado;
 - login quebrado;
@@ -70,7 +158,7 @@ Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova en
 
 ---
 
-## 5. Regras para a revisão final da documentação
+## 6. Regras para a revisão final da documentação
 
 - não alterar código do sistema;
 - não aplicar migration;
@@ -86,7 +174,7 @@ Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova en
 
 ---
 
-## 6. Controle da revisão documental
+## 7. Controle da revisão documental
 
 | Ordem | Documento | Status | Observações |
 |---:|---|---|---|
@@ -122,7 +210,7 @@ Durante a revisão arquivo por arquivo de `docs/`, qualquer divergência nova en
 
 ---
 
-## 7. Comandos para o commit documental final
+## 8. Comandos para o commit documental final
 
 Executar apenas quando todos os arquivos revisados forem substituídos manualmente:
 
