@@ -136,7 +136,7 @@ const MOBILE_BOTTOM_NAV_ITEMS = [
   { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
   { label: 'Fórum', to: '/forum', icon: MessageCircle },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
-  { label: 'Notificações', to: '/notificacoes', icon: Bell },
+  { label: 'Alertas', to: '/notificacoes', icon: Bell },
 ];
 
 function MemberMobileBottomNav() {
