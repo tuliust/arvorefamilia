@@ -418,6 +418,7 @@ function FamilyGroup({
   columns = 'double',
   cardVariant = 'default',
   maxCollapsedItems = 4,
+  topConnector = true,
   bottomConnector = false,
 }: {
   id: string;
@@ -429,6 +430,7 @@ function FamilyGroup({
   columns?: GroupColumns;
   cardVariant?: CardVariant;
   maxCollapsedItems?: number;
+  topConnector?: boolean;
   bottomConnector?: boolean;
 }) {
   if (people.length === 0) return null;
@@ -436,8 +438,14 @@ function FamilyGroup({
   const usePetCards = cardVariant === 'pet';
 
   return (
-    <section className={bottomConnector ? 'relative pb-9 pt-9' : 'relative pt-9'}>
-      <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+    <section className={[
+      'relative',
+      topConnector ? 'pt-9' : 'pt-0',
+      bottomConnector ? 'pb-9' : 'pb-0',
+    ].join(' ')}>
+      {topConnector && (
+        <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+      )}
       <div className={usePetCards
         ? 'relative z-10 rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
         : 'relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm'}
@@ -487,6 +495,7 @@ function VerticalRelativeScreen({
   columns,
   maxCollapsedItems,
   connectHorizontal,
+  bottomConnector = true,
 }: {
   title: string;
   people: Pessoa[];
@@ -497,10 +506,10 @@ function VerticalRelativeScreen({
   columns: GroupColumns;
   maxCollapsedItems: number;
   connectHorizontal?: 'left' | 'right';
+  bottomConnector?: boolean;
 }) {
   return (
     <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
       {connectHorizontal && (
         <div className={[
           'pointer-events-none absolute top-[92px] z-0 h-px bg-cyan-600',
@@ -518,7 +527,7 @@ function VerticalRelativeScreen({
           columns={columns}
           cardVariant={columns === 'double' ? 'sibling' : 'mini'}
           maxCollapsedItems={maxCollapsedItems}
-          bottomConnector
+          bottomConnector={bottomConnector}
         />
       </div>
     </div>
@@ -554,10 +563,8 @@ function AncestorGroupsScreen({
 
   return (
     <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
       <div className="relative z-10 mx-auto mt-4 w-full max-w-[360px]">
-        <section className="relative pb-9 pt-9">
-          <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+        <section className="relative pb-9 pt-0">
           <div className="relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
             <h2 className="mb-2 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">
               {title}
@@ -656,6 +663,7 @@ function ParentBranchSwipeScreen({
           onPersonClick={onPersonClick}
           columns="triple"
           maxCollapsedItems={9}
+          bottomConnector={false}
         />
       </div>
     </div>
