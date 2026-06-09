@@ -32,8 +32,6 @@ interface OrthogonalEdgeData {
 }
 
 const MOBILE_DIRECT_LOWER_EDGE_IDS = new Set([
-  'direct-central-to-siblings-group',
-  'direct-central-to-spouse-group',
   'direct-central-to-children-group',
   'direct-central-to-pets-group',
   'direct-group-filhos-to-netos',
@@ -58,7 +56,8 @@ function shouldSuppressMobileLowerEdge(id: string) {
   if (MOBILE_DIRECT_LOWER_EDGE_IDS.has(id)) return true;
 
   return (
-    (id.startsWith('direct-central-to-') && id.endsWith('-group')) ||
+    id === 'direct-central-to-children-group' ||
+    id === 'direct-central-to-pets-group' ||
     id === 'direct-group-filhos-to-netos' ||
     id === 'direct-group-irmaos-to-sobrinhos' ||
     id.startsWith('direct-spouse-to-') ||
