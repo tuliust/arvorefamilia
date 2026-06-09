@@ -178,7 +178,7 @@ export function PersonEventsEditor({ eventos, onChange, readOnly = false }: Pers
 
       <Button type="button" variant="outline" onClick={addEvent}>
         <Plus className="mr-2 h-4 w-4" />
-        Adicionar evento
+        Adicionar Evento
       </Button>
     </div>
   );
