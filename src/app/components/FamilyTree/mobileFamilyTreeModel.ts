@@ -33,6 +33,7 @@ export interface MobileFamilyTreeModel {
   nephews: Pessoa[];
   children: Pessoa[];
   pets: Pessoa[];
+  grandchildren: Pessoa[];
   paternal: MobileFamilyBranch;
   maternal: MobileFamilyBranch;
 }
@@ -196,6 +197,7 @@ export function buildMobileFamilyTreeModel(
       nephews: [],
       children: [],
       pets: [],
+      grandchildren: [],
       paternal: buildBranch(undefined, undefined, index, peopleById),
       maternal: buildBranch(undefined, undefined, index, peopleById),
     };
@@ -207,6 +209,13 @@ export function buildMobileFamilyTreeModel(
     ?? parents.find((personId) => personId !== fatherId);
   const siblingIds = findSiblings(central.id, index, peopleById);
   const childIds = findChildren(central.id, index, peopleById);
+  const humanChildIds = toPeople(childIds, peopleById)
+    .filter(isHumanFamilyMember)
+    .map((person) => person.id);
+  const grandchildIds = sortIds(
+    humanChildIds.flatMap((personId) => findChildren(personId, index, peopleById)),
+    peopleById,
+  );
 
   return {
     central,
@@ -218,8 +227,9 @@ export function buildMobileFamilyTreeModel(
       sortIds(siblingIds.flatMap((personId) => findChildren(personId, index, peopleById)), peopleById),
       peopleById,
     ),
-    children: toPeople(childIds, peopleById).filter(isHumanFamilyMember),
+    children: toPeople(humanChildIds, peopleById),
     pets: toPeople(childIds, peopleById).filter(isPetFamilyMember),
+    grandchildren: toPeople(grandchildIds, peopleById).filter(isHumanFamilyMember),
     paternal: buildBranch(fatherId, motherId, index, peopleById),
     maternal: buildBranch(motherId, fatherId, index, peopleById),
   };
