@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { BookOpen, CalendarDays, FileText, HelpCircle, MessageCircle, Plus, Search, Tags, X } from 'lucide-react';
+import { BookOpen, CalendarDays, FileText, HelpCircle, MessageCircle, Plus, Search, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -175,6 +175,9 @@ export function ForumHome() {
   );
 
   const gruposCategorias = useMemo(() => buildForumCategoryGroups(categorias), [categorias]);
+  const activeCategoryLabel = categoriaId === 'todas'
+    ? 'Todas'
+    : gruposCategorias.find((grupo) => grupo.key === categoriaId)?.label ?? 'Todas';
 
   const limparFiltros = () => {
     setBusca('');
@@ -272,13 +275,12 @@ export function ForumHome() {
               <Input
                 value={busca}
                 onChange={(event) => setBusca(event.target.value)}
-                placeholder="Buscar por termo"
+                placeholder="Pesquise aqui..."
                 className="pl-9"
               />
             </label>
 
             <label className="relative block min-w-0">
-              <Tags className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
               <select
                 value={categoriaId}
                 onChange={(event) => setCategoriaId(event.target.value as ForumCategoryFilterValue)}
@@ -286,13 +288,16 @@ export function ForumHome() {
                 aria-label="Filtrar por categoria"
                 title="Categorias"
               >
-                <option value="todas">Todas as categorias</option>
+                <option value="todas">Todas</option>
                 {gruposCategorias.map((grupo) => (
                   <option key={grupo.key} value={grupo.key}>
                     {grupo.label}
                   </option>
                 ))}
               </select>
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center px-2 text-sm font-medium text-gray-900 md:hidden">
+                {activeCategoryLabel}
+              </span>
             </label>
 
             <Button
