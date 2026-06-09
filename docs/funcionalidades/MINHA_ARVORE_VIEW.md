@@ -1,9 +1,9 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.  
-> Status: revisado após frente mobile de 2026-06-08.
+> Status: revisado após ajustes de largura dos cards centrais, grupos, labels e âncoras, com anti-regressão para Genealogia/Visão Completa.
 
 ## 1. Função deste documento
 
@@ -19,6 +19,8 @@ Use este arquivo para manter:
 - viewport, pan, zoom e scroll;
 - distribuição da pessoa central e dos grupos diretos;
 - regras de filtros diretos;
+- largura e alinhamento dos cards da área central;
+- group boxes, labels e âncoras dos grupos;
 - integração com painel lateral, legenda e ações;
 - controles mobile da árvore;
 - anti-regressões específicas da view direta.
@@ -33,6 +35,7 @@ Não use este documento para detalhar:
 | exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
 | componentes | `docs/GUIA_COMPONENTES.md` |
 | UX geral | `docs/GUIA_UX_LAYOUT.md` |
+| Genealogia e Visão Completa | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
 
 ---
 
@@ -59,6 +62,8 @@ Ela renderiza uma visão individual da pessoa central, com:
 - ações de exportação pelo painel lateral no desktop;
 - painel compacto de controles no mobile.
 
+A área central da Minha Árvore possui ajuste visual próprio: os cards de parentes diretos centrais e os grupos correspondentes são mais largos do que o padrão compacto original, sem alterar o card central nem as views de Genealogia/Visão Completa.
+
 ---
 
 ## 3. Arquivos principais
@@ -73,6 +78,7 @@ Ela renderiza uma visão individual da pessoa central, com:
 | Controles mobile da árvore | `src/app/components/FamilyTree/MobileTreeControlsPortal.tsx` |
 | Estilos dos controles mobile | `src/styles/mobile-tree-controls.css` |
 | Layout direto | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
+| Nodes customizados e ajuste de largura visual | `src/app/components/FamilyTree/nodeTypes.ts` |
 | Cards de pessoa | `src/app/components/FamilyTree/PersonNode.tsx` |
 | Painel especial da pessoa central | `src/app/components/FamilyTree/CentralPersonFocusPanel.tsx` |
 | Nó de relacionamento conjugal | `src/app/components/FamilyTree/MarriageNode.tsx` |
@@ -93,10 +99,11 @@ A view usa o mesmo shell das rotas de árvore:
 
 Regras:
 
-- ajustes deste documento devem ser condicionados a `viewMode === 'minha-arvore'`;
+- ajustes deste documento devem ser condicionados a `viewMode === 'minha-arvore'` ou a sinais equivalentes de layout direto;
 - não aplicar ajustes da view direta em `genealogia` ou `visao-completa` sem validação específica;
 - trocar view deve usar helpers de `treeViewMode.ts`;
-- search params, como `?pessoa=...`, devem ser preservados na troca de view.
+- search params, como `?pessoa=...`, devem ser preservados na troca de view;
+- alterações em `nodeTypes.ts` precisam ser validadas nas três rotas.
 
 ---
 
@@ -146,7 +153,8 @@ Regras:
 
 - a pessoa central deve permanecer visível mesmo quando filtros por status ocultam outras pessoas;
 - em `/minha-arvore`, `isSelected` e `isCentralPerson` são aplicados apenas para essa view;
-- quando houver somente a pessoa central real renderizada, o componente pode usar `CentralPersonFocusPanel`.
+- quando houver somente a pessoa central real renderizada, o componente pode usar `CentralPersonFocusPanel`;
+- o card central da pessoa foco não deve receber a ampliação visual aplicada a pai, mãe, cônjuge, irmãos, descendentes e pets.
 
 ---
 
@@ -223,11 +231,92 @@ Regras:
 - labels de grupo podem existir;
 - group boxes e anchors não devem comandar o zoom inicial;
 - alterações em constantes de posição devem ser validadas em desktop e mobile;
-- cards diretos devem preservar legibilidade em torno de `340 × 136`, salvo decisão explícita de redesign.
+- cards diretos devem preservar legibilidade;
+- a ampliação atual dos cards centrais é uma decisão de UI específica da Minha Árvore, não um novo padrão global de cards.
 
 ---
 
-## 9. Viewport, pan e zoom
+## 9. Largura dos cards da área central
+
+A view direta possui ajuste visual específico em `nodeTypes.ts` para aumentar a largura de cards centrais compactos.
+
+Escopo da ampliação:
+
+| Grupo/relação | Deve ampliar? |
+|---|---|
+| Pai | Sim |
+| Mãe | Sim |
+| Irmãos | Sim |
+| Sobrinhos | Sim |
+| Cônjuge | Sim |
+| Filhos | Sim |
+| Netos | Sim |
+| Pets | Sim |
+| Pessoa central | Não |
+| Avós, bisavós, tataravós | Não |
+| Tios e primos laterais | Não |
+| Genealogia/Visão Completa | Não |
+
+Regra técnica consolidada:
+
+```txt
+A ampliação deve ser restrita aos cards compactos da área central da Minha Árvore.
+```
+
+Comportamento visual:
+
+- cards à esquerda do eixo central podem crescer em direção ao centro pela direita;
+- cards à direita do eixo central podem crescer em direção ao centro pela esquerda;
+- o card central da pessoa foco mantém seu padrão;
+- os grupos laterais preservam largura original;
+- a ampliação não deve contaminar `/genealogia` e `/visao-completa`.
+
+Atenção:
+
+- se `CENTRAL_AREA_CARD_EXTRA_WIDTH` for alterado, revisar também group boxes, labels e anchors;
+- se `DIRECT_FAMILY_LOGICAL_CENTER_X` for alterado, validar lado de crescimento dos cards;
+- se a largura-base dos cards mudar, revisar o critério que impede o efeito colateral em Genealogia/Visão Completa.
+
+---
+
+## 10. Grupos, labels e anchors da área central
+
+Após a ampliação dos cards, os grupos visuais também devem acompanhar a nova largura.
+
+Grupos centrais ampliados:
+
+```txt
+PAI
+MÃE
+IRMÃOS
+SOBRINHOS
+CÔNJUGE
+FILHOS
+NETOS
+PETS
+```
+
+Regras:
+
+- `directFamilyGroupBoxNode` deve aumentar a largura dos grupos centrais;
+- grupos do lado direito devem deslocar visualmente para preservar crescimento em direção ao centro;
+- labels (`directFamilyLabelNode`) devem permanecer centralizadas no centro visual do grupo ampliado;
+- anchors invisíveis (`directFamilyAnchorNode`) devem acompanhar bordas e centros visuais dos grupos;
+- linhas devem conectar as bordas/centros corretos após o aumento;
+- grupos laterais de avós, bisavós, tios e primos não devem ser deslocados por esse ajuste.
+
+Checklist visual:
+
+- label `PAI` centralizada dentro do grupo do pai;
+- label `MÃE` centralizada dentro do grupo da mãe;
+- label `CÔNJUGE` centralizada no grupo do cônjuge;
+- linhas parentais e descendentes tocam as bordas/âncoras corretas;
+- não há linha conectando ponto antigo após aumento do grupo;
+- pan/zoom não usa group box como referência principal de bounds.
+
+---
+
+## 11. Viewport, pan e zoom
 
 `FamilyTree.tsx` calcula bounds e viewport a partir dos nós renderizados.
 
@@ -260,11 +349,12 @@ Não fazer:
 - reposicionar `.react-flow__viewport` com `transform`;
 - usar `top` negativo para corrigir corte;
 - usar CSS global para alterar bounds;
-- alterar zoom da Genealogia ao corrigir a Minha Árvore.
+- alterar zoom da Genealogia ao corrigir a Minha Árvore;
+- incluir labels/group boxes como principal referência de fit inicial.
 
 ---
 
-## 10. Título fixo
+## 12. Título fixo
 
 Em `/minha-arvore`, o título é:
 
@@ -283,7 +373,7 @@ Regras:
 
 ---
 
-## 11. Linhas e relacionamento conjugal
+## 13. Linhas e relacionamento conjugal
 
 A view direta recebe:
 
@@ -301,11 +391,32 @@ Regras:
 - destaque visual só altera estilo de linhas visíveis;
 - linha oculta por filtro permanece oculta mesmo com destaque ativo;
 - o nó conjugal usa `MarriageNode` e abre `ViewMarriageModal`;
-- a borda/anel azul duplicado do card principal não deve voltar no mobile.
+- a borda/anel azul duplicado do card principal não deve voltar no mobile;
+- após alteração de largura de grupos, validar que as linhas conectam bordas/anchors atuais, não coordenadas antigas.
 
 ---
 
-## 12. Painel lateral
+## 14. Modal de relacionamento conjugal
+
+O clique no nó conjugal abre `ViewMarriageModal`.
+
+Regras documentais relacionadas:
+
+- regras de tempo verbal e campos do modal ficam em `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`;
+- componentes e responsabilidades ficam em `docs/GUIA_COMPONENTES.md`;
+- troubleshooting fica em `docs/GUIA_CORRECAO_ERROS.md`.
+
+Comportamento consolidado:
+
+- cabeçalho com ícone de coração, título e botão fechar na mesma linha;
+- frase usa “são casados” quando relacionamento está ativo e ambos vivos;
+- frase usa “foram casados” quando há separação/fim, `ativo === false`, subtipo separado ou falecimento;
+- **Inserir Informações** abre formulário textual;
+- **+** em Arquivos Históricos abre upload de arquivo do relacionamento.
+
+---
+
+## 15. Painel lateral
 
 No desktop, a sidebar exibe:
 
@@ -330,7 +441,7 @@ No mobile:
 
 ---
 
-## 13. Controles mobile da árvore
+## 16. Controles mobile da árvore
 
 A frente mobile adicionou um painel compacto de controles por portal.
 
@@ -373,15 +484,9 @@ Regras:
 - em `/genealogia` e `/visao-completa`, os chips continuam sendo a navegação primária por geração;
 - a ação **Seleção** no mobile deve ser tratada com cuidado porque a seleção manual de área é uma experiência sensível em telas pequenas.
 
-Ponto técnico de atenção:
-
-```txt
-Se a exportação mobile usar captura direta própria, manter documentação alinhada em docs/funcionalidades/EXPORTACAO_ARVORE.md.
-```
-
 ---
 
-## 14. Paletas
+## 17. Paletas
 
 A view direta respeita as paletas globais da árvore:
 
@@ -401,7 +506,7 @@ Regras:
 
 ---
 
-## 15. Exportação
+## 18. Exportação
 
 A exportação usa ações expostas por `FamilyTreeActions`:
 
@@ -421,7 +526,7 @@ Regras:
 
 ---
 
-## 16. QA mínimo
+## 19. QA mínimo
 
 Validar após alteração em `/minha-arvore`:
 
@@ -430,6 +535,11 @@ Validar após alteração em `/minha-arvore`:
 - header sem scroll externo;
 - pan/zoom interno funcional;
 - pessoa central visível;
+- card central sem ampliação indevida;
+- cards centrais diretos com largura ampliada;
+- grupos centrais acompanhando largura dos cards;
+- labels dos grupos centralizadas;
+- linhas conectando bordas/âncoras corretas dos grupos;
 - cônjuge abre modal;
 - filtros de grupos ocultam cards corretos;
 - filtros de linhas não removem cards;
@@ -438,15 +548,18 @@ Validar após alteração em `/minha-arvore`:
 - controles mobile aparecem apenas nas rotas da árvore;
 - botão de ocultar/exibir setas funciona;
 - exportação continua funcionando;
-- troca para `/genealogia` e `/visao-completa` sem regressão.
+- troca para `/genealogia` e `/visao-completa` sem regressão de largura.
 
 ---
 
-## 17. Anti-regressões
+## 20. Anti-regressões
 
 Não fazer:
 
 - misturar regras de `minha-arvore` com `genealogia`;
+- aplicar largura ampliada em `/genealogia` ou `/visao-completa`;
+- aplicar aumento visual no card central da pessoa foco;
+- ampliar grupos laterais de avós, bisavós, tios ou primos por acidente;
 - persistir inferência visual no Supabase;
 - mover título para dentro do layout;
 - incluir anchors/group boxes no zoom visual principal;
@@ -455,4 +568,5 @@ Não fazer:
 - criar migration para ajuste visual;
 - alterar RLS/Storage/Auth para corrigir problema de layout;
 - criar novo controle mobile fora do portal sem remover o anterior;
-- deixar controles fixos competindo com navegação inferior mobile.
+- deixar controles fixos competindo com navegação inferior mobile;
+- corrigir conexão de linha apenas no SVG sem revisar anchors dos grupos.

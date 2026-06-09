@@ -1,6 +1,6 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`  
 > Tipo: documentação operacional.
 
@@ -215,13 +215,14 @@ Fluxo de investigação:
 4. testar novamente;
 5. evitar alterar frontend para contornar cache temporário.
 
-Exemplo conhecido:
+Exemplos conhecidos:
 
 ```txt
 public.arquivos_historicos.categoria_evento
+public.admin_reset_person_profile(target_pessoa_id uuid)
 ```
 
-Se a migration já foi aplicada, não remover `categoria_evento` do payload apenas para mascarar cache/ambiente atrasado.
+Se a migration já foi aplicada, não remover `categoria_evento` do payload nem alterar o frontend para mascarar cache/ambiente atrasado. Para RPCs, confirmar assinatura, `grant execute` e recarregamento do schema cache.
 
 ---
 
@@ -318,6 +319,26 @@ where table_schema = 'public'
   )
 order by column_name;
 ```
+
+---
+
+### `20260609193000_ensure_admin_reset_person_profile.sql`
+
+Escopo:
+
+- reforça de forma idempotente a criação da RPC `admin_reset_person_profile(target_pessoa_id uuid)`;
+- reaplica defaults `true` de privacidade/contato em `pessoas`;
+- concede `grant execute` para `authenticated`;
+- executa `notify pgrst, 'reload schema';` para forçar recarregamento do schema cache do PostgREST.
+
+Quando usar/validar:
+
+- erro `PGRST202` ao chamar `rpc('admin_reset_person_profile')`;
+- mensagem `Could not find the function public.admin_reset_person_profile(target_pessoa_id) in the schema cache`;
+- ambiente remoto sem a RPC apesar de o frontend já chamar a função;
+- suspeita de schema cache desatualizado após deploy/migration.
+
+Regra: essa migration não substitui auditoria do ambiente. Confirmar o alvo do Supabase antes de aplicar `supabase db push`.
 
 ---
 
@@ -536,7 +557,7 @@ Telas de QA conforme migration:
 |---|---|
 | Arquivos históricos | perfil de pessoa, `/minha-arvore/editar`, modal conjugal |
 | Vínculo admin usuário-pessoa | `/admin/pessoas/:id/editar` |
-| Reset de perfil | `/admin/pessoas` e `/pessoa/:id` |
+| Reset de perfil/RPC ausente | `/admin/pessoas` e `/pessoa/:id`; validar também schema cache/PostgREST |
 | Sugestões de perfil | `/pessoa/:id`, modal conjugal, `/admin/solicitacoes-vinculos` |
 | Fórum/reação única | `/forum/novo`, `/forum/topico/:id` |
 | Notificações | `/notificacoes`, `/ajustar-notificacoes`, `/admin/notificacoes` |
@@ -608,11 +629,16 @@ Verificar:
 Verificar:
 
 - migration `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql`;
+- migration `20260609193000_ensure_admin_reset_person_profile.sql`;
 - RPC `admin_reset_person_profile`;
+- assinatura `target_pessoa_id uuid`;
+- `grant execute` para `authenticated`;
 - usuário logado é admin;
 - `is_admin_user` retorna verdadeiro;
 - schema cache;
 - erro específico em insights, favoritos ou preferências.
+
+Se o erro for `PGRST202` ou `Could not find the function public.admin_reset_person_profile(target_pessoa_id)`, tratar como migration ausente, ambiente remoto divergente ou schema cache desatualizado. Não alterar o frontend para contornar a ausência da RPC.
 
 ### Sugestão de perfil não aparece no admin
 

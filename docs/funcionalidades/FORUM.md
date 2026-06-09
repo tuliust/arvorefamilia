@@ -1,9 +1,9 @@
 # Fórum
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/funcionalidades/FORUM.md`  
 > Tipo: documentação funcional e técnica do módulo de fórum.  
-> Status: revisado na auditoria final da documentação.
+> Status: revisado após remoção de filtros tipo/status, remoção do campo manual de pessoas relacionadas e padronização das categorias em cards.
 
 ---
 
@@ -18,7 +18,7 @@ Rotas:
 | `/forum` | `MemberRoute` | Lista tópicos, categorias e atalhos. |
 | `/forum/novo` | `MemberRoute` | Criação de nova publicação. |
 | `/forum/topico/:id` | `MemberRoute` | Visualização, respostas, comentários, favoritos e reações. |
-| `/forum/topico/:id/editar` | `MemberRoute` + autor/admin | Edição de tópico existente. |
+| `/forum/topico/:id/editar` | `MemberRoute` + autor/admin | Edição de tópico existente, com categorias em cards e sem campo manual de pessoa relacionada. |
 
 Este arquivo não substitui:
 
@@ -80,7 +80,39 @@ Regras:
 
 ---
 
-## 4. Criação de tópico — `/forum/novo`
+## 4. Listagem do fórum — `/forum`
+
+Arquivo principal:
+
+```txt
+src/app/pages/forum/ForumHome.tsx
+```
+
+A listagem do fórum exibe busca, filtro por categoria e ação para criação de tópico.
+
+Campos/filtros visíveis:
+
+- busca textual por termo;
+- dropdown **Todas as categorias**;
+- botão compacto apenas com ícone para limpar filtros;
+- botão/atalho para criar novo tópico, conforme header da página.
+
+Filtros removidos da UI atual:
+
+- dropdown de tipo;
+- dropdown de status.
+
+Regras:
+
+- tipo e status continuam podendo existir como campos técnicos/legados em `forum_topicos`, mas não devem voltar como filtros visíveis sem decisão explícita de produto;
+- o botão de limpar filtros deve resetar busca e categoria;
+- o botão de limpar filtros deve usar `aria-label`/`title`, pois não possui texto visível;
+- a busca e a categoria devem funcionar de forma independente;
+- a remoção dos filtros visuais não altera RLS, service ou schema.
+
+---
+
+## 5. Criação de tópico — `/forum/novo`
 
 Arquivo principal:
 
@@ -91,10 +123,13 @@ src/app/pages/forum/ForumNovoTopico.tsx
 Campos visíveis:
 
 - Título;
-- Categoria;
-- Pessoas Relacionadas;
+- Categoria em cards;
 - Conteúdo;
 - botão **Publicar**.
+
+Campo removido da UI atual:
+
+- **Pessoas Relacionadas** como dropdown manual.
 
 Campo técnico não exibido:
 
@@ -102,7 +137,7 @@ Campo técnico não exibido:
 |---|---|
 | `tipo` | `discussao` |
 
-### 4.1 Categorias
+### 5.1 Categorias
 
 Categorias são exibidas como botões, não como dropdown.
 
@@ -112,6 +147,7 @@ Regras:
 - `aria-pressed`;
 - ícone semântico por slug/nome;
 - grid responsivo;
+- em desktop amplo, as 5 categorias devem ficar em uma única linha (`lg:grid-cols-5` ou equivalente);
 - estado visual diferenciado para selecionada;
 - texto com quebra controlada.
 
@@ -126,22 +162,20 @@ Regras:
 | família/pessoa | `UsersRound` |
 | fallback | `MessageCircle` |
 
-### 4.2 Pessoas relacionadas
+### 5.2 Pessoas relacionadas
 
-O campo **Pessoas Relacionadas** é um dropdown de seleção múltipla.
+O campo manual **Pessoas Relacionadas** não aparece mais em `/forum/novo` nem em `/forum/topico/:id/editar`.
 
-Regras:
+Modelo atual:
 
-- botão abre/fecha lista;
-- primeira linha do dropdown é busca;
-- busca filtra pelo nome;
-- seleção múltipla é preservada;
-- chips exibem selecionados;
-- clique fora fecha o dropdown;
-- vínculos são persistidos em `forum_topico_pessoas`;
-- falha ao vincular pessoas não deve apagar o tópico já criado.
+- pessoas são relacionadas principalmente por menções no conteúdo;
+- o usuário digita `@` para localizar e inserir uma pessoa;
+- ao publicar ou salvar, menções compatíveis são varridas e vinculadas em `forum_topico_pessoas`;
+- vínculos já existentes em tópicos legados podem continuar sendo lidos pela visualização;
+- falha ao vincular pessoas não deve apagar o tópico já criado;
+- não reintroduzir dropdown manual sem decisão explícita de produto.
 
-### 4.3 Menções com `@`
+### 5.3 Menções com `@`
 
 O conteúdo aceita menções no padrão:
 
@@ -156,9 +190,9 @@ Comportamento atual:
 - `Enter` insere menção;
 - `Escape` fecha;
 - selecionar pessoa adiciona `@Nome Completo` no texto;
-- a pessoa mencionada também é adicionada a `Pessoas Relacionadas`;
+- a pessoa mencionada também entra no conjunto técnico de pessoas vinculadas ao tópico;
 - ao publicar, o conteúdo é varrido para identificar menções textuais compatíveis;
-- menções e pessoas relacionadas são deduplicadas.
+- menções e vínculos técnicos em `forum_topico_pessoas` são deduplicados.
 
 Aviso exibido acima do campo de conteúdo:
 
@@ -168,7 +202,7 @@ Digite @ para marcar alguém na publicação
 
 ---
 
-## 5. Visualização de tópico — `/forum/topico/:id`
+## 6. Visualização de tópico — `/forum/topico/:id`
 
 Arquivo principal:
 
@@ -262,7 +296,7 @@ Regras:
 
 ---
 
-## 6. Respostas e comentários
+## 7. Respostas e comentários
 
 ### 6.1 Respostas
 
@@ -287,7 +321,7 @@ Regras:
 
 ---
 
-## 7. Reações
+## 8. Reações
 
 Arquivos principais:
 
@@ -366,7 +400,7 @@ Resultado esperado: zero linhas.
 
 ---
 
-## 8. Notificações de fórum
+## 9. Notificações de fórum
 
 Gatilhos atuais:
 
@@ -407,7 +441,7 @@ Mensagens atuais:
 
 ---
 
-## 9. Favoritos
+## 10. Favoritos
 
 A visualização de tópico inclui `ForumTopicFavoriteButton`.
 
@@ -426,7 +460,7 @@ Regras:
 
 ---
 
-## 10. Services
+## 11. Services
 
 Arquivo:
 
@@ -482,20 +516,37 @@ Regras:
 
 ---
 
-## 11. QA funcional
+## 12. QA funcional
+
+### `/forum`
+
+- busca por termo funciona;
+- dropdown de categoria funciona;
+- dropdowns de tipo/status não aparecem;
+- botão de limpar filtros aparece apenas com ícone e possui `aria-label`/`title`;
+- limpar filtros reseta busca e categoria.
 
 ### `/forum/novo`
 
 - campo `Tipo` não aparece;
-- categoria aparece como botões;
-- dropdown de pessoas abre e fecha ao clicar fora;
-- busca filtra pessoas;
-- seleção é preservada ao filtrar;
+- campo manual `Pessoas Relacionadas` não aparece;
+- categoria aparece como cards/botões;
+- em desktop, as 5 categorias ficam em uma linha;
 - aviso `Digite @ para marcar alguém na publicação` aparece;
 - `@` abre autocomplete;
-- menção insere nome e adiciona pessoa relacionada;
-- publicar com pessoa relacionada salva vínculo;
-- publicar sem pessoa relacionada funciona.
+- menção insere nome e gera vínculo técnico em `forum_topico_pessoas`;
+- publicar com menção salva vínculo;
+- publicar sem menção funciona.
+
+### `/forum/topico/:id/editar`
+
+- campo `Tipo` não aparece;
+- campo manual `Pessoas Relacionadas` não aparece;
+- categoria aparece como cards/botões;
+- em desktop, as 5 categorias ficam em uma linha;
+- conteúdo existente é preservado;
+- menções existentes continuam renderizando;
+- salvar preserva/atualiza vínculos técnicos derivados de menção.
 
 ### `/forum/topico/:id`
 
@@ -529,7 +580,7 @@ Regras:
 
 ---
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 ### Build falha com `Rose`
 
@@ -544,6 +595,17 @@ Verificar migration:
 ```
 
 e rodar a consulta de duplicidades em `forum_reacoes`.
+
+### Campo Pessoas Relacionadas voltou na criação/edição
+
+Verificar:
+
+- `ForumNovoTopico.tsx`;
+- `ForumEditarTopico.tsx`;
+- se algum merge reintroduziu dropdown manual;
+- se o vínculo está sendo feito por menção `@`.
+
+Regra: a relação manual por dropdown não faz parte da UI atual. A vinculação deve ser derivada de menções ou preservada como dado legado na visualização.
 
 ### Menção não vira link
 
@@ -566,7 +628,7 @@ Verificar:
 
 ---
 
-## 13. Segurança e anti-regressões
+## 14. Segurança e anti-regressões
 
 Não reintroduzir:
 
@@ -591,7 +653,7 @@ Preservar:
 
 ---
 
-## 14. Evoluções futuras
+## 15. Evoluções futuras
 
 Não bloqueiam o MVP:
 

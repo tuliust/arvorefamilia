@@ -1,9 +1,9 @@
 # Guia de implementações - Árvore Família
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir o estado implementado do MVP após frente mobile.
+> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de fórum, relacionamento conjugal, cache/deploy, reset de perfil e views da árvore.
 
 ## Objetivo
 
@@ -36,32 +36,33 @@ Use também:
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 | Estrutura de usuários, pessoas e banco | `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
 | Supabase, migrations e SQL legado | `docs/operacao/MIGRATIONS_SUPABASE.md` |
+| Deploy e cache | `docs/operacao/DEPLOYMENT.md` |
 | Funcionalidades específicas | `docs/funcionalidades/*.md` |
 
 ---
 
 ## 1. Estado consolidado do MVP
 
-As frentes principais do MVP estão implementadas no escopo atual. Pendências visuais e funcionais antigas foram removidas deste guia por já terem sido finalizadas/validadas. Novas divergências encontradas durante a revisão final devem ser registradas em `docs/PLANO_PROXIMOS_PASSOS.md`.
+As frentes principais do MVP estão implementadas no escopo atual. Pendências visuais e funcionais antigas foram removidas deste guia por já terem sido finalizadas/validadas. Novas divergências encontradas durante revisão ou QA devem ser registradas em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 | Frente | Estado atual | Observação de manutenção |
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
-| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. |
-| Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário e reset mobile de geração ativa por view. |
-| Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips e reset de geração ao alternar views. |
+| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. Cards e grupos centrais possuem largura ampliada controlada. |
+| Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
+| Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
-| Admin de pessoas | Implementado | Criação/edição, copiar ID e reset de perfil por RPC sem apagar relacionamentos. |
+| Admin de pessoas | Implementado | Criação/edição, copiar ID e reset de perfil por RPC sem apagar relacionamentos. Existe migration de reforço para garantir a RPC no Supabase remoto. |
 | Relacionamentos | Implementados | Admin altera dados reais; usuário comum envia solicitação/sugestão conforme permissão. |
-| Relacionamento conjugal | Implementado | Modal público, texto humano, dados de casamento/separação/viuvez e arquivos históricos vinculados ao relacionamento. |
-| Arquivos históricos | Implementados | Storage para novos arquivos, compatibilidade com base64 legado e categoria histórica. |
+| Relacionamento conjugal | Implementado | Modal público com texto humano, tempo verbal ativo/inativo, formulário de informações e arquivos históricos vinculados ao relacionamento. |
+| Arquivos históricos | Implementados | Storage para novos arquivos, compatibilidade com base64 legado, categoria histórica e categorias específicas por contexto. |
 | Eventos da vida / timeline | Implementados no escopo atual | Eventos derivados e manuais existem; título redundante embutido é ocultado em `/minha-arvore/editar`; upload por evento, privacidade por evento e PDF ficam como evolução futura. |
 | Astrologia/acontecimentos | Implementados no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin/server-side. |
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
-| Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. |
-| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`, mas UI real consolidada é favoritos de pessoa. Expansão para outras entidades fica pós-MVP. |
+| Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe e tutor de pet. |
+| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa e tópicos de fórum. Expansão para outras entidades deve ser estudada. |
 | Página de favoritos | Implementada | Lista, busca, filtros, abertura e remoção de favoritos. |
-| Fórum | Implementado | Categorias, tópicos, respostas, comentários, pessoas relacionadas, menções, avatares, badges e reações. |
+| Fórum | Implementado | Categorias, tópicos, respostas, comentários, menções, vínculos automáticos com pessoas mencionadas, avatares, badges e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
 | Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros e ajustes de mobile. |
@@ -69,6 +70,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`, incluindo exibição no menu mobile. |
 | Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido; exportação integral fica pós-MVP. |
+| Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
 
 ---
@@ -99,7 +101,7 @@ Stack em uso:
 - admin de pessoas;
 - admin de relacionamentos;
 - solicitações de vínculo/relacionamento;
-- sugestões de informações de perfil;
+- sugestões de informações de perfil e relacionamento conjugal;
 - arquivos históricos;
 - eventos da vida;
 - fórum;
@@ -110,7 +112,8 @@ Stack em uso:
 - grau de parentesco;
 - exportação de área da árvore;
 - paletas visuais da árvore;
-- responsividade mobile/tablet.
+- responsividade mobile/tablet;
+- fallback e cache de SPA.
 
 Regras de arquitetura:
 
@@ -118,6 +121,7 @@ Regras de arquitetura:
 - Scripts SQL soltos são históricos, diagnósticos ou operacionais.
 - Ajustes visuais não devem criar migration.
 - Mudanças de schema devem ser documentadas em `docs/operacao/MIGRATIONS_SUPABASE.md`.
+- Detalhes de deploy/cache pertencem a `docs/operacao/DEPLOYMENT.md`.
 - Detalhes de rotas/guards pertencem a `docs/arquitetura/ROTAS_E_GUARDS.md`.
 - Detalhes funcionais pertencem aos arquivos em `docs/funcionalidades/`.
 
@@ -216,7 +220,8 @@ Documentação detalhada:
 
 - `docs/GUIA_UX_LAYOUT.md`;
 - `docs/GUIA_COMPONENTES.md`;
-- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`.
+- `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
+- `docs/funcionalidades/GENEALOGIA_VIEW.md`.
 
 Arquivos principais:
 
@@ -308,10 +313,11 @@ Comportamento consolidado:
 - autocomplete de endereço usa Google Places quando houver chave configurada;
 - sem chave ou em caso de falha do Google, o campo permanece como input normal.
 
-Migration/RPC relacionada:
+Migrations/RPCs relacionadas:
 
 ```txt
 20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+20260609193000_ensure_admin_reset_person_profile.sql
 admin_reset_person_profile(target_pessoa_id uuid)
 20260608143000_create_person_profile_suggestions.sql
 ```
@@ -321,7 +327,8 @@ Regras anti-regressão:
 - usuário comum não deve alterar dado restrito diretamente;
 - reset administrativo não deve apagar relacionamentos;
 - dados sensíveis não devem ser expostos no perfil público;
-- geração de IA/insights não deve ocorrer automaticamente no frontend.
+- geração de IA/insights não deve ocorrer automaticamente no frontend;
+- erro `PGRST202` em RPC indica ambiente remoto/schema cache desalinhado, não deve ser mascarado no frontend.
 
 ---
 
@@ -342,7 +349,8 @@ Comportamento consolidado:
 - `data_falecimento` ou `local_falecimento` também indicam falecimento;
 - locais no Brasil usam padrão `Cidade/UF`;
 - locais no exterior usam `Cidade (País)`;
-- busca deve ignorar caixa e acentos.
+- busca deve ignorar caixa e acentos;
+- em relacionamento conjugal, falecimento de uma das pessoas força texto no passado.
 
 Migrations relacionadas:
 
@@ -443,7 +451,11 @@ Fora do MVP:
 
 ## 9. Arquivos históricos e Storage
 
-Documentação detalhada: `docs/operacao/STORAGE_MAINTENANCE.md`.
+Documentação detalhada:
+
+- `docs/operacao/STORAGE_MAINTENANCE.md`;
+- `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`;
+- `docs/GUIA_COMPONENTES.md`.
 
 Arquivos principais:
 
@@ -467,7 +479,8 @@ Comportamento consolidado:
 - áreas compactas podem usar botão `+` com `aria-label`;
 - arquivos existentes permitem editar título, ano, descrição e categoria histórica;
 - usuário comum visualiza arquivos conforme permissões;
-- admin gerencia arquivos via formulário/perfil.
+- admin gerencia arquivos via formulário/perfil;
+- `ArquivosHistoricos` aceita `eventCategoryOptions` para restringir categorias por contexto.
 
 Categoria histórica:
 
@@ -489,6 +502,14 @@ divorcio
 carreira_profissional
 mudanca_cidade
 certidao_obito
+outro
+```
+
+No modal conjugal, categorias exibidas:
+
+```txt
+certidao_casamento
+divorcio
 outro
 ```
 
@@ -534,9 +555,12 @@ Comportamento consolidado:
 - relacionamento conjugal pode ter arquivos históricos próprios;
 - modal conjugal oculta IDs técnicos para usuário final;
 - texto público usa linguagem humana;
-- botão **Inserir Informações** respeita permissão:
-  - admin/responsável edita diretamente;
-  - usuário sem permissão envia sugestão para revisão admin.
+- o título do modal conjugal usa:
+  - “são casados” quando não há encerramento/separação, `ativo !== false`, subtipo não separado e ambos estão vivos;
+  - “foram casados” quando há separação/fim, `ativo === false`, subtipo separado ou pelo menos uma pessoa falecida;
+- botão **Inserir Informações** abre formulário textual com Informações, Data, Local e Outros;
+- botão **+** em Arquivos Históricos abre área de upload com Arquivo, Título, Descrição, Ano e Categoria;
+- categorias de arquivo histórico no contexto conjugal são Certidão de Casamento, Divórcio e Outro.
 
 Migration relacionada:
 
@@ -548,7 +572,8 @@ Regra anti-regressão:
 
 - usuário não-admin não deve alterar relacionamento real diretamente;
 - modal conjugal não deve salvar antes da ação principal do fluxo;
-- local inválido de casamento não deve impedir salvamento de dados pessoais.
+- local inválido de casamento não deve impedir salvamento de dados pessoais;
+- o botão **+** de Arquivos Históricos não deve abrir o modal de Inserir Informações.
 
 ---
 
@@ -568,6 +593,7 @@ Arquivos principais:
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/FamilyTree/buildTreeGraph.ts
+src/app/components/FamilyTree/nodeTypes.ts
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
@@ -598,6 +624,8 @@ Comportamento consolidado:
 - anel/botão conjugal aparece entre cônjuges e abre modal;
 - status visual do anel considera união ativa, separação/divórcio, viuvez ou indefinido;
 - `/minha-arvore` aplica ajustes visuais próprios sem contaminar Genealogia/Visão Completa;
+- cards centrais de pai, mãe, irmãos, sobrinhos, cônjuge, filhos, netos e pets possuem largura ampliada na Minha Árvore;
+- grupos, labels e anchors da área central acompanham a largura ampliada;
 - título da árvore é overlay único em `FamilyTree.tsx`;
 - Genealogia e Visão Completa não devem renderizar título duplicado;
 - pan/zoom interno do ReactFlow deve ser preservado;
@@ -614,6 +642,7 @@ Regras anti-regressão:
 - não salvar filtros visuais como regra de negócio;
 - não alterar nodes, edges, handles ou dimensões do botão conjugal sem QA visual;
 - manter diferenças intencionais entre `/minha-arvore` e views por gerações;
+- não permitir que largura ampliada da Minha Árvore afete `/genealogia` ou `/visao-completa`;
 - não duplicar controles mobile;
 - não permitir que `/visao-completa` herde geração ativa obsoleta de `/genealogia`.
 
@@ -648,15 +677,16 @@ Comportamento consolidado:
 
 ## 13. Favoritos
 
-Documentação detalhada futura deve ficar em arquivo próprio se a expansão for priorizada.
-
 Arquivos principais:
 
 ```txt
 src/app/services/favoritesService.ts
 src/app/components/favorites/FavoriteButton.tsx
+src/app/components/favorites/ForumTopicFavoriteButton.tsx
+src/app/components/favorites/HistoricalFileFavoriteButton.tsx
 src/app/pages/MeusFavoritos.tsx
 src/app/pages/PersonProfile.tsx
+src/app/pages/forum/ForumTopico.tsx
 ```
 
 Tipos previstos no código:
@@ -678,8 +708,10 @@ Estado consolidado:
 - serviço suporta favoritos por `entity_type`/`entity_id`;
 - metadados passam por sanitização para evitar dados sensíveis;
 - UI de favorito de pessoa está implementada;
+- tópico de fórum pode ser favoritado;
+- arquivo histórico pode ser favoritado quando componente exibe a ação;
 - `/meus-favoritos` possui listagem, busca, filtros e remoção;
-- expansão para outras entidades é pós-MVP e deve ser estudada antes de alterar UI ou schema.
+- expansão para outras entidades deve ser estudada antes de alterar UI ou schema.
 
 Regra anti-regressão:
 
@@ -746,10 +778,16 @@ src/app/types/index.ts
 Comportamento consolidado:
 
 - fórum possui categorias, tópicos, respostas, comentários, reações e denúncias;
+- `/forum` lista tópicos com busca, categoria e botão de limpar filtros;
+- filtros visuais de tipo e status foram removidos da home do fórum;
 - `/forum/novo` usa categoria por botões/cards de seleção única;
-- dropdown de pessoas relacionadas possui busca interna e fecha ao clicar fora;
+- em desktop, as 5 categorias aparecem em uma linha;
+- campo manual **Pessoas Relacionadas** foi removido de `/forum/novo`;
+- `/forum/topico/:id/editar` usa o mesmo padrão visual de cards de categoria;
+- campo manual **Pessoa relacionada** foi removido da edição;
 - conteúdo orienta uso de `@` para marcar pessoa;
-- pessoas relacionadas e mencionadas recebem notificação interna quando permitido;
+- pessoas mencionadas por `@` são vinculadas automaticamente e podem receber notificação interna;
+- dados legados de pessoa relacionada continuam preservados internamente quando existentes;
 - `/forum/topico/:id` usa badges pequenas/coloridas para categoria, tipo e status;
 - autores exibem avatar ou fallback por iniciais;
 - menções `@Nome Completo` são clicáveis para `/pessoa/:id`;
@@ -771,6 +809,7 @@ Migration relacionada:
 
 Regras anti-regressão:
 
+- não reintroduzir dropdown manual de Pessoas Relacionadas em criação/edição sem decisão de produto;
 - não trocar `Flower2` por ícone inexistente;
 - não remover constraint de unicidade de `forum_reacoes`;
 - não interromper criação de tópico/resposta/comentário por falha de notificação.
@@ -843,7 +882,35 @@ Ponto técnico:
 
 ---
 
-## 18. Banco, migrations e objetos legados
+## 18. Deploy, cache e recuperação de chunks
+
+Documentação detalhada: `docs/operacao/DEPLOYMENT.md` e `docs/GUIA_CORRECAO_ERROS.md`.
+
+Arquivos principais:
+
+```txt
+src/main.tsx
+vercel.json
+vite.config.ts
+```
+
+Comportamento consolidado:
+
+- SPA estática usa fallback para `index.html`;
+- `index.html` deve ser servido sem cache forte;
+- `/assets/*` pode usar cache longo por conter hash;
+- `src/main.tsx` captura erros de dynamic import e faz reload controlado;
+- erro de MIME `text/html` para `.js` geralmente indica HTML antigo apontando para chunk removido.
+
+Regra anti-regressão:
+
+- não cachear `index.html` como immutable;
+- não remover recuperação de chunk sem validar deploy real;
+- após alterações em lazy routes, testar `/forum`, `/minha-arvore`, `/genealogia` e `/visao-completa` em janela anônima.
+
+---
+
+## 19. Banco, migrations e objetos legados
 
 Documentação detalhada: `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
@@ -862,6 +929,7 @@ Migrations recentes relevantes:
 20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
 20260608143000_create_person_profile_suggestions.sql
 20260608180000_enforce_single_forum_reaction.sql
+20260609193000_ensure_admin_reset_person_profile.sql
 ```
 
 Objetos legados/compatibilidade:
@@ -873,7 +941,7 @@ Objetos legados/compatibilidade:
 
 ---
 
-## 19. Regras de segurança permanentes
+## 20. Regras de segurança permanentes
 
 Não deve acontecer:
 
@@ -891,11 +959,12 @@ Não deve acontecer:
 - RLS liberar escrita indevida;
 - título/subtítulo interno voltar a duplicar em Genealogia/Visão Completa;
 - legenda, overlays ou controles auxiliares aparecerem indevidamente na exportação;
-- filtros visuais serem persistidos como regra de negócio.
+- filtros visuais serem persistidos como regra de negócio;
+- cache de HTML antigo quebrar rotas lazy-loaded após deploy.
 
 ---
 
-## 20. Manutenção documental
+## 21. Manutenção documental
 
 Este guia deve permanecer como inventário consolidado.
 
@@ -910,6 +979,7 @@ Onde documentar:
 | UX, responsividade e layout | `docs/GUIA_UX_LAYOUT.md` |
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 | Schema, migrations e SQL legado | `docs/operacao/MIGRATIONS_SUPABASE.md` |
+| Deploy/cache | `docs/operacao/DEPLOYMENT.md` |
 | Erro, sintoma e correção | `docs/GUIA_CORRECAO_ERROS.md` |
 | Histórico de fase, diagnóstico ou QA antigo | `docs/historico/` |
 

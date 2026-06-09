@@ -1,9 +1,9 @@
 # Guia de correção de erros - Árvore Família
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/GUIA_CORRECAO_ERROS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para troubleshooting por sintoma.
+> Status: guia canônico revisado para troubleshooting por sintoma, incluindo cache de chunks dinâmicos e RPC ausente no Supabase.
 
 ## Objetivo
 
@@ -313,6 +313,43 @@ Sintomas comuns:
 | Search param `?pessoa=` some ao trocar view | helper de navegação em `Home.tsx`. |
 | 404 inesperado | `routes.tsx`, path digitado, lazy import. |
 
+### 4.1 Erro de chunk dinâmico ou MIME `text/html`
+
+Sintomas:
+
+```txt
+Failed to fetch dynamically imported module
+Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html"
+TypeError: Failed to fetch dynamically imported module
+```
+
+Causa provável:
+
+- `index.html` antigo no navegador aponta para asset com hash removido do deploy atual;
+- provedor serviu fallback `index.html` no lugar do `.js` inexistente;
+- cache forte aplicado ao HTML da SPA;
+- navegação para rota lazy-loaded após novo deploy sem hard refresh.
+
+Arquivos prováveis:
+
+```txt
+src/main.tsx
+vercel.json
+vite.config.ts
+src/app/routes.tsx
+```
+
+Correção segura:
+
+1. validar se o arquivo `.js` citado na URL existe no deploy atual;
+2. conferir headers de cache do `index.html`;
+3. manter `/assets/*` com cache longo/imutável, mas evitar cache forte para HTML;
+4. preservar fallback SPA para rotas reais, sem mascarar assets inexistentes;
+5. implementar recuperação controlada em `src/main.tsx` para limpar cache e recarregar uma única vez;
+6. testar em janela anônima e hard refresh.
+
+Regra: não resolver esse erro editando rota funcional sem antes verificar cache/deploy/assets.
+
 ---
 
 ## 5. Árvore, viewport e React Flow
@@ -521,6 +558,7 @@ Investigar:
 ```txt
 admin_reset_person_profile
 20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+20260609193000_ensure_admin_reset_person_profile.sql
 dataService.ts
 ```
 
@@ -530,7 +568,43 @@ Regra crítica:
 - remove foto, insights derivados, favoritos da pessoa e reseta preferências/flags previstas;
 - executar apenas como admin.
 
-### 7.4 Autocomplete de endereço não funciona
+### 7.4 Reset de perfil retorna `PGRST202`
+
+Sintoma:
+
+```txt
+Could not find the function public.admin_reset_person_profile(target_pessoa_id) in the schema cache
+PGRST202
+```
+
+Investigar:
+
+```txt
+supabase/migrations/20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+supabase/migrations/20260609193000_ensure_admin_reset_person_profile.sql
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+Causas prováveis:
+
+- migration não aplicada no Supabase remoto;
+- schema cache do PostgREST desatualizado;
+- assinatura da RPC divergente;
+- `grant execute` ausente.
+
+Correção:
+
+1. confirmar o ambiente Supabase correto;
+2. aplicar migrations pendentes;
+3. validar que a função existe com assinatura `target_pessoa_id uuid`;
+4. recarregar schema cache;
+5. testar novamente o botão em `/admin/pessoas`.
+
+Não alterar o frontend para esconder o erro de RPC ausente.
+
+### 7.5 Autocomplete de endereço não funciona
+
+### 7.5 Autocomplete de endereço não funciona
 
 Arquivos:
 
@@ -571,12 +645,19 @@ Sintomas:
 | Modal mostra ID técnico | `ViewMarriageModal`. |
 | Texto público estranho | formatador de relacionamento conjugal. |
 | Usuário comum alterou relacionamento real | `permissionService`, `relationshipChangeRequestService`. |
-| Arquivo histórico do casamento não aparece | `relacionamento_id`, permissões e `ArquivosHistoricos`. |
+| Arquivo histórico do casamento não aparece | `relacionamento_id`, permissões, `readOnly` e `ArquivosHistoricos`. |
+| Botão `+` abre modal de Inserir Informações | `ViewMarriageModal`, prop `readOnly`, `onRequestAdd`. |
+| Botão `+` sumiu | `ArquivosHistoricos` recebendo `readOnly=true` ou relacionamento sem fluxo previsto. |
+| Modal secundário não fecha | propagação de evento entre `DialogContent` e modal pai. |
+| Texto mostra `foram casados` indevidamente | regra de `ativo`, `data_separacao`, `data_fim`, subtipo e falecimento. |
 | Dados conjugais somem ao salvar | `MarriageDetailsEditor`, `marriageForms`, payload do formulário. |
 
 Regra:
 
-- usuário comum solicita alteração;
+- **Inserir Informações** abre sugestão textual com Informações, Data, Local e Outros;
+- `+` em **Arquivos Históricos** abre upload com Arquivo, Título, Descrição, Ano e Categoria;
+- categorias conjugais permitidas: Certidão de Casamento, Divórcio e Outro;
+- usuário comum solicita alteração textual;
 - admin/responsável edita conforme permissão;
 - observações internas não aparecem para usuário final.
 
@@ -634,8 +715,10 @@ Sintomas:
 
 | Sintoma | Investigar |
 |---|---|
-| Dropdown de tipo voltou | `ForumNovoTopico.tsx`. |
+| Dropdown de tipo voltou | `ForumNovoTopico.tsx`, `ForumEditarTopico.tsx`. |
+| Campo Pessoas Relacionadas voltou | `ForumNovoTopico.tsx`, `ForumEditarTopico.tsx`; usar menções `@` no lugar. |
 | Categoria não seleciona | `categoriaId`, `listarCategoriasForum`. |
+| 5 categorias quebram linha no desktop | grid de categorias; validar `lg:grid-cols-5` ou equivalente. |
 | Cards quebram no mobile | grid, `min-w-0`, `break-words`. |
 
 Regra:
@@ -825,7 +908,8 @@ Sintomas:
 | Sintoma | Investigar |
 |---|---|
 | Campo enviado não existe | migration ausente no remoto. |
-| RPC não existe | migration não aplicada ou search path errado. |
+| RPC não existe | migration não aplicada, search path errado, grants ausentes ou schema cache desatualizado. |
+| `PGRST202` em RPC | função ausente no schema cache; validar migration, assinatura, grants e `notify pgrst`. |
 | Usuário comum lê/escreve indevidamente | RLS/policies. |
 | Admin não consegue executar RPC | grants, `is_admin_user`, auth. |
 | `db push` quer aplicar alteração inesperada | migration list/diff antes de prosseguir. |

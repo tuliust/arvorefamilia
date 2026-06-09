@@ -1,9 +1,9 @@
 # Pessoas, perfil público e admin de pessoa
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`  
 > Tipo: documentação funcional específica  
-> Escopo: perfil de pessoa, administração de pessoas, edição pelo usuário, privacidade, vínculos, sugestões e relacionamento conjugal.
+> Escopo: perfil de pessoa, administração de pessoas, edição pelo usuário, privacidade, vínculos, sugestões, reset administrativo, arquivos históricos e relacionamento conjugal.
 
 ## 1. Função deste documento
 
@@ -58,7 +58,7 @@ Este documento não substitui:
 | Autocomplete de endereço | Implementado com fallback para input comum |
 | Eventos da vida | Implementados em `person_events` |
 | Arquivos históricos de pessoa | Implementados |
-| Arquivos históricos de relacionamento conjugal | Implementados para admin; sugestão para não-admin |
+| Arquivos históricos de relacionamento conjugal | Implementados no modal conjugal com upload direto pelo botão `+`; informações textuais usam sugestão administrativa |
 | Insights gerados por IA | Implementados como leitura pública de conteúdo persistido e geração explícita por admin |
 | Pets | Implementados como tipo semântico `humano_ou_pet` |
 
@@ -145,6 +145,7 @@ src/app/utils/buildPersonTimeline.ts
 20260522173000_fix_admin_list_profiles_for_linking_rpc.sql
 20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
 20260608143000_create_person_profile_suggestions.sql
+20260609193000_ensure_admin_reset_person_profile.sql
 ```
 
 ---
@@ -276,21 +277,35 @@ Regras:
 
 ### 7.2 Relacionamento conjugal
 
-No modal de relacionamento conjugal, **Inserir Informações** também cria sugestão quando não há fluxo direto de edição disponível.
+No modal de relacionamento conjugal, existem dois fluxos separados:
 
-Comportamento atual:
-
-| Situação | Comportamento |
+| Ação | Comportamento |
 |---|---|
-| Admin com relacionamento localizado | Pode usar o botão `+` em Arquivos Históricos para adicionar arquivo diretamente. |
-| Usuário não-admin ou sem fluxo direto no modal | Envia sugestão para revisão administrativa. |
-| Usuário não autenticado | Recebe aviso para entrar na conta. |
+| **Inserir Informações** | Abre modal de sugestão textual para revisão administrativa. |
+| **+** em **Arquivos Históricos** | Abre a área de upload do próprio componente de arquivos históricos. |
+
+O botão **Inserir Informações** deve abrir um modal secundário com os campos:
+
+- **Informações**;
+- **Data**;
+- **Local**;
+- **Outros**.
+
+Regras do modal secundário:
+
+- fechar por **X** ou **Cancelar** deve retornar ao modal conjugal principal;
+- clique/interação no modal secundário não deve fechar o modal pai;
+- tecla `Escape` deve fechar primeiro o modal secundário, quando ele estiver aberto;
+- sugestão enviada cria registro em `person_profile_suggestions`;
+- a sugestão não altera o relacionamento automaticamente.
 
 A sugestão inclui contexto textual com:
 
 - nomes do casal;
 - ID do relacionamento quando disponível;
 - indicação se foi enviada por usuário sem permissão direta ou por pessoa autorizada sem fluxo direto no modal.
+
+O botão **+** em **Arquivos Históricos** não deve abrir o modal de **Inserir Informações**. Ele deve abrir o formulário de upload de arquivo histórico.
 
 ---
 
@@ -424,11 +439,14 @@ RPC:
 public.admin_reset_person_profile(target_pessoa_id uuid)
 ```
 
-Migration:
+Migrations:
 
 ```txt
 20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+20260609193000_ensure_admin_reset_person_profile.sql
 ```
+
+A migration `20260609193000_ensure_admin_reset_person_profile.sql` é uma migration idempotente de reforço para ambientes em que a RPC não foi encontrada pelo PostgREST/schema cache. Ela recria/garante a função, aplica `grant execute` e força `notify pgrst, 'reload schema';`.
 
 ### 10.3 O que o reset faz
 
@@ -455,7 +473,31 @@ O reset não deve:
 - apagar redes sociais;
 - substituir uma auditoria de dados.
 
-### 10.5 Feedback
+### 10.5 Erro conhecido de schema cache/RPC ausente
+
+Sintoma:
+
+```txt
+Could not find the function public.admin_reset_person_profile(target_pessoa_id) in the schema cache
+PGRST202
+```
+
+Causa provável:
+
+- migration de RPC não aplicada no Supabase remoto;
+- schema cache do PostgREST desatualizado;
+- assinatura/grant da RPC divergente.
+
+Verificar:
+
+```txt
+20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
+20260609193000_ensure_admin_reset_person_profile.sql
+```
+
+Correção operacional: aplicar a migration pendente no ambiente correto e validar schema cache antes de alterar o frontend.
+
+### 10.6 Feedback
 
 Após sucesso, a UI informa quantos conteúdos gerados e favoritos foram removidos.
 
@@ -700,8 +742,10 @@ Comportamento:
 - preview de imagem/PDF quando possível;
 - edição de título, descrição, ano e categoria;
 - no perfil público, arquivos da pessoa são leitura;
-- no modal conjugal, admin pode salvar diretamente arquivos do relacionamento;
-- usuários sem permissão direta acionam sugestão quando tentam adicionar pelo modal conjugal.
+- no modal conjugal, o botão `+` abre a área de upload do próprio componente;
+- no modal conjugal, o upload deve coletar Arquivo, Título, Descrição, Ano e Categoria;
+- no contexto conjugal, as categorias devem ser restritas a Certidão de Casamento, Divórcio e Outro;
+- informações textuais sobre o relacionamento usam o botão **Inserir Informações**, não o botão de arquivo.
 
 Migration de categoria:
 
@@ -763,12 +807,13 @@ Comportamento:
 - abre ao clicar no anel/aliança conjugal da árvore;
 - exibe título **Relacionamento conjugal**;
 - mostra nomes/fotos/iniciais do casal;
-- usa headline humana, como `Fulana e Sicrano foram casados.`;
+- usa headline humana, como `Fulana e Sicrano são casados.` ou `Fulana e Sicrano foram casados.`;
 - exibe narrativa com data/local quando disponíveis;
 - não exibe ID técnico ao usuário final;
 - observações aparecem apenas para admin;
 - arquivos históricos do relacionamento aparecem no modal;
-- botão **Inserir Informações** permite sugestão quando não há fluxo direto.
+- botão **Inserir Informações** abre sugestão textual;
+- botão `+` em **Arquivos Históricos** abre upload de arquivo histórico.
 
 ### 18.3 Narrativa
 
@@ -780,6 +825,8 @@ O modal usa:
 
 Regras:
 
+- sem `data_separacao`/`data_fim`, sem `ativo === false`, sem subtipo `separado` e sem pessoa falecida: usar presente, como `são casados`;
+- com `data_separacao`, `data_fim`, `ativo === false`, subtipo `separado` ou pessoa falecida: usar passado, como `foram casados`;
 - não inventar data/local ausente;
 - não mostrar dados técnicos como substitutos de texto humano;
 - não expor observações internas para usuário comum.
@@ -788,10 +835,10 @@ Regras:
 
 | Situação | Resultado |
 |---|---|
-| Admin | Pode adicionar arquivos históricos diretamente pelo botão `+` e salvar. |
-| Usuário com vínculo, mas sem fluxo direto no modal | Envia sugestão para revisão admin. |
-| Usuário sem permissão direta | Envia sugestão para revisão admin. |
-| Usuário não autenticado | Recebe aviso para entrar. |
+| Clique em **Inserir Informações** | Abre modal secundário de sugestão textual. |
+| Clique em `+` em **Arquivos Históricos** | Abre formulário de upload do componente `ArquivosHistoricos`. |
+| Usuário não autenticado tentando sugerir informação | Recebe aviso para entrar. |
+| Relacionamento sem `relacionamento_id` no salvamento de arquivo | Deve exibir erro controlado, não quebrar a tela. |
 
 ---
 

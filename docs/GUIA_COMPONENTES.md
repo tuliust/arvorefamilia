@@ -1,9 +1,9 @@
 # Guia de componentes - Árvore Família
 
-> Última atualização: 2026-06-08  
+> Última atualização: 2026-06-09  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para manutenção final, atualizado com os componentes mobile recentes.
+> Status: guia canônico revisado para refletir os ajustes recentes de fórum, modal conjugal, arquivos históricos, parentesco e RPCs.
 
 ## Objetivo
 
@@ -398,6 +398,10 @@ Cuidados:
 
 - group boxes, labels e anchors não devem comandar zoom inicial;
 - alteração de constantes afeta toda a composição;
+- cards e grupos centrais da Minha Árvore podem ter largura ampliada sem alterar o card central nem os grupos laterais;
+- labels de grupos centrais devem permanecer centralizadas dentro do group box visual;
+- edges/linhas estruturais devem conectar as bordas/anchors reais dos grupos após qualquer ajuste de largura;
+- ajustes de largura da Minha Árvore não devem vazar para `/genealogia` ou `/visao-completa`;
 - marriage nodes da Minha Árvore podem usar `visualVariant: 'direct-family'`;
 - validar desktop e mobile quando mexer em espaçamentos.
 
@@ -620,6 +624,23 @@ Cuidados:
 - se a inferência visual de gerações mudar, validar DOC-001;
 - labels devem permanecer humanos e curtos.
 
+### 4.3 `ConnectionDiscoveryPanel`
+
+Responsabilidade:
+
+- comparar duas pessoas da árvore;
+- exibir resumo de parentesco e caminho familiar;
+- renderizar resultado visual na aba **Qual a minha conexão com alguém?**;
+- tratar pessoas humanas e pets de forma semanticamente distinta.
+
+Cuidados:
+
+- não usar texto genérico `pai/mãe` quando o papel parental puder ser inferido;
+- exibir **pai** para relação paterna e **mãe** para relação materna;
+- quando o destino for pet, usar relação de tutela, como `Tulius Souza é tutor de Populos`;
+- não classificar pet como filho humano;
+- manter nomes curtos no card visual e frase completa no resultado textual.
+
 ---
 
 ## 5. Perfil, pessoa e dados pessoais
@@ -682,8 +703,26 @@ Responsabilidades:
 | Componente | Responsabilidade |
 |---|---|
 | `MarriageDetailsEditor` | Editar dados conjugais em contexto admin ou formulário permitido. |
-| `ViewMarriageModal` | Exibir relacionamento conjugal de forma pública/humana. |
+| `ViewMarriageModal` | Exibir relacionamento conjugal de forma pública/humana, abrir sugestão textual e integrar arquivos históricos do relacionamento. |
 | `RelacionamentoManager` | Gerenciar relacionamentos no contexto de formulário/admin. |
+
+`ViewMarriageModal` deve preservar:
+
+- cabeçalho em uma linha horizontal com ícone, título à esquerda e botão `X`;
+- título com peso/tamanho maior que os subtítulos internos;
+- headline humana no presente ou passado;
+- **Inserir Informações** abrindo modal secundário de sugestão textual;
+- `+` em **Arquivos Históricos** abrindo upload de arquivo histórico;
+- modal secundário fechando sem fechar o modal conjugal pai.
+
+Campos do modal secundário de **Inserir Informações**:
+
+```txt
+Informações
+Data
+Local
+Outros
+```
 
 Cuidados:
 
@@ -691,7 +730,10 @@ Cuidados:
 - modal conjugal não deve exibir ID técnico para usuário final;
 - usuário sem permissão envia sugestão/solicitação, não altera relacionamento real;
 - arquivos históricos de relacionamento usam `relacionamento_id`;
-- botão compacto `+` pode ser usado em áreas de espaço reduzido.
+- botão compacto `+` pode ser usado em áreas de espaço reduzido;
+- `+` de arquivos não deve chamar o fluxo de **Inserir Informações**;
+- `readOnly` em `ArquivosHistoricos` controla a visibilidade do botão `+`;
+- sem `relacionamento_id`, salvamento de arquivo deve falhar de forma controlada, sem quebrar a tela.
 
 ---
 
@@ -712,7 +754,26 @@ Responsabilidade:
 - edição de título, descrição, ano e categoria;
 - suporte a pessoa ou relacionamento;
 - compatibilidade com base64 legado;
-- uso de Storage para novos arquivos.
+- uso de Storage para novos arquivos;
+- aceitar lista contextual de categorias por prop, quando a tela precisar restringir opções.
+
+Props/variações relevantes:
+
+```txt
+readOnly
+addButtonVariant
+eventCategoryOptions
+onRequestAdd
+relacionamentoId
+```
+
+No contexto de relacionamento conjugal, categorias permitidas:
+
+```txt
+certidao_casamento -> Certidão de Casamento
+divorcio -> Divórcio
+outro -> Outro
+```
 
 Cuidados:
 
@@ -720,6 +781,7 @@ Cuidados:
 - preview/download não pode limpar formulário;
 - bucket de avatar é diferente de bucket de arquivos históricos;
 - categoria histórica depende de migration aplicada;
+- `eventCategoryOptions` deve restringir apenas a UI do contexto, sem alterar a constraint global do banco;
 - não apagar legado sem auditoria.
 
 ---
@@ -790,15 +852,20 @@ Responsabilidades consolidadas:
 
 | Área | Responsabilidade |
 |---|---|
-| `ForumNovoTopico` | Criar tópico, selecionar categoria, relacionar pessoas, detectar/inserir menções `@`. |
+| `ForumHome` | Listar tópicos com busca, filtro de categoria e limpeza de filtros. |
+| `ForumNovoTopico` | Criar tópico, selecionar categoria em cards, detectar/inserir menções `@` e gerar vínculos técnicos por menção. |
+| `ForumEditarTopico` | Editar tópico com categorias em cards, sem campo manual de pessoa relacionada. |
 | `ForumTopico` | Exibir tópico, respostas, comentários, badges, avatares, menções e reações. |
 | `forumService` | Persistência de tópicos, respostas, comentários, reações e denúncias. |
 | `notificationTriggersService` | Notificar pessoas mencionadas/relacionadas e participantes. |
 
 Cuidados:
 
+- `/forum` deve manter apenas busca, categoria e limpar filtros; dropdowns de tipo/status não devem voltar sem decisão explícita;
+- `/forum/novo` e `/forum/topico/:id/editar` não devem exibir campo manual **Pessoas Relacionadas**;
+- as 5 categorias devem ficar em uma linha em desktop amplo;
 - não reintroduzir `Marcar solução` ou `Ocultar` nas respostas se a decisão visual continuar vigente;
-- não quebrar deduplicação entre menção e pessoa relacionada;
+- não quebrar deduplicação entre menção e vínculo técnico em `forum_topico_pessoas`;
 - falha de notificação não deve impedir publicação do tópico;
 - ao alterar reações, validar migration/constraint de unicidade.
 
