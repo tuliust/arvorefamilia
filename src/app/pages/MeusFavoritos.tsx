@@ -152,6 +152,7 @@ export function MeusFavoritos() {
       <MemberPageHeader
         title="Meus Favoritos"
         subtitle="Conteúdos salvos para consultar depois"
+        hideFavoriteButton
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
@@ -178,37 +179,33 @@ export function MeusFavoritos() {
               <button
                 type="button"
                 onClick={() => scrollFilters('left')}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm sm:hidden"
-                aria-label="Ver filtros anteriores"
+                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm sm:inline-flex"
+                aria-label="Voltar filtros"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-
-              <div
-                ref={filtersScrollerRef}
-                className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] sm:flex-wrap sm:overflow-visible sm:pb-0"
-              >
-                {FILTERS.map((item) => (
+              <div ref={filtersScrollerRef} className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+                {FILTERS.map((filter) => (
                   <button
-                    key={item.value}
+                    key={filter.value}
                     type="button"
-                    onClick={() => setFiltro(item.value)}
-                    className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                      filtro === item.value
+                    onClick={() => setFiltro(filter.value)}
+                    className={[
+                      'shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition',
+                      filtro === filter.value
                         ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
+                    ].join(' ')}
                   >
-                    {item.label}
+                    {filter.label}
                   </button>
                 ))}
               </div>
-
               <button
                 type="button"
                 onClick={() => scrollFilters('right')}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm sm:hidden"
-                aria-label="Ver próximos filtros"
+                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm sm:inline-flex"
+                aria-label="Avançar filtros"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -217,72 +214,65 @@ export function MeusFavoritos() {
         </section>
 
         {erro && (
-          <div className="break-words rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {erro}
           </div>
         )}
 
         {loading ? (
-          <div className="break-words rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm">
             Carregando favoritos...
+          </div>
+        ) : favoritosFiltrados.length === 0 ? (
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-semibold text-gray-900">Nenhum favorito encontrado.</p>
+            <p className="mt-2 text-sm text-gray-500">Salve pessoas, arquivos, tópicos ou páginas para acessar depois.</p>
           </div>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {favoritosFiltrados.length === 0 ? (
-              <div className="break-words rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2 xl:col-span-3">
-                Nenhum favorito encontrado.
-              </div>
-            ) : (
-              favoritosFiltrados.map((favorito) => {
-                const createdAt = formatDate(favorito.created_at);
-                const badgeClass = FAVORITE_BADGE_CLASSES[favorito.entity_type] ?? FAVORITE_BADGE_CLASSES.page;
-                const hasHref = Boolean(favorito.href);
+            {favoritosFiltrados.map((favorito) => {
+              const href = favorito.href;
+              const canOpen = Boolean(href);
+              const date = formatDate(favorito.created_at);
 
-                return (
-                  <div
-                    key={favorito.id}
-                    role={hasHref ? 'link' : undefined}
-                    tabIndex={hasHref ? 0 : undefined}
-                    onClick={() => openFavorite(favorito)}
-                    onKeyDown={(event) => handleFavoriteKeyDown(event, favorito)}
-                    className={`flex min-w-0 flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition sm:p-5 ${
-                      hasHref
-                        ? 'cursor-pointer hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
-                        : ''
-                    }`}
-                    aria-label={hasHref ? `Abrir ${favorito.label}` : undefined}
-                  >
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <span className={`mb-3 inline-flex max-w-full items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${badgeClass}`}>
-                          <span className="truncate">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
-                        </span>
-
-                        <h2 className="break-words text-lg font-bold text-gray-900">{favorito.label}</h2>
-
-                        {favorito.description && (
-                          <p className="mt-1 line-clamp-3 break-words text-sm text-gray-500">{favorito.description}</p>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(event) => handleRemove(event, favorito)}
-                        disabled={removingId === favorito.id}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-                        aria-label="Remover dos favoritos"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+              return (
+                <div
+                  key={favorito.id}
+                  role={canOpen ? 'button' : undefined}
+                  tabIndex={canOpen ? 0 : undefined}
+                  onClick={() => openFavorite(favorito)}
+                  onKeyDown={(event) => handleFavoriteKeyDown(event, favorito)}
+                  className={[
+                    'min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition',
+                    canOpen ? 'cursor-pointer hover:border-blue-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <span className={`inline-flex max-w-full rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${FAVORITE_BADGE_CLASSES[favorito.entity_type]}`}>
+                        <span className="truncate">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
+                      </span>
+                      <h2 className="mt-3 break-words text-base font-bold leading-snug text-gray-900">{favorito.label}</h2>
+                      {favorito.description && (
+                        <p className="mt-2 line-clamp-3 break-words text-sm leading-relaxed text-gray-600">{favorito.description}</p>
+                      )}
+                      {date && <p className="mt-3 text-xs text-gray-400">Salvo em {date}</p>}
                     </div>
 
-                    {createdAt && (
-                      <p className="break-words text-xs text-gray-400">Salvo em {createdAt}</p>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(event) => handleRemove(event, favorito)}
+                      disabled={removingId === favorito.id}
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-white text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                      aria-label="Remover favorito"
+                      title="Remover favorito"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </section>
         )}
       </main>
