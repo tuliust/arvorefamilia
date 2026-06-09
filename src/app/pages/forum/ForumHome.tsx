@@ -75,6 +75,14 @@ const FORUM_CATEGORY_GROUPS: ForumCategoryGroupDefinition[] = [
   },
 ];
 
+const TOPIC_BADGE_CLASS = 'inline-flex max-w-full items-center rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-800';
+const TOPIC_STATUS_BADGE_CLASS: Record<ForumTopicoStatus, string> = {
+  aberto: 'border-emerald-100 bg-emerald-50 text-emerald-800',
+  resolvido: 'border-emerald-100 bg-emerald-50 text-emerald-800',
+  fechado: 'border-gray-200 bg-gray-100 text-gray-700',
+  oculto: 'border-gray-200 bg-gray-100 text-gray-700',
+};
+
 function normalizeForumCategoryText(value?: string | null) {
   return (value || '')
     .normalize('NFD')
@@ -110,9 +118,41 @@ function sortForumTopics(topicos: ForumTopico[]) {
   });
 }
 
-function formatarData(valor?: string) {
+function isSameCalendarDay(first: Date, second: Date) {
+  return first.getFullYear() === second.getFullYear() &&
+    first.getMonth() === second.getMonth() &&
+    first.getDate() === second.getDate();
+}
+
+function formatarHora(valor: Date) {
+  return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(valor);
+}
+
+function formatarDataTopico(valor?: string) {
   if (!valor) return '';
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(valor));
+
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return '';
+
+  const agora = new Date();
+  const diffMs = agora.getTime() - data.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin >= 0 && diffMin < 60) {
+    return `Há ${Math.max(1, diffMin)} min`;
+  }
+
+  if (isSameCalendarDay(data, agora)) {
+    return `Hoje, às ${formatarHora(data)}`;
+  }
+
+  const ontem = new Date(agora);
+  ontem.setDate(agora.getDate() - 1);
+  if (isSameCalendarDay(data, ontem)) {
+    return `Ontem, às ${formatarHora(data)}`;
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(data);
 }
 
 export function ForumHome() {
@@ -366,13 +406,13 @@ export function ForumHome() {
                     <CardHeader className="p-4 pb-2">
                       <div className="flex min-w-0 items-start justify-between gap-3">
                         <Link to={`/forum/topico/${topico.id}`} className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                            {categoriaGrupo?.label && <span className="break-words">{categoriaGrupo.label}</span>}
-                            <span>{TIPO_LABELS[topico.tipo]}</span>
-                            <span>{STATUS_LABELS[topico.status]}</span>
-                            {topico.status === 'resolvido' && <span className="text-emerald-700">Resolvido</span>}
-                            {topico.status === 'fechado' && <span className="text-gray-700">Fechado</span>}
-                            {topico.fixado && <span className="text-blue-700">Fixado</span>}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {categoriaGrupo?.label && <span className={TOPIC_BADGE_CLASS}>{categoriaGrupo.label}</span>}
+                            <span className={TOPIC_BADGE_CLASS}>{TIPO_LABELS[topico.tipo]}</span>
+                            <span className={`${TOPIC_BADGE_CLASS} ${TOPIC_STATUS_BADGE_CLASS[topico.status]}`}>
+                              {STATUS_LABELS[topico.status]}
+                            </span>
+                            {topico.fixado && <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-800">Fixado</span>}
                           </div>
                           <CardTitle className="mt-2 break-words text-lg leading-snug">{topico.titulo}</CardTitle>
                         </Link>
@@ -388,7 +428,7 @@ export function ForumHome() {
                             <MessageCircle className="h-3 w-3 shrink-0" />
                             {topico.visualizacoes ?? 0} visualizações
                           </span>
-                          <span className="break-words">{formatarData(topico.created_at)}</span>
+                          <span className="break-words">{formatarDataTopico(topico.created_at)}</span>
                         </div>
                       </Link>
                     </CardContent>
