@@ -22,6 +22,7 @@ import {
 import { getLinkedPersonWithPessoa } from '../../../services/memberProfileService';
 import { createPersonProfileSuggestion } from '../../../services/personProfileSuggestionService';
 import { canEditLinkedPersonRecord, isAdminUser } from '../../../services/permissionService';
+import { supabase } from '../../../lib/supabaseClient';
 import { MarriageNodeDetails } from '../types';
 
 interface ViewMarriageModalProps {
@@ -48,6 +49,34 @@ const EMPTY_SUGGESTION_FORM = {
   local: '',
   outros: '',
 };
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value?: string | null) {
+  return Boolean(value && UUID_RE.test(value));
+}
+
+function getInitialRelationshipId(marriage: MarriageNodeDetails | null) {
+  const candidates = [marriage?.relationship?.id, marriage?.id];
+  return candidates.find((candidate) => isUuid(candidate)) ?? null;
+}
+
+async function fetchRelationshipIdByPair(person1Id?: string, person2Id?: string) {
+  if (!isUuid(person1Id) || !isUuid(person2Id)) return null;
+
+  const { data, error } = await supabase
+    .from('relacionamentos')
+    .select('id')
+    .eq('tipo_relacionamento', 'conjuge')
+    .or(
+      `and(pessoa_origem_id.eq.${person1Id},pessoa_destino_id.eq.${person2Id}),and(pessoa_origem_id.eq.${person2Id},pessoa_destino_id.eq.${person1Id})`
+    )
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return isUuid(data?.id) ? data.id : null;
+}
 
 function getRelationshipField(
   relationship: Record<string, unknown> | undefined,
@@ -234,7 +263,7 @@ export function ViewMarriageModal({
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [suggestionForm, setSuggestionForm] = useState(EMPTY_SUGGESTION_FORM);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
-  const relacionamentoId = marriage?.relationship?.id ?? marriage?.id ?? null;
+  const [resolvedRelacionamentoId, setResolvedRelacionamentoId] = useState<string | null>(null);
   const canInsertRelationshipInfo = resolvedIsAdmin || canEditLinkedPeople;
   const canManageHistoricalFiles = true;
 
@@ -262,17 +291,35 @@ export function ViewMarriageModal({
     async function loadArquivos() {
       setArchivesDirty(false);
 
-      if (!open || !relacionamentoId) {
+      if (!open || !marriage) {
+        setResolvedRelacionamentoId(null);
         setArquivos([]);
         return;
       }
 
       setLoadingArquivos(true);
       try {
-        const nextArquivos = await listarArquivosHistoricosDoRelacionamento(relacionamentoId);
+        const initialRelationshipId = getInitialRelationshipId(marriage);
+        const person1Id = marriage.person1?.id ?? marriage.person1Id;
+        const person2Id = marriage.person2?.id ?? marriage.person2Id;
+        const relationshipId = initialRelationshipId
+          ?? await fetchRelationshipIdByPair(person1Id, person2Id);
+
+        if (!mounted) return;
+
+        setResolvedRelacionamentoId(relationshipId);
+
+        if (!relationshipId) {
+          setArquivos([]);
+          return;
+        }
+
+        const nextArquivos = await listarArquivosHistoricosDoRelacionamento(relationshipId);
         if (mounted) setArquivos(nextArquivos);
       } catch (error) {
         if (mounted) {
+          setResolvedRelacionamentoId(null);
+          setArquivos([]);
           toast.error(error instanceof Error ? error.message : 'Não foi possível carregar arquivos históricos.');
         }
       } finally {
@@ -285,7 +332,7 @@ export function ViewMarriageModal({
     return () => {
       mounted = false;
     };
-  }, [open, relacionamentoId]);
+  }, [open, marriage]);
 
   useEffect(() => {
     let mounted = true;
@@ -354,14 +401,14 @@ export function ViewMarriageModal({
   };
 
   const handleSaveArquivos = async () => {
-    if (!relacionamentoId) {
-      toast.error('Relacionamento conjugal não localizado para salvar arquivos.');
+    if (!resolvedRelacionamentoId) {
+      toast.error('Não foi possível localizar o vínculo conjugal no banco para salvar arquivos.');
       return;
     }
 
     setSavingArquivos(true);
     try {
-      const savedArquivos = await salvarArquivosHistoricosDoRelacionamento(relacionamentoId, arquivos);
+      const savedArquivos = await salvarArquivosHistoricosDoRelacionamento(resolvedRelacionamentoId, arquivos);
       setArquivos(savedArquivos);
       setArchivesDirty(false);
       toast.success('Arquivos históricos do relacionamento salvos.');
@@ -389,7 +436,7 @@ export function ViewMarriageModal({
     try {
       const context = [
         `Relacionamento conjugal: ${person1Name} e ${person2Name}.`,
-        relacionamentoId ? `ID do relacionamento: ${relacionamentoId}.` : undefined,
+        resolvedRelacionamentoId ? `ID do relacionamento: ${resolvedRelacionamentoId}.` : undefined,
         canInsertRelationshipInfo
           ? 'Solicitação enviada por pessoa autorizada para este contexto, sem fluxo direto disponível no modal.'
           : 'Sugestão enviada por usuário sem permissão direta.',
@@ -522,7 +569,7 @@ export function ViewMarriageModal({
               <ArquivosHistoricos
                 arquivos={arquivos}
                 onChange={handleArquivosChange}
-                relacionamentoId={relacionamentoId}
+                relacionamentoId={resolvedRelacionamentoId}
                 readOnly={false}
                 addButtonVariant="icon"
                 eventCategoryOptions={MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS}
