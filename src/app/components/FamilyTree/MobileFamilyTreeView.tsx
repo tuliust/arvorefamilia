@@ -91,7 +91,7 @@ function PersonCard({
       type="button"
       onClick={() => onClick(person)}
       className={[
-        'relative flex h-[184px] w-full min-w-0 flex-col items-center rounded-[1.35rem] border px-2.5 pb-3 pt-3 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
+        'relative flex h-[164px] w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
         central
           ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 text-white'
           : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 text-white',
@@ -105,7 +105,7 @@ function PersonCard({
       <span
         className={[
           'flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner',
-          central ? 'h-[78px] w-[78px]' : 'h-[72px] w-[72px]',
+          central ? 'h-[66px] w-[66px]' : 'h-[64px] w-[64px]',
         ].join(' ')}
       >
         {person.foto_principal_url ? (
@@ -115,20 +115,20 @@ function PersonCard({
             className="h-full w-full object-cover"
           />
         ) : pet ? (
-          <PawPrint className={central ? 'h-9 w-9' : 'h-8 w-8'} aria-hidden="true" />
+          <PawPrint className={central ? 'h-8 w-8' : 'h-7 w-7'} aria-hidden="true" />
         ) : (
           <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
         )}
       </span>
-      <span className="mt-2 w-full truncate whitespace-nowrap text-[13px] font-extrabold uppercase leading-none">
+      <span className="mt-1.5 w-full truncate whitespace-nowrap text-[12px] font-extrabold uppercase leading-none">
         {displayName}
       </span>
-      <span className="mt-2 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
+      <span className="mt-1.5 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
         <Star className="h-3 w-3 shrink-0 fill-current" aria-hidden="true" />
         <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
       </span>
       {showDeathLine && (
-        <span className="mt-1 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
+        <span className="mt-0.5 flex w-full min-w-0 items-center justify-center gap-1 text-[11px] font-semibold leading-tight text-cyan-50">
           <Cross className="h-3 w-3 shrink-0" aria-hidden="true" />
           <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
         </span>
@@ -139,7 +139,7 @@ function PersonCard({
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="flex h-[184px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
+    <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
       <UserRound className="mb-2 h-8 w-8 text-slate-300" />
       {label}
     </div>
