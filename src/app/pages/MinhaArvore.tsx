@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import Cropper, { Area } from 'react-easy-crop';
 import { AppLink as Link } from '../components/AppLink';
@@ -72,6 +72,11 @@ import {
   listarEventosDaPessoa,
   salvarEventosDaPessoa,
 } from '../services/personEventsService';
+import {
+  buildSocialProfilesFromRows,
+  listarPessoaSocialProfiles,
+  substituirPessoaSocialProfiles,
+} from '../services/pessoaSocialProfilesService';
 import { ArquivoHistorico, PersonEvent, Pessoa, Relacionamento } from '../types';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 import { isHumanFamilyMember, isPetFamilyMember } from '../utils/personEntity';
@@ -614,6 +619,40 @@ export function MinhaArvore() {
       mounted = false;
     };
   }, [pessoaBase?.id]);
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSocialProfiles() {
+      if (!pessoaBase?.id) {
+        setSocialProfiles([createSocialProfile()]);
+        return;
+      }
+
+      const samePessoa = initializedPessoaIdRef.current === pessoaBase.id;
+      if (hasInitializedFormRef.current && isDirtyRef.current && samePessoa) return;
+
+      try {
+        const socialProfileRows = await listarPessoaSocialProfiles(pessoaBase.id);
+        if (mounted) {
+          setSocialProfiles(buildSocialProfilesFromRows(socialProfileRows, pessoaBase));
+        }
+      } catch (error) {
+        if (mounted) {
+          toast.warning(
+            error instanceof Error
+              ? `Não foi possível carregar redes sociais versionadas: ${error.message}`
+              : 'Não foi possível carregar redes sociais versionadas.',
+          );
+        }
+      }
+    }
+
+    loadSocialProfiles();
+
+    return () => {
+      mounted = false;
+    };
+  }, [pessoaBase]);
 
   useEffect(() => {
     if (!pessoaBase) return;
@@ -734,7 +773,7 @@ export function MinhaArvore() {
   const displayName = previewName;
   const avatarUrl = currentPhotoUrl || getAvatarUrl(pessoaBase);
   const pessoaInitials = getPessoaInitials(displayName);
-  
+
   const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
   const timelineItems = useMemo(() => {
     if (!pessoaBase) return [];
@@ -975,6 +1014,18 @@ export function MinhaArvore() {
       return;
     }
 
+    try {
+      const savedProfiles = await substituirPessoaSocialProfiles(pessoaBase.id, socialProfiles, {
+        exibirNoPerfil: payload.permitir_exibir_rede_social !== false,
+      });
+      setSocialProfiles(buildSocialProfilesFromRows(savedProfiles, updatedPessoa));
+    } catch (socialProfilesError) {
+      toast.warning(
+        socialProfilesError instanceof Error
+          ? `Dados pessoais salvos, mas não foi possível salvar redes sociais versionadas: ${socialProfilesError.message}`
+          : 'Dados pessoais salvos, mas não foi possível salvar redes sociais versionadas.',
+      );
+    }
     setPessoas((current) =>
       current.map((pessoa) => (pessoa.id === updatedPessoa.id ? updatedPessoa : pessoa))
     );
@@ -1459,7 +1510,7 @@ export function MinhaArvore() {
 
   const executeLogout = async () => {
     await signOut();
-    toast.success('Sess?o encerrada.');
+    toast.success('SessÃ£o encerrada.');
   };
 
   const requestLogout = () => {
@@ -1670,7 +1721,7 @@ export function MinhaArvore() {
                 <h2 className="text-xl font-bold text-gray-900">Meus dados</h2>
                 <p className="mt-1 text-sm text-gray-500">
                   Edite suas informações pessoais, permissões, arquivos históricos e dados familiares.
-                
+
                 </p>
               </div>
             </div>
@@ -1703,7 +1754,7 @@ export function MinhaArvore() {
                   )}
                 </Field>
 
-                
+
 
                 <Field label="Local de nascimento" error={errors.local_nascimento}>
                   <Input
@@ -1861,16 +1912,16 @@ export function MinhaArvore() {
                 </Field>
               </div>
 
-              
+
               </form>
             </section>
 
             <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Arquivos Hist?ricos</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Arquivos HistÃ³ricos</h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    Adicione, revise ou remova arquivos hist?ricos associados ao seu perfil familiar.
+                    Adicione, revise ou remova arquivos histÃ³ricos associados ao seu perfil familiar.
                   </p>
                 </div>
               </div>
