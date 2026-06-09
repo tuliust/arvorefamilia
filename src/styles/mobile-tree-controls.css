@@ -45,7 +45,7 @@
 
   .mobile-tree-controls-panel-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.15rem 0.1rem 0.6rem;
@@ -71,15 +71,6 @@
     color: rgb(71, 85, 105);
   }
 
-  .mobile-tree-controls-eyebrow {
-    margin: 0 0 0.15rem;
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgb(37, 99, 235);
-  }
-
   .mobile-tree-controls-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -101,6 +92,10 @@
     font-weight: 750;
     line-height: 1.05;
     color: rgb(30, 41, 59);
+  }
+
+  .mobile-tree-controls-grid button:last-child {
+    grid-column: 1 / -1;
   }
 
   .mobile-tree-controls-arrows-hidden .family-tree-export-root button[aria-label^="Mover"] {

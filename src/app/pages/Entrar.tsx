@@ -6,14 +6,6 @@ import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,6 +30,7 @@ type FirstAccessStep = 'code' | 'account' | 'confirmation';
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
 const RESEND_CONFIRMATION_COOLDOWN_SECONDS = 60;
 const MOBILE_DESKTOP_TIP_SESSION_KEY = 'arvore-mobile-desktop-tip-dismissed';
+const MOBILE_DESKTOP_TIP_PENDING_KEY = 'arvore-mobile-desktop-tip-pending';
 
 function getEmailRedirectTo() {
   return `${window.location.origin}/entrar`;
@@ -84,7 +77,7 @@ function friendlyAuthError(message: string) {
   return message;
 }
 
-function shouldShowMobileDesktopTip() {
+function shouldQueueMobileDesktopTip() {
   if (typeof window === 'undefined') return false;
   if (window.sessionStorage.getItem(MOBILE_DESKTOP_TIP_SESSION_KEY) === 'true') return false;
   return window.matchMedia('(max-width: 767px)').matches;
@@ -112,8 +105,6 @@ export function Entrar() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [siteVisualSettings, setSiteVisualSettings] = useState<SiteVisualSettings>(DEFAULT_SITE_VISUAL_SETTINGS);
-  const [mobileTipOpen, setMobileTipOpen] = useState(false);
-  const [pendingMobileTipNavigation, setPendingMobileTipNavigation] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -220,21 +211,11 @@ export function Entrar() {
   };
 
   const navigateAfterOptionalMobileTip = (path: string) => {
-    if (shouldShowMobileDesktopTip()) {
-      setPendingMobileTipNavigation(path);
-      setMobileTipOpen(true);
-      return;
+    if (shouldQueueMobileDesktopTip()) {
+      window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_PENDING_KEY, 'true');
     }
 
     navigate(path, { replace: true });
-  };
-
-  const handleConfirmMobileTip = () => {
-    window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_SESSION_KEY, 'true');
-    const nextPath = pendingMobileTipNavigation || '/';
-    setMobileTipOpen(false);
-    setPendingMobileTipNavigation(null);
-    navigate(nextPath, { replace: true });
   };
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -508,34 +489,6 @@ export function Entrar() {
     setAcceptedLegalTerms(false);
   };
 
-  const mobileTipDialog = (
-    <Dialog
-      open={mobileTipOpen}
-      onOpenChange={(open) => {
-        if (!open && mobileTipOpen) {
-          handleConfirmMobileTip();
-          return;
-        }
-
-        setMobileTipOpen(open);
-      }}
-    >
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Fica a dica</DialogTitle>
-          <DialogDescription>
-            Este site é melhor acessado pelo computador, notebook ou tablet.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button type="button" className="w-full" onClick={handleConfirmMobileTip}>
-            Entendi
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   if (loading || checkingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -543,7 +496,6 @@ export function Entrar() {
           <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
           <p className="text-gray-600">Verificando sessão...</p>
         </div>
-        {mobileTipDialog}
       </div>
     );
   }
@@ -839,7 +791,6 @@ export function Entrar() {
         </nav>
       </footer>
 
-      {mobileTipDialog}
     </div>
   );
 }

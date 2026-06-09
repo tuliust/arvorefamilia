@@ -443,9 +443,6 @@ export function HomeHeader({
           </div>
 
           <div className="md:hidden">
-            <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
-          </div>
-          <div className="md:hidden">
             <UserProfileMenu />
           </div>
           <div className="hidden md:block">

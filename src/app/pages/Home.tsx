@@ -19,6 +19,14 @@ import {
 } from '../components/FamilyTree/utils/treePreferences';
 import { Button } from '../components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import {
   obterTodasPessoas,
   obterTodosRelacionamentos,
   buscarPessoas,
@@ -100,6 +108,8 @@ const AI_QUESTION_EXAMPLES = [
 const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.join('\n')}`;
 
 const AI_ENDPOINT = '/api/ai';
+const MOBILE_DESKTOP_TIP_SESSION_KEY = 'arvore-mobile-desktop-tip-dismissed';
+const MOBILE_DESKTOP_TIP_PENDING_KEY = 'arvore-mobile-desktop-tip-pending';
 
 type PersonStatusFilters = {
   vivos: boolean;
@@ -153,6 +163,7 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mobileTipOpen, setMobileTipOpen] = useState(false);
 
   const [directRelativeFilterState, setDirectRelativeFilterState] = useState<{
     userId?: string;
@@ -1109,6 +1120,23 @@ export function Home() {
         : 'Minha Árvore';
   const headerActionTextClassName = isSearchExpanded ? 'hidden' : 'hidden xl:inline-flex';
 
+  useEffect(() => {
+    if (!isMobile || !canRenderTree) return;
+    if (window.sessionStorage.getItem(MOBILE_DESKTOP_TIP_PENDING_KEY) !== 'true') return;
+    if (window.sessionStorage.getItem(MOBILE_DESKTOP_TIP_SESSION_KEY) === 'true') {
+      window.sessionStorage.removeItem(MOBILE_DESKTOP_TIP_PENDING_KEY);
+      return;
+    }
+
+    setMobileTipOpen(true);
+  }, [canRenderTree, isMobile]);
+
+  const dismissMobileTip = () => {
+    window.sessionStorage.removeItem(MOBILE_DESKTOP_TIP_PENDING_KEY);
+    window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_SESSION_KEY, 'true');
+    setMobileTipOpen(false);
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-gray-50">
       <HomeHeader
@@ -1274,6 +1302,29 @@ export function Home() {
           </section>
         </>
       )}
+
+      <Dialog
+        open={mobileTipOpen}
+        onOpenChange={(open) => {
+          if (!open && mobileTipOpen) {
+            dismissMobileTip();
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Fica a dica</DialogTitle>
+            <DialogDescription>
+              Este site é melhor acessado pelo computador, notebook ou tablet.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" className="w-full" onClick={dismissMobileTip}>
+              Entendi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ViewMarriageModal
         open={!!selectedMarriage}

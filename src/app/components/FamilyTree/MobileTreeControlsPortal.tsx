@@ -7,9 +7,7 @@ import {
   FileImage,
   FileText,
   Maximize2,
-  Minus,
-  Plus,
-  Printer,
+  Search,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
@@ -20,8 +18,6 @@ import {
   captureElementToCanvas,
   downloadCanvasAsPng,
   exportCanvasAsPdf,
-  openTreePrintWindow,
-  printCanvas,
 } from './utils/treeExport';
 
 type TreeRouteConfig = {
@@ -106,14 +102,6 @@ async function saveTreePdf() {
   );
 }
 
-async function printTree() {
-  const { title } = getCurrentTreeRoute();
-  const printWindow = openTreePrintWindow();
-  const canvas = await captureTreeCanvas();
-
-  printCanvas(canvas, title, printWindow);
-}
-
 export function MobileTreeControlsPortal() {
   const [path, setPath] = useState(() => getCurrentPath());
   const [panelOpen, setPanelOpen] = useState(false);
@@ -167,10 +155,7 @@ export function MobileTreeControlsPortal() {
       {panelOpen && (
         <div className="mobile-tree-controls-panel" role="dialog" aria-label="Controles da árvore">
           <div className="mobile-tree-controls-panel-header">
-            <div>
-              <p className="mobile-tree-controls-eyebrow">Árvore</p>
-              <h2>Controles</h2>
-            </div>
+            <h2>Controles</h2>
             <button type="button" onClick={() => setPanelOpen(false)} aria-label="Fechar controles">
               <X className="h-4 w-4" />
             </button>
@@ -181,15 +166,15 @@ export function MobileTreeControlsPortal() {
               type="button"
               onClick={() => runTreeButton('Aumentar zoom', 'Controle de zoom indisponível nesta visualização.')}
             >
-              <Plus className="h-4 w-4" />
-              Zoom +
+              <Search className="h-4 w-4" />
+              Aumentar zoom
             </button>
             <button
               type="button"
               onClick={() => runTreeButton('Diminuir zoom', 'Controle de zoom indisponível nesta visualização.')}
             >
-              <Minus className="h-4 w-4" />
-              Zoom -
+              <Search className="h-4 w-4 scale-90" />
+              Diminuir zoom
             </button>
             <button type="button" onClick={() => window.dispatchEvent(new Event('resize'))}>
               <Maximize2 className="h-4 w-4" />
@@ -206,10 +191,6 @@ export function MobileTreeControlsPortal() {
             <button type="button" onClick={() => void runAction(saveTreeImage, 'Imagem gerada.')}>
               <FileImage className="h-4 w-4" />
               Imagem
-            </button>
-            <button type="button" onClick={() => void runAction(printTree)}>
-              <Printer className="h-4 w-4" />
-              Imprimir
             </button>
             <button type="button" onClick={() => toast.info('Seleção manual de área permanece disponível na versão desktop.')}>
               <Download className="h-4 w-4" />
