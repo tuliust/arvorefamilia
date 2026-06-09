@@ -359,19 +359,31 @@ export function MobileFamilyTreeView({
         <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-y-auto overflow-x-hidden overscroll-contain">
           {activeTab === 'core' && (
             <div className="mx-auto w-full max-w-[430px] px-3 pb-28 pt-10">
-              <div className="relative mx-auto grid w-full max-w-[390px] grid-cols-2 gap-5 px-4">
-                {isVisible(model.father)
-                  ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
-                  : <EmptyCard label="Pai" />}
-                {isVisible(model.mother)
-                  ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
-                  : <EmptyCard label="Mãe" />}
-                <div className="pointer-events-none absolute -bottom-7 left-[25%] right-[25%] h-px bg-cyan-600" />
-                <div className="pointer-events-none absolute -bottom-7 left-1/2 h-7 w-px -translate-x-1/2 bg-cyan-600" />
+              <div className="mx-auto w-full max-w-[390px] px-4">
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="relative">
+                    {isVisible(model.father)
+                      ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
+                      : <EmptyCard label="Pai" />}
+                    <div className="pointer-events-none absolute left-1/2 top-full h-8 w-px -translate-x-1/2 bg-cyan-600" />
+                  </div>
+
+                  <div className="relative">
+                    {isVisible(model.mother)
+                      ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
+                      : <EmptyCard label="Mãe" />}
+                    <div className="pointer-events-none absolute left-1/2 top-full h-8 w-px -translate-x-1/2 bg-cyan-600" />
+                  </div>
+                </div>
+
+                <div className="pointer-events-none relative h-12">
+                  <div className="absolute left-1/4 right-1/4 top-8 h-px bg-cyan-600" />
+                  <div className="absolute left-1/2 top-8 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                </div>
               </div>
 
               {isVisible(model.central) && (
-                <div className="relative mx-auto mt-12 w-[min(190px,58vw)]">
+                <div className="relative mx-auto mt-0 w-[min(190px,58vw)]">
                   <PersonCard person={model.central} label="Você" central onClick={onPersonClick} />
                 </div>
               )}
