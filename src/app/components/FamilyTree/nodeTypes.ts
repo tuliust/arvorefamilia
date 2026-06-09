@@ -23,6 +23,7 @@ interface DirectFamilyLegendNodeData {
 
 const CENTRAL_AREA_CARD_EXTRA_WIDTH = 80;
 const CENTRAL_AREA_CENTER_OFFSET = CENTRAL_AREA_CARD_EXTRA_WIDTH / 2;
+const CENTRAL_AREA_STRETCH_MAX_BASE_WIDTH = 370;
 const DIRECT_FAMILY_LOGICAL_CENTER_X = 1610;
 const CENTRAL_AREA_CARD_RELATIONS = new Set([
   'parent',
@@ -130,8 +131,11 @@ function DirectFamilyAnchorNode(props: NodeProps) {
 
 function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
   const relation = props.data?.directRelation;
+  const currentWidth = Number(props.data?.layoutWidth || props.data?.width);
+  const hasCompactMinhaArvoreWidth = Number.isFinite(currentWidth) && currentWidth > 0 && currentWidth <= CENTRAL_AREA_STRETCH_MAX_BASE_WIDTH;
   const shouldStretchCard = Boolean(
     relation &&
+    hasCompactMinhaArvoreWidth &&
     !props.data?.isCentralPerson &&
     CENTRAL_AREA_CARD_RELATIONS.has(relation)
   );
@@ -140,10 +144,7 @@ function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
     return React.createElement(PersonNode, props);
   }
 
-  const currentWidth = Number(props.data?.layoutWidth || props.data?.width);
-  const nextWidth = Number.isFinite(currentWidth) && currentWidth > 0
-    ? currentWidth + CENTRAL_AREA_CARD_EXTRA_WIDTH
-    : currentWidth;
+  const nextWidth = currentWidth + CENTRAL_AREA_CARD_EXTRA_WIDTH;
   const shouldStretchLeft = typeof props.xPos === 'number' && props.xPos > DIRECT_FAMILY_LOGICAL_CENTER_X;
   const nextProps = {
     ...props,
