@@ -48,14 +48,13 @@ const TABS: Array<{ id: MobileTreeTab; label: string }> = [
   { id: 'complete', label: 'Completa' },
 ];
 
-function getYear(value?: string | number) {
-  if (value === undefined || value === null || value === '') return undefined;
-  const match = String(value).match(/\b(18|19|20|21)\d{2}\b/);
-  return match?.[0];
-}
-
-function getLocation(person: Pessoa) {
-  return person.local_atual?.trim() || person.local_nascimento?.trim() || undefined;
+function getFirstTwoNames(fullName?: string) {
+  return (fullName ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' ');
 }
 
 function PersonCard({
@@ -70,8 +69,7 @@ function PersonCard({
   onClick: (person: Pessoa) => void;
 }) {
   const pet = isPetFamilyMember(person);
-  const location = getLocation(person);
-  const year = getYear(person.data_nascimento);
+  const displayName = getFirstTwoNames(person.nome_completo) || person.nome_completo;
 
   return (
     <button
@@ -80,8 +78,8 @@ function PersonCard({
       className={[
         'relative flex min-w-0 flex-col items-center rounded-[1.35rem] border px-2.5 pb-3 pt-3 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
         central
-          ? 'min-h-[214px] border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 text-white'
-          : 'min-h-[184px] border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 text-white',
+          ? 'min-h-[168px] border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 text-white'
+          : 'min-h-[148px] border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 text-white',
       ].join(' ')}
     >
       {label && (
@@ -107,23 +105,8 @@ function PersonCard({
           <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
         )}
       </span>
-      <span
-        className="mt-2 w-full overflow-hidden text-[13px] font-extrabold uppercase leading-[1.12]"
-        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-      >
-        {person.nome_completo}
-      </span>
-      {location && (
-        <span
-          className="mt-1 w-full overflow-hidden text-[11px] font-medium leading-tight text-cyan-50"
-          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-        >
-          {location}
-        </span>
-      )}
-      {year && <span className="mt-0.5 text-xs font-bold text-white/90">{year}</span>}
-      <span className="mt-auto flex h-7 w-7 items-center justify-center rounded-full border border-white/35 bg-white/15">
-        {pet ? <PawPrint className="h-3.5 w-3.5" /> : <UserRound className="h-3.5 w-3.5" />}
+      <span className="mt-2 w-full truncate whitespace-nowrap text-[13px] font-extrabold uppercase leading-none">
+        {displayName}
       </span>
     </button>
   );
@@ -131,7 +114,7 @@ function PersonCard({
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[184px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
+    <div className="flex min-h-[148px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
       <UserRound className="mb-2 h-8 w-8 text-slate-300" />
       {label}
     </div>
