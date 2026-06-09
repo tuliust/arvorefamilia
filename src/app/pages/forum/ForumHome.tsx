@@ -76,12 +76,6 @@ const FORUM_CATEGORY_GROUPS: ForumCategoryGroupDefinition[] = [
 ];
 
 const TOPIC_BADGE_CLASS = 'inline-flex max-w-full items-center rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-800';
-const TOPIC_STATUS_BADGE_CLASS: Record<ForumTopicoStatus, string> = {
-  aberto: 'border-emerald-100 bg-emerald-50 text-emerald-800',
-  resolvido: 'border-emerald-100 bg-emerald-50 text-emerald-800',
-  fechado: 'border-gray-200 bg-gray-100 text-gray-700',
-  oculto: 'border-gray-200 bg-gray-100 text-gray-700',
-};
 
 function normalizeForumCategoryText(value?: string | null) {
   return (value || '')
@@ -408,10 +402,6 @@ export function ForumHome() {
                         <Link to={`/forum/topico/${topico.id}`} className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
                             {categoriaGrupo?.label && <span className={TOPIC_BADGE_CLASS}>{categoriaGrupo.label}</span>}
-                            <span className={TOPIC_BADGE_CLASS}>{TIPO_LABELS[topico.tipo]}</span>
-                            <span className={`${TOPIC_BADGE_CLASS} ${TOPIC_STATUS_BADGE_CLASS[topico.status]}`}>
-                              {STATUS_LABELS[topico.status]}
-                            </span>
                             {topico.fixado && <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-800">Fixado</span>}
                           </div>
                           <CardTitle className="mt-2 break-words text-lg leading-snug">{topico.titulo}</CardTitle>
