@@ -20,6 +20,8 @@ import type {
 
 type MobileTreeTab = 'core' | 'paternal' | 'maternal' | 'complete';
 
+type CardVariant = 'default' | 'sibling' | 'pet';
+
 interface MobileFamilyTreeViewProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
@@ -132,6 +134,16 @@ function VitalLines({
   );
 }
 
+function getPersonCardData(person: Pessoa) {
+  return {
+    pet: isPetFamilyMember(person),
+    displayName: getFirstTwoNames(person.nome_completo) || person.nome_completo,
+    birthLine: formatVitalLine(person.local_nascimento, person.data_nascimento),
+    deathLine: formatVitalLine(person.local_falecimento, person.data_falecimento),
+    showDeathLine: Boolean(person.falecido || person.data_falecimento || person.local_falecimento),
+  };
+}
+
 function PersonCard({
   person,
   label,
@@ -143,11 +155,7 @@ function PersonCard({
   central?: boolean;
   onClick: (person: Pessoa) => void;
 }) {
-  const pet = isPetFamilyMember(person);
-  const displayName = getFirstTwoNames(person.nome_completo) || person.nome_completo;
-  const birthLine = formatVitalLine(person.local_nascimento, person.data_nascimento);
-  const deathLine = formatVitalLine(person.local_falecimento, person.data_falecimento);
-  const showDeathLine = Boolean(person.falecido || person.data_falecimento || person.local_falecimento);
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
 
   return (
     <button
@@ -186,11 +194,7 @@ function SiblingPersonCard({
   person: Pessoa;
   onClick: (person: Pessoa) => void;
 }) {
-  const pet = isPetFamilyMember(person);
-  const displayName = getFirstTwoNames(person.nome_completo) || person.nome_completo;
-  const birthLine = formatVitalLine(person.local_nascimento, person.data_nascimento);
-  const deathLine = formatVitalLine(person.local_falecimento, person.data_falecimento);
-  const showDeathLine = Boolean(person.falecido || person.data_falecimento || person.local_falecimento);
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
 
   return (
     <button
@@ -223,6 +227,43 @@ function SiblingPersonCard({
   );
 }
 
+function PetPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className="flex h-[164px] w-[calc((100%-0.625rem)/2)] min-w-0 flex-col items-center justify-center rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className="h-[54px] w-[54px]"
+        iconClassName="h-7 w-7"
+      />
+      <span
+        className="mt-1.5 w-full overflow-hidden text-[11px] font-extrabold uppercase leading-[1.05]"
+        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+      >
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        compact
+      />
+    </button>
+  );
+}
+
 function EmptyCard({ label }: { label: string }) {
   return (
     <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
@@ -240,7 +281,7 @@ function FamilyGroup({
   onToggle,
   onPersonClick,
   columns = 'double',
-  compactCards = false,
+  cardVariant = 'default',
 }: {
   id: string;
   title: string;
@@ -249,10 +290,11 @@ function FamilyGroup({
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
   columns?: 'single' | 'double';
-  compactCards?: boolean;
+  cardVariant?: CardVariant;
 }) {
   if (people.length === 0) return null;
   const visiblePeople = people.length > 4 && !expanded ? people.slice(0, 3) : people;
+  const usePetCards = cardVariant === 'pet';
 
   return (
     <section className="relative pt-9">
@@ -262,16 +304,18 @@ function FamilyGroup({
           {title}
         </h2>
         <div
-          className={[
-            'grid min-w-0 gap-2.5',
-            columns === 'single' ? 'grid-cols-1' : 'grid-cols-2',
-          ].join(' ')}
+          className={usePetCards
+            ? 'flex min-w-0 flex-wrap justify-center gap-2.5'
+            : [
+              'grid min-w-0 gap-2.5',
+              columns === 'single' ? 'grid-cols-1' : 'grid-cols-2',
+            ].join(' ')}
         >
-          {visiblePeople.map((person) => (
-            compactCards
-              ? <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />
-              : <PersonCard key={person.id} person={person} onClick={onPersonClick} />
-          ))}
+          {visiblePeople.map((person) => {
+            if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            if (cardVariant === 'pet') return <PetPersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            return <PersonCard key={person.id} person={person} onClick={onPersonClick} />;
+          })}
         </div>
         {people.length > 4 && (
           <button
@@ -503,7 +547,7 @@ export function MobileFamilyTreeView({
                     onToggle={toggleGroup}
                     onPersonClick={onPersonClick}
                     columns="single"
-                    compactCards
+                    cardVariant="sibling"
                   />
                   <FamilyGroup
                     id="core-nephews"
@@ -543,6 +587,7 @@ export function MobileFamilyTreeView({
                     onToggle={toggleGroup}
                     onPersonClick={onPersonClick}
                     columns="single"
+                    cardVariant="pet"
                   />
                   <FamilyGroup
                     id="core-grandchildren"
