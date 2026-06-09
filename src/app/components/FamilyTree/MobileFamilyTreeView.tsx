@@ -439,8 +439,8 @@ function FamilyGroup({
     <section className={bottomConnector ? 'relative pb-9 pt-9' : 'relative pt-9'}>
       <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
       <div className={usePetCards
-        ? 'rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
-        : 'rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm'}
+        ? 'relative z-10 rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
+        : 'relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm'}
       >
         <h2 className={usePetCards
           ? 'mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-800'
@@ -500,13 +500,14 @@ function VerticalRelativeScreen({
 }) {
   return (
     <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
       {connectHorizontal && (
         <div className={[
-          'pointer-events-none absolute top-[92px] h-px bg-cyan-600',
+          'pointer-events-none absolute top-[92px] z-0 h-px bg-cyan-600',
           connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
         ].join(' ')} />
       )}
-      <div className="mx-auto mt-4 w-full max-w-[360px]">
+      <div className="relative z-10 mx-auto mt-4 w-full max-w-[360px]">
         <FamilyGroup
           id={groupId}
           title={title}
@@ -553,10 +554,11 @@ function AncestorGroupsScreen({
 
   return (
     <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
-      <div className="mx-auto mt-4 w-full max-w-[360px]">
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
+      <div className="relative z-10 mx-auto mt-4 w-full max-w-[360px]">
         <section className="relative pb-9 pt-9">
           <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
-          <div className="rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
+          <div className="relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
             <h2 className="mb-2 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">
               {title}
             </h2>
