@@ -42,27 +42,31 @@ const MOBILE_DIRECT_LOWER_EDGE_IDS = new Set([
   'direct-spouse-to-pets-group',
 ]);
 
+function segment(command: string, x: number, y: number) {
+  return [command, x, y].join(' ');
+}
+
 function isMobileDirectFamilyTreeView() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
-
-  return (
-    window.matchMedia('(max-width: 767px)').matches &&
-    document.querySelector('[data-export-root="family-tree"][data-export-view="minha-arvore"]') !== null
-  );
+  return window.matchMedia('(max-width: 767px)').matches &&
+    document.querySelector('[data-export-root="family-tree"][data-export-view="minha-arvore"]') !== null;
 }
 
 function shouldSuppressMobileLowerEdge(id: string) {
   if (!isMobileDirectFamilyTreeView()) return false;
   if (MOBILE_DIRECT_LOWER_EDGE_IDS.has(id)) return true;
 
-  return (
-    id === 'direct-central-to-children-group' ||
+  return id === 'direct-central-to-children-group' ||
     id === 'direct-central-to-pets-group' ||
     id === 'direct-group-filhos-to-netos' ||
     id === 'direct-group-irmaos-to-sobrinhos' ||
     id.startsWith('direct-spouse-to-') ||
-    id.startsWith('direct-children-pets-split')
-  );
+    id.startsWith('direct-children-pets-split');
+}
+
+function shouldUseCompactMobileSplit(id: string) {
+  return isMobileDirectFamilyTreeView() &&
+    (id === 'direct-central-to-siblings-group' || id === 'direct-central-to-spouse-group');
 }
 
 function directBezierPath(sourceX: number, sourceY: number, targetX: number, targetY: number) {
@@ -70,10 +74,19 @@ function directBezierPath(sourceX: number, sourceY: number, targetX: number, tar
 
   if (Math.abs(sourceY - targetY) <= 4) {
     const y = (sourceY + targetY) / 2;
-    return `M ${sourceX} ${y} L ${targetX} ${y}`;
+    return [segment('M', sourceX, y), segment('L', targetX, y)].join(' ');
   }
 
-  return `M ${sourceX} ${sourceY} C ${midX} ${sourceY}, ${midX} ${targetY}, ${targetX} ${targetY}`;
+  return [
+    segment('M', sourceX, sourceY),
+    'C',
+    midX,
+    sourceY,
+    midX,
+    targetY,
+    targetX,
+    targetY,
+  ].join(' ');
 }
 
 export function OrthogonalChildEdge({
@@ -92,27 +105,21 @@ export function OrthogonalChildEdge({
 
   if (data?.kind === 'directHorizontal') {
     const horizontalTolerance = data.horizontalTolerance ?? 4;
+    const y = (sourceY + targetY) / 2;
     const path = data.forceHorizontal && Math.abs(sourceY - targetY) <= horizontalTolerance
-      ? `M ${sourceX} ${(sourceY + targetY) / 2} L ${targetX} ${(sourceY + targetY) / 2}`
-      : `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+      ? [segment('M', sourceX, y), segment('L', targetX, y)].join(' ')
+      : [segment('M', sourceX, sourceY), segment('L', targetX, targetY)].join(' ');
 
-    return (
-      <BaseEdge
-        id={id}
-        path={path}
-        style={style}
-        markerEnd={markerEnd}
-      />
-    );
+    return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'directElbowFromCenter') {
-    const elbowY = data.elbowY ?? sourceY + 42;
+    const elbowY = shouldUseCompactMobileSplit(id) ? sourceY + 34 : data.elbowY ?? sourceY + 42;
     const path = [
-      `M ${sourceX} ${sourceY}`,
-      `L ${sourceX} ${elbowY}`,
-      `L ${targetX} ${elbowY}`,
-      `L ${targetX} ${targetY}`,
+      segment('M', sourceX, sourceY),
+      segment('L', sourceX, elbowY),
+      segment('L', targetX, elbowY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
@@ -121,24 +128,17 @@ export function OrthogonalChildEdge({
   if (data?.kind === 'directSideElbow') {
     const elbowX = data.elbowX ?? sourceX + (targetX - sourceX) / 2;
     const path = [
-      `M ${sourceX} ${sourceY}`,
-      `L ${elbowX} ${sourceY}`,
-      `L ${elbowX} ${targetY}`,
-      `L ${targetX} ${targetY}`,
+      segment('M', sourceX, sourceY),
+      segment('L', elbowX, sourceY),
+      segment('L', elbowX, targetY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'directSmooth') {
-    return (
-      <BaseEdge
-        id={id}
-        path={directBezierPath(sourceX, sourceY, targetX, targetY)}
-        style={style}
-        markerEnd={markerEnd}
-      />
-    );
+    return <BaseEdge id={id} path={directBezierPath(sourceX, sourceY, targetX, targetY)} style={style} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'familyChild') {
@@ -147,14 +147,13 @@ export function OrthogonalChildEdge({
     const trunkX = data.trunkX ?? sourceX + (targetX - sourceX) / 2;
     const trunkMinY = data.trunkMinY ?? Math.min(startY, targetY);
     const trunkMaxY = data.trunkMaxY ?? Math.max(startY, targetY);
-
     const path = [
-      `M ${startX} ${startY}`,
-      `L ${trunkX} ${startY}`,
-      `M ${trunkX} ${trunkMinY}`,
-      `L ${trunkX} ${trunkMaxY}`,
-      `M ${trunkX} ${targetY}`,
-      `L ${targetX} ${targetY}`,
+      segment('M', startX, startY),
+      segment('L', trunkX, startY),
+      segment('M', trunkX, trunkMinY),
+      segment('L', trunkX, trunkMaxY),
+      segment('M', trunkX, targetY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
@@ -162,17 +161,12 @@ export function OrthogonalChildEdge({
 
   if (data?.kind === 'siblings') {
     const attachGap = data.attachGap ?? 16;
-    const sourceSideX = sourceX;
-    const targetSideX = targetX;
-    const sourceSideY = sourceY;
-    const targetSideY = targetY;
-    const corridorX = data.corridorX ?? Math.min(sourceSideX, targetSideX) - attachGap;
-
+    const corridorX = data.corridorX ?? Math.min(sourceX, targetX) - attachGap;
     const path = [
-      `M ${sourceSideX} ${sourceSideY}`,
-      `L ${corridorX} ${sourceSideY}`,
-      `L ${corridorX} ${targetSideY}`,
-      `L ${targetSideX} ${targetSideY}`,
+      segment('M', sourceX, sourceY),
+      segment('L', corridorX, sourceY),
+      segment('L', corridorX, targetY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
@@ -180,57 +174,44 @@ export function OrthogonalChildEdge({
 
   if (data?.kind === 'singleParentChild') {
     const corridorY = data.corridorY ?? sourceY + (data.offset ?? 28);
-    const corridorX = typeof data.corridorX === 'number'
-      ? data.corridorX
-      : sourceX + (targetX - sourceX) / 2;
-
+    const corridorX = typeof data.corridorX === 'number' ? data.corridorX : sourceX + (targetX - sourceX) / 2;
     const path = [
-      `M ${sourceX} ${sourceY}`,
-      `L ${sourceX} ${corridorY}`,
-      `L ${corridorX} ${corridorY}`,
-      `L ${corridorX} ${targetY}`,
-      `L ${targetX} ${targetY}`,
+      segment('M', sourceX, sourceY),
+      segment('L', sourceX, corridorY),
+      segment('L', corridorX, corridorY),
+      segment('L', corridorX, targetY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
   }
 
   if (data?.kind === 'generationChild') {
-    const corridorX = typeof data.corridorX === 'number'
-      ? data.corridorX
-      : sourceX + (targetX - sourceX) / 2;
-    const corridorY = typeof data.corridorY === 'number'
-      ? data.corridorY
-      : sourceY;
-
+    const corridorX = typeof data.corridorX === 'number' ? data.corridorX : sourceX + (targetX - sourceX) / 2;
+    const corridorY = typeof data.corridorY === 'number' ? data.corridorY : sourceY;
     const path = [
-      `M ${sourceX} ${sourceY}`,
-      `L ${corridorX} ${sourceY}`,
-      `L ${corridorX} ${corridorY}`,
-      `L ${corridorX} ${targetY}`,
-      `L ${targetX} ${targetY}`,
+      segment('M', sourceX, sourceY),
+      segment('L', corridorX, sourceY),
+      segment('L', corridorX, corridorY),
+      segment('L', corridorX, targetY),
+      segment('L', targetX, targetY),
     ].join(' ');
 
     return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
   }
 
-  let midX: number;
-
-  if (typeof data?.corridorX === 'number') {
-    midX = data.corridorX;
-  } else if (data?.side === 'left') {
-    midX = Math.min(sourceX, targetX) - (data.offset ?? 48);
-  } else if (data?.side === 'right') {
-    midX = Math.max(sourceX, targetX) + (data.offset ?? 48);
-  } else {
-    midX = sourceX + (targetX - sourceX) / 2;
-  }
-
+  const midX = typeof data?.corridorX === 'number'
+    ? data.corridorX
+    : data?.side === 'left'
+      ? Math.min(sourceX, targetX) - (data.offset ?? 48)
+      : data?.side === 'right'
+        ? Math.max(sourceX, targetX) + (data.offset ?? 48)
+        : sourceX + (targetX - sourceX) / 2;
   const path = [
-    `M ${sourceX} ${sourceY}`,
-    `L ${midX} ${sourceY}`,
-    `L ${midX} ${targetY}`,
-    `L ${targetX} ${targetY}`,
+    segment('M', sourceX, sourceY),
+    segment('L', midX, sourceY),
+    segment('L', midX, targetY),
+    segment('L', targetX, targetY),
   ].join(' ');
 
   return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
