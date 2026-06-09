@@ -48,8 +48,64 @@ function RouteFallback() {
   );
 }
 
+function RouteErrorFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-xl font-semibold text-gray-900">Não foi possível carregar esta página</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          A versão do site aberta no navegador pode estar desatualizada. Atualize a página para carregar os arquivos mais recentes.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        >
+          Atualizar página
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type RouteErrorBoundaryState = {
+  hasError: boolean;
+};
+
+function isDynamicImportError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(message);
+}
+
+class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteErrorBoundaryState> {
+  state: RouteErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): RouteErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (!isDynamicImportError(error)) return;
+
+    const reloadKey = 'arvorefamilia:route-chunk-reload';
+    if (sessionStorage.getItem(reloadKey) === '1') return;
+
+    sessionStorage.setItem(reloadKey, '1');
+    window.location.reload();
+  }
+
+  render() {
+    if (this.state.hasError) return <RouteErrorFallback />;
+    return this.props.children;
+  }
+}
+
 function lazyRoute(element: React.ReactNode) {
-  return <Suspense fallback={<RouteFallback />}>{element}</Suspense>;
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteFallback />}>{element}</Suspense>
+    </RouteErrorBoundary>
+  );
 }
 
 function RedirectToMinhaArvore() {
@@ -98,7 +154,7 @@ export const router = createBrowserRouter([
   { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
   { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
   { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
-  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
+  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></MemberRoute>) },
   {
     path: '*',
     element: <div className="min-h-screen flex items-center justify-center bg-gray-50">
