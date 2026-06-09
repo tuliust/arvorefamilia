@@ -2,17 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  FileText,
-  Heart,
-  Link as LinkIcon,
-  MessageCircle,
   Search,
   Trash2,
-  User,
-  Users,
 } from 'lucide-react';
 import { FavoriteEntityType, UserFavorite } from '../types';
 import { listFavorites, removeFavoriteById } from '../services/favoritesService';
@@ -21,12 +14,24 @@ const FAVORITE_TYPE_LABELS: Record<FavoriteEntityType, string> = {
   person: 'Pessoa',
   historical_file: 'Arquivo histórico',
   relationship: 'Relacionamento',
-  forum_topic: 'Tópico do fórum',
+  forum_topic: 'Fórum',
   family_event: 'Evento familiar',
   person_event: 'Evento pessoal',
   page: 'Página',
-  timeline_item: 'Item da timeline',
+  timeline_item: 'Timeline',
   story: 'História',
+};
+
+const FAVORITE_BADGE_CLASSES: Record<FavoriteEntityType, string> = {
+  person: 'bg-blue-50 text-blue-700 ring-blue-100',
+  historical_file: 'bg-amber-50 text-amber-700 ring-amber-100',
+  relationship: 'bg-violet-50 text-violet-700 ring-violet-100',
+  forum_topic: 'bg-pink-50 text-pink-700 ring-pink-100',
+  family_event: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+  person_event: 'bg-teal-50 text-teal-700 ring-teal-100',
+  page: 'bg-sky-50 text-sky-700 ring-sky-100',
+  timeline_item: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+  story: 'bg-rose-50 text-rose-700 ring-rose-100',
 };
 
 const FILTERS: Array<{ value: 'all' | FavoriteEntityType; label: string }> = [
@@ -37,18 +42,6 @@ const FILTERS: Array<{ value: 'all' | FavoriteEntityType; label: string }> = [
   { value: 'person_event', label: 'Eventos pessoais' },
   { value: 'page', label: 'Páginas' },
 ];
-
-function getFavoriteIcon(entityType: FavoriteEntityType) {
-  if (entityType === 'person') return <User className="h-4 w-4 shrink-0 text-gray-400" />;
-  if (entityType === 'historical_file') return <FileText className="h-4 w-4 shrink-0 text-gray-400" />;
-  if (entityType === 'relationship') return <Users className="h-4 w-4 shrink-0 text-gray-400" />;
-  if (entityType === 'forum_topic') return <MessageCircle className="h-4 w-4 shrink-0 text-gray-400" />;
-  if (entityType === 'family_event' || entityType === 'person_event') {
-    return <CalendarDays className="h-4 w-4 shrink-0 text-gray-400" />;
-  }
-
-  return <LinkIcon className="h-4 w-4 shrink-0 text-gray-400" />;
-}
 
 function formatDate(value?: string) {
   if (!value) return null;
@@ -221,6 +214,7 @@ export function MeusFavoritos() {
             ) : (
               favoritosFiltrados.map((favorito) => {
                 const createdAt = formatDate(favorito.created_at);
+                const badgeClass = FAVORITE_BADGE_CLASSES[favorito.entity_type] ?? FAVORITE_BADGE_CLASSES.page;
 
                 return (
                   <div
@@ -229,8 +223,7 @@ export function MeusFavoritos() {
                   >
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <span className="mb-3 inline-flex max-w-full items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700">
-                          <Heart className="h-3 w-3 shrink-0 fill-current" />
+                        <span className={`mb-3 inline-flex max-w-full items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ${badgeClass}`}>
                           <span className="truncate">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
                         </span>
 
@@ -252,14 +245,9 @@ export function MeusFavoritos() {
                       </button>
                     </div>
 
-                    <div className="min-w-0 space-y-2 text-sm text-gray-600">
-                      <div className="flex min-w-0 items-center gap-2">
-                        {getFavoriteIcon(favorito.entity_type)}
-                        <span className="min-w-0 break-words">{FAVORITE_TYPE_LABELS[favorito.entity_type]}</span>
-                      </div>
-
-                      {createdAt && <p className="break-words text-xs text-gray-400">Salvo em {createdAt}</p>}
-                    </div>
+                    {createdAt && (
+                      <p className="break-words text-xs text-gray-400">Salvo em {createdAt}</p>
+                    )}
 
                     <div className="mt-auto min-w-0">
                       {isInternalHref(favorito.href) ? (
