@@ -5,6 +5,7 @@ import "./styles/index.css";
 import "./styles/mobile-tree-controls.css";
 import "./styles/mobile-tree-lines.css";
 import "./styles/mobile-edit-profile.css";
+import "./styles/mobile-member-pages.css";
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
