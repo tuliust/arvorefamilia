@@ -462,7 +462,7 @@ export function ViewMarriageModal({
             </div>
           )}
 
-          <section className="space-y-3">
+          <section className="space-y-3 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:tracking-normal">
             {loadingArquivos ? (
               <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-500">
                 Carregando arquivos históricos...
