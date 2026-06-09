@@ -28,6 +28,93 @@ function getPersonGeneration(pessoa: Pessoa) {
     : null;
 }
 
+function inferGenealogyManualGenerations(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[],
+  centralPersonId?: string
+) {
+  if (!centralPersonId) return pessoas;
+
+  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
+  if (!peopleById.has(centralPersonId)) return pessoas;
+
+  const parentsByChild = new Map<string, Set<string>>();
+  const childrenByParent = new Map<string, Set<string>>();
+  const spousesByPerson = new Map<string, Set<string>>();
+
+  const addToMap = (map: Map<string, Set<string>>, key: string, value: string) => {
+    if (!map.has(key)) map.set(key, new Set());
+    map.get(key)!.add(value);
+  };
+
+  relacionamentos.forEach((relacionamento) => {
+    const origemId = relacionamento.pessoa_origem_id;
+    const destinoId = relacionamento.pessoa_destino_id;
+    if (!origemId || !destinoId) return;
+
+    if (
+      relacionamento.tipo_relacionamento === 'filiacao_sangue' ||
+      relacionamento.tipo_relacionamento === 'filiacao_adotiva'
+    ) {
+      addToMap(parentsByChild, destinoId, origemId);
+      addToMap(childrenByParent, origemId, destinoId);
+      return;
+    }
+
+    if (relacionamento.tipo_relacionamento === 'conjuge') {
+      addToMap(spousesByPerson, origemId, destinoId);
+      addToMap(spousesByPerson, destinoId, origemId);
+    }
+  });
+
+  const generationByPersonId = new Map<string, number>();
+  const queue: Array<{ personId: string; generation: number }> = [
+    { personId: centralPersonId, generation: 5 },
+  ];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) break;
+
+    const existingGeneration = generationByPersonId.get(current.personId);
+    if (existingGeneration !== undefined) {
+      const shouldKeepExisting =
+        Math.abs(existingGeneration - 5) <= Math.abs(current.generation - 5);
+      if (shouldKeepExisting) continue;
+    }
+
+    generationByPersonId.set(current.personId, current.generation);
+
+    parentsByChild.get(current.personId)?.forEach((parentId) => {
+      const parentGeneration = Math.max(1, current.generation - 1);
+      if (parentGeneration !== current.generation) {
+        queue.push({ personId: parentId, generation: parentGeneration });
+      }
+    });
+
+    childrenByParent.get(current.personId)?.forEach((childId) => {
+      const childGeneration = Math.min(6, current.generation + 1);
+      if (childGeneration !== current.generation) {
+        queue.push({ personId: childId, generation: childGeneration });
+      }
+    });
+
+    spousesByPerson.get(current.personId)?.forEach((spouseId) => {
+      queue.push({ personId: spouseId, generation: current.generation });
+    });
+  }
+
+  return pessoas.map((pessoa) => {
+    const inferredGeneration = generationByPersonId.get(pessoa.id);
+    if (inferredGeneration === undefined) return pessoa;
+
+    return {
+      ...pessoa,
+      manual_generation: inferredGeneration,
+    };
+  });
+}
+
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
   if (!clean) return 'Família';
@@ -114,12 +201,18 @@ export function HomeTreeSection({
     [desktopTitleFirstName, treeViewMode]
   );
   const desktopTreeViewportTop = treeViewMode === 'minha-arvore' ? 86 : 82;
+  const mobileGenealogyPessoas = React.useMemo(() => {
+    if (!usesMobileGenerationStages) return pessoas;
+
+    return inferGenealogyManualGenerations(pessoas, relacionamentos, centralReferencePersonId);
+  }, [centralReferencePersonId, pessoas, relacionamentos, usesMobileGenerationStages]);
+  const treePessoas = usesMobileGenerationStages ? mobileGenealogyPessoas : pessoas;
   const availableMobileGenerations = React.useMemo(() => {
     if (!usesMobileGenerationStages) return [];
 
     const availableGenerations = new Set<number>();
 
-    pessoas.forEach((pessoa) => {
+    mobileGenealogyPessoas.forEach((pessoa) => {
       const generation = getPersonGeneration(pessoa);
       if (generation === null) return;
       if (visiblePersonIdsByLifeStatus && !visiblePersonIdsByLifeStatus.has(pessoa.id)) return;
@@ -128,7 +221,7 @@ export function HomeTreeSection({
     });
 
     return Array.from(availableGenerations).sort((generationA, generationB) => generationA - generationB);
-  }, [usesMobileGenerationStages, pessoas, visiblePersonIdsByLifeStatus]);
+  }, [usesMobileGenerationStages, mobileGenealogyPessoas, visiblePersonIdsByLifeStatus]);
   const mobileGenerationSignature = React.useMemo(
     () => availableMobileGenerations.join('|'),
     [availableMobileGenerations]
@@ -314,7 +407,7 @@ export function HomeTreeSection({
 
       {usesMobileGenerationStages && (
         <GenealogyMobileStageTabs
-          pessoas={pessoas}
+          pessoas={mobileGenealogyPessoas}
           visiblePersonIds={visiblePersonIdsByLifeStatus}
           activeGeneration={effectiveActiveGenealogyGeneration}
           onGenerationChange={setActiveGenealogyGeneration}
@@ -340,7 +433,7 @@ export function HomeTreeSection({
       ) : canRenderTree ? (
         <FamilyTree
           ref={familyTreeRef}
-          pessoas={pessoas}
+          pessoas={treePessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
           relacionamentos={relacionamentos}
           onPersonClick={onPersonClick}
