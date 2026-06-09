@@ -35,10 +35,10 @@ function DirectFamilyAnchorNode() {
   );
 }
 
-function DirectFamilyGroupBoxNode({ data }: NodeProps<DirectFamilyGroupBoxNodeData>) {
+function DirectFamilyGroupBoxNode({ data, id }: NodeProps<DirectFamilyGroupBoxNodeData>) {
   return React.createElement('div', {
     'aria-hidden': true,
-    className: 'pointer-events-none rounded-xl',
+    className: `pointer-events-none rounded-xl direct-family-group-box ${id}`,
     style: {
       width: data.width ?? 0,
       height: data.height ?? 0,
