@@ -552,7 +552,11 @@ export function ViewMarriageModal({
       </div>
 
       <Dialog open={suggestionOpen} onOpenChange={setSuggestionOpen}>
-        <DialogContent>
+        <DialogContent
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Inserir Informações</DialogTitle>
             <DialogDescription>
