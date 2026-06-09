@@ -37,6 +37,13 @@ const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades')
 const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
 
+const ROUTE_CHUNK_RELOAD_KEY = 'arvorefamilia:route-chunk-reload-at';
+const ROUTE_CHUNK_RELOAD_COOLDOWN_MS = 10000;
+
+type WindowWithChunkHandler = Window & {
+  __arvorefamiliaChunkReloadHandlerInstalled?: boolean;
+};
+
 function RouteFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50" data-testid="route-loading">
@@ -46,6 +53,19 @@ function RouteFallback() {
       </div>
     </div>
   );
+}
+
+function reloadForFreshAssets() {
+  try {
+    const lastReloadAt = Number(sessionStorage.getItem(ROUTE_CHUNK_RELOAD_KEY) ?? 0);
+    if (Date.now() - lastReloadAt < ROUTE_CHUNK_RELOAD_COOLDOWN_MS) return false;
+    sessionStorage.setItem(ROUTE_CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    // Se o storage estiver indisponível, ainda tenta recuperar a versão nova do app.
+  }
+
+  window.location.reload();
+  return true;
 }
 
 function RouteErrorFallback() {
@@ -58,7 +78,14 @@ function RouteErrorFallback() {
         </p>
         <button
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            try {
+              sessionStorage.removeItem(ROUTE_CHUNK_RELOAD_KEY);
+            } catch {
+              // Ignora falhas de storage no clique manual de recuperação.
+            }
+            window.location.reload();
+          }}
           className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           Atualizar página
@@ -74,8 +101,39 @@ type RouteErrorBoundaryState = {
 
 function isDynamicImportError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(message);
+  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Expected a JavaScript-or-Wasm module script|MIME type/i.test(message);
 }
+
+function isAssetScriptLoadError(event: ErrorEvent | Event) {
+  if (!(event instanceof Event)) return false;
+  const target = event.target;
+  if (!(target instanceof HTMLScriptElement)) return false;
+  return /\/assets\/.+\.js(\?.*)?$/.test(target.src);
+}
+
+function installChunkLoadErrorReloadHandler() {
+  if (typeof window === 'undefined') return;
+
+  const win = window as WindowWithChunkHandler;
+  if (win.__arvorefamiliaChunkReloadHandlerInstalled) return;
+  win.__arvorefamiliaChunkReloadHandlerInstalled = true;
+
+  window.addEventListener(
+    'error',
+    (event) => {
+      if (isDynamicImportError((event as ErrorEvent).error ?? (event as ErrorEvent).message) || isAssetScriptLoadError(event)) {
+        reloadForFreshAssets();
+      }
+    },
+    true,
+  );
+
+  window.addEventListener('unhandledrejection', (event) => {
+    if (isDynamicImportError(event.reason)) reloadForFreshAssets();
+  });
+}
+
+installChunkLoadErrorReloadHandler();
 
 class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteErrorBoundaryState> {
   state: RouteErrorBoundaryState = { hasError: false };
@@ -85,13 +143,7 @@ class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteE
   }
 
   componentDidCatch(error: unknown) {
-    if (!isDynamicImportError(error)) return;
-
-    const reloadKey = 'arvorefamilia:route-chunk-reload';
-    if (sessionStorage.getItem(reloadKey) === '1') return;
-
-    sessionStorage.setItem(reloadKey, '1');
-    window.location.reload();
+    if (isDynamicImportError(error)) reloadForFreshAssets();
   }
 
   render() {
