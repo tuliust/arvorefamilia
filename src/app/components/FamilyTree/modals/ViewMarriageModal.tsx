@@ -376,19 +376,19 @@ export function ViewMarriageModal({
         aria-modal="true"
         aria-labelledby="view-marriage-modal-title"
       >
-        <div className="grid grid-cols-[2.5rem,minmax(0,1fr),2.5rem] items-center gap-3 border-b border-gray-200 px-5 py-4">
+        <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
             <Heart className="h-5 w-5" />
           </div>
 
-          <h2 id="view-marriage-modal-title" className="min-w-0 text-center text-base font-semibold text-gray-900">
+          <h2 id="view-marriage-modal-title" className="min-w-0 flex-1 text-left text-lg font-semibold text-gray-900">
             Relacionamento conjugal
           </h2>
 
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center justify-self-end rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             aria-label="Fechar modal"
             title="Fechar modal"
           >
