@@ -115,18 +115,19 @@ function VitalLines({
   compact?: boolean;
 }) {
   const alignment = align === 'left' ? 'justify-start text-left' : 'justify-center text-center';
-  const textSize = compact ? 'text-[10px]' : 'text-[11px]';
+  const textSize = compact ? 'text-[9px]' : 'text-[11px]';
   const gap = compact ? 'gap-0.5' : 'gap-1';
+  const iconSize = compact ? 'h-2.5 w-2.5' : 'h-3 w-3';
 
   return (
     <>
       <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-        <Star className="h-3 w-3 shrink-0 fill-current" aria-hidden="true" />
+        <Star className={`${iconSize} shrink-0 fill-current`} aria-hidden="true" />
         <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
       </span>
       {showDeathLine && (
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-          <Cross className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <Cross className={`${iconSize} shrink-0`} aria-hidden="true" />
           <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
         </span>
       )}
@@ -240,16 +241,16 @@ function PetPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
-      className="flex h-[164px] w-[calc((100%-0.625rem)/2)] min-w-0 flex-col items-center justify-center rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+      className="flex h-[128px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
     >
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[54px] w-[54px]"
-        iconClassName="h-7 w-7"
+        className="h-[38px] w-[38px] border-2"
+        iconClassName="h-5 w-5"
       />
       <span
-        className="mt-1.5 w-full overflow-hidden text-[11px] font-extrabold uppercase leading-[1.05]"
+        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
         style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
       >
         {displayName}
@@ -299,13 +300,19 @@ function FamilyGroup({
   return (
     <section className="relative pt-9">
       <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
-      <div className="rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
-        <h2 className="mb-3 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">
+      <div className={usePetCards
+        ? 'rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
+        : 'rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm'}
+      >
+        <h2 className={usePetCards
+          ? 'mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-800'
+          : 'mb-3 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800'}
+        >
           {title}
         </h2>
         <div
           className={usePetCards
-            ? 'flex min-w-0 flex-wrap justify-center gap-2.5'
+            ? 'grid min-w-0 grid-cols-1 gap-2'
             : [
               'grid min-w-0 gap-2.5',
               columns === 'single' ? 'grid-cols-1' : 'grid-cols-2',
@@ -570,25 +577,27 @@ export function MobileFamilyTreeView({
                     onPersonClick={onPersonClick}
                     columns="single"
                   />
-                  <FamilyGroup
-                    id="core-children"
-                    title="Filhos"
-                    people={visibleChildren}
-                    expanded={expandedGroups.has('core-children')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                  />
-                  <FamilyGroup
-                    id="core-pets"
-                    title="Pets"
-                    people={visiblePets}
-                    expanded={expandedGroups.has('core-pets')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                    cardVariant="pet"
-                  />
+                  <div className="grid grid-cols-2 items-start gap-2">
+                    <FamilyGroup
+                      id="core-pets"
+                      title="Pets"
+                      people={visiblePets}
+                      expanded={expandedGroups.has('core-pets')}
+                      onToggle={toggleGroup}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                      cardVariant="pet"
+                    />
+                    <FamilyGroup
+                      id="core-children"
+                      title="Filhos"
+                      people={visibleChildren}
+                      expanded={expandedGroups.has('core-children')}
+                      onToggle={toggleGroup}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                    />
+                  </div>
                   <FamilyGroup
                     id="core-grandchildren"
                     title="Netos"
