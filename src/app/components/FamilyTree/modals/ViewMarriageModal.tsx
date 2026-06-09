@@ -236,7 +236,7 @@ export function ViewMarriageModal({
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const relacionamentoId = marriage?.relationship?.id ?? marriage?.id ?? null;
   const canInsertRelationshipInfo = resolvedIsAdmin || canEditLinkedPeople;
-  const canManageHistoricalFiles = Boolean(relacionamentoId);
+  const canManageHistoricalFiles = true;
 
   useEffect(() => {
     if (!open) return;
@@ -523,7 +523,7 @@ export function ViewMarriageModal({
                 arquivos={arquivos}
                 onChange={handleArquivosChange}
                 relacionamentoId={relacionamentoId}
-                readOnly={!canManageHistoricalFiles}
+                readOnly={false}
                 addButtonVariant="icon"
                 eventCategoryOptions={MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS}
               />
