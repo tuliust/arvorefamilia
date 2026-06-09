@@ -135,6 +135,7 @@ export function Notificacoes() {
       <MemberPageHeader
         title="Notificações"
         subtitle="Gerencie seus avisos e acompanhe atualizações importantes da família."
+        hideFavoriteButton
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
@@ -153,8 +154,10 @@ export function Notificacoes() {
                   {naoLidas > 0 ? <BellRing className="h-5 w-5" /> : <Inbox className="h-5 w-5" />}
                 </span>
                 <div className="min-w-0">
-                  <CardTitle className="break-words text-base">Notificações recentes</CardTitle>
-                  <p className="break-words text-xs text-gray-500">{naoLidas} não lida(s)</p>
+                  <CardTitle className="break-words text-base">Recentes</CardTitle>
+                  <p className="break-words text-xs text-gray-500">
+                    {naoLidas > 0 ? `${naoLidas} não lida(s)` : 'Todas lidas'}
+                  </p>
                 </div>
               </div>
 
