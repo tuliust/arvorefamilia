@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { BookOpen, CalendarDays, FileText, HelpCircle, ListFilter, MessageCircle, Plus, Search, SlidersHorizontal, Tags } from 'lucide-react';
+import { BookOpen, CalendarDays, FileText, HelpCircle, MessageCircle, Plus, Search, Tags, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -12,22 +12,7 @@ import {
 } from '../../services/forumService';
 import { ForumEmptyState } from '../../components/forum/ForumEmptyState';
 import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicFavoriteButton';
-import { ForumCategoria, ForumTopico, ForumTopicoStatus, ForumTopicoTipo } from '../../types';
-
-const TIPO_LABELS: Record<ForumTopicoTipo, string> = {
-  pergunta: 'Pergunta',
-  discussao: 'Discussão',
-  aviso: 'Aviso',
-  memoria: 'Memória',
-  ajuda: 'Ajuda',
-};
-
-const STATUS_LABELS: Record<ForumTopicoStatus, string> = {
-  aberto: 'Aberto',
-  resolvido: 'Resolvido',
-  fechado: 'Fechado',
-  oculto: 'Oculto',
-};
+import { ForumCategoria, ForumTopico } from '../../types';
 
 type ForumCategoryGroupKey = 'duvidas' | 'memorias' | 'documentos' | 'eventos';
 type ForumCategoryFilterValue = 'todas' | ForumCategoryGroupKey;
@@ -154,8 +139,6 @@ export function ForumHome() {
   const [topicos, setTopicos] = useState<ForumTopico[]>([]);
   const [busca, setBusca] = useState('');
   const [categoriaId, setCategoriaId] = useState<ForumCategoryFilterValue>('todas');
-  const [tipo, setTipo] = useState<'todos' | ForumTopicoTipo>('todos');
-  const [status, setStatus] = useState<'todos' | ForumTopicoStatus>('todos');
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -193,13 +176,16 @@ export function ForumHome() {
 
   const gruposCategorias = useMemo(() => buildForumCategoryGroups(categorias), [categorias]);
 
+  const limparFiltros = () => {
+    setBusca('');
+    setCategoriaId('todas');
+  };
+
   useEffect(() => {
     let mounted = true;
     const timeout = window.setTimeout(async () => {
       const filtrosBase: ForumTopicoFiltros = { limite: 30 };
       if (busca.trim()) filtrosBase.busca = busca.trim();
-      if (tipo !== 'todos') filtrosBase.tipo = tipo;
-      if (status !== 'todos') filtrosBase.status = status;
 
       if (categoriaId === 'todas') {
         const data = await listarTopicosForum(filtrosBase);
@@ -230,7 +216,7 @@ export function ForumHome() {
       mounted = false;
       window.clearTimeout(timeout);
     };
-  }, [busca, categoriaId, tipo, status, gruposCategorias]);
+  }, [busca, categoriaId, gruposCategorias]);
 
   const renderCategorias = (variant: 'mobile' | 'desktop') => (
     <div className={`min-w-0 ${variant === 'mobile' ? 'lg:hidden' : 'hidden space-y-3 lg:block'}`}>
@@ -280,8 +266,8 @@ export function ForumHome() {
         {renderCategorias('mobile')}
 
         <Card className="min-w-0">
-          <CardContent className="grid grid-cols-3 gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_180px_160px]">
-            <label className="relative col-span-3 block min-w-0 md:col-span-1">
+          <CardContent className="grid grid-cols-[minmax(0,1fr)_40px] gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_40px]">
+            <label className="relative col-span-2 block min-w-0 md:col-span-1">
               <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 value={busca}
@@ -309,43 +295,17 @@ export function ForumHome() {
               </select>
             </label>
 
-            <label className="relative block min-w-0">
-              <ListFilter className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
-              <select
-                value={tipo}
-                onChange={(event) => setTipo(event.target.value as 'todos' | ForumTopicoTipo)}
-                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
-                aria-label="Filtrar por tipo"
-                title="Tipos"
-              >
-                <option value="todos">Todos os tipos</option>
-                {Object.entries(TIPO_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="relative block min-w-0">
-              <SlidersHorizontal className="pointer-events-none absolute left-1/2 top-3 h-4 w-4 -translate-x-1/2 text-gray-500 md:hidden" />
-              <select
-                value={status}
-                onChange={(event) => setStatus(event.target.value as 'todos' | ForumTopicoStatus)}
-                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
-                aria-label="Filtrar por status"
-                title="Status"
-              >
-                <option value="todos">Todos os status</option>
-                {Object.entries(STATUS_LABELS)
-                  .filter(([value]) => value !== 'oculto')
-                  .map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-              </select>
-            </label>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              onClick={limparFiltros}
+              aria-label="Limpar filtros"
+              title="Limpar filtros"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
 
@@ -361,20 +321,6 @@ export function ForumHome() {
           <div className="min-w-0 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="hidden break-words text-lg font-semibold text-gray-900 sm:block">Tópicos recentes</h2>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="hidden w-full sm:inline-flex sm:w-auto"
-                onClick={() => {
-                  setBusca('');
-                  setCategoriaId('todas');
-                  setTipo('todos');
-                  setStatus('todos');
-                }}
-              >
-                Limpar filtros
-              </Button>
             </div>
 
             {loading ? (
@@ -384,7 +330,7 @@ export function ForumHome() {
             ) : topicos.length === 0 ? (
               <ForumEmptyState
                 titulo="Nenhum tópico encontrado"
-                descricao="Não encontramos discussões para a combinação atual de termo, categoria, tipo e status."
+                descricao="Não encontramos discussões para a combinação atual de termo e categoria."
                 actionHref="/forum/novo"
                 actionLabel="Criar tópico"
                 actionIcon={Plus}
