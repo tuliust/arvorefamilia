@@ -40,10 +40,53 @@ function getFirstName(value?: string | null) {
   return clean.split(/\s+/)[0] || 'Pessoa';
 }
 
-function getParentLabelFromRelationshipType(type?: string) {
+function getFirstNameToken(value?: string | null) {
+  return getFirstName(value).toLocaleLowerCase('pt-BR');
+}
+
+function getParentLabelByPersonName(value?: string | null) {
+  const firstName = getFirstNameToken(value);
+  const knownFemaleNames = new Set([
+    'bianca',
+    'condilênia',
+    'condilenia',
+    'ivania',
+    'ivânia',
+    'lourdes',
+    'maria',
+    'monika',
+    'monica',
+    'roseli',
+    'rosely',
+    'tathiane',
+  ]);
+  const knownMaleNames = new Set([
+    'absalon',
+    'athanase',
+    'caio',
+    'charalambos',
+    'fabio',
+    'fábio',
+    'márcio',
+    'marcio',
+    'mauro',
+    'tassius',
+    'titus',
+    'tulius',
+    'yuri',
+  ]);
+  const likelyFemaleEndings = ['a', 'ia', 'na', 'ne', 'la', 'da', 'eli'];
+
+  if (knownFemaleNames.has(firstName)) return 'mãe';
+  if (knownMaleNames.has(firstName)) return 'pai';
+  if (likelyFemaleEndings.some((ending) => firstName.endsWith(ending))) return 'mãe';
+  return 'pai';
+}
+
+function getParentLabelFromRelationshipType(type?: string, parentName?: string | null) {
   if (type === 'mae') return 'mãe';
   if (type === 'pai') return 'pai';
-  return 'pai/mãe';
+  return getParentLabelByPersonName(parentName);
 }
 
 function getSiblingLabelByName(value?: string | null) {
@@ -73,7 +116,7 @@ function buildUncleOrAuntNarrative(result: RelationshipDegreeResult, pessoas: Pe
   const parentFirstName = getFirstName(parent.nome_completo);
   const originFirstName = getFirstName(origin.nome_completo);
   const siblingLabel = getSiblingLabelByName(target.nome_completo);
-  const parentLabel = getParentLabelFromRelationshipType(result.path[0]?.edge.type);
+  const parentLabel = getParentLabelFromRelationshipType(result.path[0]?.edge.type, parent.nome_completo);
 
   return `${targetFirstName} é ${siblingLabel} de ${parentFirstName}, ${parentLabel} de ${originFirstName}.`;
 }
