@@ -8,6 +8,7 @@ import "./styles/mobile-edit-profile.css";
 import "./styles/mobile-member-pages.css";
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
+const CSS_RELOAD_KEY = "arvorefamilia:css-reload";
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Importing a module script failed/i,
@@ -41,9 +42,9 @@ async function clearBrowserCaches() {
   }
 }
 
-function reloadWithFreshIndex() {
+function reloadWithFreshIndex(paramName = "__reload") {
   const url = new URL(window.location.href);
-  url.searchParams.set("__reload", String(Date.now()));
+  url.searchParams.set(paramName, String(Date.now()));
   window.location.replace(url.toString());
 }
 
@@ -52,7 +53,27 @@ function recoverFromDynamicImportError(error: unknown) {
   if (sessionStorage.getItem(DYNAMIC_IMPORT_RELOAD_KEY) === "1") return;
 
   sessionStorage.setItem(DYNAMIC_IMPORT_RELOAD_KEY, "1");
-  void clearBrowserCaches().finally(reloadWithFreshIndex);
+  void clearBrowserCaches().finally(() => reloadWithFreshIndex());
+}
+
+function isUtilityCssAvailable() {
+  const probe = document.createElement("div");
+  probe.className = "hidden";
+  probe.setAttribute("aria-hidden", "true");
+  document.body.appendChild(probe);
+
+  const cssAvailable = window.getComputedStyle(probe).display === "none";
+  probe.remove();
+
+  return cssAvailable;
+}
+
+function recoverFromMissingCss() {
+  if (sessionStorage.getItem(CSS_RELOAD_KEY) === "1") return;
+  if (isUtilityCssAvailable()) return;
+
+  sessionStorage.setItem(CSS_RELOAD_KEY, "1");
+  void clearBrowserCaches().finally(() => reloadWithFreshIndex("__css_reload"));
 }
 
 window.addEventListener("error", (event) => {
@@ -70,6 +91,9 @@ createRoot(document.getElementById("root")!).render(
   </>
 );
 
+window.setTimeout(recoverFromMissingCss, 1200);
+
 window.setTimeout(() => {
   sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
+  sessionStorage.removeItem(CSS_RELOAD_KEY);
 }, 5000);
