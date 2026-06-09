@@ -192,7 +192,10 @@ const MOBILE_DIRECT_CARD_HEIGHT = 118;
 const MOBILE_DIRECT_COLUMN_GAP = 12;
 const MOBILE_DIRECT_ROW_GAP = 12;
 const MOBILE_DIRECT_CENTER_X = VIEW_CENTER_X;
-const MOBILE_DIRECT_PARENT_CENTER_GAP = 280;
+const MOBILE_PARENT_CARD_WIDTH = 250;
+const MOBILE_PARENT_CARD_HEIGHT = 118;
+const MOBILE_PARENT_GAP = 54;
+const MOBILE_DIRECT_PARENT_CENTER_GAP = MOBILE_PARENT_CARD_WIDTH + MOBILE_PARENT_GAP;
 const MOBILE_DIRECT_PARENT_Y = 20;
 const MOBILE_DIRECT_CENTRAL_Y = 260;
 const MOBILE_DIRECT_LOWER_Y = 760;
@@ -577,7 +580,14 @@ function addAnchor(nodes: Node[], positionedIds: Set<string>, id: string, x: num
   positionedIds.add(id);
 }
 
-function addMarriageNode(nodes: Node[], positionedIds: Set<string>, id: string, centerX: number, centerY: number) {
+function addMarriageNode(
+  nodes: Node[],
+  positionedIds: Set<string>,
+  id: string,
+  centerX: number,
+  centerY: number,
+  size = MARRIAGE_NODE_SIZE
+) {
   if (!Number.isFinite(centerX) || !Number.isFinite(centerY) || positionedIds.has(id)) return;
 
   nodes.push({
@@ -585,8 +595,10 @@ function addMarriageNode(nodes: Node[], positionedIds: Set<string>, id: string, 
     type: 'marriageNode',
     data: {
       visualVariant: 'direct-family',
+      layoutWidth: size,
+      layoutHeight: size,
     },
-    position: finitePosition(centerX - MARRIAGE_NODE_SIZE / 2, centerY - MARRIAGE_NODE_SIZE / 2),
+    position: finitePosition(centerX - size / 2, centerY - size / 2),
     draggable: false,
     selectable: false,
     zIndex: 40,
@@ -2052,9 +2064,9 @@ export function directFamilyDistributedLayout(
     centerX: options.isMobile
       ? MOBILE_DIRECT_CENTER_X + MOBILE_DIRECT_PARENT_CENTER_GAP / 2
       : MOTHER_GROUP_CENTER_X,
-    laneWidth: (options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
-    cardWidth: options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
-    cardHeight: options.isMobile ? MOBILE_LOWER_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
+    laneWidth: (options.isMobile ? MOBILE_PARENT_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
+    cardWidth: options.isMobile ? MOBILE_PARENT_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
+    cardHeight: options.isMobile ? MOBILE_PARENT_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
     columnGap: SIDE_COLUMN_GAP,
     rowGap: SIDE_ROW_GAP,
   };
@@ -2067,9 +2079,9 @@ export function directFamilyDistributedLayout(
     centerX: options.isMobile
       ? MOBILE_DIRECT_CENTER_X - MOBILE_DIRECT_PARENT_CENTER_GAP / 2
       : FATHER_GROUP_CENTER_X,
-    laneWidth: (options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
-    cardWidth: options.isMobile ? MOBILE_LOWER_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
-    cardHeight: options.isMobile ? MOBILE_LOWER_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
+    laneWidth: (options.isMobile ? MOBILE_PARENT_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH) + GROUP_BOX_PADDING_X * 2,
+    cardWidth: options.isMobile ? MOBILE_PARENT_CARD_WIDTH : SIDE_PARENT_CARD_WIDTH,
+    cardHeight: options.isMobile ? MOBILE_PARENT_CARD_HEIGHT : SIDE_PARENT_CARD_HEIGHT,
     columnGap: SIDE_COLUMN_GAP,
     rowGap: SIDE_ROW_GAP,
   };
@@ -2077,6 +2089,32 @@ export function directFamilyDistributedLayout(
   const parentGroupY = options.isMobile ? MOBILE_DIRECT_PARENT_Y : CENTRAL_PARENT_GROUP_Y;
   placeGroup(motherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(fatherGroup, parentGroupY, positionedNodes, positionedIds, personNodeById, index);
+
+  let mobileLowerGroupY = MOBILE_DIRECT_LOWER_Y;
+
+  if (options.isMobile) {
+    const centralNode = findPositionedNode(positionedNodes, centralPersonId);
+    const centralDimensions = centralNode
+      ? getPositionedNodeDimensions(centralNode)
+      : { width: 320, height: 410 };
+    let nextGroupY = (centralNode?.position.y ?? MOBILE_DIRECT_CENTRAL_Y)
+      + centralDimensions.height
+      + MOBILE_DIRECT_STACK_GAP;
+
+    visiblePaternalGroups.forEach((group) => {
+      placeGroup(group, nextGroupY, positionedNodes, positionedIds, personNodeById, index);
+      const columns = resolveGroupColumns(group, group.ids, index);
+      nextGroupY += groupHeight(group.ids, columns, index, group) + MOBILE_DIRECT_STACK_GAP;
+    });
+
+    visibleMaternalGroups.forEach((group) => {
+      placeGroup(group, nextGroupY, positionedNodes, positionedIds, personNodeById, index);
+      const columns = resolveGroupColumns(group, group.ids, index);
+      nextGroupY += groupHeight(group.ids, columns, index, group) + MOBILE_DIRECT_STACK_GAP;
+    });
+
+    mobileLowerGroupY = nextGroupY;
+  }
 
   const allSiblings = findSiblings(centralPersonId, index, pessoasById);
   const siblings = filters.irmaos ? allSiblings : [];
@@ -2098,7 +2136,7 @@ export function directFamilyDistributedLayout(
   const hasChildrenAndPets = children.length > 0 && pets.length > 0;
   const lowerLeftGroupCenterX = options.isMobile ? MOBILE_LOWER_LEFT_GROUP_CENTER_X : LOWER_LEFT_GROUP_CENTER_X;
   const lowerRightGroupCenterX = options.isMobile ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X : LOWER_RIGHT_GROUP_CENTER_X;
-  const lowerGroupY = options.isMobile ? MOBILE_DIRECT_LOWER_Y : LOWER_GROUP_Y;
+  const lowerGroupY = options.isMobile ? mobileLowerGroupY : LOWER_GROUP_Y;
   const childrenPetsLeftCenterX = hasChildrenAndPets
     ? lowerRightGroupCenterX - lowerLaneWidth / 4
     : lowerRightGroupCenterX;
@@ -2186,18 +2224,6 @@ export function directFamilyDistributedLayout(
   placeGroup(petGroup, splitTopY, positionedNodes, positionedIds, personNodeById, index);
   placeGroup(grandchildrenGroup, grandchildrenTopY, positionedNodes, positionedIds, personNodeById, index);
 
-  if (options.isMobile) {
-    const currentBounds = getVisiblePersonNodeBounds(positionedNodes);
-    let nextGroupY = (currentBounds ? currentBounds.y + currentBounds.height : lowerGroupY)
-      + MOBILE_DIRECT_STACK_GAP;
-
-    [...visiblePaternalGroups, ...visibleMaternalGroups].forEach((group) => {
-      placeGroup(group, nextGroupY, positionedNodes, positionedIds, personNodeById, index);
-      const columns = resolveGroupColumns(group, group.ids, index);
-      nextGroupY += groupHeight(group.ids, columns, index, group) + MOBILE_DIRECT_STACK_GAP;
-    });
-  }
-
   const groupBoundsByKey = new Map<string, GroupBoxBounds>();
   [
     'tataravos-paternos',
@@ -2247,10 +2273,19 @@ export function directFamilyDistributedLayout(
 
   if (fatherGroupBounds && motherGroupBounds) {
     const parentCoupleMidX = (fatherGroupBounds.maxX + motherGroupBounds.minX) / 2;
-    const parentCoupleMidY = (fatherGroupBounds.centerY + motherGroupBounds.centerY) / 2;
+    const parentCoupleMidY = options.isMobile
+      ? Math.min(fatherGroupBounds.centerY, motherGroupBounds.centerY) - 4
+      : (fatherGroupBounds.centerY + motherGroupBounds.centerY) / 2;
     addAnchor(positionedNodes, positionedIds, 'direct-parent-couple-mid-anchor', parentCoupleMidX, parentCoupleMidY);
     if (isDirectLineVisible('spouse', options.edgeFilters)) {
-      addMarriageNode(positionedNodes, positionedIds, 'direct-parent-marriage-node', parentCoupleMidX, parentCoupleMidY);
+      addMarriageNode(
+        positionedNodes,
+        positionedIds,
+        'direct-parent-marriage-node',
+        parentCoupleMidX,
+        parentCoupleMidY,
+        options.isMobile ? 36 : MARRIAGE_NODE_SIZE
+      );
     }
     addAnchor(positionedNodes, positionedIds, 'direct-central-top-anchor', VIEW_CENTER_X, centralTopY);
   } else if (fatherGroupBounds || motherGroupBounds) {

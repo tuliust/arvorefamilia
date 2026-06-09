@@ -72,6 +72,10 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
   const { getNodes } = useReactFlow();
   const [localMarriageDetails, setLocalMarriageDetails] = React.useState<MarriageNodeDetails | null>(null);
   const isDirectFamilyVariant = data.visualVariant === 'direct-family';
+  const isCompactParentMarriage =
+    id === 'direct-parent-marriage-node' &&
+    'layoutWidth' in data &&
+    data.layoutWidth === 36;
   const hiddenHandle = {
     width: 1,
     height: 1,
@@ -109,7 +113,9 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         aria-label="Ver vínculo do casal"
         className={[
           'nodrag nopan relative z-40 flex cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2',
-          isDirectFamilyVariant
+          isCompactParentMarriage
+            ? 'h-9 w-9 border-2 bg-white shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:bg-slate-50 hover:text-slate-700'
+            : isDirectFamilyVariant
             ? 'h-11 w-11 border-[3px] bg-white shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:bg-slate-50 hover:text-slate-700 hover:shadow-[0_0_0_4px_rgba(241,245,249,1),0_5px_12px_rgba(71,85,105,0.24)] md:h-[60px] md:w-[60px] md:shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)]'
             : 'h-[60px] w-[60px] border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
         ].join(' ')}
@@ -134,7 +140,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
           }}
         />
         <Blend
-          className={isDirectFamilyVariant ? 'h-6 w-6 stroke-[3] md:h-9 md:w-9' : 'h-8 w-8 stroke-[2.8]'}
+          className={isCompactParentMarriage ? 'h-5 w-5 stroke-[3]' : isDirectFamilyVariant ? 'h-6 w-6 stroke-[3] md:h-9 md:w-9' : 'h-8 w-8 stroke-[2.8]'}
           aria-hidden="true"
         />
       </button>

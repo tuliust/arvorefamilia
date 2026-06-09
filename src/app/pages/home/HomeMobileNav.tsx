@@ -74,10 +74,10 @@ export function HomeMobileNav({
           type="button"
           className={itemClassName}
           onClick={() => navigateFromHome('/notificacoes')}
-          aria-label="Abrir notificações"
+          aria-label="Abrir alertas"
         >
           <Bell className="h-5 w-5" />
-          <span>Notificações</span>
+          <span>Alertas</span>
         </button>
       </div>
     </nav>

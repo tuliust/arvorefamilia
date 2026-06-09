@@ -132,19 +132,6 @@
     stroke-dasharray: 8 10 !important;
   }
 
-  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-tios-paternos"] > div,
-  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-tios-maternos"] > div,
-  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-primos-paternos"] > div,
-  .family-tree-export-root .react-flow__node-directFamilyGroupBoxNode[data-id="direct-group-box-primos-maternos"] > div {
-    transform: scaleX(0.92) !important;
-    transform-origin: center top !important;
-  }
-
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 340px"][style*="height: 136px"] {
-    transform: scale(0.94) !important;
-    transform-origin: center center !important;
-  }
-
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 340px"][style*="height: 136px"] span[class*="text-[22px]"],
   .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 340px"][style*="height: 136px"] h3[class*="text-[22px]"] {
     font-size: 18px !important;
@@ -160,12 +147,4 @@
     touch-action: none !important;
   }
 
-  .family-tree-export-root .react-flow__renderer,
-  .family-tree-export-root .react-flow__transformationpane {
-    min-height: calc(100% + 12rem) !important;
-  }
-
-  .family-tree-export-root .react-flow {
-    padding-bottom: 12rem !important;
-  }
 }

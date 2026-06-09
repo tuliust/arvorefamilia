@@ -1279,7 +1279,18 @@ function FamilyTreeComponent({
       );
     });
 
-    return getFlowBounds(initialNodes, NODE_WIDTH, NODE_HEIGHT);
+    const initialBounds = getFlowBounds(initialNodes, NODE_WIDTH, NODE_HEIGHT);
+    if (!initialBounds) return null;
+
+    const paddingX = 42;
+    const paddingY = 54;
+
+    return {
+      x: initialBounds.x - paddingX,
+      y: initialBounds.y - paddingY,
+      width: initialBounds.width + paddingX * 2,
+      height: initialBounds.height + paddingY * 2,
+    };
   }, [effectiveCentralPersonId, isMobile, layoutResult.nodes, NODE_WIDTH, NODE_HEIGHT, viewMode]);
 
 
