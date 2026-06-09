@@ -143,8 +143,8 @@ function MemberMobileBottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5">
         {MOBILE_BOTTOM_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.to === '/minha-arvore'
@@ -156,7 +156,7 @@ function MemberMobileBottomNav() {
               key={item.label}
               to={item.to}
               className={[
-                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold transition active:bg-gray-100',
+                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[11px] font-semibold transition active:bg-gray-100 min-[390px]:text-xs',
                 active
                   ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-100'
                   : 'text-gray-700 hover:bg-gray-50',
@@ -165,7 +165,7 @@ function MemberMobileBottomNav() {
               aria-current={active ? 'page' : undefined}
             >
               <Icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );
         })}
