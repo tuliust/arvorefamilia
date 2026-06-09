@@ -45,7 +45,7 @@
   }
 
   form [aria-labelledby="categoria-label"] {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 0.35rem !important;
   }
 
@@ -56,6 +56,18 @@
     font-size: 0.62rem !important;
     line-height: 1.05 !important;
     box-shadow: none !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(3) {
+    order: 4 !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(4) {
+    order: 3 !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(n+5) {
+    display: none !important;
   }
 
   form [aria-labelledby="categoria-label"] > button > span:first-child {
@@ -70,10 +82,61 @@
 
   form [aria-labelledby="categoria-label"] > button > span:last-child {
     margin-top: 0.25rem !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
+    display: block !important;
     overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
     word-break: normal !important;
+    font-size: 0 !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(1) > span:last-child::after {
+    content: 'Dúvidas';
+    font-size: 0.7rem !important;
+    line-height: 1rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(2) > span:last-child::after {
+    content: 'Histórias';
+    font-size: 0.7rem !important;
+    line-height: 1rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(3) > span:last-child::after {
+    content: 'Documentos';
+    font-size: 0.68rem !important;
+    line-height: 1rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button:nth-child(4) > span:last-child::after {
+    content: 'Eventos';
+    font-size: 0.7rem !important;
+    line-height: 1rem !important;
+  }
+
+  main > div[class*="lg:hidden"] > div[class*="grid-cols-4"] > button:nth-child(2) span:last-of-type {
+    font-size: 0 !important;
+  }
+
+  main > div[class*="lg:hidden"] > div[class*="grid-cols-4"] > button:nth-child(2) span:last-of-type::after {
+    content: 'Histórias';
+    font-size: 0.72rem !important;
+    line-height: 1rem !important;
+  }
+
+  .family-tree-export-root .react-flow__edge[data-id^="direct-primos-paternos-grid-row"] path,
+  .family-tree-export-root .react-flow__edge[data-id^="direct-primos-maternos-grid-row"] path,
+  .family-tree-export-root .react-flow__edge[data-id^="direct-tios-paternos-sibling-row"] path,
+  .family-tree-export-root .react-flow__edge[data-id^="direct-tios-maternos-sibling-row"] path {
+    opacity: 0.28 !important;
+    stroke-dasharray: 8 10 !important;
+  }
+
+  .family-tree-export-root .react-flow__pane {
+    touch-action: none !important;
+  }
+
+  .family-tree-export-root .react-flow {
+    padding-bottom: 8rem !important;
   }
 }
