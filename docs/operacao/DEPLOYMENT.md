@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09  
 > Local canônico: `docs/operacao/DEPLOYMENT.md`  
 > Tipo: checklist operacional de build, deploy e publicação.  
-> Status: revisado com política de cache para SPA Vite/Vercel e troubleshooting pós-deploy de chunks dinâmicos.
+> Status: revisado com política de cache real para SPA Vite/Vercel, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
 
 ## 1. Objetivo
 
@@ -172,11 +172,12 @@ Esses arquivos mudam a cada build. Por isso, a política correta é:
 
 | Recurso | Cache recomendado | Motivo |
 |---|---|---|
-| `/` | `no-cache, no-store, must-revalidate` | evitar HTML antigo apontando para chunks removidos |
-| `/index.html` | `no-cache, no-store, must-revalidate` | sempre buscar manifesto/chunks atuais |
+| `/` | `no-store, max-age=0, must-revalidate` | evitar HTML antigo apontando para chunks removidos |
+| `/index.html` | `no-store, max-age=0, must-revalidate` | sempre buscar manifesto/chunks atuais |
+| `/(.*)` | `no-cache` | fallback amplo conservador para rotas SPA fora de assets |
 | `/assets/*` | `public, max-age=31536000, immutable` | arquivos têm hash e podem ser cacheados |
 
-Configuração Vercel esperada:
+Configuração Vercel esperada no projeto:
 
 ```json
 {
@@ -186,7 +187,7 @@ Configuração Vercel esperada:
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "no-store, max-age=0, must-revalidate"
         }
       ]
     },
@@ -195,7 +196,16 @@ Configuração Vercel esperada:
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "no-store, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
         }
       ]
     },
@@ -211,6 +221,10 @@ Configuração Vercel esperada:
   ],
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -218,10 +232,11 @@ Configuração Vercel esperada:
 }
 ```
 
-Regra:
+Regras:
 
 ```txt
 Nunca deixar index.html com cache imutável em SPA Vite com code splitting.
+Não remover o fallback de /api/(.*) se houver rotas/API servidas pelo provedor.
 ```
 
 ---
@@ -257,8 +272,10 @@ Correção operacional:
 - garantir headers de cache do `vercel.json`;
 - após deploy, testar em janela anônima;
 - usar hard refresh quando necessário;
+- no Safari/iOS, validar também em aba privada;
+- se persistir em iPhone/iPad, orientar apagar dados do site em Ajustes > Safari > Avançado > Dados dos Sites;
 - se persistir em usuários finais, orientar limpar cache do domínio;
-- verificar se Service Worker ou cache externo está servindo HTML antigo.
+- verificar se Service Worker, proxy, CDN ou cache externo está servindo HTML antigo.
 
 Checklist específico:
 
@@ -462,7 +479,8 @@ Verificar manualmente, conforme escopo alterado:
 | Sintoma | Causa provável | Ação |
 |---|---|---|
 | `Failed to fetch dynamically imported module` | HTML antigo apontando para chunk removido | hard refresh, validar cache headers, testar anônimo |
-| MIME `text/html` para `.js` | fallback SPA respondendo `index.html` para asset inexistente | revisar `vercel.json` e cache de `index.html` |
+| MIME `text/html` para `.js` | fallback SPA respondendo `index.html` para asset inexistente | revisar `vercel.json`, cache de `index.html` e CDN |
+| Erro só no Safari/iOS após deploy | cache local do domínio ou aba antiga com HTML anterior | testar aba privada e limpar dados do site em Ajustes > Safari |
 | RPC `PGRST202` | migration não aplicada ou schema cache atrasado | aplicar migration, validar função no banco, `notify pgrst, 'reload schema'` |
 | Campo novo não existe | migration ausente no remoto | aplicar migration antes do frontend |
 | Upload falha | bucket/policy/env incorreto | revisar Storage/RLS e `storageService.ts` |

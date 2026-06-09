@@ -1,9 +1,9 @@
 # Documentação - Árvore Família
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico da documentação revisada e alinhada à frente mobile final.
+> Status: índice canônico da documentação revisada e alinhada aos ajustes recentes de fórum, favoritos, cache/deploy e frente mobile.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -74,7 +74,7 @@ docs/funcionalidades/
 | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques e painel lateral. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
-| `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, pessoas relacionadas, menções, respostas, comentários, reações e favoritos. |
+| `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. |
 | `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
@@ -171,14 +171,16 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano mantém quatro itens abertos:
+No fechamento desta revisão documental, o plano mantém seis itens abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
 | `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA |
 | `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste técnico / encoding |
 | `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente |
-| `DOC-004` | `funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento de exportação mobile |
+| `DOC-004` | `/minha-arvore` mobile | bug visual / conector inferior |
+| `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento de exportação mobile |
+| `DOC-006` | `/forum` | divergência UI/documentação / filtros tipo-status |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-09  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir os ajustes recentes de fórum, modal conjugal, arquivos históricos, parentesco e RPCs.
+> Status: guia canônico revisado para refletir os ajustes recentes de fórum, favoritos, modal conjugal, arquivos históricos, parentesco, cache/deploy e RPCs.
 
 ## Objetivo
 
@@ -803,7 +803,8 @@ Responsabilidade:
 - favoritar/desfavoritar entidade;
 - exibir estado ativo;
 - chamar `toggleFavorite`;
-- preservar metadados sanitizados.
+- preservar metadados sanitizados;
+- listar favoritos do usuário com busca, filtros, abertura e remoção.
 
 Props principais:
 
@@ -822,15 +823,25 @@ onChange
 Estado atual:
 
 - botão implementado e usado para pessoa;
-- há componentes auxiliares para fórum/páginas;
+- tópico de fórum pode ser favoritado por `ForumTopicFavoriteButton`;
+- há componentes auxiliares para páginas e arquivos históricos quando a tela expõe a ação;
 - `FavoriteEntityType` já prevê outras entidades;
+- `/meus-favoritos` usa badges de tipo no topo do card, sem ícone redundante de coração;
+- `forum_topic` deve aparecer como **Fórum**;
+- cada tipo de favorito pode ter cor própria para escaneabilidade;
+- o botão textual **Abrir conteúdo** foi removido da página;
+- o card inteiro abre o favorito quando há `href`;
+- link interno deve navegar via SPA; link externo deve abrir em nova aba segura;
+- botão de lixeira deve interromper propagação para não abrir o card;
+- card clicável deve aceitar `Enter` e `Espaço`;
 - expansão de favoritos para outros tipos deve ser validada funcionalmente antes de expor novos botões.
 
 Cuidados:
 
-- não enviar URL, telefone, token, base64 ou dado sensível em `metadata`;
-- usar `href` navegável;
+- não enviar URL sensível, telefone, token, base64 ou dado sensível em `metadata`;
+- usar `href` navegável e seguro;
 - usar `variant="icon"` para ações compactas como perfil/card;
+- preservar `aria-label`, foco visível e navegação por teclado nos cards clicáveis;
 - expansão para novas entidades deve considerar schema, UI e página `/meus-favoritos`.
 
 ---
@@ -852,17 +863,23 @@ Responsabilidades consolidadas:
 
 | Área | Responsabilidade |
 |---|---|
-| `ForumHome` | Listar tópicos com busca, filtro de categoria e limpeza de filtros. |
+| `ForumHome` | Listar tópicos com busca, filtro de categoria e limpeza de filtros. A UI atual não deve exibir dropdowns de tipo/status. |
 | `ForumNovoTopico` | Criar tópico, selecionar categoria em cards, detectar/inserir menções `@` e gerar vínculos técnicos por menção. |
 | `ForumEditarTopico` | Editar tópico com categorias em cards, sem campo manual de pessoa relacionada. |
-| `ForumTopico` | Exibir tópico, respostas, comentários, badges, avatares, menções e reações. |
-| `forumService` | Persistência de tópicos, respostas, comentários, reações e denúncias. |
+| `ForumTopico` | Exibir tópico principal, respostas diretas, badge de categoria, avatares, menções quando aplicável, favoritos e reações. |
+| `forumService` | Persistência de tópicos, respostas, comentários legados, reações e denúncias. |
 | `notificationTriggersService` | Notificar pessoas mencionadas/relacionadas e participantes. |
 
 Cuidados:
 
 - `/forum` deve manter apenas busca, categoria e limpar filtros; dropdowns de tipo/status não devem voltar sem decisão explícita;
+- em `/forum`, cards de tópicos devem exibir apenas badge de categoria e badge **Fixado** quando aplicável;
+- badges **Discussão** e **Aberto** não fazem parte da UI atual;
 - `/forum/novo` e `/forum/topico/:id/editar` não devem exibir campo manual **Pessoas Relacionadas**;
+- `/forum/topico/:id` deve usar estrutura de post/conversa, com tópico principal, respostas diretas e campo único de nova resposta;
+- a visualização do tópico não deve exibir box **Pessoa relacionada**;
+- a visualização do tópico não deve exibir botão `...` ao lado da lixeira;
+- comentários aninhados em respostas não fazem parte da UI atual; dados/funções de comentário podem permanecer como compatibilidade técnica até decisão futura;
 - as 5 categorias devem ficar em uma linha em desktop amplo;
 - não reintroduzir `Marcar solução` ou `Ocultar` nas respostas se a decisão visual continuar vigente;
 - não quebrar deduplicação entre menção e vínculo técnico em `forum_topico_pessoas`;
@@ -993,7 +1010,7 @@ Cuidados:
 | Header/menu | `HomeHeader`, `MemberPageHeader`, `UserProfileMenu`, `MobileUserMenuPalettePortal`, mobile e desktop. |
 | Árvore | `/minha-arvore`, `/genealogia`, `/visao-completa`, pan/zoom, paletas, `MobileTreeControlsPortal` e modal conjugal. |
 | Cards de pessoa | ícones, texto, truncamento, avatar, pets, falecidos e ações. |
-| Fórum | criação, tópico, respostas, comentários, menções, pessoas relacionadas e reações. |
+| Fórum | criação, edição, listagem, tópico, respostas diretas, menções, vínculos técnicos e reações. |
 | Notificações | central, preferências, triggers e falha sem bloquear fluxo principal. |
 | Favoritos | botão, página `/meus-favoritos`, sanitização de metadata e remoção. |
 | Calendário | filtros mobile, Google Agenda, grid e lista do mês. |

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09  
 > Local canônico: `docs/funcionalidades/FORUM.md`  
 > Tipo: documentação funcional e técnica do módulo de fórum.  
-> Status: revisado após remoção de filtros tipo/status, remoção do campo manual de pessoas relacionadas e padronização das categorias em cards.
+> Status: revisado para refletir a estrutura atual de listagem, tópico em formato social, respostas diretas, remoção de badges de tipo/status e remoção do campo manual de pessoas relacionadas.
 
 ---
 
@@ -15,9 +15,9 @@ Rotas:
 
 | Rota | Proteção | Função |
 |---|---|---|
-| `/forum` | `MemberRoute` | Lista tópicos, categorias e atalhos. |
-| `/forum/novo` | `MemberRoute` | Criação de nova publicação. |
-| `/forum/topico/:id` | `MemberRoute` | Visualização, respostas, comentários, favoritos e reações. |
+| `/forum` | `MemberRoute` | Lista tópicos, categorias, busca, filtro por categoria, favoritos e ação de criação. |
+| `/forum/novo` | `MemberRoute` | Criação de nova publicação com categoria em cards, conteúdo e menções `@`. |
+| `/forum/topico/:id` | `MemberRoute` | Visualização do tópico em formato de post, respostas diretas, favoritos e reações. |
 | `/forum/topico/:id/editar` | `MemberRoute` + autor/admin | Edição de tópico existente, com categorias em cards e sem campo manual de pessoa relacionada. |
 
 Este arquivo não substitui:
@@ -25,7 +25,8 @@ Este arquivo não substitui:
 - `docs/funcionalidades/NOTIFICACOES.md`, para arquitetura geral de notificações;
 - `docs/arquitetura/ROTAS_E_GUARDS.md`, para guards;
 - `docs/operacao/MIGRATIONS_SUPABASE.md`, para migrations;
-- `docs/GUIA_COMPONENTES.md`, para catálogo de componentes.
+- `docs/GUIA_COMPONENTES.md`, para catálogo de componentes;
+- `docs/PLANO_PROXIMOS_PASSOS.md`, para pendências abertas e divergências UI/documentação.
 
 ---
 
@@ -63,20 +64,21 @@ Tabelas ativas do fórum:
 
 | Tabela | Função |
 |---|---|
-| `forum_categorias` | Categorias exibidas em `/forum` e `/forum/novo`. |
+| `forum_categorias` | Categorias exibidas em `/forum`, `/forum/novo` e `/forum/topico/:id`. |
 | `forum_topicos` | Publicações principais. |
 | `forum_respostas` | Respostas diretas aos tópicos. |
-| `forum_comentarios` | Comentários vinculados a respostas. |
+| `forum_comentarios` | Tabela técnica/legada para comentários vinculados a respostas. Não compõe o fluxo visual atual de `/forum/topico/:id`. |
 | `forum_reacoes` | Reações em tópicos e respostas. |
 | `forum_denuncias` | Base de denúncias/moderação. |
-| `forum_topico_pessoas` | Relação N:N entre tópicos e pessoas da árvore. |
+| `forum_topico_pessoas` | Relação N:N entre tópicos e pessoas da árvore derivada de menções ou dados legados. |
 | `user_favorites` | Favoritos de tópicos via `entity_type = forum_topic`. |
 
 Regras:
 
 - não alterar tipos internos sem migration;
 - operações sensíveis devem depender de RLS/RPC/permissões, não apenas de esconder botão;
-- metadata de notificações e favoritos não deve conter dados sensíveis.
+- metadata de notificações e favoritos não deve conter dados sensíveis;
+- tabelas técnicas/legadas podem permanecer no schema mesmo quando a UI atual não expõe o fluxo correspondente.
 
 ---
 
@@ -88,14 +90,14 @@ Arquivo principal:
 src/app/pages/forum/ForumHome.tsx
 ```
 
-A listagem do fórum exibe busca, filtro por categoria e ação para criação de tópico.
+A listagem do fórum exibe busca, filtro por categoria, botão para limpar filtros e ação para criação de tópico.
 
-Campos/filtros visíveis:
+Campos/filtros esperados na UI:
 
 - busca textual por termo;
 - dropdown **Todas as categorias**;
 - botão compacto apenas com ícone para limpar filtros;
-- botão/atalho para criar novo tópico, conforme header da página.
+- botão/atalho para criar novo tópico.
 
 Filtros removidos da UI atual:
 
@@ -108,7 +110,36 @@ Regras:
 - o botão de limpar filtros deve resetar busca e categoria;
 - o botão de limpar filtros deve usar `aria-label`/`title`, pois não possui texto visível;
 - a busca e a categoria devem funcionar de forma independente;
-- a remoção dos filtros visuais não altera RLS, service ou schema.
+- a remoção dos filtros visuais não altera RLS, service ou schema;
+- se a UI ainda exibir dropdowns de tipo/status, registrar a divergência em `docs/PLANO_PROXIMOS_PASSOS.md` até a correção ser validada.
+
+### 4.1 Cards da listagem
+
+Cards de tópico devem exibir:
+
+- badge de categoria, como **Dúvidas**, **Memórias**, **Documentos** ou **Eventos**;
+- badge **Fixado**, apenas quando aplicável;
+- título;
+- resumo do conteúdo;
+- visualizações;
+- data relativa/contextual;
+- botão de favoritar tópico.
+
+Badges removidas dos cards:
+
+- **Discussão**;
+- **Aberto**;
+- demais badges derivadas diretamente de `tipo` ou `status`.
+
+Datas devem usar formato contextual:
+
+```txt
+Há XX min
+Hoje, às HH:MM
+Ontem, às HH:MM
+```
+
+Para datas antigas, o formato curto continua aceitável.
 
 ---
 
@@ -139,7 +170,7 @@ Campo técnico não exibido:
 
 ### 5.1 Categorias
 
-Categorias são exibidas como botões, não como dropdown.
+Categorias são exibidas como botões/cards, não como dropdown.
 
 Regras:
 
@@ -171,7 +202,7 @@ Modelo atual:
 - pessoas são relacionadas principalmente por menções no conteúdo;
 - o usuário digita `@` para localizar e inserir uma pessoa;
 - ao publicar ou salvar, menções compatíveis são varridas e vinculadas em `forum_topico_pessoas`;
-- vínculos já existentes em tópicos legados podem continuar sendo lidos pela visualização;
+- vínculos já existentes em tópicos legados podem continuar preservados no banco;
 - falha ao vincular pessoas não deve apagar o tópico já criado;
 - não reintroduzir dropdown manual sem decisão explícita de produto.
 
@@ -183,7 +214,7 @@ O conteúdo aceita menções no padrão:
 @Nome Completo
 ```
 
-Comportamento atual:
+Comportamento esperado:
 
 - digitar `@` abre autocomplete local;
 - `ArrowDown`/`ArrowUp` navegam;
@@ -210,7 +241,17 @@ Arquivo principal:
 src/app/pages/forum/ForumTopico.tsx
 ```
 
-### 5.1 Header e ações
+A tela de tópico foi reorganizada para seguir estrutura de conversa/post:
+
+```txt
+tópico principal
+respostas diretas
+campo único de nova resposta
+```
+
+Não há segundo nível visual de comentários dentro de cada resposta.
+
+### 6.1 Header e ações
 
 Ações esperadas:
 
@@ -222,42 +263,56 @@ Regras:
 
 - botão **Ocultar** não aparece no header público do tópico;
 - moderação pode permanecer no service/backend para compatibilidade;
-- usuário comum não deve ver ação administrativa sensível.
+- usuário comum não deve ver ação administrativa sensível;
+- botão **Excluir** deve ser compacto, neutro e icon-only;
+- botão `...` não deve aparecer ao lado da lixeira no estado atual.
 
-### 5.2 Badges
+### 6.2 Estrutura visual do post
 
-Badges superiores exibem:
+O tópico principal exibe:
 
-- categoria;
-- tipo técnico convertido em label;
-- status convertido em label.
+- avatar ou iniciais do autor;
+- nome do autor;
+- badge de categoria;
+- data relativa/contextual;
+- botão de favoritar;
+- botão de excluir icon-only quando permitido;
+- título do tópico;
+- conteúdo;
+- reações;
+- contador de respostas.
 
-Mapeamento de tipo:
+A tela não deve exibir:
 
-| Tipo interno | Label |
+- badge **Discussão**;
+- badge **Aberto**;
+- badges derivadas de tipo/status;
+- box **Pessoa relacionada**;
+- botão `...` de mais opções;
+- bloco separado de comentários por resposta.
+
+### 6.3 Badges
+
+Badges superiores exibem apenas a categoria normalizada.
+
+Exemplos:
+
+| Nome original/legado | Label visual |
 |---|---|
-| `pergunta` | Pergunta |
-| `discussao` | Discussão |
-| `aviso` | Aviso |
-| `memoria` | Memória |
-| `ajuda` | Ajuda |
+| `Dúvidas da Família` | `Dúvidas` |
+| `Dúvidas` | `Dúvidas` |
+| `Memórias da Família` | `Memórias` |
+| `Documentos da Família` | `Documentos` |
+| `Eventos da Família` | `Eventos` |
 
-Mapeamento de status:
+Tipo e status continuam podendo existir como campos técnicos, mas não aparecem como badges visíveis nesta tela.
 
-| Status interno | Label |
-|---|---|
-| `aberto` | Aberto |
-| `resolvido` | Resolvido |
-| `fechado` | Fechado |
-| `oculto` | Oculto |
-
-### 5.3 Avatares
+### 6.4 Avatares
 
 A tela exibe avatar ou iniciais para:
 
 - autor do tópico;
-- autores de respostas;
-- autores de comentários.
+- autores de respostas.
 
 Fonte:
 
@@ -272,52 +327,80 @@ Fallback:
 Familiar {id curto}
 ```
 
-### 5.4 Pessoa relacionada
+### 6.5 Datas
 
-Quando `pessoa_relacionada` existe, a tela exibe card com:
+Datas devem usar formato contextual:
 
-- foto ou fallback;
-- nome completo;
-- link para `/pessoa/:id`.
+```txt
+Há XX min
+Hoje, às HH:MM
+Há XX horas
+Ontem, às HH:MM
+```
 
-Observação: `forum_topico_pessoas` pode conter múltiplas pessoas relacionadas, mas o card principal do tópico usa `pessoa_relacionada` quando disponível.
+Para datas antigas, pode ser usado formato completo ou curto conforme a UI.
 
-### 5.5 Menções renderizadas
+### 6.6 Pessoa relacionada
 
-Menções no conteúdo viram links quando há correspondência segura com pessoa relacionada ao tópico.
+O box **Pessoa relacionada** foi removido da visualização pública do tópico.
+
+Regras:
+
+- vínculos em `forum_topico_pessoas` podem permanecer para notificações, busca futura, legado e menções;
+- dados legados de `pessoa_relacionada` não devem gerar card visual nesta tela;
+- reintroduzir o box exige decisão explícita de produto.
+
+### 6.7 Menções renderizadas
+
+Menções no conteúdo podem virar links quando houver correspondência segura com pessoa vinculada ao tópico.
 
 Regras:
 
 - não usar HTML bruto;
 - criar nós React;
-- ordenar nomes por tamanho decrescente antes do regex;
+- ordenar nomes por tamanho decrescente antes do regex, quando a renderização por link estiver ativa;
 - link aponta para `/pessoa/:id`;
-- se não houver match, manter texto normal.
+- se não houver match, manter texto normal;
+- se a implementação atual estiver simplificada e mantiver menções apenas como texto, registrar a diferença antes de reativar links.
 
 ---
 
-## 7. Respostas e comentários
-
-### 6.1 Respostas
+## 7. Respostas diretas
 
 Regras:
 
+- respostas são o único nível visual de conversa abaixo do tópico principal;
 - exibir autor, avatar, data e conteúdo;
 - autor/admin pode editar/excluir;
 - tópico fechado não aceita nova resposta;
 - botão **Marcar solução** não aparece na UI pública;
 - botão **Ocultar** não aparece na UI pública;
-- selo **Solução** pode aparecer para dado legado `aceita_como_solucao`.
+- selo **Solução** pode aparecer para dado legado `aceita_como_solucao`;
+- cada resposta pode ter reações;
+- não exibir campo de comentário dentro da resposta.
 
-### 6.2 Comentários
+### 7.1 Campo de nova resposta
 
-Regras:
+O campo único de nova resposta aparece no rodapé do bloco de tópico.
 
-- comentários ficam associados a respostas;
-- exibir autor, avatar e conteúdo;
-- autor/admin pode editar/excluir;
-- campo deve ser responsivo;
-- comentários não possuem reações no escopo atual.
+Comportamento esperado:
+
+- avatar do usuário atual;
+- placeholder contextual, como `Responder como {nome}`;
+- textarea compacta;
+- botão circular/icon-only de envio;
+- submissão cria registro em `forum_respostas`;
+- se o tópico estiver fechado, exibir aviso e bloquear nova resposta.
+
+### 7.2 Comentários técnicos/legados
+
+A tabela `forum_comentarios` e funções relacionadas podem permanecer no service por compatibilidade técnica, histórico ou reativação futura.
+
+No escopo visual atual:
+
+- não há campo de comentário abaixo de resposta;
+- não há lista de comentários aninhados em resposta;
+- notificações de comentário podem permanecer documentadas como legado/técnico, mas não devem ser acionadas pela UI atual se não houver fluxo visível.
 
 ---
 
@@ -355,7 +438,7 @@ Regra anti-regressão:
 Não importar Rose de lucide-react enquanto a versão instalada não exportar esse ícone.
 ```
 
-### 7.1 Uma reação por pessoa por alvo
+### 8.1 Uma reação por pessoa por alvo
 
 Alvo:
 
@@ -402,13 +485,13 @@ Resultado esperado: zero linhas.
 
 ## 9. Notificações de fórum
 
-Gatilhos atuais:
+Gatilhos atuais/previstos:
 
 | Evento | Função | Destinatários |
 |---|---|---|
 | Criação de tópico | `notifyForumTopicCreated` | usuários vinculados a pessoas mencionadas/relacionadas |
 | Nova resposta | `notifyForumReplyCreated` | participantes do tópico, exceto autor |
-| Novo comentário | `notifyForumCommentCreated` | participantes da conversa, exceto autor |
+| Novo comentário | `notifyForumCommentCreated` | participantes da conversa, exceto autor, quando o fluxo técnico de comentários estiver ativo |
 
 Tipo usado:
 
@@ -428,7 +511,8 @@ Regras:
 - pessoa mencionada e relacionada gera uma única notificação;
 - menção tem prioridade sobre relação;
 - link aponta para `/forum/topico/:id`;
-- falha de notificação não deve impedir criação de tópico/resposta/comentário.
+- falha de notificação não deve impedir criação de tópico/resposta/comentário;
+- se comentários não estiverem expostos na UI, o gatilho de comentário não deve ser considerado parte do fluxo visual atual.
 
 Mensagens atuais:
 
@@ -441,7 +525,7 @@ Mensagens atuais:
 
 ---
 
-## 10. Favoritos
+## 10. Favoritos de fórum
 
 A visualização de tópico inclui `ForumTopicFavoriteButton`.
 
@@ -450,13 +534,17 @@ Uso:
 ```txt
 entity_type = forum_topic
 entity_id = topico.id
+href = /forum/topico/:id
 ```
 
 Regras:
 
 - metadata deve ser mínima;
 - link esperado é `/forum/topico/:id`;
-- favoritos de fórum devem ser documentados em detalhe quando a frente de favoritos expandidos for consolidada.
+- botão de favorito deve permanecer compacto;
+- favoritos de fórum aparecem em `/meus-favoritos` como categoria **Fórum**;
+- em `/meus-favoritos`, o card inteiro é clicável e substitui o antigo botão **Abrir conteúdo**;
+- o botão de lixeira de `/meus-favoritos` deve interromper propagação para não abrir o card ao remover.
 
 ---
 
@@ -512,7 +600,8 @@ Regras:
 - não expor service role;
 - não vazar dados sensíveis em metadata;
 - manter funções de moderação protegidas por RLS/permissões;
-- não bloquear conteúdo salvo por falha de notificação.
+- não bloquear conteúdo salvo por falha de notificação;
+- funções de comentário podem permanecer por compatibilidade, mas não justificam reintrodução do campo de comentário na UI sem decisão de produto.
 
 ---
 
@@ -524,7 +613,9 @@ Regras:
 - dropdown de categoria funciona;
 - dropdowns de tipo/status não aparecem;
 - botão de limpar filtros aparece apenas com ícone e possui `aria-label`/`title`;
-- limpar filtros reseta busca e categoria.
+- limpar filtros reseta busca e categoria;
+- cards exibem apenas badge de categoria e badge **Fixado** quando aplicável;
+- cards não exibem **Discussão** nem **Aberto**.
 
 ### `/forum/novo`
 
@@ -545,17 +636,22 @@ Regras:
 - categoria aparece como cards/botões;
 - em desktop, as 5 categorias ficam em uma linha;
 - conteúdo existente é preservado;
-- menções existentes continuam renderizando;
+- menções existentes continuam preservadas no texto;
 - salvar preserva/atualiza vínculos técnicos derivados de menção.
 
 ### `/forum/topico/:id`
 
-- badges aparecem;
+- apenas a badge de categoria aparece;
+- categoria **Dúvidas da Família** aparece como **Dúvidas**;
+- badges **Discussão** e **Aberto** não aparecem;
 - autor tem avatar ou iniciais;
-- pessoa relacionada tem link para perfil;
-- menções viram link quando há pessoa correspondente;
-- respostas e comentários funcionam;
-- autor/admin pode editar/excluir;
+- botão `...` não aparece ao lado da lixeira;
+- botão excluir é compacto, neutro e icon-only;
+- box **Pessoa relacionada** não aparece;
+- data aparece em formato contextual;
+- respostas diretas funcionam;
+- não há campo de comentário dentro de resposta;
+- autor/admin pode editar/excluir quando permitido;
 - usuário comum não vê ação administrativa indevida;
 - tópico fechado não aceita nova resposta.
 
@@ -572,7 +668,7 @@ Regras:
 ### Notificações
 
 - pessoa mencionada recebe notificação;
-- pessoa relacionada recebe notificação;
+- pessoa relacionada recebe notificação quando houver vínculo técnico aplicável;
 - autor não recebe notificação própria;
 - menção + relação não duplica;
 - link abre `/forum/topico/:id`;
@@ -596,6 +692,18 @@ Verificar migration:
 
 e rodar a consulta de duplicidades em `forum_reacoes`.
 
+### Dropdowns de tipo/status voltaram em `/forum`
+
+Verificar:
+
+- `ForumHome.tsx`;
+- se `TIPO_LABELS` e `STATUS_LABELS` ainda estão sendo usados para renderização visível;
+- se o grid de filtros ainda possui colunas reservadas para tipo/status;
+- se o botão de limpar filtros foi inserido ao lado do dropdown de categoria;
+- se `setTipo('todos')` e `setStatus('todos')` permanecem apenas como reset interno, sem controle visual.
+
+Regra: tipo/status podem existir tecnicamente, mas não devem aparecer como filtros visíveis na home do fórum.
+
 ### Campo Pessoas Relacionadas voltou na criação/edição
 
 Verificar:
@@ -605,16 +713,39 @@ Verificar:
 - se algum merge reintroduziu dropdown manual;
 - se o vínculo está sendo feito por menção `@`.
 
-Regra: a relação manual por dropdown não faz parte da UI atual. A vinculação deve ser derivada de menções ou preservada como dado legado na visualização.
+Regra: a relação manual por dropdown não faz parte da UI atual. A vinculação deve ser derivada de menções ou preservada como dado legado.
+
+### Box Pessoa relacionada voltou no tópico
+
+Verificar:
+
+- `ForumTopico.tsx`;
+- blocos condicionais de `pessoa_relacionada`;
+- renderização de cards laterais/auxiliares;
+- eventual reuso de trecho antigo do layout.
+
+Regra: dados relacionados podem existir tecnicamente, mas o box visual foi removido da tela atual.
+
+### Comentário aninhado voltou na resposta
+
+Verificar:
+
+- renderização de `comentarios[resposta.id]`;
+- campo `comentarioTexto`;
+- handlers `comentar`, `removerComentario`, `salvarComentarioEditado`;
+- imports de funções `criarComentarioForum`, `atualizarComentarioForum`, `deletarComentarioForum` quando não usados pela UI.
+
+Regra: a UI atual possui tópico principal e respostas diretas. Não há segundo nível de comentário.
 
 ### Menção não vira link
 
 Verificar:
 
-- pessoa está em `forum_topico_pessoas` ou `pessoa_relacionada`;
+- pessoa está em `forum_topico_pessoas` ou dado legado compatível;
 - nome do texto bate com `nome_completo`;
 - regex está ordenando nomes por tamanho;
-- acentuação e espaços.
+- acentuação e espaços;
+- se a implementação atual optou por manter menção como texto simples.
 
 ### Notificação não aparece
 
@@ -633,8 +764,13 @@ Verificar:
 Não reintroduzir:
 
 - dropdown de `Tipo` em `/forum/novo`;
-- categoria como dropdown;
-- dropdown de pessoas sem busca;
+- dropdowns de tipo/status em `/forum`;
+- categoria como dropdown em `/forum/novo` ou edição;
+- dropdown manual de pessoas relacionadas em criação/edição;
+- box visual **Pessoa relacionada** em `/forum/topico/:id`;
+- badges **Discussão** e **Aberto** em cards ou tópico;
+- botão `...` ao lado da lixeira no tópico;
+- campo de comentário aninhado em resposta;
 - botão `Ocultar` no header público do tópico;
 - botão `Marcar solução` na UI pública;
 - label visual `Curtir`, `Lembrar` ou `Celebrar`;
@@ -649,7 +785,8 @@ Preservar:
 - metadata mínima;
 - links internos controlados;
 - logs técnicos sem dados sensíveis;
-- falha de notificação sem rollback do conteúdo salvo.
+- falha de notificação sem rollback do conteúdo salvo;
+- compatibilidade de tabelas/funções legadas quando ainda existirem no service.
 
 ---
 
@@ -658,11 +795,12 @@ Preservar:
 Não bloqueiam o MVP:
 
 - autocomplete remoto/assíncrono de menções;
-- menções em respostas e comentários;
-- notificações específicas por menção em resposta/comentário;
-- reações em comentários;
+- menções em respostas;
+- notificações específicas por menção em resposta;
+- reações em comentários, caso o nível de comentários volte por decisão de produto;
 - moderação administrativa dedicada;
 - busca full-text;
 - anexos em tópicos;
 - filtros por pessoa relacionada;
-- estatísticas de participação.
+- estatísticas de participação;
+- reintrodução de comentários aninhados, somente se houver decisão explícita e atualização de UX/documentação.

@@ -1,9 +1,9 @@
 # Guia de UX e Layout - Árvore Família
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-09  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com a frente mobile recente.
+> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com ajustes recentes de fórum, favoritos, cache/deploy e frente mobile.
 
 ## Objetivo
 
@@ -628,20 +628,28 @@ Arquivos principais:
 src/app/pages/forum/ForumHome.tsx
 src/app/pages/forum/ForumNovoTopico.tsx
 src/app/pages/forum/ForumTopico.tsx
+src/app/pages/forum/ForumEditarTopico.tsx
 ```
 
 Padrões consolidados:
 
+- `/forum` deve manter interface enxuta: busca, filtro de categoria e ação compacta de limpar filtros;
+- dropdowns visuais de **Tipo** e **Status** não devem aparecer na home do fórum sem decisão explícita de produto;
+- cards de tópicos recentes devem exibir apenas badge de categoria e, quando aplicável, badge **Fixado**;
+- badges **Discussão** e **Aberto** não devem aparecer em `/forum` nem em `/forum/topico/:id`;
 - `/forum/novo` não usa dropdown **Tipo**;
 - categoria usa seleção única por botões/cards;
 - categoria selecionada deve ter estado visual claro;
-- dropdown de pessoas relacionadas possui busca interna;
-- clique fora fecha dropdown;
+- campo manual **Pessoas Relacionadas** não aparece na criação nem na edição;
 - aviso **Digite @ para marcar alguém na publicação** aparece acima do conteúdo;
-- menções `@Nome Completo` aparecem em negrito/link para `/pessoa/:id`;
-- tópico usa badges pequenas/coloridas para categoria, tipo e status;
+- menções `@Nome Completo` podem gerar vínculo técnico com pessoas e, quando renderizadas, devem apontar para `/pessoa/:id`;
+- `/forum/topico/:id` usa estrutura visual de post/conversa: tópico principal, respostas diretas e campo único de nova resposta;
+- a badge de categoria na visualização deve usar rótulos curtos, como **Dúvidas**, **Memórias**, **Documentos** e **Eventos**;
+- não há box visual **Pessoa relacionada** na tela de tópico;
+- não há botão `...` ao lado das ações principais do tópico;
+- respostas não exibem **Marcar solução**, **Ocultar** nem campo aninhado de comentário;
+- comentários aninhados em respostas não fazem parte da UI atual; se existirem no banco, ficam como legado/compatibilidade;
 - autores exibem avatar ou fallback de iniciais;
-- respostas não exibem **Marcar solução** nem **Ocultar** na UI final;
 - reações usam ícones e cores;
 - apenas uma reação por usuário/alvo deve ficar ativa.
 
@@ -696,10 +704,18 @@ src/app/pages/MeusFavoritos.tsx
 Padrões:
 
 - filtros/categorias devem refletir o que a implementação suporta;
-- favorito de pessoa é a camada funcional confirmada;
+- favorito de pessoa e favorito de tópico de fórum são camadas funcionais confirmadas;
 - categorias futuras podem existir na UI, mas devem ser tratadas como evolução se não houver botão/fluxo real;
-- cards de favoritos devem ter ação clara de abrir/remover;
-- remoção deve ser segura e por usuário autenticado.
+- cards de favoritos devem ser clicáveis por inteiro quando houver `href`;
+- o botão textual **Abrir conteúdo** não faz parte da UI atual;
+- abertura de link interno deve usar navegação SPA;
+- abertura de link externo deve usar nova aba segura;
+- botão de remoção deve ser visualmente separado, com ação destrutiva clara e sem disparar a navegação do card;
+- badges de tipo devem ficar no topo do card, sem ícone redundante de coração;
+- `forum_topic` deve aparecer como **Fórum**;
+- badges de categorias/tipos devem usar cores diferentes para facilitar escaneabilidade;
+- remoção deve ser segura e por usuário autenticado;
+- cards clicáveis devem preservar `role`, foco visível, `Enter` e `Espaço`.
 
 ---
 

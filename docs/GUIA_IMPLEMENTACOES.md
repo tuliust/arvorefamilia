@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09  
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de fórum, relacionamento conjugal, cache/deploy, reset de perfil e views da árvore.
+> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de fórum, favoritos, relacionamento conjugal, cache/deploy, reset de perfil e views da árvore.
 
 ## Objetivo
 
@@ -60,9 +60,9 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Astrologia/acontecimentos | Implementados no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin/server-side. |
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
 | Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe e tutor de pet. |
-| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa e tópicos de fórum. Expansão para outras entidades deve ser estudada. |
-| Página de favoritos | Implementada | Lista, busca, filtros, abertura e remoção de favoritos. |
-| Fórum | Implementado | Categorias, tópicos, respostas, comentários, menções, vínculos automáticos com pessoas mencionadas, avatares, badges e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição. |
+| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa, tópicos de fórum e arquivos históricos quando o componente expõe a ação. Expansão para outras entidades deve ser estudada. |
+| Página de favoritos | Implementada | Lista, busca, filtros, remoção e cards inteiros clicáveis. O botão textual **Abrir conteúdo** foi removido; a lixeira não deve disparar abertura do card. |
+| Fórum | Implementado no escopo atual | Categorias, tópicos, respostas diretas, menções, vínculos automáticos com pessoas mencionadas, avatares, favoritos e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição; `/forum/topico/:id` não exibe box de pessoa relacionada nem comentários aninhados na UI atual. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
 | Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros e ajustes de mobile. |
@@ -710,14 +710,24 @@ Estado consolidado:
 - UI de favorito de pessoa está implementada;
 - tópico de fórum pode ser favoritado;
 - arquivo histórico pode ser favoritado quando componente exibe a ação;
-- `/meus-favoritos` possui listagem, busca, filtros e remoção;
+- `/meus-favoritos` possui listagem, busca, filtros, remoção e abertura de favoritos;
+- cards de `/meus-favoritos` são clicáveis por inteiro quando possuem `href`;
+- links internos devem navegar via SPA;
+- links externos devem abrir em nova aba com `noopener,noreferrer`;
+- cards clicáveis devem aceitar `Enter` e `Espaço`;
+- botão de lixeira deve interromper propagação para não abrir o card;
+- o botão textual **Abrir conteúdo** não faz parte da UI atual;
+- a badge superior não usa ícone de coração;
+- `forum_topic` deve aparecer como **Fórum** na badge visual;
+- cada categoria visual de favorito pode ter cor própria para facilitar escaneabilidade;
 - expansão para outras entidades deve ser estudada antes de alterar UI ou schema.
 
 Regra anti-regressão:
 
-- não gravar telefone, endereço, URL sensível, token, base64 ou dados longos em `metadata`.
-
----
+- não gravar telefone, endereço, URL sensível, token, base64 ou dados longos em `metadata`;
+- não reintroduzir rótulo duplicado inferior com ícone e tipo do conteúdo;
+- não reintroduzir botão textual **Abrir conteúdo** sem decisão explícita de produto;
+- não permitir que a lixeira dispare navegação do card.
 
 ## 14. Notificações
 
@@ -777,9 +787,13 @@ src/app/types/index.ts
 
 Comportamento consolidado:
 
-- fórum possui categorias, tópicos, respostas, comentários, reações e denúncias;
-- `/forum` lista tópicos com busca, categoria e botão de limpar filtros;
-- filtros visuais de tipo e status foram removidos da home do fórum;
+- fórum possui categorias, tópicos, respostas diretas, reações, favoritos e estrutura técnica de denúncias/moderação;
+- `/forum` deve listar tópicos com busca, filtro de categoria e botão icon-only para limpar filtros;
+- filtros visuais de tipo e status foram removidos da home do fórum no desenho desejado;
+- se dropdowns de tipo/status ainda aparecerem na UI, tratar como pendência real em `docs/PLANO_PROXIMOS_PASSOS.md`;
+- cards da home do fórum exibem badge de categoria e badge **Fixado** quando aplicável;
+- cards da home não exibem badges **Discussão** e **Aberto**;
+- datas de cards e tópico usam formato contextual, como `Há XX min`, `Hoje, às HH:MM`, `Há XX horas` ou `Ontem, às HH:MM`;
 - `/forum/novo` usa categoria por botões/cards de seleção única;
 - em desktop, as 5 categorias aparecem em uma linha;
 - campo manual **Pessoas Relacionadas** foi removido de `/forum/novo`;
@@ -787,10 +801,11 @@ Comportamento consolidado:
 - campo manual **Pessoa relacionada** foi removido da edição;
 - conteúdo orienta uso de `@` para marcar pessoa;
 - pessoas mencionadas por `@` são vinculadas automaticamente e podem receber notificação interna;
-- dados legados de pessoa relacionada continuam preservados internamente quando existentes;
-- `/forum/topico/:id` usa badges pequenas/coloridas para categoria, tipo e status;
+- dados legados de pessoa relacionada continuam preservados tecnicamente quando existentes;
+- `/forum/topico/:id` usa estrutura visual de post/conversa com tópico principal, respostas diretas e campo único de resposta;
+- `/forum/topico/:id` exibe apenas badge de categoria, normalizando **Dúvidas da Família** para **Dúvidas**;
+- `/forum/topico/:id` não exibe badges de tipo/status, box **Pessoa relacionada**, botão `...` ou campo de comentário aninhado em resposta;
 - autores exibem avatar ou fallback por iniciais;
-- menções `@Nome Completo` são clicáveis para `/pessoa/:id`;
 - respostas não exibem ações antigas **Marcar solução** e **Ocultar**;
 - reações usam ícones e labels finais:
   - **Amei** (`curtir`, `HeartHandshake`);
@@ -810,11 +825,13 @@ Migration relacionada:
 Regras anti-regressão:
 
 - não reintroduzir dropdown manual de Pessoas Relacionadas em criação/edição sem decisão de produto;
+- não reintroduzir dropdowns de tipo/status em `/forum` sem decisão explícita;
+- não reintroduzir badges **Discussão** e **Aberto** em cards ou tópico;
+- não reintroduzir box **Pessoa relacionada** em `/forum/topico/:id`;
+- não reintroduzir campo de comentário aninhado em resposta sem redesenho de UX e documentação;
 - não trocar `Flower2` por ícone inexistente;
 - não remover constraint de unicidade de `forum_reacoes`;
-- não interromper criação de tópico/resposta/comentário por falha de notificação.
-
----
+- não interromper criação de tópico/resposta por falha de notificação.
 
 ## 16. Calendário familiar e Google Calendar
 
