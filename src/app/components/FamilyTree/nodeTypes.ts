@@ -22,6 +22,7 @@ interface DirectFamilyLegendNodeData {
 }
 
 const CENTRAL_AREA_CARD_EXTRA_WIDTH = 80;
+const CENTRAL_AREA_CENTER_OFFSET = CENTRAL_AREA_CARD_EXTRA_WIDTH / 2;
 const DIRECT_FAMILY_LOGICAL_CENTER_X = 1610;
 const CENTRAL_AREA_CARD_RELATIONS = new Set([
   'parent',
@@ -50,16 +51,74 @@ const CENTRAL_AREA_RIGHT_GROUPS = new Set([
   'pets',
 ]);
 
+type GroupAnchorSide = 'top' | 'bottom' | 'left' | 'right' | 'center';
+
 function getDirectFamilyGroupKey(id?: string) {
   return id?.replace(/^direct-group-box-/, '');
 }
 
-function DirectFamilyAnchorNode() {
+function getDirectFamilyLabelGroupKey(id?: string) {
+  return id?.replace(/^direct-label-/, '');
+}
+
+function getDirectFamilyAnchorInfo(id?: string): { groupKey: string; anchorSide: GroupAnchorSide } | null {
+  const match = id?.match(/^direct-group-(.+)-(top|bottom|left|right|center)-anchor$/);
+  if (!match) return null;
+
+  return {
+    groupKey: match[1],
+    anchorSide: match[2] as GroupAnchorSide,
+  };
+}
+
+function isRightCentralGroup(groupKey?: string) {
+  return Boolean(groupKey && CENTRAL_AREA_RIGHT_GROUPS.has(groupKey));
+}
+
+function isStretchedCentralGroup(groupKey?: string) {
+  return Boolean(groupKey && CENTRAL_AREA_GROUPS.has(groupKey));
+}
+
+function getCentralGroupVisualShift(groupKey?: string) {
+  if (!isStretchedCentralGroup(groupKey)) return 0;
+  return isRightCentralGroup(groupKey) ? -CENTRAL_AREA_CARD_EXTRA_WIDTH : 0;
+}
+
+function getCentralGroupCenterShift(groupKey?: string) {
+  if (!isStretchedCentralGroup(groupKey)) return 0;
+  return isRightCentralGroup(groupKey) ? -CENTRAL_AREA_CENTER_OFFSET : CENTRAL_AREA_CENTER_OFFSET;
+}
+
+function getCentralGroupAnchorShift(groupKey: string, anchorSide: GroupAnchorSide) {
+  if (!isStretchedCentralGroup(groupKey)) return 0;
+
+  if (anchorSide === 'top' || anchorSide === 'bottom' || anchorSide === 'center') {
+    return getCentralGroupCenterShift(groupKey);
+  }
+
+  if (isRightCentralGroup(groupKey)) {
+    return anchorSide === 'left' ? -CENTRAL_AREA_CARD_EXTRA_WIDTH : 0;
+  }
+
+  return anchorSide === 'right' ? CENTRAL_AREA_CARD_EXTRA_WIDTH : 0;
+}
+
+function DirectFamilyAnchorNode(props: NodeProps) {
+  const anchorInfo = getDirectFamilyAnchorInfo(props.id);
+  const anchorShiftX = anchorInfo
+    ? getCentralGroupAnchorShift(anchorInfo.groupKey, anchorInfo.anchorSide)
+    : 0;
   const hiddenHandle = { background: 'transparent', border: 'none', width: 1, height: 1 };
 
   return React.createElement(
     'div',
-    { 'aria-hidden': true, className: 'pointer-events-none h-px w-px opacity-0' },
+    {
+      'aria-hidden': true,
+      className: 'pointer-events-none h-px w-px opacity-0',
+      style: {
+        transform: anchorShiftX ? `translateX(${anchorShiftX}px)` : undefined,
+      },
+    },
     React.createElement(Handle, { type: 'target', position: Position.Top, id: 'top', style: { top: 0, left: 0, ...hiddenHandle } }),
     React.createElement(Handle, { type: 'source', position: Position.Bottom, id: 'bottom', style: { bottom: 0, left: 0, ...hiddenHandle } }),
     React.createElement(Handle, { type: 'source', position: Position.Right, id: 'right', style: { right: 0, top: 0, ...hiddenHandle } }),
@@ -106,12 +165,27 @@ function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
   );
 }
 
+function DirectFamilyCenteredLabelNode(props: NodeProps) {
+  const groupKey = getDirectFamilyLabelGroupKey(props.id);
+  const shiftX = getCentralGroupCenterShift(groupKey);
+
+  return React.createElement(
+    'div',
+    {
+      style: {
+        transform: shiftX ? `translateX(${shiftX}px)` : undefined,
+      },
+    },
+    React.createElement(DirectFamilyLabelNode, props)
+  );
+}
+
 function DirectFamilyGroupBoxNode({ data, id }: NodeProps<DirectFamilyGroupBoxNodeData>) {
   const groupKey = getDirectFamilyGroupKey(id);
-  const shouldStretchGroup = Boolean(groupKey && CENTRAL_AREA_GROUPS.has(groupKey));
-  const shouldStretchLeft = Boolean(groupKey && CENTRAL_AREA_RIGHT_GROUPS.has(groupKey));
+  const shouldStretchGroup = isStretchedCentralGroup(groupKey);
   const currentWidth = data.width ?? 0;
   const width = shouldStretchGroup ? currentWidth + CENTRAL_AREA_CARD_EXTRA_WIDTH : currentWidth;
+  const shiftX = getCentralGroupVisualShift(groupKey);
 
   return React.createElement('div', {
     'aria-hidden': true,
@@ -119,7 +193,7 @@ function DirectFamilyGroupBoxNode({ data, id }: NodeProps<DirectFamilyGroupBoxNo
     style: {
       width,
       height: data.height ?? 0,
-      transform: shouldStretchLeft ? `translateX(-${CENTRAL_AREA_CARD_EXTRA_WIDTH}px)` : undefined,
+      transform: shiftX ? `translateX(${shiftX}px)` : undefined,
       background: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.background,
       borderColor: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.color,
       borderWidth: DIRECT_FAMILY_GROUP_CONTAINER_BORDER.width,
@@ -195,7 +269,7 @@ function DirectFamilyLegendNode({ data }: NodeProps<DirectFamilyLegendNodeData>)
 export const nodeTypes: NodeTypes = {
   personNode: CentralAreaPersonNode,
   marriageNode: MarriageNode,
-  directFamilyLabelNode: DirectFamilyLabelNode,
+  directFamilyLabelNode: DirectFamilyCenteredLabelNode,
   directFamilyAnchorNode: DirectFamilyAnchorNode,
   directFamilyGroupBoxNode: DirectFamilyGroupBoxNode,
   directFamilyLegendNode: DirectFamilyLegendNode,
