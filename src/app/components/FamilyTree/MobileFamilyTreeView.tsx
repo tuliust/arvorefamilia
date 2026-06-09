@@ -385,8 +385,8 @@ export function MobileFamilyTreeView({
                 </div>
 
                 <div className="pointer-events-none relative h-12">
-                  <div className="absolute left-1/4 right-1/4 top-8 h-px bg-cyan-600" />
-                  <div className="absolute left-1/2 top-8 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute left-[23.5%] right-[23.5%] top-7 h-px bg-cyan-600" />
+                  <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
                 </div>
               </div>
 
