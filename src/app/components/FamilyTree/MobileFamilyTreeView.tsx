@@ -107,17 +107,19 @@ function VitalLines({
   showDeathLine,
   align = 'center',
   compact = false,
+  prominent = false,
 }: {
   birthLine: string;
   deathLine: string;
   showDeathLine: boolean;
   align?: 'center' | 'left';
   compact?: boolean;
+  prominent?: boolean;
 }) {
   const alignment = align === 'left' ? 'justify-start text-left' : 'justify-center text-center';
-  const textSize = compact ? 'text-[9px]' : 'text-[11px]';
+  const textSize = prominent ? 'text-[12px]' : compact ? 'text-[9px]' : 'text-[11px]';
   const gap = compact ? 'gap-0.5' : 'gap-1';
-  const iconSize = compact ? 'h-2.5 w-2.5' : 'h-3 w-3';
+  const iconSize = prominent ? 'h-3.5 w-3.5' : compact ? 'h-2.5 w-2.5' : 'h-3 w-3';
 
   return (
     <>
@@ -184,6 +186,47 @@ function PersonCard({
         {displayName}
       </span>
       <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={showDeathLine} />
+    </button>
+  );
+}
+
+function MainPersonCard({
+  person,
+  label,
+  onClick,
+}: {
+  person: Pessoa;
+  label?: string;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className="relative flex h-[194px] w-full min-w-0 flex-col items-center justify-center rounded-[1.55rem] border border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 px-3.5 pb-4 pt-4 text-center text-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition active:scale-[0.98]"
+    >
+      {label && (
+        <span className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-white shadow">
+          {label}
+        </span>
+      )}
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className="h-[86px] w-[86px]"
+        iconClassName="h-10 w-10"
+      />
+      <span className="mt-3 w-full truncate whitespace-nowrap text-[15px] font-extrabold uppercase leading-none">
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        prominent
+      />
     </button>
   );
 }
@@ -532,8 +575,8 @@ export function MobileFamilyTreeView({
               </div>
 
               {isVisible(model.central) && (
-                <div className="relative mx-auto mt-0 w-[min(181px,calc((100vw-1.75rem)/2))]">
-                  <PersonCard person={model.central} label="Você" central onClick={onPersonClick} />
+                <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
+                  <MainPersonCard person={model.central} label="Você" onClick={onPersonClick} />
                 </div>
               )}
 
