@@ -8,6 +8,7 @@ import {
   HeartHandshake,
   MessageCircle,
   MessageSquare,
+  MoreHorizontal,
   PartyPopper,
   Send,
   Trash2,
@@ -15,7 +16,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Textarea } from '../../components/ui/textarea';
 import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicFavoriteButton';
@@ -137,9 +138,11 @@ function MentionedContent({ content }: { content: string; pessoas: Pessoa[] }) {
   return <>{content}</>;
 }
 
-function AuthorAvatar({ name, src }: { name: string; src?: string | null }) {
+function AuthorAvatar({ name, src, size = 'md' }: { name: string; src?: string | null; size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'h-8 w-8 text-[10px]' : 'h-10 w-10 text-xs';
+
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600">
+    <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-100 font-semibold text-gray-600 ${sizeClass}`}>
       {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : <span aria-hidden="true">{iniciais(name)}</span>}
     </span>
   );
@@ -160,6 +163,7 @@ function ReactionBar({
   selectedReaction,
   onChange,
   onSelectedChange,
+  compact = false,
 }: {
   alvoTipo: ForumAlvoTipo;
   alvoId: string;
@@ -167,6 +171,7 @@ function ReactionBar({
   selectedReaction: ForumReacaoTipo | null;
   onChange: (resumo: ResumoReacoesForum) => void;
   onSelectedChange: (tipo: ForumReacaoTipo | null) => void;
+  compact?: boolean;
 }) {
   async function reagir(tipo: ForumReacaoTipo) {
     const reacao = await reagirAoConteudo(alvoTipo, alvoId, tipo);
@@ -195,7 +200,11 @@ function ReactionBar({
             type="button"
             variant="outline"
             size="sm"
-            className={['min-w-0 gap-1 rounded-full px-2 transition', selected ? option.selectedClasses : option.classes].join(' ')}
+            className={[
+              compact ? 'h-8 min-w-8 rounded-full px-2' : 'min-w-0 gap-1 rounded-full px-2',
+              'transition',
+              selected ? option.selectedClasses : option.classes,
+            ].join(' ')}
             title={`Reagir com ${option.label}`}
             aria-label={`Reagir com ${option.label}`}
             aria-pressed={selected}
@@ -465,6 +474,8 @@ export function ForumTopico() {
 
   const topicoAuthorProfile = authorProfiles[topico.autor_id];
   const topicoAuthorName = nomeAutor(topico.autor_id, user?.id, topicoAuthorProfile);
+  const currentUserName = user?.user_metadata?.nome_exibicao || user?.user_metadata?.name || user?.email || 'você';
+  const currentUserAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const pessoasParaMencoes = pessoasRelacionadas.length > 0 ? pessoasRelacionadas : topico.pessoa_relacionada ? [topico.pessoa_relacionada] : [];
 
   return (
@@ -479,160 +490,176 @@ export function ForumTopico() {
         ]}
       />
 
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-        <Card className="min-w-0">
-          <CardContent className="space-y-5 p-4 sm:p-5 md:p-6">
-            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex min-w-0 flex-wrap gap-2">
-                {topico.categoria?.nome && <TopicBadge>{topico.categoria.nome}</TopicBadge>}
-              </div>
-
-              <div className="flex shrink-0 items-center gap-2 sm:justify-end">
-                <ForumTopicFavoriteButton topico={topico} className="h-9 w-9 border-gray-200" />
-                {podeEditarTopico && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                    onClick={removerTopico}
-                    disabled={excluindoTopico}
-                    aria-label={excluindoTopico ? 'Excluindo tópico' : 'Excluir tópico'}
-                    title={excluindoTopico ? 'Excluindo...' : 'Excluir'}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex min-w-0 items-start gap-3">
-              <AuthorAvatar name={topicoAuthorName} src={topicoAuthorProfile?.avatar_url} />
-              <div className="min-w-0">
-                <h1 className="break-words text-2xl font-bold text-gray-900 md:text-3xl">{topico.titulo}</h1>
-                <p className="mt-2 break-words text-sm text-gray-500">Por {topicoAuthorName} em {formatarData(topico.created_at)}</p>
-              </div>
-            </div>
-
-            <p className="whitespace-pre-wrap break-words leading-relaxed text-gray-700">
-              <MentionedContent content={topico.conteudo} pessoas={pessoasParaMencoes} />
-            </p>
-
-            <ReactionBar alvoTipo="topico" alvoId={topico.id} resumo={resumoTopico} selectedReaction={minhaReacaoTopico} onChange={setResumoTopico} onSelectedChange={setMinhaReacaoTopico} />
-          </CardContent>
-        </Card>
-
-        <section className="space-y-4">
-          <div className="flex min-w-0 items-center justify-between gap-3">
-            <h2 className="break-words text-xl font-bold text-gray-900">Respostas</h2>
-            <span className="shrink-0 text-sm text-gray-500">{respostas.length} resposta(s)</span>
-          </div>
-
-          {respostas.length === 0 ? (
-            <Card><CardContent className="p-6 text-center text-gray-500">Nenhuma resposta publicada ainda.</CardContent></Card>
-          ) : (
-            respostas.map((resposta) => {
-              const podeAlterarResposta = Boolean(user && (resposta.autor_id === user.id || admin));
-              const respostaAuthorProfile = authorProfiles[resposta.autor_id];
-              const respostaAuthorName = nomeAutor(resposta.autor_id, user?.id, respostaAuthorProfile);
-              return (
-                <Card key={resposta.id} className={`min-w-0 ${resposta.aceita_como_solucao ? 'border-emerald-300 bg-emerald-50/30' : ''}`}>
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <AuthorAvatar name={respostaAuthorName} src={respostaAuthorProfile?.avatar_url} />
-                        <div className="min-w-0">
-                          <CardTitle className="break-words text-base">
-                            {respostaAuthorName}
-                            {resposta.aceita_como_solucao && <span className="ml-2 inline-flex items-center gap-1 text-sm text-emerald-700"><CheckCircle2 className="h-4 w-4" />Solução</span>}
-                          </CardTitle>
-                          <p className="text-xs text-gray-500">{formatarData(resposta.created_at)}</p>
-                        </div>
-                      </div>
-
-                      {podeAlterarResposta && (
-                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-                          <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => iniciarEdicaoResposta(resposta)}><Edit className="mr-1 h-4 w-4 shrink-0" />Editar</Button>
-                          <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => removerResposta(resposta.id)}><Trash2 className="mr-1 h-4 w-4 shrink-0" />Excluir</Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4 p-4 pt-2">
-                    {editandoRespostaId === resposta.id ? (
-                      <div className="space-y-2">
-                        <Textarea value={respostaEditada} onChange={(event) => setRespostaEditada(event.target.value)} className="min-h-28" />
-                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                          <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarRespostaEditada(resposta.id)}>Salvar resposta</Button>
-                          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoRespostaId(null)}>Cancelar</Button>
-                        </div>
-                      </div>
-                    ) : <p className="whitespace-pre-wrap break-words text-gray-700">{resposta.conteudo}</p>}
-
-                    <ReactionBar alvoTipo="resposta" alvoId={resposta.id} resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO} selectedReaction={minhasReacoesRespostas[resposta.id] ?? null} onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))} onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))} />
-
-                    <div className="space-y-3 border-t border-gray-100 pt-4">
-                      <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700"><MessageSquare className="h-4 w-4" />Comentários</h3>
-
-                      {(comentarios[resposta.id] ?? []).map((comentario) => {
-                        const podeAlterarComentario = Boolean(user && (comentario.autor_id === user.id || admin));
-                        const comentarioAuthorProfile = authorProfiles[comentario.autor_id];
-                        const comentarioAuthorName = nomeAutor(comentario.autor_id, user?.id, comentarioAuthorProfile);
-                        return (
-                          <div key={comentario.id} className="min-w-0 rounded-md bg-gray-50 p-3">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
-                              <div className="flex min-w-0 items-start gap-3">
-                                <AuthorAvatar name={comentarioAuthorName} src={comentarioAuthorProfile?.avatar_url} />
-                                <div className="min-w-0">
-                                  <p className="break-words text-xs font-semibold text-gray-700">{comentarioAuthorName}</p>
-                                  {editandoComentarioId === comentario.id ? (
-                                    <div className="mt-2 space-y-2">
-                                      <Textarea value={comentarioEditado} onChange={(event) => setComentarioEditado(event.target.value)} className="min-h-16" />
-                                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                        <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarComentarioEditado(resposta.id, comentario.id)}>Salvar</Button>
-                                        <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoComentarioId(null)}>Cancelar</Button>
-                                      </div>
-                                    </div>
-                                  ) : <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{comentario.conteudo}</p>}
-                                </div>
-                              </div>
-                              {podeAlterarComentario && (
-                                <div className="flex shrink-0 gap-1">
-                                  <button type="button" onClick={() => iniciarEdicaoComentario(comentario)} className="text-gray-400 hover:text-blue-600" aria-label="Editar comentário"><Edit className="h-4 w-4" /></button>
-                                  <button type="button" onClick={() => removerComentario(resposta.id, comentario.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir comentário"><Trash2 className="h-4 w-4" /></button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <Textarea value={comentarioTexto[resposta.id] ?? ''} onChange={(event) => setComentarioTexto((prev) => ({ ...prev, [resposta.id]: event.target.value }))} placeholder="Escrever comentário" className="min-h-16" />
-                        <Button type="button" onClick={() => comentar(resposta.id)} className="w-full sm:w-auto sm:self-start">Comentar</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </section>
-
-        <Card className="min-w-0">
-          <CardHeader><CardTitle>Responder</CardTitle></CardHeader>
-          <CardContent>
-            {topico.status === 'fechado' ? (
-              <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Este tópico está fechado e não aceita novas respostas.</p>
-            ) : (
-              <form onSubmit={responder} className="space-y-3">
-                <Textarea value={respostaTexto} onChange={(event) => setRespostaTexto(event.target.value)} placeholder="Escreva sua resposta" className="min-h-32" />
-                <div className="flex flex-col sm:flex-row sm:justify-end">
-                  <Button type="submit" disabled={enviandoResposta} className="w-full sm:w-auto"><Send className="mr-2 h-4 w-4 shrink-0" />{enviandoResposta ? 'Enviando...' : 'Publicar resposta'}</Button>
+      <main className="mx-auto max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <Card className="min-w-0 overflow-hidden rounded-none border-x-0 bg-white shadow-sm sm:rounded-2xl sm:border-x">
+          <CardContent className="p-0">
+            <article className="border-b border-gray-100">
+              <header className="flex items-start gap-3 px-4 py-3 sm:px-5">
+                <AuthorAvatar name={topicoAuthorName} src={topicoAuthorProfile?.avatar_url} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                    <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
+                    {topico.categoria?.nome && <TopicBadge>{topico.categoria.nome}</TopicBadge>}
+                  </div>
+                  <p className="mt-0.5 text-xs text-gray-500">{formatarData(topico.created_at)}</p>
                 </div>
-              </form>
-            )}
+
+                <div className="flex shrink-0 items-center gap-1">
+                  <ForumTopicFavoriteButton topico={topico} className="h-9 w-9 border-gray-200" />
+                  {podeEditarTopico && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                      onClick={removerTopico}
+                      disabled={excluindoTopico}
+                      aria-label={excluindoTopico ? 'Excluindo tópico' : 'Excluir tópico'}
+                      title={excluindoTopico ? 'Excluindo...' : 'Excluir'}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-gray-500" aria-label="Mais opções">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </header>
+
+              <div className="space-y-3 px-4 pb-4 sm:px-5">
+                <h1 className="break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{topico.titulo}</h1>
+                <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-gray-800">
+                  <MentionedContent content={topico.conteudo} pessoas={pessoasParaMencoes} />
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2 sm:px-5">
+                <ReactionBar alvoTipo="topico" alvoId={topico.id} resumo={resumoTopico} selectedReaction={minhaReacaoTopico} onChange={setResumoTopico} onSelectedChange={setMinhaReacaoTopico} compact />
+                <span className="shrink-0 text-xs text-gray-500">{respostas.length} resposta(s)</span>
+              </div>
+            </article>
+
+            <section className="space-y-4 bg-gray-50/60 px-4 py-4 sm:px-5" aria-label="Respostas do tópico">
+              {respostas.length === 0 ? (
+                <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 ring-1 ring-gray-100">Nenhuma resposta publicada ainda.</div>
+              ) : (
+                respostas.map((resposta) => {
+                  const podeAlterarResposta = Boolean(user && (resposta.autor_id === user.id || admin));
+                  const respostaAuthorProfile = authorProfiles[resposta.autor_id];
+                  const respostaAuthorName = nomeAutor(resposta.autor_id, user?.id, respostaAuthorProfile);
+
+                  return (
+                    <div key={resposta.id} className="flex min-w-0 items-start gap-3">
+                      <AuthorAvatar name={respostaAuthorName} src={respostaAuthorProfile?.avatar_url} size="sm" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className={`rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100 ${resposta.aceita_como_solucao ? 'ring-emerald-200' : ''}`}>
+                          <div className="mb-1 flex min-w-0 items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="break-words text-sm font-semibold text-gray-900">
+                                {respostaAuthorName}
+                                {resposta.aceita_como_solucao && (
+                                  <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-700">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Solução
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-500">{formatarData(resposta.created_at)}</p>
+                            </div>
+
+                            {podeAlterarResposta && (
+                              <div className="flex shrink-0 gap-1">
+                                <button type="button" onClick={() => iniciarEdicaoResposta(resposta)} className="text-gray-400 hover:text-blue-600" aria-label="Editar resposta">
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button type="button" onClick={() => removerResposta(resposta.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir resposta">
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {editandoRespostaId === resposta.id ? (
+                            <div className="space-y-2">
+                              <Textarea value={respostaEditada} onChange={(event) => setRespostaEditada(event.target.value)} className="min-h-28" />
+                              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarRespostaEditada(resposta.id)}>Salvar resposta</Button>
+                                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoRespostaId(null)}>Cancelar</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800">{resposta.conteudo}</p>
+                          )}
+                        </div>
+
+                        <ReactionBar alvoTipo="resposta" alvoId={resposta.id} resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO} selectedReaction={minhasReacoesRespostas[resposta.id] ?? null} onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))} onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))} compact />
+
+                        {(comentarios[resposta.id] ?? []).map((comentario) => {
+                          const podeAlterarComentario = Boolean(user && (comentario.autor_id === user.id || admin));
+                          const comentarioAuthorProfile = authorProfiles[comentario.autor_id];
+                          const comentarioAuthorName = nomeAutor(comentario.autor_id, user?.id, comentarioAuthorProfile);
+
+                          return (
+                            <div key={comentario.id} className="ml-6 flex min-w-0 items-start gap-2">
+                              <AuthorAvatar name={comentarioAuthorName} src={comentarioAuthorProfile?.avatar_url} size="sm" />
+                              <div className="min-w-0 flex-1 rounded-2xl bg-white p-3 text-sm shadow-sm ring-1 ring-gray-100">
+                                <div className="flex min-w-0 items-start justify-between gap-2">
+                                  <p className="break-words text-xs font-semibold text-gray-700">{comentarioAuthorName}</p>
+                                  {podeAlterarComentario && (
+                                    <div className="flex shrink-0 gap-1">
+                                      <button type="button" onClick={() => iniciarEdicaoComentario(comentario)} className="text-gray-400 hover:text-blue-600" aria-label="Editar comentário"><Edit className="h-4 w-4" /></button>
+                                      <button type="button" onClick={() => removerComentario(resposta.id, comentario.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir comentário"><Trash2 className="h-4 w-4" /></button>
+                                    </div>
+                                  )}
+                                </div>
+                                {editandoComentarioId === comentario.id ? (
+                                  <div className="mt-2 space-y-2">
+                                    <Textarea value={comentarioEditado} onChange={(event) => setComentarioEditado(event.target.value)} className="min-h-16" />
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                      <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarComentarioEditado(resposta.id, comentario.id)}>Salvar</Button>
+                                      <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoComentarioId(null)}>Cancelar</Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="mt-1 whitespace-pre-wrap break-words text-gray-700">{comentario.conteudo}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <div className="ml-6 flex min-w-0 items-start gap-2">
+                          <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
+                          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+                            <Textarea value={comentarioTexto[resposta.id] ?? ''} onChange={(event) => setComentarioTexto((prev) => ({ ...prev, [resposta.id]: event.target.value }))} placeholder="Comentar" className="min-h-10 rounded-2xl bg-white text-sm" />
+                            <Button type="button" size="sm" onClick={() => comentar(resposta.id)} className="sm:self-start">Comentar</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </section>
+
+            <form onSubmit={responder} className="border-t border-gray-100 bg-white px-4 py-3 sm:px-5">
+              {topico.status === 'fechado' ? (
+                <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">Este tópico está fechado e não aceita novas respostas.</p>
+              ) : (
+                <div className="flex min-w-0 items-end gap-2">
+                  <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
+                  <Textarea
+                    value={respostaTexto}
+                    onChange={(event) => setRespostaTexto(event.target.value)}
+                    placeholder={`Responder como ${currentUserName}`}
+                    className="min-h-11 flex-1 rounded-2xl bg-gray-50 text-sm"
+                  />
+                  <Button type="submit" disabled={enviandoResposta} size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Publicar resposta">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </form>
           </CardContent>
         </Card>
       </main>
