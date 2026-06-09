@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo de pendências reais, divergências entre UI e documentação, QA futuro, dívida técnica e backlog pós-MVP após revisão de árvore, IA, Google/OAuth e deploy.
+> Status: plano vivo revisado após fechamento técnico das frentes de chips mobile com gerações inferidas, exportação mobile canônica, correção de encoding e persistência de redes sociais versionadas.
 
 ## Objetivo
 
@@ -30,14 +30,16 @@ A documentação canônica do projeto foi reorganizada por tipo de informação:
 - operação, deploy, migrations e storage em `docs/operacao/*.md`;
 - pendências reais neste arquivo.
 
-Durante a revisão desta rodada, havia conflito Git não resolvido neste arquivo. O conflito foi resolvido documentalmente mantendo os dois assuntos como pendências separadas:
+Durante a revisão desta rodada, foram fechadas tecnicamente quatro frentes que antes apareciam como pendências documentais:
 
-- conector inferior da `/minha-arvore` mobile;
-- alinhamento técnico da exportação mobile.
+- chips mobile de Genealogia/Visão Completa passaram a usar a mesma base de gerações inferidas que alimenta a árvore;
+- strings quebradas por encoding em `MinhaArvore.tsx` foram corrigidas na origem e o workaround global `textEncodingRepair` foi removido;
+- múltiplas redes sociais passaram a ser carregadas e persistidas em `pessoa_social_profiles`, mantendo compatibilidade com os campos legados da primeira rede;
+- a exportação mobile rápida passou a reutilizar o fluxo canônico de `treeExport.ts`.
 
-Também foi registrada a divergência ainda aberta na UI de `/forum`: a documentação prevê a remoção dos filtros de tipo/status, mas a validação visual indicou que os dropdowns ainda aparecem.
+Permanecem como pendências abertas apenas itens ainda não resolvidos por código, decisão de produto, QA visual ou validação externa. A divergência ainda aberta na UI de `/forum` continua registrada: a documentação prevê remoção dos filtros de tipo/status, mas a validação visual indicou que os dropdowns ainda aparecem.
 
-Nesta revisão, foram acrescentadas pendências específicas dos ajustes recentes: consolidação estrutural de CSS visual da árvore, validação de cards compactos em `360px`, QA das respostas de IA, compliance OAuth/Google Agenda e operação do endpoint serverless `/api/ai`.
+Também permanecem pendências de consolidação estrutural de CSS visual da árvore, validação de cards compactos em `360px`, QA das respostas de IA, compliance OAuth/Google Agenda e operação do endpoint serverless `/api/ai`.
 
 ---
 
@@ -45,11 +47,8 @@ Nesta revisão, foram acrescentadas pendências específicas dos ajustes recente
 
 | ID | Documento de origem | Tipo | Ação necessária | Status |
 |---|---|---|---|---|
-| DOC-001 | `docs/funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA | Avaliar se `GenealogyMobileStageTabs` deve usar gerações inferidas pelo layout. O componente monta chips a partir de `pessoas[].manual_generation`, enquanto `FamilyTree` infere gerações internamente antes do layout. | Aberto |
-| DOC-002 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste técnico / encoding | Corrigir strings quebradas por encoding em `src/app/pages/MinhaArvore.tsx`, como `Arquivos Hist?ricos`, `hist?ricos` e `Sess?o encerrada.`. | Aberto |
-| DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente | Definir se `Complemento` e múltiplas redes sociais devem persistir em schema próprio. Hoje `Complemento` é campo visual local e múltiplas redes são parcialmente sincronizadas apenas para campos legados da primeira rede. | Aberto |
+| DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente | Definir se `Complemento` deve persistir em schema próprio. As múltiplas redes sociais já persistem em `pessoa_social_profiles`; a pendência restante é apenas o campo visual `Complemento`. | Parcial |
 | DOC-004 | `/minha-arvore` mobile | bug visual / conector inferior | Refazer a conexão inferior do card principal no mobile sem depender de CSS de bordas. O desenho desejado é uma haste central curta até uma linha horizontal, com uma haste à esquerda para **Irmãos** e uma haste à direita para **Cônjuge**, sem linha central prolongada entre os grupos. | Aberto |
-| DOC-005 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento mobile | Validar se a exportação rápida do `MobileTreeControlsPortal` deve reutilizar `treeExport.ts` ou manter implementação própria. Confirmar também política de `html2canvas`, CORS, elementos ignorados e comportamento de seleção manual no mobile. | Aberto |
 | DOC-006 | `src/app/pages/forum/ForumHome.tsx` / `docs/funcionalidades/FORUM.md` | divergência UI/documentação | Aplicar ou revisar a remoção real dos dropdowns **Todos os tipos** e **Todos os status** em `/forum`. A UI esperada deve manter apenas busca, categoria e botão icon-only de limpar filtros ao lado do dropdown de categoria. | Aberto |
 | DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. O arquivo hoje concentra árvore, modal, login/OAuth e ajustes pontuais. | Aberto |
 | DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
@@ -57,6 +56,14 @@ Nesta revisão, foram acrescentadas pendências específicas dos ajustes recente
 | DOC-010 | `/entrar` / Google OAuth | compliance / validação externa | Confirmar se a home pública exibe no DOM/JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda de forma compatível com a revisão OAuth do Google. | Aberto |
 | DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
 | DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o novo documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
+
+### 2.1 Itens fechados nesta revisão técnica
+
+| ID | Documento de origem | Resultado | Status |
+|---|---|---|---|
+| DOC-001 | `docs/funcionalidades/GENEALOGIA_VIEW.md` | `HomeTreeSection.tsx` passou a calcular a base mobile de Genealogia/Visão Completa com gerações inferidas antes de montar chips e antes de repassar pessoas ao `FamilyTree`. | Concluído tecnicamente; manter QA visual mobile. |
+| DOC-002 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | Strings quebradas por encoding foram corrigidas na origem e `textEncodingRepair.ts` foi removido. | Concluído. |
+| DOC-005 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | `MobileTreeControlsPortal` passou a usar o fluxo canônico de `treeExport.ts` para imagem, PDF e impressão. | Concluído tecnicamente; manter QA de captura em mobile. |
 
 Regras:
 
@@ -99,9 +106,11 @@ Ajustes concluídos:
 - remoção de texto overlay redundante sobre a árvore no mobile;
 - remoção do anel azul duplicado no card principal;
 - painel mobile de controles da árvore;
+- exportação mobile rápida alinhada ao fluxo canônico de `treeExport.ts`;
 - opção de ocultar/exibir setas mobile;
 - paleta de cores no menu mobile;
 - reset de geração ativa em `/genealogia` e `/visao-completa`;
+- chips mobile de Genealogia/Visão Completa alinhados à base de gerações inferidas em `HomeTreeSection.tsx`;
 - acabamento mobile de `/minha-arvore/editar`;
 - CSS de edição escopado por `main:has(#minha-arvore-edit-form)`;
 - menu mobile da árvore ajustado para exibir Visualização e Cores sem sobreposição;

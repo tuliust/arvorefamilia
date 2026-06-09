@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`
 > Tipo: documentação técnica/funcional da view **Genealogia**.
-> Status: revisado após ajustes de largura da Minha Árvore, formatação de cabeçalhos de geração, títulos das views, anti-regressões entre views e frente mobile.
+> Status: revisado após alinhamento dos chips mobile às gerações inferidas, ajustes de largura da Minha Árvore, formatação de cabeçalhos, títulos das views e anti-regressões entre views.
 
 ## 1. Função deste documento
 
@@ -20,6 +20,7 @@ Use este arquivo para manter:
 - modelo de gerações;
 - layout por colunas;
 - inferência visual de geração;
+- base mobile com gerações inferidas;
 - chips mobile;
 - foco/enquadramento;
 - reset de geração ativa por view;
@@ -113,7 +114,7 @@ Regras:
 
 ## 6. Inferência visual de gerações
 
-`FamilyTree.tsx` usa `inferGenealogyManualGenerations` antes de chamar `genealogyColumnsLayout`.
+`FamilyTree.tsx` usa `inferGenealogyManualGenerations` antes de chamar `genealogyColumnsLayout`. Em mobile, `HomeTreeSection.tsx` também prepara a base visual inferida para que `GenealogyMobileStageTabs` e `FamilyTree` trabalhem com a mesma referência de gerações.
 
 Comportamento esperado:
 
@@ -129,15 +130,18 @@ Objetivo:
 
 - reduzir dependência de `manual_generation`;
 - evitar que ancestrais conectados corretamente fiquem fora da Genealogia;
-- manter coerência entre desktop e mobile.
+- manter coerência entre desktop e mobile;
+- impedir divergência entre chips mobile e colunas renderizadas.
 
-Atenção:
+Estado atual:
 
 ```txt
-GenealogyMobileStageTabs ainda pode montar chips a partir de pessoas[].manual_generation recebidas pelo shell.
-FamilyTree infere gerações internamente antes do layout.
-Sempre que houver discrepância entre chips e pessoas exibidas, revisar a origem de availableMobileGenerations.
+HomeTreeSection prepara a base mobile com gerações inferidas antes de calcular availableMobileGenerations.
+GenealogyMobileStageTabs recebe a mesma base visual usada pelo FamilyTree no mobile de /genealogia e /visao-completa.
+A inferência continua sendo visual/em memória e não persiste alterações em pessoas.manual_generation.
 ```
+
+Observação técnica: se a inferência for alterada no futuro, evitar duplicar regras em componentes diferentes. Preferir extrair a lógica comum para util compartilhado em `src/app/components/FamilyTree/utils/`.
 
 ---
 
@@ -267,6 +271,7 @@ GenealogyMobileStageTabs
 Comportamento:
 
 - aparece acima da área da árvore;
+- calcula gerações disponíveis a partir da base mobile já inferida por `HomeTreeSection`;
 - mostra apenas gerações com pessoas visíveis;
 - usa `role="tablist"` e `role="tab"`;
 - permite clique direto no chip;
@@ -399,7 +404,7 @@ Regras:
 - devem evitar edges soltas;
 - não devem afetar dados no Supabase;
 - filtros de vida (`personFilters`) são aplicados antes no shell;
-- chips mobile devem refletir pessoas visíveis após filtros de vida;
+- chips mobile devem refletir pessoas visíveis após filtros de vida e após a inferência visual preparada no shell mobile;
 - filtros não devem ser usados para simular o recorte de `/minha-arvore`.
 
 ---
@@ -461,6 +466,7 @@ Validar após alteração em `/genealogia` e `/visao-completa`:
 - cards não herdando largura visual de `360px` da `/minha-arvore`;
 - chips mobile aparecem apenas em `/genealogia` e `/visao-completa`;
 - chips mostram labels humanos;
+- chips e canvas usam a mesma base de gerações inferidas no mobile;
 - troca entre `/genealogia` e `/visao-completa` reseta geração ativa;
 - pan/zoom funcional;
 - cônjuges permanecem alinhados;
@@ -480,6 +486,7 @@ Não fazer:
 - usar `font-black` e preto absoluto nos cabeçalhos `Geração N`;
 - criar colunas vazias para manter sequência visual;
 - transformar chips mobile em filtro destrutivo;
+- voltar a calcular chips apenas sobre `pessoas[].manual_generation` bruto quando a view mobile usa inferência;
 - persistir geração inferida no Supabase;
 - inserir pets no layout por gerações;
 - aplicar `translateX` de cards da Minha Árvore em Genealogia;

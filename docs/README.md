@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico da documentação revisada e alinhada aos ajustes recentes de árvore, painel lateral, cards de 360px, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy e frente mobile.
+> Status: índice canônico revisado após fechamento técnico das frentes de chips mobile com gerações inferidas, exportação mobile canônica, correção de encoding e persistência de redes sociais versionadas.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -174,20 +174,29 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano deve contemplar pelo menos estes grupos de pendências:
+No fechamento desta revisão documental, o plano separa itens **abertos** de itens **concluídos tecnicamente**.
+
+Itens concluídos nesta revisão técnica:
+
+| ID | Origem | Resultado |
+|---|---|---|
+| `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | Chips mobile usam a base de gerações inferidas em `HomeTreeSection.tsx`. |
+| `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Encoding corrigido na origem; workaround global removido. |
+| `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação mobile rápida alinhada ao fluxo canônico de `treeExport.ts`. |
+
+Itens ainda abertos ou parcialmente abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
-| `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | bug provável / necessidade de QA |
-| `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | ajuste técnico / encoding |
-| `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente |
+| `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | decisão pendente apenas sobre persistência de `Complemento`; redes sociais múltiplas já persistem em `pessoa_social_profiles` |
 | `DOC-004` | `/minha-arvore` mobile | bug visual / conector inferior |
-| `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | revisão técnica / alinhamento de exportação mobile |
 | `DOC-006` | `/forum` | divergência UI/documentação / filtros tipo-status |
 | `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
-| `DOC-008` | Curiosidades/IA | documentação funcional específica a criar |
-| `DOC-009` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
-| `DOC-010` | `/minha-arvore` desktop | QA visual dos cards compactos de 360px e nomes longos |
+| `DOC-008` | `directFamilyDistributedLayout.ts` | melhoria técnica / migrar largura visual de cards para layout estrutural |
+| `DOC-009` | Curiosidades/IA | QA funcional de respostas e ausência de IDs |
+| `DOC-010` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
+| `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
+| `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

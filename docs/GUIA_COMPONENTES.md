@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-09
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado para refletir ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, modal conjugal, arquivos históricos, parentesco, cache/deploy e RPCs.
+> Status: guia canônico revisado para refletir ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, modal conjugal, arquivos históricos, parentesco, cache/deploy, RPCs, chips mobile com gerações inferidas, exportação mobile canônica e redes sociais versionadas.
 
 ## Objetivo
 
@@ -346,6 +346,8 @@ Responsabilidade:
 - renderizar botão circular de controles da árvore em mobile;
 - abrir painel compacto nas rotas de árvore;
 - oferecer ações rápidas de zoom, reajuste, ocultar/exibir setas, PDF, imagem e impressão;
+- reutilizar o fluxo canônico de `treeExport.ts` para captura, PNG/imagem, PDF e impressão;
+- fechar o painel após exportação bem-sucedida;
 - esconder visualmente os botões antigos `+` e `-` no mobile;
 - controlar classe global para ocultar/exibir setas de navegação;
 - manter desktop/tablet fora do escopo.
@@ -362,7 +364,8 @@ Cuidados:
 
 - não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
 - ações devem manter `aria-label`/texto acessível;
-- se exportação falhar por CORS/canvas, revisar alinhamento com `treeExport.ts`;
+- se exportação falhar por CORS/canvas, revisar `treeExport.ts`, elementos ignorados e origem das imagens;
+- não reintroduzir import direto de `html2canvas` ou `jsPDF` no portal mobile;
 - se a implementação for migrada para dentro de `FamilyTree`, remover o portal e atualizar esta seção;
 - não usar o portal para alterar dados, filtros, Supabase ou permissões.
 
@@ -619,7 +622,8 @@ Responsabilidade:
 - renderizar estados de loading/erro/vazio;
 - renderizar título desktop/tablet da view;
 - posicionar o botão de favorito da página junto aos controles de zoom no desktop;
-- controlar bloqueios de scroll externo/indevido quando a árvore ocupa a viewport.
+- controlar bloqueios de scroll externo/indevido quando a árvore ocupa a viewport;
+- em mobile, para `/genealogia` e `/visao-completa`, calcular uma base de pessoas com gerações inferidas antes de montar `availableMobileGenerations`, `GenealogyMobileStageTabs` e a prop `pessoas` de `FamilyTree`.
 
 Padrões atuais:
 
@@ -650,7 +654,8 @@ Responsabilidade:
 Cuidados:
 
 - chips dependem das gerações disponíveis no shell;
-- se a inferência visual de gerações mudar, validar DOC-001;
+- essas gerações devem vir da mesma base inferida usada pela árvore em mobile para evitar divergência entre chips e canvas;
+- se a inferência visual de gerações mudar, validar QA visual mobile de `/genealogia` e `/visao-completa`;
 - labels devem permanecer humanos e curtos.
 
 ### 4.3 `ConnectionDiscoveryPanel`
@@ -777,11 +782,11 @@ Responsabilidades:
 | `PersonDataView` | Exibir dados públicos do perfil respeitando privacidade. |
 | `PersonContactFields` | Editar contato, privacidade e dados correlatos. |
 | `AddressAutocompleteInput` | Autocomplete Google Places com fallback para input comum. |
-| `SocialProfilesEditor` | Editar redes sociais e manter compatibilidade com campos legados. |
+| `SocialProfilesEditor` | Editar redes sociais, manter compatibilidade com campos legados e apoiar persistência versionada em `pessoa_social_profiles`. |
 | `PersonEventsEditor` | Criar/editar eventos pessoais. |
 | `PersonEventsList` | Exibir eventos pessoais. |
 | `RelationshipFinder` | Exibir cálculo de vínculo/grau de parentesco. |
-| `MinhaArvore` | Editar dados próprios, avatar, arquivos, eventos e vínculos do membro autenticado. |
+| `MinhaArvore` | Editar dados próprios, avatar, arquivos, eventos, redes sociais versionadas e vínculos do membro autenticado. |
 
 Cuidados:
 
@@ -791,7 +796,8 @@ Cuidados:
 - botão de favorito no perfil deve usar `FavoriteButton`;
 - botão de edição no perfil público deve respeitar permissão já resolvida pela página/service;
 - sugestão de informação para admin deve passar por `personProfileSuggestionService`;
-- CSS mobile de `/minha-arvore/editar` deve permanecer escopado por `#minha-arvore-edit-form`.
+- CSS mobile de `/minha-arvore/editar` deve permanecer escopado por `#minha-arvore-edit-form`;
+- múltiplas redes sociais em `/minha-arvore/editar` devem persistir via `pessoaSocialProfilesService`, mantendo a primeira rede sincronizada com `rede_social`/`instagram_usuario` para compatibilidade.
 
 ---
 

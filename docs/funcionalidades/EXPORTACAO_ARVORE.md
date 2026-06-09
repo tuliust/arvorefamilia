@@ -1,9 +1,9 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
-> Tipo: documentação funcional e técnica da exportação da árvore.  
-> Status: revisado para distinguir exportação por seleção/overlay e controles mobile.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
+> Tipo: documentação funcional e técnica da exportação da árvore.
+> Status: revisado após alinhamento da exportação mobile ao fluxo canônico `treeExport.ts`.
 
 ---
 
@@ -75,6 +75,8 @@ Implementado no fluxo mobile rápido:
 - ação de PDF;
 - ação de impressão;
 - acesso sem abrir overlay manual de seleção;
+- captura usando o fluxo canônico de exportação em `treeExport.ts`;
+- política segura de `html2canvas` com `useCORS: true` e `allowTaint: false`;
 - visibilidade restrita às rotas de árvore.
 
 Fora do escopo atual:
@@ -150,8 +152,9 @@ Regras:
 - o portal mobile deve aparecer apenas nas rotas de árvore;
 - não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
 - o painel mobile não altera dados, filtros, permissões, Supabase ou migrations;
+- a captura mobile deve reutilizar os utilitários canônicos de `treeExport.ts`;
 - a captura mobile deve evitar menus/overlays sempre que tecnicamente possível;
-- divergências entre captura mobile e `treeExport.ts` devem ser tratadas como pendência técnica.
+- divergências futuras entre desktop e mobile devem ser tratadas como regressão, não como comportamento esperado.
 
 ---
 
@@ -226,15 +229,16 @@ Responsabilidades:
 
 - renderizar painel mobile de ações da árvore;
 - oferecer atalhos para PDF, imagem e impressão;
-- usar captura direta da área da árvore quando acionado no mobile;
+- usar captura direta da área da árvore quando acionado no mobile, passando pelo fluxo canônico de `treeExport.ts`;
 - ocultar visualmente controles mobile concorrentes;
 - permitir ocultar/exibir setas de navegação.
 
 Cuidados:
 
-- validar se o comportamento deve continuar independente ou ser refatorado para reutilizar `treeExport.ts`;
 - manter o portal restrito a mobile e rotas de árvore;
+- preservar reutilização de `treeExport.ts` para PNG, PDF, impressão e captura segura;
 - evitar captura de botões, menus, paletas ou overlays;
+- não reintroduzir `allowTaint: true` no fluxo mobile;
 - manter mensagens amigáveis quando a captura falhar.
 
 ---
@@ -304,11 +308,7 @@ allowTaint: false
 
 Não resolver erro de CORS com `allowTaint: true` sem revisão técnica.
 
-Se o fluxo mobile usar configuração diferente, registrar no plano:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
+O fluxo mobile também deve respeitar essa política. Diferenças futuras devem ser registradas como regressão ou decisão técnica explícita em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 ### 8.2 Tamanho de canvas
 
@@ -388,14 +388,11 @@ Checklist:
 
 ---
 
-## 11. Pendências conhecidas
+## 11. Estado documental
 
-Registrar em `docs/PLANO_PROXIMOS_PASSOS.md` se confirmado:
+A pendência técnica anterior de alinhamento da exportação mobile foi encerrada: o `MobileTreeControlsPortal` deve permanecer integrado ao fluxo canônico de `treeExport.ts`.
 
-```txt
-DOC-004
-Confirmar se o fluxo mobile de exportação pelo MobileTreeControlsPortal deve reutilizar integralmente treeExport.ts ou manter captura própria. Validar política de CORS, allowTaint e consistência entre desktop e mobile.
-```
+Validações futuras continuam recomendadas em dispositivos móveis reais, especialmente para CORS de imagens, limites de canvas e comportamento de impressão, mas isso é QA de regressão, não decisão arquitetural aberta.
 
 ---
 
@@ -410,7 +407,9 @@ Não fazer:
 - exportar árvore completa dizendo que é apenas área visível;
 - capturar dados privados ocultos por filtros/privacidade;
 - deixar seleção de área bloquear pan/zoom após cancelamento;
-- deixar o painel mobile aparecer em páginas fora da árvore.
+- deixar o painel mobile aparecer em páginas fora da árvore;
+- criar uma segunda implementação de exportação mobile divergente de `treeExport.ts`;
+- usar `allowTaint: true` para contornar CORS sem revisão técnica.
 
 Onde documentar mudanças futuras:
 

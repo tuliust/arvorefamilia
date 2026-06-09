@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, home pública/OAuth, fórum, cache/deploy e frente mobile.
+> Status: guia canônico de decisões visuais, responsividade e padrões de interface, atualizado com ajustes recentes de árvore, painel lateral, favoritos, Curiosidades/IA, home pública/OAuth, fórum, cache/deploy, frente mobile, chips com gerações inferidas e exportação mobile canônica.
 
 ## Objetivo
 
@@ -344,6 +344,7 @@ Comportamento:
 
 - layout por gerações;
 - inferência em memória de `manual_generation` a partir da pessoa central quando necessário;
+- no mobile, a base usada pelos chips deve ser a mesma base inferida repassada ao canvas;
 - colunas vazias não devem ser renderizadas;
 - cônjuges permanecem na mesma geração;
 - pais sobem uma geração;
@@ -362,6 +363,7 @@ viewMode === 'visao-completa'
 Comportamento:
 
 - usa base completa com layout por gerações;
+- em mobile, usa base com gerações inferidas antes de montar chips e enquadramento;
 - compartilha parte do padrão visual da Genealogia;
 - em mobile, reutiliza navegação por chips/blocos;
 - não deve herdar regras específicas de Minha Árvore;
@@ -392,6 +394,7 @@ Regras:
 - toque no chip altera geração/bloco ativo;
 - swipe lateral na barra avança/volta quando suportado;
 - chips focam/enquadram a geração ativa;
+- chips são calculados a partir de pessoas com geração inferida quando `manual_generation` não está completo;
 - chips não removem nodes do ReactFlow;
 - botões direcionais e zoom `+`/`-` antigos ficam ocultos quando os chips mobile estão ativos;
 - título overlay da árvore fica oculto nesse modo para evitar sobreposição;
@@ -448,6 +451,7 @@ Regras:
 - o painel mobile aparece apenas nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - a ação de ocultar/exibir setas altera apenas camada visual;
 - exportação não deve capturar legenda, menus ou overlays marcados para exclusão;
+- exportação mobile rápida deve usar o mesmo fluxo canônico de captura/exportação definido em `treeExport.ts`;
 - seleção de área deve ficar contida na superfície da árvore;
 - desktop/tablet não devem ser alterados pelo portal mobile.
 

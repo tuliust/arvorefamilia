@@ -1,9 +1,9 @@
 # Minha Árvore - edição do próprio perfil
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`  
-> Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.  
-> Status: revisado após frente mobile de 2026-06-08.
+> Última revisão: 2026-06-09
+> Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
+> Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
+> Status: revisado após correção de encoding na origem e persistência de redes sociais versionadas em `pessoa_social_profiles`.
 
 ---
 
@@ -56,6 +56,7 @@ src/app/services/dataService.ts
 src/app/services/relationshipChangeRequestService.ts
 src/app/services/arquivosHistoricosService.ts
 src/app/services/personEventsService.ts
+src/app/services/pessoaSocialProfilesService.ts
 src/app/services/storageService.ts
 src/app/services/permissionService.ts
 src/app/utils/buildPersonTimeline.ts
@@ -177,7 +178,7 @@ Campos editáveis atuais:
 | Telefone | Formatado localmente. |
 | Endereço | Pode usar Google Places quando configurado. |
 | Complemento | Campo visual local; ainda não persiste em `pessoas` enquanto o schema/tipagem não suportarem. |
-| Redes sociais | UI permite múltiplas linhas, mas o fluxo atual sincroniza a primeira linha para campos legados. |
+| Redes sociais | UI permite múltiplas linhas e persiste os perfis em `pessoa_social_profiles`; a primeira linha continua sincronizada com campos legados por compatibilidade. |
 | Mini bio | Campo livre. |
 | Curiosidades de Vida | Campo livre. |
 
@@ -190,11 +191,23 @@ Regras:
 - validação passa por `validateEditablePersonForm`;
 - payload final passa por `cleanPersonPayload`.
 
-Ponto futuro registrado no plano:
+Estado atual de persistência:
 
 ```txt
-Complemento e múltiplas redes sociais existem parcialmente na UI, mas não persistem integralmente no modelo atual.
+Redes sociais múltiplas são carregadas e salvas por pessoa_social_profiles.
+A primeira rede social permanece sincronizada com os campos legados em pessoas para compatibilidade.
+Complemento segue como campo visual/local até existir decisão de schema/tipagem.
 ```
+
+Services relacionados:
+
+```txt
+listarPessoaSocialProfiles
+substituirPessoaSocialProfiles
+buildSocialProfilesFromRows
+```
+
+Ponto futuro registrado no plano: decidir se `Complemento` deve virar campo persistente em `pessoas` ou estrutura própria.
 
 ---
 
@@ -329,11 +342,7 @@ Regras:
 - arquivos são salvos no submit principal;
 - se dados pessoais salvarem e arquivos falharem, exibir erro parcial.
 
-Ponto de atenção registrado no plano:
-
-```txt
-Há strings quebradas por encoding em MinhaArvore.tsx, como "Arquivos Hist?ricos" e "Sess?o encerrada.".
-```
+Estado documental: as strings quebradas por encoding foram corrigidas na origem. Novas ocorrências de mojibake devem ser tratadas como regressão e investigadas no arquivo fonte, não por workaround global de runtime.
 
 ---
 
@@ -440,19 +449,20 @@ Fluxo consolidado:
 5. preparar payload com `cleanPersonPayload`;
 6. remover foto ou enviar novo avatar, se necessário;
 7. atualizar pessoa via `updateOwnLinkedPerson`;
-8. salvar arquivos históricos;
-9. salvar eventos da vida;
-10. atualizar perfil via `ensureMemberProfile`;
-11. salvar ou solicitar alterações de casamento;
-12. remover rascunho;
-13. limpar dirty state;
-14. exibir toast de sucesso ou alerta parcial.
+8. salvar redes sociais versionadas via `substituirPessoaSocialProfiles`;
+9. salvar arquivos históricos;
+10. salvar eventos da vida;
+11. atualizar perfil via `ensureMemberProfile`;
+12. salvar ou solicitar alterações de casamento;
+13. remover rascunho;
+14. limpar dirty state;
+15. exibir toast de sucesso ou alerta parcial.
 
 Regras:
 
 - erro de upload de foto interrompe salvamento;
 - erro de dados pessoais interrompe salvamento;
-- erro em arquivos ou eventos gera alerta parcial;
+- erro em redes sociais, arquivos ou eventos gera alerta parcial quando os dados pessoais já foram salvos;
 - casamento com erro não deve desfazer dados pessoais já salvos;
 - mensagens devem ser claras para o usuário.
 
@@ -476,6 +486,7 @@ Não reintroduzir:
 - avatar sem ação de visualização/edição;
 - botão **Trocar Senha** que salva formulário ou limpa rascunho;
 - strings quebradas por encoding;
+- workaround global de correção de texto em runtime para mascarar mojibake;
 - CSS mobile não escopado afetando outras páginas.
 
 ---
@@ -496,9 +507,10 @@ Validar manualmente:
 - remover foto;
 - acionar **Trocar Senha**;
 - editar local de nascimento/residência;
-- adicionar/remover rede social;
-- confirmar que apenas a primeira rede persiste nos campos legados;
-- verificar comportamento do campo Complemento;
+- adicionar/remover múltiplas redes sociais;
+- confirmar que múltiplas redes persistem em `pessoa_social_profiles`;
+- confirmar que a primeira rede continua sincronizada nos campos legados;
+- verificar comportamento local do campo Complemento;
 - adicionar/remover arquivo histórico;
 - adicionar evento manual;
 - tentar salvar evento manual sem título;

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de árvore, painel lateral, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy e views responsivas.
+> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de árvore, painel lateral, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy, views responsivas, chips mobile com gerações inferidas, exportação mobile canônica e redes sociais versionadas.
 
 ## Objetivo
 
@@ -49,8 +49,8 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
 | Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. Cards compactos de grupos laterais/inferiores usam ampliação visual recente para `360px`; o card central mantém padrão próprio e Genealogia/Visão Completa não herdam essa largura. |
-| Genealogia | Implementada | Layout por gerações, chips mobile, inferência em memória de gerações quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
-| Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
+| Genealogia | Implementada | Layout por gerações, chips mobile alinhados à base de gerações inferidas, inferência em memória quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
+| Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips calculados sobre a base inferida e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
 | Admin de pessoas | Implementado | Criação/edição, copiar ID e reset de perfil por RPC sem apagar relacionamentos. Existe migration de reforço para garantir a RPC no Supabase remoto. |
 | Relacionamentos | Implementados | Admin altera dados reais; usuário comum envia solicitação/sugestão conforme permissão. |
@@ -70,7 +70,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso, aceite legal e ponto de compliance OAuth. Deve exibir nome do app e finalidade da integração com Google Agenda diretamente no JSX. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`, incluindo exibição no menu mobile. |
-| Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido; exportação integral fica pós-MVP. |
+| Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido reutilizando `treeExport.ts`; exportação integral fica pós-MVP. |
 | Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. Rotas `/api/*`, incluindo `/api/ai` quando ativa, devem ser preservadas fora do fallback SPA. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
 
@@ -99,6 +99,7 @@ Stack em uso:
 
 - árvore familiar;
 - perfil de pessoa;
+- edição da própria árvore com redes sociais versionadas em `pessoa_social_profiles`;
 - admin de pessoas;
 - admin de relacionamentos;
 - solicitações de vínculo/relacionamento;
@@ -263,6 +264,7 @@ Comportamento consolidado:
 - `MobileTreeControlsPortal` concentra controles mobile da árvore nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - o painel mobile permite zoom, reajuste, ocultar/exibir setas, exportação PDF/imagem e impressão;
 - `/genealogia` e `/visao-completa` resetam a geração ativa ao alternar view, pessoa central ou conjunto de gerações disponíveis;
+- em mobile, `HomeTreeSection` calcula as gerações disponíveis a partir da mesma base inferida repassada ao `FamilyTree`, evitando divergência entre chips e canvas;
 - títulos desktop das views da árvore usam hierarquia maior e externa ao canvas, evitando duplicidade de título interno;
 - na `/minha-arvore`, o botão de favorito da página fica próximo aos controles de zoom para reduzir dispersão no header;
 - o painel lateral desktop usa ritmo visual ampliado em títulos, subtítulos, cards e ações, sem scroll vertical interno quando o conteúdo cabe na viewport.
@@ -380,7 +382,8 @@ src/app/utils/whatsapp.ts
 
 Comportamento consolidado:
 
-- UI de redes sociais usa `SocialProfilesEditor`;
+- UI de redes sociais usa `SocialProfilesEditor` quando disponível e mantém fluxo compatível em `/minha-arvore/editar`;
+- múltiplas redes sociais são carregadas e salvas em `pessoa_social_profiles` nas rotas de edição suportadas;
 - campos legados em `pessoas` continuam por compatibilidade;
 - primeiro perfil social pode ser sincronizado com campos legados;
 - exibição no perfil respeita privacidade;
@@ -390,7 +393,8 @@ Comportamento consolidado:
 
 Futuro:
 
-- múltiplas redes sociais com persistência/UX mais avançada somente se o uso real exigir;
+- melhorias avançadas de UX para ordenação, destaque ou visibilidade por rede social somente se o uso real exigir;
+- persistência de `Complemento` depende de decisão de produto, schema e tipagem;
 - log seguro de clique e privacidade forte em banco/API ficam pós-MVP.
 
 ---

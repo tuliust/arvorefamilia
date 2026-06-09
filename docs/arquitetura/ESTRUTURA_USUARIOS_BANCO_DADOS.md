@@ -1,8 +1,9 @@
 # Estrutura de usuários, banco de dados e fluxos de pessoa - Árvore Família
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`  
+> Última revisão: 2026-06-09
+> Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 > Projeto: `tuliust/arvorefamilia`
+> Status: revisado para explicitar uso atual de `pessoa_social_profiles` em `/minha-arvore/editar`, `/meus-dados` e admin, mantendo compatibilidade com campos legados.
 
 ## Objetivo
 
@@ -267,7 +268,7 @@ Tabela:
 public.pessoa_social_profiles
 ```
 
-Função: redes sociais estruturadas por pessoa.
+Função: redes sociais estruturadas por pessoa, permitindo múltiplos perfis sem depender exclusivamente dos campos legados de `pessoas`.
 
 Campos típicos:
 
@@ -279,11 +280,22 @@ url
 exibir_no_perfil
 ```
 
+Fluxos consumidores atuais:
+
+```txt
+src/app/pages/MeusDados.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/admin/AdminPessoaForm.tsx
+src/app/services/pessoaSocialProfilesService.ts
+```
+
 Compatibilidade:
 
 - campos legados em `pessoas` continuam existindo quando necessários;
-- primeiro perfil social pode ser sincronizado com campos legados;
-- exibição pública deve respeitar flags de privacidade.
+- o primeiro perfil social pode ser sincronizado com `rede_social`, `instagram_usuario` e/ou `instagram_url`;
+- `/minha-arvore/editar` carrega e salva múltiplas redes via `pessoa_social_profiles`;
+- a exibição pública deve respeitar flags de privacidade e `exibir_no_perfil`;
+- falha ao salvar redes sociais após salvar dados pessoais deve ser tratada como alerta parcial, não como motivo para desfazer dados já persistidos.
 
 ---
 
@@ -380,6 +392,8 @@ story
 Estado funcional atual:
 
 - botão implementado para pessoa;
+- tópicos de fórum podem ser favoritados por componente próprio;
+- arquivos históricos podem expor favorito quando a tela/componente disponibiliza a ação;
 - página `/meus-favoritos` lista, busca, filtra e remove favoritos;
 - service aceita tipos genéricos e sanitiza metadata;
 - expansão para outros tipos permanece backlog controlado.
@@ -592,6 +606,7 @@ Regra:
 - Não alterar RLS para mascarar bug de frontend.
 - Não dar permissão ampla a `authenticated` sem revisar escopo.
 - Não salvar dados novos como base64.
+- Não duplicar dados estruturados de redes sociais em novos campos soltos sem avaliar `pessoa_social_profiles`.
 - Não versionar dump, backup, token, secret ou service role.
 - Não remover dados reais em revisão documental.
 - Não aplicar migration sem `supabase migration list` e plano de rollback.
