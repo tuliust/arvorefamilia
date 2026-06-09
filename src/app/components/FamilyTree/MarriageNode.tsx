@@ -108,10 +108,10 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         title="Ver vínculo do casal"
         aria-label="Ver vínculo do casal"
         className={[
-          'nodrag nopan relative z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2',
+          'nodrag nopan relative z-40 flex cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2',
           isDirectFamilyVariant
-            ? 'border-[3px] bg-white shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)] hover:bg-slate-50 hover:text-slate-700 hover:shadow-[0_0_0_5px_rgba(241,245,249,1),0_6px_16px_rgba(71,85,105,0.28)]'
-            : 'border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
+            ? 'h-11 w-11 border-[3px] bg-white shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:bg-slate-50 hover:text-slate-700 hover:shadow-[0_0_0_4px_rgba(241,245,249,1),0_5px_12px_rgba(71,85,105,0.24)] md:h-[60px] md:w-[60px] md:shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)]'
+            : 'h-[60px] w-[60px] border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
         ].join(' ')}
         style={{
           borderColor: CONNECTOR_COLOR,
@@ -134,7 +134,7 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
           }}
         />
         <Blend
-          className={isDirectFamilyVariant ? 'h-9 w-9 stroke-[3]' : 'h-8 w-8 stroke-[2.8]'}
+          className={isDirectFamilyVariant ? 'h-6 w-6 stroke-[3] md:h-9 md:w-9' : 'h-8 w-8 stroke-[2.8]'}
           aria-hidden="true"
         />
       </button>
