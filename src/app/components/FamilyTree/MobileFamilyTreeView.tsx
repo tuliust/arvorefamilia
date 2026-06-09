@@ -373,19 +373,19 @@ export function MobileFamilyTreeView({
                     {isVisible(model.father)
                       ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
                       : <EmptyCard label="Pai" />}
-                    <div className="pointer-events-none absolute left-1/2 top-full h-8 w-px -translate-x-1/2 bg-cyan-600" />
+                    <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
                   </div>
 
                   <div className="relative">
                     {isVisible(model.mother)
                       ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
                       : <EmptyCard label="Mãe" />}
-                    <div className="pointer-events-none absolute left-1/2 top-full h-8 w-px -translate-x-1/2 bg-cyan-600" />
+                    <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
                   </div>
                 </div>
 
                 <div className="pointer-events-none relative h-12">
-                  <div className="absolute left-1/4 right-1/4 top-7 h-px bg-cyan-600" />
+                  <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-7 h-px bg-cyan-600" />
                   <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
                 </div>
               </div>
@@ -396,11 +396,11 @@ export function MobileFamilyTreeView({
                 </div>
               )}
 
-              <div className="relative mx-auto h-14 w-full max-w-[360px]">
-                <div className="absolute left-1/2 top-0 h-7 w-px -translate-x-1/2 bg-cyan-600" />
-                <div className="absolute left-1/4 right-1/4 top-7 h-px bg-cyan-600" />
-                <div className="absolute left-1/4 top-7 h-7 w-px -translate-x-1/2 bg-cyan-600" />
-                <div className="absolute left-3/4 top-7 h-7 w-px -translate-x-1/2 bg-cyan-600" />
+              <div className="relative mx-auto h-9 w-full">
+                <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
+                <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
               </div>
 
               <div className="grid grid-cols-2 items-start gap-3">
