@@ -1,0 +1,62 @@
+@media (max-width: 767px) {
+  section[aria-label="Filtros do calendário"] {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  section[aria-label="Filtros do calendário"] > div {
+    justify-items: center !important;
+    gap: 0.55rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button {
+    width: min(100%, 10.5rem) !important;
+    min-height: 2.15rem !important;
+    padding: 0.42rem 0.65rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button span:last-child {
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  form [aria-labelledby="categoria-label"] {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button {
+    min-height: 4.25rem !important;
+    border-radius: 0.85rem !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.62rem !important;
+    line-height: 1.05 !important;
+    box-shadow: none !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button > span:first-child {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button > span:last-child {
+    margin-top: 0.25rem !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    word-break: normal !important;
+  }
+}
