@@ -278,6 +278,7 @@ export function VisualGroup({
   disableInternalScroll = false,
   className = '',
   spousePersonIds,
+  spousePartnerByPersonId,
   spouseTone = 'spouse',
 }: {
   title: string;
@@ -295,33 +296,53 @@ export function VisualGroup({
   disableInternalScroll?: boolean;
   className?: string;
   spousePersonIds?: Set<string>;
+  spousePartnerByPersonId?: Map<string, string>;
   spouseTone?: 'spouse' | 'ancestorSpouse';
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
   const limit = collapsedLimit ?? people.length;
   const canExpand = expandable && people.length > limit;
-  const visiblePeople = canExpand && !isExpanded ? people.slice(0, limit) : people;
+  const visiblePeople = React.useMemo(() => {
+    if (!canExpand || isExpanded) return people;
+
+    const limitedPeople = people.slice(0, limit);
+    const lastPerson = limitedPeople[limitedPeople.length - 1];
+    const nextPerson = people[limitedPeople.length];
+    const nextPartnerId = nextPerson ? spousePartnerByPersonId?.get(nextPerson.id) : undefined;
+
+    return lastPerson && nextPerson && nextPartnerId === lastPerson.id
+      ? [...limitedPeople, nextPerson]
+      : limitedPeople;
+  }, [canExpand, isExpanded, limit, people, spousePartnerByPersonId]);
   const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
   const gridColumns = effectiveColumns === 'quad' ? 'grid-cols-4' : effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
   const columnCount = effectiveColumns === 'quad' ? 4 : effectiveColumns === 'triple' ? 3 : effectiveColumns === 'double' ? 2 : 1;
   const renderedItems = React.useMemo(() => {
     const items: Array<{ type: 'person'; person: Pessoa } | { type: 'spacer'; key: string }> = [];
 
-    visiblePeople.forEach((person, index) => {
-      const nextPerson = visiblePeople[index + 1];
-      const nextIsSpouse = Boolean(nextPerson && spousePersonIds?.has(nextPerson.id));
-      const currentColumn = items.length % columnCount;
+    visiblePeople.forEach((person) => {
+      const partnerId = spousePartnerByPersonId?.get(person.id);
+      const previousItem = items[items.length - 1];
+      const followsPartner = Boolean(
+        partnerId
+        && previousItem?.type === 'person'
+        && previousItem.person.id === partnerId,
+      );
 
-      if (nextIsSpouse && columnCount > 1 && currentColumn === columnCount - 1) {
-        items.push({ type: 'spacer', key: `spacer-${person.id}` });
+      if (followsPartner && columnCount > 1 && items.length % columnCount === 0) {
+        const partnerItem = items.pop();
+        if (partnerItem?.type === 'person') {
+          items.push({ type: 'spacer', key: `spacer-${partnerItem.person.id}` });
+          items.push(partnerItem);
+        }
       }
 
       items.push({ type: 'person', person });
     });
 
     return items;
-  }, [columnCount, spousePersonIds, visiblePeople]);
+  }, [columnCount, spousePartnerByPersonId, visiblePeople]);
 
   const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -364,18 +385,19 @@ export function VisualGroup({
             }
 
             const { person } = item;
-            const isSpouseCard = Boolean(spousePersonIds?.has(person.id));
+            const partnerId = spousePartnerByPersonId?.get(person.id);
+            const isSpouseCard = Boolean(spousePersonIds?.has(person.id) || partnerId);
             const previousItem = renderedItems[index - 1];
-            const lateralConnector = isSpouseCard && previousItem?.type === 'person';
-            const topConnector = isSpouseCard && !lateralConnector;
+            const lateralConnector = Boolean(
+              partnerId
+              && previousItem?.type === 'person'
+              && previousItem.person.id === partnerId,
+            );
 
             return (
               <div key={person.id} className="relative min-w-0">
                 {lateralConnector && (
                   <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-200" aria-hidden="true" />
-                )}
-                {topConnector && (
-                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-200" aria-hidden="true" />
                 )}
                 <VisualPersonCard
                   person={person}

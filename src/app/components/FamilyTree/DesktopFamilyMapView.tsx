@@ -23,60 +23,524 @@ interface DesktopFamilyMapViewProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
-type MapGroupProps = {
-  id: string;
+type GroupKind =
+  | 'ancestor'
+  | 'lateral-many'
+  | 'central-small'
+  | 'descendant'
+  | 'pet'
+  | 'direct-card'
+  | 'single';
+type GroupArea = 'left' | 'center' | 'right' | 'ancestors' | 'lower';
+type GroupColumns = 'single' | 'double' | 'triple' | 'quad';
+type GroupVariant = 'mini' | 'compact' | 'horizontal';
+type SpousePolicy = 'never' | 'always' | 'filter';
+type AnchorName = 'topCenter' | 'bottomCenter' | 'leftCenter' | 'rightCenter';
+type Point = [number, number];
+
+type FamilyMapGroupId =
+  | 'paternalGreatGreatGrandparents'
+  | 'paternalGreatGrandparents'
+  | 'paternalGrandparents'
+  | 'paternalUncles'
+  | 'paternalCousins'
+  | 'father'
+  | 'central'
+  | 'mother'
+  | 'maternalGreatGreatGrandparents'
+  | 'maternalGreatGrandparents'
+  | 'maternalGrandparents'
+  | 'maternalUncles'
+  | 'maternalCousins'
+  | 'siblings'
+  | 'nephews'
+  | 'spouse'
+  | 'children'
+  | 'pets'
+  | 'grandchildren';
+
+type GroupConfig = {
+  id: FamilyMapGroupId;
   title: string;
-  people: Pessoa[];
-  left: number;
-  top: number;
+  kind: GroupKind;
+  area: GroupArea;
+  x: number;
+  y: number;
   width: number;
-  columns?: 'single' | 'double' | 'triple' | 'quad';
-  variant?: 'mini' | 'compact' | 'horizontal';
-  onPersonClick: (pessoa: Pessoa) => void;
-  expanded: boolean;
-  onExpandedChange: (id: string, expanded: boolean) => void;
-  zIndex?: number;
-  collapsedLimit?: number;
+  singleWidth?: number;
+  columns: GroupColumns;
+  collapsedLimit: number;
+  variant: GroupVariant;
+  expandable: boolean;
+  allowsSpouses: boolean;
+  spousePolicy: SpousePolicy;
   spouseTone?: 'spouse' | 'ancestorSpouse';
-  spousesByPerson: Map<string, Pessoa[]>;
-  showSpouseConnectors: boolean;
+  isLateral: boolean;
+  isAncestor: boolean;
+  isLower: boolean;
+  isDirectCard: boolean;
 };
 
-type GroupLayout = {
-  id: string;
-  title: string;
+type ComposedGroup = {
   people: Pessoa[];
+  spousePersonIds: Set<string>;
+  spousePartnerByPersonId: Map<string, string>;
+};
+
+type ResolvedGroup = GroupConfig & ComposedGroup & {
   left: number;
   top: number;
-  width: number;
   height: number;
-  columns?: 'single' | 'double' | 'triple' | 'quad';
-  variant?: 'mini' | 'compact' | 'horizontal';
-  collapsedLimit?: number;
 };
 
-const CANVAS_WIDTH = 1440;
-const CANVAS_HEIGHT = 1020;
-const CONNECTOR_COLOR = '#a5eef6';
-const MIN_TABLET_SCALE = 0.62;
-const GROUP_VERTICAL_GAP = 46;
-const TOP_START = 18;
-const HORIZONTAL_CARD_HEIGHT = 74;
-const MINI_CARD_HEIGHT = 112;
-const GROUP_VERTICAL_PADDING = 44;
-const GROUP_GRID_GAP = 8;
-const COLLAPSED_LIMIT = 2;
-const SIDE_BRANCH_COLLAPSED_LIMIT = 8;
-const SIDE_BRANCH_WIDTH = 360;
-const SIDE_BRANCH_SINGLE_WIDTH = 300;
-const SIBLINGS_GROUP_WIDTH = 360;
-const SIDE_BRANCH_MARGIN = 16;
-const PATERNAL_BRANCH_LEFT = SIDE_BRANCH_MARGIN;
-const MATERNAL_BRANCH_LEFT = CANVAS_WIDTH - SIDE_BRANCH_WIDTH - SIDE_BRANCH_MARGIN;
-const ANCESTOR_COLLAPSED_LIMIT = 4;
-const FATHER_TOP_OFFSET = 50;
-const PARENT_CARD_HEIGHT = 164;
-const CENTRAL_CARD_HEIGHT = 194;
+type Connector = {
+  id: string;
+  points: Point[];
+};
+
+const FAMILY_MAP_LAYOUT = {
+  canvas: {
+    width: 1440,
+    minHeight: 1020,
+    background: '#ecfeff',
+    minScale: 0.62,
+    minZoom: 0.7,
+    maxZoom: 2.2,
+    zoomStep: 0.08,
+  },
+  metrics: {
+    topStart: 18,
+    groupGap: 46,
+    groupVerticalPadding: 44,
+    gridGap: 8,
+    horizontalCardHeight: 74,
+    miniCardHeight: 112,
+    parentCardHeight: 164,
+    centralCardHeight: 194,
+    parentTopGap: 50,
+    centralTopGap: 54,
+    descendantsTopGap: 52,
+    descendantRowGap: 46,
+  },
+  connectors: {
+    color: '#a5eef6',
+    width: 3,
+    junctionGap: 18,
+  },
+  areas: {
+    left: { x: 16, width: 360 },
+    paternalAncestors: { x: 265, width: 430 },
+    center: { x: 615, width: 210 },
+    maternalAncestors: { x: 745, width: 430 },
+    right: { x: 1064, width: 360 },
+    lowerLeft: { x: 340, width: 360 },
+    lowerMiddle: { x: 665, width: 180 },
+    lowerRight: { x: 940, width: 300 },
+  },
+  groups: {
+    paternalGreatGreatGrandparents: {
+      id: 'paternalGreatGreatGrandparents',
+      title: 'Tataravós Paternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 265,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    paternalGreatGrandparents: {
+      id: 'paternalGreatGrandparents',
+      title: 'Bisavós Paternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 265,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    paternalGrandparents: {
+      id: 'paternalGrandparents',
+      title: 'Avós Paternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 265,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    paternalUncles: {
+      id: 'paternalUncles',
+      title: 'Tios Paternos',
+      kind: 'lateral-many',
+      area: 'left',
+      x: 16,
+      y: 0,
+      width: 360,
+      singleWidth: 300,
+      columns: 'quad',
+      collapsedLimit: 8,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: true,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: false,
+    },
+    paternalCousins: {
+      id: 'paternalCousins',
+      title: 'Primos Paternos',
+      kind: 'lateral-many',
+      area: 'left',
+      x: 16,
+      y: 0,
+      width: 360,
+      singleWidth: 300,
+      columns: 'quad',
+      collapsedLimit: 8,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: true,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: false,
+    },
+    father: {
+      id: 'father',
+      title: 'Pai',
+      kind: 'direct-card',
+      area: 'center',
+      x: 375,
+      y: 0,
+      width: 210,
+      columns: 'single',
+      collapsedLimit: 1,
+      variant: 'compact',
+      expandable: false,
+      allowsSpouses: false,
+      spousePolicy: 'never',
+      isLateral: false,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: true,
+    },
+    central: {
+      id: 'central',
+      title: 'Pessoa Central',
+      kind: 'direct-card',
+      area: 'center',
+      x: 615,
+      y: 0,
+      width: 210,
+      columns: 'single',
+      collapsedLimit: 1,
+      variant: 'compact',
+      expandable: false,
+      allowsSpouses: false,
+      spousePolicy: 'never',
+      isLateral: false,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: true,
+    },
+    mother: {
+      id: 'mother',
+      title: 'Mãe',
+      kind: 'direct-card',
+      area: 'center',
+      x: 855,
+      y: 0,
+      width: 210,
+      columns: 'single',
+      collapsedLimit: 1,
+      variant: 'compact',
+      expandable: false,
+      allowsSpouses: false,
+      spousePolicy: 'never',
+      isLateral: false,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: true,
+    },
+    maternalGreatGreatGrandparents: {
+      id: 'maternalGreatGreatGrandparents',
+      title: 'Tataravós Maternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 745,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    maternalGreatGrandparents: {
+      id: 'maternalGreatGrandparents',
+      title: 'Bisavós Maternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 745,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    maternalGrandparents: {
+      id: 'maternalGrandparents',
+      title: 'Avós Maternos',
+      kind: 'ancestor',
+      area: 'ancestors',
+      x: 745,
+      y: 18,
+      width: 430,
+      columns: 'double',
+      collapsedLimit: 4,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'always',
+      spouseTone: 'ancestorSpouse',
+      isLateral: false,
+      isAncestor: true,
+      isLower: false,
+      isDirectCard: false,
+    },
+    maternalUncles: {
+      id: 'maternalUncles',
+      title: 'Tios Maternos',
+      kind: 'lateral-many',
+      area: 'right',
+      x: 1064,
+      y: 0,
+      width: 360,
+      singleWidth: 300,
+      columns: 'quad',
+      collapsedLimit: 8,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: true,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: false,
+    },
+    maternalCousins: {
+      id: 'maternalCousins',
+      title: 'Primos Maternos',
+      kind: 'lateral-many',
+      area: 'right',
+      x: 1064,
+      y: 0,
+      width: 360,
+      singleWidth: 300,
+      columns: 'quad',
+      collapsedLimit: 8,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: true,
+      isAncestor: false,
+      isLower: false,
+      isDirectCard: false,
+    },
+    siblings: {
+      id: 'siblings',
+      title: 'Irmãos',
+      kind: 'central-small',
+      area: 'lower',
+      x: 340,
+      y: 0,
+      width: 360,
+      singleWidth: 260,
+      columns: 'double',
+      collapsedLimit: 2,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: false,
+      spousePolicy: 'never',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: false,
+    },
+    nephews: {
+      id: 'nephews',
+      title: 'Sobrinhos',
+      kind: 'central-small',
+      area: 'lower',
+      x: 340,
+      y: 0,
+      width: 300,
+      singleWidth: 220,
+      columns: 'double',
+      collapsedLimit: 2,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: false,
+    },
+    spouse: {
+      id: 'spouse',
+      title: 'Cônjuge',
+      kind: 'direct-card',
+      area: 'lower',
+      x: 720,
+      y: 0,
+      width: 210,
+      columns: 'single',
+      collapsedLimit: 1,
+      variant: 'compact',
+      expandable: false,
+      allowsSpouses: false,
+      spousePolicy: 'always',
+      spouseTone: 'spouse',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: true,
+    },
+    children: {
+      id: 'children',
+      title: 'Filhos',
+      kind: 'descendant',
+      area: 'lower',
+      x: 940,
+      y: 0,
+      width: 300,
+      singleWidth: 260,
+      columns: 'double',
+      collapsedLimit: 2,
+      variant: 'horizontal',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: false,
+    },
+    pets: {
+      id: 'pets',
+      title: 'Pets',
+      kind: 'pet',
+      area: 'lower',
+      x: 665,
+      y: 0,
+      width: 180,
+      singleWidth: 180,
+      columns: 'single',
+      collapsedLimit: 2,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: false,
+      spousePolicy: 'never',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: false,
+    },
+    grandchildren: {
+      id: 'grandchildren',
+      title: 'Netos',
+      kind: 'descendant',
+      area: 'lower',
+      x: 940,
+      y: 0,
+      width: 300,
+      singleWidth: 220,
+      columns: 'double',
+      collapsedLimit: 2,
+      variant: 'mini',
+      expandable: true,
+      allowsSpouses: true,
+      spousePolicy: 'filter',
+      isLateral: false,
+      isAncestor: false,
+      isLower: true,
+      isDirectCard: false,
+    },
+  } satisfies Record<FamilyMapGroupId, GroupConfig>,
+} as const;
+
+const PATERNAL_ANCESTOR_IDS: FamilyMapGroupId[] = [
+  'paternalGreatGreatGrandparents',
+  'paternalGreatGrandparents',
+  'paternalGrandparents',
+];
+const MATERNAL_ANCESTOR_IDS: FamilyMapGroupId[] = [
+  'maternalGreatGreatGrandparents',
+  'maternalGreatGrandparents',
+  'maternalGrandparents',
+];
+const RENDERED_GROUP_IDS: FamilyMapGroupId[] = [
+  ...PATERNAL_ANCESTOR_IDS,
+  ...MATERNAL_ANCESTOR_IDS,
+  'paternalUncles',
+  'paternalCousins',
+  'maternalUncles',
+  'maternalCousins',
+  'siblings',
+  'nephews',
+  'children',
+  'pets',
+  'grandchildren',
+];
 
 const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
@@ -93,56 +557,74 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
-function getRows(
-  count: number,
-  columns: 'single' | 'double' | 'triple' | 'quad',
-  expanded: boolean,
-  collapsedLimit = COLLAPSED_LIMIT,
+function getColumnCount(columns: GroupColumns) {
+  if (columns === 'quad') return 4;
+  if (columns === 'triple') return 3;
+  if (columns === 'double') return 2;
+  return 1;
+}
+
+function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: boolean) {
+  if (expanded || group.people.length <= config.collapsedLimit) return group.people;
+
+  const visible = group.people.slice(0, config.collapsedLimit);
+  const lastPerson = visible[visible.length - 1];
+  const nextPerson = group.people[visible.length];
+  const nextPartnerId = nextPerson
+    ? group.spousePartnerByPersonId.get(nextPerson.id)
+    : undefined;
+
+  return lastPerson && nextPerson && nextPartnerId === lastPerson.id
+    ? [...visible, nextPerson]
+    : visible;
+}
+
+function getGridCellCount(
+  people: Pessoa[],
+  columns: GroupColumns,
+  spousePartnerByPersonId: Map<string, string>,
 ) {
-  const visibleCount = expanded ? count : Math.min(count, collapsedLimit);
-  const columnCount = columns === 'quad' ? 4 : columns === 'triple' ? 3 : columns === 'double' ? 2 : 1;
-  return Math.max(1, Math.ceil(visibleCount / columnCount));
+  const columnCount = getColumnCount(columns);
+  let cells = 0;
+
+  people.forEach((person, index) => {
+    const partnerId = spousePartnerByPersonId.get(person.id);
+    const previousPerson = people[index - 1];
+    if (partnerId && previousPerson?.id === partnerId && cells % columnCount === 0) {
+      cells += 1;
+    }
+    cells += 1;
+  });
+
+  return cells;
 }
 
-function getGroupHeight({
-  people,
-  columns = 'double',
-  variant = 'mini',
-  expanded,
-  collapsedLimit = COLLAPSED_LIMIT,
-}: {
-  people: Pessoa[];
-  columns?: 'single' | 'double' | 'triple' | 'quad';
-  variant?: 'mini' | 'compact' | 'horizontal';
-  expanded: boolean;
-  collapsedLimit?: number;
-}) {
-  const cardHeight = variant === 'horizontal' ? HORIZONTAL_CARD_HEIGHT : MINI_CARD_HEIGHT;
-  const rows = getRows(people.length, columns, expanded, collapsedLimit);
-  return GROUP_VERTICAL_PADDING + rows * cardHeight + Math.max(0, rows - 1) * GROUP_GRID_GAP;
+function getGroupHeight(group: ComposedGroup, config: GroupConfig, expanded: boolean) {
+  const visiblePeople = getVisiblePeople(group, config, expanded);
+  const cardHeight = config.variant === 'horizontal'
+    ? FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight
+    : FAMILY_MAP_LAYOUT.metrics.miniCardHeight;
+  const cells = getGridCellCount(
+    visiblePeople,
+    config.columns,
+    group.spousePartnerByPersonId,
+  );
+  const rows = Math.max(1, Math.ceil(cells / getColumnCount(config.columns)));
+
+  return FAMILY_MAP_LAYOUT.metrics.groupVerticalPadding
+    + rows * cardHeight
+    + Math.max(0, rows - 1) * FAMILY_MAP_LAYOUT.metrics.gridGap;
 }
 
-function getGroupWidth({
-  people,
-  columns = 'double',
-  variant = 'mini',
-  baseWidth,
-}: {
-  people: Pessoa[];
-  columns?: 'single' | 'double' | 'triple' | 'quad';
-  variant?: 'mini' | 'compact' | 'horizontal';
-  baseWidth: number;
-}) {
-  if (people.length !== 1) return baseWidth;
-  if (variant === 'horizontal') return Math.min(baseWidth, 260);
-  if (columns === 'single') return Math.min(baseWidth, 220);
-  return Math.min(baseWidth, 220);
+function getGroupWidth(config: GroupConfig, peopleCount: number) {
+  return peopleCount === 1 && config.singleWidth
+    ? Math.min(config.width, config.singleWidth)
+    : config.width;
 }
 
-function centeredLeft(baseLeft: number, baseWidth: number, width: number) {
-  return baseLeft + (baseWidth - width) / 2;
+function centerWithin(baseX: number, baseWidth: number, width: number) {
+  return baseX + (baseWidth - width) / 2;
 }
-
 
 function buildSpousesByPerson(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
   const peopleById = new Map(pessoas.map((person) => [person.id, person]));
@@ -167,197 +649,187 @@ function buildSpousesByPerson(pessoas: Pessoa[], relacionamentos: Relacionamento
   return spousesByPerson;
 }
 
-function interleaveSpouses(
-  people: Pessoa[],
-  spousesByPerson: Map<string, Pessoa[]>,
-  isVisible: (person: Pessoa | undefined) => person is Pessoa,
-  options: { enabled: boolean; excludedIds?: Set<string> },
-) {
-  if (!options.enabled) return people;
-
-  const excludedIds = options.excludedIds ?? new Set<string>();
+function composeGroup({
+  people,
+  config,
+  spousesByPerson,
+  isVisible,
+  spouseFilterActive,
+  excludedIds,
+}: {
+  people: Pessoa[];
+  config: GroupConfig;
+  spousesByPerson: Map<string, Pessoa[]>;
+  isVisible: (person: Pessoa | undefined) => person is Pessoa;
+  spouseFilterActive: boolean;
+  excludedIds: Set<string>;
+}): ComposedGroup {
   const result: Pessoa[] = [];
   const seen = new Set<string>();
+  const spousePersonIds = new Set<string>();
+  const spousePartnerByPersonId = new Map<string, string>();
+  const includeSpouses = config.allowsSpouses && (
+    config.spousePolicy === 'always'
+    || (config.spousePolicy === 'filter' && spouseFilterActive)
+  );
 
   const addPerson = (person: Pessoa) => {
-    if (seen.has(person.id) || excludedIds.has(person.id) || !isVisible(person)) return;
+    if (seen.has(person.id) || excludedIds.has(person.id) || !isVisible(person)) return false;
     seen.add(person.id);
     result.push(person);
+    return true;
   };
 
   people.forEach((person) => {
-    addPerson(person);
-    (spousesByPerson.get(person.id) ?? []).forEach(addPerson);
+    if (!addPerson(person) && !seen.has(person.id)) return;
+    if (!includeSpouses) return;
+
+    // Pairing is only created from explicit `conjuge` relationships; adjacency is never inferred.
+    (spousesByPerson.get(person.id) ?? []).forEach((spouse) => {
+      if (!addPerson(spouse)) return;
+      spousePersonIds.add(spouse.id);
+      spousePartnerByPersonId.set(spouse.id, person.id);
+    });
   });
 
-  return result;
+  return { people: result, spousePersonIds, spousePartnerByPersonId };
 }
 
 function collectCollateralSpouses(
-  people: Pessoa[],
+  groups: Pessoa[][],
   spousesByPerson: Map<string, Pessoa[]>,
   isVisible: (person: Pessoa | undefined) => person is Pessoa,
   excludedIds: Set<string>,
 ) {
-  const result: Pessoa[] = [];
-  const seen = new Set<string>();
-
-  people.forEach((person) => {
+  const spouseIds = new Set<string>();
+  groups.flat().forEach((person) => {
     (spousesByPerson.get(person.id) ?? []).forEach((spouse) => {
-      if (seen.has(spouse.id) || excludedIds.has(spouse.id) || !isVisible(spouse)) return;
-      seen.add(spouse.id);
-      result.push(spouse);
+      if (!excludedIds.has(spouse.id) && isVisible(spouse)) spouseIds.add(spouse.id);
     });
   });
-
-  return result;
+  return spouseIds.size;
 }
 
-
-function getSpouseConnectorIds(
-  people: Pessoa[],
-  spousesByPerson: Map<string, Pessoa[]>,
-  enabled: boolean,
+function stackGroups(
+  ids: FamilyMapGroupId[],
+  groups: Map<FamilyMapGroupId, ComposedGroup>,
+  expandedGroups: Set<string>,
 ) {
-  if (!enabled) return undefined;
-  const spouseIds = new Set<string>();
+  let top = FAMILY_MAP_LAYOUT.metrics.topStart;
+  const layouts: ResolvedGroup[] = [];
 
-  people.forEach((person, index) => {
-    if (index === 0) return;
-    const previousPerson = people[index - 1];
-    const isPreviousSpouse = (spousesByPerson.get(previousPerson.id) ?? []).some(
-      (spouse) => spouse.id === person.id,
-    );
-    if (isPreviousSpouse) spouseIds.add(person.id);
+  ids.forEach((id) => {
+    const config = FAMILY_MAP_LAYOUT.groups[id];
+    const group = groups.get(id);
+    if (!group?.people.length) return;
+    const height = getGroupHeight(group, config, expandedGroups.has(id));
+    layouts.push({
+      ...config,
+      ...group,
+      left: config.x,
+      top,
+      height,
+    });
+    top += height + FAMILY_MAP_LAYOUT.metrics.groupGap;
   });
 
-  return spouseIds;
+  return layouts;
 }
 
-function PositionedGroup({
-  id,
-  title,
-  people,
-  left,
-  top,
-  width,
-  columns = 'double',
-  variant = 'mini',
-  onPersonClick,
-  expanded,
-  onExpandedChange,
-  zIndex = 10,
-  collapsedLimit = COLLAPSED_LIMIT,
-  spouseTone = 'spouse',
-  spousesByPerson,
-  showSpouseConnectors,
-}: MapGroupProps) {
-  if (people.length === 0) return null;
-
-  return (
-    <div className="absolute min-h-0" style={{ left, top, width, zIndex }}>
-      <VisualGroup
-        title={title}
-        people={people}
-        columns={columns}
-        variant={variant}
-        titleVariant="pill"
-        expandable
-        collapsedLimit={collapsedLimit}
-        expanded={expanded}
-        onExpandedChange={(nextExpanded) => onExpandedChange(id, nextExpanded)}
-        disableInternalScroll
-        spousePersonIds={getSpouseConnectorIds(people, spousesByPerson, showSpouseConnectors)}
-        spouseTone={spouseTone}
-        onPersonClick={onPersonClick}
-      />
-    </div>
-  );
+function resolveGroup(
+  id: FamilyMapGroupId,
+  groups: Map<FamilyMapGroupId, ComposedGroup>,
+  expandedGroups: Set<string>,
+  top: number,
+  baseArea?: { x: number; width: number },
+) {
+  const config = FAMILY_MAP_LAYOUT.groups[id];
+  const group = groups.get(id);
+  if (!group?.people.length) return undefined;
+  const width = getGroupWidth(config, group.people.length);
+  return {
+    ...config,
+    ...group,
+    left: baseArea ? centerWithin(baseArea.x, baseArea.width, width) : config.x,
+    top,
+    width,
+    height: getGroupHeight(group, config, expandedGroups.has(id)),
+  } satisfies ResolvedGroup;
 }
 
-function connectorPath(points: Array<[number, number]>) {
+function getGroupAnchor(
+  layouts: Map<FamilyMapGroupId, ResolvedGroup>,
+  groupId: FamilyMapGroupId,
+  anchorName: AnchorName,
+) {
+  const layout = layouts.get(groupId);
+  if (!layout) return undefined;
+  if (anchorName === 'topCenter') return [layout.left + layout.width / 2, layout.top] as Point;
+  if (anchorName === 'bottomCenter') return [layout.left + layout.width / 2, layout.top + layout.height] as Point;
+  if (anchorName === 'leftCenter') return [layout.left, layout.top + layout.height / 2] as Point;
+  return [layout.left + layout.width, layout.top + layout.height / 2] as Point;
+}
+
+function makeConnector(
+  layouts: Map<FamilyMapGroupId, ResolvedGroup>,
+  id: string,
+  fromGroupId: FamilyMapGroupId,
+  fromAnchor: AnchorName,
+  toGroupId: FamilyMapGroupId,
+  toAnchor: AnchorName,
+  via?: (from: Point, to: Point) => Point[],
+) {
+  const from = getGroupAnchor(layouts, fromGroupId, fromAnchor);
+  const to = getGroupAnchor(layouts, toGroupId, toAnchor);
+  if (!from || !to) return undefined;
+  return { id, points: via ? via(from, to) : [from, to] } satisfies Connector;
+}
+
+function connectorPath(points: Point[]) {
   return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
 }
 
-function centerX(layout: { left: number; width: number }) {
-  return layout.left + layout.width / 2;
+function verticalConnector(
+  layouts: Map<FamilyMapGroupId, ResolvedGroup>,
+  id: string,
+  fromId: FamilyMapGroupId,
+  toId: FamilyMapGroupId,
+) {
+  return makeConnector(
+    layouts,
+    id,
+    fromId,
+    'bottomCenter',
+    toId,
+    'topCenter',
+    (from, to) => {
+      if (from[0] === to[0]) return [from, to];
+      const middleY = from[1] + (to[1] - from[1]) / 2;
+      return [from, [from[0], middleY], [to[0], middleY], to];
+    },
+  );
 }
 
-function bottomY(layout: { top: number; height: number }) {
-  return layout.top + layout.height;
-}
-
-function buildAncestorLayouts({
-  side,
-  branch,
-  expandedGroups,
-}: {
-  side: 'paternal' | 'maternal';
-  branch: MobileFamilyBranch;
-  expandedGroups: Set<string>;
-}): GroupLayout[] {
-  const ANCESTOR_GROUP_WIDTH = 430;
-  const left = side === 'paternal' ? 265 : 745;
-  const rows: Array<Omit<GroupLayout, 'left' | 'top' | 'width' | 'height'> & { expanded: boolean }> = [
-    {
-      id: `${side}-great-great-grandparents`,
-      title: side === 'paternal' ? 'Tataravós Paternos' : 'Tataravós Maternos',
-      people: branch.greatGreatGrandparents,
-      columns: 'double',
-      variant: 'horizontal',
-      expanded: expandedGroups.has(`${side}-great-great-grandparents`),
-    },
-    {
-      id: `${side}-great-grandparents`,
-      title: side === 'paternal' ? 'Bisavós Paternos' : 'Bisavós Maternos',
-      people: branch.greatGrandparents,
-      columns: 'double',
-      variant: 'horizontal',
-      expanded: expandedGroups.has(`${side}-great-grandparents`),
-    },
-    {
-      id: `${side}-grandparents`,
-      title: side === 'paternal' ? 'Avós Paternos' : 'Avós Maternos',
-      people: branch.grandparents,
-      columns: 'double',
-      variant: 'horizontal',
-      expanded: expandedGroups.has(`${side}-grandparents`),
-    },
-  ].filter((row) => row.people.length > 0);
-
-  let top = TOP_START;
-  return rows.map((row) => {
-    const height = getGroupHeight({
-      people: row.people,
-      columns: row.columns,
-      variant: row.variant,
-      expanded: row.expanded,
-      collapsedLimit: ANCESTOR_COLLAPSED_LIMIT,
-    });
-    const layout: GroupLayout = {
-      id: row.id,
-      title: row.title,
-      people: row.people,
-      left,
-      top,
-      width: ANCESTOR_GROUP_WIDTH,
-      height,
-      columns: row.columns,
-      variant: row.variant,
-      collapsedLimit: ANCESTOR_COLLAPSED_LIMIT,
-    };
-    top += height + GROUP_VERTICAL_GAP;
-    return layout;
-  });
-}
-
-function findLayout(layouts: GroupLayout[], id: string) {
-  return layouts.find((layout) => layout.id === id);
+function branchConnector(
+  layouts: Map<FamilyMapGroupId, ResolvedGroup>,
+  id: string,
+  fromId: FamilyMapGroupId,
+  toId: FamilyMapGroupId,
+  junctionY: number,
+) {
+  return makeConnector(
+    layouts,
+    id,
+    fromId,
+    'bottomCenter',
+    toId,
+    'topCenter',
+    (from, to) => [from, [from[0], junctionY], [to[0], junctionY], to],
+  );
 }
 
 function useExpandedGroups() {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
-
   const handleExpandedChange = React.useCallback((id: string, expanded: boolean) => {
     setExpandedGroups((current) => {
       const next = new Set(current);
@@ -366,8 +838,79 @@ function useExpandedGroups() {
       return next;
     });
   }, []);
-
   return [expandedGroups, handleExpandedChange] as const;
+}
+
+function PositionedGroup({
+  layout,
+  expanded,
+  onExpandedChange,
+  onPersonClick,
+}: {
+  layout: ResolvedGroup;
+  expanded: boolean;
+  onExpandedChange: (id: string, expanded: boolean) => void;
+  onPersonClick: (pessoa: Pessoa) => void;
+}) {
+  return (
+    <div
+      className="absolute z-10 min-h-0"
+      style={{ left: layout.left, top: layout.top, width: layout.width }}
+    >
+      <VisualGroup
+        title={layout.title}
+        people={layout.people}
+        columns={layout.columns}
+        variant={layout.variant}
+        titleVariant="pill"
+        expandable={layout.expandable}
+        collapsedLimit={layout.collapsedLimit}
+        expanded={expanded}
+        onExpandedChange={(nextExpanded) => onExpandedChange(layout.id, nextExpanded)}
+        disableInternalScroll
+        spousePersonIds={layout.spousePersonIds}
+        spousePartnerByPersonId={layout.spousePartnerByPersonId}
+        spouseTone={layout.spouseTone}
+        onPersonClick={onPersonClick}
+      />
+    </div>
+  );
+}
+
+function DirectPersonCard({
+  layout,
+  person,
+  emptyLabel,
+  central,
+  tone,
+  onPersonClick,
+}: {
+  layout: ResolvedGroup;
+  person?: Pessoa;
+  emptyLabel?: string;
+  central?: boolean;
+  tone?: 'spouse';
+  onPersonClick: (pessoa: Pessoa) => void;
+}) {
+  return (
+    <div
+      className="absolute z-20"
+      style={{ left: layout.left, top: layout.top, width: layout.width }}
+    >
+      {person ? (
+        <VisualPersonCard
+          person={person}
+          label={layout.title}
+          central={central}
+          tone={tone}
+          vitalMode="full"
+          onClick={onPersonClick}
+        />
+      ) : emptyLabel ? (
+        <VisualEmptyCard label={emptyLabel} />
+      ) : null}
+    </div>
+  );
 }
 
 export function DesktopFamilyMapView({
@@ -381,17 +924,16 @@ export function DesktopFamilyMapView({
   onDirectRelationRenderedCounts,
 }: DesktopFamilyMapViewProps) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = React.useState(1);
+  const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
-  const effectiveScale = scale * manualZoom;
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
   );
   const isVisible = React.useCallback(
     (person: Pessoa | undefined, preserveCentral = false): person is Pessoa => Boolean(
-      person && (preserveCentral || !visiblePersonIds || visiblePersonIds.has(person.id))
+      person && (preserveCentral || !visiblePersonIds || visiblePersonIds.has(person.id)),
     ),
     [visiblePersonIds],
   );
@@ -399,15 +941,15 @@ export function DesktopFamilyMapView({
     (people: Pessoa[]) => people.filter((person) => isVisible(person)),
     [isVisible],
   );
-  const spousesByPerson = React.useMemo(
-    () => buildSpousesByPerson(pessoas, relacionamentos),
-    [pessoas, relacionamentos],
-  );
   const filterGroup = React.useCallback(
     (people: Pessoa[], group: DirectRelativeGroup) => (
       directRelativeFilters[group] ? filterVisible(people) : []
     ),
     [directRelativeFilters, filterVisible],
+  );
+  const spousesByPerson = React.useMemo(
+    () => buildSpousesByPerson(pessoas, relacionamentos),
+    [pessoas, relacionamentos],
   );
 
   const paternal = React.useMemo<MobileFamilyBranch>(() => ({
@@ -426,42 +968,460 @@ export function DesktopFamilyMapView({
     uncles: filterGroup(model.maternal.uncles, 'tios'),
     cousins: filterGroup(model.maternal.cousins, 'primos'),
   }), [filterGroup, model.maternal]);
+
   const father = directRelativeFilters.pais && isVisible(model.father) ? model.father : undefined;
   const mother = directRelativeFilters.pais && isVisible(model.mother) ? model.mother : undefined;
   const central = isVisible(model.central, true) ? model.central : undefined;
-  const spouses = filterVisible(model.spouses);
+  const mainSpouses = filterVisible(model.spouses);
+  const mainSpouse = mainSpouses[0];
   const siblings = filterGroup(model.siblings, 'irmaos');
   const nephews = filterGroup(model.nephews, 'sobrinhos');
   const children = filterGroup(model.children, 'filhos');
   const pets = filterGroup(model.pets, 'pets');
   const grandchildren = filterGroup(model.grandchildren, 'netos');
-  const collateralSpouseExcludedIds = React.useMemo(() => new Set([
-    centralPersonId,
-    ...spouses.map((person) => person.id),
-  ]), [centralPersonId, spouses]);
-  const withCollateralSpouses = React.useCallback((people: Pessoa[]) => interleaveSpouses(
-    people,
-    spousesByPerson,
-    isVisible,
-    { enabled: directRelativeFilters.conjuge, excludedIds: collateralSpouseExcludedIds },
-  ), [collateralSpouseExcludedIds, directRelativeFilters.conjuge, isVisible, spousesByPerson]);
-  const withAncestorSpouses = React.useCallback((people: Pessoa[]) => interleaveSpouses(
-    people,
-    spousesByPerson,
-    isVisible,
-    { enabled: true, excludedIds: collateralSpouseExcludedIds },
-  ), [collateralSpouseExcludedIds, isVisible, spousesByPerson]);
-  const collateralSpouses = React.useMemo(() => collectCollateralSpouses([
-    ...paternal.uncles,
-    ...paternal.cousins,
-    ...maternal.uncles,
-    ...maternal.cousins,
-    ...nephews,
-    ...children,
-    ...grandchildren,
-  ], spousesByPerson, isVisible, collateralSpouseExcludedIds), [
+  const excludedSpouseIds = React.useMemo(
+    () => new Set([centralPersonId, ...mainSpouses.map((person) => person.id)]),
+    [centralPersonId, mainSpouses],
+  );
+
+  const sourcePeople = React.useMemo<Record<FamilyMapGroupId, Pessoa[]>>(() => ({
+    paternalGreatGreatGrandparents: paternal.greatGreatGrandparents,
+    paternalGreatGrandparents: paternal.greatGrandparents,
+    paternalGrandparents: paternal.grandparents,
+    paternalUncles: paternal.uncles,
+    paternalCousins: paternal.cousins,
+    father: father ? [father] : [],
+    central: central ? [central] : [],
+    mother: mother ? [mother] : [],
+    maternalGreatGreatGrandparents: maternal.greatGreatGrandparents,
+    maternalGreatGrandparents: maternal.greatGrandparents,
+    maternalGrandparents: maternal.grandparents,
+    maternalUncles: maternal.uncles,
+    maternalCousins: maternal.cousins,
+    siblings,
+    nephews,
+    spouse: mainSpouse ? [mainSpouse] : [],
     children,
-    collateralSpouseExcludedIds,
+    pets,
+    grandchildren,
+  }), [
+    central,
+    children,
+    father,
+    grandchildren,
+    mainSpouse,
+    maternal,
+    mother,
+    nephews,
+    paternal,
+    pets,
+    siblings,
+  ]);
+
+  const composedGroups = React.useMemo(() => {
+    const groups = new Map<FamilyMapGroupId, ComposedGroup>();
+    (Object.keys(FAMILY_MAP_LAYOUT.groups) as FamilyMapGroupId[]).forEach((id) => {
+      groups.set(id, composeGroup({
+        people: sourcePeople[id],
+        config: FAMILY_MAP_LAYOUT.groups[id],
+        spousesByPerson,
+        isVisible,
+        spouseFilterActive: directRelativeFilters.conjuge,
+        excludedIds: excludedSpouseIds,
+      }));
+    });
+    return groups;
+  }, [
+    directRelativeFilters.conjuge,
+    excludedSpouseIds,
+    isVisible,
+    sourcePeople,
+    spousesByPerson,
+  ]);
+
+  const paternalAncestorLayouts = stackGroups(
+    PATERNAL_ANCESTOR_IDS,
+    composedGroups,
+    expandedGroups,
+  );
+  const maternalAncestorLayouts = stackGroups(
+    MATERNAL_ANCESTOR_IDS,
+    composedGroups,
+    expandedGroups,
+  );
+  const ancestorBottom = Math.max(
+    FAMILY_MAP_LAYOUT.metrics.topStart + FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight,
+    ...paternalAncestorLayouts.map((layout) => layout.top + layout.height),
+    ...maternalAncestorLayouts.map((layout) => layout.top + layout.height),
+  );
+  const parentTop = ancestorBottom + FAMILY_MAP_LAYOUT.metrics.parentTopGap;
+  const centralTop = parentTop
+    + FAMILY_MAP_LAYOUT.metrics.parentCardHeight
+    + FAMILY_MAP_LAYOUT.metrics.centralTopGap;
+  const descendantsTop = centralTop
+    + FAMILY_MAP_LAYOUT.metrics.centralCardHeight
+    + FAMILY_MAP_LAYOUT.metrics.descendantsTopGap;
+
+  const fatherLayout: ResolvedGroup = {
+    ...FAMILY_MAP_LAYOUT.groups.father,
+    ...(composedGroups.get('father') as ComposedGroup),
+    left: FAMILY_MAP_LAYOUT.groups.father.x,
+    top: parentTop,
+    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+  };
+  const motherLayout: ResolvedGroup = {
+    ...FAMILY_MAP_LAYOUT.groups.mother,
+    ...(composedGroups.get('mother') as ComposedGroup),
+    left: FAMILY_MAP_LAYOUT.groups.mother.x,
+    top: parentTop,
+    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+  };
+  const centralLayout: ResolvedGroup = {
+    ...FAMILY_MAP_LAYOUT.groups.central,
+    ...(composedGroups.get('central') as ComposedGroup),
+    left: FAMILY_MAP_LAYOUT.groups.central.x,
+    top: centralTop,
+    height: FAMILY_MAP_LAYOUT.metrics.centralCardHeight,
+  };
+  const spouseLayout: ResolvedGroup | undefined = mainSpouse ? {
+    ...FAMILY_MAP_LAYOUT.groups.spouse,
+    ...(composedGroups.get('spouse') as ComposedGroup),
+    left: FAMILY_MAP_LAYOUT.groups.spouse.x,
+    top: descendantsTop,
+    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+  } : undefined;
+
+  const paternalUnclesLayout = resolveGroup(
+    'paternalUncles',
+    composedGroups,
+    expandedGroups,
+    parentTop,
+    FAMILY_MAP_LAYOUT.areas.left,
+  );
+  const maternalUnclesLayout = resolveGroup(
+    'maternalUncles',
+    composedGroups,
+    expandedGroups,
+    parentTop,
+    FAMILY_MAP_LAYOUT.areas.right,
+  );
+  const paternalCousinsLayout = resolveGroup(
+    'paternalCousins',
+    composedGroups,
+    expandedGroups,
+    parentTop
+      + (paternalUnclesLayout?.height ?? 0)
+      + FAMILY_MAP_LAYOUT.metrics.groupGap,
+    FAMILY_MAP_LAYOUT.areas.left,
+  );
+  const maternalCousinsLayout = resolveGroup(
+    'maternalCousins',
+    composedGroups,
+    expandedGroups,
+    parentTop
+      + (maternalUnclesLayout?.height ?? 0)
+      + FAMILY_MAP_LAYOUT.metrics.groupGap,
+    FAMILY_MAP_LAYOUT.areas.right,
+  );
+  const siblingsLayout = resolveGroup(
+    'siblings',
+    composedGroups,
+    expandedGroups,
+    descendantsTop,
+    FAMILY_MAP_LAYOUT.areas.lowerLeft,
+  );
+  const nephewsLayout = resolveGroup(
+    'nephews',
+    composedGroups,
+    expandedGroups,
+    descendantsTop
+      + (siblingsLayout?.height ?? FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight)
+      + FAMILY_MAP_LAYOUT.metrics.descendantRowGap,
+    FAMILY_MAP_LAYOUT.areas.lowerLeft,
+  );
+  const rightLowerTop = spouseLayout
+    ? spouseLayout.top + spouseLayout.height + FAMILY_MAP_LAYOUT.metrics.groupGap
+    : descendantsTop;
+  const childrenLayout = resolveGroup(
+    'children',
+    composedGroups,
+    expandedGroups,
+    rightLowerTop,
+    FAMILY_MAP_LAYOUT.areas.lowerRight,
+  );
+  const petsLayout = resolveGroup(
+    'pets',
+    composedGroups,
+    expandedGroups,
+    rightLowerTop,
+    FAMILY_MAP_LAYOUT.areas.lowerMiddle,
+  );
+  const grandchildrenLayout = resolveGroup(
+    'grandchildren',
+    composedGroups,
+    expandedGroups,
+    childrenLayout
+      ? childrenLayout.top + childrenLayout.height + FAMILY_MAP_LAYOUT.metrics.groupGap
+      : rightLowerTop,
+    FAMILY_MAP_LAYOUT.areas.lowerRight,
+  );
+
+  const resolvedLayouts = new Map<FamilyMapGroupId, ResolvedGroup>();
+  [
+    ...paternalAncestorLayouts,
+    ...maternalAncestorLayouts,
+    paternalUnclesLayout,
+    paternalCousinsLayout,
+    maternalUnclesLayout,
+    maternalCousinsLayout,
+    siblingsLayout,
+    nephewsLayout,
+    childrenLayout,
+    petsLayout,
+    grandchildrenLayout,
+    fatherLayout,
+    centralLayout,
+    motherLayout,
+    spouseLayout,
+  ].forEach((layout) => {
+    if (layout) resolvedLayouts.set(layout.id, layout);
+  });
+
+  const groupLayouts = RENDERED_GROUP_IDS
+    .map((id) => resolvedLayouts.get(id))
+    .filter((layout): layout is ResolvedGroup => Boolean(layout?.people.length));
+  const contentBottom = Math.max(
+    centralLayout.top + centralLayout.height,
+    ...groupLayouts.map((layout) => layout.top + layout.height),
+    spouseLayout ? spouseLayout.top + spouseLayout.height : 0,
+  );
+  const canvasHeight = Math.max(
+    FAMILY_MAP_LAYOUT.canvas.minHeight,
+    contentBottom + FAMILY_MAP_LAYOUT.metrics.groupGap,
+  );
+
+  const connectors: Connector[] = [];
+  const addConnector = (connector?: Connector) => {
+    if (connector) connectors.push(connector);
+  };
+  const connectAncestorChain = (ids: FamilyMapGroupId[]) => {
+    const visibleIds = ids.filter((id) => resolvedLayouts.get(id)?.people.length);
+    visibleIds.slice(0, -1).forEach((id, index) => {
+      addConnector(verticalConnector(
+        resolvedLayouts,
+        `${id}-${visibleIds[index + 1]}`,
+        id,
+        visibleIds[index + 1],
+      ));
+    });
+  };
+  connectAncestorChain(PATERNAL_ANCESTOR_IDS);
+  connectAncestorChain(MATERNAL_ANCESTOR_IDS);
+
+  const paternalLastAncestor = [...PATERNAL_ANCESTOR_IDS]
+    .reverse()
+    .find((id) => resolvedLayouts.get(id)?.people.length);
+  const maternalLastAncestor = [...MATERNAL_ANCESTOR_IDS]
+    .reverse()
+    .find((id) => resolvedLayouts.get(id)?.people.length);
+  const parentJunctionY = parentTop - FAMILY_MAP_LAYOUT.connectors.junctionGap;
+  const centralJunctionY = centralTop - 36;
+  const descendantJunctionY = descendantsTop - FAMILY_MAP_LAYOUT.connectors.junctionGap;
+
+  if (paternalLastAncestor && father) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'paternal-ancestors-father',
+      paternalLastAncestor,
+      'father',
+      parentJunctionY,
+    ));
+  }
+  if (maternalLastAncestor && mother) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'maternal-ancestors-mother',
+      maternalLastAncestor,
+      'mother',
+      parentJunctionY,
+    ));
+  }
+  if (paternalLastAncestor && paternalUnclesLayout) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'paternal-ancestors-uncles',
+      paternalLastAncestor,
+      'paternalUncles',
+      parentJunctionY,
+    ));
+  }
+  if (maternalLastAncestor && maternalUnclesLayout) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'maternal-ancestors-uncles',
+      maternalLastAncestor,
+      'maternalUncles',
+      parentJunctionY,
+    ));
+  }
+  if (father && central) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'father-central',
+      'father',
+      'central',
+      centralJunctionY,
+    ));
+  }
+  if (mother && central) {
+    addConnector(branchConnector(
+      resolvedLayouts,
+      'mother-central',
+      'mother',
+      'central',
+      centralJunctionY,
+    ));
+  }
+  if (paternalUnclesLayout && paternalCousinsLayout) {
+    addConnector(verticalConnector(
+      resolvedLayouts,
+      'paternal-uncles-cousins',
+      'paternalUncles',
+      'paternalCousins',
+    ));
+  }
+  if (maternalUnclesLayout && maternalCousinsLayout) {
+    addConnector(verticalConnector(
+      resolvedLayouts,
+      'maternal-uncles-cousins',
+      'maternalUncles',
+      'maternalCousins',
+    ));
+  }
+
+  const lowerRootIds = [
+    siblingsLayout && 'siblings',
+    spouseLayout && 'spouse',
+    !spouseLayout && childrenLayout && 'children',
+    !spouseLayout && petsLayout && 'pets',
+    !spouseLayout && !childrenLayout && grandchildrenLayout && 'grandchildren',
+  ].filter((id): id is FamilyMapGroupId => Boolean(id));
+  if (central && lowerRootIds.length > 0) {
+    lowerRootIds.forEach((id) => {
+      addConnector(branchConnector(
+        resolvedLayouts,
+        `central-${id}`,
+        'central',
+        id,
+        descendantJunctionY,
+      ));
+    });
+  }
+  if (siblingsLayout && nephewsLayout) {
+    addConnector(verticalConnector(
+      resolvedLayouts,
+      'siblings-nephews',
+      'siblings',
+      'nephews',
+    ));
+  }
+  if (spouseLayout) {
+    const spouseBranchY = spouseLayout.top
+      + spouseLayout.height
+      + FAMILY_MAP_LAYOUT.metrics.groupGap / 2;
+    if (childrenLayout) {
+      addConnector(branchConnector(
+        resolvedLayouts,
+        'spouse-children',
+        'spouse',
+        'children',
+        spouseBranchY,
+      ));
+    }
+    if (petsLayout) {
+      addConnector(branchConnector(
+        resolvedLayouts,
+        'spouse-pets',
+        'spouse',
+        'pets',
+        spouseBranchY,
+      ));
+    }
+    if (!childrenLayout && grandchildrenLayout) {
+      addConnector(branchConnector(
+        resolvedLayouts,
+        'spouse-grandchildren',
+        'spouse',
+        'grandchildren',
+        spouseBranchY,
+      ));
+    }
+  }
+  if (childrenLayout && grandchildrenLayout) {
+    addConnector(verticalConnector(
+      resolvedLayouts,
+      'children-grandchildren',
+      'children',
+      'grandchildren',
+    ));
+  }
+
+  React.useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return undefined;
+    const updateScale = () => {
+      const widthScale = viewport.clientWidth / FAMILY_MAP_LAYOUT.canvas.width;
+      const heightScale = viewport.clientHeight / FAMILY_MAP_LAYOUT.canvas.minHeight;
+      setResponsiveScale(Math.min(
+        1,
+        Math.max(
+          FAMILY_MAP_LAYOUT.canvas.minScale,
+          Math.min(widthScale, heightScale),
+        ),
+      ));
+    };
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(viewport);
+    updateScale();
+    return () => observer.disconnect();
+  }, [canvasHeight, layoutRevision]);
+
+  React.useEffect(() => {
+    setManualZoom(1);
+  }, [centralPersonId, layoutRevision]);
+
+  const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    const direction = event.deltaY > 0 ? -1 : 1;
+    setManualZoom((currentZoom) => {
+      const nextZoom = currentZoom + direction * FAMILY_MAP_LAYOUT.canvas.zoomStep;
+      return Math.min(
+        FAMILY_MAP_LAYOUT.canvas.maxZoom,
+        Math.max(
+          FAMILY_MAP_LAYOUT.canvas.minZoom,
+          Number(nextZoom.toFixed(2)),
+        ),
+      );
+    });
+  }, []);
+
+  const collateralSpouseCount = React.useMemo(() => collectCollateralSpouses(
+    [
+      paternal.uncles,
+      paternal.cousins,
+      maternal.uncles,
+      maternal.cousins,
+      nephews,
+      children,
+      grandchildren,
+    ],
+    spousesByPerson,
+    isVisible,
+    excludedSpouseIds,
+  ), [
+    children,
+    excludedSpouseIds,
     grandchildren,
     isVisible,
     maternal.cousins,
@@ -471,246 +1431,16 @@ export function DesktopFamilyMapView({
     paternal.uncles,
     spousesByPerson,
   ]);
-  const nephewsWithSpouses = React.useMemo(
-    () => withCollateralSpouses(nephews),
-    [nephews, withCollateralSpouses],
-  );
-  const childrenWithSpouses = React.useMemo(
-    () => withCollateralSpouses(children),
-    [children, withCollateralSpouses],
-  );
-  const grandchildrenWithSpouses = React.useMemo(
-    () => withCollateralSpouses(grandchildren),
-    [grandchildren, withCollateralSpouses],
-  );
-  const paternalMap = React.useMemo<MobileFamilyBranch>(() => ({
-    parent: paternal.parent,
-    grandparents: withAncestorSpouses(paternal.grandparents),
-    greatGrandparents: withAncestorSpouses(paternal.greatGrandparents),
-    greatGreatGrandparents: withAncestorSpouses(paternal.greatGreatGrandparents),
-    uncles: withCollateralSpouses(paternal.uncles),
-    cousins: withCollateralSpouses(paternal.cousins),
-  }), [paternal, withAncestorSpouses, withCollateralSpouses]);
-  const maternalMap = React.useMemo<MobileFamilyBranch>(() => ({
-    parent: maternal.parent,
-    grandparents: withAncestorSpouses(maternal.grandparents),
-    greatGrandparents: withAncestorSpouses(maternal.greatGrandparents),
-    greatGreatGrandparents: withAncestorSpouses(maternal.greatGreatGrandparents),
-    uncles: withCollateralSpouses(maternal.uncles),
-    cousins: withCollateralSpouses(maternal.cousins),
-  }), [maternal, withAncestorSpouses, withCollateralSpouses]);
-
-  const paternalUncles = React.useMemo(
-    () => paternalMap.uncles,
-    [paternalMap.uncles],
-  );
-  const paternalCousins = React.useMemo(
-    () => paternalMap.cousins,
-    [paternalMap.cousins],
-  );
-  const maternalUncles = React.useMemo(
-    () => maternalMap.uncles,
-    [maternalMap.uncles],
-  );
-  const maternalCousins = React.useMemo(
-    () => maternalMap.cousins,
-    [maternalMap.cousins],
-  );
-
-  const paternalAncestors = React.useMemo(
-    () => buildAncestorLayouts({ side: 'paternal', branch: paternalMap, expandedGroups }),
-    [expandedGroups, paternalMap],
-  );
-  const maternalAncestors = React.useMemo(
-    () => buildAncestorLayouts({ side: 'maternal', branch: maternalMap, expandedGroups }),
-    [expandedGroups, maternalMap],
-  );
-
-  const maxAncestorBottom = Math.max(
-    ...paternalAncestors.map(bottomY),
-    ...maternalAncestors.map(bottomY),
-    TOP_START + HORIZONTAL_CARD_HEIGHT,
-  );
-  const parentTop = maxAncestorBottom + FATHER_TOP_OFFSET;
-  const parentJunctionY = parentTop - 18;
-  const parentBottomY = parentTop + PARENT_CARD_HEIGHT;
-  const centralTop = parentBottomY + 54;
-  const centralBottomY = centralTop + CENTRAL_CARD_HEIGHT;
-  const descendantsTop = centralBottomY + 52;
-
-  const paternalUnclesHeight = getGroupHeight({
-    people: paternalUncles,
-    columns: 'quad',
-    variant: 'mini',
-    expanded: expandedGroups.has('paternal-uncles'),
-    collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT,
-  });
-  const maternalUnclesHeight = getGroupHeight({
-    people: maternalUncles,
-    columns: 'quad',
-    variant: 'mini',
-    expanded: expandedGroups.has('maternal-uncles'),
-    collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT,
-  });
-  const paternalCousinsTop = parentTop + paternalUnclesHeight + GROUP_VERTICAL_GAP;
-  const maternalCousinsTop = parentTop + maternalUnclesHeight + GROUP_VERTICAL_GAP;
-
-  const descendantGroupTopRow = descendantsTop;
-  const leftDescendantSecondRow = descendantsTop + 144;
-  const branchWidth = SIDE_BRANCH_WIDTH;
-  const branchLeft = PATERNAL_BRANCH_LEFT;
-  const branchRight = MATERNAL_BRANCH_LEFT;
-  const descendantColumnWidth = 300;
-  const petColumnWidth = 180;
-  const siblingsWidth = getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: SIBLINGS_GROUP_WIDTH });
-
-  const spouse = spouses[0];
-  const spouseCardLayout = spouse ? {
-    left: 720,
-    top: descendantGroupTopRow,
-    width: 210,
-    height: PARENT_CARD_HEIGHT,
-  } : undefined;
-  const rightDescendantSecondRow = spouseCardLayout
-    ? bottomY(spouseCardLayout) + GROUP_VERTICAL_GAP
-    : descendantsTop;
-  const childrenHeight = getGroupHeight({
-    people: childrenWithSpouses,
-    columns: 'double',
-    variant: 'horizontal',
-    expanded: expandedGroups.has('children'),
-  });
-  const childrenWidth = getGroupWidth({
-    people: childrenWithSpouses,
-    columns: 'double',
-    variant: 'horizontal',
-    baseWidth: descendantColumnWidth,
-  });
-  const grandchildrenTop = childrenWithSpouses.length > 0
-    ? rightDescendantSecondRow + childrenHeight + GROUP_VERTICAL_GAP
-    : rightDescendantSecondRow;
-
-  const descendantLayouts: GroupLayout[] = [
-    {
-      id: 'siblings',
-      title: 'Irmãos',
-      people: siblings,
-      left: centeredLeft(340, SIBLINGS_GROUP_WIDTH, siblingsWidth),
-      top: descendantGroupTopRow,
-      width: siblingsWidth,
-      height: getGroupHeight({ people: siblings, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('siblings') }),
-      columns: 'double',
-      variant: 'horizontal',
-    },
-    {
-      id: 'children',
-      title: 'Filhos',
-      people: childrenWithSpouses,
-      left: centeredLeft(940, descendantColumnWidth, childrenWidth),
-      top: rightDescendantSecondRow,
-      width: childrenWidth,
-      height: childrenHeight,
-      columns: 'double',
-      variant: 'horizontal',
-    },
-    {
-      id: 'nephews',
-      title: 'Sobrinhos',
-      people: nephewsWithSpouses,
-      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
-      top: leftDescendantSecondRow,
-      width: getGroupWidth({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
-      height: getGroupHeight({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', expanded: expandedGroups.has('nephews') }),
-      columns: 'double',
-      variant: 'mini',
-    },
-    {
-      id: 'pets',
-      title: 'Pets',
-      people: pets,
-      left: centeredLeft(665, petColumnWidth, getGroupWidth({ people: pets, columns: 'single', variant: 'mini', baseWidth: petColumnWidth })),
-      top: rightDescendantSecondRow,
-      width: getGroupWidth({ people: pets, columns: 'single', variant: 'mini', baseWidth: petColumnWidth }),
-      height: getGroupHeight({ people: pets, columns: 'single', variant: 'mini', expanded: expandedGroups.has('pets') }),
-      columns: 'single',
-      variant: 'mini',
-    },
-    {
-      id: 'grandchildren',
-      title: 'Netos',
-      people: grandchildrenWithSpouses,
-      left: centeredLeft(940, descendantColumnWidth, getGroupWidth({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
-      top: grandchildrenTop,
-      width: getGroupWidth({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
-      height: getGroupHeight({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', expanded: expandedGroups.has('grandchildren') }),
-      columns: 'double',
-      variant: 'mini',
-    },
-  ];
-
-  const renderedDescendantLayouts = descendantLayouts.filter((layout) => layout.people.length > 0);
-  const leftDescendantLayouts = renderedDescendantLayouts.filter((layout) => (
-    layout.id === 'siblings' || layout.id === 'nephews'
-  ));
-  const childrenLayout = renderedDescendantLayouts.find((layout) => layout.id === 'children');
-  const petsLayout = renderedDescendantLayouts.find((layout) => layout.id === 'pets');
-  const grandchildrenLayout = renderedDescendantLayouts.find((layout) => layout.id === 'grandchildren');
-  const rightLowerDescendantLayouts = renderedDescendantLayouts.filter((layout) => (
-    layout.id === 'children' || layout.id === 'pets' || layout.id === 'grandchildren'
-  ));
-  const rightDescendantLayouts = [
-    ...(spouseCardLayout ? [spouseCardLayout] : []),
-    ...rightLowerDescendantLayouts,
-  ];
-  const contentBottom = Math.max(
-    centralBottomY,
-    spouseCardLayout ? bottomY(spouseCardLayout) : 0,
-    paternalCousins.length > 0 ? paternalCousinsTop + getGroupHeight({ people: paternalCousins, columns: 'quad', variant: 'mini', expanded: expandedGroups.has('paternal-cousins'), collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT }) : 0,
-    maternalCousins.length > 0 ? maternalCousinsTop + getGroupHeight({ people: maternalCousins, columns: 'quad', variant: 'mini', expanded: expandedGroups.has('maternal-cousins'), collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT }) : 0,
-    ...renderedDescendantLayouts.map(bottomY),
-  );
-  const canvasHeight = Math.max(CANVAS_HEIGHT, contentBottom + 52);
-
-  React.useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return undefined;
-
-    const updateScale = () => {
-      const widthScale = viewport.clientWidth / CANVAS_WIDTH;
-      const heightScale = viewport.clientHeight / CANVAS_HEIGHT;
-      setScale(Math.min(1, Math.max(MIN_TABLET_SCALE, Math.min(widthScale, heightScale))));
-    };
-    const observer = new ResizeObserver(updateScale);
-    observer.observe(viewport);
-    updateScale();
-
-    return () => observer.disconnect();
-  }, [layoutRevision, canvasHeight]);
-
-  React.useEffect(() => {
-    setManualZoom(1);
-  }, [layoutRevision, centralPersonId]);
-
-  const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey) return;
-    event.preventDefault();
-    const direction = event.deltaY > 0 ? -1 : 1;
-    setManualZoom((currentZoom) => {
-      const nextZoom = currentZoom + direction * 0.08;
-      return Math.min(2.2, Math.max(0.7, Number(nextZoom.toFixed(2))));
-    });
-  }, []);
 
   React.useEffect(() => {
     if (!onDirectRelationRenderedCounts) return;
-
     onDirectRelationRenderedCounts({
       ...EMPTY_COUNTS,
       pais: Number(Boolean(father)) + Number(Boolean(mother)),
       avos: paternal.grandparents.length + maternal.grandparents.length,
       bisavos: paternal.greatGrandparents.length + maternal.greatGrandparents.length,
       tataravos: paternal.greatGreatGrandparents.length + maternal.greatGreatGrandparents.length,
-      conjuge: collateralSpouses.length,
+      conjuge: collateralSpouseCount,
       filhos: children.length,
       netos: grandchildren.length,
       irmaos: siblings.length,
@@ -721,6 +1451,7 @@ export function DesktopFamilyMapView({
     });
   }, [
     children.length,
+    collateralSpouseCount,
     father,
     grandchildren.length,
     maternal,
@@ -730,199 +1461,92 @@ export function DesktopFamilyMapView({
     paternal,
     pets.length,
     siblings.length,
-    collateralSpouses.length,
   ]);
 
-  const hasCentralDescendants = leftDescendantLayouts.length > 0 || rightDescendantLayouts.length > 0;
-  const paternalGrandparents = findLayout(paternalAncestors, 'paternal-grandparents');
-  const maternalGrandparents = findLayout(maternalAncestors, 'maternal-grandparents');
-  const fatherCenterX = 480;
-  const motherCenterX = 960;
-  const centralCenterX = 720;
-  const centralBranchY = centralTop - 36;
-  const descendantsJunctionY = descendantsTop - 18;
-  const leftDescendantBranchX = leftDescendantLayouts.length > 0
-    ? centerX(leftDescendantLayouts[0])
-    : centralCenterX;
-  const rightDescendantBranchX = rightDescendantLayouts.length > 0
-    ? centerX(rightDescendantLayouts[0])
-    : centralCenterX;
-  const getSideBranchWidth = (people: Pessoa[]) => (people.length === 1 ? SIDE_BRANCH_SINGLE_WIDTH : branchWidth);
-  const paternalUnclesWidth = getSideBranchWidth(paternalUncles);
-  const maternalUnclesWidth = getSideBranchWidth(maternalUncles);
-  const paternalCousinsWidth = getSideBranchWidth(paternalCousins);
-  const maternalCousinsWidth = getSideBranchWidth(maternalCousins);
-  const unclesPaternal = {
-    left: centeredLeft(branchLeft, branchWidth, paternalUnclesWidth),
-    top: parentTop,
-    width: paternalUnclesWidth,
-    height: paternalUnclesHeight,
-  };
-  const unclesMaternal = {
-    left: centeredLeft(branchRight, branchWidth, maternalUnclesWidth),
-    top: parentTop,
-    width: maternalUnclesWidth,
-    height: maternalUnclesHeight,
-  };
-  const cousinsPaternal = {
-    left: centeredLeft(branchLeft, branchWidth, paternalCousinsWidth),
-    top: paternalCousinsTop,
-    width: paternalCousinsWidth,
-    height: getGroupHeight({ people: paternalCousins, columns: 'quad', variant: 'mini', expanded: expandedGroups.has('paternal-cousins'), collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT }),
-  };
-  const cousinsMaternal = {
-    left: centeredLeft(branchRight, branchWidth, maternalCousinsWidth),
-    top: maternalCousinsTop,
-    width: maternalCousinsWidth,
-    height: getGroupHeight({ people: maternalCousins, columns: 'quad', variant: 'mini', expanded: expandedGroups.has('maternal-cousins'), collapsedLimit: SIDE_BRANCH_COLLAPSED_LIMIT }),
-  };
+  const effectiveScale = responsiveScale * manualZoom;
 
   return (
     <div
       ref={viewportRef}
       onWheel={handleWheel}
-      className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain bg-[#ecfeff] pt-[76px]"
+      className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain pt-[76px]"
+      style={{ backgroundColor: FAMILY_MAP_LAYOUT.canvas.background }}
     >
       <div
         className="relative z-10 mx-auto"
-        style={{ width: CANVAS_WIDTH * effectiveScale, height: canvasHeight * effectiveScale }}
+        style={{
+          width: FAMILY_MAP_LAYOUT.canvas.width * effectiveScale,
+          height: canvasHeight * effectiveScale,
+        }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
           style={{
-            width: CANVAS_WIDTH,
+            width: FAMILY_MAP_LAYOUT.canvas.width,
             height: canvasHeight,
             transform: `scale(${effectiveScale})`,
           }}
         >
           <svg
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
+            viewBox={`0 0 ${FAMILY_MAP_LAYOUT.canvas.width} ${canvasHeight}`}
             aria-hidden="true"
           >
-            <g fill="none" stroke={CONNECTOR_COLOR} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              {[paternalAncestors, maternalAncestors].map((layouts) => layouts.map((layout, index) => {
-                const nextLayout = layouts[index + 1];
-                if (!nextLayout) return null;
-                const x = centerX(layout);
-                return <path key={`${layout.id}-${nextLayout.id}`} d={connectorPath([[x, bottomY(layout)], [x, nextLayout.top]])} />;
-              }))}
-              {paternalGrandparents && father && (
-                <path d={connectorPath([[centerX(paternalGrandparents), bottomY(paternalGrandparents)], [centerX(paternalGrandparents), parentJunctionY], [fatherCenterX, parentJunctionY], [fatherCenterX, parentTop]])} />
-              )}
-              {maternalGrandparents && mother && (
-                <path d={connectorPath([[centerX(maternalGrandparents), bottomY(maternalGrandparents)], [centerX(maternalGrandparents), parentJunctionY], [motherCenterX, parentJunctionY], [motherCenterX, parentTop]])} />
-              )}
-              {paternalGrandparents && paternalUncles.length > 0 && (
-                <path d={connectorPath([[centerX(paternalGrandparents), parentJunctionY], [centerX(unclesPaternal), parentJunctionY], [centerX(unclesPaternal), parentTop]])} />
-              )}
-              {maternalGrandparents && maternalUncles.length > 0 && (
-                <path d={connectorPath([[centerX(maternalGrandparents), parentJunctionY], [centerX(unclesMaternal), parentJunctionY], [centerX(unclesMaternal), parentTop]])} />
-              )}
-              {father && central && (
-                <path d={connectorPath([[fatherCenterX, parentBottomY], [fatherCenterX, centralBranchY], [centralCenterX, centralBranchY]])} />
-              )}
-              {mother && central && (
-                <path d={connectorPath([[motherCenterX, parentBottomY], [motherCenterX, centralBranchY], [centralCenterX, centralBranchY]])} />
-              )}
-              {central && (
-                <path d={connectorPath([[centralCenterX, centralBranchY], [centralCenterX, centralTop - 12]])} />
-              )}
-              {paternalUncles.length > 0 && paternalCousins.length > 0 && (
-                <path d={connectorPath([[centerX(unclesPaternal), bottomY(unclesPaternal)], [centerX(cousinsPaternal), cousinsPaternal.top]])} />
-              )}
-              {maternalUncles.length > 0 && maternalCousins.length > 0 && (
-                <path d={connectorPath([[centerX(unclesMaternal), bottomY(unclesMaternal)], [centerX(cousinsMaternal), cousinsMaternal.top]])} />
-              )}
-              {central && hasCentralDescendants && (
-                <path d={connectorPath([[centralCenterX, centralBottomY], [centralCenterX, descendantsJunctionY]])} />
-              )}
-              {central && leftDescendantLayouts.length > 0 && (
-                <path d={connectorPath([[centralCenterX, descendantsJunctionY], [leftDescendantBranchX, descendantsJunctionY]])} />
-              )}
-              {central && spouseCardLayout && (
-                <path d={connectorPath([[centralCenterX, descendantsJunctionY], [centerX(spouseCardLayout), descendantsJunctionY], [centerX(spouseCardLayout), spouseCardLayout.top]])} />
-              )}
-              {central && !spouseCardLayout && rightLowerDescendantLayouts.length > 0 && (
-                <path d={connectorPath([[centralCenterX, descendantsJunctionY], [rightDescendantBranchX, descendantsJunctionY]])} />
-              )}
-              {central && leftDescendantLayouts.map((layout) => (
-                <path
-                  key={`left-descendant-${layout.id}`}
-                  d={connectorPath([[leftDescendantBranchX, descendantsJunctionY], [leftDescendantBranchX, layout.top]])}
-                />
+            <g
+              fill="none"
+              stroke={FAMILY_MAP_LAYOUT.connectors.color}
+              strokeWidth={FAMILY_MAP_LAYOUT.connectors.width}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {connectors.map((connector) => (
+                <path key={connector.id} d={connectorPath(connector.points)} />
               ))}
-              {central && !spouseCardLayout && rightLowerDescendantLayouts.map((layout) => (
-                <path
-                  key={`right-descendant-${layout.id}`}
-                  d={connectorPath([[rightDescendantBranchX, descendantsJunctionY], [rightDescendantBranchX, layout.top], [centerX(layout), layout.top]])}
-                />
-              ))}
-              {central && spouseCardLayout && rightLowerDescendantLayouts.length > 0 && (() => {
-                const spouseCenterX = centerX(spouseCardLayout);
-                const spouseLowerJunctionY = bottomY(spouseCardLayout) + GROUP_VERTICAL_GAP / 2;
-                const branchTargets = [petsLayout, childrenLayout].filter(Boolean) as GroupLayout[];
-                const firstTarget = branchTargets[0] ?? grandchildrenLayout;
-                if (!firstTarget) return null;
-
-                return (
-                  <>
-                    <path d={connectorPath([[spouseCenterX, bottomY(spouseCardLayout)], [spouseCenterX, spouseLowerJunctionY]])} />
-                    {branchTargets.map((layout) => (
-                      <path
-                        key={`spouse-branch-${layout.id}`}
-                        d={connectorPath([[spouseCenterX, spouseLowerJunctionY], [centerX(layout), spouseLowerJunctionY], [centerX(layout), layout.top]])}
-                      />
-                    ))}
-                    {grandchildrenLayout && childrenLayout && (
-                      <path d={connectorPath([[centerX(childrenLayout), bottomY(childrenLayout)], [centerX(childrenLayout), grandchildrenLayout.top]])} />
-                    )}
-                    {grandchildrenLayout && !childrenLayout && (
-                      <path d={connectorPath([[spouseCenterX, spouseLowerJunctionY], [centerX(grandchildrenLayout), spouseLowerJunctionY], [centerX(grandchildrenLayout), grandchildrenLayout.top]])} />
-                    )}
-                  </>
-                );
-              })()}
             </g>
           </svg>
 
-          {paternalAncestors.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors spouseTone="ancestorSpouse" onPersonClick={onPersonClick} />
-          ))}
-          {maternalAncestors.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors spouseTone="ancestorSpouse" onPersonClick={onPersonClick} />
+          {groupLayouts.map((layout) => (
+            <PositionedGroup
+              key={layout.id}
+              layout={layout}
+              expanded={expandedGroups.has(layout.id)}
+              onExpandedChange={handleExpandedChange}
+              onPersonClick={onPersonClick}
+            />
           ))}
 
-          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternalUncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} columns="quad" collapsedLimit={SIDE_BRANCH_COLLAPSED_LIMIT} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
-          <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
-            {directRelativeFilters.pais && (
-              father
-                ? <VisualPersonCard person={father} label="Pai" vitalMode="full" onClick={onPersonClick} />
-                : <VisualEmptyCard label="Pai" />
-            )}
-          </div>
-          <div className="absolute z-20 w-[210px]" style={{ left: 615, top: centralTop }}>
-            {central && <VisualPersonCard person={central} label="Pessoa Central" central vitalMode="full" onClick={onPersonClick} />}
-          </div>
-          <div className="absolute z-10 w-[210px]" style={{ left: 855, top: parentTop }}>
-            {directRelativeFilters.pais && (
-              mother
-                ? <VisualPersonCard person={mother} label="Mãe" vitalMode="full" onClick={onPersonClick} />
-                : <VisualEmptyCard label="Mãe" />
-            )}
-          </div>
-          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternalUncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} columns="quad" collapsedLimit={SIDE_BRANCH_COLLAPSED_LIMIT} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
-
-          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternalCousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} columns="quad" collapsedLimit={SIDE_BRANCH_COLLAPSED_LIMIT} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
-          {spouse && spouseCardLayout && (
-            <div className="absolute z-10 w-[210px]" style={{ left: spouseCardLayout.left, top: spouseCardLayout.top }}>
-              <VisualPersonCard person={spouse} label="Cônjuge" tone="spouse" vitalMode="full" onClick={onPersonClick} />
-            </div>
+          {directRelativeFilters.pais && (
+            <>
+              <DirectPersonCard
+                layout={fatherLayout}
+                person={father}
+                emptyLabel="Pai"
+                onPersonClick={onPersonClick}
+              />
+              <DirectPersonCard
+                layout={motherLayout}
+                person={mother}
+                emptyLabel="Mãe"
+                onPersonClick={onPersonClick}
+              />
+            </>
           )}
-          {renderedDescendantLayouts.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
-          ))}
-          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternalCousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} columns="quad" collapsedLimit={SIDE_BRANCH_COLLAPSED_LIMIT} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
+          {central && (
+            <DirectPersonCard
+              layout={centralLayout}
+              person={central}
+              central
+              onPersonClick={onPersonClick}
+            />
+          )}
+          {mainSpouse && spouseLayout && (
+            <DirectPersonCard
+              layout={spouseLayout}
+              person={mainSpouse}
+              tone="spouse"
+              onPersonClick={onPersonClick}
+            />
+          )}
         </div>
       </div>
     </div>
