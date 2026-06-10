@@ -547,9 +547,9 @@ export function DesktopFamilyMapView({
 
   const descendantGroupTopRow = descendantsTop;
   const leftDescendantSecondRow = descendantsTop + 144;
-  const branchLeft = 8;
-  const branchRight = 932;
-  const branchWidth = 500;
+  const branchLeft = -86;
+  const branchRight = 1106;
+  const branchWidth = 420;
   const descendantColumnWidth = 300;
   const petColumnWidth = 180;
 
