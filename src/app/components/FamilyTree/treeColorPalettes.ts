@@ -1,4 +1,4 @@
-export type TreeColorPalette = 'white' | 'orange' | 'brown';
+export type TreeColorPalette = 'white' | 'orange' | 'brown' | 'visual';
 
 export const TREE_COLOR_PALETTE_STORAGE_KEY = 'arvorefamilia.treeColorPalette';
 
@@ -155,8 +155,51 @@ export const TREE_COLOR_PALETTES: Record<TreeColorPalette, TreeColorPaletteDefin
       '--tree-palette-legend-bg': 'rgba(251, 248, 241, 0.94)',
     },
   },
+  visual: {
+    label: 'Visual',
+    ariaLabel: 'Usar paleta visual azul e ciano',
+    swatch: '#0891B2',
+    swatchBorder: '#0E7490',
+    cssVariables: {
+      '--tree-palette-canvas-bg': '#ECFEFF',
+      '--tree-palette-card-tataravos': '#CCFBF1',
+      '--tree-palette-card-bisavos': '#99F6E4',
+      '--tree-palette-card-avos': '#67E8F9',
+      '--tree-palette-card-tios': '#A5F3FC',
+      '--tree-palette-card-primos': '#CFFAFE',
+      '--tree-palette-card-pais': '#5EEAD4',
+      '--tree-palette-card-central': '#38BDF8',
+      '--tree-palette-card-irmaos': '#99F6E4',
+      '--tree-palette-card-sobrinhos': '#CFFAFE',
+      '--tree-palette-card-netos': '#BAE6FD',
+      '--tree-palette-card-pets': '#FED7AA',
+      '--tree-palette-border-tataravos': '#0F766E',
+      '--tree-palette-border-bisavos': '#0D9488',
+      '--tree-palette-border-avos': '#0891B2',
+      '--tree-palette-border-tios': '#0891B2',
+      '--tree-palette-border-primos': '#06B6D4',
+      '--tree-palette-border-pais': '#0F766E',
+      '--tree-palette-border-central': '#0369A1',
+      '--tree-palette-border-irmaos': '#0D9488',
+      '--tree-palette-border-sobrinhos': '#0891B2',
+      '--tree-palette-border-netos': '#0284C7',
+      '--tree-palette-border-pets': '#EA580C',
+      '--tree-palette-text-primary': '#0F172A',
+      '--tree-palette-text-muted': '#334155',
+      '--tree-palette-status-alive': '#0F766E',
+      '--tree-palette-status-deceased': '#64748B',
+      '--tree-palette-card-border-pet': '#F59E0B',
+      '--tree-palette-edge-spouse': '#0891B2',
+      '--tree-palette-edge-child': '#0E7490',
+      '--tree-palette-edge-sibling': '#0284C7',
+      '--tree-palette-group-bg': '#FFFFFF',
+      '--tree-palette-group-border': '#0891B2',
+      '--tree-palette-group-border-width': '2px',
+      '--tree-palette-legend-bg': 'rgba(255, 255, 255, 0.94)',
+    },
+  },
 } as const;
 
 export function isTreeColorPalette(value: unknown): value is TreeColorPalette {
-  return value === 'white' || value === 'orange' || value === 'brown';
+  return value === 'white' || value === 'orange' || value === 'brown' || value === 'visual';
 }

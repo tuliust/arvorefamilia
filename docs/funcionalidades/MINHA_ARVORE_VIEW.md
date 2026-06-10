@@ -857,3 +857,23 @@ Não fazer:
 - deixar controles fixos competindo com navegação inferior mobile;
 - corrigir conexão de linha apenas no SVG sem revisar anchors dos grupos;
 - transformar `family-tree-visual-polish.css` em área sem escopo por rota/view.
+
+---
+
+## 21. Mapa Familiar panorâmico
+
+A rota autenticada `/mapa-familiar` oferece uma quarta visualização, sem substituir
+`/minha-arvore`.
+
+- desktop/tablet renderizam `DesktopFamilyMapView.tsx`, com composição HTML, cards
+  compartilhados de `FamilyTreeVisualCards.tsx` e conectores em SVG;
+- o modelo direto continua vindo de `buildMobileFamilyTreeModel`;
+- a pessoa central, os ramos paterno/materno, pets e filtros de parentes diretos são
+  preservados;
+- grupos extensos usam rolagem interna, sem botão **Ver todos**;
+- no mobile, a rota usa `MobileFamilyTreeView` como fallback seguro;
+- Genealogia, Visão Completa e a Minha Árvore desktop continuam usando seus layouts
+  ReactFlow atuais.
+
+Anti-regressão: não mover o Mapa Familiar para dentro de `FamilyTree.tsx` e não usar
+essa nova view para substituir a experiência segmentada de `/minha-arvore` mobile.

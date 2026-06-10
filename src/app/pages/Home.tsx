@@ -752,7 +752,7 @@ export function Home() {
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
 
-    if (treeViewMode !== 'minha-arvore') {
+    if (treeViewMode !== 'minha-arvore' && treeViewMode !== 'mapa-familiar') {
       return pessoas;
     }
 
@@ -903,12 +903,12 @@ export function Home() {
             showTitle
             personFilters={personFilters}
             edgeFilters={edgeFilters}
-            directRelativeFilters={treeViewMode === 'minha-arvore' ? directRelativeFilters : undefined}
+            directRelativeFilters={treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar' ? directRelativeFilters : undefined}
             onTogglePersonFilter={togglePersonFilter}
             onToggleEdgeFilter={toggleFilter}
             onToggleAllEdgeFilters={toggleAllEdgeFilters}
             onToggleParentChildFilter={toggleParentChildFilters}
-            onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' ? toggleDirectRelativeFilter : undefined}
+            onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar' ? toggleDirectRelativeFilter : undefined}
             visualLineFilters={visualLineFilters}
             onToggleVisualLineFilter={toggleVisualLineFilter}
             onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
@@ -1115,6 +1115,8 @@ export function Home() {
   const currentTreeViewLabel =
     treeViewMode === 'genealogia'
       ? 'Genealogia'
+      : treeViewMode === 'mapa-familiar'
+        ? 'Mapa Familiar'
       : treeViewMode === 'visao-completa'
         ? 'Visão Completa'
         : 'Minha Árvore';

@@ -53,11 +53,12 @@ function getFirstName(value?: string | null) {
 
 const TREE_VIEW_OPTIONS = [
   { label: 'Minha Árvore', path: '/minha-arvore' },
+  { label: 'Mapa Familiar', path: '/mapa-familiar' },
   { label: 'Genealogia', path: '/genealogia' },
   { label: 'Visão Completa', path: '/visao-completa' },
 ];
 
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
+const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
 
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';
@@ -298,7 +299,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   <div className="mb-2 px-2 pt-1 text-xs font-bold uppercase tracking-wide text-blue-900">
                     Visualização
                   </div>
-                  <div className="grid grid-cols-3 gap-0.5 rounded-2xl bg-white/80 p-0.5 shadow-inner">
+                  <div className="grid grid-cols-2 gap-0.5 rounded-2xl bg-white/80 p-0.5 shadow-inner">
                     {TREE_VIEW_OPTIONS.map((option) => {
                       const active = location.pathname === option.path || (option.path === '/minha-arvore' && location.pathname === '/');
 
@@ -306,7 +307,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                         <button
                           key={option.path}
                           type="button"
-                          onClick={() => goTo(option.path)}
+                          onClick={() => goTo(`${option.path}${location.search}`)}
                           className={[
                             'flex min-h-9 w-full items-center justify-center whitespace-nowrap rounded-xl px-0.5 py-1.5 text-center text-[10px] font-bold leading-none tracking-[-0.02em] transition min-[390px]:text-[11px]',
                             active

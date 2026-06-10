@@ -148,7 +148,7 @@ function MemberMobileBottomNav() {
         {MOBILE_BOTTOM_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.to === '/minha-arvore'
-            ? ['/', '/minha-arvore', '/genealogia', '/visao-completa'].includes(location.pathname)
+            ? ['/', '/minha-arvore', '/mapa-familiar', '/genealogia', '/visao-completa'].includes(location.pathname)
             : location.pathname.startsWith(item.to);
 
           return (

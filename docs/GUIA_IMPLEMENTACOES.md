@@ -1091,3 +1091,16 @@ Regras:
 - não manter pendências antigas já validadas;
 - usar links cruzados para documentos específicos;
 - atualizar este guia apenas quando o estado consolidado do produto mudar.
+
+## Estado do Mapa Familiar
+
+- rota autenticada: `/mapa-familiar`, preservando query string como `?pessoa=...`;
+- identificador técnico: `mapa-familiar`;
+- desktop/tablet: `DesktopFamilyMapView.tsx`, sem ReactFlow;
+- mobile: fallback para `MobileFamilyTreeView.tsx`;
+- dados: `buildMobileFamilyTreeModel`, sem persistência ou alteração de backend;
+- cards: `FamilyTreeVisualCards.tsx`;
+- filtros: `visiblePersonIds` e filtros de parentes diretos;
+- paleta adicionada: `visual`, disponível junto de `white`, `orange` e `brown`;
+- anti-regressão: `/minha-arvore`, `/genealogia` e `/visao-completa` mantêm seus
+  comportamentos e layouts existentes.

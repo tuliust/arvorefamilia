@@ -71,7 +71,7 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || '';
 }
 
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
+const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
 
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';
@@ -350,6 +350,7 @@ export function HomeHeader({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
+              <SelectItem value="mapa-familiar">Mapa Familiar</SelectItem>
               <SelectItem value="genealogia">Genealogia</SelectItem>
               <SelectItem value="visao-completa">Visão Completa</SelectItem>
 

@@ -170,6 +170,7 @@ const adminMigrationPath = '/admin/' + 'migrar-dados';
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMinhaArvore /></TreeAccessRoute>) },
   { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/mapa-familiar', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },

@@ -1265,3 +1265,15 @@ Quando houver testes relacionados:
 npm test
 npm run test:e2e
 ```
+
+## Mapa Familiar
+
+| Componente | Responsabilidade |
+|---|---|
+| `FamilyTreeVisualCards.tsx` | Cards, avatar, linhas vitais, estado vazio e grupos visuais compartilhados. |
+| `DesktopFamilyMapView.tsx` | Mapa panorâmico desktop/tablet, escala responsiva, filtros diretos, grupos roláveis e conectores SVG. |
+| `MobileFamilyTreeView.tsx` | Experiência segmentada mobile; também é o fallback de `/mapa-familiar` abaixo de 768px. |
+
+`HomeTreeSection.tsx` deve interceptar `treeViewMode === 'mapa-familiar'` antes de
+renderizar `FamilyTree`. O componente panorâmico não recebe props de ações que não
+utiliza e não altera dados, serviços ou relacionamentos.

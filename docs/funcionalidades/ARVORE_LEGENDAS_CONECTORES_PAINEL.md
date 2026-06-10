@@ -593,3 +593,24 @@ Não fazer:
 - aplicar regras de edges ReactFlow aos conectores HTML/CSS do `MobileFamilyTreeView.tsx`;
 - corrigir linha solta apenas escondendo overflow global sem validar se a linha estrutural continua visível;
 - deixar conectores mobile gerarem rolagem horizontal.
+
+---
+
+## 15. Conectores do Mapa Familiar
+
+`DesktopFamilyMapView.tsx` usa um overlay SVG absoluto atrás dos cards compartilhados.
+Os paths são renderizados somente quando origem e destino visuais existem após os
+filtros.
+
+Conexões cobertas:
+
+- tataravós -> bisavós -> avós em cada ramo;
+- avós paternos -> pai/tios paternos;
+- avós maternos -> mãe/tios maternos;
+- pai/mãe -> pessoa central;
+- tios -> primos;
+- pessoa central -> irmãos, cônjuge, filhos, sobrinhos, pets e netos existentes.
+
+Esses conectores não são edges ReactFlow. A nova paleta `visual` adiciona tokens
+azul/ciano às views que usam as paletas globais, sem remover `white`, `orange` ou
+`brown`.

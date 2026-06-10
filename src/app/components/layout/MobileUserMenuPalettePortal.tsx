@@ -7,7 +7,7 @@ import {
   type TreeColorPalette,
 } from '../FamilyTree/treeColorPalettes';
 
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
+const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
 
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';

@@ -1,7 +1,8 @@
-export type TreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa';
+export type TreeViewMode = 'minha-arvore' | 'mapa-familiar' | 'genealogia' | 'visao-completa';
 
 export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
   'minha-arvore': '/minha-arvore',
+  'mapa-familiar': '/mapa-familiar',
   genealogia: '/genealogia',
   'visao-completa': '/visao-completa',
 };
@@ -9,6 +10,7 @@ export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
 export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
   '/': 'minha-arvore',
   '/minha-arvore': 'minha-arvore',
+  '/mapa-familiar': 'mapa-familiar',
   '/genealogia': 'genealogia',
   '/visao-completa': 'visao-completa',
 };

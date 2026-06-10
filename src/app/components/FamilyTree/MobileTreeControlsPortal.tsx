@@ -30,6 +30,10 @@ const TREE_ROUTES: Record<string, TreeRouteConfig> = {
     label: 'minha-arvore',
     title: 'Minha Árvore',
   },
+  '/mapa-familiar': {
+    label: 'mapa-familiar',
+    title: 'Mapa Familiar',
+  },
   '/genealogia': {
     label: 'genealogia',
     title: 'Genealogia',

@@ -16,11 +16,12 @@ interface ViewModeToggleProps {
 
 const options: Array<{ value: TreeViewMode; label: string }> = [
   { value: 'minha-arvore', label: 'Minha Árvore' },
+  { value: 'mapa-familiar', label: 'Mapa Familiar' },
   { value: 'genealogia', label: 'Genealogia' },
   { value: 'visao-completa', label: 'Visão Completa' },
 ];
 
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown'];
+const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
 
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';

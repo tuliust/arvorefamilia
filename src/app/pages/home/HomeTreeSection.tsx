@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
+import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
 import { MobileFamilyTreeView } from '../../components/FamilyTree/MobileFamilyTreeView';
 import type {
   DirectRelativeFilters,
@@ -125,6 +126,10 @@ function getTreeTitleFirstName(value?: string | null) {
 function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
   if (viewMode === 'minha-arvore') {
     return `Árvore de ${firstName}`;
+  }
+
+  if (viewMode === 'mapa-familiar') {
+    return `Mapa Familiar de ${firstName}`;
   }
 
   if (viewMode === 'genealogia') {
@@ -431,7 +436,9 @@ export function HomeTreeSection({
           title: 'Nenhuma pessoa encontrada',
           message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
-      ) : canRenderTree && isMobile && treeViewMode === 'minha-arvore' ? (
+      ) : canRenderTree && isMobile && (
+        treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar'
+      ) ? (
         <MobileFamilyTreeView
           pessoas={pessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
@@ -449,6 +456,17 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
+          layoutRevision={treeLayoutRevision}
+          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
+        />
+      ) : canRenderTree && treeViewMode === 'mapa-familiar' ? (
+        <DesktopFamilyMapView
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          directRelativeFilters={directRelativeFilters}
+          onPersonClick={onPersonClick}
           layoutRevision={treeLayoutRevision}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />

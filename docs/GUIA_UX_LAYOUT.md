@@ -1137,3 +1137,22 @@ Este guia deve permanecer objetivo e visual. Não incluir:
 - duplicação de documentos funcionais.
 
 Quando um ajuste visual já estiver melhor documentado em arquivo funcional específico, manter aqui apenas a regra geral e apontar para o documento correto.
+
+## Mapa Familiar panorâmico
+
+O seletor de views passa a seguir a ordem:
+
+1. Minha Árvore
+2. Mapa Familiar
+3. Genealogia
+4. Visão Completa
+
+Em `/mapa-familiar`, desktop e tablet exibem a família direta em um único canvas
+panorâmico: ancestrais paternos à esquerda/superior, ancestrais maternos à
+direita/superior, pai-central-mãe no eixo principal, tios e primos nas laterais e
+grupos centrais abaixo.
+
+O canvas tenta caber na área disponível por escala responsiva. Quando a largura de
+tablet não comporta a escala mínima, o scroll permanece interno à área do mapa, sem
+criar overflow horizontal na página. Abaixo de 768px, a rota reutiliza a experiência
+mobile segmentada.
