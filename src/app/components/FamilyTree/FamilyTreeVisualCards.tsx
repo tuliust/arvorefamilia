@@ -114,11 +114,12 @@ export function VisualPersonCard({
   compact?: boolean;
   mini?: boolean;
   horizontal?: boolean;
-  tone?: 'default' | 'spouse';
+  tone?: 'default' | 'spouse' | 'ancestorSpouse';
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getVisualPersonCardData(person);
   const isSpouseTone = tone === 'spouse';
+  const isAncestorSpouseTone = tone === 'ancestorSpouse';
 
   if (horizontal) {
     return (
@@ -129,7 +130,9 @@ export function VisualPersonCard({
           'flex h-[74px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]',
           isSpouseTone
             ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
-            : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
+            : isAncestorSpouseTone
+              ? 'border-emerald-200 bg-gradient-to-b from-emerald-400 via-teal-500 to-cyan-700'
+              : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
         ].join(' ')}
       >
         <VisualPersonAvatar person={person} pet={pet} className="h-[46px] w-[46px]" iconClassName="h-6 w-6" />
@@ -164,7 +167,9 @@ export function VisualPersonCard({
           ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700'
           : isSpouseTone
             ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
-            : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
+            : isAncestorSpouseTone
+              ? 'border-emerald-200 bg-gradient-to-b from-emerald-400 via-teal-500 to-cyan-700'
+              : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
       ].join(' ')}
     >
       {label && (
@@ -211,10 +216,11 @@ export function VisualGroup({
   disableInternalScroll = false,
   className = '',
   spousePersonIds,
+  spouseTone = 'spouse',
 }: {
   title: string;
   people: Pessoa[];
-  columns?: 'single' | 'double' | 'triple';
+  columns?: 'single' | 'double' | 'triple' | 'quad';
   maxHeightClassName?: string;
   variant?: 'mini' | 'compact' | 'horizontal';
   onPersonClick: (person: Pessoa) => void;
@@ -227,6 +233,7 @@ export function VisualGroup({
   disableInternalScroll?: boolean;
   className?: string;
   spousePersonIds?: Set<string>;
+  spouseTone?: 'spouse' | 'ancestorSpouse';
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
@@ -234,7 +241,7 @@ export function VisualGroup({
   const canExpand = expandable && people.length > limit;
   const visiblePeople = canExpand && !isExpanded ? people.slice(0, limit) : people;
   const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
-  const gridColumns = effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
+  const gridColumns = effectiveColumns === 'quad' ? 'grid-cols-4' : effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
 
   const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -273,7 +280,7 @@ export function VisualGroup({
         <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`}>
           {visiblePeople.map((person, index) => {
             const isSpouseCard = Boolean(spousePersonIds?.has(person.id));
-            const lateralConnector = isSpouseCard && gridColumns === 'grid-cols-2' && index % 2 === 1;
+            const lateralConnector = isSpouseCard && (gridColumns === 'grid-cols-2' || gridColumns === 'grid-cols-4') && index % 2 === 1;
             const topConnector = isSpouseCard && !lateralConnector;
 
             return (
@@ -290,7 +297,7 @@ export function VisualGroup({
                   mini={variant === 'mini'}
                   compact={variant === 'compact'}
                   horizontal={variant === 'horizontal'}
-                  tone={isSpouseCard ? 'spouse' : 'default'}
+                  tone={isSpouseCard ? spouseTone : 'default'}
                 />
               </div>
             );
