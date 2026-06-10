@@ -4,7 +4,7 @@ import { Cross, PawPrint, Star, UserRound } from 'lucide-react';
 import type { Pessoa, Relacionamento } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
 import { getInitials } from '../../utils/personFields';
-import { FamilyTree, type FamilyTreeActions } from './FamilyTree';
+import type { FamilyTreeActions } from './FamilyTree';
 import {
   buildMobileFamilyTreeModel,
   type MobileFamilyBranch,
@@ -18,7 +18,7 @@ import type {
   VisualLineFilters,
 } from './types';
 
-type MobileTreeTab = 'core' | 'paternal' | 'maternal' | 'complete';
+type MobileTreeTab = 'core' | 'paternal' | 'maternal';
 
 type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
@@ -54,10 +54,9 @@ interface MobileFamilyTreeViewProps {
 }
 
 const TABS: Array<{ id: MobileTreeTab; label: string }> = [
-  { id: 'core', label: 'Núcleo' },
   { id: 'paternal', label: 'Paterno' },
+  { id: 'core', label: 'Núcleo' },
   { id: 'maternal', label: 'Materno' },
-  { id: 'complete', label: 'Completa' },
 ];
 
 function getYear(value?: string | number) {
@@ -397,7 +396,7 @@ function PetPersonCard({
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-sm font-semibold text-slate-500">
+    <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white px-3 text-center text-sm font-semibold text-slate-500">
       <UserRound className="mb-2 h-8 w-8 text-slate-300" />
       {label}
     </div>
@@ -456,8 +455,8 @@ function FamilyGroup({
       )}
       <div className={[
         usePetCards
-          ? 'relative z-10 rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
-          : 'relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm',
+          ? 'relative z-10 overflow-hidden rounded-[1.15rem] border border-cyan-200 bg-white p-2 shadow-sm'
+          : 'relative z-10 overflow-hidden rounded-[1.4rem] border border-cyan-200 bg-white p-3 shadow-sm',
         stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
       ].join(' ')}
       >
@@ -525,7 +524,7 @@ function VerticalRelativeScreen({
   const screenKind: RelativeScreenKind = columns === 'double' ? 'uncles' : 'cousins';
 
   return (
-    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-3">
+    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-4">
       {connectHorizontal && (
         <div className={[
           'pointer-events-none absolute top-1/2 z-0 h-px -translate-y-1/2 bg-cyan-600',
@@ -536,11 +535,8 @@ function VerticalRelativeScreen({
         'pointer-events-none absolute left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600',
         bottomConnector ? 'inset-y-0' : 'top-0 h-1/2',
       ].join(' ')} />
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-[380px] items-center py-[max(1rem,4vh)]">
-        <div className={[
-          'w-full min-w-0',
-          screenKind === 'uncles' ? 'h-[78%]' : 'h-[74%]',
-        ].join(' ')}>
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[380px] items-stretch pb-28 pt-10">
+        <div className="w-full min-w-0">
           <FamilyGroup
             id={groupId}
             title={title}
@@ -586,7 +582,7 @@ function AncestorGroupCard({
   onPersonClick: (person: Pessoa) => void;
 }) {
   return (
-    <section className="relative z-10 flex min-h-0 flex-col rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2.5 shadow-sm">
+    <section className="relative z-10 flex min-h-0 flex-col overflow-hidden rounded-[1.15rem] border border-cyan-200 bg-white p-2.5 shadow-sm">
       <h3 className="mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-800">
         {group.title}
       </h3>
@@ -611,19 +607,19 @@ function AncestorGroupsScreen({
   const visibleGroups = distributeAncestorSubgroups(groups);
 
   return (
-    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-3">
+    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-4">
       <h2 className="sr-only">{title}</h2>
       {visibleGroups.length === 0 ? (
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-[360px] items-center px-1 pb-[calc(env(safe-area-inset-bottom)+5.75rem)] pt-4">
-          <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white/80 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[360px] items-center pb-28 pt-10">
+          <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
             Nenhum ancestral cadastrado neste ramo.
           </p>
         </div>
       ) : (
         <>
           <div className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[24%] w-px -translate-x-1/2 bg-cyan-600" />
-          <div className="relative z-10 mx-auto flex h-full w-full max-w-[370px] items-center py-[max(1rem,4vh)]">
-            <div className="grid h-[76%] w-full min-w-0 auto-rows-fr grid-cols-1 gap-2.5 overflow-hidden">
+          <div className="relative z-10 mx-auto flex h-full w-full max-w-[370px] items-stretch pb-28 pt-10">
+            <div className="grid w-full min-w-0 auto-rows-fr grid-cols-1 gap-2.5 overflow-hidden">
               {visibleGroups.map((group) => (
                 <AncestorGroupCard key={group.id} group={group} onPersonClick={onPersonClick} />
               ))}
@@ -708,71 +704,13 @@ function ParentBranchSwipeScreen({
   );
 }
 
-function BranchView({
-  branch,
-  maternal,
-  expandedGroups,
-  onToggleGroup,
-  onPersonClick,
-}: {
-  branch: MobileFamilyBranch;
-  maternal?: boolean;
-  expandedGroups: Set<string>;
-  onToggleGroup: (id: string) => void;
-  onPersonClick: (person: Pessoa) => void;
-}) {
-  const prefix = maternal ? 'maternal' : 'paternal';
-  const groups = [
-    { id: `${prefix}-parent`, title: maternal ? 'Mãe' : 'Pai', people: branch.parent },
-    { id: `${prefix}-grandparents`, title: `Avós ${maternal ? 'maternos' : 'paternos'}`, people: branch.grandparents },
-    { id: `${prefix}-great-grandparents`, title: `Bisavós ${maternal ? 'maternos' : 'paternos'}`, people: branch.greatGrandparents },
-    ...(!maternal ? [{
-      id: `${prefix}-great-great-grandparents`,
-      title: 'Tataravós paternos',
-      people: branch.greatGreatGrandparents,
-    }] : []),
-    { id: `${prefix}-uncles`, title: `Tios ${maternal ? 'maternos' : 'paternos'}`, people: branch.uncles },
-    { id: `${prefix}-cousins`, title: `Primos ${maternal ? 'maternos' : 'paternos'}`, people: branch.cousins },
-  ];
-
-  return (
-    <div className="mx-auto w-full max-w-[430px] px-3 pb-28 pt-2">
-      {groups.every((group) => group.people.length === 0) ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-          Nenhum familiar cadastrado neste ramo.
-        </div>
-      ) : groups.map((group) => (
-        <FamilyGroup
-          key={group.id}
-          {...group}
-          expanded={expandedGroups.has(group.id)}
-          onToggle={onToggleGroup}
-          onPersonClick={onPersonClick}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function MobileFamilyTreeView({
   pessoas,
   relacionamentos,
   centralPersonId,
   visiblePersonIds,
-  familyTreeRef,
   onPersonClick,
-  onPersonView,
-  onPersonEdit,
-  onPersonAddConnection,
-  onPersonRemove,
-  onMarriageClick,
-  selectedPersonId,
-  edgeFilters,
-  directRelativeFilters,
-  genealogyFilters,
-  visualLineFilters,
   layoutRevision,
-  onDirectRelationRenderedCounts,
 }: MobileFamilyTreeViewProps) {
   const [activeTab, setActiveTab] = React.useState<MobileTreeTab>('core');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
@@ -818,12 +756,15 @@ export function MobileFamilyTreeView({
   }), [filterVisible, model.maternal]);
 
   React.useEffect(() => {
-    if (activeTab !== 'core') return;
     const container = coreScrollRef.current;
     if (!container) return;
 
     requestAnimationFrame(() => {
-      container.scrollLeft = container.clientWidth;
+      const screenIndex = activeTab === 'paternal' ? 0 : activeTab === 'maternal' ? 2 : 1;
+      container.scrollTo({
+        left: container.clientWidth * screenIndex,
+        behavior: 'smooth',
+      });
     });
   }, [activeTab, centralPersonId, layoutRevision]);
 
@@ -850,7 +791,7 @@ export function MobileFamilyTreeView({
         aria-label="Visualizações da árvore"
         className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 px-2 py-2 shadow-sm backdrop-blur"
       >
-        <div className="mx-auto grid max-w-[430px] grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1">
+        <div className="mx-auto grid max-w-[430px] grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -870,38 +811,11 @@ export function MobileFamilyTreeView({
         </div>
       </nav>
 
-      {activeTab === 'complete' ? (
-        <div className="absolute inset-x-0 bottom-0 top-[58px]">
-          <FamilyTree
-            ref={familyTreeRef}
-            pessoas={pessoas}
-            visiblePersonIds={visiblePersonIds}
-            relacionamentos={relacionamentos}
-            onPersonClick={onPersonClick}
-            onPersonView={onPersonView}
-            onPersonEdit={onPersonEdit}
-            onPersonAddConnection={onPersonAddConnection}
-            onPersonRemove={onPersonRemove}
-            onMarriageClick={onMarriageClick}
-            selectedPersonId={selectedPersonId}
-            edgeFilters={edgeFilters}
-            directRelativeFilters={directRelativeFilters}
-            centralPersonId={centralPersonId}
-            isMobile
-            layoutRevision={layoutRevision}
-            viewMode="visao-completa"
-            genealogyFilters={genealogyFilters}
-            visualLineFilters={visualLineFilters}
-            onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
-          />
-        </div>
-      ) : (
-        <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain">
-          {activeTab === 'core' && (
-            <div
-              ref={coreScrollRef}
-              className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth overscroll-x-contain"
-            >
+      <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain">
+        <div
+          ref={coreScrollRef}
+          className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth overscroll-x-contain"
+        >
               <ParentBranchSwipeScreen
                 side="left"
                 title="Tios Paternos"
@@ -918,8 +832,8 @@ export function MobileFamilyTreeView({
               <div className="relative h-full w-full shrink-0 snap-center overflow-y-auto">
                 <div className="pointer-events-none absolute left-0 top-[92px] h-px w-[calc((100%-0.75rem)/4)] bg-cyan-600" />
                 <div className="pointer-events-none absolute right-0 top-[92px] h-px w-[calc((100%-0.75rem)/4)] bg-cyan-600" />
-                <div className="mx-auto w-full max-w-[430px] px-1 pb-28 pt-10">
-                  <div className="mx-auto w-full max-w-[390px] px-1">
+                <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
+                  <div className="mx-auto w-full max-w-[390px]">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
                         {isVisible(model.father)
@@ -1035,27 +949,8 @@ export function MobileFamilyTreeView({
                 onToggle={toggleGroup}
                 onPersonClick={onPersonClick}
               />
-            </div>
-          )}
-          {activeTab === 'paternal' && (
-            <BranchView
-              branch={visiblePaternal}
-              expandedGroups={expandedGroups}
-              onToggleGroup={toggleGroup}
-              onPersonClick={onPersonClick}
-            />
-          )}
-          {activeTab === 'maternal' && (
-            <BranchView
-              branch={visibleMaternal}
-              maternal
-              expandedGroups={expandedGroups}
-              onToggleGroup={toggleGroup}
-              onPersonClick={onPersonClick}
-            />
-          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
