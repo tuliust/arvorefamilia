@@ -57,6 +57,7 @@ type GroupLayout = {
 
 const CANVAS_WIDTH = 1440;
 const CANVAS_HEIGHT = 1020;
+const CONNECTOR_COLOR = '#22b8cf';
 const MIN_TABLET_SCALE = 0.62;
 const GROUP_VERTICAL_GAP = 46;
 const TOP_START = 18;
@@ -289,7 +290,8 @@ function buildAncestorLayouts({
   branch: MobileFamilyBranch;
   expandedGroups: Set<string>;
 }): GroupLayout[] {
-  const left = side === 'paternal' ? 300 : 780;
+  const ANCESTOR_GROUP_WIDTH = 430;
+  const left = side === 'paternal' ? 265 : 745;
   const rows: Array<Omit<GroupLayout, 'left' | 'top' | 'width' | 'height'> & { expanded: boolean }> = [
     {
       id: `${side}-great-great-grandparents`,
@@ -332,7 +334,7 @@ function buildAncestorLayouts({
       people: row.people,
       left,
       top,
-      width: 360,
+      width: ANCESTOR_GROUP_WIDTH,
       height,
       columns: row.columns,
       variant: row.variant,
@@ -774,7 +776,7 @@ export function DesktopFamilyMapView({
   return (
     <div
       ref={viewportRef}
-      className="absolute inset-x-0 bottom-0 top-[76px] overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)]"
+      className="absolute inset-x-0 bottom-0 top-[76px] isolate overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)] before:pointer-events-none before:absolute before:inset-x-0 before:-top-[76px] before:h-[76px] before:bg-[#ecfeff] before:-z-10"
     >
       <div
         className="relative mx-auto"
@@ -793,7 +795,7 @@ export function DesktopFamilyMapView({
             viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
             aria-hidden="true"
           >
-            <g fill="none" stroke="#0891b2" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <g fill="none" stroke={CONNECTOR_COLOR} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               {[paternalAncestors, maternalAncestors].map((layouts) => layouts.map((layout, index) => {
                 const nextLayout = layouts[index + 1];
                 if (!nextLayout) return null;
@@ -890,17 +892,17 @@ export function DesktopFamilyMapView({
           <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
-                ? <VisualPersonCard person={father} label="Pai" onClick={onPersonClick} />
+                ? <VisualPersonCard person={father} label="Pai" vitalMode="full" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Pai" />
             )}
           </div>
           <div className="absolute z-20 w-[210px]" style={{ left: 615, top: centralTop }}>
-            {central && <VisualPersonCard person={central} label="Pessoa Central" central onClick={onPersonClick} />}
+            {central && <VisualPersonCard person={central} label="Pessoa Central" central vitalMode="full" onClick={onPersonClick} />}
           </div>
           <div className="absolute z-10 w-[210px]" style={{ left: 855, top: parentTop }}>
             {directRelativeFilters.pais && (
               mother
-                ? <VisualPersonCard person={mother} label="Mãe" onClick={onPersonClick} />
+                ? <VisualPersonCard person={mother} label="Mãe" vitalMode="full" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
@@ -909,7 +911,7 @@ export function DesktopFamilyMapView({
           <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternalCousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} columns="quad" collapsedLimit={SIDE_BRANCH_COLLAPSED_LIMIT} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           {spouse && spouseCardLayout && (
             <div className="absolute z-10 w-[210px]" style={{ left: spouseCardLayout.left, top: spouseCardLayout.top }}>
-              <VisualPersonCard person={spouse} label="Cônjuge" tone="spouse" onClick={onPersonClick} />
+              <VisualPersonCard person={spouse} label="Cônjuge" tone="spouse" vitalMode="full" onClick={onPersonClick} />
             </div>
           )}
           {renderedDescendantLayouts.map((layout) => (

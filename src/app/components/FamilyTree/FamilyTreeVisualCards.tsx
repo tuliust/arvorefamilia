@@ -3,7 +3,6 @@ import { Cross, Minus, PawPrint, Plus, Star } from 'lucide-react';
 
 import type { Pessoa } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
-import { getInitials } from '../../utils/personFields';
 
 function getYear(value?: string | number) {
   if (value === undefined || value === null || value === '') return undefined;
@@ -26,12 +25,47 @@ function formatVitalLine(place?: string, date?: string | number) {
   return [normalizedPlace, year].filter(Boolean).join(' ');
 }
 
+function formatVitalYear(date?: string | number) {
+  return getYear(date) ?? '';
+}
+
+function getPersonGender(person: Pessoa) {
+  const rawGender = String(
+    (person as { genero?: string; sexo?: string; gender?: string }).genero
+      ?? (person as { genero?: string; sexo?: string; gender?: string }).sexo
+      ?? (person as { genero?: string; sexo?: string; gender?: string }).gender
+      ?? '',
+  ).trim().toLowerCase();
+
+  if (/^(f|fem|feminino|female|mulher)/.test(rawGender)) return 'female';
+  if (/^(m|masc|masculino|male|homem)/.test(rawGender)) return 'male';
+  return 'neutral';
+}
+
+function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | 'neutral'; className: string }) {
+  const hairPath = gender === 'female'
+    ? 'M24 5c-7 0-11 5-11 13v7c0 4-2 8-5 11 4 5 10 8 16 8s12-3 16-8c-3-3-5-7-5-11v-7C35 10 31 5 24 5Z'
+    : gender === 'male'
+      ? 'M12 18c0-8 5-13 12-13s12 5 12 13c0 3-.6 6-2 8-2-2-6-4-10-4s-8 2-10 4c-1.4-2-2-5-2-8Z'
+      : 'M12 18c0-8 5-13 12-13s12 5 12 13c0 4-1 7-3 9-2-3-5-5-9-5s-7 2-9 5c-2-2-3-5-3-9Z';
+
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
+      <path fill="currentColor" d={hairPath} />
+      <circle cx="24" cy="20" r="8" fill="currentColor" />
+      <path fill="currentColor" d="M8 44c2.5-9 8.5-14 16-14s13.5 5 16 14H8Z" />
+    </svg>
+  );
+}
+
 export function getVisualPersonCardData(person: Pessoa) {
   return {
     pet: isPetFamilyMember(person),
     displayName: getFirstTwoNames(person.nome_completo) || person.nome_completo,
     birthLine: formatVitalLine(person.local_nascimento, person.data_nascimento),
     deathLine: formatVitalLine(person.local_falecimento, person.data_falecimento),
+    birthYearLine: formatVitalYear(person.data_nascimento),
+    deathYearLine: formatVitalYear(person.data_falecimento),
     showDeathLine: Boolean(person.falecido || person.data_falecimento || person.local_falecimento),
   };
 }
@@ -56,7 +90,7 @@ export function VisualPersonAvatar({
       ) : pet ? (
         <PawPrint className={iconClassName} aria-hidden="true" />
       ) : (
-        <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
+        <PersonSilhouette gender={getPersonGender(person)} className={iconClassName} />
       )}
     </span>
   );
@@ -86,12 +120,12 @@ export function VisualVitalLines({
     <>
       <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
         <Star className={`${iconSize} shrink-0 fill-current`} aria-hidden="true" />
-        <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
+        {birthLine && <span className="truncate">{birthLine}</span>}
       </span>
       {showDeathLine && (
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
           <Cross className={`${iconSize} shrink-0`} aria-hidden="true" />
-          <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
+          {deathLine && <span className="truncate">{deathLine}</span>}
         </span>
       )}
     </>
@@ -107,6 +141,7 @@ export function VisualPersonCard({
   horizontal = false,
   onClick,
   tone = 'default',
+  vitalMode = 'year',
 }: {
   person: Pessoa;
   label?: string;
@@ -115,9 +150,12 @@ export function VisualPersonCard({
   mini?: boolean;
   horizontal?: boolean;
   tone?: 'default' | 'spouse' | 'ancestorSpouse';
+  vitalMode?: 'year' | 'full';
   onClick: (person: Pessoa) => void;
 }) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getVisualPersonCardData(person);
+  const { pet, displayName, birthLine, deathLine, birthYearLine, deathYearLine, showDeathLine } = getVisualPersonCardData(person);
+  const effectiveBirthLine = vitalMode === 'full' ? birthLine : birthYearLine;
+  const effectiveDeathLine = vitalMode === 'full' ? deathLine : deathYearLine;
   const isSpouseTone = tone === 'spouse';
   const isAncestorSpouseTone = tone === 'ancestorSpouse';
 
@@ -131,7 +169,7 @@ export function VisualPersonCard({
           isSpouseTone
             ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
             : isAncestorSpouseTone
-              ? 'border-emerald-200 bg-gradient-to-b from-emerald-400 via-teal-500 to-cyan-700'
+              ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
               : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
         ].join(' ')}
       >
@@ -141,8 +179,8 @@ export function VisualPersonCard({
             {displayName}
           </span>
           <VisualVitalLines
-            birthLine={birthLine}
-            deathLine={deathLine}
+            birthLine={effectiveBirthLine}
+            deathLine={effectiveDeathLine}
             showDeathLine={showDeathLine}
             align="left"
             compact
@@ -168,12 +206,12 @@ export function VisualPersonCard({
           : isSpouseTone
             ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
             : isAncestorSpouseTone
-              ? 'border-emerald-200 bg-gradient-to-b from-emerald-400 via-teal-500 to-cyan-700'
+              ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
               : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
       ].join(' ')}
     >
       {label && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow">
+        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow">
           {label}
         </span>
       )}
@@ -182,8 +220,8 @@ export function VisualPersonCard({
         {displayName}
       </span>
       <VisualVitalLines
-        birthLine={birthLine}
-        deathLine={deathLine}
+        birthLine={effectiveBirthLine}
+        deathLine={effectiveDeathLine}
         showDeathLine={showDeathLine}
         compact={mini || compact}
         prominent={central}
@@ -264,7 +302,7 @@ export function VisualGroup({
       ].join(' ')}
     >
       {pillTitle ? (
-        <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow">
+        <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow">
           {title}
         </span>
       ) : (
@@ -286,10 +324,10 @@ export function VisualGroup({
             return (
               <div key={person.id} className="relative min-w-0">
                 {lateralConnector && (
-                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-600" aria-hidden="true" />
+                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-400" aria-hidden="true" />
                 )}
                 {topConnector && (
-                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-600" aria-hidden="true" />
+                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-400" aria-hidden="true" />
                 )}
                 <VisualPersonCard
                   person={person}
