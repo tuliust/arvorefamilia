@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
 > Tipo: documentação funcional da view **Minha Árvore**.
-> Status: revisado com impacto dos filtros no layout mobile segmentado da Minha Árvore.
+> Status: revisado contra o código atual; filtros do mobile segmentado documentados com limitação atual de `directRelativeFilters`.
 
 ---
 
@@ -202,36 +202,56 @@ Regras:
 - grupos diretos não substituem filtros de linhas;
 - grupos diretos não persistem no banco;
 - em mobile, a view direta usa defaults para evitar painel lateral complexo;
-- no mobile segmentado, os filtros continuam afetando as telas de núcleo, ancestrais, tios e primos conforme o grupo familiar correspondente.
+- no mobile segmentado atual, `directRelativeFilters` não funciona como controle interativo de ocultação das telas de núcleo, ancestrais, tios e primos; o código normaliza esses filtros para os defaults e a filtragem efetiva dos cards acontece por `visiblePersonIds`, derivado dos filtros por status/tipo.
 
 ---
 
 
 ### 6.1 Impacto dos filtros no layout mobile segmentado
 
-No mobile segmentado da `/minha-arvore`, os mesmos filtros diretos continuam valendo, mas a exibição é distribuída em telas de núcleo/ramos.
+No mobile segmentado da `/minha-arvore`, há uma diferença importante entre o desenho de produto e o código atual.
 
-Mapeamento visual:
+Estado atual confirmado:
 
-| Filtro/grupo | Impacto no mobile segmentado |
+- `MobileFamilyTreeView.tsx` recebe `directRelativeFilters`, mas a renderização dos grupos paternos/maternos é montada a partir do modelo da árvore e filtrada principalmente por `visiblePersonIds`;
+- em `Home.tsx`, no mobile da `/minha-arvore`, os filtros diretos são normalizados para `DEFAULT_DIRECT_RELATIVE_FILTERS` para evitar a complexidade do painel lateral;
+- por isso, os filtros de grupos diretos ainda não atuam como controles interativos para ocultar telas inteiras de núcleo, ancestrais, tios ou primos no `MobileFamilyTreeView`;
+- os filtros por status/tipo (`vivos`, `falecidos`, `pets`) continuam afetando os cards visíveis por meio de `visiblePersonIds`;
+- a pessoa central deve continuar preservada mesmo quando filtros por status/tipo ocultarem outras pessoas.
+
+Mapeamento real no mobile segmentado:
+
+| Estado/filtro | Impacto atual no mobile segmentado |
 |---|---|
-| `pais` | Afeta pais no núcleo, quando aplicável. |
-| `avos`, `bisavos`, `tataravos` | Afetam telas de Ancestrais paternos e maternos. |
-| `tios` | Afeta telas de Tios paternos e maternos. |
-| `primos` | Afeta telas de Primos paternos e maternos. |
-| `conjuge` | Afeta bloco de cônjuge no núcleo. |
-| `irmaos` | Afeta bloco de irmãos no núcleo. |
-| `filhos`, `netos` | Afetam descendentes no núcleo. |
-| `pets` | Afeta bloco de pets, sem misturar com filhos humanos. |
+| `personFilters.vivos` | Pode ocultar pessoas vivas, exceto preservações obrigatórias como pessoa central. |
+| `personFilters.falecidos` | Pode ocultar pessoas falecidas. |
+| `personFilters.pets` | Pode ocultar pets. |
+| `directRelativeFilters` | Mantido como estado/tipo compartilhado, mas normalizado para defaults no mobile da `/minha-arvore`; não deve ser documentado como filtro interativo ativo das telas segmentadas enquanto o código não implementar essa lógica. |
+| `edgeFilters` | Controla linhas do ReactFlow; não deve ser tratado como controlador de cards no mobile segmentado. |
+| `visualLineFilters` | Destaca linhas já visíveis quando aplicável; não cria cards, telas ou conectores novos. |
 
-Regras:
+Intenção de produto para evolução futura:
+
+| Filtro/grupo | Comportamento futuro possível |
+|---|---|
+| `pais` | Ocultar/exibir pais no núcleo, quando aplicável. |
+| `avos`, `bisavos`, `tataravos` | Ocultar/exibir grupos de ancestrais paternos e maternos. |
+| `tios` | Ocultar/exibir telas de Tios paternos e maternos. |
+| `primos` | Ocultar/exibir telas de Primos paternos e maternos. |
+| `conjuge` | Ocultar/exibir bloco de cônjuge no núcleo. |
+| `irmaos` | Ocultar/exibir bloco de irmãos no núcleo. |
+| `filhos`, `netos` | Ocultar/exibir descendentes no núcleo. |
+| `pets` | Ocultar/exibir bloco de pets, sem misturar com filhos humanos. |
+
+Regras para implementação futura:
 
 - grupo oculto por filtro não deve deixar container vazio com conector solto;
 - quando não houver pessoas para uma tela, renderizar estado vazio controlado ou omitir o bloco sem quebrar navegação;
 - conectores de tela vazia não devem aparecer como linhas sem destino;
 - contadores continuam sendo calculados pelo mesmo escopo lógico, não pelo número de cards visíveis na tela atual;
 - pets permanecem separados de filhos humanos em qualquer tela mobile;
-- filtros de linha continuam não alterando cards, mesmo no layout segmentado.
+- filtros de linha continuam não alterando cards, mesmo no layout segmentado;
+- quando `directRelativeFilters` passar a controlar o `MobileFamilyTreeView`, atualizar este documento, `MINHA_ARVORE_VIEW.md` e `GUIA_COMPONENTES.md` na mesma frente.
 
 ---
 

@@ -435,8 +435,6 @@ Esses pontos devem permanecer como backlog/pendência visual até novo ajuste de
 
 ---
 
-## 9.
-
 ---
 
 ## 9. Conectores da Genealogia e Visão Completa

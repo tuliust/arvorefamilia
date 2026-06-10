@@ -487,8 +487,6 @@ Cuidados:
 - validar as sete telas sempre que alterar container, grid, conectores ou navegação.
 
 
-### 3.3 Layout direto
-
 ### 3.3 Layout direto: `directFamilyDistributedLayout`
 
 Arquivo:

@@ -440,8 +440,6 @@ Validar as 7 telas mobile, bottom navigation, ausência de scroll lateral, legib
 
 ### 4.3 Genealogia
 
-### 4.3 Genealogia
-
 Escopo:
 
 ```txt
