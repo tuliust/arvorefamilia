@@ -57,7 +57,7 @@ type GroupLayout = {
 
 const CANVAS_WIDTH = 1440;
 const CANVAS_HEIGHT = 1020;
-const CONNECTOR_COLOR = '#7ddce8';
+const CONNECTOR_COLOR = '#a5eef6';
 const MIN_TABLET_SCALE = 0.62;
 const GROUP_VERTICAL_GAP = 46;
 const TOP_START = 18;
@@ -381,7 +381,9 @@ export function DesktopFamilyMapView({
 }: DesktopFamilyMapViewProps) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = React.useState(1);
+  const [manualZoom, setManualZoom] = React.useState(1);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
+  const effectiveScale = scale * manualZoom;
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
@@ -685,6 +687,20 @@ export function DesktopFamilyMapView({
   }, [layoutRevision, canvasHeight]);
 
   React.useEffect(() => {
+    setManualZoom(1);
+  }, [layoutRevision, centralPersonId]);
+
+  const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    const direction = event.deltaY > 0 ? -1 : 1;
+    setManualZoom((currentZoom) => {
+      const nextZoom = currentZoom + direction * 0.08;
+      return Math.min(2.2, Math.max(0.7, Number(nextZoom.toFixed(2))));
+    });
+  }, []);
+
+  React.useEffect(() => {
     if (!onDirectRelationRenderedCounts) return;
 
     onDirectRelationRenderedCounts({
@@ -763,18 +779,19 @@ export function DesktopFamilyMapView({
   return (
     <div
       ref={viewportRef}
-      className="absolute inset-x-0 bottom-0 top-[76px] isolate overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)] before:pointer-events-none before:absolute before:inset-x-0 before:-top-[76px] before:z-0 before:h-[76px] before:bg-[#ecfeff]"
+      onWheel={handleWheel}
+      className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain bg-[#ecfeff] pt-[76px]"
     >
       <div
         className="relative z-10 mx-auto"
-        style={{ width: CANVAS_WIDTH * scale, height: canvasHeight * scale }}
+        style={{ width: CANVAS_WIDTH * effectiveScale, height: canvasHeight * effectiveScale }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
           style={{
             width: CANVAS_WIDTH,
             height: canvasHeight,
-            transform: `scale(${scale})`,
+            transform: `scale(${effectiveScale})`,
           }}
         >
           <svg

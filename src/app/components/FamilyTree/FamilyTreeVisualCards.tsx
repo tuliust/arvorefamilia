@@ -199,7 +199,7 @@ export function VisualPersonCard({
       >
         <VisualPersonAvatar person={person} pet={pet} className="h-[46px] w-[46px]" iconClassName="h-6 w-6" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate whitespace-nowrap text-[11px] font-extrabold uppercase leading-none">
+          <span className="block truncate whitespace-nowrap text-[11px] font-extrabold uppercase leading-[1.18]">
             {displayName}
           </span>
           <VisualVitalLines
@@ -240,7 +240,7 @@ export function VisualPersonCard({
         </span>
       )}
       <VisualPersonAvatar person={person} pet={pet} className={avatarSize} iconClassName={iconSize} />
-      <span className={`mt-1.5 w-full truncate whitespace-nowrap ${titleSize} font-extrabold uppercase leading-none`}>
+      <span className={`mt-1.5 w-full truncate whitespace-nowrap ${titleSize} font-extrabold uppercase leading-[1.18]`}>
         {displayName}
       </span>
       <VisualVitalLines
@@ -304,6 +304,24 @@ export function VisualGroup({
   const visiblePeople = canExpand && !isExpanded ? people.slice(0, limit) : people;
   const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
   const gridColumns = effectiveColumns === 'quad' ? 'grid-cols-4' : effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
+  const columnCount = effectiveColumns === 'quad' ? 4 : effectiveColumns === 'triple' ? 3 : effectiveColumns === 'double' ? 2 : 1;
+  const renderedItems = React.useMemo(() => {
+    const items: Array<{ type: 'person'; person: Pessoa } | { type: 'spacer'; key: string }> = [];
+
+    visiblePeople.forEach((person, index) => {
+      const nextPerson = visiblePeople[index + 1];
+      const nextIsSpouse = Boolean(nextPerson && spousePersonIds?.has(nextPerson.id));
+      const currentColumn = items.length % columnCount;
+
+      if (nextIsSpouse && columnCount > 1 && currentColumn === columnCount - 1) {
+        items.push({ type: 'spacer', key: `spacer-${person.id}` });
+      }
+
+      items.push({ type: 'person', person });
+    });
+
+    return items;
+  }, [columnCount, spousePersonIds, visiblePeople]);
 
   const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -340,18 +358,24 @@ export function VisualGroup({
         </p>
       ) : (
         <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`}>
-          {visiblePeople.map((person, index) => {
+          {renderedItems.map((item, index) => {
+            if (item.type === 'spacer') {
+              return <div key={item.key} className="min-w-0" aria-hidden="true" />;
+            }
+
+            const { person } = item;
             const isSpouseCard = Boolean(spousePersonIds?.has(person.id));
-            const lateralConnector = isSpouseCard && (gridColumns === 'grid-cols-2' || gridColumns === 'grid-cols-4') && index % 2 === 1;
+            const previousItem = renderedItems[index - 1];
+            const lateralConnector = isSpouseCard && previousItem?.type === 'person';
             const topConnector = isSpouseCard && !lateralConnector;
 
             return (
               <div key={person.id} className="relative min-w-0">
                 {lateralConnector && (
-                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-400" aria-hidden="true" />
+                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-200" aria-hidden="true" />
                 )}
                 {topConnector && (
-                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-400" aria-hidden="true" />
+                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-200" aria-hidden="true" />
                 )}
                 <VisualPersonCard
                   person={person}
