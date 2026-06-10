@@ -1,9 +1,9 @@
 # Guia de implementações - Árvore Família
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado para refletir o estado implementado do MVP após ajustes de árvore, painel lateral, Curiosidades/IA, Google Agenda/OAuth, fórum, favoritos, cache/deploy, views responsivas, chips mobile com gerações inferidas, exportação mobile canônica e redes sociais versionadas.
+> Status: guia canônico revisado contra o código atual; diferencia funcionalidades implementadas de pendências visuais da Minha Árvore mobile segmentada.
 
 ## Objetivo
 
@@ -48,7 +48,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Frente | Estado atual | Observação de manutenção |
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
-| Minha Árvore | Implementada | Layout próprio em torno da pessoa central, filtros diretos, pets, conectores, botão conjugal e controles mobile dedicados. Cards compactos de grupos laterais/inferiores usam ampliação visual recente para `360px`; o card central mantém padrão próprio e Genealogia/Visão Completa não herdam essa largura. |
+| Minha Árvore | Implementada no escopo atual | Desktop/tablet usam ReactFlow + `directFamilyDistributedLayout.ts`; mobile usa `MobileFamilyTreeView.tsx` para a experiência segmentada. Estão implementados cards mobile próprios, swipe horizontal/vertical, tios em 2 colunas até 6 cards, primos em 3 colunas até 9 cards e subgrupos de ancestrais dentro de `AncestorGroupsScreen`. A reestruturação final dos ancestrais sem container externo, containers de 70–80% da tela e conectores até extremidades seguem como pendência visual. |
 | Genealogia | Implementada | Layout por gerações, chips mobile alinhados à base de gerações inferidas, inferência em memória quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
 | Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips calculados sobre a base inferida e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
@@ -73,6 +73,30 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido reutilizando `treeExport.ts`; exportação integral fica pós-MVP. |
 | Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. Rotas `/api/*`, incluindo `/api/ai` quando ativa, devem ser preservadas fora do fallback SPA. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
+
+---
+
+## 1.1 Estado atual da Minha Árvore mobile segmentada
+
+Estado implementado confirmado:
+
+- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` somente em mobile e somente para `treeViewMode === 'minha-arvore'`;
+- `MobileFamilyTreeView.tsx` contém abas internas `Núcleo`, `Paterno`, `Materno` e `Completa`;
+- a experiência segmentada cobre sete telas conceituais por meio de swipe horizontal e rolagem vertical interna dos ramos;
+- existem modelos de card específicos para pessoa principal, padrão, irmãos/tios, ancestrais, primos e pets;
+- tios paternos/maternos usam limite recolhido de 6 cards;
+- primos paternos/maternos usam limite recolhido de 9 cards;
+- ancestrais paternos/maternos são separados visualmente em `Tataravós`, `Bisavós` e `Avós`, mas ainda dentro de um container externo de ancestrais.
+
+Pendências visuais que não devem ser tratadas como implementadas:
+
+- remover o container externo **Ancestrais Paternos/Maternos**;
+- renderizar **Tataravós**, **Bisavós** e **Avós** como grupos/cards diretos na tela de ancestrais;
+- aumentar estruturalmente containers de tios e primos para cerca de 70% a 80% da altura útil;
+- fazer os cards se ajustarem ao espaço disponível por altura;
+- revisar conectores para chegarem até as extremidades aplicáveis da viewport sem gerar overflow horizontal.
+
+Essas pendências pertencem ao backlog visual/documental da árvore e não exigem migration.
 
 ---
 

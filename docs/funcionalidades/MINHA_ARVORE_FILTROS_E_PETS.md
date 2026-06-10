@@ -1,9 +1,9 @@
 # Minha Árvore - filtros, pets e regras de exibição
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`  
-> Tipo: documentação funcional da view **Minha Árvore**.  
-> Status: revisado na auditoria documental final.
+> Última revisão: 2026-06-10
+> Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
+> Tipo: documentação funcional da view **Minha Árvore**.
+> Status: revisado com impacto dos filtros no layout mobile segmentado da Minha Árvore.
 
 ---
 
@@ -42,6 +42,7 @@ src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/CentralPersonFocusPanel.tsx
 src/app/services/memberTreeService.ts
@@ -200,7 +201,37 @@ Regras:
 - cards com contagem `0` continuam clicáveis;
 - grupos diretos não substituem filtros de linhas;
 - grupos diretos não persistem no banco;
-- em mobile, a view direta usa defaults para evitar painel lateral complexo.
+- em mobile, a view direta usa defaults para evitar painel lateral complexo;
+- no mobile segmentado, os filtros continuam afetando as telas de núcleo, ancestrais, tios e primos conforme o grupo familiar correspondente.
+
+---
+
+
+### 6.1 Impacto dos filtros no layout mobile segmentado
+
+No mobile segmentado da `/minha-arvore`, os mesmos filtros diretos continuam valendo, mas a exibição é distribuída em telas de núcleo/ramos.
+
+Mapeamento visual:
+
+| Filtro/grupo | Impacto no mobile segmentado |
+|---|---|
+| `pais` | Afeta pais no núcleo, quando aplicável. |
+| `avos`, `bisavos`, `tataravos` | Afetam telas de Ancestrais paternos e maternos. |
+| `tios` | Afeta telas de Tios paternos e maternos. |
+| `primos` | Afeta telas de Primos paternos e maternos. |
+| `conjuge` | Afeta bloco de cônjuge no núcleo. |
+| `irmaos` | Afeta bloco de irmãos no núcleo. |
+| `filhos`, `netos` | Afetam descendentes no núcleo. |
+| `pets` | Afeta bloco de pets, sem misturar com filhos humanos. |
+
+Regras:
+
+- grupo oculto por filtro não deve deixar container vazio com conector solto;
+- quando não houver pessoas para uma tela, renderizar estado vazio controlado ou omitir o bloco sem quebrar navegação;
+- conectores de tela vazia não devem aparecer como linhas sem destino;
+- contadores continuam sendo calculados pelo mesmo escopo lógico, não pelo número de cards visíveis na tela atual;
+- pets permanecem separados de filhos humanos em qualquer tela mobile;
+- filtros de linha continuam não alterando cards, mesmo no layout segmentado.
 
 ---
 
@@ -397,6 +428,9 @@ Validar em `/minha-arvore`:
 - confirmar que pets não aparecem em **Visão Completa**;
 - confirmar card **Pets** separado no perfil e em `/minha-arvore/editar`;
 - testar modo foco quando apenas a pessoa central permanece;
+- validar as 7 telas do mobile segmentado da Minha Árvore;
+- confirmar que grupos ocultos por filtro não deixam containers vazios ou conectores soltos;
+- confirmar que pets continuam separados de filhos humanos no núcleo mobile;
 - testar desktop, tablet e mobile.
 
 Comando técnico:

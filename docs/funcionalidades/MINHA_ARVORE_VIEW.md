@@ -1,9 +1,9 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.
-> Status: revisado após ajustes de título, largura visual dos cards compactos, painel lateral, favorito junto ao zoom, bloqueio de scroll superior e anti-regressão para Genealogia/Visão Completa.
+> Status: revisado contra o código atual; diferencia estado implementado de pendências do layout mobile segmentado.
 
 ## 1. Função deste documento
 
@@ -36,6 +36,30 @@ Não use este documento para detalhar:
 | componentes | `docs/GUIA_COMPONENTES.md` |
 | UX geral | `docs/GUIA_UX_LAYOUT.md` |
 | Genealogia e Visão Completa | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
+
+---
+
+## Nota de verificação contra o código atual
+
+Esta revisão foi feita comparando os arquivos enviados com o estado atual dos componentes da árvore.
+
+Estado confirmado no código:
+
+- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
+- `MobileFamilyTreeView.tsx` mantém abas superiores internas `Núcleo`, `Paterno`, `Materno` e `Completa`.
+- A experiência de 7 telas existe dentro do fluxo mobile segmentado: tela principal/núcleo, telas verticais do ramo paterno e telas verticais do ramo materno.
+- Os cards mobile usam componentes próprios: `PersonCard`, `MainPersonCard`, `SiblingPersonCard`, `AncestorPersonCard`, `MiniPersonCard` e `PetPersonCard`.
+- Tios usam grade de 2 colunas com limite recolhido de 6 cards.
+- Primos usam grade de 3 colunas com limite recolhido de 9 cards.
+- Ancestrais são renderizados dentro de `AncestorGroupsScreen`, ainda com um container externo de título **Ancestrais Paternos/Maternos** contendo subgrupos internos.
+- O pedido para remover o container externo de **Ancestrais** e deixar **Tataravós**, **Bisavós** e **Avós** como grupos/cards independentes ainda está pendente.
+- O pedido para tios/primos ocuparem estruturalmente 70% a 80% da altura útil e para todos os conectores irem até as extremidades da tela ainda está pendente no código atual.
+
+Regra documental desta revisão:
+
+```txt
+Não documentar como implementado o que ainda é intenção de produto ou pendência visual.
+```
 
 ---
 
@@ -86,6 +110,7 @@ A ampliação visual de `360px` é uma decisão de UI da view direta. A consolid
 | Navegação mobile da Home | `src/app/pages/home/HomeMobileNav.tsx` |
 | Componente ReactFlow | `src/app/components/FamilyTree/FamilyTree.tsx` |
 | Controles mobile da árvore | `src/app/components/FamilyTree/MobileTreeControlsPortal.tsx` |
+| Layout mobile segmentado da Minha Árvore | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` |
 | Estilos dos controles mobile | `src/styles/mobile-tree-controls.css` |
 | Ajustes visuais complementares da árvore | `src/styles/family-tree-visual-polish.css` |
 | Layout direto | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
@@ -351,6 +376,140 @@ Checklist visual:
 - não há linha conectando ponto antigo após aumento do grupo;
 - pan/zoom não usa group box como referência principal de bounds.
 
+
+### 10.1 Layout mobile segmentado da Minha Árvore
+
+No mobile, a view **Minha Árvore** usa uma experiência segmentada própria, independente do canvas ReactFlow tradicional, implementada em:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+```
+
+Esse layout é renderizado por `HomeTreeSection.tsx` apenas quando:
+
+```txt
+isMobile && treeViewMode === 'minha-arvore'
+```
+
+Ele não substitui `directFamilyDistributedLayout.ts` no desktop/tablet e não deve herdar regras de `/genealogia` ou `/visao-completa`.
+
+#### Estado atual confirmado
+
+O fluxo mobile segmentado combina:
+
+- uma tela central/núcleo;
+- uma tela lateral do ramo paterno;
+- uma tela lateral do ramo materno;
+- rolagem vertical interna em cada ramo lateral.
+
+Na prática, a experiência cobre estas 7 telas conceituais:
+
+| Tela conceitual | Estado atual no código |
+|---|---|
+| Principal / Núcleo | Implementada dentro da tela central do `core`. |
+| Ancestrais paternos | Implementada como tela superior do ramo paterno, dentro de `AncestorGroupsScreen`. |
+| Tios paternos | Implementada como tela central do ramo paterno, com 2 colunas e limite recolhido de 6 cards. |
+| Primos paternos | Implementada como tela inferior do ramo paterno, com 3 colunas e limite recolhido de 9 cards. |
+| Ancestrais maternos | Implementada como tela superior do ramo materno, dentro de `AncestorGroupsScreen`. |
+| Tios maternos | Implementada como tela central do ramo materno, com 2 colunas e limite recolhido de 6 cards. |
+| Primos maternos | Implementada como tela inferior do ramo materno, com 3 colunas e limite recolhido de 9 cards. |
+
+#### Ancestrais no estado atual
+
+O código atual ainda renderiza os ancestrais assim:
+
+```txt
+AncestorGroupsScreen
+└── container externo "Ancestrais Paternos/Maternos"
+    ├── subgrupo Tataravós
+    ├── subgrupo Bisavós
+    └── subgrupo Avós
+```
+
+Também existe uma regra de distribuição compacta:
+
+```txt
+distributeAncestorSubgroups(groups, maxTotal = 6)
+```
+
+Quando há três subgrupos, ela tende a limitar cada grupo a até 2 pessoas para totalizar 6 cards na tela.
+
+#### Pendência de produto/layout
+
+A solicitação mais recente ainda não está implementada no código atual:
+
+```txt
+Remover o container externo "Ancestrais Paternos/Maternos".
+Renderizar diretamente os grupos/cards Tataravós, Bisavós e Avós, quando houver.
+```
+
+A documentação deve tratar isso como pendência até que `AncestorGroupsScreen` seja reestruturado.
+
+#### Tios e primos no estado atual
+
+No código atual:
+
+- `Tios Paternos` e `Tios Maternos` usam `VerticalRelativeScreen`;
+- tios usam `columns="double"` e `maxCollapsedItems={6}`;
+- primos usam `columns="triple"` e `maxCollapsedItems={9}`;
+- o container interno usa largura máxima próxima de `360px`;
+- ainda não existe implementação estrutural de `70vh`, `80vh`, `min-h-[70vh]` ou distribuição de cards por altura útil.
+
+#### Pendência visual de containers
+
+A intenção de produto é:
+
+```txt
+Nas telas de tios e primos, o container do grupo deve ocupar cerca de 70% a 80% da tela útil.
+Os cards devem se ajustar ao espaço disponível.
+```
+
+Enquanto isso não estiver no código, documentar como pendência, não como estado consolidado.
+
+#### Conectores no estado atual
+
+Conectores atuais do mobile segmentado:
+
+- ancestrais: sem linha acima; com linha inferior local;
+- tios: linha superior e inferior local;
+- primos: linha superior local; sem linha abaixo;
+- ramos laterais: linha horizontal de conexão entre a tela lateral e a tela central;
+- os conectores são HTML/CSS, não edges ReactFlow.
+
+#### Pendência visual de conectores
+
+A intenção de produto é que:
+
+```txt
+Linhas estruturais laterais, superiores e inferiores cheguem até a extremidade da tela quando houver conexão naquela direção.
+```
+
+No código atual, parte dos conectores ainda usa trechos locais (`h-9`, `max-w-[360px]`, `top-[92px]`) e precisa de QA visual antes de ser documentada como finalizada.
+
+#### QA obrigatório
+
+Validar sempre em:
+
+```txt
+320px
+375px
+390px
+430px
+```
+
+Checklist mínimo:
+
+- tela principal não gera overflow horizontal;
+- swipe horizontal abre ramo paterno e materno;
+- swipe vertical dentro dos ramos abre ancestrais, tios e primos;
+- ancestrais não têm linha acima;
+- primos não têm linha abaixo;
+- tios têm linha acima e abaixo;
+- conectores laterais não aparecem como sobras soltas;
+- bottom navigation não cobre cards, títulos ou conectores.
+
+---
+
 ## 11. Viewport, pan, zoom e scroll
 
 `FamilyTree.tsx` calcula bounds e viewport a partir dos nós renderizados.
@@ -597,6 +756,12 @@ Validar após alteração em `/minha-arvore`:
 
 - desktop: 1366px, 1440px e largura maior;
 - mobile: 320px, 375px, 390px e 430px;
+- as 7 telas mobile da Minha Árvore: Principal/Núcleo, Ancestrais Paternos, Tios Paternos, Primos Paternos, Ancestrais Maternos, Tios Maternos e Primos Maternos;
+- quando a pendência for implementada: containers das telas de tios e primos ocupando cerca de 70% a 80% da altura útil; no código atual, validar apenas se não houve regressão de largura/altura;
+- cards internos sem compressão excessiva; adaptação por altura útil ainda depende da pendência de containers;
+- quando a pendência for implementada: linhas verticais/horizontais chegando às extremidades quando forem estruturais; no código atual, validar conectores locais e ausência de sobras;
+- ausência de linha horizontal solta ou sobrando na lateral do container;
+- ausência de overflow horizontal no layout mobile segmentado;
 - header sem scroll externo;
 - painel lateral desktop sem scroll vertical;
 - pan/zoom interno funcional;
@@ -638,6 +803,9 @@ Não fazer:
 - criar migration para ajuste visual;
 - alterar RLS/Storage/Auth para corrigir problema de layout;
 - criar novo controle mobile fora do portal sem remover o anterior;
+- tratar `MobileFamilyTreeView.tsx` como se fosse ReactFlow: seus conectores são HTML/CSS e precisam de regras próprias;
+- após implementar a pendência, deixar container de tios ou primos abaixo da faixa visual esperada de 70% a 80% da altura útil;
+- permitir linha horizontal solta saindo do topo/lateral do grupo no mobile segmentado;
 - deixar controles fixos competindo com navegação inferior mobile;
 - corrigir conexão de linha apenas no SVG sem revisar anchors dos grupos;
 - transformar `family-tree-visual-polish.css` em área sem escopo por rota/view.

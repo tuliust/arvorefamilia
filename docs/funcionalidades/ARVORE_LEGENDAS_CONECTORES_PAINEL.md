@@ -1,9 +1,9 @@
 # Árvore - legendas, conectores, filtros e painel lateral
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentação funcional/técnica específica da árvore.
-> Status: revisado após ajustes de painel lateral desktop sem scroll, ritmo visual das abas, cores dinâmicas de conectores/alianças, favorito na área da árvore e cards de 360px na Minha Árvore.
+> Status: revisado contra o código atual; conectores mobile segmentados documentados com estado implementado e pendências separadas.
 
 ## 1. Função deste documento
 
@@ -16,6 +16,7 @@ Este documento consolida os controles visuais da árvore:
 - filtros de grupos diretos;
 - filtros de gerações;
 - conectores da Minha Árvore;
+- conectores HTML/CSS do layout mobile segmentado;
 - conectores da Genealogia e Visão Completa;
 - painel lateral desktop;
 - painel inferior mobile;
@@ -31,6 +32,30 @@ Não substitui:
 | exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
 | componentes | `docs/GUIA_COMPONENTES.md` |
 | UX geral | `docs/GUIA_UX_LAYOUT.md` |
+
+---
+
+## Nota de verificação contra o código atual
+
+Esta revisão foi feita comparando os arquivos enviados com o estado atual dos componentes da árvore.
+
+Estado confirmado no código:
+
+- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
+- `MobileFamilyTreeView.tsx` mantém abas superiores internas `Núcleo`, `Paterno`, `Materno` e `Completa`.
+- A experiência de 7 telas existe dentro do fluxo mobile segmentado: tela principal/núcleo, telas verticais do ramo paterno e telas verticais do ramo materno.
+- Os cards mobile usam componentes próprios: `PersonCard`, `MainPersonCard`, `SiblingPersonCard`, `AncestorPersonCard`, `MiniPersonCard` e `PetPersonCard`.
+- Tios usam grade de 2 colunas com limite recolhido de 6 cards.
+- Primos usam grade de 3 colunas com limite recolhido de 9 cards.
+- Ancestrais são renderizados dentro de `AncestorGroupsScreen`, ainda com um container externo de título **Ancestrais Paternos/Maternos** contendo subgrupos internos.
+- O pedido para remover o container externo de **Ancestrais** e deixar **Tataravós**, **Bisavós** e **Avós** como grupos/cards independentes ainda está pendente.
+- O pedido para tios/primos ocuparem estruturalmente 70% a 80% da altura útil e para todos os conectores irem até as extremidades da tela ainda está pendente no código atual.
+
+Regra documental desta revisão:
+
+```txt
+Não documentar como implementado o que ainda é intenção de produto ou pendência visual.
+```
 
 ---
 
@@ -354,6 +379,66 @@ Regras:
 
 ---
 
+
+### 8.1 Conectores no layout mobile segmentado
+
+O layout mobile segmentado da `/minha-arvore` usa conectores próprios de HTML/CSS em:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+```
+
+Esses conectores não são edges ReactFlow e não devem ser tratados como `spouseEdge`, `childEdge`, `siblingEdge` ou `auxiliary`.
+
+#### Estado atual confirmado
+
+No código atual:
+
+| Tela | Linha acima | Linha abaixo | Observação |
+|---|---:|---:|---|
+| Ancestrais paternos/maternos | Não | Sim | A tela usa `AncestorGroupsScreen` e mantém apenas conector inferior local. |
+| Tios paternos/maternos | Sim | Sim | A tela usa `VerticalRelativeScreen` + `FamilyGroup` com conector superior e inferior. |
+| Primos paternos/maternos | Sim | Não | A tela usa `VerticalRelativeScreen` com `bottomConnector={false}`. |
+| Tela principal/núcleo | Parcial | Parcial | Linhas do núcleo são desenhadas manualmente com elementos absolutos. |
+| Conexão lateral pai/mãe ↔ tios | Sim | N/A | Linha horizontal usa posicionamento absoluto na tela lateral. |
+
+#### Regras consolidadas
+
+- não deve haver linha vertical acima dos grupos de ancestrais;
+- não deve haver linha vertical abaixo dos grupos de primos;
+- tios continuam sendo o grupo intermediário entre ancestrais e primos;
+- conectores HTML/CSS devem ficar visualmente atrás dos containers/cards quando houver sobreposição;
+- ajustes de conectores mobile devem ser testados sem usar lógica de edges ReactFlow;
+- `edgeFilters` e `visualLineFilters` continuam válidos para ReactFlow; não comandam diretamente esses conectores HTML/CSS.
+
+#### Pendências visuais atuais
+
+Ainda não está consolidado no código:
+
+```txt
+Linhas estruturais indo até a extremidade da tela em todos os lados aplicáveis.
+Containers de tios/primos ocupando 70% a 80% da tela útil.
+Ancestrais sem container externo "Ancestrais Paternos/Maternos".
+```
+
+Esses pontos devem permanecer como backlog/pendência visual até novo ajuste de `MobileFamilyTreeView.tsx`.
+
+#### Critérios visuais para a próxima implementação
+
+- linha horizontal lateral deve chegar à extremidade da viewport sem gerar `overflow-x`;
+- linha vertical superior/inferior deve chegar à extremidade da tela somente quando houver continuidade estrutural;
+- não usar corte visual para esconder linha estrutural errada;
+- não permitir linha solta saindo do topo ou da lateral do container;
+- validar paterno e materno separadamente;
+- validar 320px, 375px, 390px e 430px.
+
+
+---
+
+## 9.
+
+---
+
 ## 9. Conectores da Genealogia e Visão Completa
 
 Layout:
@@ -483,6 +568,9 @@ Validar após alteração:
 - aliança e borda do anel acompanham a cor dos conectores em todas as paletas;
 - botão de favoritar aparece próximo ao zoom no desktop e não fica duplicado no header;
 - exportação ainda funciona.
+- mobile segmentado da Minha Árvore: conectores estruturais chegam às extremidades da viewport sem criar rolagem horizontal;
+- mobile segmentado da Minha Árvore: não há linha horizontal solta ou sobra lateral no topo/lado dos containers;
+- mobile segmentado da Minha Árvore: conectores ficam atrás dos containers/cards quando necessário.
 
 ---
 
@@ -502,4 +590,7 @@ Não fazer:
 - fazer a seção Aliança virar filtro sem nova decisão funcional;
 - fixar cor de aliança/conector fora dos tokens de paleta;
 - reintroduzir scroll vertical no painel lateral desktop;
-- voltar a truncar nomes com `...` em cards compactos da Minha Árvore quando houver espaço para quebra de linha.
+- voltar a truncar nomes com `...` em cards compactos da Minha Árvore quando houver espaço para quebra de linha;
+- aplicar regras de edges ReactFlow aos conectores HTML/CSS do `MobileFamilyTreeView.tsx`;
+- corrigir linha solta apenas escondendo overflow global sem validar se a linha estrutural continua visível;
+- deixar conectores mobile gerarem rolagem horizontal.
