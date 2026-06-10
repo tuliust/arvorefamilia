@@ -67,6 +67,9 @@ const GROUP_VERTICAL_PADDING = 44;
 const GROUP_GRID_GAP = 8;
 const COLLAPSED_LIMIT = 2;
 const SIDE_BRANCH_COLLAPSED_LIMIT = 8;
+const SIDE_BRANCH_WIDTH = 560;
+const PATERNAL_BRANCH_INNER_EDGE = 334;
+const MATERNAL_BRANCH_LEFT = 1106;
 const ANCESTOR_COLLAPSED_LIMIT = 4;
 const FATHER_TOP_OFFSET = 50;
 const PARENT_CARD_HEIGHT = 164;
@@ -549,9 +552,9 @@ export function DesktopFamilyMapView({
 
   const descendantGroupTopRow = descendantsTop;
   const leftDescendantSecondRow = descendantsTop + 144;
-  const branchLeft = -86;
-  const branchRight = 1106;
-  const branchWidth = 420;
+  const branchWidth = SIDE_BRANCH_WIDTH;
+  const branchLeft = PATERNAL_BRANCH_INNER_EDGE - SIDE_BRANCH_WIDTH;
+  const branchRight = MATERNAL_BRANCH_LEFT;
   const descendantColumnWidth = 300;
   const petColumnWidth = 180;
 
@@ -724,30 +727,10 @@ export function DesktopFamilyMapView({
   const rightDescendantBranchX = rightDescendantLayouts.length > 0
     ? centerX(rightDescendantLayouts[0])
     : centralCenterX;
-  const paternalUnclesWidth = getGroupWidth({
-    people: paternalUncles,
-    columns: 'quad',
-    variant: 'mini',
-    baseWidth: branchWidth,
-  });
-  const maternalUnclesWidth = getGroupWidth({
-    people: maternalUncles,
-    columns: 'quad',
-    variant: 'mini',
-    baseWidth: branchWidth,
-  });
-  const paternalCousinsWidth = getGroupWidth({
-    people: paternalCousins,
-    columns: 'quad',
-    variant: 'mini',
-    baseWidth: branchWidth,
-  });
-  const maternalCousinsWidth = getGroupWidth({
-    people: maternalCousins,
-    columns: 'quad',
-    variant: 'mini',
-    baseWidth: branchWidth,
-  });
+  const paternalUnclesWidth = branchWidth;
+  const maternalUnclesWidth = branchWidth;
+  const paternalCousinsWidth = branchWidth;
+  const maternalCousinsWidth = branchWidth;
   const unclesPaternal = {
     left: centeredLeft(branchLeft, branchWidth, paternalUnclesWidth),
     top: parentTop,
