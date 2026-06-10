@@ -329,7 +329,7 @@ export function DesktopFamilyMapView({
 
   const spouse = spouses[0];
   const spouseCardLayout = spouse ? {
-    left: 615,
+    left: 720,
     top: descendantGroupTopRow,
     width: 210,
     height: PARENT_CARD_HEIGHT,
@@ -394,9 +394,15 @@ export function DesktopFamilyMapView({
   ];
 
   const renderedDescendantLayouts = descendantLayouts.filter((layout) => layout.people.length > 0);
-  const descendantConnectorLayouts = spouseCardLayout
-    ? [...renderedDescendantLayouts, spouseCardLayout]
-    : renderedDescendantLayouts;
+  const leftDescendantLayouts = renderedDescendantLayouts.filter((layout) => (
+    layout.id === 'siblings' || layout.id === 'nephews'
+  ));
+  const rightDescendantLayouts = [
+    ...(spouseCardLayout ? [spouseCardLayout] : []),
+    ...renderedDescendantLayouts.filter((layout) => (
+      layout.id === 'children' || layout.id === 'pets' || layout.id === 'grandchildren'
+    )),
+  ];
   const contentBottom = Math.max(
     centralBottomY,
     spouseCardLayout ? bottomY(spouseCardLayout) : 0,
@@ -454,16 +460,22 @@ export function DesktopFamilyMapView({
     spouses.length,
   ]);
 
-  const hasCentralDescendants = descendantConnectorLayouts.length > 0;
+  const hasCentralDescendants = leftDescendantLayouts.length > 0 || rightDescendantLayouts.length > 0;
   const paternalGrandparents = findLayout(paternalAncestors, 'paternal-grandparents');
   const maternalGrandparents = findLayout(maternalAncestors, 'maternal-grandparents');
-  const fatherCenterX = 435;
-  const motherCenterX = 1005;
+  const fatherCenterX = 480;
+  const motherCenterX = 960;
   const centralCenterX = 720;
   const branchLeft = 8;
   const branchRight = 1172;
   const centralBranchY = centralTop - 36;
   const descendantsJunctionY = descendantsTop - 18;
+  const leftDescendantBranchX = leftDescendantLayouts.length > 0
+    ? centerX(leftDescendantLayouts[0])
+    : centralCenterX;
+  const rightDescendantBranchX = rightDescendantLayouts.length > 0
+    ? centerX(rightDescendantLayouts[0])
+    : centralCenterX;
   const unclesPaternal = { left: branchLeft, top: parentTop, width: 260, height: paternalUnclesHeight };
   const unclesMaternal = { left: branchRight, top: parentTop, width: 260, height: maternalUnclesHeight };
   const cousinsPaternal = {
@@ -538,10 +550,22 @@ export function DesktopFamilyMapView({
               {central && hasCentralDescendants && (
                 <path d={connectorPath([[centralCenterX, centralBottomY], [centralCenterX, descendantsJunctionY]])} />
               )}
-              {central && descendantConnectorLayouts.map((layout) => (
+              {central && leftDescendantLayouts.length > 0 && (
+                <path d={connectorPath([[centralCenterX, descendantsJunctionY], [leftDescendantBranchX, descendantsJunctionY]])} />
+              )}
+              {central && rightDescendantLayouts.length > 0 && (
+                <path d={connectorPath([[centralCenterX, descendantsJunctionY], [rightDescendantBranchX, descendantsJunctionY]])} />
+              )}
+              {central && leftDescendantLayouts.map((layout) => (
                 <path
-                  key={`central-${'id' in layout ? layout.id : 'spouse-card'}`}
-                  d={connectorPath([[centralCenterX, descendantsJunctionY], [centerX(layout), descendantsJunctionY], [centerX(layout), layout.top]])}
+                  key={`left-descendant-${layout.id}`}
+                  d={connectorPath([[leftDescendantBranchX, descendantsJunctionY], [leftDescendantBranchX, layout.top]])}
+                />
+              ))}
+              {central && rightDescendantLayouts.map((layout) => (
+                <path
+                  key={`right-descendant-${'id' in layout ? layout.id : 'spouse-card'}`}
+                  d={connectorPath([[rightDescendantBranchX, descendantsJunctionY], [rightDescendantBranchX, layout.top], [centerX(layout), layout.top]])}
                 />
               ))}
             </g>
@@ -555,7 +579,7 @@ export function DesktopFamilyMapView({
           ))}
 
           <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternal.uncles} left={branchLeft} top={parentTop} width={260} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
-          <div className="absolute z-10 w-[210px]" style={{ left: 330, top: parentTop }}>
+          <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
                 ? <VisualPersonCard person={father} label="Pai" onClick={onPersonClick} />
@@ -565,7 +589,7 @@ export function DesktopFamilyMapView({
           <div className="absolute z-20 w-[210px]" style={{ left: 615, top: centralTop }}>
             {central && <VisualPersonCard person={central} label="Pessoa Central" central onClick={onPersonClick} />}
           </div>
-          <div className="absolute z-10 w-[210px]" style={{ left: 900, top: parentTop }}>
+          <div className="absolute z-10 w-[210px]" style={{ left: 855, top: parentTop }}>
             {directRelativeFilters.pais && (
               mother
                 ? <VisualPersonCard person={mother} label="Mãe" onClick={onPersonClick} />
