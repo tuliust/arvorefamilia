@@ -34,6 +34,8 @@ type GroupColumns = 'single' | 'double' | 'triple';
 
 type RelativeScreenKind = 'default' | 'uncles' | 'cousins';
 
+type SwipeDirection = 'up' | 'down' | 'left' | 'right';
+
 type AncestorSubgroup = {
   id: string;
   title: string;
@@ -80,6 +82,26 @@ function getTabForScreen(screen: MobileTreeScreen): MobileTreeTab {
   if (screen.startsWith('paternal')) return 'paternal';
   if (screen.startsWith('maternal')) return 'maternal';
   return 'core';
+}
+
+function getDestinationForScreen(
+  screen: MobileTreeScreen,
+  direction: SwipeDirection,
+): MobileTreeScreen {
+  const destinations: Partial<Record<SwipeDirection, MobileTreeScreen>> =
+    screen === 'core'
+      ? { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' }
+      : screen === 'paternal-uncles'
+        ? { up: 'ancestors', down: 'paternal-cousins', right: 'core' }
+        : screen === 'maternal-uncles'
+          ? { up: 'ancestors', down: 'maternal-cousins', left: 'core' }
+          : screen === 'paternal-cousins'
+            ? { up: 'paternal-uncles' }
+            : screen === 'maternal-cousins'
+              ? { up: 'maternal-uncles' }
+              : { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' };
+
+  return destinations[direction] ?? screen;
 }
 
 function getYear(value?: string | number) {
@@ -721,6 +743,8 @@ export function MobileFamilyTreeView({
   layoutRevision,
 }: MobileFamilyTreeViewProps) {
   const [activeScreen, setActiveScreen] = React.useState<MobileTreeScreen>('core');
+  const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
+  const [isDraggingScreen, setIsDraggingScreen] = React.useState(false);
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
   const touchStartRef = React.useRef<{
     x: number;
@@ -770,29 +794,17 @@ export function MobileFamilyTreeView({
 
   React.useEffect(() => {
     setActiveScreen('core');
+    setDragOffset({ x: 0, y: 0 });
+    setIsDraggingScreen(false);
   }, [centralPersonId, layoutRevision]);
 
-  const navigateByDirection = React.useCallback((
-    direction: 'up' | 'down' | 'left' | 'right',
-  ) => {
-    setActiveScreen((current) => {
-      const destinations: Partial<Record<typeof direction, MobileTreeScreen>> =
-        current === 'core'
-          ? { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' }
-          : current === 'paternal-uncles'
-            ? { up: 'ancestors', down: 'paternal-cousins', right: 'core' }
-            : current === 'maternal-uncles'
-              ? { up: 'ancestors', down: 'maternal-cousins', left: 'core' }
-              : current === 'paternal-cousins'
-                ? { up: 'paternal-uncles' }
-                : current === 'maternal-cousins'
-                  ? { up: 'maternal-uncles' }
-                  : { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' };
-      return destinations[direction] ?? current;
-    });
+  const navigateByDirection = React.useCallback((direction: SwipeDirection) => {
+    setActiveScreen((current) => getDestinationForScreen(current, direction));
   }, []);
 
   const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    setDragOffset({ x: 0, y: 0 });
+    setIsDraggingScreen(false);
     const touch = event.touches[0];
     const target = event.target as HTMLElement;
     const scrollElement = target.closest<HTMLElement>('[data-mobile-tree-scroll]');
@@ -805,10 +817,67 @@ export function MobileFamilyTreeView({
     };
   }, []);
 
+  const handleTouchMove = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.touches[0];
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absoluteX = Math.abs(deltaX);
+    const absoluteY = Math.abs(deltaY);
+    const previewThreshold = 10;
+
+    let direction: SwipeDirection | null = null;
+    let axis: 'x' | 'y' | null = null;
+
+    if (absoluteX >= previewThreshold && absoluteX > absoluteY * 1.2) {
+      direction = deltaX < 0 ? 'right' : 'left';
+      axis = 'x';
+    } else if (absoluteY >= previewThreshold && absoluteY > absoluteX * 1.2) {
+      direction = deltaY < 0 ? 'down' : 'up';
+      axis = 'y';
+
+      if (
+        (direction === 'up' && !start.atScrollTop)
+        || (direction === 'down' && !start.atScrollBottom)
+      ) {
+        setDragOffset({ x: 0, y: 0 });
+        setIsDraggingScreen(false);
+        return;
+      }
+    }
+
+    if (!direction || !axis) {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDraggingScreen(false);
+      return;
+    }
+
+    const destination = getDestinationForScreen(activeScreen, direction);
+    if (destination === activeScreen) {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDraggingScreen(false);
+      return;
+    }
+
+    const maxX = event.currentTarget.clientWidth * 0.42;
+    const maxY = event.currentTarget.clientHeight * 0.42;
+    const clamp = (value: number, max: number) => Math.max(-max, Math.min(max, value));
+
+    setDragOffset({
+      x: axis === 'x' ? clamp(deltaX, maxX) : 0,
+      y: axis === 'y' ? clamp(deltaY, maxY) : 0,
+    });
+    setIsDraggingScreen(true);
+  }, [activeScreen]);
+
   const handleTouchEnd = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
     const touch = event.changedTouches[0];
     touchStartRef.current = null;
+    setDragOffset({ x: 0, y: 0 });
+    setIsDraggingScreen(false);
     if (!start || !touch) return;
 
     const deltaX = touch.clientX - start.x;
@@ -823,7 +892,7 @@ export function MobileFamilyTreeView({
     }
     if (absoluteY < threshold || absoluteY <= absoluteX * 1.2) return;
 
-    const direction = deltaY < 0 ? 'down' : 'up';
+    const direction: SwipeDirection = deltaY < 0 ? 'down' : 'up';
     if (
       (direction === 'up' && !start.atScrollTop)
       || (direction === 'down' && !start.atScrollBottom)
@@ -889,12 +958,16 @@ export function MobileFamilyTreeView({
       <div
         className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain"
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="grid h-[300%] w-[300%] grid-cols-3 grid-rows-3 transition-transform duration-300 ease-out"
+          className={[
+            'grid h-[300%] w-[300%] grid-cols-3 grid-rows-3',
+            isDraggingScreen ? '' : 'transition-transform duration-300 ease-out',
+          ].join(' ')}
           style={{
-            transform: `translate3d(${-activePosition.column * (100 / 3)}%, ${-activePosition.row * (100 / 3)}%, 0)`,
+            transform: `translate3d(calc(${-activePosition.column * (100 / 3)}% + ${dragOffset.x}px), calc(${-activePosition.row * (100 / 3)}% + ${dragOffset.y}px), 0)`,
           }}
         >
           <div className="col-start-2 row-start-1 h-full w-full overflow-hidden">
