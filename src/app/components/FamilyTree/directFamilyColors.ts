@@ -37,7 +37,7 @@ export const DIRECT_FAMILY_RELATION_COLORS = {
   irmaos: { background: directFilterCardColors.irmaos, solid: directRelationBorderColors.irmaos, label: 'Irmãos' },
   sobrinhos: { background: directFilterCardColors.sobrinhos, solid: directRelationBorderColors.sobrinhos, label: 'Sobrinhos' },
   netos: { background: directFilterCardColors.netos, solid: directRelationBorderColors.netos, label: 'Netos' },
-  conjuge: { background: directFilterCardColors.pais, solid: directRelationBorderColors.pais, label: 'Cônjuge' },
+  conjuge: { background: directFilterCardColors.pais, solid: directRelationBorderColors.pais, label: 'Cônjuges' },
   filhos: { background: directFilterCardColors.netos, solid: directRelationBorderColors.netos, label: 'Filhos' },
   pets: { background: directFilterCardColors.pets, solid: directRelationBorderColors.pets, label: 'Pets' },
 } as const;

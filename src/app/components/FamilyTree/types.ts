@@ -183,7 +183,7 @@ export const DEFAULT_DIRECT_RELATIVE_FILTERS: DirectRelativeFilters = {
   avos: true,
   bisavos: true,
   tataravos: true,
-  conjuge: true,
+  conjuge: false,
   filhos: true,
   netos: true,
   irmaos: true,
@@ -217,18 +217,11 @@ export const TREE_CONSTANTS: LayoutConstants = {
 
 export function getSortableBirthValue(value?: string | number | null) {
   if (value === null || value === undefined || value === '') return Number.POSITIVE_INFINITY;
+  if (typeof value === 'number') return value;
 
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
-  }
+  const parsed = Date.parse(value);
+  if (!Number.isNaN(parsed)) return parsed;
 
-  const normalizedValue = String(value).trim();
-  if (!normalizedValue) return Number.POSITIVE_INFINITY;
-
-  const timestamp = Date.parse(normalizedValue);
-  return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
-}
-
-export function isLeftSidePerson(pessoa?: Pessoa) {
-  return (pessoa?.lado || 'esquerda') === 'esquerda';
+  const year = value.match(/\d{4}/)?.[0];
+  return year ? Number(year) : Number.POSITIVE_INFINITY;
 }

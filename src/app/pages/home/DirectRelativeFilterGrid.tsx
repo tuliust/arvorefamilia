@@ -19,7 +19,7 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   { key: 'tios', label: 'Tios', colorKey: 'tios' },
   { key: 'pais', label: 'Pai e Mãe', colorKey: 'pais' },
   { key: 'primos', label: 'Primos', colorKey: 'primos' },
-  { key: 'conjuge', label: 'Cônjuge', colorKey: 'conjuge' },
+  { key: 'conjuge', label: 'Cônjuges', colorKey: 'conjuge' },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos' },
   { key: 'filhos', label: 'Filhos', colorKey: 'filhos' },
   { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos' },

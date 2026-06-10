@@ -122,6 +122,76 @@ function centeredLeft(baseLeft: number, baseWidth: number, width: number) {
   return baseLeft + (baseWidth - width) / 2;
 }
 
+
+function buildSpousesByPerson(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
+  const peopleById = new Map(pessoas.map((person) => [person.id, person]));
+  const spousesByPerson = new Map<string, Pessoa[]>();
+
+  const addSpouse = (personId: string, spouseId: string) => {
+    const spouse = peopleById.get(spouseId);
+    if (!spouse) return;
+    const spouses = spousesByPerson.get(personId) ?? [];
+    if (!spouses.some((person) => person.id === spouse.id)) {
+      spouses.push(spouse);
+      spousesByPerson.set(personId, spouses);
+    }
+  };
+
+  relacionamentos.forEach((relationship) => {
+    if (relationship.tipo_relacionamento !== 'conjuge') return;
+    addSpouse(relationship.pessoa_origem_id, relationship.pessoa_destino_id);
+    addSpouse(relationship.pessoa_destino_id, relationship.pessoa_origem_id);
+  });
+
+  return spousesByPerson;
+}
+
+function interleaveSpouses(
+  people: Pessoa[],
+  spousesByPerson: Map<string, Pessoa[]>,
+  isVisible: (person: Pessoa | undefined) => person is Pessoa,
+  options: { enabled: boolean; excludedIds?: Set<string> },
+) {
+  if (!options.enabled) return people;
+
+  const excludedIds = options.excludedIds ?? new Set<string>();
+  const result: Pessoa[] = [];
+  const seen = new Set<string>();
+
+  const addPerson = (person: Pessoa) => {
+    if (seen.has(person.id) || excludedIds.has(person.id) || !isVisible(person)) return;
+    seen.add(person.id);
+    result.push(person);
+  };
+
+  people.forEach((person) => {
+    addPerson(person);
+    (spousesByPerson.get(person.id) ?? []).forEach(addPerson);
+  });
+
+  return result;
+}
+
+function collectCollateralSpouses(
+  people: Pessoa[],
+  spousesByPerson: Map<string, Pessoa[]>,
+  isVisible: (person: Pessoa | undefined) => person is Pessoa,
+  excludedIds: Set<string>,
+) {
+  const result: Pessoa[] = [];
+  const seen = new Set<string>();
+
+  people.forEach((person) => {
+    (spousesByPerson.get(person.id) ?? []).forEach((spouse) => {
+      if (seen.has(spouse.id) || excludedIds.has(spouse.id) || !isVisible(spouse)) return;
+      seen.add(spouse.id);
+      result.push(spouse);
+    });
+  });
+
+  return result;
+}
+
 function PositionedGroup({
   id,
   title,
@@ -276,6 +346,10 @@ export function DesktopFamilyMapView({
     (people: Pessoa[]) => people.filter((person) => isVisible(person)),
     [isVisible],
   );
+  const spousesByPerson = React.useMemo(
+    () => buildSpousesByPerson(pessoas, relacionamentos),
+    [pessoas, relacionamentos],
+  );
   const filterGroup = React.useCallback(
     (people: Pessoa[], group: DirectRelativeGroup) => (
       directRelativeFilters[group] ? filterVisible(people) : []
@@ -302,12 +376,70 @@ export function DesktopFamilyMapView({
   const father = directRelativeFilters.pais && isVisible(model.father) ? model.father : undefined;
   const mother = directRelativeFilters.pais && isVisible(model.mother) ? model.mother : undefined;
   const central = isVisible(model.central, true) ? model.central : undefined;
-  const spouses = filterGroup(model.spouses, 'conjuge');
+  const spouses = filterVisible(model.spouses);
   const siblings = filterGroup(model.siblings, 'irmaos');
   const nephews = filterGroup(model.nephews, 'sobrinhos');
   const children = filterGroup(model.children, 'filhos');
   const pets = filterGroup(model.pets, 'pets');
   const grandchildren = filterGroup(model.grandchildren, 'netos');
+  const collateralSpouseExcludedIds = React.useMemo(() => new Set([
+    centralPersonId,
+    ...spouses.map((person) => person.id),
+  ]), [centralPersonId, spouses]);
+  const withCollateralSpouses = React.useCallback((people: Pessoa[]) => interleaveSpouses(
+    people,
+    spousesByPerson,
+    isVisible,
+    { enabled: directRelativeFilters.conjuge, excludedIds: collateralSpouseExcludedIds },
+  ), [collateralSpouseExcludedIds, directRelativeFilters.conjuge, isVisible, spousesByPerson]);
+  const collateralSpouses = React.useMemo(() => collectCollateralSpouses([
+    ...paternal.uncles,
+    ...paternal.cousins,
+    ...maternal.uncles,
+    ...maternal.cousins,
+    ...nephews,
+    ...children,
+    ...grandchildren,
+  ], spousesByPerson, isVisible, collateralSpouseExcludedIds), [
+    children,
+    collateralSpouseExcludedIds,
+    grandchildren,
+    isVisible,
+    maternal.cousins,
+    maternal.uncles,
+    nephews,
+    paternal.cousins,
+    paternal.uncles,
+    spousesByPerson,
+  ]);
+  const paternalUncles = React.useMemo(
+    () => withCollateralSpouses(paternal.uncles),
+    [paternal.uncles, withCollateralSpouses],
+  );
+  const paternalCousins = React.useMemo(
+    () => withCollateralSpouses(paternal.cousins),
+    [paternal.cousins, withCollateralSpouses],
+  );
+  const maternalUncles = React.useMemo(
+    () => withCollateralSpouses(maternal.uncles),
+    [maternal.uncles, withCollateralSpouses],
+  );
+  const maternalCousins = React.useMemo(
+    () => withCollateralSpouses(maternal.cousins),
+    [maternal.cousins, withCollateralSpouses],
+  );
+  const nephewsWithSpouses = React.useMemo(
+    () => withCollateralSpouses(nephews),
+    [nephews, withCollateralSpouses],
+  );
+  const childrenWithSpouses = React.useMemo(
+    () => withCollateralSpouses(children),
+    [children, withCollateralSpouses],
+  );
+  const grandchildrenWithSpouses = React.useMemo(
+    () => withCollateralSpouses(grandchildren),
+    [grandchildren, withCollateralSpouses],
+  );
 
   const paternalAncestors = React.useMemo(
     () => buildAncestorLayouts({ side: 'paternal', branch: paternal, expandedGroups }),
@@ -331,13 +463,13 @@ export function DesktopFamilyMapView({
   const descendantsTop = centralBottomY + 52;
 
   const paternalUnclesHeight = getGroupHeight({
-    people: paternal.uncles,
+    people: paternalUncles,
     columns: 'double',
     variant: 'mini',
     expanded: expandedGroups.has('paternal-uncles'),
   });
   const maternalUnclesHeight = getGroupHeight({
-    people: maternal.uncles,
+    people: maternalUncles,
     columns: 'double',
     variant: 'mini',
     expanded: expandedGroups.has('maternal-uncles'),
@@ -364,18 +496,18 @@ export function DesktopFamilyMapView({
     ? bottomY(spouseCardLayout) + GROUP_VERTICAL_GAP
     : descendantsTop;
   const childrenHeight = getGroupHeight({
-    people: children,
+    people: childrenWithSpouses,
     columns: 'double',
     variant: 'horizontal',
     expanded: expandedGroups.has('children'),
   });
   const childrenWidth = getGroupWidth({
-    people: children,
+    people: childrenWithSpouses,
     columns: 'double',
     variant: 'horizontal',
     baseWidth: descendantColumnWidth,
   });
-  const grandchildrenTop = children.length > 0
+  const grandchildrenTop = childrenWithSpouses.length > 0
     ? rightDescendantSecondRow + childrenHeight + GROUP_VERTICAL_GAP
     : rightDescendantSecondRow;
 
@@ -394,7 +526,7 @@ export function DesktopFamilyMapView({
     {
       id: 'children',
       title: 'Filhos',
-      people: children,
+      people: childrenWithSpouses,
       left: centeredLeft(940, descendantColumnWidth, childrenWidth),
       top: rightDescendantSecondRow,
       width: childrenWidth,
@@ -405,11 +537,11 @@ export function DesktopFamilyMapView({
     {
       id: 'nephews',
       title: 'Sobrinhos',
-      people: nephews,
-      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: nephews, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
+      people: nephewsWithSpouses,
+      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
       top: leftDescendantSecondRow,
-      width: getGroupWidth({ people: nephews, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
-      height: getGroupHeight({ people: nephews, columns: 'double', variant: 'mini', expanded: expandedGroups.has('nephews') }),
+      width: getGroupWidth({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
+      height: getGroupHeight({ people: nephewsWithSpouses, columns: 'double', variant: 'mini', expanded: expandedGroups.has('nephews') }),
       columns: 'double',
       variant: 'mini',
     },
@@ -427,11 +559,11 @@ export function DesktopFamilyMapView({
     {
       id: 'grandchildren',
       title: 'Netos',
-      people: grandchildren,
-      left: centeredLeft(940, descendantColumnWidth, getGroupWidth({ people: grandchildren, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
+      people: grandchildrenWithSpouses,
+      left: centeredLeft(940, descendantColumnWidth, getGroupWidth({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
       top: grandchildrenTop,
-      width: getGroupWidth({ people: grandchildren, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
-      height: getGroupHeight({ people: grandchildren, columns: 'double', variant: 'mini', expanded: expandedGroups.has('grandchildren') }),
+      width: getGroupWidth({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
+      height: getGroupHeight({ people: grandchildrenWithSpouses, columns: 'double', variant: 'mini', expanded: expandedGroups.has('grandchildren') }),
       columns: 'double',
       variant: 'mini',
     },
@@ -454,8 +586,8 @@ export function DesktopFamilyMapView({
   const contentBottom = Math.max(
     centralBottomY,
     spouseCardLayout ? bottomY(spouseCardLayout) : 0,
-    paternal.cousins.length > 0 ? paternalCousinsTop + getGroupHeight({ people: paternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }) : 0,
-    maternal.cousins.length > 0 ? maternalCousinsTop + getGroupHeight({ people: maternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }) : 0,
+    paternalCousins.length > 0 ? paternalCousinsTop + getGroupHeight({ people: paternalCousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }) : 0,
+    maternalCousins.length > 0 ? maternalCousinsTop + getGroupHeight({ people: maternalCousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }) : 0,
     ...renderedDescendantLayouts.map(bottomY),
   );
   const canvasHeight = Math.max(CANVAS_HEIGHT, contentBottom + 52);
@@ -485,7 +617,7 @@ export function DesktopFamilyMapView({
       avos: paternal.grandparents.length + maternal.grandparents.length,
       bisavos: paternal.greatGrandparents.length + maternal.greatGrandparents.length,
       tataravos: paternal.greatGreatGrandparents.length + maternal.greatGreatGrandparents.length,
-      conjuge: spouses.length,
+      conjuge: collateralSpouses.length,
       filhos: children.length,
       netos: grandchildren.length,
       irmaos: siblings.length,
@@ -505,7 +637,7 @@ export function DesktopFamilyMapView({
     paternal,
     pets.length,
     siblings.length,
-    spouses.length,
+    collateralSpouses.length,
   ]);
 
   const hasCentralDescendants = leftDescendantLayouts.length > 0 || rightDescendantLayouts.length > 0;
@@ -523,25 +655,25 @@ export function DesktopFamilyMapView({
     ? centerX(rightDescendantLayouts[0])
     : centralCenterX;
   const paternalUnclesWidth = getGroupWidth({
-    people: paternal.uncles,
+    people: paternalUncles,
     columns: 'double',
     variant: 'mini',
     baseWidth: branchWidth,
   });
   const maternalUnclesWidth = getGroupWidth({
-    people: maternal.uncles,
+    people: maternalUncles,
     columns: 'double',
     variant: 'mini',
     baseWidth: branchWidth,
   });
   const paternalCousinsWidth = getGroupWidth({
-    people: paternal.cousins,
+    people: paternalCousins,
     columns: 'double',
     variant: 'mini',
     baseWidth: branchWidth,
   });
   const maternalCousinsWidth = getGroupWidth({
-    people: maternal.cousins,
+    people: maternalCousins,
     columns: 'double',
     variant: 'mini',
     baseWidth: branchWidth,
@@ -562,13 +694,13 @@ export function DesktopFamilyMapView({
     left: centeredLeft(branchLeft, branchWidth, paternalCousinsWidth),
     top: paternalCousinsTop,
     width: paternalCousinsWidth,
-    height: getGroupHeight({ people: paternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }),
+    height: getGroupHeight({ people: paternalCousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }),
   };
   const cousinsMaternal = {
     left: centeredLeft(branchRight, branchWidth, maternalCousinsWidth),
     top: maternalCousinsTop,
     width: maternalCousinsWidth,
-    height: getGroupHeight({ people: maternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }),
+    height: getGroupHeight({ people: maternalCousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }),
   };
 
   return (
@@ -606,10 +738,10 @@ export function DesktopFamilyMapView({
               {maternalGrandparents && mother && (
                 <path d={connectorPath([[centerX(maternalGrandparents), bottomY(maternalGrandparents)], [centerX(maternalGrandparents), parentJunctionY], [motherCenterX, parentJunctionY], [motherCenterX, parentTop]])} />
               )}
-              {paternalGrandparents && paternal.uncles.length > 0 && (
+              {paternalGrandparents && paternalUncles.length > 0 && (
                 <path d={connectorPath([[centerX(paternalGrandparents), parentJunctionY], [centerX(unclesPaternal), parentJunctionY], [centerX(unclesPaternal), parentTop]])} />
               )}
-              {maternalGrandparents && maternal.uncles.length > 0 && (
+              {maternalGrandparents && maternalUncles.length > 0 && (
                 <path d={connectorPath([[centerX(maternalGrandparents), parentJunctionY], [centerX(unclesMaternal), parentJunctionY], [centerX(unclesMaternal), parentTop]])} />
               )}
               {father && central && (
@@ -621,10 +753,10 @@ export function DesktopFamilyMapView({
               {central && (
                 <path d={connectorPath([[centralCenterX, centralBranchY], [centralCenterX, centralTop - 12]])} />
               )}
-              {paternal.uncles.length > 0 && paternal.cousins.length > 0 && (
+              {paternalUncles.length > 0 && paternalCousins.length > 0 && (
                 <path d={connectorPath([[centerX(unclesPaternal), bottomY(unclesPaternal)], [centerX(cousinsPaternal), cousinsPaternal.top]])} />
               )}
-              {maternal.uncles.length > 0 && maternal.cousins.length > 0 && (
+              {maternalUncles.length > 0 && maternalCousins.length > 0 && (
                 <path d={connectorPath([[centerX(unclesMaternal), bottomY(unclesMaternal)], [centerX(cousinsMaternal), cousinsMaternal.top]])} />
               )}
               {central && hasCentralDescendants && (
@@ -686,7 +818,7 @@ export function DesktopFamilyMapView({
             <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           ))}
 
-          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternal.uncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternalUncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
@@ -704,9 +836,9 @@ export function DesktopFamilyMapView({
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
-          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternal.uncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternalUncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
 
-          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternal.cousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternalCousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           {spouse && spouseCardLayout && (
             <div className="absolute z-10 w-[210px]" style={{ left: spouseCardLayout.left, top: spouseCardLayout.top }}>
               <VisualPersonCard person={spouse} label="Cônjuge" onClick={onPersonClick} />
@@ -715,7 +847,7 @@ export function DesktopFamilyMapView({
           {renderedDescendantLayouts.map((layout) => (
             <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           ))}
-          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternal.cousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternalCousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
         </div>
       </div>
     </div>
