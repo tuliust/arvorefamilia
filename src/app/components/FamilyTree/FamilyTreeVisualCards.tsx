@@ -193,47 +193,59 @@ export function VisualGroup({
   columns = 'double',
   maxHeightClassName = 'max-h-[19rem]',
   variant = 'mini',
-  titleVariant = 'inside',
+  onPersonClick,
+  titleVariant = 'inline',
   expandable = false,
   collapsedLimit,
   defaultExpanded = false,
+  expanded,
+  onExpandedChange,
   disableInternalScroll = false,
-  onPersonClick,
+  className = '',
 }: {
   title: string;
   people: Pessoa[];
   columns?: 'single' | 'double' | 'triple';
   maxHeightClassName?: string;
   variant?: 'mini' | 'compact' | 'horizontal';
-  titleVariant?: 'inside' | 'pill';
+  onPersonClick: (person: Pessoa) => void;
+  titleVariant?: 'inline' | 'pill';
   expandable?: boolean;
   collapsedLimit?: number;
   defaultExpanded?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   disableInternalScroll?: boolean;
-  onPersonClick: (person: Pessoa) => void;
+  className?: string;
 }) {
-  const [expanded, setExpanded] = React.useState(defaultExpanded);
   const gridColumns = columns === 'triple' ? 'grid-cols-3' : columns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
-  const hasCollapsedLimit = typeof collapsedLimit === 'number' && collapsedLimit > 0;
-  const canExpand = Boolean(expandable && hasCollapsedLimit && people.length > collapsedLimit);
-  const visiblePeople = canExpand && !expanded ? people.slice(0, collapsedLimit) : people;
-  const hiddenCount = Math.max(people.length - visiblePeople.length, 0);
-  const showPillTitle = titleVariant === 'pill';
-  const scrollClassName = disableInternalScroll ? 'overflow-visible' : `overflow-y-auto pr-0.5 ${maxHeightClassName}`;
-  const contentPadding = canExpand ? 'pb-7' : '';
+  const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
+  const isExpanded = expanded ?? internalExpanded;
+  const limit = collapsedLimit ?? people.length;
+  const canExpand = expandable && people.length > limit;
+  const visiblePeople = canExpand && !isExpanded ? people.slice(0, limit) : people;
 
-  React.useEffect(() => {
-    setExpanded(defaultExpanded);
-  }, [defaultExpanded, people.length]);
+  const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const nextExpanded = !isExpanded;
+    if (expanded === undefined) setInternalExpanded(nextExpanded);
+    onExpandedChange?.(nextExpanded);
+  };
+
+  const scrollClasses = disableInternalScroll
+    ? ''
+    : `overflow-y-auto pr-0.5 ${maxHeightClassName}`;
+  const pillTitle = titleVariant === 'pill';
 
   return (
     <section
       className={[
         'relative z-10 flex min-h-0 flex-col rounded-[1.35rem] border border-cyan-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,23,42,0.08)]',
-        showPillTitle ? 'overflow-visible pt-5' : 'overflow-hidden',
+        pillTitle ? 'pt-5' : 'overflow-hidden',
+        className,
       ].join(' ')}
     >
-      {showPillTitle ? (
+      {pillTitle ? (
         <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow">
           {title}
         </span>
@@ -242,13 +254,12 @@ export function VisualGroup({
           {title}
         </h3>
       )}
-
       {people.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-center text-xs font-semibold text-slate-400">
           Sem registros
         </p>
       ) : (
-        <div className={`grid min-h-0 ${gridColumns} gap-2 ${contentPadding} ${scrollClassName}`}>
+        <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`}>
           {visiblePeople.map((person) => (
             <VisualPersonCard
               key={person.id}
@@ -261,23 +272,15 @@ export function VisualGroup({
           ))}
         </div>
       )}
-
       {canExpand && (
         <button
           type="button"
-          className="absolute bottom-2 right-2 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-cyan-200 bg-white text-cyan-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-          aria-label={expanded ? `Recolher ${title}` : `Expandir ${title}`}
-          title={expanded ? `Recolher ${title}` : `Mostrar mais ${hiddenCount} em ${title}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            setExpanded((current) => !current);
-          }}
+          onClick={handleToggle}
+          aria-label={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}
+          title={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}
+          className="absolute bottom-1.5 right-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-cyan-200 bg-white text-cyan-600 shadow-sm transition hover:bg-cyan-50 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-300"
         >
-          {expanded ? (
-            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
+          {isExpanded ? <Minus className="h-3.5 w-3.5" aria-hidden="true" /> : <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
         </button>
       )}
     </section>

@@ -24,41 +24,45 @@ interface DesktopFamilyMapViewProps {
 }
 
 type MapGroupProps = {
+  id: string;
   title: string;
   people: Pessoa[];
-  x: number;
-  y: number;
+  left: number;
+  top: number;
   width: number;
   columns?: 'single' | 'double' | 'triple';
   variant?: 'mini' | 'compact' | 'horizontal';
   onPersonClick: (pessoa: Pessoa) => void;
+  expanded: boolean;
+  onExpandedChange: (id: string, expanded: boolean) => void;
+  zIndex?: number;
+};
+
+type GroupLayout = {
+  id: string;
+  title: string;
+  people: Pessoa[];
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  columns?: 'single' | 'double' | 'triple';
+  variant?: 'mini' | 'compact' | 'horizontal';
 };
 
 const CANVAS_WIDTH = 1440;
-const CANVAS_HEIGHT = 1040;
+const CANVAS_HEIGHT = 1020;
 const MIN_TABLET_SCALE = 0.62;
-
-const FAMILY_COLUMN_WIDTH = 360;
-const SIDE_COLUMN_WIDTH = 260;
-const CORE_CARD_WIDTH = 210;
-const CORE_GROUP_WIDTH = 780;
-
-const PATERNAL_FAMILY_X = 300;
-const MATERNAL_FAMILY_X = 780;
-const PATERNAL_SIDE_X = 40;
-const MATERNAL_SIDE_X = 1140;
-const FATHER_X = 330;
-const CENTRAL_X = 615;
-const MOTHER_X = 900;
-const CORE_GROUP_X = 330;
-
-const TATARAVOS_Y = 8;
-const BISAVOS_Y = 122;
-const AVOS_Y = 236;
-const PARENTS_Y = 360;
-const CENTRAL_Y = 540;
-const COUSINS_Y = 586;
-const CORE_GROUPS_Y = 780;
+const GROUP_VERTICAL_GAP = 46;
+const TOP_START = 2;
+const HORIZONTAL_CARD_HEIGHT = 74;
+const MINI_CARD_HEIGHT = 112;
+const GROUP_VERTICAL_PADDING = 44;
+const GROUP_GRID_GAP = 8;
+const COLLAPSED_LIMIT = 2;
+const FATHER_TOP_OFFSET = 54;
+const PARENT_CARD_HEIGHT = 164;
+const CENTRAL_CARD_HEIGHT = 194;
 
 const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
@@ -75,23 +79,46 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
+function getRows(count: number, columns: 'single' | 'double' | 'triple', expanded: boolean) {
+  const visibleCount = expanded ? count : Math.min(count, COLLAPSED_LIMIT);
+  const columnCount = columns === 'triple' ? 3 : columns === 'double' ? 2 : 1;
+  return Math.max(1, Math.ceil(visibleCount / columnCount));
+}
+
+function getGroupHeight({
+  people,
+  columns = 'double',
+  variant = 'mini',
+  expanded,
+}: {
+  people: Pessoa[];
+  columns?: 'single' | 'double' | 'triple';
+  variant?: 'mini' | 'compact' | 'horizontal';
+  expanded: boolean;
+}) {
+  const cardHeight = variant === 'horizontal' ? HORIZONTAL_CARD_HEIGHT : MINI_CARD_HEIGHT;
+  const rows = getRows(people.length, columns, expanded);
+  return GROUP_VERTICAL_PADDING + rows * cardHeight + Math.max(0, rows - 1) * GROUP_GRID_GAP;
+}
+
 function PositionedGroup({
+  id,
   title,
   people,
-  x,
-  y,
+  left,
+  top,
   width,
   columns = 'double',
   variant = 'mini',
   onPersonClick,
+  expanded,
+  onExpandedChange,
+  zIndex = 10,
 }: MapGroupProps) {
   if (people.length === 0) return null;
 
   return (
-    <div
-      className="absolute z-10 min-h-0"
-      style={{ left: x, top: y, width }}
-    >
+    <div className="absolute min-h-0" style={{ left, top, width, zIndex }}>
       <VisualGroup
         title={title}
         people={people}
@@ -99,7 +126,9 @@ function PositionedGroup({
         variant={variant}
         titleVariant="pill"
         expandable
-        collapsedLimit={2}
+        collapsedLimit={COLLAPSED_LIMIT}
+        expanded={expanded}
+        onExpandedChange={(nextExpanded) => onExpandedChange(id, nextExpanded)}
         disableInternalScroll
         onPersonClick={onPersonClick}
       />
@@ -107,38 +136,96 @@ function PositionedGroup({
   );
 }
 
-function CoreGroup({
-  title,
-  people,
-  columns = 'double',
-  variant = 'horizontal',
-  onPersonClick,
-}: {
-  title: string;
-  people: Pessoa[];
-  columns?: 'single' | 'double' | 'triple';
-  variant?: 'mini' | 'compact' | 'horizontal';
-  onPersonClick: (pessoa: Pessoa) => void;
-}) {
-  if (people.length === 0) return null;
-
-  return (
-    <VisualGroup
-      title={title}
-      people={people}
-      columns={columns}
-      variant={variant}
-      titleVariant="pill"
-      expandable
-      collapsedLimit={2}
-      disableInternalScroll
-      onPersonClick={onPersonClick}
-    />
-  );
-}
-
 function connectorPath(points: Array<[number, number]>) {
   return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+}
+
+function centerX(layout: { left: number; width: number }) {
+  return layout.left + layout.width / 2;
+}
+
+function bottomY(layout: { top: number; height: number }) {
+  return layout.top + layout.height;
+}
+
+function buildAncestorLayouts({
+  side,
+  branch,
+  expandedGroups,
+}: {
+  side: 'paternal' | 'maternal';
+  branch: MobileFamilyBranch;
+  expandedGroups: Set<string>;
+}): GroupLayout[] {
+  const left = side === 'paternal' ? 300 : 780;
+  const rows: Array<Omit<GroupLayout, 'left' | 'top' | 'width' | 'height'> & { expanded: boolean }> = [
+    {
+      id: `${side}-great-great-grandparents`,
+      title: side === 'paternal' ? 'Tataravós Paternos' : 'Tataravós Maternos',
+      people: branch.greatGreatGrandparents,
+      columns: 'double',
+      variant: 'horizontal',
+      expanded: expandedGroups.has(`${side}-great-great-grandparents`),
+    },
+    {
+      id: `${side}-great-grandparents`,
+      title: side === 'paternal' ? 'Bisavós Paternos' : 'Bisavós Maternos',
+      people: branch.greatGrandparents,
+      columns: 'double',
+      variant: 'horizontal',
+      expanded: expandedGroups.has(`${side}-great-grandparents`),
+    },
+    {
+      id: `${side}-grandparents`,
+      title: side === 'paternal' ? 'Avós Paternos' : 'Avós Maternos',
+      people: branch.grandparents,
+      columns: 'double',
+      variant: 'horizontal',
+      expanded: expandedGroups.has(`${side}-grandparents`),
+    },
+  ].filter((row) => row.people.length > 0);
+
+  let top = TOP_START;
+  return rows.map((row) => {
+    const height = getGroupHeight({
+      people: row.people,
+      columns: row.columns,
+      variant: row.variant,
+      expanded: row.expanded,
+    });
+    const layout: GroupLayout = {
+      id: row.id,
+      title: row.title,
+      people: row.people,
+      left,
+      top,
+      width: 360,
+      height,
+      columns: row.columns,
+      variant: row.variant,
+    };
+    top += height + GROUP_VERTICAL_GAP;
+    return layout;
+  });
+}
+
+function findLayout(layouts: GroupLayout[], id: string) {
+  return layouts.find((layout) => layout.id === id);
+}
+
+function useExpandedGroups() {
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
+
+  const handleExpandedChange = React.useCallback((id: string, expanded: boolean) => {
+    setExpandedGroups((current) => {
+      const next = new Set(current);
+      if (expanded) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  return [expandedGroups, handleExpandedChange] as const;
 }
 
 export function DesktopFamilyMapView({
@@ -153,6 +240,7 @@ export function DesktopFamilyMapView({
 }: DesktopFamilyMapViewProps) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = React.useState(1);
+  const [expandedGroups, handleExpandedChange] = useExpandedGroups();
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
@@ -200,6 +288,123 @@ export function DesktopFamilyMapView({
   const pets = filterGroup(model.pets, 'pets');
   const grandchildren = filterGroup(model.grandchildren, 'netos');
 
+  const paternalAncestors = React.useMemo(
+    () => buildAncestorLayouts({ side: 'paternal', branch: paternal, expandedGroups }),
+    [expandedGroups, paternal],
+  );
+  const maternalAncestors = React.useMemo(
+    () => buildAncestorLayouts({ side: 'maternal', branch: maternal, expandedGroups }),
+    [expandedGroups, maternal],
+  );
+
+  const maxAncestorBottom = Math.max(
+    ...paternalAncestors.map(bottomY),
+    ...maternalAncestors.map(bottomY),
+    TOP_START + HORIZONTAL_CARD_HEIGHT,
+  );
+  const parentTop = maxAncestorBottom + FATHER_TOP_OFFSET;
+  const parentJunctionY = parentTop - 18;
+  const parentBottomY = parentTop + PARENT_CARD_HEIGHT;
+  const centralTop = parentBottomY + 54;
+  const centralBottomY = centralTop + CENTRAL_CARD_HEIGHT;
+  const descendantsTop = centralBottomY + 52;
+
+  const paternalUnclesHeight = getGroupHeight({
+    people: paternal.uncles,
+    columns: 'double',
+    variant: 'mini',
+    expanded: expandedGroups.has('paternal-uncles'),
+  });
+  const maternalUnclesHeight = getGroupHeight({
+    people: maternal.uncles,
+    columns: 'double',
+    variant: 'mini',
+    expanded: expandedGroups.has('maternal-uncles'),
+  });
+  const paternalCousinsTop = parentTop + paternalUnclesHeight + GROUP_VERTICAL_GAP;
+  const maternalCousinsTop = parentTop + maternalUnclesHeight + GROUP_VERTICAL_GAP;
+
+  const descendantGroupTopRow = descendantsTop;
+  const descendantGroupSecondRow = descendantsTop + 144;
+
+  const descendantLayouts: GroupLayout[] = [
+    {
+      id: 'siblings',
+      title: 'Irmãos',
+      people: siblings,
+      left: 300,
+      top: descendantGroupTopRow,
+      width: 300,
+      height: getGroupHeight({ people: siblings, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('siblings') }),
+      columns: 'double',
+      variant: 'horizontal',
+    },
+    {
+      id: 'spouses',
+      title: 'Cônjuge',
+      people: spouses,
+      left: 620,
+      top: descendantGroupTopRow,
+      width: 360,
+      height: getGroupHeight({ people: spouses, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('spouses') }),
+      columns: 'double',
+      variant: 'horizontal',
+    },
+    {
+      id: 'children',
+      title: 'Filhos',
+      people: children,
+      left: 1000,
+      top: descendantGroupTopRow,
+      width: 300,
+      height: getGroupHeight({ people: children, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('children') }),
+      columns: 'double',
+      variant: 'horizontal',
+    },
+    {
+      id: 'nephews',
+      title: 'Sobrinhos',
+      people: nephews,
+      left: 300,
+      top: descendantGroupSecondRow,
+      width: 300,
+      height: getGroupHeight({ people: nephews, columns: 'double', variant: 'mini', expanded: expandedGroups.has('nephews') }),
+      columns: 'double',
+      variant: 'mini',
+    },
+    {
+      id: 'pets',
+      title: 'Pets',
+      people: pets,
+      left: 650,
+      top: descendantGroupSecondRow,
+      width: 180,
+      height: getGroupHeight({ people: pets, columns: 'single', variant: 'mini', expanded: expandedGroups.has('pets') }),
+      columns: 'single',
+      variant: 'mini',
+    },
+    {
+      id: 'grandchildren',
+      title: 'Netos',
+      people: grandchildren,
+      left: 1000,
+      top: descendantGroupSecondRow,
+      width: 300,
+      height: getGroupHeight({ people: grandchildren, columns: 'double', variant: 'mini', expanded: expandedGroups.has('grandchildren') }),
+      columns: 'double',
+      variant: 'mini',
+    },
+  ];
+
+  const renderedDescendantLayouts = descendantLayouts.filter((layout) => layout.people.length > 0);
+  const contentBottom = Math.max(
+    centralBottomY,
+    paternal.cousins.length > 0 ? paternalCousinsTop + getGroupHeight({ people: paternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }) : 0,
+    maternal.cousins.length > 0 ? maternalCousinsTop + getGroupHeight({ people: maternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }) : 0,
+    ...renderedDescendantLayouts.map(bottomY),
+  );
+  const canvasHeight = Math.max(CANVAS_HEIGHT, contentBottom + 52);
+
   React.useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
@@ -214,7 +419,7 @@ export function DesktopFamilyMapView({
     updateScale();
 
     return () => observer.disconnect();
-  }, [layoutRevision]);
+  }, [layoutRevision, canvasHeight]);
 
   React.useEffect(() => {
     if (!onDirectRelationRenderedCounts) return;
@@ -248,138 +453,124 @@ export function DesktopFamilyMapView({
     spouses.length,
   ]);
 
-  const hasCentralDescendants = [
-    siblings,
-    spouses,
-    nephews,
-    children,
-    pets,
-    grandchildren,
-  ].some((people) => people.length > 0);
+  const hasCentralDescendants = renderedDescendantLayouts.length > 0;
+  const paternalGrandparents = findLayout(paternalAncestors, 'paternal-grandparents');
+  const maternalGrandparents = findLayout(maternalAncestors, 'maternal-grandparents');
+  const fatherCenterX = 435;
+  const motherCenterX = 1005;
+  const centralCenterX = 720;
+  const unclesPaternal = { left: 40, top: parentTop, width: 260, height: paternalUnclesHeight };
+  const unclesMaternal = { left: 1140, top: parentTop, width: 260, height: maternalUnclesHeight };
+  const cousinsPaternal = {
+    left: 40,
+    top: paternalCousinsTop,
+    width: 260,
+    height: getGroupHeight({ people: paternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }),
+  };
+  const cousinsMaternal = {
+    left: 1140,
+    top: maternalCousinsTop,
+    width: 260,
+    height: getGroupHeight({ people: maternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }),
+  };
 
   return (
     <div
       ref={viewportRef}
-      className="absolute inset-x-0 bottom-0 top-[76px] overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)]"
+      className="absolute inset-x-0 bottom-0 top-[60px] overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)]"
     >
       <div
         className="relative mx-auto"
-        style={{ width: CANVAS_WIDTH * scale, height: CANVAS_HEIGHT * scale }}
+        style={{ width: CANVAS_WIDTH * scale, height: canvasHeight * scale }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
           style={{
             width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
+            height: canvasHeight,
             transform: `scale(${scale})`,
           }}
         >
           <svg
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+            viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
             aria-hidden="true"
           >
             <g fill="none" stroke="#0891b2" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              {paternal.greatGreatGrandparents.length > 0 && paternal.greatGrandparents.length > 0 && (
-                <path d={connectorPath([[480, 112], [480, BISAVOS_Y]])} />
+              {[paternalAncestors, maternalAncestors].map((layouts) => layouts.map((layout, index) => {
+                const nextLayout = layouts[index + 1];
+                if (!nextLayout) return null;
+                const x = centerX(layout);
+                return <path key={`${layout.id}-${nextLayout.id}`} d={connectorPath([[x, bottomY(layout)], [x, nextLayout.top]])} />;
+              }))}
+              {paternalGrandparents && father && (
+                <path d={connectorPath([[centerX(paternalGrandparents), bottomY(paternalGrandparents)], [centerX(paternalGrandparents), parentJunctionY], [fatherCenterX, parentJunctionY], [fatherCenterX, parentTop]])} />
               )}
-              {paternal.greatGrandparents.length > 0 && paternal.grandparents.length > 0 && (
-                <path d={connectorPath([[480, 226], [480, AVOS_Y]])} />
+              {maternalGrandparents && mother && (
+                <path d={connectorPath([[centerX(maternalGrandparents), bottomY(maternalGrandparents)], [centerX(maternalGrandparents), parentJunctionY], [motherCenterX, parentJunctionY], [motherCenterX, parentTop]])} />
               )}
-              {maternal.greatGreatGrandparents.length > 0 && maternal.greatGrandparents.length > 0 && (
-                <path d={connectorPath([[960, 112], [960, BISAVOS_Y]])} />
+              {paternalGrandparents && paternal.uncles.length > 0 && (
+                <path d={connectorPath([[centerX(paternalGrandparents), parentJunctionY], [centerX(unclesPaternal), parentJunctionY], [centerX(unclesPaternal), parentTop]])} />
               )}
-              {maternal.greatGrandparents.length > 0 && maternal.grandparents.length > 0 && (
-                <path d={connectorPath([[960, 226], [960, AVOS_Y]])} />
-              )}
-              {paternal.grandparents.length > 0 && father && (
-                <path d={connectorPath([[480, 340], [480, 350], [435, 350], [435, PARENTS_Y]])} />
-              )}
-              {maternal.grandparents.length > 0 && mother && (
-                <path d={connectorPath([[960, 340], [960, 350], [1005, 350], [1005, PARENTS_Y]])} />
-              )}
-              {paternal.grandparents.length > 0 && paternal.uncles.length > 0 && (
-                <path d={connectorPath([[480, 350], [170, 350], [170, PARENTS_Y]])} />
-              )}
-              {maternal.grandparents.length > 0 && maternal.uncles.length > 0 && (
-                <path d={connectorPath([[960, 350], [1270, 350], [1270, PARENTS_Y]])} />
+              {maternalGrandparents && maternal.uncles.length > 0 && (
+                <path d={connectorPath([[centerX(maternalGrandparents), parentJunctionY], [centerX(unclesMaternal), parentJunctionY], [centerX(unclesMaternal), parentTop]])} />
               )}
               {father && central && (
-                <path d={connectorPath([[435, 524], [435, 532], [720, 532], [720, CENTRAL_Y]])} />
+                <path d={connectorPath([[fatherCenterX, parentBottomY], [fatherCenterX, centralTop - 8], [centralCenterX, centralTop - 8], [centralCenterX, centralTop]])} />
               )}
               {mother && central && (
-                <path d={connectorPath([[1005, 524], [1005, 532], [720, 532]])} />
+                <path d={connectorPath([[motherCenterX, parentBottomY], [motherCenterX, centralTop - 8], [centralCenterX, centralTop - 8]])} />
               )}
               {paternal.uncles.length > 0 && paternal.cousins.length > 0 && (
-                <path d={connectorPath([[170, 532], [170, COUSINS_Y]])} />
+                <path d={connectorPath([[centerX(unclesPaternal), bottomY(unclesPaternal)], [centerX(cousinsPaternal), cousinsPaternal.top]])} />
               )}
               {maternal.uncles.length > 0 && maternal.cousins.length > 0 && (
-                <path d={connectorPath([[1270, 532], [1270, COUSINS_Y]])} />
+                <path d={connectorPath([[centerX(unclesMaternal), bottomY(unclesMaternal)], [centerX(cousinsMaternal), cousinsMaternal.top]])} />
               )}
               {central && hasCentralDescendants && (
-                <path d={connectorPath([[720, 734], [720, 760]])} />
+                <path d={connectorPath([[centralCenterX, centralBottomY], [centralCenterX, descendantsTop - 16]])} />
               )}
-              {central && siblings.length > 0 && (
-                <path d={connectorPath([[720, 760], [460, 760], [460, CORE_GROUPS_Y]])} />
-              )}
-              {central && spouses.length > 0 && (
-                <path d={connectorPath([[720, 760], [720, CORE_GROUPS_Y]])} />
-              )}
-              {central && children.length > 0 && (
-                <path d={connectorPath([[720, 760], [980, 760], [980, CORE_GROUPS_Y]])} />
-              )}
-              {central && nephews.length > 0 && (
-                <path d={connectorPath([[460, 760], [460, 920]])} />
-              )}
-              {central && pets.length > 0 && (
-                <path d={connectorPath([[720, 760], [720, 920]])} />
-              )}
-              {central && grandchildren.length > 0 && (
-                <path d={connectorPath([[980, 760], [980, 920]])} />
-              )}
+              {central && renderedDescendantLayouts.map((layout) => (
+                <path
+                  key={`central-${layout.id}`}
+                  d={connectorPath([[centralCenterX, descendantsTop - 16], [centerX(layout), descendantsTop - 16], [centerX(layout), layout.top]])}
+                />
+              ))}
             </g>
           </svg>
 
-          <PositionedGroup title="Tataravós Paternos" people={paternal.greatGreatGrandparents} x={PATERNAL_FAMILY_X} y={TATARAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Tataravós Maternos" people={maternal.greatGreatGrandparents} x={MATERNAL_FAMILY_X} y={TATARAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Bisavós Paternos" people={paternal.greatGrandparents} x={PATERNAL_FAMILY_X} y={BISAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Bisavós Maternos" people={maternal.greatGrandparents} x={MATERNAL_FAMILY_X} y={BISAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Avós Paternos" people={paternal.grandparents} x={PATERNAL_FAMILY_X} y={AVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Avós Maternos" people={maternal.grandparents} x={MATERNAL_FAMILY_X} y={AVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          {paternalAncestors.map((layout) => (
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          ))}
+          {maternalAncestors.map((layout) => (
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          ))}
 
-          <PositionedGroup title="Tios Paternos" people={paternal.uncles} x={PATERNAL_SIDE_X} y={PARENTS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
-          <div className="absolute z-10" style={{ left: FATHER_X, top: PARENTS_Y, width: CORE_CARD_WIDTH }}>
+          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternal.uncles} left={40} top={parentTop} width={260} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <div className="absolute z-10 w-[210px]" style={{ left: 330, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
                 ? <VisualPersonCard person={father} label="Pai" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Pai" />
             )}
           </div>
-          <div className="absolute z-20" style={{ left: CENTRAL_X, top: CENTRAL_Y, width: CORE_CARD_WIDTH }}>
+          <div className="absolute z-20 w-[210px]" style={{ left: 615, top: centralTop }}>
             {central && <VisualPersonCard person={central} label="Pessoa Central" central onClick={onPersonClick} />}
           </div>
-          <div className="absolute z-10" style={{ left: MOTHER_X, top: PARENTS_Y, width: CORE_CARD_WIDTH }}>
+          <div className="absolute z-10 w-[210px]" style={{ left: 900, top: parentTop }}>
             {directRelativeFilters.pais && (
               mother
                 ? <VisualPersonCard person={mother} label="Mãe" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
-          <PositionedGroup title="Tios Maternos" people={maternal.uncles} x={MATERNAL_SIDE_X} y={PARENTS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternal.uncles} left={1140} top={parentTop} width={260} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
 
-          <PositionedGroup title="Primos Paternos" people={paternal.cousins} x={PATERNAL_SIDE_X} y={COUSINS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
-          <div
-            className="absolute z-10 grid grid-cols-3 items-start gap-3"
-            style={{ left: CORE_GROUP_X, top: CORE_GROUPS_Y, width: CORE_GROUP_WIDTH }}
-          >
-            <div><CoreGroup title="Irmãos" people={siblings} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
-            <div><CoreGroup title="Cônjuge" people={spouses} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
-            <div><CoreGroup title="Filhos" people={children} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
-            <div><CoreGroup title="Sobrinhos" people={nephews} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
-            <div><CoreGroup title="Pets" people={pets} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
-            <div><CoreGroup title="Netos" people={grandchildren} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
-          </div>
-          <PositionedGroup title="Primos Maternos" people={maternal.cousins} x={MATERNAL_SIDE_X} y={COUSINS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternal.cousins} left={40} top={paternalCousinsTop} width={260} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          {renderedDescendantLayouts.map((layout) => (
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          ))}
+          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternal.cousins} left={1140} top={maternalCousinsTop} width={260} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
         </div>
       </div>
     </div>
