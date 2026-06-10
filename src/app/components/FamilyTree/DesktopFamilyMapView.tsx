@@ -114,8 +114,12 @@ function getGroupWidth({
 }) {
   if (people.length !== 1) return baseWidth;
   if (variant === 'horizontal') return Math.min(baseWidth, 260);
-  if (columns === 'single') return Math.min(baseWidth, 180);
-  return Math.min(baseWidth, 180);
+  if (columns === 'single') return Math.min(baseWidth, 220);
+  return Math.min(baseWidth, 220);
+}
+
+function centeredLeft(baseLeft: number, baseWidth: number, width: number) {
+  return baseLeft + (baseWidth - width) / 2;
 }
 
 function PositionedGroup({
@@ -343,6 +347,11 @@ export function DesktopFamilyMapView({
 
   const descendantGroupTopRow = descendantsTop;
   const leftDescendantSecondRow = descendantsTop + 144;
+  const branchLeft = 8;
+  const branchRight = 1172;
+  const branchWidth = 260;
+  const descendantColumnWidth = 300;
+  const petColumnWidth = 180;
 
   const spouse = spouses[0];
   const spouseCardLayout = spouse ? {
@@ -364,7 +373,7 @@ export function DesktopFamilyMapView({
     people: children,
     columns: 'double',
     variant: 'horizontal',
-    baseWidth: 300,
+    baseWidth: descendantColumnWidth,
   });
   const grandchildrenTop = children.length > 0
     ? rightDescendantSecondRow + childrenHeight + GROUP_VERTICAL_GAP
@@ -375,9 +384,9 @@ export function DesktopFamilyMapView({
       id: 'siblings',
       title: 'Irmãos',
       people: siblings,
-      left: 340,
+      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: descendantColumnWidth })),
       top: descendantGroupTopRow,
-      width: getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: 300 }),
+      width: getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: descendantColumnWidth }),
       height: getGroupHeight({ people: siblings, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('siblings') }),
       columns: 'double',
       variant: 'horizontal',
@@ -386,7 +395,7 @@ export function DesktopFamilyMapView({
       id: 'children',
       title: 'Filhos',
       people: children,
-      left: 940,
+      left: centeredLeft(940, descendantColumnWidth, childrenWidth),
       top: rightDescendantSecondRow,
       width: childrenWidth,
       height: childrenHeight,
@@ -397,9 +406,9 @@ export function DesktopFamilyMapView({
       id: 'nephews',
       title: 'Sobrinhos',
       people: nephews,
-      left: 340,
+      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: nephews, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
       top: leftDescendantSecondRow,
-      width: getGroupWidth({ people: nephews, columns: 'double', variant: 'mini', baseWidth: 300 }),
+      width: getGroupWidth({ people: nephews, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
       height: getGroupHeight({ people: nephews, columns: 'double', variant: 'mini', expanded: expandedGroups.has('nephews') }),
       columns: 'double',
       variant: 'mini',
@@ -408,9 +417,9 @@ export function DesktopFamilyMapView({
       id: 'pets',
       title: 'Pets',
       people: pets,
-      left: 665,
+      left: centeredLeft(665, petColumnWidth, getGroupWidth({ people: pets, columns: 'single', variant: 'mini', baseWidth: petColumnWidth })),
       top: rightDescendantSecondRow,
-      width: getGroupWidth({ people: pets, columns: 'single', variant: 'mini', baseWidth: 180 }),
+      width: getGroupWidth({ people: pets, columns: 'single', variant: 'mini', baseWidth: petColumnWidth }),
       height: getGroupHeight({ people: pets, columns: 'single', variant: 'mini', expanded: expandedGroups.has('pets') }),
       columns: 'single',
       variant: 'mini',
@@ -419,9 +428,9 @@ export function DesktopFamilyMapView({
       id: 'grandchildren',
       title: 'Netos',
       people: grandchildren,
-      left: 940,
+      left: centeredLeft(940, descendantColumnWidth, getGroupWidth({ people: grandchildren, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth })),
       top: grandchildrenTop,
-      width: getGroupWidth({ people: grandchildren, columns: 'double', variant: 'mini', baseWidth: 300 }),
+      width: getGroupWidth({ people: grandchildren, columns: 'double', variant: 'mini', baseWidth: descendantColumnWidth }),
       height: getGroupHeight({ people: grandchildren, columns: 'double', variant: 'mini', expanded: expandedGroups.has('grandchildren') }),
       columns: 'double',
       variant: 'mini',
@@ -505,8 +514,6 @@ export function DesktopFamilyMapView({
   const fatherCenterX = 480;
   const motherCenterX = 960;
   const centralCenterX = 720;
-  const branchLeft = 8;
-  const branchRight = 1172;
   const centralBranchY = centralTop - 36;
   const descendantsJunctionY = descendantsTop - 18;
   const leftDescendantBranchX = leftDescendantLayouts.length > 0
@@ -515,18 +522,52 @@ export function DesktopFamilyMapView({
   const rightDescendantBranchX = rightDescendantLayouts.length > 0
     ? centerX(rightDescendantLayouts[0])
     : centralCenterX;
-  const unclesPaternal = { left: branchLeft, top: parentTop, width: 260, height: paternalUnclesHeight };
-  const unclesMaternal = { left: branchRight, top: parentTop, width: 260, height: maternalUnclesHeight };
+  const paternalUnclesWidth = getGroupWidth({
+    people: paternal.uncles,
+    columns: 'double',
+    variant: 'mini',
+    baseWidth: branchWidth,
+  });
+  const maternalUnclesWidth = getGroupWidth({
+    people: maternal.uncles,
+    columns: 'double',
+    variant: 'mini',
+    baseWidth: branchWidth,
+  });
+  const paternalCousinsWidth = getGroupWidth({
+    people: paternal.cousins,
+    columns: 'double',
+    variant: 'mini',
+    baseWidth: branchWidth,
+  });
+  const maternalCousinsWidth = getGroupWidth({
+    people: maternal.cousins,
+    columns: 'double',
+    variant: 'mini',
+    baseWidth: branchWidth,
+  });
+  const unclesPaternal = {
+    left: centeredLeft(branchLeft, branchWidth, paternalUnclesWidth),
+    top: parentTop,
+    width: paternalUnclesWidth,
+    height: paternalUnclesHeight,
+  };
+  const unclesMaternal = {
+    left: centeredLeft(branchRight, branchWidth, maternalUnclesWidth),
+    top: parentTop,
+    width: maternalUnclesWidth,
+    height: maternalUnclesHeight,
+  };
   const cousinsPaternal = {
-    left: branchLeft,
+    left: centeredLeft(branchLeft, branchWidth, paternalCousinsWidth),
     top: paternalCousinsTop,
-    width: getGroupWidth({ people: paternal.cousins, columns: 'double', variant: 'mini', baseWidth: 260 }),
+    width: paternalCousinsWidth,
     height: getGroupHeight({ people: paternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('paternal-cousins') }),
   };
   const cousinsMaternal = {
-    left: branchRight,
+    left: centeredLeft(branchRight, branchWidth, maternalCousinsWidth),
     top: maternalCousinsTop,
-    width: getGroupWidth({ people: maternal.cousins, columns: 'double', variant: 'mini', baseWidth: 260 }),
+    width: maternalCousinsWidth,
     height: getGroupHeight({ people: maternal.cousins, columns: 'double', variant: 'mini', expanded: expandedGroups.has('maternal-cousins') }),
   };
 
@@ -645,7 +686,7 @@ export function DesktopFamilyMapView({
             <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           ))}
 
-          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternal.uncles} left={branchLeft} top={parentTop} width={260} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternal.uncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
@@ -663,9 +704,9 @@ export function DesktopFamilyMapView({
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
-          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternal.uncles} left={branchRight} top={parentTop} width={260} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternal.uncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
 
-          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternal.cousins} left={branchLeft} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternal.cousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           {spouse && spouseCardLayout && (
             <div className="absolute z-10 w-[210px]" style={{ left: spouseCardLayout.left, top: spouseCardLayout.top }}>
               <VisualPersonCard person={spouse} label="Cônjuge" onClick={onPersonClick} />
@@ -674,7 +715,7 @@ export function DesktopFamilyMapView({
           {renderedDescendantLayouts.map((layout) => (
             <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
           ))}
-          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternal.cousins} left={branchRight} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternal.cousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
         </div>
       </div>
     </div>
