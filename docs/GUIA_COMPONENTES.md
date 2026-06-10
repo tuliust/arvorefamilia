@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-10
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual, com MobileFamilyTreeView documentado em estado implementado e pendências visuais separadas.
+> Status: guia canônico atualizado com o MobileFamilyTreeView atual: malha 3×3, abas compactas, conectores e preview de swipe.
 
 ## Objetivo
 
@@ -24,24 +24,26 @@ Este documento não substitui:
 
 ## Nota de verificação contra o código atual
 
-Esta revisão foi feita comparando os arquivos enviados com o estado atual dos componentes da árvore.
+Esta revisão consolida os ajustes implementados neste ciclo da `/minha-arvore` mobile e substitui a documentação anterior, que ainda descrevia o fluxo antigo de sete telas e abas `Núcleo`/`Completa`.
 
-Estado confirmado no código:
+Estado confirmado/esperado da frente atual:
 
-- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
-- `MobileFamilyTreeView.tsx` mantém abas superiores internas `Núcleo`, `Paterno`, `Materno` e `Completa`.
-- A experiência de 7 telas existe dentro do fluxo mobile segmentado: tela principal/núcleo, telas verticais do ramo paterno e telas verticais do ramo materno.
-- Os cards mobile usam componentes próprios: `PersonCard`, `MainPersonCard`, `SiblingPersonCard`, `AncestorPersonCard`, `MiniPersonCard` e `PetPersonCard`.
-- Tios usam grade de 2 colunas com limite recolhido de 6 cards.
-- Primos usam grade de 3 colunas com limite recolhido de 9 cards.
-- Ancestrais são renderizados dentro de `AncestorGroupsScreen`, ainda com um container externo de título **Ancestrais Paternos/Maternos** contendo subgrupos internos.
-- O pedido para remover o container externo de **Ancestrais** e deixar **Tataravós**, **Bisavós** e **Avós** como grupos/cards independentes ainda está pendente.
-- O pedido para tios/primos ocuparem estruturalmente 70% a 80% da altura útil e para todos os conectores irem até as extremidades da tela ainda está pendente no código atual.
+- `HomeTreeSection.tsx` continua renderizando `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
+- `MobileFamilyTreeView.tsx` mantém a experiência mobile separada de `FamilyTree`/ReactFlow; desktop/tablet continuam usando o layout ReactFlow da Minha Árvore.
+- As abas superiores internas do mobile são apenas **Paterno**, **Central** e **Materno**; a antiga aba **Completa** não deve reaparecer.
+- A navegação mobile usa uma malha 3×3 de telas: **Ancestrais globais** acima da tela **Central**, **Tios Paternos** à esquerda, **Tios Maternos** à direita, **Primos Paternos** abaixo dos tios paternos e **Primos Maternos** abaixo dos tios maternos.
+- A tela **Ancestrais globais** reúne os ramos paterno e materno em duas colunas, com grupos de **Tataravós**, **Bisavós** e **Avós** quando houver pessoas.
+- Os grupos de ancestrais não usam mais o container externo único `Ancestrais Paternos/Maternos` do fluxo antigo.
+- Tios usam cards compactos em grupo ampliado; primos exibem todos os cards disponíveis e usam rolagem vertical quando a altura útil não comporta todos.
+- Os conectores HTML/CSS do mobile são independentes dos edges ReactFlow e incluem conexões entre avós/bisavós/tataravós, avós → pai/mãe, pai/mãe → tios e tios → primos.
+- As linhas laterais de Pai e Mãe ficam no mesmo contexto rolável dos cards, para acompanhar o movimento vertical da tela Central.
+- Primos são fim de ramo: não deve haver linha inferior abaixo dos grupos de primos.
+- O swipe direcional mantém a navegação entre telas e recebeu pré-visualização da próxima tela durante o gesto por deslocamento temporário da malha.
 
 Regra documental desta revisão:
 
 ```txt
-Não documentar como implementado o que ainda é intenção de produto ou pendência visual.
+Documentar como implementado apenas o que pertence ao MobileFamilyTreeView atual; intenções futuras devem permanecer como backlog explícito.
 ```
 
 ---
@@ -407,11 +409,13 @@ src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 Responsabilidade:
 
 - renderizar a experiência mobile segmentada da view **Minha Árvore**;
-- organizar a árvore direta em tela central/núcleo e ramos laterais paterno/materno;
-- renderizar as telas conceituais de ancestrais, tios e primos por ramo;
+- organizar a árvore direta em uma malha 3×3 de telas independentes;
+- manter desktop/tablet fora do escopo, preservando `FamilyTree`/ReactFlow;
+- renderizar a tela **Central**, os grupos laterais de tios, os grupos inferiores de primos e a tela superior de ancestrais globais;
 - exibir cards mobile com composição própria;
 - desenhar conectores HTML/CSS independentes dos edges ReactFlow;
-- preservar a navegação inferior mobile e o header da Home.
+- preservar a navegação inferior mobile e o header da Home;
+- oferecer swipe direcional com pré-visualização da tela vizinha durante o gesto.
 
 Condição de uso:
 
@@ -420,26 +424,34 @@ HomeTreeSection.tsx
 isMobile && treeViewMode === 'minha-arvore'
 ```
 
-Telas conceituais cobertas:
+Malha de telas:
 
 ```txt
-Principal/Núcleo
-Ancestrais paternos
-Tios paternos
-Primos paternos
-Ancestrais maternos
-Tios maternos
-Primos maternos
+[ vazio            ] [ Ancestrais globais ] [ vazio           ]
+[ Tios Paternos    ] [ Central             ] [ Tios Maternos   ]
+[ Primos Paternos  ] [ vazio               ] [ Primos Maternos ]
 ```
 
-Subcomponentes/partes internas existentes no código atual:
+Abas superiores internas:
+
+```txt
+Paterno | Central | Materno
+```
+
+Comportamento das abas:
+
+- **Paterno** abre **Tios Paternos**;
+- **Central** abre a tela central;
+- **Materno** abre **Tios Maternos**;
+- não existe mais aba **Completa** no mobile segmentado.
+
+Subcomponentes/partes internas relevantes no código atual:
 
 ```txt
 FamilyGroup
 VerticalRelativeScreen
-AncestorGroupsScreen
-ParentBranchSwipeScreen
-BranchView
+AncestorsOverviewScreen
+AncestorGroupCard
 PersonCard
 MainPersonCard
 SiblingPersonCard
@@ -452,39 +464,29 @@ PersonAvatar
 
 Estado atual do layout:
 
-- o topo do componente ainda possui abas internas `Núcleo`, `Paterno`, `Materno` e `Completa`;
-- a experiência de 7 telas acontece dentro do `core`, por swipe horizontal e rolagem vertical interna dos ramos;
-- `FamilyGroup` controla `topConnector` e `bottomConnector`;
-- `VerticalRelativeScreen` renderiza tios e primos;
-- `AncestorGroupsScreen` renderiza uma tela de ancestrais com container externo e subgrupos internos;
-- tios usam `columns="double"` e `maxCollapsedItems={6}`;
-- primos usam `columns="triple"` e `maxCollapsedItems={9}`;
-- cards de irmãos/tios usam `SiblingPersonCard`;
-- cards de primos usam `MiniPersonCard`;
-- cards de ancestrais usam `AncestorPersonCard`;
-- pets usam `PetPersonCard`;
-- a pessoa principal usa `MainPersonCard`.
-
-Pendências que não devem ser documentadas como implementadas:
-
-```txt
-Remover o container externo "Ancestrais Paternos/Maternos".
-Renderizar Tataravós, Bisavós e Avós como grupos/cards diretos na tela de ancestrais.
-Fazer containers de tios/primos ocuparem estruturalmente 70% a 80% da altura útil.
-Fazer todos os conectores estruturais chegarem às extremidades aplicáveis da viewport.
-```
+- a tela **Central** reúne Pai, Mãe, pessoa principal, irmãos, sobrinhos, cônjuge, pets, filhos e netos quando houver;
+- a tela **Ancestrais globais** reúne ramo paterno e materno em duas colunas;
+- cada coluna de ancestrais pode exibir **Tataravós**, **Bisavós** e **Avós**;
+- tios ficam nas telas laterais e conectam visualmente aos ramos de avós;
+- primos ficam abaixo dos respectivos tios e exibem todos os cards disponíveis com rolagem interna;
+- em 320px, primos podem usar duas colunas; a partir de 360px, preferem três colunas;
+- as linhas laterais de Pai/Mãe acompanham o scroll da tela Central;
+- os conectores de primos não possuem linha inferior;
+- a malha usa `touchStart`, `touchMove` e `touchEnd` para swipe direcional e preview por deslocamento temporário (`dragOffset`).
 
 Cuidados:
 
 - não tratar conectores do `MobileFamilyTreeView` como edges ReactFlow;
 - não aplicar CSS do mobile segmentado em `/genealogia` ou `/visao-completa`;
 - não deixar bottom navigation cobrir cards ou títulos de grupo;
-- não resolver linha lateral sobrando apenas com corte visual que esconda conteúdo estrutural;
-- não reintroduzir ícone circular inferior nos cards;
+- não reintroduzir a aba **Completa** no topo mobile;
+- não reintroduzir o container externo único `Ancestrais Paternos/Maternos`;
+- não recolocar botão **Ver todos** nos grupos de primos;
+- não deixar conectores visíveis atravessando o fundo de cards/containers;
 - manter primeiro e segundo nome como rótulo curto dos cards mobile;
 - manter linhas vitais com `Star` para nascimento e `Cross` para falecimento;
 - validar 320px, 375px, 390px e 430px;
-- validar as sete telas sempre que alterar container, grid, conectores ou navegação.
+- validar Central, Ancestrais, Tios Paternos/Maternos e Primos Paternos/Maternos sempre que alterar container, grid, conectores ou navegação.
 
 
 ### 3.3 Layout direto: `directFamilyDistributedLayout`

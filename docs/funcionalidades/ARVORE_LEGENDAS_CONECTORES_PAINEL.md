@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentação funcional/técnica específica da árvore.
-> Status: revisado contra o código atual; conectores mobile segmentados documentados com estado implementado e pendências separadas.
+> Status: atualizado com a malha mobile 3×3, abas Paterno/Central/Materno, conectores HTML/CSS e preview de swipe.
 
 ## 1. Função deste documento
 
@@ -37,24 +37,26 @@ Não substitui:
 
 ## Nota de verificação contra o código atual
 
-Esta revisão foi feita comparando os arquivos enviados com o estado atual dos componentes da árvore.
+Esta revisão consolida os ajustes implementados neste ciclo da `/minha-arvore` mobile e substitui a documentação anterior, que ainda descrevia o fluxo antigo de sete telas e abas `Núcleo`/`Completa`.
 
-Estado confirmado no código:
+Estado confirmado/esperado da frente atual:
 
-- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
-- `MobileFamilyTreeView.tsx` mantém abas superiores internas `Núcleo`, `Paterno`, `Materno` e `Completa`.
-- A experiência de 7 telas existe dentro do fluxo mobile segmentado: tela principal/núcleo, telas verticais do ramo paterno e telas verticais do ramo materno.
-- Os cards mobile usam componentes próprios: `PersonCard`, `MainPersonCard`, `SiblingPersonCard`, `AncestorPersonCard`, `MiniPersonCard` e `PetPersonCard`.
-- Tios usam grade de 2 colunas com limite recolhido de 6 cards.
-- Primos usam grade de 3 colunas com limite recolhido de 9 cards.
-- Ancestrais são renderizados dentro de `AncestorGroupsScreen`, ainda com um container externo de título **Ancestrais Paternos/Maternos** contendo subgrupos internos.
-- O pedido para remover o container externo de **Ancestrais** e deixar **Tataravós**, **Bisavós** e **Avós** como grupos/cards independentes ainda está pendente.
-- O pedido para tios/primos ocuparem estruturalmente 70% a 80% da altura útil e para todos os conectores irem até as extremidades da tela ainda está pendente no código atual.
+- `HomeTreeSection.tsx` continua renderizando `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
+- `MobileFamilyTreeView.tsx` mantém a experiência mobile separada de `FamilyTree`/ReactFlow; desktop/tablet continuam usando o layout ReactFlow da Minha Árvore.
+- As abas superiores internas do mobile são apenas **Paterno**, **Central** e **Materno**; a antiga aba **Completa** não deve reaparecer.
+- A navegação mobile usa uma malha 3×3 de telas: **Ancestrais globais** acima da tela **Central**, **Tios Paternos** à esquerda, **Tios Maternos** à direita, **Primos Paternos** abaixo dos tios paternos e **Primos Maternos** abaixo dos tios maternos.
+- A tela **Ancestrais globais** reúne os ramos paterno e materno em duas colunas, com grupos de **Tataravós**, **Bisavós** e **Avós** quando houver pessoas.
+- Os grupos de ancestrais não usam mais o container externo único `Ancestrais Paternos/Maternos` do fluxo antigo.
+- Tios usam cards compactos em grupo ampliado; primos exibem todos os cards disponíveis e usam rolagem vertical quando a altura útil não comporta todos.
+- Os conectores HTML/CSS do mobile são independentes dos edges ReactFlow e incluem conexões entre avós/bisavós/tataravós, avós → pai/mãe, pai/mãe → tios e tios → primos.
+- As linhas laterais de Pai e Mãe ficam no mesmo contexto rolável dos cards, para acompanhar o movimento vertical da tela Central.
+- Primos são fim de ramo: não deve haver linha inferior abaixo dos grupos de primos.
+- O swipe direcional mantém a navegação entre telas e recebeu pré-visualização da próxima tela durante o gesto por deslocamento temporário da malha.
 
 Regra documental desta revisão:
 
 ```txt
-Não documentar como implementado o que ainda é intenção de produto ou pendência visual.
+Documentar como implementado apenas o que pertence ao MobileFamilyTreeView atual; intenções futuras devem permanecer como backlog explícito.
 ```
 
 ---
@@ -392,48 +394,47 @@ Esses conectores não são edges ReactFlow e não devem ser tratados como `spous
 
 #### Estado atual confirmado
 
-No código atual:
-
-| Tela | Linha acima | Linha abaixo | Observação |
-|---|---:|---:|---|
-| Ancestrais paternos/maternos | Não | Sim | A tela usa `AncestorGroupsScreen` e mantém apenas conector inferior local. |
-| Tios paternos/maternos | Sim | Sim | A tela usa `VerticalRelativeScreen` + `FamilyGroup` com conector superior e inferior. |
-| Primos paternos/maternos | Sim | Não | A tela usa `VerticalRelativeScreen` com `bottomConnector={false}`. |
-| Tela principal/núcleo | Parcial | Parcial | Linhas do núcleo são desenhadas manualmente com elementos absolutos. |
-| Conexão lateral pai/mãe ↔ tios | Sim | N/A | Linha horizontal usa posicionamento absoluto na tela lateral. |
+| Área/tela | Conectores esperados | Observação |
+|---|---|---|
+| Ancestrais globais | Tataravós → Bisavós → Avós, por ramo | Tela superior em duas colunas: paterno à esquerda, materno à direita. |
+| Avós → Pai/Mãe | Avós paternos → Pai; Avós maternos → Mãe | Conexões descem visualmente até a tela Central. |
+| Pai/Mãe → Tios | Pai conecta lateralmente a Tios Paternos; Mãe conecta lateralmente a Tios Maternos | As linhas laterais acompanham o scroll da tela Central. |
+| Tios → Primos | Tios Paternos → Primos Paternos; Tios Maternos → Primos Maternos | Tios são o grupo intermediário do ramo. |
+| Primos | Apenas linha superior | Não deve haver linha inferior abaixo dos primos. |
+| Tela Central | Linhas internas entre Pai/Mãe, pessoa central e grupos diretos | Linhas manuais em HTML/CSS, não ReactFlow. |
 
 #### Regras consolidadas
 
-- não deve haver linha vertical acima dos grupos de ancestrais;
-- não deve haver linha vertical abaixo dos grupos de primos;
+- não deve haver linha inferior abaixo de grupos de primos;
 - tios continuam sendo o grupo intermediário entre ancestrais e primos;
 - conectores HTML/CSS devem ficar visualmente atrás dos containers/cards quando houver sobreposição;
+- cards/containers precisam mascarar linhas internas com fundo opaco, `relative z-*` e `overflow` controlado;
+- linhas estruturais não devem ficar fixas no viewport quando o card relacionado rola; elas devem acompanhar o contexto visual do card;
 - ajustes de conectores mobile devem ser testados sem usar lógica de edges ReactFlow;
-- `edgeFilters` e `visualLineFilters` continuam válidos para ReactFlow; não comandam diretamente esses conectores HTML/CSS.
+- `edgeFilters` e `visualLineFilters` continuam válidos para ReactFlow; não comandam diretamente esses conectores HTML/CSS;
+- conectores não devem criar `overflow-x`.
 
-#### Pendências visuais atuais
-
-Ainda não está consolidado no código:
+#### QA obrigatório
 
 ```txt
-Linhas estruturais indo até a extremidade da tela em todos os lados aplicáveis.
-Containers de tios/primos ocupando 70% a 80% da tela útil.
-Ancestrais sem container externo "Ancestrais Paternos/Maternos".
+320px
+375px
+390px
+430px
 ```
 
-Esses pontos devem permanecer como backlog/pendência visual até novo ajuste de `MobileFamilyTreeView.tsx`.
+Validar:
 
-#### Critérios visuais para a próxima implementação
+- avós paternos conectados ao Pai;
+- avós maternos conectados à Mãe;
+- tataravós, bisavós e avós conectados dentro de cada ramo;
+- Pai conectado a Tios Paternos;
+- Mãe conectada a Tios Maternos;
+- tios conectados a primos;
+- ausência de linha inferior em primos;
+- ausência de linha atravessando fundo de cards/containers;
+- ausência de scroll horizontal.
 
-- linha horizontal lateral deve chegar à extremidade da viewport sem gerar `overflow-x`;
-- linha vertical superior/inferior deve chegar à extremidade da tela somente quando houver continuidade estrutural;
-- não usar corte visual para esconder linha estrutural errada;
-- não permitir linha solta saindo do topo ou da lateral do container;
-- validar paterno e materno separadamente;
-- validar 320px, 375px, 390px e 430px.
-
-
----
 
 ---
 
