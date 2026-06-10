@@ -106,6 +106,7 @@ export function VisualPersonCard({
   mini = false,
   horizontal = false,
   onClick,
+  tone = 'default',
 }: {
   person: Pessoa;
   label?: string;
@@ -113,16 +114,23 @@ export function VisualPersonCard({
   compact?: boolean;
   mini?: boolean;
   horizontal?: boolean;
+  tone?: 'default' | 'spouse';
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getVisualPersonCardData(person);
+  const isSpouseTone = tone === 'spouse';
 
   if (horizontal) {
     return (
       <button
         type="button"
         onClick={() => onClick(person)}
-        className="flex h-[74px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]"
+        className={[
+          'flex h-[74px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]',
+          isSpouseTone
+            ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
+            : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
+        ].join(' ')}
       >
         <VisualPersonAvatar person={person} pet={pet} className="h-[46px] w-[46px]" iconClassName="h-6 w-6" />
         <span className="min-w-0 flex-1">
@@ -154,7 +162,7 @@ export function VisualPersonCard({
         `relative flex ${height} w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
         central
           ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700'
-          : pet
+          : isSpouseTone
             ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
             : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
       ].join(' ')}
@@ -202,6 +210,7 @@ export function VisualGroup({
   onExpandedChange,
   disableInternalScroll = false,
   className = '',
+  spousePersonIds,
 }: {
   title: string;
   people: Pessoa[];
@@ -217,6 +226,7 @@ export function VisualGroup({
   onExpandedChange?: (expanded: boolean) => void;
   disableInternalScroll?: boolean;
   className?: string;
+  spousePersonIds?: Set<string>;
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
@@ -261,16 +271,30 @@ export function VisualGroup({
         </p>
       ) : (
         <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`}>
-          {visiblePeople.map((person) => (
-            <VisualPersonCard
-              key={person.id}
-              person={person}
-              onClick={onPersonClick}
-              mini={variant === 'mini'}
-              compact={variant === 'compact'}
-              horizontal={variant === 'horizontal'}
-            />
-          ))}
+          {visiblePeople.map((person, index) => {
+            const isSpouseCard = Boolean(spousePersonIds?.has(person.id));
+            const lateralConnector = isSpouseCard && gridColumns === 'grid-cols-2' && index % 2 === 1;
+            const topConnector = isSpouseCard && !lateralConnector;
+
+            return (
+              <div key={person.id} className="relative min-w-0">
+                {lateralConnector && (
+                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-600" aria-hidden="true" />
+                )}
+                {topConnector && (
+                  <span className="pointer-events-none absolute -top-2 left-1/2 z-0 h-2 w-0 -translate-x-1/2 border-l-2 border-cyan-600" aria-hidden="true" />
+                )}
+                <VisualPersonCard
+                  person={person}
+                  onClick={onPersonClick}
+                  mini={variant === 'mini'}
+                  compact={variant === 'compact'}
+                  horizontal={variant === 'horizontal'}
+                  tone={isSpouseCard ? 'spouse' : 'default'}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
       {canExpand && (

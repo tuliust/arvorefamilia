@@ -36,6 +36,8 @@ type MapGroupProps = {
   expanded: boolean;
   onExpandedChange: (id: string, expanded: boolean) => void;
   zIndex?: number;
+  spousesByPerson: Map<string, Pessoa[]>;
+  showSpouseConnectors: boolean;
 };
 
 type GroupLayout = {
@@ -192,6 +194,27 @@ function collectCollateralSpouses(
   return result;
 }
 
+
+function getSpouseConnectorIds(
+  people: Pessoa[],
+  spousesByPerson: Map<string, Pessoa[]>,
+  enabled: boolean,
+) {
+  if (!enabled) return undefined;
+  const spouseIds = new Set<string>();
+
+  people.forEach((person, index) => {
+    if (index === 0) return;
+    const previousPerson = people[index - 1];
+    const isPreviousSpouse = (spousesByPerson.get(previousPerson.id) ?? []).some(
+      (spouse) => spouse.id === person.id,
+    );
+    if (isPreviousSpouse) spouseIds.add(person.id);
+  });
+
+  return spouseIds;
+}
+
 function PositionedGroup({
   id,
   title,
@@ -205,6 +228,8 @@ function PositionedGroup({
   expanded,
   onExpandedChange,
   zIndex = 10,
+  spousesByPerson,
+  showSpouseConnectors,
 }: MapGroupProps) {
   if (people.length === 0) return null;
 
@@ -221,6 +246,7 @@ function PositionedGroup({
         expanded={expanded}
         onExpandedChange={(nextExpanded) => onExpandedChange(id, nextExpanded)}
         disableInternalScroll
+        spousePersonIds={getSpouseConnectorIds(people, spousesByPerson, showSpouseConnectors)}
         onPersonClick={onPersonClick}
       />
     </div>
@@ -393,8 +419,14 @@ export function DesktopFamilyMapView({
     { enabled: directRelativeFilters.conjuge, excludedIds: collateralSpouseExcludedIds },
   ), [collateralSpouseExcludedIds, directRelativeFilters.conjuge, isVisible, spousesByPerson]);
   const collateralSpouses = React.useMemo(() => collectCollateralSpouses([
+    ...paternal.greatGreatGrandparents,
+    ...paternal.greatGrandparents,
+    ...paternal.grandparents,
     ...paternal.uncles,
     ...paternal.cousins,
+    ...maternal.greatGreatGrandparents,
+    ...maternal.greatGrandparents,
+    ...maternal.grandparents,
     ...maternal.uncles,
     ...maternal.cousins,
     ...nephews,
@@ -406,28 +438,18 @@ export function DesktopFamilyMapView({
     grandchildren,
     isVisible,
     maternal.cousins,
+    maternal.grandparents,
+    maternal.greatGrandparents,
+    maternal.greatGreatGrandparents,
     maternal.uncles,
     nephews,
     paternal.cousins,
+    paternal.grandparents,
+    paternal.greatGrandparents,
+    paternal.greatGreatGrandparents,
     paternal.uncles,
     spousesByPerson,
   ]);
-  const paternalUncles = React.useMemo(
-    () => withCollateralSpouses(paternal.uncles),
-    [paternal.uncles, withCollateralSpouses],
-  );
-  const paternalCousins = React.useMemo(
-    () => withCollateralSpouses(paternal.cousins),
-    [paternal.cousins, withCollateralSpouses],
-  );
-  const maternalUncles = React.useMemo(
-    () => withCollateralSpouses(maternal.uncles),
-    [maternal.uncles, withCollateralSpouses],
-  );
-  const maternalCousins = React.useMemo(
-    () => withCollateralSpouses(maternal.cousins),
-    [maternal.cousins, withCollateralSpouses],
-  );
   const nephewsWithSpouses = React.useMemo(
     () => withCollateralSpouses(nephews),
     [nephews, withCollateralSpouses],
@@ -440,14 +462,47 @@ export function DesktopFamilyMapView({
     () => withCollateralSpouses(grandchildren),
     [grandchildren, withCollateralSpouses],
   );
+  const paternalMap = React.useMemo<MobileFamilyBranch>(() => ({
+    parent: paternal.parent,
+    grandparents: withCollateralSpouses(paternal.grandparents),
+    greatGrandparents: withCollateralSpouses(paternal.greatGrandparents),
+    greatGreatGrandparents: withCollateralSpouses(paternal.greatGreatGrandparents),
+    uncles: withCollateralSpouses(paternal.uncles),
+    cousins: withCollateralSpouses(paternal.cousins),
+  }), [paternal, withCollateralSpouses]);
+  const maternalMap = React.useMemo<MobileFamilyBranch>(() => ({
+    parent: maternal.parent,
+    grandparents: withCollateralSpouses(maternal.grandparents),
+    greatGrandparents: withCollateralSpouses(maternal.greatGrandparents),
+    greatGreatGrandparents: withCollateralSpouses(maternal.greatGreatGrandparents),
+    uncles: withCollateralSpouses(maternal.uncles),
+    cousins: withCollateralSpouses(maternal.cousins),
+  }), [maternal, withCollateralSpouses]);
+
+  const paternalUncles = React.useMemo(
+    () => paternalMap.uncles,
+    [paternalMap.uncles],
+  );
+  const paternalCousins = React.useMemo(
+    () => paternalMap.cousins,
+    [paternalMap.cousins],
+  );
+  const maternalUncles = React.useMemo(
+    () => maternalMap.uncles,
+    [maternalMap.uncles],
+  );
+  const maternalCousins = React.useMemo(
+    () => maternalMap.cousins,
+    [maternalMap.cousins],
+  );
 
   const paternalAncestors = React.useMemo(
-    () => buildAncestorLayouts({ side: 'paternal', branch: paternal, expandedGroups }),
-    [expandedGroups, paternal],
+    () => buildAncestorLayouts({ side: 'paternal', branch: paternalMap, expandedGroups }),
+    [expandedGroups, paternalMap],
   );
   const maternalAncestors = React.useMemo(
-    () => buildAncestorLayouts({ side: 'maternal', branch: maternal, expandedGroups }),
-    [expandedGroups, maternal],
+    () => buildAncestorLayouts({ side: 'maternal', branch: maternalMap, expandedGroups }),
+    [expandedGroups, maternalMap],
   );
 
   const maxAncestorBottom = Math.max(
@@ -812,13 +867,13 @@ export function DesktopFamilyMapView({
           </svg>
 
           {paternalAncestors.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           ))}
           {maternalAncestors.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           ))}
 
-          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternalUncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-uncles" title="Tios Paternos" people={paternalUncles} left={unclesPaternal.left} top={parentTop} width={unclesPaternal.width} expanded={expandedGroups.has('paternal-uncles')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           <div className="absolute z-10 w-[210px]" style={{ left: 375, top: parentTop }}>
             {directRelativeFilters.pais && (
               father
@@ -836,18 +891,18 @@ export function DesktopFamilyMapView({
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
-          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternalUncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-uncles" title="Tios Maternos" people={maternalUncles} left={unclesMaternal.left} top={parentTop} width={unclesMaternal.width} expanded={expandedGroups.has('maternal-uncles')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
 
-          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternalCousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="paternal-cousins" title="Primos Paternos" people={paternalCousins} left={cousinsPaternal.left} top={paternalCousinsTop} width={cousinsPaternal.width} expanded={expandedGroups.has('paternal-cousins')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           {spouse && spouseCardLayout && (
             <div className="absolute z-10 w-[210px]" style={{ left: spouseCardLayout.left, top: spouseCardLayout.top }}>
-              <VisualPersonCard person={spouse} label="Cônjuge" onClick={onPersonClick} />
+              <VisualPersonCard person={spouse} label="Cônjuge" tone="spouse" onClick={onPersonClick} />
             </div>
           )}
           {renderedDescendantLayouts.map((layout) => (
-            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+            <PositionedGroup key={layout.id} {...layout} expanded={expandedGroups.has(layout.id)} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
           ))}
-          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternalCousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} onPersonClick={onPersonClick} />
+          <PositionedGroup id="maternal-cousins" title="Primos Maternos" people={maternalCousins} left={cousinsMaternal.left} top={maternalCousinsTop} width={cousinsMaternal.width} expanded={expandedGroups.has('maternal-cousins')} onExpandedChange={handleExpandedChange} spousesByPerson={spousesByPerson} showSpouseConnectors={directRelativeFilters.conjuge} onPersonClick={onPersonClick} />
         </div>
       </div>
     </div>
