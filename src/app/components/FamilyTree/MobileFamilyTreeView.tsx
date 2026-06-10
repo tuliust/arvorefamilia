@@ -20,6 +20,14 @@ import type {
 
 type MobileTreeTab = 'core' | 'paternal' | 'maternal';
 
+type MobileTreeScreen =
+  | 'ancestors'
+  | 'paternal-uncles'
+  | 'core'
+  | 'maternal-uncles'
+  | 'paternal-cousins'
+  | 'maternal-cousins';
+
 type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
 type GroupColumns = 'single' | 'double' | 'triple';
@@ -58,6 +66,21 @@ const TABS: Array<{ id: MobileTreeTab; label: string }> = [
   { id: 'core', label: 'Núcleo' },
   { id: 'maternal', label: 'Materno' },
 ];
+
+const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
+  ancestors: { column: 1, row: 0 },
+  'paternal-uncles': { column: 0, row: 1 },
+  core: { column: 1, row: 1 },
+  'maternal-uncles': { column: 2, row: 1 },
+  'paternal-cousins': { column: 0, row: 2 },
+  'maternal-cousins': { column: 2, row: 2 },
+};
+
+function getTabForScreen(screen: MobileTreeScreen): MobileTreeTab {
+  if (screen.startsWith('paternal')) return 'paternal';
+  if (screen.startsWith('maternal')) return 'maternal';
+  return 'core';
+}
 
 function getYear(value?: string | number) {
   if (value === undefined || value === null || value === '') return undefined;
@@ -534,8 +557,10 @@ function VerticalRelativeScreen({
     <div className={[
       'relative h-full w-full shrink-0 snap-center px-4',
       isCousinsScreen ? 'overflow-y-auto overflow-x-hidden overscroll-y-auto' : 'overflow-hidden',
-    ].join(' ')}>
-      {connectHorizontal && connectAncestors && people.length > 0 && (
+    ].join(' ')}
+    data-mobile-tree-scroll={isCousinsScreen ? true : undefined}
+    >
+      {connectHorizontal && people.length > 0 && (
         <div className={[
           'pointer-events-none absolute top-[122px] z-0 h-px bg-cyan-600',
           connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
@@ -544,10 +569,10 @@ function VerticalRelativeScreen({
       {people.length > 0 && (
         <div className={[
           'pointer-events-none absolute left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600',
-          bottomConnector ? 'inset-y-0' : 'top-0 h-1/2',
+          bottomConnector ? 'inset-y-0' : 'top-0 h-10',
         ].join(' ')} />
       )}
-      {connectHorizontal && people.length > 0 && (
+      {connectHorizontal && connectAncestors && people.length > 0 && (
         <div className={[
           'pointer-events-none absolute top-0 z-0 h-10 border-t border-cyan-600',
           connectHorizontal === 'left'
@@ -623,13 +648,18 @@ function AncestorsOverviewScreen({
   const hasMaternalAncestors = maternalGroups.some((group) => group.people.length > 0);
 
   return (
-    <div className="relative h-full w-full shrink-0 snap-center overflow-y-auto overflow-x-hidden px-4">
+    <div className="relative h-full w-full shrink-0 overflow-hidden">
       <h2 className="sr-only">Ancestrais paternos e maternos</h2>
       {!hasAncestors ? (
-        <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[380px] items-center pb-28 pt-10">
-          <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
-            Nenhum ancestral cadastrado.
-          </p>
+        <div
+          data-mobile-tree-scroll
+          className="h-full overflow-y-auto overflow-x-hidden px-4 overscroll-y-contain"
+        >
+          <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[380px] items-center pb-28 pt-10">
+            <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
+              Nenhum ancestral cadastrado.
+            </p>
+          </div>
         </div>
       ) : (
         <>
@@ -645,24 +675,29 @@ function AncestorsOverviewScreen({
               <div className="pointer-events-none absolute bottom-0 right-0 z-0 h-px w-1/4 bg-cyan-600" />
             </>
           )}
-          <div className="relative z-10 mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
-            <div className="grid min-w-0 grid-cols-2 gap-2">
-              {generations.flatMap(({ paternal, maternal }) => [
-                paternal.people.length > 0 ? (
-                  <AncestorGroupCard
-                    key={paternal.id}
-                    group={paternal}
-                    onPersonClick={onPersonClick}
-                  />
-                ) : <div key={paternal.id} />,
-                maternal.people.length > 0 ? (
-                  <AncestorGroupCard
-                    key={maternal.id}
-                    group={maternal}
-                    onPersonClick={onPersonClick}
-                  />
-                ) : <div key={maternal.id} />,
-              ])}
+          <div
+            data-mobile-tree-scroll
+            className="relative z-10 h-full overflow-y-auto overflow-x-hidden px-4 overscroll-y-contain"
+          >
+            <div className="mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                {generations.flatMap(({ paternal, maternal }) => [
+                  paternal.people.length > 0 ? (
+                    <AncestorGroupCard
+                      key={paternal.id}
+                      group={paternal}
+                      onPersonClick={onPersonClick}
+                    />
+                  ) : <div key={paternal.id} />,
+                  maternal.people.length > 0 ? (
+                    <AncestorGroupCard
+                      key={maternal.id}
+                      group={maternal}
+                      onPersonClick={onPersonClick}
+                    />
+                  ) : <div key={maternal.id} />,
+                ])}
+              </div>
             </div>
           </div>
         </>
@@ -679,9 +714,14 @@ export function MobileFamilyTreeView({
   onPersonClick,
   layoutRevision,
 }: MobileFamilyTreeViewProps) {
-  const [activeTab, setActiveTab] = React.useState<MobileTreeTab>('core');
+  const [activeScreen, setActiveScreen] = React.useState<MobileTreeScreen>('core');
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
-  const coreScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const touchStartRef = React.useRef<{
+    x: number;
+    y: number;
+    atScrollTop: boolean;
+    atScrollBottom: boolean;
+  } | null>(null);
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
@@ -722,23 +762,68 @@ export function MobileFamilyTreeView({
     cousins: filterVisible(model.maternal.cousins),
   }), [filterVisible, model.maternal]);
 
-  const scrollToTab = React.useCallback((tab: MobileTreeTab) => {
-    const container = coreScrollRef.current;
-    if (!container) return;
+  React.useEffect(() => {
+    setActiveScreen('core');
+  }, [centralPersonId, layoutRevision]);
 
-    const screenIndex = tab === 'paternal' ? 0 : tab === 'maternal' ? 2 : 1;
-    container.scrollTo({
-      left: container.clientWidth * screenIndex,
-      top: container.clientHeight,
-      behavior: 'smooth',
+  const navigateByDirection = React.useCallback((
+    direction: 'up' | 'down' | 'left' | 'right',
+  ) => {
+    setActiveScreen((current) => {
+      const destinations: Partial<Record<typeof direction, MobileTreeScreen>> =
+        current === 'core'
+          ? { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' }
+          : current === 'paternal-uncles'
+            ? { up: 'ancestors', down: 'paternal-cousins', right: 'core' }
+            : current === 'maternal-uncles'
+              ? { up: 'ancestors', down: 'maternal-cousins', left: 'core' }
+              : current === 'paternal-cousins'
+                ? { up: 'paternal-uncles' }
+                : current === 'maternal-cousins'
+                  ? { up: 'maternal-uncles' }
+                  : { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' };
+      return destinations[direction] ?? current;
     });
   }, []);
 
-  React.useEffect(() => {
-    requestAnimationFrame(() => {
-      scrollToTab(activeTab);
-    });
-  }, [activeTab, centralPersonId, layoutRevision, scrollToTab]);
+  const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    const target = event.target as HTMLElement;
+    const scrollElement = target.closest<HTMLElement>('[data-mobile-tree-scroll]');
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      atScrollTop: !scrollElement || scrollElement.scrollTop <= 1,
+      atScrollBottom: !scrollElement || scrollElement.scrollTop + scrollElement.clientHeight
+        >= scrollElement.scrollHeight - 1,
+    };
+  }, []);
+
+  const handleTouchEnd = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = null;
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absoluteX = Math.abs(deltaX);
+    const absoluteY = Math.abs(deltaY);
+    const threshold = 56;
+
+    if (absoluteX >= threshold && absoluteX > absoluteY * 1.2) {
+      navigateByDirection(deltaX < 0 ? 'right' : 'left');
+      return;
+    }
+    if (absoluteY < threshold || absoluteY <= absoluteX * 1.2) return;
+
+    const direction = deltaY < 0 ? 'down' : 'up';
+    if (
+      (direction === 'up' && !start.atScrollTop)
+      || (direction === 'down' && !start.atScrollBottom)
+    ) return;
+    navigateByDirection(direction);
+  }, [navigateByDirection]);
 
   const visibleSpouses = filterVisible(model.spouses);
   const visibleSiblings = filterVisible(model.siblings);
@@ -758,6 +843,8 @@ export function MobileFamilyTreeView({
   ];
   const hasPaternalAncestors = paternalAncestorGroups.some((group) => group.people.length > 0);
   const hasMaternalAncestors = maternalAncestorGroups.some((group) => group.people.length > 0);
+  const activeTab = getTabForScreen(activeScreen);
+  const activePosition = SCREEN_POSITIONS[activeScreen];
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]">
@@ -771,8 +858,13 @@ export function MobileFamilyTreeView({
               key={tab.id}
               type="button"
               onClick={() => {
-                setActiveTab(tab.id);
-                scrollToTab(tab.id);
+                setActiveScreen(
+                  tab.id === 'paternal'
+                    ? 'paternal-uncles'
+                    : tab.id === 'maternal'
+                      ? 'maternal-uncles'
+                      : 'core',
+                );
               }}
               aria-current={activeTab === tab.id ? 'page' : undefined}
               className={[
@@ -788,12 +880,18 @@ export function MobileFamilyTreeView({
         </div>
       </nav>
 
-      <div className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain">
+      <div
+        className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden overscroll-contain"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <div
-          ref={coreScrollRef}
-          className="grid h-full w-full snap-both snap-mandatory grid-cols-[repeat(3,100%)] grid-rows-[repeat(3,100%)] overflow-auto scroll-smooth overscroll-contain"
+          className="grid h-[300%] w-[300%] grid-cols-3 grid-rows-3 transition-transform duration-300 ease-out"
+          style={{
+            transform: `translate3d(${-activePosition.column * (100 / 3)}%, ${-activePosition.row * (100 / 3)}%, 0)`,
+          }}
         >
-          <div className="col-start-2 row-start-1 h-full w-full snap-center">
+          <div className="col-start-2 row-start-1 h-full w-full overflow-hidden">
             <AncestorsOverviewScreen
               paternalGroups={paternalAncestorGroups}
               maternalGroups={maternalAncestorGroups}
@@ -801,7 +899,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-1 row-start-2 h-full w-full snap-center">
+          <div className="col-start-1 row-start-2 h-full w-full overflow-hidden">
             <VerticalRelativeScreen
               title="Tios Paternos"
               people={visiblePaternal.uncles}
@@ -816,7 +914,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="relative col-start-2 row-start-2 h-full w-full snap-center overflow-y-auto">
+          <div className="relative col-start-2 row-start-2 h-full w-full overflow-hidden">
             {hasPaternalAncestors && (
               <div className="pointer-events-none absolute left-1/4 top-0 h-10 w-px bg-cyan-600" />
             )}
@@ -825,8 +923,12 @@ export function MobileFamilyTreeView({
             )}
             <div className="pointer-events-none absolute left-0 top-[122px] h-px w-4 bg-cyan-600" />
             <div className="pointer-events-none absolute right-0 top-[122px] h-px w-4 bg-cyan-600" />
-            <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
-              <div className="mx-auto w-full max-w-[390px]">
+            <div
+              data-mobile-tree-scroll
+              className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain"
+            >
+              <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
+                <div className="mx-auto w-full max-w-[390px]">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="relative">
                     {isVisible(model.father)
@@ -849,21 +951,21 @@ export function MobileFamilyTreeView({
                 </div>
               </div>
 
-              {isVisible(model.central) && (
-                <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
-                  <MainPersonCard person={model.central} label="Você" onClick={onPersonClick} />
+                {isVisible(model.central) && (
+                  <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
+                    <MainPersonCard person={model.central} label="Você" onClick={onPersonClick} />
+                  </div>
+                )}
+
+                <div className="relative mx-auto h-9 w-full">
+                  <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
+                  <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
                 </div>
-              )}
 
-              <div className="relative mx-auto h-9 w-full">
-                <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
-                <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
-                <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
-                <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
-              </div>
-
-              <div className="grid grid-cols-2 items-start gap-3">
-                <div className="min-w-0">
+                <div className="grid grid-cols-2 items-start gap-3">
+                  <div className="min-w-0">
                   <FamilyGroup
                     id="core-siblings"
                     title="Irmãos"
@@ -885,7 +987,7 @@ export function MobileFamilyTreeView({
                   />
                 </div>
 
-                <div className="min-w-0">
+                  <div className="min-w-0">
                   <FamilyGroup
                     id="core-spouses"
                     title="Cônjuge"
@@ -925,12 +1027,13 @@ export function MobileFamilyTreeView({
                     onPersonClick={onPersonClick}
                     columns="single"
                   />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="col-start-3 row-start-2 h-full w-full snap-center">
+          <div className="col-start-3 row-start-2 h-full w-full overflow-hidden">
             <VerticalRelativeScreen
               title="Tios Maternos"
               people={visibleMaternal.uncles}
@@ -945,7 +1048,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-1 row-start-3 h-full w-full snap-center">
+          <div className="col-start-1 row-start-3 h-full w-full overflow-hidden">
             <VerticalRelativeScreen
               title="Primos Paternos"
               people={visiblePaternal.cousins}
@@ -959,7 +1062,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-3 row-start-3 h-full w-full snap-center">
+          <div className="col-start-3 row-start-3 h-full w-full overflow-hidden">
             <VerticalRelativeScreen
               title="Primos Maternos"
               people={visibleMaternal.cousins}
