@@ -47,8 +47,9 @@ function getPersonGender(person: Pessoa) {
       ?? '',
   ).trim().toLowerCase();
 
-  if (/^(f|fem|feminino|female|mulher)/.test(rawGender)) return 'female';
-  if (/^(m|masc|masculino|male|homem)/.test(rawGender)) return 'male';
+  if (/^(pet|animal|mascote)$/.test(rawGender)) return 'pet';
+  if (/^(mulher|f|fem|feminino|female)$/.test(rawGender)) return 'female';
+  if (/^(homem|m|masc|masculino|male)$/.test(rawGender)) return 'male';
 
   const firstName = (person.nome_completo ?? '').trim().split(/\s+/)[0]?.toLowerCase() ?? '';
   const maleNames = new Set([
@@ -67,24 +68,37 @@ function getPersonGender(person: Pessoa) {
 }
 
 function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | 'neutral'; className: string }) {
-  const hairPath = gender === 'female'
-    ? 'M24 5c-7 0-11 5-11 13v7c0 4-2 8-5 11 4 5 10 8 16 8s12-3 16-8c-3-3-5-7-5-11v-7C35 10 31 5 24 5Z'
-    : gender === 'male'
-      ? 'M11 18c0-8 5-13 13-13s13 5 13 13c0 3-1 6-2 8-3-2-6-3-11-3s-8 1-11 3c-1-2-2-5-2-8Z'
-      : 'M12 18c0-8 5-13 12-13s12 5 12 13c0 4-1 7-3 9-2-3-5-5-9-5s-7 2-9 5c-2-2-3-5-3-9Z';
+  if (gender === 'female') {
+    return (
+      <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M14 19c0-8 4-14 10-14s10 6 10 14v6c0 4 2 7 5 10-3 4-8 7-15 7S12 39 9 35c3-3 5-6 5-10v-6Z" />
+        <circle cx="24" cy="20" r="7" fill="currentColor" />
+        <path fill="currentColor" d="M8 44c2.4-8.8 8.5-14 16-14s13.6 5.2 16 14H8Z" />
+      </svg>
+    );
+  }
+
+  if (gender === 'male') {
+    return (
+      <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 18c0-7.5 5-13 12-13s12 5.5 12 13c0 1.4-.2 2.8-.6 4-2.8-2-6.6-3.1-11.4-3.1S15.4 20 12.6 22c-.4-1.2-.6-2.6-.6-4Z" />
+        <circle cx="24" cy="21" r="7.5" fill="currentColor" />
+        <path fill="currentColor" d="M7 44c2.7-8.5 9-13.2 17-13.2S38.3 35.5 41 44H7Z" />
+      </svg>
+    );
+  }
 
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
-      <path fill="currentColor" d={hairPath} />
-      <circle cx="24" cy="20" r="8" fill="currentColor" />
-      <path fill="currentColor" d="M8 44c2.5-9 8.5-14 16-14s13.5 5 16 14H8Z" />
+      <circle cx="24" cy="19" r="9" fill="currentColor" />
+      <path fill="currentColor" d="M7 44c2.7-9 9-14 17-14s14.3 5 17 14H7Z" />
     </svg>
   );
 }
 
 export function getVisualPersonCardData(person: Pessoa) {
   return {
-    pet: isPetFamilyMember(person),
+    pet: isPetFamilyMember(person) || getPersonGender(person) === 'pet',
     displayName: getFirstTwoNames(person.nome_completo) || person.nome_completo,
     birthLine: formatVitalLine(person.local_nascimento, person.data_nascimento),
     deathLine: formatVitalLine(person.local_falecimento, person.data_falecimento),
@@ -105,6 +119,9 @@ export function VisualPersonAvatar({
   className: string;
   iconClassName: string;
 }) {
+  const gender = getPersonGender(person);
+  const silhouetteGender = gender === 'pet' ? 'neutral' : gender;
+
   return (
     <span
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner ${className}`}
@@ -114,7 +131,7 @@ export function VisualPersonAvatar({
       ) : pet ? (
         <PawPrint className={iconClassName} aria-hidden="true" />
       ) : (
-        <PersonSilhouette gender={getPersonGender(person)} className={iconClassName} />
+        <PersonSilhouette gender={silhouetteGender} className={iconClassName} />
       )}
     </span>
   );
@@ -190,11 +207,9 @@ export function VisualPersonCard({
         onClick={() => onClick(person)}
         className={[
           'flex h-[74px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]',
-          isSpouseTone
-            ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
-            : isAncestorSpouseTone
-              ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
-              : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
+          isSpouseTone || isAncestorSpouseTone
+            ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
+            : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
         ].join(' ')}
       >
         <VisualPersonAvatar person={person} pet={pet} className="h-[46px] w-[46px]" iconClassName="h-6 w-6" />
@@ -227,11 +242,9 @@ export function VisualPersonCard({
         `relative flex ${height} w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
         central
           ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700'
-          : isSpouseTone
-            ? 'border-amber-200 bg-gradient-to-b from-amber-500 to-orange-700'
-            : isAncestorSpouseTone
-              ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
-              : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
+          : isSpouseTone || isAncestorSpouseTone
+            ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
+            : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
       ].join(' ')}
     >
       {label && (
@@ -397,7 +410,7 @@ export function VisualGroup({
             return (
               <div key={person.id} className="relative min-w-0">
                 {lateralConnector && (
-                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-200" aria-hidden="true" />
+                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-500" aria-hidden="true" />
                 )}
                 <VisualPersonCard
                   person={person}

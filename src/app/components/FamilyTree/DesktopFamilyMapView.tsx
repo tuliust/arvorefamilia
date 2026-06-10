@@ -673,23 +673,41 @@ function composeGroup({
     || (config.spousePolicy === 'filter' && spouseFilterActive)
   );
 
+  const canRenderPerson = (person: Pessoa | undefined): person is Pessoa => Boolean(
+    person && !excludedIds.has(person.id) && isVisible(person),
+  );
+
   const addPerson = (person: Pessoa) => {
-    if (seen.has(person.id) || excludedIds.has(person.id) || !isVisible(person)) return false;
+    if (seen.has(person.id) || !canRenderPerson(person)) return false;
     seen.add(person.id);
     result.push(person);
     return true;
   };
 
-  people.forEach((person) => {
-    if (!addPerson(person) && !seen.has(person.id)) return;
-    if (!includeSpouses) return;
+  const getVisibleSpouse = (person: Pessoa) => (
+    spousesByPerson.get(person.id) ?? []
+  ).find((spouse) => canRenderPerson(spouse) && !seen.has(spouse.id));
 
-    // Pairing is only created from explicit `conjuge` relationships; adjacency is never inferred.
-    (spousesByPerson.get(person.id) ?? []).forEach((spouse) => {
-      if (!addPerson(spouse)) return;
-      spousePersonIds.add(spouse.id);
-      spousePartnerByPersonId.set(spouse.id, person.id);
+  if (includeSpouses) {
+    // Render explicit couples as adjacent units first. This prevents unrelated single relatives
+    // from splitting a real couple across rows/columns in lateral groups.
+    people.forEach((person) => {
+      if (seen.has(person.id) || !canRenderPerson(person)) return;
+      const spouse = getVisibleSpouse(person);
+      if (!spouse) return;
+
+      addPerson(person);
+      if (addPerson(spouse)) {
+        spousePersonIds.add(spouse.id);
+        spousePartnerByPersonId.set(spouse.id, person.id);
+      }
     });
+  }
+
+  // Add remaining visible people after paired units. Single relatives stay visible, but no longer
+  // interrupt couples such as Marcos Alfredo + Enildes Barros.
+  people.forEach((person) => {
+    addPerson(person);
   });
 
   return { people: result, spousePersonIds, spousePartnerByPersonId };
@@ -1552,4 +1570,3 @@ export function DesktopFamilyMapView({
     </div>
   );
 }
-
