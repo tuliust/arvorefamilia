@@ -1,8 +1,9 @@
 # Arquitetura atual - Árvore Família
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/arquitetura/ARCHITECTURE.md`  
+> Última revisão: 2026-06-10
+> Local canônico: `docs/arquitetura/ARCHITECTURE.md`
 > Projeto: `tuliust/arvorefamilia`
+> Status: revisado após inclusão da view `/mapa-familiar`, do componente `DesktopFamilyMapView`, dos cards visuais compartilhados e da paleta `visual`.
 
 ## Objetivo
 
@@ -26,11 +27,11 @@ Use este arquivo para entender a arquitetura geral. Para detalhes específicos, 
 | Frontend | React 18, TypeScript e Vite |
 | Roteamento | React Router 7 com `createBrowserRouter` |
 | UI | Tailwind CSS v4, componentes locais em `src/app/components/ui`, `lucide-react` |
-| Árvore | React Flow, Dagre e layouts próprios em `components/FamilyTree` |
+| Árvore | React Flow, Dagre, layouts próprios em `components/FamilyTree`, composição visual HTML/CSS/SVG para `Mapa Familiar` |
 | Banco/Auth | Supabase Auth, Supabase Postgres, RLS, RPCs e Storage |
 | Edge/serverless | Supabase Edge Functions |
 | Testes | Vitest e Playwright |
-| Exportação | `html2canvas` e `jspdf` |
+| Exportação | `html2canvas` e `jspdf` para fluxos canônicos de exportação da árvore ReactFlow |
 | Integrações | Google Places/Maps, Google Calendar, Resend/OpenAI server-side quando configurados |
 
 Observações:
@@ -38,6 +39,7 @@ Observações:
 - `supabase/migrations` é a fonte da verdade do schema.
 - Scripts SQL soltos são referência histórica ou operacional, não schema canônico.
 - Secrets não devem ir para frontend, repositório, dumps versionados ou documentação operacional aberta.
+- Ajuste visual, nova view de apresentação e nova paleta não exigem migration.
 
 ---
 
@@ -48,7 +50,7 @@ src/app/
   components/             Componentes reutilizáveis
   components/ui/          Componentes base de UI
   components/layout/      Headers, menu do usuário e containers
-  components/FamilyTree/  ReactFlow, nodes, edges, layouts e exportação
+  components/FamilyTree/  ReactFlow, nodes, edges, layouts, exportação e views visuais da árvore
   components/person/      Campos, exibição e editores de pessoa
   components/relationships/ Dados conjugais e vínculos
   components/Timeline/    Timeline de pessoa
@@ -69,13 +71,28 @@ supabase/
   functions/              Edge Functions
 ```
 
+Arquivos centrais da árvore:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeHeader.tsx
+```
+
 Regra de separação:
 
 - componente visual não deve concentrar regra de banco;
 - persistência deve passar por service;
-- cálculo puro deve ficar em util;
+- cálculo puro deve ficar em util/model;
 - schema deve evoluir por migration;
-- rota/guard deve ficar centralizada em `routes.tsx` e nos componentes de proteção.
+- rota/guard deve ficar centralizada em `routes.tsx` e nos componentes de proteção;
+- view visual da árvore não deve alterar relacionamentos reais.
 
 ---
 
@@ -86,9 +103,9 @@ Regra de separação:
 | Rotas/guards | Definir acesso e navegação | `routes.tsx`, `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute` |
 | Contexto de auth | Sessão, login, cadastro, logout e estado do usuário | `AuthContext.tsx` |
 | Pages | Orquestração de tela, estado local e composição | `Home.tsx`, `PersonProfile.tsx`, `MinhaArvore.tsx`, páginas admin |
-| Components | UI, interação visual e componentes reutilizáveis | `FamilyTree`, `MemberPageHeader`, `UserProfileMenu`, `FavoriteButton` |
+| Components | UI, interação visual e componentes reutilizáveis | `FamilyTree`, `DesktopFamilyMapView`, `MobileFamilyTreeView`, `MemberPageHeader`, `UserProfileMenu`, `FavoriteButton` |
 | Services | Leitura/escrita Supabase, RPCs, Storage e integrações | `dataService`, `memberProfileService`, `forumService`, `notification*Service` |
-| Utils | Transformações e cálculos puros | `relationshipDegree`, `familyDates`, `buildPersonTimeline` |
+| Utils/modelos | Transformações e cálculos puros | `relationshipDegree`, `familyDates`, `buildPersonTimeline`, `buildMobileFamilyTreeModel` |
 | Migrations | Schema, RLS, functions SQL e seeds controlados | `supabase/migrations/*.sql` |
 | Edge Functions | Execução server-side com secrets | notificações, Google Calendar, insights |
 
@@ -102,7 +119,7 @@ Guards atuais:
 
 | Guard | Arquivo | Uso |
 |---|---|---|
-| `TreeAccessRoute` | `src/app/components/TreeAccessRoute.tsx` | `/`, `/minha-arvore`, `/genealogia`, `/visao-completa` |
+| `TreeAccessRoute` | `src/app/components/TreeAccessRoute.tsx` | `/`, `/minha-arvore`, `/mapa-familiar`, `/genealogia`, `/visao-completa`, `/busca` |
 | `MemberRoute` | `src/app/components/MemberRoute.tsx` | páginas de usuário autenticado, fórum, notificações, calendário, favoritos e perfis |
 | `ProtectedRoute` | `src/app/components/ProtectedRoute.tsx` | rotas administrativas |
 
@@ -114,6 +131,7 @@ Regras consolidadas:
 - Usuário comum não deve acessar `/admin/*`.
 - UI escondida não substitui RLS/RPC segura.
 - `/` redireciona para `/minha-arvore` preservando search params.
+- `/mapa-familiar` é uma view protegida da árvore e não uma página interna comum.
 
 Detalhes ficam em `docs/arquitetura/ROTAS_E_GUARDS.md`.
 
@@ -121,10 +139,11 @@ Detalhes ficam em `docs/arquitetura/ROTAS_E_GUARDS.md`.
 
 ## 5. Home pós-login e árvore
 
-A Home pós-login é o shell das três views da árvore:
+A Home pós-login é o shell das quatro views da árvore:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 ```
@@ -137,19 +156,69 @@ src/app/pages/home/HomeHeader.tsx
 src/app/pages/home/HomeTreeSection.tsx
 src/app/pages/home/HomeMobileNav.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
 src/app/components/FamilyTree/treeViewMode.ts
+src/app/components/FamilyTree/treeColorPalettes.ts
 ```
 
 Regras:
 
 - `Home.tsx` deriva `treeViewMode` da URL.
 - `treeViewMode.ts` centraliza mapeamento de view para path.
-- `FamilyTree.tsx` renderiza React Flow, layouts, viewport, pan/zoom e exportação.
-- `/minha-arvore` usa layout direto da pessoa central.
+- `HomeTreeSection.tsx` decide a renderização principal da área da árvore.
+- `FamilyTree.tsx` renderiza React Flow, layouts, viewport, pan/zoom e exportação nas views ReactFlow.
+- `/minha-arvore` usa layout direto da pessoa central no desktop/tablet e `MobileFamilyTreeView` no mobile.
+- `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e fallback para `MobileFamilyTreeView` no mobile.
 - `/genealogia` usa layout por gerações com escopo pessoal.
 - `/visao-completa` usa layout por gerações com base completa.
 - Paletas visuais são aplicadas por CSS variables e `localStorage`; não usam Supabase.
 - Ajuste visual da árvore não deve criar migration.
+
+### 5.1 `Mapa Familiar`
+
+`Mapa Familiar` é uma view panorâmica da árvore direta.
+
+Características técnicas:
+
+- rota: `/mapa-familiar`;
+- view mode: `mapa-familiar`;
+- componente principal desktop/tablet: `DesktopFamilyMapView.tsx`;
+- fallback mobile: `MobileFamilyTreeView.tsx`;
+- cards compartilhados: `FamilyTreeVisualCards.tsx`;
+- modelo de dados: `buildMobileFamilyTreeModel` em `mobileFamilyTreeModel.ts`;
+- composição visual: HTML/CSS com canvas fixo de referência e conectores SVG;
+- escala responsiva: `ResizeObserver` calcula escala para caber na viewport;
+- grupos grandes podem ter scroll interno;
+- não usa ReactFlow como base de renderização.
+
+Regras:
+
+- não substituir `/minha-arvore` por `Mapa Familiar`;
+- não migrar `/genealogia` ou `/visao-completa` para esse layout;
+- não usar `DesktopFamilyMapView` para alterar dados reais;
+- manter `visiblePersonIds` e filtros diretos respeitados pela view;
+- documentar qualquer limitação de exportação/favoritos/busca no plano antes de declarar como concluída.
+
+### 5.2 Paletas da árvore
+
+Paletas atuais:
+
+| Chave | Nome exibido | Observação |
+|---|---|---|
+| `white` | Padrão | Paleta branca/padrão |
+| `orange` | Laranja | Canvas alaranjado |
+| `brown` | Marrom | Paleta premium marrom/editorial |
+| `visual` | Visual | Paleta azul/ciano inspirada nos cards visuais do mobile e do Mapa Familiar |
+
+Regras:
+
+- paleta altera CSS variables no `document.documentElement`;
+- paleta persiste em `localStorage`;
+- paleta não altera rota, filtros, permissões, dados ou Supabase;
+- ao adicionar nova paleta, atualizar tipos, seletor desktop/tablet e portal mobile, se aplicável.
 
 ---
 
@@ -316,7 +385,8 @@ Ao alterar arquitetura:
 3. criar migration apenas quando houver mudança real de banco;
 4. atualizar `MIGRATIONS_SUPABASE.md` quando houver schema/RLS/RPC nova;
 5. atualizar documentos funcionais afetados;
-6. rodar validações mínimas:
+6. ao adicionar view de árvore, atualizar `treeViewMode.ts`, `routes.tsx`, `HomeHeader`, `HomeTreeSection`, busca/favoritos se aplicável e documentação;
+7. rodar validações mínimas:
 
 ```bash
 npm run build

@@ -3,13 +3,19 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após conferência dos documentos recentes com o código atual da Minha Árvore mobile segmentada e atualização das pendências abertas.
+> Status: índice canônico revisado após inclusão da view `/mapa-familiar`, atualização das rotas/arquitetura e reclassificação das pendências antigas da Minha Árvore mobile.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
 Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação foi consolidada para reduzir duplicidade, separar estado atual de histórico e evitar que arquivos antigos sejam usados como fonte de verdade.
 
-A revisão mais recente também registra que `/entrar` funciona como home pública do app **Família Souza Barros** para fins de validação/OAuth, incluindo explicação direta da integração com Google Agenda. A revisão de 2026-06-10 também separa o estado implementado da **Minha Árvore mobile segmentada** da pendência visual ainda aberta para finalizar sete telas, containers de 70% a 80% e conectores até as extremidades aplicáveis.
+A revisão mais recente registra:
+
+- `/entrar` continua funcionando como home pública do app **Família Souza Barros** para validação/OAuth, incluindo explicação direta da integração com Google Agenda;
+- as views principais da árvore agora são **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
+- `/mapa-familiar` é uma view protegida de árvore, com renderização panorâmica desktop/tablet em `DesktopFamilyMapView` e fallback mobile para `MobileFamilyTreeView`;
+- a paleta **Visual** (`visual`) foi adicionada como modo de cores da árvore;
+- pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 
 ---
 
@@ -35,10 +41,10 @@ Quando houver divergência entre um guia atual e conteúdo histórico, prevalece
 | Arquivo | Uso |
 |---|---|
 | `README.md` | Índice canônico da documentação. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já foi implementado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus, portais mobile e microcopy. |
-| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já foi implementado, incluindo **Mapa Familiar** e paleta **Visual**. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. Deve cobrir `DesktopFamilyMapView`, `MobileFamilyTreeView` e `FamilyTreeVisualCards`. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus, portais mobile, **Mapa Familiar**, paletas e microcopy. |
+| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. Pode receber complemento específico sobre `/mapa-familiar`. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, bloqueios, QA futuro e backlog pós-MVP. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. |
 
@@ -54,8 +60,8 @@ docs/arquitetura/
 
 | Arquivo | Uso |
 |---|---|
-| `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas e integrações. |
-| `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, home `/entrar`, rotas de membro, rotas administrativas, guards, OAuth/compliance e redirecionamentos. |
+| `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, quatro views da árvore, `DesktopFamilyMapView`, paleta `visual` e integrações. |
+| `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, home `/entrar`, rotas de árvore incluindo `/mapa-familiar`, rotas de membro, rotas administrativas, guards, OAuth/compliance e redirecionamentos. |
 | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações e objetos legados. |
 
 ---
@@ -71,17 +77,18 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos, `MobileFamilyTreeView` e estado da Minha Árvore mobile segmentada. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos, `MobileFamilyTreeView`, estado da Minha Árvore mobile segmentada e relação com `/mapa-familiar`. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
-| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS do mobile segmentado, filtros, destaques, painel lateral sem scroll desktop, aliança dinâmica e ações. |
+| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS do mobile segmentado, conectores SVG do `Mapa Familiar`, filtros, destaques, painel lateral e ações. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
-| `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
+| `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores, modo foco e impacto no `Mapa Familiar` quando documentado. |
 | `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. |
 | `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
-| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; inclui fluxo de seleção e fluxo mobile rápido. |
+| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; deve explicitar se `/mapa-familiar` ainda não participa do fluxo canônico. |
 | `funcionalidades/CURIOSIDADES_E_IA.md` | Curiosidades, descoberta de conexão familiar, perguntas à IA, contexto genealógico, privacidade, fallback e QA de respostas. |
+| `funcionalidades/FAVORITOS.md` | Favoritos de pessoas/conteúdos/páginas; deve ser atualizado caso `Mapa Familiar` vire página favoritable no catálogo. |
 
 ---
 
@@ -150,7 +157,7 @@ Não recriar documentos históricos individuais salvo necessidade explícita de 
 | Tipo de informação | Destino correto |
 |---|---|
 | Estado consolidado de implementação | `GUIA_IMPLEMENTACOES.md` |
-| Layout, responsividade, visual, menu, header, microcopy e portais mobile | `GUIA_UX_LAYOUT.md` |
+| Layout, responsividade, visual, menu, header, microcopy, Mapa Familiar e portais mobile | `GUIA_UX_LAYOUT.md` |
 | Componentes, props, responsabilidades e anti-regressões | `GUIA_COMPONENTES.md` |
 | Sintoma, erro, causa provável e correção | `GUIA_CORRECAO_ERROS.md` |
 | Pendência real, bug provável, decisão futura ou pós-MVP | `PLANO_PROXIMOS_PASSOS.md` |
@@ -175,22 +182,23 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano separa itens **abertos** de itens **concluídos tecnicamente**.
+No fechamento desta revisão documental, o plano separa itens **implementados**, **obsoletos/substituídos** e **abertos**.
 
-Itens concluídos nesta revisão técnica:
+Itens concluídos tecnicamente ou reclassificados:
 
 | ID | Origem | Resultado |
 |---|---|---|
 | `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | Chips mobile usam a base de gerações inferidas em `HomeTreeSection.tsx`. |
 | `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Encoding corrigido na origem; workaround global removido. |
+| `DOC-004` | `/minha-arvore` mobile ReactFlow | Reclassificado como obsoleto para a rota mobile principal, pois `/minha-arvore` mobile usa `MobileFamilyTreeView`. |
 | `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação mobile rápida alinhada ao fluxo canônico de `treeExport.ts`. |
+| `DOC-013` | `/minha-arvore` mobile segmentada | Reclassificado: a malha 3×3, abas `Paterno | Central | Materno`, ancestrais globais, primos sem “Ver todos” e preview de swipe foram implementados/documentados. Manter apenas QA visual manual quando necessário. |
 
 Itens ainda abertos ou parcialmente abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
 | `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | decisão pendente apenas sobre persistência de `Complemento`; redes sociais múltiplas já persistem em `pessoa_social_profiles` |
-| `DOC-004` | `/minha-arvore` mobile | bug visual / conector inferior |
 | `DOC-006` | `/forum` | divergência UI/documentação / filtros tipo-status |
 | `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
 | `DOC-008` | `directFamilyDistributedLayout.ts` | melhoria técnica / migrar largura visual de cards para layout estrutural |
@@ -198,9 +206,9 @@ Itens ainda abertos ou parcialmente abertos:
 | `DOC-010` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
 | `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
 | `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
-| `DOC-013` | `/minha-arvore` mobile segmentada | bug visual / finalizar sete telas, containers 70–80% e conectores até extremidades |
-
-A pendência `DOC-013` centraliza a divergência atual entre o desenho desejado da Minha Árvore mobile segmentada e o código existente em `MobileFamilyTreeView.tsx`. Documentos funcionais podem explicar o comportamento esperado, mas não devem marcar essa frente como concluída enquanto o código não refletir o critério de aceite.
+| `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
+| `DOC-015` | `/mapa-familiar` busca/favoritos | verificar inclusão em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES` |
+| `DOC-016` | `/mapa-familiar` exportação | decidir/documentar se a exportação canônica deve capturar a view HTML/SVG panorâmica |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 
@@ -221,7 +229,7 @@ Antes de lançamento, commit final ou deploy, bloquear se houver:
 - documentação canônica orientando ação insegura de Supabase, Storage, Auth ou migrations;
 - responsividade impedindo uso em mobile;
 - home `/entrar` sem nome público **Família Souza Barros** ou sem explicação da integração Google Agenda quando houver validação OAuth pendente;
-- árvore principal, perfil de pessoa, fórum, notificações ou edição da própria árvore inutilizáveis.
+- árvore principal, Mapa Familiar, perfil de pessoa, fórum, notificações ou edição da própria árvore inutilizáveis.
 
 ---
 
@@ -258,15 +266,22 @@ Se algum documento operacional, migration, Edge Function ou script for alterado 
 
 Usar `git add` explícito, não `git add .`.
 
-Sugestão para esta atualização específica dos dois arquivos:
+Sugestão para esta atualização específica:
 
 ```bash
-git add docs/README.md docs/PLANO_PROXIMOS_PASSOS.md
-git commit -m "docs: update mobile tree plan and docs index"
+git add docs/arquitetura/ROTAS_E_GUARDS.md
+
+git add docs/arquitetura/ARCHITECTURE.md
+
+git add docs/README.md
+
+git add docs/PLANO_PROXIMOS_PASSOS.md
+
+git commit -m "docs: atualiza arquitetura e plano do mapa familiar"
+
 git pull --rebase origin main
+
 git push origin main
 ```
 
 Para uma revisão documental ampla envolvendo todos os guias, continuar usando `git add` explícito por arquivo ou pasta, nunca `git add .`.
-
-Arquivos removidos por consolidação histórica devem permanecer staged como `D` no commit final.

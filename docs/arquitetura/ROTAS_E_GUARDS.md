@@ -1,9 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado após ajuste da home pública `/entrar` para compliance Google/OAuth e exposição direta do nome **Família Souza Barros**.
+> Status: revisado após inclusão da view protegida `/mapa-familiar`, atualização do contrato de `TreeViewMode` e preservação das regras de compliance da home pública `/entrar`.
 
 ## Objetivo
 
@@ -15,7 +15,8 @@ Use este arquivo para:
 - validar `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`;
 - entender o fluxo de login, primeiro acesso e vínculo com pessoa;
 - corrigir redirecionamentos;
-- revisar navegação entre `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- revisar navegação entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa`;
+- garantir preservação de search params, especialmente `?pessoa=...`;
 - garantir que usuário comum não acesse admin.
 
 Documentos relacionados:
@@ -41,7 +42,11 @@ src/app/services/permissionService.ts
 src/app/services/memberProfileService.ts
 src/app/pages/Entrar.tsx
 src/app/pages/Home.tsx
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
 src/app/components/FamilyTree/treeViewMode.ts
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
 ```
@@ -74,6 +79,7 @@ src/app/components/TreeAccessRoute.tsx
 Responsabilidade:
 
 - proteger as views principais da árvore;
+- proteger a busca global autenticada;
 - exigir usuário autenticado;
 - exigir login recente;
 - resolver vínculo de primeiro acesso via `resolveFirstAccessLinkForUser`;
@@ -85,6 +91,7 @@ Rotas protegidas:
 ```txt
 /
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 /busca
@@ -98,7 +105,7 @@ sem sessão -> /entrar
 sessão sem login recente -> /entrar
 sem vínculo resolvido -> /entrar
 vínculo recém-criado + dados_confirmados=false -> /meus-dados
-vínculo existente ou resolvido -> libera árvore
+vínculo existente ou resolvido -> libera árvore/busca
 ```
 
 Cuidados:
@@ -106,7 +113,8 @@ Cuidados:
 - não remover preservação de search params do redirect `/` → `/minha-arvore`;
 - não liberar árvore para usuário sem vínculo resolvido;
 - não transformar `dados_confirmados=false` de vínculo antigo em loop permanente para `/meus-dados` sem validar regra de produto;
-- não resolver acesso apenas no frontend se RLS exigir ajuste.
+- não resolver acesso apenas no frontend se RLS exigir ajuste;
+- não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
 
 ### 3.2 `MemberRoute`
 
@@ -243,17 +251,28 @@ Regras de compliance:
 |---|---|---|---|
 | `/` | `RedirectToMinhaArvore` | `TreeAccessRoute` | redireciona para `minha-arvore` |
 | `/minha-arvore` | `Home` | `TreeAccessRoute` | `minha-arvore` |
+| `/mapa-familiar` | `Home` | `TreeAccessRoute` | `mapa-familiar` |
 | `/genealogia` | `Home` | `TreeAccessRoute` | `genealogia` |
 | `/visao-completa` | `Home` | `TreeAccessRoute` | `visao-completa` |
 | `/busca` | `BuscaResultados` | `TreeAccessRoute` | busca global protegida |
 
 Regras:
 
-- as três views usam o mesmo shell `Home`;
+- as quatro views principais usam o mesmo shell `Home`;
 - `Home.tsx` deriva `treeViewMode` de `location.pathname`;
 - troca de view deve usar navegação client-side;
 - search params devem ser preservados, especialmente `?pessoa=...`;
-- não manter estado paralelo de view quando a URL já define a view.
+- não manter estado paralelo de view quando a URL já define a view;
+- `/mapa-familiar` deve ser tratada como view de árvore, não como página interna comum.
+
+### 5.1 Diferença entre as views da árvore
+
+| View | Rota | Renderização principal |
+|---|---|---|
+| Minha Árvore | `/minha-arvore` | ReactFlow no desktop/tablet; `MobileFamilyTreeView` no mobile |
+| Mapa Familiar | `/mapa-familiar` | `DesktopFamilyMapView` no desktop/tablet; fallback para `MobileFamilyTreeView` no mobile |
+| Genealogia | `/genealogia` | ReactFlow por gerações, com chips mobile quando aplicável |
+| Visão Completa | `/visao-completa` | ReactFlow por gerações/base completa, com chips mobile quando aplicável |
 
 ---
 
@@ -268,18 +287,28 @@ src/app/components/FamilyTree/treeViewMode.ts
 Contrato atual:
 
 ```txt
-TreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa'
+TreeViewMode = 'minha-arvore' | 'mapa-familiar' | 'genealogia' | 'visao-completa'
 VIEW_MODE_TO_PATH
 PATH_TO_VIEW_MODE
 getTreeViewModeFromPath
 getPathForTreeViewMode
 ```
 
+Mapeamento canônico:
+
+| `TreeViewMode` | Path |
+|---|---|
+| `minha-arvore` | `/minha-arvore` |
+| `mapa-familiar` | `/mapa-familiar` |
+| `genealogia` | `/genealogia` |
+| `visao-completa` | `/visao-completa` |
+
 Regras:
 
 - qualquer link interno entre views deve usar helper ou rota canônica equivalente;
 - não duplicar mapeamento manual em vários componentes;
-- preservar nomes de view, pois eles orientam layout e filtros.
+- preservar nomes de view, pois eles orientam layout, filtros e renderização;
+- adicionar nova view sempre exige atualização de rota, helper, header, documentação e QA de `?pessoa=...`.
 
 ---
 
@@ -357,8 +386,8 @@ Regras:
 
 `HomeHeader` contém:
 
-- seletor de view;
-- seletor de paleta;
+- seletor de view com **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
+- seletor de paleta, incluindo **Visual**;
 - busca de pessoa/página;
 - atalhos de fórum/calendário/curiosidades;
 - `UserProfileMenu variant="home-header"`.
@@ -386,7 +415,18 @@ Regras:
 - Painel Admin condicional;
 - Sair.
 
-No mobile, também apresenta seleção rápida das views da árvore.
+No mobile, também apresenta seleção rápida das views da árvore. Quando a view `/mapa-familiar` for acessada em mobile, a renderização usa fallback seguro para a experiência segmentada mobile.
+
+### Busca e favoritos
+
+`/mapa-familiar` existe como rota protegida e view da árvore. A inclusão explícita da página nos catálogos de busca global e favoritos deve ser mantida sincronizada com:
+
+```txt
+src/app/services/globalSearchService.ts
+src/app/constants/favoritePages.ts
+```
+
+Se `Mapa Familiar` não aparecer na busca do header ou em favoritos de página, registrar como pendência técnica no plano antes de documentar como concluído.
 
 ---
 
@@ -403,6 +443,8 @@ No mobile, também apresenta seleção rápida das views da árvore.
 - Não quebrar preservação de `?pessoa=...`.
 - Não duplicar mapeamento de `TreeViewMode` fora de `treeViewMode.ts` sem justificativa.
 - Não usar botão escondido como única proteção de dados.
+- Não remover `/mapa-familiar` de `TreeAccessRoute` ao mexer nas rotas.
+- Não substituir o ReactFlow de `/minha-arvore`, `/genealogia` ou `/visao-completa` pela view panorâmica.
 
 ---
 
@@ -425,4 +467,6 @@ Validar manualmente, sem alterar dados reais:
 - membro sem admin não acessa `/admin`;
 - admin acessa `/admin` e páginas administrativas;
 - `/` redireciona para `/minha-arvore` preservando search params;
-- troca entre `/minha-arvore`, `/genealogia` e `/visao-completa` mantém navegação client-side.
+- troca entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` mantém navegação client-side;
+- `/mapa-familiar?pessoa=...` preserva a pessoa central;
+- `/mapa-familiar` em mobile usa fallback seguro e não quebra a navegação inferior.
