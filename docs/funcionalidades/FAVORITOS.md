@@ -1,5 +1,10 @@
 # Favoritos
 
+> Última revisão: 2026-06-10
+> Local canônico: `docs/funcionalidades/FAVORITOS.md`
+> Tipo: documentação funcional/técnica de favoritos.
+> Status: revisado com a rota `/mapa-familiar`, favoritos de página e pendência DOC-015.
+
 Documentação funcional e técnica da funcionalidade de favoritos do projeto `arvorefamilia`.
 
 ## Objetivo
@@ -302,6 +307,7 @@ Páginas suportadas:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 /calendario-familiar
@@ -326,6 +332,35 @@ metadata = { source: "page_shortcut" }
 ### Decisão de produto
 
 Favoritar página funciona como atalho salvo para rota interna.
+
+### Mapa Familiar
+
+A página `/mapa-familiar` deve ser tratada como favorito de página quando estiver presente no catálogo de páginas favoritas.
+
+Payload esperado:
+
+```txt
+entityType = page
+entityId = /mapa-familiar
+label = Mapa Familiar
+description = Visualização panorâmica da árvore familiar
+href = /mapa-familiar
+metadata = { source: "page_shortcut" }
+```
+
+Arquivos a manter sincronizados:
+
+```txt
+src/app/constants/favoritePages.ts
+src/app/services/globalSearchService.ts
+src/app/components/FamilyTree/treeViewMode.ts
+```
+
+Regra:
+
+- favoritar `/mapa-familiar` salva a página, não uma pessoa nem um estado visual de zoom/filtros;
+- `?pessoa=...` pode ser preservado na navegação da sessão, mas o favorito de página deve apontar para a rota canônica;
+- se o catálogo ainda não incluir `/mapa-familiar`, manter a pendência `DOC-015` aberta em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 ## Relacionamentos
 
@@ -606,3 +641,10 @@ git status --short
 ```
 
 Quando houver outras frentes alterando `docs/`, a validação pode ser filtrada para os arquivos da frente de favoritos, mantendo o build completo.
+
+## Anti-regressões específicas do Mapa Familiar
+
+- Não remover `/mapa-familiar` do catálogo de favoritos se a rota estiver liberada no header.
+- Não salvar estado de zoom, grupos expandidos ou filtros do Mapa Familiar como favorito de página sem decisão específica.
+- Não favoritar pessoas a partir da rota `/mapa-familiar` usando `entity_type = page`; pessoa continua usando `entity_type = person`.
+- Não armazenar dados sensíveis, dumps de layout ou snapshots HTML/SVG em `metadata`.

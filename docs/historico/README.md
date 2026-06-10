@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-08  
-> Local canônico: `docs/historico/README.md`  
-> Tipo: consolidação histórica e índice da pasta `docs/historico/`.  
-> Status: único resumo histórico consolidado; substitui arquivos históricos individuais removidos.
+> Última revisão: 2026-06-10
+> Local canônico: `docs/historico/README.md`
+> Tipo: consolidação histórica e índice da pasta `docs/historico/`.
+> Status: resumo histórico consolidado atualizado com a frente Mapa Familiar e a coluna `genero`.
 
 ---
 
@@ -410,3 +410,41 @@ Depois desta revisão, a estrutura recomendada é:
 ```txt
 docs/historico/README.md
 ```
+
+### 4.7 Frente Mapa Familiar de 2026-06-10
+
+A frente **Mapa Familiar** adicionou uma quarta visualização protegida da árvore:
+
+```txt
+/mapa-familiar
+```
+
+Escopo histórico:
+
+- criação da rota protegida `/mapa-familiar`;
+- criação/uso de `TreeViewMode = 'mapa-familiar'`;
+- renderização desktop/tablet com `DesktopFamilyMapView.tsx`;
+- fallback mobile para `MobileFamilyTreeView.tsx`;
+- cards compartilhados em `FamilyTreeVisualCards.tsx`;
+- paleta `visual`;
+- layout panorâmico com HTML/CSS/SVG;
+- conectores por âncoras;
+- grupos expansíveis;
+- regras de cônjuges principais, ancestrais e colaterais;
+- zoom manual por `Ctrl + scroll`;
+- uso de `pessoas.genero` para avatar masculino, feminino e pet.
+
+Decisão documental:
+
+```txt
+O estado atual do Mapa Familiar deve ficar em docs/funcionalidades/MAPA_FAMILIAR_VIEW.md.
+Este histórico registra apenas a origem da frente.
+```
+
+Pendências relacionadas:
+
+- QA visual autenticado em desktop/tablet;
+- refinamento de grupos laterais de tios/primos;
+- busca/favoritos;
+- decisão sobre exportação HTML/SVG;
+- migration/tipagem para `pessoas.genero`, se a coluna foi criada manualmente.

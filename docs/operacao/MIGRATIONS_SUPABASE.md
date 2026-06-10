@@ -1,7 +1,7 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`  
+> Última revisão: 2026-06-10
+> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentação operacional.
 
 ## Objetivo
@@ -84,6 +84,7 @@ Perguntas obrigatórias:
 | O ambiente remoto está alinhado com local? | Evita push no alvo errado. |
 | Há risco de perda de dados? | Exige backup/rollback. |
 | O frontend já envia payload para a nova coluna? | Deploy deve respeitar ordem banco → frontend. |
+| A alteração foi feita manualmente no painel Supabase? | Se sim, criar migration para alinhar local/remoto. |
 | RLS precisa ser criada ou revista? | Evita abertura indevida. |
 | Há constraint nova? | Pode exigir deduplicação prévia. |
 | Há Edge Function ou service role envolvidos? | Secrets não podem ir para frontend/repositório. |
@@ -220,6 +221,7 @@ Exemplos conhecidos:
 ```txt
 public.arquivos_historicos.categoria_evento
 public.admin_reset_person_profile(target_pessoa_id uuid)
+public.pessoas.genero
 ```
 
 Se a migration já foi aplicada, não remover `categoria_evento` do payload nem alterar o frontend para mascarar cache/ambiente atrasado. Para RPCs, confirmar assinatura, `grant execute` e recarregamento do schema cache.
@@ -398,6 +400,63 @@ having count(*) > 1;
 Se retornar linhas após a migration, a constraint não foi aplicada corretamente ou houve inserção manual inconsistente.
 
 ---
+
+### Pendência provável: `add_genero_to_pessoas`
+
+Contexto:
+
+A coluna `public.pessoas.genero` foi criada/preenchida para controlar avatares visuais da árvore com os valores:
+
+```txt
+homem
+mulher
+pet
+```
+
+Se essa coluna foi criada manualmente no painel Supabase, ela precisa ser versionada em `supabase/migrations`.
+
+SQL sugerido para migration idempotente:
+
+```sql
+alter table public.pessoas
+  add column if not exists genero text;
+
+alter table public.pessoas
+  drop constraint if exists pessoas_genero_check;
+
+alter table public.pessoas
+  add constraint pessoas_genero_check
+  check (
+    genero is null
+    or genero in ('homem', 'mulher', 'pet')
+  );
+
+create index if not exists idx_pessoas_genero
+  on public.pessoas (genero);
+
+notify pgrst, 'reload schema';
+```
+
+Validações recomendadas antes de aplicar constraint:
+
+```sql
+select genero, count(*)
+from public.pessoas
+group by genero
+order by genero;
+
+select id, nome_completo, genero, humano_ou_pet
+from public.pessoas
+where genero is not null
+  and genero not in ('homem', 'mulher', 'pet');
+```
+
+Regra:
+
+- não criar migration para ajuste de avatar SVG;
+- criar migration apenas para a coluna/constraint/índice de banco;
+- aplicar migration antes de deploy que dependa de `genero` no payload tipado;
+- atualizar `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` quando a migration existir oficialmente.
 
 ## 10. RLS e permissões
 

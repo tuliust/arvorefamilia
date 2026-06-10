@@ -1,9 +1,9 @@
 # Guia de correção de erros - Árvore Família
 
-> Última revisão: 2026-06-09  
-> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico revisado para troubleshooting por sintoma, incluindo cache de chunks dinâmicos e RPC ausente no Supabase.
+> Última revisão: 2026-06-10
+> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: guia canônico revisado com troubleshooting do Mapa Familiar, avatares por `genero`, exportação e favoritos.
 
 ## Objetivo
 
@@ -296,7 +296,7 @@ src/app/services/permissionService.ts
 Comportamento esperado:
 
 - `/` redireciona para `/minha-arvore` preservando search params;
-- `/minha-arvore`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
+- `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
 - páginas de membro usam `MemberRoute`;
 - admin usa `ProtectedRoute`;
 - usuário comum não acessa admin;
@@ -475,6 +475,127 @@ Não fazer:
 - remover `stopPropagation`.
 
 ---
+
+## 5.6 Mapa Familiar com grupos laterais sobrepostos ou cortados
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
+Sintomas:
+
+| Sintoma | Investigar |
+|---|---|
+| Tios/primos invadem Pai/Mãe/Pessoa Central | `FAMILY_MAP_LAYOUT.areas.left/right`, `groups.paternalUncles`, `groups.maternalUncles`, `width`, `x` e `centerWithin`. |
+| Grupos paternos cortam à esquerda | `areas.left.x`, `areas.left.width`, escala responsiva e overflow horizontal. |
+| Grupos maternos cortam à direita | `areas.right.x`, `areas.right.width`, canvas lógico e escala responsiva. |
+| Botão `+/-` fica fora do grupo | `VisualGroup`, padding, `position: absolute` do botão e altura calculada. |
+| Grupo unitário fica largo demais | `singleWidth`, `getGroupWidth` e configuração do grupo. |
+
+Correção segura:
+
+- mexer primeiro na configuração centralizada `FAMILY_MAP_LAYOUT`;
+- não reposicionar Pai, Mãe, Pessoa Central ou ancestrais para corrigir tios/primos;
+- alterar apenas `areas.left/right` e os grupos laterais correspondentes quando o problema for lateral;
+- validar com grupos recolhidos e expandidos;
+- validar em 1366px, 1440px, 1536px e 1920px.
+
+Não fazer:
+
+- espalhar coordenadas mágicas no JSX;
+- corrigir via zoom padrão para mascarar sobreposição;
+- reduzir cards até perder legibilidade do primeiro e segundo nome;
+- mover o núcleo central para compensar laterais.
+
+## 5.7 Cônjuges do Mapa Familiar conectados à pessoa errada
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+```
+
+Causa provável:
+
+- relacionamento `conjuge` ausente ou duplicado;
+- composição do grupo ordenou pessoa solteira entre casal;
+- placeholder/spacer de linha não preservou casal lado a lado;
+- conector interno foi inferido por posição, não por relacionamento explícito.
+
+Correção:
+
+- usar apenas `relacionamentos.tipo_relacionamento === 'conjuge'` para parear cônjuges;
+- preservar `spousePartnerByPersonId`;
+- manter casais juntos antes de pessoas sem par no mesmo grupo quando necessário;
+- se não houver relação explícita, não desenhar conector interno;
+- revisar casos conhecidos como Marcos Alfredo/Enildes Barros e Mário Assis/Márcia Tereza.
+
+Anti-regressão:
+
+```txt
+Conector interno de cônjuge nunca deve ser inferido apenas por proximidade visual.
+```
+
+## 5.8 Avatar masculino/feminino/pet errado no Mapa Familiar
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/types.ts
+src/app/types/index.ts
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+Sintomas:
+
+| Sintoma | Causa provável |
+|---|---|
+| Homem aparece com avatar feminino/neutro | `pessoas.genero` ausente, valor diferente de `homem` ou fallback por nome sendo usado. |
+| Mulher aparece com avatar masculino/neutro | `pessoas.genero` ausente, valor diferente de `mulher` ou dado não carregado no frontend. |
+| Pet aparece como humano | `genero` diferente de `pet` ou `humano_ou_pet` inconsistente. |
+| Build falha dizendo que `genero` não existe | tipo `Pessoa` não foi atualizado. |
+| Frontend não recebe `genero` | coluna ausente no Supabase remoto, schema cache desatualizado ou select/service não inclui o campo. |
+
+Correção:
+
+1. confirmar dados:
+
+```sql
+select id, nome_completo, genero, humano_ou_pet
+from public.pessoas
+where id = '<id-da-pessoa>';
+```
+
+2. confirmar valores aceitos:
+
+```txt
+homem
+mulher
+pet
+```
+
+3. se TypeScript falhar, adicionar ao tipo `Pessoa`:
+
+```ts
+genero?: 'homem' | 'mulher' | 'pet' | string | null;
+```
+
+4. se a coluna foi criada manualmente, criar migration versionada;
+5. se o remoto já tem a coluna e o erro persistir, investigar schema cache.
+
+Não fazer:
+
+- inferir gênero permanentemente por nome quando `genero` existe;
+- resolver pet apenas por relacionamento visual;
+- criar migration para trocar SVG do avatar.
 
 ## 6. Paletas visuais da árvore
 
@@ -949,3 +1070,60 @@ git push origin main
 ```
 
 Não usar `git add .`.
+
+## 19. Problemas de busca, favoritos e exportação no Mapa Familiar
+
+### 19.1 `Mapa Familiar` não aparece na busca global
+
+Investigar:
+
+```txt
+src/app/services/globalSearchService.ts
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/pages/home/HomeHeader.tsx
+```
+
+Correção esperada:
+
+- incluir `/mapa-familiar` no catálogo de páginas da busca, se a decisão de produto for exibir a view;
+- preservar `?pessoa=...` ao navegar entre views;
+- manter a pendência `DOC-015` aberta enquanto não for verificado.
+
+### 19.2 `Mapa Familiar` não pode ser favoritado
+
+Investigar:
+
+```txt
+src/app/constants/favoritePages.ts
+src/app/components/favorites/PageFavoriteButton.tsx
+src/app/pages/home/HomeHeader.tsx
+```
+
+Correção esperada:
+
+- adicionar `/mapa-familiar` ao catálogo de páginas favoritas;
+- usar `entity_type = page`;
+- não salvar zoom, filtro ou estado de grupos como favorito.
+
+### 19.3 Exportação do Mapa Familiar falha ou não existe
+
+Investigar:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/utils/treeExport.ts
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
+Estado atual:
+
+- a exportação canônica foi consolidada para as views ReactFlow;
+- `/mapa-familiar` usa HTML/CSS/SVG e exige decisão técnica específica;
+- não declarar exportação completa do Mapa Familiar sem implementação/QA próprios.
+
+Correção futura possível:
+
+- definir elemento alvo de captura da superfície panorâmica;
+- ignorar botões `+/-`, header e overlays;
+- validar zoom, grupos expandidos e conectores SVG;
+- revisar limite de pixels.

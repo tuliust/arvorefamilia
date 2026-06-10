@@ -1,15 +1,15 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
 > Tipo: documentação funcional e técnica da exportação da árvore.
-> Status: revisado após alinhamento da exportação mobile ao fluxo canônico `treeExport.ts`.
+> Status: revisado com a limitação atual da exportação do Mapa Familiar HTML/CSS/SVG e a pendência de decisão sobre captura panorâmica.
 
 ---
 
 ## 1. Objetivo
 
-A exportação permite gerar imagem, PDF ou impressão a partir da árvore exibida no ReactFlow.
+A exportação permite gerar imagem, PDF ou impressão a partir das views da árvore suportadas pelo fluxo canônico de captura. No estado atual, o fluxo consolidado atende principalmente às views ReactFlow; a rota `/mapa-familiar`, por ser HTML/CSS/SVG e não ReactFlow, permanece documentada como limitação/pendência de decisão.
 
 O escopo atual é:
 
@@ -29,6 +29,8 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/types.ts
 src/app/pages/Home.tsx
@@ -43,6 +45,7 @@ docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/historico/README.md
@@ -88,6 +91,35 @@ Fora do escopo atual:
 - histórico de exportações;
 - exportação SVG/vetorial;
 - PDF multipágina automático.
+
+### 3.1 Escopo da rota `/mapa-familiar`
+
+A view **Mapa Familiar** usa `DesktopFamilyMapView.tsx`, cards HTML/CSS de `FamilyTreeVisualCards.tsx` e conectores SVG posicionados por âncoras.
+
+No estado atual, ela **não deve ser documentada como plenamente coberta pela exportação canônica** da árvore ReactFlow.
+
+Regra documental:
+
+```txt
+/minha-arvore, /genealogia e /visao-completa usam o fluxo canônico atual de exportação da árvore.
+ /mapa-familiar exige decisão técnica específica antes de ser declarado exportável.
+```
+
+Motivo técnico:
+
+- `DesktopFamilyMapView` não é canvas ReactFlow;
+- os conectores são SVG absoluto;
+- o layout possui escala responsiva e zoom manual por `Ctrl + scroll`;
+- grupos laterais e grupos expansíveis alteram a altura/posição real da superfície;
+- a exportação precisa decidir se captura a viewport visível, o canvas lógico completo ou uma área selecionada.
+
+Pendência relacionada:
+
+```txt
+DOC-016 - decidir se a exportação canônica deve capturar a view HTML/SVG panorâmica do Mapa Familiar.
+```
+
+Enquanto essa decisão não for tomada, a UI não deve prometer exportação completa do Mapa Familiar.
 
 ---
 
@@ -420,3 +452,24 @@ Onde documentar mudanças futuras:
 | Mudança visual dos controles | `GUIA_UX_LAYOUT.md` |
 | Bug de captura/CORS | `GUIA_CORRECAO_ERROS.md` |
 | Upload/histórico de exportações | `docs/operacao/STORAGE_MAINTENANCE.md` e migration específica |
+
+## 15. QA específico para Mapa Familiar
+
+Se a exportação de `/mapa-familiar` for implementada futuramente, validar:
+
+- captura com zoom manual em `1x`, menor que `1x` e maior que `1x`;
+- captura com grupos laterais recolhidos e expandidos;
+- captura com filtro **Cônjuges** desativado e ativado;
+- captura preservando conectores SVG principais;
+- captura preservando conectores internos de cônjuges;
+- ausência de botões `+/-`, painel lateral, header, menu e overlays na imagem final;
+- nomes com acentos sem corte;
+- avatares por `genero` visíveis;
+- limite de pixels em telas grandes;
+- comportamento em 1366px, 1440px, 1536px e 1920px.
+
+Anti-regressão:
+
+```txt
+Não adaptar a exportação do Mapa Familiar alterando o fluxo ReactFlow existente sem validar /minha-arvore, /genealogia e /visao-completa.
+```

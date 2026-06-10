@@ -1,9 +1,9 @@
 # Estrutura de usuários, banco de dados e fluxos de pessoa - Árvore Família
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado para explicitar uso atual de `pessoa_social_profiles` em `/minha-arvore/editar`, `/meus-dados` e admin, mantendo compatibilidade com campos legados.
+> Status: revisado com a coluna `pessoas.genero`, uso de avatares no Mapa Familiar e alerta de migration caso a coluna tenha sido criada manualmente.
 
 ## Objetivo
 
@@ -115,7 +115,7 @@ Campos funcionais relevantes:
 
 | Grupo | Exemplos |
 |---|---|
-| Identificação | `id`, `nome_completo`, `humano_ou_pet` |
+| Identificação | `id`, `nome_completo`, `humano_ou_pet`, `genero` |
 | Datas/locais | `data_nascimento`, `local_nascimento`, `data_falecimento`, `local_falecimento` |
 | Exterior | `local_nascimento_exterior`, `local_falecimento_exterior` |
 | Estado de vida | `falecido` + helpers que consideram data/local de falecimento |
@@ -129,6 +129,45 @@ Defaults recentes:
 
 - novos registros de `pessoas` usam defaults `true` para flags principais de privacidade/contato;
 - `admin_reset_person_profile` também retorna essas flags para `true`.
+
+#### Campo `genero`
+
+A coluna `pessoas.genero` passa a ser usada como fonte visual para avatares no **Mapa Familiar** e nos cards visuais compartilhados.
+
+Valores esperados:
+
+```txt
+homem
+mulher
+pet
+```
+
+Uso atual:
+
+| Valor | Efeito visual |
+|---|---|
+| `homem` | avatar masculino |
+| `mulher` | avatar feminino |
+| `pet` | ícone/avatar de pet |
+
+Regra de domínio:
+
+- `genero` orienta avatar/representação visual;
+- `humano_ou_pet` continua sendo o campo semântico histórico para diferenciar pessoa humana de pet em regras de domínio;
+- `genero = pet` deve ficar consistente com `humano_ou_pet = 'Pet'`, mas não substitui sozinho as regras existentes de pets enquanto não houver migration/backfill definitivo;
+- a árvore não deve inferir gênero por nome quando `genero` estiver preenchido.
+
+Atenção operacional:
+
+```txt
+Se `pessoas.genero` foi criada manualmente no Supabase, criar migration versionada para alinhar local/remoto.
+```
+
+Migration provável:
+
+```txt
+add_genero_to_pessoas
+```
 
 ---
 
@@ -645,3 +684,16 @@ Documentar impacto em:
 - `docs/funcionalidades/NOTIFICACOES.md`, se alterar notificações;
 - `docs/funcionalidades/FORUM.md`, se alterar fórum;
 - `docs/PLANO_PROXIMOS_PASSOS.md`, se surgir pendência real.
+
+## 14. Impacto do Mapa Familiar no modelo de dados
+
+O **Mapa Familiar** não cria novas tabelas nem altera relacionamentos reais. Ele consome `pessoas`, `relacionamentos`, filtros diretos e `buildMobileFamilyTreeModel` para compor uma visualização panorâmica HTML/CSS/SVG.
+
+Pontos de atenção:
+
+- `pessoas.genero` é usado para escolher avatar visual;
+- relacionamentos `conjuge` explícitos são usados para parear cards de cônjuges;
+- cônjuges não devem ser inferidos por proximidade visual;
+- pets seguem separados de filhos humanos;
+- ajustes de layout não exigem migration;
+- criação manual de coluna no Supabase exige migration posterior.
