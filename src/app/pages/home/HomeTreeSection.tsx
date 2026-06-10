@@ -158,6 +158,7 @@ interface HomeTreeSectionProps {
   edgeFilters: EdgeFilters;
   directRelativeFilters: DirectRelativeFilters;
   isMobile: boolean;
+  sidebarOpen?: boolean;
   treeLayoutRevision: number;
   treeViewMode: TreeViewMode;
   genealogyFilters: GenealogyFilters;
@@ -185,6 +186,7 @@ export function HomeTreeSection({
   edgeFilters,
   directRelativeFilters,
   isMobile,
+  sidebarOpen = true,
   treeLayoutRevision,
   treeViewMode,
   genealogyFilters,
@@ -198,6 +200,7 @@ export function HomeTreeSection({
     treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
   );
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
+  const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const desktopTitleFirstName = React.useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === centralReferencePersonId);
     return getTreeTitleFirstName(centralPerson?.nome_completo);
@@ -259,6 +262,10 @@ export function HomeTreeSection({
     usesMobileGenerationStages,
   ]);
 
+  React.useEffect(() => {
+    setFamilyMapHasScrolled(false);
+  }, [centralReferencePersonId, treeLayoutRevision, treeViewMode]);
+
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
   const handleTreeWheelCapture = React.useCallback((event: React.WheelEvent<HTMLElement>) => {
@@ -292,7 +299,14 @@ export function HomeTreeSection({
               }
             `}
           </style>
-          <div className="pointer-events-none absolute inset-x-0 top-5 z-20 text-center">
+          <div
+            className={[
+              'pointer-events-none absolute inset-x-0 top-5 z-20 text-center transition duration-200 ease-out',
+              treeViewMode === 'mapa-familiar' && familyMapHasScrolled
+                ? 'opacity-0 -translate-y-2'
+                : 'translate-y-0 opacity-100',
+            ].join(' ')}
+          >
             <h1 className="px-20 text-[clamp(1.65rem,2.1vw,2.25rem)] font-bold leading-tight text-slate-950">
               {desktopTreeTitle}
             </h1>
@@ -468,6 +482,8 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           onPersonClick={onPersonClick}
           layoutRevision={treeLayoutRevision}
+          sidebarCollapsed={!sidebarOpen}
+          onScrollStateChange={setFamilyMapHasScrolled}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
       ) : canRenderTree ? (

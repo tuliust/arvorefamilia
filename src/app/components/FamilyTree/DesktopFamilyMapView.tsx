@@ -20,6 +20,8 @@ interface DesktopFamilyMapViewProps {
   directRelativeFilters: DirectRelativeFilters;
   onPersonClick: (pessoa: Pessoa) => void;
   layoutRevision: number;
+  sidebarCollapsed?: boolean;
+  onScrollStateChange?: (hasScrolled: boolean) => void;
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
@@ -98,7 +100,40 @@ type Connector = {
   points: Point[];
 };
 
-const FAMILY_MAP_LAYOUT = {
+type FamilyMapLayout = {
+  canvas: {
+    width: number;
+    minHeight: number;
+    background: string;
+    minScale: number;
+    minZoom: number;
+    maxZoom: number;
+    zoomStep: number;
+  };
+  metrics: {
+    topStart: number;
+    groupGap: number;
+    groupVerticalPadding: number;
+    gridGap: number;
+    horizontalCardHeight: number;
+    miniCardHeight: number;
+    parentCardHeight: number;
+    centralCardHeight: number;
+    parentTopGap: number;
+    centralTopGap: number;
+    descendantsTopGap: number;
+    descendantRowGap: number;
+  };
+  connectors: {
+    color: string;
+    width: number;
+    junctionGap: number;
+  };
+  areas: Record<string, { x: number; width: number }>;
+  groups: Record<FamilyMapGroupId, GroupConfig>;
+};
+
+const FAMILY_MAP_LAYOUT_BASE = {
   canvas: {
     width: 1440,
     minHeight: 1020,
@@ -516,7 +551,140 @@ const FAMILY_MAP_LAYOUT = {
       isDirectCard: false,
     },
   } satisfies Record<FamilyMapGroupId, GroupConfig>,
-} as const;
+} satisfies FamilyMapLayout;
+
+function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
+  if (!isWideLayout) return FAMILY_MAP_LAYOUT_BASE;
+
+  const wideGroups: Record<FamilyMapGroupId, GroupConfig> = {
+    ...FAMILY_MAP_LAYOUT_BASE.groups,
+    paternalGreatGreatGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.paternalGreatGreatGrandparents,
+      x: 500,
+      width: 430,
+    },
+    paternalGreatGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.paternalGreatGrandparents,
+      x: 500,
+      width: 430,
+    },
+    paternalGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.paternalGrandparents,
+      x: 500,
+      width: 430,
+    },
+    paternalUncles: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.paternalUncles,
+      x: 20,
+      width: 560,
+      singleWidth: 340,
+    },
+    paternalCousins: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.paternalCousins,
+      x: 20,
+      width: 560,
+      singleWidth: 340,
+    },
+    father: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.father,
+      x: 595,
+    },
+    central: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.central,
+      x: 835,
+    },
+    mother: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.mother,
+      x: 1075,
+    },
+    maternalGreatGreatGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.maternalGreatGreatGrandparents,
+      x: 950,
+      width: 430,
+    },
+    maternalGreatGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.maternalGreatGrandparents,
+      x: 950,
+      width: 430,
+    },
+    maternalGrandparents: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.maternalGrandparents,
+      x: 950,
+      width: 430,
+    },
+    maternalUncles: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.maternalUncles,
+      x: 1300,
+      width: 560,
+      singleWidth: 340,
+    },
+    maternalCousins: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.maternalCousins,
+      x: 1300,
+      width: 560,
+      singleWidth: 340,
+    },
+    siblings: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.siblings,
+      x: 570,
+      width: 420,
+      singleWidth: 300,
+    },
+    nephews: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.nephews,
+      x: 570,
+      width: 420,
+      singleWidth: 280,
+    },
+    spouse: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.spouse,
+      x: 895,
+    },
+    children: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.children,
+      x: 1090,
+      width: 420,
+      singleWidth: 300,
+    },
+    pets: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.pets,
+      x: 835,
+      width: 210,
+      singleWidth: 210,
+    },
+    grandchildren: {
+      ...FAMILY_MAP_LAYOUT_BASE.groups.grandchildren,
+      x: 1090,
+      width: 420,
+      singleWidth: 280,
+    },
+  };
+
+  return {
+    ...FAMILY_MAP_LAYOUT_BASE,
+    canvas: {
+      ...FAMILY_MAP_LAYOUT_BASE.canvas,
+      width: 1880,
+      minScale: 0.68,
+    },
+    metrics: {
+      ...FAMILY_MAP_LAYOUT_BASE.metrics,
+      horizontalCardHeight: 82,
+      miniCardHeight: 124,
+    },
+    areas: {
+      left: { x: 20, width: 560 },
+      paternalAncestors: { x: 500, width: 430 },
+      center: { x: 835, width: 210 },
+      maternalAncestors: { x: 950, width: 430 },
+      right: { x: 1300, width: 560 },
+      lowerLeft: { x: 570, width: 420 },
+      lowerMiddle: { x: 835, width: 210 },
+      lowerRight: { x: 1090, width: 420 },
+    },
+    groups: wideGroups,
+  };
+}
 
 const PATERNAL_ANCESTOR_IDS: FamilyMapGroupId[] = [
   'paternalGreatGreatGrandparents',
@@ -599,11 +767,16 @@ function getGridCellCount(
   return cells;
 }
 
-function getGroupHeight(group: ComposedGroup, config: GroupConfig, expanded: boolean) {
+function getGroupHeight(
+  group: ComposedGroup,
+  config: GroupConfig,
+  expanded: boolean,
+  layout: FamilyMapLayout,
+) {
   const visiblePeople = getVisiblePeople(group, config, expanded);
   const cardHeight = config.variant === 'horizontal'
-    ? FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight
-    : FAMILY_MAP_LAYOUT.metrics.miniCardHeight;
+    ? layout.metrics.horizontalCardHeight
+    : layout.metrics.miniCardHeight;
   const cells = getGridCellCount(
     visiblePeople,
     config.columns,
@@ -611,9 +784,9 @@ function getGroupHeight(group: ComposedGroup, config: GroupConfig, expanded: boo
   );
   const rows = Math.max(1, Math.ceil(cells / getColumnCount(config.columns)));
 
-  return FAMILY_MAP_LAYOUT.metrics.groupVerticalPadding
+  return layout.metrics.groupVerticalPadding
     + rows * cardHeight
-    + Math.max(0, rows - 1) * FAMILY_MAP_LAYOUT.metrics.gridGap;
+    + Math.max(0, rows - 1) * layout.metrics.gridGap;
 }
 
 function getGroupWidth(config: GroupConfig, peopleCount: number) {
@@ -732,15 +905,16 @@ function stackGroups(
   ids: FamilyMapGroupId[],
   groups: Map<FamilyMapGroupId, ComposedGroup>,
   expandedGroups: Set<string>,
+  layout: FamilyMapLayout,
 ) {
-  let top = FAMILY_MAP_LAYOUT.metrics.topStart;
+  let top = layout.metrics.topStart;
   const layouts: ResolvedGroup[] = [];
 
   ids.forEach((id) => {
-    const config = FAMILY_MAP_LAYOUT.groups[id];
+    const config = layout.groups[id];
     const group = groups.get(id);
     if (!group?.people.length) return;
-    const height = getGroupHeight(group, config, expandedGroups.has(id));
+    const height = getGroupHeight(group, config, expandedGroups.has(id), layout);
     layouts.push({
       ...config,
       ...group,
@@ -748,7 +922,7 @@ function stackGroups(
       top,
       height,
     });
-    top += height + FAMILY_MAP_LAYOUT.metrics.groupGap;
+    top += height + layout.metrics.groupGap;
   });
 
   return layouts;
@@ -759,9 +933,10 @@ function resolveGroup(
   groups: Map<FamilyMapGroupId, ComposedGroup>,
   expandedGroups: Set<string>,
   top: number,
+  layout: FamilyMapLayout,
   baseArea?: { x: number; width: number },
 ) {
-  const config = FAMILY_MAP_LAYOUT.groups[id];
+  const config = layout.groups[id];
   const group = groups.get(id);
   if (!group?.people.length) return undefined;
   const width = getGroupWidth(config, group.people.length);
@@ -771,7 +946,7 @@ function resolveGroup(
     left: baseArea ? centerWithin(baseArea.x, baseArea.width, width) : config.x,
     top,
     width,
-    height: getGroupHeight(group, config, expandedGroups.has(id)),
+    height: getGroupHeight(group, config, expandedGroups.has(id), layout),
   } satisfies ResolvedGroup;
 }
 
@@ -861,11 +1036,13 @@ function useExpandedGroups() {
 
 function PositionedGroup({
   layout,
+  vitalMode,
   expanded,
   onExpandedChange,
   onPersonClick,
 }: {
   layout: ResolvedGroup;
+  vitalMode: 'year' | 'full';
   expanded: boolean;
   onExpandedChange: (id: string, expanded: boolean) => void;
   onPersonClick: (pessoa: Pessoa) => void;
@@ -889,6 +1066,8 @@ function PositionedGroup({
         spousePersonIds={layout.spousePersonIds}
         spousePartnerByPersonId={layout.spousePartnerByPersonId}
         spouseTone={layout.spouseTone}
+        vitalMode={vitalMode}
+        roomy={vitalMode === 'full'}
         onPersonClick={onPersonClick}
       />
     </div>
@@ -900,6 +1079,7 @@ function DirectPersonCard({
   person,
   emptyLabel,
   central,
+  showLabel = true,
   tone,
   onPersonClick,
 }: {
@@ -907,6 +1087,7 @@ function DirectPersonCard({
   person?: Pessoa;
   emptyLabel?: string;
   central?: boolean;
+  showLabel?: boolean;
   tone?: 'spouse';
   onPersonClick: (pessoa: Pessoa) => void;
 }) {
@@ -918,7 +1099,7 @@ function DirectPersonCard({
       {person ? (
         <VisualPersonCard
           person={person}
-          label={layout.title}
+          label={showLabel ? layout.title : undefined}
           central={central}
           tone={tone}
           vitalMode="full"
@@ -939,12 +1120,20 @@ export function DesktopFamilyMapView({
   directRelativeFilters,
   onPersonClick,
   layoutRevision,
+  sidebarCollapsed = false,
+  onScrollStateChange,
   onDirectRelationRenderedCounts,
 }: DesktopFamilyMapViewProps) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
+  const scrollStateRef = React.useRef(false);
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
+  const isWideLayout = Boolean(sidebarCollapsed);
+  const familyMapLayout = React.useMemo(
+    () => getFamilyMapLayout(isWideLayout),
+    [isWideLayout],
+  );
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
@@ -1038,10 +1227,10 @@ export function DesktopFamilyMapView({
 
   const composedGroups = React.useMemo(() => {
     const groups = new Map<FamilyMapGroupId, ComposedGroup>();
-    (Object.keys(FAMILY_MAP_LAYOUT.groups) as FamilyMapGroupId[]).forEach((id) => {
+    (Object.keys(familyMapLayout.groups) as FamilyMapGroupId[]).forEach((id) => {
       groups.set(id, composeGroup({
         people: sourcePeople[id],
-        config: FAMILY_MAP_LAYOUT.groups[id],
+        config: familyMapLayout.groups[id],
         spousesByPerson,
         isVisible,
         spouseFilterActive: directRelativeFilters.conjuge,
@@ -1052,6 +1241,7 @@ export function DesktopFamilyMapView({
   }, [
     directRelativeFilters.conjuge,
     excludedSpouseIds,
+    familyMapLayout.groups,
     isVisible,
     sourcePeople,
     spousesByPerson,
@@ -1061,52 +1251,54 @@ export function DesktopFamilyMapView({
     PATERNAL_ANCESTOR_IDS,
     composedGroups,
     expandedGroups,
+    familyMapLayout,
   );
   const maternalAncestorLayouts = stackGroups(
     MATERNAL_ANCESTOR_IDS,
     composedGroups,
     expandedGroups,
+    familyMapLayout,
   );
   const ancestorBottom = Math.max(
-    FAMILY_MAP_LAYOUT.metrics.topStart + FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight,
+    familyMapLayout.metrics.topStart + familyMapLayout.metrics.horizontalCardHeight,
     ...paternalAncestorLayouts.map((layout) => layout.top + layout.height),
     ...maternalAncestorLayouts.map((layout) => layout.top + layout.height),
   );
-  const parentTop = ancestorBottom + FAMILY_MAP_LAYOUT.metrics.parentTopGap;
+  const parentTop = ancestorBottom + familyMapLayout.metrics.parentTopGap;
   const centralTop = parentTop
-    + FAMILY_MAP_LAYOUT.metrics.parentCardHeight
-    + FAMILY_MAP_LAYOUT.metrics.centralTopGap;
+    + familyMapLayout.metrics.parentCardHeight
+    + familyMapLayout.metrics.centralTopGap;
   const descendantsTop = centralTop
-    + FAMILY_MAP_LAYOUT.metrics.centralCardHeight
-    + FAMILY_MAP_LAYOUT.metrics.descendantsTopGap;
+    + familyMapLayout.metrics.centralCardHeight
+    + familyMapLayout.metrics.descendantsTopGap;
 
   const fatherLayout: ResolvedGroup = {
-    ...FAMILY_MAP_LAYOUT.groups.father,
+    ...familyMapLayout.groups.father,
     ...(composedGroups.get('father') as ComposedGroup),
-    left: FAMILY_MAP_LAYOUT.groups.father.x,
+    left: familyMapLayout.groups.father.x,
     top: parentTop,
-    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+    height: familyMapLayout.metrics.parentCardHeight,
   };
   const motherLayout: ResolvedGroup = {
-    ...FAMILY_MAP_LAYOUT.groups.mother,
+    ...familyMapLayout.groups.mother,
     ...(composedGroups.get('mother') as ComposedGroup),
-    left: FAMILY_MAP_LAYOUT.groups.mother.x,
+    left: familyMapLayout.groups.mother.x,
     top: parentTop,
-    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+    height: familyMapLayout.metrics.parentCardHeight,
   };
   const centralLayout: ResolvedGroup = {
-    ...FAMILY_MAP_LAYOUT.groups.central,
+    ...familyMapLayout.groups.central,
     ...(composedGroups.get('central') as ComposedGroup),
-    left: FAMILY_MAP_LAYOUT.groups.central.x,
+    left: familyMapLayout.groups.central.x,
     top: centralTop,
-    height: FAMILY_MAP_LAYOUT.metrics.centralCardHeight,
+    height: familyMapLayout.metrics.centralCardHeight,
   };
   const spouseLayout: ResolvedGroup | undefined = mainSpouse ? {
-    ...FAMILY_MAP_LAYOUT.groups.spouse,
+    ...familyMapLayout.groups.spouse,
     ...(composedGroups.get('spouse') as ComposedGroup),
-    left: FAMILY_MAP_LAYOUT.groups.spouse.x,
+    left: familyMapLayout.groups.spouse.x,
     top: descendantsTop,
-    height: FAMILY_MAP_LAYOUT.metrics.parentCardHeight,
+    height: familyMapLayout.metrics.parentCardHeight,
   } : undefined;
 
   const paternalUnclesLayout = resolveGroup(
@@ -1114,14 +1306,16 @@ export function DesktopFamilyMapView({
     composedGroups,
     expandedGroups,
     parentTop,
-    FAMILY_MAP_LAYOUT.areas.left,
+    familyMapLayout,
+    familyMapLayout.areas.left,
   );
   const maternalUnclesLayout = resolveGroup(
     'maternalUncles',
     composedGroups,
     expandedGroups,
     parentTop,
-    FAMILY_MAP_LAYOUT.areas.right,
+    familyMapLayout,
+    familyMapLayout.areas.right,
   );
   const paternalCousinsLayout = resolveGroup(
     'paternalCousins',
@@ -1129,8 +1323,9 @@ export function DesktopFamilyMapView({
     expandedGroups,
     parentTop
       + (paternalUnclesLayout?.height ?? 0)
-      + FAMILY_MAP_LAYOUT.metrics.groupGap,
-    FAMILY_MAP_LAYOUT.areas.left,
+      + familyMapLayout.metrics.groupGap,
+    familyMapLayout,
+    familyMapLayout.areas.left,
   );
   const maternalCousinsLayout = resolveGroup(
     'maternalCousins',
@@ -1138,50 +1333,56 @@ export function DesktopFamilyMapView({
     expandedGroups,
     parentTop
       + (maternalUnclesLayout?.height ?? 0)
-      + FAMILY_MAP_LAYOUT.metrics.groupGap,
-    FAMILY_MAP_LAYOUT.areas.right,
+      + familyMapLayout.metrics.groupGap,
+    familyMapLayout,
+    familyMapLayout.areas.right,
   );
   const siblingsLayout = resolveGroup(
     'siblings',
     composedGroups,
     expandedGroups,
     descendantsTop,
-    FAMILY_MAP_LAYOUT.areas.lowerLeft,
+    familyMapLayout,
+    familyMapLayout.areas.lowerLeft,
   );
   const nephewsLayout = resolveGroup(
     'nephews',
     composedGroups,
     expandedGroups,
     descendantsTop
-      + (siblingsLayout?.height ?? FAMILY_MAP_LAYOUT.metrics.horizontalCardHeight)
-      + FAMILY_MAP_LAYOUT.metrics.descendantRowGap,
-    FAMILY_MAP_LAYOUT.areas.lowerLeft,
+      + (siblingsLayout?.height ?? familyMapLayout.metrics.horizontalCardHeight)
+      + familyMapLayout.metrics.descendantRowGap,
+    familyMapLayout,
+    familyMapLayout.areas.lowerLeft,
   );
   const rightLowerTop = spouseLayout
-    ? spouseLayout.top + spouseLayout.height + FAMILY_MAP_LAYOUT.metrics.groupGap
+    ? spouseLayout.top + spouseLayout.height + familyMapLayout.metrics.groupGap
     : descendantsTop;
   const childrenLayout = resolveGroup(
     'children',
     composedGroups,
     expandedGroups,
     rightLowerTop,
-    FAMILY_MAP_LAYOUT.areas.lowerRight,
+    familyMapLayout,
+    familyMapLayout.areas.lowerRight,
   );
   const petsLayout = resolveGroup(
     'pets',
     composedGroups,
     expandedGroups,
     rightLowerTop,
-    FAMILY_MAP_LAYOUT.areas.lowerMiddle,
+    familyMapLayout,
+    familyMapLayout.areas.lowerMiddle,
   );
   const grandchildrenLayout = resolveGroup(
     'grandchildren',
     composedGroups,
     expandedGroups,
     childrenLayout
-      ? childrenLayout.top + childrenLayout.height + FAMILY_MAP_LAYOUT.metrics.groupGap
+      ? childrenLayout.top + childrenLayout.height + familyMapLayout.metrics.groupGap
       : rightLowerTop,
-    FAMILY_MAP_LAYOUT.areas.lowerRight,
+    familyMapLayout,
+    familyMapLayout.areas.lowerRight,
   );
 
   const resolvedLayouts = new Map<FamilyMapGroupId, ResolvedGroup>();
@@ -1214,8 +1415,8 @@ export function DesktopFamilyMapView({
     spouseLayout ? spouseLayout.top + spouseLayout.height : 0,
   );
   const canvasHeight = Math.max(
-    FAMILY_MAP_LAYOUT.canvas.minHeight,
-    contentBottom + FAMILY_MAP_LAYOUT.metrics.groupGap,
+    familyMapLayout.canvas.minHeight,
+    contentBottom + familyMapLayout.metrics.groupGap,
   );
 
   const connectors: Connector[] = [];
@@ -1242,9 +1443,9 @@ export function DesktopFamilyMapView({
   const maternalLastAncestor = [...MATERNAL_ANCESTOR_IDS]
     .reverse()
     .find((id) => resolvedLayouts.get(id)?.people.length);
-  const parentJunctionY = parentTop - FAMILY_MAP_LAYOUT.connectors.junctionGap;
+  const parentJunctionY = parentTop - familyMapLayout.connectors.junctionGap;
   const centralJunctionY = centralTop - 36;
-  const descendantJunctionY = descendantsTop - FAMILY_MAP_LAYOUT.connectors.junctionGap;
+  const descendantJunctionY = descendantsTop - familyMapLayout.connectors.junctionGap;
 
   if (paternalLastAncestor && father) {
     addConnector(branchConnector(
@@ -1346,7 +1547,7 @@ export function DesktopFamilyMapView({
   if (spouseLayout) {
     const spouseBranchY = spouseLayout.top
       + spouseLayout.height
-      + FAMILY_MAP_LAYOUT.metrics.groupGap / 2;
+      + familyMapLayout.metrics.groupGap / 2;
     if (childrenLayout) {
       addConnector(branchConnector(
         resolvedLayouts,
@@ -1388,12 +1589,12 @@ export function DesktopFamilyMapView({
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
     const updateScale = () => {
-      const widthScale = viewport.clientWidth / FAMILY_MAP_LAYOUT.canvas.width;
-      const heightScale = viewport.clientHeight / FAMILY_MAP_LAYOUT.canvas.minHeight;
+      const widthScale = viewport.clientWidth / familyMapLayout.canvas.width;
+      const heightScale = viewport.clientHeight / familyMapLayout.canvas.minHeight;
       setResponsiveScale(Math.min(
         1,
         Math.max(
-          FAMILY_MAP_LAYOUT.canvas.minScale,
+          familyMapLayout.canvas.minScale,
           Math.min(widthScale, heightScale),
         ),
       ));
@@ -1402,27 +1603,40 @@ export function DesktopFamilyMapView({
     observer.observe(viewport);
     updateScale();
     return () => observer.disconnect();
-  }, [canvasHeight, layoutRevision]);
+  }, [canvasHeight, familyMapLayout, layoutRevision]);
 
   React.useEffect(() => {
     setManualZoom(1);
-  }, [centralPersonId, layoutRevision]);
+  }, [centralPersonId, isWideLayout, layoutRevision]);
 
   const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (!event.ctrlKey) return;
     event.preventDefault();
     const direction = event.deltaY > 0 ? -1 : 1;
     setManualZoom((currentZoom) => {
-      const nextZoom = currentZoom + direction * FAMILY_MAP_LAYOUT.canvas.zoomStep;
+      const nextZoom = currentZoom + direction * familyMapLayout.canvas.zoomStep;
       return Math.min(
-        FAMILY_MAP_LAYOUT.canvas.maxZoom,
+        familyMapLayout.canvas.maxZoom,
         Math.max(
-          FAMILY_MAP_LAYOUT.canvas.minZoom,
+          familyMapLayout.canvas.minZoom,
           Number(nextZoom.toFixed(2)),
         ),
       );
     });
-  }, []);
+  }, [familyMapLayout.canvas]);
+
+  const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const hasScrolled = event.currentTarget.scrollTop > 24;
+    if (scrollStateRef.current === hasScrolled) return;
+
+    scrollStateRef.current = hasScrolled;
+    onScrollStateChange?.(hasScrolled);
+  }, [onScrollStateChange]);
+
+  React.useEffect(() => {
+    scrollStateRef.current = false;
+    onScrollStateChange?.(false);
+  }, [centralPersonId, layoutRevision, onScrollStateChange]);
 
   const collateralSpouseCount = React.useMemo(() => collectCollateralSpouses(
     [
@@ -1487,33 +1701,34 @@ export function DesktopFamilyMapView({
     <div
       ref={viewportRef}
       onWheel={handleWheel}
+      onScroll={handleScroll}
       className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain pt-[76px]"
-      style={{ backgroundColor: FAMILY_MAP_LAYOUT.canvas.background }}
+      style={{ backgroundColor: familyMapLayout.canvas.background }}
     >
       <div
-        className="relative z-10 mx-auto"
+        className={`relative z-10 ${isWideLayout ? 'ml-0 mr-auto' : 'mx-auto'}`}
         style={{
-          width: FAMILY_MAP_LAYOUT.canvas.width * effectiveScale,
+          width: familyMapLayout.canvas.width * effectiveScale,
           height: canvasHeight * effectiveScale,
         }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
           style={{
-            width: FAMILY_MAP_LAYOUT.canvas.width,
+            width: familyMapLayout.canvas.width,
             height: canvasHeight,
             transform: `scale(${effectiveScale})`,
           }}
         >
           <svg
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${FAMILY_MAP_LAYOUT.canvas.width} ${canvasHeight}`}
+            viewBox={`0 0 ${familyMapLayout.canvas.width} ${canvasHeight}`}
             aria-hidden="true"
           >
             <g
               fill="none"
-              stroke={FAMILY_MAP_LAYOUT.connectors.color}
-              strokeWidth={FAMILY_MAP_LAYOUT.connectors.width}
+              stroke={familyMapLayout.connectors.color}
+              strokeWidth={familyMapLayout.connectors.width}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -1527,6 +1742,7 @@ export function DesktopFamilyMapView({
             <PositionedGroup
               key={layout.id}
               layout={layout}
+              vitalMode={isWideLayout ? 'full' : 'year'}
               expanded={expandedGroups.has(layout.id)}
               onExpandedChange={handleExpandedChange}
               onPersonClick={onPersonClick}
@@ -1554,6 +1770,7 @@ export function DesktopFamilyMapView({
               layout={centralLayout}
               person={central}
               central
+              showLabel={false}
               onPersonClick={onPersonClick}
             />
           )}

@@ -1239,6 +1239,7 @@ export function Home() {
           edgeFilters={edgeFilters}
           directRelativeFilters={directRelativeFilters}
           isMobile={isMobile}
+          sidebarOpen={sidebarOpen}
           treeLayoutRevision={treeLayoutRevision}
           treeViewMode={treeViewMode}
           genealogyFilters={genealogyFilters}

@@ -215,6 +215,7 @@ export interface Pessoa {
 
   profissao?: string;
   foto_principal_url?: string;
+  genero?: 'homem' | 'mulher' | 'pet' | string | null;
   humano_ou_pet: TipoEntidade;
   lado?: LadoPessoa;
   cor_bg_card?: string;

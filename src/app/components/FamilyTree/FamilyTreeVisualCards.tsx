@@ -30,26 +30,28 @@ function formatVitalYear(date?: string | number) {
 }
 
 function getPersonGender(person: Pessoa) {
-  const rawGender = String(
-    (person as {
-      genero?: string;
-      sexo?: string;
-      gender?: string;
-      sexo_biologico?: string;
-      genero_identidade?: string;
-      gender_identity?: string;
-    }).genero
-      ?? (person as { sexo?: string }).sexo
-      ?? (person as { gender?: string }).gender
-      ?? (person as { sexo_biologico?: string }).sexo_biologico
-      ?? (person as { genero_identidade?: string }).genero_identidade
-      ?? (person as { gender_identity?: string }).gender_identity
+  const primaryGender = person.genero?.trim().toLowerCase();
+  const legacyPerson = person as Pessoa & {
+    sexo?: string;
+    gender?: string;
+    sexo_biologico?: string;
+    genero_identidade?: string;
+    gender_identity?: string;
+  };
+  const legacyGender = String(
+    legacyPerson.sexo
+      ?? legacyPerson.gender
+      ?? legacyPerson.sexo_biologico
+      ?? legacyPerson.genero_identidade
+      ?? legacyPerson.gender_identity
       ?? '',
   ).trim().toLowerCase();
+  const rawGender = primaryGender || legacyGender;
 
   if (/^(pet|animal|mascote)$/.test(rawGender)) return 'pet';
   if (/^(mulher|f|fem|feminino|female)$/.test(rawGender)) return 'female';
   if (/^(homem|m|masc|masculino|male)$/.test(rawGender)) return 'male';
+  if (primaryGender) return 'neutral';
 
   const firstName = (person.nome_completo ?? '').trim().split(/\s+/)[0]?.toLowerCase() ?? '';
   const maleNames = new Set([
@@ -70,28 +72,54 @@ function getPersonGender(person: Pessoa) {
 function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | 'neutral'; className: string }) {
   if (gender === 'female') {
     return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
-        <path fill="currentColor" d="M14 19c0-8 4-14 10-14s10 6 10 14v6c0 4 2 7 5 10-3 4-8 7-15 7S12 39 9 35c3-3 5-6 5-10v-6Z" />
-        <circle cx="24" cy="20" r="7" fill="currentColor" />
-        <path fill="currentColor" d="M8 44c2.4-8.8 8.5-14 16-14s13.6 5.2 16 14H8Z" />
+      <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M14.5 30.5C14.5 16.4 22.1 7 32 7s17.5 9.4 17.5 23.5c0 8.1 3.2 13.6 7.1 18.2-5.2 5.2-13 8.3-24.6 8.3s-19.4-3.1-24.6-8.3c3.9-4.6 7.1-10.1 7.1-18.2Z"
+          opacity=".96"
+        />
+        <path
+          fill="currentColor"
+          fillRule="evenodd"
+          d="M22.2 25.4c0-7 4-12.1 9.8-12.1s9.8 5.1 9.8 12.1c0 6.9-4 12.4-9.8 12.4s-9.8-5.5-9.8-12.4Zm-8.5 31.9c2.5-10.8 9.2-17.1 18.3-17.1s15.8 6.3 18.3 17.1H13.7Z"
+          clipRule="evenodd"
+        />
+        <path
+          d="M20.5 21.8c4.1-.4 7.7-2.1 10.6-5.1 2.6 3.1 6.8 5.2 12.4 5.6"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="3.2"
+        />
       </svg>
     );
   }
 
   if (gender === 'male') {
     return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
-        <path fill="currentColor" d="M12 18c0-7.5 5-13 12-13s12 5.5 12 13c0 1.4-.2 2.8-.6 4-2.8-2-6.6-3.1-11.4-3.1S15.4 20 12.6 22c-.4-1.2-.6-2.6-.6-4Z" />
-        <circle cx="24" cy="21" r="7.5" fill="currentColor" />
-        <path fill="currentColor" d="M7 44c2.7-8.5 9-13.2 17-13.2S38.3 35.5 41 44H7Z" />
+      <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M18.3 24.7C18.3 13.9 23.8 7 32.2 7c8.6 0 14.2 6.8 14.2 17.7-3.9-3.2-8.6-4.8-14.2-4.8-5.5 0-10.1 1.6-13.9 4.8Z"
+        />
+        <path
+          fill="currentColor"
+          fillRule="evenodd"
+          d="M21.1 25.5c0-7.4 4.4-12.6 11-12.6s11 5.2 11 12.6c0 7.5-4.4 13.3-11 13.3s-11-5.8-11-13.3Zm-9.9 31.8c2.8-11.1 10.3-17.6 20.9-17.6S50.2 46.2 53 57.3H11.2Z"
+          clipRule="evenodd"
+        />
+        <path
+          fill="currentColor"
+          d="M22.8 34.1c2.4 3.1 5.5 4.7 9.3 4.7s6.9-1.6 9.3-4.7c-1.2 6-4.3 9.1-9.3 9.1s-8.1-3.1-9.3-9.1Z"
+        />
       </svg>
     );
   }
 
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true" focusable="false">
-      <circle cx="24" cy="19" r="9" fill="currentColor" />
-      <path fill="currentColor" d="M7 44c2.7-9 9-14 17-14s14.3 5 17 14H7Z" />
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+      <circle cx="32" cy="23" r="13" fill="currentColor" opacity=".9" />
+      <path fill="currentColor" d="M10 58c3.4-12.4 11.5-19 22-19s18.6 6.6 22 19H10Z" opacity=".9" />
     </svg>
   );
 }
@@ -183,6 +211,7 @@ export function VisualPersonCard({
   onClick,
   tone = 'default',
   vitalMode = 'year',
+  roomy = false,
 }: {
   person: Pessoa;
   label?: string;
@@ -192,6 +221,7 @@ export function VisualPersonCard({
   horizontal?: boolean;
   tone?: 'default' | 'spouse' | 'ancestorSpouse';
   vitalMode?: 'year' | 'full';
+  roomy?: boolean;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, birthYearLine, deathYearLine, showDeathLine } = getVisualPersonCardData(person);
@@ -206,7 +236,7 @@ export function VisualPersonCard({
         type="button"
         onClick={() => onClick(person)}
         className={[
-          'flex h-[74px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]',
+          `flex ${roomy ? 'h-[82px]' : 'h-[74px]'} w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
           isSpouseTone || isAncestorSpouseTone
             ? 'border-emerald-200 bg-gradient-to-b from-emerald-300 via-teal-500 to-emerald-700'
             : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
@@ -231,7 +261,11 @@ export function VisualPersonCard({
 
   const avatarSize = central ? 'h-[86px] w-[86px]' : mini ? 'h-[42px] w-[42px]' : compact ? 'h-[48px] w-[48px]' : 'h-[64px] w-[64px]';
   const iconSize = central ? 'h-10 w-10' : mini ? 'h-5 w-5' : compact ? 'h-6 w-6' : 'h-7 w-7';
-  const height = central ? 'h-[194px]' : mini ? 'h-[112px]' : compact ? 'h-[128px]' : 'h-[164px]';
+  const height = central
+    ? 'h-[194px]'
+    : mini
+      ? roomy ? 'h-[124px]' : 'h-[112px]'
+      : compact ? 'h-[128px]' : 'h-[164px]';
   const titleSize = central ? 'text-[15px]' : mini ? 'text-[10px]' : compact ? 'text-[11px]' : 'text-[12px]';
 
   return (
@@ -293,6 +327,8 @@ export function VisualGroup({
   spousePersonIds,
   spousePartnerByPersonId,
   spouseTone = 'spouse',
+  vitalMode = 'year',
+  roomy = false,
 }: {
   title: string;
   people: Pessoa[];
@@ -311,6 +347,8 @@ export function VisualGroup({
   spousePersonIds?: Set<string>;
   spousePartnerByPersonId?: Map<string, string>;
   spouseTone?: 'spouse' | 'ancestorSpouse';
+  vitalMode?: 'year' | 'full';
+  roomy?: boolean;
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
@@ -419,6 +457,8 @@ export function VisualGroup({
                   compact={variant === 'compact'}
                   horizontal={variant === 'horizontal'}
                   tone={isSpouseCard ? spouseTone : 'default'}
+                  vitalMode={vitalMode}
+                  roomy={roomy}
                 />
               </div>
             );
