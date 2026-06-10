@@ -24,6 +24,8 @@ type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
 type GroupColumns = 'single' | 'double' | 'triple';
 
+type RelativeScreenKind = 'default' | 'uncles' | 'cousins';
+
 type AncestorSubgroup = {
   id: string;
   title: string;
@@ -420,6 +422,8 @@ function FamilyGroup({
   maxCollapsedItems = 4,
   topConnector = true,
   bottomConnector = false,
+  stretch = false,
+  screenKind = 'default',
 }: {
   id: string;
   title: string;
@@ -432,23 +436,30 @@ function FamilyGroup({
   maxCollapsedItems?: number;
   topConnector?: boolean;
   bottomConnector?: boolean;
+  stretch?: boolean;
+  screenKind?: RelativeScreenKind;
 }) {
   if (people.length === 0) return null;
   const visiblePeople = people.length > maxCollapsedItems && !expanded ? people.slice(0, maxCollapsedItems) : people;
   const usePetCards = cardVariant === 'pet';
+  const stretchedGroup = stretch && screenKind !== 'default';
 
   return (
     <section className={[
       'relative',
+      stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
       topConnector ? 'pt-9' : 'pt-0',
       bottomConnector ? 'pb-9' : 'pb-0',
     ].join(' ')}>
       {topConnector && (
         <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
       )}
-      <div className={usePetCards
-        ? 'relative z-10 rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
-        : 'relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm'}
+      <div className={[
+        usePetCards
+          ? 'relative z-10 rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2 shadow-sm'
+          : 'relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm',
+        stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
+      ].join(' ')}
       >
         <h2 className={usePetCards
           ? 'mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-800'
@@ -457,9 +468,12 @@ function FamilyGroup({
           {title}
         </h2>
         <div
-          className={usePetCards
-            ? 'grid min-w-0 grid-cols-1 gap-2'
-            : ['grid min-w-0 gap-2.5', getGridColumnsClass(columns)].join(' ')}
+          className={[
+            usePetCards ? 'grid min-w-0 grid-cols-1 gap-2' : ['grid min-w-0 gap-2.5', getGridColumnsClass(columns)].join(' '),
+            stretchedGroup ? 'flex-1 content-around items-center overflow-hidden' : '',
+            screenKind === 'uncles' ? 'auto-rows-min' : '',
+            screenKind === 'cousins' ? 'auto-rows-min gap-2' : '',
+          ].join(' ')}
         >
           {visiblePeople.map((person) => {
             if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
@@ -508,27 +522,41 @@ function VerticalRelativeScreen({
   connectHorizontal?: 'left' | 'right';
   bottomConnector?: boolean;
 }) {
+  const screenKind: RelativeScreenKind = columns === 'double' ? 'uncles' : 'cousins';
+
   return (
-    <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
+    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-3">
       {connectHorizontal && (
         <div className={[
-          'pointer-events-none absolute top-[92px] z-0 h-px bg-cyan-600',
+          'pointer-events-none absolute top-1/2 z-0 h-px -translate-y-1/2 bg-cyan-600',
           connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
         ].join(' ')} />
       )}
-      <div className="relative z-10 mx-auto mt-4 w-full max-w-[360px]">
-        <FamilyGroup
-          id={groupId}
-          title={title}
-          people={people}
-          expanded={expanded}
-          onToggle={onToggle}
-          onPersonClick={onPersonClick}
-          columns={columns}
-          cardVariant={columns === 'double' ? 'sibling' : 'mini'}
-          maxCollapsedItems={maxCollapsedItems}
-          bottomConnector={bottomConnector}
-        />
+      <div className={[
+        'pointer-events-none absolute left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600',
+        bottomConnector ? 'inset-y-0' : 'top-0 h-1/2',
+      ].join(' ')} />
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[380px] items-center py-[max(1rem,4vh)]">
+        <div className={[
+          'w-full min-w-0',
+          screenKind === 'uncles' ? 'h-[78%]' : 'h-[74%]',
+        ].join(' ')}>
+          <FamilyGroup
+            id={groupId}
+            title={title}
+            people={people}
+            expanded={expanded}
+            onToggle={onToggle}
+            onPersonClick={onPersonClick}
+            columns={columns}
+            cardVariant={columns === 'double' ? 'sibling' : 'mini'}
+            maxCollapsedItems={maxCollapsedItems}
+            topConnector={false}
+            bottomConnector={false}
+            stretch
+            screenKind={screenKind}
+          />
+        </div>
       </div>
     </div>
   );
@@ -550,6 +578,27 @@ function distributeAncestorSubgroups(groups: AncestorSubgroup[], maxTotal = 6) {
     .filter((group) => group.people.length > 0);
 }
 
+function AncestorGroupCard({
+  group,
+  onPersonClick,
+}: {
+  group: AncestorSubgroup;
+  onPersonClick: (person: Pessoa) => void;
+}) {
+  return (
+    <section className="relative z-10 flex min-h-0 flex-col rounded-[1.15rem] border border-cyan-200 bg-white/90 p-2.5 shadow-sm">
+      <h3 className="mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-800">
+        {group.title}
+      </h3>
+      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 content-center gap-2 overflow-hidden">
+        {group.people.map((person) => (
+          <AncestorPersonCard key={person.id} person={person} onClick={onPersonClick} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AncestorGroupsScreen({
   title,
   groups,
@@ -562,37 +611,26 @@ function AncestorGroupsScreen({
   const visibleGroups = distributeAncestorSubgroups(groups);
 
   return (
-    <div className="relative h-full w-full shrink-0 snap-center px-3 pb-28 pt-10">
-      <div className="relative z-10 mx-auto mt-4 w-full max-w-[360px]">
-        <section className="relative pb-9 pt-0">
-          <div className="relative z-10 rounded-[1.4rem] border border-cyan-200 bg-white/90 p-3 shadow-sm">
-            <h2 className="mb-2 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">
-              {title}
-            </h2>
-            {visibleGroups.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-slate-200 bg-white/70 px-3 py-4 text-center text-xs font-semibold text-slate-500">
-                Nenhum ancestral cadastrado neste ramo.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {visibleGroups.map((group) => (
-                  <div key={group.id} className="rounded-[1rem] border border-cyan-100 bg-cyan-50/35 p-2">
-                    <h3 className="mb-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-700">
-                      {group.title}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {group.people.map((person) => (
-                        <AncestorPersonCard key={person.id} person={person} onClick={onPersonClick} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+    <div className="relative h-full w-full shrink-0 snap-center overflow-hidden px-3">
+      <h2 className="sr-only">{title}</h2>
+      {visibleGroups.length === 0 ? (
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[360px] items-center px-1 pb-[calc(env(safe-area-inset-bottom)+5.75rem)] pt-4">
+          <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white/80 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+            Nenhum ancestral cadastrado neste ramo.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[24%] w-px -translate-x-1/2 bg-cyan-600" />
+          <div className="relative z-10 mx-auto flex h-full w-full max-w-[370px] items-center py-[max(1rem,4vh)]">
+            <div className="grid h-[76%] w-full min-w-0 auto-rows-fr grid-cols-1 gap-2.5 overflow-hidden">
+              {visibleGroups.map((group) => (
+                <AncestorGroupCard key={group.id} group={group} onPersonClick={onPersonClick} />
+              ))}
+            </div>
           </div>
-          <div className="absolute bottom-0 left-1/2 h-9 w-px -translate-x-1/2 bg-cyan-600" />
-        </section>
-      </div>
+        </>
+      )}
     </div>
   );
 }
