@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com a Minha Árvore mobile segmentada atual e suas regras de navegação/conectores.
+> Status: guia canônico atualizado com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, `FAMILY_MAP_LAYOUT`, cônjuges por política, zoom e avatares por `genero`.
 
 ## Objetivo
 
@@ -47,8 +47,9 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 
 | Frente | Estado atual | Observação de manutenção |
 |---|---|---|
-| Árvore familiar | Implementada | `/minha-arvore`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home com ReactFlow. |
+| Árvore familiar | Implementada | `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home. ReactFlow continua em Minha Árvore/Genealogia/Visão Completa; Mapa Familiar usa HTML/CSS/SVG. |
 | Minha Árvore | Implementada no escopo atual | Desktop/tablet usam ReactFlow + `directFamilyDistributedLayout.ts`; mobile usa `MobileFamilyTreeView.tsx` com malha 3×3, abas **Paterno/Central/Materno**, tela global de ancestrais acima da Central, tios nas laterais, primos abaixo dos tios, conectores HTML/CSS próprios e preview durante swipe. |
+| Mapa Familiar | Implementado no escopo atual | `/mapa-familiar` usa `DesktopFamilyMapView.tsx` em desktop/tablet, `FamilyTreeVisualCards.tsx`, `FAMILY_MAP_LAYOUT`, conectores SVG por âncoras, grupos expansíveis, zoom `Ctrl + scroll`, regras próprias de cônjuges e fallback mobile para `MobileFamilyTreeView.tsx`. |
 | Genealogia | Implementada | Layout por gerações, chips mobile alinhados à base de gerações inferidas, inferência em memória quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
 | Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips calculados sobre a base inferida e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
@@ -69,7 +70,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. A comunicação pública da integração precisa permanecer visível em `/entrar` para validação OAuth. |
 | Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso, aceite legal e ponto de compliance OAuth. Deve exibir nome do app e finalidade da integração com Google Agenda diretamente no JSX. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
-| Paletas da árvore | Implementadas | `white`, `orange` e `brown` por CSS variables e `localStorage`, incluindo exibição no menu mobile. |
+| Paletas da árvore | Implementadas | `white`, `orange`, `brown` e `visual` por CSS variables e `localStorage`, incluindo exibição no menu mobile quando aplicável. |
 | Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido reutilizando `treeExport.ts`; exportação integral fica pós-MVP. |
 | Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. Rotas `/api/*`, incluindo `/api/ai` quando ativa, devem ser preservadas fora do fallback SPA. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
@@ -103,6 +104,41 @@ Pendências/atenções que permanecem como QA visual, não como backlog estrutur
 Essas mudanças são de UI/componente e não exigem migration.
 
 ---
+
+
+## 1.2 Estado atual do Mapa Familiar
+
+Estado implementado confirmado:
+
+- rota autenticada `/mapa-familiar` protegida por `TreeAccessRoute`;
+- `treeViewMode` técnico `mapa-familiar`;
+- desktop/tablet renderizam `DesktopFamilyMapView.tsx`, sem ReactFlow;
+- mobile usa `MobileFamilyTreeView.tsx` como fallback seguro;
+- dados vêm de `buildMobileFamilyTreeModel`, sem persistência ou alteração de backend;
+- cards e grupos visuais vêm de `FamilyTreeVisualCards.tsx`;
+- layout centralizado em `FAMILY_MAP_LAYOUT`, com configuração explícita de canvas, métricas, áreas, grupos e conectores;
+- conectores principais são SVG e derivados de âncoras dos grupos;
+- conectores internos de cônjuges são renderizados somente quando há relacionamento conjugal explícito;
+- tios e primos laterais usam até 4 colunas, limite inicial de 8 cards e expansão por `+/-`;
+- grupos com uma pessoa usam largura proporcional para reduzir espaço vazio;
+- cônjuge principal aparece quando existir, independentemente do filtro **Cônjuges**;
+- cônjuges de tataravós, bisavós e avós aparecem por padrão;
+- cônjuges de tios, primos, sobrinhos, filhos e netos aparecem apenas quando o filtro **Cônjuges** está ativo;
+- `Ctrl + scroll` controla zoom manual e não deve bloquear o scroll comum sem `Ctrl`;
+- avatares visuais usam `pessoas.genero` quando disponível: `homem`, `mulher` e `pet`.
+
+Pendências/atenções:
+
+- validar visualmente grupos laterais de tios/primos em resoluções reais;
+- confirmar migration e tipagem da coluna `pessoas.genero` se ela foi criada manualmente no Supabase;
+- decidir exportação HTML/SVG do Mapa Familiar;
+- sincronizar `/mapa-familiar` com busca global e favoritos, se ainda não estiver no código.
+
+Documento funcional canônico:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
 
 ## 2. Stack e arquitetura base
 
@@ -177,7 +213,7 @@ src/app/contexts/AuthContext.tsx
 Comportamento consolidado:
 
 - `/` redireciona para `/minha-arvore`, preservando search params;
-- `/minha-arvore`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute` e renderizam `Home`;
+- `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute` e renderizam `Home`;
 - rotas de membro usam `MemberRoute`;
 - rotas admin usam `ProtectedRoute`;
 - `/admin/login` existe, mas não deve ser o caminho principal do menu de usuário;
@@ -198,6 +234,7 @@ Rotas autenticadas de árvore:
 ```txt
 /
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 /busca
@@ -283,13 +320,13 @@ Comportamento consolidado:
 - no header da árvore, `UserProfileMenu` usa variante `home-header` em desktop/tablet e padrão compacto no mobile;
 - busca do header pesquisa pessoas e páginas;
 - busca possui sugestões e rota completa `/busca`;
-- seletor de view permite alternar entre **Minha Árvore**, **Genealogia** e **Visão Completa**;
+- seletor de view permite alternar entre **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
 - seletor de paleta fica no dropdown de views em desktop/tablet;
 - no mobile, paletas também aparecem no menu do usuário por `MobileUserMenuPalettePortal`;
-- paletas `white`, `orange` e `brown` são aplicadas por CSS variables no `document.documentElement`;
+- paletas `white`, `orange`, `brown` e `visual` são aplicadas por CSS variables no `document.documentElement`;
 - paleta ativa é persistida em `localStorage`;
 - paletas não alteram dados, permissões, Supabase, filtros ou grafo;
-- `MobileTreeControlsPortal` concentra controles mobile da árvore nas rotas `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- `MobileTreeControlsPortal` concentra controles mobile da árvore nas rotas `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa`;
 - o painel mobile permite zoom, reajuste, ocultar/exibir setas, exportação PDF/imagem e impressão;
 - `/genealogia` e `/visao-completa` resetam a geração ativa ao alternar view, pessoa central ou conjunto de gerações disponíveis;
 - em mobile, `HomeTreeSection` calcula as gerações disponíveis a partir da mesma base inferida repassada ao `FamilyTree`, evitando divergência entre chips e canvas;
@@ -674,7 +711,7 @@ Comportamento consolidado:
 - chips focam/enquadram a geração ativa, mas não removem estruturalmente as demais colunas;
 - botões de pan/zoom antigos podem ser ocultados em mobile quando os chips ou o painel mobile assumem a navegação principal;
 - `MobileTreeControlsPortal` fornece painel compacto de ações em mobile nas rotas da árvore;
-- paletas `white`, `orange` e `brown` alteram apenas tokens visuais.
+- paletas `white`, `orange`, `brown` e `visual` alteram apenas tokens visuais.
 
 Regras anti-regressão:
 
@@ -1007,7 +1044,7 @@ Regra anti-regressão:
 
 - não cachear `index.html` como immutable;
 - não remover recuperação de chunk sem validar deploy real;
-- após alterações em lazy routes, testar `/forum`, `/minha-arvore`, `/genealogia` e `/visao-completa` em janela anônima.
+- após alterações em lazy routes, testar `/forum`, `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` em janela anônima.
 
 ---
 
@@ -1091,16 +1128,3 @@ Regras:
 - não manter pendências antigas já validadas;
 - usar links cruzados para documentos específicos;
 - atualizar este guia apenas quando o estado consolidado do produto mudar.
-
-## Estado do Mapa Familiar
-
-- rota autenticada: `/mapa-familiar`, preservando query string como `?pessoa=...`;
-- identificador técnico: `mapa-familiar`;
-- desktop/tablet: `DesktopFamilyMapView.tsx`, sem ReactFlow;
-- mobile: fallback para `MobileFamilyTreeView.tsx`;
-- dados: `buildMobileFamilyTreeModel`, sem persistência ou alteração de backend;
-- cards: `FamilyTreeVisualCards.tsx`;
-- filtros: `visiblePersonIds` e filtros de parentes diretos;
-- paleta adicionada: `visual`, disponível junto de `white`, `orange` e `brown`;
-- anti-regressão: `/minha-arvore`, `/genealogia` e `/visao-completa` mantêm seus
-  comportamentos e layouts existentes.

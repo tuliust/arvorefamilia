@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado após inclusão da view `/mapa-familiar`, reclassificação das pendências antigas da Minha Árvore mobile e abertura de pendências específicas para QA, busca/favoritos e exportação do Mapa Familiar.
+> Status: plano vivo revisado após criação de `MAPA_FAMILIAR_VIEW.md`, refatoração estrutural do Mapa Familiar, regras de cônjuges, avatares por `genero` e pendências de QA/migration/exportação.
 
 ## Objetivo
 
@@ -67,6 +67,9 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a nova view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos roláveis, paleta Visual e fallback mobile. | Aberto |
 | DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Verificar e, se necessário, incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, para aparecer na busca global e poder ser favoritado como as demais views da árvore. | Aberto |
 | DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. Enquanto não houver implementação, documentar que exportação segue focada nas views ReactFlow. | Aberto |
+| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Ajustar e validar grupos laterais de tios/primos para ocupar as laterais sem invadir Pai/Mãe/Pessoa Central e sem cortar nas bordas. | Aberto |
+| DOC-018 | `pessoas.genero` | schema / migration / tipagem | Confirmar se a coluna `genero` foi criada por migration versionada e se o tipo `Pessoa` aceita `homem`, `mulher` e `pet`. | Aberto |
+| DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom e avatares por `genero`. | Aberto |
 
 Regras:
 
@@ -172,16 +175,27 @@ Rotas prioritárias para QA visual:
 
 ### Contexto
 
-`/mapa-familiar` é uma nova view de árvore protegida por `TreeAccessRoute`.
+`/mapa-familiar` é uma view protegida por `TreeAccessRoute` e possui documento funcional canônico próprio:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
 
 Estado técnico atual:
 
-- rota adicionada em `src/app/routes.tsx`;
-- view mode `mapa-familiar` em `src/app/components/FamilyTree/treeViewMode.ts`;
-- renderização desktop/tablet em `src/app/components/FamilyTree/DesktopFamilyMapView.tsx`;
-- fallback mobile para `MobileFamilyTreeView` em `HomeTreeSection.tsx`;
-- cards visuais compartilhados em `FamilyTreeVisualCards.tsx`;
-- paleta `visual` em `treeColorPalettes.ts`.
+- rota `/mapa-familiar` adicionada em `src/app/routes.tsx`;
+- view mode `mapa-familiar` em `treeViewMode.ts`;
+- renderização desktop/tablet em `DesktopFamilyMapView.tsx`, sem ReactFlow;
+- fallback mobile para `MobileFamilyTreeView.tsx` em `HomeTreeSection.tsx`;
+- cards compartilhados em `FamilyTreeVisualCards.tsx`;
+- layout centralizado em `FAMILY_MAP_LAYOUT`;
+- conectores principais SVG derivados de âncoras;
+- conectores internos de cônjuges derivados de relacionamentos `conjuge` explícitos;
+- zoom manual por `Ctrl + scroll`;
+- grupos expansíveis sem scroll interno apertado;
+- tios/primos laterais com até 4 colunas e limite inicial de 8 cards;
+- paleta `visual` disponível junto de `white`, `orange` e `brown`;
+- avatares visuais orientados por `pessoas.genero` quando disponível.
 
 ### Critérios de QA manual
 
@@ -201,19 +215,21 @@ Checklist:
 - rota `/mapa-familiar` abre corretamente;
 - search param `?pessoa=...` é preservado;
 - título desktop mostra `Mapa Familiar de {primeiro nome}`;
-- árvore panorâmica aparece sem swipe;
+- fundo do título e da árvore usam o mesmo azul claro;
+- árvore panorâmica aparece sem swipe no desktop/tablet;
 - Pai, Pessoa Central e Mãe ficam no eixo principal;
-- ancestrais paternos ficam no lado esquerdo/superior;
-- ancestrais maternos ficam no lado direito/superior;
-- tios paternos e maternos ficam nas laterais;
-- primos paternos e maternos ficam na parte inferior lateral;
-- grupos centrais de irmãos, cônjuge, filhos, pets, sobrinhos e netos ficam abaixo da pessoa central;
-- conectores não atravessam cards;
-- conectores não ficam soltos quando grupos não existem;
-- grupos grandes têm scroll interno;
-- não há overflow horizontal indevido da página;
-- paleta **Visual** aparece e aplica cores;
-- fallback mobile não quebra bottom nav;
+- grupos laterais de tios/primos não invadem a área central;
+- grupos laterais preservam margem mínima e não cortam nas bordas;
+- tios/primos usam 4 colunas e até 8 cards iniciais;
+- botão `+/-` expande/recolhe grupos extensos;
+- grupos unitários não ficam estreitos demais nem largos demais;
+- cônjuge principal aparece mesmo com filtro **Cônjuges** desativado;
+- cônjuges de ancestrais aparecem por padrão;
+- cônjuges colaterais aparecem apenas com filtro **Cônjuges** ativo;
+- conectores internos ligam apenas cônjuges reais;
+- conectores principais estão claros e alinhados;
+- conectores internos de cônjuges são mais escuros que os conectores principais;
+- avatares respeitam `genero = homem`, `genero = mulher` e `genero = pet`;
 - `/minha-arvore`, `/genealogia` e `/visao-completa` não sofrem regressão.
 
 ### Pendências técnicas relacionadas
@@ -221,6 +237,8 @@ Checklist:
 - Verificar inclusão de **Mapa Familiar** em `GLOBAL_SEARCH_PAGES`.
 - Verificar inclusão de **Mapa Familiar** em `FAVORITE_PAGES`.
 - Decidir se `DesktopFamilyMapView` deve participar do fluxo de exportação da árvore.
+- Confirmar migration e tipagem para `pessoas.genero`.
+- Validar visualmente os grupos laterais após cada ajuste de `FAMILY_MAP_LAYOUT.areas.left/right`.
 
 ---
 
@@ -386,9 +404,9 @@ Critérios para considerar a pendência fechada:
 | 2 | `docs/arquitetura/ARCHITECTURE.md` | Revisado nesta rodada | Inclui `DesktopFamilyMapView`, `FamilyTreeVisualCards`, fallback mobile e paleta `visual`. |
 | 3 | `docs/README.md` | Revisado nesta rodada | Índice atualizado para Mapa Familiar e reclassificação das pendências antigas da mobile segmentada. |
 | 4 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado nesta rodada | DOC-014, DOC-015 e DOC-016 adicionados; DOC-004 e DOC-013 reclassificados. |
-| 5 | `docs/GUIA_IMPLEMENTACOES.md` | Revisar se alterado futuramente | Deve permanecer sincronizado com Mapa Familiar, paleta Visual e fallback mobile. |
-| 6 | `docs/GUIA_UX_LAYOUT.md` | Revisar se alterado futuramente | Deve cobrir fit-to-screen, escala e QA visual do Mapa Familiar. |
-| 7 | `docs/GUIA_COMPONENTES.md` | Revisar se alterado futuramente | Deve cobrir `DesktopFamilyMapView` e `FamilyTreeVisualCards`. |
+| 5 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inclui Mapa Familiar, `FAMILY_MAP_LAYOUT`, cônjuges por política, zoom e avatares por `genero`. |
+| 6 | `docs/GUIA_UX_LAYOUT.md` | Revisado nesta rodada | Inclui UX do Mapa Familiar, grupos expansíveis, laterais, zoom, avatares e cônjuges. |
+| 7 | `docs/GUIA_COMPONENTES.md` | Revisado nesta rodada | Inclui `DesktopFamilyMapView`, `FamilyTreeVisualCards`, `VisualGroup`, conectores e avatares por `genero`. |
 | 8 | `docs/funcionalidades/FORUM.md` | Revisar conforme DOC-006 | Pendência de filtros tipo/status na home do fórum. |
 | 9 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Revisar conforme DOC-016 | Decidir/documentar exportação do Mapa Familiar. |
 | 10 | `docs/funcionalidades/FAVORITOS.md` | Revisar conforme DOC-015 | Sincronizar Mapa Familiar com favoritos, se implementado. |
@@ -408,15 +426,17 @@ npm run build
 Commit sugerido para esta atualização documental específica:
 
 ```bash
-git add docs/arquitetura/ROTAS_E_GUARDS.md
+git add docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 
-git add docs/arquitetura/ARCHITECTURE.md
+git add docs/GUIA_COMPONENTES.md
 
-git add docs/README.md
+git add docs/GUIA_IMPLEMENTACOES.md
+
+git add docs/GUIA_UX_LAYOUT.md
 
 git add docs/PLANO_PROXIMOS_PASSOS.md
 
-git commit -m "docs: atualiza arquitetura e plano do mapa familiar"
+git commit -m "docs: atualiza guias do mapa familiar"
 
 git pull --rebase origin main
 

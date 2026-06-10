@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com a experiência mobile 3×3 da Minha Árvore, conectores e comportamento de swipe.
+> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero` e regras visuais de cônjuges.
 
 ## Objetivo
 
@@ -32,26 +32,32 @@ Este documento não substitui:
 
 ## Nota de verificação contra o código atual
 
-Esta revisão consolida os ajustes implementados neste ciclo da `/minha-arvore` mobile e substitui a documentação anterior, que ainda descrevia o fluxo antigo de sete telas e abas `Núcleo`/`Completa`.
+Esta revisão consolida duas frentes diferentes da árvore, que não devem ser confundidas:
+
+1. **Minha Árvore mobile segmentada**: implementada em `MobileFamilyTreeView.tsx`, com malha 3×3, abas **Paterno | Central | Materno**, tela global de ancestrais, tios laterais, primos abaixo dos tios, conectores HTML/CSS e preview durante swipe.
+2. **Mapa Familiar desktop/tablet**: implementado em `DesktopFamilyMapView.tsx`, na rota `/mapa-familiar`, com composição HTML/CSS/SVG própria, sem ReactFlow, layout centralizado em `FAMILY_MAP_LAYOUT`, conectores por âncoras, grupos expansíveis, zoom com `Ctrl + scroll`, cards visuais compartilhados e regras próprias de cônjuges.
 
 Estado confirmado/esperado da frente atual:
 
-- `HomeTreeSection.tsx` continua renderizando `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
-- `MobileFamilyTreeView.tsx` mantém a experiência mobile separada de `FamilyTree`/ReactFlow; desktop/tablet continuam usando o layout ReactFlow da Minha Árvore.
-- As abas superiores internas do mobile são apenas **Paterno**, **Central** e **Materno**; a antiga aba **Completa** não deve reaparecer.
-- A navegação mobile usa uma malha 3×3 de telas: **Ancestrais globais** acima da tela **Central**, **Tios Paternos** à esquerda, **Tios Maternos** à direita, **Primos Paternos** abaixo dos tios paternos e **Primos Maternos** abaixo dos tios maternos.
-- A tela **Ancestrais globais** reúne os ramos paterno e materno em duas colunas, com grupos de **Tataravós**, **Bisavós** e **Avós** quando houver pessoas.
-- Os grupos de ancestrais não usam mais o container externo único `Ancestrais Paternos/Maternos` do fluxo antigo.
-- Tios usam cards compactos em grupo ampliado; primos exibem todos os cards disponíveis e usam rolagem vertical quando a altura útil não comporta todos.
-- Os conectores HTML/CSS do mobile são independentes dos edges ReactFlow e incluem conexões entre avós/bisavós/tataravós, avós → pai/mãe, pai/mãe → tios e tios → primos.
-- As linhas laterais de Pai e Mãe ficam no mesmo contexto rolável dos cards, para acompanhar o movimento vertical da tela Central.
-- Primos são fim de ramo: não deve haver linha inferior abaixo dos grupos de primos.
-- O swipe direcional mantém a navegação entre telas e recebeu pré-visualização da próxima tela durante o gesto por deslocamento temporário da malha.
+- `/minha-arvore` desktop/tablet continua usando `FamilyTree`/ReactFlow e `directFamilyDistributedLayout.ts`.
+- `/minha-arvore` mobile usa `MobileFamilyTreeView.tsx`.
+- `/mapa-familiar` desktop/tablet usa `DesktopFamilyMapView.tsx`.
+- `/mapa-familiar` mobile usa `MobileFamilyTreeView.tsx` como fallback seguro.
+- `DesktopFamilyMapView.tsx` não deve ser movido para dentro de `FamilyTree.tsx`.
+- `DesktopFamilyMapView.tsx` usa `buildMobileFamilyTreeModel` como base de composição, mas possui layout visual próprio.
+- O Mapa Familiar tem grupos por tipo: ancestrais, laterais numerosos, centrais pequenos, descendentes, pets e cards diretos.
+- Tios e primos laterais usam até 4 colunas, limite inicial de 8 cards e expansão via botão `+/-`.
+- Demais grupos usam regras específicas de largura, colunas e expansão.
+- Cônjuge da pessoa central permanece visível quando existir.
+- Cônjuges de tataravós, bisavós e avós aparecem por padrão.
+- Cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**.
+- A coluna `pessoas.genero` passa a orientar avatares do Mapa Familiar: `homem`, `mulher` e `pet`.
+- Se `genero` tiver sido criada manualmente no Supabase, a migration e a tipagem de `Pessoa` precisam ser conferidas.
 
 Regra documental desta revisão:
 
 ```txt
-Documentar como implementado apenas o que pertence ao MobileFamilyTreeView atual; intenções futuras devem permanecer como backlog explícito.
+Documentar como implementado apenas o que pertence à view atual; intenções futuras ou ajustes visuais ainda não validados devem permanecer como backlog explícito.
 ```
 
 ---
@@ -137,6 +143,7 @@ A Home pós-login é o shell das views:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 ```
@@ -171,6 +178,7 @@ O seletor de view deve navegar entre:
 
 ```txt
 Minha Árvore -> /minha-arvore
+Mapa Familiar -> /mapa-familiar
 Genealogia -> /genealogia
 Visão Completa -> /visao-completa
 ```
@@ -182,6 +190,7 @@ Paletas disponíveis:
 | Branca/padrão | `white` |
 | Laranja | `orange` |
 | Marrom | `brown` |
+| Visual | `visual` |
 
 Regras:
 
@@ -219,7 +228,7 @@ Comportamento consolidado:
 - item **Editar notificações** não existe no menu;
 - **Painel Admin** aparece apenas para administradores;
 - **Sair** limpa cache da árvore e executa logout;
-- no mobile, o painel inclui bloco de visualização para alternar entre **Minha Árvore**, **Genealogia** e **Visão Completa**;
+- no mobile, o painel inclui bloco de visualização para alternar entre **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
 - no mobile, a linha **Cores da árvore** exibe botões circulares de paleta via portal.
 
 Regra anti-regressão:
@@ -457,6 +466,82 @@ QA obrigatório para qualquer ajuste nessa frente:
 Validar as telas Central, Ancestrais, Tios Paternos, Tios Maternos, Primos Paternos e Primos Maternos, bottom navigation, ausência de scroll lateral, legibilidade dos cards, continuidade dos conectores e preview durante swipe.
 
 
+
+### 4.2.2 Mapa Familiar desktop/tablet
+
+Escopo:
+
+```txt
+viewMode === 'mapa-familiar'
+```
+
+Arquivo principal:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+```
+
+Documento funcional canônico:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
+Comportamento visual consolidado:
+
+- título: `Mapa Familiar de {primeiro nome}`;
+- fundo da área do título e da árvore deve usar o mesmo azul claro;
+- desktop/tablet exibem a família direta em uma superfície panorâmica sem swipe;
+- abaixo de 768px, a rota usa fallback mobile com `MobileFamilyTreeView`;
+- cards visuais usam `FamilyTreeVisualCards.tsx`;
+- pílulas de grupo usam cinza azulado médio;
+- linhas principais entre grupos são claras;
+- linhas internas entre cônjuges devem ser mais escuras que as linhas principais;
+- grupos não devem usar scroll interno apertado como padrão; devem expandir por botão `+/-` quando aplicável;
+- `Ctrl + scroll` ajusta zoom manual, sem bloquear scroll comum quando `Ctrl` não está pressionado.
+
+Regras de layout:
+
+- Pai, Mãe e Pessoa Central formam o eixo principal;
+- ancestrais paternos e maternos ficam no topo, em colunas laterais/superiores;
+- tios e primos paternos usam a lateral esquerda sem invadir o núcleo;
+- tios e primos maternos usam a lateral direita sem invadir o núcleo;
+- irmãos e sobrinhos ficam no ramo inferior esquerdo;
+- cônjuge principal, pets, filhos e netos ficam no ramo inferior direito;
+- tios/primos usam até 4 colunas e exibem inicialmente até 8 cards;
+- demais grupos seguem suas regras específicas de largura e colunas;
+- grupos unitários devem reduzir espaço vazio sem ficar estreitos demais;
+- margens laterais mínimas devem ser preservadas.
+
+Regras visuais de cards:
+
+- cards comuns exibem apenas ano de nascimento/falecimento;
+- Pai, Mãe, Pessoa Central e Cônjuge principal podem exibir local + ano;
+- não usar textos como `Nascimento não informado` ou `Falecimento não informado` nos cards visuais;
+- avatares usam `genero = homem`, `genero = mulher` e `genero = pet` quando disponível;
+- pet deve manter ícone próprio e não usar avatar humano.
+
+Regras de cônjuges:
+
+- cônjuge principal aparece quando existir;
+- cônjuges de tataravós, bisavós e avós aparecem por padrão;
+- cônjuges de tios, primos, sobrinhos, filhos e netos aparecem apenas com filtro **Cônjuges** ativo;
+- pares conjugais devem ficar juntos quando possível;
+- conectores internos devem ligar apenas relacionamentos `conjuge` explícitos;
+- não criar linha visual entre pessoas que não sejam cônjuges reais.
+
+QA visual obrigatório:
+
+```txt
+1366x768
+1440x900
+1536x864
+1920x1080
+768px a 1023px quando possível
+```
+
+Validar: margens laterais, grupos laterais sem invadir o núcleo, conectores alinhados, cônjuges corretos, zoom, avatares por gênero, legibilidade de nomes e ausência de regressão em `/minha-arvore`, `/genealogia` e `/visao-completa`.
+
 ### 4.3 Genealogia
 
 Escopo:
@@ -507,6 +592,7 @@ src/app/pages/home/HomeTreeSection.tsx
 Aplicado em mobile para:
 
 ```txt
+/mapa-familiar
 /genealogia
 /visao-completa
 ```
@@ -1137,22 +1223,3 @@ Este guia deve permanecer objetivo e visual. Não incluir:
 - duplicação de documentos funcionais.
 
 Quando um ajuste visual já estiver melhor documentado em arquivo funcional específico, manter aqui apenas a regra geral e apontar para o documento correto.
-
-## Mapa Familiar panorâmico
-
-O seletor de views passa a seguir a ordem:
-
-1. Minha Árvore
-2. Mapa Familiar
-3. Genealogia
-4. Visão Completa
-
-Em `/mapa-familiar`, desktop e tablet exibem a família direta em um único canvas
-panorâmico: ancestrais paternos à esquerda/superior, ancestrais maternos à
-direita/superior, pai-central-mãe no eixo principal, tios e primos nas laterais e
-grupos centrais abaixo.
-
-O canvas tenta caber na área disponível por escala responsiva. Quando a largura de
-tablet não comporta a escala mínima, o scroll permanece interno à área do mapa, sem
-criar overflow horizontal na página. Abaixo de 768px, a rota reutiliza a experiência
-mobile segmentada.
