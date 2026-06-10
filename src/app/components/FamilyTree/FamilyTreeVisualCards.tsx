@@ -218,12 +218,13 @@ export function VisualGroup({
   disableInternalScroll?: boolean;
   className?: string;
 }) {
-  const gridColumns = columns === 'triple' ? 'grid-cols-3' : columns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
   const limit = collapsedLimit ?? people.length;
   const canExpand = expandable && people.length > limit;
   const visiblePeople = canExpand && !isExpanded ? people.slice(0, limit) : people;
+  const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
+  const gridColumns = effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
 
   const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
