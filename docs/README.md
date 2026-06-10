@@ -15,6 +15,8 @@ A revisão mais recente registra:
 - as views principais da árvore agora são **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
 - `/mapa-familiar` é uma view protegida de árvore, com renderização panorâmica desktop/tablet em `DesktopFamilyMapView` e fallback mobile para `MobileFamilyTreeView`;
 - a paleta **Visual** (`visual`) foi adicionada como modo de cores da árvore;
+- `MAPA_FAMILIAR_VIEW.md` passa a ser o documento canônico da view panorâmica desktop/tablet;
+- o Mapa Familiar foi refatorado com `FAMILY_MAP_LAYOUT`, regras de cônjuges, grupos expansíveis, conectores por âncoras e avatares por `genero`;
 - pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 
 ---
@@ -77,7 +79,8 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos, `MobileFamilyTreeView`, estado da Minha Árvore mobile segmentada e relação com `/mapa-familiar`. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos e `MobileFamilyTreeView`. |
+| `funcionalidades/MAPA_FAMILIAR_VIEW.md` | View panorâmica `/mapa-familiar`, `DesktopFamilyMapView`, `FAMILY_MAP_LAYOUT`, cards visuais, cônjuges, conectores SVG, zoom, avatares por `genero` e fallback mobile. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
 | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS do mobile segmentado, conectores SVG do `Mapa Familiar`, filtros, destaques, painel lateral e ações. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
@@ -209,6 +212,8 @@ Itens ainda abertos ou parcialmente abertos:
 | `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
 | `DOC-015` | `/mapa-familiar` busca/favoritos | verificar inclusão em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES` |
 | `DOC-016` | `/mapa-familiar` exportação | decidir/documentar se a exportação canônica deve capturar a view HTML/SVG panorâmica |
+| `DOC-017` | `pessoas.genero` | validar tipagem e migration da coluna usada por avatares do Mapa Familiar |
+| `DOC-018` | `/mapa-familiar` laterais | refinar grupos de tios/primos laterais para ocupar espaço lateral sem invadir o núcleo |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
 > Tipo: documentação funcional da view **Minha Árvore**.
-> Status: atualizado com as regras atuais de filtros/status no MobileFamilyTreeView e com a malha mobile 3×3.
+> Status: revisado com as regras atuais de filtros/status, pets, coluna `genero`, filtro **Cônjuges** e impacto no Mapa Familiar.
 
 ---
 
@@ -31,6 +31,12 @@ Para legendas, conectores e painel lateral, use:
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```
 
+Para regras próprias da view panorâmica desktop/tablet, use:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
 ---
 
 ## 2. Arquivos principais
@@ -43,6 +49,9 @@ src/app/pages/home/LifeStatusKpiGrid.tsx
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/CentralPersonFocusPanel.tsx
 src/app/services/memberTreeService.ts
@@ -70,7 +79,7 @@ Regra de domínio:
 pessoas.humano_ou_pet === 'Pet'
 ```
 
-define semanticamente que a pessoa é pet.
+define semanticamente que a pessoa é pet no domínio legado. Em telas visuais novas, `pessoas.genero = 'pet'` também orienta o avatar de pet, mas não substitui automaticamente a regra semântica enquanto não houver migração/backfill definido.
 
 O relacionamento técnico ainda pode usar:
 
@@ -92,6 +101,37 @@ Portanto:
 - não salvar `tipo_relacionamento = 'pet'` sem migration;
 - não criar UI que dependa de `tutor` sem schema;
 - documentar qualquer futura mudança de domínio antes de migrar dados.
+
+---
+
+
+
+## 3.1 Coluna `genero` e avatar visual
+
+A coluna `pessoas.genero` foi adotada como fonte direta para os avatares gráficos do Mapa Familiar.
+
+Valores esperados:
+
+| Valor | Uso visual |
+|---|---|
+| `homem` | avatar masculino |
+| `mulher` | avatar feminino |
+| `pet` | avatar de pet |
+
+Regras:
+
+- foto principal (`foto_principal_url`) tem prioridade sobre avatar gráfico;
+- `genero = pet` deve usar o avatar/ícone de pet;
+- `genero = homem` ou `genero = mulher` deve escolher avatar humano correspondente;
+- `genero` não substitui automaticamente `humano_ou_pet` enquanto o domínio legado continuar existindo;
+- se `genero` foi criado manualmente no Supabase, criar migration versionada;
+- se o build acusar erro de tipo, atualizar o contrato `Pessoa` para incluir `genero?: 'homem' | 'mulher' | 'pet' | string | null`.
+
+Não fazer:
+
+- inferir gênero por nome quando `genero` existe;
+- tratar `genero = pet` como relacionamento familiar;
+- alterar RLS ou permissões para corrigir avatar visual.
 
 ---
 
@@ -187,7 +227,7 @@ Bisavós
 Avós
 Tios
 Primos
-Cônjuge
+Cônjuges
 Irmãos
 Filhos
 Sobrinhos
@@ -257,6 +297,36 @@ Regras para implementação futura:
 - quando não houver pessoas após filtro, exibir estado vazio discreto somente quando fizer sentido para a tela ativa;
 - filtros diretos não devem alterar dados reais nem relacionamentos;
 - a ocultação de grupo deve preservar a integridade visual da malha e dos conectores.
+
+---
+
+
+
+### 6.2 Filtro **Cônjuges** no Mapa Familiar
+
+No painel lateral, o rótulo funcional deve ser **Cônjuges**, não **Cônjuge**.
+
+No `Mapa Familiar`, a regra do filtro é específica:
+
+| Tipo de cônjuge | Estado inicial | Controlado pelo filtro **Cônjuges**? |
+|---|---:|---:|
+| Cônjuge da pessoa central | visível quando existir | Não |
+| Cônjuges de tataravós, bisavós e avós | visíveis quando existirem | Não |
+| Cônjuges de tios | ocultos inicialmente | Sim |
+| Cônjuges de primos | ocultos inicialmente | Sim |
+| Cônjuges de sobrinhos | ocultos inicialmente | Sim |
+| Cônjuges de filhos | ocultos inicialmente | Sim |
+| Cônjuges de netos | ocultos inicialmente | Sim |
+
+Regras:
+
+- `directRelativeFilters.conjuge` deve representar a exibição de cônjuges colaterais no Mapa Familiar;
+- desligar **Cônjuges** não deve esconder o cônjuge principal da pessoa central;
+- desligar **Cônjuges** não deve esconder cônjuges ancestrais de tataravós, bisavós e avós;
+- conectores internos entre cônjuges só devem ser desenhados quando a relação `conjuge` existir explicitamente;
+- não conectar visualmente pessoas adjacentes apenas porque ficaram lado a lado no grid.
+
+Na `/minha-arvore` ReactFlow, o comportamento legado do grupo `conjuge` pode continuar existindo conforme o layout direto. A regra acima é específica do `DesktopFamilyMapView` e deve permanecer detalhada em `MAPA_FAMILIAR_VIEW.md`.
 
 ---
 
@@ -456,7 +526,10 @@ Validar em `/minha-arvore`:
 - validar as 7 telas do mobile segmentado da Minha Árvore;
 - confirmar que grupos ocultos por filtro não deixam containers vazios ou conectores soltos;
 - confirmar que pets continuam separados de filhos humanos no núcleo mobile;
-- testar desktop, tablet e mobile.
+- testar desktop, tablet e mobile;
+- validar avatar por `genero` no Mapa Familiar;
+- validar que o filtro **Cônjuges** não oculta cônjuge principal nem cônjuges ancestrais;
+- validar que cônjuges colaterais aparecem apenas quando **Cônjuges** está ativo.
 
 Comando técnico:
 

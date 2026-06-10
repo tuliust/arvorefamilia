@@ -1,9 +1,9 @@
 # Árvore - legendas, conectores, filtros e painel lateral
 
-> Última revisão: 2026-06-10
-> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
-> Tipo: documentação funcional/técnica específica da árvore.
-> Status: atualizado com a malha mobile 3×3, abas Paterno/Central/Materno, conectores HTML/CSS e preview de swipe.
+> Última revisão: 2026-06-10  
+> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
+> Tipo: documentação funcional/técnica específica da árvore.  
+> Status: atualizado com a malha mobile 3×3, Mapa Familiar, filtros, conectores ReactFlow, conectores HTML/CSS mobile e conectores SVG do Mapa Familiar.
 
 ## 1. Função deste documento
 
@@ -15,8 +15,11 @@ Este documento consolida os controles visuais da árvore:
 - destaques visuais;
 - filtros de grupos diretos;
 - filtros de gerações;
-- conectores da Minha Árvore;
+- filtros e regras de **Cônjuges**;
+- conectores da Minha Árvore ReactFlow;
 - conectores HTML/CSS do layout mobile segmentado;
+- conectores SVG do Mapa Familiar;
+- conectores internos entre cônjuges;
 - conectores da Genealogia e Visão Completa;
 - painel lateral desktop;
 - painel inferior mobile;
@@ -27,37 +30,12 @@ Não substitui:
 | Tema | Documento |
 |---|---|
 | view direta | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Genealogia/mobile | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
 | filtros e pets | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
 | exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
 | componentes | `docs/GUIA_COMPONENTES.md` |
 | UX geral | `docs/GUIA_UX_LAYOUT.md` |
-
----
-
-## Nota de verificação contra o código atual
-
-Esta revisão consolida os ajustes implementados neste ciclo da `/minha-arvore` mobile e substitui a documentação anterior, que ainda descrevia o fluxo antigo de sete telas e abas `Núcleo`/`Completa`.
-
-Estado confirmado/esperado da frente atual:
-
-- `HomeTreeSection.tsx` continua renderizando `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
-- `MobileFamilyTreeView.tsx` mantém a experiência mobile separada de `FamilyTree`/ReactFlow; desktop/tablet continuam usando o layout ReactFlow da Minha Árvore.
-- As abas superiores internas do mobile são apenas **Paterno**, **Central** e **Materno**; a antiga aba **Completa** não deve reaparecer.
-- A navegação mobile usa uma malha 3×3 de telas: **Ancestrais globais** acima da tela **Central**, **Tios Paternos** à esquerda, **Tios Maternos** à direita, **Primos Paternos** abaixo dos tios paternos e **Primos Maternos** abaixo dos tios maternos.
-- A tela **Ancestrais globais** reúne os ramos paterno e materno em duas colunas, com grupos de **Tataravós**, **Bisavós** e **Avós** quando houver pessoas.
-- Os grupos de ancestrais não usam mais o container externo único `Ancestrais Paternos/Maternos` do fluxo antigo.
-- Tios usam cards compactos em grupo ampliado; primos exibem todos os cards disponíveis e usam rolagem vertical quando a altura útil não comporta todos.
-- Os conectores HTML/CSS do mobile são independentes dos edges ReactFlow e incluem conexões entre avós/bisavós/tataravós, avós → pai/mãe, pai/mãe → tios e tios → primos.
-- As linhas laterais de Pai e Mãe ficam no mesmo contexto rolável dos cards, para acompanhar o movimento vertical da tela Central.
-- Primos são fim de ramo: não deve haver linha inferior abaixo dos grupos de primos.
-- O swipe direcional mantém a navegação entre telas e recebeu pré-visualização da próxima tela durante o gesto por deslocamento temporário da malha.
-
-Regra documental desta revisão:
-
-```txt
-Documentar como implementado apenas o que pertence ao MobileFamilyTreeView atual; intenções futuras devem permanecer como backlog explícito.
-```
 
 ---
 
@@ -67,10 +45,10 @@ Separar claramente:
 
 | Estado | Responsabilidade |
 |---|---|
-| `edgeFilters` | existência/visibilidade de linhas |
+| `edgeFilters` | existência/visibilidade de linhas ReactFlow |
 | `visualLineFilters` | destaque visual de linhas já visíveis |
 | `personFilters` | visibilidade de cards por vivo/falecido/pet |
-| `directRelativeFilters` | grupos da Minha Árvore |
+| `directRelativeFilters` | grupos da Minha Árvore e Mapa Familiar |
 | `genealogyFilters` | gerações/grupos da Genealogia e Visão Completa |
 
 Regra obrigatória:
@@ -82,26 +60,18 @@ Destaque não altera cards.
 Destaque não altera contadores.
 ```
 
+Importante:
 
-### 2.1 Atualizações consolidadas em 2026-06-09
-
-A experiência da árvore passou a considerar os seguintes padrões visuais recentes:
-
-- o painel lateral desktop não deve ter scroll vertical interno;
-- abas **Filtros**, **Legendas** e **Ações** devem usar mais respiro vertical;
-- títulos e subtítulos do painel lateral são maiores do que o padrão compacto anterior;
-- cards/botões do painel lateral têm altura maior e espaçamento mais confortável;
-- o botão de favoritar da página da árvore fica na área do canvas, junto aos controles de zoom, e não duplicado no header desktop;
-- ícones/aneis de aliança devem acompanhar a cor do conector conjugal conforme a paleta ativa;
-- cards compactos da `/minha-arvore` foram ampliados visualmente para 360px e devem permitir quebra de linha nos nomes, evitando reticências indevidas.
-
-Essas regras devem ser tratadas como estado atual da UI, não como experimento visual.
+- conectores ReactFlow, conectores HTML/CSS mobile e conectores SVG do Mapa Familiar são sistemas diferentes;
+- não corrigir um sistema assumindo que os outros usam a mesma lógica;
+- filtros de linhas ReactFlow não comandam diretamente conectores HTML/CSS mobile;
+- filtros de linhas ReactFlow não comandam diretamente conectores SVG do Mapa Familiar, salvo quando a view explicitamente mapear essa regra.
 
 ---
 
 ## 3. Estados principais
 
-Os estados ficam em `src/app/pages/Home.tsx`.
+Os estados ficam em `src/app/pages/Home.tsx` e componentes filhos.
 
 ### 3.1 `edgeFilters`
 
@@ -116,8 +86,8 @@ Os estados ficam em `src/app/pages/Home.tsx`.
 
 Função:
 
-- controlar linhas conjugais;
-- controlar linhas parentais de filiação;
+- controlar linhas conjugais em views ReactFlow;
+- controlar linhas parentais de filiação em views ReactFlow;
 - controlar linhas de irmãos quando suportadas.
 
 Não deve:
@@ -179,8 +149,21 @@ pets
 Função:
 
 - controlar grupos visuais da Minha Árvore;
+- controlar grupos visuais do Mapa Familiar, com regras próprias;
 - afetar cards/contadores do escopo direto;
 - não controlar linhas diretamente.
+
+Regra de rótulo:
+
+```txt
+conjuge deve aparecer no painel como Cônjuges.
+```
+
+Regra específica do Mapa Familiar:
+
+- o filtro **Cônjuges** não oculta o cônjuge principal;
+- o filtro **Cônjuges** não oculta cônjuges de tataravós, bisavós e avós;
+- o filtro **Cônjuges** controla apenas cônjuges colaterais de tios, primos, sobrinhos, filhos e netos.
 
 ### 3.5 `genealogyFilters`
 
@@ -223,20 +206,9 @@ Regras consolidadas:
 - títulos das abas devem ser maiores que o padrão anterior de texto compacto;
 - subtítulos devem ter tamanho legível e espaçamento inferior suficiente antes dos cards;
 - cards de filtros e KPIs podem ter altura maior para melhorar leitura;
-- botões da aba **Ações** devem manter altura confortável e espaçamento vertical consistente;
+- botões da aba **Ações** devem manter altura e espaçamento vertical consistente;
 - a remoção de scroll não deve cortar conteúdo em alturas comuns de notebook;
 - se a altura útil ficar insuficiente, reduzir densidade por `clamp()` antes de reintroduzir scroll.
-
-Componentes afetados:
-
-```txt
-src/app/pages/home/DirectRelationKpiGrid.tsx
-src/app/pages/home/GenealogyFilterGrid.tsx
-src/app/pages/home/LifeStatusKpiGrid.tsx
-src/app/pages/home/SidebarInfoPanel.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-src/styles/family-tree-visual-polish.css
-```
 
 ### 4.2 Regras mobile
 
@@ -297,18 +269,19 @@ Blocos da legenda:
 | Cards | `personFilters` |
 | Linhas | `edgeFilters` |
 | Destacar | `visualLineFilters` |
-| Cores dos grupos | `directRelativeFilters` apenas em `minha-arvore` |
+| Cores dos grupos | `directRelativeFilters` quando aplicável |
 
 Regras:
 
 - itens interativos usam botão com `aria-pressed`;
 - itens não interativos permanecem como legenda visual;
 - a pessoa central é legenda, não filtro;
-- cores dos grupos só são interativas quando `viewMode === 'minha-arvore'`.
+- cores dos grupos são interativas no escopo direto quando a view suporta filtros diretos;
+- no Mapa Familiar, o rótulo do filtro deve ser **Cônjuges**.
 
 ---
 
-## 6. Linhas
+## 6. Linhas ReactFlow
 
 A seção **Linhas** controla `edgeFilters`.
 
@@ -324,7 +297,7 @@ Regras:
 - ocultar linhas não deve ocultar cards;
 - ocultar linhas não deve alterar dados;
 - `Pais/filhos` deve tratar sangue e adoção em conjunto no controle atual;
-- se todos os `edgeFilters` forem desligados na Minha Árvore, CSS específico oculta edges diretas.
+- se todos os `edgeFilters` forem desligados na Minha Árvore, CSS específico pode ocultar edges diretas.
 
 ---
 
@@ -349,7 +322,7 @@ Regras:
 
 ---
 
-## 8. Conectores da Minha Árvore
+## 8. Conectores da Minha Árvore ReactFlow
 
 Layout:
 
@@ -368,10 +341,9 @@ auxiliary
 
 Regras:
 
-- cards compactos de relação direta na `/minha-arvore` usam largura visual atual de 360px quando aplicável;
+- cards compactos de relação direta na `/minha-arvore` usam largura visual definida pela view direta quando aplicável;
 - nomes em cards compactos devem quebrar linha quando necessário, sem reticências indevidas;
 - linhas de tios/primos devem continuar conectando bordas/anchors atuais após aumento visual dos cards;
-- cards do lado direito podem crescer em direção ao centro para evitar expansão para fora da tela;
 - `isDirectLineVisible` aplica `edgeFilters`;
 - `getDirectLineStyle` aplica `visualLineFilters`;
 - grupos ocultos por `directRelativeFilters` não devem gerar cards visíveis;
@@ -381,8 +353,7 @@ Regras:
 
 ---
 
-
-### 8.1 Conectores no layout mobile segmentado
+## 9. Conectores no layout mobile segmentado
 
 O layout mobile segmentado da `/minha-arvore` usa conectores próprios de HTML/CSS em:
 
@@ -390,31 +361,30 @@ O layout mobile segmentado da `/minha-arvore` usa conectores próprios de HTML/C
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 ```
 
-Esses conectores não são edges ReactFlow e não devem ser tratados como `spouseEdge`, `childEdge`, `siblingEdge` ou `auxiliary`.
+Esses conectores não são edges ReactFlow.
 
-#### Estado atual confirmado
+### 9.1 Estado atual esperado
 
 | Área/tela | Conectores esperados | Observação |
 |---|---|---|
-| Ancestrais globais | Tataravós → Bisavós → Avós, por ramo | Tela superior em duas colunas: paterno à esquerda, materno à direita. |
+| Ancestrais globais | Tataravós → Bisavós → Avós, por ramo | Tela superior em duas colunas. |
 | Avós → Pai/Mãe | Avós paternos → Pai; Avós maternos → Mãe | Conexões descem visualmente até a tela Central. |
-| Pai/Mãe → Tios | Pai conecta lateralmente a Tios Paternos; Mãe conecta lateralmente a Tios Maternos | As linhas laterais acompanham o scroll da tela Central. |
-| Tios → Primos | Tios Paternos → Primos Paternos; Tios Maternos → Primos Maternos | Tios são o grupo intermediário do ramo. |
-| Primos | Apenas linha superior | Não deve haver linha inferior abaixo dos primos. |
-| Tela Central | Linhas internas entre Pai/Mãe, pessoa central e grupos diretos | Linhas manuais em HTML/CSS, não ReactFlow. |
+| Pai/Mãe → Tios | Pai conecta a Tios Paternos; Mãe conecta a Tios Maternos | Linhas laterais acompanham o scroll da tela Central. |
+| Tios → Primos | Tios Paternos → Primos Paternos; Tios Maternos → Primos Maternos | Tios são intermediários do ramo. |
+| Primos | Apenas linha superior | Não deve haver linha inferior. |
+| Tela Central | Linhas internas entre Pai/Mãe, pessoa central e grupos diretos | HTML/CSS, não ReactFlow. |
 
-#### Regras consolidadas
+### 9.2 Regras
 
 - não deve haver linha inferior abaixo de grupos de primos;
 - tios continuam sendo o grupo intermediário entre ancestrais e primos;
 - conectores HTML/CSS devem ficar visualmente atrás dos containers/cards quando houver sobreposição;
 - cards/containers precisam mascarar linhas internas com fundo opaco, `relative z-*` e `overflow` controlado;
-- linhas estruturais não devem ficar fixas no viewport quando o card relacionado rola; elas devem acompanhar o contexto visual do card;
-- ajustes de conectores mobile devem ser testados sem usar lógica de edges ReactFlow;
+- linhas estruturais não devem ficar fixas no viewport quando o card relacionado rola;
 - `edgeFilters` e `visualLineFilters` continuam válidos para ReactFlow; não comandam diretamente esses conectores HTML/CSS;
 - conectores não devem criar `overflow-x`.
 
-#### QA obrigatório
+### 9.3 QA obrigatório
 
 ```txt
 320px
@@ -435,10 +405,79 @@ Validar:
 - ausência de linha atravessando fundo de cards/containers;
 - ausência de scroll horizontal.
 
+---
+
+## 10. Conectores do Mapa Familiar
+
+A view `DesktopFamilyMapView.tsx` usa overlay SVG absoluto atrás dos cards compartilhados de `FamilyTreeVisualCards.tsx`.
+
+Esses conectores não são edges ReactFlow.
+
+Documento canônico:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
+### 10.1 Conectores principais
+
+Conexões cobertas:
+
+- tataravós → bisavós → avós em cada ramo;
+- avós paternos → pai;
+- avós paternos → tios paternos;
+- avós maternos → mãe;
+- avós maternos → tios maternos;
+- pai/mãe → pessoa central;
+- tios → primos;
+- pessoa central → ramos inferiores;
+- irmãos → sobrinhos;
+- cônjuge principal → filhos/pets/netos quando aplicável;
+- filhos → netos quando aplicável.
+
+Regras:
+
+- conectores principais usam cor clara;
+- conectores principais são calculados por âncoras de grupos;
+- origem e destino precisam existir após filtros;
+- não desenhar linha para grupo inexistente;
+- linhas principais não devem ser escurecidas para resolver conectores internos.
+
+### 10.2 Conectores internos de cônjuges
+
+Dentro de `VisualGroup`, os pares conjugais podem receber conector interno.
+
+Regras:
+
+- conector interno deve ser mais escuro que as linhas principais;
+- só deve conectar relacionamentos conjugais explícitos;
+- não usar proximidade visual para inferir cônjuge;
+- se não houver relação segura, não desenhar linha;
+- casais devem ficar juntos quando possível;
+- espaçadores invisíveis podem ser usados para evitar quebra do par no fim da linha.
+
+Exemplos de anti-regressão:
+
+```txt
+Enildes Barros não deve conectar com Absalon Limeira se o cônjuge correto for Marcos Alfredo.
+Márcia Tereza não deve conectar com Maria Acileide se o cônjuge correto for Mário Assis.
+```
+
+### 10.3 Filtro Cônjuges no Mapa Familiar
+
+Regra específica:
+
+| Cônjuge | Estado inicial |
+|---|---|
+| Cônjuge da pessoa central | visível |
+| Cônjuges de tataravós, bisavós e avós | visíveis |
+| Cônjuges de tios, primos, sobrinhos, filhos e netos | ocultos até ativar filtro **Cônjuges** |
+
+O filtro **Cônjuges** não deve ocultar o cônjuge principal nem cônjuges ancestrais.
 
 ---
 
-## 9. Conectores da Genealogia e Visão Completa
+## 11. Conectores da Genealogia e Visão Completa
 
 Layout:
 
@@ -465,7 +504,7 @@ Regras:
 
 ---
 
-## 10. Botão/anel conjugal
+## 12. Botão/anel conjugal ReactFlow
 
 Componente principal:
 
@@ -483,24 +522,11 @@ Regras:
 - não altera relacionamento no banco;
 - não deve ser substituído por emoji;
 - ícone de aliança e borda/anel devem acompanhar a cor do conector conjugal da paleta ativa;
-- não usar cor fixa laranja ou marrom quando a paleta define outro token de conector;
-- em Genealogia/Visão Completa, a edge conjugal usa `GenealogySpouseEdge` e dados de `marriageStatus`.
-
-Regra de paleta:
-
-```txt
-A aliança e sua borda devem seguir a mesma família visual das linhas/conectores.
-```
-
-Anti-regressão:
-
-- alternar paleta `white`, `orange` e `brown` deve alterar linhas e anéis de forma coerente;
-- a cor do anel não deve ficar presa ao modo anterior após troca de paleta;
-- a aliança não deve virar controle de filtro.
+- não usar cor fixa laranja ou marrom quando a paleta define outro token de conector.
 
 ---
 
-## 11. Cores e tokens
+## 13. Cores e tokens
 
 Arquivos principais:
 
@@ -514,19 +540,29 @@ Regras:
 
 - usar tokens antes de hardcodar cor;
 - manter contraste entre cards, bordas e linhas;
-- paletas `white`, `orange` e `brown` não devem quebrar legibilidade;
+- paletas `white`, `orange`, `brown` e `visual` não devem quebrar legibilidade;
 - status vivo/falecido/pet deve permanecer distinguível;
 - destaque visual deve ser claro em todas as paletas.
 
+### 13.1 Mapa Familiar
+
+Regras visuais específicas do Mapa Familiar:
+
+- linhas principais entre grupos usam cor clara;
+- linhas internas entre cônjuges usam cor mais escura;
+- pílulas dos grupos usam cinza azulado médio;
+- fundo do título e fundo da árvore usam azul claro unificado;
+- cards comuns usam tom esverdeado/azulado;
+- pets mantêm ícone de pet;
+- avatares de pessoa seguem `genero`.
+
 ---
 
-## 12. Ações da árvore
+## 14. Ações da árvore
 
 A aba **Ações** usa `SidebarInfoPanel` e chama métodos expostos por `FamilyTreeActions`.
 
-O botão de favoritar da página da árvore não pertence mais ao header desktop nessa experiência: ele deve ficar dentro da área do canvas, próximo aos controles de zoom `+` e `-`, usando `PageFavoriteButton`.
-
-Métodos expostos por `FamilyTreeActions`:
+Métodos expostos:
 
 ```txt
 startAreaSelection
@@ -540,40 +576,44 @@ Regras:
 - exportação deve capturar a área visível ou a área selecionada;
 - seleção de área bloqueia pan/zoom temporariamente;
 - envio por WhatsApp permanece futuro/pós-MVP;
-- o favorito da página deve manter comportamento de favoritar/desfavoritar rota sem duplicidade no header;
+- botão de favoritar da página deve manter comportamento de favoritar/desfavoritar rota sem duplicidade no header;
 - detalhes ficam em `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
+
+Observação:
+
+- Mapa Familiar não é ReactFlow; exportação dessa view deve ser tratada separadamente, se implementada.
 
 ---
 
-## 13. QA mínimo
+## 15. QA mínimo
 
 Validar após alteração:
 
-- botão **Linhas > Conjugal** oculta/exibe linhas conjugais;
-- botão **Linhas > Pais/filhos** oculta/exibe conectores parentais;
+- botão **Linhas > Conjugal** oculta/exibe linhas conjugais ReactFlow;
+- botão **Linhas > Pais/filhos** oculta/exibe conectores parentais ReactFlow;
 - botão **Linhas > Irmãos** não afeta cards;
-- botão **Linhas > Todas** alterna todos os grupos de linhas;
+- botão **Linhas > Todas** alterna todos os grupos de linhas ReactFlow;
 - destaque de cônjuges só altera linhas visíveis;
 - destaque de pais/filhos só altera linhas visíveis;
 - destaque de irmãos só altera linhas visíveis;
 - filtros de cards alteram vivos/falecidos/pets;
 - filtros diretos alteram grupos na Minha Árvore;
+- filtros diretos alteram grupos no Mapa Familiar conforme política própria;
 - filtros de geração alteram Genealogia/Visão Completa;
 - painel desktop abre/recolhe sem quebrar viewport;
 - painel desktop não cria scroll vertical interno;
-- títulos/subtítulos/cards do painel lateral têm respiro suficiente;
 - painel mobile abre/fecha e rola internamente;
 - modal conjugal abre pelo anel;
 - aliança e borda do anel acompanham a cor dos conectores em todas as paletas;
 - botão de favoritar aparece próximo ao zoom no desktop e não fica duplicado no header;
-- exportação ainda funciona.
-- mobile segmentado da Minha Árvore: conectores estruturais chegam às extremidades da viewport sem criar rolagem horizontal;
-- mobile segmentado da Minha Árvore: não há linha horizontal solta ou sobra lateral no topo/lado dos containers;
-- mobile segmentado da Minha Árvore: conectores ficam atrás dos containers/cards quando necessário.
+- exportação ainda funciona nas views suportadas;
+- mobile segmentado da Minha Árvore não gera rolagem horizontal;
+- Mapa Familiar não conecta cônjuges errados;
+- Mapa Familiar mantém conectores principais claros e conectores internos mais escuros.
 
 ---
 
-## 14. Anti-regressões
+## 16. Anti-regressões
 
 Não fazer:
 
@@ -589,28 +629,11 @@ Não fazer:
 - fazer a seção Aliança virar filtro sem nova decisão funcional;
 - fixar cor de aliança/conector fora dos tokens de paleta;
 - reintroduzir scroll vertical no painel lateral desktop;
-- voltar a truncar nomes com `...` em cards compactos da Minha Árvore quando houver espaço para quebra de linha;
+- voltar a truncar nomes com `...` em cards compactos quando houver espaço para quebra;
 - aplicar regras de edges ReactFlow aos conectores HTML/CSS do `MobileFamilyTreeView.tsx`;
+- aplicar regras de edges ReactFlow aos conectores SVG do `DesktopFamilyMapView.tsx`;
 - corrigir linha solta apenas escondendo overflow global sem validar se a linha estrutural continua visível;
-- deixar conectores mobile gerarem rolagem horizontal.
-
----
-
-## 15. Conectores do Mapa Familiar
-
-`DesktopFamilyMapView.tsx` usa um overlay SVG absoluto atrás dos cards compartilhados.
-Os paths são renderizados somente quando origem e destino visuais existem após os
-filtros.
-
-Conexões cobertas:
-
-- tataravós -> bisavós -> avós em cada ramo;
-- avós paternos -> pai/tios paternos;
-- avós maternos -> mãe/tios maternos;
-- pai/mãe -> pessoa central;
-- tios -> primos;
-- pessoa central -> irmãos, cônjuge, filhos, sobrinhos, pets e netos existentes.
-
-Esses conectores não são edges ReactFlow. A nova paleta `visual` adiciona tokens
-azul/ciano às views que usam as paletas globais, sem remover `white`, `orange` ou
-`brown`.
+- deixar conectores mobile gerarem rolagem horizontal;
+- deixar conectores internos de cônjuge ligarem pares errados;
+- ocultar cônjuge principal pelo filtro **Cônjuges**;
+- ocultar cônjuges ancestrais pelo filtro **Cônjuges**.

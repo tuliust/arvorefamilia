@@ -1,9 +1,9 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-10
-> Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`
-> Tipo: documentação técnica/funcional da view **Minha Árvore**.
-> Status: atualizado com a malha mobile 3×3, tela Central, ancestrais globais, conectores e preview de swipe.
+> Última revisão: 2026-06-10  
+> Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
+> Tipo: documentação técnica/funcional da view **Minha Árvore**.  
+> Status: atualizado com a malha mobile 3×3, tela Central, ancestrais globais, conectores, preview de swipe e distinção entre `/minha-arvore` e `/mapa-familiar`.
 
 ## 1. Função deste documento
 
@@ -16,19 +16,27 @@ Este documento descreve a view direta **Minha Árvore**, acessada pela rota:
 Use este arquivo para manter:
 
 - shell da Home aplicado à árvore;
-- viewport, pan, zoom e scroll;
-- distribuição da pessoa central e dos grupos diretos;
-- regras de filtros diretos;
+- viewport, pan, zoom e scroll da view direta ReactFlow;
+- distribuição da pessoa central e dos grupos diretos na Minha Árvore;
+- regras de filtros diretos na Minha Árvore;
 - largura e alinhamento dos cards compactos da view direta;
-- group boxes, labels e âncoras dos grupos;
+- group boxes, labels e âncoras dos grupos ReactFlow;
 - integração com painel lateral, legenda e ações;
 - controles mobile da árvore;
+- experiência mobile segmentada 3×3;
 - anti-regressões específicas da view direta.
 
-Não use este documento para detalhar:
+Não use este documento para detalhar o Mapa Familiar panorâmico desktop/tablet. Essa view possui documento próprio:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
+Outros documentos relacionados:
 
 | Tema | Documento |
 |---|---|
+| Mapa Familiar panorâmico | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | edição do próprio perfil | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` |
 | filtros e pets em detalhe | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
 | legendas, linhas e conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
@@ -39,33 +47,30 @@ Não use este documento para detalhar:
 
 ---
 
-## Nota de verificação contra o código atual
+## 2. Nota de verificação contra o código atual
 
-Esta revisão consolida os ajustes implementados neste ciclo da `/minha-arvore` mobile e substitui a documentação anterior, que ainda descrevia o fluxo antigo de sete telas e abas `Núcleo`/`Completa`.
+Estado atual da frente:
 
-Estado confirmado/esperado da frente atual:
+- `/minha-arvore` desktop/tablet continua usando `FamilyTree.tsx` com ReactFlow.
+- `/minha-arvore` mobile usa `MobileFamilyTreeView.tsx`, com experiência segmentada própria.
+- `/mapa-familiar` desktop/tablet usa `DesktopFamilyMapView.tsx`, documentado em `MAPA_FAMILIAR_VIEW.md`.
+- `/mapa-familiar` mobile usa fallback seguro para `MobileFamilyTreeView`.
+- A antiga aba mobile **Núcleo** foi substituída por **Central**.
+- A antiga aba mobile **Completa** não deve reaparecer.
+- O fluxo mobile antigo de sete telas foi substituído pela malha 3×3 documentada abaixo.
+- Conectores do mobile são HTML/CSS próprios, não edges ReactFlow.
+- Conectores do Mapa Familiar são SVG por âncoras, documentados em `MAPA_FAMILIAR_VIEW.md`.
 
-- `HomeTreeSection.tsx` continua renderizando `MobileFamilyTreeView` somente em mobile e somente quando `treeViewMode === 'minha-arvore'`.
-- `MobileFamilyTreeView.tsx` mantém a experiência mobile separada de `FamilyTree`/ReactFlow; desktop/tablet continuam usando o layout ReactFlow da Minha Árvore.
-- As abas superiores internas do mobile são apenas **Paterno**, **Central** e **Materno**; a antiga aba **Completa** não deve reaparecer.
-- A navegação mobile usa uma malha 3×3 de telas: **Ancestrais globais** acima da tela **Central**, **Tios Paternos** à esquerda, **Tios Maternos** à direita, **Primos Paternos** abaixo dos tios paternos e **Primos Maternos** abaixo dos tios maternos.
-- A tela **Ancestrais globais** reúne os ramos paterno e materno em duas colunas, com grupos de **Tataravós**, **Bisavós** e **Avós** quando houver pessoas.
-- Os grupos de ancestrais não usam mais o container externo único `Ancestrais Paternos/Maternos` do fluxo antigo.
-- Tios usam cards compactos em grupo ampliado; primos exibem todos os cards disponíveis e usam rolagem vertical quando a altura útil não comporta todos.
-- Os conectores HTML/CSS do mobile são independentes dos edges ReactFlow e incluem conexões entre avós/bisavós/tataravós, avós → pai/mãe, pai/mãe → tios e tios → primos.
-- As linhas laterais de Pai e Mãe ficam no mesmo contexto rolável dos cards, para acompanhar o movimento vertical da tela Central.
-- Primos são fim de ramo: não deve haver linha inferior abaixo dos grupos de primos.
-- O swipe direcional mantém a navegação entre telas e recebeu pré-visualização da próxima tela durante o gesto por deslocamento temporário da malha.
-
-Regra documental desta revisão:
+Regra documental:
 
 ```txt
-Documentar como implementado apenas o que pertence ao MobileFamilyTreeView atual; intenções futuras devem permanecer como backlog explícito.
+Documentar neste arquivo apenas a Minha Árvore direta e seu fallback/experiência mobile.
+Detalhes profundos do Mapa Familiar pertencem a MAPA_FAMILIAR_VIEW.md.
 ```
 
 ---
 
-## 2. Estado atual
+## 3. Estado atual
 
 A view **Minha Árvore** está consolidada no MVP.
 
@@ -90,19 +95,9 @@ Ela renderiza uma visão individual da pessoa central, com:
 
 A view direta possui ajuste visual próprio: os cards compactos dos grupos laterais, inferiores e centrais podem ser exibidos mais largos do que o padrão lógico original, preservando o card central e sem contaminar as views de Genealogia/Visão Completa.
 
-Nesta revisão, o padrão visual corrente da `/minha-arvore` é:
-
-| Tipo de card | Dimensão lógica/base | Exibição visual atual |
-|---|---:|---:|
-| Pessoa central | `620px × 760px` | Mantida |
-| Cards compactos de grupos da Minha Árvore | `340px × 136px` | Largura visual de referência: `360px` |
-| Cards de Genealogia/Visão Completa | `410px × 190px` | Mantidos, sem herdar `360px` |
-
-A ampliação visual de `360px` é uma decisão de UI da view direta. A consolidação ideal é estrutural, no layout/tokens da árvore; enquanto estiver em CSS complementar, deve permanecer fortemente escopada por `data-export-view="minha-arvore"`.
-
 ---
 
-## 3. Arquivos principais
+## 4. Arquivos principais
 
 | Responsabilidade | Arquivo |
 |---|---|
@@ -110,23 +105,264 @@ A ampliação visual de `360px` é uma decisão de UI da view direta. A consolid
 | Header da Home pós-login | `src/app/pages/home/HomeHeader.tsx` |
 | Área principal da árvore | `src/app/pages/home/HomeTreeSection.tsx` |
 | Navegação mobile da Home | `src/app/pages/home/HomeMobileNav.tsx` |
-| Componente ReactFlow | `src/app/components/FamilyTree/FamilyTree.tsx` |
+| Componente ReactFlow da árvore | `src/app/components/FamilyTree/FamilyTree.tsx` |
 | Controles mobile da árvore | `src/app/components/FamilyTree/MobileTreeControlsPortal.tsx` |
 | Layout mobile segmentado da Minha Árvore | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` |
 | Estilos dos controles mobile | `src/styles/mobile-tree-controls.css` |
 | Ajustes visuais complementares da árvore | `src/styles/family-tree-visual-polish.css` |
-| Layout direto | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
+| Layout direto ReactFlow | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
 | Nodes customizados e ajuste de largura visual | `src/app/components/FamilyTree/nodeTypes.ts` |
-| Cards de pessoa | `src/app/components/FamilyTree/PersonNode.tsx` |
+| Cards ReactFlow de pessoa | `src/app/components/FamilyTree/PersonNode.tsx` |
 | Painel especial da pessoa central | `src/app/components/FamilyTree/CentralPersonFocusPanel.tsx` |
 | Nó de relacionamento conjugal | `src/app/components/FamilyTree/MarriageNode.tsx` |
 | Cores/tokens | `src/app/components/FamilyTree/visualTokens.ts` e `directFamilyColors.ts` |
 | Tipos e filtros | `src/app/components/FamilyTree/types.ts` |
 
+Arquivo relacionado, mas documentado separadamente:
 
-## 3.1 MobileFamilyTreeView atual
+| Responsabilidade | Arquivo |
+|---|---|
+| Mapa Familiar panorâmico desktop/tablet | `src/app/components/FamilyTree/DesktopFamilyMapView.tsx` |
+| Cards visuais do Mapa Familiar | `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` |
 
-No mobile, a `/minha-arvore` não usa o canvas ReactFlow da versão desktop/tablet. A experiência direta é renderizada por:
+---
+
+## 5. Rotas e `viewMode`
+
+A Home pós-login trabalha com quatro views principais da árvore:
+
+| Rota | `viewMode` | Escopo | Renderização |
+|---|---|---|---|
+| `/minha-arvore` | `minha-arvore` | família direta da pessoa central | ReactFlow desktop/tablet; `MobileFamilyTreeView` mobile |
+| `/mapa-familiar` | `mapa-familiar` | mapa panorâmico da família direta | `DesktopFamilyMapView` desktop/tablet; fallback mobile |
+| `/genealogia` | `genealogia` | escopo pessoal por gerações | ReactFlow |
+| `/visao-completa` | `visao-completa` | base familiar completa por gerações | ReactFlow |
+
+Regras da Minha Árvore:
+
+- ajustes deste documento devem ser condicionados a `viewMode === 'minha-arvore'` ou a sinais equivalentes de layout direto;
+- não aplicar ajustes da view direta em `genealogia`, `visao-completa` ou `mapa-familiar` sem validação específica;
+- trocar view deve usar helpers de `treeViewMode.ts`;
+- search params, como `?pessoa=...`, devem ser preservados na troca de view;
+- alterações em `nodeTypes.ts` precisam ser validadas nas três rotas ReactFlow.
+
+---
+
+## 6. Shell da Home
+
+`Home.tsx` usa shell fixo na viewport:
+
+```txt
+fixed inset-0
+flex flex-col
+overflow-hidden
+overscroll-none
+```
+
+A área principal usa:
+
+```txt
+relative flex min-h-0 flex-1 overflow-hidden overscroll-none
+```
+
+Regras:
+
+- a página externa não deve rolar quando a árvore ocupa a viewport;
+- pan/zoom interno do ReactFlow deve continuar funcionando;
+- não resolver scroll externo quebrando a interação do canvas;
+- `HomeTreeSection` deve manter `overflow-hidden` e `overscroll-none`;
+- sidebar desktop e painel mobile devem ter rolagem própria quando necessário.
+
+---
+
+## 7. Pessoa central
+
+A pessoa central é definida por prioridade:
+
+1. `?pessoa=...`, quando válido;
+2. pessoa vinculada ao usuário (`user_person_links`);
+3. seleção local;
+4. primeira pessoa carregada como fallback.
+
+Em `FamilyTree`, a referência efetiva é:
+
+```txt
+centralPersonId || selectedPersonId || pessoas[0]?.id
+```
+
+Regras:
+
+- a pessoa central deve permanecer visível mesmo quando filtros por status ocultam outras pessoas;
+- em `/minha-arvore`, `isSelected` e `isCentralPerson` são aplicados apenas para essa view;
+- quando houver somente a pessoa central real renderizada, o componente pode usar `CentralPersonFocusPanel`;
+- o card central da pessoa foco não deve receber a ampliação visual aplicada a pai, mãe, cônjuge, irmãos, descendentes e pets.
+
+---
+
+## 8. Filtros da view direta
+
+A view direta combina quatro grupos de filtros.
+
+| Estado | Função |
+|---|---|
+| `edgeFilters` | controla linhas visíveis no ReactFlow |
+| `visualLineFilters` | controla destaque visual de linhas visíveis |
+| `personFilters` | controla cards por vivo/falecido/pet |
+| `directRelativeFilters` | controla grupos diretos da Minha Árvore |
+
+`directRelativeFilters` usa:
+
+```txt
+pais
+avos
+bisavos
+tataravos
+conjuge
+filhos
+netos
+irmaos
+sobrinhos
+tios
+primos
+pets
+```
+
+Regras:
+
+- `directRelativeFilters` é compartilhado conceitualmente com o Mapa Familiar, mas cada view interpreta alguns grupos visualmente de forma própria;
+- em mobile, a view direta usa `DEFAULT_DIRECT_RELATIVE_FILTERS`;
+- `pets` permanece sempre ativo nos filtros diretos efetivos quando a regra de produto assim determinar;
+- filtros de linha não devem ocultar cards;
+- filtros de destaque não devem recriar linhas ocultas;
+- contadores devem respeitar o escopo visual da view direta.
+
+Observação sobre **Cônjuges**:
+
+- o rótulo do painel deve ser **Cônjuges**;
+- no Mapa Familiar, esse filtro possui regras próprias descritas em `MAPA_FAMILIAR_VIEW.md`;
+- na Minha Árvore ReactFlow, validar separadamente se o filtro controla cônjuge principal ou grupos colaterais.
+
+---
+
+## 9. Layout direto ReactFlow
+
+O layout principal é:
+
+```txt
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
+Ele monta:
+
+- grupos laterais paternos e maternos;
+- centro com pais, pessoa central, cônjuge, irmãos e descendentes;
+- group boxes;
+- labels de grupos;
+- anchors estruturais;
+- edges estruturais;
+- nós conjugais;
+- separação visual de filhos humanos e pets.
+
+Áreas conceituais:
+
+| Área | Papel |
+|---|---|
+| esquerda | ramo paterno e colaterais |
+| centro | núcleo direto da pessoa central |
+| direita | ramo materno e colaterais |
+| faixa inferior | descendentes, netos e pets |
+
+Regras:
+
+- título geral não deve ser criado pelo layout;
+- labels de grupo podem existir;
+- group boxes e anchors não devem comandar o zoom inicial;
+- alterações em constantes de posição devem ser validadas em desktop e mobile;
+- cards diretos devem preservar legibilidade;
+- a ampliação atual dos cards centrais é uma decisão de UI específica da Minha Árvore, não um novo padrão global de cards.
+
+---
+
+## 10. Largura dos cards compactos da Minha Árvore
+
+A view direta possui cards com dimensões lógicas calculadas pelo layout e uma camada de ajuste visual complementar.
+
+Dimensões de referência:
+
+| Tipo | Largura | Altura | Observação |
+|---|---:|---:|---|
+| Card central da pessoa foco | `620px` | `760px` | Não deve ser ampliado pelo ajuste de cards compactos. |
+| Cards compactos da Minha Árvore | `340px` | `136px` | Podem ser exibidos visualmente com `360px`. |
+| Cards de `/genealogia` e `/visao-completa` | `410px` | `190px` | Não devem herdar a largura de `360px`. |
+
+Escopo da ampliação visual atual:
+
+| Grupo/relação | Pode exibir `360px`? | Observação |
+|---|---:|---|
+| Pai | Sim | Card central superior. |
+| Mãe | Sim | Card central superior. |
+| Irmãos | Sim | Não deve cortar nomes com reticências quando houver espaço. |
+| Sobrinhos | Sim | Não deve cortar nomes com reticências quando houver espaço. |
+| Cônjuge | Sim | Deve permanecer alinhado ao núcleo central. |
+| Filhos | Sim | Quando existirem, seguem padrão compacto ampliado. |
+| Netos | Sim | Quando existirem, seguem padrão compacto ampliado. |
+| Pets | Sim | Mantêm distinção visual de pet. |
+| Avós, bisavós e tataravós | Sim | Podem usar `360px`, mas não devem deslocar a árvore para fora da área útil. |
+| Tios e primos laterais | Sim | Validar linhas internas e group boxes. |
+| Pessoa central | Não | Mantém dimensão própria. |
+| Genealogia/Visão Completa | Não | Mantêm `410px × 190px`. |
+| Mapa Familiar | Não se aplica | Usa `FamilyTreeVisualCards`, documentado em `MAPA_FAMILIAR_VIEW.md`. |
+
+Regra técnica consolidada:
+
+```txt
+A ampliação de cards compactos ReactFlow deve ser restrita à viewMode === 'minha-arvore'.
+```
+
+---
+
+## 11. Grupos, labels e anchors após ampliação
+
+Após a ampliação dos cards compactos, grupos visuais, labels e anchors precisam continuar coerentes.
+
+Grupos que exigem validação após alteração de largura:
+
+```txt
+PAI
+MÃE
+AVÓS PATERNOS
+BISAVÓS PATERNOS
+TATARAVÓS PATERNOS
+TIOS PATERNOS
+PRIMOS PATERNOS
+IRMÃOS
+SOBRINHOS
+CÔNJUGE
+FILHOS
+NETOS
+PETS
+AVÓS MATERNOS
+BISAVÓS MATERNOS
+TATARAVÓS MATERNOS
+TIOS MATERNOS
+PRIMOS MATERNOS
+```
+
+Regras:
+
+- `directFamilyGroupBoxNode` deve acompanhar visualmente a largura dos cards contidos quando o ajuste for estrutural;
+- labels (`directFamilyLabelNode`) devem permanecer centralizadas no centro visual do group box;
+- anchors invisíveis (`directFamilyAnchorNode`) devem acompanhar bordas e centros visuais dos grupos;
+- linhas devem conectar bordas/centros atuais, não coordenadas antigas;
+- grupos laterais de **Tios** e **Primos** devem evitar linhas horizontais excessivamente longas entre cards;
+- grupos centrais do lado direito devem crescer em direção ao centro quando necessário;
+- ajustes puramente visuais por CSS não devem quebrar hitbox, clique, pan ou cálculo de bounds.
+
+---
+
+## 12. Layout mobile segmentado da Minha Árvore
+
+No mobile, a `/minha-arvore` não usa o canvas ReactFlow. A experiência direta é renderizada por:
 
 ```txt
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
@@ -171,394 +407,7 @@ Regras visuais:
 
 ---
 
-## 4. Rotas e viewMode
-
-A view usa o mesmo shell das rotas de árvore:
-
-| Rota | `viewMode` | Escopo |
-|---|---|---|
-| `/minha-arvore` | `minha-arvore` | família direta da pessoa central |
-| `/genealogia` | `genealogia` | escopo pessoal por gerações |
-| `/visao-completa` | `visao-completa` | base familiar completa por gerações |
-
-Regras:
-
-- ajustes deste documento devem ser condicionados a `viewMode === 'minha-arvore'` ou a sinais equivalentes de layout direto;
-- não aplicar ajustes da view direta em `genealogia` ou `visao-completa` sem validação específica;
-- trocar view deve usar helpers de `treeViewMode.ts`;
-- search params, como `?pessoa=...`, devem ser preservados na troca de view;
-- alterações em `nodeTypes.ts` precisam ser validadas nas três rotas.
-
----
-
-## 5. Shell da Home
-
-`Home.tsx` usa shell fixo na viewport:
-
-```txt
-fixed inset-0
-flex flex-col
-overflow-hidden
-overscroll-none
-```
-
-A área principal usa:
-
-```txt
-relative flex min-h-0 flex-1 overflow-hidden overscroll-none
-```
-
-Regras:
-
-- a página externa não deve rolar quando a árvore ocupa a viewport;
-- pan/zoom interno do ReactFlow deve continuar funcionando;
-- não resolver scroll externo quebrando a interação do canvas;
-- `HomeTreeSection` deve manter `overflow-hidden` e `overscroll-none`;
-- sidebar desktop e painel mobile devem ter rolagem própria quando necessário.
-
----
-
-## 6. Pessoa central
-
-A pessoa central é definida por prioridade:
-
-1. `?pessoa=...`, quando válido;
-2. pessoa vinculada ao usuário (`user_person_links`);
-3. seleção local;
-4. primeira pessoa carregada como fallback.
-
-Em `FamilyTree`, a referência efetiva é:
-
-```txt
-centralPersonId || selectedPersonId || pessoas[0]?.id
-```
-
-Regras:
-
-- a pessoa central deve permanecer visível mesmo quando filtros por status ocultam outras pessoas;
-- em `/minha-arvore`, `isSelected` e `isCentralPerson` são aplicados apenas para essa view;
-- quando houver somente a pessoa central real renderizada, o componente pode usar `CentralPersonFocusPanel`;
-- o card central da pessoa foco não deve receber a ampliação visual aplicada a pai, mãe, cônjuge, irmãos, descendentes e pets.
-
----
-
-## 7. Filtros da view direta
-
-A view direta combina quatro grupos de filtros.
-
-| Estado | Função |
-|---|---|
-| `edgeFilters` | controla linhas visíveis |
-| `visualLineFilters` | controla destaque visual de linhas visíveis |
-| `personFilters` | controla cards por vivo/falecido/pet |
-| `directRelativeFilters` | controla grupos diretos da Minha Árvore |
-
-`directRelativeFilters` usa:
-
-```txt
-pais
-avos
-bisavos
-tataravos
-conjuge
-filhos
-netos
-irmaos
-sobrinhos
-tios
-primos
-pets
-```
-
-Regras:
-
-- `directRelativeFilters` é específico de `minha-arvore`;
-- em mobile, a view direta usa `DEFAULT_DIRECT_RELATIVE_FILTERS`;
-- `pets` permanece sempre ativo nos filtros diretos efetivos;
-- filtros de linha não devem ocultar cards;
-- filtros de destaque não devem recriar linhas ocultas;
-- contadores devem respeitar o escopo visual da view direta.
-
----
-
-## 8. Layout direto
-
-O layout principal é:
-
-```txt
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-```
-
-Ele monta:
-
-- grupos laterais paternos e maternos;
-- centro com pais, pessoa central, cônjuge, irmãos e descendentes;
-- group boxes;
-- labels de grupos;
-- anchors estruturais;
-- edges estruturais;
-- nós conjugais;
-- separação visual de filhos humanos e pets.
-
-Áreas conceituais:
-
-| Área | Papel |
-|---|---|
-| esquerda | ramo paterno e colaterais |
-| centro | núcleo direto da pessoa central |
-| direita | ramo materno e colaterais |
-| faixa inferior | descendentes, netos e pets |
-
-Regras:
-
-- título geral não deve ser criado pelo layout;
-- labels de grupo podem existir;
-- group boxes e anchors não devem comandar o zoom inicial;
-- alterações em constantes de posição devem ser validadas em desktop e mobile;
-- cards diretos devem preservar legibilidade;
-- a ampliação atual dos cards centrais é uma decisão de UI específica da Minha Árvore, não um novo padrão global de cards.
-
----
-
-## 9. Largura dos cards compactos da Minha Árvore
-
-A view direta possui cards com dimensões lógicas calculadas pelo layout e uma camada de ajuste visual complementar.
-
-Dimensões de referência:
-
-| Tipo | Largura | Altura | Observação |
-|---|---:|---:|---|
-| Card central da pessoa foco | `620px` | `760px` | Não deve ser ampliado pelo ajuste de cards compactos. |
-| Cards compactos da Minha Árvore | `340px` | `136px` | Podem ser exibidos visualmente com `360px`. |
-| Cards de `/genealogia` e `/visao-completa` | `410px` | `190px` | Não devem herdar a largura de `360px`. |
-
-Escopo da ampliação visual atual:
-
-| Grupo/relação | Pode exibir `360px`? | Observação |
-|---|---:|---|
-| Pai | Sim | Card central superior, deve crescer em direção ao eixo central quando aplicável. |
-| Mãe | Sim | Card central superior, deve crescer em direção ao eixo central quando aplicável. |
-| Irmãos | Sim | Não deve cortar nomes com reticências quando houver espaço. |
-| Sobrinhos | Sim | Não deve cortar nomes com reticências quando houver espaço. |
-| Cônjuge | Sim | Deve permanecer alinhado ao núcleo central. |
-| Filhos | Sim | Quando existirem, seguem padrão compacto ampliado. |
-| Netos | Sim | Quando existirem, seguem padrão compacto ampliado. |
-| Pets | Sim | Mantêm distinção visual de pet. |
-| Avós, bisavós e tataravós | Sim | Podem usar `360px`, mas não devem deslocar a árvore para fora da área útil. |
-| Tios e primos laterais | Sim | Linhas horizontais internas tendem a ficar mais curtas; validar visualmente. |
-| Pessoa central | Não | Mantém dimensão própria. |
-| Genealogia/Visão Completa | Não | Mantêm `410px × 190px`. |
-
-Regra técnica consolidada:
-
-```txt
-A ampliação de cards compactos deve ser restrita à viewMode === 'minha-arvore'.
-```
-
-Comportamento visual:
-
-- cards à esquerda do eixo central podem crescer em direção ao centro pela direita;
-- cards à direita do eixo central podem crescer em direção ao centro pela esquerda;
-- grupos de **Tios** e **Primos** devem reduzir visualmente o excesso de linha horizontal entre cards quando a largura aumenta;
-- cards da área central, como **Mãe**, **Irmãos**, **Sobrinhos**, **Cônjuge** e **Pets**, devem priorizar legibilidade do nome completo;
-- nomes longos devem quebrar linha quando houver altura suficiente, evitando `...` desnecessário;
-- a ampliação não deve contaminar `/genealogia` e `/visao-completa`.
-
-Dívida técnica controlada:
-
-```txt
-Se o ajuste estiver em family-tree-visual-polish.css, tratá-lo como camada provisória.
-A solução preferencial é migrar largura, anchors, group boxes e conectores para directFamilyDistributedLayout.ts.
-```
-
-Atenção:
-
-- se a largura-base dos cards compactos mudar, revisar todos os seletores e cálculos relacionados;
-- se a ampliação migrar para o layout estrutural, revisar anchors, labels, group boxes e edges;
-- se nomes voltarem a aparecer com reticências em cards com espaço disponível, revisar `PersonNode.tsx` e os overrides de texto escopados da view direta.
-
-## 10. Grupos, labels e anchors após ampliação
-
-Após a ampliação dos cards compactos, grupos visuais, labels e anchors precisam continuar coerentes.
-
-Grupos que exigem validação após alteração de largura:
-
-```txt
-PAI
-MÃE
-AVÓS PATERNOS
-BISAVÓS PATERNOS
-TATARAVÓS PATERNOS
-TIOS PATERNOS
-PRIMOS PATERNOS
-IRMÃOS
-SOBRINHOS
-CÔNJUGE
-FILHOS
-NETOS
-PETS
-AVÓS MATERNOS
-BISAVÓS MATERNOS
-TATARAVÓS MATERNOS
-TIOS MATERNOS
-PRIMOS MATERNOS
-```
-
-Regras:
-
-- `directFamilyGroupBoxNode` deve acompanhar visualmente a largura dos cards contidos quando o ajuste for estrutural;
-- labels (`directFamilyLabelNode`) devem permanecer centralizadas no centro visual do group box;
-- anchors invisíveis (`directFamilyAnchorNode`) devem acompanhar bordas e centros visuais dos grupos;
-- linhas devem conectar bordas/centros atuais, não coordenadas antigas;
-- grupos laterais de **Tios** e **Primos** devem evitar linhas horizontais excessivamente longas entre cards;
-- grupos centrais do lado direito devem crescer em direção ao centro quando necessário;
-- ajustes puramente visuais por CSS não devem quebrar hitbox, clique, pan ou cálculo de bounds.
-
-Checklist visual:
-
-- label `PAI` centralizada dentro do grupo do pai;
-- label `MÃE` centralizada dentro do grupo da mãe;
-- label `CÔNJUGE` centralizada no grupo do cônjuge;
-- grupos de **Irmãos**, **Sobrinhos**, **Cônjuge** e **Pets** sem nomes cortados com `...` quando houver espaço;
-- linhas parentais e descendentes tocam as bordas/âncoras corretas;
-- não há linha conectando ponto antigo após aumento do grupo;
-- pan/zoom não usa group box como referência principal de bounds.
-
-
-### 10.1 Layout mobile segmentado da Minha Árvore
-
-No mobile, a view **Minha Árvore** usa uma experiência segmentada própria, independente do canvas ReactFlow tradicional, implementada em:
-
-```txt
-src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-```
-
-Esse layout é renderizado por `HomeTreeSection.tsx` apenas quando:
-
-```txt
-isMobile && treeViewMode === 'minha-arvore'
-```
-
-Ele não substitui `directFamilyDistributedLayout.ts` no desktop/tablet e não deve herdar regras de `/genealogia` ou `/visao-completa`.
-
-#### Estado atual confirmado
-
-O fluxo mobile segmentado combina:
-
-- uma tela central/núcleo;
-- uma tela lateral do ramo paterno;
-- uma tela lateral do ramo materno;
-- rolagem vertical interna em cada ramo lateral.
-
-Na prática, a experiência cobre estas 7 telas conceituais:
-
-| Tela conceitual | Estado atual no código |
-|---|---|
-| Principal / Núcleo | Implementada dentro da tela central do `core`. |
-| Ancestrais paternos | Implementada como tela superior do ramo paterno, dentro de `AncestorGroupsScreen`. |
-| Tios paternos | Implementada como tela central do ramo paterno, com 2 colunas e limite recolhido de 6 cards. |
-| Primos paternos | Implementada como tela inferior do ramo paterno, com 3 colunas e limite recolhido de 9 cards. |
-| Ancestrais maternos | Implementada como tela superior do ramo materno, dentro de `AncestorGroupsScreen`. |
-| Tios maternos | Implementada como tela central do ramo materno, com 2 colunas e limite recolhido de 6 cards. |
-| Primos maternos | Implementada como tela inferior do ramo materno, com 3 colunas e limite recolhido de 9 cards. |
-
-#### Ancestrais no estado atual
-
-O código atual ainda renderiza os ancestrais assim:
-
-```txt
-AncestorGroupsScreen
-└── container externo "Ancestrais Paternos/Maternos"
-    ├── subgrupo Tataravós
-    ├── subgrupo Bisavós
-    └── subgrupo Avós
-```
-
-Também existe uma regra de distribuição compacta:
-
-```txt
-distributeAncestorSubgroups(groups, maxTotal = 6)
-```
-
-Quando há três subgrupos, ela tende a limitar cada grupo a até 2 pessoas para totalizar 6 cards na tela.
-
-#### Pendência de produto/layout
-
-A solicitação mais recente ainda não está implementada no código atual:
-
-```txt
-Remover o container externo "Ancestrais Paternos/Maternos".
-Renderizar diretamente os grupos/cards Tataravós, Bisavós e Avós, quando houver.
-```
-
-A documentação deve tratar isso como pendência até que `AncestorGroupsScreen` seja reestruturado.
-
-#### Tios e primos no estado atual
-
-No código atual:
-
-- `Tios Paternos` e `Tios Maternos` usam `VerticalRelativeScreen`;
-- tios usam `columns="double"` e `maxCollapsedItems={6}`;
-- primos usam `columns="triple"` e `maxCollapsedItems={9}`;
-- o container interno usa largura máxima próxima de `360px`;
-- ainda não existe implementação estrutural de `70vh`, `80vh`, `min-h-[70vh]` ou distribuição de cards por altura útil.
-
-#### Pendência visual de containers
-
-A intenção de produto é:
-
-```txt
-Nas telas de tios e primos, o container do grupo deve ocupar cerca de 70% a 80% da tela útil.
-Os cards devem se ajustar ao espaço disponível.
-```
-
-Enquanto isso não estiver no código, documentar como pendência, não como estado consolidado.
-
-#### Conectores no estado atual
-
-Conectores atuais do mobile segmentado:
-
-- ancestrais: sem linha acima; com linha inferior local;
-- tios: linha superior e inferior local;
-- primos: linha superior local; sem linha abaixo;
-- ramos laterais: linha horizontal de conexão entre a tela lateral e a tela central;
-- os conectores são HTML/CSS, não edges ReactFlow.
-
-#### Pendência visual de conectores
-
-A intenção de produto é que:
-
-```txt
-Linhas estruturais laterais, superiores e inferiores cheguem até a extremidade da tela quando houver conexão naquela direção.
-```
-
-No código atual, parte dos conectores ainda usa trechos locais (`h-9`, `max-w-[360px]`, `top-[92px]`) e precisa de QA visual antes de ser documentada como finalizada.
-
-#### QA obrigatório
-
-Validar sempre em:
-
-```txt
-320px
-375px
-390px
-430px
-```
-
-Checklist mínimo:
-
-- tela principal não gera overflow horizontal;
-- swipe horizontal abre ramo paterno e materno;
-- swipe vertical dentro dos ramos abre ancestrais, tios e primos;
-- ancestrais não têm linha acima;
-- primos não têm linha abaixo;
-- tios têm linha acima e abaixo;
-- conectores laterais não aparecem como sobras soltas;
-- bottom navigation não cobre cards, títulos ou conectores.
-
----
-
-## 11. Viewport, pan, zoom e scroll
+## 13. Viewport, pan, zoom e scroll
 
 `FamilyTree.tsx` calcula bounds e viewport a partir dos nós renderizados.
 
@@ -574,20 +423,6 @@ Regras consolidadas:
 - no desktop, quando a árvore já está enquadrada e não existe conteúdo acima, o scroll do mouse para cima não deve deslocar a árvore indevidamente;
 - pan/zoom interno do ReactFlow deve continuar funcionando para navegação lateral e inferior.
 
-Constantes relevantes:
-
-```txt
-TREE_DIRECT_FAMILY_TITLE_TOP
-TREE_DIRECT_FAMILY_DESKTOP_VISUAL_TOP_INSET
-TREE_DIRECT_FAMILY_VIEWPORT_BOTTOM_PADDING_Y
-DIRECT_FAMILY_MAX_ZOOM
-DIRECT_FAMILY_MOBILE_MAX_ZOOM
-DIRECT_FAMILY_TRANSLATE_PADDING
-DIRECT_FAMILY_MOBILE_TRANSLATE_PADDING
-TREE_INITIAL_TECHNICAL_MIN_ZOOM
-TREE_PENDING_VIEWPORT_ZOOM
-```
-
 Não fazer:
 
 - reposicionar `.react-flow__viewport` com `transform` global;
@@ -597,7 +432,9 @@ Não fazer:
 - incluir labels/group boxes como principal referência de fit inicial;
 - permitir scroll externo da página quando a árvore já ocupa a viewport.
 
-## 12. Título fixo
+---
+
+## 14. Título fixo
 
 Em `/minha-arvore`, o título desktop/tablet deve usar o padrão:
 
@@ -621,17 +458,9 @@ Regras:
 - o espaçamento abaixo do título deve permitir que os cards iniciem com respiro visual;
 - validar corte superior de cards após qualquer alteração.
 
-Formatação visual de referência do título das views:
+---
 
-```txt
-font-bold
-text-slate-950
-text-center
-text-[clamp(1.65rem,2.1vw,2.25rem)]
-leading-tight
-```
-
-## 13. Linhas e relacionamento conjugal
+## 15. Linhas e relacionamento conjugal
 
 A view direta recebe:
 
@@ -649,20 +478,13 @@ Regras:
 - destaque visual só altera estilo de linhas visíveis;
 - linha oculta por filtro permanece oculta mesmo com destaque ativo;
 - o nó conjugal usa `MarriageNode` e abre `ViewMarriageModal`;
-- a borda/anel azul duplicado do card principal não deve voltar no mobile;
-- o ícone de aliança e a borda circular do nó conjugal devem acompanhar a cor dos conectores conforme a paleta ativa;
-- não usar laranja ou marrom fixo se o modo de cor define outra cor para conectores;
-- após alteração de largura de grupos, validar que as linhas conectam bordas/anchors atuais, não coordenadas antigas.
+- o ícone de aliança e a borda circular do nó conjugal devem acompanhar a cor dos conectores conforme a paleta ativa.
 
-## 14. Modal de relacionamento conjugal
+---
+
+## 16. Modal de relacionamento conjugal
 
 O clique no nó conjugal abre `ViewMarriageModal`.
-
-Regras documentais relacionadas:
-
-- regras de tempo verbal e campos do modal ficam em `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`;
-- componentes e responsabilidades ficam em `docs/GUIA_COMPONENTES.md`;
-- troubleshooting fica em `docs/GUIA_CORRECAO_ERROS.md`.
 
 Comportamento consolidado:
 
@@ -674,7 +496,7 @@ Comportamento consolidado:
 
 ---
 
-## 15. Painel lateral
+## 17. Painel lateral
 
 No desktop, a sidebar exibe:
 
@@ -691,15 +513,6 @@ Na Minha Árvore:
 - a aba **Legendas** recebe `directRelativeFilters`;
 - o botão **Ações** aciona exportação/impressão/seleção de área.
 
-Padrão visual consolidado no desktop:
-
-- painel sem scroll vertical interno;
-- título e subtítulo das abas com hierarquia mais clara;
-- espaçamento maior entre subtítulo e cards;
-- cards de filtro/KPI com altura maior;
-- botões da aba **Ações** com altura e respiro compatíveis com o espaço vertical disponível;
-- conteúdo pode ocupar melhor a extensão vertical, sem forçar rolagem.
-
 No mobile:
 
 - a sidebar desktop não aparece;
@@ -710,12 +523,11 @@ Regras:
 
 - desktop não deve gerar scroll vertical no painel lateral;
 - mobile pode usar rolagem interna controlada;
-- a ausência de scroll desktop não deve cortar ações essenciais;
-- se novas ações forem adicionadas, revisar altura disponível antes de ocultar overflow.
+- a ausência de scroll desktop não deve cortar ações essenciais.
 
-## 16. Controles mobile da árvore
+---
 
-A frente mobile adicionou um painel compacto de controles por portal.
+## 18. Controles mobile da árvore
 
 Arquivos:
 
@@ -752,13 +564,11 @@ Regras:
 - os botões `+` e `-` antigos do canvas devem ficar ocultos no mobile;
 - o botão de seta para cima deve manter a mesma formatação dos demais botões direcionais;
 - o usuário deve conseguir ocultar/exibir setas direcionais;
-- ações de exportação mobile não devem alterar estado de dados;
-- em `/genealogia` e `/visao-completa`, os chips continuam sendo a navegação primária por geração;
-- a ação **Seleção** no mobile deve ser tratada com cuidado porque a seleção manual de área é uma experiência sensível em telas pequenas.
+- ações de exportação mobile não devem alterar estado de dados.
 
 ---
 
-## 17. Paletas
+## 19. Paletas
 
 A view direta respeita as paletas globais da árvore:
 
@@ -766,6 +576,7 @@ A view direta respeita as paletas globais da árvore:
 white
 orange
 brown
+visual
 ```
 
 Regras:
@@ -776,11 +587,13 @@ Regras:
 - não hardcodar cor nova sem checar `treeColorPalettes.ts`;
 - o modo direto deve preservar contraste dos cards e linhas.
 
+A paleta `visual` foi adicionada para acomodar a estética do Mapa Familiar e dos cards visuais, mas não deve quebrar as views ReactFlow.
+
 ---
 
-## 18. Exportação
+## 20. Exportação
 
-A exportação usa ações expostas por `FamilyTreeActions`:
+A exportação da Minha Árvore ReactFlow usa ações expostas por `FamilyTreeActions`:
 
 ```txt
 saveImage
@@ -796,19 +609,19 @@ Regras:
 - no mobile, há painel rápido de exportação por `MobileTreeControlsPortal`;
 - detalhes funcionais ficam em `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
 
+Observação:
+
+- exportação do **Mapa Familiar** é tema separado e deve ser documentada em `MAPA_FAMILIAR_VIEW.md` e `EXPORTACAO_ARVORE.md`.
+
 ---
 
-## 19. QA mínimo
+## 21. QA mínimo
 
 Validar após alteração em `/minha-arvore`:
 
 - desktop: 1366px, 1440px e largura maior;
 - mobile: 320px, 375px, 390px e 430px;
-- as 7 telas mobile da Minha Árvore: Principal/Núcleo, Ancestrais Paternos, Tios Paternos, Primos Paternos, Ancestrais Maternos, Tios Maternos e Primos Maternos;
-- quando a pendência for implementada: containers das telas de tios e primos ocupando cerca de 70% a 80% da altura útil; no código atual, validar apenas se não houve regressão de largura/altura;
-- cards internos sem compressão excessiva; adaptação por altura útil ainda depende da pendência de containers;
-- quando a pendência for implementada: linhas verticais/horizontais chegando às extremidades quando forem estruturais; no código atual, validar conectores locais e ausência de sobras;
-- ausência de linha horizontal solta ou sobrando na lateral do container;
+- malha mobile: Ancestrais globais, Central, Tios Paternos, Tios Maternos, Primos Paternos e Primos Maternos;
 - ausência de overflow horizontal no layout mobile segmentado;
 - header sem scroll externo;
 - painel lateral desktop sem scroll vertical;
@@ -831,13 +644,16 @@ Validar após alteração em `/minha-arvore`:
 - controles mobile aparecem apenas nas rotas da árvore;
 - botão de ocultar/exibir setas funciona;
 - exportação continua funcionando;
-- troca para `/genealogia` e `/visao-completa` sem regressão de largura.
+- troca para `/mapa-familiar`, `/genealogia` e `/visao-completa` sem regressão.
 
-## 20. Anti-regressões
+---
+
+## 22. Anti-regressões
 
 Não fazer:
 
 - misturar regras de `minha-arvore` com `genealogia`;
+- misturar regras de `minha-arvore` com `mapa-familiar`;
 - aplicar largura de `360px` em `/genealogia` ou `/visao-completa`;
 - aplicar aumento visual no card central da pessoa foco;
 - deixar cards compactos com nomes truncados por `...` quando há espaço para quebra de linha;
@@ -851,29 +667,8 @@ Não fazer:
 - criar migration para ajuste visual;
 - alterar RLS/Storage/Auth para corrigir problema de layout;
 - criar novo controle mobile fora do portal sem remover o anterior;
-- tratar `MobileFamilyTreeView.tsx` como se fosse ReactFlow: seus conectores são HTML/CSS e precisam de regras próprias;
-- após implementar a pendência, deixar container de tios ou primos abaixo da faixa visual esperada de 70% a 80% da altura útil;
+- tratar `MobileFamilyTreeView.tsx` como se fosse ReactFlow;
 - permitir linha horizontal solta saindo do topo/lateral do grupo no mobile segmentado;
 - deixar controles fixos competindo com navegação inferior mobile;
 - corrigir conexão de linha apenas no SVG sem revisar anchors dos grupos;
 - transformar `family-tree-visual-polish.css` em área sem escopo por rota/view.
-
----
-
-## 21. Mapa Familiar panorâmico
-
-A rota autenticada `/mapa-familiar` oferece uma quarta visualização, sem substituir
-`/minha-arvore`.
-
-- desktop/tablet renderizam `DesktopFamilyMapView.tsx`, com composição HTML, cards
-  compartilhados de `FamilyTreeVisualCards.tsx` e conectores em SVG;
-- o modelo direto continua vindo de `buildMobileFamilyTreeModel`;
-- a pessoa central, os ramos paterno/materno, pets e filtros de parentes diretos são
-  preservados;
-- grupos extensos usam rolagem interna, sem botão **Ver todos**;
-- no mobile, a rota usa `MobileFamilyTreeView` como fallback seguro;
-- Genealogia, Visão Completa e a Minha Árvore desktop continuam usando seus layouts
-  ReactFlow atuais.
-
-Anti-regressão: não mover o Mapa Familiar para dentro de `FamilyTree.tsx` e não usar
-essa nova view para substituir a experiência segmentada de `/minha-arvore` mobile.

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/arquitetura/ARCHITECTURE.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado após inclusão da view `/mapa-familiar`, do componente `DesktopFamilyMapView`, dos cards visuais compartilhados e da paleta `visual`.
+> Status: revisado após refatoração estrutural do `Mapa Familiar`, centralização de `FAMILY_MAP_LAYOUT`, regras de cônjuges, avatares por `pessoas.genero`, conectores por âncoras e paleta `visual`.
 
 ## Objetivo
 
@@ -40,6 +40,7 @@ Observações:
 - Scripts SQL soltos são referência histórica ou operacional, não schema canônico.
 - Secrets não devem ir para frontend, repositório, dumps versionados ou documentação operacional aberta.
 - Ajuste visual, nova view de apresentação e nova paleta não exigem migration.
+- Mudança de schema, como a coluna `pessoas.genero`, exige migration versionada se tiver sido criada manualmente no Supabase.
 
 ---
 
@@ -179,27 +180,60 @@ Regras:
 
 ### 5.1 `Mapa Familiar`
 
-`Mapa Familiar` é uma view panorâmica da árvore direta.
+`Mapa Familiar` é uma view panorâmica da árvore direta, com rota própria e renderização independente do ReactFlow.
 
-Características técnicas:
+Características técnicas atuais:
 
 - rota: `/mapa-familiar`;
 - view mode: `mapa-familiar`;
+- documento funcional canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`;
 - componente principal desktop/tablet: `DesktopFamilyMapView.tsx`;
 - fallback mobile: `MobileFamilyTreeView.tsx`;
 - cards compartilhados: `FamilyTreeVisualCards.tsx`;
 - modelo de dados: `buildMobileFamilyTreeModel` em `mobileFamilyTreeModel.ts`;
-- composição visual: HTML/CSS com canvas fixo de referência e conectores SVG;
+- composição visual: HTML/CSS com canvas de referência e conectores SVG;
+- configuração centralizada: `FAMILY_MAP_LAYOUT`;
+- conectores principais derivados de âncoras conceituais dos grupos;
+- conectores internos de cônjuges renderizados dentro de `VisualGroup` apenas quando há relação conjugal explícita;
 - escala responsiva: `ResizeObserver` calcula escala para caber na viewport;
-- grupos grandes podem ter scroll interno;
-- não usa ReactFlow como base de renderização.
+- zoom manual: `Ctrl + scroll`, com limite mínimo/máximo definido no layout;
+- grupos expansíveis por botão `+/-`, sem scroll interno apertado como padrão.
 
-Regras:
+Regras de grupos:
+
+| Tipo | Uso | Regra principal |
+|---|---|---|
+| `ancestor` | tataravós, bisavós e avós | até 2 colunas; cônjuges aparecem por padrão; tom esverdeado próprio. |
+| `lateral-many` | tios e primos | até 4 colunas; limite inicial de 8 cards; expansão por `+`; ocupa laterais sem invadir núcleo. |
+| `central-small` | irmãos e sobrinhos | até 2 colunas; grupos unitários devem evitar espaço vazio excessivo. |
+| `descendant` | filhos e netos | até 2 colunas; cônjuges dependem do filtro **Cônjuges**. |
+| `pet` | pets | usa ícone de pet e não avatar humano. |
+| `direct-card` | Pai, Mãe, Pessoa Central e Cônjuge principal | card direto, fora de grupo expansível. |
+
+Regras de cônjuges no Mapa Familiar:
+
+- cônjuge da pessoa central aparece sempre que existir, mesmo com o filtro **Cônjuges** desativado;
+- cônjuges de tataravós, bisavós e avós aparecem por padrão;
+- cônjuges de tios, primos, sobrinhos, filhos e netos aparecem apenas quando o filtro **Cônjuges** está ativo;
+- pares de cônjuges só devem receber linha interna quando a relação `conjuge` existir explicitamente em `relacionamentos`;
+- se o pareamento não for seguro, não conectar visualmente em vez de inferir par incorreto.
+
+Regras de avatar:
+
+- `pessoas.genero = 'homem'` usa avatar masculino;
+- `pessoas.genero = 'mulher'` usa avatar feminino;
+- `pessoas.genero = 'pet'` usa avatar de pet;
+- foto principal continua tendo prioridade sobre avatar gráfico;
+- se `genero` não estiver tipado em `Pessoa`, atualizar o contrato TypeScript;
+- se a coluna foi criada manualmente no Supabase, criar migration correspondente.
+
+Regras anti-regressão:
 
 - não substituir `/minha-arvore` por `Mapa Familiar`;
 - não migrar `/genealogia` ou `/visao-completa` para esse layout;
 - não usar `DesktopFamilyMapView` para alterar dados reais;
 - manter `visiblePersonIds` e filtros diretos respeitados pela view;
+- manter refinamentos de laterais, cônjuges e avatares concentrados no `FAMILY_MAP_LAYOUT` e nos componentes visuais;
 - documentar qualquer limitação de exportação/favoritos/busca no plano antes de declarar como concluída.
 
 ### 5.2 Paletas da árvore

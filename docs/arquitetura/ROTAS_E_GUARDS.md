@@ -26,6 +26,7 @@ Documentos relacionados:
 - `docs/GUIA_CORRECAO_ERROS.md`;
 - `docs/GUIA_UX_LAYOUT.md`;
 - `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
+- `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`;
 - `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`.
 
 ---
@@ -273,6 +274,34 @@ Regras:
 | Mapa Familiar | `/mapa-familiar` | `DesktopFamilyMapView` no desktop/tablet; fallback para `MobileFamilyTreeView` no mobile |
 | Genealogia | `/genealogia` | ReactFlow por gerações, com chips mobile quando aplicável |
 | Visão Completa | `/visao-completa` | ReactFlow por gerações/base completa, com chips mobile quando aplicável |
+
+---
+
+
+
+### 5.2 Observações específicas do Mapa Familiar
+
+`/mapa-familiar` deve ser tratada como view de árvore, não como página interna comum.
+
+Regras atuais:
+
+- desktop/tablet usam `DesktopFamilyMapView.tsx`;
+- mobile usa fallback seguro para `MobileFamilyTreeView.tsx`;
+- a troca de view deve preservar `?pessoa=...`;
+- a view não usa ReactFlow como base de renderização;
+- exportação, busca global e favoritos precisam ser verificados separadamente, pois nem todos os fluxos ReactFlow se aplicam automaticamente ao Mapa Familiar;
+- o documento funcional canônico da view é `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`.
+
+Ao adicionar ou ajustar view de árvore, revisar sempre:
+
+```txt
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/routes.tsx
+src/app/pages/home/HomeHeader.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/services/globalSearchService.ts
+src/app/constants/favoritePages.ts
+```
 
 ---
 
