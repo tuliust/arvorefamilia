@@ -1,15 +1,15 @@
 # Documentação - Árvore Família
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após fechamento técnico das frentes de chips mobile com gerações inferidas, exportação mobile canônica, correção de encoding e persistência de redes sociais versionadas.
+> Status: índice canônico revisado após conferência dos documentos recentes com o código atual da Minha Árvore mobile segmentada e atualização das pendências abertas.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
 Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação foi consolidada para reduzir duplicidade, separar estado atual de histórico e evitar que arquivos antigos sejam usados como fonte de verdade.
 
-A revisão mais recente também registra que `/entrar` funciona como home pública do app **Família Souza Barros** para fins de validação/OAuth, incluindo explicação direta da integração com Google Agenda.
+A revisão mais recente também registra que `/entrar` funciona como home pública do app **Família Souza Barros** para fins de validação/OAuth, incluindo explicação direta da integração com Google Agenda. A revisão de 2026-06-10 também separa o estado implementado da **Minha Árvore mobile segmentada** da pendência visual ainda aberta para finalizar sete telas, containers de 70% a 80% e conectores até as extremidades aplicáveis.
 
 ---
 
@@ -71,9 +71,9 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow, viewport, layout central, cards compactos de 360px, filtros diretos, mobile e controles mobile. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos, `MobileFamilyTreeView` e estado da Minha Árvore mobile segmentada. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
-| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques, painel lateral sem scroll desktop, aliança dinâmica e ações. |
+| `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS do mobile segmentado, filtros, destaques, painel lateral sem scroll desktop, aliança dinâmica e ações. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
 | `funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores e modo foco. |
 | `funcionalidades/FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. |
@@ -81,6 +81,7 @@ docs/funcionalidades/
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; inclui fluxo de seleção e fluxo mobile rápido. |
+| `funcionalidades/CURIOSIDADES_E_IA.md` | Curiosidades, descoberta de conexão familiar, perguntas à IA, contexto genealógico, privacidade, fallback e QA de respostas. |
 
 ---
 
@@ -160,7 +161,7 @@ Não recriar documentos históricos individuais salvo necessidade explícita de 
 | Migrations, RLS, schema cache e SQL legado | `operacao/MIGRATIONS_SUPABASE.md` |
 | Storage, órfãos, base64 legado e scripts administrativos | `operacao/STORAGE_MAINTENANCE.md` |
 | Funcionalidade específica | `funcionalidades/<NOME>.md` |
-| Curiosidades, conexão familiar e IA | criar/complementar `funcionalidades/CURIOSIDADES_E_IA.md` quando essa frente for documentada como arquivo próprio |
+| Curiosidades, conexão familiar e IA | `funcionalidades/CURIOSIDADES_E_IA.md` |
 | Licenças e atribuições | `ATTRIBUTIONS.md` |
 | Histórico consolidado | `historico/README.md` |
 
@@ -197,6 +198,9 @@ Itens ainda abertos ou parcialmente abertos:
 | `DOC-010` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
 | `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
 | `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
+| `DOC-013` | `/minha-arvore` mobile segmentada | bug visual / finalizar sete telas, containers 70–80% e conectores até extremidades |
+
+A pendência `DOC-013` centraliza a divergência atual entre o desenho desejado da Minha Árvore mobile segmentada e o código existente em `MobileFamilyTreeView.tsx`. Documentos funcionais podem explicar o comportamento esperado, mas não devem marcar essa frente como concluída enquanto o código não refletir o critério de aceite.
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 
@@ -254,22 +258,15 @@ Se algum documento operacional, migration, Edge Function ou script for alterado 
 
 Usar `git add` explícito, não `git add .`.
 
-Sugestão:
+Sugestão para esta atualização específica dos dois arquivos:
 
 ```bash
-git add docs/README.md docs/GUIA_IMPLEMENTACOES.md docs/GUIA_COMPONENTES.md docs/GUIA_UX_LAYOUT.md docs/GUIA_CORRECAO_ERROS.md docs/PLANO_PROXIMOS_PASSOS.md
-
-git add docs/arquitetura/ARCHITECTURE.md docs/arquitetura/ROTAS_E_GUARDS.md docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
-
-git add docs/operacao/README.md docs/operacao/DEPLOYMENT.md docs/operacao/STORAGE_MAINTENANCE.md docs/operacao/MIGRATIONS_SUPABASE.md
-
-git add docs/funcionalidades/*.md docs/comandos/GIT_RESPONSIVIDADE.md docs/ATTRIBUTIONS.md docs/historico/README.md
-
-git commit -m "docs: revise final project documentation"
-
+git add docs/README.md docs/PLANO_PROXIMOS_PASSOS.md
+git commit -m "docs: update mobile tree plan and docs index"
 git pull --rebase origin main
-
 git push origin main
 ```
+
+Para uma revisão documental ampla envolvendo todos os guias, continuar usando `git add` explícito por arquivo ou pasta, nunca `git add .`.
 
 Arquivos removidos por consolidação histórica devem permanecer staged como `D` no commit final.

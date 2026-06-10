@@ -1,9 +1,9 @@
 # Plano de próximos passos - Árvore Família
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-10
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado após fechamento técnico das frentes de chips mobile com gerações inferidas, exportação mobile canônica, correção de encoding e persistência de redes sociais versionadas.
+> Status: plano vivo revisado após conferência dos documentos recentes com o código atual da Minha Árvore mobile segmentada, mantendo separado o que está implementado do que segue como pendência visual/produto.
 
 ## Objetivo
 
@@ -41,6 +41,9 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 
 Também permanecem pendências de consolidação estrutural de CSS visual da árvore, validação de cards compactos em `360px`, QA das respostas de IA, compliance OAuth/Google Agenda e operação do endpoint serverless `/api/ai`.
 
+Na revisão documental de 2026-06-10, a frente da **Minha Árvore mobile segmentada** foi comparada com o código atual de `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` e `src/app/pages/home/HomeTreeSection.tsx`. O código atual já possui `MobileFamilyTreeView` como renderização específica para `/minha-arvore` em mobile, navegação horizontal entre ramo paterno, núcleo e ramo materno, e navegação vertical dentro dos ramos laterais entre ancestrais, tios e primos. Porém, ainda não contém a reestruturação visual final solicitada para: remover o container externo único de ancestrais, fazer tios/primos ocuparem 70% a 80% da tela e levar todos os conectores aplicáveis até as extremidades da viewport.
+
+
 ---
 
 ## 2. Pendências abertas
@@ -49,6 +52,7 @@ Também permanecem pendências de consolidação estrutural de CSS visual da ár
 |---|---|---|---|---|
 | DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente | Definir se `Complemento` deve persistir em schema próprio. As múltiplas redes sociais já persistem em `pessoa_social_profiles`; a pendência restante é apenas o campo visual `Complemento`. | Parcial |
 | DOC-004 | `/minha-arvore` mobile | bug visual / conector inferior | Refazer a conexão inferior do card principal no mobile sem depender de CSS de bordas. O desenho desejado é uma haste central curta até uma linha horizontal, com uma haste à esquerda para **Irmãos** e uma haste à direita para **Cônjuge**, sem linha central prolongada entre os grupos. | Aberto |
+| DOC-013 | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` / `/minha-arvore` mobile segmentada | bug visual / divergência documentação-código | Finalizar a experiência mobile em 7 telas: tela principal, ancestrais paternos, tios paternos, primos paternos, ancestrais maternos, tios maternos e primos maternos. Remover o container externo único de ancestrais, renderizando cards/grupos independentes de **Tataravós**, **Bisavós** e **Avós** quando houver; ampliar containers de **Tios** e **Primos** para cerca de 70% a 80% da altura útil; ajustar cards ao espaço; e fazer conectores horizontais/verticais chegarem às extremidades aplicáveis da viewport, sem linha acima dos ancestrais nem abaixo dos primos. | Aberto |
 | DOC-006 | `src/app/pages/forum/ForumHome.tsx` / `docs/funcionalidades/FORUM.md` | divergência UI/documentação | Aplicar ou revisar a remoção real dos dropdowns **Todos os tipos** e **Todos os status** em `/forum`. A UI esperada deve manter apenas busca, categoria e botão icon-only de limpar filtros ao lado do dropdown de categoria. | Aberto |
 | DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. O arquivo hoje concentra árvore, modal, login/OAuth e ajustes pontuais. | Aberto |
 | DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
@@ -79,7 +83,7 @@ Regras:
 Estado técnico da frente mobile:
 
 ```txt
-Concluída no código e validada por build, com pendências visuais pontuais registradas neste plano.
+Concluída para o shell mobile geral e para os controles mobile principais. A Minha Árvore mobile segmentada está implementada em primeira versão, mas ainda tem pendência visual/produto aberta em DOC-013.
 ```
 
 Arquivos relevantes:
@@ -92,6 +96,7 @@ src/styles/mobile-edit-profile.css
 src/styles/mobile-tree-lines.css
 src/app/components/Timeline/PersonTimeline.tsx
 src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/layout/MobileUserMenuPalettePortal.tsx
 src/app/pages/home/HomeHeader.tsx
 src/app/pages/home/HomeTreeSection.tsx
@@ -114,7 +119,10 @@ Ajustes concluídos:
 - acabamento mobile de `/minha-arvore/editar`;
 - CSS de edição escopado por `main:has(#minha-arvore-edit-form)`;
 - menu mobile da árvore ajustado para exibir Visualização e Cores sem sobreposição;
-- toggle compacto de **Minha Árvore**, **Genealogia** e **Visão Completa** no menu mobile.
+- toggle compacto de **Minha Árvore**, **Genealogia** e **Visão Completa** no menu mobile;
+- `MobileFamilyTreeView` renderizado apenas quando `isMobile && treeViewMode === 'minha-arvore'`;
+- primeira versão da Minha Árvore mobile segmentada com telas laterais para **Tios Paternos** e **Tios Maternos**, e navegação vertical para ancestrais/tios/primos de cada ramo;
+- cards mobile especializados para pessoa principal, irmãos/tios, pets, ancestrais e primos.
 
 Validação visual ainda recomendada, sem bloquear tecnicamente:
 
@@ -227,6 +235,94 @@ No mobile, abaixo do card principal, deve aparecer apenas:
 - uma haste vertical à direita até **Cônjuge**.
 
 Não deve haver linha central descendo entre os grupos.
+
+---
+
+## 4.1 Pendência específica: Minha Árvore mobile segmentada em 7 telas
+
+### Contexto
+
+A experiência mobile da `/minha-arvore` usa `MobileFamilyTreeView.tsx` e não o ReactFlow direto. Ela é acionada por `HomeTreeSection.tsx` apenas quando a árvore pode renderizar, o viewport é mobile e `treeViewMode === 'minha-arvore'`.
+
+O código atual já prevê sete áreas/telas conceituais:
+
+```txt
+Principal/Núcleo
+Ancestrais paternos
+Tios paternos
+Primos paternos
+Ancestrais maternos
+Tios maternos
+Primos maternos
+```
+
+O estado atual, entretanto, ainda não corresponde integralmente ao desenho visual final solicitado.
+
+### Estado atual observado no código
+
+- `MobileFamilyTreeView` ainda mantém abas internas `Núcleo`, `Paterno`, `Materno` e `Completa`.
+- A aba `Núcleo` usa swipe horizontal com painel paterno à esquerda, núcleo no centro e painel materno à direita.
+- Cada painel lateral usa swipe vertical entre ancestrais, tios e primos.
+- `Tios` usam `VerticalRelativeScreen` com `columns="double"` e limite de 6 pessoas.
+- `Primos` usam `VerticalRelativeScreen` com `columns="triple"` e limite de 9 pessoas.
+- `Ancestrais` usam `AncestorGroupsScreen`, que ainda renderiza um container externo com título **Ancestrais Paternos/Maternos** e subgrupos internos de **Tataravós**, **Bisavós** e **Avós**.
+- O container dos grupos laterais ainda usa largura máxima próxima de `max-w-[360px]`; não há, no código atual, regra estrutural para ocupar 70% a 80% da altura útil.
+- Linhas laterais e verticais existem, mas ainda não foram normalizadas para sempre chegar às extremidades aplicáveis da viewport.
+
+### Estado visual desejado
+
+Nas telas de ancestrais:
+
+- remover o container externo único **Ancestrais Paternos/Maternos**;
+- renderizar diretamente até três cards/grupos independentes:
+  - **Tataravós**;
+  - **Bisavós**;
+  - **Avós**;
+- exibir apenas grupos que tenham pessoas cadastradas;
+- manter todos dentro de uma única tela vertical do ramo;
+- não exibir linha vertical acima da tela de ancestrais.
+
+Nas telas de tios e primos:
+
+- ampliar o container principal do grupo para cerca de `70vh` a `80vh` da altura útil mobile;
+- preservar área segura da navegação inferior mobile;
+- ajustar cards internos ao espaço disponível;
+- tios devem continuar cabendo em até 6 cards, preferencialmente 2 colunas × 3 linhas;
+- primos devem continuar cabendo em até 9 cards, preferencialmente 3 colunas × 3 linhas;
+- evitar concentração dos cards no topo quando houver poucos itens.
+
+Conectores:
+
+- linha horizontal da tela de tios paternos deve ir até a extremidade esquerda da tela;
+- linha horizontal da tela de tios maternos deve ir até a extremidade direita da tela;
+- conectores verticais entre ancestrais → tios → primos devem chegar às extremidades superior/inferior aplicáveis de cada tela;
+- não deve haver linha acima dos ancestrais;
+- não deve haver linha abaixo dos primos;
+- os conectores devem encostar visualmente nos grupos, sem sobras quebradas, cortes ou linhas flutuantes.
+
+### Arquivos envolvidos
+
+```txt
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/pages/home/HomeTreeSection.tsx
+docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_IMPLEMENTACOES.md
+```
+
+### Critérios de aceite
+
+- as sete telas são navegáveis em mobile;
+- ancestrais paternos e maternos não têm container externo único;
+- tataravós, bisavós e avós aparecem como grupos/cards próprios;
+- tios e primos ocupam aproximadamente 70% a 80% da tela útil;
+- cards se adaptam ao espaço sem overflow horizontal;
+- conectores chegam às extremidades aplicáveis;
+- não há linha acima de ancestrais;
+- não há linha abaixo de primos;
+- validação visual em `320px`, `375px`, `390px` e `430px`.
 
 ---
 
@@ -388,10 +484,10 @@ Critérios para considerar a pendência fechada:
 | Ordem | Documento | Status | Observações |
 |---:|---|---|---|
 | 1 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado | Conflitos Git resolvidos; DOC-004 e DOC-005 separados; DOC-006 adicionado para filtros da home do fórum. |
-| 2 | `docs/README.md` | Revisar se necessário | Atualizar lista de pendências abertas após substituição deste plano. |
+| 2 | `docs/README.md` | Revisado | Índice atualizado para refletir a pendência DOC-013 da Minha Árvore mobile segmentada e o escopo atual dos documentos de árvore. |
 | 3 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inventário consolidado ajustado para árvore, IA, Google/OAuth, fórum, favoritos e pendências reais. |
-| 4 | `docs/GUIA_UX_LAYOUT.md` | Revisar em seguida | Atualizar padrões visuais de fórum e favoritos. |
-| 5 | `docs/GUIA_COMPONENTES.md` | Revisar em seguida | Atualizar responsabilidades de `ForumTopico`, `ForumHome` e `MeusFavoritos`. |
+| 4 | `docs/GUIA_UX_LAYOUT.md` | Revisado em frente documental paralela | Manter alinhado com o estado real do `MobileFamilyTreeView` e com a pendência DOC-013. |
+| 5 | `docs/GUIA_COMPONENTES.md` | Revisado em frente documental paralela | Inclui `MobileFamilyTreeView` e seus subcomponentes; manter pendências visuais no plano. |
 | 6 | `docs/funcionalidades/FORUM.md` | Revisado nesta rodada | Alinhado ao padrão atual: categoria, respostas diretas, sem box de pessoa relacionada e sem comentário aninhado na UI. |
 | 7 | `docs/operacao/DEPLOYMENT.md` | Revisado nesta rodada | Inclui `/api/ai`, variáveis server-side, Google/OAuth e checklist pós-deploy. |
 | 8 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | Criado nesta rodada | Novo guia funcional para Curiosidades, conexão familiar e IA. |
@@ -408,12 +504,11 @@ git diff --check
 npm run build
 ```
 
-Commit sugerido para os documentos desta rodada:
+Commit sugerido para esta atualização documental específica:
 
 ```bash
-git add docs/PLANO_PROXIMOS_PASSOS.md docs/GUIA_IMPLEMENTACOES.md docs/operacao/DEPLOYMENT.md
-git add docs/funcionalidades/CURIOSIDADES_E_IA.md
-git commit -m "docs: align implementation plan deployment and AI"
+git add docs/PLANO_PROXIMOS_PASSOS.md docs/README.md
+git commit -m "docs: update mobile tree plan and docs index"
 git pull --rebase origin main
 git push origin main
 ```
