@@ -63,7 +63,7 @@ interface MobileFamilyTreeViewProps {
 
 const TABS: Array<{ id: MobileTreeTab; label: string }> = [
   { id: 'paternal', label: 'Paterno' },
-  { id: 'core', label: 'Núcleo' },
+  { id: 'core', label: 'Central' },
   { id: 'maternal', label: 'Materno' },
 ];
 
@@ -679,8 +679,14 @@ function AncestorsOverviewScreen({
             data-mobile-tree-scroll
             className="relative z-10 h-full overflow-y-auto overflow-x-hidden px-4 overscroll-y-contain"
           >
-            <div className="mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
-              <div className="grid min-w-0 grid-cols-2 gap-2">
+            <div className="relative mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
+              {hasPaternalAncestors && (
+                <div className="pointer-events-none absolute bottom-0 left-1/4 top-2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
+              )}
+              {hasMaternalAncestors && (
+                <div className="pointer-events-none absolute bottom-0 right-1/4 top-2 z-0 w-px translate-x-1/2 bg-cyan-600" />
+              )}
+              <div className="relative z-10 grid min-w-0 grid-cols-2 gap-2">
                 {generations.flatMap(({ paternal, maternal }) => [
                   paternal.people.length > 0 ? (
                     <AncestorGroupCard
@@ -921,8 +927,7 @@ export function MobileFamilyTreeView({
             {hasMaternalAncestors && (
               <div className="pointer-events-none absolute right-1/4 top-0 h-10 w-px bg-cyan-600" />
             )}
-            <div className="pointer-events-none absolute left-0 top-[122px] h-px w-4 bg-cyan-600" />
-            <div className="pointer-events-none absolute right-0 top-[122px] h-px w-4 bg-cyan-600" />
+
             <div
               data-mobile-tree-scroll
               className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain"
@@ -930,14 +935,16 @@ export function MobileFamilyTreeView({
               <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
                 <div className="mx-auto w-full max-w-[390px]">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
+                  <div className="relative z-10">
+                    <div className="pointer-events-none absolute right-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
                     {isVisible(model.father)
                       ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
                       : <EmptyCard label="Pai" />}
                     <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
                   </div>
 
-                  <div className="relative">
+                  <div className="relative z-10">
+                    <div className="pointer-events-none absolute left-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
                     {isVisible(model.mother)
                       ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
                       : <EmptyCard label="Mãe" />}
@@ -1080,3 +1087,4 @@ export function MobileFamilyTreeView({
     </div>
   );
 }
+
