@@ -57,7 +57,7 @@ type GroupLayout = {
 
 const CANVAS_WIDTH = 1440;
 const CANVAS_HEIGHT = 1020;
-const CONNECTOR_COLOR = '#22b8cf';
+const CONNECTOR_COLOR = '#7ddce8';
 const MIN_TABLET_SCALE = 0.62;
 const GROUP_VERTICAL_GAP = 46;
 const TOP_START = 18;
@@ -67,7 +67,9 @@ const GROUP_VERTICAL_PADDING = 44;
 const GROUP_GRID_GAP = 8;
 const COLLAPSED_LIMIT = 2;
 const SIDE_BRANCH_COLLAPSED_LIMIT = 8;
-const SIDE_BRANCH_WIDTH = 560;
+const SIDE_BRANCH_WIDTH = 660;
+const SIDE_BRANCH_SINGLE_WIDTH = 300;
+const SIBLINGS_GROUP_WIDTH = 360;
 const PATERNAL_BRANCH_INNER_EDGE = 334;
 const MATERNAL_BRANCH_LEFT = 1106;
 const ANCESTOR_COLLAPSED_LIMIT = 4;
@@ -557,6 +559,7 @@ export function DesktopFamilyMapView({
   const branchRight = MATERNAL_BRANCH_LEFT;
   const descendantColumnWidth = 300;
   const petColumnWidth = 180;
+  const siblingsWidth = getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: SIBLINGS_GROUP_WIDTH });
 
   const spouse = spouses[0];
   const spouseCardLayout = spouse ? {
@@ -589,9 +592,9 @@ export function DesktopFamilyMapView({
       id: 'siblings',
       title: 'Irmãos',
       people: siblings,
-      left: centeredLeft(340, descendantColumnWidth, getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: descendantColumnWidth })),
+      left: centeredLeft(340, SIBLINGS_GROUP_WIDTH, siblingsWidth),
       top: descendantGroupTopRow,
-      width: getGroupWidth({ people: siblings, columns: 'double', variant: 'horizontal', baseWidth: descendantColumnWidth }),
+      width: siblingsWidth,
       height: getGroupHeight({ people: siblings, columns: 'double', variant: 'horizontal', expanded: expandedGroups.has('siblings') }),
       columns: 'double',
       variant: 'horizontal',
@@ -727,10 +730,11 @@ export function DesktopFamilyMapView({
   const rightDescendantBranchX = rightDescendantLayouts.length > 0
     ? centerX(rightDescendantLayouts[0])
     : centralCenterX;
-  const paternalUnclesWidth = branchWidth;
-  const maternalUnclesWidth = branchWidth;
-  const paternalCousinsWidth = branchWidth;
-  const maternalCousinsWidth = branchWidth;
+  const getSideBranchWidth = (people: Pessoa[]) => (people.length === 1 ? SIDE_BRANCH_SINGLE_WIDTH : branchWidth);
+  const paternalUnclesWidth = getSideBranchWidth(paternalUncles);
+  const maternalUnclesWidth = getSideBranchWidth(maternalUncles);
+  const paternalCousinsWidth = getSideBranchWidth(paternalCousins);
+  const maternalCousinsWidth = getSideBranchWidth(maternalCousins);
   const unclesPaternal = {
     left: centeredLeft(branchLeft, branchWidth, paternalUnclesWidth),
     top: parentTop,
@@ -759,10 +763,10 @@ export function DesktopFamilyMapView({
   return (
     <div
       ref={viewportRef}
-      className="absolute inset-x-0 bottom-0 top-[76px] isolate overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)] before:pointer-events-none before:absolute before:inset-x-0 before:-top-[76px] before:h-[76px] before:bg-[#ecfeff] before:-z-10"
+      className="absolute inset-x-0 bottom-0 top-[76px] isolate overflow-auto overscroll-contain bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_38%,#f8fafc_100%)] before:pointer-events-none before:absolute before:inset-x-0 before:-top-[76px] before:z-0 before:h-[76px] before:bg-[#ecfeff]"
     >
       <div
-        className="relative mx-auto"
+        className="relative z-10 mx-auto"
         style={{ width: CANVAS_WIDTH * scale, height: canvasHeight * scale }}
       >
         <div

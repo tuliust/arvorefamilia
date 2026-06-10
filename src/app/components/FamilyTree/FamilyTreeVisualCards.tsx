@@ -31,14 +31,38 @@ function formatVitalYear(date?: string | number) {
 
 function getPersonGender(person: Pessoa) {
   const rawGender = String(
-    (person as { genero?: string; sexo?: string; gender?: string }).genero
-      ?? (person as { genero?: string; sexo?: string; gender?: string }).sexo
-      ?? (person as { genero?: string; sexo?: string; gender?: string }).gender
+    (person as {
+      genero?: string;
+      sexo?: string;
+      gender?: string;
+      sexo_biologico?: string;
+      genero_identidade?: string;
+      gender_identity?: string;
+    }).genero
+      ?? (person as { sexo?: string }).sexo
+      ?? (person as { gender?: string }).gender
+      ?? (person as { sexo_biologico?: string }).sexo_biologico
+      ?? (person as { genero_identidade?: string }).genero_identidade
+      ?? (person as { gender_identity?: string }).gender_identity
       ?? '',
   ).trim().toLowerCase();
 
   if (/^(f|fem|feminino|female|mulher)/.test(rawGender)) return 'female';
   if (/^(m|masc|masculino|male|homem)/.test(rawGender)) return 'male';
+
+  const firstName = (person.nome_completo ?? '').trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+  const maleNames = new Set([
+    'absalon', 'adalberto', 'athanase', 'caio', 'charalambos', 'constantino', 'fabio', 'fábio',
+    'heitor', 'ildo', 'jose', 'josé', 'leonardo', 'marcio', 'márcio', 'marcos', 'mario', 'mário',
+    'mauro', 'rodrigo', 'rosel', 'secundino', 'tassiu', 'tássiu', 'titus', 'tulius', 'yuri',
+  ]);
+  const femaleNames = new Set([
+    'alexia', 'fulana', 'glauce', 'hilda', 'ivanira', 'maria', 'monika', 'rafaela', 'teresá',
+    'teresa', 'tathiane', 'vanira',
+  ]);
+  if (maleNames.has(firstName)) return 'male';
+  if (femaleNames.has(firstName)) return 'female';
+
   return 'neutral';
 }
 
@@ -46,7 +70,7 @@ function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | '
   const hairPath = gender === 'female'
     ? 'M24 5c-7 0-11 5-11 13v7c0 4-2 8-5 11 4 5 10 8 16 8s12-3 16-8c-3-3-5-7-5-11v-7C35 10 31 5 24 5Z'
     : gender === 'male'
-      ? 'M12 18c0-8 5-13 12-13s12 5 12 13c0 3-.6 6-2 8-2-2-6-4-10-4s-8 2-10 4c-1.4-2-2-5-2-8Z'
+      ? 'M11 18c0-8 5-13 13-13s13 5 13 13c0 3-1 6-2 8-3-2-6-3-11-3s-8 1-11 3c-1-2-2-5-2-8Z'
       : 'M12 18c0-8 5-13 12-13s12 5 12 13c0 4-1 7-3 9-2-3-5-5-9-5s-7 2-9 5c-2-2-3-5-3-9Z';
 
   return (
