@@ -26,16 +26,39 @@ interface DesktopFamilyMapViewProps {
 type MapGroupProps = {
   title: string;
   people: Pessoa[];
-  className: string;
+  x: number;
+  y: number;
+  width: number;
   columns?: 'single' | 'double' | 'triple';
   variant?: 'mini' | 'compact' | 'horizontal';
-  maxHeightClassName?: string;
   onPersonClick: (pessoa: Pessoa) => void;
 };
 
 const CANVAS_WIDTH = 1440;
-const CANVAS_HEIGHT = 1080;
+const CANVAS_HEIGHT = 1040;
 const MIN_TABLET_SCALE = 0.62;
+
+const FAMILY_COLUMN_WIDTH = 360;
+const SIDE_COLUMN_WIDTH = 260;
+const CORE_CARD_WIDTH = 210;
+const CORE_GROUP_WIDTH = 780;
+
+const PATERNAL_FAMILY_X = 300;
+const MATERNAL_FAMILY_X = 780;
+const PATERNAL_SIDE_X = 40;
+const MATERNAL_SIDE_X = 1140;
+const FATHER_X = 330;
+const CENTRAL_X = 615;
+const MOTHER_X = 900;
+const CORE_GROUP_X = 330;
+
+const TATARAVOS_Y = 8;
+const BISAVOS_Y = 122;
+const AVOS_Y = 236;
+const PARENTS_Y = 360;
+const CENTRAL_Y = 540;
+const COUSINS_Y = 586;
+const CORE_GROUPS_Y = 780;
 
 const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
@@ -55,25 +78,62 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
 function PositionedGroup({
   title,
   people,
-  className,
+  x,
+  y,
+  width,
   columns = 'double',
   variant = 'mini',
-  maxHeightClassName = 'max-h-[12rem]',
   onPersonClick,
 }: MapGroupProps) {
   if (people.length === 0) return null;
 
   return (
-    <div className={`absolute z-10 min-h-0 ${className}`}>
+    <div
+      className="absolute z-10 min-h-0"
+      style={{ left: x, top: y, width }}
+    >
       <VisualGroup
         title={title}
         people={people}
         columns={columns}
         variant={variant}
-        maxHeightClassName={maxHeightClassName}
+        titleVariant="pill"
+        expandable
+        collapsedLimit={2}
+        disableInternalScroll
         onPersonClick={onPersonClick}
       />
     </div>
+  );
+}
+
+function CoreGroup({
+  title,
+  people,
+  columns = 'double',
+  variant = 'horizontal',
+  onPersonClick,
+}: {
+  title: string;
+  people: Pessoa[];
+  columns?: 'single' | 'double' | 'triple';
+  variant?: 'mini' | 'compact' | 'horizontal';
+  onPersonClick: (pessoa: Pessoa) => void;
+}) {
+  if (people.length === 0) return null;
+
+  return (
+    <VisualGroup
+      title={title}
+      people={people}
+      columns={columns}
+      variant={variant}
+      titleVariant="pill"
+      expandable
+      collapsedLimit={2}
+      disableInternalScroll
+      onPersonClick={onPersonClick}
+    />
   );
 }
 
@@ -221,102 +281,105 @@ export function DesktopFamilyMapView({
           >
             <g fill="none" stroke="#0891b2" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               {paternal.greatGreatGrandparents.length > 0 && paternal.greatGrandparents.length > 0 && (
-                <path d={connectorPath([[480, 132], [480, 145]])} />
+                <path d={connectorPath([[480, 112], [480, BISAVOS_Y]])} />
               )}
               {paternal.greatGrandparents.length > 0 && paternal.grandparents.length > 0 && (
-                <path d={connectorPath([[480, 257], [480, 270]])} />
+                <path d={connectorPath([[480, 226], [480, AVOS_Y]])} />
               )}
               {maternal.greatGreatGrandparents.length > 0 && maternal.greatGrandparents.length > 0 && (
-                <path d={connectorPath([[960, 132], [960, 145]])} />
+                <path d={connectorPath([[960, 112], [960, BISAVOS_Y]])} />
               )}
               {maternal.greatGrandparents.length > 0 && maternal.grandparents.length > 0 && (
-                <path d={connectorPath([[960, 257], [960, 270]])} />
+                <path d={connectorPath([[960, 226], [960, AVOS_Y]])} />
               )}
               {paternal.grandparents.length > 0 && father && (
-                <path d={connectorPath([[480, 382], [480, 398], [435, 398], [435, 410]])} />
+                <path d={connectorPath([[480, 340], [480, 350], [435, 350], [435, PARENTS_Y]])} />
               )}
               {maternal.grandparents.length > 0 && mother && (
-                <path d={connectorPath([[960, 382], [960, 398], [1005, 398], [1005, 410]])} />
+                <path d={connectorPath([[960, 340], [960, 350], [1005, 350], [1005, PARENTS_Y]])} />
               )}
               {paternal.grandparents.length > 0 && paternal.uncles.length > 0 && (
-                <path d={connectorPath([[480, 398], [170, 398], [170, 410]])} />
+                <path d={connectorPath([[480, 350], [170, 350], [170, PARENTS_Y]])} />
               )}
               {maternal.grandparents.length > 0 && maternal.uncles.length > 0 && (
-                <path d={connectorPath([[960, 398], [1270, 398], [1270, 410]])} />
+                <path d={connectorPath([[960, 350], [1270, 350], [1270, PARENTS_Y]])} />
               )}
               {father && central && (
-                <path d={connectorPath([[435, 574], [435, 596], [720, 596], [720, 604]])} />
+                <path d={connectorPath([[435, 524], [435, 532], [720, 532], [720, CENTRAL_Y]])} />
               )}
               {mother && central && (
-                <path d={connectorPath([[1005, 574], [1005, 596], [720, 596]])} />
+                <path d={connectorPath([[1005, 524], [1005, 532], [720, 532]])} />
               )}
               {paternal.uncles.length > 0 && paternal.cousins.length > 0 && (
-                <path d={connectorPath([[170, 604], [170, 650]])} />
+                <path d={connectorPath([[170, 532], [170, COUSINS_Y]])} />
               )}
               {maternal.uncles.length > 0 && maternal.cousins.length > 0 && (
-                <path d={connectorPath([[1270, 604], [1270, 650]])} />
+                <path d={connectorPath([[1270, 532], [1270, COUSINS_Y]])} />
               )}
               {central && hasCentralDescendants && (
-                <path d={connectorPath([[720, 798], [720, 810]])} />
+                <path d={connectorPath([[720, 734], [720, 760]])} />
               )}
               {central && siblings.length > 0 && (
-                <path d={connectorPath([[720, 810], [460, 810], [460, 820]])} />
+                <path d={connectorPath([[720, 760], [460, 760], [460, CORE_GROUPS_Y]])} />
               )}
               {central && spouses.length > 0 && (
-                <path d={connectorPath([[720, 810], [720, 820]])} />
+                <path d={connectorPath([[720, 760], [720, CORE_GROUPS_Y]])} />
               )}
               {central && children.length > 0 && (
-                <path d={connectorPath([[720, 810], [980, 810], [980, 820]])} />
+                <path d={connectorPath([[720, 760], [980, 760], [980, CORE_GROUPS_Y]])} />
               )}
               {central && nephews.length > 0 && (
-                <path d={connectorPath([[460, 810], [460, 950]])} />
+                <path d={connectorPath([[460, 760], [460, 920]])} />
               )}
               {central && pets.length > 0 && (
-                <path d={connectorPath([[720, 810], [720, 950]])} />
+                <path d={connectorPath([[720, 760], [720, 920]])} />
               )}
               {central && grandchildren.length > 0 && (
-                <path d={connectorPath([[980, 810], [980, 950]])} />
+                <path d={connectorPath([[980, 760], [980, 920]])} />
               )}
             </g>
           </svg>
 
-          <PositionedGroup title="Tataravós Paternos" people={paternal.greatGreatGrandparents} className="left-[300px] top-[20px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Tataravós Maternos" people={maternal.greatGreatGrandparents} className="left-[780px] top-[20px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Bisavós Paternos" people={paternal.greatGrandparents} className="left-[300px] top-[145px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Bisavós Maternos" people={maternal.greatGrandparents} className="left-[780px] top-[145px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Avós Paternos" people={paternal.grandparents} className="left-[300px] top-[270px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
-          <PositionedGroup title="Avós Maternos" people={maternal.grandparents} className="left-[780px] top-[270px] w-[360px]" variant="horizontal" maxHeightClassName="max-h-[78px]" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Tataravós Paternos" people={paternal.greatGreatGrandparents} x={PATERNAL_FAMILY_X} y={TATARAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Tataravós Maternos" people={maternal.greatGreatGrandparents} x={MATERNAL_FAMILY_X} y={TATARAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Bisavós Paternos" people={paternal.greatGrandparents} x={PATERNAL_FAMILY_X} y={BISAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Bisavós Maternos" people={maternal.greatGrandparents} x={MATERNAL_FAMILY_X} y={BISAVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Avós Paternos" people={paternal.grandparents} x={PATERNAL_FAMILY_X} y={AVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Avós Maternos" people={maternal.grandparents} x={MATERNAL_FAMILY_X} y={AVOS_Y} width={FAMILY_COLUMN_WIDTH} variant="horizontal" onPersonClick={onPersonClick} />
 
-          <PositionedGroup title="Tios Paternos" people={paternal.uncles} className="left-[40px] top-[410px] w-[260px]" maxHeightClassName="max-h-[158px]" onPersonClick={onPersonClick} />
-          <div className="absolute left-[330px] top-[410px] z-10 w-[210px]">
+          <PositionedGroup title="Tios Paternos" people={paternal.uncles} x={PATERNAL_SIDE_X} y={PARENTS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
+          <div className="absolute z-10" style={{ left: FATHER_X, top: PARENTS_Y, width: CORE_CARD_WIDTH }}>
             {directRelativeFilters.pais && (
               father
                 ? <VisualPersonCard person={father} label="Pai" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Pai" />
             )}
           </div>
-          <div className="absolute left-[615px] top-[604px] z-20 w-[210px]">
+          <div className="absolute z-20" style={{ left: CENTRAL_X, top: CENTRAL_Y, width: CORE_CARD_WIDTH }}>
             {central && <VisualPersonCard person={central} label="Pessoa Central" central onClick={onPersonClick} />}
           </div>
-          <div className="absolute left-[900px] top-[410px] z-10 w-[210px]">
+          <div className="absolute z-10" style={{ left: MOTHER_X, top: PARENTS_Y, width: CORE_CARD_WIDTH }}>
             {directRelativeFilters.pais && (
               mother
                 ? <VisualPersonCard person={mother} label="Mãe" onClick={onPersonClick} />
                 : <VisualEmptyCard label="Mãe" />
             )}
           </div>
-          <PositionedGroup title="Tios Maternos" people={maternal.uncles} className="left-[1140px] top-[410px] w-[260px]" maxHeightClassName="max-h-[158px]" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Tios Maternos" people={maternal.uncles} x={MATERNAL_SIDE_X} y={PARENTS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
 
-          <PositionedGroup title="Primos Paternos" people={paternal.cousins} className="left-[40px] top-[650px] w-[260px]" maxHeightClassName="max-h-[238px]" onPersonClick={onPersonClick} />
-          <div className="absolute left-[330px] top-[820px] z-10 grid w-[780px] grid-cols-3 items-start gap-3">
-            <div>{siblings.length > 0 && <VisualGroup title="Irmãos" people={siblings} columns="single" variant="horizontal" maxHeightClassName="max-h-[92px]" onPersonClick={onPersonClick} />}</div>
-            <div>{spouses.length > 0 && <VisualGroup title="Cônjuge" people={spouses} columns="single" variant="horizontal" maxHeightClassName="max-h-[92px]" onPersonClick={onPersonClick} />}</div>
-            <div>{children.length > 0 && <VisualGroup title="Filhos" people={children} columns="single" variant="horizontal" maxHeightClassName="max-h-[92px]" onPersonClick={onPersonClick} />}</div>
-            <div>{nephews.length > 0 && <VisualGroup title="Sobrinhos" people={nephews} columns="double" variant="mini" maxHeightClassName="max-h-[90px]" onPersonClick={onPersonClick} />}</div>
-            <div>{pets.length > 0 && <VisualGroup title="Pets" people={pets} columns="double" variant="mini" maxHeightClassName="max-h-[90px]" onPersonClick={onPersonClick} />}</div>
-            <div>{grandchildren.length > 0 && <VisualGroup title="Netos" people={grandchildren} columns="double" variant="mini" maxHeightClassName="max-h-[90px]" onPersonClick={onPersonClick} />}</div>
+          <PositionedGroup title="Primos Paternos" people={paternal.cousins} x={PATERNAL_SIDE_X} y={COUSINS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
+          <div
+            className="absolute z-10 grid grid-cols-3 items-start gap-3"
+            style={{ left: CORE_GROUP_X, top: CORE_GROUPS_Y, width: CORE_GROUP_WIDTH }}
+          >
+            <div><CoreGroup title="Irmãos" people={siblings} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
+            <div><CoreGroup title="Cônjuge" people={spouses} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
+            <div><CoreGroup title="Filhos" people={children} columns="double" variant="horizontal" onPersonClick={onPersonClick} /></div>
+            <div><CoreGroup title="Sobrinhos" people={nephews} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
+            <div><CoreGroup title="Pets" people={pets} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
+            <div><CoreGroup title="Netos" people={grandchildren} columns="double" variant="mini" onPersonClick={onPersonClick} /></div>
           </div>
-          <PositionedGroup title="Primos Maternos" people={maternal.cousins} className="left-[1140px] top-[650px] w-[260px]" maxHeightClassName="max-h-[238px]" onPersonClick={onPersonClick} />
+          <PositionedGroup title="Primos Maternos" people={maternal.cousins} x={MATERNAL_SIDE_X} y={COUSINS_Y} width={SIDE_COLUMN_WIDTH} onPersonClick={onPersonClick} />
         </div>
       </div>
     </div>
