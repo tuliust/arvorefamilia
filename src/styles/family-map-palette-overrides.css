@@ -21,7 +21,7 @@ html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] butto
 }
 
 /* Escopo de disponibilidade e título das views da árvore. */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   [data-slot="select-item"][data-value="minha-arvore"],
   [data-slot="select-item"][data-value="genealogia"] {
     display: none !important;
@@ -58,7 +58,7 @@ html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] butto
   }
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 1023.98px) {
   body [data-export-root="family-tree"] > div.pointer-events-none.absolute.inset-x-0.z-10.text-center {
     display: block !important;
     top: 4.05rem !important;
