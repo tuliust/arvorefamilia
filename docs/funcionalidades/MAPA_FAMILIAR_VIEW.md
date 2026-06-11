@@ -1,9 +1,9 @@
 # Mapa Familiar - view panorâmica desktop/tablet
 
-> Última revisão: 2026-06-10  
+> Última revisão: 2026-06-11  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Mapa Familiar**.  
-> Status: documento canônico da rota `/mapa-familiar`, com layout panorâmico desktop/tablet, fallback mobile, modo wide com painel lateral colapsado, grupos expansíveis, regras de cônjuges, conectores SVG, zoom e avatares por `genero`.
+> Status: documento canônico da rota `/mapa-familiar`, com layout panorâmico desktop/tablet, fallback mobile atualizado via `MobileFamilyTreeView`, modo wide com painel lateral colapsado, grupos expansíveis, regras de cônjuges, conectores SVG, zoom, cards mobile com anos e avatares por `genero`.
 
 ## 1. Função deste documento
 
@@ -64,7 +64,7 @@ Diferença central:
 | Aspecto | Minha Árvore | Mapa Familiar |
 |---|---|---|
 | Desktop/tablet | ReactFlow | HTML/CSS/SVG próprio |
-| Mobile | malha segmentada 3×3 | fallback seguro para `MobileFamilyTreeView` |
+| Mobile | malha segmentada 3×3 | fallback seguro para `MobileFamilyTreeView`, herdando cards com anos, avatar por `genero`, card central sem badge e conectores roláveis |
 | Navegação | pan/zoom ReactFlow | canvas panorâmico com zoom via `Ctrl + scroll` |
 | Conectores | edges ReactFlow | SVG por âncoras de grupos |
 | Cards | `PersonNode` | `FamilyTreeVisualCards` |
@@ -112,7 +112,7 @@ Regras:
 - deve respeitar filtros do painel quando aplicável;
 - deve ser acessível pelo seletor de views como **Mapa Familiar**;
 - não deve alterar ou substituir `/minha-arvore`;
-- no mobile, deve usar fallback seguro para `MobileFamilyTreeView` ou comportamento equivalente definido pelo app.
+- no mobile, deve usar fallback seguro para `MobileFamilyTreeView` ou comportamento equivalente definido pelo app; nesse fallback, valem as regras de cards mobile com apenas anos, avatar por `genero`, card central sem badge e conectores no contexto rolável.
 
 ---
 
@@ -697,6 +697,30 @@ Regras:
 ---
 
 ## 16. Fallback mobile
+
+Abaixo de 768px, `/mapa-familiar` usa `MobileFamilyTreeView.tsx` como fallback seguro. Portanto, no mobile, a rota herda a experiência segmentada da Minha Árvore, não o canvas panorâmico desktop/tablet.
+
+Regras atuais do fallback mobile:
+
+| Elemento | Comportamento |
+|---|---|
+| Estrutura | Malha 3×3 com **Paterno**, **Central** e **Materno**. |
+| Cards | Mesma família de cards do `MobileFamilyTreeView`. |
+| Linhas vitais | Apenas ano ao lado dos ícones de nascimento/falecimento. Não exibir local/cidade/UF. |
+| Card central | Não exibe badge **VOCÊ**. |
+| Pai/Mãe | Mantêm labels **PAI** e **MÃE** quando presentes. |
+| Avatares | Foto real primeiro; fallback visual por `genero` (`homem`, `mulher`, `pet`). |
+| Conectores | HTML/CSS próprios do mobile, não SVG do `DesktopFamilyMapView`. |
+| Scroll central | Conectores avós → Pai/Mãe devem acompanhar o scroll da tela Central. |
+
+Anti-regressões:
+
+- não tentar portar o canvas SVG desktop para mobile sem decisão explícita;
+- não documentar o Mapa Familiar mobile como versão panorâmica;
+- não aplicar as regras de `vitalMode="full"` do desktop aos cards mobile;
+- não reintroduzir badge **VOCÊ** no card principal mobile;
+- não separar as regras do fallback mobile das regras de `MINHA_ARVORE_VIEW.md`, pois o componente é compartilhado.
+
 
 Em telas mobile, `/mapa-familiar` deve usar fallback seguro.
 

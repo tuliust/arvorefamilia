@@ -1,9 +1,9 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-10  
+> Última revisão: 2026-06-11  
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.  
-> Status: atualizado com a malha mobile 3×3, tela Central, ancestrais globais, conectores, preview de swipe e distinção entre `/minha-arvore` e `/mapa-familiar`.
+> Status: atualizado com a malha mobile 3×3, tela Central, ancestrais globais, conectores em contexto rolável, preview de swipe, cards mobile com anos, avatar visual por `genero`, card central sem badge e distinção entre `/minha-arvore` e `/mapa-familiar`.
 
 ## 1. Função deste documento
 
@@ -60,6 +60,10 @@ Estado atual da frente:
 - O fluxo mobile antigo de sete telas foi substituído pela malha 3×3 documentada abaixo.
 - Conectores do mobile são HTML/CSS próprios, não edges ReactFlow.
 - Conectores do Mapa Familiar são SVG por âncoras, documentados em `MAPA_FAMILIAR_VIEW.md`.
+- Na tela Central mobile, os conectores entre ancestrais, Pai/Mãe e pessoa central devem viver no mesmo contexto rolável dos cards para não se desalinharem durante scroll vertical.
+- Cards mobile exibem apenas o ano nas linhas vitais ao lado dos ícones de nascimento e falecimento.
+- O card principal mobile não exibe badge **VOCÊ**; labels como **PAI** e **MÃE** permanecem.
+- Avatares mobile reutilizam a lógica visual compartilhada de `FamilyTreeVisualCards.tsx`: foto real primeiro; fallback por `genero` (`homem`, `mulher`, `pet`).
 
 Regra documental:
 
@@ -406,6 +410,29 @@ Regras visuais:
 - não deve haver linha inferior abaixo de primos.
 
 ---
+
+
+### 12.1 Regras recentes de cards e conectores mobile
+
+Estas regras valem para `/minha-arvore` mobile e para o fallback mobile de `/mapa-familiar`, pois ambas as rotas usam `MobileFamilyTreeView.tsx` nesse breakpoint.
+
+| Elemento | Regra atual |
+|---|---|
+| Linhas de avós → Pai/Mãe | Devem acompanhar o scroll da tela Central e permanecer alinhadas aos cards. Não usar conectores fixos fora do container rolável quando o card relacionado rola. |
+| Linhas de Pai/Mãe → pessoa central | Devem permanecer centralizadas mesmo quando a área central é rolada para cima ou para baixo. |
+| Linhas vitais dos cards | Exibir apenas o ano ao lado de `Star` e `Cross`. Não exibir local/cidade/UF no mobile. |
+| Card principal | Não exibir badge **VOCÊ** no mobile. |
+| Pai/Mãe | Manter labels **PAI** e **MÃE** quando presentes. |
+| Avatar sem foto real | Usar fallback visual por `genero`: `homem`, `mulher` ou `pet`. |
+| Foto real | `foto_principal_url` tem prioridade sobre qualquer fallback visual. |
+
+Anti-regressões:
+
+- não reintroduzir local de nascimento/falecimento nos cards mobile;
+- não usar iniciais como fallback principal quando houver fallback visual por `genero` disponível;
+- não posicionar conectores de ancestrais fora do scroll se eles precisam acompanhar Pai/Mãe;
+- não remover labels de Pai/Mãe ao remover o badge do card principal;
+- validar 320px, 375px, 390px e 430px sempre que mexer em cards, conectores ou scroll.
 
 ## 13. Viewport, pan, zoom e scroll
 

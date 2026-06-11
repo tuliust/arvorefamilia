@@ -1,9 +1,9 @@
 # Guia de componentes - Árvore Família
 
-> Última atualização: 2026-06-10
+> Última atualização: 2026-06-11
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com `MobileFamilyTreeView`, `DesktopFamilyMapView`, `FamilyTreeVisualCards`, Mapa Familiar e regras de cônjuges/avatares por `genero`.
+> Status: guia canônico atualizado com `MobileFamilyTreeView`, `DesktopFamilyMapView`, `FamilyTreeVisualCards`, Mapa Familiar, regras de cônjuges, avatares por `genero`, cards mobile com anos, card central sem badge e conectores mobile em contexto rolável.
 
 ## Objetivo
 
@@ -45,7 +45,11 @@ Estado confirmado/esperado da frente atual:
 - Cônjuge da pessoa central permanece visível quando existir.
 - Cônjuges de tataravós, bisavós e avós aparecem por padrão.
 - Cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**.
-- A coluna `pessoas.genero` passa a orientar avatares do Mapa Familiar: `homem`, `mulher` e `pet`.
+- A coluna `pessoas.genero` passa a orientar avatares do Mapa Familiar e do fallback mobile compartilhado: `homem`, `mulher` e `pet`.
+- `MobileFamilyTreeView` reutiliza dados/avatares visuais de `FamilyTreeVisualCards.tsx` para manter consistência entre Minha Árvore mobile e Mapa Familiar mobile.
+- Cards mobile exibem apenas anos nas linhas vitais, sem local/cidade/UF.
+- O card principal mobile não exibe badge **VOCÊ**; labels como **PAI** e **MÃE** permanecem.
+- Conectores de avós → Pai/Mãe na tela Central mobile devem acompanhar o scroll dos cards.
 - Se `genero` tiver sido criada manualmente no Supabase, a migration e a tipagem de `Pessoa` precisam ser conferidas.
 
 Regra documental desta revisão:
@@ -479,8 +483,17 @@ Estado atual do layout:
 - primos ficam abaixo dos respectivos tios e exibem todos os cards disponíveis com rolagem interna;
 - em 320px, primos podem usar duas colunas; a partir de 360px, preferem três colunas;
 - as linhas laterais de Pai/Mãe acompanham o scroll da tela Central;
+- os conectores entre ancestrais, Pai/Mãe e pessoa central devem ficar no mesmo contexto rolável/visual dos cards quando dependerem da posição desses cards;
 - os conectores de primos não possuem linha inferior;
 - a malha usa `touchStart`, `touchMove` e `touchEnd` para swipe direcional e preview por deslocamento temporário (`dragOffset`).
+
+Regras atuais dos cards mobile:
+
+- `VitalLines` deve exibir apenas ano de nascimento/falecimento;
+- `MainPersonCard` não deve exibir badge **VOCÊ** no card principal;
+- `PersonCard` pode manter labels específicas como **PAI** e **MÃE**;
+- `PersonAvatar` deve privilegiar `foto_principal_url` e, na ausência de foto, usar fallback visual por `genero` (`homem`, `mulher`, `pet`) via lógica compartilhada com `FamilyTreeVisualCards`;
+- não usar iniciais como fallback principal quando a lógica visual por `genero` estiver disponível.
 
 Cuidados:
 
@@ -575,6 +588,7 @@ Responsabilidade:
 
 - renderizar os cards visuais compartilhados pelo Mapa Familiar;
 - prover `VisualGroup`, `VisualPersonCard` e `VisualEmptyCard`;
+- prover dados visuais reutilizáveis por `MobileFamilyTreeView`, incluindo `birthYearLine`, `deathYearLine` e avatar por `genero`;
 - exibir cards mini, compactos, horizontais e centrais conforme `variant`;
 - aplicar pílulas de grupo, botão `+/-`, modo expandido e limite inicial;
 - renderizar conectores internos entre cônjuges quando há pareamento explícito;

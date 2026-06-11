@@ -1,9 +1,9 @@
 # Guia de UX e Layout - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero` e regras visuais de cônjuges.
+> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero`, cards mobile com anos, card central sem badge, conectores roláveis e regras visuais de cônjuges.
 
 ## Objetivo
 
@@ -52,7 +52,10 @@ Estado confirmado/esperado da frente atual:
 - Cônjuge da pessoa central permanece visível quando existir.
 - Cônjuges de tataravós, bisavós e avós aparecem por padrão.
 - Cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**.
-- A coluna `pessoas.genero` passa a orientar avatares do Mapa Familiar: `homem`, `mulher` e `pet`.
+- A coluna `pessoas.genero` passa a orientar avatares do Mapa Familiar e do fallback mobile compartilhado: `homem`, `mulher` e `pet`.
+- No mobile, cards da Minha Árvore e do fallback do Mapa Familiar exibem apenas anos nas linhas vitais.
+- No mobile, o card principal não exibe badge **VOCÊ**, mas Pai/Mãe mantêm labels próprios.
+- No mobile, conectores entre ancestrais, Pai/Mãe e pessoa central devem acompanhar o scroll da tela Central.
 - Se `genero` tiver sido criada manualmente no Supabase, a migration e a tipagem de `Pessoa` precisam ser conferidas.
 
 Regra documental desta revisão:
@@ -431,9 +434,25 @@ O componente usa pré-visualização da próxima tela durante o gesto de swipe: 
 - primos usam duas colunas em 320px e três colunas a partir de 360px quando couber;
 - conectores de ancestrais ligam tataravós → bisavós → avós → Pai/Mãe;
 - linhas laterais de Pai/Mãe acompanham o scroll da tela Central;
+- conectores de avós → Pai/Mãe devem estar no mesmo contexto rolável/visual dos cards centrais para não ficarem soltos quando o usuário desliza a área central para cima;
+- cards mobile exibem apenas anos nas linhas de nascimento/falecimento;
+- o card principal mobile não exibe badge **VOCÊ**;
+- avatares mobile usam foto real ou fallback por `genero` (`homem`, `mulher`, `pet`);
 - tios conectam ao ramo de avós e aos primos;
 - primos não têm linha inferior, pois são fim de ramo;
 - cards e containers usam fundo opaco/z-index/overflow controlado para mascarar linhas internas.
+
+#### Regras de cards e avatares no mobile
+
+- linhas vitais devem mostrar somente o ano ao lado dos ícones `Star` e `Cross`;
+- não exibir local, cidade ou UF nos cards mobile;
+- a ausência de ano usa fallback textual discreto, como **Nascimento não informado** ou **Falecimento não informado**;
+- o card principal da pessoa central não deve mostrar badge **VOCÊ**;
+- labels de relação, como **PAI** e **MÃE**, continuam válidos;
+- avatar com `foto_principal_url` usa foto real;
+- avatar sem foto usa fallback visual por `genero`: homem, mulher ou pet;
+- pet não deve usar avatar humano;
+- não usar iniciais como fallback principal quando o fallback visual por `genero` estiver disponível.
 
 #### Regras de UX
 
@@ -1040,6 +1059,14 @@ desktop
 - drawers e menus mobile devem considerar safe area.
 
 ### 8.3 Árvore no mobile
+
+Regras específicas atuais:
+
+- `/minha-arvore` mobile e `/mapa-familiar` mobile compartilham `MobileFamilyTreeView`;
+- validar sempre a tela Central com scroll vertical, porque Pai/Mãe e conectores de ancestrais precisam permanecer alinhados;
+- cards mobile devem priorizar leitura compacta: nome curto, avatar visual e apenas ano nas linhas vitais;
+- bottom navigation não pode cobrir cards, conectores ou botões de grupo;
+- o preview de swipe não deve disparar quando o gesto for scroll interno legítimo.
 
 - `/minha-arvore` mantém canvas com pan/zoom;
 - `/genealogia` e `/visao-completa` usam chips mobile por geração/bloco;
