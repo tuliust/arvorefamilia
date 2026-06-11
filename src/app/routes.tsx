@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, useLocation } from 'react-router';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
+import { getTreeViewModeFromPath } from './components/FamilyTree/treeViewMode';
 
 const Home = React.lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })));
 const BuscaResultados = React.lazy(() => import('./pages/BuscaResultados').then((module) => ({ default: module.BuscaResultados })));
@@ -30,7 +31,7 @@ const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm')
 const AdminRelacionamentos = React.lazy(() => import('./pages/admin/AdminRelacionamentos').then((module) => ({ default: module.AdminRelacionamentos })));
 const AdminRelacionamentoForm = React.lazy(() => import('./pages/admin/AdminRelacionamentoForm').then((module) => ({ default: module.AdminRelacionamentoForm })));
 const AdminImportacao = React.lazy(() => import('./pages/admin/AdminImportacao').then((module) => ({ default: module.AdminImportacao })));
-const AdminMigrationTool = React.lazy(() => import('./pages/admin/Admin' + 'MigrarDados').then((module) => ({ default: module.AdminMigrarDados })));
+const AdminMigrationTool = React.lazy(() => import('./pages/admin/AdminMigrarDados').then((module) => ({ default: module.AdminMigrarDados })));
 const AdminDiagnostico = React.lazy(() => import('./pages/admin/AdminDiagnostico').then((module) => ({ default: module.AdminDiagnostico })));
 const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade').then((module) => ({ default: module.AdminIntegridade })));
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
@@ -165,23 +166,35 @@ function RedirectToMapaFamiliar() {
   return <Navigate to={`/mapa-familiar${location.search}`} replace />;
 }
 
-function FamilyHorizontalMapRoute() {
+function TreeHomeShell() {
+  const location = useLocation();
+  const treeViewMode = getTreeViewModeFromPath(location.pathname);
+
   return (
-    <div className="contents" data-tree-route-view="mapa-familiar-horizontal">
+    <div
+      className="contents"
+      data-tree-route-view={treeViewMode === 'mapa-familiar-horizontal' ? 'mapa-familiar-horizontal' : undefined}
+    >
       <Home />
     </div>
   );
 }
 
-const adminMigrationPath = '/admin/' + 'migrar-dados';
+const adminMigrationPath = '/admin/migrar-dados';
+const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
 
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
-  { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/mapa-familiar', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/mapa-familiar-horizontal', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
-  { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  {
+    element: treeHomeRouteElement,
+    children: [
+      { path: 'minha-arvore' },
+      { path: 'mapa-familiar' },
+      { path: 'mapa-familiar-horizontal' },
+      { path: 'genealogia' },
+      { path: 'visao-completa' },
+    ],
+  },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
