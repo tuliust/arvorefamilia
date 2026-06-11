@@ -1,6 +1,8 @@
 import React from 'react';
+import { toast } from 'sonner';
 
 import type { Pessoa, Relacionamento } from '../../types';
+import type { FamilyTreeActions } from './FamilyTree';
 import {
   VisualEmptyCard,
   VisualGroup,
@@ -11,6 +13,14 @@ import {
   type MobileFamilyBranch,
 } from './mobileFamilyTreeModel';
 import type { DirectRelativeFilters, DirectRelativeGroup } from './types';
+import {
+  buildTreeExportFilename,
+  captureElementToCanvas,
+  downloadCanvasAsPng,
+  exportCanvasAsPdf,
+  openTreePrintWindow,
+  printCanvas,
+} from './utils/treeExport';
 
 interface DesktopFamilyMapViewProps {
   pessoas: Pessoa[];
@@ -1115,7 +1125,7 @@ function DirectPersonCard({
   );
 }
 
-export function DesktopFamilyMapView({
+function DesktopFamilyMapViewComponent({
   pessoas,
   relacionamentos,
   centralPersonId,
@@ -1126,8 +1136,9 @@ export function DesktopFamilyMapView({
   sidebarCollapsed = false,
   onScrollStateChange,
   onDirectRelationRenderedCounts,
-}: DesktopFamilyMapViewProps) {
+}: DesktopFamilyMapViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
+  const exportRootRef = React.useRef<HTMLDivElement | null>(null);
   const scrollStateRef = React.useRef(false);
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
@@ -1699,6 +1710,79 @@ export function DesktopFamilyMapView({
   ]);
 
   const effectiveScale = responsiveScale * manualZoom;
+  const captureFamilyMap = React.useCallback(async () => {
+    if (!exportRootRef.current) {
+      throw new Error('Área do Mapa Familiar não encontrada para exportação.');
+    }
+
+    return captureElementToCanvas(exportRootRef.current);
+  }, []);
+  const handleZoomIn = React.useCallback(() => {
+    setManualZoom((currentZoom) => Math.min(
+      familyMapLayout.canvas.maxZoom,
+      Number((currentZoom + familyMapLayout.canvas.zoomStep).toFixed(2)),
+    ));
+  }, [familyMapLayout.canvas]);
+  const handleZoomOut = React.useCallback(() => {
+    setManualZoom((currentZoom) => Math.max(
+      familyMapLayout.canvas.minZoom,
+      Number((currentZoom - familyMapLayout.canvas.zoomStep).toFixed(2)),
+    ));
+  }, [familyMapLayout.canvas]);
+  const handleSaveImage = React.useCallback(async () => {
+    try {
+      const canvas = await captureFamilyMap();
+      downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar', 'png'));
+    } catch (error) {
+      console.error('Erro ao exportar imagem do Mapa Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Familiar.');
+    }
+  }, [captureFamilyMap]);
+  const handleSavePdf = React.useCallback(async () => {
+    try {
+      const canvas = await captureFamilyMap();
+      await exportCanvasAsPdf(
+        canvas,
+        buildTreeExportFilename('mapa-familiar', 'pdf'),
+        'Mapa Familiar',
+      );
+    } catch (error) {
+      console.error('Erro ao exportar PDF do Mapa Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Familiar.');
+    }
+  }, [captureFamilyMap]);
+  const handlePrint = React.useCallback(async () => {
+    const printWindow = openTreePrintWindow();
+
+    try {
+      const canvas = await captureFamilyMap();
+      printCanvas(canvas, 'Imprimir Mapa Familiar', printWindow);
+    } catch (error) {
+      if (!printWindow.closed) printWindow.close();
+      console.error('Erro ao imprimir o Mapa Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Familiar.');
+    }
+  }, [captureFamilyMap]);
+  const handleDirectExport = React.useCallback(() => {
+    toast.info('O Mapa Familiar exporta diretamente a superfície panorâmica atual.');
+    void handleSaveImage();
+  }, [handleSaveImage]);
+
+  React.useImperativeHandle(ref, () => ({
+    zoomIn: handleZoomIn,
+    zoomOut: handleZoomOut,
+    print: handlePrint,
+    savePdf: handleSavePdf,
+    saveImage: handleSaveImage,
+    startAreaSelection: handleDirectExport,
+  }), [
+    handleDirectExport,
+    handlePrint,
+    handleSaveImage,
+    handleSavePdf,
+    handleZoomIn,
+    handleZoomOut,
+  ]);
 
   return (
     <div
@@ -1709,6 +1793,8 @@ export function DesktopFamilyMapView({
       style={{ backgroundColor: familyMapLayout.canvas.background }}
     >
       <div
+        ref={exportRootRef}
+        data-family-map-export-root="true"
         className="relative z-10 mx-auto"
         style={{
           width: familyMapLayout.canvas.width * effectiveScale,
@@ -1790,3 +1876,8 @@ export function DesktopFamilyMapView({
     </div>
   );
 }
+
+export const DesktopFamilyMapView = React.forwardRef<
+  FamilyTreeActions,
+  DesktopFamilyMapViewProps
+>(DesktopFamilyMapViewComponent);

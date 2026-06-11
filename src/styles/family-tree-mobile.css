@@ -1,48 +1,4 @@
 @media (max-width: 767px) {
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] {
-    padding: 18px 16px !important;
-  }
-
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > button,
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > div:first-of-type {
-    width: 112px !important;
-    height: 112px !important;
-  }
-
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] > div:last-of-type {
-    margin-top: 18px !important;
-  }
-
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] h3 {
-    font-size: 18px !important;
-    line-height: 1.15 !important;
-  }
-
-  .family-tree-export-root .react-flow__node-personNode > .relative > div[style*="width: 320px"] h3 + div {
-    margin-top: 12px !important;
-    line-height: 1.25 !important;
-  }
-  .family-tree-export-root [aria-label="Mover árvore para cima"] {
-    position: fixed !important;
-    top: calc(env(safe-area-inset-top, 0px) + 14.25rem) !important;
-    left: 50vw !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    z-index: 9999 !important;
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-  }
-
-  .family-tree-export-root [aria-label="Mover árvore para baixo"] {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 11.75rem);
-    left: 50vw;
-    right: auto;
-    transform: translateX(-50%);
-  }
-
   .family-tree-export-root .react-flow__node-directFamilyLabelNode > div[aria-label^="A árvore de"] {
     transform: translateY(-18px) scale(1.16);
     transform-origin: center top;

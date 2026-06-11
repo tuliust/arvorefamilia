@@ -475,6 +475,7 @@ export function HomeTreeSection({
         />
       ) : canRenderTree && treeViewMode === 'mapa-familiar' ? (
         <DesktopFamilyMapView
+          ref={familyTreeRef}
           pessoas={pessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
           relacionamentos={relacionamentos}

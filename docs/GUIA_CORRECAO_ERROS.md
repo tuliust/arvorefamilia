@@ -1175,7 +1175,7 @@ Correção esperada:
 - preservar `?pessoa=...` ao navegar entre views;
 - manter a pendência `DOC-015` aberta enquanto não for verificado.
 
-#Estado observado na revisão atual: `/mapa-familiar` ainda não está em `GLOBAL_SEARCH_PAGES`.
+#Estado atual: `/mapa-familiar` está em `GLOBAL_SEARCH_PAGES`.
 
 ## 19.2 `Mapa Familiar` não pode ser favoritado
 
@@ -1193,7 +1193,7 @@ Correção esperada:
 - usar `entity_type = page`;
 - não salvar zoom, filtro ou estado de grupos como favorito.
 
-#Estado observado na revisão atual: `/mapa-familiar` ainda não está em `FAVORITE_PAGES`.
+#Estado atual: `/mapa-familiar` está em `FAVORITE_PAGES`.
 
 ## 19.3 Exportação do Mapa Familiar falha ou não existe
 
@@ -1208,7 +1208,11 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 Estado atual:
 
 - a exportação canônica foi consolidada para as views ReactFlow;
-- `/mapa-familiar` usa HTML/CSS/SVG e exige decisão técnica específica;
+- `/mapa-familiar` usa HTML/CSS/SVG e deve possuir `[data-family-map-export-root="true"]`;
+- `treeExport.ts` deve resolver esse root antes de `.react-flow`;
+- botões/overlays que não pertencem ao artefato devem usar `data-tree-export-ignore="true"`;
+- manter `useCORS: true` e `allowTaint: false`;
+- verificar erros de CORS em fotos externas e manter mensagem amigável ao usuário;
 - não declarar exportação completa do Mapa Familiar sem implementação/QA próprios.
 
 Correção futura possível:

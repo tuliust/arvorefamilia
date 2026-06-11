@@ -504,3 +504,15 @@ Validar manualmente, sem alterar dados reais:
 - troca entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` mantém navegação client-side;
 - `/mapa-familiar?pessoa=...` preserva a pessoa central;
 - `/mapa-familiar` em mobile usa fallback seguro e não quebra a navegação inferior.
+
+### Navegação contextual entre árvore e perfil
+
+As rotas `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` adicionam `?voltar=` ao abrir `/pessoa/:id`. O perfil valida esse retorno contra rotas internas permitidas, usa fallback seguro quando necessário e preserva o parâmetro ao navegar entre parentes.
+
+```txt
+/mapa-familiar?pessoa=A
+-> /pessoa/B?voltar=%2Fmapa-familiar%3Fpessoa%3DA
+-> /mapa-familiar?pessoa=A
+```
+
+Status: **Concluído tecnicamente; manter QA manual de navegação por view**.

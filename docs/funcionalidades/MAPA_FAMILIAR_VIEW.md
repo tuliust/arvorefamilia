@@ -746,16 +746,19 @@ O Mapa Familiar não é ReactFlow.
 Estado técnico atual:
 
 - `MobileTreeControlsPortal.tsx` reconhece `/mapa-familiar` como rota de árvore;
-- a captura tenta primeiro encontrar `.react-flow` dentro de `data-export-root="family-tree"`;
-- quando `.react-flow` não existe, o fluxo usa o próprio `data-export-root="family-tree"` como fallback de captura;
-- por isso, o Mapa Familiar pode entrar no fluxo de imagem/PDF como HTML/CSS/SVG, mas essa captura ainda precisa de QA visual específico.
+- `DesktopFamilyMapView` expõe `FamilyTreeActions` para PNG, PDF, impressão e zoom;
+- o canvas escalado possui `data-family-map-export-root="true"`;
+- `treeExport.ts` resolve alvo explícito, root do Mapa Familiar, `.react-flow` e fallback;
+- a captura inclui cards HTML/CSS, conectores SVG, paleta, pessoa central, grupos expandidos/recolhidos e escala visual atual;
+- controles e botões auxiliares marcados com `data-tree-export-ignore="true"` ficam fora da captura;
+- o portal mobile usa o mesmo helper canônico e também oferece impressão.
 
 Consequências:
 
-- não documentar a exportação do Mapa Familiar como equivalente à exportação ReactFlow;
-- não assumir que zoom, conectores SVG, sombras, fontes e fotos serão capturados com a mesma fidelidade das views ReactFlow sem teste;
-- se a captura do Mapa Familiar falhar ou sair incompleta, revisar `MobileTreeControlsPortal.tsx`, `treeExport.ts` e o container `data-export-root`;
-- manter pendência em `docs/funcionalidades/EXPORTACAO_ARVORE.md` ou `PLANO_PROXIMOS_PASSOS.md` até QA/decisão explícita.
+- a seleção retangular continua exclusiva das views ReactFlow;
+- o Mapa Familiar exporta diretamente a superfície panorâmica atual/capturável;
+- a exportação não é server-side, não é multipágina automática, não salva no Supabase Storage e não calcula conteúdo fora da view;
+- QA visual autenticado ainda deve conferir proporção, fotos externas, sombras, conectores e legibilidade.
 
 ---
 
@@ -774,14 +777,24 @@ Estado observado na revisão atual:
 
 - `/mapa-familiar` já existe como rota/view principal da árvore;
 - a documentação de favoritos já define o payload esperado para página interna;
-- o código atual ainda precisa confirmar/incluir `Mapa Familiar` em `FAVORITE_PAGES`;
-- o código atual ainda precisa confirmar/incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES`.
+- `Mapa Familiar` está incluído em `FAVORITE_PAGES`;
+- `Mapa Familiar` está incluído em `GLOBAL_SEARCH_PAGES`.
+
+### 18.1 Navegação preservando contexto
+
+Ao abrir um perfil a partir do Mapa Familiar, a rota usa `?voltar=` para preservar a pessoa central e a query da view. A navegação entre parentes mantém o mesmo retorno e valores inválidos caem em fallback interno seguro.
+
+```txt
+/mapa-familiar?pessoa=A
+-> /pessoa/B?voltar=%2Fmapa-familiar%3Fpessoa%3DA
+-> /mapa-familiar?pessoa=A
+```
 
 Regras:
 
 - favoritar `/mapa-familiar` deve salvar a página canônica, não a pessoa, zoom, filtros ou grupos expandidos;
 - a busca global deve apontar para `/mapa-familiar` como página, sem interferir em busca de pessoas;
-- manter `DOC-015` aberto até a inclusão ser feita e validada no código.
+- `DOC-015` permanece fechado enquanto busca global e favoritos mantiverem a rota canônica.
 
 ---
 

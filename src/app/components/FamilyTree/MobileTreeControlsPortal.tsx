@@ -7,6 +7,7 @@ import {
   FileImage,
   FileText,
   Maximize2,
+  Printer,
   Search,
   SlidersHorizontal,
   X,
@@ -18,6 +19,9 @@ import {
   captureElementToCanvas,
   downloadCanvasAsPng,
   exportCanvasAsPdf,
+  openTreePrintWindow,
+  printCanvas,
+  resolveTreeExportTarget,
 } from './utils/treeExport';
 
 type TreeRouteConfig = {
@@ -56,10 +60,6 @@ function getTreeRoot() {
   return document.querySelector('[data-export-root="family-tree"]') as HTMLElement | null;
 }
 
-function getTreeCaptureElement() {
-  return document.querySelector('[data-export-root="family-tree"] .react-flow') as HTMLElement | null;
-}
-
 function clickTreeButton(label: string) {
   const root = getTreeRoot();
   const button = root?.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
@@ -79,13 +79,25 @@ function runTreeButton(label: string, fallbackMessage: string) {
 }
 
 async function captureTreeCanvas() {
-  const element = getTreeCaptureElement() ?? getTreeRoot();
+  const element = resolveTreeExportTarget();
 
   if (!element) {
     throw new Error('Área da árvore não encontrada.');
   }
 
   return captureElementToCanvas(element);
+}
+
+async function printTree() {
+  const printWindow = openTreePrintWindow();
+
+  try {
+    const canvas = await captureTreeCanvas();
+    printCanvas(canvas, getCurrentTreeRoute().title, printWindow);
+  } catch (error) {
+    if (!printWindow.closed) printWindow.close();
+    throw error;
+  }
 }
 
 async function saveTreeImage() {
@@ -195,6 +207,10 @@ export function MobileTreeControlsPortal() {
             <button type="button" onClick={() => void runAction(saveTreeImage, 'Imagem gerada.')}>
               <FileImage className="h-4 w-4" />
               Imagem
+            </button>
+            <button type="button" onClick={() => void runAction(printTree)}>
+              <Printer className="h-4 w-4" />
+              Imprimir
             </button>
             <button type="button" onClick={() => toast.info('Seleção manual de área permanece disponível na versão desktop.')}>
               <Download className="h-4 w-4" />

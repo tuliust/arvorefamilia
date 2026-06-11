@@ -3,13 +3,13 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
 > Tipo: documentação funcional e técnica da exportação da árvore.
-> Status: revisado para separar fluxo canônico já implementado das views ReactFlow/mobile e pendência real `DOC-016` de exportação do Mapa Familiar HTML/CSS/SVG.
+> Status: fluxo canônico implementado para views ReactFlow, fallback mobile e Mapa Familiar HTML/CSS/SVG; manter QA manual de fidelidade visual.
 
 ---
 
 ## 1. Objetivo
 
-A exportação permite gerar imagem, PDF ou impressão a partir das views da árvore suportadas pelo fluxo canônico de captura. No estado atual, o fluxo consolidado atende principalmente às views ReactFlow; a rota `/mapa-familiar`, por ser HTML/CSS/SVG e não ReactFlow, permanece documentada como limitação/pendência de decisão.
+A exportação permite gerar imagem, PDF ou impressão a partir das quatro views da árvore. As views ReactFlow mantêm seleção retangular no desktop; o Mapa Familiar usa captura direta de sua superfície HTML/CSS/SVG panorâmica.
 
 O escopo atual é:
 
@@ -96,30 +96,26 @@ Fora do escopo atual:
 
 A view **Mapa Familiar** usa `DesktopFamilyMapView.tsx`, cards HTML/CSS de `FamilyTreeVisualCards.tsx` e conectores SVG posicionados por âncoras.
 
-No estado atual, ela **não deve ser documentada como plenamente coberta pela exportação canônica** da árvore ReactFlow. Esta não é mais uma divergência documental: é uma pendência real de decisão/implementação (`DOC-016`).
+No estado atual, ela participa do helper canônico por um root estável.
 
 Regra documental:
 
 ```txt
-/minha-arvore, /genealogia e /visao-completa usam o fluxo canônico atual de exportação da árvore.
- /mapa-familiar exige decisão técnica específica antes de ser declarado exportável.
+/minha-arvore, /genealogia e /visao-completa usam captura ReactFlow.
+/mapa-familiar usa [data-family-map-export-root="true"] para capturar HTML/CSS/SVG.
 ```
 
-Motivo técnico:
+Comportamento técnico:
 
 - `DesktopFamilyMapView` não é canvas ReactFlow;
 - os conectores são SVG absoluto;
 - o layout possui escala responsiva e zoom manual por `Ctrl + scroll`;
 - grupos laterais e grupos expansíveis alteram a altura/posição real da superfície;
-- a exportação precisa decidir se captura a viewport visível, o canvas lógico completo ou uma área selecionada.
+- a captura preserva pessoa central, estado expandido/recolhido, paleta e escala visual atual;
+- botões de expansão são marcados com `data-tree-export-ignore="true"` e não aparecem no artefato;
+- seleção retangular permanece exclusiva do ReactFlow; no Mapa Familiar a ação correspondente exporta diretamente a superfície panorâmica atual.
 
-Pendência real relacionada:
-
-```txt
-DOC-016 - decidir se a exportação canônica deve capturar a view HTML/SVG panorâmica do Mapa Familiar.
-```
-
-Enquanto essa decisão não for tomada, a UI não deve prometer exportação completa do Mapa Familiar.
+`DOC-016` foi concluído tecnicamente. Permanece apenas QA manual de fidelidade visual, sem promessa de árvore completa server-side, PDF multipágina, Storage ou cálculo fora da view.
 
 ---
 

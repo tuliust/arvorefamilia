@@ -14,6 +14,19 @@ export interface CaptureElementOptions {
   ignoreElements?: (node: Element) => boolean;
 }
 
+export function resolveTreeExportTarget(
+  explicitTarget?: HTMLElement | null,
+  searchRoot: ParentNode = document
+) {
+  if (explicitTarget) return explicitTarget;
+
+  return (
+    searchRoot.querySelector('[data-family-map-export-root="true"]') ||
+    searchRoot.querySelector('.react-flow') ||
+    searchRoot.querySelector('[data-export-root="family-tree"]')
+  ) as HTMLElement | null;
+}
+
 function getSafeErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
@@ -66,6 +79,7 @@ export function getDefaultTreeExportIgnoreElements(node: Element) {
   return Boolean(
     elementNode.closest?.('.react-flow__controls') ||
     elementNode.closest?.('.react-flow__minimap') ||
+    elementNode.closest?.('[data-tree-export-ignore="true"]') ||
     elementNode.closest?.('[data-tree-node-menu="true"]') ||
     elementNode.closest?.('[data-tree-selection-overlay="true"]') ||
     elementNode.closest?.('[data-tree-legend="true"]')
@@ -96,6 +110,7 @@ export async function captureElementToCanvas(
         clonedDocument.documentElement.classList.add('is-exporting-family-tree');
         injectExportSafeCss(clonedDocument);
         const clonedRoot =
+          clonedDocument.querySelector('[data-family-map-export-root="true"]') ||
           clonedDocument.querySelector('[data-export-root="family-tree"]') ||
           clonedDocument.querySelector('.react-flow') ||
           clonedDocument.body;

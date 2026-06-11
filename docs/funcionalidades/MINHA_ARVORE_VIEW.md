@@ -645,7 +645,18 @@ Regras:
 
 Observação:
 
-- exportação do **Mapa Familiar** é tema separado e deve ser documentada em `MAPA_FAMILIAR_VIEW.md` e `EXPORTACAO_ARVORE.md`.
+- o **Mapa Familiar** usa o mesmo contrato de ações, mas captura diretamente seu root HTML/CSS/SVG; seleção retangular permanece exclusiva do ReactFlow.
+
+### 20.1 Navegação preservando contexto
+
+Ao abrir `/pessoa/:id` a partir de `/minha-arvore`, `/mapa-familiar`, `/genealogia` ou `/visao-completa`, a URL recebe `?voltar=` com a view de origem. O botão **Voltar para árvore** e a navegação entre parentes preservam esse retorno, com fallback interno seguro para valores inválidos.
+
+```txt
+/mapa-familiar?pessoa=A
+-> /pessoa/B?voltar=%2Fmapa-familiar%3Fpessoa%3DA
+-> Voltar para árvore
+-> /mapa-familiar?pessoa=A
+```
 
 ---
 

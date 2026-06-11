@@ -56,13 +56,7 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 
 | ID | Documento/origem | Tipo | Ação necessária | Status |
 |---|---|---|---|---|
-| DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. | Aberto |
-| DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
-| DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
-| DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. O `MobileTreeControlsPortal` reconhece `/mapa-familiar`, mas o helper de captura ainda procura `.react-flow`, portanto a exportação HTML/SVG precisa de implementação/QA próprios. | Aberto confirmado |
-| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Código atual já possui reorganização do modo wide em `DesktopFamilyMapView.tsx`. Validar visualmente, com dados reais, se tios/primos ocupam as laterais sem invadir Pai/Mãe/Pessoa Central, sem cortar nas bordas e sem perder proporção quando o painel lateral é colapsado. | Parcial / QA aberto |
-| DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom, layout wide/painel colapsado e avatares por `genero`. | Aberto |
-| DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Código atual já passa `sidebarCollapsed` para `DesktopFamilyMapView` e usa `getFamilyMapLayout(true)`. Validar visualmente que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Parcial / QA aberto |
+| DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | **1. Mapa Familiar - QA visual e correções finais.** Validar alinhamento panorâmico, conectores, grupos laterais, painel colapsado, centralização, colisões, margens, desktop/tablet, exportação e resoluções reais com dados autenticados. | Aberto - pendência principal |
 
 Regras:
 
@@ -83,7 +77,7 @@ Na revisão atual, as divergências anteriores foram fechadas:
 - IA/Curiosidades já foi validada no escopo funcional atual;
 - Google OAuth/Agenda já foi reclassificado como operação temporária em modo **Testing**, com cadastro manual de test users no Google Cloud até a autorização externa.
 
-Portanto, busca/favoritos do Mapa Familiar, versionamento básico de `pessoas.genero`, persistência de `pessoas.complemento`, documentação do Fórum, validação de IA/Curiosidades e operação temporária de Google OAuth deixam de ser pendências abertas. Permanecem apenas QA visual, decisões de produto, implementação futura de exportação do Mapa Familiar e refatorações técnicas listadas na tabela principal.
+Portanto, busca/favoritos do Mapa Familiar, versionamento básico de `pessoas.genero`, persistência de `pessoas.complemento`, documentação do Fórum, validação de IA/Curiosidades, operação temporária de Google OAuth, navegação contextual e exportação do Mapa Familiar deixam de ser pendências abertas. Permanece como pendência principal apenas o QA visual autenticado do Mapa Familiar; CSS/layout residual é manutenção incremental.
 
 
 ---
@@ -108,6 +102,11 @@ Portanto, busca/favoritos do Mapa Familiar, versionamento básico de `pessoas.ge
 | DOC-023 | `FamilyTreeVisualCards.tsx` / `MobileFamilyTreeView.tsx` | Avatares mobile passaram a reutilizar a lógica visual de foto real e fallback por `genero` (`homem`, `mulher`, `pet`). | Concluído tecnicamente; migration de `pessoas.genero` versionada em `20260611003558_add_genero_to_pessoas.sql`. |
 | DOC-015 | `/mapa-familiar` busca/favoritos | `Mapa Familiar` foi incluído em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, permitindo busca global e favorito de página para a rota canônica `/mapa-familiar`. | Concluído. |
 | DOC-018 | `pessoas.genero` | A coluna `public.pessoas.genero` foi confirmada no banco e versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com comentário e índice parcial `idx_pessoas_genero`. | Concluído tecnicamente; manter coerência entre `genero` visual e `humano_ou_pet` sem substituir regra semântica. |
+| DOC-007 / DOC-008 | CSS/layout da árvore | Overrides mobile comprovadamente duplicados foram removidos. O restante permanece escopado e deve migrar incrementalmente para componentes, tokens ou cálculo estrutural somente com QA visual. | Parcialmente resolvido; manter manutenção incremental sem bloquear MVP. |
+| DOC-016 | `/mapa-familiar` exportação | `DesktopFamilyMapView` passou a expor `FamilyTreeActions` e a capturar seu root HTML/CSS/SVG específico para PNG, PDF e impressão. O helper canônico resolve alvo explícito, Mapa Familiar, ReactFlow e fallback, mantendo `useCORS: true` e `allowTaint: false`. | Concluído tecnicamente; manter QA manual de exportação. |
+| DOC-017 / DOC-020 | laterais e painel colapsado do Mapa Familiar | Consolidados em `DOC-014`, pois dependem do mesmo QA visual autenticado com dados reais. | Reclassificados no QA visual principal. |
+| DOC-019 | documentação do Mapa Familiar | Documentação canônica sincronizada com navegação contextual, exportação HTML/CSS/SVG e manutenção incremental de layout. | Concluído nesta revisão. |
+| DOC-024 | Navegação preservando contexto da view | Perfis abertos a partir de `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` recebem `?voltar=...`; retornos e navegação entre parentes preservam a view com fallback interno seguro. | Concluído tecnicamente; manter QA manual de navegação por view. |
 
 ---
 
@@ -324,7 +323,14 @@ A camada `src/styles/family-tree-visual-polish.css` acumulou ajustes de:
 - estabilização de tooltip em modal;
 - overrides antigos relacionados à home pública.
 
-Critério de aceite futuro:
+Estado após auditoria:
+
+- regras mobile duplicadas e integralmente sobrescritas foram removidas de `family-tree-mobile.css`;
+- `family-tree-visual-polish.css` continua escopado por root/view nas regras da árvore;
+- seletores frágeis ainda existentes não foram migrados agressivamente sem QA visual autenticado;
+- a dívida deixou de ser bloqueio do MVP e passa a ser manutenção incremental.
+
+Direção de manutenção:
 
 - mover regras estáveis para componentes, tokens ou cálculos de layout;
 - reduzir seletores baseados em `style*="width: 340px"` e `translate(...)`;
@@ -393,7 +399,7 @@ Critérios para considerar a pendência fechada:
 | Notificações avançadas | Push real, WhatsApp real, fila/retry avançado e cron externo automatizado. | Pós-MVP. |
 | WhatsApp avançado | Privacidade forte em banco/API e log seguro de clique. | Pós-MVP. |
 | Timeline avançada | Upload por evento, privacidade por evento e exportação PDF. | Pós-MVP. |
-| Exportação avançada | Exportar árvore completa e avaliar captura do Mapa Familiar HTML/SVG. | Pós-MVP. |
+| Exportação avançada | Exportar árvore completa, PDF multipágina ou processamento server-side. A captura atual do Mapa Familiar HTML/CSS/SVG já está implementada. | Pós-MVP. |
 | Parentesco avançado | Integração visual direta na árvore, Genealogia, Mapa Familiar e Visão Completa. | Pós-MVP. |
 | Fórum avançado | Moderação ampliada, busca refinada, anexos e filtros adicionais. | Pós-MVP. |
 | Home dinâmica | Aniversários, memórias do dia, novidades e destaques. | Pós-MVP. |
@@ -445,7 +451,7 @@ Critérios para considerar a pendência fechada:
 | 6 | `docs/GUIA_UX_LAYOUT.md` | Revisado nesta rodada | Inclui UX do Mapa Familiar, grupos expansíveis, laterais, zoom, avatares e cônjuges. |
 | 7 | `docs/GUIA_COMPONENTES.md` | Revisado nesta rodada | Inclui `DesktopFamilyMapView`, `FamilyTreeVisualCards`, `VisualGroup`, conectores e avatares por `genero`. |
 | 8 | `docs/funcionalidades/FORUM.md` | Revisar conforme DOC-006 | Pendência de filtros tipo/status na home do fórum. |
-| 9 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Revisar conforme DOC-016 | Decidir/documentar exportação do Mapa Familiar. |
+| 9 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Revisado nesta rodada | Documenta exportação HTML/CSS/SVG do Mapa Familiar e fechamento técnico de DOC-016. |
 | 10 | `docs/funcionalidades/FAVORITOS.md` | Revisar conforme DOC-015 | Sincronizar Mapa Familiar com favoritos, se implementado. |
 
 ---

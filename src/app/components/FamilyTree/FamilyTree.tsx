@@ -34,6 +34,7 @@ import {
   exportCanvasAsPdf,
   openTreePrintWindow,
   printCanvas,
+  resolveTreeExportTarget,
 } from './utils/treeExport';
 import {
   DEFAULT_EDGE_FILTERS,
@@ -811,7 +812,7 @@ function createDebugBoundsNode({
 }
 
 function getExportableFlowElement(container: HTMLDivElement | null) {
-  return container?.querySelector('.react-flow') as HTMLElement | null;
+  return container ? resolveTreeExportTarget(undefined, container) : null;
 }
 
 function clampViewportCoordinate(value: number, min: number, max: number) {

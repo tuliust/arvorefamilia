@@ -507,6 +507,10 @@ Não fazer:
 
 ## 19. Documentos relacionados
 
+### Navegação para pessoas na árvore
+
+Quando uma ação de IA/Curiosidades troca a pessoa central, ela preserva a view atual entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa`. Se abrir `/pessoa/:id`, o fluxo usa `?voltar=` para retornar com segurança à rota e query originais.
+
 ```txt
 docs/README.md
 docs/GUIA_IMPLEMENTACOES.md

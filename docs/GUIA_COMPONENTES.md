@@ -401,7 +401,7 @@ Rotas onde aparece:
 /visao-completa
 ```
 
-Observação: no código atual, `/mapa-familiar` está registrado em `TREE_ROUTES` do portal mobile. A captura tenta primeiro o canvas ReactFlow (`.react-flow`) e, quando ele não existe, usa o elemento raiz marcado com `data-export-root="family-tree"`. Isso permite tentativa de captura do Mapa Familiar HTML/CSS/SVG, mas a qualidade visual ainda deve ser validada por QA manual.
+Observação: `/mapa-familiar` está registrado em `TREE_ROUTES` e possui root específico `data-family-map-export-root="true"`. `treeExport.ts` resolve esse alvo antes de `.react-flow`, permitindo captura canônica HTML/CSS/SVG para PNG, PDF e impressão. A fidelidade visual ainda deve ser validada por QA manual.
 
 Cuidados:
 
@@ -1404,4 +1404,3 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 ```
 
 Este guia deve manter apenas o inventário de componentes e suas responsabilidades. Mudanças funcionais profundas do Mapa Familiar devem atualizar primeiro o documento funcional canônico.
-

@@ -462,6 +462,7 @@ export function VisualGroup({
       {canExpand && (
         <button
           type="button"
+          data-tree-export-ignore="true"
           onClick={handleToggle}
           aria-label={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}
           title={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}

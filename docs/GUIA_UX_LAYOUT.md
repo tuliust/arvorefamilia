@@ -43,6 +43,7 @@ Estado confirmado/esperado da frente atual:
 - `/minha-arvore` mobile usa `MobileFamilyTreeView.tsx`.
 - `/mapa-familiar` desktop/tablet usa `DesktopFamilyMapView.tsx`.
 - `/mapa-familiar` mobile usa `MobileFamilyTreeView.tsx` como fallback seguro.
+- `/mapa-familiar` desktop/tablet exporta a superfície panorâmica atual por root HTML/CSS/SVG próprio; a seleção retangular continua restrita ao ReactFlow.
 - `DesktopFamilyMapView.tsx` não deve ser movido para dentro de `FamilyTree.tsx`.
 - `DesktopFamilyMapView.tsx` usa `buildMobileFamilyTreeModel` como base de composição, mas possui layout visual próprio.
 - O Mapa Familiar tem grupos por tipo: ancestrais, laterais numerosos, centrais pequenos, descendentes, pets e cards diretos.
@@ -77,7 +78,9 @@ Documentar como implementado apenas o que pertence à view atual; intenções fu
 | Árvore como canvas | Pan, zoom, seleção, exportação, legenda e paletas pertencem à experiência de canvas. |
 | Permissão não é visual | Esconder botão não substitui `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute`, RLS, RPC segura ou validação em service. |
 | Ajuste visual não muda regra de negócio | Tailwind, espaçamento, scroll e responsividade não devem alterar payloads, Supabase, migrations, services ou RLS. |
-| Sem correção agressiva no ReactFlow | Não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir espaçamento da árvore. Ajustes provisórios em CSS devem ser escopados e migrados para layout estrutural quando possível. |
+| Sem correção agressiva no ReactFlow | Não usar `translate`, `transform`, `top` negativo ou manipulação direta de `.react-flow__viewport` para corrigir espaçamento da árvore. Ajustes provisórios em CSS devem ser escopados e migrados incrementalmente para layout estrutural com QA visual. |
+
+Estado da dívida CSS/layout em 2026-06-11: parcialmente resolvida com remoção de regras mobile duplicadas. Seletores globais/frágeis remanescentes ficam reclassificados como manutenção incremental sem bloquear o MVP.
 | Escopo visual explícito | CSS novo deve ser restrito por rota, container, data attribute ou seletor estrutural confiável para não vazar para outras telas. |
 
 ---
@@ -303,7 +306,7 @@ Comportamento:
 - placeholder: **Buscar pessoa ou página...**;
 - sugere pessoas e páginas;
 - páginas sugeridas incluem as rotas catalogadas em `GLOBAL_SEARCH_PAGES`, como **Notificações**, **Ajustar Notificações**, **Fórum** e **Calendário Familiar**;
-- na revisão contra o código atual, **Mapa Familiar** ainda não está em `GLOBAL_SEARCH_PAGES`; manter `DOC-015` aberto até a inclusão;
+- **Mapa Familiar** está incluído em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`;
 - sugestões fecham ao clicar fora;
 - sugestões fecham com `Esc`;
 - botão **Ver todos os resultados** navega para `/busca?q=...`;

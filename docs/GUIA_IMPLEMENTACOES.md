@@ -72,7 +72,9 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso e aceite legal. O texto institucional deve apresentar a plataforma familiar privada; o parágrafo específico sobre Google Agenda foi removido do JSX da página de entrada. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange`, `brown` e `visual` por CSS variables e `localStorage`, incluindo exibição no menu mobile quando aplicável. |
-| Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido reutilizando `treeExport.ts`; exportação integral fica pós-MVP. |
+| Exportação da árvore | Implementada no escopo atual | Seleção/exportação ReactFlow em PNG/PDF/impressão, painel mobile rápido e captura direta HTML/CSS/SVG do `/mapa-familiar`; exportação integral fica pós-MVP. |
+| Navegação preservando contexto da view | Concluída tecnicamente | `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` abrem `/pessoa/:id?voltar=...`; retorno e navegação entre parentes preservam a origem com fallback seguro. |
+| Dívida CSS/layout da árvore | Parcialmente resolvida | Overrides mobile duplicados removidos; manutenção restante deve ser incremental e não bloqueia o MVP. |
 | Deploy/cache | Implementado no escopo atual | `vercel.json` define fallback SPA e cache correto; `src/main.tsx` possui recuperação para erro de chunk dinâmico. Rotas `/api/*`, incluindo `/api/ai` quando ativa, devem ser preservadas fora do fallback SPA. |
 | Responsividade | Implementada no escopo MVP | Ajustes mobile/tablet consolidados em layout, headers, árvore, fórum, calendário, perfil, modais e `/minha-arvore/editar`. |
 
@@ -1044,6 +1046,9 @@ Comportamento consolidado:
 - exportação não usa Storage;
 - exportação não cria migration;
 - legenda/overlays auxiliares não devem aparecer no artefato exportado quando marcados para exclusão.
+- `/mapa-familiar` usa `data-family-map-export-root="true"` e captura cards HTML/CSS, conectores SVG, grupos, pessoa central e escala visual atual;
+- `data-tree-export-ignore="true"` exclui controles auxiliares;
+- seleção retangular permanece exclusiva das views ReactFlow.
 
 Fora do MVP:
 

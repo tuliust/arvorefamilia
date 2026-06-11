@@ -19,6 +19,10 @@ A revisão mais recente registra:
 - `MAPA_FAMILIAR_VIEW.md` passa a ser o documento canônico da view panorâmica desktop/tablet;
 - o Mapa Familiar foi refatorado com `FAMILY_MAP_LAYOUT`, regras de cônjuges, grupos expansíveis, conectores por âncoras e avatares por `genero`;
 - `/mapa-familiar` já consta em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, permitindo busca global e favorito de página para a rota canônica;
+- navegação entre views de árvore e perfis preserva a origem por `?voltar=...`, inclusive ao navegar entre parentes;
+- `/mapa-familiar` participa do fluxo de PNG, PDF e impressão por captura específica de sua superfície HTML/CSS/SVG;
+- a dívida CSS/layout foi parcialmente reduzida e reclassificada como manutenção incremental sem bloquear o MVP;
+- permanece pendente o QA visual autenticado do Mapa Familiar com dados e resoluções reais;
 - `pessoas.genero` já possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com coluna `text`, comentário e índice parcial;
 - `pessoas.complemento` já possui migration versionada em `supabase/migrations/20260611013000_add_complemento_to_pessoas.sql` e é persistido nos formulários de edição do próprio perfil;
 - IA/Curiosidades foi validada funcionalmente no escopo atual; pendências futuras devem ser registradas apenas como manutenção ou novo requisito específico;
@@ -96,7 +100,7 @@ docs/funcionalidades/
 | `funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
 | `funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. |
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
-| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; deve explicitar se `/mapa-familiar` ainda não participa do fluxo canônico. |
+| `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível/capturável em PNG, PDF e impressão, incluindo captura HTML/CSS/SVG do `/mapa-familiar`. |
 | `funcionalidades/CURIOSIDADES_E_IA.md` | Curiosidades, descoberta de conexão familiar, perguntas à IA, contexto genealógico, privacidade, fallback e QA de respostas. |
 | `funcionalidades/FAVORITOS.md` | Favoritos de pessoas/conteúdos/páginas, incluindo `/mapa-familiar` como página favoritable no catálogo. |
 
@@ -214,18 +218,15 @@ Itens concluídos tecnicamente, resolvidos documentalmente ou reclassificados:
 | `DOC-021` | conectores mobile | Conectores mobile ajustados para acompanhar o contexto rolável da tela Central. |
 | `DOC-022` | cards mobile | Cards mobile exibem apenas ano e o card central não exibe badge **Você**. |
 | `DOC-023` | avatares mobile | Avatares mobile reutilizam foto real e fallback visual por `genero`. |
+| `DOC-007/008` | CSS/layout | Parcialmente resolvido e reclassificado como manutenção incremental sem bloquear o MVP. |
+| `DOC-016` | `/mapa-familiar` exportação | Captura HTML/CSS/SVG implementada para PNG, PDF e impressão. |
+| `DOC-024` | navegação contextual | `?voltar=` preserva a view de origem entre árvore e perfis. |
 
 Itens ainda abertos ou parcialmente abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
-| `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
-| `DOC-008` | `directFamilyDistributedLayout.ts` | melhoria técnica / migrar largura visual de cards para layout estrutural |
-| `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
-| `DOC-016` | `/mapa-familiar` exportação | implementação futura / decidir e validar captura HTML/CSS/SVG panorâmica |
-| `DOC-017` | `/mapa-familiar` laterais | QA visual dos grupos de tios/primos laterais para ocupar espaço lateral sem invadir o núcleo |
-| `DOC-019` | `MAPA_FAMILIAR_VIEW.md` | manutenção documental canônica do Mapa Familiar conforme o código evoluir |
-| `DOC-020` | `/mapa-familiar` painel colapsado | QA visual do canvas com painel lateral colapsado |
+| `DOC-014` | `/mapa-familiar` | **1. Mapa Familiar - QA visual e correções finais**, consolidando alinhamento, conectores, laterais, painel colapsado, centralização, colisões, margens e resoluções reais. |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 
