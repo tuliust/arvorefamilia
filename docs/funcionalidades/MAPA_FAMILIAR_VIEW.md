@@ -743,30 +743,45 @@ Motivo:
 
 O Mapa Familiar não é ReactFlow.
 
-Consequência:
+Estado técnico atual:
 
-- exportação baseada no canvas ReactFlow pode não capturar o Mapa Familiar;
-- se a exportação ainda não foi adaptada, documentar como limitação;
-- uma futura exportação deve capturar HTML/SVG do container do Mapa Familiar;
-- manter pendência em `docs/funcionalidades/EXPORTACAO_ARVORE.md` ou `PLANO_PROXIMOS_PASSOS.md`.
+- `MobileTreeControlsPortal.tsx` reconhece `/mapa-familiar` como rota de árvore;
+- a captura tenta primeiro encontrar `.react-flow` dentro de `data-export-root="family-tree"`;
+- quando `.react-flow` não existe, o fluxo usa o próprio `data-export-root="family-tree"` como fallback de captura;
+- por isso, o Mapa Familiar pode entrar no fluxo de imagem/PDF como HTML/CSS/SVG, mas essa captura ainda precisa de QA visual específico.
+
+Consequências:
+
+- não documentar a exportação do Mapa Familiar como equivalente à exportação ReactFlow;
+- não assumir que zoom, conectores SVG, sombras, fontes e fotos serão capturados com a mesma fidelidade das views ReactFlow sem teste;
+- se a captura do Mapa Familiar falhar ou sair incompleta, revisar `MobileTreeControlsPortal.tsx`, `treeExport.ts` e o container `data-export-root`;
+- manter pendência em `docs/funcionalidades/EXPORTACAO_ARVORE.md` ou `PLANO_PROXIMOS_PASSOS.md` até QA/decisão explícita.
 
 ---
 
 ## 18. Busca global e favoritos
 
-Se a view deve aparecer como página acessível nos mecanismos do app, revisar:
+Arquivos a manter sincronizados:
 
 ```txt
 src/app/constants/favoritePages.ts
 src/app/services/globalSearchService.ts
 docs/funcionalidades/FAVORITOS.md
+docs/PLANO_PROXIMOS_PASSOS.md
 ```
+
+Estado observado na revisão atual:
+
+- `/mapa-familiar` já existe como rota/view principal da árvore;
+- a documentação de favoritos já define o payload esperado para página interna;
+- o código atual ainda precisa confirmar/incluir `Mapa Familiar` em `FAVORITE_PAGES`;
+- o código atual ainda precisa confirmar/incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES`.
 
 Regras:
 
-- `/mapa-familiar` deve poder aparecer como página favoritable, se produto decidir;
-- busca global deve reconhecer **Mapa Familiar**, se produto decidir;
-- se ainda não implementado, manter como pendência.
+- favoritar `/mapa-familiar` deve salvar a página canônica, não a pessoa, zoom, filtros ou grupos expandidos;
+- a busca global deve apontar para `/mapa-familiar` como página, sem interferir em busca de pessoas;
+- manter `DOC-015` aberto até a inclusão ser feita e validada no código.
 
 ---
 
@@ -908,13 +923,16 @@ Contexto observado em QA:
 - a expansão não deve causar margens laterais assimétricas;
 - a expansão não deve provocar sobreposição entre `Cônjuge`, `Pets` e grupos inferiores.
 
-Correção esperada em `DesktopFamilyMapView.tsx`:
+Correção técnica esperada/atual em `DesktopFamilyMapView.tsx`:
 
 - centralizar o wrapper escalado da árvore com `mx-auto`;
-- revisar `getFamilyMapLayout(true)` para manter áreas laterais balanceadas;
+- usar `sidebarCollapsed` para selecionar `getFamilyMapLayout(true)`;
+- manter áreas laterais balanceadas no layout wide;
 - separar `lowerLeft`, `lowerMiddle` e `lowerRight` no layout wide;
 - revisar `groups.spouse`, `groups.pets`, `groups.siblings`, `groups.nephews`, `groups.children` e `groups.grandchildren`;
 - manter conectores SVG por âncoras, sem transform externo para mascarar o problema.
+
+Status documental: o ajuste estrutural já deve ser tratado como implementado no código atual; a pendência restante é QA visual autenticado com dados reais.
 
 QA específico:
 

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero`, cards mobile com anos, card central sem badge, conectores roláveis e regras visuais de cônjuges.
+> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero`, cards mobile com anos, card central sem badge, conectores roláveis, navegação inferior ativa em `/mapa-familiar` e regras visuais de cônjuges.
 
 ## Objetivo
 
@@ -172,7 +172,7 @@ Regras:
 - preservar search params ao trocar view, especialmente `?pessoa=...`;
 - esconder textos e priorizar ícones em breakpoints menores;
 - manter dropdowns e sugestões acima da árvore;
-- manter o botão de favorito da view próximo aos controles `+` e `-` no desktop;
+- manter o botão de favorito da view próximo aos controles `+` e `-` no desktop quando a rota existir em `FAVORITE_PAGES`;
 - evitar overflow horizontal;
 - no mobile, o título deve priorizar identificação pessoal da árvore, como `Família de {primeiro nome}` quando houver pessoa vinculada.
 
@@ -286,7 +286,7 @@ Notificações
 Regras:
 
 - páginas internas precisam reservar espaço inferior (`pb-24 md:pb-0`);
-- o estado ativo deve considerar `/`, `/minha-arvore`, `/genealogia` e `/visao-completa` como **Home**;
+- o estado ativo deve considerar `/`, `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` como **Home**;
 - evitar elementos fixos concorrendo com essa navegação em mobile;
 - modais e drawers devem considerar `safe-area-inset-bottom`.
 
@@ -302,7 +302,8 @@ Comportamento:
 
 - placeholder: **Buscar pessoa ou página...**;
 - sugere pessoas e páginas;
-- páginas sugeridas incluem rotas recorrentes como **Notificações**, **Ajustar Notificações**, **Fórum** e **Calendário Familiar**;
+- páginas sugeridas incluem as rotas catalogadas em `GLOBAL_SEARCH_PAGES`, como **Notificações**, **Ajustar Notificações**, **Fórum** e **Calendário Familiar**;
+- na revisão contra o código atual, **Mapa Familiar** ainda não está em `GLOBAL_SEARCH_PAGES`; manter `DOC-015` aberto até a inclusão;
 - sugestões fecham ao clicar fora;
 - sugestões fecham com `Esc`;
 - botão **Ver todos os resultados** navega para `/busca?q=...`;

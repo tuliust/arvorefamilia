@@ -396,15 +396,19 @@ Rotas onde aparece:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 ```
+
+Observação: no código atual, `/mapa-familiar` está registrado em `TREE_ROUTES` do portal mobile. A captura tenta primeiro o canvas ReactFlow (`.react-flow`) e, quando ele não existe, usa o elemento raiz marcado com `data-export-root="family-tree"`. Isso permite tentativa de captura do Mapa Familiar HTML/CSS/SVG, mas a qualidade visual ainda deve ser validada por QA manual.
 
 Cuidados:
 
 - não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
 - ações devem manter `aria-label`/texto acessível;
-- se exportação falhar por CORS/canvas, revisar `treeExport.ts`, elementos ignorados e origem das imagens;
+- se exportação falhar por CORS/canvas, revisar `treeExport.ts`, elementos ignorados, origem das imagens e o fallback entre `.react-flow` e `data-export-root="family-tree"`;
+- em `/mapa-familiar`, a exportação mobile deve ser tratada como captura HTML/CSS/SVG e validada visualmente, não como fluxo ReactFlow puro;
 - não reintroduzir import direto de `html2canvas` ou `jsPDF` no portal mobile;
 - se a implementação for migrada para dentro de `FamilyTree`, remover o portal e atualizar esta seção;
 - não usar o portal para alterar dados, filtros, Supabase ou permissões.
@@ -433,8 +437,10 @@ Condição de uso:
 
 ```txt
 HomeTreeSection.tsx
-isMobile && treeViewMode === 'minha-arvore'
+isMobile && (treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar')
 ```
+
+Observação: em `/mapa-familiar`, o componente é usado apenas como fallback mobile seguro. O comportamento panorâmico desktop/tablet do Mapa Familiar continua em `DesktopFamilyMapView.tsx`.
 
 Malha de telas:
 
@@ -472,6 +478,7 @@ MiniPersonCard
 PetPersonCard
 VitalLines
 PersonAvatar
+VisualPersonAvatar
 ```
 
 Estado atual do layout:

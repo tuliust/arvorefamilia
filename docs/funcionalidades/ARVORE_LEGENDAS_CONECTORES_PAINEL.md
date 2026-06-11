@@ -222,6 +222,25 @@ No mobile:
 - overlay fecha o painel;
 - chips de geração e painel de controles da árvore têm prioridade visual sobre abas laterais.
 
+### 4.2.1 Controles mobile da árvore
+
+`MobileTreeControlsPortal` aparece nas rotas:
+
+```txt
+/minha-arvore
+/mapa-familiar
+/genealogia
+/visao-completa
+```
+
+Regras:
+
+- o portal não deve aparecer em páginas internas fora da árvore, como `/meus-favoritos` e `/calendario-familiar`;
+- ações de zoom/reajuste dependem dos botões disponíveis na view atual;
+- em views ReactFlow, a captura prioriza `.react-flow`;
+- no Mapa Familiar, a captura pode usar o container `data-export-root="family-tree"` como fallback;
+- exportação do Mapa Familiar precisa de QA visual próprio por ser HTML/CSS/SVG.
+
 ### 4.3 Anti-regressões do painel
 
 Não fazer:
@@ -452,6 +471,18 @@ Documento canônico:
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 ```
 
+### 10.0 Painel colapsado e layout wide
+
+Quando o painel lateral desktop é colapsado, o Mapa Familiar passa para o layout wide de `DesktopFamilyMapView`.
+
+Regras:
+
+- o canvas deve permanecer centralizado;
+- margens laterais paterna/materna devem ficar proporcionais;
+- grupos inferiores precisam permanecer em faixas separadas;
+- conectores SVG devem continuar presos às âncoras dos grupos, sem correção por transform externo;
+- validar painel aberto e painel colapsado sempre que `areas`, `groups` ou `canvas.width` forem alterados.
+
 ### 10.1 Conectores principais
 
 Conexões cobertas:
@@ -614,7 +645,10 @@ Regras:
 
 Observação:
 
-- Mapa Familiar não é ReactFlow; exportação dessa view deve ser tratada separadamente, se implementada.
+- Mapa Familiar não é ReactFlow;
+- no código atual, `MobileTreeControlsPortal` reconhece `/mapa-familiar` como rota de árvore;
+- a captura tenta `.react-flow` primeiro e usa `data-export-root="family-tree"` como fallback;
+- por isso, a exportação do Mapa Familiar deve ser validada como captura HTML/CSS/SVG, não como fluxo ReactFlow puro.
 
 ---
 

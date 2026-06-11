@@ -55,6 +55,7 @@ Estado atual da frente:
 - `/minha-arvore` mobile usa `MobileFamilyTreeView.tsx`, com experiência segmentada própria.
 - `/mapa-familiar` desktop/tablet usa `DesktopFamilyMapView.tsx`, documentado em `MAPA_FAMILIAR_VIEW.md`.
 - `/mapa-familiar` mobile usa fallback seguro para `MobileFamilyTreeView`.
+- `HomeTreeSection.tsx` também usa `MobileFamilyTreeView` como fallback mobile de `/mapa-familiar`; essa reutilização não transforma o Mapa Familiar desktop em ReactFlow.
 - A antiga aba mobile **Núcleo** foi substituída por **Central**.
 - A antiga aba mobile **Completa** não deve reaparecer.
 - O fluxo mobile antigo de sete telas foi substituído pela malha 3×3 documentada abaixo.
@@ -141,6 +142,12 @@ A Home pós-login trabalha com quatro views principais da árvore:
 | `/mapa-familiar` | `mapa-familiar` | mapa panorâmico da família direta | `DesktopFamilyMapView` desktop/tablet; fallback mobile |
 | `/genealogia` | `genealogia` | escopo pessoal por gerações | ReactFlow |
 | `/visao-completa` | `visao-completa` | base familiar completa por gerações | ReactFlow |
+
+Observação sobre controles mobile:
+
+- `MobileTreeControlsPortal` aparece nas quatro rotas de árvore: `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa`;
+- neste documento, as regras do portal devem ser lidas principalmente pelo impacto em `/minha-arvore`;
+- detalhes de exportação/QA do Mapa Familiar pertencem a `MAPA_FAMILIAR_VIEW.md` e `EXPORTACAO_ARVORE.md`.
 
 Regras da Minha Árvore:
 

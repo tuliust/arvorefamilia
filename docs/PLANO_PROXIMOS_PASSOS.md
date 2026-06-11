@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos e avatares por `genero`.
+> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos, avatares por `genero`, Mapa Familiar wide com painel colapsado e pendências confirmadas de busca/favoritos.
 
 ## Objetivo
 
@@ -67,7 +67,7 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
 | DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`. Na revisão contra o código atual, `/mapa-familiar` ainda não aparece em `src/app/services/globalSearchService.ts` nem em `src/app/constants/favoritePages.ts`. | Aberto confirmado |
 | DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. O `MobileTreeControlsPortal` reconhece `/mapa-familiar`, mas o helper de captura ainda procura `.react-flow`, portanto a exportação HTML/SVG precisa de implementação/QA próprios. | Aberto confirmado |
-| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Ajustar e validar grupos laterais de tios/primos para ocupar as laterais sem invadir Pai/Mãe/Pessoa Central e sem cortar nas bordas. Incluir validação específica do layout wide após colapsar o painel lateral. | Aberto |
+| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Código atual já possui reorganização do modo wide em `DesktopFamilyMapView.tsx`. Validar visualmente, com dados reais, se tios/primos ocupam as laterais sem invadir Pai/Mãe/Pessoa Central, sem cortar nas bordas e sem perder proporção quando o painel lateral é colapsado. | Parcial / QA aberto |
 | DOC-018 | `pessoas.genero` | schema / migration | Tipagem frontend confirmada em `src/app/types/index.ts`. Falta confirmar/criar migration versionada para `public.pessoas.genero`, caso a coluna tenha sido criada manualmente no Supabase. | Parcial |
 | DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom, layout wide/painel colapsado e avatares por `genero`. | Aberto |
 | DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Código atual já passa `sidebarCollapsed` para `DesktopFamilyMapView` e usa `getFamilyMapLayout(true)`. Validar visualmente que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Parcial / QA aberto |
@@ -78,6 +78,16 @@ Regras:
 - documentos funcionais podem mencionar o contexto, mas o controle fica nesta tabela;
 - fechar item apenas após validação técnica, QA visual ou decisão explícita;
 - se houver alteração de schema, criar migration e atualizar `docs/operacao/MIGRATIONS_SUPABASE.md`.
+
+### 2.0.1 Observação contra o código atual
+
+Na revisão atual, há duas divergências confirmadas entre documentação/produto e código:
+
+- `/mapa-familiar` existe como rota/view, mas ainda não está catalogada em `GLOBAL_SEARCH_PAGES`;
+- `/mapa-familiar` existe como rota/view, mas ainda não está catalogada em `FAVORITE_PAGES`.
+
+Por isso, `DOC-015` deve permanecer aberto até que `src/app/services/globalSearchService.ts` e `src/app/constants/favoritePages.ts` sejam atualizados.
+
 
 ---
 

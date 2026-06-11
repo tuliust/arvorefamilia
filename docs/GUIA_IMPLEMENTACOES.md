@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, ajustes mobile de conectores, anos nos cards, card central sem badge, avatares visuais por `genero` e `/entrar` sem texto público de Google Agenda.
+> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, ajustes mobile de conectores, anos nos cards, card central sem badge, avatares visuais por `genero`, `/entrar` sem texto público de Google Agenda e pendência confirmada de `/mapa-familiar` em busca/favoritos.
 
 ## Objetivo
 
@@ -62,7 +62,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
 | Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe, primos, tio/sobrinho e tutor de pet. |
 | Curiosidades, conexão e IA | Implementadas no escopo atual | Modal de Curiosidades reúne abas informativas, descoberta de conexão familiar e painel de perguntas à IA. Respostas genealógicas usam contexto estruturado, regras de privacidade e fallback determinístico quando aplicável. |
-| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa, tópicos de fórum e arquivos históricos quando o componente expõe a ação. Expansão para outras entidades deve ser estudada. |
+| Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa, tópicos de fórum, eventos pessoais, arquivos históricos e páginas presentes em `FAVORITE_PAGES`. Na revisão atual, `/mapa-familiar` ainda não está no catálogo e permanece em `DOC-015`. |
 | Página de favoritos | Implementada | Lista, busca, filtros, remoção e cards inteiros clicáveis. O botão textual **Abrir conteúdo** foi removido; a lixeira não deve disparar abertura do card. |
 | Fórum | Implementado no escopo atual | Categorias, tópicos, respostas diretas, menções, vínculos automáticos com pessoas mencionadas, avatares, favoritos e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição; `/forum/topico/:id` não exibe box de pessoa relacionada nem comentários aninhados na UI atual. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
@@ -136,7 +136,7 @@ Pendências/atenções:
 - validar visualmente grupos laterais de tios/primos em resoluções reais;
 - confirmar migration e tipagem da coluna `pessoas.genero` se ela foi criada manualmente no Supabase;
 - decidir exportação HTML/SVG do Mapa Familiar;
-- sincronizar `/mapa-familiar` com busca global e favoritos, se ainda não estiver no código.
+- sincronizar `/mapa-familiar` com busca global e favoritos: na revisão atual, `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES` ainda não incluem essa rota.
 
 Documento funcional canônico:
 
@@ -164,12 +164,18 @@ Estado implementado confirmado no código atual:
 - no fallback mobile, `birthYearLine` e `deathYearLine` são usados para exibir apenas anos nos cards.
 - no fallback mobile, o card central não recebe `label="Você"`; labels como **Pai** e **Mãe** permanecem.
 
+Observação de consistência com busca/favoritos:
+
+- `src/app/services/globalSearchService.ts` cataloga páginas para busca global, mas ainda não inclui `/mapa-familiar`;
+- `src/app/constants/favoritePages.ts` cataloga páginas favoritáveis, mas ainda não inclui `/mapa-familiar`;
+- até esses arquivos serem ajustados, a view existe e é acessível, mas não deve ser documentada como página buscável/favoritável implementada.
+
 Pendências que permanecem fora deste estado consolidado:
 
 - confirmar se a coluna `pessoas.genero` já possui migration versionada;
 - validar visualmente o modo wide com dados reais em navegador autenticado;
 - decidir se exportação do Mapa Familiar deve capturar HTML/CSS/SVG de forma canônica;
-- confirmar inclusão de `/mapa-familiar` nos catálogos de busca global e favoritos, se ainda não houver.
+- incluir `/mapa-familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`; na revisão atual, ambos os catálogos ainda não incluem essa rota.
 
 
 ## 2. Stack e arquitetura base
