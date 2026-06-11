@@ -766,10 +766,7 @@ export function Home() {
         return DEFAULT_DIRECT_RELATIVE_FILTERS;
       }
 
-      return {
-        ...directRelativeFilterState.filters,
-        pets: true,
-      };
+      return directRelativeFilterState.filters;
     },
     [directRelativeFilterState.filters, isMobile, treeViewMode]
   );
@@ -917,9 +914,11 @@ export function Home() {
           <LifeStatusKpiGrid
             vivos={lifeStatusCounts.vivos}
             falecidos={lifeStatusCounts.falecidos}
-            pets={lifeStatusCounts.pets}
             filters={personFilters}
             onToggle={togglePersonFilter}
+            directRelativeFilters={directRelativeFilters}
+            directRelationCounts={directRelationCounts}
+            onToggleDirectRelative={toggleDirectRelativeFilter}
           />
         </div>
       )}
@@ -1197,7 +1196,7 @@ export function Home() {
           >
             {sidebarOpen && (
               <div className="flex min-h-0 flex-1 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
-                <div className="flex items-center gap-[clamp(0.35rem,0.8vh,0.5rem)]">
+                <div className="relative flex items-center gap-[clamp(0.35rem,0.8vh,0.5rem)]">
                   <div className="min-w-0 flex-1">
                     <SidebarPanelTabs
                       activePanel={activeSidebarPanel}
@@ -1219,7 +1218,7 @@ export function Home() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
+                    className="absolute right-0 top-0 h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"

@@ -102,7 +102,7 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
-const ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['avos', 'bisavos', 'tataravos'];
+const ANCESTOR_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['avos', 'bisavos', 'tataravos'];
 const FILTERABLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['tios', 'primos', 'sobrinhos', 'filhos'];
 
 function createDirectRelativeFiltersForGroups(groups: DirectRelativeGroup[]): DirectRelativeFilters {
@@ -569,7 +569,8 @@ function DesktopFamilyHorizontalMapViewComponent({
     };
 
     includeSpousesForAnchors([centralPersonId]);
-    includeSpousesForAnchors(collectScopeForGroups(ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS));
+    const activeAncestorGroups = ANCESTOR_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);
+    includeSpousesForAnchors(collectScopeForGroups(activeAncestorGroups));
 
     if (directRelativeFilters.conjuge) {
       const activeFilterableGroups = FILTERABLE_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);

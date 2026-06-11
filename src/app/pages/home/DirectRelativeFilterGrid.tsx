@@ -64,7 +64,7 @@ export function DirectRelativeFilterGrid({
     <div
       className={
         compact
-          ? 'grid w-full min-w-0 grid-cols-3 gap-[clamp(0.3rem,0.68vh,0.44rem)]'
+          ? 'grid w-full min-w-0 grid-cols-2 gap-[clamp(0.3rem,0.68vh,0.44rem)]'
           : 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(0.4rem,1.15vh,0.7rem)]'
       }
     >

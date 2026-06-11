@@ -1,14 +1,35 @@
 import React from 'react';
-import { Cross, Star } from 'lucide-react';
+import { Cross, Dog, Heart, Star } from 'lucide-react';
+
+import type { DirectRelativeFilters, DirectRelativeGroup } from '../../components/FamilyTree/types';
+import {
+  DIRECT_FAMILY_CARD_TEXT_COLORS,
+  DIRECT_FAMILY_RELATION_COLORS,
+} from '../../components/FamilyTree/directFamilyColors';
 
 type LifeStatusFilterKey = 'vivos' | 'falecidos' | 'pets';
+type DirectRelationCounts = Record<DirectRelativeGroup, number>;
+
+interface FilterItem {
+  key: string;
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string }>;
+  background: string;
+  color: string;
+  border: string;
+  active: boolean;
+  onToggle: () => void;
+}
 
 interface LifeStatusKpiGridProps {
   vivos: number;
   falecidos: number;
-  pets: number;
   filters: Record<LifeStatusFilterKey, boolean>;
   onToggle: (key: LifeStatusFilterKey) => void;
+  directRelativeFilters: DirectRelativeFilters;
+  directRelationCounts: DirectRelationCounts;
+  onToggleDirectRelative: (key: DirectRelativeGroup) => void;
 }
 
 export function LifeStatusKpiGrid({
@@ -16,25 +37,54 @@ export function LifeStatusKpiGrid({
   falecidos,
   filters,
   onToggle,
+  directRelativeFilters,
+  directRelationCounts,
+  onToggleDirectRelative,
 }: LifeStatusKpiGridProps) {
-  const items = [
+  const items: FilterItem[] = [
     {
-      key: 'vivos' as const,
+      key: 'vivos',
       label: 'Vivos',
       value: vivos,
       icon: Star,
       background: 'var(--tree-palette-status-alive-bg, #F8FAFC)',
       color: 'var(--tree-palette-text-primary, #334155)',
       border: 'var(--tree-palette-status-alive, #CBD5E1)',
+      active: filters.vivos,
+      onToggle: () => onToggle('vivos'),
     },
     {
-      key: 'falecidos' as const,
+      key: 'falecidos',
       label: 'Falecidos',
       value: falecidos,
       icon: Cross,
       background: 'var(--tree-palette-status-deceased-bg, #F8FAFC)',
       color: 'var(--tree-palette-text-primary, #334155)',
       border: 'var(--tree-palette-status-deceased, #CBD5E1)',
+      active: filters.falecidos,
+      onToggle: () => onToggle('falecidos'),
+    },
+    {
+      key: 'conjuge',
+      label: 'C\u00f4njuges',
+      value: directRelationCounts.conjuge,
+      icon: Heart,
+      background: DIRECT_FAMILY_RELATION_COLORS.conjuge.background,
+      color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
+      border: DIRECT_FAMILY_RELATION_COLORS.conjuge.solid,
+      active: directRelativeFilters.conjuge,
+      onToggle: () => onToggleDirectRelative('conjuge'),
+    },
+    {
+      key: 'pets',
+      label: 'Pets',
+      value: directRelationCounts.pets,
+      icon: Dog,
+      background: DIRECT_FAMILY_RELATION_COLORS.pets.background,
+      color: DIRECT_FAMILY_CARD_TEXT_COLORS.primary,
+      border: DIRECT_FAMILY_RELATION_COLORS.pets.solid,
+      active: directRelativeFilters.pets,
+      onToggle: () => onToggleDirectRelative('pets'),
     },
   ];
 
@@ -45,18 +95,17 @@ export function LifeStatusKpiGrid({
       </summary>
       <div className="grid w-full min-w-0 grid-cols-2 gap-[clamp(0.22rem,0.52vh,0.32rem)] px-1.5 pb-1.5">
         {items.map((item) => {
-          const active = filters[item.key];
           const Icon = item.icon;
 
           return (
             <button
               key={item.key}
               type="button"
-              aria-pressed={active}
-              onClick={() => onToggle(item.key)}
+              aria-pressed={item.active}
+              onClick={item.onToggle}
               className={[
                 'family-filter-chip min-h-[clamp(36px,4.9vh,43px)] w-full min-w-0 overflow-hidden rounded-lg border px-1.5 py-1 text-left shadow-sm transition',
-                active ? 'opacity-100' : 'grayscale opacity-45',
+                item.active ? 'opacity-100' : 'grayscale opacity-45',
                 'hover:-translate-y-0.5 hover:shadow-md',
               ].join(' ')}
               style={{
@@ -64,7 +113,7 @@ export function LifeStatusKpiGrid({
                 borderColor: item.border,
                 color: item.color,
               }}
-              title={active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
+              title={item.active ? `Ocultar ${item.label}` : `Mostrar ${item.label}`}
             >
               <span className="flex min-w-0 items-center gap-1">
                 <Icon className="h-3.5 w-3.5 shrink-0" />

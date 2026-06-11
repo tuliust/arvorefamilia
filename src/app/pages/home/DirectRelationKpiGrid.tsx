@@ -26,6 +26,7 @@ export function DirectRelationKpiGrid({
           filters={filters}
           counts={counts}
           onToggle={onToggle}
+          excludedKeys={['conjuge', 'pets']}
           compact
         />
       </div>
