@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após ajustes mobile da árvore, alinhamento do fallback mobile do Mapa Familiar e remoção do texto de Google Agenda da página `/entrar`.
+> Status: índice canônico revisado após ajustes mobile da árvore, alinhamento do fallback mobile do Mapa Familiar, remoção do texto de Google Agenda da página `/entrar`, inclusão de `/mapa-familiar` em busca/favoritos e migration versionada de `pessoas.genero`.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -17,6 +17,8 @@ A revisão mais recente registra:
 - a paleta **Visual** (`visual`) foi adicionada como modo de cores da árvore;
 - `MAPA_FAMILIAR_VIEW.md` passa a ser o documento canônico da view panorâmica desktop/tablet;
 - o Mapa Familiar foi refatorado com `FAMILY_MAP_LAYOUT`, regras de cônjuges, grupos expansíveis, conectores por âncoras e avatares por `genero`;
+- `/mapa-familiar` já consta em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, permitindo busca global e favorito de página para a rota canônica;
+- `pessoas.genero` já possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com coluna `text`, comentário e índice parcial;
 - o fallback mobile da árvore usa conectores que acompanham o scroll da tela Central, cards com apenas ano, card central sem badge **Você** e avatares visuais por `genero`;
 - pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 
@@ -92,7 +94,7 @@ docs/funcionalidades/
 | `funcionalidades/TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
 | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação da área visível da árvore em PNG, PDF e impressão; deve explicitar se `/mapa-familiar` ainda não participa do fluxo canônico. |
 | `funcionalidades/CURIOSIDADES_E_IA.md` | Curiosidades, descoberta de conexão familiar, perguntas à IA, contexto genealógico, privacidade, fallback e QA de respostas. |
-| `funcionalidades/FAVORITOS.md` | Favoritos de pessoas/conteúdos/páginas; deve ser atualizado caso `Mapa Familiar` vire página favoritable no catálogo. |
+| `funcionalidades/FAVORITOS.md` | Favoritos de pessoas/conteúdos/páginas, incluindo `/mapa-familiar` como página favoritable no catálogo. |
 
 ---
 
@@ -211,10 +213,8 @@ Itens ainda abertos ou parcialmente abertos:
 | `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
 | `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
 | `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
-| `DOC-015` | `/mapa-familiar` busca/favoritos | verificar inclusão em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES` |
 | `DOC-016` | `/mapa-familiar` exportação | decidir/documentar se a exportação canônica deve capturar a view HTML/SVG panorâmica |
-| `DOC-017` | `pessoas.genero` | validar tipagem e migration da coluna usada por avatares do Mapa Familiar |
-| `DOC-018` | `/mapa-familiar` laterais | refinar grupos de tios/primos laterais para ocupar espaço lateral sem invadir o núcleo |
+| `DOC-017` | `/mapa-familiar` laterais | QA visual dos grupos de tios/primos laterais para ocupar espaço lateral sem invadir o núcleo |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

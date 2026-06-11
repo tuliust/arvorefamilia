@@ -109,9 +109,10 @@ Os ajustes abaixo são documentados como mudanças de UI/componente e não devem
 | Usar avatar gráfico homem/mulher/pet quando não há foto | Reuso de campo visual existente e lógica frontend |
 | Remover texto institucional de Google Agenda em `/entrar` | Conteúdo estático de página, sem impacto de banco |
 
-Exceção:
+Observação:
 
-- se `public.pessoas.genero` ainda não existir oficialmente em migration versionada, criar migration para a coluna/constraint/índice;
+- `public.pessoas.genero` já possui migration versionada em `20260611003558_add_genero_to_pessoas.sql`;
+- essa migration adiciona coluna `text` nullable, comentário e índice parcial `idx_pessoas_genero`;
 - não criar migration para os SVGs, componentes, espaçamentos, labels, conectores ou formatação de ano.
 
 
@@ -247,6 +248,38 @@ Se a migration já foi aplicada, não remover `categoria_evento` do payload nem 
 ---
 
 ## 9. Migrations recentes relevantes
+
+### `20260611003558_add_genero_to_pessoas.sql`
+
+Escopo:
+
+- adiciona `genero text` em `public.pessoas` de forma idempotente;
+- documenta a coluna como campo visual opcional para orientar avatar fallback;
+- cria índice parcial `idx_pessoas_genero` quando `genero` não é nulo/vazio.
+
+Uso funcional:
+
+- `genero` orienta avatares visuais em `FamilyTreeVisualCards` e no fallback mobile compartilhado;
+- valores esperados no frontend: `homem`, `mulher`, `pet`;
+- `humano_ou_pet` continua sendo o campo semântico principal para regras de pessoa/pet.
+
+SQL útil para verificar:
+
+```sql
+select table_schema, table_name, column_name, data_type, is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'pessoas'
+  and column_name = 'genero';
+```
+
+Sintoma se ausente:
+
+```txt
+Ambiente novo sem coluna genero não quebra a regra semântica de pets, mas perde a fonte visual versionada usada para avatar fallback por homem/mulher/pet.
+```
+
+---
 
 ### `20260522121000_add_historical_file_event_category.sql`
 

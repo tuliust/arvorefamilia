@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/FAVORITOS.md`
 > Tipo: documentação funcional/técnica de favoritos.
-> Status: revisado contra o código atual; favoritos de página estão implementados, mas `/mapa-familiar` ainda não consta em `FAVORITE_PAGES` e permanece pendente em DOC-015.
+> Status: revisado contra o código atual; favoritos de página estão implementados e `/mapa-familiar` consta em `FAVORITE_PAGES` como página favoritable.
 
 Documentação funcional e técnica da funcionalidade de favoritos do projeto `arvorefamilia`.
 
@@ -307,6 +307,7 @@ Páginas suportadas no código atual:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 /calendario-familiar
@@ -323,7 +324,7 @@ Observação contra o código atual:
 /mapa-familiar
 ```
 
-A rota `/mapa-familiar` existe como view da árvore, mas ainda não consta em `src/app/constants/favoritePages.ts`. Enquanto isso não for corrigido, o Mapa Familiar não deve ser tratado como página favoritável implementada.
+A rota `/mapa-familiar` existe como view da árvore e consta em `src/app/constants/favoritePages.ts`, portanto deve ser tratada como página favoritável implementada.
 
 ### Payload
 
@@ -342,9 +343,9 @@ Favoritar página funciona como atalho salvo para rota interna.
 
 ### Mapa Familiar
 
-Status atual: pendente no catálogo de favoritos.
+Status atual: implementado no catálogo de favoritos.
 
-A página `/mapa-familiar` deve ser tratada como favorito de página somente depois de ser incluída em `src/app/constants/favoritePages.ts`.
+A página `/mapa-familiar` deve ser tratada como favorito de página porque já está incluída em `src/app/constants/favoritePages.ts`.
 
 Payload esperado:
 
@@ -367,9 +368,9 @@ src/app/components/FamilyTree/treeViewMode.ts
 
 Regra:
 
-- quando implementado, favoritar `/mapa-familiar` deve salvar a página, não uma pessoa nem um estado visual de zoom/filtros;
+- favoritar `/mapa-familiar` salva a página, não uma pessoa nem um estado visual de zoom/filtros;
 - `?pessoa=...` pode ser preservado na navegação da sessão, mas o favorito de página deve apontar para a rota canônica;
-- como o catálogo atual ainda não inclui `/mapa-familiar`, manter a pendência `DOC-015` aberta em `docs/PLANO_PROXIMOS_PASSOS.md`.
+- a antiga pendência `DOC-015` foi concluída após inclusão de `/mapa-familiar` em `FAVORITE_PAGES` e `GLOBAL_SEARCH_PAGES`.
 
 ## Relacionamentos
 

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos, avatares por `genero`, Mapa Familiar wide com painel colapsado e pendências confirmadas de busca/favoritos.
+> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos, avatares por `genero`, Mapa Familiar wide com painel colapsado, `/mapa-familiar` incluído em busca/favoritos e migration versionada de `pessoas.genero`.
 
 ## Objetivo
 
@@ -35,7 +35,7 @@ Estado técnico atual das views da árvore:
 | View | Rota | Estado |
 |---|---|---|
 | Minha Árvore | `/minha-arvore` | Implementada; ReactFlow no desktop/tablet e `MobileFamilyTreeView` no mobile. |
-| Mapa Familiar | `/mapa-familiar` | Implementada tecnicamente como view protegida; usa `DesktopFamilyMapView` no desktop/tablet, fallback para `MobileFamilyTreeView` no mobile, modo wide com painel colapsado, título ocultável por scroll e avatares por `genero`. QA visual autenticado segue pendente. |
+| Mapa Familiar | `/mapa-familiar` | Implementada tecnicamente como view protegida; usa `DesktopFamilyMapView` no desktop/tablet, fallback para `MobileFamilyTreeView` no mobile, modo wide com painel colapsado, título ocultável por scroll, avatares por `genero`, busca global e favoritos de página. QA visual autenticado segue pendente. |
 | Genealogia | `/genealogia` | Implementada; chips mobile usam base de gerações inferidas. |
 | Visão Completa | `/visao-completa` | Implementada; chips mobile usam base de gerações inferidas. |
 
@@ -65,10 +65,8 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
 | DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
-| DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`. Na revisão contra o código atual, `/mapa-familiar` ainda não aparece em `src/app/services/globalSearchService.ts` nem em `src/app/constants/favoritePages.ts`. | Aberto confirmado |
 | DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. O `MobileTreeControlsPortal` reconhece `/mapa-familiar`, mas o helper de captura ainda procura `.react-flow`, portanto a exportação HTML/SVG precisa de implementação/QA próprios. | Aberto confirmado |
 | DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Código atual já possui reorganização do modo wide em `DesktopFamilyMapView.tsx`. Validar visualmente, com dados reais, se tios/primos ocupam as laterais sem invadir Pai/Mãe/Pessoa Central, sem cortar nas bordas e sem perder proporção quando o painel lateral é colapsado. | Parcial / QA aberto |
-| DOC-018 | `pessoas.genero` | schema / migration | Tipagem frontend confirmada em `src/app/types/index.ts`. Falta confirmar/criar migration versionada para `public.pessoas.genero`, caso a coluna tenha sido criada manualmente no Supabase. | Parcial |
 | DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom, layout wide/painel colapsado e avatares por `genero`. | Aberto |
 | DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Código atual já passa `sidebarCollapsed` para `DesktopFamilyMapView` e usa `getFamilyMapLayout(true)`. Validar visualmente que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Parcial / QA aberto |
 
@@ -81,12 +79,13 @@ Regras:
 
 ### 2.0.1 Observação contra o código atual
 
-Na revisão atual, há duas divergências confirmadas entre documentação/produto e código:
+Na revisão atual, as divergências anteriores foram fechadas:
 
-- `/mapa-familiar` existe como rota/view, mas ainda não está catalogada em `GLOBAL_SEARCH_PAGES`;
-- `/mapa-familiar` existe como rota/view, mas ainda não está catalogada em `FAVORITE_PAGES`.
+- `/mapa-familiar` já consta em `GLOBAL_SEARCH_PAGES`;
+- `/mapa-familiar` já consta em `FAVORITE_PAGES`;
+- `public.pessoas.genero` já existe no banco e possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`.
 
-Por isso, `DOC-015` deve permanecer aberto até que `src/app/services/globalSearchService.ts` e `src/app/constants/favoritePages.ts` sejam atualizados.
+Portanto, busca/favoritos do Mapa Familiar e versionamento básico de `pessoas.genero` deixam de ser pendências abertas. Permanecem apenas QA visual, decisões de produto e validações externas listadas na tabela principal.
 
 
 ---
@@ -102,7 +101,9 @@ Por isso, `DOC-015` deve permanecer aberto até que `src/app/services/globalSear
 | DOC-013 | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` / `/minha-arvore` mobile segmentada | Reclassificado: a implementação atual usa malha 3×3, abas `Paterno | Central | Materno`, tela global de ancestrais, primos sem **Ver todos**, linhas Pai/Mãe acompanhando scroll e preview durante swipe. Pendências residuais devem ser registradas como bug visual específico, não como “finalizar sete telas”. | Concluído tecnicamente; manter QA visual manual. |
 | DOC-021 | `MobileFamilyTreeView.tsx` / conectores mobile | Conectores entre ancestrais, Pai/Mãe e pessoa central ajustados para acompanhar o contexto rolável da tela Central. | Concluído tecnicamente; manter QA visual manual em 320px, 375px, 390px e 430px. |
 | DOC-022 | `MobileFamilyTreeView.tsx` / cards mobile | Cards mobile passaram a exibir apenas ano em nascimento/falecimento e o card central não exibe badge **Você**. | Concluído tecnicamente; manter QA visual manual. |
-| DOC-023 | `FamilyTreeVisualCards.tsx` / `MobileFamilyTreeView.tsx` | Avatares mobile passaram a reutilizar a lógica visual de foto real e fallback por `genero` (`homem`, `mulher`, `pet`). | Concluído tecnicamente; depende da confirmação de migration de `pessoas.genero` em DOC-018. |
+| DOC-023 | `FamilyTreeVisualCards.tsx` / `MobileFamilyTreeView.tsx` | Avatares mobile passaram a reutilizar a lógica visual de foto real e fallback por `genero` (`homem`, `mulher`, `pet`). | Concluído tecnicamente; migration de `pessoas.genero` versionada em `20260611003558_add_genero_to_pessoas.sql`. |
+| DOC-015 | `/mapa-familiar` busca/favoritos | `Mapa Familiar` foi incluído em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, permitindo busca global e favorito de página para a rota canônica `/mapa-familiar`. | Concluído. |
+| DOC-018 | `pessoas.genero` | A coluna `public.pessoas.genero` foi confirmada no banco e versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com comentário e índice parcial `idx_pessoas_genero`. | Concluído tecnicamente; manter coerência entre `genero` visual e `humano_ou_pet` sem substituir regra semântica. |
 
 ---
 

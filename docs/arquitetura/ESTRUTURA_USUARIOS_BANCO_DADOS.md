@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e no mobile compartilhado, além de alerta de migration caso a coluna tenha sido criada manualmente no Supabase.
+> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e no mobile compartilhado, e migration versionada `20260611003558_add_genero_to_pessoas.sql`.
 
 ## Objetivo
 
@@ -157,22 +157,18 @@ Regra de domínio:
 - `genero = pet` deve ficar consistente com `humano_ou_pet = 'Pet'`, mas não substitui sozinho as regras existentes de pets enquanto não houver migration/backfill definitivo;
 - a árvore não deve inferir gênero por nome quando `genero` estiver preenchido.
 
-Atenção operacional:
-
-```txt
-Se `pessoas.genero` foi criada manualmente no Supabase, criar migration versionada para alinhar local/remoto.
-```
-
 Estado confirmado contra o código atual:
 
 - a tipagem frontend de `Pessoa.genero` existe;
 - os cards visuais leem `person.genero` antes de usar fallbacks legados;
-- a existência de migration oficial para `pessoas.genero` ainda precisa ser verificada no repositório/ambiente.
+- a coluna `public.pessoas.genero` existe no Supabase como `text` nullable;
+- a migration oficial está versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`;
+- a migration cria comentário e índice parcial `idx_pessoas_genero`.
 
-Migration provável:
+Migration oficial:
 
 ```txt
-add_genero_to_pessoas
+20260611003558_add_genero_to_pessoas.sql
 ```
 
 ---
@@ -196,7 +192,7 @@ Regras:
 - `genero` deve ser tratado como informação visual, não como relação familiar;
 - alteração de avatar não altera `relacionamentos`;
 - manter `humano_ou_pet` como fonte semântica até haver decisão de migração/backfill;
-- se a migration de `genero` for criada oficialmente, atualizar este documento e `docs/operacao/MIGRATIONS_SUPABASE.md`.
+- a migration de `genero` já está criada oficialmente; manter este documento e `docs/operacao/MIGRATIONS_SUPABASE.md` sincronizados se houver constraint, backfill ou normalização futura.
 
 
 ### 2.3 Relacionamentos
