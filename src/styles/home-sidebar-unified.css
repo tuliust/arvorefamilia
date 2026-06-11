@@ -1,0 +1,23 @@
+/* Painel lateral unificado da árvore: remove abas/ação legadas e evita barras internas. */
+main aside button[aria-label="Ações da árvore"],
+section.fixed button[aria-label="Ações da árvore"] {
+  display: none !important;
+}
+
+main aside {
+  overflow: hidden;
+}
+
+main aside [class*="overflow-y-auto"],
+section.fixed [class*="overflow-y-auto"] {
+  overflow-y: visible !important;
+}
+
+main aside [class*="overflow-x-auto"],
+section.fixed [class*="overflow-x-auto"] {
+  overflow-x: hidden !important;
+}
+
+main aside [class*="gap-3"] {
+  gap: clamp(0.32rem, 0.75vh, 0.45rem) !important;
+}
