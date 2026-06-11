@@ -180,7 +180,7 @@ export function SidebarPanelTabs({
       <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5">
         <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
         <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
-        <TopIconButton icon={Scan} label="Restaurar visualiza??o" onClick={handleRestoreView} />
+        <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
       </div>
 
       <section className="tree-control-panel flex w-full min-w-0 flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">

@@ -58,16 +58,6 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || '';
 }
 
-function getFirstAndLastName(value?: string | null) {
-  const clean = value?.trim();
-  if (!clean) return '';
-
-  const beforeEmail = clean.includes('@') ? clean.split('@')[0] : clean;
-  const parts = beforeEmail.split(/\s+/).filter(Boolean);
-
-  if (parts.length <= 1) return parts[0] ?? '';
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
 
 interface HomeHeaderProps {
   currentTreeViewLabel: string;
@@ -112,7 +102,6 @@ export function HomeHeader({
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
   const [mobileHeaderFirstName, setMobileHeaderFirstName] = useState('');
-  const [headerUserShortName, setHeaderUserShortName] = useState('');
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
   const hasSearchSuggestions = Boolean(
@@ -132,7 +121,6 @@ export function HomeHeader({
     async function loadHeaderName() {
       if (!user?.id) {
         setMobileHeaderFirstName('');
-        setHeaderUserShortName('');
         return;
       }
 
@@ -144,7 +132,6 @@ export function HomeHeader({
         ''
       );
       setMobileHeaderFirstName(getFirstName(metadataName));
-      setHeaderUserShortName(getFirstAndLastName(metadataName));
 
       try {
         const linkedPersonResult = await getPrimaryLinkedPersonWithPessoa(user.id);
@@ -152,11 +139,9 @@ export function HomeHeader({
 
         const linkedPersonName = linkedPersonResult.data?.pessoa?.nome_completo;
         setMobileHeaderFirstName(getFirstName(linkedPersonName) || getFirstName(metadataName));
-        setHeaderUserShortName(getFirstAndLastName(linkedPersonName) || getFirstAndLastName(metadataName));
       } catch {
         if (!cancelled) {
           setMobileHeaderFirstName(getFirstName(metadataName));
-          setHeaderUserShortName(getFirstAndLastName(metadataName));
         }
       }
     }
@@ -372,11 +357,6 @@ export function HomeHeader({
             <UserProfileMenu />
           </div>
           <div className="hidden min-w-0 items-center gap-2 md:flex">
-            {headerUserShortName && (
-              <span className="hidden max-w-[10rem] truncate text-sm font-semibold text-gray-800 lg:block" title={headerUserShortName}>
-                {headerUserShortName}
-              </span>
-            )}
             <UserProfileMenu />
           </div>
         </div>
