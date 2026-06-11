@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos, avatares por `genero`, Mapa Familiar wide com painel colapsado, `/mapa-familiar` incluído em busca/favoritos e migration versionada de `pessoas.genero`.
+> Status: plano vivo revisado contra o código atual após persistência de `pessoas.complemento`, validação de IA/Curiosidades, reclassificação de Google OAuth para operação temporária em modo testes, ajustes mobile da árvore, Mapa Familiar em busca/favoritos e migrations versionadas de `pessoas.genero` e `pessoas.complemento`.
 
 ## Objetivo
 
@@ -56,14 +56,10 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 
 | ID | Documento/origem | Tipo | Ação necessária | Status |
 |---|---|---|---|---|
-| DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | melhoria futura / decisão pendente | Definir se `Complemento` deve persistir em schema próprio. As múltiplas redes sociais já persistem em `pessoa_social_profiles`; a pendência restante é apenas o campo visual `Complemento`. | Parcial |
 | DOC-006 | `src/app/pages/forum/ForumHome.tsx` / `docs/funcionalidades/FORUM.md` | divergência UI/documentação | Aplicar ou revisar a remoção real dos dropdowns **Todos os tipos** e **Todos os status** em `/forum`. A UI esperada deve manter apenas busca, categoria e botão icon-only de limpar filtros ao lado do dropdown de categoria. | Aberto |
 | DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. | Aberto |
 | DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
-| DOC-009 | `src/app/pages/home/homeAiContext.ts` / `api/ai.ts` | QA funcional / IA | Validar em produção ou preview as respostas de IA para perguntas genealógicas prioritárias, garantindo ausência de IDs e de inferências sensíveis. | Aberto |
-| DOC-010 | Google Agenda/OAuth | decisão de produto / compliance | O parágrafo específico sobre Google Agenda foi removido de `/entrar`. Confirmar com produto/compliance qual superfície pública deve declarar a finalidade da integração em eventual revisão OAuth (`/calendario-familiar`, `/privacidade`, página dedicada ou outro fluxo), sem reintroduzir o texto em `/entrar` sem decisão explícita. | Aberto |
-| DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
-| DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
+| DOC-010 | Google Agenda/OAuth | operação temporária / validação externa | Os ajustes solicitados pelo Google já foram realizados, mas a autorização OAuth ainda não foi concedida. Até a aprovação, manter o app em modo **Testing** e cadastrar manualmente no Google Cloud os e-mails dos usuários que se cadastrarem no site, respeitando o limite operacional de test users. Não reintroduzir o texto de Google Agenda em `/entrar` sem nova decisão explícita. | Operação ativa / validação externa |
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
 | DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. O `MobileTreeControlsPortal` reconhece `/mapa-familiar`, mas o helper de captura ainda procura `.react-flow`, portanto a exportação HTML/SVG precisa de implementação/QA próprios. | Aberto confirmado |
 | DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Código atual já possui reorganização do modo wide em `DesktopFamilyMapView.tsx`. Validar visualmente, com dados reais, se tios/primos ocupam as laterais sem invadir Pai/Mãe/Pessoa Central, sem cortar nas bordas e sem perder proporção quando o painel lateral é colapsado. | Parcial / QA aberto |
@@ -84,8 +80,9 @@ Na revisão atual, as divergências anteriores foram fechadas:
 - `/mapa-familiar` já consta em `GLOBAL_SEARCH_PAGES`;
 - `/mapa-familiar` já consta em `FAVORITE_PAGES`;
 - `public.pessoas.genero` já existe no banco e possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`.
+- `public.pessoas.complemento` já existe no banco, possui migration versionada em `supabase/migrations/20260611013000_add_complemento_to_pessoas.sql` e é persistido pelos formulários de edição do próprio perfil.
 
-Portanto, busca/favoritos do Mapa Familiar e versionamento básico de `pessoas.genero` deixam de ser pendências abertas. Permanecem apenas QA visual, decisões de produto e validações externas listadas na tabela principal.
+Portanto, busca/favoritos do Mapa Familiar, versionamento básico de `pessoas.genero`, persistência de `pessoas.complemento` e validação de IA/Curiosidades deixam de ser pendências abertas. Permanecem apenas QA visual, decisões de produto e validações externas listadas na tabela principal.
 
 
 ---
@@ -96,8 +93,12 @@ Portanto, busca/favoritos do Mapa Familiar e versionamento básico de `pessoas.g
 |---|---|---|---|
 | DOC-001 | `docs/funcionalidades/GENEALOGIA_VIEW.md` | `HomeTreeSection.tsx` passou a calcular a base mobile de Genealogia/Visão Completa com gerações inferidas antes de montar chips e antes de repassar pessoas ao `FamilyTree`. | Concluído tecnicamente; manter QA visual mobile. |
 | DOC-002 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | Strings quebradas por encoding foram corrigidas na origem e `textEncodingRepair.ts` foi removido. | Concluído. |
+| DOC-003 | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | `Complemento` deixou de ser campo visual/local e passou a persistir em `public.pessoas.complemento`, separado do endereço principal preenchido pelo Google Places. Migration versionada em `20260611013000_add_complemento_to_pessoas.sql`. | Concluído tecnicamente. |
 | DOC-004 | `/minha-arvore` mobile ReactFlow | Reclassificado como obsoleto para a rota mobile principal, pois `/minha-arvore` mobile deixou de depender do desenho inferior ReactFlow e usa `MobileFamilyTreeView`. Se o ReactFlow mobile voltar a ser usado, reabrir com novo escopo. | Obsoleto/substituído. |
 | DOC-005 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | `MobileTreeControlsPortal` passou a usar o fluxo canônico de `treeExport.ts` para imagem, PDF e impressão. | Concluído tecnicamente; manter QA de captura em mobile. |
+| DOC-009 | `src/app/pages/home/homeAiContext.ts` / `api/ai.ts` | IA/Curiosidades foi validada no escopo funcional atual, com contexto estruturado, ausência de IDs na resposta esperada, tratamento de falha e preservação do modal. | Concluído. |
+| DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | Variáveis server-side e rewrite `/api/*` foram revisados/validados no escopo atual. Manter secrets fora do frontend e tratar novas mudanças como manutenção operacional. | Concluído. |
+| DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | Documento funcional de Curiosidades e IA alinhado ao estado validado atual. Novas mudanças devem entrar como requisito específico, não como pendência aberta herdada. | Concluído. |
 | DOC-013 | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` / `/minha-arvore` mobile segmentada | Reclassificado: a implementação atual usa malha 3×3, abas `Paterno | Central | Materno`, tela global de ancestrais, primos sem **Ver todos**, linhas Pai/Mãe acompanhando scroll e preview durante swipe. Pendências residuais devem ser registradas como bug visual específico, não como “finalizar sete telas”. | Concluído tecnicamente; manter QA visual manual. |
 | DOC-021 | `MobileFamilyTreeView.tsx` / conectores mobile | Conectores entre ancestrais, Pai/Mãe e pessoa central ajustados para acompanhar o contexto rolável da tela Central. | Concluído tecnicamente; manter QA visual manual em 320px, 375px, 390px e 430px. |
 | DOC-022 | `MobileFamilyTreeView.tsx` / cards mobile | Cards mobile passaram a exibir apenas ano em nascimento/falecimento e o card central não exibe badge **Você**. | Concluído tecnicamente; manter QA visual manual. |

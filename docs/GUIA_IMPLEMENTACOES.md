@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, ajustes mobile de conectores, anos nos cards, card central sem badge, avatares visuais por `genero`, `/entrar` sem texto público de Google Agenda, `/mapa-familiar` em busca/favoritos e migration versionada de `pessoas.genero`.
+> Status: guia canônico revisado contra o código atual com persistência de `pessoas.complemento`, IA/Curiosidades validada, Google OAuth em modo testes, Minha Árvore mobile segmentada, Mapa Familiar panorâmico, avatares visuais por `genero`, `/mapa-familiar` em busca/favoritos e migrations versionadas de `pessoas.genero` e `pessoas.complemento`.
 
 ## Objetivo
 
@@ -57,17 +57,18 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Relacionamentos | Implementados | Admin altera dados reais; usuário comum envia solicitação/sugestão conforme permissão. |
 | Relacionamento conjugal | Implementado | Modal público com texto humano, tempo verbal ativo/inativo, formulário de informações e arquivos históricos vinculados ao relacionamento. |
 | Arquivos históricos | Implementados | Storage para novos arquivos, compatibilidade com base64 legado, categoria histórica e categorias específicas por contexto. |
+| Dados próprios/endereço | Implementados | Formulários de dados próprios persistem `endereco` e `complemento` separadamente. `endereco` pode ser preenchido por Google Places; `complemento` guarda apartamento, bloco, torre, casa ou referência interna em `public.pessoas.complemento`. |
 | Eventos da vida / timeline | Implementados no escopo atual | Eventos derivados e manuais existem; título redundante embutido é ocultado em `/minha-arvore/editar`; upload por evento, privacidade por evento e PDF ficam como evolução futura. |
 | Astrologia/acontecimentos | Implementados no escopo atual | Perfil lê insights persistidos; geração/regeneração é ação admin/server-side. |
 | WhatsApp no perfil | Implementado no frontend | Botão depende de telefone válido e permissão; não há WhatsApp Business API no MVP. |
 | Grau de parentesco/vínculo | Implementado | Utilitário puro, testes unitários e integração em Home/perfil. Narrativas refinadas para pai/mãe, primos, tio/sobrinho e tutor de pet. |
-| Curiosidades, conexão e IA | Implementadas no escopo atual | Modal de Curiosidades reúne abas informativas, descoberta de conexão familiar e painel de perguntas à IA. Respostas genealógicas usam contexto estruturado, regras de privacidade e fallback determinístico quando aplicável. |
+| Curiosidades, conexão e IA | Implementadas e validadas no escopo atual | Modal de Curiosidades reúne abas informativas, descoberta de conexão familiar e painel de perguntas à IA. Respostas genealógicas usam contexto estruturado, regras de privacidade, fallback determinístico quando aplicável e tratamento controlado de erro. |
 | Favoritos | Primeira camada implementada | Serviço suporta `entity_type`; UI real consolidada inclui favoritos de pessoa, tópicos de fórum, eventos pessoais, arquivos históricos e páginas presentes em `FAVORITE_PAGES`, incluindo `/mapa-familiar` como favorito de página. |
 | Página de favoritos | Implementada | Lista, busca, filtros, remoção e cards inteiros clicáveis. O botão textual **Abrir conteúdo** foi removido; a lixeira não deve disparar abertura do card. |
 | Fórum | Implementado no escopo atual | Categorias, tópicos, respostas diretas, menções, vínculos automáticos com pessoas mencionadas, avatares, favoritos e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição; `/forum/topico/:id` não exibe box de pessoa relacionada nem comentários aninhados na UI atual. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
-| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. A explicação detalhada da integração deve ficar na área do calendário e/ou documentos públicos legais quando necessária; a página `/entrar` não deve exibir o parágrafo promocional da integração. |
+| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. Enquanto a autorização OAuth não for concedida, operar em modo Testing e cadastrar manualmente os e-mails autorizados no Google Cloud. A página `/entrar` não deve exibir o parágrafo promocional da integração sem nova decisão. |
 | Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso e aceite legal. O texto institucional deve apresentar a plataforma familiar privada; o parágrafo específico sobre Google Agenda foi removido do JSX da página de entrada. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange`, `brown` e `visual` por CSS variables e `localStorage`, incluindo exibição no menu mobile quando aplicável. |

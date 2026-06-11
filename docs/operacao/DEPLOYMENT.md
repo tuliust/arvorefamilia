@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/operacao/DEPLOYMENT.md`
 > Tipo: checklist operacional de build, deploy e publicação.
-> Status: revisado com política de cache real para SPA Vite/Vercel, rotas serverless `/api/*`, IA, Google Agenda/OAuth, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
+> Status: revisado com política de cache real para SPA Vite/Vercel, rotas serverless `/api/*`, IA validada no escopo atual, Google Agenda/OAuth em operação temporária de modo testes, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
 
 ## 1. Objetivo
 
@@ -440,7 +440,7 @@ Regras:
 
 ---
 
-## 14. Google Agenda, OAuth e home pública
+## 14. Google Agenda, OAuth e modo testes
 
 A integração com Google Agenda exige consistência entre:
 
@@ -450,6 +450,23 @@ A integração com Google Agenda exige consistência entre:
 - finalidade da integração declarada ao usuário;
 - escopos solicitados;
 - política de privacidade acessível.
+
+Status operacional atual:
+
+```txt
+Os ajustes solicitados pelo Google foram realizados, mas a autorização OAuth ainda não foi concedida.
+Até a aprovação, o app deve permanecer em modo Testing no Google Cloud.
+Usuários reais que se cadastrarem no site devem ser adicionados manualmente como test users no Google Cloud.
+Respeitar o limite operacional de test users do modo Testing.
+```
+
+Regras temporárias:
+
+- não tratar a ausência de aprovação OAuth como bug de frontend;
+- não reintroduzir texto promocional de Google Agenda em `/entrar` sem nova decisão explícita;
+- manter `/privacidade` e `/termos` acessíveis sem autenticação;
+- orientar usuários não adicionados como test users antes de testar a conexão com Google;
+- revisar esta seção quando o Google aprovar a autorização.
 
 Arquivos relevantes:
 
@@ -465,15 +482,15 @@ docs/funcionalidades/CURIOSIDADES_E_IA.md
 docs/arquitetura/ROTAS_E_GUARDS.md
 ```
 
-Checklist de compliance antes de reenviar validação OAuth:
+Checklist enquanto o OAuth estiver em modo testes:
 
 - `/entrar` deve estar acessível publicamente sem login;
 - o título principal deve exibir **Família Souza Barros**;
 - o texto institucional deve explicar que a plataforma organiza árvore genealógica, perfis, fotos, documentos, memórias e datas familiares;
-- o texto sobre Google Agenda deve explicar sincronização de aniversários e datas de memória mediante autorização explícita;
-- esses textos devem estar renderizados diretamente no JSX/DOM, não apenas via pseudo-elemento CSS;
 - `/privacidade` e `/termos` devem permanecer acessíveis sem autenticação;
 - o domínio final deve corresponder ao domínio cadastrado no Google Cloud;
+- o app deve estar em modo **Testing** enquanto a aprovação OAuth não for concedida;
+- o e-mail do usuário testador deve estar cadastrado como test user no Google Cloud antes do teste;
 - secrets OAuth devem ficar em Supabase/Edge Functions, não no frontend.
 
 Validação manual recomendada:
@@ -481,15 +498,13 @@ Validação manual recomendada:
 ```txt
 1. Abrir /entrar em janela anônima.
 2. Confirmar nome Família Souza Barros no hero.
-3. Confirmar texto de Google Agenda visível.
-4. Abrir /privacidade sem login.
-5. Abrir /termos sem login.
+3. Abrir /privacidade sem login.
+4. Abrir /termos sem login.
+5. Adicionar o e-mail do usuário real como test user no Google Cloud.
 6. Entrar com usuário autorizado.
 7. Abrir /calendario-familiar.
 8. Testar fluxo de conectar Google Agenda em ambiente autorizado.
 ```
-
----
 
 ## 15. Serverless `/api/ai`
 
@@ -541,7 +556,7 @@ supabase functions list
 
 Verificar manualmente, conforme escopo alterado:
 
-- `/entrar` com nome **Família Souza Barros** e texto de Google Agenda;
+- `/entrar` com nome **Família Souza Barros**, sem reintroduzir texto específico de Google Agenda salvo nova decisão;
 - `/api/ai` quando a frente de IA estiver ativa;
 - `/minha-arvore`;
 - `/genealogia`;
@@ -592,7 +607,7 @@ Verificar manualmente, conforme escopo alterado:
 | Tela branca sem build error | erro runtime/lazy import | abrir console, testar anônimo, checar chunks e imports |
 | `/api/ai` retorna HTML | fallback SPA capturou `/api/*` | revisar ordem dos rewrites no `vercel.json` |
 | IA falha em produção | `OPENAI_API_KEY` ausente/inválida ou endpoint serverless com erro | revisar variável server-side no provedor e logs sem expor dados pessoais |
-| Google rejeita OAuth | home pública não mostra nome/finalidade do app ou domínio divergente | revisar `/entrar`, tela OAuth, `/privacidade`, `/termos` e domínio autorizado |
+| Google OAuth bloqueia usuário real | app ainda está em modo Testing ou e-mail não foi cadastrado como test user | adicionar o e-mail no Google Cloud, confirmar domínio/consent screen e reavaliar após aprovação OAuth |
 
 ---
 

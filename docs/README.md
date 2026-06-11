@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após ajustes mobile da árvore, alinhamento do fallback mobile do Mapa Familiar, remoção do texto de Google Agenda da página `/entrar`, inclusão de `/mapa-familiar` em busca/favoritos e migration versionada de `pessoas.genero`.
+> Status: índice canônico revisado após persistência de `pessoas.complemento`, validação de IA/Curiosidades, operação temporária de Google OAuth em modo testes, ajustes mobile da árvore, Mapa Familiar em busca/favoritos e migrations versionadas de `pessoas.genero` e `pessoas.complemento`.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -12,6 +12,7 @@ Use este arquivo como ponto de entrada antes de consultar guias específicos. A 
 A revisão mais recente registra:
 
 - `/entrar` continua funcionando como home pública do app **Família Souza Barros**, login e primeiro acesso; o parágrafo específico sobre integração com Google Agenda foi removido do conteúdo público da página de entrada;
+- enquanto a autorização OAuth do Google não for concedida, a integração com Google Agenda deve operar em modo **Testing**, com usuários liberados manualmente como test users no Google Cloud;
 - as views principais da árvore agora são **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
 - `/mapa-familiar` é uma view protegida de árvore, com renderização panorâmica desktop/tablet em `DesktopFamilyMapView` e fallback mobile para `MobileFamilyTreeView`;
 - a paleta **Visual** (`visual`) foi adicionada como modo de cores da árvore;
@@ -19,6 +20,8 @@ A revisão mais recente registra:
 - o Mapa Familiar foi refatorado com `FAMILY_MAP_LAYOUT`, regras de cônjuges, grupos expansíveis, conectores por âncoras e avatares por `genero`;
 - `/mapa-familiar` já consta em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, permitindo busca global e favorito de página para a rota canônica;
 - `pessoas.genero` já possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com coluna `text`, comentário e índice parcial;
+- `pessoas.complemento` já possui migration versionada em `supabase/migrations/20260611013000_add_complemento_to_pessoas.sql` e é persistido nos formulários de edição do próprio perfil;
+- IA/Curiosidades foi validada funcionalmente no escopo atual; pendências futuras devem ser registradas apenas como manutenção ou novo requisito específico;
 - o fallback mobile da árvore usa conectores que acompanham o scroll da tela Central, cards com apenas ano, card central sem badge **Você** e avatares visuais por `genero`;
 - pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 

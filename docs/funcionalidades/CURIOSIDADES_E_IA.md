@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/funcionalidades/CURIOSIDADES_E_IA.md`
 > Tipo: documentação funcional e técnica das abas de Curiosidades, conexão familiar e IA na Home.
-> Status: guia criado para consolidar o comportamento implementado após ajustes de narrativas de parentesco, respostas genealógicas assistidas, regras de privacidade e integração com `api/ai.ts`.
+> Status: guia validado no escopo funcional atual após ajustes de narrativas de parentesco, respostas genealógicas assistidas, regras de privacidade, fallback de erro e integração serverless com `api/ai.ts`.
 
 ## 1. Função deste documento
 
@@ -44,6 +44,14 @@ O escopo atual cobre:
 - respostas determinísticas para perguntas recorrentes quando o dado pode ser calculado localmente;
 - regras para evitar exposição de IDs, dados técnicos e inferências sensíveis.
 
+Status atual:
+
+```txt
+IA/Curiosidades está validada no escopo funcional atual.
+Novas melhorias devem ser registradas como manutenção ou requisito específico,
+não como pendência aberta herdada de QA inicial.
+```
+
 Fora do escopo atual:
 
 - gravar novas informações a partir da IA;
@@ -80,6 +88,7 @@ A experiência fica dentro da Home autenticada, usada pelas rotas:
 
 ```txt
 /minha-arvore
+/mapa-familiar
 /genealogia
 /visao-completa
 ```

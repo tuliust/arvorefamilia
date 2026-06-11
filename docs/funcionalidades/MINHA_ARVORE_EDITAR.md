@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-09
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
-> Status: revisado após correção de encoding na origem e persistência de redes sociais versionadas em `pessoa_social_profiles`.
+> Status: revisado após correção de encoding na origem, persistência de redes sociais versionadas em `pessoa_social_profiles` e persistência de `Complemento` em `public.pessoas.complemento`.
 
 ---
 
@@ -177,7 +177,7 @@ Campos editáveis atuais:
 | Profissão | Opcional. |
 | Telefone | Formatado localmente. |
 | Endereço | Pode usar Google Places quando configurado. |
-| Complemento | Campo visual local; ainda não persiste em `pessoas` enquanto o schema/tipagem não suportarem. |
+| Complemento | Persistido em `public.pessoas.complemento`; serve para dado manual separado do endereço Google Places, como apartamento, bloco, torre, casa ou referência interna. |
 | Redes sociais | UI permite múltiplas linhas e persiste os perfis em `pessoa_social_profiles`; a primeira linha continua sincronizada com campos legados por compatibilidade. |
 | Mini bio | Campo livre. |
 | Curiosidades de Vida | Campo livre. |
@@ -196,18 +196,26 @@ Estado atual de persistência:
 ```txt
 Redes sociais múltiplas são carregadas e salvas por pessoa_social_profiles.
 A primeira rede social permanece sincronizada com os campos legados em pessoas para compatibilidade.
-Complemento segue como campo visual/local até existir decisão de schema/tipagem.
+Complemento é carregado e salvo em public.pessoas.complemento, separado do endereço principal.
+Selecionar novo endereço via Google Places deve atualizar apenas endereco e não apagar complemento.
 ```
 
 Services relacionados:
 
 ```txt
+updateOwnLinkedPerson
+buildEditablePersonFormState
+cleanPersonPayload
 listarPessoaSocialProfiles
 substituirPessoaSocialProfiles
 buildSocialProfilesFromRows
 ```
 
-Ponto futuro registrado no plano: decidir se `Complemento` deve virar campo persistente em `pessoas` ou estrutura própria.
+Migration relacionada:
+
+```txt
+supabase/migrations/20260611013000_add_complemento_to_pessoas.sql
+```
 
 ---
 

@@ -112,6 +112,7 @@ Os ajustes abaixo são documentados como mudanças de UI/componente e não devem
 Observação:
 
 - `public.pessoas.genero` já possui migration versionada em `20260611003558_add_genero_to_pessoas.sql`;
+public.pessoas.complemento
 - essa migration adiciona coluna `text` nullable, comentário e índice parcial `idx_pessoas_genero`;
 - não criar migration para os SVGs, componentes, espaçamentos, labels, conectores ou formatação de ano.
 
@@ -248,6 +249,47 @@ Se a migration já foi aplicada, não remover `categoria_evento` do payload nem 
 ---
 
 ## 9. Migrations recentes relevantes
+
+### `20260611013000_add_complemento_to_pessoas.sql`
+
+Escopo:
+
+- adiciona `complemento text` em `public.pessoas` de forma idempotente;
+- documenta a coluna como complemento manual de endereço;
+- não cria índice, constraint ou RLS própria, pois o campo usa a mesma linha e permissões de `pessoas`.
+
+Uso funcional:
+
+- `endereco` continua sendo o endereço principal, preenchido ou normalizado pelo Google Places quando configurado;
+- `complemento` guarda informação manual como apartamento, bloco, torre, casa ou referência interna;
+- selecionar novo endereço via Google Places deve atualizar apenas `endereco`, sem apagar `complemento`;
+- o campo é editado nos fluxos de dados próprios, incluindo `/meus-dados` e `/minha-arvore/editar`.
+
+SQL útil para verificar:
+
+```sql
+select table_schema, table_name, column_name, data_type, is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'pessoas'
+  and column_name = 'complemento';
+```
+
+Sintoma se ausente:
+
+```txt
+update em pessoas falha quando o frontend envia complemento no payload,
+ou o campo aparece na UI mas não persiste após recarregar.
+```
+
+Observação operacional:
+
+```txt
+Esta coluna foi aplicada manualmente no Supabase antes de ser versionada.
+A migration existe para manter ambientes futuros e histórico local/remoto alinhados.
+```
+
+---
 
 ### `20260611003558_add_genero_to_pessoas.sql`
 
