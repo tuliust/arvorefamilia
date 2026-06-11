@@ -23,6 +23,10 @@ main aside [class*="gap-3"] {
   gap: clamp(0.28rem, 0.68vh, 0.42rem) !important;
 }
 
+html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.rounded-2xl.border.border-blue-100.bg-blue-50.p-2.md\:hidden {
+  display: none !important;
+}
+
 .tree-control-panel,
 .tree-control-section,
 .tree-icon-chip,
