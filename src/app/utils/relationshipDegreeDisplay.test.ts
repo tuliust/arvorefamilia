@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Pessoa, Relacionamento, TipoRelacionamento } from '../types';
 import { calculateRelationshipDegree } from './relationshipDegree';
 import { getRelationshipResultSentence } from './relationshipDegreeDisplay';

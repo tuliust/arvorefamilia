@@ -336,6 +336,11 @@ export function getRelationshipResultSentence(result: RelationshipDegreeResult, 
   }
 
   if (pattern === 'child>sibling>parent>parent') {
+    const narrative = buildSecondDegreeCousinNarrative(result, people);
+    if (narrative?.summary) {
+      return `${withFinalPeriod(narrative.title)} ${withFinalPeriod(narrative.summary)}`;
+    }
+
     return `${originFirstName} e ${targetFirstName} são primos de segundo grau.`;
   }
 
