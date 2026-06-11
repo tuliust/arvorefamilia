@@ -16,6 +16,10 @@ import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { Pessoa, Relacionamento } from '../../types';
 import { GenealogyMobileStageTabs } from './GenealogyMobileStageTabs';
+import {
+  SIDEBAR_TREE_ACTION_EVENT,
+  type SidebarTreeAction,
+} from './SidebarPanelTabs';
 
 interface StateMessageProps {
   title: string;
@@ -145,7 +149,7 @@ interface HomeTreeSectionProps {
   pessoas: Pessoa[];
   centralReferencePersonId?: string;
   canRenderTree: boolean;
-  familyTreeRef: React.Ref<FamilyTreeActions>;
+  familyTreeRef: React.RefObject<FamilyTreeActions | null>;
   visiblePersonIdsByLifeStatus?: Set<string>;
   relacionamentos: Relacionamento[];
   onPersonClick: (pessoa: Pessoa) => void;
@@ -275,6 +279,24 @@ export function HomeTreeSection({
     event.preventDefault();
     event.stopPropagation();
   }, [isMobile, treeViewMode]);
+
+  React.useEffect(() => {
+    const handleSidebarTreeAction = (event: Event) => {
+      const action = (event as CustomEvent<SidebarTreeAction>).detail;
+      const treeActions = familyTreeRef.current;
+      if (!treeActions) return;
+
+      if (action === 'zoom-in') treeActions.zoomIn();
+      if (action === 'zoom-out') treeActions.zoomOut();
+      if (action === 'select-area') treeActions.startAreaSelection();
+      if (action === 'save-image') void treeActions.saveImage();
+      if (action === 'save-pdf') void treeActions.savePdf();
+      if (action === 'print') void treeActions.print();
+    };
+
+    window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
+    return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
+  }, [familyTreeRef]);
 
   return (
     <section
