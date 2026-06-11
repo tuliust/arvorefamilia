@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-11
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após persistência de `pessoas.complemento`, validação de IA/Curiosidades, operação temporária de Google OAuth em modo testes, ajustes mobile da árvore, Mapa Familiar em busca/favoritos e migrations versionadas de `pessoas.genero` e `pessoas.complemento`.
+> Status: índice canônico revisado após fechamento de divergências documentais, persistência de `pessoas.complemento`, validação de IA/Curiosidades, operação temporária de Google OAuth em modo testes, ajustes mobile da árvore, Mapa Familiar em busca/favoritos e migrations versionadas de `pessoas.genero` e `pessoas.complemento`.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -22,6 +22,7 @@ A revisão mais recente registra:
 - `pessoas.genero` já possui migration versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`, com coluna `text`, comentário e índice parcial;
 - `pessoas.complemento` já possui migration versionada em `supabase/migrations/20260611013000_add_complemento_to_pessoas.sql` e é persistido nos formulários de edição do próprio perfil;
 - IA/Curiosidades foi validada funcionalmente no escopo atual; pendências futuras devem ser registradas apenas como manutenção ou novo requisito específico;
+- a divergência documental do Fórum foi fechada: a documentação canônica descreve a UI sem filtros visíveis de tipo/status e sem badges legadas de tipo/status;
 - o fallback mobile da árvore usa conectores que acompanham o scroll da tela Central, cards com apenas ano, card central sem badge **Você** e avatares visuais por `genero`;
 - pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 
@@ -191,33 +192,40 @@ As pendências abertas da revisão documental ficam apenas em:
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-No fechamento desta revisão documental, o plano separa itens **implementados**, **obsoletos/substituídos** e **abertos**.
+No fechamento desta revisão documental, o plano separa itens **implementados**, **obsoletos/substituídos**, **operacionais** e **abertos**.
 
-Itens concluídos tecnicamente ou reclassificados:
+Itens concluídos tecnicamente, resolvidos documentalmente ou reclassificados:
 
 | ID | Origem | Resultado |
 |---|---|---|
 | `DOC-001` | `funcionalidades/GENEALOGIA_VIEW.md` | Chips mobile usam a base de gerações inferidas em `HomeTreeSection.tsx`. |
 | `DOC-002` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Encoding corrigido na origem; workaround global removido. |
+| `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | `Complemento` persiste em `public.pessoas.complemento`, separado do endereço principal preenchido pelo Google Places. |
 | `DOC-004` | `/minha-arvore` mobile ReactFlow | Reclassificado como obsoleto para a rota mobile principal, pois `/minha-arvore` mobile usa `MobileFamilyTreeView`. |
 | `DOC-005` | `funcionalidades/EXPORTACAO_ARVORE.md` | Exportação mobile rápida alinhada ao fluxo canônico de `treeExport.ts`. |
-| `DOC-013` | `/minha-arvore` mobile segmentada | Reclassificado: a malha 3×3, abas `Paterno | Central | Materno`, ancestrais globais, primos sem “Ver todos” e preview de swipe foram implementados/documentados. Manter apenas QA visual manual quando necessário. |
+| `DOC-006` | `funcionalidades/FORUM.md` | Divergência documental fechada; o guia do Fórum descreve a UI sem dropdowns de tipo/status e sem badges legadas de tipo/status. |
+| `DOC-009` | Curiosidades/IA | QA funcional validado no escopo atual, incluindo contexto estruturado, ausência de IDs e tratamento de falha. |
+| `DOC-010` | Google Agenda/OAuth | Compliance público tratado como OK no escopo documental atual; até a autorização externa, operar em modo **Testing** com test users cadastrados manualmente. |
+| `DOC-011` | `api/ai.ts` / deploy | Secrets server-side e rewrite `/api/*` revisados no escopo atual. |
+| `DOC-012` | Curiosidades/IA | Documentação funcional alinhada ao comportamento validado atual. |
+| `DOC-013` | `/minha-arvore` mobile segmentada | Malha 3×3, abas `Paterno | Central | Materno`, ancestrais globais, primos sem “Ver todos” e preview de swipe implementados/documentados. |
+| `DOC-015` | `/mapa-familiar` busca/favoritos | `/mapa-familiar` incluído em busca global e favoritos de página. |
+| `DOC-018` | `pessoas.genero` | Coluna confirmada no banco e versionada em migration. |
+| `DOC-021` | conectores mobile | Conectores mobile ajustados para acompanhar o contexto rolável da tela Central. |
+| `DOC-022` | cards mobile | Cards mobile exibem apenas ano e o card central não exibe badge **Você**. |
+| `DOC-023` | avatares mobile | Avatares mobile reutilizam foto real e fallback visual por `genero`. |
 
 Itens ainda abertos ou parcialmente abertos:
 
 | ID | Origem | Tipo |
 |---|---|---|
-| `DOC-003` | `funcionalidades/MINHA_ARVORE_EDITAR.md` | decisão pendente apenas sobre persistência de `Complemento`; redes sociais múltiplas já persistem em `pessoa_social_profiles` |
-| `DOC-006` | `/forum` | divergência UI/documentação / filtros tipo-status |
 | `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
 | `DOC-008` | `directFamilyDistributedLayout.ts` | melhoria técnica / migrar largura visual de cards para layout estrutural |
-| `DOC-009` | Curiosidades/IA | QA funcional de respostas e ausência de IDs |
-| `DOC-010` | Google Agenda/OAuth | decisão de produto/compliance sobre onde declarar publicamente a finalidade da integração, sem recolocar automaticamente o texto em `/entrar` |
-| `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
-| `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
 | `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
-| `DOC-016` | `/mapa-familiar` exportação | decidir/documentar se a exportação canônica deve capturar a view HTML/SVG panorâmica |
+| `DOC-016` | `/mapa-familiar` exportação | implementação futura / decidir e validar captura HTML/CSS/SVG panorâmica |
 | `DOC-017` | `/mapa-familiar` laterais | QA visual dos grupos de tios/primos laterais para ocupar espaço lateral sem invadir o núcleo |
+| `DOC-019` | `MAPA_FAMILIAR_VIEW.md` | manutenção documental canônica do Mapa Familiar conforme o código evoluir |
+| `DOC-020` | `/mapa-familiar` painel colapsado | QA visual do canvas com painel lateral colapsado |
 
 Não duplicar essas pendências em outros arquivos. Documentos funcionais podem mencionar o contexto técnico, mas o controle deve permanecer no plano.
 

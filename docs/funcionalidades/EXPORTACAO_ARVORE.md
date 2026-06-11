@@ -1,9 +1,9 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
 > Tipo: documentação funcional e técnica da exportação da árvore.
-> Status: revisado com a limitação atual da exportação do Mapa Familiar HTML/CSS/SVG e a pendência de decisão sobre captura panorâmica.
+> Status: revisado para separar fluxo canônico já implementado das views ReactFlow/mobile e pendência real `DOC-016` de exportação do Mapa Familiar HTML/CSS/SVG.
 
 ---
 
@@ -96,7 +96,7 @@ Fora do escopo atual:
 
 A view **Mapa Familiar** usa `DesktopFamilyMapView.tsx`, cards HTML/CSS de `FamilyTreeVisualCards.tsx` e conectores SVG posicionados por âncoras.
 
-No estado atual, ela **não deve ser documentada como plenamente coberta pela exportação canônica** da árvore ReactFlow.
+No estado atual, ela **não deve ser documentada como plenamente coberta pela exportação canônica** da árvore ReactFlow. Esta não é mais uma divergência documental: é uma pendência real de decisão/implementação (`DOC-016`).
 
 Regra documental:
 
@@ -113,7 +113,7 @@ Motivo técnico:
 - grupos laterais e grupos expansíveis alteram a altura/posição real da superfície;
 - a exportação precisa decidir se captura a viewport visível, o canvas lógico completo ou uma área selecionada.
 
-Pendência relacionada:
+Pendência real relacionada:
 
 ```txt
 DOC-016 - decidir se a exportação canônica deve capturar a view HTML/SVG panorâmica do Mapa Familiar.

@@ -1,9 +1,9 @@
 # Curiosidades e IA - modal, conexão familiar e perguntas assistidas
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/CURIOSIDADES_E_IA.md`
 > Tipo: documentação funcional e técnica das abas de Curiosidades, conexão familiar e IA na Home.
-> Status: guia validado no escopo funcional atual após ajustes de narrativas de parentesco, respostas genealógicas assistidas, regras de privacidade, fallback de erro e integração serverless com `api/ai.ts`.
+> Status: guia validado no escopo funcional atual e removido das pendências abertas do plano; `DOC-009`, `DOC-011` e `DOC-012` ficam classificados como concluídos/manutenção contínua.
 
 ## 1. Função deste documento
 
@@ -48,6 +48,7 @@ Status atual:
 
 ```txt
 IA/Curiosidades está validada no escopo funcional atual.
+`DOC-009`, `DOC-011` e `DOC-012` não são pendências abertas.
 Novas melhorias devem ser registradas como manutenção ou requisito específico,
 não como pendência aberta herdada de QA inicial.
 ```

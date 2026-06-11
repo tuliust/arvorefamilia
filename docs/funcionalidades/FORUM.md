@@ -1,15 +1,28 @@
-# Fórum
+﻿# Fórum
 
-> Última revisão: 2026-06-09  
+> Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/FORUM.md`  
 > Tipo: documentação funcional e técnica do módulo de fórum.  
-> Status: revisado para refletir a estrutura atual de listagem, tópico em formato social, respostas diretas, remoção de badges de tipo/status e remoção do campo manual de pessoas relacionadas.
+> Status: revisado e alinhado ao fechamento da divergência documental DOC-006; a UI documentada remove filtros visíveis de tipo/status, badges legadas de tipo/status e campo manual de pessoas relacionadas.
 
 ---
 
 ## 1. Objetivo
 
 Este documento registra o comportamento atual do fórum familiar.
+
+### 1.1 Status documental
+
+A divergência documental `DOC-006` foi fechada no plano canônico.
+
+Estado esperado:
+
+```txt
+/forum exibe busca, filtro por categoria, botão compacto para limpar filtros e ação de novo tópico.
+Dropdowns de tipo/status não fazem parte da UI atual.
+Tipo/status podem existir como campos técnicos ou legados, mas não devem voltar como controles visíveis sem nova decisão de produto.
+```
+
 
 Rotas:
 
@@ -111,7 +124,7 @@ Regras:
 - o botão de limpar filtros deve usar `aria-label`/`title`, pois não possui texto visível;
 - a busca e a categoria devem funcionar de forma independente;
 - a remoção dos filtros visuais não altera RLS, service ou schema;
-- se a UI ainda exibir dropdowns de tipo/status, registrar a divergência em `docs/PLANO_PROXIMOS_PASSOS.md` até a correção ser validada.
+- se a UI voltar a exibir dropdowns de tipo/status, tratar como regressão ou novo requisito explícito, não como pendência documental herdada.
 
 ### 4.1 Cards da listagem
 
