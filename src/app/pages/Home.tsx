@@ -777,7 +777,11 @@ export function Home() {
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
 
-    if (treeViewMode !== 'minha-arvore' && treeViewMode !== 'mapa-familiar') {
+    if (
+      treeViewMode !== 'minha-arvore' &&
+      treeViewMode !== 'mapa-familiar' &&
+      treeViewMode !== 'visao-completa'
+    ) {
       return pessoas;
     }
 
@@ -895,7 +899,7 @@ export function Home() {
       {activeSidebarPanel === 'filters' && (
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
           <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
-            {treeViewMode === 'genealogia' || treeViewMode === 'visao-completa' ? (
+            {treeViewMode === 'genealogia' ? (
               <GenealogyFilterGrid
                 filters={genealogyFilters}
                 counts={genealogyFilterCounts}
