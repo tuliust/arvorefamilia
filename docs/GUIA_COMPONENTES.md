@@ -28,7 +28,7 @@ Este documento não substitui:
 Esta revisão consolida duas frentes diferentes da árvore, que não devem ser confundidas:
 
 1. **Minha Árvore mobile segmentada**: implementada em `MobileFamilyTreeView.tsx`, com malha 3×3, abas **Paterno | Central | Materno**, tela global de ancestrais, tios laterais, primos abaixo dos tios, conectores HTML/CSS e preview durante swipe.
-2. **Mapa Familiar desktop/tablet**: implementado em `DesktopFamilyMapView.tsx`, na rota `/mapa-familiar`, com composição HTML/CSS/SVG própria, sem ReactFlow, layout centralizado em `FAMILY_MAP_LAYOUT`, conectores por âncoras, grupos expansíveis, zoom com `Ctrl + scroll`, cards visuais compartilhados e regras próprias de cônjuges.
+2. **Mapa Familiar desktop/tablet**: implementado em `DesktopFamilyMapView.tsx`, na rota `/mapa-familiar`, com composição HTML/CSS/SVG própria, sem ReactFlow, layout centralizado em `FAMILY_MAP_LAYOUT`, conectores por âncoras, grupos expansíveis, zoom com `Ctrl + scroll`, cards visuais compartilhados, modo wide quando o painel lateral é colapsado e regras próprias de cônjuges.
 
 Estado confirmado/esperado da frente atual:
 
@@ -40,6 +40,7 @@ Estado confirmado/esperado da frente atual:
 - `DesktopFamilyMapView.tsx` usa `buildMobileFamilyTreeModel` como base de composição, mas possui layout visual próprio.
 - O Mapa Familiar tem grupos por tipo: ancestrais, laterais numerosos, centrais pequenos, descendentes, pets e cards diretos.
 - Tios e primos laterais usam até 4 colunas, limite inicial de 8 cards e expansão via botão `+/-`.
+- Quando o painel lateral é colapsado, o Mapa Familiar usa layout wide: o canvas deve permanecer centralizado, com margens paterna/materna equivalentes e sem sobreposição entre `Cônjuge`, `Pets`, `Irmãos` e `Sobrinhos`.
 - Demais grupos usam regras específicas de largura, colunas e expansão.
 - Cônjuge da pessoa central permanece visível quando existir.
 - Cônjuges de tataravós, bisavós e avós aparecem por padrão.
@@ -494,6 +495,106 @@ Cuidados:
 - manter linhas vitais com `Star` para nascimento e `Cross` para falecimento;
 - validar 320px, 375px, 390px e 430px;
 - validar Central, Ancestrais, Tios Paternos/Maternos e Primos Paternos/Maternos sempre que alterar container, grid, conectores ou navegação.
+
+
+
+### 3.2.2 `DesktopFamilyMapView`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+```
+
+Responsabilidade:
+
+- renderizar a experiência desktop/tablet da view **Mapa Familiar**;
+- compor uma superfície panorâmica HTML/CSS/SVG independente do ReactFlow;
+- montar grupos de ancestrais, laterais, eixo central, descendentes, pets e cônjuge principal;
+- calcular posições a partir de `FAMILY_MAP_LAYOUT_BASE` e do layout wide acionado por `sidebarCollapsed`;
+- centralizar o canvas tanto com painel lateral aberto quanto com painel lateral colapsado;
+- manter conectores principais SVG por âncoras (`topCenter`, `bottomCenter`, `leftCenter`, `rightCenter`);
+- manter pares conjugais adjacentes quando houver relacionamento `conjuge` explícito;
+- renderizar `VisualGroup`, `VisualPersonCard` e `VisualEmptyCard`;
+- expor contagens renderizadas ao painel por `onDirectRelationRenderedCounts`;
+- aplicar zoom manual por `Ctrl + scroll`, sem bloquear o scroll comum.
+
+Estrutura interna esperada:
+
+```txt
+FAMILY_MAP_LAYOUT_BASE
+getFamilyMapLayout
+helpers de grupos e cônjuges
+helpers de medidas e áreas
+helpers de conectores
+PositionedGroup
+DirectPersonCard
+DesktopFamilyMapView
+```
+
+Regras de layout base:
+
+- o layout base atende o Mapa Familiar com painel lateral aberto;
+- `areas.left` e `areas.right` concentram tios/primos paternos e maternos;
+- `areas.lowerLeft` concentra irmãos/sobrinhos;
+- `areas.lowerMiddle` concentra apoio inferior central, como pets quando aplicável;
+- `areas.lowerRight` concentra descendentes e netos;
+- alterações de `x`, `width`, `singleWidth`, `columns` e limites devem passar por `FAMILY_MAP_LAYOUT_BASE.groups` ou pelo retorno de `getFamilyMapLayout`.
+
+Regras do layout wide (`sidebarCollapsed === true`):
+
+- não alinhar a superfície com `ml-0 mr-auto`; usar centralização (`mx-auto`) para preservar margens laterais equivalentes;
+- manter a pessoa central como referência visual do mapa expandido;
+- ampliar laterais sem encostar tios/primos nas bordas da viewport;
+- separar horizontalmente as faixas inferiores:
+  - `lowerLeft`: `Irmãos` e `Sobrinhos`;
+  - `lowerMiddle`: `Cônjuge` e `Pets`, sem colisão;
+  - `lowerRight`: `Filhos` e `Netos`;
+- cônjuge e pets não devem se sobrepor entre si nem invadir grupos de irmãos/sobrinhos;
+- conectores inferiores devem continuar partindo da pessoa central/cônjuge para os grupos corretos.
+
+Cuidados:
+
+- não mover `DesktopFamilyMapView` para dentro de `FamilyTree.tsx`;
+- não trocar conectores SVG do Mapa Familiar por edges ReactFlow;
+- não corrigir assimetria com transform ou deslocamento visual externo;
+- não usar coordenadas soltas no JSX quando o ajuste pertence ao layout;
+- não alterar schema, Supabase, filtros ou regra de parentesco para resolver colisão visual;
+- validar painel aberto e painel colapsado sempre que `FAMILY_MAP_LAYOUT_BASE`, `getFamilyMapLayout`, `areas` ou grupos inferiores forem alterados;
+- validar desktop em 1366×768, 1440×900, 1536×864 e 1920×1080.
+
+### 3.2.3 `FamilyTreeVisualCards`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+```
+
+Responsabilidade:
+
+- renderizar os cards visuais compartilhados pelo Mapa Familiar;
+- prover `VisualGroup`, `VisualPersonCard` e `VisualEmptyCard`;
+- exibir cards mini, compactos, horizontais e centrais conforme `variant`;
+- aplicar pílulas de grupo, botão `+/-`, modo expandido e limite inicial;
+- renderizar conectores internos entre cônjuges quando há pareamento explícito;
+- renderizar avatar/fallback visual por `genero`.
+
+Regras de avatar fallback:
+
+- `genero = homem` usa silhueta masculina;
+- `genero = mulher` usa silhueta feminina legível, com aparência humana e sem visual de “fantasma”;
+- `genero = pet` usa ícone próprio de pet;
+- pet não deve cair em avatar humano;
+- ausência de foto não deve alterar dados da pessoa, apenas fallback visual;
+- se `genero` estiver ausente ou indefinido, preservar o fallback genérico previsto no componente.
+
+Cuidados:
+
+- não usar assets externos com watermark;
+- preferir SVG inline ou componente local para avatares fallback;
+- não mudar cores e dimensões globais dos cards ao alterar apenas um avatar;
+- conferir o mesmo card em grupos horizontais, mini, compactos, central, cônjuge e pet.
 
 
 ### 3.3 Layout direto: `directFamilyDistributedLayout`

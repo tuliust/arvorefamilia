@@ -35,7 +35,7 @@ Este documento não substitui:
 Esta revisão consolida duas frentes diferentes da árvore, que não devem ser confundidas:
 
 1. **Minha Árvore mobile segmentada**: implementada em `MobileFamilyTreeView.tsx`, com malha 3×3, abas **Paterno | Central | Materno**, tela global de ancestrais, tios laterais, primos abaixo dos tios, conectores HTML/CSS e preview durante swipe.
-2. **Mapa Familiar desktop/tablet**: implementado em `DesktopFamilyMapView.tsx`, na rota `/mapa-familiar`, com composição HTML/CSS/SVG própria, sem ReactFlow, layout centralizado em `FAMILY_MAP_LAYOUT`, conectores por âncoras, grupos expansíveis, zoom com `Ctrl + scroll`, cards visuais compartilhados e regras próprias de cônjuges.
+2. **Mapa Familiar desktop/tablet**: implementado em `DesktopFamilyMapView.tsx`, na rota `/mapa-familiar`, com composição HTML/CSS/SVG própria, sem ReactFlow, layout centralizado em `FAMILY_MAP_LAYOUT`, conectores por âncoras, grupos expansíveis, zoom com `Ctrl + scroll`, cards visuais compartilhados, modo wide com painel colapsado e regras próprias de cônjuges.
 
 Estado confirmado/esperado da frente atual:
 
@@ -47,6 +47,7 @@ Estado confirmado/esperado da frente atual:
 - `DesktopFamilyMapView.tsx` usa `buildMobileFamilyTreeModel` como base de composição, mas possui layout visual próprio.
 - O Mapa Familiar tem grupos por tipo: ancestrais, laterais numerosos, centrais pequenos, descendentes, pets e cards diretos.
 - Tios e primos laterais usam até 4 colunas, limite inicial de 8 cards e expansão via botão `+/-`.
+- Quando o painel lateral é colapsado, o Mapa Familiar deve expandir a área útil sem perder centro visual: as margens paterna/materna precisam permanecer proporcionais e grupos inferiores não podem se sobrepor.
 - Demais grupos usam regras específicas de largura, colunas e expansão.
 - Cônjuge da pessoa central permanece visível quando existir.
 - Cônjuges de tataravós, bisavós e avós aparecem por padrão.
@@ -507,11 +508,15 @@ Regras de layout:
 - tios e primos paternos usam a lateral esquerda sem invadir o núcleo;
 - tios e primos maternos usam a lateral direita sem invadir o núcleo;
 - irmãos e sobrinhos ficam no ramo inferior esquerdo;
-- cônjuge principal, pets, filhos e netos ficam no ramo inferior direito;
+- cônjuge principal, pets, filhos e netos ficam na faixa inferior, mas com áreas separadas no layout wide;
+- no painel aberto, a distribuição inferior pode seguir a composição compacta original;
+- no painel colapsado, a superfície deve usar centralização (`mx-auto`) e não alinhamento forçado à esquerda;
+- no painel colapsado, `Irmãos/Sobrinhos`, `Cônjuge/Pets` e `Filhos/Netos` devem ocupar faixas horizontais próprias para evitar colisão;
 - tios/primos usam até 4 colunas e exibem inicialmente até 8 cards;
 - demais grupos seguem suas regras específicas de largura e colunas;
 - grupos unitários devem reduzir espaço vazio sem ficar estreitos demais;
-- margens laterais mínimas devem ser preservadas.
+- margens laterais mínimas devem ser preservadas dos dois lados;
+- a distância lateral entre o ramo paterno e a borda esquerda deve ser visualmente equivalente à distância entre o ramo materno e a borda direita.
 
 Regras visuais de cards:
 
@@ -540,7 +545,7 @@ QA visual obrigatório:
 768px a 1023px quando possível
 ```
 
-Validar: margens laterais, grupos laterais sem invadir o núcleo, conectores alinhados, cônjuges corretos, zoom, avatares por gênero, legibilidade de nomes e ausência de regressão em `/minha-arvore`, `/genealogia` e `/visao-completa`.
+Validar: margens laterais, grupos laterais sem invadir o núcleo, centralização com painel aberto e colapsado, ausência de sobreposição entre `Cônjuge`, `Pets`, `Irmãos` e `Sobrinhos`, conectores alinhados, cônjuges corretos, zoom, avatares por gênero, legibilidade de nomes e ausência de regressão em `/minha-arvore`, `/genealogia` e `/visao-completa`.
 
 ### 4.3 Genealogia
 

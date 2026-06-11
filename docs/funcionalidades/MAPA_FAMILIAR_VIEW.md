@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Mapa Familiar**.  
-> Status: documento canônico da rota `/mapa-familiar`, com layout panorâmico desktop/tablet, fallback mobile, grupos expansíveis, regras de cônjuges, conectores SVG, zoom e avatares por `genero`.
+> Status: documento canônico da rota `/mapa-familiar`, com layout panorâmico desktop/tablet, fallback mobile, modo wide com painel lateral colapsado, grupos expansíveis, regras de cônjuges, conectores SVG, zoom e avatares por `genero`.
 
 ## 1. Função deste documento
 
@@ -21,6 +21,7 @@ Use este arquivo para manter:
 - arquitetura de `DesktopFamilyMapView.tsx`;
 - uso dos cards compartilhados de `FamilyTreeVisualCards.tsx`;
 - regras de grupos, colunas, expansão e limites;
+- regras de centralização, margens laterais e layout wide quando o painel lateral é colapsado;
 - regras de cônjuges principais, ancestrais e colaterais;
 - conectores SVG principais por âncoras;
 - conectores internos entre cônjuges;
@@ -190,6 +191,27 @@ Define espaçamentos e alturas de referência, como:
 - altura do card da pessoa central;
 - gaps entre ancestrais, pais, central e descendentes.
 
+### 6.2.1 Modo wide com painel lateral colapsado
+
+Quando `sidebarCollapsed === true`, `DesktopFamilyMapView` deve usar o layout wide retornado por `getFamilyMapLayout(true)`.
+
+Regras obrigatórias:
+
+- o canvas deve continuar centralizado na viewport;
+- não usar alinhamento forçado à esquerda, como `ml-0 mr-auto`, para o wrapper principal;
+- o centro visual deve continuar sendo a pessoa central;
+- as margens laterais dos ramos paterno e materno devem ficar proporcionais;
+- grupos laterais podem ganhar largura, mas não podem cortar nas bordas;
+- `Irmãos/Sobrinhos`, `Cônjuge/Pets` e `Filhos/Netos` precisam ocupar faixas inferiores separadas;
+- `Cônjuge` e `Pets` não podem se sobrepor;
+- conectores inferiores devem continuar legíveis e associados aos grupos corretos.
+
+Critério visual:
+
+```txt
+Ao colapsar o painel lateral, a árvore pode ocupar mais área horizontal, mas não pode parecer deslocada para a esquerda nem comprimir o ramo materno contra a borda direita.
+```
+
 ### 6.3 `areas`
 
 Define áreas conceituais do canvas:
@@ -202,8 +224,8 @@ Define áreas conceituais do canvas:
 | `maternalAncestors` | tataravós, bisavós e avós maternos |
 | `right` | tios/primos maternos |
 | `lowerLeft` | irmãos e sobrinhos |
-| `lowerMiddle` | pets ou apoio inferior central |
-| `lowerRight` | cônjuge, filhos e netos |
+| `lowerMiddle` | faixa inferior central; no layout wide acomoda cônjuge principal e/ou pets sem colisão |
+| `lowerRight` | filhos e netos; no layout base pode apoiar a composição inferior direita |
 
 Regras para laterais:
 
@@ -212,7 +234,17 @@ Regras para laterais:
 - laterais não devem invadir o núcleo central;
 - laterais não devem cortar na borda da viewport;
 - manter margem lateral mínima;
-- ajustes devem ser feitos preferencialmente em `areas.left`, `areas.right` e configs dos grupos laterais.
+- no modo wide, a margem visual à esquerda do ramo paterno deve ser proporcional à margem visual à direita do ramo materno;
+- ajustes de laterais devem ser feitos preferencialmente em `areas.left`, `areas.right` e configs dos grupos laterais.
+
+Regras para áreas inferiores:
+
+- `Irmãos` e `Sobrinhos` devem permanecer em `lowerLeft`;
+- `Cônjuge` e `Pets` devem ter espaço próprio no eixo inferior central, especialmente no layout wide;
+- `Filhos` e `Netos` devem permanecer em `lowerRight`;
+- `Cônjuge` e `Pets` não devem se sobrepor;
+- grupos inferiores não devem invadir grupos laterais de tios/primos;
+- mudanças de `areas.lowerLeft`, `areas.lowerMiddle` e `areas.lowerRight` precisam ser testadas com painel aberto e painel colapsado.
 
 ### 6.4 `groups`
 
@@ -833,8 +865,44 @@ Regras:
 - exibir até 8 cards inicialmente;
 - expandir por botão `+/-`;
 - ocupar áreas vazias laterais;
+- manter margens laterais proporcionais com painel aberto e colapsado;
 - não invadir Pai, Mãe, Pessoa Central ou grupos inferiores;
 - preservar margem mínima nas bordas;
 - ajustar preferencialmente `FAMILY_MAP_LAYOUT.areas.left`, `FAMILY_MAP_LAYOUT.areas.right` e os grupos laterais correspondentes.
 
 
+
+
+---
+
+## 24. Atualização de layout: painel lateral colapsado
+
+Contexto observado em QA:
+
+- com o painel lateral aberto, o mapa usa a composição compacta esperada;
+- ao clicar no botão de colapsar painel, a árvore expande corretamente;
+- a expansão não deve causar margens laterais assimétricas;
+- a expansão não deve provocar sobreposição entre `Cônjuge`, `Pets` e grupos inferiores.
+
+Correção esperada em `DesktopFamilyMapView.tsx`:
+
+- centralizar o wrapper escalado da árvore com `mx-auto`;
+- revisar `getFamilyMapLayout(true)` para manter áreas laterais balanceadas;
+- separar `lowerLeft`, `lowerMiddle` e `lowerRight` no layout wide;
+- revisar `groups.spouse`, `groups.pets`, `groups.siblings`, `groups.nephews`, `groups.children` e `groups.grandchildren`;
+- manter conectores SVG por âncoras, sem transform externo para mascarar o problema.
+
+QA específico:
+
+```txt
+1. Abrir /mapa-familiar com painel lateral visível.
+2. Conferir se o ramo paterno, eixo central e ramo materno estão proporcionais.
+3. Colapsar o painel lateral.
+4. Conferir se o canvas permanece centralizado.
+5. Conferir se as margens esquerda/direita continuam proporcionais.
+6. Conferir se Cônjuge e Pets não se sobrepõem.
+7. Conferir se Irmãos/Sobrinhos não invadem Cônjuge/Pets.
+8. Conferir se Filhos/Netos não invadem Cônjuge/Pets.
+9. Conferir se conectores continuam presos às âncoras corretas.
+10. Repetir em 1366×768, 1440×900, 1536×864 e 1920×1080.
+```

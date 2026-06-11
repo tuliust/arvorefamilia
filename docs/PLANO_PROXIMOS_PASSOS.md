@@ -64,12 +64,13 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-010 | `/entrar` / Google OAuth | compliance / validação externa | Confirmar se a home pública exibe no DOM/JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda de forma compatível com a revisão OAuth do Google. | Aberto |
 | DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
 | DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
-| DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a nova view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos roláveis, paleta Visual e fallback mobile. | Aberto |
+| DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
 | DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Verificar e, se necessário, incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, para aparecer na busca global e poder ser favoritado como as demais views da árvore. | Aberto |
 | DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. Enquanto não houver implementação, documentar que exportação segue focada nas views ReactFlow. | Aberto |
-| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Ajustar e validar grupos laterais de tios/primos para ocupar as laterais sem invadir Pai/Mãe/Pessoa Central e sem cortar nas bordas. | Aberto |
+| DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Ajustar e validar grupos laterais de tios/primos para ocupar as laterais sem invadir Pai/Mãe/Pessoa Central e sem cortar nas bordas. Incluir validação específica do layout wide após colapsar o painel lateral. | Aberto |
 | DOC-018 | `pessoas.genero` | schema / migration / tipagem | Confirmar se a coluna `genero` foi criada por migration versionada e se o tipo `Pessoa` aceita `homem`, `mulher` e `pet`. | Aberto |
-| DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom e avatares por `genero`. | Aberto |
+| DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom, layout wide/painel colapsado e avatares por `genero`. | Aberto |
+| DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Validar que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Aberto |
 
 Regras:
 
@@ -189,13 +190,15 @@ Estado técnico atual:
 - fallback mobile para `MobileFamilyTreeView.tsx` em `HomeTreeSection.tsx`;
 - cards compartilhados em `FamilyTreeVisualCards.tsx`;
 - layout centralizado em `FAMILY_MAP_LAYOUT`;
+- modo wide em `getFamilyMapLayout(true)` quando o painel lateral é colapsado;
 - conectores principais SVG derivados de âncoras;
 - conectores internos de cônjuges derivados de relacionamentos `conjuge` explícitos;
 - zoom manual por `Ctrl + scroll`;
 - grupos expansíveis sem scroll interno apertado;
 - tios/primos laterais com até 4 colunas e limite inicial de 8 cards;
 - paleta `visual` disponível junto de `white`, `orange` e `brown`;
-- avatares visuais orientados por `pessoas.genero` quando disponível.
+- avatares visuais orientados por `pessoas.genero` quando disponível;
+- avatar feminino fallback revisado em `FamilyTreeVisualCards.tsx`, preservando homem e pet.
 
 ### Critérios de QA manual
 
@@ -220,6 +223,9 @@ Checklist:
 - Pai, Pessoa Central e Mãe ficam no eixo principal;
 - grupos laterais de tios/primos não invadem a área central;
 - grupos laterais preservam margem mínima e não cortam nas bordas;
+- com painel lateral colapsado, o canvas continua centralizado e não fica preso à esquerda;
+- com painel lateral colapsado, margens paterna e materna permanecem proporcionais;
+- cônjuge, pets, irmãos/sobrinhos e filhos/netos não se sobrepõem no ramo inferior;
 - tios/primos usam 4 colunas e até 8 cards iniciais;
 - botão `+/-` expande/recolhe grupos extensos;
 - grupos unitários não ficam estreitos demais nem largos demais;
@@ -239,6 +245,7 @@ Checklist:
 - Decidir se `DesktopFamilyMapView` deve participar do fluxo de exportação da árvore.
 - Confirmar migration e tipagem para `pessoas.genero`.
 - Validar visualmente os grupos laterais após cada ajuste de `FAMILY_MAP_LAYOUT.areas.left/right`.
+- Validar visualmente `areas.lowerLeft`, `areas.lowerMiddle`, `areas.lowerRight` e `groups.spouse/pets/siblings/nephews/children/grandchildren` após qualquer ajuste do painel colapsado.
 
 ---
 
