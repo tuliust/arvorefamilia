@@ -181,6 +181,14 @@ function FamilyHorizontalMapRoute() {
   );
 }
 
+function CompleteTestRoute() {
+  return (
+    <div className="contents" data-tree-route-view="visao-completa-teste">
+      <Home />
+    </div>
+  );
+}
+
 const adminMigrationPath = '/admin/' + 'migrar-dados';
 
 export const router = createBrowserRouter([
@@ -191,7 +199,7 @@ export const router = createBrowserRouter([
   { path: '/mapa-familiar-horizontal', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/visao-completa-teste', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
+  { path: '/visao-completa-teste', element: lazyRoute(<TreeAccessRoute><CompleteTestRoute /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
