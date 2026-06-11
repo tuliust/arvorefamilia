@@ -7,7 +7,6 @@ import {
   Network,
   Sprout,
   Trees,
-  UserRound,
   UsersRound,
 } from 'lucide-react';
 
