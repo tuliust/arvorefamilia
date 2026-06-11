@@ -6,3 +6,9 @@ html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] butto
   background: var(--family-map-card-bg) !important;
   color: var(--family-map-card-text) !important;
 }
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] button[data-family-map-color-key] span,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] button[data-family-map-color-key] span,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] button[data-family-map-color-key] span {
+  color: inherit !important;
+}
