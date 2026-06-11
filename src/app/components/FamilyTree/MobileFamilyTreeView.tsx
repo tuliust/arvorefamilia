@@ -195,7 +195,7 @@ function PersonCard({
         className={central ? 'h-[66px] w-[66px]' : 'h-[64px] w-[64px]'}
         iconClassName={central ? 'h-8 w-8' : 'h-7 w-7'}
       />
-      <span className="mt-1.5 w-full truncate whitespace-nowrap text-[12px] font-extrabold uppercase leading-none">
+      <span className="mt-1.5 w-full truncate whitespace-nowrap py-px text-[12px] font-extrabold uppercase leading-[1.2]">
         {displayName}
       </span>
       <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={showDeathLine} />
@@ -224,7 +224,7 @@ function MainPersonCard({
         className="h-[86px] w-[86px]"
         iconClassName="h-10 w-10"
       />
-      <span className="mt-3 w-full truncate whitespace-nowrap text-[15px] font-extrabold uppercase leading-none">
+      <span className="mt-3 w-full truncate whitespace-nowrap py-px text-[15px] font-extrabold uppercase leading-[1.2]">
         {displayName}
       </span>
       <VitalLines
@@ -611,13 +611,15 @@ function AncestorsOverviewScreen({
   maternalGroups: AncestorSubgroup[];
   onPersonClick: (person: Pessoa) => void;
 }) {
-  const generations = paternalGroups.map((paternalGroup, index) => ({
-    paternal: paternalGroup,
-    maternal: maternalGroups[index],
-  }));
-  const hasAncestors = generations.some(
-    ({ paternal, maternal }) => paternal.people.length > 0 || maternal.people.length > 0,
-  );
+  const generations = paternalGroups
+    .map((paternalGroup, index) => ({
+      paternal: paternalGroup,
+      maternal: maternalGroups[index],
+    }))
+    .filter(({ paternal, maternal }) => (
+      paternal.people.length > 0 || maternal.people.length > 0
+    ));
+  const hasAncestors = generations.length > 0;
   const hasPaternalAncestors = paternalGroups.some((group) => group.people.length > 0);
   const hasMaternalAncestors = maternalGroups.some((group) => group.people.length > 0);
 
@@ -655,12 +657,12 @@ function AncestorsOverviewScreen({
           >
             <div className="relative mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
               {hasPaternalAncestors && (
-                <div className="pointer-events-none absolute bottom-0 left-1/4 top-2 z-0 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="pointer-events-none absolute bottom-0 left-1/4 top-6 z-0 w-px -translate-x-1/2 bg-cyan-600" />
               )}
               {hasMaternalAncestors && (
-                <div className="pointer-events-none absolute bottom-0 right-1/4 top-2 z-0 w-px translate-x-1/2 bg-cyan-600" />
+                <div className="pointer-events-none absolute bottom-0 right-1/4 top-6 z-0 w-px translate-x-1/2 bg-cyan-600" />
               )}
-              <div className="relative z-10 grid min-w-0 grid-cols-2 gap-2">
+              <div className="relative z-10 grid min-w-0 grid-cols-2 items-start gap-2">
                 {generations.flatMap(({ paternal, maternal }) => [
                   paternal.people.length > 0 ? (
                     <AncestorGroupCard
