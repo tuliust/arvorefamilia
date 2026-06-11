@@ -31,6 +31,8 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
   display: none !important;
 }
 
+.tree-panel-control-stack,
+.tree-external-zoom-actions,
 .tree-control-panel,
 .tree-control-topbar,
 .tree-view-toggle,
@@ -44,6 +46,18 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 .family-filter-chip {
   min-width: 0;
   max-width: 100%;
+}
+
+.tree-external-zoom-actions {
+  width: max-content;
+}
+
+.tree-top-icon-button {
+  border-radius: 0.5rem !important;
+}
+
+.tree-control-panel {
+  overflow: visible;
 }
 
 .tree-control-section > summary {
