@@ -1,0 +1,179 @@
+/* Painel lateral unificado da árvore: controles compactos, responsivos e sem barras internas. */
+main aside button[aria-label="Ações da árvore"],
+section.fixed button[aria-label="Ações da árvore"] {
+  display: none !important;
+}
+
+main aside,
+section.fixed {
+  overflow: hidden;
+}
+
+main aside > div > div:first-child {
+  align-items: flex-start !important;
+}
+
+main aside [class*="overflow-y-auto"],
+section.fixed [class*="overflow-y-auto"] {
+  overflow-y: visible !important;
+}
+
+main aside [class*="overflow-x-auto"],
+section.fixed [class*="overflow-x-auto"] {
+  overflow-x: hidden !important;
+}
+
+main aside [class*="gap-3"] {
+  gap: clamp(0.28rem, 0.68vh, 0.42rem) !important;
+}
+
+html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.rounded-2xl.border.border-blue-100.bg-blue-50.p-2.md\:hidden {
+  display: none !important;
+}
+
+.tree-panel-control-stack,
+.tree-external-zoom-actions,
+.tree-control-panel,
+.tree-control-topbar,
+.tree-view-toggle,
+.tree-primary-actions,
+.tree-control-flyout,
+.tree-control-section,
+.tree-icon-chip,
+.tree-top-icon-button,
+.tree-primary-control-button,
+.tree-palette-dot-button,
+.family-filter-chip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tree-external-zoom-actions {
+  width: max-content;
+}
+
+.tree-top-icon-button {
+  border-radius: 0.5rem !important;
+}
+
+.tree-control-panel {
+  overflow: visible;
+}
+
+.tree-control-section > summary {
+  user-select: none;
+}
+
+.tree-control-section > summary::after {
+  content: '▾';
+  margin-left: auto;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: rgb(100 116 139);
+  transition: transform 160ms ease;
+}
+
+.tree-control-section:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+
+.tree-control-section:not([open]) > div {
+  display: none;
+}
+
+.tree-icon-chip,
+.tree-top-icon-button,
+.tree-primary-control-button,
+.tree-palette-dot-button,
+.family-filter-chip {
+  contain: layout paint;
+}
+
+.tree-primary-control-button,
+.tree-control-flyout {
+  animation: tree-panel-fade 120ms ease-out;
+}
+
+.tree-control-flyout {
+  border-radius: 0.625rem;
+  border: 1px solid rgb(226 232 240);
+  background: rgb(248 250 252 / 0.92);
+  padding: 0.25rem;
+}
+
+.family-filter-chip svg,
+.tree-icon-chip svg,
+.tree-top-icon-button svg,
+.tree-primary-control-button svg {
+  opacity: 0.78;
+}
+
+html[data-tree-highlight-lines='true'] [data-family-map-export-root='true'] svg path,
+html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-flow__edge-path {
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+}
+
+html[data-tree-highlight-cards='true'] [data-family-map-export-root='true'] [data-family-map-color-key],
+html[data-tree-highlight-cards='true'] [data-export-root='family-tree'] .react-flow__node-personNode > div {
+  outline: 2px solid var(--tree-palette-group-border, #94a3b8) !important;
+  outline-offset: 3px;
+}
+
+html[data-tree-highlight-groups='true'] [data-family-map-export-root='true'] .absolute.z-10,
+html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-flow__node-personNode {
+  box-shadow: 0 10px 20px rgb(15 23 42 / 18%) !important;
+}
+
+@keyframes tree-panel-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-height: 820px) {
+  .tree-control-panel {
+    gap: 0.2rem !important;
+    padding: 0.32rem !important;
+  }
+
+  .tree-control-section > summary {
+    min-height: 1.35rem !important;
+    padding-top: 0.18rem !important;
+    padding-bottom: 0.18rem !important;
+  }
+
+  .tree-control-section > div {
+    padding-bottom: 0.28rem !important;
+  }
+
+  .tree-icon-chip,
+  .tree-top-icon-button {
+    min-height: 1.55rem !important;
+  }
+
+  .tree-primary-control-button {
+    min-height: 2.2rem !important;
+  }
+
+  .family-filter-chip {
+    min-height: 2.05rem !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .tree-control-section:not(:first-of-type):not(:nth-of-type(2)) {
+    border-color: rgb(226 232 240 / 0.7);
+  }
+
+  .tree-icon-chip span,
+  .tree-primary-control-button span,
+  .family-filter-chip span {
+    font-size: 0.58rem !important;
+  }
+}

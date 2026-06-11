@@ -17,17 +17,19 @@ export function DirectRelationKpiGrid({
   onToggle,
 }: DirectRelationKpiGridProps) {
   return (
-    <section className="min-w-0">
-      <h2 className="mb-[clamp(0.3rem,0.85vh,0.5rem)] text-[clamp(15px,2.35vh,18px)] font-semibold leading-tight text-gray-900">Filtros</h2>
-      <p className="mb-[clamp(0.95rem,1.9vh,1.35rem)] text-[clamp(12px,1.8vh,14px)] leading-snug text-gray-500">
-        Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
-      </p>
-      <DirectRelativeFilterGrid
-        filters={filters}
-        counts={counts}
-        onToggle={onToggle}
-        excludedKeys={['pais']}
-      />
-    </section>
+    <details className="tree-control-section min-w-0 rounded-lg border border-gray-200 bg-white/95 shadow-sm" open>
+      <summary className="flex min-h-7 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-[clamp(10px,1.2vh,11px)] font-bold uppercase tracking-[0.12em] text-slate-500 [&::-webkit-details-marker]:hidden">
+        <span className="truncate">Grupos</span>
+      </summary>
+      <div className="min-w-0 px-1.5 pb-1.5">
+        <DirectRelativeFilterGrid
+          filters={filters}
+          counts={counts}
+          onToggle={onToggle}
+          excludedKeys={['conjuge']}
+          compact
+        />
+      </div>
+    </details>
   );
 }
