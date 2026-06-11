@@ -214,6 +214,50 @@ function sortPeopleByFallback(a: Pessoa, b: Pessoa, centralPersonId: string) {
   return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
 }
 
+function pairKey(firstId: string, secondId: string) {
+  return [firstId, secondId].sort().join('::');
+}
+
+function getParentGroupKey(personId: string, maps: RelationshipMaps) {
+  const parentIds = Array.from(maps.parentsByChild.get(personId) ?? []).sort();
+  if (parentIds.length === 0) return `person:${personId}`;
+
+  for (let parentIndex = 0; parentIndex < parentIds.length; parentIndex += 1) {
+    for (let spouseIndex = parentIndex + 1; spouseIndex < parentIds.length; spouseIndex += 1) {
+      const firstParentId = parentIds[parentIndex];
+      const secondParentId = parentIds[spouseIndex];
+      if (maps.spousesByPerson.get(firstParentId)?.has(secondParentId)) {
+        return `parents:${pairKey(firstParentId, secondParentId)}`;
+      }
+    }
+  }
+
+  return `parents:${parentIds.join('::')}`;
+}
+
+function orderChildrenByParentGroup(people: Pessoa[], maps: RelationshipMaps, centralPersonId: string) {
+  const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
+  const groups = new Map<string, { firstIndex: number; people: Pessoa[] }>();
+
+  people.forEach((person) => {
+    const groupKey = getParentGroupKey(person.id, maps);
+    const existingGroup = groups.get(groupKey);
+    const currentIndex = originalIndexByPersonId.get(person.id) ?? Number.POSITIVE_INFINITY;
+
+    if (existingGroup) {
+      existingGroup.people.push(person);
+      existingGroup.firstIndex = Math.min(existingGroup.firstIndex, currentIndex);
+      return;
+    }
+
+    groups.set(groupKey, { firstIndex: currentIndex, people: [person] });
+  });
+
+  return Array.from(groups.values())
+    .sort((groupA, groupB) => groupA.firstIndex - groupB.firstIndex)
+    .flatMap((group) => [...group.people].sort((a, b) => sortPeopleByFallback(a, b, centralPersonId)));
+}
+
 function orderPeopleWithAdjacentSpouses(people: Pessoa[], maps: RelationshipMaps) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
@@ -294,8 +338,26 @@ function connectorPath(points: Point[]) {
   return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
 }
 
-function pairKey(firstId: string, secondId: string) {
-  return [firstId, secondId].sort().join('::');
+function getCoupleChildLayouts(
+  firstParentId: string,
+  secondParentId: string,
+  parentGeneration: number,
+  layouts: Map<string, PersonLayout>,
+  maps: RelationshipMaps,
+) {
+  const firstParentChildren = maps.childrenByParent.get(firstParentId) ?? new Set<string>();
+  const secondParentChildren = maps.childrenByParent.get(secondParentId) ?? new Set<string>();
+
+  return Array.from(firstParentChildren)
+    .filter((childId) => secondParentChildren.has(childId))
+    .map((childId) => layouts.get(childId))
+    .filter((layout): layout is PersonLayout => Boolean(layout) && layout.generation === parentGeneration + 1)
+    .sort((layoutA, layoutB) => {
+      const birthA = getFallbackSortableBirthValue(layoutA.person.data_nascimento);
+      const birthB = getFallbackSortableBirthValue(layoutB.person.data_nascimento);
+      if (birthA !== birthB) return birthA - birthB;
+      return layoutA.top - layoutB.top;
+    });
 }
 
 function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
@@ -315,14 +377,52 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       const upperLayout = personLayout.top <= spouseLayout.top ? personLayout : spouseLayout;
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
-      const x = upperLayout.left + upperLayout.width / 2;
+      const spouseX = upperLayout.left + upperLayout.width / 2;
+      const spouseLineMiddleY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
 
       connectors.push({
         id: `spouse-${key}`,
         points: [
-          [x, upperLayout.top + upperLayout.height],
-          [x, lowerLayout.top],
+          [spouseX, upperLayout.top + upperLayout.height],
+          [spouseX, lowerLayout.top],
         ],
+      });
+
+      const childLayouts = getCoupleChildLayouts(personId, spouseId, personLayout.generation, layouts, maps);
+      if (childLayouts.length === 0 || personLayout.generation >= 6) return;
+
+      const nextColumnLeft = upperLayout.left + CANVAS.columnWidth;
+      const currentColumnRight = upperLayout.left + upperLayout.width;
+      const trunkX = currentColumnRight + (nextColumnLeft - currentColumnRight) / 2;
+      const childCenterYs = childLayouts.map((childLayout) => childLayout.top + childLayout.height / 2);
+      const minY = Math.min(spouseLineMiddleY, ...childCenterYs);
+      const maxY = Math.max(spouseLineMiddleY, ...childCenterYs);
+
+      connectors.push({
+        id: `family-branch-${key}`,
+        points: [
+          [spouseX, spouseLineMiddleY],
+          [trunkX, spouseLineMiddleY],
+        ],
+      });
+
+      connectors.push({
+        id: `family-trunk-${key}`,
+        points: [
+          [trunkX, minY],
+          [trunkX, maxY],
+        ],
+      });
+
+      childLayouts.forEach((childLayout) => {
+        const childCenterY = childLayout.top + childLayout.height / 2;
+        connectors.push({
+          id: `family-child-${key}-${childLayout.person.id}`,
+          points: [
+            [trunkX, childCenterY],
+            [childLayout.left, childCenterY],
+          ],
+        });
       });
     });
   });
@@ -390,7 +490,8 @@ function DesktopFamilyHorizontalMapViewComponent({
         return sortPeopleByFallback(a, b, centralPersonId);
       });
 
-      result.set(generation, orderPeopleWithAdjacentSpouses(generationPeople, maps));
+      const orderedChildren = orderChildrenByParentGroup(generationPeople, maps, centralPersonId);
+      result.set(generation, orderPeopleWithAdjacentSpouses(orderedChildren, maps));
     });
 
     return result;
