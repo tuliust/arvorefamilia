@@ -165,25 +165,9 @@ function RedirectToMapaFamiliar() {
   return <Navigate to={`/mapa-familiar${location.search}`} replace />;
 }
 
-function HorizontalMapRoute() {
-  return (
-    <div className="contents" data-tree-route-view="mapa-horizontal">
-      <Home />
-    </div>
-  );
-}
-
 function FamilyHorizontalMapRoute() {
   return (
     <div className="contents" data-tree-route-view="mapa-familiar-horizontal">
-      <Home />
-    </div>
-  );
-}
-
-function CompleteTestRoute() {
-  return (
-    <div className="contents" data-tree-route-view="visao-completa-teste">
       <Home />
     </div>
   );
@@ -195,11 +179,9 @@ export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
   { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/mapa-familiar', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/mapa-horizontal', element: lazyRoute(<TreeAccessRoute><HorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/mapa-familiar-horizontal', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
-  { path: '/visao-completa-teste', element: lazyRoute(<TreeAccessRoute><CompleteTestRoute /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
