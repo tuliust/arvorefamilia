@@ -55,7 +55,7 @@ const viewOptions: Array<{
   { key: 'minha-arvore', label: 'Minha Árvore', shortLabel: 'Minha', mobileOnly: true, icon: Layers },
   { key: 'mapa-familiar', label: 'Mapa Familiar', shortLabel: 'Vertical', icon: Map },
   { key: 'genealogia', label: 'Genealogia', shortLabel: 'Genealogia', mobileOnly: true, icon: PanelTop },
-  { key: 'visao-completa', label: 'Visão Completa', shortLabel: 'Horizontal', icon: Layers },
+  { key: 'mapa-familiar-horizontal', label: 'Mapa Familiar Horizontal', shortLabel: 'Horizontal', icon: Layers },
 ];
 
 type HighlightKey = 'lines' | 'cards' | 'groups';
@@ -103,6 +103,7 @@ function applyTreePalette(value: TreeColorPalette) {
 }
 
 function getCurrentTreeViewMode(pathname: string): TreeViewMode {
+  if (pathname.startsWith('/mapa-familiar-horizontal')) return 'mapa-familiar-horizontal';
   if (pathname.startsWith('/visao-completa')) return 'visao-completa';
   if (pathname.startsWith('/genealogia')) return 'genealogia';
   if (pathname.startsWith('/minha-arvore')) return 'minha-arvore';
