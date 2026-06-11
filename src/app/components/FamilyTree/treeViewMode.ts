@@ -21,6 +21,7 @@ export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
   '/mapa-familiar': 'mapa-familiar',
   '/mapa-horizontal': 'mapa-horizontal',
   '/mapa-familiar-horizontal': 'mapa-familiar-horizontal',
+  '/visao-completa-teste': 'mapa-familiar-horizontal',
   '/genealogia': 'genealogia',
   '/visao-completa': 'visao-completa',
 };
