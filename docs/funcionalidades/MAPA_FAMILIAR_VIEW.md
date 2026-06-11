@@ -1,9 +1,9 @@
 # Mapa Familiar - view panorâmica desktop/tablet
 
-> Última revisão: 2026-06-10
-> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`
-> Tipo: documentação técnica/funcional da view **Mapa Familiar**.
-> Status: documento canônico da rota `/mapa-familiar`, revisado contra o código atual com layout panorâmico desktop/tablet, fallback mobile, modo wide com painel lateral colapsado, grupos expansíveis, regras de cônjuges, conectores SVG, zoom, título ocultável por scroll, card central sem badge e avatares por `genero`.
+> Última revisão: 2026-06-10  
+> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
+> Tipo: documentação técnica/funcional da view **Mapa Familiar**.  
+> Status: documento canônico da rota `/mapa-familiar`, com layout panorâmico desktop/tablet, fallback mobile, modo wide com painel lateral colapsado, grupos expansíveis, regras de cônjuges, conectores SVG, zoom e avatares por `genero`.
 
 ## 1. Função deste documento
 
@@ -84,7 +84,7 @@ Diferença central:
 | Seletor/header de views | `src/app/pages/home/HomeHeader.tsx` |
 | Filtros diretos no painel | `src/app/pages/home/DirectRelativeFilterGrid.tsx` |
 | Rotas | `src/app/routes.tsx` |
-| View mode | `src/app/components/FamilyTree/treeViewMode.ts` |
+| View mode | `src/app/utils/treeViewMode.ts` |
 | Paletas | `src/app/components/FamilyTree/treeColorPalettes.ts` |
 | Cores de grupos diretos | `src/app/components/FamilyTree/directFamilyColors.ts` |
 
@@ -113,43 +113,6 @@ Regras:
 - deve ser acessível pelo seletor de views como **Mapa Familiar**;
 - não deve alterar ou substituir `/minha-arvore`;
 - no mobile, deve usar fallback seguro para `MobileFamilyTreeView` ou comportamento equivalente definido pelo app.
-
----
-
-## 4.1 Estado verificado contra o código atual
-
-A revisão deste documento foi comparada com os arquivos atuais da implementação:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-src/app/types/index.ts
-src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
-```
-
-Estado confirmado no código:
-
-- `Home.tsx` mantém `sidebarOpen` e repassa esse estado para `HomeTreeSection`, permitindo derivar `sidebarCollapsed` para o Mapa Familiar.
-- `HomeTreeSection.tsx` renderiza `DesktopFamilyMapView` quando `treeViewMode === 'mapa-familiar'` no desktop/tablet.
-- `HomeTreeSection.tsx` renderiza `MobileFamilyTreeView` no mobile tanto para `minha-arvore` quanto para `mapa-familiar`.
-- `HomeTreeSection.tsx` mantém o estado `familyMapHasScrolled` e oculta o título desktop do Mapa Familiar quando o scroll interno informa que a view saiu do topo.
-- `DesktopFamilyMapView.tsx` aceita `sidebarCollapsed?: boolean` e `onScrollStateChange?: (hasScrolled: boolean) => void`.
-- `DesktopFamilyMapView.tsx` deriva `isWideLayout` a partir de `sidebarCollapsed` e usa `getFamilyMapLayout(isWideLayout)`.
-- `DesktopFamilyMapView.tsx` usa `FAMILY_MAP_LAYOUT_BASE` no modo normal e layout wide no painel colapsado.
-- `DesktopFamilyMapView.tsx` mantém o wrapper principal do canvas com `mx-auto`, preservando centralização visual.
-- `DesktopFamilyMapView.tsx` passa `showLabel={false}` apenas para o card da pessoa central, removendo a badge superior **Pessoa Central**.
-- `DesktopFamilyMapView.tsx` passa `vitalMode={isWideLayout ? 'full' : 'year'}` para grupos, permitindo local + ano no modo wide.
-- `FamilyTreeVisualCards.tsx` já possui `vitalMode`, `roomy`, `VisualPersonAvatar` e leitura de `person.genero`.
-- `src/app/types/index.ts` já tipa `Pessoa.genero?: 'homem' | 'mulher' | 'pet' | string | null`.
-- `MobileTreeControlsPortal.tsx` reconhece `/mapa-familiar` em `TREE_ROUTES`.
-
-Regra de documentação:
-
-```txt
-O modo wide, o título ocultável por scroll e a remoção da badge da pessoa central já devem ser tratados como implementação atual, não como backlog.
-```
 
 ---
 
@@ -248,23 +211,6 @@ Critério visual:
 ```txt
 Ao colapsar o painel lateral, a árvore pode ocupar mais área horizontal, mas não pode parecer deslocada para a esquerda nem comprimir o ramo materno contra a borda direita.
 ```
-
-
-Estado atual do código no modo wide:
-
-```txt
-canvas.width: 1880
-canvas.minScale: 0.68
-horizontalCardHeight: 82
-miniCardHeight: 124
-left/right width: 560
-left.x: 20
-right.x: 1300
-center.x: 835
-```
-
-Esses valores são implementação corrente e podem ser refinados por QA visual, mas a regra estrutural permanece: o modo wide deve usar `getFamilyMapLayout(true)`, não ajustes pontuais no JSX.
-
 
 ### 6.3 `areas`
 
@@ -428,67 +374,6 @@ Regras:
 - pai, mãe, pessoa central e cônjuge principal podem exibir local + ano;
 - cônjuge principal sempre aparece quando existir, independentemente do filtro **Cônjuges**;
 - esses cards não devem ser tratados como grupos expansíveis.
-
----
-
-## 7.7 Card central, badge e título da view
-
-### Card da pessoa central
-
-No Mapa Familiar, o card da pessoa central não deve exibir badge superior.
-
-Implementação esperada:
-
-```txt
-DirectPersonCard
-showLabel?: boolean
-```
-
-Uso obrigatório:
-
-```tsx
-<DirectPersonCard
-  layout={centralLayout}
-  person={central}
-  central
-  showLabel={false}
-  onPersonClick={onPersonClick}
-/>
-```
-
-Regras:
-
-- remover apenas a badge da pessoa central;
-- manter badges de **Pai**, **Mãe**, **Cônjuge** e grupos;
-- não remover suporte global a `label` em `VisualPersonCard`;
-- não usar CSS global para esconder todas as badges.
-
-### Título `Mapa Familiar de {nome}`
-
-O título desktop é renderizado em `HomeTreeSection.tsx`, não dentro do canvas do `DesktopFamilyMapView`.
-
-Comportamento atual:
-
-- no topo do scroll interno, o título aparece;
-- quando o scroll interno do Mapa Familiar passa de `24px`, o título recebe transição de ocultação;
-- ao voltar ao topo, o título reaparece;
-- a regra é exclusiva de `treeViewMode === 'mapa-familiar'`.
-
-Implementação esperada:
-
-```txt
-HomeTreeSection.familyMapHasScrolled
-DesktopFamilyMapView.onScrollStateChange
-viewportRef.onScroll
-scrollTop > 24
-```
-
-Regras:
-
-- não aplicar esse comportamento a `/minha-arvore`, `/genealogia` ou `/visao-completa`;
-- não criar layout shift;
-- manter `pointer-events-none` no overlay do título;
-- resetar o estado ao trocar pessoa central, revisão de layout ou view.
 
 ---
 

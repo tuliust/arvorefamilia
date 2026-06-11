@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, modo wide com painel lateral colapsado, título ocultável por scroll, card central sem badge, grupos expansíveis, zoom, avatares por `genero` e regras visuais de cônjuges.
+> Status: guia canônico atualizado com Minha Árvore mobile 3×3, Mapa Familiar panorâmico, grupos expansíveis, zoom, avatares por `genero` e regras visuais de cônjuges.
 
 ## Objetivo
 
@@ -283,7 +283,7 @@ Notificações
 Regras:
 
 - páginas internas precisam reservar espaço inferior (`pb-24 md:pb-0`);
-- o estado ativo deve considerar `/`, `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` como **Home**;
+- o estado ativo deve considerar `/`, `/minha-arvore`, `/genealogia` e `/visao-completa` como **Home**;
 - evitar elementos fixos concorrendo com essa navegação em mobile;
 - modais e drawers devem considerar `safe-area-inset-bottom`.
 
@@ -546,75 +546,6 @@ QA visual obrigatório:
 ```
 
 Validar: margens laterais, grupos laterais sem invadir o núcleo, centralização com painel aberto e colapsado, ausência de sobreposição entre `Cônjuge`, `Pets`, `Irmãos` e `Sobrinhos`, conectores alinhados, cônjuges corretos, zoom, avatares por gênero, legibilidade de nomes e ausência de regressão em `/minha-arvore`, `/genealogia` e `/visao-completa`.
-
-
-### 4.4 Mapa Familiar desktop/tablet
-
-Escopo:
-
-```txt
-treeViewMode === 'mapa-familiar' && !isMobile
-```
-
-Base técnica:
-
-```txt
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-```
-
-Comportamento visual consolidado:
-
-- o Mapa Familiar é uma superfície HTML/CSS/SVG, não ReactFlow;
-- o fundo do título e da árvore usa azul claro uniforme;
-- o título **Mapa Familiar de {primeiro nome}** aparece no topo e é ocultado quando o scroll interno passa de `24px`;
-- ao retornar ao topo, o título reaparece;
-- a pessoa central não exibe badge **Pessoa Central** acima do card;
-- Pai, Mãe, Cônjuge e grupos continuam com badges/pílulas;
-- o canvas fica centralizado com `mx-auto`;
-- com painel lateral aberto, usa o layout base;
-- com painel lateral colapsado, usa o layout wide via `sidebarCollapsed`;
-- no layout wide, a árvore ocupa mais espaço horizontal sem deslocar o eixo da pessoa central para uma lateral;
-- os grupos laterais de tios/primos podem ficar mais largos, mas não devem invadir o núcleo;
-- os grupos inferiores precisam manter faixas separadas para Irmãos/Sobrinhos, Cônjuge/Pets e Filhos/Netos;
-- `Cônjuge` e `Pets` não podem se sobrepor;
-- grupos usam `+/-` para expansão;
-- modo normal exibe anos em grupos;
-- modo wide pode exibir local + ano em grupos por `vitalMode="full"`;
-- `Ctrl + scroll` controla zoom; scroll comum continua rolando a superfície.
-
-Avatares:
-
-- foto cadastrada tem prioridade;
-- `genero = homem` usa avatar masculino;
-- `genero = mulher` usa avatar feminino;
-- `genero = pet` usa ícone/avatar de pet;
-- campos legados só entram como fallback quando `genero` está ausente ou vazio.
-
-QA visual obrigatório:
-
-```txt
-1366x768
-1440x900
-1536x864
-1920x1080
-painel aberto
-painel colapsado
-scroll no topo
-scroll deslocado
-Ctrl + scroll
-filtro Cônjuges ligado/desligado
-```
-
-Anti-regressões:
-
-- não alinhar o canvas à esquerda para “ganhar espaço”;
-- não esconder todas as badges para remover só a da pessoa central;
-- não misturar conectores SVG do Mapa Familiar com edges ReactFlow;
-- não usar CSS global para consertar coordenadas de grupos;
-- não reduzir o ramo materno contra a borda direita no modo wide.
-
 
 ### 4.3 Genealogia
 

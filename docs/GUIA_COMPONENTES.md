@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-10
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com `MobileFamilyTreeView`, `DesktopFamilyMapView`, `FamilyTreeVisualCards`, Mapa Familiar, modo wide, título ocultável por scroll, card central sem badge e regras de cônjuges/avatares por `genero`.
+> Status: guia canônico atualizado com `MobileFamilyTreeView`, `DesktopFamilyMapView`, `FamilyTreeVisualCards`, Mapa Familiar e regras de cônjuges/avatares por `genero`.
 
 ## Objetivo
 
@@ -392,7 +392,6 @@ Rotas onde aparece:
 
 ```txt
 /minha-arvore
-/mapa-familiar
 /genealogia
 /visao-completa
 ```
@@ -430,7 +429,7 @@ Condição de uso:
 
 ```txt
 HomeTreeSection.tsx
-isMobile && (treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar')
+isMobile && treeViewMode === 'minha-arvore'
 ```
 
 Malha de telas:
@@ -596,79 +595,6 @@ Cuidados:
 - preferir SVG inline ou componente local para avatares fallback;
 - não mudar cores e dimensões globais dos cards ao alterar apenas um avatar;
 - conferir o mesmo card em grupos horizontais, mini, compactos, central, cônjuge e pet.
-
-
-
-### 3.2.3 Integração `HomeTreeSection` + `DesktopFamilyMapView`
-
-Arquivos:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-```
-
-Responsabilidade:
-
-- passar o estado `sidebarOpen` de `Home.tsx` para `HomeTreeSection`;
-- derivar `sidebarCollapsed={!sidebarOpen}` apenas para o Mapa Familiar desktop/tablet;
-- controlar `familyMapHasScrolled` em `HomeTreeSection`;
-- ocultar o título desktop do Mapa Familiar quando `DesktopFamilyMapView` reportar scroll interno;
-- resetar o estado de scroll ao trocar pessoa central, `treeLayoutRevision` ou view.
-
-Props relevantes de `DesktopFamilyMapView`:
-
-```ts
-sidebarCollapsed?: boolean;
-onScrollStateChange?: (hasScrolled: boolean) => void;
-```
-
-Regras:
-
-- `sidebarCollapsed` só deve alterar o layout do Mapa Familiar;
-- não aplicar modo wide em `/minha-arvore`, `/genealogia` ou `/visao-completa`;
-- `onScrollStateChange` deve ser chamado apenas quando o booleano muda;
-- o título deve ser escondido por transição visual, sem remover o componente do DOM;
-- o canvas deve permanecer centralizado.
-
-### 3.2.4 Props visuais adicionadas nos cards do Mapa Familiar
-
-Componentes:
-
-```txt
-DirectPersonCard
-VisualGroup
-VisualPersonCard
-VisualPersonAvatar
-```
-
-Props/contratos atuais:
-
-```ts
-DirectPersonCard.showLabel?: boolean;
-VisualGroup.vitalMode?: 'year' | 'full';
-VisualGroup.roomy?: boolean;
-VisualPersonCard.vitalMode?: 'year' | 'full';
-VisualPersonCard.roomy?: boolean;
-```
-
-Uso consolidado:
-
-- `showLabel={false}` remove apenas a badge da pessoa central no Mapa Familiar;
-- `vitalMode="year"` mantém grupos compactos com ano;
-- `vitalMode="full"` permite local + ano no modo wide;
-- `roomy` aumenta altura de cards para comportar mais informação;
-- cônjuges usam o mesmo gradiente esverdeado dos cônjuges ancestrais;
-- linhas internas entre cônjuges usam cor mais escura que as linhas principais.
-
-Avatares:
-
-- `VisualPersonAvatar` prioriza `foto_principal_url`;
-- sem foto, `person.genero` define `homem`, `mulher` ou `pet`;
-- `pet` mantém `PawPrint`;
-- campos legados (`sexo`, `gender`, `sexo_biologico`, etc.) só funcionam como fallback;
-- inferência por primeiro nome só é fallback quando `genero` está ausente.
 
 
 ### 3.3 Layout direto: `directFamilyDistributedLayout`
@@ -1457,3 +1383,4 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 ```
 
 Este guia deve manter apenas o inventário de componentes e suas responsabilidades. Mudanças funcionais profundas do Mapa Familiar devem atualizar primeiro o documento funcional canônico.
+
