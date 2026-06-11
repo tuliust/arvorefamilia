@@ -28,7 +28,7 @@ function getCurrentPathname() {
 }
 
 const horizontalTabs = ['Paterno', 'Central', 'Materno'] as const;
-const mobileTreeControlsTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.35rem)]';
+const mobileTreeControlsTopClass = 'top-[calc(env(safe-area-inset-top,0px)+4.35rem)]';
 
 export function HomeMobileNav({
   legendOpen,
