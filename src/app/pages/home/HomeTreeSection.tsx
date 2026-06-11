@@ -138,7 +138,7 @@ function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
   }
 
   if (viewMode === 'mapa-familiar-horizontal') {
-    return `Mapa Familiar Horizontal de ${firstName}`;
+    return `Genealogia de ${firstName}`;
   }
 
   if (viewMode === 'genealogia') {
