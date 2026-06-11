@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
-  ArrowDownToLine,
   ArrowUpToLine,
   Brush,
   FileDown,
@@ -9,7 +8,6 @@ import {
   Layers,
   Map,
   Minus,
-  Palette,
   PanelTop,
   Plus,
   Printer,
