@@ -4,22 +4,9 @@ import { CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, UserR
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '../../components/ui/select';
 import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
-import {
-  TREE_COLOR_PALETTE_CSS_VARIABLES,
-  TREE_COLOR_PALETTE_STORAGE_KEY,
-  TREE_COLOR_PALETTES,
-  isTreeColorPalette,
-  type TreeColorPalette,
-} from '../../components/FamilyTree/treeColorPalettes';
 import { FAVORITE_PAGES } from '../../constants/favoritePages';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
@@ -71,28 +58,6 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || '';
 }
 
-const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
-
-function getStoredPalette(): TreeColorPalette {
-  if (typeof window === 'undefined') return 'white';
-
-  const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
-  return isTreeColorPalette(stored) ? stored : 'white';
-}
-
-function applyTreePalette(value: TreeColorPalette) {
-  if (typeof document === 'undefined') return;
-
-  const palette = TREE_COLOR_PALETTES[value];
-  const root = document.documentElement;
-
-  root.dataset.treeColorPalette = value;
-
-  TREE_COLOR_PALETTE_CSS_VARIABLES.forEach((variableName) => {
-    root.style.setProperty(variableName, palette.cssVariables[variableName]);
-  });
-}
-
 interface HomeHeaderProps {
   currentTreeViewLabel: string;
   treeViewMode: TreeViewMode;
@@ -115,8 +80,6 @@ interface HomeHeaderProps {
 
 export function HomeHeader({
   currentTreeViewLabel,
-  treeViewMode,
-  onTreeViewModeChange,
   isSearchExpanded,
   searchExpanded,
   onSearchExpandedChange,
@@ -137,7 +100,6 @@ export function HomeHeader({
   const searchRootRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
-  const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
   const [mobileHeaderFirstName, setMobileHeaderFirstName] = useState('');
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
@@ -151,11 +113,6 @@ export function HomeHeader({
   useEffect(() => {
     setSearchSuggestionsDismissed(false);
   }, [searchTerm]);
-
-  useEffect(() => {
-    applyTreePalette(treeColorPalette);
-    window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
-  }, [treeColorPalette]);
 
   useEffect(() => {
     let cancelled = false;
@@ -343,54 +300,6 @@ export function HomeHeader({
         </div>
 
         <div className={['min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-visible sm:gap-2', isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex'].join(' ')}>
-          <Select value={treeViewMode} onValueChange={(value) => onTreeViewModeChange(value as TreeViewMode)}>
-            <SelectTrigger className="relative z-20 h-9 w-[9.5rem] max-w-[48vw] min-w-[8.25rem] shrink-0 gap-1.5 overflow-visible rounded-xl border-blue-300 bg-blue-50 px-2.5 text-sm font-semibold text-blue-900 shadow-md transition hover:border-blue-400 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 focus:ring-offset-0 sm:min-w-[10.5rem] sm:px-3 lg:min-w-[13rem]" aria-label={`Visualização atual: ${currentTreeViewLabel}`} title={currentTreeViewLabel}>
-              <Network className="h-4 w-4 shrink-0 text-blue-700" />
-              <span className="min-w-0 truncate">{currentTreeViewLabel}</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="minha-arvore">Minha Árvore</SelectItem>
-              <SelectItem value="mapa-familiar">Mapa Familiar</SelectItem>
-              <SelectItem value="genealogia">Genealogia</SelectItem>
-              <SelectItem value="visao-completa">Visão Completa</SelectItem>
-
-              <div className="mx-2 my-1 border-t border-gray-200 pt-2">
-                <div className="flex items-center gap-2 px-1 pb-1" aria-label="Paleta de cores da árvore">
-                  {paletteOptions.map((paletteKey) => {
-                    const palette = TREE_COLOR_PALETTES[paletteKey];
-                    const isActive = paletteKey === treeColorPalette;
-
-                    return (
-                      <button
-                        key={paletteKey}
-                        type="button"
-                        aria-label={palette.ariaLabel}
-                        aria-pressed={isActive}
-                        title={palette.label}
-                        className={[
-                          'h-5 w-5 rounded-full border transition',
-                          isActive
-                            ? 'scale-110 ring-2 ring-slate-900 ring-offset-2'
-                            : 'hover:scale-105 hover:ring-2 hover:ring-slate-300 hover:ring-offset-1',
-                        ].join(' ')}
-                        style={{
-                          backgroundColor: palette.swatch,
-                          borderColor: palette.swatchBorder,
-                        }}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setTreeColorPalette(paletteKey);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            </SelectContent>
-          </Select>
-
           <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
           <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3" title="Curiosidades" aria-label="Abrir Curiosidades" onClick={onCuriosities}>
             <Sparkles className="h-4 w-4" />
