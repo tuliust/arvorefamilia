@@ -18,10 +18,10 @@ export function DirectRelationKpiGrid({
 }: DirectRelationKpiGridProps) {
   return (
     <details className="tree-control-section min-w-0 rounded-lg border border-gray-200 bg-white/95 shadow-sm" open>
-      <summary className="flex min-h-7 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-[clamp(10px,1.2vh,11px)] font-bold uppercase tracking-[0.12em] text-slate-500 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 text-[clamp(10px,1.2vh,11px)] font-bold uppercase tracking-[0.12em] text-slate-500 [&::-webkit-details-marker]:hidden">
         <span className="truncate">Grupos</span>
       </summary>
-      <div className="min-w-0 px-1.5 pb-1.5">
+      <div className="min-w-0 px-2 pb-2">
         <DirectRelativeFilterGrid
           filters={filters}
           counts={counts}
