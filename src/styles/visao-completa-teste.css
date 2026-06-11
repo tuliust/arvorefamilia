@@ -1,0 +1,193 @@
+[data-tree-route-view="visao-completa-teste"] {
+  --vc-test-screen-bg: var(--family-map-canvas-bg, #ffffff);
+  --vc-test-title-bg: var(--family-map-title-bg, rgb(255 255 255 / 82%));
+  --vc-test-title-border: var(--family-map-title-border, rgb(203 213 225 / 64%));
+  --vc-test-title-shadow: var(--family-map-title-shadow, 0 6px 18px rgb(15 23 42 / 7%));
+  --vc-test-title-color: var(--family-map-title-color, #334d47);
+  --vc-test-label-bg: var(--family-map-label-bg, #4a586a);
+  --vc-test-label-color: var(--family-map-label-text, #ffffff);
+  --vc-test-line: var(--family-map-connector, #b8cfd0);
+  --vc-test-card-text: var(--family-map-card-text, #071225);
+  --vc-test-card-muted: var(--family-map-card-muted, #24313d);
+  --vc-test-card-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --vc-test-card-shadow-hover: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+html[data-tree-color-palette="white"] [data-tree-route-view="visao-completa-teste"] {
+  --vc-test-screen-bg: #ffffff;
+}
+
+html[data-tree-color-palette="orange"] [data-tree-route-view="visao-completa-teste"] {
+  --vc-test-screen-bg: #fff7ed;
+}
+
+html[data-tree-color-palette="brown"] [data-tree-route-view="visao-completa-teste"] {
+  --vc-test-screen-bg: #f4efe6;
+}
+
+[data-tree-route-view="visao-completa-teste"] section,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] {
+  background: var(--vc-test-screen-bg) !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__renderer,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__pane,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__viewport {
+  background: transparent !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] section > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1 {
+  display: inline-flex;
+  max-width: min(32rem, calc(100% - 16rem));
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--vc-test-title-border);
+  border-radius: 0.8rem;
+  background: var(--vc-test-title-bg);
+  box-shadow: var(--vc-test-title-shadow);
+  padding: 0.26rem 0.78rem 0.32rem;
+  color: var(--vc-test-title-color);
+  font-size: clamp(1.12rem, 1.55vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.04;
+  backdrop-filter: blur(8px);
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-directFamilyLabelNode > div {
+  min-height: 22px !important;
+  width: auto !important;
+  min-width: 78px !important;
+  justify-content: center !important;
+  border-radius: 9999px !important;
+  background: var(--vc-test-label-bg) !important;
+  color: var(--vc-test-label-color) !important;
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.12) !important;
+  padding: 0.22rem 0.72rem !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
+  min-height: 74px !important;
+  height: 74px !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  border-radius: 1.1rem !important;
+  box-shadow: var(--vc-test-card-shadow) !important;
+  color: var(--vc-test-card-text) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+  padding: 8px 10px !important;
+  text-align: left !important;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer:hover {
+  box-shadow: var(--vc-test-card-shadow-hover) !important;
+  transform: translateY(-2px) !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > button,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div.relative.flex.shrink-0,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div[class*="rounded-full"] {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  border: 3px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode img {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  object-fit: cover !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div:last-child {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  max-width: calc(100% - 58px) !important;
+  min-height: 0 !important;
+  margin-top: 0 !important;
+  justify-content: center !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode h3 {
+  display: block !important;
+  overflow: hidden !important;
+  color: var(--vc-test-card-text) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.18 !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode p {
+  overflow: hidden !important;
+  color: var(--vc-test-card-muted) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode p span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode h3 + div,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode div[class*="space-y"] {
+  margin-top: 3px !important;
+  gap: 1px !important;
+  line-height: 1.05 !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-personNode span.rounded-full.bg-blue-600 {
+  display: none !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__edge-path,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__edge-interaction,
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__edges path {
+  stroke: var(--vc-test-line) !important;
+  stroke-width: 3px !important;
+  opacity: 0.72 !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-genealogyFamilyConnectorNode svg path {
+  stroke: var(--vc-test-line) !important;
+  stroke-width: 3px !important;
+  opacity: 0.72 !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] .react-flow__node-marriageNode {
+  opacity: 0.22 !important;
+  pointer-events: auto !important;
+}
+
+[data-tree-route-view="visao-completa-teste"] [data-export-root="family-tree"] [data-tree-node-menu="true"] {
+  color: #0f172a !important;
+  text-transform: none !important;
+}
