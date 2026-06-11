@@ -3,6 +3,7 @@ import { useLocation } from 'react-router';
 
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
+import { DesktopFamilyHorizontalMapView } from '../../components/FamilyTree/DesktopFamilyHorizontalMapView';
 import { MobileFamilyTreeView } from '../../components/FamilyTree/MobileFamilyTreeView';
 import type {
   DirectRelativeFilters,
@@ -134,6 +135,10 @@ function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
 
   if (viewMode === 'mapa-familiar') {
     return `Mapa Familiar de ${firstName}`;
+  }
+
+  if (viewMode === 'mapa-familiar-horizontal') {
+    return `Mapa Familiar Horizontal de ${firstName}`;
   }
 
   if (viewMode === 'genealogia') {
@@ -324,7 +329,7 @@ export function HomeTreeSection({
           <div
             className={[
               'pointer-events-none absolute inset-x-0 top-5 z-20 text-center transition duration-200 ease-out',
-              treeViewMode === 'mapa-familiar' && familyMapHasScrolled
+              (treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal') && familyMapHasScrolled
                 ? 'opacity-0 -translate-y-2'
                 : 'translate-y-0 opacity-100',
             ].join(' ')}
@@ -493,6 +498,19 @@ export function HomeTreeSection({
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
           layoutRevision={treeLayoutRevision}
+          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
+        />
+      ) : canRenderTree && treeViewMode === 'mapa-familiar-horizontal' ? (
+        <DesktopFamilyHorizontalMapView
+          ref={familyTreeRef}
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          directRelativeFilters={directRelativeFilters}
+          onPersonClick={onPersonClick}
+          layoutRevision={treeLayoutRevision}
+          onScrollStateChange={setFamilyMapHasScrolled}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
       ) : canRenderTree && treeViewMode === 'mapa-familiar' ? (
