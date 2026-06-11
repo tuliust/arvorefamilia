@@ -32,7 +32,7 @@ export function HomeMobileNav({
         <button
           type="button"
           className={activeItemClassName}
-          onClick={() => navigateFromHome('/minha-arvore')}
+          onClick={() => navigateFromHome('/mapa-familiar')}
           aria-label="Abrir Home"
           aria-current="page"
         >
