@@ -191,6 +191,7 @@ export const router = createBrowserRouter([
   { path: '/mapa-familiar-horizontal', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/visao-completa-teste', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
