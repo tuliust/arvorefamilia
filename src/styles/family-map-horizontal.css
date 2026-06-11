@@ -111,3 +111,17 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   color: #0f172a !important;
   text-transform: none !important;
 }
+
+[data-family-map-horizontal-root="true"] button[data-family-map-color-key] {
+  border-color: var(--family-map-card-border, rgb(165 243 252 / 0.86)) !important;
+  background: var(--family-map-card-bg, linear-gradient(180deg, #14b8a6, #0e7490)) !important;
+  color: var(--family-map-card-text, #ffffff) !important;
+}
+
+[data-family-map-horizontal-root="true"] button[data-family-map-color-key] * {
+  color: inherit !important;
+}
+
+[data-family-map-horizontal-root="true"] path {
+  stroke: var(--family-map-connector, #a5eef6) !important;
+}
