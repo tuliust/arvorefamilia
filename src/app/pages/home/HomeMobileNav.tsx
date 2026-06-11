@@ -45,7 +45,7 @@ export function HomeMobileNav({
       {isHorizontalMap && (
         <nav
           aria-label="Visualizações da árvore horizontal"
-          className="fixed inset-x-0 top-0 z-[9990] border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur md:hidden"
+          className="fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+6.45rem)] z-[9990] border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur md:hidden"
         >
           <div className="grid w-full max-w-[330px] grid-cols-3 gap-0.5 rounded-xl bg-slate-100 p-1">
             {horizontalTabs.map((tab) => {
@@ -71,7 +71,7 @@ export function HomeMobileNav({
       {isDirectFamilyMap && (
         <button
           type="button"
-          className="fixed right-[0.85rem] top-[calc(env(safe-area-inset-top,0px)+0.55rem)] z-[10000] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden"
+          className="fixed right-[0.85rem] top-[calc(env(safe-area-inset-top,0px)+6.95rem)] z-[10000] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden"
           onClick={onToggleLegend}
           aria-label={legendOpen ? 'Fechar painel da árvore' : 'Abrir painel da árvore'}
           aria-expanded={legendOpen}
