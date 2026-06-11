@@ -18,15 +18,15 @@ export function DirectRelationKpiGrid({
 }: DirectRelationKpiGridProps) {
   return (
     <section className="min-w-0">
-      <h2 className="mb-[clamp(0.3rem,0.85vh,0.5rem)] text-[clamp(15px,2.35vh,18px)] font-semibold leading-tight text-gray-900">Filtros</h2>
-      <p className="mb-[clamp(0.95rem,1.9vh,1.35rem)] text-[clamp(12px,1.8vh,14px)] leading-snug text-gray-500">
-        Clique nos cards abaixo para exibir ou ocultar grupos de parentes.
-      </p>
+      <h2 className="mb-[clamp(0.3rem,0.75vh,0.45rem)] truncate text-[clamp(11px,1.35vh,12px)] font-bold uppercase tracking-[0.12em] text-slate-500">
+        Pessoas e grupos
+      </h2>
       <DirectRelativeFilterGrid
         filters={filters}
         counts={counts}
         onToggle={onToggle}
-        excludedKeys={['pais']}
+        excludedKeys={['sobrinhos']}
+        compact
       />
     </section>
   );
