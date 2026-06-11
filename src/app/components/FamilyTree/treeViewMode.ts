@@ -5,14 +5,14 @@ export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
   'mapa-familiar': '/mapa-familiar',
   'mapa-horizontal': '/mapa-horizontal',
   genealogia: '/genealogia',
-  'visao-completa': '/visao-completa',
+  'visao-completa': '/mapa-horizontal',
 };
 
 export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
   '/': 'mapa-familiar',
   '/minha-arvore': 'minha-arvore',
   '/mapa-familiar': 'mapa-familiar',
-  '/mapa-horizontal': 'mapa-horizontal',
+  '/mapa-horizontal': 'visao-completa',
   '/genealogia': 'genealogia',
   '/visao-completa': 'visao-completa',
 };
