@@ -38,6 +38,10 @@ const TREE_ROUTES: Record<string, TreeRouteConfig> = {
     label: 'mapa-familiar',
     title: 'Mapa Familiar',
   },
+  '/mapa-familiar-horizontal': {
+    label: 'mapa-familiar-horizontal',
+    title: 'Mapa Familiar Horizontal',
+  },
   '/genealogia': {
     label: 'genealogia',
     title: 'Genealogia',
@@ -118,11 +122,16 @@ async function saveTreePdf() {
   );
 }
 
+function isDirectFamilyMapPath(path: string) {
+  return path === '/mapa-familiar' || path === '/mapa-familiar-horizontal';
+}
+
 export function MobileTreeControlsPortal() {
   const [path, setPath] = useState(() => getCurrentPath());
   const [panelOpen, setPanelOpen] = useState(false);
   const [arrowsVisible, setArrowsVisible] = useState(true);
   const isTreePage = useMemo(() => Boolean(TREE_ROUTES[path]), [path]);
+  const isHandledByHomeMobilePanel = isDirectFamilyMapPath(path);
 
   useEffect(() => {
     const updatePath = () => setPath(getCurrentPath());
@@ -145,13 +154,13 @@ export function MobileTreeControlsPortal() {
   }, [arrowsVisible, isTreePage]);
 
   useEffect(() => {
-    if (!isTreePage) {
+    if (!isTreePage || isHandledByHomeMobilePanel) {
       setPanelOpen(false);
       setArrowsVisible(true);
     }
-  }, [isTreePage]);
+  }, [isHandledByHomeMobilePanel, isTreePage]);
 
-  if (!isTreePage) return null;
+  if (!isTreePage || isHandledByHomeMobilePanel) return null;
 
   const runAction = async (action: () => void | Promise<void>, successMessage?: string) => {
     try {
