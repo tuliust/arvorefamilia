@@ -19,3 +19,72 @@ html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] butto
   background: var(--family-map-label-bg) !important;
   color: var(--family-map-label-text) !important;
 }
+
+/* Escopo de disponibilidade e título das views da árvore. */
+@media (min-width: 768px) {
+  [data-slot="select-item"][data-value="minha-arvore"],
+  [data-slot="select-item"][data-value="genealogia"] {
+    display: none !important;
+  }
+
+  section > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1 {
+    display: inline-flex;
+    max-width: min(27rem, calc(100% - 16rem));
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--family-map-title-border, rgb(203 213 225 / 64%));
+    border-radius: 0.8rem;
+    background: var(--family-map-title-bg, rgb(255 255 255 / 80%));
+    box-shadow: var(--family-map-title-shadow, 0 6px 18px rgb(15 23 42 / 7%));
+    padding: 0.26rem 0.78rem 0.32rem;
+    color: var(--family-map-title-color, #334d47);
+    font-size: clamp(1.12rem, 1.55vw, 1.45rem);
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.04;
+    backdrop-filter: blur(8px);
+  }
+
+  section > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0.16rem;
+    left: 50%;
+    width: min(4.5rem, 28%);
+    height: 0.08rem;
+    border-radius: 9999px;
+    background: var(--family-map-title-accent, linear-gradient(90deg, rgb(34 211 238 / 0%), rgb(20 184 166 / 34%), rgb(34 211 238 / 0%)));
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 767.98px) {
+  body [data-export-root="family-tree"] > div.pointer-events-none.absolute.inset-x-0.z-10.text-center {
+    display: block !important;
+    top: 4.05rem !important;
+    height: auto !important;
+    padding-inline: 3.25rem !important;
+  }
+
+  body [data-export-root="family-tree"] > div.pointer-events-none.absolute.inset-x-0.z-10.text-center h2 {
+    display: inline-flex !important;
+    max-width: min(23rem, calc(100% - 1rem));
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--family-map-title-border, rgb(203 213 225 / 64%));
+    border-radius: 0.8rem;
+    background: var(--family-map-title-bg, rgb(255 255 255 / 80%));
+    box-shadow: var(--family-map-title-shadow, 0 6px 18px rgb(15 23 42 / 7%));
+    padding: 0.24rem 0.68rem 0.3rem;
+    color: var(--family-map-title-color, #334d47) !important;
+    font-size: clamp(1rem, 4.8vw, 1.28rem) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.012em;
+    line-height: 1.05 !important;
+    backdrop-filter: blur(8px);
+  }
+
+  body [data-export-root="family-tree"] > div.pointer-events-none.absolute.inset-x-0.z-10.text-center p {
+    display: none !important;
+  }
+}
