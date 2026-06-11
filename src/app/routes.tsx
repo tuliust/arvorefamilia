@@ -160,17 +160,26 @@ function lazyRoute(element: React.ReactNode) {
   );
 }
 
-function RedirectToMinhaArvore() {
+function RedirectToMapaFamiliar() {
   const location = useLocation();
-  return <Navigate to={`/minha-arvore${location.search}`} replace />;
+  return <Navigate to={`/mapa-familiar${location.search}`} replace />;
+}
+
+function HorizontalMapRoute() {
+  return (
+    <div className="contents" data-tree-route-view="mapa-horizontal">
+      <Home />
+    </div>
+  );
 }
 
 const adminMigrationPath = '/admin/' + 'migrar-dados';
 
 export const router = createBrowserRouter([
-  { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMinhaArvore /></TreeAccessRoute>) },
+  { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
   { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/mapa-familiar', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
+  { path: '/mapa-horizontal', element: lazyRoute(<TreeAccessRoute><HorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
