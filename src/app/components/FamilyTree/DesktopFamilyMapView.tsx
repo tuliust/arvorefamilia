@@ -556,6 +556,9 @@ const FAMILY_MAP_LAYOUT_BASE = {
 function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
   if (!isWideLayout) return FAMILY_MAP_LAYOUT_BASE;
 
+  // Wide mode is used after the left panel is collapsed. Keep the canvas centered
+  // and reserve independent lower lanes so siblings/nephews, spouse, pets and
+  // descendants do not compete for the same horizontal space.
   const wideGroups: Record<FamilyMapGroupId, GroupConfig> = {
     ...FAMILY_MAP_LAYOUT_BASE.groups,
     paternalGreatGreatGrandparents: {
@@ -626,35 +629,35 @@ function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
     },
     siblings: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.siblings,
-      x: 570,
-      width: 420,
+      x: 520,
+      width: 360,
       singleWidth: 300,
     },
     nephews: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.nephews,
-      x: 570,
-      width: 420,
+      x: 520,
+      width: 360,
       singleWidth: 280,
     },
     spouse: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.spouse,
-      x: 895,
+      x: 950,
     },
     children: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.children,
-      x: 1090,
+      x: 1190,
       width: 420,
       singleWidth: 300,
     },
     pets: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.pets,
-      x: 835,
+      x: 950,
       width: 210,
       singleWidth: 210,
     },
     grandchildren: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.grandchildren,
-      x: 1090,
+      x: 1190,
       width: 420,
       singleWidth: 280,
     },
@@ -678,9 +681,9 @@ function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
       center: { x: 835, width: 210 },
       maternalAncestors: { x: 950, width: 430 },
       right: { x: 1300, width: 560 },
-      lowerLeft: { x: 570, width: 420 },
-      lowerMiddle: { x: 835, width: 210 },
-      lowerRight: { x: 1090, width: 420 },
+      lowerLeft: { x: 520, width: 360 },
+      lowerMiddle: { x: 950, width: 210 },
+      lowerRight: { x: 1190, width: 420 },
     },
     groups: wideGroups,
   };
@@ -1706,7 +1709,7 @@ export function DesktopFamilyMapView({
       style={{ backgroundColor: familyMapLayout.canvas.background }}
     >
       <div
-        className={`relative z-10 ${isWideLayout ? 'ml-0 mr-auto' : 'mx-auto'}`}
+        className="relative z-10 mx-auto"
         style={{
           width: familyMapLayout.canvas.width * effectiveScale,
           height: canvasHeight * effectiveScale,
