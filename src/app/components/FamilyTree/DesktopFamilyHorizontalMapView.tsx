@@ -1,10 +1,17 @@
 import React from 'react';
+import type { Node } from 'reactflow';
 import { toast } from 'sonner';
 
 import type { Pessoa, Relacionamento } from '../../types';
 import type { FamilyTreeActions } from './FamilyTree';
 import { VisualPersonCard } from './FamilyTreeVisualCards';
-import type { DirectRelativeFilters, DirectRelativeGroup } from './types';
+import { buildTreeGraph } from './buildTreeGraph';
+import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
+import {
+  DEFAULT_EDGE_FILTERS,
+  type DirectRelativeFilters,
+  type DirectRelativeGroup,
+} from './types';
 import {
   buildTreeExportFilename,
   captureElementToCanvas,
@@ -46,6 +53,11 @@ type PersonLayout = {
 type Connector = {
   id: string;
   points: Point[];
+};
+
+type GenealogyReferencePlacement = {
+  x: number;
+  y: number;
 };
 
 const CANVAS = {
@@ -185,10 +197,54 @@ function inferHorizontalGenerations(
   return generationByPersonId;
 }
 
-function sortPeopleByGeneration(a: Pessoa, b: Pessoa, centralPersonId: string) {
+function getFallbackSortableBirthValue(value?: string | null) {
+  if (!value) return Number.POSITIVE_INFINITY;
+  const year = String(value).match(/\d{4}/)?.[0];
+  return year ? Number(year) : Number.POSITIVE_INFINITY;
+}
+
+function sortPeopleByFallback(a: Pessoa, b: Pessoa, centralPersonId: string) {
   if (a.id === centralPersonId) return -1;
   if (b.id === centralPersonId) return 1;
-  return a.nome_completo.localeCompare(b.nome_completo, 'pt-BR');
+
+  const birthA = getFallbackSortableBirthValue(a.data_nascimento);
+  const birthB = getFallbackSortableBirthValue(b.data_nascimento);
+  if (birthA !== birthB) return birthA - birthB;
+
+  return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
+}
+
+function isPersonNodeWithPessoa(node: Node): node is Node & { data: { pessoa: Pessoa } } {
+  return node.type === 'personNode' && Boolean(node.data?.pessoa);
+}
+
+function buildGenealogyReferencePlacements(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[],
+  onPersonClick: (pessoa: Pessoa) => void,
+) {
+  const graph = buildTreeGraph({
+    pessoas,
+    relacionamentos,
+    onPersonClick,
+    edgeFilters: DEFAULT_EDGE_FILTERS,
+  });
+  const layout = genealogyColumnsLayout(graph, {
+    edgeFilters: DEFAULT_EDGE_FILTERS,
+    hideUngenerated: true,
+  });
+  const placements = new Map<string, GenealogyReferencePlacement>();
+
+  layout.nodes
+    .filter(isPersonNodeWithPessoa)
+    .forEach((node) => {
+      placements.set(node.data.pessoa.id, {
+        x: node.position.x,
+        y: node.position.y,
+      });
+    });
+
+  return placements;
 }
 
 function getCardLabel(person: Pessoa, generation: number, centralPersonId: string, maps: RelationshipMaps) {
@@ -286,30 +342,52 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
 
+  const visibleHorizontalPessoas = React.useMemo(() => {
+    return pessoas.filter((person) => {
+      if (visiblePersonIds && !visiblePersonIds.has(person.id)) return false;
+      if (person.humano_ou_pet === 'Pet' && !directRelativeFilters.pets) return false;
+      return true;
+    });
+  }, [directRelativeFilters.pets, pessoas, visiblePersonIds]);
   const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
   const generationByPersonId = React.useMemo(
-    () => inferHorizontalGenerations(pessoas, maps, centralPersonId),
-    [centralPersonId, maps, pessoas],
+    () => inferHorizontalGenerations(visibleHorizontalPessoas, maps, centralPersonId),
+    [centralPersonId, maps, visibleHorizontalPessoas],
+  );
+  const genealogyReferencePlacements = React.useMemo(
+    () => buildGenealogyReferencePlacements(visibleHorizontalPessoas, relacionamentos, onPersonClick),
+    [onPersonClick, relacionamentos, visibleHorizontalPessoas],
   );
 
   const peopleByGeneration = React.useMemo(() => {
     const result = new Map<number, Pessoa[]>();
     GENERATIONS.forEach((generation) => result.set(generation, []));
 
-    pessoas.forEach((person) => {
-      if (visiblePersonIds && !visiblePersonIds.has(person.id)) return;
-      if (person.humano_ou_pet === 'Pet' && !directRelativeFilters.pets) return;
+    visibleHorizontalPessoas.forEach((person) => {
       const generation = generationByPersonId.get(person.id);
       if (!generation || generation < 1 || generation > 6) return;
       result.get(generation)?.push(person);
     });
 
     result.forEach((generationPeople) => {
-      generationPeople.sort((a, b) => sortPeopleByGeneration(a, b, centralPersonId));
+      generationPeople.sort((a, b) => {
+        const referenceA = genealogyReferencePlacements.get(a.id);
+        const referenceB = genealogyReferencePlacements.get(b.id);
+
+        if (referenceA && referenceB) {
+          if (referenceA.y !== referenceB.y) return referenceA.y - referenceB.y;
+          return referenceA.x - referenceB.x;
+        }
+
+        if (referenceA) return -1;
+        if (referenceB) return 1;
+
+        return sortPeopleByFallback(a, b, centralPersonId);
+      });
     });
 
     return result;
-  }, [centralPersonId, directRelativeFilters.pets, generationByPersonId, pessoas, visiblePersonIds]);
+  }, [centralPersonId, generationByPersonId, genealogyReferencePlacements, visibleHorizontalPessoas]);
 
   const { layouts, canvasHeight } = React.useMemo(() => {
     const nextLayouts = new Map<string, PersonLayout>();
@@ -373,9 +451,9 @@ function DesktopFamilyHorizontalMapViewComponent({
       bisavos: generationCount(2),
       tataravos: generationCount(1),
       filhos: generationCount(6),
-      pets: pessoas.filter((person) => person.humano_ou_pet === 'Pet' && (!visiblePersonIds || visiblePersonIds.has(person.id))).length,
+      pets: visibleHorizontalPessoas.filter((person) => person.humano_ou_pet === 'Pet').length,
     });
-  }, [onDirectRelationRenderedCounts, peopleByGeneration, pessoas, visiblePersonIds]);
+  }, [onDirectRelationRenderedCounts, peopleByGeneration, visibleHorizontalPessoas]);
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const hasScrolled = event.currentTarget.scrollTop > 24;
