@@ -210,6 +210,8 @@ export function HomeTreeSection({
   );
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
+  const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
+  const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
   const desktopTitleFirstName = React.useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === centralReferencePersonId);
     return getTreeTitleFirstName(centralPerson?.nome_completo);
@@ -288,6 +290,13 @@ export function HomeTreeSection({
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
       const action = (event as CustomEvent<SidebarTreeAction>).detail;
+
+      if (action === 'restore-view') {
+        setFamilyMapHasScrolled(false);
+        setRestoreViewRevision((revision) => revision + 1);
+        return;
+      }
+
       const treeActions = familyTreeRef.current;
       if (!treeActions) return;
 
@@ -497,7 +506,7 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
-          layoutRevision={treeLayoutRevision}
+          layoutRevision={effectiveTreeLayoutRevision}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
       ) : canRenderTree && treeViewMode === 'mapa-familiar-horizontal' ? (
@@ -509,7 +518,7 @@ export function HomeTreeSection({
           centralPersonId={centralReferencePersonId}
           directRelativeFilters={directRelativeFilters}
           onPersonClick={onPersonClick}
-          layoutRevision={treeLayoutRevision}
+          layoutRevision={effectiveTreeLayoutRevision}
           onScrollStateChange={setFamilyMapHasScrolled}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
@@ -522,7 +531,7 @@ export function HomeTreeSection({
           centralPersonId={centralReferencePersonId}
           directRelativeFilters={directRelativeFilters}
           onPersonClick={onPersonClick}
-          layoutRevision={treeLayoutRevision}
+          layoutRevision={effectiveTreeLayoutRevision}
           sidebarCollapsed={!sidebarOpen}
           onScrollStateChange={setFamilyMapHasScrolled}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
@@ -544,7 +553,7 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           centralPersonId={centralReferencePersonId}
           isMobile={isMobile}
-          layoutRevision={treeLayoutRevision}
+          layoutRevision={effectiveTreeLayoutRevision}
           activeGenealogyGeneration={effectiveActiveGenealogyGeneration}
           viewMode={treeViewMode}
           genealogyFilters={genealogyFilters}

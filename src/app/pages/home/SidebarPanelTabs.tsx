@@ -28,6 +28,7 @@ export type SidebarPanel = 'filters' | 'legend' | 'info';
 export type SidebarTreeAction =
   | 'zoom-in'
   | 'zoom-out'
+  | 'restore-view'
   | 'select-area'
   | 'save-image'
   | 'save-pdf'
@@ -125,7 +126,6 @@ export function SidebarPanelTabs({
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
-  const restoreViewUsedRef = React.useRef(false);
   const [treeColorPalette, setTreeColorPalette] = React.useState<TreeColorPalette>(getStoredPalette);
   const [activeFlyout, setActiveFlyout] = React.useState<ControlFlyout>(null);
   const [activeHighlights, setActiveHighlights] = React.useState<Record<HighlightKey, boolean>>({
@@ -154,10 +154,6 @@ export function SidebarPanelTabs({
     }
   }, [activePanel, onChange]);
 
-  React.useEffect(() => {
-    restoreViewUsedRef.current = false;
-  }, [location.pathname]);
-
   const handleViewChange = React.useCallback((viewMode: TreeViewMode) => {
     const nextPath = getPathForTreeViewMode(viewMode);
     if (location.pathname === nextPath) return;
@@ -165,10 +161,7 @@ export function SidebarPanelTabs({
   }, [location.pathname, location.search, navigate]);
 
   const handleRestoreView = React.useCallback(() => {
-    if (restoreViewUsedRef.current) return;
-
-    restoreViewUsedRef.current = true;
-    dispatchTreeAction('zoom-out');
+    dispatchTreeAction('restore-view');
   }, []);
 
   const toggleHighlight = React.useCallback((key: HighlightKey) => {
@@ -187,7 +180,7 @@ export function SidebarPanelTabs({
       <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5">
         <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
         <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
-        <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
+        <TopIconButton icon={Scan} label="Restaurar visualiza??o" onClick={handleRestoreView} />
       </div>
 
       <section className="tree-control-panel flex w-full min-w-0 flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
