@@ -4,8 +4,6 @@ import {
   CalendarDays,
   ChevronDown,
   Home,
-  Layers,
-  Map,
   MessageCircle,
   SlidersHorizontal,
   Star,
@@ -29,57 +27,51 @@ function getCurrentPathname() {
   return window.location.pathname;
 }
 
+const horizontalTabs = ['Paterno', 'Central', 'Materno'] as const;
+
 export function HomeMobileNav({
   legendOpen,
   onToggleLegend,
-  onTreeViewModeChange,
   navigateFromHome,
 }: HomeMobileNavProps) {
   const pathname = getCurrentPathname();
-  const isDirectFamilyMap = pathname.startsWith('/mapa-familiar');
-  const isHorizontalMap = pathname.startsWith('/mapa-familiar-horizontal');
+  const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+  const isHorizontalMap = pathname === '/mapa-familiar-horizontal';
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
 
   return (
     <>
-      {isDirectFamilyMap && (
-        <div className="fixed left-1/2 top-[calc(env(safe-area-inset-top,0px)+0.9rem)] z-[10000] grid w-[min(15.5rem,calc(100vw-6.5rem))] -translate-x-1/2 grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-[0_12px_28px_rgba(15,23,42,0.16)] backdrop-blur md:hidden">
-          <button
-            type="button"
-            aria-pressed={!isHorizontalMap}
-            onClick={() => onTreeViewModeChange('mapa-familiar')}
-            className={[
-              'flex min-h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-[12px] font-semibold leading-tight transition',
-              !isHorizontalMap
-                ? 'border-blue-300 bg-blue-50 text-blue-900 shadow-sm'
-                : 'border-transparent bg-white text-slate-600 active:bg-slate-50',
-            ].join(' ')}
-          >
-            <Map className="h-4 w-4" />
-            <span>Vertical</span>
-          </button>
-          <button
-            type="button"
-            aria-pressed={isHorizontalMap}
-            onClick={() => onTreeViewModeChange('mapa-familiar-horizontal')}
-            className={[
-              'flex min-h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-[12px] font-semibold leading-tight transition',
-              isHorizontalMap
-                ? 'border-blue-300 bg-blue-50 text-blue-900 shadow-sm'
-                : 'border-transparent bg-white text-slate-600 active:bg-slate-50',
-            ].join(' ')}
-          >
-            <Layers className="h-4 w-4" />
-            <span>Horizontal</span>
-          </button>
-        </div>
+      {isHorizontalMap && (
+        <nav
+          aria-label="Visualizações da árvore horizontal"
+          className="fixed inset-x-0 top-0 z-[9990] border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur md:hidden"
+        >
+          <div className="grid w-full max-w-[330px] grid-cols-3 gap-0.5 rounded-xl bg-slate-100 p-1">
+            {horizontalTabs.map((tab) => {
+              const active = tab === 'Central';
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  aria-current={active ? 'page' : undefined}
+                  className={[
+                    'min-w-0 rounded-lg px-0.5 py-2 text-[10px] font-bold transition min-[375px]:text-[11px]',
+                    active ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-600 hover:bg-white',
+                  ].join(' ')}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       )}
 
       {isDirectFamilyMap && (
         <button
           type="button"
-          className="fixed right-[0.85rem] top-[calc(env(safe-area-inset-top,0px)+0.9rem)] z-[10000] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden"
+          className="fixed right-[0.85rem] top-[calc(env(safe-area-inset-top,0px)+0.55rem)] z-[10000] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden"
           onClick={onToggleLegend}
           aria-label={legendOpen ? 'Fechar painel da árvore' : 'Abrir painel da árvore'}
           aria-expanded={legendOpen}
