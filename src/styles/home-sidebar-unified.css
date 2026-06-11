@@ -1,10 +1,11 @@
-/* Painel lateral unificado da árvore: remove abas/ação legadas e evita barras internas. */
+/* Painel lateral unificado da árvore: controles compactos, responsivos e sem barras internas. */
 main aside button[aria-label="Ações da árvore"],
 section.fixed button[aria-label="Ações da árvore"] {
   display: none !important;
 }
 
-main aside {
+main aside,
+section.fixed {
   overflow: hidden;
 }
 
@@ -19,5 +20,80 @@ section.fixed [class*="overflow-x-auto"] {
 }
 
 main aside [class*="gap-3"] {
-  gap: clamp(0.32rem, 0.75vh, 0.45rem) !important;
+  gap: clamp(0.28rem, 0.68vh, 0.42rem) !important;
+}
+
+.tree-control-panel,
+.tree-control-section,
+.tree-icon-chip,
+.family-filter-chip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tree-control-section > summary {
+  user-select: none;
+}
+
+.tree-control-section > summary::after {
+  content: '▾';
+  margin-left: auto;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: rgb(100 116 139);
+  transition: transform 160ms ease;
+}
+
+.tree-control-section:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+
+.tree-control-section:not([open]) > div {
+  display: none;
+}
+
+.tree-icon-chip,
+.family-filter-chip {
+  contain: layout paint;
+}
+
+.family-filter-chip svg,
+.tree-icon-chip svg {
+  opacity: 0.78;
+}
+
+@media (max-height: 820px) {
+  .tree-control-panel {
+    gap: 0.2rem !important;
+    padding: 0.32rem !important;
+  }
+
+  .tree-control-section > summary {
+    min-height: 1.35rem !important;
+    padding-top: 0.18rem !important;
+    padding-bottom: 0.18rem !important;
+  }
+
+  .tree-control-section > div {
+    padding-bottom: 0.28rem !important;
+  }
+
+  .tree-icon-chip {
+    min-height: 1.55rem !important;
+  }
+
+  .family-filter-chip {
+    min-height: 2.05rem !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .tree-control-section:not(:first-of-type):not(:nth-of-type(2)) {
+    border-color: rgb(226 232 240 / 0.7);
+  }
+
+  .tree-icon-chip span,
+  .family-filter-chip span {
+    font-size: 0.58rem !important;
+  }
 }
