@@ -103,14 +103,24 @@ function isParentChildRelationship(relationship: Relacionamento) {
 function getParentChildIds(relationship: Relacionamento) {
   if (relationship.tipo_relacionamento === 'filho') {
     return {
-      parentId: relationship.pessoa_destino_id,
-      childId: relationship.pessoa_origem_id,
+      childId: relationship.pessoa_destino_id,
+      parentId: relationship.pessoa_origem_id,
+    };
+  }
+
+  if (
+    relationship.tipo_relacionamento === 'filiacao_sangue'
+    || relationship.tipo_relacionamento === 'filiacao_adotiva'
+  ) {
+    return {
+      childId: relationship.pessoa_destino_id,
+      parentId: relationship.pessoa_origem_id,
     };
   }
 
   return {
-    parentId: relationship.pessoa_origem_id,
-    childId: relationship.pessoa_destino_id,
+    childId: relationship.pessoa_origem_id,
+    parentId: relationship.pessoa_destino_id,
   };
 }
 
