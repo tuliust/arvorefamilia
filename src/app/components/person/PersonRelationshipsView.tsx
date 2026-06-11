@@ -18,14 +18,25 @@ function uniqueById(people: Pessoa[]) {
   return Array.from(new Map(people.map((person) => [person.id, person])).values());
 }
 
-function PersonButton({ person, label }: { person: Pessoa; label: string }) {
+function PersonButton({
+  person,
+  label,
+  treeReturnPath,
+}: {
+  person: Pessoa;
+  label: string;
+  treeReturnPath?: string;
+}) {
   const navigate = useNavigate();
   const isPet = person.humano_ou_pet === 'Pet';
+  const profilePath = treeReturnPath
+    ? `/pessoa/${person.id}?voltar=${encodeURIComponent(treeReturnPath)}`
+    : `/pessoa/${person.id}`;
 
   return (
     <button
       type="button"
-      onClick={() => navigate(`/pessoa/${person.id}`, { flushSync: true })}
+      onClick={() => navigate(profilePath, { flushSync: true })}
       className="flex w-full items-center gap-3 rounded-lg border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50"
       aria-label={`Abrir perfil de ${person.nome_completo}`}
     >
@@ -44,7 +55,15 @@ function PersonButton({ person, label }: { person: Pessoa; label: string }) {
   );
 }
 
-export function PersonRelationshipsView({ relationships, loading = false }: { relationships: RelationshipGroups; loading?: boolean }) {
+export function PersonRelationshipsView({
+  relationships,
+  loading = false,
+  treeReturnPath,
+}: {
+  relationships: RelationshipGroups;
+  loading?: boolean;
+  treeReturnPath?: string;
+}) {
   const parents = uniqueById([...relationships.pais, ...relationships.maes]);
   const spouses = uniqueById(relationships.conjuges);
   const relatedChildren = uniqueById(relationships.filhos);
@@ -72,7 +91,7 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {parents.length === 0 ? <p className="text-sm text-gray-500">Nenhum pai/mãe cadastrado</p> : parents.map((person) => <PersonButton key={person.id} person={person} label="Pai/Mãe" />)}
+          {parents.length === 0 ? <p className="text-sm text-gray-500">Nenhum pai/mãe cadastrado</p> : parents.map((person) => <PersonButton key={person.id} person={person} label="Pai/Mãe" treeReturnPath={treeReturnPath} />)}
         </CardContent>
       </Card>
 
@@ -85,7 +104,7 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {spouses.map((person) => <PersonButton key={person.id} person={person} label="Cônjuge" />)}
+            {spouses.map((person) => <PersonButton key={person.id} person={person} label="Cônjuge" treeReturnPath={treeReturnPath} />)}
           </CardContent>
         </Card>
       )}
@@ -99,7 +118,7 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {children.map((person) => <PersonButton key={person.id} person={person} label="Filho(a)" />)}
+            {children.map((person) => <PersonButton key={person.id} person={person} label="Filho(a)" treeReturnPath={treeReturnPath} />)}
           </CardContent>
         </Card>
       )}
@@ -113,7 +132,7 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {pets.map((person) => <PersonButton key={person.id} person={person} label="Pet da família" />)}
+            {pets.map((person) => <PersonButton key={person.id} person={person} label="Pet da família" treeReturnPath={treeReturnPath} />)}
           </CardContent>
         </Card>
       )}
@@ -126,7 +145,7 @@ export function PersonRelationshipsView({ relationships, loading = false }: { re
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {siblings.length === 0 ? <p className="text-sm text-gray-500">Nenhum irmão cadastrado</p> : siblings.map((person) => <PersonButton key={person.id} person={person} label="Irmão(ã)" />)}
+          {siblings.length === 0 ? <p className="text-sm text-gray-500">Nenhum irmão cadastrado</p> : siblings.map((person) => <PersonButton key={person.id} person={person} label="Irmão(ã)" treeReturnPath={treeReturnPath} />)}
         </CardContent>
       </Card>
     </div>

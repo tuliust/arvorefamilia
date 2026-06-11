@@ -201,6 +201,29 @@ export function Home() {
     ? `home:${user?.id ?? 'anon'}:${linkedPersonId ?? 'no-linked-person'}`
     : null;
 
+  const buildTreePathForPerson = useCallback(
+    (personId?: string) => {
+      const nextPath = getPathForTreeViewMode(treeViewMode);
+      const params = new URLSearchParams(location.search);
+      const cleanPersonId = personId?.trim();
+
+      if (cleanPersonId) {
+        params.set('pessoa', cleanPersonId);
+      } else {
+        params.delete('pessoa');
+      }
+
+      const query = params.toString();
+      return `${nextPath}${query ? `?${query}` : ''}`;
+    },
+    [location.search, treeViewMode]
+  );
+
+  const buildCurrentTreeReturnPath = useCallback(
+    () => buildTreePathForPerson(queryPersonId || treeFocusPersonId || selectedPersonId || linkedPersonId),
+    [buildTreePathForPerson, linkedPersonId, queryPersonId, selectedPersonId, treeFocusPersonId]
+  );
+
   const [edgeFilters, setEdgeFilters] = useState({
     conjugal: true,
     filiacao_sangue: true,
@@ -417,15 +440,16 @@ export function Home() {
     const queryPersonExists = pessoas.some((pessoa) => pessoa.id === queryPersonId);
 
     if (!queryPersonExists) {
-      setTreeFocusPersonId(undefined);
-      setSelectedPersonId(linkedPersonId || pessoas[0]?.id);
-      navigate('/', { replace: true });
+      const fallbackPersonId = linkedPersonId || pessoas[0]?.id;
+      setTreeFocusPersonId(fallbackPersonId);
+      setSelectedPersonId(fallbackPersonId);
+      navigate(buildTreePathForPerson(fallbackPersonId), { replace: true });
       return;
     }
 
     setTreeFocusPersonId(queryPersonId);
     setSelectedPersonId(queryPersonId);
-  }, [linkedPersonId, linkedPersonResolved, navigate, pessoas, queryPersonId]);
+  }, [buildTreePathForPerson, linkedPersonId, linkedPersonResolved, navigate, pessoas, queryPersonId]);
 
   useEffect(() => {
     if (selectedCuriosityPersonId || pessoas.length === 0) return;
@@ -536,10 +560,11 @@ export function Home() {
 
   const navigateToPersonProfile = useCallback(
     (personId: string) => {
-      const path = `/pessoa/${personId}`;
+      const returnPath = buildCurrentTreeReturnPath();
+      const path = `/pessoa/${personId}?voltar=${encodeURIComponent(returnPath)}`;
       navigate(path, { replace: false, flushSync: true });
     },
-    [navigate]
+    [buildCurrentTreeReturnPath, navigate]
   );
 
   const navigateFromHome = useCallback(
@@ -717,13 +742,13 @@ export function Home() {
       setSidebarOpen(false);
       setLegendOpen(false);
     }
-    navigate(`/?pessoa=${encodeURIComponent(personId)}`, { replace: false });
+    navigate(buildTreePathForPerson(personId), { replace: false });
 
     window.setTimeout(() => {
       setTreeLayoutRevision((revision) => revision + 1);
       window.dispatchEvent(new Event('resize'));
     }, 80);
-  }, [isMobile, navigate]);
+  }, [buildTreePathForPerson, isMobile, navigate]);
 
   const pessoasVisiveisPorStatus = useMemo(() => {
     return pessoas.filter((pessoa) =>

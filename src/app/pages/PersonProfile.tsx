@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { AppLink as Link } from '../components/AppLink';
 import { Card, CardContent } from '../components/ui/card';
@@ -28,10 +28,13 @@ import { listarEventosDaPessoa } from '../services/personEventsService';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { listarTopicosForum } from '../services/forumService';
 import { ArquivoHistorico, ForumTopico, Pessoa, PersonEvent, Relacionamento } from '../types';
-import { 
+import {
+  ArrowLeft,
+  Bell,
   MessageCircle,
   Pencil,
   Plus,
+  Star,
   UserCircle2,
 } from 'lucide-react';
 import { PersonDataView } from '../components/person/PersonDataView';
@@ -44,10 +47,33 @@ import { getCachedTreeData } from '../services/treeDataCache';
 import { ForumEmptyState } from '../components/forum/ForumEmptyState';
 import { PersonTimeline } from '../components/Timeline/PersonTimeline';
 import { FavoriteButton } from '../components/favorites/FavoriteButton';
-import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../components/layout/MemberPageHeader';
+import { MemberPageHeader, type HeaderAction } from '../components/layout/MemberPageHeader';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 import { getLinkedPersonWithPessoa } from '../services/memberProfileService';
 import { createPersonProfileSuggestion } from '../services/personProfileSuggestionService';
+
+const TREE_RETURN_FALLBACK_PATH = '/minha-arvore';
+const ALLOWED_TREE_RETURN_PATHS = ['/', '/minha-arvore', '/mapa-familiar', '/genealogia', '/visao-completa'];
+
+function getSafeTreeReturnPath(rawReturnPath?: string | null) {
+  const cleanReturnPath = rawReturnPath?.trim();
+
+  if (!cleanReturnPath) {
+    return TREE_RETURN_FALLBACK_PATH;
+  }
+
+  try {
+    const decodedReturnPath = decodeURIComponent(cleanReturnPath);
+    const isInternalPath = decodedReturnPath.startsWith('/') && !decodedReturnPath.startsWith('//');
+    const isAllowedTreePath = ALLOWED_TREE_RETURN_PATHS.some(
+      (path) => decodedReturnPath === path || decodedReturnPath.startsWith(`${path}?`)
+    );
+
+    return isInternalPath && isAllowedTreePath ? decodedReturnPath : TREE_RETURN_FALLBACK_PATH;
+  } catch {
+    return TREE_RETURN_FALLBACK_PATH;
+  }
+}
 
 type ProfileRelationships = {
   pais: Pessoa[];
@@ -68,6 +94,7 @@ const EMPTY_RELATIONSHIPS: ProfileRelationships = {
 export function PersonProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | undefined>();
   const [relacionamentos, setRelacionamentos] = useState<ProfileRelationships>(EMPTY_RELATIONSHIPS);
@@ -90,6 +117,18 @@ export function PersonProfile() {
   const canEdit = useMemo(
     () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }) || currentPersonCanEditLink,
     [id, linkedPessoaId, user, isAdmin, currentPersonCanEditLink],
+  );
+  const treeReturnPath = useMemo(
+    () => getSafeTreeReturnPath(searchParams.get('voltar')),
+    [searchParams]
+  );
+  const profileHeaderActions = useMemo<HeaderAction[]>(
+    () => [
+      { label: 'Voltar para árvore', to: treeReturnPath, icon: ArrowLeft, responsiveLabel: 'lg' },
+      { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'xl' },
+      { label: 'Notificações', to: '/notificacoes', icon: Bell, responsiveLabel: 'xl' },
+    ],
+    [treeReturnPath]
   );
   const timelineItems = useMemo(() => {
     if (!pessoa) return [];
@@ -363,7 +402,7 @@ export function PersonProfile() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <p className="text-center text-gray-600">Pessoa não encontrada</p>
-            <Button onClick={() => navigate('/')} className="mt-4 w-full">
+            <Button onClick={() => navigate(treeReturnPath)} className="mt-4 w-full">
               Voltar para a árvore
             </Button>
           </CardContent>
@@ -383,7 +422,7 @@ export function PersonProfile() {
         title={pessoa.nome_completo}
         subtitle="Perfil individual da árvore familiar"
         icon={UserCircle2}
-        actions={DEFAULT_MEMBER_HEADER_ACTIONS}
+        actions={profileHeaderActions}
       />
 
       {/* Main Content */}
@@ -438,7 +477,11 @@ export function PersonProfile() {
           </CardContent>
         </Card>
 
-        <PersonRelationshipsView relationships={relacionamentos} loading={relationshipsLoading} />
+        <PersonRelationshipsView
+          relationships={relacionamentos}
+          loading={relationshipsLoading}
+          treeReturnPath={treeReturnPath}
+        />
 
         <RelationshipFinder
           pessoaBase={pessoa}
