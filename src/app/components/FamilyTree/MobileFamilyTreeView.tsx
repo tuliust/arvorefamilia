@@ -1,10 +1,12 @@
 import React from 'react';
-import { Cross, PawPrint, Star, UserRound } from 'lucide-react';
+import { Cross, Star, UserRound } from 'lucide-react';
 
 import type { Pessoa, Relacionamento } from '../../types';
-import { isPetFamilyMember } from '../../utils/personEntity';
-import { getInitials } from '../../utils/personFields';
 import type { FamilyTreeActions } from './FamilyTree';
+import {
+  getVisualPersonCardData,
+  VisualPersonAvatar as PersonAvatar,
+} from './FamilyTreeVisualCards';
 import {
   buildMobileFamilyTreeModel,
   type MobileFamilyBranch,
@@ -104,57 +106,6 @@ function getDestinationForScreen(
   return destinations[direction] ?? screen;
 }
 
-function getYear(value?: string | number) {
-  if (value === undefined || value === null || value === '') return undefined;
-  const match = String(value).match(/\b(18|19|20|21)\d{2}\b/);
-  return match?.[0];
-}
-
-function getFirstTwoNames(fullName?: string) {
-  return (fullName ?? '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .join(' ');
-}
-
-function formatVitalLine(place?: string, date?: string | number) {
-  const normalizedPlace = place?.trim();
-  const year = getYear(date);
-  return [normalizedPlace, year].filter(Boolean).join(' ');
-}
-
-function PersonAvatar({
-  person,
-  pet,
-  className,
-  iconClassName,
-}: {
-  person: Pessoa;
-  pet: boolean;
-  className: string;
-  iconClassName: string;
-}) {
-  return (
-    <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner ${className}`}
-    >
-      {person.foto_principal_url ? (
-        <img
-          src={person.foto_principal_url}
-          alt=""
-          className="h-full w-full object-cover"
-        />
-      ) : pet ? (
-        <PawPrint className={iconClassName} aria-hidden="true" />
-      ) : (
-        <span className="text-lg font-extrabold">{getInitials(person.nome_completo)}</span>
-      )}
-    </span>
-  );
-}
-
 function VitalLines({
   birthLine,
   deathLine,
@@ -192,12 +143,20 @@ function VitalLines({
 }
 
 function getPersonCardData(person: Pessoa) {
+  const {
+    pet,
+    displayName,
+    birthYearLine,
+    deathYearLine,
+    showDeathLine,
+  } = getVisualPersonCardData(person);
+
   return {
-    pet: isPetFamilyMember(person),
-    displayName: getFirstTwoNames(person.nome_completo) || person.nome_completo,
-    birthLine: formatVitalLine(person.local_nascimento, person.data_nascimento),
-    deathLine: formatVitalLine(person.local_falecimento, person.data_falecimento),
-    showDeathLine: Boolean(person.falecido || person.data_falecimento || person.local_falecimento),
+    pet,
+    displayName,
+    birthLine: birthYearLine,
+    deathLine: deathYearLine,
+    showDeathLine,
   };
 }
 
@@ -246,11 +205,9 @@ function PersonCard({
 
 function MainPersonCard({
   person,
-  label,
   onClick,
 }: {
   person: Pessoa;
-  label?: string;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
@@ -261,11 +218,6 @@ function MainPersonCard({
       onClick={() => onClick(person)}
       className="relative flex h-[194px] w-full min-w-0 flex-col items-center justify-center rounded-[1.55rem] border border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 px-3.5 pb-4 pt-4 text-center text-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition active:scale-[0.98]"
     >
-      {label && (
-        <span className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-white shadow">
-          {label}
-        </span>
-      )}
       <PersonAvatar
         person={person}
         pet={pet}
@@ -994,46 +946,45 @@ export function MobileFamilyTreeView({
           </div>
 
           <div className="relative col-start-2 row-start-2 h-full w-full overflow-hidden">
-            {hasPaternalAncestors && (
-              <div className="pointer-events-none absolute left-1/4 top-0 h-10 w-px bg-cyan-600" />
-            )}
-            {hasMaternalAncestors && (
-              <div className="pointer-events-none absolute right-1/4 top-0 h-10 w-px bg-cyan-600" />
-            )}
-
             <div
               data-mobile-tree-scroll
               className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain"
             >
               <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
-                <div className="mx-auto w-full max-w-[390px]">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative z-10">
-                    <div className="pointer-events-none absolute right-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
-                    {isVisible(model.father)
-                      ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
-                      : <EmptyCard label="Pai" />}
-                    <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="relative mx-auto w-full max-w-[390px]">
+                  {hasPaternalAncestors && (
+                    <div className="pointer-events-none absolute bottom-full left-1/4 h-10 w-px -translate-x-1/2 bg-cyan-600" />
+                  )}
+                  {hasMaternalAncestors && (
+                    <div className="pointer-events-none absolute bottom-full right-1/4 h-10 w-px translate-x-1/2 bg-cyan-600" />
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative z-10">
+                      <div className="pointer-events-none absolute right-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
+                      {isVisible(model.father)
+                        ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
+                        : <EmptyCard label="Pai" />}
+                      <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="pointer-events-none absolute left-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
+                      {isVisible(model.mother)
+                        ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
+                        : <EmptyCard label="Mãe" />}
+                      <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                    </div>
                   </div>
 
-                  <div className="relative z-10">
-                    <div className="pointer-events-none absolute left-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
-                    {isVisible(model.mother)
-                      ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
-                      : <EmptyCard label="Mãe" />}
-                    <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="pointer-events-none relative h-12">
+                    <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-7 h-px bg-cyan-600" />
+                    <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
                   </div>
                 </div>
-
-                <div className="pointer-events-none relative h-12">
-                  <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-7 h-px bg-cyan-600" />
-                  <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
-                </div>
-              </div>
 
                 {isVisible(model.central) && (
                   <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
-                    <MainPersonCard person={model.central} label="Você" onClick={onPersonClick} />
+                    <MainPersonCard person={model.central} onClick={onPersonClick} />
                   </div>
                 )}
 

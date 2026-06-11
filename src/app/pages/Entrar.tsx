@@ -532,9 +532,6 @@ export function Entrar() {
               <p>
                 Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
               </p>
-              <p>
-                A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
-              </p>
             </div>
           </section>
 
