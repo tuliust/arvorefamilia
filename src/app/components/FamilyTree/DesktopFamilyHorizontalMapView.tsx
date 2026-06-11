@@ -60,6 +60,18 @@ type GenealogyReferencePlacement = {
   y: number;
 };
 
+type CoupleConnectorCandidate = {
+  key: string;
+  generation: number;
+  personLayout: PersonLayout;
+  spouseLayout: PersonLayout;
+  upperLayout: PersonLayout;
+  lowerLayout: PersonLayout;
+  childLayouts: PersonLayout[];
+  spouseX: number;
+  spouseLineMiddleY: number;
+};
+
 const CANVAS = {
   width: 1580,
   minHeight: 900,
@@ -370,8 +382,8 @@ function getCoupleChildLayouts(
     });
 }
 
-function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
-  const connectors: Connector[] = [];
+function buildCoupleConnectorCandidates(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
+  const candidates: CoupleConnectorCandidate[] = [];
   const visiblePairKeys = new Set<string>();
 
   maps.spousesByPerson.forEach((spouseIds, personId) => {
@@ -389,55 +401,103 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
       const spouseX = upperLayout.left + upperLayout.width / 2;
       const spouseLineMiddleY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
-
-      connectors.push({
-        id: `spouse-${key}`,
-        points: [
-          [spouseX, upperLayout.top + upperLayout.height],
-          [spouseX, lowerLayout.top],
-        ],
-      });
-
       const childLayouts = getCoupleChildLayouts(personId, spouseId, personLayout.generation, layouts, maps);
-      if (childLayouts.length === 0 || personLayout.generation >= 6) return;
 
-      const nextColumnLeft = upperLayout.left + CANVAS.columnWidth;
-      const currentColumnRight = upperLayout.left + upperLayout.width;
-      const trunkX = currentColumnRight + (nextColumnLeft - currentColumnRight) / 2;
-      const childCenterYs = childLayouts.map((childLayout) => childLayout.top + childLayout.height / 2);
-      const minY = Math.min(spouseLineMiddleY, ...childCenterYs);
-      const maxY = Math.max(spouseLineMiddleY, ...childCenterYs);
-
-      connectors.push({
-        id: `family-branch-${key}`,
-        points: [
-          [spouseX, spouseLineMiddleY],
-          [trunkX, spouseLineMiddleY],
-        ],
+      candidates.push({
+        key,
+        generation: personLayout.generation,
+        personLayout,
+        spouseLayout,
+        upperLayout,
+        lowerLayout,
+        childLayouts,
+        spouseX,
+        spouseLineMiddleY,
       });
+    });
+  });
 
+  return candidates;
+}
+
+function getTrunkXForCandidate(candidate: CoupleConnectorCandidate, siblings: CoupleConnectorCandidate[]) {
+  const currentColumnRight = candidate.upperLayout.left + candidate.upperLayout.width;
+  const nextColumnLeft = candidate.upperLayout.left + CANVAS.columnWidth;
+  const gapWidth = nextColumnLeft - currentColumnRight;
+  const orderedSiblings = [...siblings].sort((a, b) => {
+    if (a.spouseLineMiddleY !== b.spouseLineMiddleY) return a.spouseLineMiddleY - b.spouseLineMiddleY;
+    return a.key.localeCompare(b.key);
+  });
+  const candidateIndex = Math.max(0, orderedSiblings.findIndex((item) => item.key === candidate.key));
+
+  return currentColumnRight + gapWidth * ((candidateIndex + 1) / (orderedSiblings.length + 1));
+}
+
+function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
+  const connectors: Connector[] = [];
+  const candidates = buildCoupleConnectorCandidates(layouts, maps);
+  const childCandidateBuckets = new Map<number, CoupleConnectorCandidate[]>();
+
+  candidates.forEach((candidate) => {
+    if (candidate.childLayouts.length === 0 || candidate.generation >= 6) return;
+    const bucket = childCandidateBuckets.get(candidate.generation) ?? [];
+    bucket.push(candidate);
+    childCandidateBuckets.set(candidate.generation, bucket);
+  });
+
+  candidates.forEach((candidate) => {
+    connectors.push({
+      id: `spouse-${candidate.key}`,
+      points: [
+        [candidate.spouseX, candidate.upperLayout.top + candidate.upperLayout.height],
+        [candidate.spouseX, candidate.lowerLayout.top],
+      ],
+    });
+
+    if (candidate.childLayouts.length === 0 || candidate.generation >= 6) return;
+
+    const childCenterYs = candidate.childLayouts.map((childLayout) => childLayout.top + childLayout.height / 2);
+    const trunkX = getTrunkXForCandidate(candidate, childCandidateBuckets.get(candidate.generation) ?? [candidate]);
+    const minY = Math.min(candidate.spouseLineMiddleY, ...childCenterYs);
+    const maxY = Math.max(candidate.spouseLineMiddleY, ...childCenterYs);
+
+    connectors.push({
+      id: `family-branch-${candidate.key}`,
+      points: [
+        [candidate.spouseX, candidate.spouseLineMiddleY],
+        [trunkX, candidate.spouseLineMiddleY],
+      ],
+    });
+
+    connectors.push({
+      id: `family-trunk-${candidate.key}`,
+      points: [
+        [trunkX, minY],
+        [trunkX, maxY],
+      ],
+    });
+
+    candidate.childLayouts.forEach((childLayout) => {
+      const childCenterY = childLayout.top + childLayout.height / 2;
       connectors.push({
-        id: `family-trunk-${key}`,
+        id: `family-child-${candidate.key}-${childLayout.person.id}`,
         points: [
-          [trunkX, minY],
-          [trunkX, maxY],
+          [trunkX, childCenterY],
+          [childLayout.left, childCenterY],
         ],
-      });
-
-      childLayouts.forEach((childLayout) => {
-        const childCenterY = childLayout.top + childLayout.height / 2;
-        connectors.push({
-          id: `family-child-${key}-${childLayout.person.id}`,
-          points: [
-            [trunkX, childCenterY],
-            [childLayout.left, childCenterY],
-          ],
-        });
       });
     });
   });
 
   return connectors;
+}
+
+function isLowerSpouseCard(layout: PersonLayout, layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
+  return Array.from(maps.spousesByPerson.get(layout.person.id) ?? []).some((spouseId) => {
+    const spouseLayout = layouts.get(spouseId);
+    if (!spouseLayout || spouseLayout.generation !== layout.generation) return false;
+    return spouseLayout.top < layout.top;
+  });
 }
 
 function DesktopFamilyHorizontalMapViewComponent({
@@ -707,21 +767,27 @@ function DesktopFamilyHorizontalMapViewComponent({
             </div>
           ))}
 
-          {Array.from(layouts.values()).map((layout) => (
-            <div
-              key={layout.person.id}
-              className="absolute z-20"
-              style={{ left: layout.left, top: layout.top, width: layout.width }}
-            >
-              <VisualPersonCard
-                person={layout.person}
-                label={getCardLabel(layout.person, layout.generation, centralPersonId, maps)}
-                horizontal
-                onClick={onPersonClick}
-                vitalMode="year"
-              />
-            </div>
-          ))}
+          {Array.from(layouts.values()).map((layout) => {
+            const useSpouseTone = layout.person.id !== centralPersonId && isLowerSpouseCard(layout, layouts, maps);
+
+            return (
+              <div
+                key={layout.person.id}
+                className="absolute z-20"
+                style={{ left: layout.left, top: layout.top, width: layout.width }}
+              >
+                <VisualPersonCard
+                  person={layout.person}
+                  label={useSpouseTone ? 'Cônjuge' : getCardLabel(layout.person, layout.generation, centralPersonId, maps)}
+                  horizontal
+                  central={layout.person.id === centralPersonId}
+                  tone={useSpouseTone ? 'spouse' : undefined}
+                  onClick={onPersonClick}
+                  vitalMode="year"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
