@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, Skull } from 'lucide-react';
+import { Cross, Star } from 'lucide-react';
 
 type LifeStatusFilterKey = 'vivos' | 'falecidos' | 'pets';
 
@@ -22,7 +22,7 @@ export function LifeStatusKpiGrid({
       key: 'vivos' as const,
       label: 'Vivos',
       value: vivos,
-      icon: HeartPulse,
+      icon: Star,
       background: 'var(--tree-palette-status-alive-bg, #F8FAFC)',
       color: 'var(--tree-palette-text-primary, #334155)',
       border: 'var(--tree-palette-status-alive, #CBD5E1)',
@@ -31,7 +31,7 @@ export function LifeStatusKpiGrid({
       key: 'falecidos' as const,
       label: 'Falecidos',
       value: falecidos,
-      icon: Skull,
+      icon: Cross,
       background: 'var(--tree-palette-status-deceased-bg, #F8FAFC)',
       color: 'var(--tree-palette-text-primary, #334155)',
       border: 'var(--tree-palette-status-deceased, #CBD5E1)',
@@ -42,7 +42,6 @@ export function LifeStatusKpiGrid({
     <details className="tree-control-section min-w-0 rounded-lg border border-gray-200 bg-white/95 shadow-sm" open>
       <summary className="flex min-h-7 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-[clamp(10px,1.2vh,11px)] font-bold uppercase tracking-[0.12em] text-slate-500 [&::-webkit-details-marker]:hidden">
         <span className="truncate">Filtros</span>
-        <span className="text-[9px] font-semibold normal-case tracking-normal text-slate-400">vivos/falecidos</span>
       </summary>
       <div className="grid w-full min-w-0 grid-cols-2 gap-[clamp(0.22rem,0.52vh,0.32rem)] px-1.5 pb-1.5">
         {items.map((item) => {
