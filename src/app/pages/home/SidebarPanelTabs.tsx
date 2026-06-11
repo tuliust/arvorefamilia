@@ -128,6 +128,15 @@ export function SidebarPanelTabs({
   }, [treeColorPalette]);
 
   React.useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const root = document.documentElement;
+    root.dataset.treeHighlightLines = activeHighlights.lines ? 'true' : 'false';
+    root.dataset.treeHighlightCards = activeHighlights.cards ? 'true' : 'false';
+    root.dataset.treeHighlightGroups = activeHighlights.groups ? 'true' : 'false';
+  }, [activeHighlights]);
+
+  React.useEffect(() => {
     if (activePanel !== 'filters') {
       window.setTimeout(() => onChange('filters'), 0);
     }
