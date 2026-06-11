@@ -27,6 +27,8 @@ function getCurrentPathname() {
   return window.location.pathname;
 }
 
+const horizontalTabs = ['Paterno', 'Central', 'Materno'] as const;
+
 export function HomeMobileNav({
   legendOpen,
   onToggleLegend,
@@ -34,11 +36,38 @@ export function HomeMobileNav({
 }: HomeMobileNavProps) {
   const pathname = getCurrentPathname();
   const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+  const isHorizontalMap = pathname === '/mapa-familiar-horizontal';
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
 
   return (
     <>
+      {isHorizontalMap && (
+        <nav
+          aria-label="Visualizações da árvore horizontal"
+          className="fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+6.95rem)] z-[9990] border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur md:hidden"
+        >
+          <div className="grid w-full max-w-[330px] grid-cols-3 gap-0.5 rounded-xl bg-slate-100 p-1">
+            {horizontalTabs.map((tab) => {
+              const active = tab === 'Central';
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  aria-current={active ? 'page' : undefined}
+                  className={[
+                    'min-w-0 rounded-lg px-0.5 py-2 text-[10px] font-bold transition min-[375px]:text-[11px]',
+                    active ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-600 hover:bg-white',
+                  ].join(' ')}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+
       {isDirectFamilyMap && (
         <button
           type="button"
