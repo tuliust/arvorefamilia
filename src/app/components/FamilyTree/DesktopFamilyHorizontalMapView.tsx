@@ -132,6 +132,13 @@ function buildRelationshipMaps(relacionamentos: Relacionamento[]): RelationshipM
   return { parentsByChild, childrenByParent, spousesByPerson };
 }
 
+function getManualGeneration(person: Pessoa) {
+  const manualGeneration = Number(person.manual_generation);
+  if (!Number.isFinite(manualGeneration)) return undefined;
+
+  return Math.min(6, Math.max(1, Math.trunc(manualGeneration)));
+}
+
 function inferHorizontalGenerations(
   pessoas: Pessoa[],
   maps: RelationshipMaps,
@@ -139,22 +146,30 @@ function inferHorizontalGenerations(
 ) {
   const peopleById = new Map(pessoas.map((person) => [person.id, person]));
   const generationByPersonId = new Map<string, number>();
+
+  pessoas.forEach((person) => {
+    const manualGeneration = getManualGeneration(person);
+    if (manualGeneration !== undefined) {
+      generationByPersonId.set(person.id, manualGeneration);
+    }
+  });
+
+  const visited = new Set<string>();
   const queue: Array<{ personId: string; generation: number }> = [
-    { personId: centralPersonId, generation: 5 },
+    { personId: centralPersonId, generation: generationByPersonId.get(centralPersonId) ?? 5 },
   ];
 
   while (queue.length > 0) {
     const current = queue.shift();
-    if (!current || !peopleById.has(current.personId)) continue;
+    if (!current || !peopleById.has(current.personId) || visited.has(current.personId)) continue;
+    visited.add(current.personId);
 
-    const generation = Math.min(6, Math.max(1, current.generation));
-    const existing = generationByPersonId.get(current.personId);
-    if (existing !== undefined) {
-      const keepExisting = Math.abs(existing - 5) <= Math.abs(generation - 5);
-      if (keepExisting) continue;
+    const generation = generationByPersonId.get(current.personId)
+      ?? Math.min(6, Math.max(1, current.generation));
+
+    if (!generationByPersonId.has(current.personId)) {
+      generationByPersonId.set(current.personId, generation);
     }
-
-    generationByPersonId.set(current.personId, generation);
 
     maps.parentsByChild.get(current.personId)?.forEach((parentId) => {
       queue.push({ personId: parentId, generation: generation - 1 });
@@ -166,14 +181,6 @@ function inferHorizontalGenerations(
       queue.push({ personId: spouseId, generation });
     });
   }
-
-  pessoas.forEach((person) => {
-    if (generationByPersonId.has(person.id)) return;
-    const manualGeneration = person.manual_generation;
-    if (typeof manualGeneration === 'number' && Number.isFinite(manualGeneration)) {
-      generationByPersonId.set(person.id, Math.min(6, Math.max(1, manualGeneration)));
-    }
-  });
 
   return generationByPersonId;
 }
