@@ -1,0 +1,7 @@
+/* Mantem contraste dos labels dos cards diretos apos overrides de paleta. */
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute {
+  background: var(--family-map-label-bg) !important;
+  color: var(--family-map-label-text) !important;
+}
