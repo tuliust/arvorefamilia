@@ -1,0 +1,35 @@
+/* Ajustes visuais isolados para a view Mapa Familiar. */
+section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1 {
+  display: inline-flex;
+  max-width: min(44rem, calc(100% - 10rem));
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(103 232 249 / 72%);
+  border-radius: 1.35rem;
+  background: linear-gradient(180deg, rgb(255 255 255 / 90%), rgb(236 254 255 / 74%));
+  box-shadow: 0 14px 34px rgb(8 145 178 / 16%);
+  padding: 0.72rem 1.45rem 0.82rem;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+  backdrop-filter: blur(12px);
+}
+
+section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1::after {
+  content: '';
+  position: absolute;
+  bottom: 0.52rem;
+  left: 50%;
+  width: min(9rem, 42%);
+  height: 0.18rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgb(34 211 238 / 0%), rgb(20 184 166 / 70%), rgb(34 211 238 / 0%));
+  transform: translateX(-50%);
+}
+
+/*
+ * O canvas wide usa width: 1880px quando o painel lateral está colapsado.
+ * Nesse estado, desloca apenas Primos Paternos para ocupar melhor a faixa vazia à esquerda.
+ */
+[data-family-map-export-root="true"] > div[style*="width: 1880px"] > .absolute.z-10.min-h-0:has(button[aria-label*="Primos Paternos"]) {
+  left: -120px !important;
+}
