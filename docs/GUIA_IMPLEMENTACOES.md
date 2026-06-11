@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico atualizado com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, `FAMILY_MAP_LAYOUT`, cônjuges por política, zoom e avatares por `genero`.
+> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, `FAMILY_MAP_LAYOUT`, modo wide, título ocultável por scroll, card central sem badge, cônjuges por política, zoom e avatares por `genero`.
 
 ## Objetivo
 
@@ -49,7 +49,7 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 |---|---|---|
 | Árvore familiar | Implementada | `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` usam o shell autenticado da Home. ReactFlow continua em Minha Árvore/Genealogia/Visão Completa; Mapa Familiar usa HTML/CSS/SVG. |
 | Minha Árvore | Implementada no escopo atual | Desktop/tablet usam ReactFlow + `directFamilyDistributedLayout.ts`; mobile usa `MobileFamilyTreeView.tsx` com malha 3×3, abas **Paterno/Central/Materno**, tela global de ancestrais acima da Central, tios nas laterais, primos abaixo dos tios, conectores HTML/CSS próprios e preview durante swipe. |
-| Mapa Familiar | Implementado no escopo atual | `/mapa-familiar` usa `DesktopFamilyMapView.tsx` em desktop/tablet, `FamilyTreeVisualCards.tsx`, `FAMILY_MAP_LAYOUT`, conectores SVG por âncoras, grupos expansíveis, zoom `Ctrl + scroll`, regras próprias de cônjuges e fallback mobile para `MobileFamilyTreeView.tsx`. |
+| Mapa Familiar | Implementado no escopo atual | `/mapa-familiar` usa `DesktopFamilyMapView.tsx` em desktop/tablet, `FamilyTreeVisualCards.tsx`, `FAMILY_MAP_LAYOUT`, conectores SVG por âncoras, grupos expansíveis, modo wide quando o painel lateral é colapsado, título ocultável por scroll, card central sem badge, zoom `Ctrl + scroll`, regras próprias de cônjuges e fallback mobile para `MobileFamilyTreeView.tsx`. |
 | Genealogia | Implementada | Layout por gerações, chips mobile alinhados à base de gerações inferidas, inferência em memória quando necessário e reset mobile de geração ativa por view. Não deve herdar largura da Minha Árvore. |
 | Visão Completa | Implementada | Layout por gerações/blocos, navegação mobile por chips calculados sobre a base inferida e reset de geração ao alternar views. Mantém padrão de cards das views por geração. |
 | Perfil de pessoa | Implementado | Perfil público autenticado, dados pessoais, privacidade, arquivos, eventos, favoritos e sugestões. |
@@ -139,6 +139,31 @@ Documento funcional canônico:
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 ```
+
+
+### 1.3 Estado atual verificado do Mapa Familiar pós-refinamento visual
+
+Estado implementado confirmado no código atual:
+
+- `Home.tsx` mantém `sidebarOpen` e aciona revisão de layout quando o painel abre/fecha.
+- `HomeTreeSection.tsx` recebe `sidebarOpen`, deriva `sidebarCollapsed` e repassa para `DesktopFamilyMapView`.
+- `HomeTreeSection.tsx` mantém `familyMapHasScrolled` para ocultar o título quando a superfície do Mapa Familiar rola.
+- `DesktopFamilyMapView.tsx` aceita `sidebarCollapsed` e `onScrollStateChange`.
+- `DesktopFamilyMapView.tsx` usa `getFamilyMapLayout(false)` no modo base e `getFamilyMapLayout(true)` no modo wide.
+- O modo wide usa canvas maior e áreas laterais/inferiores específicas, mantendo o wrapper centralizado.
+- `DesktopFamilyMapView.tsx` passa `showLabel={false}` para a pessoa central.
+- `DesktopFamilyMapView.tsx` usa `vitalMode="full"` em grupos quando `isWideLayout` é verdadeiro.
+- `FamilyTreeVisualCards.tsx` implementa `VisualPersonAvatar` com prioridade para foto, depois `genero`, depois fallbacks legados.
+- `Pessoa.genero` já está tipado em `src/app/types/index.ts`.
+- `MobileTreeControlsPortal.tsx` reconhece `/mapa-familiar` como rota de árvore para controles mobile.
+
+Pendências que permanecem fora deste estado consolidado:
+
+- confirmar se a coluna `pessoas.genero` já possui migration versionada;
+- validar visualmente o modo wide com dados reais em navegador autenticado;
+- decidir se exportação do Mapa Familiar deve capturar HTML/CSS/SVG de forma canônica;
+- confirmar inclusão de `/mapa-familiar` nos catálogos de busca global e favoritos, se ainda não houver.
+
 
 ## 2. Stack e arquitetura base
 
@@ -311,7 +336,7 @@ src/main.tsx
 
 Comportamento consolidado:
 
-- Home pós-login é o shell das três views da árvore;
+- Home pós-login é o shell das quatro views da árvore;
 - `treeViewMode` é derivado da rota;
 - troca de view preserva search params;
 - header da árvore usa `HomeHeader`;
