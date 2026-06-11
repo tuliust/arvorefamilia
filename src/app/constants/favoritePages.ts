@@ -11,6 +11,23 @@ export const FAVORITE_PAGES: FavoritePage[] = [
     keywords: ['arvore', 'árvore', 'familia', 'família'],
   },
   {
+    id: 'mapa-familiar',
+    title: 'Mapa Familiar',
+    description: 'Visualização panorâmica da árvore familiar.',
+    path: '/mapa-familiar',
+    keywords: [
+      'mapa familiar',
+      'mapa',
+      'panoramico',
+      'panorâmico',
+      'familia',
+      'família',
+      'arvore',
+      'árvore',
+      'visual',
+    ],
+  },
+  {
     id: 'genealogia',
     title: 'Genealogia',
     description: 'Visualização por gerações e ramos familiares.',
