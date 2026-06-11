@@ -214,6 +214,36 @@ function sortPeopleByFallback(a: Pessoa, b: Pessoa, centralPersonId: string) {
   return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
 }
 
+function orderPeopleWithAdjacentSpouses(people: Pessoa[], maps: RelationshipMaps) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
+  const placedPersonIds = new Set<string>();
+  const orderedPeople: Pessoa[] = [];
+
+  people.forEach((person) => {
+    if (placedPersonIds.has(person.id)) return;
+
+    orderedPeople.push(person);
+    placedPersonIds.add(person.id);
+
+    const spouse = Array.from(maps.spousesByPerson.get(person.id) ?? [])
+      .map((spouseId) => peopleById.get(spouseId))
+      .filter((candidate): candidate is Pessoa => Boolean(candidate) && !placedPersonIds.has(candidate.id))
+      .sort((a, b) => {
+        const indexA = originalIndexByPersonId.get(a.id) ?? Number.POSITIVE_INFINITY;
+        const indexB = originalIndexByPersonId.get(b.id) ?? Number.POSITIVE_INFINITY;
+        return indexA - indexB;
+      })[0];
+
+    if (!spouse) return;
+
+    orderedPeople.push(spouse);
+    placedPersonIds.add(spouse.id);
+  });
+
+  return orderedPeople;
+}
+
 function isPersonNodeWithPessoa(node: Node): node is Node & { data: { pessoa: Pessoa } } {
   return node.type === 'personNode' && Boolean(node.data?.pessoa);
 }
@@ -268,10 +298,6 @@ function pairKey(firstId: string, secondId: string) {
   return [firstId, secondId].sort().join('::');
 }
 
-function getCenter(layout: PersonLayout): Point {
-  return [layout.left + layout.width / 2, layout.top + layout.height / 2];
-}
-
 function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
   const connectors: Connector[] = [];
   const visiblePairKeys = new Set<string>();
@@ -287,38 +313,17 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
       if (visiblePairKeys.has(key)) return;
       visiblePairKeys.add(key);
 
-      const from: Point = [personLayout.left + personLayout.width, personLayout.top + personLayout.height / 2];
-      const to: Point = [spouseLayout.left, spouseLayout.top + spouseLayout.height / 2];
-      const left = from[0] <= to[0] ? from : to;
-      const right = from[0] <= to[0] ? to : from;
-      connectors.push({ id: `spouse-${key}`, points: [left, right] });
-    });
-  });
+      const upperLayout = personLayout.top <= spouseLayout.top ? personLayout : spouseLayout;
+      const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
+      const x = upperLayout.left + upperLayout.width / 2;
 
-  maps.parentsByChild.forEach((parentIds, childId) => {
-    const childLayout = layouts.get(childId);
-    if (!childLayout) return;
-
-    const visibleParents = Array.from(parentIds)
-      .map((parentId) => layouts.get(parentId))
-      .filter((layout): layout is PersonLayout => Boolean(layout));
-    if (visibleParents.length === 0) return;
-
-    const sourceCandidates = visibleParents.filter((parentLayout) => (
-      parentLayout.generation === childLayout.generation - 1
-    ));
-    const parents = sourceCandidates.length > 0 ? sourceCandidates : visibleParents;
-    const parentCenters = parents.map(getCenter);
-    const source: Point = [
-      parentCenters.reduce((sum, [x]) => sum + x, 0) / parentCenters.length,
-      parentCenters.reduce((sum, [, y]) => sum + y, 0) / parentCenters.length,
-    ];
-    const target: Point = [childLayout.left, childLayout.top + childLayout.height / 2];
-    const middleX = source[0] + (target[0] - source[0]) / 2;
-
-    connectors.push({
-      id: `child-${childId}-${parents.map((parent) => parent.person.id).join('-')}`,
-      points: [source, [middleX, source[1]], [middleX, target[1]], target],
+      connectors.push({
+        id: `spouse-${key}`,
+        points: [
+          [x, upperLayout.top + upperLayout.height],
+          [x, lowerLayout.top],
+        ],
+      });
     });
   });
 
@@ -369,7 +374,7 @@ function DesktopFamilyHorizontalMapViewComponent({
       result.get(generation)?.push(person);
     });
 
-    result.forEach((generationPeople) => {
+    result.forEach((generationPeople, generation) => {
       generationPeople.sort((a, b) => {
         const referenceA = genealogyReferencePlacements.get(a.id);
         const referenceB = genealogyReferencePlacements.get(b.id);
@@ -384,10 +389,12 @@ function DesktopFamilyHorizontalMapViewComponent({
 
         return sortPeopleByFallback(a, b, centralPersonId);
       });
+
+      result.set(generation, orderPeopleWithAdjacentSpouses(generationPeople, maps));
     });
 
     return result;
-  }, [centralPersonId, generationByPersonId, genealogyReferencePlacements, visibleHorizontalPessoas]);
+  }, [centralPersonId, generationByPersonId, genealogyReferencePlacements, maps, visibleHorizontalPessoas]);
 
   const { layouts, canvasHeight } = React.useMemo(() => {
     const nextLayouts = new Map<string, PersonLayout>();
