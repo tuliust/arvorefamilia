@@ -1297,7 +1297,7 @@ export function Home() {
             onClick={() => setLegendOpen(false)}
             aria-label="Fechar painel"
           />
-          <section className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 max-h-[60vh] overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl">
+          <section className="tree-mobile-controls-panel fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 flex max-h-[min(82vh,calc(100vh-7rem))] flex-col overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl">
             <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <SidebarPanelTabs
@@ -1327,7 +1327,7 @@ export function Home() {
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </div>
-            <div className="max-h-[calc(60vh-4rem)] overflow-y-auto overscroll-contain px-4 py-3 [-webkit-overflow-scrolling:touch]">
+            <div className="tree-mobile-controls-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
               {sidebarPanelContent}
             </div>
           </section>

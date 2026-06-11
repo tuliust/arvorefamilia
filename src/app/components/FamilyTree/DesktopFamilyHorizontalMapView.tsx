@@ -21,6 +21,7 @@ import {
   openTreePrintWindow,
   printCanvas,
 } from './utils/treeExport';
+import { TreeAreaSelectionOverlay } from './TreeAreaSelectionOverlay';
 
 interface DesktopFamilyHorizontalMapViewProps {
   pessoas: Pessoa[];
@@ -526,6 +527,7 @@ function DesktopFamilyHorizontalMapViewComponent({
   const scrollStateRef = React.useRef(false);
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
+  const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
 
   const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
   const horizontalVisibility = React.useMemo(() => {
@@ -765,10 +767,18 @@ function DesktopFamilyHorizontalMapViewComponent({
     }
   }, [captureFamilyMap]);
 
-  const handleDirectExport = React.useCallback(() => {
-    toast.info('O Mapa Familiar Horizontal exporta diretamente a superfície atual.');
-    void handleSaveImage();
-  }, [handleSaveImage]);
+  const handleStartAreaSelection = React.useCallback(() => {
+    if (!mapSurfaceRef.current) {
+      toast.error('?rea do Mapa Familiar Horizontal n?o encontrada para sele??o.');
+      return;
+    }
+
+    setIsAreaSelectionOpen(true);
+  }, []);
+
+  const handleCloseAreaSelection = React.useCallback(() => {
+    setIsAreaSelectionOpen(false);
+  }, []);
 
   React.useImperativeHandle(ref, () => ({
     zoomIn: handleZoomIn,
@@ -776,8 +786,15 @@ function DesktopFamilyHorizontalMapViewComponent({
     print: handlePrint,
     savePdf: handleSavePdf,
     saveImage: handleSaveImage,
-    startAreaSelection: handleDirectExport,
-  }), [handleDirectExport, handlePrint, handleSaveImage, handleSavePdf, handleZoomIn, handleZoomOut]);
+    startAreaSelection: handleStartAreaSelection,
+  }), [
+    handlePrint,
+    handleSaveImage,
+    handleSavePdf,
+    handleStartAreaSelection,
+    handleZoomIn,
+    handleZoomOut,
+  ]);
 
   return (
     <div

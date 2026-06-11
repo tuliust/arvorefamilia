@@ -21,6 +21,7 @@ import {
   openTreePrintWindow,
   printCanvas,
 } from './utils/treeExport';
+import { TreeAreaSelectionOverlay } from './TreeAreaSelectionOverlay';
 
 interface DesktopFamilyMapViewProps {
   pessoas: Pessoa[];
@@ -1139,9 +1140,11 @@ function DesktopFamilyMapViewComponent({
 }: DesktopFamilyMapViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const exportRootRef = React.useRef<HTMLDivElement | null>(null);
+  const mapSurfaceRef = React.useRef<HTMLDivElement | null>(null);
   const scrollStateRef = React.useRef(false);
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
+  const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
   const isWideLayout = Boolean(sidebarCollapsed);
   const familyMapLayout = React.useMemo(
@@ -1763,10 +1766,18 @@ function DesktopFamilyMapViewComponent({
       toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Familiar.');
     }
   }, [captureFamilyMap]);
-  const handleDirectExport = React.useCallback(() => {
-    toast.info('O Mapa Familiar exporta diretamente a superfície panorâmica atual.');
-    void handleSaveImage();
-  }, [handleSaveImage]);
+  const handleStartAreaSelection = React.useCallback(() => {
+    if (!mapSurfaceRef.current) {
+      toast.error('?rea do Mapa Familiar n?o encontrada para sele??o.');
+      return;
+    }
+
+    setIsAreaSelectionOpen(true);
+  }, []);
+
+  const handleCloseAreaSelection = React.useCallback(() => {
+    setIsAreaSelectionOpen(false);
+  }, []);
 
   React.useImperativeHandle(ref, () => ({
     zoomIn: handleZoomIn,
@@ -1774,12 +1785,12 @@ function DesktopFamilyMapViewComponent({
     print: handlePrint,
     savePdf: handleSavePdf,
     saveImage: handleSaveImage,
-    startAreaSelection: handleDirectExport,
+    startAreaSelection: handleStartAreaSelection,
   }), [
-    handleDirectExport,
     handlePrint,
     handleSaveImage,
     handleSavePdf,
+    handleStartAreaSelection,
     handleZoomIn,
     handleZoomOut,
   ]);
@@ -1802,6 +1813,7 @@ function DesktopFamilyMapViewComponent({
         }}
       >
         <div
+          ref={mapSurfaceRef}
           className="absolute left-0 top-0 origin-top-left"
           style={{
             width: familyMapLayout.canvas.width,
@@ -1872,6 +1884,14 @@ function DesktopFamilyMapViewComponent({
             />
           )}
         </div>
+        {isAreaSelectionOpen && (
+          <TreeAreaSelectionOverlay
+            getTargetElement={() => mapSurfaceRef.current}
+            filenameLabel="mapa-familiar"
+            title="?rea selecionada do Mapa Familiar"
+            onClose={handleCloseAreaSelection}
+          />
+        )}
       </div>
     </div>
   );
