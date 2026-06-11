@@ -4,9 +4,12 @@ import {
   Dog,
   Heart,
   Home,
-  Network,
-  Sprout,
-  Trees,
+  PersonStanding,
+  SquareUser,
+  Tally1,
+  Tally2,
+  Tally3,
+  TrainFrontTunnel,
   UsersRound,
 } from 'lucide-react';
 
@@ -26,13 +29,13 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   colorKey: RelationColorKey;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { key: 'tataravos', label: 'Tataravós', colorKey: 'tataravos', icon: Trees },
-  { key: 'bisavos', label: 'Bisavós', colorKey: 'bisavos', icon: Sprout },
-  { key: 'avos', label: 'Avós', colorKey: 'avos', icon: UsersRound },
-  { key: 'pais', label: 'Pais', colorKey: 'pais', icon: Home },
+  { key: 'tataravos', label: 'Tataravós', colorKey: 'tataravos', icon: Tally1 },
+  { key: 'bisavos', label: 'Bisavós', colorKey: 'bisavos', icon: Tally2 },
+  { key: 'avos', label: 'Avós', colorKey: 'avos', icon: Tally3 },
+  { key: 'pais', label: 'Pais', colorKey: 'pais', icon: SquareUser },
   { key: 'tios', label: 'Tios', colorKey: 'tios', icon: UsersRound },
-  { key: 'primos', label: 'Primos', colorKey: 'primos', icon: Network },
-  { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos', icon: Baby },
+  { key: 'primos', label: 'Primos', colorKey: 'primos', icon: PersonStanding },
+  { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos', icon: TrainFrontTunnel },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos', icon: UsersRound },
   { key: 'filhos', label: 'Filhos', colorKey: 'filhos', icon: Baby },
   { key: 'netos', label: 'Netos', colorKey: 'netos', icon: Baby },
