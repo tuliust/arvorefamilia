@@ -1,9 +1,9 @@
 # Minha Árvore - filtros, pets e regras de exibição
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`
 > Tipo: documentação funcional da view **Minha Árvore**.
-> Status: revisado com as regras atuais de filtros/status, pets, coluna `genero`, filtro **Cônjuges** e impacto no Mapa Familiar.
+> Status: revisado com regras atuais de filtros/status, pets, coluna `genero`, filtro **Cônjuges**, impacto no Mapa Familiar e regras mobile compartilhadas por `MobileFamilyTreeView`.
 
 ---
 
@@ -134,6 +134,59 @@ Não fazer:
 - alterar RLS ou permissões para corrigir avatar visual.
 
 ---
+
+### 3.2 Uso de `genero` no mobile
+
+A partir da revisão de 2026-06-11, a regra de avatar visual por `genero` também se aplica aos cards mobile renderizados por `MobileFamilyTreeView`.
+
+Escopo:
+
+```txt
+/minha-arvore em mobile
+/mapa-familiar em mobile, quando usa fallback para MobileFamilyTreeView
+```
+
+Regras de exibição:
+
+| Dado disponível | Resultado esperado no avatar mobile |
+|---|---|
+| `foto_principal_url` válida | exibe a foto real da pessoa/pet |
+| sem foto + `genero = homem` | exibe avatar gráfico masculino |
+| sem foto + `genero = mulher` | exibe avatar gráfico feminino |
+| sem foto + `genero = pet` | exibe avatar/ícone de pet |
+| sem foto + `genero` ausente | usa fallback visual definido em `FamilyTreeVisualCards.tsx`, sem alterar domínio |
+
+Regras complementares:
+
+- o mobile deve reutilizar a mesma lógica visual de `FamilyTreeVisualCards.tsx` sempre que possível;
+- o avatar de pet no mobile não deve depender de relacionamento `filho`;
+- `genero = pet` orienta avatar, mas a regra semântica de pet continua sendo `humano_ou_pet === 'Pet'` enquanto não houver backfill/migration de domínio;
+- alterações de avatar, badge ou texto do card são visuais e não exigem migration.
+
+### 3.3 Linhas vitais nos cards mobile
+
+Nos cards mobile de `MobileFamilyTreeView`, as linhas de nascimento e falecimento devem exibir apenas o ano ao lado dos ícones.
+
+Exemplos esperados:
+
+```txt
+⭐ 1962
+✝ 2009
+```
+
+Não exibir no mobile:
+
+```txt
+⭐ Paulo Afonso/BA 1962
+✝ Natal/RN 2009
+```
+
+Regras:
+
+- aplicar a Pai, Mãe, pessoa central, avós, bisavós, tataravós, irmãos, sobrinhos, cônjuge, filhos, netos, tios, primos e pets;
+- manter fallbacks textuais quando não houver ano;
+- não alterar a regra desktop/tablet do Mapa Familiar, que pode usar `vitalMode="full"` em contextos com espaço suficiente;
+- não criar migration para essa alteração.
 
 ## 4. Helpers obrigatórios
 
@@ -299,6 +352,18 @@ Regras para implementação futura:
 - a ocultação de grupo deve preservar a integridade visual da malha e dos conectores.
 
 ---
+
+
+### 6.3 Regras visuais recentes do mobile segmentado
+
+As regras abaixo foram consolidadas para evitar divergência entre `/minha-arvore` mobile e `/mapa-familiar` mobile:
+
+- o card principal da pessoa central não exibe badge **VOCÊ**;
+- os cards de Pai e Mãe continuam podendo exibir labels próprios;
+- linhas vitais exibem somente o ano;
+- avatares usam foto real ou fallback por `genero`;
+- conectores HTML/CSS não são comandados diretamente por `edgeFilters`;
+- filtros diretos ainda não devem ser documentados como controle interativo pleno das telas da malha enquanto o código não implementar essa lógica.
 
 
 

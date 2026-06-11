@@ -1,6 +1,6 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentação operacional.
 
@@ -96,6 +96,24 @@ Não criar migration para mudança puramente visual.
 ```
 
 ---
+
+## 3.1 Mudanças visuais que não exigem migration
+
+Os ajustes abaixo são documentados como mudanças de UI/componente e não devem gerar alteração de schema:
+
+| Ajuste | Motivo |
+|---|---|
+| Remover badge **VOCÊ** do card principal mobile | Alteração visual em `MobileFamilyTreeView` |
+| Exibir apenas ano nos cards mobile | Formatação de dados já existentes |
+| Corrigir conectores mobile entre ancestrais, Pai/Mãe e pessoa central | Estrutura visual HTML/CSS |
+| Usar avatar gráfico homem/mulher/pet quando não há foto | Reuso de campo visual existente e lógica frontend |
+| Remover texto institucional de Google Agenda em `/entrar` | Conteúdo estático de página, sem impacto de banco |
+
+Exceção:
+
+- se `public.pessoas.genero` ainda não existir oficialmente em migration versionada, criar migration para a coluna/constraint/índice;
+- não criar migration para os SVGs, componentes, espaçamentos, labels, conectores ou formatação de ano.
+
 
 ## 4. Criar migration
 
@@ -401,7 +419,7 @@ Se retornar linhas após a migration, a constraint não foi aplicada corretament
 
 ---
 
-### Pendência provável: `add_genero_to_pessoas`
+### Pendência operacional: `add_genero_to_pessoas`
 
 Contexto:
 
@@ -450,6 +468,11 @@ from public.pessoas
 where genero is not null
   and genero not in ('homem', 'mulher', 'pet');
 ```
+
+
+Observação de revisão 2026-06-11:
+
+O uso visual de `genero` foi ampliado para o fallback mobile de `MobileFamilyTreeView`, além do Mapa Familiar desktop/tablet. Isso não muda a natureza da pendência: a migration só é necessária para versionar a coluna `public.pessoas.genero`, caso ela tenha sido criada manualmente no Supabase.
 
 Regra:
 

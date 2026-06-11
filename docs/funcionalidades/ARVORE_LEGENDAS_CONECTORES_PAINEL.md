@@ -1,9 +1,9 @@
 # Árvore - legendas, conectores, filtros e painel lateral
 
-> Última revisão: 2026-06-10  
+> Última revisão: 2026-06-11  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
 > Tipo: documentação funcional/técnica específica da árvore.  
-> Status: atualizado com a malha mobile 3×3, Mapa Familiar, filtros, conectores ReactFlow, conectores HTML/CSS mobile e conectores SVG do Mapa Familiar.
+> Status: atualizado com malha mobile 3×3, Mapa Familiar, filtros, conectores ReactFlow, conectores HTML/CSS mobile, conectores SVG do Mapa Familiar e anti-regressões recentes de scroll/conectores mobile.
 
 ## 1. Função deste documento
 
@@ -406,6 +406,39 @@ Validar:
 - ausência de scroll horizontal.
 
 ---
+
+### 9.4 Anti-regressão 2026-06-11: conectores da tela Central
+
+Na tela **Central** do `MobileFamilyTreeView`, os conectores que descem dos ancestrais para Pai/Mãe devem acompanhar o mesmo contexto rolável dos cards relacionados.
+
+Regra técnica esperada:
+
+```txt
+Linhas que precisam encaixar em Pai/Mãe não devem ficar fixas no viewport enquanto Pai/Mãe rola dentro de data-mobile-tree-scroll.
+```
+
+Critérios:
+
+- ao rolar a tela Central, os conectores de avós → Pai/Mãe permanecem encaixados;
+- não aparecem linhas verticais soltas no meio da tela;
+- não aparecem duplicidades de linha descendo dos ancestrais;
+- a conexão Pai/Mãe → pessoa central permanece alinhada;
+- bottom navigation não cobre conectores essenciais.
+
+Esses conectores continuam fora do controle direto de `edgeFilters` e `visualLineFilters`.
+
+### 9.5 Regras visuais dos cards mobile relacionadas à legenda
+
+Os cards mobile renderizados por `MobileFamilyTreeView` seguem regras próprias:
+
+- linhas vitais exibem apenas ano;
+- o card central não exibe badge **VOCÊ**;
+- Pai e Mãe podem manter labels;
+- avatares usam foto real ou fallback por `genero`;
+- pets usam visual de pet quando `genero = pet` ou fallback semântico indicar pet.
+
+Essas regras não são filtros de legenda e não devem ser controladas por `TreeLegend`.
+
 
 ## 10. Conectores do Mapa Familiar
 

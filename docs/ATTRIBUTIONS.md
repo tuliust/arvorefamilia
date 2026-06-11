@@ -1,6 +1,6 @@
 # Atribuições e licenças
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-11  
 > Local recomendado: `docs/ATTRIBUTIONS.md`  
 > Tipo: atribuições de terceiros e referências de licença.
 
@@ -79,6 +79,26 @@ Radix UI
 A licença de cada dependência deve ser confirmada no pacote correspondente antes de redistribuição comercial, publicação pública ampla ou auditoria jurídica.
 
 ---
+
+## 4.1 Avatares e ícones da árvore
+
+Os avatares gráficos de homem, mulher e pet usados nos cards visuais da árvore devem ser tratados conforme sua origem:
+
+| Origem do asset | Ação documental |
+|---|---|
+| SVG inline autoral do projeto | registrar que não há atribuição externa específica |
+| biblioteca de ícones já declarada no `package.json`, como `lucide-react` | confirmar licença da dependência no pacote |
+| imagem, ilustração ou SVG de terceiros | registrar autor, fonte, URL e licença neste arquivo |
+| asset gerado por ferramenta externa | registrar termos/licença aplicáveis antes de uso comercial ou publicação ampla |
+
+Regra:
+
+```txt
+Não incorporar imagens externas de avatar homem/mulher/pet sem verificar licença e atribuição.
+```
+
+Se os avatares atuais forem SVGs internos criados no próprio código, não há nova atribuição específica além das dependências já listadas.
+
 
 ## 5. Conteúdo familiar e uploads
 

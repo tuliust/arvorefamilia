@@ -1,9 +1,9 @@
 # Estrutura de usuários, banco de dados e fluxos de pessoa - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e alerta de migration caso a coluna tenha sido criada manualmente no Supabase.
+> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e no mobile compartilhado, além de alerta de migration caso a coluna tenha sido criada manualmente no Supabase.
 
 ## Objetivo
 
@@ -176,6 +176,28 @@ add_genero_to_pessoas
 ```
 
 ---
+
+#### Uso de `genero` nas views da árvore
+
+O campo `genero` é consumido visualmente por cards compartilhados da árvore.
+
+Escopos confirmados:
+
+| View/contexto | Uso |
+|---|---|
+| `/mapa-familiar` desktop/tablet | `FamilyTreeVisualCards` escolhe avatar por foto real ou `genero` |
+| `/minha-arvore` mobile | `MobileFamilyTreeView` reutiliza avatar visual compartilhado |
+| `/mapa-familiar` mobile | fallback para `MobileFamilyTreeView`, herdando a mesma regra |
+| Pets | `genero = pet` orienta avatar de pet, sem substituir sozinho `humano_ou_pet` |
+
+Regras:
+
+- `foto_principal_url` tem prioridade sobre avatar gráfico;
+- `genero` deve ser tratado como informação visual, não como relação familiar;
+- alteração de avatar não altera `relacionamentos`;
+- manter `humano_ou_pet` como fonte semântica até haver decisão de migração/backfill;
+- se a migration de `genero` for criada oficialmente, atualizar este documento e `docs/operacao/MIGRATIONS_SUPABASE.md`.
+
 
 ### 2.3 Relacionamentos
 
