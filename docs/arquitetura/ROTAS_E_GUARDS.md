@@ -1,9 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-11
-> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
-> Projeto: `tuliust/arvorefamilia`
-> Status: revisado após inclusão da view protegida `/mapa-familiar`, atualização do contrato de `TreeViewMode` e alinhamento da rota pública `/entrar` ao código atual, sem parágrafo específico sobre Google Agenda.
+> Última revisão: 2026-06-11  
+> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: revisado após inclusão de `/mapa-familiar-horizontal`, remoção das rotas experimentais `/mapa-horizontal` e `/visao-completa-teste`, atualização do contrato de `TreeViewMode` e alinhamento do redirecionamento raiz para `/mapa-familiar`.
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ Use este arquivo para:
 - validar `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`;
 - entender o fluxo de login, primeiro acesso e vínculo com pessoa;
 - corrigir redirecionamentos;
-- revisar navegação entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa`;
+- revisar navegação entre views da árvore;
 - garantir preservação de search params, especialmente `?pessoa=...`;
 - garantir que usuário comum não acesse admin.
 
@@ -23,7 +23,7 @@ Documentos relacionados:
 
 - `docs/arquitetura/ARCHITECTURE.md`;
 - `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`;
-- `docs/GUIA_CORRECAO_ERROS.md`;
+- `docs/GUIA_COMPONENTES.md`;
 - `docs/GUIA_UX_LAYOUT.md`;
 - `docs/funcionalidades/MINHA_ARVORE_VIEW.md`;
 - `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`;
@@ -45,8 +45,10 @@ src/app/pages/Entrar.tsx
 src/app/pages/Home.tsx
 src/app/pages/home/HomeHeader.tsx
 src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeMobileNav.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
@@ -93,6 +95,7 @@ Rotas protegidas:
 /
 /minha-arvore
 /mapa-familiar
+/mapa-familiar-horizontal
 /genealogia
 /visao-completa
 /busca
@@ -111,11 +114,11 @@ vínculo existente ou resolvido -> libera árvore/busca
 
 Cuidados:
 
-- não remover preservação de search params do redirect `/` → `/minha-arvore`;
 - não liberar árvore para usuário sem vínculo resolvido;
 - não transformar `dados_confirmados=false` de vínculo antigo em loop permanente para `/meus-dados` sem validar regra de produto;
 - não resolver acesso apenas no frontend se RLS exigir ajuste;
-- não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
+- não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore;
+- preservar search params ao redirecionar `/` para `/mapa-familiar`.
 
 ### 3.2 `MemberRoute`
 
@@ -222,32 +225,10 @@ Regras:
 - `/entrar` não deve exigir sessão;
 - termos e privacidade devem permanecer acessíveis sem login;
 - `/admin/login` não deve ser usado como item principal de navegação;
-- `/entrar` também funciona como tela pública de identidade do app, mas não deve concentrar automaticamente toda comunicação de integrações;
+- `/entrar` também funciona como tela pública de identidade do app;
 - o título principal da home pública deve ser **Família Souza Barros**;
 - o texto institucional da plataforma deve existir diretamente no JSX de `src/app/pages/Entrar.tsx`;
-- se uma exigência de OAuth pedir descrição pública da integração, definir uma superfície pública adequada sem usar CSS, pseudo-elementos ou conteúdo invisível.
-
-### 4.1 Conteúdo obrigatório em `/entrar`
-
-A home pública deve comunicar claramente:
-
-```txt
-Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
-```
-
-Conteúdo removido de `/entrar`:
-
-```txt
-A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
-```
-
-Regras de compliance:
-
-- o nome exibido deve corresponder ao nome público do app;
-- `/entrar` deve manter links públicos para `/termos` e `/privacidade`;
-- a integração com Google Agenda continua pertencendo ao Calendário Familiar e deve ser explicada na superfície definida por produto/compliance quando houver revisão OAuth;
-- não reintroduzir o parágrafo removido em `/entrar` sem decisão explícita;
-- não resolver exigências de OAuth apenas com CSS, pseudo-elementos ou conteúdo invisível.
+- se uma exigência de OAuth pedir descrição pública da integração, definir superfície pública adequada sem usar CSS, pseudo-elementos ou conteúdo invisível.
 
 ---
 
@@ -255,62 +236,25 @@ Regras de compliance:
 
 | Rota | Componente | Guard | View |
 |---|---|---|---|
-| `/` | `RedirectToMinhaArvore` | `TreeAccessRoute` | redireciona para `minha-arvore` |
+| `/` | `RedirectToMapaFamiliar` | `TreeAccessRoute` | redireciona para `/mapa-familiar` |
 | `/minha-arvore` | `Home` | `TreeAccessRoute` | `minha-arvore` |
 | `/mapa-familiar` | `Home` | `TreeAccessRoute` | `mapa-familiar` |
+| `/mapa-familiar-horizontal` | `FamilyHorizontalMapRoute` → `Home` | `TreeAccessRoute` | `mapa-familiar-horizontal` |
 | `/genealogia` | `Home` | `TreeAccessRoute` | `genealogia` |
 | `/visao-completa` | `Home` | `TreeAccessRoute` | `visao-completa` |
 | `/busca` | `BuscaResultados` | `TreeAccessRoute` | busca global protegida |
 
 Regras:
 
-- as quatro views principais usam o mesmo shell `Home`;
-- `Home.tsx` deriva `treeViewMode` de `location.pathname`;
-- troca de view deve usar navegação client-side;
-- search params devem ser preservados, especialmente `?pessoa=...`;
-- não manter estado paralelo de view quando a URL já define a view;
-- `/mapa-familiar` deve ser tratada como view de árvore, não como página interna comum.
-
-### 5.1 Diferença entre as views da árvore
-
-| View | Rota | Renderização principal |
-|---|---|---|
-| Minha Árvore | `/minha-arvore` | ReactFlow no desktop/tablet; `MobileFamilyTreeView` no mobile |
-| Mapa Familiar | `/mapa-familiar` | `DesktopFamilyMapView` no desktop/tablet; fallback para `MobileFamilyTreeView` no mobile |
-| Genealogia | `/genealogia` | ReactFlow por gerações, com chips mobile quando aplicável |
-| Visão Completa | `/visao-completa` | ReactFlow por gerações/base completa, com chips mobile quando aplicável |
+- as views da árvore usam o mesmo shell `Home`;
+- `/mapa-familiar-horizontal` usa wrapper com `data-tree-route-view="mapa-familiar-horizontal"`;
+- `/` redireciona para `/mapa-familiar`, preservando search params;
+- `/mapa-horizontal` e `/visao-completa-teste` foram removidas e devem cair no fallback 404;
+- não adicionar rota experimental nova sem registrá-la na documentação e em `treeViewMode.ts`.
 
 ---
 
-
-
-### 5.2 Observações específicas do Mapa Familiar
-
-`/mapa-familiar` deve ser tratada como view de árvore, não como página interna comum.
-
-Regras atuais:
-
-- desktop/tablet usam `DesktopFamilyMapView.tsx`;
-- mobile usa fallback seguro para `MobileFamilyTreeView.tsx`;
-- a troca de view deve preservar `?pessoa=...`;
-- a view não usa ReactFlow como base de renderização;
-- exportação, busca global e favoritos precisam ser verificados separadamente, pois nem todos os fluxos ReactFlow se aplicam automaticamente ao Mapa Familiar;
-- o documento funcional canônico da view é `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`.
-
-Ao adicionar ou ajustar view de árvore, revisar sempre:
-
-```txt
-src/app/components/FamilyTree/treeViewMode.ts
-src/app/routes.tsx
-src/app/pages/home/HomeHeader.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/services/globalSearchService.ts
-src/app/constants/favoritePages.ts
-```
-
----
-
-## 6. Helpers de view da árvore
+## 6. Contrato de `TreeViewMode`
 
 Arquivo:
 
@@ -320,199 +264,176 @@ src/app/components/FamilyTree/treeViewMode.ts
 
 Contrato atual:
 
-```txt
-TreeViewMode = 'minha-arvore' | 'mapa-familiar' | 'genealogia' | 'visao-completa'
-VIEW_MODE_TO_PATH
-PATH_TO_VIEW_MODE
-getTreeViewModeFromPath
-getPathForTreeViewMode
+```ts
+export type TreeViewMode =
+  | 'minha-arvore'
+  | 'mapa-familiar'
+  | 'mapa-familiar-horizontal'
+  | 'genealogia'
+  | 'visao-completa';
 ```
 
-Mapeamento canônico:
+Mapeamento atual:
 
-| `TreeViewMode` | Path |
+```ts
+export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
+  'minha-arvore': '/minha-arvore',
+  'mapa-familiar': '/mapa-familiar',
+  'mapa-familiar-horizontal': '/mapa-familiar-horizontal',
+  genealogia: '/genealogia',
+  'visao-completa': '/visao-completa',
+};
+
+export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
+  '/': 'mapa-familiar',
+  '/minha-arvore': 'minha-arvore',
+  '/mapa-familiar': 'mapa-familiar',
+  '/mapa-familiar-horizontal': 'mapa-familiar-horizontal',
+  '/genealogia': 'genealogia',
+  '/visao-completa': 'visao-completa',
+};
+```
+
+Regras:
+
+- qualquer nova view deve ser registrada em `TreeViewMode`, `VIEW_MODE_TO_PATH`, `PATH_TO_VIEW_MODE`, `routes.tsx`, painel, busca/favoritos quando aplicável e documentação;
+- rotas antigas removidas não devem permanecer como alias silencioso sem decisão explícita;
+- `getTreeViewModeFromPath()` deve cair em `mapa-familiar` como fallback atual.
+
+---
+
+## 7. Renderização por view
+
+A decisão de renderização fica em `HomeTreeSection.tsx`.
+
+| View | Desktop/tablet | Mobile |
+|---|---|---|
+| `minha-arvore` | `FamilyTree`/ReactFlow | `MobileFamilyTreeView` |
+| `mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
+| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `DesktopFamilyHorizontalMapView` |
+| `genealogia` | `FamilyTree`/ReactFlow | `FamilyTree` com tabs/chips de geração |
+| `visao-completa` | `FamilyTree`/ReactFlow | `FamilyTree` com tabs/chips de geração |
+
+Observações:
+
+- `DesktopFamilyHorizontalMapView` não é ReactFlow, apesar de usar `buildTreeGraph` e `genealogyColumnsLayout` como referência interna de ordenação;
+- `MobileFamilyTreeView` é a experiência mobile segmentada 3×3 da família direta;
+- `MobileTreeControlsPortal` não deve renderizar seu painel simplificado para `/mapa-familiar` e `/mapa-familiar-horizontal`, pois essas rotas usam painel mobile do `HomeMobileNav`/`Home`.
+
+---
+
+## 8. Painel e navegação entre views
+
+No desktop, `SidebarPanelTabs.tsx` exibe:
+
+| Botão | View | Rota |
+|---|---|---|
+| Vertical | `mapa-familiar` | `/mapa-familiar` |
+| Horizontal | `mapa-familiar-horizontal` | `/mapa-familiar-horizontal` |
+
+Opções mobile-only ainda podem existir internamente para `minha-arvore` e `genealogia`, mas a experiência desktop atual prioriza o par Vertical/Horizontal.
+
+Regras:
+
+- clique em **Vertical** deve preservar search params relevantes;
+- clique em **Horizontal** deve preservar search params relevantes;
+- a rota ativa deve ser detectada por prefixo, especialmente `/mapa-familiar-horizontal`;
+- não redirecionar **Horizontal** para `/visao-completa`.
+
+---
+
+## 9. Rotas de membro
+
+| Rota | Componente | Guard |
+|---|---|---|
+| `/minha-arvore/editar` | `MinhaArvore` | `MemberRoute` |
+| `/meus-dados` | `MeusDados` | `MemberRoute` |
+| `/meus-vinculos` | `MeusVinculos` | `MemberRoute` |
+| `/vincular-perfil` | `VincularPerfil` | `MemberRoute` |
+| `/pessoa/:id` | `PersonProfile` | `MemberRoute` |
+| `/pessoas/:id` | `PersonProfile` | `MemberRoute` |
+| `/calendario-familiar` | `CalendarioFamiliar` | `MemberRoute` |
+| `/meus-favoritos` | `MeusFavoritos` | `MemberRoute` |
+| `/notificacoes` | `Notificacoes` | `MemberRoute` |
+| `/ajustar-notificacoes` | `AjustarNotificacoes` | `MemberRoute` |
+| `/forum` | `ForumHome` | `MemberRoute` |
+| `/forum/novo` | `ForumNovoTopico` | `MemberRoute` |
+| `/forum/topico/:id` | `ForumTopico` | `MemberRoute` |
+| `/forum/topico/:id/editar` | `ForumEditarTopico` | `MemberRoute` |
+
+---
+
+## 10. Rotas administrativas
+
+| Rota | Guard |
 |---|---|
-| `minha-arvore` | `/minha-arvore` |
-| `mapa-familiar` | `/mapa-familiar` |
-| `genealogia` | `/genealogia` |
-| `visao-completa` | `/visao-completa` |
+| `/admin` | `ProtectedRoute` |
+| `/admin/dashboard` | `ProtectedRoute` |
+| `/admin/home` | `ProtectedRoute` |
+| `/admin/pessoas` | `ProtectedRoute` |
+| `/admin/pessoas/nova` | `ProtectedRoute` |
+| `/admin/pessoas/:id` | `ProtectedRoute` |
+| `/admin/pessoas/:id/editar` | `ProtectedRoute` |
+| `/admin/relacionamentos` | `ProtectedRoute` |
+| `/admin/relacionamentos/novo` | `ProtectedRoute` |
+| `/admin/importacao` | `ProtectedRoute` |
+| `/admin/migrar-dados` | `ProtectedRoute` |
+| `/admin/diagnostico` | `ProtectedRoute` |
+| `/admin/integridade` | `ProtectedRoute` |
+| `/admin/atividades` | `ProtectedRoute` |
+| `/admin/notificacoes` | `ProtectedRoute` |
+| `/admin/solicitacoes-vinculos` | `ProtectedRoute` |
+
+---
+
+## 11. Search params e navegação contextual
 
 Regras:
 
-- qualquer link interno entre views deve usar helper ou rota canônica equivalente;
-- não duplicar mapeamento manual em vários componentes;
-- preservar nomes de view, pois eles orientam layout, filtros e renderização;
-- adicionar nova view sempre exige atualização de rota, helper, header, documentação e QA de `?pessoa=...`.
+- `?pessoa=...` deve ser preservado ao alternar views da árvore quando tecnicamente aplicável;
+- navegação de perfil deve preservar origem por `?voltar=...`;
+- `RedirectToMapaFamiliar` deve preservar `location.search`;
+- troca de paleta não altera URL;
+- troca de filtros não altera URL;
+- troca de view pelo painel deve usar `getPathForTreeViewMode`.
 
 ---
 
-## 7. Rotas de membro
+## 12. Checklist para adicionar ou ajustar view da árvore
 
-| Rota | Componente | Função |
-|---|---|---|
-| `/minha-arvore/editar` | `MinhaArvore` | Edição da própria árvore/dados pelo membro |
-| `/meus-dados` | `MeusDados` | Edição dos dados da pessoa vinculada |
-| `/meus-vinculos` | `MeusVinculos` | Gestão/visualização de vínculos |
-| `/vincular-perfil` | `VincularPerfil` | Solicitação/criação de vínculo adicional |
-| `/pessoa/:id` | `PersonProfile` | Perfil público/interno de pessoa |
-| `/pessoas/:id` | `PersonProfile` | Alias do perfil de pessoa |
-| `/calendario-familiar` | `CalendarioFamiliar` | Calendário familiar e Google Agenda |
-| `/meus-favoritos` | `MeusFavoritos` | Favoritos do usuário |
-| `/notificacoes` | `Notificacoes` | Central de notificações |
-| `/ajustar-notificacoes` | `AjustarNotificacoes` | Preferências de notificações |
-| `/forum` | `ForumHome` | Home do fórum |
-| `/forum/novo` | `ForumNovoTopico` | Criação de tópico |
-| `/forum/topico/:id` | `ForumTopico` | Visualização de tópico |
-| `/forum/topico/:id/editar` | `ForumEditarTopico` | Edição de tópico |
+Ao adicionar/alterar view:
 
-Regras:
-
-- rotas de membro usam `MemberRoute`;
-- ações administrativas dentro dessas rotas devem ser condicionais;
-- acesso à edição de pessoa depende de permissão específica, não apenas da rota;
-- navegação deve usar React Router/AppLink quando possível.
-
----
-
-## 8. Rotas administrativas
-
-| Rota | Componente | Função |
-|---|---|---|
-| `/admin` | `AdminDashboard` | Dashboard admin |
-| `/admin/dashboard` | `AdminDashboard` | Alias/dashboard admin |
-| `/admin/home` | `AdminHomeSettings` | Configurações visuais da home pública |
-| `/admin/pessoas` | `AdminPessoas` | Listagem de pessoas |
-| `/admin/pessoas/nova` | `AdminPessoaForm` | Criação de pessoa |
-| `/admin/pessoas/:id` | `AdminPessoaForm` | Alias de edição/visualização admin |
-| `/admin/pessoas/:id/editar` | `AdminPessoaForm` | Edição de pessoa |
-| `/admin/relacionamentos` | `AdminRelacionamentos` | Gestão de relacionamentos |
-| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm` | Criação de relacionamento |
-| `/admin/importacao` | `AdminImportacao` | Importação |
-| `/admin/migrar-dados` | `AdminMigrarDados` | Ferramenta destrutiva de migração de seed |
-| `/admin/diagnostico` | `AdminDiagnostico` | Diagnóstico de integridade |
-| `/admin/integridade` | `AdminIntegridade` | Integridade de dados |
-| `/admin/atividades` | `AdminAtividades` | Histórico de atividades |
-| `/admin/notificacoes` | `AdminNotificacoes` | Diagnóstico/gestão de notificações |
-| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos` | Solicitações de vínculo, sugestões de perfil e relacionamento |
-
-Regras:
-
-- toda rota `/admin/*`, exceto `/admin/login`, deve usar `ProtectedRoute`;
-- `/admin/migrar-dados` exige proteção adicional por flag e confirmação textual;
-- alterações em relacionamento real, reset de perfil, moderação e diagnóstico devem permanecer restritas a admin.
+1. Atualizar `TreeViewMode`.
+2. Atualizar `VIEW_MODE_TO_PATH`.
+3. Atualizar `PATH_TO_VIEW_MODE`.
+4. Atualizar `routes.tsx`.
+5. Definir wrapper de rota se precisar de `data-tree-route-view`.
+6. Atualizar `HomeTreeSection.tsx`.
+7. Atualizar `SidebarPanelTabs.tsx`.
+8. Atualizar busca global e favoritos se a view for pública no app.
+9. Validar `MobileTreeControlsPortal`.
+10. Validar `HomeMobileNav`.
+11. Atualizar documentação:
+    - `ROTAS_E_GUARDS.md`;
+    - `GUIA_COMPONENTES.md`;
+    - `GUIA_UX_LAYOUT.md`;
+    - documento funcional da view.
+12. Rodar:
+    ```bash
+    npm run build
+    git diff --check
+    ```
 
 ---
 
-## 9. Navegação global
+## 13. Anti-regressões
 
-### Home pública
+Não fazer:
 
-`Entrar.tsx` contém:
-
-- nome público **Família Souza Barros**;
-- texto institucional da plataforma familiar privada;
-- documentação pública/compliance da integração com Google Agenda quando exigida;
-- login;
-- primeiro acesso;
-- links públicos para termos e privacidade.
-
-### Home pós-login
-
-`HomeHeader` contém:
-
-- seletor de view com **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
-- seletor de paleta, incluindo **Visual**;
-- busca de pessoa/página;
-- atalhos de fórum/calendário/curiosidades;
-- `UserProfileMenu variant="home-header"`.
-
-### Páginas internas
-
-`MemberPageHeader` contém:
-
-- título/subtítulo;
-- ações responsivas;
-- `UserProfileMenu` padrão;
-- navegação inferior mobile fixa com atalhos para Home, Calendário, Fórum, Favoritos e Notificações.
-
-### Menu do usuário
-
-`UserProfileMenu` contém:
-
-- topo clicável para `/minha-arvore/editar`;
-- Home;
-- Atualizar perfil;
-- Fórum;
-- Calendário;
-- Favoritos;
-- Notificações;
-- Painel Admin condicional;
-- Sair.
-
-No mobile, também apresenta seleção rápida das views da árvore. Quando a view `/mapa-familiar` for acessada em mobile, a renderização usa fallback seguro para a experiência segmentada mobile.
-
-### Busca e favoritos
-
-`/mapa-familiar` existe como rota protegida e view da árvore. A inclusão explícita da página nos catálogos de busca global e favoritos deve ser mantida sincronizada com:
-
-```txt
-src/app/services/globalSearchService.ts
-src/app/constants/favoritePages.ts
-```
-
-Se `Mapa Familiar` não aparecer na busca do header ou em favoritos de página, registrar como pendência técnica no plano antes de documentar como concluído.
-
----
-
-## 10. Regras anti-regressão
-
-- Não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
-- Não proteger `/entrar`, `/termos` ou `/privacidade`.
-- Não remover de `/entrar` o nome **Família Souza Barros** nem o texto institucional da plataforma.
-- Não resolver texto de compliance OAuth apenas por CSS.
-- Não expor admin por link sem `ProtectedRoute`.
-- Não usar e-mail hardcoded como regra de admin.
-- Não redirecionar usuário já vinculado em loop para `/meus-dados`.
-- Não usar `window.location` para navegação interna quando `navigate` resolver.
-- Não quebrar preservação de `?pessoa=...`.
-- Não duplicar mapeamento de `TreeViewMode` fora de `treeViewMode.ts` sem justificativa.
-- Não usar botão escondido como única proteção de dados.
-- Não remover `/mapa-familiar` de `TreeAccessRoute` ao mexer nas rotas.
-- Não substituir o ReactFlow de `/minha-arvore`, `/genealogia` ou `/visao-completa` pela view panorâmica.
-
----
-
-## 11. Checklist de validação
-
-Após alterar rotas/guards:
-
-```bash
-npm run build
-git diff --check
-```
-
-Validar manualmente, sem alterar dados reais:
-
-- visitante acessa `/entrar`, `/termos`, `/privacidade`;
-- `/entrar` exibe nome **Família Souza Barros**;
-- `/entrar` exibe finalidade da plataforma antes do login; a comunicação da integração Google Agenda deve ficar na superfície pública/compliance definida para esse fim;
-- visitante não acessa área de membro/admin;
-- membro acessa `/minha-arvore/editar`, fórum, favoritos, notificações e calendário;
-- membro sem admin não acessa `/admin`;
-- admin acessa `/admin` e páginas administrativas;
-- `/` redireciona para `/minha-arvore` preservando search params;
-- troca entre `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` mantém navegação client-side;
-- `/mapa-familiar?pessoa=...` preserva a pessoa central;
-- `/mapa-familiar` em mobile usa fallback seguro e não quebra a navegação inferior.
-
-### Navegação contextual entre árvore e perfil
-
-As rotas `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` adicionam `?voltar=` ao abrir `/pessoa/:id`. O perfil valida esse retorno contra rotas internas permitidas, usa fallback seguro quando necessário e preserva o parâmetro ao navegar entre parentes.
-
-```txt
-/mapa-familiar?pessoa=A
--> /pessoa/B?voltar=%2Fmapa-familiar%3Fpessoa%3DA
--> /mapa-familiar?pessoa=A
-```
-
-Status: **Concluído tecnicamente; manter QA manual de navegação por view**.
+- reintroduzir `/mapa-horizontal` ou `/visao-completa-teste` sem decisão explícita;
+- redirecionar `/mapa-familiar-horizontal` para `/visao-completa`;
+- trocar `TreeAccessRoute` por `MemberRoute` nas rotas da árvore;
+- remover preservação de search params do redirect `/`;
+- esconder rota via UI sem remover do router quando a decisão for exclusão;
+- alterar guard de admin baseado apenas em estado visual do menu;
+- criar alias silencioso sem documentação.

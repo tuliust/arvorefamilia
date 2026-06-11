@@ -1,39 +1,68 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-11
-> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
-> Tipo: documentação funcional e técnica da exportação da árvore.
-> Status: fluxo canônico implementado para views ReactFlow, fallback mobile e Mapa Familiar HTML/CSS/SVG; manter QA manual de fidelidade visual.
+> Última revisão: 2026-06-11  
+> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
+> Tipo: documentação funcional e técnica da exportação da árvore.  
+> Status: fluxo canônico revisado para views ReactFlow, Mapa Familiar Vertical, Mapa Familiar Horizontal, painel desktop e controle mobile atual.
 
 ---
 
 ## 1. Objetivo
 
-A exportação permite gerar imagem, PDF ou impressão a partir das quatro views da árvore. As views ReactFlow mantêm seleção retangular no desktop; o Mapa Familiar usa captura direta de sua superfície HTML/CSS/SVG panorâmica.
+A exportação permite gerar imagem, PDF ou impressão a partir das views da árvore.
 
 O escopo atual é:
 
 ```txt
-Exportar a área visível/selecionada ou a captura disponível da árvore, não a árvore completa calculada server-side.
+Exportar a área visível/selecionada ou a superfície capturável atual da árvore.
 ```
 
-A exportação completa de toda a árvore, com escala automática integral, multipágina ou processamento server-side, permanece fora do escopo atual.
+Não está no escopo atual:
+
+- exportação automática da árvore completa;
+- exportação multipágina;
+- exportação server-side;
+- exportação vetorial/SVG puro;
+- salvamento automático no Supabase Storage;
+- histórico de exportações.
 
 ---
 
-## 2. Arquivos principais
+## 2. Views cobertas
+
+| View | Rota | Estratégia |
+|---|---|---|
+| Minha Árvore | `/minha-arvore` | ReactFlow; área visível/seleção |
+| Genealogia | `/genealogia` | ReactFlow; área visível/seleção |
+| Visão Completa | `/visao-completa` | ReactFlow; área visível/seleção |
+| Mapa Familiar Vertical | `/mapa-familiar` | captura HTML/CSS/SVG da superfície panorâmica |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | captura HTML/CSS/SVG da superfície horizontal por gerações |
+
+Regra central:
+
+```txt
+As views ReactFlow usam a estrutura ReactFlow.
+As views do Mapa Familiar usam root HTML/CSS/SVG próprio.
+```
+
+---
+
+## 3. Arquivos principais
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/types.ts
 src/app/pages/Home.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/HomeMobileNav.tsx
 src/main.tsx
 src/styles/mobile-tree-controls.css
 ```
@@ -43,99 +72,65 @@ Documentos relacionados:
 ```txt
 docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
-docs/GUIA_CORRECAO_ERROS.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/historico/README.md
+docs/PLANO_PROXIMOS_PASSOS.md
 ```
-
-Observação: diagnósticos históricos individuais de exportação foram consolidados em `docs/historico/README.md`. Não referenciar arquivos históricos removidos como fonte viva.
 
 ---
 
-## 3. Escopo atual
+## 4. Escopo atual
 
 Implementado no fluxo principal:
 
-- seleção retangular de área visível;
+- seleção retangular de área visível em views ReactFlow;
 - exportação PNG;
 - exportação PDF;
 - impressão;
 - cancelamento por botão;
 - cancelamento por `Esc`;
 - seleção mínima de `80 x 80px`;
-- limite estimado de 12.000.000 pixels;
+- limite preventivo de pixels;
 - bloqueio de pan/zoom durante seleção;
-- exclusão de controles/overlays/legendas da captura;
+- exclusão de controles/overlays/menus da captura;
 - mensagens de erro amigáveis.
 
-Implementado no fluxo mobile rápido:
+Implementado nas views de Mapa Familiar:
 
-- painel mobile de controles da árvore;
-- ação de imagem;
-- ação de PDF;
-- ação de impressão;
-- acesso sem abrir overlay manual de seleção;
-- captura usando o fluxo canônico de exportação em `treeExport.ts`;
-- política segura de `html2canvas` com `useCORS: true` e `allowTaint: false`;
-- visibilidade restrita às rotas de árvore.
+- captura direta da superfície atual;
+- exportação PNG;
+- exportação PDF;
+- impressão;
+- preservação da paleta atual;
+- preservação do zoom/escala visual atual;
+- preservação de grupos visíveis e expandidos;
+- captura dos conectores SVG;
+- exclusão de botões marcados como ignoráveis.
 
-Fora do escopo atual:
+Implementado no mobile:
 
-- exportar automaticamente a árvore completa;
-- exportar árvore completa com escala automática;
-- exportação server-side;
-- salvar exportações no Supabase Storage;
-- histórico de exportações;
-- exportação SVG/vetorial;
-- PDF multipágina automático.
-
-### 3.1 Escopo da rota `/mapa-familiar`
-
-A view **Mapa Familiar** usa `DesktopFamilyMapView.tsx`, cards HTML/CSS de `FamilyTreeVisualCards.tsx` e conectores SVG posicionados por âncoras.
-
-No estado atual, ela participa do helper canônico por um root estável.
-
-Regra documental:
-
-```txt
-/minha-arvore, /genealogia e /visao-completa usam captura ReactFlow.
-/mapa-familiar usa [data-family-map-export-root="true"] para capturar HTML/CSS/SVG.
-```
-
-Comportamento técnico:
-
-- `DesktopFamilyMapView` não é canvas ReactFlow;
-- os conectores são SVG absoluto;
-- o layout possui escala responsiva e zoom manual por `Ctrl + scroll`;
-- grupos laterais e grupos expansíveis alteram a altura/posição real da superfície;
-- a captura preserva pessoa central, estado expandido/recolhido, paleta e escala visual atual;
-- botões de expansão são marcados com `data-tree-export-ignore="true"` e não aparecem no artefato;
-- seleção retangular permanece exclusiva do ReactFlow; no Mapa Familiar a ação correspondente exporta diretamente a superfície panorâmica atual.
-
-`DOC-016` foi concluído tecnicamente. Permanece apenas QA manual de fidelidade visual, sem promessa de árvore completa server-side, PDF multipágina, Storage ou cálculo fora da view.
+- `/mapa-familiar` e `/mapa-familiar-horizontal` usam botão de controle em `HomeMobileNav`, que abre o painel inferior com ações;
+- outras views de árvore podem usar `MobileTreeControlsPortal`;
+- o portal mobile não deve duplicar controles nas rotas do Mapa Familiar.
 
 ---
 
-## 4. Fluxos de exportação
-
-### 4.1 Fluxo principal com seleção de área
+## 5. Fluxo principal com seleção de área
 
 Arquivos:
 
 ```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/utils/treeExport.ts
+FamilyTree.tsx
+TreeAreaSelectionOverlay.tsx
+treeExport.ts
 ```
 
 Fluxo:
 
 ```txt
-Usuário abre a árvore
-Usuário escolhe seleção/exportação
+Usuário abre a árvore ReactFlow
+Usuário escolhe Exportar > Área
 Overlay aparece sobre a árvore
 Usuário arrasta uma área visível
 Toolbar aparece
@@ -154,153 +149,189 @@ Cancelar ou Esc
 -> filtros, view e pessoa central são preservados
 ```
 
-### 4.2 Fluxo mobile rápido
+Regras:
 
-Arquivos:
+- seleção retangular é comportamento das views ReactFlow;
+- em Mapa Familiar, ação **Área** deve exportar diretamente a superfície atual ou exibir mensagem/fluxo equivalente, sem prometer seleção retangular se ela não existir;
+- a seleção não deve alterar dados, filtros ou Supabase.
+
+---
+
+## 6. Fluxo do Mapa Familiar Vertical
+
+Arquivo principal:
 
 ```txt
-src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
-src/styles/mobile-tree-controls.css
-src/main.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 ```
 
-Fluxo:
+Root esperado:
 
 ```txt
-Usuário abre /minha-arvore, /genealogia ou /visao-completa no mobile
-Botão circular de controles aparece
-Usuário abre o painel
-Usuário escolhe PDF, Imagem ou Imprimir
-Sistema captura a área disponível da árvore
-Sistema baixa arquivo ou abre impressão
+[data-family-map-export-root="true"]
+```
+
+Comportamento:
+
+- captura HTML/CSS/SVG da superfície panorâmica;
+- não depende de ReactFlow;
+- captura cards visuais, conectores SVG e estado atual;
+- respeita paleta atual;
+- respeita zoom manual e escala responsiva;
+- respeita grupos expandidos/recolhidos;
+- ignora botões de expansão quando marcados para exportação.
+
+Arquivo gerado:
+
+```txt
+mapa-familiar-*.png
+mapa-familiar-*.pdf
+```
+
+---
+
+## 7. Fluxo do Mapa Familiar Horizontal
+
+Arquivo principal:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+```
+
+Roots esperados:
+
+```txt
+data-family-map-export-root="true"
+data-family-map-horizontal-root="true"
+```
+
+Comportamento:
+
+- captura HTML/CSS/SVG da superfície horizontal;
+- captura colunas ativas;
+- captura conectores de cônjuges e casal → filhos;
+- preserva colunas vazias ocultadas;
+- preserva filtros ativos;
+- preserva cônjuges visíveis;
+- respeita paleta atual;
+- respeita zoom manual e escala responsiva.
+
+Arquivo gerado:
+
+```txt
+mapa-familiar-horizontal-*.png
+mapa-familiar-horizontal-*.pdf
 ```
 
 Regras:
 
-- o portal mobile deve aparecer apenas nas rotas de árvore;
-- não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
-- o painel mobile não altera dados, filtros, permissões, Supabase ou migrations;
-- a captura mobile deve reutilizar os utilitários canônicos de `treeExport.ts`;
-- a captura mobile deve evitar menus/overlays sempre que tecnicamente possível;
-- divergências futuras entre desktop e mobile devem ser tratadas como regressão, não como comportamento esperado.
+- a view horizontal não deve usar captura de `.react-flow` como fonte principal;
+- conectores SVG devem permanecer dentro da superfície capturável;
+- elementos de controle mobile/desktop não devem entrar na captura;
+- se não houver root, a exportação deve falhar com mensagem compreensível.
 
 ---
 
-## 5. Componentes
+## 8. Painel desktop
 
-### 5.1 `FamilyTree.tsx`
+O painel desktop em `SidebarPanelTabs.tsx` oferece ações:
 
-Responsabilidades:
+| Opção | Ação |
+|---|---|
+| Área | `startAreaSelection` |
+| Imagem | `saveImage` |
+| PDF | `savePdf` |
+| Imprimir | `print` |
 
-- expor ações por ref;
-- iniciar seleção de área;
-- bloquear interações durante seleção;
-- renderizar `TreeAreaSelectionOverlay`;
-- fornecer elemento alvo para captura;
-- manter viewport/filtros após cancelar ou concluir.
+Regras:
 
-Ações expostas:
+- `SIDEBAR_TREE_ACTION_EVENT` envia a ação para `HomeTreeSection`;
+- `HomeTreeSection` chama a ref da árvore/view atual;
+- `FamilyTree`, `DesktopFamilyMapView` e `DesktopFamilyHorizontalMapView` devem expor `FamilyTreeActions`;
+- botões não devem alterar dados nem filtros.
 
-```txt
-zoomIn
-zoomOut
-print
-savePdf
-saveImage
-startAreaSelection
-```
+---
 
-### 5.2 `TreeAreaSelectionOverlay.tsx`
+## 9. Mobile
 
-Responsabilidades:
+### 9.1 Rotas do Mapa Familiar
 
-- capturar arraste de seleção;
-- validar área mínima;
-- exibir instrução;
-- exibir toolbar contextual;
-- exportar PNG/PDF/impressão;
-- cancelar por botão ou `Esc`;
-- fechar após sucesso;
-- exibir erro local se a exportação falhar.
-
-Texto atual:
+Em mobile, nas rotas:
 
 ```txt
-Arraste para selecionar uma área visível da árvore.
+/mapa-familiar
+/mapa-familiar-horizontal
 ```
 
-Ações atuais:
+o botão de controle é renderizado por:
 
 ```txt
-Salvar PNG
-Salvar PDF
-Imprimir
-Cancelar
+src/app/pages/home/HomeMobileNav.tsx
 ```
 
-### 5.3 `treeExport.ts`
+Ele abre o painel inferior de `Home.tsx`, reutilizando o conteúdo funcional do painel desktop.
+
+Regras:
+
+- não renderizar `MobileTreeControlsPortal` nessas rotas;
+- evitar duplicidade de botões;
+- manter o botão alinhado à barra superior da árvore;
+- o painel aberto deve permitir filtros, cores, exportação e destaques conforme a view suportar.
+
+### 9.2 Outras views
+
+`MobileTreeControlsPortal` pode atuar em views ReactFlow como:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Regras:
+
+- o portal deve aparecer apenas em rotas de árvore suportadas;
+- não deve aparecer em páginas internas como `/minha-arvore/editar`, `/meus-favoritos` ou `/calendario-familiar`;
+- deve reutilizar `treeExport.ts`;
+- deve manter `useCORS: true` e `allowTaint: false`.
+
+---
+
+## 10. `treeExport.ts`
 
 Responsabilidades:
 
 - montar nome de arquivo;
+- resolver alvo de exportação;
 - capturar elemento com `html2canvas`;
-- recortar canvas;
+- recortar canvas quando houver seleção;
 - baixar PNG;
 - gerar PDF;
 - abrir janela de impressão;
 - imprimir canvas;
 - ignorar elementos de UI não exportáveis.
 
-### 5.4 `MobileTreeControlsPortal.tsx`
+Ordem esperada de resolução de alvo:
 
-Responsabilidades:
+```txt
+1. alvo explícito da view, quando fornecido;
+2. root do Mapa Familiar;
+3. root ReactFlow;
+4. fallback seguro para data-export-root="family-tree".
+```
 
-- renderizar painel mobile de ações da árvore;
-- oferecer atalhos para PDF, imagem e impressão;
-- usar captura direta da área da árvore quando acionado no mobile, passando pelo fluxo canônico de `treeExport.ts`;
-- ocultar visualmente controles mobile concorrentes;
-- permitir ocultar/exibir setas de navegação.
+Regras:
 
-Cuidados:
-
-- manter o portal restrito a mobile e rotas de árvore;
-- preservar reutilização de `treeExport.ts` para PNG, PDF, impressão e captura segura;
-- evitar captura de botões, menus, paletas ou overlays;
-- não reintroduzir `allowTaint: true` no fluxo mobile;
-- manter mensagens amigáveis quando a captura falhar.
+- não usar `allowTaint: true` sem revisão;
+- manter `useCORS: true`;
+- novos overlays/menus precisam de marcador de ignore;
+- não capturar painel lateral, botão mobile, bottom nav ou menus de usuário.
 
 ---
 
-## 6. Regras de interação
+## 11. Elementos ignorados
 
-Durante a seleção pelo overlay:
-
-- pan bloqueado;
-- zoom bloqueado;
-- clique em pessoa bloqueado;
-- clique em casamento bloqueado;
-- menus contextuais não abrem;
-- eventos do overlay não propagam para ReactFlow.
-
-Após concluir/cancelar:
-
-- árvore mantém a mesma view;
-- filtros não são alterados;
-- pessoa central não muda;
-- pan/zoom voltam ao comportamento normal.
-
-No painel mobile rápido:
-
-- pan/zoom da árvore permanecem como estão;
-- a ação de exportar não deve modificar viewport;
-- ocultar/exibir setas é apenas estado visual local/global de UI;
-- falhas de exportação devem exibir aviso amigável.
-
----
-
-## 7. Elementos ignorados na exportação
-
-Seletores relevantes no fluxo principal:
+Seletores/atributos relevantes:
 
 ```txt
 .react-flow__controls
@@ -308,6 +339,8 @@ Seletores relevantes no fluxo principal:
 [data-tree-node-menu="true"]
 [data-tree-selection-overlay="true"]
 [data-tree-legend="true"]
+[data-tree-export-ignore="true"]
+.mobile-tree-controls-portal
 ```
 
 Regras:
@@ -315,19 +348,20 @@ Regras:
 - controles de zoom não devem aparecer;
 - menu de node não deve aparecer;
 - overlay de seleção não deve aparecer;
-- legenda marcada com `data-tree-legend="true"` não deve aparecer;
-- novos overlays/menus devem receber seletor de ignore;
-- o painel `MobileTreeControlsPortal` não deve aparecer na captura final.
+- legenda marcada não deve aparecer;
+- bottom nav mobile não deve aparecer;
+- botão de controle mobile não deve aparecer;
+- novos overlays devem receber atributo de ignore.
 
 ---
 
-## 8. Restrições técnicas
+## 12. Restrições técnicas
 
-### 8.1 CORS
+### 12.1 CORS
 
 A captura usa `html2canvas`.
 
-Configurações esperadas para o fluxo canônico:
+Configuração esperada:
 
 ```txt
 useCORS: true
@@ -336,11 +370,9 @@ allowTaint: false
 
 Não resolver erro de CORS com `allowTaint: true` sem revisão técnica.
 
-O fluxo mobile também deve respeitar essa política. Diferenças futuras devem ser registradas como regressão ou decisão técnica explícita em `docs/PLANO_PROXIMOS_PASSOS.md`.
+### 12.2 Tamanho de canvas
 
-### 8.2 Tamanho de canvas
-
-Manter limite preventivo para evitar travamento do navegador em dispositivos móveis ou máquinas com pouca memória.
+Manter limite preventivo para evitar travamento do navegador.
 
 Referência atual:
 
@@ -348,7 +380,14 @@ Referência atual:
 12.000.000 pixels
 ```
 
-### 8.3 PDF
+Se o limite for atingido:
+
+- reduzir área exportada;
+- orientar usuário a diminuir zoom;
+- dividir escopo manualmente;
+- não prometer exportação completa automática.
+
+### 12.3 PDF
 
 Regras:
 
@@ -357,7 +396,7 @@ Regras:
 - não prometer PDF multipágina automático;
 - não prometer árvore completa em PDF no escopo atual.
 
-### 8.4 Impressão
+### 12.4 Impressão
 
 Regras:
 
@@ -368,7 +407,7 @@ Regras:
 
 ---
 
-## 9. Acessibilidade e UX
+## 13. Acessibilidade e UX
 
 Regras:
 
@@ -377,13 +416,26 @@ Regras:
 - mensagens devem ser compreensíveis;
 - não exibir IDs técnicos;
 - não bloquear a árvore após erro;
-- em mobile, painel de controles deve ser fácil de fechar e não cobrir permanentemente a navegação principal.
+- exportar não deve alterar view, pessoa central, filtros, paleta ou permissões;
+- falha de exportação deve exibir toast/erro amigável.
 
 ---
 
-## 10. QA recomendado
+## 14. QA mínimo
 
-Validar desktop/tablet:
+### Views ReactFlow
+
+Validar:
+
+- seleção de área;
+- PNG;
+- PDF;
+- impressão;
+- cancelamento por `Esc`;
+- zoom/pan após cancelar;
+- exclusão de overlays.
+
+Rotas:
 
 ```txt
 /minha-arvore
@@ -391,7 +443,43 @@ Validar desktop/tablet:
 /visao-completa
 ```
 
-Validar mobile:
+### Mapa Familiar Vertical
+
+Validar:
+
+```txt
+/mapa-familiar
+```
+
+Checklist:
+
+- exporta cards visuais;
+- exporta conectores SVG;
+- não exporta painel/botões;
+- preserva paleta;
+- preserva estado expandido/recolhido;
+- título/controles não entram indevidamente se marcados fora da superfície.
+
+### Mapa Familiar Horizontal
+
+Validar:
+
+```txt
+/mapa-familiar-horizontal
+```
+
+Checklist:
+
+- exporta colunas visíveis;
+- não cria coluna vazia no artefato;
+- exporta conectores de cônjuges;
+- exporta troncos casal → filhos;
+- não exporta controles mobile ou bottom nav;
+- preserva filtros e paleta.
+
+### Mobile
+
+Breakpoints:
 
 ```txt
 320px
@@ -402,70 +490,23 @@ Validar mobile:
 
 Checklist:
 
-- seleção retangular aparece;
-- cancelar por botão funciona;
-- cancelar por `Esc` funciona;
-- PNG baixa arquivo;
-- PDF baixa arquivo;
-- impressão abre janela/diálogo;
-- seleção pequena demais mostra aviso;
-- legenda/menus/overlays não aparecem na captura;
-- painel mobile aparece apenas nas rotas da árvore;
-- PDF/imagem/impressão do painel mobile não quebram a página;
-- desktop/tablet não são afetados pelo portal mobile.
+- botão de controle abre painel;
+- ações de exportação aparecem;
+- painel fecha após sucesso;
+- não há dois painéis concorrentes;
+- bottom nav não aparece no artefato.
 
 ---
 
-## 11. Estado documental
-
-A pendência técnica anterior de alinhamento da exportação mobile foi encerrada: o `MobileTreeControlsPortal` deve permanecer integrado ao fluxo canônico de `treeExport.ts`.
-
-Validações futuras continuam recomendadas em dispositivos móveis reais, especialmente para CORS de imagens, limites de canvas e comportamento de impressão, mas isso é QA de regressão, não decisão arquitetural aberta.
-
----
-
-## 12. Anti-regressão
+## 15. Anti-regressões
 
 Não fazer:
 
-- transformar exportação em upload automático;
-- salvar imagem/PDF no Supabase sem nova frente;
-- usar service role no frontend;
-- aplicar migration por ajuste visual;
-- exportar árvore completa dizendo que é apenas área visível;
-- capturar dados privados ocultos por filtros/privacidade;
-- deixar seleção de área bloquear pan/zoom após cancelamento;
-- deixar o painel mobile aparecer em páginas fora da árvore;
-- criar uma segunda implementação de exportação mobile divergente de `treeExport.ts`;
-- usar `allowTaint: true` para contornar CORS sem revisão técnica.
-
-Onde documentar mudanças futuras:
-
-| Mudança | Documento |
-|---|---|
-| Exportação de árvore completa | `docs/PLANO_PROXIMOS_PASSOS.md` e depois este arquivo |
-| Mudança em `treeExport.ts` | Este arquivo + `GUIA_COMPONENTES.md` |
-| Mudança visual dos controles | `GUIA_UX_LAYOUT.md` |
-| Bug de captura/CORS | `GUIA_CORRECAO_ERROS.md` |
-| Upload/histórico de exportações | `docs/operacao/STORAGE_MAINTENANCE.md` e migration específica |
-
-## 15. QA específico para Mapa Familiar
-
-Se a exportação de `/mapa-familiar` for implementada futuramente, validar:
-
-- captura com zoom manual em `1x`, menor que `1x` e maior que `1x`;
-- captura com grupos laterais recolhidos e expandidos;
-- captura com filtro **Cônjuges** desativado e ativado;
-- captura preservando conectores SVG principais;
-- captura preservando conectores internos de cônjuges;
-- ausência de botões `+/-`, painel lateral, header, menu e overlays na imagem final;
-- nomes com acentos sem corte;
-- avatares por `genero` visíveis;
-- limite de pixels em telas grandes;
-- comportamento em 1366px, 1440px, 1536px e 1920px.
-
-Anti-regressão:
-
-```txt
-Não adaptar a exportação do Mapa Familiar alterando o fluxo ReactFlow existente sem validar /minha-arvore, /genealogia e /visao-completa.
-```
+- reintroduzir exportação específica duplicada fora de `treeExport.ts`;
+- importar `html2canvas`/`jspdf` diretamente em novos componentes sem necessidade;
+- capturar `.react-flow` para `/mapa-familiar-horizontal`;
+- ocultar conectores SVG antes da captura;
+- exportar painel lateral ou bottom nav;
+- prometer árvore completa ou PDF multipágina;
+- alterar dados ou Supabase durante exportação;
+- usar o fluxo mobile antigo nas rotas do Mapa Familiar.

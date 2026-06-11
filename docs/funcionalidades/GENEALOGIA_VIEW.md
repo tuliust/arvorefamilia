@@ -1,9 +1,9 @@
 # Genealogia - view, layout e navegação mobile
 
-> Última revisão: 2026-06-09
-> Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`
-> Tipo: documentação técnica/funcional da view **Genealogia**.
-> Status: revisado após alinhamento dos chips mobile às gerações inferidas, ajustes de largura da Minha Árvore, formatação de cabeçalhos, títulos das views e anti-regressões entre views.
+> Última revisão: 2026-06-11  
+> Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`  
+> Tipo: documentação técnica/funcional da view **Genealogia** e do comportamento compartilhado com **Visão Completa**.  
+> Status: revisado após consolidação de `/mapa-familiar-horizontal`, atualização dos cabeçalhos de geração em pílula escura, manutenção dos chips mobile, distinção entre views ReactFlow e views visuais do Mapa Familiar.
 
 ## 1. Função deste documento
 
@@ -28,25 +28,27 @@ Use este arquivo para manter:
 - padrão de tamanho dos cards em views por geração;
 - formatação dos cabeçalhos de coluna `Geração N`;
 - anti-regressões de pan/zoom/ReactFlow;
-- isolamento entre ajustes da Minha Árvore e views por geração.
+- isolamento entre ajustes da Minha Árvore e views do Mapa Familiar.
 
 ---
 
 ## 2. Diferença entre views
 
-| View | Rota | `viewMode` | Escopo |
-|---|---|---|---|
-| Minha Árvore | `/minha-arvore` | `minha-arvore` | família direta da pessoa central |
-| Genealogia | `/genealogia` | `genealogia` | escopo pessoal por gerações |
-| Visão Completa | `/visao-completa` | `visao-completa` | base familiar completa por gerações |
+| View | Rota | `viewMode` | Escopo | Renderização |
+|---|---|---|---|---|
+| Minha Árvore | `/minha-arvore` | `minha-arvore` | família direta da pessoa central | ReactFlow desktop; `MobileFamilyTreeView` mobile |
+| Mapa Familiar Vertical | `/mapa-familiar` | `mapa-familiar` | família direta visual | HTML/CSS/SVG; mobile usa `MobileFamilyTreeView` |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` | família direta por gerações | HTML/CSS/SVG próprio |
+| Genealogia | `/genealogia` | `genealogia` | escopo pessoal por gerações | ReactFlow |
+| Visão Completa | `/visao-completa` | `visao-completa` | base familiar completa por gerações | ReactFlow |
 
 Regras:
 
 - este documento trata principalmente de `genealogia`;
-- quando citar `/visao-completa`, tratar apenas o comportamento compartilhado de layout/mobile;
-- ajustes da Minha Árvore não devem ser aplicados automaticamente aqui;
-- ajustes transversais de header, menu, título, paletas e ReactFlow devem ser validados nas três views;
-- qualquer alteração em `nodeTypes.ts`, `PersonNode.tsx` ou dimensões de card deve confirmar que `/genealogia` e `/visao-completa` preservam seu padrão visual.
+- quando citar `/visao-completa`, tratar apenas comportamento compartilhado de layout/mobile;
+- `/mapa-familiar-horizontal` pode usar `genealogyColumnsLayout` como referência de ordenação, mas não é view ReactFlow e não pertence ao escopo funcional de Genealogia;
+- ajustes da Minha Árvore ou Mapa Familiar não devem ser aplicados automaticamente aqui;
+- ajustes transversais em `PersonNode`, nodes, edges ou dimensões devem validar `/genealogia` e `/visao-completa`.
 
 ---
 
@@ -63,6 +65,7 @@ Regras:
 | Filtro de escopo pessoal | `src/app/components/FamilyTree/layouts/filterPersonalTreeScope.ts` |
 | Tipos/filtros/nodes | `src/app/components/FamilyTree/types.ts` e `nodeTypes.ts` |
 | Card de pessoa | `src/app/components/FamilyTree/PersonNode.tsx` |
+| Cabeçalhos de coluna | `src/app/components/FamilyTree/DirectFamilyLabelNode.tsx` |
 | Conector de família | `src/app/components/FamilyTree/GenealogyFamilyConnectorNode.tsx` |
 | Edge conjugal | `src/app/components/FamilyTree/GenealogySpouseEdge.tsx` |
 
@@ -85,7 +88,6 @@ Regras:
 
 - chips usam labels humanos;
 - labels técnicos de coluna podem continuar como `Geração N`;
-- cabeçalhos de coluna `Geração N` devem usar peso `font-bold` e cor cinza (`text-slate-600` ou equivalente);
 - colunas vazias não devem ser renderizadas;
 - gerações sem pessoas não devem aparecer nos chips;
 - pessoas sem geração podem ser ocultadas em `/visao-completa` quando `hideUngenerated` estiver ativo;
@@ -114,7 +116,7 @@ Regras:
 
 ## 6. Inferência visual de gerações
 
-`FamilyTree.tsx` usa `inferGenealogyManualGenerations` antes de chamar `genealogyColumnsLayout`. Em mobile, `HomeTreeSection.tsx` também prepara a base visual inferida para que `GenealogyMobileStageTabs` e `FamilyTree` trabalhem com a mesma referência de gerações.
+`FamilyTree.tsx` usa inferência visual de gerações antes de chamar `genealogyColumnsLayout`. Em mobile, `HomeTreeSection.tsx` também prepara a base visual inferida para que `GenealogyMobileStageTabs` e `FamilyTree` trabalhem com a mesma referência de gerações.
 
 Comportamento esperado:
 
@@ -128,20 +130,12 @@ Comportamento esperado:
 
 Objetivo:
 
-- reduzir dependência de `manual_generation`;
+- reduzir dependência de `manual_generation` em casos incompletos;
 - evitar que ancestrais conectados corretamente fiquem fora da Genealogia;
 - manter coerência entre desktop e mobile;
 - impedir divergência entre chips mobile e colunas renderizadas.
 
-Estado atual:
-
-```txt
-HomeTreeSection prepara a base mobile com gerações inferidas antes de calcular availableMobileGenerations.
-GenealogyMobileStageTabs recebe a mesma base visual usada pelo FamilyTree no mobile de /genealogia e /visao-completa.
-A inferência continua sendo visual/em memória e não persiste alterações em pessoas.manual_generation.
-```
-
-Observação técnica: se a inferência for alterada no futuro, evitar duplicar regras em componentes diferentes. Preferir extrair a lógica comum para util compartilhado em `src/app/components/FamilyTree/utils/`.
+Observação técnica: se a inferência for alterada no futuro, evitar duplicar regras em componentes diferentes. Preferir extrair a lógica comum para util compartilhado.
 
 ---
 
@@ -162,17 +156,18 @@ Observação técnica: se a inferência for alterada no futuro, evitar duplicar 
 Regras:
 
 - título geral não deve ser criado pelo layout;
-- labels de geração são permitidos e devem usar peso forte moderado (`font-bold`) e cinza, não `font-black` com preto absoluto;
+- labels de geração são permitidos;
 - zoom desktop usa largura como referência;
 - altura total da árvore não deve reduzir excessivamente o zoom;
 - usuário deve conseguir navegar verticalmente quando houver muitos cards;
-- cards devem manter largura e proporção compatíveis com as views por geração, sem herdar expansão da área central de `/minha-arvore`.
+- cards devem manter largura e proporção próprias das views por geração;
+- não herdar largura/estilo especial da Minha Árvore ou do Mapa Familiar.
 
 ---
 
 ## 8. Padrão de cards em Genealogia e Visão Completa
 
-As views por geração devem manter **padrão próprio de tamanho dos cards**.
+As views por geração devem manter padrão próprio de tamanho dos cards.
 
 Dimensão de referência:
 
@@ -181,45 +176,42 @@ Dimensão de referência:
 | `/genealogia` | `410px` | `190px` |
 | `/visao-completa` | `410px` | `190px` |
 
-Regra consolidada após regressão corrigida:
+Regra consolidada:
 
 ```txt
-A expansão de cards compactos da Minha Árvore não deve afetar /genealogia nem /visao-completa.
+A expansão de cards compactos da Minha Árvore e o visual dos cards do Mapa Familiar não devem afetar /genealogia nem /visao-completa.
 ```
-
-Contexto técnico:
-
-- a `/minha-arvore` pode exibir cards compactos com largura visual de referência de `360px`;
-- cards de `/genealogia` e `/visao-completa` não devem receber esse acréscimo visual;
-- o layout por gerações depende de largura estável para colunas, conectores e espaçamento entre cônjuges;
-- se `PersonNode`, `nodeTypes.ts` ou CSS de árvore forem alterados, validar que as três views continuam com padrões distintos.
 
 Checklist específico:
 
 - abrir `/genealogia` e comparar cards de diferentes gerações;
-- abrir `/visao-completa` e confirmar que os cards não foram esticados como na `/minha-arvore`;
-- abrir `/minha-arvore` e confirmar que seus cards compactos mantêm o padrão próprio da view direta;
-- validar que cônjuges em Genealogia mantêm alinhamento e espaçamento;
-- validar que o cabeçalho `Geração N` permanece em `font-bold` e cinza.
+- abrir `/visao-completa` e confirmar que os cards não foram convertidos para o visual do Mapa Familiar;
+- abrir `/minha-arvore` e confirmar que seus cards compactos mantêm padrão próprio;
+- abrir `/mapa-familiar-horizontal` e confirmar que ela usa `VisualPersonCard`, não `PersonNode`;
+- validar que cônjuges em Genealogia mantêm alinhamento e espaçamento.
 
 Não fazer:
 
-- condicionar largura apenas por `directRelation` sem considerar a view/largura-base;
-- aplicar largura de `360px` em cards das views por geração;
-- deslocar cards de Genealogia com `translateX` criado para a Minha Árvore;
-- usar CSS de `/minha-arvore` sem escopo por `data-export-view`.
+- aplicar largura de `/minha-arvore` em cards das views por geração;
+- aplicar CSS de `/mapa-familiar-horizontal` em `.react-flow__node-personNode`;
+- deslocar cards de Genealogia com `translateX` criado para outra view;
+- usar CSS de outra view sem escopo por rota/data attribute.
 
-## 8.1 Títulos das views e cabeçalhos de geração
+---
+
+## 9. Títulos das views e cabeçalhos de geração
 
 Títulos das views:
 
 | Rota | Título esperado |
 |---|---|
 | `/minha-arvore` | `Árvore de {primeiro nome}` |
+| `/mapa-familiar` | `Mapa Familiar de {primeiro nome}` |
+| `/mapa-familiar-horizontal` | `Mapa Familiar Horizontal de {primeiro nome}` |
 | `/genealogia` | `Família de {primeiro nome}` |
 | `/visao-completa` | `Linha Genealógica de {primeiro nome}` |
 
-Formatação visual de referência dos títulos:
+Formatação visual de referência dos títulos desktop:
 
 ```txt
 font-bold
@@ -238,23 +230,29 @@ Geração 3
 ...
 ```
 
-Formatação esperada:
+Formatação atual esperada:
 
 ```txt
-font-bold
-text-slate-600
+pílula arredondada
+bg-slate-600
+texto branco
 uppercase
-tracking visual moderado quando aplicável
+tracking moderado
+sombra discreta
+sem wrapper branco externo
 ```
 
 Regras:
 
-- não usar `font-black` nos cabeçalhos de geração;
-- não usar preto absoluto como padrão dos cabeçalhos;
+- não usar wrapper branco ao redor da pílula;
 - manter contraste suficiente em desktop/tablet;
-- validar que os cabeçalhos continuam alinhados ao centro de cada coluna.
+- validar alinhamento ao centro de cada coluna;
+- não deixar cabeçalho competir visualmente com o card;
+- não reaplicar o antigo padrão cinza/texto solto.
 
-## 9. Chips mobile
+---
+
+## 10. Chips mobile
 
 `HomeTreeSection.tsx` ativa chips quando:
 
@@ -293,7 +291,7 @@ Descendentes
 
 ---
 
-## 10. Estado da geração ativa
+## 11. Estado da geração ativa
 
 O estado de geração ativa é coordenado por `HomeTreeSection.tsx`.
 
@@ -316,15 +314,9 @@ Regras consolidadas:
 - ao sair das views com chips mobile, o estado deve ser limpo;
 - a geração ativa não deve se transformar em filtro destrutivo.
 
-Objetivo:
-
-```txt
-Evitar que /visao-completa herde indevidamente geração ou enquadramento anterior de /genealogia.
-```
-
 ---
 
-## 11. Foco mobile: foco, não filtro
+## 12. Foco mobile: foco, não filtro
 
 Decisão consolidada:
 
@@ -347,44 +339,35 @@ Regras:
 
 ---
 
-## 12. Enquadramento mobile
+## 13. Distinção com Mapa Familiar Horizontal
 
-Em `FamilyTree.tsx`, o enquadramento mobile genealógico:
+`/mapa-familiar-horizontal` usa algumas referências genealógicas para ordenar cards, mas não é Genealogia.
 
-- identifica a geração alvo;
-- busca bounds da coluna alvo;
-- usa a geração 3/Avós como referência vertical quando disponível;
-- usa o eixo X da geração ativa;
-- mantém o eixo Y ancorado na referência;
-- não define `translateExtent` no mobile genealógico, permitindo recuperar área superior por arraste.
+Diferenças:
 
-Regras:
-
-- o eixo Y não deve saltar a cada troca de chip;
-- a área superior deve ser recuperável por pan;
-- controles direcionais/zoom podem ficar ocultos no mobile genealógico para não competir com chips;
-- `TREE_GENEALOGY_MOBILE_VIEWPORT_TOP_SAFE_AREA` protege a área dos chips.
-
----
-
-## 13. Controles mobile nas views por geração
-
-As rotas `/genealogia` e `/visao-completa` também recebem `MobileTreeControlsPortal`.
+| Aspecto | Genealogia/Visão Completa | Mapa Familiar Horizontal |
+|---|---|---|
+| Renderização | ReactFlow | HTML/CSS/SVG próprio |
+| Card | `PersonNode` | `VisualPersonCard` |
+| Conectores | ReactFlow edges/nodes | SVG manual |
+| Colunas | ReactFlow layout | DOM absoluto por colunas ativas |
+| Mobile | chips de geração | barra Paterno/Central/Materno visual |
+| Exportação | ReactFlow/seleção | superfície HTML/CSS/SVG |
 
 Regras:
 
-- chips continuam sendo a navegação principal por geração;
-- botões direcionais e zoom antigos do canvas podem ficar ocultos para não competir com chips;
-- o painel mobile pode concentrar ações como exportação, imagem, PDF e impressão;
-- ocultar/exibir setas não deve alterar dados nem filtros;
-- controles mobile devem aparecer apenas nas rotas de árvore;
-- a experiência de seleção manual de área em mobile deve ser tratada com cuidado.
+- não corrigir `/mapa-familiar-horizontal` em `genealogyColumnsLayout` sem necessidade;
+- não aplicar CSS da horizontal em Genealogia;
+- não usar `GenealogySpouseEdge` para conectores da horizontal;
+- manter documentação separada em `MAPA_FAMILIAR_VIEW.md`.
 
 ---
 
-## 14. Filtros de Genealogia
+## 14. Painel e filtros
 
-`GenealogyFilters` possui:
+Genealogia/Visão Completa usam `GenealogyFilterGrid`.
+
+Grupos documentados:
 
 ```txt
 generation1
@@ -400,96 +383,85 @@ generation6
 
 Regras:
 
-- filtros são aplicados no layout por geração;
-- devem evitar edges soltas;
-- não devem afetar dados no Supabase;
-- filtros de vida (`personFilters`) são aplicados antes no shell;
-- chips mobile devem refletir pessoas visíveis após filtros de vida e após a inferência visual preparada no shell mobile;
-- filtros não devem ser usados para simular o recorte de `/minha-arvore`.
+- filtros de geração não são iguais aos filtros de grupos diretos;
+- `directRelativeFilters` não deve controlar Genealogia;
+- `genealogyFilters` não deve controlar Mapa Familiar;
+- contadores precisam refletir pessoas visíveis por grupo;
+- filtros não devem deixar edges soltas.
+
+Observação: `/visao-completa` pode usar painel de gerações, não o painel de grupos diretos, salvo decisão explícita de produto. O botão **Horizontal** do painel do Mapa Familiar deve apontar para `/mapa-familiar-horizontal`, não para `/visao-completa`.
 
 ---
 
-## 15. Linhas e conectores
+## 15. Exportação
 
-A Genealogia usa:
-
-| Elemento | Função |
-|---|---|
-| `GenealogyFamilyConnectorNode` | conector/bus de pais-filhos |
-| `GenealogySpouseEdge` | vínculo conjugal e anel/aliança |
-| `visualLineFilters` | destaque de linhas visíveis |
-| `edgeFilters` | visibilidade de linhas |
+Genealogia e Visão Completa usam fluxo ReactFlow.
 
 Regras:
 
-- `edgeFilters.conjugal` controla edges conjugais;
-- `edgeFilters.filiacao_sangue`/`filiacao_adotiva` controlam conectores parentais;
-- `edgeFilters.irmaos` controla conexões de irmãos quando suportadas;
-- destaque visual não reexibe linha oculta;
-- clique no anel conjugal abre `ViewMarriageModal`;
-- o modal conjugal tem regras próprias documentadas em `PESSOAS_PERFIL_ADMIN.md` e `GUIA_COMPONENTES.md`.
+- seleção retangular permitida;
+- PNG/PDF/impressão pelo fluxo canônico;
+- `TreeAreaSelectionOverlay` deve bloquear pan/zoom durante seleção;
+- overlays/controles não devem sair no artefato;
+- `MobileTreeControlsPortal` pode atuar em mobile para views ReactFlow;
+- não usar captura HTML/CSS/SVG do Mapa Familiar nas views ReactFlow.
 
 ---
 
-## 16. Visão Completa
+## 16. QA
 
-`/visao-completa` compartilha `genealogyColumnsLayout`, mas usa a base completa.
+### Desktop
 
-Diferenças:
+Rotas:
 
-- não restringe ao escopo pessoal;
-- pode ocultar pessoas sem geração (`hideUngenerated`);
-- no mobile, usa os mesmos chips de geração;
-- o foco por chip continua sendo enquadramento, não filtro;
-- a geração ativa deve resetar ao entrar ou alternar a partir de `/genealogia`.
+```txt
+/genealogia
+/visao-completa
+```
 
-Regras:
+Checklist:
 
-- mudanças que alterem escopo devem ser validadas separadamente em `/genealogia` e `/visao-completa`;
-- não assumir que contadores ou chips das duas rotas terão os mesmos resultados;
-- `/visao-completa` não deve reaproveitar geração ativa obsoleta de outra view;
-- `/visao-completa` não deve herdar ampliação de cards ou grupos da Minha Árvore.
+- títulos corretos;
+- pílulas `Geração N` sem wrapper branco;
+- cards com tamanho próprio;
+- cônjuges alinhados;
+- conectores parentais visíveis;
+- edges conjugais visíveis;
+- colunas vazias ocultadas;
+- pan/zoom preservados;
+- filtros de geração funcionam.
+
+### Mobile
+
+Rotas:
+
+```txt
+/genealogia
+/visao-completa
+```
+
+Checklist:
+
+- chips aparecem;
+- chips mostram apenas gerações disponíveis;
+- foco muda sem remover colunas;
+- geração ativa reseta ao trocar view;
+- não há bottom nav cobrindo controle crítico;
+- painel mobile não duplica botões.
 
 ---
 
-## 17. QA mínimo
-
-Validar após alteração em `/genealogia` e `/visao-completa`:
-
-- desktop: 1366px, 1440px e largura maior;
-- mobile: 320px, 375px, 390px e 430px;
-- títulos das views com hierarquia correta;
-- `/genealogia`: **Família de {nome}**;
-- `/visao-completa`: **Linha Genealógica de {nome}**;
-- cabeçalhos `Geração N` em `font-bold` e cinza;
-- cards de pessoas com `410px × 190px`;
-- cards não herdando largura visual de `360px` da `/minha-arvore`;
-- chips mobile aparecem apenas em `/genealogia` e `/visao-completa`;
-- chips mostram labels humanos;
-- chips e canvas usam a mesma base de gerações inferidas no mobile;
-- troca entre `/genealogia` e `/visao-completa` reseta geração ativa;
-- pan/zoom funcional;
-- cônjuges permanecem alinhados;
-- anéis conjugais acompanham a cor dos conectores/paleta;
-- edges parentais não ficam soltas;
-- pets não entram no layout genealógico;
-- filtros não persistem alteração no Supabase;
-- exportação continua funcionando;
-- botão de favorito junto ao zoom não quebra controles de pan/zoom no desktop.
-
-## 18. Anti-regressões
+## 17. Anti-regressões
 
 Não fazer:
 
-- aplicar largura de `360px` da `/minha-arvore` em `/genealogia` ou `/visao-completa`;
-- alterar cards por geração sem revisar conectores;
-- usar `font-black` e preto absoluto nos cabeçalhos `Geração N`;
-- criar colunas vazias para manter sequência visual;
+- voltar o cabeçalho `Geração N` para texto simples solto;
+- adicionar wrapper branco na pílula de geração;
+- alterar `manual_generation` no banco por inferência visual;
+- aplicar CSS de Mapa Familiar nos cards de `PersonNode`;
+- reaproveitar `DesktopFamilyHorizontalMapView` como Genealogia;
+- apontar botão **Horizontal** para `/visao-completa`;
 - transformar chips mobile em filtro destrutivo;
-- voltar a calcular chips apenas sobre `pessoas[].manual_generation` bruto quando a view mobile usa inferência;
-- persistir geração inferida no Supabase;
-- inserir pets no layout por gerações;
-- aplicar `translateX` de cards da Minha Árvore em Genealogia;
-- deixar `/visao-completa` herdar estado de geração obsoleto de `/genealogia`;
-- corrigir um card isolado com `transform` global que afete todas as views;
-- usar cor fixa no anel conjugal quando a paleta define outra cor para conectores.
+- inserir pets no layout genealógico;
+- reintroduzir `/visao-completa-teste` para testar layout;
+- corrigir alinhamento por CSS global em `.react-flow__viewport`.
