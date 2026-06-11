@@ -1,15 +1,39 @@
 /* Ajustes visuais isolados para a view Mapa Familiar. */
+html[data-tree-color-palette="white"] {
+  --family-map-title-bg: rgb(255 255 255 / 80%);
+  --family-map-title-border: rgb(203 213 225 / 64%);
+  --family-map-title-shadow: 0 6px 18px rgb(15 23 42 / 7%);
+  --family-map-title-color: #334d47;
+  --family-map-title-accent: linear-gradient(90deg, rgb(203 213 225 / 0%), rgb(184 206 194 / 48%), rgb(203 213 225 / 0%));
+}
+
+html[data-tree-color-palette="orange"] {
+  --family-map-title-bg: linear-gradient(180deg, rgb(255 255 255 / 82%), rgb(255 247 237 / 82%));
+  --family-map-title-border: rgb(234 176 143 / 42%);
+  --family-map-title-shadow: 0 6px 18px rgb(234 88 12 / 8%);
+  --family-map-title-color: #5f4d45;
+  --family-map-title-accent: linear-gradient(90deg, rgb(234 176 143 / 0%), rgb(231 185 133 / 46%), rgb(234 176 143 / 0%));
+}
+
+html[data-tree-color-palette="brown"] {
+  --family-map-title-bg: linear-gradient(180deg, rgb(251 248 241 / 86%), rgb(244 239 230 / 86%));
+  --family-map-title-border: rgb(168 95 69 / 38%);
+  --family-map-title-shadow: 0 6px 18px rgb(91 70 54 / 10%);
+  --family-map-title-color: #5b4636;
+  --family-map-title-accent: linear-gradient(90deg, rgb(168 95 69 / 0%), rgb(102 116 91 / 38%), rgb(168 95 69 / 0%));
+}
+
 section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1 {
   display: inline-flex;
   max-width: min(27rem, calc(100% - 16rem));
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(103 232 249 / 42%);
+  border: 1px solid var(--family-map-title-border, rgb(103 232 249 / 42%));
   border-radius: 0.8rem;
-  background: linear-gradient(180deg, rgb(255 255 255 / 80%), rgb(236 254 255 / 80%));
-  box-shadow: 0 6px 18px rgb(8 145 178 / 9%);
+  background: var(--family-map-title-bg, linear-gradient(180deg, rgb(255 255 255 / 80%), rgb(236 254 255 / 80%)));
+  box-shadow: var(--family-map-title-shadow, 0 6px 18px rgb(8 145 178 / 9%));
   padding: 0.26rem 0.78rem 0.32rem;
-  color: #334d47;
+  color: var(--family-map-title-color, #334d47);
   font-size: clamp(1.12rem, 1.55vw, 1.45rem);
   font-weight: 600;
   letter-spacing: -0.012em;
@@ -25,9 +49,101 @@ section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolut
   width: min(4.5rem, 28%);
   height: 0.08rem;
   border-radius: 9999px;
-  background: linear-gradient(90deg, rgb(34 211 238 / 0%), rgb(20 184 166 / 34%), rgb(34 211 238 / 0%));
+  background: var(--family-map-title-accent, linear-gradient(90deg, rgb(34 211 238 / 0%), rgb(20 184 166 / 34%), rgb(34 211 238 / 0%)));
   transform: translateX(-50%);
 }
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"],
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"],
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] {
+  --family-map-card-text: #111827;
+  --family-map-card-muted: #24313d;
+  --family-map-group-bg: rgb(255 255 255 / 82%);
+  --family-map-group-border: rgb(255 255 255 / 86%);
+  --family-map-label-bg: #4a586a;
+  --family-map-label-text: #ffffff;
+  --family-map-connector: #b8cfd0;
+  background: var(--family-map-canvas-bg, #ffffff);
+}
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] { --family-map-canvas-bg: #ffffff; --family-map-group-border: rgb(203 213 225 / 72%); --family-map-connector: #cbd5e1; }
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] { --family-map-canvas-bg: #fff7ed; --family-map-group-border: rgb(234 176 143 / 46%); --family-map-label-bg: #7a5a47; --family-map-connector: #ecc2a5; }
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] { --family-map-canvas-bg: #f4efe6; --family-map-card-text: #2f2a25; --family-map-card-muted: #3f352d; --family-map-group-bg: rgb(251 248 241 / 84%); --family-map-group-border: rgb(203 189 166 / 62%); --family-map-label-bg: #5b4636; --family-map-connector: #cbbda6; }
+
+html[data-tree-color-palette="white"] [data-family-map-color-key="tataravos"] { --family-map-card-bg: #b7aed6; --family-map-card-border: #b7aed6; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="bisavos"] { --family-map-card-bg: #d49bc5; --family-map-card-border: #d49bc5; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="avos"] { --family-map-card-bg: #e8a29b; --family-map-card-border: #e8a29b; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="tios"] { --family-map-card-bg: #eab08f; --family-map-card-border: #eab08f; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="primos"] { --family-map-card-bg: #e7b985; --family-map-card-border: #e7b985; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="pais"], html[data-tree-color-palette="white"] [data-family-map-color-key="conjuge"] { --family-map-card-bg: #e4c37a; --family-map-card-border: #e4c37a; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="central"] { --family-map-card-bg: #e7e8e8; --family-map-card-border: #cbd5e1; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="irmaos"] { --family-map-card-bg: #a9cb72; --family-map-card-border: #a9cb72; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="sobrinhos"] { --family-map-card-bg: #b8cec2; --family-map-card-border: #b8cec2; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="filhos"], html[data-tree-color-palette="white"] [data-family-map-color-key="netos"] { --family-map-card-bg: #bdd8dc; --family-map-card-border: #bdd8dc; }
+html[data-tree-color-palette="white"] [data-family-map-color-key="pets"] { --family-map-card-bg: #f4c7ab; --family-map-card-border: #f4c7ab; }
+
+html[data-tree-color-palette="orange"] [data-family-map-color-key="tataravos"] { --family-map-card-bg: linear-gradient(135deg, #cbc3e0, #b7aed6); --family-map-card-border: #b7aed6; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="bisavos"] { --family-map-card-bg: linear-gradient(135deg, #e0afd1, #d49bc5); --family-map-card-border: #d49bc5; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="avos"] { --family-map-card-bg: linear-gradient(135deg, #f0b8b2, #e8a29b); --family-map-card-border: #e8a29b; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="tios"] { --family-map-card-bg: linear-gradient(135deg, #f1c2a5, #eab08f); --family-map-card-border: #eab08f; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="primos"] { --family-map-card-bg: linear-gradient(135deg, #edc997, #e7b985); --family-map-card-border: #e7b985; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="pais"], html[data-tree-color-palette="orange"] [data-family-map-color-key="conjuge"] { --family-map-card-bg: linear-gradient(135deg, #ead08f, #e4c37a); --family-map-card-border: #e4c37a; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="central"] { --family-map-card-bg: linear-gradient(135deg, #f5f1e5, #dce6e4); --family-map-card-border: #cbd5e1; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="irmaos"] { --family-map-card-bg: linear-gradient(135deg, #b9d783, #a9cb72); --family-map-card-border: #a9cb72; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="sobrinhos"] { --family-map-card-bg: linear-gradient(135deg, #c7dbd1, #b8cec2); --family-map-card-border: #b8cec2; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="filhos"], html[data-tree-color-palette="orange"] [data-family-map-color-key="netos"] { --family-map-card-bg: linear-gradient(135deg, #cbe3e6, #bdd8dc); --family-map-card-border: #bdd8dc; }
+html[data-tree-color-palette="orange"] [data-family-map-color-key="pets"] { --family-map-card-bg: linear-gradient(135deg, #f7d3bd, #f4c7ab); --family-map-card-border: #f4c7ab; }
+
+html[data-tree-color-palette="brown"] [data-family-map-color-key="tataravos"] { --family-map-card-bg: linear-gradient(135deg, #f4efe6, #d9c7ad); --family-map-card-border: #cbbda6; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="bisavos"] { --family-map-card-bg: linear-gradient(135deg, #fbf8f1, #e0ccb0); --family-map-card-border: #cbbda6; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="avos"] { --family-map-card-bg: linear-gradient(135deg, #eadcc8, #d2b48f); --family-map-card-border: #a9825a; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="tios"] { --family-map-card-bg: linear-gradient(135deg, #e7d8bf, #c9906f); --family-map-card-border: #a85f45; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="primos"] { --family-map-card-bg: linear-gradient(135deg, #f4efe6, #d9b08c); --family-map-card-border: #a85f45; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="pais"], html[data-tree-color-palette="brown"] [data-family-map-color-key="conjuge"] { --family-map-card-bg: linear-gradient(135deg, #e2d2ba, #a85f45); --family-map-card-border: #8b5e34; --family-map-card-text: #ffffff; --family-map-card-muted: #fff7ed; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="central"] { --family-map-card-bg: linear-gradient(135deg, #a85f45, #66745b); --family-map-card-border: #5b4636; --family-map-card-text: #ffffff; --family-map-card-muted: #fff7ed; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="irmaos"] { --family-map-card-bg: linear-gradient(135deg, #d9c7ad, #66745b); --family-map-card-border: #66745b; --family-map-card-text: #ffffff; --family-map-card-muted: #f4efe6; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="sobrinhos"] { --family-map-card-bg: linear-gradient(135deg, #e7d8bf, #9aa082); --family-map-card-border: #66745b; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="filhos"], html[data-tree-color-palette="brown"] [data-family-map-color-key="netos"] { --family-map-card-bg: linear-gradient(135deg, #f4efe6, #b9b99a); --family-map-card-border: #66745b; }
+html[data-tree-color-palette="brown"] [data-family-map-color-key="pets"] { --family-map-card-bg: linear-gradient(135deg, #eadcc8, #a85f45); --family-map-card-border: #8b5e34; --family-map-card-text: #ffffff; --family-map-card-muted: #fff7ed; }
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] section[data-family-map-color-key],
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] section[data-family-map-color-key],
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] section[data-family-map-color-key] {
+  border-color: var(--family-map-group-border) !important;
+  background: var(--family-map-group-bg) !important;
+}
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]),
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]),
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]) {
+  border-color: var(--family-map-card-border) !important;
+  background: var(--family-map-card-bg) !important;
+  color: var(--family-map-card-text) !important;
+}
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]) *,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]) *,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] [data-family-map-color-key] button:not([data-tree-export-ignore]) * {
+  color: inherit !important;
+}
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] section[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] section[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] section[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] button[data-family-map-color-key] > span.absolute {
+  background: var(--family-map-label-bg) !important;
+  color: var(--family-map-label-text) !important;
+}
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] .border-cyan-500,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] .border-cyan-500,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] .border-cyan-500 { border-color: var(--family-map-connector) !important; }
+
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] svg path,
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] svg path,
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] svg path { stroke: var(--family-map-connector) !important; }
 
 /*
  * O canvas wide usa width: 1880px quando o painel lateral está colapsado.
