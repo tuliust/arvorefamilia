@@ -71,7 +71,7 @@ type GenealogyReferencePlacement = {
 };
 
 const CANVAS = {
-  width: 1580,
+  minWidth: 420,
   minHeight: 900,
   left: 64,
   top: 96,
@@ -171,9 +171,7 @@ function inferHorizontalGenerations(
 
   pessoas.forEach((person) => {
     const manualGeneration = getManualGeneration(person);
-    if (manualGeneration !== undefined) {
-      generationByPersonId.set(person.id, manualGeneration);
-    }
+    if (manualGeneration !== undefined) generationByPersonId.set(person.id, manualGeneration);
   });
 
   const visited = new Set<string>();
@@ -189,9 +187,7 @@ function inferHorizontalGenerations(
     const generation = generationByPersonId.get(current.personId)
       ?? Math.min(6, Math.max(1, current.generation));
 
-    if (!generationByPersonId.has(current.personId)) {
-      generationByPersonId.set(current.personId, generation);
-    }
+    if (!generationByPersonId.has(current.personId)) generationByPersonId.set(current.personId, generation);
 
     maps.parentsByChild.get(current.personId)?.forEach((parentId) => {
       queue.push({ personId: parentId, generation: generation - 1 });
@@ -380,7 +376,7 @@ function getChildLayoutsForCouple(
 
 function getDistributedTrunkX(candidate: CoupleConnectorCandidate, index: number, total: number) {
   const columnRight = candidate.upperLayout.left + candidate.upperLayout.width;
-  const nextColumnLeft = candidate.upperLayout.left + CANVAS.columnWidth;
+  const nextColumnLeft = Math.min(...candidate.childLayouts.map((layout) => layout.left));
   const gap = Math.max(12, nextColumnLeft - columnRight);
   const step = gap / (total + 1);
   return columnRight + step * (index + 1);
@@ -479,6 +475,12 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
   return connectors;
 }
 
+function getCanvasWidth(activeGenerations: number[]) {
+  if (activeGenerations.length === 0) return CANVAS.minWidth;
+  const visibleColumnsWidth = CANVAS.cardWidth + Math.max(0, activeGenerations.length - 1) * CANVAS.columnWidth;
+  return Math.max(CANVAS.minWidth, CANVAS.left * 2 + visibleColumnsWidth);
+}
+
 function DesktopFamilyHorizontalMapViewComponent({
   pessoas,
   relacionamentos,
@@ -560,11 +562,17 @@ function DesktopFamilyHorizontalMapViewComponent({
     return result;
   }, [centralPersonId, generationByPersonId, genealogyReferencePlacements, maps, visibleHorizontalPessoas]);
 
+  const activeGenerations = React.useMemo(
+    () => GENERATIONS.filter((generation) => (peopleByGeneration.get(generation)?.length ?? 0) > 0),
+    [peopleByGeneration],
+  );
+  const canvasWidth = React.useMemo(() => getCanvasWidth(activeGenerations), [activeGenerations]);
+
   const { layouts, canvasHeight } = React.useMemo(() => {
     const nextLayouts = new Map<string, PersonLayout>();
     let maxBottom = CANVAS.top + CANVAS.cardHeight;
 
-    GENERATIONS.forEach((generation, columnIndex) => {
+    activeGenerations.forEach((generation, columnIndex) => {
       const people = peopleByGeneration.get(generation) ?? [];
       const left = CANVAS.left + columnIndex * CANVAS.columnWidth;
 
@@ -587,7 +595,7 @@ function DesktopFamilyHorizontalMapViewComponent({
       layouts: nextLayouts,
       canvasHeight: Math.max(CANVAS.minHeight, maxBottom + CANVAS.top),
     };
-  }, [peopleByGeneration]);
+  }, [activeGenerations, peopleByGeneration]);
 
   const connectors = React.useMemo(() => buildConnectors(layouts, maps), [layouts, maps]);
   const effectiveScale = responsiveScale * manualZoom;
@@ -597,7 +605,7 @@ function DesktopFamilyHorizontalMapViewComponent({
     if (!viewport) return undefined;
 
     const updateScale = () => {
-      const widthScale = viewport.clientWidth / CANVAS.width;
+      const widthScale = viewport.clientWidth / canvasWidth;
       const heightScale = viewport.clientHeight / CANVAS.minHeight;
       setResponsiveScale(Math.min(1, Math.max(CANVAS.minScale, Math.min(widthScale, heightScale))));
     };
@@ -606,7 +614,7 @@ function DesktopFamilyHorizontalMapViewComponent({
     observer.observe(viewport);
     updateScale();
     return () => observer.disconnect();
-  }, [canvasHeight, layoutRevision]);
+  }, [canvasHeight, canvasWidth, layoutRevision]);
 
   React.useEffect(() => {
     setManualZoom(1);
@@ -720,21 +728,21 @@ function DesktopFamilyHorizontalMapViewComponent({
         data-family-map-horizontal-root="true"
         className="relative z-10 mx-auto"
         style={{
-          width: CANVAS.width * effectiveScale,
+          width: canvasWidth * effectiveScale,
           height: canvasHeight * effectiveScale,
         }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
           style={{
-            width: CANVAS.width,
+            width: canvasWidth,
             height: canvasHeight,
             transform: `scale(${effectiveScale})`,
           }}
         >
           <svg
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${CANVAS.width} ${canvasHeight}`}
+            viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
             aria-hidden="true"
           >
             <g
@@ -750,7 +758,7 @@ function DesktopFamilyHorizontalMapViewComponent({
             </g>
           </svg>
 
-          {GENERATIONS.map((generation, index) => (
+          {activeGenerations.map((generation, index) => (
             <div
               key={generation}
               className="absolute top-12 z-10 -translate-x-1/2 rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow"
