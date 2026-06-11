@@ -524,6 +524,7 @@ function DesktopFamilyHorizontalMapViewComponent({
 }: DesktopFamilyHorizontalMapViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const exportRootRef = React.useRef<HTMLDivElement | null>(null);
+  const mapSurfaceRef = React.useRef<HTMLDivElement | null>(null);
   const scrollStateRef = React.useRef(false);
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
@@ -769,7 +770,7 @@ function DesktopFamilyHorizontalMapViewComponent({
 
   const handleStartAreaSelection = React.useCallback(() => {
     if (!mapSurfaceRef.current) {
-      toast.error('?rea do Mapa Familiar Horizontal n?o encontrada para sele??o.');
+      toast.error('Área do Mapa Familiar Horizontal não encontrada para seleção.');
       return;
     }
 
@@ -815,6 +816,7 @@ function DesktopFamilyHorizontalMapViewComponent({
         }}
       >
         <div
+          ref={mapSurfaceRef}
           className="absolute left-0 top-0 origin-top-left"
           style={{
             width: canvasWidth,
@@ -867,6 +869,14 @@ function DesktopFamilyHorizontalMapViewComponent({
           ))}
         </div>
       </div>
+      {isAreaSelectionOpen && (
+        <TreeAreaSelectionOverlay
+          getTargetElement={() => mapSurfaceRef.current}
+          filenameLabel="mapa-familiar-horizontal"
+          title="Área selecionada do Mapa Familiar Horizontal"
+          onClose={handleCloseAreaSelection}
+        />
+      )}
     </div>
   );
 }

@@ -1768,7 +1768,7 @@ function DesktopFamilyMapViewComponent({
   }, [captureFamilyMap]);
   const handleStartAreaSelection = React.useCallback(() => {
     if (!mapSurfaceRef.current) {
-      toast.error('?rea do Mapa Familiar n?o encontrada para sele??o.');
+      toast.error('Área do Mapa Familiar não encontrada para seleção.');
       return;
     }
 
@@ -1888,7 +1888,7 @@ function DesktopFamilyMapViewComponent({
           <TreeAreaSelectionOverlay
             getTargetElement={() => mapSurfaceRef.current}
             filenameLabel="mapa-familiar"
-            title="?rea selecionada do Mapa Familiar"
+            title="Área selecionada do Mapa Familiar"
             onClose={handleCloseAreaSelection}
           />
         )}
