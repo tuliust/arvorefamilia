@@ -102,6 +102,28 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
+const ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['avos', 'bisavos', 'tataravos'];
+const FILTERABLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['tios', 'primos', 'sobrinhos', 'filhos'];
+
+function createDirectRelativeFiltersForGroups(groups: DirectRelativeGroup[]): DirectRelativeFilters {
+  const activeGroups = new Set(groups);
+
+  return {
+    pais: activeGroups.has('pais'),
+    avos: activeGroups.has('avos'),
+    bisavos: activeGroups.has('bisavos'),
+    tataravos: activeGroups.has('tataravos'),
+    conjuge: activeGroups.has('conjuge'),
+    filhos: activeGroups.has('filhos'),
+    netos: activeGroups.has('netos'),
+    irmaos: activeGroups.has('irmaos'),
+    sobrinhos: activeGroups.has('sobrinhos'),
+    tios: activeGroups.has('tios'),
+    primos: activeGroups.has('primos'),
+    pets: activeGroups.has('pets'),
+  };
+}
+
 function isParentChildRelationship(relationship: Relacionamento) {
   return relationship.tipo_relacionamento === 'pai'
     || relationship.tipo_relacionamento === 'mae'
@@ -332,7 +354,14 @@ function buildGenealogyReferencePlacements(
   return placements;
 }
 
-function getCardLabel(person: Pessoa, generation: number, centralPersonId: string, maps: RelationshipMaps) {
+function getCardLabel(
+  person: Pessoa,
+  generation: number,
+  centralPersonId: string,
+  maps: RelationshipMaps,
+  spouseTonePersonIds: Set<string>,
+) {
+  if (spouseTonePersonIds.has(person.id)) return 'Cônjuge';
   if (person.humano_ou_pet === 'Pet') return 'Pets';
   if (person.id === centralPersonId) return 'Pessoa Central';
   if (maps.spousesByPerson.get(centralPersonId)?.has(person.id)) return 'Cônjuge';
@@ -498,12 +527,13 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
 
-  const visibleHorizontalPessoas = React.useMemo(() => {
+  const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
+  const horizontalVisibility = React.useMemo(() => {
     const statusFilteredPeople = pessoas.filter((person) => {
       if (visiblePersonIds && !visiblePersonIds.has(person.id)) return false;
       return true;
     });
-
+    const peopleById = new Map(statusFilteredPeople.map((person) => [person.id, person]));
     const graph = buildTreeGraph({
       pessoas: statusFilteredPeople,
       relacionamentos,
@@ -516,10 +546,43 @@ function DesktopFamilyHorizontalMapViewComponent({
       filters: directRelativeFilters,
     });
 
-    if (directScopeIds.size === 0) return [];
-    return statusFilteredPeople.filter((person) => directScopeIds.has(person.id));
-  }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
-  const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
+    if (directScopeIds.size === 0) {
+      return { people: [] as Pessoa[], spouseTonePersonIds: new Set<string>() };
+    }
+
+    const selectedPersonIds = new Set(directScopeIds);
+    const spouseTonePersonIds = new Set<string>();
+
+    const collectScopeForGroups = (groups: DirectRelativeGroup[]) => collectDirectFamilyScopePersonIds(graph, {
+      centralPersonId,
+      filters: createDirectRelativeFiltersForGroups(groups),
+    });
+
+    const includeSpousesForAnchors = (anchorIds: Iterable<string>) => {
+      Array.from(anchorIds).forEach((anchorId) => {
+        maps.spousesByPerson.get(anchorId)?.forEach((spouseId) => {
+          if (!peopleById.has(spouseId)) return;
+          selectedPersonIds.add(spouseId);
+          if (!directScopeIds.has(spouseId)) spouseTonePersonIds.add(spouseId);
+        });
+      });
+    };
+
+    includeSpousesForAnchors([centralPersonId]);
+    includeSpousesForAnchors(collectScopeForGroups(ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS));
+
+    if (directRelativeFilters.conjuge) {
+      const activeFilterableGroups = FILTERABLE_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);
+      includeSpousesForAnchors(collectScopeForGroups(activeFilterableGroups));
+    }
+
+    return {
+      people: statusFilteredPeople.filter((person) => selectedPersonIds.has(person.id)),
+      spouseTonePersonIds,
+    };
+  }, [centralPersonId, directRelativeFilters, maps, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
+  const visibleHorizontalPessoas = horizontalVisibility.people;
+  const spouseTonePersonIds = horizontalVisibility.spouseTonePersonIds;
   const generationByPersonId = React.useMemo(
     () => inferHorizontalGenerations(visibleHorizontalPessoas, maps, centralPersonId),
     [centralPersonId, maps, visibleHorizontalPessoas],
@@ -629,10 +692,11 @@ function DesktopFamilyHorizontalMapViewComponent({
       avos: generationCount(3),
       bisavos: generationCount(2),
       tataravos: generationCount(1),
+      conjuge: spouseTonePersonIds.size,
       filhos: generationCount(6),
       pets: visibleHorizontalPessoas.filter((person) => person.humano_ou_pet === 'Pet').length,
     });
-  }, [onDirectRelationRenderedCounts, peopleByGeneration, visibleHorizontalPessoas]);
+  }, [onDirectRelationRenderedCounts, peopleByGeneration, spouseTonePersonIds.size, visibleHorizontalPessoas]);
 
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const hasScrolled = event.currentTarget.scrollTop > 24;
@@ -776,7 +840,7 @@ function DesktopFamilyHorizontalMapViewComponent({
             >
               <VisualPersonCard
                 person={layout.person}
-                label={getCardLabel(layout.person, layout.generation, centralPersonId, maps)}
+                label={getCardLabel(layout.person, layout.generation, centralPersonId, maps, spouseTonePersonIds)}
                 horizontal
                 onClick={onPersonClick}
                 vitalMode="year"
