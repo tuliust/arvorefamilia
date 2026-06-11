@@ -48,8 +48,13 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
   max-width: 100%;
 }
 
+.tree-panel-control-stack,
+.tree-control-panel {
+  width: 100%;
+}
+
 .tree-external-zoom-actions {
-  width: max-content;
+  width: 100%;
 }
 
 .tree-top-icon-button {
@@ -138,31 +143,31 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
 
 @media (max-height: 820px) {
   .tree-control-panel {
-    gap: 0.2rem !important;
-    padding: 0.32rem !important;
+    gap: 0.26rem !important;
+    padding: 0.38rem !important;
   }
 
   .tree-control-section > summary {
-    min-height: 1.35rem !important;
-    padding-top: 0.18rem !important;
-    padding-bottom: 0.18rem !important;
+    min-height: 1.55rem !important;
+    padding-top: 0.26rem !important;
+    padding-bottom: 0.26rem !important;
   }
 
   .tree-control-section > div {
-    padding-bottom: 0.28rem !important;
+    padding-bottom: 0.42rem !important;
   }
 
   .tree-icon-chip,
   .tree-top-icon-button {
-    min-height: 1.55rem !important;
+    min-height: 1.7rem !important;
   }
 
   .tree-primary-control-button {
-    min-height: 2.2rem !important;
+    min-height: 2.25rem !important;
   }
 
   .family-filter-chip {
-    min-height: 2.05rem !important;
+    min-height: 2.55rem !important;
   }
 }
 
@@ -174,6 +179,6 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
   .tree-icon-chip span,
   .tree-primary-control-button span,
   .family-filter-chip span {
-    font-size: 0.58rem !important;
+    font-size: 0.62rem !important;
   }
 }
