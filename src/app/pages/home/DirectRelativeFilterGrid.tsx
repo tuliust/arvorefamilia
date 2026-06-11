@@ -16,14 +16,14 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   { key: 'tataravos', label: 'Tataravós', colorKey: 'tataravos' },
   { key: 'bisavos', label: 'Bisavós', colorKey: 'bisavos' },
   { key: 'avos', label: 'Avós', colorKey: 'avos' },
+  { key: 'pais', label: 'Pais', colorKey: 'pais' },
   { key: 'tios', label: 'Tios', colorKey: 'tios' },
-  { key: 'pais', label: 'Pai e Mãe', colorKey: 'pais' },
   { key: 'primos', label: 'Primos', colorKey: 'primos' },
-  { key: 'conjuge', label: 'Cônjuges', colorKey: 'conjuge' },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos' },
   { key: 'filhos', label: 'Filhos', colorKey: 'filhos' },
-  { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos' },
   { key: 'netos', label: 'Netos', colorKey: 'netos' },
+  { key: 'conjuge', label: 'Cônjuges', colorKey: 'conjuge' },
+  { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos' },
 ];
 
 interface DirectRelativeFilterGridProps {
@@ -47,7 +47,7 @@ export function DirectRelativeFilterGrid({
     <div
       className={
         compact
-          ? 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(0.4rem,1.15vh,0.7rem)] sm:grid-cols-5'
+          ? 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(0.28rem,0.7vh,0.4rem)]'
           : 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(0.4rem,1.15vh,0.7rem)]'
       }
     >
@@ -63,7 +63,9 @@ export function DirectRelativeFilterGrid({
             aria-pressed={active}
             onClick={() => onToggle(option.key)}
             className={[
-              'min-h-[clamp(46px,6.4vh,58px)] w-full min-w-0 overflow-hidden rounded-xl border px-2.5 py-[clamp(0.45rem,1.05vh,0.65rem)] text-left shadow-sm transition',
+              compact
+                ? 'min-h-[clamp(34px,4.7vh,42px)] w-full min-w-0 overflow-hidden rounded-lg border px-2 py-[clamp(0.28rem,0.65vh,0.38rem)] text-left shadow-sm transition'
+                : 'min-h-[clamp(46px,6.4vh,58px)] w-full min-w-0 overflow-hidden rounded-xl border px-2.5 py-[clamp(0.45rem,1.05vh,0.65rem)] text-left shadow-sm transition',
               active ? 'opacity-100' : 'grayscale opacity-45',
               'hover:-translate-y-0.5 hover:shadow-md',
             ].join(' ')}
@@ -74,8 +76,16 @@ export function DirectRelativeFilterGrid({
             }}
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
-            <span className="block truncate text-[clamp(11px,1.65vh,13px)] font-semibold leading-tight">{option.label}</span>
-            <span className="mt-[clamp(0.25rem,0.65vh,0.4rem)] block truncate text-[clamp(18px,2.55vh,22px)] font-bold leading-none">{count}</span>
+            <span className={[
+              'block truncate font-semibold leading-tight',
+              compact ? 'text-[clamp(10px,1.25vh,11px)]' : 'text-[clamp(11px,1.65vh,13px)]',
+            ].join(' ')}>{option.label}</span>
+            <span className={[
+              'block truncate font-bold leading-none',
+              compact
+                ? 'mt-[clamp(0.12rem,0.35vh,0.2rem)] text-[clamp(14px,1.9vh,17px)]'
+                : 'mt-[clamp(0.25rem,0.65vh,0.4rem)] text-[clamp(18px,2.55vh,22px)]',
+            ].join(' ')}>{count}</span>
           </button>
         );
       })}
