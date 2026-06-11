@@ -128,6 +128,10 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
   box-shadow: 0 10px 20px rgb(15 23 42 / 18%) !important;
 }
 
+[data-family-map-export-root='true'] .absolute.z-20 > div[class*="border-dashed"][class*="text-slate-400"] {
+  display: none !important;
+}
+
 @keyframes tree-panel-fade {
   from {
     opacity: 0;
