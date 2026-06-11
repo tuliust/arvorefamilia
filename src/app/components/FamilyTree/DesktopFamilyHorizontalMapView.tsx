@@ -6,6 +6,7 @@ import type { Pessoa, Relacionamento } from '../../types';
 import type { FamilyTreeActions } from './FamilyTree';
 import { VisualPersonCard } from './FamilyTreeVisualCards';
 import { buildTreeGraph } from './buildTreeGraph';
+import { collectDirectFamilyScopePersonIds } from './layouts/directFamilyDistributedLayout';
 import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
 import {
   DEFAULT_EDGE_FILTERS,
@@ -60,18 +61,6 @@ type GenealogyReferencePlacement = {
   y: number;
 };
 
-type CoupleConnectorCandidate = {
-  key: string;
-  generation: number;
-  personLayout: PersonLayout;
-  spouseLayout: PersonLayout;
-  upperLayout: PersonLayout;
-  lowerLayout: PersonLayout;
-  childLayouts: PersonLayout[];
-  spouseX: number;
-  spouseLineMiddleY: number;
-};
-
 const CANVAS = {
   width: 1580,
   minHeight: 900,
@@ -113,26 +102,16 @@ function isParentChildRelationship(relationship: Relacionamento) {
 }
 
 function getParentChildIds(relationship: Relacionamento) {
-  if (relationship.tipo_relacionamento === 'filho') {
+  if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
     return {
-      childId: relationship.pessoa_destino_id,
-      parentId: relationship.pessoa_origem_id,
-    };
-  }
-
-  if (
-    relationship.tipo_relacionamento === 'filiacao_sangue'
-    || relationship.tipo_relacionamento === 'filiacao_adotiva'
-  ) {
-    return {
-      childId: relationship.pessoa_destino_id,
-      parentId: relationship.pessoa_origem_id,
+      parentId: relationship.pessoa_destino_id,
+      childId: relationship.pessoa_origem_id,
     };
   }
 
   return {
-    childId: relationship.pessoa_origem_id,
-    parentId: relationship.pessoa_destino_id,
+    parentId: relationship.pessoa_origem_id,
+    childId: relationship.pessoa_destino_id,
   };
 }
 
@@ -236,50 +215,6 @@ function sortPeopleByFallback(a: Pessoa, b: Pessoa, centralPersonId: string) {
   return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
 }
 
-function pairKey(firstId: string, secondId: string) {
-  return [firstId, secondId].sort().join('::');
-}
-
-function getParentGroupKey(personId: string, maps: RelationshipMaps) {
-  const parentIds = Array.from(maps.parentsByChild.get(personId) ?? []).sort();
-  if (parentIds.length === 0) return `person:${personId}`;
-
-  for (let parentIndex = 0; parentIndex < parentIds.length; parentIndex += 1) {
-    for (let spouseIndex = parentIndex + 1; spouseIndex < parentIds.length; spouseIndex += 1) {
-      const firstParentId = parentIds[parentIndex];
-      const secondParentId = parentIds[spouseIndex];
-      if (maps.spousesByPerson.get(firstParentId)?.has(secondParentId)) {
-        return `parents:${pairKey(firstParentId, secondParentId)}`;
-      }
-    }
-  }
-
-  return `parents:${parentIds.join('::')}`;
-}
-
-function orderChildrenByParentGroup(people: Pessoa[], maps: RelationshipMaps, centralPersonId: string) {
-  const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
-  const groups = new Map<string, { firstIndex: number; people: Pessoa[] }>();
-
-  people.forEach((person) => {
-    const groupKey = getParentGroupKey(person.id, maps);
-    const existingGroup = groups.get(groupKey);
-    const currentIndex = originalIndexByPersonId.get(person.id) ?? Number.POSITIVE_INFINITY;
-
-    if (existingGroup) {
-      existingGroup.people.push(person);
-      existingGroup.firstIndex = Math.min(existingGroup.firstIndex, currentIndex);
-      return;
-    }
-
-    groups.set(groupKey, { firstIndex: currentIndex, people: [person] });
-  });
-
-  return Array.from(groups.values())
-    .sort((groupA, groupB) => groupA.firstIndex - groupB.firstIndex)
-    .flatMap((group) => [...group.people].sort((a, b) => sortPeopleByFallback(a, b, centralPersonId)));
-}
-
 function orderPeopleWithAdjacentSpouses(people: Pessoa[], maps: RelationshipMaps) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
@@ -360,30 +295,12 @@ function connectorPath(points: Point[]) {
   return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
 }
 
-function getCoupleChildLayouts(
-  firstParentId: string,
-  secondParentId: string,
-  parentGeneration: number,
-  layouts: Map<string, PersonLayout>,
-  maps: RelationshipMaps,
-) {
-  const firstParentChildren = maps.childrenByParent.get(firstParentId) ?? new Set<string>();
-  const secondParentChildren = maps.childrenByParent.get(secondParentId) ?? new Set<string>();
-
-  return Array.from(firstParentChildren)
-    .filter((childId) => secondParentChildren.has(childId))
-    .map((childId) => layouts.get(childId))
-    .filter((layout): layout is PersonLayout => Boolean(layout) && layout.generation === parentGeneration + 1)
-    .sort((layoutA, layoutB) => {
-      const birthA = getFallbackSortableBirthValue(layoutA.person.data_nascimento);
-      const birthB = getFallbackSortableBirthValue(layoutB.person.data_nascimento);
-      if (birthA !== birthB) return birthA - birthB;
-      return layoutA.top - layoutB.top;
-    });
+function pairKey(firstId: string, secondId: string) {
+  return [firstId, secondId].sort().join('::');
 }
 
-function buildCoupleConnectorCandidates(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
-  const candidates: CoupleConnectorCandidate[] = [];
+function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
+  const connectors: Connector[] = [];
   const visiblePairKeys = new Set<string>();
 
   maps.spousesByPerson.forEach((spouseIds, personId) => {
@@ -399,105 +316,19 @@ function buildCoupleConnectorCandidates(layouts: Map<string, PersonLayout>, maps
 
       const upperLayout = personLayout.top <= spouseLayout.top ? personLayout : spouseLayout;
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
-      const spouseX = upperLayout.left + upperLayout.width / 2;
-      const spouseLineMiddleY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
-      const childLayouts = getCoupleChildLayouts(personId, spouseId, personLayout.generation, layouts, maps);
+      const x = upperLayout.left + upperLayout.width / 2;
 
-      candidates.push({
-        key,
-        generation: personLayout.generation,
-        personLayout,
-        spouseLayout,
-        upperLayout,
-        lowerLayout,
-        childLayouts,
-        spouseX,
-        spouseLineMiddleY,
-      });
-    });
-  });
-
-  return candidates;
-}
-
-function getTrunkXForCandidate(candidate: CoupleConnectorCandidate, siblings: CoupleConnectorCandidate[]) {
-  const currentColumnRight = candidate.upperLayout.left + candidate.upperLayout.width;
-  const nextColumnLeft = candidate.upperLayout.left + CANVAS.columnWidth;
-  const gapWidth = nextColumnLeft - currentColumnRight;
-  const orderedSiblings = [...siblings].sort((a, b) => {
-    if (a.spouseLineMiddleY !== b.spouseLineMiddleY) return a.spouseLineMiddleY - b.spouseLineMiddleY;
-    return a.key.localeCompare(b.key);
-  });
-  const candidateIndex = Math.max(0, orderedSiblings.findIndex((item) => item.key === candidate.key));
-
-  return currentColumnRight + gapWidth * ((candidateIndex + 1) / (orderedSiblings.length + 1));
-}
-
-function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
-  const connectors: Connector[] = [];
-  const candidates = buildCoupleConnectorCandidates(layouts, maps);
-  const childCandidateBuckets = new Map<number, CoupleConnectorCandidate[]>();
-
-  candidates.forEach((candidate) => {
-    if (candidate.childLayouts.length === 0 || candidate.generation >= 6) return;
-    const bucket = childCandidateBuckets.get(candidate.generation) ?? [];
-    bucket.push(candidate);
-    childCandidateBuckets.set(candidate.generation, bucket);
-  });
-
-  candidates.forEach((candidate) => {
-    connectors.push({
-      id: `spouse-${candidate.key}`,
-      points: [
-        [candidate.spouseX, candidate.upperLayout.top + candidate.upperLayout.height],
-        [candidate.spouseX, candidate.lowerLayout.top],
-      ],
-    });
-
-    if (candidate.childLayouts.length === 0 || candidate.generation >= 6) return;
-
-    const childCenterYs = candidate.childLayouts.map((childLayout) => childLayout.top + childLayout.height / 2);
-    const trunkX = getTrunkXForCandidate(candidate, childCandidateBuckets.get(candidate.generation) ?? [candidate]);
-    const minY = Math.min(candidate.spouseLineMiddleY, ...childCenterYs);
-    const maxY = Math.max(candidate.spouseLineMiddleY, ...childCenterYs);
-
-    connectors.push({
-      id: `family-branch-${candidate.key}`,
-      points: [
-        [candidate.spouseX, candidate.spouseLineMiddleY],
-        [trunkX, candidate.spouseLineMiddleY],
-      ],
-    });
-
-    connectors.push({
-      id: `family-trunk-${candidate.key}`,
-      points: [
-        [trunkX, minY],
-        [trunkX, maxY],
-      ],
-    });
-
-    candidate.childLayouts.forEach((childLayout) => {
-      const childCenterY = childLayout.top + childLayout.height / 2;
       connectors.push({
-        id: `family-child-${candidate.key}-${childLayout.person.id}`,
+        id: `spouse-${key}`,
         points: [
-          [trunkX, childCenterY],
-          [childLayout.left, childCenterY],
+          [x, upperLayout.top + upperLayout.height],
+          [x, lowerLayout.top],
         ],
       });
     });
   });
 
   return connectors;
-}
-
-function isLowerSpouseCard(layout: PersonLayout, layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
-  return Array.from(maps.spousesByPerson.get(layout.person.id) ?? []).some((spouseId) => {
-    const spouseLayout = layouts.get(spouseId);
-    if (!spouseLayout || spouseLayout.generation !== layout.generation) return false;
-    return spouseLayout.top < layout.top;
-  });
 }
 
 function DesktopFamilyHorizontalMapViewComponent({
@@ -518,12 +349,26 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [manualZoom, setManualZoom] = React.useState(1);
 
   const visibleHorizontalPessoas = React.useMemo(() => {
-    return pessoas.filter((person) => {
+    const statusFilteredPeople = pessoas.filter((person) => {
       if (visiblePersonIds && !visiblePersonIds.has(person.id)) return false;
-      if (person.humano_ou_pet === 'Pet' && !directRelativeFilters.pets) return false;
       return true;
     });
-  }, [directRelativeFilters.pets, pessoas, visiblePersonIds]);
+
+    const graph = buildTreeGraph({
+      pessoas: statusFilteredPeople,
+      relacionamentos,
+      selectedPersonId: centralPersonId,
+      onPersonClick,
+      edgeFilters: DEFAULT_EDGE_FILTERS,
+    });
+    const directScopeIds = collectDirectFamilyScopePersonIds(graph, {
+      centralPersonId,
+      filters: directRelativeFilters,
+    });
+
+    if (directScopeIds.size === 0) return [];
+    return statusFilteredPeople.filter((person) => directScopeIds.has(person.id));
+  }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
   const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
   const generationByPersonId = React.useMemo(
     () => inferHorizontalGenerations(visibleHorizontalPessoas, maps, centralPersonId),
@@ -560,8 +405,7 @@ function DesktopFamilyHorizontalMapViewComponent({
         return sortPeopleByFallback(a, b, centralPersonId);
       });
 
-      const orderedChildren = orderChildrenByParentGroup(generationPeople, maps, centralPersonId);
-      result.set(generation, orderPeopleWithAdjacentSpouses(orderedChildren, maps));
+      result.set(generation, orderPeopleWithAdjacentSpouses(generationPeople, maps));
     });
 
     return result;
@@ -767,27 +611,21 @@ function DesktopFamilyHorizontalMapViewComponent({
             </div>
           ))}
 
-          {Array.from(layouts.values()).map((layout) => {
-            const useSpouseTone = layout.person.id !== centralPersonId && isLowerSpouseCard(layout, layouts, maps);
-
-            return (
-              <div
-                key={layout.person.id}
-                className="absolute z-20"
-                style={{ left: layout.left, top: layout.top, width: layout.width }}
-              >
-                <VisualPersonCard
-                  person={layout.person}
-                  label={useSpouseTone ? 'Cônjuge' : getCardLabel(layout.person, layout.generation, centralPersonId, maps)}
-                  horizontal
-                  central={layout.person.id === centralPersonId}
-                  tone={useSpouseTone ? 'spouse' : undefined}
-                  onClick={onPersonClick}
-                  vitalMode="year"
-                />
-              </div>
-            );
-          })}
+          {Array.from(layouts.values()).map((layout) => (
+            <div
+              key={layout.person.id}
+              className="absolute z-20"
+              style={{ left: layout.left, top: layout.top, width: layout.width }}
+            >
+              <VisualPersonCard
+                person={layout.person}
+                label={getCardLabel(layout.person, layout.generation, centralPersonId, maps)}
+                horizontal
+                onClick={onPersonClick}
+                vitalMode="year"
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>
