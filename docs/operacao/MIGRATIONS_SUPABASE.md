@@ -413,7 +413,7 @@ mulher
 pet
 ```
 
-Se essa coluna foi criada manualmente no painel Supabase, ela precisa ser versionada em `supabase/migrations`.
+Se essa coluna foi criada manualmente no painel Supabase, ela precisa ser versionada em `supabase/migrations`. A revisão contra o código atual confirma que `Pessoa.genero` já está tipado no frontend; a pendência aqui é operacional/schema.
 
 SQL sugerido para migration idempotente:
 
@@ -455,7 +455,8 @@ Regra:
 
 - não criar migration para ajuste de avatar SVG;
 - criar migration apenas para a coluna/constraint/índice de banco;
-- aplicar migration antes de deploy que dependa de `genero` no payload tipado;
+- aplicar migration antes de deploy que dependa de `genero` em payloads de escrita ou queries tipadas;
+- se o frontend apenas lê `genero`, ainda assim manter local/remoto alinhados para evitar divergência de ambientes;
 - atualizar `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` quando a migration existir oficialmente.
 
 ## 10. RLS e permissões
@@ -726,6 +727,29 @@ Se houver linhas:
 - constraint pode ter falhado;
 - houve inserção manual inconsistente;
 - revisar `forumService.ts`.
+
+---
+
+
+### Coluna `pessoas.genero` existe no remoto, mas não local
+
+Sintomas:
+
+```txt
+Build passa, mas ambientes novos não possuem a coluna genero.
+Supabase remoto aceita genero, mas db reset local não recria o campo.
+Documentação menciona genero, mas não há migration correspondente.
+```
+
+Correção:
+
+1. confirmar se existe migration em `supabase/migrations` para `public.pessoas.genero`;
+2. se não existir, criar migration idempotente `add_genero_to_pessoas`;
+3. aplicar localmente em ambiente seguro;
+4. validar valores fora de `homem`, `mulher`, `pet` antes de constraint;
+5. aplicar remoto somente após revisão do alvo e backup quando necessário.
+
+Não usar `migration repair` para mascarar coluna criada manualmente sem SQL versionado.
 
 ---
 

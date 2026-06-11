@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado com troubleshooting do Mapa Familiar, avatares por `genero`, exportação e favoritos.
+> Status: guia canônico revisado contra o código atual com troubleshooting do Mapa Familiar, modo wide, título ocultável, badge central, avatares por `genero`, exportação e favoritos.
 
 ## Objetivo
 
@@ -597,6 +597,94 @@ Não fazer:
 - resolver pet apenas por relacionamento visual;
 - criar migration para trocar SVG do avatar.
 
+
+## 5.9 Título do Mapa Familiar não some ao rolar ou não volta ao topo
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+```
+
+Comportamento esperado:
+
+- `HomeTreeSection` mantém `familyMapHasScrolled`;
+- `DesktopFamilyMapView` chama `onScrollStateChange` no scroll interno;
+- `scrollTop > 24` oculta o título desktop com transição;
+- ao voltar para `scrollTop <= 24`, o título reaparece;
+- o estado reseta quando mudam pessoa central, view ou `layoutRevision`.
+
+Investigar:
+
+| Sintoma | Verificar |
+|---|---|
+| Título nunca some | `onScroll` do container principal do `DesktopFamilyMapView`, callback `onScrollStateChange`, classe condicional em `HomeTreeSection`. |
+| Título some e não volta | reset de `scrollStateRef`, efeito que chama `onScrollStateChange(false)`, retorno ao topo real do container. |
+| Título de outras views some indevidamente | condição `treeViewMode === 'mapa-familiar'`. |
+
+Não corrigir com CSS global escondendo todos os títulos da árvore.
+
+## 5.10 Modo wide do Mapa Familiar não é aplicado ao colapsar painel
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+```
+
+Fluxo esperado:
+
+```txt
+Home.tsx/sidebarOpen
+  -> HomeTreeSection sidebarOpen
+  -> DesktopFamilyMapView sidebarCollapsed={!sidebarOpen}
+  -> getFamilyMapLayout(true)
+```
+
+Investigar:
+
+- `Home.tsx` passa `sidebarOpen` para `HomeTreeSection`;
+- `HomeTreeSection` passa `sidebarCollapsed={!sidebarOpen}` apenas para `DesktopFamilyMapView`;
+- `DesktopFamilyMapView` deriva `isWideLayout` de `sidebarCollapsed`;
+- `getFamilyMapLayout(true)` altera `canvas.width`, áreas, laterais e faixas inferiores;
+- `treeLayoutRevision` é incrementado ao abrir/fechar painel para recalcular escala.
+
+Sintomas:
+
+| Sintoma | Causa provável |
+|---|---|
+| Árvore não muda ao recolher painel | prop não propagada ou `getFamilyMapLayout` não usado. |
+| Árvore desloca demais para a esquerda | wrapper deixou de usar centralização controlada ou canvas wide ficou desequilibrado. |
+| Cônjuge/Pets sobrepõem Filhos/Netos | `areas.lowerMiddle/lowerRight` ou `rightLowerTop` incorretos. |
+| Laterais cortam | canvas lógico, áreas left/right ou escala responsiva insuficientes. |
+
+Não resolver aumentando apenas zoom padrão.
+
+## 5.11 Badge `PESSOA CENTRAL` reaparece no Mapa Familiar
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+```
+
+Comportamento esperado:
+
+- `DirectPersonCard` aceita `showLabel?: boolean`;
+- o card central passa `showLabel={false}`;
+- `VisualPersonCard` só renderiza badge quando recebe `label`;
+- Pai, Mãe, Cônjuge e grupos continuam com rótulos.
+
+Correção:
+
+- não remover suporte global a `label`;
+- aplicar a exceção apenas no card central do Mapa Familiar;
+- validar que as pílulas de grupos continuam visíveis.
+
 ## 6. Paletas visuais da árvore
 
 Arquivos:
@@ -722,8 +810,6 @@ Correção:
 5. testar novamente o botão em `/admin/pessoas`.
 
 Não alterar o frontend para esconder o erro de RPC ausente.
-
-### 7.5 Autocomplete de endereço não funciona
 
 ### 7.5 Autocomplete de endereço não funciona
 
@@ -1089,7 +1175,9 @@ Correção esperada:
 - preservar `?pessoa=...` ao navegar entre views;
 - manter a pendência `DOC-015` aberta enquanto não for verificado.
 
-### 19.2 `Mapa Familiar` não pode ser favoritado
+#Estado observado na revisão atual: `/mapa-familiar` ainda não está em `GLOBAL_SEARCH_PAGES`.
+
+## 19.2 `Mapa Familiar` não pode ser favoritado
 
 Investigar:
 
@@ -1105,7 +1193,9 @@ Correção esperada:
 - usar `entity_type = page`;
 - não salvar zoom, filtro ou estado de grupos como favorito.
 
-### 19.3 Exportação do Mapa Familiar falha ou não existe
+#Estado observado na revisão atual: `/mapa-familiar` ainda não está em `FAVORITE_PAGES`.
+
+## 19.3 Exportação do Mapa Familiar falha ou não existe
 
 Investigar:
 

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/arquitetura/ARCHITECTURE.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado após refatoração estrutural do `Mapa Familiar`, centralização de `FAMILY_MAP_LAYOUT`, regras de cônjuges, avatares por `pessoas.genero`, conectores por âncoras e paleta `visual`.
+> Status: revisado contra o código atual após modo wide do `Mapa Familiar`, `sidebarCollapsed`, ocultação do título por scroll, badge central removida, avatares por `pessoas.genero`, conectores SVG por âncoras e pendência de migration para `pessoas.genero`.
 
 ## Objetivo
 
@@ -41,6 +41,7 @@ Observações:
 - Secrets não devem ir para frontend, repositório, dumps versionados ou documentação operacional aberta.
 - Ajuste visual, nova view de apresentação e nova paleta não exigem migration.
 - Mudança de schema, como a coluna `pessoas.genero`, exige migration versionada se tiver sido criada manualmente no Supabase.
+- A tipagem frontend de `Pessoa.genero` já existe em `src/app/types/index.ts`; a pendência operacional é confirmar/versionar a migration no Supabase.
 
 ---
 
@@ -168,8 +169,10 @@ src/app/components/FamilyTree/treeColorPalettes.ts
 Regras:
 
 - `Home.tsx` deriva `treeViewMode` da URL.
+- `Home.tsx` mantém o estado `sidebarOpen` do painel lateral e incrementa `treeLayoutRevision` quando o painel abre/fecha ou quando muda o modo mobile/desktop.
 - `treeViewMode.ts` centraliza mapeamento de view para path.
 - `HomeTreeSection.tsx` decide a renderização principal da área da árvore.
+- Em `/mapa-familiar`, `HomeTreeSection.tsx` repassa `sidebarCollapsed={!sidebarOpen}` para `DesktopFamilyMapView` e usa `onScrollStateChange` para ocultar/exibir o título desktop conforme o scroll interno da view.
 - `FamilyTree.tsx` renderiza React Flow, layouts, viewport, pan/zoom e exportação nas views ReactFlow.
 - `/minha-arvore` usa layout direto da pessoa central no desktop/tablet e `MobileFamilyTreeView` no mobile.
 - `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e fallback para `MobileFamilyTreeView` no mobile.
@@ -192,12 +195,18 @@ Características técnicas atuais:
 - cards compartilhados: `FamilyTreeVisualCards.tsx`;
 - modelo de dados: `buildMobileFamilyTreeModel` em `mobileFamilyTreeModel.ts`;
 - composição visual: HTML/CSS com canvas de referência e conectores SVG;
-- configuração centralizada: `FAMILY_MAP_LAYOUT`;
+- configuração centralizada: `FAMILY_MAP_LAYOUT_BASE` e helper `getFamilyMapLayout(isWideLayout)`;
+- modo base: usado com painel lateral aberto;
+- modo wide: usado quando `sidebarCollapsed === true`, com canvas lógico ampliado, laterais mais largas e faixas inferiores separadas;
 - conectores principais derivados de âncoras conceituais dos grupos;
 - conectores internos de cônjuges renderizados dentro de `VisualGroup` apenas quando há relação conjugal explícita;
 - escala responsiva: `ResizeObserver` calcula escala para caber na viewport;
 - zoom manual: `Ctrl + scroll`, com limite mínimo/máximo definido no layout;
-- grupos expansíveis por botão `+/-`, sem scroll interno apertado como padrão.
+- scroll comum preservado sem `Ctrl`;
+- título desktop `Mapa Familiar de {primeiro nome}` fica fora do canvas e é ocultado quando o scroll interno da view passa de 24px;
+- card da pessoa central não exibe badge/pílula `PESSOA CENTRAL`, enquanto Pai, Mãe, Cônjuge e grupos mantêm seus rótulos;
+- grupos expansíveis por botão `+/-`, sem scroll interno apertado como padrão;
+- no modo wide, grupos podem receber `vitalMode="full"` para exibir local + ano quando houver espaço.
 
 Regras de grupos:
 
@@ -220,11 +229,11 @@ Regras de cônjuges no Mapa Familiar:
 
 Regras de avatar:
 
-- `pessoas.genero = 'homem'` usa avatar masculino;
-- `pessoas.genero = 'mulher'` usa avatar feminino;
-- `pessoas.genero = 'pet'` usa avatar de pet;
+- `pessoas.genero = 'homem'` usa avatar masculino SVG inline;
+- `pessoas.genero = 'mulher'` usa avatar feminino SVG inline;
+- `pessoas.genero = 'pet'` usa avatar de pet (`PawPrint`/pet visual);
 - foto principal continua tendo prioridade sobre avatar gráfico;
-- se `genero` não estiver tipado em `Pessoa`, atualizar o contrato TypeScript;
+- `Pessoa.genero` já está tipado no frontend;
 - se a coluna foi criada manualmente no Supabase, criar migration correspondente.
 
 Regras anti-regressão:
@@ -234,7 +243,9 @@ Regras anti-regressão:
 - não usar `DesktopFamilyMapView` para alterar dados reais;
 - manter `visiblePersonIds` e filtros diretos respeitados pela view;
 - manter refinamentos de laterais, cônjuges e avatares concentrados no `FAMILY_MAP_LAYOUT` e nos componentes visuais;
-- documentar qualquer limitação de exportação/favoritos/busca no plano antes de declarar como concluída.
+- documentar qualquer limitação de exportação/favoritos/busca no plano antes de declarar como concluída;
+- manter pendência aberta enquanto `/mapa-familiar` não estiver explicitamente em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`;
+- lembrar que o painel mobile de controles reconhece `/mapa-familiar`, mas o fluxo de captura ainda precisa de validação/implementação específica para HTML/SVG, pois o fluxo canônico foi desenhado para ReactFlow.
 
 ### 5.2 Paletas da árvore
 

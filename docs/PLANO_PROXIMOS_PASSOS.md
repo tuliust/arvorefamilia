@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado após criação de `MAPA_FAMILIAR_VIEW.md`, refatoração estrutural do Mapa Familiar, regras de cônjuges, avatares por `genero` e pendências de QA/migration/exportação.
+> Status: plano vivo revisado contra o código atual após modo wide do Mapa Familiar, `sidebarCollapsed`, ocultação do título por scroll, badge central removida, avatares por `genero`, tipagem frontend confirmada e pendências de QA/migration/exportação/busca/favoritos.
 
 ## Objetivo
 
@@ -35,7 +35,7 @@ Estado técnico atual das views da árvore:
 | View | Rota | Estado |
 |---|---|---|
 | Minha Árvore | `/minha-arvore` | Implementada; ReactFlow no desktop/tablet e `MobileFamilyTreeView` no mobile. |
-| Mapa Familiar | `/mapa-familiar` | Implementada tecnicamente como view protegida; usa `DesktopFamilyMapView` no desktop/tablet e fallback para `MobileFamilyTreeView` no mobile. QA visual autenticado segue pendente. |
+| Mapa Familiar | `/mapa-familiar` | Implementada tecnicamente como view protegida; usa `DesktopFamilyMapView` no desktop/tablet, fallback para `MobileFamilyTreeView` no mobile, modo wide com painel colapsado, título ocultável por scroll e avatares por `genero`. QA visual autenticado segue pendente. |
 | Genealogia | `/genealogia` | Implementada; chips mobile usam base de gerações inferidas. |
 | Visão Completa | `/visao-completa` | Implementada; chips mobile usam base de gerações inferidas. |
 
@@ -65,12 +65,12 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
 | DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
-| DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Verificar e, se necessário, incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`, para aparecer na busca global e poder ser favoritado como as demais views da árvore. | Aberto |
-| DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. Enquanto não houver implementação, documentar que exportação segue focada nas views ReactFlow. | Aberto |
+| DOC-015 | `/mapa-familiar` busca/favoritos | ajuste técnico / consistência de navegação | Incluir `Mapa Familiar` em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`. Na revisão contra o código atual, `/mapa-familiar` ainda não aparece em `src/app/services/globalSearchService.ts` nem em `src/app/constants/favoritePages.ts`. | Aberto confirmado |
+| DOC-016 | `/mapa-familiar` exportação | decisão de produto / implementação futura | Decidir se a exportação canônica deve capturar a view HTML/SVG do Mapa Familiar. O `MobileTreeControlsPortal` reconhece `/mapa-familiar`, mas o helper de captura ainda procura `.react-flow`, portanto a exportação HTML/SVG precisa de implementação/QA próprios. | Aberto confirmado |
 | DOC-017 | `/mapa-familiar` refinamento lateral | QA visual / layout | Ajustar e validar grupos laterais de tios/primos para ocupar as laterais sem invadir Pai/Mãe/Pessoa Central e sem cortar nas bordas. Incluir validação específica do layout wide após colapsar o painel lateral. | Aberto |
-| DOC-018 | `pessoas.genero` | schema / migration / tipagem | Confirmar se a coluna `genero` foi criada por migration versionada e se o tipo `Pessoa` aceita `homem`, `mulher` e `pet`. | Aberto |
+| DOC-018 | `pessoas.genero` | schema / migration | Tipagem frontend confirmada em `src/app/types/index.ts`. Falta confirmar/criar migration versionada para `public.pessoas.genero`, caso a coluna tenha sido criada manualmente no Supabase. | Parcial |
 | DOC-019 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | documentação canônica | Manter a documentação do Mapa Familiar sincronizada com `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, regras de cônjuges, zoom, layout wide/painel colapsado e avatares por `genero`. | Aberto |
-| DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Validar que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Aberto |
+| DOC-020 | `/mapa-familiar` painel colapsado | QA visual / layout | Código atual já passa `sidebarCollapsed` para `DesktopFamilyMapView` e usa `getFamilyMapLayout(true)`. Validar visualmente que, ao colapsar o painel lateral, o canvas permanece centralizado, as margens paterna/materna ficam proporcionais e `Cônjuge`, `Pets`, `Irmãos/Sobrinhos` e `Filhos/Netos` não se sobrepõem. | Parcial / QA aberto |
 
 Regras:
 
@@ -198,7 +198,10 @@ Estado técnico atual:
 - tios/primos laterais com até 4 colunas e limite inicial de 8 cards;
 - paleta `visual` disponível junto de `white`, `orange` e `brown`;
 - avatares visuais orientados por `pessoas.genero` quando disponível;
-- avatar feminino fallback revisado em `FamilyTreeVisualCards.tsx`, preservando homem e pet.
+- avatar feminino fallback revisado em `FamilyTreeVisualCards.tsx`, preservando homem e pet;
+- título desktop do Mapa Familiar ocultado quando o scroll interno passa de 24px;
+- badge `PESSOA CENTRAL` removida do card central via `showLabel={false}`;
+- `vitalMode="full"` aplicado aos grupos no modo wide para exibir local + ano quando houver espaço.
 
 ### Critérios de QA manual
 

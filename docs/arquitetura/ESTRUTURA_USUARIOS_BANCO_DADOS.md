@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-10
 > Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado com a coluna `pessoas.genero`, uso de avatares no Mapa Familiar e alerta de migration caso a coluna tenha sido criada manualmente.
+> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e alerta de migration caso a coluna tenha sido criada manualmente no Supabase.
 
 ## Objetivo
 
@@ -132,7 +132,7 @@ Defaults recentes:
 
 #### Campo `genero`
 
-A coluna `pessoas.genero` passa a ser usada como fonte visual para avatares no **Mapa Familiar** e nos cards visuais compartilhados.
+A coluna `pessoas.genero` passa a ser usada como fonte visual para avatares no **Mapa Familiar** e nos cards visuais compartilhados. No frontend, o contrato `Pessoa` já possui `genero?: 'homem' | 'mulher' | 'pet' | string | null`.
 
 Valores esperados:
 
@@ -162,6 +162,12 @@ Atenção operacional:
 ```txt
 Se `pessoas.genero` foi criada manualmente no Supabase, criar migration versionada para alinhar local/remoto.
 ```
+
+Estado confirmado contra o código atual:
+
+- a tipagem frontend de `Pessoa.genero` existe;
+- os cards visuais leem `person.genero` antes de usar fallbacks legados;
+- a existência de migration oficial para `pessoas.genero` ainda precisa ser verificada no repositório/ambiente.
 
 Migration provável:
 
@@ -685,7 +691,7 @@ Documentar impacto em:
 - `docs/funcionalidades/FORUM.md`, se alterar fórum;
 - `docs/PLANO_PROXIMOS_PASSOS.md`, se surgir pendência real.
 
-## 14. Impacto do Mapa Familiar no modelo de dados
+## 12. Impacto do Mapa Familiar no modelo de dados
 
 O **Mapa Familiar** não cria novas tabelas nem altera relacionamentos reais. Ele consome `pessoas`, `relacionamentos`, filtros diretos e `buildMobileFamilyTreeModel` para compor uma visualização panorâmica HTML/CSS/SVG.
 
@@ -697,3 +703,16 @@ Pontos de atenção:
 - pets seguem separados de filhos humanos;
 - ajustes de layout não exigem migration;
 - criação manual de coluna no Supabase exige migration posterior.
+
+
+---
+
+### 12.1 Verificação contra o código atual
+
+Estado observado na revisão deste lote:
+
+- `src/app/types/index.ts` já tipa `Pessoa.genero` como `homem`, `mulher`, `pet`, string ou `null`;
+- `FamilyTreeVisualCards.tsx` usa `person.genero` como fonte primária dos avatares visuais;
+- `genero` não deve substituir sozinho `humano_ou_pet` nas regras de domínio enquanto não houver decisão de migração/backfill;
+- o Mapa Familiar usa `genero` para representação visual, não para alterar relacionamentos, filtros ou permissões;
+- se a coluna existir apenas no Supabase remoto por edição manual, a documentação operacional exige criar migration versionada.
