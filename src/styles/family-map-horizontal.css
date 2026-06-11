@@ -122,6 +122,10 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   color: inherit !important;
 }
 
+[data-family-map-horizontal-root="true"] > div > svg.pointer-events-none {
+  display: none !important;
+}
+
 [data-family-map-horizontal-root="true"] path {
   stroke: var(--family-map-connector, #a5eef6) !important;
 }
