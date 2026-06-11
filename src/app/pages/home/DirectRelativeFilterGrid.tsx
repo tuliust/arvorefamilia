@@ -64,7 +64,7 @@ export function DirectRelativeFilterGrid({
     <div
       className={
         compact
-          ? 'grid w-full min-w-0 grid-cols-3 gap-[clamp(0.22rem,0.52vh,0.32rem)]'
+          ? 'grid w-full min-w-0 grid-cols-3 gap-[clamp(0.3rem,0.68vh,0.44rem)]'
           : 'grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-[clamp(0.4rem,1.15vh,0.7rem)]'
       }
     >
@@ -82,7 +82,7 @@ export function DirectRelativeFilterGrid({
             onClick={() => onToggle(option.key)}
             className={[
               compact
-                ? 'family-filter-chip min-h-[clamp(36px,4.9vh,43px)] w-full min-w-0 overflow-hidden rounded-lg border px-1.5 py-1 text-left shadow-sm transition'
+                ? 'family-filter-chip min-h-[clamp(46px,5.8vh,56px)] w-full min-w-0 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-sm transition'
                 : 'family-filter-chip min-h-[clamp(46px,6.4vh,58px)] w-full min-w-0 overflow-hidden rounded-xl border px-2.5 py-[clamp(0.45rem,1.05vh,0.65rem)] text-left shadow-sm transition',
               active ? 'opacity-100' : 'grayscale opacity-45',
               'hover:-translate-y-0.5 hover:shadow-md',
@@ -94,17 +94,17 @@ export function DirectRelativeFilterGrid({
             }}
             title={active ? `Ocultar ${option.label}` : `Mostrar ${option.label}`}
           >
-            <span className="flex min-w-0 items-center gap-1">
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Icon className={compact ? 'h-4 w-4 shrink-0' : 'h-3.5 w-3.5 shrink-0'} />
               <span className={[
                 'min-w-0 flex-1 truncate font-semibold leading-tight',
-                compact ? 'text-[clamp(9px,1.1vh,10px)]' : 'text-[clamp(11px,1.65vh,13px)]',
+                compact ? 'text-[clamp(10px,1.22vh,11px)]' : 'text-[clamp(11px,1.65vh,13px)]',
               ].join(' ')}>{option.label}</span>
             </span>
             <span className={[
               'block truncate font-bold leading-none',
               compact
-                ? 'mt-[clamp(0.1rem,0.28vh,0.16rem)] text-[clamp(13px,1.7vh,16px)]'
+                ? 'mt-[clamp(0.22rem,0.48vh,0.32rem)] text-[clamp(16px,2vh,19px)]'
                 : 'mt-[clamp(0.25rem,0.65vh,0.4rem)] text-[clamp(18px,2.55vh,22px)]',
             ].join(' ')}>{count}</span>
           </button>
