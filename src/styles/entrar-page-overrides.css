@@ -1,4 +1,0 @@
-/* Ajuste temporário da página /entrar: oculta o parágrafo institucional removido do texto visível. */
-main section > div.mt-4.max-w-xl.space-y-3 > p:nth-child(2) {
-  display: none;
-}
