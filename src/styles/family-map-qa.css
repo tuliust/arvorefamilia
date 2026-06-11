@@ -1,5 +1,6 @@
 /* Ajustes visuais isolados para a view Mapa Familiar. */
 html[data-tree-color-palette="white"] {
+  --family-map-screen-bg: #ffffff;
   --family-map-title-bg: rgb(255 255 255 / 80%);
   --family-map-title-border: rgb(203 213 225 / 64%);
   --family-map-title-shadow: 0 6px 18px rgb(15 23 42 / 7%);
@@ -8,6 +9,7 @@ html[data-tree-color-palette="white"] {
 }
 
 html[data-tree-color-palette="orange"] {
+  --family-map-screen-bg: #fff7ed;
   --family-map-title-bg: linear-gradient(180deg, rgb(255 255 255 / 82%), rgb(255 247 237 / 82%));
   --family-map-title-border: rgb(234 176 143 / 42%);
   --family-map-title-shadow: 0 6px 18px rgb(234 88 12 / 8%);
@@ -16,11 +18,21 @@ html[data-tree-color-palette="orange"] {
 }
 
 html[data-tree-color-palette="brown"] {
+  --family-map-screen-bg: #f4efe6;
   --family-map-title-bg: linear-gradient(180deg, rgb(251 248 241 / 86%), rgb(244 239 230 / 86%));
   --family-map-title-border: rgb(168 95 69 / 38%);
   --family-map-title-shadow: 0 6px 18px rgb(91 70 54 / 10%);
   --family-map-title-color: #5b4636;
   --family-map-title-accent: linear-gradient(90deg, rgb(168 95 69 / 0%), rgb(102 116 91 / 38%), rgb(168 95 69 / 0%));
+}
+
+html[data-tree-color-palette="white"] section:has([data-family-map-export-root="true"]),
+html[data-tree-color-palette="orange"] section:has([data-family-map-export-root="true"]),
+html[data-tree-color-palette="brown"] section:has([data-family-map-export-root="true"]),
+html[data-tree-color-palette="white"] section:has([data-family-map-export-root="true"]) > div:has(> [data-family-map-export-root="true"]),
+html[data-tree-color-palette="orange"] section:has([data-family-map-export-root="true"]) > div:has(> [data-family-map-export-root="true"]),
+html[data-tree-color-palette="brown"] section:has([data-family-map-export-root="true"]) > div:has(> [data-family-map-export-root="true"]) {
+  background-color: var(--family-map-screen-bg) !important;
 }
 
 section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolute.inset-x-0.top-5.z-20.text-center h1 {
