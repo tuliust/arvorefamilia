@@ -9,10 +9,10 @@ section:has([data-family-map-export-root="true"]) > .pointer-events-none.absolut
   background: linear-gradient(180deg, rgb(255 255 255 / 80%), rgb(236 254 255 / 80%));
   box-shadow: 0 6px 18px rgb(8 145 178 / 9%);
   padding: 0.26rem 0.78rem 0.32rem;
-  color: #526963;
-  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  color: #334d47;
+  font-size: clamp(1.12rem, 1.55vw, 1.45rem);
   font-weight: 600;
-  letter-spacing: -0.018em;
+  letter-spacing: -0.012em;
   line-height: 1.04;
   backdrop-filter: blur(8px);
 }
