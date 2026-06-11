@@ -62,6 +62,23 @@ main aside [class*="gap-3"] {
   opacity: 0.78;
 }
 
+html[data-tree-highlight-lines='true'] [data-family-map-export-root='true'] svg path,
+html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-flow__edge-path {
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+}
+
+html[data-tree-highlight-cards='true'] [data-family-map-export-root='true'] [data-family-map-color-key],
+html[data-tree-highlight-cards='true'] [data-export-root='family-tree'] .react-flow__node-personNode > div {
+  outline: 2px solid var(--tree-palette-group-border, #94a3b8) !important;
+  outline-offset: 3px;
+}
+
+html[data-tree-highlight-groups='true'] [data-family-map-export-root='true'] .absolute.z-10,
+html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-flow__node-personNode {
+  box-shadow: 0 10px 20px rgb(15 23 42 / 18%) !important;
+}
+
 @media (max-height: 820px) {
   .tree-control-panel {
     gap: 0.2rem !important;
