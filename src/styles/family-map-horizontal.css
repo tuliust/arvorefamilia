@@ -7,7 +7,7 @@
   --horizontal-map-card-muted: #475569;
   --horizontal-map-avatar-bg: rgba(255, 255, 255, 0.86);
   --horizontal-map-line: rgba(148, 163, 184, 0.62);
-  --horizontal-map-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+  --horizontal-map-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
 }
 
 html[data-tree-color-palette="visual"] [data-tree-route-view="mapa-horizontal"] {
@@ -16,10 +16,10 @@ html[data-tree-color-palette="visual"] [data-tree-route-view="mapa-horizontal"] 
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%);
   --horizontal-map-card-border: rgba(255, 255, 255, 0.72);
   --horizontal-map-card-text: #ffffff;
-  --horizontal-map-card-muted: rgba(255, 255, 255, 0.86);
+  --horizontal-map-card-muted: rgba(255, 255, 255, 0.9);
   --horizontal-map-avatar-bg: rgba(255, 255, 255, 0.18);
   --horizontal-map-line: rgba(103, 232, 249, 0.82);
-  --horizontal-map-shadow: 0 18px 38px rgba(8, 145, 178, 0.2);
+  --horizontal-map-shadow: 0 14px 28px rgba(8, 145, 178, 0.18);
 }
 
 html[data-tree-color-palette="orange"] [data-tree-route-view="mapa-horizontal"] {
@@ -31,7 +31,7 @@ html[data-tree-color-palette="orange"] [data-tree-route-view="mapa-horizontal"] 
   --horizontal-map-card-muted: #5b3822;
   --horizontal-map-avatar-bg: rgba(255, 255, 255, 0.5);
   --horizontal-map-line: rgba(234, 140, 92, 0.52);
-  --horizontal-map-shadow: 0 18px 38px rgba(180, 83, 9, 0.14);
+  --horizontal-map-shadow: 0 14px 28px rgba(180, 83, 9, 0.14);
 }
 
 html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
@@ -43,7 +43,7 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   --horizontal-map-card-muted: #5b4636;
   --horizontal-map-avatar-bg: rgba(255, 255, 255, 0.48);
   --horizontal-map-line: rgba(121, 101, 77, 0.48);
-  --horizontal-map-shadow: 0 18px 38px rgba(91, 70, 54, 0.16);
+  --horizontal-map-shadow: 0 14px 28px rgba(91, 70, 54, 0.16);
 }
 
 [data-tree-route-view="mapa-horizontal"] section,
@@ -57,10 +57,26 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   background: transparent !important;
 }
 
+/* Mapa Horizontal: mantém a estrutura ReactFlow da Visão Completa, mas aproxima
+   o card individual da exibição compacta usada no Mapa Familiar. */
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative {
+  width: 174px !important;
+  height: 58px !important;
+}
+
 [data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
-  border-width: 1px !important;
-  border-color: var(--horizontal-map-card-border) !important;
-  border-radius: 1rem !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 174px !important;
+  min-height: 58px !important;
+  height: 58px !important;
+  gap: 8px !important;
+  padding: 7px 10px !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  border-radius: 8px !important;
   background: var(--horizontal-map-card-bg) !important;
   color: var(--horizontal-map-card-text) !important;
   box-shadow: var(--horizontal-map-shadow) !important;
@@ -71,34 +87,87 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   background: var(--horizontal-map-card-bg-alt) !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode h3 {
-  color: var(--horizontal-map-card-text) !important;
-  font-size: 0.92rem !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.01em !important;
-  line-height: 1.08 !important;
-  text-transform: uppercase;
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > .flex.items-center {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  gap: 8px !important;
+  align-items: center !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p {
-  color: var(--horizontal-map-card-muted) !important;
-  font-size: 0.72rem !important;
-  font-weight: 700 !important;
-  line-height: 1.15 !important;
-}
-
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode svg {
-  color: currentColor;
-}
-
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div > div:first-child {
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > .flex.items-center > .relative.flex {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  flex-basis: 36px !important;
   border: 2px solid rgba(255, 255, 255, 0.84) !important;
   background: var(--horizontal-map-avatar-bg) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > .flex.items-center > .relative.flex svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: var(--horizontal-map-card-text) !important;
+  opacity: 0.92 !important;
 }
 
 [data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode img {
+  width: 36px !important;
+  height: 36px !important;
   border: 2px solid rgba(255, 255, 255, 0.86) !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > .flex.items-center > .min-w-0.flex-1 {
+  display: flex !important;
+  min-width: 0 !important;
+  max-width: 108px !important;
+  height: 100% !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode h3 {
+  display: block !important;
+  max-width: 108px !important;
+  overflow: hidden !important;
+  color: var(--horizontal-map-card-text) !important;
+  font-size: 7px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase;
+  white-space: nowrap !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p {
+  max-width: 108px !important;
+  overflow: hidden !important;
+  color: var(--horizontal-map-card-muted) !important;
+  font-size: 6px !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p svg {
+  width: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode h3 + span,
+[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode .rounded-full.bg-blue-600 {
+  display: none !important;
 }
 
 [data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__edge-path,
