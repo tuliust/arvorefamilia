@@ -1,0 +1,8 @@
+/* Complementa family-map-qa.css para cards diretos do Mapa Familiar. */
+html[data-tree-color-palette="white"] [data-family-map-export-root="true"] button[data-family-map-color-key],
+html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] button[data-family-map-color-key],
+html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] button[data-family-map-color-key] {
+  border-color: var(--family-map-card-border) !important;
+  background: var(--family-map-card-bg) !important;
+  color: var(--family-map-card-text) !important;
+}
