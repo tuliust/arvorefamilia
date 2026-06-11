@@ -130,6 +130,53 @@ export function getVisualPersonCardData(person: Pessoa) {
   };
 }
 
+type FamilyMapColorKey =
+  | 'tataravos'
+  | 'bisavos'
+  | 'avos'
+  | 'tios'
+  | 'primos'
+  | 'pais'
+  | 'central'
+  | 'irmaos'
+  | 'sobrinhos'
+  | 'conjuge'
+  | 'filhos'
+  | 'netos'
+  | 'pets';
+
+function normalizeColorKeyText(value?: string) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function getFamilyMapColorKeyFromText(
+  value?: string,
+  options: { central?: boolean; spouse?: boolean } = {},
+): FamilyMapColorKey | undefined {
+  if (options.central) return 'central';
+  if (options.spouse) return 'conjuge';
+
+  const normalized = normalizeColorKeyText(value);
+
+  if (normalized.includes('tataravos')) return 'tataravos';
+  if (normalized.includes('bisavos')) return 'bisavos';
+  if (normalized.includes('avos')) return 'avos';
+  if (normalized.includes('tios')) return 'tios';
+  if (normalized.includes('primos')) return 'primos';
+  if (normalized.includes('pai') || normalized.includes('mae')) return 'pais';
+  if (normalized.includes('irmaos')) return 'irmaos';
+  if (normalized.includes('sobrinhos')) return 'sobrinhos';
+  if (normalized.includes('conjuge')) return 'conjuge';
+  if (normalized.includes('filhos')) return 'filhos';
+  if (normalized.includes('netos')) return 'netos';
+  if (normalized.includes('pets')) return 'pets';
+
+  return undefined;
+}
+
 export function VisualPersonAvatar({
   person,
   pet,
@@ -223,11 +270,16 @@ export function VisualPersonCard({
   const effectiveDeathLine = vitalMode === 'full' ? deathLine : deathYearLine;
   const isSpouseTone = tone === 'spouse';
   const isAncestorSpouseTone = tone === 'ancestorSpouse';
+  const familyMapColorKey = getFamilyMapColorKeyFromText(label, {
+    central,
+    spouse: isSpouseTone || isAncestorSpouseTone,
+  });
 
   if (horizontal) {
     return (
       <button
         type="button"
+        data-family-map-color-key={familyMapColorKey}
         onClick={() => onClick(person)}
         className={[
           `flex ${roomy ? 'h-[82px]' : 'h-[74px]'} w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
@@ -265,6 +317,7 @@ export function VisualPersonCard({
   return (
     <button
       type="button"
+      data-family-map-color-key={familyMapColorKey}
       onClick={() => onClick(person)}
       className={[
         `relative flex ${height} w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
@@ -348,6 +401,7 @@ export function VisualGroup({
   const isExpanded = expanded ?? internalExpanded;
   const limit = collapsedLimit ?? people.length;
   const canExpand = expandable && people.length > limit;
+  const groupColorKey = getFamilyMapColorKeyFromText(title);
   const visiblePeople = React.useMemo(() => {
     if (!canExpand || isExpanded) return people;
 
@@ -403,6 +457,7 @@ export function VisualGroup({
 
   return (
     <section
+      data-family-map-color-key={groupColorKey}
       className={[
         'relative z-10 flex min-h-0 flex-col rounded-[1.35rem] border border-cyan-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,23,42,0.08)]',
         pillTitle ? 'pt-5' : 'overflow-hidden',
