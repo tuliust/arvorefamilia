@@ -9,6 +9,8 @@ import "./styles/mobile-member-pages.css";
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
 const CSS_RELOAD_KEY = "arvorefamilia:css-reload";
+const TREE_ACTION_EVENT = "arvore-family-tree-action";
+const TREE_ROOT_SELECTOR = '[data-export-root="family-tree"], [data-family-map-export-root="true"]';
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Importing a module script failed/i,
@@ -75,6 +77,60 @@ function recoverFromMissingCss() {
   sessionStorage.setItem(CSS_RELOAD_KEY, "1");
   void clearBrowserCaches().finally(() => reloadWithFreshIndex("__css_reload"));
 }
+
+function hasVisibleTreeSurface() {
+  return Boolean(document.querySelector(TREE_ROOT_SELECTOR));
+}
+
+function isEditableShortcutTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+}
+
+function dispatchTreeZoomAction(action: "zoom-in" | "zoom-out") {
+  window.dispatchEvent(new CustomEvent(TREE_ACTION_EVENT, { detail: action }));
+}
+
+function installTreeOnlyZoomShortcuts() {
+  window.addEventListener(
+    "wheel",
+    (event) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      if (!hasVisibleTreeSurface()) return;
+
+      event.preventDefault();
+    },
+    { capture: true, passive: false },
+  );
+
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      if (event.altKey) return;
+      if (!hasVisibleTreeSurface()) return;
+      if (isEditableShortcutTarget(event.target)) return;
+
+      const key = event.key.toLowerCase();
+      const code = event.code;
+      const isZoomIn = key === "+" || key === "=" || code === "NumpadAdd";
+      const isZoomOut = key === "-" || key === "_" || code === "NumpadSubtract";
+      const isResetBrowserZoom = key === "0" || code === "Numpad0";
+
+      if (!isZoomIn && !isZoomOut && !isResetBrowserZoom) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isZoomIn) dispatchTreeZoomAction("zoom-in");
+      if (isZoomOut) dispatchTreeZoomAction("zoom-out");
+    },
+    { capture: true },
+  );
+}
+
+installTreeOnlyZoomShortcuts();
 
 window.addEventListener("error", (event) => {
   recoverFromDynamicImportError(event.error || event.message);
