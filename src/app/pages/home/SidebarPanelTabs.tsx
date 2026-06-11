@@ -171,84 +171,83 @@ export function SidebarPanelTabs({
   }, []);
 
   return (
-    <section className="tree-control-panel flex min-w-0 flex-col gap-[clamp(0.26rem,0.62vh,0.38rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.36rem,0.78vh,0.48rem)] shadow-sm">
-      <div className="tree-control-topbar grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-1">
-        <p className="truncate text-[clamp(10px,1.22vh,11px)] font-bold uppercase tracking-[0.14em] text-slate-500">
-          Controles
-        </p>
+    <div className="tree-panel-control-stack flex min-w-0 flex-col gap-[clamp(0.32rem,0.75vh,0.5rem)]">
+      <div className="tree-external-zoom-actions flex min-w-0 items-center gap-1">
         <TopIconButton icon={Plus} label="Aumentar zoom" onClick={() => dispatchTreeAction('zoom-in')} />
         <TopIconButton icon={Minus} label="Diminuir zoom" onClick={() => dispatchTreeAction('zoom-out')} />
         <TopIconButton icon={ArrowUpToLine} label="Restaurar visualização" onClick={() => dispatchTreeAction('zoom-out')} />
       </div>
 
-      <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
-        {viewOptions.map((option) => {
-          const Icon = option.icon;
-          return (
-            <IconToggleButton
-              key={option.key}
-              icon={Icon}
-              label={option.shortLabel}
-              active={currentViewMode === option.key}
-              mobileOnly={option.mobileOnly}
-              title={option.label}
-              onClick={() => handleViewChange(option.key)}
-            />
-          );
-        })}
-      </div>
-
-      <div className="tree-primary-actions grid min-w-0 grid-cols-3 gap-1">
-        <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => toggleFlyout('colors')} />
-        <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => toggleFlyout('export')} />
-        <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => toggleFlyout('highlight')} />
-      </div>
-
-      {activeFlyout === 'colors' && (
-        <div className="tree-control-flyout grid min-w-0 grid-cols-4 gap-1" aria-label="Paletas de cores da árvore">
-          {paletteOptions.map((paletteKey) => {
-            const palette = TREE_COLOR_PALETTES[paletteKey];
-            const isActive = paletteKey === treeColorPalette;
-
-            return (
-              <button
-                key={paletteKey}
-                type="button"
-                aria-label={palette.ariaLabel}
-                aria-pressed={isActive}
-                title={paletteLabels[paletteKey]}
-                className={[
-                  'tree-palette-dot-button flex min-h-8 min-w-0 items-center justify-center rounded-lg border bg-white transition',
-                  isActive ? 'border-slate-800 ring-1 ring-slate-800' : 'border-gray-200 hover:border-slate-300 hover:bg-slate-50',
-                ].join(' ')}
-                onClick={() => setTreeColorPalette(paletteKey)}
-              >
-                <span className="h-4 w-4 shrink-0 rounded-full border" style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeFlyout === 'export' && (
-        <div className="tree-control-flyout grid min-w-0 grid-cols-2 gap-1">
-          {exportOptions.map((option) => (
-            <CompactControlButton key={option.action} icon={option.icon} label={option.label} onClick={() => dispatchTreeAction(option.action)} />
-          ))}
-        </div>
-      )}
-
-      {activeFlyout === 'highlight' && (
-        <div className="tree-control-flyout grid min-w-0 grid-cols-3 gap-1">
-          {highlightOptions.map((option) => {
+      <section className="tree-control-panel flex min-w-0 flex-col gap-[clamp(0.26rem,0.62vh,0.38rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.36rem,0.78vh,0.48rem)] shadow-sm">
+        <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
+          {viewOptions.map((option) => {
             const Icon = option.icon;
             return (
-              <IconToggleButton key={option.key} icon={Icon} label={option.label} active={activeHighlights[option.key]} onClick={() => toggleHighlight(option.key)} />
+              <IconToggleButton
+                key={option.key}
+                icon={Icon}
+                label={option.shortLabel}
+                active={currentViewMode === option.key}
+                mobileOnly={option.mobileOnly}
+                title={option.label}
+                onClick={() => handleViewChange(option.key)}
+              />
             );
           })}
         </div>
-      )}
-    </section>
+
+        <div className="tree-primary-actions grid min-w-0 grid-cols-3 gap-1">
+          <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => toggleFlyout('colors')} />
+          <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => toggleFlyout('export')} />
+          <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => toggleFlyout('highlight')} />
+        </div>
+
+        {activeFlyout === 'colors' && (
+          <div className="tree-control-flyout grid min-w-0 grid-cols-4 gap-1" aria-label="Paletas de cores da árvore">
+            {paletteOptions.map((paletteKey) => {
+              const palette = TREE_COLOR_PALETTES[paletteKey];
+              const isActive = paletteKey === treeColorPalette;
+
+              return (
+                <button
+                  key={paletteKey}
+                  type="button"
+                  aria-label={palette.ariaLabel}
+                  aria-pressed={isActive}
+                  title={paletteLabels[paletteKey]}
+                  className={[
+                    'tree-palette-dot-button flex min-h-8 min-w-0 items-center justify-center rounded-lg border bg-white transition',
+                    isActive ? 'border-slate-800 ring-1 ring-slate-800' : 'border-gray-200 hover:border-slate-300 hover:bg-slate-50',
+                  ].join(' ')}
+                  onClick={() => setTreeColorPalette(paletteKey)}
+                >
+                  <span className="h-4 w-4 shrink-0 rounded-full border" style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {activeFlyout === 'export' && (
+          <div className="tree-control-flyout grid min-w-0 grid-cols-2 gap-1">
+            {exportOptions.map((option) => (
+              <CompactControlButton key={option.action} icon={option.icon} label={option.label} onClick={() => dispatchTreeAction(option.action)} />
+            ))}
+          </div>
+        )}
+
+        {activeFlyout === 'highlight' && (
+          <div className="tree-control-flyout grid min-w-0 grid-cols-3 gap-1">
+            {highlightOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <IconToggleButton key={option.key} icon={Icon} label={option.label} active={activeHighlights[option.key]} onClick={() => toggleHighlight(option.key)} />
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -262,8 +261,8 @@ function TopIconButton({
   onClick: () => void;
 }) {
   return (
-    <button type="button" onClick={onClick} title={label} aria-label={label} className="tree-top-icon-button flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-900">
-      <Icon className="h-3.5 w-3.5" />
+    <button type="button" onClick={onClick} title={label} aria-label={label} className="tree-top-icon-button flex h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+      <Icon className="h-4 w-4" />
     </button>
   );
 }
