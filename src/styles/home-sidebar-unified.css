@@ -9,6 +9,10 @@ section.fixed {
   overflow: hidden;
 }
 
+main aside > div > div:first-child {
+  align-items: flex-start !important;
+}
+
 main aside [class*="overflow-y-auto"],
 section.fixed [class*="overflow-y-auto"] {
   overflow-y: visible !important;
@@ -28,8 +32,15 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 }
 
 .tree-control-panel,
+.tree-control-topbar,
+.tree-view-toggle,
+.tree-primary-actions,
+.tree-control-flyout,
 .tree-control-section,
 .tree-icon-chip,
+.tree-top-icon-button,
+.tree-primary-control-button,
+.tree-palette-dot-button,
 .family-filter-chip {
   min-width: 0;
   max-width: 100%;
@@ -57,12 +68,29 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 }
 
 .tree-icon-chip,
+.tree-top-icon-button,
+.tree-primary-control-button,
+.tree-palette-dot-button,
 .family-filter-chip {
   contain: layout paint;
 }
 
+.tree-primary-control-button,
+.tree-control-flyout {
+  animation: tree-panel-fade 120ms ease-out;
+}
+
+.tree-control-flyout {
+  border-radius: 0.625rem;
+  border: 1px solid rgb(226 232 240);
+  background: rgb(248 250 252 / 0.92);
+  padding: 0.25rem;
+}
+
 .family-filter-chip svg,
-.tree-icon-chip svg {
+.tree-icon-chip svg,
+.tree-top-icon-button svg,
+.tree-primary-control-button svg {
   opacity: 0.78;
 }
 
@@ -83,6 +111,17 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
   box-shadow: 0 10px 20px rgb(15 23 42 / 18%) !important;
 }
 
+@keyframes tree-panel-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-height: 820px) {
   .tree-control-panel {
     gap: 0.2rem !important;
@@ -99,8 +138,13 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
     padding-bottom: 0.28rem !important;
   }
 
-  .tree-icon-chip {
+  .tree-icon-chip,
+  .tree-top-icon-button {
     min-height: 1.55rem !important;
+  }
+
+  .tree-primary-control-button {
+    min-height: 2.2rem !important;
   }
 
   .family-filter-chip {
@@ -114,6 +158,7 @@ html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-
   }
 
   .tree-icon-chip span,
+  .tree-primary-control-button span,
   .family-filter-chip span {
     font-size: 0.58rem !important;
   }
