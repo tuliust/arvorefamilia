@@ -1,9 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: revisado após inclusão da view protegida `/mapa-familiar`, atualização do contrato de `TreeViewMode` e preservação das regras de compliance da home pública `/entrar`.
+> Status: revisado após inclusão da view protegida `/mapa-familiar`, atualização do contrato de `TreeViewMode` e alinhamento da rota pública `/entrar` ao código atual, sem parágrafo específico sobre Google Agenda.
 
 ## Objetivo
 
@@ -212,7 +212,7 @@ Cuidados:
 
 | Rota | Componente | Função |
 |---|---|---|
-| `/entrar` | `Entrar` | Home pública, login, cadastro, primeiro acesso, aceite legal e apresentação da integração Google Agenda |
+| `/entrar` | `Entrar` | Home pública, login, cadastro, primeiro acesso e aceite legal |
 | `/termos` | `Termos` | Termos de uso |
 | `/privacidade` | `Privacidade` | Política de privacidade |
 | `/admin/login` | `AdminLogin` | Entrada administrativa específica/legada |
@@ -222,10 +222,10 @@ Regras:
 - `/entrar` não deve exigir sessão;
 - termos e privacidade devem permanecer acessíveis sem login;
 - `/admin/login` não deve ser usado como item principal de navegação;
-- `/entrar` também é a tela pública usada para validação de identidade/finalidade do app em fluxos OAuth;
+- `/entrar` também funciona como tela pública de identidade do app, mas não deve concentrar automaticamente toda comunicação de integrações;
 - o título principal da home pública deve ser **Família Souza Barros**;
-- o texto institucional e a finalidade da integração com Google Agenda devem existir diretamente no JSX de `src/app/pages/Entrar.tsx`;
-- não resolver exigências de OAuth apenas com CSS, pseudo-elementos ou conteúdo invisível.
+- o texto institucional da plataforma deve existir diretamente no JSX de `src/app/pages/Entrar.tsx`;
+- se uma exigência de OAuth pedir descrição pública da integração, definir uma superfície pública adequada sem usar CSS, pseudo-elementos ou conteúdo invisível.
 
 ### 4.1 Conteúdo obrigatório em `/entrar`
 
@@ -233,16 +233,21 @@ A home pública deve comunicar claramente:
 
 ```txt
 Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
+```
 
+Conteúdo removido de `/entrar`:
+
+```txt
 A integração com o Google Agenda permite sincronizar aniversários e datas de memória da família no calendário do usuário, sempre mediante autorização explícita.
 ```
 
 Regras de compliance:
 
-- o nome exibido deve corresponder ao nome público do app submetido à validação;
-- a integração com Google Agenda deve ser apresentada como opcional e autorizada pelo usuário;
-- não ocultar esse texto atrás de login, modal, tooltip ou menu;
-- manter links públicos para `/termos` e `/privacidade`.
+- o nome exibido deve corresponder ao nome público do app;
+- `/entrar` deve manter links públicos para `/termos` e `/privacidade`;
+- a integração com Google Agenda continua pertencendo ao Calendário Familiar e deve ser explicada na superfície definida por produto/compliance quando houver revisão OAuth;
+- não reintroduzir o parágrafo removido em `/entrar` sem decisão explícita;
+- não resolver exigências de OAuth apenas com CSS, pseudo-elementos ou conteúdo invisível.
 
 ---
 
@@ -406,7 +411,7 @@ Regras:
 
 - nome público **Família Souza Barros**;
 - texto institucional da plataforma familiar privada;
-- explicação da integração com Google Agenda;
+- documentação pública/compliance da integração com Google Agenda quando exigida;
 - login;
 - primeiro acesso;
 - links públicos para termos e privacidade.
@@ -463,7 +468,7 @@ Se `Mapa Familiar` não aparecer na busca do header ou em favoritos de página, 
 
 - Não trocar `TreeAccessRoute` por `MemberRoute` nas views da árvore.
 - Não proteger `/entrar`, `/termos` ou `/privacidade`.
-- Não remover de `/entrar` o nome **Família Souza Barros** nem a descrição da integração com Google Agenda.
+- Não remover de `/entrar` o nome **Família Souza Barros** nem o texto institucional da plataforma.
 - Não resolver texto de compliance OAuth apenas por CSS.
 - Não expor admin por link sem `ProtectedRoute`.
 - Não usar e-mail hardcoded como regra de admin.
@@ -490,7 +495,7 @@ Validar manualmente, sem alterar dados reais:
 
 - visitante acessa `/entrar`, `/termos`, `/privacidade`;
 - `/entrar` exibe nome **Família Souza Barros**;
-- `/entrar` exibe finalidade da plataforma e integração Google Agenda antes do login;
+- `/entrar` exibe finalidade da plataforma antes do login; a comunicação da integração Google Agenda deve ficar na superfície pública/compliance definida para esse fim;
 - visitante não acessa área de membro/admin;
 - membro acessa `/minha-arvore/editar`, fórum, favoritos, notificações e calendário;
 - membro sem admin não acessa `/admin`;

@@ -1,9 +1,9 @@
 # Plano de próximos passos - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: plano vivo revisado contra o código atual após modo wide do Mapa Familiar, `sidebarCollapsed`, ocultação do título por scroll, badge central removida, avatares por `genero`, tipagem frontend confirmada e pendências de QA/migration/exportação/busca/favoritos.
+> Status: plano vivo revisado contra o código atual após ajustes mobile da árvore, remoção do parágrafo de Google Agenda em `/entrar`, card central mobile sem badge, cards mobile com anos e avatares por `genero`.
 
 ## Objetivo
 
@@ -61,7 +61,7 @@ Permanecem como pendências abertas apenas itens ainda não resolvidos por códi
 | DOC-007 | `src/styles/family-tree-visual-polish.css` / `docs/GUIA_UX_LAYOUT.md` | dívida técnica / refatoração visual | Consolidar overrides acumulados de `family-tree-visual-polish.css` em componentes, tokens ou layouts estruturais quando a UI estabilizar. | Aberto |
 | DOC-008 | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` | melhoria técnica / layout | Migrar a ampliação visual dos cards compactos da `/minha-arvore` para cálculo estrutural do layout, incluindo cards de `360px`, crescimento em direção ao centro e linhas de tios/primos, reduzindo dependência de CSS por seletor. | Aberto |
 | DOC-009 | `src/app/pages/home/homeAiContext.ts` / `api/ai.ts` | QA funcional / IA | Validar em produção ou preview as respostas de IA para perguntas genealógicas prioritárias, garantindo ausência de IDs e de inferências sensíveis. | Aberto |
-| DOC-010 | `/entrar` / Google OAuth | compliance / validação externa | Confirmar se a home pública exibe no DOM/JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda de forma compatível com a revisão OAuth do Google. | Aberto |
+| DOC-010 | Google Agenda/OAuth | decisão de produto / compliance | O parágrafo específico sobre Google Agenda foi removido de `/entrar`. Confirmar com produto/compliance qual superfície pública deve declarar a finalidade da integração em eventual revisão OAuth (`/calendario-familiar`, `/privacidade`, página dedicada ou outro fluxo), sem reintroduzir o texto em `/entrar` sem decisão explícita. | Aberto |
 | DOC-011 | `api/ai.ts` / `docs/operacao/DEPLOYMENT.md` | operação / secrets | Confirmar variáveis server-side da IA no provedor de deploy, como `OPENAI_API_KEY` e modelo configurado, sem exposição no frontend e sem fallback SPA capturar `/api/*`. | Aberto |
 | DOC-012 | `docs/funcionalidades/CURIOSIDADES_E_IA.md` | documentação / manutenção | Manter o documento de Curiosidades e IA sincronizado com `HomeCuriositiesDialog`, `ConnectionDiscoveryPanel`, `AiQuestionPanel`, `homeAiContext` e `api/ai.ts`. | Aberto |
 | DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar a view panorâmica após login em desktop/tablet: seletor, rota, preservação de `?pessoa=...`, alinhamento, conectores, grupos expansíveis, paleta Visual, fallback mobile, centralização com painel aberto/colapsado e ausência de colisão entre grupos inferiores. | Aberto |
@@ -90,6 +90,9 @@ Regras:
 | DOC-004 | `/minha-arvore` mobile ReactFlow | Reclassificado como obsoleto para a rota mobile principal, pois `/minha-arvore` mobile deixou de depender do desenho inferior ReactFlow e usa `MobileFamilyTreeView`. Se o ReactFlow mobile voltar a ser usado, reabrir com novo escopo. | Obsoleto/substituído. |
 | DOC-005 | `docs/funcionalidades/EXPORTACAO_ARVORE.md` | `MobileTreeControlsPortal` passou a usar o fluxo canônico de `treeExport.ts` para imagem, PDF e impressão. | Concluído tecnicamente; manter QA de captura em mobile. |
 | DOC-013 | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` / `/minha-arvore` mobile segmentada | Reclassificado: a implementação atual usa malha 3×3, abas `Paterno | Central | Materno`, tela global de ancestrais, primos sem **Ver todos**, linhas Pai/Mãe acompanhando scroll e preview durante swipe. Pendências residuais devem ser registradas como bug visual específico, não como “finalizar sete telas”. | Concluído tecnicamente; manter QA visual manual. |
+| DOC-021 | `MobileFamilyTreeView.tsx` / conectores mobile | Conectores entre ancestrais, Pai/Mãe e pessoa central ajustados para acompanhar o contexto rolável da tela Central. | Concluído tecnicamente; manter QA visual manual em 320px, 375px, 390px e 430px. |
+| DOC-022 | `MobileFamilyTreeView.tsx` / cards mobile | Cards mobile passaram a exibir apenas ano em nascimento/falecimento e o card central não exibe badge **Você**. | Concluído tecnicamente; manter QA visual manual. |
+| DOC-023 | `FamilyTreeVisualCards.tsx` / `MobileFamilyTreeView.tsx` | Avatares mobile passaram a reutilizar a lógica visual de foto real e fallback por `genero` (`homem`, `mulher`, `pet`). | Concluído tecnicamente; depende da confirmação de migration de `pessoas.genero` em DOC-018. |
 
 ---
 
@@ -142,7 +145,10 @@ Ajustes concluídos:
 - tios e primos em telas laterais/derivadas;
 - primos sem botão **Ver todos**, com rolagem vertical interna;
 - preview parcial durante swipe;
-- linhas laterais de Pai/Mãe acompanhando o scroll da tela central.
+- conectores entre ancestrais, Pai/Mãe e pessoa central acompanhando o contexto rolável da tela Central;
+- cards mobile com apenas ano de nascimento/falecimento;
+- card central mobile sem badge **Você**;
+- avatares mobile reutilizando foto real e fallback visual por `genero` (`homem`, `mulher`, `pet`).
 
 Validação visual ainda recomendada, sem bloquear tecnicamente:
 
@@ -187,7 +193,7 @@ Estado técnico atual:
 - rota `/mapa-familiar` adicionada em `src/app/routes.tsx`;
 - view mode `mapa-familiar` em `treeViewMode.ts`;
 - renderização desktop/tablet em `DesktopFamilyMapView.tsx`, sem ReactFlow;
-- fallback mobile para `MobileFamilyTreeView.tsx` em `HomeTreeSection.tsx`;
+- fallback mobile para `MobileFamilyTreeView.tsx` em `HomeTreeSection.tsx`, com conectores roláveis da tela Central, cards com apenas ano, card central sem badge e avatares por `genero`;
 - cards compartilhados em `FamilyTreeVisualCards.tsx`;
 - layout centralizado em `FAMILY_MAP_LAYOUT`;
 - modo wide em `getFamilyMapLayout(true)` quando o painel lateral é colapsado;
@@ -347,13 +353,19 @@ Critérios:
 
 ### 6.4 Google Agenda/OAuth
 
-Critérios para considerar a pendência fechada:
+Estado atual:
 
 - `/entrar` mostra **Família Souza Barros** como nome principal do app;
 - `/entrar` explica que a plataforma organiza árvore, perfis, fotos, documentos, memórias e datas familiares;
-- `/entrar` explica que Google Agenda sincroniza aniversários e datas de memória mediante autorização explícita;
-- o texto existe diretamente no JSX/DOM, não apenas em pseudo-elemento CSS;
-- domínio, nome do app e finalidade declarada são coerentes com a tela de consentimento OAuth.
+- o parágrafo específico sobre Google Agenda foi removido de `/entrar`;
+- a integração com Google Agenda permanece funcional quando configurada no Calendário Familiar.
+
+Critérios para considerar a pendência fechada:
+
+- produto/compliance decide onde a finalidade da integração deve ser declarada publicamente, caso a revisão OAuth exija essa comunicação;
+- a superfície escolhida deve ser rastreável no código e acessível conforme exigência de validação;
+- não reintroduzir o parágrafo de Google Agenda em `/entrar` sem decisão explícita;
+- domínio, nome do app e finalidade declarada devem permanecer coerentes com a tela de consentimento OAuth.
 
 ---
 
@@ -412,9 +424,9 @@ Critérios para considerar a pendência fechada:
 |---:|---|---|---|
 | 1 | `docs/arquitetura/ROTAS_E_GUARDS.md` | Revisado nesta rodada | Inclui `/mapa-familiar`, `TreeAccessRoute`, quatro views e contrato atualizado de `TreeViewMode`. |
 | 2 | `docs/arquitetura/ARCHITECTURE.md` | Revisado nesta rodada | Inclui `DesktopFamilyMapView`, `FamilyTreeVisualCards`, fallback mobile e paleta `visual`. |
-| 3 | `docs/README.md` | Revisado nesta rodada | Índice atualizado para Mapa Familiar e reclassificação das pendências antigas da mobile segmentada. |
-| 4 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado nesta rodada | DOC-014, DOC-015 e DOC-016 adicionados; DOC-004 e DOC-013 reclassificados. |
-| 5 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inclui Mapa Familiar, `FAMILY_MAP_LAYOUT`, cônjuges por política, zoom e avatares por `genero`. |
+| 3 | `docs/README.md` | Revisado nesta rodada | Índice atualizado para Mapa Familiar, ajustes mobile e remoção do texto de Google Agenda de `/entrar`. |
+| 4 | `docs/PLANO_PROXIMOS_PASSOS.md` | Revisado nesta rodada | DOC-010 ajustado e DOC-021/DOC-022/DOC-023 registrados como concluídos tecnicamente. |
+| 5 | `docs/GUIA_IMPLEMENTACOES.md` | Revisado nesta rodada | Inclui Mapa Familiar, ajustes mobile de conectores, anos nos cards, card central sem badge e avatares por `genero`. |
 | 6 | `docs/GUIA_UX_LAYOUT.md` | Revisado nesta rodada | Inclui UX do Mapa Familiar, grupos expansíveis, laterais, zoom, avatares e cônjuges. |
 | 7 | `docs/GUIA_COMPONENTES.md` | Revisado nesta rodada | Inclui `DesktopFamilyMapView`, `FamilyTreeVisualCards`, `VisualGroup`, conectores e avatares por `genero`. |
 | 8 | `docs/funcionalidades/FORUM.md` | Revisar conforme DOC-006 | Pendência de filtros tipo/status na home do fórum. |

@@ -1,9 +1,9 @@
 # Documentação - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico revisado após inclusão da view `/mapa-familiar`, atualização das rotas/arquitetura e reclassificação das pendências antigas da Minha Árvore mobile.
+> Status: índice canônico revisado após ajustes mobile da árvore, alinhamento do fallback mobile do Mapa Familiar e remoção do texto de Google Agenda da página `/entrar`.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -11,12 +11,13 @@ Use este arquivo como ponto de entrada antes de consultar guias específicos. A 
 
 A revisão mais recente registra:
 
-- `/entrar` continua funcionando como home pública do app **Família Souza Barros** para validação/OAuth, incluindo explicação direta da integração com Google Agenda;
+- `/entrar` continua funcionando como home pública do app **Família Souza Barros**, login e primeiro acesso; o parágrafo específico sobre integração com Google Agenda foi removido do conteúdo público da página de entrada;
 - as views principais da árvore agora são **Minha Árvore**, **Mapa Familiar**, **Genealogia** e **Visão Completa**;
 - `/mapa-familiar` é uma view protegida de árvore, com renderização panorâmica desktop/tablet em `DesktopFamilyMapView` e fallback mobile para `MobileFamilyTreeView`;
 - a paleta **Visual** (`visual`) foi adicionada como modo de cores da árvore;
 - `MAPA_FAMILIAR_VIEW.md` passa a ser o documento canônico da view panorâmica desktop/tablet;
 - o Mapa Familiar foi refatorado com `FAMILY_MAP_LAYOUT`, regras de cônjuges, grupos expansíveis, conectores por âncoras e avatares por `genero`;
+- o fallback mobile da árvore usa conectores que acompanham o scroll da tela Central, cards com apenas ano, card central sem badge **Você** e avatares visuais por `genero`;
 - pendências antigas da Minha Árvore mobile segmentada foram reclassificadas para não conflitar com a malha 3×3 já implementada/documentada.
 
 ---
@@ -79,8 +80,8 @@ docs/funcionalidades/
 | Arquivo | Escopo |
 |---|---|
 | `funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos e `MobileFamilyTreeView`. |
-| `funcionalidades/MAPA_FAMILIAR_VIEW.md` | View panorâmica `/mapa-familiar`, `DesktopFamilyMapView`, `FAMILY_MAP_LAYOUT`, cards visuais, cônjuges, conectores SVG, zoom, avatares por `genero` e fallback mobile. |
+| `funcionalidades/MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, cards compactos, filtros diretos e `MobileFamilyTreeView`, incluindo conectores mobile roláveis, anos nos cards, card central sem badge e avatares por `genero`. |
+| `funcionalidades/MAPA_FAMILIAR_VIEW.md` | View panorâmica `/mapa-familiar`, `DesktopFamilyMapView`, `FAMILY_MAP_LAYOUT`, cards visuais, cônjuges, conectores SVG, zoom, avatares por `genero` e fallback mobile compartilhado com `MobileFamilyTreeView`. |
 | `funcionalidades/GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
 | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS do mobile segmentado, conectores SVG do `Mapa Familiar`, filtros, destaques, painel lateral e ações. |
 | `funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
@@ -206,7 +207,7 @@ Itens ainda abertos ou parcialmente abertos:
 | `DOC-007` | `family-tree-visual-polish.css` | dívida técnica / consolidar CSS em componentes/layouts |
 | `DOC-008` | `directFamilyDistributedLayout.ts` | melhoria técnica / migrar largura visual de cards para layout estrutural |
 | `DOC-009` | Curiosidades/IA | QA funcional de respostas e ausência de IDs |
-| `DOC-010` | Google Agenda/OAuth | QA pós-ajuste de `/entrar` e validação pública |
+| `DOC-010` | Google Agenda/OAuth | decisão de produto/compliance sobre onde declarar publicamente a finalidade da integração, sem recolocar automaticamente o texto em `/entrar` |
 | `DOC-011` | `api/ai.ts` / deploy | operação / secrets e fallback SPA |
 | `DOC-012` | Curiosidades/IA | manutenção de documentação funcional específica |
 | `DOC-014` | `/mapa-familiar` | QA visual manual autenticado em desktop/tablet e fallback mobile |
@@ -233,7 +234,7 @@ Antes de lançamento, commit final ou deploy, bloquear se houver:
 - migration obrigatória ausente no ambiente final;
 - documentação canônica orientando ação insegura de Supabase, Storage, Auth ou migrations;
 - responsividade impedindo uso em mobile;
-- home `/entrar` sem nome público **Família Souza Barros** ou sem explicação da integração Google Agenda quando houver validação OAuth pendente;
+- home `/entrar` sem nome público **Família Souza Barros**, ou documentação pública/compliance ausente para a integração Google Agenda quando houver validação OAuth pendente;
 - árvore principal, Mapa Familiar, perfil de pessoa, fórum, notificações ou edição da própria árvore inutilizáveis.
 
 ---

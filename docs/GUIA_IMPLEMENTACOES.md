@@ -1,9 +1,9 @@
 # Guia de implementações - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-11
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, `FAMILY_MAP_LAYOUT`, modo wide, título ocultável por scroll, card central sem badge, cônjuges por política, zoom e avatares por `genero`.
+> Status: guia canônico revisado contra o código atual com Minha Árvore mobile segmentada, Mapa Familiar panorâmico, ajustes mobile de conectores, anos nos cards, card central sem badge, avatares visuais por `genero` e `/entrar` sem texto público de Google Agenda.
 
 ## Objetivo
 
@@ -67,8 +67,8 @@ As frentes principais do MVP estão implementadas no escopo atual. Pendências v
 | Fórum | Implementado no escopo atual | Categorias, tópicos, respostas diretas, menções, vínculos automáticos com pessoas mencionadas, avatares, favoritos e reações. Campo manual de Pessoas Relacionadas foi removido da criação/edição; `/forum/topico/:id` não exibe box de pessoa relacionada nem comentários aninhados na UI atual. |
 | Reações do fórum | Implementadas | Uma reação por usuário/alvo, troca/remoção e constraint de unicidade em migration. |
 | Notificações | Implementadas no escopo atual | Central, preferências, logs, dispatch interno/e-mail configurável e gatilhos de fórum/arquivos/vínculos. Cron externo fica operacional. |
-| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. A comunicação pública da integração precisa permanecer visível em `/entrar` para validação OAuth. |
-| Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso, aceite legal e ponto de compliance OAuth. Deve exibir nome do app e finalidade da integração com Google Agenda diretamente no JSX. |
+| Calendário familiar | Implementado | Datas familiares, sidebar de categorias, filtros, ajustes mobile e integração operacional com Google Agenda quando configurada. A explicação detalhada da integração deve ficar na área do calendário e/ou documentos públicos legais quando necessária; a página `/entrar` não deve exibir o parágrafo promocional da integração. |
+| Home pública/legal | Implementada | `/entrar` funciona como home pública do app **Família Souza Barros**, login, primeiro acesso e aceite legal. O texto institucional deve apresentar a plataforma familiar privada; o parágrafo específico sobre Google Agenda foi removido do JSX da página de entrada. |
 | Headers e menu | Implementados | Páginas internas usam `MemberPageHeader`; views da árvore usam `HomeHeader` com `UserProfileMenu`; menu mobile recebeu paleta por portal. |
 | Paletas da árvore | Implementadas | `white`, `orange`, `brown` e `visual` por CSS variables e `localStorage`, incluindo exibição no menu mobile quando aplicável. |
 | Exportação da árvore | Implementada no escopo atual | Seleção/exportação de área visível em PNG/PDF/impressão e painel mobile rápido reutilizando `treeExport.ts`; exportação integral fica pós-MVP. |
@@ -91,7 +91,11 @@ Estado implementado confirmado:
 - primos exibem todos os cards disponíveis, sem botão **Ver todos**, com duas colunas em 320px e três colunas a partir de 360px quando couber;
 - telas com conteúdo maior que a altura útil usam rolagem vertical interna com padding inferior para não serem cobertas pela bottom navigation;
 - conectores HTML/CSS do mobile ligam gerações de ancestrais, avós a Pai/Mãe, Pai/Mãe a tios e tios a primos;
+- conectores entre ancestrais e Pai/Mãe ficam no mesmo contexto rolável da tela Central quando precisam acompanhar cards em `data-mobile-tree-scroll`;
 - linhas horizontais de Pai/Mãe acompanham o scroll da tela Central;
+- cards mobile exibem apenas o ano de nascimento/falecimento ao lado dos ícones, sem localidade;
+- o card principal mobile não exibe badge **Você**;
+- avatares mobile reutilizam `FamilyTreeVisualCards.tsx`, priorizando foto real e depois fallback visual por `genero` (`homem`, `mulher`, `pet`);
 - primos não têm linha inferior, por serem fim de ramo;
 - a navegação por swipe foi mantida e recebeu pré-visualização da tela vizinha durante o movimento por `dragOffset`/`touchMove`.
 
@@ -113,7 +117,7 @@ Estado implementado confirmado:
 - rota autenticada `/mapa-familiar` protegida por `TreeAccessRoute`;
 - `treeViewMode` técnico `mapa-familiar`;
 - desktop/tablet renderizam `DesktopFamilyMapView.tsx`, sem ReactFlow;
-- mobile usa `MobileFamilyTreeView.tsx` como fallback seguro;
+- mobile usa `MobileFamilyTreeView.tsx` como fallback seguro, herdando conectores roláveis da tela Central, cards com apenas ano, card principal sem badge **Você** e avatares visuais por `genero`;
 - dados vêm de `buildMobileFamilyTreeModel`, sem persistência ou alteração de backend;
 - cards e grupos visuais vêm de `FamilyTreeVisualCards.tsx`;
 - layout centralizado em `FAMILY_MAP_LAYOUT`, com configuração explícita de canvas, métricas, áreas, grupos e conectores;
@@ -156,6 +160,9 @@ Estado implementado confirmado no código atual:
 - `FamilyTreeVisualCards.tsx` implementa `VisualPersonAvatar` com prioridade para foto, depois `genero`, depois fallbacks legados.
 - `Pessoa.genero` já está tipado em `src/app/types/index.ts`.
 - `MobileTreeControlsPortal.tsx` reconhece `/mapa-familiar` como rota de árvore para controles mobile.
+- `MobileFamilyTreeView.tsx` reutiliza `getVisualPersonCardData` e `VisualPersonAvatar` de `FamilyTreeVisualCards.tsx`.
+- no fallback mobile, `birthYearLine` e `deathYearLine` são usados para exibir apenas anos nos cards.
+- no fallback mobile, o card central não recebe `label="Você"`; labels como **Pai** e **Mãe** permanecem.
 
 Pendências que permanecem fora deste estado consolidado:
 
@@ -206,7 +213,7 @@ Stack em uso:
 - paletas visuais da árvore;
 - responsividade mobile/tablet;
 - fallback e cache de SPA;
-- comunicação pública de Google Agenda/OAuth em `/entrar`.
+- página pública `/entrar` com texto institucional da plataforma, sem parágrafo específico sobre Google Agenda.
 
 Regras de arquitetura:
 
@@ -1001,8 +1008,8 @@ Google Calendar:
 - integração está versionada em migration;
 - tokens devem ficar restritos a Edge Functions/service role;
 - OAuth, sincronização e proteção de tokens exigem validação operacional quando a frente for priorizada;
-- `/entrar` deve exibir diretamente no JSX o nome **Família Souza Barros** e a finalidade da integração com Google Agenda;
-- o app OAuth do Google deve corresponder visualmente ao nome e ao domínio público exibidos na home.
+- `/entrar` deve exibir diretamente no JSX o nome **Família Souza Barros** e a descrição institucional da plataforma, sem o parágrafo específico sobre Google Agenda;
+- quando houver revisão OAuth, a finalidade da integração deve estar documentada em superfície pública adequada definida pelo produto/compliance, sem reintroduzir o parágrafo removido em `/entrar` sem decisão explícita.
 
 ---
 
