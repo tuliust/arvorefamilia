@@ -8,7 +8,7 @@ export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
 };
 
 export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
-  '/': 'minha-arvore',
+  '/': 'mapa-familiar',
   '/minha-arvore': 'minha-arvore',
   '/mapa-familiar': 'mapa-familiar',
   '/genealogia': 'genealogia',
@@ -16,7 +16,7 @@ export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
 };
 
 export function getTreeViewModeFromPath(pathname: string): TreeViewMode {
-  return PATH_TO_VIEW_MODE[pathname] ?? 'minha-arvore';
+  return PATH_TO_VIEW_MODE[pathname] ?? 'mapa-familiar';
 }
 
 export function getPathForTreeViewMode(viewMode: TreeViewMode): string {
