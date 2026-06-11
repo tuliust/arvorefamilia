@@ -82,7 +82,8 @@ export type EditableOwnPersonPayload = Pick<
   | 'data_nascimento'
   | 'local_nascimento'
   | 'local_nascimento_exterior'
-  | 'local_atual'  | 'profissao'
+  | 'local_atual'
+  | 'profissao'
 
   | 'foto_principal_url'
   | 'falecido'
@@ -90,6 +91,7 @@ export type EditableOwnPersonPayload = Pick<
   | 'curiosidades'
   | 'telefone'
   | 'endereco'
+  | 'complemento'
   | 'rede_social'
   | 'instagram_usuario'
   | 'instagram_url'
@@ -113,6 +115,7 @@ const PRIVACY_FIELDS = new Set([
 const SENSITIVE_ACTIVITY_FIELDS = new Set([
   'telefone',
   'endereco',
+  'complemento',
   'rede_social',
   'instagram_usuario',
   'instagram_url',

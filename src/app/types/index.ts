@@ -223,6 +223,7 @@ export interface Pessoa {
   curiosidades?: string;
   telefone?: string;
   endereco?: string;
+  complemento?: string | null;
   rede_social?: string;
   instagram_usuario?: string;
   instagram_url?: string;

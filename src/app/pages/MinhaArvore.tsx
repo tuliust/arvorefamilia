@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import Cropper, { Area } from 'react-easy-crop';
 import { AppLink as Link } from '../components/AppLink';
@@ -130,7 +130,6 @@ type MarriageFormState = Record<string, { data_casamento: string; local_casament
 type PendingLeaveAction = { type: 'route'; to: string } | { type: 'logout' };
 type MinhaArvoreDraft = {
   form: EditableOwnPersonPayload;
-  complemento: string;
   socialProfiles: SocialProfileForm[];
   personEvents: PersonEvent[];
 };
@@ -213,12 +212,16 @@ function readMinhaArvoreDraft(key: string): MinhaArvoreDraft | null {
     const rawDraft = window.sessionStorage.getItem(key);
     if (!rawDraft) return null;
 
-    const draft = JSON.parse(rawDraft) as Partial<MinhaArvoreDraft>;
+    const draft = JSON.parse(rawDraft) as Partial<MinhaArvoreDraft> & { complemento?: string };
     if (!draft.form || !Array.isArray(draft.socialProfiles)) return null;
 
+    const form = {
+      ...draft.form,
+      complemento: draft.form.complemento ?? draft.complemento ?? '',
+    };
+
     return {
-      form: draft.form,
-      complemento: draft.complemento ?? '',
+      form,
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
       personEvents: Array.isArray(draft.personEvents) ? draft.personEvents as PersonEvent[] : [],
     };
@@ -349,8 +352,8 @@ export function MinhaArvore() {
   const [linkLoading, setLinkLoading] = useState(true);
   const [scope, setScope] = useState<MemberScope>('familia_direta');
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
-  const [complemento, setComplemento] = useState('');
-  const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);  const [errors, setErrors] = useState<PersonFieldErrors>({});
+  const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
+  const [errors, setErrors] = useState<PersonFieldErrors>({});
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoDialogMode, setPhotoDialogMode] = useState<'preview' | 'edit'>('preview');
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -550,7 +553,6 @@ export function MinhaArvore() {
           String(pessoaBase.instagram_usuario ?? ''),
         ),
       ]);
-      setComplemento(draft?.complemento ?? '');
       setPersonEvents(draft?.personEvents ?? []);
       isDirtyRef.current = Boolean(draft);
     }
@@ -759,11 +761,10 @@ export function MinhaArvore() {
 
     writeMinhaArvoreDraft(getDraftKey(user.id, pessoaBase.id), {
       form,
-      complemento,
       socialProfiles,
       personEvents,
     });
-  }, [complemento, form, personEvents, pessoaBase?.id, socialProfiles, user?.id]);
+  }, [form, personEvents, pessoaBase?.id, socialProfiles, user?.id]);
 
   const previewName = useMemo(() => {
     const name = formatPersonName(String(form.nome_completo ?? '').trim());
@@ -985,7 +986,7 @@ export function MinhaArvore() {
 
     setSaving(true);
 
-    // TODO: extrair este formulário junto com /meus-dados e persistir múltiplas redes em pessoa_social_profiles.
+    // Mantém os campos legados sincronizados com a primeira rede social para compatibilidade com telas antigas.
     const primarySocialProfile = socialProfiles[0];
     const payload = cleanPersonPayload({
       ...form,
@@ -1810,14 +1811,13 @@ export function MinhaArvore() {
 
                 <Field label="Complemento">
                   <Input
-                    value={complemento}
-                    onChange={(e) => {
-                      markFormDirty();
-                      setComplemento(e.target.value);
-                    }}
-                    placeholder="Apartamento, bloco, casa, referência"
+                    value={String(form.complemento ?? '')}
+                    onChange={(e) => updateTextField('complemento', e.target.value)}
+                    placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
                   />
-                  {/* Campo visual até public.pessoas.complemento existir no schema e na tipagem. */}
+                  <p className="text-xs text-gray-500">
+                    Use para apartamento, bloco, torre, casa ou referência interna. O endereço principal continua vindo do Google Maps.
+                  </p>
                 </Field>
 
                 <div className="space-y-2 md:col-span-2">

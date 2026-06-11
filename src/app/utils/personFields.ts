@@ -24,7 +24,7 @@ export const PERSON_FIELD_LABELS = {
 
 
 
-  profissao: 'Profiss?o',
+  profissao: 'Profissão',
   foto_principal_url: 'Foto',
   minibio: 'Mini bio',
   curiosidades: 'Curiosidades',
@@ -49,20 +49,22 @@ export const PERSON_FIELD_LABELS = {
   lado: 'Lado',
 } as const;
 
-export type PersonFieldErrors = Partial<Record<keyof EditableOwnPersonPayload | 'complemento', string>>;
+export type PersonFieldErrors = Partial<Record<keyof EditableOwnPersonPayload, string>>;
 
 export const EDITABLE_OWN_PERSON_FIELDS: Array<keyof EditableOwnPersonPayload> = [
   'nome_completo',
   'data_nascimento',
   'local_nascimento',
   'local_nascimento_exterior',
-  'local_atual',  'profissao',
+  'local_atual',
+  'profissao',
 
   'falecido',
   'minibio',
   'curiosidades',
   'telefone',
   'endereco',
+  'complemento',
   'rede_social',
   'instagram_usuario',
   'instagram_url',
@@ -80,7 +82,8 @@ export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOw
     data_nascimento: pessoa?.data_nascimento ?? '',
     local_nascimento: pessoa?.local_nascimento ?? '',
     local_nascimento_exterior: pessoa?.local_nascimento_exterior ?? false,
-    local_atual: pessoa?.local_atual ?? '',    profissao: pessoa?.profissao ?? '',
+    local_atual: pessoa?.local_atual ?? '',
+    profissao: pessoa?.profissao ?? '',
 
     foto_principal_url: pessoa?.foto_principal_url ?? '',
     falecido: pessoa?.falecido ?? Boolean(pessoa?.data_falecimento || pessoa?.local_falecimento),
@@ -88,6 +91,7 @@ export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOw
     curiosidades: pessoa?.curiosidades ?? '',
     telefone: pessoa?.telefone ?? '',
     endereco: pessoa?.endereco ?? '',
+    complemento: pessoa?.complemento ?? '',
     rede_social: pessoa?.rede_social ?? '',
     instagram_usuario: pessoa?.instagram_usuario ?? '',
     instagram_url: pessoa?.instagram_url ?? '',

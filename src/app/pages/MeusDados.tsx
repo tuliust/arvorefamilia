@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
 import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
@@ -155,7 +155,6 @@ const NOTIFICATION_OPTIONS: Array<{ key: NotificationPreferenceKey; label: strin
 
 type MeusDadosDraft = {
   form: EditableOwnPersonPayload;
-  complemento: string;
   socialProfiles: SocialProfileForm[];
   archives: ArquivoHistorico[];
 };
@@ -172,12 +171,16 @@ function readMeusDadosDraft(key: string): MeusDadosDraft | null {
     const rawDraft = window.sessionStorage.getItem(key);
     if (!rawDraft) return null;
 
-    const draft = JSON.parse(rawDraft) as Partial<MeusDadosDraft>;
+    const draft = JSON.parse(rawDraft) as Partial<MeusDadosDraft> & { complemento?: string };
     if (!draft.form || !Array.isArray(draft.socialProfiles)) return null;
 
+    const form = {
+      ...draft.form,
+      complemento: draft.form.complemento ?? draft.complemento ?? '',
+    };
+
     return {
-      form: draft.form,
-      complemento: draft.complemento ?? '',
+      form,
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
       archives: Array.isArray(draft.archives) ? draft.archives : [],
     };
@@ -257,7 +260,6 @@ export function MeusDados() {
   const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
-  const [complemento, setComplemento] = useState('');
   const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
   const [notificationPreferences, setNotificationPreferences] = useState<PreferenciaNotificacao | null>(null);
   const [errors, setErrors] = useState<PersonFieldErrors>({});
@@ -345,7 +347,6 @@ export function MeusDados() {
       if (!shouldPreserveDraft) {
         setForm(draft?.form ?? buildEditablePersonFormState(data?.pessoa));
         setSocialProfiles(draft?.socialProfiles ?? loadedSocialProfiles);
-        setComplemento(draft?.complemento ?? '');
         isDirtyRef.current = Boolean(draft);
       }
 
@@ -395,11 +396,10 @@ export function MeusDados() {
 
     writeMeusDadosDraft(getDraftKey(user.id, pessoaId), {
       form,
-      complemento,
       socialProfiles,
       archives,
     });
-  }, [archives, complemento, form, link?.pessoa?.id, socialProfiles, user?.id]);
+  }, [archives, form, link?.pessoa?.id, socialProfiles, user?.id]);
 
   const pessoa = link?.pessoa;
   const canEditSelectedProfile = link?.can_edit !== false;
@@ -858,14 +858,13 @@ export function MeusDados() {
             </Field>
             <Field label="Complemento">
               <Input
-                value={complemento}
-                onChange={(e) => {
-                  markFormDirty();
-                  setComplemento(e.target.value);
-                }}
-                placeholder="Apartamento, bloco, casa, referência"
+                value={String(form.complemento ?? '')}
+                onChange={(e) => updateTextField('complemento', e.target.value)}
+                placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
               />
-              {/* Campo visual até public.pessoas.complemento existir no schema e na tipagem. */}
+              <p className="break-words text-xs text-gray-500">
+                Use para apartamento, bloco, torre, casa ou referência interna. O endereço principal continua vindo do Google Maps.
+              </p>
             </Field>
             <div className="min-w-0 space-y-2 md:col-span-2">
               <SocialProfilesEditor
