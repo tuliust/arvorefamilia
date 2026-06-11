@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
-  ArrowUpToLine,
   Brush,
   FileDown,
   ImageDown,
@@ -172,14 +171,14 @@ export function SidebarPanelTabs({
   }, []);
 
   return (
-    <div className="tree-panel-control-stack flex min-w-0 flex-col gap-[clamp(0.32rem,0.75vh,0.5rem)]">
-      <div className="tree-external-zoom-actions flex min-w-0 items-center gap-1">
-        <TopIconButton icon={Plus} label="Aumentar zoom" onClick={() => dispatchTreeAction('zoom-in')} />
-        <TopIconButton icon={Minus} label="Diminuir zoom" onClick={() => dispatchTreeAction('zoom-out')} />
-        <TopIconButton icon={ArrowUpToLine} label="Restaurar visualização" onClick={() => dispatchTreeAction('zoom-out')} />
+    <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]">
+      <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5">
+        <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
+        <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
+        <TopIconButton icon={Scan} label="Restaurar visualização" onClick={() => dispatchTreeAction('zoom-out')} />
       </div>
 
-      <section className="tree-control-panel flex min-w-0 flex-col gap-[clamp(0.26rem,0.62vh,0.38rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.36rem,0.78vh,0.48rem)] shadow-sm">
+      <section className="tree-control-panel flex w-full min-w-0 flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
         <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
           {viewOptions.map((option) => {
             const Icon = option.icon;
@@ -255,15 +254,21 @@ export function SidebarPanelTabs({
 function TopIconButton({
   icon: Icon,
   label,
+  visibleLabel,
   onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  visibleLabel?: string;
   onClick: () => void;
 }) {
   return (
-    <button type="button" onClick={onClick} title={label} aria-label={label} className="tree-top-icon-button flex h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-      <Icon className="h-4 w-4" />
+    <button type="button" onClick={onClick} title={label} aria-label={label} className={[
+      'tree-top-icon-button flex h-[clamp(34px,4.75vh,38px)] shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+      visibleLabel ? 'min-w-[clamp(70px,7.2vw,86px)] gap-1.5 px-2.5 text-[11px] font-semibold leading-none' : 'w-[clamp(34px,4.75vh,38px)]',
+    ].join(' ')}>
+      <Icon className="h-4 w-4 shrink-0" />
+      {visibleLabel && <span className="truncate">{visibleLabel}</span>}
     </button>
   );
 }
