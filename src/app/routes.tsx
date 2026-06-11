@@ -173,6 +173,14 @@ function HorizontalMapRoute() {
   );
 }
 
+function FamilyHorizontalMapRoute() {
+  return (
+    <div className="contents" data-tree-route-view="mapa-familiar-horizontal">
+      <Home />
+    </div>
+  );
+}
+
 const adminMigrationPath = '/admin/' + 'migrar-dados';
 
 export const router = createBrowserRouter([
@@ -180,6 +188,7 @@ export const router = createBrowserRouter([
   { path: '/minha-arvore', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/mapa-familiar', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/mapa-horizontal', element: lazyRoute(<TreeAccessRoute><HorizontalMapRoute /></TreeAccessRoute>) },
+  { path: '/mapa-familiar-horizontal', element: lazyRoute(<TreeAccessRoute><FamilyHorizontalMapRoute /></TreeAccessRoute>) },
   { path: '/genealogia', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/visao-completa', element: lazyRoute(<TreeAccessRoute><Home /></TreeAccessRoute>) },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
