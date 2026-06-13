@@ -118,10 +118,50 @@ html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-f
   pointer-events: none !important;
 }
 
-[data-family-map-export-root='true'] .family-map-status-icon {
-  color: currentColor;
-  stroke: currentColor;
+/* Exportação: preserva SVGs internos dos cards. Os conectores usam seletores próprios
+   e não devem contaminar avatar, silhueta, pet, estrela ou cruz. */
+[data-family-map-export-root='true'] .family-map-avatar-icon,
+[data-family-map-horizontal-root='true'] .family-map-avatar-icon,
+[data-family-map-export-root='true'] .family-map-status-icon,
+[data-family-map-horizontal-root='true'] .family-map-status-icon {
+  color: currentColor !important;
   filter: none;
+}
+
+[data-family-map-export-root='true'] .family-map-person-silhouette,
+[data-family-map-horizontal-root='true'] .family-map-person-silhouette,
+[data-family-map-export-root='true'] .family-map-person-silhouette path,
+[data-family-map-horizontal-root='true'] .family-map-person-silhouette path,
+[data-family-map-export-root='true'] .family-map-person-silhouette circle,
+[data-family-map-horizontal-root='true'] .family-map-person-silhouette circle {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+[data-family-map-export-root='true'] .family-map-pet-icon,
+[data-family-map-horizontal-root='true'] .family-map-pet-icon,
+[data-family-map-export-root='true'] .family-map-pet-icon path,
+[data-family-map-horizontal-root='true'] .family-map-pet-icon path,
+[data-family-map-export-root='true'] .family-map-pet-icon circle,
+[data-family-map-horizontal-root='true'] .family-map-pet-icon circle {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+[data-family-map-export-root='true'] .family-map-birth-icon,
+[data-family-map-horizontal-root='true'] .family-map-birth-icon,
+[data-family-map-export-root='true'] .family-map-birth-icon path,
+[data-family-map-horizontal-root='true'] .family-map-birth-icon path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+[data-family-map-export-root='true'] .family-map-deceased-icon,
+[data-family-map-horizontal-root='true'] .family-map-deceased-icon,
+[data-family-map-export-root='true'] .family-map-deceased-icon path,
+[data-family-map-horizontal-root='true'] .family-map-deceased-icon path {
+  fill: none !important;
+  stroke: currentColor !important;
 }
 
 html[data-tree-highlight-cards='true'] [data-family-map-export-root='true'] [data-family-map-color-key],

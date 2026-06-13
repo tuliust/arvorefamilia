@@ -72,7 +72,7 @@ function getPersonGender(person: Pessoa) {
 function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | 'neutral'; className: string }) {
   if (gender === 'female') {
     return (
-      <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+      <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
         <path
           fill="currentColor"
           d="M18 56c2.4-10.2 8.5-15.7 14-15.7S43.6 45.8 46 56H18Z"
@@ -91,7 +91,7 @@ function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | '
 
   if (gender === 'male') {
     return (
-      <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+      <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
         <path
           fill="currentColor"
           d="M18.3 24.7C18.3 13.9 23.8 7 32.2 7c8.6 0 14.2 6.8 14.2 17.7-3.9-3.2-8.6-4.8-14.2-4.8-5.5 0-10.1 1.6-13.9 4.8Z"
@@ -111,7 +111,7 @@ function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | '
   }
 
   return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
       <circle cx="32" cy="23" r="13" fill="currentColor" opacity=".9" />
       <path fill="currentColor" d="M10 58c3.4-12.4 11.5-19 22-19s18.6 6.6 22 19H10Z" opacity=".9" />
     </svg>
@@ -193,12 +193,13 @@ export function VisualPersonAvatar({
 
   return (
     <span
+      data-family-map-avatar="true"
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/80 bg-white/20 shadow-inner ${className}`}
     >
       {person.foto_principal_url ? (
-        <img src={person.foto_principal_url} alt="" className="h-full w-full object-cover" />
+        <img src={person.foto_principal_url} alt="" data-family-map-photo-avatar="true" className="h-full w-full object-cover" />
       ) : pet ? (
-        <PawPrint className={iconClassName} aria-hidden="true" />
+        <PawPrint className={`family-map-avatar-icon family-map-pet-icon ${iconClassName}`} aria-hidden="true" />
       ) : (
         <PersonSilhouette gender={silhouetteGender} className={iconClassName} />
       )}
@@ -231,6 +232,8 @@ export function VisualVitalLines({
       <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
         <Star
           className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`}
+          fill="currentColor"
+          stroke="currentColor"
           aria-hidden="true"
         />
         {birthLine && <span className="truncate">{birthLine}</span>}
@@ -239,6 +242,8 @@ export function VisualVitalLines({
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
           <Cross
             className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`}
+            fill="none"
+            stroke="currentColor"
             aria-hidden="true"
           />
           {deathLine && <span className="truncate">{deathLine}</span>}

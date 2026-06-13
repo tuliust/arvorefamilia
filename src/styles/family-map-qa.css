@@ -153,6 +153,39 @@ html[data-tree-color-palette="white"] [data-family-map-export-root="true"] .bord
 html[data-tree-color-palette="orange"] [data-family-map-export-root="true"] .border-cyan-500,
 html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] .border-cyan-500 { border-color: var(--family-map-connector) !important; }
 
+/* Ícones internos dos cards não devem herdar regras de conectores durante exportação. */
+[data-family-map-export-root="true"] .family-map-avatar-icon,
+[data-family-map-export-root="true"] .family-map-status-icon {
+  color: currentColor !important;
+  filter: none;
+}
+
+[data-family-map-export-root="true"] .family-map-person-silhouette,
+[data-family-map-export-root="true"] .family-map-person-silhouette path,
+[data-family-map-export-root="true"] .family-map-person-silhouette circle {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+[data-family-map-export-root="true"] .family-map-pet-icon,
+[data-family-map-export-root="true"] .family-map-pet-icon path,
+[data-family-map-export-root="true"] .family-map-pet-icon circle {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+[data-family-map-export-root="true"] .family-map-birth-icon,
+[data-family-map-export-root="true"] .family-map-birth-icon path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+[data-family-map-export-root="true"] .family-map-deceased-icon,
+[data-family-map-export-root="true"] .family-map-deceased-icon path {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
 html[data-tree-color-palette="white"] [data-family-map-connectors="true"] path,
 html[data-tree-color-palette="orange"] [data-family-map-connectors="true"] path,
 html[data-tree-color-palette="brown"] [data-family-map-connectors="true"] path {
