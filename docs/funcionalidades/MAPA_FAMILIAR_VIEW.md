@@ -408,6 +408,8 @@ A horizontal usa `VisualPersonCard`.
 Regras:
 
 - usa paleta/cores do Mapa Familiar;
+- estrela e cruz de status herdam o contraste definido pelo card em cada paleta;
+- Pets usa tom teal/ciano próprio na paleta Visual;
 - cônjuges têm tom próprio;
 - pets usam tom próprio;
 - cards ficam compactos;

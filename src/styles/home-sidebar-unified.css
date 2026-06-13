@@ -118,11 +118,10 @@ html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-f
   pointer-events: none !important;
 }
 
-[data-family-map-export-root='true'] .family-map-deceased-icon {
-  color: #334155 !important;
-  filter:
-    drop-shadow(0 0 1px rgb(255 255 255 / 95%))
-    drop-shadow(0 1px 1px rgb(15 23 42 / 35%));
+[data-family-map-export-root='true'] .family-map-status-icon {
+  color: currentColor;
+  stroke: currentColor;
+  filter: none;
 }
 
 html[data-tree-highlight-cards='true'] [data-family-map-export-root='true'] [data-family-map-color-key],

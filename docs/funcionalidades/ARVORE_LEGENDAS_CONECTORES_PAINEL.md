@@ -283,6 +283,7 @@ Cuidados:
 
 - o card **Cônjuges** não deve ser removido;
 - o card **Pets** deve ser mantido, mas há pendência em `Home.tsx` quando `directRelativeFilters.pets` é forçado como `true`;
+- na paleta Visual, **Pets** usa os tokens teal/ciano da própria paleta;
 - `excludedKeys` existe como prop, mas o painel atual não deve esconder cônjuges por padrão.
 
 ---

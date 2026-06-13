@@ -229,12 +229,18 @@ export function VisualVitalLines({
   return (
     <>
       <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-        <Star className={`${iconSize} shrink-0 fill-current`} aria-hidden="true" />
+        <Star
+          className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`}
+          aria-hidden="true"
+        />
         {birthLine && <span className="truncate">{birthLine}</span>}
       </span>
       {showDeathLine && (
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-          <Cross className={`family-map-deceased-icon ${iconSize} shrink-0`} aria-hidden="true" />
+          <Cross
+            className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`}
+            aria-hidden="true"
+          />
           {deathLine && <span className="truncate">{deathLine}</span>}
         </span>
       )}
