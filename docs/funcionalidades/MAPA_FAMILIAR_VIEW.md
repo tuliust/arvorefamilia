@@ -355,14 +355,14 @@ Constantes conceituais:
 
 ```txt
 Sempre visíveis: cônjuge central, cônjuges de avós, bisavós e tataravós.
-Filtráveis: cônjuges de tios, primos, sobrinhos e filhos.
+Filtráveis: cônjuges de tios, primos, sobrinhos, filhos e netos.
 ```
 
 Regras:
 
 - cônjuge da pessoa central é sempre reincluído quando existir e passar nos filtros de vida;
 - cônjuges de avós, bisavós e tataravós são sempre reincluídos;
-- cônjuges de tios, primos, sobrinhos e filhos dependem do filtro **Cônjuges**;
+- cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**;
 - cônjuges reincluídos fora do escopo direto recebem tom/label **Cônjuge**;
 - cônjuges devem ficar imediatamente acima/abaixo um do outro;
 - se o cônjuge não passar no filtro de vida/tipo, não deve ser reincluído.
@@ -442,6 +442,7 @@ Nas views do Mapa Familiar:
 - `Ctrl + scroll` aplica zoom interno;
 - zoom não deve alterar header, painel lateral ou bottom nav;
 - `Ctrl/Cmd + +` e `Ctrl/Cmd + -` devem acionar zoom da árvore quando interceptados pelo app;
+- **Restaurar visualização** redefine diretamente o zoom e a posição de rolagem iniciais;
 - zoom não deve alterar dados ou filtros.
 
 ---

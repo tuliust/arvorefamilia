@@ -272,7 +272,7 @@ const FAMILY_MAP_LAYOUT_BASE = {
       x: -160,
       y: 0,
       width: 480,
-      singleWidth: 300,
+      singleWidth: 250,
       columns: 'quad',
       collapsedLimit: 8,
       variant: 'mini',
@@ -429,7 +429,7 @@ const FAMILY_MAP_LAYOUT_BASE = {
       x: 1120,
       y: 0,
       width: 480,
-      singleWidth: 300,
+      singleWidth: 250,
       columns: 'quad',
       collapsedLimit: 8,
       variant: 'mini',
@@ -597,7 +597,7 @@ function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
       ...FAMILY_MAP_LAYOUT_BASE.groups.paternalCousins,
       x: 20,
       width: 560,
-      singleWidth: 340,
+      singleWidth: 250,
     },
     father: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.father,
@@ -636,7 +636,7 @@ function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
       ...FAMILY_MAP_LAYOUT_BASE.groups.maternalCousins,
       x: 1300,
       width: 560,
-      singleWidth: 340,
+      singleWidth: 250,
     },
     siblings: {
       ...FAMILY_MAP_LAYOUT_BASE.groups.siblings,
@@ -1624,6 +1624,11 @@ function DesktopFamilyMapViewComponent({
 
   React.useEffect(() => {
     setManualZoom(1);
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = 0;
+    }
   }, [centralPersonId, isWideLayout, layoutRevision]);
 
   const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -1822,6 +1827,7 @@ function DesktopFamilyMapViewComponent({
           }}
         >
           <svg
+            data-family-map-connectors="true"
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
             viewBox={`0 0 ${familyMapLayout.canvas.width} ${canvasHeight}`}
             aria-hidden="true"

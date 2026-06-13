@@ -301,13 +301,14 @@ Regra específica do Mapa Familiar:
   - tios;
   - primos;
   - sobrinhos;
-  - filhos.
+  - filhos;
+  - netos.
 
 No Mapa Familiar Horizontal, a lógica atual usa:
 
 ```txt
 ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS = ['avos', 'bisavos', 'tataravos']
-FILTERABLE_SPOUSE_ANCHOR_GROUPS = ['tios', 'primos', 'sobrinhos', 'filhos']
+FILTERABLE_SPOUSE_ANCHOR_GROUPS = ['tios', 'primos', 'sobrinhos', 'filhos', 'netos']
 ```
 
 E sempre reinclui cônjuge da pessoa central.
@@ -351,10 +352,13 @@ A seção **Destacar** controla `visualLineFilters`.
 
 Regras:
 
+- **Linhas** oculta os conectores visuais, sem ocultar ícones internos dos cards;
 - destaque vence a cor normal da linha;
 - destaque não reexibe linha oculta;
 - destaque não altera cards;
 - destaque não altera dados.
+
+O controle **Restaurar visualização** redefine diretamente o zoom e a posição de rolagem iniciais nas views vertical e horizontal.
 
 ---
 

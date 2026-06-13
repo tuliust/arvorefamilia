@@ -234,7 +234,7 @@ export function VisualVitalLines({
       </span>
       {showDeathLine && (
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-          <Cross className={`${iconSize} shrink-0`} aria-hidden="true" />
+          <Cross className={`family-map-deceased-icon ${iconSize} shrink-0`} aria-hidden="true" />
           {deathLine && <span className="truncate">{deathLine}</span>}
         </span>
       )}

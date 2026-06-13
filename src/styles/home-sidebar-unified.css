@@ -111,10 +111,18 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
   opacity: 0.78;
 }
 
-html[data-tree-highlight-lines='true'] [data-family-map-export-root='true'] svg path,
-html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-flow__edge-path {
-  stroke-width: 5px !important;
-  opacity: 1 !important;
+html[data-tree-highlight-lines='true'] [data-family-map-connectors='true'],
+html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-flow__edges,
+html[data-tree-highlight-lines='true'] [data-export-root='family-tree'] .react-flow__node-genealogyFamilyConnectorNode {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+[data-family-map-export-root='true'] .family-map-deceased-icon {
+  color: #334155 !important;
+  filter:
+    drop-shadow(0 0 1px rgb(255 255 255 / 95%))
+    drop-shadow(0 1px 1px rgb(15 23 42 / 35%));
 }
 
 html[data-tree-highlight-cards='true'] [data-family-map-export-root='true'] [data-family-map-color-key],

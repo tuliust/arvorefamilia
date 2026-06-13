@@ -10,6 +10,7 @@ import {
   Tally2,
   Tally3,
   TrainFrontTunnel,
+  UserRoundPlus,
   UsersRound,
 } from 'lucide-react';
 
@@ -37,7 +38,7 @@ const DIRECT_RELATIVE_FILTER_OPTIONS: Array<{
   { key: 'primos', label: 'Primos', colorKey: 'primos', icon: PersonStanding },
   { key: 'sobrinhos', label: 'Sobrinhos', colorKey: 'sobrinhos', icon: TrainFrontTunnel },
   { key: 'irmaos', label: 'Irmãos', colorKey: 'irmaos', icon: UsersRound },
-  { key: 'filhos', label: 'Filhos', colorKey: 'filhos', icon: Baby },
+  { key: 'filhos', label: 'Filhos', colorKey: 'filhos', icon: UserRoundPlus },
   { key: 'netos', label: 'Netos', colorKey: 'netos', icon: Baby },
   { key: 'conjuge', label: 'Cônjuges', colorKey: 'conjuge', icon: Heart },
   { key: 'pets', label: 'Pets', colorKey: 'pets', icon: Dog },

@@ -734,6 +734,10 @@ export function Home() {
     });
   }, []);
 
+  useEffect(() => {
+    setRenderedDirectRelationCounts(null);
+  }, [centralReferencePersonId, treeViewMode]);
+
   const handleOpenPersonTree = useCallback((personId: string) => {
     setTreeFocusPersonId(personId);
     setSelectedPersonId(personId);
@@ -887,6 +891,19 @@ export function Home() {
       ),
     [pessoas, relacionamentos, centralReferencePersonId, visiblePersonIdsByLifeStatus]
   );
+  const effectiveDirectRelationCounts = useMemo(
+    () => (
+      renderedDirectRelationCounts && (
+        treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal'
+      )
+        ? {
+            ...directRelationCounts,
+            conjuge: renderedDirectRelationCounts.conjuge,
+          }
+        : directRelationCounts
+    ),
+    [directRelationCounts, renderedDirectRelationCounts, treeViewMode]
+  );
   const genealogyFilterCounts = useMemo(
     () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
     [pessoasVisiveisPorStatus, relacionamentos]
@@ -905,7 +922,7 @@ export function Home() {
             ) : (
               <DirectRelationKpiGrid
                 filters={directRelativeFilters}
-                counts={directRelationCounts}
+                counts={effectiveDirectRelationCounts}
                 onToggle={toggleDirectRelativeFilter}
               />
             )}
@@ -917,7 +934,7 @@ export function Home() {
             filters={personFilters}
             onToggle={togglePersonFilter}
             directRelativeFilters={directRelativeFilters}
-            directRelationCounts={directRelationCounts}
+            directRelationCounts={effectiveDirectRelationCounts}
             onToggleDirectRelative={toggleDirectRelativeFilter}
           />
         </div>
