@@ -9,7 +9,9 @@ import {
   exportCanvasAsPdf,
   ExportRect,
   openTreePrintWindow,
+  prependTitleToCanvas,
   printCanvas,
+  waitForExportUiSettle,
 } from './utils/treeExport';
 
 type ExportAction = 'png' | 'pdf' | 'print';
@@ -219,7 +221,7 @@ export function TreeAreaSelectionOverlay({
       await waitForTreeExportPaint();
 
       const targetRect = target.getBoundingClientRect();
-      const canvas = await captureElementToCanvas(target);
+      const canvas = await captureElementToCanvas(target, { captureVisibleAreaOnly: true });
       const scaleX = canvas.width / targetRect.width;
       const scaleY = canvas.height / targetRect.height;
       const croppedCanvas = cropCanvas(canvas, {
@@ -229,21 +231,26 @@ export function TreeAreaSelectionOverlay({
         height: selection.height * scaleY,
       });
 
+      const titledCanvas = prependTitleToCanvas(croppedCanvas, title);
+
       if (action === 'png') {
         downloadCanvasAsPng(
-          croppedCanvas,
+          titledCanvas,
           buildTreeExportFilename(`${filenameLabel}-area`, 'png')
         );
+        await waitForExportUiSettle();
       } else if (action === 'pdf') {
         await exportCanvasAsPdf(
-          croppedCanvas,
+          titledCanvas,
           buildTreeExportFilename(`${filenameLabel}-area`, 'pdf'),
-          title
+          ''
         );
+        await waitForExportUiSettle();
       } else {
-        printCanvas(croppedCanvas, title, printWindow);
+        await printCanvas(titledCanvas, title, printWindow);
       }
 
+      await waitForExportUiSettle(250);
       onClose();
     } catch (exportError) {
       if (printWindow && !printWindow.closed) {
@@ -268,6 +275,11 @@ export function TreeAreaSelectionOverlay({
   ]);
 
   const targetRect = getTargetElement()?.getBoundingClientRect();
+
+  if (!targetRect) {
+    return null;
+  }
+
   const toolbarTop = selection
     ? clamp(selection.y + selection.height + 12, 16, Math.max(16, (targetRect?.height ?? 0) - 64))
     : 16;
@@ -280,7 +292,13 @@ export function TreeAreaSelectionOverlay({
     <div
       ref={overlayRef}
       data-tree-selection-overlay="true"
-      className="absolute inset-0 z-40 cursor-crosshair select-none bg-slate-950/20"
+      className="fixed z-[90] cursor-crosshair select-none bg-slate-950/20"
+      style={{
+        left: targetRect.left,
+        top: targetRect.top,
+        width: targetRect.width,
+        height: targetRect.height,
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

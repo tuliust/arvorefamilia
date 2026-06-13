@@ -15,6 +15,7 @@ export interface CaptureElementOptions {
   ignoreElements?: (node: Element) => boolean;
   maxScale?: number;
   scale?: number;
+  captureVisibleAreaOnly?: boolean;
 }
 
 export interface ElementCaptureMetrics {
@@ -74,8 +75,16 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#039;');
 }
 
-function getElementCssSize(element: HTMLElement) {
+function getElementCssSize(element: HTMLElement, captureVisibleAreaOnly = false) {
   const rect = element.getBoundingClientRect();
+
+  if (captureVisibleAreaOnly) {
+    return {
+      width: Math.ceil(Math.max(rect.width, 1)),
+      height: Math.ceil(Math.max(rect.height, 1)),
+    };
+  }
+
   const width = Math.ceil(Math.max(rect.width, element.offsetWidth, element.scrollWidth, 1));
   const height = Math.ceil(Math.max(rect.height, element.offsetHeight, element.scrollHeight, 1));
 
@@ -86,7 +95,7 @@ export function getElementCaptureMetrics(
   element: HTMLElement,
   options: CaptureElementOptions = {}
 ): ElementCaptureMetrics {
-  const { width, height } = getElementCssSize(element);
+  const { width, height } = getElementCssSize(element, options.captureVisibleAreaOnly);
   const scale = options.scale ?? getBrowserExportScale(options.maxScale);
   const estimatedPixels = width * scale * height * scale;
 
@@ -132,6 +141,75 @@ export function buildTreeExportFilename(label: string, extension: 'png' | 'pdf')
   return `${safeLabel}-${timestamp}.${extension}`;
 }
 
+export function waitForExportUiSettle(milliseconds = 450) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
+}
+
+function clampCanvasValue(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+export interface PrependCanvasTitleOptions {
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  titleHeight?: number;
+}
+
+export function prependTitleToCanvas(
+  sourceCanvas: HTMLCanvasElement,
+  title?: string,
+  options: PrependCanvasTitleOptions = {}
+) {
+  const normalizedTitle = title?.trim();
+  if (!normalizedTitle) return sourceCanvas;
+
+  const titleHeight = Math.round(
+    options.titleHeight ??
+      clampCanvasValue(sourceCanvas.width * 0.045, 72, 132)
+  );
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = sourceCanvas.width;
+  outputCanvas.height = sourceCanvas.height + titleHeight;
+
+  const context = outputCanvas.getContext('2d');
+  if (!context) {
+    throw new Error('Não foi possível preparar o título da exportação.');
+  }
+
+  const backgroundColor = options.backgroundColor ?? '#f7f1e8';
+  const textColor = options.textColor ?? '#5b4636';
+  const borderColor = options.borderColor ?? 'rgba(168, 95, 69, 0.28)';
+  const fontSize = Math.round(clampCanvasValue(titleHeight * 0.36, 24, 38));
+
+  context.fillStyle = backgroundColor;
+  context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+  context.fillStyle = textColor;
+  context.font = `700 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(
+    normalizedTitle,
+    outputCanvas.width / 2,
+    Math.round(titleHeight / 2)
+  );
+
+  context.strokeStyle = borderColor;
+  context.lineWidth = Math.max(1, Math.round(sourceCanvas.width / 1800));
+  context.beginPath();
+  context.moveTo(0, titleHeight - 0.5);
+  context.lineTo(outputCanvas.width, titleHeight - 0.5);
+  context.stroke();
+
+  context.drawImage(sourceCanvas, 0, titleHeight);
+
+  return outputCanvas;
+}
+
+
 export function getDefaultTreeExportIgnoreElements(node: Element) {
   const elementNode = node as HTMLElement;
 
@@ -144,6 +222,76 @@ export function getDefaultTreeExportIgnoreElements(node: Element) {
     elementNode.closest?.('[data-tree-legend="true"]') ||
     elementNode.closest?.('[data-tree-export-loading="true"]')
   );
+}
+
+
+function normalizeInlineSvgIconsForTreeExport(root: ParentNode) {
+  const documentRef = root instanceof Document ? root : ((root as Node).ownerDocument ?? document);
+  const windowRef = documentRef.defaultView;
+
+  root.querySelectorAll<SVGSVGElement>('svg').forEach((svg) => {
+    if (svg.closest('[data-family-map-connectors="true"], .react-flow__edges')) return;
+
+    const computedSvg = windowRef?.getComputedStyle(svg);
+    const svgColor = computedSvg?.color && computedSvg.color !== 'rgba(0, 0, 0, 0)'
+      ? computedSvg.color
+      : '#0f172a';
+
+    svg.style.setProperty('color', svgColor, 'important');
+
+    svg.querySelectorAll<SVGElement>('path, circle, rect, ellipse, line, polyline, polygon').forEach((shape) => {
+      const computedShape = windowRef?.getComputedStyle(shape);
+      const fillAttr = shape.getAttribute('fill');
+      const strokeAttr = shape.getAttribute('stroke');
+      const computedFill = computedShape?.fill;
+      const computedStroke = computedShape?.stroke;
+
+      if (fillAttr !== 'none' && computedFill !== 'none') {
+        const fill = !fillAttr || fillAttr === 'currentColor' || computedFill === 'currentcolor'
+          ? svgColor
+          : computedFill || fillAttr;
+        shape.setAttribute('fill', fill);
+        shape.style.setProperty('fill', fill, 'important');
+      }
+
+      if (strokeAttr && strokeAttr !== 'none' && computedStroke !== 'none') {
+        const stroke = strokeAttr === 'currentColor' || computedStroke === 'currentcolor'
+          ? svgColor
+          : computedStroke || strokeAttr;
+        shape.setAttribute('stroke', stroke);
+        shape.style.setProperty('stroke', stroke, 'important');
+      }
+    });
+
+    // html2canvas can occasionally rasterize inline SVG icons with currentColor as a
+    // dark square. Serializing them as data-image SVGs after resolving colors keeps
+    // avatars, status icons and pet icons identical to the on-screen DOM.
+    if (!svg.closest('[data-family-map-color-key]')) return;
+
+    try {
+      const serializedSvg = new XMLSerializer().serializeToString(svg);
+      const image = documentRef.createElement('img');
+      const computed = windowRef?.getComputedStyle(svg);
+
+      image.setAttribute('src', `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serializedSvg)}`);
+      image.setAttribute('alt', '');
+      image.setAttribute('aria-hidden', 'true');
+      image.setAttribute('decoding', 'sync');
+      image.className = svg.getAttribute('class') ?? '';
+
+      if (computed) {
+        image.style.width = computed.width;
+        image.style.height = computed.height;
+        image.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
+        image.style.verticalAlign = computed.verticalAlign;
+        image.style.flexShrink = computed.flexShrink;
+      }
+
+      svg.replaceWith(image);
+    } catch {
+      // Keep the original inline SVG if serialization is not available.
+    }
+  });
 }
 
 function prepareClonedDocumentForTreeExport(clonedDocument: Document) {
@@ -162,6 +310,7 @@ function prepareClonedDocumentForTreeExport(clonedDocument: Document) {
   clonedRoots.forEach((clonedRoot) => {
     clonedRoot.style.overflow = 'visible';
     sanitizeUnsupportedExportColors(clonedRoot);
+    normalizeInlineSvgIconsForTreeExport(clonedRoot);
   });
 
   clonedDocument.querySelectorAll<HTMLElement>('[data-tree-export-ignore="true"], [data-tree-selection-overlay="true"], [data-tree-export-loading="true"]').forEach((node) => {
@@ -324,7 +473,7 @@ export function openTreePrintWindow() {
   return printWindow;
 }
 
-export function printCanvas(
+export async function printCanvas(
   canvas: HTMLCanvasElement,
   title = 'Imprimir árvore',
   targetWindow?: Window | null
@@ -356,19 +505,39 @@ export function printCanvas(
   </head>
   <body>
     <img src="${imageUrl}" alt="Mapa familiar exportado" />
-    <script>
-      const image = document.querySelector('img');
-      const printTree = () => {
-        window.focus();
-        window.print();
-      };
-      if (image.complete) {
-        setTimeout(printTree, 50);
-      } else {
-        image.addEventListener('load', () => setTimeout(printTree, 50), { once: true });
-      }
-    </script>
   </body>
 </html>`);
   printWindow.document.close();
+
+  await new Promise<void>((resolve, reject) => {
+    const image = printWindow.document.querySelector('img');
+
+    const resolveAfterPrint = () => {
+      if (printWindow.closed) {
+        reject(new Error('A janela de impressão foi fechada antes da conclusão.'));
+        return;
+      }
+
+      try {
+        printWindow.focus();
+        printWindow.print();
+        window.setTimeout(resolve, 650);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    if (!image) {
+      window.setTimeout(resolveAfterPrint, 120);
+      return;
+    }
+
+    if (image.complete) {
+      window.setTimeout(resolveAfterPrint, 120);
+      return;
+    }
+
+    image.addEventListener('load', () => window.setTimeout(resolveAfterPrint, 120), { once: true });
+    image.addEventListener('error', () => reject(new Error('Não foi possível carregar a imagem para impressão.')), { once: true });
+  });
 }

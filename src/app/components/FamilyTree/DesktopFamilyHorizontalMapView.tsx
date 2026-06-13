@@ -19,7 +19,9 @@ import {
   downloadCanvasAsPng,
   exportCanvasAsPdf,
   openTreePrintWindow,
+  prependTitleToCanvas,
   printCanvas,
+  waitForExportUiSettle,
 } from './utils/treeExport';
 import {
   TreeAreaSelectionOverlay,
@@ -99,6 +101,11 @@ function getExportLoadingMessage(action: 'image' | 'pdf' | 'print') {
   if (action === 'pdf') return 'Gerando PDF...';
   return 'Preparando impressão...';
 }
+
+function getExportFirstName(person?: Pessoa) {
+  return person?.nome_completo?.trim().split(/\s+/).filter(Boolean)[0];
+}
+
 
 const CANVAS = {
   minWidth: 420,
@@ -662,6 +669,14 @@ function DesktopFamilyHorizontalMapViewComponent({
     };
   }, [centralPersonId, directRelativeFilters, maps, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
   const visibleHorizontalPessoas = horizontalVisibility.people;
+  const centralPerson = React.useMemo(
+    () => pessoas.find((person) => person.id === centralPersonId),
+    [centralPersonId, pessoas],
+  );
+  const exportTitle = React.useMemo(() => {
+    const firstName = getExportFirstName(centralPerson);
+    return firstName ? `Genealogia de ${firstName}` : 'Genealogia';
+  }, [centralPerson]);
   const spouseTonePersonIds = horizontalVisibility.spouseTonePersonIds;
   const filterableSpousePersonIds = horizontalVisibility.filterableSpousePersonIds;
   const generationByPersonId = React.useMemo(
@@ -825,15 +840,16 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
-      const canvas = await captureFamilyMap();
+      const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar-horizontal', 'png'));
+      await waitForExportUiSettle();
     } catch (error) {
       console.error('Erro ao exportar imagem do Mapa Familiar Horizontal:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Familiar Horizontal.');
     } finally {
       setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap, exportLoadingMessage]);
+  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
 
   const handleSavePdf = React.useCallback(async () => {
     if (exportLoadingMessage) return;
@@ -842,15 +858,20 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
-      const canvas = await captureFamilyMap();
-      await exportCanvasAsPdf(canvas, buildTreeExportFilename('mapa-familiar-horizontal', 'pdf'), 'Mapa Familiar Horizontal');
+      const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
+      await exportCanvasAsPdf(
+        canvas,
+        buildTreeExportFilename('mapa-familiar-horizontal', 'pdf'),
+        '',
+      );
+      await waitForExportUiSettle();
     } catch (error) {
       console.error('Erro ao exportar PDF do Mapa Familiar Horizontal:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Familiar Horizontal.');
     } finally {
       setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap, exportLoadingMessage]);
+  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
 
   const handlePrint = React.useCallback(async () => {
     if (exportLoadingMessage) return;
@@ -860,8 +881,9 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
-      const canvas = await captureFamilyMap();
-      printCanvas(canvas, 'Imprimir Mapa Familiar Horizontal', printWindow);
+      const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
+      await printCanvas(canvas, exportTitle, printWindow);
+      await waitForExportUiSettle();
     } catch (error) {
       if (!printWindow.closed) printWindow.close();
       console.error('Erro ao imprimir o Mapa Familiar Horizontal:', error);
@@ -869,13 +891,13 @@ function DesktopFamilyHorizontalMapViewComponent({
     } finally {
       setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap, exportLoadingMessage]);
+  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
 
   const handleStartAreaSelection = React.useCallback(() => {
     if (exportLoadingMessage) return;
 
-    if (!exportRootRef.current) {
-      toast.error('Área do Mapa Familiar Horizontal não encontrada para seleção.');
+    if (!viewportRef.current) {
+      toast.error('Área visível do Mapa Familiar Horizontal não encontrada para seleção.');
       return;
     }
 
@@ -976,9 +998,9 @@ function DesktopFamilyHorizontalMapViewComponent({
         </div>
         {isAreaSelectionOpen && (
           <TreeAreaSelectionOverlay
-            getTargetElement={() => exportRootRef.current}
+            getTargetElement={() => viewportRef.current}
             filenameLabel="mapa-familiar-horizontal"
-            title="Área selecionada do Mapa Familiar Horizontal"
+            title={exportTitle}
             onClose={handleCloseAreaSelection}
           />
         )}
