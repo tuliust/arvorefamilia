@@ -382,6 +382,7 @@ export function VisualGroup({
   spouseTone = 'spouse',
   vitalMode = 'year',
   roomy = false,
+  hideChrome = false,
 }: {
   title: string;
   people: Pessoa[];
@@ -402,6 +403,7 @@ export function VisualGroup({
   spouseTone?: 'spouse' | 'ancestorSpouse';
   vitalMode?: 'year' | 'full';
   roomy?: boolean;
+  hideChrome?: boolean;
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
@@ -460,18 +462,22 @@ export function VisualGroup({
     ? ''
     : `overflow-y-auto pr-0.5 ${maxHeightClassName}`;
   const pillTitle = titleVariant === 'pill';
+  const groupChromeClassName = hideChrome
+    ? 'relative z-10 flex min-h-0 flex-col overflow-visible rounded-none border border-transparent bg-transparent p-0 shadow-none'
+    : 'relative z-10 flex min-h-0 flex-col rounded-[1.35rem] border border-cyan-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,23,42,0.08)]';
 
   return (
     <section
       data-family-map-group="true"
+      data-family-map-chrome-hidden={hideChrome ? 'true' : undefined}
       data-family-map-color-key={groupColorKey}
       className={[
-        'relative z-10 flex min-h-0 flex-col rounded-[1.35rem] border border-cyan-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,23,42,0.08)]',
-        pillTitle ? 'pt-5' : 'overflow-hidden',
+        groupChromeClassName,
+        !hideChrome && (pillTitle ? 'pt-5' : 'overflow-hidden'),
         className,
-      ].join(' ')}
+      ].filter(Boolean).join(' ')}
     >
-      {pillTitle ? (
+      {!hideChrome && (pillTitle ? (
         <span
           data-family-map-group-title="true"
           className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow"
@@ -485,7 +491,7 @@ export function VisualGroup({
         >
           {title}
         </h3>
-      )}
+      ))}
       {people.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-center text-xs font-semibold text-slate-400">
           Sem registros

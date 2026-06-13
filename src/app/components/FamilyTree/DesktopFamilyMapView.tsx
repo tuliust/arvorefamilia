@@ -827,6 +827,7 @@ function getGroupHeight(
   config: GroupConfig,
   expanded: boolean,
   layout: FamilyMapLayout,
+  hideGroupChrome = false,
 ) {
   const visiblePeople = getVisiblePeople(group, config, expanded);
   const cardHeight = config.variant === 'horizontal'
@@ -839,7 +840,9 @@ function getGroupHeight(
   );
   const rows = Math.max(1, Math.ceil(cells / getColumnCount(config.columns)));
 
-  return layout.metrics.groupVerticalPadding
+  const verticalPadding = hideGroupChrome ? 0 : layout.metrics.groupVerticalPadding;
+
+  return verticalPadding
     + rows * cardHeight
     + Math.max(0, rows - 1) * layout.metrics.gridGap;
 }
@@ -961,6 +964,7 @@ function stackGroups(
   groups: Map<FamilyMapGroupId, ComposedGroup>,
   expandedGroups: Set<string>,
   layout: FamilyMapLayout,
+  hideGroupChrome = false,
 ) {
   let top = layout.metrics.topStart;
   const layouts: ResolvedGroup[] = [];
@@ -969,7 +973,7 @@ function stackGroups(
     const config = layout.groups[id];
     const group = groups.get(id);
     if (!group?.people.length) return;
-    const height = getGroupHeight(group, config, expandedGroups.has(id), layout);
+    const height = getGroupHeight(group, config, expandedGroups.has(id), layout, hideGroupChrome);
     layouts.push({
       ...config,
       ...group,
@@ -990,6 +994,7 @@ function resolveGroup(
   top: number,
   layout: FamilyMapLayout,
   baseArea?: { x: number; width: number },
+  hideGroupChrome = false,
 ) {
   const config = layout.groups[id];
   const group = groups.get(id);
@@ -1001,7 +1006,7 @@ function resolveGroup(
     left: baseArea ? centerWithin(baseArea.x, baseArea.width, width) : config.x,
     top,
     width,
-    height: getGroupHeight(group, config, expandedGroups.has(id), layout),
+    height: getGroupHeight(group, config, expandedGroups.has(id), layout, hideGroupChrome),
   } satisfies ResolvedGroup;
 }
 
@@ -1089,16 +1094,41 @@ function useExpandedGroups() {
   return [expandedGroups, handleExpandedChange] as const;
 }
 
+function useTreeHighlightGroupsActive() {
+  const [active, setActive] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const root = document.documentElement;
+    const update = () => setActive(root.dataset.treeHighlightGroups === 'true');
+
+    update();
+
+    const observer = new MutationObserver(update);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-tree-highlight-groups'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return active;
+}
+
 function PositionedGroup({
   layout,
   vitalMode,
   expanded,
+  hideChrome = false,
   onExpandedChange,
   onPersonClick,
 }: {
   layout: ResolvedGroup;
   vitalMode: 'year' | 'full';
   expanded: boolean;
+  hideChrome?: boolean;
   onExpandedChange: (id: string, expanded: boolean) => void;
   onPersonClick: (pessoa: Pessoa) => void;
 }) {
@@ -1113,6 +1143,7 @@ function PositionedGroup({
         columns={layout.columns}
         variant={layout.variant}
         titleVariant="pill"
+        hideChrome={hideChrome}
         expandable={layout.expandable}
         collapsedLimit={layout.collapsedLimit}
         expanded={expanded}
@@ -1188,6 +1219,7 @@ function DesktopFamilyMapViewComponent({
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
   const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
+  const hideGroupChrome = useTreeHighlightGroupsActive();
   const isWideLayout = Boolean(sidebarCollapsed);
   const familyMapLayout = React.useMemo(
     () => getFamilyMapLayout(isWideLayout),
@@ -1311,12 +1343,14 @@ function DesktopFamilyMapViewComponent({
     composedGroups,
     expandedGroups,
     familyMapLayout,
+    hideGroupChrome,
   );
   const maternalAncestorLayouts = stackGroups(
     MATERNAL_ANCESTOR_IDS,
     composedGroups,
     expandedGroups,
     familyMapLayout,
+    hideGroupChrome,
   );
   const ancestorBottom = Math.max(
     familyMapLayout.metrics.topStart + familyMapLayout.metrics.horizontalCardHeight,
@@ -1367,6 +1401,7 @@ function DesktopFamilyMapViewComponent({
     parentTop,
     familyMapLayout,
     familyMapLayout.areas.left,
+    hideGroupChrome,
   );
   const maternalUnclesLayout = resolveGroup(
     'maternalUncles',
@@ -1375,6 +1410,7 @@ function DesktopFamilyMapViewComponent({
     parentTop,
     familyMapLayout,
     familyMapLayout.areas.right,
+    hideGroupChrome,
   );
   const paternalCousinsLayout = resolveGroup(
     'paternalCousins',
@@ -1385,6 +1421,7 @@ function DesktopFamilyMapViewComponent({
       + familyMapLayout.metrics.groupGap,
     familyMapLayout,
     familyMapLayout.areas.left,
+    hideGroupChrome,
   );
   const maternalCousinsLayout = resolveGroup(
     'maternalCousins',
@@ -1395,6 +1432,7 @@ function DesktopFamilyMapViewComponent({
       + familyMapLayout.metrics.groupGap,
     familyMapLayout,
     familyMapLayout.areas.right,
+    hideGroupChrome,
   );
   const siblingsLayout = resolveGroup(
     'siblings',
@@ -1403,6 +1441,7 @@ function DesktopFamilyMapViewComponent({
     descendantsTop,
     familyMapLayout,
     familyMapLayout.areas.lowerLeft,
+    hideGroupChrome,
   );
   const nephewsLayout = resolveGroup(
     'nephews',
@@ -1413,6 +1452,7 @@ function DesktopFamilyMapViewComponent({
       + familyMapLayout.metrics.descendantRowGap,
     familyMapLayout,
     familyMapLayout.areas.lowerLeft,
+    hideGroupChrome,
   );
   const rightLowerTop = spouseLayout
     ? spouseLayout.top + spouseLayout.height + familyMapLayout.metrics.groupGap
@@ -1424,6 +1464,7 @@ function DesktopFamilyMapViewComponent({
     rightLowerTop,
     familyMapLayout,
     familyMapLayout.areas.lowerRight,
+    hideGroupChrome,
   );
   const petsLayout = resolveGroup(
     'pets',
@@ -1432,6 +1473,7 @@ function DesktopFamilyMapViewComponent({
     rightLowerTop,
     familyMapLayout,
     familyMapLayout.areas.lowerMiddle,
+    hideGroupChrome,
   );
   const grandchildrenLayout = resolveGroup(
     'grandchildren',
@@ -1442,6 +1484,7 @@ function DesktopFamilyMapViewComponent({
       : rightLowerTop,
     familyMapLayout,
     familyMapLayout.areas.lowerRight,
+    hideGroupChrome,
   );
 
   const resolvedLayouts = new Map<FamilyMapGroupId, ResolvedGroup>();
@@ -1932,6 +1975,7 @@ function DesktopFamilyMapViewComponent({
               layout={getOffsetLayout(layout, renderOffsetX)}
               vitalMode={isWideLayout ? 'full' : 'year'}
               expanded={expandedGroups.has(layout.id)}
+              hideChrome={hideGroupChrome}
               onExpandedChange={handleExpandedChange}
               onPersonClick={onPersonClick}
             />
@@ -1943,12 +1987,14 @@ function DesktopFamilyMapViewComponent({
                 layout={getOffsetLayout(fatherLayout, renderOffsetX)}
                 person={father}
                 emptyLabel="Pai"
+                showLabel={!hideGroupChrome}
                 onPersonClick={onPersonClick}
               />
               <DirectPersonCard
                 layout={getOffsetLayout(motherLayout, renderOffsetX)}
                 person={mother}
                 emptyLabel="Mãe"
+                showLabel={!hideGroupChrome}
                 onPersonClick={onPersonClick}
               />
             </>
@@ -1967,6 +2013,7 @@ function DesktopFamilyMapViewComponent({
               layout={getOffsetLayout(spouseLayout, renderOffsetX)}
               person={mainSpouse}
               tone="spouse"
+              showLabel={!hideGroupChrome}
               onPersonClick={onPersonClick}
             />
           )}

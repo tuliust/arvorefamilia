@@ -145,6 +145,23 @@ html[data-tree-highlight-groups='true']
   display: none !important;
 }
 
+html[data-tree-highlight-groups='true']
+  [data-family-map-export-root='true']:not([data-family-map-horizontal-root='true'])
+  [data-family-map-group='true'][data-family-map-chrome-hidden='true'] {
+  padding: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+html[data-tree-highlight-groups='true']
+  [data-family-map-export-root='true']:not([data-family-map-horizontal-root='true'])
+  [data-family-map-group='true'][data-family-map-chrome-hidden='true']
+  [data-family-map-group-title='true'] {
+  display: none !important;
+}
+
 [data-family-map-export-root='true'] .absolute.z-20 > div[class*="border-dashed"][class*="text-slate-400"] {
   display: none !important;
 }
