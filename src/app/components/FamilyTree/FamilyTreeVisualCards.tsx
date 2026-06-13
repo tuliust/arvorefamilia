@@ -463,6 +463,7 @@ export function VisualGroup({
 
   return (
     <section
+      data-family-map-group="true"
       data-family-map-color-key={groupColorKey}
       className={[
         'relative z-10 flex min-h-0 flex-col rounded-[1.35rem] border border-cyan-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,23,42,0.08)]',
@@ -471,11 +472,17 @@ export function VisualGroup({
       ].join(' ')}
     >
       {pillTitle ? (
-        <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow">
+        <span
+          data-family-map-group-title="true"
+          className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow"
+        >
           {title}
         </span>
       ) : (
-        <h3 className="mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-700">
+        <h3
+          data-family-map-group-title="true"
+          className="mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-700"
+        >
           {title}
         </h3>
       )}

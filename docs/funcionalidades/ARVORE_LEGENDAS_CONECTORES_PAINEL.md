@@ -354,6 +354,7 @@ A seção **Destacar** controla `visualLineFilters`.
 Regras:
 
 - **Linhas** oculta os conectores visuais, sem ocultar ícones internos dos cards;
+- **Grupos** oculta molduras e títulos dos grupos no Mapa Familiar Vertical, mantendo os cards visíveis;
 - destaque vence a cor normal da linha;
 - destaque não reexibe linha oculta;
 - destaque não altera cards;

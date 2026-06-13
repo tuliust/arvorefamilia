@@ -245,7 +245,15 @@ Regras:
 - `Cônjuge` e `Pets` não podem colidir;
 - conectores inferiores continuam legíveis.
 
-### 6.4 Cônjuges na vertical
+### 6.4 Destaque de grupos
+
+No Mapa Familiar Vertical, **Destacar > Grupos**:
+
+- não aplica sombra;
+- oculta molduras, fundos e títulos dos containers de grupo;
+- mantém os cards de pessoas e conectores visíveis.
+
+### 6.5 Cônjuges na vertical
 
 Regras:
 
@@ -255,7 +263,7 @@ Regras:
 - cônjuges não devem ser conectados à pessoa errada;
 - conectores internos entre cônjuges só devem existir para relações conjugais explícitas.
 
-### 6.5 Mobile da vertical
+### 6.6 Mobile da vertical
 
 Em mobile, `/mapa-familiar` usa `MobileFamilyTreeView`.
 

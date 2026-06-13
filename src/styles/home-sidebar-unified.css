@@ -130,9 +130,19 @@ html[data-tree-highlight-cards='true'] [data-export-root='family-tree'] .react-f
   outline-offset: 3px;
 }
 
-html[data-tree-highlight-groups='true'] [data-family-map-export-root='true'] .absolute.z-10,
-html[data-tree-highlight-groups='true'] [data-export-root='family-tree'] .react-flow__node-personNode {
-  box-shadow: 0 10px 20px rgb(15 23 42 / 18%) !important;
+html[data-tree-highlight-groups='true']
+  [data-family-map-export-root='true']:not([data-family-map-horizontal-root='true'])
+  [data-family-map-group='true'] {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+html[data-tree-highlight-groups='true']
+  [data-family-map-export-root='true']:not([data-family-map-horizontal-root='true'])
+  [data-family-map-group-title='true'] {
+  display: none !important;
 }
 
 [data-family-map-export-root='true'] .absolute.z-20 > div[class*="border-dashed"][class*="text-slate-400"] {
