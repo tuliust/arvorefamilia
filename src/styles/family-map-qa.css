@@ -159,10 +159,30 @@ html[data-tree-color-palette="brown"] [data-family-map-connectors="true"] path {
   stroke: var(--family-map-connector) !important;
 }
 
-/*
- * O canvas wide usa width: 1880px quando o painel lateral está colapsado.
- * Nesse estado, desloca apenas Primos Paternos para ocupar melhor a faixa vazia à esquerda.
- */
-[data-family-map-export-root="true"] > div[style*="width: 1880px"] > .absolute.z-10.min-h-0:has(button[aria-label*="Primos Paternos"]) {
-  left: -120px !important;
+/* Ajustes de exportação/seleção do Mapa Familiar vertical.
+   O root exportável precisa permitir overflow porque a correção TS desloca
+   grupos e conectores para dentro de uma superfície lógica maior. */
+[data-family-map-export-root="true"]:not([data-family-map-horizontal-root="true"]) {
+  overflow: visible;
+  isolation: isolate;
 }
+
+[data-family-map-export-root="true"]:not([data-family-map-horizontal-root="true"]) > div {
+  overflow: visible;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root="true"] {
+  box-shadow: none !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root="true"] [data-tree-export-ignore="true"],
+html.is-exporting-family-tree [data-family-map-export-root="true"] [data-tree-selection-overlay="true"],
+html.is-exporting-family-tree [data-family-map-export-root="true"] [data-tree-export-loading="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+[data-family-map-export-root="true"] [data-family-map-connectors="true"] {
+  overflow: visible;
+}
+

@@ -231,3 +231,28 @@ html[data-tree-highlight-groups='true']
     margin-bottom: 0.5rem;
   }
 }
+
+/* Estado global de exportação: remove UI transitória do clone do html2canvas
+   e mantém o painel lateral isolado da superfície capturada. */
+html.is-exporting-family-tree [data-tree-export-ignore="true"],
+html.is-exporting-family-tree [data-tree-selection-overlay="true"],
+html.is-exporting-family-tree [data-tree-export-loading="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+[data-tree-export-loading="true"] {
+  pointer-events: auto;
+}
+
+[data-family-map-export-root="true"] {
+  isolation: isolate;
+  overflow: visible;
+}
+
+[data-family-map-export-root="true"] [data-tree-export-ignore="true"],
+[data-family-map-export-root="true"] [data-tree-selection-overlay="true"],
+[data-family-map-export-root="true"] [data-tree-export-loading="true"] {
+  contain: layout paint;
+}
+

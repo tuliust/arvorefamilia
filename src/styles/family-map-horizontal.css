@@ -192,3 +192,30 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
 [data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path {
   stroke: var(--family-map-connector, #a5eef6) !important;
 }
+
+/* Superfície própria do Mapa Familiar Horizontal usada por seleção e exportação. */
+[data-family-map-horizontal-root="true"] {
+  background: var(--horizontal-map-screen-bg, #ffffff) !important;
+  overflow: visible;
+  isolation: isolate;
+}
+
+[data-family-map-horizontal-root="true"] > div {
+  overflow: visible;
+}
+
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] {
+  box-shadow: none !important;
+}
+
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-export-ignore="true"],
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-selection-overlay="true"],
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-export-loading="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] {
+  overflow: visible;
+}
+

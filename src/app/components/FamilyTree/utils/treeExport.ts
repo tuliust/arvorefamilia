@@ -11,8 +11,21 @@ export interface ExportRect {
 }
 
 export interface CaptureElementOptions {
+  backgroundColor?: string | null;
   ignoreElements?: (node: Element) => boolean;
+  maxScale?: number;
+  scale?: number;
 }
+
+export interface ElementCaptureMetrics {
+  width: number;
+  height: number;
+  scale: number;
+  estimatedPixels: number;
+}
+
+export const DEFAULT_TREE_EXPORT_MAX_SCALE = 2;
+export const DEFAULT_TREE_EXPORT_MAX_PIXELS = 24_000_000;
 
 export function resolveTreeExportTarget(
   explicitTarget?: HTMLElement | null,
@@ -22,6 +35,7 @@ export function resolveTreeExportTarget(
 
   return (
     searchRoot.querySelector('[data-family-map-export-root="true"]') ||
+    searchRoot.querySelector('[data-family-map-horizontal-root="true"]') ||
     searchRoot.querySelector('.react-flow') ||
     searchRoot.querySelector('[data-export-root="family-tree"]')
   ) as HTMLElement | null;
@@ -33,6 +47,12 @@ function getSafeErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function getBrowserExportScale(maxScale = DEFAULT_TREE_EXPORT_MAX_SCALE) {
+  if (typeof window === 'undefined') return 1;
+
+  return Math.min(maxScale, window.devicePixelRatio || 1);
 }
 
 function canvasToDataUrl(canvas: HTMLCanvasElement) {
@@ -52,6 +72,45 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function getElementCssSize(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const width = Math.ceil(Math.max(rect.width, element.offsetWidth, element.scrollWidth, 1));
+  const height = Math.ceil(Math.max(rect.height, element.offsetHeight, element.scrollHeight, 1));
+
+  return { width, height };
+}
+
+export function getElementCaptureMetrics(
+  element: HTMLElement,
+  options: CaptureElementOptions = {}
+): ElementCaptureMetrics {
+  const { width, height } = getElementCssSize(element);
+  const scale = options.scale ?? getBrowserExportScale(options.maxScale);
+  const estimatedPixels = width * scale * height * scale;
+
+  return {
+    width,
+    height,
+    scale,
+    estimatedPixels,
+  };
+}
+
+export function assertSafeElementCaptureSize(
+  element: HTMLElement,
+  label = 'A árvore',
+  maxPixels = DEFAULT_TREE_EXPORT_MAX_PIXELS,
+  options: CaptureElementOptions = {}
+) {
+  const metrics = getElementCaptureMetrics(element, options);
+
+  if (metrics.estimatedPixels <= maxPixels) return metrics;
+
+  throw new Error(
+    `${label} está muito grande para exportar com segurança neste zoom. Reduza o zoom ou use a exportação por área.`
+  );
 }
 
 export function buildTreeExportFilename(label: string, extension: 'png' | 'pdf') {
@@ -82,8 +141,33 @@ export function getDefaultTreeExportIgnoreElements(node: Element) {
     elementNode.closest?.('[data-tree-export-ignore="true"]') ||
     elementNode.closest?.('[data-tree-node-menu="true"]') ||
     elementNode.closest?.('[data-tree-selection-overlay="true"]') ||
-    elementNode.closest?.('[data-tree-legend="true"]')
+    elementNode.closest?.('[data-tree-legend="true"]') ||
+    elementNode.closest?.('[data-tree-export-loading="true"]')
   );
+}
+
+function prepareClonedDocumentForTreeExport(clonedDocument: Document) {
+  clonedDocument.documentElement.classList.add('is-exporting-family-tree');
+  injectExportSafeCss(clonedDocument);
+
+  const clonedRoots = clonedDocument.querySelectorAll<HTMLElement>([
+    '[data-family-map-export-root="true"]',
+    '[data-family-map-horizontal-root="true"]',
+    '[data-export-root="family-tree"]',
+    '.react-flow',
+  ].join(','));
+
+  sanitizeUnsupportedExportColors(clonedDocument.body);
+
+  clonedRoots.forEach((clonedRoot) => {
+    clonedRoot.style.overflow = 'visible';
+    sanitizeUnsupportedExportColors(clonedRoot);
+  });
+
+  clonedDocument.querySelectorAll<HTMLElement>('[data-tree-export-ignore="true"], [data-tree-selection-overlay="true"], [data-tree-export-loading="true"]').forEach((node) => {
+    node.style.setProperty('display', 'none', 'important');
+    node.style.setProperty('visibility', 'hidden', 'important');
+  });
 }
 
 export async function captureElementToCanvas(
@@ -95,28 +179,31 @@ export async function captureElementToCanvas(
   }
 
   const { default: html2canvas } = await import('html2canvas');
+  const metrics = getElementCaptureMetrics(element, options);
+  const backgroundColor = options.backgroundColor === undefined
+    ? '#ffffff'
+    : options.backgroundColor;
+
   document.documentElement.classList.add('is-exporting-family-tree');
 
   try {
     return await html2canvas(element, {
-      backgroundColor: '#ffffff',
-      scale: Math.min(2, window.devicePixelRatio || 1),
+      backgroundColor,
+      scale: metrics.scale,
+      width: metrics.width,
+      height: metrics.height,
+      windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, metrics.width),
+      windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, metrics.height),
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
       useCORS: true,
       allowTaint: false,
+      imageTimeout: 15000,
       logging: false,
+      removeContainer: true,
       ignoreElements: (node) =>
         getDefaultTreeExportIgnoreElements(node) || Boolean(options.ignoreElements?.(node)),
-      onclone: (clonedDocument) => {
-        clonedDocument.documentElement.classList.add('is-exporting-family-tree');
-        injectExportSafeCss(clonedDocument);
-        const clonedRoot =
-          clonedDocument.querySelector('[data-family-map-export-root="true"]') ||
-          clonedDocument.querySelector('[data-export-root="family-tree"]') ||
-          clonedDocument.querySelector('.react-flow') ||
-          clonedDocument.body;
-        sanitizeUnsupportedExportColors(clonedDocument.body);
-        sanitizeUnsupportedExportColors(clonedRoot as HTMLElement);
-      },
+      onclone: prepareClonedDocumentForTreeExport,
     });
   } finally {
     document.documentElement.classList.remove('is-exporting-family-tree');
@@ -126,8 +213,15 @@ export async function captureElementToCanvas(
 export function cropCanvas(sourceCanvas: HTMLCanvasElement, rect: ExportRect) {
   const cropX = Math.max(0, Math.floor(rect.x));
   const cropY = Math.max(0, Math.floor(rect.y));
-  const cropWidth = Math.max(1, Math.min(sourceCanvas.width - cropX, Math.ceil(rect.width)));
-  const cropHeight = Math.max(1, Math.min(sourceCanvas.height - cropY, Math.ceil(rect.height)));
+
+  if (cropX >= sourceCanvas.width || cropY >= sourceCanvas.height) {
+    throw new Error('A área selecionada está fora da imagem capturada.');
+  }
+
+  const availableWidth = sourceCanvas.width - cropX;
+  const availableHeight = sourceCanvas.height - cropY;
+  const cropWidth = Math.min(availableWidth, Math.max(1, Math.ceil(rect.width)));
+  const cropHeight = Math.min(availableHeight, Math.max(1, Math.ceil(rect.height)));
 
   if (cropWidth <= 0 || cropHeight <= 0) {
     throw new Error('A área selecionada está fora da imagem capturada.');
@@ -261,7 +355,7 @@ export function printCanvas(
     </style>
   </head>
   <body>
-    <img src="${imageUrl}" alt="Área selecionada da árvore genealógica" />
+    <img src="${imageUrl}" alt="Mapa familiar exportado" />
     <script>
       const image = document.querySelector('img');
       const printTree = () => {

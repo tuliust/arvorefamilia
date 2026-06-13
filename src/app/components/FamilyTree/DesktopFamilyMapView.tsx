@@ -21,7 +21,11 @@ import {
   openTreePrintWindow,
   printCanvas,
 } from './utils/treeExport';
-import { TreeAreaSelectionOverlay } from './TreeAreaSelectionOverlay';
+import {
+  TreeAreaSelectionOverlay,
+  TreeExportLoadingOverlay,
+  waitForTreeExportPaint,
+} from './TreeAreaSelectionOverlay';
 
 interface DesktopFamilyMapViewProps {
   pessoas: Pessoa[];
@@ -563,6 +567,43 @@ const FAMILY_MAP_LAYOUT_BASE = {
     },
   } satisfies Record<FamilyMapGroupId, GroupConfig>,
 } satisfies FamilyMapLayout;
+
+const EXPORT_HORIZONTAL_PADDING = 48;
+const MAX_DIRECT_EXPORT_PIXELS = 24_000_000;
+
+function estimateElementExportPixels(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const scale = typeof window === 'undefined'
+    ? 1
+    : Math.min(2, window.devicePixelRatio || 1);
+
+  return rect.width * scale * rect.height * scale;
+}
+
+function assertSafeDirectExportSize(element: HTMLElement, label: string) {
+  if (estimateElementExportPixels(element) <= MAX_DIRECT_EXPORT_PIXELS) return;
+
+  throw new Error(
+    `${label} está muito grande para exportar com segurança neste zoom. Reduza o zoom ou use a exportação por área.`
+  );
+}
+
+function getOffsetLayout(layout: ResolvedGroup, offsetX: number): ResolvedGroup {
+  return {
+    ...layout,
+    left: layout.left + offsetX,
+  };
+}
+
+function getOffsetConnectorPoints(points: Point[], offsetX: number): Point[] {
+  return points.map(([x, y]) => [x + offsetX, y]);
+}
+
+function getExportLoadingMessage(action: 'image' | 'pdf' | 'print') {
+  if (action === 'image') return 'Preparando imagem...';
+  if (action === 'pdf') return 'Gerando PDF...';
+  return 'Preparando impressão...';
+}
 
 function getFamilyMapLayout(isWideLayout: boolean): FamilyMapLayout {
   if (!isWideLayout) return FAMILY_MAP_LAYOUT_BASE;
@@ -1145,6 +1186,7 @@ function DesktopFamilyMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
+  const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
   const isWideLayout = Boolean(sidebarCollapsed);
   const familyMapLayout = React.useMemo(
@@ -1435,6 +1477,22 @@ function DesktopFamilyMapViewComponent({
     familyMapLayout.canvas.minHeight,
     contentBottom + familyMapLayout.metrics.groupGap,
   );
+  const layoutsForExportBounds = [
+    centralLayout,
+    ...(directRelativeFilters.pais ? [fatherLayout, motherLayout] : []),
+    ...(spouseLayout ? [spouseLayout] : []),
+    ...groupLayouts,
+  ];
+  const contentMinX = Math.min(
+    0,
+    ...layoutsForExportBounds.map((layout) => layout.left),
+  );
+  const contentMaxX = Math.max(
+    familyMapLayout.canvas.width,
+    ...layoutsForExportBounds.map((layout) => layout.left + layout.width),
+  );
+  const exportCanvasWidth = contentMaxX - contentMinX + EXPORT_HORIZONTAL_PADDING * 2;
+  const renderOffsetX = -contentMinX + EXPORT_HORIZONTAL_PADDING;
 
   const connectors: Connector[] = [];
   const addConnector = (connector?: Connector) => {
@@ -1606,7 +1664,7 @@ function DesktopFamilyMapViewComponent({
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
     const updateScale = () => {
-      const widthScale = viewport.clientWidth / familyMapLayout.canvas.width;
+      const widthScale = viewport.clientWidth / exportCanvasWidth;
       const heightScale = viewport.clientHeight / familyMapLayout.canvas.minHeight;
       setResponsiveScale(Math.min(
         1,
@@ -1620,7 +1678,7 @@ function DesktopFamilyMapViewComponent({
     observer.observe(viewport);
     updateScale();
     return () => observer.disconnect();
-  }, [canvasHeight, familyMapLayout, layoutRevision]);
+  }, [canvasHeight, exportCanvasWidth, familyMapLayout, layoutRevision]);
 
   React.useEffect(() => {
     setManualZoom(1);
@@ -1723,6 +1781,7 @@ function DesktopFamilyMapViewComponent({
       throw new Error('Área do Mapa Familiar não encontrada para exportação.');
     }
 
+    assertSafeDirectExportSize(exportRootRef.current, 'O Mapa Familiar');
     return captureElementToCanvas(exportRootRef.current);
   }, []);
   const handleZoomIn = React.useCallback(() => {
@@ -1738,16 +1797,28 @@ function DesktopFamilyMapViewComponent({
     ));
   }, [familyMapLayout.canvas]);
   const handleSaveImage = React.useCallback(async () => {
+    if (exportLoadingMessage) return;
+
+    setExportLoadingMessage(getExportLoadingMessage('image'));
+
     try {
+      await waitForTreeExportPaint();
       const canvas = await captureFamilyMap();
       downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar', 'png'));
     } catch (error) {
       console.error('Erro ao exportar imagem do Mapa Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Familiar.');
+    } finally {
+      setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap]);
+  }, [captureFamilyMap, exportLoadingMessage]);
   const handleSavePdf = React.useCallback(async () => {
+    if (exportLoadingMessage) return;
+
+    setExportLoadingMessage(getExportLoadingMessage('pdf'));
+
     try {
+      await waitForTreeExportPaint();
       const canvas = await captureFamilyMap();
       await exportCanvasAsPdf(
         canvas,
@@ -1757,28 +1828,38 @@ function DesktopFamilyMapViewComponent({
     } catch (error) {
       console.error('Erro ao exportar PDF do Mapa Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Familiar.');
+    } finally {
+      setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap]);
+  }, [captureFamilyMap, exportLoadingMessage]);
   const handlePrint = React.useCallback(async () => {
+    if (exportLoadingMessage) return;
+
     const printWindow = openTreePrintWindow();
+    setExportLoadingMessage(getExportLoadingMessage('print'));
 
     try {
+      await waitForTreeExportPaint();
       const canvas = await captureFamilyMap();
       printCanvas(canvas, 'Imprimir Mapa Familiar', printWindow);
     } catch (error) {
       if (!printWindow.closed) printWindow.close();
       console.error('Erro ao imprimir o Mapa Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Familiar.');
+    } finally {
+      setExportLoadingMessage(null);
     }
-  }, [captureFamilyMap]);
+  }, [captureFamilyMap, exportLoadingMessage]);
   const handleStartAreaSelection = React.useCallback(() => {
-    if (!mapSurfaceRef.current) {
+    if (exportLoadingMessage) return;
+
+    if (!exportRootRef.current) {
       toast.error('Área do Mapa Familiar não encontrada para seleção.');
       return;
     }
 
     setIsAreaSelectionOpen(true);
-  }, []);
+  }, [exportLoadingMessage]);
 
   const handleCloseAreaSelection = React.useCallback(() => {
     setIsAreaSelectionOpen(false);
@@ -1813,7 +1894,7 @@ function DesktopFamilyMapViewComponent({
         data-family-map-export-root="true"
         className="relative z-10 mx-auto"
         style={{
-          width: familyMapLayout.canvas.width * effectiveScale,
+          width: exportCanvasWidth * effectiveScale,
           height: canvasHeight * effectiveScale,
         }}
       >
@@ -1821,7 +1902,7 @@ function DesktopFamilyMapViewComponent({
           ref={mapSurfaceRef}
           className="absolute left-0 top-0 origin-top-left"
           style={{
-            width: familyMapLayout.canvas.width,
+            width: exportCanvasWidth,
             height: canvasHeight,
             transform: `scale(${effectiveScale})`,
           }}
@@ -1829,7 +1910,7 @@ function DesktopFamilyMapViewComponent({
           <svg
             data-family-map-connectors="true"
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${familyMapLayout.canvas.width} ${canvasHeight}`}
+            viewBox={`0 0 ${exportCanvasWidth} ${canvasHeight}`}
             aria-hidden="true"
           >
             <g
@@ -1840,7 +1921,7 @@ function DesktopFamilyMapViewComponent({
               strokeLinejoin="round"
             >
               {connectors.map((connector) => (
-                <path key={connector.id} d={connectorPath(connector.points)} />
+                <path key={connector.id} d={connectorPath(getOffsetConnectorPoints(connector.points, renderOffsetX))} />
               ))}
             </g>
           </svg>
@@ -1848,7 +1929,7 @@ function DesktopFamilyMapViewComponent({
           {groupLayouts.map((layout) => (
             <PositionedGroup
               key={layout.id}
-              layout={layout}
+              layout={getOffsetLayout(layout, renderOffsetX)}
               vitalMode={isWideLayout ? 'full' : 'year'}
               expanded={expandedGroups.has(layout.id)}
               onExpandedChange={handleExpandedChange}
@@ -1859,13 +1940,13 @@ function DesktopFamilyMapViewComponent({
           {directRelativeFilters.pais && (
             <>
               <DirectPersonCard
-                layout={fatherLayout}
+                layout={getOffsetLayout(fatherLayout, renderOffsetX)}
                 person={father}
                 emptyLabel="Pai"
                 onPersonClick={onPersonClick}
               />
               <DirectPersonCard
-                layout={motherLayout}
+                layout={getOffsetLayout(motherLayout, renderOffsetX)}
                 person={mother}
                 emptyLabel="Mãe"
                 onPersonClick={onPersonClick}
@@ -1874,7 +1955,7 @@ function DesktopFamilyMapViewComponent({
           )}
           {central && (
             <DirectPersonCard
-              layout={centralLayout}
+              layout={getOffsetLayout(centralLayout, renderOffsetX)}
               person={central}
               central
               showLabel={false}
@@ -1883,7 +1964,7 @@ function DesktopFamilyMapViewComponent({
           )}
           {mainSpouse && spouseLayout && (
             <DirectPersonCard
-              layout={spouseLayout}
+              layout={getOffsetLayout(spouseLayout, renderOffsetX)}
               person={mainSpouse}
               tone="spouse"
               onPersonClick={onPersonClick}
@@ -1892,13 +1973,19 @@ function DesktopFamilyMapViewComponent({
         </div>
         {isAreaSelectionOpen && (
           <TreeAreaSelectionOverlay
-            getTargetElement={() => mapSurfaceRef.current}
+            getTargetElement={() => exportRootRef.current}
             filenameLabel="mapa-familiar"
             title="Área selecionada do Mapa Familiar"
             onClose={handleCloseAreaSelection}
           />
         )}
       </div>
+      {exportLoadingMessage && (
+        <TreeExportLoadingOverlay
+          title="Exportando Mapa Familiar"
+          message={exportLoadingMessage}
+        />
+      )}
     </div>
   );
 }

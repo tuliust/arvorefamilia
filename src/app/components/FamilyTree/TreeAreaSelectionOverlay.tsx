@@ -29,6 +29,51 @@ interface TreeAreaSelectionOverlayProps {
 const MIN_SELECTION_SIZE = 80;
 const MAX_EXPORT_PIXELS = 12_000_000;
 
+export function waitForTreeExportPaint() {
+  return new Promise<void>((resolve) => {
+    if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+      resolve();
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+interface TreeExportLoadingOverlayProps {
+  message: string;
+  title?: string;
+}
+
+export function TreeExportLoadingOverlay({
+  message,
+  title = 'Exportando árvore',
+}: TreeExportLoadingOverlayProps) {
+  return (
+    <div
+      data-tree-export-ignore="true"
+      className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 backdrop-blur-[1px]"
+      role="dialog"
+      aria-modal="true"
+      aria-busy="true"
+      aria-labelledby="tree-export-loading-title"
+      aria-describedby="tree-export-loading-message"
+    >
+      <div className="w-full max-w-xs rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-2xl">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-slate-700" aria-hidden="true" />
+        <p id="tree-export-loading-title" className="mt-3 text-sm font-semibold text-slate-900">
+          {title}
+        </p>
+        <p id="tree-export-loading-message" className="mt-1 text-xs text-slate-600">
+          {message}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -171,6 +216,8 @@ export function TreeAreaSelectionOverlay({
 
     try {
       printWindow = action === 'print' ? openTreePrintWindow() : null;
+      await waitForTreeExportPaint();
+
       const targetRect = target.getBoundingClientRect();
       const canvas = await captureElementToCanvas(target);
       const scaleX = canvas.width / targetRect.width;
@@ -317,6 +364,13 @@ export function TreeAreaSelectionOverlay({
             )}
           </div>
         </>
+      )}
+
+      {activeAction && (
+        <TreeExportLoadingOverlay
+          title="Exportando área selecionada"
+          message={getActionLabel(activeAction)}
+        />
       )}
 
       {!selection && (
