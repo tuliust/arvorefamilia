@@ -106,6 +106,31 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
 const ANCESTOR_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['avos', 'bisavos', 'tataravos'];
 const FILTERABLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['tios', 'primos', 'sobrinhos', 'filhos', 'netos'];
 
+function getTreeHighlightGroupsActive() {
+  return typeof document !== 'undefined'
+    && document.documentElement.dataset.treeHighlightGroups === 'true';
+}
+
+function useTreeHighlightGroupsActive() {
+  const [active, setActive] = React.useState(getTreeHighlightGroupsActive);
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const updateActive = () => setActive(getTreeHighlightGroupsActive());
+    const observer = new MutationObserver(updateActive);
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-tree-highlight-groups'],
+    });
+    updateActive();
+
+    return () => observer.disconnect();
+  }, []);
+
+  return active;
+}
+
 function createDirectRelativeFiltersForGroups(groups: DirectRelativeGroup[]): DirectRelativeFilters {
   const activeGroups = new Set(groups);
 
@@ -529,6 +554,8 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
+  const hideGenerationHeaders = useTreeHighlightGroupsActive();
+  const canvasTop = hideGenerationHeaders ? 40 : CANVAS.top;
 
   const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
   const horizontalVisibility = React.useMemo(() => {
@@ -657,14 +684,14 @@ function DesktopFamilyHorizontalMapViewComponent({
 
   const { layouts, canvasHeight } = React.useMemo(() => {
     const nextLayouts = new Map<string, PersonLayout>();
-    let maxBottom = CANVAS.top + CANVAS.cardHeight;
+    let maxBottom = canvasTop + CANVAS.cardHeight;
 
     activeGenerations.forEach((generation, columnIndex) => {
       const people = peopleByGeneration.get(generation) ?? [];
       const left = CANVAS.left + columnIndex * CANVAS.columnWidth;
 
       people.forEach((person, rowIndex) => {
-        const top = CANVAS.top + rowIndex * (CANVAS.cardHeight + CANVAS.rowGap);
+        const top = canvasTop + rowIndex * (CANVAS.cardHeight + CANVAS.rowGap);
         const layout: PersonLayout = {
           person,
           generation,
@@ -680,9 +707,9 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     return {
       layouts: nextLayouts,
-      canvasHeight: Math.max(CANVAS.minHeight, maxBottom + CANVAS.top),
+      canvasHeight: Math.max(CANVAS.minHeight, maxBottom + canvasTop),
     };
-  }, [activeGenerations, peopleByGeneration]);
+  }, [activeGenerations, canvasTop, peopleByGeneration]);
 
   const connectors = React.useMemo(() => buildConnectors(layouts, maps), [layouts, maps]);
   const effectiveScale = responsiveScale * manualZoom;
@@ -868,7 +895,7 @@ function DesktopFamilyHorizontalMapViewComponent({
             </g>
           </svg>
 
-          {activeGenerations.map((generation, index) => (
+          {!hideGenerationHeaders && activeGenerations.map((generation, index) => (
             <div
               key={generation}
               className="absolute top-12 z-10 -translate-x-1/2 rounded-full bg-slate-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow"

@@ -409,7 +409,15 @@ Regras:
 - não deixar linhas conectarem cards invisíveis;
 - se casal não tiver filho visível na geração seguinte, manter apenas linha de cônjuge.
 
-### 7.8 Cards e cores
+### 7.8 Destaque de grupos
+
+No Mapa Familiar Horizontal, **Destacar > Grupos**:
+
+- oculta os cabeçalhos `Geração X`;
+- reduz o topo inicial do layout para os cards ocuparem a área liberada;
+- recalcula os conectores a partir das novas posições dos cards.
+
+### 7.9 Cards e cores
 
 A horizontal usa `VisualPersonCard`.
 
@@ -424,7 +432,7 @@ Regras:
 - cards mantêm avatar, nome e anos;
 - foto real tem prioridade sobre avatar fallback.
 
-### 7.9 Mobile da horizontal
+### 7.10 Mobile da horizontal
 
 Em mobile, `/mapa-familiar-horizontal` usa a própria view horizontal.
 
