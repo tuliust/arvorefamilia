@@ -765,7 +765,40 @@ function MobileFamilyHorizontalMapViewComponent({
   }, [activeGenerationSignature, centralPersonId, generationByPersonId, layoutRevision]);
 
   React.useEffect(() => {
-    if (activeGenerations.length === 0) {
+    const activeGeneration = activeGenerations[activeIndex];
+  const activeColumnIndex = Math.max(0, activeIndex);
+  const activeColumnLeft = MOBILE_HORIZONTAL_CANVAS.left
+    + activeColumnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
+
+  const activeLayouts = React.useMemo(
+    () => Array.from(layouts.values())
+      .filter((layout) => layout.generation === activeGeneration)
+      .sort((a, b) => a.top - b.top),
+    [activeGeneration, layouts],
+  );
+
+  const activeGenerationHeight = React.useMemo(() => {
+    const headerBottom = MOBILE_HORIZONTAL_CANVAS.headerTop
+      + MOBILE_HORIZONTAL_CANVAS.headerHeight;
+
+    if (activeLayouts.length === 0) {
+      return headerBottom + MOBILE_HORIZONTAL_CANVAS.bottomPadding;
+    }
+
+    const lastCardBottom = Math.max(...activeLayouts.map((layout) => layout.top + layout.height));
+
+    return lastCardBottom + 12;
+  }, [activeLayouts]);
+
+  const activeSpouseConnectors = React.useMemo(
+    () => spouseConnectors.filter((connector) => connector.points.every(([x]) => (
+      x >= activeColumnLeft
+      && x <= activeColumnLeft + MOBILE_HORIZONTAL_CANVAS.cardWidth
+    ))),
+    [activeColumnLeft, spouseConnectors],
+  );
+
+  if (activeGenerations.length === 0) {
       onDirectRelationRenderedCounts?.(EMPTY_COUNTS);
       return;
     }
@@ -800,21 +833,14 @@ function MobileFamilyHorizontalMapViewComponent({
 
   React.useEffect(() => {
     const stage = stageScrollRef.current;
-    const activeGeneration = activeGenerations[activeIndex];
-    const column = activeGeneration ? generationColumnRefs.current.get(activeGeneration) : null;
-
-    if (!stage || !column) return;
-
-    const stageRect = stage.getBoundingClientRect();
-    const columnRect = column.getBoundingClientRect();
-    const columnCenter = stage.scrollLeft + (columnRect.left - stageRect.left) + columnRect.width / 2;
-    const targetLeft = Math.max(0, columnCenter - stage.clientWidth / 2);
+    if (!stage) return;
 
     stage.scrollTo({
-      left: targetLeft,
+      top: 0,
+      left: 0,
       behavior: 'smooth',
     });
-  }, [activeGenerations, activeIndex, layoutRevision]);
+  }, [activeIndex, layoutRevision]);
 
   const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
@@ -860,7 +886,7 @@ function MobileFamilyHorizontalMapViewComponent({
     const threshold = Math.max(56, (viewportRef.current?.clientWidth ?? 360) * 0.18);
 
     if (swipeState.active && absoluteX >= threshold) {
-      goToIndex(deltaX < 0 ? activeIndex + 1 : activeIndex - 1);
+      goToIndex(deltaX > 0 ? activeIndex + 1 : activeIndex - 1);
       return;
     }
 
@@ -986,15 +1012,15 @@ function MobileFamilyHorizontalMapViewComponent({
 
       <div
         ref={stageScrollRef}
-        className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+5.65rem)] top-[48px] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-none bg-[#f8efe4] [-webkit-overflow-scrolling:touch]"
+        className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+5.65rem)] top-[48px] overflow-x-hidden overflow-y-auto overscroll-x-none overscroll-y-contain bg-[#f8efe4] [-webkit-overflow-scrolling:touch]"
         data-mobile-horizontal-stage="true"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative w-max pl-[calc((100vw-12rem)/2)] pr-[calc((100vw-12rem)/2)] pb-4 pt-8"
-          style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top left' }}
+          className="relative mx-auto w-[12rem] pb-3 pt-8"
+          style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top center' }}
         >
           <div
             ref={(node) => {
@@ -1002,66 +1028,48 @@ function MobileFamilyHorizontalMapViewComponent({
             }}
             className="relative"
             style={{
-              width: canvasWidth,
-              height: canvasHeight,
+              width: MOBILE_HORIZONTAL_CANVAS.cardWidth,
+              height: activeGenerationHeight,
             }}
             data-mobile-horizontal-map-surface="true"
           >
-            <svg
-              data-family-map-connectors="true"
-              className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-              viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-              aria-hidden="true"
+            <div
+              className="absolute z-10 -translate-x-1/2 rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
+              style={{
+                left: MOBILE_HORIZONTAL_CANVAS.cardWidth / 2,
+                top: MOBILE_HORIZONTAL_CANVAS.headerTop,
+              }}
             >
-              <g
-                fill="none"
-                stroke="#d9ad82"
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              Geração {activeGeneration}
+            </div>
+
+            {activeSpouseConnectors.length > 0 && (
+              <svg
+                data-family-map-spouse-connectors="true"
+                className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+                viewBox={`${activeColumnLeft} 0 ${MOBILE_HORIZONTAL_CANVAS.cardWidth} ${activeGenerationHeight}`}
+                aria-hidden="true"
               >
-                {familyConnectors.map((connector) => (
-                  <path key={connector.id} d={connectorPath(connector.points)} />
-                ))}
-              </g>
-            </svg>
+                <g
+                  fill="none"
+                  stroke="#d9ad82"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {activeSpouseConnectors.map((connector) => (
+                    <path key={connector.id} d={connectorPath(connector.points)} />
+                  ))}
+                </g>
+              </svg>
+            )}
 
-            {activeGenerations.map((generation, columnIndex) => {
-              const left = MOBILE_HORIZONTAL_CANVAS.left
-                + columnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
-
-              return (
-                <React.Fragment key={generation}>
-                  <div
-                    ref={setGenerationColumnRef(generation)}
-                    className="pointer-events-none absolute"
-                    style={{
-                      left,
-                      top: 0,
-                      width: MOBILE_HORIZONTAL_CANVAS.cardWidth,
-                      height: 1,
-                    }}
-                    aria-hidden="true"
-                  />
-                  <div
-                    className="absolute z-10 -translate-x-1/2 rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
-                    style={{
-                      left: left + MOBILE_HORIZONTAL_CANVAS.cardWidth / 2,
-                      top: MOBILE_HORIZONTAL_CANVAS.headerTop,
-                    }}
-                  >
-                    Geração {generation}
-                  </div>
-                </React.Fragment>
-              );
-            })}
-
-            {Array.from(layouts.values()).map((layout) => (
+            {activeLayouts.map((layout) => (
               <div
                 key={layout.person.id}
                 className="absolute z-20"
                 style={{
-                  left: layout.left,
+                  left: layout.left - activeColumnLeft,
                   top: layout.top,
                   width: layout.width,
                 }}
@@ -1078,27 +1086,6 @@ function MobileFamilyHorizontalMapViewComponent({
                 />
               </div>
             ))}
-
-            {spouseConnectors.length > 0 && (
-              <svg
-                data-family-map-spouse-connectors="true"
-                className="pointer-events-none absolute inset-0 z-30 h-full w-full"
-                viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-                aria-hidden="true"
-              >
-                <g
-                  fill="none"
-                  stroke="#d9ad82"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {spouseConnectors.map((connector) => (
-                    <path key={connector.id} d={connectorPath(connector.points)} />
-                  ))}
-                </g>
-              </svg>
-            )}
           </div>
         </div>
       </div>
