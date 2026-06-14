@@ -1279,7 +1279,7 @@ function DesktopFamilyMapViewComponent({
   const central = isVisible(model.central, true) ? model.central : undefined;
   const exportTitle = React.useMemo(() => {
     const firstName = getExportFirstName(central);
-    return firstName ? `Mapa Familiar de ${firstName}` : 'Mapa Familiar';
+    return firstName ? `Árvore Familiar de ${firstName}` : 'Árvore Familiar';
   }, [central]);
   const mainSpouses = filterVisible(model.spouses);
   const mainSpouse = mainSpouses[0];
@@ -1832,10 +1832,10 @@ function DesktopFamilyMapViewComponent({
   const effectiveScale = responsiveScale * manualZoom;
   const captureFamilyMap = React.useCallback(async () => {
     if (!exportRootRef.current) {
-      throw new Error('Área do Mapa Familiar não encontrada para exportação.');
+      throw new Error('Área do Árvore Familiar não encontrada para exportação.');
     }
 
-    assertSafeDirectExportSize(exportRootRef.current, 'O Mapa Familiar');
+    assertSafeDirectExportSize(exportRootRef.current, 'O Árvore Familiar');
     return captureElementToCanvas(exportRootRef.current);
   }, []);
   const handleZoomIn = React.useCallback(() => {
@@ -1857,12 +1857,13 @@ function DesktopFamilyMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar', 'png'));
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
-      console.error('Erro ao exportar imagem do Mapa Familiar:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Familiar.');
+      console.error('Erro ao exportar imagem do Árvore Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Árvore Familiar.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -1874,16 +1875,17 @@ function DesktopFamilyMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       await exportCanvasAsPdf(
         canvas,
         buildTreeExportFilename('mapa-familiar', 'pdf'),
         '',
       );
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
-      console.error('Erro ao exportar PDF do Mapa Familiar:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Familiar.');
+      console.error('Erro ao exportar PDF do Árvore Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Árvore Familiar.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -1896,13 +1898,14 @@ function DesktopFamilyMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       await printCanvas(canvas, exportTitle, printWindow);
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
       if (!printWindow.closed) printWindow.close();
-      console.error('Erro ao imprimir o Mapa Familiar:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Familiar.');
+      console.error('Erro ao imprimir o Árvore Familiar:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Árvore Familiar.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -1911,11 +1914,11 @@ function DesktopFamilyMapViewComponent({
     if (exportLoadingMessage) return;
 
     if (!viewportRef.current) {
-      toast.error('Área visível do Mapa Familiar não encontrada para seleção.');
+      toast.error('Área visível do Árvore Familiar não encontrada para seleção.');
       return;
     }
 
-    setIsAreaSelectionOpen(true);
+    setIsAreaSelectionOpen((current) => !current);
   }, [exportLoadingMessage]);
 
   const handleCloseAreaSelection = React.useCallback(() => {
@@ -2043,7 +2046,7 @@ function DesktopFamilyMapViewComponent({
       </div>
       {exportLoadingMessage && (
         <TreeExportLoadingOverlay
-          title="Exportando Mapa Familiar"
+          title="Exportando Árvore Familiar"
           message={exportLoadingMessage}
         />
       )}

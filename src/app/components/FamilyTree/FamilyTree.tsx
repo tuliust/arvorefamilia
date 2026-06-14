@@ -1750,7 +1750,7 @@ function FamilyTreeComponent({
       return;
     }
 
-    setIsAreaSelectionOpen(true);
+    setIsAreaSelectionOpen((current) => !current);
   }, []);
 
   const handleCloseAreaSelection = useCallback(() => {

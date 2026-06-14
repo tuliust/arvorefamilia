@@ -534,9 +534,10 @@ function MobileFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureActiveGeneration(), exportTitle);
       downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar-horizontal-mobile', 'png'));
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem.');
     } finally {
@@ -550,13 +551,14 @@ function MobileFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureActiveGeneration(), exportTitle);
       await exportCanvasAsPdf(
         canvas,
         buildTreeExportFilename('mapa-familiar-horizontal-mobile', 'pdf'),
         '',
       );
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF.');
     } finally {
@@ -571,9 +573,10 @@ function MobileFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureActiveGeneration(), exportTitle);
       await printCanvas(canvas, exportTitle, printWindow);
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
       if (!printWindow.closed) printWindow.close();
       toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir.');

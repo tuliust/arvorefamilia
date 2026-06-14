@@ -36,10 +36,10 @@ function getTreeTitleFirstName(value?: string | null) {
 
 function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
   if (viewMode === 'mapa-familiar') {
-    return `Mapa Familiar de ${firstName}`;
+    return `Árvore Familiar de ${firstName}`;
   }
 
-  return `Mapa Familiar Horizontal de ${firstName}`;
+  return `Mapa Genealógico de ${firstName}`;
 }
 
 interface HomeTreeSectionProps {

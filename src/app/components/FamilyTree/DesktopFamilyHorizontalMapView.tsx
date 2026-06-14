@@ -676,7 +676,7 @@ function DesktopFamilyHorizontalMapViewComponent({
   );
   const exportTitle = React.useMemo(() => {
     const firstName = getExportFirstName(centralPerson);
-    return firstName ? `Genealogia de ${firstName}` : 'Genealogia';
+    return firstName ? `Mapa Genealógico de ${firstName}` : 'Mapa Genealógico';
   }, [centralPerson]);
   const spouseTonePersonIds = horizontalVisibility.spouseTonePersonIds;
   const filterableSpousePersonIds = horizontalVisibility.filterableSpousePersonIds;
@@ -860,10 +860,10 @@ function DesktopFamilyHorizontalMapViewComponent({
 
   const captureFamilyMap = React.useCallback(async () => {
     if (!exportRootRef.current) {
-      throw new Error('Área do Mapa Familiar Horizontal não encontrada para exportação.');
+      throw new Error('Área do Mapa Genealógico não encontrada para exportação.');
     }
 
-    assertSafeDirectExportSize(exportRootRef.current, 'O Mapa Familiar Horizontal');
+    assertSafeDirectExportSize(exportRootRef.current, 'O Mapa Genealógico');
     return captureElementToCanvas(exportRootRef.current);
   }, []);
 
@@ -882,12 +882,13 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar-horizontal', 'png'));
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
-      console.error('Erro ao exportar imagem do Mapa Familiar Horizontal:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Familiar Horizontal.');
+      console.error('Erro ao exportar imagem do Mapa Genealógico:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Genealógico.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -900,16 +901,17 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       await exportCanvasAsPdf(
         canvas,
         buildTreeExportFilename('mapa-familiar-horizontal', 'pdf'),
         '',
       );
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
-      console.error('Erro ao exportar PDF do Mapa Familiar Horizontal:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Familiar Horizontal.');
+      console.error('Erro ao exportar PDF do Mapa Genealógico:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Genealógico.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -923,13 +925,14 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     try {
       await waitForTreeExportPaint();
+      await waitForExportUiSettle(150);
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
       await printCanvas(canvas, exportTitle, printWindow);
-      await waitForExportUiSettle();
+      await waitForExportUiSettle(700);
     } catch (error) {
       if (!printWindow.closed) printWindow.close();
-      console.error('Erro ao imprimir o Mapa Familiar Horizontal:', error);
-      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Familiar Horizontal.');
+      console.error('Erro ao imprimir o Mapa Genealógico:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Genealógico.');
     } finally {
       setExportLoadingMessage(null);
     }
@@ -939,11 +942,11 @@ function DesktopFamilyHorizontalMapViewComponent({
     if (exportLoadingMessage) return;
 
     if (!viewportRef.current) {
-      toast.error('Área visível do Mapa Familiar Horizontal não encontrada para seleção.');
+      toast.error('Área visível do Mapa Genealógico não encontrada para seleção.');
       return;
     }
 
-    setIsAreaSelectionOpen(true);
+    setIsAreaSelectionOpen((current) => !current);
   }, [exportLoadingMessage]);
 
   const handleCloseAreaSelection = React.useCallback(() => {
@@ -1049,7 +1052,7 @@ function DesktopFamilyHorizontalMapViewComponent({
       </div>
       {exportLoadingMessage && (
         <TreeExportLoadingOverlay
-          title="Exportando Mapa Familiar Horizontal"
+          title="Exportando Mapa Genealógico"
           message={exportLoadingMessage}
         />
       )}

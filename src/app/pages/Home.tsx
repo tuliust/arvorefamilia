@@ -1098,14 +1098,12 @@ export function Home() {
           >
             {sidebarOpen && (
               <div className="flex min-h-0 flex-1 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
-                <div className="flex items-start gap-[clamp(0.35rem,0.8vh,0.5rem)]">
-                  <div className="min-w-0 flex-1">
-                    <SidebarPanelTabs />
-                  </div>
+                <div className="relative min-w-0">
+                  <SidebarPanelTabs />
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
+                    className="absolute right-0 top-0 z-10 h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
