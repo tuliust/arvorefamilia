@@ -787,6 +787,12 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
+const ADAPTIVE_UNCLES_GROUP_IDS = new Set<FamilyMapGroupId>([
+  'paternalUncles',
+  'maternalUncles',
+]);
+const GROUP_HORIZONTAL_PADDING = 24;
+
 function getColumnCount(columns: GroupColumns) {
   if (columns === 'quad') return 4;
   if (columns === 'triple') return 3;
@@ -807,6 +813,41 @@ function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: b
   return lastPerson && nextPerson && nextPartnerId === lastPerson.id
     ? [...visible, nextPerson]
     : visible;
+}
+
+function getAdaptiveGroupColumns(
+  config: GroupConfig,
+  visiblePeople: Pessoa[],
+): GroupColumns {
+  return ADAPTIVE_UNCLES_GROUP_IDS.has(config.id)
+    && (visiblePeople.length === 3 || visiblePeople.length === 6)
+    ? 'triple'
+    : config.columns;
+}
+
+function getAdaptiveGroupWidth(
+  config: GroupConfig,
+  peopleCount: number,
+  columns: GroupColumns,
+  layout: FamilyMapLayout,
+) {
+  if (peopleCount === 1 && config.singleWidth) {
+    return Math.min(config.width, config.singleWidth);
+  }
+  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) || columns !== 'triple') {
+    return config.width;
+  }
+
+  const originalColumnCount = getColumnCount(config.columns);
+  const adaptiveColumnCount = getColumnCount(columns);
+  const originalGridWidth = config.width
+    - GROUP_HORIZONTAL_PADDING
+    - Math.max(0, originalColumnCount - 1) * layout.metrics.gridGap;
+  const cardWidth = originalGridWidth / originalColumnCount;
+
+  return GROUP_HORIZONTAL_PADDING
+    + adaptiveColumnCount * cardWidth
+    + Math.max(0, adaptiveColumnCount - 1) * layout.metrics.gridGap;
 }
 
 function getGridCellCount(
@@ -832,32 +873,26 @@ function getGridCellCount(
 function getGroupHeight(
   group: ComposedGroup,
   config: GroupConfig,
-  expanded: boolean,
+  visiblePeople: Pessoa[],
+  columns: GroupColumns,
   layout: FamilyMapLayout,
   hideGroupChrome = false,
 ) {
-  const visiblePeople = getVisiblePeople(group, config, expanded);
   const cardHeight = config.variant === 'horizontal'
     ? layout.metrics.horizontalCardHeight
     : layout.metrics.miniCardHeight;
   const cells = getGridCellCount(
     visiblePeople,
-    config.columns,
+    columns,
     group.spousePartnerByPersonId,
   );
-  const rows = Math.max(1, Math.ceil(cells / getColumnCount(config.columns)));
+  const rows = Math.max(1, Math.ceil(cells / getColumnCount(columns)));
 
   const verticalPadding = hideGroupChrome ? 0 : layout.metrics.groupVerticalPadding;
 
   return verticalPadding
     + rows * cardHeight
     + Math.max(0, rows - 1) * layout.metrics.gridGap;
-}
-
-function getGroupWidth(config: GroupConfig, peopleCount: number) {
-  return peopleCount === 1 && config.singleWidth
-    ? Math.min(config.width, config.singleWidth)
-    : config.width;
 }
 
 function centerWithin(baseX: number, baseWidth: number, width: number) {
@@ -980,12 +1015,17 @@ function stackGroups(
     const config = layout.groups[id];
     const group = groups.get(id);
     if (!group?.people.length) return;
-    const height = getGroupHeight(group, config, expandedGroups.has(id), layout, hideGroupChrome);
+    const visiblePeople = getVisiblePeople(group, config, expandedGroups.has(id));
+    const columns = getAdaptiveGroupColumns(config, visiblePeople);
+    const width = getAdaptiveGroupWidth(config, visiblePeople.length, columns, layout);
+    const height = getGroupHeight(group, config, visiblePeople, columns, layout, hideGroupChrome);
     layouts.push({
       ...config,
       ...group,
-      left: config.x,
+      left: centerWithin(config.x, config.width, width),
       top,
+      width,
+      columns,
       height,
     });
     top += height + layout.metrics.groupGap;
@@ -1006,14 +1046,17 @@ function resolveGroup(
   const config = layout.groups[id];
   const group = groups.get(id);
   if (!group?.people.length) return undefined;
-  const width = getGroupWidth(config, group.people.length);
+  const visiblePeople = getVisiblePeople(group, config, expandedGroups.has(id));
+  const columns = getAdaptiveGroupColumns(config, visiblePeople);
+  const width = getAdaptiveGroupWidth(config, visiblePeople.length, columns, layout);
   return {
     ...config,
     ...group,
     left: baseArea ? centerWithin(baseArea.x, baseArea.width, width) : config.x,
     top,
     width,
-    height: getGroupHeight(group, config, expandedGroups.has(id), layout, hideGroupChrome),
+    columns,
+    height: getGroupHeight(group, config, visiblePeople, columns, layout, hideGroupChrome),
   } satisfies ResolvedGroup;
 }
 
