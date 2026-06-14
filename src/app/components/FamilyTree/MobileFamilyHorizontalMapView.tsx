@@ -51,18 +51,29 @@ type RelationshipMaps = {
   spousesByPerson: Map<string, Set<string>>;
 };
 
-type Connector = {
-  id: string;
-  fromGeneration: number;
-  toGeneration: number;
-  fromPersonId: string;
-  toPersonId: string;
+type Point = [number, number];
+
+type PersonLayout = {
+  person: Pessoa;
+  generation: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
 };
 
-type PersonPosition = {
-  personId: string;
+type Connector = {
+  id: string;
+  points: Point[];
+};
+
+type CoupleConnectorCandidate = {
+  key: string;
   generation: number;
-  index: number;
+  upperLayout: PersonLayout;
+  lowerLayout: PersonLayout;
+  childLayouts: PersonLayout[];
+  coupleMidY: number;
 };
 
 const GENERATIONS = [1, 2, 3, 4, 5, 6] as const;
@@ -91,6 +102,19 @@ const GENERATION_LABELS: Record<number, string> = {
   4: 'Pais',
   5: 'Núcleo',
   6: 'Descendentes',
+};
+
+const MOBILE_HORIZONTAL_CANVAS = {
+  left: 0,
+  top: 96,
+  cardWidth: 192,
+  cardHeight: 108,
+  rowGap: 12,
+  columnWidth: 264,
+  minHeight: 560,
+  headerTop: 32,
+  headerHeight: 32,
+  bottomPadding: 40,
 };
 
 function isParentChildRelationship(relationship: Relacionamento) {
@@ -243,36 +267,143 @@ function getCardLabel(person: Pessoa, generation: number, centralPersonId: strin
   return GENERATION_LABELS[generation] ?? `Geração ${generation}`;
 }
 
-function buildParentChildConnectors(
-  peopleByGeneration: Map<number, Pessoa[]>,
-  generationByPersonId: Map<string, number>,
+function connectorPath(points: Point[]) {
+  return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+}
+
+function pairKey(firstId: string, secondId: string) {
+  return [firstId, secondId].sort().join('::');
+}
+
+function getChildLayoutsForCouple(
+  firstLayout: PersonLayout,
+  secondLayout: PersonLayout,
+  layouts: Map<string, PersonLayout>,
   maps: RelationshipMaps,
 ) {
-  const visiblePersonIds = new Set<string>();
-  peopleByGeneration.forEach((people) => people.forEach((person) => visiblePersonIds.add(person.id)));
+  const firstChildren = maps.childrenByParent.get(firstLayout.person.id) ?? new Set<string>();
+  const secondChildren = maps.childrenByParent.get(secondLayout.person.id) ?? new Set<string>();
+  const commonChildIds = Array.from(firstChildren).filter((childId) => secondChildren.has(childId));
 
+  return commonChildIds
+    .map((childId) => layouts.get(childId))
+    .filter((layout): layout is PersonLayout => Boolean(layout) && layout.generation === firstLayout.generation + 1)
+    .sort((a, b) => {
+      const birthA = getFallbackSortableBirthValue(a.person.data_nascimento);
+      const birthB = getFallbackSortableBirthValue(b.person.data_nascimento);
+      if (birthA !== birthB) return birthA - birthB;
+      return a.top - b.top;
+    });
+}
+
+function getDistributedTrunkX(candidate: CoupleConnectorCandidate, index: number, total: number) {
+  const columnRight = candidate.upperLayout.left + candidate.upperLayout.width;
+  const nextColumnLeft = Math.min(...candidate.childLayouts.map((layout) => layout.left));
+  const gap = Math.max(12, nextColumnLeft - columnRight);
+  const step = gap / (total + 1);
+  return columnRight + step * (index + 1);
+}
+
+function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps) {
   const connectors: Connector[] = [];
+  const visiblePairKeys = new Set<string>();
+  const childConnectorCandidates: CoupleConnectorCandidate[] = [];
 
-  visiblePersonIds.forEach((childId) => {
-    const childGeneration = generationByPersonId.get(childId);
-    if (!childGeneration) return;
+  maps.spousesByPerson.forEach((spouseIds, personId) => {
+    const personLayout = layouts.get(personId);
+    if (!personLayout) return;
 
-    maps.parentsByChild.get(childId)?.forEach((parentId) => {
-      if (!visiblePersonIds.has(parentId)) return;
-      const parentGeneration = generationByPersonId.get(parentId);
-      if (!parentGeneration || parentGeneration >= childGeneration) return;
+    spouseIds.forEach((spouseId) => {
+      const spouseLayout = layouts.get(spouseId);
+      if (!spouseLayout || spouseLayout.generation !== personLayout.generation) return;
+
+      const key = pairKey(personId, spouseId);
+      if (visiblePairKeys.has(key)) return;
+      visiblePairKeys.add(key);
+
+      const upperLayout = personLayout.top <= spouseLayout.top ? personLayout : spouseLayout;
+      const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
+      const spouseX = upperLayout.left + upperLayout.width / 2;
+      const coupleMidY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
 
       connectors.push({
-        id: `mobile-horizontal-parent-${parentId}-${childId}`,
-        fromGeneration: parentGeneration,
-        toGeneration: childGeneration,
-        fromPersonId: parentId,
-        toPersonId: childId,
+        id: `mobile-spouse-${key}`,
+        points: [
+          [spouseX, upperLayout.top + upperLayout.height],
+          [spouseX, lowerLayout.top],
+        ],
+      });
+
+      const childLayouts = getChildLayoutsForCouple(upperLayout, lowerLayout, layouts, maps);
+      if (childLayouts.length === 0) return;
+
+      childConnectorCandidates.push({
+        key,
+        generation: upperLayout.generation,
+        upperLayout,
+        lowerLayout,
+        childLayouts,
+        coupleMidY,
+      });
+    });
+  });
+
+  const candidatesByGeneration = new Map<number, CoupleConnectorCandidate[]>();
+  childConnectorCandidates.forEach((candidate) => {
+    if (!candidatesByGeneration.has(candidate.generation)) candidatesByGeneration.set(candidate.generation, []);
+    candidatesByGeneration.get(candidate.generation)!.push(candidate);
+  });
+
+  candidatesByGeneration.forEach((candidates) => {
+    const orderedCandidates = [...candidates].sort((a, b) => a.coupleMidY - b.coupleMidY);
+
+    orderedCandidates.forEach((candidate, index) => {
+      const spouseX = candidate.upperLayout.left + candidate.upperLayout.width / 2;
+      const trunkX = getDistributedTrunkX(candidate, index, orderedCandidates.length);
+      const childCenters = candidate.childLayouts.map((layout) => layout.top + layout.height / 2);
+      const firstChildY = Math.min(...childCenters);
+      const lastChildY = Math.max(...childCenters);
+      const trunkTop = Math.min(candidate.coupleMidY, firstChildY);
+      const trunkBottom = Math.max(candidate.coupleMidY, lastChildY);
+
+      connectors.push({
+        id: `mobile-couple-out-${candidate.key}`,
+        points: [
+          [spouseX, candidate.coupleMidY],
+          [trunkX, candidate.coupleMidY],
+        ],
+      });
+
+      connectors.push({
+        id: `mobile-couple-trunk-${candidate.key}`,
+        points: [
+          [trunkX, trunkTop],
+          [trunkX, trunkBottom],
+        ],
+      });
+
+      candidate.childLayouts.forEach((childLayout) => {
+        const childY = childLayout.top + childLayout.height / 2;
+
+        connectors.push({
+          id: `mobile-couple-child-${candidate.key}-${childLayout.person.id}`,
+          points: [
+            [trunkX, childY],
+            [childLayout.left, childY],
+          ],
+        });
       });
     });
   });
 
   return connectors;
+}
+
+function getCanvasWidth(activeGenerations: number[]) {
+  if (activeGenerations.length === 0) return MOBILE_HORIZONTAL_CANVAS.cardWidth;
+
+  return MOBILE_HORIZONTAL_CANVAS.cardWidth
+    + Math.max(0, activeGenerations.length - 1) * MOBILE_HORIZONTAL_CANVAS.columnWidth;
 }
 
 function getScreenIndex(activeGenerations: number[], generation: number) {
@@ -417,22 +548,45 @@ function MobileFamilyHorizontalMapViewComponent({
     [peopleByGeneration],
   );
 
-  const positionByPersonId = React.useMemo(() => {
-    const positions = new Map<string, PersonPosition>();
+  const { layouts, canvasWidth, canvasHeight } = React.useMemo(() => {
+    const nextLayouts = new Map<string, PersonLayout>();
+    let maxBottom = MOBILE_HORIZONTAL_CANVAS.top + MOBILE_HORIZONTAL_CANVAS.cardHeight;
 
-    activeGenerations.forEach((generation) => {
+    activeGenerations.forEach((generation, columnIndex) => {
       const people = peopleByGeneration.get(generation) ?? [];
-      people.forEach((person, index) => {
-        positions.set(person.id, { personId: person.id, generation, index });
+      const left = MOBILE_HORIZONTAL_CANVAS.left + columnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
+
+      people.forEach((person, rowIndex) => {
+        const top = MOBILE_HORIZONTAL_CANVAS.top
+          + rowIndex * (MOBILE_HORIZONTAL_CANVAS.cardHeight + MOBILE_HORIZONTAL_CANVAS.rowGap);
+
+        const layout: PersonLayout = {
+          person,
+          generation,
+          left,
+          top,
+          width: MOBILE_HORIZONTAL_CANVAS.cardWidth,
+          height: MOBILE_HORIZONTAL_CANVAS.cardHeight,
+        };
+
+        nextLayouts.set(person.id, layout);
+        maxBottom = Math.max(maxBottom, top + MOBILE_HORIZONTAL_CANVAS.cardHeight);
       });
     });
 
-    return positions;
+    return {
+      layouts: nextLayouts,
+      canvasWidth: getCanvasWidth(activeGenerations),
+      canvasHeight: Math.max(
+        MOBILE_HORIZONTAL_CANVAS.minHeight,
+        maxBottom + MOBILE_HORIZONTAL_CANVAS.bottomPadding,
+      ),
+    };
   }, [activeGenerations, peopleByGeneration]);
 
   const connectors = React.useMemo(
-    () => buildParentChildConnectors(peopleByGeneration, generationByPersonId, maps),
-    [generationByPersonId, maps, peopleByGeneration],
+    () => buildConnectors(layouts, maps),
+    [layouts, maps],
   );
 
   const activeGenerationSignature = activeGenerations.join('|');
@@ -679,86 +833,92 @@ function MobileFamilyHorizontalMapViewComponent({
           className="relative w-max pl-[calc((100vw-12rem)/2)] pr-[calc((100vw-12rem)/2)] pb-4 pt-8"
           style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top left' }}
         >
-          <div className="relative flex items-start gap-[4.5rem]">
-            {activeGenerations.map((generation, screenIndex) => {
-              const people = peopleByGeneration.get(generation) ?? [];
-              const isActiveScreen = screenIndex === activeIndex;
-              const hasNextGeneration = screenIndex < activeGenerations.length - 1;
+          <div
+            ref={(node) => {
+              if (node) captureRef.current = node;
+            }}
+            className="relative"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+            }}
+            data-mobile-horizontal-map-surface="true"
+          >
+            <svg
+              data-family-map-connectors="true"
+              className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+              viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+              aria-hidden="true"
+            >
+              <g
+                fill="none"
+                stroke="#d9ad82"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {connectors.map((connector) => (
+                  <path key={connector.id} d={connectorPath(connector.points)} />
+                ))}
+              </g>
+            </svg>
+
+            {activeGenerations.map((generation, columnIndex) => {
+              const left = MOBILE_HORIZONTAL_CANVAS.left
+                + columnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
 
               return (
-                <section
-                  key={generation}
-                  ref={(node) => {
-                    setGenerationColumnRef(generation)(node);
-                    if (isActiveScreen) captureRef.current = node;
-                  }}
-                  className="relative w-[12rem] shrink-0"
-                  data-mobile-horizontal-generation={generation}
-                  data-mobile-horizontal-generation-column="true"
-                >
-                  <div className="sticky top-3 z-20 mb-9 text-center">
-                    <span className="inline-flex rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
-                      Geração {generation}
-                    </span>
+                <React.Fragment key={generation}>
+                  <div
+                    ref={setGenerationColumnRef(generation)}
+                    className="pointer-events-none absolute"
+                    style={{
+                      left,
+                      top: 0,
+                      width: MOBILE_HORIZONTAL_CANVAS.cardWidth,
+                      height: 1,
+                    }}
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="absolute z-10 -translate-x-1/2 rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
+                    style={{
+                      left: left + MOBILE_HORIZONTAL_CANVAS.cardWidth / 2,
+                      top: MOBILE_HORIZONTAL_CANVAS.headerTop,
+                    }}
+                  >
+                    Geração {generation}
                   </div>
-
-                  {hasNextGeneration && people.length > 1 && (
-                    <div
-                      className="pointer-events-none absolute left-[calc(100%+2.15rem)] top-[7.5rem] bottom-14 z-0 w-[3px] rounded-full bg-[#d9ad82]/60"
-                      aria-hidden="true"
-                    />
-                  )}
-
-                  <div className="relative z-10 flex flex-col gap-3 pb-12">
-                    {people.map((person) => {
-                      const hasIncomingConnector = connectors.some((connector) => connector.toPersonId === person.id);
-                      const hasOutgoingConnector = connectors.some((connector) => connector.fromPersonId === person.id);
-
-                      return (
-                        <div
-                          key={person.id}
-                          className="relative z-10"
-                          data-mobile-horizontal-card="true"
-                        >
-                          {hasIncomingConnector && screenIndex > 0 && (
-                            <div
-                              className="pointer-events-none absolute right-full top-1/2 z-0 h-[3px] w-10 -translate-y-1/2 rounded-full bg-[#d9ad82]/55"
-                              aria-hidden="true"
-                            />
-                          )}
-
-                          <VisualPersonCard
-                            person={person}
-                            label={getCardLabel(person, generation, centralPersonId, maps, spouseTonePersonIds)}
-                            horizontal
-                            roomy
-                            onClick={onPersonClick}
-                            vitalMode="year"
-                          />
-
-                          {hasOutgoingConnector && hasNextGeneration && (
-                            <div
-                              className="pointer-events-none absolute left-full top-1/2 z-0 h-[3px] w-[4.5rem] -translate-y-1/2 rounded-full bg-[#d9ad82]/70"
-                              aria-hidden="true"
-                            />
-                          )}
-
-                          {hasOutgoingConnector && hasNextGeneration && (
-                            <div
-                              className="pointer-events-none absolute left-[calc(100%+4.45rem)] top-1/2 z-0 h-[3px] w-7 -translate-y-1/2 rounded-full bg-[#d9ad82]/70"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
+                </React.Fragment>
               );
             })}
+
+            {Array.from(layouts.values()).map((layout) => (
+              <div
+                key={layout.person.id}
+                className="absolute z-20"
+                style={{
+                  left: layout.left,
+                  top: layout.top,
+                  width: layout.width,
+                }}
+                data-mobile-horizontal-generation={layout.generation}
+                data-mobile-horizontal-card="true"
+              >
+                <VisualPersonCard
+                  person={layout.person}
+                  label={getCardLabel(layout.person, layout.generation, centralPersonId, maps, spouseTonePersonIds)}
+                  horizontal
+                  roomy
+                  onClick={onPersonClick}
+                  vitalMode="year"
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
 
       {activeIndex > 0 && (
         <button
