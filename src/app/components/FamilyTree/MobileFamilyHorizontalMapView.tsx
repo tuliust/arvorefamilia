@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Node } from 'reactflow';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Pessoa, Relacionamento } from '../../types';
@@ -118,7 +117,7 @@ const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
   top: 72,
   cardWidth: 216,
-  cardHeight: 78,
+  cardHeight: 72,
   rowGap: 18,
   columnWidth: 304,
   minHeight: 560,
@@ -1057,13 +1056,13 @@ function MobileFamilyHorizontalMapViewComponent({
               onClick={() => goToIndex(index)}
               aria-current={index === activeIndex ? 'page' : undefined}
               className={[
-                'shrink-0 rounded-full px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.08em] transition',
+                'shrink-0 rounded-full px-2.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.04em] transition',
                 index === activeIndex
                   ? 'bg-cyan-700 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 active:bg-slate-200',
               ].join(' ')}
             >
-              G{generation}
+              Ger {generation}
             </button>
           ))}
         </div>
@@ -1161,19 +1160,6 @@ function MobileFamilyHorizontalMapViewComponent({
           </div>
         </div>
       </div>
-
-
-      {activeIndex > 0 && (
-        <button
-          type="button"
-          onClick={() => goToIndex(activeIndex - 1)}
-          className="absolute left-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg"
-          aria-label="Ir para geração anterior"
-          data-tree-export-ignore="true"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-      )}
 
       {exportLoadingMessage && (
         <TreeExportLoadingOverlay
