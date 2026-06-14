@@ -290,7 +290,9 @@ function MobileFamilyHorizontalMapViewComponent({
   onDirectRelationRenderedCounts,
 }: MobileFamilyHorizontalMapViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
-  const captureRef = React.useRef<HTMLDivElement | null>(null);
+  const captureRef = React.useRef<HTMLElement | null>(null);
+  const stageScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const generationColumnRefs = React.useRef(new Map<number, HTMLElement | null>());
   const swipeStateRef = React.useRef<SwipeState | null>(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [dragX, setDragX] = React.useState(0);
@@ -385,7 +387,7 @@ function MobileFamilyHorizontalMapViewComponent({
 
   const exportTitle = React.useMemo(() => {
     const firstName = getExportFirstName(centralPerson);
-    return firstName ? `Genealogia de ${firstName}` : 'Genealogia';
+    return firstName ? `Mapa Genealógico de ${firstName}` : 'Mapa Genealógico';
   }, [centralPerson]);
 
   const generationByPersonId = React.useMemo(
@@ -467,6 +469,31 @@ function MobileFamilyHorizontalMapViewComponent({
     setActiveIndex(Math.max(0, Math.min(activeGenerations.length - 1, index)));
     setDragX(0);
   }, [activeGenerations.length]);
+
+  const setGenerationColumnRef = React.useCallback((generation: number) => (node: HTMLElement | null) => {
+    if (node) {
+      generationColumnRefs.current.set(generation, node);
+      return;
+    }
+
+    generationColumnRefs.current.delete(generation);
+  }, []);
+
+  React.useEffect(() => {
+    const stage = stageScrollRef.current;
+    const activeGeneration = activeGenerations[activeIndex];
+    const column = activeGeneration ? generationColumnRefs.current.get(activeGeneration) : null;
+
+    if (!stage || !column) return;
+
+    const desiredInset = Math.min(110, stage.clientWidth * 0.28);
+    const targetLeft = Math.max(0, column.offsetLeft - desiredInset);
+
+    stage.scrollTo({
+      left: targetLeft,
+      behavior: 'smooth',
+    });
+  }, [activeGenerations, activeIndex, layoutRevision]);
 
   const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
@@ -594,14 +621,11 @@ function MobileFamilyHorizontalMapViewComponent({
     startAreaSelection: () => toast.info('Seleção manual de área permanece disponível na versão desktop.'),
   }), [handlePrint, handleSaveImage, handleSavePdf]);
 
-  const viewportWidth = viewportRef.current?.clientWidth ?? 0;
-  const screenWidthPercent = 100 / activeGenerations.length;
-  const trackTransform = `translate3d(calc(${-activeIndex * screenWidthPercent}% + ${dragX}px), 0, 0)`;
   const activeGeneration = activeGenerations[activeIndex];
 
   if (activeGenerations.length === 0) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-transparent px-6 text-center">
+      <div className="absolute inset-0 flex items-center justify-center bg-[#f8efe4] px-6 text-center">
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white/90 p-6 text-sm font-semibold text-slate-500 shadow-sm">
           Nenhuma geração visível para os filtros atuais.
         </div>
@@ -612,11 +636,11 @@ function MobileFamilyHorizontalMapViewComponent({
   return (
     <div
       ref={viewportRef}
-      className="absolute inset-0 overflow-hidden bg-transparent"
+      className="absolute inset-0 overflow-hidden bg-[#f8efe4]"
       data-family-map-horizontal-mobile-root="true"
     >
       <nav
-        aria-label="Gerações do Mapa Familiar Horizontal"
+        aria-label="Gerações do Mapa Genealógico"
         className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 px-2 py-2 shadow-sm backdrop-blur"
         data-tree-export-ignore="true"
       >
@@ -638,65 +662,71 @@ function MobileFamilyHorizontalMapViewComponent({
             </button>
           ))}
           <span className="ml-auto shrink-0 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-slate-500 shadow-sm">
-            {activeGeneration ? `${GENERATION_LABELS[activeGeneration] ?? `Geração ${activeGeneration}`}` : ''}
+            {activeGeneration ? (GENERATION_LABELS[activeGeneration] ?? `Geração ${activeGeneration}`) : ''}
           </span>
         </div>
       </nav>
 
       <div
-        className="absolute inset-x-0 bottom-0 top-[58px] overflow-hidden"
+        ref={stageScrollRef}
+        className="absolute inset-x-0 bottom-0 top-[48px] overflow-auto overscroll-contain bg-[#f8efe4] [-webkit-overflow-scrolling:touch]"
+        data-mobile-horizontal-stage="true"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className={[
-            'flex h-full',
-            dragX === 0 ? 'transition-transform duration-300 ease-out' : '',
-          ].join(' ')}
-          style={{
-            width: `${activeGenerations.length * 100}%`,
-            transform: trackTransform,
-          }}
+          className="relative min-h-full w-max px-8 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-8"
+          style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top left' }}
         >
-          {activeGenerations.map((generation, screenIndex) => {
-            const people = peopleByGeneration.get(generation) ?? [];
-            const isActiveScreen = screenIndex === activeIndex;
+          <div className="relative flex items-start gap-[4.5rem]">
+            {activeGenerations.map((generation, screenIndex) => {
+              const people = peopleByGeneration.get(generation) ?? [];
+              const isActiveScreen = screenIndex === activeIndex;
+              const hasNextGeneration = screenIndex < activeGenerations.length - 1;
 
-            return (
-              <section
-                key={generation}
-                ref={isActiveScreen ? captureRef : undefined}
-                className="relative h-full min-w-0 overflow-y-auto overflow-x-hidden overscroll-y-contain bg-transparent px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.25rem)] pt-6 [-webkit-overflow-scrolling:touch]"
-                style={{ width: `${screenWidthPercent}%` }}
-              >
-                <div
-                  className="mx-auto w-full max-w-[390px] origin-top"
-                  style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top center' }}
+              return (
+                <section
+                  key={generation}
+                  ref={(node) => {
+                    setGenerationColumnRef(generation)(node);
+                    if (isActiveScreen) captureRef.current = node;
+                  }}
+                  className="relative w-[20.5rem] shrink-0"
+                  data-mobile-horizontal-generation={generation}
+                  data-mobile-horizontal-generation-column="true"
                 >
-                  <div className="mb-5 text-center">
-                    <span className="inline-flex rounded-full bg-slate-600 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] text-white shadow">
+                  <div className="sticky top-3 z-20 mb-9 text-center">
+                    <span className="inline-flex rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md">
                       Geração {generation}
                     </span>
-                    <p className="mt-2 text-xs font-semibold text-slate-500">
-                      {screenIndex + 1} de {activeGenerations.length}
-                    </p>
                   </div>
 
-                  <div className="relative space-y-4 pb-10">
-                    {people.map((person, index) => {
-                      const position = positionByPersonId.get(person.id);
+                  {hasNextGeneration && people.length > 1 && (
+                    <div
+                      className="pointer-events-none absolute left-[calc(100%+2.15rem)] top-[7.5rem] bottom-14 z-0 w-[3px] rounded-full bg-[#d9ad82]/60"
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  <div className="relative z-10 flex flex-col gap-7 pb-12">
+                    {people.map((person) => {
                       const hasIncomingConnector = connectors.some((connector) => connector.toPersonId === person.id);
                       const hasOutgoingConnector = connectors.some((connector) => connector.fromPersonId === person.id);
 
                       return (
-                        <div key={person.id} className="relative">
-                          {hasIncomingConnector && (
-                            <div className="pointer-events-none absolute -top-4 left-1/2 h-4 w-px -translate-x-1/2 bg-[var(--family-map-connector,#0e7490)] opacity-70" />
+                        <div
+                          key={person.id}
+                          className="relative z-10"
+                          data-mobile-horizontal-card="true"
+                        >
+                          {hasIncomingConnector && screenIndex > 0 && (
+                            <div
+                              className="pointer-events-none absolute right-full top-1/2 z-0 h-[3px] w-10 -translate-y-1/2 rounded-full bg-[#d9ad82]/55"
+                              aria-hidden="true"
+                            />
                           )}
-                          {index > 0 && (
-                            <div className="pointer-events-none absolute -top-4 left-1/2 h-4 w-px -translate-x-1/2 bg-[var(--family-map-connector,#0e7490)] opacity-40" />
-                          )}
+
                           <VisualPersonCard
                             person={person}
                             label={getCardLabel(person, generation, centralPersonId, maps, spouseTonePersonIds)}
@@ -705,17 +735,28 @@ function MobileFamilyHorizontalMapViewComponent({
                             onClick={onPersonClick}
                             vitalMode="year"
                           />
-                          {hasOutgoingConnector && position && (
-                            <div className="pointer-events-none absolute left-1/2 top-full h-4 w-px -translate-x-1/2 bg-[var(--family-map-connector,#0e7490)] opacity-70" />
+
+                          {hasOutgoingConnector && hasNextGeneration && (
+                            <div
+                              className="pointer-events-none absolute left-full top-1/2 z-0 h-[3px] w-[4.5rem] -translate-y-1/2 rounded-full bg-[#d9ad82]/70"
+                              aria-hidden="true"
+                            />
+                          )}
+
+                          {hasOutgoingConnector && hasNextGeneration && (
+                            <div
+                              className="pointer-events-none absolute left-[calc(100%+4.45rem)] top-1/2 z-0 h-[3px] w-7 -translate-y-1/2 rounded-full bg-[#d9ad82]/70"
+                              aria-hidden="true"
+                            />
                           )}
                         </div>
                       );
                     })}
                   </div>
-                </div>
-              </section>
-            );
-          })}
+                </section>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -751,6 +792,7 @@ function MobileFamilyHorizontalMapViewComponent({
       )}
     </div>
   );
+
 }
 
 export const MobileFamilyHorizontalMapView = React.forwardRef<
