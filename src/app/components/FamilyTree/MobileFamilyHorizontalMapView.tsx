@@ -797,19 +797,6 @@ function MobileFamilyHorizontalMapViewComponent({
     [activeGeneration, layouts],
   );
 
-  const activeGenerationHeight = React.useMemo(() => {
-    const headerBottom = MOBILE_HORIZONTAL_CANVAS.headerTop
-      + MOBILE_HORIZONTAL_CANVAS.headerHeight;
-
-    if (activeLayouts.length === 0) {
-      return headerBottom + MOBILE_HORIZONTAL_CANVAS.bottomPadding;
-    }
-
-    const lastCardBottom = Math.max(...activeLayouts.map((layout) => layout.top + layout.height));
-
-    return lastCardBottom + 10;
-  }, [activeLayouts]);
-
   const activeConnectorViewportWidth = React.useMemo(
     () => Math.max(MOBILE_HORIZONTAL_CANVAS.cardWidth, stageViewportWidth),
     [stageViewportWidth],
@@ -823,6 +810,53 @@ function MobileFamilyHorizontalMapViewComponent({
 
     return Math.max(0, activeColumnLeft - sideInset);
   }, [activeColumnLeft, activeConnectorViewportWidth]);
+
+  const activeGenerationHeight = React.useMemo(() => {
+    const headerBottom = MOBILE_HORIZONTAL_CANVAS.headerTop
+      + MOBILE_HORIZONTAL_CANVAS.headerHeight;
+
+    const lastCardBottom = activeLayouts.length === 0
+      ? headerBottom
+      : Math.max(...activeLayouts.map((layout) => layout.top + layout.height));
+
+    const viewportLeft = activeConnectorViewportLeft;
+    const viewportRight = activeConnectorViewportLeft + activeConnectorViewportWidth;
+    const horizontalTolerance = 12;
+
+    const connectorBottom = connectors.reduce((maxY, connector) => {
+      const isHorizontallyVisible = connector.points.some(([x]) => (
+        x >= viewportLeft - horizontalTolerance
+        && x <= viewportRight + horizontalTolerance
+      )) || connector.points.some((point, index) => {
+        const previousPoint = connector.points[index - 1];
+        if (!previousPoint) return false;
+
+        const minX = Math.min(previousPoint[0], point[0]);
+        const maxX = Math.max(previousPoint[0], point[0]);
+
+        return minX <= viewportRight + horizontalTolerance
+          && maxX >= viewportLeft - horizontalTolerance;
+      });
+
+      if (!isHorizontallyVisible) return maxY;
+
+      return Math.max(
+        maxY,
+        ...connector.points.map(([, y]) => y),
+      );
+    }, 0);
+
+    return Math.max(
+      headerBottom,
+      lastCardBottom,
+      connectorBottom,
+    ) + MOBILE_HORIZONTAL_CANVAS.bottomPadding;
+  }, [
+    activeConnectorViewportLeft,
+    activeConnectorViewportWidth,
+    activeLayouts,
+    connectors,
+  ]);
 
   const activeSpouseConnectors = React.useMemo(
     () => spouseConnectors.filter((connector) => connector.points.every(([x]) => (
