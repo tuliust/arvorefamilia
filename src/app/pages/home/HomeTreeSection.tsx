@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router';
 
-import type { FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
+import type { FamilyTreeActions } from '../../components/FamilyTree/actions';
 import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
 import { DesktopFamilyHorizontalMapView } from '../../components/FamilyTree/DesktopFamilyHorizontalMapView';
 import { MobileFamilyHorizontalMapView } from '../../components/FamilyTree/MobileFamilyHorizontalMapView';
@@ -26,100 +26,6 @@ interface StateMessageProps {
   title: string;
   message: string;
   tone?: 'neutral' | 'error';
-}
-
-function getPersonGeneration(pessoa: Pessoa) {
-  const generation = pessoa.manual_generation;
-  return typeof generation === 'number' && Number.isFinite(generation)
-    ? generation
-    : null;
-}
-
-function inferGenealogyManualGenerations(
-  pessoas: Pessoa[],
-  relacionamentos: Relacionamento[],
-  centralPersonId?: string
-) {
-  if (!centralPersonId) return pessoas;
-
-  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
-  if (!peopleById.has(centralPersonId)) return pessoas;
-
-  const parentsByChild = new Map<string, Set<string>>();
-  const childrenByParent = new Map<string, Set<string>>();
-  const spousesByPerson = new Map<string, Set<string>>();
-
-  const addToMap = (map: Map<string, Set<string>>, key: string, value: string) => {
-    if (!map.has(key)) map.set(key, new Set());
-    map.get(key)!.add(value);
-  };
-
-  relacionamentos.forEach((relacionamento) => {
-    const origemId = relacionamento.pessoa_origem_id;
-    const destinoId = relacionamento.pessoa_destino_id;
-    if (!origemId || !destinoId) return;
-
-    if (
-      relacionamento.tipo_relacionamento === 'filiacao_sangue' ||
-      relacionamento.tipo_relacionamento === 'filiacao_adotiva'
-    ) {
-      addToMap(parentsByChild, destinoId, origemId);
-      addToMap(childrenByParent, origemId, destinoId);
-      return;
-    }
-
-    if (relacionamento.tipo_relacionamento === 'conjuge') {
-      addToMap(spousesByPerson, origemId, destinoId);
-      addToMap(spousesByPerson, destinoId, origemId);
-    }
-  });
-
-  const generationByPersonId = new Map<string, number>();
-  const queue: Array<{ personId: string; generation: number }> = [
-    { personId: centralPersonId, generation: 5 },
-  ];
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (!current) break;
-
-    const existingGeneration = generationByPersonId.get(current.personId);
-    if (existingGeneration !== undefined) {
-      const shouldKeepExisting =
-        Math.abs(existingGeneration - 5) <= Math.abs(current.generation - 5);
-      if (shouldKeepExisting) continue;
-    }
-
-    generationByPersonId.set(current.personId, current.generation);
-
-    parentsByChild.get(current.personId)?.forEach((parentId) => {
-      const parentGeneration = Math.max(1, current.generation - 1);
-      if (parentGeneration !== current.generation) {
-        queue.push({ personId: parentId, generation: parentGeneration });
-      }
-    });
-
-    childrenByParent.get(current.personId)?.forEach((childId) => {
-      const childGeneration = Math.min(6, current.generation + 1);
-      if (childGeneration !== current.generation) {
-        queue.push({ personId: childId, generation: childGeneration });
-      }
-    });
-
-    spousesByPerson.get(current.personId)?.forEach((spouseId) => {
-      queue.push({ personId: spouseId, generation: current.generation });
-    });
-  }
-
-  return pessoas.map((pessoa) => {
-    const inferredGeneration = generationByPersonId.get(pessoa.id);
-    if (inferredGeneration === undefined) return pessoa;
-
-    return {
-      ...pessoa,
-      manual_generation: inferredGeneration,
-    };
-  });
 }
 
 function getTreeTitleFirstName(value?: string | null) {
@@ -192,9 +98,6 @@ export function HomeTreeSection({
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   const location = useLocation();
-  const shouldApplyDirectTreeVisualAdjustments = false;
-  const usesMobileGenerationStages = false;
-  const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
   const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
@@ -207,67 +110,11 @@ export function HomeTreeSection({
     [desktopTitleFirstName, treeViewMode]
   );
   const desktopTreeViewportTop = 82;
-  const mobileGenealogyPessoas = React.useMemo(() => {
-    if (!usesMobileGenerationStages) return pessoas;
-
-    return inferGenealogyManualGenerations(pessoas, relacionamentos, centralReferencePersonId);
-  }, [centralReferencePersonId, pessoas, relacionamentos, usesMobileGenerationStages]);
-  const treePessoas = usesMobileGenerationStages ? mobileGenealogyPessoas : pessoas;
-  const availableMobileGenerations = React.useMemo(() => {
-    if (!usesMobileGenerationStages) return [];
-
-    const availableGenerations = new Set<number>();
-
-    mobileGenealogyPessoas.forEach((pessoa) => {
-      const generation = getPersonGeneration(pessoa);
-      if (generation === null) return;
-      if (visiblePersonIdsByLifeStatus && !visiblePersonIdsByLifeStatus.has(pessoa.id)) return;
-
-      availableGenerations.add(generation);
-    });
-
-    return Array.from(availableGenerations).sort((generationA, generationB) => generationA - generationB);
-  }, [usesMobileGenerationStages, mobileGenealogyPessoas, visiblePersonIdsByLifeStatus]);
-  const mobileGenerationSignature = React.useMemo(
-    () => availableMobileGenerations.join('|'),
-    [availableMobileGenerations]
-  );
-  const defaultGenealogyMobileGeneration = availableMobileGenerations[0] ?? null;
-  const effectiveActiveGenealogyGeneration = usesMobileGenerationStages
-    ? activeGenealogyGeneration ?? defaultGenealogyMobileGeneration
-    : null;
-  const shouldHideAllDirectEdges = shouldApplyDirectTreeVisualAdjustments && !(
-    edgeFilters.conjugal ||
-    edgeFilters.filiacao_sangue ||
-    edgeFilters.filiacao_adotiva ||
-    edgeFilters.irmaos
-  );
-  const shouldHideDirectCousinGridEdges = shouldApplyDirectTreeVisualAdjustments && !edgeFilters.irmaos;
-
-  React.useEffect(() => {
-    if (!usesMobileGenerationStages) {
-      setActiveGenealogyGeneration(null);
-      return;
-    }
-
-    setActiveGenealogyGeneration(defaultGenealogyMobileGeneration);
-  }, [
-    centralReferencePersonId,
-    defaultGenealogyMobileGeneration,
-    mobileGenerationSignature,
-    treeViewMode,
-    usesMobileGenerationStages,
-  ]);
-
   React.useEffect(() => {
     setFamilyMapHasScrolled(false);
   }, [centralReferencePersonId, treeLayoutRevision, treeViewMode]);
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
-
-  const handleTreeWheelCapture = React.useCallback((event: React.WheelEvent<HTMLElement>) => {
-    if (isMobile || event.deltaY >= 0) return;
-  }, [isMobile]);
 
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
@@ -295,10 +142,7 @@ export function HomeTreeSection({
   }, [familyTreeRef]);
 
   return (
-    <section
-      className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100"
-      onWheelCapture={handleTreeWheelCapture}
-    >
+    <section className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100">
       {!isMobile && (
         <>
           <style>
@@ -370,75 +214,6 @@ export function HomeTreeSection({
               font-size: 0.84rem !important;
               line-height: 1.18 !important;
             }
-
-            ${usesMobileGenerationStages ? `
-              [data-export-root="family-tree"] > .pointer-events-none.absolute.inset-x-0.z-10.text-center {
-                display: none !important;
-              }
-
-              [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"],
-              [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"],
-              [data-export-root="family-tree"] button[aria-label="Mover árvore para a esquerda"],
-              [data-export-root="family-tree"] button[aria-label="Mover árvore para a direita"],
-              [data-export-root="family-tree"] button[aria-label="Aumentar zoom"],
-              [data-export-root="family-tree"] button[aria-label="Diminuir zoom"] {
-                display: none !important;
-              }
-            ` : ''}
-          `}
-        </style>
-      )}
-
-      {shouldApplyDirectTreeVisualAdjustments && (
-        <style>
-          {`
-            .react-flow__node-personNode > .relative > .cursor-pointer {
-              overflow: visible !important;
-            }
-
-            .react-flow__node-personNode h3 {
-              line-height: 1.18 !important;
-              padding-bottom: 0.08em;
-            }
-
-            .react-flow__node-personNode p {
-              line-height: 1.2 !important;
-              ${isMobile ? `
-                overflow: visible !important;
-                text-overflow: clip !important;
-                white-space: normal !important;
-              ` : `
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                white-space: nowrap !important;
-              `}
-            }
-
-            ${shouldHideAllDirectEdges ? `
-              .react-flow__edges .react-flow__edge,
-              .react-flow__edges svg g.react-flow__edge,
-              .react-flow__edges svg path.react-flow__edge-path,
-              .react-flow__edges svg path.react-flow__edge-interaction {
-                display: none !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-              }
-            ` : ''}
-
-            ${!shouldHideAllDirectEdges && shouldHideDirectCousinGridEdges ? `
-              .react-flow__edge[data-id^="direct-primos-paternos-grid-"],
-              .react-flow__edge[data-id^="direct-primos-maternos-grid-"],
-              .react-flow__edge[class*="react-flow__edge-direct-primos-paternos-grid-"],
-              .react-flow__edge[class*="react-flow__edge-direct-primos-maternos-grid-"],
-              .react-flow__edge[data-testid*="direct-primos-paternos-grid-"],
-              .react-flow__edge[data-testid*="direct-primos-maternos-grid-"],
-              g.react-flow__edge[class*="direct-primos-paternos-grid-"],
-              g.react-flow__edge[class*="direct-primos-maternos-grid-"] {
-                display: none !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-              }
-            ` : ''}
           `}
         </style>
       )}

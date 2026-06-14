@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { flushSync } from 'react-dom';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 
-import type { FamilyTreeActions } from '../components/FamilyTree/FamilyTree';
+import type { FamilyTreeActions } from '../components/FamilyTree/actions';
 import { TreeLegend } from '../components/FamilyTree/TreeLegend';
 import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
 import { collectDirectFamilyScopePersonIds } from '../components/FamilyTree/layouts/directFamilyDistributedLayout';
@@ -40,11 +40,9 @@ import {
 import { Pessoa, Relacionamento } from '../types';
 import {
   DEFAULT_GENEALOGY_FILTERS,
-  DEFAULT_DIRECT_RELATIVE_FILTERS,
   DEFAULT_VISUAL_LINE_FILTERS,
   DirectRelativeFilters,
   DirectRelativeGroup,
-  GenealogyFilterKey,
   GenealogyFilters,
   MarriageNodeDetails,
   VisualLineFilterKey,
@@ -82,7 +80,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
-import { GenealogyFilterGrid } from './home/GenealogyFilterGrid';
 import { buildAiTreeContext } from './home/homeAiContext';
 import {
   calculateCuriosities,
@@ -136,7 +133,6 @@ function isVisibleByLifeStatusFilter(
 
   return filters.vivos;
 }
-
 
 export function Home() {
   const navigate = useNavigate();
@@ -732,13 +728,6 @@ export function Home() {
     }));
   }, [user?.id]);
 
-  const toggleGenealogyFilter = useCallback((filterKey: GenealogyFilterKey) => {
-    setGenealogyFilters((prev) => ({
-      ...prev,
-      [filterKey]: !prev[filterKey],
-    }));
-  }, []);
-
   const centralReferencePersonId = linkedPersonResolved
     ? treeFocusPersonId || linkedPersonId || selectedPersonId || pessoas[0]?.id
     : undefined;
@@ -909,10 +898,6 @@ export function Home() {
         : directRelationCounts
     ),
     [directRelationCounts, renderedDirectRelationCounts, treeViewMode]
-  );
-  const genealogyFilterCounts = useMemo(
-    () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
-    [pessoasVisiveisPorStatus, relacionamentos]
   );
   const usesDirectTreeLegendControls = treeViewMode === 'mapa-familiar'
     || treeViewMode === 'mapa-familiar-horizontal';
@@ -1444,7 +1429,6 @@ export function Home() {
 }
 
 type DirectRelationCounts = Record<DirectRelativeGroup, number>;
-type GenealogyFilterCounts = Record<GenealogyFilterKey, number>;
 
 function uniqueIds(ids: Array<string | undefined | null>, centralPersonId?: string) {
   return Array.from(new Set(ids.filter((id): id is string => Boolean(id) && id !== centralPersonId)));
@@ -1558,99 +1542,6 @@ function calculateDirectRelationCounts(
     primos: countVisible(cousins),
     pets: countVisible(petChildren),
   };
-}
-
-function calculateGenealogyFilterCounts(
-  pessoas: Pessoa[],
-  relacionamentos: Relacionamento[]
-): GenealogyFilterCounts {
-  const counts: GenealogyFilterCounts = {
-    generation1: 0,
-    generation2: 0,
-    generation3Family: 0,
-    generation3Spouses: 0,
-    generation4Family: 0,
-    generation4Spouses: 0,
-    generation5Family: 0,
-    generation5Spouses: 0,
-    generation6: 0,
-  };
-
-  const peopleById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
-  const spouseIdsByGeneration = new Map<number, Set<string>>();
-
-  const getSortableBirthTimestamp = (pessoa: Pessoa) => {
-    if (!pessoa.data_nascimento) return Number.POSITIVE_INFINITY;
-    const timestamp = new Date(pessoa.data_nascimento).getTime();
-    return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
-  };
-
-  const comparePeopleForGenealogyOrder = (pessoaA: Pessoa, pessoaB: Pessoa) => {
-    const birthA = getSortableBirthTimestamp(pessoaA);
-    const birthB = getSortableBirthTimestamp(pessoaB);
-
-    if (birthA !== birthB) return birthA - birthB;
-    return (pessoaA.nome_completo || '').localeCompare(pessoaB.nome_completo || '');
-  };
-
-  const markSpouseInGeneration = (generation: number, personId: string) => {
-    if (!spouseIdsByGeneration.has(generation)) spouseIdsByGeneration.set(generation, new Set());
-    spouseIdsByGeneration.get(generation)!.add(personId);
-  };
-
-  relacionamentos.forEach((relacionamento) => {
-    if (relacionamento.tipo_relacionamento !== 'conjuge') return;
-
-    const origin = peopleById.get(relacionamento.pessoa_origem_id);
-    const destination = peopleById.get(relacionamento.pessoa_destino_id);
-    if (!origin || !destination) return;
-    if (origin.manual_generation !== destination.manual_generation) return;
-
-    const generation = origin.manual_generation;
-    if (generation !== 3 && generation !== 4 && generation !== 5) return;
-
-    const orderedPair = [origin, destination].sort(comparePeopleForGenealogyOrder);
-    markSpouseInGeneration(generation, orderedPair[1].id);
-  });
-
-  pessoas.forEach((pessoa) => {
-    switch (pessoa.manual_generation) {
-      case 1:
-        counts.generation1 += 1;
-        break;
-      case 2:
-        counts.generation2 += 1;
-        break;
-      case 3:
-        if (spouseIdsByGeneration.get(3)?.has(pessoa.id)) {
-          counts.generation3Spouses += 1;
-        } else {
-          counts.generation3Family += 1;
-        }
-        break;
-      case 4:
-        if (spouseIdsByGeneration.get(4)?.has(pessoa.id)) {
-          counts.generation4Spouses += 1;
-        } else {
-          counts.generation4Family += 1;
-        }
-        break;
-      case 5:
-        if (spouseIdsByGeneration.get(5)?.has(pessoa.id)) {
-          counts.generation5Spouses += 1;
-        } else {
-          counts.generation5Family += 1;
-        }
-        break;
-      case 6:
-        counts.generation6 += 1;
-        break;
-      default:
-        break;
-    }
-  });
-
-  return counts;
 }
 
 function StateMessage({
