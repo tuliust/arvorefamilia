@@ -972,3 +972,38 @@ body.tree-mobile-controls-open {
     font-size: 0.74rem !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: refinamento compacto mapa horizontal mobile */
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button {
+    height: 5.35rem !important;
+    min-height: 5.35rem !important;
+    border-radius: 1.25rem !important;
+    padding: 0.62rem 0.78rem !important;
+    gap: 0.5rem !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] [data-family-map-avatar="true"] {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-avatar-icon {
+    width: 1.35rem !important;
+    height: 1.35rem !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button > span:not([data-family-map-avatar]) > span:first-child {
+    font-size: 0.74rem !important;
+    line-height: 1.04 !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-status-icon + span,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] span[class*="text-cyan-50"] {
+    font-size: 0.7rem !important;
+    line-height: 1 !important;
+  }
+}

@@ -116,16 +116,16 @@ const GENERATION_LABELS: Record<number, string> = {
 
 const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
-  top: 76,
+  top: 66,
   cardWidth: 192,
-  cardHeight: 92,
-  rowGap: 8,
+  cardHeight: 86,
+  rowGap: 6,
   columnWidth: 264,
   minHeight: 560,
-  headerTop: 14,
-  headerHeight: 30,
-  bottomPadding: 20,
-  spouseConnectorOverlap: 0,
+  headerTop: 8,
+  headerHeight: 26,
+  bottomPadding: 14,
+  spouseConnectorOverlap: 8,
 };
 
 function isParentChildRelationship(relationship: Relacionamento) {
@@ -450,8 +450,11 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
       const spouseX = upperLayout.left + upperLayout.width / 2;
       const coupleMidY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
-      const spouseConnectorStartY = upperLayout.top + upperLayout.height;
-      const spouseConnectorEndY = lowerLayout.top;
+      const spouseConnectorStartY = upperLayout.top
+        + upperLayout.height
+        - MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
+      const spouseConnectorEndY = lowerLayout.top
+        + MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
 
       connectors.push({
         id: `mobile-spouse-${key}`,
@@ -755,12 +758,10 @@ function MobileFamilyHorizontalMapViewComponent({
   const activeGenerationSignature = activeGenerations.join('|');
 
   React.useEffect(() => {
-    const centralGeneration = generationByPersonId.get(centralPersonId);
-    const defaultIndex = centralGeneration ? getScreenIndex(activeGenerations, centralGeneration) : 0;
-    setActiveIndex(defaultIndex >= 0 ? defaultIndex : 0);
+    setActiveIndex(0);
     setDragX(0);
     setManualZoom(1);
-  }, [activeGenerationSignature, centralPersonId, generationByPersonId, layoutRevision]);
+  }, [activeGenerationSignature, layoutRevision]);
 
   const activeGeneration = activeGenerations[activeIndex];
   const activeColumnIndex = Math.max(0, activeIndex);
@@ -1109,7 +1110,7 @@ function MobileFamilyHorizontalMapViewComponent({
               return (
                 <div
                   key={generation}
-                  className="absolute z-10 flex min-w-[11.5rem] -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-slate-600 px-6 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
+                  className="absolute z-10 flex min-w-[9.75rem] -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-slate-600 px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white shadow-md"
                   style={{
                     left,
                     top: MOBILE_HORIZONTAL_CANVAS.headerTop,
