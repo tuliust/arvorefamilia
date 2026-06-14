@@ -1184,6 +1184,7 @@ function MobileFamilyHorizontalMapViewComponent({
                 <VisualPersonCard
                   person={layout.person}
                   label={getCardLabel(layout.person, layout.generation, centralPersonId, maps, spouseTonePersonIds)}
+                  central={layout.person.id === centralPersonId}
                   horizontal
                   roomy
                   onClick={onPersonClick}
