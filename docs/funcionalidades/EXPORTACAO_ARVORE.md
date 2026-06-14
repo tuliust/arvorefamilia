@@ -1,9 +1,9 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
 > Tipo: documentação funcional/técnica da exportação da árvore.  
-> Status: alinhado à baseline atual: views oficiais `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Status: alinhado à baseline atual das views oficiais `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
 
@@ -20,7 +20,7 @@ Contrato:
 
 ```txt
 Exportar a superfície capturável da view ativa ou da área selecionada,
-sem incluir painel, header, bottom nav, overlays ou controles.
+sem incluir painel, header, bottom nav, overlays, debug ou controles.
 ```
 
 ---
@@ -31,8 +31,8 @@ Views oficiais:
 
 | View | Rota | Base técnica |
 |---|---|---|
-| Mapa Familiar | `/mapa-familiar` | HTML/CSS/SVG em `DesktopFamilyMapView`; mobile em `MobileFamilyTreeView` |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView`; mobile em `MobileFamilyHorizontalMapView` |
+| Árvore Familiar | `/mapa-familiar` | HTML/CSS/SVG em `DesktopFamilyMapView`; mobile em `MobileFamilyTreeView` |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView`; mobile em `MobileFamilyHorizontalMapView` |
 
 Rotas antigas fora do produto ativo:
 
@@ -55,6 +55,7 @@ Observação técnica:
 ```txt
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
+src/app/components/FamilyTree/TreeExportLoadingOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
@@ -65,6 +66,8 @@ src/app/pages/home/HomeTreeSection.tsx
 src/styles/home-sidebar-unified.css
 src/styles/family-map-horizontal.css
 src/styles/family-map-qa.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
 src/styles/mobile-tree-controls.css
 ```
 
@@ -89,11 +92,12 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 Regras:
 
-- o painel dispara a ação;
+- o painel desktop/completo dispara a ação;
+- o modal mobile de controles não expõe Exportar;
 - a view ativa decide o alvo de captura;
 - cliques repetidos devem ser bloqueados durante exportação;
 - erros devem liberar loading;
-- a futura remoção das abas `Filtros | Legendas | Ações` não pode quebrar esses botões.
+- a ausência da barra `Filtros | Legendas | Ações` não pode quebrar esses botões.
 
 ---
 
@@ -112,7 +116,8 @@ Regras:
 - Imagem/PDF/Imprimir usam o root exportável;
 - Área usa alvo alinhado ao viewport visível;
 - `mapSurfaceRef` não deve ser capturado isoladamente quando houver offsets/escala;
-- mobile deve expor alvo coerente com a tela/geração ativa.
+- mobile deve expor alvo coerente com a tela/geração ativa;
+- novos blocos estruturais, como segundo núcleo conjugal, devem entrar no cálculo de bounds/canvas quando renderizados.
 
 ---
 
@@ -171,7 +176,9 @@ Regras:
 - não depender de imagem externa sem CORS;
 - não capturar painel, overlay, loading, header ou bottom nav;
 - sanitizar cores incompatíveis;
-- testar em desktop e mobile.
+- testar em desktop e mobile;
+- preservar paleta ativa e gradientes dos cards;
+- validar que avatares, ícones e conectores não viram blocos escuros no clone.
 
 ---
 
@@ -203,7 +210,9 @@ Regras:
 - seleção mínima de `80 x 80px`;
 - impedir fechamento por `Esc` durante exportação;
 - respeitar limite preventivo de pixels;
-- não capturar interface transitória.
+- não capturar interface transitória;
+- `Exportar > Área` deve operar como toggle;
+- recorte deve corresponder à área visível selecionada.
 
 ---
 
@@ -230,12 +239,12 @@ Regras:
 
 ## 10. Título no canvas
 
-Títulos:
+Títulos vigentes:
 
 | Rota | Título |
 |---|---|
-| `/mapa-familiar` | `Mapa Familiar de {primeiroNome}` ou `Mapa Familiar` |
-| `/mapa-familiar-horizontal` | `Genealogia de {primeiroNome}` ou `Genealogia` |
+| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar` |
+| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico` |
 
 Regras:
 
@@ -243,11 +252,12 @@ Regras:
 - PDF recebe canvas já titulado;
 - Impressão recebe canvas já titulado;
 - Área selecionada também recebe título;
-- evitar título duplicado no PDF.
+- evitar título duplicado no PDF;
+- não restaurar `Genealogia de...` nem `Mapa Familiar Horizontal de...` como título exportável principal.
 
 ---
 
-## 11. SVGs e avatares
+## 11. SVGs, avatares e ícones
 
 Problema prevenido:
 
@@ -273,6 +283,16 @@ family-map-birth-icon
 family-map-deceased-icon
 ```
 
+Contrato de avatar:
+
+```txt
+Pessoa com foto -> foto_principal_url
+Pessoa sem foto -> User, lucide-react
+Pet             -> PawPrint, lucide-react
+```
+
+Não há fallback visual por gênero como regra vigente.
+
 ---
 
 ## 12. Elementos ignorados
@@ -285,6 +305,7 @@ Devem ser ignorados:
 [data-tree-export-loading="true"]
 [data-tree-node-menu="true"]
 [data-tree-legend="true"]
+[data-tree-debug-viewer="true"]
 .react-flow__controls
 .react-flow__minimap
 ```
@@ -293,7 +314,7 @@ Mesmo que seletores ReactFlow permaneçam em utilitário, as views oficiais atua
 
 ---
 
-## 13. Mapa Familiar Vertical
+## 13. Árvore Familiar Vertical
 
 Root esperado:
 
@@ -308,16 +329,24 @@ Regras:
 - respeitar paleta e filtros;
 - respeitar `hideGroupChrome`;
 - não capturar painel;
-- exportar com título de Mapa Familiar.
+- exportar com título `Árvore Familiar`;
+- incluir blocos descendentes adicionais quando renderizados;
+- calcular bounds considerando novos grupos, cônjuges adicionais, filhos e netos quando existirem.
 
 ---
 
-## 14. Mapa Familiar Horizontal
+## 14. Mapa Genealógico Horizontal
 
 Roots/atributos esperados:
 
 ```txt
 data-family-map-horizontal-root
+data-family-map-horizontal-mobile-root
+```
+
+Compatibilidade histórica que pode aparecer em CSS/utilitário:
+
+```txt
 data-mobile-family-horizontal-root
 ```
 
@@ -327,11 +356,44 @@ Regras:
 - preservar conectores;
 - preservar compactação de colunas;
 - respeitar `Destacar > Grupos`;
-- exportar com título de Genealogia.
+- respeitar cônjuges da Geração 4/Pais quando renderizados;
+- exportar com título `Mapa Genealógico`;
+- preservar paleta ativa, inclusive correções mobile para evitar fallback azul indevido.
 
 ---
 
-## 15. QA obrigatório
+## 15. Paletas e CSS na exportação
+
+Paletas oficiais:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Regras:
+
+- exportação deve preservar card, texto, borda, group chrome, conectores e canvas;
+- Visual/Azul deve preservar gradientes teal/cyan/blue onde esse for o contrato da view;
+- white/orange/brown não podem cair em fallback azul;
+- bordas de grupos mobile devem seguir a paleta;
+- cards do painel não entram na captura, mas não devem contaminar variáveis da árvore;
+- CSS de calendário não deve afetar exportação da árvore.
+
+Arquivos de CSS relacionados:
+
+```txt
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+```
+
+---
+
+## 16. QA obrigatório
 
 Testar:
 
@@ -349,21 +411,35 @@ PDF
 Imprimir
 ```
 
-Comandos:
+### Desktop
 
-```bash
-npm run build
-npm test
-npm run test:e2e
-git diff --check
-```
+- [ ] `/mapa-familiar` exporta PNG;
+- [ ] `/mapa-familiar` exporta PDF;
+- [ ] `/mapa-familiar` imprime;
+- [ ] `/mapa-familiar` exporta área;
+- [ ] `/mapa-familiar-horizontal` exporta PNG;
+- [ ] `/mapa-familiar-horizontal` exporta PDF;
+- [ ] `/mapa-familiar-horizontal` imprime;
+- [ ] `/mapa-familiar-horizontal` exporta área.
 
-Critérios:
+### Mobile
 
-- painel não aparece no resultado;
-- título aparece uma vez;
-- SVGs aparecem corretamente;
-- PDF proporcional;
-- impressão abre janela;
-- área selecionada corresponde à seleção;
-- loading fecha em erro/sucesso.
+- [ ] `/mapa-familiar` não captura modal de controles;
+- [ ] `/mapa-familiar-horizontal` não captura bottom nav;
+- [ ] paletas mobile permanecem corretas se a exportação for acionada por fluxo completo;
+- [ ] geração ativa horizontal não corta cards/conectores visíveis.
+
+### Critérios gerais
+
+- [ ] painel não aparece no resultado;
+- [ ] título aparece uma vez;
+- [ ] título usa nomenclatura vigente;
+- [ ] SVGs aparecem corretamente;
+- [ ] PDF proporcional;
+- [ ] impressão abre janela;
+- [ ] área selecionada corresponde à seleção;
+- [ ] loading fecha em erro/sucesso;
+- [ ] conectores aparecem;
+- [ ] paleta ativa é respeitada;
+- [ ] filtros ativos são respeitados;
+- [ ] debug `Visualizar como...` não aparece.

@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: guia canônico alinhado às duas views oficiais da árvore e ao painel simplificado.
+> Status: guia canônico alinhado às duas views oficiais da árvore, painel simplificado, paletas desktop/mobile, calendário mobile e exportação.
 
 ---
 
@@ -69,17 +68,25 @@ Essa rota é uma página de edição de membro e não deve ser confundida com a 
 | Shell da árvore | Implementado | `Home` é o shell das duas views oficiais. |
 | Mapa Familiar | Implementado | Desktop/tablet usa `DesktopFamilyMapView`; mobile usa `MobileFamilyTreeView`. |
 | Mapa Familiar Horizontal | Implementado | Desktop/tablet usa `DesktopFamilyHorizontalMapView`; mobile usa `MobileFamilyHorizontalMapView`. |
+| Horizontal mobile | Implementada | Uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno. |
 | Favoritos de páginas | Implementados | `FAVORITE_PAGES` inclui `/mapa-familiar` e `/mapa-familiar-horizontal`. |
 | Busca global | Implementada | `GLOBAL_SEARCH_PAGES` inclui as duas views oficiais e aliases antigos apontam para rotas atuais. |
 | Retorno de perfil | Implementado | `?voltar=` aceita `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`. |
 | Painel desktop/mobile | Implementado | Painel simplificado, sem barra `Filtros | Legendas | Ações`. |
+| Cards do painel | Implementados | Cards de grupos/filtros no desktop seguem o visual da paleta ativa. |
 | Exportação | Implementada | Área, Imagem, PDF e Imprimir nas views oficiais. |
 | Paletas | Implementadas | `white`, `visual`, `orange`, `brown`. |
+| Paletas mobile | Implementadas | Mobile replica desktop, com CSS escopado para corrigir divergências visuais. |
+| Bordas de grupos mobile | Implementadas | Containers de grupos usam variáveis de paleta, não borda fixa. |
+| Cards mobile de pessoas | Implementados | Sem fallback textual de nascimento/falecimento não informado. |
+| Cônjuges adicionais | Implementado estruturalmente | `/mapa-familiar` suporta segundo núcleo conjugal quando dados existem. |
+| Cônjuges da Geração 4 | Implementado/contrato vigente | `/mapa-familiar-horizontal` deve renderizar cônjuges de Pais/Geração 4 quando filtro está ativo. |
 | Destaques | Implementados | `Linhas`, `Cards`, `Grupos`. |
 | Perfil de pessoa | Implementado | Perfil autenticado, dados, arquivos, eventos e favoritos. |
 | Admin | Implementado | Pessoas, relacionamentos, importação, integridade, notificações e solicitações. |
 | Fórum | Implementado | Categorias, tópicos, respostas, reações, favoritos e notificações. |
 | Calendário | Implementado | Datas familiares e integração Google Calendar quando configurada. |
+| Calendário mobile | Implementado | 5 categorias em uma linha, bolinha colorida acima do título, título em uma linha. |
 | Notificações | Implementadas | Central, preferências, dispatch interno/e-mail conforme configuração. |
 | Testes | Implementados parcialmente | Vitest e Playwright validam baseline estrutural. |
 | Higiene de repo | Implementada | Artefatos locais de teste, backups e cópias de env ignorados. |
@@ -112,6 +119,7 @@ Contrato atual:
 | `/pessoa/:id` | `MemberRoute` | Perfil de pessoa. |
 | `/pessoas/:id` | `MemberRoute` | Alias vigente. |
 | `/meus-dados`, `/meus-vinculos`, `/vincular-perfil` | `MemberRoute` | Área de membro. |
+| `/calendario-familiar` | `MemberRoute` | Calendário familiar. |
 | `/forum/*` | `MemberRoute` | Fórum. |
 | `/admin/*` | `ProtectedRoute` | Administração. |
 
@@ -166,7 +174,7 @@ Estado atual:
 - flyouts específicos concentram paletas, exportação e destaques;
 - modal mobile usa o mesmo conjunto de controles essenciais.
 
-Controles vigentes:
+Controles desktop vigentes:
 
 ```txt
 Zoom +/-
@@ -180,6 +188,25 @@ Filtros/grupos
 Filtros de status
 ```
 
+Controles mobile vigentes:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros de status
+```
+
+No mobile, não exibir:
+
+```txt
+Zoom
+Restaurar visualização
+Exportar
+```
+
 Arquivos envolvidos:
 
 ```txt
@@ -190,12 +217,118 @@ src/app/pages/home/DirectRelationKpiGrid.tsx
 src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
 src/styles/home-sidebar-unified.css
+src/styles/tree-panel-palette-cards.css
 src/styles/mobile-tree-controls.css
 ```
 
 ---
 
-## 7. Exportação da árvore
+## 7. Paletas, cards e CSS escopado
+
+Paletas oficiais:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Arquivos principais:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+src/styles/calendar-mobile-category-buttons.css
+```
+
+Contrato:
+
+- desktop é referência visual;
+- mobile replica desktop;
+- cards, bordas, texto, conectores e canvas mudam juntos;
+- Visual/Azul usa gradiente teal/cyan/blue quando o componente base exige correção;
+- demais paletas não devem cair em fallback azul;
+- bordas dos grupos mobile usam `--family-map-group-border`;
+- fundos de grupos mobile usam `--family-map-group-bg`;
+- CSS novo deve ser escopado por root/data attribute.
+
+---
+
+## 8. Regras de cônjuges implementadas
+
+### Sempre visíveis
+
+Não dependem do filtro:
+
+- cônjuge da pessoa central;
+- cônjuges de avós;
+- cônjuges de bisavós;
+- cônjuges de tataravós.
+
+### Filtráveis
+
+Dependem do filtro `Cônjuges`:
+
+- cônjuges de pais/Geração 4 na horizontal;
+- cônjuges de tios;
+- cônjuges de primos;
+- cônjuges de sobrinhos;
+- cônjuges de filhos;
+- cônjuges de netos.
+
+### Núcleos conjugais descendentes
+
+`/mapa-familiar` suporta estruturalmente:
+
+- primeiro cônjuge visível como núcleo principal;
+- cônjuges adicionais como “Outro relacionamento”;
+- filhos agrupados pelo outro pai/mãe quando a relação explícita existe;
+- filhos sem outro pai/mãe identificado permanecem no grupo principal.
+
+---
+
+## 9. Calendário familiar implementado
+
+Rota:
+
+```txt
+/calendario-familiar
+```
+
+Arquivos:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+src/styles/calendar-mobile-category-buttons.css
+src/app/utils/familyDates.ts
+src/app/services/googleCalendarService.ts
+```
+
+Contrato mobile atual:
+
+- 5 categorias em uma única linha;
+- bolinha colorida acima do título;
+- título em uma linha;
+- sem overflow horizontal;
+- card grande de categorias oculto no mobile quando duplicar os filtros superiores.
+
+Categorias compactas:
+
+```txt
+Aniversário
+Casamento
+Falecimento
+Outros
+Reunião
+```
+
+---
+
+## 10. Exportação da árvore
 
 Implementada em:
 
@@ -224,11 +357,14 @@ Regras:
 - painel e UI transitória não entram na captura;
 - exportação deve respeitar filtros, destaques, paletas, conectores e título;
 - captura excessiva deve ser bloqueada;
-- HTML/CSS/SVG das views oficiais tem prioridade sobre compatibilidade ReactFlow.
+- HTML/CSS/SVG das views oficiais tem prioridade sobre compatibilidade ReactFlow;
+- título exportável deve usar a nomenclatura vigente:
+  - `Árvore Familiar`;
+  - `Mapa Genealógico`.
 
 ---
 
-## 8. Busca e favoritos
+## 11. Busca e favoritos
 
 Arquivos:
 
@@ -247,7 +383,7 @@ Regras:
 
 ---
 
-## 9. Código removido ou desativado na frente
+## 12. Código removido ou desativado na frente
 
 Removido:
 
@@ -279,7 +415,7 @@ backups/
 
 ---
 
-## 10. Legado técnico preservado
+## 13. Legado técnico preservado
 
 Preservar até projeto específico:
 
@@ -301,7 +437,7 @@ Motivo:
 
 ---
 
-## 11. Validação da baseline
+## 14. Validação da baseline
 
 Comandos obrigatórios antes de fechar mudança relevante:
 
@@ -316,14 +452,14 @@ git status --short
 Resultado final esperado:
 
 - build passa;
-- 36 testes unitários passam;
-- 9 testes E2E passam;
+- testes unitários passam;
+- testes E2E passam;
 - `git status --short` sem saída;
 - `main` sincronizada com `origin/main`.
 
 ---
 
-## 12. Pendências não implementadas neste guia
+## 15. Pendências não implementadas neste guia
 
 Registrar e acompanhar em:
 

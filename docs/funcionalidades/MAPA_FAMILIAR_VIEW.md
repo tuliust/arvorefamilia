@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação funcional/técnica das duas views oficiais da árvore.  
-> Status: atualizado após ajustes em títulos, painel desktop, modal mobile, mobile horizontal, paletas e avatares.
+> Status: atualizado após ajustes em títulos, painel desktop, modal mobile, mobile horizontal, paletas, avatares, bordas mobile, cônjuges da Geração 4 e núcleos conjugais adicionais.
 
 ---
 
@@ -81,7 +81,8 @@ Diferenças:
 | Navegação mobile | `src/app/pages/home/HomeMobileNav.tsx` |
 | CSS vertical/paletas | `src/styles/family-map-qa.css` |
 | CSS horizontal | `src/styles/family-map-horizontal.css` |
-| CSS painel | `src/styles/home-sidebar-unified.css` |
+| CSS paletas mobile | `src/styles/family-map-mobile-palettes.css` |
+| CSS painel | `src/styles/home-sidebar-unified.css`, `src/styles/tree-panel-palette-cards.css` |
 | CSS controles mobile | `src/styles/mobile-tree-controls.css` |
 
 ---
@@ -162,7 +163,8 @@ getTreeViewModeFromPath(pathname) -> mapa-familiar
 6. expansão/recolhimento;
 7. conectores SVG;
 8. zoom/scroll;
-9. exportação.
+9. exportação;
+10. núcleos conjugais adicionais, quando os dados permitirem.
 
 ### 6.2 Grupos
 
@@ -191,7 +193,18 @@ Regras:
 - expansão não deve afetar dados reais;
 - pessoa central deve permanecer visível quando aplicável.
 
-### 6.3 Modo wide
+### 6.3 Núcleos conjugais descendentes
+
+Quando a pessoa central tiver mais de um relacionamento conjugal:
+
+- o primeiro cônjuge visível permanece como núcleo principal;
+- cônjuges adicionais podem gerar bloco `Outro relacionamento`;
+- filhos devem ser agrupados pelo outro pai/mãe quando houver relação explícita;
+- filhos sem outro pai/mãe identificado permanecem no grupo principal;
+- o layout deve reservar espaço para cônjuge adicional e filhos desse relacionamento sem sobrepor irmãos, sobrinhos, filhos, netos ou pets;
+- dados reais não devem ser criados/alterados por ajuste visual.
+
+### 6.4 Modo wide
 
 Quando o painel é colapsado:
 
@@ -200,7 +213,7 @@ Quando o painel é colapsado:
 - grupos laterais não devem invadir o núcleo;
 - exportação deve capturar superfície normalizada.
 
-### 6.4 Mobile vertical
+### 6.5 Mobile vertical
 
 `MobileFamilyTreeView` mantém experiência própria:
 
@@ -214,7 +227,9 @@ Regras:
 
 - não usar a navegação `Ger 1/Ger 2/...` da horizontal;
 - conectores devem respeitar o alinhamento de referência do desktop;
-- paletas mobile devem herdar tokens do desktop;
+- paletas mobile devem herdar tokens do desktop e overrides de `family-map-mobile-palettes.css`;
+- bordas dos grupos devem seguir `--family-map-group-border` da paleta ativa;
+- fundos dos grupos devem seguir `--family-map-group-bg` da paleta ativa;
 - não usar cores hardcoded como fonte de verdade visual.
 
 ---
@@ -257,7 +272,17 @@ Regras:
 - a ordem deve preservar relações familiares e nascimento quando disponível;
 - mobile não deve criar uma hierarquia alternativa divergente da desktop.
 
-### 7.3 Conectores
+### 7.3 Cônjuges da Geração 4 / Pais
+
+Na horizontal, pessoas da Geração 4 podem estar classificadas como `pais` no escopo visual.
+
+Contrato:
+
+- quando o filtro `Cônjuges` estiver ativo, cônjuges de pessoas do grupo `pais` também devem ser exibidos;
+- o card deve receber tratamento/label de cônjuge quando aplicável;
+- a ausência desses cônjuges é regressão.
+
+### 7.4 Conectores
 
 Conectores:
 
@@ -271,9 +296,10 @@ Regras:
 - conector conjugal depende de relacionamento explícito;
 - não inferir casamento por proximidade;
 - conectores devem recalcular quando grupos/cabeçalhos mudam;
+- no desktop, a espessura deve permanecer discreta;
 - no mobile, a altura rolável deve considerar cards e linhas conectoras visíveis.
 
-### 7.4 Mobile horizontal
+### 7.5 Mobile horizontal
 
 Componente:
 
@@ -301,7 +327,8 @@ Regras:
 - não usar barra `Paterno | Central | Materno`;
 - não criar subrota por geração;
 - não aplicar CSS ReactFlow;
-- a direção do swipe deve ser validada em aparelho real/iOS antes do fechamento de QA.
+- a direção do swipe deve ser validada em aparelho real/iOS antes do fechamento de QA;
+- cards sem `data-family-map-color-key` não podem cair em fallback azul/teal quando a paleta ativa não for Visual/Azul.
 
 ---
 
@@ -320,6 +347,7 @@ Não dependem do filtro `Cônjuges`:
 
 Dependem do filtro `Cônjuges`:
 
+- cônjuges de pais / Geração 4 na horizontal;
 - cônjuges de tios;
 - cônjuges de primos;
 - cônjuges de sobrinhos;
@@ -365,14 +393,52 @@ brown
 Contrato:
 
 - desktop é a referência visual;
-- mobile deve herdar os mesmos tokens `--tree-palette-*`;
+- mobile deve herdar os mesmos tokens `--tree-palette-*` e CSS escopado;
 - cards, bordas, texto, ícones, canvas e conectores devem mudar juntos;
 - não usar classes fixas `teal/cyan/blue/orange/brown` no mobile como fonte de verdade visual;
 - a exportação deve respeitar a paleta ativa.
 
+### 10.1 Paleta Visual/Azul
+
+Na vertical e horizontal, a paleta Visual/Azul usa gradientes teal/cyan/blue nos cards.
+
+Regras:
+
+- `/mapa-familiar` desktop é referência visual;
+- `/mapa-familiar-horizontal` desktop e mobile devem preservar gradientes, não cores pastéis sólidas;
+- cards centrais usam gradiente cyan/blue;
+- cônjuges usam gradiente emerald/teal;
+- pets usam tom teal/ciano próprio.
+
+### 10.2 Paletas white, orange e brown no mobile
+
+As paletas mobile devem replicar o desktop:
+
+- fundo do grupo;
+- borda do grupo;
+- card;
+- borda do card;
+- texto;
+- conectores.
+
+A correção de mobile deve acontecer em CSS escopado, não por alteração de dados.
+
 ---
 
-## 11. Avatares
+## 11. Cards mobile de pessoas
+
+Em `/mapa-familiar` mobile:
+
+- exibir nome em destaque;
+- abaixo do nome, exibir linha `★ AAAA` quando houver ano de nascimento;
+- abaixo, exibir linha `✥ AAAA` quando houver ano de falecimento;
+- não exibir `Nascimento não informado`;
+- não exibir `Falecimento não informado`;
+- manter legibilidade em todas as paletas.
+
+---
+
+## 12. Avatares
 
 Contrato:
 
@@ -392,7 +458,7 @@ Regras:
 
 ---
 
-## 12. Exportação
+## 13. Exportação
 
 Ações:
 
@@ -422,7 +488,7 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ---
 
-## 13. Painel e modal de controles
+## 14. Painel e modal de controles
 
 ### Desktop
 
@@ -440,6 +506,12 @@ Destacar
 Grupos
 Filtros
 ```
+
+Cards do painel desktop:
+
+- devem seguir o visual/gradiente da paleta ativa;
+- devem usar o mesmo vocabulário visual dos cards da árvore;
+- não devem entrar na exportação.
 
 ### Mobile
 
@@ -468,14 +540,13 @@ Regras:
 - botão **Grupos** abre/fecha os cards de grupos;
 - cards de grupos não aparecem por padrão;
 - filtros ficam sempre visíveis;
-- filtros devem caber em 4 colunas;
 - título do modal deve ser `Controles`;
 - subtítulo removido;
 - botão superior direito usa ícone `X`.
 
 ---
 
-## 14. Debug temporário
+## 15. Debug temporário
 
 Pode existir, como ferramenta de diagnóstico, um dropdown:
 
@@ -498,7 +569,7 @@ Regras:
 
 ---
 
-## 15. QA obrigatório
+## 16. QA obrigatório
 
 Validar:
 
@@ -523,9 +594,12 @@ Fluxos:
 - alternância com `?pessoa=...`;
 - abertura de perfil e retorno;
 - filtros de grupos;
-- cônjuges;
+- cônjuges, incluindo Geração 4 na horizontal;
+- múltiplos cônjuges da pessoa central na vertical;
 - pets;
 - paletas;
+- bordas de grupos mobile;
+- cards mobile de datas;
 - avatares;
 - exportação PNG/PDF/imprimir;
 - modal mobile de controles;
@@ -534,7 +608,7 @@ Fluxos:
 
 ---
 
-## 16. Anti-regressões
+## 17. Anti-regressões
 
 Não reintroduzir:
 
@@ -555,3 +629,12 @@ FamilyTreeActions
 ```
 
 Não alterar dados reais por ajuste visual.
+
+Não permitir:
+
+- paletas mobile divergentes do desktop;
+- bordas de grupo mobile com cor fixa fora da paleta;
+- cards mobile com `Nascimento não informado`;
+- cônjuges da Geração 4 ausentes na horizontal quando filtro ativo;
+- cards sem key de paleta caindo em azul quando a paleta ativa for laranja/marrom/branca;
+- painel desktop com cards visualmente desconectados da árvore.

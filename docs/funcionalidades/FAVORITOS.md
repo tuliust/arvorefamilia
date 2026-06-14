@@ -1,6 +1,6 @@
 # Favoritos
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/FAVORITOS.md`  
 > Tipo: documentação funcional/técnica de favoritos.  
 > Status: alinhado ao código atual de `src/app/constants/favoritePages.ts` e `src/app/services/globalSearchService.ts`.
@@ -57,8 +57,8 @@ Páginas atualmente suportadas:
 
 | ID | Título | Path |
 |---|---|---|
-| `mapa-familiar` | Mapa Familiar | `/mapa-familiar` |
-| `mapa-familiar-horizontal` | Mapa Familiar Horizontal | `/mapa-familiar-horizontal` |
+| `mapa-familiar` | Árvore Familiar | `/mapa-familiar` |
+| `mapa-familiar-horizontal` | Mapa Genealógico | `/mapa-familiar-horizontal` |
 | `meus-dados` | Meus Dados | `/meus-dados` |
 | `meus-vinculos` | Meus Vínculos | `/meus-vinculos` |
 | `notificacoes` | Notificações | `/notificacoes` |
@@ -83,6 +83,22 @@ Exceção:
 é uma rota vigente de edição, mas não é atalho principal de view da árvore.
 
 ---
+
+### 3.1 Contrato atual das views de árvore
+
+Páginas favoritáveis da árvore:
+
+| ID | Título vigente | Path |
+|---|---|---|
+| `mapa-familiar` | Árvore Familiar | `/mapa-familiar` |
+| `mapa-familiar-horizontal` | Mapa Genealógico | `/mapa-familiar-horizontal` |
+
+Regras:
+
+- favorito de página deve salvar a rota canônica;
+- não salvar geração ativa, zoom, pan, filtro, pessoa central temporária ou estado do modal como contrato obrigatório;
+- query params podem existir em navegação contextual, mas o favorito de página deve continuar estável;
+- aliases históricos podem existir como keywords de busca, não como destinos favoritos.
 
 ## 4. Busca global relacionada
 
@@ -405,3 +421,21 @@ Critério:
 - catálogo ativo tem as duas views oficiais;
 - rotas antigas não aparecem como páginas favoritáveis;
 - `/minha-arvore/editar` não é confundida com view antiga.
+
+## 16. Anti-regressões específicas da árvore
+
+Não reintroduzir como favorito de página:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Checklist:
+
+- [ ] `favoritePages.ts` contém `/mapa-familiar` com título **Árvore Familiar**.
+- [ ] `favoritePages.ts` contém `/mapa-familiar-horizontal` com título **Mapa Genealógico**.
+- [ ] Busca global e favoritos usam o mesmo vocabulário das views oficiais.
+- [ ] `/minha-arvore/editar` não é tratada como substituta da antiga `/minha-arvore`.
+- [ ] Favoritos de pessoa continuam apontando para `/pessoa/:id`, não para uma view da árvore.

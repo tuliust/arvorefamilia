@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: checklist canônico atualizado após ajustes de árvore, painel mobile, paletas, avatares, conectores e debug temporário.
+> Status: checklist canônico atualizado após ajustes de árvore, painel, mobile, paletas, calendário, conectores, exportação e debug temporário.
 
 ---
 
@@ -20,6 +20,7 @@ Use antes de:
 - alterar paletas, conectores, cards ou avatares;
 - alterar exportação;
 - alterar favoritos ou busca global;
+- alterar calendário familiar;
 - remover arquivos;
 - limpar CSS;
 - arquivar documentação;
@@ -76,12 +77,13 @@ rg "Filtros|Legendas|Ações"
 rg "MobileTreeControlsPortal"
 rg "G1|G2|G3"
 rg "teal-|cyan-|blue-|orange-|brown-"
+rg "Nascimento não informado|Falecimento não informado"
 ```
 
 Em ambiente Windows sem `rg`, usar:
 
 ```powershell
-Select-String -Path .\src\**\*.*,.\docs\**\*.* -Pattern "minha-arvore|genealogia|visao-completa|Filtros|Legendas|Ações|MobileTreeControlsPortal|G1|G2|G3"
+Select-String -Path .\src\**\*.*, .\docs\**\*.* -Pattern "minha-arvore|genealogia|visao-completa|Filtros|Legendas|Ações|MobileTreeControlsPortal|G1|G2|G3"
 ```
 
 Interpretação permitida:
@@ -92,7 +94,8 @@ Interpretação permitida:
 - aliases antigos podem existir como keywords de busca/favoritos se apontarem para rotas atuais;
 - a barra `Filtros | Legendas | Ações` não deve voltar como UI ativa;
 - classes Tailwind de cor podem existir em áreas fora da árvore, mas o mobile da árvore deve herdar tokens de paleta;
-- `G1/G2/G3` deve ser substituído por `Ger 1/Ger 2/Ger 3` na UI vigente.
+- `G1/G2/G3` deve ser substituído por `Ger 1/Ger 2/Ger 3` na UI vigente;
+- textos `Nascimento não informado` e `Falecimento não informado` não devem aparecer nos cards mobile da árvore.
 
 ---
 
@@ -253,7 +256,8 @@ Checklist:
 - [ ] painel não aparece na exportação;
 - [ ] painel não corta controles em telas de baixa altura;
 - [ ] flyout de Exportar não substitui o box principal de controles;
-- [ ] `Exportar > Área` funciona como toggle de abrir/fechar seleção.
+- [ ] `Exportar > Área` funciona como toggle de abrir/fechar seleção;
+- [ ] cards de grupos e filtros usam o visual/gradiente coerente com a paleta ativa.
 
 ### Não deve voltar
 
@@ -293,7 +297,7 @@ Exportar
 ### Contrato visual e funcional
 
 - título: `Controles`;
-- sem subtítulo `Visualização, cores...`;
+- sem subtítulo;
 - botão superior direito com ícone `X`;
 - botões principais: `Cores`, `Grupos`, `Destacar`;
 - `Grupos` abre/fecha os cards de grupos;
@@ -339,10 +343,13 @@ Checklist:
 - [ ] mobile não usa cores hardcoded como fonte da verdade dos cards;
 - [ ] mobile não força `teal/cyan/blue/orange/brown` fora dos tokens de paleta;
 - [ ] paletas afetam cards, bordas, textos, ícones, conectores, labels, canvas e exportação;
-- [ ] conectores seguem `--tree-palette-edge-*`;
-- [ ] cards seguem `--tree-palette-card-*`;
+- [ ] conectores seguem `--tree-palette-edge-*` ou variáveis equivalentes do mapa;
+- [ ] cards seguem `--tree-palette-card-*` ou variáveis equivalentes do mapa;
 - [ ] fundo/canvas segue `--tree-palette-canvas-*`;
-- [ ] nenhuma regra global `svg path` altera ícones ou conectores fora do escopo da árvore.
+- [ ] bordas de grupos mobile seguem `--family-map-group-border`;
+- [ ] fundos de grupos mobile seguem `--family-map-group-bg`;
+- [ ] nenhuma regra global `svg path` altera ícones ou conectores fora do escopo da árvore;
+- [ ] cards sem `data-family-map-color-key` na horizontal mobile não caem em fallback azul indevido.
 
 QA obrigatório:
 
@@ -371,6 +378,20 @@ Regras:
 - SVGs internos dos cards não podem virar quadrados escuros na exportação;
 - pets preservam iconografia própria.
 
+### Cards mobile de pessoas em `/mapa-familiar`
+
+Checklist:
+
+- [ ] nome aparece em destaque;
+- [ ] nascimento aparece apenas quando houver ano real;
+- [ ] nascimento usa linha com estrela + `AAAA`;
+- [ ] falecimento aparece apenas quando houver ano real;
+- [ ] falecimento usa linha com cruz + `AAAA`;
+- [ ] não aparece `Nascimento não informado`;
+- [ ] não aparece `Falecimento não informado`.
+
+### Avatar
+
 Checklist:
 
 - [ ] pessoa sem foto mostra `User` no desktop.
@@ -381,14 +402,55 @@ Checklist:
 
 ---
 
-## 13. Regras de conectores
+## 13. Regras de cônjuges
+
+### Sempre visíveis
+
+Não dependem do filtro:
+
+- cônjuge da pessoa central;
+- cônjuges de avós;
+- cônjuges de bisavós;
+- cônjuges de tataravós.
+
+### Filtráveis
+
+Dependem do filtro `Cônjuges`:
+
+- cônjuges de pais/Geração 4 na horizontal;
+- cônjuges de tios;
+- cônjuges de primos;
+- cônjuges de sobrinhos;
+- cônjuges de filhos;
+- cônjuges de netos.
+
+### Núcleos conjugais adicionais
+
+Checklist:
+
+- [ ] se a pessoa central tem mais de um cônjuge, o layout não deve ocultar todos exceto `mainSpouses[0]`;
+- [ ] filhos são agrupados pelo outro pai/mãe quando relação explícita existir;
+- [ ] filhos sem outro pai/mãe identificado permanecem no grupo principal;
+- [ ] segundo relacionamento não deve sobrepor irmãos, sobrinhos, netos ou pets;
+- [ ] dados fictícios não devem ser criados para resolver layout.
+
+### Anti-regressão crítica
+
+```txt
+Conector conjugal nunca deve ser inferido apenas por proximidade visual.
+```
+
+---
+
+## 14. Regras de conectores
 
 ### Vertical desktop
 
 - conectores SVG por âncoras;
 - conectores respeitam grupos visíveis;
 - conectores recalculam com painel aberto/colapsado;
-- conectores continuam coerentes com `Destacar > Grupos`.
+- conectores continuam coerentes com `Destacar > Grupos`;
+- espessura visual deve ser discreta e não competir com os cards.
 
 ### Vertical mobile
 
@@ -403,7 +465,8 @@ Checklist:
 - cônjuges adjacentes;
 - casal → gap → tronco → filhos;
 - conectores conjugais dependem de relacionamento explícito;
-- não inferir casamento por proximidade visual.
+- não inferir casamento por proximidade visual;
+- cônjuges da Geração 4/Pais devem aparecer quando filtro `Cônjuges` está ativo.
 
 ### Horizontal mobile
 
@@ -425,7 +488,48 @@ Checklist:
 
 ---
 
-## 14. Regras de exportação
+## 15. Regras de calendário familiar mobile
+
+Rota:
+
+```txt
+/calendario-familiar
+```
+
+Categorias compactas:
+
+```txt
+Aniversário
+Casamento
+Falecimento
+Outros
+Reunião
+```
+
+Contrato mobile:
+
+- [ ] os 5 botões aparecem em uma única linha;
+- [ ] cada botão exibe bolinha colorida acima do título;
+- [ ] o título ocupa a largura útil do botão;
+- [ ] o título permanece em uma linha;
+- [ ] ellipsis é permitido em telas extremas;
+- [ ] não há overflow horizontal global;
+- [ ] o card grande `Categorias` não duplica os filtros compactos no mobile;
+- [ ] os filtros usam o mesmo estado `activeCategories` do desktop;
+- [ ] cada botão mantém `aria-pressed`.
+
+Breakpoints mínimos:
+
+```txt
+320px
+375px
+390px
+430px
+```
+
+---
+
+## 16. Regras de exportação
 
 Testar em `/mapa-familiar`:
 
@@ -448,6 +552,7 @@ Testar em `/mapa-familiar-horizontal`:
 Verificar:
 
 - [ ] título aparece no canvas;
+- [ ] título segue a nomenclatura vigente;
 - [ ] painel não aparece na captura;
 - [ ] header não aparece;
 - [ ] bottom nav não aparece;
@@ -462,7 +567,7 @@ Verificar:
 
 ---
 
-## 15. Regras de debug temporário
+## 17. Regras de debug temporário
 
 Debug temporário previsto/implementável:
 
@@ -497,7 +602,7 @@ Checklist:
 
 ---
 
-## 16. Regras de favoritos
+## 18. Regras de favoritos
 
 Páginas de árvore favoritáveis:
 
@@ -517,7 +622,7 @@ Checklist:
 
 ---
 
-## 17. Regras de busca global
+## 19. Regras de busca global
 
 Checklist:
 
@@ -530,7 +635,7 @@ Checklist:
 
 ---
 
-## 18. Regras de guards e segurança
+## 20. Regras de guards e segurança
 
 Checklist:
 
@@ -544,7 +649,7 @@ Checklist:
 
 ---
 
-## 19. Regras para remoção de arquivos
+## 21. Regras para remoção de arquivos
 
 Antes de remover:
 
@@ -580,7 +685,7 @@ relationshipResolverService.ts
 
 ---
 
-## 20. Regras de CSS
+## 22. Regras de CSS
 
 Checklist:
 
@@ -593,10 +698,13 @@ Checklist:
 - [ ] exportação oculta UI transitória.
 - [ ] mobile de árvore não define paleta por classes fixas como fonte da verdade.
 - [ ] seletores de paleta usam `data-family-map-*` ou root equivalente.
+- [ ] `family-map-mobile-palettes.css` preserva Visual/Azul e replica white/orange/brown no mobile.
+- [ ] `tree-panel-palette-cards.css` não afeta mobile.
+- [ ] `calendar-mobile-category-buttons.css` fica restrito ao calendário mobile.
 
 ---
 
-## 21. Regras de documentação
+## 23. Regras de documentação
 
 Checklist:
 
@@ -608,11 +716,14 @@ Checklist:
 - [ ] Guias não tratam `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
 - [ ] Guias registram desktop como referência de paletas.
 - [ ] Guias registram mobile horizontal como adaptação da lógica desktop.
+- [ ] Guias registram cônjuges da Geração 4/Pais na horizontal.
+- [ ] Guias registram núcleos conjugais adicionais na vertical.
+- [ ] Guias registram calendário mobile com 5 botões em uma linha.
 - [ ] Guias registram `Visualizar como...` como debug temporário, se implementado.
 
 ---
 
-## 22. Checklist final antes de push
+## 24. Checklist final antes de push
 
 ```bash
 npm run build
@@ -630,4 +741,4 @@ Aceitação:
 - sem arquivos locais no status;
 - sem `test-results/`, `backups/` ou `.env*.save` versionados;
 - docs atualizadas se comportamento mudou;
-- QA visual feito quando houve mudança de layout, paleta, mobile ou exportação.
+- QA visual feito quando houve mudança de layout, paleta, mobile, calendário ou exportação.

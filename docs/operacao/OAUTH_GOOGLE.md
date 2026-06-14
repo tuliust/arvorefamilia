@@ -1,6 +1,6 @@
 # Google OAuth e Google Agenda
 
-> Última revisão: 2026-06-14  
+> Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/OAUTH_GOOGLE.md`  
 > Tipo: documentação operacional específica de OAuth Google e integração Google Agenda.  
 > Status: documento complementar extraído e consolidado a partir de `DEPLOYMENT.md`, `CALENDARIO_FAMILIAR.md`, Edge Functions e regras atuais de operação.
@@ -53,6 +53,23 @@ Regras:
 - o usuário precisa estar autenticado para conectar a agenda;
 - falha externa do Google não deve quebrar o restante do app;
 - a ausência de aprovação OAuth não é bug de frontend.
+
+---
+
+## 2.1 Relação com o calendário mobile
+
+Ajustes visuais em `/calendario-familiar`, como botões compactos, bolinhas coloridas ou layout mobile, não alteram OAuth.
+
+OAuth entra no escopo apenas quando houver mudança em:
+
+- escopos Google;
+- redirect URI;
+- consent screen;
+- domínio público;
+- Edge Functions `google-calendar-*`;
+- tokens/conexões;
+- service `googleCalendarService.ts`;
+- textos públicos exigidos pela verificação Google.
 
 ---
 

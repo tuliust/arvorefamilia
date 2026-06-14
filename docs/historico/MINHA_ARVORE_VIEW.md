@@ -130,11 +130,14 @@ Mesmo com a rota removida, algumas regras seguem válidas e foram preservadas na
 - `MobileFamilyTreeView` é usado por `/mapa-familiar` mobile;
 - filtros de pets continuam separados entre tipo/status e grupo;
 - cônjuges têm regra específica de visibilidade;
+- cônjuges de pais/Geração 4 na horizontal são filtráveis quando o filtro está ativo;
+- múltiplos cônjuges da pessoa central podem gerar núcleos descendentes adicionais;
 - conectores não devem inferir casamento por proximidade visual;
 - exportação deve ignorar painel, header, bottom nav, overlays e loading;
 - ajustes visuais não alteram dados reais;
 - paletas mobile devem seguir a referência desktop;
-- pessoa sem foto usa `User`; pet usa `PawPrint`.
+- pessoa sem foto usa `User`; pet usa `PawPrint`;
+- cards mobile não devem exibir `Nascimento não informado`.
 
 ---
 

@@ -1,6 +1,6 @@
 # Notificações
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/NOTIFICACOES.md`  
 > Tipo: documentação funcional, técnica e operacional do módulo de notificações.  
 > Status: revisado na auditoria final da documentação.
@@ -57,6 +57,25 @@ Futuro/pós-MVP:
 - preferências mais granulares por fórum, se o produto exigir.
 
 ---
+
+### 2.1 Integração com calendário familiar
+
+O calendário familiar consome datas familiares e pode gerar contexto para notificações de rotina.
+
+Escopo vigente:
+
+- aniversários;
+- datas de memória/falecimento;
+- eventos familiares quando houver fluxo suportado;
+- rotina manual/admin e Edge Function diária, conforme configuração.
+
+Regras:
+
+- notificações de calendário devem respeitar preferências do usuário;
+- deduplicação deve usar `notification_occurrences`;
+- falha de e-mail não deve desfazer notificação interna;
+- Google Agenda é integração de calendário, não canal de notificação;
+- alterações no shape de evento do calendário exigem revisar notificações e Google Agenda.
 
 ## 3. Arquitetura
 
@@ -379,6 +398,18 @@ memoria_falecimento:YYYY-MM-DD:userId:pessoaId
 ```
 
 ---
+
+### 9.1 Relação com `/calendario-familiar`
+
+A rota `/calendario-familiar` exibe datas familiares; o módulo de notificações pode avisar sobre datas especiais, mas não deve duplicar a responsabilidade visual do calendário.
+
+Checklist:
+
+- [ ] aniversários e memórias usam labels amigáveis;
+- [ ] rotina diária respeita fuso `America/Sao_Paulo`;
+- [ ] usuários sem preferência ativa não recebem o canal desativado;
+- [ ] notificações internas podem existir mesmo quando e-mail falha;
+- [ ] não expor tokens do Google Agenda nem Resend em logs ou metadata.
 
 ## 10. Edge Function diária
 
@@ -730,3 +761,14 @@ Preservar:
 - cron automático fora de migration com secret seguro;
 - labels amigáveis e acentuação em `/notificacoes`;
 - clique no card inteiro quando houver link.
+
+## 17. Anti-regressões de integração
+
+Checklist:
+
+- [ ] Fórum continua disparando notificações para menções e respostas sem bloquear criação de conteúdo.
+- [ ] Calendário/datas especiais continuam deduplicados por ocorrência.
+- [ ] Links internos de notificações usam rotas vigentes.
+- [ ] Não usar `/minha-arvore`, `/genealogia` ou `/visao-completa` como destino ativo.
+- [ ] `/calendario-familiar`, `/forum/topico/:id`, `/pessoa/:id` e `/admin/*` continuam sendo destinos válidos conforme permissão.
+- [ ] Preferências de e-mail continuam separadas das preferências internas.

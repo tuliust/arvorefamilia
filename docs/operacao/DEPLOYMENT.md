@@ -154,11 +154,16 @@ Quando houver alteração de rota, autenticação, navegação, árvore ou fluxo
 npm run test:e2e
 ```
 
-Quando houver alteração em Mapa Familiar, painel mobile, exportação ou documentação de árvore, validar também:
+Quando houver alteração em Mapa Familiar, painel mobile, exportação ou documentação de árvore, validar as rotas vigentes:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
+```
+
+E confirmar que as rotas removidas não voltaram como views ativas:
+
+```txt
 /minha-arvore
 /genealogia
 /visao-completa
@@ -333,9 +338,9 @@ Checklist específico:
 ```txt
 1. Abrir domínio final.
 2. Abrir /forum.
-3. Abrir /minha-arvore.
-4. Abrir /genealogia.
-5. Abrir /visao-completa.
+3. Abrir /mapa-familiar.
+4. Abrir /mapa-familiar-horizontal.
+5. Confirmar que /minha-arvore, /genealogia e /visao-completa não voltaram como views ativas.
 6. Navegar entre rotas lazy-loaded.
 7. Verificar console para erros de dynamic import.
 ```
@@ -552,7 +557,7 @@ Regras:
 Checklist manual:
 
 ```txt
-1. Abrir /minha-arvore.
+1. Abrir /mapa-familiar.
 2. Abrir Curiosidades.
 3. Abrir Pergunte à IA.
 4. Fazer pergunta simples coberta pelo contexto.
@@ -589,11 +594,11 @@ supabase functions list
 
 Verificar manualmente, conforme escopo alterado:
 
-- `/entrar` com nome **Família Souza Barros**, sem reintroduzir texto específico de Google Agenda salvo nova decisão;
+- `/entrar` com nome **Família Souza Barros** e finalidade pública compatível com OAuth;
 - `/api/ai` quando a frente de IA estiver ativa;
-- `/minha-arvore`;
-- `/genealogia`;
-- `/visao-completa`;
+- `/mapa-familiar`;
+- `/mapa-familiar-horizontal`;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` como rotas removidas, não como views ativas;
 - `/minha-arvore/editar`;
 - `/pessoa/:id`;
 - `/forum`;
@@ -634,6 +639,17 @@ npm run build
 ```
 
 Evitar `git add .` quando houver arquivos não documentais ou artefatos gerados fora de `docs/`.
+
+### 16.4 Checklist específico do calendário mobile
+
+Quando o deploy alterar `/calendario-familiar`, validar em 320px, 375px, 390px e 430px:
+
+- 5 categorias em uma única linha;
+- bolinha colorida acima do título de cada botão;
+- título em uma linha, sem quebra;
+- sem overflow horizontal;
+- card grande de categorias oculto no mobile quando duplicar os filtros superiores;
+- Google Agenda acessível e com erro controlado quando OAuth não estiver autorizado.
 
 ---
 

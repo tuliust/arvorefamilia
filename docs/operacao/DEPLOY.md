@@ -1,6 +1,6 @@
 # Deploy
 
-> Última revisão: 2026-06-14  
+> Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/DEPLOY.md`  
 > Tipo: atalho operacional de deploy.  
 > Status: documento complementar; o guia completo permanece em `docs/operacao/DEPLOYMENT.md`.
@@ -55,18 +55,23 @@ supabase functions list
 - Não aplicar migration junto do deploy sem autorização.
 - Não cachear `index.html` como imutável.
 - Preservar rewrite de `/api/(.*)` antes do fallback SPA.
-- Validar `/entrar`, login, árvore, fórum, calendário e admin conforme escopo.
+- Validar `/entrar`, login, `/mapa-familiar`, `/mapa-familiar-horizontal`, fórum, calendário e admin conforme escopo.
 - Para Mapa Familiar, validar `/mapa-familiar` e `/mapa-familiar-horizontal` no desktop e mobile.
 
 ---
 
 ## 4. Mapa Familiar e mobile
 
-Quando o deploy incluir alterações recentes da árvore:
+Quando o deploy incluir alterações recentes da árvore, validar as rotas vigentes:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
+```
+
+E confirmar que as rotas removidas não voltaram como views ativas:
+
+```txt
 /minha-arvore
 /genealogia
 /visao-completa

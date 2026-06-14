@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia atualizado após ajustes de painel mobile, paletas, avatares, conectores, exportação e debug temporário.
+> Status: guia revisado após ajustes de painel desktop, modal mobile, paletas desktop/mobile, calendário mobile, cônjuges, conectores, exportação e debug temporário.
 
 ---
 
@@ -24,6 +24,7 @@ Use antes de alterar:
 - conectores;
 - favoritos;
 - busca;
+- calendário familiar mobile;
 - componentes compartilhados.
 
 ---
@@ -40,8 +41,9 @@ Use antes de alterar:
 | CSS deve ser escopado | Preferir rota, data attribute ou container. |
 | Histórico não orienta implementação | Docs legados não podem reintroduzir views removidas. |
 | Painel não usa abas antigas | Não restaurar `Filtros | Legendas | Ações`. |
-| Desktop é referência visual | Mobile deve adaptar layout e herdar paletas/tokens. |
+| Desktop é referência visual | Mobile adapta layout e herda paletas/tokens. |
 | Debug não é produto final | `Visualizar como...` deve ser temporário, flagado ou restrito. |
+| Ajuste visual não cria dado | Não inserir relacionamentos ou pessoas fictícias para resolver layout. |
 
 ---
 
@@ -77,7 +79,7 @@ Cuidados:
 - estados temporários de debug não devem persistir dados reais;
 - elementos de debug devem usar `data-tree-export-ignore="true"`.
 
-Estados relevantes atuais ou previstos:
+Estados relevantes:
 
 | Estado | Papel |
 |---|---|
@@ -88,7 +90,8 @@ Estados relevantes atuais ou previstos:
 | `legendOpen` | Abertura do modal mobile de controles. |
 | `mobileGroupsOpen` | Exibição sob demanda de grupos no modal mobile. |
 | `renderedDirectRelationCounts` | Contagens efetivas informadas pela view renderizada. |
-| `debugViewPersonId` | Debug temporário para visualizar a árvore como outra pessoa, se implementado. |
+| `treeLayoutRevision` | Força recalculo/re-render quando necessário. |
+| `debugViewPersonId` | Debug temporário para visualizar a árvore como outra pessoa. |
 
 ### 3.2 `HomeTreeSection`
 
@@ -253,7 +256,7 @@ src/app/pages/home/DirectRelationKpiGrid.tsx
 
 Responsabilidades:
 
-- exibir grupos diretos;
+- exibir KPIs de relações diretas;
 - usar contagens efetivas quando a view informa;
 - refletir `directRelativeFilters`;
 - funcionar tanto no painel desktop quanto no modal mobile sob demanda.
@@ -276,13 +279,23 @@ Responsabilidades:
 
 - renderizar cards/filtros de grupos;
 - controlar `Cônjuges` e `Pets`;
-- preservar semântica de filtros diretos.
+- preservar semântica de filtros diretos;
+- no desktop, expor data attributes para aplicação de paleta visual do painel.
 
 Cuidados:
 
 - `Cônjuges` filtrável não é igual a cônjuge ancestral sempre visível;
 - `Pets` pode participar de filtros de grupo e de status/tipo;
-- no mobile, o container de grupos deve ficar sem box/título persistente quando acionado sob demanda, conforme UX atual.
+- no mobile, o container de grupos deve ficar sem box/título persistente quando acionado sob demanda;
+- cards do painel desktop devem seguir gradiente/borda/texto da paleta ativa.
+
+Data attributes esperados quando aplicável:
+
+```txt
+data-tree-panel-card="true"
+data-tree-panel-card-type="group"
+data-family-map-color-key
+```
 
 ### 4.4 `LifeStatusKpiGrid`
 
@@ -294,15 +307,26 @@ src/app/pages/home/LifeStatusKpiGrid.tsx
 
 Responsabilidades:
 
-- filtros `Vivos`, `Falecidos` e `Pets`;
+- filtros `Vivos`, `Falecidos`, `Cônjuges` e `Pets`;
 - contadores por status/tipo;
-- visibilidade permanente no modal mobile.
+- visibilidade permanente no modal mobile;
+- no desktop, aplicar vocabulário visual compatível com a paleta ativa.
 
 Cuidados:
 
 - filtros do modal mobile devem caber em 4 colunas/1 linha quando possível;
 - não esconder filtros quando `Grupos` estiver fechado;
-- manter contraste nas quatro paletas.
+- manter contraste nas quatro paletas;
+- `Vivos` e `Falecidos` não são grupos familiares, mas devem ter tratamento visual coerente com a paleta.
+
+Data attributes esperados quando aplicável:
+
+```txt
+data-tree-panel-card="true"
+data-tree-panel-card-type="filter"
+data-tree-panel-filter-key
+data-family-map-color-key
+```
 
 ### 4.5 Componentes de legenda/info
 
@@ -337,6 +361,8 @@ Responsabilidades:
 - compor grupos da família direta;
 - aplicar filtros de grupos/status;
 - calcular cônjuges;
+- suportar núcleos conjugais adicionais da pessoa central;
+- agrupar filhos pelo outro pai/mãe quando houver relacionamento explícito;
 - desenhar conectores SVG;
 - controlar zoom/scroll;
 - exportar PNG/PDF/print;
@@ -350,7 +376,9 @@ Cuidados:
 - não criar relações por proximidade visual;
 - conectores devem depender de âncoras e relacionamentos explícitos;
 - alteração de layout exige QA visual;
-- paletas desktop são referência para mobile.
+- paletas desktop são referência para mobile;
+- cônjuge adicional não deve criar dado fictício;
+- novos blocos devem entrar no cálculo de altura e export bounds.
 
 ### 5.2 `MobileFamilyTreeView`
 
@@ -366,7 +394,8 @@ Responsabilidades:
 - telas Paterno/Central/Materno;
 - conectores HTML/CSS;
 - visual compacto;
-- adaptação da hierarquia desktop para mobile.
+- adaptação da hierarquia desktop para mobile;
+- cards de pessoas com nome, nascimento e falecimento quando existirem.
 
 Cuidados:
 
@@ -375,7 +404,10 @@ Cuidados:
 - manter controles marcados para ignorar exportação;
 - alinhar conectores de Pai/Mãe/ancestrais ao eixo visual correto;
 - não criar paleta própria hardcoded;
-- cards devem herdar tokens `--tree-palette-*`.
+- cards devem herdar tokens da paleta ativa;
+- não exibir `Nascimento não informado`;
+- não exibir linha de nascimento/falecimento sem ano;
+- bordas de grupos mobile devem seguir o desktop.
 
 ### 5.3 `DesktopFamilyHorizontalMapView`
 
@@ -391,6 +423,7 @@ Responsabilidades:
 - organizar pessoas por gerações;
 - ocultar colunas vazias;
 - posicionar cônjuges;
+- incluir cônjuges da Geração 4/Pais quando filtro `Cônjuges` estiver ativo;
 - desenhar conectores SVG;
 - preservar fundo transparente quando definido;
 - exportar com título e paleta;
@@ -419,7 +452,8 @@ Responsabilidades:
 - permitir scroll vertical interno;
 - exibir botões `Ger 1`, `Ger 2`, `Ger 3` etc.;
 - renderizar conectores da geração ativa;
-- permitir rolagem até cards e conectores visíveis.
+- permitir rolagem até cards e conectores visíveis;
+- preservar paleta ativa sem fallback azul indevido.
 
 Cuidados:
 
@@ -429,7 +463,8 @@ Cuidados:
 - não reintroduzir setas laterais como navegação principal;
 - não reintroduzir scroll horizontal manual;
 - direção de swipe deve ser validada em aparelho real;
-- mobile deve ser recorte responsivo do desktop, não lógica paralela divergente.
+- mobile deve ser recorte responsivo do desktop, não lógica paralela divergente;
+- cards sem `data-family-map-color-key` devem receber fallback coerente com a paleta selecionada.
 
 Dívida técnica recomendada:
 
@@ -454,7 +489,8 @@ Responsabilidades:
 - renderizar cards visuais compartilhados;
 - aplicar avatar/foto;
 - representar pessoa, pet, status e datas;
-- preservar legibilidade e exportação.
+- preservar legibilidade e exportação;
+- fornecer `data-family-map-color-key` quando possível.
 
 Contrato de avatar:
 
@@ -469,7 +505,8 @@ Regras:
 - não diferenciar avatar sem foto por gênero;
 - não restaurar silhuetas homem/mulher/neutro;
 - ícones devem herdar cor/contraste da paleta;
-- SVG dos ícones não pode ser afetado por seletor global de conectores.
+- SVG dos ícones não pode ser afetado por seletor global de conectores;
+- card central deve receber tratamento `central` quando a view tiver essa informação.
 
 ### 6.2 `treeColorPalettes`
 
@@ -488,12 +525,83 @@ Responsabilidades:
 Regra:
 
 ```txt
-Mobile não deve definir cor própria fora dos tokens do desktop.
+Mobile não deve definir cor própria fora do contrato visual do desktop.
 ```
+
+### 6.3 CSS de paletas e painéis
+
+Arquivos:
+
+```txt
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+```
+
+Responsabilidades:
+
+- aplicar paletas na vertical/horizontal;
+- corrigir diferenças mobile;
+- garantir que cards de painel desktop usem o mesmo tratamento visual dos cards da árvore;
+- preservar borda de grupos mobile alinhada à paleta;
+- impedir fallback azul/teal em paletas não azuis.
 
 ---
 
-## 7. Componentes de exportação
+## 7. Calendário familiar
+
+### 7.1 `CalendarioFamiliar`
+
+Arquivo:
+
+```txt
+src/app/pages/CalendarioFamiliar.tsx
+```
+
+Responsabilidades:
+
+- renderizar mês atual;
+- filtrar eventos por categoria;
+- integrar ou preparar integração com Google Agenda;
+- manter filtros mobile compactos;
+- apresentar eventos familiares.
+
+Contrato mobile dos filtros de categoria:
+
+```txt
+5 botões em uma linha
+bolinha colorida acima do título
+título em uma linha
+sem overflow horizontal
+```
+
+Categorias:
+
+```txt
+Aniversário
+Casamento
+Falecimento
+Outros
+Reunião
+```
+
+CSS crítico:
+
+```txt
+src/styles/calendar-mobile-category-buttons.css
+```
+
+Cuidados:
+
+- não voltar para duas linhas sem decisão explícita;
+- não remover a bolinha colorida;
+- não permitir quebra de linha nos rótulos;
+- testar 320px, 375px, 390px e 430px.
+
+---
+
+## 8. Componentes de exportação
 
 Arquivos:
 
@@ -521,9 +629,9 @@ Regras:
 
 ---
 
-## 8. Debug temporário
+## 9. Debug temporário
 
-### 8.1 `Visualizar como...`
+### 9.1 `Visualizar como...`
 
 Local previsto:
 
@@ -548,7 +656,7 @@ Regras:
 
 ---
 
-## 9. Contratos e tipos
+## 10. Contratos e tipos
 
 Arquivo extraído ou recomendado:
 
@@ -569,7 +677,7 @@ Regra:
 
 ---
 
-## 10. Services principais
+## 11. Services principais
 
 Preservar:
 
@@ -600,7 +708,7 @@ Regras:
 
 ---
 
-## 11. Componentes removidos
+## 12. Componentes removidos
 
 Não reintroduzir sem decisão explícita:
 
@@ -621,7 +729,7 @@ Se algum import quebrar após remoção:
 
 ---
 
-## 12. Legado técnico preservado
+## 13. Legado técnico preservado
 
 Preservar até frente específica:
 
@@ -644,38 +752,75 @@ Motivo:
 
 ---
 
-## 13. Checklist antes de remover componente
+## 14. Data attributes críticos
+
+Preservar ou documentar alteração antes de remover:
+
+```txt
+data-family-map-export-root="true"
+data-tree-export-ignore="true"
+data-tree-selection-overlay="true"
+data-tree-export-loading="true"
+data-tree-debug-viewer="true"
+data-mobile-family-tree-root="true"
+data-family-map-horizontal-root="true"
+data-family-map-horizontal-mobile-root="true"
+data-family-map-color-key
+data-family-map-mobile-card="true"
+data-family-map-avatar="true"
+data-family-map-connectors="true"
+data-tree-panel-card="true"
+data-tree-panel-card-type
+data-tree-panel-filter-key
+```
+
+---
+
+## 15. QA obrigatório por tipo de alteração
+
+### Alteração em árvore
+
+```txt
+/mapa-familiar desktop
+/mapa-familiar mobile
+/mapa-familiar-horizontal desktop
+/mapa-familiar-horizontal mobile
+paletas white/visual/orange/brown
+filtros cônjuges/pets/filhos
+exportação
+```
+
+### Alteração em calendário
+
+```txt
+/calendario-familiar mobile 320px
+/calendario-familiar mobile 375px
+/calendario-familiar mobile 390px
+/calendario-familiar mobile 430px
+```
+
+### Alteração em CSS de paleta
+
+```txt
+Cards
+Bordas de grupos
+Conectores
+Painel desktop
+Mobile vertical
+Mobile horizontal
+Exportação
+```
+
+---
+
+## 16. Comandos finais
+
+Antes de fechar PR/commit relevante:
 
 ```bash
-rg "NomeDoComponente"
-rg "from './NomeDoComponente'"
-rg "from '../NomeDoComponente'"
 npm run build
 npm test
 npm run test:e2e
 git diff --check
+git status --short
 ```
-
-Critérios:
-
-- sem import ativo;
-- sem lazy import;
-- sem CSS necessário para view atual;
-- sem teste dependente;
-- sem contrato exportado usado por outro arquivo;
-- sem função de fallback intencional.
-
----
-
-## 14. Critério de aceitação
-
-Uma alteração de componente só deve ser fechada quando:
-
-- build passa;
-- testes unitários passam;
-- E2E passa quando rota/navegação/árvore for afetada;
-- `git diff --check` não aponta erro bloqueante;
-- rotas antigas não voltam;
-- painel antigo de abas não volta;
-- docs canônicas são atualizadas se o comportamento mudar;
-- QA visual é feito quando houver mudança de mobile, paleta, conectores ou exportação.

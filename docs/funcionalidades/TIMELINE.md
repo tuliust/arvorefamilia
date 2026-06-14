@@ -1,6 +1,6 @@
 # Timeline
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/TIMELINE.md`  
 > Tipo: documentação funcional e técnica da linha do tempo de pessoa.
 
@@ -13,6 +13,17 @@ A timeline organiza eventos relevantes da vida de uma pessoa em ordem cronológi
 Ela aparece no perfil da pessoa e também é usada na edição do próprio perfil em `/minha-arvore/editar`, onde eventos manuais podem ser revisados e salvos.
 
 ---
+
+### 1.1 Relação com perfil, árvore e calendário
+
+A timeline é uma visão cronológica de pessoa. Ela não substitui:
+
+- `/mapa-familiar`, que organiza grupos e relações na árvore vertical;
+- `/mapa-familiar-horizontal`, que organiza gerações;
+- `/calendario-familiar`, que agrega datas por mês;
+- `/minha-arvore/editar`, que edita eventos manuais.
+
+As mesmas fontes de dados podem alimentar todos esses contextos, mas cada módulo tem responsabilidade visual própria.
 
 ## 2. Arquivos principais
 
@@ -195,6 +206,24 @@ ativo = false
 não deve, sozinho, gerar separação se a relação foi encerrada por falecimento de cônjuge.
 
 ---
+
+### 8.1 Múltiplos relacionamentos conjugais
+
+A timeline deve preservar eventos de múltiplos relacionamentos quando existirem.
+
+Regras:
+
+- cada relacionamento conjugal explícito pode gerar item próprio de casamento/união;
+- separação/divórcio só deve aparecer com dado explícito;
+- viuvez não deve ser convertida automaticamente em separação;
+- arquivos históricos de relacionamento devem permanecer associados ao relacionamento correto;
+- eventos de filhos devem derivar de relação parental explícita, não de proximidade visual na árvore.
+
+Impacto:
+
+- uma pessoa pode ter mais de um item de casamento/união;
+- o perfil e a árvore devem contar a mesma história relacional;
+- a timeline não deve ocultar relacionamento anterior porque há cônjuge atual.
 
 ## 9. Deduplicação
 
@@ -446,6 +475,19 @@ git status --short
 Esses itens não bloqueiam o MVP.
 
 ---
+
+## 16. Anti-regressões
+
+Checklist:
+
+- [ ] Timeline não usa `/minha-arvore`, `/genealogia` ou `/visao-completa` como rotas ativas.
+- [ ] Eventos de casamento/união usam relacionamento explícito.
+- [ ] Múltiplos relacionamentos não são colapsados em um único cônjuge.
+- [ ] Separação exige dado explícito e não é inferida apenas por `ativo = false` quando houver viuvez.
+- [ ] Eventos manuais continuam editáveis em `/minha-arvore/editar`.
+- [ ] Datas de aniversário/falecimento permanecem compatíveis com `/calendario-familiar`.
+- [ ] Metadata sensível continua sanitizada.
+
 
 ## 18. Anti-regressões
 

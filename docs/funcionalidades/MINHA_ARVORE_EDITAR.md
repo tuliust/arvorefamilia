@@ -1,6 +1,6 @@
 # Minha Árvore - edição do próprio perfil
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
 > Status: revisado após correção de encoding na origem, persistência de redes sociais versionadas em `pessoa_social_profiles` e persistência de `Complemento` em `public.pessoas.complemento`.
@@ -29,8 +29,8 @@ Documentos relacionados:
 
 ```txt
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/funcionalidades/TIMELINE.md
 docs/funcionalidades/NOTIFICACOES.md
 docs/GUIA_UX_LAYOUT.md
@@ -41,6 +41,27 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 ```
 
 ---
+
+### 1.1 Exceção nominal na baseline atual
+
+A rota `/minha-arvore/editar` é vigente e deve permanecer documentada.
+
+Ela **não** reativa a antiga view de árvore `/minha-arvore`.
+
+Contrato atual:
+
+| Rota | Status | Função |
+|---|---|---|
+| `/minha-arvore/editar` | Vigente | edição do membro, dados, vínculos, arquivos e eventos |
+| `/minha-arvore` | Removida como view ativa | não restaurar |
+| `/mapa-familiar` | Vigente | view vertical principal da árvore |
+| `/mapa-familiar-horizontal` | Vigente | view horizontal/genealógica |
+
+Regras:
+
+- links de navegação principal para árvore devem usar `/mapa-familiar` ou `/mapa-familiar-horizontal`;
+- documentação desta página não deve ser usada para restaurar a antiga view `/minha-arvore`;
+- CSS com nome `minha-arvore` é permitido apenas quando escopado à rota de edição.
 
 ## 2. Arquivos principais
 
@@ -306,6 +327,25 @@ Regras:
 
 ---
 
+### 8.1 Múltiplos relacionamentos e consistência com a árvore
+
+A edição de vínculos deve aceitar que uma pessoa tenha mais de um relacionamento conjugal ao longo da vida.
+
+Regras:
+
+- não substituir relacionamento conjugal existente apenas porque outro foi adicionado;
+- manter `data_casamento`, `local_casamento`, `data_separacao`, status e subtipo quando o schema permitir;
+- múltiplos cônjuges devem ser preservados para que `/mapa-familiar` possa exibir núcleos conjugais adicionais;
+- filhos devem continuar associados por relacionamentos parentais explícitos;
+- a edição não deve criar vínculos visuais apenas para resolver layout;
+- usuário comum solicita alteração; admin pode executar diretamente conforme permissão.
+
+Impacto nas views:
+
+- `/mapa-familiar` pode agrupar filhos por outro pai/mãe quando há relacionamento explícito;
+- `/mapa-familiar-horizontal` deve considerar cônjuges conforme filtros e geração;
+- o perfil e a timeline devem refletir todos os relacionamentos preservados.
+
 ## 9. Dados de casamento
 
 Para cônjuges, a página pode exibir/editar:
@@ -536,3 +576,16 @@ npm run build
 git diff --check
 git status --short
 ```
+
+## 17. Anti-regressões específicas desta rota
+
+Checklist:
+
+- [ ] `/minha-arvore/editar` continua protegida por `MemberRoute`.
+- [ ] `/minha-arvore` não volta como view ativa.
+- [ ] CSS mobile permanece escopado ao formulário de edição.
+- [ ] Cards de resumo Pais/Irmãos/Cônjuges/Filhos/Pets continuam legíveis em 320px, 375px, 390px e 430px.
+- [ ] Múltiplos cônjuges não são sobrescritos por salvamento parcial.
+- [ ] Pets continuam separados semanticamente por `humano_ou_pet === 'Pet'`.
+- [ ] `Complemento` não é apagado ao selecionar novo endereço via Google Places.
+- [ ] Redes sociais múltiplas continuam persistidas em `pessoa_social_profiles`.

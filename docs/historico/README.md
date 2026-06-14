@@ -169,6 +169,8 @@ Regras preservadas nos docs atuais:
 - separação entre `personFilters` e `directRelativeFilters`;
 - pets por `humano_ou_pet === 'Pet'`;
 - cônjuges sempre visíveis versus filtráveis;
+- cônjuges de pais/Geração 4 filtráveis na horizontal;
+- múltiplos cônjuges da pessoa central na vertical;
 - contagens efetivas por view;
 - filtros não alteram dados;
 - pessoa com foto usa `foto_principal_url`;
@@ -231,7 +233,8 @@ Estado atual:
 - desktop tem painel completo;
 - mobile tem modal específico de controles;
 - a barra `Filtros | Legendas | Ações` não deve voltar;
-- `SidebarPanelTabs.tsx` mantém nome histórico, mas não deve ser entendido como contrato de abas.
+- `SidebarPanelTabs.tsx` mantém nome histórico, mas não deve ser entendido como contrato de abas;
+- cards do painel desktop devem seguir o visual/gradiente da paleta ativa.
 
 Contrato atual resumido:
 
@@ -265,7 +268,10 @@ Características atuais:
 - conectores HTML/CSS no mobile;
 - filtros de grupos/status;
 - regras de cônjuges;
+- suporte a núcleos conjugais adicionais;
 - paletas;
+- bordas mobile alinhadas ao desktop;
+- cards mobile sem `Nascimento não informado`;
 - destaques.
 
 ### 8.2 Horizontal
@@ -282,6 +288,7 @@ Características atuais:
 - swipe lateral;
 - scroll vertical até cards e conectores visíveis;
 - exportação HTML/CSS/SVG;
+- cônjuges da Geração 4 devem aparecer quando filtro `Cônjuges` estiver ativo;
 - desktop é referência de hierarquia, conectores e paletas.
 
 Documento atual:
@@ -292,7 +299,27 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 
 ---
 
-## 9. Debug temporário documentado
+## 9. Histórico do calendário mobile
+
+O calendário familiar consolidou filtros compactos mobile.
+
+Estado atual:
+
+- cinco categorias em uma única linha;
+- bolinha colorida acima do título;
+- título em uma linha;
+- sem overflow horizontal;
+- card grande de categorias oculto no mobile quando duplicar os filtros compactos.
+
+Documento atual:
+
+```txt
+docs/funcionalidades/CALENDARIO_FAMILIAR.md
+```
+
+---
+
+## 10. Debug temporário documentado
 
 A frente atual prevê ou documenta o debug temporário:
 
@@ -316,7 +343,7 @@ docs/PLANO_PROXIMOS_PASSOS.md
 
 ---
 
-## 10. Itens históricos que não devem voltar
+## 11. Itens históricos que não devem voltar
 
 Não restaurar como produto ativo:
 
@@ -342,7 +369,7 @@ Não restaurar:
 
 ---
 
-## 11. Regra de manutenção histórica
+## 12. Regra de manutenção histórica
 
 Ao concluir uma frente nova:
 
@@ -354,7 +381,7 @@ Ao concluir uma frente nova:
 
 ---
 
-## 12. Validação documental
+## 13. Validação documental
 
 Antes de fechar commit de documentação:
 

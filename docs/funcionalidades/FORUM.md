@@ -1,6 +1,6 @@
 ﻿# Fórum
 
-> Última revisão: 2026-06-11
+> Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/FORUM.md`  
 > Tipo: documentação funcional e técnica do módulo de fórum.  
 > Status: revisado e alinhado ao fechamento da divergência documental DOC-006; a UI documentada remove filtros visíveis de tipo/status, badges legadas de tipo/status e campo manual de pessoas relacionadas.
@@ -42,6 +42,25 @@ Este arquivo não substitui:
 - `docs/PLANO_PROXIMOS_PASSOS.md`, para pendências abertas e divergências UI/documentação.
 
 ---
+
+### 1.2 Relação com árvore, pessoas e notificações
+
+O fórum é funcionalidade de membro e se integra com:
+
+- perfis de pessoa por links `/pessoa/:id`;
+- favoritos de tópicos com `entity_type = forum_topic`;
+- menções `@Nome Completo` que podem vincular pessoas em `forum_topico_pessoas`;
+- notificações internas para menções, pessoas relacionadas e respostas;
+- busca e navegação autenticada, sem depender das views antigas da árvore.
+
+As views oficiais da árvore continuam sendo apenas:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+O fórum não deve usar `/minha-arvore`, `/genealogia` ou `/visao-completa` como destino de retorno ou contexto de árvore.
 
 ## 2. Arquivos principais
 
@@ -245,6 +264,17 @@ Digite @ para marcar alguém na publicação
 ```
 
 ---
+
+### 5.4 Pessoas, perfis e múltiplos vínculos
+
+Quando um tópico menciona ou relaciona uma pessoa:
+
+- o vínculo técnico deve apontar para `pessoas.id`;
+- o link visual, quando existir, deve usar `/pessoa/:id`;
+- não usar rotas de árvore como destino direto da pessoa mencionada;
+- não inferir parentesco, casamento ou consanguinidade a partir de menções no fórum;
+- múltiplos cônjuges ou múltiplos relacionamentos pertencem aos dados de árvore/perfil, não ao fórum;
+- o fórum pode exibir a pessoa relacionada, mas não deve alterar relacionamentos.
 
 ## 6. Visualização de tópico — `/forum/topico/:id`
 
@@ -817,3 +847,14 @@ Não bloqueiam o MVP:
 - filtros por pessoa relacionada;
 - estatísticas de participação;
 - reintrodução de comentários aninhados, somente se houver decisão explícita e atualização de UX/documentação.
+
+## 15. Anti-regressões de integração
+
+Checklist:
+
+- [ ] Fórum não reintroduz filtros visíveis de tipo/status sem decisão de produto.
+- [ ] Tópicos favoritados continuam usando `forum_topic`.
+- [ ] Menções continuam vinculando pessoas por ID, quando houver correspondência segura.
+- [ ] Links de pessoa usam `/pessoa/:id`.
+- [ ] Notificações de fórum não impedem criação de tópico/resposta se falharem.
+- [ ] O fórum não aponta para `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.

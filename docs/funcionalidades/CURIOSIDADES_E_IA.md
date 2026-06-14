@@ -1,6 +1,6 @@
 # Curiosidades e IA - modal, conexão familiar e perguntas assistidas
 
-> Última revisão: 2026-06-11
+> Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/CURIOSIDADES_E_IA.md`
 > Tipo: documentação funcional e técnica das abas de Curiosidades, conexão familiar e IA na Home.
 > Status: guia validado no escopo funcional atual e removido das pendências abertas do plano; `DOC-009`, `DOC-011` e `DOC-012` ficam classificados como concluídos/manutenção contínua.
@@ -24,10 +24,10 @@ Não use este documento para detalhar:
 
 | Tema | Documento |
 |---|---|
-| views da árvore | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` e `docs/funcionalidades/GENEALOGIA_VIEW.md` |
+| views da árvore | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | componentes gerais | `docs/GUIA_COMPONENTES.md` |
 | UX e layout geral | `docs/GUIA_UX_LAYOUT.md` |
-| deploy de `/api/ai` | `docs/operacao/DEPLOYMENT.md` |
+| deploy de `/api/ai` | `docs/operacao/DEPLOYMENT.md` ou guia operacional vigente |
 | pendências futuras | `docs/PLANO_PROXIMOS_PASSOS.md` |
 | dados, RLS e migrations | `docs/operacao/MIGRATIONS_SUPABASE.md` |
 
@@ -85,13 +85,11 @@ Fora do escopo atual:
 
 ## 4. Acesso e acionamento
 
-A experiência fica dentro da Home autenticada, usada pelas rotas:
+A experiência fica dentro da Home autenticada, usada pelas views oficiais da árvore:
 
 ```txt
-/minha-arvore
 /mapa-familiar
-/genealogia
-/visao-completa
+/mapa-familiar-horizontal
 ```
 
 Regras:
@@ -104,6 +102,32 @@ Regras:
 - dados ocultos por privacidade não devem ser expostos por microcopy, tooltip ou resposta de IA.
 
 ---
+
+### 4.1 Rotas e documentação vigentes
+
+A experiência de **Curiosidades** pertence ao shell autenticado da árvore e deve considerar apenas as views oficiais:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Não tratar como rotas ativas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+A rota `/minha-arvore/editar` continua vigente, mas é fluxo de edição do membro e não é ponto de entrada do modal de Curiosidades.
+
+Regras:
+
+- a pessoa central usada pela IA deve acompanhar a pessoa carregada no shell da árvore;
+- a alternância vertical/horizontal não deve alterar o contexto familiar enviado à IA;
+- aliases históricos como “minha árvore” e “genealogia” podem existir apenas como linguagem do usuário, não como rotas de navegação;
+- respostas da IA não devem sugerir acessar rotas removidas.
 
 ## 5. Estrutura do modal
 
@@ -287,6 +311,25 @@ Regras:
 - relações calculadas devem ter preferência sobre inferência livre do modelo.
 
 ---
+
+### 10.1 Dados usados pela árvore, perfis e vínculos
+
+O contexto da IA deve permanecer alinhado aos mesmos dados usados pelas views oficiais da árvore e pelos perfis:
+
+- `pessoas` carregadas no shell autenticado;
+- `relacionamentos` parentais e conjugais explícitos;
+- vínculos `user_person_links`, quando usados para identificar a pessoa vinculada ao usuário;
+- campos de nascimento, falecimento, local de nascimento e residência;
+- `manual_generation`, quando disponível para leitura genealógica;
+- relacionamentos conjugais múltiplos, sem escolher apenas um cônjuge como verdade única;
+- pets identificados por `humano_ou_pet === 'Pet'`.
+
+Regras de consistência:
+
+- se uma pessoa tem múltiplos cônjuges, a IA deve descrever o vínculo como múltiplos relacionamentos, sem apagar ou substituir cônjuge anterior;
+- cônjuge de parente deve ser explicado como vínculo por casamento/união, não como consanguinidade;
+- datas ausentes devem ser apresentadas como desconhecidas, não inventadas;
+- não expor IDs técnicos, salvo em diagnóstico administrativo explícito.
 
 ## 11. Perguntas que a IA deve responder
 
@@ -484,6 +527,18 @@ npm test
 ```
 
 ---
+
+## 16. Sincronização com a baseline atual da árvore
+
+Checklist de manutenção:
+
+- [ ] Curiosidades não referencia `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
+- [ ] Perguntas sobre “mapa”, “árvore”, “genealogia” ou “visão horizontal” direcionam conceitualmente para `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- [ ] O contexto de IA considera múltiplos cônjuges quando existirem relacionamentos explícitos.
+- [ ] Pets usam regra semântica de pessoa pet.
+- [ ] Respostas não sugerem alteração de dados sem fluxo de edição/admin.
+- [ ] Dados privados de contato continuam dependentes de privacidade e permissão.
+
 
 ## 18. Anti-regressões
 

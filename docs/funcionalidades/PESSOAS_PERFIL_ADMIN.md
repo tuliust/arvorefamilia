@@ -1,6 +1,6 @@
 # Pessoas, perfil público e admin de pessoa
 
-> Última revisão: 2026-06-09  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`  
 > Tipo: documentação funcional específica  
 > Escopo: perfil de pessoa, administração de pessoas, edição pelo usuário, privacidade, vínculos, sugestões, reset administrativo, arquivos históricos e relacionamento conjugal.
@@ -40,6 +40,22 @@ Este documento não substitui:
 
 ---
 
+### 1.1 Relação com as views oficiais da árvore
+
+Os dados de pessoas e relacionamentos descritos neste documento alimentam diretamente:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Regras:
+
+- `/pessoa/:id` e `/pessoas/:id` são rotas de perfil, não views de árvore;
+- `/minha-arvore/editar` é edição do membro, não a antiga view `/minha-arvore`;
+- relacionamentos criados no admin devem ser explícitos e consistentes para que conectores, cônjuges e filhos sejam renderizados corretamente;
+- ajustes visuais da árvore não devem ser resolvidos alterando dados reais sem regra de negócio.
+
 ## 2. Status funcional
 
 | Área | Status |
@@ -63,6 +79,30 @@ Este documento não substitui:
 | Pets | Implementados como tipo semântico `humano_ou_pet` |
 
 ---
+
+### 2.1 Dados usados pela árvore
+
+Campos e estruturas com impacto direto nas views oficiais:
+
+| Dado | Uso na árvore |
+|---|---|
+| `pessoas.id` | Identidade estável de cards, perfil e vínculos. |
+| `nome_completo` | Nome exibido em cards, busca, perfil e IA. |
+| `data_nascimento` | Ano/idade, ordenação, calendário e cards mobile. |
+| `data_falecimento` / `falecido` | Status, memória, calendário e cards mobile. |
+| `foto_principal_url` | Avatar real nos cards e perfil. |
+| `humano_ou_pet` | Diferencia pessoa humana de pet. |
+| `manual_generation` | Referência primária da horizontal por gerações quando disponível. |
+| relacionamentos parentais | Pais, filhos, irmãos, ancestrais e conectores. |
+| relacionamentos conjugais | Cônjuges, casamento, núcleos adicionais e timeline. |
+| `user_person_links` | Pessoa vinculada ao usuário e permissões de edição. |
+
+Regras:
+
+- datas ausentes não devem gerar microcopy falsa como “Nascimento não informado” nos cards mobile da árvore;
+- `manual_generation` não deve ser inventado por ajuste visual sem decisão administrativa;
+- pets não devem ser inferidos por nome ou posição visual;
+- cônjuges dependem de relacionamento explícito.
 
 ## 3. Rotas
 
@@ -308,6 +348,26 @@ A sugestão inclui contexto textual com:
 O botão **+** em **Arquivos Históricos** não deve abrir o modal de **Inserir Informações**. Ele deve abrir o formulário de upload de arquivo histórico.
 
 ---
+
+### 7.3 Múltiplos relacionamentos conjugais
+
+O sistema deve preservar múltiplos relacionamentos conjugais quando existirem.
+
+Regras:
+
+- uma pessoa pode ter mais de um cônjuge registrado ao longo da vida;
+- a edição de um relacionamento não deve apagar outro relacionamento conjugal da mesma pessoa;
+- dados de casamento/separação pertencem ao relacionamento específico, não à pessoa isolada;
+- filhos devem ser associados por relações parentais explícitas, permitindo agrupamento por outro pai/mãe na árvore;
+- a árvore vertical pode exibir bloco de “Outro relacionamento” quando a pessoa central tiver mais de um núcleo conjugal;
+- a horizontal deve exibir cônjuges conforme geração e filtro, incluindo Geração 4/Pais quando o filtro Cônjuges estiver ativo.
+
+Validação administrativa:
+
+- conferir se o par conjugal foi criado com relacionamento explícito;
+- conferir se filhos possuem vínculos parentais corretos;
+- conferir se datas e locais pertencem ao relacionamento correto;
+- não duplicar relacionamento inverso se o service já cria inverso automaticamente.
 
 ## 8. Privacidade
 
@@ -977,3 +1037,16 @@ Fluxos mínimos:
 - Arquivos históricos novos usam Storage, não base64.
 - Pets continuam no modelo de pessoas, com semântica própria.
 - Observações conjugais são informação restrita/admin.
+
+## 17. Anti-regressões de pessoas, vínculos e árvore
+
+Checklist:
+
+- [ ] `/pessoa/:id` e `/pessoas/:id` continuam protegidos por `MemberRoute`.
+- [ ] Perfil usa retorno seguro para `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- [ ] Admin não sobrescreve múltiplos cônjuges ao editar uma pessoa.
+- [ ] Relacionamentos conjugais e parentais continuam explícitos.
+- [ ] Pets usam `humano_ou_pet === 'Pet'`.
+- [ ] `manual_generation` só é alterado por edição/admin intencional.
+- [ ] Privacidade de contato não é burlada por perfil, fórum, IA, timeline ou notificações.
+- [ ] Dados usados pela árvore continuam disponíveis sem depender de rotas legadas.

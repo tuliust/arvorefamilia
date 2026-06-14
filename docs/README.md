@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico atualizado após ajustes nas views `/mapa-familiar`, `/mapa-familiar-horizontal`, painel desktop, modal mobile, paletas, avatares e QA.
+> Status: índice canônico sincronizado com as duas views oficiais da árvore, painel simplificado, paletas desktop/mobile, calendário mobile, exportação e documentação histórica.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -49,6 +49,7 @@ A baseline funcional atual registra:
   - Destacar;
   - Grupos;
   - Filtros;
+- os cards de grupos e filtros do painel desktop devem usar o mesmo vocabulário visual dos cards da árvore, com gradiente, borda, texto e estado inativo coerentes com a paleta ativa;
 - o modal mobile possui contrato próprio e reduzido:
   - Vertical;
   - Horizontal;
@@ -62,7 +63,7 @@ A baseline funcional atual registra:
   - Restaurar visualização;
   - Exportar;
 - o botão **Grupos** no mobile abre/fecha os cards de grupos sob demanda;
-- os filtros mobile ficam sempre visíveis e devem caber em 4 colunas;
+- os filtros mobile ficam sempre visíveis e devem caber em 4 colunas quando aplicável;
 - a alternância Vertical/Horizontal preserva `location.search`, incluindo `?pessoa=...`;
 - `PersonProfile` aceita retorno seguro para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`;
 - favoritos e busca global incluem as duas views oficiais;
@@ -73,6 +74,19 @@ A baseline funcional atual registra:
   - PDF;
   - Imprimir;
 - exportação é recurso do painel desktop/completo; o modal mobile de controles não deve expor Exportar;
+- a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
+- a paleta visual do desktop é a referência do mobile;
+- as paletas oficiais são `white`, `visual`, `orange` e `brown`;
+- a paleta Visual/Azul usa gradientes teal/cyan/blue nos cards da árvore e nas correções específicas necessárias para mobile/horizontal;
+- as paletas `white`, `orange` e `brown` no mobile devem replicar o comportamento desktop;
+- bordas de grupos mobile devem usar as variáveis da paleta ativa;
+- cards mobile de pessoas não devem exibir fallback textual como `Nascimento não informado` ou `Falecimento não informado`;
+- cards mobile podem exibir abaixo do nome:
+  - estrela + ano de nascimento, se houver;
+  - cruz + ano de falecimento, se houver;
+- `/mapa-familiar` suporta núcleos conjugais adicionais quando a pessoa central tem mais de um relacionamento e filhos associados ao outro pai/mãe;
+- `/mapa-familiar-horizontal` deve exibir cônjuges da Geração 4/Pais quando o filtro `Cônjuges` estiver ativo;
+- `/calendario-familiar` no mobile deve exibir os 5 botões de categorias em uma única linha, com bolinha colorida acima do título, mantendo o título em uma linha;
 - ReactFlow/Dagre continuam presentes como dependência técnica de código legado ativo, tipos, layouts ou utilitários; não devem ser removidos por limpeza superficial;
 - artefatos locais como `test-results/`, `playwright-report/`, `coverage/`, `backups/` e `.env*.save` ficam fora do versionamento.
 
@@ -89,7 +103,7 @@ A baseline funcional atual registra:
 - Quando houver divergência entre documentação e código atual, revisar o código e atualizar o guia canônico.
 - Quando houver divergência entre guia atual e conteúdo histórico, prevalece o guia atual.
 - Conteúdo histórico não deve ser usado para restaurar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
-- A referência visual de paletas é o desktop; o mobile deve herdar os mesmos tokens CSS.
+- A referência visual de paletas é o desktop; o mobile deve herdar os mesmos tokens CSS e só pode ter overrides escopados quando forem necessários para reproduzir o resultado visual do desktop.
 
 ---
 
@@ -100,13 +114,13 @@ A baseline funcional atual registra:
 | `README.md` | Índice canônico da documentação. | Atualizado. |
 | `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Atualizado. |
 | `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Manter sincronizado. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Manter sincronizado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Manter sincronizado. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado. |
 | `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Atualizado. |
 | `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
-| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico e manual para mudanças futuras. | Atualizar após esta frente. |
+| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico e manual para mudanças futuras. | Atualizado. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA e backlog pós-frente. | Atualizado. |
-| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Manter sincronizado. |
+| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Atualizado. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
 
 ---
@@ -123,7 +137,7 @@ docs/arquitetura/
 |---|---|
 | `ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
 | `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, rotas administrativas, guards, redirecionamentos e navegação. |
-| `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações e objetos legados. |
+| `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações, relacionamentos e objetos legados. |
 
 ---
 
@@ -139,13 +153,13 @@ docs/funcionalidades/
 |---|---|---|
 | `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
 | `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques, conectores e exportação. | Atualizado após ajustes desktop/mobile. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão nas duas views oficiais. | Preservar e validar. |
-| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Preservar. |
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil público/admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Preservar. |
+| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão nas duas views oficiais. | Atualizado. |
+| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
+| `PESSOAS_PERFIL_ADMIN.md` | Perfil público/admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
 | `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com a view removida `/minha-arvore`. |
 | `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
 | `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Preservar. |
-| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Preservar. |
+| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Atualizado. |
 | `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
 | `CURIOSIDADES_E_IA.md` | Funcionalidades de curiosidades, IA e geração de conteúdo. | Preservar. |
 
@@ -213,6 +227,16 @@ brown  -> Marrom
 
 O desktop é referência visual. Mobile deve usar os mesmos tokens `--tree-palette-*`.
 
+### CSS recente de referência
+
+```txt
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+src/styles/calendar-mobile-category-buttons.css
+```
+
+Esses arquivos existem para corrigir contratos visuais específicos e devem permanecer escopados.
+
 ### Testes mínimos de baseline
 
 ```bash
@@ -247,7 +271,7 @@ Interpretação:
 
 ---
 
-## 7. Estado final da frente
+## 7. Estado final esperado de uma frente
 
 A frente de refatoração e ajustes da árvore deve fechar com:
 
@@ -268,3 +292,14 @@ Pendências reais remanescentes ficam em:
 ```txt
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
+
+---
+
+## 8. Ordem recomendada para manutenção documental
+
+1. Atualizar documento funcional afetado.
+2. Atualizar `BASELINE_PRODUTO_ATUAL.md` se o comportamento estrutural mudou.
+3. Atualizar `REGRAS_DE_NAO_REGRESSAO.md` se a mudança criou novo risco.
+4. Atualizar `INVENTARIO_TECNICO.md` se novos arquivos, services, CSS ou rotas foram criados.
+5. Atualizar `DECISOES_ARQUITETURAIS.md` se a mudança for uma decisão estrutural.
+6. Atualizar `PLANO_PROXIMOS_PASSOS.md` se a mudança fechou ou abriu QA/backlog.

@@ -1,13 +1,15 @@
-# Estrutura de usuários, banco de dados e fluxos de pessoa - Árvore Família
+# Estrutura de usuários, banco de dados e fluxos de pessoa — Árvore Família
 
-> Última revisão: 2026-06-11
-> Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`
-> Projeto: `tuliust/arvorefamilia`
-> Status: revisado contra o código atual com `Pessoa.genero` tipado no frontend, uso visual de `pessoas.genero` no Mapa Familiar e no mobile compartilhado, e migration versionada `20260611003558_add_genero_to_pessoas.sql`.
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: revisado para alinhar usuários, pessoas, relacionamentos, permissões, múltiplos cônjuges, pets, manual generation, calendário e fluxos atuais da árvore.
+
+---
 
 ## Objetivo
 
-Este documento consolida a estrutura atual relacionada a usuários autenticados, pessoas da árvore, perfis, vínculos, preferências, notificações, favoritos, eventos, arquivos históricos, insights, fórum e tabelas/views de apoio.
+Este documento consolida a estrutura atual relacionada a usuários autenticados, pessoas da árvore, perfis, vínculos, preferências, notificações, favoritos, eventos, arquivos históricos, insights, fórum, calendário e tabelas/views de apoio.
 
 Use este arquivo para entender **como usuários, pessoas e tabelas de apoio se conectam**.
 
@@ -16,11 +18,18 @@ Ele não substitui:
 - `docs/operacao/MIGRATIONS_SUPABASE.md`: operação de migrations e SQL legado;
 - `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e acesso;
 - `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`: comportamento de pessoa/perfil/admin;
+- `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`: comportamento visual das views da árvore;
+- `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: filtros, cônjuges, conectores e painel;
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`: calendário e Google Agenda;
 - `docs/funcionalidades/NOTIFICACOES.md`: arquitetura específica de notificações;
 - `docs/funcionalidades/FORUM.md`: comportamento funcional do fórum;
 - `docs/GUIA_CORRECAO_ERROS.md`: troubleshooting por sintoma.
 
-Regra central: **`supabase/migrations` é a fonte da verdade do schema**.
+Regra central:
+
+```txt
+supabase/migrations é a fonte da verdade do schema.
+```
 
 ---
 
@@ -69,6 +78,15 @@ auth.users
   -> notificacoes_usuario
 ```
 
+Fluxo do calendário:
+
+```txt
+pessoas + relacionamentos
+  -> criarEventosDoCalendario
+  -> /calendario-familiar
+  -> google_calendar_connections / google_calendar_synced_events quando sincronizado
+```
+
 ---
 
 ## 2. Tabelas principais
@@ -99,6 +117,12 @@ src/app/services/memberProfileService.ts
 src/app/services/permissionService.ts
 ```
 
+Regras:
+
+- usuário sem vínculo resolvido não deve acessar as views principais da árvore;
+- vínculo de usuário não altera por si só os relacionamentos familiares;
+- editar perfil vinculado exige permissão no service/RLS/RPC, não apenas botão visível.
+
 ---
 
 ### 2.2 Pessoas
@@ -120,7 +144,7 @@ Campos funcionais relevantes:
 | Exterior | `local_nascimento_exterior`, `local_falecimento_exterior` |
 | Estado de vida | `falecido` + helpers que consideram data/local de falecimento |
 | Perfil | `foto_principal_url`, `minibio`, `curiosidades` |
-| Contato | `telefone`, `endereco`, `rede_social`, `instagram_usuario`, `instagram_url` |
+| Contato | `telefone`, `endereco`, `complemento`, `rede_social`, `instagram_usuario`, `instagram_url` |
 | Privacidade | `permitir_exibir_*`, `permitir_mensagens_whatsapp` |
 | Árvore | `lado`, `manual_generation`, `cor_bg_card` |
 | Legado/compatibilidade | `arquivos_historicos` em `pessoas`, quando existir no ambiente |
@@ -128,72 +152,64 @@ Campos funcionais relevantes:
 Defaults recentes:
 
 - novos registros de `pessoas` usam defaults `true` para flags principais de privacidade/contato;
-- `admin_reset_person_profile` também retorna essas flags para `true`.
+- `admin_reset_person_profile` também retorna essas flags para `true`;
+- `complemento` é dado separado do endereço principal e não deve ser apagado por atualização de endereço via Google Places.
 
-#### Campo `genero`
+#### `humano_ou_pet`
 
-A coluna `pessoas.genero` passa a ser usada como fonte visual para avatares no **Mapa Familiar** e nos cards visuais compartilhados. No frontend, o contrato `Pessoa` já possui `genero?: 'homem' | 'mulher' | 'pet' | string | null`.
+Campo semântico para diferenciar pessoa humana de pet.
 
-Valores esperados:
-
-```txt
-homem
-mulher
-pet
-```
-
-Uso atual:
-
-| Valor | Efeito visual |
-|---|---|
-| `homem` | avatar masculino |
-| `mulher` | avatar feminino |
-| `pet` | ícone/avatar de pet |
-
-Regra de domínio:
-
-- `genero` orienta avatar/representação visual;
-- `humano_ou_pet` continua sendo o campo semântico histórico para diferenciar pessoa humana de pet em regras de domínio;
-- `genero = pet` deve ficar consistente com `humano_ou_pet = 'Pet'`, mas não substitui sozinho as regras existentes de pets enquanto não houver migration/backfill definitivo;
-- a árvore não deve inferir gênero por nome quando `genero` estiver preenchido.
-
-Estado confirmado contra o código atual:
-
-- a tipagem frontend de `Pessoa.genero` existe;
-- os cards visuais leem `person.genero` antes de usar fallbacks legados;
-- a coluna `public.pessoas.genero` existe no Supabase como `text` nullable;
-- a migration oficial está versionada em `supabase/migrations/20260611003558_add_genero_to_pessoas.sql`;
-- a migration cria comentário e índice parcial `idx_pessoas_genero`.
-
-Migration oficial:
+Regra:
 
 ```txt
-20260611003558_add_genero_to_pessoas.sql
+humano_ou_pet === 'Pet' identifica pet para regras de domínio.
 ```
 
----
+Uso:
 
-#### Uso de `genero` nas views da árvore
+- filtros de Pets;
+- avatar `PawPrint` quando não houver foto;
+- separação de filhos humanos e pets em resumos;
+- lógica de relacionamento/tutela quando aplicável.
 
-O campo `genero` é consumido visualmente por cards compartilhados da árvore.
+Não inferir pet apenas por nome, avatar ou posição visual.
 
-Escopos confirmados:
+#### `genero`
 
-| View/contexto | Uso |
+`genero` pode existir como metadado textual, mas não é o contrato visual principal de avatar sem foto.
+
+Contrato visual atual:
+
+| Caso | Renderização |
 |---|---|
-| `/mapa-familiar` desktop/tablet | `FamilyTreeVisualCards` escolhe avatar por foto real ou `genero` |
-| `/minha-arvore` mobile | `MobileFamilyTreeView` reutiliza avatar visual compartilhado |
-| `/mapa-familiar` mobile | fallback para `MobileFamilyTreeView`, herdando a mesma regra |
-| Pets | `genero = pet` orienta avatar de pet, sem substituir sozinho `humano_ou_pet` |
+| Pessoa com `foto_principal_url` | foto real |
+| Pessoa humana sem foto | `User` de `lucide-react` |
+| Pet sem foto | `PawPrint` de `lucide-react` |
 
 Regras:
 
-- `foto_principal_url` tem prioridade sobre avatar gráfico;
-- `genero` deve ser tratado como informação visual, não como relação familiar;
-- alteração de avatar não altera `relacionamentos`;
-- manter `humano_ou_pet` como fonte semântica até haver decisão de migração/backfill;
-- a migration de `genero` já está criada oficialmente; manter este documento e `docs/operacao/MIGRATIONS_SUPABASE.md` sincronizados se houver constraint, backfill ou normalização futura.
+- não há distinção visual obrigatória por gênero para avatar sem foto;
+- `genero = pet` pode existir como compatibilidade, mas não substitui sozinho `humano_ou_pet = 'Pet'`;
+- a árvore não deve inferir gênero por nome;
+- qualquer mudança para avatar por gênero exigiria nova decisão de produto e atualização da documentação canônica.
 
+#### `manual_generation`
+
+Campo usado principalmente pela horizontal:
+
+```txt
+pessoas.manual_generation
+```
+
+Regras:
+
+- valores esperados: 1 a 6;
+- ausentes/inválidos podem ser inferidos visualmente em memória;
+- inferência visual não deve persistir no Supabase;
+- alteração manual de geração é dado real e deve ocorrer por fluxo administrativo/edição apropriado;
+- `/mapa-familiar-horizontal` deve tratar colunas vazias como ocultáveis/compactáveis.
+
+---
 
 ### 2.3 Relacionamentos
 
@@ -223,7 +239,9 @@ Regras:
 - admin cria/edita relacionamento real;
 - usuário comum envia solicitação;
 - dados conjugais são preservados nos fluxos de edição;
-- relacionamento inverso é criado/atualizado apenas quando a regra for determinística.
+- relacionamento inverso é criado/atualizado apenas quando a regra for determinística;
+- conector conjugal nas views depende de relacionamento explícito;
+- cônjuge nunca deve ser inferido apenas por proximidade visual, sobrenome, ordem ou posição.
 
 Tabelas relacionadas:
 
@@ -233,7 +251,30 @@ relationship_change_requests
 
 ---
 
-### 2.4 Arquivos históricos
+## 3. Múltiplos relacionamentos conjugais
+
+Múltiplos cônjuges devem ser representados por múltiplos relacionamentos explícitos do tipo `conjuge`.
+
+Regras de dados:
+
+- não criar cônjuge por layout;
+- não alterar relacionamento real por causa de ajuste visual;
+- um relacionamento conjugal pode ter dados próprios de casamento, união, separação e observações;
+- arquivos históricos de casamento/relacionamento devem usar `relacionamento_id` quando disponíveis;
+- timeline e calendário podem derivar eventos conjugais de `data_casamento`.
+
+Regras de renderização:
+
+- `/mapa-familiar` pode exibir núcleo conjugal principal e núcleos adicionais;
+- filhos podem ser agrupados pelo outro pai/mãe quando houver relação explícita;
+- filhos sem outro pai/mãe identificado permanecem no grupo principal;
+- `/mapa-familiar-horizontal` deve exibir cônjuges da Geração 4/Pais quando o filtro **Cônjuges** estiver ativo;
+- cônjuges de avós, bisavós e tataravós podem ser sempre visíveis conforme contrato da árvore;
+- cônjuges colaterais dependem do filtro **Cônjuges**.
+
+---
+
+## 4. Arquivos históricos
 
 Tabela:
 
@@ -275,13 +316,13 @@ outro
 Regras:
 
 - novos arquivos usam Storage, não base64;
-- base64 legado permanece compatível;
+- base64 legado permanece compatível até limpeza controlada;
 - arquivos de casamento usam `relacionamento_id`;
 - limpeza de órfãos deve seguir `docs/operacao/STORAGE_MAINTENANCE.md`.
 
 ---
 
-### 2.5 Eventos da vida e timeline
+## 5. Eventos da vida e timeline
 
 Tabela:
 
@@ -310,8 +351,8 @@ A timeline também deriva eventos de:
 
 - nascimento;
 - falecimento;
-- relacionamentos;
-- filhos;
+- relacionamentos conjugais;
+- nascimento de filhos;
 - arquivos históricos;
 - eventos pessoais.
 
@@ -323,7 +364,7 @@ Fora do MVP atual:
 
 ---
 
-### 2.6 Redes sociais
+## 6. Redes sociais
 
 Tabela:
 
@@ -362,7 +403,7 @@ Compatibilidade:
 
 ---
 
-### 2.7 Insights gerados
+## 7. Insights gerados
 
 Tabela:
 
@@ -389,7 +430,7 @@ Regras:
 
 ---
 
-### 2.8 Sugestões de perfil
+## 8. Sugestões de perfil
 
 Tabela:
 
@@ -397,7 +438,7 @@ Tabela:
 public.person_profile_suggestions
 ```
 
-Função: permitir que usuário sem permissão direta sugira informações para uma pessoa.
+Função: permitir que usuário sem permissão direta sugira informações para uma pessoa ou relacionamento conjugal.
 
 Campos principais:
 
@@ -428,7 +469,7 @@ Fluxo:
 
 ---
 
-## 3. Favoritos
+## 9. Favoritos
 
 Tabela:
 
@@ -458,8 +499,8 @@ Estado funcional atual:
 - tópicos de fórum podem ser favoritados por componente próprio;
 - arquivos históricos podem expor favorito quando a tela/componente disponibiliza a ação;
 - página `/meus-favoritos` lista, busca, filtra e remove favoritos;
-- service aceita tipos genéricos e sanitiza metadata;
-- expansão para outros tipos permanece backlog controlado.
+- páginas internas favoritáveis incluem `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- service aceita tipos genéricos e sanitiza metadata.
 
 Regras de segurança:
 
@@ -468,7 +509,7 @@ Regras de segurança:
 
 ---
 
-## 4. Notificações
+## 10. Notificações
 
 Tabelas atuais:
 
@@ -501,11 +542,12 @@ Gatilhos relevantes:
 
 - novo arquivo histórico;
 - novo vínculo de usuário;
-- fórum: menção, pessoa relacionada, resposta e comentário.
+- fórum: menção, pessoa relacionada, resposta e comentário;
+- rotina de aniversários e memórias.
 
 ---
 
-## 5. Fórum
+## 11. Fórum
 
 Tabelas:
 
@@ -552,7 +594,26 @@ Isso garante uma reação ativa por usuário e alvo.
 
 ---
 
-## 6. Google Calendar
+## 12. Calendário e Google Agenda
+
+### 12.1 Eventos familiares
+
+`/calendario-familiar` deriva eventos de:
+
+- `pessoas.data_nascimento`;
+- `pessoas.data_falecimento`;
+- `relacionamentos.data_casamento`;
+- eventos históricos/familiares quando suportados;
+- confraternizações/reuniões quando cadastradas ou derivadas.
+
+Regras:
+
+- calendário não deve alterar dados de pessoas/relacionamentos;
+- filtros usam o estado `activeCategories`;
+- categorias mobile devem ser compactas e não gerar overflow;
+- alterações no shape de evento devem revisar Google Agenda.
+
+### 12.2 Google Calendar
 
 Objetos:
 
@@ -574,11 +635,12 @@ Regras:
 
 - tokens devem ficar restritos a Edge Functions/service role;
 - frontend não deve manipular segredo OAuth;
-- desconexão e sincronização devem ser feitas por service/Edge Function.
+- desconexão e sincronização devem ser feitas por service/Edge Function;
+- `/entrar` deve explicar a finalidade da integração quando necessário para compliance OAuth.
 
 ---
 
-## 7. Activity logs
+## 13. Activity logs
 
 Tabela:
 
@@ -629,7 +691,7 @@ Regras:
 
 ---
 
-## 8. RPCs e funções relevantes
+## 14. RPCs e funções relevantes
 
 | Função/RPC | Uso |
 |---|---|
@@ -645,7 +707,7 @@ Regras:
 
 ---
 
-## 9. Objetos legados ou de compatibilidade
+## 15. Objetos legados ou de compatibilidade
 
 | Objeto | Tratamento |
 |---|---|
@@ -662,7 +724,27 @@ Regra:
 
 ---
 
-## 10. Regras de segurança e manutenção
+## 16. Impacto do Mapa Familiar no modelo de dados
+
+O **Mapa Familiar** não cria novas tabelas nem altera relacionamentos reais. Ele consome `pessoas`, `relacionamentos`, filtros diretos e modelos de layout para compor visualizações HTML/CSS/SVG.
+
+Pontos de atenção:
+
+- `pessoas.manual_generation` orienta a horizontal quando disponível;
+- `pessoas.humano_ou_pet` separa pets de pessoas humanas;
+- `foto_principal_url` tem prioridade no avatar;
+- pessoa humana sem foto usa `User`;
+- pet sem foto usa `PawPrint`;
+- relacionamentos `conjuge` explícitos são usados para parear cards de cônjuges;
+- cônjuges não devem ser inferidos por proximidade visual;
+- múltiplos cônjuges são múltiplos relacionamentos, não colunas especiais;
+- pets seguem separados de filhos humanos;
+- ajustes de layout não exigem migration;
+- criação manual de coluna no Supabase exige migration posterior.
+
+---
+
+## 17. Regras de segurança e manutenção
 
 - `supabase/migrations` é a fonte da verdade.
 - Não aplicar schema por SQL solto em ambiente novo.
@@ -677,7 +759,7 @@ Regra:
 
 ---
 
-## 11. Checklist ao alterar banco ou fluxos de pessoa
+## 18. Checklist ao alterar banco ou fluxos de pessoa
 
 Antes:
 
@@ -705,32 +787,8 @@ Documentar impacto em:
 - `docs/operacao/MIGRATIONS_SUPABASE.md`;
 - `docs/arquitetura/ROTAS_E_GUARDS.md`, se alterar acesso;
 - `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`, se alterar pessoa/perfil;
+- `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`, se alterar dados consumidos pela árvore;
+- `docs/funcionalidades/CALENDARIO_FAMILIAR.md`, se alterar datas/eventos;
 - `docs/funcionalidades/NOTIFICACOES.md`, se alterar notificações;
 - `docs/funcionalidades/FORUM.md`, se alterar fórum;
 - `docs/PLANO_PROXIMOS_PASSOS.md`, se surgir pendência real.
-
-## 12. Impacto do Mapa Familiar no modelo de dados
-
-O **Mapa Familiar** não cria novas tabelas nem altera relacionamentos reais. Ele consome `pessoas`, `relacionamentos`, filtros diretos e `buildMobileFamilyTreeModel` para compor uma visualização panorâmica HTML/CSS/SVG.
-
-Pontos de atenção:
-
-- `pessoas.genero` é usado para escolher avatar visual;
-- relacionamentos `conjuge` explícitos são usados para parear cards de cônjuges;
-- cônjuges não devem ser inferidos por proximidade visual;
-- pets seguem separados de filhos humanos;
-- ajustes de layout não exigem migration;
-- criação manual de coluna no Supabase exige migration posterior.
-
-
----
-
-### 12.1 Verificação contra o código atual
-
-Estado observado na revisão deste lote:
-
-- `src/app/types/index.ts` já tipa `Pessoa.genero` como `homem`, `mulher`, `pet`, string ou `null`;
-- `FamilyTreeVisualCards.tsx` usa `person.genero` como fonte primária dos avatares visuais;
-- `genero` não deve substituir sozinho `humano_ou_pet` nas regras de domínio enquanto não houver decisão de migração/backfill;
-- o Mapa Familiar usa `genero` para representação visual, não para alterar relacionamentos, filtros ou permissões;
-- se a coluna existir apenas no Supabase remoto por edição manual, a documentação operacional exige criar migration versionada.

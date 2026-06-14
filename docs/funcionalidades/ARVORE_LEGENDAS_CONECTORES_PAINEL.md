@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: documentação funcional/técnica atualizada após simplificação do painel desktop e criação do modal mobile específico.
+> Status: documentação funcional/técnica atualizada após simplificação do painel, alinhamento das paletas desktop/mobile, ajustes em conectores, cards do painel e regras de cônjuges da horizontal.
 
 ---
 
@@ -56,13 +56,14 @@ O painel atual **não contém mais** a barra:
 Filtros | Legendas | Ações
 ```
 
-O painel foi simplificado para operar com:
+O painel opera com:
 
 - controles superiores compactos no desktop;
 - filtros/grupos visíveis diretamente no desktop;
 - status e KPIs acessíveis sem alternância por aba;
 - flyouts específicos para paleta, exportação e destaques;
-- modal mobile específico para controles essenciais.
+- modal mobile específico para controles essenciais;
+- cards de grupos e filtros com tratamento visual coerente com os cards da árvore.
 
 A antiga estrutura de abas e o estado `activeSidebarPanel` não devem voltar como contrato de produto.
 
@@ -94,7 +95,7 @@ A antiga estrutura de abas e o estado `activeSidebarPanel` não devem voltar com
 | Cores | Alterna paleta visual. |
 | Grupos | Exibe/oculta cards de grupos sob demanda. |
 | Destacar | Linhas, Cards, Grupos. |
-| Filtros | Vivos, Falecidos, Pets em 4 colunas. |
+| Filtros | Vivos, Falecidos, Pets em 4 colunas quando houver espaço. |
 
 No mobile, não exibir:
 
@@ -135,6 +136,8 @@ src/styles/home-sidebar-unified.css
 src/styles/mobile-tree-controls.css
 src/styles/family-map-qa.css
 src/styles/family-map-horizontal.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
 ```
 
 Arquivos/elementos legados não montados no painel atual podem permanecer no repo apenas se houver dependência técnica comprovada. Eles não devem ser documentados como UI vigente.
@@ -206,11 +209,32 @@ No mobile:
 - o botão `Grupos` abre/fecha a área de grupos;
 - a área de grupos não precisa de box externo nem título `GRUPOS`;
 - filtros de status ficam sempre visíveis;
-- filtros de status devem ocupar 4 colunas e apenas uma linha quando houver espaço.
+- filtros de status devem ocupar 4 colunas quando houver espaço;
+- bordas e fundos de grupos devem seguir a paleta ativa, usando os mesmos tokens do desktop.
 
 ---
 
-## 7. Regras de cônjuges
+## 7. Cards do painel e paletas
+
+No desktop, os cards de **Grupos** e **Filtros** do painel devem usar o mesmo vocabulário visual dos cards da árvore para a paleta ativa.
+
+Contrato:
+
+- cards do painel usam data attributes específicos, como `data-tree-panel-card` e `data-family-map-color-key` quando aplicável;
+- o CSS `tree-panel-palette-cards.css` aplica background, borda e texto com base nas variáveis do mapa;
+- a paleta Visual/Azul usa gradientes equivalentes aos cards da árvore, não tons pastéis chapados;
+- `Cônjuges` e `Pets` no painel seguem os tons equivalentes dos cards da árvore;
+- `Vivos` e `Falecidos`, por não serem grupos familiares, usam tratamento coerente com a paleta, mantendo contraste e estado ativo/inativo.
+
+Anti-regressão:
+
+```txt
+O painel desktop não deve voltar a usar cards visualmente desconectados da paleta ativa da árvore.
+```
+
+---
+
+## 8. Regras de cônjuges
 
 ### Sempre visíveis
 
@@ -223,13 +247,24 @@ Não dependem do filtro `Cônjuges`:
 
 ### Filtráveis
 
-Dependem do filtro:
+Dependem do filtro `Cônjuges`:
 
+- cônjuges de pais / Geração 4 na horizontal;
 - cônjuges de tios;
 - cônjuges de primos;
 - cônjuges de sobrinhos;
 - cônjuges de filhos;
 - cônjuges de netos.
+
+### Núcleos conjugais adicionais
+
+Na view vertical `/mapa-familiar`, quando a pessoa central possuir mais de um relacionamento conjugal:
+
+- o primeiro cônjuge visível permanece como núcleo principal;
+- cônjuges adicionais podem ser exibidos como `Outro relacionamento`;
+- filhos devem ser agrupados pelo outro pai/mãe quando houver relacionamento explícito;
+- filhos sem outro pai/mãe identificado permanecem no grupo principal;
+- a alteração visual não deve criar nem editar dados reais.
 
 ### Anti-regressão
 
@@ -241,7 +276,7 @@ Conectores conjugais devem depender de relacionamento explícito.
 
 ---
 
-## 8. Filtros de status
+## 9. Filtros de status
 
 Componente:
 
@@ -263,11 +298,11 @@ Regras:
 - pets dependem de filtros de pet e tipo de pessoa;
 - filtros não devem remover dados do banco;
 - filtros devem ser refletidos na exportação;
-- no mobile, devem ser compactos e exibidos em 4 colunas.
+- no mobile, devem ser compactos e exibidos em 4 colunas quando houver espaço.
 
 ---
 
-## 9. Legendas e ajuda contextual
+## 10. Legendas e ajuda contextual
 
 A antiga aba `Legendas` não é UI vigente do painel.
 
@@ -286,7 +321,7 @@ Até nova decisão:
 
 ---
 
-## 10. Conectores
+## 11. Conectores
 
 ### Vertical desktop
 
@@ -301,7 +336,8 @@ Características:
 - SVG por âncoras;
 - recalculado com grupos, zoom e modo wide;
 - ajustado quando `Destacar > Grupos` oculta chrome;
-- não deve depender de proximidade visual.
+- não deve depender de proximidade visual;
+- espessura visual atual: discreta, referência `strokeWidth`/width próxima de `2`.
 
 ### Horizontal desktop
 
@@ -316,7 +352,8 @@ Características:
 - SVG por geração/casal/filhos;
 - conectores de cônjuge e casal → filhos;
 - colunas compactadas;
-- recalculado quando cabeçalhos/grupos mudam.
+- recalculado quando cabeçalhos/grupos mudam;
+- espessura visual atual: discreta, referência `strokeWidth` próxima de `2`.
 
 ### Mobile vertical
 
@@ -331,6 +368,7 @@ Características:
 - conectores HTML/CSS;
 - navegação Paterno/Central/Materno;
 - deve seguir o alinhamento de referência do desktop;
+- bordas dos grupos e linhas devem seguir a paleta ativa;
 - não deve afetar horizontal mobile.
 
 ### Mobile horizontal
@@ -353,7 +391,7 @@ Características:
 
 ---
 
-## 11. Destaques
+## 12. Destaques
 
 Flyout:
 
@@ -378,7 +416,7 @@ Regras:
 
 ---
 
-## 12. Exportação e seleção por área
+## 13. Exportação e seleção por área
 
 Ações desktop/completo:
 
@@ -413,7 +451,7 @@ src/styles/family-map-horizontal.css
 
 ---
 
-## 13. Modal mobile de controles
+## 14. Modal mobile de controles
 
 Regras do modal mobile:
 
@@ -460,7 +498,7 @@ barra Paterno/Central/Materno na horizontal mobile
 
 ---
 
-## 14. Paletas e avatares
+## 15. Paletas, cards mobile e avatares
 
 ### Paletas
 
@@ -476,9 +514,20 @@ brown
 Contrato:
 
 - desktop é referência visual;
-- mobile deve herdar os tokens `--tree-palette-*`;
+- mobile deve herdar os tokens `--tree-palette-*` e os overrides de `family-map-mobile-palettes.css`;
 - não usar cores hardcoded no mobile como fonte de verdade;
 - paletas devem afetar cards, bordas, texto, conectores e exportação.
+
+### Cards mobile de pessoas
+
+Em `/mapa-familiar` mobile:
+
+- exibir nome;
+- abaixo do nome, exibir `★ AAAA` somente quando houver ano de nascimento;
+- abaixo, exibir `✥ AAAA` somente quando houver ano de falecimento;
+- não exibir `Nascimento não informado`;
+- não exibir `Falecimento não informado`;
+- os textos devem herdar contraste da paleta ativa.
 
 ### Avatares
 
@@ -494,7 +543,7 @@ Não há variação de avatar por gênero.
 
 ---
 
-## 15. Checklist de QA
+## 16. Checklist de QA
 
 ### Desktop
 
@@ -507,6 +556,7 @@ Não há variação de avatar por gênero.
 - [ ] Exportar abre ações e executa PNG/PDF/print/área.
 - [ ] Destacar altera linhas/cards/grupos sem quebrar conectores.
 - [ ] Filtros funcionam sem abas internas.
+- [ ] Cônjuges da Geração 4 aparecem na horizontal quando filtro `Cônjuges` está ativo.
 - [ ] Painel não aparece na exportação.
 
 ### Mobile
@@ -517,16 +567,18 @@ Não há variação de avatar por gênero.
 - [ ] Toggle Vertical/Horizontal aparece.
 - [ ] Zoom/Restaurar/Exportar não aparecem no modal.
 - [ ] Botão `Grupos` abre/fecha grupos.
-- [ ] Filtros ficam em 4 colunas.
+- [ ] Filtros ficam compactos.
 - [ ] Scroll interno funciona.
 - [ ] Body destrava ao fechar.
 - [ ] Horizontal mobile navega por geração.
 - [ ] Vertical mobile mantém Paterno/Central/Materno.
+- [ ] Paletas mobile seguem desktop.
+- [ ] Cards mobile não exibem textos de data não informada.
 - [ ] Exportação não captura header, bottom nav ou modal.
 
 ---
 
-## 16. Não regressão
+## 17. Não regressão
 
 Não reintroduzir:
 
@@ -541,4 +593,7 @@ favoritos apontando para rotas removidas
 busca global retornando rotas removidas como páginas ativas
 Zoom/Exportar/Restaurar no modal mobile
 cores hardcoded substituindo tokens de paleta no mobile
+cards mobile com "Nascimento não informado"
+conectores grossos que disputem atenção com os cards
+cônjuges da Geração 4 ausentes da horizontal com filtro ativo
 ```

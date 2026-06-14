@@ -1,9 +1,9 @@
-# Rotas e guards de acesso - Árvore Família
+# Rotas e guards de acesso — Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra `routes.tsx`, `treeViewMode.ts`, favoritos, busca global e shell atual das views da árvore.
+> Status: revisado para consolidar rotas vigentes, rotas removidas, guards, shell das views oficiais, painel simplificado e navegação preservando `location.search`.
 
 ---
 
@@ -32,6 +32,7 @@ docs/GUIA_UX_LAYOUT.md
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/EXPORTACAO_ARVORE.md
 docs/funcionalidades/FAVORITOS.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 ```
 
 ---
@@ -93,7 +94,7 @@ Responsabilidade:
 - proteger views principais da árvore;
 - proteger busca global autenticada;
 - exigir usuário autenticado;
-- exigir login recente;
+- exigir login recente quando aplicável;
 - resolver vínculo de primeiro acesso;
 - redirecionar usuário sem acesso para `/entrar`;
 - redirecionar vínculo recém-criado com dados não confirmados para `/meus-dados`, conforme regra vigente.
@@ -224,7 +225,7 @@ Regras:
 - `/entrar` não exige sessão;
 - termos e privacidade permanecem acessíveis sem login;
 - `/admin/login` não deve ser item principal de navegação;
-- `/entrar` também funciona como superfície pública de identidade do app.
+- `/entrar` também funciona como superfície pública de identidade do app e pode conter explicação de integrações como Google Agenda.
 
 ---
 
@@ -240,7 +241,8 @@ Regras:
 Regras:
 
 - as duas views da árvore usam o mesmo shell `Home`;
-- `/mapa-familiar-horizontal` recebe `data-tree-route-view="mapa-familiar-horizontal"` no wrapper;
+- `/mapa-familiar` é a view default;
+- `/mapa-familiar-horizontal` é a view horizontal/genealógica oficial;
 - `/` redireciona para `/mapa-familiar`, preservando `location.search`;
 - `/minha-arvore`, `/genealogia` e `/visao-completa` foram removidas como views ativas;
 - não adicionar rota experimental nova sem registrar em `treeViewMode.ts`, `routes.tsx`, painel, testes e documentação.
@@ -318,16 +320,16 @@ A decisão principal fica em `HomeTreeSection.tsx`.
 
 Observações:
 
-- `DesktopFamilyHorizontalMapView` não é ReactFlow, embora use `buildTreeGraph` e `genealogyColumnsLayout` como referência interna;
+- `DesktopFamilyHorizontalMapView` não é ReactFlow, embora possa usar helpers e layouts preservados;
 - `MobileFamilyHorizontalMapView` é a experiência mobile própria da horizontal, com uma geração por tela e swipe lateral;
 - `MobileFamilyTreeView` é a experiência mobile segmentada da família direta;
-- `FamilyTree.tsx` não é renderer oficial das views atuais, mas ainda fornece contrato/tipos e deve ser removido apenas após extração segura.
+- `FamilyTree.tsx` não é renderer oficial das views atuais, mas ainda pode fornecer contrato/tipos e deve ser removido apenas após extração segura.
 
 ---
 
 ## 9. Navegação do painel
 
-No desktop, `SidebarPanelTabs.tsx` exibe:
+No desktop, `SidebarPanelTabs.tsx` exibe alternância de rota:
 
 | Botão | View | Rota |
 |---|---|---|
@@ -340,24 +342,46 @@ Regras:
 - a rota ativa deve ser detectada por prefixo, especialmente `/mapa-familiar-horizontal`;
 - não adicionar atalhos para `/minha-arvore`, `/genealogia` ou `/visao-completa`.
 
-Controles vigentes no mesmo componente:
+Controles vigentes no desktop:
 
-- Zoom +;
-- Zoom -;
-- Restaurar visualização;
-- Cores;
-- Exportar;
-- Destacar;
-- Filtros;
-- Legendas;
-- Ações.
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Vertical
+Horizontal
+Cores
+Exportar
+Destacar
+Grupos/Filtros
+Filtros de status
+```
 
-Pendência de produto/UX:
+O produto não usa mais a barra visual persistente:
 
-- remover a barra `Filtros | Legendas | Ações`;
-- manter filtros/grupos visíveis diretamente;
-- ocultar/remover Legendas e Ações;
-- preservar os controles superiores necessários.
+```txt
+Filtros | Legendas | Ações
+```
+
+No mobile, o modal de controles deve conter apenas:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros de status
+```
+
+E não deve conter:
+
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Exportar
+```
 
 ---
 
@@ -438,7 +462,8 @@ Regras:
 Observações:
 
 - `/pessoas/:id` é alias de `/pessoa/:id`; se for removido futuramente, criar redirect ou plano de compatibilidade;
-- `/minha-arvore/editar` mantém nome histórico por compatibilidade e escopo funcional.
+- `/minha-arvore/editar` mantém nome histórico por compatibilidade e escopo funcional;
+- `/calendario-familiar` inclui UI mobile com filtros compactos de categorias e integração Google Agenda quando configurada.
 
 ---
 
@@ -473,13 +498,7 @@ VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
 
 ## 14. 404
 
-A rota catch-all `*` renderiza uma página simples com:
-
-```txt
-404
-Página não encontrada
-Voltar para home
-```
+A rota catch-all `*` renderiza página de rota não encontrada.
 
 Deve cobrir:
 
@@ -511,6 +530,7 @@ rg "/minha-arvore|/genealogia|/visao-completa"
 rg "TreeViewMode"
 rg "FAVORITE_PAGES|GLOBAL_SEARCH_PAGES"
 rg "ALLOWED_TREE_RETURN_PATHS|TREE_RETURN_FALLBACK_PATH"
+rg "Filtros|Legendas|Ações"
 ```
 
 Validações manuais:

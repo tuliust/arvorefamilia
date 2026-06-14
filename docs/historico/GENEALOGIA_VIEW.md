@@ -111,7 +111,7 @@ A antiga documentação registrava:
 - exportação ReactFlow;
 - cuidados para não vazar CSS entre ReactFlow e Mapa Familiar.
 
-Algumas dessas ideias continuam úteis como contexto técnico, mas foram redistribuídas:
+Algumas ideias continuam úteis como contexto técnico, mas foram redistribuídas:
 
 | Tema | Documento atual |
 |---|---|
@@ -162,6 +162,14 @@ Regras atuais:
 - Mobile deve adaptar escala e recorte, não criar outra hierarquia.
 - A refatoração futura ideal é um view model compartilhado entre desktop e mobile.
 
+### 6.4 Cônjuges da Geração 4
+
+Regra atual da horizontal:
+
+- pessoas da Geração 4 podem ser classificadas como `pais`;
+- quando o filtro `Cônjuges` estiver ativo, cônjuges desses `pais` devem aparecer;
+- essa regra pertence aos docs canônicos e não reativa a antiga `/genealogia`.
+
 ---
 
 ## 7. Arquivos técnicos relacionados ao legado
@@ -202,7 +210,7 @@ Se um import quebrar, primeiro validar se o fluxo ainda é vigente. Não restaur
 Regras atuais que substituem comportamentos históricos:
 
 - desktop é a referência visual das paletas;
-- mobile deve herdar tokens `--tree-palette-*`;
+- mobile deve herdar tokens `--tree-palette-*` e regras escopadas atuais;
 - não usar cores hardcoded de `teal/cyan/blue/orange/brown` no mobile fora dos tokens;
 - pessoa com `foto_principal_url` usa foto;
 - pessoa sem foto usa `User` de `lucide-react`;

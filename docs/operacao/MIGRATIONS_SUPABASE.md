@@ -106,14 +106,14 @@ Os ajustes abaixo são documentados como mudanças de UI/componente e não devem
 | Remover badge **VOCÊ** do card principal mobile | Alteração visual em `MobileFamilyTreeView` |
 | Exibir apenas ano nos cards mobile | Formatação de dados já existentes |
 | Corrigir conectores mobile entre ancestrais, Pai/Mãe e pessoa central | Estrutura visual HTML/CSS/SVG |
-| Usar avatar gráfico homem/mulher/pet quando não há foto | Reuso de campo visual existente e lógica frontend |
+| Ajustar fallback visual de avatar sem foto (`User` para pessoa, `PawPrint` para pet) | Lógica frontend/visual, sem schema |
 | Criar ou ajustar `MobileFamilyHorizontalMapView` | Nova composição visual mobile, sem alteração de dados |
 | Exibir `/mapa-familiar-horizontal` mobile com uma geração por tela | Organização visual de dados já existentes |
 | Trocar barra `Paterno | Central | Materno` da horizontal mobile por navegação por gerações | UX/navegação de tela, sem schema |
 | Transformar painel mobile dos mapas em modal de controles | UI e CSS, sem schema |
 | Remover fundo sólido da horizontal e usar fundo transparente | CSS/visual |
 | Atualizar exportação visual HTML/CSS/SVG | Captura client-side, sem banco |
-| Remover texto institucional de Google Agenda em `/entrar` | Conteúdo estático de página, sem impacto de banco |
+| Ajustar microcopy pública de OAuth/Google Agenda em `/entrar` | Conteúdo estático de página, sem impacto de banco |
 
 Observação:
 
@@ -310,13 +310,15 @@ A migration existe para manter ambientes futuros e histórico local/remoto alinh
 Escopo:
 
 - adiciona `genero text` em `public.pessoas` de forma idempotente;
-- documenta a coluna como campo visual opcional para orientar avatar fallback;
+- documenta a coluna como metadado opcional de pessoa;
 - cria índice parcial `idx_pessoas_genero` quando `genero` não é nulo/vazio.
 
-Uso funcional:
+Uso funcional atual:
 
-- `genero` orienta avatares visuais em `FamilyTreeVisualCards` e no fallback mobile compartilhado;
-- valores esperados no frontend: `homem`, `mulher`, `pet`;
+- `genero` pode permanecer como dado cadastral/compatibilidade;
+- a regra visual vigente dos cards não exige avatar diferente por gênero;
+- pessoa humana sem foto usa fallback `User`;
+- pet sem foto usa fallback `PawPrint`;
 - `humano_ou_pet` continua sendo o campo semântico principal para regras de pessoa/pet.
 
 SQL útil para verificar:
@@ -332,7 +334,7 @@ where table_schema = 'public'
 Sintoma se ausente:
 
 ```txt
-Ambiente novo sem coluna genero não quebra a regra semântica de pets, mas perde a fonte visual versionada usada para avatar fallback por homem/mulher/pet.
+Ambiente novo sem coluna genero pode perder compatibilidade com cadastros que preencham esse metadado, mas não deve quebrar a árvore nem o fallback visual atual de avatares.
 ```
 
 ---

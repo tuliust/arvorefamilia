@@ -3,13 +3,13 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: baseline funcional após remoção das views antigas, ajustes em painel/modal, títulos, paletas, avatares e mobile horizontal.
+> Status: baseline funcional revisada após ajustes em views oficiais, painel, paletas desktop/mobile, calendário mobile, cônjuges na horizontal e suporte visual a núcleos conjugais adicionais.
 
 ---
 
 ## 1. Objetivo
 
-Este documento define o estado canônico atual do produto para orientar novas alterações, revisões e limpezas.
+Este documento define o estado canônico atual do produto para orientar novas alterações, revisões, limpezas e QA.
 
 A baseline serve para evitar regressões como:
 
@@ -21,7 +21,10 @@ A baseline serve para evitar regressões como:
 - alterar navegação, exportação ou retorno de perfil sem validação;
 - reintroduzir artefatos locais no versionamento;
 - reintroduzir cores mobile divergentes do desktop;
-- reintroduzir controles desktop no modal mobile.
+- reintroduzir controles desktop no modal mobile;
+- fazer cards mobile caírem em fallback azul/teal quando outra paleta está ativa;
+- quebrar a exibição de cônjuges na horizontal;
+- voltar a exibir microcopy de data desconhecida nos cards mobile.
 
 Regra principal:
 
@@ -83,7 +86,7 @@ A rota abaixo continua vigente:
 /minha-arvore/editar
 ```
 
-Ela representa a edição dos dados/árvore do membro e não deve ser confundida com a view antiga `/minha-arvore`.
+Ela representa edição de dados/perfil/árvore do membro e não deve ser confundida com a view antiga `/minha-arvore`.
 
 ---
 
@@ -134,7 +137,7 @@ Regras:
 - `/mapa-familiar-horizontal` é a experiência horizontal por gerações;
 - a horizontal mobile não é subrota; é uma renderização interna da mesma rota;
 - a palavra “Genealogia” pode aparecer como conceito/título visual, mas não reativa `/genealogia`;
-- não reintroduzir renderização ReactFlow como view pública principal sem decisão arquitetural.
+- não reintroduzir ReactFlow como view pública principal sem decisão arquitetural explícita.
 
 ---
 
@@ -144,6 +147,7 @@ Regras:
 |---|---|
 | `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar` |
 | `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico` |
+| `/calendario-familiar` | `Calendário` |
 
 Regras:
 
@@ -219,7 +223,10 @@ Estado atual:
 - não há mais barra visual `Filtros | Legendas | Ações`;
 - filtros/grupos/status ficam disponíveis diretamente no painel;
 - controles superiores e flyouts permanecem preservados;
-- painel, overlays e loading são marcados para não entrar na exportação.
+- painel, overlays e loading são marcados para não entrar na exportação;
+- cards de `Grupos` e `Filtros` devem seguir o vocabulário visual da paleta ativa;
+- no desktop, cards do painel devem replicar gradiente/borda/texto dos cards da árvore sempre que houver equivalência visual;
+- estados inativos continuam perceptíveis por opacidade/desaturação, sem perder legibilidade.
 
 Controles desktop vigentes:
 
@@ -245,7 +252,9 @@ Estado atual:
 - subtítulo removido;
 - botão superior direito com ícone `X`;
 - botão `Grupos` exibe/oculta cards de grupos;
-- filtros ficam sempre visíveis em 4 colunas.
+- filtros ficam sempre visíveis em 4 colunas;
+- mobile não deve receber controles de zoom/exportação/restauração;
+- paletas mobile devem seguir o desktop.
 
 Controles mobile vigentes:
 
@@ -296,7 +305,7 @@ Ações oficiais:
 
 Regras:
 
-- painel, header, bottom nav, overlays e loading não devem entrar na captura;
+- painel, header, bottom nav, overlays, modal mobile, loading e debug não devem entrar na captura;
 - a exportação deve preservar paleta, filtros, conectores SVG, cards e título;
 - área selecionada deve capturar apenas a região escolhida;
 - `Área` deve funcionar como toggle;
@@ -308,11 +317,9 @@ Regras:
 
 ---
 
-## 9. Paletas e avatares
+## 9. Paletas, cards e avatares
 
-### Paletas
-
-Paletas oficiais:
+### Paletas oficiais
 
 ```txt
 white
@@ -324,9 +331,39 @@ brown
 Contrato:
 
 - desktop é a referência visual;
-- mobile deve herdar os mesmos tokens CSS `--tree-palette-*`;
-- cards, bordas, texto, conectores e canvas devem mudar juntos;
-- exportação deve preservar a paleta ativa.
+- mobile deve herdar o mesmo contrato visual do desktop;
+- cards, bordas, texto, conectores, labels, grupos e canvas devem mudar juntos;
+- exportação deve preservar a paleta ativa;
+- a paleta Visual/Azul usa gradientes teal/ciano/azul nos cards, mesmo quando os tokens base da paleta são sólidos;
+- paletas Branca, Laranja e Marrom no mobile não podem cair em fallback azul/teal.
+
+CSS crítico de paletas recentes:
+
+```txt
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+```
+
+### Cards mobile de pessoas
+
+Em `/mapa-familiar` mobile, os cards devem exibir:
+
+```txt
+Nome da pessoa
+★ AAAA, se houver nascimento
+✥ AAAA, se houver falecimento
+```
+
+Regras:
+
+- não exibir `Nascimento não informado`;
+- não exibir `Falecimento não informado`;
+- não exibir linha de nascimento se não houver data/ano;
+- não exibir linha de falecimento se não houver data/ano;
+- manter ícones e texto legíveis em todas as paletas;
+- o mesmo princípio se aplica a cards compactos que tenham metadados vitais.
 
 ### Avatares
 
@@ -359,11 +396,60 @@ Regras:
 - botões laterais de seta não aparecem;
 - botão de controles fica alinhado à linha de botões `Ger`;
 - conectores devem seguir a estrutura desktop;
-- direção de swipe deve ser validada em aparelho real antes de fechar QA.
+- direção de swipe deve ser validada em aparelho real antes de fechar QA;
+- cards sem `data-family-map-color-key` não podem herdar fallback azul quando outra paleta estiver ativa;
+- a paleta ativa deve ser coerente com a versão desktop.
 
 ---
 
-## 11. Debug temporário
+## 11. Múltiplos cônjuges e núcleos conjugais
+
+A view vertical `/mapa-familiar` deve suportar múltiplos relacionamentos da pessoa central.
+
+Contrato:
+
+- o primeiro cônjuge visível permanece como núcleo principal;
+- cônjuges adicionais podem gerar bloco `Outro relacionamento`;
+- filhos devem ser agrupados pelo outro pai/mãe quando houver relacionamento explícito;
+- filhos sem outro pai/mãe identificado permanecem no grupo principal;
+- dados reais não devem ser criados por ajuste visual;
+- novos núcleos devem entrar no cálculo de altura, bounds e exportação.
+
+Na horizontal:
+
+- cônjuges ancestrais e diretos devem respeitar filtros;
+- cônjuges de `pais` / Geração 4 devem aparecer quando o filtro `Cônjuges` estiver ativo;
+- cônjuges adjacentes não devem ser inferidos por proximidade visual: dependem de relacionamento explícito.
+
+---
+
+## 12. Calendário familiar mobile
+
+Rota:
+
+```txt
+/calendario-familiar
+```
+
+Contrato mobile atual dos botões de categoria:
+
+- cinco categorias em uma única linha;
+- categorias: `Aniversário`, `Casamento`, `Falecimento`, `Outros`, `Reunião`;
+- cada botão mantém o título em uma linha;
+- cada botão exibe uma bolinha colorida acima do título;
+- o título deve ocupar a largura útil do botão;
+- em telas estreitas, usar `nowrap`, `ellipsis` e ajustes responsivos sem criar overflow horizontal;
+- o layout deve ser validado em 320px, 375px, 390px e 430px.
+
+CSS crítico:
+
+```txt
+src/styles/calendar-mobile-category-buttons.css
+```
+
+---
+
+## 13. Debug temporário
 
 Pode existir um dropdown de diagnóstico:
 
@@ -386,7 +472,7 @@ Status:
 
 ---
 
-## 12. Componentes e contratos críticos
+## 14. Componentes e contratos críticos
 
 ### Oficiais
 
@@ -400,6 +486,7 @@ src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/components/FamilyTree/actions.ts
+src/app/pages/CalendarioFamiliar.tsx
 ```
 
 ### Preservados por dependência até refatoração específica
@@ -422,7 +509,7 @@ Motivos:
 
 ---
 
-## 13. CSS e data attributes críticos
+## 15. CSS e data attributes críticos
 
 Preservar:
 
@@ -436,6 +523,11 @@ data-tree-export-ignore="true"
 data-tree-selection-overlay="true"
 data-tree-export-loading="true"
 data-tree-debug-viewer="true"
+data-family-map-color-key
+data-family-map-mobile-card="true"
+data-family-map-connectors="true"
+data-tree-panel-card="true"
+data-tree-panel-filter-key
 ```
 
 CSS crítico:
@@ -448,6 +540,9 @@ src/styles/home-sidebar-unified.css
 src/styles/mobile-tree-controls.css
 src/styles/mobile-edit-profile.css
 src/styles/tree-view-desktop-polish.css
+src/styles/family-map-mobile-palettes.css
+src/styles/tree-panel-palette-cards.css
+src/styles/calendar-mobile-category-buttons.css
 ```
 
 Atenção:
@@ -455,11 +550,12 @@ Atenção:
 - `mobile-edit-profile.css` pode usar nomenclatura associada a `/minha-arvore/editar`;
 - isso é permitido porque a rota de edição continua vigente;
 - não remover CSS apenas por nome antigo;
-- aliases antigos devem ser tratados caso a caso.
+- aliases antigos devem ser tratados caso a caso;
+- CSS importado por último costuma ser usado para vencer conflitos de Tailwind/inline styles; revisar ordem antes de mover arquivos.
 
 ---
 
-## 14. Testes obrigatórios de baseline
+## 16. Testes obrigatórios de baseline
 
 Antes de fechar mudanças relevantes:
 
@@ -479,20 +575,38 @@ E2E mínimo esperado:
 - `/minha-arvore`, `/genealogia` e `/visao-completa` não voltam como rotas ativas;
 - `/minha-arvore/editar` continua protegida;
 - `/pessoa/:id` e `/pessoas/:id` redirecionam para login sem sessão;
-- `/admin/*` bloqueia usuário não autenticado.
+- `/admin/*` bloqueia usuário não autenticado;
+- `/calendario-familiar` continua protegida.
 
 ---
 
-## 15. Pendências reais pós-baseline
+## 17. Pendências reais pós-baseline
 
-As pendências restantes não são de roteamento estrutural. São principalmente:
+Pendências devem ficar centralizadas em:
 
-- QA visual manual com dados reais;
-- QA de exportação em PNG/PDF/impressão/área;
-- QA mobile iOS/Safari em breakpoints pequenos;
-- QA de paletas mobile contra desktop;
-- QA de avatares `User`/`PawPrint`;
-- QA de conectores em mobile vertical e horizontal;
-- decisão futura sobre debug `Visualizar como...`;
-- decisão futura sobre remoção completa do stack ReactFlow legado;
-- eventual limpeza de dependências após auditoria específica.
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```
+
+A baseline não deve virar backlog. Ela deve registrar o estado aceito do produto.
+
+---
+
+## 18. Checklist de anti-regressão rápido
+
+Antes de aceitar alteração visual:
+
+```txt
+[ ] /mapa-familiar desktop preservado.
+[ ] /mapa-familiar mobile preservado.
+[ ] /mapa-familiar-horizontal desktop preservado.
+[ ] /mapa-familiar-horizontal mobile preservado.
+[ ] Paletas white/visual/orange/brown preservadas.
+[ ] Cards mobile sem “Nascimento não informado”.
+[ ] Bordas de grupos mobile seguem paleta desktop.
+[ ] Cônjuges da Geração 4 aparecem na horizontal quando filtro Cônjuges está ativo.
+[ ] Cards de painel desktop seguem gradiente/paleta da árvore.
+[ ] Conectores continuam finos e legíveis.
+[ ] Calendário mobile mantém 5 categorias em uma linha com bolinha acima do título.
+[ ] Exportação não captura painel/header/bottom nav/modal/debug.
+```

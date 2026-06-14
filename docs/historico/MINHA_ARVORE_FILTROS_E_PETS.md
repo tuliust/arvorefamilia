@@ -125,6 +125,7 @@ Sempre visíveis quando existirem:
 
 Filtráveis:
 
+- cônjuges de pais / Geração 4 na horizontal;
 - cônjuges de tios;
 - cônjuges de primos;
 - cônjuges de sobrinhos;
@@ -138,6 +139,16 @@ Conector conjugal deve depender de relacionamento conjuge explícito.
 ```
 
 Não inferir cônjuge por proximidade visual, sobrenome, ordem de card ou posição no layout.
+
+### 3.5 Núcleos conjugais adicionais
+
+Na view vertical atual, múltiplos cônjuges da pessoa central podem ser representados em núcleos descendentes separados.
+
+Regra:
+
+- filhos devem ser agrupados pelo outro pai/mãe quando existir relacionamento explícito;
+- filhos sem outro pai/mãe identificado continuam no grupo principal;
+- não criar dados fictícios para resolver layout.
 
 ---
 
@@ -191,7 +202,6 @@ Contrato atual:
 - `Grupos` abre/fecha os cards de grupos;
 - grupos não ficam visíveis por padrão no modal mobile;
 - filtros de status ficam visíveis;
-- filtros ficam em 4 colunas quando houver espaço conforme regra CSS atual;
 - mobile não deve mostrar Zoom, Restaurar ou Exportar.
 
 ---

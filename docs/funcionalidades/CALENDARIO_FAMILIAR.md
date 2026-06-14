@@ -1,9 +1,9 @@
 # Calendário Familiar
 
-> Última revisão: 2026-06-09
-> Local canônico: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`
-> Tipo: documentação funcional e técnica da rota `/calendario-familiar`.
-> Status: revisado após ajustes de compliance OAuth/Google Agenda e exposição pública da finalidade da integração em `/entrar`.
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/funcionalidades/CALENDARIO_FAMILIAR.md`  
+> Tipo: documentação funcional e técnica da rota `/calendario-familiar`.  
+> Status: revisado após ajustes de compliance OAuth/Google Agenda e refatoração dos filtros mobile de categorias.
 
 ---
 
@@ -20,7 +20,7 @@ A funcionalidade cobre:
 - confraternizações/reuniões;
 - integração operacional com Google Agenda, quando configurada.
 
-Este documento registra apenas o comportamento atual e os cuidados de manutenção. Histórico de ajustes mobile ou QA antigo deve permanecer em `docs/historico/`.
+Este documento registra o comportamento vigente e os cuidados de manutenção. Histórico de ajustes antigos deve permanecer em `docs/historico/`.
 
 A integração com Google Agenda também tem implicação de compliance/OAuth: a home pública `/entrar` deve declarar o nome do app e a finalidade da sincronização antes da autorização do usuário.
 
@@ -36,6 +36,7 @@ src/app/pages/Entrar.tsx
 src/app/components/layout/MemberPageHeader.tsx
 src/app/components/AppLink.tsx
 src/app/routes.tsx
+src/styles/calendar-mobile-category-buttons.css
 ```
 
 Documentos relacionados:
@@ -149,13 +150,33 @@ Outros
 Reunião
 ```
 
-Regras de mobile:
+### 6.1 Contrato visual mobile atual
 
-- ficam acima do calendário;
-- devem caber em 320px, 375px, 390px e 430px;
-- usam fonte reduzida;
-- não devem gerar overflow horizontal;
-- substituem o card grande de categorias no mobile.
+No mobile, os 5 botões devem ser exibidos em **uma única linha**.
+
+Cada botão deve conter:
+
+- uma bolinha colorida acima do título;
+- título centralizado abaixo da bolinha;
+- título em uma linha;
+- `white-space: nowrap`;
+- fallback com `text-overflow: ellipsis` em telas extremas;
+- área de toque suficiente para uso em iOS/Safari;
+- ausência de overflow horizontal global.
+
+O CSS responsável é:
+
+```txt
+src/styles/calendar-mobile-category-buttons.css
+```
+
+Regras de breakpoints:
+
+- validar em 320px, 375px, 390px e 430px;
+- `Aniversário` e `Falecimento` são os rótulos de maior risco;
+- a fonte pode ser compactada em telas menores, mas não deve quebrar linha;
+- a bolinha colorida não deve empurrar o título para fora do botão;
+- o card grande de categorias deve permanecer oculto no mobile quando duplicar os filtros superiores.
 
 Card `Categorias`:
 
@@ -199,7 +220,7 @@ formatDeathSidebarTitle
 
 ---
 
-## 8. Comportamento mobile da bolinha
+## 8. Comportamento mobile da bolinha do dia
 
 Função:
 
@@ -304,6 +325,9 @@ Regras:
 
 - sem overflow horizontal global;
 - filtros compactos legíveis;
+- 5 filtros mobile em uma linha;
+- bolinha colorida acima do título do botão;
+- títulos dos botões em uma linha;
 - card inferior de categorias oculto no mobile;
 - grid mensal usável;
 - Google Agenda acessível por botão no header mobile;
@@ -323,6 +347,19 @@ toggleCategory
 getCalendarCategory
 aria-pressed
 ```
+
+### Botões mobile quebraram linha
+
+Verificar:
+
+```txt
+src/styles/calendar-mobile-category-buttons.css
+white-space: nowrap
+text-overflow: ellipsis
+grid-template-columns: repeat(5, minmax(0, 1fr))
+```
+
+Não voltar para duas linhas sem decisão explícita de UX.
 
 ### Bolinha mobile ainda abre modal
 
@@ -392,11 +429,13 @@ git status --short
 - trocar mês;
 - usar filtros desktop/tablet;
 - usar filtros mobile;
+- validar os 5 botões mobile em uma linha;
+- validar bolinha colorida acima do título em cada botão;
 - validar singular/plural;
 - validar aniversário no grid;
 - validar falecimento no grid;
 - validar card Memória apenas quando houver itens;
-- validar bolinha mobile;
+- validar bolinha mobile do dia;
 - validar Google Agenda se a área foi alterada;
 - validar `/entrar` como home pública exigida pelo OAuth;
 - validar mobile e desktop.
@@ -427,6 +466,10 @@ Não reintroduzir:
 
 - card grande de categorias duplicado no mobile;
 - filtros compactos sem `aria-pressed`;
+- filtros mobile em duas linhas sem decisão explícita;
+- botões mobile sem bolinha colorida acima do título;
+- quebra de linha nos títulos dos botões mobile;
+- overflow horizontal global;
 - texto `item(ns)`;
 - alteração de shape de evento sem revisar Google Agenda;
 - secrets de Google no frontend;
