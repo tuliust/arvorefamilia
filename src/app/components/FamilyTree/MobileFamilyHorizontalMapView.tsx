@@ -64,9 +64,12 @@ type PersonLayout = {
   height: number;
 };
 
+type ConnectorKind = 'family' | 'spouse';
+
 type Connector = {
   id: string;
   points: Point[];
+  kind: ConnectorKind;
 };
 
 type CoupleConnectorCandidate = {
@@ -122,6 +125,7 @@ const MOBILE_HORIZONTAL_CANVAS = {
   headerTop: 32,
   headerHeight: 32,
   bottomPadding: 40,
+  spouseConnectorOverlap: 10,
 };
 
 function isParentChildRelationship(relationship: Relacionamento) {
@@ -446,12 +450,18 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
       const spouseX = upperLayout.left + upperLayout.width / 2;
       const coupleMidY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
+      const spouseConnectorStartY = upperLayout.top
+        + upperLayout.height
+        - MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
+      const spouseConnectorEndY = lowerLayout.top
+        + MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
 
       connectors.push({
         id: `mobile-spouse-${key}`,
+        kind: 'spouse',
         points: [
-          [spouseX, upperLayout.top + upperLayout.height],
-          [spouseX, lowerLayout.top],
+          [spouseX, spouseConnectorStartY],
+          [spouseX, spouseConnectorEndY],
         ],
       });
 
@@ -489,6 +499,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       connectors.push({
         id: `mobile-couple-out-${candidate.key}`,
+        kind: 'family',
         points: [
           [spouseX, candidate.coupleMidY],
           [trunkX, candidate.coupleMidY],
@@ -497,6 +508,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       connectors.push({
         id: `mobile-couple-trunk-${candidate.key}`,
+        kind: 'family',
         points: [
           [trunkX, trunkTop],
           [trunkX, trunkBottom],
@@ -508,6 +520,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
         connectors.push({
           id: `mobile-couple-child-${candidate.key}-${childLayout.person.id}`,
+          kind: 'family',
           points: [
             [trunkX, childY],
             [childLayout.left, childY],
@@ -729,6 +742,16 @@ function MobileFamilyHorizontalMapViewComponent({
   const connectors = React.useMemo(
     () => buildConnectors(layouts, maps),
     [layouts, maps],
+  );
+
+  const familyConnectors = React.useMemo(
+    () => connectors.filter((connector) => connector.kind === 'family'),
+    [connectors],
+  );
+
+  const spouseConnectors = React.useMemo(
+    () => connectors.filter((connector) => connector.kind === 'spouse'),
+    [connectors],
   );
 
   const activeGenerationSignature = activeGenerations.join('|');
@@ -997,7 +1020,7 @@ function MobileFamilyHorizontalMapViewComponent({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                {connectors.map((connector) => (
+                {familyConnectors.map((connector) => (
                   <path key={connector.id} d={connectorPath(connector.points)} />
                 ))}
               </g>
@@ -1055,6 +1078,27 @@ function MobileFamilyHorizontalMapViewComponent({
                 />
               </div>
             ))}
+
+            {spouseConnectors.length > 0 && (
+              <svg
+                data-family-map-spouse-connectors="true"
+                className="pointer-events-none absolute inset-0 z-30 h-full w-full"
+                viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+                aria-hidden="true"
+              >
+                <g
+                  fill="none"
+                  stroke="#d9ad82"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {spouseConnectors.map((connector) => (
+                    <path key={connector.id} d={connectorPath(connector.points)} />
+                  ))}
+                </g>
+              </svg>
+            )}
           </div>
         </div>
       </div>
