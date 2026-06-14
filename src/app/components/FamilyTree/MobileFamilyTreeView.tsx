@@ -657,21 +657,21 @@ function AncestorsOverviewScreen({
         <>
           {hasPaternalAncestors && (
             <>
-              <div className="pointer-events-none absolute bottom-0 left-1/4 z-0 h-10 w-px bg-cyan-600" />
-              <div className="pointer-events-none absolute bottom-0 left-0 z-0 h-px w-1/4 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 left-[calc(50%-97.5px)] z-0 h-10 w-px -translate-x-1/2 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 left-0 right-[calc(50%+97.5px)] z-0 h-px bg-cyan-600" />
             </>
           )}
           {hasMaternalAncestors && (
             <>
-              <div className="pointer-events-none absolute bottom-0 right-1/4 z-0 h-10 w-px bg-cyan-600" />
-              <div className="pointer-events-none absolute bottom-0 right-0 z-0 h-px w-1/4 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 right-[calc(50%-97.5px)] z-0 h-10 w-px translate-x-1/2 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 left-[calc(50%+97.5px)] right-0 z-0 h-px bg-cyan-600" />
             </>
           )}
           <div
             data-mobile-tree-scroll
             className="relative z-10 h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
           >
-            <div className="relative mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
+            <div className="relative mx-auto min-h-full w-full max-w-[390px] pb-28 pt-6">
               {hasPaternalAncestors && (
                 <div className="pointer-events-none absolute bottom-0 left-1/4 top-6 z-0 w-px -translate-x-1/2 bg-cyan-600" />
               )}
