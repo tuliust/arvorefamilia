@@ -117,10 +117,10 @@ const GENERATION_LABELS: Record<number, string> = {
 const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
   top: 66,
-  cardWidth: 192,
+  cardWidth: 216,
   cardHeight: 86,
-  rowGap: 6,
-  columnWidth: 264,
+  rowGap: 12,
+  columnWidth: 304,
   minHeight: 560,
   headerTop: 8,
   headerHeight: 26,
@@ -777,6 +777,20 @@ function MobileFamilyHorizontalMapViewComponent({
     return sideInset - activeColumnLeft;
   }, [activeColumnLeft, stageViewportWidth]);
 
+  const swipePreviewOffset = React.useMemo(() => {
+    const maxPreviewOffset = Math.max(56, stageViewportWidth * 0.42);
+
+    if (dragX > 0 && activeIndex < activeGenerations.length - 1) {
+      return -Math.min(dragX, maxPreviewOffset);
+    }
+
+    if (dragX < 0 && activeIndex > 0) {
+      return Math.min(Math.abs(dragX), maxPreviewOffset);
+    }
+
+    return 0;
+  }, [activeGenerations.length, activeIndex, dragX, stageViewportWidth]);
+
   const activeLayouts = React.useMemo(
     () => Array.from(layouts.values())
       .filter((layout) => layout.generation === activeGeneration)
@@ -1079,8 +1093,9 @@ function MobileFamilyHorizontalMapViewComponent({
             style={{
               width: canvasWidth,
               height: activeGenerationHeight,
-              transform: `translateX(${activeSurfaceTranslateX}px) scale(${manualZoom})`,
+              transform: `translateX(${activeSurfaceTranslateX + swipePreviewOffset}px) scale(${manualZoom})`,
               transformOrigin: 'top left',
+              transition: dragX === 0 ? 'transform 220ms ease-out' : 'none',
             }}
           >
             <svg

@@ -1007,3 +1007,27 @@ body.tree-mobile-controls-open {
     line-height: 1 !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: cards mais largos e preview de swipe */
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button {
+    width: 100% !important;
+    height: 5.45rem !important;
+    min-height: 5.45rem !important;
+    border-radius: 1.32rem !important;
+    padding: 0.68rem 0.86rem !important;
+    gap: 0.56rem !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button > span:not([data-family-map-avatar]) > span:first-child {
+    font-size: 0.76rem !important;
+    line-height: 1.05 !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-status-icon + span,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] span[class*="text-cyan-50"] {
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+  }
+}
