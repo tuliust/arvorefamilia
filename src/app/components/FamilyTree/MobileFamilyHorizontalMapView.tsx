@@ -486,8 +486,8 @@ function MobileFamilyHorizontalMapViewComponent({
 
     if (!stage || !column) return;
 
-    const desiredInset = Math.min(110, stage.clientWidth * 0.28);
-    const targetLeft = Math.max(0, column.offsetLeft - desiredInset);
+    const targetInset = Math.max(0, (stage.clientWidth - column.offsetWidth) / 2);
+    const targetLeft = Math.max(0, column.offsetLeft - targetInset);
 
     stage.scrollTo({
       left: targetLeft,
@@ -669,14 +669,14 @@ function MobileFamilyHorizontalMapViewComponent({
 
       <div
         ref={stageScrollRef}
-        className="absolute inset-x-0 bottom-0 top-[48px] overflow-auto overscroll-contain bg-[#f8efe4] [-webkit-overflow-scrolling:touch]"
+        className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+5.65rem)] top-[48px] overflow-x-auto overflow-y-auto overscroll-x-contain overscroll-y-none bg-[#f8efe4] [-webkit-overflow-scrolling:touch]"
         data-mobile-horizontal-stage="true"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative min-h-full w-max px-8 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-8"
+          className="relative w-max pl-[calc((100vw-12rem)/2)] pr-[calc((100vw-12rem)/2)] pb-4 pt-8"
           style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top left' }}
         >
           <div className="relative flex items-start gap-[4.5rem]">

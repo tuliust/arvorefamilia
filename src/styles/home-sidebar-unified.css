@@ -780,3 +780,15 @@ body.tree-mobile-controls-open {
 
    Fim da revisão 2026-06-14: mapa genealógico horizontal mobile em canvas
    -------------------------------------------------------------------------- */
+
+
+/* Ajuste 2026-06-14: centralização e rolagem mobile horizontal */
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-stage="true"] {
+    overscroll-behavior-y: none !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-stage="true"] > div {
+    min-height: auto !important;
+  }
+}
