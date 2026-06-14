@@ -338,3 +338,54 @@ html.is-exporting-family-tree [data-mobile-family-horizontal-root="true"] [data-
   display: none !important;
   visibility: hidden !important;
 }
+
+/* A paleta Visual preserva os gradientes dos cards na horizontal. */
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] {
+  --family-map-card-text: #ffffff;
+  --family-map-card-muted: rgb(236 254 255 / 0.92);
+  --family-map-connector: rgb(103 232 249 / 0.86);
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] {
+  --family-map-card-bg: linear-gradient(180deg, #14b8a6 0%, #0e7490 100%);
+  --family-map-card-border: rgb(165 243 252 / 0.86);
+  background: var(--family-map-card-bg) !important;
+  border-color: var(--family-map-card-border) !important;
+  color: #ffffff !important;
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key="conjuge"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key="conjuge"] {
+  --family-map-card-bg: linear-gradient(180deg, #6ee7b7 0%, #14b8a6 52%, #047857 100%);
+  --family-map-card-border: rgb(167 243 208 / 0.86);
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key="central"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key="central"] {
+  --family-map-card-bg: linear-gradient(180deg, #06b6d4 0%, #1d4ed8 100%);
+  --family-map-card-border: rgb(103 232 249 / 0.86);
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key="pets"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key="pets"] {
+  --family-map-card-bg: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%);
+  --family-map-card-border: rgb(103 232 249 / 0.8);
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key] *,
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] * {
+  color: inherit !important;
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] [data-family-map-avatar="true"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] [data-family-map-avatar="true"] {
+  border-color: rgb(255 255 255 / 0.82) !important;
+  background: rgb(255 255 255 / 0.18) !important;
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path,
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] [data-family-map-connectors="true"] path {
+  stroke: var(--family-map-connector) !important;
+}
