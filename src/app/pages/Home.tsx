@@ -851,7 +851,14 @@ export function Home() {
     [directRelationCounts, renderedDirectRelationCounts, treeViewMode]
   );
   const sidebarFiltersContent = (
-    <section className="tree-sidebar-filter-panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
+    <section
+      className="tree-sidebar-filter-panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]"
+      data-tree-panel-family-map={
+        treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal'
+          ? 'true'
+          : undefined
+      }
+    >
       <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
         {(!isMobile || mobileGroupsOpen) && (
           <div className="tree-sidebar-filter-scroll min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">

@@ -176,7 +176,7 @@ const FAMILY_MAP_LAYOUT_BASE = {
   },
   connectors: {
     color: '#a5eef6',
-    width: 3,
+    width: 2,
     junctionGap: 18,
   },
   areas: {

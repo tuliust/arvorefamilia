@@ -104,7 +104,7 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-familiar-horiz
 [data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__edge-path,
 [data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__edge-interaction {
   stroke: var(--horizontal-map-line) !important;
-  stroke-width: 2.5px !important;
+  stroke-width: 2px !important;
 }
 
 [data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] [data-tree-node-menu="true"] {

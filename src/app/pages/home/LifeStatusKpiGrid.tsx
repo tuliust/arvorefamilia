@@ -103,6 +103,10 @@ export function LifeStatusKpiGrid({
               type="button"
               aria-pressed={item.active}
               onClick={item.onToggle}
+              data-tree-panel-card="true"
+              data-tree-panel-card-type="filter"
+              data-tree-panel-filter-key={item.key}
+              data-family-map-color-key={item.key === 'conjuge' || item.key === 'pets' ? item.key : undefined}
               className={[
                 'family-filter-chip min-h-[clamp(36px,4.9vh,43px)] w-full min-w-0 overflow-hidden rounded-lg border px-1.5 py-1 text-left shadow-sm transition',
                 item.active ? 'opacity-100' : 'grayscale opacity-45',

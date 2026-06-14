@@ -81,6 +81,9 @@ export function DirectRelativeFilterGrid({
             type="button"
             aria-pressed={active}
             onClick={() => onToggle(option.key)}
+            data-tree-panel-card="true"
+            data-tree-panel-card-type="group"
+            data-family-map-color-key={option.colorKey}
             className={[
               compact
                 ? 'family-filter-chip min-h-[clamp(46px,5.8vh,56px)] w-full min-w-0 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-sm transition'

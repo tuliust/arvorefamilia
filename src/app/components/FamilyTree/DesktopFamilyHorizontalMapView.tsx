@@ -1005,7 +1005,7 @@ function DesktopFamilyHorizontalMapViewComponent({
             <g
               fill="none"
               stroke="var(--family-map-connector, #a5eef6)"
-              strokeWidth={3}
+              strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
             >

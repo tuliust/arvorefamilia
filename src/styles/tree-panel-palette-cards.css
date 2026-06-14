@@ -1,0 +1,91 @@
+/* Desktop family-map panel cards mirror the active tree palette. */
+@media (min-width: 768px) {
+  main aside [data-tree-panel-family-map="true"] [data-tree-panel-card="true"] {
+    background: var(--family-map-card-bg, var(--tree-palette-card-central, #ffffff)) !important;
+    border-color: var(--family-map-card-border, var(--tree-palette-group-border, #cbd5e1)) !important;
+    color: var(--family-map-card-text, var(--tree-palette-text-primary, #111827)) !important;
+  }
+
+  main aside [data-tree-panel-family-map="true"] [data-tree-panel-card="true"] * {
+    color: inherit !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-card="true"][data-family-map-color-key] {
+    --family-map-card-bg: linear-gradient(180deg, #14b8a6 0%, #0e7490 100%) !important;
+    --family-map-card-border: rgb(165 243 252 / 0.86) !important;
+    --family-map-card-text: #ffffff !important;
+    --family-map-card-muted: rgb(236 254 255 / 0.92) !important;
+    background: linear-gradient(180deg, #14b8a6 0%, #0e7490 100%) !important;
+    border-color: rgb(165 243 252 / 0.86) !important;
+    color: #ffffff !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-family-map-color-key="conjuge"] {
+    --family-map-card-bg: linear-gradient(180deg, #6ee7b7 0%, #14b8a6 52%, #047857 100%) !important;
+    --family-map-card-border: rgb(167 243 208 / 0.86) !important;
+    background: linear-gradient(180deg, #6ee7b7 0%, #14b8a6 52%, #047857 100%) !important;
+    border-color: rgb(167 243 208 / 0.86) !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-family-map-color-key="central"] {
+    --family-map-card-bg: linear-gradient(180deg, #06b6d4 0%, #1d4ed8 100%) !important;
+    --family-map-card-border: rgb(103 232 249 / 0.86) !important;
+    background: linear-gradient(180deg, #06b6d4 0%, #1d4ed8 100%) !important;
+    border-color: rgb(103 232 249 / 0.86) !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-family-map-color-key="pets"] {
+    --family-map-card-bg: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%) !important;
+    --family-map-card-border: rgb(103 232 249 / 0.8) !important;
+    background: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%) !important;
+    border-color: rgb(103 232 249 / 0.8) !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="vivos"] {
+    background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%) !important;
+    border-color: #0f766e !important;
+    color: #ffffff !important;
+  }
+
+  html[data-tree-color-palette="visual"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="falecidos"] {
+    background: linear-gradient(180deg, #94a3b8 0%, #475569 100%) !important;
+    border-color: #64748b !important;
+    color: #ffffff !important;
+  }
+
+  html[data-tree-color-palette="brown"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="vivos"] {
+    background: linear-gradient(135deg, #d9c7ad, #66745b) !important;
+    border-color: #66745b !important;
+    color: #ffffff !important;
+  }
+
+  html[data-tree-color-palette="brown"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="falecidos"] {
+    background: linear-gradient(135deg, #eadcc8, #a9825a) !important;
+    border-color: #a9825a !important;
+    color: #2f2a25 !important;
+  }
+
+  html[data-tree-color-palette="orange"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="vivos"] {
+    background: linear-gradient(135deg, #b9d783, #a9cb72) !important;
+    border-color: #a9cb72 !important;
+    color: #111827 !important;
+  }
+
+  html[data-tree-color-palette="orange"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="falecidos"] {
+    background: linear-gradient(135deg, #f1c2a5, #eab08f) !important;
+    border-color: #eab08f !important;
+    color: #111827 !important;
+  }
+
+  html[data-tree-color-palette="white"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="vivos"] {
+    background: var(--tree-palette-card-irmaos, #a9cb72) !important;
+    border-color: var(--tree-palette-border-irmaos, #a9cb72) !important;
+    color: #111827 !important;
+  }
+
+  html[data-tree-color-palette="white"] main aside [data-tree-panel-family-map="true"] [data-tree-panel-filter-key="falecidos"] {
+    background: var(--tree-palette-card-sobrinhos, #b8cec2) !important;
+    border-color: var(--tree-palette-border-sobrinhos, #b8cec2) !important;
+    color: #111827 !important;
+  }
+}
