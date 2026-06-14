@@ -295,3 +295,79 @@
     transform-origin: center top !important;
   }
 }
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-13: telas mobile dos Mapas Familiares
+   --------------------------------------------------------------------------
+   Estas regras são escopadas aos componentes mobile em HTML/CSS/SVG e não
+   devem afetar as views ReactFlow de /genealogia e /visao-completa.
+*/
+
+@media (max-width: 767px) {
+  [data-mobile-family-tree-root="true"],
+  [data-mobile-family-tree-stage="true"],
+  [data-mobile-family-tree-track="true"] {
+    overflow: visible;
+  }
+
+  [data-mobile-family-tree-root="true"] {
+    height: 100%;
+    min-width: 0;
+    background: linear-gradient(180deg, #ecfeff 0%, #f8fafc 34%, #f8fafc 100%);
+    touch-action: pan-y;
+  }
+
+  [data-mobile-family-tree-track="true"] {
+    will-change: transform;
+    transform-style: preserve-3d;
+  }
+
+  [data-mobile-family-tree-screen="true"] {
+    position: relative;
+    overflow: visible;
+  }
+
+  [data-mobile-family-tree-screen-scroll="true"] {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-mobile-family-tree-connector="true"] {
+    pointer-events: none;
+    background-color: rgb(8 145 178 / 0.88);
+  }
+
+  [data-mobile-family-horizontal-root="true"] {
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    background: transparent !important;
+  }
+
+  [data-mobile-family-horizontal-track="true"] {
+    height: 100%;
+    will-change: transform;
+    transform-style: preserve-3d;
+  }
+
+  [data-mobile-family-horizontal-screen="true"] {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-mobile-family-horizontal-root="true"] [data-family-map-connectors="true"] {
+    overflow: visible;
+  }
+
+  [data-mobile-family-horizontal-root="true"] .family-map-avatar-icon,
+  [data-mobile-family-horizontal-root="true"] .family-map-status-icon,
+  [data-mobile-family-tree-root="true"] .family-map-avatar-icon,
+  [data-mobile-family-tree-root="true"] .family-map-status-icon {
+    color: currentColor !important;
+    filter: none;
+  }
+}

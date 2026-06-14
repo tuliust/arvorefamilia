@@ -145,6 +145,42 @@ type FamilyMapColorKey =
   | 'netos'
   | 'pets';
 
+export const FAMILY_MAP_AVATAR_SIZES = {
+  horizontal: {
+    avatar: 'h-[46px] w-[46px]',
+    icon: 'h-6 w-6',
+  },
+  mobileDefault: {
+    avatar: 'h-[64px] w-[64px]',
+    icon: 'h-7 w-7',
+  },
+  mobileCentralCompact: {
+    avatar: 'h-[66px] w-[66px]',
+    icon: 'h-8 w-8',
+  },
+  mobileCentral: {
+    avatar: 'h-[86px] w-[86px]',
+    icon: 'h-10 w-10',
+  },
+  mobileSibling: {
+    avatar: 'h-[50px] w-[50px]',
+    icon: 'h-6 w-6',
+  },
+  mobileAncestor: {
+    avatar: 'h-[34px] w-[34px] border-2',
+    icon: 'h-4 w-4',
+  },
+  mobileMini: {
+    avatar: 'h-[36px] w-[36px] border-2',
+    icon: 'h-5 w-5',
+  },
+  mobilePet: {
+    avatar: 'h-[38px] w-[38px] border-2',
+    icon: 'h-5 w-5',
+  },
+} as const;
+
+
 function normalizeColorKeyText(value?: string) {
   return (value ?? '')
     .normalize('NFD')
@@ -299,7 +335,7 @@ export function VisualPersonCard({
             : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700',
         ].join(' ')}
       >
-        <VisualPersonAvatar person={person} pet={pet} className="h-[46px] w-[46px]" iconClassName="h-6 w-6" />
+        <VisualPersonAvatar person={person} pet={pet} className={FAMILY_MAP_AVATAR_SIZES.horizontal.avatar} iconClassName={FAMILY_MAP_AVATAR_SIZES.horizontal.icon} />
         <span className="min-w-0 flex-1">
           <span className="block truncate whitespace-nowrap text-[11px] font-extrabold uppercase leading-[1.18]">
             {displayName}

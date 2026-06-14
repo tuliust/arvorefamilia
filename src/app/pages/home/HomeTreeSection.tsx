@@ -4,6 +4,7 @@ import { useLocation } from 'react-router';
 import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
 import { DesktopFamilyHorizontalMapView } from '../../components/FamilyTree/DesktopFamilyHorizontalMapView';
+import { MobileFamilyHorizontalMapView } from '../../components/FamilyTree/MobileFamilyHorizontalMapView';
 import { MobileFamilyTreeView } from '../../components/FamilyTree/MobileFamilyTreeView';
 import type {
   DirectRelativeFilters,
@@ -506,6 +507,18 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           genealogyFilters={genealogyFilters}
           visualLineFilters={visualLineFilters}
+          layoutRevision={effectiveTreeLayoutRevision}
+          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
+        />
+      ) : canRenderTree && isMobile && treeViewMode === 'mapa-familiar-horizontal' ? (
+        <MobileFamilyHorizontalMapView
+          ref={familyTreeRef}
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          directRelativeFilters={directRelativeFilters}
+          onPersonClick={onPersonClick}
           layoutRevision={effectiveTreeLayoutRevision}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />

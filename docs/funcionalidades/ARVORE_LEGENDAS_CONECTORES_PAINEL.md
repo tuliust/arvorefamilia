@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
 > Tipo: documentação funcional/técnica específica da árvore.  
-> Status: revisado contra a estrutura atual de `Home.tsx`, `HomeTreeSection.tsx`, `SidebarPanelTabs.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `TreeAreaSelectionOverlay.tsx`, `FamilyTreeVisualCards.tsx`, `treeExport.ts` e CSS complementar.
+> Status: revisado contra a estrutura atual de `Home.tsx`, `HomeTreeSection.tsx`, `HomeMobileNav.tsx`, `SidebarPanelTabs.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `MobileFamilyHorizontalMapView.tsx`, `TreeAreaSelectionOverlay.tsx`, `FamilyTreeVisualCards.tsx`, `treeExport.ts` e CSS complementar.
 
 ---
 
@@ -12,7 +12,7 @@
 Este documento consolida o comportamento dos controles visuais da árvore:
 
 - painel lateral desktop;
-- painel inferior mobile das rotas de Mapa Familiar;
+- painel mobile modal das rotas de Mapa Familiar;
 - filtros de grupos;
 - filtros de status;
 - regras de `Cônjuges`;
@@ -101,23 +101,30 @@ Nas rotas:
 /mapa-familiar-horizontal
 ```
 
-o botão `Controles` é controlado por `HomeMobileNav` e abre o painel inferior de `Home.tsx`, reaproveitando `sidebarPanelContent`.
+o botão `Controles` é controlado por `HomeMobileNav` e abre o painel mobile de `Home.tsx`, reaproveitando `sidebarPanelContent`.
 
-Regras atuais:
+Contrato atual:
 
 - não existe sidebar lateral;
 - o conteúdo do painel mobile usa os mesmos filtros e ações do desktop;
-- o painel inferior tem rolagem interna;
+- o painel mobile deve abrir como modal acima do header, do bottom nav e dos botões flutuantes;
+- o overlay cobre a tela inteira e fecha o modal ao toque;
+- o conteúdo interno tem rolagem própria;
+- a tecla `Escape` fecha o modal quando disponível;
+- o body deve bloquear rolagem enquanto o modal estiver aberto;
 - `MobileTreeControlsPortal` retorna `null` nessas duas rotas para evitar duplicidade;
 - o painel, bottom nav, botões flutuantes e overlays têm marcadores/estilos para não entrar na exportação.
 
-Observação:
+Regras de camada:
 
 ```txt
-O painel mobile ainda é um bottom sheet, não um modal centralizado pleno.
+Painel mobile > header > barra superior da árvore > bottom nav > conteúdo da árvore
 ```
 
-Se o comportamento for alterado para modal em futura frente, este documento deve ser atualizado.
+Regras de exportação:
+
+- o painel mobile deve usar `data-tree-export-ignore="true"`;
+- o overlay e botões do painel não devem entrar em PNG, PDF, impressão ou seleção de área.
 
 ---
 
@@ -280,6 +287,33 @@ Características:
 - colunas vazias são omitidas e conectores recalculados.
 
 ---
+
+### 8.5 Mapa Familiar Horizontal mobile
+
+Usado em:
+
+```txt
+/mapa-familiar-horizontal mobile
+```
+
+Sistema:
+
+```txt
+MobileFamilyHorizontalMapView + SVG/HTML próprios
+```
+
+Características:
+
+- uma geração visível por tela;
+- track horizontal paginado;
+- swipe lateral para trocar geração;
+- scroll vertical independente dentro de cada geração;
+- conectores devem acompanhar o track, não telas isoladas;
+- gerações sem cards visíveis não devem gerar tela vazia;
+- filtros diretos, filtros de status, cônjuges e pets continuam compartilhados com o painel.
+
+A barra `Paterno | Central | Materno` não pertence à horizontal mobile.
+
 
 ## 9. `Destacar`
 
@@ -454,7 +488,9 @@ Devem ser ignorados por `treeExport.ts` e/ou CSS:
 - área selecionada com título;
 - loading não some cedo demais;
 - avatares/silhuetas não viram quadrados;
-- painel/overlays não aparecem no artefato.
+- painel/overlays não aparecem no artefato;
+- `/mapa-familiar-horizontal` mobile exibe uma geração por tela;
+- swipe lateral muda geração sem quebrar scroll vertical.
 
 ---
 
@@ -468,4 +504,7 @@ Não fazer:
 - tratar `restore-view` como `zoom-out`;
 - usar `.react-flow` como alvo de exportação do Mapa Familiar;
 - remover `netos` dos cônjuges filtráveis;
-- colocar `Cônjuges` de volta no bloco de grupos.
+- colocar `Cônjuges` de volta no bloco de grupos;
+- reativar `MobileTreeControlsPortal` em `/mapa-familiar` ou `/mapa-familiar-horizontal`;
+- reintroduzir a barra `Paterno | Central | Materno` na horizontal mobile;
+- usar z-index inferior ao header/bottom nav no painel mobile.

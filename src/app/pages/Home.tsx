@@ -249,6 +249,26 @@ export function Home() {
   }, [isMobile]);
 
   useEffect(() => {
+    if (!isMobile || !legendOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLegendOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobile, legendOpen]);
+
+  useEffect(() => {
     setTreeLayoutRevision((revision) => revision + 1);
 
     const timers = [0, 120, 240].map((delay) =>
@@ -781,6 +801,7 @@ export function Home() {
     if (
       treeViewMode !== 'minha-arvore' &&
       treeViewMode !== 'mapa-familiar' &&
+      treeViewMode !== 'mapa-familiar-horizontal' &&
       treeViewMode !== 'visao-completa'
     ) {
       return pessoas;
@@ -908,6 +929,9 @@ export function Home() {
     () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
     [pessoasVisiveisPorStatus, relacionamentos]
   );
+  const usesDirectTreeLegendControls = treeViewMode === 'minha-arvore'
+    || treeViewMode === 'mapa-familiar'
+    || treeViewMode === 'mapa-familiar-horizontal';
   const sidebarPanelContent = (
     <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
       {activeSidebarPanel === 'filters' && (
@@ -948,12 +972,12 @@ export function Home() {
             showTitle
             personFilters={personFilters}
             edgeFilters={edgeFilters}
-            directRelativeFilters={treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar' ? directRelativeFilters : undefined}
+            directRelativeFilters={usesDirectTreeLegendControls ? directRelativeFilters : undefined}
             onTogglePersonFilter={togglePersonFilter}
             onToggleEdgeFilter={toggleFilter}
             onToggleAllEdgeFilters={toggleAllEdgeFilters}
             onToggleParentChildFilter={toggleParentChildFilters}
-            onToggleDirectRelativeFilter={treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar' ? toggleDirectRelativeFilter : undefined}
+            onToggleDirectRelativeFilter={usesDirectTreeLegendControls ? toggleDirectRelativeFilter : undefined}
             visualLineFilters={visualLineFilters}
             onToggleVisualLineFilter={toggleVisualLineFilter}
             onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
@@ -1307,14 +1331,21 @@ export function Home() {
       )}
 
       {isMobile && legendOpen && (
-        <>
+        <div
+          className="tree-mobile-controls-modal fixed inset-0 z-[11000] md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Controles da árvore"
+          data-tree-export-ignore="true"
+        >
           <button
             type="button"
-            className="fixed inset-0 z-30 bg-black/15"
+            className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"
             onClick={() => setLegendOpen(false)}
             aria-label="Fechar painel"
+            data-tree-export-ignore="true"
           />
-          <section className="tree-mobile-controls-panel fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-40 flex max-h-[min(82vh,calc(100vh-7rem))] flex-col overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl">
+          <section className="tree-mobile-controls-panel absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] top-[calc(env(safe-area-inset-top,0px)+0.75rem)] flex min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
             <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <SidebarPanelTabs
@@ -1348,7 +1379,7 @@ export function Home() {
               {sidebarPanelContent}
             </div>
           </section>
-        </>
+        </div>
       )}
 
       <Dialog

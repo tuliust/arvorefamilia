@@ -218,4 +218,33 @@ html.is-exporting-family-tree [data-family-map-export-root="true"] [data-tree-ex
 [data-family-map-export-root="true"] [data-family-map-connectors="true"] {
   overflow: visible;
 }
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-13: não forçar fundo no Mapa Familiar Horizontal
+   --------------------------------------------------------------------------
+   O Mapa Familiar Vertical pode continuar usando --family-map-screen-bg por
+   paleta. A horizontal, incluindo a versão mobile paginada por geração, deve
+   preservar fundo transparente atrás dos cards.
+*/
 
+section:has([data-family-map-horizontal-root="true"]),
+section:has([data-mobile-family-horizontal-root="true"]),
+section:has([data-family-map-horizontal-root="true"]) > div:has(> [data-family-map-horizontal-root="true"]),
+section:has([data-mobile-family-horizontal-root="true"]) > div:has(> [data-mobile-family-horizontal-root="true"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+[data-family-map-horizontal-root="true"],
+[data-mobile-family-horizontal-root="true"] {
+  --family-map-canvas-bg: transparent;
+  background: transparent !important;
+}
+
+html[data-tree-color-palette="white"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="brown"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"],
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"],
+html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"] {
+  background: transparent !important;
+}

@@ -189,7 +189,7 @@ export function TreeLegend({
     const key = directRelativeKeyByLegendLabel[label];
 
     if (!key || key === 'central') return {};
-    if (viewMode !== 'minha-arvore' && viewMode !== 'mapa-familiar') return {};
+    if (viewMode !== 'minha-arvore' && viewMode !== 'mapa-familiar' && viewMode !== 'mapa-familiar-horizontal') return {};
     if (!directRelativeFilters || !onToggleDirectRelativeFilter) return {};
 
     const active = directRelativeFilters[key];
@@ -211,7 +211,7 @@ export function TreeLegend({
           <div className="space-y-[clamp(0.25rem,0.75vh,0.45rem)]">
             <h2 className="text-[clamp(14px,2.1vh,16px)] font-semibold leading-tight text-gray-900">Legendas visuais</h2>
             <p className="text-[clamp(11px,1.6vh,13px)] leading-snug text-gray-500">
-              Clique nos botões para ativar ou desativar linhas e destaques da árvore.
+              Clique nos botões para ativar ou desativar linhas, destaques e grupos da árvore.
             </p>
           </div>
         )}
@@ -315,7 +315,7 @@ export function TreeLegend({
         <div className="space-y-1">
           <h2 className="text-sm font-semibold text-gray-900">Legendas visuais</h2>
           <p className="text-xs leading-snug text-gray-500">
-            Clique nos botões para ativar ou desativar linhas e destaques da árvore.
+            Clique nos botões para ativar ou desativar linhas, destaques e grupos da árvore.
           </p>
         </div>
       )}

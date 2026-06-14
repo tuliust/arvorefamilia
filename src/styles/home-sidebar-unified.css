@@ -1,11 +1,9 @@
 /* Painel lateral unificado da árvore: controles compactos, responsivos e sem barras internas. */
-main aside button[aria-label="Ações da árvore"],
-section.fixed button[aria-label="Ações da árvore"] {
+main aside button[aria-label="Ações da árvore"] {
   display: none !important;
 }
 
-main aside,
-section.fixed {
+main aside {
   overflow: hidden;
 }
 
@@ -312,4 +310,119 @@ html.is-exporting-family-tree [data-tree-export-loading="true"] {
 [data-family-map-export-root="true"] [data-tree-export-loading="true"] {
   contain: layout paint;
 }
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-13: modal mobile de controles da árvore
+   --------------------------------------------------------------------------
+   O painel mobile de /mapa-familiar e /mapa-familiar-horizontal não deve ser
+   tratado como sidebar nem como bottom sheet atrás do header. Ele precisa ficar
+   acima do header, bottom nav e botões flutuantes, mantendo scroll interno.
+*/
 
+html.tree-mobile-controls-open,
+body.tree-mobile-controls-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+.tree-mobile-controls-modal-root,
+.tree-mobile-controls-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+}
+
+.tree-mobile-controls-modal-root {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.tree-mobile-controls-modal-overlay {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.tree-mobile-controls-panel {
+  position: relative;
+  z-index: 11001;
+  display: flex;
+  width: min(100%, 30rem);
+  max-height: calc(100dvh - max(1.5rem, env(safe-area-inset-top, 0px)) - max(1.5rem, env(safe-area-inset-bottom, 0px)));
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(226 232 240);
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 28px 72px rgba(15, 23, 42, 0.28);
+  pointer-events: auto;
+}
+
+.tree-mobile-controls-panel-header {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgb(241 245 249);
+  padding: 0.75rem 0.85rem;
+}
+
+.tree-mobile-controls-panel .tree-panel-control-stack {
+  width: 100%;
+}
+
+.tree-mobile-controls-panel .tree-control-panel {
+  overflow: visible;
+}
+
+.tree-mobile-controls-panel button[aria-label="Ações da árvore"] {
+  display: inline-flex !important;
+}
+
+.tree-mobile-controls-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  padding-bottom: max(0.9rem, env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+
+.tree-mobile-controls-panel .family-filter-chip {
+  min-height: 3.6rem;
+}
+
+@media (max-width: 767px) {
+  .tree-mobile-controls-modal-root {
+    align-items: stretch;
+  }
+
+  .tree-mobile-controls-panel {
+    width: 100%;
+    max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    border-radius: 1.15rem;
+  }
+
+  .tree-mobile-controls-panel .tree-control-section > div {
+    padding-bottom: 0.7rem !important;
+  }
+
+  .tree-mobile-controls-panel .tree-control-section:last-child {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-height: 680px) and (max-width: 767px) {
+  .tree-mobile-controls-modal-root {
+    padding-top: max(0.45rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(0.45rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .tree-mobile-controls-panel {
+    max-height: calc(100dvh - 0.9rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+}

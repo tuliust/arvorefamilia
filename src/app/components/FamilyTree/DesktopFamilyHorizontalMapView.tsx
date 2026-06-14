@@ -123,6 +123,7 @@ const CANVAS = {
 };
 
 const GENERATIONS = [1, 2, 3, 4, 5, 6] as const;
+const STABLE_SCALE_RECALCULATION_DELAYS = [0, 120, 320] as const;
 
 const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
@@ -763,25 +764,66 @@ function DesktopFamilyHorizontalMapViewComponent({
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
 
+    let animationFrame = 0;
+    const timers: number[] = [];
+
     const updateScale = () => {
+      if (!viewportRef.current) return;
+
       const widthScale = viewport.clientWidth / canvasWidth;
       const heightScale = viewport.clientHeight / CANVAS.minHeight;
-      setResponsiveScale(Math.min(1, Math.max(CANVAS.minScale, Math.min(widthScale, heightScale))));
+      const nextScale = Math.min(1, Math.max(CANVAS.minScale, Math.min(widthScale, heightScale)));
+
+      setResponsiveScale((currentScale) => (
+        Math.abs(currentScale - nextScale) < 0.001 ? currentScale : nextScale
+      ));
     };
 
-    const observer = new ResizeObserver(updateScale);
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(updateScale);
+    };
+
+    const observer = new ResizeObserver(scheduleUpdate);
     observer.observe(viewport);
-    updateScale();
-    return () => observer.disconnect();
+    window.addEventListener('resize', scheduleUpdate);
+    window.visualViewport?.addEventListener('resize', scheduleUpdate);
+
+    STABLE_SCALE_RECALCULATION_DELAYS.forEach((delay) => {
+      timers.push(window.setTimeout(scheduleUpdate, delay));
+    });
+
+    scheduleUpdate();
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      timers.forEach((timer) => window.clearTimeout(timer));
+      observer.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+      window.visualViewport?.removeEventListener('resize', scheduleUpdate);
+    };
   }, [canvasHeight, canvasWidth, layoutRevision]);
 
   React.useEffect(() => {
     setManualZoom(1);
-    const viewport = viewportRef.current;
-    if (viewport) {
+
+    const resetViewportPosition = () => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+
       viewport.scrollLeft = 0;
       viewport.scrollTop = 0;
-    }
+    };
+
+    const timers = STABLE_SCALE_RECALCULATION_DELAYS.map((delay) =>
+      window.setTimeout(resetViewportPosition, delay)
+    );
+
+    window.requestAnimationFrame(resetViewportPosition);
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
   }, [centralPersonId, layoutRevision]);
 
   React.useEffect(() => {
@@ -929,8 +971,8 @@ function DesktopFamilyHorizontalMapViewComponent({
       ref={viewportRef}
       onWheel={handleWheel}
       onScroll={handleScroll}
-      className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain pt-[76px]"
-      style={{ backgroundColor: '#ecfeff' }}
+      data-family-map-horizontal-viewport="true"
+      className="absolute inset-x-0 bottom-0 top-0 isolate overflow-auto overscroll-contain bg-transparent pt-[76px]"
     >
       <div
         ref={exportRootRef}

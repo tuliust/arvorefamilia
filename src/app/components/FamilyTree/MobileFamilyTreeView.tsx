@@ -4,6 +4,7 @@ import { Cross, Star, UserRound } from 'lucide-react';
 import type { Pessoa, Relacionamento } from '../../types';
 import type { FamilyTreeActions } from './FamilyTree';
 import {
+  FAMILY_MAP_AVATAR_SIZES,
   getVisualPersonCardData,
   VisualPersonAvatar as PersonAvatar,
 } from './FamilyTreeVisualCards';
@@ -71,6 +72,21 @@ const TABS: Array<{ id: MobileTreeTab; label: string }> = [
   { id: 'maternal', label: 'Materno' },
 ];
 
+const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
+  pais: 0,
+  avos: 0,
+  bisavos: 0,
+  tataravos: 0,
+  conjuge: 0,
+  filhos: 0,
+  netos: 0,
+  irmaos: 0,
+  sobrinhos: 0,
+  tios: 0,
+  primos: 0,
+  pets: 0,
+};
+
 const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
   ancestors: { column: 1, row: 0 },
   'paternal-uncles': { column: 0, row: 1 },
@@ -129,12 +145,12 @@ function VitalLines({
   return (
     <>
       <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-        <Star className={`${iconSize} shrink-0 fill-current`} aria-hidden="true" />
+        <Star className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`} aria-hidden="true" />
         <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
       </span>
       {showDeathLine && (
         <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-          <Cross className={`${iconSize} shrink-0`} aria-hidden="true" />
+          <Cross className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`} aria-hidden="true" />
           <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
         </span>
       )}
@@ -192,8 +208,8 @@ function PersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className={central ? 'h-[66px] w-[66px]' : 'h-[64px] w-[64px]'}
-        iconClassName={central ? 'h-8 w-8' : 'h-7 w-7'}
+        className={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.avatar : FAMILY_MAP_AVATAR_SIZES.mobileDefault.avatar}
+        iconClassName={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.icon : FAMILY_MAP_AVATAR_SIZES.mobileDefault.icon}
       />
       <span className="mt-1.5 w-full truncate whitespace-nowrap py-px text-[12px] font-extrabold uppercase leading-[1.2]">
         {displayName}
@@ -221,8 +237,8 @@ function MainPersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[86px] w-[86px]"
-        iconClassName="h-10 w-10"
+        className={FAMILY_MAP_AVATAR_SIZES.mobileCentral.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileCentral.icon}
       />
       <span className="mt-3 w-full truncate whitespace-nowrap py-px text-[15px] font-extrabold uppercase leading-[1.2]">
         {displayName}
@@ -255,8 +271,8 @@ function SiblingPersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[50px] w-[50px]"
-        iconClassName="h-6 w-6"
+        className={FAMILY_MAP_AVATAR_SIZES.mobileSibling.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileSibling.icon}
       />
       <span className="flex min-w-0 flex-1 flex-col justify-center">
         <span
@@ -295,8 +311,8 @@ function AncestorPersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[34px] w-[34px] border-2"
-        iconClassName="h-4 w-4"
+        className={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.icon}
       />
       <span className="flex min-w-0 flex-1 flex-col justify-center">
         <span
@@ -335,8 +351,8 @@ function MiniPersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[36px] w-[36px] border-2"
-        iconClassName="h-5 w-5"
+        className={FAMILY_MAP_AVATAR_SIZES.mobileMini.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileMini.icon}
       />
       <span
         className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
@@ -372,8 +388,8 @@ function PetPersonCard({
       <PersonAvatar
         person={person}
         pet={pet}
-        className="h-[38px] w-[38px] border-2"
-        iconClassName="h-5 w-5"
+        className={FAMILY_MAP_AVATAR_SIZES.mobilePet.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobilePet.icon}
       />
       <span
         className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
@@ -530,7 +546,7 @@ function VerticalRelativeScreen({
   return (
     <div className={[
       'relative h-full w-full shrink-0 snap-center px-4',
-      isCousinsScreen ? 'overflow-y-auto overflow-x-hidden overscroll-y-auto' : 'overflow-hidden',
+      isCousinsScreen ? 'overflow-y-auto overflow-x-hidden overscroll-y-auto' : 'overflow-visible',
     ].join(' ')}
     data-mobile-tree-scroll={isCousinsScreen ? true : undefined}
     >
@@ -629,7 +645,7 @@ function AncestorsOverviewScreen({
       {!hasAncestors ? (
         <div
           data-mobile-tree-scroll
-          className="h-full overflow-y-auto overflow-x-hidden px-4 overscroll-y-contain"
+          className="h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
         >
           <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[380px] items-center pb-28 pt-10">
             <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
@@ -653,7 +669,7 @@ function AncestorsOverviewScreen({
           )}
           <div
             data-mobile-tree-scroll
-            className="relative z-10 h-full overflow-y-auto overflow-x-hidden px-4 overscroll-y-contain"
+            className="relative z-10 h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
           >
             <div className="relative mx-auto min-h-full w-full max-w-[398px] pb-28 pt-6">
               {hasPaternalAncestors && (
@@ -695,6 +711,7 @@ export function MobileFamilyTreeView({
   visiblePersonIds,
   onPersonClick,
   layoutRevision,
+  onDirectRelationRenderedCounts,
 }: MobileFamilyTreeViewProps) {
   const [activeScreen, setActiveScreen] = React.useState<MobileTreeScreen>('core');
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
@@ -860,6 +877,47 @@ export function MobileFamilyTreeView({
   const visibleChildren = filterVisible(model.children);
   const visiblePets = filterVisible(model.pets);
   const visibleGrandchildren = filterVisible(model.grandchildren);
+  React.useEffect(() => {
+    if (!onDirectRelationRenderedCounts) return;
+
+    onDirectRelationRenderedCounts({
+      ...EMPTY_COUNTS,
+      pais: Number(isVisible(model.father)) + Number(isVisible(model.mother)),
+      avos: visiblePaternal.grandparents.length + visibleMaternal.grandparents.length,
+      bisavos: visiblePaternal.greatGrandparents.length + visibleMaternal.greatGrandparents.length,
+      tataravos: visiblePaternal.greatGreatGrandparents.length + visibleMaternal.greatGreatGrandparents.length,
+      conjuge: visibleSpouses.length,
+      filhos: visibleChildren.length,
+      netos: visibleGrandchildren.length,
+      irmaos: visibleSiblings.length,
+      sobrinhos: visibleNephews.length,
+      tios: visiblePaternal.uncles.length + visibleMaternal.uncles.length,
+      primos: visiblePaternal.cousins.length + visibleMaternal.cousins.length,
+      pets: visiblePets.length,
+    });
+  }, [
+    isVisible,
+    model.father,
+    model.mother,
+    onDirectRelationRenderedCounts,
+    visibleChildren.length,
+    visibleGrandchildren.length,
+    visibleMaternal.cousins.length,
+    visibleMaternal.greatGrandparents.length,
+    visibleMaternal.greatGreatGrandparents.length,
+    visibleMaternal.grandparents.length,
+    visibleMaternal.uncles.length,
+    visibleNephews.length,
+    visiblePaternal.cousins.length,
+    visiblePaternal.greatGrandparents.length,
+    visiblePaternal.greatGreatGrandparents.length,
+    visiblePaternal.grandparents.length,
+    visiblePaternal.uncles.length,
+    visiblePets.length,
+    visibleSiblings.length,
+    visibleSpouses.length,
+  ]);
+
   const paternalAncestorGroups: AncestorSubgroup[] = [
     { id: 'paternal-great-great-grandparents', title: 'Tataravós paternos', people: visiblePaternal.greatGreatGrandparents },
     { id: 'paternal-great-grandparents', title: 'Bisavós paternos', people: visiblePaternal.greatGrandparents },
@@ -876,7 +934,7 @@ export function MobileFamilyTreeView({
   const activePosition = SCREEN_POSITIONS[activeScreen];
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]">
+    <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]" data-mobile-family-tree-root="true">
       <nav
         aria-label="Visualizações da árvore"
         className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur"
@@ -916,15 +974,16 @@ export function MobileFamilyTreeView({
         onTouchEnd={handleTouchEnd}
       >
         <div
+          data-mobile-family-tree-stage="true"
           className={[
-            'grid h-[300%] w-[300%] grid-cols-3 grid-rows-3',
+            'grid h-[300%] w-[300%] grid-cols-3 grid-rows-3 overflow-visible',
             isDraggingScreen ? '' : 'transition-transform duration-300 ease-out',
           ].join(' ')}
           style={{
             transform: `translate3d(calc(${-activePosition.column * (100 / 3)}% + ${dragOffset.x}px), calc(${-activePosition.row * (100 / 3)}% + ${dragOffset.y}px), 0)`,
           }}
         >
-          <div className="col-start-2 row-start-1 h-full w-full overflow-hidden">
+          <div className="col-start-2 row-start-1 h-full w-full overflow-visible" data-mobile-family-tree-screen="ancestors">
             <AncestorsOverviewScreen
               paternalGroups={paternalAncestorGroups}
               maternalGroups={maternalAncestorGroups}
@@ -932,7 +991,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-1 row-start-2 h-full w-full overflow-hidden">
+          <div className="col-start-1 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="paternal-uncles">
             <VerticalRelativeScreen
               title="Tios Paternos"
               people={visiblePaternal.uncles}
@@ -947,10 +1006,10 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="relative col-start-2 row-start-2 h-full w-full overflow-hidden">
+          <div className="relative col-start-2 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="core">
             <div
               data-mobile-tree-scroll
-              className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain"
+              className="h-full overflow-y-auto overflow-x-visible overscroll-y-contain"
             >
               <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
                 <div className="relative mx-auto w-full max-w-[390px]">
@@ -1066,7 +1125,7 @@ export function MobileFamilyTreeView({
             </div>
           </div>
 
-          <div className="col-start-3 row-start-2 h-full w-full overflow-hidden">
+          <div className="col-start-3 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="maternal-uncles">
             <VerticalRelativeScreen
               title="Tios Maternos"
               people={visibleMaternal.uncles}
@@ -1081,7 +1140,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-1 row-start-3 h-full w-full overflow-hidden">
+          <div className="col-start-1 row-start-3 h-full w-full overflow-visible" data-mobile-family-tree-screen="paternal-cousins">
             <VerticalRelativeScreen
               title="Primos Paternos"
               people={visiblePaternal.cousins}
@@ -1095,7 +1154,7 @@ export function MobileFamilyTreeView({
             />
           </div>
 
-          <div className="col-start-3 row-start-3 h-full w-full overflow-hidden">
+          <div className="col-start-3 row-start-3 h-full w-full overflow-visible" data-mobile-family-tree-screen="maternal-cousins">
             <VerticalRelativeScreen
               title="Primos Maternos"
               people={visibleMaternal.cousins}

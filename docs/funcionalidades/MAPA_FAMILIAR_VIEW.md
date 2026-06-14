@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação técnica/funcional das views **Mapa Familiar Vertical** e **Mapa Familiar Horizontal**.  
-> Status: revisado contra a estrutura atual das views, exportação, filtros, destaques, paletas, conectores e mobile.
+> Status: revisado contra a estrutura atual das views, exportação, filtros, destaques, paletas, conectores, painel mobile modal e navegação mobile da horizontal por telas de geração.
 
 ---
 
@@ -27,7 +27,9 @@ Use este arquivo para manter:
 - conectores SVG;
 - paletas e cards;
 - exportação;
-- mobile;
+- mobile 320px, 375px, 390px e 430px;
+- painel de controles mobile acima do header e bottom nav;
+- swipe da horizontal mobile por geração;
 - QA e anti-regressões.
 
 ---
@@ -39,7 +41,7 @@ O Mapa Familiar é a experiência visual da família direta.
 | View | Rota | Componente |
 |---|---|---|
 | Mapa Familiar Vertical | `/mapa-familiar` | `DesktopFamilyMapView` no desktop/tablet; `MobileFamilyTreeView` no mobile |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` também no mobile |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` no desktop/tablet; `MobileFamilyHorizontalMapView` no mobile |
 
 Diferenças:
 
@@ -48,7 +50,7 @@ Diferenças:
 | Organização | canvas panorâmico com grupos familiares | colunas por geração |
 | Base | pessoa central com parentes diretos/colaterais | gerações 1 a 6 |
 | Conectores | SVG por âncoras de grupos/cards | SVG de cônjuges e casal → filhos |
-| Mobile | usa `MobileFamilyTreeView` | usa a própria horizontal |
+| Mobile | usa `MobileFamilyTreeView` com telas Paterno/Central/Materno | usa `MobileFamilyHorizontalMapView`, com uma geração por tela e swipe lateral |
 | Título | `Mapa Familiar de {primeiroNome}` | `Genealogia de {primeiroNome}` |
 | Exportação | root HTML/CSS/SVG vertical | root HTML/CSS/SVG horizontal |
 
@@ -59,7 +61,8 @@ Diferenças:
 | Responsabilidade | Arquivo |
 |---|---|
 | View vertical | `src/app/components/FamilyTree/DesktopFamilyMapView.tsx` |
-| View horizontal | `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx` |
+| View horizontal desktop/tablet | `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx` |
+| View horizontal mobile | `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx` |
 | Cards visuais | `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` |
 | Seleção/exportação por área | `src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx` |
 | Utilitários de exportação | `src/app/components/FamilyTree/utils/treeExport.ts` |
@@ -72,6 +75,7 @@ Diferenças:
 | Filtros diretos | `src/app/pages/home/DirectRelativeFilterGrid.tsx` |
 | Paletas | `src/app/components/FamilyTree/treeColorPalettes.ts` |
 | Cores dos grupos | `src/app/components/FamilyTree/directFamilyColors.ts` |
+| Navegação mobile | `src/app/pages/home/HomeMobileNav.tsx` |
 | CSS de painel/exportação | `src/styles/home-sidebar-unified.css` |
 | CSS horizontal | `src/styles/family-map-horizontal.css` |
 | CSS QA/paletas do mapa | `src/styles/family-map-qa.css` |
@@ -343,6 +347,56 @@ Quando ativo:
 
 ---
 
+### 7.8 Mobile por telas de geração
+
+No mobile, `/mapa-familiar-horizontal` não deve reaproveitar o canvas multi-coluna do desktop.
+
+Componente esperado:
+
+```txt
+MobileFamilyHorizontalMapView
+```
+
+Contrato funcional:
+
+- cada geração visível ocupa uma tela própria;
+- apenas gerações com cards renderizados entram na paginação;
+- o usuário muda de tela por swipe lateral;
+- cada tela tem scroll vertical próprio para listas longas;
+- chips compactos `G1`, `G2`, `G3`... permitem salto direto entre gerações;
+- a geração ativa inicial é a geração central quando existir; caso contrário, a primeira geração disponível;
+- os conectores devem ser desenhados em uma camada global do track para continuar alinhados durante o swipe;
+- filtros de grupos, status de vida, cônjuges e pets continuam vindo do painel compartilhado.
+
+Estrutura visual recomendada:
+
+```txt
+viewport mobile
+└── track horizontal
+    ├── tela Geração 1
+    ├── tela Geração 2
+    ├── tela Geração 3
+    ├── tela Geração 4
+    ├── tela Geração 5
+    └── tela Geração 6
+```
+
+Regras de gesto:
+
+- swipe para esquerda avança para a próxima geração;
+- swipe para direita volta para a geração anterior;
+- scroll vertical não deve trocar geração;
+- o swipe horizontal só deve ser considerado quando `abs(deltaX) > abs(deltaY) * 1.2`.
+
+Anti-regressões específicas:
+
+- não reintroduzir barra `Paterno | Central | Materno` na horizontal mobile;
+- não transformar a horizontal mobile em Genealogia/Visão Completa;
+- não usar ReactFlow para a horizontal mobile;
+- não renderizar colunas vazias como telas vazias;
+- não quebrar o desktop/tablet multi-coluna.
+
+
 ## 8. Regras de Cônjuges
 
 ### 8.1 Contagem
@@ -467,23 +521,27 @@ Com:
 
 - abas `Paterno | Central | Materno`;
 - botão `Controles` do `HomeMobileNav`;
-- painel inferior com filtros/ações.
+- painel de controles em modal superior com filtros/ações.
 
 ### 11.2 `/mapa-familiar-horizontal`
 
 No mobile usa:
 
 ```txt
-DesktopFamilyHorizontalMapView
+MobileFamilyHorizontalMapView
 ```
 
 Com:
 
-- barra visual `Paterno | Central | Materno`;
-- `Central` ativo por padrão;
-- comportamento funcional da barra ainda não definido;
-- botão `Controles` na mesma faixa;
-- painel inferior com filtros/ações.
+- uma tela por geração visível;
+- chips compactos de geração;
+- swipe lateral entre gerações;
+- scroll vertical independente dentro da tela ativa;
+- botão `Controles` no `HomeMobileNav`;
+- painel de controles em modal superior ao header e ao bottom nav;
+- fundo transparente na superfície da horizontal.
+
+A barra antiga `Paterno | Central | Materno` não deve aparecer nesta rota.
 
 ---
 
@@ -534,4 +592,6 @@ Não fazer:
 - aplicar CSS amplo em `svg path`;
 - ocultar ícones internos ao esconder conectores;
 - duplicar título no PDF;
-- fechar loading cedo demais.
+- fechar loading cedo demais;
+- exibir `Paterno | Central | Materno` em `/mapa-familiar-horizontal` mobile;
+- renderizar múltiplas gerações lado a lado no mobile da horizontal.

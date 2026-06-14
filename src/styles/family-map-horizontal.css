@@ -1,5 +1,5 @@
-[data-tree-route-view="mapa-horizontal"] {
-  --horizontal-map-screen-bg: #ffffff;
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+  --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: #ffffff;
   --horizontal-map-card-bg-alt: #f6fbff;
   --horizontal-map-card-border: rgba(148, 163, 184, 0.45);
@@ -10,8 +10,8 @@
   --horizontal-map-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
 }
 
-html[data-tree-color-palette="visual"] [data-tree-route-view="mapa-horizontal"] {
-  --horizontal-map-screen-bg: #ecfeff;
+html[data-tree-color-palette="visual"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+  --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #0ea5a5 0%, #0284c7 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%);
   --horizontal-map-card-border: rgba(255, 255, 255, 0.72);
@@ -22,8 +22,8 @@ html[data-tree-color-palette="visual"] [data-tree-route-view="mapa-horizontal"] 
   --horizontal-map-shadow: 0 18px 38px rgba(8, 145, 178, 0.2);
 }
 
-html[data-tree-color-palette="orange"] [data-tree-route-view="mapa-horizontal"] {
-  --horizontal-map-screen-bg: #fff7ed;
+html[data-tree-color-palette="orange"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+  --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #f5b895 0%, #eec77d 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #e7a1cd 0%, #edc978 100%);
   --horizontal-map-card-border: rgba(194, 100, 55, 0.32);
@@ -34,8 +34,8 @@ html[data-tree-color-palette="orange"] [data-tree-route-view="mapa-horizontal"] 
   --horizontal-map-shadow: 0 18px 38px rgba(180, 83, 9, 0.14);
 }
 
-html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
-  --horizontal-map-screen-bg: #f4efe6;
+html[data-tree-color-palette="brown"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+  --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #eadbc4 0%, #c39175 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #f4ead8 0%, #8a6d4f 100%);
   --horizontal-map-card-border: rgba(91, 70, 54, 0.34);
@@ -46,18 +46,18 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   --horizontal-map-shadow: 0 18px 38px rgba(91, 70, 54, 0.16);
 }
 
-[data-tree-route-view="mapa-horizontal"] section,
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) section,
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] {
   background: var(--horizontal-map-screen-bg) !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__renderer,
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__pane,
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__viewport {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__renderer,
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__pane,
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__viewport {
   background: transparent !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
   border-width: 1px !important;
   border-color: var(--horizontal-map-card-border) !important;
   border-radius: 1rem !important;
@@ -67,11 +67,11 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   overflow: hidden !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode:nth-of-type(2n) > .relative > .cursor-pointer {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode:nth-of-type(2n) > .relative > .cursor-pointer {
   background: var(--horizontal-map-card-bg-alt) !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode h3 {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode h3 {
   color: var(--horizontal-map-card-text) !important;
   font-size: 0.92rem !important;
   font-weight: 800 !important;
@@ -80,34 +80,34 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
   text-transform: uppercase;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode p {
   color: var(--horizontal-map-card-muted) !important;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
   line-height: 1.15 !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode svg {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode svg {
   color: currentColor;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div > div:first-child {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div > div:first-child {
   border: 2px solid rgba(255, 255, 255, 0.84) !important;
   background: var(--horizontal-map-avatar-bg) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode img {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode img {
   border: 2px solid rgba(255, 255, 255, 0.86) !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__edge-path,
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] .react-flow__edge-interaction {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__edge-path,
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__edge-interaction {
   stroke: var(--horizontal-map-line) !important;
   stroke-width: 2.5px !important;
 }
 
-[data-tree-route-view="mapa-horizontal"] [data-export-root="family-tree"] [data-tree-node-menu="true"] {
+:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] [data-tree-node-menu="true"] {
   color: #0f172a !important;
   text-transform: none !important;
 }
@@ -228,7 +228,7 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-horizontal"] {
 
 /* Superfície própria do Mapa Familiar Horizontal usada por seleção e exportação. */
 [data-family-map-horizontal-root="true"] {
-  background: var(--horizontal-map-screen-bg, #ffffff) !important;
+  background: transparent !important;
   overflow: visible;
   isolation: isolate;
 }
@@ -251,4 +251,90 @@ html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tre
 [data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] {
   overflow: visible;
 }
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-13: Mapa Familiar Horizontal mobile e transparência
+   --------------------------------------------------------------------------
+   - A rota oficial é /mapa-familiar-horizontal.
+   - No mobile, a view pode ser renderizada por MobileFamilyHorizontalMapView
+     com uma geração por tela.
+   - O fundo atrás dos cards deve permanecer transparente em desktop e mobile.
+   - A exportação continua removendo controles transitórios.
+*/
 
+[data-family-map-horizontal-viewport="true"],
+[data-family-map-horizontal-root="true"],
+[data-mobile-family-horizontal-root="true"],
+[data-mobile-family-horizontal-track="true"],
+[data-mobile-family-horizontal-screen="true"] {
+  background: transparent !important;
+}
+
+[data-family-map-horizontal-root="true"],
+[data-mobile-family-horizontal-root="true"] {
+  --horizontal-map-screen-bg: transparent;
+  overflow: visible;
+  isolation: isolate;
+}
+
+[data-family-map-horizontal-root="true"] > div,
+[data-mobile-family-horizontal-root="true"] > div {
+  overflow: visible;
+}
+
+[data-mobile-family-horizontal-root="true"] {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+[data-mobile-family-horizontal-tabs="true"] {
+  padding-top: max(0.55rem, env(safe-area-inset-top, 0px));
+}
+
+[data-mobile-family-horizontal-track="true"] {
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+[data-mobile-family-horizontal-screen="true"] {
+  min-width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-mobile-family-horizontal-screen="true"] [data-family-map-connectors="true"] {
+  overflow: visible;
+}
+
+[data-mobile-family-horizontal-root="true"] [data-family-map-connectors="true"] path {
+  stroke: var(--family-map-connector, #a5eef6) !important;
+}
+
+[data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] {
+  border-color: var(--family-map-card-border, rgb(165 243 252 / 0.86)) !important;
+  background: var(--family-map-card-bg, linear-gradient(180deg, #14b8a6, #0e7490)) !important;
+  color: var(--family-map-card-text, #ffffff) !important;
+}
+
+[data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] * {
+  color: inherit !important;
+}
+
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"],
+html.is-exporting-family-tree [data-mobile-family-horizontal-root="true"] {
+  box-shadow: none !important;
+}
+
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-export-ignore="true"],
+html.is-exporting-family-tree [data-mobile-family-horizontal-root="true"] [data-tree-export-ignore="true"],
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-selection-overlay="true"],
+html.is-exporting-family-tree [data-mobile-family-horizontal-root="true"] [data-tree-selection-overlay="true"],
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-tree-export-loading="true"],
+html.is-exporting-family-tree [data-mobile-family-horizontal-root="true"] [data-tree-export-loading="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}

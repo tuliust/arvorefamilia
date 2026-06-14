@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/GENEALOGIA_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Genealogia** e do comportamento compartilhado com **Visão Completa**.  
-> Status: revisado contra a estrutura atual de rotas, `treeViewMode`, `HomeTreeSection`, views ReactFlow e separação explícita das views visuais do Mapa Familiar.
+> Status: revisado contra a estrutura atual de rotas, `treeViewMode`, `HomeTreeSection`, views ReactFlow, chips mobile e separação explícita das views visuais do Mapa Familiar.
 
 ---
 
@@ -44,7 +44,7 @@ Não use este documento para documentar profundamente:
 |---|---|---|---|---|
 | Minha Árvore | `/minha-arvore` | `minha-arvore` | família direta da pessoa central | ReactFlow no desktop/tablet; `MobileFamilyTreeView` no mobile |
 | Mapa Familiar Vertical | `/mapa-familiar` | `mapa-familiar` | família direta em mapa visual | `DesktopFamilyMapView` no desktop/tablet; `MobileFamilyTreeView` no mobile |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` | família direta por gerações | `DesktopFamilyHorizontalMapView`, inclusive no mobile |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` | família direta por gerações | `DesktopFamilyHorizontalMapView` no desktop/tablet; `MobileFamilyHorizontalMapView` no mobile |
 | Genealogia | `/genealogia` | `genealogia` | escopo pessoal por gerações | ReactFlow |
 | Visão Completa | `/visao-completa` | `visao-completa` | base familiar completa por gerações | ReactFlow |
 
@@ -52,8 +52,9 @@ Regras:
 
 - `/genealogia` e `/visao-completa` são as views por geração baseadas em ReactFlow.
 - `/mapa-familiar-horizontal` pode usar `genealogyColumnsLayout` como referência de ordenação, mas não é ReactFlow e não deve ser documentada como Genealogia.
-- Ajustes de cards, SVGs, conectores e exportação do Mapa Familiar pertencem ao documento do Mapa Familiar.
-- CSS criado para uma dessas views deve ser escopado por `viewMode`, rota, `data-export-root`, `data-family-map-export-root` ou atributo equivalente.
+- No mobile, `/mapa-familiar-horizontal` também usa navegação por geração, mas com **uma geração por tela** e cards visuais próprios; isso não altera o contrato da Genealogia.
+- Ajustes de cards, SVGs, conectores, exportação e swipe do Mapa Familiar pertencem ao documento do Mapa Familiar.
+- CSS criado para uma dessas views deve ser escopado por `viewMode`, rota, `data-export-root`, `data-family-map-export-root`, `data-family-map-horizontal-root`, `data-mobile-family-horizontal-root` ou atributo equivalente.
 
 ---
 
@@ -291,6 +292,13 @@ Núcleo
 Descendentes
 ```
 
+Observação:
+
+```txt
+A navegação mobile por geração de /mapa-familiar-horizontal não usa GenealogyMobileStageTabs.
+Ela pertence a MobileFamilyHorizontalMapView e troca telas, não apenas foco ReactFlow.
+```
+
 ---
 
 ## 12. Geração ativa no mobile
@@ -330,6 +338,13 @@ Motivos:
 - ReactFlow precisa manter nodes para bounds e pan;
 - evitar discrepância entre o que o usuário vê e o que a exportação captura;
 - filtros destrutivos pertencem ao painel, não aos chips de navegação.
+
+Contraste com `/mapa-familiar-horizontal` mobile:
+
+```txt
+/mapa-familiar-horizontal mobile exibe uma geração por tela.
+Essa paginação visual não é a mesma coisa que filtro destrutivo da Genealogia.
+```
 
 ---
 
@@ -380,11 +395,14 @@ Mobile:
 - alternar view reseta chip ativo;
 - alterar pessoa central recalcula gerações;
 - chips focam sem destruir layout;
-- bottom nav não cobre controles essenciais.
+- bottom nav não cobre controles essenciais;
+- modal mobile de controles do Mapa Familiar não afeta `MobileTreeControlsPortal`.
 
 Anti-regressões:
 
 - `/mapa-familiar-horizontal` não deve ser tratada como ReactFlow;
+- `/mapa-familiar-horizontal` mobile deve usar `MobileFamilyHorizontalMapView`, uma geração por tela e swipe lateral;
 - `/mapa-familiar` não deve usar cabeçalhos `Geração N`;
 - cards do Mapa Familiar não devem substituir `PersonNode`;
-- CSS da Genealogia não deve vazar para Mapa Familiar.
+- CSS da Genealogia não deve vazar para Mapa Familiar;
+- CSS de Mapa Familiar não deve alterar cards, nodes ou edges de `/genealogia` e `/visao-completa`.

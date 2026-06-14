@@ -149,10 +149,8 @@ export function SidebarPanelTabs({
   }, [activeHighlights]);
 
   React.useEffect(() => {
-    if (activePanel !== 'filters') {
-      window.setTimeout(() => onChange('filters'), 0);
-    }
-  }, [activePanel, onChange]);
+    setActiveFlyout(null);
+  }, [location.pathname]);
 
   const handleViewChange = React.useCallback((viewMode: TreeViewMode) => {
     const nextPath = getPathForTreeViewMode(viewMode);
@@ -176,7 +174,7 @@ export function SidebarPanelTabs({
   }, []);
 
   return (
-    <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]">
+    <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]" data-tree-export-ignore="true">
       <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5">
         <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
         <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
@@ -251,8 +249,39 @@ export function SidebarPanelTabs({
             })}
           </div>
         )}
+
+        <div className="tree-panel-tabs grid min-w-0 grid-cols-3 gap-1 border-t border-gray-100 pt-1">
+          <PanelTabButton label="Filtros" active={activePanel === 'filters'} onClick={() => onChange('filters')} />
+          <PanelTabButton label="Legendas" active={activePanel === 'legend'} onClick={() => onChange('legend')} />
+          <PanelTabButton label="Ações" active={activePanel === 'info'} onClick={() => onChange('info')} />
+        </div>
       </section>
     </div>
+  );
+}
+
+
+function PanelTabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={[
+        'min-h-8 min-w-0 rounded-md border px-1.5 text-[10px] font-bold leading-tight transition',
+        active ? 'border-slate-700 bg-slate-800 text-white shadow-sm' : 'border-gray-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+      ].join(' ')}
+    >
+      <span className="truncate">{label}</span>
+    </button>
   );
 }
 

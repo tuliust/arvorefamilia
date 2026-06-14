@@ -88,3 +88,35 @@ html[data-tree-color-palette="brown"] [data-family-map-export-root="true"] butto
     display: none !important;
   }
 }
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-13: escopo de paleta para Mapa Familiar Horizontal
+   --------------------------------------------------------------------------
+   A paleta deve continuar colorindo cards/conectores, mas não pode restaurar
+   fundo sólido na horizontal desktop ou mobile.
+*/
+
+html[data-tree-color-palette="white"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="brown"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"],
+html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"],
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"],
+html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] {
+  --horizontal-map-screen-bg: transparent;
+  --family-map-canvas-bg: transparent;
+  background: transparent !important;
+}
+
+html[data-tree-color-palette="visual"] [data-family-map-color-key="pets"],
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] [data-family-map-color-key="pets"],
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] [data-family-map-color-key="pets"] {
+  --family-map-card-bg: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%);
+  --family-map-card-border: rgba(103, 232, 249, 0.72);
+}
+
+@media (max-width: 1023.98px) {
+  [data-mobile-family-horizontal-root="true"] [data-export-root="family-tree"] > div.pointer-events-none.absolute.inset-x-0.z-10.text-center {
+    display: none !important;
+  }
+}
