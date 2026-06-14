@@ -779,12 +779,12 @@ function MobileFamilyHorizontalMapViewComponent({
   const swipePreviewOffset = React.useMemo(() => {
     const maxPreviewOffset = Math.max(72, Math.min(MOBILE_HORIZONTAL_CANVAS.columnWidth, stageViewportWidth * 0.62));
 
-    if (dragX > 0 && activeIndex < activeGenerations.length - 1) {
-      return -Math.min(dragX, maxPreviewOffset);
+    if (dragX < 0 && activeIndex < activeGenerations.length - 1) {
+      return -Math.min(Math.abs(dragX), maxPreviewOffset);
     }
 
-    if (dragX < 0 && activeIndex > 0) {
-      return Math.min(Math.abs(dragX), maxPreviewOffset);
+    if (dragX > 0 && activeIndex > 0) {
+      return Math.min(dragX, maxPreviewOffset);
     }
 
     return 0;
@@ -944,7 +944,7 @@ function MobileFamilyHorizontalMapViewComponent({
     const threshold = Math.max(40, (viewportRef.current?.clientWidth ?? 360) * 0.13);
 
     if (swipeState.active && absoluteX >= threshold) {
-      goToIndex(deltaX > 0 ? activeIndex + 1 : activeIndex - 1);
+      goToIndex(deltaX < 0 ? activeIndex + 1 : activeIndex - 1);
       return;
     }
 
