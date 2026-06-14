@@ -116,14 +116,14 @@ const GENERATION_LABELS: Record<number, string> = {
 
 const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
-  top: 66,
+  top: 72,
   cardWidth: 216,
-  cardHeight: 86,
-  rowGap: 12,
+  cardHeight: 78,
+  rowGap: 18,
   columnWidth: 304,
   minHeight: 560,
-  headerTop: 8,
-  headerHeight: 26,
+  headerTop: 18,
+  headerHeight: 24,
   bottomPadding: 14,
   spouseConnectorOverlap: 8,
 };
@@ -778,7 +778,7 @@ function MobileFamilyHorizontalMapViewComponent({
   }, [activeColumnLeft, stageViewportWidth]);
 
   const swipePreviewOffset = React.useMemo(() => {
-    const maxPreviewOffset = Math.max(56, stageViewportWidth * 0.42);
+    const maxPreviewOffset = Math.max(72, Math.min(MOBILE_HORIZONTAL_CANVAS.columnWidth, stageViewportWidth * 0.62));
 
     if (dragX > 0 && activeIndex < activeGenerations.length - 1) {
       return -Math.min(dragX, maxPreviewOffset);
@@ -942,7 +942,7 @@ function MobileFamilyHorizontalMapViewComponent({
 
     const deltaX = touch.clientX - swipeState.startX;
     const absoluteX = Math.abs(deltaX);
-    const threshold = Math.max(56, (viewportRef.current?.clientWidth ?? 360) * 0.18);
+    const threshold = Math.max(40, (viewportRef.current?.clientWidth ?? 360) * 0.13);
 
     if (swipeState.active && absoluteX >= threshold) {
       goToIndex(deltaX > 0 ? activeIndex + 1 : activeIndex - 1);
@@ -1125,7 +1125,7 @@ function MobileFamilyHorizontalMapViewComponent({
               return (
                 <div
                   key={generation}
-                  className="absolute z-10 flex min-w-[9.75rem] -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-slate-600 px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white shadow-md"
+                  className="absolute z-10 flex min-w-[8.5rem] -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-slate-600 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white shadow-md"
                   style={{
                     left,
                     top: MOBILE_HORIZONTAL_CANVAS.headerTop,
