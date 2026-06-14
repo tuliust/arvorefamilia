@@ -19,3 +19,9 @@ pnpm-debug.log*
 coverage/
 test-results/
 playwright-report/
+
+# Backups locais
+backups/
+
+# Cópias locais de ambiente
+.env*.save
