@@ -1,256 +1,123 @@
 # Árvore - legendas, conectores, filtros e painel lateral
 
-> Última revisão: 2026-06-11  
+> Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
 > Tipo: documentação funcional/técnica específica da árvore.  
-> Status: atualizado com Mapa Familiar Vertical/Horizontal, filtros de cônjuges, conectores SVG da horizontal, colunas vazias, painel desktop/mobile, controle mobile por `HomeMobileNav` e pendência do filtro de grupo Pets.
+> Status: revisado contra a estrutura atual de `Home.tsx`, `HomeTreeSection.tsx`, `SidebarPanelTabs.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `TreeAreaSelectionOverlay.tsx`, `FamilyTreeVisualCards.tsx`, `treeExport.ts` e CSS complementar.
+
+---
 
 ## 1. Função deste documento
 
-Este documento consolida os controles visuais da árvore:
+Este documento consolida o comportamento dos controles visuais da árvore:
 
-- aba **Legendas**;
-- filtros de cards;
-- filtros de linhas;
-- destaques visuais;
-- filtros de grupos diretos;
-- filtros de gerações;
-- filtros e regras de **Cônjuges**;
-- conectores da Minha Árvore ReactFlow;
-- conectores HTML/CSS do layout mobile segmentado;
-- conectores SVG do Mapa Familiar Vertical;
-- conectores SVG do Mapa Familiar Horizontal;
-- conectores da Genealogia e Visão Completa;
 - painel lateral desktop;
-- painel inferior mobile;
-- ações de exportação.
+- painel inferior mobile das rotas de Mapa Familiar;
+- filtros de grupos;
+- filtros de status;
+- regras de `Cônjuges`;
+- botões de zoom e restauração;
+- flyouts de `Cores`, `Exportar` e `Destacar`;
+- conectores ReactFlow, HTML/CSS e SVG;
+- seleção manual de área;
+- loading de exportação;
+- regras de exclusão de interface durante captura.
 
 Não substitui:
 
 | Tema | Documento |
 |---|---|
-| view direta | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
-| Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
-| Genealogia/mobile | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
-| filtros e pets | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
-| exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| componentes | `docs/GUIA_COMPONENTES.md` |
-| UX geral | `docs/GUIA_UX_LAYOUT.md` |
+| Mapa Familiar Vertical/Horizontal | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
+| Componentes | `docs/GUIA_COMPONENTES.md` |
+| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
+| Minha Árvore | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Genealogia | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
 
 ---
 
-## 2. Regra central
+## 2. Regra central dos estados
 
-Separar claramente:
+Os controles da árvore devem permanecer separados por responsabilidade.
 
 | Estado | Responsabilidade |
 |---|---|
-| `edgeFilters` | existência/visibilidade de linhas ReactFlow |
-| `visualLineFilters` | destaque visual de linhas já visíveis |
-| `personFilters` | visibilidade de cards por vivo/falecido/pet |
-| `directRelativeFilters` | grupos da Minha Árvore, Mapa Familiar Vertical e Mapa Familiar Horizontal |
-| `genealogyFilters` | gerações/grupos da Genealogia e Visão Completa |
+| `edgeFilters` | existência/visibilidade de linhas ReactFlow. |
+| `visualLineFilters` | destaque visual de linhas já visíveis em views ReactFlow. |
+| `personFilters` | visibilidade de cards por status: vivos, falecidos, pets. |
+| `directRelativeFilters` | grupos/filtros diretos usados em Minha Árvore, Mapa Familiar Vertical e Mapa Familiar Horizontal. |
+| `genealogyFilters` | gerações/grupos da Genealogia e da Visão Completa. |
+| `activeHighlights` / `data-tree-highlight-*` | efeitos visuais globais acionados pelo flyout `Destacar`. |
 
-Regra obrigatória:
+Regras obrigatórias:
 
 ```txt
-Destaque não cria linha nova.
-Destaque não reexibe linha oculta.
-Destaque não altera cards.
-Destaque não altera contadores.
+Destaque não cria relacionamento.
+Destaque não reexibe card filtrado.
+Destaque não altera dados.
+Destaque não persiste no Supabase.
+Contadores devem refletir o que a view renderiza quando a view fornece contagem efetiva.
 ```
-
-Importante:
-
-- conectores ReactFlow, HTML/CSS mobile e SVG do Mapa Familiar são sistemas diferentes;
-- filtros de linhas ReactFlow não comandam diretamente conectores HTML/CSS mobile;
-- filtros de linhas ReactFlow não comandam diretamente conectores SVG do Mapa Familiar, salvo quando a view explicitamente mapear essa regra;
-- filtros de grupos controlam cards e escopo, não linhas diretamente.
 
 ---
 
-## 3. Estados principais
+## 3. Painel desktop
 
-Os estados ficam principalmente em `src/app/pages/Home.tsx` e componentes filhos.
+O painel desktop é renderizado na Home pós-login e integra `SidebarPanelTabs`, `DirectRelationKpiGrid`, `LifeStatusKpiGrid`, `GenealogyFilterGrid`, `TreeLegend` e `SidebarInfoPanel`.
 
-### 3.1 `edgeFilters`
+### 3.1 Topo do painel
 
-```ts
-{
-  conjugal: boolean;
-  filiacao_sangue: boolean;
-  filiacao_adotiva: boolean;
-  irmaos: boolean;
-}
-```
+O topo do painel concentra:
 
-Função:
+| Controle | Papel |
+|---|---|
+| `+ Zoom` | chama `zoomIn` na view atual. |
+| `- Zoom` | chama `zoomOut` na view atual. |
+| `Restaurar visualização` | dispara `restore-view`; reseta zoom e posição/scroll inicial. |
+| `Vertical` | navega para `/mapa-familiar`. |
+| `Horizontal` | navega para `/mapa-familiar-horizontal`. |
+| `Cores` | alterna paletas via CSS variables/document root. |
+| `Exportar` | abre `Área`, `Imagem`, `PDF`, `Imprimir`. |
+| `Destacar` | abre `Linhas`, `Cards`, `Grupos`. |
 
-- controlar linhas conjugais em views ReactFlow;
-- controlar linhas parentais de filiação em views ReactFlow;
-- controlar linhas de irmãos quando suportadas.
+O painel não deve entrar em PNG, PDF, impressão ou captura de área.
 
-Não deve:
-
-- alterar cards;
-- alterar contadores de vida/pets;
-- persistir no Supabase;
-- alterar relacionamentos reais.
-
-### 3.2 `visualLineFilters`
-
-```ts
-{
-  spouseHighlight: boolean;
-  parentChildHighlight: boolean;
-  siblingHighlight: boolean;
-}
-```
-
-Função:
-
-- destacar linhas visíveis;
-- preservar linhas ocultas;
-- não alterar estrutura do grafo.
-
-### 3.3 `personFilters`
-
-```ts
-{
-  vivos: boolean;
-  falecidos: boolean;
-  pets: boolean;
-}
-```
-
-Função:
-
-- controlar cards renderizados por status/tipo;
-- preservar pessoa central quando aplicável;
-- alimentar contadores de `LifeStatusKpiGrid`.
-
-### 3.4 `directRelativeFilters`
-
-```txt
-pais
-avos
-bisavos
-tataravos
-conjuge
-filhos
-netos
-irmaos
-sobrinhos
-tios
-primos
-pets
-```
-
-Função:
-
-- controlar grupos visuais da Minha Árvore;
-- controlar grupos visuais do Mapa Familiar Vertical;
-- controlar grupos visuais do Mapa Familiar Horizontal;
-- afetar cards/contadores do escopo direto;
-- não controlar linhas diretamente.
-
-Regra de rótulo:
-
-```txt
-conjuge deve aparecer no painel como Cônjuges.
-```
-
-### 3.5 `genealogyFilters`
-
-```txt
-generation1
-generation2
-generation3Family
-generation3Spouses
-generation4Family
-generation4Spouses
-generation5Family
-generation5Spouses
-generation6
-```
-
-Função:
-
-- controlar grupos da Genealogia/Visão Completa;
-- preservar conectores apenas entre pessoas visíveis;
-- evitar edges soltas.
-
----
-
-## 4. Painel lateral e painel mobile
-
-### 4.1 Painel desktop
-
-No desktop, a Home renderiza uma sidebar com:
+### 3.2 Abas
 
 | Aba | Conteúdo |
 |---|---|
-| Filtros | `DirectRelationKpiGrid` ou `GenealogyFilterGrid` + `LifeStatusKpiGrid` |
-| Legendas | `TreeLegend` |
-| Ações | `SidebarInfoPanel` |
+| `Filtros` | grupos diretos ou filtros de genealogia + status de vida/pets. |
+| `Legendas` | legenda visual da árvore. |
+| `Ações` | painel informativo/ações auxiliares. |
 
-O topo do painel inclui:
+---
 
-- botões de zoom;
-- recolher/expandir painel;
-- toggle **Vertical / Horizontal**;
-- botão/flyout **Cores**;
-- botão/flyout **Exportar**;
-- botão/flyout **Destacar**.
+## 4. Painel mobile
 
-Toggle atual:
-
-| Botão | Rota |
-|---|---|
-| Vertical | `/mapa-familiar` |
-| Horizontal | `/mapa-familiar-horizontal` |
-
-Regras desktop:
-
-- o painel lateral desktop não deve gerar scroll vertical interno desnecessário;
-- filtros devem permanecer legíveis;
-- cards desligados usam opacidade/grayscale;
-- se a altura útil ficar insuficiente, reduzir densidade por `clamp()` antes de reintroduzir scroll;
-- não esconder filtros importantes para caber visualmente.
-
-### 4.2 Painel mobile
-
-No mobile:
-
-- não há sidebar lateral;
-- `HomeMobileNav` abre o painel inferior;
-- painel inferior reaproveita `sidebarPanelContent`;
-- altura máxima é limitada;
-- conteúdo pode rolar internamente;
-- overlay fecha o painel.
-
-Rotas controladas pelo painel mobile do `HomeMobileNav`:
+Nas rotas:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
 ```
 
-Nessas rotas, `MobileTreeControlsPortal` não renderiza seu painel antigo.
+o botão `Controles` é controlado por `HomeMobileNav` e abre o painel inferior de `Home.tsx`, reaproveitando `sidebarPanelContent`.
 
-### 4.3 `MobileTreeControlsPortal`
+Regras atuais:
 
-`MobileTreeControlsPortal` continua registrando rotas de árvore para exportação e ações rápidas, mas retorna `null` quando o path é:
+- não existe sidebar lateral;
+- o conteúdo do painel mobile usa os mesmos filtros e ações do desktop;
+- o painel inferior tem rolagem interna;
+- `MobileTreeControlsPortal` retorna `null` nessas duas rotas para evitar duplicidade;
+- o painel, bottom nav, botões flutuantes e overlays têm marcadores/estilos para não entrar na exportação.
+
+Observação:
 
 ```txt
-/mapa-familiar
-/mapa-familiar-horizontal
+O painel mobile ainda é um bottom sheet, não um modal centralizado pleno.
 ```
 
-Motivo:
-
-- evitar duplicidade;
-- essas rotas usam botão superior e painel inferior do `HomeMobileNav`.
+Se o comportamento for alterado para modal em futura frente, este documento deve ser atualizado.
 
 ---
 
@@ -264,264 +131,341 @@ src/app/pages/home/DirectRelativeFilterGrid.tsx
 
 Cards atuais:
 
-| Key | Label |
-|---|---|
-| `tataravos` | Tataravós |
-| `bisavos` | Bisavós |
-| `avos` | Avós |
-| `pais` | Pais |
-| `tios` | Tios |
-| `primos` | Primos |
-| `sobrinhos` | Sobrinhos |
-| `irmaos` | Irmãos |
-| `filhos` | Filhos |
-| `netos` | Netos |
-| `conjuge` | Cônjuges |
-| `pets` | Pets |
+| Key | Label | Tipo |
+|---|---|---|
+| `tataravos` | Tataravós | Grupo |
+| `bisavos` | Bisavós | Grupo |
+| `avos` | Avós | Grupo |
+| `pais` | Pais | Grupo |
+| `tios` | Tios | Grupo |
+| `primos` | Primos | Grupo |
+| `sobrinhos` | Sobrinhos | Grupo |
+| `irmaos` | Irmãos | Grupo |
+| `filhos` | Filhos | Grupo |
+| `netos` | Netos | Grupo |
+| `conjuge` | Cônjuges | Filtro visual de cônjuges específicos |
+| `pets` | Pets | Filtro de pets |
 
-Cuidados:
+Regras:
 
-- o card **Cônjuges** não deve ser removido;
-- o card **Pets** deve ser mantido, mas há pendência em `Home.tsx` quando `directRelativeFilters.pets` é forçado como `true`;
-- na paleta Visual, **Pets** usa os tokens teal/ciano da própria paleta;
-- `excludedKeys` existe como prop, mas o painel atual não deve esconder cônjuges por padrão.
+- `Filhos` usa o ícone `UserRoundPlus`.
+- `Netos` mantém o ícone de bebê/criança.
+- `Cônjuges` não deve voltar para o bloco de grupos.
+- `Pets` fica nos filtros e respeita a paleta visual ativa.
+- Na paleta `visual`, Pets usa tom teal/ciano, não laranja.
 
 ---
 
-## 6. Regras de Cônjuges
+## 6. Regras de `Cônjuges`
 
-### 6.1 Regras gerais
+### 6.1 Conceito
 
-Cônjuge não é apenas uma linha; pode gerar card visual.
+O filtro `Cônjuges` não significa “mostrar/ocultar todos os cônjuges do banco”.
 
-Regra específica do Mapa Familiar:
+Ele controla apenas cônjuges filtráveis de grupos colaterais/descendentes.
 
-- o filtro **Cônjuges** não oculta o cônjuge principal;
-- o filtro **Cônjuges** não oculta cônjuges de tataravós, bisavós e avós;
-- o filtro **Cônjuges** controla cônjuges colaterais/descendentes de:
-  - tios;
-  - primos;
-  - sobrinhos;
-  - filhos;
-  - netos.
+### 6.2 Sempre visíveis
 
-No Mapa Familiar Horizontal, a lógica atual usa:
+Nunca devem depender do filtro `Cônjuges`:
+
+- cônjuge da pessoa central;
+- cônjuges de avós;
+- cônjuges de bisavós;
+- cônjuges de tataravós.
+
+### 6.3 Filtráveis
+
+Dependem do filtro `Cônjuges`:
+
+- cônjuges de tios;
+- cônjuges de primos;
+- cônjuges de sobrinhos;
+- cônjuges de filhos;
+- cônjuges de netos.
+
+No Mapa Familiar Horizontal, as constantes conceituais são:
 
 ```txt
 ALWAYS_VISIBLE_SPOUSE_ANCHOR_GROUPS = ['avos', 'bisavos', 'tataravos']
 FILTERABLE_SPOUSE_ANCHOR_GROUPS = ['tios', 'primos', 'sobrinhos', 'filhos', 'netos']
 ```
 
-E sempre reinclui cônjuge da pessoa central.
+### 6.4 Contagem
 
-### 6.2 Card visual de cônjuge
+O painel deve usar contagem efetiva renderizada pela view quando disponível.
 
-Quando uma pessoa é reincluída como cônjuge fora do escopo direto, ela entra em `spouseTonePersonIds` e recebe label/tom de **Cônjuge**.
-
----
-
-## 7. Linhas ReactFlow
-
-A seção **Linhas** controla `edgeFilters`.
-
-| Botão | Estado afetado |
-|---|---|
-| Conjugal | `edgeFilters.conjugal` |
-| Pais/filhos | `edgeFilters.filiacao_sangue` e `edgeFilters.filiacao_adotiva` |
-| Irmãos | `edgeFilters.irmaos` |
-| Todas | todos os `edgeFilters` |
-
-Regras:
-
-- ocultar linhas não deve ocultar cards;
-- ocultar linhas não deve alterar dados;
-- `Pais/filhos` trata sangue e adoção em conjunto no controle atual;
-- se todos os `edgeFilters` forem desligados na Minha Árvore, CSS específico pode ocultar edges diretas.
-
----
-
-## 8. Destaques
-
-A seção **Destacar** controla `visualLineFilters`.
-
-| Botão | Estado |
-|---|---|
-| Cônjuges | `spouseHighlight` |
-| Pais/Filhos | `parentChildHighlight` |
-| Irmãos | `siblingHighlight` |
-| Todas | todos os destaques |
-
-Regras:
-
-- **Linhas** oculta os conectores visuais, sem ocultar ícones internos dos cards;
-- **Grupos** oculta molduras e títulos dos grupos no Mapa Familiar Vertical, mantendo os cards visíveis;
-- no Mapa Familiar Horizontal, **Grupos** oculta os cabeçalhos de geração e recalcula cards e conectores mais acima;
-- destaque vence a cor normal da linha;
-- destaque não reexibe linha oculta;
-- destaque não altera cards;
-- destaque não altera dados.
-
-O controle **Restaurar visualização** redefine diretamente o zoom e a posição de rolagem iniciais nas views vertical e horizontal.
-
----
-
-## 9. Conectores por view
-
-### 9.1 Minha Árvore desktop/tablet
-
-Sistema:
+Regra de aceite:
 
 ```txt
-ReactFlow edges
+A contagem de Cônjuges não inclui cônjuge central nem cônjuges ancestrais obrigatórios.
 ```
 
-Controlados por:
+---
+
+## 7. Filtros de status
+
+`LifeStatusKpiGrid` usa:
+
+```ts
+{
+  vivos: boolean;
+  falecidos: boolean;
+  pets: boolean;
+}
+```
+
+Regras:
+
+- pessoa central permanece visível quando aplicável;
+- pets obedecem ao filtro `pets`;
+- falecidos obedecem ao filtro `falecidos`;
+- vivos obedecem ao filtro `vivos`;
+- placeholders vazios/dashed não devem aparecer como caixas fantasma quando filtros removem cards.
+
+---
+
+## 8. Linhas e conectores
+
+### 8.1 ReactFlow
+
+Usado em:
+
+```txt
+/minha-arvore desktop/tablet
+/genealogia
+/visao-completa
+```
+
+Controlado por:
 
 ```txt
 edgeFilters
 visualLineFilters
 ```
 
-### 9.2 Minha Árvore mobile
+### 8.2 Mobile segmentado
 
-Sistema:
+Usado em:
 
 ```txt
-HTML/CSS
+/minha-arvore mobile
+/mapa-familiar mobile
 ```
+
+Conectores HTML/CSS próprios, não ReactFlow.
+
+### 8.3 Mapa Familiar Vertical
+
+Usa SVG próprio dentro de `DesktopFamilyMapView.tsx`.
 
 Características:
 
-- conectores de Pai/Mãe para pessoa central;
-- conectores para ancestrais;
-- conectores laterais para tios/primos;
-- devem acompanhar scroll da tela Central;
-- não dependem diretamente de `edgeFilters` ReactFlow.
+- conecta grupos e cards por âncoras calculadas;
+- precisa acompanhar modo wide, offsets laterais e grupos ocultos;
+- ao ativar `Destacar > Grupos`, os conectores devem se aproximar dos cards, não da caixa invisível antiga;
+- ao ativar `Destacar > Linhas`, os conectores são ocultados.
 
-### 9.3 Mapa Familiar Vertical
+### 8.4 Mapa Familiar Horizontal
 
-Sistema:
-
-```txt
-SVG por âncoras internas de DesktopFamilyMapView
-```
+Usa SVG próprio dentro de `DesktopFamilyHorizontalMapView.tsx`.
 
 Características:
 
-- conecta grupos visuais;
-- conecta relações principais;
-- pode ter conectores internos entre cônjuges;
-- usa `FAMILY_MAP_LAYOUT`.
-
-Cuidados:
-
-- não tentar corrigir conectores verticais alterando ReactFlow;
-- validar painel aberto/colapsado.
-
-### 9.4 Mapa Familiar Horizontal
-
-Sistema:
-
-```txt
-SVG próprio em DesktopFamilyHorizontalMapView
-```
-
-Regras implementadas:
-
-1. cônjuges visíveis da mesma geração ficam adjacentes;
-2. uma linha vertical conecta o centro inferior do card superior ao centro superior do card inferior;
-3. do meio dessa linha sai uma linha horizontal até o gap entre colunas;
-4. no gap há tronco vertical;
-5. o tronco vai do primeiro ao último filho do casal;
-6. cada filho recebe ramal horizontal;
-7. os troncos são distribuídos no eixo X dentro do gap para evitar sobreposição;
-8. filhos do casal são ordenados do mais velho ao mais novo;
-9. se uma coluna estiver vazia, ela é ocultada e conectores são recalculados.
-
-Não fazer:
-
-- ocultar globalmente `svg.pointer-events-none`;
-- remover `buildConnectors`;
-- desenhar linhas pais/filhos fora do modelo casal → filhos;
-- usar linhas de `/visao-completa` para a horizontal.
-
-### 9.5 Genealogia e Visão Completa
-
-Sistema:
-
-```txt
-ReactFlow + genealogyColumnsLayout
-```
-
-Características:
-
-- `genealogySpouseEdge`;
-- `genealogyFamilyConnectorNode`;
-- cabeçalhos `GERAÇÃO N` com pílula escura;
-- conectores entre pessoas visíveis.
+- linha vertical entre cônjuges;
+- saída horizontal do meio do casal para o gap;
+- tronco vertical no gap;
+- ramais horizontais até filhos;
+- troncos distribuídos no eixo X para evitar sobreposição;
+- filhos ordenados do mais velho para o mais novo;
+- colunas vazias são omitidas e conectores recalculados.
 
 ---
 
-## 10. Exportação
+## 9. `Destacar`
 
-A aba **Ações** e o flyout **Exportar** disparam:
+O flyout `Destacar` altera atributos globais no `document.documentElement`.
+
+| Botão | Comportamento atual |
+|---|---|
+| `Linhas` | oculta conectores visuais da view atual. |
+| `Cards` | aplica outline/destaque em cards visíveis. |
+| `Grupos` | altera chrome dos grupos/cabeçalhos conforme a view. |
+
+### 9.1 `Destacar > Linhas`
+
+Comportamento atual:
+
+- oculta conectores do Mapa Familiar Vertical/Horizontal via `[data-family-map-connectors='true']`;
+- oculta edges ReactFlow quando aplicável;
+- não deve ocultar ícones internos dos cards;
+- não deve alterar cards ou contadores.
+
+### 9.2 `Destacar > Cards`
+
+Comportamento atual:
+
+- aplica outline/destaque visual em cards visíveis;
+- não reexibe cards ocultos por filtro;
+- não altera paleta, dados ou contadores.
+
+### 9.3 `Destacar > Grupos` no Mapa Familiar Vertical
+
+Quando ativo:
+
+- oculta molduras, fundos, bordas e sombras de grupos;
+- oculta títulos/pills dos grupos;
+- oculta os labels diretos `PAI`, `MÃE` e `CÔNJUGE`;
+- mantém cards visíveis;
+- recalcula altura/geometria dos grupos em modo sem chrome;
+- aproxima conectores dos cards, em vez de conectá-los à caixa invisível antiga.
+
+A implementação usa conceitos como:
 
 ```txt
-select-area
-save-image
-save-pdf
-print
+hideGroupChrome
+data-family-map-group="true"
+data-family-map-group-title="true"
+data-family-map-chrome-hidden="true"
+```
+
+### 9.4 `Destacar > Grupos` no Mapa Familiar Horizontal
+
+Quando ativo:
+
+- oculta cabeçalhos `Geração X`;
+- reduz o topo do canvas/colunas;
+- recalcula cards e conectores mais acima;
+- quando desativado, restaura layout anterior.
+
+---
+
+## 10. Restaurar visualização
+
+O botão `Restaurar visualização` dispara a ação própria:
+
+```txt
+restore-view
 ```
 
 Regras:
 
-- ReactFlow usa captura da área de grafo;
-- `/mapa-familiar` usa captura HTML/CSS/SVG;
-- `/mapa-familiar-horizontal` usa captura HTML/CSS/SVG;
-- se seleção de área não estiver disponível em view HTML/CSS/SVG, a view pode exportar diretamente a superfície atual.
+- não deve ser tratado como `zoom-out`;
+- deve resetar zoom manual;
+- deve resetar scroll/posição inicial da árvore;
+- deve funcionar repetidas vezes;
+- deve funcionar em `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- deve preservar filtros, paleta e pessoa central.
 
 ---
 
-## 11. Anti-regressões
+## 11. Exportar
+
+O flyout `Exportar` oferece:
+
+| Botão | Ação |
+|---|---|
+| `Área` | abre seleção retangular. |
+| `Imagem` | exporta PNG. |
+| `PDF` | exporta PDF A4 proporcional. |
+| `Imprimir` | abre janela de impressão com imagem da árvore. |
+
+A view ativa expõe essas ações via `FamilyTreeActions`:
+
+```ts
+zoomIn
+zoomOut
+print
+savePdf
+saveImage
+startAreaSelection
+```
+
+Regras gerais:
+
+- o painel apenas dispara a ação;
+- a view decide o alvo capturável;
+- exportação não altera filtros;
+- elementos de UI devem ser ignorados na captura;
+- o loading de exportação deve bloquear cliques repetidos;
+- o título da view é composto no canvas exportado.
+
+---
+
+## 12. Loading de exportação
+
+A exportação usa `TreeExportLoadingOverlay`.
+
+Textos recomendados:
+
+| Ação | Texto |
+|---|---|
+| Imagem | `Preparando imagem...` |
+| PDF | `Gerando PDF...` |
+| Imprimir | `Preparando impressão...` |
+| Área | texto específico da ação da toolbar. |
+
+Regras:
+
+- mostrar antes do trabalho pesado;
+- usar `waitForTreeExportPaint()` para garantir pintura visual;
+- usar `waitForExportUiSettle()` para não fechar cedo demais;
+- ignorar o loading no clone de exportação;
+- fechar em `finally`;
+- exibir erro via toast ou mensagem local.
+
+---
+
+## 13. Elementos ignorados na exportação
+
+Devem ser ignorados por `treeExport.ts` e/ou CSS:
+
+```txt
+[data-tree-export-ignore="true"]
+[data-tree-selection-overlay="true"]
+[data-tree-export-loading="true"]
+[data-tree-node-menu="true"]
+[data-tree-legend="true"]
+.react-flow__controls
+.react-flow__minimap
+```
+
+---
+
+## 14. QA obrigatório
+
+### Painel
+
+- alternar Vertical/Horizontal preservando search params;
+- abrir `Cores`, `Exportar`, `Destacar`;
+- testar zoom in/out;
+- testar `Restaurar visualização`;
+- validar contagens após filtros.
+
+### Destaques
+
+- `Linhas`: conectores somem, ícones permanecem;
+- `Cards`: cards destacados;
+- `Grupos` vertical: caixas/títulos/labels diretos somem, cards permanecem;
+- `Grupos` horizontal: cabeçalhos somem, cards sobem, conectores alinhados.
+
+### Exportação
+
+- Imagem/PDF/Imprimir com título;
+- área selecionada com título;
+- loading não some cedo demais;
+- avatares/silhuetas não viram quadrados;
+- painel/overlays não aparecem no artefato.
+
+---
+
+## 15. Anti-regressões
 
 Não fazer:
 
-- reintroduzir scroll vertical no painel lateral desktop sem decisão explícita;
-- duplicar controle de legenda fora da aba **Legendas**;
-- fazer aba **Ações** competir com botões do canvas;
-- esconder filtros importantes para caber visualmente;
-- misturar filtros de linha com filtros de cards;
-- aplicar regra desktop ao painel inferior mobile sem validação;
-- reintroduzir toggle **Vertical | Horizontal** no mobile;
-- reativar `MobileTreeControlsPortal` em `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- remover a lógica de cônjuges sempre visíveis;
-- remover `Pets` do painel sem corrigir a lógica de filtro;
-- confundir `/mapa-familiar-horizontal` com `/visao-completa`.
-
----
-
-## 12. QA mínimo
-
-Após alterações de painel, filtros ou conectores, validar:
-
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Casos:
-
-- painel aberto;
-- painel colapsado;
-- mobile;
-- paletas;
-- filtros de grupos;
-- filtro Cônjuges;
-- filtro Pets;
-- zoom;
-- exportação;
-- conectores casal → filhos;
-- colunas vazias.
+- usar CSS amplo como `svg path` sem escopo;
+- ocultar conectores por seletor que atinja ícones internos;
+- reintroduzir sombra em `Destacar > Grupos`;
+- tratar `restore-view` como `zoom-out`;
+- usar `.react-flow` como alvo de exportação do Mapa Familiar;
+- remover `netos` dos cônjuges filtráveis;
+- colocar `Cônjuges` de volta no bloco de grupos.

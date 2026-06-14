@@ -1,31 +1,36 @@
 # Plano de próximos passos - Árvore Família
 
-> Última revisão: 2026-06-11  
+> Última revisão: 2026-06-13  
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: plano vivo revisado após consolidação de `/mapa-familiar-horizontal`, painel Vertical/Horizontal, conectores casal → filhos, controles mobile, remoção de rotas experimentais e atualização das pendências reais.
+> Status: plano vivo revisado após consolidação das views `/mapa-familiar` e `/mapa-familiar-horizontal`, correções de exportação, atualização documental dos lotes recentes e reclassificação das pendências reais.
+
+---
 
 ## Objetivo
 
 Este documento registra apenas:
 
-- pendências reais encontradas durante revisão documental, QA visual ou implementação;
+- pendências reais;
+- QA visual ou funcional ainda aberto;
 - divergências entre documentação e implementação;
-- ações futuras que não devem ser executadas sem decisão explícita;
-- pontos de QA, migration, refatoração ou melhoria identificados durante auditoria técnica;
-- pendências remanescentes após ajustes de árvore, mobile, Mapa Familiar e documentação.
+- decisões futuras que exigem validação;
+- pontos que não devem ser tratados como concluídos sem teste real;
+- ações de refatoração ou produto que não pertencem aos guias canônicos.
 
-O estado consolidado do que já está implementado deve permanecer em `docs/GUIA_IMPLEMENTACOES.md`.
+O estado implementado deve ficar em:
+
+```txt
+docs/GUIA_IMPLEMENTACOES.md
+```
 
 ---
 
-## 1. Situação atual
-
-Views da árvore:
+## 1. Situação atual das views
 
 | View | Rota | Estado |
 |---|---|---|
-| Mapa Familiar Vertical | `/mapa-familiar` | Implementada; view default de `/`; usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile. |
+| Mapa Familiar Vertical | `/mapa-familiar` | Implementada; rota default de `/`; usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile. |
 | Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Implementada; usa `DesktopFamilyHorizontalMapView`, colunas por geração, conectores SVG e painel compartilhado. |
 | Minha Árvore | `/minha-arvore` | Implementada; ReactFlow no desktop/tablet e `MobileFamilyTreeView` no mobile. |
 | Genealogia | `/genealogia` | Implementada; ReactFlow por gerações; chips mobile. |
@@ -38,63 +43,61 @@ Rotas experimentais removidas:
 /visao-completa-teste
 ```
 
-Estado técnico recente:
+Estado técnico consolidado:
 
 - `/` redireciona para `/mapa-familiar`;
-- `TreeViewMode` inclui `mapa-familiar-horizontal`;
-- `/mapa-familiar-horizontal` é protegida por `TreeAccessRoute`;
+- `TreeViewMode` contém cinco views oficiais;
+- `TreeHomeShell` envolve as rotas de árvore;
+- `/mapa-familiar-horizontal` é rota oficial e protegida por `TreeAccessRoute`;
 - painel desktop mostra **Vertical** e **Horizontal**;
-- **Vertical** aponta para `/mapa-familiar`;
-- **Horizontal** aponta para `/mapa-familiar-horizontal`;
 - mobile não usa toggle Vertical/Horizontal;
-- `/mapa-familiar-horizontal` mobile possui barra visual `Paterno | Central | Materno`, ainda sem comportamento funcional definido;
-- botão de controle mobile fica alinhado à barra superior;
-- `MobileTreeControlsPortal` não deve renderizar nas rotas `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- `/mapa-familiar-horizontal` mobile tem barra visual `Paterno | Central | Materno`;
+- `MobileTreeControlsPortal` não renderiza em `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- exportação dos Mapas Familiares foi corrigida tecnicamente para título, loading, impressão, seleção por área e SVGs/avatares;
+- QA manual autenticado ainda é necessário.
 
 ---
 
 ## 2. Pendências abertas
 
-| ID | Documento/origem | Tipo | Ação necessária | Status |
+| ID | Área | Tipo | Ação necessária | Status |
 |---|---|---|---|---|
-| DOC-014 | `/mapa-familiar` / `DesktopFamilyMapView.tsx` | QA visual manual autenticado | Validar alinhamento panorâmico, conectores, grupos laterais, painel colapsado, centralização, colisões, margens, desktop/tablet, exportação e resoluções reais com dados autenticados. | Aberto |
-| DOC-025 | `/mapa-familiar-horizontal` / `DesktopFamilyHorizontalMapView.tsx` | QA visual manual autenticado | Validar colunas ativas, colunas vazias ocultadas, cônjuges adjacentes, conectores casal → filhos, distribuição de troncos no gap, filhos ordenados por nascimento e filtros combinados. | Aberto |
-| DOC-026 | `Home.tsx` / filtros diretos | Bug funcional | Corrigir o filtro de grupo **Pets** se `directRelativeFilters.pets` ainda estiver sendo forçado como `true`, impedindo ocultar/exibir pets pelo card de grupo. | Aberto |
-| DOC-027 | `/mapa-familiar-horizontal` mobile | Produto/UX | Definir comportamento real dos botões `Paterno`, `Central` e `Materno` na barra mobile da view horizontal. Hoje a barra é visual e `Central` fica ativo por padrão. | Aberto |
-| DOC-028 | `HomeMobileNav.tsx` / mobile Safari | QA visual | Validar posição da barra e do botão de controle em iOS/Safari nos breakpoints 320, 375, 390 e 430px. | Aberto |
-| DOC-029 | Exportação das views visuais | QA funcional | Validar PNG, PDF e impressão de `/mapa-familiar` e `/mapa-familiar-horizontal`, incluindo paletas, conectores e ocultação de controles. | Aberto |
-| DOC-030 | Documentação cruzada | Documentação | Após aplicar novos docs, conferir links cruzados em README, ARCHITECTURE, ROTAS, GUIA_COMPONENTES, GUIA_UX_LAYOUT e funcionalidades. | Aberto |
+| DOC-014 | `/mapa-familiar` | QA visual/manual | Validar alinhamento panorâmico, conectores, grupos laterais, modo painel colapsado, centralização, colisões, margens, exportação e paletas com dados reais. | Aberto |
+| DOC-025 | `/mapa-familiar-horizontal` | QA visual/manual | Validar colunas ativas, colunas vazias ocultadas, cônjuges adjacentes, conectores casal → filhos, distribuição de troncos, filhos por nascimento, filtros e exportação. | Aberto |
+| DOC-026 | Pets | Bug/QA funcional | Confirmar se `directRelativeFilters.pets` funciona como filtro de grupo independente de `personFilters.pets` nas views que suportam grupo Pets. | Aberto |
+| DOC-027 | `/mapa-familiar-horizontal` mobile | Produto/UX | Definir comportamento real dos botões `Paterno`, `Central` e `Materno`. Hoje a barra é visual e `Central` fica ativo por padrão. | Aberto |
+| DOC-028 | Mobile Safari/iOS | QA visual | Validar posição da barra e do botão de controle em iOS/Safari nos breakpoints 320, 375, 390 e 430px. | Aberto |
+| DOC-029 | Exportação | QA funcional pós-correção | Validar PNG, PDF, impressão e Área de `/mapa-familiar` e `/mapa-familiar-horizontal`, incluindo título, loading, conectores, paletas e avatares. | Implementado tecnicamente; QA aberto |
+| DOC-030 | Documentação cruzada | Documentação/QA | Conferir links cruzados após aplicar todos os lotes documentais. | Aberto |
+| DOC-031 | Busca/favoritos | Produto | Decidir se `/mapa-familiar-horizontal` deve entrar em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES` como página própria. | Aberto |
+| DOC-032 | Legenda na horizontal | UX/consistência | Verificar se a aba Legendas deve receber `directRelativeFilters` também em `/mapa-familiar-horizontal`, já que o painel de filtros atua na horizontal. | Aberto |
+| DOC-033 | Exportação ReactFlow pós-ajustes | QA regressão | Revalidar `/minha-arvore`, `/genealogia` e `/visao-completa` depois das mudanças em `treeExport.ts`. | Aberto |
 
 Regras:
 
-- não duplicar essas pendências em outros documentos;
-- documentos funcionais podem mencionar o contexto, mas o controle fica nesta tabela;
-- fechar item apenas após validação técnica, QA visual ou decisão explícita;
-- se houver alteração de schema, criar migration e atualizar `docs/operacao/MIGRATIONS_SUPABASE.md`.
+- não duplicar esta tabela em outros documentos;
+- documentos funcionais podem citar o contexto, mas o controle de pendências fica aqui;
+- fechar apenas após validação real, decisão explícita ou commit de correção;
+- alteração de schema exige migration e atualização em `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
 ---
 
 ## 3. Itens fechados, obsoletos ou reclassificados
 
-| ID | Documento/origem | Resultado | Status |
-|---|---|---|
-| DOC-001 | Genealogia/Visão Completa mobile | Chips mobile passaram a usar base de gerações inferidas. | Concluído tecnicamente; manter QA visual. |
-| DOC-004 | `/minha-arvore` mobile ReactFlow | Obsoleto para a rota mobile principal, pois `/minha-arvore` mobile usa `MobileFamilyTreeView`. | Obsoleto/substituído. |
-| DOC-005 | Exportação mobile rápida | `MobileTreeControlsPortal` passou a usar fluxo canônico de `treeExport.ts`. | Concluído tecnicamente; manter QA. |
-| DOC-013 | Minha Árvore mobile segmentada | Malha 3×3 com Paterno/Central/Materno, ancestrais, laterais e preview durante swipe. | Concluído tecnicamente; manter QA visual. |
-| DOC-014-parcial | `/mapa-familiar` busca/favoritos | `/mapa-familiar` já consta em busca/favoritos quando implementado no código. | Fechado se confirmado no código atual. |
-| DOC-016 | Exportação do Mapa Familiar Vertical | Captura HTML/CSS/SVG por root próprio. | Concluído tecnicamente; manter QA. |
-| DOC-017 / DOC-020 | Laterais e painel colapsado do Mapa Familiar | Reclassificados para QA visual consolidado do DOC-014. | Reclassificado. |
-| DOC-024 | Navegação preservando contexto | Perfis abertos a partir das views preservam retorno por `?voltar=...` quando fluxo está ativo. | Concluído tecnicamente; manter QA. |
-| EXP-001 | `/mapa-horizontal` | Rota experimental removida. | Obsoleto/removido. |
-| EXP-002 | `/visao-completa-teste` | Rota experimental removida. | Obsoleto/removido. |
-| EXP-003 | Botão Horizontal apontando para `/visao-completa` | Substituído por `/mapa-familiar-horizontal`. | Concluído. |
-| HMAP-001 | Conectores de cônjuges na horizontal | Implementada linha vertical entre cônjuges. | Concluído tecnicamente; manter QA. |
-| HMAP-002 | Conectores casal → filhos | Implementado tronco horizontal/vertical e ramais para filhos. | Concluído tecnicamente; manter QA. |
-| HMAP-003 | Colunas vazias | Colunas sem cards visíveis passam a ser ocultadas. | Concluído tecnicamente; manter QA. |
-| HMAP-004 | Cônjuges colaterais | Cônjuges de tios, primos, sobrinhos e filhos são reincluídos quando filtro **Cônjuges** está ativo. | Concluído tecnicamente; manter QA. |
-| MOB-001 | Toggle Vertical/Horizontal mobile | Removida das páginas `/mapa-familiar` e `/mapa-familiar-horizontal`. | Concluído. |
-| MOB-002 | Botão de controle mobile | Reposicionado para alinhar com a barra superior das views de mapa. | Concluído tecnicamente; manter QA em iOS. |
+| ID | Frente | Resultado | Status |
+|---|---|---|---|
+| EXP-001 | `/mapa-horizontal` | Rota experimental removida. | Obsoleto/removido |
+| EXP-002 | `/visao-completa-teste` | Rota experimental removida. | Obsoleto/removido |
+| EXP-003 | Botão Horizontal → `/visao-completa` | Substituído por `/mapa-familiar-horizontal`. | Concluído |
+| HMAP-001 | Cônjuges na horizontal | Linha vertical entre cônjuges implementada. | Concluído tecnicamente; QA aberto |
+| HMAP-002 | Casal → filhos | Tronco horizontal/vertical e ramais implementados. | Concluído tecnicamente; QA aberto |
+| HMAP-003 | Colunas vazias | Colunas sem cards visíveis ocultadas. | Concluído tecnicamente; QA aberto |
+| HMAP-004 | Cônjuges colaterais | Cônjuges de tios, primos, sobrinhos, filhos e netos seguem regra de filtro. | Concluído tecnicamente; QA aberto |
+| MOB-001 | Toggle Vertical/Horizontal mobile | Removido nas rotas do Mapa Familiar. | Concluído |
+| MOB-002 | Botão de controle mobile | Alinhado à faixa superior das views de mapa. | Concluído tecnicamente; QA iOS aberto |
+| EXP-004 | Loading de exportação | Implementado e revisado para não sumir cedo demais. | Concluído tecnicamente; QA aberto |
+| EXP-005 | Título na exportação | Canvas passa a incluir título da view. | Concluído tecnicamente; QA aberto |
+| EXP-006 | Avatares/SVGs na exportação | Tratamento de SVGs e classes semânticas aplicado. | Concluído tecnicamente; QA aberto |
 
 ---
 
@@ -102,7 +105,7 @@ Regras:
 
 ### 4.1 Mapa Familiar Vertical
 
-Rotas:
+Rota:
 
 ```txt
 /mapa-familiar
@@ -125,17 +128,22 @@ Breakpoints:
 Checklist:
 
 - abre como view padrão a partir de `/`;
-- título correto no desktop;
-- painel desktop não corta controles;
+- título `Mapa Familiar de {nome}`;
 - botão **Horizontal** navega para `/mapa-familiar-horizontal`;
+- painel desktop não corta controles;
 - cônjuge principal aparece;
 - cônjuges ancestrais aparecem;
-- cônjuges colaterais dependem do filtro **Cônjuges**;
-- filtros de vida funcionam;
-- grupo Pets deve ser validado especificamente;
-- zoom com `Ctrl + scroll` afeta apenas a área da árvore;
-- header e painel ficam fixos;
-- exportação PNG/PDF/impressão preserva superfície.
+- cônjuges colaterais dependem de **Cônjuges**;
+- filtro Pets de grupo funciona, se implementado;
+- filtro Pets de status/tipo funciona;
+- `Destacar > Linhas` oculta conectores;
+- `Destacar > Grupos` oculta molduras/títulos e labels `PAI`, `MÃE`, `CÔNJUGE`;
+- conectores continuam coerentes quando grupos estão sem chrome;
+- `Restaurar visualização` reseta zoom/scroll;
+- exportação por Área cobre laterais;
+- PNG/PDF/impressão incluem título;
+- avatares não viram quadrados pretos;
+- painel/header/overlay/loading não entram no artefato.
 
 ### 4.2 Mapa Familiar Horizontal
 
@@ -147,44 +155,64 @@ Rota:
 
 Checklist:
 
+- título `Genealogia de {nome}`;
 - botão **Vertical** retorna para `/mapa-familiar`;
-- colunas são definidas por `manual_generation` quando válido;
+- `manual_generation` define colunas quando válido;
 - valores fora de 1 a 6 são limitados;
 - colunas vazias somem;
 - filhos de casal ficam do mais velho ao mais novo;
-- cônjuges aparecem em linhas coladas;
+- cônjuges ficam em linhas consecutivas;
 - linha vertical entre cônjuges aparece;
 - tronco casal → filhos aparece quando há filhos visíveis;
 - múltiplos troncos no mesmo gap não ficam sobrepostos;
 - filhos invisíveis por filtro não recebem linha;
-- cônjuges de tios/primos aparecem com filtro **Cônjuges** ativo;
-- cônjuges de tios/primos somem com filtro **Cônjuges** inativo;
-- cônjuge central e cônjuges ancestrais permanecem;
+- cônjuges de tios/primos/sobrinhos/filhos/netos obedecem **Cônjuges**;
+- cônjuge central e ancestrais permanecem;
+- `Destacar > Grupos` oculta cabeçalhos `Geração X` e recalcula layout;
 - cards respeitam paletas;
-- exportação preserva colunas e conectores.
+- exportação preserva colunas e conectores;
+- título aparece na exportação;
+- avatares/SVGs aparecem corretamente.
 
-### 4.3 Mobile
+### 4.3 Minha Árvore
+
+Rota:
+
+```txt
+/minha-arvore
+```
+
+Checklist:
+
+- desktop/tablet usa ReactFlow;
+- mobile usa `MobileFamilyTreeView`;
+- filtros diretos funcionam no desktop/tablet;
+- filtros de status/tipo funcionam;
+- `MobileTreeControlsPortal` aparece no mobile;
+- não há duplicidade com painel do HomeMobileNav;
+- exportação ReactFlow funciona após mudanças em `treeExport.ts`;
+- card central mobile não exibe `VOCÊ`;
+- linhas vitais mobile exibem só ano;
+- avatares por `genero`.
+
+### 4.4 Genealogia e Visão Completa
 
 Rotas:
 
 ```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-/minha-arvore
 /genealogia
 /visao-completa
 ```
 
 Checklist:
 
-- `/mapa-familiar` mantém barra nativa `Paterno | Central | Materno`;
-- `/mapa-familiar-horizontal` mostra barra visual equivalente;
-- não há toggle Vertical/Horizontal;
-- botão de controle está na mesma linha da barra;
-- painel inferior abre com filtros/ações;
-- não há duplicidade com `MobileTreeControlsPortal`;
-- bottom nav não cobre conteúdo essencial;
-- Safari/iOS respeita `safe-area`.
+- ReactFlow renderiza;
+- chips mobile aparecem apenas nessas rotas;
+- chips focam, não filtram destrutivamente;
+- pílulas `Geração N` continuam com fundo escuro;
+- cards não herdam visual do Mapa Familiar;
+- exportação ReactFlow funciona;
+- bottom nav não cobre controles.
 
 ---
 
@@ -192,147 +220,126 @@ Checklist:
 
 ### Problema
 
-O card de filtro **Pets** do painel de grupos pode não ocultar/exibir cards de pets na view horizontal e/ou vertical.
+O projeto possui dois conceitos com o mesmo rótulo:
 
-### Causa provável
-
-Há indício de que `directRelativeFilters.pets` tenha sido forçado como `true` no estado derivado em `Home.tsx`.
+- Pets como status/tipo (`personFilters.pets`);
+- Pets como grupo direto (`directRelativeFilters.pets`).
 
 ### Ação recomendada
 
-Revisar `Home.tsx` e separar claramente:
+Revisar:
 
-| Estado | Papel |
-|---|---|
-| `personFilters.pets` | filtro de tipo/status de vida |
-| `directRelativeFilters.pets` | filtro do grupo Pets no painel de grupos |
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/pages/home/LifeStatusKpiGrid.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+```
 
 Critério de aceite:
 
-- desligar **Pets** em grupos remove cards de pets;
-- ligar **Pets** recoloca cards de pets;
-- filtro de vida/tipo **Pets** continua independente;
-- contadores refletem estado visível;
-- não quebra cônjuges, filhos ou grupos diretos.
+- desligar Pets em status/tipo remove pets de todos os escopos;
+- desligar Pets em grupos remove o grupo visual Pets quando aplicável;
+- filhos humanos não são afetados;
+- contadores não ficam incoerentes;
+- exportação reflete o estado visual.
 
 ---
 
 ## 6. Pendência específica: barra mobile da horizontal
 
-### Estado atual
+Estado atual:
 
-Em `/mapa-familiar-horizontal`, a barra mobile:
+```txt
+/mapa-familiar-horizontal
+```
+
+exibe barra visual:
 
 ```txt
 Paterno | Central | Materno
 ```
 
-é renderizada como estrutura visual, com **Central** ativo por padrão.
+com **Central** ativo por padrão.
 
-### Decisão pendente
+Decisão pendente:
 
-Definir se a barra deve:
+| Opção | Comportamento |
+|---|---|
+| Manter visual | barra comunica organização, mas não navega |
+| Implementar scroll/foco | botões rolam para colunas/faixas relacionadas |
+| Remover | se não houver ação real, substituir por título/controle mais claro |
 
-1. filtrar colunas por ramo;
-2. navegar horizontalmente para uma região;
-3. alterar foco/scroll;
-4. alternar subconjuntos de relações;
-5. ser removida da horizontal.
+Critério antes de implementar:
 
-Enquanto não houver decisão, não implementar comportamento sem validação de produto.
-
----
-
-## 7. Pendência específica: conectores da horizontal
-
-### Estado atual
-
-A view horizontal desenha:
-
-- linha vertical entre cônjuges;
-- linha horizontal do casal ao gap;
-- tronco vertical no gap;
-- ramais horizontais até filhos.
-
-### Pontos a validar
-
-- sobreposição em famílias grandes;
-- conexão quando um dos cônjuges está oculto;
-- conexão quando filhos estão filtrados;
-- conexão quando coluna seguinte foi compactada após ocultação de coluna vazia;
-- comportamento com múltiplos casais na mesma geração;
-- exportação com conectores.
-
-Se falhar, ajustar em `DesktopFamilyHorizontalMapView.tsx`, não em CSS global.
+- definir significado de Paterno/Materno na horizontal por gerações;
+- evitar conflito com colunas de geração;
+- evitar comportamento falso;
+- validar mobile 320–430px.
 
 ---
 
-## 8. Pendência documental
+## 7. Pendência específica: busca/favoritos da horizontal
 
-Após substituir os arquivos revisados, conferir:
+Estado atual a validar:
+
+- `/mapa-familiar` consta como página de busca/favoritos;
+- `/mapa-familiar-horizontal` é rota oficial, mas pode não constar como página própria.
+
+Arquivos:
 
 ```txt
-docs/README.md
-docs/arquitetura/ARCHITECTURE.md
-docs/arquitetura/ROTAS_E_GUARDS.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+src/app/services/globalSearchService.ts
+src/app/constants/favoritePages.ts
 ```
 
-Critérios:
+Decisão:
 
-- todas as views oficiais aparecem com nomes corretos;
-- `/mapa-familiar-horizontal` aparece em rotas, arquitetura, componentes e UX;
-- `/mapa-horizontal` e `/visao-completa-teste` não aparecem como rotas ativas;
-- Mapa Familiar Vertical e Horizontal estão no mesmo documento funcional ou com links cruzados claros;
-- pendências reais ficam apenas neste plano.
+```txt
+Adicionar /mapa-familiar-horizontal como página própria?
+```
+
+Critério de aceite, se sim:
+
+- item aparece na busca global;
+- item pode ser favoritado;
+- título diferencia da vertical;
+- favoritos não salvam zoom/filtros/estado de seleção;
+- documentação de favoritos é atualizada.
 
 ---
 
-## 9. Regras para fechar pendências
+## 8. Comandos mínimos
 
-Um item só deve ser fechado quando houver:
-
-- commit aplicado;
-- build local validado ou justificativa explícita;
-- QA visual mínimo quando a mudança for visual;
-- documentação atualizada, se o comportamento for canônico;
-- ausência de regressão nas views relacionadas.
-
-Comando mínimo:
+Antes de fechar qualquer frente técnica:
 
 ```bash
-npm run build
+git status --short
 git diff --check
+npm run build
 ```
 
-Para QA mobile:
+Quando houver teste aplicável:
 
-```txt
-iPhone/Safari real ou emulador confiável
-320px
-375px
-390px
-430px
+```bash
+npm test
+npm run test:e2e
+```
+
+Para banco/schema:
+
+```bash
+supabase migration list
 ```
 
 ---
 
-## 10. Backlog pós-MVP
+## 9. Regras de manutenção
 
-Itens que não devem ser tratados como bug do MVP sem decisão explícita:
-
-- exportação completa da árvore;
-- PDF multipágina;
-- exportação vetorial;
-- sincronização avançada de calendário;
-- comportamento final da barra Paterno/Central/Materno na horizontal;
-- edição visual de `manual_generation` por drag-and-drop;
-- assistente automático de organização de gerações;
-- persistência de layout personalizado por usuário;
-- versão alternativa da horizontal usando ReactFlow.
+- Este documento não deve repetir implementação completa.
+- Itens concluídos devem sair de pendências e entrar em `GUIA_IMPLEMENTACOES.md` se forem relevantes.
+- QA manual autenticado deve ser mantido como aberto até validação em ambiente real.
+- Não abrir nova rota experimental sem atualizar `treeViewMode.ts`, `routes.tsx`, busca/favoritos quando aplicável e documentação.
+- Não criar migration para ajuste visual.

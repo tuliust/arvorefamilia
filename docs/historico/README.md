@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-10
-> Local canônico: `docs/historico/README.md`
-> Tipo: consolidação histórica e índice da pasta `docs/historico/`.
-> Status: resumo histórico consolidado atualizado com a frente Mapa Familiar e a coluna `genero`.
+> Última revisão: 2026-06-13  
+> Local canônico: `docs/historico/README.md`  
+> Tipo: consolidação histórica e índice da pasta `docs/historico/`.  
+> Status: revisado após consolidação de `/mapa-familiar`, `/mapa-familiar-horizontal`, exportação com título/loading/SVGs, remoção de rotas experimentais e atualização dos documentos canônicos.
 
 ---
 
@@ -33,99 +33,82 @@ Se houver divergência entre este histórico consolidado e a documentação can�
 
 ---
 
-## 2. Decisão documental desta revisão
+## 2. Decisão documental
 
-Durante a revisão final da documentação, foi adotada a seguinte decisão para o grupo histórico:
+A documentação histórica foi consolidada neste arquivo para:
 
-```txt
-Consolidar tudo em docs/historico/README.md e remover os arquivos históricos individuais.
-```
+- reduzir duplicidade;
+- evitar que diagnósticos antigos sejam tratados como documentação viva;
+- registrar apenas decisões passadas úteis;
+- deslocar regras atuais para guias canônicos;
+- manter QA e rastreabilidade sem vários arquivos obsoletos.
 
-Motivos:
-
-- reduzir duplicidade documental;
-- evitar que diagnósticos antigos sejam usados como documentação viva;
-- manter apenas o que ajuda a entender decisões passadas;
-- deslocar regras atuais para documentos canônicos;
-- preservar QA e rastreabilidade sem manter vários arquivos obsoletos.
+Conteúdos históricos antigos não devem ser recriados como fonte de operação.
 
 ---
 
-## 3. Arquivos históricos consolidados e removidos
-
-Os conteúdos relevantes dos arquivos abaixo foram consolidados neste README ou já foram absorvidos pelos documentos canônicos atuais.
+## 3. Arquivos históricos consolidados/removidos
 
 | Arquivo antigo | Decisão | Destino atual da informação útil |
 |---|---|---|
-| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | Removido após consolidação. | Revisão documental atual e `docs/PLANO_PROXIMOS_PASSOS.md`. |
-| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | Removido após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo neste README. |
-| `QA_7_6_EXPORTACAO_ARVORE.md` | Removido após consolidação. | `docs/funcionalidades/EXPORTACAO_ARVORE.md` + resumo de QA neste README. |
-| `QA_FINAL_MVP.md` | Removido após consolidação. | Critérios permanentes em `docs/PLANO_PROXIMOS_PASSOS.md` + checklist resumido neste README. |
-| `RESPONSIVIDADE_MOBILE_TABLET.md` | Removido após consolidação. | `docs/GUIA_UX_LAYOUT.md` + checklist resumido neste README. |
-| `AJUSTES_MOBILE_2026-06-02.md` | Removido após consolidação. | `docs/GUIA_UX_LAYOUT.md`, documentos funcionais de árvore/calendário/fórum/admin + resumo neste README. |
-| `documentacao-antiga/*` | Removido após consolidação. | Informação útil deve estar nos guias canônicos ou neste README. |
-| `sql-legado/*` | Removido após consolidação. | `supabase/migrations/` permanece como fonte de verdade do schema; SQL operacional útil deve ficar em `scripts/` com aviso claro. |
+| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | consolidado/removido | `docs/README.md`, `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | consolidado/removido | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
+| `QA_7_6_EXPORTACAO_ARVORE.md` | consolidado/removido | `docs/funcionalidades/EXPORTACAO_ARVORE.md`, `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `QA_FINAL_MVP.md` | consolidado/removido | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `RESPONSIVIDADE_MOBILE_TABLET.md` | consolidado/removido | `docs/GUIA_UX_LAYOUT.md` |
+| `AJUSTES_MOBILE_2026-06-02.md` | consolidado/removido | guias funcionais e `GUIA_UX_LAYOUT.md` |
+| `documentacao-antiga/*` | consolidado/removido | documentos canônicos |
+| `sql-legado/*` | consolidado/removido | `supabase/migrations/` e scripts operacionais seguros |
 
 ---
 
-## 4. Consolidação por frente histórica
+## 4. Linha histórica resumida
 
-### 4.1 Auditoria documental de 2026-05-21
+### 4.1 Auditoria documental
 
-O diagnóstico de documentação registrou uma auditoria anterior dos arquivos em `docs/` e apontou lacunas nos guias de componentes, UX, implementação, notificações, plano, exportação, responsividade, Storage e timeline.
+A auditoria anterior identificou lacunas em:
 
-Na revisão final atual, esses pontos foram tratados nos documentos canônicos correspondentes. Portanto, o diagnóstico antigo não deve continuar como arquivo separado.
+- componentes;
+- UX/layout;
+- implementação;
+- notificações;
+- plano de próximos passos;
+- exportação;
+- responsividade;
+- Storage;
+- timeline;
+- rotas/guards.
 
-Referências atuais:
-
-```txt
-docs/GUIA_IMPLEMENTACOES.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-docs/GUIA_CORRECAO_ERROS.md
-docs/PLANO_PROXIMOS_PASSOS.md
-```
+Essas lacunas foram redistribuídas entre documentos canônicos. Divergências atuais devem ser registradas em `PLANO_PROXIMOS_PASSOS.md`.
 
 ---
 
-### 4.2 Frente 7.6 — exportação da área visível da árvore
+### 4.2 Exportação da árvore - frente 7.6
 
-A frente 7.6 foi concluída no escopo MVP com três etapas históricas:
+A frente 7.6 introduziu o fluxo de exportação client-side da árvore.
 
-| Etapa | Resumo |
-|---|---|
-| 7.6A | Diagnóstico técnico inicial da exportação. |
-| 7.6B | Implementação da seleção/exportação de área visível. |
-| 7.6C | QA técnico/visual e refinamentos pontuais. |
+Itens históricos:
 
-Estado consolidado:
-
-```txt
-A exportação atual permite selecionar uma área visível da árvore e gerar PNG, PDF ou impressão.
-```
-
-Limitação preservada:
-
-```txt
-A exportação atua sobre a viewport visível atual, não sobre a árvore completa.
-```
-
-Itens validados historicamente:
-
-- botão **Selecionar área**;
-- overlay de seleção retangular;
-- cancelamento por botão;
-- cancelamento por `Esc`;
-- bloqueio temporário de pan/zoom;
-- exportação PNG;
-- exportação PDF;
+- seleção retangular;
+- cancelamento por botão/Esc;
+- PNG;
+- PDF;
 - impressão;
-- recusa de seleção pequena demais;
-- limite preventivo para seleção grande;
-- exclusão de controles, minimap, overlays, menus e legendas da captura;
-- erro amigável para falhas de captura/impressão/CORS.
+- limite preventivo de pixels;
+- exclusão de controles/menus/overlays;
+- mensagens de erro;
+- integração com `html2canvas` e `jspdf`.
 
-Documento canônico atual:
+A evolução posterior consolidou:
+
+- exportação das superfícies HTML/CSS/SVG de `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- título no canvas exportado;
+- loading contextual;
+- impressão assíncrona;
+- correção de avatares/SVGs;
+- seleção por área alinhada à superfície exportável.
+
+Documento canônico:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
@@ -135,26 +118,15 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ### 4.3 QA final do MVP
 
-O checklist histórico de QA final foi consolidado em regras permanentes e referências canônicas.
+O checklist histórico de QA foi consolidado em:
 
-Escopo de validação relevante:
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+docs/GUIA_UX_LAYOUT.md
+docs/funcionalidades/*.md
+```
 
-- árvore familiar;
-- perfis de pessoa;
-- administração de pessoas e relacionamentos;
-- solicitações de vínculo;
-- arquivos históricos e Storage;
-- fórum;
-- notificações;
-- calendário familiar;
-- timeline;
-- favoritos;
-- exportação;
-- rotas e guards;
-- responsividade mobile/tablet;
-- admin.
-
-Comandos técnicos mínimos preservados:
+Comandos preservados:
 
 ```bash
 git status --short
@@ -165,46 +137,33 @@ npm run test:e2e
 supabase migration list
 ```
 
-Critérios de bloqueio atuais ficam em:
+Critérios permanentes:
 
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
-Rotas e guards ficam em:
-
-```txt
-docs/arquitetura/ROTAS_E_GUARDS.md
-```
+- sem overflow horizontal global;
+- headers usáveis;
+- botões acessíveis por toque;
+- cards sem estouro;
+- modais com rolagem interna;
+- árvore utilizável com pan/zoom;
+- exportação validada;
+- guards e RLS preservados;
+- build aprovado.
 
 ---
 
 ### 4.4 Responsividade mobile/tablet
 
-A frente de responsividade mobile/tablet foi concluída no escopo MVP e não deve permanecer como guia vivo separado.
+A frente de responsividade consolidou:
 
-Critérios históricos preservados:
+- breakpoints 320, 375, 390, 430 e tablet;
+- headers compactos;
+- bottom nav;
+- modais/drawers com safe area;
+- árvore mobile segmentada;
+- controles mobile;
+- painéis e filtros adaptáveis.
 
-- não introduzir nova funcionalidade durante ajuste responsivo;
-- não criar migration por ajuste visual;
-- não alterar RLS/Edge Functions por responsividade;
-- priorizar legibilidade, toque, ausência de overflow horizontal e uso real em telas pequenas;
-- testar 320px, 375px, 390px, 430px, 768px e desktop;
-- validar modais, overlays e formulários longos com altura reduzida.
-
-Critérios globais de aceite preservados:
-
-- sem overflow horizontal global;
-- headers usáveis;
-- botões acessíveis por toque;
-- cards sem estouro de container;
-- tabelas com scroll controlado;
-- modais com altura máxima e rolagem;
-- CTAs principais visíveis;
-- árvore utilizável com pan/zoom;
-- build aprovado após ajustes.
-
-Documento canônico atual:
+Documento canônico:
 
 ```txt
 docs/GUIA_UX_LAYOUT.md
@@ -212,239 +171,197 @@ docs/GUIA_UX_LAYOUT.md
 
 ---
 
-### 4.5 Ajustes mobile do ciclo 2026-06-02
+### 4.5 Minha Árvore mobile segmentada
 
-O ciclo de 2026-06-02 envolveu refinamentos em:
+A experiência mobile da Minha Árvore evoluiu para:
 
 ```txt
-/minha-arvore
-/genealogia
-/visao-completa
-/forum
-/calendario-familiar
-/meus-favoritos
-/admin
-/minha-arvore/editar
-menu do avatar/header
+Paterno | Central | Materno
 ```
 
-Decisões úteis preservadas:
-
-- manter ajustes mobile restritos a mobile quando esse for o escopo;
-- validar árvore em 320px, 375px, 390px e 430px;
-- manter setas de navegação mobile alinhadas aos controles visuais reais;
-- preservar seletor mobile de visualização entre **Minha Árvore**, **Genealogia** e **Visão Completa**;
-- evitar cards, filtros e botões duplicados em mobile;
-- manter filtros compactos do calendário sem overflow;
-- evitar duplicação visual entre filtros superiores e cards inferiores;
-- preservar navegação mobile por avatar/menu quando esse padrão já estiver consolidado.
-
-Documentos canônicos atuais:
+com malha 3×3:
 
 ```txt
-docs/GUIA_UX_LAYOUT.md
+[ vazio            ] [ Ancestrais globais ] [ vazio           ]
+[ Tios Paternos    ] [ Central             ] [ Tios Maternos   ]
+[ Primos Paternos  ] [ vazio               ] [ Primos Maternos ]
+```
+
+Características consolidadas:
+
+- `MobileFamilyTreeView`;
+- conectores HTML/CSS;
+- preview durante swipe;
+- linhas vitais com anos;
+- card central sem badge `VOCÊ`;
+- avatar visual por `genero`;
+- reutilização em `/mapa-familiar` mobile.
+
+Documentos canônicos:
+
+```txt
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/funcionalidades/MINHA_ARVORE_EDITAR.md
-docs/funcionalidades/CALENDARIO_FAMILIAR.md
-docs/funcionalidades/FORUM.md
-docs/GUIA_COMPONENTES.md
+docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
 ```
 
 ---
 
-### 4.6 Frente mobile final de 2026-06-08
+### 4.6 Mapa Familiar Vertical
 
-A frente mobile final de 2026-06-08 consolidou ajustes visuais e de usabilidade apenas para mobile, preservando tablet/desktop.
+A rota `/mapa-familiar` foi consolidada como view default da árvore.
 
-Escopo histórico:
+Características:
 
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-/minha-arvore/editar
-menu mobile do usuário
-modal de login/dica
-controles mobile da árvore
-```
-
-Itens concluídos:
-
-- overlay do modal de login/dica com fundo da página e opacidade preta;
-- header mobile da árvore com título personalizado **Família de {primeiro nome}**;
-- remoção do texto overlay mobile sobre a árvore;
-- padronização dos botões direcionais da árvore;
-- possibilidade de ocultar/exibir setas mobile;
-- painel mobile de controles da árvore via `MobileTreeControlsPortal`;
-- controles mobile para zoom, reajuste, PDF, imagem e impressão;
-- paleta de cores no menu mobile via `MobileUserMenuPalettePortal`;
-- reset de geração ativa ao alternar `/genealogia` e `/visao-completa`;
-- acabamento mobile de `/minha-arvore/editar` via `mobile-edit-profile.css`;
-- escopo do CSS de edição restrito por `main:has(#minha-arvore-edit-form)`.
-
-Arquivos relevantes:
-
-```txt
-src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
-src/app/components/layout/MobileUserMenuPalettePortal.tsx
-src/styles/mobile-tree-controls.css
-src/styles/mobile-edit-profile.css
-src/app/pages/home/HomeHeader.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/Timeline/PersonTimeline.tsx
-src/styles/family-tree-mobile.css
-src/main.tsx
-```
-
-Validações técnicas registradas no ciclo:
-
-```bash
-npm run build
-git diff --check
-```
-
-Documentos canônicos atualizados ou a atualizar:
-
-```txt
-docs/GUIA_UX_LAYOUT.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_IMPLEMENTACOES.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_EDITAR.md
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
----
-
-## 5. Documentação antiga e SQL legado removidos
-
-As antigas pastas abaixo foram removidas após consolidação:
-
-```txt
-docs/historico/documentacao-antiga/
-docs/historico/sql-legado/
-```
-
-Esses conteúdos não devem ser recriados como fonte operacional. Se algum conteúdo antigo ainda for necessário, ele deve ser migrado para o documento canônico adequado ou para um script operacional seguro.
-
-Destinos canônicos:
-
-| Conteúdo antigo | Destino atual |
-|---|---|
-| Índice de documentação | `docs/README.md` |
-| Setup/deploy | `docs/operacao/DEPLOYMENT.md` |
-| Banco/migrations | `docs/operacao/MIGRATIONS_SUPABASE.md` |
-| Erros e soluções | `docs/GUIA_CORRECAO_ERROS.md` |
-| Arquitetura | `docs/arquitetura/ARCHITECTURE.md` |
-| Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
-| Usuários e banco | `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
-| Funcionalidades específicas | `docs/funcionalidades/*.md` |
-| SQL operacional pontual ainda útil | `scripts/`, com aviso, dry-run quando aplicável e confirmação explícita para ação destrutiva |
-| Schema real do banco | `supabase/migrations/` |
-
----
-
-## 6. Estrutura histórica esperada
-
-Após a revisão e os commits documentais, a estrutura histórica esperada é:
-
-```txt
-docs/historico/README.md
-```
-
-Não devem existir novamente, salvo decisão explícita futura:
-
-```txt
-docs/historico/documentacao-antiga/
-docs/historico/sql-legado/
-docs/historico/DIAGNOSTICO_DOCUMENTACAO_ATUAL.md
-docs/historico/DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md
-docs/historico/QA_7_6_EXPORTACAO_ARVORE.md
-docs/historico/QA_FINAL_MVP.md
-docs/historico/RESPONSIVIDADE_MOBILE_TABLET.md
-docs/historico/AJUSTES_MOBILE_2026-06-02.md
-```
-
----
-
-## 7. O que não fazer
-
-Não fazer:
-
-- usar documento histórico como guia atual;
-- manter diagnóstico antigo como fonte de verdade;
-- duplicar QA antigo nos documentos funcionais;
-- recriar arquivos históricos individuais sem necessidade explícita;
-- recriar `documentacao-antiga/` ou `sql-legado/` como arquivo morto;
-- aplicar SQL legado como schema principal;
-- remover conteúdo histórico futuro sem checar se há conteúdo único ainda não migrado;
-- manter backups temporários dentro de `docs/historico/`;
-- documentar nova pendência em histórico em vez de usar `docs/PLANO_PROXIMOS_PASSOS.md`.
-
----
-
-## 8. O que fazer daqui em diante
-
-Fazer:
-
-- manter este arquivo como único histórico consolidado;
-- registrar novas pendências em `docs/PLANO_PROXIMOS_PASSOS.md`;
-- registrar estado implementado em `docs/GUIA_IMPLEMENTACOES.md`;
-- registrar troubleshooting em `docs/GUIA_CORRECAO_ERROS.md`;
-- registrar decisões visuais em `docs/GUIA_UX_LAYOUT.md`;
-- registrar operação em `docs/operacao/`;
-- revisar `docs/README.md` quando a estrutura documental mudar.
-
----
-
-## 9. Resumo executivo
-
-A pasta `docs/historico/` passa a ter função de rastreabilidade consolidada, não de documentação viva.
-
-Depois desta revisão, a estrutura recomendada é:
-
-```txt
-docs/historico/README.md
-```
-
-### 4.7 Frente Mapa Familiar de 2026-06-10
-
-A frente **Mapa Familiar** adicionou uma quarta visualização protegida da árvore:
-
-```txt
-/mapa-familiar
-```
-
-Escopo histórico:
-
-- criação da rota protegida `/mapa-familiar`;
-- criação/uso de `TreeViewMode = 'mapa-familiar'`;
-- renderização desktop/tablet com `DesktopFamilyMapView.tsx`;
-- fallback mobile para `MobileFamilyTreeView.tsx`;
-- cards compartilhados em `FamilyTreeVisualCards.tsx`;
-- paleta `visual`;
-- layout panorâmico com HTML/CSS/SVG;
-- conectores por âncoras;
+- desktop/tablet usa `DesktopFamilyMapView`;
+- mobile usa `MobileFamilyTreeView`;
+- root exportável próprio;
+- conectores SVG;
 - grupos expansíveis;
-- regras de cônjuges principais, ancestrais e colaterais;
-- zoom manual por `Ctrl + scroll`;
-- uso de `pessoas.genero` para avatar masculino, feminino e pet.
+- paletas;
+- cônjuges com regra própria;
+- filtros de grupo/status;
+- `Destacar > Grupos` com modo sem chrome;
+- labels `PAI`, `MÃE` e `CÔNJUGE` ocultáveis;
+- exportação com título e tratamento de SVG.
 
-Decisão documental:
+Documentos canônicos:
 
 ```txt
-O estado atual do Mapa Familiar deve ficar em docs/funcionalidades/MAPA_FAMILIAR_VIEW.md.
-Este histórico registra apenas a origem da frente.
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
 ```
 
-Pendências relacionadas:
+---
 
-- QA visual autenticado em desktop/tablet;
-- refinamento de grupos laterais de tios/primos;
-- busca/favoritos;
-- decisão sobre exportação HTML/SVG;
-- migration/tipagem para `pessoas.genero`, se a coluna foi criada manualmente.
+### 4.7 Mapa Familiar Horizontal
+
+A rota `/mapa-familiar-horizontal` substituiu rotas experimentais e tornou-se view oficial.
+
+Características:
+
+- `DesktopFamilyHorizontalMapView`;
+- colunas por `manual_generation`;
+- gerações 1 a 6;
+- colunas vazias ocultadas;
+- cônjuges adjacentes;
+- conectores SVG de casal/filhos;
+- título `Genealogia de {nome}`;
+- barra mobile visual `Paterno | Central | Materno`;
+- exportação com título, loading e tratamento de SVGs;
+- filtro **Cônjuges** com escopo colateral/descendente.
+
+Rotas antigas removidas:
+
+```txt
+/mapa-horizontal
+/visao-completa-teste
+```
+
+Documentos canônicos:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/arquitetura/ROTAS_E_GUARDS.md
+docs/arquitetura/ARCHITECTURE.md
+```
+
+---
+
+### 4.8 Painel lateral e mobile
+
+O painel foi consolidado com:
+
+- Vertical/Horizontal;
+- Cores;
+- Exportar;
+- Destacar;
+- Filtros;
+- Legendas;
+- Ações;
+- Restaurar visualização.
+
+No mobile:
+
+- `/mapa-familiar` e `/mapa-familiar-horizontal` usam painel do `HomeMobileNav`;
+- `MobileTreeControlsPortal` retorna `null` nessas duas rotas;
+- demais views de árvore podem continuar usando o portal mobile.
+
+Documento canônico:
+
+```txt
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+---
+
+### 4.9 Paletas, avatares e SVGs
+
+Frente consolidada:
+
+- paletas `white`, `visual`, `orange`, `brown`;
+- `FamilyTreeVisualCards`;
+- avatar visual por `genero`;
+- classes semânticas para SVGs;
+- estrela e cruz com contraste;
+- pets alinhados à paleta visual;
+- correção de SVGs no `html2canvas`.
+
+Documentos canônicos:
+
+```txt
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
+---
+
+## 5. Estado histórico obsoleto
+
+Não tratar como atual:
+
+- `/mapa-horizontal`;
+- `/visao-completa-teste`;
+- botão Horizontal apontando para `/visao-completa`;
+- `/` redirecionando para `/minha-arvore`;
+- Mapa Familiar Horizontal como experimento;
+- exportação sem título;
+- exportação sem loading;
+- `MobileTreeControlsPortal` duplicado nas rotas do Mapa Familiar;
+- aba mobile antiga `Núcleo`;
+- aba mobile antiga `Completa`;
+- filtro **Cônjuges** como controle do cônjuge principal no Mapa Familiar.
+
+---
+
+## 6. Destinos canônicos
+
+| Tema | Documento atual |
+|---|---|
+| Índice | `docs/README.md` |
+| Implementações | `docs/GUIA_IMPLEMENTACOES.md` |
+| Componentes | `docs/GUIA_COMPONENTES.md` |
+| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
+| Pendências | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| Rotas/guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
+| Arquitetura | `docs/arquitetura/ARCHITECTURE.md` |
+| Minha Árvore | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
+| Filtros/pets | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
+| Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Genealogia | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
+| Painel/conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
+| Migrations | `docs/operacao/MIGRATIONS_SUPABASE.md` |
+
+---
+
+## 7. Regra de manutenção histórica
+
+Ao concluir uma frente nova:
+
+1. atualizar documento canônico;
+2. mover pendências reais para `PLANO_PROXIMOS_PASSOS.md`;
+3. registrar apenas resumo histórico aqui, se necessário;
+4. não recriar arquivos históricos individuais;
+5. não usar histórico para orientar implementação sem checar código atual.

@@ -1,13 +1,15 @@
 # Mapa Familiar - views Vertical e Horizontal
 
-> Última revisão: 2026-06-11  
+> Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação técnica/funcional das views **Mapa Familiar Vertical** e **Mapa Familiar Horizontal**.  
-> Status: documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`, com layout panorâmico vertical, layout horizontal por gerações, filtros de grupos, regras de cônjuges, conectores SVG, paletas, exportação, mobile e anti-regressões.
+> Status: revisado contra a estrutura atual das views, exportação, filtros, destaques, paletas, conectores e mobile.
+
+---
 
 ## 1. Função deste documento
 
-Este documento descreve as views do **Mapa Familiar**:
+Este documento descreve as views:
 
 ```txt
 /mapa-familiar
@@ -17,56 +19,38 @@ Este documento descreve as views do **Mapa Familiar**:
 Use este arquivo para manter:
 
 - objetivo funcional das views;
-- diferença entre Minha Árvore, Mapa Familiar Vertical, Mapa Familiar Horizontal, Genealogia e Visão Completa;
+- diferenças entre Vertical e Horizontal;
 - integração com `treeViewMode`;
-- arquitetura de `DesktopFamilyMapView.tsx`;
-- arquitetura de `DesktopFamilyHorizontalMapView.tsx`;
-- uso dos cards compartilhados de `FamilyTreeVisualCards.tsx`;
-- regras de grupos, colunas, expansão e limites;
-- regras de `manual_generation`;
-- regras de cônjuges principais, ancestrais e colaterais;
-- conectores SVG da vertical;
-- conectores SVG da horizontal;
-- zoom e exportação;
-- avatares visuais por `genero`;
-- comportamento mobile;
-- QA visual manual e anti-regressões.
-
-Não use este documento para detalhar:
-
-| Tema | Documento |
-|---|---|
-| view direta ReactFlow e mobile segmentado | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
-| painel lateral, filtros globais e legenda geral | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| filtros e pets em detalhe | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
-| exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| componentes gerais | `docs/GUIA_COMPONENTES.md` |
-| UX geral | `docs/GUIA_UX_LAYOUT.md` |
-| arquitetura geral | `docs/arquitetura/ARCHITECTURE.md` |
+- arquitetura dos componentes;
+- filtros de grupos e status;
+- regras de cônjuges;
+- conectores SVG;
+- paletas e cards;
+- exportação;
+- mobile;
+- QA e anti-regressões.
 
 ---
 
-## 2. Conceito das views
+## 2. Conceito
 
-O **Mapa Familiar** é o conjunto de views visuais da família direta.
+O Mapa Familiar é a experiência visual da família direta.
 
-| View | Rota | Renderização principal |
+| View | Rota | Componente |
 |---|---|---|
-| Mapa Familiar Vertical | `/mapa-familiar` | HTML/CSS/SVG panorâmico no desktop/tablet; `MobileFamilyTreeView` no mobile |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | HTML/CSS/SVG por colunas de geração no desktop/tablet/mobile |
+| Mapa Familiar Vertical | `/mapa-familiar` | `DesktopFamilyMapView` no desktop/tablet; `MobileFamilyTreeView` no mobile |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` também no mobile |
 
-Diferenças principais:
+Diferenças:
 
 | Aspecto | Vertical | Horizontal |
 |---|---|---|
-| Componente | `DesktopFamilyMapView` | `DesktopFamilyHorizontalMapView` |
-| Organização | grupos familiares posicionados em canvas panorâmico | colunas por geração |
-| Base visual | família direta centrada | gerações 1 a 6 |
-| Coluna | não usa coluna fixa por geração | usa `manual_generation` como fonte primária |
-| Conectores | SVG por âncoras de grupos | SVG casal → filhos |
-| Mobile | `MobileFamilyTreeView` | mesma view horizontal com barra mobile própria |
-| Painel | grupos + vida + ações | mesmo painel |
-| Exportação | superfície HTML/CSS/SVG | superfície HTML/CSS/SVG |
+| Organização | canvas panorâmico com grupos familiares | colunas por geração |
+| Base | pessoa central com parentes diretos/colaterais | gerações 1 a 6 |
+| Conectores | SVG por âncoras de grupos/cards | SVG de cônjuges e casal → filhos |
+| Mobile | usa `MobileFamilyTreeView` | usa a própria horizontal |
+| Título | `Mapa Familiar de {primeiroNome}` | `Genealogia de {primeiroNome}` |
+| Exportação | root HTML/CSS/SVG vertical | root HTML/CSS/SVG horizontal |
 
 ---
 
@@ -74,134 +58,108 @@ Diferenças principais:
 
 | Responsabilidade | Arquivo |
 |---|---|
-| View vertical desktop/tablet | `src/app/components/FamilyTree/DesktopFamilyMapView.tsx` |
+| View vertical | `src/app/components/FamilyTree/DesktopFamilyMapView.tsx` |
 | View horizontal | `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx` |
-| Cards visuais compartilhados | `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` |
-| Modelo de dados da família direta | `src/app/components/FamilyTree/mobileFamilyTreeModel.ts` |
-| Escopo direto ReactFlow/base | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
-| Referência genealógica da horizontal | `src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts` |
-| Tipos da árvore e filtros diretos | `src/app/components/FamilyTree/types.ts` |
-| Renderização da área principal da Home | `src/app/pages/home/HomeTreeSection.tsx` |
-| Painel de controles | `src/app/pages/home/SidebarPanelTabs.tsx` |
+| Cards visuais | `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` |
+| Seleção/exportação por área | `src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx` |
+| Utilitários de exportação | `src/app/components/FamilyTree/utils/treeExport.ts` |
+| Modelo mobile | `src/app/components/FamilyTree/mobileFamilyTreeModel.ts` |
+| Escopo direto | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
+| Referência genealógica | `src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts` |
+| Tipos/filtros | `src/app/components/FamilyTree/types.ts` |
+| Shell da área da árvore | `src/app/pages/home/HomeTreeSection.tsx` |
+| Painel | `src/app/pages/home/SidebarPanelTabs.tsx` |
 | Filtros diretos | `src/app/pages/home/DirectRelativeFilterGrid.tsx` |
-| Rotas | `src/app/routes.tsx` |
-| View mode | `src/app/components/FamilyTree/treeViewMode.ts` |
 | Paletas | `src/app/components/FamilyTree/treeColorPalettes.ts` |
-| Cores de grupos diretos | `src/app/components/FamilyTree/directFamilyColors.ts` |
+| Cores dos grupos | `src/app/components/FamilyTree/directFamilyColors.ts` |
+| CSS de painel/exportação | `src/styles/home-sidebar-unified.css` |
 | CSS horizontal | `src/styles/family-map-horizontal.css` |
-| CSS/QA do mapa | `src/styles/family-map-qa.css` |
+| CSS QA/paletas do mapa | `src/styles/family-map-qa.css` |
 
 ---
 
-## 4. Rotas e `treeViewMode`
+## 4. Rotas e títulos
 
-Rotas:
+Rotas oficiais:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
 ```
 
-Contrato atual:
+Regras:
 
-```ts
-export type TreeViewMode =
-  | 'minha-arvore'
-  | 'mapa-familiar'
-  | 'mapa-familiar-horizontal'
-  | 'genealogia'
-  | 'visao-completa';
-```
+- `/` redireciona para `/mapa-familiar`;
+- `/mapa-horizontal` não é rota oficial;
+- `/visao-completa-teste` não é rota oficial;
+- search params como `?pessoa=...` devem ser preservados na troca de view.
 
-Mapeamento:
+Títulos desktop:
 
-```ts
-'mapa-familiar': '/mapa-familiar'
-'mapa-familiar-horizontal': '/mapa-familiar-horizontal'
-```
+| View | Título |
+|---|---|
+| `/mapa-familiar` | `Mapa Familiar de {primeiroNome}` |
+| `/mapa-familiar-horizontal` | `Genealogia de {primeiroNome}` |
+
+O mesmo título é usado como base para exportação.
+
+---
+
+## 5. Painel
+
+As duas views usam o mesmo painel de grupos, filtros e ações.
+
+### 5.1 Grupos/filtros diretos
+
+| Key | Label |
+|---|---|
+| `tataravos` | Tataravós |
+| `bisavos` | Bisavós |
+| `avos` | Avós |
+| `pais` | Pais |
+| `tios` | Tios |
+| `primos` | Primos |
+| `sobrinhos` | Sobrinhos |
+| `irmaos` | Irmãos |
+| `filhos` | Filhos |
+| `netos` | Netos |
+| `conjuge` | Cônjuges |
+| `pets` | Pets |
 
 Regras:
 
-- `/mapa-familiar` e `/mapa-familiar-horizontal` usam o mesmo shell autenticado `Home`;
-- ambas preservam search params como `?pessoa=...`;
-- ambas preservam a pessoa central selecionada;
-- ambas respeitam filtros do painel;
-- `/` redireciona para `/mapa-familiar`;
-- `/mapa-familiar-horizontal` não deve redirecionar para `/visao-completa`;
-- `/mapa-horizontal` e `/visao-completa-teste` não existem mais.
+- `Cônjuges` e `Pets` ficam no bloco de filtros;
+- `Filhos` usa ícone `UserRoundPlus`;
+- contadores usam valores efetivamente renderizados pela view quando disponíveis.
+
+### 5.2 Ações
+
+| Flyout | Ações |
+|---|---|
+| Cores | paletas `white`, `visual`, `orange`, `brown` |
+| Exportar | `Área`, `Imagem`, `PDF`, `Imprimir` |
+| Destacar | `Linhas`, `Cards`, `Grupos` |
 
 ---
 
-## 5. Painel e navegação
-
-No desktop, o painel exibe:
-
-| Botão | View | Rota |
-|---|---|---|
-| Vertical | `mapa-familiar` | `/mapa-familiar` |
-| Horizontal | `mapa-familiar-horizontal` | `/mapa-familiar-horizontal` |
-
-Ambas as views usam os mesmos filtros diretos:
-
-```txt
-Tataravós
-Bisavós
-Avós
-Pais
-Tios
-Primos
-Sobrinhos
-Irmãos
-Filhos
-Netos
-Cônjuges
-Pets
-```
-
-E os mesmos filtros de vida:
-
-```txt
-Vivos
-Falecidos
-Pets
-```
-
-Observação importante:
-
-- `directRelativeFilters.pets` ainda precisa de revisão em `Home.tsx` se houver trecho forçando `pets: true`, porque isso pode impedir o botão de grupo **Pets** de ocultar cards como esperado.
-
----
-
-## 6. Mapa Familiar Vertical - `/mapa-familiar`
+## 6. Mapa Familiar Vertical
 
 ### 6.1 Arquitetura
 
-`DesktopFamilyMapView.tsx` deve manter separadas estas camadas:
+`DesktopFamilyMapView.tsx` organiza:
 
 1. configuração de layout;
-2. composição dos grupos;
+2. composição de grupos;
 3. políticas de cônjuges;
-4. regras de expansão e colunas;
-5. cálculo de âncoras;
-6. conectores SVG;
-7. renderização de grupos;
-8. renderização de cards diretos;
-9. zoom e escala responsiva.
+4. expansão;
+5. cálculo de altura/largura;
+6. cálculo de âncoras;
+7. conectores SVG;
+8. renderização de grupos/cards;
+9. zoom/escala;
+10. exportação/loading/seleção.
 
-Estrutura esperada:
-
-```txt
-FAMILY_MAP_LAYOUT
-types auxiliares
-helpers de composição
-helpers de layout
-helpers de conectores
-PositionedGroup
-DirectPersonCard
-DesktopFamilyMapView
-```
-
-### 6.2 Grupos
+### 6.2 Layout
 
 Tipos conceituais:
 
@@ -217,106 +175,97 @@ single
 
 Grupos principais:
 
-| Grupo | Papel |
-|---|---|
-| Tataravós | ancestrais |
-| Bisavós | ancestrais |
-| Avós | ancestrais |
-| Pais | pai/mãe da pessoa central |
-| Cônjuge | cônjuge da pessoa central |
-| Irmãos | irmãos da pessoa central |
-| Sobrinhos | filhos de irmãos |
-| Tios | irmãos dos pais |
-| Primos | filhos dos tios |
-| Filhos | filhos da pessoa central |
-| Netos | netos da pessoa central |
-| Pets | pets vinculados |
+- tataravós, bisavós, avós;
+- pai, mãe, pessoa central;
+- cônjuge;
+- tios, primos;
+- irmãos, sobrinhos;
+- filhos, netos;
+- pets.
 
 ### 6.3 Modo wide
 
-Quando `sidebarCollapsed === true`, `DesktopFamilyMapView` usa layout wide.
+Quando o painel lateral é colapsado, a vertical usa configuração wide.
 
 Regras:
 
-- canvas deve continuar centralizado;
-- não usar alinhamento forçado à esquerda;
-- margens paterna/materna precisam ficar proporcionais;
-- grupos inferiores não podem se sobrepor;
-- `Cônjuge` e `Pets` não podem colidir;
-- conectores inferiores continuam legíveis.
+- canvas maior;
+- áreas laterais reposicionadas;
+- largura exportável normalizada;
+- conectores recebem o mesmo offset dos grupos;
+- `Cônjuge`, `Pets`, filhos e netos não devem se sobrepor.
 
-### 6.4 Destaque de grupos
+### 6.4 Grupos com uma pessoa
 
-No Mapa Familiar Vertical, **Destacar > Grupos**:
+Quando um grupo tem uma pessoa e possui `singleWidth`, a largura deve ser reduzida.
 
-- não aplica sombra;
-- oculta molduras, fundos e títulos dos containers de grupo;
-- mantém os cards de pessoas e conectores visíveis.
+Regra aplicada:
 
-### 6.5 Cônjuges na vertical
+```txt
+Primos Paternos e Primos Maternos com uma pessoa usam largura menor para evitar destaque excessivo.
+```
 
-Regras:
+### 6.5 `Destacar > Grupos`
 
-- cônjuge da pessoa central permanece visível quando existir;
-- cônjuges de tataravós, bisavós e avós aparecem por padrão;
-- cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**;
-- cônjuges não devem ser conectados à pessoa errada;
-- conectores internos entre cônjuges só devem existir para relações conjugais explícitas.
+No vertical, o estado ativo equivale a:
 
-### 6.6 Mobile da vertical
-
-Em mobile, `/mapa-familiar` usa `MobileFamilyTreeView`.
+```txt
+hideGroupChrome = true
+```
 
 Comportamento:
 
-- barra nativa **Paterno | Central | Materno**;
-- botão de controle alinhado à barra;
-- painel inferior com filtros/ações;
-- cards com anos;
-- card central sem badge **Você**;
-- conectores no contexto rolável;
-- não há toggle **Vertical/Horizontal**.
+- remove molduras/fundos/sombras dos grupos;
+- oculta títulos dos grupos;
+- oculta labels `PAI`, `MÃE` e `CÔNJUGE`;
+- mantém cards visíveis;
+- recalcula altura/geometria dos grupos sem padding visual;
+- ajusta âncoras para que conectores se aproximem dos cards, não de caixas invisíveis.
+
+Atributos relacionados:
+
+```txt
+data-family-map-group="true"
+data-family-map-group-title="true"
+data-family-map-chrome-hidden="true"
+```
+
+### 6.6 Conectores
+
+Sistema:
+
+```txt
+SVG próprio em DesktopFamilyMapView
+```
+
+Regras:
+
+- conectores usam âncoras calculadas;
+- alterações em `x`, `width`, `top`, `height`, offsets ou modo sem chrome devem recalcular conectores;
+- `Destacar > Linhas` oculta conectores;
+- `Destacar > Grupos` não deve ocultar conectores.
 
 ---
 
-## 7. Mapa Familiar Horizontal - `/mapa-familiar-horizontal`
+## 7. Mapa Familiar Horizontal
 
-### 7.1 Objetivo
+### 7.1 Arquitetura
 
-A view horizontal organiza a família em colunas de geração, com visual do Mapa Familiar e conectores simplificados por casal.
+`DesktopFamilyHorizontalMapView.tsx` organiza:
 
-Objetivo:
-
-```txt
-Mostrar gerações em colunas compactas, preservando filtros e aparência do Mapa Familiar.
-```
-
-### 7.2 Arquitetura
-
-Componente:
-
-```txt
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-```
-
-Camadas internas:
-
-1. leitura de relacionamentos;
-2. cálculo de escopo visível;
+1. mapas de relacionamentos;
+2. escopo direto;
 3. reinclusão de cônjuges;
-4. cálculo de geração;
-5. referência de ordenação pela Visão Completa;
-6. agrupamento por geração;
-7. ordenação de filhos;
-8. adjacência de cônjuges;
-9. cálculo de layouts;
-10. cálculo de conectores;
-11. renderização de cards;
-12. exportação.
+4. geração manual/inferida;
+5. ordenação de referência;
+6. colunas por geração;
+7. layouts dos cards;
+8. conectores;
+9. exportação/loading/seleção.
 
-### 7.3 Colunas por geração
+### 7.2 Gerações
 
-A coluna é definida por:
+Fonte primária:
 
 ```txt
 pessoas.manual_generation
@@ -324,247 +273,265 @@ pessoas.manual_generation
 
 Regras:
 
-- valores válidos são de 1 a 6;
-- valores fora da faixa são limitados;
-- se `manual_generation` não existir ou for inválido, a geração pode ser inferida;
-- cônjuges herdam a geração do cônjuge conectado quando necessário;
-- pessoa central usa fallback de geração 5 se não houver valor;
-- inferência não persiste no Supabase.
+- valores válidos: 1 a 6;
+- valores inválidos são limitados;
+- fallback por inferência a partir de pais/filhos/cônjuges;
+- cônjuges podem herdar geração;
+- inferência é visual e não persiste no Supabase.
 
-### 7.4 Colunas vazias
+### 7.3 Colunas vazias
 
-Regras:
+- colunas sem cards visíveis são omitidas;
+- colunas restantes são compactadas;
+- conectores são recalculados;
+- canvas width acompanha as colunas ativas.
 
-- colunas sem cards visíveis são ocultadas;
-- as demais colunas são compactadas;
-- cabeçalhos usam apenas gerações ativas;
-- conectores são recalculados com base no índice compacto;
-- canvas width é calculado pelas colunas ativas.
+### 7.4 Ordenação
 
-### 7.5 Ordenação dos cards
+Ordem baseada em:
 
-A ordenação usa:
+1. referência de `genealogyColumnsLayout`;
+2. coordenada vertical;
+3. coordenada horizontal;
+4. ano de nascimento;
+5. nome.
 
-1. posição de referência de `genealogyColumnsLayout`;
-2. posição vertical `y`;
-3. posição horizontal `x`;
-4. fallback por nascimento;
-5. fallback por nome.
+Filhos do mesmo casal são ordenados do mais velho para o mais novo.
 
-Além disso:
+### 7.5 Cônjuges
 
-- filhos do mesmo casal são agrupados pelo par de pais;
-- filhos são ordenados do mais velho para o mais novo;
-- cônjuges visíveis da mesma geração são posicionados em linhas coladas.
+Sempre visíveis:
 
-### 7.6 Cônjuges na horizontal
+- cônjuge central;
+- cônjuges de avós;
+- cônjuges de bisavós;
+- cônjuges de tataravós.
 
-Constantes conceituais:
+Filtráveis:
 
-```txt
-Sempre visíveis: cônjuge central, cônjuges de avós, bisavós e tataravós.
-Filtráveis: cônjuges de tios, primos, sobrinhos, filhos e netos.
-```
+- cônjuges de tios;
+- cônjuges de primos;
+- cônjuges de sobrinhos;
+- cônjuges de filhos;
+- cônjuges de netos.
 
-Regras:
-
-- cônjuge da pessoa central é sempre reincluído quando existir e passar nos filtros de vida;
-- cônjuges de avós, bisavós e tataravós são sempre reincluídos;
-- cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**;
-- cônjuges reincluídos fora do escopo direto recebem tom/label **Cônjuge**;
-- cônjuges devem ficar imediatamente acima/abaixo um do outro;
-- se o cônjuge não passar no filtro de vida/tipo, não deve ser reincluído.
-
-### 7.7 Conectores da horizontal
+### 7.6 Conectores
 
 Sistema:
 
 ```txt
-SVG próprio dentro de DesktopFamilyHorizontalMapView
+SVG próprio em DesktopFamilyHorizontalMapView
 ```
-
-Conector de cônjuges:
-
-```txt
-centro inferior do card superior
-↓
-centro superior do card inferior
-```
-
-Conector casal → filhos:
-
-1. encontrar filhos comuns do casal;
-2. pegar o meio da linha vertical entre cônjuges;
-3. sair com linha horizontal até o gap entre colunas;
-4. criar tronco vertical no gap;
-5. tronco vai do primeiro ao último filho;
-6. cada filho recebe ramal horizontal até o card;
-7. quando vários casais usam o mesmo gap, distribuir troncos em `x` diferentes.
 
 Regras:
 
-- não desenhar linhas entre pais/filhos fora do modelo casal → filhos;
-- não ocultar SVG globalmente;
-- recalcular conectores ao filtrar grupos;
-- não deixar linhas conectarem cards invisíveis;
-- se casal não tiver filho visível na geração seguinte, manter apenas linha de cônjuge.
+- cônjuges da mesma geração ficam adjacentes;
+- linha vertical liga o casal;
+- do meio da linha sai conexão ao gap;
+- tronco vertical no gap liga filhos comuns;
+- ramais horizontais chegam aos filhos;
+- múltiplos casais no mesmo gap distribuem troncos em X.
 
-### 7.8 Destaque de grupos
+### 7.7 `Destacar > Grupos`
 
-No Mapa Familiar Horizontal, **Destacar > Grupos**:
+Quando ativo:
 
-- oculta os cabeçalhos `Geração X`;
-- reduz o topo inicial do layout para os cards ocuparem a área liberada;
-- recalcula os conectores a partir das novas posições dos cards.
+- oculta cabeçalhos `Geração X`;
+- recalcula `canvasTop` para subir cards;
+- recalcula conectores;
+- estado desligado restaura cabeçalhos e posição original.
 
-### 7.9 Cards e cores
+---
 
-A horizontal usa `VisualPersonCard`.
+## 8. Regras de Cônjuges
+
+### 8.1 Contagem
+
+O painel deve exibir apenas cônjuges filtráveis:
+
+```txt
+tios, primos, sobrinhos, filhos, netos
+```
+
+Não conta:
+
+```txt
+cônjuge central, cônjuges de avós, bisavós e tataravós.
+```
+
+### 8.2 Renderização
+
+- cônjuge central sempre aparece quando existir e passar nos filtros de vida;
+- cônjuges ancestrais sempre aparecem quando seus grupos ancestrais estão ativos;
+- cônjuges colaterais/descendentes dependem do filtro `Cônjuges`;
+- cônjuges reincluídos recebem tom/label visual de `Cônjuge`.
+
+---
+
+## 9. Paletas e cards
+
+Paletas:
+
+```txt
+white
+visual
+orange
+brown
+```
 
 Regras:
 
-- usa paleta/cores do Mapa Familiar;
-- estrela e cruz de status herdam o contraste definido pelo card em cada paleta;
-- Pets usa tom teal/ciano próprio na paleta Visual;
-- cônjuges têm tom próprio;
-- pets usam tom próprio;
-- cards ficam compactos;
-- cards mantêm avatar, nome e anos;
-- foto real tem prioridade sobre avatar fallback.
+- paletas são CSS variables aplicadas no document root;
+- não alteram dados/filtros;
+- `Pets` no modo visual usa tom teal/ciano, não laranja;
+- estrela e cruz seguem lógica de cor por paleta;
+- SVGs internos dos cards usam classes semânticas para exportação.
 
-### 7.10 Mobile da horizontal
-
-Em mobile, `/mapa-familiar-horizontal` usa a própria view horizontal.
-
-Comportamento atual:
-
-- barra visual **Paterno | Central | Materno** renderizada em `HomeMobileNav`;
-- **Central** ativo por padrão;
-- botões da barra ainda não possuem função definida;
-- botão de controle fica alinhado à barra;
-- painel inferior abre filtros/ações;
-- não há toggle **Vertical/Horizontal**.
-
-Pendência:
+Classes/atributos relevantes:
 
 ```txt
-Definir comportamento funcional da barra Paterno/Central/Materno na horizontal.
+family-map-avatar-icon
+family-map-person-silhouette
+family-map-pet-icon
+family-map-status-icon
+family-map-birth-icon
+family-map-deceased-icon
+data-family-map-avatar="true"
+data-family-map-photo-avatar="true"
+data-family-map-color-key
 ```
 
 ---
 
-## 8. Zoom
+## 10. Exportação
 
-Nas views do Mapa Familiar:
+As duas views expõem:
 
-- `Ctrl + scroll` aplica zoom interno;
-- zoom não deve alterar header, painel lateral ou bottom nav;
-- `Ctrl/Cmd + +` e `Ctrl/Cmd + -` devem acionar zoom da árvore quando interceptados pelo app;
-- **Restaurar visualização** redefine diretamente o zoom e a posição de rolagem iniciais;
-- zoom não deve alterar dados ou filtros.
+```txt
+saveImage
+savePdf
+print
+startAreaSelection
+zoomIn
+zoomOut
+```
 
----
+### 10.1 Títulos
 
-## 9. Exportação
-
-Ambas as views do Mapa Familiar exportam superfície HTML/CSS/SVG.
-
-| View | Nome base |
+| View | Título exportado |
 |---|---|
-| `/mapa-familiar` | `mapa-familiar` |
-| `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` |
+| Vertical | `Mapa Familiar de {primeiroNome}` |
+| Horizontal | `Genealogia de {primeiroNome}` |
 
-Regras:
+O título é composto no canvas com `prependTitleToCanvas`.
 
-- exportar superfície atual;
-- não prometer árvore completa server-side;
-- não prometer PDF multipágina;
-- preservar paleta, cards e conectores;
-- ignorar controles quando marcados para exportação;
-- validar fidelidade visual manualmente.
+### 10.2 Loading
+
+A view usa `TreeExportLoadingOverlay` e:
+
+- espera pintura do loading antes do processamento;
+- aguarda settle antes de remover o loading;
+- para impressão, aguarda `printCanvas` resolver.
+
+### 10.3 Área
+
+O overlay usa:
+
+- `position: fixed`;
+- target visível da árvore;
+- `captureVisibleAreaOnly`;
+- `cropCanvas`;
+- título no recorte.
+
+### 10.4 Avatares
+
+Durante exportação:
+
+- SVGs internos são normalizados no clone;
+- conectores são excluídos da serialização de ícones;
+- avatares sem foto não devem virar quadrados escuros.
 
 ---
 
-## 10. Anti-regressões
+## 11. Mobile
+
+### 11.1 `/mapa-familiar`
+
+No mobile usa:
+
+```txt
+MobileFamilyTreeView
+```
+
+Com:
+
+- abas `Paterno | Central | Materno`;
+- botão `Controles` do `HomeMobileNav`;
+- painel inferior com filtros/ações.
+
+### 11.2 `/mapa-familiar-horizontal`
+
+No mobile usa:
+
+```txt
+DesktopFamilyHorizontalMapView
+```
+
+Com:
+
+- barra visual `Paterno | Central | Materno`;
+- `Central` ativo por padrão;
+- comportamento funcional da barra ainda não definido;
+- botão `Controles` na mesma faixa;
+- painel inferior com filtros/ações.
+
+---
+
+## 12. QA obrigatório
+
+### Vertical
+
+- grupos e filtros;
+- `Cônjuges`;
+- `Pets`;
+- `Destacar > Linhas`;
+- `Destacar > Grupos`;
+- labels `PAI`, `MÃE`, `CÔNJUGE`;
+- conectores em modo sem grupos;
+- modo wide;
+- exportação PNG/PDF/print/área.
+
+### Horizontal
+
+- gerações 1–6;
+- colunas vazias;
+- cônjuges adjacentes;
+- casal → filhos;
+- `Destacar > Grupos`;
+- título `Genealogia de {nome}`;
+- exportação PNG/PDF/print/área.
+
+### Paletas/exportação
+
+- white, visual, orange, brown;
+- avatares/silhuetas;
+- estrela/cruz;
+- pets;
+- título no canvas;
+- loading.
+
+---
+
+## 13. Anti-regressões
 
 Não fazer:
 
-- substituir `/mapa-familiar` por `/mapa-familiar-horizontal`;
-- substituir `/visao-completa` pela horizontal;
-- apontar **Horizontal** para `/visao-completa`;
-- recriar `/mapa-horizontal` ou `/visao-completa-teste`;
-- misturar conectores ReactFlow com conectores SVG das views do Mapa Familiar;
-- esconder todos os conectores SVG da horizontal;
-- quebrar adjacência de cônjuges;
-- deixar filhos fora da ordem de nascimento;
-- renderizar colunas vazias;
-- ocultar cônjuge principal pelo filtro **Cônjuges**;
-- ocultar cônjuges ancestrais pelo filtro **Cônjuges**;
-- tratar `manual_generation` como dado a ser alterado pela view;
-- usar CSS global sem escopo para corrigir layout.
-
----
-
-## 11. QA mínimo
-
-### Desktop
-
-Validar:
-
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Checklist:
-
-- Vertical/Horizontal no painel;
-- filtros de grupos;
-- filtros de vida;
-- filtro Cônjuges;
-- filtro Pets;
-- paletas Branca, Azul, Laranja e Marrom;
-- zoom;
-- exportação;
-- painel colapsado;
-- colunas vazias;
-- conectores casal → filhos.
-
-### Mobile
-
-Validar:
-
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Breakpoints:
-
-```txt
-320px
-375px
-390px
-430px
-```
-
-Checklist:
-
-- sem toggle Vertical/Horizontal;
-- barra Paterno/Central/Materno no lugar correto;
-- botão de controle alinhado à barra;
-- painel inferior abre e fecha;
-- bottom nav não cobre conteúdo essencial;
-- Safari/iOS respeita safe-area.
-
----
-
-## 12. Pendências conhecidas
-
-| Pendência | Local |
-|---|---|
-| Corrigir/validar filtro de grupo **Pets** | `Home.tsx` / filtros diretos |
-| Definir função da barra mobile da horizontal | Produto/UX |
-| QA real dos conectores da horizontal com filtros combinados | `DesktopFamilyHorizontalMapView.tsx` |
-| QA visual autenticado da vertical em modo wide | `DesktopFamilyMapView.tsx` |
-| QA de exportação das duas views | `treeExport.ts` + views |
+- mover a horizontal para ReactFlow;
+- usar `.react-flow` como alvo de exportação dos mapas;
+- reintroduzir `/mapa-horizontal`;
+- remover `netos` de cônjuges filtráveis;
+- reexibir labels `PAI`, `MÃE`, `CÔNJUGE` no modo `Destacar > Grupos`;
+- aplicar CSS amplo em `svg path`;
+- ocultar ícones internos ao esconder conectores;
+- duplicar título no PDF;
+- fechar loading cedo demais.
