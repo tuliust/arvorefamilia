@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/INVENTARIO_TECNICO.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: inventário técnico atualizado após refatoração das rotas, painel, CSS e higiene do repositório.
+> Status: inventário técnico atualizado após refatoração das rotas, painel, CSS, mobile, paletas e debug temporário.
 
 ---
 
@@ -31,6 +30,7 @@ Classificações:
 | Removido | Não existe mais no código versionado ou foi removido da frente atual. |
 | Candidato a refatoração | Usado, mas deve ser simplificado antes de futuras limpezas. |
 | Risco de regressão | Pode quebrar fluxo crítico se alterado sem teste. |
+| Temporário/debug | Útil para QA, mas não deve ser tratado como produto final. |
 
 ---
 
@@ -98,7 +98,7 @@ Classificações:
 | `src/app/pages/home/HomeTreeSection.tsx` | Decide renderização da view ativa por modo e breakpoint | Vigente crítico |
 | `src/app/pages/home/HomeHeader.tsx` | Header da Home pós-login | Vigente |
 | `src/app/pages/home/HomeMobileNav.tsx` | Bottom/mobile nav e acesso ao painel mobile | Vigente crítico no mobile |
-| `src/app/pages/home/SidebarPanelTabs.tsx` | Controles superiores, alternância, paletas, exportação, destaque e filtros diretos | Vigente com dívida de nome |
+| `src/app/pages/home/SidebarPanelTabs.tsx` | Controles, alternância, paletas, exportação, destaque e filtros | Vigente com dívida de nome |
 | `src/app/pages/home/DirectRelationKpiGrid.tsx` | KPIs/filtros de relações diretas | Vigente |
 | `src/app/pages/home/DirectRelativeFilterGrid.tsx` | Filtros de grupos diretos | Vigente |
 | `src/app/pages/home/LifeStatusKpiGrid.tsx` | Filtros por status de vida/pets | Vigente |
@@ -111,6 +111,16 @@ SidebarPanelTabs.tsx mantém nome histórico, embora não use mais tabs.
 ```
 
 Refatorações futuras devem extrair estado e ações por domínio, não reescrever tudo em um único commit.
+
+### 4.1 Estados/contratos recentes em `Home.tsx`
+
+| Estado/contrato | Categoria | Observação |
+|---|---|---|
+| `mobileGroupsOpen` | Vigente mobile | Controla grupos sob demanda no modal mobile. |
+| `legendOpen` | Vigente com nome histórico | Controla modal mobile de controles; não representa aba de legenda. |
+| `renderedDirectRelationCounts` | Vigente | Contagens efetivas vindas da view. |
+| `treeLayoutRevision` | Vigente | Força recalculo/re-render de layout quando necessário. |
+| `debugViewPersonId` | Temporário/debug | Usado para `Visualizar como...`, se implementado. |
 
 ---
 
@@ -126,9 +136,49 @@ Refatorações futuras devem extrair estado e ações por domínio, não reescre
 | `TreeAreaSelectionOverlay.tsx` | Exportação por área | Vigente | Alto |
 | `TreeExportLoadingOverlay.tsx` | Loading de exportação | Vigente | Médio |
 
+### 5.1 Contratos de títulos
+
+| View | Título |
+|---|---|
+| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` |
+| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` |
+
+### 5.2 Contratos mobile
+
+| View mobile | Contrato |
+|---|---|
+| `MobileFamilyTreeView` | Paterno/Central/Materno; paleta herdada do desktop; conectores alinhados ao desktop. |
+| `MobileFamilyHorizontalMapView` | Uma geração por tela; botões `Ger X`; swipe; scroll vertical até cards/conectores; sem scroll horizontal manual. |
+
 ---
 
-## 6. Stack legado ativo da árvore
+## 6. Paletas, cards e avatares
+
+| Arquivo | Função | Categoria |
+|---|---|---|
+| `treeColorPalettes.ts` | Define paletas `white`, `visual`, `orange`, `brown` | Vigente crítico |
+| `FamilyTreeVisualCards.tsx` | Cards, avatares, ícones e status | Vigente crítico |
+| `family-map-qa.css` | Estilo da vertical e tokens | Vigente |
+| `family-map-horizontal.css` | Estilo da horizontal e tokens | Vigente |
+| `home-sidebar-unified.css` | Painel, modal mobile e ajustes globais da Home | Vigente |
+
+Contrato de avatar:
+
+```txt
+foto real -> foto_principal_url
+pessoa sem foto -> User
+pet -> PawPrint
+```
+
+Contrato de paleta:
+
+```txt
+Desktop é referência. Mobile herda tokens --tree-palette-*.
+```
+
+---
+
+## 7. Stack legado ativo da árvore
 
 | Arquivo | Situação | Ação recomendada |
 |---|---|---|
@@ -141,7 +191,7 @@ Refatorações futuras devem extrair estado e ações por domínio, não reescre
 | `layouts/directFamilyDistributedLayout.ts` | Helper usado pelas views oficiais | Preservar. |
 | `layouts/genealogyColumnsLayout.ts` | Dependência da horizontal | Preservar. |
 
-Contrato já extraído:
+Contrato já extraído ou recomendado:
 
 ```txt
 src/app/components/FamilyTree/actions.ts
@@ -149,7 +199,7 @@ src/app/components/FamilyTree/actions.ts
 
 ---
 
-## 7. Serviços principais
+## 8. Serviços principais
 
 | Arquivo | Categoria | Observação |
 |---|---|---|
@@ -164,7 +214,7 @@ src/app/components/FamilyTree/actions.ts
 
 ---
 
-## 8. Componentes removidos na frente atual
+## 9. Componentes removidos na frente atual
 
 | Arquivo | Status |
 |---|---|
@@ -183,11 +233,11 @@ Não restaurar arquivo removido sem nova busca de uso, justificativa e validaç�
 
 ---
 
-## 9. CSS
+## 10. CSS
 
 | Arquivo | Categoria | Observação |
 |---|---|---|
-| `home-sidebar-unified.css` | Vigente | Painel simplificado e modal mobile. |
+| `home-sidebar-unified.css` | Vigente | Painel simplificado, modal mobile, filtros e grupos. |
 | `mobile-tree-controls.css` | Legado ativo | Renderer ReactFlow mobile; preservar até remoção do stack. |
 | `family-map-qa.css` | Vigente | Ajustes do mapa vertical e transparência da horizontal. |
 | `family-map-horizontal.css` | Vigente | Horizontal desktop/mobile, paletas e exportação. |
@@ -201,11 +251,22 @@ Regras:
 - não remover CSS por nome antigo sem verificar escopo;
 - `minha-arvore` pode existir em CSS da rota `/minha-arvore/editar`;
 - `genealogia` pode existir como conceito visual, não rota;
-- CSS global de SVG deve ser evitado.
+- CSS global de SVG deve ser evitado;
+- mobile de árvore não deve usar cores hardcoded como fonte da paleta.
 
 ---
 
-## 10. Testes
+## 11. Debug temporário
+
+| Elemento | Local | Categoria | Ação |
+|---|---|---|---|
+| `Visualizar como...` | `Home.tsx` | Temporário/debug | Decidir se remove, protege por flag ou restringe a admin. |
+| `data-tree-debug-viewer="true"` | DOM do debug | Temporário/debug | Deve ser ignorado pela exportação. |
+| `debugViewPersonId` | Estado em memória | Temporário/debug | Não persistir dados reais. |
+
+---
+
+## 12. Testes
 
 | Arquivo | Categoria | Observação |
 |---|---|---|
@@ -223,9 +284,22 @@ npm run test:e2e
 git diff --check
 ```
 
+QA manual obrigatório para:
+
+```txt
+/mapa-familiar desktop
+/mapa-familiar mobile
+/mapa-familiar-horizontal desktop
+/mapa-familiar-horizontal mobile
+paletas branca/azul/laranja/marrom
+modal mobile
+exportação
+debug Visualizar como...
+```
+
 ---
 
-## 11. Configuração e higiene
+## 13. Configuração e higiene
 
 | Arquivo | Categoria | Observação |
 |---|---|---|
@@ -253,7 +327,7 @@ backups/
 
 ---
 
-## 12. Documentação
+## 14. Documentação
 
 Canônicos atualizados:
 
@@ -267,6 +341,7 @@ docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
 docs/PLANO_PROXIMOS_PASSOS.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```
 
@@ -274,11 +349,13 @@ Documentos históricos ou mistos devem ser revisados antes de virar referência.
 
 ---
 
-## 13. Próximas frentes técnicas possíveis
+## 15. Próximas frentes técnicas possíveis
 
 1. Renomear `SidebarPanelTabs.tsx` para nome neutro.
 2. Extrair responsabilidades de `Home.tsx`.
-3. Auditar stack ReactFlow/Dagre.
-4. Criar CI GitHub Actions.
-5. Ampliar E2E autenticado com dados reais ou fixtures.
-6. Auditar dependências e `pnpm.overrides`.
+3. Extrair `horizontalMapViewModel` compartilhado entre desktop e mobile.
+4. Auditar stack ReactFlow/Dagre.
+5. Decidir destino do debug `Visualizar como...`.
+6. Criar CI GitHub Actions.
+7. Ampliar E2E autenticado com dados reais ou fixtures.
+8. Auditar dependências e `pnpm.overrides`.

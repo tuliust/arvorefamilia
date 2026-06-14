@@ -1,6 +1,6 @@
-# Legado - Minha Árvore
+# Legado — Minha Árvore
 
-> Última revisão histórica: 2026-06-13  
+> Última revisão histórica: 2026-06-14  
 > Local recomendado: `docs/historico/MINHA_ARVORE_VIEW.md`  
 > Origem: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Status: **legado arquivado**. Este documento não é canônico para implementação atual.
@@ -59,6 +59,7 @@ O conteúdo foi reclassificado porque:
 | view direta ReactFlow como principal | substituída por `/mapa-familiar` |
 | mobile segmentado da Minha Árvore | reaproveitado por `/mapa-familiar` mobile via `MobileFamilyTreeView` |
 | edição da própria árvore | preservada em `/minha-arvore/editar` |
+| título atual da vertical | `Árvore Familiar de {primeiroNome}` |
 
 ---
 
@@ -94,6 +95,7 @@ Esses conceitos foram redistribuídos para documentos canônicos atuais:
 | UX mobile | `docs/GUIA_UX_LAYOUT.md` |
 | Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
+| Não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
 
 ---
 
@@ -114,7 +116,7 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 Motivos:
 
-- podem conter contratos ainda usados, como `FamilyTreeActions`;
+- podem conter contratos ainda usados;
 - layouts com nomes antigos podem ser dependência real das views atuais;
 - ReactFlow pode permanecer como dependência técnica até refatoração própria;
 - remoção deve acontecer em frente separada, com busca de imports e build.
@@ -130,11 +132,39 @@ Mesmo com a rota removida, algumas regras seguem válidas e foram preservadas na
 - cônjuges têm regra específica de visibilidade;
 - conectores não devem inferir casamento por proximidade visual;
 - exportação deve ignorar painel, header, bottom nav, overlays e loading;
-- ajustes visuais não alteram dados reais.
+- ajustes visuais não alteram dados reais;
+- paletas mobile devem seguir a referência desktop;
+- pessoa sem foto usa `User`; pet usa `PawPrint`.
 
 ---
 
-## 7. Regras que não devem ser reativadas
+## 7. Regras atuais da view substituta
+
+A substituta funcional da antiga `/minha-arvore` é `/mapa-familiar`.
+
+Contrato atual:
+
+```txt
+/mapa-familiar
+```
+
+- desktop/tablet: `DesktopFamilyMapView`;
+- mobile: `MobileFamilyTreeView`;
+- título: `Árvore Familiar de {primeiroNome}`;
+- painel desktop completo;
+- modal mobile reduzido;
+- exportação oficial nas ações de Área, Imagem/PNG, PDF e Imprimir.
+
+No mobile vertical:
+
+- manter navegação Paterno/Central/Materno;
+- alinhar conectores à estrutura desktop quando houver divergência;
+- não usar a horizontal mobile como base de comportamento;
+- não restaurar ReactFlow para corrigir layout.
+
+---
+
+## 8. Regras que não devem ser reativadas
 
 Não reintroduzir:
 
@@ -151,11 +181,12 @@ Não usar este documento para:
 - restaurar links;
 - restaurar favoritos;
 - restaurar busca global;
-- orientar novas alterações na árvore.
+- orientar novas alterações na árvore;
+- justificar retorno de ReactFlow como view pública principal.
 
 ---
 
-## 8. Quando consultar este histórico
+## 9. Quando consultar este histórico
 
 Consultar apenas para:
 
@@ -163,14 +194,17 @@ Consultar apenas para:
 - recuperar contexto de ReactFlow;
 - revisar motivo de componentes legados;
 - planejar remoção futura de código morto;
-- comparar comportamento histórico com a baseline atual.
+- comparar comportamento histórico com a baseline atual;
+- rastrear quais regras foram migradas para os guias canônicos.
 
 Fonte de verdade atual:
 
 ```txt
+docs/README.md
 docs/BASELINE_PRODUTO_ATUAL.md
 docs/INVENTARIO_TECNICO.md
 docs/DECISOES_ARQUITETURAIS.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```

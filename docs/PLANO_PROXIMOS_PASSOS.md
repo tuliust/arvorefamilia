@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: plano vivo após fechamento técnico da frente de rotas, painel, CSS, docs e higiene do repositório.
+> Status: plano vivo após ajustes nas views oficiais, painel desktop, modal mobile, paletas, avatares e mobile horizontal.
 
 ---
 
@@ -32,8 +31,8 @@ docs/BASELINE_PRODUTO_ATUAL.md
 
 | View | Rota | Estado |
 |---|---|---|
-| Mapa Familiar Vertical | `/mapa-familiar` | Implementada; rota default de `/`; usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile. |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Implementada; usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile, com uma geração por tela no mobile. |
+| Árvore Familiar Vertical | `/mapa-familiar` | Implementada; rota default de `/`; usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile. |
+| Mapa Genealógico Horizontal | `/mapa-familiar-horizontal` | Implementada; usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile, com uma geração por tela no mobile. |
 | Minha Árvore | `/minha-arvore` | Removida como view ativa. |
 | Genealogia | `/genealogia` | Removida como rota ativa. |
 | Visão Completa | `/visao-completa` | Removida como rota ativa. |
@@ -45,11 +44,11 @@ Estado técnico consolidado:
 - `TreeViewMode` contém apenas duas views oficiais;
 - `TreeHomeShell` envolve as rotas de árvore;
 - painel desktop/mobile foi simplificado e não usa mais a barra `Filtros | Legendas | Ações`;
+- modal mobile possui contrato próprio: Vertical/Horizontal, Cores, Grupos, Destacar e Filtros;
 - busca e favoritos apontam para rotas atuais;
 - aliases antigos são keywords, não rotas ativas;
-- exportação foi preservada para as duas views oficiais;
-- artefatos locais e backups foram removidos/ignorados no Git;
-- build, unit tests e E2E passaram na validação final.
+- exportação foi preservada para as duas views oficiais no painel completo/desktop;
+- artefatos locais e backups foram removidos/ignorados no Git.
 
 ---
 
@@ -60,14 +59,20 @@ Estado técnico consolidado:
 | QA-001 | `/mapa-familiar` | QA visual/manual | Validar alinhamento panorâmico, conectores, grupos laterais, modo painel colapsado, centralização, colisões, margens, exportação e paletas com dados reais. | Aberto |
 | QA-002 | `/mapa-familiar-horizontal` | QA visual/manual | Validar colunas ativas, colunas vazias ocultadas, cônjuges adjacentes, conectores casal → filhos, distribuição de troncos, filtros e exportação. | Aberto |
 | QA-003 | Pets | QA funcional | Confirmar se `directRelativeFilters.pets` e `personFilters.pets` cobrem corretamente grupo Pets e status/tipo nas duas views. | Aberto |
-| QA-004 | Horizontal mobile | QA visual/funcional | Validar chips `G1/G2/G3`, swipe lateral, scroll vertical por geração, conectores, safe-area e retorno ao estado inicial. | Aberto |
+| QA-004 | Horizontal mobile | QA visual/funcional | Validar botões `Ger 1/Ger 2/Ger 3`, swipe lateral, ausência de scroll horizontal manual, scroll vertical por geração, conectores, safe area e retorno ao estado inicial. | Aberto |
 | QA-005 | Mobile Safari/iOS | QA visual | Validar posição da barra e do botão de controle em iOS/Safari nos breakpoints 320, 375, 390 e 430px. | Aberto |
 | QA-006 | Exportação | QA funcional | Validar PNG, PDF, impressão e Área em `/mapa-familiar` e `/mapa-familiar-horizontal`, incluindo título, loading, conectores, paletas e avatares. | Aberto |
 | QA-007 | Documentação cruzada | Documentação/QA | Conferir links cruzados após aplicar todos os documentos revisados no repo. | Aberto |
 | QA-008 | Issue #8 | Operação | Registrar comentário final com resumo da frente e fechar a issue se não houver nova pendência. | Aberto |
+| QA-009 | Paletas mobile | QA visual | Validar as paletas Branca, Azul, Laranja e Marrom no mobile contra a referência desktop, nas duas rotas da árvore. | Aberto |
+| QA-010 | Avatares | QA visual | Confirmar `User` para pessoas sem foto e `PawPrint` para pets em desktop/mobile, incluindo exportação. | Aberto |
+| QA-011 | Modal mobile | QA funcional/visual | Validar título `Controles`, botão X, ausência de subtítulo, Vertical/Horizontal, Cores, Grupos, Destacar, filtros em 4 colunas e ausência de Zoom/Exportar/Restaurar. | Aberto |
+| QA-012 | Conectores mobile | QA visual | Validar mobile vertical contra referência desktop e mobile horizontal até o fim de cards e linhas conectoras visíveis. | Aberto |
+| DBG-001 | Visualizar como | Debug/produto | Decidir se o dropdown temporário `Visualizar como...` fica, é removido ou protegido por flag/admin. | Aberto |
 | REF-001 | `Home.tsx` | Refatoração | Extrair responsabilidades de carregamento, filtros, exportação e painel em hooks/components menores. | Backlog |
 | REF-002 | `SidebarPanelTabs.tsx` | Refatoração | Renomear para nome neutro, como `TreeControlPanel`, já que não renderiza mais tabs. | Backlog |
 | REF-003 | ReactFlow/Dagre | Refatoração técnica | Auditar se o stack legado ainda é necessário e planejar remoção em frente própria. | Backlog |
+| REF-004 | Horizontal shared model | Refatoração técnica | Extrair view model compartilhado entre `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView`, evitando divergência de hierarquia. | Backlog |
 | CI-001 | CI | Infra | Criar GitHub Actions para build, Vitest e Playwright em PR/push. | Backlog |
 | DEP-001 | Dependências | Manutenção | Revisar `pnpm.overrides` e consistência npm/pnpm em frente separada. | Backlog |
 
@@ -83,7 +88,7 @@ Regras:
 ## 3. Itens fechados, obsoletos ou reclassificados
 
 | ID | Frente | Resultado | Status |
-|---|---|---|---|
+|---|---|---|
 | EXP-001 | `/mapa-horizontal` | Rota experimental removida. | Obsoleto/removido |
 | EXP-002 | `/visao-completa-teste` | Rota experimental removida. | Obsoleto/removido |
 | EXP-003 | Botão Horizontal → `/visao-completa` | Substituído por `/mapa-familiar-horizontal`. | Concluído |
@@ -93,22 +98,24 @@ Regras:
 | HMAP-001 | Cônjuges na horizontal | Linha/conectores de cônjuges preservados tecnicamente. | Concluído tecnicamente; QA aberto |
 | HMAP-002 | Casal → filhos | Tronco e ramais preservados tecnicamente. | Concluído tecnicamente; QA aberto |
 | HMAP-003 | Colunas vazias | Colunas sem cards visíveis ocultadas. | Concluído tecnicamente; QA aberto |
-| MOB-001 | Toggle Vertical/Horizontal mobile antigo | Removido/substituído pelo modal de controles. | Concluído |
+| MOB-001 | Toggle Vertical/Horizontal mobile antigo | Substituído pelo modal de controles. | Concluído |
 | MOB-002 | Botão de controle mobile | Alinhado às views atuais. | Concluído tecnicamente; QA iOS aberto |
 | MOB-003 | Horizontal mobile por geração | `MobileFamilyHorizontalMapView` preservado. | Concluído tecnicamente; QA aberto |
+| MOB-004 | Modal mobile reduzido | Modal sem Zoom, Restaurar e Exportar; com Cores, Grupos, Destacar, Filtros e Vertical/Horizontal. | Concluído tecnicamente; QA aberto |
 | PANEL-001 | Barra `Filtros | Legendas | Ações` | Removida/simplificada no painel atual. | Concluído |
 | SEARCH-001 | Busca/favoritos da horizontal | `/mapa-familiar-horizontal` incluída em busca/favoritos. | Concluído |
+| AVATAR-001 | Avatares sem foto | Padronização em `User`; pets em `PawPrint`. | Concluído tecnicamente; QA aberto |
 | CLEAN-001 | Componentes órfãos | Removidos componentes sem uso. | Concluído |
 | CLEAN-002 | Resolver legado | `relationshipResolverService.ts` removido. | Concluído |
 | HYGIENE-001 | `test-results/` | Ignorado no `.gitignore`. | Concluído |
 | HYGIENE-002 | `backups/` e `.env*.save` | Ignorados; backup/env local removidos do versionamento. | Concluído |
-| DOC-001 | Docs do painel | Atualizadas para refletir painel sem abas. | Concluído nesta revisão |
+| DOC-001 | Docs do painel | Atualizadas para refletir painel sem abas e modal mobile. | Concluído nesta revisão |
 
 ---
 
 ## 4. QA prioritário
 
-### 4.1 Mapa Familiar Vertical
+### 4.1 Árvore Familiar Vertical
 
 Rota:
 
@@ -133,9 +140,10 @@ Breakpoints:
 Checklist:
 
 - [ ] abre como view padrão a partir de `/`;
-- [ ] título `Mapa Familiar de {nome}`;
+- [ ] título `Árvore Familiar de {nome}`;
 - [ ] botão Horizontal navega para `/mapa-familiar-horizontal`;
 - [ ] painel desktop não corta controles;
+- [ ] modal mobile tem apenas controles essenciais;
 - [ ] cônjuge principal aparece;
 - [ ] cônjuges ancestrais aparecem;
 - [ ] cônjuges colaterais dependem de filtro;
@@ -144,7 +152,7 @@ Checklist:
 - [ ] `Destacar > Grupos` não quebra layout;
 - [ ] exportação preserva título, cards, conectores e paleta.
 
-### 4.2 Mapa Familiar Horizontal
+### 4.2 Mapa Genealógico Horizontal
 
 Rota:
 
@@ -154,12 +162,13 @@ Rota:
 
 Checklist:
 
+- [ ] título `Mapa Genealógico de {nome}`;
 - [ ] colunas por geração aparecem corretamente;
 - [ ] colunas vazias são ocultadas;
 - [ ] cônjuges ficam adjacentes;
 - [ ] conectores casal → filhos são coerentes;
 - [ ] filtros afetam cards esperados;
-- [ ] fundo transparente permanece onde definido;
+- [ ] fundo/paleta seguem desktop;
 - [ ] Vertical retorna para `/mapa-familiar` preservando query;
 - [ ] exportação não corta colunas.
 
@@ -168,14 +177,46 @@ Checklist:
 Checklist:
 
 - [ ] `/mapa-familiar` mobile mantém Paterno/Central/Materno;
-- [ ] `/mapa-familiar-horizontal` mobile usa chips de geração;
+- [ ] `/mapa-familiar-horizontal` mobile usa botões `Ger`;
 - [ ] swipe lateral não conflita com scroll vertical;
+- [ ] não há scroll horizontal manual na horizontal mobile;
+- [ ] scroll vertical vai até cards e conectores visíveis;
 - [ ] modal de controles abre/fecha;
 - [ ] body destrava após fechar modal;
 - [ ] bottom nav não cobre controles;
-- [ ] safe area iOS está correta.
+- [ ] safe area iOS está correta;
+- [ ] botão de controles fica alinhado à barra de geração.
 
-### 4.4 Exportação
+### 4.4 Modal mobile
+
+Validar:
+
+- [ ] título `Controles`;
+- [ ] subtítulo removido;
+- [ ] botão X fecha;
+- [ ] Vertical/Horizontal visíveis;
+- [ ] Cores visível;
+- [ ] Grupos visível;
+- [ ] Destacar visível;
+- [ ] filtros em 4 colunas;
+- [ ] grupos só aparecem ao clicar em `Grupos`;
+- [ ] Zoom/Restaurar/Exportar ausentes.
+
+### 4.5 Paletas e avatares
+
+Validar nas duas views e nos dois ambientes:
+
+- [ ] paleta Branca igual ao desktop;
+- [ ] paleta Azul igual ao desktop;
+- [ ] paleta Laranja igual ao desktop;
+- [ ] paleta Marrom igual ao desktop;
+- [ ] cards, bordas, textos e conectores mudam juntos;
+- [ ] pessoa sem foto usa `User`;
+- [ ] pet usa `PawPrint`;
+- [ ] fotos reais continuam aparecendo;
+- [ ] exportação preserva avatares.
+
+### 4.6 Exportação
 
 Testar nas duas views:
 
@@ -192,7 +233,8 @@ Verificar:
 - [ ] painel não aparece;
 - [ ] header não aparece;
 - [ ] bottom nav não aparece;
-- [ ] overlay/loading não aparecem;
+- [ ] modal/debug não aparece;
+- [ ] overlay/loading não aparece;
 - [ ] SVGs dos cards não viram quadrados escuros;
 - [ ] conectores aparecem;
 - [ ] paleta ativa é respeitada;
@@ -208,6 +250,7 @@ Fechar a issue quando:
 - [ ] build passar;
 - [ ] unit tests passarem;
 - [ ] E2E passar;
+- [ ] QA mobile essencial for registrado;
 - [ ] `git status --short` ficar limpo;
 - [ ] comentário final registrar commits e escopo concluído.
 
@@ -220,8 +263,11 @@ Resumo:
 - Mantidas apenas as views `/mapa-familiar` e `/mapa-familiar-horizontal`.
 - Preservada `/minha-arvore/editar`.
 - Removidas views antigas `/minha-arvore`, `/genealogia` e `/visao-completa`.
-- Painel simplificado sem `Filtros | Legendas | Ações`.
+- Painel desktop simplificado sem `Filtros | Legendas | Ações`.
+- Modal mobile específico com Vertical/Horizontal, Cores, Grupos, Destacar e Filtros.
 - Busca/favoritos alinhados às rotas atuais.
+- Paletas mobile alinhadas ao desktop.
+- Avatares padronizados: `User` para pessoas sem foto e `PawPrint` para pets.
 - Componentes órfãos, resolver legado, backups e cópia local de ambiente removidos.
 - `.gitignore` atualizado para artefatos locais.
 - Docs canônicas revisadas.
@@ -244,8 +290,8 @@ Se tudo passar:
 
 ```bash
 git add docs
-git commit -m "docs: atualiza documentacao final da arvore"
+git commit -m "docs: atualiza documentacao da arvore e controles mobile"
 git push
 ```
 
-Depois fechar a Issue #8.
+Depois fechar a Issue #8, se não houver nova pendência real.

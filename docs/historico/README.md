@@ -1,6 +1,6 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local recomendado: `docs/historico/README.md`  
 > Tipo: índice e consolidação histórica.  
 > Status: atualizado após a definição da baseline atual com duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
@@ -75,6 +75,13 @@ Exceção vigente:
 
 é rota de edição de membro e deve permanecer documentada fora do contexto das views antigas.
 
+Títulos vigentes das views oficiais:
+
+| Rota | Título |
+|---|---|
+| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` |
+| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` |
+
 ---
 
 ## 3. Documentos históricos de views antigas
@@ -125,8 +132,9 @@ A antiga `/genealogia` organizava pessoas por gerações em ReactFlow.
 Status atual:
 
 - rota removida;
-- título “Genealogia” permanece apenas como conceito visual da horizontal;
-- horizontal atual é `/mapa-familiar-horizontal`.
+- linguagem genealógica permanece apenas como conceito visual da horizontal atual;
+- horizontal atual é `/mapa-familiar-horizontal`;
+- título atual: `Mapa Genealógico de {primeiroNome}`.
 
 Documento histórico:
 
@@ -152,7 +160,7 @@ docs/historico/GENEALOGIA_VIEW.md
 
 ---
 
-## 5. Histórico de filtros e pets
+## 5. Histórico de filtros, pets e avatares
 
 A documentação antiga de filtros e pets continha regras ainda úteis, mas misturadas à view removida `/minha-arvore`.
 
@@ -160,10 +168,13 @@ Regras preservadas nos docs atuais:
 
 - separação entre `personFilters` e `directRelativeFilters`;
 - pets por `humano_ou_pet === 'Pet'`;
-- avatar visual por `genero`;
 - cônjuges sempre visíveis versus filtráveis;
 - contagens efetivas por view;
-- filtros não alteram dados.
+- filtros não alteram dados;
+- pessoa com foto usa `foto_principal_url`;
+- pessoa humana sem foto usa `User`;
+- pet sem foto usa `PawPrint`;
+- não há distinção visual obrigatória por gênero para avatar sem foto.
 
 Documento histórico:
 
@@ -178,6 +189,7 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 ```
 
 ---
@@ -193,7 +205,8 @@ A frente de exportação consolidou:
 - loading;
 - título no canvas;
 - exclusão de painel/header/bottom nav;
-- normalização de SVGs.
+- normalização de SVGs;
+- preservação de conectores, paletas e avatares.
 
 Documento atual:
 
@@ -205,28 +218,28 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ## 7. Histórico de painel
 
-O painel atual ainda contém:
+O painel antigo usava a barra:
 
 ```txt
-Filtros
-Legendas
-Ações
+Filtros | Legendas | Ações
 ```
 
-Isso deve ser tratado como estado atual com dívida conhecida.
+Esse padrão não é UI vigente.
 
-Próxima frente:
+Estado atual:
 
-- remover barra de abas;
-- manter filtros/grupos visíveis diretamente;
-- preservar controles superiores:
-  - Zoom;
-  - Restaurar;
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Exportar;
-  - Destacar.
+- desktop tem painel completo;
+- mobile tem modal específico de controles;
+- a barra `Filtros | Legendas | Ações` não deve voltar;
+- `SidebarPanelTabs.tsx` mantém nome histórico, mas não deve ser entendido como contrato de abas.
+
+Contrato atual resumido:
+
+| Ambiente | Controles |
+|---|---|
+| Desktop | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar, Grupos/Filtros |
+| Mobile | Vertical, Horizontal, Cores, Grupos, Destacar, Filtros |
+| Mobile não deve ter | Zoom, Restaurar, Exportar |
 
 Documento atual:
 
@@ -246,8 +259,10 @@ Características atuais:
 
 - desktop/tablet usa `DesktopFamilyMapView`;
 - mobile usa `MobileFamilyTreeView`;
+- título atual: `Árvore Familiar de {primeiroNome}`;
 - exportação HTML/CSS/SVG;
-- conectores SVG;
+- conectores SVG no desktop;
+- conectores HTML/CSS no mobile;
 - filtros de grupos/status;
 - regras de cônjuges;
 - paletas;
@@ -261,10 +276,13 @@ Características atuais:
 
 - desktop/tablet usa `DesktopFamilyHorizontalMapView`;
 - mobile usa `MobileFamilyHorizontalMapView`;
+- título atual: `Mapa Genealógico de {primeiroNome}`;
 - uma geração por tela no mobile;
-- chips de geração;
+- botões `Ger 1`, `Ger 2`, `Ger 3` etc.;
 - swipe lateral;
-- exportação HTML/CSS/SVG.
+- scroll vertical até cards e conectores visíveis;
+- exportação HTML/CSS/SVG;
+- desktop é referência de hierarquia, conectores e paletas.
 
 Documento atual:
 
@@ -274,7 +292,31 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 
 ---
 
-## 9. Itens históricos que não devem voltar
+## 9. Debug temporário documentado
+
+A frente atual prevê ou documenta o debug temporário:
+
+```txt
+Visualizar como...
+```
+
+Finalidade:
+
+- renderizar `/mapa-familiar` e `/mapa-familiar-horizontal` a partir da visualização de outra pessoa da tabela `pessoas`;
+- testar árvore, conectores, paletas e filtros com diferentes pessoas centrais;
+- não criar rota nova;
+- não substituir autenticação, vínculo real ou permissão;
+- ser removido, protegido por flag/admin ou mantido apenas em ambiente controlado conforme decisão futura.
+
+O controle desse item deve ficar em:
+
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```
+
+---
+
+## 10. Itens históricos que não devem voltar
 
 Não restaurar como produto ativo:
 
@@ -293,11 +335,14 @@ Não restaurar:
 - busca global para rotas removidas;
 - botão Horizontal apontando para `/visao-completa`;
 - horizontal mobile com barra `Paterno | Central | Materno`;
-- docs canônicos tratando rotas antigas como ativas.
+- tabs antigas `Filtros | Legendas | Ações`;
+- docs canônicos tratando rotas antigas como ativas;
+- paletas mobile próprias que divergem do desktop;
+- avatares por gênero como regra visual obrigatória.
 
 ---
 
-## 10. Regra de manutenção histórica
+## 11. Regra de manutenção histórica
 
 Ao concluir uma frente nova:
 
@@ -309,7 +354,7 @@ Ao concluir uma frente nova:
 
 ---
 
-## 11. Validação documental
+## 12. Validação documental
 
 Antes de fechar commit de documentação:
 
@@ -321,4 +366,5 @@ Critério:
 
 - ocorrências em `docs/historico/` são permitidas se marcadas como legado;
 - `/minha-arvore/editar` é permitido como rota vigente;
-- docs canônicos não devem apresentar rotas removidas como views ativas.
+- docs canônicos não devem apresentar rotas removidas como views ativas;
+- docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente.

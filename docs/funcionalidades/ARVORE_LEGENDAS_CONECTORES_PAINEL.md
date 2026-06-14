@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: documentação funcional/técnica atualizada após simplificação do painel.
+> Status: documentação funcional/técnica atualizada após simplificação do painel desktop e criação do modal mobile específico.
 
 ---
 
@@ -20,6 +19,7 @@ Este documento consolida o comportamento de:
 - botões de zoom/restauração;
 - alternância Vertical/Horizontal;
 - flyouts `Cores`, `Exportar`, `Destacar`;
+- botão `Grupos` no mobile;
 - conectores;
 - destaques;
 - seleção por área;
@@ -58,17 +58,19 @@ Filtros | Legendas | Ações
 
 O painel foi simplificado para operar com:
 
-- controles superiores compactos;
-- filtros/grupos visíveis diretamente;
+- controles superiores compactos no desktop;
+- filtros/grupos visíveis diretamente no desktop;
 - status e KPIs acessíveis sem alternância por aba;
 - flyouts específicos para paleta, exportação e destaques;
-- modal mobile equivalente para controles essenciais.
+- modal mobile específico para controles essenciais.
 
 A antiga estrutura de abas e o estado `activeSidebarPanel` não devem voltar como contrato de produto.
 
 ---
 
-## 3. Controles que devem permanecer
+## 3. Contrato de controles por ambiente
+
+### Desktop
 
 | Controle | Função |
 |---|---|
@@ -80,13 +82,35 @@ A antiga estrutura de abas e o estado `activeSidebarPanel` não devem voltar com
 | Cores | Alterna paleta visual. |
 | Exportar | Área, Imagem, PDF, Imprimir. |
 | Destacar | Linhas, Cards, Grupos. |
+| Grupos | Filtros diretos de grupos renderizados no painel. |
+| Filtros | Vivos, Falecidos, Pets e filtros diretos/status. |
 
-Regras:
+### Mobile
+
+| Controle | Função |
+|---|---|
+| Vertical | Navega para `/mapa-familiar`. |
+| Horizontal | Navega para `/mapa-familiar-horizontal`. |
+| Cores | Alterna paleta visual. |
+| Grupos | Exibe/oculta cards de grupos sob demanda. |
+| Destacar | Linhas, Cards, Grupos. |
+| Filtros | Vivos, Falecidos, Pets em 4 colunas. |
+
+No mobile, não exibir:
+
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Exportar
+```
+
+Regras comuns:
 
 - Vertical/Horizontal preservam `location.search`;
 - `?pessoa=...` não pode ser perdido;
 - exportação não pode depender de abas removidas;
-- painel não entra na captura/exportação;
+- painel/modal não entram na captura/exportação;
 - botões de ação não devem ser `submit`.
 
 ---
@@ -126,6 +150,7 @@ Arquivos/elementos legados não montados no painel atual podem permanecer no rep
 | `visualLineFilters` | Controla filtros/destaques de linhas conforme view. |
 | `activeHighlights` | Controla `Destacar`: linhas, cards e grupos. |
 | `legendOpen` | Controla abertura do modal mobile de controles; não representa mais uma aba de legenda. |
+| `mobileGroupsOpen` | Controla exibição dos cards de grupos no modal mobile. |
 | `renderedDirectRelationCounts` | Contagens efetivas retornadas pela view renderizada. |
 
 Estados que não devem voltar como contrato de produto:
@@ -172,6 +197,16 @@ Regras:
 - `Pets` usa tom específico da paleta ativa;
 - filtros devem funcionar nas duas views oficiais;
 - pessoa central deve permanecer visível quando aplicável.
+
+### Mobile
+
+No mobile:
+
+- os cards de grupos não aparecem por padrão;
+- o botão `Grupos` abre/fecha a área de grupos;
+- a área de grupos não precisa de box externo nem título `GRUPOS`;
+- filtros de status ficam sempre visíveis;
+- filtros de status devem ocupar 4 colunas e apenas uma linha quando houver espaço.
 
 ---
 
@@ -227,7 +262,8 @@ Regras:
 - pessoa central deve permanecer visível quando aplicável;
 - pets dependem de filtros de pet e tipo de pessoa;
 - filtros não devem remover dados do banco;
-- filtros devem ser refletidos na exportação.
+- filtros devem ser refletidos na exportação;
+- no mobile, devem ser compactos e exibidos em 4 colunas.
 
 ---
 
@@ -252,7 +288,7 @@ Até nova decisão:
 
 ## 10. Conectores
 
-### Vertical
+### Vertical desktop
 
 View:
 
@@ -267,7 +303,7 @@ Características:
 - ajustado quando `Destacar > Grupos` oculta chrome;
 - não deve depender de proximidade visual.
 
-### Horizontal
+### Horizontal desktop
 
 View:
 
@@ -294,6 +330,7 @@ Características:
 
 - conectores HTML/CSS;
 - navegação Paterno/Central/Materno;
+- deve seguir o alinhamento de referência do desktop;
 - não deve afetar horizontal mobile.
 
 ### Mobile horizontal
@@ -307,10 +344,12 @@ MobileFamilyHorizontalMapView
 Características:
 
 - uma geração por tela;
-- chips de geração;
+- botões `Ger 1`, `Ger 2`, `Ger 3`;
 - swipe lateral;
 - scroll vertical interno por geração;
-- conectores visuais escopados ao root mobile horizontal.
+- sem scroll horizontal manual;
+- conectores devem seguir a estrutura desktop: cônjuge, casal → tronco, tronco → filhos;
+- a altura rolável deve considerar cards e linhas conectoras visíveis.
 
 ---
 
@@ -341,7 +380,7 @@ Regras:
 
 ## 12. Exportação e seleção por área
 
-Ações:
+Ações desktop/completo:
 
 ```txt
 Área
@@ -357,7 +396,10 @@ Regras:
 - oculta painel, header, bottom nav, overlays e loading;
 - preserva cards, conectores, paleta e título;
 - recorte por área deve respeitar coordenadas da superfície capturada;
-- captura muito grande deve ser bloqueada com mensagem clara.
+- `Área` deve funcionar como toggle: abrir ao primeiro clique e fechar ao segundo;
+- loading deve permanecer até a ação real concluir;
+- captura muito grande deve ser bloqueada com mensagem clara;
+- o modal mobile de controles não exibe Exportar.
 
 Arquivos críticos:
 
@@ -371,17 +413,41 @@ src/styles/family-map-horizontal.css
 
 ---
 
-## 13. Mobile
+## 13. Modal mobile de controles
 
 Regras do modal mobile:
 
-- aberto pelo botão `Controles`;
+- aberto pelo botão flutuante de controles;
+- botão flutuante fica alinhado à linha de botões `Ger` na horizontal mobile;
+- título do modal: `Controles`;
+- sem subtítulo;
+- botão superior direito usa ícone `X`;
 - overlay fecha o modal;
 - `Escape` fecha quando disponível;
 - body fica com scroll travado;
 - conteúdo interno tem rolagem própria;
 - painel fica acima do header, bottom nav e botões flutuantes;
 - painel não entra na exportação.
+
+Controles visíveis no modal mobile:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros
+```
+
+Não exibir no modal mobile:
+
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Exportar
+```
 
 Não reintroduzir:
 
@@ -394,7 +460,41 @@ barra Paterno/Central/Materno na horizontal mobile
 
 ---
 
-## 14. Checklist de QA
+## 14. Paletas e avatares
+
+### Paletas
+
+Paletas vigentes:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Contrato:
+
+- desktop é referência visual;
+- mobile deve herdar os tokens `--tree-palette-*`;
+- não usar cores hardcoded no mobile como fonte de verdade;
+- paletas devem afetar cards, bordas, texto, conectores e exportação.
+
+### Avatares
+
+Contrato:
+
+```txt
+Pessoa com foto -> foto_principal_url
+Pessoa sem foto -> User, lucide-react
+Pet             -> PawPrint, lucide-react
+```
+
+Não há variação de avatar por gênero.
+
+---
+
+## 15. Checklist de QA
 
 ### Desktop
 
@@ -413,6 +513,11 @@ barra Paterno/Central/Materno na horizontal mobile
 
 - [ ] Botão `Controles` abre modal.
 - [ ] Overlay fecha modal.
+- [ ] Botão X fecha modal.
+- [ ] Toggle Vertical/Horizontal aparece.
+- [ ] Zoom/Restaurar/Exportar não aparecem no modal.
+- [ ] Botão `Grupos` abre/fecha grupos.
+- [ ] Filtros ficam em 4 colunas.
 - [ ] Scroll interno funciona.
 - [ ] Body destrava ao fechar.
 - [ ] Horizontal mobile navega por geração.
@@ -421,7 +526,7 @@ barra Paterno/Central/Materno na horizontal mobile
 
 ---
 
-## 15. Não regressão
+## 16. Não regressão
 
 Não reintroduzir:
 
@@ -434,4 +539,6 @@ barra Filtros | Legendas | Ações
 activeSidebarPanel como contrato de produto
 favoritos apontando para rotas removidas
 busca global retornando rotas removidas como páginas ativas
+Zoom/Exportar/Restaurar no modal mobile
+cores hardcoded substituindo tokens de paleta no mobile
 ```

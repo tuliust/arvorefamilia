@@ -1,9 +1,9 @@
-# Arquitetura atual - Árvore Família
+# Arquitetura atual — Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/arquitetura/ARCHITECTURE.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra a baseline atual da branch `main`.
+> Status: revisado contra a baseline atual da branch `main`, com ajustes de árvore, painel mobile, paletas, conectores, avatares e debug temporário.
 
 ---
 
@@ -23,8 +23,10 @@ Use este arquivo para entender a arquitetura geral. Para detalhes específicos, 
 | UX e layout | `docs/GUIA_UX_LAYOUT.md` |
 | Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| Painel, legendas e conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Painel, filtros e conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
 | Pendências reais | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| Não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
+| Inventário técnico | `docs/INVENTARIO_TECNICO.md` |
 
 ---
 
@@ -36,6 +38,7 @@ Use este arquivo para entender a arquitetura geral. Para detalhes específicos, 
 | Roteamento | React Router 7 com `createBrowserRouter` |
 | UI | Tailwind CSS v4, CSS complementar em `src/styles`, componentes locais, `lucide-react` |
 | Árvore visual oficial | HTML/CSS/SVG próprio em `DesktopFamilyMapView`, `DesktopFamilyHorizontalMapView`, `MobileFamilyTreeView` e `MobileFamilyHorizontalMapView` |
+| Paletas | Tokens CSS centralizados em `treeColorPalettes.ts` e aplicados por roots/data attributes |
 | Legado ativo da árvore | ReactFlow/Dagre ainda presentes em tipos, layouts, helpers e renderer legado não montado |
 | Banco/Auth | Supabase Auth, Supabase Postgres, RLS, RPCs e Storage |
 | Edge/serverless | Supabase Edge Functions |
@@ -52,6 +55,7 @@ Regras estruturais:
 - Secrets não devem ir para frontend, repositório, dumps versionados ou documentação pública.
 - Views visuais da árvore não devem alterar relacionamentos reais.
 - ReactFlow/Dagre não devem ser removidos sem projeto próprio, porque ainda existem dependências técnicas indiretas.
+- Desktop é a referência visual/estrutural para paletas e mapa horizontal; mobile adapta a experiência, não redefine hierarquia.
 
 ---
 
@@ -82,6 +86,7 @@ src/styles/
   family-map-horizontal.css
   home-sidebar-unified.css
   mobile-tree-controls.css
+  family-tree-mobile.css
   ...
 ```
 
@@ -117,7 +122,7 @@ src/app/components/FamilyTree/MarriageNode.tsx
 src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 ```
 
-`FamilyTree.tsx` não é renderer oficial das duas views atuais, mas ainda fornece o contrato `FamilyTreeActions`. Antes de removê-lo, esse tipo deve ser extraído para um arquivo neutro.
+`FamilyTree.tsx` não é renderer oficial das duas views atuais. Antes de removê-lo, contratos ainda úteis devem estar extraídos para arquivos neutros.
 
 ---
 
@@ -130,6 +135,7 @@ src/app/components/FamilyTree/GenealogySpouseEdge.tsx
 | Services | Supabase, RPCs, Storage e integrações |
 | Utils/modelos | Transformações e cálculos puros |
 | Layouts da árvore | Cálculo de nós, colunas, escopo e posicionamento |
+| Paletas | Tokens e variáveis CSS sem alteração de dados |
 | Migrations | Schema, RLS, functions SQL e seeds controlados |
 | Edge Functions | Execução server-side com secrets |
 
@@ -137,7 +143,8 @@ Dívida técnica atual:
 
 - `Home.tsx` concentra carregamento da árvore, pessoa central, filtros, navegação, painel, modais e exportação;
 - parte do estado de filtros genealógicos permanece atravessando a Home mesmo após a remoção das rotas antigas;
-- `FamilyTreeActions` reside em arquivo legado;
+- `SidebarPanelTabs.tsx` mantém nome histórico, embora não renderize tabs;
+- mobile horizontal ainda tem lógica própria que deveria compartilhar um view model com o desktop;
 - CSS mistura regras vigentes, aliases antigos e restos de ReactFlow;
 - documentação histórica e canônica ainda precisa permanecer sincronizada com a baseline.
 
@@ -191,7 +198,8 @@ Regras consolidadas:
 - `Home.tsx` deriva `treeViewMode` da URL e mantém filtros, pessoa central, painel, paleta e estados de interação;
 - `HomeTreeSection.tsx` decide a renderização principal da área da árvore;
 - a troca de views preserva search params, especialmente `?pessoa=...`;
-- a navegação para perfil usa `?voltar=...` para retornar à view de origem.
+- a navegação para perfil usa `?voltar=...` para retornar à view de origem;
+- o debug temporário `Visualizar como...`, se ativo, altera apenas a referência central visual em memória.
 
 Matriz de renderização:
 
@@ -232,12 +240,14 @@ Características:
 - modelo base: `buildMobileFamilyTreeModel`;
 - cards compartilhados: `FamilyTreeVisualCards.tsx`;
 - grupos posicionados por configuração de layout;
-- conectores SVG por âncoras;
+- conectores SVG por âncoras no desktop;
+- conectores HTML/CSS no mobile;
 - conectores internos entre cônjuges quando há relação explícita;
 - grupos expansíveis;
 - modo wide quando o painel lateral é colapsado;
 - zoom manual e escala responsiva;
-- exportação direta e por área sobre root HTML/CSS/SVG.
+- exportação direta e por área sobre root HTML/CSS/SVG;
+- título `Árvore Familiar de {primeiroNome}`.
 
 Regra de cônjuges:
 
@@ -256,10 +266,9 @@ Destaque de grupos:
 
 `/mapa-familiar-horizontal` é a view horizontal por gerações.
 
-Características:
+Características desktop:
 
 - componente desktop/tablet: `DesktopFamilyHorizontalMapView.tsx`;
-- componente mobile: `MobileFamilyHorizontalMapView.tsx`;
 - composição visual: HTML/CSS/SVG;
 - usa `pessoas.manual_generation` como fonte primária da coluna;
 - valores válidos de geração são 1 a 6;
@@ -275,7 +284,8 @@ Características:
   - ramais até filhos;
   - troncos distribuídos no eixo X para evitar sobreposição;
 - usa a mesma lógica de paletas/cards do Mapa Familiar;
-- exporta a superfície HTML/CSS/SVG atual.
+- exporta a superfície HTML/CSS/SVG atual;
+- título `Mapa Genealógico de {primeiroNome}`.
 
 Contrato mobile:
 
@@ -283,7 +293,8 @@ Contrato mobile:
 1 geração = 1 tela
 swipe lateral = troca de geração
 scroll vertical = rolagem interna da geração ativa
-chips G1/G2/G3... = atalho de navegação entre gerações ativas
+botões Ger 1/Ger 2/Ger 3... = atalho de navegação entre gerações ativas
+scroll vertical deve alcançar cards e conectores visíveis
 ```
 
 Anti-regressões:
@@ -291,13 +302,22 @@ Anti-regressões:
 - não reintroduzir a barra `Paterno | Central | Materno` em `/mapa-familiar-horizontal`;
 - não usar `/visao-completa` como substituto da horizontal;
 - não aplicar CSS ReactFlow na horizontal mobile;
-- não capturar header, bottom nav ou modal no fluxo de exportação.
+- não capturar header, bottom nav ou modal no fluxo de exportação;
+- não criar scroll horizontal manual como navegação principal.
+
+Dívida recomendada:
+
+```txt
+Extrair horizontalMapViewModel compartilhado para evitar divergência entre desktop e mobile.
+```
 
 ---
 
-## 8. Painel desktop e mobile
+## 8. Painel desktop e modal mobile
 
-O estado atual do painel ainda usa `SidebarPanelTabs.tsx`.
+O estado atual do painel ainda usa `SidebarPanelTabs.tsx`, mas a UI não possui mais a barra `Filtros | Legendas | Ações`.
+
+### Desktop/tablet
 
 Controles vigentes:
 
@@ -309,17 +329,37 @@ Controles vigentes:
 - Cores;
 - Exportar;
 - Destacar;
-- Filtros;
-- Legendas;
-- Ações.
+- filtros/grupos;
+- filtros de status.
 
-Dívida técnica planejada:
+### Mobile
 
-- remover a barra `Filtros | Legendas | Ações`;
-- manter filtros/grupos visíveis diretamente;
-- remover/ocultar Legendas e Ações;
-- preservar Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar e Destacar;
-- garantir que o painel mobile continue abrindo como modal quando aplicável.
+O modal mobile é específico e reduzido.
+
+Controles vigentes:
+
+- Vertical;
+- Horizontal;
+- Cores;
+- Grupos;
+- Destacar;
+- filtros de status.
+
+Não renderizar no mobile:
+
+- Zoom +;
+- Zoom -;
+- Restaurar visualização;
+- Exportar.
+
+Regras:
+
+- título do modal: `Controles`;
+- sem subtítulo;
+- botão superior direito com `X`;
+- botão `Grupos` abre/fecha cards de grupos;
+- filtros permanecem visíveis e compactos;
+- modal não entra na exportação.
 
 Arquivos envolvidos:
 
@@ -333,7 +373,75 @@ src/styles/mobile-tree-controls.css
 
 ---
 
-## 9. Exportação
+## 9. Paletas, cards e avatares
+
+Paletas vigentes:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Regra principal:
+
+```txt
+Desktop é a referência visual das paletas. Mobile deve herdar tokens CSS do desktop.
+```
+
+Tokens e arquivos:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+src/styles/home-sidebar-unified.css
+```
+
+Contrato de avatar:
+
+| Caso | Renderização |
+|---|---|
+| Pessoa com foto | `foto_principal_url` |
+| Pessoa sem foto | `User` de `lucide-react` |
+| Pet | `PawPrint` de `lucide-react` |
+
+Regras:
+
+- não diferenciar avatar sem foto por gênero;
+- não usar seletor global de SVG que afete ícones de card;
+- exportação deve preservar ícones, cards, conectores e paletas.
+
+---
+
+## 10. Debug temporário
+
+Ferramenta prevista/implementável:
+
+```txt
+Visualizar como...
+```
+
+Objetivo:
+
+```txt
+Renderizar /mapa-familiar e /mapa-familiar-horizontal usando outra pessoa da tabela pessoas como referência central.
+```
+
+Contrato:
+
+- fica no shell `Home.tsx`;
+- usa dados já carregados da tabela `pessoas`;
+- não navega para perfil;
+- não altera dados reais;
+- deve ter `data-tree-debug-viewer="true"`;
+- deve ter `data-tree-export-ignore="true"`;
+- deve ser removida, flagada ou restrita a admin antes de produção pública, conforme decisão de produto.
+
+---
+
+## 11. Exportação
 
 Documento canônico:
 
@@ -356,13 +464,15 @@ src/app/pages/home/SidebarPanelTabs.tsx
 Contrato:
 
 - exportar a superfície capturável da view ativa ou área selecionada;
-- não incluir painel, header, bottom nav, overlays ou controles;
+- não incluir painel, header, bottom nav, modal, overlays, debug ou controles;
 - preservar paleta, filtros, zoom/escala, grupos visíveis, conectores, avatares e título;
-- suportar PNG, PDF, impressão e seleção por área.
+- suportar PNG, PDF, impressão e seleção por área;
+- `Exportar > Área` deve funcionar como toggle;
+- loading deve cobrir o ciclo real da captura/exportação.
 
 ---
 
-## 10. Favoritos e busca global
+## 12. Favoritos e busca global
 
 Arquivos:
 
@@ -380,7 +490,7 @@ Estado atual:
 
 ---
 
-## 11. Dados, services e cache
+## 13. Dados, services e cache
 
 Services críticos:
 
@@ -397,13 +507,13 @@ Services críticos:
 Dívidas:
 
 - `dataService.ts` é amplo e deve ser dividido por domínio futuramente;
-- `relationshipResolverService.ts` foi identificado como candidato a remoção se continuar sem consumidores;
+- `relationshipResolverService.ts` foi removido; não restaurar sem justificativa;
 - `treePreferences.ts` deve documentar chaves e prazo de compatibilidade;
 - `userEngagementService.ts` deve ser revisado como compatibilidade local/legado ativo.
 
 ---
 
-## 12. CSS e estilos
+## 14. CSS e estilos
 
 CSS vigente e/ou compartilhado:
 
@@ -422,11 +532,13 @@ Cuidados:
 - CSS com nomes antigos pode conter regras compartilhadas;
 - não remover seletores por nome sem confirmar uso real;
 - aliases antigos, como `data-tree-route-view="mapa-horizontal"`, devem ser removidos só após QA visual;
-- regras `data-export-view` de views antigas devem ser tratadas no mesmo lote do renderer legado.
+- regras `data-export-view` de views antigas devem ser tratadas no mesmo lote do renderer legado;
+- mobile da árvore deve usar tokens de paleta, não cores hardcoded;
+- evitar qualquer seletor global `svg path`.
 
 ---
 
-## 13. Testes e validações
+## 15. Testes e validações
 
 Scripts disponíveis:
 
@@ -459,11 +571,14 @@ Fluxos manuais críticos:
 - alternância vertical/horizontal preserva search params;
 - perfil de pessoa volta para a view de origem;
 - favoritos e busca global exibem as duas views oficiais;
-- exportação funciona nas duas views oficiais.
+- paletas funcionam em desktop e mobile;
+- modal mobile funciona nas duas rotas;
+- exportação funciona nas duas views oficiais;
+- debug `Visualizar como...`, se ativo, não entra na exportação.
 
 ---
 
-## 14. Regras de não regressão
+## 16. Regras de não regressão
 
 Não reintroduzir:
 
@@ -513,4 +628,20 @@ favoritePages.ts
 globalSearchService.ts
 PersonProfile.tsx
 docs/arquitetura/ROTAS_E_GUARDS.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```
+
+---
+
+## 17. Direções arquiteturais recomendadas
+
+Próximas frentes de arquitetura:
+
+1. Extrair responsabilidades de `Home.tsx`.
+2. Renomear `SidebarPanelTabs.tsx` para `TreeControlPanel`.
+3. Extrair `horizontalMapViewModel` compartilhado por desktop/mobile.
+4. Encapsular paletas e data attributes em helpers/tokens testáveis.
+5. Decidir destino do debug `Visualizar como...`.
+6. Auditar e remover ReactFlow/Dagre em frente específica.
+7. Criar GitHub Actions para build, Vitest e Playwright.

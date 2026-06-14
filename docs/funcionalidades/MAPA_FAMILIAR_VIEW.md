@@ -1,9 +1,9 @@
-# Mapa Familiar - views Vertical e Horizontal
+# Mapa Familiar — views Vertical e Horizontal
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação funcional/técnica das duas views oficiais da árvore.  
-> Status: alinhado à baseline atual: `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Status: atualizado após ajustes em títulos, painel desktop, modal mobile, mobile horizontal, paletas e avatares.
 
 ---
 
@@ -41,12 +41,12 @@ Não confundir com rotas antigas removidas:
 
 ## 2. Conceito
 
-O Mapa Familiar é a experiência visual da árvore.
+As duas views oficiais são experiências complementares da mesma árvore familiar.
 
 | View | Rota | Papel |
 |---|---|---|
-| Mapa Familiar | `/mapa-familiar` | view principal/default |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | alternativa horizontal/genealógica |
+| Árvore Familiar | `/mapa-familiar` | view vertical principal/default |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | alternativa horizontal por gerações |
 
 Diferenças:
 
@@ -55,8 +55,8 @@ Diferenças:
 | Organização | grupos familiares em canvas panorâmico | colunas por geração |
 | Desktop/tablet | `DesktopFamilyMapView` | `DesktopFamilyHorizontalMapView` |
 | Mobile | `MobileFamilyTreeView` | `MobileFamilyHorizontalMapView` |
-| Navegação mobile | Paterno/Central/Materno | chips e swipe por geração |
-| Título | `Mapa Familiar de {nome}` | `Genealogia de {nome}` |
+| Navegação mobile | Paterno/Central/Materno | botões `Ger 1`, `Ger 2`, `Ger 3` e swipe |
+| Título | `Árvore Familiar de {nome}` | `Mapa Genealógico de {nome}` |
 | Exportação | root HTML/CSS/SVG vertical | root HTML/CSS/SVG horizontal |
 
 ---
@@ -70,7 +70,7 @@ Diferenças:
 | View vertical mobile | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx` |
 | View horizontal mobile | `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx` |
 | Cards visuais | `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` |
-| Modelo mobile | `src/app/components/FamilyTree/mobileFamilyTreeModel.ts` |
+| Modelo mobile vertical | `src/app/components/FamilyTree/mobileFamilyTreeModel.ts` |
 | Layout direto/helper | `src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts` |
 | Layout de referência horizontal | `src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts` |
 | Tipos e filtros | `src/app/components/FamilyTree/types.ts` |
@@ -114,12 +114,12 @@ Títulos:
 
 | Rota | Título |
 |---|---|
-| `/mapa-familiar` | `Mapa Familiar de {primeiroNome}` ou `Mapa Familiar` |
-| `/mapa-familiar-horizontal` | `Genealogia de {primeiroNome}` ou `Genealogia` |
+| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar` |
+| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico` |
 
 Observação:
 
-- “Genealogia” pode ser usado como título conceitual da horizontal;
+- “Genealogia” pode aparecer como termo conceitual ou keyword de busca;
 - isso não reativa a rota `/genealogia`.
 
 ---
@@ -148,7 +148,7 @@ getTreeViewModeFromPath(pathname) -> mapa-familiar
 
 ---
 
-## 6. Mapa Familiar Vertical
+## 6. Árvore Familiar Vertical
 
 ### 6.1 Arquitetura
 
@@ -188,7 +188,8 @@ Regras:
 - `Cônjuges` e `Pets` são filtros;
 - `Filhos` usa ícone próprio;
 - grupos podem ter contagem efetiva renderizada;
-- expansão não deve afetar dados reais.
+- expansão não deve afetar dados reais;
+- pessoa central deve permanecer visível quando aplicável.
 
 ### 6.3 Modo wide
 
@@ -199,29 +200,28 @@ Quando o painel é colapsado:
 - grupos laterais não devem invadir o núcleo;
 - exportação deve capturar superfície normalizada.
 
-### 6.4 `Destacar > Grupos`
+### 6.4 Mobile vertical
 
-Comportamento:
-
-- remove molduras, fundos e sombras dos grupos;
-- oculta títulos dos grupos;
-- oculta labels `PAI`, `MÃE`, `CÔNJUGE`;
-- mantém cards visíveis;
-- recalcula conectores/âncoras.
-
-Atributos úteis:
+`MobileFamilyTreeView` mantém experiência própria:
 
 ```txt
-data-family-map-group="true"
-data-family-map-group-title="true"
-data-family-map-chrome-hidden="true"
+Paterno
+Central
+Materno
 ```
+
+Regras:
+
+- não usar a navegação `Ger 1/Ger 2/...` da horizontal;
+- conectores devem respeitar o alinhamento de referência do desktop;
+- paletas mobile devem herdar tokens do desktop;
+- não usar cores hardcoded como fonte de verdade visual.
 
 ---
 
-## 7. Mapa Familiar Horizontal
+## 7. Mapa Genealógico Horizontal
 
-### 7.1 Arquitetura
+### 7.1 Arquitetura desktop
 
 `DesktopFamilyHorizontalMapView` organiza:
 
@@ -232,6 +232,8 @@ data-family-map-chrome-hidden="true"
 5. conectores SVG;
 6. compactação de colunas vazias;
 7. exportação.
+
+O desktop é a referência estrutural da hierarquia horizontal.
 
 ### 7.2 Gerações
 
@@ -252,7 +254,8 @@ Regras:
 - valores ausentes podem ser inferidos em memória;
 - inferência visual não deve persistir no Supabase;
 - colunas vazias são ocultadas;
-- a ordem deve preservar relações familiares e nascimento quando disponível.
+- a ordem deve preservar relações familiares e nascimento quando disponível;
+- mobile não deve criar uma hierarquia alternativa divergente da desktop.
 
 ### 7.3 Conectores
 
@@ -267,7 +270,8 @@ Regras:
 
 - conector conjugal depende de relacionamento explícito;
 - não inferir casamento por proximidade;
-- conectores devem recalcular quando grupos/cabeçalhos mudam.
+- conectores devem recalcular quando grupos/cabeçalhos mudam;
+- no mobile, a altura rolável deve considerar cards e linhas conectoras visíveis.
 
 ### 7.4 Mobile horizontal
 
@@ -281,18 +285,23 @@ Contrato:
 
 ```txt
 1 geração = 1 tela
-chips G1/G2/G3... = atalho de geração
-swipe esquerda = próxima geração
-swipe direita = geração anterior
+botões Ger 1/Ger 2/Ger 3... = atalho de geração
+swipe lateral = troca de geração
 scroll vertical = dentro da geração ativa
+sem scroll horizontal manual
 ```
 
 Regras:
 
+- a primeira tela deve ser a menor geração visível, por exemplo `Ger 2`;
+- os botões laterais com setas não devem aparecer;
+- o botão de controles deve ficar alinhado à linha dos botões `Ger`;
+- o scroll vertical deve ir até o último card ou até o fim das linhas conectoras visíveis;
 - não usar `MobileFamilyTreeView`;
 - não usar barra `Paterno | Central | Materno`;
 - não criar subrota por geração;
-- não aplicar CSS ReactFlow.
+- não aplicar CSS ReactFlow;
+- a direção do swipe deve ser validada em aparelho real/iOS antes do fechamento de QA.
 
 ---
 
@@ -337,13 +346,14 @@ Regras:
 - `Pets` aparece como filtro;
 - pets também são considerados em `personFilters`;
 - não remover compatibilidade de pets sem migração de dados;
-- paleta visual usa teal/ciano para pets.
+- pet usa `PawPrint` como avatar padrão quando não há foto;
+- a cor de pets deve vir da paleta ativa, não de classe hardcoded.
 
 ---
 
 ## 10. Paletas e cards
 
-Paletas:
+Paletas oficiais:
 
 ```txt
 white
@@ -352,16 +362,37 @@ orange
 brown
 ```
 
-Cards:
+Contrato:
 
-- usam `FamilyTreeVisualCards`;
-- devem manter legibilidade;
-- avatares e ícones devem exportar corretamente;
-- não usar seletor global de SVG.
+- desktop é a referência visual;
+- mobile deve herdar os mesmos tokens `--tree-palette-*`;
+- cards, bordas, texto, ícones, canvas e conectores devem mudar juntos;
+- não usar classes fixas `teal/cyan/blue/orange/brown` no mobile como fonte de verdade visual;
+- a exportação deve respeitar a paleta ativa.
 
 ---
 
-## 11. Exportação
+## 11. Avatares
+
+Contrato:
+
+```txt
+Pessoa com foto -> foto_principal_url
+Pessoa sem foto -> User, lucide-react
+Pet             -> PawPrint, lucide-react
+```
+
+Regras:
+
+- não há mais avatar diferente para homem, mulher ou gênero neutro;
+- todos os cards de pessoas sem foto usam o mesmo ícone `User`;
+- pets usam `PawPrint`;
+- fotos reais continuam com prioridade;
+- avatares devem exportar corretamente e não virar quadrado escuro.
+
+---
+
+## 12. Exportação
 
 Ações:
 
@@ -378,7 +409,10 @@ Regras:
 - incluir título no canvas;
 - ignorar painel/header/bottom nav/modal/loading;
 - preservar conectores e paleta;
-- seleção por área captura área visível.
+- seleção por área captura área visível;
+- `Exportar > Área` deve funcionar como toggle;
+- loading deve permanecer até a ação real concluir;
+- no mobile, o modal de controles não expõe Exportar.
 
 Documento específico:
 
@@ -388,29 +422,83 @@ docs/funcionalidades/EXPORTACAO_ARVORE.md
 
 ---
 
-## 12. Painel
+## 13. Painel e modal de controles
 
-Estado atual:
+### Desktop
 
-- controles superiores existem;
-- abas `Filtros`, `Legendas`, `Ações` ainda existem;
-- próxima frente deve remover as abas e deixar filtros diretos visíveis.
-
-Controles que não podem quebrar:
+Controles vigentes:
 
 ```txt
-Zoom +/-
+Zoom +
+Zoom -
 Restaurar visualização
 Vertical
 Horizontal
 Cores
 Exportar
 Destacar
+Grupos
+Filtros
 ```
+
+### Mobile
+
+Controles vigentes:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros
+```
+
+No mobile, não exibir:
+
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Exportar
+```
+
+Regras:
+
+- botão **Grupos** abre/fecha os cards de grupos;
+- cards de grupos não aparecem por padrão;
+- filtros ficam sempre visíveis;
+- filtros devem caber em 4 colunas;
+- título do modal deve ser `Controles`;
+- subtítulo removido;
+- botão superior direito usa ícone `X`.
 
 ---
 
-## 13. QA obrigatório
+## 14. Debug temporário
+
+Pode existir, como ferramenta de diagnóstico, um dropdown:
+
+```txt
+Visualizar como...
+```
+
+Objetivo:
+
+- renderizar `/mapa-familiar` e `/mapa-familiar-horizontal` usando outra pessoa da tabela `pessoas` como referência central;
+- não navegar para `/pessoa/:id`;
+- não alterar dados;
+- não entrar na exportação.
+
+Regras:
+
+- deve ser marcado como debug temporário;
+- deve ter `data-tree-export-ignore="true"`;
+- antes de produção, decidir se permanece, se fica protegido por flag/admin ou se será removido.
+
+---
+
+## 15. QA obrigatório
 
 Validar:
 
@@ -438,13 +526,15 @@ Fluxos:
 - cônjuges;
 - pets;
 - paletas;
+- avatares;
 - exportação PNG/PDF/imprimir;
 - modal mobile de controles;
-- swipe da horizontal mobile.
+- swipe da horizontal mobile;
+- scroll vertical até conectores no mobile horizontal.
 
 ---
 
-## 14. Anti-regressões
+## 16. Anti-regressões
 
 Não reintroduzir:
 

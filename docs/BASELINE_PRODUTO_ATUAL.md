@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: baseline funcional após remoção das views antigas da árvore, simplificação do painel e higiene do repositório.
+> Status: baseline funcional após remoção das views antigas, ajustes em painel/modal, títulos, paletas, avatares e mobile horizontal.
 
 ---
 
@@ -20,7 +19,9 @@ A baseline serve para evitar regressões como:
 - apagar compatibilidades de dados sem migração;
 - remover CSS misto sem teste visual;
 - alterar navegação, exportação ou retorno de perfil sem validação;
-- reintroduzir artefatos locais no versionamento.
+- reintroduzir artefatos locais no versionamento;
+- reintroduzir cores mobile divergentes do desktop;
+- reintroduzir controles desktop no modal mobile.
 
 Regra principal:
 
@@ -36,8 +37,8 @@ O produto mantém duas views oficiais de árvore:
 
 | View | Rota | Status | Uso |
 |---|---|---|---|
-| Mapa Familiar | `/mapa-familiar` | Oficial/default | View vertical principal da árvore |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Oficial | View horizontal/genealógica por gerações |
+| Árvore Familiar | `/mapa-familiar` | Oficial/default | View vertical principal da árvore |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | Oficial | View horizontal/genealógica por gerações |
 
 A rota raiz:
 
@@ -137,7 +138,22 @@ Regras:
 
 ---
 
-## 5. Navegação, favoritos e busca global
+## 5. Títulos oficiais
+
+| Rota | Título |
+|---|---|
+| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar` |
+| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico` |
+
+Regras:
+
+- títulos exibidos e exportados devem permanecer consistentes;
+- nomes de rota não mudam;
+- títulos antigos `Mapa Familiar de...`, `Mapa Familiar Horizontal de...` e `Genealogia de...` não são mais o contrato vigente da UI principal.
+
+---
+
+## 6. Navegação, favoritos e busca global
 
 As duas views oficiais devem estar alinhadas em:
 
@@ -194,17 +210,18 @@ Fallback padrão:
 
 ---
 
-## 6. Painel da árvore
+## 7. Painel da árvore
+
+### Desktop
 
 Estado atual:
 
 - não há mais barra visual `Filtros | Legendas | Ações`;
 - filtros/grupos/status ficam disponíveis diretamente no painel;
 - controles superiores e flyouts permanecem preservados;
-- modal mobile compartilha os controles essenciais;
-- painel, modal, overlays e loading são marcados para não entrar na exportação.
+- painel, overlays e loading são marcados para não entrar na exportação.
 
-Controles vigentes:
+Controles desktop vigentes:
 
 ```txt
 Zoom +
@@ -219,6 +236,37 @@ Filtros de grupos
 Filtros de status
 ```
 
+### Mobile
+
+Estado atual:
+
+- modal específico aberto pelo botão de controles;
+- título `Controles`;
+- subtítulo removido;
+- botão superior direito com ícone `X`;
+- botão `Grupos` exibe/oculta cards de grupos;
+- filtros ficam sempre visíveis em 4 colunas.
+
+Controles mobile vigentes:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros
+```
+
+Não exibir no mobile:
+
+```txt
+Zoom +
+Zoom -
+Restaurar visualização
+Exportar
+```
+
 Regras:
 
 - `Vertical` navega para `/mapa-familiar`;
@@ -230,7 +278,7 @@ Regras:
 
 ---
 
-## 7. Exportação
+## 8. Exportação
 
 A exportação vigente deve funcionar nas duas views oficiais:
 
@@ -251,13 +299,94 @@ Regras:
 - painel, header, bottom nav, overlays e loading não devem entrar na captura;
 - a exportação deve preservar paleta, filtros, conectores SVG, cards e título;
 - área selecionada deve capturar apenas a região escolhida;
+- `Área` deve funcionar como toggle;
+- loading deve permanecer até a ação real concluir;
 - captura muito grande deve falhar com mensagem clara;
 - `treeExport.ts` é utilitário crítico e não deve ser removido em limpezas gerais;
-- compatibilidade técnica com ReactFlow não significa que as rotas antigas estejam ativas.
+- compatibilidade técnica com ReactFlow não significa que as rotas antigas estejam ativas;
+- o modal mobile de controles não deve expor Exportar.
 
 ---
 
-## 8. Componentes e contratos críticos
+## 9. Paletas e avatares
+
+### Paletas
+
+Paletas oficiais:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Contrato:
+
+- desktop é a referência visual;
+- mobile deve herdar os mesmos tokens CSS `--tree-palette-*`;
+- cards, bordas, texto, conectores e canvas devem mudar juntos;
+- exportação deve preservar a paleta ativa.
+
+### Avatares
+
+Contrato:
+
+```txt
+Pessoa com foto -> foto_principal_url
+Pessoa sem foto -> User, lucide-react
+Pet             -> PawPrint, lucide-react
+```
+
+Não há mais distinção visual de avatar por gênero.
+
+---
+
+## 10. Mobile horizontal
+
+Contrato:
+
+```txt
+1 geração = 1 tela
+botões Ger 1/Ger 2/Ger 3... = navegação
+sem scroll horizontal manual
+scroll vertical até cards e conectores visíveis
+```
+
+Regras:
+
+- primeira tela deve ser a menor geração visível;
+- botões laterais de seta não aparecem;
+- botão de controles fica alinhado à linha de botões `Ger`;
+- conectores devem seguir a estrutura desktop;
+- direção de swipe deve ser validada em aparelho real antes de fechar QA.
+
+---
+
+## 11. Debug temporário
+
+Pode existir um dropdown de diagnóstico:
+
+```txt
+Visualizar como...
+```
+
+Objetivo:
+
+- selecionar uma pessoa da tabela `pessoas` como referência central temporária;
+- visualizar `/mapa-familiar` e `/mapa-familiar-horizontal` a partir dessa pessoa;
+- não alterar dados;
+- não navegar para perfil;
+- não entrar na exportação.
+
+Status:
+
+- ferramenta de debug temporário;
+- antes de produção, decidir se será removida, protegida por flag ou restrita a admin.
+
+---
+
+## 12. Componentes e contratos críticos
 
 ### Oficiais
 
@@ -293,41 +422,20 @@ Motivos:
 
 ---
 
-## 9. Código removido na frente atual
-
-Foram removidos do código ativo:
-
-```txt
-src/app/pages/home/GenealogyMobileStageTabs.tsx
-src/app/pages/home/GenealogyFilterGrid.tsx
-src/app/pages/CentralNotificacoes.tsx
-src/app/components/FamilyTree/ViewModeToggle.tsx
-src/app/components/figma/ImageWithFallback.tsx
-src/app/services/relationshipResolverService.ts
-```
-
-Foram removidos do versionamento:
-
-```txt
-backups/
-.env.local.save
-```
-
----
-
-## 10. CSS e data attributes críticos
+## 13. CSS e data attributes críticos
 
 Preservar:
 
 ```txt
 data-tree-route-view="mapa-familiar-horizontal"
 data-family-map-horizontal-root
-data-mobile-family-horizontal-root
+data-family-map-horizontal-mobile-root
 data-mobile-family-tree-root
 data-family-map-export-root="true"
 data-tree-export-ignore="true"
 data-tree-selection-overlay="true"
 data-tree-export-loading="true"
+data-tree-debug-viewer="true"
 ```
 
 CSS crítico:
@@ -351,7 +459,7 @@ Atenção:
 
 ---
 
-## 11. Testes obrigatórios de baseline
+## 14. Testes obrigatórios de baseline
 
 Antes de fechar mudanças relevantes:
 
@@ -375,13 +483,16 @@ E2E mínimo esperado:
 
 ---
 
-## 12. Pendências reais pós-baseline
+## 15. Pendências reais pós-baseline
 
 As pendências restantes não são de roteamento estrutural. São principalmente:
 
 - QA visual manual com dados reais;
 - QA de exportação em PNG/PDF/impressão/área;
 - QA mobile iOS/Safari em breakpoints pequenos;
+- QA de paletas mobile contra desktop;
+- QA de avatares `User`/`PawPrint`;
+- QA de conectores em mobile vertical e horizontal;
+- decisão futura sobre debug `Visualizar como...`;
 - decisão futura sobre remoção completa do stack ReactFlow legado;
-- eventual limpeza de dependências após auditoria específica;
-- fechamento da Issue #8 com o resumo da frente.
+- eventual limpeza de dependências após auditoria específica.

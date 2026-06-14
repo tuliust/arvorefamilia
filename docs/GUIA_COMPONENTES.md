@@ -3,8 +3,7 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: guia alinhado às duas views oficiais, painel simplificado e remoção de componentes órfãos.
+> Status: guia atualizado após ajustes de painel mobile, paletas, avatares, conectores, exportação e debug temporário.
 
 ---
 
@@ -16,9 +15,13 @@ Use antes de alterar:
 
 - shell da árvore;
 - views do Mapa Familiar;
-- painel lateral/mobile;
+- painel lateral desktop;
+- modal mobile de controles;
 - exportação;
 - filtros;
+- paletas;
+- avatares;
+- conectores;
 - favoritos;
 - busca;
 - componentes compartilhados.
@@ -37,6 +40,8 @@ Use antes de alterar:
 | CSS deve ser escopado | Preferir rota, data attribute ou container. |
 | Histórico não orienta implementação | Docs legados não podem reintroduzir views removidas. |
 | Painel não usa abas antigas | Não restaurar `Filtros | Legendas | Ações`. |
+| Desktop é referência visual | Mobile deve adaptar layout e herdar paletas/tokens. |
+| Debug não é produto final | `Visualizar como...` deve ser temporário, flagado ou restrito. |
 
 ---
 
@@ -55,17 +60,35 @@ Responsabilidades:
 - carregar pessoas e relacionamentos;
 - resolver pessoa vinculada/central;
 - manter filtros globais;
-- controlar painel desktop/mobile;
+- controlar painel desktop;
+- controlar modal mobile de controles;
 - compor header e área da árvore;
 - alimentar contagens renderizadas;
-- controlar modais, IA, curiosidades, conexão e exportação.
+- controlar modais, IA, curiosidades, conexão e exportação;
+- preservar navegação com `location.search`;
+- opcionalmente hospedar debug temporário `Visualizar como...`.
 
 Cuidados:
 
 - `Home` ainda concentra responsabilidades e deve ser refatorado por etapas pequenas;
 - não inserir views antigas no shell;
 - não misturar regras de rota com layout específico;
-- preservar `?pessoa=...` e `?voltar=...`.
+- preservar `?pessoa=...` e `?voltar=...`;
+- estados temporários de debug não devem persistir dados reais;
+- elementos de debug devem usar `data-tree-export-ignore="true"`.
+
+Estados relevantes atuais ou previstos:
+
+| Estado | Papel |
+|---|---|
+| `directRelativeFilters` | Filtros de grupos diretos. |
+| `personFilters` | Filtros de vivos, falecidos e pets. |
+| `visualLineFilters` | Estado visual de linhas/conectores. |
+| `activeHighlights` | Destaques de linhas, cards e grupos. |
+| `legendOpen` | Abertura do modal mobile de controles. |
+| `mobileGroupsOpen` | Exibição sob demanda de grupos no modal mobile. |
+| `renderedDirectRelationCounts` | Contagens efetivas informadas pela view renderizada. |
+| `debugViewPersonId` | Debug temporário para visualizar a árvore como outra pessoa, se implementado. |
 
 ### 3.2 `HomeTreeSection`
 
@@ -99,6 +122,13 @@ genealogia
 visao-completa
 ```
 
+Títulos vigentes:
+
+| View | Título |
+|---|---|
+| `mapa-familiar` | `Árvore Familiar de {primeiroNome}` |
+| `mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` |
+
 ### 3.3 `HomeHeader`
 
 Arquivo:
@@ -119,7 +149,8 @@ Cuidados:
 
 - não apontar ação principal para `/minha-arvore`;
 - preservar páginas favoritas de `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- nome/e-mail do usuário ficam no menu, não ao lado do avatar.
+- nome/e-mail do usuário ficam no menu, não ao lado do avatar;
+- header não deve aparecer na exportação.
 
 ### 3.4 `HomeMobileNav`
 
@@ -134,14 +165,16 @@ Responsabilidades:
 - navegação inferior mobile;
 - botão `Controles` nas views oficiais;
 - abertura do modal mobile de controles;
-- marcação para ignorar exportação.
+- marcação para ignorar exportação;
+- posicionamento do botão de controles alinhado à barra de geração no horizontal mobile.
 
 Regras:
 
 - `/mapa-familiar` mobile pode usar navegação interna de `MobileFamilyTreeView`;
 - `/mapa-familiar-horizontal` mobile usa navegação por gerações;
 - não reintroduzir `Paterno | Central | Materno` na horizontal mobile;
-- não duplicar `MobileTreeControlsPortal`.
+- não duplicar `MobileTreeControlsPortal`;
+- botão de controles não deve sobrepor os chips `Ger X`.
 
 ---
 
@@ -157,13 +190,14 @@ src/app/pages/home/SidebarPanelTabs.tsx
 
 Estado atual:
 
-- renderiza controles de zoom/restauração;
+- renderiza controles de zoom/restauração no desktop;
 - troca Vertical/Horizontal preservando search params;
 - concentra flyouts `Cores`, `Exportar`, `Destacar`;
 - exibe filtros diretos/status sem barra de abas;
-- não renderiza a barra `Filtros | Legendas | Ações`.
+- não renderiza a barra `Filtros | Legendas | Ações`;
+- recebe props específicas para modo mobile.
 
-Controles vigentes:
+Controles desktop:
 
 ```txt
 Zoom +/-
@@ -177,9 +211,36 @@ Filtros/grupos
 Filtros de status
 ```
 
+Controles mobile:
+
+```txt
+Vertical
+Horizontal
+Cores
+Grupos
+Destacar
+Filtros de status
+```
+
+No mobile, não renderizar:
+
+```txt
+Zoom +/-
+Restaurar visualização
+Exportar
+```
+
+Props relevantes:
+
+| Prop | Uso |
+|---|---|
+| `mobileControls` | Ativa modo modal mobile reduzido. |
+| `mobileGroupsActive` | Indica se grupos estão visíveis no modal mobile. |
+| `onMobileGroupsOpenChange` | Abre/fecha grupos no modal mobile. |
+
 Dívida restante:
 
-- `SidebarPanelTabs` pode ter nome histórico e responsabilidades amplas;
+- `SidebarPanelTabs` mantém nome histórico e responsabilidades amplas;
 - eventual renome deve ser feita em frente própria, por exemplo para `TreeControlPanel`.
 
 ### 4.2 `DirectRelationKpiGrid`
@@ -194,7 +255,14 @@ Responsabilidades:
 
 - exibir grupos diretos;
 - usar contagens efetivas quando a view informa;
-- refletir `directRelativeFilters`.
+- refletir `directRelativeFilters`;
+- funcionar tanto no painel desktop quanto no modal mobile sob demanda.
+
+Cuidados:
+
+- no modal mobile, grupos só aparecem ao clicar em `Grupos`;
+- grupos não devem aparecer por padrão no modal mobile;
+- contagens efetivas não devem inflar cônjuges sempre visíveis.
 
 ### 4.3 `DirectRelativeFilterGrid`
 
@@ -210,6 +278,12 @@ Responsabilidades:
 - controlar `Cônjuges` e `Pets`;
 - preservar semântica de filtros diretos.
 
+Cuidados:
+
+- `Cônjuges` filtrável não é igual a cônjuge ancestral sempre visível;
+- `Pets` pode participar de filtros de grupo e de status/tipo;
+- no mobile, o container de grupos deve ficar sem box/título persistente quando acionado sob demanda, conforme UX atual.
+
 ### 4.4 `LifeStatusKpiGrid`
 
 Arquivo:
@@ -221,7 +295,14 @@ src/app/pages/home/LifeStatusKpiGrid.tsx
 Responsabilidades:
 
 - filtros `Vivos`, `Falecidos` e `Pets`;
-- contadores por status/tipo.
+- contadores por status/tipo;
+- visibilidade permanente no modal mobile.
+
+Cuidados:
+
+- filtros do modal mobile devem caber em 4 colunas/1 linha quando possível;
+- não esconder filtros quando `Grupos` estiver fechado;
+- manter contraste nas quatro paletas.
 
 ### 4.5 Componentes de legenda/info
 
@@ -260,14 +341,16 @@ Responsabilidades:
 - controlar zoom/scroll;
 - exportar PNG/PDF/print;
 - abrir seleção por área;
-- implementar `Destacar > Grupos`.
+- implementar `Destacar > Grupos`;
+- servir como referência de hierarquia/paleta para a versão mobile vertical.
 
 Cuidados:
 
 - não corrigir sobreposição por zoom padrão;
 - não criar relações por proximidade visual;
 - conectores devem depender de âncoras e relacionamentos explícitos;
-- alteração de layout exige QA visual.
+- alteração de layout exige QA visual;
+- paletas desktop são referência para mobile.
 
 ### 5.2 `MobileFamilyTreeView`
 
@@ -282,13 +365,17 @@ Responsabilidades:
 - experiência mobile de `/mapa-familiar`;
 - telas Paterno/Central/Materno;
 - conectores HTML/CSS;
-- visual compacto.
+- visual compacto;
+- adaptação da hierarquia desktop para mobile.
 
 Cuidados:
 
 - não usar na horizontal mobile;
 - preservar swipe/abas internas;
-- manter controles marcados para ignorar exportação.
+- manter controles marcados para ignorar exportação;
+- alinhar conectores de Pai/Mãe/ancestrais ao eixo visual correto;
+- não criar paleta própria hardcoded;
+- cards devem herdar tokens `--tree-palette-*`.
 
 ### 5.3 `DesktopFamilyHorizontalMapView`
 
@@ -306,7 +393,15 @@ Responsabilidades:
 - posicionar cônjuges;
 - desenhar conectores SVG;
 - preservar fundo transparente quando definido;
-- exportar com título e paleta.
+- exportar com título e paleta;
+- servir como referência estrutural da horizontal mobile.
+
+Cuidados:
+
+- conector conjugal depende de relacionamento explícito;
+- não inferir casamento por proximidade;
+- filhos devem derivar de pais/casais conforme layout genealógico;
+- alteração de conectores exige QA em desktop e mobile.
 
 ### 5.4 `MobileFamilyHorizontalMapView`
 
@@ -322,17 +417,83 @@ Responsabilidades:
 - apresentar uma geração por tela;
 - permitir swipe lateral;
 - permitir scroll vertical interno;
-- exibir chips de geração.
+- exibir botões `Ger 1`, `Ger 2`, `Ger 3` etc.;
+- renderizar conectores da geração ativa;
+- permitir rolagem até cards e conectores visíveis.
 
 Cuidados:
 
 - não usar barra Paterno/Central/Materno;
 - não gerar subrotas por geração;
-- não capturar bottom nav/modal na exportação.
+- não capturar bottom nav/modal na exportação;
+- não reintroduzir setas laterais como navegação principal;
+- não reintroduzir scroll horizontal manual;
+- direção de swipe deve ser validada em aparelho real;
+- mobile deve ser recorte responsivo do desktop, não lógica paralela divergente.
+
+Dívida técnica recomendada:
+
+```txt
+Extrair horizontalMapViewModel compartilhado entre DesktopFamilyHorizontalMapView e MobileFamilyHorizontalMapView.
+```
 
 ---
 
-## 6. Componentes de exportação
+## 6. Cards, avatares e paletas
+
+### 6.1 `FamilyTreeVisualCards`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+```
+
+Responsabilidades:
+
+- renderizar cards visuais compartilhados;
+- aplicar avatar/foto;
+- representar pessoa, pet, status e datas;
+- preservar legibilidade e exportação.
+
+Contrato de avatar:
+
+| Caso | Renderização |
+|---|---|
+| Pessoa com foto | `foto_principal_url` |
+| Pessoa sem foto | `User` de `lucide-react` |
+| Pet | `PawPrint` de `lucide-react` |
+
+Regras:
+
+- não diferenciar avatar sem foto por gênero;
+- não restaurar silhuetas homem/mulher/neutro;
+- ícones devem herdar cor/contraste da paleta;
+- SVG dos ícones não pode ser afetado por seletor global de conectores.
+
+### 6.2 `treeColorPalettes`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/treeColorPalettes.ts
+```
+
+Responsabilidades:
+
+- centralizar paletas `white`, `visual`, `orange`, `brown`;
+- expor tokens CSS para cards, bordas, texto, conectores e canvas;
+- garantir consistência entre vertical, horizontal, desktop, mobile e exportação.
+
+Regra:
+
+```txt
+Mobile não deve definir cor própria fora dos tokens do desktop.
+```
+
+---
+
+## 7. Componentes de exportação
 
 Arquivos:
 
@@ -354,13 +515,42 @@ Regras:
 
 - não remover `treeExport.ts` em limpeza superficial;
 - não usar seletor global que afete todos os SVGs;
-- não capturar painel, header, bottom nav ou overlays.
+- não capturar painel, header, bottom nav, modal, overlays ou debug;
+- `Exportar > Área` deve operar como toggle;
+- loading deve cobrir o ciclo real da captura/exportação.
 
 ---
 
-## 7. Contratos e tipos
+## 8. Debug temporário
 
-Arquivo extraído:
+### 8.1 `Visualizar como...`
+
+Local previsto:
+
+```txt
+src/app/pages/Home.tsx
+```
+
+Objetivo:
+
+```txt
+Visualizar /mapa-familiar e /mapa-familiar-horizontal usando outra pessoa da tabela pessoas como referência central.
+```
+
+Regras:
+
+- elemento deve ter `data-tree-debug-viewer="true"`;
+- elemento deve ter `data-tree-export-ignore="true"`;
+- não deve alterar dados reais;
+- não deve navegar para perfil;
+- deve recalcular layout/contagens;
+- deve ser removido, protegido por flag ou restrito a admin antes de produção pública, conforme decisão de produto.
+
+---
+
+## 9. Contratos e tipos
+
+Arquivo extraído ou recomendado:
 
 ```txt
 src/app/components/FamilyTree/actions.ts
@@ -374,11 +564,12 @@ Responsabilidade:
 Regra:
 
 - novos contratos compartilhados devem ficar em arquivos neutros;
-- não centralizar tipos novos em componentes legados.
+- não centralizar tipos novos em componentes legados;
+- tipos de layout horizontal compartilhado devem ir para `layouts/` ou `utils/`.
 
 ---
 
-## 8. Services principais
+## 10. Services principais
 
 Preservar:
 
@@ -404,11 +595,12 @@ Regras:
 - `treeDataCache.ts` coordena invalidação/recarregamento;
 - `relationshipCacheService.ts` limpa `parentescos_calculados`;
 - `memberProfileService.ts` é crítico para vínculo usuário-pessoa;
-- `userEngagementService.ts` ainda concentra compatibilidade local/legada e notificações.
+- `userEngagementService.ts` ainda concentra compatibilidade local/legada e notificações;
+- `globalSearchService.ts` não deve apontar para rotas removidas.
 
 ---
 
-## 9. Componentes removidos
+## 11. Componentes removidos
 
 Não reintroduzir sem decisão explícita:
 
@@ -429,7 +621,7 @@ Se algum import quebrar após remoção:
 
 ---
 
-## 10. Legado técnico preservado
+## 12. Legado técnico preservado
 
 Preservar até frente específica:
 
@@ -452,7 +644,7 @@ Motivo:
 
 ---
 
-## 11. Checklist antes de remover componente
+## 13. Checklist antes de remover componente
 
 ```bash
 rg "NomeDoComponente"
@@ -475,7 +667,7 @@ Critérios:
 
 ---
 
-## 12. Critério de aceitação
+## 14. Critério de aceitação
 
 Uma alteração de componente só deve ser fechada quando:
 
@@ -485,4 +677,5 @@ Uma alteração de componente só deve ser fechada quando:
 - `git diff --check` não aponta erro bloqueante;
 - rotas antigas não voltam;
 - painel antigo de abas não volta;
-- docs canônicas são atualizadas se o comportamento mudar.
+- docs canônicas são atualizadas se o comportamento mudar;
+- QA visual é feito quando houver mudança de mobile, paleta, conectores ou exportação.

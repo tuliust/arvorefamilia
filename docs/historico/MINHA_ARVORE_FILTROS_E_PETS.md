@@ -1,6 +1,6 @@
-# Legado - Filtros, pets e regras da antiga Minha Árvore
+# Legado — Filtros, pets e regras da antiga Minha Árvore
 
-> Última revisão histórica: 2026-06-13  
+> Última revisão histórica: 2026-06-14  
 > Local recomendado: `docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md`  
 > Origem: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`  
 > Status: **legado arquivado com regras extraídas para documentação canônica atual**.
@@ -9,7 +9,7 @@
 
 ## 1. Função deste documento
 
-Este arquivo preserva o histórico da documentação de filtros, pets e cônjuges originalmente associada à antiga view:
+Este arquivo preserva o histórico da documentação de filtros, pets, cônjuges e avatares originalmente associada à antiga view:
 
 ```txt
 /minha-arvore
@@ -24,13 +24,14 @@ docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 ```
 
 ---
 
 ## 2. Estado atual
 
-Views oficiais que usam regras atuais de filtros:
+Views oficiais que usam as regras atuais de filtros:
 
 ```txt
 /mapa-familiar
@@ -43,24 +44,25 @@ Exceção vigente:
 /minha-arvore/editar
 ```
 
-é rota de edição e não usa este documento como guia de view.
+Essa rota é de edição de perfil/árvore do membro e não usa este documento como guia de view.
 
 ---
 
 ## 3. Regras preservadas na documentação canônica
 
-As regras abaixo continuam válidas e já devem ser consultadas nos guias atuais.
+As regras abaixo continuam válidas, mas devem ser consultadas nos guias atuais.
 
 ### 3.1 Separação de filtros
 
 Estados conceituais:
 
-| Estado | Papel |
+| Estado | Papel atual |
 |---|---|
 | `personFilters` | filtra vivos, falecidos e pets por status/tipo |
 | `directRelativeFilters` | filtra grupos diretos e grupos visuais |
+| `visualLineFilters` | controla destaque/visibilidade de linhas conforme view |
+| `activeHighlights` | controla `Destacar`: linhas, cards e grupos |
 | `edgeFilters` | legado/ReactFlow; não comanda conectores HTML/SVG das views oficiais |
-| `visualLineFilters` | destaque/linhas visuais conforme view |
 | `genealogyFilters` | legado associado a views removidas; não é filtro principal das views oficiais |
 
 Regra:
@@ -90,24 +92,27 @@ Regras:
 
 - não inferir pet pelo nome;
 - não inferir pet apenas pelo grupo visual;
-- `genero = pet` pode orientar avatar, mas não substitui regra semântica se houver divergência;
-- não criar relacionamento `tutor` ou tipo `pet` sem decisão de schema.
+- `genero = pet` pode orientar fallback visual legado, mas não substitui regra semântica se houver divergência;
+- não criar relacionamento `tutor` ou tipo `pet` sem decisão de schema;
+- pets devem respeitar filtros de grupo e filtros de status/tipo quando aplicável.
 
 ### 3.3 Avatar
 
-Prioridade visual:
+Contrato visual atual:
 
-1. `foto_principal_url`;
-2. `genero`;
-3. fallback visual.
+| Situação | Avatar |
+|---|---|
+| Pessoa com `foto_principal_url` | foto real |
+| Pessoa humana sem foto | ícone `User` de `lucide-react` |
+| Pet sem foto | ícone `PawPrint` de `lucide-react` |
 
-Valores visuais esperados:
+Regra atual:
 
 ```txt
-homem
-mulher
-pet
+foto real > pet > pessoa sem foto
 ```
+
+Não há mais distinção visual obrigatória por gênero para avatar sem foto.
 
 ### 3.4 Cônjuges
 
@@ -132,6 +137,8 @@ Regra crítica:
 Conector conjugal deve depender de relacionamento conjuge explícito.
 ```
 
+Não inferir cônjuge por proximidade visual, sobrenome, ordem de card ou posição no layout.
+
 ---
 
 ## 4. Regras que não devem voltar como estavam
@@ -149,7 +156,9 @@ Não tratar:
 - `directRelativeFilters` como contrato da antiga view `/minha-arvore`;
 - `GenealogyFilters` como filtro principal das views oficiais;
 - `MobileFamilyHorizontalMapView` como barra `Paterno | Central | Materno`;
-- `/mapa-familiar-horizontal` como `/genealogia`.
+- `/mapa-familiar-horizontal` como `/genealogia`;
+- avatar por gênero como contrato obrigatório atual;
+- paleta mobile como conjunto de cores hardcoded independente do desktop.
 
 ---
 
@@ -157,15 +166,37 @@ Não tratar:
 
 | View | Uso atual dos filtros |
 |---|---|
-| `/mapa-familiar` desktop/tablet | grupos diretos, status/tipo, cônjuges e pets |
-| `/mapa-familiar` mobile | `MobileFamilyTreeView` com comportamento mobile compartilhado |
+| `/mapa-familiar` desktop/tablet | grupos diretos, status/tipo, cônjuges, pets, destaques e exportação |
+| `/mapa-familiar` mobile | `MobileFamilyTreeView`, navegação Paterno/Central/Materno e modal mobile de controles |
 | `/mapa-familiar-horizontal` desktop/tablet | grupos/status aplicados à horizontal por geração |
-| `/mapa-familiar-horizontal` mobile | filtros aplicados à geração ativa/paginada |
+| `/mapa-familiar-horizontal` mobile | filtros aplicados à geração ativa/paginada, com uma geração por tela |
 | `/minha-arvore/editar` | edição; não é view de filtros da árvore |
 
 ---
 
-## 6. Contadores
+## 6. Modal mobile atual
+
+O histórico de filtros foi substituído no produto ativo por um modal mobile específico.
+
+Contrato atual:
+
+- título `Controles`;
+- sem subtítulo;
+- botão superior direito com `X`;
+- toggle `Vertical` / `Horizontal`;
+- botões principais:
+  - `Cores`;
+  - `Grupos`;
+  - `Destacar`;
+- `Grupos` abre/fecha os cards de grupos;
+- grupos não ficam visíveis por padrão no modal mobile;
+- filtros de status ficam visíveis;
+- filtros ficam em 4 colunas quando houver espaço conforme regra CSS atual;
+- mobile não deve mostrar Zoom, Restaurar ou Exportar.
+
+---
+
+## 7. Contadores
 
 Regra preservada:
 
@@ -184,18 +215,40 @@ Cônjuges sempre visíveis não devem inflar a contagem de cônjuges filtráveis
 
 ---
 
-## 7. Conteúdo histórico útil
+## 8. Paletas
+
+Contrato atual:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Regras:
+
+- desktop é referência visual;
+- mobile deve herdar os mesmos tokens CSS `--tree-palette-*`;
+- paletas afetam cards, bordas, textos, ícones, conectores, canvas e exportação;
+- não criar paleta mobile paralela com classes fixas;
+- se houver divergência visual, corrigir o mobile para seguir o desktop.
+
+---
+
+## 9. Conteúdo histórico útil
 
 Este documento pode ser consultado para entender:
 
 - origem da separação entre pets de grupo e pets de status;
 - origem da regra de cônjuges sempre visíveis;
-- mobile segmentado `Paterno | Central | Materno`;
-- motivo de `directRelativeFilters.pets` e `personFilters.pets` existirem separadamente.
+- origem do mobile segmentado `Paterno | Central | Materno`;
+- motivo de `directRelativeFilters.pets` e `personFilters.pets` existirem separadamente;
+- como regras antigas foram migradas para a baseline atual.
 
 ---
 
-## 8. Fonte de verdade atual
+## 10. Fonte de verdade atual
 
 Consultar:
 
@@ -205,6 +258,7 @@ docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/BASELINE_PRODUTO_ATUAL.md
 ```
 
 Não usar este documento para orientar implementação nova.
