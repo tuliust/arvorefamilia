@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Node } from 'reactflow';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -8,6 +9,7 @@ import type { FamilyTreeActions } from './FamilyTree';
 import { VisualPersonCard } from './FamilyTreeVisualCards';
 import { buildTreeGraph } from './buildTreeGraph';
 import { collectDirectFamilyScopePersonIds } from './layouts/directFamilyDistributedLayout';
+import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
 import {
   DEFAULT_EDGE_FILTERS,
   type DirectRelativeFilters,
@@ -74,6 +76,11 @@ type CoupleConnectorCandidate = {
   lowerLayout: PersonLayout;
   childLayouts: PersonLayout[];
   coupleMidY: number;
+};
+
+type GenealogyReferencePlacement = {
+  x: number;
+  y: number;
 };
 
 const GENERATIONS = [1, 2, 3, 4, 5, 6] as const;
@@ -224,7 +231,7 @@ function getFallbackSortableBirthValue(value?: string | null) {
   return year ? Number(year) : Number.POSITIVE_INFINITY;
 }
 
-function sortPeopleByBirthThenName(a: Pessoa, b: Pessoa, centralPersonId: string) {
+function sortPeopleByFallback(a: Pessoa, b: Pessoa, centralPersonId: string) {
   if (a.id === centralPersonId) return -1;
   if (b.id === centralPersonId) return 1;
 
@@ -233,6 +240,120 @@ function sortPeopleByBirthThenName(a: Pessoa, b: Pessoa, centralPersonId: string
   if (birthA !== birthB) return birthA - birthB;
 
   return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
+}
+
+function sortPeopleByBirthThenName(people: Pessoa[]) {
+  return [...people].sort((a, b) => {
+    const birthA = getFallbackSortableBirthValue(a.data_nascimento);
+    const birthB = getFallbackSortableBirthValue(b.data_nascimento);
+    if (birthA !== birthB) return birthA - birthB;
+    return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
+  });
+}
+
+function getParentGroupKey(person: Pessoa, maps: RelationshipMaps) {
+  const parentIds = Array.from(maps.parentsByChild.get(person.id) ?? []).sort();
+  if (parentIds.length === 0) return undefined;
+  return parentIds.join('::');
+}
+
+function orderChildrenByParentGroups(people: Pessoa[], maps: RelationshipMaps) {
+  const groupByParentKey = new Map<string, Pessoa[]>();
+  const placedPersonIds = new Set<string>();
+  const orderedPeople: Pessoa[] = [];
+
+  people.forEach((person) => {
+    const parentKey = getParentGroupKey(person, maps);
+    if (!parentKey) return;
+    if (!groupByParentKey.has(parentKey)) groupByParentKey.set(parentKey, []);
+    groupByParentKey.get(parentKey)!.push(person);
+  });
+
+  people.forEach((person) => {
+    if (placedPersonIds.has(person.id)) return;
+
+    const parentKey = getParentGroupKey(person, maps);
+    const siblings = parentKey ? groupByParentKey.get(parentKey) : undefined;
+
+    if (!siblings || siblings.length <= 1) {
+      orderedPeople.push(person);
+      placedPersonIds.add(person.id);
+      return;
+    }
+
+    sortPeopleByBirthThenName(siblings).forEach((sibling) => {
+      if (placedPersonIds.has(sibling.id)) return;
+      orderedPeople.push(sibling);
+      placedPersonIds.add(sibling.id);
+    });
+  });
+
+  return orderedPeople;
+}
+
+function orderPeopleWithAdjacentSpouses(people: Pessoa[], maps: RelationshipMaps) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
+  const placedPersonIds = new Set<string>();
+  const orderedPeople: Pessoa[] = [];
+
+  people.forEach((person) => {
+    if (placedPersonIds.has(person.id)) return;
+
+    orderedPeople.push(person);
+    placedPersonIds.add(person.id);
+
+    const spouse = Array.from(maps.spousesByPerson.get(person.id) ?? [])
+      .map((spouseId) => peopleById.get(spouseId))
+      .filter((candidate): candidate is Pessoa => Boolean(candidate) && !placedPersonIds.has(candidate.id))
+      .sort((a, b) => {
+        const indexA = originalIndexByPersonId.get(a.id) ?? Number.POSITIVE_INFINITY;
+        const indexB = originalIndexByPersonId.get(b.id) ?? Number.POSITIVE_INFINITY;
+        return indexA - indexB;
+      })[0];
+
+    if (!spouse) return;
+
+    orderedPeople.push(spouse);
+    placedPersonIds.add(spouse.id);
+  });
+
+  return orderedPeople;
+}
+
+function isPersonNodeWithPessoa(node: Node): node is Node & { data: { pessoa: Pessoa } } {
+  return node.type === 'personNode' && Boolean(node.data?.pessoa);
+}
+
+function buildGenealogyReferencePlacements(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[],
+  onPersonClick: (pessoa: Pessoa) => void,
+) {
+  const graph = buildTreeGraph({
+    pessoas,
+    relacionamentos,
+    onPersonClick,
+    edgeFilters: DEFAULT_EDGE_FILTERS,
+  });
+
+  const layout = genealogyColumnsLayout(graph, {
+    edgeFilters: DEFAULT_EDGE_FILTERS,
+    hideUngenerated: true,
+  });
+
+  const placements = new Map<string, GenealogyReferencePlacement>();
+
+  layout.nodes
+    .filter(isPersonNodeWithPessoa)
+    .forEach((node) => {
+      placements.set(node.data.pessoa.id, {
+        x: node.position.x,
+        y: node.position.y,
+      });
+    });
+
+  return placements;
 }
 
 function createDirectRelativeFiltersForGroups(groups: DirectRelativeGroup[]): DirectRelativeFilters {
@@ -526,6 +647,11 @@ function MobileFamilyHorizontalMapViewComponent({
     [centralPersonId, maps, visibleHorizontalPessoas],
   );
 
+  const genealogyReferencePlacements = React.useMemo(
+    () => buildGenealogyReferencePlacements(visibleHorizontalPessoas, relacionamentos, onPersonClick),
+    [onPersonClick, relacionamentos, visibleHorizontalPessoas],
+  );
+
   const peopleByGeneration = React.useMemo(() => {
     const result = new Map<number, Pessoa[]>();
     GENERATIONS.forEach((generation) => result.set(generation, []));
@@ -536,12 +662,28 @@ function MobileFamilyHorizontalMapViewComponent({
       result.get(generation)?.push(person);
     });
 
-    result.forEach((generationPeople) => {
-      generationPeople.sort((a, b) => sortPeopleByBirthThenName(a, b, centralPersonId));
+    result.forEach((generationPeople, generation) => {
+      generationPeople.sort((a, b) => {
+        const referenceA = genealogyReferencePlacements.get(a.id);
+        const referenceB = genealogyReferencePlacements.get(b.id);
+
+        if (referenceA && referenceB) {
+          if (referenceA.y !== referenceB.y) return referenceA.y - referenceB.y;
+          return referenceA.x - referenceB.x;
+        }
+
+        if (referenceA) return -1;
+        if (referenceB) return 1;
+
+        return sortPeopleByFallback(a, b, centralPersonId);
+      });
+
+      const orderedChildren = orderChildrenByParentGroups(generationPeople, maps);
+      result.set(generation, orderPeopleWithAdjacentSpouses(orderedChildren, maps));
     });
 
     return result;
-  }, [centralPersonId, generationByPersonId, visibleHorizontalPessoas]);
+  }, [centralPersonId, generationByPersonId, genealogyReferencePlacements, maps, visibleHorizontalPessoas]);
 
   const activeGenerations = React.useMemo(
     () => GENERATIONS.filter((generation) => (peopleByGeneration.get(generation)?.length ?? 0) > 0),
