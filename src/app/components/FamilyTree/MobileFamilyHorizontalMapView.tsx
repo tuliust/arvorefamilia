@@ -777,7 +777,6 @@ function MobileFamilyHorizontalMapViewComponent({
     startAreaSelection: () => toast.info('Seleção manual de área permanece disponível na versão desktop.'),
   }), [handlePrint, handleSaveImage, handleSavePdf]);
 
-  const activeGeneration = activeGenerations[activeIndex];
 
   if (activeGenerations.length === 0) {
     return (
@@ -817,9 +816,6 @@ function MobileFamilyHorizontalMapViewComponent({
               G{generation}
             </button>
           ))}
-          <span className="ml-auto shrink-0 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-slate-500 shadow-sm">
-            {activeGeneration ? (GENERATION_LABELS[activeGeneration] ?? `Geração ${activeGeneration}`) : ''}
-          </span>
         </div>
       </nav>
 
