@@ -6,10 +6,6 @@
     right: 2.25rem !important;
   }
 
-  /* A Visão Completa não exibe controles flutuantes de zoom no topo desktop. */
-  [data-export-root="family-tree"][data-export-view="visao-completa"] > .absolute.right-4.top-4.z-20 {
-    display: none !important;
-  }
 }
 
 /*

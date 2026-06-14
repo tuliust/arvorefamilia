@@ -299,7 +299,7 @@
    Revisão 2026-06-13: telas mobile dos Mapas Familiares
    --------------------------------------------------------------------------
    Estas regras são escopadas aos componentes mobile em HTML/CSS/SVG e não
-   devem afetar as views ReactFlow de /genealogia e /visao-completa.
+   devem afetar o fallback ReactFlow legado preservado fora das rotas oficiais.
 */
 
 @media (max-width: 767px) {

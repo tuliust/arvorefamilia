@@ -1,4 +1,4 @@
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+[data-tree-route-view="mapa-familiar-horizontal"] {
   --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: #ffffff;
   --horizontal-map-card-bg-alt: #f6fbff;
@@ -10,7 +10,7 @@
   --horizontal-map-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
 }
 
-html[data-tree-color-palette="visual"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+html[data-tree-color-palette="visual"] [data-tree-route-view="mapa-familiar-horizontal"] {
   --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #0ea5a5 0%, #0284c7 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #2dd4bf 0%, #0891b2 100%);
@@ -22,7 +22,7 @@ html[data-tree-color-palette="visual"] :is([data-tree-route-view="mapa-horizonta
   --horizontal-map-shadow: 0 18px 38px rgba(8, 145, 178, 0.2);
 }
 
-html[data-tree-color-palette="orange"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+html[data-tree-color-palette="orange"] [data-tree-route-view="mapa-familiar-horizontal"] {
   --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #f5b895 0%, #eec77d 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #e7a1cd 0%, #edc978 100%);
@@ -34,7 +34,7 @@ html[data-tree-color-palette="orange"] :is([data-tree-route-view="mapa-horizonta
   --horizontal-map-shadow: 0 18px 38px rgba(180, 83, 9, 0.14);
 }
 
-html[data-tree-color-palette="brown"] :is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) {
+html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-familiar-horizontal"] {
   --horizontal-map-screen-bg: transparent;
   --horizontal-map-card-bg: linear-gradient(135deg, #eadbc4 0%, #c39175 100%);
   --horizontal-map-card-bg-alt: linear-gradient(135deg, #f4ead8 0%, #8a6d4f 100%);
@@ -46,18 +46,18 @@ html[data-tree-color-palette="brown"] :is([data-tree-route-view="mapa-horizontal
   --horizontal-map-shadow: 0 18px 38px rgba(91, 70, 54, 0.16);
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) section,
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] {
+[data-tree-route-view="mapa-familiar-horizontal"] section,
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] {
   background: var(--horizontal-map-screen-bg) !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__renderer,
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__pane,
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__viewport {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__renderer,
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__pane,
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__viewport {
   background: transparent !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer {
   border-width: 1px !important;
   border-color: var(--horizontal-map-card-border) !important;
   border-radius: 1rem !important;
@@ -67,11 +67,11 @@ html[data-tree-color-palette="brown"] :is([data-tree-route-view="mapa-horizontal
   overflow: hidden !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode:nth-of-type(2n) > .relative > .cursor-pointer {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode:nth-of-type(2n) > .relative > .cursor-pointer {
   background: var(--horizontal-map-card-bg-alt) !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode h3 {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode h3 {
   color: var(--horizontal-map-card-text) !important;
   font-size: 0.92rem !important;
   font-weight: 800 !important;
@@ -80,34 +80,34 @@ html[data-tree-color-palette="brown"] :is([data-tree-route-view="mapa-horizontal
   text-transform: uppercase;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode p {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode p {
   color: var(--horizontal-map-card-muted) !important;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
   line-height: 1.15 !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode svg {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode svg {
   color: currentColor;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div > div:first-child {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode > .relative > .cursor-pointer > div > div:first-child {
   border: 2px solid rgba(255, 255, 255, 0.84) !important;
   background: var(--horizontal-map-avatar-bg) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__node-personNode img {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__node-personNode img {
   border: 2px solid rgba(255, 255, 255, 0.86) !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__edge-path,
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] .react-flow__edge-interaction {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__edge-path,
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] .react-flow__edge-interaction {
   stroke: var(--horizontal-map-line) !important;
   stroke-width: 2.5px !important;
 }
 
-:is([data-tree-route-view="mapa-horizontal"], [data-tree-route-view="mapa-familiar-horizontal"]) [data-export-root="family-tree"] [data-tree-node-menu="true"] {
+[data-tree-route-view="mapa-familiar-horizontal"] [data-export-root="family-tree"] [data-tree-node-menu="true"] {
   color: #0f172a !important;
   text-transform: none !important;
 }
