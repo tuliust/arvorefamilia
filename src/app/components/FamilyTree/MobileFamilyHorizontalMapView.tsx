@@ -764,8 +764,7 @@ function MobileFamilyHorizontalMapViewComponent({
     setManualZoom(1);
   }, [activeGenerationSignature, centralPersonId, generationByPersonId, layoutRevision]);
 
-  React.useEffect(() => {
-    const activeGeneration = activeGenerations[activeIndex];
+  const activeGeneration = activeGenerations[activeIndex];
   const activeColumnIndex = Math.max(0, activeIndex);
   const activeColumnLeft = MOBILE_HORIZONTAL_CANVAS.left
     + activeColumnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
@@ -798,7 +797,8 @@ function MobileFamilyHorizontalMapViewComponent({
     [activeColumnLeft, spouseConnectors],
   );
 
-  if (activeGenerations.length === 0) {
+  React.useEffect(() => {
+    if (activeGenerations.length === 0) {
       onDirectRelationRenderedCounts?.(EMPTY_COUNTS);
       return;
     }
