@@ -1,8 +1,4 @@
-/* Painel lateral unificado da árvore: controles compactos, responsivos e sem barras internas. */
-main aside button[aria-label="Ações da árvore"] {
-  display: none !important;
-}
-
+/* Painel lateral unificado da árvore: controles compactos, filtros diretos e sem abas internas. */
 main aside {
   overflow: hidden;
 }
@@ -11,8 +7,14 @@ main aside > div > div:first-child {
   align-items: flex-start !important;
 }
 
-main aside [class*="overflow-y-auto"] {
+main aside [class*="overflow-y-auto"]:not(.tree-sidebar-filter-scroll) {
   overflow-y: visible !important;
+}
+
+.tree-sidebar-filter-scroll {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 main aside [class*="overflow-x-auto"] {
@@ -60,6 +62,11 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 .tree-control-panel {
   overflow: visible;
 }
+
+.tree-panel-tabs {
+  display: none !important;
+}
+
 
 .tree-control-section > summary {
   user-select: none;
@@ -378,8 +385,8 @@ body.tree-mobile-controls-open {
   overflow: visible;
 }
 
-.tree-mobile-controls-panel button[aria-label="Ações da árvore"] {
-  display: inline-flex !important;
+.tree-panel-tabs {
+  display: none !important;
 }
 
 .tree-mobile-controls-scroll {

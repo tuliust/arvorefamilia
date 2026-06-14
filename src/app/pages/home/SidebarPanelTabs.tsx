@@ -23,8 +23,6 @@ import {
 } from '../../components/FamilyTree/treeColorPalettes';
 import { getPathForTreeViewMode, type TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 
-export type SidebarPanel = 'filters' | 'legend' | 'info';
-
 export type SidebarTreeAction =
   | 'zoom-in'
   | 'zoom-out'
@@ -109,15 +107,7 @@ function dispatchTreeAction(action: SidebarTreeAction) {
   window.dispatchEvent(new CustomEvent<SidebarTreeAction>(SIDEBAR_TREE_ACTION_EVENT, { detail: action }));
 }
 
-interface SidebarPanelTabsProps {
-  activePanel: SidebarPanel;
-  onChange: (panel: SidebarPanel) => void;
-}
-
-export function SidebarPanelTabs({
-  activePanel,
-  onChange,
-}: SidebarPanelTabsProps) {
+export function SidebarPanelTabs() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
@@ -176,7 +166,7 @@ export function SidebarPanelTabs({
         <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
       </div>
 
-      <section className="tree-control-panel flex w-full min-w-0 flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
+      <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
         <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
           {viewOptions.map((option) => {
             const Icon = option.icon;
@@ -245,40 +235,11 @@ export function SidebarPanelTabs({
           </div>
         )}
 
-        <div className="tree-panel-tabs grid min-w-0 grid-cols-3 gap-1 border-t border-gray-100 pt-1">
-          <PanelTabButton label="Filtros" active={activePanel === 'filters'} onClick={() => onChange('filters')} />
-          <PanelTabButton label="Legendas" active={activePanel === 'legend'} onClick={() => onChange('legend')} />
-          <PanelTabButton label="Ações" active={activePanel === 'info'} onClick={() => onChange('info')} />
-        </div>
       </section>
     </div>
   );
 }
 
-
-function PanelTabButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={[
-        'min-h-8 min-w-0 rounded-md border px-1.5 text-[10px] font-bold leading-tight transition',
-        active ? 'border-slate-700 bg-slate-800 text-white shadow-sm' : 'border-gray-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-      ].join(' ')}
-    >
-      <span className="truncate">{label}</span>
-    </button>
-  );
-}
 
 function TopIconButton({
   icon: Icon,

@@ -1,3 +1,4 @@
+/* Controles mobile legados do renderer ReactFlow. As rotas oficiais /mapa-familiar e /mapa-familiar-horizontal usam o modal de HomeMobileNav. */
 @media (max-width: 767px) {
   .family-tree-export-root button[aria-label="Aumentar zoom"],
   .family-tree-export-root button[aria-label="Diminuir zoom"] {

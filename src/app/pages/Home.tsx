@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import type { FamilyTreeActions } from '../components/FamilyTree/actions';
-import { TreeLegend } from '../components/FamilyTree/TreeLegend';
 import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
 import { collectDirectFamilyScopePersonIds } from '../components/FamilyTree/layouts/directFamilyDistributedLayout';
 import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageModal';
@@ -45,7 +44,6 @@ import {
   DirectRelativeGroup,
   GenealogyFilters,
   MarriageNodeDetails,
-  VisualLineFilterKey,
   VisualLineFilters,
 } from '../components/FamilyTree/types';
 import {
@@ -75,8 +73,6 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
@@ -93,8 +89,7 @@ import { HomeHeader } from './home/HomeHeader';
 import { HomeMobileNav } from './home/HomeMobileNav';
 import { HomeTreeSection } from './home/HomeTreeSection';
 import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
-import { SidebarInfoPanel } from './home/SidebarInfoPanel';
-import { SidebarPanelTabs, type SidebarPanel } from './home/SidebarPanelTabs';
+import { SidebarPanelTabs } from './home/SidebarPanelTabs';
 
 const AI_QUESTION_EXAMPLES = [
   'Quem são meus bisavós paternos?',
@@ -154,7 +149,6 @@ export function Home() {
   const [pessoasFiltradas, setPessoasFiltradas] = useState<Pessoa[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
-  const [activeSidebarPanel, setActiveSidebarPanel] = useState<SidebarPanel>('filters');
   const [legendOpen, setLegendOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -220,14 +214,14 @@ export function Home() {
     [buildTreePathForPerson, linkedPersonId, queryPersonId, selectedPersonId, treeFocusPersonId]
   );
 
-  const [edgeFilters, setEdgeFilters] = useState({
+  const [edgeFilters] = useState({
     conjugal: true,
     filiacao_sangue: true,
     filiacao_adotiva: true,
     irmaos: true,
   });
 
-  const [visualLineFilters, setVisualLineFilters] = useState<VisualLineFilters>(DEFAULT_VISUAL_LINE_FILTERS);
+  const [visualLineFilters] = useState<VisualLineFilters>(DEFAULT_VISUAL_LINE_FILTERS);
 
   const [personFilters, setPersonFilters] = useState({
     vivos: true,
@@ -237,7 +231,7 @@ export function Home() {
 
   const [renderedDirectRelationCounts, setRenderedDirectRelationCounts] = useState<DirectRelationCounts | null>(null);
 
-  const [genealogyFilters, setGenealogyFilters] = useState<GenealogyFilters>(DEFAULT_GENEALOGY_FILTERS);
+  const [genealogyFilters] = useState<GenealogyFilters>(DEFAULT_GENEALOGY_FILTERS);
 
   useEffect(() => {
     setSidebarOpen((prev) => (isMobile ? false : prev));
@@ -658,59 +652,6 @@ export function Home() {
     setConnectionTarget(null);
   }, []);
 
-  const toggleFilter = useCallback((filterKey: keyof typeof edgeFilters) => {
-    setEdgeFilters((prev) => ({
-      ...prev,
-      [filterKey]: !prev[filterKey],
-    }));
-  }, []);
-
-  const toggleParentChildFilters = useCallback(() => {
-    setEdgeFilters((prev) => {
-      const shouldEnable = !(prev.filiacao_sangue || prev.filiacao_adotiva);
-
-      return {
-        ...prev,
-        filiacao_sangue: shouldEnable,
-        filiacao_adotiva: shouldEnable,
-      };
-    });
-  }, []);
-
-  const toggleAllEdgeFilters = useCallback(() => {
-    setEdgeFilters((prev) => {
-      const allActive = prev.conjugal && prev.filiacao_sangue && prev.filiacao_adotiva && prev.irmaos;
-      const nextValue = !allActive;
-
-      return {
-        conjugal: nextValue,
-        filiacao_sangue: nextValue,
-        filiacao_adotiva: nextValue,
-        irmaos: nextValue,
-      };
-    });
-  }, []);
-
-  const toggleVisualLineFilter = useCallback((filterKey: VisualLineFilterKey) => {
-    setVisualLineFilters((prev) => ({
-      ...prev,
-      [filterKey]: !prev[filterKey],
-    }));
-  }, []);
-
-  const toggleAllVisualLineFilters = useCallback(() => {
-    setVisualLineFilters((prev) => {
-      const allActive = prev.spouseHighlight && prev.parentChildHighlight && prev.siblingHighlight;
-      const nextValue = !allActive;
-
-      return {
-        spouseHighlight: nextValue,
-        parentChildHighlight: nextValue,
-        siblingHighlight: nextValue,
-      };
-    });
-  }, []);
-
   const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
     setPersonFilters((prev) => ({
       ...prev,
@@ -899,64 +840,30 @@ export function Home() {
     ),
     [directRelationCounts, renderedDirectRelationCounts, treeViewMode]
   );
-  const usesDirectTreeLegendControls = treeViewMode === 'mapa-familiar'
-    || treeViewMode === 'mapa-familiar-horizontal';
-  const sidebarPanelContent = (
-    <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
-      {activeSidebarPanel === 'filters' && (
-        <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
-          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
-            <DirectRelationKpiGrid
-              filters={directRelativeFilters}
-              counts={effectiveDirectRelationCounts}
-              onToggle={toggleDirectRelativeFilter}
-            />
-          </div>
-
-          <LifeStatusKpiGrid
-            vivos={lifeStatusCounts.vivos}
-            falecidos={lifeStatusCounts.falecidos}
-            filters={personFilters}
-            onToggle={togglePersonFilter}
-            directRelativeFilters={directRelativeFilters}
-            directRelationCounts={effectiveDirectRelationCounts}
-            onToggleDirectRelative={toggleDirectRelativeFilter}
+  const sidebarFiltersContent = (
+    <section className="tree-sidebar-filter-panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
+      <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
+        <div className="tree-sidebar-filter-scroll min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
+          <DirectRelationKpiGrid
+            filters={directRelativeFilters}
+            counts={effectiveDirectRelationCounts}
+            onToggle={toggleDirectRelativeFilter}
           />
         </div>
-      )}
 
-      {activeSidebarPanel === 'legend' && (
-        <div className="h-full min-h-0 overflow-y-auto pr-0.5">
-          <TreeLegend
-            viewMode={treeViewMode}
-            compact
-            showTitle
-            personFilters={personFilters}
-            edgeFilters={edgeFilters}
-            directRelativeFilters={usesDirectTreeLegendControls ? directRelativeFilters : undefined}
-            onTogglePersonFilter={togglePersonFilter}
-            onToggleEdgeFilter={toggleFilter}
-            onToggleAllEdgeFilters={toggleAllEdgeFilters}
-            onToggleParentChildFilter={toggleParentChildFilters}
-            onToggleDirectRelativeFilter={usesDirectTreeLegendControls ? toggleDirectRelativeFilter : undefined}
-            visualLineFilters={visualLineFilters}
-            onToggleVisualLineFilter={toggleVisualLineFilter}
-            onToggleAllVisualLineFilters={toggleAllVisualLineFilters}
-          />
-        </div>
-      )}
-
-      {activeSidebarPanel === 'info' && (
-        <SidebarInfoPanel
-          onSelectArea={() => familyTreeRef.current?.startAreaSelection()}
-          onSavePdf={() => familyTreeRef.current?.savePdf()}
-          onSaveImage={() => familyTreeRef.current?.saveImage()}
-          onPrint={() => familyTreeRef.current?.print()}
-          onWhatsApp={() => toast.info('Envio por WhatsApp será implementado em breve.')}
+        <LifeStatusKpiGrid
+          vivos={lifeStatusCounts.vivos}
+          falecidos={lifeStatusCounts.falecidos}
+          filters={personFilters}
+          onToggle={togglePersonFilter}
+          directRelativeFilters={directRelativeFilters}
+          directRelationCounts={effectiveDirectRelationCounts}
+          onToggleDirectRelative={toggleDirectRelativeFilter}
         />
-      )}
+      </div>
     </section>
   );
+
   const selectedCuriosityPerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === selectedCuriosityPersonId),
     [pessoas, selectedCuriosityPersonId]
@@ -1168,8 +1075,6 @@ export function Home() {
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-gray-50">
       <HomeHeader
         currentTreeViewLabel={currentTreeViewLabel}
-        treeViewMode={treeViewMode}
-        onTreeViewModeChange={handleTreeViewModeChange}
         isSearchExpanded={isSearchExpanded}
         searchExpanded={searchExpanded}
         onSearchExpandedChange={setSearchExpanded}
@@ -1193,29 +1098,14 @@ export function Home() {
           >
             {sidebarOpen && (
               <div className="flex min-h-0 flex-1 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
-                <div className="relative flex items-center gap-[clamp(0.35rem,0.8vh,0.5rem)]">
+                <div className="flex items-start gap-[clamp(0.35rem,0.8vh,0.5rem)]">
                   <div className="min-w-0 flex-1">
-                    <SidebarPanelTabs
-                      activePanel={activeSidebarPanel}
-                      onChange={setActiveSidebarPanel}
-                    />
+                    <SidebarPanelTabs />
                   </div>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="h-[clamp(32px,4.5vh,36px)] shrink-0 border-gray-500 bg-gray-500 px-[clamp(0.55rem,1.2vh,0.75rem)] text-[clamp(11px,1.45vh,12px)] text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
-                    onClick={() => setActiveSidebarPanel('info')}
-                    title="Ações da árvore"
-                    aria-label="Ações da árvore"
-                    aria-pressed={activeSidebarPanel === 'info'}
-                  >
-                    <Printer className="h-4 w-4" />
-                    <span className="ml-2">Ações</span>
-                  </Button>
-                  <Button
-                    variant="outline"
                     size="icon"
-                    className="absolute right-0 top-0 h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
+                    className="h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
@@ -1224,7 +1114,7 @@ export function Home() {
                   </Button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-hidden">
-                  {sidebarPanelContent}
+                  {sidebarFiltersContent}
                 </div>
               </div>
             )}
@@ -1278,10 +1168,6 @@ export function Home() {
         <HomeMobileNav
           legendOpen={legendOpen}
           onToggleLegend={() => setLegendOpen((open) => !open)}
-          currentTreeViewLabel={currentTreeViewLabel}
-          onTreeViewModeChange={handleTreeViewModeChange}
-          familyTreeRef={familyTreeRef}
-          onCuriosities={() => setAiDialogOpen(true)}
           navigateFromHome={navigateFromHome}
         />
       )}
@@ -1302,24 +1188,11 @@ export function Home() {
             data-tree-export-ignore="true"
           />
           <section className="tree-mobile-controls-panel absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] top-[calc(env(safe-area-inset-top,0px)+0.75rem)] flex min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-            <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+            <div className="tree-mobile-controls-panel-header flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <SidebarPanelTabs
-                  activePanel={activeSidebarPanel}
-                  onChange={setActiveSidebarPanel}
-                />
+                <p className="truncate text-sm font-extrabold text-slate-950">Controles da árvore</p>
+                <p className="truncate text-xs font-medium text-slate-500">Visualização, cores, exportação, destaques e filtros</p>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0 border-gray-500 bg-gray-500 text-white shadow-sm hover:border-gray-600 hover:bg-gray-600 hover:text-white"
-                onClick={() => setActiveSidebarPanel('info')}
-                title="Ações da árvore"
-                aria-label="Ações da árvore"
-                aria-pressed={activeSidebarPanel === 'info'}
-              >
-                <Printer className="h-4 w-4" />
-              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -1328,11 +1201,12 @@ export function Home() {
                 title="Fechar painel"
                 aria-label="Fechar painel"
               >
-                <ChevronDown className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 rotate-[-90deg]" />
               </Button>
             </div>
-            <div className="tree-mobile-controls-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
-              {sidebarPanelContent}
+            <div className="tree-mobile-controls-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
+              <SidebarPanelTabs />
+              {sidebarFiltersContent}
             </div>
           </section>
         </div>

@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
-import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import { FAVORITE_PAGES } from '../../constants/favoritePages';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
@@ -61,8 +60,6 @@ function getFirstName(value?: string | null) {
 
 interface HomeHeaderProps {
   currentTreeViewLabel: string;
-  treeViewMode: TreeViewMode;
-  onTreeViewModeChange: (value: TreeViewMode) => void;
   isSearchExpanded: boolean;
   searchExpanded: boolean;
   onSearchExpandedChange: (value: boolean) => void;

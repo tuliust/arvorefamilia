@@ -9,16 +9,9 @@ import {
   Star,
 } from 'lucide-react';
 
-import type { FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
-import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
-
 interface HomeMobileNavProps {
   legendOpen: boolean;
   onToggleLegend: () => void;
-  currentTreeViewLabel: string;
-  onTreeViewModeChange: (value: TreeViewMode) => void;
-  familyTreeRef: React.RefObject<FamilyTreeActions | null>;
-  onCuriosities: () => void;
   navigateFromHome: (path: string) => void;
 }
 
