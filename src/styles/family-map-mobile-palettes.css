@@ -49,6 +49,39 @@ html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"
   color: var(--family-map-card-text) !important;
 }
 
+/*
+  Horizontal mobile can receive generation-level cards without a relation color key
+  (for example, the "Núcleo" fallback). Mirror the desktop fallback, which treats
+  those residual same-generation people as Irmãos, so they never keep the base
+  teal/cyan Tailwind gradient when another palette is active.
+*/
+html[data-tree-color-palette="white"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]),
+html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) {
+  --family-map-card-bg: #a9cb72;
+  --family-map-card-border: #a9cb72;
+  background: var(--family-map-card-bg) !important;
+  border-color: var(--family-map-card-border) !important;
+  color: #111827 !important;
+}
+
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]),
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) {
+  --family-map-card-bg: linear-gradient(135deg, #b9d783, #a9cb72);
+  --family-map-card-border: #a9cb72;
+  background: var(--family-map-card-bg) !important;
+  border-color: var(--family-map-card-border) !important;
+  color: #111827 !important;
+}
+
+html[data-tree-color-palette="brown"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]),
+html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) {
+  --family-map-card-bg: linear-gradient(135deg, #d9c7ad, #66745b);
+  --family-map-card-border: #66745b;
+  background: var(--family-map-card-bg) !important;
+  border-color: var(--family-map-card-border) !important;
+  color: #ffffff !important;
+}
+
 html[data-tree-color-palette="white"] [data-mobile-family-tree-root="true"] button[data-family-map-mobile-card="true"][data-family-map-color-key] *,
 html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"] button[data-family-map-mobile-card="true"][data-family-map-color-key] *,
 html[data-tree-color-palette="brown"] [data-mobile-family-tree-root="true"] button[data-family-map-mobile-card="true"][data-family-map-color-key] *,
@@ -57,7 +90,13 @@ html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="
 html[data-tree-color-palette="brown"] [data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key] *,
 html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] *,
 html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] *,
-html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] * {
+html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key] *,
+html[data-tree-color-palette="white"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]) *,
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]) *,
+html[data-tree-color-palette="brown"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]) *,
+html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) *,
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) *,
+html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) * {
   color: inherit !important;
 }
 
