@@ -159,6 +159,7 @@ export function Home() {
   const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
   const [legendOpen, setLegendOpen] = useState(true);
   const [mobileGroupsOpen, setMobileGroupsOpen] = useState(false);
+  const [debugViewPersonId, setDebugViewPersonId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -679,7 +680,7 @@ export function Home() {
   }, [user?.id]);
 
   const centralReferencePersonId = linkedPersonResolved
-    ? treeFocusPersonId || linkedPersonId || selectedPersonId || pessoas[0]?.id
+    ? debugViewPersonId || treeFocusPersonId || linkedPersonId || selectedPersonId || pessoas[0]?.id
     : undefined;
   const centralReferencePerson = useMemo(
     () => pessoas.find((pessoa) => pessoa.id === centralReferencePersonId),
@@ -1064,6 +1065,35 @@ export function Home() {
     ? 'Mapa Familiar Horizontal'
     : 'Mapa Familiar';
   const headerActionTextClassName = isSearchExpanded ? 'hidden' : 'hidden xl:inline-flex';
+  const shouldShowDebugViewer = canRenderTree && (
+    treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal'
+  );
+
+  const debugViewPersonOptions = useMemo(() => {
+    return [...pessoas]
+      .filter((pessoa) => Boolean(pessoa.id))
+      .sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR'));
+  }, [pessoas]);
+
+  const handleDebugViewPersonChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextPersonId = event.target.value || undefined;
+
+    setDebugViewPersonId(nextPersonId);
+    setRenderedDirectRelationCounts(null);
+    setTreeLayoutRevision((revision) => revision + 1);
+
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      setTreeLayoutRevision((revision) => revision + 1);
+    }, 80);
+  }, []);
+
+  useEffect(() => {
+    if (!debugViewPersonId) return;
+    if (pessoas.some((pessoa) => pessoa.id === debugViewPersonId)) return;
+
+    setDebugViewPersonId(undefined);
+  }, [debugViewPersonId, pessoas]);
 
   useEffect(() => {
     if (!isMobile || !canRenderTree) return;
@@ -1171,6 +1201,36 @@ export function Home() {
           renderStateMessage={(props) => <StateMessage {...props} />}
           onDirectRelationRenderedCounts={handleDirectRelationRenderedCounts}
         />
+
+        {shouldShowDebugViewer && (
+          <div
+            className={[
+              'absolute z-[9500] rounded-xl border border-amber-200 bg-amber-50/95 p-2 shadow-lg backdrop-blur',
+              isMobile ? 'left-2 right-16 top-2' : 'right-4 top-4 w-80',
+            ].join(' ')}
+            data-tree-debug-viewer="true"
+            data-tree-export-ignore="true"
+          >
+            <label className="mb-1 block text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-700">
+              Visualizar como...
+            </label>
+            <select
+              value={debugViewPersonId ?? ''}
+              onChange={handleDebugViewPersonChange}
+              className="h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+              aria-label="Visualizar árvore como outra pessoa"
+            >
+              <option value="">
+                Padrão atual{centralReferencePerson?.nome_completo ? ` — ${centralReferencePerson.nome_completo}` : ''}
+              </option>
+              {debugViewPersonOptions.map((pessoa) => (
+                <option key={pessoa.id} value={pessoa.id}>
+                  {pessoa.nome_completo || pessoa.id}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </main>
 
       {isMobile && (
