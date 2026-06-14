@@ -1324,3 +1324,124 @@ body.tree-mobile-controls-open {
     font-size: 0.82rem !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: mobile usa paletas desktop */
+@media (max-width: 767px) {
+  [data-mobile-family-tree-root="true"],
+  [data-family-map-horizontal-mobile-root="true"] {
+    --family-map-card-text: var(--tree-palette-text-primary, #0f172a);
+    --family-map-card-muted: var(--tree-palette-text-muted, #334155);
+    --family-map-connector: var(--tree-palette-edge-child, #0e7490);
+    background: var(--tree-palette-canvas-bg, #ffffff) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] [data-mobile-family-tree-stage="true"],
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-stage="true"] {
+    background: var(--tree-palette-canvas-bg, #ffffff) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="tataravos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tataravos"] {
+    --family-map-card-bg: var(--tree-palette-card-tataravos, #b7aed6);
+    --family-map-card-border: var(--tree-palette-border-tataravos, #b7aed6);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="bisavos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="bisavos"] {
+    --family-map-card-bg: var(--tree-palette-card-bisavos, #d49bc5);
+    --family-map-card-border: var(--tree-palette-border-bisavos, #d49bc5);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="avos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="avos"] {
+    --family-map-card-bg: var(--tree-palette-card-avos, #e8a29b);
+    --family-map-card-border: var(--tree-palette-border-avos, #e8a29b);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="pais"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pais"] {
+    --family-map-card-bg: var(--tree-palette-card-pais, #e4c37a);
+    --family-map-card-border: var(--tree-palette-border-pais, #e4c37a);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="tios"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tios"] {
+    --family-map-card-bg: var(--tree-palette-card-tios, #eab08f);
+    --family-map-card-border: var(--tree-palette-border-tios, #eab08f);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="primos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="primos"] {
+    --family-map-card-bg: var(--tree-palette-card-primos, #e7b985);
+    --family-map-card-border: var(--tree-palette-border-primos, #e7b985);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="central"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="central"] {
+    --family-map-card-bg: var(--tree-palette-card-central, #e7e8e8);
+    --family-map-card-border: var(--tree-palette-border-central, #cbd5e1);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="conjuge"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="conjuge"] {
+    --family-map-card-bg: var(--tree-palette-card-sobrinhos, #b8cec2);
+    --family-map-card-border: var(--tree-palette-border-sobrinhos, #b8cec2);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="irmaos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="irmaos"] {
+    --family-map-card-bg: var(--tree-palette-card-irmaos, #a9cb72);
+    --family-map-card-border: var(--tree-palette-border-irmaos, #a9cb72);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="sobrinhos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="sobrinhos"] {
+    --family-map-card-bg: var(--tree-palette-card-sobrinhos, #b8cec2);
+    --family-map-card-border: var(--tree-palette-border-sobrinhos, #b8cec2);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="filhos"],
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="netos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="filhos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="netos"] {
+    --family-map-card-bg: var(--tree-palette-card-netos, #bdd8dc);
+    --family-map-card-border: var(--tree-palette-border-netos, #bdd8dc);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-color-key="pets"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pets"] {
+    --family-map-card-bg: var(--tree-palette-card-pets, #f4c7ab);
+    --family-map-card-border: var(--tree-palette-border-pets, #f4c7ab);
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-mobile-card="true"],
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button[data-family-map-color-key] {
+    border-color: var(--family-map-card-border, #cbd5e1) !important;
+    background: var(--family-map-card-bg, #ffffff) !important;
+    color: var(--family-map-card-text, #0f172a) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] [data-family-map-mobile-card="true"] *,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button[data-family-map-color-key] * {
+    color: inherit !important;
+  }
+
+  [data-mobile-family-tree-root="true"] .family-map-status-icon,
+  [data-family-map-horizontal-mobile-root="true"] .family-map-status-icon,
+  [data-mobile-family-tree-root="true"] .family-map-avatar-icon,
+  [data-family-map-horizontal-mobile-root="true"] .family-map-avatar-icon {
+    color: currentColor !important;
+    filter: none !important;
+  }
+
+  [data-mobile-family-tree-root="true"] [class*="bg-cyan-600"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-connectors="true"] path {
+    background-color: var(--family-map-connector, #0e7490) !important;
+    stroke: var(--family-map-connector, #0e7490) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] [class*="border-cyan-600"] {
+    border-color: var(--family-map-connector, #0e7490) !important;
+  }
+}

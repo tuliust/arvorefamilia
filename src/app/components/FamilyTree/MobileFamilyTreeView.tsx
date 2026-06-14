@@ -33,6 +33,61 @@ type MobileTreeScreen =
 
 type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
+type MobileFamilyMapColorKey =
+  | 'tataravos'
+  | 'bisavos'
+  | 'avos'
+  | 'pais'
+  | 'tios'
+  | 'primos'
+  | 'central'
+  | 'conjuge'
+  | 'irmaos'
+  | 'sobrinhos'
+  | 'filhos'
+  | 'netos'
+  | 'pets';
+
+function normalizeMobileColorKeyText(value?: string) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function getMobileFamilyMapColorKeyFromTitle(
+  title?: string,
+  fallback: MobileFamilyMapColorKey = 'central',
+): MobileFamilyMapColorKey {
+  const normalized = normalizeMobileColorKeyText(title);
+
+  if (normalized.includes('tataravos')) return 'tataravos';
+  if (normalized.includes('bisavos')) return 'bisavos';
+  if (normalized.includes('avos')) return 'avos';
+  if (normalized.includes('pai') || normalized.includes('mae')) return 'pais';
+  if (normalized.includes('tios')) return 'tios';
+  if (normalized.includes('primos')) return 'primos';
+  if (normalized.includes('central')) return 'central';
+  if (normalized.includes('conjuge')) return 'conjuge';
+  if (normalized.includes('irmaos')) return 'irmaos';
+  if (normalized.includes('sobrinhos')) return 'sobrinhos';
+  if (normalized.includes('filhos')) return 'filhos';
+  if (normalized.includes('netos')) return 'netos';
+  if (normalized.includes('pets')) return 'pets';
+
+  return fallback;
+}
+
+function getMobileFamilyMapColorKeyForGroup(
+  title: string,
+  cardVariant: CardVariant,
+): MobileFamilyMapColorKey {
+  if (cardVariant === 'sibling') return 'irmaos';
+  if (cardVariant === 'pet') return 'pets';
+
+  return getMobileFamilyMapColorKeyFromTitle(title, cardVariant === 'mini' ? 'tios' : 'central');
+}
+
 type GroupColumns = 'single' | 'double' | 'triple';
 
 type RelativeScreenKind = 'default' | 'uncles' | 'cousins';
@@ -180,19 +235,24 @@ function PersonCard({
   person,
   label,
   central = false,
+  colorKey,
   onClick,
 }: {
   person: Pessoa;
   label?: string;
   central?: boolean;
+  colorKey?: MobileFamilyMapColorKey;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+  const effectiveColorKey = colorKey ?? (central ? 'central' : getMobileFamilyMapColorKeyFromTitle(label, 'pais'));
 
   return (
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key={effectiveColorKey}
       className={[
         'relative flex h-[164px] w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
         central
@@ -232,6 +292,8 @@ function MainPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="central"
       className="relative flex h-[194px] w-full min-w-0 flex-col items-center justify-center rounded-[1.55rem] border border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 px-3.5 pb-4 pt-4 text-center text-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition active:scale-[0.98]"
     >
       <PersonAvatar
@@ -266,6 +328,8 @@ function SiblingPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="irmaos"
       className="flex h-[82px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
     >
       <PersonAvatar
@@ -295,9 +359,11 @@ function SiblingPersonCard({
 
 function AncestorPersonCard({
   person,
+  colorKey = 'avos',
   onClick,
 }: {
   person: Pessoa;
+  colorKey?: MobileFamilyMapColorKey;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
@@ -306,6 +372,8 @@ function AncestorPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key={colorKey}
       className="flex h-[60px] w-full min-w-0 items-center gap-1.5 rounded-[0.85rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-1.5 text-left text-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] transition active:scale-[0.98]"
     >
       <PersonAvatar
@@ -335,9 +403,11 @@ function AncestorPersonCard({
 
 function MiniPersonCard({
   person,
+  colorKey = 'tios',
   onClick,
 }: {
   person: Pessoa;
+  colorKey?: MobileFamilyMapColorKey;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
@@ -346,6 +416,8 @@ function MiniPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key={colorKey}
       className="flex h-[104px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
     >
       <PersonAvatar
@@ -383,6 +455,8 @@ function PetPersonCard({
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="pets"
       className="flex h-[128px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
     >
       <PersonAvatar
@@ -459,6 +533,7 @@ function FamilyGroup({
     : people.slice(0, maxCollapsedItems);
   const usePetCards = cardVariant === 'pet';
   const stretchedGroup = stretch && screenKind !== 'default';
+  const groupColorKey = getMobileFamilyMapColorKeyForGroup(title, cardVariant);
 
   return (
     <section className={[
@@ -494,8 +569,8 @@ function FamilyGroup({
           {visiblePeople.map((person) => {
             if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
             if (cardVariant === 'pet') return <PetPersonCard key={person.id} person={person} onClick={onPersonClick} />;
-            if (cardVariant === 'mini') return <MiniPersonCard key={person.id} person={person} onClick={onPersonClick} />;
-            return <PersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            if (cardVariant === 'mini') return <MiniPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
+            return <PersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
           })}
         </div>
         {!showAll && people.length > maxCollapsedItems && (
@@ -604,6 +679,8 @@ function AncestorGroupCard({
   group: AncestorSubgroup;
   onPersonClick: (person: Pessoa) => void;
 }) {
+  const groupColorKey = getMobileFamilyMapColorKeyFromTitle(group.title, 'avos');
+
   return (
     <section className="relative z-10 flex min-h-[5.5rem] min-w-0 flex-col overflow-hidden rounded-[1rem] border border-cyan-200 bg-white p-2 shadow-sm">
       <h3 className="mb-1.5 truncate text-center text-[9px] font-extrabold uppercase tracking-[0.04em] text-slate-800 min-[375px]:text-[10px]">
@@ -611,7 +688,7 @@ function AncestorGroupCard({
       </h3>
       <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-1 content-center gap-1.5">
         {group.people.map((person) => (
-          <AncestorPersonCard key={person.id} person={person} onClick={onPersonClick} />
+          <AncestorPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />
         ))}
       </div>
     </section>
