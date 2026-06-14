@@ -433,3 +433,206 @@ body.tree-mobile-controls-open {
     max-height: calc(100dvh - 0.9rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-14: modal mobile compacto dos controles da árvore
+   --------------------------------------------------------------------------
+   Objetivo:
+   - Reduzir largura e altura do modal mobile em /mapa-familiar e
+     /mapa-familiar-horizontal.
+   - Forçar fundo branco no painel, inclusive na visualização horizontal.
+   - Exibir grupos e filtros em 3 colunas no modal mobile.
+   - Compactar paddings, gaps e cards para reduzir rolagem.
+*/
+
+@media (max-width: 767px) {
+  .tree-mobile-controls-modal .tree-mobile-controls-panel {
+    inset: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    top: 50% !important;
+    bottom: auto !important;
+    width: min(calc(100vw - 1.5rem), 23.75rem) !important;
+    max-height: min(76dvh, 36rem) !important;
+    min-height: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: 1rem !important;
+    border-color: rgb(226 232 240) !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+    overflow: hidden !important;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header {
+    min-height: 2.8rem !important;
+    padding: 0.6rem 0.75rem !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header p:first-child {
+    font-size: 0.86rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header p:last-child {
+    font-size: 0.68rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-scroll {
+    gap: 0.55rem !important;
+    padding: 0.55rem 0.65rem 0.7rem !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  .tree-mobile-controls-modal .tree-panel-control-stack {
+    gap: 0.45rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-external-zoom-actions {
+    gap: 0.4rem !important;
+    padding-right: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-top-icon-button {
+    height: 2rem !important;
+    min-height: 2rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-top-icon-button[class*="min-w"] {
+    min-width: 4.35rem !important;
+    padding-inline: 0.55rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-panel {
+    gap: 0.32rem !important;
+    padding: 0.36rem !important;
+    border-radius: 0.85rem !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  .tree-mobile-controls-modal .tree-view-toggle {
+    gap: 0.32rem !important;
+    padding: 0.28rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-primary-actions {
+    gap: 0.32rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-primary-control-button {
+    min-height: 2.15rem !important;
+    gap: 0.1rem !important;
+    font-size: 0.66rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-icon-chip {
+    min-height: 1.65rem !important;
+    font-size: 0.64rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-flyout {
+    gap: 0.3rem !important;
+    padding: 0.25rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel {
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+    padding: 0.45rem !important;
+    overflow: visible !important;
+    border-radius: 0.9rem !important;
+    background: rgb(248 250 252) !important;
+    background-color: rgb(248 250 252) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div {
+    gap: 0.5rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll {
+    max-height: none !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-section {
+    border-radius: 0.8rem !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-section > summary {
+    min-height: 1.7rem !important;
+    padding: 0.32rem 0.55rem !important;
+    font-size: 0.66rem !important;
+    letter-spacing: 0.14em !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-section > div {
+    padding: 0.2rem 0.38rem 0.45rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section > div > .grid,
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.34rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip {
+    min-height: 2.65rem !important;
+    border-radius: 0.65rem !important;
+    padding: 0.34rem 0.38rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip > span:first-child {
+    gap: 0.26rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip svg {
+    width: 0.82rem !important;
+    height: 0.82rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip span {
+    font-size: 0.62rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip > span:last-child {
+    margin-top: 0.16rem !important;
+    font-size: 0.86rem !important;
+    line-height: 1 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .tree-mobile-controls-modal .tree-mobile-controls-panel {
+    width: min(calc(100vw - 1rem), 22rem) !important;
+    max-height: min(78dvh, 35rem) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section > div > .grid,
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid {
+    gap: 0.28rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip {
+    min-height: 2.5rem !important;
+    padding-inline: 0.3rem !important;
+  }
+
+  .tree-mobile-controls-modal .family-filter-chip span {
+    font-size: 0.58rem !important;
+  }
+}
+
+   Fim da revisão 2026-06-14: modal mobile compacto dos controles da árvore
+   -------------------------------------------------------------------------- */
