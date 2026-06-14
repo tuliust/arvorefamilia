@@ -1,30 +1,61 @@
 @media (max-width: 767px) {
+  section[aria-label="Filtros do calendário"] {
+    padding: 0.42rem 0.5rem !important;
+    border-radius: 1rem !important;
+  }
+
   section[aria-label="Filtros do calendário"] > div {
-    gap: 0.16rem !important;
-    font-size: clamp(1rem, 5.2vw, 1.46rem) !important;
-    line-height: 0.96 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.28rem !important;
+    font-size: clamp(1.12rem, 6.15vw, 1.74rem) !important;
+    line-height: 0.88 !important;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] {
-    min-height: 2.45rem;
-    gap: 0.015rem !important;
-    padding: 0.34rem 0 !important;
-    border-radius: 0.68rem !important;
-    line-height: 0.96 !important;
+    min-height: 2.24rem;
+    gap: 0 !important;
+    padding: 0.18rem 0.22rem !important;
+    border-radius: 0.72rem !important;
+    line-height: 0.88 !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(5) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 0.14rem);
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:first-child {
-    width: 0.36rem !important;
-    height: 0.36rem !important;
+    display: none !important;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:last-child {
-    flex: 0 1 auto;
+    flex: 1 1 100%;
     min-width: 0;
-    max-width: calc(100% - 0.38rem);
+    max-width: 100%;
     overflow: hidden;
+    text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
-    letter-spacing: -0.05em;
+    font-size: inherit;
+    font-weight: 900;
+    letter-spacing: -0.075em;
+  }
+}
+
+@media (max-width: 359px) {
+  section[aria-label="Filtros do calendário"] > div {
+    gap: 0.22rem !important;
+    font-size: clamp(1rem, 5.9vw, 1.36rem) !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] {
+    min-height: 2.12rem;
+    padding: 0.16rem 0.18rem !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] > span:last-child {
+    letter-spacing: -0.082em;
   }
 }
