@@ -1,393 +1,324 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-13
-> Local canônico: `docs/historico/README.md`  
-> Tipo: consolidação histórica e índice da pasta `docs/historico/`.  
-> Status: revisado após consolidação de `/mapa-familiar`, `/mapa-familiar-horizontal` mobile por gerações, modal mobile de controles, exportação com título/loading/SVGs, remoção de rotas experimentais e atualização dos documentos canônicos.
+> Última revisão: 2026-06-13  
+> Local recomendado: `docs/historico/README.md`  
+> Tipo: índice e consolidação histórica.  
+> Status: atualizado após a definição da baseline atual com duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
 
 ## 1. Objetivo
 
-Esta pasta existe apenas para preservar rastreabilidade técnica e operacional do projeto **Árvore Família**.
+Esta pasta preserva rastreabilidade técnica e operacional do projeto **Árvore Família**.
 
-O estado atual do produto não deve ser consultado nos históricos. A fonte de verdade fica nos documentos canônicos:
+Ela não é fonte de verdade do produto atual.
+
+A fonte de verdade fica em:
 
 ```txt
 docs/README.md
+docs/BASELINE_PRODUTO_ATUAL.md
+docs/INVENTARIO_TECNICO.md
+docs/DECISOES_ARQUITETURAIS.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 docs/GUIA_IMPLEMENTACOES.md
 docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_CORRECAO_ERROS.md
-docs/PLANO_PROXIMOS_PASSOS.md
 docs/arquitetura/
 docs/funcionalidades/
 docs/operacao/
 ```
 
-Regra principal:
+Regra:
 
 ```txt
-Se houver divergência entre este histórico consolidado e a documentação canônica atual, prevalece a documentação canônica atual.
+Se houver divergência entre histórico e documentação canônica atual, prevalece a documentação canônica atual.
 ```
 
 ---
 
-## 2. Decisão documental
+## 2. Baseline atual do produto
 
-A documentação histórica foi consolidada neste arquivo para:
+A baseline atual da árvore é:
 
-- reduzir duplicidade;
-- evitar que diagnósticos antigos sejam tratados como documentação viva;
-- registrar apenas decisões passadas úteis;
-- deslocar regras atuais para guias canônicos;
-- manter QA e rastreabilidade sem vários arquivos obsoletos.
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
 
-Conteúdos históricos antigos não devem ser recriados como fonte de operação.
+A rota raiz:
+
+```txt
+/
+```
+
+redireciona para:
+
+```txt
+/mapa-familiar
+```
+
+Rotas antigas removidas como views ativas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Exceção vigente:
+
+```txt
+/minha-arvore/editar
+```
+
+é rota de edição de membro e deve permanecer documentada fora do contexto das views antigas.
 
 ---
 
-## 3. Arquivos históricos consolidados/removidos
+## 3. Documentos históricos de views antigas
 
-| Arquivo antigo | Decisão | Destino atual da informação útil |
+Os documentos abaixo foram arquivados como legado e não devem permanecer em `docs/funcionalidades/` como guias canônicos:
+
+| Documento histórico | Origem | Motivo |
 |---|---|---|
-| `DIAGNOSTICO_DOCUMENTACAO_ATUAL.md` | consolidado/removido | `docs/README.md`, `docs/PLANO_PROXIMOS_PASSOS.md` |
-| `DIAGNOSTICO_7_6_EXPORTACAO_ARVORE.md` | consolidado/removido | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| `QA_7_6_EXPORTACAO_ARVORE.md` | consolidado/removido | `docs/funcionalidades/EXPORTACAO_ARVORE.md`, `docs/PLANO_PROXIMOS_PASSOS.md` |
-| `QA_FINAL_MVP.md` | consolidado/removido | `docs/PLANO_PROXIMOS_PASSOS.md` |
-| `RESPONSIVIDADE_MOBILE_TABLET.md` | consolidado/removido | `docs/GUIA_UX_LAYOUT.md` |
-| `AJUSTES_MOBILE_2026-06-02.md` | consolidado/removido | guias funcionais e `GUIA_UX_LAYOUT.md` |
-| `documentacao-antiga/*` | consolidado/removido | documentos canônicos |
-| `sql-legado/*` | consolidado/removido | `supabase/migrations/` e scripts operacionais seguros |
+| `docs/historico/MINHA_ARVORE_VIEW.md` | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` | `/minha-arvore` não é view ativa |
+| `docs/historico/GENEALOGIA_VIEW.md` | `docs/funcionalidades/GENEALOGIA_VIEW.md` | `/genealogia` e `/visao-completa` não são views ativas |
+| `docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md` | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | regras vigentes foram extraídas para docs atuais |
 
----
-
-## 4. Linha histórica resumida
-
-### 4.1 Auditoria documental
-
-A auditoria anterior identificou lacunas em:
-
-- componentes;
-- UX/layout;
-- implementação;
-- notificações;
-- plano de próximos passos;
-- exportação;
-- responsividade;
-- Storage;
-- timeline;
-- rotas/guards.
-
-Essas lacunas foram redistribuídas entre documentos canônicos. Divergências atuais devem ser registradas em `PLANO_PROXIMOS_PASSOS.md`.
-
----
-
-### 4.2 Exportação da árvore - frente 7.6
-
-A frente 7.6 introduziu o fluxo de exportação client-side da árvore.
-
-Itens históricos:
-
-- seleção retangular;
-- cancelamento por botão/Esc;
-- PNG;
-- PDF;
-- impressão;
-- limite preventivo de pixels;
-- exclusão de controles/menus/overlays;
-- mensagens de erro;
-- integração com `html2canvas` e `jspdf`.
-
-A evolução posterior consolidou:
-
-- exportação das superfícies HTML/CSS/SVG de `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- título no canvas exportado;
-- loading contextual;
-- impressão assíncrona;
-- correção de avatares/SVGs;
-- seleção por área alinhada à superfície exportável.
-
-Documento canônico:
-
-```txt
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-```
-
----
-
-### 4.3 QA final do MVP
-
-O checklist histórico de QA foi consolidado em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-docs/GUIA_UX_LAYOUT.md
-docs/funcionalidades/*.md
-```
-
-Comandos preservados:
-
-```bash
-git status --short
-git diff --check
-npm run build
-npm test
-npm run test:e2e
-supabase migration list
-```
-
-Critérios permanentes:
-
-- sem overflow horizontal global;
-- headers usáveis;
-- botões acessíveis por toque;
-- cards sem estouro;
-- modais com rolagem interna;
-- árvore utilizável com pan/zoom;
-- exportação validada;
-- guards e RLS preservados;
-- build aprovado.
-
----
-
-### 4.4 Responsividade mobile/tablet
-
-A frente de responsividade consolidou:
-
-- breakpoints 320, 375, 390, 430 e tablet;
-- headers compactos;
-- bottom nav;
-- modais/drawers com safe area;
-- árvore mobile segmentada;
-- controles mobile;
-- painéis e filtros adaptáveis.
-
-Documento canônico:
-
-```txt
-docs/GUIA_UX_LAYOUT.md
-```
-
----
-
-### 4.5 Minha Árvore mobile segmentada
-
-A experiência mobile da Minha Árvore evoluiu para:
-
-```txt
-Paterno | Central | Materno
-```
-
-com malha 3×3:
-
-```txt
-[ vazio            ] [ Ancestrais globais ] [ vazio           ]
-[ Tios Paternos    ] [ Central             ] [ Tios Maternos   ]
-[ Primos Paternos  ] [ vazio               ] [ Primos Maternos ]
-```
-
-Características consolidadas:
-
-- `MobileFamilyTreeView`;
-- conectores HTML/CSS;
-- preview durante swipe;
-- linhas vitais com anos;
-- card central sem badge `VOCÊ`;
-- avatar visual por `genero`;
-- reutilização em `/mapa-familiar` mobile.
-
-Documentos canônicos:
+Após mover esses arquivos para histórico, recomenda-se remover as versões antigas de:
 
 ```txt
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
+docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
+```
+
+ou substituí-las por stubs mínimos apontando para `docs/historico/`, conforme a política do projeto.
+
+---
+
+## 4. Histórico resumido das views
+
+### 4.1 Antiga Minha Árvore
+
+A antiga `/minha-arvore` era uma view direta baseada em ReactFlow no desktop/tablet e `MobileFamilyTreeView` no mobile.
+
+Status atual:
+
+- rota removida como view ativa;
+- comportamento principal substituído por `/mapa-familiar`;
+- mobile segmentado permanece útil em `/mapa-familiar` mobile;
+- `/minha-arvore/editar` continua vigente como edição.
+
+Documento histórico:
+
+```txt
+docs/historico/MINHA_ARVORE_VIEW.md
+```
+
+### 4.2 Antiga Genealogia
+
+A antiga `/genealogia` organizava pessoas por gerações em ReactFlow.
+
+Status atual:
+
+- rota removida;
+- título “Genealogia” permanece apenas como conceito visual da horizontal;
+- horizontal atual é `/mapa-familiar-horizontal`.
+
+Documento histórico:
+
+```txt
+docs/historico/GENEALOGIA_VIEW.md
+```
+
+### 4.3 Antiga Visão Completa
+
+A antiga `/visao-completa` era uma variação ampliada/completa da visão genealógica.
+
+Status atual:
+
+- rota removida;
+- não deve ser usada como fallback da horizontal;
+- código ReactFlow remanescente deve ser tratado como legado técnico.
+
+Documento histórico relacionado:
+
+```txt
+docs/historico/GENEALOGIA_VIEW.md
 ```
 
 ---
 
-### 4.6 Mapa Familiar Vertical
+## 5. Histórico de filtros e pets
 
-A rota `/mapa-familiar` foi consolidada como view default da árvore.
+A documentação antiga de filtros e pets continha regras ainda úteis, mas misturadas à view removida `/minha-arvore`.
 
-Características:
+Regras preservadas nos docs atuais:
 
-- desktop/tablet usa `DesktopFamilyMapView`;
-- mobile usa `MobileFamilyTreeView`;
-- root exportável próprio;
-- conectores SVG;
-- grupos expansíveis;
-- paletas;
-- cônjuges com regra própria;
-- filtros de grupo/status;
-- `Destacar > Grupos` com modo sem chrome;
-- labels `PAI`, `MÃE` e `CÔNJUGE` ocultáveis;
-- exportação com título e tratamento de SVG.
+- separação entre `personFilters` e `directRelativeFilters`;
+- pets por `humano_ou_pet === 'Pet'`;
+- avatar visual por `genero`;
+- cônjuges sempre visíveis versus filtráveis;
+- contagens efetivas por view;
+- filtros não alteram dados.
 
-Documentos canônicos:
+Documento histórico:
+
+```txt
+docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md
+```
+
+Documentos atuais:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_COMPONENTES.md
+```
+
+---
+
+## 6. Histórico de exportação
+
+A frente de exportação consolidou:
+
+- seleção por área;
+- PNG;
+- PDF;
+- impressão;
+- loading;
+- título no canvas;
+- exclusão de painel/header/bottom nav;
+- normalização de SVGs.
+
+Documento atual:
+
+```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
 ```
 
 ---
 
-### 4.7 Mapa Familiar Horizontal
+## 7. Histórico de painel
 
-A rota `/mapa-familiar-horizontal` substituiu rotas experimentais e tornou-se view oficial.
-
-Características:
-
-- `DesktopFamilyHorizontalMapView`;
-- colunas por `manual_generation`;
-- gerações 1 a 6;
-- colunas vazias ocultadas;
-- cônjuges adjacentes;
-- conectores SVG de casal/filhos;
-- título `Genealogia de {nome}`;
-- desktop/tablet usa `DesktopFamilyHorizontalMapView`;
-- mobile usa `MobileFamilyHorizontalMapView`, com uma geração por tela e swipe lateral;
-- a antiga barra mobile visual `Paterno | Central | Materno` da horizontal foi substituída por navegação por geração;
-- exportação com título, loading e tratamento de SVGs;
-- filtro **Cônjuges** com escopo colateral/descendente.
-
-Rotas antigas removidas:
+O painel atual ainda contém:
 
 ```txt
+Filtros
+Legendas
+Ações
+```
+
+Isso deve ser tratado como estado atual com dívida conhecida.
+
+Próxima frente:
+
+- remover barra de abas;
+- manter filtros/grupos visíveis diretamente;
+- preservar controles superiores:
+  - Zoom;
+  - Restaurar;
+  - Vertical;
+  - Horizontal;
+  - Cores;
+  - Exportar;
+  - Destacar.
+
+Documento atual:
+
+```txt
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+---
+
+## 8. Histórico de Mapa Familiar
+
+### 8.1 Vertical
+
+`/mapa-familiar` consolidou-se como view principal/default.
+
+Características atuais:
+
+- desktop/tablet usa `DesktopFamilyMapView`;
+- mobile usa `MobileFamilyTreeView`;
+- exportação HTML/CSS/SVG;
+- conectores SVG;
+- filtros de grupos/status;
+- regras de cônjuges;
+- paletas;
+- destaques.
+
+### 8.2 Horizontal
+
+`/mapa-familiar-horizontal` consolidou-se como alternativa horizontal/genealógica.
+
+Características atuais:
+
+- desktop/tablet usa `DesktopFamilyHorizontalMapView`;
+- mobile usa `MobileFamilyHorizontalMapView`;
+- uma geração por tela no mobile;
+- chips de geração;
+- swipe lateral;
+- exportação HTML/CSS/SVG.
+
+Documento atual:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```
+
+---
+
+## 9. Itens históricos que não devem voltar
+
+Não restaurar como produto ativo:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
 /mapa-horizontal
 /visao-completa-teste
 ```
 
-Documentos canônicos:
+Não restaurar:
 
-```txt
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/arquitetura/ROTAS_E_GUARDS.md
-docs/arquitetura/ARCHITECTURE.md
-```
-
----
-
-### 4.8 Painel lateral e mobile
-
-O painel foi consolidado com:
-
-- Vertical/Horizontal;
-- Cores;
-- Exportar;
-- Destacar;
-- Filtros;
-- Legendas;
-- Ações;
-- Restaurar visualização.
-
-No mobile:
-
-- `/mapa-familiar` e `/mapa-familiar-horizontal` usam o botão de controles do `HomeMobileNav`;
-- o painel mobile dos mapas foi consolidado como modal acima do header, bottom nav e controles flutuantes;
-- `MobileTreeControlsPortal` retorna `null` nessas duas rotas;
-- demais views de árvore podem continuar usando o portal mobile.
-
-Documento canônico:
-
-```txt
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-```
-
----
-
-### 4.9 Paletas, avatares e SVGs
-
-Frente consolidada:
-
-- paletas `white`, `visual`, `orange`, `brown`;
-- `FamilyTreeVisualCards`;
-- avatar visual por `genero`;
-- classes semânticas para SVGs;
-- estrela e cruz com contraste;
-- pets alinhados à paleta visual;
-- correção de SVGs no `html2canvas`.
-
-Documentos canônicos:
-
-```txt
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-```
-
----
-
-## 5. Estado histórico obsoleto
-
-Não tratar como atual:
-
-- `/mapa-horizontal`;
-- `/visao-completa-teste`;
-- botão Horizontal apontando para `/visao-completa`;
 - `/` redirecionando para `/minha-arvore`;
-- Mapa Familiar Horizontal como experimento;
-- exportação sem título;
-- exportação sem loading;
-- `MobileTreeControlsPortal` duplicado nas rotas do Mapa Familiar;
-- aba mobile antiga `Núcleo`;
-- aba mobile antiga `Completa`;
-- filtro **Cônjuges** como controle do cônjuge principal no Mapa Familiar.
+- favoritos para rotas removidas;
+- busca global para rotas removidas;
+- botão Horizontal apontando para `/visao-completa`;
+- horizontal mobile com barra `Paterno | Central | Materno`;
+- docs canônicos tratando rotas antigas como ativas.
 
 ---
 
-## 6. Destinos canônicos
-
-| Tema | Documento atual |
-|---|---|
-| Índice | `docs/README.md` |
-| Implementações | `docs/GUIA_IMPLEMENTACOES.md` |
-| Componentes | `docs/GUIA_COMPONENTES.md` |
-| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
-| Pendências | `docs/PLANO_PROXIMOS_PASSOS.md` |
-| Rotas/guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
-| Arquitetura | `docs/arquitetura/ARCHITECTURE.md` |
-| Minha Árvore | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` |
-| Filtros/pets | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` |
-| Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
-| Genealogia | `docs/funcionalidades/GENEALOGIA_VIEW.md` |
-| Painel/conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| Migrations | `docs/operacao/MIGRATIONS_SUPABASE.md` |
-
----
-
-## 7. Regra de manutenção histórica
+## 10. Regra de manutenção histórica
 
 Ao concluir uma frente nova:
 
 1. atualizar documento canônico;
-2. mover pendências reais para `PLANO_PROXIMOS_PASSOS.md`;
-3. registrar apenas resumo histórico aqui, se necessário;
-4. não recriar arquivos históricos individuais;
-5. não usar histórico para orientar implementação sem checar código atual.
+2. atualizar baseline se o comportamento estrutural mudar;
+3. mover pendências reais para `PLANO_PROXIMOS_PASSOS.md`;
+4. registrar resumo aqui apenas se houver valor histórico;
+5. não recriar documentação histórica como fonte de implementação.
 
-### 4.10 Ajuste mobile do Mapa Familiar Horizontal
+---
 
-A evolução mais recente da horizontal mobile substituiu o canvas amplo reaproveitado do desktop por uma experiência específica:
+## 11. Validação documental
 
-```txt
-MobileFamilyHorizontalMapView
-1 geração por tela
-swipe lateral para próxima/anterior geração
-chips compactos de geração
-scroll vertical por tela
+Antes de fechar commit de documentação:
+
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
 ```
 
-A decisão consolidada removeu a antiga barra visual `Paterno | Central | Materno` da horizontal mobile. Essa barra permanece válida apenas para a experiência segmentada de `MobileFamilyTreeView`, usada em `/minha-arvore` mobile e `/mapa-familiar` mobile.
+Critério:
 
-Documentos canônicos:
-
-```txt
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-```
+- ocorrências em `docs/historico/` são permitidas se marcadas como legado;
+- `/minha-arvore/editar` é permitido como rota vigente;
+- docs canônicos não devem apresentar rotas removidas como views ativas.
