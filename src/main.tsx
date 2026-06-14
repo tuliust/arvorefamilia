@@ -11,6 +11,10 @@ const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
 const CSS_RELOAD_KEY = "arvorefamilia:css-reload";
 const TREE_ACTION_EVENT = "arvore-family-tree-action";
 const TREE_ROOT_SELECTOR = '[data-export-root="family-tree"], [data-family-map-export-root="true"]';
+const MOBILE_FAMILY_TREE_ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
+const MOBILE_FAMILY_TREE_CARD_SELECTOR = `${MOBILE_FAMILY_TREE_ROOT_SELECTOR} [data-family-map-mobile-card="true"]`;
+const UNKNOWN_BIRTH_TEXT = "Nascimento não informado";
+const UNKNOWN_DEATH_TEXT = "Falecimento não informado";
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Importing a module script failed/i,
@@ -130,7 +134,59 @@ function installTreeOnlyZoomShortcuts() {
   );
 }
 
+function syncMobileFamilyTreeUnknownVitalLines() {
+  if (!document.querySelector(MOBILE_FAMILY_TREE_ROOT_SELECTOR)) return;
+
+  const rules = [
+    { iconSelector: ".family-map-birth-icon", unknownText: UNKNOWN_BIRTH_TEXT },
+    { iconSelector: ".family-map-deceased-icon", unknownText: UNKNOWN_DEATH_TEXT },
+  ];
+
+  for (const rule of rules) {
+    document
+      .querySelectorAll(`${MOBILE_FAMILY_TREE_CARD_SELECTOR} ${rule.iconSelector}`)
+      .forEach((icon) => {
+        const line = icon.parentElement;
+        if (!(line instanceof HTMLElement)) return;
+
+        const shouldHide = line.textContent?.includes(rule.unknownText) ?? false;
+        if (shouldHide) {
+          line.hidden = true;
+          line.setAttribute("aria-hidden", "true");
+          return;
+        }
+
+        line.hidden = false;
+        line.removeAttribute("aria-hidden");
+      });
+  }
+}
+
+function installMobileFamilyTreeVitalLineCleanup() {
+  let scheduled = false;
+  const scheduleSync = () => {
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(() => {
+      scheduled = false;
+      syncMobileFamilyTreeUnknownVitalLines();
+    });
+  };
+
+  scheduleSync();
+
+  const observer = new MutationObserver(scheduleSync);
+  observer.observe(document.body, {
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
+
+  window.addEventListener("resize", scheduleSync);
+}
+
 installTreeOnlyZoomShortcuts();
+installMobileFamilyTreeVitalLineCleanup();
 
 window.addEventListener("error", (event) => {
   recoverFromDynamicImportError(event.error || event.message);
