@@ -692,7 +692,7 @@ function MobileFamilyHorizontalMapViewComponent({
                     setGenerationColumnRef(generation)(node);
                     if (isActiveScreen) captureRef.current = node;
                   }}
-                  className="relative w-[15rem] shrink-0"
+                  className="relative w-[12rem] shrink-0"
                   data-mobile-horizontal-generation={generation}
                   data-mobile-horizontal-generation-column="true"
                 >
@@ -709,7 +709,7 @@ function MobileFamilyHorizontalMapViewComponent({
                     />
                   )}
 
-                  <div className="relative z-10 flex flex-col gap-5 pb-12">
+                  <div className="relative z-10 flex flex-col gap-3 pb-12">
                     {people.map((person) => {
                       const hasIncomingConnector = connectors.some((connector) => connector.toPersonId === person.id);
                       const hasOutgoingConnector = connectors.some((connector) => connector.fromPersonId === person.id);
