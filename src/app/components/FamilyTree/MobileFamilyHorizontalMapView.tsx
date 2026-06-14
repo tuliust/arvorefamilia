@@ -116,16 +116,16 @@ const GENERATION_LABELS: Record<number, string> = {
 
 const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
-  top: 96,
+  top: 76,
   cardWidth: 192,
-  cardHeight: 108,
-  rowGap: 12,
+  cardHeight: 92,
+  rowGap: 8,
   columnWidth: 264,
   minHeight: 560,
-  headerTop: 32,
-  headerHeight: 32,
-  bottomPadding: 40,
-  spouseConnectorOverlap: 10,
+  headerTop: 14,
+  headerHeight: 30,
+  bottomPadding: 20,
+  spouseConnectorOverlap: 0,
 };
 
 function isParentChildRelationship(relationship: Relacionamento) {
@@ -450,11 +450,8 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
       const lowerLayout = personLayout.top <= spouseLayout.top ? spouseLayout : personLayout;
       const spouseX = upperLayout.left + upperLayout.width / 2;
       const coupleMidY = (upperLayout.top + upperLayout.height + lowerLayout.top) / 2;
-      const spouseConnectorStartY = upperLayout.top
-        + upperLayout.height
-        - MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
-      const spouseConnectorEndY = lowerLayout.top
-        + MOBILE_HORIZONTAL_CANVAS.spouseConnectorOverlap;
+      const spouseConnectorStartY = upperLayout.top + upperLayout.height;
+      const spouseConnectorEndY = lowerLayout.top;
 
       connectors.push({
         id: `mobile-spouse-${key}`,
@@ -770,6 +767,15 @@ function MobileFamilyHorizontalMapViewComponent({
   const activeColumnLeft = MOBILE_HORIZONTAL_CANVAS.left
     + activeColumnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth;
 
+  const activeSurfaceTranslateX = React.useMemo(() => {
+    const sideInset = Math.max(
+      0,
+      (stageViewportWidth - MOBILE_HORIZONTAL_CANVAS.cardWidth) / 2,
+    );
+
+    return sideInset - activeColumnLeft;
+  }, [activeColumnLeft, stageViewportWidth]);
+
   const activeLayouts = React.useMemo(
     () => Array.from(layouts.values())
       .filter((layout) => layout.generation === activeGeneration)
@@ -787,7 +793,7 @@ function MobileFamilyHorizontalMapViewComponent({
 
     const lastCardBottom = Math.max(...activeLayouts.map((layout) => layout.top + layout.height));
 
-    return lastCardBottom + 12;
+    return lastCardBottom + 10;
   }, [activeLayouts]);
 
   const activeConnectorViewportWidth = React.useMemo(
@@ -1057,86 +1063,69 @@ function MobileFamilyHorizontalMapViewComponent({
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative mx-auto w-[12rem] pb-3 pt-8"
-          style={{ transform: `scale(${manualZoom})`, transformOrigin: 'top center' }}
+          ref={(node) => {
+            if (node) captureRef.current = node;
+          }}
+          className="relative mx-auto overflow-hidden pb-3"
+          style={{
+            width: stageViewportWidth,
+            height: activeGenerationHeight * manualZoom,
+          }}
+          data-mobile-horizontal-map-surface="true"
         >
           <div
-            ref={(node) => {
-              if (node) captureRef.current = node;
-            }}
-            className="relative"
+            className="relative origin-top-left"
             style={{
-              width: MOBILE_HORIZONTAL_CANVAS.cardWidth,
+              width: canvasWidth,
               height: activeGenerationHeight,
+              transform: `translateX(${activeSurfaceTranslateX}px) scale(${manualZoom})`,
+              transformOrigin: 'top left',
             }}
-            data-mobile-horizontal-map-surface="true"
           >
-            <div
-              className="absolute z-10 -translate-x-1/2 rounded-full bg-slate-600 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
-              style={{
-                left: MOBILE_HORIZONTAL_CANVAS.cardWidth / 2,
-                top: MOBILE_HORIZONTAL_CANVAS.headerTop,
-              }}
+            <svg
+              data-family-map-connectors="true"
+              className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+              viewBox={`0 0 ${canvasWidth} ${activeGenerationHeight}`}
+              aria-hidden="true"
             >
-              Geração {activeGeneration}
-            </div>
-
-            {familyConnectors.length > 0 && (
-              <svg
-                data-family-map-family-connectors="true"
-                className="pointer-events-none absolute top-0 z-0 h-full"
-                style={{
-                  left: -Math.max(
-                    0,
-                    (activeConnectorViewportWidth - MOBILE_HORIZONTAL_CANVAS.cardWidth) / 2,
-                  ),
-                  width: activeConnectorViewportWidth,
-                  height: activeGenerationHeight,
-                }}
-                viewBox={`${activeConnectorViewportLeft} 0 ${activeConnectorViewportWidth} ${activeGenerationHeight}`}
-                aria-hidden="true"
+              <g
+                fill="none"
+                stroke="var(--family-map-connector, #a5eef6)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <g
-                  fill="none"
-                  stroke="#d9ad82"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {familyConnectors.map((connector) => (
-                    <path key={connector.id} d={connectorPath(connector.points)} />
-                  ))}
-                </g>
-              </svg>
-            )}
+                {connectors.map((connector) => (
+                  <path key={connector.id} d={connectorPath(connector.points)} />
+                ))}
+              </g>
+            </svg>
 
-            {activeSpouseConnectors.length > 0 && (
-              <svg
-                data-family-map-spouse-connectors="true"
-                className="pointer-events-none absolute inset-0 z-10 h-full w-full"
-                viewBox={`${activeColumnLeft} 0 ${MOBILE_HORIZONTAL_CANVAS.cardWidth} ${activeGenerationHeight}`}
-                aria-hidden="true"
-              >
-                <g
-                  fill="none"
-                  stroke="#d9ad82"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {activeSpouseConnectors.map((connector) => (
-                    <path key={connector.id} d={connectorPath(connector.points)} />
-                  ))}
-                </g>
-              </svg>
-            )}
+            {activeGenerations.map((generation, columnIndex) => {
+              const left = MOBILE_HORIZONTAL_CANVAS.left
+                + columnIndex * MOBILE_HORIZONTAL_CANVAS.columnWidth
+                + MOBILE_HORIZONTAL_CANVAS.cardWidth / 2;
 
-            {activeLayouts.map((layout) => (
+              return (
+                <div
+                  key={generation}
+                  className="absolute z-10 flex min-w-[11.5rem] -translate-x-1/2 items-center justify-center whitespace-nowrap rounded-full bg-slate-600 px-6 py-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white shadow-md"
+                  style={{
+                    left,
+                    top: MOBILE_HORIZONTAL_CANVAS.headerTop,
+                  }}
+                >
+                  Geração {generation}
+                </div>
+              );
+            })}
+
+            {Array.from(layouts.values()).map((layout) => (
               <div
                 key={layout.person.id}
                 className="absolute z-20"
                 style={{
-                  left: layout.left - activeColumnLeft,
+                  left: layout.left,
                   top: layout.top,
                   width: layout.width,
                 }}
@@ -1167,18 +1156,6 @@ function MobileFamilyHorizontalMapViewComponent({
           data-tree-export-ignore="true"
         >
           <ChevronLeft className="h-5 w-5" />
-        </button>
-      )}
-
-      {activeIndex < activeGenerations.length - 1 && (
-        <button
-          type="button"
-          onClick={() => goToIndex(activeIndex + 1)}
-          className="absolute right-3 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg"
-          aria-label="Ir para próxima geração"
-          data-tree-export-ignore="true"
-        >
-          <ChevronRight className="h-5 w-5" />
         </button>
       )}
 

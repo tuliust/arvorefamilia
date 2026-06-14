@@ -950,3 +950,25 @@ body.tree-mobile-controls-open {
 
    Fim do ajuste 2026-06-14: padroniza cards e avatares mobile com desktop
    -------------------------------------------------------------------------- */
+
+
+/* Ajuste 2026-06-14: compacta cards do mapa horizontal mobile */
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button {
+    height: 5.75rem !important;
+    min-height: 5.75rem !important;
+    border-radius: 1.35rem !important;
+    padding: 0.72rem 0.82rem !important;
+    gap: 0.58rem !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button > span:not([data-family-map-avatar]) > span:first-child {
+    font-size: 0.78rem !important;
+    line-height: 1.05 !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-status-icon + span,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] span[class*="text-cyan-50"] {
+    font-size: 0.74rem !important;
+  }
+}
