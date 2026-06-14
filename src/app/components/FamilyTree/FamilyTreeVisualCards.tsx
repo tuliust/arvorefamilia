@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cross, Minus, PawPrint, Plus, Star } from 'lucide-react';
+import { Cross, Minus, PawPrint, Plus, Star, User } from 'lucide-react';
 
 import type { Pessoa } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
@@ -67,55 +67,6 @@ function getPersonGender(person: Pessoa) {
   if (femaleNames.has(firstName)) return 'female';
 
   return 'neutral';
-}
-
-function PersonSilhouette({ gender, className }: { gender: 'female' | 'male' | 'neutral'; className: string }) {
-  if (gender === 'female') {
-    return (
-      <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
-        <path
-          fill="currentColor"
-          d="M18 56c2.4-10.2 8.5-15.7 14-15.7S43.6 45.8 46 56H18Z"
-        />
-        <path
-          fill="currentColor"
-          d="M20.5 30.2C20.5 17.4 25.2 9 32 9s11.5 8.4 11.5 21.2c0 6.5 2 11 5.6 14.7-4.3 1.1-8.2-.1-11.1-3.2 4.1-2.9 6.8-8.2 6.8-14.3 0-8.7-5.5-15.2-12.8-15.2s-12.8 6.5-12.8 15.2c0 6.1 2.7 11.4 6.8 14.3-2.9 3.1-6.8 4.3-11.1 3.2 3.6-3.7 5.6-8.2 5.6-14.7Z"
-        />
-        <path
-          fill="currentColor"
-          d="M22.4 24.3c3.7-.4 7-2 9.7-4.9 2.3 2.8 5.6 4.6 9.5 5-.1 7.4-4.2 13.4-9.6 13.4s-9.6-6-9.6-13.5Z"
-        />
-      </svg>
-    );
-  }
-
-  if (gender === 'male') {
-    return (
-      <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
-        <path
-          fill="currentColor"
-          d="M18.3 24.7C18.3 13.9 23.8 7 32.2 7c8.6 0 14.2 6.8 14.2 17.7-3.9-3.2-8.6-4.8-14.2-4.8-5.5 0-10.1 1.6-13.9 4.8Z"
-        />
-        <path
-          fill="currentColor"
-          fillRule="evenodd"
-          d="M21.1 25.5c0-7.4 4.4-12.6 11-12.6s11 5.2 11 12.6c0 7.5-4.4 13.3-11 13.3s-11-5.8-11-13.3Zm-9.9 31.8c2.8-11.1 10.3-17.6 20.9-17.6S50.2 46.2 53 57.3H11.2Z"
-          clipRule="evenodd"
-        />
-        <path
-          fill="currentColor"
-          d="M22.8 34.1c2.4 3.1 5.5 4.7 9.3 4.7s6.9-1.6 9.3-4.7c-1.2 6-4.3 9.1-9.3 9.1s-8.1-3.1-9.3-9.1Z"
-        />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 64 64" className={`family-map-avatar-icon family-map-person-silhouette ${className}`} aria-hidden="true" focusable="false">
-      <circle cx="32" cy="23" r="13" fill="currentColor" opacity=".9" />
-      <path fill="currentColor" d="M10 58c3.4-12.4 11.5-19 22-19s18.6 6.6 22 19H10Z" opacity=".9" />
-    </svg>
-  );
 }
 
 export function getVisualPersonCardData(person: Pessoa) {
@@ -224,9 +175,6 @@ export function VisualPersonAvatar({
   className: string;
   iconClassName: string;
 }) {
-  const gender = getPersonGender(person);
-  const silhouetteGender = gender === 'pet' ? 'neutral' : gender;
-
   return (
     <span
       data-family-map-avatar="true"
@@ -237,7 +185,7 @@ export function VisualPersonAvatar({
       ) : pet ? (
         <PawPrint className={`family-map-avatar-icon family-map-pet-icon ${iconClassName}`} aria-hidden="true" />
       ) : (
-        <PersonSilhouette gender={silhouetteGender} className={iconClassName} />
+        <User className={`family-map-avatar-icon family-map-user-icon ${iconClassName}`} aria-hidden="true" />
       )}
     </span>
   );
