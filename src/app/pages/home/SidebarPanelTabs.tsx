@@ -107,7 +107,15 @@ function dispatchTreeAction(action: SidebarTreeAction) {
   window.dispatchEvent(new CustomEvent<SidebarTreeAction>(SIDEBAR_TREE_ACTION_EVENT, { detail: action }));
 }
 
-export function SidebarPanelTabs({ mobileControls = false }: { mobileControls?: boolean } = {}) {
+export function SidebarPanelTabs({
+  mobileControls = false,
+  mobileGroupsActive = false,
+  onMobileGroupsOpenChange,
+}: {
+  mobileControls?: boolean;
+  mobileGroupsActive?: boolean;
+  onMobileGroupsOpenChange?: (open: boolean) => void;
+} = {}) {
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
@@ -158,6 +166,16 @@ export function SidebarPanelTabs({ mobileControls = false }: { mobileControls?: 
     setActiveFlyout((current) => (current === flyout ? null : flyout));
   }, []);
 
+  const handleFlyoutToggle = React.useCallback((flyout: Exclude<ControlFlyout, null>) => {
+    if (mobileControls) onMobileGroupsOpenChange?.(false);
+    toggleFlyout(flyout);
+  }, [mobileControls, onMobileGroupsOpenChange, toggleFlyout]);
+
+  const handleMobileGroupsToggle = React.useCallback(() => {
+    setActiveFlyout(null);
+    onMobileGroupsOpenChange?.(!mobileGroupsActive);
+  }, [mobileGroupsActive, onMobileGroupsOpenChange]);
+
   return (
     <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]" data-tree-export-ignore="true">
       {!mobileControls && (
@@ -186,12 +204,14 @@ export function SidebarPanelTabs({ mobileControls = false }: { mobileControls?: 
           })}
         </div>
 
-        <div className={['tree-primary-actions grid min-w-0 gap-1', mobileControls ? 'grid-cols-2' : 'grid-cols-3'].join(' ')}>
-          <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => toggleFlyout('colors')} />
-          {!mobileControls && (
-            <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => toggleFlyout('export')} />
+        <div className="tree-primary-actions grid min-w-0 grid-cols-3 gap-1">
+          <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => handleFlyoutToggle('colors')} />
+          {mobileControls ? (
+            <PrimaryControlButton icon={PanelTop} label="Grupos" active={mobileGroupsActive} onClick={handleMobileGroupsToggle} />
+          ) : (
+            <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => handleFlyoutToggle('export')} />
           )}
-          <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => toggleFlyout('highlight')} />
+          <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => handleFlyoutToggle('highlight')} />
         </div>
 
         {activeFlyout === 'colors' && (

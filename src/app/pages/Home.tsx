@@ -158,6 +158,7 @@ export function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [treeLayoutRevision, setTreeLayoutRevision] = useState(0);
   const [legendOpen, setLegendOpen] = useState(true);
+  const [mobileGroupsOpen, setMobileGroupsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -851,13 +852,15 @@ export function Home() {
   const sidebarFiltersContent = (
     <section className="tree-sidebar-filter-panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
       <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
-        <div className="tree-sidebar-filter-scroll min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
-          <DirectRelationKpiGrid
-            filters={directRelativeFilters}
-            counts={effectiveDirectRelationCounts}
-            onToggle={toggleDirectRelativeFilter}
-          />
-        </div>
+        {(!isMobile || mobileGroupsOpen) && (
+          <div className="tree-sidebar-filter-scroll min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
+            <DirectRelationKpiGrid
+              filters={directRelativeFilters}
+              counts={effectiveDirectRelationCounts}
+              onToggle={toggleDirectRelativeFilter}
+            />
+          </div>
+        )}
 
         <LifeStatusKpiGrid
           vivos={lifeStatusCounts.vivos}
@@ -1197,7 +1200,7 @@ export function Home() {
             <div className="tree-mobile-controls-panel-header flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-extrabold text-slate-950">Controles</p>
-                <p className="truncate text-xs font-medium text-slate-500">Visualização, cores, destaques e filtros</p>
+
               </div>
               <Button
                 variant="outline"
@@ -1207,11 +1210,15 @@ export function Home() {
                 title="Fechar painel"
                 aria-label="Fechar painel"
               >
-                <ChevronLeft className="h-4 w-4 rotate-[-90deg]" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="tree-mobile-controls-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
-              <SidebarPanelTabs mobileControls />
+              <SidebarPanelTabs
+                mobileControls
+                mobileGroupsActive={mobileGroupsOpen}
+                onMobileGroupsOpenChange={setMobileGroupsOpen}
+              />
               {sidebarFiltersContent}
             </div>
           </section>

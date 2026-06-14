@@ -1242,3 +1242,85 @@ body.tree-mobile-controls-open {
     display: flex !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: grupos sob demanda e filtros 4 colunas */
+@media (max-width: 767px) {
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header {
+    padding: 0.72rem 0.9rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header p:first-child {
+    font-size: 1.16rem !important;
+    line-height: 1.05 !important;
+    font-weight: 850 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-primary-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section > summary {
+    display: none !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section > div {
+    padding: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section > div > .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.38rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section {
+    border-radius: 0.85rem !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > summary {
+    display: flex !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.34rem !important;
+    padding: 0.25rem 0.35rem 0.45rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid .family-filter-chip {
+    min-height: 2.55rem !important;
+    padding: 0.32rem 0.28rem !important;
+    border-radius: 0.65rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid .family-filter-chip span {
+    font-size: 0.58rem !important;
+    line-height: 1.02 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-panel > div > .tree-control-section > div.grid .family-filter-chip > span:last-child {
+    font-size: 0.82rem !important;
+  }
+}
