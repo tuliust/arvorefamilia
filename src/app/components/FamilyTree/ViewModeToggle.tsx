@@ -16,7 +16,7 @@ interface ViewModeToggleProps {
 
 const options: Array<{ value: TreeViewMode; label: string }> = [
   { value: 'mapa-familiar', label: 'Mapa Familiar' },
-  { value: 'visao-completa', label: 'Visão Completa' },
+  { value: 'mapa-familiar-horizontal', label: 'Horizontal' },
 ];
 
 const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];

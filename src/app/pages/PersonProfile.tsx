@@ -52,8 +52,8 @@ import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 import { getLinkedPersonWithPessoa } from '../services/memberProfileService';
 import { createPersonProfileSuggestion } from '../services/personProfileSuggestionService';
 
-const TREE_RETURN_FALLBACK_PATH = '/minha-arvore';
-const ALLOWED_TREE_RETURN_PATHS = ['/', '/minha-arvore', '/mapa-familiar', '/genealogia', '/visao-completa'];
+const TREE_RETURN_FALLBACK_PATH = '/mapa-familiar';
+const ALLOWED_TREE_RETURN_PATHS = ['/', '/mapa-familiar', '/mapa-familiar-horizontal'];
 
 function getSafeTreeReturnPath(rawReturnPath?: string | null) {
   const cleanReturnPath = rawReturnPath?.trim();

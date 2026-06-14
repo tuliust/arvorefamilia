@@ -30,10 +30,6 @@ type TreeRouteConfig = {
 };
 
 const TREE_ROUTES: Record<string, TreeRouteConfig> = {
-  '/minha-arvore': {
-    label: 'minha-arvore',
-    title: 'Minha Árvore',
-  },
   '/mapa-familiar': {
     label: 'mapa-familiar',
     title: 'Mapa Familiar',
@@ -42,14 +38,6 @@ const TREE_ROUTES: Record<string, TreeRouteConfig> = {
     label: 'mapa-familiar-horizontal',
     title: 'Mapa Familiar Horizontal',
   },
-  '/genealogia': {
-    label: 'genealogia',
-    title: 'Genealogia',
-  },
-  '/visao-completa': {
-    label: 'visao-completa',
-    title: 'Visão Completa',
-  },
 };
 
 function getCurrentPath() {
@@ -57,7 +45,7 @@ function getCurrentPath() {
 }
 
 function getCurrentTreeRoute() {
-  return TREE_ROUTES[getCurrentPath()] ?? TREE_ROUTES['/minha-arvore'];
+  return TREE_ROUTES[getCurrentPath()] ?? TREE_ROUTES['/mapa-familiar'];
 }
 
 function getTreeRoot() {

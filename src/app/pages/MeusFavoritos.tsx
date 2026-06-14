@@ -155,7 +155,7 @@ export function MeusFavoritos() {
         hideFavoriteButton
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
-          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
           { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
         ]}

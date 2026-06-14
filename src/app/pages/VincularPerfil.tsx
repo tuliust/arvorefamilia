@@ -89,7 +89,7 @@ export function VincularPerfil() {
     }
 
     toast.success('Perfil vinculado com sucesso.');
-    navigate('/minha-arvore');
+    navigate('/mapa-familiar');
   };
 
   return (
@@ -99,7 +99,7 @@ export function VincularPerfil() {
         subtitle="Associe sua conta a uma pessoa já cadastrada na árvore genealógica."
         icon={UserCircle2}
         actions={[
-          { label: 'Voltar', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.ArrowLeft },
+          { label: 'Voltar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
         ]}
       />

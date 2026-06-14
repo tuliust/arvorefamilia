@@ -17,13 +17,6 @@ export type GlobalSearchResults = {
 
 export const GLOBAL_SEARCH_PAGES: GlobalSearchPageResult[] = [
   {
-    id: 'minha-arvore',
-    title: 'Minha Árvore',
-    description: 'Visualização principal da árvore familiar com pessoa central, parentes diretos e filtros.',
-    path: '/minha-arvore',
-    keywords: ['arvore', 'árvore', 'familia', 'família', 'parentes', 'pessoa central', 'inicio', 'home'],
-  },
-  {
     id: 'mapa-familiar',
     title: 'Mapa Familiar',
     description: 'Visualização panorâmica da família direta em mapa com grupos, cônjuges, pets e descendentes.',
@@ -44,18 +37,11 @@ export const GLOBAL_SEARCH_PAGES: GlobalSearchPageResult[] = [
     ],
   },
   {
-    id: 'genealogia',
-    title: 'Genealogia',
-    description: 'Visualização genealógica organizada por gerações e ramos familiares.',
-    path: '/genealogia',
-    keywords: ['genealogia', 'geracoes', 'gerações', 'ancestrais', 'descendentes', 'ramos'],
-  },
-  {
-    id: 'visao-completa',
-    title: 'Visão Completa',
-    description: 'Visualização ampliada da árvore com mais pessoas e relacionamentos.',
-    path: '/visao-completa',
-    keywords: ['visao completa', 'visão completa', 'arvore completa', 'árvore completa', 'todos'],
+    id: 'mapa-familiar-horizontal',
+    title: 'Mapa Familiar Horizontal',
+    description: 'Visualização horizontal da família organizada por gerações e ramos.',
+    path: '/mapa-familiar-horizontal',
+    keywords: ['mapa familiar', 'horizontal', 'genealogia', 'geracoes', 'gerações', 'ancestrais', 'descendentes'],
   },
   {
     id: 'meus-dados',

@@ -52,10 +52,8 @@ function getFirstName(value?: string | null) {
 }
 
 const TREE_VIEW_OPTIONS = [
-  { label: 'Minha Árvore', path: '/minha-arvore' },
   { label: 'Mapa Familiar', path: '/mapa-familiar' },
-  { label: 'Genealogia', path: '/genealogia' },
-  { label: 'Visão Completa', path: '/visao-completa' },
+  { label: 'Mapa Familiar Horizontal', path: '/mapa-familiar-horizontal' },
 ];
 
 const paletteOptions: TreeColorPalette[] = ['white', 'orange', 'brown', 'visual'];
@@ -301,7 +299,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   </div>
                   <div className="grid grid-cols-2 gap-0.5 rounded-2xl bg-white/80 p-0.5 shadow-inner">
                     {TREE_VIEW_OPTIONS.map((option) => {
-                      const active = location.pathname === option.path || (option.path === '/minha-arvore' && location.pathname === '/');
+                      const active = location.pathname === option.path || (option.path === '/mapa-familiar' && location.pathname === '/');
 
                       return (
                         <button
@@ -355,7 +353,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   </div>
                 </div>
 
-                <button type="button" className={itemClassName} onClick={() => goTo('/minha-arvore')}>
+                <button type="button" className={itemClassName} onClick={() => goTo('/mapa-familiar')}>
                   <Home className="h-5 w-5 text-blue-700" />
                   Home
                 </button>

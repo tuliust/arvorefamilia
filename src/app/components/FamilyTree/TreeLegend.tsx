@@ -189,7 +189,7 @@ export function TreeLegend({
     const key = directRelativeKeyByLegendLabel[label];
 
     if (!key || key === 'central') return {};
-    if (viewMode !== 'minha-arvore' && viewMode !== 'mapa-familiar' && viewMode !== 'mapa-familiar-horizontal') return {};
+    if (viewMode !== 'mapa-familiar' && viewMode !== 'mapa-familiar-horizontal') return {};
     if (!directRelativeFilters || !onToggleDirectRelativeFilter) return {};
 
     const active = directRelativeFilters[key];

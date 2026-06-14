@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router';
 
-import { FamilyTree, type FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
+import type { FamilyTreeActions } from '../../components/FamilyTree/FamilyTree';
 import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
 import { DesktopFamilyHorizontalMapView } from '../../components/FamilyTree/DesktopFamilyHorizontalMapView';
 import { MobileFamilyHorizontalMapView } from '../../components/FamilyTree/MobileFamilyHorizontalMapView';
@@ -17,7 +17,6 @@ import type {
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { Pessoa, Relacionamento } from '../../types';
-import { GenealogyMobileStageTabs } from './GenealogyMobileStageTabs';
 import {
   SIDEBAR_TREE_ACTION_EVENT,
   type SidebarTreeAction,
@@ -130,23 +129,11 @@ function getTreeTitleFirstName(value?: string | null) {
 }
 
 function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
-  if (viewMode === 'minha-arvore') {
-    return `Árvore de ${firstName}`;
-  }
-
   if (viewMode === 'mapa-familiar') {
     return `Mapa Familiar de ${firstName}`;
   }
 
-  if (viewMode === 'mapa-familiar-horizontal') {
-    return `Genealogia de ${firstName}`;
-  }
-
-  if (viewMode === 'genealogia') {
-    return `Família de ${firstName}`;
-  }
-
-  return `Linha Genealógica de ${firstName}`;
+  return `Mapa Familiar Horizontal de ${firstName}`;
 }
 
 interface HomeTreeSectionProps {
@@ -205,10 +192,8 @@ export function HomeTreeSection({
   onDirectRelationRenderedCounts,
 }: HomeTreeSectionProps) {
   const location = useLocation();
-  const shouldApplyDirectTreeVisualAdjustments = treeViewMode === 'minha-arvore';
-  const usesMobileGenerationStages = isMobile && (
-    treeViewMode === 'genealogia' || treeViewMode === 'visao-completa'
-  );
+  const shouldApplyDirectTreeVisualAdjustments = false;
+  const usesMobileGenerationStages = false;
   const [activeGenealogyGeneration, setActiveGenealogyGeneration] = React.useState<number | null>(null);
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
@@ -221,7 +206,7 @@ export function HomeTreeSection({
     () => getDesktopTreeTitle(treeViewMode, desktopTitleFirstName),
     [desktopTitleFirstName, treeViewMode]
   );
-  const desktopTreeViewportTop = treeViewMode === 'minha-arvore' ? 86 : 82;
+  const desktopTreeViewportTop = 82;
   const mobileGenealogyPessoas = React.useMemo(() => {
     if (!usesMobileGenerationStages) return pessoas;
 
@@ -281,12 +266,8 @@ export function HomeTreeSection({
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
   const handleTreeWheelCapture = React.useCallback((event: React.WheelEvent<HTMLElement>) => {
-    if (isMobile || treeViewMode !== 'minha-arvore') return;
-    if (event.deltaY >= 0) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-  }, [isMobile, treeViewMode]);
+    if (isMobile || event.deltaY >= 0) return;
+  }, [isMobile]);
 
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
@@ -462,15 +443,6 @@ export function HomeTreeSection({
         </style>
       )}
 
-      {usesMobileGenerationStages && (
-        <GenealogyMobileStageTabs
-          pessoas={mobileGenealogyPessoas}
-          visiblePersonIds={visiblePersonIdsByLifeStatus}
-          activeGeneration={effectiveActiveGenealogyGeneration}
-          onGenerationChange={setActiveGenealogyGeneration}
-        />
-      )}
-
       {isTreeResolving ? (
         renderStateMessage({
           title: 'Carregando árvore',
@@ -487,9 +459,7 @@ export function HomeTreeSection({
           title: 'Nenhuma pessoa encontrada',
           message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
         })
-      ) : canRenderTree && isMobile && (
-        treeViewMode === 'minha-arvore' || treeViewMode === 'mapa-familiar'
-      ) ? (
+      ) : canRenderTree && isMobile && treeViewMode === 'mapa-familiar' ? (
         <MobileFamilyTreeView
           pessoas={pessoas}
           visiblePersonIds={effectiveVisiblePersonIds}
@@ -547,30 +517,6 @@ export function HomeTreeSection({
           layoutRevision={effectiveTreeLayoutRevision}
           sidebarCollapsed={!sidebarOpen}
           onScrollStateChange={setFamilyMapHasScrolled}
-          onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
-        />
-      ) : canRenderTree ? (
-        <FamilyTree
-          ref={familyTreeRef}
-          pessoas={treePessoas}
-          visiblePersonIds={effectiveVisiblePersonIds}
-          relacionamentos={relacionamentos}
-          onPersonClick={onPersonClick}
-          onPersonView={onPersonView}
-          onPersonEdit={onPersonEdit}
-          onPersonAddConnection={onPersonAddConnection}
-          onPersonRemove={onPersonRemove}
-          onMarriageClick={onMarriageClick}
-          selectedPersonId={selectedPersonId}
-          edgeFilters={edgeFilters}
-          directRelativeFilters={directRelativeFilters}
-          centralPersonId={centralReferencePersonId}
-          isMobile={isMobile}
-          layoutRevision={effectiveTreeLayoutRevision}
-          activeGenealogyGeneration={effectiveActiveGenealogyGeneration}
-          viewMode={treeViewMode}
-          genealogyFilters={genealogyFilters}
-          visualLineFilters={visualLineFilters}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
       ) : (

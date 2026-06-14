@@ -785,27 +785,12 @@ export function Home() {
   }, [pessoasVisiveisPorStatus]);
 
   const directRelativeFilters = useMemo(
-    () => {
-      if (isMobile && treeViewMode === 'minha-arvore') {
-        return DEFAULT_DIRECT_RELATIVE_FILTERS;
-      }
-
-      return directRelativeFilterState.filters;
-    },
-    [directRelativeFilterState.filters, isMobile, treeViewMode]
+    () => directRelativeFilterState.filters,
+    [directRelativeFilterState.filters]
   );
 
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
-
-    if (
-      treeViewMode !== 'minha-arvore' &&
-      treeViewMode !== 'mapa-familiar' &&
-      treeViewMode !== 'mapa-familiar-horizontal' &&
-      treeViewMode !== 'visao-completa'
-    ) {
-      return pessoas;
-    }
 
     const graph = buildTreeGraph({
       pessoas,
@@ -929,27 +914,18 @@ export function Home() {
     () => calculateGenealogyFilterCounts(pessoasVisiveisPorStatus, relacionamentos),
     [pessoasVisiveisPorStatus, relacionamentos]
   );
-  const usesDirectTreeLegendControls = treeViewMode === 'minha-arvore'
-    || treeViewMode === 'mapa-familiar'
+  const usesDirectTreeLegendControls = treeViewMode === 'mapa-familiar'
     || treeViewMode === 'mapa-familiar-horizontal';
   const sidebarPanelContent = (
     <section className="h-full min-h-0 min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-[clamp(0.45rem,1.05vh,0.625rem)]">
       {activeSidebarPanel === 'filters' && (
         <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
           <div className="min-h-0 min-w-0 flex-1 overflow-y-auto pr-0.5">
-            {treeViewMode === 'genealogia' ? (
-              <GenealogyFilterGrid
-                filters={genealogyFilters}
-                counts={genealogyFilterCounts}
-                onToggle={toggleGenealogyFilter}
-              />
-            ) : (
-              <DirectRelationKpiGrid
-                filters={directRelativeFilters}
-                counts={effectiveDirectRelationCounts}
-                onToggle={toggleDirectRelativeFilter}
-              />
-            )}
+            <DirectRelationKpiGrid
+              filters={directRelativeFilters}
+              counts={effectiveDirectRelationCounts}
+              onToggle={toggleDirectRelativeFilter}
+            />
           </div>
 
           <LifeStatusKpiGrid
@@ -1181,14 +1157,9 @@ export function Home() {
   const isSearchExpanded = searchExpanded;
   const isTreeResolving = isLoading || !linkedPersonResolved;
   const canRenderTree = !isTreeResolving && !loadError && pessoas.length > 0 && Boolean(centralReferencePersonId);
-  const currentTreeViewLabel =
-    treeViewMode === 'genealogia'
-      ? 'Genealogia'
-      : treeViewMode === 'mapa-familiar'
-        ? 'Mapa Familiar'
-      : treeViewMode === 'visao-completa'
-        ? 'Visão Completa'
-        : 'Minha Árvore';
+  const currentTreeViewLabel = treeViewMode === 'mapa-familiar-horizontal'
+    ? 'Mapa Familiar Horizontal'
+    : 'Mapa Familiar';
   const headerActionTextClassName = isSearchExpanded ? 'hidden' : 'hidden xl:inline-flex';
 
   useEffect(() => {

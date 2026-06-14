@@ -881,7 +881,7 @@ export function AdminPessoaForm() {
         actions={[
           { label: 'Admin', to: '/admin', icon: HEADER_ACTION_ICONS.ArrowLeft },
           { label: 'Pessoas', to: '/admin/pessoas', icon: User },
-          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
+          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
         ]}
       />
 

@@ -188,11 +188,8 @@ export const router = createBrowserRouter([
   {
     element: treeHomeRouteElement,
     children: [
-      { path: 'minha-arvore' },
       { path: 'mapa-familiar' },
       { path: 'mapa-familiar-horizontal' },
-      { path: 'genealogia' },
-      { path: 'visao-completa' },
     ],
   },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },

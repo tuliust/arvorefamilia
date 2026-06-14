@@ -4,13 +4,6 @@ export type FavoritePage = GlobalSearchPageResult;
 
 export const FAVORITE_PAGES: FavoritePage[] = [
   {
-    id: 'minha-arvore',
-    title: 'Minha Árvore',
-    description: 'Visualização principal da árvore familiar.',
-    path: '/minha-arvore',
-    keywords: ['arvore', 'árvore', 'familia', 'família'],
-  },
-  {
     id: 'mapa-familiar',
     title: 'Mapa Familiar',
     description: 'Visualização panorâmica da árvore familiar.',
@@ -28,18 +21,11 @@ export const FAVORITE_PAGES: FavoritePage[] = [
     ],
   },
   {
-    id: 'genealogia',
-    title: 'Genealogia',
-    description: 'Visualização por gerações e ramos familiares.',
-    path: '/genealogia',
-    keywords: ['genealogia', 'geracoes', 'gerações'],
-  },
-  {
-    id: 'visao-completa',
-    title: 'Visão Completa',
-    description: 'Visualização ampliada da árvore.',
-    path: '/visao-completa',
-    keywords: ['visao', 'visão', 'completa'],
+    id: 'mapa-familiar-horizontal',
+    title: 'Mapa Familiar Horizontal',
+    description: 'Visualização horizontal da família organizada por gerações.',
+    path: '/mapa-familiar-horizontal',
+    keywords: ['mapa familiar', 'horizontal', 'genealogia', 'geracoes', 'gerações'],
   },
   {
     id: 'meus-dados',

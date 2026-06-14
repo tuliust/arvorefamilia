@@ -357,7 +357,7 @@ export function CalendarioFamiliar() {
         subtitle="Aniversários e datas de memória da árvore genealógica"
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.ArrowLeft },
-          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Home },
+          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
           { label: 'Notificações', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell },
         ]}

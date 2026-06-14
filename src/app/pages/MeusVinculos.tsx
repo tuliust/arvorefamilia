@@ -687,7 +687,7 @@ export function MeusVinculos() {
         icon={Users}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
-          { label: 'Minha Árvore', to: '/minha-arvore', icon: HEADER_ACTION_ICONS.Network },
+          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
           { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
         ]}
       />

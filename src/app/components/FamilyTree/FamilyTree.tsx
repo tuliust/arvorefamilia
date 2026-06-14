@@ -25,7 +25,6 @@ import {
 } from './layouts/directFamilyDistributedLayout';
 import { filterGraphToPersonalScope } from './layouts/filterPersonalTreeScope';
 import { genealogyColumnsLayout } from './layouts/genealogyColumnsLayout';
-import type { TreeViewMode } from './treeViewMode';
 import { TreeAreaSelectionOverlay } from './TreeAreaSelectionOverlay';
 import {
   buildTreeExportFilename,
@@ -52,6 +51,8 @@ import {
 } from './types';
 import { DIRECT_FAMILY_TOKENS } from './visualTokens';
 
+type LegacyFamilyTreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa';
+
 interface FamilyTreeProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
@@ -67,7 +68,7 @@ interface FamilyTreeProps {
   directRelativeFilters?: DirectRelativeFilters;
   genealogyFilters?: GenealogyFilters;
   visualLineFilters?: VisualLineFilters;
-  viewMode: TreeViewMode;
+  viewMode: LegacyFamilyTreeViewMode;
   centralPersonId?: string;
   isMobile?: boolean;
   layoutRevision?: number;
@@ -844,7 +845,7 @@ async function printVisibleTree(container: HTMLDivElement | null) {
   }
 }
 
-async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: TreeViewMode) {
+async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: LegacyFamilyTreeViewMode) {
   const canvas = await captureVisibleTree(container);
   await exportCanvasAsPdf(
     canvas,
@@ -860,7 +861,7 @@ async function saveVisibleTreePdf(container: HTMLDivElement | null, viewMode: Tr
   );
 }
 
-async function saveVisibleTreeImage(container: HTMLDivElement | null, viewMode: TreeViewMode) {
+async function saveVisibleTreeImage(container: HTMLDivElement | null, viewMode: LegacyFamilyTreeViewMode) {
   const canvas = await captureVisibleTree(container);
   downloadCanvasAsPng(
     canvas,
@@ -871,7 +872,7 @@ async function saveVisibleTreeImage(container: HTMLDivElement | null, viewMode: 
   );
 }
 
-function usesGenealogyLayout(viewMode: TreeViewMode) {
+function usesGenealogyLayout(viewMode: LegacyFamilyTreeViewMode) {
   return viewMode === 'genealogia' || viewMode === 'visao-completa';
 }
 

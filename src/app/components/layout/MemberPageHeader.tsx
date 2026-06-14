@@ -132,7 +132,7 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
 }
 
 const MOBILE_BOTTOM_NAV_ITEMS = [
-  { label: 'Home', to: '/minha-arvore', icon: Home },
+  { label: 'Home', to: '/mapa-familiar', icon: Home },
   { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
   { label: 'Fórum', to: '/forum', icon: MessageCircle },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
@@ -147,8 +147,8 @@ function MemberMobileBottomNav() {
       <div className="mx-auto grid max-w-md grid-cols-5 gap-0.5">
         {MOBILE_BOTTOM_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const active = item.to === '/minha-arvore'
-            ? ['/', '/minha-arvore', '/mapa-familiar', '/genealogia', '/visao-completa'].includes(location.pathname)
+          const active = item.to === '/mapa-familiar'
+            ? ['/', '/mapa-familiar', '/mapa-familiar-horizontal'].includes(location.pathname)
             : location.pathname.startsWith(item.to);
 
           return (
@@ -176,7 +176,7 @@ function MemberMobileBottomNav() {
 
 export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
   { label: 'Árvore geral', to: '/', icon: Home, responsiveLabel: 'lg' },
-  { label: 'Minha Árvore', to: '/minha-arvore', icon: Network, responsiveLabel: 'lg' },
+  { label: 'Mapa Familiar', to: '/mapa-familiar', icon: Network, responsiveLabel: 'lg' },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'xl' },
   { label: 'Notificações', to: '/notificacoes', icon: Bell, responsiveLabel: 'xl' },
 ];
