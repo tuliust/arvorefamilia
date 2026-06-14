@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { flushSync } from 'react-dom';
-import { useLocation, useNavigate, useSearchParams } from 'react-router';
+import {
+  flushSync } from 'react-dom';
+import { useLocation,
+  useNavigate,
+  useSearchParams } from 'react-router';
 
 import type { FamilyTreeActions } from '../components/FamilyTree/actions';
 import { buildTreeGraph } from '../components/FamilyTree/buildTreeGraph';
@@ -9,13 +12,13 @@ import { ViewMarriageModal } from '../components/FamilyTree/modals/ViewMarriageM
 import {
   AddConnectionModal,
   type AddConnectionPayload,
-} from '../components/FamilyTree/modals/AddConnectionModal';
+  } from '../components/FamilyTree/modals/AddConnectionModal';
 import { useIsMobile } from '../components/FamilyTree/hooks/useIsMobile';
 import {
   readDirectRelativeFilters,
   storeDirectRelativeFilters,
   migrateLegacyTreeViewPreferences,
-} from '../components/FamilyTree/utils/treePreferences';
+  } from '../components/FamilyTree/utils/treePreferences';
 import { Button } from '../components/ui/button';
 import {
   Dialog,
@@ -24,19 +27,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../components/ui/dialog';
+  } from '../components/ui/dialog';
 import {
   obterTodasPessoas,
   obterTodosRelacionamentos,
   buscarPessoas,
-} from '../services/dataService';
+  } from '../services/dataService';
 import {
   clearTreeDataCache,
   getCachedTreeData,
   setCachedTreeData,
   subscribeTreeDataChanged,
-} from '../services/treeDataCache';
-import { Pessoa, Relacionamento } from '../types';
+  } from '../services/treeDataCache';
+import { Pessoa,
+  Relacionamento } from '../types';
 import {
   DEFAULT_GENEALOGY_FILTERS,
   DEFAULT_VISUAL_LINE_FILTERS,
@@ -45,26 +49,29 @@ import {
   GenealogyFilters,
   MarriageNodeDetails,
   VisualLineFilters,
-} from '../components/FamilyTree/types';
+  } from '../components/FamilyTree/types';
 import {
   getPathForTreeViewMode,
   getTreeViewModeFromPath,
   type TreeViewMode,
-} from '../components/FamilyTree/treeViewMode';
+  } from '../components/FamilyTree/treeViewMode';
 import { useAuth } from '../contexts/AuthContext';
-import { getMemberProfile, getPrimaryLinkedPerson, MemberProfile } from '../services/memberProfileService';
+import { getMemberProfile,
+  getPrimaryLinkedPerson,
+  MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
 import {
   getInsightByType,
   obterInsightsGeradosPessoa,
   PersonGeneratedInsight,
-} from '../services/personInsightsService';
+  } from '../services/personInsightsService';
 import { isPersonDeceased } from '../utils/personFields';
-import { isHumanFamilyMember, isPetFamilyMember } from '../utils/personEntity';
+import { isHumanFamilyMember,
+  isPetFamilyMember } from '../utils/personEntity';
 import {
   calculateRelationshipDegree,
   type RelationshipDegreeResult,
-} from '../utils/relationshipDegree';
+  } from '../utils/relationshipDegree';
 import {
   Search,
   Lightbulb,
@@ -73,7 +80,8 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
-, X} from 'lucide-react';
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
 import { buildAiTreeContext } from './home/homeAiContext';
