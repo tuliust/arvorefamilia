@@ -562,6 +562,7 @@ function MobileFamilyHorizontalMapViewComponent({
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [dragX, setDragX] = React.useState(0);
   const [manualZoom, setManualZoom] = React.useState(1);
+  const [stageViewportWidth, setStageViewportWidth] = React.useState(MOBILE_HORIZONTAL_CANVAS.cardWidth);
   const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
 
   const maps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
@@ -789,6 +790,20 @@ function MobileFamilyHorizontalMapViewComponent({
     return lastCardBottom + 12;
   }, [activeLayouts]);
 
+  const activeConnectorViewportWidth = React.useMemo(
+    () => Math.max(MOBILE_HORIZONTAL_CANVAS.cardWidth, stageViewportWidth),
+    [stageViewportWidth],
+  );
+
+  const activeConnectorViewportLeft = React.useMemo(() => {
+    const sideInset = Math.max(
+      0,
+      (activeConnectorViewportWidth - MOBILE_HORIZONTAL_CANVAS.cardWidth) / 2,
+    );
+
+    return Math.max(0, activeColumnLeft - sideInset);
+  }, [activeColumnLeft, activeConnectorViewportWidth]);
+
   const activeSpouseConnectors = React.useMemo(
     () => spouseConnectors.filter((connector) => connector.points.every(([x]) => (
       x >= activeColumnLeft
@@ -840,6 +855,29 @@ function MobileFamilyHorizontalMapViewComponent({
       left: 0,
       behavior: 'smooth',
     });
+  }, [activeIndex, layoutRevision]);
+
+  React.useEffect(() => {
+    const stage = stageScrollRef.current;
+    if (!stage) return;
+
+    const updateStageViewportWidth = () => {
+      setStageViewportWidth(Math.max(MOBILE_HORIZONTAL_CANVAS.cardWidth, stage.clientWidth));
+    };
+
+    updateStageViewportWidth();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updateStageViewportWidth)
+      : undefined;
+
+    resizeObserver?.observe(stage);
+    window.addEventListener('resize', updateStageViewportWidth);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateStageViewportWidth);
+    };
   }, [activeIndex, layoutRevision]);
 
   const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
@@ -1042,6 +1080,35 @@ function MobileFamilyHorizontalMapViewComponent({
             >
               Geração {activeGeneration}
             </div>
+
+            {familyConnectors.length > 0 && (
+              <svg
+                data-family-map-family-connectors="true"
+                className="pointer-events-none absolute top-0 z-0 h-full"
+                style={{
+                  left: -Math.max(
+                    0,
+                    (activeConnectorViewportWidth - MOBILE_HORIZONTAL_CANVAS.cardWidth) / 2,
+                  ),
+                  width: activeConnectorViewportWidth,
+                  height: activeGenerationHeight,
+                }}
+                viewBox={`${activeConnectorViewportLeft} 0 ${activeConnectorViewportWidth} ${activeGenerationHeight}`}
+                aria-hidden="true"
+              >
+                <g
+                  fill="none"
+                  stroke="#d9ad82"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {familyConnectors.map((connector) => (
+                    <path key={connector.id} d={connectorPath(connector.points)} />
+                  ))}
+                </g>
+              </svg>
+            )}
 
             {activeSpouseConnectors.length > 0 && (
               <svg
