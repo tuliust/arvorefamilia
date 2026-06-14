@@ -810,3 +810,143 @@ body.tree-mobile-controls-open {
     height: 1.5rem !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Ajuste 2026-06-14: padroniza cards e avatares mobile com desktop
+   --------------------------------------------------------------------------
+   Objetivo:
+   - Fazer os cards e avatares de /mapa-familiar-horizontal no mobile seguirem
+     a mesma linguagem visual do desktop.
+   - Remover diferença de silhueta branca/grande no mobile.
+   - Padronizar avatar sem foto: silhueta escura, mesmo SVG, mesmo tamanho.
+*/
+
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] {
+    --family-map-card-text: var(--tree-palette-text-primary, #0f172a);
+    --family-map-card-muted: var(--tree-palette-text-muted, #334155);
+    --family-map-connector: var(--tree-palette-edge-child, #0e7490);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tataravos"] {
+    --family-map-card-bg: var(--tree-palette-card-tataravos, #b7aed6);
+    --family-map-card-border: var(--tree-palette-border-tataravos, #b7aed6);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="bisavos"] {
+    --family-map-card-bg: var(--tree-palette-card-bisavos, #d49bc5);
+    --family-map-card-border: var(--tree-palette-border-bisavos, #d49bc5);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="avos"] {
+    --family-map-card-bg: var(--tree-palette-card-avos, #e8a29b);
+    --family-map-card-border: var(--tree-palette-border-avos, #e8a29b);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tios"] {
+    --family-map-card-bg: var(--tree-palette-card-tios, #eab08f);
+    --family-map-card-border: var(--tree-palette-border-tios, #eab08f);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="primos"] {
+    --family-map-card-bg: var(--tree-palette-card-primos, #e7b985);
+    --family-map-card-border: var(--tree-palette-border-primos, #e7b985);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pais"] {
+    --family-map-card-bg: var(--tree-palette-card-pais, #e4c37a);
+    --family-map-card-border: var(--tree-palette-border-pais, #e4c37a);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="central"] {
+    --family-map-card-bg: var(--tree-palette-card-central, #e7e8e8);
+    --family-map-card-border: var(--tree-palette-border-central, #cbd5e1);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="irmaos"] {
+    --family-map-card-bg: var(--tree-palette-card-irmaos, #a9cb72);
+    --family-map-card-border: var(--tree-palette-border-irmaos, #a9cb72);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="sobrinhos"] {
+    --family-map-card-bg: var(--tree-palette-card-sobrinhos, #b8cec2);
+    --family-map-card-border: var(--tree-palette-border-sobrinhos, #b8cec2);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="filhos"],
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="netos"] {
+    --family-map-card-bg: var(--tree-palette-card-netos, #bdd8dc);
+    --family-map-card-border: var(--tree-palette-border-netos, #bdd8dc);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="conjuge"] {
+    --family-map-card-bg: var(--tree-palette-card-sobrinhos, #b8cec2);
+    --family-map-card-border: var(--tree-palette-border-sobrinhos, #b8cec2);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pets"] {
+    --family-map-card-bg: var(--tree-palette-card-pets, #f4c7ab);
+    --family-map-card-border: var(--tree-palette-border-pets, #f4c7ab);
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button[data-family-map-color-key] {
+    border-color: var(--family-map-card-border, rgb(165 243 252 / 0.86)) !important;
+    background: var(--family-map-card-bg, linear-gradient(180deg, #14b8a6, #0e7490)) !important;
+    color: var(--family-map-card-text, #0f172a) !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button[data-family-map-color-key] * {
+    color: inherit !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] [data-family-map-avatar="true"] {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    border-width: 3px !important;
+    border-color: rgba(255, 255, 255, 0.84) !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24) !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-avatar-icon {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    color: var(--family-map-card-text, #0f172a) !important;
+    filter: none !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-person-silhouette,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-person-silhouette path,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-person-silhouette circle {
+    fill: currentColor !important;
+    stroke: none !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-pet-icon,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-pet-icon path,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-pet-icon circle {
+    fill: none !important;
+    stroke: currentColor !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-status-icon {
+    color: var(--family-map-card-text, #0f172a) !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-birth-icon,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-birth-icon path {
+    fill: currentColor !important;
+    stroke: currentColor !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-deceased-icon,
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-deceased-icon path {
+    fill: none !important;
+    stroke: currentColor !important;
+  }
+}
+
+   Fim do ajuste 2026-06-14: padroniza cards e avatares mobile com desktop
+   -------------------------------------------------------------------------- */
