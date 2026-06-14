@@ -131,6 +131,10 @@ html[data-tree-color-palette="visual"] [data-family-map-horizontal-mobile-root="
 html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] {
   --family-map-card-text: #ffffff;
   --family-map-card-muted: rgb(236 254 255 / 0.92);
+  --family-map-group-bg: rgb(255 255 255 / 92%);
+  --family-map-group-border: rgb(165 243 252 / 0.72);
+  --family-map-label-bg: #475569;
+  --family-map-label-text: #ffffff;
   --family-map-connector: rgb(103 232 249 / 0.86);
 }
 
@@ -188,4 +192,20 @@ html[data-tree-color-palette="visual"] [data-mobile-family-tree-root="true"] [da
 html[data-tree-color-palette="visual"] [data-family-map-horizontal-mobile-root="true"] [data-family-map-connectors="true"] path,
 html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] [data-family-map-connectors="true"] path {
   stroke: rgb(103 232 249 / 0.86) !important;
+}
+
+/* Mobile vertical group chrome should mirror the desktop palette chrome. */
+html[data-tree-color-palette="white"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div,
+html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div,
+html[data-tree-color-palette="brown"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div,
+html[data-tree-color-palette="visual"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div {
+  border-color: var(--family-map-group-border) !important;
+  background: var(--family-map-group-bg) !important;
+}
+
+html[data-tree-color-palette="white"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div > h2,
+html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div > h2,
+html[data-tree-color-palette="brown"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div > h2,
+html[data-tree-color-palette="visual"] [data-mobile-family-tree-root="true"] section:has(> div button[data-family-map-mobile-card="true"][data-family-map-color-key]) > div > h2 {
+  color: var(--family-map-card-text) !important;
 }
