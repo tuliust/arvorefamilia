@@ -3,7 +3,7 @@
 > Última atualização: 2026-06-13  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra componentes atuais das views da árvore, painel, exportação, cards visuais, paletas e CSS de suporte.
+> Status: revisado contra os componentes atuais das views da árvore, incluindo `MobileFamilyHorizontalMapView`, modal mobile de controles, painel, exportação, cards visuais, paletas e CSS de suporte.
 
 ---
 
@@ -102,12 +102,14 @@ Responsabilidade:
 
 - navegação inferior mobile;
 - botão de controle superior em `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- barra visual `Paterno | Central | Materno` da horizontal.
+- abrir/fechar o modal de controles da árvore via estado controlado por `Home.tsx`;
+- manter os elementos de navegação marcados com `data-tree-export-ignore="true"`.
 
 Regras:
 
-- `/mapa-familiar` usa toggle nativa de `MobileFamilyTreeView`;
-- `/mapa-familiar-horizontal` usa barra visual em `HomeMobileNav`;
+- `/mapa-familiar` usa a navegação/toggle nativa de `MobileFamilyTreeView`;
+- `/mapa-familiar-horizontal` não usa barra `Paterno | Central | Materno`;
+- a horizontal mobile navega por geração dentro de `MobileFamilyHorizontalMapView`;
 - não reintroduzir toggle `Vertical | Horizontal` no mobile.
 
 ### 2.4 `HomeTreeSection`
@@ -131,8 +133,9 @@ Renderização atual:
 | Condição | Componente |
 |---|---|
 | `isMobile && (minha-arvore || mapa-familiar)` | `MobileFamilyTreeView` |
+| `isMobile && mapa-familiar-horizontal` | `MobileFamilyHorizontalMapView` |
 | `mapa-familiar` desktop/tablet | `DesktopFamilyMapView` |
-| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` |
+| `mapa-familiar-horizontal` desktop/tablet | `DesktopFamilyHorizontalMapView` |
 | demais views | `FamilyTree` |
 
 Títulos:
@@ -359,6 +362,37 @@ Regras atuais:
 - `Destacar > Grupos` oculta cabeçalhos `Geração X` e sobe cards/conectores;
 - cônjuges filtráveis incluem netos;
 - exportação não usa ReactFlow.
+
+---
+
+### 6.2 `MobileFamilyHorizontalMapView`
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+```
+
+Responsabilidade:
+
+- renderizar `/mapa-familiar-horizontal` no mobile;
+- transformar colunas de geração em telas paginadas;
+- exibir uma geração por tela;
+- permitir swipe lateral entre gerações;
+- permitir scroll vertical dentro da geração ativa;
+- renderizar chips compactos de geração (`G1`, `G2`, `G3` etc.);
+- reaproveitar `VisualPersonCard` e tokens visuais compartilhados;
+- informar contagens renderizadas para o painel;
+- respeitar filtros diretos, filtros de vida/pets e regra de cônjuges;
+- expor ações imperativas compatíveis com o painel quando aplicável.
+
+Regras atuais:
+
+- não usa ReactFlow;
+- não usa barra `Paterno | Central | Materno`;
+- não deve substituir a view desktop/tablet;
+- deve manter o escopo por rota e `data-mobile-family-horizontal-root`;
+- conectores e cards devem se mover juntos durante o swipe.
 
 ---
 
@@ -602,7 +636,7 @@ Retorna null em /mapa-familiar e /mapa-familiar-horizontal.
 
 Motivo:
 
-- essas rotas usam `HomeMobileNav` e painel inferior da Home.
+- essas rotas usam `HomeMobileNav` e o modal de controles renderizado pela Home.
 
 ---
 
@@ -640,3 +674,11 @@ QA mínimo:
 - `Imagem`, `PDF`, `Imprimir`;
 - paletas white, visual, orange, brown;
 - mobile em 375px e 430px.
+
+
+## 13. Atualização Lote 1 — 2026-06-13
+
+- `HomeMobileNav` não renderiza mais barra `Paterno | Central | Materno` para `/mapa-familiar-horizontal`.
+- `HomeTreeSection` separa horizontal desktop/tablet e horizontal mobile.
+- `MobileFamilyHorizontalMapView` é componente obrigatório para a horizontal mobile.
+- O painel mobile dos mapas é modal acima do header e do bottom nav.

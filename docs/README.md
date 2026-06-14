@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico revisado após atualização das documentações do Mapa Familiar, exportação, painel, componentes, UX, arquitetura, rotas e guia de implementações.
+> Status: índice canônico revisado contra a estrutura atual do repositório, incluindo `MobileFamilyHorizontalMapView`, modal mobile de controles, Mapa Familiar Horizontal mobile por geração, exportação e pendências documentais remanescentes.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -31,13 +31,15 @@ A revisão mais recente registra:
   - `genealogia`;
   - `visao-completa`;
 - `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
-- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView`, inclusive em mobile;
+- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
 - o painel desktop exibe botões **Vertical** e **Horizontal**:
   - **Vertical** → `/mapa-familiar`;
   - **Horizontal** → `/mapa-familiar-horizontal`;
 - `HomeMobileNav` controla o botão de painel mobile em `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- o painel mobile dos mapas é um modal de controles acima do header, bottom nav e botões flutuantes, com overlay, scroll interno e fechamento por `Escape`;
 - `MobileTreeControlsPortal` não renderiza seu painel antigo nessas duas rotas;
 - `/mapa-familiar-horizontal` organiza cards por `pessoas.manual_generation`, limitado de 1 a 6, com fallback por inferência;
+- no mobile, `/mapa-familiar-horizontal` exibe uma geração por tela, com chips `G1`, `G2`, `G3` etc. e swipe lateral entre gerações;
 - colunas vazias em `/mapa-familiar-horizontal` são ocultadas e as demais colunas são compactadas;
 - cônjuges da pessoa central e cônjuges de avós, bisavós e tataravós permanecem visíveis quando existirem;
 - cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**;
@@ -212,7 +214,7 @@ Rotas experimentais removidas:
 | Minha Árvore | `src/app/components/FamilyTree/FamilyTree.tsx`, `directFamilyDistributedLayout.ts` |
 | Mobile direto | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `mobileFamilyTreeModel.ts` |
 | Mapa Familiar Vertical | `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, `family-map-qa.css` |
-| Mapa Familiar Horizontal | `DesktopFamilyHorizontalMapView.tsx`, `family-map-horizontal.css` |
+| Mapa Familiar Horizontal | `DesktopFamilyHorizontalMapView.tsx`, `MobileFamilyHorizontalMapView.tsx`, `family-map-horizontal.css` |
 | Exportação | `TreeAreaSelectionOverlay.tsx`, `utils/treeExport.ts`, `utils/exportColorSanitizer.ts`, `home-sidebar-unified.css` |
 | Paletas | `treeColorPalettes.ts`, `directFamilyColors.ts`, CSS de suporte |
 | Busca/favoritos | `globalSearchService.ts`, `favoritePages.ts`, `MeusFavoritos.tsx` |
@@ -242,16 +244,20 @@ Após mudanças em árvore/exportação:
 Revisar nos próximos lotes:
 
 ```txt
-docs/funcionalidades/GENEALOGIA_VIEW.md
+docs/arquitetura/ARCHITECTURE.md
+docs/arquitetura/ROTAS_E_GUARDS.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+docs/funcionalidades/FAVORITOS.md
 docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
-docs/PLANO_PROXIMOS_PASSOS.md
 docs/historico/README.md
+docs/operacao/
 ```
 
 Pontos específicos:
 
 - confirmar se `/mapa-familiar-horizontal` deve entrar em favoritos/busca como página própria;
-- registrar QA pós-exportação;
-- registrar comportamento final da barra mobile `Paterno | Central | Materno` da horizontal quando for definido;
-- revisar efeitos compartilhados de filtros de vida/pets/cônjuges entre views.
+- registrar QA pós-exportação dos Mapas Familiares;
+- revisar efeitos compartilhados de filtros de vida/pets/cônjuges entre views;
+- manter explícito que a barra `Paterno | Central | Materno` pertence ao mobile de `/mapa-familiar` e `MobileFamilyTreeView`, não ao mobile de `/mapa-familiar-horizontal`;
+- manter explícito que a horizontal mobile usa `MobileFamilyHorizontalMapView` com uma geração por tela.

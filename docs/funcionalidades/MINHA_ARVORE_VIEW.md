@@ -1,9 +1,9 @@
 # Minha Árvore - view, layout e viewport
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_VIEW.md`  
 > Tipo: documentação técnica/funcional da view **Minha Árvore**.  
-> Status: revisado contra `treeViewMode`, `routes.tsx`, `HomeTreeSection`, `MobileTreeControlsPortal`, Mapa Familiar Vertical/Horizontal, filtros atuais e exportação.
+> Status: revisado contra `treeViewMode`, `routes.tsx`, `HomeTreeSection`, `MobileTreeControlsPortal`, Mapa Familiar Vertical/Horizontal com `MobileFamilyHorizontalMapView`, filtros atuais e exportação.
 
 ---
 
@@ -93,6 +93,7 @@ Arquivos relacionados, mas documentados separadamente:
 ```txt
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 ```
 
@@ -106,18 +107,35 @@ Contrato atual:
 |---|---|---|
 | `/minha-arvore` | `minha-arvore` | ReactFlow desktop/tablet; `MobileFamilyTreeView` mobile |
 | `/mapa-familiar` | `mapa-familiar` | Mapa Familiar vertical; fallback mobile `MobileFamilyTreeView` |
-| `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` também no mobile |
+| `/mapa-familiar-horizontal` | `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` no desktop/tablet; `MobileFamilyHorizontalMapView` no mobile |
 | `/genealogia` | `genealogia` | ReactFlow por gerações |
 | `/visao-completa` | `visao-completa` | ReactFlow por gerações/base completa |
 
 Regras:
 
 - `/` redireciona para `/mapa-familiar`, não para `/minha-arvore`;
-- `/mapa-familiar-horizontal` não é Minha Árvore;
+- `/mapa-familiar-horizontal` não é Minha Árvore e possui componente mobile próprio por gerações;
 - ajustes desta documentação devem ser condicionados a `viewMode === 'minha-arvore'` ou ao mobile compartilhado explicitamente;
 - search params como `?pessoa=...` devem ser preservados na troca de view.
 
 ---
+
+
+### 4.1 Observação sobre horizontal mobile
+
+A experiência `Paterno | Central | Materno` descrita neste documento pertence à Minha Árvore mobile e ao fallback mobile de `/mapa-familiar`.
+
+Ela **não** deve ser aplicada a `/mapa-familiar-horizontal`.
+
+Contrato da horizontal mobile:
+
+```txt
+MobileFamilyHorizontalMapView
+1 geração por tela
+swipe lateral entre gerações
+chips G1/G2/G3...
+```
+
 
 ## 5. Shell da Home
 

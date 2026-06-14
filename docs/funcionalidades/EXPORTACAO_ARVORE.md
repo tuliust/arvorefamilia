@@ -1,9 +1,9 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
 > Tipo: documentação funcional e técnica da exportação da árvore.  
-> Status: revisado contra `treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `FamilyTreeVisualCards.tsx` e CSS de exportação.
+> Status: revisado contra `treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `MobileFamilyHorizontalMapView.tsx`, `FamilyTreeVisualCards.tsx` e CSS de exportação.
 
 ---
 
@@ -43,7 +43,8 @@ Nas views de Mapa Familiar, a exportação deve preservar:
 | Genealogia | `/genealogia` | ReactFlow |
 | Visão Completa | `/visao-completa` | ReactFlow |
 | Mapa Familiar Vertical | `/mapa-familiar` | HTML/CSS/SVG |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | HTML/CSS/SVG |
+| Mapa Familiar Horizontal desktop/tablet | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView` |
+| Mapa Familiar Horizontal mobile | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `MobileFamilyHorizontalMapView` |
 
 Regra:
 
@@ -61,6 +62,7 @@ src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/pages/home/HomeTreeSection.tsx
@@ -407,12 +409,32 @@ Nas rotas do Mapa Familiar:
 
 Regras:
 
-- ações são disparadas pelo painel inferior do `HomeMobileNav`;
-- painel, header, bottom nav e botão de controle não entram na captura;
+- ações são disparadas pelo modal mobile de controles aberto pelo `HomeMobileNav`;
+- modal de controles, painel, header, bottom nav e botão de controle não entram na captura;
 - seleção por área deve considerar a área visível da árvore;
 - o alvo não deve ser a interface inteira.
 
 ---
+
+
+### 17.1 `/mapa-familiar-horizontal` mobile
+
+No mobile, `/mapa-familiar-horizontal` usa `MobileFamilyHorizontalMapView`.
+
+Contrato de exportação:
+
+- a view mobile é paginada por geração;
+- a exportação direta deve capturar a superfície mobile ativa, respeitando geração ativa, filtros e paleta;
+- a exportação por área deve considerar apenas a área visível/selecionada da tela atual;
+- header, bottom nav, chips de geração, modal de controles e overlays continuam fora da captura;
+- o título composto no canvas permanece `Genealogia de {primeiroNome}` ou `Genealogia`.
+
+Observação de produto:
+
+```txt
+Caso o produto decida exportar sempre todas as gerações no mobile, essa regra deve ser alterada em `MobileFamilyHorizontalMapView` e nesta documentação.
+```
+
 
 ## 18. Limites e performance
 

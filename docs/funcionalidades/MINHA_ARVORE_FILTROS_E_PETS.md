@@ -1,9 +1,9 @@
 # Minha Árvore - filtros, pets e regras de exibição
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md`  
 > Tipo: documentação funcional/técnica dos filtros da árvore direta, pets, cônjuges, contadores e impactos cruzados nas views de mapa.  
-> Status: revisado contra a estrutura atual de `Home.tsx`, filtros diretos, filtros de status, Mapa Familiar Vertical/Horizontal e mobile segmentado.
+> Status: revisado contra a estrutura atual de `Home.tsx`, filtros diretos, filtros de status, Mapa Familiar Vertical/Horizontal desktop e mobile, `MobileFamilyHorizontalMapView` e mobile segmentado.
 
 ---
 
@@ -55,6 +55,7 @@ src/app/components/FamilyTree/mobileFamilyTreeModel.ts
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
 src/app/components/FamilyTree/layouts/directFamilyScope.ts
 src/app/components/FamilyTree/types.ts
@@ -215,7 +216,8 @@ Uso:
 | `/minha-arvore` mobile | recebe defaults no fluxo atual; filtros diretos não controlam a malha como painel interativo completo |
 | `/mapa-familiar` desktop/tablet | grupos visuais do Mapa Familiar Vertical |
 | `/mapa-familiar` mobile | usa `MobileFamilyTreeView`; comportamento similar ao mobile da Minha Árvore |
-| `/mapa-familiar-horizontal` | grupos/escopo da view horizontal por gerações |
+| `/mapa-familiar-horizontal` desktop/tablet | grupos/escopo da view horizontal por gerações |
+| `/mapa-familiar-horizontal` mobile | mesmos filtros de grupos/status aplicados à experiência paginada por geração em `MobileFamilyHorizontalMapView` |
 | `/genealogia` | usa `genealogyFilters`, não `directRelativeFilters` como filtro principal |
 
 Regras:
@@ -258,6 +260,28 @@ Regras:
 - conectores HTML/CSS mobile não são edges ReactFlow.
 
 ---
+
+
+## 8.1 Mapa Familiar Horizontal mobile
+
+No mobile, `/mapa-familiar-horizontal` não usa `MobileFamilyTreeView`.
+
+Comportamento atual:
+
+- componente: `MobileFamilyHorizontalMapView`;
+- cada geração ativa ocupa uma tela;
+- swipe lateral troca a geração;
+- scroll vertical rola a geração ativa;
+- filtros de status/tipo e grupos diretos continuam vindo de `Home.tsx`;
+- o filtro **Cônjuges** preserva a distinção entre cônjuges sempre visíveis e cônjuges filtráveis;
+- `directRelativeFilters.pets` continua separado de `personFilters.pets`.
+
+Anti-regressões:
+
+- não documentar a horizontal mobile como barra `Paterno | Central | Materno`;
+- não tratar chips de geração da horizontal como `genealogyFilters`;
+- não persistir geração ativa da horizontal no Supabase.
+
 
 ## 9. Regras visuais do mobile
 

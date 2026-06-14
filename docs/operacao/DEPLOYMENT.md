@@ -1,9 +1,9 @@
 # Deploy e operação
 
-> Última revisão: 2026-06-09
+> Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/DEPLOYMENT.md`
 > Tipo: checklist operacional de build, deploy e publicação.
-> Status: revisado com política de cache real para SPA Vite/Vercel, rotas serverless `/api/*`, IA validada no escopo atual, Google Agenda/OAuth em operação temporária de modo testes, troubleshooting pós-deploy de chunks dinâmicos e validação em Safari/iOS.
+> Status: revisado com política de cache real para SPA Vite/Vercel, rotas serverless `/api/*`, IA, Google Agenda/OAuth em modo testes quando aplicável, troubleshooting pós-deploy de chunks dinâmicos, validação Safari/iOS e QA das views mobile do Mapa Familiar.
 
 ## 1. Objetivo
 
@@ -153,6 +153,35 @@ Quando houver alteração de rota, autenticação, navegação, árvore ou fluxo
 ```bash
 npm run test:e2e
 ```
+
+Quando houver alteração em Mapa Familiar, painel mobile, exportação ou documentação de árvore, validar também:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Breakpoints mínimos para QA visual mobile:
+
+```txt
+320px
+375px
+390px
+430px
+```
+
+Regras específicas:
+
+- `/mapa-familiar-horizontal` desktop/tablet usa `DesktopFamilyHorizontalMapView`;
+- `/mapa-familiar-horizontal` mobile usa `MobileFamilyHorizontalMapView`;
+- a horizontal mobile deve exibir uma geração por tela;
+- a horizontal mobile não deve voltar a usar barra `Paterno | Central | Materno`;
+- o painel mobile dos mapas deve abrir como modal de controles acima de header, bottom nav e botões;
+- `MobileTreeControlsPortal` não deve duplicar painel em `/mapa-familiar` e `/mapa-familiar-horizontal`.
+
 
 Observação:
 
@@ -536,6 +565,10 @@ Checklist manual:
 
 ## 16. Checklist antes do deploy
 
+### 16.1 Checklist técnico
+
+
+
 ```bash
 git status --short
 git diff --check
@@ -570,6 +603,37 @@ Verificar manualmente, conforme escopo alterado:
 - `/calendario-familiar`;
 - `/admin`;
 - `/admin/pessoas`.
+
+---
+
+### 16.2 Checklist visual específico das views da árvore
+
+Quando o deploy incluir alterações em árvore, painel, Mapa Familiar, exportação, CSS ou documentação correlata:
+
+```txt
+1. Abrir /mapa-familiar.
+2. Abrir painel mobile em 320/375/390/430px.
+3. Confirmar modal acima de header e bottom nav.
+4. Abrir /mapa-familiar-horizontal no desktop.
+5. Abrir /mapa-familiar-horizontal no mobile.
+6. Confirmar uma geração por tela.
+7. Deslizar para esquerda/direita entre gerações.
+8. Confirmar que a barra Paterno/Central/Materno não aparece na horizontal mobile.
+9. Testar Exportar > Imagem/PDF/Área quando a frente afetar exportação.
+10. Confirmar que header, bottom nav, overlay e loading não entram na captura.
+```
+
+### 16.3 Checklist documental
+
+Quando o deploy for documental:
+
+```bash
+git status --short
+git diff --check -- docs/
+npm run build
+```
+
+Evitar `git add .` quando houver arquivos não documentais ou artefatos gerados fora de `docs/`.
 
 ---
 
@@ -633,6 +697,7 @@ Verificar manualmente, conforme escopo alterado:
 ```txt
 docs/operacao/MIGRATIONS_SUPABASE.md
 docs/operacao/STORAGE_MAINTENANCE.md
+docs/operacao/OAUTH_GOOGLE.md
 docs/funcionalidades/NOTIFICACOES.md
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
 docs/funcionalidades/CURIOSIDADES_E_IA.md
@@ -640,4 +705,6 @@ docs/arquitetura/ROTAS_E_GUARDS.md
 docs/GUIA_CORRECAO_ERROS.md
 docs/funcionalidades/FORUM.md
 docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```

@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: plano vivo revisado após consolidação das views `/mapa-familiar` e `/mapa-familiar-horizontal`, correções de exportação, atualização documental dos lotes recentes e reclassificação das pendências reais.
+> Status: plano vivo revisado após implementação do Mapa Familiar Horizontal mobile por geração, modal mobile de controles, exportação, atualização documental do Lote 1 e reclassificação das pendências reais.
 
 ---
 
@@ -31,7 +31,7 @@ docs/GUIA_IMPLEMENTACOES.md
 | View | Rota | Estado |
 |---|---|---|
 | Mapa Familiar Vertical | `/mapa-familiar` | Implementada; rota default de `/`; usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile. |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Implementada; usa `DesktopFamilyHorizontalMapView`, colunas por geração, conectores SVG e painel compartilhado. |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Implementada; usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile, com uma geração por tela, chips de geração, swipe lateral, conectores e painel compartilhado. |
 | Minha Árvore | `/minha-arvore` | Implementada; ReactFlow no desktop/tablet e `MobileFamilyTreeView` no mobile. |
 | Genealogia | `/genealogia` | Implementada; ReactFlow por gerações; chips mobile. |
 | Visão Completa | `/visao-completa` | Implementada; ReactFlow por gerações com base completa. |
@@ -51,7 +51,7 @@ Estado técnico consolidado:
 - `/mapa-familiar-horizontal` é rota oficial e protegida por `TreeAccessRoute`;
 - painel desktop mostra **Vertical** e **Horizontal**;
 - mobile não usa toggle Vertical/Horizontal;
-- `/mapa-familiar-horizontal` mobile tem barra visual `Paterno | Central | Materno`;
+- `/mapa-familiar-horizontal` mobile usa `MobileFamilyHorizontalMapView`, com uma geração por tela e swipe lateral;
 - `MobileTreeControlsPortal` não renderiza em `/mapa-familiar` e `/mapa-familiar-horizontal`;
 - exportação dos Mapas Familiares foi corrigida tecnicamente para título, loading, impressão, seleção por área e SVGs/avatares;
 - QA manual autenticado ainda é necessário.
@@ -65,7 +65,7 @@ Estado técnico consolidado:
 | DOC-014 | `/mapa-familiar` | QA visual/manual | Validar alinhamento panorâmico, conectores, grupos laterais, modo painel colapsado, centralização, colisões, margens, exportação e paletas com dados reais. | Aberto |
 | DOC-025 | `/mapa-familiar-horizontal` | QA visual/manual | Validar colunas ativas, colunas vazias ocultadas, cônjuges adjacentes, conectores casal → filhos, distribuição de troncos, filhos por nascimento, filtros e exportação. | Aberto |
 | DOC-026 | Pets | Bug/QA funcional | Confirmar se `directRelativeFilters.pets` funciona como filtro de grupo independente de `personFilters.pets` nas views que suportam grupo Pets. | Aberto |
-| DOC-027 | `/mapa-familiar-horizontal` mobile | Produto/UX | Definir comportamento real dos botões `Paterno`, `Central` e `Materno`. Hoje a barra é visual e `Central` fica ativo por padrão. | Aberto |
+| DOC-027 | `/mapa-familiar-horizontal` mobile | QA visual/funcional | Validar a navegação por geração no mobile: chips `G1/G2/G3`, swipe lateral, scroll vertical por geração, conectores, safe-area e retorno ao estado inicial. | Aberto |
 | DOC-028 | Mobile Safari/iOS | QA visual | Validar posição da barra e do botão de controle em iOS/Safari nos breakpoints 320, 375, 390 e 430px. | Aberto |
 | DOC-029 | Exportação | QA funcional pós-correção | Validar PNG, PDF, impressão e Área de `/mapa-familiar` e `/mapa-familiar-horizontal`, incluindo título, loading, conectores, paletas e avatares. | Implementado tecnicamente; QA aberto |
 | DOC-030 | Documentação cruzada | Documentação/QA | Conferir links cruzados após aplicar todos os lotes documentais. | Aberto |
@@ -95,6 +95,7 @@ Regras:
 | HMAP-004 | Cônjuges colaterais | Cônjuges de tios, primos, sobrinhos, filhos e netos seguem regra de filtro. | Concluído tecnicamente; QA aberto |
 | MOB-001 | Toggle Vertical/Horizontal mobile | Removido nas rotas do Mapa Familiar. | Concluído |
 | MOB-002 | Botão de controle mobile | Alinhado à faixa superior das views de mapa. | Concluído tecnicamente; QA iOS aberto |
+| MOB-003 | Horizontal mobile por geração | Substituiu a barra `Paterno/Central/Materno` por `MobileFamilyHorizontalMapView`, com uma geração por tela e swipe lateral. | Concluído tecnicamente; QA aberto |
 | EXP-004 | Loading de exportação | Implementado e revisado para não sumir cedo demais. | Concluído tecnicamente; QA aberto |
 | EXP-005 | Título na exportação | Canvas passa a incluir título da view. | Concluído tecnicamente; QA aberto |
 | EXP-006 | Avatares/SVGs na exportação | Tratamento de SVGs e classes semânticas aplicado. | Concluído tecnicamente; QA aberto |
@@ -248,38 +249,36 @@ Critério de aceite:
 
 ---
 
-## 6. Pendência específica: barra mobile da horizontal
+## 6. Pendência específica: horizontal mobile por geração
 
-Estado atual:
+### Estado atual
 
-```txt
-/mapa-familiar-horizontal
-```
+A barra antiga `Paterno | Central | Materno` não é mais o comportamento da rota `/mapa-familiar-horizontal` no mobile.
 
-exibe barra visual:
+O comportamento atual esperado é:
 
 ```txt
-Paterno | Central | Materno
+MobileFamilyHorizontalMapView
+1 geração = 1 tela
+chips G1/G2/G3...
+swipe lateral entre gerações
+scroll vertical dentro da geração ativa
 ```
 
-com **Central** ativo por padrão.
+### Ação recomendada
 
-Decisão pendente:
+- validar em 320px, 375px, 390px e 430px;
+- validar iOS/Safari com safe-area;
+- validar se os conectores permanecem alinhados durante swipe;
+- validar se `Restaurar visualização` volta para escala/posição esperada;
+- validar se filtros de vida, pets, cônjuges e grupos diretos afetam a tela ativa e as contagens.
 
-| Opção | Comportamento |
-|---|---|
-| Manter visual | barra comunica organização, mas não navega |
-| Implementar scroll/foco | botões rolam para colunas/faixas relacionadas |
-| Remover | se não houver ação real, substituir por título/controle mais claro |
+Status:
 
-Critério antes de implementar:
+```txt
+Implementado tecnicamente; QA manual aberto.
+```
 
-- definir significado de Paterno/Materno na horizontal por gerações;
-- evitar conflito com colunas de geração;
-- evitar comportamento falso;
-- validar mobile 320–430px.
-
----
 
 ## 7. Pendência específica: busca/favoritos da horizontal
 

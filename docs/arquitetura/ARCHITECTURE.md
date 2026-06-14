@@ -1,9 +1,9 @@
 # Arquitetura atual - Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/arquitetura/ARCHITECTURE.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra a estrutura atual do repositório, com rotas oficiais da árvore, shell compartilhado da Home, Mapa Familiar Vertical/Horizontal, painel desktop/mobile, exportação com título/loading/SVGs e remoção de rotas experimentais.
+> Status: revisado contra a estrutura atual do repositório, com `MobileFamilyHorizontalMapView` oficial no mobile de `/mapa-familiar-horizontal`, modal mobile de controles, rotas oficiais da árvore, exportação com título/loading/SVGs e remoção de rotas experimentais.
 
 ---
 
@@ -36,7 +36,7 @@ Use este arquivo para entender a arquitetura geral. Para detalhes específicos, 
 | Roteamento | React Router 7 com `createBrowserRouter` |
 | UI | Tailwind CSS v4, CSS complementar em `src/styles`, componentes locais, `lucide-react` |
 | Árvore ReactFlow | React Flow, Dagre e layouts próprios em `components/FamilyTree` |
-| Mapa Familiar | HTML/CSS/SVG próprio em `DesktopFamilyMapView` e `DesktopFamilyHorizontalMapView` |
+| Mapa Familiar | HTML/CSS/SVG próprio em `DesktopFamilyMapView`, `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView` |
 | Banco/Auth | Supabase Auth, Supabase Postgres, RLS, RPCs e Storage |
 | Edge/serverless | Supabase Edge Functions |
 | Exportação | `html2canvas`, `jspdf`, utilitários em `treeExport.ts` |
@@ -90,6 +90,7 @@ Arquivos centrais da árvore:
 src/app/components/FamilyTree/FamilyTree.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
@@ -179,7 +180,7 @@ Matriz de renderização:
 |---|---|---|
 | `minha-arvore` | `FamilyTree` / ReactFlow | `MobileFamilyTreeView` |
 | `mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `DesktopFamilyHorizontalMapView` |
+| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
 | `genealogia` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
 | `visao-completa` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
 
@@ -246,7 +247,8 @@ Destaque de grupos:
 
 Características:
 
-- componente principal: `DesktopFamilyHorizontalMapView.tsx`;
+- componente desktop/tablet: `DesktopFamilyHorizontalMapView.tsx`;
+- componente mobile: `MobileFamilyHorizontalMapView.tsx`;
 - composição visual: HTML/CSS/SVG, sem ReactFlow;
 - usa `pessoas.manual_generation` como fonte primária da coluna;
 - valores válidos de geração são 1 a 6;
@@ -263,13 +265,46 @@ Características:
   - troncos distribuídos no eixo X para evitar sobreposição;
 - usa a mesma lógica de paletas/cards do Mapa Familiar;
 - exporta a superfície HTML/CSS/SVG atual;
-- mobile usa a mesma view horizontal, com barra visual `Paterno | Central | Materno` renderizada pela Home.
+- no mobile, cada geração ativa ocupa uma tela própria;
+- o usuário navega entre gerações por swipe lateral ou chips compactos de geração;
+- `HomeMobileNav` não renderiza mais a barra `Paterno | Central | Materno` nessa rota.
 
 Destaque de grupos:
 
 - `Destacar > Grupos` oculta os cabeçalhos `Geração X`;
 - os cards sobem para ocupar o espaço dos cabeçalhos;
 - conectores são recalculados.
+
+
+### 6.5 Contrato mobile específico do Mapa Familiar Horizontal
+
+No mobile, `/mapa-familiar-horizontal` não deve reutilizar o canvas amplo do desktop.
+
+Contrato atual:
+
+```txt
+1 geração = 1 tela
+swipe lateral = troca de geração
+scroll vertical = rolagem interna da geração ativa
+chips G1/G2/G3... = atalho de navegação entre gerações ativas
+```
+
+Responsabilidades:
+
+| Componente | Responsabilidade |
+|---|---|
+| `DesktopFamilyHorizontalMapView` | layout horizontal completo para desktop/tablet |
+| `MobileFamilyHorizontalMapView` | experiência mobile paginada por geração |
+| `HomeTreeSection` | bifurcar a renderização por breakpoint |
+| `HomeMobileNav` | manter botão de controles e bottom nav, sem barra Paterno/Central/Materno na horizontal mobile |
+
+Anti-regressões:
+
+- não reintroduzir a barra `Paterno | Central | Materno` em `/mapa-familiar-horizontal`;
+- não usar `/visao-completa` como substituto da horizontal;
+- não aplicar CSS ReactFlow na horizontal mobile;
+- não capturar header, bottom nav ou modal no fluxo de exportação.
+
 
 ### 6.4 Genealogia e Visão Completa
 
@@ -312,9 +347,9 @@ Regras:
 No mobile:
 
 - `/mapa-familiar` usa `MobileFamilyTreeView` com toggle nativa **Paterno | Central | Materno**.
-- `/mapa-familiar-horizontal` usa a própria view horizontal com barra visual **Paterno | Central | Materno**.
+- `/mapa-familiar-horizontal` mobile usa `MobileFamilyHorizontalMapView`, com uma geração por tela e navegação por swipe lateral.
 - `HomeMobileNav` renderiza o botão de controle para `/mapa-familiar` e `/mapa-familiar-horizontal`.
-- O botão abre painel inferior baseado no mesmo conteúdo funcional do painel desktop.
+- O botão abre o modal mobile de controles, acima de header, bottom nav e botões flutuantes, baseado no mesmo conteúdo funcional do painel desktop.
 - `MobileTreeControlsPortal` não renderiza seu painel simplificado nessas duas rotas para evitar duplicidade.
 
 ---

@@ -1,9 +1,9 @@
 # Guia de correção de erros - Árvore Família
 
-> Última revisão: 2026-06-10
+> Última revisão: 2026-06-13
 > Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com troubleshooting do Mapa Familiar, modo wide, título ocultável, badge central, avatares por `genero`, exportação e favoritos.
+> Status: guia canônico revisado contra o código atual com troubleshooting do Mapa Familiar, horizontal mobile por geração, modal mobile de controles, modo wide, título ocultável, avatares por `genero`, exportação, busca e favoritos.
 
 ## Objetivo
 
@@ -295,8 +295,8 @@ src/app/services/permissionService.ts
 
 Comportamento esperado:
 
-- `/` redireciona para `/minha-arvore` preservando search params;
-- `/minha-arvore`, `/mapa-familiar`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
+- `/` redireciona para `/mapa-familiar` preservando search params;
+- `/minha-arvore`, `/mapa-familiar`, `/mapa-familiar-horizontal`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
 - páginas de membro usam `MemberRoute`;
 - admin usa `ProtectedRoute`;
 - usuário comum não acessa admin;
@@ -684,6 +684,144 @@ Correção:
 - não remover suporte global a `label`;
 - aplicar a exceção apenas no card central do Mapa Familiar;
 - validar que as pílulas de grupos continuam visíveis.
+
+
+## 5.12 `/mapa-familiar-horizontal` mobile ainda aparece como canvas horizontal largo
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/HomeTreeSection.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/styles/family-map-horizontal.css
+src/styles/family-tree-mobile.css
+```
+
+Comportamento esperado:
+
+- desktop/tablet usam `DesktopFamilyHorizontalMapView`;
+- mobile usa `MobileFamilyHorizontalMapView`;
+- cada geração visível ocupa uma tela;
+- chips `G1`, `G2`, `G3` etc. mudam a geração ativa;
+- swipe lateral muda a tela;
+- scroll vertical permanece dentro da geração ativa;
+- a barra `Paterno | Central | Materno` não aparece na horizontal mobile.
+
+Investigar:
+
+| Sintoma | Verificar |
+|---|---|
+| Horizontal mobile continua multi-coluna | condição em `HomeTreeSection.tsx`. |
+| Build falha por import ausente | caminho/export de `MobileFamilyHorizontalMapView.tsx`. |
+| Chips de geração não aparecem | dados de `manual_generation`, gerações inferidas, filtros de vida e geração ativa. |
+| Swipe muda tela enquanto usuário tenta rolar verticalmente | threshold de gesto horizontal vs vertical. |
+| Cards somem após filtro | interseção entre `directRelativeFilters`, filtros de vida/pets e escopo renderizado. |
+
+Correção segura:
+
+- garantir import de `MobileFamilyHorizontalMapView`;
+- renderizar o componente apenas quando `isMobile && treeViewMode === 'mapa-familiar-horizontal'`;
+- manter `DesktopFamilyHorizontalMapView` para desktop/tablet;
+- não transformar a horizontal em ReactFlow;
+- não reaproveitar a barra `Paterno | Central | Materno` nessa view.
+
+## 5.13 Painel mobile de controles fica atrás do header, tabs ou bottom nav
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/styles/home-sidebar-unified.css
+src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+```
+
+Comportamento esperado:
+
+- `HomeMobileNav` aciona o painel;
+- `Home.tsx` renderiza o painel como modal;
+- o modal fica acima de header, bottom nav, chips e botões flutuantes;
+- overlay fecha o modal;
+- `Escape` fecha o modal;
+- o conteúdo tem scroll interno;
+- `MobileTreeControlsPortal` continua retornando `null` para `/mapa-familiar` e `/mapa-familiar-horizontal`.
+
+Investigar:
+
+| Sintoma | Verificar |
+|---|---|
+| Modal cortado pelo header | z-index do modal vs `HomeHeader`. |
+| Bottom nav cobre botões | z-index e safe-area em `home-sidebar-unified.css`. |
+| Página rola atrás do modal | classe/efeito de scroll lock no `body`. |
+| Dois painéis aparecem | `MobileTreeControlsPortal` reativado indevidamente. |
+| Exportação captura controles | ausência de `data-tree-export-ignore="true"`. |
+
+Correção segura:
+
+- não voltar para bottom sheet z-40;
+- usar camada `fixed inset-0` com z-index superior ao header;
+- manter scroll interno do painel;
+- preservar marcações de exportação.
+
+## 5.14 Legenda ou filtros diretos não afetam `/mapa-familiar-horizontal`
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/Home.tsx
+src/app/components/FamilyTree/TreeLegend.tsx
+src/app/pages/home/DirectRelationKpiGrid.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+```
+
+Comportamento esperado:
+
+- `/mapa-familiar` e `/mapa-familiar-horizontal` usam `directRelativeFilters`;
+- a aba `Legendas` pode acionar filtros diretos também na horizontal;
+- contagens devem refletir o que a view renderiza quando a view fornece contagem efetiva;
+- `Cônjuges` conta apenas cônjuges filtráveis, não cônjuge central nem cônjuges ancestrais obrigatórios.
+
+Investigar:
+
+| Sintoma | Verificar |
+|---|---|
+| Clique na legenda não muda horizontal | condição `viewMode` em `TreeLegend`. |
+| Filtros funcionam na aba Filtros, mas não em Legendas | props `directRelativeFilters` e `onToggleDirectRelativeFilter` em `Home.tsx`. |
+| Contagem de cônjuges inflada | regra de cônjuges sempre visíveis vs filtráveis. |
+| Mobile e desktop divergem | contagem/escopo entre `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView`. |
+
+Correção segura:
+
+- incluir `mapa-familiar-horizontal` nas condições de filtros diretos;
+- não aplicar `genealogyFilters` na horizontal;
+- não usar filtros de destaque para recriar cards ocultos.
+
+## 5.15 Barra `Paterno | Central | Materno` reaparece na horizontal mobile
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/HomeMobileNav.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+```
+
+Comportamento esperado:
+
+- a barra `Paterno | Central | Materno` pertence a `MobileFamilyTreeView`;
+- ela pode aparecer em `/minha-arvore` e `/mapa-familiar` mobile conforme o contrato da view;
+- ela não deve aparecer em `/mapa-familiar-horizontal` mobile;
+- a horizontal mobile usa chips de geração.
+
+Correção:
+
+- remover qualquer renderização condicional da barra antiga em `HomeMobileNav` para `/mapa-familiar-horizontal`;
+- manter a navegação por geração dentro de `MobileFamilyHorizontalMapView`;
+- validar que o botão `Controles` permanece visível.
+
 
 ## 6. Paletas visuais da árvore
 

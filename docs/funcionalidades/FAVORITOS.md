@@ -1,9 +1,9 @@
 # Favoritos
 
-> Última revisão: 2026-06-11
+> Última revisão: 2026-06-13
 > Local canônico: `docs/funcionalidades/FAVORITOS.md`
 > Tipo: documentação funcional/técnica de favoritos.
-> Status: revisado contra o código atual; favoritos de página estão implementados e `/mapa-familiar` consta em `FAVORITE_PAGES` como página favoritable.
+> Status: revisado contra o código atual; favoritos de página estão implementados, `/mapa-familiar` consta em `FAVORITE_PAGES` e `/mapa-familiar-horizontal` permanece pendência de produto para entrar como página própria.
 
 Documentação funcional e técnica da funcionalidade de favoritos do projeto `arvorefamilia`.
 
@@ -371,6 +371,41 @@ Regra:
 - favoritar `/mapa-familiar` salva a página, não uma pessoa nem um estado visual de zoom/filtros;
 - `?pessoa=...` pode ser preservado na navegação da sessão, mas o favorito de página deve apontar para a rota canônica;
 - a antiga pendência `DOC-015` foi concluída após inclusão de `/mapa-familiar` em `FAVORITE_PAGES` e `GLOBAL_SEARCH_PAGES`.
+
+
+### Mapa Familiar Horizontal
+
+Status atual: **pendente de decisão de produto** como favorito de página próprio.
+
+A rota `/mapa-familiar-horizontal` existe como view oficial da árvore, mas não deve ser documentada como favorita implementada enquanto não constar em:
+
+```txt
+src/app/constants/favoritePages.ts
+```
+
+Decisão pendente:
+
+```txt
+Definir se `/mapa-familiar-horizontal` deve aparecer em FAVORITE_PAGES e GLOBAL_SEARCH_PAGES como página independente ou se o atalho de Mapa Familiar deve continuar apontando apenas para `/mapa-familiar`.
+```
+
+Se for implementado, payload recomendado:
+
+```txt
+entityType = page
+entityId = /mapa-familiar-horizontal
+label = Mapa Familiar Horizontal
+description = Visualização genealógica horizontal por gerações
+href = /mapa-familiar-horizontal
+metadata = { source: "page_shortcut" }
+```
+
+Regras:
+
+- favoritar a horizontal deve salvar a rota canônica, não a geração mobile ativa;
+- `?pessoa=...` pode continuar sendo preservado pela navegação, mas o favorito de página deve ser estável;
+- se a horizontal entrar em favoritos, atualizar também `GLOBAL_SEARCH_PAGES`, `docs/README.md` e `docs/PLANO_PROXIMOS_PASSOS.md`.
+
 
 ## Relacionamentos
 

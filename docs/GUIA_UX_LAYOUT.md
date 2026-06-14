@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra a estrutura atual das views da árvore, Mapa Familiar Vertical/Horizontal, painel, mobile, destaques, exportação, paletas e cards visuais.
+> Status: revisado contra a estrutura atual das views da árvore, Mapa Familiar Vertical/Horizontal, horizontal mobile por geração, modal mobile de controles, destaques, exportação, paletas e cards visuais.
 
 ---
 
@@ -59,7 +59,7 @@ Elementos:
 
 - `HomeHeader`;
 - sidebar desktop;
-- painel inferior mobile;
+- modal mobile de controles;
 - `HomeTreeSection`;
 - navegação inferior mobile.
 
@@ -141,17 +141,21 @@ Regras:
 Nas rotas `/mapa-familiar` e `/mapa-familiar-horizontal`:
 
 - o botão `Controles` vem de `HomeMobileNav`;
-- o painel abre como bottom sheet;
-- conteúdo reaproveita painel desktop;
+- o painel abre como modal de controles, em camada superior ao header, bottom nav, chips e botões flutuantes;
+- conteúdo reaproveita o painel desktop;
 - há overlay de fechamento;
-- bottom nav e painel não entram na captura.
+- `Escape` fecha o modal;
+- o `body` fica com scroll travado enquanto o modal está aberto;
+- bottom nav, painel, overlay e loading não entram na captura.
 
 Regras:
 
 - não duplicar `MobileTreeControlsPortal`;
-- manter botão de controle na mesma faixa visual das barras mobile;
+- manter botão de controle acessível na faixa superior segura;
 - não exibir toggle `Vertical/Horizontal` no mobile;
-- garantir rolagem interna do painel.
+- garantir rolagem interna do modal;
+- preservar safe-area de iOS/Safari;
+- usar z-index superior ao header e à bottom nav.
 
 ---
 
@@ -197,7 +201,7 @@ Mobile:
 
 - usa `MobileFamilyTreeView`;
 - mantém toggle nativa `Paterno | Central | Materno`;
-- botão `Controles` abre painel inferior.
+- botão `Controles` abre o modal de controles.
 
 ### 8.1 Visual de grupos
 
@@ -236,10 +240,13 @@ Comportamento:
 
 Mobile:
 
-- usa a própria horizontal;
-- barra visual `Paterno | Central | Materno`;
-- `Central` ativo por padrão;
-- comportamento funcional da barra ainda é backlog.
+- usa `MobileFamilyHorizontalMapView`;
+- cada geração visível ocupa uma tela própria;
+- chips compactos `G1`, `G2`, `G3` etc. alternam a geração ativa;
+- swipe para esquerda avança para a próxima geração;
+- swipe para direita retorna para a geração anterior;
+- scroll vertical ocorre dentro da geração ativa;
+- não usa a barra `Paterno | Central | Materno`.
 
 ### 9.1 Cabeçalhos de geração
 
@@ -397,7 +404,7 @@ Verificar:
 
 - header;
 - botão `Controles`;
-- painel inferior;
+- modal de controles;
 - bottom nav;
 - árvore;
 - seleção por área;
@@ -473,10 +480,10 @@ Não devem aparecer:
 
 ## 18. Backlog visual explícito
 
-Se ainda não implementado, permanece como backlog:
+Se ainda não implementado ou não validado, permanece como backlog/QA:
 
-- transformar o painel mobile inferior em modal centralizado pleno;
-- dar comportamento funcional à barra `Paterno | Central | Materno` da horizontal mobile;
+- QA da horizontal mobile por geração em 320px, 375px, 390px e 430px;
+- QA de safe-area em iOS/Safari para modal de controles, chips e bottom nav;
 - refinamento avançado de conectores internos/fan-out por card em grupos sem chrome;
 - PDF multipágina ou vetorial.
 

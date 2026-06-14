@@ -1,9 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra `routes.tsx`, `treeViewMode.ts` e shell atual das views da árvore, com `/` redirecionando para `/mapa-familiar`, `/mapa-familiar-horizontal` consolidada e rotas experimentais removidas.
+> Status: revisado contra `routes.tsx`, `treeViewMode.ts` e shell atual das views da árvore, com `/mapa-familiar-horizontal` usando `MobileFamilyHorizontalMapView` no mobile, `/` redirecionando para `/mapa-familiar` e rotas experimentais removidas.
 
 ---
 
@@ -53,6 +53,7 @@ src/app/pages/home/HomeMobileNav.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
 src/app/components/layout/UserProfileMenu.tsx
@@ -321,17 +322,38 @@ A decisão principal fica em `HomeTreeSection.tsx`.
 |---|---|---|
 | `minha-arvore` | `FamilyTree` / ReactFlow | `MobileFamilyTreeView` |
 | `mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `DesktopFamilyHorizontalMapView` |
+| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
 | `genealogia` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
 | `visao-completa` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
 
 Observações:
 
 - `DesktopFamilyHorizontalMapView` não é ReactFlow, embora use `buildTreeGraph` e `genealogyColumnsLayout` como referência interna;
+- `MobileFamilyHorizontalMapView` é a experiência mobile própria da horizontal, com uma geração por tela e swipe lateral;
 - `MobileFamilyTreeView` é a experiência mobile segmentada da família direta;
 - `MobileTreeControlsPortal` não deve renderizar painel simplificado para `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
+
+
+## 8.1 Contrato mobile da horizontal
+
+Em `/mapa-familiar-horizontal`, a renderização é bifurcada por breakpoint:
+
+| Ambiente | Componente |
+|---|---|
+| Desktop/tablet | `DesktopFamilyHorizontalMapView` |
+| Mobile | `MobileFamilyHorizontalMapView` |
+
+Regras:
+
+- a rota continua sendo `/mapa-familiar-horizontal`;
+- não existe rota separada para a horizontal mobile;
+- `TreeViewMode` continua `mapa-familiar-horizontal`;
+- a navegação mobile por geração é comportamento interno da view, não subrota;
+- `HomeMobileNav` mantém botão **Controles** e bottom nav, mas não deve renderizar `Paterno | Central | Materno` na horizontal mobile;
+- `MobileTreeControlsPortal` permanece desativado nas rotas `/mapa-familiar` e `/mapa-familiar-horizontal`.
+
 
 ## 9. Navegação do painel
 

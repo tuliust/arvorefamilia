@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-13
 > Local canônico: `docs/historico/README.md`  
 > Tipo: consolidação histórica e índice da pasta `docs/historico/`.  
-> Status: revisado após consolidação de `/mapa-familiar`, `/mapa-familiar-horizontal`, exportação com título/loading/SVGs, remoção de rotas experimentais e atualização dos documentos canônicos.
+> Status: revisado após consolidação de `/mapa-familiar`, `/mapa-familiar-horizontal` mobile por gerações, modal mobile de controles, exportação com título/loading/SVGs, remoção de rotas experimentais e atualização dos documentos canônicos.
 
 ---
 
@@ -247,7 +247,9 @@ Características:
 - cônjuges adjacentes;
 - conectores SVG de casal/filhos;
 - título `Genealogia de {nome}`;
-- barra mobile visual `Paterno | Central | Materno`;
+- desktop/tablet usa `DesktopFamilyHorizontalMapView`;
+- mobile usa `MobileFamilyHorizontalMapView`, com uma geração por tela e swipe lateral;
+- a antiga barra mobile visual `Paterno | Central | Materno` da horizontal foi substituída por navegação por geração;
 - exportação com título, loading e tratamento de SVGs;
 - filtro **Cônjuges** com escopo colateral/descendente.
 
@@ -283,7 +285,8 @@ O painel foi consolidado com:
 
 No mobile:
 
-- `/mapa-familiar` e `/mapa-familiar-horizontal` usam painel do `HomeMobileNav`;
+- `/mapa-familiar` e `/mapa-familiar-horizontal` usam o botão de controles do `HomeMobileNav`;
+- o painel mobile dos mapas foi consolidado como modal acima do header, bottom nav e controles flutuantes;
 - `MobileTreeControlsPortal` retorna `null` nessas duas rotas;
 - demais views de árvore podem continuar usando o portal mobile.
 
@@ -365,3 +368,26 @@ Ao concluir uma frente nova:
 3. registrar apenas resumo histórico aqui, se necessário;
 4. não recriar arquivos históricos individuais;
 5. não usar histórico para orientar implementação sem checar código atual.
+
+### 4.10 Ajuste mobile do Mapa Familiar Horizontal
+
+A evolução mais recente da horizontal mobile substituiu o canvas amplo reaproveitado do desktop por uma experiência específica:
+
+```txt
+MobileFamilyHorizontalMapView
+1 geração por tela
+swipe lateral para próxima/anterior geração
+chips compactos de geração
+scroll vertical por tela
+```
+
+A decisão consolidada removeu a antiga barra visual `Paterno | Central | Materno` da horizontal mobile. Essa barra permanece válida apenas para a experiência segmentada de `MobileFamilyTreeView`, usada em `/minha-arvore` mobile e `/mapa-familiar` mobile.
+
+Documentos canônicos:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/GENEALOGIA_VIEW.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+```

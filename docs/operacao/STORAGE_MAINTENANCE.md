@@ -1,8 +1,9 @@
 # Manutenção de Storage
 
-> Última revisão: 2026-06-08  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/operacao/STORAGE_MAINTENANCE.md`  
-> Tipo: documentação operacional de manutenção controlada de Storage.
+> Tipo: documentação operacional de manutenção controlada de Storage.  
+> Status: revisado contra scripts atuais de diagnóstico/migração, buckets principais, arquivos históricos, base64 legado e regras de segurança operacional.
 
 ## 1. Objetivo
 
@@ -36,6 +37,27 @@ Nenhuma operação destrutiva deve acontecer sem:
 4. backup quando houver risco de perda;
 5. flag explícita de escrita/remoção;
 6. validação posterior da UI afetada.
+
+## 2.1 Relação com as views da árvore
+
+Ajustes recentes em `/mapa-familiar`, `/mapa-familiar-horizontal`, exportação, conectores, avatares e modal mobile não alteram Storage.
+
+Storage só entra no escopo quando a mudança envolver:
+
+- upload ou remoção de foto/avatar;
+- arquivos históricos;
+- base64 legado;
+- buckets `person-avatars` ou `historical-files`;
+- URLs, `storage_bucket`, `storage_path` ou policies;
+- scripts administrativos de limpeza/migração.
+
+Regra:
+
+```txt
+Corrigir avatar fallback SVG, card visual, exportação, fundo transparente ou painel mobile não exige operação de Storage.
+```
+
+---
 
 ## 3. Variáveis necessárias
 
@@ -261,6 +283,16 @@ Regras:
 - remover relatório local após uso quando contiver dados sensíveis.
 
 ## 14. Checklist de execução segura
+
+Se a tarefa for apenas visual/documental, sem arquivos reais, bucket ou URL de Storage:
+
+```txt
+Não rodar scripts de Storage.
+Não usar service role.
+Não gerar relatório de órfãos.
+```
+
+Para tarefas reais de Storage:
 
 Antes:
 

@@ -1,6 +1,6 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-11
+> Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentação operacional.
 
@@ -105,17 +105,24 @@ Os ajustes abaixo são documentados como mudanças de UI/componente e não devem
 |---|---|
 | Remover badge **VOCÊ** do card principal mobile | Alteração visual em `MobileFamilyTreeView` |
 | Exibir apenas ano nos cards mobile | Formatação de dados já existentes |
-| Corrigir conectores mobile entre ancestrais, Pai/Mãe e pessoa central | Estrutura visual HTML/CSS |
+| Corrigir conectores mobile entre ancestrais, Pai/Mãe e pessoa central | Estrutura visual HTML/CSS/SVG |
 | Usar avatar gráfico homem/mulher/pet quando não há foto | Reuso de campo visual existente e lógica frontend |
+| Criar ou ajustar `MobileFamilyHorizontalMapView` | Nova composição visual mobile, sem alteração de dados |
+| Exibir `/mapa-familiar-horizontal` mobile com uma geração por tela | Organização visual de dados já existentes |
+| Trocar barra `Paterno | Central | Materno` da horizontal mobile por navegação por gerações | UX/navegação de tela, sem schema |
+| Transformar painel mobile dos mapas em modal de controles | UI e CSS, sem schema |
+| Remover fundo sólido da horizontal e usar fundo transparente | CSS/visual |
+| Atualizar exportação visual HTML/CSS/SVG | Captura client-side, sem banco |
 | Remover texto institucional de Google Agenda em `/entrar` | Conteúdo estático de página, sem impacto de banco |
 
 Observação:
 
 - `public.pessoas.genero` já possui migration versionada em `20260611003558_add_genero_to_pessoas.sql`;
-public.pessoas.complemento
-- essa migration adiciona coluna `text` nullable, comentário e índice parcial `idx_pessoas_genero`;
-- não criar migration para os SVGs, componentes, espaçamentos, labels, conectores ou formatação de ano.
+- `public.pessoas.complemento` já possui migration versionada em `20260611013000_add_complemento_to_pessoas.sql`;
+- não criar migration para SVGs, componentes, espaçamentos, labels, conectores, modal, paletas ou formatação de ano;
+- criar migration apenas quando houver coluna, tabela, índice, constraint, policy, RPC, trigger, bucket/policy ou Edge Function dependente de schema.
 
+---
 
 ## 4. Criar migration
 
@@ -249,6 +256,13 @@ Se a migration já foi aplicada, não remover `categoria_evento` do payload nem 
 ---
 
 ## 9. Migrations recentes relevantes
+
+Regra de leitura desta seção:
+
+```txt
+As migrations abaixo são relevantes para operação de banco.
+Elas não devem ser confundidas com os ajustes recentes de Mapa Familiar mobile, que foram frontend/CSS/documentação.
+```
 
 ### `20260611013000_add_complemento_to_pessoas.sql`
 
@@ -494,68 +508,6 @@ Se retornar linhas após a migration, a constraint não foi aplicada corretament
 
 ---
 
-### Pendência operacional: `add_genero_to_pessoas`
-
-Contexto:
-
-A coluna `public.pessoas.genero` foi criada/preenchida para controlar avatares visuais da árvore com os valores:
-
-```txt
-homem
-mulher
-pet
-```
-
-Se essa coluna foi criada manualmente no painel Supabase, ela precisa ser versionada em `supabase/migrations`. A revisão contra o código atual confirma que `Pessoa.genero` já está tipado no frontend; a pendência aqui é operacional/schema.
-
-SQL sugerido para migration idempotente:
-
-```sql
-alter table public.pessoas
-  add column if not exists genero text;
-
-alter table public.pessoas
-  drop constraint if exists pessoas_genero_check;
-
-alter table public.pessoas
-  add constraint pessoas_genero_check
-  check (
-    genero is null
-    or genero in ('homem', 'mulher', 'pet')
-  );
-
-create index if not exists idx_pessoas_genero
-  on public.pessoas (genero);
-
-notify pgrst, 'reload schema';
-```
-
-Validações recomendadas antes de aplicar constraint:
-
-```sql
-select genero, count(*)
-from public.pessoas
-group by genero
-order by genero;
-
-select id, nome_completo, genero, humano_ou_pet
-from public.pessoas
-where genero is not null
-  and genero not in ('homem', 'mulher', 'pet');
-```
-
-
-Observação de revisão 2026-06-11:
-
-O uso visual de `genero` foi ampliado para o fallback mobile de `MobileFamilyTreeView`, além do Mapa Familiar desktop/tablet. Isso não muda a natureza da pendência: a migration só é necessária para versionar a coluna `public.pessoas.genero`, caso ela tenha sido criada manualmente no Supabase.
-
-Regra:
-
-- não criar migration para ajuste de avatar SVG;
-- criar migration apenas para a coluna/constraint/índice de banco;
-- aplicar migration antes de deploy que dependa de `genero` em payloads de escrita ou queries tipadas;
-- se o frontend apenas lê `genero`, ainda assim manter local/remoto alinhados para evitar divergência de ambientes;
-- atualizar `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` quando a migration existir oficialmente.
 
 ## 10. RLS e permissões
 
@@ -883,6 +835,7 @@ Fazer:
 - usar dry-run para limpeza;
 - testar fluxo afetado;
 - atualizar documentação relacionada;
+- quando a mudança for apenas visual, registrar que não há migration aplicável;
 - registrar no `PLANO_PROXIMOS_PASSOS.md` apenas pendências reais, não histórico já resolvido.
 
 ---
@@ -899,4 +852,6 @@ Fazer:
 | Fórum | `docs/funcionalidades/FORUM.md` |
 | Notificações | `docs/funcionalidades/NOTIFICACOES.md` |
 | Storage | `docs/operacao/STORAGE_MAINTENANCE.md` |
+| Deploy | `docs/operacao/DEPLOYMENT.md` |
+| Google OAuth | `docs/operacao/OAUTH_GOOGLE.md` |
 | Plano vivo | `docs/PLANO_PROXIMOS_PASSOS.md` |
