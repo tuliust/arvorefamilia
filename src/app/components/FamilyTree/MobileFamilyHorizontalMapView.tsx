@@ -640,8 +640,10 @@ function MobileFamilyHorizontalMapViewComponent({
 
     if (!stage || !column) return;
 
-    const targetInset = Math.max(0, (stage.clientWidth - column.offsetWidth) / 2);
-    const targetLeft = Math.max(0, column.offsetLeft - targetInset);
+    const stageRect = stage.getBoundingClientRect();
+    const columnRect = column.getBoundingClientRect();
+    const columnCenter = stage.scrollLeft + (columnRect.left - stageRect.left) + columnRect.width / 2;
+    const targetLeft = Math.max(0, columnCenter - stage.clientWidth / 2);
 
     stage.scrollTo({
       left: targetLeft,

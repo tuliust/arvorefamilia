@@ -792,3 +792,21 @@ body.tree-mobile-controls-open {
     min-height: auto !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: avatares desktop no mapa horizontal mobile */
+@media (max-width: 767px) {
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] [data-family-map-avatar="true"] {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    border-width: 3px !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] .family-map-avatar-icon {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+}
