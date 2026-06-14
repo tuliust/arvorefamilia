@@ -1164,3 +1164,81 @@ body.tree-mobile-controls-open {
     overflow: visible !important;
   }
 }
+
+
+/* Ajuste 2026-06-14: refinamento modal mobile controles */
+@media (max-width: 767px) {
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header {
+    padding: 0.78rem 0.9rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header p:first-child {
+    font-size: 1.08rem !important;
+    line-height: 1.05 !important;
+    font-weight: 800 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header p:last-child {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-mobile-controls-panel-header button {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+  }
+
+  .tree-mobile-controls-modal .tree-view-toggle {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+    padding: 0.32rem !important;
+    border-radius: 0.85rem !important;
+    background: rgb(248 250 252) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-external-zoom-actions {
+    display: none !important;
+  }
+
+  .tree-mobile-controls-modal .tree-control-panel {
+    gap: 0.45rem !important;
+  }
+
+  /*
+   * Primeiro bloco do painel de filtros = GRUPOS.
+   * No mobile, os cards ficam soltos, sem container e sem título.
+   */
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:first-of-type {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:first-of-type > summary {
+    display: none !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:first-of-type > div {
+    padding: 0 !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:first-of-type > div > .grid {
+    gap: 0.38rem !important;
+  }
+
+  /*
+   * Segundo bloco = FILTROS. Mantém box/título.
+   */
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:not(:first-of-type) {
+    border-radius: 0.85rem !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .tree-mobile-controls-modal .tree-sidebar-filter-scroll .tree-control-section:not(:first-of-type) > summary {
+    display: flex !important;
+  }
+}

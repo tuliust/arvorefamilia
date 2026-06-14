@@ -73,7 +73,7 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
+, X} from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
 import { buildAiTreeContext } from './home/homeAiContext';
@@ -1175,7 +1175,7 @@ export function Home() {
           className="tree-mobile-controls-modal fixed inset-0 z-[11000] md:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Controles da árvore"
+          aria-label="Controles"
           data-tree-export-ignore="true"
         >
           <button
@@ -1188,8 +1188,8 @@ export function Home() {
           <section className="tree-mobile-controls-panel absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] top-[calc(env(safe-area-inset-top,0px)+0.75rem)] flex min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
             <div className="tree-mobile-controls-panel-header flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-extrabold text-slate-950">Controles da árvore</p>
-                <p className="truncate text-xs font-medium text-slate-500">Cores, destaques, grupos e filtros</p>
+                <p className="truncate text-sm font-extrabold text-slate-950">Controles</p>
+                <p className="truncate text-xs font-medium text-slate-500">Visualização, cores, destaques e filtros</p>
               </div>
               <Button
                 variant="outline"
