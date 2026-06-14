@@ -20,7 +20,7 @@ function getCurrentPathname() {
   return window.location.pathname;
 }
 
-const mobileTreeControlsTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.18rem)]';
+const mobileTreeControlsTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
 
 export function HomeMobileNav({
   legendOpen,
@@ -37,7 +37,7 @@ export function HomeMobileNav({
       {isDirectFamilyMap && (
         <button
           type="button"
-          className={`fixed right-[0.85rem] ${mobileTreeControlsTopClass} z-[10000] flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden`}
+          className={`fixed right-[0.85rem] ${mobileTreeControlsTopClass} z-[10000] flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden`}
           onClick={onToggleLegend}
           aria-label={legendOpen ? 'Fechar painel da árvore' : 'Abrir painel da árvore'}
           aria-expanded={legendOpen}

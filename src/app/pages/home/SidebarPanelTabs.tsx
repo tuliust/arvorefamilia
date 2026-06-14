@@ -107,7 +107,7 @@ function dispatchTreeAction(action: SidebarTreeAction) {
   window.dispatchEvent(new CustomEvent<SidebarTreeAction>(SIDEBAR_TREE_ACTION_EVENT, { detail: action }));
 }
 
-export function SidebarPanelTabs() {
+export function SidebarPanelTabs({ mobileControls = false }: { mobileControls?: boolean } = {}) {
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
@@ -160,33 +160,39 @@ export function SidebarPanelTabs() {
 
   return (
     <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]" data-tree-export-ignore="true">
-      <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5 pr-[clamp(40px,5vh,44px)]">
-        <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
-        <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
-        <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
-      </div>
+      {!mobileControls && (
+        <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5 pr-[clamp(40px,5vh,44px)]">
+          <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
+          <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
+          <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
+        </div>
+      )}
 
       <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
-        <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
-          {viewOptions.map((option) => {
-            const Icon = option.icon;
-            return (
-              <IconToggleButton
-                key={option.key}
-                icon={Icon}
-                label={option.shortLabel}
-                active={currentViewMode === option.key}
-                mobileOnly={option.mobileOnly}
-                title={option.label}
-                onClick={() => handleViewChange(option.key)}
-              />
-            );
-          })}
-        </div>
+        {!mobileControls && (
+          <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
+            {viewOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <IconToggleButton
+                  key={option.key}
+                  icon={Icon}
+                  label={option.shortLabel}
+                  active={currentViewMode === option.key}
+                  mobileOnly={option.mobileOnly}
+                  title={option.label}
+                  onClick={() => handleViewChange(option.key)}
+                />
+              );
+            })}
+          </div>
+        )}
 
-        <div className="tree-primary-actions grid min-w-0 grid-cols-3 gap-1">
+        <div className={['tree-primary-actions grid min-w-0 gap-1', mobileControls ? 'grid-cols-2' : 'grid-cols-3'].join(' ')}>
           <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => toggleFlyout('colors')} />
-          <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => toggleFlyout('export')} />
+          {!mobileControls && (
+            <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => toggleFlyout('export')} />
+          )}
           <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => toggleFlyout('highlight')} />
         </div>
 

@@ -1189,7 +1189,7 @@ export function Home() {
             <div className="tree-mobile-controls-panel-header flex items-center gap-2 border-b border-gray-100 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-extrabold text-slate-950">Controles da árvore</p>
-                <p className="truncate text-xs font-medium text-slate-500">Visualização, cores, exportação, destaques e filtros</p>
+                <p className="truncate text-xs font-medium text-slate-500">Cores, destaques, grupos e filtros</p>
               </div>
               <Button
                 variant="outline"
@@ -1203,7 +1203,7 @@ export function Home() {
               </Button>
             </div>
             <div className="tree-mobile-controls-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
-              <SidebarPanelTabs />
+              <SidebarPanelTabs mobileControls />
               {sidebarFiltersContent}
             </div>
           </section>
