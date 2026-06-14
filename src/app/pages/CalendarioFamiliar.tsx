@@ -416,8 +416,8 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calendário">
-          <div className="grid grid-cols-3 gap-1 text-[8px] font-semibold text-gray-700 min-[390px]:text-[9px]">
+        <section className="rounded-2xl border border-gray-200 bg-white px-2 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calendário">
+          <div className="grid grid-cols-3 gap-1 text-[10px] font-bold text-gray-700 min-[360px]:text-[11px] min-[390px]:text-xs min-[430px]:text-[13px]">
             {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => {
               const colors = CALENDAR_CATEGORY_COLORS[item.category];
               const active = activeCategories[item.category];
@@ -428,7 +428,7 @@ export function CalendarioFamiliar() {
                   type="button"
                   onClick={() => toggleCategory(item.category)}
                   aria-pressed={active}
-                  className="flex min-w-0 items-center justify-center gap-1 rounded-md border px-1 py-1 text-center leading-tight transition"
+                  className="flex min-w-0 items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-2 text-center leading-none transition min-[390px]:gap-1 min-[390px]:px-1"
                   style={{
                     borderColor: active ? colors.border : '#E5E7EB',
                     backgroundColor: active ? colors.background : '#FFFFFF',
@@ -436,8 +436,8 @@ export function CalendarioFamiliar() {
                     opacity: active ? 1 : 0.62,
                   }}
                 >
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: colors.dot }} />
-                  <span className="min-w-0 truncate">{item.label}</span>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full min-[390px]:h-3 min-[390px]:w-3" style={{ backgroundColor: colors.dot }} />
+                  <span className="min-w-0 max-w-full truncate whitespace-nowrap">{item.label}</span>
                 </button>
               );
             })}
