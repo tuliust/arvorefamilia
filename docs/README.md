@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-13  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico revisado contra a estrutura atual do repositório, incluindo `MobileFamilyHorizontalMapView`, modal mobile de controles, Mapa Familiar Horizontal mobile por geração, exportação e pendências documentais remanescentes.
+> Status: índice canônico revisado contra a baseline atual da `main`.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -13,56 +13,37 @@ Use este arquivo como ponto de entrada antes de consultar guias específicos. A 
 
 ## 1. Estado atual consolidado
 
-A revisão mais recente registra:
+A baseline funcional atual registra:
 
-- `/entrar` funciona como home pública, login, primeiro acesso e aceite legal;
-- a rota raiz `/` redireciona para `/mapa-familiar`, preservando search params;
-- as views principais da árvore são:
-  - **Minha Árvore** — `/minha-arvore`;
-  - **Mapa Familiar Vertical** — `/mapa-familiar`;
+- `/entrar` funciona como home pública, login, cadastro, primeiro acesso e aceite legal;
+- a rota raiz `/` redireciona para `/mapa-familiar`, preservando `location.search`;
+- as views principais da árvore são apenas:
+  - **Mapa Familiar** — `/mapa-familiar`;
   - **Mapa Familiar Horizontal** — `/mapa-familiar-horizontal`;
-  - **Genealogia** — `/genealogia`;
-  - **Visão Completa** — `/visao-completa`;
-- as rotas experimentais `/mapa-horizontal` e `/visao-completa-teste` foram removidas;
+- as antigas views de árvore foram removidas do roteamento ativo:
+  - `/minha-arvore`;
+  - `/genealogia`;
+  - `/visao-completa`;
+- `/minha-arvore/editar` continua vigente como rota de edição do membro;
 - `TreeViewMode` possui exatamente:
-  - `minha-arvore`;
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
-  - `genealogia`;
-  - `visao-completa`;
 - `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
 - `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
 - o painel desktop exibe botões **Vertical** e **Horizontal**:
   - **Vertical** → `/mapa-familiar`;
   - **Horizontal** → `/mapa-familiar-horizontal`;
-- `HomeMobileNav` controla o botão de painel mobile em `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- o painel mobile dos mapas é um modal de controles acima do header, bottom nav e botões flutuantes, com overlay, scroll interno e fechamento por `Escape`;
-- `MobileTreeControlsPortal` não renderiza seu painel antigo nessas duas rotas;
-- `/mapa-familiar-horizontal` organiza cards por `pessoas.manual_generation`, limitado de 1 a 6, com fallback por inferência;
-- no mobile, `/mapa-familiar-horizontal` exibe uma geração por tela, com chips `G1`, `G2`, `G3` etc. e swipe lateral entre gerações;
-- colunas vazias em `/mapa-familiar-horizontal` são ocultadas e as demais colunas são compactadas;
-- cônjuges da pessoa central e cônjuges de avós, bisavós e tataravós permanecem visíveis quando existirem;
-- cônjuges de tios, primos, sobrinhos, filhos e netos dependem do filtro **Cônjuges**;
-- filhos de um casal em `/mapa-familiar-horizontal` são ordenados do mais velho para o mais novo;
-- conectores de `/mapa-familiar-horizontal` são SVG próprios;
-- `/visao-completa` continua como view própria baseada em ReactFlow/genealogy layout;
-- cabeçalhos `GERAÇÃO N` em Genealogia/Visão Completa usam pílula escura;
-- exportação de `/mapa-familiar` e `/mapa-familiar-horizontal` foi corrigida tecnicamente:
-  - **Área** abre seleção manual retangular;
-  - **Imagem** exporta PNG;
-  - **PDF** exporta em A4 proporcional;
-  - **Imprimir** abre fluxo de impressão;
-  - há loading contextual;
-  - o título entra no canvas exportado;
-  - painel, header, bottom nav, overlay e loading são ignorados na captura;
-  - SVGs de avatares/status são tratados para evitar renderização como quadrados escuros;
-- `Destacar > Grupos` no Mapa Familiar Vertical oculta molduras/títulos de grupos e labels `PAI`, `MÃE`, `CÔNJUGE`;
-- `Destacar > Grupos` no Mapa Familiar Horizontal oculta cabeçalhos de geração e recalcula cards/conectores;
-- `Destacar > Linhas` oculta conectores visuais;
-- `Restaurar visualização` reseta posição/zoom da view ativa;
-- paletas `white`, `visual`, `orange` e `brown` são aplicadas via CSS variables e `localStorage`;
-- `/mapa-familiar` está em busca global e favoritos;
-- `/mapa-familiar-horizontal` ainda precisa de decisão para entrar como página própria em busca/favoritos.
+- a alternância vertical/horizontal preserva `location.search`, incluindo `?pessoa=...`;
+- `PersonProfile` aceita retorno seguro para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- favoritos e busca global incluem as duas views oficiais;
+- exportação de `/mapa-familiar` e `/mapa-familiar-horizontal` cobre:
+  - **Área**;
+  - **Imagem**;
+  - **PDF**;
+  - **Imprimir**;
+- ReactFlow/Dagre continuam presentes como dependência técnica de código legado ativo, tipos, layouts ou utilitários; não devem ser removidos em limpeza superficial;
+- o painel ainda contém a barra **Filtros | Legendas | Ações** no estado atual e deve ser revisado em frente própria;
+- documentos de views antigas devem ser arquivados como histórico ou marcados como legado.
 
 ---
 
@@ -78,23 +59,32 @@ Regras gerais:
 - `docs/historico/README.md` é o resumo histórico consolidado;
 - pendências reais, bugs prováveis e decisões futuras devem ficar em `PLANO_PROXIMOS_PASSOS.md`;
 - scripts SQL soltos, diagnósticos antigos e documentação removida não substituem `supabase/migrations` nem os guias canônicos;
-- quando houver divergência entre documentação e código atual, revisar o código e atualizar o guia canônico antes de fazer novas alterações.
-
-Quando houver divergência entre guia atual e conteúdo histórico, prevalece o guia atual.
+- quando houver divergência entre documentação e código atual, revisar o código e atualizar o guia canônico antes de fazer novas alterações;
+- quando houver divergência entre guia atual e conteúdo histórico, prevalece o guia atual;
+- conteúdo histórico não deve ser usado para restaurar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
 
 ---
 
 ## 3. Guias oficiais na raiz de `docs/`
 
-| Arquivo | Uso |
+| Arquivo | Uso | Status recomendado |
+|---|---|---|
+| `README.md` | Índice canônico da documentação. | Atualizado contra baseline. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já está implementado. | Revisar para remover rotas antigas. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. | Revisar componentes legado/ativos. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus, painéis, paletas e microcopy. | Revisar com duas views oficiais. |
+| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Remover cenários de rotas antigas. |
+| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, bloqueios, QA futuro e backlog pós-MVP. | Reclassificar backlog vencido. |
+| `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
+
+Documentos de baseline recomendados para criação/manutenção:
+
+| Arquivo | Conteúdo esperado |
 |---|---|
-| `README.md` | Índice canônico da documentação. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que já está implementado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões de uso e anti-regressões. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, headers, árvore, menus, painéis, paletas, Mapa Familiar Vertical/Horizontal e microcopy. |
-| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. |
-| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, bloqueios, QA futuro e backlog pós-MVP. |
-| `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. |
+| `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado no commit atual. |
+| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS e dependências. |
+| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. |
+| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico e manual para futuras mudanças. |
 
 ---
 
@@ -108,7 +98,7 @@ docs/arquitetura/
 
 | Arquivo | Uso |
 |---|---|
-| `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, views da árvore, exportação client-side, paletas e integrações. |
+| `arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
 | `arquitetura/ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, rotas administrativas, guards, redirecionamentos e navegação. |
 | `arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações e objetos legados. |
 
@@ -122,21 +112,21 @@ Pasta:
 docs/funcionalidades/
 ```
 
-| Arquivo | Escopo |
-|---|---|
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. |
-| `MINHA_ARVORE_VIEW.md` | View direta da árvore, ReactFlow desktop/tablet, viewport, layout central, filtros diretos e `MobileFamilyTreeView`. |
-| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`: vertical, horizontal, cards, grupos, conectores, filtros, paletas, seleção, exportação, loading, mobile e anti-regressões. |
-| `GENEALOGIA_VIEW.md` | Genealogia, Visão Completa, gerações, chips mobile, cabeçalhos de coluna, reset de geração ativa, inferência visual e QA. |
-| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores ReactFlow, conectores HTML/CSS mobile, conectores SVG do Mapa Familiar, filtros, destaques, painel lateral e ações. |
-| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. |
-| `MINHA_ARVORE_FILTROS_E_PETS.md` | Filtros da Minha Árvore, separação humanos/pets, contadores, modo foco e impacto no Mapa Familiar. |
-| `FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. |
-| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. |
-| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. |
-| `TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão, incluindo captura HTML/CSS/SVG de `/mapa-familiar` e `/mapa-familiar-horizontal`, loading, título no canvas, SVGs e limite preventivo de pixels. |
-| `FAVORITOS.md` | Favoritos de pessoas/páginas; revisar se `/mapa-familiar-horizontal` entrará em `FAVORITE_PAGES`. |
+| Arquivo | Escopo | Status recomendado |
+|---|---|---|
+| `PESSOAS_PERFIL_ADMIN.md` | Perfil público, perfil admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Preservar. |
+| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`: vertical, horizontal, cards, grupos, conectores, filtros, paletas, seleção, exportação, loading, mobile e anti-regressões. | Referência principal. |
+| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Legendas, linhas, conectores, filtros, destaques, painel lateral e ações. | Atualizar após frente de painel. |
+| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore, avatar, arquivos, eventos pessoais, dados próprios, CSS mobile escopado e saída sem salvar. | Vigente; não confundir com a view removida `/minha-arvore`. |
+| `MINHA_ARVORE_VIEW.md` | Antiga view direta da árvore. | Arquivar ou marcar como legado. |
+| `MINHA_ARVORE_FILTROS_E_PETS.md` | Mistura regras antigas e regras vigentes de filtros/pets. | Extrair regras vigentes antes de arquivar. |
+| `GENEALOGIA_VIEW.md` | Antigas views `/genealogia` e `/visao-completa`. | Arquivar ou marcar como legado. |
+| `FORUM.md` | Fórum, categorias, tópicos, menções, respostas diretas, reações, favoritos, vínculos técnicos e notificações. | Preservar. |
+| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions, fórum e cron futuro. | Preservar. |
+| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile, Google Agenda, compliance OAuth, microcopy e QA. | Preservar. |
+| `TIMELINE.md` | Timeline de pessoa, eventos derivados, `person_events`, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
+| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão nas duas views oficiais. | Atualizado contra baseline. |
+| `FAVORITOS.md` | Favoritos de pessoas/páginas; inclui `/mapa-familiar` e `/mapa-familiar-horizontal`. | Atualizado contra baseline. |
 
 ---
 
@@ -162,11 +152,8 @@ Rotas protegidas por `TreeAccessRoute`:
 
 ```txt
 /
-/minha-arvore
 /mapa-familiar
 /mapa-familiar-horizontal
-/genealogia
-/visao-completa
 /busca
 ```
 
@@ -188,76 +175,165 @@ Contrato atual:
 
 ```ts
 export type TreeViewMode =
-  | 'minha-arvore'
   | 'mapa-familiar'
-  | 'mapa-familiar-horizontal'
-  | 'genealogia'
-  | 'visao-completa';
+  | 'mapa-familiar-horizontal';
 ```
 
-Rotas experimentais removidas:
+Views oficiais:
+
+| Rota | Desktop/tablet | Mobile |
+|---|---|---|
+| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+
+Rotas antigas que não devem voltar como views da árvore:
 
 ```txt
-/mapa-horizontal
-/visao-completa-teste
+/minha-arvore
+/genealogia
+/visao-completa
 ```
 
----
-
-## 8. Mapa rápido de arquivos de código por documentação
-
-| Escopo | Arquivos principais |
-|---|---|
-| Rotas | `src/app/routes.tsx`, `src/app/components/FamilyTree/treeViewMode.ts` |
-| Shell da Home | `src/app/pages/Home.tsx`, `src/app/pages/home/HomeTreeSection.tsx`, `src/app/pages/home/HomeHeader.tsx`, `src/app/pages/home/HomeMobileNav.tsx` |
-| Painel | `src/app/pages/home/SidebarPanelTabs.tsx`, `DirectRelationKpiGrid.tsx`, `LifeStatusKpiGrid.tsx`, `SidebarInfoPanel.tsx` |
-| Minha Árvore | `src/app/components/FamilyTree/FamilyTree.tsx`, `directFamilyDistributedLayout.ts` |
-| Mobile direto | `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `mobileFamilyTreeModel.ts` |
-| Mapa Familiar Vertical | `DesktopFamilyMapView.tsx`, `FamilyTreeVisualCards.tsx`, `family-map-qa.css` |
-| Mapa Familiar Horizontal | `DesktopFamilyHorizontalMapView.tsx`, `MobileFamilyHorizontalMapView.tsx`, `family-map-horizontal.css` |
-| Exportação | `TreeAreaSelectionOverlay.tsx`, `utils/treeExport.ts`, `utils/exportColorSanitizer.ts`, `home-sidebar-unified.css` |
-| Paletas | `treeColorPalettes.ts`, `directFamilyColors.ts`, CSS de suporte |
-| Busca/favoritos | `globalSearchService.ts`, `favoritePages.ts`, `MeusFavoritos.tsx` |
-| Auth/guards | `AuthContext.tsx`, `TreeAccessRoute.tsx`, `MemberRoute.tsx`, `ProtectedRoute.tsx` |
-
----
-
-## 9. Sequência recomendada para atualização documental
-
-Após mudanças em árvore/exportação:
-
-1. `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`
-2. `docs/funcionalidades/EXPORTACAO_ARVORE.md`
-3. `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
-4. `docs/GUIA_COMPONENTES.md`
-5. `docs/GUIA_UX_LAYOUT.md`
-6. `docs/arquitetura/ROTAS_E_GUARDS.md`
-7. `docs/arquitetura/ARCHITECTURE.md`
-8. `docs/GUIA_IMPLEMENTACOES.md`
-9. `docs/README.md`
-10. `docs/PLANO_PROXIMOS_PASSOS.md`
-
----
-
-## 10. Pendências documentais conhecidas
-
-Revisar nos próximos lotes:
+Exceção vigente:
 
 ```txt
-docs/arquitetura/ARCHITECTURE.md
-docs/arquitetura/ROTAS_E_GUARDS.md
+/minha-arvore/editar
+```
+
+Essa rota pertence à edição do membro, não à antiga view da árvore.
+
+---
+
+## 8. Baseline de navegação, busca e favoritos
+
+Arquivos que devem permanecer sincronizados:
+
+```txt
+src/app/routes.tsx
+src/app/components/FamilyTree/treeViewMode.ts
+src/app/constants/favoritePages.ts
+src/app/services/globalSearchService.ts
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/PersonProfile.tsx
+```
+
+Regras:
+
+- não há links visíveis para `/minha-arvore`, `/genealogia` ou `/visao-completa`;
+- `/mapa-familiar` e `/mapa-familiar-horizontal` estão em favoritos;
+- `/mapa-familiar` e `/mapa-familiar-horizontal` estão na busca global;
+- retornar de perfil deve aceitar as duas views oficiais;
+- favoritos de página apontam para rotas canônicas, não para estado de zoom/filtro.
+
+---
+
+## 9. Exportação
+
+Documento canônico:
+
+```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
-docs/funcionalidades/FAVORITOS.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
-docs/historico/README.md
-docs/operacao/
 ```
 
-Pontos específicos:
+Views oficiais cobertas:
 
-- confirmar se `/mapa-familiar-horizontal` deve entrar em favoritos/busca como página própria;
-- registrar QA pós-exportação dos Mapas Familiares;
-- revisar efeitos compartilhados de filtros de vida/pets/cônjuges entre views;
-- manter explícito que a barra `Paterno | Central | Materno` pertence ao mobile de `/mapa-familiar` e `MobileFamilyTreeView`, não ao mobile de `/mapa-familiar-horizontal`;
-- manter explícito que a horizontal mobile usa `MobileFamilyHorizontalMapView` com uma geração por tela.
+| Rota | Exportação |
+|---|---|
+| `/mapa-familiar` | Área, Imagem, PDF, Imprimir |
+| `/mapa-familiar-horizontal` | Área, Imagem, PDF, Imprimir |
+
+Observações:
+
+- utilitários podem manter compatibilidade com raízes ReactFlow/legado;
+- a documentação canônica deve descrever o produto ativo;
+- se ReactFlow legado for removido futuramente, revisar `treeExport.ts`, CSS e docs no mesmo commit.
+
+---
+
+## 10. Painel, filtros e ações
+
+No estado atual, `SidebarPanelTabs.tsx` ainda concentra:
+
+- Zoom;
+- Restaurar visualização;
+- Vertical;
+- Horizontal;
+- Cores;
+- Exportar;
+- Destacar;
+- barra **Filtros | Legendas | Ações**.
+
+Frente futura já prevista:
+
+- remover barra `Filtros | Legendas | Ações`;
+- manter filtros/grupos visíveis diretamente;
+- ocultar/remover Legendas e Ações;
+- preservar Zoom, Restaurar/Fit, Vertical, Horizontal, Cores, Exportar e Destacar;
+- atualizar `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` e CSS no mesmo commit.
+
+---
+
+## 11. Histórico
+
+Pasta:
+
+```txt
+docs/historico/
+```
+
+Uso correto:
+
+- registrar decisões antigas;
+- preservar contexto de QA;
+- guardar diagnósticos e relatórios;
+- evitar perda de histórico.
+
+Uso incorreto:
+
+- orientar implementação atual;
+- restaurar rotas removidas;
+- contradizer `ROTAS_E_GUARDS.md`;
+- substituir migrations ou documentação canônica.
+
+---
+
+## 12. Checklist de não regressão
+
+Antes de atualizar documentação ou código da árvore:
+
+```bash
+git status --short
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+rg "/minha-arvore|/genealogia|/visao-completa"
+rg "TreeViewMode"
+rg "FAVORITE_PAGES|GLOBAL_SEARCH_PAGES"
+```
+
+Revisar manualmente:
+
+- `/` → `/mapa-familiar`;
+- `/mapa-familiar` desktop/mobile;
+- `/mapa-familiar-horizontal` desktop/mobile;
+- alternância vertical/horizontal preservando `?pessoa=...`;
+- retorno de perfil via `?voltar=...`;
+- favoritos;
+- busca global;
+- exportação Área/Imagem/PDF/Imprimir;
+- 404 para `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- `/minha-arvore/editar` continua protegida e funcional.
+
+---
+
+## 13. Regra final
+
+Quando documentação e código divergirem, o fluxo correto é:
+
+1. verificar o código atual;
+2. classificar a divergência como doc desatualizada, bug ou decisão pendente;
+3. atualizar documentação canônica;
+4. preservar histórico em `docs/historico/` apenas quando necessário;
+5. criar ou ajustar testes que impeçam regressão.

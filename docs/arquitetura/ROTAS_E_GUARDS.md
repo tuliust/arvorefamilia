@@ -1,9 +1,9 @@
 # Rotas e guards de acesso - Árvore Família
 
-> Última revisão: 2026-06-13
+> Última revisão: 2026-06-13  
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: revisado contra `routes.tsx`, `treeViewMode.ts` e shell atual das views da árvore, com `/mapa-familiar-horizontal` usando `MobileFamilyHorizontalMapView` no mobile, `/` redirecionando para `/mapa-familiar` e rotas experimentais removidas.
+> Status: revisado contra `routes.tsx`, `treeViewMode.ts`, favoritos, busca global e shell atual das views da árvore.
 
 ---
 
@@ -19,7 +19,8 @@ Use este arquivo para:
 - corrigir redirecionamentos;
 - revisar navegação entre views da árvore;
 - preservar search params, especialmente `?pessoa=...`;
-- garantir que usuário comum não acesse admin.
+- garantir que usuário comum não acesse admin;
+- evitar a restauração acidental de views removidas.
 
 Documentos relacionados:
 
@@ -29,8 +30,8 @@ docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 docs/GUIA_COMPONENTES.md
 docs/GUIA_UX_LAYOUT.md
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
+docs/funcionalidades/EXPORTACAO_ARVORE.md
+docs/funcionalidades/FAVORITOS.md
 ```
 
 ---
@@ -47,15 +48,13 @@ src/app/services/permissionService.ts
 src/app/services/memberProfileService.ts
 src/app/components/FamilyTree/treeViewMode.ts
 src/app/pages/Home.tsx
+src/app/pages/PersonProfile.tsx
 src/app/pages/home/HomeTreeSection.tsx
 src/app/pages/home/HomeHeader.tsx
 src/app/pages/home/HomeMobileNav.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
+src/app/constants/favoritePages.ts
+src/app/services/globalSearchService.ts
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
 ```
@@ -103,11 +102,8 @@ Rotas protegidas:
 
 ```txt
 /
-/minha-arvore
 /mapa-familiar
 /mapa-familiar-horizontal
-/genealogia
-/visao-completa
 /busca
 ```
 
@@ -166,7 +162,8 @@ Cuidados:
 
 - não usar `ProtectedRoute` em página de membro comum;
 - não assumir que usuário autenticado pode editar qualquer pessoa;
-- perfil, arquivos, sugestões, favoritos e fórum devem respeitar permissões próprias.
+- perfil, arquivos, sugestões, favoritos e fórum devem respeitar permissões próprias;
+- `/minha-arvore/editar` é vigente, apesar do nome histórico.
 
 ### 4.3 `ProtectedRoute`
 
@@ -182,13 +179,6 @@ Responsabilidade:
 - exigir usuário autenticado;
 - consultar `permissionService.isAdminUser`;
 - bloquear usuário comum.
-
-Validação de admin:
-
-```txt
-permissionService.isAdminUser(user)
-  -> supabase.rpc('is_admin_user', { target_user_id: user.id })
-```
 
 Rotas protegidas:
 
@@ -243,20 +233,31 @@ Regras:
 | Rota | Elemento/Componente | Guard | View |
 |---|---|---|---|
 | `/` | `RedirectToMapaFamiliar` | `TreeAccessRoute` | redireciona para `/mapa-familiar` |
-| `/minha-arvore` | `TreeHomeShell` → `Home` | `TreeAccessRoute` | `minha-arvore` |
 | `/mapa-familiar` | `TreeHomeShell` → `Home` | `TreeAccessRoute` | `mapa-familiar` |
 | `/mapa-familiar-horizontal` | `TreeHomeShell` → `Home` | `TreeAccessRoute` | `mapa-familiar-horizontal` |
-| `/genealogia` | `TreeHomeShell` → `Home` | `TreeAccessRoute` | `genealogia` |
-| `/visao-completa` | `TreeHomeShell` → `Home` | `TreeAccessRoute` | `visao-completa` |
 | `/busca` | `BuscaResultados` | `TreeAccessRoute` | busca global protegida |
 
 Regras:
 
-- todas as views da árvore usam o mesmo shell `Home`;
+- as duas views da árvore usam o mesmo shell `Home`;
 - `/mapa-familiar-horizontal` recebe `data-tree-route-view="mapa-familiar-horizontal"` no wrapper;
 - `/` redireciona para `/mapa-familiar`, preservando `location.search`;
-- `/mapa-horizontal` e `/visao-completa-teste` foram removidas;
-- não adicionar rota experimental nova sem registrar em `treeViewMode.ts`, `routes.tsx`, painel e documentação.
+- `/minha-arvore`, `/genealogia` e `/visao-completa` foram removidas como views ativas;
+- não adicionar rota experimental nova sem registrar em `treeViewMode.ts`, `routes.tsx`, painel, testes e documentação.
+
+Rotas antigas removidas:
+
+| Rota | Status esperado |
+|---|---|
+| `/minha-arvore` | 404 |
+| `/genealogia` | 404 |
+| `/visao-completa` | 404 |
+
+Exceção vigente:
+
+| Rota | Guard | Observação |
+|---|---|---|
+| `/minha-arvore/editar` | `MemberRoute` | Edição de dados/árvore pelo membro. Não é a view antiga `/minha-arvore`. |
 
 ---
 
@@ -272,31 +273,22 @@ Contrato atual:
 
 ```ts
 export type TreeViewMode =
-  | 'minha-arvore'
   | 'mapa-familiar'
-  | 'mapa-familiar-horizontal'
-  | 'genealogia'
-  | 'visao-completa';
+  | 'mapa-familiar-horizontal';
 ```
 
 Mapeamento atual:
 
 ```ts
 export const VIEW_MODE_TO_PATH: Record<TreeViewMode, string> = {
-  'minha-arvore': '/minha-arvore',
   'mapa-familiar': '/mapa-familiar',
   'mapa-familiar-horizontal': '/mapa-familiar-horizontal',
-  genealogia: '/genealogia',
-  'visao-completa': '/visao-completa',
 };
 
 export const PATH_TO_VIEW_MODE: Record<string, TreeViewMode> = {
   '/': 'mapa-familiar',
-  '/minha-arvore': 'minha-arvore',
   '/mapa-familiar': 'mapa-familiar',
   '/mapa-familiar-horizontal': 'mapa-familiar-horizontal',
-  '/genealogia': 'genealogia',
-  '/visao-completa': 'visao-completa',
 };
 ```
 
@@ -308,9 +300,10 @@ getTreeViewModeFromPath(pathname) -> mapa-familiar quando path não é conhecido
 
 Cuidados:
 
-- qualquer nova view deve ser registrada em `TreeViewMode`, `VIEW_MODE_TO_PATH`, `PATH_TO_VIEW_MODE`, `routes.tsx`, painel, busca/favoritos se aplicável e documentação;
+- qualquer nova view deve ser decisão de produto, não exceção local;
 - rota antiga removida não deve permanecer como alias silencioso sem decisão explícita;
-- se a rota possuir subrotas, revisar detecção por prefixo no painel.
+- se a rota possuir subrotas, revisar detecção por prefixo no painel;
+- `TreeViewMode` não deve voltar a incluir `minha-arvore`, `genealogia` ou `visao-completa`.
 
 ---
 
@@ -320,40 +313,17 @@ A decisão principal fica em `HomeTreeSection.tsx`.
 
 | View | Desktop/tablet | Mobile |
 |---|---|---|
-| `minha-arvore` | `FamilyTree` / ReactFlow | `MobileFamilyTreeView` |
 | `mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
 | `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
-| `genealogia` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
-| `visao-completa` | `FamilyTree` / ReactFlow | `FamilyTree` com tabs/chips de geração |
 
 Observações:
 
 - `DesktopFamilyHorizontalMapView` não é ReactFlow, embora use `buildTreeGraph` e `genealogyColumnsLayout` como referência interna;
 - `MobileFamilyHorizontalMapView` é a experiência mobile própria da horizontal, com uma geração por tela e swipe lateral;
 - `MobileFamilyTreeView` é a experiência mobile segmentada da família direta;
-- `MobileTreeControlsPortal` não deve renderizar painel simplificado para `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- `FamilyTree.tsx` não é renderer oficial das views atuais, mas ainda fornece contrato/tipos e deve ser removido apenas após extração segura.
 
 ---
-
-
-## 8.1 Contrato mobile da horizontal
-
-Em `/mapa-familiar-horizontal`, a renderização é bifurcada por breakpoint:
-
-| Ambiente | Componente |
-|---|---|
-| Desktop/tablet | `DesktopFamilyHorizontalMapView` |
-| Mobile | `MobileFamilyHorizontalMapView` |
-
-Regras:
-
-- a rota continua sendo `/mapa-familiar-horizontal`;
-- não existe rota separada para a horizontal mobile;
-- `TreeViewMode` continua `mapa-familiar-horizontal`;
-- a navegação mobile por geração é comportamento interno da view, não subrota;
-- `HomeMobileNav` mantém botão **Controles** e bottom nav, mas não deve renderizar `Paterno | Central | Materno` na horizontal mobile;
-- `MobileTreeControlsPortal` permanece desativado nas rotas `/mapa-familiar` e `/mapa-familiar-horizontal`.
-
 
 ## 9. Navegação do painel
 
@@ -364,18 +334,89 @@ No desktop, `SidebarPanelTabs.tsx` exibe:
 | Vertical | `mapa-familiar` | `/mapa-familiar` |
 | Horizontal | `mapa-familiar-horizontal` | `/mapa-familiar-horizontal` |
 
-Opções mobile-only internas ainda podem existir para `minha-arvore` e `genealogia`, mas a experiência desktop atual privilegia o par Vertical/Horizontal.
-
 Regras:
 
 - clique em **Vertical** e **Horizontal** preserva `location.search`;
 - a rota ativa deve ser detectada por prefixo, especialmente `/mapa-familiar-horizontal`;
-- não redirecionar **Horizontal** para `/visao-completa`;
-- `Restaurar visualização` dispara `restore-view`, não `zoom-out`.
+- não adicionar atalhos para `/minha-arvore`, `/genealogia` ou `/visao-completa`.
+
+Controles vigentes no mesmo componente:
+
+- Zoom +;
+- Zoom -;
+- Restaurar visualização;
+- Cores;
+- Exportar;
+- Destacar;
+- Filtros;
+- Legendas;
+- Ações.
+
+Pendência de produto/UX:
+
+- remover a barra `Filtros | Legendas | Ações`;
+- manter filtros/grupos visíveis diretamente;
+- ocultar/remover Legendas e Ações;
+- preservar os controles superiores necessários.
 
 ---
 
-## 10. Rotas de membro
+## 10. Retorno de perfil
+
+Arquivo:
+
+```txt
+src/app/pages/PersonProfile.tsx
+```
+
+Contrato atual:
+
+```txt
+TREE_RETURN_FALLBACK_PATH = /mapa-familiar
+ALLOWED_TREE_RETURN_PATHS = /, /mapa-familiar, /mapa-familiar-horizontal
+```
+
+Regras:
+
+- abrir perfil a partir de `/mapa-familiar` deve permitir retorno para `/mapa-familiar`;
+- abrir perfil a partir de `/mapa-familiar-horizontal` deve permitir retorno para `/mapa-familiar-horizontal`;
+- `?voltar=...` deve aceitar apenas caminhos internos permitidos;
+- caminhos externos, vazios ou não permitidos caem em `/mapa-familiar`;
+- `?pessoa=...` e demais search params de retorno podem ser preservados quando codificados no `voltar`.
+
+---
+
+## 11. Navegação, busca global e favoritos
+
+Arquivos:
+
+```txt
+src/app/constants/favoritePages.ts
+src/app/services/globalSearchService.ts
+src/app/components/layout/UserProfileMenu.tsx
+src/app/components/layout/MemberPageHeader.tsx
+```
+
+Estado atual:
+
+| Rota | Busca global | Favoritos | Observação |
+|---|---:|---:|---|
+| `/mapa-familiar` | Sim | Sim | View principal. |
+| `/mapa-familiar-horizontal` | Sim | Sim | View horizontal/genealógica. |
+| `/minha-arvore` | Não | Não | Removida. |
+| `/genealogia` | Não | Não | Removida. |
+| `/visao-completa` | Não | Não | Removida. |
+| `/minha-arvore/editar` | Não como página favorita da árvore | Não listado como atalho principal | Rota de edição protegida. |
+
+Regras:
+
+- navegação ativa não deve apontar para rotas removidas;
+- favoritos de página devem salvar rotas canônicas, sem `?pessoa=...`;
+- busca global pode indexar termos como “genealogia” para localizar `/mapa-familiar-horizontal`, desde que não use `/genealogia` como rota.
+
+---
+
+## 12. Rotas de membro
 
 | Rota | Componente | Guard |
 |---|---|---|
@@ -394,15 +435,14 @@ Regras:
 | `/forum/topico/:id` | `ForumTopico` | `MemberRoute` |
 | `/forum/topico/:id/editar` | `ForumEditarTopico` | `MemberRoute` |
 
-Regras:
+Observações:
 
-- edição de pessoa, arquivos e relacionamentos depende de permissões além do login;
-- retorno para árvore deve respeitar `voltar`;
-- `/pessoa/:id` e `/pessoas/:id` apontam para `PersonProfile`.
+- `/pessoas/:id` é alias de `/pessoa/:id`; se for removido futuramente, criar redirect ou plano de compatibilidade;
+- `/minha-arvore/editar` mantém nome histórico por compatibilidade e escopo funcional.
 
 ---
 
-## 11. Rotas administrativas
+## 13. Rotas administrativas
 
 | Rota | Componente | Guard |
 |---|---|---|
@@ -411,7 +451,7 @@ Regras:
 | `/admin/home` | `AdminHomeSettings` | `ProtectedRoute` |
 | `/admin/pessoas` | `AdminPessoas` | `ProtectedRoute` |
 | `/admin/pessoas/nova` | `AdminPessoaForm` | `ProtectedRoute` |
-| `/admin/pessoas/:id` | `AdminPessoaForm` ou equivalente | `ProtectedRoute` |
+| `/admin/pessoas/:id` | `AdminPessoaForm` | `ProtectedRoute` |
 | `/admin/pessoas/:id/editar` | `AdminPessoaForm` | `ProtectedRoute` |
 | `/admin/relacionamentos` | `AdminRelacionamentos` | `ProtectedRoute` |
 | `/admin/relacionamentos/novo` | `AdminRelacionamentoForm` | `ProtectedRoute` |
@@ -422,50 +462,86 @@ Regras:
 | `/admin/atividades` | `AdminAtividades` | `ProtectedRoute` |
 | `/admin/notificacoes` | `AdminNotificacoes` | `ProtectedRoute` |
 | `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos` | `ProtectedRoute` |
-| `/admin/login` | `AdminLogin` | pública/legada |
 
-Regras:
+`/admin/migrar-dados` é rota destrutiva e também depende da variável:
 
-- `/admin/login` não substitui `ProtectedRoute`;
-- rotas admin não devem ser acessíveis por usuário comum;
-- se RPC/admin falhar, bloquear por segurança.
-
----
-
-## 12. Busca global e favoritos
-
-Estado atual:
-
-- `/mapa-familiar` está em `GLOBAL_SEARCH_PAGES` e `FAVORITE_PAGES`.
-- `/mapa-familiar-horizontal` ainda não aparece como página própria nesses arrays.
-
-Pendência de produto:
-
-```txt
-Decidir se /mapa-familiar-horizontal deve ser indexada/favoritável como página independente.
-```
-
-Se sim, atualizar:
-
-```txt
-src/app/services/globalSearchService.ts
-src/app/constants/favoritePages.ts
-docs/funcionalidades/FAVORITOS.md
-docs/README.md
+```env
+VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
 ```
 
 ---
 
-## 13. Anti-regressões
+## 14. 404
 
-Não fazer sem revisão:
+A rota catch-all `*` renderiza uma página simples com:
 
-- recriar `/mapa-horizontal` ou `/visao-completa-teste`;
-- trocar `/` para `/minha-arvore` sem decisão de produto;
-- remover `TreeAccessRoute` das views da árvore;
-- trocar `TreeHomeShell` por páginas isoladas sem revisar estado compartilhado;
-- fazer `Horizontal` navegar para `/visao-completa`;
-- reativar `MobileTreeControlsPortal` nos Mapas Familiares;
-- usar UI escondida como substituto de guard/RLS/RPC;
-- perder search params ao trocar view;
-- persistir inferências visuais de geração automaticamente no banco.
+```txt
+404
+Página não encontrada
+Voltar para home
+```
+
+Deve cobrir:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+qualquer rota desconhecida
+```
+
+---
+
+## 15. Checklist antes de alterar rotas
+
+Rodar:
+
+```bash
+git status --short
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+```
+
+Buscas úteis:
+
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa"
+rg "TreeViewMode"
+rg "FAVORITE_PAGES|GLOBAL_SEARCH_PAGES"
+rg "ALLOWED_TREE_RETURN_PATHS|TREE_RETURN_FALLBACK_PATH"
+```
+
+Validações manuais:
+
+- `/` redireciona para `/mapa-familiar`;
+- `/?pessoa=abc` preserva a query ao redirecionar;
+- `/mapa-familiar` bloqueia visitante sem sessão;
+- `/mapa-familiar-horizontal` bloqueia visitante sem sessão;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` retornam 404;
+- `/minha-arvore/editar` bloqueia visitante sem sessão;
+- perfil permite retorno para as duas views oficiais;
+- favoritos e busca global exibem as duas views oficiais.
+
+---
+
+## 16. Regra final
+
+Rotas removidas não devem ser restauradas por documentação antiga.
+
+A baseline atual de árvore é:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Qualquer nova view exige:
+
+1. decisão de produto;
+2. alteração em `routes.tsx`;
+3. alteração em `treeViewMode.ts`;
+4. atualização de navegação, favoritos e busca se aplicável;
+5. testes E2E;
+6. documentação no mesmo commit.

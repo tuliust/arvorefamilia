@@ -1,9 +1,9 @@
 # Exportação da árvore
 
-> Última revisão: 2026-06-13
+> Última revisão: 2026-06-13  
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
-> Tipo: documentação funcional e técnica da exportação da árvore.  
-> Status: revisado contra `treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `DesktopFamilyMapView.tsx`, `DesktopFamilyHorizontalMapView.tsx`, `MobileFamilyHorizontalMapView.tsx`, `FamilyTreeVisualCards.tsx` e CSS de exportação.
+> Tipo: documentação funcional/técnica da exportação da árvore.  
+> Status: alinhado à baseline atual: views oficiais `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
 
@@ -16,42 +16,37 @@ A exportação permite gerar:
 - impressão;
 - recorte manual por área.
 
-Contrato atual:
+Contrato:
 
 ```txt
-Exportar a superfície capturável da view ativa ou a área selecionada pelo usuário,
+Exportar a superfície capturável da view ativa ou da área selecionada,
 sem incluir painel, header, bottom nav, overlays ou controles.
 ```
-
-Nas views de Mapa Familiar, a exportação deve preservar:
-
-- paleta ativa;
-- filtros ativos;
-- zoom/escala atual;
-- grupos visíveis/expandidos;
-- conectores SVG;
-- avatares/silhuetas/pets;
-- título da view composto no canvas.
 
 ---
 
 ## 2. Views cobertas
 
+Views oficiais:
+
 | View | Rota | Base técnica |
 |---|---|---|
-| Minha Árvore | `/minha-arvore` | ReactFlow |
-| Genealogia | `/genealogia` | ReactFlow |
-| Visão Completa | `/visao-completa` | ReactFlow |
-| Mapa Familiar Vertical | `/mapa-familiar` | HTML/CSS/SVG |
-| Mapa Familiar Horizontal desktop/tablet | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView` |
-| Mapa Familiar Horizontal mobile | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `MobileFamilyHorizontalMapView` |
+| Mapa Familiar | `/mapa-familiar` | HTML/CSS/SVG em `DesktopFamilyMapView`; mobile em `MobileFamilyTreeView` |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView`; mobile em `MobileFamilyHorizontalMapView` |
 
-Regra:
+Rotas antigas fora do produto ativo:
 
 ```txt
-Views ReactFlow capturam o root ReactFlow.
-Mapas Familiares capturam seus roots HTML/CSS/SVG próprios.
+/minha-arvore
+/genealogia
+/visao-completa
 ```
+
+Observação técnica:
+
+- `treeExport.ts` pode conter compatibilidades ou seletores herdados;
+- isso não significa que rotas antigas estejam ativas;
+- limpeza de exportação ligada a ReactFlow deve ocorrer junto da remoção planejada do renderer legado.
 
 ---
 
@@ -62,6 +57,7 @@ src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
@@ -69,6 +65,15 @@ src/app/pages/home/HomeTreeSection.tsx
 src/styles/home-sidebar-unified.css
 src/styles/family-map-horizontal.css
 src/styles/family-map-qa.css
+src/styles/mobile-tree-controls.css
+```
+
+Arquivos a preservar até refatoração própria:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 ```
 
 ---
@@ -77,35 +82,37 @@ src/styles/family-map-qa.css
 
 | Botão | Comportamento |
 |---|---|
-| `Área` | Abre overlay fixo para seleção retangular da área visível do alvo. |
-| `Imagem` | Captura a superfície exportável e baixa PNG. |
-| `PDF` | Captura a superfície exportável, compõe título no canvas e insere em PDF A4 proporcional. |
-| `Imprimir` | Captura a superfície exportável, compõe título no canvas e abre janela de impressão. |
+| Área | abre seleção retangular da área visível |
+| Imagem | baixa PNG |
+| PDF | gera PDF proporcional |
+| Imprimir | abre fluxo de impressão |
 
 Regras:
 
 - o painel dispara a ação;
-- a view ativa decide qual elemento capturar;
-- uma exportação em andamento bloqueia cliques repetidos;
-- erros devem liberar loading e exibir mensagem clara.
+- a view ativa decide o alvo de captura;
+- cliques repetidos devem ser bloqueados durante exportação;
+- erros devem liberar loading;
+- a futura remoção das abas `Filtros | Legendas | Ações` não pode quebrar esses botões.
 
 ---
 
 ## 5. Modelo de refs
 
-Nas views de Mapa Familiar:
+Nas views:
 
 | Ref | Papel |
 |---|---|
-| `viewportRef` | container visível/rolável, usado para scroll e seleção por área visível. |
-| `exportRootRef` | root exportável completo/normalizado. |
-| `mapSurfaceRef` | superfície interna escalada com cards, grupos e conectores. |
+| `viewportRef` | container visível/rolável |
+| `exportRootRef` | root exportável completo |
+| `mapSurfaceRef` | superfície interna escalada |
 
 Regras:
 
-- `Imagem`, `PDF` e `Imprimir` usam o root exportável da view;
-- `Área` usa alvo alinhado ao viewport/área visível, com `captureVisibleAreaOnly`;
-- `mapSurfaceRef` não deve ser usado isoladamente quando houver offsets, escala ou laterais normalizadas.
+- Imagem/PDF/Imprimir usam o root exportável;
+- Área usa alvo alinhado ao viewport visível;
+- `mapSurfaceRef` não deve ser capturado isoladamente quando houver offsets/escala;
+- mobile deve expor alvo coerente com a tela/geração ativa.
 
 ---
 
@@ -114,36 +121,33 @@ Regras:
 Responsabilidades:
 
 - montar nomes de arquivos;
-- resolver alvo padrão de exportação;
-- calcular tamanho e escala;
-- limitar tamanho preventivo;
-- capturar com `html2canvas`;
+- resolver alvo exportável;
+- medir dimensões;
+- aplicar limite preventivo de pixels;
+- capturar DOM com `html2canvas`;
 - recortar canvas;
-- baixar PNG;
-- gerar PDF;
-- abrir janela de impressão;
-- imprimir canvas;
+- gerar PNG/PDF/print;
 - compor título no canvas;
-- preservar SVGs internos;
 - ignorar UI transitória;
-- sanitizar cores não suportadas no clone.
+- sanitizar cores modernas incompatíveis;
+- normalizar SVGs internos.
 
-Funções/conceitos principais:
+Funções/conceitos:
 
-| Função/conceito | Papel |
+| Item | Papel |
 |---|---|
-| `buildTreeExportFilename` | Gera nome seguro com timestamp. |
-| `resolveTreeExportTarget` | Resolve root exportável por prioridade. |
-| `getElementCaptureMetrics` | Calcula dimensões e escala. |
-| `assertSafeElementCaptureSize` | Bloqueia capturas grandes demais. |
-| `captureElementToCanvas` | Captura DOM com `html2canvas`. |
-| `cropCanvas` | Recorta canvas por retângulo. |
-| `downloadCanvasAsPng` | Dispara download PNG. |
-| `exportCanvasAsPdf` | Gera PDF. |
-| `openTreePrintWindow` | Abre janela em branco para impressão. |
-| `printCanvas` | Escreve imagem, aguarda carregamento e dispara `window.print()`. |
-| `prependTitleToCanvas` | Adiciona faixa de título no topo do canvas. |
-| `waitForExportUiSettle` | Mantém feedback visual por tempo mínimo. |
+| `buildTreeExportFilename` | nome seguro com timestamp |
+| `resolveTreeExportTarget` | resolve root exportável |
+| `getElementCaptureMetrics` | calcula dimensões/escala |
+| `assertSafeElementCaptureSize` | bloqueia captura grande demais |
+| `captureElementToCanvas` | captura DOM |
+| `cropCanvas` | recorta canvas |
+| `downloadCanvasAsPng` | baixa PNG |
+| `exportCanvasAsPdf` | gera PDF |
+| `openTreePrintWindow` | abre janela de impressão |
+| `printCanvas` | imprime imagem |
+| `prependTitleToCanvas` | adiciona título |
+| `waitForExportUiSettle` | estabiliza feedback visual |
 
 ---
 
@@ -156,19 +160,18 @@ useCORS: true
 allowTaint: false
 removeContainer: true
 backgroundColor: definido pela view/opção
-scale: limitado por maxScale/devicePixelRatio
-windowWidth/windowHeight: no mínimo viewport e dimensão capturada
-scrollX/scrollY: compensados pelo scroll da janela
+scale: limitado
+windowWidth/windowHeight: adequados à captura
+scrollX/scrollY: compensados
 ```
 
 Regras:
 
 - não usar `allowTaint: true` sem revisão;
-- não depender de imagens externas sem CORS;
-- não capturar painel, overlays ou botões;
-- não capturar loading;
-- sanitizar cores modernas incompatíveis no clone;
-- normalizar SVGs internos dos cards.
+- não depender de imagem externa sem CORS;
+- não capturar painel, overlay, loading, header ou bottom nav;
+- sanitizar cores incompatíveis;
+- testar em desktop e mobile.
 
 ---
 
@@ -180,160 +183,101 @@ Componente:
 TreeAreaSelectionOverlay.tsx
 ```
 
-Características atuais:
-
-- overlay usa `position: fixed`;
-- recebe `getTargetElement`;
-- calcula `targetRect` por `getBoundingClientRect()`;
-- impede fechar por `Esc` quando há exportação em andamento;
-- exige seleção mínima de `80 x 80px`;
-- aplica limite preventivo de pixels;
-- usa `captureElementToCanvas(target, { captureVisibleAreaOnly: true })`;
-- recorta com base no retângulo selecionado;
-- compõe título no canvas recortado;
-- oferece PNG, PDF e impressão.
-
 Fluxo:
 
 ```txt
 Exportar > Área
-→ overlay fixo
-→ usuário arrasta
-→ toolbar aparece
-→ escolhe PNG/PDF/Imprimir
-→ loading local
-→ captura visível
-→ crop
-→ prependTitleToCanvas
-→ exportação
-→ pequeno settle
-→ fecha overlay
+-> overlay fixo
+-> usuário arrasta seleção
+-> toolbar aparece
+-> PNG/PDF/Imprimir
+-> captura visível
+-> crop
+-> título
+-> exportação
+-> fecha overlay
 ```
+
+Regras:
+
+- seleção mínima de `80 x 80px`;
+- impedir fechamento por `Esc` durante exportação;
+- respeitar limite preventivo de pixels;
+- não capturar interface transitória.
 
 ---
 
 ## 9. Loading de exportação
 
-Componentes/conceitos:
+Elementos/conceitos:
 
 ```txt
 TreeExportLoadingOverlay
 waitForTreeExportPaint
 waitForExportUiSettle
+data-tree-export-loading
+data-tree-export-ignore
 ```
 
 Regras:
 
 - loading aparece antes do `html2canvas`;
-- a view aguarda pintura com `waitForTreeExportPaint`;
-- o loading não deve fechar antes do download/PDF/print ser disparado;
-- para PNG/PDF, aguardar `waitForExportUiSettle`;
-- para impressão, `printCanvas` deve resolver apenas após a imagem carregar e `window.print()` ser chamado;
-- loading deve ser ignorado na captura por `data-tree-export-loading` e `data-tree-export-ignore`;
-- erro fecha loading em `finally`.
+- loading não entra na captura;
+- erro fecha loading em `finally`;
+- impressão só resolve depois de disparar `window.print()`.
 
 ---
 
 ## 10. Título no canvas
 
-As exportações de Mapa Familiar compõem o título diretamente no canvas.
+Títulos:
 
-| View | Título |
+| Rota | Título |
 |---|---|
 | `/mapa-familiar` | `Mapa Familiar de {primeiroNome}` ou `Mapa Familiar` |
 | `/mapa-familiar-horizontal` | `Genealogia de {primeiroNome}` ou `Genealogia` |
 
-Função:
-
-```txt
-prependTitleToCanvas(canvas, title)
-```
-
 Regras:
 
 - PNG recebe título no canvas;
-- PDF recebe canvas já titulado e deve evitar título duplicado;
+- PDF recebe canvas já titulado;
 - Impressão recebe canvas já titulado;
 - Área selecionada também recebe título;
-- o título visual da página não precisa estar dentro do DOM capturado;
-- o título deve usar fundo claro e texto legível.
+- evitar título duplicado no PDF.
 
 ---
 
-## 11. PDF
+## 11. SVGs e avatares
 
-Fluxo esperado:
+Problema prevenido:
 
 ```txt
-captureElementToCanvas
-→ prependTitleToCanvas
-→ exportCanvasAsPdf(canvas, filename, '')
+SVGs internos dos cards podem ser capturados como quadrados escuros.
 ```
 
-Atenção:
+Mitigações:
 
-- passar título vazio quando o canvas já tem título para evitar duplicação;
-- ajustar imagem proporcionalmente em A4;
-- orientação depende da proporção do canvas.
+- classes semânticas em `FamilyTreeVisualCards`;
+- normalização de SVGs no clone;
+- escopo separado para conectores;
+- evitar seletor global `svg path`.
 
----
-
-## 12. Impressão
-
-Fluxo esperado:
+Classes úteis:
 
 ```txt
-openTreePrintWindow
-→ captureElementToCanvas
-→ prependTitleToCanvas
-→ printCanvas
+family-map-avatar-icon
+family-map-person-silhouette
+family-map-pet-icon
+family-map-status-icon
+family-map-birth-icon
+family-map-deceased-icon
 ```
-
-`printCanvas` deve:
-
-- usar `toDataURL`;
-- escrever HTML de impressão;
-- aguardar carregamento da imagem;
-- focar a janela;
-- chamar `window.print()`;
-- resolver depois de disparar a impressão;
-- tratar janela bloqueada/fechada.
 
 ---
 
-## 13. SVGs, avatares e ícones
+## 12. Elementos ignorados
 
-Problema corrigido:
-
-```txt
-Alguns SVGs internos dos cards podiam virar quadrados escuros no html2canvas.
-```
-
-Mitigações atuais:
-
-- `FamilyTreeVisualCards.tsx` usa classes semânticas:
-  - `family-map-avatar-icon`;
-  - `family-map-person-silhouette`;
-  - `family-map-pet-icon`;
-  - `family-map-status-icon`;
-  - `family-map-birth-icon`;
-  - `family-map-deceased-icon`;
-- `treeExport.ts` normaliza SVGs no clone;
-- SVGs internos dos cards têm `currentColor`, `fill` e `stroke` resolvidos;
-- SVGs dos cards podem ser serializados como `data:image/svg+xml` no clone;
-- conectores são excluídos da rotina de serialização de ícones.
-
-Regras CSS:
-
-- não usar seletor amplo `svg path` sem escopo;
-- conectores devem ser estilizados por `[data-family-map-connectors="true"]`;
-- ícones internos não podem herdar stroke/fill dos conectores.
-
----
-
-## 14. Elementos ignorados
-
-Devem ser ignorados pelo clone/exportação:
+Devem ser ignorados:
 
 ```txt
 [data-tree-export-ignore="true"]
@@ -345,144 +289,81 @@ Devem ser ignorados pelo clone/exportação:
 .react-flow__minimap
 ```
 
+Mesmo que seletores ReactFlow permaneçam em utilitário, as views oficiais atuais são HTML/CSS/SVG.
+
 ---
 
-## 15. Mapa Familiar Vertical
+## 13. Mapa Familiar Vertical
 
-Root:
+Root esperado:
 
 ```txt
 [data-family-map-export-root="true"]
-```
-
-Arquivo:
-
-```txt
-DesktopFamilyMapView.tsx
 ```
 
 Regras:
 
 - capturar root exportável normalizado;
-- preservar laterais e offsets;
-- incluir conectores SVG;
-- respeitar modo wide;
-- respeitar `hideGroupChrome` quando `Destacar > Grupos` estiver ativo;
-- exportar com título `Mapa Familiar de {primeiroNome}`;
-- não capturar painel ou header.
+- preservar conectores SVG;
+- respeitar paleta e filtros;
+- respeitar `hideGroupChrome`;
+- não capturar painel;
+- exportar com título de Mapa Familiar.
 
 ---
 
-## 16. Mapa Familiar Horizontal
+## 14. Mapa Familiar Horizontal
 
-Roots:
-
-```txt
-[data-family-map-export-root="true"]
-[data-family-map-horizontal-root="true"]
-```
-
-Arquivo:
+Roots/atributos esperados:
 
 ```txt
-DesktopFamilyHorizontalMapView.tsx
+data-family-map-horizontal-root
+data-mobile-family-horizontal-root
 ```
 
 Regras:
 
-- capturar colunas ativas;
-- preservar conectores SVG casal/filhos;
-- respeitar cabeçalhos ocultos quando `Destacar > Grupos` estiver ativo;
-- exportar com título `Genealogia de {primeiroNome}`;
-- não usar `.react-flow` como alvo principal.
+- capturar superfície horizontal completa ou geração/área ativa no mobile;
+- preservar conectores;
+- preservar compactação de colunas;
+- respeitar `Destacar > Grupos`;
+- exportar com título de Genealogia.
 
 ---
 
-## 17. Mobile
+## 15. QA obrigatório
 
-Nas rotas do Mapa Familiar:
+Testar:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
+desktop
+mobile
+paletas
+filtros
+destaques
+Área
+Imagem
+PDF
+Imprimir
 ```
 
-Regras:
+Comandos:
 
-- ações são disparadas pelo modal mobile de controles aberto pelo `HomeMobileNav`;
-- modal de controles, painel, header, bottom nav e botão de controle não entram na captura;
-- seleção por área deve considerar a área visível da árvore;
-- o alvo não deve ser a interface inteira.
-
----
-
-
-### 17.1 `/mapa-familiar-horizontal` mobile
-
-No mobile, `/mapa-familiar-horizontal` usa `MobileFamilyHorizontalMapView`.
-
-Contrato de exportação:
-
-- a view mobile é paginada por geração;
-- a exportação direta deve capturar a superfície mobile ativa, respeitando geração ativa, filtros e paleta;
-- a exportação por área deve considerar apenas a área visível/selecionada da tela atual;
-- header, bottom nav, chips de geração, modal de controles e overlays continuam fora da captura;
-- o título composto no canvas permanece `Genealogia de {primeiroNome}` ou `Genealogia`.
-
-Observação de produto:
-
-```txt
-Caso o produto decida exportar sempre todas as gerações no mobile, essa regra deve ser alterada em `MobileFamilyHorizontalMapView` e nesta documentação.
+```bash
+npm run build
+npm test
+npm run test:e2e
+git diff --check
 ```
 
+Critérios:
 
-## 18. Limites e performance
-
-Limites:
-
-```txt
-DEFAULT_TREE_EXPORT_MAX_SCALE = 2
-DEFAULT_TREE_EXPORT_MAX_PIXELS = 24_000_000
-MAX_EXPORT_PIXELS em área = 12_000_000
-```
-
-Boas práticas:
-
-- reduzir zoom antes de exportar se a área for grande demais;
-- usar `Área` para recortes grandes;
-- manter loading durante processamento;
-- evitar sombras e filtros pesados desnecessários em clones de exportação;
-- validar em paletas white, visual, orange e brown.
-
----
-
-## 19. QA obrigatório
-
-Testar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
-
-| Ação | Verificação |
-|---|---|
-| Imagem | PNG com título, cards, conectores e avatares corretos. |
-| PDF | PDF sem título duplicado. |
-| Imprimir | Janela abre com imagem pronta e título no conteúdo. |
-| Área PNG | Recorte respeita seleção e inclui título. |
-| Área PDF | Recorte em PDF com título. |
-| Área Imprimir | Recorte impresso com título. |
-| Loading | Aparece antes e não fecha cedo demais. |
-| SVGs | Silhuetas/pets/estrela/cruz não viram quadrados. |
-| UI | Painel, loading e overlays não aparecem no artefato. |
-
----
-
-## 20. Anti-regressões
-
-Não fazer:
-
-- usar `allowTaint: true`;
-- remover `useCORS`;
-- capturar header/painel por engano;
-- aplicar CSS global em todos os `svg path`;
-- usar `mapSurfaceRef` isoladamente como alvo de seleção se o viewport/root tiver outro sistema de coordenadas;
-- duplicar título no PDF;
-- fechar loading antes de `printCanvas` resolver;
-- reintroduzir exportação por `.react-flow` no Mapa Familiar.
+- painel não aparece no resultado;
+- título aparece uma vez;
+- SVGs aparecem corretamente;
+- PDF proporcional;
+- impressão abre janela;
+- área selecionada corresponde à seleção;
+- loading fecha em erro/sucesso.

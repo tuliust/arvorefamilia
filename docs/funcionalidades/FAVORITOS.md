@@ -1,44 +1,119 @@
 # Favoritos
 
-> Última revisão: 2026-06-13
-> Local canônico: `docs/funcionalidades/FAVORITOS.md`
-> Tipo: documentação funcional/técnica de favoritos.
-> Status: revisado contra o código atual; favoritos de página estão implementados, `/mapa-familiar` consta em `FAVORITE_PAGES` e `/mapa-familiar-horizontal` permanece pendência de produto para entrar como página própria.
+> Última revisão: 2026-06-13  
+> Local canônico: `docs/funcionalidades/FAVORITOS.md`  
+> Tipo: documentação funcional/técnica de favoritos.  
+> Status: alinhado ao código atual de `src/app/constants/favoritePages.ts` e `src/app/services/globalSearchService.ts`.
 
-Documentação funcional e técnica da funcionalidade de favoritos do projeto `arvorefamilia`.
+---
 
-## Objetivo
+## 1. Objetivo
 
-A funcionalidade de favoritos permite que cada usuário autenticado salve conteúdos relevantes da árvore familiar para consulta posterior em `/meus-favoritos`.
+A funcionalidade de favoritos permite que cada usuário autenticado salve conteúdos relevantes para consulta posterior em `/meus-favoritos`.
 
-A implementação deve preservar três princípios:
+Princípios:
 
 1. favoritos são individuais por usuário;
 2. favoritos não devem expor dados de outros usuários;
-3. favoritos devem apontar para entidades com identificador estável e destino claro.
+3. favoritos devem apontar para entidade ou rota estável;
+4. favoritos de página usam rota canônica, não estado visual temporário.
 
-## Estado atual
+---
 
-A página `/meus-favoritos` existe e lista favoritos gravados na tabela genérica `user_favorites`.
+## 2. Estado atual
 
-Atualmente, estão ativos ou preparados para uso real:
+A página `/meus-favoritos` lista registros da tabela genérica:
 
-- Pessoas;
-- Arquivos históricos;
-- Tópicos do fórum;
-- Eventos pessoais;
-- Páginas internas.
+```txt
+user_favorites
+```
 
-Categorias ambíguas permanecem ocultas da UI de filtros até terem semântica e destino definidos:
+Tipos implementados ou preparados:
 
-- Relacionamentos;
-- Eventos familiares;
-- Timeline;
-- Histórias.
+- pessoas;
+- arquivos históricos;
+- tópicos do fórum;
+- eventos pessoais;
+- páginas internas.
 
-## Modelo de dados
+Categorias ambíguas permanecem ocultas da UI de filtros até terem destino claro:
 
-A tabela `user_favorites` é genérica e trabalha com `entity_type` + `entity_id`.
+- relacionamentos;
+- eventos familiares;
+- timeline;
+- histórias.
+
+---
+
+## 3. Páginas favoritáveis
+
+Catálogo técnico:
+
+```txt
+src/app/constants/favoritePages.ts
+```
+
+Páginas atualmente suportadas:
+
+| ID | Título | Path |
+|---|---|---|
+| `mapa-familiar` | Mapa Familiar | `/mapa-familiar` |
+| `mapa-familiar-horizontal` | Mapa Familiar Horizontal | `/mapa-familiar-horizontal` |
+| `meus-dados` | Meus Dados | `/meus-dados` |
+| `meus-vinculos` | Meus Vínculos | `/meus-vinculos` |
+| `notificacoes` | Notificações | `/notificacoes` |
+| `ajustar-notificacoes` | Ajustar Notificações | `/ajustar-notificacoes` |
+| `forum` | Fórum | `/forum` |
+| `calendario` | Calendário Familiar | `/calendario-familiar` |
+
+Rotas antigas que não devem ser favoritáveis como páginas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Exceção:
+
+```txt
+/minha-arvore/editar
+```
+
+é uma rota vigente de edição, mas não é atalho principal de view da árvore.
+
+---
+
+## 4. Busca global relacionada
+
+Catálogo técnico:
+
+```txt
+src/app/services/globalSearchService.ts
+```
+
+A busca global também inclui:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Regra:
+
+- favoritos e busca global devem permanecer sincronizados para as views oficiais;
+- rotas antigas não devem voltar como páginas buscáveis/favoritáveis;
+- termos como “genealogia” podem aparecer como keyword da horizontal, mas não como rota `/genealogia`.
+
+---
+
+## 5. Modelo de dados
+
+Tabela:
+
+```txt
+user_favorites
+```
 
 Campos principais:
 
@@ -53,17 +128,23 @@ Campos principais:
 - `created_at`;
 - `updated_at`.
 
-Há unicidade por usuário, tipo e entidade:
+Unicidade conceitual:
 
 ```txt
 user_id + entity_type + entity_id
 ```
 
-Isso evita duplicidade do mesmo favorito para o mesmo usuário.
+---
 
-## Tipos técnicos aceitos
+## 6. Tipos técnicos
 
-O tipo `FavoriteEntityType` aceita:
+Tipo:
+
+```txt
+FavoriteEntityType
+```
+
+Valores aceitos:
 
 ```txt
 person
@@ -77,39 +158,35 @@ timeline_item
 story
 ```
 
-Nem todos os tipos devem estar visíveis na UI antes de terem suporte funcional real.
+Nem todo tipo deve aparecer em filtro de UI.
 
-## Categorias visíveis em `/meus-favoritos`
+---
 
-A UI de filtros deve exibir apenas categorias com implementação segura e destino claro.
-
-Categorias visíveis atualmente:
+## 7. Categorias visíveis
 
 | Filtro | `entity_type` | Status |
 |---|---|---|
-| Todos | `all` | Ativo |
-| Pessoas | `person` | Ativo |
-| Arquivos históricos | `historical_file` | Ativo |
-| Fórum | `forum_topic` | Ativo |
-| Eventos pessoais | `person_event` | Ativo |
-| Páginas | `page` | Ativo |
+| Todos | `all` | ativo |
+| Pessoas | `person` | ativo |
+| Arquivos históricos | `historical_file` | ativo |
+| Fórum | `forum_topic` | ativo |
+| Eventos pessoais | `person_event` | ativo |
+| Páginas | `page` | ativo |
 
-Categorias ocultas temporariamente:
+Categorias ocultas:
 
-| Filtro | `entity_type` | Motivo |
-|---|---|---|
-| Relacionamentos | `relationship` | Falta destino claro de abertura e definição de escopo |
-| Eventos familiares | `family_event` | Eventos do calendário são majoritariamente derivados |
-| Timeline | `timeline_item` | Timeline é agregadora e pode duplicar favoritos de entidades reais |
-| Histórias | `story` | Ainda não existe entidade persistida clara |
+| Categoria | Motivo |
+|---|---|
+| Relacionamentos | falta rota/destino próprio |
+| Eventos familiares | muitos eventos são derivados |
+| Timeline | agregadora, não entidade forte |
+| Histórias | entidade persistida ainda não consolidada |
 
-Mesmo ocultas nos filtros, categorias antigas ou futuras podem aparecer em “Todos” se existirem registros na tabela, desde que tenham `label` e, idealmente, `href`.
+---
 
-## Componentes e services principais
+## 8. Componentes e services
 
 ### Service
-
-Arquivo:
 
 ```txt
 src/app/services/favoritesService.ts
@@ -117,16 +194,14 @@ src/app/services/favoritesService.ts
 
 Responsabilidades:
 
-- listar favoritos do usuário atual;
-- verificar se uma entidade já está favoritada;
-- adicionar favorito;
-- remover favorito por entidade;
-- remover favorito por ID;
+- listar favoritos;
+- verificar favorito existente;
+- adicionar;
+- remover por entidade;
+- remover por ID;
 - alternar favorito.
 
 ### Botão genérico
-
-Arquivo:
 
 ```txt
 src/app/components/favorites/FavoriteButton.tsx
@@ -134,15 +209,12 @@ src/app/components/favorites/FavoriteButton.tsx
 
 Responsabilidades:
 
-- exibir estado ativo/inativo;
-- carregar estado inicial;
-- adicionar/remover favorito;
-- bloquear múltiplos cliques durante loading;
-- expor `aria-label` adequado.
+- estado ativo/inativo;
+- loading;
+- `aria-label`;
+- prevenção de clique duplicado.
 
 ### Botões específicos
-
-Arquivos atuais:
 
 ```txt
 src/app/components/favorites/HistoricalFileFavoriteButton.tsx
@@ -151,19 +223,13 @@ src/app/components/favorites/PersonEventFavoriteButton.tsx
 src/app/components/favorites/PageFavoriteButton.tsx
 ```
 
-Esses componentes encapsulam payloads e metadados específicos de cada entidade para evitar duplicação de lógica nas páginas.
+---
 
-## Pessoas
+## 9. Pessoas
 
-### Status
+Status: implementado.
 
-Implementado.
-
-### Onde aparece
-
-- Perfil da pessoa.
-
-### Payload
+Payload:
 
 ```txt
 entityType = person
@@ -174,31 +240,29 @@ href = /pessoa/:id
 metadata = { source: "person_profile" }
 ```
 
-### Observações
+Regras:
 
-Pessoas são a categoria mais estável da funcionalidade. Devem permanecer ativas na UI.
+- usar UUID real;
+- não expor dados sensíveis;
+- respeitar permissões/RLS.
 
-## Arquivos históricos
+---
 
-### Status
+## 10. Arquivos históricos
 
-Implementado.
+Status: implementado.
 
-### Onde aparece
-
-- Cards de arquivos históricos em `ArquivosHistoricos`.
-
-### Payload
+Payload:
 
 ```txt
 entityType = historical_file
 entityId = arquivo.id
 label = arquivo.titulo || "Arquivo histórico"
 description = arquivo.descricao || arquivo.ano || categoria || tipo
-href = /pessoa/:pessoa_id, quando houver pessoa vinculada
+href = /pessoa/:pessoa_id
 ```
 
-### Metadata
+Metadata permitida:
 
 ```txt
 file_type
@@ -209,24 +273,23 @@ pessoa_id
 relacionamento_id
 ```
 
-### Regras específicas
+Não salvar:
 
-- Não salvar `url`, `file_url`, base64, caminho de Storage ou dados sensíveis em `metadata`.
-- O botão só deve aparecer para arquivos com UUID real.
-- Arquivos temporários criados antes de persistência não devem ser favoritáveis.
+```txt
+url
+file_url
+base64
+storage path sensível
+token
+```
 
-## Fórum
+---
 
-### Status
+## 11. Fórum
 
-Implementado para tópicos.
+Status: tópicos implementados.
 
-### Onde aparece
-
-- Cards da listagem do fórum;
-- página de detalhe do tópico.
-
-### Payload
+Payload:
 
 ```txt
 entityType = forum_topic
@@ -236,32 +299,18 @@ description = topico.conteudo || categoria || "Tópico do fórum"
 href = /forum/topico/:id
 ```
 
-### Metadata
+Decisão:
 
-```txt
-tipo
-status
-categoria_id
-pessoa_relacionada_id
-```
+- favoritar fórum significa favoritar tópico;
+- comentários/respostas não têm favorito próprio nesta etapa.
 
-### Decisão de produto
+---
 
-Favoritar “Fórum” significa favoritar tópico, não categoria, comentário ou resposta.
+## 12. Eventos pessoais
 
-Comentários e respostas não têm favorito próprio nesta etapa.
+Status: implementado.
 
-## Eventos pessoais
-
-### Status
-
-Implementado.
-
-### Onde aparece
-
-- Cards de “Eventos da vida” no perfil da pessoa.
-
-### Payload
+Payload:
 
 ```txt
 entityType = person_event
@@ -271,62 +320,13 @@ description = evento.descricao || evento.local || evento.data_evento || "Evento 
 href = /pessoa/:pessoa_id
 ```
 
-### Metadata
+---
 
-```txt
-event_type
-data_evento
-local
-pessoa_id
-```
+## 13. Páginas internas
 
-### Observações
+Status: implementado.
 
-Eventos pessoais são persistidos em `person_events`, por isso têm ID estável e podem ser favoritados sem migration.
-
-## Páginas internas
-
-### Status
-
-Implementado.
-
-### Onde aparece
-
-- Header padrão de páginas internas com `MemberPageHeader`;
-- header das views da árvore com `HomeHeader`.
-
-### Catálogo
-
-Arquivo:
-
-```txt
-src/app/constants/favoritePages.ts
-```
-
-Páginas suportadas no código atual:
-
-```txt
-/minha-arvore
-/mapa-familiar
-/genealogia
-/visao-completa
-/calendario-familiar
-/forum
-/notificacoes
-/ajustar-notificacoes
-/meus-dados
-/meus-vinculos
-```
-
-Observação contra o código atual:
-
-```txt
-/mapa-familiar
-```
-
-A rota `/mapa-familiar` existe como view da árvore e consta em `src/app/constants/favoritePages.ts`, portanto deve ser tratada como página favoritável implementada.
-
-### Payload
+Payload:
 
 ```txt
 entityType = page
@@ -337,359 +337,71 @@ href = path
 metadata = { source: "page_shortcut" }
 ```
 
-### Decisão de produto
-
-Favoritar página funciona como atalho salvo para rota interna.
-
-### Mapa Familiar
-
-Status atual: implementado no catálogo de favoritos.
-
-A página `/mapa-familiar` deve ser tratada como favorito de página porque já está incluída em `src/app/constants/favoritePages.ts`.
-
-Payload esperado:
+### `/mapa-familiar`
 
 ```txt
 entityType = page
 entityId = /mapa-familiar
 label = Mapa Familiar
-description = Visualização panorâmica da árvore familiar
 href = /mapa-familiar
-metadata = { source: "page_shortcut" }
 ```
 
-Arquivos a manter sincronizados:
-
-```txt
-src/app/constants/favoritePages.ts
-src/app/services/globalSearchService.ts
-src/app/components/FamilyTree/treeViewMode.ts
-```
-
-Regra:
-
-- favoritar `/mapa-familiar` salva a página, não uma pessoa nem um estado visual de zoom/filtros;
-- `?pessoa=...` pode ser preservado na navegação da sessão, mas o favorito de página deve apontar para a rota canônica;
-- a antiga pendência `DOC-015` foi concluída após inclusão de `/mapa-familiar` em `FAVORITE_PAGES` e `GLOBAL_SEARCH_PAGES`.
-
-
-### Mapa Familiar Horizontal
-
-Status atual: **pendente de decisão de produto** como favorito de página próprio.
-
-A rota `/mapa-familiar-horizontal` existe como view oficial da árvore, mas não deve ser documentada como favorita implementada enquanto não constar em:
-
-```txt
-src/app/constants/favoritePages.ts
-```
-
-Decisão pendente:
-
-```txt
-Definir se `/mapa-familiar-horizontal` deve aparecer em FAVORITE_PAGES e GLOBAL_SEARCH_PAGES como página independente ou se o atalho de Mapa Familiar deve continuar apontando apenas para `/mapa-familiar`.
-```
-
-Se for implementado, payload recomendado:
+### `/mapa-familiar-horizontal`
 
 ```txt
 entityType = page
 entityId = /mapa-familiar-horizontal
 label = Mapa Familiar Horizontal
-description = Visualização genealógica horizontal por gerações
 href = /mapa-familiar-horizontal
-metadata = { source: "page_shortcut" }
 ```
 
 Regras:
 
-- favoritar a horizontal deve salvar a rota canônica, não a geração mobile ativa;
-- `?pessoa=...` pode continuar sendo preservado pela navegação, mas o favorito de página deve ser estável;
-- se a horizontal entrar em favoritos, atualizar também `GLOBAL_SEARCH_PAGES`, `docs/README.md` e `docs/PLANO_PROXIMOS_PASSOS.md`.
+- não salvar zoom, filtros, geração mobile ou `?pessoa=...` como favorito de página;
+- query params podem ser preservados na navegação da sessão, não no catálogo fixo.
 
+---
 
-## Relacionamentos
+## 14. Registros legados
 
-### Status
-
-Oculto temporariamente.
-
-### Diagnóstico
-
-Existe entidade `Relacionamento`, mas não existe rota própria estável como `/relacionamento/:id`.
-
-Relacionamentos podem representar:
-
-- cônjuge;
-- pai;
-- mãe;
-- filho;
-- irmão.
-
-Para favoritos, isso é ambíguo.
-
-### Decisão recomendada
-
-Quando a categoria voltar, “Relacionamentos” deve significar apenas relacionamentos conjugais:
-
-- casamento;
-- união;
-- separação como estado/metadado.
-
-Relações pai/mãe/filho/irmão devem continuar representadas pela árvore e pelos perfis de pessoas.
-
-### Payload futuro sugerido
+Pode haver favoritos antigos gravados com:
 
 ```txt
-entityType = relationship
-entityId = relacionamento.id
-label = Relacionamento de Pessoa A e Pessoa B
-description = Casamento/União · local/data
-href = /pessoa/:idDaPessoaPrincipal
+/minha-arvore
+/genealogia
+/visao-completa
 ```
 
-### Metadata futura sugerida
+Tratamento recomendado:
 
-```txt
-relationship_type
-relationship_subtype
-pessoa_origem_id
-pessoa_destino_id
-data_casamento
-data_separacao
-local_casamento
-local_separacao
-```
+- não reativar rotas para suportar favorito antigo;
+- criar estratégia de migração/normalização se registros existirem;
+- mapear `/minha-arvore` para `/mapa-familiar` apenas se houver decisão explícita;
+- não mapear `/genealogia` ou `/visao-completa` automaticamente sem avaliar intenção.
 
-### Critério para reativar filtro
+---
 
-Reativar apenas quando houver decisão sobre destino de abertura:
+## 15. Validação
 
-1. perfil de uma das pessoas com âncora de relacionamentos; ou
-2. modal/tela própria de relacionamento; ou
-3. futura rota `/relacionamento/:id`.
-
-## Eventos familiares
-
-### Status
-
-Oculto temporariamente.
-
-### Diagnóstico
-
-O calendário familiar atual trabalha majoritariamente com eventos derivados de pessoas e relacionamentos, como:
-
-- aniversário;
-- falecimento/memória;
-- casamento.
-
-Esses eventos podem ter IDs sintéticos e dados recalculados a partir da data atual ou dos dados-base.
-
-### Decisão recomendada
-
-Não tratar eventos familiares derivados como entidade forte neste momento.
-
-Alternativas atuais:
-
-- favoritar a pessoa;
-- favoritar a página Calendário Familiar;
-- futuramente, favoritar relacionamento conjugal para casamentos.
-
-### Payload futuro possível, se for adotado snapshot
-
-```txt
-entityType = family_event
-entityId = evento.id
-label = evento.titulo
-description = evento.descricao
-href = evento.link || /calendario-familiar
-```
-
-### Metadata futura possível
-
-```txt
-calendar_event_type
-category
-pessoa_id
-related_person_ids
-day
-month
-original_year
-source = derived_calendar
-```
-
-### Quando exigiria migration
-
-Migration será recomendada se eventos familiares passarem a ser entidades manuais/persistidas com CRUD próprio, permissões próprias e página/detalhe próprio.
-
-## Timeline
-
-### Status
-
-Oculto temporariamente.
-
-### Diagnóstico
-
-A timeline é uma visão agregadora, construída a partir de outras entidades:
-
-- pessoa;
-- relacionamento;
-- arquivo histórico;
-- evento pessoal;
-- evento familiar.
-
-Muitos itens de timeline já correspondem a entidades que podem ou poderão ser favoritadas diretamente.
-
-### Decisão recomendada
-
-Timeline não deve ter favoritos próprios no MVP expandido.
-
-Ela deve herdar favoritos das entidades de origem:
-
-| Item da timeline | Favorito correto |
-|---|---|
-| Arquivo histórico | `historical_file` |
-| Evento pessoal | `person_event` |
-| Casamento/união/separação | futuro `relationship` |
-| Nascimento/falecimento | `person` ou futuro snapshot familiar |
-| Memória | `person_event` tipo `memoria` ou `forum_topic` tipo `memoria` |
-
-### Quando usar `timeline_item`
-
-Somente se houver necessidade futura de salvar uma composição narrativa que não exista como entidade de origem.
-
-## Histórias
-
-### Status
-
-Oculto temporariamente.
-
-### Diagnóstico
-
-Ainda não há entidade persistida clara chamada `story`.
-
-O conceito de história pode aparecer hoje como:
-
-- tópico do fórum do tipo memória;
-- evento pessoal do tipo memória;
-- item de timeline do tipo memória.
-
-### Decisão recomendada
-
-Não ativar `story` enquanto não existir entidade própria.
-
-No curto prazo:
-
-- histórias coletivas ou conversáveis devem ser tópicos do fórum do tipo memória;
-- histórias ligadas a uma pessoa devem ser eventos pessoais do tipo memória;
-- histórias exibidas na timeline devem herdar o favorito da entidade de origem.
-
-### Quando exigiria migration
-
-Migration será necessária se o produto criar uma entidade editorial própria, por exemplo:
-
-```txt
-stories
-story_people
-story_files
-story_visibility
-```
-
-Com isso, `story` poderia voltar como categoria real em `/meus-favoritos`.
-
-## Regra para exibição de categorias em `/meus-favoritos`
-
-A página `/meus-favoritos` deve separar:
-
-1. labels técnicos para todos os tipos aceitos;
-2. filtros visíveis apenas para categorias com suporte real.
-
-Assim, registros antigos ou futuros não quebram a listagem em “Todos”, mas a UI não promete categorias sem funcionalidade.
-
-Regra prática:
-
-```txt
-Se não existe categoria funcional específica, não exibir botão/filtro da categoria.
-```
-
-## Padrão visual
-
-### Ícone
-
-Usar `Star` do `lucide-react`.
-
-### Estado inativo
-
-- botão neutro;
-- estrela sem preenchimento;
-- `aria-label="Adicionar aos favoritos"`.
-
-### Estado ativo
-
-- estrela preenchida;
-- destaque amarelo/laranja conforme padrão do `FavoriteButton`;
-- `aria-label="Remover dos favoritos"`.
-
-### Loading
-
-- botão desabilitado durante ação;
-- não permitir duplo clique.
-
-### Cards pequenos
-
-- usar botão circular ou quadrado compacto;
-- preferir canto superior direito ou linha de ações;
-- não envolver o botão dentro de `<Link>` do card;
-- não bloquear o clique principal do card.
-
-### Páginas de detalhe
-
-- posicionar no header da página ou próximo ao título principal;
-- evitar conflito com editar/remover.
-
-### Mobile
-
-- manter área clicável confortável;
-- evitar sobreposição com navegação inferior;
-- em cards compactos, usar botão icon-only com `aria-label` claro.
-
-## Segurança e privacidade
-
-A implementação deve seguir estas regras:
-
-- favorito pertence ao usuário autenticado;
-- nunca expor favoritos de outro usuário;
-- não salvar URLs sensíveis, signed URLs, base64, tokens, telefones, e-mails ou endereços em `metadata`;
-- tratar entidade removida/inacessível com fallback em `/meus-favoritos`;
-- preservar RLS;
-- não alterar service role ou secrets.
-
-## Critérios para adicionar nova categoria
-
-Antes de tornar uma nova categoria visível em `/meus-favoritos`, validar:
-
-1. existe entidade ou chave estável?
-2. existe rota/destino claro?
-3. o favorito não duplica outra entidade já favoritada?
-4. metadata não expõe dado sensível?
-5. a entidade respeita permissões/RLS?
-6. existe estado vazio adequado?
-7. existe comportamento claro quando a entidade for removida?
-
-## Validação após alterações
-
-Após qualquer alteração relacionada a favoritos, validar:
+Após alterar favoritos:
 
 ```bash
-git diff --check
 npm run build
-git status --short
+npm test
+npm run test:e2e
+git diff --check
 ```
 
-Quando houver outras frentes alterando `docs/`, a validação pode ser filtrada para os arquivos da frente de favoritos, mantendo o build completo.
+Buscas:
 
-## Anti-regressões específicas do Mapa Familiar
+```bash
+rg "FAVORITE_PAGES"
+rg "GLOBAL_SEARCH_PAGES"
+rg "/minha-arvore|/genealogia|/visao-completa" src/app/constants src/app/services docs/funcionalidades/FAVORITOS.md
+```
 
-- Não remover `/mapa-familiar` do catálogo de favoritos se a rota estiver liberada no header.
-- Não salvar estado de zoom, grupos expandidos ou filtros do Mapa Familiar como favorito de página sem decisão específica.
-- Não favoritar pessoas a partir da rota `/mapa-familiar` usando `entity_type = page`; pessoa continua usando `entity_type = person`.
-- Não armazenar dados sensíveis, dumps de layout ou snapshots HTML/SVG em `metadata`.
+Critério:
+
+- catálogo ativo tem as duas views oficiais;
+- rotas antigas não aparecem como páginas favoritáveis;
+- `/minha-arvore/editar` não é confundida com view antiga.

@@ -1,37 +1,42 @@
 # Guia de correção de erros - Árvore Família
 
-> Última revisão: 2026-06-13
-> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
-> Projeto: `tuliust/arvorefamilia`
-> Status: guia canônico revisado contra o código atual com troubleshooting do Mapa Familiar, horizontal mobile por geração, modal mobile de controles, modo wide, título ocultável, avatares por `genero`, exportação, busca e favoritos.
+> Última revisão: 2026-06-13  
+> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: troubleshooting alinhado à baseline atual: `/mapa-familiar` e `/mapa-familiar-horizontal` são as únicas views oficiais da árvore.
 
-## Objetivo
+---
 
-Este documento orienta investigação e correção de erros por **sintoma observado**.
+## 1. Objetivo
+
+Este documento orienta investigação e correção de erros por sintoma observado.
 
 Use quando houver:
 
 - build quebrado;
-- tela que não carrega;
+- teste falhando;
+- rota errada;
 - regressão visual;
-- falha de permissão;
-- erro de Supabase/RLS/migration;
-- falha de Storage;
-- falha de notificações;
-- comportamento inesperado em árvore, perfil, fórum, favoritos ou calendário.
+- falha de exportação;
+- falha de favoritos/busca;
+- problema em guards;
+- problema mobile;
+- comportamento inesperado da árvore.
 
-Este documento não substitui:
+Este guia não substitui:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: estado implementado;
-- `docs/GUIA_COMPONENTES.md`: componentes e responsabilidades;
-- `docs/GUIA_UX_LAYOUT.md`: decisões visuais;
-- `docs/PLANO_PROXIMOS_PASSOS.md`: pendências reais e backlog;
-- `docs/operacao/MIGRATIONS_SUPABASE.md`: procedimento operacional de migrations;
-- `docs/funcionalidades/*.md`: detalhes funcionais por área.
+| Tema | Documento |
+|---|---|
+| Baseline | `docs/BASELINE_PRODUTO_ATUAL.md` |
+| Regras de não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
+| Implementações | `docs/GUIA_IMPLEMENTACOES.md` |
+| Componentes | `docs/GUIA_COMPONENTES.md` |
+| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
+| Rotas | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 
 ---
 
-## 1. Checklist inicial
+## 2. Checklist inicial
 
 Antes de alterar código:
 
@@ -41,18 +46,6 @@ npm run build
 git diff --check
 ```
 
-Se envolver banco:
-
-```bash
-supabase migration list
-```
-
-Se envolver Edge Functions:
-
-```bash
-supabase functions list
-```
-
 Se envolver testes:
 
 ```bash
@@ -60,18 +53,25 @@ npm test
 npm run test:e2e
 ```
 
-Regras:
+Se envolver rotas antigas:
 
-- corrigir o primeiro erro real antes de tratar erros derivados;
-- não rodar `supabase db push` sem revisar migrations;
-- não usar `migration repair` para mascarar migration não aplicada;
-- não commitar secrets, dumps, tokens, service role, `.bak`, patches locais ou saídas de build;
-- não ampliar RLS para resolver leitura/escrita sem entender a regra de negócio;
-- não apagar dados legados/base64 sem auditoria.
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa"
+rg "minha-arvore|genealogia|visao-completa"
+```
+
+Interpretação:
+
+- `/minha-arvore/editar` pode aparecer;
+- `docs/historico/` pode aparecer;
+- a palavra “genealogia” pode aparecer como conceito;
+- `/genealogia` não deve voltar como rota ativa;
+- `/visao-completa` não deve voltar como rota ativa;
+- `/minha-arvore` não deve voltar como view ativa.
 
 ---
 
-## 2. Build quebrado
+## 3. Build quebrado
 
 Arquivos prováveis:
 
@@ -80,8 +80,7 @@ src/app/routes.tsx
 src/app/pages/
 src/app/components/
 src/app/services/
-src/app/types/index.ts
-src/app/utils/
+src/app/types/
 package.json
 vite.config.ts
 tsconfig.json
@@ -90,1272 +89,357 @@ tsconfig.json
 Causas comuns:
 
 - import inexistente;
-- export ausente;
-- componente movido sem ajustar caminho;
-- tipo novo ausente em `types/index.ts`;
-- campo de banco usado no frontend sem tipo;
+- export removido;
+- tipo ausente;
+- JSX inválido;
+- componente movido sem atualizar caminho;
 - dependência não instalada;
-- JSX inválido após script;
 - conflito de merge;
-- arquivo salvo com encoding problemático.
+- arquivo com encoding corrompido.
 
 Correção:
 
 1. rodar `npm run build`;
-2. ler o primeiro erro;
-3. corrigir o arquivo apontado;
-4. repetir build;
-5. rodar `git diff --check`;
-6. confirmar que a correção não mudou escopo funcional.
-
-### 2.1 `Link is not defined`
-
-Sintoma:
-
-```txt
-ReferenceError: Link is not defined
-```
-
-Causa provável:
-
-- import de `AppLink as Link` removido em página que ainda usa `<Link>`.
-
-Correção:
-
-```ts
-import { AppLink as Link } from '../components/AppLink';
-```
-
-Ajustar caminho relativo conforme a pasta.
-
-### 2.2 `Missing initializer in const declaration` em `React.forwardRef`
-
-Sintoma:
-
-```txt
-Missing initializer in const declaration
-```
-
-Arquivo provável:
-
-```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-```
-
-Causa provável:
-
-- script quebrou a declaração `export const FamilyTree = React.forwardRef...`.
-
-Correção segura:
-
-```ts
-function FamilyTreeComponent(
-  props: FamilyTreeProps,
-  ref: React.ForwardedRef<FamilyTreeActions>
-) {
-  // ...
-}
-
-export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
-```
-
-### 2.3 `Expected "}" but found ":"` em `style`
-
-Sintoma:
-
-```txt
-Expected "}" but found ":"
-style={ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }
-```
-
-Correção:
-
-```tsx
-style={{ top: TREE_TITLE_TOP, height: TREE_TITLE_HEIGHT }}
-```
-
-### 2.4 `treeColorPalette is not defined`
-
-Sintoma:
-
-```txt
-ReferenceError: treeColorPalette is not defined
-```
-
-Arquivo provável:
-
-```txt
-src/app/pages/home/HomeHeader.tsx
-```
-
-Causa provável:
-
-- JSX dos botões de paleta foi inserido sem estado/effect correspondente.
-
-Verificar se existem:
-
-```txt
-TREE_COLOR_PALETTES
-TREE_COLOR_PALETTE_STORAGE_KEY
-const [treeColorPalette, setTreeColorPalette]
-applyTreePalette(treeColorPalette)
-setTreeColorPalette(paletteKey)
-```
-
-Correção:
-
-- se produção estiver quebrada, reverter o commit problemático;
-- reimplementar em branch/PR;
-- validar build e preview;
-- evitar script parcial que aplique apenas JSX.
+2. corrigir o primeiro erro real;
+3. repetir build;
+4. rodar `git diff --check`;
+5. validar que não reabriu rotas antigas.
 
 ---
 
-## 3. Git, backups e arquivos temporários
+## 4. Rotas e guards
 
-### 3.1 `.git/index.lock`
-
-Sintoma:
-
-```txt
-fatal: Unable to create '.git/index.lock': File exists.
-```
-
-Correção:
-
-```bash
-# confirmar antes que não existe processo Git ativo
-rm -f .git/index.lock
-git status
-```
-
-### 3.2 Backups no `git status`
-
-Sintoma:
-
-```txt
-Untracked files:
-  backups/
-  *.bak
-  *.patch
-  apply-*.py
-```
-
-Correção:
-
-```bash
-rm -rf backups/
-rm -f *.bak *.patch
-rm -f apply-*.py
-git status --short
-```
-
-Regra:
-
-- não commitar backups, scripts temporários ou patches auxiliares.
-
-### 3.3 Mojibake/acentuação corrompida
-
-Sintoma:
-
-```txt
-CalendÃ¡rio
-NotificaÃ§Ãµes
-PrÃ³ximos
-```
-
-Causas:
-
-- arquivo salvo em encoding errado;
-- PowerShell/terminal regravou Markdown/TSX sem UTF-8 correto;
-- script de substituição usou encoding implícito.
-
-Correção:
-
-- confirmar encoding UTF-8;
-- evitar `Set-Content` sem encoding explícito;
-- revisar diff antes de commit;
-- em Markdown, preferir edição controlada e `git diff --check`.
-
----
-
-## 4. Rotas, guards e navegação
-
-Arquivos prováveis:
+Arquivos:
 
 ```txt
 src/app/routes.tsx
-src/app/components/ProtectedRoute.tsx
-src/app/components/MemberRoute.tsx
 src/app/components/TreeAccessRoute.tsx
-src/app/pages/Home.tsx
+src/app/components/MemberRoute.tsx
+src/app/components/ProtectedRoute.tsx
 src/app/components/FamilyTree/treeViewMode.ts
-src/app/services/permissionService.ts
+src/app/pages/Home.tsx
+src/app/pages/PersonProfile.tsx
 ```
 
 Comportamento esperado:
 
-- `/` redireciona para `/mapa-familiar` preservando search params;
-- `/minha-arvore`, `/mapa-familiar`, `/mapa-familiar-horizontal`, `/genealogia` e `/visao-completa` usam `TreeAccessRoute`;
-- páginas de membro usam `MemberRoute`;
-- admin usa `ProtectedRoute`;
-- usuário comum não acessa admin;
-- `treeViewMode` deriva da rota;
-- troca de view usa navegação client-side.
+- `/` redireciona para `/mapa-familiar`;
+- `/mapa-familiar` usa `TreeAccessRoute`;
+- `/mapa-familiar-horizontal` usa `TreeAccessRoute`;
+- `/busca` usa `TreeAccessRoute`;
+- `/minha-arvore/editar` usa `MemberRoute`;
+- `/pessoa/:id` e `/pessoas/:id` usam `MemberRoute`;
+- `/admin/*` usa `ProtectedRoute`.
+
+Sintomas:
+
+| Sintoma | Investigar |
+|---|---|
+| `/` não abre a árvore | `RedirectToMapaFamiliar`, `TreeAccessRoute`, sessão/vínculo. |
+| `/mapa-familiar-horizontal` vira `/mapa-familiar` sem motivo | `treeViewMode.ts`, fallback, navegação do painel. |
+| `?pessoa=` some ao alternar | helpers de navegação e `location.search`. |
+| perfil não volta para horizontal | `PersonProfile.tsx`, lista segura de retorno. |
+| rota antiga abre conteúdo | `routes.tsx`; não reintroduzir aliases sem decisão. |
+
+---
+
+## 5. E2E falhando por rota antiga
+
+Sintoma:
+
+```txt
+page.goto('/minha-arvore')
+```
+
+ou expectativa de:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Causa:
+
+- teste desatualizado em relação à baseline.
+
+Correção:
+
+- substituir smoke de view da árvore por `/mapa-familiar`;
+- adicionar smoke para `/mapa-familiar-horizontal`;
+- manter teste separado para `/minha-arvore/editar` se necessário;
+- rotas antigas devem retornar 404, redirect ou login conforme decisão implementada, mas não devem ser documentadas como views ativas.
+
+Arquivo provável:
+
+```txt
+tests/e2e/app-smoke.spec.ts
+```
+
+---
+
+## 6. `TreeViewMode` divergente
+
+Arquivo:
+
+```txt
+src/app/components/FamilyTree/treeViewMode.ts
+```
+
+Contrato atual:
+
+```txt
+mapa-familiar
+mapa-familiar-horizontal
+```
+
+Sintomas:
+
+| Sintoma | Causa provável |
+|---|---|
+| TypeScript pede `minha-arvore` | componente/doc antigo ainda tipado contra contrato removido. |
+| botão horizontal abre rota errada | `VIEW_MODE_TO_PATH` ou navegação local incorreta. |
+| rota desconhecida renderiza view errada | fallback de `getTreeViewModeFromPath`. |
+
+Correção:
+
+- manter apenas os dois modos oficiais;
+- tratar path desconhecido como `mapa-familiar`;
+- não reintroduzir modos antigos para “resolver” erro de build.
+
+---
+
+## 7. Painel lateral/mobile
+
+Arquivos:
+
+```txt
+src/app/pages/Home.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/styles/home-sidebar-unified.css
+src/styles/mobile-tree-controls.css
+```
+
+Estado atual:
+
+- abas `Filtros`, `Legendas`, `Ações` ainda existem;
+- próxima frente deve removê-las;
+- controles superiores devem ser preservados.
+
+Sintomas:
+
+| Sintoma | Investigar |
+|---|---|
+| filtros desapareceram | `activeSidebarPanel`, conteúdo condicional, modal mobile. |
+| exportação parou | eventos de `SidebarPanelTabs`, refs da view ativa. |
+| modal mobile não fecha | `legendOpen`, overlay, `Escape`, scroll lock. |
+| painel entra na captura | falta de `data-tree-export-ignore`. |
+
+Correção:
+
+- remover abas apenas em frente própria;
+- ao remover abas, deixar filtros visíveis diretamente;
+- manter Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar e Destacar.
+
+---
+
+## 8. Mapa Familiar Vertical
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/styles/family-map-qa.css
+```
 
 Sintomas comuns:
 
 | Sintoma | Investigar |
 |---|---|
-| Usuário comum acessa admin | `ProtectedRoute`, `permissionService`, RLS. |
-| Usuário vinculado volta para `/meus-dados` em loop | `TreeAccessRoute`, `memberProfileService`. |
-| View errada abre na árvore | `treeViewMode.ts`, `Home.tsx`, `HomeHeader.tsx`. |
-| Search param `?pessoa=` some ao trocar view | helper de navegação em `Home.tsx`. |
-| 404 inesperado | `routes.tsx`, path digitado, lazy import. |
+| grupos laterais sobrepostos | configuração de layout, áreas left/right, expansão. |
+| cônjuge conectado à pessoa errada | relacionamento explícito `conjuge`, ordenação de cards. |
+| pets não aparecem | `directRelativeFilters.pets`, `personFilters.pets`, tipo da pessoa. |
+| conectores desalinhados | cálculo de âncoras, modo wide, `hideGroupChrome`. |
+| exportação cortada | root exportável, escala, viewport, offsets. |
 
-### 4.1 Erro de chunk dinâmico ou MIME `text/html`
+Correções seguras:
 
-Sintomas:
-
-```txt
-Failed to fetch dynamically imported module
-Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html"
-TypeError: Failed to fetch dynamically imported module
-```
-
-Causa provável:
-
-- `index.html` antigo no navegador aponta para asset com hash removido do deploy atual;
-- provedor serviu fallback `index.html` no lugar do `.js` inexistente;
-- cache forte aplicado ao HTML da SPA;
-- navegação para rota lazy-loaded após novo deploy sem hard refresh.
-
-Arquivos prováveis:
-
-```txt
-src/main.tsx
-vercel.json
-vite.config.ts
-src/app/routes.tsx
-```
-
-Correção segura:
-
-1. validar se o arquivo `.js` citado na URL existe no deploy atual;
-2. conferir headers de cache do `index.html`;
-3. manter `/assets/*` com cache longo/imutável, mas evitar cache forte para HTML;
-4. preservar fallback SPA para rotas reais, sem mascarar assets inexistentes;
-5. implementar recuperação controlada em `src/main.tsx` para limpar cache e recarregar uma única vez;
-6. testar em janela anônima e hard refresh.
-
-Regra: não resolver esse erro editando rota funcional sem antes verificar cache/deploy/assets.
+- ajustar configuração centralizada;
+- não usar zoom padrão para mascarar sobreposição;
+- não inferir cônjuge por proximidade visual;
+- validar desktop e mobile.
 
 ---
 
-## 5. Árvore, viewport e React Flow
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-src/styles/family-tree-visual-polish.css
-```
-
-### 5.1 Título colado no topo ou espaço grande até cards
-
-Investigar:
-
-- constantes de título/viewport em `FamilyTree.tsx`;
-- safe area mobile;
-- bounds usados no viewport inicial;
-- CSS externo que altere React Flow.
-
-Não fazer:
-
-```txt
-.react-flow__viewport { transform: ... }
-top negativo
-translate manual
-```
-
-Correção segura:
-
-- ajustar constantes/cálculo em `FamilyTree.tsx`;
-- validar `/minha-arvore`, `/genealogia`, `/visao-completa`;
-- validar mobile e desktop;
-- preservar pan/zoom interno.
-
-### 5.2 Cards superiores cortados
-
-Causa provável:
-
-- deslocamento visual aplicado diretamente ao viewport do React Flow;
-- bounds de pan/zoom calculados sem espaço superior;
-- labels/group boxes entrando no cálculo indevidamente.
-
-Correção:
-
-- remover transform/translate externo;
-- revisar separação entre bounds visuais e bounds técnicos;
-- confirmar que `personNode` comanda bounds de zoom quando aplicável.
-
-### 5.3 Pan/zoom não funciona
-
-Investigar:
-
-- `panOnScroll`;
-- `zoomOnScroll`;
-- overlay de seleção de área ativo;
-- elemento invisível interceptando eventos;
-- `nodrag`/`nopan` em botões internos.
-
-Correção:
-
-- confirmar se seleção de área foi finalizada/cancelada;
-- inspecionar z-index e pointer events;
-- validar botões direcionais e zoom.
-
-### 5.4 Genealogia/Visão Completa mobile com chips problemáticos
+## 9. Mapa Familiar Horizontal
 
 Arquivos:
 
 ```txt
-src/app/pages/home/GenealogyMobileStageTabs.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-```
-
-Sintomas:
-
-| Sintoma | Causa provável |
-|---|---|
-| Chip remove pessoas da árvore | `activeGenealogyGeneration` usado como filtro destrutivo. |
-| Não aparece primeira geração real | cálculo de gerações disponíveis. |
-| Cabeçalho não recuperável por pan | `translateExtent` restritivo. |
-| Botões de zoom aparecem onde não devem | CSS condicional de `usesMobileGenerationStages`. |
-| Árvore salta verticalmente entre chips | eixo Y não ancorado em referência comum. |
-
-Regra:
-
-- chips focam/enquadram, mas não removem colunas do React Flow;
-- inferência de geração é visual e não persiste no Supabase.
-
-### 5.5 Anel/ícone conjugal ausente ou inconsistente
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/directFamilyColors.ts
-src/app/components/FamilyTree/types.ts
-```
-
-Verificar:
-
-- ícone `Blend`;
-- tamanho `60px × 60px`;
-- `FAMILY_TREE_COLORS.EDGE_SPOUSE`;
-- `visualVariant: 'direct-family'` apenas onde aplicável;
-- clique abrindo `ViewMarriageModal`.
-
-Não fazer:
-
-- trocar o ícone por texto;
-- aplicar a variante da Minha Árvore em todas as views sem validação;
-- remover `stopPropagation`.
-
----
-
-## 5.6 Mapa Familiar com grupos laterais sobrepostos ou cortados
-
-Arquivos prováveis:
-
-```txt
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-src/app/components/FamilyTree/mobileFamilyTreeModel.ts
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+src/styles/family-map-horizontal.css
 ```
 
 Sintomas:
 
 | Sintoma | Investigar |
 |---|---|
-| Tios/primos invadem Pai/Mãe/Pessoa Central | `FAMILY_MAP_LAYOUT.areas.left/right`, `groups.paternalUncles`, `groups.maternalUncles`, `width`, `x` e `centerWithin`. |
-| Grupos paternos cortam à esquerda | `areas.left.x`, `areas.left.width`, escala responsiva e overflow horizontal. |
-| Grupos maternos cortam à direita | `areas.right.x`, `areas.right.width`, canvas lógico e escala responsiva. |
-| Botão `+/-` fica fora do grupo | `VisualGroup`, padding, `position: absolute` do botão e altura calculada. |
-| Grupo unitário fica largo demais | `singleWidth`, `getGroupWidth` e configuração do grupo. |
+| geração vazia aparece | compactação de colunas e filtro de pessoas visíveis. |
+| geração errada | `manual_generation`, inferência em memória. |
+| cônjuges separados | ordenação/pareamento por relacionamento. |
+| mobile mostra Paterno/Central/Materno | `HomeMobileNav`, condição de rota. |
+| swipe não troca geração | handlers mobile, estado da geração ativa. |
+| exportação horizontal corta colunas | root exportável, largura normalizada, escala. |
 
-Correção segura:
+Correções:
 
-- mexer primeiro na configuração centralizada `FAMILY_MAP_LAYOUT`;
-- não reposicionar Pai, Mãe, Pessoa Central ou ancestrais para corrigir tios/primos;
-- alterar apenas `areas.left/right` e os grupos laterais correspondentes quando o problema for lateral;
-- validar com grupos recolhidos e expandidos;
-- validar em 1366px, 1440px, 1536px e 1920px.
+- não usar `/genealogia` ou `/visao-completa` como fallback;
+- não criar subrotas por geração;
+- manter chips `G1`, `G2`, `G3` como navegação interna.
 
-Não fazer:
+---
 
-- espalhar coordenadas mágicas no JSX;
-- corrigir via zoom padrão para mascarar sobreposição;
-- reduzir cards até perder legibilidade do primeiro e segundo nome;
-- mover o núcleo central para compensar laterais.
+## 10. Exportação
 
-## 5.7 Cônjuges do Mapa Familiar conectados à pessoa errada
-
-Arquivos prováveis:
+Arquivos:
 
 ```txt
+src/app/components/FamilyTree/utils/treeExport.ts
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-```
-
-Causa provável:
-
-- relacionamento `conjuge` ausente ou duplicado;
-- composição do grupo ordenou pessoa solteira entre casal;
-- placeholder/spacer de linha não preservou casal lado a lado;
-- conector interno foi inferido por posição, não por relacionamento explícito.
-
-Correção:
-
-- usar apenas `relacionamentos.tipo_relacionamento === 'conjuge'` para parear cônjuges;
-- preservar `spousePartnerByPersonId`;
-- manter casais juntos antes de pessoas sem par no mesmo grupo quando necessário;
-- se não houver relação explícita, não desenhar conector interno;
-- revisar casos conhecidos como Marcos Alfredo/Enildes Barros e Mário Assis/Márcia Tereza.
-
-Anti-regressão:
-
-```txt
-Conector interno de cônjuge nunca deve ser inferido apenas por proximidade visual.
-```
-
-## 5.8 Avatar masculino/feminino/pet errado no Mapa Familiar
-
-Arquivos prováveis:
-
-```txt
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-src/app/types.ts
-src/app/types/index.ts
-docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
-docs/operacao/MIGRATIONS_SUPABASE.md
-```
-
-Sintomas:
-
-| Sintoma | Causa provável |
-|---|---|
-| Homem aparece com avatar feminino/neutro | `pessoas.genero` ausente, valor diferente de `homem` ou fallback por nome sendo usado. |
-| Mulher aparece com avatar masculino/neutro | `pessoas.genero` ausente, valor diferente de `mulher` ou dado não carregado no frontend. |
-| Pet aparece como humano | `genero` diferente de `pet` ou `humano_ou_pet` inconsistente. |
-| Build falha dizendo que `genero` não existe | tipo `Pessoa` não foi atualizado. |
-| Frontend não recebe `genero` | coluna ausente no Supabase remoto, schema cache desatualizado ou select/service não inclui o campo. |
-
-Correção:
-
-1. confirmar dados:
-
-```sql
-select id, nome_completo, genero, humano_ou_pet
-from public.pessoas
-where id = '<id-da-pessoa>';
-```
-
-2. confirmar valores aceitos:
-
-```txt
-homem
-mulher
-pet
-```
-
-3. se TypeScript falhar, adicionar ao tipo `Pessoa`:
-
-```ts
-genero?: 'homem' | 'mulher' | 'pet' | string | null;
-```
-
-4. se a coluna foi criada manualmente, criar migration versionada;
-5. se o remoto já tem a coluna e o erro persistir, investigar schema cache.
-
-Não fazer:
-
-- inferir gênero permanentemente por nome quando `genero` existe;
-- resolver pet apenas por relacionamento visual;
-- criar migration para trocar SVG do avatar.
-
-
-## 5.9 Título do Mapa Familiar não some ao rolar ou não volta ao topo
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-```
-
-Comportamento esperado:
-
-- `HomeTreeSection` mantém `familyMapHasScrolled`;
-- `DesktopFamilyMapView` chama `onScrollStateChange` no scroll interno;
-- `scrollTop > 24` oculta o título desktop com transição;
-- ao voltar para `scrollTop <= 24`, o título reaparece;
-- o estado reseta quando mudam pessoa central, view ou `layoutRevision`.
-
-Investigar:
-
-| Sintoma | Verificar |
-|---|---|
-| Título nunca some | `onScroll` do container principal do `DesktopFamilyMapView`, callback `onScrollStateChange`, classe condicional em `HomeTreeSection`. |
-| Título some e não volta | reset de `scrollStateRef`, efeito que chama `onScrollStateChange(false)`, retorno ao topo real do container. |
-| Título de outras views some indevidamente | condição `treeViewMode === 'mapa-familiar'`. |
-
-Não corrigir com CSS global escondendo todos os títulos da árvore.
-
-## 5.10 Modo wide do Mapa Familiar não é aplicado ao colapsar painel
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-```
-
-Fluxo esperado:
-
-```txt
-Home.tsx/sidebarOpen
-  -> HomeTreeSection sidebarOpen
-  -> DesktopFamilyMapView sidebarCollapsed={!sidebarOpen}
-  -> getFamilyMapLayout(true)
-```
-
-Investigar:
-
-- `Home.tsx` passa `sidebarOpen` para `HomeTreeSection`;
-- `HomeTreeSection` passa `sidebarCollapsed={!sidebarOpen}` apenas para `DesktopFamilyMapView`;
-- `DesktopFamilyMapView` deriva `isWideLayout` de `sidebarCollapsed`;
-- `getFamilyMapLayout(true)` altera `canvas.width`, áreas, laterais e faixas inferiores;
-- `treeLayoutRevision` é incrementado ao abrir/fechar painel para recalcular escala.
-
-Sintomas:
-
-| Sintoma | Causa provável |
-|---|---|
-| Árvore não muda ao recolher painel | prop não propagada ou `getFamilyMapLayout` não usado. |
-| Árvore desloca demais para a esquerda | wrapper deixou de usar centralização controlada ou canvas wide ficou desequilibrado. |
-| Cônjuge/Pets sobrepõem Filhos/Netos | `areas.lowerMiddle/lowerRight` ou `rightLowerTop` incorretos. |
-| Laterais cortam | canvas lógico, áreas left/right ou escala responsiva insuficientes. |
-
-Não resolver aumentando apenas zoom padrão.
-
-## 5.11 Badge `PESSOA CENTRAL` reaparece no Mapa Familiar
-
-Arquivos prováveis:
-
-```txt
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
-```
-
-Comportamento esperado:
-
-- `DirectPersonCard` aceita `showLabel?: boolean`;
-- o card central passa `showLabel={false}`;
-- `VisualPersonCard` só renderiza badge quando recebe `label`;
-- Pai, Mãe, Cônjuge e grupos continuam com rótulos.
-
-Correção:
-
-- não remover suporte global a `label`;
-- aplicar a exceção apenas no card central do Mapa Familiar;
-- validar que as pílulas de grupos continuam visíveis.
-
-
-## 5.12 `/mapa-familiar-horizontal` mobile ainda aparece como canvas horizontal largo
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/home/HomeTreeSection.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/pages/home/HomeMobileNav.tsx
-src/styles/family-map-horizontal.css
-src/styles/family-tree-mobile.css
-```
-
-Comportamento esperado:
-
-- desktop/tablet usam `DesktopFamilyHorizontalMapView`;
-- mobile usa `MobileFamilyHorizontalMapView`;
-- cada geração visível ocupa uma tela;
-- chips `G1`, `G2`, `G3` etc. mudam a geração ativa;
-- swipe lateral muda a tela;
-- scroll vertical permanece dentro da geração ativa;
-- a barra `Paterno | Central | Materno` não aparece na horizontal mobile.
-
-Investigar:
-
-| Sintoma | Verificar |
-|---|---|
-| Horizontal mobile continua multi-coluna | condição em `HomeTreeSection.tsx`. |
-| Build falha por import ausente | caminho/export de `MobileFamilyHorizontalMapView.tsx`. |
-| Chips de geração não aparecem | dados de `manual_generation`, gerações inferidas, filtros de vida e geração ativa. |
-| Swipe muda tela enquanto usuário tenta rolar verticalmente | threshold de gesto horizontal vs vertical. |
-| Cards somem após filtro | interseção entre `directRelativeFilters`, filtros de vida/pets e escopo renderizado. |
-
-Correção segura:
-
-- garantir import de `MobileFamilyHorizontalMapView`;
-- renderizar o componente apenas quando `isMobile && treeViewMode === 'mapa-familiar-horizontal'`;
-- manter `DesktopFamilyHorizontalMapView` para desktop/tablet;
-- não transformar a horizontal em ReactFlow;
-- não reaproveitar a barra `Paterno | Central | Materno` nessa view.
-
-## 5.13 Painel mobile de controles fica atrás do header, tabs ou bottom nav
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/HomeMobileNav.tsx
-src/styles/home-sidebar-unified.css
-src/app/components/FamilyTree/MobileTreeControlsPortal.tsx
-```
-
-Comportamento esperado:
-
-- `HomeMobileNav` aciona o painel;
-- `Home.tsx` renderiza o painel como modal;
-- o modal fica acima de header, bottom nav, chips e botões flutuantes;
-- overlay fecha o modal;
-- `Escape` fecha o modal;
-- o conteúdo tem scroll interno;
-- `MobileTreeControlsPortal` continua retornando `null` para `/mapa-familiar` e `/mapa-familiar-horizontal`.
-
-Investigar:
-
-| Sintoma | Verificar |
-|---|---|
-| Modal cortado pelo header | z-index do modal vs `HomeHeader`. |
-| Bottom nav cobre botões | z-index e safe-area em `home-sidebar-unified.css`. |
-| Página rola atrás do modal | classe/efeito de scroll lock no `body`. |
-| Dois painéis aparecem | `MobileTreeControlsPortal` reativado indevidamente. |
-| Exportação captura controles | ausência de `data-tree-export-ignore="true"`. |
-
-Correção segura:
-
-- não voltar para bottom sheet z-40;
-- usar camada `fixed inset-0` com z-index superior ao header;
-- manter scroll interno do painel;
-- preservar marcações de exportação.
-
-## 5.14 Legenda ou filtros diretos não afetam `/mapa-familiar-horizontal`
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/Home.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/pages/home/DirectRelationKpiGrid.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
-```
-
-Comportamento esperado:
-
-- `/mapa-familiar` e `/mapa-familiar-horizontal` usam `directRelativeFilters`;
-- a aba `Legendas` pode acionar filtros diretos também na horizontal;
-- contagens devem refletir o que a view renderiza quando a view fornece contagem efetiva;
-- `Cônjuges` conta apenas cônjuges filtráveis, não cônjuge central nem cônjuges ancestrais obrigatórios.
-
-Investigar:
-
-| Sintoma | Verificar |
-|---|---|
-| Clique na legenda não muda horizontal | condição `viewMode` em `TreeLegend`. |
-| Filtros funcionam na aba Filtros, mas não em Legendas | props `directRelativeFilters` e `onToggleDirectRelativeFilter` em `Home.tsx`. |
-| Contagem de cônjuges inflada | regra de cônjuges sempre visíveis vs filtráveis. |
-| Mobile e desktop divergem | contagem/escopo entre `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView`. |
-
-Correção segura:
-
-- incluir `mapa-familiar-horizontal` nas condições de filtros diretos;
-- não aplicar `genealogyFilters` na horizontal;
-- não usar filtros de destaque para recriar cards ocultos.
-
-## 5.15 Barra `Paterno | Central | Materno` reaparece na horizontal mobile
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/home/HomeMobileNav.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 ```
 
-Comportamento esperado:
+Sintomas:
 
-- a barra `Paterno | Central | Materno` pertence a `MobileFamilyTreeView`;
-- ela pode aparecer em `/minha-arvore` e `/mapa-familiar` mobile conforme o contrato da view;
-- ela não deve aparecer em `/mapa-familiar-horizontal` mobile;
-- a horizontal mobile usa chips de geração.
+| Sintoma | Investigar |
+|---|---|
+| PNG inclui painel | `data-tree-export-ignore`. |
+| PDF duplica título | uso de `prependTitleToCanvas` e título passado ao PDF. |
+| SVG vira quadrado escuro | normalização de SVGs no clone. |
+| Área captura região errada | `getBoundingClientRect`, viewport, scroll. |
+| loading aparece no canvas | `data-tree-export-loading`. |
+| exportação muito grande falha | limite preventivo de pixels. |
 
 Correção:
 
-- remover qualquer renderização condicional da barra antiga em `HomeMobileNav` para `/mapa-familiar-horizontal`;
-- manter a navegação por geração dentro de `MobileFamilyHorizontalMapView`;
-- validar que o botão `Controles` permanece visível.
-
-
-## 6. Paletas visuais da árvore
-
-Arquivos:
-
-```txt
-src/app/pages/home/HomeHeader.tsx
-src/app/components/FamilyTree/treeColorPalettes.ts
-src/app/components/FamilyTree/visualTokens.ts
-src/app/components/FamilyTree/directFamilyColors.ts
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Paleta não muda | `applyTreePalette`, CSS variables, `document.documentElement`. |
-| Paleta não persiste | `TREE_COLOR_PALETTE_STORAGE_KEY`, `localStorage`. |
-| Build passa, runtime quebra | referência a estado não declarado. |
-| Contraste ruim em anel/linhas | tokens visuais e paletas. |
-
-Regras:
-
-- paleta não altera dados, filtros, rota, Supabase ou permissão;
-- validar `white`, `orange` e `brown`;
-- não aplicar migration para paleta.
+- manter `allowTaint: false`;
+- revisar CORS de imagens;
+- sanitizar cores incompatíveis no clone;
+- testar PNG, PDF e impressão.
 
 ---
 
-## 7. Perfil, pessoa e admin
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/PersonProfile.tsx
-src/app/pages/admin/AdminPessoaForm.tsx
-src/app/pages/admin/AdminPessoas.tsx
-src/app/components/person/
-src/app/services/dataService.ts
-src/app/services/personProfileSuggestionService.ts
-src/app/services/permissionService.ts
-```
-
-### 7.1 Botão de editar aparece para pessoa errada
-
-Investigar:
-
-- `permissionService`;
-- pessoa vinculada ao usuário;
-- responsável pelo perfil;
-- status admin;
-- condição de renderização no `PersonProfile`.
-
-Regra:
-
-- botão visual não substitui permissão;
-- usuário sem permissão deve enviar sugestão, não editar diretamente.
-
-### 7.2 Sugestão de perfil não aparece no admin
-
-Investigar:
-
-```txt
-person_profile_suggestions
-personProfileSuggestionService.ts
-/admin/solicitacoes-vinculos
-RLS da migration correspondente
-```
-
-Verificar:
-
-- status `pending`;
-- usuário autenticado;
-- `target_pessoa_id`;
-- tela admin carregando pendências.
-
-### 7.3 Reset de perfil removeu dado indevido
-
-Investigar:
-
-```txt
-admin_reset_person_profile
-20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
-20260609193000_ensure_admin_reset_person_profile.sql
-dataService.ts
-```
-
-Regra crítica:
-
-- reset não deve apagar relacionamentos familiares;
-- remove foto, insights derivados, favoritos da pessoa e reseta preferências/flags previstas;
-- executar apenas como admin.
-
-### 7.4 Reset de perfil retorna `PGRST202`
-
-Sintoma:
-
-```txt
-Could not find the function public.admin_reset_person_profile(target_pessoa_id) in the schema cache
-PGRST202
-```
-
-Investigar:
-
-```txt
-supabase/migrations/20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
-supabase/migrations/20260609193000_ensure_admin_reset_person_profile.sql
-docs/operacao/MIGRATIONS_SUPABASE.md
-```
-
-Causas prováveis:
-
-- migration não aplicada no Supabase remoto;
-- schema cache do PostgREST desatualizado;
-- assinatura da RPC divergente;
-- `grant execute` ausente.
-
-Correção:
-
-1. confirmar o ambiente Supabase correto;
-2. aplicar migrations pendentes;
-3. validar que a função existe com assinatura `target_pessoa_id uuid`;
-4. recarregar schema cache;
-5. testar novamente o botão em `/admin/pessoas`.
-
-Não alterar o frontend para esconder o erro de RPC ausente.
-
-### 7.5 Autocomplete de endereço não funciona
+## 11. Favoritos e busca global
 
 Arquivos:
-
-```txt
-src/app/components/person/AddressAutocompleteInput.tsx
-src/app/utils/googleAddress.ts
-```
-
-Verificar:
-
-- `VITE_GOOGLE_MAPS_API_KEY`;
-- carregamento da API;
-- fallback para input comum;
-- erros no console.
-
-Regra:
-
-- ausência da chave não pode bloquear edição manual.
-
----
-
-## 8. Relacionamentos e modal conjugal
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/modals/ViewMarriageModal.tsx
-src/app/components/relationships/MarriageDetailsEditor.tsx
-src/app/services/relationshipChangeRequestService.ts
-src/app/services/personProfileSuggestionService.ts
-src/app/pages/admin/AdminSolicitacoesVinculos.tsx
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Modal mostra ID técnico | `ViewMarriageModal`. |
-| Texto público estranho | formatador de relacionamento conjugal. |
-| Usuário comum alterou relacionamento real | `permissionService`, `relationshipChangeRequestService`. |
-| Arquivo histórico do casamento não aparece | `relacionamento_id`, permissões, `readOnly` e `ArquivosHistoricos`. |
-| Botão `+` abre modal de Inserir Informações | `ViewMarriageModal`, prop `readOnly`, `onRequestAdd`. |
-| Botão `+` sumiu | `ArquivosHistoricos` recebendo `readOnly=true` ou relacionamento sem fluxo previsto. |
-| Modal secundário não fecha | propagação de evento entre `DialogContent` e modal pai. |
-| Texto mostra `foram casados` indevidamente | regra de `ativo`, `data_separacao`, `data_fim`, subtipo e falecimento. |
-| Dados conjugais somem ao salvar | `MarriageDetailsEditor`, `marriageForms`, payload do formulário. |
-
-Regra:
-
-- **Inserir Informações** abre sugestão textual com Informações, Data, Local e Outros;
-- `+` em **Arquivos Históricos** abre upload com Arquivo, Título, Descrição, Ano e Categoria;
-- categorias conjugais permitidas: Certidão de Casamento, Divórcio e Outro;
-- usuário comum solicita alteração textual;
-- admin/responsável edita conforme permissão;
-- observações internas não aparecem para usuário final.
-
----
-
-## 9. Arquivos históricos e Storage
-
-Arquivos:
-
-```txt
-src/app/components/ArquivosHistoricos.tsx
-src/app/components/FotoUpload.tsx
-src/app/services/arquivosHistoricosService.ts
-src/app/services/storageService.ts
-docs/operacao/STORAGE_MAINTENANCE.md
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Upload falha | bucket, path, RLS, tamanho, MIME. |
-| Preview some depois do upload | estado local do componente. |
-| PDF não abre preview | fallback de PDF/URL. |
-| Insert falha com `categoria_evento` | migration ausente no remoto. |
-| Arquivo de casamento aparece em pessoa errada | `relacionamento_id` vs `pessoa_id`. |
-| Base64 legado não renderiza | compatibilidade com data URL. |
-
-Regras:
-
-- novos arquivos usam Storage;
-- não salvar novo base64;
-- não remover base64 legado automaticamente;
-- não mascarar migration ausente removendo campo do payload;
-- limpeza de órfãos exige dry-run/auditoria.
-
----
-
-## 10. Fórum
-
-Arquivos:
-
-```txt
-src/app/pages/forum/ForumHome.tsx
-src/app/pages/forum/ForumNovoTopico.tsx
-src/app/pages/forum/ForumTopico.tsx
-src/app/pages/forum/ForumEditarTopico.tsx
-src/app/services/forumService.ts
-src/app/services/notificationTriggersService.ts
-```
-
-### 10.1 Categoria/tipo na criação
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Dropdown de tipo voltou | `ForumNovoTopico.tsx`, `ForumEditarTopico.tsx`. |
-| Campo Pessoas Relacionadas voltou | `ForumNovoTopico.tsx`, `ForumEditarTopico.tsx`; usar menções `@` no lugar. |
-| Categoria não seleciona | `categoriaId`, `listarCategoriasForum`. |
-| 5 categorias quebram linha no desktop | grid de categorias; validar `lg:grid-cols-5` ou equivalente. |
-| Cards quebram no mobile | grid, `min-w-0`, `break-words`. |
-
-Regra:
-
-- tipo padrão é `discussao`;
-- categoria é seleção única por botões/cards.
-
-### 10.2 Pessoas relacionadas e menções
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Dropdown não fecha | listener de clique fora. |
-| Busca não encontra pessoa com acento | normalização. |
-| `@` não abre sugestões | `detectMention`. |
-| Menção não vira link no tópico | `MentionedContent`. |
-| Pessoa mencionada não vira relacionada | `addRelatedPerson`. |
-
-Regra:
-
-- menção usa `@Nome Completo`;
-- pessoa mencionada também entra no conjunto de relacionadas;
-- falha de notificação não bloqueia publicação.
-
-### 10.3 Reações
-
-Arquivos:
-
-```txt
-src/app/pages/forum/ForumTopico.tsx
-src/app/services/forumService.ts
-supabase/migrations/20260608180000_enforce_single_forum_reaction.sql
-```
-
-Sintomas:
-
-| Sintoma | Causa provável |
-|---|---|
-| Usuário consegue duas reações no mesmo alvo | constraint ausente ou service alterado. |
-| Clicar na mesma reação não remove | `reagirAoConteudo`. |
-| Trocar reação duplica | delete anterior falhou. |
-| Ícone de Orações quebra build | import incorreto; usar `Flower2`. |
-
-Labels corretos:
-
-```txt
-curtir -> Amei
-apoiar -> Apoiar
-lembrar -> Orações
-celebrar -> Parabéns
-```
-
----
-
-## 11. Notificações
-
-Arquivos:
-
-```txt
-src/app/pages/Notificacoes.tsx
-src/app/pages/AjustarNotificacoes.tsx
-src/app/components/notifications/NotificationPreferencesPanel.tsx
-src/app/pages/admin/AdminNotificacoes.tsx
-src/app/services/notificationDispatchService.ts
-src/app/services/notificationTriggersService.ts
-src/app/services/notificationRecipientsService.ts
-supabase/functions/
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Notificação não aparece | trigger, recipients, preferências, dispatch. |
-| Autor recebe notificação da própria ação | `excludeActor`. |
-| Menção e pessoa relacionada duplicam | deduplicação em `notifyForumTopicCreated`. |
-| E-mail não envia | provider/secrets/Edge Function/log. |
-| Preferência não salva | `NotificationPreferencesPanel`, RLS, service. |
-| Falha de notificação quebra ação principal | try/catch no fluxo chamador. |
-
-Regras:
-
-- central é `/notificacoes`;
-- preferências ficam em `/ajustar-notificacoes`;
-- push/WhatsApp não devem fingir envio real;
-- cron automático depende de configuração segura externa.
-
----
-
-## 12. Favoritos
-
-Arquivos:
-
-```txt
-src/app/components/favorites/FavoriteButton.tsx
-src/app/services/favoritesService.ts
-src/app/pages/MeusFavoritos.tsx
-src/app/types/index.ts
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Botão não ativa | `isFavorite`, `entityType`, `entityId`. |
-| Duplicidade de favorito | unique/upsert `user_id,entity_type,entity_id`. |
-| Remoção não reflete na UI | estado local, `onChange`, reload da lista. |
-| Metadata sensível salva | `sanitizeMetadata`. |
-| Filtro da página mostra categoria sem item real | expansão parcial de tipos. |
-
-Regras:
-
-- pessoa é a primeira camada funcional;
-- tipos futuros já existem em `FavoriteEntityType`, mas botões reais dependem de validação por entidade;
-- não salvar telefone, URL sensível, token, base64 ou dado privado em `metadata`.
-
----
-
-## 13. Calendário familiar e Google Agenda
-
-Arquivos:
-
-```txt
-src/app/pages/CalendarioFamiliar.tsx
-src/app/utils/familyDates.ts
-src/app/services/googleCalendarService.ts
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Calendário sem eventos | `criarEventosDoCalendario`, filtros ativos, dados de pessoas/relacionamentos. |
-| Filtros mobile não aparecem | `MOBILE_CALENDAR_LEGEND_ITEMS`, breakpoint `md:hidden`. |
-| Texto de idade errado | formatadores de aniversário/falecimento. |
-| Google Agenda não conecta | Edge Function/OAuth/env/secrets. |
-| Sincronização não cria eventos | service, token, opções de aniversários/memórias. |
-
-Regras:
-
-- título da página deve ser **Calendário**;
-- filtros mobile ficam acima do grid;
-- card Google Agenda pode ficar recolhido no mobile;
-- tokens OAuth não devem ir para frontend.
-
----
-
-## 14. Exportação da árvore
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/utils/treeExport.ts
-src/app/components/FamilyTree/FamilyTree.tsx
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Seleção não inicia | ref/actions do `FamilyTree`, botão Ações/Home. |
-| Canvas vem vazio | elemento raiz, timing, `html2canvas`. |
-| Overlay aparece na exportação | atributos/filtros de exportação. |
-| PDF corta área | dimensões do canvas e cálculo do PDF. |
-| Pan/zoom fica travado | seleção não foi finalizada/cancelada. |
-
-Regras:
-
-- exportação atual é de área visível/selecionada;
-- árvore completa é evolução futura;
-- sem Storage e sem migration.
-
----
-
-## 15. Supabase, migrations e RLS
-
-Documentação operacional:
-
-```txt
-docs/operacao/MIGRATIONS_SUPABASE.md
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| Campo enviado não existe | migration ausente no remoto. |
-| RPC não existe | migration não aplicada, search path errado, grants ausentes ou schema cache desatualizado. |
-| `PGRST202` em RPC | função ausente no schema cache; validar migration, assinatura, grants e `notify pgrst`. |
-| Usuário comum lê/escreve indevidamente | RLS/policies. |
-| Admin não consegue executar RPC | grants, `is_admin_user`, auth. |
-| `db push` quer aplicar alteração inesperada | migration list/diff antes de prosseguir. |
-
-Regras:
-
-- `supabase/migrations` é a fonte da verdade;
-- scripts SQL soltos são históricos/operacionais;
-- não criar migration para ajuste visual;
-- não usar service role no frontend;
-- não versionar secrets/dumps/tokens.
-
----
-
-## 16. Procedimento para hotfix seguro
-
-1. Reproduzir sintoma.
-2. Rodar `git status --short`.
-3. Rodar `npm run build`.
-4. Corrigir a menor causa real.
-5. Rodar `npm run build` novamente.
-6. Rodar `git diff --check`.
-7. Se envolver banco, revisar `supabase migration list`.
-8. Se envolver rota crítica, testar fluxo manualmente.
-9. Documentar apenas se a regra for recorrente.
-
-Para commit localizado:
-
-```bash
-git status --short
-git diff --check
-npm run build
-git add <arquivos-especificos>
-git commit -m "fix: describe the concrete fix"
-git pull --rebase origin main
-git push origin main
-```
-
-Não usar `git add .`.
-
-## 19. Problemas de busca, favoritos e exportação no Mapa Familiar
-
-### 19.1 `Mapa Familiar` não aparece na busca global
-
-Investigar:
-
-```txt
-src/app/services/globalSearchService.ts
-src/app/components/FamilyTree/treeViewMode.ts
-src/app/pages/home/HomeHeader.tsx
-```
-
-Correção esperada:
-
-- incluir `/mapa-familiar` no catálogo de páginas da busca, se a decisão de produto for exibir a view;
-- preservar `?pessoa=...` ao navegar entre views;
-- manter a pendência `DOC-015` aberta enquanto não for verificado.
-
-#Estado atual: `/mapa-familiar` está em `GLOBAL_SEARCH_PAGES`.
-
-## 19.2 `Mapa Familiar` não pode ser favoritado
-
-Investigar:
 
 ```txt
 src/app/constants/favoritePages.ts
+src/app/services/globalSearchService.ts
 src/app/components/favorites/PageFavoriteButton.tsx
-src/app/pages/home/HomeHeader.tsx
 ```
 
-Correção esperada:
+Estado esperado:
 
-- adicionar `/mapa-familiar` ao catálogo de páginas favoritas;
-- usar `entity_type = page`;
-- não salvar zoom, filtro ou estado de grupos como favorito.
+- `/mapa-familiar` em favoritos e busca;
+- `/mapa-familiar-horizontal` em favoritos e busca;
+- `/minha-arvore`, `/genealogia`, `/visao-completa` fora dos catálogos ativos.
 
-#Estado atual: `/mapa-familiar` está em `FAVORITE_PAGES`.
+Sintomas:
 
-## 19.3 Exportação do Mapa Familiar falha ou não existe
+| Sintoma | Investigar |
+|---|---|
+| horizontal não aparece na busca | `GLOBAL_SEARCH_PAGES`. |
+| horizontal não pode ser favoritada | `FAVORITE_PAGES`. |
+| rota antiga aparece em favoritos | catálogo ou registro legado salvo no banco. |
+| favorito abre rota removida | dados antigos em `user_favorites`. |
 
-Investigar:
+Correção:
+
+- atualizar catálogo;
+- tratar registros antigos como legado de dados, não como rota ativa;
+- não salvar query params em favorito de página.
+
+---
+
+## 12. CSS e regressões visuais
+
+Arquivos:
 
 ```txt
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/utils/treeExport.ts
-docs/funcionalidades/EXPORTACAO_ARVORE.md
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
+src/styles/home-sidebar-unified.css
+src/styles/mobile-tree-controls.css
+src/styles/family-tree-visual-polish.css
+src/styles/mobile-tree-lines.css
+src/styles/tree-view-desktop-polish.css
 ```
 
-Estado atual:
+Regras:
 
-- a exportação canônica foi consolidada para as views ReactFlow;
-- `/mapa-familiar` usa HTML/CSS/SVG e deve possuir `[data-family-map-export-root="true"]`;
-- `treeExport.ts` deve resolver esse root antes de `.react-flow`;
-- botões/overlays que não pertencem ao artefato devem usar `data-tree-export-ignore="true"`;
-- manter `useCORS: true` e `allowTaint: false`;
-- verificar erros de CORS em fotos externas e manter mensagem amigável ao usuário;
-- não declarar exportação completa do Mapa Familiar sem implementação/QA próprios.
+- CSS com nome antigo não é automaticamente removível;
+- verificar uso real antes de apagar;
+- preservar raízes:
+  - `data-family-map-horizontal-root`;
+  - `data-mobile-family-horizontal-root`;
+  - `data-mobile-family-tree-root`;
+  - `data-tree-route-view="mapa-familiar-horizontal"`;
+- remover seletor legado apenas após QA visual.
 
-Correção futura possível:
+---
 
-- definir elemento alvo de captura da superfície panorâmica;
-- ignorar botões `+/-`, header e overlays;
-- validar zoom, grupos expandidos e conectores SVG;
-- revisar limite de pixels.
+## 13. Segurança e higiene
+
+Itens de risco:
+
+```txt
+.env.local.save
+backups/
+*.bak
+*.patch
+dist/
+test-results/
+```
+
+Regras:
+
+- não commitar secrets;
+- se `.env.local.save` tiver credenciais reais, rotacionar;
+- não expor conteúdo de secrets em relatório;
+- remover backup versionado após confirmar que não contém conteúdo necessário.
+
+---
+
+## 14. Encerramento da correção
+
+Antes de commit:
+
+```bash
+git status --short
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+```
+
+Se envolver docs:
+
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
+```
+
+Critério:
+
+- docs canônicos não devem descrever rotas antigas como views ativas;
+- histórico pode permanecer em `docs/historico/`;
+- toda mudança funcional deve atualizar doc afetada no mesmo commit.
