@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import ReactFlow, {
   EdgeTypes,
   useNodesState,
@@ -50,6 +50,8 @@ import {
   VisualLineFilters,
 } from './types';
 import { DIRECT_FAMILY_TOKENS } from './visualTokens';
+import type { FamilyTreeActions } from './actions';
+export type { FamilyTreeActions } from './actions';
 
 type LegacyFamilyTreeViewMode = 'minha-arvore' | 'genealogia' | 'visao-completa';
 
@@ -79,14 +81,6 @@ interface FamilyTreeProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
-export interface FamilyTreeActions {
-  zoomIn: () => void;
-  zoomOut: () => void;
-  print: () => Promise<void>;
-  savePdf: () => Promise<void>;
-  saveImage: () => Promise<void>;
-  startAreaSelection: () => void;
-}
 
 const edgeTypes: EdgeTypes = {
   orthogonalChild: OrthogonalChildEdge,
@@ -1166,7 +1160,7 @@ function FamilyTreeComponent({
     if (logicalViewportBounds) {
       debugNodes.push(createDebugBoundsNode({
         id: `${viewMode}-logical-viewport`,
-        label: 'GRADE LÃ“GICA / VIEWPORT BOUNDS',
+        label: 'GRADE LÓGICA / VIEWPORT BOUNDS',
         bounds: logicalViewportBounds,
         borderColor: 'rgba(245, 158, 11, 0.95)',
         backgroundColor: 'rgba(245, 158, 11, 0.08)',
@@ -1178,7 +1172,7 @@ function FamilyTreeComponent({
     if (renderedContentBounds) {
       debugNodes.push(createDebugBoundsNode({
         id: `${viewMode}-rendered-content`,
-        label: 'CONTEÃšDO RENDERIZADO / FLOW BOUNDS',
+        label: 'CONTEÚDO RENDERIZADO / FLOW BOUNDS',
         bounds: renderedContentBounds,
         borderColor: 'rgba(59, 130, 246, 0.95)',
         backgroundColor: 'rgba(59, 130, 246, 0.06)',
@@ -1808,8 +1802,8 @@ function FamilyTreeComponent({
           type="button"
           onClick={() => handleDirectionalPan('up')}
           className="absolute left-1/2 top-4 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          aria-label="Mover ?rvore para cima"
-          title="Mover ?rvore para cima"
+          aria-label="Mover árvore para cima"
+          title="Mover árvore para cima"
         >
           <ChevronUp className="h-4 w-4" />
         </button>
@@ -1863,7 +1857,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('left')}
             className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover Ã¡rvore para a esquerda"
+            aria-label="Mover árvore para a esquerda"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -1871,7 +1865,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('right')}
             className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover Ã¡rvore para a direita"
+            aria-label="Mover árvore para a direita"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -1879,7 +1873,7 @@ function FamilyTreeComponent({
             type="button"
             onClick={() => handleDirectionalPan('down')}
             className="absolute bottom-[5.75rem] left-1/2 z-20 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Mover Ã¡rvore para baixo"
+            aria-label="Mover árvore para baixo"
           >
             <ChevronDown className="h-5 w-5" />
           </button>
@@ -1890,13 +1884,13 @@ function FamilyTreeComponent({
         <div className="pointer-events-none absolute inset-0 z-30 border-4 border-dashed border-red-500/80 bg-red-500/[0.02]">
           <div className="absolute right-4 top-4 max-w-[360px] rounded-lg border border-red-300 bg-white/95 px-3 py-2 text-left text-xs font-semibold text-red-700 shadow-lg">
             <div>DEBUG TREE BOUNDS</div>
-            <div>Vermelho: Ã¡rea total visÃ­vel do componente</div>
+            <div>Vermelho: área total visível do componente</div>
             <div>ReactFlow: top {isMobile ? 0 : desktopVisualTopInset}px / bottom {isMobile ? 0 : TREE_DESKTOP_VISUAL_BOTTOM_INSET}px</div>
-            <div>Amarelo: grade lÃ³gica / viewportBounds</div>
-            <div>Azul: conteÃºdo renderizado / flowBounds</div>
-            <div>Rosa: Ã¡rea preenchida por cards / personNodes</div>
+            <div>Amarelo: grade lógica / viewportBounds</div>
+            <div>Azul: conteúdo renderizado / flowBounds</div>
+            <div>Rosa: área preenchida por cards / personNodes</div>
             <div>View atual: {viewMode}</div>
-            <div>Container: {containerSize.width}px Ã— {containerSize.height}px</div>
+            <div>Container: {containerSize.width}px × {containerSize.height}px</div>
             <div>Zoom inicial: {activeTreeViewport?.zoom.toFixed(6) ?? 'pendente'}</div>
           </div>
         </div>
@@ -1953,7 +1947,7 @@ function FamilyTreeComponent({
                 ? 'genealogia'
                 : 'visao-completa'
           }
-          title="Ãrea selecionada da Ã¡rvore"
+          title="Área selecionada da árvore"
           onClose={handleCloseAreaSelection}
         />
       )}
