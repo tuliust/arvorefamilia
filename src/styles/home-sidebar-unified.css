@@ -763,7 +763,7 @@ body.tree-mobile-controls-open {
 
 @media (max-width: 380px) {
   [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-generation-column="true"] {
-    width: 19rem !important;
+    width: 15rem !important;
   }
 
   [data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-card="true"] > button {
