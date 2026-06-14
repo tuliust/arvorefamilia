@@ -1,9 +1,10 @@
 # Inventário técnico — Árvore Família
 
-> Local canônico sugerido: `docs/INVENTARIO_TECNICO.md`  
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/INVENTARIO_TECNICO.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: inventário técnico da baseline atual  
-> Escopo: rotas, componentes, services, hooks, tipos, CSS, testes e documentação
+> Baseline revisada: `main` em `833108f`  
+> Status: inventário técnico atualizado após refatoração das rotas, painel, CSS e higiene do repositório.
 
 ---
 
@@ -19,15 +20,15 @@ Use este documento para:
 - orientar novos prompts, commits e QA;
 - manter documentação e código sincronizados.
 
-Classificações usadas:
+Classificações:
 
 | Categoria | Definição |
 |---|---|
 | Vigente | Usado pelo produto atual. |
 | Vigente com dívida | Necessário, mas concentrado, duplicado, mal nomeado ou difícil de manter. |
 | Legado ativo | Antigo, mas ainda usado por dependência, contrato, compatibilidade ou CSS. |
-| Histórico | Pode permanecer apenas em `docs/historico/` ou registros claramente legados. |
-| Candidato a remoção | Sem consumidor aparente, removível após busca final e build. |
+| Histórico | Pode permanecer apenas em documentação histórica. |
+| Removido | Não existe mais no código versionado ou foi removido da frente atual. |
 | Candidato a refatoração | Usado, mas deve ser simplificado antes de futuras limpezas. |
 | Risco de regressão | Pode quebrar fluxo crítico se alterado sem teste. |
 
@@ -63,35 +64,15 @@ Classificações usadas:
 | `/ajustar-notificacoes` | `AjustarNotificacoes` | `MemberRoute` | Vigente |
 | `/forum/*` | Fórum | `MemberRoute` | Vigente |
 
-### 2.3 Rotas públicas
+### 2.3 Rotas públicas e admin
 
-| Rota | Componente | Categoria |
-|---|---|---|
-| `/entrar` | `Entrar` | Vigente |
-| `/termos` | `Termos` | Vigente |
-| `/privacidade` | `Privacidade` | Vigente |
-| `/admin/login` | `AdminLogin` | Pública/legada |
-
-### 2.4 Rotas administrativas
-
-| Rota | Guard | Categoria |
-|---|---|---|
-| `/admin` | `ProtectedRoute` | Vigente |
-| `/admin/dashboard` | `ProtectedRoute` | Alias vigente |
-| `/admin/home` | `ProtectedRoute` | Vigente |
-| `/admin/pessoas` | `ProtectedRoute` | Vigente |
-| `/admin/pessoas/nova` | `ProtectedRoute` | Vigente |
-| `/admin/pessoas/:id` | `ProtectedRoute` | Alias vigente |
-| `/admin/pessoas/:id/editar` | `ProtectedRoute` | Vigente |
-| `/admin/relacionamentos` | `ProtectedRoute` | Vigente |
-| `/admin/relacionamentos/novo` | `ProtectedRoute` | Vigente |
-| `/admin/importacao` | `ProtectedRoute` | Vigente |
-| `/admin/migrar-dados` | `ProtectedRoute` | Sensível |
-| `/admin/diagnostico` | `ProtectedRoute` | Vigente com legado possível |
-| `/admin/integridade` | `ProtectedRoute` | Vigente |
-| `/admin/atividades` | `ProtectedRoute` | Vigente |
-| `/admin/notificacoes` | `ProtectedRoute` | Vigente |
-| `/admin/solicitacoes-vinculos` | `ProtectedRoute` | Vigente |
+| Rota | Categoria |
+|---|---|
+| `/entrar` | Pública vigente |
+| `/termos` | Pública vigente |
+| `/privacidade` | Pública vigente |
+| `/admin/login` | Pública/admin |
+| `/admin/*` | Protegida por `ProtectedRoute` |
 
 ---
 
@@ -101,11 +82,11 @@ Classificações usadas:
 |---|---|---|---|
 | `src/app/routes.tsx` | Define rotas, guards, lazy loading e fallback de chunks | Vigente crítico | Não reintroduzir views antigas. |
 | `src/app/components/FamilyTree/treeViewMode.ts` | Contrato de views da árvore | Vigente crítico | Deve conter só dois modos. |
-| `src/app/constants/favoritePages.ts` | Catálogo de páginas favoritáveis | Vigente | Inclui as duas views oficiais. |
-| `src/app/services/globalSearchService.ts` | Busca global de páginas e pessoas | Vigente | Inclui as duas views oficiais. |
+| `src/app/constants/favoritePages.ts` | Catálogo de páginas favoritáveis | Vigente | Inclui as duas views oficiais; aliases antigos apenas como keywords. |
+| `src/app/services/globalSearchService.ts` | Busca global de páginas e pessoas | Vigente | Inclui as duas views oficiais; aliases antigos apontam para rotas atuais. |
 | `src/app/components/layout/UserProfileMenu.tsx` | Menu do usuário | Vigente | Deve apontar para rotas atuais. |
 | `src/app/components/layout/MemberPageHeader.tsx` | Header de páginas internas | Vigente | Deve usar `/mapa-familiar` como home da árvore. |
-| `src/app/pages/PersonProfile.tsx` | Perfil e retorno via `?voltar=` | Vigente crítico | Retornos seguros devem incluir horizontal. |
+| `src/app/pages/PersonProfile.tsx` | Perfil e retorno via `?voltar=` | Vigente crítico | Retornos seguros incluem horizontal. |
 
 ---
 
@@ -117,16 +98,16 @@ Classificações usadas:
 | `src/app/pages/home/HomeTreeSection.tsx` | Decide renderização da view ativa por modo e breakpoint | Vigente crítico |
 | `src/app/pages/home/HomeHeader.tsx` | Header da Home pós-login | Vigente |
 | `src/app/pages/home/HomeMobileNav.tsx` | Bottom/mobile nav e acesso ao painel mobile | Vigente crítico no mobile |
-| `src/app/pages/home/SidebarPanelTabs.tsx` | Controles superiores, alternância vertical/horizontal, paletas, exportação, destaque e abas do painel | Vigente com dívida |
-| `src/app/pages/home/SidebarInfoPanel.tsx` | Conteúdo de ações/info do painel | Candidato a revisão na próxima frente |
-| `src/app/pages/home/DirectRelationKpiGrid.tsx` | Filtros/grupos diretos | Vigente |
+| `src/app/pages/home/SidebarPanelTabs.tsx` | Controles superiores, alternância, paletas, exportação, destaque e filtros diretos | Vigente com dívida de nome |
+| `src/app/pages/home/DirectRelationKpiGrid.tsx` | KPIs/filtros de relações diretas | Vigente |
+| `src/app/pages/home/DirectRelativeFilterGrid.tsx` | Filtros de grupos diretos | Vigente |
 | `src/app/pages/home/LifeStatusKpiGrid.tsx` | Filtros por status de vida/pets | Vigente |
-| `src/app/pages/home/GenealogyFilterGrid.tsx` | Grid de filtros genealógicos | Candidato a remoção/investigação |
 
 Dívida principal:
 
 ```txt
 Home.tsx concentra responsabilidades demais.
+SidebarPanelTabs.tsx mantém nome histórico, embora não use mais tabs.
 ```
 
 Refatorações futuras devem extrair estado e ações por domínio, não reescrever tudo em um único commit.
@@ -151,196 +132,153 @@ Refatorações futuras devem extrair estado e ações por domínio, não reescre
 
 | Arquivo | Situação | Ação recomendada |
 |---|---|---|
-| `FamilyTree.tsx` | Renderer legado não montado como view pública, mas contém/exporta `FamilyTreeActions` | Extrair contrato antes de remover. |
-| `PersonNode.tsx` | Nó ReactFlow legado | Remover apenas no projeto de desativação do stack ReactFlow. |
+| `FamilyTree.tsx` | Renderer legado não montado como view pública principal | Preservar até projeto de remoção ReactFlow. |
+| `PersonNode.tsx` | Nó ReactFlow legado | Remover apenas no lote ReactFlow. |
 | `MarriageNode.tsx` | Nó ReactFlow legado e tipos úteis | Separar tipos antes de remover. |
 | `GenealogySpouseEdge.tsx` | Edge ReactFlow legado | Remover junto do lote ReactFlow. |
-| `nodeTypes.ts` / `edgeTypes.ts`, se existentes | Configuração ReactFlow | Investigar no lote ReactFlow. |
+| `nodeTypes.ts` / `edgeTypes.ts` | Configuração ReactFlow | Investigar no lote ReactFlow. |
 | `buildTreeGraph.ts` | Grafo/layout auxiliar ainda usado | Preservar até análise específica. |
 | `layouts/directFamilyDistributedLayout.ts` | Helper usado pelas views oficiais | Preservar. |
 | `layouts/genealogyColumnsLayout.ts` | Dependência da horizontal | Preservar. |
 
-Recomendação prioritária:
+Contrato já extraído:
 
 ```txt
-Mover FamilyTreeActions para um arquivo neutro, por exemplo:
 src/app/components/FamilyTree/actions.ts
 ```
 
 ---
 
-## 7. Services principais
+## 7. Serviços principais
 
-| Arquivo | Função | Categoria | Ação |
-|---|---|---|---|
-| `dataService.ts` | CRUD central de pessoas, relacionamentos e dados | Vigente com dívida | Dividir por domínio futuramente. |
-| `memberProfileService.ts` | Vínculo usuário-pessoa | Vigente crítico | Cobrir com testes. |
-| `treeDataCache.ts` | Cache e invalidação da árvore | Vigente crítico | Documentar contrato. |
-| `favoritesService.ts` | Favoritos | Vigente | Preservar. |
-| `globalSearchService.ts` | Busca global | Vigente | Manter sincronizado com favoritos. |
-| `permissionService.ts` | Permissões/admin | Vigente crítico | Não substituir por UI. |
-| `personInsightsService.ts` | Insights/IA por pessoa | Vigente | Preservar. |
-| `forumService.ts` | Fórum | Vigente | Preservar. |
-| `notification*` | Notificações | Vigente | Testes de integração futuros. |
-| `googleCalendarService.ts` | Integração Google Calendar | Vigente/opcional | Preservar. |
-| `relationshipResolverService.ts` | Sem consumidor aparente no diagnóstico | Candidato a remoção | Remover em commit próprio após busca final. |
-| `userEngagementService.ts` | Compatibilidade local/legado | Legado ativo | Migrar consumidores antes de remover. |
-
----
-
-## 8. Hooks e utils relevantes
-
-| Arquivo | Função | Categoria |
+| Arquivo | Categoria | Observação |
 |---|---|---|
-| `components/FamilyTree/hooks/useIsMobile.ts` | Breakpoint da árvore | Vigente com possível dívida |
-| `components/FamilyTree/utils/treeExport.ts` | Exportação PNG/PDF/impressão/área | Vigente crítico |
-| `components/FamilyTree/utils/treePreferences.ts` | Preferências e migrações locais | Exceção necessária |
-| `utils/relationshipDegree.ts` | Grau de parentesco | Vigente |
-| `utils/personFields.ts` | Normalização de campos de pessoa | Vigente |
-| `utils/personEntity.ts` | Humanos/pets | Vigente crítico |
-| `utils/searchText.ts` | Normalização de busca | Vigente |
+| `dataService.ts` | Vigente crítico | CRUD de pessoas/relacionamentos, logs, eventos da árvore. |
+| `memberProfileService.ts` | Vigente crítico | Perfis, vínculos usuário-pessoa, primeiro acesso. |
+| `treeDataCache.ts` | Vigente | Cache/evento global da árvore. |
+| `relationshipCacheService.ts` | Vigente | Limpeza de cache de parentesco. |
+| `favoritesService.ts` | Vigente | Persistência de favoritos. |
+| `globalSearchService.ts` | Vigente | Busca global com rotas atuais. |
+| `userEngagementService.ts` | Vigente com legado | Notificações/preferências e compatibilidade local. |
+| `relationshipResolverService.ts` | Removido | Resolver legado/parcial removido. |
 
 ---
 
-## 9. Tipos e contratos
+## 8. Componentes removidos na frente atual
 
-| Contrato | Arquivo provável | Categoria | Risco |
-|---|---|---|---|
-| `Pessoa` | `src/app/types` | Vigente crítico | Muito alto |
-| `Relacionamento` | `src/app/types` | Vigente crítico | Muito alto |
-| `TreeViewMode` | `treeViewMode.ts` | Vigente crítico | Alto |
-| `FamilyTreeActions` | `FamilyTree.tsx` atualmente | Vigente em local legado | Alto |
-| `DirectRelativeFilters` | `FamilyTree/types.ts` | Vigente | Alto |
-| `GenealogyFilters` | `FamilyTree/types.ts` | Legado ativo/dívida | Médio |
-| `MarriageNodeDetails` | `FamilyTree/types.ts` | Vigente | Alto |
-| `FavoriteEntityType` | tipos/favoritos | Vigente | Médio |
-| `VinculoUsuarioPessoa` | perfis/vínculos | Vigente crítico | Muito alto |
-| `NotificationIntent` | notificações | Vigente | Alto |
+| Arquivo | Status |
+|---|---|
+| `src/app/pages/home/GenealogyMobileStageTabs.tsx` | Removido |
+| `src/app/pages/home/GenealogyFilterGrid.tsx` | Removido |
+| `src/app/pages/CentralNotificacoes.tsx` | Removido |
+| `src/app/components/FamilyTree/ViewModeToggle.tsx` | Removido |
+| `src/app/components/figma/ImageWithFallback.tsx` | Removido |
+| `src/app/services/relationshipResolverService.ts` | Removido |
 
----
-
-## 10. CSS e estilos
-
-| Arquivo | Categoria | Ação |
-|---|---|---|
-| `family-map-qa.css` | Vigente | Preservar. |
-| `family-map-horizontal.css` | Vigente com possíveis aliases | Remover aliases só após QA. |
-| `family-tree-mobile.css` | Compartilhado | Preservar. |
-| `mobile-tree-controls.css` | Vigente mobile | Preservar. |
-| `home-sidebar-unified.css` | Vigente com dívida do painel | Revisar na frente do painel. |
-| `mobile-edit-profile.css` | Vigente para `/minha-arvore/editar` | Preservar. |
-| `family-tree-visual-polish.css` | Misto | Separar seletores. |
-| `mobile-tree-lines.css` | Ligado ao renderer antigo | Remover só no lote ReactFlow. |
-| `tree-view-desktop-polish.css` | Misto | Remover seletores antigos com QA. |
-
-Data attributes críticos:
+Regra:
 
 ```txt
-data-tree-route-view="mapa-familiar-horizontal"
-data-family-map-horizontal-root
-data-mobile-family-horizontal-root
-data-mobile-family-tree-root
-data-family-map-export-root="true"
-data-tree-export-ignore="true"
-data-tree-export-loading="true"
+Não restaurar arquivo removido sem nova busca de uso, justificativa e validação.
 ```
 
 ---
 
-## 11. Testes
+## 9. CSS
 
-| Arquivo/área | Status | Ação |
+| Arquivo | Categoria | Observação |
 |---|---|---|
-| `tests/e2e/app-smoke.spec.ts` | Deve testar rotas atuais | Manter alinhado à baseline. |
-| Vitest | Existente | Ampliar cobertura de helpers críticos. |
-| Playwright | Existente | Adicionar fluxos autenticados quando houver fixtures. |
-| Typecheck separado | Ausente/pendente | Criar script `npm run typecheck`. |
-| Lint | Ausente/pendente | Criar script e CI. |
-| CI versionado | Ausente no diagnóstico | Criar workflow mínimo. |
-
----
-
-## 12. Candidatos a remoção em commits próprios
-
-Confirmar com `rg` antes de remover:
-
-```txt
-src/app/components/FamilyTree/ViewModeToggle.tsx
-src/app/components/FamilyTree/GenealogyMobileStageTabs.tsx
-src/app/components/ImageWithFallback.tsx
-src/app/services/relationshipResolverService.ts
-src/app/pages/CentralNotificacoes.tsx
-```
+| `home-sidebar-unified.css` | Vigente | Painel simplificado e modal mobile. |
+| `mobile-tree-controls.css` | Legado ativo | Renderer ReactFlow mobile; preservar até remoção do stack. |
+| `family-map-qa.css` | Vigente | Ajustes do mapa vertical e transparência da horizontal. |
+| `family-map-horizontal.css` | Vigente | Horizontal desktop/mobile, paletas e exportação. |
+| `family-tree-mobile.css` | Vigente/legado misto | Mobile vertical/horizontal e CSS ReactFlow legado. |
+| `mobile-tree-lines.css` | Legado ativo | Regras ReactFlow diretas; preservar. |
+| `tree-view-desktop-polish.css` | Vigente | Ajustes desktop transversais sem resíduos de view antiga. |
+| `mobile-edit-profile.css` | Vigente | Escopado a `/minha-arvore/editar`. |
 
 Regras:
 
-- um lote pequeno por commit;
-- rodar `npm run build` e `git diff --check`;
-- se alterar import, rodar `npm test`;
-- se alterar árvore, rodar `npm run test:e2e` e QA visual.
+- não remover CSS por nome antigo sem verificar escopo;
+- `minha-arvore` pode existir em CSS da rota `/minha-arvore/editar`;
+- `genealogia` pode existir como conceito visual, não rota;
+- CSS global de SVG deve ser evitado.
 
 ---
 
-## 13. Arquivos sensíveis ou de higiene
+## 10. Testes
 
-| Arquivo/pasta | Risco | Ação |
+| Arquivo | Categoria | Observação |
 |---|---|---|
-| `.env.local.save` | Pode conter segredo | Auditar sem expor conteúdo; rotacionar se necessário. |
-| `backups/FamilyTree.before_debug_bounds...tsx` | Backup versionado | Remover após confirmar irrelevância. |
-| Dumps SQL soltos | Risco de dados/sensibilidade | Mover para histórico seguro ou fora do repo. |
-| `test-results/` | Artefato local | Não versionar. |
-| `dist/` | Build local | Não versionar. |
+| `tests/e2e/app-smoke.spec.ts` | Vigente | Protege rotas oficiais e bloqueia retorno das antigas. |
+| `relationshipDegree.test.ts` | Vigente | Relacionamento/grau. |
+| `relationshipDegreeDisplay.test.ts` | Vigente | Exibição textual de parentesco. |
+| `mobileFamilyTreeModel.test.ts` | Vigente | Modelo mobile. |
 
----
+Comandos:
 
-## 14. Dependências e scripts
-
-Revisar em lote futuro:
-
-```txt
-package.json
-package-lock.json
-vite.config.*
-playwright.config.*
-vitest.config.*
-.github/
+```bash
+npm run build
+npm test
+npm run test:e2e
+git diff --check
 ```
 
-Prioridades:
+---
 
-1. adicionar `typecheck` separado;
-2. adicionar lint;
-3. criar CI mínimo;
-4. auditar dependências sem uso;
-5. não remover ReactFlow/Dagre enquanto houver tipos/helpers ativos.
+## 11. Configuração e higiene
+
+| Arquivo | Categoria | Observação |
+|---|---|---|
+| `.gitignore` | Vigente | Ignora envs, testes, backups e artefatos locais. |
+| `package.json` | Vigente | Scripts de build/test/e2e presentes. |
+| `vite.config.ts` | Vigente | Vite, React, Tailwind, chunks manuais e Vitest. |
+| `playwright.config.ts` | Vigente | Build + preview antes dos E2E. |
+| `tsconfig.json` | Inexistente | Não criar sem necessidade; o projeto builda sem ele. |
+
+Ignorados:
+
+```txt
+node_modules/
+dist/
+.vite/
+.env
+.env.local
+.env.*.local
+.env*.save
+coverage/
+test-results/
+playwright-report/
+backups/
+```
 
 ---
 
-## 15. Ordem recomendada de limpeza
+## 12. Documentação
 
-1. Baseline documental e E2E.
-2. Painel `Filtros | Legendas | Ações`.
-3. Extração de `FamilyTreeActions`.
-4. Remoção de órfãos claros.
-5. Limpeza de CSS por seletor.
-6. Arquivamento de docs legados.
-7. Auditoria de design system (`components/ui`).
-8. Typecheck/lint/CI.
-9. Planejamento específico para remover renderer ReactFlow legado.
+Canônicos atualizados:
+
+```txt
+docs/README.md
+docs/BASELINE_PRODUTO_ATUAL.md
+docs/INVENTARIO_TECNICO.md
+docs/GUIA_IMPLEMENTACOES.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+docs/GUIA_CORRECAO_ERROS.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/PLANO_PROXIMOS_PASSOS.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+```
+
+Documentos históricos ou mistos devem ser revisados antes de virar referência.
 
 ---
 
-## 16. Regra operacional
+## 13. Próximas frentes técnicas possíveis
 
-Este inventário deve ser atualizado sempre que uma mudança alterar:
-
-- rotas;
-- guards;
-- contratos da árvore;
-- services centrais;
-- favoritos;
-- busca global;
-- exportação;
-- componentes oficiais;
-- documentação canônica.
-
+1. Renomear `SidebarPanelTabs.tsx` para nome neutro.
+2. Extrair responsabilidades de `Home.tsx`.
+3. Auditar stack ReactFlow/Dagre.
+4. Criar CI GitHub Actions.
+5. Ampliar E2E autenticado com dados reais ou fixtures.
+6. Auditar dependências e `pnpm.overrides`.

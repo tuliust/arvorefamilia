@@ -1,9 +1,10 @@
 # Regras de não regressão — Árvore Família
 
-> Local canônico sugerido: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: checklist canônico para alterações futuras  
-> Escopo: rotas, árvore, painel, exportação, favoritos, busca, guards, docs e segurança
+> Baseline revisada: `main` em `833108f`  
+> Status: checklist canônico para alterações futuras.
 
 ---
 
@@ -66,6 +67,13 @@ rg "visao-completa"
 rg "/minha-arvore|/genealogia|/visao-completa"
 rg "TreeViewMode|treeViewMode"
 rg "data-tree-route-view|data-export-view"
+rg "Filtros|Legendas|Ações"
+```
+
+Em ambiente Windows sem `rg`, usar:
+
+```powershell
+Select-String -Path .\src\**\*.*,.\docs\**\*.* -Pattern "minha-arvore|genealogia|visao-completa|Filtros|Legendas|Ações"
 ```
 
 Interpretação permitida:
@@ -73,8 +81,9 @@ Interpretação permitida:
 - `/minha-arvore/editar` pode permanecer;
 - `genealogia` pode aparecer como termo textual da horizontal;
 - `docs/historico/` pode conter material legado;
-- arquivos de documentação legada devem estar claramente marcados;
-- não pode haver rota ativa, favorito, busca global ou modo ativo para as rotas removidas.
+- aliases antigos podem existir como keywords de busca/favoritos se apontarem para rotas atuais;
+- não pode haver rota ativa, favorito, busca global ou modo ativo para as rotas removidas;
+- a barra `Filtros | Legendas | Ações` não deve voltar como UI ativa.
 
 ---
 
@@ -138,7 +147,7 @@ Checklist:
 - [ ] `PATH_TO_VIEW_MODE` contém `/`, `/mapa-familiar`, `/mapa-familiar-horizontal`.
 - [ ] fallback retorna `mapa-familiar`.
 - [ ] nenhuma view antiga está no tipo.
-- [ ] alternância vertical/horizontal preserva `location.search`.
+- [ ] alternância Vertical/Horizontal preserva `location.search`.
 
 ---
 
@@ -180,9 +189,9 @@ Exemplos esperados:
 
 Checklist:
 
-- [ ] abrir perfil a partir da vertical gera retorno para `/mapa-familiar`.
-- [ ] abrir perfil a partir da horizontal gera retorno para `/mapa-familiar-horizontal`.
-- [ ] retorno inválido cai em `/mapa-familiar`.
+- [ ] abrir perfil a partir da vertical gera retorno para `/mapa-familiar`;
+- [ ] abrir perfil a partir da horizontal gera retorno para `/mapa-familiar-horizontal`;
+- [ ] retorno inválido cai em `/mapa-familiar`;
 - [ ] `/minha-arvore` não é fallback de perfil.
 
 ---
@@ -190,31 +199,6 @@ Checklist:
 ## 8. Regras do painel
 
 ### Estado atual que deve funcionar
-
-- Zoom +;
-- Zoom -;
-- Restaurar visualização;
-- Vertical;
-- Horizontal;
-- Cores;
-- Exportar;
-- Destacar;
-- Filtros;
-- Legendas;
-- Ações;
-- modal mobile de controles.
-
-### Próxima mudança planejada
-
-Remover:
-
-```txt
-Filtros
-Legendas
-Ações
-```
-
-Mas preservar:
 
 ```txt
 Zoom +
@@ -225,11 +209,21 @@ Horizontal
 Cores
 Exportar
 Destacar
-filtros/grupos visíveis diretamente
-modal mobile
+Filtros/grupos visíveis diretamente
+Filtros de status
+Modal mobile de controles
 ```
 
-Checklist após simplificação futura:
+### Não deve voltar
+
+```txt
+barra Filtros | Legendas | Ações
+activeSidebarPanel como contrato de produto
+aba Legendas como UI persistente
+aba Ações como UI persistente
+```
+
+Checklist:
 
 - [ ] filtros continuam acessíveis sem aba;
 - [ ] exportação continua funcionando;
@@ -237,7 +231,8 @@ Checklist após simplificação futura:
 - [ ] destaque de linhas/cards/grupos continua funcionando;
 - [ ] modal mobile abre e fecha corretamente;
 - [ ] `Escape` fecha modal/overlay quando aplicável;
-- [ ] scroll do body não fica travado no mobile.
+- [ ] scroll do body não fica travado no mobile;
+- [ ] painel não aparece na exportação.
 
 ---
 
@@ -292,6 +287,7 @@ Checklist:
 - [ ] favoritos não apontam para rotas removidas.
 - [ ] favorito de página usa rota canônica sem estado transitório.
 - [ ] favorito não salva zoom, geração ativa, filtro ou query específica como contrato obrigatório.
+- [ ] aliases antigos são keywords, não destinos.
 
 ---
 
@@ -301,7 +297,8 @@ Checklist:
 
 - [ ] busca por “mapa” retorna `Mapa Familiar`.
 - [ ] busca por “horizontal” ou “genealogia” retorna `Mapa Familiar Horizontal`.
-- [ ] busca não retorna `/minha-arvore`, `/genealogia` ou `/visao-completa` como páginas ativas.
+- [ ] busca por “minha árvore” não retorna `/minha-arvore` como rota ativa.
+- [ ] busca por “visão completa” não retorna `/visao-completa` como rota ativa.
 - [ ] busca por pessoas continua usando `buscarPessoas`.
 - [ ] termos e privacidade podem aparecer como páginas públicas se estiverem no catálogo.
 
@@ -315,218 +312,90 @@ Checklist:
 - [ ] `MemberRoute` protege páginas de membro.
 - [ ] `ProtectedRoute` protege `/admin/*`.
 - [ ] usuário comum não acessa admin.
-- [ ] UI escondida não é usada como única barreira de segurança.
-- [ ] RLS/RPC/services continuam aplicando permissões.
-- [ ] ferramentas destrutivas exigem env flag e confirmação.
+- [ ] UI escondida não é controle de permissão.
+- [ ] RLS e services continuam sendo fonte de autorização.
+- [ ] `.env`, `.env.local`, `.env*.save` e backups não são versionados.
 
 ---
 
-## 13. Regras para remover arquivos
+## 13. Regras para remoção de arquivos
 
-Antes de remover qualquer arquivo:
+Antes de remover:
 
 ```bash
 rg "NomeDoArquivoSemExtensao"
-rg "from ['\"].*NomeDoArquivo"
-rg "import .*NomeDoArquivo"
-npm run build
-git diff --check
-```
-
-Se for componente da árvore:
-
-```bash
-npm run test:e2e
-```
-
-Não remover isoladamente:
-
-```txt
-FamilyTree.tsx
-PersonNode.tsx
-MarriageNode.tsx
-GenealogySpouseEdge.tsx
-directFamilyDistributedLayout.ts
-genealogyColumnsLayout.ts
-treeExport.ts
-TreeAreaSelectionOverlay.tsx
-```
-
-Sem plano específico.
-
----
-
-## 14. Regras para limpar CSS
-
-Antes de remover CSS:
-
-```bash
-rg "nome-da-classe|data-attribute" src/app src/styles
-```
-
-Checklist:
-
-- [ ] seletor não existe no DOM atual;
-- [ ] seletor não é usado por exportação;
-- [ ] seletor não é usado no mobile;
-- [ ] seletor não pertence a `/minha-arvore/editar`;
-- [ ] seletor não é compartilhado entre view oficial e legado;
-- [ ] QA visual feito em desktop;
-- [ ] QA visual feito em mobile;
-- [ ] exportação testada se o CSS afetar árvore.
-
----
-
-## 15. Regras para documentação
-
-Ao alterar comportamento:
-
-- [ ] atualizar `README.md` se afetar uso geral;
-- [ ] atualizar `docs/README.md` se afetar índice/status;
-- [ ] atualizar `ARCHITECTURE.md` se afetar arquitetura;
-- [ ] atualizar `ROTAS_E_GUARDS.md` se afetar rotas;
-- [ ] atualizar doc funcional correspondente;
-- [ ] atualizar `BASELINE_PRODUTO_ATUAL.md` se afetar baseline;
-- [ ] atualizar `DECISOES_ARQUITETURAIS.md` se houver decisão nova;
-- [ ] atualizar `INVENTARIO_TECNICO.md` se mudar inventário;
-- [ ] atualizar este arquivo se criar nova regra de validação.
-
-Documentos legados devem ir para:
-
-```txt
-docs/historico/
-```
-
-com aviso claro de que não são fonte de verdade.
-
----
-
-## 16. Regras de segurança e higiene do repositório
-
-Nunca versionar:
-
-```txt
-.env.local
-.env.* com segredo
-service role keys
-dumps reais
-tokens
-backups sensíveis
-dist/
-test-results/
-node_modules/
-```
-
-Atenção especial:
-
-- auditar `.env.local.save` se existir no repo;
-- remover backups versionados depois de confirmar que não são necessários;
-- rotacionar credenciais se segredo real tiver sido versionado;
-- não colar segredo em issue, commit, prompt ou documentação.
-
----
-
-## 17. Checklist manual desktop
-
-- [ ] login/entrada;
-- [ ] `/` resolve corretamente;
-- [ ] `/mapa-familiar` carrega;
-- [ ] `/mapa-familiar-horizontal` carrega;
-- [ ] alternância Vertical/Horizontal preserva query;
-- [ ] clique em pessoa abre perfil;
-- [ ] voltar do perfil retorna à view correta;
-- [ ] filtros funcionam;
-- [ ] Cores funcionam;
-- [ ] Exportar funciona;
-- [ ] Destacar funciona;
-- [ ] favoritos funcionam;
-- [ ] busca global funciona;
-- [ ] admin bloqueia usuário comum.
-
----
-
-## 18. Checklist manual mobile
-
-- [ ] `/mapa-familiar` renderiza mobile;
-- [ ] `/mapa-familiar-horizontal` renderiza uma geração por tela;
-- [ ] chips de geração funcionam;
-- [ ] swipe lateral funciona na horizontal;
-- [ ] scroll vertical da geração ativa funciona;
-- [ ] botão de controles abre modal;
-- [ ] modal fecha;
-- [ ] bottom nav não cobre controles críticos;
-- [ ] exportação não captura header/bottom nav;
-- [ ] retorno de perfil funciona.
-
----
-
-## 19. Checklist para commit
-
-Antes do commit:
-
-```bash
-git status --short
+rg "NomeDoComponente"
 npm run build
 npm test
 npm run test:e2e
 git diff --check
 ```
 
-Revisar:
+Remoção exige:
 
-- [ ] diff não inclui secrets;
-- [ ] diff não inclui backups;
-- [ ] docs atualizadas;
-- [ ] testes atualizados;
-- [ ] rotas antigas não reapareceram;
-- [ ] `/minha-arvore/editar` preservada;
-- [ ] exportação não quebrada;
-- [ ] mobile não quebrado.
+- sem import ativo;
+- sem lazy import;
+- sem contrato exportado;
+- sem CSS dependente;
+- sem teste dependente;
+- sem uso em documentação canônica como vigente;
+- decisão explícita se for legado técnico.
 
----
+Arquivos já removidos não devem voltar sem nova justificativa:
 
-## 20. Mensagens de commit recomendadas
-
-Rotas:
-
-```bash
-git commit -m "refactor: simplifica rotas da arvore"
-```
-
-Painel:
-
-```bash
-git commit -m "refactor: simplifica painel dos mapas familiares"
-```
-
-Docs:
-
-```bash
-git commit -m "docs: registra baseline atual do produto"
-```
-
-Testes:
-
-```bash
-git commit -m "test: atualiza smoke tests das rotas oficiais"
-```
-
-CSS:
-
-```bash
-git commit -m "style: remove seletores legados da arvore"
+```txt
+GenealogyMobileStageTabs.tsx
+GenealogyFilterGrid.tsx
+CentralNotificacoes.tsx
+ViewModeToggle.tsx
+ImageWithFallback.tsx
+relationshipResolverService.ts
 ```
 
 ---
 
-## 21. Regra final
+## 14. Regras de CSS
 
-Uma mudança só está pronta quando:
+Checklist:
 
-1. o código compila;
-2. os testes relevantes passam;
-3. a documentação canônica não contradiz o código;
-4. a busca por rotas antigas foi interpretada;
-5. não há segredo, backup ou artefato local no diff;
-6. o comportamento mobile e exportação foram avaliados quando afetados.
+- [ ] CSS novo usa data attribute, rota ou container como escopo.
+- [ ] Não há seletor global `svg path` sem escopo.
+- [ ] `mobile-edit-profile.css` continua permitido para `/minha-arvore/editar`.
+- [ ] `family-map-horizontal.css` não traz alias antigo `mapa-horizontal`.
+- [ ] CSS ReactFlow legado só é removido em frente própria.
+- [ ] painel mobile tem z-index acima de header/bottom nav.
+- [ ] exportação oculta UI transitória.
 
+---
+
+## 15. Regras de documentação
+
+Checklist:
+
+- [ ] Docs canônicos refletem código atual.
+- [ ] Docs históricos estão marcados como legado.
+- [ ] `PLANO_PROXIMOS_PASSOS.md` contém pendências reais.
+- [ ] Guias não dizem que as tabs antigas ainda existem.
+- [ ] Guias não dizem que `TreeViewMode` tem mais de dois modos.
+- [ ] Guias não tratam `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
+
+---
+
+## 16. Checklist final antes de push
+
+```bash
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+git status --short
+```
+
+Aceitação:
+
+- build sem erro;
+- unit tests passando;
+- E2E passando;
+- sem arquivos locais no status;
+- sem `test-results/`, `backups/` ou `.env*.save` versionados;
+- docs atualizadas se comportamento mudou.

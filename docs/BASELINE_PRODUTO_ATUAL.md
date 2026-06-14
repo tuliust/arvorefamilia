@@ -1,15 +1,16 @@
 # Baseline do produto atual — Árvore Família
 
-> Local canônico sugerido: `docs/BASELINE_PRODUTO_ATUAL.md`  
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: baseline funcional da `main` após a remoção das views antigas da árvore  
-> Escopo: comportamento implementado no código atual, não histórico de produto
+> Baseline revisada: `main` em `833108f`  
+> Status: baseline funcional após remoção das views antigas da árvore, simplificação do painel e higiene do repositório.
 
 ---
 
 ## 1. Objetivo
 
-Este documento define o **estado canônico atual** do produto para orientar novas alterações, revisões e limpezas.
+Este documento define o estado canônico atual do produto para orientar novas alterações, revisões e limpezas.
 
 A baseline serve para evitar regressões como:
 
@@ -18,7 +19,8 @@ A baseline serve para evitar regressões como:
 - remover código ainda compartilhado pelas views oficiais;
 - apagar compatibilidades de dados sem migração;
 - remover CSS misto sem teste visual;
-- alterar navegação, exportação ou retorno de perfil sem validação.
+- alterar navegação, exportação ou retorno de perfil sem validação;
+- reintroduzir artefatos locais no versionamento.
 
 Regra principal:
 
@@ -26,13 +28,11 @@ Regra principal:
 O comportamento implementado no código atual prevalece sobre documentação histórica.
 ```
 
-Documentos em `docs/historico/` podem explicar decisões anteriores, mas não devem orientar implementação ativa sem validação contra o código atual.
-
 ---
 
 ## 2. Baseline funcional da árvore
 
-O produto mantém **duas views oficiais de árvore**:
+O produto mantém duas views oficiais de árvore:
 
 | View | Rota | Status | Uso |
 |---|---|---|---|
@@ -55,7 +55,7 @@ preservando `location.search`, especialmente `?pessoa=...`.
 
 ### Rotas antigas removidas do produto ativo
 
-As rotas abaixo **não são mais views ativas**:
+As rotas abaixo não são mais views ativas:
 
 ```txt
 /minha-arvore
@@ -63,16 +63,16 @@ As rotas abaixo **não são mais views ativas**:
 /visao-completa
 ```
 
-Elas não devem voltar a aparecer em:
+Elas não devem voltar a aparecer como:
 
-- `routes.tsx` como views da árvore;
-- `TreeViewMode`;
-- menu do usuário;
-- favoritos de página;
-- busca global;
-- headers e breadcrumbs;
-- documentação canônica;
-- testes E2E como rotas válidas.
+- rotas da árvore em `routes.tsx`;
+- valores de `TreeViewMode`;
+- destino de menu do usuário;
+- favorito de página ativo;
+- resultado de busca global como página ativa;
+- fallback de perfil;
+- item de header/breadcrumb;
+- teste E2E de rota válida.
 
 ### Exceção nominal importante
 
@@ -82,13 +82,13 @@ A rota abaixo continua vigente:
 /minha-arvore/editar
 ```
 
-Ela representa a edição dos dados/árvore do membro e **não deve ser confundida** com a view antiga `/minha-arvore`.
+Ela representa a edição dos dados/árvore do membro e não deve ser confundida com a view antiga `/minha-arvore`.
 
 ---
 
 ## 3. Contrato de `TreeViewMode`
 
-O contrato atual de `TreeViewMode` deve permanecer restrito a:
+O contrato atual deve permanecer restrito a:
 
 ```ts
 export type TreeViewMode =
@@ -109,12 +109,12 @@ Fallback esperado:
 getTreeViewModeFromPath(path desconhecido) -> mapa-familiar
 ```
 
-Regras de não regressão:
+Regras:
 
 - não reintroduzir `minha-arvore`, `genealogia` ou `visao-completa` no tipo;
 - não criar alias silencioso para rotas removidas;
 - qualquer nova view futura exige alteração coordenada em rotas, navegação, favoritos, busca, testes e documentação;
-- alternância vertical/horizontal deve preservar `location.search`.
+- alternância Vertical/Horizontal deve preservar `location.search`.
 
 ---
 
@@ -130,9 +130,9 @@ Regras de não regressão:
 Regras:
 
 - `/mapa-familiar` é a experiência visual vertical principal;
-- `/mapa-familiar-horizontal` é a experiência genealógica horizontal;
+- `/mapa-familiar-horizontal` é a experiência horizontal por gerações;
 - a horizontal mobile não é subrota; é uma renderização interna da mesma rota;
-- não usar `/visao-completa` como substituto da horizontal;
+- a palavra “Genealogia” pode aparecer como conceito/título visual, mas não reativa `/genealogia`;
 - não reintroduzir renderização ReactFlow como view pública principal sem decisão arquitetural.
 
 ---
@@ -149,11 +149,12 @@ src/app/services/globalSearchService.ts
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
+src/app/pages/PersonProfile.tsx
 ```
 
 ### Favoritos
 
-As páginas de árvore favoritáveis vigentes são:
+Páginas de árvore favoritáveis:
 
 ```txt
 /mapa-familiar
@@ -164,11 +165,18 @@ Favoritar uma página salva o atalho da rota canônica, não estado visual de zo
 
 ### Busca global
 
-A busca global deve indexar as duas views oficiais e não deve indexar as views removidas como páginas ativas.
+A busca global deve indexar as duas views oficiais.
+
+Termos antigos podem existir apenas como keywords que redirecionam para rotas vigentes:
+
+```txt
+minha árvore -> /mapa-familiar
+árvore genealógica -> /mapa-familiar-horizontal
+linha genealógica -> /mapa-familiar-horizontal
+visão completa -> /mapa-familiar-horizontal
+```
 
 ### Retorno de perfil
-
-A navegação entre árvore e perfil usa `?voltar=...`.
 
 Retornos seguros para a árvore:
 
@@ -186,38 +194,39 @@ Fallback padrão:
 
 ---
 
-## 6. Painel da árvore: estado atual e pendência
+## 6. Painel da árvore
 
 Estado atual:
 
-- o painel ainda possui controles superiores para:
-  - Zoom +;
-  - Zoom -;
-  - Restaurar visualização;
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Exportar;
-  - Destacar;
-- a barra inferior do painel ainda possui:
-  - `Filtros`;
-  - `Legendas`;
-  - `Ações`.
+- não há mais barra visual `Filtros | Legendas | Ações`;
+- filtros/grupos/status ficam disponíveis diretamente no painel;
+- controles superiores e flyouts permanecem preservados;
+- modal mobile compartilha os controles essenciais;
+- painel, modal, overlays e loading são marcados para não entrar na exportação.
 
-Pendência planejada:
+Controles vigentes:
 
 ```txt
-Remover a barra Filtros | Legendas | Ações.
+Zoom +
+Zoom -
+Restaurar visualização
+Vertical
+Horizontal
+Cores
+Exportar
+Destacar
+Filtros de grupos
+Filtros de status
 ```
 
-Comportamento desejado para a próxima frente:
+Regras:
 
-- filtros/grupos visíveis diretamente no painel;
-- remover/ocultar aba de legendas;
-- remover/ocultar aba de ações;
-- preservar todos os controles superiores necessários;
-- preservar modal mobile de controles;
-- preservar exportação, cores e destaque.
+- `Vertical` navega para `/mapa-familiar`;
+- `Horizontal` navega para `/mapa-familiar-horizontal`;
+- ambos preservam `location.search`;
+- `?pessoa=...` não pode ser perdido;
+- `Restaurar visualização` não é sinônimo de `Zoom -`;
+- painel mobile deve travar scroll do body e manter rolagem interna.
 
 ---
 
@@ -241,15 +250,16 @@ Regras:
 
 - painel, header, bottom nav, overlays e loading não devem entrar na captura;
 - a exportação deve preservar paleta, filtros, conectores SVG, cards e título;
-- área selecionada deve capturar apenas a região visível escolhida;
+- área selecionada deve capturar apenas a região escolhida;
+- captura muito grande deve falhar com mensagem clara;
 - `treeExport.ts` é utilitário crítico e não deve ser removido em limpezas gerais;
-- a existência de compatibilidade técnica com ReactFlow não significa que as rotas antigas estejam ativas.
+- compatibilidade técnica com ReactFlow não significa que as rotas antigas estejam ativas.
 
 ---
 
 ## 8. Componentes e contratos críticos
 
-### Preservar como oficiais
+### Oficiais
 
 ```txt
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
@@ -260,9 +270,10 @@ src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/treeViewMode.ts
+src/app/components/FamilyTree/actions.ts
 ```
 
-### Preservar por dependência até refatoração
+### Preservados por dependência até refatoração específica
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -275,22 +286,36 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 Motivos:
 
-- `FamilyTree.tsx` ainda contém/exporta contrato usado pelas views atuais (`FamilyTreeActions`);
-- `directFamilyDistributedLayout.ts` contém helper usado nas views oficiais;
+- ainda podem conter tipos, helpers ou compatibilidades compartilhadas;
+- `directFamilyDistributedLayout.ts` contém helpers usados pelas views oficiais;
 - `genealogyColumnsLayout.ts` é dependência real da horizontal;
-- ReactFlow ainda aparece em tipos, grafos ou layouts compartilhados.
-
-Regra:
-
-```txt
-Não remover o stack ReactFlow legado em limpezas pequenas.
-```
-
-A remoção deve ser um projeto próprio, depois de extrair contratos e helpers ativos.
+- CSS ReactFlow legado deve ser limpo apenas junto do projeto de desativação do renderer legado.
 
 ---
 
-## 9. CSS e data attributes críticos
+## 9. Código removido na frente atual
+
+Foram removidos do código ativo:
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/CentralNotificacoes.tsx
+src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/components/figma/ImageWithFallback.tsx
+src/app/services/relationshipResolverService.ts
+```
+
+Foram removidos do versionamento:
+
+```txt
+backups/
+.env.local.save
+```
+
+---
+
+## 10. CSS e data attributes críticos
 
 Preservar:
 
@@ -305,9 +330,7 @@ data-tree-selection-overlay="true"
 data-tree-export-loading="true"
 ```
 
-Não remover CSS apenas por nome antigo. Há arquivos mistos que contêm regras vigentes e legado.
-
-Preservar especialmente:
+CSS crítico:
 
 ```txt
 src/styles/family-map-qa.css
@@ -316,45 +339,15 @@ src/styles/family-tree-mobile.css
 src/styles/home-sidebar-unified.css
 src/styles/mobile-tree-controls.css
 src/styles/mobile-edit-profile.css
+src/styles/tree-view-desktop-polish.css
 ```
 
 Atenção:
 
-- `mobile-edit-profile.css` pode usar nomenclatura associada a `/minha-arvore/editar`, que continua vigente;
-- aliases antigos como `mapa-horizontal` devem ser removidos apenas depois de QA visual;
-- CSS de ReactFlow deve ser limpo apenas junto do projeto de remoção do renderer legado.
-
----
-
-## 10. Documentação canônica vigente
-
-Os arquivos abaixo devem refletir esta baseline:
-
-```txt
-README.md
-docs/README.md
-docs/BASELINE_PRODUTO_ATUAL.md
-docs/INVENTARIO_TECNICO.md
-docs/DECISOES_ARQUITETURAIS.md
-docs/REGRAS_DE_NAO_REGRESSAO.md
-docs/arquitetura/ARCHITECTURE.md
-docs/arquitetura/ROTAS_E_GUARDS.md
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-docs/funcionalidades/FAVORITOS.md
-```
-
-Documentos sobre views removidas devem ser arquivados em `docs/historico/` ou marcados explicitamente como legado.
-
-Antes de arquivar documentos mistos, extrair regras ainda vigentes, especialmente sobre:
-
-- filtros;
-- pets;
-- cônjuges;
-- exportação;
-- mobile;
-- favoritos;
-- busca global.
+- `mobile-edit-profile.css` pode usar nomenclatura associada a `/minha-arvore/editar`;
+- isso é permitido porque a rota de edição continua vigente;
+- não remover CSS apenas por nome antigo;
+- aliases antigos devem ser tratados caso a caso.
 
 ---
 
@@ -367,42 +360,28 @@ npm run build
 npm test
 npm run test:e2e
 git diff --check
+git status --short
 ```
 
-Buscas recomendadas:
+E2E mínimo esperado:
 
-```bash
-rg "minha-arvore"
-rg "genealogia"
-rg "visao-completa"
-rg "/minha-arvore|/genealogia|/visao-completa"
-rg "TreeViewMode|treeViewMode"
-rg "Filtros|Legendas|Ações"
-```
-
-Interpretação:
-
-- `/minha-arvore/editar` pode permanecer;
-- `genealogia` pode aparecer como termo descritivo/comercial da horizontal;
-- `docs/historico/` pode conter rotas antigas;
-- rotas antigas não devem aparecer como navegação ativa, favoritos, busca global ou `TreeViewMode`.
+- `/` redireciona ou bloqueia conforme sessão/guard;
+- `/mapa-familiar` é protegida;
+- `/mapa-familiar-horizontal` é protegida;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` não voltam como rotas ativas;
+- `/minha-arvore/editar` continua protegida;
+- `/pessoa/:id` e `/pessoas/:id` redirecionam para login sem sessão;
+- `/admin/*` bloqueia usuário não autenticado.
 
 ---
 
-## 12. Backlog imediato após esta baseline
+## 12. Pendências reais pós-baseline
 
-1. Corrigir e manter E2E alinhado às duas rotas oficiais.
-2. Simplificar painel removendo `Filtros | Legendas | Ações`.
-3. Extrair `FamilyTreeActions` de `FamilyTree.tsx` para contrato neutro.
-4. Remover órfãos claros em commits pequenos.
-5. Atualizar guias canônicos restantes.
-6. Arquivar docs de views removidas.
-7. Auditar CSS legado por seletor, com QA visual.
-8. Planejar remoção do renderer ReactFlow legado como projeto separado.
+As pendências restantes não são de roteamento estrutural. São principalmente:
 
----
-
-## 13. Regra final
-
-Qualquer mudança futura que altere rotas, views da árvore, exportação, retorno de perfil, favoritos, busca global, guards ou CSS estrutural deve atualizar esta baseline ou registrar uma decisão arquitetural explícita.
-
+- QA visual manual com dados reais;
+- QA de exportação em PNG/PDF/impressão/área;
+- QA mobile iOS/Safari em breakpoints pequenos;
+- decisão futura sobre remoção completa do stack ReactFlow legado;
+- eventual limpeza de dependências após auditoria específica;
+- fechamento da Issue #8 com o resumo da frente.

@@ -1,9 +1,10 @@
-# Árvore - legendas, conectores, filtros e painel
+# Árvore — painel, filtros, conectores, destaques e exportação
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
-> Tipo: documentação funcional/técnica do painel, filtros, conectores e legendas.  
-> Status: alinhado à baseline atual, com dívida registrada para remover as abas `Filtros | Legendas | Ações`.
+> Projeto: `tuliust/arvorefamilia`  
+> Baseline revisada: `main` em `833108f`  
+> Status: documentação funcional/técnica atualizada após simplificação do painel.
 
 ---
 
@@ -12,7 +13,7 @@
 Este documento consolida o comportamento de:
 
 - painel lateral desktop;
-- painel mobile modal;
+- modal mobile de controles;
 - filtros de grupos;
 - filtros de status;
 - regras de cônjuges;
@@ -20,7 +21,7 @@ Este documento consolida o comportamento de:
 - alternância Vertical/Horizontal;
 - flyouts `Cores`, `Exportar`, `Destacar`;
 - conectores;
-- legendas;
+- destaques;
 - seleção por área;
 - loading de exportação.
 
@@ -39,49 +40,54 @@ Rotas antigas não são views ativas:
 /visao-completa
 ```
 
+Exceção vigente:
+
+```txt
+/minha-arvore/editar
+```
+
 ---
 
 ## 2. Estado atual do painel
 
-O painel atual ainda contém:
+O painel atual **não contém mais** a barra:
 
 ```txt
-Filtros
-Legendas
-Ações
+Filtros | Legendas | Ações
 ```
 
-Esse é o estado vigente do código, mas é uma dívida de UX já mapeada.
+O painel foi simplificado para operar com:
 
-Próxima frente esperada:
+- controles superiores compactos;
+- filtros/grupos visíveis diretamente;
+- status e KPIs acessíveis sem alternância por aba;
+- flyouts específicos para paleta, exportação e destaques;
+- modal mobile equivalente para controles essenciais.
 
-- remover a barra `Filtros | Legendas | Ações`;
-- manter filtros/grupos visíveis diretamente;
-- remover/ocultar `Legendas`;
-- remover/ocultar `Ações`;
-- preservar controles superiores.
+A antiga estrutura de abas e o estado `activeSidebarPanel` não devem voltar como contrato de produto.
 
 ---
 
-## 3. Controles superiores que devem permanecer
+## 3. Controles que devem permanecer
 
 | Controle | Função |
 |---|---|
-| Zoom + | aproxima a view ativa |
-| Zoom - | afasta a view ativa |
-| Restaurar visualização | reseta posição/zoom/scroll |
-| Vertical | navega para `/mapa-familiar` |
-| Horizontal | navega para `/mapa-familiar-horizontal` |
-| Cores | alterna paleta |
-| Exportar | Área, Imagem, PDF, Imprimir |
-| Destacar | Linhas, Cards, Grupos |
+| Zoom + | Aproxima a view ativa. |
+| Zoom - | Afasta a view ativa. |
+| Restaurar visualização | Reseta posição, zoom, scroll ou enquadramento conforme view. |
+| Vertical | Navega para `/mapa-familiar`. |
+| Horizontal | Navega para `/mapa-familiar-horizontal`. |
+| Cores | Alterna paleta visual. |
+| Exportar | Área, Imagem, PDF, Imprimir. |
+| Destacar | Linhas, Cards, Grupos. |
 
 Regras:
 
 - Vertical/Horizontal preservam `location.search`;
 - `?pessoa=...` não pode ser perdido;
-- exportação não pode quebrar quando as abas forem removidas;
-- painel não entra na captura/exportação.
+- exportação não pode depender de abas removidas;
+- painel não entra na captura/exportação;
+- botões de ação não devem ser `submit`.
 
 ---
 
@@ -95,8 +101,6 @@ src/app/pages/home/HomeTreeSection.tsx
 src/app/pages/home/DirectRelationKpiGrid.tsx
 src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
-src/app/components/FamilyTree/TreeLegend.tsx
-src/app/pages/home/SidebarInfoPanel.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
@@ -109,23 +113,32 @@ src/styles/family-map-qa.css
 src/styles/family-map-horizontal.css
 ```
 
+Arquivos/elementos legados não montados no painel atual podem permanecer no repo apenas se houver dependência técnica comprovada. Eles não devem ser documentados como UI vigente.
+
 ---
 
 ## 5. Estados principais
 
 | Estado | Papel |
 |---|---|
-| `directRelativeFilters` | controla grupos/filtros diretos usados nas duas views oficiais |
-| `personFilters` | controla vivos/falecidos/pets |
-| `visualLineFilters` | usado por linhas/destaques conforme view |
-| `activeHighlights` | controla `Destacar` |
-| `legendOpen` | hoje também controla modal mobile; revisar na próxima frente |
-| `activeSidebarPanel` | controla abas atuais; remover na simplificação |
-| `renderedDirectRelationCounts` | contagens efetivas retornadas pela view |
+| `directRelativeFilters` | Controla grupos/filtros diretos usados nas duas views oficiais. |
+| `personFilters` | Controla vivos, falecidos e pets. |
+| `visualLineFilters` | Controla filtros/destaques de linhas conforme view. |
+| `activeHighlights` | Controla `Destacar`: linhas, cards e grupos. |
+| `legendOpen` | Controla abertura do modal mobile de controles; não representa mais uma aba de legenda. |
+| `renderedDirectRelationCounts` | Contagens efetivas retornadas pela view renderizada. |
+
+Estados que não devem voltar como contrato de produto:
+
+```txt
+activeSidebarPanel
+tabs Filtros/Legendas/Ações
+viewMode com minha-arvore/genealogia/visao-completa
+```
 
 Regras:
 
-- filtro não altera dados;
+- filtro não altera dados no Supabase;
 - destaque não altera dados;
 - contagem deve refletir renderização efetiva quando disponível;
 - cônjuge sempre visível não deve inflar contagem de cônjuges filtráveis.
@@ -134,7 +147,7 @@ Regras:
 
 ## 6. Filtros diretos
 
-Keys:
+Keys esperadas:
 
 ```txt
 tataravos
@@ -154,10 +167,11 @@ pets
 Regras:
 
 - `Cônjuges` é filtro visual específico;
-- `Pets` é filtro de pets;
+- `Pets` é filtro de grupo/pessoa pet conforme a view;
 - `Filhos` usa ícone próprio;
-- `Pets` usa tom teal/ciano na paleta visual;
-- filtros devem funcionar nas duas views oficiais.
+- `Pets` usa tom específico da paleta ativa;
+- filtros devem funcionar nas duas views oficiais;
+- pessoa central deve permanecer visível quando aplicável.
 
 ---
 
@@ -188,6 +202,8 @@ Dependem do filtro:
 Conector conjugal nunca deve ser inferido apenas por proximidade visual.
 ```
 
+Conectores conjugais devem depender de relacionamento explícito.
+
 ---
 
 ## 8. Filtros de status
@@ -210,48 +226,31 @@ Regras:
 
 - pessoa central deve permanecer visível quando aplicável;
 - pets dependem de filtros de pet e tipo de pessoa;
-- filtros não devem remover dados do banco.
+- filtros não devem remover dados do banco;
+- filtros devem ser refletidos na exportação.
 
 ---
 
-## 9. Legendas
+## 9. Legendas e ajuda contextual
 
-Componente:
+A antiga aba `Legendas` não é UI vigente do painel.
 
-```txt
-TreeLegend
-```
+Possibilidades futuras:
 
-Estado:
+| Opção | Decisão necessária |
+|---|---|
+| Remover totalmente legenda visual | Excluir UI, docs funcionais específicas e CSS órfão após auditoria. |
+| Manter como ajuda contextual | Reposicionar fora do fluxo de abas, por exemplo em tooltip/modal independente. |
 
-- ainda pode ser exibido na aba `Legendas`;
-- deve ser revisado na simplificação do painel;
-- não participa da exportação;
-- elementos de legenda devem ser marcados para ignorar captura quando visíveis.
+Até nova decisão:
 
-Decisão futura:
-
-- se a legenda sair do produto atual, remover UI e docs canônicas;
-- se permanecer como ajuda, reposicionar fora do fluxo de abas.
+- não reintroduzir a aba `Legendas`;
+- qualquer legenda visível deve ter `data-tree-export-ignore="true"`;
+- documentação histórica sobre legendas deve ficar marcada como legado.
 
 ---
 
-## 10. Ações/Info
-
-Componente:
-
-```txt
-SidebarInfoPanel
-```
-
-Estado:
-
-- ainda pode ser exibido na aba `Ações`;
-- deve ser revisado/removido na próxima frente se não tiver função essencial.
-
----
-
-## 11. Conectores
+## 10. Conectores
 
 ### Vertical
 
@@ -265,7 +264,8 @@ Características:
 
 - SVG por âncoras;
 - recalculado com grupos, zoom e modo wide;
-- ajustado quando `Destacar > Grupos` oculta chrome.
+- ajustado quando `Destacar > Grupos` oculta chrome;
+- não deve depender de proximidade visual.
 
 ### Horizontal
 
@@ -293,7 +293,8 @@ MobileFamilyTreeView
 Características:
 
 - conectores HTML/CSS;
-- navegação Paterno/Central/Materno.
+- navegação Paterno/Central/Materno;
+- não deve afetar horizontal mobile.
 
 ### Mobile horizontal
 
@@ -305,13 +306,15 @@ MobileFamilyHorizontalMapView
 
 Características:
 
-- geração ativa por tela;
-- chips/swipe;
-- conectores escopados à experiência mobile.
+- uma geração por tela;
+- chips de geração;
+- swipe lateral;
+- scroll vertical interno por geração;
+- conectores visuais escopados ao root mobile horizontal.
 
 ---
 
-## 12. Destaques
+## 11. Destaques
 
 Flyout:
 
@@ -321,54 +324,22 @@ Destacar
 
 Opções:
 
-| Opção | Papel |
+| Opção | Comportamento |
 |---|---|
-| Linhas | oculta/suaviza conectores |
-| Cards | destaca cards |
-| Grupos | remove chrome visual de grupos/cabeçalhos |
+| Linhas | Oculta/destaca conectores conforme view. |
+| Cards | Aplica outline/realce nos cards. |
+| Grupos | Remove ou reduz chrome visual de grupos, preservando conteúdo. |
 
 Regras:
 
-- destaque não cria relacionamento;
-- destaque não reexibe item filtrado;
-- destaque não persiste;
-- `Destacar > Grupos` deve recalcular conectores.
+- destaque não altera dados;
+- destaque deve ser respeitado na exportação;
+- `Destacar > Grupos` não pode quebrar conectores;
+- labels auxiliares não devem aparecer na exportação se forem apenas UI.
 
 ---
 
-## 13. Cores
-
-Flyout:
-
-```txt
-Cores
-```
-
-Paletas:
-
-```txt
-white
-visual
-orange
-brown
-```
-
-Regras:
-
-- usa CSS variables;
-- persiste preferência local quando aplicável;
-- exportação deve refletir paleta ativa;
-- ícones e SVGs devem manter contraste.
-
----
-
-## 14. Exportar
-
-Flyout:
-
-```txt
-Exportar
-```
+## 12. Exportação e seleção por área
 
 Ações:
 
@@ -381,119 +352,86 @@ Imprimir
 
 Regras:
 
-- ação vem do painel;
-- alvo vem da view ativa;
-- painel/modal/header/bottom nav/loading não entram na captura;
-- seleção por área usa overlay próprio;
-- erro libera loading.
+- exporta a view ativa;
+- usa root exportável específico da vertical/horizontal;
+- oculta painel, header, bottom nav, overlays e loading;
+- preserva cards, conectores, paleta e título;
+- recorte por área deve respeitar coordenadas da superfície capturada;
+- captura muito grande deve ser bloqueada com mensagem clara.
 
-Documento específico:
-
-```txt
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-```
-
----
-
-## 15. Painel mobile
-
-Nas rotas:
+Arquivos críticos:
 
 ```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-comportamento:
-
-- `HomeMobileNav` abre o modal;
-- modal fica acima de header e bottom nav;
-- overlay cobre tela;
-- toque no overlay fecha;
-- `Escape` fecha;
-- body bloqueia scroll;
-- conteúdo interno rola;
-- modal não entra na exportação.
-
-Dívida:
-
-- ao remover abas, modal deve exibir filtros diretos sem depender de `activeSidebarPanel`.
-
----
-
-## 16. Próxima frente: simplificação do painel
-
-Objetivo:
-
-- remover barra `Filtros | Legendas | Ações`;
-- eliminar `activeSidebarPanel` se não houver outro uso;
-- deixar filtros/grupos visíveis diretamente;
-- revisar `legendOpen` para representar apenas abertura do modal mobile, ou renomear;
-- remover `TreeLegend`/`SidebarInfoPanel` da experiência se não forem mais necessários;
-- preservar exportação, cores, destaque, zoom e alternância.
-
-Arquivos prováveis:
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
-src/app/pages/home/HomeMobileNav.tsx
+src/app/components/FamilyTree/utils/treeExport.ts
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/styles/home-sidebar-unified.css
-src/styles/mobile-tree-controls.css
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
 ```
 
 ---
 
-## 17. Validações
+## 13. Mobile
 
-Após alteração no painel:
+Regras do modal mobile:
 
-```bash
-npm run build
-npm test
-npm run test:e2e
-git diff --check
-```
-
-QA manual:
-
-- abrir `/mapa-familiar`;
-- abrir `/mapa-familiar-horizontal`;
-- testar filtros diretos;
-- testar vivos/falecidos/pets;
-- alternar Vertical/Horizontal com `?pessoa=...`;
-- abrir modal mobile;
-- exportar PNG/PDF/imprimir;
-- testar `Destacar > Grupos`;
-- testar paletas;
-- confirmar que `Filtros`, `Legendas` e `Ações` não aparecem se a frente já tiver sido aplicada.
-
----
-
-## 18. Anti-regressões
-
-Não quebrar:
-
-```txt
-Zoom +/-
-Restaurar visualização
-Vertical
-Horizontal
-Cores
-Exportar
-Destacar
-Filtros diretos
-Modal mobile
-Exportação
-```
+- aberto pelo botão `Controles`;
+- overlay fecha o modal;
+- `Escape` fecha quando disponível;
+- body fica com scroll travado;
+- conteúdo interno tem rolagem própria;
+- painel fica acima do header, bottom nav e botões flutuantes;
+- painel não entra na exportação.
 
 Não reintroduzir:
 
 ```txt
-/minha-arvore
-/genealogia
-/visao-completa
+MobileTreeControlsPortal como UI duplicada nas rotas oficiais
+sidebar lateral mobile
+bottom sheet parcial que comprometa controles
+barra Paterno/Central/Materno na horizontal mobile
 ```
 
-como views ativas.
+---
+
+## 14. Checklist de QA
+
+### Desktop
+
+- [ ] `/mapa-familiar` abre como view default.
+- [ ] `/mapa-familiar-horizontal` abre como horizontal.
+- [ ] Vertical/Horizontal preservam `?pessoa=...`.
+- [ ] Zoom + e Zoom - funcionam.
+- [ ] Restaurar visualização funciona.
+- [ ] Cores alteram paleta.
+- [ ] Exportar abre ações e executa PNG/PDF/print/área.
+- [ ] Destacar altera linhas/cards/grupos sem quebrar conectores.
+- [ ] Filtros funcionam sem abas internas.
+- [ ] Painel não aparece na exportação.
+
+### Mobile
+
+- [ ] Botão `Controles` abre modal.
+- [ ] Overlay fecha modal.
+- [ ] Scroll interno funciona.
+- [ ] Body destrava ao fechar.
+- [ ] Horizontal mobile navega por geração.
+- [ ] Vertical mobile mantém Paterno/Central/Materno.
+- [ ] Exportação não captura header, bottom nav ou modal.
+
+---
+
+## 15. Não regressão
+
+Não reintroduzir:
+
+```txt
+/minha-arvore como view ativa
+/genealogia como rota ativa
+/visao-completa como rota ativa
+TreeViewMode com mais de dois valores
+barra Filtros | Legendas | Ações
+activeSidebarPanel como contrato de produto
+favoritos apontando para rotas removidas
+busca global retornando rotas removidas como páginas ativas
+```

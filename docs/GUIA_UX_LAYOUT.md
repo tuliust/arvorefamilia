@@ -1,9 +1,10 @@
-# Guia de UX e Layout - Árvore Família
+# Guia de UX e Layout — Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia alinhado à baseline atual da árvore: `/mapa-familiar` como view principal e `/mapa-familiar-horizontal` como alternativa horizontal/genealógica.
+> Baseline revisada: `main` em `833108f`  
+> Status: guia alinhado às duas views oficiais e ao painel simplificado.
 
 ---
 
@@ -36,6 +37,7 @@ Use este guia para revisar:
 | Permissão não é visual | UI não substitui guards, RLS ou services. |
 | Histórico não é produto ativo | Docs históricos não devem reabrir views removidas. |
 | Ajuste visual não muda dados | CSS não altera Supabase nem relacionamentos. |
+| Painel sem abas internas | A barra `Filtros | Legendas | Ações` não deve voltar como UI ativa. |
 
 Anti-padrões:
 
@@ -44,18 +46,17 @@ Não usar translate/top negativo para corrigir canvas.
 Não usar seletor global svg path.
 Não reintroduzir /minha-arvore, /genealogia ou /visao-completa como views ativas.
 Não usar /visao-completa como substituto da horizontal.
+Não restaurar activeSidebarPanel para resolver organização do painel.
 ```
 
 ---
 
 ## 3. Rotas e navegação da árvore
 
-Views oficiais:
-
 | View | Rota | Papel |
 |---|---|---|
-| Mapa Familiar | `/mapa-familiar` | principal/default |
-| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | alternativa horizontal/genealógica |
+| Mapa Familiar | `/mapa-familiar` | Principal/default |
+| Mapa Familiar Horizontal | `/mapa-familiar-horizontal` | Alternativa horizontal/genealógica |
 
 Redirect:
 
@@ -65,7 +66,7 @@ Redirect:
 
 preservando `location.search`.
 
-Rotas antigas removidas do produto ativo:
+Rotas antigas removidas:
 
 ```txt
 /minha-arvore
@@ -78,8 +79,6 @@ Exceção vigente:
 ```txt
 /minha-arvore/editar
 ```
-
-é edição de membro e deve permanecer.
 
 ---
 
@@ -103,7 +102,8 @@ Regras:
 - avatar não deve exibir nome textual ao lado no desktop;
 - nome/e-mail ficam no menu do avatar;
 - a árvore deve ocupar área de canvas sem scroll externo desnecessário;
-- search params devem ser preservados ao alternar vertical/horizontal.
+- search params devem ser preservados ao alternar vertical/horizontal;
+- painel, modal e overlays auxiliares não entram na exportação.
 
 ---
 
@@ -213,26 +213,26 @@ Estado atual:
 
 | Área | Comportamento |
 |---|---|
-| Topo | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar |
-| Abas | `Filtros`, `Legendas`, `Ações` |
-| Filtros | grupos/status |
-| Legendas | legenda visual |
-| Ações | painel auxiliar |
+| Topo/controles | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar |
+| Filtros | Grupos diretos e status visíveis diretamente |
+| Ações secundárias | Organizadas em flyouts, não em abas persistentes |
+| Legendas | Não são aba ativa do painel; ajuda futura deve ser reposicionada se necessária |
 
-Dívida planejada:
+A barra abaixo não é mais UI vigente:
 
-- remover a barra `Filtros | Legendas | Ações`;
-- manter filtros/grupos visíveis diretamente;
-- ocultar/remover legenda e ações se não forem mais parte do produto;
-- preservar controles superiores.
+```txt
+Filtros | Legendas | Ações
+```
 
-Regras atuais até a limpeza:
+Regras:
 
 - painel não entra na exportação;
 - botões ativos refletem a rota;
 - `Restaurar visualização` não deve ser confundido com `Zoom -`;
 - `Vertical` aponta para `/mapa-familiar`;
-- `Horizontal` aponta para `/mapa-familiar-horizontal`.
+- `Horizontal` aponta para `/mapa-familiar-horizontal`;
+- filtros continuam acessíveis sem alternância por aba;
+- qualquer ajuda contextual deve ser independente e ignorada pela exportação.
 
 ---
 
@@ -245,7 +245,7 @@ Nas rotas oficiais:
 /mapa-familiar-horizontal
 ```
 
-comportamento:
+Comportamento:
 
 - botão `Controles` vem de `HomeMobileNav`;
 - painel abre como modal;
@@ -280,28 +280,22 @@ Regras:
 
 - paletas alteram CSS variables;
 - paletas não alteram dados;
-- `Pets` no modo visual usa tom teal/ciano;
-- ícones de status devem manter contraste;
-- avatares/SVGs devem continuar legíveis;
-- exportação deve refletir paleta ativa.
+- paleta ativa deve afetar cards, conectores, labels e exportação;
+- a horizontal preserva fundo transparente onde definido;
+- ícones internos não devem herdar regras globais de conectores.
 
 ---
 
-## 10. Cards
-
-Componente base:
-
-```txt
-FamilyTreeVisualCards
-```
+## 10. Cards e avatares
 
 Regras:
 
-- exibir nome de forma legível;
-- preservar distinção de pessoa, falecido e pet;
-- ícones SVG internos devem ser exportáveis;
-- conectores não devem herdar estilos de ícones;
-- não reduzir card a ponto de perder primeiro/segundo nome.
+- cards devem preservar contraste entre texto/fundo;
+- avatar com foto deve manter crop estável;
+- avatar sem foto usa ícones/silhuetas sem virar quadrado escuro na exportação;
+- pet usa iconografia própria;
+- falecimento/data de nascimento usam ícones semânticos;
+- microcopy não deve depender de hover para informação essencial.
 
 ---
 
@@ -309,122 +303,95 @@ Regras:
 
 ### Vertical
 
-- SVG por âncoras;
-- acompanha grupos, cards e modo wide;
-- recalcula quando grupos são ocultados/expandidos;
-- não infere casamento por proximidade visual.
+- conectores SVG por âncoras;
+- respeitam grupos visíveis;
+- se `Destacar > Grupos` remover chrome, conectores continuam coerentes;
+- cônjuge não é inferido por proximidade.
 
 ### Horizontal
 
-- SVG de cônjuge e casal → filhos;
-- colunas/gaps devem evitar sobreposição;
-- conectores são recalculados com `Destacar > Grupos`.
+- casal → filhos;
+- cônjuges adjacentes;
+- colunas por geração;
+- conectores não devem invadir cards;
+- conectores devem respeitar paleta ativa.
 
-### Mobile vertical
+### Mobile
 
-- conectores HTML/CSS próprios;
-- não aplicar CSS ReactFlow.
-
-### Mobile horizontal
-
-- conectores devem respeitar geração ativa;
-- não capturar controles no export.
+- vertical usa conectores HTML/CSS;
+- horizontal usa conectores escopados à geração/tela;
+- conectores não devem criar overflow horizontal indevido.
 
 ---
 
-## 12. Destaques
+## 12. Exportação
 
-Flyout:
+Ações:
 
 ```txt
-Destacar
+Área
+Imagem/PNG
+PDF
+Imprimir
 ```
 
-Opções:
+Regras visuais:
 
-| Opção | Efeito |
-|---|---|
-| Linhas | oculta ou suaviza conectores visuais |
-| Cards | destaca cards |
-| Grupos | oculta chrome de grupos/cabeçalhos |
-
-Regras:
-
-- destaque não cria relacionamento;
-- destaque não reexibe item filtrado;
-- destaque não altera banco;
-- destaque não persiste no Supabase.
+- título deve aparecer no canvas exportado quando aplicável;
+- painel, header, bottom nav, modal e overlay não entram;
+- conectores aparecem;
+- paleta ativa é respeitada;
+- SVGs internos não viram quadrados escuros;
+- imagem grande demais deve gerar erro claro.
 
 ---
 
-## 13. Exportação e captura
+## 13. Breakpoints de QA
 
-A exportação deve ignorar:
-
-```txt
-header
-painel
-bottom nav
-modal
-overlay
-loading
-botões flutuantes
-```
-
-Marcadores esperados:
-
-```txt
-data-tree-export-ignore="true"
-data-tree-selection-overlay="true"
-data-tree-export-loading="true"
-```
-
-Regras:
-
-- PNG/PDF/impressão incluem título no canvas;
-- seleção por área captura área visível;
-- SVGs internos devem ser normalizados;
-- alterações de layout exigem QA de exportação.
-
----
-
-## 14. Responsividade mínima
-
-Validar:
+Validar principalmente:
 
 ```txt
 320px
 375px
 390px
 430px
-768px
-1024px
-1366px
-1440px
-1536px
-1920px
+768px a 1023px
+1366x768
+1440x900
+1536x864
+1920x1080
 ```
 
-Mobile:
+Prioridades:
 
-- sem overflow horizontal indesejado;
-- controles acessíveis;
-- modal com scroll interno;
-- chips da horizontal cabem;
-- bottom nav não cobre conteúdo crítico.
-
-Desktop:
-
-- painel não corta controles;
-- canvas ocupa espaço útil;
-- grupos laterais não sobrepõem núcleo;
-- exportação captura superfície correta.
+- mobile iOS/Safari;
+- modal de controles;
+- horizontal por geração;
+- exportação;
+- painel desktop em altura baixa.
 
 ---
 
-## 15. Não regressão visual
+## 14. Anti-regressões visuais
 
-Antes de aprovar alteração de UX/layout:
+Não reintroduzir:
+
+```txt
+/minha-arvore como view ativa
+/genealogia como rota ativa
+/visao-completa como rota ativa
+toggle antigo de múltiplas views
+barra Filtros | Legendas | Ações
+MobileTreeControlsPortal duplicado
+Paterno/Central/Materno na horizontal mobile
+CSS global que atinja todos os svg/path
+```
+
+---
+
+## 15. Critério de aceitação para mudanças de layout
+
+Antes de commit:
 
 ```bash
 npm run build
@@ -433,15 +400,11 @@ npm run test:e2e
 git diff --check
 ```
 
-Testes manuais mínimos:
+Para mudanças visuais relevantes:
 
-- abrir `/`;
-- abrir `/mapa-familiar`;
-- abrir `/mapa-familiar-horizontal`;
-- alternar Vertical/Horizontal com `?pessoa=...`;
-- abrir perfil e voltar;
-- abrir modal mobile de controles;
-- testar exportação PNG/PDF/impressão;
-- testar paletas;
-- testar destaques;
-- verificar favoritos e busca global.
+- registrar screenshots manuais nos principais breakpoints;
+- testar exportação;
+- testar painel aberto/fechado;
+- testar paleta;
+- testar filtros;
+- testar retorno de perfil com `?voltar=`.

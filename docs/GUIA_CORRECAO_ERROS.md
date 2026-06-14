@@ -1,9 +1,10 @@
-# Guia de correção de erros - Árvore Família
+# Guia de correção de erros — Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_CORRECAO_ERROS.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: troubleshooting alinhado à baseline atual: `/mapa-familiar` e `/mapa-familiar-horizontal` são as únicas views oficiais da árvore.
+> Baseline revisada: `main` em `833108f`  
+> Status: troubleshooting alinhado às duas views oficiais e ao painel simplificado.
 
 ---
 
@@ -22,17 +23,6 @@ Use quando houver:
 - problema em guards;
 - problema mobile;
 - comportamento inesperado da árvore.
-
-Este guia não substitui:
-
-| Tema | Documento |
-|---|---|
-| Baseline | `docs/BASELINE_PRODUTO_ATUAL.md` |
-| Regras de não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
-| Implementações | `docs/GUIA_IMPLEMENTACOES.md` |
-| Componentes | `docs/GUIA_COMPONENTES.md` |
-| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
-| Rotas | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 
 ---
 
@@ -83,7 +73,12 @@ src/app/services/
 src/app/types/
 package.json
 vite.config.ts
-tsconfig.json
+```
+
+Observação:
+
+```txt
+O projeto não possui tsconfig.json nesta baseline. Não criar um apenas para resolver erro sem diagnóstico.
 ```
 
 Causas comuns:
@@ -159,22 +154,23 @@ ou expectativa de:
 /visao-completa
 ```
 
-Causa:
+Interpretação atual:
 
-- teste desatualizado em relação à baseline.
-
-Correção:
-
-- substituir smoke de view da árvore por `/mapa-familiar`;
-- adicionar smoke para `/mapa-familiar-horizontal`;
-- manter teste separado para `/minha-arvore/editar` se necessário;
-- rotas antigas devem retornar 404, redirect ou login conforme decisão implementada, mas não devem ser documentadas como views ativas.
+- essas rotas podem aparecer em teste apenas para garantir que não voltaram como views ativas;
+- `/minha-arvore/editar` continua válida e deve ser testada como rota protegida.
 
 Arquivo provável:
 
 ```txt
 tests/e2e/app-smoke.spec.ts
 ```
+
+Correção:
+
+- substituir smoke de view da árvore por `/mapa-familiar`;
+- manter smoke para `/mapa-familiar-horizontal`;
+- manter teste separado para `/minha-arvore/editar`;
+- rotas antigas não devem ser documentadas como views ativas.
 
 ---
 
@@ -223,24 +219,26 @@ src/styles/mobile-tree-controls.css
 
 Estado atual:
 
-- abas `Filtros`, `Legendas`, `Ações` ainda existem;
-- próxima frente deve removê-las;
-- controles superiores devem ser preservados.
+- painel sem barra `Filtros | Legendas | Ações`;
+- filtros/grupos/status ficam visíveis diretamente;
+- controles superiores e flyouts continuam.
 
 Sintomas:
 
 | Sintoma | Investigar |
 |---|---|
-| filtros desapareceram | `activeSidebarPanel`, conteúdo condicional, modal mobile. |
+| filtros desapareceram | renderização direta no painel, props, filtros por status/grupo. |
 | exportação parou | eventos de `SidebarPanelTabs`, refs da view ativa. |
 | modal mobile não fecha | `legendOpen`, overlay, `Escape`, scroll lock. |
 | painel entra na captura | falta de `data-tree-export-ignore`. |
+| abas antigas voltaram | regressão em `SidebarPanelTabs` ou CSS. |
 
 Correção:
 
-- remover abas apenas em frente própria;
-- ao remover abas, deixar filtros visíveis diretamente;
-- manter Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar e Destacar.
+- não restaurar `activeSidebarPanel`;
+- deixar filtros visíveis diretamente;
+- manter Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar e Destacar;
+- rodar E2E e QA manual.
 
 ---
 
@@ -290,156 +288,154 @@ Sintomas:
 
 | Sintoma | Investigar |
 |---|---|
-| geração vazia aparece | compactação de colunas e filtro de pessoas visíveis. |
-| geração errada | `manual_generation`, inferência em memória. |
-| cônjuges separados | ordenação/pareamento por relacionamento. |
-| mobile mostra Paterno/Central/Materno | `HomeMobileNav`, condição de rota. |
-| swipe não troca geração | handlers mobile, estado da geração ativa. |
-| exportação horizontal corta colunas | root exportável, largura normalizada, escala. |
+| colunas vazias aparecem | lógica de colunas visíveis. |
+| cônjuges distantes | agrupamento por casal/relacionamento. |
+| conectores casal → filhos quebram | cálculo SVG e anchors. |
+| horizontal mobile vira vertical | `HomeTreeSection` e breakpoint. |
+| fundo deixa de ser transparente | CSS `family-map-horizontal.css` e `family-map-qa.css`. |
 
-Correções:
+Correção:
 
-- não usar `/genealogia` ou `/visao-completa` como fallback;
-- não criar subrotas por geração;
-- manter chips `G1`, `G2`, `G3` como navegação interna.
+- não usar `/visao-completa` como fallback;
+- validar mobile e desktop;
+- preservar root horizontal e data attributes.
 
 ---
 
-## 10. Exportação
+## 10. Exportação quebrada
 
 Arquivos:
 
 ```txt
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
-```
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| PNG inclui painel | `data-tree-export-ignore`. |
-| PDF duplica título | uso de `prependTitleToCanvas` e título passado ao PDF. |
-| SVG vira quadrado escuro | normalização de SVGs no clone. |
-| Área captura região errada | `getBoundingClientRect`, viewport, scroll. |
-| loading aparece no canvas | `data-tree-export-loading`. |
-| exportação muito grande falha | limite preventivo de pixels. |
-
-Correção:
-
-- manter `allowTaint: false`;
-- revisar CORS de imagens;
-- sanitizar cores incompatíveis no clone;
-- testar PNG, PDF e impressão.
-
----
-
-## 11. Favoritos e busca global
-
-Arquivos:
-
-```txt
-src/app/constants/favoritePages.ts
-src/app/services/globalSearchService.ts
-src/app/components/favorites/PageFavoriteButton.tsx
-```
-
-Estado esperado:
-
-- `/mapa-familiar` em favoritos e busca;
-- `/mapa-familiar-horizontal` em favoritos e busca;
-- `/minha-arvore`, `/genealogia`, `/visao-completa` fora dos catálogos ativos.
-
-Sintomas:
-
-| Sintoma | Investigar |
-|---|---|
-| horizontal não aparece na busca | `GLOBAL_SEARCH_PAGES`. |
-| horizontal não pode ser favoritada | `FAVORITE_PAGES`. |
-| rota antiga aparece em favoritos | catálogo ou registro legado salvo no banco. |
-| favorito abre rota removida | dados antigos em `user_favorites`. |
-
-Correção:
-
-- atualizar catálogo;
-- tratar registros antigos como legado de dados, não como rota ativa;
-- não salvar query params em favorito de página.
-
----
-
-## 12. CSS e regressões visuais
-
-Arquivos:
-
-```txt
+src/styles/home-sidebar-unified.css
 src/styles/family-map-qa.css
 src/styles/family-map-horizontal.css
-src/styles/home-sidebar-unified.css
-src/styles/mobile-tree-controls.css
-src/styles/family-tree-visual-polish.css
-src/styles/mobile-tree-lines.css
-src/styles/tree-view-desktop-polish.css
 ```
 
-Regras:
+Sintomas:
 
-- CSS com nome antigo não é automaticamente removível;
-- verificar uso real antes de apagar;
-- preservar raízes:
-  - `data-family-map-horizontal-root`;
-  - `data-mobile-family-horizontal-root`;
-  - `data-mobile-family-tree-root`;
-  - `data-tree-route-view="mapa-familiar-horizontal"`;
-- remover seletor legado apenas após QA visual.
+| Sintoma | Causa provável |
+|---|---|
+| painel aparece no PNG | falta de `data-tree-export-ignore`. |
+| SVG vira quadrado escuro | sanitização/normalização de SVG. |
+| PDF corta árvore | escala/canvas/tamanho da captura. |
+| impressão abre janela vazia | popup bloqueado ou canvas inválido. |
+| área selecionada captura errado | offsets/crop/escala. |
+
+Correção:
+
+- preservar `treeExport.ts`;
+- não remover sanitização de cor;
+- validar PNG, PDF, print e Área nas duas views.
 
 ---
 
-## 13. Segurança e higiene
+## 11. Busca/favoritos errados
 
-Itens de risco:
+Arquivos:
 
 ```txt
-.env.local.save
-backups/
-*.bak
-*.patch
-dist/
-test-results/
+src/app/services/globalSearchService.ts
+src/app/constants/favoritePages.ts
+src/app/services/favoritesService.ts
 ```
 
-Regras:
+Sintomas:
 
-- não commitar secrets;
-- se `.env.local.save` tiver credenciais reais, rotacionar;
-- não expor conteúdo de secrets em relatório;
-- remover backup versionado após confirmar que não contém conteúdo necessário.
+| Sintoma | Correção |
+|---|---|
+| busca retorna `/minha-arvore` | trocar destino para `/mapa-familiar` ou remover página. |
+| busca retorna `/genealogia` | trocar destino para `/mapa-familiar-horizontal`. |
+| favorito abre rota removida | atualizar `favoritePages.ts`. |
+| alias antigo não encontra nada | adicionar keyword sem mudar path canônico. |
 
 ---
 
-## 14. Encerramento da correção
+## 12. Arquivo local aparece no Git
+
+Sintoma:
+
+```txt
+?? test-results/
+?? backups/
+?? .env.local.save
+```
+
+Correção:
+
+1. confirmar `.gitignore`;
+2. se for untracked e ignorável, limpar ou deixar ignorado;
+3. se estiver versionado, remover só do índice:
+
+```bash
+git rm --cached arquivo
+git rm -r --cached pasta
+```
+
+Não colar conteúdo de `.env`.
+
+Arquivos que devem ficar ignorados:
+
+```txt
+.env
+.env.local
+.env.*.local
+.env*.save
+coverage/
+test-results/
+playwright-report/
+backups/
+```
+
+---
+
+## 13. Componente removido é pedido pelo build
+
+Arquivos já removidos:
+
+```txt
+GenealogyMobileStageTabs.tsx
+GenealogyFilterGrid.tsx
+CentralNotificacoes.tsx
+ViewModeToggle.tsx
+ImageWithFallback.tsx
+relationshipResolverService.ts
+```
+
+Se o build pedir um deles:
+
+1. identificar quem importou;
+2. confirmar se esse fluxo ainda é vigente;
+3. remover ou substituir o import;
+4. não restaurar arquivo removido como solução rápida;
+5. rodar build/testes.
+
+---
+
+## 14. Checklist final de correção
 
 Antes de commit:
 
 ```bash
-git status --short
 npm run build
 npm test
 npm run test:e2e
 git diff --check
+git status --short
 ```
 
-Se envolver docs:
+Depois de push:
 
 ```bash
-rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
+git log --oneline --decorate -5
 ```
 
-Critério:
+Critério de aceite:
 
-- docs canônicos não devem descrever rotas antigas como views ativas;
-- histórico pode permanecer em `docs/historico/`;
-- toda mudança funcional deve atualizar doc afetada no mesmo commit.
+- erro resolvido;
+- rotas antigas não voltaram;
+- painel antigo não voltou;
+- testes passam;
+- docs canônicas atualizadas se o comportamento mudou.

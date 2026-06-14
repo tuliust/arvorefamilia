@@ -1,9 +1,10 @@
-# Guia de componentes - Árvore Família
+# Guia de componentes — Árvore Família
 
-> Última revisão: 2026-06-13  
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_COMPONENTES.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia alinhado à baseline atual: `/mapa-familiar` e `/mapa-familiar-horizontal` como únicas views oficiais da árvore.
+> Baseline revisada: `main` em `833108f`  
+> Status: guia alinhado às duas views oficiais, painel simplificado e remoção de componentes órfãos.
 
 ---
 
@@ -11,7 +12,7 @@
 
 Este guia identifica os principais componentes do projeto, suas responsabilidades e os cuidados necessários para evitar regressões.
 
-Use este documento antes de alterar:
+Use antes de alterar:
 
 - shell da árvore;
 - views do Mapa Familiar;
@@ -21,18 +22,6 @@ Use este documento antes de alterar:
 - favoritos;
 - busca;
 - componentes compartilhados.
-
-Documentos relacionados:
-
-| Tema | Documento |
-|---|---|
-| Baseline | `docs/BASELINE_PRODUTO_ATUAL.md` |
-| Inventário técnico | `docs/INVENTARIO_TECNICO.md` |
-| UX/layout | `docs/GUIA_UX_LAYOUT.md` |
-| Mapa Familiar | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
-| Painel/conectores | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| Rotas | `docs/arquitetura/ROTAS_E_GUARDS.md` |
 
 ---
 
@@ -47,6 +36,7 @@ Documentos relacionados:
 | Exportação ignora UI transitória | Usar `data-tree-export-ignore="true"`. |
 | CSS deve ser escopado | Preferir rota, data attribute ou container. |
 | Histórico não orienta implementação | Docs legados não podem reintroduzir views removidas. |
+| Painel não usa abas antigas | Não restaurar `Filtros | Legendas | Ações`. |
 
 ---
 
@@ -72,8 +62,8 @@ Responsabilidades:
 
 Cuidados:
 
-- `Home` está concentrado e deve ser refatorado por etapas pequenas;
-- não inserir novas views antigas no shell;
+- `Home` ainda concentra responsabilidades e deve ser refatorado por etapas pequenas;
+- não inserir views antigas no shell;
 - não misturar regras de rota com layout específico;
 - preservar `?pessoa=...` e `?voltar=...`.
 
@@ -108,8 +98,6 @@ minha-arvore
 genealogia
 visao-completa
 ```
-
-como views ativas.
 
 ### 3.3 `HomeHeader`
 
@@ -169,12 +157,13 @@ src/app/pages/home/SidebarPanelTabs.tsx
 
 Estado atual:
 
-- renderiza controles superiores;
-- renderiza barra de abas `Filtros`, `Legendas`, `Ações`;
-- emite eventos de zoom, restore e exportação;
-- troca Vertical/Horizontal preservando search params.
+- renderiza controles de zoom/restauração;
+- troca Vertical/Horizontal preservando search params;
+- concentra flyouts `Cores`, `Exportar`, `Destacar`;
+- exibe filtros diretos/status sem barra de abas;
+- não renderiza a barra `Filtros | Legendas | Ações`.
 
-Controles superiores vigentes:
+Controles vigentes:
 
 ```txt
 Zoom +/-
@@ -184,13 +173,14 @@ Horizontal
 Cores
 Exportar
 Destacar
+Filtros/grupos
+Filtros de status
 ```
 
-Dívida conhecida:
+Dívida restante:
 
-- a barra `Filtros | Legendas | Ações` deve ser removida em frente posterior;
-- filtros/grupos devem ficar visíveis diretamente;
-- `Legendas` e `Ações` devem ser ocultadas/removidas se não fizerem parte da experiência final.
+- `SidebarPanelTabs` pode ter nome histórico e responsabilidades amplas;
+- eventual renome deve ser feita em frente própria, por exemplo para `TreeControlPanel`.
 
 ### 4.2 `DirectRelationKpiGrid`
 
@@ -233,20 +223,20 @@ Responsabilidades:
 - filtros `Vivos`, `Falecidos` e `Pets`;
 - contadores por status/tipo.
 
-### 4.5 `TreeLegend` e `SidebarInfoPanel`
+### 4.5 Componentes de legenda/info
 
-Arquivos:
+Arquivos que podem existir por histórico:
 
 ```txt
 src/app/components/FamilyTree/TreeLegend.tsx
 src/app/pages/home/SidebarInfoPanel.tsx
 ```
 
-Estado:
+Regras:
 
-- ainda podem ser renderizados pelas abas atuais;
-- devem ser revisados na frente de simplificação do painel;
-- não remover antes de confirmar que não são usados em fluxo visível ou ajuda contextual.
+- não documentar como UI ativa se não estiverem montados no painel atual;
+- não reintroduzir aba `Legendas`;
+- qualquer ajuda contextual futura deve ser reposicionada fora da barra de abas e ignorada pela exportação.
 
 ---
 
@@ -312,16 +302,11 @@ Responsabilidades:
 
 - renderizar `/mapa-familiar-horizontal` no desktop/tablet;
 - organizar pessoas por gerações;
-- usar `manual_generation` quando disponível;
-- compactar colunas vazias;
+- ocultar colunas vazias;
+- posicionar cônjuges;
 - desenhar conectores SVG;
-- exportar superfície horizontal.
-
-Cuidados:
-
-- rota oficial é `/mapa-familiar-horizontal`, não `/genealogia`;
-- `genealogyColumnsLayout` pode ser dependência técnica, não rota ativa;
-- não remover layout compartilhado sem rastrear imports reais.
+- preservar fundo transparente quando definido;
+- exportar com título e paleta.
 
 ### 5.4 `MobileFamilyHorizontalMapView`
 
@@ -333,174 +318,171 @@ src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 
 Responsabilidades:
 
-- experiência mobile da horizontal;
-- uma geração por tela;
-- chips `G1`, `G2`, `G3` etc.;
-- swipe lateral entre gerações;
-- scroll vertical interno da geração ativa.
+- renderizar `/mapa-familiar-horizontal` no mobile;
+- apresentar uma geração por tela;
+- permitir swipe lateral;
+- permitir scroll vertical interno;
+- exibir chips de geração.
 
 Cuidados:
 
-- não reintroduzir `Paterno | Central | Materno`;
-- não transformar geração em subrota;
-- não capturar header/bottom nav na exportação.
+- não usar barra Paterno/Central/Materno;
+- não gerar subrotas por geração;
+- não capturar bottom nav/modal na exportação.
 
-### 5.5 `FamilyTreeVisualCards`
+---
 
-Arquivo:
+## 6. Componentes de exportação
+
+Arquivos:
 
 ```txt
-src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
+src/app/components/FamilyTree/TreeExportLoadingOverlay.tsx
+src/app/components/FamilyTree/utils/treeExport.ts
 ```
 
 Responsabilidades:
 
-- cards compartilhados das views visuais;
-- avatares/silhuetas/pets;
-- ícones de status;
-- classes semânticas para exportação.
+- seleção de área;
+- loading de exportação;
+- captura com `html2canvas`;
+- exportação PNG/PDF/impressão;
+- normalização de SVGs e cores.
 
-Cuidados:
+Regras:
 
-- SVGs internos devem ser compatíveis com `html2canvas`;
-- não usar seletor global `svg path`;
-- conectores devem ser escopados separadamente.
+- não remover `treeExport.ts` em limpeza superficial;
+- não usar seletor global que afete todos os SVGs;
+- não capturar painel, header, bottom nav ou overlays.
 
 ---
 
-## 6. Legado ativo e contratos a extrair
+## 7. Contratos e tipos
 
-### 6.1 `FamilyTree`
-
-Arquivo:
+Arquivo extraído:
 
 ```txt
-src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/actions.ts
 ```
 
-Estado:
+Responsabilidade:
 
-- renderer ReactFlow legado não é view oficial ativa;
-- ainda exige cuidado porque pode concentrar tipos/contratos, especialmente `FamilyTreeActions`.
-
-Recomendação:
-
-- extrair `FamilyTreeActions` para arquivo neutro antes de remover `FamilyTree.tsx`;
-- não remover ReactFlow em commit misto com mudança de UX;
-- tratar remoção do renderer legado como projeto próprio.
-
-### 6.2 Nodes/edges ReactFlow
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-```
-
-Estado:
-
-- candidatos a remoção apenas quando o stack ReactFlow legado for removido;
-- não remover isoladamente se tipos ou exports ainda forem consumidos.
-
-### 6.3 Layouts compartilhados
-
-Arquivos:
-
-```txt
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-```
+- declarar `FamilyTreeActions` fora de `FamilyTree.tsx`;
+- permitir que views oficiais usem o contrato sem depender do renderer legado.
 
 Regra:
 
-- preservar enquanto houver uso por views oficiais;
-- nomes antigos não são evidência suficiente para remoção.
+- novos contratos compartilhados devem ficar em arquivos neutros;
+- não centralizar tipos novos em componentes legados.
 
 ---
 
-## 7. Favoritos e busca
+## 8. Services principais
 
-Componentes/arquivos:
+Preservar:
 
 ```txt
-src/app/components/favorites/FavoriteButton.tsx
-src/app/components/favorites/PageFavoriteButton.tsx
-src/app/constants/favoritePages.ts
+src/app/services/dataService.ts
+src/app/services/memberProfileService.ts
+src/app/services/treeDataCache.ts
+src/app/services/relationshipCacheService.ts
+src/app/services/userEngagementService.ts
+src/app/services/favoritesService.ts
 src/app/services/globalSearchService.ts
 ```
 
-Estado:
-
-- `/mapa-familiar` e `/mapa-familiar-horizontal` são páginas favoritáveis;
-- ambas aparecem na busca global;
-- rotas antigas não devem voltar aos catálogos ativos.
-
----
-
-## 8. Exportação
-
-Arquivos:
+Removido:
 
 ```txt
-src/app/components/FamilyTree/utils/treeExport.ts
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
+src/app/services/relationshipResolverService.ts
 ```
 
-Responsabilidades:
+Regras:
 
-- resolver alvo exportável;
-- capturar com `html2canvas`;
-- gerar PNG/PDF/impressão;
-- compor título no canvas;
-- ignorar interface.
-
-Cuidados:
-
-- painel e overlays devem ter `data-tree-export-ignore="true"`;
-- alterações no painel não podem quebrar `Área`, `Imagem`, `PDF` e `Imprimir`;
-- exportação precisa de QA manual.
+- `dataService.ts` é crítico para CRUD e eventos da árvore;
+- `treeDataCache.ts` coordena invalidação/recarregamento;
+- `relationshipCacheService.ts` limpa `parentescos_calculados`;
+- `memberProfileService.ts` é crítico para vínculo usuário-pessoa;
+- `userEngagementService.ts` ainda concentra compatibilidade local/legada e notificações.
 
 ---
 
-## 9. Componentes candidatos a revisão futura
+## 9. Componentes removidos
 
-| Componente/arquivo | Situação | Ação |
-|---|---|---|
-| `GenealogyMobileStageTabs.tsx` | ligado a fluxo antigo | remover após confirmar zero imports |
-| `ViewModeToggle.tsx` | sem consumidor aparente | remover em commit próprio |
-| `ImageWithFallback.tsx` | sem consumidor aparente | remover após busca final |
-| `CentralNotificacoes.tsx` | sem rota/import aparente | investigar antes de remover |
-| `GenealogyFilterGrid.tsx` | pode estar importado sem renderização útil | limpar junto ao painel |
+Não reintroduzir sem decisão explícita:
+
+```txt
+src/app/pages/home/GenealogyMobileStageTabs.tsx
+src/app/pages/home/GenealogyFilterGrid.tsx
+src/app/pages/CentralNotificacoes.tsx
+src/app/components/FamilyTree/ViewModeToggle.tsx
+src/app/components/figma/ImageWithFallback.tsx
+```
+
+Se algum import quebrar após remoção:
+
+1. confirmar se o fluxo ainda é vigente;
+2. procurar substituto atual;
+3. não restaurar o arquivo antigo por conveniência;
+4. rodar build/testes.
 
 ---
 
-## 10. Validação
+## 10. Legado técnico preservado
 
-Após alterar componentes:
+Preservar até frente específica:
+
+```txt
+src/app/components/FamilyTree/FamilyTree.tsx
+src/app/components/FamilyTree/PersonNode.tsx
+src/app/components/FamilyTree/MarriageNode.tsx
+src/app/components/FamilyTree/GenealogySpouseEdge.tsx
+src/app/components/FamilyTree/nodeTypes.ts
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
+src/styles/mobile-tree-lines.css
+```
+
+Motivo:
+
+- pode haver tipos/helpers ativos;
+- a horizontal usa layout genealógico;
+- remover ReactFlow/Dagre exige frente própria.
+
+---
+
+## 11. Checklist antes de remover componente
 
 ```bash
+rg "NomeDoComponente"
+rg "from './NomeDoComponente'"
+rg "from '../NomeDoComponente'"
 npm run build
 npm test
 npm run test:e2e
 git diff --check
 ```
 
-Quando envolver árvore:
-
-```bash
-rg "TreeViewMode"
-rg "/minha-arvore|/genealogia|/visao-completa"
-rg "data-tree-route-view"
-```
-
 Critérios:
 
-- as duas views oficiais funcionam no desktop e mobile;
-- `?pessoa=...` é preservado;
-- exportação continua funcionando;
-- painel mobile continua abrindo;
-- rotas antigas não voltam como navegação ativa;
-- `/minha-arvore/editar` continua preservada.
+- sem import ativo;
+- sem lazy import;
+- sem CSS necessário para view atual;
+- sem teste dependente;
+- sem contrato exportado usado por outro arquivo;
+- sem função de fallback intencional.
+
+---
+
+## 12. Critério de aceitação
+
+Uma alteração de componente só deve ser fechada quando:
+
+- build passa;
+- testes unitários passam;
+- E2E passa quando rota/navegação/árvore for afetada;
+- `git diff --check` não aponta erro bloqueante;
+- rotas antigas não voltam;
+- painel antigo de abas não volta;
+- docs canônicas são atualizadas se o comportamento mudar.
