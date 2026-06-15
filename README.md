@@ -1,33 +1,50 @@
-# Arvore Familia
+# Árvore Família
 
-Aplicacao web para arvore genealogica familiar, com area de membros, painel administrativo, perfis de pessoas, relacionamentos, arquivos historicos, forum, calendario, notificacoes, favoritos e integracoes opcionais.
+Aplicação web para árvore genealógica familiar, com área de membros, painel administrativo, perfis de pessoas, relacionamentos, arquivos históricos, fórum, calendário, notificações, favoritos e integrações opcionais.
 
-Este `README.md` e a porta de entrada rapida do repositorio. A documentacao tecnica completa fica em `docs/README.md`.
+Este `README.md` é a porta de entrada rápida do repositório. A documentação técnica completa fica em `docs/README.md`.
 
 ---
 
 ## Estado atual
 
-O projeto esta estruturado como uma aplicacao React/Vite com persistencia no Supabase.
+O projeto está estruturado como uma aplicação React/Vite com persistência no Supabase.
 
 Principais frentes consolidadas:
 
-- arvore familiar interativa;
-- visualizacoes `/minha-arvore`, `/genealogia` e `/visao-completa`;
+- árvore familiar interativa nas duas views oficiais atuais;
+- **Árvore Familiar** em `/mapa-familiar`;
+- **Mapa Genealógico** em `/mapa-familiar-horizontal`;
+- rota raiz `/` redirecionando para `/mapa-familiar`, preservando query string;
+- `/minha-arvore/editar` como rota vigente de edição do membro;
 - perfis individuais de pessoas;
 - painel administrativo;
 - CRUD de pessoas e relacionamentos;
-- relacionamentos inversos quando a regra e deterministica;
-- arquivos historicos por pessoa;
-- area autenticada de membros;
-- vinculo entre usuario e pessoa da arvore;
-- forum familiar;
-- calendario familiar;
-- notificacoes internas/e-mail conforme configuracao;
+- relacionamentos inversos quando a regra é determinística;
+- arquivos históricos por pessoa e por relacionamento quando aplicável;
+- área autenticada de membros;
+- vínculo entre usuário e pessoa da árvore;
+- fórum familiar;
+- calendário familiar;
+- notificações internas/e-mail conforme configuração;
 - favoritos;
 - timeline e insights familiares;
-- exportacao de area visivel da arvore;
+- exportação da árvore por área, PNG, PDF e impressão;
 - responsividade mobile/tablet validada no escopo atual.
+
+Rotas antigas que não são views ativas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Histórico preventivo:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
 
 ---
 
@@ -42,47 +59,48 @@ Principais frentes consolidadas:
 - Supabase Postgres;
 - Supabase Storage;
 - Supabase Edge Functions;
-- ReactFlow/Dagre;
+- ReactFlow/Dagre como legado ativo/dependência técnica, não como renderer público principal das views oficiais;
 - Vitest;
 - Playwright.
 
 ---
 
-## Estrutura do repositorio
+## Estrutura do repositório
 
 ```txt
 src/app/
-  components/        componentes reutilizaveis
+  components/        componentes reutilizáveis
   components/FamilyTree/
   contexts/          AuthContext e estado compartilhado
-  lib/               cliente Supabase e utilitarios base
-  pages/             telas publicas, membro, forum e admin
-  services/          acesso a dados e regras de negocio
+  lib/               cliente Supabase e utilitários base
+  pages/             telas públicas, membro, fórum e admin
+  services/          acesso a dados e regras de negócio
   types/             contratos TypeScript
   routes.tsx         rotas e guards
 
 docs/
-  README.md          indice canonico da documentacao
-  arquitetura/       rotas, guards, usuarios e modelo de dados
-  funcionalidades/   documentacao por funcionalidade
-  operacao/          migrations, Supabase, storage e manutencao
-  historico/         diagnosticos, QA e registros antigos
+  README.md          índice canônico da documentação
+  QA_MANUAL.md       QA manual centralizado
+  arquitetura/       rotas, guards, usuários e modelo de dados
+  funcionalidades/   documentação por funcionalidade
+  operacao/          migrations, deploy, OAuth, Storage e manutenção
+  historico/         registros históricos e rotas removidas
 
 supabase/
   migrations/        fonte da verdade do schema
   functions/         Edge Functions
 ```
 
-Regra de organizacao:
+Regra de organização:
 
 - o root deve conter apenas arquivos essenciais do projeto;
-- documentacao tecnica detalhada deve ficar em `docs/`;
-- diagnosticos, relatorios antigos e SQLs soltos devem ficar em `docs/historico/` ou fora do repositorio quando forem dumps sensiveis;
-- `supabase/migrations` e a fonte da verdade do banco.
+- documentação técnica detalhada deve ficar em `docs/`;
+- diagnósticos, relatórios antigos e SQLs soltos devem ficar em `docs/historico/` ou fora do repositório quando forem dumps sensíveis;
+- `supabase/migrations` é a fonte da verdade do banco.
 
 ---
 
-## Variaveis de ambiente
+## Variáveis de ambiente
 
 Crie `.env.local` na raiz do projeto:
 
@@ -103,13 +121,13 @@ Opcional, apenas para liberar ferramentas destrutivas em ambiente controlado:
 VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
 ```
 
-Nao versionar `.env.local`, service role, dumps, tokens, backups ou secrets.
+Não versionar `.env.local`, service role, dumps, tokens, backups ou secrets.
 
 ---
 
 ## Comandos principais
 
-Instalacao:
+Instalação:
 
 ```bash
 npm install
@@ -121,7 +139,7 @@ Desenvolvimento local:
 npm run dev
 ```
 
-Build de producao:
+Build de produção:
 
 ```bash
 npm run build
@@ -133,7 +151,7 @@ Preview local do build:
 npm run preview
 ```
 
-Testes unitarios:
+Testes unitários:
 
 ```bash
 npm test
@@ -155,68 +173,72 @@ npm run test:e2e:ui
 
 ## Rotas principais
 
-### Entrada e area de membro
+### Entrada e área de membro
 
 - `/entrar`: login, cadastro e primeiro acesso;
-- `/`: redireciona para `/minha-arvore`, preservando query string;
-- `/minha-arvore`: arvore direta protegida por `TreeAccessRoute`;
-- `/genealogia`: visualizacao genealogica protegida por `TreeAccessRoute`;
-- `/visao-completa`: visualizacao completa protegida por `TreeAccessRoute`;
-- `/minha-arvore/editar`: edicao da propria arvore/dados pelo membro;
-- `/meus-dados`: dados pessoais do usuario vinculado;
-- `/meus-vinculos`: vinculos usuario-pessoa;
-- `/vincular-perfil`: fluxo de solicitacao/vinculo;
-- `/calendario-familiar`: calendario familiar;
+- `/`: redireciona para `/mapa-familiar`, preservando query string;
+- `/mapa-familiar`: Árvore Familiar, protegida por `TreeAccessRoute`;
+- `/mapa-familiar-horizontal`: Mapa Genealógico, protegido por `TreeAccessRoute`;
+- `/busca`: busca global autenticada, protegida por `TreeAccessRoute`;
+- `/minha-arvore/editar`: edição da própria árvore/dados pelo membro, protegida por `MemberRoute`;
+- `/meus-dados`: dados pessoais do usuário vinculado;
+- `/meus-vinculos`: vínculos usuário-pessoa;
+- `/vincular-perfil`: fluxo de solicitação/vínculo;
+- `/calendario-familiar`: calendário familiar;
 - `/meus-favoritos`: favoritos;
-- `/notificacoes`: central de notificacoes;
-- `/ajustar-notificacoes`: preferencias de notificacao.
+- `/notificacoes`: central de notificações;
+- `/ajustar-notificacoes`: preferências de notificação.
 
-### Pessoas e forum
+### Pessoas e fórum
 
-- `/pessoa/:id`: perfil publico/autenticado de pessoa;
+- `/pessoa/:id`: perfil público/autenticado de pessoa;
 - `/pessoas/:id`: alias/rota de perfil;
-- `/forum`: forum familiar;
-- `/forum/novo`: novo topico;
-- `/forum/topico/:id`: detalhe do topico;
-- `/forum/topico/:id/editar`: edicao do topico.
+- `/forum`: fórum familiar;
+- `/forum/novo`: novo tópico;
+- `/forum/topico/:id`: detalhe do tópico;
+- `/forum/topico/:id/editar`: edição do tópico.
 
 ### Admin
 
-- `/admin/login`: entrada admin publica/legada;
+- `/admin/login`: entrada admin pública/legada;
 - `/admin` e `/admin/dashboard`: dashboard administrativo;
-- `/admin/home`: configuracao visual da entrada;
+- `/admin/home`: configuração visual da entrada;
 - `/admin/pessoas`: listagem de pessoas;
-- `/admin/pessoas/nova`: criacao de pessoa;
+- `/admin/pessoas/nova`: criação de pessoa;
 - `/admin/pessoas/:id`: detalhe administrativo da pessoa;
-- `/admin/pessoas/:id/editar`: edicao administrativa da pessoa;
+- `/admin/pessoas/:id/editar`: edição administrativa da pessoa;
 - `/admin/relacionamentos`: listagem de relacionamentos;
-- `/admin/relacionamentos/novo`: criacao de relacionamento;
-- `/admin/importacao`: importacao;
-- `/admin/migrar-dados`: ferramenta destrutiva protegida por confirmacao;
-- `/admin/diagnostico`: diagnosticos administrativos;
+- `/admin/relacionamentos/novo`: criação de relacionamento;
+- `/admin/importacao`: importação;
+- `/admin/migrar-dados`: ferramenta destrutiva protegida por confirmação;
+- `/admin/diagnostico`: diagnósticos administrativos;
 - `/admin/integridade`: integridade de dados;
-- `/admin/atividades`: historico de atividades;
-- `/admin/notificacoes`: administracao de notificacoes;
-- `/admin/solicitacoes-vinculos`: solicitacoes de vinculo.
+- `/admin/atividades`: histórico de atividades;
+- `/admin/notificacoes`: administração de notificações;
+- `/admin/solicitacoes-vinculos`: solicitações de vínculo.
 
-A documentacao detalhada de rotas fica em:
+A documentação detalhada de rotas fica em:
 
 ```txt
 docs/arquitetura/ROTAS_E_GUARDS.md
 ```
 
+O histórico das rotas removidas fica em:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
+
 ---
 
-## Guards e permissoes
+## Guards e permissões
 
-- `MemberRoute`: exige usuario autenticado;
-- `TreeAccessRoute`: exige login recente e vinculo confirmado em `user_person_links`;
-- `ProtectedRoute`: protege rotas administrativas com verificacao de admin;
-- `permissionService`: centraliza permissoes de admin e edicao por pessoa vinculada.
+- `MemberRoute`: exige usuário autenticado;
+- `TreeAccessRoute`: protege as views da árvore e a busca autenticada;
+- `ProtectedRoute`: protege rotas administrativas com verificação de admin;
+- `permissionService`: centraliza permissões de admin e edição por pessoa vinculada.
 
-Admin deve ser definido no banco por `profiles.role = 'admin'`.
-
-Durante transicoes, pode existir fallback temporario por e-mail no frontend. Esse fallback deve ser removido quando todos os admins estiverem garantidos por `profiles.role`.
+Admin deve ser definido no banco por `profiles.role = 'admin'` ou fluxo equivalente documentado.
 
 ---
 
@@ -230,19 +252,17 @@ supabase/migrations
 
 como fonte da verdade do schema.
 
-Nao use SQLs soltos como schema principal em ambientes novos. Arquivos como `database-schema.sql`, `supabase_schema.sql`, `supabase_data.sql`, `diagnostico-*.sql`, `verificar-irmaos.sql` ou similares devem ser tratados como historico, diagnostico ou backup local, nao como fonte oficial.
+Não use SQLs soltos como schema principal em ambientes novos. Arquivos como `database-schema.sql`, `supabase_schema.sql`, `supabase_data.sql`, `diagnostico-*.sql`, `verificar-irmaos.sql` ou similares devem ser tratados como histórico, diagnóstico ou backup local, não como fonte oficial.
 
-Antes de aplicar migrations em staging/producao:
+Antes de aplicar migrations em staging/produção:
 
 1. revisar o SQL;
-2. fazer backup quando aplicavel;
+2. fazer backup quando aplicável;
 3. validar em ambiente local/staging;
 4. rodar build e testes;
-5. aplicar apenas com autorizacao explicita.
+5. aplicar apenas com autorização explícita.
 
-Nao rode `supabase db push` em banco remoto sem revisar o estado das migrations.
-
-Documentacao operacional:
+Documentação operacional:
 
 ```txt
 docs/operacao/MIGRATIONS_SUPABASE.md
@@ -254,29 +274,29 @@ docs/operacao/MIGRATIONS_SUPABASE.md
 
 Tabelas e objetos centrais:
 
-- `pessoas`: dados cadastrais, biograficos e campos complementares;
+- `pessoas`: dados cadastrais, biográficos e campos complementares;
 - `relacionamentos`: arestas entre pessoas;
-- `arquivos_historicos`: arquivos vinculados por `pessoa_id`;
-- `profiles`: perfis de usuarios e roles;
-- `user_person_links`: vinculo entre usuario autenticado e pessoa da arvore;
-- `forum_*`: categorias, topicos, respostas, comentarios, reacoes e denuncias;
-- `notifications` e tabelas correlatas: notificacoes e preferencias;
-- `user_favorites`: favoritos do usuario;
-- `google_calendar_*`: conexao e metadados de integracao quando habilitada.
+- `arquivos_historicos`: arquivos vinculados por `pessoa_id` ou `relacionamento_id` quando aplicável;
+- `profiles`: perfis de usuários e roles;
+- `user_person_links`: vínculo entre usuário autenticado e pessoa da árvore;
+- `forum_*`: categorias, tópicos, respostas, comentários, reações e denúncias;
+- `notifications` e tabelas correlatas: notificações e preferências;
+- `user_favorites`: favoritos do usuário;
+- `google_calendar_*`: conexão e metadados de integração quando habilitada.
 
-Observacoes:
+Observações:
 
-- `arquivos_historicos` e tabela relacional, nao coluna JSON de `pessoas`;
-- relacionamentos de `conjuge` e `irmao` sao simetricos;
+- `arquivos_historicos` é tabela relacional, não coluna JSON de `pessoas` para novos registros;
+- relacionamentos de `conjuge` e `irmao` são simétricos;
 - relacionamentos `pai`/`mae` geram inverso `filho` quando o fluxo permite;
-- relacionamento `filho` so deve gerar inverso `pai` ou `mae` quando o fluxo informa o tipo correto;
-- nao inferir genero/tipo parental quando o dado nao estiver claro.
+- relacionamento `filho` só deve gerar inverso `pai` ou `mae` quando o fluxo informa o tipo correto;
+- não inferir gênero/tipo parental quando o dado não estiver claro.
 
 ---
 
 ## Ferramentas destrutivas
 
-A rota abaixo e sensivel:
+A rota abaixo é sensível:
 
 ```txt
 /admin/migrar-dados
@@ -284,13 +304,13 @@ A rota abaixo e sensivel:
 
 Ela pode apagar pessoas e relacionamentos antes de importar seed.
 
-Em producao, deve permanecer bloqueada por padrao. Para liberar em ambiente controlado, use:
+Em produção, deve permanecer bloqueada por padrão. Para liberar em ambiente controlado, use:
 
 ```env
 VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
 ```
 
-A tela ainda exige confirmacao textual:
+A tela ainda exige confirmação textual:
 
 ```txt
 MIGRAR DADOS
@@ -298,9 +318,9 @@ MIGRAR DADOS
 
 ---
 
-## Checklist tecnico antes de commit/deploy
+## Checklist técnico antes de commit/deploy
 
-Execute antes de fechar alteracoes relevantes:
+Execute antes de fechar alterações relevantes:
 
 ```bash
 git status
@@ -311,18 +331,18 @@ git diff --check
 supabase migration list
 ```
 
-Verifique tambem:
+Verifique também:
 
 - nenhuma migration criada para ajuste puramente visual;
 - nenhum secret ou dump versionado;
-- nenhum `dist/`, `test-results/`, `.bak`, log temporario ou arquivo gerado entrou no commit;
-- documentacao atualizada quando houver mudanca de rota, banco, permissao, UX ou comportamento consolidado.
+- nenhum `dist/`, `test-results/`, `.bak`, log temporário ou arquivo gerado entrou no commit;
+- documentação atualizada quando houver mudança de rota, banco, permissão, UX ou comportamento consolidado.
 
 ---
 
 ## Deploy
 
-Fluxo padrao:
+Fluxo padrão:
 
 ```bash
 npm install
@@ -335,7 +355,7 @@ O artefato final fica em:
 dist/
 ```
 
-Para deploy estatico, configure as variaveis de ambiente no provedor e publique `dist/`.
+Para deploy estático, configure as variáveis de ambiente no provedor e publique `dist/`.
 
 Se o provedor exigir, configure fallback SPA para:
 
@@ -343,7 +363,7 @@ Se o provedor exigir, configure fallback SPA para:
 index.html
 ```
 
-Documentacao de deploy:
+Documentação de deploy:
 
 ```txt
 docs/operacao/DEPLOYMENT.md
@@ -351,9 +371,9 @@ docs/operacao/DEPLOYMENT.md
 
 ---
 
-## Documentacao
+## Documentação
 
-Ponto de entrada canonico:
+Ponto de entrada canônico:
 
 ```txt
 docs/README.md
@@ -361,38 +381,101 @@ docs/README.md
 
 Documentos principais:
 
-- `docs/GUIA_IMPLEMENTACOES.md`: estado consolidado do que ja foi implementado;
-- `docs/GUIA_COMPONENTES.md`: componentes, props, responsabilidades e cuidados contra regressao;
-- `docs/GUIA_UX_LAYOUT.md`: decisoes de UX, layout e responsividade;
+- `docs/BASELINE_PRODUTO_ATUAL.md`: estado funcional vigente;
+- `docs/QA_MANUAL.md`: QA manual centralizado;
+- `docs/REGRAS_DE_NAO_REGRESSAO.md`: contratos que não podem regredir;
+- `docs/GUIA_IMPLEMENTACOES.md`: estado consolidado do que já foi implementado;
+- `docs/GUIA_COMPONENTES.md`: componentes, props, responsabilidades e cuidados contra regressão;
+- `docs/GUIA_UX_LAYOUT.md`: decisões de UX, layout e responsividade;
 - `docs/GUIA_CORRECAO_ERROS.md`: troubleshooting por sintoma;
-- `docs/PLANO_PROXIMOS_PASSOS.md`: pendencias, fechamento de MVP e backlog pos-MVP;
-- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e navegacao;
-- `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`: usuarios, pessoas, vinculos e modelo de dados;
-- `docs/operacao/MIGRATIONS_SUPABASE.md`: migrations, Supabase e seguranca operacional;
-- `docs/operacao/DEPLOYMENT.md`: deploy, variaveis e operacao;
-- `docs/funcionalidades/`: documentacao especifica por funcionalidade;
-- `docs/historico/`: diagnosticos, QA e registros historicos;
-- `docs/ATTRIBUTIONS.md`: atribuicoes e licencas de componentes/assets, se mantido dentro de `docs/`.
+- `docs/PLANO_PROXIMOS_PASSOS.md`: pendências, riscos e backlog;
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e navegação;
+- `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`: usuários, pessoas, vínculos e modelo de dados;
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: migrations, Supabase e segurança operacional;
+- `docs/operacao/DEPLOYMENT.md`: deploy, variáveis e operação;
+- `docs/funcionalidades/`: documentação específica por funcionalidade;
+- `docs/historico/ROTAS_REMOVIDAS.md`: histórico preventivo de rotas removidas;
+- `docs/historico/`: diagnósticos, QA e registros históricos;
+- `docs/ATTRIBUTIONS.md`: atribuições e licenças de componentes/assets, se mantido dentro de `docs/`.
 
-Se houver divergencia entre um documento antigo e os guias em `docs/`, prevalece a documentacao canonica em `docs/`.
+Se houver divergência entre um documento antigo e os guias em `docs/`, prevalece a documentação canônica em `docs/`.
 
 ---
 
-## Politica para arquivos no root
+## Política para arquivos no root
 
-Devem permanecer no root apenas arquivos necessarios para execucao, build, deploy ou entrada rapida do repositorio, como:
+Devem permanecer no root apenas arquivos necessários para execução, build, deploy ou configuração do projeto.
+
+Exemplos:
 
 ```txt
 README.md
-index.html
 package.json
 package-lock.json
-playwright.config.ts
-postcss.config.mjs
-vercel.json
 vite.config.ts
+vercel.json
+index.html
 ```
 
-Arquivos de documentacao complementar devem preferencialmente ficar em `docs/`.
+Não manter no root:
 
-Arquivos historicos, diagnosticos, relatorios antigos, logs e SQLs legados nao devem permanecer soltos na raiz.
+```txt
+dist/
+backups/
+test-results/
+playwright-report/
+coverage/
+*.bak
+*.patch
+.env
+.env.local
+.env*.save
+```
+
+---
+
+## Anti-regressão de rotas antigas
+
+Não reativar como views de produto:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Permitido:
+
+- `/minha-arvore/editar` como rota vigente de edição do membro;
+- termos como “minha árvore”, “genealogia” e “visão completa” como keywords, rótulos históricos ou texto explicativo, desde que apontem para rotas vigentes;
+- ocorrências em `docs/historico/` claramente marcadas como legado.
+
+Regra:
+
+```txt
+Keyword antiga não reativa rota antiga.
+```
+
+---
+
+## Validação documental
+
+Antes de fechar mudanças de documentação:
+
+```bash
+git diff --check
+npm run build
+```
+
+Para auditoria de rotas antigas:
+
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa" README.md docs src tests
+```
+
+Interpretação:
+
+- `/minha-arvore/editar` é permitido;
+- `docs/historico/ROTAS_REMOVIDAS.md` é a referência preventiva;
+- `docs/historico/` pode conter ocorrências legadas;
+- documentos canônicos não devem tratar as rotas removidas como views ativas.
