@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md`, registrar `docs/historico/ROTAS_REMOVIDAS.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
+> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md`, registrar `docs/historico/ROTAS_REMOVIDAS.md`, classificar `docs/historico/SQLS_LEGADOS.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -41,6 +41,8 @@ A baseline funcional atual registra:
 - a vertical suporta núcleos conjugais adicionais quando há dados reais;
 - cônjuges de `pais`/Geração 4 na horizontal continuam pendência documentada, não implementação consolidada;
 - `/calendario-familiar` possui filtros mobile compactos por categoria;
+- `supabase/migrations/` é a fonte da verdade do schema;
+- SQLs soltos ou antigos ficam classificados em `docs/historico/SQLS_LEGADOS.md` quando não forem migrations oficiais;
 - ReactFlow/Dagre permanecem como legado ativo/dependência técnica e não devem ser removidos sem frente própria.
 
 ---
@@ -60,6 +62,7 @@ A baseline funcional atual registra:
 | Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
 | Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
 | Entender rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
+| Classificar SQL solto ou documento antigo de banco | `docs/historico/SQLS_LEGADOS.md` |
 
 Regra:
 
@@ -69,6 +72,7 @@ QA manual fica em QA_MANUAL.md.
 Pendência fica em PLANO_PROXIMOS_PASSOS.md.
 Operação fica em docs/operacao/.
 Histórico fica em docs/historico/.
+supabase/migrations/ é a fonte da verdade do schema.
 ```
 
 ---
@@ -156,6 +160,7 @@ Regra operacional:
 ```txt
 Ajuste visual, layout, paleta, modal, exportação client-side ou documentação não exige migration.
 Mudança de schema, RLS, RPC, trigger, bucket/policy, Edge Function ou secret exige revisão operacional.
+supabase/migrations/ é a fonte da verdade do schema.
 ```
 
 ---
@@ -172,19 +177,22 @@ Uso:
 
 - preservar contexto de decisões passadas;
 - manter documentação antiga sem confundi-la com contrato vigente;
-- guardar material sobre rotas removidas, refatorações e auditorias já encerradas.
+- guardar material sobre rotas removidas, SQLs legados, refatorações e auditorias já encerradas.
 
 | Arquivo | Uso |
 |---|---|
 | `README.md` | Índice histórico consolidado da pasta. |
 | `ROTAS_REMOVIDAS.md` | Histórico preventivo de `/minha-arvore`, `/genealogia` e `/visao-completa`. |
+| `SQLS_LEGADOS.md` | Inventário preventivo de SQLs soltos, dumps, diagnósticos e documentos antigos de banco. |
 
 Regras:
 
 - conteúdo histórico não prevalece sobre documentação canônica;
 - histórico não deve reabrir `/minha-arvore`, `/genealogia` ou `/visao-completa`;
+- SQL histórico não substitui migration oficial;
 - material histórico útil deve apontar para o documento canônico atual;
-- dúvidas sobre ocorrências dessas rotas antigas devem ser conferidas em `docs/historico/ROTAS_REMOVIDAS.md`.
+- dúvidas sobre ocorrências dessas rotas antigas devem ser conferidas em `docs/historico/ROTAS_REMOVIDAS.md`;
+- dúvidas sobre SQL solto devem ser conferidas em `docs/historico/SQLS_LEGADOS.md`.
 
 ---
 
@@ -200,6 +208,7 @@ Regras:
 | Pendência ou risco | `PLANO_PROXIMOS_PASSOS.md` |
 | Deploy/operação | `docs/operacao/*` |
 | Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` e `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
+| SQL legado, dump ou diagnóstico antigo | `docs/historico/SQLS_LEGADOS.md` |
 | História/legado | `docs/historico/*` |
 
 ---
@@ -246,5 +255,5 @@ docs/QA_MANUAL.md
 - Não transformar checklist manual em pendência fechada sem validação real.
 - Não duplicar checklists longos de QA fora de `QA_MANUAL.md`.
 - Não colocar secrets, service role, tokens ou chaves reais na documentação.
-- Não tratar SQL solto como fonte principal do schema.
+- Não tratar SQL solto como fonte principal do schema; o histórico preventivo fica em `docs/historico/SQLS_LEGADOS.md`.
 - Não usar docs históricas como fonte de implementação vigente.
