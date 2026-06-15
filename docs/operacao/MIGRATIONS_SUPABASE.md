@@ -1,9 +1,9 @@
-﻿# Migrations Supabase
+# Migrations Supabase
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.
-> Status: revisado para separar alterações de banco de ajustes visuais/documentais.
+> Status: revisado para separar migrations oficiais, SQLs soltos e stubs preventivos.
 
 ---
 
@@ -31,7 +31,7 @@ Não use este documento para ajustes puramente visuais.
 supabase/migrations/ é a fonte da verdade do schema.
 ```
 
-SQL solto pode existir como histórico, diagnóstico ou operação pontual, mas não substitui migration.
+SQL solto pode existir como histórico, diagnóstico, operação pontual ou stub preventivo, mas não substitui migration.
 
 Não aplicar como schema principal:
 
@@ -41,6 +41,19 @@ supabase/forum-schema.sql
 supabase/google-calendar-schema.sql
 diagnostico-*.sql
 scripts SQL antigos fora de supabase/migrations/
+```
+
+Observação:
+
+```txt
+supabase/forum-schema.sql e supabase/google-calendar-schema.sql foram neutralizados como stubs preventivos.
+Eles não devem conter comandos operacionais nem ser usados para provisionar banco.
+```
+
+Inventário histórico:
+
+```txt
+docs/historico/SQLS_LEGADOS.md
 ```
 
 ---
@@ -218,183 +231,3 @@ Fluxo:
 6. não remover payload correto para contornar ambiente atrasado.
 
 Exemplos de objetos sensíveis:
-
-```txt
-public.arquivos_historicos.categoria_evento
-public.admin_reset_person_profile(target_pessoa_id uuid)
-public.pessoas.genero
-public.pessoas.complemento
-```
-
----
-
-## 10. Migrations recentes relevantes
-
-### `20260522121000_add_historical_file_event_category.sql`
-
-Escopo:
-
-- adiciona `categoria_evento` em `public.arquivos_historicos`;
-- cria constraint de categorias;
-- deve existir antes de frontend que envie `categoria_evento`.
-
-Categorias esperadas:
-
-```txt
-certidao_nascimento
-certidao_casamento
-alistamento_militar
-imigracao
-divorcio
-carreira_profissional
-mudanca_cidade
-certidao_obito
-outro
-```
-
-### `20260522173000_fix_admin_list_profiles_for_linking_rpc.sql`
-
-Escopo:
-
-- cria/corrige RPC `admin_list_profiles_for_linking`;
-- usa `security definer`;
-- exige admin;
-- concede execução a `authenticated`.
-
-### `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql`
-
-Escopo:
-
-- ajusta defaults de privacidade/contato;
-- cria/atualiza `admin_reset_person_profile(target_pessoa_id uuid)`;
-- permite reset administrativo controlado;
-- preserva relacionamentos familiares.
-
-### `20260609193000_ensure_admin_reset_person_profile.sql`
-
-Escopo:
-
-- reforça idempotência/assinatura da RPC de reset administrativo.
-
-### `20260611003558_add_genero_to_pessoas.sql`
-
-Escopo:
-
-- adiciona `genero` em `public.pessoas`;
-- mantém compatibilidade de cadastro;
-- não define fallback visual por gênero.
-
-Regra visual atual:
-
-```txt
-Pessoa sem foto usa User; pet sem foto usa PawPrint.
-```
-
-### `20260611013000_add_complemento_to_pessoas.sql`
-
-Escopo:
-
-- adiciona `complemento` em `public.pessoas`;
-- armazena complemento manual de endereço;
-- não altera regras visuais da árvore.
-
----
-
-## 11. Edge Functions e banco
-
-Edge Function não é migration, mas pode depender de schema.
-
-Antes de alterar função que escreve/lê banco:
-
-- revisar schema;
-- revisar RLS/RPC;
-- revisar secrets;
-- publicar função;
-- testar frontend.
-
-Comandos:
-
-```bash
-supabase functions list
-supabase functions deploy <nome-da-function>
-```
-
----
-
-## 12. Storage e migrations
-
-Storage e schema são frentes distintas.
-
-Storage pode envolver:
-
-- bucket;
-- policy;
-- paths;
-- arquivos reais;
-- scripts com service role.
-
-Consulte:
-
-```txt
-docs/operacao/STORAGE_MAINTENANCE.md
-```
-
-Não criar migration para corrigir:
-
-- avatar fallback;
-- ícone SVG;
-- card;
-- exportação visual;
-- paleta;
-- modal.
-
----
-
-## 13. SQL legado
-
-Classificação permitida:
-
-| Tipo | Tratamento |
-|---|---|
-| migration oficial | fonte da verdade |
-| script diagnóstico | executar com cuidado, não como schema |
-| script corretivo pontual | exige revisão e backup |
-| SQL histórico | manter em histórico ou remover se obsoleto |
-| dump | não versionar se contiver dados reais |
-
-Antes de remover SQL legado:
-
-```bash
-rg "nome_do_arquivo.sql" .
-```
-
----
-
-## 14. Rollback
-
-Rollback de banco não é igual a revert Git.
-
-Antes de desfazer schema:
-
-1. avaliar impacto em dados;
-2. criar migration reversa quando apropriado;
-3. fazer backup;
-4. revisar frontend dependente;
-5. testar ambiente controlado;
-6. aplicar com autorização explícita.
-
-Nunca executar `drop` destrutivo em produção sem plano.
-
----
-
-## 15. Critérios para atualizar este documento
-
-Atualize quando houver:
-
-- nova migration relevante;
-- mudança de fluxo Supabase;
-- nova RPC crítica;
-- mudança de RLS;
-- novo script SQL operacional;
-- mudança em schema cache/troubleshooting;
-- nova política sobre SQL legado.
