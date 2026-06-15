@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14
 > Local recomendado: `docs/historico/README.md`
 > Tipo: índice e consolidação histórica.
-> Status: atualizado após a definição da baseline atual, com índice explícito para rotas removidas e duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Status: atualizado após a definição da baseline atual, com índice explícito para rotas removidas, SQLs legados e duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
 
@@ -28,12 +28,19 @@ docs/GUIA_CORRECAO_ERROS.md
 docs/arquitetura/
 docs/funcionalidades/
 docs/operacao/
+supabase/migrations/
 ```
 
 Regra:
 
 ```txt
 Se houver divergência entre histórico e documentação canônica atual, prevalece a documentação canônica atual.
+```
+
+Para banco de dados:
+
+```txt
+supabase/migrations/ é a fonte da verdade do schema.
 ```
 
 ---
@@ -181,7 +188,7 @@ Regras preservadas nos docs atuais:
 - separação entre `personFilters` e `directRelativeFilters`;
 - pets por `humano_ou_pet === 'Pet'`;
 - cônjuges sempre visíveis versus filtráveis;
-- cônjuges de pais/Geração 4 filtráveis na horizontal;
+- cônjuges de pais/Geração 4 na horizontal permanecem pendência `TREE-003` até correção no código;
 - múltiplos cônjuges da pessoa central na vertical;
 - contagens efetivas por view;
 - filtros não alteram dados;
@@ -204,6 +211,7 @@ docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
 ---
@@ -300,7 +308,7 @@ Características atuais:
 - swipe lateral;
 - scroll vertical até cards e conectores visíveis;
 - exportação HTML/CSS/SVG;
-- cônjuges da Geração 4 devem aparecer quando filtro `Cônjuges` estiver ativo;
+- cônjuges de pais/Geração 4 na horizontal permanecem pendência `TREE-003` até código incluir esse grupo;
 - desktop é referência de hierarquia, conectores e paletas.
 
 Documento atual:
@@ -331,7 +339,42 @@ docs/funcionalidades/CALENDARIO_FAMILIAR.md
 
 ---
 
-## 10. Debug temporário documentado
+## 10. SQLs legados e docs antigos de banco
+
+O documento preventivo principal para SQL solto, dump, diagnóstico antigo ou documento de banco fora de migrations é:
+
+```txt
+docs/historico/SQLS_LEGADOS.md
+```
+
+Status atual:
+
+- `supabase/migrations/` é a fonte da verdade do schema;
+- SQLs soltos podem existir como histórico, diagnóstico ou operação pontual;
+- SQL solto não deve ser usado para montar ambiente novo;
+- dump com dados reais não deve ser versionado.
+
+Arquivos classificados como legado/preventivo quando existirem no repositório:
+
+```txt
+supabase/forum-schema.sql
+supabase/google-calendar-schema.sql
+database-schema.sql
+supabase_schema.sql
+supabase_data.sql
+diagnostico-*.sql
+verificar-*.sql
+```
+
+Documento operacional atual:
+
+```txt
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+---
+
+## 11. Debug temporário documentado
 
 A frente atual prevê ou documenta o debug temporário:
 
@@ -355,7 +398,7 @@ docs/PLANO_PROXIMOS_PASSOS.md
 
 ---
 
-## 11. Itens históricos que não devem voltar
+## 12. Itens históricos que não devem voltar
 
 Não restaurar como produto ativo:
 
@@ -383,11 +426,12 @@ Não restaurar:
 - tabs antigas `Filtros | Legendas | Ações`;
 - docs canônicos tratando rotas antigas como ativas;
 - paletas mobile próprias que divergem do desktop;
-- avatares por gênero como regra visual obrigatória.
+- avatares por gênero como regra visual obrigatória;
+- SQL legado como fonte principal de schema.
 
 ---
 
-## 12. Regra de manutenção histórica
+## 13. Regra de manutenção histórica
 
 Ao concluir uma frente nova:
 
@@ -395,22 +439,26 @@ Ao concluir uma frente nova:
 2. atualizar baseline se o comportamento estrutural mudar;
 3. mover pendências reais para `PLANO_PROXIMOS_PASSOS.md`;
 4. registrar resumo aqui apenas se houver valor histórico;
-5. não recriar documentação histórica como fonte de implementação.
+5. não recriar documentação histórica como fonte de implementação;
+6. não tratar SQL histórico como migration oficial.
 
 ---
 
-## 13. Validação documental
+## 14. Validação documental
 
 Antes de fechar commit de documentação:
 
 ```bash
 rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
+rg "database-schema\.sql|supabase_schema\.sql|supabase_data\.sql|forum-schema\.sql|google-calendar-schema\.sql" README.md docs supabase scripts src
 ```
 
 Critério:
 
 - ocorrências em `docs/historico/` são permitidas se marcadas como legado;
 - ocorrências em `docs/historico/ROTAS_REMOVIDAS.md` são esperadas e preventivas;
+- ocorrências em `docs/historico/SQLS_LEGADOS.md` são esperadas e preventivas;
 - `/minha-arvore/editar` é permitido como rota vigente;
 - docs canônicos não devem apresentar rotas removidas como views ativas;
-- docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente.
+- docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente;
+- docs operacionais devem apontar `supabase/migrations/` como fonte da verdade do schema.
