@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14
 > Local canônico: `docs/historico/SQLS_LEGADOS.md`
 > Tipo: inventário histórico/preventivo de SQLs fora de `supabase/migrations/`.
-> Status: revisado após neutralização de SQLs soltos em `supabase/`, `src/imports/pasted_text/` e `scripts/`.
+> Status: revisado após neutralização de SQLs soltos em `supabase/`, `src/imports/pasted_text/` e `scripts/`, com referência ao inventário de imports colados legados.
 
 ---
 
@@ -19,6 +19,12 @@ Ele existe para evitar regressões operacionais, principalmente:
 - restaurar modelo de dados antigo por cópia manual;
 - versionar dump, backup ou dados reais;
 - manter scripts destrutivos com identificadores reais no repositório.
+
+Para a política geral de arquivos colados em `src/imports/pasted_text/`, consultar também:
+
+```txt
+docs/historico/IMPORTS_COLADOS_LEGADOS.md
+```
 
 ---
 
@@ -64,6 +70,13 @@ Manter um stub no caminho antigo preserva rastreabilidade sem oferecer script ex
 ```
 
 Para consultar o conteúdo antigo, usar o histórico do Git e comparar com as migrations oficiais antes de qualquer decisão.
+
+Observação sobre `src/imports/pasted_text/`:
+
+```txt
+Quando o arquivo colado não for especificamente SQL, a política preventiva fica em docs/historico/IMPORTS_COLADOS_LEGADOS.md.
+Quando contiver SQL, diagnóstico ou operação de banco, este documento continua sendo a referência principal.
+```
 
 ---
 
@@ -171,12 +184,14 @@ rg --files -g "*.sql"
 rg "database-schema\.sql|supabase_schema\.sql|supabase_data\.sql|forum-schema\.sql|google-calendar-schema\.sql" .
 rg "diagnostico-.*\.sql|verificar-.*\.sql|cleanup-test-user" .
 rg "Execute este SQL|Supabase SQL Editor|CREATE TABLE|CREATE POLICY|CREATE OR REPLACE FUNCTION|ALTER TABLE|INSERT INTO|DELETE FROM|UPDATE " supabase docs scripts src
+rg "src/imports/pasted_text" .
 ```
 
 Interpretação:
 
 - ocorrências em `supabase/migrations/` são esperadas;
-- ocorrências em `docs/historico/SQLS_LEGADOS.md` são preventivas;
+- ocorrências em `docs/historico/SQLS_LEGADOS.md` são esperadas e preventivas;
+- ocorrências em `docs/historico/IMPORTS_COLADOS_LEGADOS.md` são esperadas e preventivas;
 - ocorrências em SQL solto exigem classificação;
 - ocorrências em stubs devem aparecer apenas como comentário preventivo;
 - ocorrências em documentação operacional devem apontar para migrations como fonte da verdade.
@@ -186,6 +201,7 @@ Interpretação:
 ## 9. Documentos relacionados
 
 ```txt
+docs/historico/IMPORTS_COLADOS_LEGADOS.md
 docs/operacao/MIGRATIONS_SUPABASE.md
 docs/operacao/DEPLOYMENT.md
 docs/operacao/STORAGE_MAINTENANCE.md
