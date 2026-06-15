@@ -2,180 +2,16 @@
 
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/README.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico sincronizado com as duas views oficiais da árvore, painel simplificado, paletas desktop/mobile, calendário mobile, exportação e documentação histórica.
+> Tipo: índice canônico da documentação.  
+> Status: revisado contra `main` após auditoria de rotas, componentes, services, migrations, scripts, estilos e configuração.
 
-Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
+Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto `tuliust/arvorefamilia`.
 
-Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação canônica deve registrar comportamento implementado, contratos de produto vigentes ou pendências explicitamente classificadas como backlog/QA.
-
----
-
-## 1. Estado atual consolidado
-
-A baseline funcional atual registra:
-
-- `/entrar` funciona como home pública, login, cadastro, primeiro acesso e aceite legal;
-- a rota raiz `/` redireciona para `/mapa-familiar`, preservando `location.search`;
-- as views oficiais da árvore são apenas:
-  - **Árvore Familiar** — `/mapa-familiar`;
-  - **Mapa Genealógico** — `/mapa-familiar-horizontal`;
-- as antigas views de árvore foram removidas do roteamento ativo:
-  - `/minha-arvore`;
-  - `/genealogia`;
-  - `/visao-completa`;
-- `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
-- `TreeViewMode` possui exatamente:
-  - `mapa-familiar`;
-  - `mapa-familiar-horizontal`;
-- `/mapa-familiar` usa:
-  - `DesktopFamilyMapView` no desktop/tablet;
-  - `MobileFamilyTreeView` no mobile;
-- `/mapa-familiar-horizontal` usa:
-  - `DesktopFamilyHorizontalMapView` no desktop/tablet;
-  - `MobileFamilyHorizontalMapView` no mobile;
-- os títulos vigentes são:
-  - `/mapa-familiar`: `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar`;
-  - `/mapa-familiar-horizontal`: `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico`;
-- o painel desktop foi simplificado e não possui mais a barra visual `Filtros | Legendas | Ações`;
-- o painel desktop preserva:
-  - Zoom +;
-  - Zoom -;
-  - Restaurar visualização;
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Exportar;
-  - Destacar;
-  - Grupos;
-  - Filtros;
-- os cards de grupos e filtros do painel desktop devem usar o mesmo vocabulário visual dos cards da árvore, com gradiente, borda, texto e estado inativo coerentes com a paleta ativa;
-- o modal mobile possui contrato próprio e reduzido:
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Grupos;
-  - Destacar;
-  - Filtros;
-- o modal mobile não deve exibir:
-  - Zoom +;
-  - Zoom -;
-  - Restaurar visualização;
-  - Exportar;
-- o botão **Grupos** no mobile abre/fecha os cards de grupos sob demanda;
-- os filtros mobile ficam sempre visíveis e devem caber em 4 colunas quando aplicável;
-- a alternância Vertical/Horizontal preserva `location.search`, incluindo `?pessoa=...`;
-- `PersonProfile` aceita retorno seguro para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- favoritos e busca global incluem as duas views oficiais;
-- aliases como “minha árvore”, “genealogia” e “visão completa” podem existir apenas como keywords que apontam para rotas atuais;
-- exportação nas views oficiais cobre:
-  - Área;
-  - Imagem/PNG;
-  - PDF;
-  - Imprimir;
-- exportação é recurso do painel desktop/completo; o modal mobile de controles não deve expor Exportar;
-- a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
-- a paleta visual do desktop é a referência do mobile;
-- as paletas oficiais são `white`, `visual`, `orange` e `brown`;
-- a paleta Visual/Azul usa gradientes teal/cyan/blue nos cards da árvore e nas correções específicas necessárias para mobile/horizontal;
-- as paletas `white`, `orange` e `brown` no mobile devem replicar o comportamento desktop;
-- bordas de grupos mobile devem usar as variáveis da paleta ativa;
-- cards mobile de pessoas não devem exibir fallback textual como `Nascimento não informado` ou `Falecimento não informado`;
-- cards mobile podem exibir abaixo do nome:
-  - estrela + ano de nascimento, se houver;
-  - cruz + ano de falecimento, se houver;
-- `/mapa-familiar` suporta núcleos conjugais adicionais quando a pessoa central tem mais de um relacionamento e filhos associados ao outro pai/mãe;
-- `/mapa-familiar-horizontal` deve exibir cônjuges da Geração 4/Pais quando o filtro `Cônjuges` estiver ativo;
-- `/calendario-familiar` no mobile deve exibir os 5 botões de categorias em uma única linha, com bolinha colorida acima do título, mantendo o título em uma linha;
-- ReactFlow/Dagre continuam presentes como dependência técnica de código legado ativo, tipos, layouts ou utilitários; não devem ser removidos por limpeza superficial;
-- artefatos locais como `test-results/`, `playwright-report/`, `coverage/`, `backups/` e `.env*.save` ficam fora do versionamento.
+Use este arquivo como ponto de entrada. Quando houver conflito entre documento e implementação, o código da `main` prevalece e a documentação deve ser corrigida. Conteúdo histórico não é fonte de verdade para comportamento vigente.
 
 ---
 
-## 2. Regras de uso da documentação
-
-- Arquivos na raiz de `docs/` são guias canônicos gerais.
-- Arquivos em `docs/funcionalidades/` são guias canônicos de comportamento funcional específico.
-- Arquivos em `docs/arquitetura/` descrevem rotas, guards, arquitetura e modelo de usuários/dados.
-- Arquivos em `docs/operacao/` descrevem procedimentos operacionais e de manutenção.
-- Arquivos em `docs/historico/` são históricos e não substituem os guias canônicos.
-- Pendências reais, QA e decisões futuras devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
-- Quando houver divergência entre documentação e código atual, revisar o código e atualizar o guia canônico.
-- Quando houver divergência entre guia atual e conteúdo histórico, prevalece o guia atual.
-- Conteúdo histórico não deve ser usado para restaurar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
-- A referência visual de paletas é o desktop; o mobile deve herdar os mesmos tokens CSS e só pode ter overrides escopados quando forem necessários para reproduzir o resultado visual do desktop.
-
----
-
-## 3. Guias oficiais na raiz de `docs/`
-
-| Arquivo | Uso | Status |
-|---|---|---|
-| `README.md` | Índice canônico da documentação. | Atualizado. |
-| `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Atualizado. |
-| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Manter sincronizado. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Atualizado. |
-| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
-| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico e manual para mudanças futuras. | Atualizado. |
-| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA e backlog pós-frente. | Atualizado. |
-| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Atualizado. |
-| `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
-
----
-
-## 4. Arquitetura
-
-Pasta:
-
-```txt
-docs/arquitetura/
-```
-
-| Arquivo | Uso |
-|---|---|
-| `ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
-| `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, rotas administrativas, guards, redirecionamentos e navegação. |
-| `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações, relacionamentos e objetos legados. |
-
----
-
-## 5. Funcionalidades
-
-Pasta:
-
-```txt
-docs/funcionalidades/
-```
-
-| Arquivo | Escopo | Status |
-|---|---|---|
-| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
-| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques, conectores e exportação. | Atualizado após ajustes desktop/mobile. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão nas duas views oficiais. | Atualizado. |
-| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil público/admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
-| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com a view removida `/minha-arvore`. |
-| `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
-| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Preservar. |
-| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Atualizado. |
-| `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
-| `CURIOSIDADES_E_IA.md` | Funcionalidades de curiosidades, IA e geração de conteúdo. | Preservar. |
-
-Documentos sobre antigas views de árvore devem permanecer em `docs/historico/` ou marcados como legado:
-
-```txt
-MINHA_ARVORE_VIEW.md
-MINHA_ARVORE_FILTROS_E_PETS.md
-GENEALOGIA_VIEW.md
-```
-
-Antes de arquivar documentos mistos, extrair regras ainda vigentes sobre pets, filtros, cônjuges, conectores ou exportação.
-
----
-
-## 6. Contratos críticos
+## 1. Baseline atual confirmada no código
 
 ### Rotas oficiais da árvore
 
@@ -185,13 +21,12 @@ Antes de arquivar documentos mistos, extrair regras ainda vigentes sobre pets, f
 /mapa-familiar-horizontal
 ```
 
-### Exceção nominal vigente
+- `/` redireciona para `/mapa-familiar`, preservando a query string.
+- `/mapa-familiar` é a view vertical principal.
+- `/mapa-familiar-horizontal` é a view horizontal/genealógica.
+- `TreeViewMode` possui apenas `mapa-familiar` e `mapa-familiar-horizontal`.
 
-```txt
-/minha-arvore/editar
-```
-
-### Rotas antigas removidas como views
+### Rotas antigas removidas como views ativas
 
 ```txt
 /minha-arvore
@@ -199,107 +34,154 @@ Antes de arquivar documentos mistos, extrair regras ainda vigentes sobre pets, f
 /visao-completa
 ```
 
-### Títulos oficiais
+Essas rotas só podem aparecer como histórico, teste de não regressão ou keyword que aponta para rota atual.
+
+### Exceção nominal vigente
 
 ```txt
-/mapa-familiar            -> Árvore Familiar de {primeiroNome}
-/mapa-familiar-horizontal -> Mapa Genealógico de {primeiroNome}
+/minha-arvore/editar
 ```
 
-### Avatares oficiais
+Essa página continua ativa como edição de dados/vínculos do membro e não reativa a antiga view `/minha-arvore`.
 
-```txt
-Pessoa com foto -> foto_principal_url
-Pessoa sem foto -> User, lucide-react
-Pet             -> PawPrint, lucide-react
-```
+### Renderização das duas views
 
-Não há distinção visual de avatar por gênero.
+| Rota | Desktop/tablet | Mobile |
+|---|---|---|
+| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
 
-### Paletas oficiais
+### Rotas principais de produto
 
-```txt
-white  -> Branca
-visual -> Azul
-orange -> Laranja
-brown  -> Marrom
-```
+| Área | Rotas vigentes |
+|---|---|
+| Login/legal | `/entrar`, `/termos`, `/privacidade` |
+| Busca | `/busca` |
+| Perfil | `/pessoa/:id`, `/pessoas/:id` |
+| Membro | `/minha-arvore/editar`, `/meus-dados`, `/meus-vinculos`, `/vincular-perfil` |
+| Calendário | `/calendario-familiar` |
+| Favoritos | `/meus-favoritos` |
+| Notificações | `/notificacoes`, `/ajustar-notificacoes` |
+| Fórum | `/forum`, `/forum/novo`, `/forum/topico/:id`, `/forum/topico/:id/editar` |
+| Admin | `/admin`, `/admin/login`, `/admin/dashboard`, `/admin/home`, `/admin/pessoas`, `/admin/relacionamentos`, `/admin/importacao`, `/admin/migrar-dados`, `/admin/diagnostico`, `/admin/integridade`, `/admin/atividades`, `/admin/notificacoes`, `/admin/solicitacoes-vinculos` |
 
-O desktop é referência visual. Mobile deve usar os mesmos tokens `--tree-palette-*`.
+---
 
-### CSS recente de referência
+## 2. Estado implementado x pendência
 
-```txt
-src/styles/family-map-mobile-palettes.css
-src/styles/tree-panel-palette-cards.css
-src/styles/calendar-mobile-category-buttons.css
-```
+A documentação deve distinguir comportamento implementado de contrato desejado ainda pendente.
 
-Esses arquivos existem para corrigir contratos visuais específicos e devem permanecer escopados.
+| Tema | Estado na `main` | Documento de acompanhamento |
+|---|---|---|
+| Duas views oficiais da árvore | Implementado | `BASELINE_PRODUTO_ATUAL.md`, `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Painel desktop sem `Filtros | Legendas | Ações` | Implementado | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Modal mobile de controles sem zoom/exportação | Implementado | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Paletas `white`, `visual`, `orange`, `brown` | Implementado | `GUIA_UX_LAYOUT.md`, `MAPA_FAMILIAR_VIEW.md` |
+| Exportação Área/PNG/PDF/Imprimir | Implementado nas views oficiais | `funcionalidades/EXPORTACAO_ARVORE.md` |
+| Calendário mobile com 5 categorias em linha | Implementado por CSS específico | `funcionalidades/CALENDARIO_FAMILIAR.md` |
+| `Nascimento não informado` oculto no mobile | Resultado visual depende de limpeza DOM em `src/main.tsx`; refatoração pendente | `PLANO_PROXIMOS_PASSOS.md#TREE-004` |
+| Cônjuges de `pais`/Geração 4 na horizontal | Pendente: código não inclui `pais` em `FILTERABLE_SPOUSE_ANCHOR_GROUPS` | `PLANO_PROXIMOS_PASSOS.md#TREE-003` |
+| Dropdown `Visualizar como...` | Debug temporário em produto | `PLANO_PROXIMOS_PASSOS.md#TREE-005` |
 
-### Testes mínimos de baseline
+---
+
+## 3. Guias canônicos na raiz de `docs/`
+
+| Arquivo | Papel | Status após auditoria |
+|---|---|---|
+| `README.md` | Índice da documentação. | Atualizado. |
+| `BASELINE_PRODUTO_ATUAL.md` | Fonte de verdade funcional da `main`. | Atualizado para separar implementado de pendências. |
+| `INVENTARIO_TECNICO.md` | Inventário de rotas, arquivos, CSS, scripts, migrations e funções. | Atualizado. |
+| `GUIA_IMPLEMENTACOES.md` | O que está implementado e o que é dívida/backlog. | Atualizado. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades e riscos de regressão. | Atualizado. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, paletas e microcopy. | Atualizado. |
+| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico/funcional para mudanças futuras. | Atualizado. |
+| `DECISOES_ARQUITETURAIS.md` | ADRs e decisões estruturais vigentes. | Atualizado. |
+| `PLANO_PROXIMOS_PASSOS.md` | Pendências, riscos, QA e decisões futuras. | Atualizado. |
+| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma. | Preservado. |
+| `ATTRIBUTIONS.md` | Licenças e atribuições. | Preservado. |
+
+---
+
+## 4. Arquitetura
+
+| Arquivo | Papel |
+|---|---|
+| `docs/arquitetura/ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, árvore, API local/serverless, Supabase, Storage e Edge Functions. |
+| `docs/arquitetura/ROTAS_E_GUARDS.md` | Rotas, guards, redirects, lazy loading, fallback SPA e rotas removidas. |
+| `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, perfis, pessoas, vínculos e permissões. |
+
+---
+
+## 5. Funcionalidades
+
+| Arquivo | Escopo |
+|---|---|
+| `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | Documento principal das duas views da árvore. |
+| `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, conectores e destaques. |
+| `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Exportação por área, imagem, PDF e impressão. |
+| `docs/funcionalidades/CALENDARIO_FAMILIAR.md` | Calendário, categorias, filtros mobile e Google Agenda. |
+| `docs/funcionalidades/FAVORITOS.md` | Favoritos de páginas, pessoas e conteúdos. |
+| `docs/funcionalidades/FORUM.md` | Fórum, tópicos, respostas, reações, favoritos e notificações. |
+| `docs/funcionalidades/NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs e Edge Functions. |
+| `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md` | Perfil, admin de pessoas, privacidade, arquivos, eventos e sugestões. |
+| `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` | Edição da própria árvore/perfil do membro. |
+| `docs/funcionalidades/TIMELINE.md` | Timeline de eventos da pessoa. |
+| `docs/funcionalidades/CURIOSIDADES_E_IA.md` | Curiosidades, IA e insights gerados. |
+
+---
+
+## 6. Operação
+
+| Arquivo | Uso |
+|---|---|
+| `docs/operacao/README.md` | Índice operacional. |
+| `docs/operacao/DEPLOY.md` | Checklist rápido de deploy. |
+| `docs/operacao/DEPLOYMENT.md` | Guia completo de build, cache, deploy, serverless, Supabase, OAuth e QA. |
+| `docs/operacao/MIGRATIONS_SUPABASE.md` | Procedimento para migrations. |
+| `docs/operacao/OAUTH_GOOGLE.md` | OAuth Google/Agenda e modo Testing. |
+| `docs/operacao/STORAGE_MAINTENANCE.md` | Storage, buckets, upload e manutenção. |
+
+`DEPLOY.md` e `DEPLOYMENT.md` não são duplicados: o primeiro é atalho, o segundo é o guia completo.
+
+---
+
+## 7. Histórico
+
+Documentos em `docs/historico/` preservam contexto, mas não definem comportamento ativo.
+
+| Arquivo | Status |
+|---|---|
+| `historico/README.md` | Índice histórico. |
+| `historico/MINHA_ARVORE_VIEW.md` | Legado da antiga view `/minha-arvore`. |
+| `historico/MINHA_ARVORE_FILTROS_E_PETS.md` | Legado de filtros/pets da antiga view. |
+| `historico/GENEALOGIA_VIEW.md` | Legado da antiga view `/genealogia`. |
+
+---
+
+## 8. Validações mínimas
+
+Para alterações documentais:
 
 ```bash
+git diff --check -- docs/
 npm run build
+```
+
+Para alterações que mencionem rotas, guards, árvore, navegação ou fluxo crítico:
+
+```bash
 npm test
 npm run test:e2e
-git diff --check
-git status --short
 ```
 
-### Buscas recomendadas
+Para revisão antes de commit:
 
 ```bash
-rg "minha-arvore"
-rg "genealogia"
-rg "visao-completa"
-rg "/minha-arvore|/genealogia|/visao-completa"
-rg "TreeViewMode|treeViewMode"
-rg "Filtros|Legendas|Ações"
-rg "from-teal|to-cyan|border-cyan|bg-cyan|text-cyan"
-rg "Visualizar como"
+git status --short
+git diff --check
+git diff --cached --stat
+git diff --cached --check
 ```
 
-Interpretação:
-
-- `/minha-arvore/editar` pode permanecer;
-- `genealogia` pode aparecer como conceito textual da horizontal, mas não como rota ativa;
-- `docs/historico/` pode conter material legado;
-- aliases antigos podem existir como keywords de busca/favoritos, desde que apontem para rotas atuais;
-- a barra `Filtros | Legendas | Ações` não deve voltar como UI ativa;
-- cores hardcoded em mobile devem ser tratadas como possível regressão se substituírem tokens de paleta.
-
----
-
-## 7. Estado final esperado de uma frente
-
-A frente de refatoração e ajustes da árvore deve fechar com:
-
-- build de produção passando;
-- testes unitários passando;
-- testes E2E passando, quando aplicáveis;
-- `git diff --check` sem erro;
-- working tree limpo;
-- `main` sincronizada com `origin/main`;
-- rotas antigas bloqueadas por teste;
-- painel desktop completo e modal mobile específico;
-- paletas mobile sincronizadas com desktop;
-- avatares padronizados;
-- documentação canônica revisada.
-
-Pendências reais remanescentes ficam em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
----
-
-## 8. Ordem recomendada para manutenção documental
-
-1. Atualizar documento funcional afetado.
-2. Atualizar `BASELINE_PRODUTO_ATUAL.md` se o comportamento estrutural mudou.
-3. Atualizar `REGRAS_DE_NAO_REGRESSAO.md` se a mudança criou novo risco.
-4. Atualizar `INVENTARIO_TECNICO.md` se novos arquivos, services, CSS ou rotas foram criados.
-5. Atualizar `DECISOES_ARQUITETURAIS.md` se a mudança for uma decisão estrutural.
-6. Atualizar `PLANO_PROXIMOS_PASSOS.md` se a mudança fechou ou abriu QA/backlog.
+Não usar `git add .` quando a frente for documental.
