@@ -1,8 +1,8 @@
-# Operação e manutenção
+﻿# Operação e manutenção
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/README.md`  
-> Tipo: índice operacional da pasta `docs/operacao`.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/README.md`
+> Tipo: índice operacional da pasta `docs/operacao`.
 > Status: revisado para separar deploy, migrations, Storage e OAuth sem duplicar os guias funcionais.
 
 ---

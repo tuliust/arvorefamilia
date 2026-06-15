@@ -1,8 +1,8 @@
-# Arquitetura atual — Árvore Família
+﻿# Arquitetura atual — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/arquitetura/ARCHITECTURE.md`  
-> Tipo: visão técnica de alto nível.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/arquitetura/ARCHITECTURE.md`
+> Tipo: visão técnica de alto nível.
 > Status: revisado para refletir a baseline atual com duas views oficiais da árvore, Supabase, Edge Functions, documentação operacional separada e legado ReactFlow tratado como dependência técnica, não como renderer público principal.
 
 ---

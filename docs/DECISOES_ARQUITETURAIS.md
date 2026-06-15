@@ -1,8 +1,8 @@
-# Decisões arquiteturais — Árvore Família
+﻿# Decisões arquiteturais — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/DECISOES_ARQUITETURAIS.md`  
-> Tipo: registro de decisões estruturais/ADR leve.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/DECISOES_ARQUITETURAIS.md`
+> Tipo: registro de decisões estruturais/ADR leve.
 > Status: documento revisado para refletir a `main` atual e separar decisão vigente de pendência/backlog.
 
 ---

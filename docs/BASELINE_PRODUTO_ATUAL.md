@@ -1,9 +1,9 @@
-# Baseline do produto atual — Árvore Família
+﻿# Baseline do produto atual — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: baseline funcional  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: baseline funcional
 > Status: revisado contra os arquivos enviados e contra a `main` atual; separa comportamento implementado de pendências registradas.
 
 ---

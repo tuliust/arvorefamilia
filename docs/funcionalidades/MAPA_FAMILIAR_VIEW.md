@@ -1,8 +1,8 @@
-# Mapa Familiar — views Vertical e Horizontal
+﻿# Mapa Familiar — views Vertical e Horizontal
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
-> Tipo: documentação funcional/técnica das duas views oficiais da árvore.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`
+> Tipo: documentação funcional/técnica das duas views oficiais da árvore.
 > Status: revisado para separar comportamento implementado de pendências abertas.
 
 ---

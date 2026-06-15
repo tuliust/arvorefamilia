@@ -1,8 +1,8 @@
-# Rotas e guards de acesso — Árvore Família
+﻿# Rotas e guards de acesso — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`  
-> Tipo: documentação arquitetural de rotas, guards e navegação.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
+> Tipo: documentação arquitetural de rotas, guards e navegação.
 > Status: revisado para refletir a `main` atual, com duas views oficiais da árvore e rotas antigas removidas do produto ativo.
 
 ---

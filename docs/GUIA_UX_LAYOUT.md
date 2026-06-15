@@ -1,9 +1,9 @@
-# Guia de UX e Layout — Árvore Família
+﻿# Guia de UX e Layout — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/GUIA_UX_LAYOUT.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: guia de experiência, layout e responsividade  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/GUIA_UX_LAYOUT.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: guia de experiência, layout e responsividade
 > Status: revisado para documentar comportamento visual vigente e separar pendências técnicas de contrato de UX.
 
 ---

@@ -1,8 +1,8 @@
-# Exportação da árvore
+﻿# Exportação da árvore
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
-> Tipo: documentação funcional/técnica da exportação da árvore.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
+> Tipo: documentação funcional/técnica da exportação da árvore.
 > Status: revisado para as views oficiais atuais e para evitar duplicação com os demais guias.
 
 ---

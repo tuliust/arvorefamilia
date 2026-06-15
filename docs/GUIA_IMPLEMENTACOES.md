@@ -1,9 +1,9 @@
-# Guia de implementações — Árvore Família
+﻿# Guia de implementações — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: guia de implementação vigente  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: guia de implementação vigente
 > Status: revisado para registrar somente o que está implementado; pendências ficam separadas em seção própria e no `PLANO_PROXIMOS_PASSOS.md`.
 
 ---

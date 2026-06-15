@@ -1,8 +1,8 @@
-# Deploy e operação
+﻿# Deploy e operação
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/DEPLOYMENT.md`  
-> Tipo: checklist operacional completo de build, deploy e publicação.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/DEPLOYMENT.md`
+> Tipo: checklist operacional completo de build, deploy e publicação.
 > Status: revisado para SPA Vite, Vercel/cache, Supabase, Edge Functions, rotas `/api/*`, OAuth Google e QA das views atuais da árvore.
 
 ---

@@ -1,9 +1,9 @@
-# Regras de não regressão — Árvore Família
+﻿# Regras de não regressão — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: checklist de QA e prevenção de regressões  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: checklist de QA e prevenção de regressões
 > Status: revisado para separar regras vigentes de pendências ainda abertas.
 
 ---

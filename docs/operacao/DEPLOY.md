@@ -1,8 +1,8 @@
-# Deploy
+﻿# Deploy
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/DEPLOY.md`  
-> Tipo: atalho operacional de deploy.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/DEPLOY.md`
+> Tipo: atalho operacional de deploy.
 > Status: complementar; o procedimento completo está em `docs/operacao/DEPLOYMENT.md`.
 
 ---

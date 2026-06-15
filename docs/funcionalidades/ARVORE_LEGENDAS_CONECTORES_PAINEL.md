@@ -1,8 +1,8 @@
-# Árvore — painel, filtros, conectores, destaques e exportação
+﻿# Árvore — painel, filtros, conectores, destaques e exportação
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`  
-> Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
+> Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore.
 > Status: revisado para refletir o painel atual sem abas e separar pendências abertas.
 
 ---

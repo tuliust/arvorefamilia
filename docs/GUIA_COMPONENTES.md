@@ -1,9 +1,9 @@
-# Guia de componentes — Árvore Família
+﻿# Guia de componentes — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/GUIA_COMPONENTES.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: guia de responsabilidades de componentes  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/GUIA_COMPONENTES.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: guia de responsabilidades de componentes
 > Status: revisado para reduzir repetição com baseline/inventário e destacar responsabilidades, limites e riscos por componente.
 
 ---
@@ -24,8 +24,8 @@ Use antes de alterar:
 - perfil/pessoas;
 - favoritos, fórum e notificações.
 
-Para contratos funcionais, use `BASELINE_PRODUTO_ATUAL.md`.  
-Para mapa técnico completo, use `INVENTARIO_TECNICO.md`.  
+Para contratos funcionais, use `BASELINE_PRODUTO_ATUAL.md`.
+Para mapa técnico completo, use `INVENTARIO_TECNICO.md`.
 Para checklists, use `REGRAS_DE_NAO_REGRESSAO.md`.
 
 ---

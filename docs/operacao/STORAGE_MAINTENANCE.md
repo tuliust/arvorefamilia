@@ -1,8 +1,8 @@
-# Manutenção de Storage
+﻿# Manutenção de Storage
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/STORAGE_MAINTENANCE.md`  
-> Tipo: documentação operacional de Storage.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/STORAGE_MAINTENANCE.md`
+> Tipo: documentação operacional de Storage.
 > Status: revisado para diagnóstico de órfãos, base64 legado, buckets principais e separação entre fallback visual e arquivos reais.
 
 ---

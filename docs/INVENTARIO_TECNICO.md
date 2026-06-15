@@ -1,9 +1,9 @@
-# Inventário técnico — Árvore Família
+﻿# Inventário técnico — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/INVENTARIO_TECNICO.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: inventário técnico  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/INVENTARIO_TECNICO.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: inventário técnico
 > Status: revisado contra documentos enviados e código da `main`; marca legado ativo, dívidas e riscos sem transformar pendências em baseline.
 
 ---

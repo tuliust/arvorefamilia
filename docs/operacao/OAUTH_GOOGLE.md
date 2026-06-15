@@ -1,8 +1,8 @@
-# Google OAuth e Google Agenda
+﻿# Google OAuth e Google Agenda
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/OAUTH_GOOGLE.md`  
-> Tipo: documentação operacional específica de OAuth Google e integração Google Agenda.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/OAUTH_GOOGLE.md`
+> Tipo: documentação operacional específica de OAuth Google e integração Google Agenda.
 > Status: revisado para separar operação OAuth de ajustes visuais do calendário.
 
 ---

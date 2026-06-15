@@ -1,8 +1,8 @@
-# Migrations Supabase
+﻿# Migrations Supabase
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`  
-> Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.  
+> Última revisão: 2026-06-14
+> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
+> Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.
 > Status: revisado para separar alterações de banco de ajustes visuais/documentais.
 
 ---
