@@ -4,7 +4,24 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
-import { ArrowDown, ArrowUp, Download, ExternalLink, Upload, X, FileText, Eye, Plus } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Baby,
+  Briefcase,
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  Heart,
+  Images,
+  Plane,
+  Plus,
+  ScrollText,
+  Shield,
+  Upload,
+  X,
+} from 'lucide-react';
 import { uploadHistoricalFile } from '../services/storageService';
 import { HistoricalFileFavoriteButton } from './favorites/HistoricalFileFavoriteButton';
 
@@ -22,6 +39,18 @@ const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEvent
 ];
 
 type HistoricalFileCategoryOption = { value: HistoricalFileEventCategory; label: string };
+
+const INTERACTIVE_CATEGORY_OPTIONS: Array<
+  HistoricalFileCategoryOption & { description: string; icon: React.ComponentType<{ className?: string }> }
+> = [
+  { value: 'certidao_nascimento', label: 'Certidão de Nascimento', description: 'Registro do nascimento.', icon: Baby },
+  { value: 'alistamento_militar', label: 'Alistamento Militar', description: 'Documentos de serviço militar.', icon: Shield },
+  { value: 'certidao_casamento', label: 'Certidão de Casamento', description: 'Registros de união e casamento.', icon: Heart },
+  { value: 'imigracao', label: 'Imigração no Brasil', description: 'Chegada e trajetória migratória.', icon: Plane },
+  { value: 'carreira_profissional', label: 'Primeiro Trabalho', description: 'Início da vida profissional.', icon: Briefcase },
+  { value: 'certidao_obito', label: 'Certidão de Óbito', description: 'Registro de falecimento.', icon: ScrollText },
+  { value: 'outro', label: 'Outras Memórias', description: 'Fotos, documentos e lembranças.', icon: Images },
+];
 
 function sanitizeFileName(value: string) {
   return value
@@ -103,6 +132,7 @@ interface ArquivosHistoricosProps {
   addButtonVariant?: 'full' | 'icon';
   showTitle?: boolean;
   eventCategoryOptions?: HistoricalFileCategoryOption[];
+  variant?: 'default' | 'interactive';
 }
 
 export function ArquivosHistoricos({
@@ -115,6 +145,7 @@ export function ArquivosHistoricos({
   addButtonVariant = 'full',
   showTitle = true,
   eventCategoryOptions = HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS,
+  variant = 'default',
 }: ArquivosHistoricosProps) {
   const [novoArquivo, setNovoArquivo] = useState({
     titulo: '',
@@ -145,8 +176,7 @@ export function ArquivosHistoricos({
     setIsAddingFile((current) => !current);
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFile = async (file?: File) => {
     if (!file) return;
 
     const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
@@ -171,8 +201,17 @@ export function ArquivosHistoricos({
       alert(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
     } finally {
       setIsUploadingFile(false);
-      e.target.value = '';
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await handleFile(e.target.files?.[0]);
+    e.target.value = '';
+  };
+
+  const handleInteractiveCategorySelect = (category: HistoricalFileEventCategory) => {
+    setNovoArquivo((current) => ({ ...current, categoria_evento: category }));
+    setIsAddingFile(true);
   };
 
   const handleAddArquivo = () => {
@@ -245,7 +284,7 @@ export function ArquivosHistoricos({
           <CardHeader>
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {showTitle ? <CardTitle className="break-words">Arquivos Históricos</CardTitle> : <div />}
-              {(!readOnly || onRequestAdd) && (
+              {variant === 'default' && (!readOnly || onRequestAdd) && (
                 <Button
                   type="button"
                   variant="outline"
@@ -269,6 +308,39 @@ export function ArquivosHistoricos({
           </CardHeader>
         )}
         <CardContent className="space-y-4">
+          {variant === 'interactive' && !readOnly && (
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Que tipo de memória deseja adicionar?</h3>
+                <p className="mt-1 text-xs text-gray-500">Escolha uma categoria para abrir os campos do arquivo.</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 lg:grid-cols-3">
+                {INTERACTIVE_CATEGORY_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const selected = novoArquivo.categoria_evento === option.value && isAddingFile;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => handleInteractiveCategorySelect(option.value)}
+                      className={`min-w-0 rounded-xl border p-3 text-left transition-colors ${
+                        selected
+                          ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200'
+                          : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 ${selected ? 'text-blue-700' : 'text-gray-600'}`} />
+                      <span className="mt-2 block break-words text-sm font-semibold text-gray-900">{option.label}</span>
+                      <span className="mt-1 block break-words text-xs text-gray-500">{option.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {(isAddingFile || hasUploadedDraftFile) && !readOnly && (
             <div className="space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
               {hasUploadedDraftFile && (
@@ -289,15 +361,37 @@ export function ArquivosHistoricos({
                 <>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Arquivo *
+                      {variant === 'interactive' ? 'Arraste aqui uma imagem ou PDF' : 'Arquivo *'}
                     </label>
-                    <Input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,application/pdf"
-                      onChange={handleFileChange}
-                      disabled={isUploadingFile}
-                      className="cursor-pointer"
-                    />
+                    {variant === 'interactive' ? (
+                      <label
+                        className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-5 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          void handleFile(event.dataTransfer.files?.[0]);
+                        }}
+                      >
+                        <Upload className="h-6 w-6 text-blue-600" />
+                        <span className="mt-2 text-sm font-medium text-gray-900">Arraste aqui uma imagem ou PDF</span>
+                        <span className="mt-1 text-xs text-gray-500">ou clique para selecionar</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,application/pdf"
+                          onChange={handleFileChange}
+                          disabled={isUploadingFile}
+                          className="sr-only"
+                        />
+                      </label>
+                    ) : (
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={handleFileChange}
+                        disabled={isUploadingFile}
+                        className="cursor-pointer"
+                      />
+                    )}
                     {isUploadingFile && (
                       <p className="mt-1 break-words text-xs text-blue-600">
                         Enviando arquivo para o Storage...
@@ -342,26 +436,28 @@ export function ArquivosHistoricos({
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Categoria
-                    </label>
-                    <select
-                      value={novoArquivo.categoria_evento}
-                      onChange={(e) => setNovoArquivo(prev => ({
-                        ...prev,
-                        categoria_evento: e.target.value as HistoricalFileEventCategory | '',
-                      }))}
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                    >
-                      <option value="">Sem categoria</option>
-                      {eventCategoryOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {variant === 'default' && (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Categoria
+                      </label>
+                      <select
+                        value={novoArquivo.categoria_evento}
+                        onChange={(e) => setNovoArquivo(prev => ({
+                          ...prev,
+                          categoria_evento: e.target.value as HistoricalFileEventCategory | '',
+                        }))}
+                        className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Sem categoria</option>
+                        {eventCategoryOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <Button

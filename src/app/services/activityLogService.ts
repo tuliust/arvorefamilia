@@ -97,6 +97,7 @@ const ACTIVITY_CHANGED_FIELD_GROUPS: Array<{ label: string; fields: string[] }> 
       'local_falecimento',
       'local_falecimento_exterior',
       'local_atual',
+      'local_atual_exterior',
     ],
   },
   {

@@ -26,7 +26,20 @@ function setInputRef(
 }
 
 export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, AddressAutocompleteInputProps>(
-  ({ value, onChange, disabled, autoComplete = 'off', autoCorrect = 'off', autoCapitalize = 'off', spellCheck = false, ...props }, ref) => {
+  ({
+    value,
+    onChange,
+    disabled,
+    autoComplete = 'new-password',
+    autoCorrect = 'off',
+    autoCapitalize = 'off',
+    spellCheck = false,
+    name = 'family-tree-google-address',
+    id,
+    ...props
+  }, ref) => {
+    const generatedId = React.useId();
+    const inputId = id ?? `family-tree-google-address-${generatedId.replace(/:/g, '')}`;
     const inputRef = useRef<HTMLInputElement | null>(null);
     const onChangeRef = useRef(onChange);
 
@@ -105,6 +118,8 @@ export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, Addre
         type="text"
         value={value}
         disabled={disabled}
+        id={inputId}
+        name={name}
         autoComplete={autoComplete}
         autoCorrect={autoCorrect}
         autoCapitalize={autoCapitalize}

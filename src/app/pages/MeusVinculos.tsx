@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Heart, Plus, Save, Trash2, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Save, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import {
@@ -13,6 +13,7 @@ import {
   MarriageDetailsForm,
   normalizeMarriageDetails,
 } from '../components/relationships/MarriageDetailsEditor';
+import { getInitials, isPersonDeceased } from '../utils/personFields';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
@@ -74,8 +75,11 @@ type MeusVinculosDraft = {
   relationships: RelationshipGroups;
   marriageDetails: MarriageDetails;
   localRelationshipRoles: Record<string, 'pai' | 'mae'>;
+  childOtherParent: Record<string, string>;
+  spouseExpanded: Record<string, boolean>;
   archives: ArquivoHistorico[];
   hasLocalRelationshipChanges: boolean;
+  hasPendingRelationshipRequest: boolean;
 };
 
 const EMPTY_GROUPS: RelationshipGroups = {
@@ -119,6 +123,22 @@ function findRelationshipBetween(
   ));
 }
 
+function getMeusDadosDraftKey(userId: string, pessoaId: string) {
+  return `meus-dados-draft:${userId}:${pessoaId}`;
+}
+
+function readMeusDadosDraft(key: string): { pendingAvatarDataUrl?: string | null } | null {
+  try {
+    const rawDraft = window.sessionStorage.getItem(key);
+    if (!rawDraft) return null;
+
+    const draft = JSON.parse(rawDraft) as { pendingAvatarDataUrl?: string | null };
+    return { pendingAvatarDataUrl: draft.pendingAvatarDataUrl ?? null };
+  } catch {
+    return null;
+  }
+}
+
 function getMeusVinculosDraftKey(userId: string, pessoaId: string) {
   return `meus-vinculos-draft:${userId}:${pessoaId}`;
 }
@@ -143,8 +163,11 @@ function readMeusVinculosDraft(key: string): MeusVinculosDraft | null {
         Object.entries(draft.marriageDetails ?? {}).map(([key, value]) => [key, normalizeMarriageDetails(value)])
       ),
       localRelationshipRoles: draft.localRelationshipRoles ?? {},
+      childOtherParent: draft.childOtherParent ?? {},
+      spouseExpanded: draft.spouseExpanded ?? {},
       archives: Array.isArray(draft.archives) ? draft.archives : [],
       hasLocalRelationshipChanges: Boolean(draft.hasLocalRelationshipChanges),
+      hasPendingRelationshipRequest: Boolean(draft.hasPendingRelationshipRequest),
     };
   } catch {
     return null;
@@ -239,8 +262,12 @@ export function MeusVinculos() {
     parentRole: 'pai',
   });
   const [localRelationshipRoles, setLocalRelationshipRoles] = useState<Record<string, 'pai' | 'mae'>>({});
+  const [childOtherParent, setChildOtherParent] = useState<Record<string, string>>({});
+  const [spouseExpanded, setSpouseExpanded] = useState<Record<string, boolean>>({});
   const [hasLocalRelationshipChanges, setHasLocalRelationshipChanges] = useState(false);
+  const [hasPendingRelationshipRequest, setHasPendingRelationshipRequest] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
+  const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
   const draftHydratedRef = useRef(false);
@@ -256,11 +283,12 @@ export function MeusVinculos() {
     const nextMarriageDetails: MarriageDetails = {};
     uniquePeople(nextRelationships.conjuges).forEach((person) => {
       const rel = findRelationshipBetween(nextAllRelationships, pessoaId, person.id, ['conjuge']);
+      const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(person);
       nextMarriageDetails[person.id] = {
         ...createEmptyMarriageDetails(),
         data_casamento: String(rel?.data_casamento ?? ''),
         local_casamento: String(rel?.local_casamento ?? ''),
-        ativo: rel?.ativo ?? true,
+        ativo: rel?.ativo ?? defaultActive,
         data_separacao: String(rel?.data_separacao ?? ''),
         local_separacao: String(rel?.local_separacao ?? ''),
       };
@@ -308,12 +336,18 @@ export function MeusVinculos() {
         if (mounted) setArchives(nextArchives);
         await reloadRelationships(data.pessoa.id);
 
+        const dadosDraft = readMeusDadosDraft(getMeusDadosDraftKey(user.id, data.pessoa.id));
+        if (mounted) setPendingAvatarDataUrl(dadosDraft?.pendingAvatarDataUrl ?? null);
+
         if (mounted && draft) {
           setRelationships(draft.relationships);
           setMarriageDetails(draft.marriageDetails);
           setLocalRelationshipRoles(draft.localRelationshipRoles);
+          setChildOtherParent(draft.childOtherParent);
+          setSpouseExpanded(draft.spouseExpanded);
           setArchives(draft.archives);
           setHasLocalRelationshipChanges(draft.hasLocalRelationshipChanges);
+          setHasPendingRelationshipRequest(draft.hasPendingRelationshipRequest);
           draftDirtyRef.current = true;
         }
       }
@@ -338,16 +372,22 @@ export function MeusVinculos() {
       relationships,
       marriageDetails,
       localRelationshipRoles,
+      childOtherParent,
+      spouseExpanded,
       archives,
       hasLocalRelationshipChanges,
+      hasPendingRelationshipRequest,
     });
   }, [
     archives,
+    childOtherParent,
     hasLocalRelationshipChanges,
+    hasPendingRelationshipRequest,
     localRelationshipRoles,
     marriageDetails,
     pessoa?.id,
     relationships,
+    spouseExpanded,
     user?.id,
   ]);
 
@@ -413,9 +453,13 @@ export function MeusVinculos() {
     }));
 
     if (addDialog.group === 'conjuges') {
+      const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(person);
       setMarriageDetails((current) => ({
         ...current,
-        [person.id]: createEmptyMarriageDetails(),
+        [person.id]: {
+          ...createEmptyMarriageDetails(),
+          ativo: defaultActive,
+        },
       }));
     }
 
@@ -441,6 +485,19 @@ export function MeusVinculos() {
 
     if (group === 'conjuges') {
       setMarriageDetails((current) => {
+        const next = { ...current };
+        delete next[personId];
+        return next;
+      });
+      setSpouseExpanded((current) => {
+        const next = { ...current };
+        delete next[personId];
+        return next;
+      });
+    }
+
+    if (group === 'filhos') {
+      setChildOtherParent((current) => {
         const next = { ...current };
         delete next[personId];
         return next;
@@ -633,6 +690,10 @@ export function MeusVinculos() {
 
     setFinishing(false);
 
+    if (requestSummary.created > 0) {
+      setHasPendingRelationshipRequest(true);
+    }
+
     if (user?.id && pessoa.id) {
       removeMeusVinculosDraft(getMeusVinculosDraftKey(user.id, pessoa.id));
     }
@@ -642,13 +703,14 @@ export function MeusVinculos() {
       const duplicateText = requestSummary.skipped > 0
         ? ` ${requestSummary.skipped} solicitação já estava pendente.`
         : '';
-      toast.success(`${requestSummary.created} solicitação(ões) enviada(s) para revisão dos administradores.${duplicateText}`);
+      toast.success(`Sua solicitação está em aprovação. Você receberá um e-mail assim que a análise for finalizada. Aguarde as próximas horas.${duplicateText}`);
     } else if (requestSummary.skipped > 0) {
       toast.info('As solicitações desses vínculos já estavam pendentes para revisão.');
     } else {
       toast.success('Vínculos confirmados.');
     }
-    navigate('/', { replace: true });
+    // TODO: futuro destino de conclusão será /revisao-dados
+    navigate('/minha-arvore/editar', { replace: true });
   };
 
   if (loading) {
@@ -693,6 +755,14 @@ export function MeusVinculos() {
       />
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,360px)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button type="button" variant="outline" onClick={() => navigate('/meus-dados')}>
+            Voltar para meus dados
+          </Button>
+          {hasPendingRelationshipRequest && (
+            <p className="text-sm text-gray-600">Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.</p>
+          )}
+        </div>
         <div className="min-w-0 space-y-6">
           <Card className="min-w-0">
             <CardHeader>
@@ -717,7 +787,36 @@ export function MeusVinculos() {
                 addLabel="Adicionar filho"
                 onAdd={() => openAddDialog('filhos', 'Adicionar filho')}
                 onRemove={(personId) => removeRelative('filhos', personId)}
-              />
+              >
+                {(person) => (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor={`child-other-parent-${person.id}`}>Outro pai/mãe</Label>
+                      <select
+                        id={`child-other-parent-${person.id}`}
+                        value={childOtherParent[person.id] ?? ''}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          markDraftDirty();
+                          setChildOtherParent((current) => ({
+                            ...current,
+                            [person.id]: nextValue,
+                          }));
+                        }}
+                        className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      >
+                        <option value="">Não informado</option>
+                        {uniquePeople(relationships.conjuges).map((spouse) => (
+                          <option key={spouse.id} value={spouse.id}>{spouse.nome_completo}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {relationships.conjuges.length === 0 && (
+                      <p className="text-sm text-gray-500">Adicione um cônjuge para habilitar a seleção de outro pai/mãe.</p>
+                    )}
+                  </div>
+                )}
+              </RelationSection>
               <RelationSection
                 title="Cônjuge"
                 emptyLabel="Nenhum cônjuge cadastrado"
@@ -726,16 +825,77 @@ export function MeusVinculos() {
                 onAdd={() => openAddDialog('conjuges', 'Adicionar cônjuge')}
                 onRemove={(personId) => removeRelative('conjuges', personId)}
               >
-                {(person) => (
-                  <div className="mt-3 min-w-0">
-                    <MarriageDetailsEditor
-                      value={marriageDetails[person.id] ?? createEmptyMarriageDetails()}
-                      onChange={(details) => updateMarriageDetail(person.id, details)}
-                      isAdmin={false}
-                      allowHistoricalFiles={false}
-                    />
-                  </div>
-                )}
+                {(person) => {
+                  const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
+                  const expanded = spouseExpanded[person.id] ?? false;
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={details.ativo}
+                            onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
+                            className="h-4 w-4"
+                          />
+                          Relacionamento ativo
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSpouseExpanded((current) => ({
+                            ...current,
+                            [person.id]: !current[person.id],
+                          }))}
+                          aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
+                        >
+                          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {expanded && (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <Label htmlFor={`spouse wedding-date-${person.id}`}>Data de casamento</Label>
+                            <Input
+                              id={`spouse wedding-date-${person.id}`}
+                              value={details.data_casamento}
+                              onChange={(event) => updateMarriageDetail(person.id, { ...details, data_casamento: event.target.value })}
+                              placeholder="DD/MM/AAAA ou AAAA"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`spouse wedding-place-${person.id}`}>Local de casamento</Label>
+                            <Input
+                              id={`spouse wedding-place-${person.id}`}
+                              value={details.local_casamento}
+                              onChange={(event) => updateMarriageDetail(person.id, { ...details, local_casamento: event.target.value })}
+                              placeholder="Cidade/UF"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`spouse separation-date-${person.id}`}>Data de separação</Label>
+                            <Input
+                              id={`spouse separation-date-${person.id}`}
+                              value={details.data_separacao}
+                              onChange={(event) => updateMarriageDetail(person.id, { ...details, data_separacao: event.target.value })}
+                              placeholder="DD/MM/AAAA ou AAAA"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`spouse separation-place-${person.id}`}>Local de separação</Label>
+                            <Input
+                              id={`spouse separation-place-${person.id}`}
+                              value={details.local_separacao}
+                              onChange={(event) => updateMarriageDetail(person.id, { ...details, local_separacao: event.target.value })}
+                              placeholder="Cidade/UF"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
               </RelationSection>
               <RelationSection
                 title="Irmãos"
@@ -755,8 +915,14 @@ export function MeusVinculos() {
 
         <aside className="h-fit min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-              <Heart className="h-6 w-6" />
+            <div className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700">
+              {avatarSource ? (
+                <img src={avatarSource} alt={pessoa.nome_completo} className="h-full w-full object-cover" />
+              ) : (
+                <span className="inline-flex h-full w-full items-center justify-center text-lg font-semibold">
+                  {avatarInitials}
+                </span>
+              )}
             </div>
             <div className="min-w-0">
               <h2 className="break-words font-semibold text-gray-900">{pessoa.nome_completo}</h2>
@@ -774,7 +940,7 @@ export function MeusVinculos() {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Confirmar e acessar árvore
+                Confirmar e continuar edição
               </>
             )}
           </Button>
@@ -786,7 +952,7 @@ export function MeusVinculos() {
           <DialogHeader>
             <DialogTitle className="break-words">{addDialog?.title ?? 'Solicitar familiar'}</DialogTitle>
             <DialogDescription className="break-words">
-              A solicitação será enviada para revisão dos administradores ao finalizar a confirmação.
+              O vínculo será guardado no rascunho e formalizado no fluxo final de aprovação.
             </DialogDescription>
           </DialogHeader>
 
@@ -863,7 +1029,7 @@ export function MeusVinculos() {
             </Button>
             <Button type="button" className="w-full sm:w-auto" onClick={addRelative}>
               <Plus className="h-4 w-4" />
-              Solicitar vínculo
+              Enviar para Aprovação
             </Button>
           </DialogFooter>
         </DialogContent>

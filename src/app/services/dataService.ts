@@ -23,6 +23,7 @@ const PESSOA_COLUMNS = [
   'local_falecimento',
   'local_falecimento_exterior',
   'falecido',
+  'local_atual_exterior',
   'local_atual',  'profissao',
 
   'foto_principal_url',
@@ -130,6 +131,7 @@ function toPessoa(row: any): Pessoa {
     falecido: row?.falecido ?? isPersonDeceased(row),
     local_nascimento_exterior: row?.local_nascimento_exterior ?? false,
     local_falecimento_exterior: row?.local_falecimento_exterior ?? false,
+    local_atual_exterior: row?.local_atual_exterior ?? false,
     permitir_exibir_data_nascimento: row?.permitir_exibir_data_nascimento ?? true,
     permitir_exibir_endereco: row?.permitir_exibir_endereco ?? true,
     permitir_exibir_rede_social: row?.permitir_exibir_rede_social ?? row?.permitir_exibir_instagram ?? true,
