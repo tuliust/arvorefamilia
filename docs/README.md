@@ -1,10 +1,9 @@
-
 # Documentação — Árvore Família
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
+> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md`, registrar `docs/historico/ROTAS_REMOVIDAS.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -25,6 +24,7 @@ A baseline funcional atual registra:
   - `/minha-arvore`;
   - `/genealogia`;
   - `/visao-completa`;
+- o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
 - `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
 - `TreeViewMode` possui apenas:
   - `mapa-familiar`;
@@ -59,6 +59,7 @@ A baseline funcional atual registra:
 | Ver pendências, riscos e decisões futuras | `PLANO_PROXIMOS_PASSOS.md` |
 | Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
 | Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
+| Entender rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
 
 Regra:
 
@@ -173,11 +174,17 @@ Uso:
 - manter documentação antiga sem confundi-la com contrato vigente;
 - guardar material sobre rotas removidas, refatorações e auditorias já encerradas.
 
+| Arquivo | Uso |
+|---|---|
+| `README.md` | Índice histórico consolidado da pasta. |
+| `ROTAS_REMOVIDAS.md` | Histórico preventivo de `/minha-arvore`, `/genealogia` e `/visao-completa`. |
+
 Regras:
 
 - conteúdo histórico não prevalece sobre documentação canônica;
 - histórico não deve reabrir `/minha-arvore`, `/genealogia` ou `/visao-completa`;
-- material histórico útil deve apontar para o documento canônico atual.
+- material histórico útil deve apontar para o documento canônico atual;
+- dúvidas sobre ocorrências dessas rotas antigas devem ser conferidas em `docs/historico/ROTAS_REMOVIDAS.md`.
 
 ---
 
@@ -233,7 +240,7 @@ docs/QA_MANUAL.md
 
 ## 10. Anti-regressões documentais
 
-- Não documentar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
+- Não documentar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas; o histórico preventivo fica em `docs/historico/ROTAS_REMOVIDAS.md`.
 - Não tratar `/minha-arvore/editar` como view antiga da árvore.
 - Não documentar `pais`/Geração 4 na horizontal como implementado até `TREE-003` ser corrigido no código.
 - Não transformar checklist manual em pendência fechada sem validação real.
