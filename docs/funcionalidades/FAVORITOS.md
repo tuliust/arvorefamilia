@@ -1,9 +1,9 @@
 # Favoritos
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/FAVORITOS.md`  
-> Tipo: documentação funcional/técnica de favoritos.  
-> Status: alinhado ao código atual de `src/app/constants/favoritePages.ts` e `src/app/services/globalSearchService.ts`.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/FAVORITOS.md`
+> Tipo: documentação funcional/técnica de favoritos.
+> Status: revisado para rotas oficiais atuais, busca global, páginas favoritáveis e tratamento de registros legados.
 
 ---
 
@@ -16,7 +16,18 @@ Princípios:
 1. favoritos são individuais por usuário;
 2. favoritos não devem expor dados de outros usuários;
 3. favoritos devem apontar para entidade ou rota estável;
-4. favoritos de página usam rota canônica, não estado visual temporário.
+4. favoritos de página usam rota canônica, não estado visual temporário;
+5. favoritos não reativam rotas históricas.
+
+Este documento não substitui:
+
+| Tema | Documento canônico |
+|---|---|
+| Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
+| Rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
+| Views da árvore | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| QA manual | `docs/QA_MANUAL.md` |
+| Regras de não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
 
 ---
 
@@ -74,17 +85,17 @@ Rotas antigas que não devem ser favoritáveis como páginas:
 /visao-completa
 ```
 
-Exceção:
+Exceção vigente:
 
 ```txt
 /minha-arvore/editar
 ```
 
-é uma rota vigente de edição, mas não é atalho principal de view da árvore.
+Essa exceção é uma rota de edição do membro, não um atalho principal de view da árvore.
 
 ---
 
-### 3.1 Contrato atual das views de árvore
+## 4. Contrato atual das views de árvore
 
 Páginas favoritáveis da árvore:
 
@@ -98,9 +109,12 @@ Regras:
 - favorito de página deve salvar a rota canônica;
 - não salvar geração ativa, zoom, pan, filtro, pessoa central temporária ou estado do modal como contrato obrigatório;
 - query params podem existir em navegação contextual, mas o favorito de página deve continuar estável;
-- aliases históricos podem existir como keywords de busca, não como destinos favoritos.
+- aliases históricos podem existir como keywords de busca, não como destinos favoritos;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` não devem voltar para `favoritePages.ts`.
 
-## 4. Busca global relacionada
+---
+
+## 5. Busca global relacionada
 
 Catálogo técnico:
 
@@ -108,7 +122,7 @@ Catálogo técnico:
 src/app/services/globalSearchService.ts
 ```
 
-A busca global também inclui:
+A busca global inclui as duas views oficiais:
 
 ```txt
 /mapa-familiar
@@ -119,11 +133,22 @@ Regra:
 
 - favoritos e busca global devem permanecer sincronizados para as views oficiais;
 - rotas antigas não devem voltar como páginas buscáveis/favoritáveis;
-- termos como “genealogia” podem aparecer como keyword da horizontal, mas não como rota `/genealogia`.
+- termos como “minha árvore”, “genealogia” e “visão completa” podem aparecer como keywords, desde que apontem para rotas vigentes;
+- keyword antiga não reativa rota antiga.
+
+Exemplos permitidos:
+
+| Keyword | Destino |
+|---|---|
+| minha árvore | `/mapa-familiar` |
+| árvore familiar | `/mapa-familiar` |
+| genealogia | `/mapa-familiar-horizontal` |
+| árvore genealógica | `/mapa-familiar-horizontal` |
+| visão completa | `/mapa-familiar-horizontal` |
 
 ---
 
-## 5. Modelo de dados
+## 6. Modelo de dados
 
 Tabela:
 
@@ -150,9 +175,16 @@ Unicidade conceitual:
 user_id + entity_type + entity_id
 ```
 
+Regras:
+
+- `user_id` deve ser sempre o usuário autenticado;
+- `href` deve ser interno e seguro;
+- `metadata` deve ser sanitizada;
+- favoritos não devem armazenar token, URL privada de storage, base64 ou dado sensível.
+
 ---
 
-## 6. Tipos técnicos
+## 7. Tipos técnicos
 
 Tipo:
 
@@ -178,7 +210,7 @@ Nem todo tipo deve aparecer em filtro de UI.
 
 ---
 
-## 7. Categorias visíveis
+## 8. Categorias visíveis
 
 | Filtro | `entity_type` | Status |
 |---|---|---|
@@ -200,9 +232,9 @@ Categorias ocultas:
 
 ---
 
-## 8. Componentes e services
+## 9. Componentes e services
 
-### Service
+### 9.1 Service
 
 ```txt
 src/app/services/favoritesService.ts
@@ -215,9 +247,11 @@ Responsabilidades:
 - adicionar;
 - remover por entidade;
 - remover por ID;
-- alternar favorito.
+- alternar favorito;
+- sanitizar metadata;
+- manter isolamento por usuário.
 
-### Botão genérico
+### 9.2 Botão genérico
 
 ```txt
 src/app/components/favorites/FavoriteButton.tsx
@@ -228,9 +262,10 @@ Responsabilidades:
 - estado ativo/inativo;
 - loading;
 - `aria-label`;
-- prevenção de clique duplicado.
+- prevenção de clique duplicado;
+- feedback visual seguro.
 
-### Botões específicos
+### 9.3 Botões específicos
 
 ```txt
 src/app/components/favorites/HistoricalFileFavoriteButton.tsx
@@ -241,7 +276,7 @@ src/app/components/favorites/PageFavoriteButton.tsx
 
 ---
 
-## 9. Pessoas
+## 10. Pessoas
 
 Status: implementado.
 
@@ -260,11 +295,12 @@ Regras:
 
 - usar UUID real;
 - não expor dados sensíveis;
-- respeitar permissões/RLS.
+- respeitar permissões/RLS;
+- não apontar favorito de pessoa para uma view da árvore.
 
 ---
 
-## 10. Arquivos históricos
+## 11. Arquivos históricos
 
 Status: implementado.
 
@@ -301,7 +337,7 @@ token
 
 ---
 
-## 11. Fórum
+## 12. Fórum
 
 Status: tópicos implementados.
 
@@ -322,7 +358,7 @@ Decisão:
 
 ---
 
-## 12. Eventos pessoais
+## 13. Eventos pessoais
 
 Status: implementado.
 
@@ -338,7 +374,7 @@ href = /pessoa/:pessoa_id
 
 ---
 
-## 13. Páginas internas
+## 14. Páginas internas
 
 Status: implementado.
 
@@ -353,32 +389,33 @@ href = path
 metadata = { source: "page_shortcut" }
 ```
 
-### `/mapa-familiar`
+### 14.1 `/mapa-familiar`
 
 ```txt
 entityType = page
 entityId = /mapa-familiar
-label = Mapa Familiar
+label = Árvore Familiar
 href = /mapa-familiar
 ```
 
-### `/mapa-familiar-horizontal`
+### 14.2 `/mapa-familiar-horizontal`
 
 ```txt
 entityType = page
 entityId = /mapa-familiar-horizontal
-label = Mapa Familiar Horizontal
+label = Mapa Genealógico
 href = /mapa-familiar-horizontal
 ```
 
 Regras:
 
 - não salvar zoom, filtros, geração mobile ou `?pessoa=...` como favorito de página;
-- query params podem ser preservados na navegação da sessão, não no catálogo fixo.
+- query params podem ser preservados na navegação da sessão, não no catálogo fixo;
+- rótulos de favoritos devem seguir o vocabulário canônico das views atuais.
 
 ---
 
-## 14. Registros legados
+## 15. Registros legados
 
 Pode haver favoritos antigos gravados com:
 
@@ -393,19 +430,26 @@ Tratamento recomendado:
 - não reativar rotas para suportar favorito antigo;
 - criar estratégia de migração/normalização se registros existirem;
 - mapear `/minha-arvore` para `/mapa-familiar` apenas se houver decisão explícita;
-- não mapear `/genealogia` ou `/visao-completa` automaticamente sem avaliar intenção.
+- mapear `/genealogia` e `/visao-completa` para `/mapa-familiar-horizontal` apenas se houver decisão explícita;
+- registrar qualquer normalização em frente própria, com validação de dados reais.
+
+Referência preventiva:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
 
 ---
 
-## 15. Validação
+## 16. Validação
 
 Após alterar favoritos:
 
 ```bash
+git diff --check
 npm run build
 npm test
 npm run test:e2e
-git diff --check
 ```
 
 Buscas:
@@ -420,9 +464,19 @@ Critério:
 
 - catálogo ativo tem as duas views oficiais;
 - rotas antigas não aparecem como páginas favoritáveis;
-- `/minha-arvore/editar` não é confundida com view antiga.
+- `/minha-arvore/editar` não é confundida com view antiga;
+- keywords antigas apontam para rotas atuais;
+- favoritos de pessoa continuam apontando para `/pessoa/:id`.
 
-## 16. Anti-regressões específicas da árvore
+QA manual complementar:
+
+```txt
+docs/QA_MANUAL.md
+```
+
+---
+
+## 17. Anti-regressões específicas
 
 Não reintroduzir como favorito de página:
 
@@ -439,3 +493,4 @@ Checklist:
 - [ ] Busca global e favoritos usam o mesmo vocabulário das views oficiais.
 - [ ] `/minha-arvore/editar` não é tratada como substituta da antiga `/minha-arvore`.
 - [ ] Favoritos de pessoa continuam apontando para `/pessoa/:id`, não para uma view da árvore.
+- [ ] Registros legados não são usados como justificativa para recriar rotas removidas.
