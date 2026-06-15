@@ -1,9 +1,9 @@
 # Git — comandos de responsividade, revisão documental e QA visual
 
-> Última revisão: 2026-06-14  
-> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`  
-> Tipo: referência operacional auxiliar.  
-> Status: checklist de comandos; não é documentação funcional canônica.
+> Última revisão: 2026-06-14
+> Local recomendado: `docs/comandos/GIT_RESPONSIVIDADE.md`
+> Tipo: referência operacional auxiliar.
+> Status: guia auxiliar de comandos; não é documentação funcional canônica.
 
 ---
 
@@ -19,26 +19,34 @@ Use este arquivo para:
 - validar alterações antes de commit;
 - evitar inclusão de artefatos locais;
 - substituir manualmente arquivos revisados em `docs/`;
-- rodar QA mínimo de responsividade.
+- consultar comandos rápidos de QA.
 
-Este arquivo **não** define contratos de UX, componente, rota ou produto.
+Este arquivo **não** define contratos de UX, componente, rota, produto ou pendência.
 
-Para decisões vigentes, consultar:
+Para contratos vigentes, consultar:
 
 ```txt
+docs/BASELINE_PRODUTO_ATUAL.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/arquitetura/ROTAS_E_GUARDS.md
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/funcionalidades/CALENDARIO_FAMILIAR.md
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-Para histórico de views removidas, consultar apenas:
+Para QA manual detalhado, consultar:
 
 ```txt
-docs/historico/
+docs/QA_MANUAL.md
+```
+
+Para histórico de views removidas, consultar:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 ---
@@ -151,6 +159,12 @@ Enviar branch nova:
 git push -u origin <nome-da-branch>
 ```
 
+Observação:
+
+```txt
+Se a frente for feita diretamente na main, confirmar antes que a main local está atualizada e sem arquivos pendentes.
+```
+
 ---
 
 ## 6. Revisar diff
@@ -220,7 +234,9 @@ git status --short
 
 ## 8. `git add` seguro
 
-Adicionar explicitamente os arquivos alterados:
+Adicionar explicitamente os arquivos alterados.
+
+Raiz de `docs/`:
 
 ```bash
 git add docs/README.md
@@ -229,6 +245,7 @@ git add docs/INVENTARIO_TECNICO.md
 git add docs/GUIA_IMPLEMENTACOES.md
 git add docs/GUIA_COMPONENTES.md
 git add docs/GUIA_UX_LAYOUT.md
+git add docs/QA_MANUAL.md
 git add docs/REGRAS_DE_NAO_REGRESSAO.md
 git add docs/DECISOES_ARQUITETURAIS.md
 git add docs/PLANO_PROXIMOS_PASSOS.md
@@ -267,6 +284,13 @@ git add docs/operacao/DEPLOY.md
 git add docs/operacao/DEPLOYMENT.md
 git add docs/operacao/OAUTH_GOOGLE.md
 git add docs/operacao/STORAGE_MAINTENANCE.md
+```
+
+Histórico:
+
+```bash
+git add docs/historico/README.md
+git add docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 Comandos e atribuições:
@@ -372,7 +396,13 @@ git status --short
 
 ---
 
-## 11. QA de responsividade atual
+## 11. QA de responsividade — referência rápida
+
+Este arquivo mantém apenas uma referência operacional rápida. O checklist manual completo fica em:
+
+```txt
+docs/QA_MANUAL.md
+```
 
 Breakpoints mínimos:
 
@@ -401,45 +431,17 @@ Rotas prioritárias:
 /notificacoes
 ```
 
-Checklist mobile da árvore:
+Regras rápidas:
 
-```txt
-/mapa-familiar
-- navegação Paterno/Central/Materno preservada;
-- cards não exibem "Nascimento não informado";
-- bordas dos grupos seguem a paleta desktop;
-- paletas branca, visual/azul, laranja e marrom estão coerentes.
+- `/mapa-familiar` mobile usa navegação Paterno/Central/Materno;
+- `/mapa-familiar-horizontal` mobile usa botões `Ger X`, não Paterno/Central/Materno;
+- o modal mobile de controles não deve exibir Zoom, Restaurar ou Exportar;
+- o calendário mobile deve preservar filtros compactos em 320px, 375px, 390px e 430px;
+- paletas mobile devem seguir o contrato desktop;
+- `Nascimento não informado` e `Falecimento não informado` não devem aparecer visualmente em cards mobile;
+- cônjuges de `pais`/Geração 4 na horizontal são pendência `TREE-003`, não comportamento consolidado.
 
-/mapa-familiar-horizontal
-- uma geração por tela;
-- botões Ger X visíveis;
-- sem barra Paterno/Central/Materno;
-- sem scroll horizontal manual;
-- cônjuges da Geração 4/Pais aparecem quando o filtro Cônjuges está ativo;
-- paleta mobile não cai em fallback azul indevido.
-```
-
-Checklist calendário mobile:
-
-```txt
-/calendario-familiar
-- 5 categorias em uma única linha;
-- bolinha colorida acima do título;
-- títulos em uma linha;
-- sem overflow horizontal em 320px, 375px, 390px e 430px;
-- card grande de categorias não duplica os filtros compactos no mobile.
-```
-
-Checklist modal mobile:
-
-```txt
-- título "Controles";
-- botão X fecha;
-- Vertical/Horizontal visíveis;
-- Cores, Grupos e Destacar visíveis;
-- filtros visíveis;
-- sem Zoom, Restaurar e Exportar.
-```
+Se precisar de checklist por rota, paleta, exportação, perfil, fórum, notificações, admin ou pós-deploy, usar `docs/QA_MANUAL.md`.
 
 ---
 
@@ -464,6 +466,7 @@ rg "from-teal|to-cyan|border-cyan|bg-cyan|text-cyan" docs
 Interpretação:
 
 - `/minha-arvore/editar` é permitido;
+- `docs/historico/ROTAS_REMOVIDAS.md` é a referência para rotas antigas removidas;
 - `docs/historico/` pode citar rotas removidas como legado;
 - `genealogia` pode aparecer como conceito textual da horizontal;
 - a barra `Filtros | Legendas | Ações` pode aparecer apenas como padrão removido;
@@ -503,6 +506,7 @@ Se aparecer conteúdo funcional ou visual novo, migrar para:
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/QA_MANUAL.md
 docs/funcionalidades/
 docs/PLANO_PROXIMOS_PASSOS.md
 ```

@@ -1,9 +1,11 @@
 # Pessoas, perfil público e admin de pessoa
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`  
-> Tipo: documentação funcional específica  
-> Escopo: perfil de pessoa, administração de pessoas, edição pelo usuário, privacidade, vínculos, sugestões, reset administrativo, arquivos históricos e relacionamento conjugal.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`
+> Tipo: documentação funcional/técnica de pessoas, perfil e administração.
+> Status: revisado para separar rotas de perfil, edição de membro, dados usados pela árvore, pendências conhecidas e documentação histórica.
+
+---
 
 ## 1. Função deste documento
 
@@ -30,17 +32,19 @@ Este documento não substitui:
 | Tema | Documento canônico |
 |---|---|
 | Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
+| Rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
+| Views da árvore | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Edição da própria árvore | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` |
+| Favoritos | `docs/funcionalidades/FAVORITOS.md` |
 | Modelo de banco | `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
 | Migrations e Supabase | `docs/operacao/MIGRATIONS_SUPABASE.md` |
-| Edição da própria árvore | `docs/funcionalidades/MINHA_ARVORE_EDITAR.md` |
-| Timeline | `docs/funcionalidades/TIMELINE.md` |
-| Notificações | `docs/funcionalidades/NOTIFICACOES.md` |
-| Fórum | `docs/funcionalidades/FORUM.md` |
-| Troubleshooting geral | `docs/GUIA_CORRECAO_ERROS.md` |
+| Storage | `docs/operacao/STORAGE_MAINTENANCE.md` |
+| QA manual | `docs/QA_MANUAL.md` |
+| Pendências e riscos | `docs/PLANO_PROXIMOS_PASSOS.md` |
 
 ---
 
-### 1.1 Relação com as views oficiais da árvore
+## 2. Relação com as views oficiais da árvore
 
 Os dados de pessoas e relacionamentos descritos neste documento alimentam diretamente:
 
@@ -53,10 +57,13 @@ Regras:
 
 - `/pessoa/:id` e `/pessoas/:id` são rotas de perfil, não views de árvore;
 - `/minha-arvore/editar` é edição do membro, não a antiga view `/minha-arvore`;
+- `/minha-arvore`, `/genealogia` e `/visao-completa` não são views ativas;
 - relacionamentos criados no admin devem ser explícitos e consistentes para que conectores, cônjuges e filhos sejam renderizados corretamente;
 - ajustes visuais da árvore não devem ser resolvidos alterando dados reais sem regra de negócio.
 
-## 2. Status funcional
+---
+
+## 3. Status funcional
 
 | Área | Status |
 |---|---|
@@ -74,13 +81,14 @@ Regras:
 | Autocomplete de endereço | Implementado com fallback para input comum |
 | Eventos da vida | Implementados em `person_events` |
 | Arquivos históricos de pessoa | Implementados |
-| Arquivos históricos de relacionamento conjugal | Implementados no modal conjugal com upload direto pelo botão `+`; informações textuais usam sugestão administrativa |
+| Arquivos históricos de relacionamento conjugal | Implementados no modal conjugal com upload direto pelo botão `+` |
+| Sugestões textuais de relacionamento conjugal | Implementadas por revisão administrativa |
 | Insights gerados por IA | Implementados como leitura pública de conteúdo persistido e geração explícita por admin |
 | Pets | Implementados como tipo semântico `humano_ou_pet` |
 
 ---
 
-### 2.1 Dados usados pela árvore
+## 4. Dados usados pela árvore
 
 Campos e estruturas com impacto direto nas views oficiais:
 
@@ -102,9 +110,12 @@ Regras:
 - datas ausentes não devem gerar microcopy falsa como “Nascimento não informado” nos cards mobile da árvore;
 - `manual_generation` não deve ser inventado por ajuste visual sem decisão administrativa;
 - pets não devem ser inferidos por nome ou posição visual;
-- cônjuges dependem de relacionamento explícito.
+- cônjuges dependem de relacionamento explícito;
+- dado administrativo não deve ser alterado para resolver apenas composição visual.
 
-## 3. Rotas
+---
+
+## 5. Rotas
 
 | Rota | Guard | Função |
 |---|---|---|
@@ -118,11 +129,25 @@ Regras:
 | `/admin/pessoas/:id/editar` | `ProtectedRoute` | Edição administrativa de pessoa. |
 | `/admin/solicitacoes-vinculos` | `ProtectedRoute` | Revisão de vínculos, mudanças de relacionamento e sugestões de perfil. |
 
+Rotas que não pertencem a esta frente como produto ativo:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Interpretação:
+
+- `/minha-arvore/editar` pode aparecer neste documento porque é rota vigente de edição;
+- `/minha-arvore` sem `/editar` é histórica e não deve ser usada como view ativa;
+- detalhes de guards ficam em `docs/arquitetura/ROTAS_E_GUARDS.md`.
+
 ---
 
-## 4. Arquivos principais
+## 6. Arquivos principais
 
-### Páginas
+### 6.1 Páginas
 
 ```txt
 src/app/pages/PersonProfile.tsx
@@ -133,7 +158,15 @@ src/app/pages/admin/AdminPessoaForm.tsx
 src/app/pages/admin/AdminSolicitacoesVinculos.tsx
 ```
 
-### Componentes
+Observação:
+
+```txt
+src/app/pages/MinhaArvore.tsx
+```
+
+é usado para o fluxo vigente de edição em `/minha-arvore/editar`. A presença desse arquivo não reativa a antiga view `/minha-arvore`.
+
+### 6.2 Componentes
 
 ```txt
 src/app/components/person/PersonDataView.tsx
@@ -153,7 +186,7 @@ src/app/components/relationships/MarriageDetailsEditor.tsx
 src/app/components/ConfirmDialog.tsx
 ```
 
-### Services e utils
+### 6.3 Services e utils
 
 ```txt
 src/app/services/dataService.ts
@@ -175,7 +208,7 @@ src/app/utils/whatsapp.ts
 src/app/utils/buildPersonTimeline.ts
 ```
 
-### Migrations relacionadas
+### 6.4 Migrations relacionadas
 
 ```txt
 20260514130000_add_falecido_to_pessoas.sql
@@ -188,11 +221,16 @@ src/app/utils/buildPersonTimeline.ts
 20260609193000_ensure_admin_reset_person_profile.sql
 ```
 
+Regra operacional:
+
+- mudança de schema, RPC, RLS, policy, bucket ou Edge Function deve atualizar `docs/operacao/*` no mesmo lote;
+- mudança visual, textual ou documental não exige migration.
+
 ---
 
-## 5. Perfil público/interno de pessoa
+## 7. Perfil público/interno de pessoa
 
-### 5.1 Dados exibidos
+### 7.1 Dados exibidos
 
 O perfil `/pessoa/:id` pode exibir:
 
@@ -212,7 +250,7 @@ O perfil `/pessoa/:id` pode exibir:
 - botão de edição quando o usuário tiver permissão;
 - ação **Inserir Informações**.
 
-### 5.2 Carregamento
+### 7.2 Carregamento
 
 A página carrega:
 
@@ -227,7 +265,7 @@ A página carrega:
 | `listarTopicosForum({ pessoaRelacionadaId })` | Discussões relacionadas à pessoa. |
 | `getCachedTreeData` ou `obterTodasPessoas`/`obterTodosRelacionamentos` | Contexto para cálculo de parentesco. |
 
-### 5.3 Regras de exibição
+### 7.3 Regras de exibição
 
 - O perfil deve permanecer legível mesmo quando campos estiverem vazios.
 - Telefone, endereço, data de nascimento e redes sociais respeitam flags de privacidade.
@@ -240,9 +278,9 @@ A página carrega:
 
 ---
 
-## 6. Permissões de edição
+## 8. Permissões de edição
 
-### 6.1 Permissão no perfil
+### 8.1 Permissão no perfil
 
 O perfil calcula permissão combinando:
 
@@ -261,7 +299,7 @@ O botão de edição aparece quando o usuário é:
 - usuário com vínculo direto à pessoa e permissão de edição;
 - responsável pelo perfil conforme `user_person_links`.
 
-### 6.2 Comportamento do botão Editar
+### 8.2 Comportamento do botão Editar
 
 No perfil `/pessoa/:id`:
 
@@ -282,9 +320,9 @@ Regra de segurança: esconder botão no frontend não substitui RLS, RPC segura 
 
 ---
 
-## 7. Inserir Informações e sugestões de perfil
+## 9. Inserir Informações e sugestões de perfil
 
-### 7.1 Perfil de pessoa
+### 9.1 Perfil de pessoa
 
 A ação **Inserir Informações** em `/pessoa/:id` segue este fluxo:
 
@@ -315,7 +353,7 @@ Regras:
 - admin pode marcar como `reviewed` ou `dismissed`;
 - dados sensíveis devem ser mínimos.
 
-### 7.2 Relacionamento conjugal
+### 9.2 Relacionamento conjugal
 
 No modal de relacionamento conjugal, existem dois fluxos separados:
 
@@ -349,7 +387,7 @@ O botão **+** em **Arquivos Históricos** não deve abrir o modal de **Inserir 
 
 ---
 
-### 7.3 Múltiplos relacionamentos conjugais
+## 10. Múltiplos relacionamentos conjugais
 
 O sistema deve preservar múltiplos relacionamentos conjugais quando existirem.
 
@@ -360,7 +398,18 @@ Regras:
 - dados de casamento/separação pertencem ao relacionamento específico, não à pessoa isolada;
 - filhos devem ser associados por relações parentais explícitas, permitindo agrupamento por outro pai/mãe na árvore;
 - a árvore vertical pode exibir bloco de “Outro relacionamento” quando a pessoa central tiver mais de um núcleo conjugal;
-- a horizontal deve exibir cônjuges conforme geração e filtro, incluindo Geração 4/Pais quando o filtro Cônjuges estiver ativo.
+- a horizontal exibe cônjuges conforme geração, relação explícita e filtros implementados no código.
+
+Pendência conhecida:
+
+```txt
+TREE-003 — cônjuges de pais/Geração 4 na horizontal
+```
+
+Regra:
+
+- não tratar cônjuges de `pais`/Geração 4 na horizontal como comportamento implementado até a correção de código correspondente;
+- se o comportamento for corrigido, atualizar `MAPA_FAMILIAR_VIEW.md`, `ARVORE_LEGENDAS_CONECTORES_PAINEL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e este documento no mesmo lote.
 
 Validação administrativa:
 
@@ -369,9 +418,11 @@ Validação administrativa:
 - conferir se datas e locais pertencem ao relacionamento correto;
 - não duplicar relacionamento inverso se o service já cria inverso automaticamente.
 
-## 8. Privacidade
+---
 
-### 8.1 Campos
+## 11. Privacidade
+
+### 11.1 Campos
 
 Campos principais de privacidade/contato em `pessoas`:
 
@@ -384,7 +435,7 @@ permitir_exibir_rede_social
 permitir_exibir_telefone
 ```
 
-### 8.2 Defaults atuais
+### 11.2 Defaults atuais
 
 A migration `20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql` define defaults `true` para:
 
@@ -398,7 +449,7 @@ permitir_exibir_telefone
 
 No frontend, `toPessoa` também normaliza valores ausentes para `true`, incluindo compatibilidade entre `permitir_exibir_rede_social` e `permitir_exibir_instagram`.
 
-### 8.3 Regras por dado
+### 11.3 Regras por dado
 
 | Dado | Regra |
 |---|---|
@@ -413,9 +464,9 @@ Regra permanente: privacidade não deve depender só de esconder componente visu
 
 ---
 
-## 9. Administração de pessoas
+## 12. Administração de pessoas
 
-### 9.1 Listagem `/admin/pessoas`
+### 12.1 Listagem `/admin/pessoas`
 
 A listagem administrativa oferece:
 
@@ -436,7 +487,7 @@ O botão de copiar ID:
 - não navega;
 - não altera dados.
 
-### 9.2 Excluir pessoa
+### 12.2 Excluir pessoa
 
 A exclusão chama `deletarPessoa`.
 
@@ -447,7 +498,7 @@ Cuidados:
 - impacto em relacionamentos e dados associados depende de constraints/RLS/cascades do banco;
 - não confundir com reset de perfil.
 
-### 9.3 Formulário admin
+### 12.3 Formulário admin
 
 O formulário administrativo edita/cria pessoa e reúne blocos de:
 
@@ -475,15 +526,15 @@ Regras:
 
 ---
 
-## 10. Reset administrativo de perfil
+## 13. Reset administrativo de perfil
 
-### 10.1 Objetivo real
+### 13.1 Objetivo real
 
 O botão **Resetar Perfil** remove dados complementares/customizados associados à pessoa e retorna certas preferências para o estado padrão atual.
 
 Não é uma restauração completa de histórico nem rollback transacional de todos os dados da pessoa.
 
-### 10.2 Implementação
+### 13.2 Implementação
 
 Arquivos:
 
@@ -508,7 +559,7 @@ Migrations:
 
 A migration `20260609193000_ensure_admin_reset_person_profile.sql` é uma migration idempotente de reforço para ambientes em que a RPC não foi encontrada pelo PostgREST/schema cache. Ela recria/garante a função, aplica `grant execute` e força `notify pgrst, 'reload schema';`.
 
-### 10.3 O que o reset faz
+### 13.3 O que o reset faz
 
 Conforme a RPC atual:
 
@@ -520,7 +571,7 @@ Conforme a RPC atual:
 | `user_favorites` | Remove favoritos com `entity_type = 'person'` e `entity_id` da pessoa. |
 | `preferencias_notificacao` | Recria/atualiza preferências dos usuários vinculados para `true`. |
 
-### 10.4 O que o reset não deve fazer
+### 13.4 O que o reset não deve fazer
 
 O reset não deve:
 
@@ -533,7 +584,7 @@ O reset não deve:
 - apagar redes sociais;
 - substituir uma auditoria de dados.
 
-### 10.5 Erro conhecido de schema cache/RPC ausente
+### 13.5 Erro conhecido de schema cache/RPC ausente
 
 Sintoma:
 
@@ -548,26 +599,15 @@ Causa provável:
 - schema cache do PostgREST desatualizado;
 - assinatura/grant da RPC divergente.
 
-Verificar:
-
-```txt
-20260608120000_admin_reset_person_profile_and_true_privacy_defaults.sql
-20260609193000_ensure_admin_reset_person_profile.sql
-```
-
 Correção operacional: aplicar a migration pendente no ambiente correto e validar schema cache antes de alterar o frontend.
-
-### 10.6 Feedback
-
-Após sucesso, a UI informa quantos conteúdos gerados e favoritos foram removidos.
 
 Regra anti-regressão: qualquer alteração na RPC deve confirmar que não há `delete` em `relacionamentos`.
 
 ---
 
-## 11. Área do usuário
+## 14. Área do usuário
 
-### 11.1 `/meus-dados`
+### 14.1 `/meus-dados`
 
 Página para edição dos dados da pessoa vinculada ao usuário.
 
@@ -590,7 +630,7 @@ storageService.ts
 userEngagementService.ts
 ```
 
-### 11.2 `/minha-arvore/editar`
+### 14.2 `/minha-arvore/editar`
 
 Fluxo ampliado de edição própria, documentado em:
 
@@ -602,9 +642,9 @@ Este arquivo só registra a relação com pessoas/perfil. Detalhes de avatar sup
 
 ---
 
-## 12. Vínculo usuário-pessoa
+## 15. Vínculo usuário-pessoa
 
-### 12.1 Tabela
+### 15.1 Tabela
 
 ```txt
 public.user_person_links
@@ -620,7 +660,7 @@ Campos funcionais relevantes incluem:
 - `can_edit`;
 - `dados_confirmados`.
 
-### 12.2 Admin
+### 15.2 Admin
 
 No formulário admin de pessoa, o card de usuários vinculados usa RPC:
 
@@ -648,7 +688,7 @@ Regras:
 - botão **Recarregar** tenta buscar novamente;
 - não usar fallback inseguro de consulta direta em `profiles`.
 
-### 12.3 Solicitações
+### 15.3 Solicitações
 
 Alterações de vínculo/relacionamento feitas por usuário comum devem passar por fluxo de solicitação quando não forem edição direta permitida.
 
@@ -660,7 +700,7 @@ docs/funcionalidades/MINHA_ARVORE_EDITAR.md
 
 ---
 
-## 13. Pets
+## 16. Pets
 
 Pets são pessoas do ponto de vista estrutural da árvore, mas com semântica própria.
 
@@ -684,11 +724,19 @@ Regras de exibição:
 - pet pode ser relacionado como filho técnico;
 - pet não deve ser contado como filho humano;
 - pet não exibe astrologia/acontecimentos;
-- filtros específicos ficam documentados em `MINHA_ARVORE_FILTROS_E_PETS.md`.
+- filtros e comportamento visual da árvore ficam nos documentos atuais de mapa, painel e QA, não em documentos históricos.
+
+Referências atuais:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
+```
 
 ---
 
-## 14. Autocomplete de endereço
+## 17. Autocomplete de endereço
 
 Componente:
 
@@ -721,7 +769,7 @@ Usado em:
 
 ---
 
-## 15. Eventos da vida
+## 18. Eventos da vida
 
 Tabela:
 
@@ -763,13 +811,14 @@ Usos:
 - usuário pode criar eventos quando permitido;
 - perfil exibe eventos;
 - timeline consome eventos pessoais;
+- calendário pode consumir datas relevantes;
 - ausência de eventos não deve quebrar perfil.
 
 ---
 
-## 16. Arquivos históricos
+## 19. Arquivos históricos
 
-### 16.1 Pessoa
+### 19.1 Pessoa
 
 Arquivos de pessoa usam:
 
@@ -778,7 +827,7 @@ pessoa_id preenchido
 relacionamento_id nulo
 ```
 
-### 16.2 Relacionamento conjugal
+### 19.2 Relacionamento conjugal
 
 Arquivos de relacionamento usam:
 
@@ -787,7 +836,7 @@ relacionamento_id preenchido
 pessoa_id nulo
 ```
 
-### 16.3 Componente e services
+### 19.3 Componente e services
 
 ```txt
 src/app/components/ArquivosHistoricos.tsx
@@ -817,7 +866,7 @@ Regra operacional: se o frontend envia `categoria_evento`, a migration precisa e
 
 ---
 
-## 17. Insights gerados
+## 20. Insights gerados
 
 Arquivos:
 
@@ -839,9 +888,9 @@ Regras:
 
 ---
 
-## 18. Relacionamento conjugal
+## 21. Relacionamento conjugal
 
-### 18.1 Dados
+### 21.1 Dados
 
 Campos principais em `relacionamentos`:
 
@@ -854,7 +903,7 @@ local_separacao
 observacoes
 ```
 
-### 18.2 Modal de visualização
+### 21.2 Modal de visualização
 
 Arquivo:
 
@@ -875,7 +924,7 @@ Comportamento:
 - botão **Inserir Informações** abre sugestão textual;
 - botão `+` em **Arquivos Históricos** abre upload de arquivo histórico.
 
-### 18.3 Narrativa
+### 21.3 Narrativa
 
 O modal usa:
 
@@ -891,7 +940,7 @@ Regras:
 - não mostrar dados técnicos como substitutos de texto humano;
 - não expor observações internas para usuário comum.
 
-### 18.4 Edição/sugestão
+### 21.4 Edição/sugestão
 
 | Situação | Resultado |
 |---|---|
@@ -902,7 +951,7 @@ Regras:
 
 ---
 
-## 19. Fórum relacionado ao perfil
+## 22. Fórum relacionado ao perfil
 
 No perfil de pessoa, há área de discussões relacionadas.
 
@@ -922,7 +971,7 @@ docs/funcionalidades/FORUM.md
 
 ---
 
-## 20. Favoritos
+## 23. Favoritos
 
 No perfil, o botão de favorito usa:
 
@@ -939,9 +988,15 @@ Comportamento:
 - metadata é sanitizada no service;
 - favoritos expandidos para outras entidades devem ser tratados em frente específica e no plano/backlog.
 
+Documento canônico:
+
+```txt
+docs/funcionalidades/FAVORITOS.md
+```
+
 ---
 
-## 21. Logs e segurança
+## 24. Logs e segurança
 
 Logs relevantes:
 
@@ -968,7 +1023,7 @@ Regras:
 
 ---
 
-## 22. Troubleshooting específico
+## 25. Troubleshooting específico
 
 | Sintoma | Verificar |
 |---|---|
@@ -988,7 +1043,7 @@ Regras:
 
 ---
 
-## 23. Checklist anti-regressão
+## 26. Checklist anti-regressão
 
 Antes de alterar esta frente, validar:
 
@@ -1021,11 +1076,19 @@ Fluxos mínimos:
 - arquivos históricos aparecem sem quebrar perfil;
 - modal conjugal abre, fecha e não exibe ID técnico;
 - arquivos de relacionamento salvam apenas quando admin;
-- não há dado sensível em logs/metadata.
+- não há dado sensível em logs/metadata;
+- perfil usa retorno seguro para `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- dados usados pela árvore continuam disponíveis sem depender de rotas legadas.
+
+QA manual complementar:
+
+```txt
+docs/QA_MANUAL.md
+```
 
 ---
 
-## 24. Decisões que não devem ser reabertas sem motivo
+## 27. Decisões que não devem ser reabertas sem motivo
 
 - `pessoas` é a entidade principal da árvore; usuário autenticado é outra entidade.
 - Vínculo usuário-pessoa fica em `user_person_links`.
@@ -1037,16 +1100,5 @@ Fluxos mínimos:
 - Arquivos históricos novos usam Storage, não base64.
 - Pets continuam no modelo de pessoas, com semântica própria.
 - Observações conjugais são informação restrita/admin.
-
-## 17. Anti-regressões de pessoas, vínculos e árvore
-
-Checklist:
-
-- [ ] `/pessoa/:id` e `/pessoas/:id` continuam protegidos por `MemberRoute`.
-- [ ] Perfil usa retorno seguro para `/mapa-familiar` e `/mapa-familiar-horizontal`.
-- [ ] Admin não sobrescreve múltiplos cônjuges ao editar uma pessoa.
-- [ ] Relacionamentos conjugais e parentais continuam explícitos.
-- [ ] Pets usam `humano_ou_pet === 'Pet'`.
-- [ ] `manual_generation` só é alterado por edição/admin intencional.
-- [ ] Privacidade de contato não é burlada por perfil, fórum, IA, timeline ou notificações.
-- [ ] Dados usados pela árvore continuam disponíveis sem depender de rotas legadas.
+- Relacionamentos conjugais e parentais continuam explícitos.
+- `/minha-arvore/editar` continua vigente como edição do membro, sem reativar `/minha-arvore` como view.

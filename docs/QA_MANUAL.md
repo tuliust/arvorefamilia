@@ -1,0 +1,691 @@
+
+# QA manual — Árvore Família
+
+> Última revisão: 2026-06-14
+> Local canônico: `docs/QA_MANUAL.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: guia central de QA manual
+> Status: criado para centralizar validações manuais e reduzir repetição em documentos funcionais, operacionais e de não regressão.
+
+---
+
+## 1. Objetivo
+
+Este guia centraliza os procedimentos de QA manual do projeto **Árvore Família**.
+
+Use este arquivo para validar:
+
+- rotas oficiais e rotas removidas;
+- guards e navegação;
+- Árvore Familiar vertical;
+- Mapa Genealógico horizontal;
+- mobile e breakpoints;
+- painel desktop;
+- modal mobile de controles;
+- paletas;
+- cards, avatares e conectores;
+- exportação;
+- calendário familiar;
+- perfil e retorno;
+- fórum;
+- notificações;
+- admin;
+- deploy e pós-deploy.
+
+Este documento não substitui:
+
+| Documento | Papel |
+|---|---|
+| `docs/REGRAS_DE_NAO_REGRESSAO.md` | Contratos técnicos e regras que não devem ser violadas. |
+| `docs/PLANO_PROXIMOS_PASSOS.md` | Pendências, riscos e decisões futuras. |
+| `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | Contrato funcional das duas views da árvore. |
+| `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Contrato do painel, filtros, conectores e destaques. |
+| `docs/funcionalidades/EXPORTACAO_ARVORE.md` | Contrato técnico da exportação. |
+| `docs/operacao/DEPLOYMENT.md` | Procedimento completo de deploy e operação. |
+
+Regra de escopo:
+
+```txt
+REGRAS_DE_NAO_REGRESSAO.md diz o que não pode quebrar.
+QA_MANUAL.md diz como validar manualmente.
+PLANO_PROXIMOS_PASSOS.md registra o que ainda está aberto.
+```
+
+---
+
+## 2. Quando usar
+
+Use este guia:
+
+- antes de concluir mudança visual;
+- antes de publicar deploy;
+- depois de alterar rotas, guards, árvore, painel, exportação ou calendário;
+- depois de reorganizar documentação que afete contratos;
+- antes de fechar pendências de QA em `PLANO_PROXIMOS_PASSOS.md`.
+
+Mudanças somente documentais podem exigir apenas conferência documental e build, desde que não alterem contratos de produto.
+
+---
+
+## 3. Comandos mínimos
+
+### Mudança documental
+
+```bash
+git diff --check
+npm run build
+```
+
+### Mudança de código não visual
+
+```bash
+git diff --check
+npm run build
+npm test
+```
+
+### Mudança em rotas, guards, árvore, navegação, exportação ou mobile
+
+```bash
+git diff --check
+npm run build
+npm test
+npm run test:e2e
+```
+
+### Mudança visual/CSS
+
+```bash
+git diff --check
+npm run build
+npm run test:e2e
+```
+
+### Antes de commit
+
+```bash
+git status --short
+git diff --stat
+git diff --check
+```
+
+---
+
+## 4. Breakpoints e ambientes mínimos
+
+### Mobile
+
+Validar, no mínimo:
+
+```txt
+320px
+375px
+390px
+430px
+```
+
+### Tablet e desktop
+
+Validar, quando a mudança envolver árvore, painel, exportação ou layout:
+
+```txt
+tablet
+1366px
+1440px
+1536px
+1920px
+```
+
+### Navegadores
+
+Quando houver mudança mobile ou deploy:
+
+```txt
+Chrome desktop
+Chrome Android, quando possível
+Safari/iOS, quando possível
+janela anônima/privada no pós-deploy
+```
+
+---
+
+## 5. QA de documentação
+
+Use quando a mudança alterar arquivos em `docs/`.
+
+Checklist:
+
+- [ ] `docs/README.md` aponta para documentos existentes.
+- [ ] `docs/QA_MANUAL.md` é referenciado quando o assunto for QA manual.
+- [ ] `docs/REGRAS_DE_NAO_REGRESSAO.md` mantém regras, não checklists longos duplicados.
+- [ ] `docs/PLANO_PROXIMOS_PASSOS.md` contém apenas pendências, riscos e decisões abertas.
+- [ ] documentos funcionais descrevem comportamento implementado, não backlog.
+- [ ] documentos operacionais concentram deploy, migrations, OAuth, Storage e secrets.
+- [ ] documentos históricos não parecem fonte vigente.
+- [ ] rotas antigas aparecem apenas como histórico, keyword ou anti-regressão.
+- [ ] não há links quebrados óbvios para documentos movidos/removidos.
+- [ ] `git diff --check` não retorna trailing whitespace.
+
+Busca útil:
+
+```bash
+rg "QA_MANUAL|REGRAS_DE_NAO_REGRESSAO|PLANO_PROXIMOS_PASSOS" docs
+rg "/minha-arvore|/genealogia|/visao-completa" docs src tests
+```
+
+---
+
+## 6. QA de rotas e guards
+
+Rotas oficiais da árvore:
+
+```txt
+/
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Exceção vigente:
+
+```txt
+/minha-arvore/editar
+```
+
+Rotas antigas que não devem voltar como views ativas:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Checklist:
+
+- [ ] `/` redireciona para `/mapa-familiar` ou para `/entrar` conforme sessão/guard.
+- [ ] `/?pessoa=abc` preserva `?pessoa=abc` ao redirecionar.
+- [ ] `/mapa-familiar` exige acesso de árvore.
+- [ ] `/mapa-familiar-horizontal` exige acesso de árvore.
+- [ ] `/busca` exige acesso de árvore.
+- [ ] `/minha-arvore/editar` permanece protegida como rota de membro.
+- [ ] `/minha-arvore`, `/genealogia` e `/visao-completa` não renderizam views da árvore.
+- [ ] usuário comum não acessa `/admin/*`.
+- [ ] erro de guard não expõe dados administrativos.
+
+---
+
+## 7. QA de `TreeViewMode`
+
+Contrato:
+
+```txt
+mapa-familiar
+mapa-familiar-horizontal
+```
+
+Checklist:
+
+- [ ] `VIEW_MODE_TO_PATH` contém só as duas views oficiais.
+- [ ] `PATH_TO_VIEW_MODE` reconhece `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- [ ] fallback desconhecido retorna `mapa-familiar`.
+- [ ] alternância Vertical/Horizontal preserva `location.search`.
+- [ ] `?pessoa=...` não é perdido.
+- [ ] rotas removidas não são reintroduzidas no tipo.
+
+---
+
+## 8. QA da Árvore Familiar vertical
+
+Rota:
+
+```txt
+/mapa-familiar
+```
+
+Componentes esperados:
+
+| Ambiente | Componente |
+|---|---|
+| Desktop/tablet | `DesktopFamilyMapView` |
+| Mobile | `MobileFamilyTreeView` |
+
+### Desktop/tablet
+
+Checklist:
+
+- [ ] canvas vertical/panorâmico renderiza sem erro.
+- [ ] pessoa central aparece.
+- [ ] grupos familiares aparecem conforme dados e filtros.
+- [ ] cônjuge principal aparece quando existe.
+- [ ] múltiplos núcleos conjugais aparecem apenas quando há dados reais.
+- [ ] filhos de relacionamento adicional são agrupados pelo outro pai/mãe quando houver relação explícita.
+- [ ] pets aparecem com filtro próprio quando existentes.
+- [ ] conectores não invadem cards.
+- [ ] zoom aproxima e afasta.
+- [ ] restaurar visualização não equivale a apenas reduzir zoom.
+- [ ] painel colapsado não quebra bounds, conectores ou exportação.
+
+### Mobile
+
+Checklist:
+
+- [ ] renderiza `MobileFamilyTreeView`.
+- [ ] navegação interna usa Paterno/Central/Materno.
+- [ ] não usa botões `Ger X`.
+- [ ] cards preservam contraste.
+- [ ] grupos e bordas seguem paleta ativa.
+- [ ] conectores HTML/CSS respeitam hierarquia visual.
+- [ ] modal de controles abre pelo botão esperado.
+- [ ] body destrava ao fechar modal.
+- [ ] não há scroll horizontal indevido.
+
+---
+
+## 9. QA do Mapa Genealógico horizontal
+
+Rota:
+
+```txt
+/mapa-familiar-horizontal
+```
+
+Componentes esperados:
+
+| Ambiente | Componente |
+|---|---|
+| Desktop/tablet | `DesktopFamilyHorizontalMapView` |
+| Mobile | `MobileFamilyHorizontalMapView` |
+
+### Desktop/tablet
+
+Checklist:
+
+- [ ] pessoas aparecem por geração/coluna.
+- [ ] `manual_generation` é respeitado quando disponível.
+- [ ] colunas vazias são ocultadas.
+- [ ] cônjuges adjacentes aparecem conforme regra implementada.
+- [ ] conectores casal → filhos estão alinhados.
+- [ ] filtros afetam a visualização sem alterar dados.
+- [ ] paleta ativa altera cards, conectores e canvas.
+- [ ] exportação usa título `Mapa Genealógico`.
+
+### Mobile
+
+Checklist:
+
+- [ ] renderiza `MobileFamilyHorizontalMapView`.
+- [ ] uma geração aparece por tela.
+- [ ] botões `Ger 1`, `Ger 2`, `Ger 3` etc. funcionam.
+- [ ] swipe lateral troca geração.
+- [ ] scroll vertical permite ver último card e conectores.
+- [ ] não há barra Paterno/Central/Materno.
+- [ ] não há scroll horizontal manual como navegação principal.
+- [ ] botão de controles fica alinhado à linha de `Ger`.
+- [ ] primeira tela corresponde à menor geração visível.
+- [ ] paletas não azuis não caem em fallback azul/teal.
+
+---
+
+## 10. QA de painel desktop
+
+Checklist:
+
+- [ ] Zoom + funciona.
+- [ ] Zoom - funciona.
+- [ ] Restaurar visualização funciona.
+- [ ] Vertical navega para `/mapa-familiar`.
+- [ ] Horizontal navega para `/mapa-familiar-horizontal`.
+- [ ] `location.search` é preservado.
+- [ ] Cores abre seleção de paleta.
+- [ ] Exportar abre Área, Imagem, PDF e Imprimir.
+- [ ] Destacar abre Linhas, Cards e Grupos.
+- [ ] filtros de grupos ficam acessíveis sem aba.
+- [ ] filtros de status ficam acessíveis sem aba.
+- [ ] não existe barra `Filtros | Legendas | Ações`.
+- [ ] painel não aparece na exportação.
+- [ ] cards do painel seguem paleta ativa.
+- [ ] estado inativo continua legível.
+
+---
+
+## 11. QA do modal mobile de controles
+
+Checklist:
+
+- [ ] modal abre em `/mapa-familiar`.
+- [ ] modal abre em `/mapa-familiar-horizontal`.
+- [ ] título é `Controles`.
+- [ ] não há subtítulo.
+- [ ] botão superior direito usa `X`.
+- [ ] overlay fecha modal.
+- [ ] `Escape` fecha quando aplicável.
+- [ ] body trava com modal aberto.
+- [ ] body destrava ao fechar.
+- [ ] conteúdo interno tem rolagem própria.
+- [ ] modal fica acima do header, bottom nav e botões.
+- [ ] modal não entra na exportação.
+- [ ] contém Vertical, Horizontal, Cores, Grupos, Destacar e Filtros.
+- [ ] não contém Zoom +, Zoom -, Restaurar visualização ou Exportar.
+- [ ] Grupos abre/fecha cards de grupos.
+- [ ] grupos não aparecem por padrão.
+- [ ] filtros permanecem visíveis com grupos fechados.
+- [ ] filtros cabem em 4 colunas quando houver espaço.
+
+---
+
+## 12. QA de paletas
+
+Paletas oficiais:
+
+```txt
+white
+visual
+orange
+brown
+```
+
+Validar em desktop e mobile:
+
+- [ ] Branca/`white`.
+- [ ] Visual/Azul/`visual`.
+- [ ] Laranja/`orange`.
+- [ ] Marrom/`brown`.
+
+Checklist por paleta:
+
+- [ ] cards mudam corretamente.
+- [ ] bordas mudam corretamente.
+- [ ] grupos mudam corretamente.
+- [ ] conectores mudam corretamente.
+- [ ] labels e títulos preservam contraste.
+- [ ] painel acompanha vocabulário visual.
+- [ ] exportação preserva a paleta.
+- [ ] paletas `white`, `orange` e `brown` não caem em fallback azul/teal.
+- [ ] Visual/Azul preserva gradientes quando aplicável.
+
+---
+
+## 13. QA de cards e avatares
+
+Contrato:
+
+| Caso | Esperado |
+|---|---|
+| Pessoa com foto | foto real |
+| Pessoa sem foto | ícone `User` |
+| Pet sem foto | ícone `PawPrint` |
+
+Checklist:
+
+- [ ] pessoa sem foto não usa fallback por gênero.
+- [ ] pet não usa ícone de pessoa.
+- [ ] ícones preservam contraste.
+- [ ] exportação preserva ícones.
+- [ ] SVGs internos não viram blocos escuros.
+- [ ] foto externa com CORS inválido falha de modo controlado.
+
+### Cards mobile de pessoas
+
+Checklist:
+
+- [ ] nome aparece em destaque.
+- [ ] nascimento aparece apenas quando há ano/data real.
+- [ ] falecimento aparece apenas quando há ano/data real.
+- [ ] `Nascimento não informado` não aparece no resultado visual.
+- [ ] `Falecimento não informado` não aparece no resultado visual.
+- [ ] dívida `TREE-004` permanece aberta até remoção estrutural do fallback no componente.
+
+---
+
+## 14. QA de cônjuges, núcleos e conectores
+
+### Cônjuges
+
+Checklist:
+
+- [ ] cônjuge da pessoa central aparece quando há relação.
+- [ ] cônjuges de avós/bisavós/tataravós aparecem como ancestrais quando aplicável.
+- [ ] filtro `Cônjuges` afeta grupos filtráveis implementados.
+- [ ] `pais`/Geração 4 não é tratado como implementado até correção de `TREE-003`.
+- [ ] contagem de cônjuges filtráveis não é inflada por cônjuges sempre visíveis.
+- [ ] nenhum cônjuge é inferido apenas por proximidade visual.
+
+### Núcleos conjugais adicionais
+
+Checklist:
+
+- [ ] pessoa central com mais de um relacionamento explícito não perde cônjuges adicionais.
+- [ ] filhos são agrupados pelo outro pai/mãe quando relação existir.
+- [ ] filhos sem outro pai/mãe identificado permanecem no grupo principal.
+- [ ] segundo relacionamento não sobrepõe irmãos, filhos, netos, sobrinhos ou pets.
+- [ ] ajuste visual não cria dados.
+
+### Conectores
+
+Checklist:
+
+- [ ] conectores representam relações explícitas.
+- [ ] conectores não invadem cards.
+- [ ] conectores não são cortados no fim da superfície.
+- [ ] conectores seguem paleta ativa.
+- [ ] conectores aparecem na exportação.
+- [ ] conectores não usam seletor global que afete ícones.
+
+---
+
+## 15. QA de exportação
+
+Ações:
+
+```txt
+Área
+Imagem/PNG
+PDF
+Imprimir
+```
+
+Validar em:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Checklist:
+
+- [ ] Área abre seleção.
+- [ ] segundo clique em Área fecha seleção.
+- [ ] seleção mínima é respeitada.
+- [ ] PNG gera arquivo.
+- [ ] PDF gera arquivo.
+- [ ] Imprimir abre fluxo de impressão.
+- [ ] loading aparece durante ação real.
+- [ ] erro libera loading.
+- [ ] captura grande demais mostra erro claro.
+- [ ] título correto é adicionado.
+- [ ] painel não aparece.
+- [ ] header não aparece.
+- [ ] bottom nav não aparece.
+- [ ] modal mobile não aparece.
+- [ ] debug não aparece.
+- [ ] overlay de seleção não aparece.
+- [ ] paleta ativa é preservada.
+- [ ] conectores são preservados.
+- [ ] ícones SVG são preservados.
+- [ ] pessoas com foto, sem foto e pets exportam corretamente.
+
+---
+
+## 16. QA do calendário familiar
+
+Rota:
+
+```txt
+/calendario-familiar
+```
+
+Checklist mobile:
+
+- [ ] cinco botões de categorias aparecem em uma linha quando possível.
+- [ ] bolinha colorida aparece acima do título.
+- [ ] título permanece em uma linha.
+- [ ] ellipsis funciona em telas extremas.
+- [ ] não há overflow horizontal global.
+- [ ] filtros alteram eventos visíveis.
+- [ ] estado visual reflete categoria ativa/inativa.
+- [ ] `aria-pressed` é preservado.
+- [ ] Google Agenda não quebra quando OAuth não está configurado.
+- [ ] erro de OAuth é controlado.
+
+Categorias esperadas:
+
+```txt
+Aniversário
+Casamento
+Falecimento
+Outros
+Reunião
+```
+
+---
+
+## 17. QA de perfil, retorno e pessoas
+
+Checklist:
+
+- [ ] perfil aberto a partir de `/mapa-familiar` retorna para `/mapa-familiar`.
+- [ ] perfil aberto a partir de `/mapa-familiar-horizontal` retorna para `/mapa-familiar-horizontal`.
+- [ ] retorno com `?pessoa=...` é preservado quando codificado em `voltar`.
+- [ ] URL externa em `voltar` é rejeitada.
+- [ ] retorno inválido cai em `/mapa-familiar`.
+- [ ] usuário comum não edita pessoa sem permissão.
+- [ ] pessoa vinculada edita apenas o que for permitido.
+- [ ] admin mantém acesso esperado.
+- [ ] sugestões de alteração respeitam permissões.
+- [ ] arquivos históricos não quebram perfil.
+
+---
+
+## 18. QA de fórum
+
+Rotas principais:
+
+```txt
+/forum
+/forum/novo
+/forum/topico/:id
+/forum/topico/:id/editar
+```
+
+Checklist:
+
+- [ ] fórum lista tópicos.
+- [ ] usuário autenticado cria tópico.
+- [ ] usuário autorizado edita tópico.
+- [ ] usuário sem permissão não edita tópico indevido.
+- [ ] respostas funcionam.
+- [ ] favoritos funcionam.
+- [ ] reações funcionam quando aplicável.
+- [ ] notificações associadas não quebram.
+- [ ] rota inexistente ou tópico inválido tem erro controlado.
+
+---
+
+## 19. QA de notificações
+
+Rotas:
+
+```txt
+/notificacoes
+/ajustar-notificacoes
+/admin/notificacoes
+```
+
+Checklist:
+
+- [ ] central lista notificações.
+- [ ] marcação de leitura funciona.
+- [ ] preferências carregam.
+- [ ] preferências salvam.
+- [ ] admin acessa área administrativa de notificações.
+- [ ] usuário comum não acessa admin.
+- [ ] Edge Function ausente/falha externa não quebra UI de forma não controlada.
+- [ ] e-mails/secrets não aparecem no frontend.
+
+---
+
+## 20. QA de admin
+
+Checklist:
+
+- [ ] usuário admin acessa `/admin`.
+- [ ] usuário comum é bloqueado.
+- [ ] dashboard carrega.
+- [ ] pessoas listam.
+- [ ] pessoa abre em detalhe.
+- [ ] criação/edição respeita validações.
+- [ ] relacionamentos funcionam.
+- [ ] importação não é executada sem confirmação.
+- [ ] ações destrutivas exigem confirmação.
+- [ ] RPCs admin falham de forma segura quando ausentes.
+- [ ] nenhuma tela admin depende apenas de botão escondido no frontend.
+
+---
+
+## 21. QA operacional pós-deploy
+
+Usar junto com `docs/operacao/DEPLOYMENT.md`.
+
+Checklist:
+
+- [ ] domínio final abre.
+- [ ] `/entrar` abre sem login.
+- [ ] `/privacidade` abre sem login.
+- [ ] `/termos` abre sem login.
+- [ ] login funciona.
+- [ ] `/mapa-familiar` abre.
+- [ ] `/mapa-familiar-horizontal` abre.
+- [ ] `/forum` abre.
+- [ ] `/calendario-familiar` abre.
+- [ ] `/admin` bloqueia usuário comum.
+- [ ] rotas antigas não voltam como views ativas.
+- [ ] console não mostra erro de chunk dinâmico.
+- [ ] janela anônima usa chunks atuais.
+- [ ] Safari/iOS não fica preso em HTML antigo.
+- [ ] `/api/*`, quando existir, não cai no fallback SPA.
+- [ ] Edge Functions necessárias estão publicadas.
+- [ ] Google OAuth funciona para test user quando em modo Testing.
+
+---
+
+## 22. Registro de evidência
+
+Para fechar QA visual ou funcional, registrar no PR, issue ou comentário interno:
+
+```txt
+Data:
+Commit:
+Ambiente:
+Navegador:
+Breakpoints testados:
+Rotas testadas:
+Resultado:
+Pendências abertas:
+Screenshots, se houver:
+```
+
+Se um teste manual não foi executado, registrar explicitamente como não executado. Não marcar pendência como fechada sem validação real.
+
+---
+
+## 23. Checklist final antes de fechar frente
+
+- [ ] `git diff --check` sem saída.
+- [ ] `npm run build` passou.
+- [ ] `npm test` passou ou foi justificado como não executado.
+- [ ] `npm run test:e2e` passou ou foi justificado como não executado.
+- [ ] QA manual aplicável foi executado.
+- [ ] documentação afetada foi atualizada.
+- [ ] pendências novas foram registradas em `PLANO_PROXIMOS_PASSOS.md`.
+- [ ] nenhuma rota antiga voltou como view ativa.
+- [ ] nenhuma mudança visual criou migration.
+- [ ] nenhuma secret foi exposta.

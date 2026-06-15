@@ -1,9 +1,10 @@
+
 # Exportação da árvore
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`  
-> Tipo: documentação funcional/técnica da exportação da árvore.  
-> Status: alinhado à baseline atual das views oficiais `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
+> Tipo: documentação funcional/técnica da exportação da árvore
+> Status: organizado para manter detalhes técnicos da exportação e delegar QA manual para `docs/QA_MANUAL.md`.
 
 ---
 
@@ -20,19 +21,23 @@ Contrato:
 
 ```txt
 Exportar a superfície capturável da view ativa ou da área selecionada,
-sem incluir painel, header, bottom nav, overlays, debug ou controles.
+sem incluir painel, header, bottom nav, overlays, loading, debug ou controles.
+```
+
+QA manual detalhado fica em:
+
+```txt
+docs/QA_MANUAL.md
 ```
 
 ---
 
 ## 2. Views cobertas
 
-Views oficiais:
-
-| View | Rota | Base técnica |
+| View | Rota | Componentes |
 |---|---|---|
-| Árvore Familiar | `/mapa-familiar` | HTML/CSS/SVG em `DesktopFamilyMapView`; mobile em `MobileFamilyTreeView` |
-| Mapa Genealógico | `/mapa-familiar-horizontal` | HTML/CSS/SVG em `DesktopFamilyHorizontalMapView`; mobile em `MobileFamilyHorizontalMapView` |
+| Árvore Familiar | `/mapa-familiar` | `DesktopFamilyMapView`, `MobileFamilyTreeView` |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView`, `MobileFamilyHorizontalMapView` |
 
 Rotas antigas fora do produto ativo:
 
@@ -42,11 +47,10 @@ Rotas antigas fora do produto ativo:
 /visao-completa
 ```
 
-Observação técnica:
+Observação:
 
-- `treeExport.ts` pode conter compatibilidades ou seletores herdados;
-- isso não significa que rotas antigas estejam ativas;
-- limpeza de exportação ligada a ReactFlow deve ocorrer junto da remoção planejada do renderer legado.
+- seletores ou compatibilidades herdadas em `treeExport.ts` não reativam rotas antigas;
+- limpeza de ReactFlow/exportação legada deve ocorrer apenas em frente própria.
 
 ---
 
@@ -63,15 +67,15 @@ src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/pages/home/HomeTreeSection.tsx
-src/styles/home-sidebar-unified.css
-src/styles/family-map-horizontal.css
 src/styles/family-map-qa.css
+src/styles/family-map-horizontal.css
 src/styles/family-map-mobile-palettes.css
-src/styles/tree-panel-palette-cards.css
+src/styles/home-sidebar-unified.css
 src/styles/mobile-tree-controls.css
+src/styles/tree-panel-palette-cards.css
 ```
 
-Arquivos a preservar até refatoração própria:
+Arquivos legados que não devem ser removidos sem frente específica:
 
 ```txt
 src/app/components/FamilyTree/FamilyTree.tsx
@@ -81,29 +85,29 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 
 ---
 
-## 4. Contrato dos botões
+## 4. Ações de exportação
 
-| Botão | Comportamento |
+| Ação | Comportamento |
 |---|---|
-| Área | abre seleção retangular da área visível |
-| Imagem | baixa PNG |
-| PDF | gera PDF proporcional |
-| Imprimir | abre fluxo de impressão |
+| Área | Abre seleção retangular sobre a área visível. |
+| Imagem | Gera PNG da view/área. |
+| PDF | Gera PDF proporcional com título. |
+| Imprimir | Abre fluxo de impressão com canvas titulado. |
 
 Regras:
 
-- o painel desktop/completo dispara a ação;
-- o modal mobile de controles não expõe Exportar;
-- a view ativa decide o alvo de captura;
+- disponíveis no painel desktop/completo;
+- não disponíveis no modal mobile de controles;
+- a view ativa resolve o alvo de captura;
 - cliques repetidos devem ser bloqueados durante exportação;
 - erros devem liberar loading;
-- a ausência da barra `Filtros | Legendas | Ações` não pode quebrar esses botões.
+- a ausência da antiga barra `Filtros | Legendas | Ações` não pode quebrar os botões.
 
 ---
 
-## 5. Modelo de refs
+## 5. Modelo de refs e alvos
 
-Nas views:
+Refs esperadas nas views:
 
 | Ref | Papel |
 |---|---|
@@ -113,11 +117,11 @@ Nas views:
 
 Regras:
 
-- Imagem/PDF/Imprimir usam o root exportável;
+- PNG/PDF/Imprimir usam root exportável;
 - Área usa alvo alinhado ao viewport visível;
-- `mapSurfaceRef` não deve ser capturado isoladamente quando houver offsets/escala;
+- `mapSurfaceRef` isolado pode gerar crop incorreto se houver offsets/escala;
 - mobile deve expor alvo coerente com a tela/geração ativa;
-- novos blocos estruturais, como segundo núcleo conjugal, devem entrar no cálculo de bounds/canvas quando renderizados.
+- novos blocos visuais renderizados devem entrar nos bounds/canvas.
 
 ---
 
@@ -131,28 +135,31 @@ Responsabilidades:
 - aplicar limite preventivo de pixels;
 - capturar DOM com `html2canvas`;
 - recortar canvas;
-- gerar PNG/PDF/print;
-- compor título no canvas;
+- baixar PNG;
+- gerar PDF;
+- abrir/imprimir;
+- adicionar título;
+- estabilizar UI antes da captura;
 - ignorar UI transitória;
-- sanitizar cores modernas incompatíveis;
+- sanitizar cores incompatíveis;
 - normalizar SVGs internos.
 
-Funções/conceitos:
+Conceitos/funções relevantes:
 
-| Item | Papel |
-|---|---|
-| `buildTreeExportFilename` | nome seguro com timestamp |
-| `resolveTreeExportTarget` | resolve root exportável |
-| `getElementCaptureMetrics` | calcula dimensões/escala |
-| `assertSafeElementCaptureSize` | bloqueia captura grande demais |
-| `captureElementToCanvas` | captura DOM |
-| `cropCanvas` | recorta canvas |
-| `downloadCanvasAsPng` | baixa PNG |
-| `exportCanvasAsPdf` | gera PDF |
-| `openTreePrintWindow` | abre janela de impressão |
-| `printCanvas` | imprime imagem |
-| `prependTitleToCanvas` | adiciona título |
-| `waitForExportUiSettle` | estabiliza feedback visual |
+```txt
+buildTreeExportFilename
+resolveTreeExportTarget
+getElementCaptureMetrics
+assertSafeElementCaptureSize
+captureElementToCanvas
+cropCanvas
+downloadCanvasAsPng
+exportCanvasAsPdf
+openTreePrintWindow
+printCanvas
+prependTitleToCanvas
+waitForExportUiSettle
+```
 
 ---
 
@@ -166,7 +173,7 @@ allowTaint: false
 removeContainer: true
 backgroundColor: definido pela view/opção
 scale: limitado
-windowWidth/windowHeight: adequados à captura
+windowWidth/windowHeight: adequados
 scrollX/scrollY: compensados
 ```
 
@@ -174,15 +181,44 @@ Regras:
 
 - não usar `allowTaint: true` sem revisão;
 - não depender de imagem externa sem CORS;
-- não capturar painel, overlay, loading, header ou bottom nav;
-- sanitizar cores incompatíveis;
-- testar em desktop e mobile;
-- preservar paleta ativa e gradientes dos cards;
-- validar que avatares, ícones e conectores não viram blocos escuros no clone.
+- preservar paleta ativa;
+- preservar gradientes dos cards;
+- preservar conectores SVG;
+- normalizar SVGs/ícones quando necessário;
+- evitar seletor global `svg path`;
+- testar pessoas com foto, sem foto e pets.
 
 ---
 
-## 8. Área selecionada
+## 8. Elementos ignorados
+
+Devem ser ignorados na captura:
+
+```txt
+[data-tree-export-ignore="true"]
+[data-tree-selection-overlay="true"]
+[data-tree-export-loading="true"]
+[data-tree-node-menu="true"]
+[data-tree-legend="true"]
+[data-tree-debug-viewer="true"]
+.react-flow__controls
+.react-flow__minimap
+```
+
+Exemplos de elementos ignoráveis:
+
+- painel desktop;
+- modal mobile;
+- header;
+- bottom nav;
+- overlays;
+- loading;
+- debug `Visualizar como...`;
+- menus de nó/card.
+
+---
+
+## 9. Seleção por área
 
 Componente:
 
@@ -194,29 +230,28 @@ Fluxo:
 
 ```txt
 Exportar > Área
--> overlay fixo
--> usuário arrasta seleção
--> toolbar aparece
+-> overlay de seleção
+-> arrasto do usuário
+-> toolbar da seleção
 -> PNG/PDF/Imprimir
--> captura visível
+-> captura da área visível
 -> crop
 -> título
--> exportação
--> fecha overlay
+-> fechamento
 ```
 
 Regras:
 
 - seleção mínima de `80 x 80px`;
 - impedir fechamento por `Esc` durante exportação;
-- respeitar limite preventivo de pixels;
-- não capturar interface transitória;
-- `Exportar > Área` deve operar como toggle;
-- recorte deve corresponder à área visível selecionada.
+- respeitar limite de pixels;
+- não capturar overlay/toolbar;
+- `Área` deve funcionar como toggle;
+- recorte deve corresponder à área visual selecionada.
 
 ---
 
-## 9. Loading de exportação
+## 10. Loading
 
 Elementos/conceitos:
 
@@ -233,13 +268,12 @@ Regras:
 - loading aparece antes do `html2canvas`;
 - loading não entra na captura;
 - erro fecha loading em `finally`;
-- impressão só resolve depois de disparar `window.print()`.
+- impressão só resolve depois de disparar `window.print()`;
+- cliques repetidos durante loading devem ser ignorados.
 
 ---
 
-## 10. Título no canvas
-
-Títulos vigentes:
+## 11. Títulos no canvas
 
 | Rota | Título |
 |---|---|
@@ -248,29 +282,31 @@ Títulos vigentes:
 
 Regras:
 
-- PNG recebe título no canvas;
-- PDF recebe canvas já titulado;
-- Impressão recebe canvas já titulado;
+- PNG recebe título;
+- PDF usa canvas titulado;
+- Impressão usa canvas titulado;
 - Área selecionada também recebe título;
-- evitar título duplicado no PDF;
+- evitar título duplicado;
 - não restaurar `Genealogia de...` nem `Mapa Familiar Horizontal de...` como título exportável principal.
 
 ---
 
-## 11. SVGs, avatares e ícones
+## 12. Avatares, ícones e SVGs
 
-Problema prevenido:
+Contrato:
 
-```txt
-SVGs internos dos cards podem ser capturados como quadrados escuros.
-```
+| Caso | Renderização |
+|---|---|
+| Pessoa com foto | `foto_principal_url` |
+| Pessoa sem foto | `User`, `lucide-react` |
+| Pet | `PawPrint`, `lucide-react` |
 
-Mitigações:
+Riscos prevenidos:
 
-- classes semânticas em `FamilyTreeVisualCards`;
-- normalização de SVGs no clone;
-- escopo separado para conectores;
-- evitar seletor global `svg path`.
+- SVG interno virar bloco escuro;
+- conector afetar ícone por seletor global;
+- avatar externo sem CORS falhar;
+- status/nascimento/falecimento perder contraste.
 
 Classes úteis:
 
@@ -283,34 +319,7 @@ family-map-birth-icon
 family-map-deceased-icon
 ```
 
-Contrato de avatar:
-
-```txt
-Pessoa com foto -> foto_principal_url
-Pessoa sem foto -> User, lucide-react
-Pet             -> PawPrint, lucide-react
-```
-
-Não há fallback visual por gênero como regra vigente.
-
----
-
-## 12. Elementos ignorados
-
-Devem ser ignorados:
-
-```txt
-[data-tree-export-ignore="true"]
-[data-tree-selection-overlay="true"]
-[data-tree-export-loading="true"]
-[data-tree-node-menu="true"]
-[data-tree-legend="true"]
-[data-tree-debug-viewer="true"]
-.react-flow__controls
-.react-flow__minimap
-```
-
-Mesmo que seletores ReactFlow permaneçam em utilitário, as views oficiais atuais são HTML/CSS/SVG.
+Não há fallback por gênero como regra vigente.
 
 ---
 
@@ -329,9 +338,8 @@ Regras:
 - respeitar paleta e filtros;
 - respeitar `hideGroupChrome`;
 - não capturar painel;
-- exportar com título `Árvore Familiar`;
-- incluir blocos descendentes adicionais quando renderizados;
-- calcular bounds considerando novos grupos, cônjuges adicionais, filhos e netos quando existirem.
+- incluir blocos adicionais renderizados;
+- calcular bounds considerando grupos, cônjuges, filhos, netos e pets quando existirem.
 
 ---
 
@@ -344,7 +352,7 @@ data-family-map-horizontal-root
 data-family-map-horizontal-mobile-root
 ```
 
-Compatibilidade histórica que pode aparecer em CSS/utilitário:
+Compatibilidade histórica que pode aparecer:
 
 ```txt
 data-mobile-family-horizontal-root
@@ -355,10 +363,16 @@ Regras:
 - capturar superfície horizontal completa ou geração/área ativa no mobile;
 - preservar conectores;
 - preservar compactação de colunas;
+- preservar paleta ativa;
 - respeitar `Destacar > Grupos`;
-- respeitar cônjuges da Geração 4/Pais quando renderizados;
-- exportar com título `Mapa Genealógico`;
-- preservar paleta ativa, inclusive correções mobile para evitar fallback azul indevido.
+- exportar com título `Mapa Genealógico`.
+
+Observação importante:
+
+```txt
+Cônjuges de pais/Geração 4 na horizontal não devem ser tratados
+como implementados até correção de TREE-003 no código.
+```
 
 ---
 
@@ -375,71 +389,44 @@ brown
 
 Regras:
 
-- exportação deve preservar card, texto, borda, group chrome, conectores e canvas;
-- Visual/Azul deve preservar gradientes teal/cyan/blue onde esse for o contrato da view;
-- white/orange/brown não podem cair em fallback azul;
-- bordas de grupos mobile devem seguir a paleta;
-- cards do painel não entram na captura, mas não devem contaminar variáveis da árvore;
-- CSS de calendário não deve afetar exportação da árvore.
-
-Arquivos de CSS relacionados:
-
-```txt
-src/styles/family-map-qa.css
-src/styles/family-map-horizontal.css
-src/styles/family-map-mobile-palettes.css
-src/styles/tree-panel-palette-cards.css
-```
+- exportação preserva card, texto, borda, grupos, conectores e canvas;
+- a paleta Visual/Azul preserva gradientes quando aplicável;
+- paletas não azuis não caem em fallback azul/teal;
+- CSS de exportação deve ser escopado;
+- clone de captura não deve aplicar seletor global que afete ícones internos.
 
 ---
 
-## 16. QA obrigatório
+## 16. Erros e limites
 
-Testar:
+Regras:
+
+- captura grande demais deve ser bloqueada com mensagem clara;
+- erro de imagem externa/CORS deve ser controlado;
+- erro de PDF deve liberar loading;
+- erro de impressão não deve deixar UI travada;
+- retry não deve duplicar downloads em andamento.
+
+---
+
+## 17. QA manual
+
+Procedimentos de QA ficam em:
 
 ```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-desktop
-mobile
-paletas
-filtros
-destaques
-Área
-Imagem
-PDF
-Imprimir
+docs/QA_MANUAL.md
 ```
 
-### Desktop
+Usar especialmente as seções:
 
-- [ ] `/mapa-familiar` exporta PNG;
-- [ ] `/mapa-familiar` exporta PDF;
-- [ ] `/mapa-familiar` imprime;
-- [ ] `/mapa-familiar` exporta área;
-- [ ] `/mapa-familiar-horizontal` exporta PNG;
-- [ ] `/mapa-familiar-horizontal` exporta PDF;
-- [ ] `/mapa-familiar-horizontal` imprime;
-- [ ] `/mapa-familiar-horizontal` exporta área.
+- QA de exportação;
+- QA de paletas;
+- QA de cards e avatares;
+- QA de cônjuges, núcleos e conectores;
+- QA operacional pós-deploy.
 
-### Mobile
+Pendências relacionadas continuam em:
 
-- [ ] `/mapa-familiar` não captura modal de controles;
-- [ ] `/mapa-familiar-horizontal` não captura bottom nav;
-- [ ] paletas mobile permanecem corretas se a exportação for acionada por fluxo completo;
-- [ ] geração ativa horizontal não corta cards/conectores visíveis.
-
-### Critérios gerais
-
-- [ ] painel não aparece no resultado;
-- [ ] título aparece uma vez;
-- [ ] título usa nomenclatura vigente;
-- [ ] SVGs aparecem corretamente;
-- [ ] PDF proporcional;
-- [ ] impressão abre janela;
-- [ ] área selecionada corresponde à seleção;
-- [ ] loading fecha em erro/sucesso;
-- [ ] conectores aparecem;
-- [ ] paleta ativa é respeitada;
-- [ ] filtros ativos são respeitados;
-- [ ] debug `Visualizar como...` não aparece.
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
+```

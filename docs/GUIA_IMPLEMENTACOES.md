@@ -1,99 +1,58 @@
-# Guia de implementações — Árvore Família
+﻿# Guia de implementações — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: guia canônico alinhado às duas views oficiais da árvore, painel simplificado, paletas desktop/mobile, calendário mobile e exportação.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: guia de implementação vigente
+> Status: revisado para registrar somente o que está implementado; pendências ficam separadas em seção própria e no `PLANO_PROXIMOS_PASSOS.md`.
 
 ---
 
 ## 1. Objetivo
 
-Este documento registra o que está implementado no projeto **Árvore Família** e quais comportamentos devem ser considerados vigentes.
+Este guia descreve as frentes implementadas no projeto e os arquivos principais que sustentam cada comportamento.
 
-Use este guia para:
+Não é objetivo deste documento:
 
-- entender o estado atual do produto;
-- evitar restauração acidental de rotas e padrões removidos;
-- localizar os arquivos responsáveis por cada frente;
-- orientar manutenção sem transformar histórico em regra ativa;
-- distinguir implementação vigente, legado técnico e backlog.
+- manter inventário exaustivo de todos os arquivos;
+- duplicar checklists de QA;
+- registrar histórico de decisões antigas;
+- tratar pendência como comportamento entregue.
+
+Para esses temas, use:
+
+```txt
+docs/INVENTARIO_TECNICO.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/DECISOES_ARQUITETURAIS.md
+docs/PLANO_PROXIMOS_PASSOS.md
+```
 
 ---
 
-## 2. Baseline funcional atual
+## 2. Estado implementado em síntese
 
-Rotas centrais:
-
-```txt
-/
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Comportamento:
-
-- `/` redireciona para `/mapa-familiar`, preservando `location.search`;
-- `/mapa-familiar` é a view principal/default;
-- `/mapa-familiar-horizontal` é a alternativa horizontal/genealógica;
-- `TreeViewMode` possui apenas:
-  - `mapa-familiar`;
-  - `mapa-familiar-horizontal`.
-
-Rotas removidas do produto ativo:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Exceção vigente:
-
-```txt
-/minha-arvore/editar
-```
-
-Essa rota é uma página de edição de membro e não deve ser confundida com a antiga view `/minha-arvore`.
+| Frente | Estado |
+|---|---|
+| Views oficiais da árvore | Implementadas em `/mapa-familiar` e `/mapa-familiar-horizontal`. |
+| Redirect raiz | Implementado para `/mapa-familiar`, preservando query string. |
+| Guards | Implementados por `TreeAccessRoute`, `MemberRoute` e `ProtectedRoute`. |
+| Shell da árvore | Implementado em `Home` e `HomeTreeSection`. |
+| Painel desktop | Implementado sem barra de abas antigas. |
+| Modal mobile de controles | Implementado com conjunto reduzido de ações. |
+| Exportação | Implementada nas duas views oficiais. |
+| Paletas | Implementadas com quatro chaves oficiais. |
+| Busca global | Implementada com páginas vigentes e aliases antigos apontando para rotas atuais. |
+| Favoritos | Implementados para páginas e entidades suportadas. |
+| Calendário familiar | Implementado com filtros/categorias e integração Google Agenda quando configurada. |
+| Perfil e área de membro | Implementados. |
+| Fórum | Implementado. |
+| Notificações | Implementadas. |
+| Admin | Implementado. |
 
 ---
 
-## 3. Estado consolidado do MVP
-
-| Frente | Estado atual | Observação de manutenção |
-|---|---|---|
-| Rotas da árvore | Implementadas | Apenas `/mapa-familiar` e `/mapa-familiar-horizontal` são views ativas. |
-| Redirect raiz | Implementado | `/` redireciona para `/mapa-familiar` preservando query string. |
-| Guards | Implementados | Árvore usa `TreeAccessRoute`; membro usa `MemberRoute`; admin usa `ProtectedRoute`. |
-| Shell da árvore | Implementado | `Home` é o shell das duas views oficiais. |
-| Mapa Familiar | Implementado | Desktop/tablet usa `DesktopFamilyMapView`; mobile usa `MobileFamilyTreeView`. |
-| Mapa Familiar Horizontal | Implementado | Desktop/tablet usa `DesktopFamilyHorizontalMapView`; mobile usa `MobileFamilyHorizontalMapView`. |
-| Horizontal mobile | Implementada | Uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno. |
-| Favoritos de páginas | Implementados | `FAVORITE_PAGES` inclui `/mapa-familiar` e `/mapa-familiar-horizontal`. |
-| Busca global | Implementada | `GLOBAL_SEARCH_PAGES` inclui as duas views oficiais e aliases antigos apontam para rotas atuais. |
-| Retorno de perfil | Implementado | `?voltar=` aceita `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`. |
-| Painel desktop/mobile | Implementado | Painel simplificado, sem barra `Filtros | Legendas | Ações`. |
-| Cards do painel | Implementados | Cards de grupos/filtros no desktop seguem o visual da paleta ativa. |
-| Exportação | Implementada | Área, Imagem, PDF e Imprimir nas views oficiais. |
-| Paletas | Implementadas | `white`, `visual`, `orange`, `brown`. |
-| Paletas mobile | Implementadas | Mobile replica desktop, com CSS escopado para corrigir divergências visuais. |
-| Bordas de grupos mobile | Implementadas | Containers de grupos usam variáveis de paleta, não borda fixa. |
-| Cards mobile de pessoas | Implementados | Sem fallback textual de nascimento/falecimento não informado. |
-| Cônjuges adicionais | Implementado estruturalmente | `/mapa-familiar` suporta segundo núcleo conjugal quando dados existem. |
-| Cônjuges da Geração 4 | Implementado/contrato vigente | `/mapa-familiar-horizontal` deve renderizar cônjuges de Pais/Geração 4 quando filtro está ativo. |
-| Destaques | Implementados | `Linhas`, `Cards`, `Grupos`. |
-| Perfil de pessoa | Implementado | Perfil autenticado, dados, arquivos, eventos e favoritos. |
-| Admin | Implementado | Pessoas, relacionamentos, importação, integridade, notificações e solicitações. |
-| Fórum | Implementado | Categorias, tópicos, respostas, reações, favoritos e notificações. |
-| Calendário | Implementado | Datas familiares e integração Google Calendar quando configurada. |
-| Calendário mobile | Implementado | 5 categorias em uma linha, bolinha colorida acima do título, título em uma linha. |
-| Notificações | Implementadas | Central, preferências, dispatch interno/e-mail conforme configuração. |
-| Testes | Implementados parcialmente | Vitest e Playwright validam baseline estrutural. |
-| Higiene de repo | Implementada | Artefatos locais de teste, backups e cópias de env ignorados. |
-
----
-
-## 4. Rotas, acesso e guards
+## 3. Rotas, guards e navegação
 
 Arquivos principais:
 
@@ -103,27 +62,52 @@ src/app/components/TreeAccessRoute.tsx
 src/app/components/MemberRoute.tsx
 src/app/components/ProtectedRoute.tsx
 src/app/components/FamilyTree/treeViewMode.ts
-src/app/contexts/AuthContext.tsx
-src/app/services/permissionService.ts
 ```
 
-Contrato atual:
+Rotas de árvore implementadas:
 
-| Rota | Guard | Status |
+| Rota | Guard | Comportamento |
 |---|---|---|
 | `/` | `TreeAccessRoute` | Redireciona para `/mapa-familiar`. |
-| `/mapa-familiar` | `TreeAccessRoute` | View oficial principal. |
-| `/mapa-familiar-horizontal` | `TreeAccessRoute` | View oficial horizontal. |
+| `/mapa-familiar` | `TreeAccessRoute` | View vertical principal. |
+| `/mapa-familiar-horizontal` | `TreeAccessRoute` | View horizontal/genealógica. |
 | `/busca` | `TreeAccessRoute` | Busca global autenticada. |
-| `/minha-arvore/editar` | `MemberRoute` | Edição do membro; preservar. |
-| `/pessoa/:id` | `MemberRoute` | Perfil de pessoa. |
-| `/pessoas/:id` | `MemberRoute` | Alias vigente. |
-| `/meus-dados`, `/meus-vinculos`, `/vincular-perfil` | `MemberRoute` | Área de membro. |
-| `/calendario-familiar` | `MemberRoute` | Calendário familiar. |
-| `/forum/*` | `MemberRoute` | Fórum. |
-| `/admin/*` | `ProtectedRoute` | Administração. |
 
-Não reintroduzir:
+Rotas de membro implementadas:
+
+```txt
+/minha-arvore/editar
+/meus-dados
+/meus-vinculos
+/vincular-perfil
+/pessoa/:id
+/pessoas/:id
+/calendario-familiar
+/meus-favoritos
+/notificacoes
+/ajustar-notificacoes
+/forum/*
+```
+
+Rotas admin implementadas:
+
+```txt
+/admin
+/admin/login
+/admin/dashboard
+/admin/home
+/admin/pessoas
+/admin/relacionamentos
+/admin/importacao
+/admin/migrar-dados
+/admin/diagnostico
+/admin/integridade
+/admin/atividades
+/admin/notificacoes
+/admin/solicitacoes-vinculos
+```
+
+Rotas removidas como views:
 
 ```txt
 /minha-arvore
@@ -131,13 +115,11 @@ Não reintroduzir:
 /visao-completa
 ```
 
-como views ativas.
-
 ---
 
-## 5. Shell da Home e renderização da árvore
+## 4. Shell da árvore
 
-Arquivos principais:
+Arquivos:
 
 ```txt
 src/app/pages/Home.tsx
@@ -147,48 +129,91 @@ src/app/pages/home/HomeMobileNav.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 ```
 
-Matriz vigente:
+Implementado:
 
-| Rota | Desktop/tablet | Mobile |
+- carregamento de pessoas e relacionamentos;
+- resolução de pessoa central;
+- controle de filtros e paletas;
+- alternância Vertical/Horizontal;
+- painel lateral desktop;
+- modal mobile de controles;
+- exportação por ações disparadas pelo painel;
+- favoritos da página atual;
+- preservação de `location.search`;
+- debug temporário `Visualizar como...`, quando presente.
+
+Dívida técnica:
+
+- `Home.tsx` concentra responsabilidades demais;
+- `SidebarPanelTabs.tsx` mantém nome histórico apesar de não representar mais abas persistentes.
+
+---
+
+## 5. Views oficiais da árvore
+
+Matriz implementada:
+
+| View | Desktop/tablet | Mobile |
 |---|---|---|
 | `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
 | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
 
-Regras:
+### `/mapa-familiar`
 
-- a troca Vertical/Horizontal deve preservar `location.search`;
-- `?pessoa=...` não pode ser perdido;
-- a horizontal mobile não usa barra `Paterno | Central | Materno`;
-- a horizontal mobile navega por gerações dentro de `MobileFamilyHorizontalMapView`;
-- as rotas antigas não devem ser usadas como fallback visual.
+Implementado:
+
+- canvas vertical principal;
+- grupos familiares;
+- filtros de relações diretas;
+- filtros por status/tipo;
+- conectores;
+- paletas;
+- pets;
+- cônjuge principal;
+- núcleos conjugais adicionais da pessoa central quando existem dados;
+- exportação;
+- zoom/restauração no desktop;
+- versão mobile segmentada.
+
+### `/mapa-familiar-horizontal`
+
+Implementado:
+
+- organização por gerações;
+- ocultação de colunas vazias;
+- cônjuges adjacentes conforme grupos suportados;
+- conectores casal/filhos;
+- exportação;
+- versão mobile com uma geração por tela;
+- botões `Ger X`, swipe lateral e scroll vertical.
+
+Pendência relevante:
+
+```txt
+Cônjuges de pais/Geração 4 ainda não devem ser tratados como implementados.
+Ver TREE-003 no docs/PLANO_PROXIMOS_PASSOS.md.
+```
 
 ---
 
 ## 6. Painel, filtros e controles
 
-Estado atual:
-
-- painel sem barra `Filtros | Legendas | Ações`;
-- filtros/grupos/status ficam visíveis diretamente;
-- controles superiores permanecem;
-- flyouts específicos concentram paletas, exportação e destaques;
-- modal mobile usa o mesmo conjunto de controles essenciais.
-
-Controles desktop vigentes:
+Implementado no desktop:
 
 ```txt
-Zoom +/-
+Zoom +
+Zoom -
 Restaurar visualização
 Vertical
 Horizontal
 Cores
 Exportar
 Destacar
-Filtros/grupos
+Filtros de grupos
 Filtros de status
 ```
 
-Controles mobile vigentes:
+Implementado no mobile:
 
 ```txt
 Vertical
@@ -199,33 +224,29 @@ Destacar
 Filtros de status
 ```
 
-No mobile, não exibir:
+Removido da UI vigente:
 
 ```txt
-Zoom
-Restaurar visualização
-Exportar
+Filtros | Legendas | Ações
 ```
 
-Arquivos envolvidos:
+Arquivos relacionados:
 
 ```txt
-src/app/pages/Home.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
-src/app/pages/home/HomeMobileNav.tsx
 src/app/pages/home/DirectRelationKpiGrid.tsx
 src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
 src/styles/home-sidebar-unified.css
-src/styles/tree-panel-palette-cards.css
 src/styles/mobile-tree-controls.css
+src/styles/tree-panel-palette-cards.css
 ```
 
 ---
 
 ## 7. Paletas, cards e CSS escopado
 
-Paletas oficiais:
+Paletas implementadas:
 
 ```txt
 white
@@ -234,244 +255,264 @@ orange
 brown
 ```
 
-Arquivos principais:
+Arquivos:
 
 ```txt
 src/app/components/FamilyTree/treeColorPalettes.ts
+src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/styles/family-map-qa.css
 src/styles/family-map-horizontal.css
 src/styles/family-map-mobile-palettes.css
 src/styles/tree-panel-palette-cards.css
-src/styles/calendar-mobile-category-buttons.css
 ```
 
-Contrato:
+Implementado:
 
-- desktop é referência visual;
-- mobile replica desktop;
-- cards, bordas, texto, conectores e canvas mudam juntos;
-- Visual/Azul usa gradiente teal/cyan/blue quando o componente base exige correção;
-- demais paletas não devem cair em fallback azul;
-- bordas dos grupos mobile usam `--family-map-group-border`;
-- fundos de grupos mobile usam `--family-map-group-bg`;
-- CSS novo deve ser escopado por root/data attribute.
+- paleta ativa aplicada a canvas, cards, bordas, texto e conectores;
+- correções mobile escopadas;
+- painel desktop com cards coerentes com a paleta;
+- avatares com foto real, `User` para pessoa sem foto e `PawPrint` para pet.
 
----
+Atenção:
 
-## 8. Regras de cônjuges implementadas
-
-### Sempre visíveis
-
-Não dependem do filtro:
-
-- cônjuge da pessoa central;
-- cônjuges de avós;
-- cônjuges de bisavós;
-- cônjuges de tataravós.
-
-### Filtráveis
-
-Dependem do filtro `Cônjuges`:
-
-- cônjuges de pais/Geração 4 na horizontal;
-- cônjuges de tios;
-- cônjuges de primos;
-- cônjuges de sobrinhos;
-- cônjuges de filhos;
-- cônjuges de netos.
-
-### Núcleos conjugais descendentes
-
-`/mapa-familiar` suporta estruturalmente:
-
-- primeiro cônjuge visível como núcleo principal;
-- cônjuges adicionais como “Outro relacionamento”;
-- filhos agrupados pelo outro pai/mãe quando a relação explícita existe;
-- filhos sem outro pai/mãe identificado permanecem no grupo principal.
+- CSS novo deve ser escopado por root, data attribute ou container;
+- não usar alteração global de tema para resolver problema local da árvore.
 
 ---
 
-## 9. Calendário familiar implementado
+## 8. Exportação
 
-Rota:
+Arquivos:
 
 ```txt
-/calendario-familiar
+src/app/components/FamilyTree/utils/treeExport.ts
+src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
+src/app/components/FamilyTree/DesktopFamilyMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 ```
+
+Implementado:
+
+- exportação por área;
+- exportação PNG;
+- exportação PDF;
+- impressão;
+- mensagens de loading;
+- proteção contra captura grande demais;
+- ignorar UI transitória com atributos de exportação.
+
+Não implementado no modal mobile:
+
+```txt
+Exportar
+```
+
+Essa ausência é intencional.
+
+---
+
+## 9. Calendário familiar
 
 Arquivos:
 
 ```txt
 src/app/pages/CalendarioFamiliar.tsx
 src/styles/calendar-mobile-category-buttons.css
-src/app/utils/familyDates.ts
-src/app/services/googleCalendarService.ts
 ```
 
-Contrato mobile atual:
+Implementado:
 
-- 5 categorias em uma única linha;
-- bolinha colorida acima do título;
+- categorias visuais;
+- filtros;
+- layout mobile com 5 botões em linha quando o espaço permite;
+- bolinha colorida acima do texto;
 - título em uma linha;
-- sem overflow horizontal;
-- card grande de categorias oculto no mobile quando duplicar os filtros superiores.
+- integração com Google Agenda quando ambiente/OAuth/secrets estão configurados.
 
-Categorias compactas:
-
-```txt
-Aniversário
-Casamento
-Falecimento
-Outros
-Reunião
-```
+Detalhes operacionais ficam em `docs/operacao/OAUTH_GOOGLE.md`.
 
 ---
 
-## 10. Exportação da árvore
+## 10. Perfil, pessoas e área do membro
 
-Implementada em:
-
-```txt
-src/app/components/FamilyTree/utils/treeExport.ts
-src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
-src/app/components/FamilyTree/TreeExportLoadingOverlay.tsx
-```
-
-Ações:
-
-- Área;
-- Imagem/PNG;
-- PDF;
-- Imprimir.
-
-Views suportadas:
+Arquivos principais:
 
 ```txt
-/mapa-familiar
-/mapa-familiar-horizontal
+src/app/pages/PersonProfile.tsx
+src/app/pages/MinhaArvore.tsx
+src/app/pages/MeusDados.tsx
+src/app/pages/MeusVinculos.tsx
+src/app/pages/VincularPerfil.tsx
+src/app/components/person/
+src/app/services/memberProfileService.ts
+src/app/services/dataService.ts
 ```
 
-Regras:
+Implementado:
 
-- painel e UI transitória não entram na captura;
-- exportação deve respeitar filtros, destaques, paletas, conectores e título;
-- captura excessiva deve ser bloqueada;
-- HTML/CSS/SVG das views oficiais tem prioridade sobre compatibilidade ReactFlow;
-- título exportável deve usar a nomenclatura vigente:
-  - `Árvore Familiar`;
-  - `Mapa Genealógico`.
+- perfil de pessoa por `/pessoa/:id` e `/pessoas/:id`;
+- retorno via `?voltar=` restrito a destinos seguros;
+- edição de dados do membro por `/minha-arvore/editar`;
+- dados pessoais, vínculos e solicitação de vínculo;
+- componentes de perfil, arquivos, eventos e dados relacionados.
 
 ---
 
-## 11. Busca e favoritos
+## 11. Fórum, favoritos e notificações
+
+### Fórum
 
 Arquivos:
 
 ```txt
-src/app/services/globalSearchService.ts
-src/app/constants/favoritePages.ts
-src/app/services/favoritesService.ts
+src/app/pages/forum/
+src/app/services/forumService.ts
 ```
 
-Regras:
+Implementado:
 
-- busca/favoritos usam rotas canônicas;
-- termos antigos podem servir como aliases;
-- aliases antigos não podem salvar `/minha-arvore`, `/genealogia` ou `/visao-completa` como destino ativo;
-- favorito de página não salva zoom/filtro/query como contrato obrigatório.
+- home do fórum;
+- criação, edição e visualização de tópicos;
+- respostas/comentários conforme service;
+- favoritos e notificações quando integrados.
+
+### Favoritos
+
+Arquivos:
+
+```txt
+src/app/components/favorites/
+src/app/services/favoritesService.ts
+src/app/constants/favoritePages.ts
+```
+
+Implementado:
+
+- favoritos de páginas oficiais;
+- favoritos de pessoas/conteúdos suportados;
+- atalhos para `/mapa-familiar` e `/mapa-familiar-horizontal`.
+
+### Notificações
+
+Arquivos:
+
+```txt
+src/app/pages/Notificacoes.tsx
+src/app/pages/AjustarNotificacoes.tsx
+src/app/services/userEngagementService.ts
+```
+
+Implementado:
+
+- central de notificações;
+- preferências;
+- suporte a dispatch interno/e-mail conforme configuração.
 
 ---
 
-## 12. Código removido ou desativado na frente
+## 12. Admin e operação
 
-Removido:
+Rotas/admin implementadas:
 
 ```txt
-src/app/pages/home/GenealogyMobileStageTabs.tsx
-src/app/pages/home/GenealogyFilterGrid.tsx
-src/app/pages/CentralNotificacoes.tsx
-src/app/components/FamilyTree/ViewModeToggle.tsx
-src/app/components/figma/ImageWithFallback.tsx
-src/app/services/relationshipResolverService.ts
+/admin/*
 ```
 
-Removido do versionamento:
+Áreas principais:
+
+- dashboard;
+- home/settings;
+- pessoas;
+- relacionamentos;
+- importação;
+- migração de dados;
+- diagnóstico;
+- integridade;
+- atividades;
+- notificações;
+- solicitações de vínculos.
+
+Operação relacionada:
 
 ```txt
-backups/
-.env.local.save
+supabase/migrations/
+supabase/functions/
+scripts/
+docs/operacao/
 ```
 
-Ignorado em `.gitignore`:
+Regra operacional:
 
 ```txt
-coverage/
-test-results/
-playwright-report/
-backups/
-.env*.save
+mudança visual ou documental não exige migration;
+mudança de schema exige migration;
+Edge Function/secrets/service role exigem documentação operacional.
 ```
 
 ---
 
 ## 13. Legado técnico preservado
 
-Preservar até projeto específico:
+Alguns arquivos com origem ReactFlow ou nomes históricos podem continuar no código por dependência técnica, tipos, compatibilidade ou helpers.
+
+Exemplos:
 
 ```txt
-src/app/components/FamilyTree/FamilyTree.tsx
-src/app/components/FamilyTree/PersonNode.tsx
-src/app/components/FamilyTree/MarriageNode.tsx
-src/app/components/FamilyTree/GenealogySpouseEdge.tsx
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
-src/styles/mobile-tree-lines.css
+FamilyTree.tsx
+PersonNode.tsx
+MarriageNode.tsx
+GenealogySpouseEdge.tsx
+OrthogonalChildEdge.tsx
+buildTreeGraph.ts
+layouts/directFamilyDistributedLayout.ts
+layouts/genealogyColumnsLayout.ts
 ```
 
-Motivo:
+Regra:
 
-- podem conter tipos, contratos ou helpers usados;
-- limpeza superficial pode quebrar exportação/layout;
-- ReactFlow/Dagre devem ser desativados em frente própria.
+```txt
+Não remover legado ativo em limpeza documental.
+Remoção de ReactFlow/legado exige frente própria, inventário de uso e testes.
+```
 
 ---
 
-## 14. Validação da baseline
+## 14. Pendências não implementadas
 
-Comandos obrigatórios antes de fechar mudança relevante:
+Pendências conhecidas que não devem ser descritas como implementadas:
+
+| ID | Pendência | Onde registrar |
+|---|---|---|
+| `TREE-003` | Verificar/corrigir cônjuges de pais/Geração 4 na horizontal. | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `TREE-004` | Remover dependência de limpeza DOM para esconder fallbacks de datas no mobile. | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `TREE-005` | Decidir destino do debug `Visualizar como...`. | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `ARCH-002` | Clarificar responsabilidades transversais de `src/main.tsx`. | `docs/PLANO_PROXIMOS_PASSOS.md` |
+| `MOB-*` | QA visual real de modal e horizontal mobile. | `docs/PLANO_PROXIMOS_PASSOS.md` |
+
+---
+
+## 15. Validação
+
+Após alteração funcional:
 
 ```bash
+git diff --check
 npm run build
 npm test
 npm run test:e2e
+```
+
+Após alteração somente documental:
+
+```bash
 git diff --check
-git status --short
+npm run build
 ```
 
-Resultado final esperado:
+Se a documentação alterar contratos de rotas, árvore, guards ou navegação, também rodar:
 
-- build passa;
-- testes unitários passam;
-- testes E2E passam;
-- `git status --short` sem saída;
-- `main` sincronizada com `origin/main`.
-
----
-
-## 15. Pendências não implementadas neste guia
-
-Registrar e acompanhar em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
+```bash
+npm test
+npm run test:e2e
 ```
-
-Principais categorias:
-
-- QA visual manual;
-- QA mobile iOS/Safari;
-- QA de exportação;
-- limpeza futura do stack ReactFlow legado;
-- eventual CI GitHub Actions;
-- fechamento formal de issues.

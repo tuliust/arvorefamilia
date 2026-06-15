@@ -1,54 +1,54 @@
-# Inventário técnico — Árvore Família
+﻿# Inventário técnico — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/INVENTARIO_TECNICO.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: inventário técnico atualizado após refatoração de rotas, painel, CSS, mobile, paletas, calendário mobile, cônjuges e debug temporário.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/INVENTARIO_TECNICO.md`
+> Projeto: `tuliust/arvorefamilia`
+> Tipo: inventário técnico
+> Status: revisado contra documentos enviados e código da `main`; marca legado ativo, dívidas e riscos sem transformar pendências em baseline.
 
 ---
 
 ## 1. Objetivo
 
-Este inventário registra os principais arquivos, contratos e dependências técnicas do projeto no estado atual da `main`.
+Este inventário lista arquivos, contratos e dependências técnicas relevantes.
 
-Use este documento para:
+Use para:
 
-- revisar impacto antes de refatorações;
-- identificar código vigente, legado ativo e candidatos a remoção;
+- estimar impacto de alterações;
+- planejar refatorações;
 - evitar remoções inseguras;
-- orientar novos prompts, commits e QA;
-- manter documentação e código sincronizados.
+- orientar QA e revisão;
+- manter documentação sincronizada.
 
 Classificações:
 
 | Categoria | Definição |
 |---|---|
 | Vigente | Usado pelo produto atual. |
-| Vigente com dívida | Necessário, mas concentrado, duplicado, mal nomeado ou difícil de manter. |
-| Legado ativo | Antigo, mas ainda usado por dependência, contrato, compatibilidade ou CSS. |
-| Histórico | Pode permanecer apenas em documentação histórica. |
-| Removido | Não existe mais no código versionado ou foi removido da frente atual. |
-| Candidato a refatoração | Usado, mas deve ser simplificado antes de futuras limpezas. |
-| Risco de regressão | Pode quebrar fluxo crítico se alterado sem teste. |
-| Temporário/debug | Útil para QA, mas não deve ser tratado como produto final. |
+| Vigente crítico | Usado em fluxo sensível; alteração exige teste/QA. |
+| Vigente com dívida | Usado, mas concentrado, mal nomeado ou difícil de manter. |
+| Legado ativo | Antigo, mas ainda importado/usado. |
+| Temporário/debug | Útil para QA, não produto final. |
+| Histórico/removido | Não deve orientar implementação ativa. |
+| Candidato a refatoração | Deve ser tratado em frente própria. |
 
 ---
 
 ## 2. Rotas
 
-### 2.1 Rotas da árvore
+### 2.1 Árvore
 
-| Rota | Componente/guard | Categoria | Ação |
+| Rota | Componente/guard | Categoria | Observação |
 |---|---|---|---|
-| `/` | `TreeAccessRoute` + redirect para `/mapa-familiar` | Vigente | Preservar query string. |
-| `/mapa-familiar` | `TreeHomeShell` → `Home` | Vigente | View principal/default. |
-| `/mapa-familiar-horizontal` | `TreeHomeShell` → `Home` | Vigente | View horizontal/genealógica. |
-| `/busca` | `TreeAccessRoute` → `BuscaResultados` | Vigente | Preservar. |
-| `/minha-arvore` | Sem rota ativa | Histórico/removida | Não restaurar. |
-| `/genealogia` | Sem rota ativa | Histórico/removida | Não restaurar. |
-| `/visao-completa` | Sem rota ativa | Histórico/removida | Não restaurar. |
+| `/` | `TreeAccessRoute` + redirect | Vigente crítico | Redireciona para `/mapa-familiar` preservando search. |
+| `/mapa-familiar` | `TreeHomeShell` → `Home` | Vigente crítico | View principal. |
+| `/mapa-familiar-horizontal` | `TreeHomeShell` → `Home` | Vigente crítico | View horizontal. |
+| `/busca` | `TreeAccessRoute` → `BuscaResultados` | Vigente | Busca global. |
+| `/minha-arvore` | Sem rota ativa | Histórico/removido | Não restaurar. |
+| `/genealogia` | Sem rota ativa | Histórico/removido | Não restaurar. |
+| `/visao-completa` | Sem rota ativa | Histórico/removido | Não restaurar. |
 
-### 2.2 Rotas de membro
+### 2.2 Membro
 
 | Rota | Componente | Guard | Categoria |
 |---|---|---|---|
@@ -62,31 +62,38 @@ Classificações:
 | `/meus-favoritos` | `MeusFavoritos` | `MemberRoute` | Vigente |
 | `/notificacoes` | `Notificacoes` | `MemberRoute` | Vigente |
 | `/ajustar-notificacoes` | `AjustarNotificacoes` | `MemberRoute` | Vigente |
-| `/forum/*` | Fórum | `MemberRoute` | Vigente |
+| `/forum/*` | páginas de fórum | `MemberRoute` | Vigente |
 
-### 2.3 Rotas públicas e admin
+### 2.3 Públicas e admin
 
 | Rota | Categoria |
 |---|---|
-| `/entrar` | Pública vigente |
-| `/termos` | Pública vigente |
-| `/privacidade` | Pública vigente |
+| `/entrar` | Pública |
+| `/termos` | Pública |
+| `/privacidade` | Pública |
 | `/admin/login` | Pública/admin |
 | `/admin/*` | Protegida por `ProtectedRoute` |
 
 ---
 
-## 3. Arquivos centrais de roteamento e navegação
+## 3. Roteamento e navegação
 
-| Arquivo | Função | Categoria | Observação |
-|---|---|---|---|
-| `src/app/routes.tsx` | Define rotas, guards, lazy loading e fallback de chunks | Vigente crítico | Não reintroduzir views antigas. |
-| `src/app/components/FamilyTree/treeViewMode.ts` | Contrato de views da árvore | Vigente crítico | Deve conter só dois modos. |
-| `src/app/constants/favoritePages.ts` | Catálogo de páginas favoritáveis | Vigente | Inclui as duas views oficiais; aliases antigos apenas como keywords. |
-| `src/app/services/globalSearchService.ts` | Busca global de páginas e pessoas | Vigente | Inclui as duas views oficiais; aliases antigos apontam para rotas atuais. |
-| `src/app/components/layout/UserProfileMenu.tsx` | Menu do usuário | Vigente | Deve apontar para rotas atuais. |
-| `src/app/components/layout/MemberPageHeader.tsx` | Header de páginas internas | Vigente | Deve usar `/mapa-familiar` como home da árvore. |
-| `src/app/pages/PersonProfile.tsx` | Perfil e retorno via `?voltar=` | Vigente crítico | Retornos seguros incluem horizontal. |
+| Arquivo | Função | Categoria |
+|---|---|---|
+| `src/app/routes.tsx` | rotas, lazy loading, guards e fallback | Vigente crítico |
+| `src/app/components/FamilyTree/treeViewMode.ts` | contrato das views oficiais | Vigente crítico |
+| `src/app/constants/favoritePages.ts` | páginas favoritáveis | Vigente |
+| `src/app/services/globalSearchService.ts` | busca global de páginas/pessoas | Vigente |
+| `src/app/components/layout/UserProfileMenu.tsx` | menu do usuário | Vigente |
+| `src/app/components/layout/MemberPageHeader.tsx` | header interno | Vigente |
+| `src/app/pages/PersonProfile.tsx` | perfil e retorno via `?voltar=` | Vigente crítico |
+
+Contrato de `TreeViewMode`:
+
+```txt
+mapa-familiar
+mapa-familiar-horizontal
+```
 
 ---
 
@@ -94,33 +101,22 @@ Classificações:
 
 | Arquivo | Função | Categoria |
 |---|---|---|
-| `src/app/pages/Home.tsx` | Orquestra carregamento da árvore, filtros, pessoa central, painel, modais, exportação e navegação | Vigente com dívida alta |
-| `src/app/pages/home/HomeTreeSection.tsx` | Decide renderização da view ativa por modo e breakpoint | Vigente crítico |
-| `src/app/pages/home/HomeHeader.tsx` | Header da Home pós-login | Vigente |
-| `src/app/pages/home/HomeMobileNav.tsx` | Bottom/mobile nav e acesso ao painel mobile | Vigente crítico no mobile |
-| `src/app/pages/home/SidebarPanelTabs.tsx` | Controles, alternância, paletas, exportação, destaque e filtros | Vigente com dívida de nome |
-| `src/app/pages/home/DirectRelationKpiGrid.tsx` | KPIs/filtros de relações diretas | Vigente |
-| `src/app/pages/home/DirectRelativeFilterGrid.tsx` | Filtros de grupos diretos | Vigente |
-| `src/app/pages/home/LifeStatusKpiGrid.tsx` | Filtros por status de vida/pets | Vigente |
+| `src/app/pages/Home.tsx` | orquestra dados, filtros, painel, modal, exportação e debug | Vigente com dívida alta |
+| `src/app/pages/home/HomeTreeSection.tsx` | decide view por modo/breakpoint | Vigente crítico |
+| `src/app/pages/home/HomeHeader.tsx` | header da Home | Vigente |
+| `src/app/pages/home/HomeMobileNav.tsx` | bottom nav e controles mobile | Vigente crítico |
+| `src/app/pages/home/SidebarPanelTabs.tsx` | painel/controles/flyouts/filtros | Vigente com dívida de nome |
+| `DirectRelationKpiGrid.tsx` | KPIs/contagens de relações diretas | Vigente |
+| `DirectRelativeFilterGrid.tsx` | filtros de grupos diretos | Vigente |
+| `LifeStatusKpiGrid.tsx` | filtros por status/tipo | Vigente |
 
-Dívida principal:
+Dívidas:
 
 ```txt
 Home.tsx concentra responsabilidades demais.
-SidebarPanelTabs.tsx mantém nome histórico, embora não use mais tabs.
+SidebarPanelTabs.tsx mantém nome histórico.
+legendOpen controla modal de controles, não aba de legenda.
 ```
-
-Refatorações futuras devem extrair estado e ações por domínio, não reescrever tudo em um único commit.
-
-### 4.1 Estados/contratos em `Home.tsx`
-
-| Estado/contrato | Categoria | Observação |
-|---|---|---|
-| `mobileGroupsOpen` | Vigente mobile | Controla grupos sob demanda no modal mobile. |
-| `legendOpen` | Vigente com nome histórico | Controla modal mobile de controles; não representa aba de legenda. |
-| `renderedDirectRelationCounts` | Vigente | Contagens efetivas vindas da view. |
-| `treeLayoutRevision` | Vigente | Força recalculo/re-render de layout quando necessário. |
-| `debugViewPersonId` | Temporário/debug | Usado para `Visualizar como...`, se implementado. |
 
 ---
 
@@ -128,63 +124,47 @@ Refatorações futuras devem extrair estado e ações por domínio, não reescre
 
 | Arquivo | Uso | Categoria | Risco |
 |---|---|---|---|
-| `DesktopFamilyMapView.tsx` | `/mapa-familiar` desktop/tablet | Vigente | Alto |
-| `MobileFamilyTreeView.tsx` | `/mapa-familiar` mobile | Vigente | Alto |
-| `DesktopFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` desktop/tablet | Vigente | Alto |
-| `MobileFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` mobile | Vigente | Alto |
-| `FamilyTreeVisualCards.tsx` | Cards compartilhados | Vigente | Alto |
-| `TreeAreaSelectionOverlay.tsx` | Exportação por área | Vigente | Alto |
-| `TreeExportLoadingOverlay.tsx` | Loading de exportação | Vigente | Médio |
+| `DesktopFamilyMapView.tsx` | `/mapa-familiar` desktop/tablet | Vigente crítico | Alto |
+| `MobileFamilyTreeView.tsx` | `/mapa-familiar` mobile | Vigente crítico | Alto |
+| `DesktopFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` desktop/tablet | Vigente crítico | Alto |
+| `MobileFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` mobile | Vigente crítico | Alto |
+| `FamilyTreeVisualCards.tsx` | cards e avatares compartilhados | Vigente crítico | Alto |
+| `TreeAreaSelectionOverlay.tsx` | seleção/exportação por área | Vigente crítico | Alto |
+| `TreeExportLoadingOverlay.tsx` | loading de exportação | Vigente | Médio |
 
-### 5.1 Contratos de títulos
+### Contratos técnicos relevantes
 
-| View | Título |
+| Contrato | Estado |
 |---|---|
-| `/mapa-familiar` | `Árvore Familiar de {primeiroNome}` |
-| `/mapa-familiar-horizontal` | `Mapa Genealógico de {primeiroNome}` |
-
-### 5.2 Contratos mobile
-
-| View mobile | Contrato |
-|---|---|
-| `MobileFamilyTreeView` | Paterno/Central/Materno; paleta herdada do desktop; conectores alinhados ao desktop; cards sem microcopy de data ausente. |
-| `MobileFamilyHorizontalMapView` | Uma geração por tela; botões `Ger X`; swipe; scroll vertical até cards/conectores; sem scroll horizontal manual; sem fallback azul fora da paleta visual. |
-
-### 5.3 Cônjuges e núcleos conjugais
-
-| Área | Contrato |
-|---|---|
-| Vertical desktop | Suporta cônjuge principal e núcleos conjugais adicionais da pessoa central. |
-| Vertical desktop | Filhos são agrupados pelo outro pai/mãe quando houver relacionamento explícito. |
-| Horizontal desktop | Cônjuges da Geração 4/Pais devem aparecer quando filtro `Cônjuges` está ativo. |
-| Horizontal mobile | Deve seguir a estrutura/recorte da horizontal desktop. |
+| Títulos `Árvore Familiar` e `Mapa Genealógico` | Implementados em `HomeTreeSection`. |
+| Horizontal mobile por geração | Implementado em `MobileFamilyHorizontalMapView`. |
+| Cônjuges filtráveis horizontais | Implementado para alguns grupos; `pais` é pendência `TREE-003`. |
+| Fallback de datas mobile | Resultado visual protegido por limpeza DOM; dívida `TREE-004`. |
+| Debug `Visualizar como...` | Temporário/decisão pendente `TREE-005`. |
 
 ---
 
-## 6. Paletas, cards e avatares
+## 6. Paletas, cards e CSS
 
 | Arquivo | Função | Categoria |
 |---|---|---|
-| `src/app/components/FamilyTree/treeColorPalettes.ts` | Define paletas `white`, `visual`, `orange`, `brown` | Vigente crítico |
-| `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` | Cards, avatares, ícones e status | Vigente crítico |
-| `src/styles/family-map-qa.css` | Estilo da vertical e tokens | Vigente |
-| `src/styles/family-map-horizontal.css` | Estilo da horizontal e tokens | Vigente |
-| `src/styles/family-map-mobile-palettes.css` | Paletas mobile da árvore vertical e horizontal | Vigente crítico |
-| `src/styles/tree-panel-palette-cards.css` | Cards do painel desktop com paleta/gradiente da árvore | Vigente |
-| `src/styles/home-sidebar-unified.css` | Painel, modal mobile e ajustes globais da Home | Vigente |
+| `src/app/components/FamilyTree/treeColorPalettes.ts` | tokens de paleta | Vigente crítico |
+| `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` | cards/avatares/status | Vigente crítico |
+| `src/styles/family-map-qa.css` | estilos da vertical e tokens | Vigente |
+| `src/styles/family-map-horizontal.css` | estilos da horizontal | Vigente |
+| `src/styles/family-map-mobile-palettes.css` | paletas mobile | Vigente crítico |
+| `src/styles/tree-panel-palette-cards.css` | cards do painel por paleta | Vigente |
+| `src/styles/home-sidebar-unified.css` | painel e ajustes da Home | Vigente |
+| `src/styles/mobile-tree-controls.css` | modal mobile de controles | Vigente |
+| `src/styles/calendar-mobile-category-buttons.css` | calendário mobile | Vigente crítico |
 
-Contrato de avatar:
-
-```txt
-foto real -> foto_principal_url
-pessoa sem foto -> User
-pet -> PawPrint
-```
-
-Contrato de paleta:
+Paletas:
 
 ```txt
-Desktop é referência. Mobile herda o contrato visual do desktop.
+white
+visual
+orange
+brown
 ```
 
 ---
@@ -193,19 +173,10 @@ Desktop é referência. Mobile herda o contrato visual do desktop.
 
 | Arquivo | Função | Categoria |
 |---|---|---|
-| `src/app/pages/CalendarioFamiliar.tsx` | Página do calendário familiar | Vigente |
-| `src/styles/calendar-mobile-category-buttons.css` | Layout mobile dos botões de categorias | Vigente crítico no mobile |
+| `src/app/pages/CalendarioFamiliar.tsx` | calendário familiar | Vigente |
+| `src/styles/calendar-mobile-category-buttons.css` | layout mobile dos botões | Vigente crítico |
 
-Contrato dos botões mobile:
-
-```txt
-5 botões em uma linha
-bolinha colorida acima do título
-título em uma linha
-sem overflow horizontal
-```
-
-Categorias:
+Categorias documentadas:
 
 ```txt
 Aniversário
@@ -217,130 +188,93 @@ Reunião
 
 ---
 
-## 8. Stack legado ativo da árvore
+## 8. Perfil, favoritos, fórum e notificações
 
-| Arquivo | Situação | Ação recomendada |
+| Área | Arquivos | Categoria |
 |---|---|---|
-| `FamilyTree.tsx` | Renderer legado não montado como view pública principal | Preservar até projeto de remoção ReactFlow. |
-| `PersonNode.tsx` | Nó ReactFlow legado | Remover apenas no lote ReactFlow. |
-| `MarriageNode.tsx` | Nó ReactFlow legado e tipos úteis | Separar tipos antes de remover. |
-| `GenealogySpouseEdge.tsx` | Edge ReactFlow legado | Remover junto do lote ReactFlow. |
-| `nodeTypes.ts` / `edgeTypes.ts` | Configuração ReactFlow | Investigar no lote ReactFlow. |
-| `buildTreeGraph.ts` | Grafo/layout auxiliar ainda usado | Preservar até análise específica. |
-| `layouts/directFamilyDistributedLayout.ts` | Helper usado pelas views oficiais | Preservar. |
-| `layouts/genealogyColumnsLayout.ts` | Dependência da horizontal | Preservar. |
-
-Contrato já extraído ou recomendado:
-
-```txt
-src/app/components/FamilyTree/actions.ts
-```
+| Perfil/pessoas | `PersonProfile.tsx`, `components/person/`, `MinhaArvore.tsx`, `MeusDados.tsx` | Vigente |
+| Favoritos | `components/favorites/`, `favoritesService.ts`, `favoritePages.ts` | Vigente |
+| Fórum | `pages/forum/`, `forumService.ts` | Vigente |
+| Notificações | `Notificacoes.tsx`, `AjustarNotificacoes.tsx`, `userEngagementService.ts` | Vigente |
+| Busca | `BuscaResultados.tsx`, `globalSearchService.ts` | Vigente |
 
 ---
 
-## 9. Serviços principais
+## 9. Services principais
 
 | Arquivo | Categoria | Observação |
 |---|---|---|
-| `dataService.ts` | Vigente crítico | CRUD de pessoas/relacionamentos, logs, eventos da árvore. |
-| `memberProfileService.ts` | Vigente crítico | Perfis, vínculos usuário-pessoa, primeiro acesso. |
-| `treeDataCache.ts` | Vigente | Cache/evento global da árvore. |
-| `relationshipCacheService.ts` | Vigente | Limpeza de cache de parentesco. |
-| `favoritesService.ts` | Vigente | Persistência de favoritos. |
-| `globalSearchService.ts` | Vigente | Busca global com rotas atuais. |
-| `userEngagementService.ts` | Vigente com legado | Notificações/preferências e compatibilidade local. |
-| `relationshipResolverService.ts` | Removido | Resolver legado/parcial removido. |
+| `dataService.ts` | Vigente crítico | Pessoas, relacionamentos e eventos. |
+| `memberProfileService.ts` | Vigente crítico | Vínculos e perfis de membro. |
+| `treeDataCache.ts` | Vigente | Cache/eventos da árvore. |
+| `relationshipCacheService.ts` | Vigente | Cache de parentesco. |
+| `favoritesService.ts` | Vigente | Favoritos. |
+| `globalSearchService.ts` | Vigente | Busca e aliases de páginas. |
+| `forumService.ts` | Vigente | Fórum. |
+| `userEngagementService.ts` | Vigente com compatibilidade | Notificações/preferências. |
+| `storageService.ts` | Vigente | Storage/arquivos quando usado. |
+| `personProfileSuggestionService.ts` | Vigente se integrado | Sugestões/edição assistida. |
 
 ---
 
-## 10. Componentes removidos na frente atual
+## 10. Legado ativo da árvore
 
-| Arquivo | Status |
-|---|---|
-| `src/app/pages/home/GenealogyMobileStageTabs.tsx` | Removido |
-| `src/app/pages/home/GenealogyFilterGrid.tsx` | Removido |
-| `src/app/pages/CentralNotificacoes.tsx` | Removido |
-| `src/app/components/FamilyTree/ViewModeToggle.tsx` | Removido |
-| `src/app/components/figma/ImageWithFallback.tsx` | Removido |
-| `src/app/services/relationshipResolverService.ts` | Removido |
+| Arquivo | Situação | Ação recomendada |
+|---|---|---|
+| `FamilyTree.tsx` | origem/contrato legado, ainda pode fornecer tipos/refs | preservar até frente ReactFlow |
+| `PersonNode.tsx` | nó ReactFlow legado | remover só com inventário de imports |
+| `MarriageNode.tsx` | nó/tipos legados | separar tipos antes de remover |
+| `GenealogySpouseEdge.tsx` | edge legado | remover em lote específico |
+| `OrthogonalChildEdge.tsx` | edge legado | remover em lote específico |
+| `nodeTypes.ts` / `edgeTypes.ts` | configuração ReactFlow | auditar antes de remover |
+| `buildTreeGraph.ts` | helper ainda usado por views horizontais | preservar |
+| `layouts/directFamilyDistributedLayout.ts` | helper das views oficiais | preservar |
+| `layouts/genealogyColumnsLayout.ts` | helper da horizontal | preservar |
 
 Regra:
 
 ```txt
-Não restaurar arquivo removido sem nova busca de uso, justificativa e validação.
+Legado ativo não é lixo. Remover apenas em frente própria.
 ```
 
 ---
 
-## 11. CSS
+## 11. Supabase, migrations e operação
 
-| Arquivo | Categoria | Observação |
-|---|---|---|
-| `home-sidebar-unified.css` | Vigente | Painel simplificado, modal mobile, filtros e grupos. |
-| `mobile-tree-controls.css` | Legado ativo | Renderer ReactFlow mobile; preservar até remoção do stack. |
-| `family-map-qa.css` | Vigente | Ajustes do mapa vertical, tokens e transparência da horizontal. |
-| `family-map-horizontal.css` | Vigente | Horizontal desktop/mobile, paletas e exportação. |
-| `family-map-mobile-palettes.css` | Vigente crítico | Corrige paletas mobile vertical/horizontal e bordas de grupos. |
-| `tree-panel-palette-cards.css` | Vigente | Faz painel desktop seguir gradiente/paleta da árvore. |
-| `calendar-mobile-category-buttons.css` | Vigente | Botões mobile de categorias do calendário. |
-| `family-tree-mobile.css` | Vigente/legado misto | Mobile vertical/horizontal e CSS ReactFlow legado. |
-| `mobile-tree-lines.css` | Legado ativo | Regras ReactFlow diretas; preservar. |
-| `tree-view-desktop-polish.css` | Vigente | Ajustes desktop transversais sem resíduos de view antiga. |
-| `mobile-edit-profile.css` | Vigente | Escopado a `/minha-arvore/editar`. |
+Áreas a verificar em alterações operacionais:
+
+```txt
+supabase/migrations/
+supabase/functions/
+scripts/
+docs/operacao/
+```
 
 Regras:
 
-- não remover CSS por nome antigo sem verificar escopo;
-- `minha-arvore` pode existir em CSS da rota `/minha-arvore/editar`;
-- `genealogia` pode existir como conceito visual, não rota;
-- CSS global de SVG deve ser evitado;
-- mobile de árvore não deve usar cores hardcoded como fonte da paleta;
-- arquivos importados por último podem estar vencendo conflitos de Tailwind ou inline style; revisar antes de reordenar imports.
-
----
-
-## 12. Data attributes críticos
-
-| Attribute | Uso |
+| Mudança | Exige migration? |
 |---|---|
-| `data-tree-route-view` | Escopo de rota/view. |
-| `data-family-map-horizontal-root` | Root da horizontal desktop. |
-| `data-family-map-horizontal-mobile-root` | Root da horizontal mobile. |
-| `data-mobile-family-tree-root` | Root da vertical mobile. |
-| `data-family-map-export-root="true"` | Root exportável. |
-| `data-tree-export-ignore="true"` | Elementos ignorados na exportação. |
-| `data-tree-selection-overlay="true"` | Overlay de seleção de área. |
-| `data-tree-export-loading="true"` | Overlay de loading. |
-| `data-tree-debug-viewer="true"` | Debug `Visualizar como...`. |
-| `data-family-map-color-key` | Chave visual de paleta dos cards. |
-| `data-family-map-mobile-card="true"` | Cards mobile da vertical. |
-| `data-family-map-avatar="true"` | Avatar/foto/ícone do card. |
-| `data-family-map-connectors="true"` | Conectores SVG/escopados. |
-| `data-tree-panel-card="true"` | Cards do painel desktop. |
-| `data-tree-panel-filter-key` | Filtros de status/tipo no painel. |
+| CSS/layout/documentação | Não |
+| Nova coluna/tabela/policy/índice | Sim |
+| Edge Function | Não como migration necessariamente, mas exige documentação de deploy/secrets |
+| Storage bucket/policy | Sim ou procedimento operacional documentado |
+| Secret/OAuth/service role | Não versionar valor; documentar nome e uso |
 
 ---
 
-## 13. Debug temporário
+## 12. Scripts, build e testes
 
-| Elemento | Local | Categoria | Ação |
-|---|---|---|---|
-| `Visualizar como...` | `Home.tsx` | Temporário/debug | Decidir se remove, protege por flag ou restringe a admin. |
-| `data-tree-debug-viewer="true"` | DOM do debug | Temporário/debug | Deve ser ignorado pela exportação. |
-| `debugViewPersonId` | Estado em memória | Temporário/debug | Não persistir dados reais. |
+Arquivos de configuração relevantes:
 
----
+```txt
+package.json
+vite.config.*
+playwright.config.*
+tsconfig*.json
+vercel.json
+```
 
-## 14. Testes
-
-| Arquivo | Categoria | Observação |
-|---|---|---|
-| `tests/e2e/app-smoke.spec.ts` | Vigente | Protege rotas oficiais e bloqueia retorno das antigas. |
-| `relationshipDegree.test.ts` | Vigente | Relacionamento/grau. |
-| `relationshipDegreeDisplay.test.ts` | Vigente | Exibição textual de parentesco. |
-| `mobileFamilyTreeModel.test.ts` | Vigente | Modelo mobile. |
-
-Comandos:
+Comandos conhecidos:
 
 ```bash
 npm run build
@@ -349,109 +283,78 @@ npm run test:e2e
 git diff --check
 ```
 
-QA manual obrigatório para:
+Testes esperados:
 
-```txt
-/mapa-familiar desktop
-/mapa-familiar mobile
-/mapa-familiar-horizontal desktop
-/mapa-familiar-horizontal mobile
-/calendario-familiar mobile
-paletas branca/azul/laranja/marrom
-modal mobile
-exportação
-debug Visualizar como...
-```
+| Tipo | Uso |
+|---|---|
+| Vitest | utils/modelos e lógica pura. |
+| Playwright | smoke de rotas, guards e rotas antigas removidas. |
+| QA manual | layout, paletas, exportação e mobile real. |
 
 ---
 
-## 15. Configuração e higiene
+## 13. Data attributes críticos
 
-| Arquivo | Categoria | Observação |
+| Atributo | Função |
+|---|---|
+| `data-tree-route-view` | identifica view horizontal no shell |
+| `data-export-root="family-tree"` | raiz de exportação |
+| `data-family-map-export-root="true"` | raiz/escopo de mapa familiar |
+| `data-tree-export-ignore="true"` | ignora UI na exportação |
+| `data-family-map-color-key` | paletas/cards |
+| `data-mobile-family-tree-root="true"` | escopo mobile vertical |
+| `data-family-map-mobile-card="true"` | cards mobile |
+| `data-tree-debug-viewer="true"` | debug temporário |
+
+---
+
+## 14. Documentação
+
+| Documento | Papel |
+|---|---|
+| `BASELINE_PRODUTO_ATUAL.md` | estado funcional vigente |
+| `GUIA_IMPLEMENTACOES.md` | frentes implementadas |
+| `GUIA_COMPONENTES.md` | responsabilidades de componentes |
+| `GUIA_UX_LAYOUT.md` | UX e layout |
+| `REGRAS_DE_NAO_REGRESSAO.md` | checklists e comandos |
+| `PLANO_PROXIMOS_PASSOS.md` | pendências, riscos e decisões |
+| `DECISOES_ARQUITETURAIS.md` | decisões estruturais |
+| `docs/funcionalidades/` | documentação funcional detalhada |
+| `docs/arquitetura/` | arquitetura, rotas e guards |
+| `docs/operacao/` | deploy, migrations, OAuth, storage e manutenção |
+
+---
+
+## 15. Riscos técnicos principais
+
+| Risco | Categoria | Mitigação |
 |---|---|---|
-| `.gitignore` | Vigente | Ignora envs, testes, backups e artefatos locais. |
-| `package.json` | Vigente | Scripts de build/test/e2e presentes. |
-| `vite.config.ts` | Vigente | Vite, React, Tailwind, chunks manuais e Vitest. |
-| `playwright.config.ts` | Vigente | Build + preview antes dos E2E. |
-| `tsconfig.json` | Inexistente | Não criar sem necessidade; o projeto builda sem ele. |
-
-Ignorados:
-
-```txt
-node_modules/
-dist/
-.vite/
-.env
-.env.local
-.env.*.local
-.env*.save
-coverage/
-test-results/
-playwright-report/
-backups/
-```
+| Reativar rotas antigas | alto | testes E2E e busca por rotas |
+| Tratar pendência como implementada | alto | manter `TREE-003`/`TREE-004` no plano |
+| Quebrar exportação | alto | QA em Área/PNG/PDF/Print |
+| Alterar CSS global demais | alto | escopo por root/data attribute |
+| Remover legado ativo | alto | inventário de imports e build |
+| Quebrar mobile horizontal | alto | QA em dispositivos/larguras reais |
+| Quebrar OAuth/Storage | médio/alto | docs operacionais e secrets fora do repo |
 
 ---
 
-## 16. Documentação
+## 16. Critério para refatoração segura
 
-Canônicos prioritários:
+Antes de refatorar:
 
-```txt
-docs/README.md
-docs/BASELINE_PRODUTO_ATUAL.md
-docs/INVENTARIO_TECNICO.md
-docs/GUIA_IMPLEMENTACOES.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-docs/GUIA_CORRECAO_ERROS.md
-docs/REGRAS_DE_NAO_REGRESSAO.md
-docs/PLANO_PROXIMOS_PASSOS.md
-docs/DECISOES_ARQUITETURAIS.md
+```bash
+rg "arquivoOuSímbolo" src docs
+npm run build
+npm test
+npm run test:e2e
 ```
 
-Funcionais que devem ficar sincronizados com este inventário:
+Além disso:
 
-```txt
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-docs/funcionalidades/CALENDARIO_FAMILIAR.md
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md
-```
-
-Regra:
-
-```txt
-Se o código mudar contrato visual ou funcional, atualizar docs no mesmo lote ou registrar pendência explícita no PLANO_PROXIMOS_PASSOS.
-```
-
----
-
-## 17. Riscos técnicos principais
-
-| Risco | Causa provável | Mitigação |
-|---|---|---|
-| Paleta mobile divergente | CSS importado antes de override ou seletor de root errado | Testar roots mobile e ordem de imports. |
-| Fallback azul indevido | Card sem `data-family-map-color-key` | Garantir fallback por paleta. |
-| Exportação capturando UI | Falta de `data-tree-export-ignore` | Revisar header, painel, bottom nav, modal e debug. |
-| Cônjuges ausentes | Grupo fora da lista de inclusão | Testar `pais`, tios, primos, sobrinhos, filhos e netos. |
-| Quebra de calendário mobile | Rótulos longos em 5 colunas | Validar 320px/375px/390px/430px. |
-| Remoção insegura de legado | Arquivo antigo ainda usado por helper/tipo | Buscar imports antes de remover. |
-| CSS global agressivo | Seletor `svg path` genérico | Escopar por data attribute. |
-
----
-
-## 18. Critério para refatoração segura
-
-Refatorar apenas quando:
-
-```txt
-[ ] Escopo de arquivo e rota estiver claro.
-[ ] Contrato visual estiver documentado.
-[ ] Não houver mudança de dados escondida.
-[ ] Build passar.
-[ ] Testes relevantes passarem.
-[ ] QA manual for possível ou pendência for registrada.
-[ ] Documentação for atualizada no mesmo lote.
-```
+- manter commits pequenos;
+- alterar documentação junto com código;
+- não fazer `git add .`;
+- não versionar secrets;
+- registrar pendências no `PLANO_PROXIMOS_PASSOS.md`;
+- validar visualmente se tocar árvore, CSS, painel, modal ou exportação.
