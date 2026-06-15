@@ -60,6 +60,7 @@ import {
   maskBirthDate,
   normalizeBirthDate,
   normalizeLocationByMode,
+  normalizeProfession,
   PersonFieldErrors,
   buildSocialProfilesFromPerson,
   createSocialProfile,
@@ -67,7 +68,6 @@ import {
   validateEditablePersonForm,
   validateLocationByMode,
 } from '../utils/personFields';
-import { getZodiacSignFromBirthDate } from '../utils/zodiac';
 
 const AVATAR_SIZE = 512;
 const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
@@ -155,6 +155,10 @@ type MeusDadosDraft = {
   form: EditableOwnPersonPayload;
   socialProfiles: SocialProfileForm[];
   archives: ArquivoHistorico[];
+  notificationPreferences?: PreferenciaNotificacao | null;
+  pendingAvatarDataUrl?: string | null;
+  avatarCropSourceDataUrl?: string | null;
+  photoMarkedForRemoval?: boolean;
 };
 
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
@@ -173,6 +177,7 @@ function readMeusDadosDraft(key: string): MeusDadosDraft | null {
     if (!draft.form || !Array.isArray(draft.socialProfiles)) return null;
 
     const form = {
+      ...buildEditablePersonFormState(),
       ...draft.form,
       complemento: draft.form.complemento ?? draft.complemento ?? '',
     };
@@ -181,6 +186,10 @@ function readMeusDadosDraft(key: string): MeusDadosDraft | null {
       form,
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
       archives: Array.isArray(draft.archives) ? draft.archives : [],
+      notificationPreferences: draft.notificationPreferences ?? null,
+      pendingAvatarDataUrl: draft.pendingAvatarDataUrl ?? null,
+      avatarCropSourceDataUrl: draft.avatarCropSourceDataUrl ?? null,
+      photoMarkedForRemoval: draft.photoMarkedForRemoval === true,
     };
   } catch {
     return null;
@@ -210,6 +219,57 @@ function readImage(src: string) {
     image.addEventListener('error', reject);
     image.src = src;
   });
+}
+
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => resolve(String(reader.result ?? '')));
+    reader.addEventListener('error', () => reject(reader.error ?? new Error('Não foi possível preparar a imagem.')));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function dataUrlToBlob(dataUrl: string) {
+  try {
+    const [metadata, encodedData] = dataUrl.split(',');
+    if (!metadata || !encodedData) return null;
+
+    const mimeType = metadata.match(/^data:([^;]+)/)?.[1] ?? 'image/jpeg';
+    const isBase64 = metadata.includes(';base64');
+    const binary = isBase64 ? window.atob(encodedData) : decodeURIComponent(encodedData);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return new Blob([bytes], { type: mimeType });
+  } catch {
+    return null;
+  }
+}
+
+async function createPersistableAvatarSource(file: File) {
+  const sourceDataUrl = await blobToDataUrl(file);
+  const image = await readImage(sourceDataUrl);
+  const maxDimension = 1600;
+
+  if (image.naturalWidth <= maxDimension && image.naturalHeight <= maxDimension) {
+    return sourceDataUrl;
+  }
+
+  const scale = maxDimension / Math.max(image.naturalWidth, image.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.naturalWidth * scale);
+  canvas.height = Math.round(image.naturalHeight * scale);
+  const context = canvas.getContext('2d');
+
+  if (!context) return sourceDataUrl;
+
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.9);
 }
 
 async function createCroppedAvatarBlob(imageSrc: string, cropPixels: Area) {
@@ -265,6 +325,8 @@ export function MeusDados() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   const [croppedPhotoBlob, setCroppedPhotoBlob] = useState<Blob | null>(null);
+  const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
+  const [avatarCropSourceDataUrl, setAvatarCropSourceDataUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -350,22 +412,33 @@ export function MeusDados() {
 
       const preferences = await obterPreferenciasNotificacao(user.id);
       if (!mounted) return;
-      setNotificationPreferences({
-        ...preferences,
-        ...Object.fromEntries(
-          Object.entries(DEFAULT_NOTIFICATION_PREFERENCES).map(([key, defaultValue]) => [
-            key,
-            (preferences as Record<string, unknown>)[key] === false ? false : defaultValue,
-          ]),
-        ),
-      } as PreferenciaNotificacao);
+      if (!shouldPreserveDraft) {
+        const nextPreferences = {
+          ...preferences,
+          ...Object.fromEntries(
+            Object.entries(DEFAULT_NOTIFICATION_PREFERENCES).map(([key, defaultValue]) => [
+              key,
+              (preferences as Record<string, unknown>)[key] === false ? false : defaultValue,
+            ]),
+          ),
+          ...draft?.notificationPreferences,
+          receber_avisos_gerais: true,
+        } as PreferenciaNotificacao;
+        setNotificationPreferences(nextPreferences);
+      }
 
       hasInitializedFormRef.current = true;
       initializedPessoaIdRef.current = nextPessoaId;
-      setPhotoPreviewUrl(null);
-      setCropImageUrl(null);
-      setCroppedPhotoBlob(null);
-      setPhotoMarkedForRemoval(false);
+      if (!shouldPreserveDraft) {
+        const restoredPendingAvatar = draft?.pendingAvatarDataUrl ?? null;
+        const restoredCropSource = draft?.avatarCropSourceDataUrl ?? null;
+        setPendingAvatarDataUrl(restoredPendingAvatar);
+        setAvatarCropSourceDataUrl(restoredCropSource);
+        setPhotoPreviewUrl(restoredPendingAvatar);
+        setCropImageUrl(restoredCropSource);
+        setCroppedPhotoBlob(restoredPendingAvatar ? dataUrlToBlob(restoredPendingAvatar) : null);
+        setPhotoMarkedForRemoval(draft?.photoMarkedForRemoval === true);
+      }
       setLoading(false);
     }
 
@@ -396,8 +469,22 @@ export function MeusDados() {
       form,
       socialProfiles,
       archives,
+      notificationPreferences,
+      pendingAvatarDataUrl,
+      avatarCropSourceDataUrl,
+      photoMarkedForRemoval,
     });
-  }, [archives, form, link?.pessoa?.id, socialProfiles, user?.id]);
+  }, [
+    archives,
+    avatarCropSourceDataUrl,
+    form,
+    link?.pessoa?.id,
+    notificationPreferences,
+    pendingAvatarDataUrl,
+    photoMarkedForRemoval,
+    socialProfiles,
+    user?.id,
+  ]);
 
   const pessoa = link?.pessoa;
   const canEditSelectedProfile = link?.can_edit !== false;
@@ -418,10 +505,6 @@ export function MeusDados() {
   }, [form.local_atual, form.local_atual_exterior, form.local_nascimento, form.local_nascimento_exterior]);
 
   const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
-  const zodiacSign = useMemo(
-    () => getZodiacSignFromBirthDate(form.data_nascimento),
-    [form.data_nascimento],
-  );
   const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
 
   const markFormDirty = () => {
@@ -442,7 +525,7 @@ export function MeusDados() {
   };
 
   const updateTextField = (field: keyof EditableOwnPersonPayload, value: string) => {
-    if (field === 'data_nascimento') {
+    if (field === 'data_nascimento' || field === 'data_falecimento') {
       updateField(field, maskBirthDate(value));
       return;
     }
@@ -472,6 +555,8 @@ export function MeusDados() {
   };
 
   const updateNotificationPreference = (key: NotificationPreferenceKey, checked: boolean) => {
+    if (key === 'receber_avisos_gerais') return;
+    markFormDirty();
     setNotificationPreferences((current) => ({
       id: current?.id ?? `local-${user?.id ?? 'user'}`,
       user_id: current?.user_id ?? user?.id ?? '',
@@ -485,17 +570,21 @@ export function MeusDados() {
     const value = String(form[field] ?? '');
 
     if (field === 'nome_completo') updateField(field, formatPersonName(value));
-    if (field === 'data_nascimento') updateField(field, normalizeBirthDate(value));
-    if (field === 'local_nascimento' || field === 'local_atual') {
-      const normalizedLocation = field === 'local_nascimento'
-        ? normalizeLocationByMode(value, { international: form.local_nascimento_exterior === true })
-        : normalizeLocationByMode(value, { international: form.local_atual_exterior === true });
+    if (field === 'data_nascimento' || field === 'data_falecimento') {
+      updateField(field, normalizeBirthDate(value));
+    }
+    if (field === 'profissao') updateField(field, normalizeProfession(value));
+    if (field === 'local_nascimento' || field === 'local_atual' || field === 'local_falecimento') {
+      const international = field === 'local_nascimento'
+        ? form.local_nascimento_exterior === true
+        : field === 'local_falecimento'
+          ? form.local_falecimento_exterior === true
+          : form.local_atual_exterior === true;
+      const normalizedLocation = normalizeLocationByMode(value, { international });
       updateField(field, normalizedLocation);
       setErrors((current) => ({
         ...current,
-        [field]: field === 'local_nascimento'
-          ? validateLocationByMode(normalizedLocation, { international: form.local_nascimento_exterior === true })
-          : validateLocationByMode(normalizedLocation, { international: form.local_atual_exterior === true }),
+        [field]: validateLocationByMode(normalizedLocation, { international }),
       }));
     }
   };
@@ -507,6 +596,10 @@ export function MeusDados() {
     const normalizedBirthLocation = normalizeLocationByMode(String(form.local_nascimento ?? ''), {
       international: form.local_nascimento_exterior === true,
     });
+    const normalizedDeathDate = normalizeBirthDate(String(form.data_falecimento ?? ''));
+    const normalizedDeathLocation = normalizeLocationByMode(String(form.local_falecimento ?? ''), {
+      international: form.local_falecimento_exterior === true,
+    });
     const normalizedCurrentLocation = normalizeLocationByMode(String(form.local_atual ?? ''), {
       international: form.local_atual_exterior === true,
     });
@@ -517,22 +610,32 @@ export function MeusDados() {
       nome_completo: normalizedName,
       data_nascimento: normalizedBirthDate,
       local_nascimento: normalizedBirthLocation,
+      data_falecimento: normalizedDeathDate,
+      local_falecimento: normalizedDeathLocation,
       local_atual: normalizedCurrentLocation,
+      profissao: normalizeProfession(String(current.profissao ?? '')),
       telefone: formatPhone(String(current.telefone ?? '')),
     }));
 
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handlePhotoFile = (file?: File | null) => {
+  const handlePhotoFile = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       toast.error('Selecione um arquivo de imagem.');
       return;
     }
 
-    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
-    setCropImageUrl(URL.createObjectURL(file));
+    try {
+      const sourceDataUrl = await createPersistableAvatarSource(file);
+      markFormDirty();
+      setAvatarCropSourceDataUrl(sourceDataUrl);
+      setCropImageUrl(sourceDataUrl);
+    } catch {
+      toast.error('Não foi possível preparar a imagem selecionada.');
+      return;
+    }
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
@@ -540,11 +643,14 @@ export function MeusDados() {
   };
 
   const handleRemovePhoto = () => {
+    markFormDirty();
     if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
     if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
     setPhotoPreviewUrl(null);
     setCropImageUrl(null);
     setCroppedPhotoBlob(null);
+    setPendingAvatarDataUrl(null);
+    setAvatarCropSourceDataUrl(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
@@ -560,11 +666,14 @@ export function MeusDados() {
 
     try {
       const blob = await createCroppedAvatarBlob(cropImageUrl, croppedAreaPixels);
-      const previewUrl = URL.createObjectURL(blob);
+      const previewUrl = await blobToDataUrl(blob);
 
-      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      markFormDirty();
       setPhotoPreviewUrl(previewUrl);
       setCroppedPhotoBlob(blob);
+      setPendingAvatarDataUrl(previewUrl);
+      setAvatarCropSourceDataUrl(null);
+      setCropImageUrl(null);
       setPhotoMarkedForRemoval(false);
       setPhotoDialogOpen(false);
       toast.success('Corte aplicado ao avatar.');
@@ -676,7 +785,10 @@ export function MeusDados() {
 
     if (notificationPreferences) {
       try {
-        const savedPreferences = await salvarPreferenciasNotificacao(user.id, notificationPreferences);
+        const savedPreferences = await salvarPreferenciasNotificacao(user.id, {
+          ...notificationPreferences,
+          receber_avisos_gerais: true,
+        });
         setNotificationPreferences(savedPreferences);
         if (savedPreferences.id.startsWith('local-')) {
           toast.warning('Dados pessoais salvos, mas as preferências de notificação ficaram apenas locais.');
@@ -695,6 +807,9 @@ export function MeusDados() {
     if (user?.id && pessoa.id) {
       removeMeusDadosDraft(getDraftKey(user.id, pessoa.id));
     }
+    setPendingAvatarDataUrl(null);
+    setAvatarCropSourceDataUrl(null);
+    setCroppedPhotoBlob(null);
     isDirtyRef.current = false;
     toast.success('Dados pessoais salvos.');
     navigate('/meus-vinculos', { replace: true });
@@ -791,17 +906,6 @@ export function MeusDados() {
                 placeholder="DD/MM/AAAA ou AAAA"
                 aria-invalid={Boolean(errors.data_nascimento)}
               />
-              {shouldSuggestFullBirthDate && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p className="break-words">
-                    Se souber, adicione também o dia e o mês de nascimento.
-                  </p>
-                </div>
-              )}
-            </Field>
-            <Field label="Signo">
-              <Input value={zodiacSign || 'Não identificado'} readOnly className="bg-gray-50 text-gray-700" />
             </Field>
             <Field label="Local de nascimento" error={errors.local_nascimento}>
               <Input
@@ -820,24 +924,43 @@ export function MeusDados() {
                 onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
               />
             </Field>
+            {shouldSuggestFullBirthDate && (
+              <div className="min-w-0 self-start">
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="break-words">
+                    Se souber, adicione também o dia e o mês de nascimento.
+                  </p>
+                </div>
+              </div>
+            )}
             <Field label="Cidade de Residência" error={errors.local_atual}>
               <Input
                 value={String(form.local_atual ?? '')}
                 onBlur={() => normalizeFieldOnBlur('local_atual')}
                 onChange={(e) => updateTextField('local_atual', e.target.value)}
-                placeholder="Cidade/UF"
+                placeholder={form.local_atual_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
                 aria-invalid={Boolean(errors.local_atual)}
               />
-              <p className="break-words text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
+              <p className="break-words text-xs text-gray-500">
+                {form.local_atual_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
+              </p>
+              <ToggleField
+                label="Moro no exterior"
+                checked={form.local_atual_exterior === true}
+                onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+              />
             </Field>
             
             <Field label="Profissão">
               <Input
                 value={String(form.profissao ?? '')}
+                onBlur={() => normalizeFieldOnBlur('profissao')}
                 onChange={(e) => updateTextField('profissao', e.target.value)}
                 placeholder="Ex: jornalista, professora, médico, empresário..."
               />
-            </Field><div className="md:col-span-2">
+            </Field>
+            <div className="md:col-span-2">
               <ToggleField
                 label="Pessoa falecida"
                 description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."
@@ -845,6 +968,36 @@ export function MeusDados() {
                 onCheckedChange={(checked) => updateField('falecido', checked)}
               />
             </div>
+            {form.falecido === true && (
+              <>
+                <Field label="Data de falecimento" error={errors.data_falecimento}>
+                  <Input
+                    value={String(form.data_falecimento ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('data_falecimento')}
+                    onChange={(event) => updateTextField('data_falecimento', event.target.value)}
+                    placeholder="DD/MM/AAAA ou AAAA"
+                    aria-invalid={Boolean(errors.data_falecimento)}
+                  />
+                </Field>
+                <Field label="Local de falecimento" error={errors.local_falecimento}>
+                  <Input
+                    value={String(form.local_falecimento ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                    onChange={(event) => updateTextField('local_falecimento', event.target.value)}
+                    placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                    aria-invalid={Boolean(errors.local_falecimento)}
+                  />
+                  <p className="break-words text-xs text-gray-500">
+                    {form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
+                  </p>
+                  <ToggleField
+                    label="Falecimento fora do Brasil"
+                    checked={form.local_falecimento_exterior === true}
+                    onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                  />
+                </Field>
+              </>
+            )}
             <Field label="Telefone">
               <Input
                 value={String(form.telefone ?? '')}
@@ -854,7 +1007,6 @@ export function MeusDados() {
             </Field>
             <Field label="Endereço">
               <AddressAutocompleteInput
-                name="google-places-address-input"
                 value={String(form.endereco ?? '')}
                 onChange={(nextValue) => updateTextField('endereco', nextValue)}
                 placeholder="Rua, número, bairro, cidade, CEP"
@@ -946,6 +1098,7 @@ export function MeusDados() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoa.id}
+                variant="interactive"
               />
             </div>
           )}
@@ -961,8 +1114,9 @@ export function MeusDados() {
                   key={option.key}
                   label={option.label}
                   description={option.description}
-                  checked={notificationPreferences?.[option.key] !== false}
+                  checked={option.key === 'receber_avisos_gerais' || notificationPreferences?.[option.key] !== false}
                   onCheckedChange={(checked) => updateNotificationPreference(option.key, checked)}
+                  disabled={option.key === 'receber_avisos_gerais'}
                 />
               ))}
             </div>
@@ -1134,11 +1288,13 @@ function ToggleField({
   description,
   checked,
   onCheckedChange,
+  disabled = false,
 }: {
   label: string;
   description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
@@ -1146,7 +1302,7 @@ function ToggleField({
         <Label>{label}</Label>
         {description && <p className="break-words text-xs leading-snug text-gray-500">{description}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} className="shrink-0" />
     </div>
   );
 }
