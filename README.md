@@ -44,6 +44,7 @@ Histórico preventivo:
 
 ```txt
 docs/historico/ROTAS_REMOVIDAS.md
+docs/historico/SQLS_LEGADOS.md
 ```
 
 ---
@@ -84,7 +85,7 @@ docs/
   arquitetura/       rotas, guards, usuários e modelo de dados
   funcionalidades/   documentação por funcionalidade
   operacao/          migrations, deploy, OAuth, Storage e manutenção
-  historico/         registros históricos e rotas removidas
+  historico/         registros históricos, rotas removidas e SQLs legados
 
 supabase/
   migrations/        fonte da verdade do schema
@@ -96,7 +97,8 @@ Regra de organização:
 - o root deve conter apenas arquivos essenciais do projeto;
 - documentação técnica detalhada deve ficar em `docs/`;
 - diagnósticos, relatórios antigos e SQLs soltos devem ficar em `docs/historico/` ou fora do repositório quando forem dumps sensíveis;
-- `supabase/migrations` é a fonte da verdade do banco.
+- `supabase/migrations` é a fonte da verdade do banco;
+- SQL solto não substitui migration oficial.
 
 ---
 
@@ -252,7 +254,13 @@ supabase/migrations
 
 como fonte da verdade do schema.
 
-Não use SQLs soltos como schema principal em ambientes novos. Arquivos como `database-schema.sql`, `supabase_schema.sql`, `supabase_data.sql`, `diagnostico-*.sql`, `verificar-irmaos.sql` ou similares devem ser tratados como histórico, diagnóstico ou backup local, não como fonte oficial.
+Não use SQLs soltos como schema principal em ambientes novos. Arquivos como `database-schema.sql`, `supabase_schema.sql`, `supabase_data.sql`, `diagnostico-*.sql`, `verificar-irmaos.sql`, `supabase/forum-schema.sql`, `supabase/google-calendar-schema.sql` ou similares devem ser tratados como histórico, diagnóstico ou backup local, não como fonte oficial.
+
+Referência preventiva:
+
+```txt
+docs/historico/SQLS_LEGADOS.md
+```
 
 Antes de aplicar migrations em staging/produção:
 
@@ -395,6 +403,7 @@ Documentos principais:
 - `docs/operacao/DEPLOYMENT.md`: deploy, variáveis e operação;
 - `docs/funcionalidades/`: documentação específica por funcionalidade;
 - `docs/historico/ROTAS_REMOVIDAS.md`: histórico preventivo de rotas removidas;
+- `docs/historico/SQLS_LEGADOS.md`: histórico preventivo de SQLs soltos, dumps e documentos antigos de banco;
 - `docs/historico/`: diagnósticos, QA e registros históricos;
 - `docs/ATTRIBUTIONS.md`: atribuições e licenças de componentes/assets, se mantido dentro de `docs/`.
 
@@ -473,9 +482,17 @@ Para auditoria de rotas antigas:
 rg "/minha-arvore|/genealogia|/visao-completa" README.md docs src tests
 ```
 
+Para auditoria de SQLs soltos:
+
+```bash
+rg "database-schema\.sql|supabase_schema\.sql|supabase_data\.sql|forum-schema\.sql|google-calendar-schema\.sql" README.md docs supabase scripts src
+```
+
 Interpretação:
 
 - `/minha-arvore/editar` é permitido;
 - `docs/historico/ROTAS_REMOVIDAS.md` é a referência preventiva;
+- `docs/historico/SQLS_LEGADOS.md` é a referência preventiva para SQLs soltos;
 - `docs/historico/` pode conter ocorrências legadas;
-- documentos canônicos não devem tratar as rotas removidas como views ativas.
+- documentos canônicos não devem tratar as rotas removidas como views ativas;
+- documentos operacionais devem tratar `supabase/migrations/` como fonte da verdade do schema.
