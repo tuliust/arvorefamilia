@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
 > Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.
-> Status: revisado para separar migrations oficiais, SQLs soltos e stubs preventivos.
+> Status: revisado para separar migrations oficiais, SQLs soltos, stubs preventivos, diagnósticos e operações pontuais.
 
 ---
 
@@ -19,7 +19,8 @@ Use antes de:
 - investigar schema local/remoto;
 - alterar RLS, RPC, trigger, constraint ou função SQL;
 - decidir se SQL solto deve virar migration;
-- corrigir divergência de schema cache.
+- corrigir divergência de schema cache;
+- revisar script SQL fora de `supabase/migrations/`.
 
 Não use este documento para ajustes puramente visuais.
 
@@ -39,14 +40,17 @@ Não aplicar como schema principal:
 database-schema.sql
 supabase/forum-schema.sql
 supabase/google-calendar-schema.sql
+src/imports/pasted_text/*.txt com SQL antigo
+scripts/cleanup-test-user-*.sql
 diagnostico-*.sql
+verificar-*.sql
 scripts SQL antigos fora de supabase/migrations/
 ```
 
 Observação:
 
 ```txt
-supabase/forum-schema.sql e supabase/google-calendar-schema.sql foram neutralizados como stubs preventivos.
+supabase/forum-schema.sql, supabase/google-calendar-schema.sql, arquivos SQL-like em src/imports/pasted_text/ e scripts de limpeza antigos foram neutralizados ou devem permanecer como stubs preventivos.
 Eles não devem conter comandos operacionais nem ser usados para provisionar banco.
 ```
 
@@ -104,13 +108,14 @@ Perguntas obrigatórias:
 
 | Pergunta | Motivo |
 |---|---|
-| A mudança exige banco? | evita migration desnecessária |
-| O objeto já existe? | evita duplicidade |
-| O ambiente remoto está correto? | evita aplicar no projeto errado |
-| Há risco de perda de dados? | exige backup |
-| O frontend depende da mudança? | define ordem banco -> frontend |
-| RLS precisa mudar? | evita exposição indevida |
-| Há Edge Function envolvida? | exige secrets e deploy server-side |
+| A mudança exige banco? | Evita migration desnecessária. |
+| O objeto já existe? | Evita duplicidade. |
+| O ambiente remoto está correto? | Evita aplicar no projeto errado. |
+| Há risco de perda de dados? | Exige backup. |
+| O frontend depende da mudança? | Define ordem banco -> frontend. |
+| RLS precisa mudar? | Evita exposição indevida. |
+| Há Edge Function envolvida? | Exige secrets e deploy server-side. |
+| Existe SQL solto equivalente? | Exige comparação com migrations e neutralização se for legado. |
 
 ---
 
@@ -210,7 +215,41 @@ Não usar para:
 
 ---
 
-## 9. Schema cache/PostgREST
+## 9. SQLs fora de `supabase/migrations/`
+
+Arquivos fora de `supabase/migrations/` devem ser tratados como exceção.
+
+Classificação permitida:
+
+| Tipo | Pode ficar versionado? | Condição |
+|---|---:|---|
+| Stub preventivo | Sim | Sem comandos operacionais e com referência à fonte oficial. |
+| Diagnóstico de leitura | Avaliar | Sem dados reais no arquivo; escopo e ambiente claros. |
+| Operação destrutiva | Evitar | Preferir arquivo local não versionado; exige dry-run, backup e autorização. |
+| Dump de schema | Não recomendado | Só histórico controlado; não usar como migration. |
+| Dump de dados | Não | Não versionar. |
+| Schema operacional | Não | Deve virar migration oficial. |
+
+Arquivos neutralizados ou monitorados:
+
+```txt
+supabase/forum-schema.sql
+supabase/google-calendar-schema.sql
+src/imports/pasted_text/genealogy-schema.txt
+src/imports/pasted_text/sibling-check.txt
+src/imports/pasted_text/irmaos-relacionamento.txt
+scripts/cleanup-test-user-9feabe7c.sql
+```
+
+Regra:
+
+```txt
+Se o arquivo orienta executar SQL no Supabase SQL Editor, cria/altera schema, contém comandos destrutivos, contém resultados reais ou contém identificadores reais, ele deve ser neutralizado, removido do versionamento ou refeito como migration/rotina operacional aprovada.
+```
+
+---
+
+## 10. Schema cache/PostgREST
 
 Sintomas:
 
@@ -231,3 +270,41 @@ Fluxo:
 6. não remover payload correto para contornar ambiente atrasado.
 
 Exemplos de objetos sensíveis:
+
+```txt
+RPCs usadas pelo frontend
+policies RLS
+grants de funções
+triggers de auditoria
+views usadas por services
+colunas novas consumidas pelo frontend
+```
+
+---
+
+## 11. Operações destrutivas
+
+Operações destrutivas não devem ser tratadas como migration normal quando forem limpeza pontual de dados.
+
+Regras mínimas:
+
+- nunca commitar service role key;
+- nunca commitar dump de dados reais;
+- nunca commitar script com UUID, e-mail ou identificador real sem justificativa explícita;
+- preferir script local não versionado;
+- usar dry-run antes de qualquer alteração;
+- fazer backup quando houver dados compartilhados ou produção;
+- confirmar projeto Supabase antes de executar;
+- registrar decisão operacional quando a limpeza impactar dados reais.
+
+---
+
+## 12. Documentos relacionados
+
+```txt
+docs/historico/SQLS_LEGADOS.md
+docs/operacao/DEPLOYMENT.md
+docs/operacao/STORAGE_MAINTENANCE.md
+docs/operacao/OAUTH_GOOGLE.md
+docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+```
