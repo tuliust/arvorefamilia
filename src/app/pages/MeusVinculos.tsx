@@ -275,6 +275,9 @@ export function MeusVinculos() {
 
   const pessoa = link?.pessoa;
 
+  const avatarSource = pendingAvatarDataUrl || String(pessoa?.foto_principal_url ?? '');
+  const avatarInitials = pessoa ? getInitials(pessoa.nome_completo) : '?';
+
   async function reloadRelationships(pessoaId: string) {
     const [nextRelationships, nextAllRelationships] = await Promise.all([
       obterRelacionamentosDaPessoa(pessoaId),
@@ -709,8 +712,7 @@ export function MeusVinculos() {
     } else {
       toast.success('Vínculos confirmados.');
     }
-    // TODO: futuro destino de conclusão será /revisao-dados
-    navigate('/minha-arvore/editar', { replace: true });
+    navigate('/revisao-dados', { replace: true });
   };
 
   if (loading) {

@@ -15,7 +15,11 @@ Use este arquivo como ponto de entrada. A documentação canônica deve registra
 
 A baseline funcional atual registra:
 
-- `/entrar` funciona como home pública, login, cadastro, primeiro acesso e aceite legal;
+- `/entrar` funciona como home pública, login, primeiro acesso e aceite legal;
+- O fluxo de cadastro e revisão de dados do membro é dividido em 3 etapas:
+  - **Etapa 1:** `/meus-dados` — Dados pessoais, contato, endereço, mini bio e curiosidades (com auxílio de IA).
+  - **Etapa 2:** `/meus-vinculos` — Vínculos familiares e relacionamentos.
+  - **Etapa 3:** `/revisao-dados` — Revisão final, arquivos históricos, notificações e privacidade.
 - `/` redireciona para `/mapa-familiar`, preservando `location.search`;
 - as views oficiais da árvore são:
   - **Árvore Familiar** — `/mapa-familiar`;

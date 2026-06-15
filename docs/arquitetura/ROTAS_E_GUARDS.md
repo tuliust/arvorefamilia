@@ -147,6 +147,7 @@ Protege páginas de membro autenticado:
 /meus-dados
 /meus-vinculos
 /vincular-perfil
+/revisao-dados
 /pessoa/:id
 /pessoas/:id
 /calendario-familiar

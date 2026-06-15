@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
-import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
+import { Camera, ImagePlus, Info, Save, Sparkles, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
@@ -757,19 +757,6 @@ export function MeusDados() {
       );
     }
 
-    try {
-      const savedArchives = await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
-      setArchives(savedArchives);
-    } catch (archivesError) {
-      setSaving(false);
-      toast.error(
-        archivesError instanceof Error
-          ? `Dados pessoais salvos, mas não foi possível salvar arquivos históricos: ${archivesError.message}`
-          : 'Dados pessoais salvos, mas não foi possível salvar arquivos históricos.',
-      );
-      return;
-    }
-
     if (link.relacao_com_perfil === 'Sou esta pessoa') {
       const { error: profileError } = await ensureMemberProfile(user.id, {
         nome_exibicao: updatedPessoa?.nome_completo ?? String(payload.nome_completo ?? ''),
@@ -783,25 +770,6 @@ export function MeusDados() {
       }
     }
 
-    if (notificationPreferences) {
-      try {
-        const savedPreferences = await salvarPreferenciasNotificacao(user.id, {
-          ...notificationPreferences,
-          receber_avisos_gerais: true,
-        });
-        setNotificationPreferences(savedPreferences);
-        if (savedPreferences.id.startsWith('local-')) {
-          toast.warning('Dados pessoais salvos, mas as preferências de notificação ficaram apenas locais.');
-        }
-      } catch (notificationError) {
-        toast.warning(
-          notificationError instanceof Error
-            ? `Dados pessoais salvos, mas não foi possível salvar notificações: ${notificationError.message}`
-            : 'Dados pessoais salvos, mas não foi possível salvar as preferências de notificação.',
-        );
-      }
-    }
-
     setSaving(false);
 
     if (user?.id && pessoa.id) {
@@ -811,8 +779,39 @@ export function MeusDados() {
     setAvatarCropSourceDataUrl(null);
     setCroppedPhotoBlob(null);
     isDirtyRef.current = false;
-    toast.success('Dados pessoais salvos.');
-    navigate('/meus-vinculos', { replace: true });
+    toast.success('Etapa 1 concluída: Dados pessoais salvos.');
+    navigate('/meus-vinculos');
+  };
+
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiTarget, setAiTarget] = useState<'minibio' | 'curiosidades'>('minibio');
+  const [aiKeywords, setAiKeywords] = useState('');
+  const [aiResult, setAiResult] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+
+  const handleGenerateAiText = async () => {
+    if (!aiKeywords.trim()) {
+      toast.error('Informe algumas palavras-chave ou tópicos.');
+      return;
+    }
+
+    setAiGenerating(true);
+    try {
+      const prompt = `Gere uma breve ${aiTarget === 'minibio' ? 'apresentação pessoal (mini bio)' : 'lista de curiosidades ou fatos interessantes'} para uma árvore genealógica familiar, com base nestes tópicos: ${aiKeywords}. Responda de forma carinhosa e familiar.`;
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      setAiResult(data.answer);
+    } catch (error) {
+      toast.error('Não foi possível gerar a sugestão agora.');
+    } finally {
+      setAiGenerating(false);
+    }
   };
 
   if (loading) {
@@ -820,7 +819,7 @@ export function MeusDados() {
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
           <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600" />
-          <p className="text-gray-600">Carregando seus dados...</p>
+          <p className="text-gray-600">Etapa 1: Carregando seus dados...</p>
         </div>
       </div>
     );
@@ -847,7 +846,7 @@ export function MeusDados() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Revisar meus dados"
-        subtitle="Confira suas informações antes de acessar a árvore principal."
+        subtitle="Etapa 1: Confira seus dados pessoais."
         icon={UserCircle2}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
@@ -888,7 +887,8 @@ export function MeusDados() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Nome completo" error={errors.nome_completo}>
               <Input
                 value={String(form.nome_completo ?? '')}
@@ -912,14 +912,12 @@ export function MeusDados() {
                 value={String(form.local_nascimento ?? '')}
                 onBlur={() => normalizeFieldOnBlur('local_nascimento')}
                 onChange={(e) => updateTextField('local_nascimento', e.target.value)}
-                placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                placeholder="Ex: Paulo Afonso/BA"
                 aria-invalid={Boolean(errors.local_nascimento)}
               />
-              <p className="break-words text-xs text-gray-500">
-                {form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-              </p>
               <ToggleField
-                label="Nasci fora do Brasil"
+                label="Estrangeiro"
+                compact
                 checked={form.local_nascimento_exterior === true}
                 onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
               />
@@ -939,14 +937,12 @@ export function MeusDados() {
                 value={String(form.local_atual ?? '')}
                 onBlur={() => normalizeFieldOnBlur('local_atual')}
                 onChange={(e) => updateTextField('local_atual', e.target.value)}
-                placeholder={form.local_atual_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                placeholder="Ex: Paulo Afonso/BA"
                 aria-invalid={Boolean(errors.local_atual)}
               />
-              <p className="break-words text-xs text-gray-500">
-                {form.local_atual_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-              </p>
               <ToggleField
-                label="Moro no exterior"
+                label="Exterior"
+                compact
                 checked={form.local_atual_exterior === true}
                 onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
               />
@@ -984,21 +980,19 @@ export function MeusDados() {
                     value={String(form.local_falecimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_falecimento')}
                     onChange={(event) => updateTextField('local_falecimento', event.target.value)}
-                    placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                    placeholder="Ex: Paulo Afonso/BA"
                     aria-invalid={Boolean(errors.local_falecimento)}
                   />
-                  <p className="break-words text-xs text-gray-500">
-                    {form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-                  </p>
                   <ToggleField
-                    label="Falecimento fora do Brasil"
+                    label="Estrangeiro"
+                    compact
                     checked={form.local_falecimento_exterior === true}
                     onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
                   />
                 </Field>
               </>
             )}
-            <Field label="Telefone">
+            <Field label="WhatsApp">
               <Input
                 value={String(form.telefone ?? '')}
                 onChange={(e) => updateTextField('telefone', e.target.value)}
@@ -1009,7 +1003,7 @@ export function MeusDados() {
               <AddressAutocompleteInput
                 value={String(form.endereco ?? '')}
                 onChange={(nextValue) => updateTextField('endereco', nextValue)}
-                placeholder="Rua, número, bairro, cidade, CEP"
+                placeholder="Digite a rua e número, depois selecione"
               />
             </Field>
             <Field label="Complemento">
@@ -1018,10 +1012,10 @@ export function MeusDados() {
                 onChange={(e) => updateTextField('complemento', e.target.value)}
                 placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
               />
-              <p className="break-words text-xs text-gray-500">
-                Use para apartamento, bloco, torre, casa ou referência interna. O endereço principal continua vindo do Google Maps.
-              </p>
             </Field>
+            </div>
+
+            <div className="mt-2">
             <div className="min-w-0 space-y-2 md:col-span-2">
               <SocialProfilesEditor
                 profiles={socialProfiles}
@@ -1032,105 +1026,74 @@ export function MeusDados() {
                 }}
               />
             </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-4">
-            <Field label="Mini bio">
-              <Textarea
-                value={String(form.minibio ?? '')}
-                onChange={(e) => updateTextField('minibio', e.target.value)}
-                placeholder="Opcional: escreva uma breve apresentação sobre você. Conte quem você é, de onde vem, o que faz ou fez, sua trajetória, valores, conquistas e sua relação com a família."
-                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-              />
-            </Field>
-            <Field label="Curiosidades de Vida">
-              <Textarea
-                value={String(form.curiosidades ?? '')}
-                onChange={(e) => updateTextField('curiosidades', e.target.value)}
-                placeholder="Opcional: compartilhe fatos, histórias ou lembranças curiosas sobre sua vida. Pode incluir hobbies, costumes, viagens, talentos, apelidos, momentos marcantes ou detalhes que ajudem a família a conhecer melhor você."
-                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-              />
-            </Field>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <ToggleField
-              label="Exibir minha data de nascimento para outros familiares"
-              description="Você pode alterar esta opção depois na edição do perfil."
-              checked={form.permitir_exibir_data_nascimento !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_data_nascimento', checked)}
-            />
-            <ToggleField
-              label="Exibir meu telefone para outros familiares"
-              description="Controla a visualização do número no perfil."
-              checked={form.permitir_exibir_telefone !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_telefone', checked)}
-            />
-            <ToggleField
-              label="Exibir meu endereço para outros familiares"
-              description="Controla a visualização do endereço no perfil."
-              checked={form.permitir_exibir_endereco !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_endereco', checked)}
-            />
-            <ToggleField
-              label="Exibir minha rede social para outros familiares"
-              description="Você pode alterar esta opção depois na edição do perfil."
-              checked={form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false}
-              onCheckedChange={(checked) => {
-                updateField('permitir_exibir_rede_social', checked);
-                updateField('permitir_exibir_instagram', checked);
-              }}
-            />
-            <ToggleField
-              label="Permitir mensagens por WhatsApp"
-              description="Permite que familiares usem seu telefone para contato por WhatsApp."
-              checked={form.permitir_mensagens_whatsapp !== false}
-              onCheckedChange={(checked) => updateField('permitir_mensagens_whatsapp', checked)}
-            />
-          </div>
-
-          {pessoa?.id && (
-            <div className="mt-6 min-w-0">
-              <ArquivosHistoricos
-                arquivos={archives}
-                onChange={(nextArchives) => {
-                  markFormDirty();
-                  setArchives(nextArchives);
-                }}
-                pessoaId={pessoa.id}
-                variant="interactive"
-              />
-            </div>
-          )}
-
-          <section className="mt-6 min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4 min-w-0">
-              <h2 className="break-words text-base font-semibold text-gray-900">Preferências de notificação</h2>
-              <p className="mt-1 break-words text-sm text-gray-500">Escolha quais avisos familiares deseja receber.</p>
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {NOTIFICATION_OPTIONS.map((option) => (
-                <ToggleField
-                  key={option.key}
-                  label={option.label}
-                  description={option.description}
-                  checked={option.key === 'receber_avisos_gerais' || notificationPreferences?.[option.key] !== false}
-                  onCheckedChange={(checked) => updateNotificationPreference(option.key, checked)}
-                  disabled={option.key === 'receber_avisos_gerais'}
-                />
-              ))}
             </div>
           </section>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <section className="mt-8 space-y-6 rounded-xl border border-gray-100 bg-white p-1">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <Label className="text-sm font-semibold text-gray-900">Mini bio</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setAiTarget('minibio');
+                    setAiKeywords('');
+                    setAiResult('');
+                    setAiModalOpen(true);
+                  }}
+                  title="Gerar com IA"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                value={String(form.minibio ?? '')}
+                onChange={(e) => updateTextField('minibio', e.target.value)}
+                placeholder="Escreva uma breve apresentação sobre você."
+                className="min-h-24 border-gray-200 bg-white text-sm focus-visible:ring-blue-600"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <Label className="text-sm font-semibold text-gray-900">Curiosidades de Vida</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setAiTarget('curiosidades');
+                    setAiKeywords('');
+                    setAiResult('');
+                    setAiModalOpen(true);
+                  }}
+                  title="Gerar com IA"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                value={String(form.curiosidades ?? '')}
+                onChange={(e) => updateTextField('curiosidades', e.target.value)}
+                placeholder="Compartilhe fatos, histórias ou lembranças curiosas sobre sua vida."
+                className="min-h-24 border-gray-200 bg-white text-sm focus-visible:ring-blue-600"
+              />
+            </div>
+          </section>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <Button type="submit" disabled={saving || !canEditSelectedProfile} className="w-full sm:w-auto sm:min-w-[220px]">
               {saving ? (
                 'Salvando...'
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
-                  Confirmar meus dados
-                </>
+                  Próxima etapa: Vínculos
+                  <Save className="ml-2 h-4 w-4" />
+                />
               )}
             </Button>
           </div>
@@ -1269,6 +1232,64 @@ export function MeusDados() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={aiModalOpen} onOpenChange={setAiModalOpen}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              Gerar {aiTarget === 'minibio' ? 'Mini bio' : 'Curiosidades'}
+            </DialogTitle>
+            <DialogDescription>
+              Informe alguns tópicos e a IA criará uma sugestão de texto para você.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Tópicos ou palavras-chave</Label>
+              <Textarea
+                placeholder="Ex: nasci no interior, gosto de pescar, sou professor aposentado..."
+                value={aiKeywords}
+                onChange={(e) => setAiKeywords(e.target.value)}
+                className="min-h-20"
+              />
+            </div>
+
+            <Button
+              onClick={handleGenerateAiText}
+              disabled={aiGenerating || !aiKeywords.trim()}
+              className="w-full"
+            >
+              {aiGenerating ? 'Gerando...' : 'Gerar sugestão'}
+            </Button>
+
+            {aiResult && (
+              <div className="space-y-2">
+                <Label>Resultado</Label>
+                <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 text-sm text-gray-700">
+                  {aiResult}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setAiModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={!aiResult}
+              onClick={() => {
+                updateField(aiTarget, aiResult);
+                setAiModalOpen(false);
+              }}
+            >
+              Aplicar texto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1289,13 +1310,24 @@ function ToggleField({
   checked,
   onCheckedChange,
   disabled = false,
+  compact = false,
 }: {
   label: string;
   description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3">
+        <Label className="text-xs font-medium text-gray-600">{label}</Label>
+        <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} className="scale-75" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-w-0 items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
       <div className="min-w-0 space-y-1">

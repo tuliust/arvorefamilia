@@ -15,6 +15,7 @@ const AjustarNotificacoes = React.lazy(() => import('./pages/AjustarNotificacoes
 const Entrar = React.lazy(() => import('./pages/Entrar').then((module) => ({ default: module.Entrar })));
 const Privacidade = React.lazy(() => import('./pages/Privacidade').then((module) => ({ default: module.Privacidade })));
 const Termos = React.lazy(() => import('./pages/Termos').then((module) => ({ default: module.Termos })));
+const RevisaoDados = React.lazy(() => import('./pages/RevisaoDados').then((module) => ({ default: module.RevisaoDados })));
 const MinhaArvore = React.lazy(() => import('./pages/MinhaArvore').then((module) => ({ default: module.MinhaArvore })));
 const MeusDados = React.lazy(() => import('./pages/MeusDados').then((module) => ({ default: module.MeusDados })));
 const MeusVinculos = React.lazy(() => import('./pages/MeusVinculos').then((module) => ({ default: module.MeusVinculos })));
@@ -197,6 +198,8 @@ export const router = createBrowserRouter([
   { path: '/termos', element: lazyRoute(<Termos />) },
   { path: '/privacidade', element: lazyRoute(<Privacidade />) },
   { path: '/minha-arvore/editar', element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>) },
+  { path: '/revisao-dados', element: lazyRoute(<MemberRoute><RevisaoDados /></MemberRoute>) },
+  { path: '/revisao-dados', element: lazyRoute(<MemberRoute><RevisaoDados /></MemberRoute>) },
   { path: '/meus-dados', element: lazyRoute(<MemberRoute><MeusDados /></MemberRoute>) },
   { path: '/meus-vinculos', element: lazyRoute(<MemberRoute><MeusVinculos /></MemberRoute>) },
   { path: '/vincular-perfil', element: lazyRoute(<MemberRoute><VincularPerfil /></MemberRoute>) },

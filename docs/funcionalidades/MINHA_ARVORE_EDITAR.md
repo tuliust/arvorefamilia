@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
-> Status: revisado após correção de encoding na origem, persistência de redes sociais versionadas em `pessoa_social_profiles` e persistência de `Complemento` em `public.pessoas.complemento`.
+> Status: revisado para refletir o novo fluxo de cadastro em 3 etapas, onde esta rota é o destino final.
 
 ---
 

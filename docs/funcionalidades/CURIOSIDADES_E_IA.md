@@ -7,7 +7,7 @@
 
 ## 1. Função deste documento
 
-Este documento descreve a experiência de exploração familiar acessada pela Home autenticada, especialmente o modal **Curiosidades** e suas abas de descoberta.
+Este documento descreve a experiência de exploração familiar e geração de conteúdo assistida por IA, incluindo o modal **Curiosidades** e o recurso de geração de texto para Mini Bio e Curiosidades na página `/meus-dados`.
 
 Use este arquivo para manter:
 
@@ -16,6 +16,7 @@ Use este arquivo para manter:
 - aba **Qual a minha conexão com alguém?**;
 - aba **Pergunte à IA**;
 - regras de contexto genealógico enviado à IA;
+- recurso de IA para Mini Bio e Curiosidades em `/meus-dados`;
 - perguntas permitidas e bloqueadas;
 - respostas determinísticas/fallbacks;
 - privacidade, segurança e anti-regressões.
@@ -42,6 +43,7 @@ O escopo atual cobre:
 - descoberta de conexão entre duas pessoas;
 - perguntas assistidas por IA sobre o conjunto familiar carregado;
 - respostas determinísticas para perguntas recorrentes quando o dado pode ser calculado localmente;
+- geração de texto assistida por IA para Mini Bio e Curiosidades na página `/meus-dados`;
 - regras para evitar exposição de IDs, dados técnicos e inferências sensíveis.
 
 Status atual:
@@ -74,6 +76,7 @@ Fora do escopo atual:
 | Aba de conexão familiar | `src/app/pages/home/ConnectionDiscoveryPanel.tsx` |
 | Card visual de resultado/caminho | `src/app/pages/home/DiscoverResultCard.tsx` |
 | Informações de contato/contexto visual | `src/app/pages/home/ContactInfo.tsx` |
+| Geração de texto IA em `/meus-dados` | `src/app/pages/MeusDados.tsx` |
 | Painel de perguntas à IA | `src/app/pages/home/AiQuestionPanel.tsx` |
 | Contexto estruturado para IA | `src/app/pages/home/homeAiContext.ts` |
 | Display textual de parentesco | `src/app/utils/relationshipDegreeDisplay.ts` |
@@ -83,27 +86,41 @@ Fora do escopo atual:
 
 ---
 
-## 4. Acesso e acionamento
+## 4. Recurso de IA para Mini Bio e Curiosidades em `/meus-dados`
 
-A experiência fica dentro da Home autenticada, usada pelas views oficiais da árvore:
+A página `/meus-dados` (Etapa 1 do cadastro) oferece um recurso de IA para auxiliar na criação de textos para os campos "Mini bio" e "Curiosidades de Vida".
+
+**Fluxo:**
+- Um ícone de "Sparkles" (faíscas) é exibido ao lado das labels dos campos.
+- Ao clicar no ícone, um modal é aberto.
+- O usuário informa palavras-chave ou tópicos.
+- A IA gera uma sugestão de texto com base nos tópicos e no contexto familiar.
+- O usuário pode aplicar o texto gerado ao campo correspondente.
+
+**Regras:**
+- O modal deve ter um campo para palavras-chave, um seletor de destino (Mini Bio/Curiosidades), um botão de geração, uma área de visualização e botões para aplicar/cancelar.
+- O endpoint `/api/ai` é utilizado para a comunicação com a OpenAI.
+- Não expor `OPENAI_API_KEY` no frontend.
+- O texto gerado deve ser carinhoso e familiar, como o restante das interações da IA.
+
+## 5. Acesso e acionamento do modal de Curiosidades (Home)
+
+A experiência de exploração familiar (modal de Curiosidades) fica dentro da Home autenticada, usada pelas views oficiais da árvore:
 
 ```txt
 /mapa-familiar
 /mapa-familiar-horizontal
 ```
 
-Regras:
+**Regras:**
+- Visitante não autenticado não deve acessar Curiosidades.
+- A abertura do modal parte do `HomeHeader` ou ação equivalente da Home.
+- O modal usa dados já carregados pela Home.
+- Falha parcial da IA não deve impedir uso das demais abas.
+- A experiência não deve exigir permissões administrativas.
+- Dados ocultos por privacidade não devem ser expostos por microcopy, tooltip ou resposta de IA.
 
-- visitante não autenticado não deve acessar Curiosidades;
-- a abertura do modal parte do `HomeHeader` ou ação equivalente da Home;
-- o modal usa dados já carregados pela Home;
-- falha parcial da IA não deve impedir uso das demais abas;
-- a experiência não deve exigir permissões administrativas;
-- dados ocultos por privacidade não devem ser expostos por microcopy, tooltip ou resposta de IA.
-
----
-
-### 4.1 Rotas e documentação vigentes
+### 5.1 Rotas e documentação vigentes
 
 A experiência de **Curiosidades** pertence ao shell autenticado da árvore e deve considerar apenas as views oficiais:
 
@@ -122,14 +139,13 @@ Não tratar como rotas ativas:
 
 A rota `/minha-arvore/editar` continua vigente, mas é fluxo de edição do membro e não é ponto de entrada do modal de Curiosidades.
 
-Regras:
+**Regras:**
+- A pessoa central usada pela IA deve acompanhar a pessoa carregada no shell da árvore.
+- A alternância vertical/horizontal não deve alterar o contexto familiar enviado à IA.
+- Aliases históricos como “minha árvore” e “genealogia” podem existir apenas como linguagem do usuário, não como rotas de navegação.
+- Respostas da IA não devem sugerir acessar rotas removidas.
 
-- a pessoa central usada pela IA deve acompanhar a pessoa carregada no shell da árvore;
-- a alternância vertical/horizontal não deve alterar o contexto familiar enviado à IA;
-- aliases históricos como “minha árvore” e “genealogia” podem existir apenas como linguagem do usuário, não como rotas de navegação;
-- respostas da IA não devem sugerir acessar rotas removidas.
-
-## 5. Estrutura do modal
+## 6. Estrutura do modal (Home)
 
 O modal **Curiosidades** pode reunir abas como:
 
@@ -151,7 +167,7 @@ Regras de UX:
 
 ---
 
-## 6. Curiosidades calculadas
+## 7. Curiosidades calculadas (Home)
 
 A camada de curiosidades pode exibir informações como:
 
@@ -175,7 +191,7 @@ Regras:
 
 ---
 
-## 7. Tooltips de cidades
+## 8. Tooltips de cidades (Home)
 
 Em blocos como **Onde moram** e **Onde nasceram**, os tooltips devem:
 
@@ -201,7 +217,7 @@ Anti-regressões:
 
 ---
 
-## 8. Aba "Qual a minha conexão com alguém?"
+## 9. Aba "Qual a minha conexão com alguém?" (Home)
 
 A aba permite comparar duas pessoas e obter:
 
@@ -250,7 +266,7 @@ Regras visuais:
 
 ---
 
-## 9. Aba "Pergunte à IA"
+## 10. Aba "Pergunte à IA" (Home)
 
 A aba permite perguntas em linguagem natural sobre a família.
 
@@ -283,7 +299,7 @@ Regras:
 
 ---
 
-## 10. Contexto estruturado da IA
+## 11. Contexto estruturado da IA (Home)
 
 `homeAiContext.ts` deve preparar o contexto com dados como:
 
@@ -312,7 +328,7 @@ Regras:
 
 ---
 
-### 10.1 Dados usados pela árvore, perfis e vínculos
+### 11.1 Dados usados pela árvore, perfis e vínculos (Home)
 
 O contexto da IA deve permanecer alinhado aos mesmos dados usados pelas views oficiais da árvore e pelos perfis:
 
@@ -332,6 +348,7 @@ Regras de consistência:
 - não expor IDs técnicos, salvo em diagnóstico administrativo explícito.
 
 ## 11. Perguntas que a IA deve responder
+## 12. Perguntas que a IA deve responder (Home)
 
 A IA pode responder perguntas como:
 
@@ -360,7 +377,7 @@ Critérios:
 
 ---
 
-## 12. Perguntas que a IA não deve responder
+## 13. Perguntas que a IA não deve responder (Home)
 
 A IA não deve responder, inferir ou especular sobre:
 
