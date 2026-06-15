@@ -1,13 +1,17 @@
 # Deploy
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-14  
 > Local canônico: `docs/operacao/DEPLOY.md`  
 > Tipo: atalho operacional de deploy.  
-> Status: documento complementar; o guia completo permanece em `docs/operacao/DEPLOYMENT.md`.
+> Status: complementar; o procedimento completo está em `docs/operacao/DEPLOYMENT.md`.
+
+---
 
 ## 1. Objetivo
 
-Este arquivo existe como atalho rápido para publicação. Para procedimento completo, variáveis, cache SPA, Supabase, Edge Functions, Google OAuth, `/api/*`, troubleshooting e QA pós-deploy, use:
+Este arquivo é um atalho rápido para publicação.
+
+Para detalhes de variáveis, cache SPA, Supabase, Edge Functions, OAuth, rotas `/api/*`, troubleshooting e QA pós-deploy, use:
 
 ```txt
 docs/operacao/DEPLOYMENT.md
@@ -25,7 +29,7 @@ git diff --check
 npm run build
 ```
 
-Quando houver alteração relevante:
+Quando houver alteração funcional:
 
 ```bash
 npm test
@@ -55,21 +59,25 @@ supabase functions list
 - Não aplicar migration junto do deploy sem autorização.
 - Não cachear `index.html` como imutável.
 - Preservar rewrite de `/api/(.*)` antes do fallback SPA.
-- Validar `/entrar`, login, `/mapa-familiar`, `/mapa-familiar-horizontal`, fórum, calendário e admin conforme escopo.
-- Para Mapa Familiar, validar `/mapa-familiar` e `/mapa-familiar-horizontal` no desktop e mobile.
+- Validar rotas críticas após deploy.
+- Tratar warning de chunk grande como alerta de performance, não como falha, se o build concluiu.
 
 ---
 
-## 4. Mapa Familiar e mobile
-
-Quando o deploy incluir alterações recentes da árvore, validar as rotas vigentes:
+## 4. Rotas mínimas para QA
 
 ```txt
+/entrar
 /mapa-familiar
 /mapa-familiar-horizontal
+/calendario-familiar
+/forum
+/meus-favoritos
+/notificacoes
+/admin
 ```
 
-E confirmar que as rotas removidas não voltaram como views ativas:
+Confirmar que estas rotas antigas não voltaram como views ativas:
 
 ```txt
 /minha-arvore
@@ -77,7 +85,17 @@ E confirmar que as rotas removidas não voltaram como views ativas:
 /visao-completa
 ```
 
-QA mobile mínimo:
+Exceção vigente:
+
+```txt
+/minha-arvore/editar
+```
+
+---
+
+## 5. QA mobile mínimo da árvore
+
+Breakpoints:
 
 ```txt
 320px
@@ -86,20 +104,18 @@ QA mobile mínimo:
 430px
 ```
 
-Regras:
+Validar:
 
+- `/mapa-familiar` mobile usa `MobileFamilyTreeView`;
 - `/mapa-familiar-horizontal` mobile usa `MobileFamilyHorizontalMapView`;
-- cada geração aparece em uma tela;
-- swipe lateral troca geração;
-- a barra `Paterno | Central | Materno` não pertence à horizontal mobile;
-- painel mobile dos mapas abre como modal de controles;
-- `MobileTreeControlsPortal` não duplica painel em `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- horizontal mobile mostra uma geração por tela;
+- horizontal mobile não usa barra `Paterno | Central | Materno`;
+- modal mobile de controles não exibe Zoom, Restaurar nem Exportar;
+- paletas não caem em fallback azul indevido.
 
 ---
 
-## 5. Documento completo
-
-Consulte sempre:
+## 6. Documento completo
 
 ```txt
 docs/operacao/DEPLOYMENT.md

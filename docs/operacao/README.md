@@ -1,111 +1,106 @@
 # Operação e manutenção
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/operacao/README.md`
-> Tipo: índice operacional da pasta `docs/operacao`.
-> Status: revisado após os lotes documentais de arquitetura, componentes, UX, funcionalidades da árvore, exportação, deploy, migrations, Storage e OAuth.
+> Última revisão: 2026-06-14  
+> Local canônico: `docs/operacao/README.md`  
+> Tipo: índice operacional da pasta `docs/operacao`.  
+> Status: revisado para separar deploy, migrations, Storage e OAuth sem duplicar os guias funcionais.
+
+---
 
 ## 1. Objetivo
 
-Esta pasta reúne procedimentos operacionais que podem afetar infraestrutura, banco, Storage, deploy, migrations, secrets, OAuth, Edge Functions, rotas serverless ou dados reais.
+A pasta `docs/operacao/` reúne procedimentos que podem afetar publicação, infraestrutura, banco, Edge Functions, Storage, secrets, OAuth, rotas serverless ou dados reais.
 
-Ela não substitui os guias canônicos da raiz de `docs/`. Use os documentos de operação quando a tarefa envolver:
+Use esta pasta quando a tarefa envolver:
 
-- deploy e publicação;
+- deploy;
 - variáveis de ambiente;
 - Supabase migrations;
 - Edge Functions;
-- rotas serverless do provedor, como `/api/*`;
+- rotas serverless `/api/*`;
+- Google OAuth/Agenda;
 - manutenção de Storage;
 - scripts administrativos;
+- service role;
 - dry-run de limpeza;
-- operações com service role;
-- dados legados;
-- Google OAuth/Agenda;
-- execução de comandos que podem alterar infraestrutura ou dados.
+- dados reais.
 
-Este índice operacional também registra a separação entre mudanças de produto/UI e operações de infraestrutura: ajustes em árvore, calendário mobile, paletas, conectores, cards, painel ou documentação não devem ser tratados como motivo automático para migration, deploy de Edge Function ou manutenção de Storage.
+Não use esta pasta para explicar layout da árvore, regras visuais ou componentes. Para isso, use os documentos funcionais e guias da raiz de `docs/`.
 
-Regra de escopo:
+---
+
+## 2. Regra principal
 
 ```txt
-Ajuste visual, layout mobile, paleta, conectores, modal, exportação visual ou documentação não exige migration.
-Alteração de schema, RLS, RPC, trigger, Storage policy ou Edge Function exige revisão operacional.
+Ajuste visual, paleta, modal, calendário mobile, exportação visual ou documentação não exige migration.
+Alteração de schema, RLS, RPC, trigger, Storage policy, bucket ou Edge Function exige revisão operacional.
 ```
 
 ---
 
-## 2. Documentos desta pasta
+## 3. Documentos operacionais
 
 | Arquivo | Função | Status |
 |---|---|---|
-| `DEPLOYMENT.md` | Checklist completo de build, variáveis, deploy estático, cache SPA, Supabase, Edge Functions, rotas `/api/*`, Google Agenda/OAuth, QA pós-deploy e troubleshooting. | Canônico para deploy. |
-| `DEPLOY.md` | Atalho operacional curto para deploy, apontando para `DEPLOYMENT.md`. | Complementar. |
-| `MIGRATIONS_SUPABASE.md` | Fluxo seguro de migrations, `supabase migration list`, `supabase db push`, schema cache, RLS, RPCs, SQL legado, dados familiares, Google Calendar e validação pós-migration. | Canônico para banco. |
-| `STORAGE_MAINTENANCE.md` | Diagnóstico de objetos órfãos, migração de base64 legado, buckets, scripts administrativos e limpeza auditada de Storage. | Canônico para Storage. |
-| `OAUTH_GOOGLE.md` | Operação específica de Google OAuth/Google Agenda, consent screen, test users, domínio, redirects, escopos e troubleshooting. | Complementar/canônico para OAuth Google. |
-
-Observação:
-
-```txt
-Se o repositório optar por manter apenas DEPLOYMENT.md como documento único de deploy,
-DEPLOY.md pode permanecer como arquivo curto de redirecionamento operacional.
-```
+| `DEPLOYMENT.md` | checklist completo de build, deploy, cache SPA, variáveis, Supabase, Edge Functions, `/api/*`, OAuth e QA pós-deploy | canônico para deploy |
+| `DEPLOY.md` | atalho curto para publicação | complementar |
+| `MIGRATIONS_SUPABASE.md` | fluxo seguro de migrations, schema, RLS, RPCs e scripts SQL | canônico para banco |
+| `STORAGE_MAINTENANCE.md` | diagnóstico de órfãos, base64 legado, buckets e scripts de Storage | canônico para Storage |
+| `OAUTH_GOOGLE.md` | consent screen, redirect URI, test users, secrets e Google Agenda | canônico para OAuth Google |
 
 ---
 
-## 3. Relação com outros documentos
+## 4. Relação com a documentação funcional
 
-| Documento | Papel |
+| Documento | Quando consultar |
 |---|---|
-| `../README.md` | Índice canônico da documentação do projeto. |
-| `../GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. |
-| `../GUIA_COMPONENTES.md` | Componentes, responsabilidades e anti-regressões. |
-| `../GUIA_UX_LAYOUT.md` | Decisões visuais, responsividade, painéis, árvore e mobile. |
-| `../GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma. |
-| `../PLANO_PROXIMOS_PASSOS.md` | Pendências reais e QA ainda aberto. |
-| `../arquitetura/ARCHITECTURE.md` | Visão técnica geral da aplicação. |
-| `../arquitetura/ROTAS_E_GUARDS.md` | Rotas, guards, `TreeViewMode` e renderização por view. |
-| `../arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de dados, tabelas, vínculos e objetos legados. |
-| `../funcionalidades/CALENDARIO_FAMILIAR.md` | Regras funcionais do calendário e Google Agenda. |
-| `../funcionalidades/CURIOSIDADES_E_IA.md` | Uso de IA e rota serverless `/api/ai`. |
-| `../historico/README.md` | Registro histórico consolidado de auditorias, QA e frentes antigas. |
+| `../README.md` | índice geral da documentação |
+| `../BASELINE_PRODUTO_ATUAL.md` | estado funcional vigente |
+| `../GUIA_IMPLEMENTACOES.md` | implementação consolidada versus backlog |
+| `../GUIA_COMPONENTES.md` | responsabilidades dos componentes |
+| `../GUIA_UX_LAYOUT.md` | decisões visuais e responsividade |
+| `../REGRAS_DE_NAO_REGRESSAO.md` | checklists de regressão |
+| `../PLANO_PROXIMOS_PASSOS.md` | pendências reais |
+| `../arquitetura/ARCHITECTURE.md` | arquitetura geral |
+| `../arquitetura/ROTAS_E_GUARDS.md` | rotas, guards e TreeViewMode |
+| `../funcionalidades/CALENDARIO_FAMILIAR.md` | comportamento funcional do calendário |
+| `../funcionalidades/EXPORTACAO_ARVORE.md` | exportação da árvore |
+| `../historico/README.md` | histórico e docs legados |
 
 ---
 
-## 4. Regras operacionais permanentes
+## 5. Regras permanentes
 
-- Nunca versionar `.env`, `.env.local`, dumps, tokens, secrets, API keys, service role ou relatórios com dados reais.
-- Nunca usar service role no frontend.
-- Nunca aplicar SQL em produção sem revisão, backup e confirmação explícita.
-- Nunca tratar SQL legado como fonte principal de schema.
-- Preferir `supabase/migrations/` como fonte da verdade do banco.
-- Executar scripts destrutivos apenas com dry-run prévio e flag explícita.
+- Não versionar `.env`, `.env.local`, dumps, tokens, API keys, service role ou dados reais.
+- Não usar service role no frontend.
+- Não prefixar secrets server-side com `VITE_`.
+- Não aplicar SQL em produção sem autorização explícita.
+- Não rodar script destrutivo sem dry-run.
 - Não misturar limpeza de Storage com migration de schema.
-- Não apagar dados reais sem plano de rollback.
-- Registrar no plano apenas pendências reais, não histórico longo de implementação concluída.
 - Não resolver problema visual criando migration.
-- Não alterar RLS, Auth, Storage ou Edge Functions para corrigir layout.
-- Não expor `OPENAI_API_KEY`, OAuth client secret, Resend key ou service role com prefixo `VITE_`.
-- Não deixar fallback SPA capturar rotas `/api/*`.
-- Não cachear `index.html` como imutável em SPA Vite com code splitting.
+- Não alterar RLS, Auth, Storage ou Edge Function para corrigir layout.
+- Não deixar fallback SPA capturar `/api/*`.
+- Não cachear `index.html` como imutável em SPA Vite.
+- Registrar riscos e pendências reais em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 ---
 
-## 5. Ordem segura para tarefas operacionais
+## 6. Ordem segura para tarefas operacionais
 
-1. Ler o documento específico desta pasta.
-2. Conferir branch, ambiente e projeto Supabase.
-3. Confirmar variáveis necessárias.
-4. Rodar comandos não destrutivos primeiro.
-5. Revisar relatório, diff ou saída.
-6. Executar ação de escrita apenas quando houver confirmação explícita.
+1. Confirmar branch, ambiente e projeto Supabase.
+2. Ler o documento operacional específico.
+3. Conferir variáveis necessárias.
+4. Rodar comandos não destrutivos.
+5. Revisar diff, relatório ou saída.
+6. Executar escrita apenas com confirmação explícita.
 7. Validar UI/fluxos afetados.
-8. Registrar ajustes documentais ou pendências reais em `PLANO_PROXIMOS_PASSOS.md`.
+8. Atualizar documentação ou plano, se houver pendência.
 
 ---
 
-## 6. Comandos técnicos mínimos
+## 7. Comandos mínimos
+
+Antes de deploy ou alteração relevante:
 
 ```bash
 git status --short
@@ -113,143 +108,77 @@ git diff --check
 npm run build
 ```
 
-Quando houver testes afetados:
+Quando houver teste afetado:
 
 ```bash
 npm test
 npm run test:e2e
 ```
 
-Quando houver banco ou Edge Functions:
+Quando houver banco:
 
 ```bash
 supabase migration list
+```
+
+Quando houver Edge Functions:
+
+```bash
 supabase functions list
 ```
 
-Quando houver ajuste documental amplo:
+Quando houver alteração documental ampla:
 
 ```bash
 git diff --check -- docs/
 npm run build
 ```
 
-Quando houver deploy:
-
-```bash
-npm run build
-npm run preview
-```
-
 ---
 
-## 7. Relação entre mudanças visuais e operação
+## 8. Mudanças que não exigem operação de banco
 
-Mudanças como as abaixo são **não operacionais de banco**:
+Exemplos:
 
 - ajuste de `/mapa-familiar` mobile;
-- criação/uso de `MobileFamilyHorizontalMapView`;
-- troca da horizontal mobile para uma geração por tela;
+- ajuste de `/mapa-familiar-horizontal` mobile;
+- paletas da árvore;
 - modal mobile de controles;
-- fundo transparente da horizontal;
-- conectores HTML/CSS/SVG;
-- paletas;
-- exportação visual;
+- cards do painel;
+- conectores visuais;
+- fallback visual de avatar;
+- bolinhas e botões do calendário mobile;
+- exportação client-side;
 - documentação.
 
-Elas exigem:
-
-```bash
-git status --short
-git diff --check
-npm run build
-```
-
-E QA manual nas rotas afetadas, mas **não** exigem `supabase db push`.
+Essas mudanças podem exigir build, testes e QA visual, mas não migration.
 
 ---
 
-## 8. Arquivos que não pertencem aqui
+## 9. Mudanças que exigem revisão operacional
 
-Não colocar nesta pasta:
+Exemplos:
 
-- documentação funcional detalhada de página ou módulo;
-- decisões visuais de UX;
-- changelog longo de ciclos concluídos;
-- diagnóstico histórico que não seja procedimento atual;
-- SQL avulso sem contexto operacional;
-- screenshots ou dumps com dados reais;
-- backups temporários de `.env`, exports de banco ou arquivos de Storage.
-
-Esses conteúdos devem ficar em `docs/funcionalidades/`, `docs/historico/`, `docs/GUIA_UX_LAYOUT.md`, `docs/GUIA_COMPONENTES.md`, `docs/GUIA_CORRECAO_ERROS.md`, `scripts/` ou `supabase/migrations/`, conforme o caso.
-
----
-
-## 9. Critérios de bloqueio operacional
-
-Bloquear operação, deploy ou alteração de infraestrutura se houver:
-
-- build quebrado;
-- migrations locais e remotas divergentes sem explicação;
-- SQL legado sendo tratado como schema principal;
-- comando destrutivo sem dry-run;
-- ausência de backup quando houver escrita em dados reais;
-- uso de service role fora de ambiente seguro;
-- secret em frontend, documentação, issue, commit ou log;
-- RLS sem validação em fluxo de usuário comum;
-- Edge Function dependente de secret ausente;
-- fallback SPA capturando `/api/*`;
-- `index.html` com cache forte;
-- documentação operacional orientando comando inseguro.
+- nova coluna/tabela/índice/constraint;
+- nova ou alterada RPC;
+- mudança de RLS/policy;
+- trigger/function SQL;
+- bucket ou policy de Storage;
+- Edge Function;
+- secret;
+- redirect URI OAuth;
+- rota serverless `/api/*`;
+- scripts com service role;
+- limpeza ou migração de arquivos reais.
 
 ---
 
-## 10. Manutenção deste índice
+## 10. Critério de atualização deste índice
 
-Atualizar este arquivo quando:
+Atualize `docs/operacao/README.md` quando:
 
-- documento novo for criado em `docs/operacao/`;
-- documento operacional for removido ou consolidado;
-- regra operacional permanente mudar;
-- comandos mínimos mudarem;
-- histórico consolidado substituir referências antigas;
-- Google OAuth sair de modo Testing;
-- rota serverless nova for adicionada.
-
-Não usar este índice para registrar pendência funcional. Pendências reais ficam em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
-
----
-
-## 7.1 Rotas vigentes em QA operacional
-
-Quando uma tarefa operacional afetar deploy, cache, rotas, guards ou build, validar como rotas vigentes:
-
-```txt
-/entrar
-/mapa-familiar
-/mapa-familiar-horizontal
-/minha-arvore/editar
-/calendario-familiar
-/forum
-/notificacoes
-/admin
-```
-
-E validar como rotas removidas/404, salvo redirecionamento explícito futuro:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Regra:
-
-```txt
-/minha-arvore/editar é vigente; /minha-arvore como view de árvore não é vigente.
-```
+- novo documento operacional for criado;
+- `DEPLOY.md` ou `DEPLOYMENT.md` mudar de papel;
+- surgir nova integração server-side;
+- scripts administrativos forem adicionados;
+- política operacional de banco, Storage, OAuth ou deploy mudar.

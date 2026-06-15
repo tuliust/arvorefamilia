@@ -3,75 +3,84 @@
 > Última revisão: 2026-06-14  
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: guia alinhado às duas views oficiais, painel desktop, modal mobile, paletas, calendário mobile, avatares e conectores.
+> Tipo: guia de experiência, layout e responsividade  
+> Status: revisado para documentar comportamento visual vigente e separar pendências técnicas de contrato de UX.
 
 ---
 
 ## 1. Objetivo
 
-Este documento registra decisões consolidadas de experiência, layout, responsividade e comportamento visual.
+Este documento registra decisões de experiência e layout.
 
-Use este guia para revisar:
+Use para revisar:
 
-- shell da árvore;
-- navegação entre Vertical e Horizontal;
+- navegação entre views;
+- shell da Home;
 - painel desktop;
-- modal mobile de controles;
+- modal mobile;
 - cards;
 - conectores;
 - paletas;
-- calendário familiar;
+- calendário;
 - exportação;
-- anti-regressões visuais.
+- QA visual.
+
+Não use este arquivo como inventário técnico; para isso, consulte `INVENTARIO_TECNICO.md`.
 
 ---
 
-## 2. Princípios gerais
+## 2. Princípios de UX
 
 | Princípio | Regra prática |
 |---|---|
-| Clareza | Usar nomes e ações explícitas. |
-| Continuidade | Preservar query params, foco de pessoa e retorno de perfil. |
-| Escopo visual | CSS novo deve ser restrito por rota, container ou data attribute. |
-| Canvas controlado | Zoom, pan, scroll e exportação pertencem à superfície da árvore. |
-| Permissão não é visual | UI não substitui guards, RLS ou services. |
-| Histórico não é produto ativo | Docs históricos não devem reabrir views removidas. |
-| Ajuste visual não muda dados | CSS não altera Supabase nem relacionamentos. |
-| Painel sem abas internas | A barra `Filtros | Legendas | Ações` não deve voltar como UI ativa. |
-| Desktop como referência | Mobile adapta escala/navegação, mas não redefine paleta ou hierarquia. |
-| Coerência visual | Painel, cards, bordas e conectores devem falar a mesma linguagem da paleta ativa. |
+| Clareza | Ações devem ter rótulos explícitos e previsíveis. |
+| Continuidade | Preservar pessoa central, query params e retorno de perfil. |
+| Escopo | Ajuste visual deve ser restrito ao container correto. |
+| Consistência | Desktop é referência visual; mobile adapta interação e escala. |
+| Separação | UI não substitui guard, RLS, service ou migration. |
+| Histórico controlado | Docs históricos não reabrem rotas ou padrões removidos. |
+| Exportação limpa | Captura não deve incluir controles, debug ou overlays transitórios. |
 
 Anti-padrões:
 
 ```txt
-Não usar translate/top negativo para corrigir canvas.
-Não usar seletor global svg path.
-Não reintroduzir /minha-arvore, /genealogia ou /visao-completa como views ativas.
-Não usar /visao-completa como substituto da horizontal.
-Não restaurar activeSidebarPanel para resolver organização do painel.
-Não usar cores hardcoded no mobile quando houver token de paleta.
-Não exibir microcopy de dado ausente dentro de card compacto mobile.
-Não deixar cards de paletas não azuis caírem em fallback azul/teal.
+Reintroduzir /minha-arvore, /genealogia ou /visao-completa como views.
+Usar /visao-completa como sinônimo da horizontal.
+Restaurar a barra Filtros | Legendas | Ações.
+Usar cores hardcoded no mobile como fonte da verdade visual.
+Usar seletor global svg path.
+Corrigir layout criando dados fictícios.
+Exibir microcopy de dado ausente em card compacto mobile.
 ```
 
 ---
 
-## 3. Rotas e navegação da árvore
+## 3. Navegação da árvore
+
+Views oficiais:
 
 | View | Rota | Papel |
 |---|---|---|
-| Árvore Familiar | `/mapa-familiar` | Principal/default |
-| Mapa Genealógico | `/mapa-familiar-horizontal` | Alternativa horizontal/genealógica |
+| Árvore Familiar | `/mapa-familiar` | principal/default |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | horizontal por gerações |
 
-Redirect:
+Comportamento:
 
 ```txt
 / -> /mapa-familiar
 ```
 
-preservando `location.search`.
+preservando query string.
 
-Rotas antigas removidas:
+A alternância Vertical/Horizontal deve preservar:
+
+```txt
+?pessoa=...
+?voltar=...
+outros search params relevantes
+```
+
+Rotas removidas como views:
 
 ```txt
 /minha-arvore
@@ -79,7 +88,7 @@ Rotas antigas removidas:
 /visao-completa
 ```
 
-Exceção vigente:
+Exceção:
 
 ```txt
 /minha-arvore/editar
@@ -89,38 +98,29 @@ Exceção vigente:
 
 ## 4. Shell visual da Home
 
-A Home pós-login é o shell das duas views oficiais.
-
 Elementos:
 
 - `HomeHeader`;
-- área da árvore (`HomeTreeSection`);
+- área da árvore;
 - painel lateral desktop;
 - modal mobile de controles;
-- navegação inferior mobile;
+- bottom nav mobile;
 - overlays de exportação/loading;
 - modais auxiliares;
-- debug temporário `Visualizar como...`, se habilitado.
+- debug temporário, quando habilitado.
 
 Regras:
 
-- header deve permanecer visualmente estável;
-- avatar não deve exibir nome textual ao lado no desktop;
-- nome/e-mail ficam no menu do avatar;
-- a árvore deve ocupar área de canvas sem scroll externo desnecessário;
-- search params devem ser preservados ao alternar vertical/horizontal;
-- painel, modal e overlays auxiliares não entram na exportação;
-- debug temporário não entra na exportação.
+- header deve permanecer estável;
+- avatar não deve exibir nome/e-mail lateral fixo;
+- nome/e-mail ficam no menu;
+- árvore deve ocupar a área principal como canvas;
+- painel, modal, bottom nav, overlays e debug não entram na exportação;
+- a UI não deve perder contexto ao trocar vertical/horizontal.
 
 ---
 
-## 5. Árvore Familiar
-
-Rota:
-
-```txt
-/mapa-familiar
-```
+## 5. Árvore Familiar — `/mapa-familiar`
 
 ### Desktop/tablet
 
@@ -130,16 +130,16 @@ Componente:
 DesktopFamilyMapView
 ```
 
-Características:
+Características de UX:
 
 - canvas panorâmico;
 - grupos familiares;
-- conectores SVG;
-- zoom e scroll;
-- modo wide quando painel é colapsado;
-- exportação HTML/CSS/SVG;
-- título `Árvore Familiar de {primeiroNome}`;
-- suporte visual a múltiplos núcleos conjugais quando a pessoa central tiver mais de um relacionamento.
+- zoom e restauração;
+- conectores;
+- painel lateral;
+- paletas;
+- exportação;
+- suporte visual a múltiplos núcleos conjugais da pessoa central quando existem dados.
 
 ### Mobile
 
@@ -149,20 +149,16 @@ Componente:
 MobileFamilyTreeView
 ```
 
-Características:
+Características de UX:
 
 - experiência segmentada;
 - navegação interna Paterno/Central/Materno;
+- cards compactos;
 - conectores HTML/CSS;
-- botão `Controles` abre modal mobile;
-- paletas devem seguir desktop;
-- alinhamento de conectores deve ter o desktop como referência visual;
-- bordas de grupos devem usar a cor da paleta ativa;
-- cards de pessoas exibem apenas dados vitais existentes.
+- botão `Controles`;
+- paletas herdadas do desktop.
 
-### Cards mobile
-
-Contrato visual:
+Cards mobile:
 
 ```txt
 NOME DA PESSOA
@@ -172,21 +168,14 @@ NOME DA PESSOA
 
 Regras:
 
-- `★ AAAA` aparece apenas quando houver nascimento;
-- `✥ AAAA` aparece apenas quando houver falecimento;
-- não exibir `Nascimento não informado`;
-- não exibir `Falecimento não informado`;
-- manter contraste e legibilidade nas quatro paletas.
+- nascimento aparece apenas quando houver data/ano;
+- falecimento aparece apenas quando houver data/ano;
+- resultado visual não deve mostrar `Nascimento não informado` nem `Falecimento não informado`;
+- a implementação atual usa limpeza DOM em `src/main.tsx` para garantir esse resultado visual; a correção estrutural do componente permanece pendente.
 
 ---
 
-## 6. Mapa Genealógico
-
-Rota:
-
-```txt
-/mapa-familiar-horizontal
-```
+## 6. Mapa Genealógico — `/mapa-familiar-horizontal`
 
 ### Desktop/tablet
 
@@ -196,15 +185,20 @@ Componente:
 DesktopFamilyHorizontalMapView
 ```
 
-Características:
+Características de UX:
 
 - colunas por geração;
-- pessoas organizadas por `manual_generation` quando disponível;
 - colunas vazias ocultadas;
-- cônjuges adjacentes;
-- conectores SVG casal → filhos;
-- título visual/exportável `Mapa Genealógico de {primeiroNome}`;
-- cônjuges da Geração 4/Pais aparecem quando o filtro `Cônjuges` está ativo.
+- cônjuges adjacentes conforme suporte atual do código;
+- conectores SVG;
+- título `Mapa Genealógico de {primeiroNome}`;
+- exportação com título e paleta.
+
+Atenção:
+
+```txt
+Cônjuges de pais/Geração 4 não devem ser tratados como implementados até fechamento do TREE-003.
+```
 
 ### Mobile
 
@@ -218,39 +212,35 @@ Contrato:
 
 ```txt
 1 geração = 1 tela
+botões Ger X = atalhos
 swipe lateral = troca de geração
-scroll vertical = rolagem interna da geração ativa
-botões Ger 1/Ger 2/Ger 3... = atalho entre gerações
-sem scroll horizontal manual
+scroll vertical = navegação dentro da geração
+sem scroll horizontal manual como navegação principal
 ```
 
 Regras:
 
-- não usar barra `Paterno | Central | Materno`;
-- não usar canvas desktop amplo com rolagem horizontal manual;
+- não usar barra Paterno/Central/Materno;
 - não criar subrotas por geração;
-- preservar safe area e bottom nav;
-- exportação não deve capturar header, bottom nav ou modal;
-- o botão de controles deve ficar alinhado à linha dos botões `Ger`;
-- botões laterais de seta não devem aparecer;
-- rolagem vertical deve ir até o último card ou até o fim dos conectores visíveis;
-- se houver preview de swipe, ele não deve permitir scroll horizontal manual;
-- cards de paletas não azuis não podem cair em fallback visual azul.
+- não usar setas laterais como navegação principal;
+- bottom nav e safe area devem permanecer estáveis;
+- botão de controles deve conviver com a linha `Ger X`;
+- paletas não azuis não podem cair em fallback azul.
 
 ---
 
 ## 7. Painel desktop
 
-Estado atual:
+Estado vigente:
 
 | Área | Comportamento |
 |---|---|
 | Topo/controles | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar |
-| Filtros | Grupos diretos e status visíveis diretamente |
-| Ações secundárias | Organizadas em flyouts, não em abas persistentes |
-| Legendas | Não são aba ativa do painel; ajuda futura deve ser reposicionada se necessária |
+| Filtros | Grupos diretos e status visíveis sem aba |
+| Ações secundárias | Flyouts específicos |
+| Legendas | Não são aba persistente |
 
-A barra abaixo não é mais UI vigente:
+A barra abaixo não é UI vigente:
 
 ```txt
 Filtros | Legendas | Ações
@@ -259,30 +249,16 @@ Filtros | Legendas | Ações
 Regras:
 
 - painel não entra na exportação;
-- botões ativos refletem a rota;
-- `Restaurar visualização` não deve ser confundido com `Zoom -`;
-- `Vertical` aponta para `/mapa-familiar`;
-- `Horizontal` aponta para `/mapa-familiar-horizontal`;
-- filtros continuam acessíveis sem alternância por aba;
-- qualquer ajuda contextual deve ser independente e ignorada pela exportação;
-- cards de `Grupos` e `Filtros` devem usar o mesmo vocabulário visual da árvore na paleta ativa;
-- painel desktop não deve parecer um sistema visual separado da árvore.
-
-### Cards do painel
-
-Contrato:
-
-- cards de grupos replicam gradiente/borda/texto dos cards equivalentes da árvore;
-- cards de filtros têm tratamento coerente com a paleta;
-- `Cônjuges` e `Pets` usam tom equivalente aos cards da árvore;
-- `Vivos` e `Falecidos` podem usar tons semânticos coerentes com a paleta;
-- estado inativo preserva legibilidade.
+- botão ativo deve refletir a rota;
+- `Restaurar visualização` não é sinônimo de `Zoom -`;
+- cards do painel devem seguir a linguagem visual da paleta ativa;
+- estado inativo deve reduzir ênfase sem perder legibilidade.
 
 ---
 
 ## 8. Modal mobile de controles
 
-Nas rotas oficiais:
+Rotas:
 
 ```txt
 /mapa-familiar
@@ -291,17 +267,15 @@ Nas rotas oficiais:
 
 Comportamento:
 
-- botão flutuante abre o modal;
-- em `/mapa-familiar-horizontal`, o botão fica alinhado à linha dos botões `Ger`;
-- título do modal: `Controles`;
-- não exibir subtítulo;
-- botão superior direito usa ícone `X`;
-- overlay fecha o modal;
+- abre pelo botão `Controles`;
+- título: `Controles`;
+- sem subtítulo;
+- botão superior direito com `X`;
+- overlay fecha;
 - `Escape` fecha quando disponível;
-- body fica com scroll travado;
-- conteúdo interno tem rolagem própria;
-- painel fica acima do header, bottom nav e botões flutuantes;
-- painel não entra na exportação.
+- body fica travado;
+- conteúdo interno rola;
+- modal não entra na exportação.
 
 Controles visíveis:
 
@@ -323,21 +297,20 @@ Restaurar visualização
 Exportar
 ```
 
-Regras específicas:
+Regra de layout:
 
-- botão `Grupos` abre/fecha os cards de grupos;
+- `Grupos` abre/fecha cards de grupos;
 - grupos não aparecem por padrão;
-- filtros permanecem visíveis;
-- filtros devem caber em 4 colunas;
-- os cards de grupos no mobile podem ficar fora de box e sem título `GRUPOS`.
+- filtros permanecem sempre visíveis;
+- filtros devem caber em layout compacto, preferencialmente quatro colunas.
 
 ---
 
 ## 9. Paletas
 
-Paletas vigentes:
+Paletas:
 
-| Nome visual | Chave |
+| Nome | Chave |
 |---|---|
 | Branca | `white` |
 | Visual/Azul | `visual` |
@@ -346,89 +319,55 @@ Paletas vigentes:
 
 Regras:
 
-- paletas alteram CSS variables;
-- paletas não alteram dados;
-- paleta ativa deve afetar cards, conectores, labels, canvas e exportação;
-- desktop é a referência visual;
+- paleta altera CSS variables/tokens;
+- paleta não altera dados;
+- desktop é referência;
 - mobile deve consumir o mesmo contrato visual;
-- não usar cores fixas em mobile como fonte de verdade visual;
-- ícones internos não devem herdar regras globais de conectores;
-- a paleta Visual/Azul usa gradientes em cards;
-- as demais paletas não podem cair em gradiente azul por fallback.
+- ícones internos não devem herdar estilos globais de conectores;
+- exportação deve preservar paleta ativa;
+- CSS novo deve ser escopado.
 
 ---
 
 ## 10. Cards e avatares
 
+Contratos:
+
+| Caso | UI |
+|---|---|
+| Pessoa com foto | imagem real |
+| Pessoa sem foto | `User` |
+| Pet | `PawPrint` |
+
 Regras:
 
-- cards devem preservar contraste entre texto/fundo;
-- avatar com foto deve manter crop estável;
-- avatar sem foto usa `User` de `lucide-react`;
-- pet usa `PawPrint` de `lucide-react`;
-- não há avatar diferente por gênero;
-- falecimento/data de nascimento usam ícones semânticos;
-- microcopy não deve depender de hover para informação essencial;
-- SVGs internos devem exportar corretamente.
-
-Contrato de avatar:
-
-```txt
-foto_principal_url -> foto real
-sem foto           -> User
-pet                -> PawPrint
-```
-
-Contrato de datas em cards compactos:
-
-```txt
-Exibir dado existente.
-Omitir dado ausente.
-Não substituir ausência por frase longa.
-```
+- não diferenciar avatar sem foto por gênero;
+- preservar contraste;
+- manter crop estável;
+- datas só aparecem quando existem;
+- nomes devem permanecer legíveis em cards compactos;
+- estado selecionado/destaque não pode apagar informação principal.
 
 ---
 
 ## 11. Conectores
 
-### Vertical
+Regras gerais:
 
-- conectores SVG por âncoras no desktop;
-- conectores HTML/CSS no mobile vertical;
-- respeitam grupos visíveis;
-- se `Destacar > Grupos` remover chrome, conectores continuam coerentes;
-- cônjuge não é inferido por proximidade.
+- conector deve representar relação explícita;
+- não inferir casamento por proximidade visual;
+- não usar seletor global que afete ícones;
+- conectores devem seguir paleta ativa;
+- conectores devem continuar visíveis na exportação.
 
-### Horizontal
+Por view:
 
-- casal → filhos;
-- cônjuges adjacentes;
-- colunas por geração;
-- conectores não devem invadir cards;
-- conectores devem respeitar paleta ativa;
-- mobile deve seguir estrutura desktop, adaptando recorte/escala/navegação.
-
-### Espessura visual
-
-Contrato:
-
-```txt
-Conectores desktop devem permanecer finos o suficiente para não competir com os cards.
-Referência atual: stroke visual discreto, em torno de 2px nas views oficiais.
-```
-
-Regras:
-
-- reduzir espessura não deve comprometer legibilidade;
-- aumentar espessura exige QA em todas as paletas;
-- conectores devem continuar legíveis em exportação.
-
-### Mobile
-
-- vertical usa conectores HTML/CSS;
-- horizontal usa conectores escopados à geração/tela;
-- conectores não devem criar overflow horizontal indevido;
-- altura do stage deve considerar linhas conectoras visíveis abaixo do último card.
+| View | Regra |
+|---|---|
+| Vertical desktop | SVG por âncoras e grupos. |
+| Vertical mobile | HTML/CSS alinhado à hierarquia visual. |
+| Horizontal desktop | casal → filhos por geração. |
+| Horizontal mobile | conectores da geração ativa e scroll vertical até o fim visual. |
 
 ---
 
@@ -440,16 +379,14 @@ Rota:
 /calendario-familiar
 ```
 
-### Mobile
+UX vigente:
 
-Contrato atual dos filtros de categoria:
-
-```txt
-5 botões em uma linha
-bolinha colorida acima do título
-título em uma linha
-sem overflow horizontal
-```
+- categorias visuais claras;
+- filtros por categoria;
+- em mobile, cinco botões em linha quando possível;
+- bolinha colorida acima do título;
+- título do botão em uma linha;
+- sem overflow horizontal desnecessário.
 
 Categorias:
 
@@ -461,118 +398,83 @@ Outros
 Reunião
 ```
 
-Regras:
-
-- manter os 5 botões em uma única linha;
-- a bolinha colorida deve ficar acima do título;
-- o título deve preencher o botão sem quebrar linha;
-- usar `nowrap` e `ellipsis` em telas estreitas;
-- não voltar para layout em duas linhas sem decisão de produto;
-- validar 320px, 375px, 390px e 430px;
-- o card do mês e a grade do calendário não devem ser afetados por ajustes nos botões.
-
 ---
 
 ## 13. Exportação
+
+Regras de UX:
+
+- exportar sem header/painel/modal/bottom nav/debug;
+- manter título;
+- manter paleta;
+- preservar conectores e cards;
+- mostrar loading enquanto a ação real ocorre;
+- erro de tamanho deve orientar o usuário a reduzir zoom ou usar área.
 
 Ações:
 
 ```txt
 Área
-Imagem/PNG
+Imagem
 PDF
 Imprimir
 ```
-
-Regras visuais:
-
-- título deve aparecer no canvas exportado quando aplicável;
-- painel, header, bottom nav, modal, debug e overlay não entram;
-- conectores aparecem;
-- paleta ativa é respeitada;
-- SVGs internos não viram quadrados escuros;
-- imagem grande demais deve gerar erro claro;
-- loading permanece até exportação concluir.
 
 ---
 
 ## 14. Debug temporário
 
-Um dropdown `Visualizar como...` pode existir como ferramenta temporária de QA:
+`Visualizar como...` é ferramenta de QA/debug.
 
-- permite renderizar as duas views a partir da perspectiva de outra pessoa da tabela `pessoas`;
-- não altera dados;
-- não navega para perfil;
-- não entra na exportação;
-- deve ser removido, protegido por flag ou restrito a admin antes de produção, conforme decisão futura.
+Regras:
+
+- não tratar como fluxo final;
+- não entrar na exportação;
+- não persistir dados reais;
+- decisão de manter/remover/flagar fica no `PLANO_PROXIMOS_PASSOS.md`.
 
 ---
 
-## 15. Breakpoints de QA
+## 15. Breakpoints e QA visual
 
-Validar principalmente:
+Testar, no mínimo:
 
 ```txt
 320px
 375px
 390px
 430px
-768px a 1023px
-1366x768
-1440x900
-1536x864
-1920x1080
+768px
+1366px
+1440px
+1536px
+1920px
 ```
 
-Prioridades:
-
-- mobile iOS/Safari;
-- modal de controles;
-- horizontal por geração;
-- calendário mobile;
-- exportação;
-- painel desktop em altura baixa;
-- paletas nas quatro opções;
-- avatares e conectores.
-
----
-
-## 16. Anti-regressões visuais
-
-Não reintroduzir:
+Superfícies obrigatórias:
 
 ```txt
-/minha-arvore como view ativa
-/genealogia como rota ativa
-/visao-completa como rota ativa
-toggle antigo de múltiplas views
-barra Filtros | Legendas | Ações
-MobileTreeControlsPortal duplicado
-Paterno/Central/Materno na horizontal mobile
-CSS global que atinja todos os svg/path
-Zoom/Exportar/Restaurar no modal mobile
-cores hardcoded no mobile como fonte de verdade
-setas laterais no mobile horizontal
-scroll horizontal manual no mobile horizontal
-Nascimento não informado em card mobile
-fallback azul em paleta laranja/marrom/branca
-calendário mobile com categorias quebrando linha
+/mapa-familiar
+/mapa-familiar-horizontal
+/calendario-familiar
+/pessoa/:id
+/forum
+/notificacoes
+/admin
 ```
 
 ---
 
-## 17. Critério de aceitação para mudanças de layout
+## 16. Critério de aceitação
 
-Antes de aceitar mudança visual:
+Uma mudança de layout só deve ser aceita quando:
 
-```txt
-[ ] Rota testada no desktop.
-[ ] Rota testada no mobile.
-[ ] Paletas white/visual/orange/brown testadas.
-[ ] 320px, 375px, 390px e 430px testados quando houver mobile.
-[ ] Exportação preservada quando a mudança afetar árvore.
-[ ] Sem overflow horizontal novo.
-[ ] Sem mudança de dados.
-[ ] Build executado.
-[ ] git diff --check sem erro real.
-```
+- não reativa rotas removidas;
+- não quebra alternância Vertical/Horizontal;
+- não perde query string;
+- não altera dados para resolver visual;
+- não captura UI transitória na exportação;
+- preserva paletas em desktop e mobile;
+- passa em `npm run build`;
+- passa nos testes aplicáveis;
+- foi validada visualmente nos breakpoints relevantes.
