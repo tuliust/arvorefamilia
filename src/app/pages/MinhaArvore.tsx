@@ -30,14 +30,10 @@ import {
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
+import { Switch } from '../components/ui/switch';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import {
-  GoogleAddressComponent,
-  GooglePlaceResult,
-  GooglePlacesAutocomplete,
-  loadGoogleMapsPlaces,
-} from '../lib/googleMapsLoader';
+import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
   adicionarPessoa,
   adicionarRelacionamentoComInverso,
@@ -85,18 +81,20 @@ import {
   cleanPersonPayload,
   formatPersonName,
   formatPhone,
-  getSocialPlaceholder,
   getInitials,
+  getSocialPlaceholder,
   maskBirthDate,
   normalizeBirthDate,
   normalizeLocation,
   normalizeLocationByMode,
+  normalizeProfession,
   PersonFieldErrors,
   SOCIAL_NETWORKS,
   validateEditablePersonForm,
   validateLocation,
   validateLocationByMode,
 } from '../utils/personFields';
+import { SocialProfilesEditor } from '../components/person/SocialProfilesEditor';
 import { includesNormalizedText, normalizeSearchText } from '../utils/searchText';
 import { toast } from 'sonner';
 
@@ -138,6 +136,7 @@ type MinhaArvoreDraft = {
 
 const AVATAR_SIZE = 512;
 const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
+const INTERNATIONAL_LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade (País). Exemplo: Dublin (Irlanda).';
 const SOCIAL_PROFILE_PREFIXES: Record<string, string> = {
   LinkedIn: 'linkedin.com/in/',
   Facebook: 'facebook.com/',
@@ -340,10 +339,32 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
+  function ToggleField({
+    label,
+    description,
+    checked,
+    onCheckedChange,
+  }: {
+    label: string;
+    description?: string;
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+  }) {
+    return (
+      <div className="flex min-w-0 items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
+        <div className="min-w-0 space-y-1">
+          <Label>{label}</Label>
+          {description && <p className="break-words text-xs leading-snug text-gray-500">{description}</p>}
+        </div>
+        <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+      </div>
+    );
+  }
+
 export function MinhaArvore() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  // addressInputRef removed: using shared AddressAutocompleteInput component
   const hasInitializedFormRef = useRef(false);
   const initializedPessoaIdRef = useRef<string | null>(null);
   const isDirtyRef = useRef(false);
@@ -676,75 +697,7 @@ export function MinhaArvore() {
       return next;
     });
   }, [pessoaBase, relationshipGroups.conjuges, relacionamentos]);
-  useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    const input = addressInputRef.current;
-
-    if (!apiKey) {
-      if (import.meta.env.DEV) {
-        console.warn('[Google Maps] VITE_GOOGLE_MAPS_API_KEY ausente; autocomplete de endereço desativado.');
-      }
-      return;
-    }
-
-    if (loading || linkLoading || !pessoaBase || !input) return;
-
-    let active = true;
-    let autocomplete: GooglePlacesAutocomplete | undefined;
-    let listener: { remove: () => void } | undefined;
-
-    loadGoogleMapsPlaces(apiKey)
-      .then((googleMaps) => {
-        if (!active || !googleMaps || !addressInputRef.current) return;
-
-        const brazilBounds = new googleMaps.maps.LatLngBounds(
-          { lat: -33.75, lng: -73.99 },
-          { lat: 5.27, lng: -34.79 },
-        );
-
-        autocomplete = new googleMaps.maps.places.Autocomplete(addressInputRef.current, {
-          bounds: brazilBounds,
-          componentRestrictions: { country: 'br' },
-          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
-          strictBounds: false,
-          types: ['geocode'],
-        });
-
-        listener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete?.getPlace();
-
-          if (!place?.address_components?.length && import.meta.env.DEV) {
-            console.warn('[Google Maps] place_changed sem address_components.', place);
-          }
-
-          const selectedAddress = place ? formatGooglePlaceAddress(place) : '';
-          if (!selectedAddress) return;
-
-          markFormDirty();
-          setForm((current) => ({
-            ...current,
-            endereco: selectedAddress,
-          }));
-          setErrors((current) => ({
-            ...current,
-            endereco: undefined,
-          }));
-        });
-      })
-      .catch((error) => {
-        if (active && import.meta.env.DEV) {
-          console.warn('[Google Maps] Não foi possível carregar Places.', error);
-        }
-      });
-
-    return () => {
-      active = false;
-      listener?.remove();
-      if (autocomplete && window.google?.maps.event?.clearInstanceListeners) {
-        window.google.maps.event.clearInstanceListeners(autocomplete);
-      }
-    };
-  }, [loading, linkLoading, pessoaBase?.id]);
+  // Google Places autocomplete is handled by AddressAutocompleteInput component.
 
   useEffect(() => {
     return () => {
@@ -869,34 +822,68 @@ export function MinhaArvore() {
   const normalizeFieldOnBlur = (field: keyof EditableOwnPersonPayload) => {
     const value = String(form[field] ?? '');
 
-    if (field === 'nome_completo') updateField(field, formatPersonName(value));
-    if (field === 'data_nascimento') updateField(field, normalizeBirthDate(value));
+    if (field === 'nome_completo') {
+      updateField(field, formatPersonName(value));
+      return;
+    }
+
+    if (field === 'data_nascimento' || field === 'data_falecimento') {
+      updateField(field, normalizeBirthDate(value));
+      return;
+    }
+
+    if (field === 'profissao') {
+      updateField(field, normalizeProfession(value));
+      return;
+    }
+
     if (field === 'local_nascimento' || field === 'local_atual') {
       const international = field === 'local_nascimento'
         ? form.local_nascimento_exterior === true
         : form.local_atual_exterior === true;
+
       const normalizedLocation = normalizeLocationByMode(value, { international });
+
       updateField(field, normalizedLocation);
       setErrors((current) => ({
         ...current,
         [field]: validateLocationByMode(normalizedLocation, { international }),
       }));
+
+      return;
+    }
+
+    if (field === 'local_falecimento') {
+      const international = form.local_falecimento_exterior === true;
+      const normalizedLocation = normalizeLocationByMode(value, { international });
+
+      updateField(field, normalizedLocation);
+      setErrors((current) => ({
+        ...current,
+        local_falecimento: validateLocationByMode(normalizedLocation, { international }),
+      }));
     }
   };
 
   const validateForm = () => {
-    const normalizedForm = {
+    const normalizedForm: EditableOwnPersonPayload = {
       ...form,
       nome_completo: formatPersonName(String(form.nome_completo ?? '')),
       data_nascimento: normalizeBirthDate(String(form.data_nascimento ?? '')),
+      data_falecimento: normalizeBirthDate(String(form.data_falecimento ?? '')),
+      profissao: normalizeProfession(String(form.profissao ?? '')),
       local_nascimento: normalizeLocationByMode(String(form.local_nascimento ?? ''), {
         international: form.local_nascimento_exterior === true,
       }),
       local_atual: normalizeLocationByMode(String(form.local_atual ?? ''), {
         international: form.local_atual_exterior === true,
       }),
+      local_falecimento: normalizeLocationByMode(String(form.local_falecimento ?? ''), {
+        international: form.local_falecimento_exterior === true,
+      }),
       telefone: formatPhone(String(form.telefone ?? '')),
     };
+
     const nextErrors = validateEditablePersonForm(normalizedForm);
 
     setErrors(nextErrors);
@@ -1644,79 +1631,6 @@ export function MinhaArvore() {
           </section>
         )}
 
-        <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)] gap-6">
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 lg:col-span-2">
-            <div className="flex items-start gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setPhotoDialogMode('preview');
-                  setPhotoDialogOpen(true);
-                }}
-                className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 transition hover:ring-2 hover:ring-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                aria-label={avatarUrl ? 'Ampliar ou alterar foto do perfil' : 'Cadastrar foto do perfil'}
-                title={avatarUrl ? 'Ampliar ou alterar foto' : 'Cadastrar foto'}
-              >
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-lg font-bold">
-                    {pessoaInitials}
-                  </span>
-                )}
-                <span className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-black/55 py-1 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100">
-                  Foto
-                </span>
-              </button>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {displayName}
-                </h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Esta área reúne seus dados, vínculos familiares e o escopo de visualização da sua árvore.
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-4 gap-2"
-                  onClick={handlePasswordReset}
-                  disabled={passwordResetting}
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {passwordResetting ? 'Enviando...' : 'Trocar Senha'}
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-4">
-              <div className="rounded-2xl bg-green-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-green-700 font-semibold">Pais</p>
-                <p className="text-2xl font-bold text-green-900 mt-2">{resumo.pais.length}</p>
-              </div>
-              <div className="rounded-2xl bg-amber-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">Irmãos</p>
-                <p className="text-2xl font-bold text-amber-900 mt-2">{resumo.irmaos.length}</p>
-              </div>
-              <div className="rounded-2xl bg-purple-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-purple-700 font-semibold">Cônjuges</p>
-                <p className="text-2xl font-bold text-purple-900 mt-2">{resumo.conjuges.length}</p>
-              </div>
-              <div className="rounded-2xl bg-sky-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-sky-700 font-semibold">Filhos</p>
-                <p className="text-2xl font-bold text-sky-900 mt-2">{filhosHumanos.length}</p>
-              </div>
-              <div className="rounded-2xl bg-rose-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-rose-700 font-semibold">Pets</p>
-                <p className="text-2xl font-bold text-rose-900 mt-2">{petsVinculados.length}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {pessoaBase && (
 
 
@@ -1756,12 +1670,7 @@ export function MinhaArvore() {
                     placeholder="DD/MM/AAAA ou AAAA"
                     aria-invalid={Boolean(errors.data_nascimento)}
                   />
-                  {shouldSuggestFullBirthDate && (
-                    <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p>Se souber, adicione também o dia e o mês de nascimento.</p>
-                    </div>
-                  )}
+                  {/* helper moved to be rendered next to Local de nascimento */}
                 </Field>
 
 
@@ -1771,11 +1680,23 @@ export function MinhaArvore() {
                     value={String(form.local_nascimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_nascimento')}
                     onChange={(e) => updateTextField('local_nascimento', e.target.value)}
-                    placeholder="Cidade/UF"
+                    placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
                     aria-invalid={Boolean(errors.local_nascimento)}
                   />
-                  <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
+                  <p className="text-xs text-gray-500">{form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
+                  <ToggleField
+                    label="Nasci fora do Brasil"
+                    checked={form.local_nascimento_exterior === true}
+                    onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
+                  />
                 </Field>
+
+                {shouldSuggestFullBirthDate && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p>Se souber, adicione também o dia e o mês de nascimento.</p>
+                  </div>
+                )}
 
                 <Field label="Cidade de Residência" error={errors.local_atual}>
                   <Input
@@ -1786,15 +1707,59 @@ export function MinhaArvore() {
                     aria-invalid={Boolean(errors.local_atual)}
                   />
                   <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
+                  <ToggleField
+                    label="Moro no exterior"
+                    checked={form.local_atual_exterior === true}
+                    onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                  />
                 </Field>
 
                 <Field label="Profissão">
                   <Input
                     value={String(form.profissao ?? '')}
                     onChange={(e) => updateTextField('profissao', e.target.value)}
+                    onBlur={() => normalizeFieldOnBlur('profissao')}
                     placeholder="Ex: jornalista, professora, médico, empresário..."
                   />
                 </Field>
+
+                <div className="md:col-span-2">
+                  <ToggleField
+                    label="Pessoa falecida"
+                    description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."
+                    checked={form.falecido === true}
+                    onCheckedChange={(checked) => updateField('falecido', checked)}
+                  />
+                </div>
+
+                {form.falecido === true && (
+                  <>
+                    <Field label="Data de falecimento">
+                      <Input
+                        value={String(form.data_falecimento ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('data_falecimento')}
+                        onChange={(e) => updateTextField('data_falecimento', maskBirthDate(e.target.value))}
+                        placeholder="AAAA ou DD/MM/AAAA"
+                      />
+                    </Field>
+
+                    <Field label="Local de falecimento">
+                      <Input
+                        value={String(form.local_falecimento ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                        onChange={(e) => updateTextField('local_falecimento', e.target.value)}
+                        placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                        aria-invalid={Boolean(errors.local_falecimento)}
+                      />
+                      <p className="text-xs text-gray-500">{form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
+                      <ToggleField
+                        label="Falecimento fora do Brasil"
+                        checked={form.local_falecimento_exterior === true}
+                        onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                      />
+                    </Field>
+                  </>
+                )}
 
                 <Field label="Telefone">
                   <Input
@@ -1805,15 +1770,10 @@ export function MinhaArvore() {
                 </Field>
 
                 <Field label="Endereço">
-                  <Input
-                    ref={addressInputRef}
+                  <AddressAutocompleteInput
                     name="google-places-address-input-minha-arvore"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
                     value={String(form.endereco ?? '')}
-                    onChange={(e) => updateTextField('endereco', e.target.value)}
+                    onChange={(next) => updateTextField('endereco', next)}
                     placeholder="Rua, número, bairro, cidade, CEP"
                   />
                 </Field>
@@ -1830,75 +1790,11 @@ export function MinhaArvore() {
                 </Field>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Redes sociais</Label>
-                  <div className="space-y-3">
-                    {socialProfiles.map((profile, index) => (
-                      <div key={profile.id} className="space-y-2">
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(180px,0.45fr)_minmax(0,1fr)] md:items-start">
-                          <select
-                            value={profile.rede}
-                            onChange={(event) => updateSocialProfile(profile.id, 'rede', event.target.value)}
-                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                            aria-invalid={index === 0 ? Boolean(errors.rede_social) : undefined}
-                          >
-                            <option value="">Selecione a plataforma</option>
-                            {SOCIAL_NETWORKS.map((network) => (
-                              <option key={network} value={network}>
-                                {network}
-                              </option>
-                            ))}
-                          </select>
-
-                          {profile.rede && (
-                            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
-                              <div className="flex min-w-0 flex-1">
-                                <span className="inline-flex h-10 shrink-0 items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600">
-                                  {SOCIAL_PROFILE_PREFIXES[profile.rede]}
-                                </span>
-                                <Input
-                                  value={profile.perfil}
-                                  onChange={(e) => updateSocialProfile(profile.id, 'perfil', e.target.value)}
-                                  placeholder={getSocialPlaceholder(profile.rede)}
-                                  className="rounded-l-none"
-                                  aria-invalid={index === 0 ? Boolean(errors.instagram_usuario) : undefined}
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-10 w-10 shrink-0"
-                                  onClick={addSocialProfile}
-                                  aria-label="Adicionar rede social"
-                                  title="Adicionar rede social"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-10 w-10 shrink-0"
-                                  onClick={() => removeSocialProfile(profile.id)}
-                                  disabled={socialProfiles.length === 1}
-                                  aria-label="Remover rede social"
-                                  title="Remover rede social"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        {index === 0 && (errors.rede_social || errors.instagram_usuario) && (
-                          <p className="text-xs font-medium text-red-600">
-                            {errors.rede_social || errors.instagram_usuario}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <SocialProfilesEditor
+                    profiles={socialProfiles}
+                    onChange={setSocialProfiles}
+                    errors={{ rede_social: errors.rede_social, instagram_usuario: errors.instagram_usuario }}
+                  />
                 </div>
               </div>
 
@@ -1942,8 +1838,6 @@ export function MinhaArvore() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoaBase.id}
-                addButtonVariant="icon"
-                showTitle={false}
               />
             </section>
 

@@ -90,6 +90,10 @@ export type EditableOwnPersonPayload = Pick<
   | 'local_atual_exterior'
   | 'profissao'
 
+  | 'data_falecimento'
+  | 'local_falecimento'
+  | 'local_falecimento_exterior'
+
   | 'foto_principal_url'
   | 'minibio'
   | 'curiosidades'
