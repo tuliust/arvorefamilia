@@ -82,7 +82,6 @@ import {
   formatPhone,
   isPersonDeceased,
   normalizeBirthDate,
-  normalizeLocation,
   normalizeLocationByMode,
   syncFirstSocialProfileToPersonFields,
   validateEditablePersonForm,
@@ -118,6 +117,7 @@ function createEmptyAdminPessoaFormData() {
     local_falecimento: '',
     local_falecimento_exterior: false,
     falecido: false,
+    local_atual_exterior: false,
     local_atual: '',    profissao: '',
 
     foto_principal_url: '',
@@ -288,6 +288,7 @@ export function AdminPessoaForm() {
               local_falecimento: pessoa.local_falecimento || '',
               local_falecimento_exterior: pessoa.local_falecimento_exterior ?? false,
               falecido: pessoa.falecido ?? Boolean(pessoa.data_falecimento || pessoa.local_falecimento),
+              local_atual_exterior: pessoa.local_atual_exterior ?? false,
               local_atual: pessoa.local_atual || '',              profissao: pessoa.profissao || '',
 
               foto_principal_url: pessoa.foto_principal_url || '',
@@ -501,17 +502,20 @@ export function AdminPessoaForm() {
         ...formDataWithSocialProfile,
         ...cleanPersonPayload(formDataWithSocialProfile),
         data_nascimento: normalizeBirthDate(formData.data_nascimento) || undefined,
-        data_falecimento: normalizeBirthDate(formData.data_falecimento) || undefined,
+        data_falecimento: normalizeBirthDate(formData.data_falecimento) || null,
         falecido: isFalecido,
         local_nascimento: normalizeLocationByMode(formData.local_nascimento, {
           international: formData.local_nascimento_exterior,
         }),
-        local_atual: normalizeLocation(formData.local_atual),
         local_falecimento: normalizeLocationByMode(formData.local_falecimento, {
           international: formData.local_falecimento_exterior,
+        }) || null,
+        local_atual: normalizeLocationByMode(formData.local_atual, {
+          international: formData.local_atual_exterior,
         }),
         local_nascimento_exterior: formData.local_nascimento_exterior === true,
         local_falecimento_exterior: formData.local_falecimento_exterior === true,
+        local_atual_exterior: formData.local_atual_exterior === true,
         lado: formData.lado || 'esquerda',
         manual_generation: formData.manual_generation ? Number(formData.manual_generation) : null,
       };

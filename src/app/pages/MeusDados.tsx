@@ -59,14 +59,12 @@ import {
   getInitials,
   maskBirthDate,
   normalizeBirthDate,
-  normalizeLocation,
   normalizeLocationByMode,
   PersonFieldErrors,
   buildSocialProfilesFromPerson,
   createSocialProfile,
   syncFirstSocialProfileToPersonFields,
   validateEditablePersonForm,
-  validateLocation,
   validateLocationByMode,
 } from '../utils/personFields';
 import { getZodiacSignFromBirthDate } from '../utils/zodiac';
@@ -409,11 +407,15 @@ export function MeusDados() {
   }, [form.nome_completo, pessoa?.nome_completo]);
 
   const previewLocation = useMemo(() => {
-    if (form.local_atual) return normalizeLocation(String(form.local_atual)) || 'Sem local informado';
+    if (form.local_atual) {
+      return normalizeLocationByMode(String(form.local_atual), {
+        international: form.local_atual_exterior === true,
+      }) || 'Sem local informado';
+    }
     return normalizeLocationByMode(String(form.local_nascimento || ''), {
       international: form.local_nascimento_exterior === true,
     }) || 'Sem local informado';
-  }, [form.local_atual, form.local_nascimento, form.local_nascimento_exterior]);
+  }, [form.local_atual, form.local_atual_exterior, form.local_nascimento, form.local_nascimento_exterior]);
 
   const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
   const zodiacSign = useMemo(
@@ -487,13 +489,13 @@ export function MeusDados() {
     if (field === 'local_nascimento' || field === 'local_atual') {
       const normalizedLocation = field === 'local_nascimento'
         ? normalizeLocationByMode(value, { international: form.local_nascimento_exterior === true })
-        : normalizeLocation(value);
+        : normalizeLocationByMode(value, { international: form.local_atual_exterior === true });
       updateField(field, normalizedLocation);
       setErrors((current) => ({
         ...current,
         [field]: field === 'local_nascimento'
           ? validateLocationByMode(normalizedLocation, { international: form.local_nascimento_exterior === true })
-          : validateLocation(normalizedLocation),
+          : validateLocationByMode(normalizedLocation, { international: form.local_atual_exterior === true }),
       }));
     }
   };
@@ -505,7 +507,9 @@ export function MeusDados() {
     const normalizedBirthLocation = normalizeLocationByMode(String(form.local_nascimento ?? ''), {
       international: form.local_nascimento_exterior === true,
     });
-    const normalizedCurrentLocation = normalizeLocation(String(form.local_atual ?? ''));
+    const normalizedCurrentLocation = normalizeLocationByMode(String(form.local_atual ?? ''), {
+      international: form.local_atual_exterior === true,
+    });
 
     setErrors(nextErrors);
     setForm((current) => ({

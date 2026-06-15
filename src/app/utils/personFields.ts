@@ -21,6 +21,7 @@ export const PERSON_FIELD_LABELS = {
   local_nascimento: 'Local de nascimento',
   local_nascimento_exterior: 'Local de nascimento fora do Brasil',
   local_atual: 'Residência atual',
+  local_atual_exterior: 'Residência atual fora do Brasil',
 
 
 
@@ -56,10 +57,14 @@ export const EDITABLE_OWN_PERSON_FIELDS: Array<keyof EditableOwnPersonPayload> =
   'data_nascimento',
   'local_nascimento',
   'local_nascimento_exterior',
+  'data_falecimento',
+  'local_falecimento',
+  'local_falecimento_exterior',
+  'falecido',
   'local_atual',
+  'local_atual_exterior',
   'profissao',
 
-  'falecido',
   'minibio',
   'curiosidades',
   'telefone',
@@ -82,11 +87,15 @@ export function buildEditablePersonFormState(pessoa?: Pessoa | null): EditableOw
     data_nascimento: pessoa?.data_nascimento ?? '',
     local_nascimento: pessoa?.local_nascimento ?? '',
     local_nascimento_exterior: pessoa?.local_nascimento_exterior ?? false,
+    data_falecimento: pessoa?.data_falecimento ?? '',
+    local_falecimento: pessoa?.local_falecimento ?? '',
+    local_falecimento_exterior: pessoa?.local_falecimento_exterior ?? false,
+    falecido: pessoa?.falecido ?? Boolean(pessoa?.data_falecimento || pessoa?.local_falecimento),
     local_atual: pessoa?.local_atual ?? '',
+    local_atual_exterior: pessoa?.local_atual_exterior ?? false,
     profissao: pessoa?.profissao ?? '',
 
     foto_principal_url: pessoa?.foto_principal_url ?? '',
-    falecido: pessoa?.falecido ?? Boolean(pessoa?.data_falecimento || pessoa?.local_falecimento),
     minibio: pessoa?.minibio ?? '',
     curiosidades: pessoa?.curiosidades ?? '',
     telefone: pessoa?.telefone ?? '',
@@ -121,6 +130,10 @@ export function titleCase(value: string) {
     .split(' ')
     .map(normalizeWord)
     .join(' ');
+}
+
+export function normalizeProfession(value: string): string {
+  return titleCase(value);
 }
 
 export function formatPersonName(value: string) {
@@ -323,10 +336,10 @@ export function isPersonDeceased(pessoa?: Pick<Pessoa, 'falecido' | 'data_faleci
 }
 
 export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnPersonPayload {
-  const hasDeathInfo = Boolean(
-    String((form as Record<string, unknown>).data_falecimento ?? '').trim() ||
-    String((form as Record<string, unknown>).local_falecimento ?? '').trim()
-  );
+  const normalizedDeathDate = normalizeBirthDate(String(form.data_falecimento ?? ''));
+  const normalizedDeathLocation = normalizeLocationByMode(String(form.local_falecimento ?? ''), {
+    international: form.local_falecimento_exterior === true,
+  });
   const normalizedForm: EditableOwnPersonPayload = {
     ...form,
     nome_completo: formatPersonName(String(form.nome_completo ?? '')),
@@ -334,9 +347,16 @@ export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnP
     local_nascimento: normalizeLocationByMode(String(form.local_nascimento ?? ''), {
       international: form.local_nascimento_exterior === true,
     }),
-    local_atual: normalizeLocation(String(form.local_atual ?? '')),
+    data_falecimento: normalizedDeathDate || null,
+    local_falecimento: normalizedDeathLocation || null,
+    local_falecimento_exterior: form.local_falecimento_exterior === true,
+    falecido: form.falecido === true,
+    local_atual: normalizeLocationByMode(String(form.local_atual ?? ''), {
+      international: form.local_atual_exterior === true,
+    }),
+    local_atual_exterior: form.local_atual_exterior === true,
+    profissao: normalizeProfession(String(form.profissao ?? '')),
     telefone: formatPhone(String(form.telefone ?? '')),
-    falecido: form.falecido === true || hasDeathInfo,
     permitir_exibir_instagram: form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
     permitir_mensagens_whatsapp: form.permitir_mensagens_whatsapp !== false,
     permitir_exibir_data_nascimento: form.permitir_exibir_data_nascimento ?? true,
@@ -370,7 +390,13 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   const normalizedBirthLocation = normalizeLocationByMode(String(form.local_nascimento ?? ''), {
     international: form.local_nascimento_exterior === true,
   });
-  const normalizedCurrentLocation = normalizeLocation(String(form.local_atual ?? ''));
+  const normalizedDeathDate = normalizeBirthDate(String(form.data_falecimento ?? ''));
+  const normalizedDeathLocation = normalizeLocationByMode(String(form.local_falecimento ?? ''), {
+    international: form.local_falecimento_exterior === true,
+  });
+  const normalizedCurrentLocation = normalizeLocationByMode(String(form.local_atual ?? ''), {
+    international: form.local_atual_exterior === true,
+  });
 
   const isPet = (form as Record<string, unknown>).humano_ou_pet === 'Pet';
 
@@ -390,7 +416,17 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   });
   if (birthLocationError) nextErrors.local_nascimento = birthLocationError;
 
-  const currentLocationError = validateLocation(normalizedCurrentLocation);
+  const deathDateError = validateBirthDate(normalizedDeathDate);
+  if (deathDateError) nextErrors.data_falecimento = deathDateError;
+
+  const deathLocationError = validateLocationByMode(normalizedDeathLocation, {
+    international: form.local_falecimento_exterior === true,
+  });
+  if (deathLocationError) nextErrors.local_falecimento = deathLocationError;
+
+  const currentLocationError = validateLocationByMode(normalizedCurrentLocation, {
+    international: form.local_atual_exterior === true,
+  });
   if (currentLocationError) nextErrors.local_atual = currentLocationError;
 
   const socialNetwork = String(form.rede_social ?? '').trim();

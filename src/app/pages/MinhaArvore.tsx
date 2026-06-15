@@ -90,10 +90,12 @@ import {
   maskBirthDate,
   normalizeBirthDate,
   normalizeLocation,
+  normalizeLocationByMode,
   PersonFieldErrors,
   SOCIAL_NETWORKS,
   validateEditablePersonForm,
   validateLocation,
+  validateLocationByMode,
 } from '../utils/personFields';
 import { includesNormalizedText, normalizeSearchText } from '../utils/searchText';
 import { toast } from 'sonner';
@@ -870,11 +872,14 @@ export function MinhaArvore() {
     if (field === 'nome_completo') updateField(field, formatPersonName(value));
     if (field === 'data_nascimento') updateField(field, normalizeBirthDate(value));
     if (field === 'local_nascimento' || field === 'local_atual') {
-      const normalizedLocation = normalizeLocation(value);
+      const international = field === 'local_nascimento'
+        ? form.local_nascimento_exterior === true
+        : form.local_atual_exterior === true;
+      const normalizedLocation = normalizeLocationByMode(value, { international });
       updateField(field, normalizedLocation);
       setErrors((current) => ({
         ...current,
-        [field]: validateLocation(normalizedLocation),
+        [field]: validateLocationByMode(normalizedLocation, { international }),
       }));
     }
   };
@@ -884,8 +889,12 @@ export function MinhaArvore() {
       ...form,
       nome_completo: formatPersonName(String(form.nome_completo ?? '')),
       data_nascimento: normalizeBirthDate(String(form.data_nascimento ?? '')),
-      local_nascimento: normalizeLocation(String(form.local_nascimento ?? '')),
-      local_atual: normalizeLocation(String(form.local_atual ?? '')),
+      local_nascimento: normalizeLocationByMode(String(form.local_nascimento ?? ''), {
+        international: form.local_nascimento_exterior === true,
+      }),
+      local_atual: normalizeLocationByMode(String(form.local_atual ?? ''), {
+        international: form.local_atual_exterior === true,
+      }),
       telefone: formatPhone(String(form.telefone ?? '')),
     };
     const nextErrors = validateEditablePersonForm(normalizedForm);

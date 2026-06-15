@@ -207,11 +207,12 @@ export interface Pessoa {
   data_nascimento?: number | string;
   local_nascimento?: string;
   local_nascimento_exterior?: boolean;
-  data_falecimento?: number | string;
-  local_falecimento?: string;
-  local_falecimento_exterior?: boolean;
+  data_falecimento?: string | null;
+  local_falecimento?: string | null;
+  local_falecimento_exterior?: boolean | null;
   falecido?: boolean;
   local_atual?: string;
+  local_atual_exterior?: boolean | null;
 
   profissao?: string;
   foto_principal_url?: string;
