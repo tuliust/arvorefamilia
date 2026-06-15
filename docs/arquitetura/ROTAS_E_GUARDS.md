@@ -1,4 +1,4 @@
-﻿# Rotas e guards de acesso — Árvore Família
+# Rotas e guards de acesso — Árvore Família
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
@@ -26,6 +26,12 @@ Este documento não detalha layout, exportação nem regras visuais. Para isso, 
 - `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
 - `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
 - `docs/GUIA_UX_LAYOUT.md`.
+
+Para histórico preventivo das rotas removidas, consulte:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
 
 ---
 
@@ -57,6 +63,12 @@ Exceção vigente:
 ```
 
 Essa rota pertence ao fluxo de edição de dados do membro e não deve ser confundida com a antiga view `/minha-arvore`.
+
+O histórico das rotas removidas fica em:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
 
 ---
 
@@ -207,6 +219,12 @@ Rotas antigas:
 | `/minha-arvore` | não é view ativa; deve cair em 404/fluxo não encontrado |
 | `/genealogia` | não é view ativa; deve cair em 404/fluxo não encontrado |
 | `/visao-completa` | não é view ativa; deve cair em 404/fluxo não encontrado |
+
+Referência histórica/preventiva:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
 
 ---
 
@@ -362,6 +380,8 @@ QA de rotas:
 - `/minha-arvore/editar` exige membro autenticado;
 - `/admin/*` bloqueia usuário comum;
 - `/minha-arvore`, `/genealogia` e `/visao-completa` não voltam como views ativas.
+
+Para interpretar ocorrências dessas rotas em buscas, use também `docs/historico/ROTAS_REMOVIDAS.md`.
 
 ---
 
