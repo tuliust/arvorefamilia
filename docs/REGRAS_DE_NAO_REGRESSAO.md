@@ -1,4 +1,3 @@
-
 # Regras de não regressão — Árvore Família
 
 > Última revisão: 2026-06-14
@@ -93,7 +92,8 @@ Interpretação:
 - `genealogia` pode existir como conceito textual, não como rota ativa;
 - aliases antigos podem existir se apontarem para rotas atuais;
 - `Nascimento não informado` pode existir como dívida técnica transitória, mas não deve aparecer no resultado visual mobile;
-- documentos históricos podem conter legado se estiverem claramente marcados.
+- documentos históricos podem conter legado se estiverem claramente marcados;
+- `docs/historico/ROTAS_REMOVIDAS.md` é a referência preventiva para interpretar essas ocorrências.
 
 ---
 
@@ -129,6 +129,12 @@ Interpretação:
 /minha-arvore
 /genealogia
 /visao-completa
+```
+
+Histórico preventivo:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 Regras:
@@ -394,6 +400,7 @@ Regras:
 - `PLANO_PROXIMOS_PASSOS.md` centraliza pendências;
 - documentos funcionais não devem duplicar QA extenso;
 - documentos históricos não reabrem rotas removidas;
+- `docs/historico/ROTAS_REMOVIDAS.md` centraliza o histórico e as anti-regressões específicas de `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - divergência entre histórico e guia canônico é resolvida em favor do guia canônico;
 - divergência entre documentação e código exige auditoria do código.
 
