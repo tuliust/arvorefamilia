@@ -1,9 +1,9 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md`, registrar `docs/historico/ROTAS_REMOVIDAS.md`, classificar `docs/historico/SQLS_LEGADOS.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
+> Status: índice canônico atualizado para incluir a Fase 6 de dados pessoais, vínculos familiares, edição da árvore pelo membro e admin de pessoas.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -26,6 +26,10 @@ A baseline funcional atual registra:
   - `/visao-completa`;
 - o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
 - `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
+- `/meus-dados`, `/meus-vinculos`, `/minha-arvore/editar` e admin de pessoas refletem a Fase 6 de dados pessoais consolidada na `main`;
+- campos de localização internacional, falecimento, profissão normalizada e preservação de booleanos estão documentados em `docs/funcionalidades/DADOS_PESSOAIS_E_VINCULOS.md`;
+- a rota futura `/revisao-dados` ainda não foi implementada; o destino provisório após `/meus-vinculos` é `/minha-arvore/editar`;
+- a frente visual da árvore analisada em branches separadas não foi integrada à `main` nesta entrega;
 - `TreeViewMode` possui apenas:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
@@ -43,6 +47,7 @@ A baseline funcional atual registra:
 - `/calendario-familiar` possui filtros mobile compactos por categoria;
 - `supabase/migrations/` é a fonte da verdade do schema;
 - SQLs soltos ou antigos ficam classificados em `docs/historico/SQLS_LEGADOS.md` quando não forem migrations oficiais;
+- imports colados legados ficam classificados em `docs/historico/IMPORTS_COLADOS_LEGADOS.md`;
 - ReactFlow/Dagre permanecem como legado ativo/dependência técnica e não devem ser removidos sem frente própria.
 
 ---
@@ -56,20 +61,22 @@ A baseline funcional atual registra:
 | Ver o que está implementado por frente | `GUIA_IMPLEMENTACOES.md` |
 | Entender responsabilidades de componentes | `GUIA_COMPONENTES.md` |
 | Revisar UX, layout, responsividade e paletas | `GUIA_UX_LAYOUT.md` |
-| Validar manualmente rotas, árvore, mobile, exportação e deploy | `QA_MANUAL.md` |
+| Validar manualmente rotas, árvore, mobile, exportação, dados pessoais e deploy | `QA_MANUAL.md` |
 | Conferir regras que não podem regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Ver pendências, riscos e decisões futuras | `PLANO_PROXIMOS_PASSOS.md` |
 | Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
 | Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
 | Entender rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
 | Classificar SQL solto ou documento antigo de banco | `docs/historico/SQLS_LEGADOS.md` |
+| Classificar imports colados legados | `docs/historico/IMPORTS_COLADOS_LEGADOS.md` |
+| Entender a Fase 6 de dados pessoais e vínculos | `docs/funcionalidades/DADOS_PESSOAIS_E_VINCULOS.md` |
 
 Regra:
 
 ```txt
 Contrato vigente fica nos guias canônicos.
 QA manual fica em QA_MANUAL.md.
-Pendência fica em PLANO_PROXIMOS_PASSOS.md.
+Pendência fica em PLANO_PROXIMOS_PASSOS.md ou no documento funcional quando a pendência for específica da frente.
 Operação fica em docs/operacao/.
 Histórico fica em docs/historico/.
 supabase/migrations/ é a fonte da verdade do schema.
@@ -87,7 +94,7 @@ supabase/migrations/ é a fonte da verdade do schema.
 | `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado. |
 | `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado. |
 | `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Atualizado. |
-| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Novo. |
+| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Atualizado. |
 | `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Atualizado. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Atualizado. |
 | `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Atualizado. |
@@ -122,11 +129,12 @@ docs/funcionalidades/
 
 | Arquivo | Escopo | Status |
 |---|---|---|
-| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
+| `DADOS_PESSOAIS_E_VINCULOS.md` | Fase 6: dados pessoais, localização, falecimento, vínculos, edição do membro e admin de pessoas. | Referência principal da frente. |
+| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal da árvore. |
 | `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques e conectores. | Atualizado. |
 | `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão. | Atualizado. |
-| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
+| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Vigente. |
+| `PESSOAS_PERFIL_ADMIN.md` | Perfil, reset, sugestões, privacidade, arquivos, eventos, admin e relacionamento conjugal. | Vigente; complementar à Fase 6. |
 | `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com `/minha-arvore` removida. |
 | `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
 | `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Preservar. |
@@ -163,6 +171,12 @@ Mudança de schema, RLS, RPC, trigger, bucket/policy, Edge Function ou secret ex
 supabase/migrations/ é a fonte da verdade do schema.
 ```
 
+Atenção operacional atual:
+
+```txt
+A migration supabase/migrations/20260615120000_add_local_atual_exterior_to_pessoas.sql deve ser aplicada no Supabase correto quando a funcionalidade da Fase 6 for publicada/usada em ambiente real.
+```
+
 ---
 
 ## 7. Histórico
@@ -177,13 +191,14 @@ Uso:
 
 - preservar contexto de decisões passadas;
 - manter documentação antiga sem confundi-la com contrato vigente;
-- guardar material sobre rotas removidas, SQLs legados, refatorações e auditorias já encerradas.
+- guardar material sobre rotas removidas, SQLs legados, imports colados, refatorações e auditorias já encerradas.
 
 | Arquivo | Uso |
 |---|---|
 | `README.md` | Índice histórico consolidado da pasta. |
 | `ROTAS_REMOVIDAS.md` | Histórico preventivo de `/minha-arvore`, `/genealogia` e `/visao-completa`. |
 | `SQLS_LEGADOS.md` | Inventário preventivo de SQLs soltos, dumps, diagnósticos e documentos antigos de banco. |
+| `IMPORTS_COLADOS_LEGADOS.md` | Inventário preventivo de imports colados/legados em `src/imports/pasted_text/`. |
 
 Regras:
 
@@ -192,7 +207,8 @@ Regras:
 - SQL histórico não substitui migration oficial;
 - material histórico útil deve apontar para o documento canônico atual;
 - dúvidas sobre ocorrências dessas rotas antigas devem ser conferidas em `docs/historico/ROTAS_REMOVIDAS.md`;
-- dúvidas sobre SQL solto devem ser conferidas em `docs/historico/SQLS_LEGADOS.md`.
+- dúvidas sobre SQL solto devem ser conferidas em `docs/historico/SQLS_LEGADOS.md`;
+- dúvidas sobre imports colados devem ser conferidas em `docs/historico/IMPORTS_COLADOS_LEGADOS.md`.
 
 ---
 
@@ -206,9 +222,11 @@ Regras:
 | QA manual | `QA_MANUAL.md` |
 | Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Pendência ou risco | `PLANO_PROXIMOS_PASSOS.md` |
+| Dados pessoais, vínculos e admin de pessoa | `docs/funcionalidades/DADOS_PESSOAIS_E_VINCULOS.md` e `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md` |
 | Deploy/operação | `docs/operacao/*` |
 | Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` e `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
 | SQL legado, dump ou diagnóstico antigo | `docs/historico/SQLS_LEGADOS.md` |
+| Imports colados legados | `docs/historico/IMPORTS_COLADOS_LEGADOS.md` |
 | História/legado | `docs/historico/*` |
 
 ---
@@ -251,9 +269,11 @@ docs/QA_MANUAL.md
 
 - Não documentar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas; o histórico preventivo fica em `docs/historico/ROTAS_REMOVIDAS.md`.
 - Não tratar `/minha-arvore/editar` como view antiga da árvore.
+- Não documentar `/revisao-dados` como implementada enquanto a rota não existir.
+- Não documentar ajustes visuais da árvore como concluídos quando estiverem apenas em branches pendentes.
 - Não documentar `pais`/Geração 4 na horizontal como implementado até `TREE-003` ser corrigido no código.
 - Não transformar checklist manual em pendência fechada sem validação real.
-- Não duplicar checklists longos de QA fora de `QA_MANUAL.md`.
+- Não duplicar checklists longos de QA fora de `QA_MANUAL.md`, salvo resumo específico em documento funcional.
 - Não colocar secrets, service role, tokens ou chaves reais na documentação.
 - Não tratar SQL solto como fonte principal do schema; o histórico preventivo fica em `docs/historico/SQLS_LEGADOS.md`.
 - Não usar docs históricas como fonte de implementação vigente.
