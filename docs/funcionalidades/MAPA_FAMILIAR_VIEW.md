@@ -1,9 +1,10 @@
-﻿# Mapa Familiar — views Vertical e Horizontal
+
+# Mapa Familiar — views Vertical e Horizontal
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`
-> Tipo: documentação funcional/técnica das duas views oficiais da árvore.
-> Status: revisado para separar comportamento implementado de pendências abertas.
+> Tipo: documentação funcional/técnica das duas views oficiais da árvore
+> Status: organizado para descrever contratos funcionais e apontar QA manual para `docs/QA_MANUAL.md`.
 
 ---
 
@@ -31,9 +32,13 @@ Ele cobre:
 
 Não cobre em detalhe:
 
-- exportação: ver `docs/funcionalidades/EXPORTACAO_ARVORE.md`;
-- painel/filtros/destaques: ver `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
-- rotas e guards: ver `docs/arquitetura/ROTAS_E_GUARDS.md`.
+| Tema | Documento |
+|---|---|
+| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
+| Painel, filtros e destaques | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
+| QA manual | `docs/QA_MANUAL.md` |
+| Pendências abertas | `docs/PLANO_PROXIMOS_PASSOS.md` |
 
 ---
 
@@ -311,7 +316,7 @@ Portanto:
 - não tratar cônjuges de `pais`/Geração 4 na horizontal como implementados;
 - manter o comportamento como pendência `TREE-003` em `docs/PLANO_PROXIMOS_PASSOS.md`;
 - corrigir apenas em frente de código autorizada;
-- após correção, atualizar este documento e as regras de não regressão.
+- após correção, atualizar este documento, `REGRAS_DE_NAO_REGRESSAO.md` e `QA_MANUAL.md`.
 
 ---
 
@@ -385,120 +390,65 @@ Contrato visual em `/mapa-familiar` mobile:
 
 ```txt
 Nome da pessoa
-★ AAAA, se houver nascimento
-✥ AAAA, se houver falecimento
+★ AAAA, quando houver nascimento
+✥ AAAA, quando houver falecimento
 ```
 
 Regras:
 
-- não exibir `Nascimento não informado`;
-- não exibir `Falecimento não informado`;
-- não exibir linha de nascimento sem ano/data real;
-- não exibir linha de falecimento sem ano/data real;
-- manter contraste em todas as paletas.
-
-### Dívida técnica conhecida
-
-O contrato visual acima é vigente, mas a solução atual depende de limpeza/ocultação posterior em `src/main.tsx`. A correção estrutural deve remover o fallback no componente React. Pendência registrada como `TREE-004`.
+- não exibir linha de nascimento sem dado real;
+- não exibir linha de falecimento sem dado real;
+- não exibir visualmente `Nascimento não informado`;
+- não exibir visualmente `Falecimento não informado`;
+- manter dívida `TREE-004` aberta até remover o fallback direto do componente React.
 
 ---
 
-## 14. Conectores
+## 14. Exportação
 
-### Vertical desktop
+A exportação é suportada nas duas views oficiais.
 
-- SVG por âncoras;
-- recalculado com filtros, zoom, painel e modo wide;
-- não invade cards;
-- não cria relação por proximidade.
+Resumo:
 
-### Vertical mobile
+- Área;
+- Imagem/PNG;
+- PDF;
+- Imprimir.
 
-- conectores HTML/CSS;
-- seguem eixo visual de Paterno/Central/Materno;
-- usam paleta ativa;
-- não afetam horizontal mobile.
-
-### Horizontal desktop
-
-- SVG por geração/casal/filhos;
-- cônjuge adjacente quando incluído pelas regras atuais;
-- casal → tronco → filhos;
-- colunas vazias ocultadas;
-- conector conjugal depende de relacionamento explícito.
-
-### Horizontal mobile
-
-- recorte por geração;
-- conectores da geração ativa;
-- scroll vertical considera cards e linhas;
-- sem scroll horizontal manual.
-
----
-
-## 15. Exportação
-
-A exportação das views oficiais é detalhada em:
+Detalhes técnicos ficam em:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
 ```
 
-Contrato resumido:
+QA manual fica em:
 
-- exportar Área, PNG, PDF e Imprimir;
-- não capturar painel, header, bottom nav, modal, overlays, loading ou debug;
-- preservar título, paleta, conectores, cards e filtros;
-- capturar a view ativa ou a área selecionada.
-
----
-
-## 16. Debug temporário
-
-O seletor `Visualizar como...`, quando presente:
-
-- é ferramenta de QA/debug;
-- não deve entrar na exportação;
-- não deve ser tratado como produto final sem decisão;
-- está registrado como pendência `TREE-005`.
+```txt
+docs/QA_MANUAL.md
+```
 
 ---
 
-## 17. Checklist mínimo de QA
+## 15. QA e pendências
 
-### Rotas
+Este documento descreve contratos funcionais. Para execução de QA, usar:
 
-- [ ] `/mapa-familiar` renderiza vertical.
-- [ ] `/mapa-familiar-horizontal` renderiza horizontal.
-- [ ] `/` redireciona preservando query.
-- [ ] `/minha-arvore`, `/genealogia`, `/visao-completa` não voltaram como views ativas.
-- [ ] `/minha-arvore/editar` permanece vigente.
+```txt
+docs/QA_MANUAL.md
+```
 
-### Desktop
+Pendências relacionadas:
 
-- [ ] Painel funciona sem abas antigas.
-- [ ] Paletas funcionam nas duas views.
-- [ ] Cônjuges e pets respeitam filtros.
-- [ ] Conectores não invadem cards.
-- [ ] Exportação funciona.
+| ID | Tema |
+|---|---|
+| `TREE-001` | validar visualmente `/mapa-familiar` com dados reais |
+| `TREE-002` | validar visualmente `/mapa-familiar-horizontal` com dados reais |
+| `TREE-003` | verificar/corrigir cônjuges de `pais`/Geração 4 na horizontal |
+| `TREE-004` | remover dependência de limpeza DOM para datas desconhecidas no mobile |
+| `TREE-005` | decidir destino do dropdown `Visualizar como...` |
 
-### Mobile
+Fonte das pendências:
 
-- [ ] Vertical usa Paterno/Central/Materno.
-- [ ] Horizontal usa `Ger X`.
-- [ ] Modal mobile não mostra Zoom/Exportar.
-- [ ] Paletas não caem em fallback azul indevido.
-- [ ] Cards não exibem microcopy de dado ausente.
-
----
-
-## 18. Buscas úteis
-
-```bash
-rg "/minha-arvore|/genealogia|/visao-completa" docs src
-rg "TreeViewMode|treeViewMode" docs src
-rg "DesktopFamilyMapView|MobileFamilyTreeView" docs src
-rg "DesktopFamilyHorizontalMapView|MobileFamilyHorizontalMapView" docs src
-rg "FILTERABLE_SPOUSE_ANCHOR_GROUPS" src
-rg "Nascimento não informado|Falecimento não informado" docs src
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
 ```

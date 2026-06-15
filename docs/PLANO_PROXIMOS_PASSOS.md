@@ -1,9 +1,10 @@
-﻿# Plano de próximos passos — Árvore Família
+
+# Plano de próximos passos — Árvore Família
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
-> Tipo: backlog técnico/documental vivo.
-> Status: revisado para conter apenas pendências, riscos, decisões futuras e QA aberto.
+> Tipo: backlog técnico/documental vivo
+> Status: reorganizado para manter apenas pendências, riscos, decisões futuras e QA aberto, com procedimentos de validação centralizados em `docs/QA_MANUAL.md`.
 
 ---
 
@@ -11,12 +12,21 @@
 
 Este documento registra o que **ainda precisa ser verificado, decidido, corrigido ou melhorado** no projeto.
 
-Ele não deve duplicar a documentação funcional consolidada. O estado implementado fica nos documentos canônicos:
+Ele não deve duplicar:
+
+- documentação funcional consolidada;
+- regras de não regressão;
+- checklists longos de QA manual;
+- procedimentos operacionais completos.
+
+Referências principais:
 
 ```txt
 docs/BASELINE_PRODUTO_ATUAL.md
 docs/GUIA_IMPLEMENTACOES.md
 docs/INVENTARIO_TECNICO.md
+docs/QA_MANUAL.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 docs/funcionalidades/*
 docs/arquitetura/*
 docs/operacao/*
@@ -28,7 +38,8 @@ Regras:
 - não registrar pendência como se fosse comportamento vigente;
 - fechar item apenas após validação real, commit de correção ou decisão explícita;
 - mudanças visuais/documentais não exigem migration;
-- mudanças de schema, RPC, policy, trigger, bucket, Edge Function ou secret exigem documentação operacional.
+- mudanças de schema, RPC, policy, trigger, bucket, Edge Function ou secret exigem documentação operacional;
+- procedimentos de QA manual ficam em `docs/QA_MANUAL.md`.
 
 ---
 
@@ -46,6 +57,7 @@ Regras:
 | Exportação | Implementada para as views oficiais por Área, PNG, PDF e Impressão. |
 | Calendário | Implementado com filtros mobile compactos e integração Google Agenda quando configurada. |
 | Fórum, notificações e favoritos | Implementados, sujeitos a QA funcional recorrente. |
+| QA manual | Centralizado em `docs/QA_MANUAL.md`. |
 
 ---
 
@@ -58,9 +70,9 @@ Regras:
 **Título:** Conferir links cruzados após cada reorganização documental.
 **Tipo:** pendência
 **Prioridade:** média
-**Contexto:** a documentação está distribuída entre guias canônicos, funcionalidades, arquitetura, operação e histórico. Reorganizações parciais podem deixar links quebrados ou documentos históricos parecendo vigentes.
-**Evidência:** os guias canônicos referenciam documentos em `docs/funcionalidades/`, `docs/arquitetura/`, `docs/operacao/` e `docs/historico/`.
-**Arquivos relacionados:** `docs/README.md`, `docs/historico/README.md`, `docs/funcionalidades/*`, `docs/arquitetura/*`, `docs/operacao/*`.
+**Contexto:** a documentação está distribuída entre guias canônicos, funcionalidades, arquitetura, operação, QA e histórico. Reorganizações parciais podem deixar links quebrados ou documentos históricos parecendo vigentes.
+**Evidência:** os guias canônicos referenciam documentos em `docs/funcionalidades/`, `docs/arquitetura/`, `docs/operacao/`, `docs/historico/` e `docs/QA_MANUAL.md`.
+**Arquivos relacionados:** `docs/README.md`, `docs/QA_MANUAL.md`, `docs/historico/README.md`, `docs/funcionalidades/*`, `docs/arquitetura/*`, `docs/operacao/*`.
 **Ação recomendada:** antes de remover/mover documento, rodar `rg "NOME_DO_ARQUIVO" docs src README.md` e atualizar links no mesmo commit.
 **Status:** aberto.
 
@@ -97,7 +109,7 @@ Regras:
 **Prioridade:** média
 **Contexto:** os comandos existem, mas a validação ainda depende de execução manual quando não há workflow configurado.
 **Evidência:** `package.json` declara `vite build`, `vitest run` e `playwright test`.
-**Arquivos relacionados:** `package.json`, `.github/workflows/*`.
+**Arquivos relacionados:** `package.json`, `.github/workflows/*`, `docs/QA_MANUAL.md`.
 **Ação recomendada:** criar workflow para PR/push com build e Vitest; Playwright pode ser job separado.
 **Status:** backlog.
 
@@ -134,8 +146,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** a view vertical combina grupos, conectores, paletas, pets, cônjuges, zoom, painel e exportação.
 **Evidência:** `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`.
-**Ação recomendada:** testar 1366, 1440, 1536, 1920, tablet e mobile 320/375/390/430.
+**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar o roteiro de Árvore Familiar vertical em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: TREE-002
@@ -145,8 +157,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** a horizontal depende de gerações, colunas, cônjuges adjacentes, conectores casal → filhos e exportação.
 **Evidência:** `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView`.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`.
-**Ação recomendada:** validar colunas por geração, conectores, filtros, exportação e mobile por geração.
+**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar o roteiro de Mapa Genealógico horizontal em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: TREE-003
@@ -156,7 +168,7 @@ Regras:
 **Prioridade:** alta
 **Contexto:** a regra desejada é que cônjuges de pessoas classificadas como `pais`/Geração 4 apareçam na horizontal quando o filtro `Cônjuges` estiver ativo. No código auditado, os grupos filtráveis não incluem `pais`.
 **Evidência:** `FILTERABLE_SPOUSE_ANCHOR_GROUPS` inclui `tios`, `primos`, `sobrinhos`, `filhos` e `netos`, mas não `pais`, em desktop e mobile horizontal.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`.
+**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`, `docs/QA_MANUAL.md`.
 **Ação recomendada:** reproduzir com dados reais; se confirmado, incluir `pais` no conjunto apropriado, validar contagens e adicionar teste/QA.
 **Status:** aberto.
 
@@ -167,7 +179,7 @@ Regras:
 **Prioridade:** média
 **Contexto:** o contrato visual é não exibir `Nascimento não informado` nem `Falecimento não informado` em cards mobile. Hoje a solução é indireta, via limpeza DOM em `src/main.tsx`.
 **Evidência:** `MobileFamilyTreeView.tsx` ainda pode montar fallback textual e `src/main.tsx` remove/oculta as linhas depois.
-**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `src/main.tsx`.
+**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `src/main.tsx`, `docs/QA_MANUAL.md`.
 **Ação recomendada:** corrigir no componente React em frente própria e remover fallback DOM quando validado.
 **Status:** aberto.
 
@@ -193,8 +205,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** o modal tem contrato específico: sem Zoom, sem Restaurar, sem Exportar, com `Grupos` sob demanda.
 **Evidência:** `SidebarPanelTabs` muda comportamento quando `mobileControls=true`; `Home` controla abertura/fechamento do modal.
-**Arquivos relacionados:** `src/app/pages/Home.tsx`, `src/app/pages/home/SidebarPanelTabs.tsx`, `src/styles/mobile-tree-controls.css`.
-**Ação recomendada:** testar Chrome Android, Safari/iOS, 320/375/390/430px, safe area, overlay, scroll interno e destravamento do body.
+**Arquivos relacionados:** `src/app/pages/Home.tsx`, `src/app/pages/home/SidebarPanelTabs.tsx`, `src/styles/mobile-tree-controls.css`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de modal mobile em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: MOB-002
@@ -204,8 +216,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** a horizontal mobile deve ter uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno.
 **Evidência:** `MobileFamilyHorizontalMapView` é renderizado para `/mapa-familiar-horizontal` no mobile.
-**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`.
-**Ação recomendada:** validar gestos reais, altura de conectores, último card, safe area e ausência de scroll horizontal manual.
+**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de horizontal mobile em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 ---
@@ -219,8 +231,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** `/calendario-familiar` deve exibir 5 categorias em uma linha no mobile, com bolinha acima do texto.
 **Evidência:** `CalendarioFamiliar.tsx` define categorias e `calendar-mobile-category-buttons.css` controla layout compacto.
-**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/styles/calendar-mobile-category-buttons.css`.
-**Ação recomendada:** validar 320, 375, 390 e 430px, especialmente `Aniversário` e `Falecimento`.
+**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/styles/calendar-mobile-category-buttons.css`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de calendário familiar em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: CAL-002
@@ -230,7 +242,7 @@ Regras:
 **Prioridade:** média
 **Contexto:** a integração depende de OAuth, services e Edge Functions.
 **Evidência:** a página chama services de status, conexão, sincronização e desconexão.
-**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/app/services/googleCalendarService.ts`, `docs/operacao/OAUTH_GOOGLE.md`.
+**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/app/services/googleCalendarService.ts`, `docs/operacao/OAUTH_GOOGLE.md`, `docs/QA_MANUAL.md`.
 **Ação recomendada:** testar conexão, callback, sincronização, desconexão, ausência de tokens no frontend e test users quando aplicável.
 **Status:** aberto.
 
@@ -245,8 +257,8 @@ Regras:
 **Prioridade:** alta
 **Contexto:** exportação deve funcionar por Área, PNG, PDF e Impressão em `/mapa-familiar` e `/mapa-familiar-horizontal`.
 **Evidência:** painel dispara `select-area`, `save-image`, `save-pdf` e `print`; views fornecem refs e ações.
-**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `HomeTreeSection.tsx`, `SidebarPanelTabs.tsx`.
-**Ação recomendada:** testar as quatro ações em ambas as views, com paletas diferentes, filtros e área selecionada.
+**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `HomeTreeSection.tsx`, `SidebarPanelTabs.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de exportação em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: EXP-002
@@ -256,7 +268,7 @@ Regras:
 **Prioridade:** média
 **Contexto:** `html2canvas` pode falhar ou renderizar SVGs/ícones de forma incorreta.
 **Evidência:** `treeExport.ts` contém sanitização/normalização para cores e SVGs.
-**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `FamilyTreeVisualCards.tsx`.
+**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `FamilyTreeVisualCards.tsx`, `docs/QA_MANUAL.md`.
 **Ação recomendada:** testar pessoas com foto, pessoas sem foto, pets, ícones de nascimento/falecimento e CORS de imagens.
 **Status:** aberto.
 
@@ -271,8 +283,8 @@ Regras:
 **Prioridade:** média
 **Contexto:** `?voltar=` deve aceitar apenas destinos internos seguros e cair no fallback canônico quando inválido.
 **Evidência:** perfil aceita retorno para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`.
-**Arquivos relacionados:** `src/app/pages/PersonProfile.tsx`, `src/app/pages/Home.tsx`.
-**Ação recomendada:** testar abertura de perfil a partir das duas views, retorno com `?pessoa=...`, rejeição de URL externa e fallback.
+**Arquivos relacionados:** `src/app/pages/PersonProfile.tsx`, `src/app/pages/Home.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de perfil e retorno em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 #### ID: PERF-002
@@ -297,8 +309,8 @@ Regras:
 **Prioridade:** média
 **Contexto:** fórum inclui tópicos, respostas, reações, favoritos e notificações.
 **Evidência:** rotas `/forum`, `/forum/novo`, `/forum/topico/:id` e `/forum/topico/:id/editar` existem sob `MemberRoute`.
-**Arquivos relacionados:** `src/app/pages/forum/*`, `src/app/services/forumService.ts`.
-**Ação recomendada:** validar listagem, criação, edição, abertura de tópico, permissão, favoritos e notificações.
+**Arquivos relacionados:** `src/app/pages/forum/*`, `src/app/services/forumService.ts`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de fórum em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 ---
@@ -312,8 +324,8 @@ Regras:
 **Prioridade:** média
 **Contexto:** notificações dependem de páginas, preferências, logs e eventual dispatch por Edge Functions.
 **Evidência:** `/notificacoes`, `/ajustar-notificacoes` e `/admin/notificacoes` existem no roteamento atual.
-**Arquivos relacionados:** `src/app/pages/Notificacoes.tsx`, `src/app/pages/AjustarNotificacoes.tsx`, `src/app/pages/admin/AdminNotificacoes.tsx`.
-**Ação recomendada:** validar leitura, marcação, preferências e área administrativa.
+**Arquivos relacionados:** `src/app/pages/Notificacoes.tsx`, `src/app/pages/AjustarNotificacoes.tsx`, `src/app/pages/admin/AdminNotificacoes.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar roteiro de notificações em `docs/QA_MANUAL.md`.
 **Status:** aberto.
 
 ---
@@ -344,95 +356,42 @@ Regras:
 
 ---
 
-### Operação/deploy
+## 4. Backlog de refatoração futura
 
-#### ID: OPS-001
-
-**Título:** Rodar validação completa após alterações documentais que mexam em contratos.
-**Tipo:** pendência operacional
-**Prioridade:** média
-**Contexto:** mesmo documentação pode induzir alterações futuras incorretas se divergir do código.
-**Evidência:** contratos de rotas, guards e árvore são verificados por build/testes.
-**Arquivos relacionados:** `package.json`, `tests/e2e/*`, `docs/*`.
-**Ação recomendada:** após alterar docs canônicos, rodar `git diff --check`, `npm run build`, `npm test` e `npm run test:e2e`.
-**Status:** aberto.
+| ID | Frente | Prioridade | Observação |
+|---|---|---:|---|
+| REF-001 | Extrair responsabilidades de `Home.tsx` | média | Separar dados, filtros, painel, modais, exportação, debug e seleção de pessoa. |
+| REF-002 | Renomear `SidebarPanelTabs` | baixa | O componente não representa mais tabs; possível nome futuro: `TreeControlPanel`. |
+| REF-003 | Compartilhar view model entre horizontal desktop/mobile | média | Reduz divergência estrutural entre as duas renderizações. |
+| REF-004 | Remover legado ReactFlow com segurança | baixa | Exige inventário de imports, testes e validação de exportação. |
+| REF-005 | Extrair limpeza DOM de datas desconhecidas do `main.tsx` | média | Relacionado a `TREE-004`. |
 
 ---
 
-### Refatoração futura
+## 5. Como fechar um item
 
-#### ID: REF-001
+Para fechar qualquer item deste plano:
 
-**Título:** Extrair responsabilidades de `Home.tsx`.
-**Tipo:** refatoração futura
-**Prioridade:** média
-**Contexto:** `Home.tsx` concentra dados, filtros, painel, modais, exportação, debug e seleção de pessoa.
-**Evidência:** inventário técnico classifica `Home.tsx` como vigente com dívida alta.
-**Arquivos relacionados:** `src/app/pages/Home.tsx`, `src/app/pages/home/*`.
-**Ação recomendada:** extrair por domínio em etapas pequenas: estado de filtros, ações de exportação, pessoa central, modal mobile e debug.
-**Status:** backlog.
+1. identificar commit ou decisão explícita;
+2. executar validação aplicável;
+3. registrar evidência;
+4. atualizar documentação canônica afetada;
+5. remover, arquivar ou marcar o item como concluído.
 
-#### ID: REF-002
-
-**Título:** Renomear `SidebarPanelTabs` quando o painel estiver estabilizado.
-**Tipo:** refatoração futura
-**Prioridade:** baixa
-**Contexto:** o componente não representa mais tabs, mas o nome histórico permanece.
-**Evidência:** docs funcionais registram que a barra de tabs foi removida.
-**Arquivos relacionados:** `src/app/pages/home/SidebarPanelTabs.tsx`.
-**Ação recomendada:** renomear em frente própria, por exemplo para `TreeControlPanel`, com busca global e build.
-**Status:** backlog.
-
----
-
-## 4. Itens fechados ou tratados como baseline
-
-Os itens abaixo não devem permanecer como pendências abertas:
-
-| Item | Onde documentar |
-|---|---|
-| Rotas oficiais da árvore | `BASELINE_PRODUTO_ATUAL.md`, `ROTAS_E_GUARDS.md`, `MAPA_FAMILIAR_VIEW.md` |
-| Remoção de `/minha-arvore`, `/genealogia`, `/visao-completa` como views ativas | Baseline, regras de não regressão, arquitetura |
-| Matriz de renderização desktop/mobile | Baseline, guia de componentes, mapa familiar |
-| Painel sem `Filtros | Legendas | Ações` | Guia UX, painel/conectores |
-| Modal mobile sem Zoom/Exportar | Guia UX, painel/conectores |
-| Exportação por Área/PNG/PDF/Imprimir | `EXPORTACAO_ARVORE.md` |
-| Paletas oficiais | Baseline, UX, inventário |
-| Calendário mobile com 5 categorias | Baseline, calendário funcional |
-
----
-
-## 5. Validação recomendada
-
-Antes de fechar qualquer item:
-
-```bash
-git diff --check
-npm run build
-npm test
-npm run test:e2e
-```
-
-Para alterações visuais, adicionar QA manual:
+Checklist de fechamento:
 
 ```txt
-Desktop: 1366, 1440, 1536, 1920
-Mobile: 320, 375, 390, 430
-Tablet: ao menos um breakpoint intermediário
-Browsers: Chrome e Safari/iOS quando houver mobile
+Item:
+Commit:
+Validação automática:
+QA manual:
+Documento atualizado:
+Resultado:
+Pendências restantes:
 ```
 
----
+Procedimentos de QA manual ficam em:
 
-## 6. Regra de atualização deste plano
-
-Adicionar item novo apenas quando houver:
-
-- erro confirmado;
-- risco técnico claro;
-- decisão pendente;
-- QA não executado;
-- melhoria futura não implementada;
-- lacuna documental real.
-
-Não usar este arquivo como depósito de histórico extenso. Histórico útil deve ir para `docs/historico/`.
+```txt
+docs/QA_MANUAL.md
+```

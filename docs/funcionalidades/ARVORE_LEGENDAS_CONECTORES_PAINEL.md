@@ -1,9 +1,10 @@
-﻿# Árvore — painel, filtros, conectores, destaques e exportação
+
+# Árvore — painel, filtros, conectores, destaques e exportação
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
-> Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore.
-> Status: revisado para refletir o painel atual sem abas e separar pendências abertas.
+> Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore
+> Status: organizado para descrever contrato funcional e apontar QA manual para `docs/QA_MANUAL.md`.
 
 ---
 
@@ -18,19 +19,24 @@ Este documento descreve:
 - cards do painel;
 - conectores;
 - destaques;
-- seleção por área;
-- relação com exportação.
+- relação do painel com exportação.
 
-Para detalhes das views em si, ver:
+Para detalhes das views em si:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 ```
 
-Para detalhes da exportação, ver:
+Para detalhes da exportação:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
+```
+
+Para QA manual:
+
+```txt
+docs/QA_MANUAL.md
 ```
 
 ---
@@ -153,7 +159,7 @@ Regras:
 - `?pessoa=...` não pode ser perdido;
 - painel não entra na exportação;
 - `Restaurar visualização` não é sinônimo de `Zoom -`;
-- ações não devem depender de abas removidas.
+- ações não dependem de abas removidas.
 
 ---
 
@@ -339,14 +345,6 @@ Até nova decisão:
 
 ### Vertical desktop
 
-View:
-
-```txt
-DesktopFamilyMapView
-```
-
-Características:
-
 - SVG por âncoras;
 - recalcula com grupos, zoom, scroll e painel;
 - respeita filtros e destaques;
@@ -355,28 +353,12 @@ Características:
 
 ### Vertical mobile
 
-View:
-
-```txt
-MobileFamilyTreeView
-```
-
-Características:
-
 - conectores HTML/CSS;
 - navegação Paterno/Central/Materno;
 - paleta ativa;
 - alinhamento baseado na hierarquia desktop.
 
 ### Horizontal desktop
-
-View:
-
-```txt
-DesktopFamilyHorizontalMapView
-```
-
-Características:
 
 - SVG por geração/casal/filhos;
 - cônjuges adjacentes quando incluídos;
@@ -385,14 +367,6 @@ Características:
 - conectores recalculam com grupos/cabeçalhos.
 
 ### Horizontal mobile
-
-View:
-
-```txt
-MobileFamilyHorizontalMapView
-```
-
-Características:
 
 - uma geração por tela;
 - botões `Ger X`;
@@ -404,7 +378,7 @@ Características:
 Regra crítica:
 
 ```txt
-Conector conjugal nunca deve ser inferido apenas por proximidade visual.
+Conector conjugal nunca deve ser inferido por proximidade visual.
 ```
 
 ---
@@ -421,22 +395,22 @@ Opções:
 
 | Opção | Comportamento |
 |---|---|
-| Linhas | Destaca/oculta conectores conforme view. |
-| Cards | Aplica realce visual nos cards. |
-| Grupos | Reduz/oculta chrome de grupos, preservando conteúdo. |
+| Linhas | Afeta conectores/linhas conforme view. |
+| Cards | Realça ou destaca cards. |
+| Grupos | Reduz/oculta chrome visual de grupos, preservando conteúdo. |
 
 Regras:
 
 - destaque não altera dados;
-- destaque deve ser respeitado na exportação;
+- destaque deve ser refletido na exportação;
 - `Destacar > Grupos` não pode quebrar conectores;
-- labels auxiliares de UI não devem aparecer na exportação quando forem transitórias.
+- labels auxiliares não devem aparecer na exportação se forem apenas UI.
 
 ---
 
-## 15. Exportação a partir do painel
+## 15. Relação com exportação
 
-Ações:
+O painel desktop/completo aciona:
 
 ```txt
 Área
@@ -445,101 +419,38 @@ PDF
 Imprimir
 ```
 
-Regras:
-
-- disponíveis no desktop/completo;
-- não disponíveis no modal mobile de controles;
-- exportam a view ativa;
-- respeitam paleta, filtros, conectores e título;
-- ignoram painel, modal, header, bottom nav, overlays, loading e debug;
-- `Área` funciona como toggle;
-- loading fecha mesmo em caso de erro.
-
-Arquivo canônico de detalhes:
+Este documento registra apenas que o painel expõe as ações. Detalhes técnicos de refs, `html2canvas`, loading, crop e título ficam em:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
 ```
 
+Regras locais:
+
+- modal mobile não exibe Exportar;
+- painel/modal não entram na captura;
+- remoção da antiga barra de tabs não pode quebrar exportação.
+
 ---
 
-## 16. Seleção por área
+## 16. QA
 
-Componente:
+Procedimentos manuais ficam em:
 
 ```txt
-TreeAreaSelectionOverlay
+docs/QA_MANUAL.md
 ```
 
-Fluxo esperado:
+Usar especialmente as seções:
+
+- painel desktop;
+- modal mobile de controles;
+- paletas;
+- cônjuges, núcleos e conectores;
+- exportação.
+
+Pendências continuam em:
 
 ```txt
-Exportar > Área
--> usuário arrasta seleção
--> toolbar de ações
--> PNG/PDF/Imprimir
--> crop da região visível
--> título
--> fechamento do overlay
-```
-
-Regras:
-
-- seleção mínima;
-- não capturar overlay/toolbar;
-- bloquear captura grande demais;
-- impedir cliques repetidos durante exportação.
-
----
-
-## 17. Debug temporário
-
-O seletor `Visualizar como...`, quando presente:
-
-- é ferramenta de QA/debug;
-- usa `data-tree-export-ignore="true"`;
-- não deve ser documentado como funcionalidade final;
-- precisa de decisão futura registrada em `TREE-005`.
-
----
-
-## 18. Checklist de QA
-
-### Painel desktop
-
-- [ ] não há barra `Filtros | Legendas | Ações`;
-- [ ] filtros aparecem diretamente;
-- [ ] `Cores`, `Exportar` e `Destacar` funcionam;
-- [ ] Vertical/Horizontal preservam query;
-- [ ] painel não aparece na exportação;
-- [ ] cards do painel seguem paleta ativa.
-
-### Modal mobile
-
-- [ ] contém Vertical, Horizontal, Cores, Grupos, Destacar e Filtros;
-- [ ] não contém Zoom, Restaurar nem Exportar;
-- [ ] `Grupos` abre/fecha cards;
-- [ ] filtros permanecem visíveis;
-- [ ] body destrava ao fechar;
-- [ ] modal não entra na exportação.
-
-### Conectores
-
-- [ ] não invadem cards;
-- [ ] preservam paleta;
-- [ ] recalculam com filtros;
-- [ ] cônjuges exigem relacionamento explícito;
-- [ ] horizontal mobile permite rolar até conectores visíveis.
-
----
-
-## 19. Buscas úteis
-
-```bash
-rg "Filtros \| Legendas \| Ações" docs src
-rg "activeSidebarPanel" docs src
-rg "data-tree-export-ignore" src
-rg "data-tree-panel-card" src styles
-rg "FILTERABLE_SPOUSE_ANCHOR_GROUPS" src
-rg "Visualizar como" src docs
+docs/PLANO_PROXIMOS_PASSOS.md
 ```

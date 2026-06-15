@@ -1,13 +1,14 @@
+
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/README.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico sincronizado com as duas views oficiais da árvore, painel simplificado, paletas desktop/mobile, calendário mobile, exportação e documentação histórica.
+> Última revisão: 2026-06-14
+> Local canônico: `docs/README.md`
+> Projeto: `tuliust/arvorefamilia`
+> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
-Use este arquivo como ponto de entrada antes de consultar guias específicos. A documentação canônica deve registrar comportamento implementado, contratos de produto vigentes ou pendências explicitamente classificadas como backlog/QA.
+Use este arquivo como ponto de entrada. A documentação canônica deve registrar comportamento implementado, contratos vigentes ou pendências explicitamente classificadas.
 
 ---
 
@@ -16,94 +17,58 @@ Use este arquivo como ponto de entrada antes de consultar guias específicos. A 
 A baseline funcional atual registra:
 
 - `/entrar` funciona como home pública, login, cadastro, primeiro acesso e aceite legal;
-- a rota raiz `/` redireciona para `/mapa-familiar`, preservando `location.search`;
-- as views oficiais da árvore são apenas:
+- `/` redireciona para `/mapa-familiar`, preservando `location.search`;
+- as views oficiais da árvore são:
   - **Árvore Familiar** — `/mapa-familiar`;
   - **Mapa Genealógico** — `/mapa-familiar-horizontal`;
-- as antigas views de árvore foram removidas do roteamento ativo:
+- as views antigas foram removidas do roteamento ativo:
   - `/minha-arvore`;
   - `/genealogia`;
   - `/visao-completa`;
 - `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
-- `TreeViewMode` possui exatamente:
+- `TreeViewMode` possui apenas:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
-- `/mapa-familiar` usa:
-  - `DesktopFamilyMapView` no desktop/tablet;
-  - `MobileFamilyTreeView` no mobile;
-- `/mapa-familiar-horizontal` usa:
-  - `DesktopFamilyHorizontalMapView` no desktop/tablet;
-  - `MobileFamilyHorizontalMapView` no mobile;
-- os títulos vigentes são:
-  - `/mapa-familiar`: `Árvore Familiar de {primeiroNome}` ou `Árvore Familiar`;
-  - `/mapa-familiar-horizontal`: `Mapa Genealógico de {primeiroNome}` ou `Mapa Genealógico`;
-- o painel desktop foi simplificado e não possui mais a barra visual `Filtros | Legendas | Ações`;
-- o painel desktop preserva:
-  - Zoom +;
-  - Zoom -;
-  - Restaurar visualização;
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Exportar;
-  - Destacar;
-  - Grupos;
-  - Filtros;
-- os cards de grupos e filtros do painel desktop devem usar o mesmo vocabulário visual dos cards da árvore, com gradiente, borda, texto e estado inativo coerentes com a paleta ativa;
-- o modal mobile possui contrato próprio e reduzido:
-  - Vertical;
-  - Horizontal;
-  - Cores;
-  - Grupos;
-  - Destacar;
-  - Filtros;
-- o modal mobile não deve exibir:
-  - Zoom +;
-  - Zoom -;
-  - Restaurar visualização;
-  - Exportar;
-- o botão **Grupos** no mobile abre/fecha os cards de grupos sob demanda;
-- os filtros mobile ficam sempre visíveis e devem caber em 4 colunas quando aplicável;
-- a alternância Vertical/Horizontal preserva `location.search`, incluindo `?pessoa=...`;
-- `PersonProfile` aceita retorno seguro para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- favoritos e busca global incluem as duas views oficiais;
-- aliases como “minha árvore”, “genealogia” e “visão completa” podem existir apenas como keywords que apontam para rotas atuais;
-- exportação nas views oficiais cobre:
-  - Área;
-  - Imagem/PNG;
-  - PDF;
-  - Imprimir;
-- exportação é recurso do painel desktop/completo; o modal mobile de controles não deve expor Exportar;
+- `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
+- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
+- o painel desktop não possui mais a barra `Filtros | Legendas | Ações`;
+- o modal mobile é reduzido e não exibe Zoom, Restaurar visualização ou Exportar;
 - a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
-- a paleta visual do desktop é a referência do mobile;
+- exportação cobre Área, Imagem/PNG, PDF e Imprimir nas views oficiais;
+- a referência visual de paletas é o desktop, com adaptação mobile por tokens/overrides escopados;
 - as paletas oficiais são `white`, `visual`, `orange` e `brown`;
-- a paleta Visual/Azul usa gradientes teal/cyan/blue nos cards da árvore e nas correções específicas necessárias para mobile/horizontal;
-- as paletas `white`, `orange` e `brown` no mobile devem replicar o comportamento desktop;
-- bordas de grupos mobile devem usar as variáveis da paleta ativa;
-- cards mobile de pessoas não devem exibir fallback textual como `Nascimento não informado` ou `Falecimento não informado`;
-- cards mobile podem exibir abaixo do nome:
-  - estrela + ano de nascimento, se houver;
-  - cruz + ano de falecimento, se houver;
-- `/mapa-familiar` suporta núcleos conjugais adicionais quando a pessoa central tem mais de um relacionamento e filhos associados ao outro pai/mãe;
-- `/mapa-familiar-horizontal` deve exibir cônjuges da Geração 4/Pais quando o filtro `Cônjuges` estiver ativo;
-- `/calendario-familiar` no mobile deve exibir os 5 botões de categorias em uma única linha, com bolinha colorida acima do título, mantendo o título em uma linha;
-- ReactFlow/Dagre continuam presentes como dependência técnica de código legado ativo, tipos, layouts ou utilitários; não devem ser removidos por limpeza superficial;
-- artefatos locais como `test-results/`, `playwright-report/`, `coverage/`, `backups/` e `.env*.save` ficam fora do versionamento.
+- cards mobile não devem exibir visualmente `Nascimento não informado` ou `Falecimento não informado`;
+- a vertical suporta núcleos conjugais adicionais quando há dados reais;
+- cônjuges de `pais`/Geração 4 na horizontal continuam pendência documentada, não implementação consolidada;
+- `/calendario-familiar` possui filtros mobile compactos por categoria;
+- ReactFlow/Dagre permanecem como legado ativo/dependência técnica e não devem ser removidos sem frente própria.
 
 ---
 
-## 2. Regras de uso da documentação
+## 2. Como usar a documentação
 
-- Arquivos na raiz de `docs/` são guias canônicos gerais.
-- Arquivos em `docs/funcionalidades/` são guias canônicos de comportamento funcional específico.
-- Arquivos em `docs/arquitetura/` descrevem rotas, guards, arquitetura e modelo de usuários/dados.
-- Arquivos em `docs/operacao/` descrevem procedimentos operacionais e de manutenção.
-- Arquivos em `docs/historico/` são históricos e não substituem os guias canônicos.
-- Pendências reais, QA e decisões futuras devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
-- Quando houver divergência entre documentação e código atual, revisar o código e atualizar o guia canônico.
-- Quando houver divergência entre guia atual e conteúdo histórico, prevalece o guia atual.
-- Conteúdo histórico não deve ser usado para restaurar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
-- A referência visual de paletas é o desktop; o mobile deve herdar os mesmos tokens CSS e só pode ter overrides escopados quando forem necessários para reproduzir o resultado visual do desktop.
+| Necessidade | Documento principal |
+|---|---|
+| Entender o estado funcional vigente | `BASELINE_PRODUTO_ATUAL.md` |
+| Ver mapa técnico de arquivos, services, CSS e legado | `INVENTARIO_TECNICO.md` |
+| Ver o que está implementado por frente | `GUIA_IMPLEMENTACOES.md` |
+| Entender responsabilidades de componentes | `GUIA_COMPONENTES.md` |
+| Revisar UX, layout, responsividade e paletas | `GUIA_UX_LAYOUT.md` |
+| Validar manualmente rotas, árvore, mobile, exportação e deploy | `QA_MANUAL.md` |
+| Conferir regras que não podem regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Ver pendências, riscos e decisões futuras | `PLANO_PROXIMOS_PASSOS.md` |
+| Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
+| Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
+
+Regra:
+
+```txt
+Contrato vigente fica nos guias canônicos.
+QA manual fica em QA_MANUAL.md.
+Pendência fica em PLANO_PROXIMOS_PASSOS.md.
+Operação fica em docs/operacao/.
+Histórico fica em docs/historico/.
+```
 
 ---
 
@@ -117,10 +82,11 @@ A baseline funcional atual registra:
 | `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado. |
 | `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado. |
 | `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Atualizado. |
-| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
-| `REGRAS_DE_NAO_REGRESSAO.md` | Checklist técnico e manual para mudanças futuras. | Atualizado. |
-| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA e backlog pós-frente. | Atualizado. |
+| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Novo. |
+| `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Atualizado. |
+| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Atualizado. |
 | `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Atualizado. |
+| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
 
 ---
@@ -152,154 +118,126 @@ docs/funcionalidades/
 | Arquivo | Escopo | Status |
 |---|---|---|
 | `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
-| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques, conectores e exportação. | Atualizado após ajustes desktop/mobile. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão nas duas views oficiais. | Atualizado. |
+| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques e conectores. | Atualizado. |
+| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão. | Atualizado. |
 | `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil público/admin, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
-| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com a view removida `/minha-arvore`. |
+| `PESSOAS_PERFIL_ADMIN.md` | Perfil, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
+| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com `/minha-arvore` removida. |
 | `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
 | `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Preservar. |
 | `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Atualizado. |
 | `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
-| `CURIOSIDADES_E_IA.md` | Funcionalidades de curiosidades, IA e geração de conteúdo. | Preservar. |
+| `CURIOSIDADES_E_IA.md` | Curiosidades, IA e geração de conteúdo. | Preservar. |
 
-Documentos sobre antigas views de árvore devem permanecer em `docs/historico/` ou marcados como legado:
-
-```txt
-MINHA_ARVORE_VIEW.md
-MINHA_ARVORE_FILTROS_E_PETS.md
-GENEALOGIA_VIEW.md
-```
-
-Antes de arquivar documentos mistos, extrair regras ainda vigentes sobre pets, filtros, cônjuges, conectores ou exportação.
+Documentos sobre antigas views da árvore devem permanecer apenas em `docs/historico/` ou marcados como legado.
 
 ---
 
-## 6. Contratos críticos
+## 6. Operação
 
-### Rotas oficiais da árvore
-
-```txt
-/
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-### Exceção nominal vigente
+Pasta:
 
 ```txt
-/minha-arvore/editar
+docs/operacao/
 ```
 
-### Rotas antigas removidas como views
+| Arquivo | Uso |
+|---|---|
+| `README.md` | Índice operacional e regras gerais. |
+| `DEPLOY.md` | Atalho curto de deploy. |
+| `DEPLOYMENT.md` | Guia completo de deploy, cache, fallback SPA, Supabase, Edge Functions, `/api/*`, OAuth e troubleshooting. |
+| `MIGRATIONS_SUPABASE.md` | Fluxo seguro de migrations, schema, RLS, RPCs e schema cache. |
+| `OAUTH_GOOGLE.md` | Operação Google OAuth/Agenda, consent screen, test users, redirects e secrets. |
+| `STORAGE_MAINTENANCE.md` | Buckets, objetos órfãos, base64 legado e scripts administrativos. |
+
+Regra operacional:
 
 ```txt
-/minha-arvore
-/genealogia
-/visao-completa
+Ajuste visual, layout, paleta, modal, exportação client-side ou documentação não exige migration.
+Mudança de schema, RLS, RPC, trigger, bucket/policy, Edge Function ou secret exige revisão operacional.
 ```
 
-### Títulos oficiais
+---
+
+## 7. Histórico
+
+Pasta:
 
 ```txt
-/mapa-familiar            -> Árvore Familiar de {primeiroNome}
-/mapa-familiar-horizontal -> Mapa Genealógico de {primeiroNome}
+docs/historico/
 ```
 
-### Avatares oficiais
+Uso:
 
-```txt
-Pessoa com foto -> foto_principal_url
-Pessoa sem foto -> User, lucide-react
-Pet             -> PawPrint, lucide-react
-```
+- preservar contexto de decisões passadas;
+- manter documentação antiga sem confundi-la com contrato vigente;
+- guardar material sobre rotas removidas, refatorações e auditorias já encerradas.
 
-Não há distinção visual de avatar por gênero.
+Regras:
 
-### Paletas oficiais
+- conteúdo histórico não prevalece sobre documentação canônica;
+- histórico não deve reabrir `/minha-arvore`, `/genealogia` ou `/visao-completa`;
+- material histórico útil deve apontar para o documento canônico atual.
 
-```txt
-white  -> Branca
-visual -> Azul
-orange -> Laranja
-brown  -> Marrom
-```
+---
 
-O desktop é referência visual. Mobile deve usar os mesmos tokens `--tree-palette-*`.
+## 8. Onde registrar cada tipo de mudança
 
-### CSS recente de referência
+| Tipo de informação | Onde registrar |
+|---|---|
+| Estado implementado | `BASELINE_PRODUTO_ATUAL.md` ou documento funcional específico |
+| Responsabilidade técnica | `INVENTARIO_TECNICO.md` ou `GUIA_COMPONENTES.md` |
+| UX/layout | `GUIA_UX_LAYOUT.md` |
+| QA manual | `QA_MANUAL.md` |
+| Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Pendência ou risco | `PLANO_PROXIMOS_PASSOS.md` |
+| Deploy/operação | `docs/operacao/*` |
+| Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` e `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
+| História/legado | `docs/historico/*` |
 
-```txt
-src/styles/family-map-mobile-palettes.css
-src/styles/tree-panel-palette-cards.css
-src/styles/calendar-mobile-category-buttons.css
-```
+---
 
-Esses arquivos existem para corrigir contratos visuais específicos e devem permanecer escopados.
+## 9. Validação antes de alterar documentação
 
-### Testes mínimos de baseline
+Para mudança documental simples:
 
 ```bash
+git diff --check
+npm run build
+```
+
+Para reorganização que altera contratos ou guias canônicos:
+
+```bash
+git diff --check
+npm run build
+npm test
+```
+
+Para mudança que afeta QA manual, árvore, rotas, deploy ou operação:
+
+```bash
+git diff --check
 npm run build
 npm test
 npm run test:e2e
-git diff --check
-git status --short
 ```
 
-### Buscas recomendadas
-
-```bash
-rg "minha-arvore"
-rg "genealogia"
-rg "visao-completa"
-rg "/minha-arvore|/genealogia|/visao-completa"
-rg "TreeViewMode|treeViewMode"
-rg "Filtros|Legendas|Ações"
-rg "from-teal|to-cyan|border-cyan|bg-cyan|text-cyan"
-rg "Visualizar como"
-```
-
-Interpretação:
-
-- `/minha-arvore/editar` pode permanecer;
-- `genealogia` pode aparecer como conceito textual da horizontal, mas não como rota ativa;
-- `docs/historico/` pode conter material legado;
-- aliases antigos podem existir como keywords de busca/favoritos, desde que apontem para rotas atuais;
-- a barra `Filtros | Legendas | Ações` não deve voltar como UI ativa;
-- cores hardcoded em mobile devem ser tratadas como possível regressão se substituírem tokens de paleta.
-
----
-
-## 7. Estado final esperado de uma frente
-
-A frente de refatoração e ajustes da árvore deve fechar com:
-
-- build de produção passando;
-- testes unitários passando;
-- testes E2E passando, quando aplicáveis;
-- `git diff --check` sem erro;
-- working tree limpo;
-- `main` sincronizada com `origin/main`;
-- rotas antigas bloqueadas por teste;
-- painel desktop completo e modal mobile específico;
-- paletas mobile sincronizadas com desktop;
-- avatares padronizados;
-- documentação canônica revisada.
-
-Pendências reais remanescentes ficam em:
+Validações manuais centralizadas ficam em:
 
 ```txt
-docs/PLANO_PROXIMOS_PASSOS.md
+docs/QA_MANUAL.md
 ```
 
 ---
 
-## 8. Ordem recomendada para manutenção documental
+## 10. Anti-regressões documentais
 
-1. Atualizar documento funcional afetado.
-2. Atualizar `BASELINE_PRODUTO_ATUAL.md` se o comportamento estrutural mudou.
-3. Atualizar `REGRAS_DE_NAO_REGRESSAO.md` se a mudança criou novo risco.
-4. Atualizar `INVENTARIO_TECNICO.md` se novos arquivos, services, CSS ou rotas foram criados.
-5. Atualizar `DECISOES_ARQUITETURAIS.md` se a mudança for uma decisão estrutural.
-6. Atualizar `PLANO_PROXIMOS_PASSOS.md` se a mudança fechou ou abriu QA/backlog.
+- Não documentar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas.
+- Não tratar `/minha-arvore/editar` como view antiga da árvore.
+- Não documentar `pais`/Geração 4 na horizontal como implementado até `TREE-003` ser corrigido no código.
+- Não transformar checklist manual em pendência fechada sem validação real.
+- Não duplicar checklists longos de QA fora de `QA_MANUAL.md`.
+- Não colocar secrets, service role, tokens ou chaves reais na documentação.
+- Não tratar SQL solto como fonte principal do schema.
+- Não usar docs históricas como fonte de implementação vigente.

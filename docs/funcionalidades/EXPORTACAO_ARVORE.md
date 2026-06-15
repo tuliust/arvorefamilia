@@ -1,9 +1,10 @@
-﻿# Exportação da árvore
+
+# Exportação da árvore
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
-> Tipo: documentação funcional/técnica da exportação da árvore.
-> Status: revisado para as views oficiais atuais e para evitar duplicação com os demais guias.
+> Tipo: documentação funcional/técnica da exportação da árvore
+> Status: organizado para manter detalhes técnicos da exportação e delegar QA manual para `docs/QA_MANUAL.md`.
 
 ---
 
@@ -21,6 +22,12 @@ Contrato:
 ```txt
 Exportar a superfície capturável da view ativa ou da área selecionada,
 sem incluir painel, header, bottom nav, overlays, loading, debug ou controles.
+```
+
+QA manual detalhado fica em:
+
+```txt
+docs/QA_MANUAL.md
 ```
 
 ---
@@ -363,15 +370,13 @@ Regras:
 Observação importante:
 
 ```txt
-Cônjuges de pais/Geração 4 na horizontal não devem ser tratados como implementados
-enquanto a pendência TREE-003 permanecer aberta.
+Cônjuges de pais/Geração 4 na horizontal não devem ser tratados
+como implementados até correção de TREE-003 no código.
 ```
-
-A exportação preserva o que a view renderiza; ela não deve criar cônjuges ou relações ausentes.
 
 ---
 
-## 15. Paletas na exportação
+## 15. Paletas e CSS na exportação
 
 Paletas oficiais:
 
@@ -384,82 +389,44 @@ brown
 
 Regras:
 
-- card, texto, borda, group chrome, conectores e canvas devem preservar a paleta;
-- Visual/Azul pode ter gradientes;
-- Laranja/Marrom/Branca não podem cair em fallback azul;
-- mobile deve exportar com paleta coerente;
-- CSS de exportação deve ser escopado.
+- exportação preserva card, texto, borda, grupos, conectores e canvas;
+- a paleta Visual/Azul preserva gradientes quando aplicável;
+- paletas não azuis não caem em fallback azul/teal;
+- CSS de exportação deve ser escopado;
+- clone de captura não deve aplicar seletor global que afete ícones internos.
 
 ---
 
-## 16. Limites e erros
+## 16. Erros e limites
 
 Regras:
 
-- captura muito grande deve ser bloqueada antes do consumo excessivo de memória;
-- erro deve gerar mensagem clara;
-- loading deve fechar em erro;
-- área inválida deve ser recusada;
-- falha de imagem/CORS deve ser tratada sem travar a UI.
-
-Mensagens devem orientar ação do usuário sem expor stack trace ou dados sensíveis.
+- captura grande demais deve ser bloqueada com mensagem clara;
+- erro de imagem externa/CORS deve ser controlado;
+- erro de PDF deve liberar loading;
+- erro de impressão não deve deixar UI travada;
+- retry não deve duplicar downloads em andamento.
 
 ---
 
-## 17. Segurança e privacidade
+## 17. QA manual
 
-- não incluir tokens, secrets ou dados de ambiente em nome de arquivo, metadados ou logs;
-- não capturar UI administrativa ou menus sensíveis;
-- não incluir debug na exportação;
-- não enviar a captura a serviço externo sem decisão explícita.
+Procedimentos de QA ficam em:
 
----
+```txt
+docs/QA_MANUAL.md
+```
 
-## 18. QA mínimo
+Usar especialmente as seções:
 
-### Por view
+- QA de exportação;
+- QA de paletas;
+- QA de cards e avatares;
+- QA de cônjuges, núcleos e conectores;
+- QA operacional pós-deploy.
 
-- [ ] `/mapa-familiar` PNG.
-- [ ] `/mapa-familiar` PDF.
-- [ ] `/mapa-familiar` Impressão.
-- [ ] `/mapa-familiar` Área.
-- [ ] `/mapa-familiar-horizontal` PNG.
-- [ ] `/mapa-familiar-horizontal` PDF.
-- [ ] `/mapa-familiar-horizontal` Impressão.
-- [ ] `/mapa-familiar-horizontal` Área.
+Pendências relacionadas continuam em:
 
-### Por conteúdo
-
-- [ ] pessoa com foto;
-- [ ] pessoa sem foto;
-- [ ] pet;
-- [ ] nascimento/falecimento;
-- [ ] conectores;
-- [ ] cônjuge;
-- [ ] paleta Visual;
-- [ ] paleta Laranja/Marrom/Branca;
-- [ ] filtros ativos;
-- [ ] `Destacar > Grupos`.
-
-### Por UI ignorada
-
-- [ ] painel não aparece;
-- [ ] modal não aparece;
-- [ ] header não aparece;
-- [ ] bottom nav não aparece;
-- [ ] loading não aparece;
-- [ ] debug não aparece;
-- [ ] overlay de área não aparece no resultado.
-
----
-
-## 19. Buscas úteis
-
-```bash
-rg "treeExport" src docs
-rg "data-tree-export-ignore" src
-rg "data-family-map-export-root|data-family-map-horizontal-root" src styles
-rg "TreeAreaSelectionOverlay|TreeExportLoadingOverlay" src docs
-rg "html2canvas|jspdf|printCanvas|exportCanvasAsPdf" src
-rg "react-flow__controls|react-flow__minimap" src docs
+```txt
+docs/PLANO_PROXIMOS_PASSOS.md
 ```

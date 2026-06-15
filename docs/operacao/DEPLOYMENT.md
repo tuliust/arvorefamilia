@@ -1,9 +1,10 @@
-﻿# Deploy e operação
+
+# Deploy e operação
 
 > Última revisão: 2026-06-14
 > Local canônico: `docs/operacao/DEPLOYMENT.md`
-> Tipo: checklist operacional completo de build, deploy e publicação.
-> Status: revisado para SPA Vite, Vercel/cache, Supabase, Edge Functions, rotas `/api/*`, OAuth Google e QA das views atuais da árvore.
+> Tipo: checklist operacional completo de build, deploy e publicação
+> Status: organizado para manter operação/deploy neste arquivo e delegar QA manual de produto para `docs/QA_MANUAL.md`.
 
 ---
 
@@ -24,10 +25,13 @@ Use para:
 
 Este documento não substitui:
 
-- `MIGRATIONS_SUPABASE.md` para banco;
-- `STORAGE_MAINTENANCE.md` para Storage;
-- `OAUTH_GOOGLE.md` para OAuth Google;
-- guias funcionais para UX/árvore.
+| Tema | Documento |
+|---|---|
+| QA manual de produto e pós-deploy | `docs/QA_MANUAL.md` |
+| Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` |
+| Storage | `docs/operacao/STORAGE_MAINTENANCE.md` |
+| OAuth Google | `docs/operacao/OAUTH_GOOGLE.md` |
+| Funcionalidades da árvore | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 
 ---
 
@@ -139,6 +143,12 @@ Quando houver rota, guard, navegação, árvore, exportação ou fluxo crítico:
 npm run test:e2e
 ```
 
+QA manual aplicável fica em:
+
+```txt
+docs/QA_MANUAL.md
+```
+
 Artefato esperado:
 
 ```txt
@@ -245,15 +255,10 @@ Correção operacional:
 5. validar Safari/iOS;
 6. conferir Service Worker/CDN/proxy, se existirem.
 
-Checklist:
+Checklist manual completo de pós-deploy:
 
 ```txt
-/entrar
-/mapa-familiar
-/mapa-familiar-horizontal
-/forum
-/calendario-familiar
-/admin
+docs/QA_MANUAL.md
 ```
 
 ---
@@ -352,11 +357,13 @@ Quando houver integração Google Agenda:
 - confirmar domínio final;
 - confirmar `/privacidade` e `/termos` públicos;
 - confirmar redirect URI;
+- confirmar consent screen;
+- confirmar test users se app estiver em modo Testing;
 - confirmar Edge Functions `google-calendar-*`;
-- confirmar test users quando consent screen estiver em Testing;
-- validar conexão e desconexão em `/calendario-familiar`.
+- confirmar secrets no Supabase;
+- testar conexão e desconexão.
 
-Detalhes em:
+Detalhes ficam em:
 
 ```txt
 docs/operacao/OAUTH_GOOGLE.md
@@ -364,93 +371,90 @@ docs/operacao/OAUTH_GOOGLE.md
 
 ---
 
-## 14. QA pós-deploy
+## 14. Admin
 
-### Rotas
-
-```txt
-/entrar
-/mapa-familiar
-/mapa-familiar-horizontal
-/minha-arvore/editar
-/calendario-familiar
-/forum
-/meus-favoritos
-/notificacoes
-/admin
-```
-
-Confirmar que não voltaram como views ativas:
+Regra:
 
 ```txt
-/minha-arvore
-/genealogia
-/visao-completa
+Admin não depende de botão escondido no frontend.
 ```
 
-### Árvore
+Antes/depois de deploy que afete admin:
 
-- `/mapa-familiar` desktop/tablet;
-- `/mapa-familiar` mobile;
-- `/mapa-familiar-horizontal` desktop/tablet;
-- `/mapa-familiar-horizontal` mobile;
-- paletas;
-- modal mobile;
-- exportação;
-- retorno de perfil.
-
-### Mobile mínimo
-
-```txt
-320px
-375px
-390px
-430px
-```
-
-### Calendário
-
-- categorias mobile;
-- Google Agenda quando configurada;
-- ausência de overflow.
+- validar acesso admin;
+- validar bloqueio de usuário comum;
+- validar RPCs administrativas;
+- validar ações destrutivas com confirmação;
+- não promover admin apenas pelo frontend.
 
 ---
 
-## 15. Admin e segurança
+## 15. Storage
 
-Validar:
+Deploy visual não exige manutenção de Storage.
 
-- `/admin/*` bloqueia usuário comum;
-- admin acessa painel;
-- RPCs administrativas exigem admin;
-- botões destrutivos pedem confirmação;
-- erro de permissão não expõe dados;
-- service role não está no bundle.
+Storage entra no escopo quando houver:
 
----
+- upload ou remoção de foto/avatar;
+- arquivos históricos;
+- migração de base64;
+- buckets;
+- policies;
+- scripts administrativos.
 
-## 16. Rollback
+Detalhes ficam em:
 
-Se o deploy quebrar:
-
-1. identificar se é frontend, cache, Supabase, Edge Function ou OAuth;
-2. pausar novas alterações;
-3. reverter deploy no provedor quando necessário;
-4. evitar migration rollback destrutivo sem plano;
-5. registrar causa e correção;
-6. atualizar documentação se for nova classe de problema.
+```txt
+docs/operacao/STORAGE_MAINTENANCE.md
+```
 
 ---
 
-## 17. Critérios para atualizar este documento
+## 16. QA pós-deploy
 
-Atualize quando houver:
+Este documento mantém o checklist operacional. O roteiro manual completo fica em:
 
-- mudança de provedor;
-- alteração em `vercel.json`;
-- nova rota `/api/*`;
-- nova Edge Function;
-- nova política de cache;
-- mudança de variáveis de ambiente;
-- mudança em OAuth;
-- novo fluxo de QA pós-deploy.
+```txt
+docs/QA_MANUAL.md
+```
+
+Checklist operacional mínimo:
+
+- [ ] build publicado corresponde ao commit esperado;
+- [ ] domínio final abre;
+- [ ] cache/fallback não retorna HTML para asset JS;
+- [ ] `/api/*`, quando existir, não cai no fallback SPA;
+- [ ] variáveis públicas apontam para Supabase correto;
+- [ ] secrets server-side não aparecem no bundle;
+- [ ] Edge Functions necessárias estão publicadas;
+- [ ] Google OAuth está configurado para o domínio final;
+- [ ] QA manual pós-deploy foi executado ou justificado.
+
+---
+
+## 17. Rollback
+
+Em caso de falha crítica:
+
+1. identificar commit/deploy problemático;
+2. reverter ou promover deploy anterior no provedor;
+3. validar cache de `index.html`;
+4. validar rotas críticas;
+5. registrar causa;
+6. abrir pendência em `PLANO_PROXIMOS_PASSOS.md` se necessário.
+
+Nunca tentar resolver falha de schema removendo payload do frontend sem confirmar migration, schema cache e ambiente.
+
+---
+
+## 18. O que não fazer
+
+- Não publicar com `.env.local` versionado.
+- Não expor service role.
+- Não usar secret com prefixo `VITE_`.
+- Não aplicar migration em produção sem autorização.
+- Não cachear `index.html` como imutável.
+- Não remover rewrite de `/api/(.*)` quando houver rotas serverless.
+- Não corrigir problema visual com migration.
+- Não rodar scripts destrutivos sem dry-run.
+- Não marcar QA como concluído sem validação real.
