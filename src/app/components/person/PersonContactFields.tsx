@@ -6,6 +6,7 @@ import { PersonFormSection } from './PersonFormSection';
 type PersonContactFieldsValue = {
   telefone: string;
   endereco: string;
+  complemento?: string;
 };
 
 type PersonContactFieldsProps = {
@@ -50,6 +51,19 @@ export function PersonContactFields({
           onChange={(nextValue) => onChange('endereco', nextValue)}
           placeholder="Rua, número, bairro, cidade"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Complemento</label>
+        <Input
+          type="text"
+          value={value.complemento ?? ''}
+          onChange={(event) => onChange('complemento', event.target.value)}
+          placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Use para apartamento, bloco, torre, casa ou referência interna.
+        </p>
       </div>
     </PersonFormSection>
   );

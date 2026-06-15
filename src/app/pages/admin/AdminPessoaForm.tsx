@@ -82,6 +82,7 @@ import {
   formatPhone,
   isPersonDeceased,
   normalizeBirthDate,
+  normalizeLocation,
   normalizeLocationByMode,
   syncFirstSocialProfileToPersonFields,
   validateEditablePersonForm,
@@ -117,8 +118,9 @@ function createEmptyAdminPessoaFormData() {
     local_falecimento: '',
     local_falecimento_exterior: false,
     falecido: false,
+    local_atual: '',
     local_atual_exterior: false,
-    local_atual: '',    profissao: '',
+    profissao: '',
 
     foto_principal_url: '',
     humano_ou_pet: 'Humano' as TipoEntidade,
@@ -128,6 +130,7 @@ function createEmptyAdminPessoaFormData() {
     curiosidades: '',
     telefone: '',
     endereco: '',
+    complemento: '',
     rede_social: '',
     instagram_usuario: '',
     instagram_url: '',
@@ -137,6 +140,7 @@ function createEmptyAdminPessoaFormData() {
     permitir_exibir_telefone: true,
     permitir_exibir_instagram: true,
     permitir_mensagens_whatsapp: true,
+    receber_avisos_gerais: true,
     arquivos_historicos: [] as ArquivoHistorico[],
   };
 }
@@ -288,8 +292,9 @@ export function AdminPessoaForm() {
               local_falecimento: pessoa.local_falecimento || '',
               local_falecimento_exterior: pessoa.local_falecimento_exterior ?? false,
               falecido: pessoa.falecido ?? Boolean(pessoa.data_falecimento || pessoa.local_falecimento),
+              local_atual: pessoa.local_atual || '',
               local_atual_exterior: pessoa.local_atual_exterior ?? false,
-              local_atual: pessoa.local_atual || '',              profissao: pessoa.profissao || '',
+              profissao: pessoa.profissao || '',
 
               foto_principal_url: pessoa.foto_principal_url || '',
               humano_ou_pet: pessoa.humano_ou_pet || ('Humano' as TipoEntidade),
@@ -299,6 +304,7 @@ export function AdminPessoaForm() {
               curiosidades: pessoa.curiosidades || '',
               telefone: pessoa.telefone || '',
               endereco: pessoa.endereco || '',
+              complemento: pessoa.complemento || '',
               rede_social: pessoa.rede_social || '',
               instagram_usuario: pessoa.instagram_usuario || '',
               instagram_url: pessoa.instagram_url || '',
@@ -308,6 +314,7 @@ export function AdminPessoaForm() {
               permitir_exibir_telefone: pessoa.permitir_exibir_telefone ?? true,
               permitir_exibir_instagram: pessoa.permitir_exibir_instagram ?? pessoa.permitir_exibir_rede_social ?? true,
               permitir_mensagens_whatsapp: pessoa.permitir_mensagens_whatsapp ?? true,
+              receber_avisos_gerais: pessoa.receber_avisos_gerais ?? true,
               arquivos_historicos: arquivosHistoricos,
             };
 
@@ -502,22 +509,23 @@ export function AdminPessoaForm() {
         ...formDataWithSocialProfile,
         ...cleanPersonPayload(formDataWithSocialProfile),
         data_nascimento: normalizeBirthDate(formData.data_nascimento) || undefined,
-        data_falecimento: normalizeBirthDate(formData.data_falecimento) || null,
+        data_falecimento: normalizeBirthDate(formData.data_falecimento) || undefined,
         falecido: isFalecido,
         local_nascimento: normalizeLocationByMode(formData.local_nascimento, {
           international: formData.local_nascimento_exterior,
         }),
-        local_falecimento: normalizeLocationByMode(formData.local_falecimento, {
-          international: formData.local_falecimento_exterior,
-        }) || null,
         local_atual: normalizeLocationByMode(formData.local_atual, {
           international: formData.local_atual_exterior,
         }),
+        local_falecimento: normalizeLocationByMode(formData.local_falecimento, {
+          international: formData.local_falecimento_exterior,
+        }),
         local_nascimento_exterior: formData.local_nascimento_exterior === true,
-        local_falecimento_exterior: formData.local_falecimento_exterior === true,
         local_atual_exterior: formData.local_atual_exterior === true,
+        local_falecimento_exterior: formData.local_falecimento_exterior === true,
         lado: formData.lado || 'esquerda',
         manual_generation: formData.manual_generation ? Number(formData.manual_generation) : null,
+        receber_avisos_gerais: true,
       };
 
       const validationErrors = validateEditablePersonForm(pessoaData);

@@ -1,6 +1,7 @@
 import { Input } from '../ui/input';
 import { TipoEntidade, LadoPessoa } from '../../types';
 import { PersonFormSection } from './PersonFormSection';
+import { titleCase } from '../../utils/personFields';
 
 type PersonBasicInfoValue = {
   nome_completo: string;
@@ -38,6 +39,7 @@ export function PersonBasicInfoFields({ value, onChange }: PersonBasicInfoFields
           type="text"
           value={value.profissao ?? ''}
           onChange={(event) => onChange('profissao', event.target.value)}
+          onBlur={() => onChange('profissao', titleCase(value.profissao ?? ''))}
           placeholder="Ex: professora, advogado, comerciante..."
         />
       </div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
