@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-14  
-> Local recomendado: `docs/historico/README.md`  
-> Tipo: índice e consolidação histórica.  
-> Status: atualizado após a definição da baseline atual com duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Última revisão: 2026-06-14
+> Local recomendado: `docs/historico/README.md`
+> Tipo: índice e consolidação histórica.
+> Status: atualizado após a definição da baseline atual, com índice explícito para rotas removidas e duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
 
 ---
 
@@ -86,10 +86,19 @@ Títulos vigentes das views oficiais:
 
 ## 3. Documentos históricos de views antigas
 
+O documento preventivo principal para rotas antigas é:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
+
+Ele deve ser usado antes de interpretar ocorrências de `/minha-arvore`, `/genealogia` ou `/visao-completa` em buscas de código ou documentação.
+
 Os documentos abaixo foram arquivados como legado e não devem permanecer em `docs/funcionalidades/` como guias canônicos:
 
 | Documento histórico | Origem | Motivo |
 |---|---|---|
+| `docs/historico/ROTAS_REMOVIDAS.md` | frente documental atual | resume substituições, exceção `/minha-arvore/editar` e anti-regressões de rotas removidas |
 | `docs/historico/MINHA_ARVORE_VIEW.md` | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` | `/minha-arvore` não é view ativa |
 | `docs/historico/GENEALOGIA_VIEW.md` | `docs/funcionalidades/GENEALOGIA_VIEW.md` | `/genealogia` e `/visao-completa` não são views ativas |
 | `docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md` | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | regras vigentes foram extraídas para docs atuais |
@@ -123,6 +132,7 @@ Documento histórico:
 
 ```txt
 docs/historico/MINHA_ARVORE_VIEW.md
+docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 ### 4.2 Antiga Genealogia
@@ -140,6 +150,7 @@ Documento histórico:
 
 ```txt
 docs/historico/GENEALOGIA_VIEW.md
+docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 ### 4.3 Antiga Visão Completa
@@ -156,6 +167,7 @@ Documento histórico relacionado:
 
 ```txt
 docs/historico/GENEALOGIA_VIEW.md
+docs/historico/ROTAS_REMOVIDAS.md
 ```
 
 ---
@@ -355,6 +367,12 @@ Não restaurar como produto ativo:
 /visao-completa-teste
 ```
 
+Referência preventiva:
+
+```txt
+docs/historico/ROTAS_REMOVIDAS.md
+```
+
 Não restaurar:
 
 - `/` redirecionando para `/minha-arvore`;
@@ -392,6 +410,7 @@ rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
 Critério:
 
 - ocorrências em `docs/historico/` são permitidas se marcadas como legado;
+- ocorrências em `docs/historico/ROTAS_REMOVIDAS.md` são esperadas e preventivas;
 - `/minha-arvore/editar` é permitido como rota vigente;
 - docs canônicos não devem apresentar rotas removidas como views ativas;
 - docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente.
