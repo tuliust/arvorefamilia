@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
 import { PageFavoriteButton } from '../favorites/PageFavoriteButton';
+import { useAuth } from '../../contexts/AuthContext';
+import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import {
   ArrowLeft,
   Bell,
@@ -36,6 +38,7 @@ export type HeaderAction = {
    */
   responsiveLabel?: 'always' | 'lg' | 'xl' | 'never';
   disabled?: boolean;
+  badgeCount?: number;
 };
 
 interface MemberPageHeaderProps {
@@ -92,6 +95,23 @@ function getLabelClassName(mode: HeaderAction['responsiveLabel']) {
   return 'sr-only xl:not-sr-only xl:whitespace-nowrap';
 }
 
+function isNotificationsAction(action: Pick<HeaderAction, 'to' | 'label'>) {
+  return action.to === '/notificacoes' || action.label.toLocaleLowerCase('pt-BR').includes('notifica');
+}
+
+function NotificationCountBadge({ count }: { count?: number }) {
+  if (!count || count <= 0) return null;
+
+  return (
+    <span
+      className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-5 text-white ring-2 ring-white"
+      aria-label={String(count) + ' notificação' + (count === 1 ? '' : 'es') + ' não lida' + (count === 1 ? '' : 's')}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
 function HeaderActionButton({ action }: { action: HeaderAction }) {
   const Icon = action.icon;
   const variantClassName = getActionClass(action.variant);
@@ -111,8 +131,9 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
 
   if (action.to) {
     return (
-      <Link to={action.to} className={className} title={action.label} aria-label={action.label}>
+      <Link to={action.to} className={['relative', className].join(' ')} title={action.label} aria-label={action.label}>
         {content}
+        <NotificationCountBadge count={action.badgeCount} />
       </Link>
     );
   }
@@ -122,11 +143,12 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
       type="button"
       onClick={action.onClick}
       disabled={action.disabled}
-      className={className}
+      className={['relative', className].join(' ')}
       title={action.label}
       aria-label={action.label}
     >
       {content}
+      <NotificationCountBadge count={action.badgeCount} />
     </button>
   );
 }
@@ -139,7 +161,7 @@ const MOBILE_BOTTOM_NAV_ITEMS = [
   { label: 'Alertas', to: '/notificacoes', icon: Bell },
 ];
 
-function MemberMobileBottomNav() {
+function MemberMobileBottomNav({ unreadNotificationsCount }: { unreadNotificationsCount: number }) {
   const location = useLocation();
 
   return (
@@ -164,7 +186,10 @@ function MemberMobileBottomNav() {
               aria-label={item.label}
               aria-current={active ? 'page' : undefined}
             >
-              <Icon className="h-5 w-5" />
+              <span className="relative">
+                <Icon className="h-5 w-5" />
+                {item.to === '/notificacoes' && <NotificationCountBadge count={unreadNotificationsCount} />}
+              </span>
               <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );
@@ -192,6 +217,36 @@ export function MemberPageHeader({
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
+  const { user } = useAuth();
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  const refreshUnreadNotificationsCount = useCallback(async () => {
+    if (!user) {
+      setUnreadNotificationsCount(0);
+      return;
+    }
+
+    const count = await contarNotificacoesNaoLidasSupabase(user.id);
+    setUnreadNotificationsCount(count);
+  }, [user]);
+
+  useEffect(() => {
+    refreshUnreadNotificationsCount();
+
+    window.addEventListener('arvorefamilia:notifications-updated', refreshUnreadNotificationsCount);
+    window.addEventListener('focus', refreshUnreadNotificationsCount);
+
+    return () => {
+      window.removeEventListener('arvorefamilia:notifications-updated', refreshUnreadNotificationsCount);
+      window.removeEventListener('focus', refreshUnreadNotificationsCount);
+    };
+  }, [refreshUnreadNotificationsCount]);
+
+  const actionsWithNotificationBadge = actions.map((action) =>
+    isNotificationsAction(action)
+      ? { ...action, badgeCount: unreadNotificationsCount }
+      : action
+  );
 
   return (
     <>
@@ -223,7 +278,7 @@ export function MemberPageHeader({
 
           {(actions.length > 0 || customActions) && (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
-              {actions.map((action) => (
+              {actionsWithNotificationBadge.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
               {!hideFavoriteButton && (
@@ -235,7 +290,7 @@ export function MemberPageHeader({
           )}
         </div>
       </header>
-      <MemberMobileBottomNav />
+      <MemberMobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
     </>
   );
 }

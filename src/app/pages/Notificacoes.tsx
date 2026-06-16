@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, BellRing, CheckCheck, ExternalLink, Inbox, Settings, Trash2 } from 'lucide-react';
+import { Bell, BellRing, CheckCheck, Inbox, Settings, Trash2 } from 'lucide-react';
 import { AppLink as Link } from '../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { Button } from '../components/ui/button';
@@ -14,30 +14,64 @@ import {
   removerNotificacaoSupabase,
 } from '../services/userEngagementService';
 
-function formatarData(valor?: string) {
-  if (!valor) return '';
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return valor;
-  return data.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+function formatarHora(data: Date) {
+  return data.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit',
   });
 }
 
-function formatNotificationType(type?: string) {
-  const raw = String(type ?? '').trim();
-  if (!raw) return 'NOTIFICAÇÃO';
+function isSameCalendarDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
-  const normalized = raw.toLocaleUpperCase('pt-BR');
-  const labels: Record<string, string> = {
-    DATAS_ESPECIAIS: 'ESPECIAIS',
-    MEMORIA: 'MEMÓRIA',
-  };
+function formatarDataNotificacao(valor?: string) {
+  if (!valor) return '';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return valor;
 
-  return labels[normalized] ?? normalized.replace(/_/g, ' ');
+  const agora = new Date();
+  const diffMs = Math.max(0, agora.getTime() - data.getTime());
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffSeconds < 30) return 'Agora';
+  if (diffMinutes < 2) return 'Agora há pouco';
+  if (diffMinutes < 60) return `Há ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
+
+  if (isSameCalendarDay(data, agora)) {
+    return `Hoje, às ${formatarHora(data)}`;
+  }
+
+  if (diffHours < 24) {
+    return `Há ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
+  }
+
+  const ontem = new Date(agora);
+  ontem.setDate(agora.getDate() - 1);
+
+  if (isSameCalendarDay(data, ontem)) {
+    return `Ontem, às ${formatarHora(data)}`;
+  }
+
+  const dataCurta = data.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+
+  return `Dia ${dataCurta}, às ${formatarHora(data)}`;
+}
+
+function formatarContagemNaoLidas(total: number) {
+  if (total <= 0) return 'Todas lidas';
+  if (total === 1) return '1 não lida';
+  return `${total} não lidas`;
 }
 
 function normalizeNotificationText(value?: string | null) {
@@ -90,6 +124,10 @@ export function Notificacoes() {
     [navigate]
   );
 
+  const notificarAtualizacaoNotificacoes = () => {
+    window.dispatchEvent(new Event('arvorefamilia:notifications-updated'));
+  };
+
   const marcarComoLida = async (id: string) => {
     if (!user) return;
 
@@ -97,12 +135,14 @@ export function Notificacoes() {
       current.map((notificacao) => (notificacao.id === id ? { ...notificacao, lida: true } : notificacao))
     );
     await marcarNotificacaoSupabaseComoLida(id, user.id);
+    notificarAtualizacaoNotificacoes();
   };
 
   const marcarTodas = async () => {
     if (!user) return;
     setNotificacoes((current) => current.map((notificacao) => ({ ...notificacao, lida: true })));
     await marcarTodasNotificacoesSupabaseComoLidas(user.id);
+    notificarAtualizacaoNotificacoes();
   };
 
   const remover = async (id: string) => {
@@ -110,6 +150,7 @@ export function Notificacoes() {
 
     setNotificacoes((current) => current.filter((notificacao) => notificacao.id !== id));
     await removerNotificacaoSupabase(id, user.id);
+    notificarAtualizacaoNotificacoes();
   };
 
   if (!user) {
@@ -156,7 +197,7 @@ export function Notificacoes() {
                 <div className="min-w-0">
                   <CardTitle className="break-words text-base">Recentes</CardTitle>
                   <p className="break-words text-xs text-gray-500">
-                    {naoLidas > 0 ? `${naoLidas} não lida(s)` : 'Todas lidas'}
+                    {formatarContagemNaoLidas(naoLidas)}
                   </p>
                 </div>
               </div>
@@ -235,10 +276,7 @@ export function Notificacoes() {
                             >
                               {item.lida ? 'Lida' : 'Nova'}
                             </span>
-                            <span className="break-all rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 ring-1 ring-gray-100">
-                              {formatNotificationType(item.tipo)}
-                            </span>
-                            <span className="break-words text-xs text-gray-400">{formatarData(item.created_at)}</span>
+
                           </div>
 
                           <div className="space-y-2">
@@ -246,16 +284,9 @@ export function Notificacoes() {
                             <p className="break-words text-sm leading-relaxed text-gray-600">{mensagem}</p>
                           </div>
 
-                          {item.link && (
-                            <Link
-                              to={item.link}
-                              onClick={(event) => event.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 rounded-lg px-0 text-sm font-semibold text-blue-700 hover:underline"
-                            >
-                              Abrir conteúdo
-                              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                            </Link>
-                          )}
+                          <p className="break-words text-sm font-medium text-gray-500">
+                            {formatarDataNotificacao(item.created_at)}
+                          </p>
                         </div>
 
                         <div className="flex shrink-0 flex-row gap-2 border-t border-gray-100 pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">

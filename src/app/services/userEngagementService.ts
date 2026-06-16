@@ -300,6 +300,22 @@ export async function listarNotificacoesSupabase(userId: string): Promise<Notifi
   }
 }
 
+export async function contarNotificacoesNaoLidasSupabase(userId: string): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('notificacoes_usuario')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('lida', false);
+
+    if (error) throw error;
+    return count ?? 0;
+  } catch (error) {
+    console.error('[Supabase] Erro ao contar notificações não lidas:', error);
+    return listarNotificacoes(userId).filter((item) => !item.lida).length;
+  }
+}
+
 export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string, userId: string) {
   const { error } = await supabase
     .from('notificacoes_usuario')
