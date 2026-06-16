@@ -1,6 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronDown, ChevronUp, Plus, Save, Trash2, Users } from 'lucide-react';
+import {
+  Baby,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  MapPin,
+  Plus,
+  Save,
+  Trash2,
+  Undo2,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   HEADER_ACTION_ICONS,
@@ -9,13 +22,12 @@ import {
 import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
 import {
   createEmptyMarriageDetails,
-  MarriageDetailsEditor,
   MarriageDetailsForm,
   normalizeMarriageDetails,
 } from '../components/relationships/MarriageDetailsEditor';
 import { getInitials, isPersonDeceased } from '../utils/personFields';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +52,7 @@ import {
 } from '../services/memberProfileService';
 import { Pessoa, Relacionamento } from '../types';
 import { normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
+import { cn } from '../lib/utils';
 
 type RelationshipGroups = {
   pais: Pessoa[];
@@ -50,6 +63,14 @@ type RelationshipGroups = {
 };
 
 type RelationshipGroupKey = 'pais' | 'filhos' | 'conjuges' | 'irmaos';
+
+type RelationshipReviewStatus =
+  | 'confirmed'
+  | 'added_pending'
+  | 'edited_pending'
+  | 'removed_pending';
+
+type RemovedRelationshipIds = Record<RelationshipGroupKey, string[]>;
 
 type AddRelativeForm = {
   nome_completo: string;
@@ -72,6 +93,7 @@ type MeusVinculosDraft = {
   localRelationshipRoles: Record<string, 'pai' | 'mae'>;
   childOtherParent: Record<string, string>;
   spouseExpanded: Record<string, boolean>;
+  removedRelationshipIds: RemovedRelationshipIds;
   hasLocalRelationshipChanges: boolean;
   hasPendingRelationshipRequest: boolean;
 };
@@ -81,6 +103,13 @@ const EMPTY_GROUPS: RelationshipGroups = {
   maes: [],
   conjuges: [],
   filhos: [],
+  irmaos: [],
+};
+
+const EMPTY_REMOVED_RELATIONSHIP_IDS: RemovedRelationshipIds = {
+  pais: [],
+  filhos: [],
+  conjuges: [],
   irmaos: [],
 };
 
@@ -159,6 +188,12 @@ function readMeusVinculosDraft(key: string): MeusVinculosDraft | null {
       localRelationshipRoles: draft.localRelationshipRoles ?? {},
       childOtherParent: draft.childOtherParent ?? {},
       spouseExpanded: draft.spouseExpanded ?? {},
+      removedRelationshipIds: {
+        pais: Array.isArray(draft.removedRelationshipIds?.pais) ? draft.removedRelationshipIds.pais : [],
+        filhos: Array.isArray(draft.removedRelationshipIds?.filhos) ? draft.removedRelationshipIds.filhos : [],
+        conjuges: Array.isArray(draft.removedRelationshipIds?.conjuges) ? draft.removedRelationshipIds.conjuges : [],
+        irmaos: Array.isArray(draft.removedRelationshipIds?.irmaos) ? draft.removedRelationshipIds.irmaos : [],
+      },
       hasLocalRelationshipChanges: Boolean(draft.hasLocalRelationshipChanges),
       hasPendingRelationshipRequest: Boolean(draft.hasPendingRelationshipRequest),
     };
@@ -175,57 +210,301 @@ function writeMeusVinculosDraft(key: string, draft: MeusVinculosDraft) {
   }
 }
 
-function RelationSection({
-  title,
-  emptyLabel,
-  people,
-  addLabel,
-  onAdd,
+function formatCount(count: number, singular: string, plural: string) {
+  if (count === 0) return `Nenhum ${singular}`;
+  if (count === 1) return `1 ${singular}`;
+  return `${count} ${plural}`;
+}
+
+function formatOptionalValue(value?: string | number | null) {
+  const formatted = String(value ?? '').trim();
+  return formatted || null;
+}
+
+function getPersonSecondaryDetails(person: Pessoa) {
+  return [
+    formatOptionalValue(person.data_nascimento) ? `Nascimento: ${formatOptionalValue(person.data_nascimento)}` : null,
+    formatOptionalValue(person.local_nascimento),
+    isPersonDeceased(person) ? 'Falecido(a)' : null,
+  ].filter(Boolean) as string[];
+}
+
+function relationshipStatusHasPending(status: RelationshipReviewStatus) {
+  return status === 'added_pending' || status === 'edited_pending' || status === 'removed_pending';
+}
+
+function getRelationshipCardClassName(status: RelationshipReviewStatus) {
+  if (status === 'removed_pending') return 'border-red-200 bg-red-50';
+  if (status === 'added_pending' || status === 'edited_pending') return 'border-amber-200 bg-amber-50';
+  return 'border-gray-200 bg-white';
+}
+
+function RelationshipStatusBadge({ status }: { status: RelationshipReviewStatus }) {
+  const config = {
+    confirmed: {
+      label: 'Cadastrado',
+      className: 'border-gray-200 bg-gray-100 text-gray-700',
+    },
+    added_pending: {
+      label: 'Em análise',
+      className: 'border-amber-200 bg-amber-100 text-amber-800',
+    },
+    edited_pending: {
+      label: 'Em análise',
+      className: 'border-amber-200 bg-amber-100 text-amber-800',
+    },
+    removed_pending: {
+      label: 'Remoção em análise',
+      className: 'border-red-200 bg-red-100 text-red-800',
+    },
+  } satisfies Record<RelationshipReviewStatus, { label: string; className: string }>;
+
+  return (
+    <span className={cn('inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold', config[status].className)}>
+      {config[status].label}
+    </span>
+  );
+}
+
+function PersonAvatar({ person, className = 'h-12 w-12', imageSrc }: { person: Pessoa; className?: string; imageSrc?: string | null }) {
+  const photo = String(imageSrc || person.foto_principal_url || '').trim();
+
+  return (
+    <div className={cn('flex shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100', className)}>
+      {photo ? (
+        <img src={photo} alt={person.nome_completo} className="h-full w-full object-cover" />
+      ) : (
+        <span className="inline-flex h-full w-full items-center justify-center text-sm font-semibold">
+          {getInitials(person.nome_completo)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+const RELATIONSHIP_GROUP_META: Record<RelationshipGroupKey, {
+  title: string;
+  summaryTitle: string;
+  description: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  addLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = {
+  pais: {
+    title: 'Pais',
+    summaryTitle: 'Pais',
+    description: 'Confirme pai e mãe cadastrados para sua árvore.',
+    emptyTitle: 'Nenhum pai ou mãe cadastrado',
+    emptyDescription: 'Adicione pai ou mãe para completar a geração anterior da árvore.',
+    addLabel: 'Adicionar pai ou mãe',
+    icon: UserRound,
+  },
+  filhos: {
+    title: 'Filhos',
+    summaryTitle: 'Filhos',
+    description: 'Confirme seus filhos e, se souber, informe o outro pai/mãe.',
+    emptyTitle: 'Nenhum filho cadastrado',
+    emptyDescription: 'Adicione filhos para conectar a próxima geração.',
+    addLabel: 'Adicionar filho',
+    icon: Baby,
+  },
+  conjuges: {
+    title: 'Cônjuges',
+    summaryTitle: 'Cônjuges',
+    description: 'Registre relacionamentos importantes e detalhes de casamento ou separação.',
+    emptyTitle: 'Nenhum cônjuge cadastrado',
+    emptyDescription: 'Adicione cônjuges para registrar relacionamentos importantes.',
+    addLabel: 'Adicionar cônjuge',
+    icon: Heart,
+  },
+  irmaos: {
+    title: 'Irmãos',
+    summaryTitle: 'Irmãos',
+    description: 'Complete os vínculos laterais com irmãos e irmãs.',
+    emptyTitle: 'Nenhum irmão cadastrado',
+    emptyDescription: 'Adicione irmãos para completar os vínculos laterais da família.',
+    addLabel: 'Adicionar irmão',
+    icon: Users,
+  },
+};
+
+function getRelationshipLabel(group: RelationshipGroupKey, person: Pessoa, isMother: boolean) {
+  if (group === 'pais') return isMother ? 'Mãe' : 'Pai';
+  if (group === 'filhos') return 'Filho(a)';
+  if (group === 'conjuges') return 'Cônjuge';
+  return 'Irmão(ã)';
+}
+
+function RelationshipRelativeCard({
+  group,
+  person,
+  status,
+  isMother = false,
   onRemove,
+  onUndoRemove,
   children,
 }: {
-  title: string;
-  emptyLabel: string;
+  group: RelationshipGroupKey;
+  person: Pessoa;
+  status: RelationshipReviewStatus;
+  isMother?: boolean;
+  onRemove: (personId: string) => void;
+  onUndoRemove: (personId: string) => void;
+  children?: React.ReactNode;
+}) {
+  const secondaryDetails = getPersonSecondaryDetails(person);
+  const isPendingRemoval = status === 'removed_pending';
+  const isLocalAddition = status === 'added_pending';
+
+  return (
+    <article className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassName(status))}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+        <PersonAvatar person={person} />
+
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h4 className="min-w-0 break-words text-base font-semibold leading-snug text-gray-950">
+                {person.nome_completo}
+              </h4>
+              <p className="mt-1 text-sm font-medium text-gray-600">
+                {getRelationshipLabel(group, person, isMother)}
+              </p>
+            </div>
+            <RelationshipStatusBadge status={status} />
+          </div>
+
+          {secondaryDetails.length > 0 && (
+            <div className="flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+              {secondaryDetails.map((detail) => (
+                <span key={detail} className="inline-flex max-w-full items-center gap-1 rounded-md bg-white/70 px-2 py-1 ring-1 ring-gray-200">
+                  {detail.startsWith('Nascimento') ? <CalendarDays className="h-3.5 w-3.5 shrink-0" /> : <MapPin className="h-3.5 w-3.5 shrink-0" />}
+                  <span className="min-w-0 break-words">{detail}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {children}
+
+          {status === 'added_pending' || status === 'edited_pending' ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-100/60 px-3 py-2 text-sm text-amber-900">
+              Esta alteração será revisada antes de aparecer definitivamente na árvore.
+            </p>
+          ) : null}
+
+          {isPendingRemoval && (
+            <p className="rounded-lg border border-red-200 bg-red-100/70 px-3 py-2 text-sm text-red-900">
+              Você solicitou a remoção deste vínculo. A alteração será avaliada antes de sair da árvore.
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {isPendingRemoval ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-red-200 text-red-700 hover:bg-red-50 sm:w-auto"
+                onClick={() => onUndoRemove(person.id)}
+              >
+                <Undo2 className="h-4 w-4" />
+                Desfazer solicitação
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-red-700 hover:bg-red-50 sm:w-auto"
+                onClick={() => onRemove(person.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+                {isLocalAddition ? 'Cancelar adição' : 'Solicitar remoção'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function RelationshipGroupSection({
+  group,
+  people,
+  pendingCount,
+  onAdd,
+  onRemove,
+  onUndoRemove,
+  getStatus,
+  isMother,
+  children,
+}: {
+  group: RelationshipGroupKey;
   people: Pessoa[];
-  addLabel: string;
+  pendingCount: number;
   onAdd: () => void;
   onRemove: (personId: string) => void;
-  children?: (person: Pessoa) => React.ReactNode;
+  onUndoRemove: (personId: string) => void;
+  getStatus: (person: Pessoa) => RelationshipReviewStatus;
+  isMother?: (person: Pessoa) => boolean;
+  children?: (person: Pessoa, status: RelationshipReviewStatus) => React.ReactNode;
 }) {
+  const meta = RELATIONSHIP_GROUP_META[group];
+
   return (
-    <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-        <h3 className="min-w-0 break-words font-semibold text-gray-900">{title}</h3>
-        <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={onAdd} aria-label={addLabel}>
+    <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <meta.icon className="h-5 w-5 shrink-0 text-blue-700" />
+            <h3 className="min-w-0 break-words text-lg font-semibold text-gray-950">{meta.title}</h3>
+            {pendingCount > 0 && (
+              <span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                Em análise
+              </span>
+            )}
+          </div>
+          <p className="mt-1 break-words text-sm text-gray-600">{meta.description}</p>
+        </div>
+        <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={onAdd}>
           <Plus className="h-4 w-4" />
+          {meta.addLabel}
         </Button>
       </div>
 
       {people.length === 0 ? (
-        <p className="break-words rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-500">{emptyLabel}</p>
+        <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
+          <p className="font-semibold text-gray-900">{meta.emptyTitle}</p>
+          <p className="mx-auto mt-1 max-w-xl break-words text-sm text-gray-600">{meta.emptyDescription}</p>
+          <Button type="button" variant="outline" className="mt-4 w-full sm:w-auto" onClick={onAdd}>
+            <Plus className="h-4 w-4" />
+            {meta.addLabel}
+          </Button>
+        </div>
       ) : (
-        <div className="space-y-2">
-          {people.map((person) => (
-            <div key={person.id} className="min-w-0 rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <p className="min-w-0 break-words text-sm font-medium text-gray-900">{person.nome_completo}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 text-red-700 hover:bg-red-50"
-                  onClick={() => onRemove(person.id)}
-                  aria-label={`Remover ${person.nome_completo}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              {children?.(person)}
-            </div>
-          ))}
+        <div className="mt-4 space-y-3">
+          {people.map((person) => {
+            const status = getStatus(person);
+            return (
+              <RelationshipRelativeCard
+                key={`${group}-${person.id}-${status}`}
+                group={group}
+                person={person}
+                status={status}
+                isMother={isMother?.(person) ?? false}
+                onRemove={onRemove}
+                onUndoRemove={onUndoRemove}
+              >
+                {children?.(person, status)}
+              </RelationshipRelativeCard>
+            );
+          })}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -249,6 +528,7 @@ export function MeusVinculos() {
   const [localRelationshipRoles, setLocalRelationshipRoles] = useState<Record<string, 'pai' | 'mae'>>({});
   const [childOtherParent, setChildOtherParent] = useState<Record<string, string>>({});
   const [spouseExpanded, setSpouseExpanded] = useState<Record<string, boolean>>({});
+  const [removedRelationshipIds, setRemovedRelationshipIds] = useState<RemovedRelationshipIds>(EMPTY_REMOVED_RELATIONSHIP_IDS);
   const [hasLocalRelationshipChanges, setHasLocalRelationshipChanges] = useState(false);
   const [hasPendingRelationshipRequest, setHasPendingRelationshipRequest] = useState(false);
   const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
@@ -258,8 +538,6 @@ export function MeusVinculos() {
   const draftDirtyRef = useRef(false);
 
   const pessoa = link?.pessoa;
-  const avatarSource = pendingAvatarDataUrl || String(pessoa?.foto_principal_url ?? '');
-  const avatarInitials = getInitials(String(pessoa?.nome_completo ?? ''));
 
   async function reloadRelationships(pessoaId: string) {
     const [nextRelationships, nextAllRelationships] = await Promise.all([
@@ -285,6 +563,7 @@ export function MeusVinculos() {
     setInitialRelationships(nextRelationships);
     setMarriageDetails(nextMarriageDetails);
     setInitialMarriageDetails(nextMarriageDetails);
+    setRemovedRelationshipIds(EMPTY_REMOVED_RELATIONSHIP_IDS);
 
     return {
       relationships: nextRelationships,
@@ -329,6 +608,7 @@ export function MeusVinculos() {
           setLocalRelationshipRoles(draft.localRelationshipRoles);
           setChildOtherParent(draft.childOtherParent);
           setSpouseExpanded(draft.spouseExpanded);
+          setRemovedRelationshipIds(draft.removedRelationshipIds);
           setHasLocalRelationshipChanges(draft.hasLocalRelationshipChanges);
           setHasPendingRelationshipRequest(draft.hasPendingRelationshipRequest);
           draftDirtyRef.current = true;
@@ -357,6 +637,7 @@ export function MeusVinculos() {
       localRelationshipRoles,
       childOtherParent,
       spouseExpanded,
+      removedRelationshipIds,
       hasLocalRelationshipChanges,
       hasPendingRelationshipRequest,
     });
@@ -367,6 +648,7 @@ export function MeusVinculos() {
     localRelationshipRoles,
     marriageDetails,
     pessoa?.id,
+    removedRelationshipIds,
     relationships,
     spouseExpanded,
     user?.id,
@@ -432,6 +714,10 @@ export function MeusVinculos() {
       ...current,
       [person.id]: addForm.parentRole,
     }));
+    setRemovedRelationshipIds((current) => ({
+      ...current,
+      [addDialog.group]: current[addDialog.group].filter((id) => id !== person.id),
+    }));
 
     if (addDialog.group === 'conjuges') {
       const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(person);
@@ -451,6 +737,8 @@ export function MeusVinculos() {
   const removeRelative = (group: RelationshipGroupKey, personId: string) => {
     // TODO: persistir remoção de vínculo em Supabase quando a revisão de relacionamentos for definitiva.
     markDraftDirty();
+    const wasInitialRelationship = getGroupPeople(initialRelationships, group).some((person) => person.id === personId);
+
     if (group === 'pais') {
       setRelationships((current) => ({
         ...current,
@@ -485,6 +773,53 @@ export function MeusVinculos() {
       });
     }
 
+    if (wasInitialRelationship) {
+      setRemovedRelationshipIds((current) => ({
+        ...current,
+        [group]: Array.from(new Set([...current[group], personId])),
+      }));
+    } else {
+      setLocalRelationshipRoles((current) => {
+        const next = { ...current };
+        delete next[personId];
+        return next;
+      });
+    }
+
+    setHasLocalRelationshipChanges(true);
+  };
+
+  const undoRemoveRelative = (group: RelationshipGroupKey, personId: string) => {
+    const person = getGroupPeople(initialRelationships, group).find((item) => item.id === personId);
+    if (!person) return;
+
+    markDraftDirty();
+    setRemovedRelationshipIds((current) => ({
+      ...current,
+      [group]: current[group].filter((id) => id !== personId),
+    }));
+
+    setRelationships((current) => {
+      if (group === 'pais') {
+        const wasMother = initialRelationships.maes.some((mae) => mae.id === personId);
+        return wasMother
+          ? { ...current, maes: uniquePeople([...current.maes, person]) }
+          : { ...current, pais: uniquePeople([...current.pais, person]) };
+      }
+
+      return {
+        ...current,
+        [group]: uniquePeople([...current[group], person]),
+      };
+    });
+
+    if (group === 'conjuges') {
+      setMarriageDetails((current) => ({
+        ...current,
+        [personId]: initialMarriageDetails[personId] ?? createEmptyMarriageDetails(),
+      }));
+    }
+
     setHasLocalRelationshipChanges(true);
   };
 
@@ -510,6 +845,80 @@ export function MeusVinculos() {
     if (group === 'conjuges') return 'conjuge';
     return 'irmao';
   };
+
+  const getVisibleGroupPeople = (group: RelationshipGroupKey) => {
+    const currentPeople = getGroupPeople(relationships, group);
+    const currentIds = new Set(currentPeople.map((person) => person.id));
+    const removedPeople = getGroupPeople(initialRelationships, group)
+      .filter((person) => removedRelationshipIds[group].includes(person.id) && !currentIds.has(person.id));
+
+    return uniquePeople([...currentPeople, ...removedPeople]);
+  };
+
+  const getRelationshipReviewStatus = (group: RelationshipGroupKey, person: Pessoa): RelationshipReviewStatus => {
+    if (removedRelationshipIds[group].includes(person.id)) return 'removed_pending';
+
+    const initialPeople = getGroupPeople(initialRelationships, group);
+    const wasInitiallyPresent = initialPeople.some((initialPerson) => initialPerson.id === person.id);
+    if (!wasInitiallyPresent) return 'added_pending';
+
+    if (group === 'conjuges') {
+      const initialDetails = normalizeMarriageDetails(initialMarriageDetails[person.id]);
+      const currentDetails = normalizeMarriageDetails(marriageDetails[person.id]);
+      if (JSON.stringify(initialDetails) !== JSON.stringify(currentDetails)) return 'edited_pending';
+    }
+
+    return 'confirmed';
+  };
+
+  const reviewGroups = useMemo(() => {
+    const groups: RelationshipGroupKey[] = ['pais', 'filhos', 'conjuges', 'irmaos'];
+
+    return groups.reduce<Record<RelationshipGroupKey, {
+      people: Pessoa[];
+      visiblePeople: Pessoa[];
+      pendingCount: number;
+      added: number;
+      edited: number;
+      removed: number;
+    }>>((acc, group) => {
+      const people = getGroupPeople(relationships, group);
+      const visiblePeople = getVisibleGroupPeople(group);
+      const statuses = visiblePeople.map((person) => getRelationshipReviewStatus(group, person));
+
+      acc[group] = {
+        people,
+        visiblePeople,
+        pendingCount: statuses.filter(relationshipStatusHasPending).length,
+        added: statuses.filter((status) => status === 'added_pending').length,
+        edited: statuses.filter((status) => status === 'edited_pending').length,
+        removed: statuses.filter((status) => status === 'removed_pending').length,
+      };
+      return acc;
+    }, {
+      pais: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
+      filhos: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
+      conjuges: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
+      irmaos: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
+    });
+  }, [initialMarriageDetails, initialRelationships, marriageDetails, relationships, removedRelationshipIds]);
+
+  const reviewSummary = useMemo(() => {
+    const added = reviewGroups.pais.added + reviewGroups.filhos.added + reviewGroups.conjuges.added + reviewGroups.irmaos.added;
+    const edited = reviewGroups.pais.edited + reviewGroups.filhos.edited + reviewGroups.conjuges.edited + reviewGroups.irmaos.edited;
+    const removed = reviewGroups.pais.removed + reviewGroups.filhos.removed + reviewGroups.conjuges.removed + reviewGroups.irmaos.removed;
+
+    return {
+      parents: reviewGroups.pais.people.length,
+      children: reviewGroups.filhos.people.length,
+      spouses: reviewGroups.conjuges.people.length,
+      siblings: reviewGroups.irmaos.people.length,
+      added,
+      edited,
+      removed,
+      totalPending: added + edited + removed,
+    };
+  }, [reviewGroups]);
 
   const getRelationshipInputForGroup = (
     action: CreateRelationshipChangeRequestInput['action'],
@@ -693,13 +1102,11 @@ export function MeusVinculos() {
     );
   }
 
-  const parents = uniquePeople([...relationships.pais, ...relationships.maes]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Confirmar vínculos familiares"
-        subtitle="Etapa 2 de 5: revise seus vínculos antes de seguir para arquivos históricos."
+        subtitle="Revise quem são seus pais, filhos, cônjuges e irmãos antes de seguir."
         icon={Users}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
@@ -710,42 +1117,107 @@ export function MeusVinculos() {
 
       <MemberOnboardingSteps activeStep={2} />
 
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,360px)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button type="button" variant="outline" onClick={() => navigate('/meus-dados')}>
             Voltar para meus dados
           </Button>
           {hasPendingRelationshipRequest && (
-            <p className="text-sm text-gray-600">Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.</p>
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.
+            </p>
           )}
         </div>
-        <div className="min-w-0 space-y-6">
-          <Card className="min-w-0">
-            <CardHeader>
-              <CardTitle className="flex min-w-0 items-center gap-2 break-words">
-                <Users className="h-5 w-5 shrink-0" />
-                <span className="min-w-0 break-words">Relacionamentos</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <RelationSection
-                title="Pais"
-                emptyLabel="Nenhum pai/mãe cadastrado"
-                people={parents}
-                addLabel="Adicionar pai ou mãe"
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="min-w-0 space-y-6">
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-semibold text-blue-700">Pessoa em revisão</p>
+              <div className="mt-3 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+                <PersonAvatar person={pessoa} className="h-16 w-16" imageSrc={pendingAvatarDataUrl} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-600">Você está revisando os vínculos familiares de:</p>
+                  <h2 className="mt-1 min-w-0 break-words text-xl font-semibold leading-tight text-gray-950">
+                    {pessoa.nome_completo}
+                  </h2>
+                  <div className="mt-2 flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+                    {formatOptionalValue(pessoa.data_nascimento) && (
+                      <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-50 px-2 py-1 ring-1 ring-gray-200">
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                        <span className="break-words">Nascimento: {formatOptionalValue(pessoa.data_nascimento)}</span>
+                      </span>
+                    )}
+                    {formatOptionalValue(pessoa.local_nascimento || pessoa.local_atual) && (
+                      <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-gray-50 px-2 py-1 ring-1 ring-gray-200">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        <span className="break-words">{formatOptionalValue(pessoa.local_nascimento || pessoa.local_atual)}</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-3 break-words text-sm text-gray-600">
+                    Confira se os familiares abaixo estão corretos. Você pode adicionar vínculos, solicitar correções ou seguir se estiver tudo certo.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {([
+                ['pais', reviewSummary.parents, 'vínculo', 'vínculos'],
+                ['filhos', reviewSummary.children, 'vínculo', 'vínculos'],
+                ['conjuges', reviewSummary.spouses, 'vínculo', 'vínculos'],
+                ['irmaos', reviewSummary.siblings, 'vínculo', 'vínculos'],
+              ] as Array<[RelationshipGroupKey, number, string, string]>).map(([group, count, singular, plural]) => {
+                const meta = RELATIONSHIP_GROUP_META[group];
+                const Icon = meta.icon;
+
+                return (
+                  <div key={group} className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 shrink-0 text-blue-700" />
+                          <p className="font-semibold text-gray-900">{meta.summaryTitle}</p>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-600">
+                          {formatCount(count, singular, plural)}
+                          {reviewGroups[group].pendingCount > 0 ? ` · ${reviewGroups[group].pendingCount} em análise` : ''}
+                        </p>
+                      </div>
+                      {reviewGroups[group].pendingCount > 0 && (
+                        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                          Em análise
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-6">
+              <RelationshipGroupSection
+                group="pais"
+                people={reviewGroups.pais.visiblePeople}
+                pendingCount={reviewGroups.pais.pendingCount}
                 onAdd={() => openAddDialog('pais', 'Adicionar pai ou mãe')}
                 onRemove={(personId) => removeRelative('pais', personId)}
+                onUndoRemove={(personId) => undoRemoveRelative('pais', personId)}
+                getStatus={(person) => getRelationshipReviewStatus('pais', person)}
+                isMother={(person) => relationships.maes.some((mae) => mae.id === person.id) || initialRelationships.maes.some((mae) => mae.id === person.id)}
               />
-              <RelationSection
-                title="Filhos"
-                emptyLabel="Nenhum filho cadastrado"
-                people={uniquePeople(relationships.filhos)}
-                addLabel="Adicionar filho"
+
+              <RelationshipGroupSection
+                group="filhos"
+                people={reviewGroups.filhos.visiblePeople}
+                pendingCount={reviewGroups.filhos.pendingCount}
                 onAdd={() => openAddDialog('filhos', 'Adicionar filho')}
                 onRemove={(personId) => removeRelative('filhos', personId)}
+                onUndoRemove={(personId) => undoRemoveRelative('filhos', personId)}
+                getStatus={(person) => getRelationshipReviewStatus('filhos', person)}
               >
-                {(person) => (
-                  <div className="space-y-3">
+                {(person, status) => status !== 'removed_pending' && (
+                  <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
                     <div className="space-y-2">
                       <Label htmlFor={`child-other-parent-${person.id}`}>Outro pai/mãe</Label>
                       <select
@@ -772,20 +1244,24 @@ export function MeusVinculos() {
                     )}
                   </div>
                 )}
-              </RelationSection>
-              <RelationSection
-                title="Cônjuge"
-                emptyLabel="Nenhum cônjuge cadastrado"
-                people={uniquePeople(relationships.conjuges)}
-                addLabel="Adicionar cônjuge"
+              </RelationshipGroupSection>
+
+              <RelationshipGroupSection
+                group="conjuges"
+                people={reviewGroups.conjuges.visiblePeople}
+                pendingCount={reviewGroups.conjuges.pendingCount}
                 onAdd={() => openAddDialog('conjuges', 'Adicionar cônjuge')}
                 onRemove={(personId) => removeRelative('conjuges', personId)}
+                onUndoRemove={(personId) => undoRemoveRelative('conjuges', personId)}
+                getStatus={(person) => getRelationshipReviewStatus('conjuges', person)}
               >
-                {(person) => {
+                {(person, status) => {
                   const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
                   const expanded = spouseExpanded[person.id] ?? false;
+                  if (status === 'removed_pending') return null;
+
                   return (
-                    <div className="space-y-3">
+                    <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
                           <input
@@ -852,52 +1328,88 @@ export function MeusVinculos() {
                     </div>
                   );
                 }}
-              </RelationSection>
-              <RelationSection
-                title="Irmãos"
-                emptyLabel="Nenhum irmão cadastrado"
-                people={uniquePeople(relationships.irmaos)}
-                addLabel="Adicionar irmão"
+              </RelationshipGroupSection>
+
+              <RelationshipGroupSection
+                group="irmaos"
+                people={reviewGroups.irmaos.visiblePeople}
+                pendingCount={reviewGroups.irmaos.pendingCount}
                 onAdd={() => openAddDialog('irmaos', 'Adicionar irmão')}
                 onRemove={(personId) => removeRelative('irmaos', personId)}
+                onUndoRemove={(personId) => undoRemoveRelative('irmaos', personId)}
+                getStatus={(person) => getRelationshipReviewStatus('irmaos', person)}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
+          <aside className="min-w-0">
+            <div className="sticky top-4 h-fit min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex min-w-0 items-center gap-3">
+                <PersonAvatar person={pessoa} className="h-14 w-14" imageSrc={pendingAvatarDataUrl} />
+                <div className="min-w-0">
+                  <h2 className="break-words font-semibold text-gray-950">Resumo da revisão</h2>
+                  <p className="break-words text-sm text-gray-600">{pessoa.nome_completo}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Vínculos atuais</p>
+                  <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-gray-500">Pais</dt>
+                      <dd className="font-semibold text-gray-900">{reviewSummary.parents}</dd>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-gray-500">Filhos</dt>
+                      <dd className="font-semibold text-gray-900">{reviewSummary.children}</dd>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-gray-500">Cônjuges</dt>
+                      <dd className="font-semibold text-gray-900">{reviewSummary.spouses}</dd>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-gray-500">Irmãos</dt>
+                      <dd className="font-semibold text-gray-900">{reviewSummary.siblings}</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">Alterações nesta etapa</p>
+                  {reviewSummary.totalPending === 0 ? (
+                    <div className="mt-2 space-y-1 text-sm text-gray-600">
+                      <p>Nenhuma alteração pendente.</p>
+                      <p>Você pode confirmar e continuar.</p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 space-y-2 text-sm text-gray-700">
+                      {reviewSummary.added > 0 && <p>+ {formatCount(reviewSummary.added, 'vínculo adicionado', 'vínculos adicionados')}</p>}
+                      {reviewSummary.removed > 0 && <p>- {formatCount(reviewSummary.removed, 'remoção solicitada', 'remoções solicitadas')}</p>}
+                      {reviewSummary.edited > 0 && <p>{formatCount(reviewSummary.edited, 'vínculo alterado', 'vínculos alterados')}</p>}
+                      <p className="pt-2 text-amber-900">Suas alterações serão enviadas para análise dos administradores da árvore.</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+                  Alterações em vínculos familiares passam por revisão antes de aparecerem definitivamente na árvore.
+                </div>
+              </div>
+
+              <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
+                {finishing ? (
+                  'Finalizando...'
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    {reviewSummary.totalPending > 0 ? 'Enviar alterações e continuar' : 'Confirmar vínculos e continuar'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </aside>
         </div>
-
-        <aside className="h-fit min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700">
-              {avatarSource ? (
-                <img src={avatarSource} alt={pessoa.nome_completo} className="h-full w-full object-cover" />
-              ) : (
-                <span className="inline-flex h-full w-full items-center justify-center text-lg font-semibold">
-                  {avatarInitials}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h2 className="break-words font-semibold text-gray-900">{pessoa.nome_completo}</h2>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-            <p className="font-medium text-gray-900">Confirmação</p>
-            <p className="mt-1 break-words">Ao concluir, seus dados ficam confirmados e alterações de vínculos são enviadas aos administradores.</p>
-          </div>
-
-          <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
-            {finishing ? (
-              'Finalizando...'
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Confirmar e seguir para arquivos
-              </>
-            )}
-          </Button>
-        </aside>
       </main>
 
       <Dialog open={Boolean(addDialog)} onOpenChange={(open) => (!open ? closeAddDialog() : undefined)}>
