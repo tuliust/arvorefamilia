@@ -72,6 +72,20 @@ type RelationshipReviewStatus =
 
 type RemovedRelationshipIds = Record<RelationshipGroupKey, string[]>;
 
+type ProfileControlRequestReason =
+  | 'deceased'
+  | 'minor_or_dependent'
+  | 'close_family'
+  | 'other';
+
+type ProfileControlRequestDraft = {
+  pessoaId: string;
+  pessoaNome: string;
+  reason: ProfileControlRequestReason;
+  relationshipDescription: string;
+  createdAt: string;
+};
+
 type AddRelativeForm = {
   nome_completo: string;
   data_nascimento: string;
@@ -111,6 +125,13 @@ const EMPTY_REMOVED_RELATIONSHIP_IDS: RemovedRelationshipIds = {
   filhos: [],
   conjuges: [],
   irmaos: [],
+};
+
+const PROFILE_CONTROL_REASON_LABELS: Record<ProfileControlRequestReason, string> = {
+  deceased: 'É uma pessoa falecida da família',
+  minor_or_dependent: 'É uma criança ou dependente sob minha responsabilidade',
+  close_family: 'Sou familiar próximo e quero ajudar a manter os dados atualizados',
+  other: 'Outro motivo',
 };
 
 function uniquePeople(people: Pessoa[]) {
@@ -221,6 +242,21 @@ function formatOptionalValue(value?: string | number | null) {
   return formatted || null;
 }
 
+function getProfileControlRequestSummaryLabel(count: number) {
+  if (count === 0) return 'Nenhuma solicitação de controle.';
+  if (count === 1) return '1 perfil solicitado';
+  return `${count} perfis solicitados`;
+}
+
+function canRequestProfileControl(person: Pessoa, ownPersonId?: string, hasRequest = false, status: RelationshipReviewStatus = 'confirmed') {
+  if (!person.id || !ownPersonId) return false;
+  if (person.id === ownPersonId) return false;
+  if (hasRequest) return false;
+  if (status === 'removed_pending') return false;
+  if (person.id.startsWith('local-')) return false;
+  return true;
+}
+
 function getPersonSecondaryDetails(person: Pessoa) {
   return [
     formatOptionalValue(person.data_nascimento) ? `Nascimento: ${formatOptionalValue(person.data_nascimento)}` : null,
@@ -237,6 +273,11 @@ function getRelationshipCardClassName(status: RelationshipReviewStatus) {
   if (status === 'removed_pending') return 'border-red-200 bg-red-50';
   if (status === 'added_pending' || status === 'edited_pending') return 'border-amber-200 bg-amber-50';
   return 'border-gray-200 bg-white';
+}
+
+function getRelationshipCardClassNameWithControl(status: RelationshipReviewStatus, hasControlRequest: boolean) {
+  if (hasControlRequest) return 'border-blue-200 bg-blue-50';
+  return getRelationshipCardClassName(status);
 }
 
 function RelationshipStatusBadge({ status }: { status: RelationshipReviewStatus }) {
@@ -340,17 +381,23 @@ function RelationshipRelativeCard({
   group,
   person,
   status,
+  hasControlRequest = false,
+  ownPersonId,
   isMother = false,
   onRemove,
   onUndoRemove,
+  onRequestControl,
   children,
 }: {
   group: RelationshipGroupKey;
   person: Pessoa;
   status: RelationshipReviewStatus;
+  hasControlRequest?: boolean;
+  ownPersonId?: string;
   isMother?: boolean;
   onRemove: (personId: string) => void;
   onUndoRemove: (personId: string) => void;
+  onRequestControl: (person: Pessoa) => void;
   children?: React.ReactNode;
 }) {
   const secondaryDetails = getPersonSecondaryDetails(person);
@@ -358,7 +405,7 @@ function RelationshipRelativeCard({
   const isLocalAddition = status === 'added_pending';
 
   return (
-    <article className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassName(status))}>
+    <article className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassNameWithControl(status, hasControlRequest))}>
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
         <PersonAvatar person={person} />
 
@@ -372,7 +419,13 @@ function RelationshipRelativeCard({
                 {getRelationshipLabel(group, person, isMother)}
               </p>
             </div>
-            <RelationshipStatusBadge status={status} />
+            {hasControlRequest ? (
+              <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800">
+                Controle em análise
+              </span>
+            ) : (
+              <RelationshipStatusBadge status={status} />
+            )}
           </div>
 
           {secondaryDetails.length > 0 && (
@@ -400,6 +453,12 @@ function RelationshipRelativeCard({
             </p>
           )}
 
+          {hasControlRequest && !isPendingRemoval && (
+            <p className="rounded-lg border border-blue-200 bg-blue-100/70 px-3 py-2 text-sm text-blue-900">
+              Você solicitou permissão para administrar este perfil. A solicitação será avaliada antes de liberar edição.
+            </p>
+          )}
+
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {isPendingRemoval ? (
               <Button
@@ -424,6 +483,17 @@ function RelationshipRelativeCard({
                 {isLocalAddition ? 'Cancelar adição' : 'Solicitar remoção'}
               </Button>
             )}
+            {canRequestProfileControl(person, ownPersonId, hasControlRequest, status) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 sm:w-auto"
+                onClick={() => onRequestControl(person)}
+              >
+                Solicitar controle do perfil
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -438,7 +508,10 @@ function RelationshipGroupSection({
   onAdd,
   onRemove,
   onUndoRemove,
+  onRequestControl,
   getStatus,
+  hasControlRequest,
+  ownPersonId,
   isMother,
   children,
 }: {
@@ -448,7 +521,10 @@ function RelationshipGroupSection({
   onAdd: () => void;
   onRemove: (personId: string) => void;
   onUndoRemove: (personId: string) => void;
+  onRequestControl: (person: Pessoa) => void;
   getStatus: (person: Pessoa) => RelationshipReviewStatus;
+  hasControlRequest: (person: Pessoa) => boolean;
+  ownPersonId?: string;
   isMother?: (person: Pessoa) => boolean;
   children?: (person: Pessoa, status: RelationshipReviewStatus) => React.ReactNode;
 }) {
@@ -494,9 +570,12 @@ function RelationshipGroupSection({
                 group={group}
                 person={person}
                 status={status}
+                hasControlRequest={hasControlRequest(person)}
+                ownPersonId={ownPersonId}
                 isMother={isMother?.(person) ?? false}
                 onRemove={onRemove}
                 onUndoRemove={onUndoRemove}
+                onRequestControl={onRequestControl}
               >
                 {children?.(person, status)}
               </RelationshipRelativeCard>
@@ -531,6 +610,13 @@ export function MeusVinculos() {
   const [removedRelationshipIds, setRemovedRelationshipIds] = useState<RemovedRelationshipIds>(EMPTY_REMOVED_RELATIONSHIP_IDS);
   const [hasLocalRelationshipChanges, setHasLocalRelationshipChanges] = useState(false);
   const [hasPendingRelationshipRequest, setHasPendingRelationshipRequest] = useState(false);
+  // TODO: Persistir solicitação de controle de perfil quando o fluxo administrativo estiver disponível.
+  const [controlRequestDialogOpen, setControlRequestDialogOpen] = useState(false);
+  const [selectedControlPerson, setSelectedControlPerson] = useState<Pessoa | null>(null);
+  const [controlRequestReason, setControlRequestReason] = useState<ProfileControlRequestReason>('deceased');
+  const [controlRequestDescription, setControlRequestDescription] = useState('');
+  const [controlRequestError, setControlRequestError] = useState<string | null>(null);
+  const [profileControlRequests, setProfileControlRequests] = useState<ProfileControlRequestDraft[]>([]);
   const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
@@ -598,6 +684,12 @@ export function MeusVinculos() {
         const draftKey = getMeusVinculosDraftKey(user.id, data.pessoa.id);
         const draft = readMeusVinculosDraft(draftKey);
         await reloadRelationships(data.pessoa.id);
+        setProfileControlRequests([]);
+        setSelectedControlPerson(null);
+        setControlRequestReason('deceased');
+        setControlRequestDescription('');
+        setControlRequestError(null);
+        setControlRequestDialogOpen(false);
 
         const dadosDraft = readMeusDadosDraft(getMeusDadosDraftKey(user.id, data.pessoa.id));
         if (mounted) setPendingAvatarDataUrl(dadosDraft?.pendingAvatarDataUrl ?? null);
@@ -823,6 +915,55 @@ export function MeusVinculos() {
     setHasLocalRelationshipChanges(true);
   };
 
+  const openControlRequestDialog = (person: Pessoa) => {
+    setSelectedControlPerson(person);
+    setControlRequestReason('deceased');
+    setControlRequestDescription('');
+    setControlRequestError(null);
+    setControlRequestDialogOpen(true);
+  };
+
+  const closeControlRequestDialog = () => {
+    setControlRequestDialogOpen(false);
+    setSelectedControlPerson(null);
+    setControlRequestReason('deceased');
+    setControlRequestDescription('');
+    setControlRequestError(null);
+  };
+
+  const submitProfileControlRequest = () => {
+    if (!selectedControlPerson) return;
+
+    const trimmedDescription = controlRequestDescription.trim();
+    if (!controlRequestReason) {
+      setControlRequestError('Selecione um motivo para a solicitação.');
+      return;
+    }
+    if (trimmedDescription.length < 10) {
+      setControlRequestError('A justificativa deve ter pelo menos 10 caracteres.');
+      return;
+    }
+
+    const alreadyRequested = profileControlRequests.some((request) => request.pessoaId === selectedControlPerson.id);
+    if (alreadyRequested) {
+      toast.info('Já existe uma solicitação de controle em análise para este perfil.');
+      closeControlRequestDialog();
+      return;
+    }
+
+    const nextRequest: ProfileControlRequestDraft = {
+      pessoaId: selectedControlPerson.id,
+      pessoaNome: selectedControlPerson.nome_completo,
+      reason: controlRequestReason,
+      relationshipDescription: trimmedDescription,
+      createdAt: new Date().toISOString(),
+    };
+
+    setProfileControlRequests((current) => [...current, nextRequest]);
+    closeControlRequestDialog();
+    toast.success('Solicitação de controle enviada para análise.');
+  };
+
   const updateMarriageDetail = (spouseId: string, details: MarriageDetailsForm) => {
     markDraftDirty();
     setMarriageDetails((current) => ({
@@ -916,9 +1057,16 @@ export function MeusVinculos() {
       added,
       edited,
       removed,
+      controlRequests: profileControlRequests.length,
       totalPending: added + edited + removed,
     };
-  }, [reviewGroups]);
+  }, [profileControlRequests.length, reviewGroups]);
+
+  const profileControlRequestIds = useMemo(() => new Set(profileControlRequests.map((request) => request.pessoaId)), [profileControlRequests]);
+  const hasProfileControlRequest = (personId: string) => profileControlRequestIds.has(personId);
+
+  const currentReviewChangesCount = reviewSummary.totalPending;
+  const hasAnyPendingControlRequests = reviewSummary.controlRequests > 0;
 
   const getRelationshipInputForGroup = (
     action: CreateRelationshipChangeRequestInput['action'],
@@ -1203,7 +1351,10 @@ export function MeusVinculos() {
                 onAdd={() => openAddDialog('pais', 'Adicionar pai ou mãe')}
                 onRemove={(personId) => removeRelative('pais', personId)}
                 onUndoRemove={(personId) => undoRemoveRelative('pais', personId)}
+                onRequestControl={openControlRequestDialog}
                 getStatus={(person) => getRelationshipReviewStatus('pais', person)}
+                hasControlRequest={(person) => hasProfileControlRequest(person.id)}
+                ownPersonId={pessoa.id}
                 isMother={(person) => relationships.maes.some((mae) => mae.id === person.id) || initialRelationships.maes.some((mae) => mae.id === person.id)}
               />
 
@@ -1214,7 +1365,10 @@ export function MeusVinculos() {
                 onAdd={() => openAddDialog('filhos', 'Adicionar filho')}
                 onRemove={(personId) => removeRelative('filhos', personId)}
                 onUndoRemove={(personId) => undoRemoveRelative('filhos', personId)}
+                onRequestControl={openControlRequestDialog}
                 getStatus={(person) => getRelationshipReviewStatus('filhos', person)}
+                hasControlRequest={(person) => hasProfileControlRequest(person.id)}
+                ownPersonId={pessoa.id}
               >
                 {(person, status) => status !== 'removed_pending' && (
                   <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
@@ -1253,7 +1407,10 @@ export function MeusVinculos() {
                 onAdd={() => openAddDialog('conjuges', 'Adicionar cônjuge')}
                 onRemove={(personId) => removeRelative('conjuges', personId)}
                 onUndoRemove={(personId) => undoRemoveRelative('conjuges', personId)}
+                onRequestControl={openControlRequestDialog}
                 getStatus={(person) => getRelationshipReviewStatus('conjuges', person)}
+                hasControlRequest={(person) => hasProfileControlRequest(person.id)}
+                ownPersonId={pessoa.id}
               >
                 {(person, status) => {
                   const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
@@ -1337,7 +1494,10 @@ export function MeusVinculos() {
                 onAdd={() => openAddDialog('irmaos', 'Adicionar irmão')}
                 onRemove={(personId) => removeRelative('irmaos', personId)}
                 onUndoRemove={(personId) => undoRemoveRelative('irmaos', personId)}
+                onRequestControl={openControlRequestDialog}
                 getStatus={(person) => getRelationshipReviewStatus('irmaos', person)}
+                hasControlRequest={(person) => hasProfileControlRequest(person.id)}
+                ownPersonId={pessoa.id}
               />
             </div>
           </section>
@@ -1377,7 +1537,7 @@ export function MeusVinculos() {
 
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm font-semibold text-gray-900">Alterações nesta etapa</p>
-                  {reviewSummary.totalPending === 0 ? (
+                  {currentReviewChangesCount === 0 && !hasAnyPendingControlRequests ? (
                     <div className="mt-2 space-y-1 text-sm text-gray-600">
                       <p>Nenhuma alteração pendente.</p>
                       <p>Você pode confirmar e continuar.</p>
@@ -1387,14 +1547,29 @@ export function MeusVinculos() {
                       {reviewSummary.added > 0 && <p>+ {formatCount(reviewSummary.added, 'vínculo adicionado', 'vínculos adicionados')}</p>}
                       {reviewSummary.removed > 0 && <p>- {formatCount(reviewSummary.removed, 'remoção solicitada', 'remoções solicitadas')}</p>}
                       {reviewSummary.edited > 0 && <p>{formatCount(reviewSummary.edited, 'vínculo alterado', 'vínculos alterados')}</p>}
-                      <p className="pt-2 text-amber-900">Suas alterações serão enviadas para análise dos administradores da árvore.</p>
+                      {reviewSummary.controlRequests > 0 && <p>{formatCount(reviewSummary.controlRequests, 'solicitação de controle', 'solicitações de controle')}</p>}
+                      <p className="pt-2 text-amber-900">
+                        {currentReviewChangesCount > 0
+                          ? 'Suas alterações serão enviadas para análise dos administradores da árvore.'
+                          : 'Suas solicitações serão enviadas para análise dos administradores da árvore.'}
+                      </p>
                     </div>
                   )}
                 </div>
 
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+                  <p className="font-semibold">Solicitações de controle</p>
+                  <p className="mt-1">{getProfileControlRequestSummaryLabel(reviewSummary.controlRequests)}</p>
+                </div>
+
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
                   Alterações em vínculos familiares passam por revisão antes de aparecerem definitivamente na árvore.
                 </div>
+                {hasAnyPendingControlRequests && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                    Solicitações de controle são avaliadas para proteger a privacidade e a integridade da árvore familiar.
+                  </div>
+                )}
               </div>
 
               <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
@@ -1403,7 +1578,11 @@ export function MeusVinculos() {
                 ) : (
                   <>
                     <Save className="h-4 w-4" />
-                    {reviewSummary.totalPending > 0 ? 'Enviar alterações e continuar' : 'Confirmar vínculos e continuar'}
+                    {currentReviewChangesCount === 0 && !hasAnyPendingControlRequests
+                      ? 'Confirmar vínculos e continuar'
+                      : hasAnyPendingControlRequests && currentReviewChangesCount === 0
+                        ? 'Enviar solicitações e continuar'
+                        : 'Enviar alterações e continuar'}
                   </>
                 )}
               </Button>
@@ -1411,6 +1590,77 @@ export function MeusVinculos() {
           </aside>
         </div>
       </main>
+
+      <Dialog open={controlRequestDialogOpen} onOpenChange={(open) => (open ? setControlRequestDialogOpen(true) : closeControlRequestDialog())}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto bg-white">
+          <DialogHeader>
+            <DialogTitle className="break-words">Solicitar controle do perfil</DialogTitle>
+            <DialogDescription className="break-words">
+              Você está pedindo permissão para editar e manter as informações deste perfil familiar.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedControlPerson && (
+            <div className="flex min-w-0 items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <PersonAvatar person={selectedControlPerson} className="h-14 w-14" />
+              <div className="min-w-0">
+                <p className="text-sm text-gray-600">Perfil selecionado</p>
+                <p className="break-words font-semibold text-gray-950">{selectedControlPerson.nome_completo}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="control-request-reason">Motivo</Label>
+              <select
+                id="control-request-reason"
+                value={controlRequestReason}
+                onChange={(event) => {
+                  setControlRequestReason(event.target.value as ProfileControlRequestReason);
+                  setControlRequestError(null);
+                }}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                <option value="deceased">{PROFILE_CONTROL_REASON_LABELS.deceased}</option>
+                <option value="minor_or_dependent">{PROFILE_CONTROL_REASON_LABELS.minor_or_dependent}</option>
+                <option value="close_family">{PROFILE_CONTROL_REASON_LABELS.close_family}</option>
+                <option value="other">{PROFILE_CONTROL_REASON_LABELS.other}</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="control-request-description">Explique brevemente sua relação com essa pessoa</Label>
+              <textarea
+                id="control-request-description"
+                value={controlRequestDescription}
+                onChange={(event) => {
+                  setControlRequestDescription(event.target.value);
+                  setControlRequestError(null);
+                }}
+                placeholder="Ex: sou filho, neto, sobrinho, responsável legal ou familiar próximo."
+                rows={5}
+                className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              />
+            </div>
+
+            {controlRequestError && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                {controlRequestError}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeControlRequestDialog}>
+              Cancelar
+            </Button>
+            <Button type="button" className="w-full sm:w-auto" onClick={submitProfileControlRequest}>
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(addDialog)} onOpenChange={(open) => (!open ? closeAddDialog() : undefined)}>
         <DialogContent className="bg-white">
