@@ -778,6 +778,28 @@ export async function listLinkablePeople() {
   return { error: error?.message, data: (data as Pessoa[]) ?? [] };
 }
 
+export async function getLinkedPersonIds(pessoaIds: string[]) {
+  const uniqueIds = Array.from(new Set(pessoaIds.filter((id) => Boolean(String(id).trim()))));
+
+  if (uniqueIds.length === 0) {
+    return { error: undefined, data: new Set<string>() };
+  }
+
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('pessoa_id')
+    .in('pessoa_id', uniqueIds);
+
+  if (error) {
+    return { error: error.message, data: new Set<string>() };
+  }
+
+  return {
+    error: undefined,
+    data: new Set((data || []).map((row) => String((row as { pessoa_id?: string | null }).pessoa_id ?? '').trim()).filter(Boolean)),
+  };
+}
+
 type RelationshipSearchPersonRow = Pick<
   Pessoa,
   | 'id'

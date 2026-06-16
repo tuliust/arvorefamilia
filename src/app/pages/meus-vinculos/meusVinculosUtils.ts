@@ -1,4 +1,4 @@
-import { Pessoa } from '../../types';
+import { Pessoa, Relacionamento } from '../../types';
 import {
   ProfileControlRequestReason,
   RelationshipGroupKey,
@@ -55,11 +55,7 @@ export function canRequestProfileControl(
 }
 
 export function getPersonSecondaryDetails(person: Pessoa) {
-  return [
-    formatOptionalValue(person.data_nascimento) ? `Nascimento: ${formatOptionalValue(person.data_nascimento)}` : null,
-    formatOptionalValue(person.local_nascimento || person.local_atual),
-    isPersonDeceased(person) ? 'Falecido(a)' : null,
-  ].filter(Boolean) as string[];
+  return [isPersonDeceased(person) ? 'Falecido(a)' : null].filter(Boolean) as string[];
 }
 
 export function relationshipStatusHasPending(status: RelationshipReviewStatus) {
@@ -73,11 +69,13 @@ export function getRelationshipCardClassName(status: RelationshipReviewStatus) {
   return 'border-gray-200 bg-white';
 }
 
-export function getRelationshipStatusBadgeConfig(status: RelationshipReviewStatus) {
+export function getRelationshipStatusBadgeConfig(status: RelationshipReviewStatus, hasAuthUser = false) {
   const config: Record<RelationshipReviewStatus, { label: string; className: string }> = {
     confirmed: {
-      label: 'Cadastrado',
-      className: 'border-gray-200 bg-gray-100 text-gray-700',
+      label: hasAuthUser ? 'Ativo' : 'Pré-cadastrado',
+      className: hasAuthUser
+        ? 'border-green-200 bg-green-100 text-green-800'
+        : 'border-gray-200 bg-gray-100 text-gray-700',
     },
     added_pending: {
       label: 'Em análise',
@@ -98,6 +96,70 @@ export function getRelationshipStatusBadgeConfig(status: RelationshipReviewStatu
   };
 
   return config[status];
+}
+
+export function getFirstName(fullName: string) {
+  return fullName.trim().split(/\s+/)[0] || '';
+}
+
+export function getChildRelationshipLabel(person: Pessoa) {
+  const gender = String(person.genero ?? '').trim().toLowerCase();
+
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(gender)) {
+    return 'Filha';
+  }
+
+  if (['homem', 'masculino', 'male', 'masculino'].includes(gender)) {
+    return 'Filho';
+  }
+
+  return 'Filho(a)';
+}
+
+function resolveRelationshipOtherPersonId(rel: Relacionamento, childId: string) {
+  if (rel.pessoa_origem_id === childId) return rel.pessoa_destino_id;
+  if (rel.pessoa_destino_id === childId) return rel.pessoa_origem_id;
+  return null;
+}
+
+export function findKnownOtherParentForChild(args: {
+  child: Pessoa;
+  currentPersonId: string;
+  allRelacionamentos: Relacionamento[];
+  candidatePeople: Pessoa[];
+}) {
+  const { child, currentPersonId, allRelacionamentos, candidatePeople } = args;
+
+  const knownRelationships = allRelacionamentos
+    .filter((rel) => ['pai', 'mae'].includes(rel.tipo_relacionamento))
+    .filter((rel) => rel.pessoa_origem_id === child.id || rel.pessoa_destino_id === child.id)
+    .sort((left, right) => {
+      if (left.tipo_relacionamento === right.tipo_relacionamento) return 0;
+      return left.tipo_relacionamento === 'mae' ? -1 : 1;
+    });
+
+  for (const rel of knownRelationships) {
+    const otherPersonId = resolveRelationshipOtherPersonId(rel, child.id);
+    if (!otherPersonId || otherPersonId === currentPersonId) continue;
+
+    const match = candidatePeople.find((person) => person.id === otherPersonId);
+    if (match) return match;
+  }
+
+  return null;
+}
+
+export function getChildOtherParentOptions(args: {
+  child: Pessoa;
+  currentPersonId: string;
+  allRelacionamentos: Relacionamento[];
+  candidatePeople: Pessoa[];
+}) {
+  const knownOtherParent = findKnownOtherParentForChild(args);
+  return Array.from(new Map([
+    ...args.candidatePeople,
+    ...(knownOtherParent ? [knownOtherParent] : []),
+  ].map((person) => [person.id, person])).values());
 }
 
 export function getRelationshipCardLabel(group: RelationshipGroupKey, isMother = false) {

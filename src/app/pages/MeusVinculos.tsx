@@ -42,6 +42,7 @@ import {
 } from '../services/relationshipChangeRequestService';
 import {
   getPrimaryLinkedPersonWithPessoa,
+  getLinkedPersonIds,
   resolveFirstAccessLinkForUser,
   searchPeopleForRelationship,
   UserPersonLinkRecord,
@@ -52,10 +53,15 @@ import { ProfileControlRequestDialog } from './meus-vinculos/ProfileControlReque
 import { RelativeCard } from './meus-vinculos/RelativeCard';
 import { RelationshipGroupPanel } from './meus-vinculos/RelationshipGroupPanel';
 import { RelationshipOverview } from './meus-vinculos/RelationshipOverview';
-import { RelationshipReviewAside } from './meus-vinculos/RelationshipReviewAside';
 import {
   canRequestProfileControl,
   formatOptionalValue,
+  getChildOtherParentOptions,
+  getChildRelationshipLabel,
+  findKnownOtherParentForChild,
+  getRelationshipChangeNoticeText,
+  getRelationshipControlNoticeText,
+  getRelationshipFinalButtonLabel,
   getRelationshipOverviewGroupLabel,
   relationshipStatusHasPending,
 } from './meus-vinculos/meusVinculosUtils';
@@ -253,6 +259,7 @@ export function MeusVinculos() {
   const [controlRequestDescription, setControlRequestDescription] = useState('');
   const [controlRequestError, setControlRequestError] = useState<string | null>(null);
   const [profileControlRequests, setProfileControlRequests] = useState<ProfileControlRequestDraft[]>([]);
+  const [linkedPersonIds, setLinkedPersonIds] = useState<Set<string>>(() => new Set());
   const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
@@ -717,6 +724,17 @@ export function MeusVinculos() {
     return 'irmao';
   };
 
+  const getChildOtherParentOptionsForPerson = (child: Pessoa) => getChildOtherParentOptions({
+    child,
+    currentPersonId: pessoa.id,
+    allRelacionamentos,
+    candidatePeople: uniquePeople([
+      ...relationships.conjuges,
+      ...relationships.pais,
+      ...relationships.maes,
+    ]),
+  });
+
   const getVisibleGroupPeople = (group: RelationshipGroupKey) => {
     const currentPeople = getGroupPeople(relationships, group);
     const currentIds = new Set(currentPeople.map((person) => person.id));
@@ -774,6 +792,44 @@ export function MeusVinculos() {
     });
   }, [initialMarriageDetails, initialRelationships, marriageDetails, relationships, removedRelationshipIds]);
 
+  useEffect(() => {
+    if (!pessoa?.id || reviewGroups.filhos.visiblePeople.length === 0) return;
+
+    setChildOtherParent((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      reviewGroups.filhos.visiblePeople.forEach((child) => {
+        if (next[child.id]) return;
+
+        const knownOtherParent = findKnownOtherParentForChild({
+          child,
+          currentPersonId: pessoa.id,
+          allRelacionamentos,
+          candidatePeople: uniquePeople([
+            ...relationships.conjuges,
+            ...relationships.pais,
+            ...relationships.maes,
+          ]),
+        });
+
+        if (knownOtherParent?.id) {
+          next[child.id] = knownOtherParent.id;
+          changed = true;
+        }
+      });
+
+      return changed ? next : current;
+    });
+  }, [
+    allRelacionamentos,
+    pessoa?.id,
+    relationships.conjuges,
+    relationships.maes,
+    relationships.pais,
+    reviewGroups.filhos.visiblePeople,
+  ]);
+
   const reviewSummary = useMemo(() => {
     const added = reviewGroups.pais.added + reviewGroups.filhos.added + reviewGroups.conjuges.added + reviewGroups.irmaos.added;
     const edited = reviewGroups.pais.edited + reviewGroups.filhos.edited + reviewGroups.conjuges.edited + reviewGroups.irmaos.edited;
@@ -794,6 +850,40 @@ export function MeusVinculos() {
 
   const profileControlRequestIds = useMemo(() => new Set(profileControlRequests.map((request) => request.pessoaId)), [profileControlRequests]);
   const hasProfileControlRequest = (personId: string) => profileControlRequestIds.has(personId);
+
+  const visibleRelationshipPersonIds = useMemo(() => {
+    return Array.from(new Set([
+      ...reviewGroups.pais.visiblePeople.map((person) => person.id),
+      ...reviewGroups.filhos.visiblePeople.map((person) => person.id),
+      ...reviewGroups.conjuges.visiblePeople.map((person) => person.id),
+      ...reviewGroups.irmaos.visiblePeople.map((person) => person.id),
+    ].filter((id) => Boolean(id) && !String(id).startsWith('local-')))).sort();
+  }, [reviewGroups]);
+
+  const visibleRelationshipPersonIdsKey = useMemo(() => visibleRelationshipPersonIds.join('|'), [visibleRelationshipPersonIds]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadLinkedIds() {
+      if (visibleRelationshipPersonIds.length === 0) {
+        if (mounted) setLinkedPersonIds(new Set());
+        return;
+      }
+
+      const { data, error } = await getLinkedPersonIds(visibleRelationshipPersonIds);
+      if (!mounted) return;
+      if (!error) {
+        setLinkedPersonIds(data);
+      }
+    }
+
+    loadLinkedIds();
+
+    return () => {
+      mounted = false;
+    };
+  }, [visibleRelationshipPersonIdsKey]);
 
   const reviewCounts: RelationshipCounts = {
     parents: reviewSummary.parents,
@@ -1012,271 +1102,288 @@ export function MeusVinculos() {
 
       <MemberOnboardingSteps activeStep={2} />
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/meus-dados')}>
-            Voltar para meus dados
-          </Button>
-          {hasPendingRelationshipRequest && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.
-            </p>
-          )}
-        </div>
+      <main className="mx-auto max-w-7xl px-4 py-6">
+        {hasPendingRelationshipRequest && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="min-w-0 space-y-6">
-            <RelationshipOverview
-              person={pessoa}
-              avatarSrc={pendingAvatarDataUrl}
-              groups={overviewGroups}
-            />
+        <section className="min-w-0 space-y-6">
+          <RelationshipOverview
+            person={pessoa}
+            avatarSrc={pendingAvatarDataUrl}
+            groups={overviewGroups}
+          />
 
-            <div className="space-y-6">
-              <RelationshipGroupPanel
-                title="Pais"
-                description="Confirme pai e mãe cadastrados para sua árvore."
-                icon={UserRound}
-                count={reviewGroups.pais.visiblePeople.length}
-                pendingCount={reviewGroups.pais.pendingCount}
-                emptyTitle="Nenhum pai ou mãe cadastrado"
-                emptyDescription="Adicione pai ou mãe para completar a geração anterior da árvore."
-                addButtonLabel="Adicionar pai ou mãe"
-                onAdd={() => openAddDialog('pais', 'Adicionar pai ou mãe')}
-              >
-                {reviewGroups.pais.visiblePeople.map((person) => {
-                  const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
-                    ? 'control_pending'
-                    : getRelationshipReviewStatus('pais', person);
-                  const isMother = relationships.maes.some((mae) => mae.id === person.id) || initialRelationships.maes.some((mae) => mae.id === person.id);
+          <div className="space-y-6">
+            <RelationshipGroupPanel
+              id="vinculos-pais"
+              title="Pais"
+              description="Confirme pai e mãe cadastrados para sua árvore."
+              icon={UserRound}
+              count={reviewGroups.pais.visiblePeople.length}
+              pendingCount={reviewGroups.pais.pendingCount}
+              emptyTitle="Nenhum pai ou mãe cadastrado"
+              emptyDescription="Adicione pai ou mãe para completar a geração anterior da árvore."
+              addButtonLabel="Adicionar pai ou mãe"
+              onAdd={() => openAddDialog('pais', 'Adicionar pai ou mãe')}
+            >
+              {reviewGroups.pais.visiblePeople.map((person) => {
+                const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
+                  ? 'control_pending'
+                  : getRelationshipReviewStatus('pais', person);
+                const isMother = relationships.maes.some((mae) => mae.id === person.id) || initialRelationships.maes.some((mae) => mae.id === person.id);
 
-                  return (
-                    <RelativeCard
-                      key={`pais-${person.id}-${status}`}
-                      person={person}
-                      relationshipGroup="pais"
-                      relationshipLabel={isMother ? 'Mãe' : 'Pai'}
-                      status={status}
-                      canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
-                      onRemove={() => removeRelative('pais', person.id)}
-                      onUndoRemove={() => undoRemoveRelative('pais', person.id)}
-                      onCancelAddition={() => removeRelative('pais', person.id)}
-                      onRequestControl={() => openControlRequestDialog(person)}
-                    />
-                  );
-                })}
-              </RelationshipGroupPanel>
+                return (
+                  <RelativeCard
+                    key={`pais-${person.id}-${status}`}
+                    person={person}
+                    relationshipGroup="pais"
+                    relationshipLabel={isMother ? 'Mãe' : 'Pai'}
+                    status={status}
+                    hasAuthUser={linkedPersonIds.has(person.id)}
+                    canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
+                    onRemove={() => removeRelative('pais', person.id)}
+                    onUndoRemove={() => undoRemoveRelative('pais', person.id)}
+                    onCancelAddition={() => removeRelative('pais', person.id)}
+                    onRequestControl={() => openControlRequestDialog(person)}
+                  />
+                );
+              })}
+            </RelationshipGroupPanel>
 
-              <RelationshipGroupPanel
-                title="Filhos"
-                description="Confirme seus filhos e, se souber, informe o outro pai/mãe."
-                icon={Baby}
-                count={reviewGroups.filhos.visiblePeople.length}
-                pendingCount={reviewGroups.filhos.pendingCount}
-                emptyTitle="Nenhum filho cadastrado"
-                emptyDescription="Adicione filhos para conectar a próxima geração."
-                addButtonLabel="Adicionar filho"
-                onAdd={() => openAddDialog('filhos', 'Adicionar filho')}
-              >
-                {reviewGroups.filhos.visiblePeople.map((person) => {
-                  const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
-                    ? 'control_pending'
-                    : getRelationshipReviewStatus('filhos', person);
+            <RelationshipGroupPanel
+              id="vinculos-filhos"
+              title="Filhos"
+              description="Confirme seus filhos e, se souber, informe o outro pai/mãe."
+              icon={Baby}
+              count={reviewGroups.filhos.visiblePeople.length}
+              pendingCount={reviewGroups.filhos.pendingCount}
+              emptyTitle="Nenhum filho cadastrado"
+              emptyDescription="Adicione filhos para conectar a próxima geração."
+              addButtonLabel="Adicionar filho"
+              onAdd={() => openAddDialog('filhos', 'Adicionar filho')}
+            >
+              {reviewGroups.filhos.visiblePeople.map((person) => {
+                const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
+                  ? 'control_pending'
+                  : getRelationshipReviewStatus('filhos', person);
+                const otherParentOptions = getChildOtherParentOptionsForPerson(person);
 
-                  return (
-                    <RelativeCard
-                      key={`filhos-${person.id}-${status}`}
-                      person={person}
-                      relationshipGroup="filhos"
-                      relationshipLabel="Filho(a)"
-                      status={status}
-                      canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
-                      onRemove={() => removeRelative('filhos', person.id)}
-                      onUndoRemove={() => undoRemoveRelative('filhos', person.id)}
-                      onCancelAddition={() => removeRelative('filhos', person.id)}
-                      onRequestControl={() => openControlRequestDialog(person)}
-                    >
-                      {status !== 'removed_pending' && (
-                        <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
-                          <div className="space-y-2">
-                            <Label htmlFor={`child-other-parent-${person.id}`}>Outro pai/mãe</Label>
-                            <select
-                              id={`child-other-parent-${person.id}`}
-                              value={childOtherParent[person.id] ?? ''}
-                              onChange={(event) => {
-                                const nextValue = event.target.value;
-                                markDraftDirty();
-                                setChildOtherParent((current) => ({
-                                  ...current,
-                                  [person.id]: nextValue,
-                                }));
-                              }}
-                              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                            >
-                              <option value="">Não informado</option>
-                              {uniquePeople(relationships.conjuges).map((spouse) => (
-                                <option key={spouse.id} value={spouse.id}>{spouse.nome_completo}</option>
-                              ))}
-                            </select>
-                          </div>
-                          {relationships.conjuges.length === 0 && (
-                            <p className="text-sm text-gray-500">Adicione um cônjuge para habilitar a seleção de outro pai/mãe.</p>
-                          )}
-                        </div>
-                      )}
-                    </RelativeCard>
-                  );
-                })}
-              </RelationshipGroupPanel>
-
-              <RelationshipGroupPanel
-                title="Cônjuges"
-                description="Registre relacionamentos importantes e detalhes de casamento ou separação."
-                icon={Heart}
-                count={reviewGroups.conjuges.visiblePeople.length}
-                pendingCount={reviewGroups.conjuges.pendingCount}
-                emptyTitle="Nenhum cônjuge cadastrado"
-                emptyDescription="Adicione cônjuges para registrar relacionamentos importantes."
-                addButtonLabel="Adicionar cônjuge"
-                onAdd={() => openAddDialog('conjuges', 'Adicionar cônjuge')}
-              >
-                {reviewGroups.conjuges.visiblePeople.map((person) => {
-                  const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
-                    ? 'control_pending'
-                    : getRelationshipReviewStatus('conjuges', person);
-                  const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
-                  const expanded = spouseExpanded[person.id] ?? false;
-
-                  return (
-                    <RelativeCard
-                      key={`conjuges-${person.id}-${status}`}
-                      person={person}
-                      relationshipGroup="conjuges"
-                      relationshipLabel="Cônjuge"
-                      status={status}
-                      canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
-                      onRemove={() => removeRelative('conjuges', person.id)}
-                      onUndoRemove={() => undoRemoveRelative('conjuges', person.id)}
-                      onCancelAddition={() => removeRelative('conjuges', person.id)}
-                      onRequestControl={() => openControlRequestDialog(person)}
-                    >
-                      {status !== 'removed_pending' && (
-                        <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
-                              <input
-                                type="checkbox"
-                                checked={details.ativo}
-                                onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
-                                className="h-4 w-4"
-                              />
-                              Relacionamento ativo
-                            </label>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setSpouseExpanded((current) => ({
+                return (
+                  <RelativeCard
+                    key={`filhos-${person.id}-${status}`}
+                    person={person}
+                    relationshipGroup="filhos"
+                    relationshipLabel={getChildRelationshipLabel(person)}
+                    status={status}
+                    hasAuthUser={linkedPersonIds.has(person.id)}
+                    canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
+                    onRemove={() => removeRelative('filhos', person.id)}
+                    onUndoRemove={() => undoRemoveRelative('filhos', person.id)}
+                    onCancelAddition={() => removeRelative('filhos', person.id)}
+                    onRequestControl={() => openControlRequestDialog(person)}
+                  >
+                    {status !== 'removed_pending' && (
+                      <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
+                        <div className="space-y-2">
+                          <Label htmlFor={`child-other-parent-${person.id}`}>Outro pai/mãe</Label>
+                          <select
+                            id={`child-other-parent-${person.id}`}
+                            value={childOtherParent[person.id] ?? ''}
+                            onChange={(event) => {
+                              const nextValue = event.target.value;
+                              markDraftDirty();
+                              setChildOtherParent((current) => ({
                                 ...current,
-                                [person.id]: !current[person.id],
-                              }))}
-                              aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
-                            >
-                              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                            </Button>
-                          </div>
-                          {expanded && (
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div>
-                                <Label htmlFor={`spouse wedding-date-${person.id}`}>Data de casamento</Label>
-                                <Input
-                                  id={`spouse wedding-date-${person.id}`}
-                                  value={details.data_casamento}
-                                  onChange={(event) => updateMarriageDetail(person.id, { ...details, data_casamento: event.target.value })}
-                                  placeholder="DD/MM/AAAA ou AAAA"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor={`spouse wedding-place-${person.id}`}>Local de casamento</Label>
-                                <Input
-                                  id={`spouse wedding-place-${person.id}`}
-                                  value={details.local_casamento}
-                                  onChange={(event) => updateMarriageDetail(person.id, { ...details, local_casamento: event.target.value })}
-                                  placeholder="Cidade/UF"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor={`spouse separation-date-${person.id}`}>Data de separação</Label>
-                                <Input
-                                  id={`spouse separation-date-${person.id}`}
-                                  value={details.data_separacao}
-                                  onChange={(event) => updateMarriageDetail(person.id, { ...details, data_separacao: event.target.value })}
-                                  placeholder="DD/MM/AAAA ou AAAA"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor={`spouse separation-place-${person.id}`}>Local de separação</Label>
-                                <Input
-                                  id={`spouse separation-place-${person.id}`}
-                                  value={details.local_separacao}
-                                  onChange={(event) => updateMarriageDetail(person.id, { ...details, local_separacao: event.target.value })}
-                                  placeholder="Cidade/UF"
-                                />
-                              </div>
-                            </div>
-                          )}
+                                [person.id]: nextValue,
+                              }));
+                            }}
+                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            <option value="">Não informado</option>
+                            {otherParentOptions.map((option) => (
+                              <option key={option.id} value={option.id}>{option.nome_completo}</option>
+                            ))}
+                          </select>
                         </div>
-                      )}
-                    </RelativeCard>
-                  );
-                })}
-              </RelationshipGroupPanel>
+                        {otherParentOptions.length === 0 && (
+                          <p className="text-sm text-gray-500">Adicione um cônjuge ou cadastre o outro pai/mãe para habilitar a seleção.</p>
+                        )}
+                      </div>
+                    )}
+                  </RelativeCard>
+                );
+              })}
+            </RelationshipGroupPanel>
 
-              <RelationshipGroupPanel
-                title="Irmãos"
-                description="Complete os vínculos laterais com irmãos e irmãs."
-                icon={Users}
-                count={reviewGroups.irmaos.visiblePeople.length}
-                pendingCount={reviewGroups.irmaos.pendingCount}
-                emptyTitle="Nenhum irmão cadastrado"
-                emptyDescription="Adicione irmãos para completar os vínculos laterais da família."
-                addButtonLabel="Adicionar irmão"
-                onAdd={() => openAddDialog('irmaos', 'Adicionar irmão')}
-              >
-                {reviewGroups.irmaos.visiblePeople.map((person) => {
-                  const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
-                    ? 'control_pending'
-                    : getRelationshipReviewStatus('irmaos', person);
+            <RelationshipGroupPanel
+              id="vinculos-conjuges"
+              title="Cônjuges"
+              description="Registre relacionamentos importantes e detalhes de casamento ou separação."
+              icon={Heart}
+              count={reviewGroups.conjuges.visiblePeople.length}
+              pendingCount={reviewGroups.conjuges.pendingCount}
+              emptyTitle="Nenhum cônjuge cadastrado"
+              emptyDescription="Adicione cônjuges para registrar relacionamentos importantes."
+              addButtonLabel="Adicionar cônjuge"
+              onAdd={() => openAddDialog('conjuges', 'Adicionar cônjuge')}
+            >
+              {reviewGroups.conjuges.visiblePeople.map((person) => {
+                const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
+                  ? 'control_pending'
+                  : getRelationshipReviewStatus('conjuges', person);
+                const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
+                const expanded = spouseExpanded[person.id] ?? false;
 
-                  return (
-                    <RelativeCard
-                      key={`irmaos-${person.id}-${status}`}
-                      person={person}
-                      relationshipGroup="irmaos"
-                      relationshipLabel="Irmão(ã)"
-                      status={status}
-                      canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
-                      onRemove={() => removeRelative('irmaos', person.id)}
-                      onUndoRemove={() => undoRemoveRelative('irmaos', person.id)}
-                      onCancelAddition={() => removeRelative('irmaos', person.id)}
-                      onRequestControl={() => openControlRequestDialog(person)}
-                    />
-                  );
-                })}
-              </RelationshipGroupPanel>
+                return (
+                  <RelativeCard
+                    key={`conjuges-${person.id}-${status}`}
+                    person={person}
+                    relationshipGroup="conjuges"
+                    relationshipLabel="Cônjuge"
+                    status={status}
+                    hasAuthUser={linkedPersonIds.has(person.id)}
+                    canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
+                    onRemove={() => removeRelative('conjuges', person.id)}
+                    onUndoRemove={() => undoRemoveRelative('conjuges', person.id)}
+                    onCancelAddition={() => removeRelative('conjuges', person.id)}
+                    onRequestControl={() => openControlRequestDialog(person)}
+                  >
+                    {status !== 'removed_pending' && (
+                      <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                            <input
+                              type="checkbox"
+                              checked={details.ativo}
+                              onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
+                              className="h-4 w-4"
+                            />
+                            Relacionamento ativo
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setSpouseExpanded((current) => ({
+                              ...current,
+                              [person.id]: !current[person.id],
+                            }))}
+                            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
+                          >
+                            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        {expanded && (
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div>
+                              <Label htmlFor={`spouse wedding-date-${person.id}`}>Data de casamento</Label>
+                              <Input
+                                id={`spouse wedding-date-${person.id}`}
+                                value={details.data_casamento}
+                                onChange={(event) => updateMarriageDetail(person.id, { ...details, data_casamento: event.target.value })}
+                                placeholder="DD/MM/AAAA ou AAAA"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`spouse wedding-place-${person.id}`}>Local de casamento</Label>
+                              <Input
+                                id={`spouse wedding-place-${person.id}`}
+                                value={details.local_casamento}
+                                onChange={(event) => updateMarriageDetail(person.id, { ...details, local_casamento: event.target.value })}
+                                placeholder="Cidade/UF"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`spouse separation-date-${person.id}`}>Data de separação</Label>
+                              <Input
+                                id={`spouse separation-date-${person.id}`}
+                                value={details.data_separacao}
+                                onChange={(event) => updateMarriageDetail(person.id, { ...details, data_separacao: event.target.value })}
+                                placeholder="DD/MM/AAAA ou AAAA"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`spouse separation-place-${person.id}`}>Local de separação</Label>
+                              <Input
+                                id={`spouse separation-place-${person.id}`}
+                                value={details.local_separacao}
+                                onChange={(event) => updateMarriageDetail(person.id, { ...details, local_separacao: event.target.value })}
+                                placeholder="Cidade/UF"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </RelativeCard>
+                );
+              })}
+            </RelationshipGroupPanel>
+
+            <RelationshipGroupPanel
+              id="vinculos-irmaos"
+              title="Irmãos"
+              description="Complete os vínculos laterais com irmãos e irmãs."
+              icon={Users}
+              count={reviewGroups.irmaos.visiblePeople.length}
+              pendingCount={reviewGroups.irmaos.pendingCount}
+              emptyTitle="Nenhum irmão cadastrado"
+              emptyDescription="Adicione irmãos para completar os vínculos laterais da família."
+              addButtonLabel="Adicionar irmão"
+              onAdd={() => openAddDialog('irmaos', 'Adicionar irmão')}
+            >
+              {reviewGroups.irmaos.visiblePeople.map((person) => {
+                const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
+                  ? 'control_pending'
+                  : getRelationshipReviewStatus('irmaos', person);
+
+                return (
+                  <RelativeCard
+                    key={`irmaos-${person.id}-${status}`}
+                    person={person}
+                    relationshipGroup="irmaos"
+                    relationshipLabel="Irmão(ã)"
+                    status={status}
+                    hasAuthUser={linkedPersonIds.has(person.id)}
+                    canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
+                    onRemove={() => removeRelative('irmaos', person.id)}
+                    onUndoRemove={() => undoRemoveRelative('irmaos', person.id)}
+                    onCancelAddition={() => removeRelative('irmaos', person.id)}
+                    onRequestControl={() => openControlRequestDialog(person)}
+                  />
+                );
+              })}
+            </RelationshipGroupPanel>
+          </div>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-gray-950">Finalizar revisão</h2>
+              <p className="text-sm text-gray-600">Confirme os vínculos familiares para continuar.</p>
             </div>
-          </section>
 
-          <aside className="min-w-0">
-            <RelationshipReviewAside
-              counts={reviewCounts}
-              changes={reviewChanges}
-              hasPendingRelationshipRequest={hasPendingRelationshipRequest}
-              saving={finishing}
-              onConfirm={handleFinish}
-            />
-          </aside>
-        </div>
+            <div className="mt-4 space-y-3">
+              {reviewChanges.totalPending > 0 && (
+                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  {getRelationshipChangeNoticeText(reviewChanges.totalPending > 0)}
+                </p>
+              )}
+
+              {reviewChanges.controlRequests > 0 && (
+                <p className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                  {getRelationshipControlNoticeText()}
+                </p>
+              )}
+            </div>
+
+            <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
+              {finishing ? 'Finalizando...' : getRelationshipFinalButtonLabel(reviewChanges.totalPending > 0, reviewChanges.controlRequests > 0)}
+            </Button>
+          </section>
+        </section>
       </main>
 
       <ProfileControlRequestDialog

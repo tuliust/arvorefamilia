@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { formatCount } from './meusVinculosUtils';
 
 type RelationshipGroupPanelProps = {
+  id?: string;
   title: string;
   description: string;
   icon?: React.ComponentType<{ className?: string }>;
@@ -17,6 +18,7 @@ type RelationshipGroupPanelProps = {
 };
 
 export function RelationshipGroupPanel({
+  id,
   title,
   description,
   icon: Icon,
@@ -29,7 +31,7 @@ export function RelationshipGroupPanel({
   children,
 }: RelationshipGroupPanelProps) {
   return (
-    <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section id={id} className="scroll-mt-24 min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
