@@ -5,7 +5,7 @@ import {
   Check,
   Filter,
   Search,
-  Trash2,
+  Star,
 } from 'lucide-react';
 import { FavoriteEntityType, UserFavorite } from '../types';
 import { listFavorites, removeFavoriteById } from '../services/favoritesService';
@@ -132,6 +132,7 @@ export function MeusFavoritos() {
     setRemovingId(favorito.id);
 
     try {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
       await removeFavoriteById(favorito.id);
       setFavoritos((current) => current.filter((item) => item.id !== favorito.id));
     } catch (error) {
@@ -157,7 +158,7 @@ export function MeusFavoritos() {
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-6`}>
-        <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <section className="min-w-0 w-full max-w-3xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -269,11 +270,21 @@ export function MeusFavoritos() {
                       type="button"
                       onClick={(event) => handleRemove(event, favorito)}
                       disabled={removingId === favorito.id}
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-white text-red-600 transition hover:bg-red-50 disabled:opacity-60"
-                      aria-label="Remover favorito"
-                      title="Remover favorito"
+                      className={[
+                        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition',
+                        removingId === favorito.id
+                          ? 'border-gray-200 bg-gray-50 text-gray-400 opacity-60'
+                          : 'border-amber-200 bg-amber-50 text-amber-500 hover:bg-amber-100',
+                      ].join(' ')}
+                      aria-label={removingId === favorito.id ? 'Removendo dos favoritos' : 'Remover dos favoritos'}
+                      title={removingId === favorito.id ? 'Removendo dos favoritos' : 'Remover dos favoritos'}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Star
+                        className={[
+                          'h-4 w-4',
+                          removingId === favorito.id ? '' : 'fill-current',
+                        ].join(' ')}
+                      />
                     </button>
                   </div>
                 </div>
