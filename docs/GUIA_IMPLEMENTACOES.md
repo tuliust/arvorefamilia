@@ -1,10 +1,10 @@
-﻿# Guia de implementações — Árvore Família
+# Guia de implementações — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de implementação vigente
-> Status: revisado para registrar somente o que está implementado; pendências ficam separadas em seção própria e no `PLANO_PROXIMOS_PASSOS.md`.
+> Status: atualizado para registrar o fluxo de membro em 5 etapas e as novas rotas `/arquivos-historicos` e `/preferencias`.
 
 ---
 
@@ -45,7 +45,7 @@ docs/PLANO_PROXIMOS_PASSOS.md
 | Busca global | Implementada com páginas vigentes e aliases antigos apontando para rotas atuais. |
 | Favoritos | Implementados para páginas e entidades suportadas. |
 | Calendário familiar | Implementado com filtros/categorias e integração Google Agenda quando configurada. |
-| Perfil e área de membro | Implementados. |
+| Perfil e área de membro | Implementados, incluindo onboarding em 5 etapas. |
 | Fórum | Implementado. |
 | Notificações | Implementadas. |
 | Admin | Implementado. |
@@ -79,6 +79,9 @@ Rotas de membro implementadas:
 /minha-arvore/editar
 /meus-dados
 /meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
 /vincular-perfil
 /pessoa/:id
 /pessoas/:id
@@ -114,6 +117,26 @@ Rotas removidas como views:
 /genealogia
 /visao-completa
 ```
+
+### 3.1 Fluxo de cadastro do membro
+
+Implementado como onboarding protegido por `MemberRoute`:
+
+| Etapa | Rota | Página | Componente de etapa |
+|---|---|---|---|
+| 1 | `/meus-dados` | `MeusDados` | `MemberOnboardingSteps activeStep={1}` |
+| 2 | `/meus-vinculos` | `MeusVinculos` | `MemberOnboardingSteps activeStep={2}` |
+| 3 | `/arquivos-historicos` | `ArquivosHistoricosPage` | `MemberOnboardingSteps activeStep={3}` |
+| 4 | `/preferencias` | `PreferenciasPage` | `MemberOnboardingSteps activeStep={4}` |
+| 5 | `/revisao-dados` | `RevisaoDados` | `MemberOnboardingSteps activeStep={5}` |
+
+Responsabilidades consolidadas:
+
+- `/meus-dados`: dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades;
+- `/meus-vinculos`: vínculos familiares;
+- `/arquivos-historicos`: arquivos e documentos da pessoa vinculada;
+- `/preferencias`: notificações e permissões de exibição;
+- `/revisao-dados`: revisão final e acesso à árvore.
 
 ---
 
@@ -339,6 +362,9 @@ Detalhes operacionais ficam em `docs/operacao/OAUTH_GOOGLE.md`.
 Arquivos principais:
 
 ```txt
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/pages/PreferenciasPage.tsx
+src/app/components/member/MemberOnboardingSteps.tsx
 src/app/pages/PersonProfile.tsx
 src/app/pages/MinhaArvore.tsx
 src/app/pages/MeusDados.tsx

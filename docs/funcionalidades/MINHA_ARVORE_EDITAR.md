@@ -1,9 +1,9 @@
 # Minha Árvore - edição do próprio perfil
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/funcionalidades/MINHA_ARVORE_EDITAR.md`
 > Tipo: documentação funcional e técnica da rota `/minha-arvore/editar`.
-> Status: revisado após correção de encoding na origem, persistência de redes sociais versionadas em `pessoa_social_profiles` e persistência de `Complemento` em `public.pessoas.complemento`.
+> Status: atualizado para separar `/minha-arvore/editar` do cadastro inicial em 5 etapas e documentar a nova distribuição de Arquivos Históricos, Preferências e Revisão final.
 
 ---
 
@@ -30,10 +30,16 @@ O fluxo de cadastro inicial é separado da edição completa:
 ```txt
 Etapa 1: /meus-dados
 Etapa 2: /meus-vinculos
-Etapa 3: /revisao-dados
+Etapa 3: /arquivos-historicos
+Etapa 4: /preferencias
+Etapa 5: /revisao-dados
 ```
 
-No cadastro inicial, Arquivos Históricos, Preferências de notificação e Permissão para exibir dados ficam somente na Etapa 3.
+No cadastro inicial:
+
+- Arquivos Históricos pertencem à Etapa 3, em `/arquivos-historicos`;
+- Preferências de notificação e Permissões de exibição pertencem à Etapa 4, em `/preferencias`;
+- `/revisao-dados` é apenas a revisão final e a finalização do fluxo.
 
 Documentos relacionados:
 
@@ -202,11 +208,11 @@ Campos editáveis atuais:
 | Campo | Observação |
 |---|---|
 | Nome completo | Obrigatório para humano. |
-| Data de nascimento | Aceita data completa ou ano, conforme validação. |
+| Dia ou Ano de Nascimento | Aceita `AAAA` ou `DD/MM/AAAA`, conforme validação. |
 | Local de nascimento | Normalizado para formato `Cidade/UF` quando aplicável. |
 | Cidade de residência | Campo `local_atual`. |
 | Profissão | Opcional. |
-| Telefone | Formatado localmente. |
+| WhatsApp | Usa o campo legado `telefone`, formatado localmente. |
 | Endereço | Pode usar Google Places quando configurado. |
 | Complemento | Persistido em `public.pessoas.complemento`; serve para dado manual separado do endereço Google Places, como apartamento, bloco, torre, casa ou referência interna. |
 | Redes sociais | UI permite múltiplas linhas e persiste os perfis em `pessoa_social_profiles`; a primeira linha continua sincronizada com campos legados por compatibilidade. |
@@ -230,6 +236,30 @@ A primeira rede social permanece sincronizada com os campos legados em pessoas p
 Complemento é carregado e salvo em public.pessoas.complemento, separado do endereço principal.
 Selecionar novo endereço via Google Places deve atualizar apenas endereco e não apagar complemento.
 ```
+
+
+### 5.1 Relação com `/meus-dados`
+
+`/meus-dados` é a Etapa 1 do cadastro inicial e usa um recorte mais orientado à confirmação rápida dos dados do membro.
+
+Contratos que devem permanecer alinhados entre `/meus-dados` e `/minha-arvore/editar`:
+
+- validação por `validateEditablePersonForm`;
+- normalização por `cleanPersonPayload`;
+- suporte a `AAAA` ou `DD/MM/AAAA` para nascimento e falecimento;
+- persistência de redes sociais em `pessoa_social_profiles`;
+- primeira rede social sincronizada com campos legados;
+- endereço principal separado de `complemento`;
+- dados de falecimento condicionados ao status `falecido`.
+
+Diferença funcional:
+
+```txt
+/minha-arvore/editar = edição completa e recorrente do perfil.
+/meus-dados = etapa inicial de cadastro/confirmação.
+```
+
+
 
 Services relacionados:
 

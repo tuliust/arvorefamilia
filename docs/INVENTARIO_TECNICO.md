@@ -1,10 +1,10 @@
-﻿# Inventário técnico — Árvore Família
+# Inventário técnico — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/INVENTARIO_TECNICO.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: inventário técnico
-> Status: revisado contra documentos enviados e código da `main`; marca legado ativo, dívidas e riscos sem transformar pendências em baseline.
+> Status: atualizado com as novas rotas, páginas e componente do onboarding de membro em 5 etapas.
 
 ---
 
@@ -53,8 +53,11 @@ Classificações:
 | Rota | Componente | Guard | Categoria |
 |---|---|---|---|
 | `/minha-arvore/editar` | `MinhaArvore` | `MemberRoute` | Vigente com nome histórico |
-| `/meus-dados` | `MeusDados` | `MemberRoute` | Vigente |
-| `/meus-vinculos` | `MeusVinculos` | `MemberRoute` | Vigente |
+| `/meus-dados` | `MeusDados` | `MemberRoute` | Vigente crítico |
+| `/meus-vinculos` | `MeusVinculos` | `MemberRoute` | Vigente crítico |
+| `/arquivos-historicos` | `ArquivosHistoricosPage` | `MemberRoute` | Vigente crítico |
+| `/preferencias` | `PreferenciasPage` | `MemberRoute` | Vigente crítico |
+| `/revisao-dados` | `RevisaoDados` | `MemberRoute` | Vigente crítico |
 | `/vincular-perfil` | `VincularPerfil` | `MemberRoute` | Vigente |
 | `/pessoa/:id` | `PersonProfile` | `MemberRoute` | Vigente |
 | `/pessoas/:id` | `PersonProfile` | `MemberRoute` | Alias vigente |
@@ -197,6 +200,27 @@ Reunião
 | Fórum | `pages/forum/`, `forumService.ts` | Vigente |
 | Notificações | `Notificacoes.tsx`, `AjustarNotificacoes.tsx`, `userEngagementService.ts` | Vigente |
 | Busca | `BuscaResultados.tsx`, `globalSearchService.ts` | Vigente |
+
+---
+
+## 8.1 Onboarding do membro
+
+| Arquivo | Função | Categoria |
+|---|---|---|
+| `src/app/pages/MeusDados.tsx` | Etapa 1: dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. | Vigente crítico |
+| `src/app/pages/MeusVinculos.tsx` | Etapa 2: vínculos familiares e solicitações de relacionamento. | Vigente crítico |
+| `src/app/pages/ArquivosHistoricosPage.tsx` | Etapa 3: arquivos históricos da pessoa vinculada. | Vigente crítico |
+| `src/app/pages/PreferenciasPage.tsx` | Etapa 4: preferências de notificação e permissões de exibição. | Vigente crítico |
+| `src/app/pages/RevisaoDados.tsx` | Etapa 5: síntese final e confirmação do primeiro acesso. | Vigente crítico |
+| `src/app/components/member/MemberOnboardingSteps.tsx` | Indicador visual/navegação entre as cinco etapas. | Vigente crítico |
+
+Contratos:
+
+```txt
+Arquivos Históricos não devem voltar a ser editados em /revisao-dados.
+Notificações e permissões não devem voltar a ser editadas em /revisao-dados.
+A revisão final pode exibir resumo, não edição completa.
+```
 
 ---
 

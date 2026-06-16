@@ -1,9 +1,9 @@
 # Curiosidades e IA - modal, conexão familiar e perguntas assistidas
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/funcionalidades/CURIOSIDADES_E_IA.md`
 > Tipo: documentação funcional e técnica das abas de Curiosidades, conexão familiar e IA na Home.
-> Status: guia validado no escopo funcional atual e removido das pendências abertas do plano; `DOC-009`, `DOC-011` e `DOC-012` ficam classificados como concluídos/manutenção contínua.
+> Status: atualizado para registrar que a geração assistida de Mini Bio e Curiosidades permanece na Etapa 1 `/meus-dados` do novo fluxo em 5 etapas.
 
 ## 1. Função deste documento
 
@@ -274,7 +274,7 @@ Usuário pergunta
 
 ### 9.1 Geração de Mini Bio e Curiosidades
 
-`/meus-dados` reutiliza o mesmo endpoint serverless `POST /api/ai`, sem expor `OPENAI_API_KEY`.
+`/meus-dados`, Etapa 1 do cadastro inicial do membro, reutiliza o mesmo endpoint serverless `POST /api/ai`, sem expor `OPENAI_API_KEY`.
 
 Payload específico:
 
@@ -289,7 +289,14 @@ Payload específico:
 
 O destino aceita `minibio` ou `curiosidades`. A resposta é exibida como sugestão e só altera o formulário após a ação explícita de aplicar.
 
-Regras:
+Regras no fluxo de cadastro:
+
+- a geração assistida de Mini Bio e Curiosidades pertence à Etapa 1 `/meus-dados`;
+- `/revisao-dados` deve apenas resumir Mini Bio e Curiosidades já salvas, sem reabrir o fluxo completo de IA;
+- a IA nunca deve publicar automaticamente; o texto gerado continua dependente de ação explícita do usuário;
+- o endpoint não deve receber `OPENAI_API_KEY` no frontend.
+
+Regras gerais:
 
 - pergunta vazia não deve ser enviada;
 - loading e erro devem ser claros;

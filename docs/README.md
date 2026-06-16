@@ -1,9 +1,9 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico reorganizado para incluir `docs/QA_MANUAL.md`, registrar `docs/historico/ROTAS_REMOVIDAS.md`, classificar `docs/historico/SQLS_LEGADOS.md` e separar contratos, QA manual, pendências, arquitetura, funcionalidades, operação e histórico.
+> Status: índice canônico atualizado para registrar o fluxo de cadastro do membro em 5 etapas, as rotas `/arquivos-historicos` e `/preferencias`, e a separação entre edição, preferências e revisão final.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -25,9 +25,17 @@ A baseline funcional atual registra:
   - `/genealogia`;
   - `/visao-completa`;
 - o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
-- `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
-- o cadastro inicial do membro usa três etapas protegidas por `MemberRoute`: `/meus-dados`, `/meus-vinculos` e `/revisao-dados`;
-- Arquivos Históricos, Preferências de notificação e Permissão para exibir dados pertencem à Etapa 3 em `/revisao-dados`;
+- `/minha-arvore/editar` continua vigente como rota protegida de edição completa do membro;
+- o cadastro inicial do membro usa cinco etapas protegidas por `MemberRoute`:
+  1. `/meus-dados`;
+  2. `/meus-vinculos`;
+  3. `/arquivos-historicos`;
+  4. `/preferencias`;
+  5. `/revisao-dados`;
+- Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`;
+- Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`;
+- `/revisao-dados` é revisão final e finalização, sem edição completa de arquivos, notificações ou permissões;
+- `MemberOnboardingSteps` é o indicador visual reutilizável das cinco etapas;
 - `TreeViewMode` possui apenas:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
@@ -84,15 +92,15 @@ supabase/migrations/ é a fonte da verdade do schema.
 | Arquivo | Uso | Status |
 |---|---|---|
 | `README.md` | Índice canônico da documentação. | Atualizado. |
-| `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Atualizado. |
-| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Manter sincronizado. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Atualizado. |
-| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Novo. |
-| `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Atualizado. |
-| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Atualizado. |
-| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Atualizado. |
+| `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Manter sincronizado. |
+| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Atualizado para o onboarding em 5 etapas. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para o onboarding em 5 etapas. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado com `MemberOnboardingSteps`. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Preservar. |
+| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Preservar. |
+| `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Manter sincronizado. |
+| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Manter sincronizado. |
+| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Preservar. |
 | `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
 
@@ -109,7 +117,7 @@ docs/arquitetura/
 | Arquivo | Uso |
 |---|---|
 | `ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
-| `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, rotas administrativas, guards, redirecionamentos e navegação. |
+| `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, onboarding em 5 etapas, rotas administrativas, guards, redirecionamentos e navegação. |
 | `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações, relacionamentos e objetos legados. |
 
 ---
@@ -125,16 +133,16 @@ docs/funcionalidades/
 | Arquivo | Escopo | Status |
 |---|---|---|
 | `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
-| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques e conectores. | Atualizado. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão. | Atualizado. |
+| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques e conectores. | Preservar. |
+| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão. | Preservar. |
 | `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
 | `PESSOAS_PERFIL_ADMIN.md` | Perfil, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
-| `MINHA_ARVORE_EDITAR.md` | Edição da própria árvore e CSS mobile escopado. | Vigente; não confundir com `/minha-arvore` removida. |
+| `MINHA_ARVORE_EDITAR.md` | Edição completa da própria árvore; diferente do onboarding inicial. | Atualizado. |
 | `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
-| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Preservar. |
-| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Atualizado. |
+| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Atualizado para `/preferencias`. |
+| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Preservar. |
 | `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
-| `CURIOSIDADES_E_IA.md` | Curiosidades, IA e geração de conteúdo. | Preservar. |
+| `CURIOSIDADES_E_IA.md` | Curiosidades, IA e geração de Mini Bio/Curiosidades em `/meus-dados`. | Atualizado. |
 
 Documentos sobre antigas views da árvore devem permanecer apenas em `docs/historico/` ou marcados como legado.
 
@@ -241,21 +249,30 @@ npm test
 npm run test:e2e
 ```
 
-Validações manuais centralizadas ficam em:
-
-```txt
-docs/QA_MANUAL.md
-```
+Se `npm run test:e2e` não estiver configurado ou não for aplicável, registrar explicitamente essa limitação no PR/commit.
 
 ---
 
-## 10. Anti-regressões documentais
+## 10. Checklist documental do onboarding de membro
 
-- Não documentar `/minha-arvore`, `/genealogia` ou `/visao-completa` como views ativas; o histórico preventivo fica em `docs/historico/ROTAS_REMOVIDAS.md`.
-- Não tratar `/minha-arvore/editar` como view antiga da árvore.
-- Não documentar `pais`/Geração 4 na horizontal como implementado até `TREE-003` ser corrigido no código.
-- Não transformar checklist manual em pendência fechada sem validação real.
-- Não duplicar checklists longos de QA fora de `QA_MANUAL.md`.
-- Não colocar secrets, service role, tokens ou chaves reais na documentação.
-- Não tratar SQL solto como fonte principal do schema; o histórico preventivo fica em `docs/historico/SQLS_LEGADOS.md`.
-- Não usar docs históricas como fonte de implementação vigente.
+Sempre que alterar `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` ou `/revisao-dados`, revisar:
+
+```txt
+docs/README.md
+docs/arquitetura/ROTAS_E_GUARDS.md
+docs/funcionalidades/MINHA_ARVORE_EDITAR.md
+docs/funcionalidades/NOTIFICACOES.md
+docs/funcionalidades/CURIOSIDADES_E_IA.md
+docs/INVENTARIO_TECNICO.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_IMPLEMENTACOES.md
+```
+
+Critérios:
+
+- rotas novas registradas como `MemberRoute`;
+- etapa ativa coerente no `MemberOnboardingSteps`;
+- Arquivos Históricos documentados na Etapa 3;
+- Notificações e Permissões documentadas na Etapa 4;
+- Revisão final documentada sem edição duplicada;
+- comandos de validação executados ou limitação registrada.

@@ -1,9 +1,9 @@
 # Notificações
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/funcionalidades/NOTIFICACOES.md`  
-> Tipo: documentação funcional, técnica e operacional do módulo de notificações.  
-> Status: revisado na auditoria final da documentação.
+> Última revisão: 2026-06-15
+> Local canônico: `docs/funcionalidades/NOTIFICACOES.md`
+> Tipo: documentação funcional, técnica e operacional do módulo de notificações.
+> Status: atualizado para refletir que notificações e permissões do cadastro inicial ficam na Etapa 4 `/preferencias`, sem edição duplicada em `/revisao-dados`.
 
 ---
 
@@ -17,7 +17,7 @@ Rotas:
 |---|---|---|
 | `/notificacoes` | `MemberRoute` | Central/lista de notificações em cards. |
 | `/ajustar-notificacoes` | `MemberRoute` | Preferências do usuário. |
-| `/revisao-dados` | `MemberRoute` | Etapa 3 do cadastro inicial, reutilizando `NotificationPreferencesPanel`. |
+| `/preferencias` | `MemberRoute` | Etapa 4 do cadastro inicial, reutilizando `NotificationPreferencesPanel`. |
 | `/admin/notificacoes` | `ProtectedRoute` | Diagnóstico, testes e rotinas administrativas. |
 
 Documentação complementar:
@@ -48,7 +48,7 @@ Implementado no escopo MVP:
 - Edge Function `send-notification-email` com Resend;
 - notificações internas de fórum para menções, pessoas relacionadas, respostas e comentários;
 - deduplicação de destinatários em notificações de fórum.
-- preferências também disponíveis na Etapa 3 `/revisao-dados`; não são duplicadas em `/meus-dados`.
+- preferências também disponíveis na Etapa 4 `/preferencias`; não são duplicadas em `/meus-dados` nem editadas em `/revisao-dados`.
 
 Futuro/pós-MVP:
 
@@ -173,6 +173,15 @@ Push e WhatsApp permanecem como not_configured/ignorado até haver provider real
 ---
 
 ## 6. Preferências
+
+A edição de preferências aparece em dois contextos:
+
+| Contexto | Rota | Uso |
+|---|---|---|
+| Página dedicada | `/ajustar-notificacoes` | Ajuste recorrente das preferências do usuário. |
+| Cadastro inicial | `/preferencias` | Etapa 4 do onboarding do membro, antes da revisão final. |
+
+`/revisao-dados` pode exibir apenas resumo/estado das preferências, sem duplicar edição completa.
 
 Preferências gerais:
 

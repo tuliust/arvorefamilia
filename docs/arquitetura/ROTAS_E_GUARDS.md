@@ -1,9 +1,9 @@
 # Rotas e guards de acesso — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Tipo: documentação arquitetural de rotas, guards e navegação.
-> Status: revisado para refletir a `main` atual, com duas views oficiais da árvore e rotas antigas removidas do produto ativo.
+> Status: atualizado para o fluxo de cadastro do membro em 5 etapas, incluindo `/arquivos-historicos` e `/preferencias` protegidas por `MemberRoute`.
 
 ---
 
@@ -146,6 +146,8 @@ Protege páginas de membro autenticado:
 /minha-arvore/editar
 /meus-dados
 /meus-vinculos
+/arquivos-historicos
+/preferencias
 /revisao-dados
 /vincular-perfil
 /pessoa/:id
@@ -165,13 +167,19 @@ Cuidados:
 
 ### 5.2.1 Fluxo de cadastro do membro
 
+O cadastro/revisão inicial do membro usa cinco etapas protegidas por `MemberRoute`.
+
 | Etapa | Rota | Responsabilidade |
 |---|---|---|
-| 1 | `/meus-dados` | Dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
+| 1 | `/meus-dados` | Dados pessoais, nascimento/residência, profissão, falecimento quando aplicável, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
 | 2 | `/meus-vinculos` | Revisão e solicitação de vínculos familiares. |
-| 3 | `/revisao-dados` | Revisão geral, Arquivos Históricos, Preferências de notificação, permissões de exibição e conclusão. |
+| 3 | `/arquivos-historicos` | Inclusão e organização de documentos, fotos e registros históricos da pessoa vinculada. |
+| 4 | `/preferencias` | Preferências de notificação e permissões de exibição de dados. |
+| 5 | `/revisao-dados` | Revisão final, síntese das etapas anteriores e conclusão do primeiro acesso. |
 
-A confirmação definitiva do primeiro acesso ocorre ao finalizar a Etapa 3.
+O indicador visual `MemberOnboardingSteps` deve aparecer abaixo de `MemberPageHeader` nessas cinco páginas. Ele permite navegação direta entre etapas, destacando a etapa ativa.
+
+A confirmação definitiva do primeiro acesso ocorre ao finalizar a Etapa 5.
 
 ### 5.3 `ProtectedRoute`
 

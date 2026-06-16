@@ -1,10 +1,10 @@
-﻿# Guia de componentes — Árvore Família
+# Guia de componentes — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-15
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de responsabilidades de componentes
-> Status: revisado para reduzir repetição com baseline/inventário e destacar responsabilidades, limites e riscos por componente.
+> Status: atualizado para documentar `MemberOnboardingSteps` e a divisão do cadastro do membro em 5 etapas.
 
 ---
 
@@ -499,8 +499,56 @@ src/app/services/userEngagementService.ts
 Responsabilidades:
 
 - central;
-- preferências;
+- preferências em `/ajustar-notificacoes` e `/preferencias`;
 - compatibilidade com notificações internas/e-mail conforme configuração.
+
+---
+
+## 9.1 Onboarding do membro
+
+### `MemberOnboardingSteps`
+
+Arquivo:
+
+```txt
+src/app/components/member/MemberOnboardingSteps.tsx
+```
+
+Responsabilidades:
+
+- exibir as cinco etapas do cadastro/revisão do membro;
+- destacar a etapa ativa via `activeStep`;
+- permitir clique nos círculos para navegar entre rotas;
+- manter círculos conectados por linhas horizontais;
+- preservar layout responsivo com scroll horizontal quando necessário.
+
+Etapas oficiais:
+
+| Etapa | Label | Rota |
+|---|---|---|
+| 1 | Meus dados | `/meus-dados` |
+| 2 | Vínculos | `/meus-vinculos` |
+| 3 | Arquivos | `/arquivos-historicos` |
+| 4 | Preferências | `/preferencias` |
+| 5 | Revisão | `/revisao-dados` |
+
+Cuidados:
+
+- o componente deve ficar abaixo de `MemberPageHeader` e antes do conteúdo principal;
+- não deve substituir os guards;
+- não deve presumir que todas as etapas estão completas;
+- deve usar navegação interna do app, não reload de página;
+- não deve introduzir dependência externa.
+
+### Páginas do fluxo
+
+| Página | Papel |
+|---|---|
+| `MeusDados` | Dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
+| `MeusVinculos` | Vínculos familiares. |
+| `ArquivosHistoricosPage` | Reuso de `ArquivosHistoricos` para etapa 3. |
+| `PreferenciasPage` | Reuso de `NotificationPreferencesPanel` e permissões de exibição. |
+| `RevisaoDados` | Síntese final, sem edição completa de arquivos, notificações ou permissões. |
 
 ---
 
