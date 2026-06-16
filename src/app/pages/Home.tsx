@@ -117,6 +117,13 @@ type PersonStatusFilters = {
   pets: boolean;
 };
 
+function getShortPersonName(pessoa: Pessoa) {
+  const source = String(pessoa.nome_completo || pessoa.id || '').trim();
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  return parts.slice(0, 2).join(' ') || pessoa.id;
+}
+
 function isVisibleByLifeStatusFilter(
   pessoa: Pessoa,
   filters: PersonStatusFilters,
@@ -1079,11 +1086,15 @@ export function Home() {
   const debugViewPersonOptions = useMemo(() => {
     return [...pessoas]
       .filter((pessoa) => Boolean(pessoa.id))
-      .sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR'));
+      .map((pessoa) => ({
+        id: pessoa.id,
+        label: getShortPersonName(pessoa),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
   }, [pessoas]);
 
-  const handleDebugViewPersonChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    const nextPersonId = event.target.value || undefined;
+  const handleDebugViewPersonChange = useCallback((nextValue: string) => {
+    const nextPersonId = nextValue || undefined;
 
     setDebugViewPersonId(nextPersonId);
     setRenderedDirectRelationCounts(null);
@@ -1134,6 +1145,10 @@ export function Home() {
         headerActionTextClassName={headerActionTextClassName}
         onCuriosities={() => setAiDialogOpen(true)}
         navigateFromHome={navigateFromHome}
+        showViewAsSelector={shouldShowDebugViewer}
+        viewAsPersonValue={debugViewPersonId ?? ''}
+        viewAsPersonOptions={debugViewPersonOptions}
+        onViewAsPersonChange={handleDebugViewPersonChange}
       />
 
       <main className="relative flex min-h-0 flex-1 overflow-hidden overscroll-none">
@@ -1209,35 +1224,6 @@ export function Home() {
           onDirectRelationRenderedCounts={handleDirectRelationRenderedCounts}
         />
 
-        {shouldShowDebugViewer && (
-          <div
-            className={[
-              'absolute z-[9500] rounded-xl border border-amber-200 bg-amber-50/95 p-2 shadow-lg backdrop-blur',
-              isMobile ? 'left-2 right-16 top-2' : 'right-4 top-4 w-80',
-            ].join(' ')}
-            data-tree-debug-viewer="true"
-            data-tree-export-ignore="true"
-          >
-            <label className="mb-1 block text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-700">
-              Visualizar como...
-            </label>
-            <select
-              value={debugViewPersonId ?? ''}
-              onChange={handleDebugViewPersonChange}
-              className="h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-              aria-label="Visualizar árvore como outra pessoa"
-            >
-              <option value="">
-                Padrão atual{centralReferencePerson?.nome_completo ? ` — ${centralReferencePerson.nome_completo}` : ''}
-              </option>
-              {debugViewPersonOptions.map((pessoa) => (
-                <option key={pessoa.id} value={pessoa.id}>
-                  {pessoa.nome_completo || pessoa.id}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </main>
 
       {isMobile && (

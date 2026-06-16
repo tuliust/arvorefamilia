@@ -74,6 +74,10 @@ interface HomeHeaderProps {
   headerActionTextClassName: string;
   onCuriosities: () => void;
   navigateFromHome: (path: string) => void;
+  showViewAsSelector?: boolean;
+  viewAsPersonValue?: string;
+  viewAsPersonOptions?: Array<{ id: string; label: string }>;
+  onViewAsPersonChange?: (value: string) => void;
 }
 
 export function HomeHeader({
@@ -92,6 +96,10 @@ export function HomeHeader({
   headerActionTextClassName,
   onCuriosities,
   navigateFromHome,
+  showViewAsSelector = false,
+  viewAsPersonValue = '',
+  viewAsPersonOptions = [],
+  onViewAsPersonChange,
 }: HomeHeaderProps) {
   const location = useLocation();
   const { user } = useAuth();
@@ -298,6 +306,27 @@ export function HomeHeader({
         </div>
 
         <div className={['min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-visible sm:gap-2', isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex'].join(' ')}>
+          {showViewAsSelector && (
+            <label className="hidden min-w-0 shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1 shadow-sm lg:flex" data-tree-export-ignore="true">
+              <span className="sr-only">Visualizar como...</span>
+              <select
+                value={viewAsPersonValue}
+                onChange={(event) => onViewAsPersonChange?.(event.target.value)}
+                className="h-7 max-w-[240px] rounded-lg border-0 bg-transparent px-1 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-200 xl:max-w-[280px]"
+                aria-label="Visualizar árvore como outra pessoa"
+              >
+                <option value="__view_as_label__" disabled>
+                  Visualizar como...
+                </option>
+                <option value="">Sua view padrão</option>
+                {viewAsPersonOptions.map((pessoa) => (
+                  <option key={pessoa.id} value={pessoa.id}>
+                    {pessoa.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
           <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3" title="Curiosidades" aria-label="Abrir Curiosidades" onClick={onCuriosities}>
             <Sparkles className="h-4 w-4" />
