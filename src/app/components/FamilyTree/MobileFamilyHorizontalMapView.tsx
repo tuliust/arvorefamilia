@@ -489,7 +489,7 @@ function getChildLayoutsForCouple(
 
   return commonChildIds
     .map((childId) => layouts.get(childId))
-    .filter((layout): layout is PersonLayout => Boolean(layout) && layout.generation === firstLayout.generation + 1)
+    .filter((layout): layout is PersonLayout => Boolean(layout) && layout.generation > firstLayout.generation)
     .sort((a, b) => {
       const birthA = getFallbackSortableBirthValue(a.person.data_nascimento);
       const birthB = getFallbackSortableBirthValue(b.person.data_nascimento);
