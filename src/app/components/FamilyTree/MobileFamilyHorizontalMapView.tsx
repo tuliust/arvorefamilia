@@ -618,20 +618,37 @@ function MobileFamilyHorizontalMapViewComponent({
 
     includeSpousesForAnchors([centralPersonId], requiredSpousePersonIds);
 
+    const collectExistingSpousesForAnchors = (anchorIds: Iterable<string>) => {
+      const spouseIds = new Set<string>();
+
+      Array.from(anchorIds).forEach((anchorId) => {
+        maps.spousesByPerson.get(anchorId)?.forEach((spouseId) => {
+          if (peopleById.has(spouseId)) spouseIds.add(spouseId);
+        });
+      });
+
+      return spouseIds;
+    };
+
+    const ancestorAnchorIds = collectScopeForGroups(ANCESTOR_SPOUSE_ANCHOR_GROUPS);
+    collectExistingSpousesForAnchors(ancestorAnchorIds).forEach((spouseId) => {
+      requiredSpousePersonIds.add(spouseId);
+    });
+
     const activeAncestorGroups = ANCESTOR_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);
     includeSpousesForAnchors(collectScopeForGroups(activeAncestorGroups), requiredSpousePersonIds);
 
-    const activeFilterableGroups = FILTERABLE_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);
-    const filterableAnchorIds = collectScopeForGroups(activeFilterableGroups);
-    Array.from(filterableAnchorIds).forEach((anchorId) => {
-      maps.spousesByPerson.get(anchorId)?.forEach((spouseId) => {
-        if (!peopleById.has(spouseId) || requiredSpousePersonIds.has(spouseId)) return;
-        filterableSpousePersonIds.add(spouseId);
-      });
+    const countableFilterableAnchorIds = collectScopeForGroups(FILTERABLE_SPOUSE_ANCHOR_GROUPS);
+    collectExistingSpousesForAnchors(countableFilterableAnchorIds).forEach((spouseId) => {
+      if (requiredSpousePersonIds.has(spouseId)) return;
+      filterableSpousePersonIds.add(spouseId);
     });
 
+    const activeFilterableGroups = FILTERABLE_SPOUSE_ANCHOR_GROUPS.filter((group) => directRelativeFilters[group]);
+    const visibleFilterableAnchorIds = collectScopeForGroups(activeFilterableGroups);
+
     if (directRelativeFilters.conjuge) {
-      includeSpousesForAnchors(filterableAnchorIds);
+      includeSpousesForAnchors(visibleFilterableAnchorIds);
     }
 
     return {
