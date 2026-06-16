@@ -153,7 +153,7 @@ const AI_TONES: Array<{
   { id: 'simples', label: 'Simples e direto', description: 'Claro, breve e sem floreios.', icon: Pencil },
   { id: 'divertido', label: 'Divertido', description: 'Leve, bem-humorado e natural.', icon: Smile },
   { id: 'elegante', label: 'Elegante', description: 'Cuidado, discreto e polido.', icon: Star },
-  { id: 'nostalgico', label: 'Nostálgico', description: 'Com memória, origem e afeto.', icon: Camera },
+  { id: 'nostalgico', label: 'Nostálgico', description: 'Para homenagens e memórias de quem já faleceu.', icon: Camera },
   { id: 'inspirador', label: 'Inspirador', description: 'Positivo, sem exagerar conquistas.', icon: Sparkles },
   { id: 'familiar', label: 'Familiar', description: 'Voltado a vínculos e lembranças.', icon: Users },
   { id: 'emocional', label: 'Emocional', description: 'Sensível e acolhedor.', icon: Gift },
@@ -416,9 +416,201 @@ function limitText(value: string, maxLength = 300) {
   return String(value ?? '').trim().slice(0, maxLength);
 }
 
+function getAiBadgeDisplayLabel(badge: AiBadge, memorialMode: boolean) {
+  if (!memorialMode) return badge.label;
+
+  const memorialLabels: Record<string, string> = {
+    'Calma': 'Era uma pessoa calma',
+    'Comunicativa': 'Era comunicativa',
+    'Reservada': 'Era reservada',
+    'Criativa': 'Era criativa',
+    'Curiosa': 'Era curiosa',
+    'Bem-humorada': 'Era bem-humorada',
+    'Sensível': 'Era sensível',
+    'Determinada': 'Era determinada',
+    'Independente': 'Era independente',
+    'Organizada': 'Era organizada',
+    'Espontânea': 'Era espontânea',
+    'Teimosa': 'Era teimosa',
+    'Generosa': 'Era generosa',
+    'Cuidadosa': 'Era cuidadosa',
+    'Sonhadora': 'Era sonhadora',
+    'Observadora': 'Era observadora',
+    'Acolhedora': 'Era acolhedora',
+    'Corajosa': 'Era corajosa',
+
+    'Família em primeiro lugar': 'Família esteve em primeiro lugar',
+    'Gosto de reunir pessoas': 'Gostava de reunir pessoas',
+    'Mantenho tradições familiares': 'Mantinha tradições familiares',
+    'Valorizo histórias antigas': 'Valorizava histórias antigas',
+    'Tenho forte ligação com meus pais': 'Tinha forte ligação com os pais',
+    'Tenho forte ligação com meus avós': 'Tinha forte ligação com os avós',
+    'Tenho proximidade com meus irmãos': 'Tinha proximidade com os irmãos',
+    'Amo ser mãe ou pai': 'Amava ser mãe ou pai',
+    'Amo ser tia ou tio': 'Amava ser tia ou tio',
+    'Gosto de cuidar dos outros': 'Gostava de cuidar dos outros',
+    'Sou referência na família': 'Era referência na família',
+    'Gosto de ouvir histórias da família': 'Gostava de ouvir histórias da família',
+    'Gosto de contar histórias': 'Gostava de contar histórias',
+    'Valorizo encontros de família': 'Valorizava encontros de família',
+    'Guardo fotos e lembranças': 'Guardava fotos e lembranças',
+    'Preservo memórias familiares': 'Preservava memórias familiares',
+
+    'Me dedico ao trabalho': 'Dedicou-se ao trabalho',
+    'Gosto de empreender': 'Gostava de empreender',
+    'Me destaco pela criatividade': 'Destacava-se pela criatividade',
+    'Gosto de ensinar': 'Gostava de ensinar',
+    'Gosto de aprender': 'Gostava de aprender',
+    'Tenho espírito de liderança': 'Tinha espírito de liderança',
+    'Mudei de carreira': 'Mudou de carreira',
+    'Trabalhei desde cedo': 'Trabalhou desde cedo',
+    'Construí minha trajetória com esforço': 'Construiu sua trajetória com esforço',
+    'Tenho orgulho da minha profissão': 'Tinha orgulho da profissão',
+    'Sou reconhecida pelo que faço': 'Era reconhecida pelo que fazia',
+    'Trabalhei em diferentes áreas': 'Trabalhou em diferentes áreas',
+    'Valorizo independência financeira': 'Valorizava independência financeira',
+    'Gosto de resolver problemas': 'Gostava de resolver problemas',
+    'Tenho habilidade manual': 'Tinha habilidade manual',
+    'Tenho facilidade com pessoas': 'Tinha facilidade com pessoas',
+    'Tenho habilidade com comunicação': 'Tinha habilidade com comunicação',
+    'Tenho facilidade com números': 'Tinha facilidade com números',
+    'Tenho habilidade artística': 'Tinha habilidade artística',
+
+    'Nasci em uma cidade e vivi em outra': 'Nasceu em uma cidade e viveu em outra',
+    'Mudei de cidade': 'Mudou de cidade',
+    'Mudei de estado': 'Mudou de estado',
+    'Morei fora do Brasil': 'Morou fora do Brasil',
+    'Tenho ligação forte com minha cidade natal': 'Tinha ligação forte com sua cidade natal',
+    'Sinto saudade de um lugar': 'Sentia saudade de um lugar',
+    'Tenho uma cidade que marcou minha vida': 'Teve uma cidade que marcou sua vida',
+    'Gosto de viajar': 'Gostava de viajar',
+    'Vivi uma fase importante em outra cidade': 'Viveu uma fase importante em outra cidade',
+    'Comecei de novo em outro lugar': 'Começou de novo em outro lugar',
+    'Construí família longe da cidade natal': 'Construiu família longe da cidade natal',
+    'Voltei para minha cidade de origem': 'Voltou para sua cidade de origem',
+    'Tenho raízes no interior': 'Tinha raízes no interior',
+    'Tenho raízes no litoral': 'Tinha raízes no litoral',
+    'Tenho raízes em outro país': 'Tinha raízes em outro país',
+    'Valorizo minhas origens': 'Valorizava suas origens',
+
+    'Casamento': 'Viveu um casamento',
+    'Nascimento dos filhos': 'Viveu o nascimento dos filhos',
+    'Mudança de cidade': 'Viveu uma mudança de cidade',
+    'Primeira casa': 'Conquistou a primeira casa',
+    'Primeiro emprego': 'Teve o primeiro emprego',
+    'Formatura': 'Formou-se',
+    'Viagem marcante': 'Fez uma viagem marcante',
+    'Recomeço importante': 'Viveu um recomeço importante',
+    'Perda de alguém querido': 'Perdeu alguém querido',
+    'Superação de uma fase difícil': 'Superou uma fase difícil',
+    'Conquista profissional': 'Teve uma conquista profissional',
+    'Criação de um negócio': 'Criou um negócio',
+    'Encontro com alguém especial': 'Encontrou alguém especial',
+    'Fase de muito aprendizado': 'Viveu uma fase de muito aprendizado',
+    'Mudança de carreira': 'Mudou de carreira',
+    'Aposentadoria': 'Aposentou-se',
+    'Uma decisão que mudou a vida': 'Tomou uma decisão que mudou sua vida',
+    'Um sonho realizado': 'Realizou um sonho',
+
+    'Cozinhar': 'Gostava de cozinhar',
+    'Viajar': 'Gostava de viajar',
+    'Música': 'Gostava de música',
+    'Dançar': 'Gostava de dançar',
+    'Ler': 'Gostava de ler',
+    'Filmes e séries': 'Gostava de filmes e séries',
+    'Futebol': 'Gostava de futebol',
+    'Praia': 'Gostava de praia',
+    'Natureza': 'Gostava de natureza',
+    'Animais': 'Gostava de animais',
+    'Fotografia': 'Gostava de fotografia',
+    'Jardinagem': 'Gostava de jardinagem',
+    'Artesanato': 'Gostava de artesanato',
+    'Tecnologia': 'Gostava de tecnologia',
+    'Festas de família': 'Gostava de festas de família',
+    'Comida caseira': 'Gostava de comida caseira',
+    'Caminhadas': 'Gostava de caminhadas',
+    'Conversar': 'Gostava de conversar',
+    'Contar histórias': 'Gostava de contar histórias',
+    'Receber pessoas em casa': 'Gostava de receber pessoas em casa',
+    'Café': 'Gostava de café',
+    'Religião ou espiritualidade': 'Valorizava religião ou espiritualidade',
+    'Cultura': 'Gostava de cultura',
+    'Estudos': 'Gostava de estudar',
+
+    'Tenho um apelido': 'Tinha um apelido',
+    'Tenho uma frase típica': 'Tinha uma frase típica',
+    'Costumo repetir histórias': 'Costumava repetir histórias',
+    'Tenho uma receita famosa': 'Tinha uma receita famosa',
+    'Estou sempre tirando fotos': 'Estava sempre tirando fotos',
+    'Guardo objetos antigos': 'Guardava objetos antigos',
+    'Tenho uma música marcante': 'Tinha uma música marcante',
+    'Me conhecem pelo meu humor': 'Era lembrada pelo humor',
+    'Me conhecem pela minha teimosia': 'Era lembrada pela teimosia',
+    'Me conhecem pela minha generosidade': 'Era lembrada pela generosidade',
+    'Gosto de aconselhar pessoas': 'Gostava de aconselhar pessoas',
+    'Costumo organizar encontros': 'Costumava organizar encontros',
+    'Tenho uma mania engraçada': 'Tinha uma mania engraçada',
+    'Tenho um talento escondido': 'Tinha um talento escondido',
+    'Costumo ser pontual': 'Costumava ser pontual',
+    'Costumo me atrasar': 'Costumava se atrasar',
+    'Amo datas comemorativas': 'Amava datas comemorativas',
+    'Tenho um prato preferido': 'Tinha um prato preferido',
+    'Tenho um lugar preferido': 'Tinha um lugar preferido',
+    'Tenho uma lembrança de infância marcante': 'Tinha uma lembrança de infância marcante',
+  };
+
+  return memorialLabels[badge.label] ?? badge.label;
+}
+
+function getAiBadgeGroupDisplayText(group: AiBadgeGroup, memorialMode: boolean) {
+  if (!memorialMode) {
+    return {
+      title: group.title,
+      subtitle: group.subtitle,
+    };
+  }
+
+  const memorialText: Partial<Record<AiBadgeCategory, { title: string; subtitle: string }>> = {
+    personalidade: {
+      title: 'Essa pessoa era lembrada como alguém...',
+      subtitle: 'Escolha características que marcaram seu jeito de ser.',
+    },
+    familia: {
+      title: 'Família e vínculos que marcaram sua vida',
+      subtitle: 'Selecione lembranças ligadas à família e às pessoas importantes em sua trajetória.',
+    },
+    trabalho: {
+      title: 'Trabalho e trajetória de vida',
+      subtitle: 'Selecione aspectos que fizeram parte de sua história profissional ou de suas conquistas.',
+    },
+    lugares: {
+      title: 'Lugares que fizeram parte da sua história',
+      subtitle: 'Marque cidades, viagens e mudanças que fizeram parte de sua trajetória.',
+    },
+    momentos: {
+      title: 'Momentos que marcaram sua história',
+      subtitle: 'Selecione acontecimentos que fizeram parte de sua trajetória.',
+    },
+    hobbies: {
+      title: 'Gostos, paixões e pequenos prazeres que marcaram sua vida',
+      subtitle: 'Escolha interesses e hábitos que faziam parte de seu jeito de viver.',
+    },
+    marcas: {
+      title: 'O que fazia essa pessoa ser única?',
+      subtitle: 'Escolha marcas pessoais, gostos e lembranças que ajudam a preservar sua memória.',
+    },
+  };
+
+  return memorialText[group.id] ?? {
+    title: group.title,
+    subtitle: group.subtitle,
+  };
+}
+
 function buildAiProfileQuestions(
   selectedBadges: AiBadge[],
   customTraits: string,
+  memorialMode: boolean,
 ): AiGeneratedQuestion[] {
   const categories = new Set(selectedBadges.map((badge) => badge.category));
   const questions: AiGeneratedQuestion[] = [];
@@ -427,6 +619,33 @@ function buildAiProfileQuestions(
       questions.push({ id, question, answer: '' });
     }
   };
+
+  if (memorialMode) {
+    if (categories.has('familia')) {
+      addQuestion('familia', 'Que lembrança de família essa pessoa deixou?');
+    }
+    if (categories.has('lugares')) {
+      addQuestion('lugares', 'Qual cidade, mudança ou lugar marcou sua trajetória?');
+    }
+    if (categories.has('trabalho')) {
+      addQuestion('trabalho', 'O que mais marcou sua vida profissional ou seu jeito de trabalhar?');
+    }
+    if (categories.has('hobbies') || categories.has('marcas')) {
+      addQuestion('curiosidades', 'Existe alguma comida, frase, mania ou costume pelo qual essa pessoa era lembrada?');
+    }
+    if (categories.has('momentos')) {
+      addQuestion('momentos', 'Que momento importante ajudou a formar sua história?');
+    }
+    if (customTraits.trim()) {
+      addQuestion('detalhes', 'Qual detalhe pessoal deveria aparecer nessa homenagem?');
+    }
+
+    addQuestion('historia', 'O que você gostaria que a família lembrasse sobre essa pessoa?');
+    addQuestion('jeito', 'Que característica dessa pessoa aparecia no convívio com os outros?');
+    addQuestion('memoria', 'Qual lembrança, hábito ou gosto ajuda a preservar sua memória?');
+
+    return questions.slice(0, 3);
+  }
 
   if (categories.has('familia')) {
     addQuestion('familia', 'Qual lembrança de família você guarda com mais carinho?');
@@ -771,6 +990,7 @@ export function MeusDados() {
     () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
     [aiAllBadges, aiSelectedBadges],
   );
+  const aiIsMemorialMode = aiTone === 'nostalgico';
   const aiAnsweredQuestions = useMemo(
     () => aiGeneratedQuestions.filter((item) => item.answer.trim()),
     [aiGeneratedQuestions],
@@ -780,13 +1000,13 @@ export function MeusDados() {
 
   useEffect(() => {
     setAiGeneratedQuestions((currentQuestions) => {
-      const nextQuestions = buildAiProfileQuestions(aiSelectedBadgeItems, aiCustomTraits);
+      const nextQuestions = buildAiProfileQuestions(aiSelectedBadgeItems, aiCustomTraits, aiIsMemorialMode);
       return nextQuestions.map((question) => ({
         ...question,
         answer: currentQuestions.find((item) => item.id === question.id)?.answer ?? '',
       }));
     });
-  }, [aiSelectedBadgeItems, aiCustomTraits]);
+  }, [aiSelectedBadgeItems, aiCustomTraits, aiIsMemorialMode]);
 
   const markFormDirty = () => {
     isDirtyRef.current = true;
@@ -1001,7 +1221,8 @@ export function MeusDados() {
         body: JSON.stringify({
           purpose: 'profile_text',
           tone: aiTone,
-          selectedBadges: aiSelectedBadgeItems.map((badge) => badge.label),
+          memorialMode: aiIsMemorialMode,
+          selectedBadges: aiSelectedBadgeItems.map((badge) => getAiBadgeDisplayLabel(badge, aiIsMemorialMode)),
           customTraits: aiCustomTraits.trim(),
           answers: answeredQuestions,
           context: {
@@ -1010,6 +1231,8 @@ export function MeusDados() {
             local_nascimento: String(form.local_nascimento ?? ''),
             local_atual: String(form.local_atual ?? ''),
             data_nascimento: String(form.data_nascimento ?? ''),
+            data_falecimento: String(form.data_falecimento ?? ''),
+            falecido: form.falecido === true,
             minibio_atual: String(form.minibio ?? ''),
             curiosidades_atuais: String(form.curiosidades ?? ''),
           },
@@ -1125,7 +1348,8 @@ export function MeusDados() {
 
   const renderAiBadgeGroup = (group: AiBadgeGroup) => {
     const GroupIcon = group.icon;
-    const compactCards = ['personalidade', 'familia', 'trabalho', 'lugares'].includes(group.id);
+    const compactCards = ['personalidade', 'familia', 'trabalho', 'lugares', 'momentos', 'hobbies', 'marcas'].includes(group.id);
+    const displayText = getAiBadgeGroupDisplayText(group, aiIsMemorialMode);
 
     return (
       <div className="space-y-4">
@@ -1134,14 +1358,15 @@ export function MeusDados() {
             <GroupIcon className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h3 className="break-words text-lg font-semibold text-gray-900">{group.title}</h3>
-            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">{group.subtitle}</p>
+            <h3 className="break-words text-lg font-semibold text-gray-900">{displayText.title}</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">{displayText.subtitle}</p>
           </div>
         </div>
         <div className={compactCards ? 'grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3' : 'grid grid-cols-1 gap-3 sm:grid-cols-2'}>
           {group.badges.map((badge) => {
             const selected = aiSelectedBadges.includes(badge.id);
             const BadgeIcon = badge.icon ?? group.icon;
+            const displayLabel = getAiBadgeDisplayLabel(badge, aiIsMemorialMode);
 
             if (compactCards) {
               return (
@@ -1158,7 +1383,7 @@ export function MeusDados() {
                   aria-pressed={selected}
                 >
                   <span className="min-w-0 overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-                    {badge.label}
+                    {displayLabel}
                   </span>
                 </button>
               );
@@ -1180,7 +1405,7 @@ export function MeusDados() {
                 <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/80 text-blue-700">
                   <BadgeIcon className="h-4 w-4" />
                 </span>
-                <span className="min-w-0 break-words font-medium leading-snug">{badge.label}</span>
+                <span className="min-w-0 break-words font-medium leading-snug">{displayLabel}</span>
               </button>
             );
           })}
@@ -1196,7 +1421,7 @@ export function MeusDados() {
           <div>
             <h3 className="break-words text-lg font-semibold text-gray-900">Escolha o tom do texto</h3>
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              Como você quer que sua Mini Bio e suas Curiosidades soem?
+              Como você quer que sua Mini Bio e suas Curiosidades soem? O tom Nostálgico cria uma homenagem em memória de quem já faleceu.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1240,15 +1465,23 @@ export function MeusDados() {
       return (
         <div className="space-y-4">
           <div>
-            <h3 className="break-words text-lg font-semibold text-gray-900">Outras características</h3>
+            <h3 className="break-words text-lg font-semibold text-gray-900">
+              {aiIsMemorialMode ? 'Outras lembranças sobre essa pessoa' : 'Outras características'}
+            </h3>
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              Quer acrescentar algo que não apareceu nas opções?
+              {aiIsMemorialMode
+                ? 'Quer acrescentar algo que ajude a contar sua história?'
+                : 'Quer acrescentar algo que não apareceu nas opções?'}
             </p>
           </div>
           <Textarea
             value={aiCustomTraits}
             onChange={(event) => setAiCustomTraits(event.target.value)}
-            placeholder="Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades..."
+            placeholder={
+              aiIsMemorialMode
+                ? 'Ex: adorava cozinhar aos domingos, era conhecido pelo bom humor, morou em três cidades, gostava de reunir a família...'
+                : 'Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades...'
+            }
             className="min-h-32 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
           />
         </div>
@@ -1261,7 +1494,9 @@ export function MeusDados() {
           <div>
             <h3 className="break-words text-lg font-semibold text-gray-900">Perguntas opcionais</h3>
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              As respostas ajudam a IA a deixar o texto menos genérico. Você pode deixar em branco.
+              {aiIsMemorialMode
+                ? 'As respostas ajudam a IA a criar uma homenagem mais fiel à memória da pessoa. Você pode deixar em branco.'
+                : 'As respostas ajudam a IA a deixar o texto menos genérico. Você pode deixar em branco.'}
             </p>
           </div>
           <div className="space-y-3">
@@ -1618,7 +1853,9 @@ export function MeusDados() {
           <DialogHeader>
             <DialogTitle className="break-words">Ajuda para escrever sobre você</DialogTitle>
             <DialogDescription className="break-words">
-              Selecione características, lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades sobre sua vida.
+              {aiIsMemorialMode
+                ? 'Selecione lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades em tom de homenagem.'
+                : 'Selecione características, lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades sobre sua vida.'}
             </DialogDescription>
           </DialogHeader>
 

@@ -22,6 +22,7 @@ export default async function handler(req: any, res: any) {
       selectedBadges,
       customTraits,
       answers,
+      memorialMode,
     } = req.body || {};
 
     if (purpose === "profile_text") {
@@ -35,8 +36,11 @@ export default async function handler(req: any, res: any) {
         });
       }
 
+      const isMemorialMode = memorialMode === true || tone === "nostalgico";
+
       const profilePayload = {
         tone: typeof tone === "string" ? tone.slice(0, 80) : "afetivo",
+        memorialMode: isMemorialMode,
         selectedBadges: Array.isArray(selectedBadges)
           ? selectedBadges
             .filter((item) => typeof item === "string")
@@ -62,23 +66,48 @@ export default async function handler(req: any, res: any) {
         input: [
           {
             role: "system",
-            content: [
-              "Você deve gerar dois textos curtos para um perfil familiar.",
-              'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
-              "Regras:",
-              "- Escreva sempre em primeira pessoa.",
-              "- Não use terceira pessoa.",
-              "- Cada campo deve ter no máximo 300 caracteres.",
-              "- Não invente fatos.",
-              "- Use apenas as informações fornecidas em contexto, badges, características adicionais e respostas.",
-              "- Não mencione IA.",
-              "- Não use linguagem exagerada.",
-              "- Não exponha dados técnicos.",
-              "- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.",
-              "- Se houver temas sensíveis, trate com sobriedade.",
-              "- A Mini Bio deve apresentar quem sou, minhas origens, valores, trajetória ou relação com a família.",
-              "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves sobre minha vida.",
-            ].join(" "),
+            content: isMemorialMode
+              ? [
+                "Você deve gerar dois textos curtos para um perfil familiar de uma pessoa falecida.",
+                'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
+                "Regras:",
+                "- Escreva em terceira pessoa.",
+                "- Use verbos no passado.",
+                "- Use tom saudosista, afetivo e respeitoso.",
+                "- Pode usar o nome da pessoa quando disponível no contexto.",
+                "- Não use primeira pessoa.",
+                "- Não use eu, me, meu, minha, meus ou minhas.",
+                "- Não escreva como se a pessoa ainda estivesse viva.",
+                "- Cada campo deve ter no máximo 300 caracteres.",
+                "- Não invente fatos, datas, cidades, viagens, profissões, conquistas ou eventos.",
+                "- Não use placeholders como xxxx.",
+                "- Não mencione morte diretamente se não for necessário.",
+                "- Evite linguagem fúnebre pesada.",
+                "- Não mencione IA.",
+                "- Não exponha dados técnicos.",
+                "- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.",
+                "- Se houver temas sensíveis, trate com sobriedade.",
+                "- A Mini Bio deve preservar a memória da pessoa, suas origens, valores, trajetória ou vínculos familiares.",
+                "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves no passado.",
+                "- Prefira formulações como: '[Nome] foi uma pessoa...', '[Nome] era lembrado por...', 'Gostava de...', 'Adorava...', 'Tinha o costume de...'.",
+              ].join(" ")
+              : [
+                "Você deve gerar dois textos curtos para um perfil familiar.",
+                'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
+                "Regras:",
+                "- Escreva sempre em primeira pessoa.",
+                "- Não use terceira pessoa.",
+                "- Cada campo deve ter no máximo 300 caracteres.",
+                "- Não invente fatos.",
+                "- Use apenas as informações fornecidas em contexto, badges, características adicionais e respostas.",
+                "- Não mencione IA.",
+                "- Não use linguagem exagerada.",
+                "- Não exponha dados técnicos.",
+                "- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.",
+                "- Se houver temas sensíveis, trate com sobriedade.",
+                "- A Mini Bio deve apresentar quem sou, minhas origens, valores, trajetória ou relação com a família.",
+                "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves sobre minha vida.",
+              ].join(" "),
           },
           {
             role: "user",
