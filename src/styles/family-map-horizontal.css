@@ -389,3 +389,41 @@ html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] 
 html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] [data-family-map-connectors="true"] path {
   stroke: var(--family-map-connector) !important;
 }
+
+/* C?njuges na horizontal mant?m a cor da gera??o, com leve varia??o tonal. */
+[data-family-map-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
+  background: var(--family-map-card-bg-spouse, var(--family-map-card-bg)) !important;
+  border-color: var(--family-map-card-border-spouse, var(--family-map-card-border)) !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="tataravos"] {
+  --family-map-card-bg-spouse: #c0b8da;
+  --family-map-card-border-spouse: #c0b8da;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="bisavos"] {
+  --family-map-card-bg-spouse: #dda8ce;
+  --family-map-card-border-spouse: #dda8ce;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="avos"] {
+  --family-map-card-bg-spouse: #edaea7;
+  --family-map-card-border-spouse: #edaea7;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="pais"] {
+  --family-map-card-bg-spouse: #e8cc8d;
+  --family-map-card-border-spouse: #e8cc8d;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="irmaos"] {
+  --family-map-card-bg-spouse: #b5d281;
+  --family-map-card-border-spouse: #b5d281;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="filhos"],
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="netos"] {
+  --family-map-card-bg-spouse: #c8e0e3;
+  --family-map-card-border-spouse: #c8e0e3;
+}
+

@@ -248,6 +248,7 @@ export function VisualPersonCard({
   tone = 'default',
   vitalMode = 'year',
   roomy = false,
+  familyMapColorKeyOverride,
 }: {
   person: Pessoa;
   label?: string;
@@ -258,6 +259,7 @@ export function VisualPersonCard({
   tone?: 'default' | 'spouse' | 'ancestorSpouse';
   vitalMode?: 'year' | 'full';
   roomy?: boolean;
+  familyMapColorKeyOverride?: FamilyMapColorKey;
   onClick: (person: Pessoa) => void;
 }) {
   const { pet, displayName, birthLine, deathLine, birthYearLine, deathYearLine, showDeathLine } = getVisualPersonCardData(person);
@@ -265,7 +267,7 @@ export function VisualPersonCard({
   const effectiveDeathLine = vitalMode === 'full' ? deathLine : deathYearLine;
   const isSpouseTone = tone === 'spouse';
   const isAncestorSpouseTone = tone === 'ancestorSpouse';
-  const familyMapColorKey = getFamilyMapColorKeyFromText(label, {
+  const familyMapColorKey = familyMapColorKeyOverride ?? getFamilyMapColorKeyFromText(label, {
     central,
     spouse: isSpouseTone || isAncestorSpouseTone,
   });
@@ -275,6 +277,7 @@ export function VisualPersonCard({
       <button
         type="button"
         data-family-map-color-key={familyMapColorKey}
+        data-family-map-spouse-tone={isSpouseTone || isAncestorSpouseTone ? 'true' : undefined}
         onClick={() => onClick(person)}
         className={[
           `flex ${roomy ? 'h-[82px]' : 'h-[74px]'} w-full min-w-0 items-center gap-2 rounded-[1.1rem] border px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
@@ -313,6 +316,7 @@ export function VisualPersonCard({
     <button
       type="button"
       data-family-map-color-key={familyMapColorKey}
+      data-family-map-spouse-tone={isSpouseTone || isAncestorSpouseTone ? 'true' : undefined}
       onClick={() => onClick(person)}
       className={[
         `relative flex ${height} w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.14)] active:scale-[0.98]`,
