@@ -14,6 +14,7 @@ import {
   Info,
   KeyRound,
   Link2,
+  Pencil,
   Plus,
   Save,
   Sparkles,
@@ -411,6 +412,7 @@ export function MinhaArvore() {
   const [addRelativeForm, setAddRelativeForm] = useState<AddRelativeForm>(() => createEmptyAddRelativeForm());
   const [relationshipSaving, setRelationshipSaving] = useState(false);
   const [relationshipRemoving, setRelationshipRemoving] = useState<string | null>(null);
+  const [editingMarriagePersonId, setEditingMarriagePersonId] = useState<string | null>(null);
   const [marriageForms, setMarriageForms] = useState<MarriageFormState>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
@@ -701,6 +703,12 @@ export function MinhaArvore() {
       mounted = false;
     };
   }, [pessoaBase]);
+
+  useEffect(() => {
+    if (editingMarriagePersonId && !relationshipGroups.conjuges.some((spouse) => spouse.id === editingMarriagePersonId)) {
+      setEditingMarriagePersonId(null);
+    }
+  }, [editingMarriagePersonId, relationshipGroups.conjuges]);
 
   useEffect(() => {
     if (!pessoaBase) return;
@@ -2024,18 +2032,42 @@ export function MinhaArvore() {
                                   <p className="mt-1 text-xs text-gray-500">{person.local_nascimento}</p>
                                 )}
                               </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0 text-red-700 hover:bg-red-50"
-                                onClick={() => handleRemoveRelative(group, person)}
-                                disabled={relationshipRemoving === removeKey}
-                                aria-label={`${isAdmin ? 'Remover' : 'Solicitar remoção de'} ${person.nome_completo}`}
-                                title={`${isAdmin ? 'Remover' : 'Solicitar remoção de'} ${person.nome_completo}`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex shrink-0 items-center gap-1">
+                                {group === 'conjuges' && editingMarriagePersonId === person.id && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className={[
+                                      'h-8 w-8 shrink-0',
+                                      editingMarriagePersonId === person.id
+                                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                                        : 'text-gray-600 hover:bg-gray-100',
+                                    ].join(' ')}
+                                    onClick={() =>
+                                      setEditingMarriagePersonId((current) => (current === person.id ? null : person.id))
+                                    }
+                                    aria-label={`${editingMarriagePersonId === person.id ? 'Fechar edição de' : 'Editar casamento de'} ${person.nome_completo}`}
+                                    title={`${editingMarriagePersonId === person.id ? 'Fechar edição de' : 'Editar casamento de'} ${person.nome_completo}`}
+                                    aria-expanded={editingMarriagePersonId === person.id}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                )}
+
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 text-red-700 hover:bg-red-50"
+                                  onClick={() => handleRemoveRelative(group, person)}
+                                  disabled={relationshipRemoving === removeKey}
+                                  aria-label={`${isAdmin ? 'Remover' : 'Solicitar remoção de'} ${person.nome_completo}`}
+                                  title={`${isAdmin ? 'Remover' : 'Solicitar remoção de'} ${person.nome_completo}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
 
                             {group === 'conjuges' && (
