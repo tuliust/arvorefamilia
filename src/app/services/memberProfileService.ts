@@ -777,3 +777,58 @@ export async function listLinkablePeople() {
 
   return { error: error?.message, data: (data as Pessoa[]) ?? [] };
 }
+
+type RelationshipSearchPersonRow = Pick<
+  Pessoa,
+  | 'id'
+  | 'nome_completo'
+  | 'data_nascimento'
+  | 'local_nascimento'
+  | 'local_atual'
+  | 'local_nascimento_exterior'
+  | 'local_atual_exterior'
+  | 'falecido'
+  | 'foto_principal_url'
+  | 'humano_ou_pet'
+>;
+
+export async function searchPeopleForRelationship(query: string) {
+  const normalizedQuery = query.trim();
+
+  if (normalizedQuery.length < 2) {
+    return {
+      error: undefined,
+      data: [] as Pessoa[],
+    };
+  }
+
+  const escapedQuery = normalizedQuery.replace(/[%_]/g, '\\$&');
+  const { data, error } = await supabase
+    .from('pessoas')
+    .select('id, nome_completo, data_nascimento, local_nascimento, local_atual, local_nascimento_exterior, local_atual_exterior, falecido, foto_principal_url, humano_ou_pet')
+    .ilike('nome_completo', `%${escapedQuery}%`)
+    .order('nome_completo', { ascending: true })
+    .limit(10);
+
+  if (error) {
+    return { error: error.message || 'Não foi possível buscar pessoas agora.', data: [] as Pessoa[] };
+  }
+
+  const people = (data || []).map((row) => {
+    const person = row as RelationshipSearchPersonRow;
+    return {
+      id: person.id,
+      nome_completo: person.nome_completo,
+      data_nascimento: person.data_nascimento,
+      local_nascimento: person.local_nascimento ?? undefined,
+      local_atual: person.local_atual ?? undefined,
+      local_nascimento_exterior: person.local_nascimento_exterior ?? false,
+      local_atual_exterior: person.local_atual_exterior ?? false,
+      falecido: person.falecido ?? false,
+      foto_principal_url: person.foto_principal_url ?? undefined,
+      humano_ou_pet: person.humano_ou_pet ?? 'Humano',
+    } as Pessoa;
+  });
+
+  return { error: undefined, data: people };
+}

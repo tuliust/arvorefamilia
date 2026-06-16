@@ -43,6 +43,7 @@ import {
 import {
   getPrimaryLinkedPersonWithPessoa,
   resolveFirstAccessLinkForUser,
+  searchPeopleForRelationship,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
 import { Pessoa, Relacionamento } from '../types';
@@ -54,6 +55,7 @@ import { RelationshipOverview } from './meus-vinculos/RelationshipOverview';
 import { RelationshipReviewAside } from './meus-vinculos/RelationshipReviewAside';
 import {
   canRequestProfileControl,
+  formatOptionalValue,
   getRelationshipOverviewGroupLabel,
   relationshipStatusHasPending,
 } from './meus-vinculos/meusVinculosUtils';
@@ -83,6 +85,8 @@ type AddRelativeForm = {
   local_nascimento_exterior: boolean;
   parentRole: 'pai' | 'mae';
 };
+
+type AddRelativeMode = 'search' | 'create' | 'confirm';
 
 type AddDialogState = {
   group: RelationshipGroupKey;
@@ -230,6 +234,12 @@ export function MeusVinculos() {
     local_nascimento_exterior: false,
     parentRole: 'pai',
   });
+  const [addRelativeMode, setAddRelativeMode] = useState<AddRelativeMode>('search');
+  const [relativeSearchTerm, setRelativeSearchTerm] = useState('');
+  const [relativeSearchResults, setRelativeSearchResults] = useState<Pessoa[]>([]);
+  const [relativeSearchLoading, setRelativeSearchLoading] = useState(false);
+  const [relativeSearchError, setRelativeSearchError] = useState<string | null>(null);
+  const [selectedExistingRelative, setSelectedExistingRelative] = useState<Pessoa | null>(null);
   const [localRelationshipRoles, setLocalRelationshipRoles] = useState<Record<string, 'pai' | 'mae'>>({});
   const [childOtherParent, setChildOtherParent] = useState<Record<string, string>>({});
   const [spouseExpanded, setSpouseExpanded] = useState<Record<string, boolean>>({});
@@ -376,6 +386,23 @@ export function MeusVinculos() {
     draftDirtyRef.current = true;
   };
 
+  const resetAddRelativeFlow = () => {
+    setAddDialog(null);
+    setAddForm({
+      nome_completo: '',
+      data_nascimento: '',
+      local_nascimento: '',
+      local_nascimento_exterior: false,
+      parentRole: 'pai',
+    });
+    setAddRelativeMode('search');
+    setRelativeSearchTerm('');
+    setRelativeSearchResults([]);
+    setRelativeSearchLoading(false);
+    setRelativeSearchError(null);
+    setSelectedExistingRelative(null);
+  };
+
   const openAddDialog = (group: RelationshipGroupKey, title: string) => {
     setAddDialog({ group, title });
     setAddForm({
@@ -385,63 +412,140 @@ export function MeusVinculos() {
       local_nascimento_exterior: false,
       parentRole: 'pai',
     });
+    setAddRelativeMode('search');
+    setRelativeSearchTerm('');
+    setRelativeSearchResults([]);
+    setRelativeSearchLoading(false);
+    setRelativeSearchError(null);
+    setSelectedExistingRelative(null);
   };
 
   const closeAddDialog = () => {
-    setAddDialog(null);
-    setAddForm({
-      nome_completo: '',
-      data_nascimento: '',
-      local_nascimento: '',
-      local_nascimento_exterior: false,
-      parentRole: 'pai',
-    });
+    resetAddRelativeFlow();
+  };
+
+  const getSearchConflictMessage = (person: Pessoa) => {
+    if (!addDialog || !pessoa?.id) return null;
+    if (person.id === pessoa.id) return 'Esta é a pessoa em revisão.';
+
+    const visiblePerson = reviewGroups[addDialog.group].visiblePeople.find((item) => item.id === person.id);
+    if (!visiblePerson) return null;
+
+    const status = getRelationshipReviewStatus(addDialog.group, visiblePerson);
+    if (status === 'added_pending') return 'Esta pessoa já foi adicionada nesta revisão.';
+    if (status === 'removed_pending') return 'Esta pessoa já está marcada para remoção nesta revisão.';
+    return 'Esta pessoa já está vinculada nesta categoria.';
+  };
+
+  const runRelativeSearch = async () => {
+    const searchTerm = relativeSearchTerm.trim();
+    if (searchTerm.length < 2) {
+      setRelativeSearchError('Digite pelo menos 2 caracteres para buscar.');
+      setRelativeSearchResults([]);
+      return;
+    }
+
+    setRelativeSearchLoading(true);
+    setRelativeSearchError(null);
+
+    try {
+      const { data, error } = await searchPeopleForRelationship(searchTerm);
+      if (error) {
+        setRelativeSearchResults([]);
+        setRelativeSearchError('Não foi possível buscar pessoas agora. Você ainda pode criar um novo cadastro.');
+        return;
+      }
+
+      setRelativeSearchResults(data);
+    } catch {
+      setRelativeSearchResults([]);
+      setRelativeSearchError('Não foi possível buscar pessoas agora. Você ainda pode criar um novo cadastro.');
+    } finally {
+      setRelativeSearchLoading(false);
+    }
+  };
+
+  const selectExistingRelative = (person: Pessoa) => {
+    setSelectedExistingRelative(person);
+    setAddRelativeMode('confirm');
+    setRelativeSearchError(null);
+  };
+
+  const startCreateNewRelative = () => {
+    setSelectedExistingRelative(null);
+    setAddRelativeMode('create');
+    setRelativeSearchError(null);
+    if (!addForm.nome_completo.trim()) {
+      setAddForm((current) => ({
+        ...current,
+        nome_completo: relativeSearchTerm.trim(),
+      }));
+    }
+  };
+
+  const goBackToSearch = () => {
+    setSelectedExistingRelative(null);
+    setAddRelativeMode('search');
+    setRelativeSearchError(null);
   };
 
   const addRelative = () => {
     if (!addDialog) return;
-    if (!addForm.nome_completo.trim()) {
-      toast.error('Informe o nome completo do familiar.');
-      return;
+
+    const person = selectedExistingRelative ?? null;
+
+    if (!person) {
+      if (!addForm.nome_completo.trim()) {
+        toast.error('Informe o nome completo do familiar.');
+        return;
+      }
+      const birthLocationError = validateLocationByMode(addForm.local_nascimento, {
+        international: addForm.local_nascimento_exterior,
+      });
+      if (birthLocationError) {
+        toast.error(birthLocationError);
+        return;
+      }
     }
-    const birthLocationError = validateLocationByMode(addForm.local_nascimento, {
-      international: addForm.local_nascimento_exterior,
-    });
-    if (birthLocationError) {
-      toast.error(birthLocationError);
-      return;
+
+    if (person) {
+      const conflictMessage = getSearchConflictMessage(person);
+      if (conflictMessage) {
+        toast.error(conflictMessage);
+        return;
+      }
     }
 
     markDraftDirty();
-    const person = createLocalPerson(addForm);
+    const relativePerson = person ?? createLocalPerson(addForm);
 
     setRelationships((current) => {
       if (addDialog.group === 'pais' && addForm.parentRole === 'mae') {
         return {
           ...current,
-          maes: uniquePeople([...current.maes, person]),
+          maes: uniquePeople([...current.maes, relativePerson]),
         };
       }
 
       return {
         ...current,
-        [addDialog.group]: uniquePeople([...current[addDialog.group], person]),
+        [addDialog.group]: uniquePeople([...current[addDialog.group], relativePerson]),
       };
     });
     setLocalRelationshipRoles((current) => ({
       ...current,
-      [person.id]: addForm.parentRole,
+      [relativePerson.id]: addForm.parentRole,
     }));
     setRemovedRelationshipIds((current) => ({
       ...current,
-      [addDialog.group]: current[addDialog.group].filter((id) => id !== person.id),
+      [addDialog.group]: current[addDialog.group].filter((id) => id !== relativePerson.id),
     }));
 
     if (addDialog.group === 'conjuges') {
-      const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(person);
+      const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(relativePerson);
       setMarriageDetails((current) => ({
         ...current,
-        [person.id]: {
+        [relativePerson.id]: {
           ...createEmptyMarriageDetails(),
           ativo: defaultActive,
         },
@@ -449,7 +553,7 @@ export function MeusVinculos() {
     }
 
     setHasLocalRelationshipChanges(true);
-    closeAddDialog();
+    resetAddRelativeFlow();
   };
 
   const removeRelative = (group: RelationshipGroupKey, personId: string) => {
@@ -1194,7 +1298,7 @@ export function MeusVinculos() {
       />
 
       <Dialog open={Boolean(addDialog)} onOpenChange={(open) => (!open ? closeAddDialog() : undefined)}>
-        <DialogContent className="bg-white">
+        <DialogContent className="max-h-[85vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle className="break-words">{addDialog?.title ?? 'Solicitar familiar'}</DialogTitle>
             <DialogDescription className="break-words">
@@ -1203,80 +1307,290 @@ export function MeusVinculos() {
           </DialogHeader>
 
           <div className="grid gap-4">
-            {(addDialog?.group === 'pais' || addDialog?.group === 'filhos') && (
-              <div className="space-y-2">
-                <Label htmlFor="relative-parent-role">
-                  {addDialog.group === 'pais' ? 'Este familiar é' : 'Meu papel em relação ao filho'}
-                </Label>
-                <select
-                  id="relative-parent-role"
-                  value={addForm.parentRole}
-                  onChange={(event) => setAddForm((current) => ({
-                    ...current,
-                    parentRole: event.target.value as 'pai' | 'mae',
-                  }))}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                >
-                  <option value="pai">{addDialog.group === 'pais' ? 'Pai' : 'Sou pai'}</option>
-                  <option value="mae">{addDialog.group === 'pais' ? 'Mãe' : 'Sou mãe'}</option>
-                </select>
+            {addRelativeMode === 'search' && (
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void runRelativeSearch();
+                }}
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="relative-search-name">Nome da pessoa</Label>
+                  <Input
+                    id="relative-search-name"
+                    value={relativeSearchTerm}
+                    onChange={(event) => {
+                      setRelativeSearchTerm(event.target.value);
+                      setRelativeSearchError(null);
+                    }}
+                    placeholder="Ex: Maria Souza, João Limeira..."
+                  />
+                  <p className="text-sm text-gray-600">
+                    Digite o nome da pessoa para verificar se ela já existe na árvore antes de criar um novo cadastro.
+                  </p>
+                </div>
+
+                {relativeSearchError && (
+                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                    {relativeSearchError}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="submit" className="w-full sm:w-auto" disabled={relativeSearchLoading}>
+                    {relativeSearchLoading ? 'Buscando...' : 'Buscar'}
+                  </Button>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={startCreateNewRelative}>
+                    Criar nova pessoa
+                  </Button>
+                </div>
+
+                {relativeSearchLoading && (
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                    Buscando pessoas cadastradas...
+                  </div>
+                )}
+
+                {!relativeSearchLoading && relativeSearchResults.length > 0 && (
+                  <div className="space-y-3">
+                    {relativeSearchResults.map((result) => {
+                      const conflictMessage = getSearchConflictMessage(result);
+                      const birthLabel = formatOptionalValue(result.data_nascimento);
+                      const locationLabel = formatOptionalValue(result.local_nascimento || result.local_atual);
+
+                      return (
+                        <article key={result.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex min-w-0 gap-3">
+                              <div className="flex h-12 w-12 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                                {String(result.foto_principal_url ?? '').trim() ? (
+                                  <img
+                                    src={String(result.foto_principal_url ?? '').trim()}
+                                    alt={result.nome_completo}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="inline-flex h-full w-full items-center justify-center text-sm font-semibold">
+                                    {result.nome_completo.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'EU'}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="min-w-0 space-y-1">
+                                <h4 className="break-words text-base font-semibold text-gray-950">{result.nome_completo}</h4>
+                                <div className="flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+                                  {birthLabel && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 ring-1 ring-gray-200">
+                                      <span className="font-medium text-gray-500">Nascimento:</span>
+                                      <span className="break-words text-gray-900">{birthLabel}</span>
+                                    </span>
+                                  )}
+                                  {locationLabel && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 ring-1 ring-gray-200">
+                                      <span className="font-medium text-gray-500">Local:</span>
+                                      <span className="break-words text-gray-900">{locationLabel}</span>
+                                    </span>
+                                  )}
+                                  {result.falecido && (
+                                    <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-red-800 ring-1 ring-red-200">
+                                      Falecido(a)
+                                    </span>
+                                  )}
+                                </div>
+                                {conflictMessage && (
+                                  <p className="text-sm text-red-700">{conflictMessage}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              className="w-full shrink-0 sm:w-auto"
+                              variant={conflictMessage ? 'outline' : 'default'}
+                              disabled={Boolean(conflictMessage)}
+                              onClick={() => selectExistingRelative(result)}
+                            >
+                              Usar esta pessoa
+                            </Button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!relativeSearchLoading && relativeSearchTerm.trim().length >= 2 && relativeSearchResults.length === 0 && !relativeSearchError && (
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
+                    <p className="font-semibold text-gray-900">Nenhuma pessoa encontrada com esse nome.</p>
+                    <p className="mx-auto mt-1 max-w-xl break-words text-sm text-gray-600">
+                      Você pode criar um novo cadastro para este familiar.
+                    </p>
+                    <Button type="button" variant="outline" className="mt-4 w-full sm:w-auto" onClick={startCreateNewRelative}>
+                      Criar nova pessoa
+                    </Button>
+                  </div>
+                )}
+              </form>
+            )}
+
+            {addRelativeMode === 'confirm' && selectedExistingRelative && (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <p className="text-sm font-semibold text-blue-800">Pessoa selecionada</p>
+                  <div className="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex h-14 w-14 shrink-0 overflow-hidden rounded-full bg-blue-100 text-blue-800 ring-1 ring-blue-200">
+                      {String(selectedExistingRelative.foto_principal_url ?? '').trim() ? (
+                        <img
+                          src={String(selectedExistingRelative.foto_principal_url ?? '').trim()}
+                          alt={selectedExistingRelative.nome_completo}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="inline-flex h-full w-full items-center justify-center text-sm font-semibold">
+                          {selectedExistingRelative.nome_completo.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'EU'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <h4 className="break-words text-base font-semibold text-gray-950">{selectedExistingRelative.nome_completo}</h4>
+                      <div className="mt-1 flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+                        {formatOptionalValue(selectedExistingRelative.data_nascimento) && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 ring-1 ring-blue-100">
+                            <span className="font-medium text-gray-500">Nascimento:</span>
+                            <span className="break-words text-gray-900">{formatOptionalValue(selectedExistingRelative.data_nascimento)}</span>
+                          </span>
+                        )}
+                        {formatOptionalValue(selectedExistingRelative.local_nascimento || selectedExistingRelative.local_atual) && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 ring-1 ring-blue-100">
+                            <span className="font-medium text-gray-500">Local:</span>
+                            <span className="break-words text-gray-900">
+                              {formatOptionalValue(selectedExistingRelative.local_nascimento || selectedExistingRelative.local_atual)}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2 text-sm text-blue-900">
+                        Este vínculo será revisado antes de aparecer definitivamente na árvore.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {(addDialog.group === 'pais' || addDialog.group === 'filhos') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relative-parent-role">
+                      {addDialog.group === 'pais' ? 'Este familiar é' : 'Meu papel em relação ao filho'}
+                    </Label>
+                    <select
+                      id="relative-parent-role"
+                      value={addForm.parentRole}
+                      onChange={(event) => setAddForm((current) => ({
+                        ...current,
+                        parentRole: event.target.value as 'pai' | 'mae',
+                      }))}
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      <option value="pai">{addDialog.group === 'pais' ? 'Pai' : 'Sou pai'}</option>
+                      <option value="mae">{addDialog.group === 'pais' ? 'Mãe' : 'Sou mãe'}</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={goBackToSearch}>
+                    Trocar pessoa
+                  </Button>
+                </div>
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="relative-name">Nome completo</Label>
-              <Input
-                id="relative-name"
-                value={addForm.nome_completo}
-                onChange={(event) => setAddForm((current) => ({ ...current, nome_completo: event.target.value }))}
-                placeholder="Nome completo"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="relative-birth-date">Data de nascimento opcional</Label>
-              <Input
-                id="relative-birth-date"
-                value={addForm.data_nascimento}
-                onChange={(event) => setAddForm((current) => ({ ...current, data_nascimento: event.target.value }))}
-                placeholder="DD/MM/AAAA ou AAAA"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="relative-birth-place">Local de nascimento opcional</Label>
-              <Input
-                id="relative-birth-place"
-                value={addForm.local_nascimento}
-                onChange={(event) => setAddForm((current) => ({ ...current, local_nascimento: event.target.value }))}
-                onBlur={() => setAddForm((current) => ({
-                  ...current,
-                  local_nascimento: normalizeLocationByMode(current.local_nascimento, {
-                    international: current.local_nascimento_exterior,
-                  }),
-                }))}
-                placeholder={addForm.local_nascimento_exterior ? 'Cidade (País)' : 'Cidade/UF'}
-              />
-              <label className="flex items-start gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300"
-                  checked={addForm.local_nascimento_exterior}
-                  onChange={(event) => setAddForm((current) => ({
-                    ...current,
-                    local_nascimento_exterior: event.target.checked,
-                  }))}
-                />
-                <span className="break-words">Nascimento fora do Brasil</span>
-              </label>
-            </div>
+
+            {addRelativeMode === 'create' && (
+              <div className="space-y-4">
+                {(addDialog?.group === 'pais' || addDialog?.group === 'filhos') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relative-parent-role">
+                      {addDialog.group === 'pais' ? 'Este familiar é' : 'Meu papel em relação ao filho'}
+                    </Label>
+                    <select
+                      id="relative-parent-role"
+                      value={addForm.parentRole}
+                      onChange={(event) => setAddForm((current) => ({
+                        ...current,
+                        parentRole: event.target.value as 'pai' | 'mae',
+                      }))}
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      <option value="pai">{addDialog.group === 'pais' ? 'Pai' : 'Sou pai'}</option>
+                      <option value="mae">{addDialog.group === 'pais' ? 'Mãe' : 'Sou mãe'}</option>
+                    </select>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="relative-name">Nome completo</Label>
+                  <Input
+                    id="relative-name"
+                    value={addForm.nome_completo}
+                    onChange={(event) => setAddForm((current) => ({ ...current, nome_completo: event.target.value }))}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="relative-birth-date">Data de nascimento opcional</Label>
+                  <Input
+                    id="relative-birth-date"
+                    value={addForm.data_nascimento}
+                    onChange={(event) => setAddForm((current) => ({ ...current, data_nascimento: event.target.value }))}
+                    placeholder="DD/MM/AAAA ou AAAA"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="relative-birth-place">Local de nascimento opcional</Label>
+                  <Input
+                    id="relative-birth-place"
+                    value={addForm.local_nascimento}
+                    onChange={(event) => setAddForm((current) => ({ ...current, local_nascimento: event.target.value }))}
+                    onBlur={() => setAddForm((current) => ({
+                      ...current,
+                      local_nascimento: normalizeLocationByMode(current.local_nascimento, {
+                        international: current.local_nascimento_exterior,
+                      }),
+                    }))}
+                    placeholder={addForm.local_nascimento_exterior ? 'Cidade (País)' : 'Cidade/UF'}
+                  />
+                  <label className="flex items-start gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300"
+                      checked={addForm.local_nascimento_exterior}
+                      onChange={(event) => setAddForm((current) => ({
+                        ...current,
+                        local_nascimento_exterior: event.target.checked,
+                      }))}
+                    />
+                    <span className="break-words">Nascimento fora do Brasil</span>
+                  </label>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={goBackToSearch}>
+                    Voltar para busca
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={closeAddDialog}>
               Cancelar
             </Button>
-            <Button type="button" className="w-full sm:w-auto" onClick={addRelative}>
-              <Plus className="h-4 w-4" />
-              Enviar para Aprovação
-            </Button>
+            {addRelativeMode !== 'search' && (
+              <Button type="button" className="w-full sm:w-auto" onClick={addRelative}>
+                <Plus className="h-4 w-4" />
+                {selectedExistingRelative ? 'Confirmar vínculo' : 'Enviar para Aprovação'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
