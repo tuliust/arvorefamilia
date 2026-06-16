@@ -427,3 +427,48 @@ html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true
   --family-map-card-border-spouse: #c8e0e3;
 }
 
+/* C?njuges na horizontal mant?m a cor da gera??o, com leve varia??o tonal. */
+[data-family-map-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+[data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
+  background: var(--family-map-card-bg-spouse, var(--family-map-card-bg)) !important;
+  border-color: var(--family-map-card-border-spouse, var(--family-map-card-border)) !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="tataravos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tataravos"] {
+  --family-map-card-bg-spouse: #c1b8dd;
+  --family-map-card-border-spouse: #b5aad5;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="bisavos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="bisavos"] {
+  --family-map-card-bg-spouse: #dda8ce;
+  --family-map-card-border-spouse: #cf91bd;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="avos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="avos"] {
+  --family-map-card-bg-spouse: #edafa8;
+  --family-map-card-border-spouse: #df978f;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="pais"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pais"] {
+  --family-map-card-bg-spouse: #e9cd8c;
+  --family-map-card-border-spouse: #d9b765;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="irmaos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="irmaos"] {
+  --family-map-card-bg-spouse: #b5d280;
+  --family-map-card-border-spouse: #9fc166;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="filhos"],
+[data-family-map-horizontal-root="true"] [data-family-map-color-key="netos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="filhos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="netos"] {
+  --family-map-card-bg-spouse: #c9e1e4;
+  --family-map-card-border-spouse: #accdd2;
+}
+
