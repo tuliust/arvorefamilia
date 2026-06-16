@@ -499,11 +499,30 @@ function getChildLayoutsForCouple(
 }
 
 function getDistributedTrunkX(candidate: CoupleConnectorCandidate, index: number, total: number) {
-  const columnRight = candidate.upperLayout.left + candidate.upperLayout.width;
-  const nextColumnLeft = Math.min(...candidate.childLayouts.map((layout) => layout.left));
-  const gap = Math.max(12, nextColumnLeft - columnRight);
+  const parentColumnRight = candidate.upperLayout.left + candidate.upperLayout.width;
+  const firstChildColumnLeft = Math.min(...candidate.childLayouts.map((layout) => layout.left));
+  const minChildGeneration = Math.min(...candidate.childLayouts.map((layout) => layout.generation));
+  const generationGap = minChildGeneration - candidate.generation;
+  const minGap = 12;
+
+  if (generationGap > 1) {
+    const lastIntermediateColumnRight = candidate.upperLayout.left
+      + (generationGap - 1) * MOBILE_HORIZONTAL_CANVAS.columnWidth
+      + candidate.upperLayout.width;
+
+    const maxX = firstChildColumnLeft - minGap;
+    const minX = parentColumnRight + minGap;
+    const spreadOffset = total > 1 ? (index - (total - 1) / 2) * 6 : 0;
+    const preferredX = lastIntermediateColumnRight + minGap + spreadOffset;
+
+    if (maxX > minX) {
+      return Math.min(maxX, Math.max(minX, preferredX));
+    }
+  }
+
+  const gap = Math.max(minGap, firstChildColumnLeft - parentColumnRight);
   const step = gap / (total + 1);
-  return columnRight + step * (index + 1);
+  return parentColumnRight + step * (index + 1);
 }
 
 function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipMaps, allowedPairKeys?: Set<string>) {
