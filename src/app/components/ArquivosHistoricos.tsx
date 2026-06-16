@@ -46,7 +46,9 @@ const INTERACTIVE_CATEGORY_OPTIONS: Array<
   { value: 'certidao_nascimento', label: 'Certidão de Nascimento', description: 'Registro do nascimento.', icon: Baby },
   { value: 'alistamento_militar', label: 'Alistamento Militar', description: 'Documentos de serviço militar.', icon: Shield },
   { value: 'certidao_casamento', label: 'Certidão de Casamento', description: 'Registros de união e casamento.', icon: Heart },
+  { value: 'divorcio', label: 'Divórcio', description: 'Documentos de separação ou divórcio.', icon: FileText },
   { value: 'imigracao', label: 'Imigração no Brasil', description: 'Chegada e trajetória migratória.', icon: Plane },
+  { value: 'mudanca_cidade', label: 'Mudança de Cidade', description: 'Registros de mudança e recomeço.', icon: Plane },
   { value: 'carreira_profissional', label: 'Primeiro Trabalho', description: 'Início da vida profissional.', icon: Briefcase },
   { value: 'certidao_obito', label: 'Certidão de Óbito', description: 'Registro de falecimento.', icon: ScrollText },
   { value: 'outro', label: 'Outras Memórias', description: 'Fotos, documentos e lembranças.', icon: Images },
@@ -164,7 +166,17 @@ export function ArquivosHistoricos({
   const hasUploadedDraftFile = Boolean(novoArquivo.url);
 
   const resetNovoArquivo = () => {
-    setNovoArquivo({ titulo: '', descricao: '', ano: '', tipo: 'imagem', url: '', storage_bucket: '', storage_path: '', mime_type: '', categoria_evento: '' });
+    setNovoArquivo({
+      titulo: '',
+      descricao: '',
+      ano: '',
+      tipo: 'imagem',
+      url: '',
+      storage_bucket: '',
+      storage_path: '',
+      mime_type: '',
+      categoria_evento: '',
+    });
   };
 
   const handleToggleAddFile = () => {
@@ -189,13 +201,13 @@ export function ArquivosHistoricos({
     setIsUploadingFile(true);
     try {
       const upload = await uploadHistoricalFile(file, { pessoaId, relacionamentoId });
-      setNovoArquivo(prev => ({
+      setNovoArquivo((prev) => ({
         ...prev,
         url: upload.url,
         storage_bucket: upload.bucket,
         storage_path: upload.path,
         mime_type: file.type || 'application/octet-stream',
-        tipo: isImage ? 'imagem' : 'pdf'
+        tipo: isImage ? 'imagem' : 'pdf',
       }));
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
@@ -242,7 +254,7 @@ export function ArquivosHistoricos({
   };
 
   const handleRemoveArquivo = (id: string) => {
-    onChange(arquivos.filter(a => a.id !== id));
+    onChange(arquivos.filter((arquivo) => arquivo.id !== id));
   };
 
   const handleUpdateArquivo = (id: string, updates: Partial<ArquivoHistorico>) => {
@@ -406,7 +418,7 @@ export function ArquivosHistoricos({
                     <Input
                       type="text"
                       value={novoArquivo.titulo}
-                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, titulo: e.target.value }))}
+                      onChange={(e) => setNovoArquivo((prev) => ({ ...prev, titulo: e.target.value }))}
                       placeholder="Ex: Certidão de casamento"
                     />
                   </div>
@@ -417,7 +429,7 @@ export function ArquivosHistoricos({
                     </label>
                     <textarea
                       value={novoArquivo.descricao}
-                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, descricao: e.target.value }))}
+                      onChange={(e) => setNovoArquivo((prev) => ({ ...prev, descricao: e.target.value }))}
                       rows={2}
                       className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                       placeholder="Informações adicionais sobre o arquivo..."
@@ -431,7 +443,7 @@ export function ArquivosHistoricos({
                     <Input
                       type="text"
                       value={novoArquivo.ano}
-                      onChange={(e) => setNovoArquivo(prev => ({ ...prev, ano: e.target.value }))}
+                      onChange={(e) => setNovoArquivo((prev) => ({ ...prev, ano: e.target.value }))}
                       placeholder="Ex: 1950"
                     />
                   </div>
@@ -443,7 +455,7 @@ export function ArquivosHistoricos({
                       </label>
                       <select
                         value={novoArquivo.categoria_evento}
-                        onChange={(e) => setNovoArquivo(prev => ({
+                        onChange={(e) => setNovoArquivo((prev) => ({
                           ...prev,
                           categoria_evento: e.target.value as HistoricalFileEventCategory | '',
                         }))}

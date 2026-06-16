@@ -27,6 +27,35 @@ function getSocialProfileUrl(rede: string, perfil?: string | null) {
   return value;
 }
 
+function normalizeSocialProfileValue(rede: string, perfil?: string | null) {
+  const value = String(perfil ?? '').trim();
+  if (!value) return null;
+
+  const withoutAt = value.replace(/^@+/, '');
+
+  if (!/^https?:\/\//i.test(withoutAt)) {
+    return withoutAt;
+  }
+
+  try {
+    const url = new URL(withoutAt);
+    const hostname = url.hostname.replace(/^www\./, '').toLowerCase();
+    const pathParts = url.pathname.split('/').filter(Boolean);
+
+    if (rede === 'Instagram' && hostname.includes('instagram.com')) return pathParts[0] ?? withoutAt;
+    if (rede === 'TikTok' && hostname.includes('tiktok.com')) return (pathParts[0] ?? withoutAt).replace(/^@+/, '');
+    if (rede === 'Facebook' && hostname.includes('facebook.com')) return pathParts[0] ?? withoutAt;
+    if (rede === 'LinkedIn' && hostname.includes('linkedin.com')) {
+      const inIndex = pathParts.findIndex((part) => part.toLowerCase() === 'in');
+      return inIndex >= 0 ? pathParts[inIndex + 1] ?? withoutAt : pathParts[0] ?? withoutAt;
+    }
+  } catch {
+    return withoutAt;
+  }
+
+  return withoutAt;
+}
+
 function toPessoaSocialProfile(row: any): PessoaSocialProfile {
   return {
     id: row.id,
@@ -42,7 +71,7 @@ function toPessoaSocialProfile(row: any): PessoaSocialProfile {
 
 function normalizePayload(payload: SocialProfilePayload) {
   const rede = payload.rede.trim();
-  const perfil = payload.perfil?.trim() || null;
+  const perfil = normalizeSocialProfileValue(rede, payload.perfil);
 
   return {
     rede,
@@ -153,7 +182,7 @@ export async function substituirPessoaSocialProfiles(
       perfil: profile.perfil.trim(),
       exibir_no_perfil: options.exibirNoPerfil ?? true,
     }))
-    .filter((profile) => profile.rede || profile.perfil)
+    .filter((profile) => profile.rede && profile.perfil)
     .filter((profile) => {
       const key = profile.rede.toLocaleLowerCase('pt-BR');
       if (!key) return true;

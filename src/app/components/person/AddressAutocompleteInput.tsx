@@ -30,7 +30,7 @@ export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, Addre
     value,
     onChange,
     disabled,
-    autoComplete = 'off',
+    autoComplete = 'new-password',
     autoCorrect = 'off',
     autoCapitalize = 'off',
     spellCheck = false,
@@ -127,6 +127,9 @@ export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, Addre
         data-form-type="other"
         data-lpignore="true"
         data-1p-ignore="true"
+        data-1password-ignore="true"
+        data-bwignore="true"
+        aria-autocomplete="list"
         onChange={(event) => onChangeRef.current(event.target.value)}
       />
     );

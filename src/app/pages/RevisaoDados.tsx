@@ -1,29 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardCheck, Save } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import {
   HEADER_ACTION_ICONS,
   MemberPageHeader,
   PAGE_CONTAINER_CLASS,
 } from '../components/layout/MemberPageHeader';
-import { NotificationPreferencesPanel } from '../components/notifications/NotificationPreferencesPanel';
+import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { Switch } from '../components/ui/switch';
 import { useAuth } from '../contexts/AuthContext';
 import { obterRelacionamentosDaPessoa } from '../services/dataService';
-import {
-  listarArquivosHistoricosPorPessoa,
-  substituirArquivosHistoricosDaPessoa,
-} from '../services/arquivosHistoricosService';
+import { listarArquivosHistoricosPorPessoa } from '../services/arquivosHistoricosService';
 import {
   confirmOwnLinkedPersonData,
   getPrimaryLinkedPersonWithPessoa,
   resolveFirstAccessLinkForUser,
-  updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
 import { listarPessoaSocialProfiles } from '../services/pessoaSocialProfilesService';
@@ -84,28 +77,15 @@ function valueOrEmpty(value: unknown) {
   return text || 'Não informado';
 }
 
+function yesNo(value: boolean) {
+  return value ? 'Sim' : 'Não';
+}
+
 function ReviewItem({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="min-w-0 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
       <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
       <div className="mt-1 break-words text-sm text-gray-900">{value}</div>
-    </div>
-  );
-}
-
-function PrivacyToggle({
-  label,
-  checked,
-  onCheckedChange,
-}: {
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
-      <Label className="min-w-0 break-words">{label}</Label>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
   );
 }
@@ -119,8 +99,6 @@ export function RevisaoDados() {
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
   const [privacy, setPrivacy] = useState<PrivacyState | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savingArchives, setSavingArchives] = useState(false);
-  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
@@ -178,44 +156,10 @@ export function RevisaoDados() {
     return groups;
   }, [relationships]);
 
-  const handleSaveArchives = async () => {
-    if (!pessoa?.id) return;
-    setSavingArchives(true);
-    try {
-      const saved = await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
-      setArchives(saved);
-      toast.success('Arquivos históricos salvos.');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar os arquivos.');
-    } finally {
-      setSavingArchives(false);
-    }
-  };
-
-  const handleSavePrivacy = async () => {
-    if (!pessoa?.id || !privacy) return false;
-    setSavingPrivacy(true);
-    const { error, data } = await updateOwnLinkedPerson(pessoa.id, {
-      ...privacy,
-      permitir_exibir_instagram: privacy.permitir_exibir_rede_social,
-    });
-    setSavingPrivacy(false);
-    if (error) {
-      toast.error(error);
-      return false;
-    }
-    if (data) setLink((current) => (current ? { ...current, pessoa: data } : current));
-    toast.success('Permissões de exibição salvas.');
-    return true;
-  };
-
   const handleFinish = async () => {
     if (!link?.id || !pessoa?.id || !user?.id) return;
     setFinishing(true);
     try {
-      await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
-      const privacySaved = await handleSavePrivacy();
-      if (!privacySaved) return;
       const { error } = await confirmOwnLinkedPersonData(link.id);
       if (error) throw new Error(error);
       window.sessionStorage.removeItem(getMeusVinculosDraftKey(user.id, pessoa.id));
@@ -251,127 +195,102 @@ export function RevisaoDados() {
     );
   }
 
+  const socialProfilesSummary = socialProfiles.length > 0
+    ? socialProfiles.map((profile) => `${profile.rede}: ${profile.perfil || profile.url || ''}`).join(', ')
+    : valueOrEmpty(pessoa.rede_social && pessoa.instagram_usuario
+      ? `${pessoa.rede_social}: ${pessoa.instagram_usuario}`
+      : '');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Revisão dos dados"
-        subtitle="Etapa 3 de 3: confira os dados e conclua seu cadastro."
+        title="Revisão final"
+        subtitle="Etapa 5 de 5: confira o resumo antes de acessar a árvore."
         icon={ClipboardCheck}
         actions={[
           { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
           { label: 'Meus vínculos', to: '/meus-vinculos', icon: HEADER_ACTION_ICONS.Network },
+          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
         ]}
       />
 
+      <MemberOnboardingSteps activeStep={5} />
+
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <Card>
-          <CardHeader><CardTitle>Revisão dos dados cadastrados</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Dados pessoais</CardTitle></CardHeader>
           <CardContent className="space-y-5">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               <ReviewItem label="Nome completo" value={valueOrEmpty(pessoa.nome_completo)} />
-              <ReviewItem label="Data de nascimento" value={valueOrEmpty(pessoa.data_nascimento)} />
+              <ReviewItem label="Dia ou ano de nascimento" value={valueOrEmpty(pessoa.data_nascimento)} />
               <ReviewItem label="Local de nascimento" value={valueOrEmpty(pessoa.local_nascimento)} />
               <ReviewItem label="Cidade de residência" value={valueOrEmpty(pessoa.local_atual)} />
               <ReviewItem label="Profissão" value={valueOrEmpty(pessoa.profissao)} />
-              <ReviewItem label="Pessoa falecida" value={pessoa.falecido ? 'Sim' : 'Não'} />
+              <ReviewItem label="Pessoa falecida" value={yesNo(Boolean(pessoa.falecido))} />
+              {pessoa.falecido && (
+                <>
+                  <ReviewItem label="Data de falecimento" value={valueOrEmpty(pessoa.data_falecimento)} />
+                  <ReviewItem label="Local de falecimento" value={valueOrEmpty(pessoa.local_falecimento)} />
+                </>
+              )}
               <ReviewItem label="WhatsApp" value={valueOrEmpty(pessoa.telefone)} />
               <ReviewItem label="Endereço" value={valueOrEmpty(pessoa.endereco)} />
               <ReviewItem label="Complemento" value={valueOrEmpty(pessoa.complemento)} />
-              <ReviewItem
-                label="Redes sociais"
-                value={
-                  socialProfiles.length > 0
-                    ? socialProfiles.map((profile) => `${profile.rede}: ${profile.perfil || profile.url || ''}`).join(', ')
-                    : valueOrEmpty(pessoa.rede_social && pessoa.instagram_usuario
-                      ? `${pessoa.rede_social}: ${pessoa.instagram_usuario}`
-                      : '')
-                }
-              />
+              <ReviewItem label="Redes sociais" value={socialProfilesSummary} />
               <ReviewItem label="Mini Bio" value={valueOrEmpty(pessoa.minibio)} />
               <ReviewItem label="Curiosidades" value={valueOrEmpty(pessoa.curiosidades)} />
-            </div>
-
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">Vínculos cadastrados</h3>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {relationshipSummary.map((group) => (
-                  <ReviewItem
-                    key={group.label}
-                    label={group.label}
-                    value={group.people.length > 0
-                      ? group.people.map((person) => person.nome_completo).join(', ')
-                      : 'Nenhum vínculo informado'}
-                  />
-                ))}
-              </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={() => navigate('/meus-dados')}>Editar dados</Button>
               <Button type="button" variant="outline" onClick={() => navigate('/meus-vinculos')}>Editar vínculos</Button>
+              <Button type="button" variant="outline" onClick={() => navigate('/arquivos-historicos')}>Editar arquivos</Button>
+              <Button type="button" variant="outline" onClick={() => navigate('/preferencias')}>Editar preferências</Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-3">
-          <ArquivosHistoricos
-            arquivos={archives}
-            onChange={setArchives}
-            pessoaId={pessoa.id}
-            variant="interactive"
-          />
-          <div className="flex justify-end">
-            <Button type="button" onClick={handleSaveArchives} disabled={savingArchives}>
-              <Save className="h-4 w-4" />
-              {savingArchives ? 'Salvando...' : 'Salvar arquivos'}
-            </Button>
-          </div>
-        </div>
-
-        <NotificationPreferencesPanel userId={user.id} />
+        <Card>
+          <CardHeader><CardTitle>Vínculos cadastrados</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {relationshipSummary.map((group) => (
+                <ReviewItem
+                  key={group.label}
+                  label={group.label}
+                  value={group.people.length > 0
+                    ? group.people.map((person) => person.nome_completo).join(', ')
+                    : 'Nenhum vínculo informado'}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
-          <CardHeader><CardTitle>Permissão para exibir dados</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <PrivacyToggle
-                label="Exibir data de nascimento"
-                checked={privacy.permitir_exibir_data_nascimento}
-                onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_exibir_data_nascimento: checked }))}
-              />
-              <PrivacyToggle
-                label="Exibir WhatsApp"
-                checked={privacy.permitir_exibir_telefone}
-                onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_exibir_telefone: checked }))}
-              />
-              <PrivacyToggle
-                label="Exibir endereço"
-                checked={privacy.permitir_exibir_endereco}
-                onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_exibir_endereco: checked }))}
-              />
-              <PrivacyToggle
-                label="Exibir redes sociais"
-                checked={privacy.permitir_exibir_rede_social}
-                onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_exibir_rede_social: checked }))}
-              />
-              <PrivacyToggle
-                label="Permitir mensagens por WhatsApp"
-                checked={privacy.permitir_mensagens_whatsapp}
-                onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_mensagens_whatsapp: checked }))}
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button type="button" onClick={() => void handleSavePrivacy()} disabled={savingPrivacy}>
-                <Save className="h-4 w-4" />
-                {savingPrivacy ? 'Salvando...' : 'Salvar permissões'}
-              </Button>
-            </div>
+          <CardHeader><CardTitle>Arquivos históricos</CardTitle></CardHeader>
+          <CardContent>
+            <ReviewItem
+              label="Estado dos arquivos"
+              value={archives.length > 0 ? `${archives.length} arquivo(s) histórico(s) informado(s).` : 'Nenhum arquivo histórico informado.'}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Preferências e permissões</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ReviewItem label="Exibir data de nascimento" value={yesNo(privacy.permitir_exibir_data_nascimento)} />
+            <ReviewItem label="Exibir telefone/WhatsApp" value={yesNo(privacy.permitir_exibir_telefone)} />
+            <ReviewItem label="Exibir endereço" value={yesNo(privacy.permitir_exibir_endereco)} />
+            <ReviewItem label="Exibir redes sociais" value={yesNo(privacy.permitir_exibir_rede_social)} />
+            <ReviewItem label="Permitir mensagens por WhatsApp" value={yesNo(privacy.permitir_mensagens_whatsapp)} />
           </CardContent>
         </Card>
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/meus-vinculos')}>
-            Voltar para vínculos
+          <Button type="button" variant="outline" onClick={() => navigate('/preferencias')}>
+            Voltar para preferências
           </Button>
           <Button type="button" onClick={handleFinish} disabled={finishing}>
             <CheckCircle2 className="h-4 w-4" />

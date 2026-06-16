@@ -38,6 +38,7 @@ import {
   HEADER_ACTION_ICONS,
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
+import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
 import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
   SocialProfileForm,
@@ -90,8 +91,6 @@ import {
 } from '../utils/personFields';
 
 const AVATAR_SIZE = 512;
-const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São José dos Pinhais/PR.';
-const INTERNATIONAL_LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade (País). Exemplo: Dublin (Irlanda).';
 // TODO: Migrar blocos simples para os componentes compartilhados de pessoa sem afetar avatar/crop, Places e primeiro acesso.
 
 type MeusDadosDraft = {
@@ -1348,6 +1347,8 @@ export function MeusDados() {
         ]}
       />
 
+      <MemberOnboardingSteps activeStep={1} />
+
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
         <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           {linkedPeople.length > 1 && (
@@ -1393,16 +1394,37 @@ export function MeusDados() {
                   required
                 />
               </Field>
-              <Field label="Data de nascimento" error={errors.data_nascimento}>
+
+              <div className="min-w-0 space-y-2">
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <Label htmlFor="data-nascimento">Dia ou Ano de Nascimento</Label>
+                  <span className="group relative inline-flex shrink-0">
+                    <button
+                      type="button"
+                      aria-label="Formato aceito para nascimento"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
+                      Use o formato AAAA ou DD/MM/AAAA
+                    </span>
+                  </span>
+                </div>
                 <Input
+                  id="data-nascimento"
                   value={String(form.data_nascimento ?? '')}
                   onBlur={() => normalizeFieldOnBlur('data_nascimento')}
                   onChange={(e) => updateTextField('data_nascimento', e.target.value)}
-                  placeholder="DD/MM/AAAA ou AAAA"
+                  placeholder="AAAA ou DD/MM/AAAA"
                   aria-invalid={Boolean(errors.data_nascimento)}
                 />
-              </Field>
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
+                {errors.data_nascimento && (
+                  <p className="break-words text-xs font-medium text-red-600">{errors.data_nascimento}</p>
+                )}
+              </div>
+
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
                 <Field label="Local de nascimento" error={errors.local_nascimento}>
                   <Input
                     value={String(form.local_nascimento ?? '')}
@@ -1418,6 +1440,7 @@ export function MeusDados() {
                   onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
                 />
               </div>
+
               {shouldSuggestFullBirthDate && (
                 <div className="min-w-0 self-start">
                   <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
@@ -1426,7 +1449,8 @@ export function MeusDados() {
                   </div>
                 </div>
               )}
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
+
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
                 <Field label="Cidade de residência" error={errors.local_atual}>
                   <Input
                     value={String(form.local_atual ?? '')}
@@ -1442,51 +1466,57 @@ export function MeusDados() {
                   onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
                 />
               </div>
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
-                <Field label="Profissão">
-                  <Input
-                    value={String(form.profissao ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('profissao')}
-                    onChange={(e) => updateTextField('profissao', e.target.value)}
-                    placeholder="Ex: jornalista, professora, médico..."
-                  />
-                </Field>
-                <CompactToggleField
-                  label="Falecida"
-                  checked={form.falecido === true}
-                  onCheckedChange={(checked) => updateField('falecido', checked)}
+
+              <Field label="Profissão">
+                <Input
+                  value={String(form.profissao ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('profissao')}
+                  onChange={(e) => updateTextField('profissao', e.target.value)}
+                  placeholder="Ex: jornalista, professora, médico..."
                 />
+              </Field>
+
+              <div className="border-t border-gray-200 pt-4 md:col-span-2">
+                <div className="max-w-xs">
+                  <CompactToggleField
+                    label="Falecida"
+                    checked={form.falecido === true}
+                    onCheckedChange={(checked) => updateField('falecido', checked)}
+                    alignWithInput={false}
+                  />
+                </div>
               </div>
-            {form.falecido === true && (
-              <>
-                <Field label="Data de falecimento" error={errors.data_falecimento}>
-                  <Input
-                    value={String(form.data_falecimento ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('data_falecimento')}
-                    onChange={(event) => updateTextField('data_falecimento', event.target.value)}
-                    placeholder="DD/MM/AAAA ou AAAA"
-                    aria-invalid={Boolean(errors.data_falecimento)}
-                  />
-                </Field>
-                <Field label="Local de falecimento" error={errors.local_falecimento}>
-                  <Input
-                    value={String(form.local_falecimento ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('local_falecimento')}
-                    onChange={(event) => updateTextField('local_falecimento', event.target.value)}
-                    placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
-                    aria-invalid={Boolean(errors.local_falecimento)}
-                  />
-                  <p className="break-words text-xs text-gray-500">
-                    {form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-                  </p>
-                  <ToggleField
-                    label="Falecimento fora do Brasil"
-                    checked={form.local_falecimento_exterior === true}
-                    onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
-                  />
-                </Field>
-              </>
-            )}
+
+              {form.falecido === true && (
+                <div className="grid grid-cols-1 gap-4 md:col-span-2 md:grid-cols-2">
+                  <Field label="Data de falecimento" error={errors.data_falecimento}>
+                    <Input
+                      value={String(form.data_falecimento ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('data_falecimento')}
+                      onChange={(event) => updateTextField('data_falecimento', event.target.value)}
+                      placeholder="DD/MM/AAAA ou AAAA"
+                      aria-invalid={Boolean(errors.data_falecimento)}
+                    />
+                  </Field>
+                  <Field label="Local de falecimento" error={errors.local_falecimento}>
+                    <Input
+                      value={String(form.local_falecimento ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                      onChange={(event) => updateTextField('local_falecimento', event.target.value)}
+                      placeholder={form.local_falecimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                      aria-invalid={Boolean(errors.local_falecimento)}
+                    />
+                  </Field>
+                  <div className="md:col-span-2 md:max-w-sm">
+                    <CompactToggleField
+                      label="Falecimento fora do Brasil"
+                      checked={form.local_falecimento_exterior === true}
+                      onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                      alignWithInput={false}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -1810,41 +1840,19 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-function ToggleField({
-  label,
-  description,
-  checked,
-  onCheckedChange,
-  disabled = false,
-}: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex min-w-0 items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <div className="min-w-0 space-y-1">
-        <Label>{label}</Label>
-        {description && <p className="break-words text-xs leading-snug text-gray-500">{description}</p>}
-      </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} className="shrink-0" />
-    </div>
-  );
-}
-
 function CompactToggleField({
   label,
   checked,
   onCheckedChange,
+  alignWithInput = true,
 }: {
   label: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  alignWithInput?: boolean;
 }) {
   return (
-    <div className="mt-6 flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3">
+    <div className={`${alignWithInput ? 'mt-6 ' : ''}flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3`}>
       <Label className="text-xs">{label}</Label>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>

@@ -83,7 +83,7 @@ export function SocialProfilesEditor({
               <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
                 <div className="flex min-w-0 flex-1">
                   {profile.rede && (
-                    <span className="inline-flex h-10 shrink-0 items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600">
+                    <span className="inline-flex h-10 max-w-[48%] shrink-0 items-center truncate rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600 sm:max-w-none">
                       {SOCIAL_PROFILE_PREFIXES[profile.rede]}
                     </span>
                   )}
@@ -92,7 +92,7 @@ export function SocialProfilesEditor({
                     onChange={(event) => updateProfile(profile.id, 'perfil', event.target.value)}
                     placeholder={getSocialPlaceholder(profile.rede)}
                     disabled={disabled || !profile.rede}
-                    className={profile.rede ? 'rounded-l-none' : undefined}
+                    className={profile.rede ? 'min-w-0 rounded-l-none' : 'min-w-0'}
                     aria-invalid={index === 0 ? Boolean(errors?.instagram_usuario) : undefined}
                   />
                 </div>

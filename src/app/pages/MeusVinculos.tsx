@@ -6,6 +6,7 @@ import {
   HEADER_ACTION_ICONS,
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
+import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
 import {
   createEmptyMarriageDetails,
   MarriageDetailsEditor,
@@ -663,7 +664,7 @@ export function MeusVinculos() {
     } else {
       toast.success('Vínculos confirmados.');
     }
-    navigate('/revisao-dados', { replace: true });
+    navigate('/arquivos-historicos', { replace: true });
   };
 
   if (loading) {
@@ -698,7 +699,7 @@ export function MeusVinculos() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Confirmar vínculos familiares"
-        subtitle="Revise seus relacionamentos antes de seguir para a etapa final."
+        subtitle="Etapa 2 de 5: revise seus vínculos antes de seguir para arquivos históricos."
         icon={Users}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
@@ -706,6 +707,8 @@ export function MeusVinculos() {
           { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
         ]}
       />
+
+      <MemberOnboardingSteps activeStep={2} />
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,360px)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -890,7 +893,7 @@ export function MeusVinculos() {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Confirmar e revisar dados
+                Confirmar e seguir para arquivos
               </>
             )}
           </Button>

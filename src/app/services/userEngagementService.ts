@@ -12,6 +12,7 @@ import {
 
 const FAVORITES_KEY = 'arvorefamilia:favorites';
 const NOTIFICATIONS_KEY = 'arvorefamilia:notifications';
+const NOTIFICATION_PREFERENCES_KEY = 'arvorefamilia:notification-preferences';
 const DEFAULT_USER_ID = 'demo-user';
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
@@ -44,6 +45,24 @@ function readJson<T>(key: string, fallback: T): T {
 function writeJson<T>(key: string, value: T) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function readNotificationPreferencesStore() {
+  return readJson<Record<string, PreferenciaNotificacao>>(NOTIFICATION_PREFERENCES_KEY, {});
+}
+
+function writeNotificationPreferencesStore(store: Record<string, PreferenciaNotificacao>) {
+  writeJson(NOTIFICATION_PREFERENCES_KEY, store);
+}
+
+function readLocalNotificationPreferences(userId: string) {
+  return readNotificationPreferencesStore()[userId] ?? null;
+}
+
+function writeLocalNotificationPreferences(preferencias: PreferenciaNotificacao) {
+  const store = readNotificationPreferencesStore();
+  store[preferencias.user_id] = preferencias;
+  writeNotificationPreferencesStore(store);
 }
 
 function createId(prefix: string) {
@@ -181,7 +200,7 @@ function mapPreferenciaRow(row: Record<string, unknown>): PreferenciaNotificacao
 }
 
 function getLocalPreferences(userId: string): PreferenciaNotificacao {
-  return {
+  return readLocalNotificationPreferences(userId) ?? {
     id: `local-${userId}`,
     user_id: userId,
     ...DEFAULT_NOTIFICATION_PREFERENCES,
@@ -197,7 +216,11 @@ export async function obterPreferenciasNotificacao(userId: string): Promise<Pref
       .maybeSingle();
 
     if (error) throw error;
-    if (data) return mapPreferenciaRow(data);
+    if (data) {
+      const preferencias = mapPreferenciaRow(data);
+      writeLocalNotificationPreferences(preferencias);
+      return preferencias;
+    }
 
     const { data: created, error: createError } = await supabase
       .from('preferencias_notificacao')
@@ -206,7 +229,9 @@ export async function obterPreferenciasNotificacao(userId: string): Promise<Pref
       .single();
 
     if (createError) throw createError;
-    return mapPreferenciaRow(created);
+    const preferencias = mapPreferenciaRow(created);
+    writeLocalNotificationPreferences(preferencias);
+    return preferencias;
   } catch (error) {
     console.error('[Supabase] Erro ao obter preferências de notificação:', error);
     return getLocalPreferences(userId);
@@ -235,6 +260,8 @@ export async function salvarPreferenciasNotificacao(
       .single();
 
     if (error) throw error;
+    const savedPreferences = mapPreferenciaRow(data);
+    writeLocalNotificationPreferences(savedPreferences);
     await createActivityLog({
       action: 'notification_preferences.updated',
       entity_type: 'notification_preferences',
@@ -244,13 +271,16 @@ export async function salvarPreferenciasNotificacao(
         preference_keys: Object.keys(payload).filter((key) => key !== 'user_id'),
       },
     });
-    return mapPreferenciaRow(data);
+    return savedPreferences;
   } catch (error) {
     console.error('[Supabase] Erro ao salvar preferências de notificação:', error);
-    return {
+    const localPreferences: PreferenciaNotificacao = {
       ...getLocalPreferences(userId),
       ...preferencias,
+      user_id: userId,
     };
+    writeLocalNotificationPreferences(localPreferences);
+    return localPreferences;
   }
 }
 

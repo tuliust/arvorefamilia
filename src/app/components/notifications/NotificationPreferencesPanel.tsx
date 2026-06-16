@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Switch } from '../ui/switch';
@@ -86,9 +86,15 @@ const EMAIL_OPTIONS: Array<{ key: EmailPreferenceKey; label: string; description
 
 interface NotificationPreferencesPanelProps {
   userId: string;
+  title?: string;
+  description?: string;
 }
 
-export function NotificationPreferencesPanel({ userId }: NotificationPreferencesPanelProps) {
+export function NotificationPreferencesPanel({
+  userId,
+  title = 'Notificações',
+  description = 'A lista interna continua visível mesmo com canais desligados.',
+}: NotificationPreferencesPanelProps) {
   const [preferencias, setPreferencias] = useState<PreferenciaNotificacao | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
@@ -145,9 +151,9 @@ export function NotificationPreferencesPanel({ userId }: NotificationPreferences
             <Mail className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <CardTitle className="break-words text-base">Notificações</CardTitle>
+            <CardTitle className="break-words text-base">{title}</CardTitle>
             <p className="break-words text-xs text-gray-500">
-              A lista interna continua visível mesmo com canais desligados.
+              {description}
             </p>
           </div>
         </div>

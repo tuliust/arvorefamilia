@@ -245,6 +245,7 @@ export const HEADER_ACTION_ICONS = {
   CalendarDays,
   Home,
   LogOut,
+  MessageCircle,
   Network,
   Plus,
   Settings,

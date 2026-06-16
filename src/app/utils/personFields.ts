@@ -16,20 +16,17 @@ export const LOWERCASE_NAME_PARTS = new Set(['de', 'da', 'das', 'do', 'dos', 'e'
 
 export const PERSON_FIELD_LABELS = {
   nome_completo: 'Nome completo',
-  data_nascimento: 'Data de nascimento',
+  data_nascimento: 'Dia ou Ano de Nascimento',
   signo: 'Signo',
   local_nascimento: 'Local de nascimento',
   local_nascimento_exterior: 'Local de nascimento fora do Brasil',
-  local_atual: 'Residência atual',
+  local_atual: 'Cidade de residência',
   local_atual_exterior: 'Residência atual fora do Brasil',
-
-
-
   profissao: 'Profissão',
   foto_principal_url: 'Foto',
   minibio: 'Mini bio',
   curiosidades: 'Curiosidades',
-  telefone: 'Telefone',
+  telefone: 'WhatsApp',
   endereco: 'Endereço',
   complemento: 'Complemento',
   rede_social: 'Rede social',
@@ -40,7 +37,7 @@ export const PERSON_FIELD_LABELS = {
   permitir_exibir_data_nascimento: 'Exibir data de nascimento',
   permitir_exibir_endereco: 'Exibir endereço',
   permitir_exibir_rede_social: 'Exibir rede social',
-  permitir_exibir_telefone: 'Exibir telefone',
+  permitir_exibir_telefone: 'Exibir telefone/WhatsApp',
   data_falecimento: 'Data de falecimento',
   local_falecimento: 'Local de falecimento',
   local_falecimento_exterior: 'Local de falecimento fora do Brasil',
@@ -64,7 +61,7 @@ export const EDITABLE_OWN_PERSON_FIELDS: Array<keyof EditableOwnPersonPayload> =
   'local_atual',
   'local_atual_exterior',
   'profissao',
-
+  'foto_principal_url',
   'minibio',
   'curiosidades',
   'telefone',
@@ -336,6 +333,7 @@ export function isPersonDeceased(pessoa?: Pick<Pessoa, 'falecido' | 'data_faleci
 }
 
 export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnPersonPayload {
+  const isDeceased = form.falecido === true;
   const normalizedDeathDate = normalizeBirthDate(String(form.data_falecimento ?? ''));
   const normalizedDeathLocation = normalizeLocationByMode(String(form.local_falecimento ?? ''), {
     international: form.local_falecimento_exterior === true,
@@ -347,10 +345,10 @@ export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnP
     local_nascimento: normalizeLocationByMode(String(form.local_nascimento ?? ''), {
       international: form.local_nascimento_exterior === true,
     }),
-    data_falecimento: normalizedDeathDate || null,
-    local_falecimento: normalizedDeathLocation || null,
-    local_falecimento_exterior: form.local_falecimento_exterior === true,
-    falecido: form.falecido === true,
+    data_falecimento: isDeceased ? normalizedDeathDate || null : null,
+    local_falecimento: isDeceased ? normalizedDeathLocation || null : null,
+    local_falecimento_exterior: isDeceased && form.local_falecimento_exterior === true,
+    falecido: isDeceased,
     local_atual: normalizeLocationByMode(String(form.local_atual ?? ''), {
       international: form.local_atual_exterior === true,
     }),
@@ -416,13 +414,15 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
   });
   if (birthLocationError) nextErrors.local_nascimento = birthLocationError;
 
-  const deathDateError = validateBirthDate(normalizedDeathDate);
-  if (deathDateError) nextErrors.data_falecimento = deathDateError;
+  if (form.falecido === true) {
+    const deathDateError = validateBirthDate(normalizedDeathDate);
+    if (deathDateError) nextErrors.data_falecimento = deathDateError;
 
-  const deathLocationError = validateLocationByMode(normalizedDeathLocation, {
-    international: form.local_falecimento_exterior === true,
-  });
-  if (deathLocationError) nextErrors.local_falecimento = deathLocationError;
+    const deathLocationError = validateLocationByMode(normalizedDeathLocation, {
+      international: form.local_falecimento_exterior === true,
+    });
+    if (deathLocationError) nextErrors.local_falecimento = deathLocationError;
+  }
 
   const currentLocationError = validateLocationByMode(normalizedCurrentLocation, {
     international: form.local_atual_exterior === true,

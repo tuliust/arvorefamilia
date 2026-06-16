@@ -189,7 +189,7 @@ async function salvarArquivosHistoricosPorOwner(
       descricao: normalizeOptional(arquivo.descricao),
       ano: normalizeOptional(arquivo.ano),
       categoria_evento: normalizeOptional(arquivo.categoria_evento),
-      ordem: arquivo.ordem ?? index,
+      ordem: index,
     };
 
     if (isUuid(arquivo.id)) {
