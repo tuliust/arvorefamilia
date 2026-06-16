@@ -14,12 +14,14 @@ import {
   Info,
   KeyRound,
   Link2,
+  MapPin,
   Pencil,
   Plus,
   Save,
   Sparkles,
   Trash2,
   UploadCloud,
+  UserCircle2,
   Wand2,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -1733,162 +1735,219 @@ export function MinhaArvore() {
           <>
 
 
-            <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-
-
-              <div className="mb-5">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Meus dados</h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Edite suas informações pessoais, permissões, arquivos históricos e dados familiares.
-
-                </p>
-              </div>
-            </div>
-
             <form id="minha-arvore-edit-form" onSubmit={handleSavePersonalData} className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Field label="Nome completo" error={errors.nome_completo}>
-                  <Input
-                    value={String(form.nome_completo ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('nome_completo')}
-                    onChange={(e) => updateTextField('nome_completo', e.target.value)}
-                    aria-invalid={Boolean(errors.nome_completo)}
-                    required
-                  />
-                </Field>
-
-                <Field label={<InlineInfoHint label="Dia ou Ano de Nascimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />} error={errors.data_nascimento}>
-                  <Input
-                    value={String(form.data_nascimento ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('data_nascimento')}
-                    onChange={(e) => updateTextField('data_nascimento', e.target.value)}
-                    placeholder="DD/MM/AAAA ou AAAA"
-                    aria-invalid={Boolean(errors.data_nascimento)}
-                  />
-                  {/* helper moved to be rendered next to Local de nascimento */}
-                </Field>
-
-
-
-                <Field label={<InlineInfoHint label="Local de nascimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />} error={errors.local_nascimento}>
-                  <Input
-                    value={String(form.local_nascimento ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('local_nascimento')}
-                    onChange={(e) => updateTextField('local_nascimento', e.target.value)}
-                    placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
-                    aria-invalid={Boolean(errors.local_nascimento)}
-                  />
-                  <ToggleField
-                    label="Estrangeiro"
-                    checked={form.local_nascimento_exterior === true}
-                    onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
-                  />
-                </Field>
-
-                {shouldSuggestFullBirthDate && (
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p>Se souber, adicione também o dia e o mês de nascimento.</p>
+              <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-5 flex min-w-0 items-start gap-3">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                    <UserCircle2 className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="break-words text-xl font-bold text-gray-900">Dados pessoais</h2>
                   </div>
-                )}
-
-                <Field label={<InlineInfoHint label="Cidade de residência" hint="Use Cidade/UF para Brasil ou marque Exterior para usar Cidade (País)." />} error={errors.local_atual}>
-                  <Input
-                    value={String(form.local_atual ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('local_atual')}
-                    onChange={(e) => updateTextField('local_atual', e.target.value)}
-                    placeholder="Cidade/UF"
-                    aria-invalid={Boolean(errors.local_atual)}
-                  />
-                  <ToggleField
-                    label="Exterior"
-                    checked={form.local_atual_exterior === true}
-                    onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-                  />
-                </Field>
-
-                <Field label="Profissão">
-                  <Input
-                    value={String(form.profissao ?? '')}
-                    onChange={(e) => updateTextField('profissao', e.target.value)}
-                    onBlur={() => normalizeFieldOnBlur('profissao')}
-                    placeholder="Ex: jornalista, professora, médico, empresário..."
-                  />
-                </Field>
-
-                <div className="md:col-span-2">
-                  <ToggleField
-                    label="Pessoa falecida"
-                    description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."
-                    checked={form.falecido === true}
-                    onCheckedChange={(checked) => updateField('falecido', checked)}
-                  />
                 </div>
 
-                {form.falecido === true && (
-                  <>
-                    <Field label={<InlineInfoHint label="Dia ou Ano de Falecimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Field label="Nome completo" error={errors.nome_completo}>
+                    <Input
+                      value={String(form.nome_completo ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('nome_completo')}
+                      onChange={(e) => updateTextField('nome_completo', e.target.value)}
+                      aria-invalid={Boolean(errors.nome_completo)}
+                      required
+                    />
+                  </Field>
+
+                  <Field label="Profissão">
+                    <Input
+                      value={String(form.profissao ?? '')}
+                      onChange={(e) => updateTextField('profissao', e.target.value)}
+                      onBlur={() => normalizeFieldOnBlur('profissao')}
+                      placeholder="Ex: jornalista, professora, médico, empresário..."
+                    />
+                  </Field>
+
+                  <Field
+                    label={<InlineInfoHint label="Local de nascimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />}
+                    error={errors.local_nascimento}
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
-                        value={String(form.data_falecimento ?? '')}
-                        onBlur={() => normalizeFieldOnBlur('data_falecimento')}
-                        onChange={(e) => updateTextField('data_falecimento', maskBirthDate(e.target.value))}
-                        placeholder="AAAA ou DD/MM/AAAA"
+                        className="min-w-0 sm:flex-1"
+                        value={String(form.local_nascimento ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('local_nascimento')}
+                        onChange={(e) => updateTextField('local_nascimento', e.target.value)}
+                        placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                        aria-invalid={Boolean(errors.local_nascimento)}
+                      />
+                      <div className="inline-flex h-10 shrink-0 items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 sm:min-w-32">
+                        <span>Estrangeiro</span>
+                        <Switch
+                          checked={form.local_nascimento_exterior === true}
+                          onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
+                        />
+                      </div>
+                    </div>
+                  </Field>
+
+                  <Field
+                    label={<InlineInfoHint label="Dia ou Ano de Nascimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}
+                    error={errors.data_nascimento}
+                  >
+                    <Input
+                      value={String(form.data_nascimento ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('data_nascimento')}
+                      onChange={(e) => updateTextField('data_nascimento', e.target.value)}
+                      placeholder="DD/MM/AAAA ou AAAA"
+                      aria-invalid={Boolean(errors.data_nascimento)}
+                    />
+                  </Field>
+
+                  {shouldSuggestFullBirthDate && (
+                    <div className="md:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>Se souber, adicione também o dia e o mês de nascimento.</p>
+                    </div>
+                  )}
+
+                  <div className="md:col-span-2 border-t border-gray-200 pt-4">
+                    <Label className="mb-3 block">A pessoa é falecida?</Label>
+                    <div className="grid max-w-md grid-cols-2 overflow-hidden rounded-xl border border-gray-200 bg-white p-1">
+                      <button
+                        type="button"
+                        onClick={() => updateField('falecido', true)}
+                        className={[
+                          'rounded-lg px-4 py-2 text-sm font-semibold transition',
+                          form.falecido === true ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
+                        ].join(' ')}
+                        aria-pressed={form.falecido === true}
+                      >
+                        Sim
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateField('falecido', false)}
+                        className={[
+                          'rounded-lg px-4 py-2 text-sm font-semibold transition',
+                          form.falecido !== true ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
+                        ].join(' ')}
+                        aria-pressed={form.falecido !== true}
+                      >
+                        Não
+                      </button>
+                    </div>
+                  </div>
+
+                  {form.falecido === true ? (
+                    <>
+                      <Field
+                        label={<InlineInfoHint label="Dia ou Ano de Falecimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}
+                      >
+                        <Input
+                          value={String(form.data_falecimento ?? '')}
+                          onBlur={() => normalizeFieldOnBlur('data_falecimento')}
+                          onChange={(e) => updateTextField('data_falecimento', maskBirthDate(e.target.value))}
+                          placeholder="AAAA ou DD/MM/AAAA"
+                        />
+                      </Field>
+
+                      <Field
+                        label={<InlineInfoHint label="Local de falecimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />}
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Input
+                            className="min-w-0 sm:flex-1"
+                            value={String(form.local_falecimento ?? '')}
+                            onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                            onChange={(e) => updateTextField('local_falecimento', e.target.value)}
+                            placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
+                            aria-invalid={Boolean(errors.local_falecimento)}
+                          />
+                          <div className="inline-flex h-10 shrink-0 items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 sm:min-w-32">
+                            <span>Exterior</span>
+                            <Switch
+                              checked={form.local_falecimento_exterior === true}
+                              onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                            />
+                          </div>
+                        </div>
+                      </Field>
+                    </>
+                  ) : (
+                    <Field
+                      label={<InlineInfoHint label="Cidade de residência" hint="Use Cidade/UF para Brasil ou marque Exterior para usar Cidade (País)." />}
+                      error={errors.local_atual}
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Input
+                          className="min-w-0 sm:flex-1"
+                          value={String(form.local_atual ?? '')}
+                          onBlur={() => normalizeFieldOnBlur('local_atual')}
+                          onChange={(e) => updateTextField('local_atual', e.target.value)}
+                          placeholder="Cidade/UF"
+                          aria-invalid={Boolean(errors.local_atual)}
+                        />
+                        <div className="inline-flex h-10 shrink-0 items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 sm:min-w-32">
+                          <span>Exterior</span>
+                          <Switch
+                            checked={form.local_atual_exterior === true}
+                            onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                          />
+                        </div>
+                      </div>
+                    </Field>
+                  )}
+                </div>
+              </section>
+
+              {form.falecido !== true && (
+                <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="mb-5 flex min-w-0 items-start gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                      <MapPin className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="break-words text-xl font-bold text-gray-900">Contato, endereço e redes sociais</h2>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Field label="WhatsApp">
+                      <Input
+                        value={String(form.telefone ?? '')}
+                        onChange={(e) => updateTextField('telefone', e.target.value)}
+                        placeholder="(XX) XXXXX-XXXX"
+                      />
+                    </Field>
+                    <div className="hidden md:block" />
+
+                    <Field label="Endereço">
+                      <AddressAutocompleteInput
+                        name="google-places-address-input-minha-arvore"
+                        value={String(form.endereco ?? '')}
+                        onChange={(next) => updateTextField('endereco', next)}
+                        placeholder="Digite a rua e número, depois selecione"
                       />
                     </Field>
 
-                    <Field label={<InlineInfoHint label="Local de falecimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />}>
+                    <Field label="Complemento">
                       <Input
-                        value={String(form.local_falecimento ?? '')}
-                        onBlur={() => normalizeFieldOnBlur('local_falecimento')}
-                        onChange={(e) => updateTextField('local_falecimento', e.target.value)}
-                        placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
-                        aria-invalid={Boolean(errors.local_falecimento)}
-                      />
-                      <ToggleField
-                        label="Exterior"
-                        checked={form.local_falecimento_exterior === true}
-                        onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                        value={String(form.complemento ?? '')}
+                        onChange={(e) => updateTextField('complemento', e.target.value)}
+                        placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
                       />
                     </Field>
-                  </>
-                )}
 
-                <Field label="WhatsApp">
-                  <Input
-                    value={String(form.telefone ?? '')}
-                    onChange={(e) => updateTextField('telefone', e.target.value)}
-                    placeholder="(XX) XXXXX-XXXX"
-                  />
-                </Field>
-                <div className="hidden md:block" />
+                    <div className="space-y-2 md:col-span-2">
+                      <SocialProfilesEditor
+                        profiles={socialProfiles}
+                        onChange={handleSocialProfilesChange}
+                        errors={{ rede_social: errors.rede_social, instagram_usuario: errors.instagram_usuario }}
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
 
-                <Field label="Endereço">
-                  <AddressAutocompleteInput
-                    name="google-places-address-input-minha-arvore"
-                    value={String(form.endereco ?? '')}
-                    onChange={(next) => updateTextField('endereco', next)}
-                    placeholder="Rua, número, bairro, cidade, CEP"
-                  />
-                </Field>
-
-                <Field label="Complemento">
-                  <Input
-                    value={String(form.complemento ?? '')}
-                    onChange={(e) => updateTextField('complemento', e.target.value)}
-                    placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
-                  />
-
-                </Field>
-
-                <div className="space-y-2 md:col-span-2">
-                  <SocialProfilesEditor
-                    profiles={socialProfiles}
-                    onChange={handleSocialProfilesChange}
-                    errors={{ rede_social: errors.rede_social, instagram_usuario: errors.instagram_usuario }}
-                  />
-                </div>
-              </div>
               <PersonBioFields
                 value={{
                   minibio: String(form.minibio ?? ''),
@@ -1914,10 +1973,7 @@ export function MinhaArvore() {
                   </Button>
                 )}
               />
-
-
-              </form>
-            </section>
+            </form>
 
             <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

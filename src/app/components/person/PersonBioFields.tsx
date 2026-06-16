@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpenText } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { PERSON_FIELD_LABELS } from '../../utils/personFields';
 import { PersonFormSection } from './PersonFormSection';
 
@@ -17,9 +17,8 @@ type PersonBioFieldsProps = {
 export function PersonBioFields({ value, onChange, headerAction }: PersonBioFieldsProps) {
   return (
     <PersonFormSection
-      title="Mini bio e curiosidades"
-      description="Separe dados objetivos de informações narrativas sobre trajetória, memórias, hábitos e detalhes familiares."
-      icon={<BookOpenText className="h-5 w-5" />}
+      title="Sobre Mim"
+      icon={<Sparkles className="h-5 w-5" />}
       headerAction={headerAction}
     >
       <div>
