@@ -66,6 +66,7 @@ import {
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
 import { uploadPersonAvatarFile } from '../services/storageService';
+import { salvarPreferenciasNotificacao } from '../services/userEngagementService';
 import {
   buildSocialProfilesFromRows,
   listarPessoaSocialProfiles,
@@ -1303,6 +1304,15 @@ export function MeusDados() {
       rede_social: primarySocialProfile.rede || '',
       instagram_usuario: primarySocialProfile.perfil || '',
     });
+
+    if (payload.falecido === true) {
+      payload.permitir_exibir_data_nascimento = true;
+      payload.permitir_exibir_telefone = true;
+      payload.permitir_exibir_endereco = true;
+      payload.permitir_exibir_rede_social = true;
+      payload.permitir_exibir_instagram = true;
+      payload.permitir_mensagens_whatsapp = false;
+    }
     if (photoMarkedForRemoval) {
       payload.foto_principal_url = '';
     } else if (croppedPhotoBlob) {
@@ -1323,6 +1333,23 @@ export function MeusDados() {
       setSaving(false);
       toast.error(updateError);
       return;
+    }
+
+    if (payload.falecido === true) {
+      await salvarPreferenciasNotificacao(user.id, {
+        receber_aniversarios: false,
+        receber_datas_memoria: false,
+        receber_eventos: false,
+        receber_avisos_gerais: false,
+        receber_email: false,
+        receber_push: false,
+        receber_whatsapp: false,
+        receber_email_novo_usuario: false,
+        receber_email_datas_especiais: false,
+        receber_email_novas_mensagens_forum: false,
+        receber_email_novos_registros_historicos: false,
+        receber_email_evento_historico_familia: false,
+      });
     }
 
     try {
@@ -1581,7 +1608,7 @@ export function MeusDados() {
         ]}
       />
 
-      <MemberOnboardingSteps activeStep={1} />
+      <MemberOnboardingSteps activeStep={1} hidePreferences={form.falecido === true} />
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
         <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
@@ -1656,7 +1683,7 @@ export function MeusDados() {
                   label="Estrangeiro"
                   checked={form.local_nascimento_exterior === true}
                   onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
-                  alignWithInput={false}
+                  alignWithInput={true}
                 />
               </div>
 
@@ -1701,7 +1728,7 @@ export function MeusDados() {
                     label="Exterior"
                     checked={form.local_atual_exterior === true}
                     onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-                    alignWithInput={false}
+                    alignWithInput={true}
                   />
                 </div>
               )}
@@ -1749,6 +1776,7 @@ export function MeusDados() {
             </div>
           </section>
 
+          {form.falecido !== true && (
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <SectionTitle icon={MapPin}>Contato, endereço e redes sociais</SectionTitle>
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
@@ -1786,6 +1814,7 @@ export function MeusDados() {
               </div>
             </div>
           </section>
+          )}
 
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <div className="mb-4 flex items-center justify-between gap-3">

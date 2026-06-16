@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { useAuth } from '../contexts/AuthContext';
+import { salvarPreferenciasNotificacao } from '../services/userEngagementService';
 import {
   getPrimaryLinkedPersonWithPessoa,
   resolveFirstAccessLinkForUser,
@@ -74,6 +75,34 @@ export function PreferenciasPage() {
       }
 
       const pessoa = data.pessoa;
+
+      if (pessoa.falecido === true) {
+        await updateOwnLinkedPerson(pessoa.id, {
+          permitir_exibir_data_nascimento: true,
+          permitir_exibir_telefone: true,
+          permitir_exibir_endereco: true,
+          permitir_exibir_rede_social: true,
+          permitir_exibir_instagram: true,
+          permitir_mensagens_whatsapp: false,
+        });
+        await salvarPreferenciasNotificacao(user.id, {
+          receber_aniversarios: false,
+          receber_datas_memoria: false,
+          receber_eventos: false,
+          receber_avisos_gerais: false,
+          receber_email: false,
+          receber_push: false,
+          receber_whatsapp: false,
+          receber_email_novo_usuario: false,
+          receber_email_datas_especiais: false,
+          receber_email_novas_mensagens_forum: false,
+          receber_email_novos_registros_historicos: false,
+          receber_email_evento_historico_familia: false,
+        });
+        if (mounted) navigate('/revisao-dados', { replace: true });
+        return;
+      }
+
       setLink(data);
       setPrivacy({
         permitir_exibir_data_nascimento: pessoa.permitir_exibir_data_nascimento !== false,

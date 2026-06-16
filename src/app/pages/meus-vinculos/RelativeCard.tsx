@@ -69,7 +69,9 @@ export function RelativeCard({
   children,
 }: RelativeCardProps) {
   const badge = getRelationshipStatusBadgeConfig(status, hasAuthUser);
-  const secondaryDetails = getPersonSecondaryDetails(person);
+  const secondaryDetails = getPersonSecondaryDetails(person, {
+    genderHint: isMother ? 'mulher' : relationshipGroup === 'pais' ? 'homem' : undefined,
+  });
   const relationLabel = relationshipLabel ?? (relationshipGroup ? getRelationshipCardLabel(relationshipGroup, isMother) : '');
   const showRequestControl = canRequestControl && status !== 'control_pending' && canRequestProfileControl(person, ownPersonId, false, status);
   const baseHelperText = helperText

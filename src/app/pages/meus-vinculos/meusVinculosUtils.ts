@@ -54,22 +54,28 @@ export function canRequestProfileControl(
   return true;
 }
 
-function getGenderedDeceasedLabel(person: Pessoa) {
-  const gender = String(person.genero ?? '').trim().toLowerCase();
+type GenderHint = 'homem' | 'mulher' | null | undefined;
 
-  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(gender)) {
-    return 'Falecida';
-  }
+function normalizeGender(gender?: unknown, fallback?: GenderHint) {
+  const normalized = String(gender ?? fallback ?? '').trim().toLowerCase();
 
-  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(gender)) {
-    return 'Falecido';
-  }
-
-  return 'Falecido(a)';
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalized)) return 'mulher';
+  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalized)) return 'homem';
+  return fallback ?? 'homem';
 }
 
-export function getPersonSecondaryDetails(person: Pessoa) {
-  return [isPersonDeceased(person) ? getGenderedDeceasedLabel(person) : null].filter(Boolean) as string[];
+export function getPersonLifeStatusLabel(person: Pessoa, genderHint?: GenderHint) {
+  const gender = normalizeGender(person.genero, genderHint);
+
+  if (isPersonDeceased(person)) {
+    return gender === 'mulher' ? 'Falecida' : 'Falecido';
+  }
+
+  return gender === 'mulher' ? 'Viva' : 'Vivo';
+}
+
+export function getPersonSecondaryDetails(person: Pessoa, options: { genderHint?: GenderHint } = {}) {
+  return [getPersonLifeStatusLabel(person, options.genderHint)].filter(Boolean) as string[];
 }
 
 export function relationshipStatusHasPending(status: RelationshipReviewStatus) {

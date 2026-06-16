@@ -1146,7 +1146,7 @@ export function MeusVinculos() {
         ]}
       />
 
-      <MemberOnboardingSteps activeStep={2} />
+      <MemberOnboardingSteps activeStep={2} hidePreferences={pessoa?.falecido === true} />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         {hasPendingRelationshipRequest && (

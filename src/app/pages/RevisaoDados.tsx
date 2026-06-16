@@ -113,9 +113,21 @@ function isImageArchive(archive: ArquivoHistorico) {
   return archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/');
 }
 
-function getPersonStatusLabel(pessoa: Pessoa) {
-  if (pessoa.falecido) return 'Falecido(a)';
-  return 'Vivo(a)';
+type GenderHint = 'homem' | 'mulher' | null | undefined;
+
+function normalizeGender(gender?: unknown, fallback?: GenderHint) {
+  const normalized = String(gender ?? fallback ?? '').trim().toLowerCase();
+
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalized)) return 'mulher';
+  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalized)) return 'homem';
+  return fallback ?? 'homem';
+}
+
+function getPersonStatusLabel(pessoa: Pessoa, genderHint?: GenderHint) {
+  const gender = normalizeGender(pessoa.genero, genderHint);
+
+  if (pessoa.falecido) return gender === 'mulher' ? 'Falecida' : 'Falecido';
+  return gender === 'mulher' ? 'Viva' : 'Vivo';
 }
 
 function ReviewValue({ label, value }: { label: string; value: React.ReactNode }) {
@@ -194,7 +206,7 @@ function SectionCard({
   );
 }
 
-function PeopleList({ people }: { people: Pessoa[] }) {
+function PeopleList({ people, genderHints = {} }: { people: Pessoa[]; genderHints?: Record<string, GenderHint> }) {
   if (people.length === 0) {
     return <p className="text-sm text-gray-500">Nenhum vínculo informado.</p>;
   }
@@ -208,7 +220,14 @@ function PeopleList({ people }: { people: Pessoa[] }) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-gray-900">{person.nome_completo}</p>
-            <p className="text-xs text-gray-500">{getPersonStatusLabel(person)}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-gray-500">{getPersonStatusLabel(person, genderHints[person.id])}</span>
+              {String(person.id).startsWith('local-') && (
+                <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                  Em análise
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}
@@ -271,10 +290,17 @@ export function RevisaoDados() {
   const pessoa = link?.pessoa;
 
   const relationshipSummary = useMemo(() => [
-    { label: 'Pais', people: uniquePeople([...relationships.pais, ...relationships.maes]) },
-    { label: 'Cônjuges', people: uniquePeople(relationships.conjuges) },
-    { label: 'Filhos', people: uniquePeople(relationships.filhos) },
-    { label: 'Irmãos', people: uniquePeople(relationships.irmaos) },
+    {
+      label: 'Pais',
+      people: uniquePeople([...relationships.pais, ...relationships.maes]),
+      genderHints: Object.fromEntries([
+        ...relationships.pais.map((person) => [person.id, 'homem'] as const),
+        ...relationships.maes.map((person) => [person.id, 'mulher'] as const),
+      ]) as Record<string, GenderHint>,
+    },
+    { label: 'Cônjuges', people: uniquePeople(relationships.conjuges), genderHints: {} as Record<string, GenderHint> },
+    { label: 'Filhos', people: uniquePeople(relationships.filhos), genderHints: {} as Record<string, GenderHint> },
+    { label: 'Irmãos', people: uniquePeople(relationships.irmaos), genderHints: {} as Record<string, GenderHint> },
   ], [relationships]);
 
   const socialProfilesSummary = useMemo(() => {
@@ -399,7 +425,7 @@ export function RevisaoDados() {
         ]}
       />
 
-      <MemberOnboardingSteps activeStep={5} />
+      <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <Card className="border-gray-200 bg-white shadow-sm">
@@ -428,10 +454,16 @@ export function RevisaoDados() {
                 </div>
               </div>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => setEditingSection('personal')}>
-              <Pencil className="h-4 w-4" />
-              Editar perfil
-            </Button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditingSection('personal')}>
+                <Pencil className="h-4 w-4" />
+                Editar perfil
+              </Button>
+              <Button type="button" size="sm" onClick={handleFinish} disabled={finishing || savingSection !== null}>
+                <CheckCircle2 className="h-4 w-4" />
+                {finishing ? 'Finalizando...' : 'Finalizar e acessar árvore'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -653,6 +685,7 @@ export function RevisaoDados() {
               )}
             </SectionCard>
 
+            {pessoa.falecido !== true && (
             <SectionCard
               title="Notificações e permissões"
               icon={Bell}
@@ -690,18 +723,11 @@ export function RevisaoDados() {
                 </div>
               )}
             </SectionCard>
+            )}
           </aside>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/preferencias')}>
-            Voltar para preferências
-          </Button>
-          <Button type="button" onClick={handleFinish} disabled={finishing || savingSection !== null}>
-            <CheckCircle2 className="h-4 w-4" />
-            {finishing ? 'Finalizando...' : 'Finalizar e acessar a árvore'}
-          </Button>
-        </div>
+
       </main>
     </div>
   );

@@ -5,6 +5,7 @@ type MemberOnboardingStepNumber = 1 | 2 | 3 | 4 | 5;
 
 type MemberOnboardingStepsProps = {
   activeStep: MemberOnboardingStepNumber;
+  hidePreferences?: boolean;
 };
 
 const STEPS: Array<{
@@ -19,14 +20,15 @@ const STEPS: Array<{
   { number: 5, label: 'Revisão', path: '/revisao-dados' },
 ];
 
-export function MemberOnboardingSteps({ activeStep }: MemberOnboardingStepsProps) {
+export function MemberOnboardingSteps({ activeStep, hidePreferences = false }: MemberOnboardingStepsProps) {
   const navigate = useNavigate();
+  const visibleSteps = hidePreferences ? STEPS.filter((step) => step.number !== 4) : STEPS;
 
   return (
     <nav className="border-t border-gray-100 bg-white" aria-label="Etapas do cadastro">
       <div className="mx-auto max-w-6xl overflow-x-auto px-4 py-4">
         <ol className="flex min-w-max items-start justify-center">
-          {STEPS.map((step, index) => {
+          {visibleSteps.map((step, index) => {
             const isActive = step.number === activeStep;
             const isPast = step.number < activeStep;
 
@@ -53,7 +55,7 @@ export function MemberOnboardingSteps({ activeStep }: MemberOnboardingStepsProps
                     {step.label}
                   </span>
                 </li>
-                {index < STEPS.length - 1 && (
+                {index < visibleSteps.length - 1 && (
                   <li
                     aria-hidden="true"
                     className={[

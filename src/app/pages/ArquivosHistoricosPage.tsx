@@ -136,7 +136,7 @@ export function ArquivosHistoricosPage() {
 
   const handleContinue = async () => {
     const saved = await saveArchives();
-    if (saved) navigate('/preferencias');
+    if (saved) navigate(pessoa?.falecido === true ? '/revisao-dados' : '/preferencias');
   };
 
   if (loading) {
@@ -178,7 +178,7 @@ export function ArquivosHistoricosPage() {
         ]}
       />
 
-      <MemberOnboardingSteps activeStep={3} />
+      <MemberOnboardingSteps activeStep={3} hidePreferences={pessoa.falecido === true} />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         <ArquivosHistoricos
