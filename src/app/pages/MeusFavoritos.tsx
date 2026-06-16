@@ -1,9 +1,9 @@
-import React, { KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { KeyboardEvent, MouseEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import {
-  ChevronLeft,
-  ChevronRight,
+  Check,
+  Filter,
   Search,
   Trash2,
 } from 'lucide-react';
@@ -69,14 +69,7 @@ export function MeusFavoritos() {
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const filtersScrollerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollFilters = (direction: 'left' | 'right') => {
-    filtersScrollerRef.current?.scrollBy({
-      left: direction === 'left' ? -220 : 220,
-      behavior: 'smooth',
-    });
-  };
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
 
   const recarregar = async () => {
     setLoading(true);
@@ -112,6 +105,8 @@ export function MeusFavoritos() {
       return matchesType && matchesSearch;
     });
   }, [busca, favoritos, filtro]);
+
+  const activeFilterLabel = FILTERS.find((filter) => filter.value === filtro)?.label ?? 'Todos';
 
   const openFavorite = (favorito: UserFavorite) => {
     if (!favorito.href) return;
@@ -163,8 +158,8 @@ export function MeusFavoritos() {
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-6`}>
         <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="flex min-w-0 flex-col gap-4">
-            <div className="relative min-w-0">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="search"
@@ -175,40 +170,51 @@ export function MeusFavoritos() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="relative shrink-0">
               <button
                 type="button"
-                onClick={() => scrollFilters('left')}
-                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm sm:inline-flex"
-                aria-label="Voltar filtros"
+                onClick={() => setFilterMenuOpen((current) => !current)}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+                aria-expanded={filterMenuOpen}
+                aria-haspopup="menu"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <Filter className="h-4 w-4" />
+                Filtros
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  {activeFilterLabel}
+                </span>
               </button>
-              <div ref={filtersScrollerRef} className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
-                {FILTERS.map((filter) => (
-                  <button
-                    key={filter.value}
-                    type="button"
-                    onClick={() => setFiltro(filter.value)}
-                    className={[
-                      'shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition',
-                      filtro === filter.value
-                        ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
-                    ].join(' ')}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => scrollFilters('right')}
-                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm sm:inline-flex"
-                aria-label="Avançar filtros"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+
+              {filterMenuOpen && (
+                <div
+                  className="absolute right-0 z-20 mt-2 w-full min-w-64 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg sm:w-72"
+                  role="menu"
+                >
+                  {FILTERS.map((filter) => {
+                    const isActive = filtro === filter.value;
+
+                    return (
+                      <button
+                        key={filter.value}
+                        type="button"
+                        onClick={() => {
+                          setFiltro(filter.value);
+                          setFilterMenuOpen(false);
+                        }}
+                        className={[
+                          'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition',
+                          isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50',
+                        ].join(' ')}
+                        role="menuitemradio"
+                        aria-checked={isActive}
+                      >
+                        <span>{filter.label}</span>
+                        {isActive && <Check className="h-4 w-4" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </section>
