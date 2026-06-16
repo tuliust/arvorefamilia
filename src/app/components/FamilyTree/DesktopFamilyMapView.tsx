@@ -874,13 +874,22 @@ function DesktopFamilyMapViewComponent({
 
   const paternalAncestorLayouts = stackGroups(PATERNAL_ANCESTOR_IDS, composedGroups, expandedGroups, familyMapLayout, hideGroupChrome);
   const maternalAncestorLayouts = stackGroups(MATERNAL_ANCESTOR_IDS, composedGroups, expandedGroups, familyMapLayout, hideGroupChrome);
-  const ancestorBottom = Math.max(
-    familyMapLayout.metrics.topStart + familyMapLayout.metrics.horizontalCardHeight,
-    ...paternalAncestorLayouts.map((layout) => layout.top + layout.height),
-    ...maternalAncestorLayouts.map((layout) => layout.top + layout.height),
-  );
-  const parentTop = ancestorBottom + familyMapLayout.metrics.parentTopGap;
-  const centralTop = parentTop + familyMapLayout.metrics.parentCardHeight + familyMapLayout.metrics.centralTopGap;
+  const hasAncestorLayouts = paternalAncestorLayouts.length > 0 || maternalAncestorLayouts.length > 0;
+  const hasParentCards = Boolean(father || mother);
+  const ancestorBottom = hasAncestorLayouts
+    ? Math.max(
+        ...paternalAncestorLayouts.map((layout) => layout.top + layout.height),
+        ...maternalAncestorLayouts.map((layout) => layout.top + layout.height),
+      )
+    : familyMapLayout.metrics.topStart;
+  const parentTop = hasAncestorLayouts
+    ? ancestorBottom + familyMapLayout.metrics.parentTopGap
+    : familyMapLayout.metrics.topStart;
+  const centralTop = hasParentCards
+    ? parentTop + familyMapLayout.metrics.parentCardHeight + familyMapLayout.metrics.centralTopGap
+    : hasAncestorLayouts
+      ? ancestorBottom + familyMapLayout.metrics.centralTopGap
+      : familyMapLayout.metrics.topStart;
   const descendantsTop = centralTop + familyMapLayout.metrics.centralCardHeight + familyMapLayout.metrics.descendantsTopGap;
 
   const fatherLayout = makeDirectLayout(familyMapLayout.groups.father, parentTop, familyMapLayout.metrics.parentCardHeight, father ? [father] : []);
