@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ChevronDown, ChevronUp, Plus, Save, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import {
   HEADER_ACTION_ICONS,
   MemberPageHeader,
@@ -27,10 +26,6 @@ import {
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  listarArquivosHistoricosPorPessoa,
-  substituirArquivosHistoricosDaPessoa,
-} from '../services/arquivosHistoricosService';
 import { adicionarPessoa, obterRelacionamentosDaPessoa, obterTodosRelacionamentos } from '../services/dataService';
 import {
   CreateRelationshipChangeRequestInput,
@@ -38,12 +33,11 @@ import {
   findPendingDuplicateRelationshipChangeRequest,
 } from '../services/relationshipChangeRequestService';
 import {
-  confirmOwnLinkedPersonData,
   getPrimaryLinkedPersonWithPessoa,
   resolveFirstAccessLinkForUser,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
-import { ArquivoHistorico, Pessoa, Relacionamento } from '../types';
+import { Pessoa, Relacionamento } from '../types';
 import { normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
 
 type RelationshipGroups = {
@@ -77,7 +71,6 @@ type MeusVinculosDraft = {
   localRelationshipRoles: Record<string, 'pai' | 'mae'>;
   childOtherParent: Record<string, string>;
   spouseExpanded: Record<string, boolean>;
-  archives: ArquivoHistorico[];
   hasLocalRelationshipChanges: boolean;
   hasPendingRelationshipRequest: boolean;
 };
@@ -165,7 +158,6 @@ function readMeusVinculosDraft(key: string): MeusVinculosDraft | null {
       localRelationshipRoles: draft.localRelationshipRoles ?? {},
       childOtherParent: draft.childOtherParent ?? {},
       spouseExpanded: draft.spouseExpanded ?? {},
-      archives: Array.isArray(draft.archives) ? draft.archives : [],
       hasLocalRelationshipChanges: Boolean(draft.hasLocalRelationshipChanges),
       hasPendingRelationshipRequest: Boolean(draft.hasPendingRelationshipRequest),
     };
@@ -179,14 +171,6 @@ function writeMeusVinculosDraft(key: string, draft: MeusVinculosDraft) {
     window.sessionStorage.setItem(key, JSON.stringify(draft));
   } catch {
     // Rascunho é auxiliar; falha de storage não deve bloquear edição.
-  }
-}
-
-function removeMeusVinculosDraft(key: string) {
-  try {
-    window.sessionStorage.removeItem(key);
-  } catch {
-    // noop
   }
 }
 
@@ -266,7 +250,6 @@ export function MeusVinculos() {
   const [spouseExpanded, setSpouseExpanded] = useState<Record<string, boolean>>({});
   const [hasLocalRelationshipChanges, setHasLocalRelationshipChanges] = useState(false);
   const [hasPendingRelationshipRequest, setHasPendingRelationshipRequest] = useState(false);
-  const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
   const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
@@ -274,6 +257,8 @@ export function MeusVinculos() {
   const draftDirtyRef = useRef(false);
 
   const pessoa = link?.pessoa;
+  const avatarSource = pendingAvatarDataUrl || String(pessoa?.foto_principal_url ?? '');
+  const avatarInitials = getInitials(String(pessoa?.nome_completo ?? ''));
 
   async function reloadRelationships(pessoaId: string) {
     const [nextRelationships, nextAllRelationships] = await Promise.all([
@@ -332,8 +317,6 @@ export function MeusVinculos() {
       if (data?.pessoa?.id) {
         const draftKey = getMeusVinculosDraftKey(user.id, data.pessoa.id);
         const draft = readMeusVinculosDraft(draftKey);
-        const nextArchives = await listarArquivosHistoricosPorPessoa(data.pessoa.id);
-        if (mounted) setArchives(nextArchives);
         await reloadRelationships(data.pessoa.id);
 
         const dadosDraft = readMeusDadosDraft(getMeusDadosDraftKey(user.id, data.pessoa.id));
@@ -345,7 +328,6 @@ export function MeusVinculos() {
           setLocalRelationshipRoles(draft.localRelationshipRoles);
           setChildOtherParent(draft.childOtherParent);
           setSpouseExpanded(draft.spouseExpanded);
-          setArchives(draft.archives);
           setHasLocalRelationshipChanges(draft.hasLocalRelationshipChanges);
           setHasPendingRelationshipRequest(draft.hasPendingRelationshipRequest);
           draftDirtyRef.current = true;
@@ -374,12 +356,10 @@ export function MeusVinculos() {
       localRelationshipRoles,
       childOtherParent,
       spouseExpanded,
-      archives,
       hasLocalRelationshipChanges,
       hasPendingRelationshipRequest,
     });
   }, [
-    archives,
     childOtherParent,
     hasLocalRelationshipChanges,
     hasPendingRelationshipRequest,
@@ -514,11 +494,6 @@ export function MeusVinculos() {
       [spouseId]: normalizeMarriageDetails(details),
     }));
     setHasLocalRelationshipChanges(true);
-  };
-
-  const handleArchivesChange = (nextArchives: ArquivoHistorico[]) => {
-    markDraftDirty();
-    setArchives(nextArchives);
   };
 
   const getGroupPeople = (groups: RelationshipGroups, group: RelationshipGroupKey) => {
@@ -662,22 +637,6 @@ export function MeusVinculos() {
 
     setFinishing(true);
 
-    try {
-      await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
-    } catch (error) {
-      setFinishing(false);
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar arquivos históricos.');
-      return;
-    }
-
-    const { error: confirmError } = await confirmOwnLinkedPersonData(link.id);
-
-    if (confirmError) {
-      setFinishing(false);
-      toast.error(confirmError);
-      return;
-    }
-
     let requestSummary = { created: 0, skipped: 0 };
 
     try {
@@ -694,11 +653,6 @@ export function MeusVinculos() {
       setHasPendingRelationshipRequest(true);
     }
 
-    if (user?.id && pessoa.id) {
-      removeMeusVinculosDraft(getMeusVinculosDraftKey(user.id, pessoa.id));
-    }
-    draftDirtyRef.current = false;
-
     if (requestSummary.created > 0) {
       const duplicateText = requestSummary.skipped > 0
         ? ` ${requestSummary.skipped} solicitação já estava pendente.`
@@ -709,8 +663,7 @@ export function MeusVinculos() {
     } else {
       toast.success('Vínculos confirmados.');
     }
-    // TODO: futuro destino de conclusão será /revisao-dados
-    navigate('/minha-arvore/editar', { replace: true });
+    navigate('/revisao-dados', { replace: true });
   };
 
   if (loading) {
@@ -745,7 +698,7 @@ export function MeusVinculos() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Confirmar vínculos familiares"
-        subtitle="Revise seus relacionamentos e arquivos antes de acessar a árvore."
+        subtitle="Revise seus relacionamentos antes de seguir para a etapa final."
         icon={Users}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
@@ -908,9 +861,6 @@ export function MeusVinculos() {
             </CardContent>
           </Card>
 
-          <div className="min-w-0">
-            <ArquivosHistoricos arquivos={archives} onChange={handleArchivesChange} pessoaId={pessoa.id} />
-          </div>
         </div>
 
         <aside className="h-fit min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
@@ -940,7 +890,7 @@ export function MeusVinculos() {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Confirmar e continuar edição
+                Confirmar e revisar dados
               </>
             )}
           </Button>

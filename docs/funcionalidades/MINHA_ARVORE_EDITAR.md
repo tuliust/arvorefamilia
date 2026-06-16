@@ -25,6 +25,16 @@ src/app/pages/MinhaArvore.tsx
 
 A página é diferente de `/meus-dados`: ela concentra uma experiência mais completa de edição da própria árvore, incluindo dados pessoais, avatar, vínculos familiares, arquivos históricos, eventos da vida, troca de senha e proteção contra saída sem salvar.
 
+O fluxo de cadastro inicial é separado da edição completa:
+
+```txt
+Etapa 1: /meus-dados
+Etapa 2: /meus-vinculos
+Etapa 3: /revisao-dados
+```
+
+No cadastro inicial, Arquivos Históricos, Preferências de notificação e Permissão para exibir dados ficam somente na Etapa 3.
+
 Documentos relacionados:
 
 ```txt

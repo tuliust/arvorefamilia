@@ -146,6 +146,7 @@ Protege páginas de membro autenticado:
 /minha-arvore/editar
 /meus-dados
 /meus-vinculos
+/revisao-dados
 /vincular-perfil
 /pessoa/:id
 /pessoas/:id
@@ -161,6 +162,16 @@ Cuidados:
 - autenticação não significa permissão para editar qualquer pessoa;
 - permissões de perfil, arquivos, fórum e sugestões continuam em services/RLS/RPC;
 - `/minha-arvore/editar` é vigente, apesar do nome histórico.
+
+### 5.2.1 Fluxo de cadastro do membro
+
+| Etapa | Rota | Responsabilidade |
+|---|---|---|
+| 1 | `/meus-dados` | Dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
+| 2 | `/meus-vinculos` | Revisão e solicitação de vínculos familiares. |
+| 3 | `/revisao-dados` | Revisão geral, Arquivos Históricos, Preferências de notificação, permissões de exibição e conclusão. |
+
+A confirmação definitiva do primeiro acesso ocorre ao finalizar a Etapa 3.
 
 ### 5.3 `ProtectedRoute`
 

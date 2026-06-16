@@ -10,7 +10,43 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: "OPENAI_API_KEY não configurada." });
     }
 
-    const { message, context } = req.body || {};
+    const { message, context, purpose, destination, keywords } = req.body || {};
+
+    if (purpose === "profile_text") {
+      if (!keywords || typeof keywords !== "string") {
+        return res.status(400).json({ error: "Informe palavras-chave para gerar o texto." });
+      }
+
+      const target = destination === "curiosidades" ? "Curiosidades" : "Mini Bio";
+      const compactProfileContext = context
+        ? JSON.stringify(context).slice(0, 6000)
+        : "Sem contexto adicional.";
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await client.responses.create({
+        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [
+              `Escreva uma sugestão curta para o campo ${target} de um perfil familiar.`,
+              "Responda em português do Brasil, em um único texto pronto para uso.",
+              "Use somente os fatos e palavras-chave fornecidos.",
+              "Não invente datas, lugares, parentescos, conquistas ou características.",
+              target === "Mini Bio"
+                ? "Use tom acolhedor e objetivo, preferencialmente em terceira pessoa, com até 90 palavras."
+                : "Use tom leve e pessoal, com até 120 palavras.",
+            ].join(" "),
+          },
+          {
+            role: "user",
+            content: `Palavras-chave: ${keywords.trim().slice(0, 1200)}\nContexto do perfil: ${compactProfileContext}`,
+          },
+        ],
+        max_output_tokens: 260,
+      });
+
+      return res.status(200).json({ answer: response.output_text });
+    }
 
     if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "Mensagem inválida." });

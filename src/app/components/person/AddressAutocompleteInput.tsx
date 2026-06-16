@@ -30,11 +30,11 @@ export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, Addre
     value,
     onChange,
     disabled,
-    autoComplete = 'new-password',
+    autoComplete = 'off',
     autoCorrect = 'off',
     autoCapitalize = 'off',
     spellCheck = false,
-    name = 'family-tree-google-address',
+    name = 'family-tree-places-street-address',
     id,
     ...props
   }, ref) => {
@@ -124,6 +124,9 @@ export const AddressAutocompleteInput = React.forwardRef<HTMLInputElement, Addre
         autoCorrect={autoCorrect}
         autoCapitalize={autoCapitalize}
         spellCheck={spellCheck}
+        data-form-type="other"
+        data-lpignore="true"
+        data-1p-ignore="true"
         onChange={(event) => onChangeRef.current(event.target.value)}
       />
     );

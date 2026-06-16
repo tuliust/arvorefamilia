@@ -26,6 +26,8 @@ A baseline funcional atual registra:
   - `/visao-completa`;
 - o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
 - `/minha-arvore/editar` continua vigente como rota protegida de edição do membro;
+- o cadastro inicial do membro usa três etapas protegidas por `MemberRoute`: `/meus-dados`, `/meus-vinculos` e `/revisao-dados`;
+- Arquivos Históricos, Preferências de notificação e Permissão para exibir dados pertencem à Etapa 3 em `/revisao-dados`;
 - `TreeViewMode` possui apenas:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;

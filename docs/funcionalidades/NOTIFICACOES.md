@@ -17,6 +17,7 @@ Rotas:
 |---|---|---|
 | `/notificacoes` | `MemberRoute` | Central/lista de notificações em cards. |
 | `/ajustar-notificacoes` | `MemberRoute` | Preferências do usuário. |
+| `/revisao-dados` | `MemberRoute` | Etapa 3 do cadastro inicial, reutilizando `NotificationPreferencesPanel`. |
 | `/admin/notificacoes` | `ProtectedRoute` | Diagnóstico, testes e rotinas administrativas. |
 
 Documentação complementar:
@@ -47,6 +48,7 @@ Implementado no escopo MVP:
 - Edge Function `send-notification-email` com Resend;
 - notificações internas de fórum para menções, pessoas relacionadas, respostas e comentários;
 - deduplicação de destinatários em notificações de fórum.
+- preferências também disponíveis na Etapa 3 `/revisao-dados`; não são duplicadas em `/meus-dados`.
 
 Futuro/pós-MVP:
 

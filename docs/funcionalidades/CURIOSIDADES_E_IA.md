@@ -272,6 +272,23 @@ Usuário pergunta
 -> resposta retorna para o painel
 ```
 
+### 9.1 Geração de Mini Bio e Curiosidades
+
+`/meus-dados` reutiliza o mesmo endpoint serverless `POST /api/ai`, sem expor `OPENAI_API_KEY`.
+
+Payload específico:
+
+```json
+{
+  "purpose": "profile_text",
+  "destination": "minibio",
+  "keywords": "palavras-chave informadas pelo usuário",
+  "context": {}
+}
+```
+
+O destino aceita `minibio` ou `curiosidades`. A resposta é exibida como sugestão e só altera o formulário após a ação explícita de aplicar.
+
 Regras:
 
 - pergunta vazia não deve ser enviada;

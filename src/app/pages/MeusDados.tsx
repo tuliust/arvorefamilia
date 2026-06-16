@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
-import { Camera, ImagePlus, Info, Save, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
+import { Camera, ImagePlus, Info, Save, Sparkles, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
   HEADER_ACTION_ICONS,
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
-import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
   SocialProfileForm,
@@ -35,22 +34,13 @@ import {
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
-import {
-  DEFAULT_NOTIFICATION_PREFERENCES,
-  obterPreferenciasNotificacao,
-  salvarPreferenciasNotificacao,
-} from '../services/userEngagementService';
 import { uploadPersonAvatarFile } from '../services/storageService';
-import {
-  listarArquivosHistoricosPorPessoa,
-  substituirArquivosHistoricosDaPessoa,
-} from '../services/arquivosHistoricosService';
 import {
   buildSocialProfilesFromRows,
   listarPessoaSocialProfiles,
   substituirPessoaSocialProfiles,
 } from '../services/pessoaSocialProfilesService';
-import { ArquivoHistorico, Pessoa, PreferenciaNotificacao } from '../types';
+import { Pessoa } from '../types';
 import {
   buildEditablePersonFormState,
   cleanPersonPayload,
@@ -74,88 +64,9 @@ const LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade/UF. Exemplo: São J
 const INTERNATIONAL_LOCATION_FORMAT_HELPER = 'Use o formato Nome da Cidade (País). Exemplo: Dublin (Irlanda).';
 // TODO: Migrar blocos simples para os componentes compartilhados de pessoa sem afetar avatar/crop, Places e primeiro acesso.
 
-type NotificationPreferenceKey =
-  | 'receber_aniversarios'
-  | 'receber_datas_memoria'
-  | 'receber_eventos'
-  | 'receber_avisos_gerais'
-  | 'receber_email'
-  | 'receber_push'
-  | 'receber_whatsapp'
-  | 'receber_email_novo_usuario'
-  | 'receber_email_datas_especiais'
-  | 'receber_email_novas_mensagens_forum'
-  | 'receber_email_novos_registros_historicos'
-  | 'receber_email_evento_historico_familia';
-
-const NOTIFICATION_OPTIONS: Array<{ key: NotificationPreferenceKey; label: string; description: string }> = [
-  {
-    key: 'receber_aniversarios',
-    label: 'Aniversários',
-    description: 'Avisos sobre aniversários de familiares.',
-  },
-  {
-    key: 'receber_datas_memoria',
-    label: 'Datas de memória',
-    description: 'Lembretes de datas marcantes da família.',
-  },
-  {
-    key: 'receber_eventos',
-    label: 'Eventos familiares',
-    description: 'Convites e atualizações de eventos.',
-  },
-  {
-    key: 'receber_avisos_gerais',
-    label: 'Avisos gerais',
-    description: 'Comunicados importantes da plataforma.',
-  },
-  {
-    key: 'receber_email',
-    label: 'Receber emails',
-    description: 'Controle geral para emails opcionais.',
-  },
-  {
-    key: 'receber_push',
-    label: 'Receber notificações push',
-    description: 'Avisos pelo navegador quando disponíveis.',
-  },
-  {
-    key: 'receber_whatsapp',
-    label: 'Receber avisos por WhatsApp',
-    description: 'Comunicações familiares por WhatsApp quando disponíveis.',
-  },
-  {
-    key: 'receber_email_novo_usuario',
-    label: 'Email sobre novo usuário',
-    description: 'Quando um novo familiar entra na plataforma.',
-  },
-  {
-    key: 'receber_email_datas_especiais',
-    label: 'Email sobre datas especiais',
-    description: 'Aniversários, memórias e datas importantes.',
-  },
-  {
-    key: 'receber_email_novas_mensagens_forum',
-    label: 'Email sobre mensagens no fórum',
-    description: 'Atualizações em conversas familiares.',
-  },
-  {
-    key: 'receber_email_novos_registros_historicos',
-    label: 'Email sobre registros históricos',
-    description: 'Fotos, documentos e memórias adicionados.',
-  },
-  {
-    key: 'receber_email_evento_historico_familia',
-    label: 'Email sobre evento histórico',
-    description: 'Avisos relacionados à história familiar.',
-  },
-];
-
 type MeusDadosDraft = {
   form: EditableOwnPersonPayload;
   socialProfiles: SocialProfileForm[];
-  archives: ArquivoHistorico[];
-  notificationPreferences?: PreferenciaNotificacao | null;
   pendingAvatarDataUrl?: string | null;
   avatarCropSourceDataUrl?: string | null;
   photoMarkedForRemoval?: boolean;
@@ -185,8 +96,6 @@ function readMeusDadosDraft(key: string): MeusDadosDraft | null {
     return {
       form,
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
-      archives: Array.isArray(draft.archives) ? draft.archives : [],
-      notificationPreferences: draft.notificationPreferences ?? null,
       pendingAvatarDataUrl: draft.pendingAvatarDataUrl ?? null,
       avatarCropSourceDataUrl: draft.avatarCropSourceDataUrl ?? null,
       photoMarkedForRemoval: draft.photoMarkedForRemoval === true,
@@ -319,7 +228,6 @@ export function MeusDados() {
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
-  const [notificationPreferences, setNotificationPreferences] = useState<PreferenciaNotificacao | null>(null);
   const [errors, setErrors] = useState<PersonFieldErrors>({});
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -333,7 +241,12 @@ export function MeusDados() {
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiKeywords, setAiKeywords] = useState('');
+  const [aiDestination, setAiDestination] = useState<'minibio' | 'curiosidades'>('minibio');
+  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -376,19 +289,6 @@ export function MeusDados() {
 
       if (nextPessoaId) {
         try {
-          const nextArchives = await listarArquivosHistoricosPorPessoa(nextPessoaId);
-          if (mounted && !shouldPreserveDraft) setArchives(draft?.archives ?? nextArchives);
-        } catch (archivesError) {
-          if (mounted) {
-            toast.error(
-              archivesError instanceof Error
-                ? archivesError.message
-              : 'Não foi possível carregar arquivos históricos.',
-            );
-          }
-        }
-
-        try {
           const socialProfileRows = await listarPessoaSocialProfiles(nextPessoaId);
           loadedSocialProfiles = buildSocialProfilesFromRows(socialProfileRows, data?.pessoa);
         } catch (socialProfilesError) {
@@ -400,31 +300,12 @@ export function MeusDados() {
             );
           }
         }
-      } else if (!shouldPreserveDraft) {
-        setArchives([]);
       }
 
       if (!shouldPreserveDraft) {
         setForm(draft?.form ?? buildEditablePersonFormState(data?.pessoa));
         setSocialProfiles(draft?.socialProfiles ?? loadedSocialProfiles);
         isDirtyRef.current = Boolean(draft);
-      }
-
-      const preferences = await obterPreferenciasNotificacao(user.id);
-      if (!mounted) return;
-      if (!shouldPreserveDraft) {
-        const nextPreferences = {
-          ...preferences,
-          ...Object.fromEntries(
-            Object.entries(DEFAULT_NOTIFICATION_PREFERENCES).map(([key, defaultValue]) => [
-              key,
-              (preferences as Record<string, unknown>)[key] === false ? false : defaultValue,
-            ]),
-          ),
-          ...draft?.notificationPreferences,
-          receber_avisos_gerais: true,
-        } as PreferenciaNotificacao;
-        setNotificationPreferences(nextPreferences);
       }
 
       hasInitializedFormRef.current = true;
@@ -468,18 +349,14 @@ export function MeusDados() {
     writeMeusDadosDraft(getDraftKey(user.id, pessoaId), {
       form,
       socialProfiles,
-      archives,
-      notificationPreferences,
       pendingAvatarDataUrl,
       avatarCropSourceDataUrl,
       photoMarkedForRemoval,
     });
   }, [
-    archives,
     avatarCropSourceDataUrl,
     form,
     link?.pessoa?.id,
-    notificationPreferences,
     pendingAvatarDataUrl,
     photoMarkedForRemoval,
     socialProfiles,
@@ -552,18 +429,6 @@ export function MeusDados() {
     markFormDirty();
     setSocialProfiles(nextProfiles);
     syncFirstSocialProfileToLegacyFields(nextProfiles);
-  };
-
-  const updateNotificationPreference = (key: NotificationPreferenceKey, checked: boolean) => {
-    if (key === 'receber_avisos_gerais') return;
-    markFormDirty();
-    setNotificationPreferences((current) => ({
-      id: current?.id ?? `local-${user?.id ?? 'user'}`,
-      user_id: current?.user_id ?? user?.id ?? '',
-      ...DEFAULT_NOTIFICATION_PREFERENCES,
-      ...current,
-      [key]: checked,
-    }));
   };
 
   const normalizeFieldOnBlur = (field: keyof EditableOwnPersonPayload) => {
@@ -696,6 +561,58 @@ export function MeusDados() {
     }
   };
 
+  const handleGenerateAiText = async () => {
+    const keywords = aiKeywords.trim();
+    if (!keywords || aiLoading) return;
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiSuggestion('');
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          purpose: 'profile_text',
+          destination: aiDestination,
+          keywords,
+          context: {
+            nome: String(form.nome_completo ?? ''),
+            profissao: String(form.profissao ?? ''),
+            local_nascimento: String(form.local_nascimento ?? ''),
+            local_atual: String(form.local_atual ?? ''),
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Não foi possível gerar a sugestão agora.');
+      }
+
+      const suggestion = payload?.answer;
+      if (!suggestion || typeof suggestion !== 'string') {
+        throw new Error('A IA não retornou uma sugestão válida.');
+      }
+      setAiSuggestion(suggestion.trim());
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'Não foi possível gerar a sugestão agora.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleApplyAiText = () => {
+    if (!aiSuggestion) return;
+    updateTextField(aiDestination, aiSuggestion);
+    setAiDialogOpen(false);
+    setAiSuggestion('');
+    setAiError(null);
+  };
+
   const handleConfirm = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -757,19 +674,6 @@ export function MeusDados() {
       );
     }
 
-    try {
-      const savedArchives = await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
-      setArchives(savedArchives);
-    } catch (archivesError) {
-      setSaving(false);
-      toast.error(
-        archivesError instanceof Error
-          ? `Dados pessoais salvos, mas não foi possível salvar arquivos históricos: ${archivesError.message}`
-          : 'Dados pessoais salvos, mas não foi possível salvar arquivos históricos.',
-      );
-      return;
-    }
-
     if (link.relacao_com_perfil === 'Sou esta pessoa') {
       const { error: profileError } = await ensureMemberProfile(user.id, {
         nome_exibicao: updatedPessoa?.nome_completo ?? String(payload.nome_completo ?? ''),
@@ -780,25 +684,6 @@ export function MeusDados() {
         setSaving(false);
         toast.error(profileError);
         return;
-      }
-    }
-
-    if (notificationPreferences) {
-      try {
-        const savedPreferences = await salvarPreferenciasNotificacao(user.id, {
-          ...notificationPreferences,
-          receber_avisos_gerais: true,
-        });
-        setNotificationPreferences(savedPreferences);
-        if (savedPreferences.id.startsWith('local-')) {
-          toast.warning('Dados pessoais salvos, mas as preferências de notificação ficaram apenas locais.');
-        }
-      } catch (notificationError) {
-        toast.warning(
-          notificationError instanceof Error
-            ? `Dados pessoais salvos, mas não foi possível salvar notificações: ${notificationError.message}`
-            : 'Dados pessoais salvos, mas não foi possível salvar as preferências de notificação.',
-        );
       }
     }
 
@@ -888,86 +773,82 @@ export function MeusDados() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Nome completo" error={errors.nome_completo}>
-              <Input
-                value={String(form.nome_completo ?? '')}
-                onBlur={() => normalizeFieldOnBlur('nome_completo')}
-                onChange={(e) => updateTextField('nome_completo', e.target.value)}
-                aria-invalid={Boolean(errors.nome_completo)}
-                required
-              />
-            </Field>
-            <Field label="Data de nascimento" error={errors.data_nascimento}>
-              <Input
-                value={String(form.data_nascimento ?? '')}
-                onBlur={() => normalizeFieldOnBlur('data_nascimento')}
-                onChange={(e) => updateTextField('data_nascimento', e.target.value)}
-                placeholder="DD/MM/AAAA ou AAAA"
-                aria-invalid={Boolean(errors.data_nascimento)}
-              />
-            </Field>
-            <Field label="Local de nascimento" error={errors.local_nascimento}>
-              <Input
-                value={String(form.local_nascimento ?? '')}
-                onBlur={() => normalizeFieldOnBlur('local_nascimento')}
-                onChange={(e) => updateTextField('local_nascimento', e.target.value)}
-                placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
-                aria-invalid={Boolean(errors.local_nascimento)}
-              />
-              <p className="break-words text-xs text-gray-500">
-                {form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-              </p>
-              <ToggleField
-                label="Nasci fora do Brasil"
-                checked={form.local_nascimento_exterior === true}
-                onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
-              />
-            </Field>
-            {shouldSuggestFullBirthDate && (
-              <div className="min-w-0 self-start">
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p className="break-words">
-                    Se souber, adicione também o dia e o mês de nascimento.
-                  </p>
-                </div>
+          <section className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h2 className="mb-4 text-base font-semibold text-gray-900">Dados pessoais</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field label="Nome completo" error={errors.nome_completo}>
+                <Input
+                  value={String(form.nome_completo ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('nome_completo')}
+                  onChange={(e) => updateTextField('nome_completo', e.target.value)}
+                  aria-invalid={Boolean(errors.nome_completo)}
+                  required
+                />
+              </Field>
+              <Field label="Data de nascimento" error={errors.data_nascimento}>
+                <Input
+                  value={String(form.data_nascimento ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('data_nascimento')}
+                  onChange={(e) => updateTextField('data_nascimento', e.target.value)}
+                  placeholder="DD/MM/AAAA ou AAAA"
+                  aria-invalid={Boolean(errors.data_nascimento)}
+                />
+              </Field>
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
+                <Field label="Local de nascimento" error={errors.local_nascimento}>
+                  <Input
+                    value={String(form.local_nascimento ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('local_nascimento')}
+                    onChange={(e) => updateTextField('local_nascimento', e.target.value)}
+                    placeholder={form.local_nascimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                    aria-invalid={Boolean(errors.local_nascimento)}
+                  />
+                </Field>
+                <CompactToggleField
+                  label="Estrangeiro"
+                  checked={form.local_nascimento_exterior === true}
+                  onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
+                />
               </div>
-            )}
-            <Field label="Cidade de Residência" error={errors.local_atual}>
-              <Input
-                value={String(form.local_atual ?? '')}
-                onBlur={() => normalizeFieldOnBlur('local_atual')}
-                onChange={(e) => updateTextField('local_atual', e.target.value)}
-                placeholder={form.local_atual_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
-                aria-invalid={Boolean(errors.local_atual)}
-              />
-              <p className="break-words text-xs text-gray-500">
-                {form.local_atual_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}
-              </p>
-              <ToggleField
-                label="Moro no exterior"
-                checked={form.local_atual_exterior === true}
-                onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-              />
-            </Field>
-            
-            <Field label="Profissão">
-              <Input
-                value={String(form.profissao ?? '')}
-                onBlur={() => normalizeFieldOnBlur('profissao')}
-                onChange={(e) => updateTextField('profissao', e.target.value)}
-                placeholder="Ex: jornalista, professora, médico, empresário..."
-              />
-            </Field>
-            <div className="md:col-span-2">
-              <ToggleField
-                label="Pessoa falecida"
-                description="Marque mesmo que a data ou o local de falecimento sejam desconhecidos."
-                checked={form.falecido === true}
-                onCheckedChange={(checked) => updateField('falecido', checked)}
-              />
-            </div>
+              {shouldSuggestFullBirthDate && (
+                <div className="min-w-0 self-start">
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="break-words">Se souber, adicione também o dia e o mês de nascimento.</p>
+                  </div>
+                </div>
+              )}
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
+                <Field label="Cidade de residência" error={errors.local_atual}>
+                  <Input
+                    value={String(form.local_atual ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('local_atual')}
+                    onChange={(e) => updateTextField('local_atual', e.target.value)}
+                    placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                    aria-invalid={Boolean(errors.local_atual)}
+                  />
+                </Field>
+                <CompactToggleField
+                  label="Exterior"
+                  checked={form.local_atual_exterior === true}
+                  onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                />
+              </div>
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_112px] gap-3">
+                <Field label="Profissão">
+                  <Input
+                    value={String(form.profissao ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('profissao')}
+                    onChange={(e) => updateTextField('profissao', e.target.value)}
+                    placeholder="Ex: jornalista, professora, médico..."
+                  />
+                </Field>
+                <CompactToggleField
+                  label="Falecida"
+                  checked={form.falecido === true}
+                  onCheckedChange={(checked) => updateField('falecido', checked)}
+                />
+              </div>
             {form.falecido === true && (
               <>
                 <Field label="Data de falecimento" error={errors.data_falecimento}>
@@ -998,7 +879,13 @@ export function MeusDados() {
                 </Field>
               </>
             )}
-            <Field label="Telefone">
+            </div>
+          </section>
+
+          <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h2 className="mb-4 text-base font-semibold text-gray-900">Contato, endereço e redes sociais</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Field label="WhatsApp">
               <Input
                 value={String(form.telefone ?? '')}
                 onChange={(e) => updateTextField('telefone', e.target.value)}
@@ -1009,7 +896,7 @@ export function MeusDados() {
               <AddressAutocompleteInput
                 value={String(form.endereco ?? '')}
                 onChange={(nextValue) => updateTextField('endereco', nextValue)}
-                placeholder="Rua, número, bairro, cidade, CEP"
+                placeholder="Digite a rua e número, depois selecione"
               />
             </Field>
             <Field label="Complemento">
@@ -1032,10 +919,30 @@ export function MeusDados() {
                 }}
               />
             </div>
-          </div>
+            </div>
+          </section>
 
-          <div className="mt-4 grid grid-cols-1 gap-4">
-            <Field label="Mini bio">
+          <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-gray-900">Mini Bio e Curiosidades</h2>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => {
+                  setAiError(null);
+                  setAiSuggestion('');
+                  setAiDialogOpen(true);
+                }}
+                aria-label="Gerar texto com IA"
+                title="Gerar texto com IA"
+              >
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <Field label="Mini Bio">
               <Textarea
                 value={String(form.minibio ?? '')}
                 onChange={(e) => updateTextField('minibio', e.target.value)}
@@ -1043,82 +950,14 @@ export function MeusDados() {
                 className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
               />
             </Field>
-            <Field label="Curiosidades de Vida">
+              <Field label="Curiosidades">
               <Textarea
                 value={String(form.curiosidades ?? '')}
                 onChange={(e) => updateTextField('curiosidades', e.target.value)}
                 placeholder="Opcional: compartilhe fatos, histórias ou lembranças curiosas sobre sua vida. Pode incluir hobbies, costumes, viagens, talentos, apelidos, momentos marcantes ou detalhes que ajudem a família a conhecer melhor você."
                 className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
               />
-            </Field>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <ToggleField
-              label="Exibir minha data de nascimento para outros familiares"
-              description="Você pode alterar esta opção depois na edição do perfil."
-              checked={form.permitir_exibir_data_nascimento !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_data_nascimento', checked)}
-            />
-            <ToggleField
-              label="Exibir meu telefone para outros familiares"
-              description="Controla a visualização do número no perfil."
-              checked={form.permitir_exibir_telefone !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_telefone', checked)}
-            />
-            <ToggleField
-              label="Exibir meu endereço para outros familiares"
-              description="Controla a visualização do endereço no perfil."
-              checked={form.permitir_exibir_endereco !== false}
-              onCheckedChange={(checked) => updateField('permitir_exibir_endereco', checked)}
-            />
-            <ToggleField
-              label="Exibir minha rede social para outros familiares"
-              description="Você pode alterar esta opção depois na edição do perfil."
-              checked={form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false}
-              onCheckedChange={(checked) => {
-                updateField('permitir_exibir_rede_social', checked);
-                updateField('permitir_exibir_instagram', checked);
-              }}
-            />
-            <ToggleField
-              label="Permitir mensagens por WhatsApp"
-              description="Permite que familiares usem seu telefone para contato por WhatsApp."
-              checked={form.permitir_mensagens_whatsapp !== false}
-              onCheckedChange={(checked) => updateField('permitir_mensagens_whatsapp', checked)}
-            />
-          </div>
-
-          {pessoa?.id && (
-            <div className="mt-6 min-w-0">
-              <ArquivosHistoricos
-                arquivos={archives}
-                onChange={(nextArchives) => {
-                  markFormDirty();
-                  setArchives(nextArchives);
-                }}
-                pessoaId={pessoa.id}
-                variant="interactive"
-              />
-            </div>
-          )}
-
-          <section className="mt-6 min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4 min-w-0">
-              <h2 className="break-words text-base font-semibold text-gray-900">Preferências de notificação</h2>
-              <p className="mt-1 break-words text-sm text-gray-500">Escolha quais avisos familiares deseja receber.</p>
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {NOTIFICATION_OPTIONS.map((option) => (
-                <ToggleField
-                  key={option.key}
-                  label={option.label}
-                  description={option.description}
-                  checked={option.key === 'receber_avisos_gerais' || notificationPreferences?.[option.key] !== false}
-                  onCheckedChange={(checked) => updateNotificationPreference(option.key, checked)}
-                  disabled={option.key === 'receber_avisos_gerais'}
-                />
-              ))}
+              </Field>
             </div>
           </section>
 
@@ -1167,6 +1006,62 @@ export function MeusDados() {
 
         </aside>
       </main>
+
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>Gerar texto com IA</DialogTitle>
+            <DialogDescription>
+              Informe fatos e tópicos reais. A sugestão só será aplicada quando você confirmar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ai-profile-destination">Destino</Label>
+              <select
+                id="ai-profile-destination"
+                value={aiDestination}
+                onChange={(event) => setAiDestination(event.target.value as 'minibio' | 'curiosidades')}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="minibio">Mini Bio</option>
+                <option value="curiosidades">Curiosidades</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ai-profile-keywords">Palavras-chave e tópicos</Label>
+              <Textarea
+                id="ai-profile-keywords"
+                value={aiKeywords}
+                onChange={(event) => setAiKeywords(event.target.value)}
+                placeholder="Ex: professora, nasceu na Bahia, gosta de música, viagens em família"
+                className="min-h-24"
+              />
+            </div>
+            {aiError && <p className="text-sm text-red-600">{aiError}</p>}
+            {aiSuggestion && (
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Sugestão</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-800">{aiSuggestion}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAiDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleGenerateAiText} disabled={aiLoading || !aiKeywords.trim()}>
+              <Sparkles className="h-4 w-4" />
+              {aiLoading ? 'Gerando...' : 'Gerar sugestão'}
+            </Button>
+            {aiSuggestion && (
+              <Button type="button" onClick={handleApplyAiText}>
+                Aplicar texto
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
         <DialogContent className="bg-white">
@@ -1303,6 +1198,23 @@ function ToggleField({
         {description && <p className="break-words text-xs leading-snug text-gray-500">{description}</p>}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} className="shrink-0" />
+    </div>
+  );
+}
+
+function CompactToggleField({
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="mt-6 flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3">
+      <Label className="text-xs">{label}</Label>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
   );
 }
