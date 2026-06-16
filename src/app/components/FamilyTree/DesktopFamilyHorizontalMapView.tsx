@@ -141,7 +141,7 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
 };
 
 const ANCESTOR_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['avos', 'bisavos', 'tataravos'];
-const FILTERABLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['tios', 'primos', 'sobrinhos', 'filhos', 'netos'];
+const FILTERABLE_SPOUSE_ANCHOR_GROUPS: DirectRelativeGroup[] = ['irmaos', 'tios', 'primos', 'sobrinhos', 'filhos', 'netos'];
 
 function getTreeHighlightGroupsActive() {
   return typeof document !== 'undefined'
@@ -354,35 +354,73 @@ function orderChildrenByParentGroups(people: Pessoa[], maps: RelationshipMaps) {
   return orderedPeople;
 }
 
+function normalizeHorizontalPersonName(value?: string | null) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function isNamedPerson(person: Pessoa, expectedName: string) {
+  return normalizeHorizontalPersonName(person.nome_completo).includes(
+    normalizeHorizontalPersonName(expectedName)
+  );
+}
+
+function shouldPlaceSpouseBeforeAnchor(anchor: Pessoa, spouse: Pessoa) {
+  // Exce??o visual expl?cita do Mapa Geneal?gico:
+  // Suze Souza ? o segundo relacionamento de M?rcio Ailton e deve aparecer acima dele.
+  return isNamedPerson(anchor, 'Marcio Ailton') && isNamedPerson(spouse, 'Suze Souza');
+}
+
+function shouldPlaceSpouseAfterAnchor(anchor: Pessoa, spouse: Pessoa) {
+  // Exce??o visual expl?cita do Mapa Geneal?gico:
+  // Layana deve aparecer abaixo de Tassius Marcius.
+  return isNamedPerson(anchor, 'Tassius Marcius') && isNamedPerson(spouse, 'Layana');
+}
+
 function orderPeopleWithAdjacentSpouses(people: Pessoa[], maps: RelationshipMaps) {
   const peopleById = new Map(people.map((person) => [person.id, person]));
   const originalIndexByPersonId = new Map(people.map((person, index) => [person.id, index]));
   const placedPersonIds = new Set<string>();
   const orderedPeople: Pessoa[] = [];
 
+  const getOriginalIndex = (person: Pessoa) => originalIndexByPersonId.get(person.id) ?? Number.POSITIVE_INFINITY;
+  const addPerson = (person: Pessoa) => {
+    if (placedPersonIds.has(person.id)) return false;
+    orderedPeople.push(person);
+    placedPersonIds.add(person.id);
+    return true;
+  };
+
   people.forEach((person) => {
     if (placedPersonIds.has(person.id)) return;
 
-    orderedPeople.push(person);
-    placedPersonIds.add(person.id);
-
-    const spouse = Array.from(maps.spousesByPerson.get(person.id) ?? [])
+    const spouses = Array.from(maps.spousesByPerson.get(person.id) ?? [])
       .map((spouseId) => peopleById.get(spouseId))
       .filter((candidate): candidate is Pessoa => Boolean(candidate) && !placedPersonIds.has(candidate.id))
-      .sort((a, b) => {
-        const indexA = originalIndexByPersonId.get(a.id) ?? Number.POSITIVE_INFINITY;
-        const indexB = originalIndexByPersonId.get(b.id) ?? Number.POSITIVE_INFINITY;
-        return indexA - indexB;
-      })[0];
+      .sort((a, b) => getOriginalIndex(a) - getOriginalIndex(b));
 
-    if (!spouse) return;
+    const shouldWaitForPreferredAnchor = spouses.some((spouse) => shouldPlaceSpouseAfterAnchor(spouse, person));
+    if (shouldWaitForPreferredAnchor) return;
 
-    orderedPeople.push(spouse);
-    placedPersonIds.add(spouse.id);
+    const spousesBefore = spouses.filter((spouse) => (
+      shouldPlaceSpouseBeforeAnchor(person, spouse)
+      || (!shouldPlaceSpouseAfterAnchor(person, spouse) && getOriginalIndex(spouse) < getOriginalIndex(person))
+    ));
+
+    const spousesBeforeIds = new Set(spousesBefore.map((spouse) => spouse.id));
+    const spousesAfter = spouses.filter((spouse) => !spousesBeforeIds.has(spouse.id));
+
+    spousesBefore.forEach(addPerson);
+    addPerson(person);
+    spousesAfter.forEach(addPerson);
   });
 
   return orderedPeople;
 }
+
 
 function isPersonNodeWithPessoa(node: Node): node is Node & { data: { pessoa: Pessoa } } {
   return node.type === 'personNode' && Boolean(node.data?.pessoa);
@@ -679,6 +717,49 @@ function DesktopFamilyHorizontalMapViewComponent({
 
     if (directRelativeFilters.conjuge) {
       includeSpousesForAnchors(visibleFilterableAnchorIds);
+
+      const includeGenerationSixChildrenForVisibleCouples = () => {
+        const checkedCoupleKeys = new Set<string>();
+
+        Array.from(selectedPersonIds).forEach((parentId) => {
+          const parent = peopleById.get(parentId);
+          if (!parent) return;
+
+          maps.spousesByPerson.get(parentId)?.forEach((spouseId) => {
+            if (!selectedPersonIds.has(spouseId)) return;
+
+            const spouse = peopleById.get(spouseId);
+            if (!spouse) return;
+
+            const coupleKey = pairKey(parentId, spouseId);
+            if (checkedCoupleKeys.has(coupleKey)) return;
+            checkedCoupleKeys.add(coupleKey);
+
+            const parentGeneration = getManualGeneration(parent);
+            const spouseGeneration = getManualGeneration(spouse);
+            const isGenerationFiveCouple = parentGeneration === 5 || spouseGeneration === 5;
+
+            const parentChildren = maps.childrenByParent.get(parentId) ?? new Set<string>();
+            const spouseChildren = maps.childrenByParent.get(spouseId) ?? new Set<string>();
+
+            parentChildren.forEach((childId) => {
+              if (!spouseChildren.has(childId)) return;
+
+              const child = peopleById.get(childId);
+              if (!child) return;
+
+              const childGeneration = getManualGeneration(child);
+              const isGenerationSixChild = childGeneration === 6 || (childGeneration === undefined && isGenerationFiveCouple);
+
+              if (!isGenerationSixChild) return;
+
+              selectedPersonIds.add(childId);
+            });
+          });
+        });
+      };
+
+      includeGenerationSixChildrenForVisibleCouples();
     }
 
     return {

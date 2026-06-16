@@ -515,3 +515,17 @@ Além dos comandos, fazer QA visual manual nas larguras:
 - [ ] Exportação ignora UI transitória.
 - [ ] Paletas mobile seguem desktop.
 - [ ] Pendências `TREE-003` e `TREE-004` não são descritas como implementadas.
+<!-- ajuste-mapa-horizontal-conjuges-filhos-2026-06 -->
+
+## Mapa familiar horizontal ? c?njuges e filhos de casais vis?veis
+
+Na rota `/mapa-familiar-horizontal`:
+
+- O filtro `C?njuges` tamb?m considera c?njuges de pessoas do grupo `Irm?os`/n?cleo.
+- C?njuges exibidos no mesmo grupo geracional devem ficar adjacentes e conectados verticalmente.
+- Layana deve aparecer abaixo de Tassius Marcius quando `C?njuges` estiver ativo.
+- Suze Souza, segundo relacionamento de M?rcio Ailton, deve aparecer apenas quando `C?njuges` estiver ativo e posicionada acima de M?rcio Ailton.
+- Quando ambos os pais de um casal vis?vel estiverem exibidos, filhos comuns da 6? gera??o devem aparecer na coluna da direita e receber conex?o a partir da uni?o do casal.
+- Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
+- A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
+

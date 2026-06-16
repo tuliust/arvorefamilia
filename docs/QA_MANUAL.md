@@ -862,4 +862,17 @@ Na p?gina `/mapa-familiar`:
 - C?njuges de irm?os s?o exibidos no grupo `Irm?os` quando o filtro `C?njuges` est? ativo e existe relacionamento expl?cito `tipo_relacionamento === 'conjuge'`.
 - Esse comportamento n?o cria nem infere dados; depende exclusivamente dos relacionamentos persistidos.
 - A regra acima se aplica ? p?gina `/mapa-familiar`. N?o assumir o mesmo comportamento para `/mapa-familiar-horizontal` sem valida??o espec?fica.
+<!-- ajuste-mapa-horizontal-conjuges-filhos-2026-06 -->
+
+## Mapa familiar horizontal ? c?njuges e filhos de casais vis?veis
+
+Na rota `/mapa-familiar-horizontal`:
+
+- O filtro `C?njuges` tamb?m considera c?njuges de pessoas do grupo `Irm?os`/n?cleo.
+- C?njuges exibidos no mesmo grupo geracional devem ficar adjacentes e conectados verticalmente.
+- Layana deve aparecer abaixo de Tassius Marcius quando `C?njuges` estiver ativo.
+- Suze Souza, segundo relacionamento de M?rcio Ailton, deve aparecer apenas quando `C?njuges` estiver ativo e posicionada acima de M?rcio Ailton.
+- Quando ambos os pais de um casal vis?vel estiverem exibidos, filhos comuns da 6? gera??o devem aparecer na coluna da direita e receber conex?o a partir da uni?o do casal.
+- Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
+- A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
 
