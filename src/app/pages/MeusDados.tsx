@@ -172,7 +172,6 @@ const AI_STEPS = [
   'Marcas pessoais e curiosidades',
   'Outras características',
   'Perguntas opcionais',
-  'Geração final',
 ];
 
 function makeBadges(
@@ -197,28 +196,28 @@ function makeBadges(
 const AI_BADGE_GROUPS: AiBadgeGroup[] = [
   {
     id: 'personalidade',
-    title: 'Como você se descreveria?',
+    title: 'Você se definiria como uma pessoa...',
     subtitle: 'Escolha características que combinam com você.',
     icon: Smile,
     badges: makeBadges('personalidade', [
-      'Calmo(a)',
-      'Comunicativo(a)',
-      'Reservado(a)',
-      'Criativo(a)',
-      'Curioso(a)',
-      'Bem-humorado(a)',
+      'Calma',
+      'Comunicativa',
+      'Reservada',
+      'Criativa',
+      'Curiosa',
+      'Bem-humorada',
       'Sensível',
-      'Determinado(a)',
+      'Determinada',
       'Independente',
-      'Organizado(a)',
-      'Espontâneo(a)',
-      'Teimoso(a)',
-      'Generoso(a)',
-      'Cuidadoso(a)',
-      'Sonhador(a)',
-      'Observador(a)',
-      'Acolhedor(a)',
-      'Corajoso(a)',
+      'Organizada',
+      'Espontânea',
+      'Teimosa',
+      'Generosa',
+      'Cuidadosa',
+      'Sonhadora',
+      'Observadora',
+      'Acolhedora',
+      'Corajosa',
     ], Smile),
   },
   {
@@ -228,25 +227,25 @@ const AI_BADGE_GROUPS: AiBadgeGroup[] = [
     icon: Users,
     badges: makeBadges('familia', [
       'Família em primeiro lugar',
-      'Gosta de reunir pessoas',
-      'Mantém tradições familiares',
-      'Valoriza histórias antigas',
-      'Tem forte ligação com os pais',
-      'Tem forte ligação com os avós',
-      'É próximo(a) dos irmãos',
-      'Ama ser pai/mãe',
-      'Ama ser tio/tia',
-      'Gosta de cuidar dos outros',
-      'É referência na família',
-      'Gosta de ouvir histórias da família',
-      'Gosta de contar histórias',
-      'Valoriza encontros de família',
-      'Guarda fotos e lembranças',
-      'Preserva memórias familiares',
+      'Gosto de reunir pessoas',
+      'Mantenho tradições familiares',
+      'Valorizo histórias antigas',
+      'Tenho forte ligação com meus pais',
+      'Tenho forte ligação com meus avós',
+      'Tenho proximidade com meus irmãos',
+      'Amo ser mãe ou pai',
+      'Amo ser tia ou tio',
+      'Gosto de cuidar dos outros',
+      'Sou referência na família',
+      'Gosto de ouvir histórias da família',
+      'Gosto de contar histórias',
+      'Valorizo encontros de família',
+      'Guardo fotos e lembranças',
+      'Preservo memórias familiares',
     ], Users, {
       'Família em primeiro lugar': Heart,
-      'Guarda fotos e lembranças': Camera,
-      'Preserva memórias familiares': BookOpen,
+      'Guardo fotos e lembranças': Camera,
+      'Preservo memórias familiares': BookOpen,
     }),
   },
   {
@@ -255,28 +254,28 @@ const AI_BADGE_GROUPS: AiBadgeGroup[] = [
     subtitle: 'Conte um pouco sobre sua relação com o trabalho, profissão e conquistas.',
     icon: Briefcase,
     badges: makeBadges('trabalho', [
-      'Dedicado(a) ao trabalho',
-      'Empreendedor(a)',
-      'Criativo(a) na profissão',
-      'Gosta de ensinar',
-      'Gosta de aprender',
-      'Tem espírito de liderança',
-      'Mudou de carreira',
-      'Trabalhou desde cedo',
-      'Construiu sua trajetória com esforço',
-      'Tem orgulho da profissão',
-      'É reconhecido(a) pelo que faz',
-      'Trabalhou em diferentes áreas',
-      'Valoriza independência financeira',
-      'Gosta de resolver problemas',
-      'Tem habilidade manual',
-      'Tem habilidade com pessoas',
-      'Tem habilidade com comunicação',
-      'Tem habilidade com números',
-      'Tem habilidade artística',
+      'Me dedico ao trabalho',
+      'Gosto de empreender',
+      'Me destaco pela criatividade',
+      'Gosto de ensinar',
+      'Gosto de aprender',
+      'Tenho espírito de liderança',
+      'Mudei de carreira',
+      'Trabalhei desde cedo',
+      'Construí minha trajetória com esforço',
+      'Tenho orgulho da minha profissão',
+      'Sou reconhecida pelo que faço',
+      'Trabalhei em diferentes áreas',
+      'Valorizo independência financeira',
+      'Gosto de resolver problemas',
+      'Tenho habilidade manual',
+      'Tenho facilidade com pessoas',
+      'Tenho habilidade com comunicação',
+      'Tenho facilidade com números',
+      'Tenho habilidade artística',
     ], Briefcase, {
-      'Gosta de ensinar': GraduationCap,
-      'Gosta de aprender': BookOpen,
+      'Gosto de ensinar': GraduationCap,
+      'Gosto de aprender': BookOpen,
     }),
   },
   {
@@ -285,26 +284,26 @@ const AI_BADGE_GROUPS: AiBadgeGroup[] = [
     subtitle: 'Marque experiências ligadas a cidades, viagens e mudanças de vida.',
     icon: MapPin,
     badges: makeBadges('lugares', [
-      'Nasceu em uma cidade e viveu em outra',
-      'Mudou de cidade',
-      'Mudou de estado',
-      'Morou fora do Brasil',
-      'Tem ligação forte com a cidade natal',
-      'Sente saudade de um lugar',
-      'Tem uma cidade que marcou sua vida',
-      'Gosta de viajar',
-      'Viveu uma fase importante em outra cidade',
-      'Começou de novo em outro lugar',
-      'Construiu família longe da cidade natal',
-      'Voltou para a cidade de origem',
-      'Tem raízes no interior',
-      'Tem raízes no litoral',
-      'Tem raízes em outro país',
-      'Valoriza suas origens',
+      'Nasci em uma cidade e vivi em outra',
+      'Mudei de cidade',
+      'Mudei de estado',
+      'Morei fora do Brasil',
+      'Tenho ligação forte com minha cidade natal',
+      'Sinto saudade de um lugar',
+      'Tenho uma cidade que marcou minha vida',
+      'Gosto de viajar',
+      'Vivi uma fase importante em outra cidade',
+      'Comecei de novo em outro lugar',
+      'Construí família longe da cidade natal',
+      'Voltei para minha cidade de origem',
+      'Tenho raízes no interior',
+      'Tenho raízes no litoral',
+      'Tenho raízes em outro país',
+      'Valorizo minhas origens',
     ], MapPin, {
-      'Gosta de viajar': Plane,
-      'Morou fora do Brasil': Map,
-      'Começou de novo em outro lugar': Home,
+      'Gosto de viajar': Plane,
+      'Morei fora do Brasil': Map,
+      'Comecei de novo em outro lugar': Home,
     }),
   },
   {
@@ -380,35 +379,35 @@ const AI_BADGE_GROUPS: AiBadgeGroup[] = [
   },
   {
     id: 'marcas',
-    title: 'Detalhes que tornam você único(a)',
+    title: 'O que faz você uma pessoa única?',
     subtitle: 'Pequenas manias, frases, gostos e costumes ajudam a deixar sua história mais viva.',
     icon: Sparkles,
     badges: makeBadges('marcas', [
-      'Tem um apelido',
-      'Tem uma frase típica',
-      'Conta histórias repetidas',
-      'Tem uma receita famosa',
-      'Sempre tira fotos',
-      'Guarda objetos antigos',
-      'Tem uma música marcante',
-      'É conhecido(a) pelo humor',
-      'É conhecido(a) pela teimosia',
-      'É conhecido(a) pela generosidade',
-      'Gosta de aconselhar pessoas',
-      'Sempre organiza encontros',
-      'Tem uma mania engraçada',
-      'Tem um talento escondido',
-      'É pontual',
-      'Sempre se atrasa',
-      'Ama datas comemorativas',
-      'Tem um prato preferido',
-      'Tem um lugar preferido',
-      'Tem uma lembrança de infância marcante',
+      'Tenho um apelido',
+      'Tenho uma frase típica',
+      'Costumo repetir histórias',
+      'Tenho uma receita famosa',
+      'Estou sempre tirando fotos',
+      'Guardo objetos antigos',
+      'Tenho uma música marcante',
+      'Me conhecem pelo meu humor',
+      'Me conhecem pela minha teimosia',
+      'Me conhecem pela minha generosidade',
+      'Gosto de aconselhar pessoas',
+      'Costumo organizar encontros',
+      'Tenho uma mania engraçada',
+      'Tenho um talento escondido',
+      'Costumo ser pontual',
+      'Costumo me atrasar',
+      'Amo datas comemorativas',
+      'Tenho um prato preferido',
+      'Tenho um lugar preferido',
+      'Tenho uma lembrança de infância marcante',
     ], Sparkles, {
-      'Tem uma receita famosa': Utensils,
-      'Sempre tira fotos': Camera,
-      'Tem uma música marcante': Music,
-      'Ama datas comemorativas': Gift,
+      'Tenho uma receita famosa': Utensils,
+      'Estou sempre tirando fotos': Camera,
+      'Tenho uma música marcante': Music,
+      'Amo datas comemorativas': Gift,
     }),
   },
 ];
@@ -1126,6 +1125,7 @@ export function MeusDados() {
 
   const renderAiBadgeGroup = (group: AiBadgeGroup) => {
     const GroupIcon = group.icon;
+    const compactCards = ['personalidade', 'familia', 'trabalho', 'lugares'].includes(group.id);
 
     return (
       <div className="space-y-4">
@@ -1138,10 +1138,31 @@ export function MeusDados() {
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">{group.subtitle}</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className={compactCards ? 'grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3' : 'grid grid-cols-1 gap-3 sm:grid-cols-2'}>
           {group.badges.map((badge) => {
             const selected = aiSelectedBadges.includes(badge.id);
             const BadgeIcon = badge.icon ?? group.icon;
+
+            if (compactCards) {
+              return (
+                <button
+                  key={badge.id}
+                  type="button"
+                  onClick={() => toggleAiBadge(badge.id)}
+                  className={[
+                    'flex min-h-[56px] min-w-0 items-center justify-center rounded-xl border px-3 py-2.5 text-center text-sm font-medium leading-snug transition-colors',
+                    selected
+                      ? 'border-blue-300 bg-blue-50 text-blue-800'
+                      : 'border-gray-200 bg-white text-gray-800 hover:border-blue-200 hover:bg-blue-50/50',
+                  ].join(' ')}
+                  aria-pressed={selected}
+                >
+                  <span className="min-w-0 overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                    {badge.label}
+                  </span>
+                </button>
+              );
+            }
 
             return (
               <button
@@ -1264,46 +1285,7 @@ export function MeusDados() {
       );
     }
 
-    const toneLabel = AI_TONES.find((tone) => tone.id === aiTone)?.label ?? 'Afetivo';
-
-    return (
-      <div className="space-y-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-            <Wand2 className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="break-words text-lg font-semibold text-gray-900">Tudo pronto para gerar seus textos</h3>
-            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              A IA vai criar uma Mini Bio e Curiosidades em primeira pessoa, com até 300 caracteres cada.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tom escolhido</p>
-            <p className="mt-1 break-words text-sm font-medium text-gray-900">{toneLabel}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Opções selecionadas</p>
-            <p className="mt-1 text-sm font-medium text-gray-900">{aiSelectedBadgeItems.length}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Características adicionais</p>
-            <p className="mt-1 text-sm font-medium text-gray-900">{aiCustomTraits.trim() ? 'Sim' : 'Não'}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Perguntas respondidas</p>
-            <p className="mt-1 text-sm font-medium text-gray-900">{aiAnsweredQuestions.length}</p>
-          </div>
-        </div>
-        {!aiHasGenerationSource && (
-          <p className="break-words rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Selecione ao menos uma opção, adicione uma característica ou responda uma pergunta para gerar os textos.
-          </p>
-        )}
-      </div>
-    );
+    return null;
   };
 
   if (loading) {
