@@ -23,6 +23,37 @@ import {
 } from '../services/memberProfileService';
 import { ArquivoHistorico, Pessoa } from '../types';
 
+function getArquivosHistoricosDraftKey(userId: string, pessoaId: string) {
+  return `arquivos-historicos-draft:${userId}:${pessoaId}`;
+}
+
+function readArquivosHistoricosDraft(key: string): ArquivoHistorico[] | null {
+  try {
+    const rawDraft = window.localStorage.getItem(key);
+    if (!rawDraft) return null;
+    const draft = JSON.parse(rawDraft);
+    return Array.isArray(draft) ? draft as ArquivoHistorico[] : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeArquivosHistoricosDraft(key: string, archives: ArquivoHistorico[]) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(archives));
+  } catch {
+    // Rascunho local é auxiliar; falha de storage não deve bloquear a navegação.
+  }
+}
+
+function clearArquivosHistoricosDraft(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // noop
+  }
+}
+
 export function ArquivosHistoricosPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -30,6 +61,7 @@ export function ArquivosHistoricosPage() {
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [draftHydrated, setDraftHydrated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +70,7 @@ export function ArquivosHistoricosPage() {
       if (!user) return;
 
       setLoading(true);
+      setDraftHydrated(false);
       await resolveFirstAccessLinkForUser(user);
       const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
 
@@ -53,13 +86,18 @@ export function ArquivosHistoricosPage() {
 
       try {
         const storedArchives = await listarArquivosHistoricosPorPessoa(data.pessoa.id);
-        if (mounted) setArchives(storedArchives);
+        const draftKey = getArquivosHistoricosDraftKey(user.id, data.pessoa.id);
+        const draftArchives = readArquivosHistoricosDraft(draftKey);
+        if (mounted) setArchives(draftArchives ?? storedArchives);
       } catch (loadError) {
         if (mounted) {
           toast.error(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os arquivos históricos.');
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setDraftHydrated(true);
+          setLoading(false);
+        }
       }
     }
 
@@ -72,12 +110,19 @@ export function ArquivosHistoricosPage() {
 
   const pessoa = link?.pessoa;
 
+  useEffect(() => {
+    if (!user || !pessoa?.id || !draftHydrated) return;
+    const draftKey = getArquivosHistoricosDraftKey(user.id, pessoa.id);
+    writeArquivosHistoricosDraft(draftKey, archives);
+  }, [archives, draftHydrated, pessoa?.id, user]);
+
   const saveArchives = async () => {
     if (!pessoa?.id) return false;
 
     setSaving(true);
     try {
       const saved = await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
+      clearArquivosHistoricosDraft(getArquivosHistoricosDraftKey(user!.id, pessoa.id));
       setArchives(saved);
       toast.success('Arquivos históricos salvos.');
       return true;

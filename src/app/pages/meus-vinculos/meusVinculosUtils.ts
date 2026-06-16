@@ -54,8 +54,22 @@ export function canRequestProfileControl(
   return true;
 }
 
+function getGenderedDeceasedLabel(person: Pessoa) {
+  const gender = String(person.genero ?? '').trim().toLowerCase();
+
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(gender)) {
+    return 'Falecida';
+  }
+
+  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(gender)) {
+    return 'Falecido';
+  }
+
+  return 'Falecido(a)';
+}
+
 export function getPersonSecondaryDetails(person: Pessoa) {
-  return [isPersonDeceased(person) ? 'Falecido(a)' : null].filter(Boolean) as string[];
+  return [isPersonDeceased(person) ? getGenderedDeceasedLabel(person) : null].filter(Boolean) as string[];
 }
 
 export function relationshipStatusHasPending(status: RelationshipReviewStatus) {

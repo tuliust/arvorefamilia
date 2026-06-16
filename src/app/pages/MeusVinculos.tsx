@@ -1188,7 +1188,7 @@ export function MeusVinculos() {
                     {status !== 'removed_pending' && (
                       <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
                         <div className="space-y-2">
-                          <Label htmlFor={`child-other-parent-${person.id}`}>Outro pai/mãe</Label>
+                          <Label htmlFor={`child-other-parent-${person.id}`}>Alterar a mãe</Label>
                           <select
                             id={`child-other-parent-${person.id}`}
                             value={childOtherParent[person.id] ?? ''}

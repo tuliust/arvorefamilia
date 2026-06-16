@@ -1638,7 +1638,7 @@ export function MeusDados() {
                 />
               </Field>
 
-              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
+              <div className="grid min-w-0 grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
                 <Field
                   label="Local de nascimento"
                   labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para local de nascimento" />}
@@ -1656,6 +1656,7 @@ export function MeusDados() {
                   label="Estrangeiro"
                   checked={form.local_nascimento_exterior === true}
                   onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
+                  alignWithInput={false}
                 />
               </div>
 
@@ -1682,7 +1683,7 @@ export function MeusDados() {
               </div>
 
               {form.falecido !== true && (
-                <div className="grid min-w-0 grid-cols-1 items-start gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
+                <div className="grid min-w-0 grid-cols-1 items-center gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
                   <Field
                     label="Cidade de residência"
                     labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para cidade de residência" />}
@@ -1700,6 +1701,7 @@ export function MeusDados() {
                     label="Exterior"
                     checked={form.local_atual_exterior === true}
                     onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                    alignWithInput={false}
                   />
                 </div>
               )}

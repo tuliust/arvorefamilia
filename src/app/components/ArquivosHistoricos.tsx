@@ -5,8 +5,6 @@ import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
 import {
-  ArrowDown,
-  ArrowUp,
   Baby,
   Briefcase,
   Download,
@@ -16,6 +14,7 @@ import {
   Heart,
   Images,
   Plane,
+  Pencil,
   Plus,
   ScrollText,
   Shield,
@@ -164,6 +163,7 @@ export function ArquivosHistoricos({
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [previewFile, setPreviewFile] = useState<ArquivoHistorico | null>(null);
   const hasUploadedDraftFile = Boolean(novoArquivo.url);
+  const [editingArquivoId, setEditingArquivoId] = useState<string | null>(null);
 
   const resetNovoArquivo = () => {
     setNovoArquivo({
@@ -227,8 +227,8 @@ export function ArquivosHistoricos({
     setNovoArquivo((current) => ({
       ...current,
       categoria_evento: category,
-      titulo: current.titulo.trim() ? current.titulo : option?.label ?? '',
-      descricao: current.descricao.trim() ? current.descricao : option?.description ?? '',
+      titulo: option?.label ?? '',
+      descricao: option?.description ?? '',
     }));
     setIsAddingFile(true);
   };
@@ -258,10 +258,12 @@ export function ArquivosHistoricos({
     onChange([...arquivos, arquivo]);
     resetNovoArquivo();
     setIsAddingFile(false);
+    setEditingArquivoId(null);
   };
 
   const handleRemoveArquivo = (id: string) => {
     onChange(arquivos.filter((arquivo) => arquivo.id !== id));
+    setEditingArquivoId((current) => (current === id ? null : current));
   };
 
   const handleUpdateArquivo = (id: string, updates: Partial<ArquivoHistorico>) => {
@@ -270,16 +272,6 @@ export function ArquivosHistoricos({
     )));
   };
 
-  const handleMoveArquivo = (id: string, direction: -1 | 1) => {
-    const currentIndex = arquivos.findIndex((arquivo) => arquivo.id === id);
-    const nextIndex = currentIndex + direction;
-    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= arquivos.length) return;
-
-    const nextArquivos = [...arquivos];
-    const [item] = nextArquivos.splice(currentIndex, 1);
-    nextArquivos.splice(nextIndex, 0, item);
-    onChange(nextArquivos.map((arquivo, index) => ({ ...arquivo, ordem: index })));
-  };
 
   const handleViewFile = (arquivo: ArquivoHistorico) => {
     setPreviewFile(arquivo);
@@ -513,7 +505,7 @@ export function ArquivosHistoricos({
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {arquivos.map((arquivo, index) => (
+              {arquivos.map((arquivo) => (
                 <div
                   key={arquivo.id}
                   className="min-w-0 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
@@ -524,7 +516,7 @@ export function ArquivosHistoricos({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      {readOnly ? (
+                      {readOnly || editingArquivoId !== arquivo.id ? (
                         <>
                           <h4 className="break-words text-sm font-medium text-gray-900">
                             {arquivo.titulo}
@@ -542,6 +534,61 @@ export function ArquivosHistoricos({
                               {arquivo.descricao}
                             </p>
                           )}
+                          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                            {readOnly ? (
+                              <>
+                                <HistoricalFileFavoriteButton
+                                  arquivo={arquivo}
+                                  pessoaId={pessoaId}
+                                  relacionamentoId={relacionamentoId}
+                                  className="h-8 w-8 border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewFile(arquivo)}
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  Visualizar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadArquivo(arquivo)}
+                                  className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
+                                >
+                                  <Download className="h-3 w-3" />
+                                  Baixar arquivo
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openArquivoInNewTab(arquivo)}
+                                  className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Abrir
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingArquivoId(arquivo.id)}
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveArquivo(arquivo.id)}
+                                  className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline"
+                                >
+                                  <X className="h-3 w-3" />
+                                  Remover
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </>
                       ) : (
                         <div className="space-y-2">
@@ -581,70 +628,27 @@ export function ArquivosHistoricos({
                             className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                             placeholder="Descrição"
                           />
+                          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => setEditingArquivoId(null)}
+                            >
+                              Cancelar edição
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => setEditingArquivoId(null)}
+                            >
+                              Concluir edição
+                            </Button>
+                          </div>
                         </div>
                       )}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <HistoricalFileFavoriteButton
-                          arquivo={arquivo}
-                          pessoaId={pessoaId}
-                          relacionamentoId={relacionamentoId}
-                          className="h-8 w-8 border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleViewFile(arquivo)}
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                        >
-                          <Eye className="h-3 w-3" />
-                          Visualizar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadArquivo(arquivo)}
-                          className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
-                        >
-                          <Download className="h-3 w-3" />
-                          Baixar arquivo
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openArquivoInNewTab(arquivo)}
-                          className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Abrir
-                        </button>
-                        {!readOnly && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveArquivo(arquivo.id, -1)}
-                              disabled={index === 0}
-                              className="inline-flex items-center gap-1 text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300"
-                            >
-                              <ArrowUp className="h-3 w-3" />
-                              Subir
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveArquivo(arquivo.id, 1)}
-                              disabled={index === arquivos.length - 1}
-                              className="inline-flex items-center gap-1 text-xs text-gray-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300"
-                            >
-                              <ArrowDown className="h-3 w-3" />
-                              Descer
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveArquivo(arquivo.id)}
-                              className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline"
-                            >
-                              <X className="h-3 w-3" />
-                              Remover
-                            </button>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>

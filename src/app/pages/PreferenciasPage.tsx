@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Save, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
@@ -194,21 +194,12 @@ export function PreferenciasPage() {
                 onCheckedChange={(checked) => setPrivacy((current) => current && ({ ...current, permitir_mensagens_whatsapp: checked }))}
               />
             </div>
-            <div className="flex justify-end">
-              <Button type="button" onClick={() => void handleSavePrivacy()} disabled={savingPrivacy}>
-                <Save className="h-4 w-4" />
-                {savingPrivacy ? 'Salvando...' : 'Salvar permissões'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/arquivos-historicos')}>
-            Voltar para arquivos históricos
-          </Button>
+        <div className="flex justify-end">
           <Button type="button" onClick={handleContinue} disabled={savingPrivacy}>
-            Continuar para revisão
+            {savingPrivacy ? 'Salvando...' : 'Continuar para revisão'}
           </Button>
         </div>
       </main>
