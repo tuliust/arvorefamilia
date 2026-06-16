@@ -38,9 +38,11 @@ function toParagraphs(value: unknown) {
 type PersonDataViewProps = {
   pessoa: Pessoa;
   headerAction?: React.ReactNode;
+  afterOverviewContent?: React.ReactNode;
+  sideContent?: React.ReactNode;
 };
 
-export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
+export function PersonDataView({ pessoa, headerAction, afterOverviewContent, sideContent }: PersonDataViewProps) {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [generatedInsights, setGeneratedInsights] = useState<PersonGeneratedInsight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -176,7 +178,9 @@ export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
         </DialogContent>
       </Dialog>
 
-      {(pessoa.minibio || pessoa.curiosidades) && (
+      <div className={sideContent ? 'grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,64rem)_minmax(320px,1fr)] xl:items-start' : 'space-y-6'}>
+        <div className="space-y-6">
+          {(pessoa.minibio || pessoa.curiosidades) && (
         <Card>
           <CardHeader>
             <CardTitle>Sobre</CardTitle>
@@ -204,10 +208,12 @@ export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
             </div>
           </CardContent>
         </Card>
-      )}
+          )}
 
-      {!isFalecido && (canShowPhoneNumber || canShowWhatsAppButton || canShowAddress || canShowSocial) && (
-        <Card>
+          {afterOverviewContent}
+
+              {!isFalecido && (canShowPhoneNumber || canShowWhatsAppButton || canShowAddress || canShowSocial) && (
+            <Card>
           <CardHeader>
             <CardTitle>Contato</CardTitle>
           </CardHeader>
@@ -250,8 +256,8 @@ export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
         </Card>
       )}
 
-      {pessoa.data_nascimento && !isPet && canShowBirthDate && (
-        <>
+          {pessoa.data_nascimento && !isPet && canShowBirthDate && (
+            <>
           <PersonAstrologyCard
             pessoa={pessoa}
             insight={astrologyInsight}
@@ -265,8 +271,16 @@ export function PersonDataView({ pessoa, headerAction }: PersonDataViewProps) {
             loading={insightsLoading}
             error={insightsError}
           />
-        </>
-      )}
+            </>
+          )}
+        </div>
+
+        {sideContent && (
+          <aside className="min-w-0 xl:sticky xl:top-6">
+            {sideContent}
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

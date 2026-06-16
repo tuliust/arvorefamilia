@@ -40,12 +40,14 @@ export function RelationshipFinder({
     });
   }, [pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
 
+  const nomeBaseCurto = pessoaBase.nome_completo.trim().split(/\s+/)[0] || 'esta pessoa';
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
-          Descubra seu parentesco com...
+          Qual o seu parentesco com {nomeBaseCurto}
         </CardTitle>
       </CardHeader>
 

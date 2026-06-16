@@ -1,18 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
-import { toast } from 'sonner';
 import { AppLink as Link } from '../components/AppLink';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
-import { Textarea } from '../components/ui/textarea';
 import {
   obterPessoaPorId,
   obterRelacionamentosDaPessoa,
@@ -50,7 +40,6 @@ import { FavoriteButton } from '../components/favorites/FavoriteButton';
 import { MemberPageHeader, type HeaderAction } from '../components/layout/MemberPageHeader';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 import { getLinkedPersonWithPessoa } from '../services/memberProfileService';
-import { createPersonProfileSuggestion } from '../services/personProfileSuggestionService';
 
 const TREE_RETURN_FALLBACK_PATH = '/mapa-familiar';
 const ALLOWED_TREE_RETURN_PATHS = ['/', '/mapa-familiar', '/mapa-familiar-horizontal'];
@@ -111,9 +100,6 @@ export function PersonProfile() {
   const [allPeople, setAllPeople] = useState<Pessoa[]>([]);
   const [allRelationships, setAllRelationships] = useState<Relacionamento[]>([]);
   const [relationshipDegreeContextComplete, setRelationshipDegreeContextComplete] = useState(false);
-  const [suggestionOpen, setSuggestionOpen] = useState(false);
-  const [suggestionText, setSuggestionText] = useState('');
-  const [suggestionLoading, setSuggestionLoading] = useState(false);
   const canEdit = useMemo(
     () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }) || currentPersonCanEditLink,
     [id, linkedPessoaId, user, isAdmin, currentPersonCanEditLink],
@@ -282,33 +268,6 @@ export function PersonProfile() {
     navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados');
   };
 
-  const handleInsertInformation = () => {
-    if (canEdit) {
-      handleEditProfile();
-      return;
-    }
-
-    setSuggestionOpen(true);
-  };
-
-  const handleSubmitSuggestion = async () => {
-    if (!id || suggestionLoading) return;
-
-    setSuggestionLoading(true);
-    try {
-      await createPersonProfileSuggestion({
-        targetPessoaId: id,
-        suggestionText,
-      });
-      setSuggestionText('');
-      setSuggestionOpen(false);
-      toast.success('Sugestão enviada para revisão administrativa.');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a sugestão.');
-    } finally {
-      setSuggestionLoading(false);
-    }
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -426,9 +385,18 @@ export function PersonProfile() {
       />
 
       {/* Main Content */}
-      <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-[1440px] space-y-6 px-2 py-6 sm:px-4 sm:py-8 lg:px-5 xl:px-6">
         <PersonDataView
           pessoa={pessoa}
+          afterOverviewContent={(
+            <RelationshipFinder
+              pessoaBase={pessoa}
+              pessoas={allPeople.length > 0 ? allPeople : [pessoa]}
+              relacionamentos={relationshipFinderRelationships}
+              dataScopeNotice={relationshipFinderScopeNotice}
+            />
+          )}
+          sideContent={<PersonTimeline items={timelineItems} isAdmin={isAdmin} />}
           headerAction={(
             <div className="flex items-center gap-2">
               <FavoriteButton
@@ -457,25 +425,6 @@ export function PersonProfile() {
           )}
         />
 
-        <Card>
-          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="min-w-0">
-              <h2 className="break-words text-lg font-semibold text-gray-900">Informações do perfil</h2>
-              <p className="mt-1 break-words text-sm text-gray-500">
-                Complete dados, histórias, contato, eventos ou correções sobre esta pessoa.
-              </p>
-            </div>
-            <Button
-              type="button"
-              className="w-full sm:w-auto"
-              onClick={handleInsertInformation}
-              aria-label="Inserir Informações"
-            >
-              <Plus className="h-4 w-4" />
-              Inserir Informações
-            </Button>
-          </CardContent>
-        </Card>
 
         <PersonRelationshipsView
           relationships={relacionamentos}
@@ -483,14 +432,6 @@ export function PersonProfile() {
           treeReturnPath={treeReturnPath}
         />
 
-        <RelationshipFinder
-          pessoaBase={pessoa}
-          pessoas={allPeople.length > 0 ? allPeople : [pessoa]}
-          relacionamentos={relationshipFinderRelationships}
-          dataScopeNotice={relationshipFinderScopeNotice}
-        />
-
-        <PersonTimeline items={timelineItems} isAdmin={isAdmin} />
 
         <PersonEventsList eventos={personEvents} />
 
@@ -564,42 +505,6 @@ export function PersonProfile() {
         )}
       </main>
 
-      <Dialog open={suggestionOpen} onOpenChange={setSuggestionOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Inserir Informações</DialogTitle>
-            <DialogDescription>
-              Envie uma sugestão para revisão no painel administrativo. Ela não altera o perfil automaticamente.
-            </DialogDescription>
-          </DialogHeader>
-
-          <Textarea
-            value={suggestionText}
-            onChange={(event) => setSuggestionText(event.target.value)}
-            rows={6}
-            placeholder="Descreva a informação, correção ou história que deseja sugerir."
-            aria-label="Informação sugerida"
-          />
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setSuggestionOpen(false)}
-              disabled={suggestionLoading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSubmitSuggestion}
-              disabled={suggestionLoading || !suggestionText.trim()}
-            >
-              {suggestionLoading ? 'Enviando...' : 'Enviar sugestão'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
