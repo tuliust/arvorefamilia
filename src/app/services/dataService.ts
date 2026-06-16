@@ -24,7 +24,8 @@ const PESSOA_COLUMNS = [
   'local_falecimento_exterior',
   'falecido',
   'local_atual_exterior',
-  'local_atual',  'profissao',
+  'local_atual',
+  'profissao',
 
   'foto_principal_url',
   'humano_ou_pet',
@@ -33,6 +34,7 @@ const PESSOA_COLUMNS = [
   'curiosidades',
   'telefone',
   'endereco',
+  'complemento',
   'rede_social',
   'instagram_usuario',
   'instagram_url',

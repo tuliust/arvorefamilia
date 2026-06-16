@@ -315,12 +315,14 @@ export function syncFirstSocialProfileToPersonFields<T extends { rede_social?: s
   form: T,
   profiles: SocialProfileForm[],
 ): T {
-  const firstProfile = profiles[0] ?? createSocialProfile();
+  const firstCompleteProfile = profiles.find((profile) =>
+    String(profile.rede ?? '').trim() && String(profile.perfil ?? '').trim()
+  );
 
   return {
     ...form,
-    rede_social: firstProfile.rede,
-    instagram_usuario: firstProfile.perfil,
+    rede_social: firstCompleteProfile?.rede ?? '',
+    instagram_usuario: firstCompleteProfile?.perfil ?? '',
   };
 }
 
@@ -349,18 +351,18 @@ export function cleanPersonPayload(form: EditableOwnPersonPayload): EditableOwnP
     local_falecimento: isDeceased ? normalizedDeathLocation || null : null,
     local_falecimento_exterior: isDeceased && form.local_falecimento_exterior === true,
     falecido: isDeceased,
-    local_atual: normalizeLocationByMode(String(form.local_atual ?? ''), {
+    local_atual: isDeceased ? '' : normalizeLocationByMode(String(form.local_atual ?? ''), {
       international: form.local_atual_exterior === true,
     }),
-    local_atual_exterior: form.local_atual_exterior === true,
+    local_atual_exterior: !isDeceased && form.local_atual_exterior === true,
     profissao: normalizeProfession(String(form.profissao ?? '')),
     telefone: formatPhone(String(form.telefone ?? '')),
-    permitir_exibir_instagram: form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
-    permitir_mensagens_whatsapp: form.permitir_mensagens_whatsapp !== false,
-    permitir_exibir_data_nascimento: form.permitir_exibir_data_nascimento ?? true,
-    permitir_exibir_endereco: form.permitir_exibir_endereco !== false,
-    permitir_exibir_rede_social: form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
-    permitir_exibir_telefone: form.permitir_exibir_telefone !== false,
+    permitir_exibir_instagram: isDeceased ? true : form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
+    permitir_mensagens_whatsapp: isDeceased ? false : form.permitir_mensagens_whatsapp !== false,
+    permitir_exibir_data_nascimento: isDeceased ? true : form.permitir_exibir_data_nascimento ?? true,
+    permitir_exibir_endereco: isDeceased ? true : form.permitir_exibir_endereco !== false,
+    permitir_exibir_rede_social: isDeceased ? true : form.permitir_exibir_rede_social !== false && form.permitir_exibir_instagram !== false,
+    permitir_exibir_telefone: isDeceased ? true : form.permitir_exibir_telefone !== false,
   };
 
   return EDITABLE_OWN_PERSON_FIELDS.reduce<EditableOwnPersonPayload>((payload, field) => {
@@ -424,10 +426,12 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
     if (deathLocationError) nextErrors.local_falecimento = deathLocationError;
   }
 
-  const currentLocationError = validateLocationByMode(normalizedCurrentLocation, {
-    international: form.local_atual_exterior === true,
-  });
-  if (currentLocationError) nextErrors.local_atual = currentLocationError;
+  if (form.falecido !== true) {
+    const currentLocationError = validateLocationByMode(normalizedCurrentLocation, {
+      international: form.local_atual_exterior === true,
+    });
+    if (currentLocationError) nextErrors.local_atual = currentLocationError;
+  }
 
   const socialNetwork = String(form.rede_social ?? '').trim();
   const socialProfile = String(form.instagram_usuario ?? '').trim();

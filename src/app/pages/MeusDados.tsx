@@ -2219,9 +2219,12 @@ function CompactToggleField({
   className?: string;
 }) {
   return (
-    <div className={['flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3', className].filter(Boolean).join(' ')}>
-      <Label className="min-w-0 break-words text-xs">{label}</Label>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+    <div className={['min-w-0', className].filter(Boolean).join(' ')}>
+      <div aria-hidden="true" className="hidden h-[22px] sm:block" />
+      <div className="flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 sm:mt-2">
+        <Label className="min-w-0 break-words text-xs">{label}</Label>
+        <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+      </div>
     </div>
   );
 }

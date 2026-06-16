@@ -39,6 +39,10 @@ const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEvent
 
 type HistoricalFileCategoryOption = { value: HistoricalFileEventCategory; label: string };
 type HistoricalFileParticipant = Pick<Pessoa, 'id' | 'nome_completo'>;
+type ArquivoHistoricoWithParticipants = ArquivoHistorico & {
+  participante_ids?: string[];
+  participantes?: HistoricalFileParticipant[];
+};
 type DraftHistoricalFile = {
   titulo: string;
   descricao: string;
@@ -322,9 +326,14 @@ export function ArquivosHistoricos({
       .filter((person): person is HistoricalFileParticipant => Boolean(person));
   };
 
+  const getArquivoParticipantIds = (arquivo: ArquivoHistorico) => (
+    (arquivo as ArquivoHistoricoWithParticipants).participante_ids ?? []
+  );
+
   const getArquivoParticipants = (arquivo: ArquivoHistorico) => {
-    const byIds = getParticipantsFromIds(arquivo.participante_ids ?? []);
-    return byIds.length > 0 ? byIds : arquivo.participantes ?? [];
+    const archiveWithParticipants = arquivo as ArquivoHistoricoWithParticipants;
+    const byIds = getParticipantsFromIds(getArquivoParticipantIds(arquivo));
+    return byIds.length > 0 ? byIds : archiveWithParticipants.participantes ?? [];
   };
 
   const renderParticipantSelector = (
@@ -339,8 +348,7 @@ export function ArquivosHistoricos({
     const query = normalizeSearchText(searchValue.trim());
     const options = participantOptions
       .filter((person) => !selectedSet.has(person.id))
-      .filter((person) => !query || normalizeSearchText(person.nome_completo).includes(query))
-      .slice(0, 8);
+      .filter((person) => !query || normalizeSearchText(person.nome_completo).includes(query));
 
     return (
       <div className="space-y-2">
@@ -403,7 +411,7 @@ export function ArquivosHistoricos({
       return;
     }
 
-    const arquivo: ArquivoHistorico = {
+    const arquivo: ArquivoHistoricoWithParticipants = {
       id: `arquivo-${Date.now()}`,
       tipo: novoArquivo.tipo,
       url: novoArquivo.url,
@@ -432,10 +440,10 @@ export function ArquivosHistoricos({
     setEditingArquivoId((current) => (current === id ? null : current));
   };
 
-  const handleUpdateArquivo = (id: string, updates: Partial<ArquivoHistorico>) => {
+  const handleUpdateArquivo = (id: string, updates: Partial<ArquivoHistoricoWithParticipants>) => {
     onChange(arquivos.map((arquivo) => (
-      arquivo.id === id ? { ...arquivo, ...updates } : arquivo
-    )));
+      arquivo.id === id ? { ...(arquivo as ArquivoHistoricoWithParticipants), ...updates } : arquivo
+    )) as ArquivoHistorico[]);
   };
 
 
@@ -814,16 +822,16 @@ export function ArquivosHistoricos({
                           />
                           {renderParticipantSelector(
                             getArquivoParticipants(arquivo),
-                            arquivo.participante_ids ?? [],
+                            getArquivoParticipantIds(arquivo),
                             (personId) => {
-                              const nextIds = Array.from(new Set([...(arquivo.participante_ids ?? []), personId]));
+                              const nextIds = Array.from(new Set([...(getArquivoParticipantIds(arquivo)), personId]));
                               handleUpdateArquivo(arquivo.id, {
                                 participante_ids: nextIds,
                                 participantes: getParticipantsFromIds(nextIds),
                               });
                             },
                             (personId) => {
-                              const nextIds = (arquivo.participante_ids ?? []).filter((id) => id !== personId);
+                              const nextIds = (getArquivoParticipantIds(arquivo)).filter((id) => id !== personId);
                               handleUpdateArquivo(arquivo.id, {
                                 participante_ids: nextIds,
                                 participantes: getParticipantsFromIds(nextIds),

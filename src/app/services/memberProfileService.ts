@@ -124,6 +124,16 @@ const SENSITIVE_ACTIVITY_FIELDS = new Set([
   'instagram_url',
 ]);
 
+
+function cleanOwnPersonUpdatePayload(payload: EditableOwnPersonPayload): EditableOwnPersonPayload {
+  return Object.entries(payload).reduce<EditableOwnPersonPayload>((nextPayload, [field, value]) => {
+    if (value !== undefined) {
+      (nextPayload as Record<string, unknown>)[field] = value;
+    }
+    return nextPayload;
+  }, {});
+}
+
 function getSafeOwnPersonChangedFields(payload: EditableOwnPersonPayload) {
   return Object.keys(payload).filter((field) => !SENSITIVE_ACTIVITY_FIELDS.has(field));
 }
@@ -723,15 +733,17 @@ export async function updateOwnLinkedPerson(pessoaId: string, payload: EditableO
     return { error: 'Você não tem permissão para editar este perfil.', data: null as Pessoa | null };
   }
 
+  const updatePayload = cleanOwnPersonUpdatePayload(payload);
+
   const { data, error } = await supabase
     .from('pessoas')
-    .update(payload)
+    .update(updatePayload)
     .eq('id', pessoaId)
     .select('*')
     .single();
 
   if (!error && data) {
-    await registerOwnPersonUpdateActivity(pessoaId, payload, data as Pessoa);
+    await registerOwnPersonUpdateActivity(pessoaId, updatePayload, data as Pessoa);
     emitTreeDataChanged();
   }
 

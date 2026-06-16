@@ -409,7 +409,7 @@ export function RevisaoDados() {
     );
   }
 
-  const isDeceased = form.falecido === true;
+  const isDeceased = pessoa.falecido === true;
   const visibleSocialForms = socialProfileForms.length > 0 ? socialProfileForms : [createSocialProfile()];
 
   return (
@@ -566,7 +566,7 @@ export function RevisaoDados() {
                 {relationshipSummary.map((group) => (
                   <div key={group.label} className="rounded-xl border border-gray-100 p-3">
                     <p className="mb-2 text-sm font-semibold text-gray-900">{group.label}</p>
-                    <PeopleList people={group.people} />
+                    <PeopleList people={group.people} genderHints={group.genderHints} />
                   </div>
                 ))}
               </div>
