@@ -1611,23 +1611,25 @@ export function MeusDados() {
                 />
               </Field>
 
-              <Field
-                label="Dia ou Ano de Nascimento"
-                labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para nascimento" />}
-                error={errors.data_nascimento}
-              >
+              <Field label="Profissão">
                 <Input
-                  id="data-nascimento"
-                  value={String(form.data_nascimento ?? '')}
-                  onBlur={() => normalizeFieldOnBlur('data_nascimento')}
-                  onChange={(e) => updateTextField('data_nascimento', e.target.value)}
-                  placeholder="AAAA ou DD/MM/AAAA"
-                  aria-invalid={Boolean(errors.data_nascimento)}
+                  value={String(form.profissao ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('profissao')}
+                  onChange={(e) => updateTextField('profissao', e.target.value)}
+                  placeholder="Ex: jornalista, professora, médico..."
                 />
               </Field>
 
               <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
-                <Field label="Local de nascimento" error={errors.local_nascimento}>
+                <Field
+                  label="Local de nascimento"
+                  labelAddon={(
+                    <DateFormatInfoButton ariaLabel="Formato aceito para local de nascimento">
+                      Use Cidade/UF. Para exterior, marque Estrangeiro e use Cidade (País).
+                    </DateFormatInfoButton>
+                  )}
+                  error={errors.local_nascimento}
+                >
                   <Input
                     value={String(form.local_nascimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_nascimento')}
@@ -1643,29 +1645,18 @@ export function MeusDados() {
                 />
               </div>
 
-              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
-                <Field label="Cidade de residência" error={errors.local_atual}>
-                  <Input
-                    value={String(form.local_atual ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('local_atual')}
-                    onChange={(e) => updateTextField('local_atual', e.target.value)}
-                    placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                    aria-invalid={Boolean(errors.local_atual)}
-                  />
-                </Field>
-                <CompactToggleField
-                  label="Exterior"
-                  checked={form.local_atual_exterior === true}
-                  onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-                />
-              </div>
-
-              <Field label="Profissão">
+              <Field
+                label="Dia ou Ano de Nascimento"
+                labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para nascimento" />}
+                error={errors.data_nascimento}
+              >
                 <Input
-                  value={String(form.profissao ?? '')}
-                  onBlur={() => normalizeFieldOnBlur('profissao')}
-                  onChange={(e) => updateTextField('profissao', e.target.value)}
-                  placeholder="Ex: jornalista, professora, médico..."
+                  id="data-nascimento"
+                  value={String(form.data_nascimento ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('data_nascimento')}
+                  onChange={(e) => updateTextField('data_nascimento', e.target.value)}
+                  placeholder="AAAA ou DD/MM/AAAA"
+                  aria-invalid={Boolean(errors.data_nascimento)}
                 />
               </Field>
 
@@ -1678,6 +1669,31 @@ export function MeusDados() {
 
               {form.falecido === true && (
                 <div className="grid grid-cols-1 items-start gap-4 md:col-span-2 md:grid-cols-2">
+                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px] md:col-span-2 md:w-[calc(50%-0.5rem)]">
+                    <Field
+                      label="Cidade de residência"
+                      labelAddon={(
+                        <DateFormatInfoButton ariaLabel="Formato aceito para cidade de residência">
+                          Use Cidade/UF. Para exterior, marque Exterior e use Cidade (País).
+                        </DateFormatInfoButton>
+                      )}
+                      error={errors.local_atual}
+                    >
+                      <Input
+                        value={String(form.local_atual ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('local_atual')}
+                        onChange={(e) => updateTextField('local_atual', e.target.value)}
+                        placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                        aria-invalid={Boolean(errors.local_atual)}
+                      />
+                    </Field>
+                    <CompactToggleField
+                      label="Exterior"
+                      checked={form.local_atual_exterior === true}
+                      onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                    />
+                  </div>
+
                   <Field
                     label="Dia ou Ano de Falecimento"
                     labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para falecimento" />}
@@ -1692,7 +1708,15 @@ export function MeusDados() {
                     />
                   </Field>
                   <div className="min-w-0 space-y-3">
-                    <Field label="Local de falecimento" error={errors.local_falecimento}>
+                    <Field
+                      label="Local de falecimento"
+                      labelAddon={(
+                        <DateFormatInfoButton ariaLabel="Formato aceito para local de falecimento">
+                          Use Cidade/UF. Para exterior, marque Falecimento no exterior e use Cidade (País).
+                        </DateFormatInfoButton>
+                      )}
+                      error={errors.local_falecimento}
+                    >
                       <Input
                         value={String(form.local_falecimento ?? '')}
                         onBlur={() => normalizeFieldOnBlur('local_falecimento')}
@@ -2035,16 +2059,22 @@ function SectionTitle({
   className?: string;
 }) {
   return (
-    <h2 className={['mb-4 flex min-w-0 items-center gap-2 text-base font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-        <Icon className="h-4 w-4" />
+    <h2 className={['mb-5 flex min-w-0 items-center gap-3 text-lg font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+        <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0 break-words">{children}</span>
     </h2>
   );
 }
 
-function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
+function DateFormatInfoButton({
+  ariaLabel,
+  children = 'Use o formato AAAA ou DD/MM/AAAA',
+}: {
+  ariaLabel: string;
+  children?: React.ReactNode;
+}) {
   return (
     <span className="group relative inline-flex shrink-0">
       <button
@@ -2054,8 +2084,8 @@ function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
       >
         <Info className="h-3.5 w-3.5" />
       </button>
-      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
-        Use o formato AAAA ou DD/MM/AAAA
+      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
+        {children}
       </span>
     </span>
   );
