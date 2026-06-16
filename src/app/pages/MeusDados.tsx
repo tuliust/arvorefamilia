@@ -1681,68 +1681,68 @@ export function MeusDados() {
                 />
               </div>
 
-              {form.falecido === true && (
-                <>
-                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
-                    <Field
-                      label="Cidade de residência"
-                      labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para cidade de residência" />}
-                      error={errors.local_atual}
-                    >
-                      <Input
-                        value={String(form.local_atual ?? '')}
-                        onBlur={() => normalizeFieldOnBlur('local_atual')}
-                        onChange={(e) => updateTextField('local_atual', e.target.value)}
-                        placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                        aria-invalid={Boolean(errors.local_atual)}
-                      />
-                    </Field>
-                    <CompactToggleField
-                      label="Exterior"
-                      checked={form.local_atual_exterior === true}
-                      onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+              {form.falecido !== true && (
+                <div className="grid min-w-0 grid-cols-1 items-start gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
+                  <Field
+                    label="Cidade de residência"
+                    labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para cidade de residência" />}
+                    error={errors.local_atual}
+                  >
+                    <Input
+                      value={String(form.local_atual ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('local_atual')}
+                      onChange={(e) => updateTextField('local_atual', e.target.value)}
+                      placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                      aria-invalid={Boolean(errors.local_atual)}
                     />
-                  </div>
+                  </Field>
+                  <CompactToggleField
+                    label="Exterior"
+                    checked={form.local_atual_exterior === true}
+                    onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                  />
+                </div>
+              )}
 
-                  <div className="grid grid-cols-1 items-start gap-4 md:col-span-2 md:grid-cols-2">
+              {form.falecido === true && (
+                <div className="grid grid-cols-1 items-start gap-4 md:col-span-2 md:grid-cols-2">
+                  <Field
+                    label="Dia ou Ano de Falecimento"
+                    labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para falecimento" />}
+                    error={errors.data_falecimento}
+                  >
+                    <Input
+                      value={String(form.data_falecimento ?? '')}
+                      onBlur={() => normalizeFieldOnBlur('data_falecimento')}
+                      onChange={(event) => updateTextField('data_falecimento', event.target.value)}
+                      placeholder="AAAA ou DD/MM/AAAA"
+                      aria-invalid={Boolean(errors.data_falecimento)}
+                    />
+                  </Field>
+                  <div className="min-w-0 space-y-3">
                     <Field
-                      label="Dia ou Ano de Falecimento"
-                      labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para falecimento" />}
-                      error={errors.data_falecimento}
+                      label="Local de falecimento"
+                      labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para local de falecimento" />}
+                      error={errors.local_falecimento}
                     >
                       <Input
-                        value={String(form.data_falecimento ?? '')}
-                        onBlur={() => normalizeFieldOnBlur('data_falecimento')}
-                        onChange={(event) => updateTextField('data_falecimento', event.target.value)}
-                        placeholder="AAAA ou DD/MM/AAAA"
-                        aria-invalid={Boolean(errors.data_falecimento)}
+                        value={String(form.local_falecimento ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                        onChange={(event) => updateTextField('local_falecimento', event.target.value)}
+                        placeholder={form.local_falecimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                        aria-invalid={Boolean(errors.local_falecimento)}
                       />
                     </Field>
-                    <div className="min-w-0 space-y-3">
-                      <Field
-                        label="Local de falecimento"
-                        labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para local de falecimento" />}
-                        error={errors.local_falecimento}
-                      >
-                        <Input
-                          value={String(form.local_falecimento ?? '')}
-                          onBlur={() => normalizeFieldOnBlur('local_falecimento')}
-                          onChange={(event) => updateTextField('local_falecimento', event.target.value)}
-                          placeholder={form.local_falecimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                          aria-invalid={Boolean(errors.local_falecimento)}
-                        />
-                      </Field>
-                      <div className="max-w-[260px]">
-                        <CompactToggleField
-                          label="Falecimento no exterior"
-                          checked={form.local_falecimento_exterior === true}
-                          onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
-                          alignWithInput={false}
-                        />
-                      </div>
+                    <div className="max-w-[260px]">
+                      <CompactToggleField
+                        label="Falecimento no exterior"
+                        checked={form.local_falecimento_exterior === true}
+                        onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                        alignWithInput={false}
+                      />
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </section>

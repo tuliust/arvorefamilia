@@ -222,7 +222,14 @@ export function ArquivosHistoricos({
   };
 
   const handleInteractiveCategorySelect = (category: HistoricalFileEventCategory) => {
-    setNovoArquivo((current) => ({ ...current, categoria_evento: category }));
+    const option = INTERACTIVE_CATEGORY_OPTIONS.find((item) => item.value === category);
+
+    setNovoArquivo((current) => ({
+      ...current,
+      categoria_evento: category,
+      titulo: current.titulo.trim() ? current.titulo : option?.label ?? '',
+      descricao: current.descricao.trim() ? current.descricao : option?.description ?? '',
+    }));
     setIsAddingFile(true);
   };
 

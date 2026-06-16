@@ -183,16 +183,6 @@ export function NotificationPreferencesPanel({
             </div>
 
             <div className="border-t border-gray-100 pt-3">
-              <PreferenceToggle
-                label="Receber notificações por email"
-                description="Controle geral para todos os emails opcionais."
-                checked={preferencias.receber_email !== false}
-                disabled={savingKey === 'receber_email'}
-                onCheckedChange={(checked) => atualizarPreferencia('receber_email', checked)}
-              />
-            </div>
-
-            <div className="border-t border-gray-100 pt-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {EMAIL_OPTIONS.map((option) => (
                   <PreferenceToggle
@@ -200,8 +190,7 @@ export function NotificationPreferencesPanel({
                     label={option.label}
                     description={option.description}
                     checked={preferencias[option.key] !== false}
-                    disabled={preferencias.receber_email === false || savingKey === option.key}
-                    muted={preferencias.receber_email === false}
+                    disabled={savingKey === option.key}
                     onCheckedChange={(checked) => atualizarPreferencia(option.key, checked)}
                   />
                 ))}

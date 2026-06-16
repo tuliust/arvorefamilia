@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Archive, Save } from 'lucide-react';
+import { Archive } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
@@ -143,19 +143,10 @@ export function ArquivosHistoricosPage() {
           variant="interactive"
         />
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/meus-vinculos')}>
-            Voltar para vínculos
+        <div className="flex justify-end">
+          <Button type="button" onClick={handleContinue} disabled={saving}>
+            {saving ? 'Salvando...' : 'Salvar e Continuar'}
           </Button>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button type="button" variant="outline" onClick={() => void saveArchives()} disabled={saving}>
-              <Save className="h-4 w-4" />
-              {saving ? 'Salvando...' : 'Salvar arquivos'}
-            </Button>
-            <Button type="button" onClick={handleContinue} disabled={saving}>
-              Continuar para preferências
-            </Button>
-          </div>
         </div>
       </main>
     </div>
