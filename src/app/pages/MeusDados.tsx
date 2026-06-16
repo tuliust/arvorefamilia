@@ -1039,9 +1039,18 @@ export function MeusDados() {
     updateField(field, value);
   };
 
+  const getCompleteSocialProfiles = (profiles: SocialProfileForm[] = socialProfiles) => (
+    profiles.filter((profile) => profile.rede.trim() && profile.perfil.trim())
+  );
+
+  const getPrimaryCompleteSocialProfile = (profiles: SocialProfileForm[] = socialProfiles) => (
+    getCompleteSocialProfiles(profiles)[0] ?? createSocialProfile()
+  );
+
   const syncFirstSocialProfileToLegacyFields = (profiles: SocialProfileForm[]) => {
     markFormDirty();
-    setForm((current) => syncFirstSocialProfileToPersonFields(current, profiles));
+    const primaryCompleteProfile = getPrimaryCompleteSocialProfile(profiles);
+    setForm((current) => syncFirstSocialProfileToPersonFields(current, [primaryCompleteProfile]));
     setErrors((current) => ({
       ...current,
       rede_social: undefined,
@@ -1079,7 +1088,13 @@ export function MeusDados() {
   };
 
   const validateForm = () => {
-    const nextErrors = validateEditablePersonForm(form);
+    const primarySocialProfile = getPrimaryCompleteSocialProfile();
+    const formForValidation = {
+      ...form,
+      rede_social: primarySocialProfile.rede || '',
+      instagram_usuario: primarySocialProfile.perfil || '',
+    };
+    const nextErrors = validateEditablePersonForm(formForValidation);
     const normalizedName = formatPersonName(String(form.nome_completo ?? ''));
     const normalizedBirthDate = normalizeBirthDate(String(form.data_nascimento ?? ''));
     const normalizedBirthLocation = normalizeLocationByMode(String(form.local_nascimento ?? ''), {
@@ -1104,6 +1119,8 @@ export function MeusDados() {
       local_atual: normalizedCurrentLocation,
       profissao: normalizeProfession(String(current.profissao ?? '')),
       telefone: formatPhone(String(current.telefone ?? '')),
+      rede_social: primarySocialProfile.rede || '',
+      instagram_usuario: primarySocialProfile.perfil || '',
     }));
 
     return Object.keys(nextErrors).length === 0;
@@ -1279,11 +1296,12 @@ export function MeusDados() {
 
     setSaving(true);
 
-    const primarySocialProfile = socialProfiles[0];
+    const completedSocialProfiles = getCompleteSocialProfiles();
+    const primarySocialProfile = completedSocialProfiles[0] ?? createSocialProfile();
     const payload = cleanPersonPayload({
       ...form,
-      rede_social: primarySocialProfile?.rede || '',
-      instagram_usuario: primarySocialProfile?.perfil || '',
+      rede_social: primarySocialProfile.rede || '',
+      instagram_usuario: primarySocialProfile.perfil || '',
     });
     if (photoMarkedForRemoval) {
       payload.foto_principal_url = '';
@@ -1308,7 +1326,7 @@ export function MeusDados() {
     }
 
     try {
-      const savedProfiles = await substituirPessoaSocialProfiles(pessoa.id, socialProfiles, {
+      const savedProfiles = await substituirPessoaSocialProfiles(pessoa.id, completedSocialProfiles, {
         exibirNoPerfil: payload.permitir_exibir_rede_social !== false,
       });
       setSocialProfiles(buildSocialProfilesFromRows(savedProfiles, updatedPessoa ?? pessoa));
@@ -1611,40 +1629,6 @@ export function MeusDados() {
                 />
               </Field>
 
-              <Field label="Profissão">
-                <Input
-                  value={String(form.profissao ?? '')}
-                  onBlur={() => normalizeFieldOnBlur('profissao')}
-                  onChange={(e) => updateTextField('profissao', e.target.value)}
-                  placeholder="Ex: jornalista, professora, médico..."
-                />
-              </Field>
-
-              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
-                <Field
-                  label="Local de nascimento"
-                  labelAddon={(
-                    <DateFormatInfoButton ariaLabel="Formato aceito para local de nascimento">
-                      Use Cidade/UF. Para exterior, marque Estrangeiro e use Cidade (País).
-                    </DateFormatInfoButton>
-                  )}
-                  error={errors.local_nascimento}
-                >
-                  <Input
-                    value={String(form.local_nascimento ?? '')}
-                    onBlur={() => normalizeFieldOnBlur('local_nascimento')}
-                    onChange={(e) => updateTextField('local_nascimento', e.target.value)}
-                    placeholder={form.local_nascimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                    aria-invalid={Boolean(errors.local_nascimento)}
-                  />
-                </Field>
-                <CompactToggleField
-                  label="Estrangeiro"
-                  checked={form.local_nascimento_exterior === true}
-                  onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
-                />
-              </div>
-
               <Field
                 label="Dia ou Ano de Nascimento"
                 labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para nascimento" />}
@@ -1660,6 +1644,49 @@ export function MeusDados() {
                 />
               </Field>
 
+              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
+                <Field label="Local de nascimento" error={errors.local_nascimento}>
+                  <Input
+                    value={String(form.local_nascimento ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('local_nascimento')}
+                    onChange={(e) => updateTextField('local_nascimento', e.target.value)}
+                    placeholder={form.local_nascimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                    aria-invalid={Boolean(errors.local_nascimento)}
+                  />
+                </Field>
+                <CompactToggleField
+                  label="Estrangeiro"
+                  checked={form.local_nascimento_exterior === true}
+                  onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
+                />
+              </div>
+
+              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
+                <Field label="Cidade de residência" error={errors.local_atual}>
+                  <Input
+                    value={String(form.local_atual ?? '')}
+                    onBlur={() => normalizeFieldOnBlur('local_atual')}
+                    onChange={(e) => updateTextField('local_atual', e.target.value)}
+                    placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                    aria-invalid={Boolean(errors.local_atual)}
+                  />
+                </Field>
+                <CompactToggleField
+                  label="Exterior"
+                  checked={form.local_atual_exterior === true}
+                  onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
+                />
+              </div>
+
+              <Field label="Profissão">
+                <Input
+                  value={String(form.profissao ?? '')}
+                  onBlur={() => normalizeFieldOnBlur('profissao')}
+                  onChange={(e) => updateTextField('profissao', e.target.value)}
+                  placeholder="Ex: jornalista, professora, médico..."
+                />
+              </Field>
+
               <div className="border-t border-gray-200 pt-4 md:col-span-2">
                 <DeathStatusSelector
                   checked={form.falecido === true}
@@ -1669,31 +1696,6 @@ export function MeusDados() {
 
               {form.falecido === true && (
                 <div className="grid grid-cols-1 items-start gap-4 md:col-span-2 md:grid-cols-2">
-                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px] md:col-span-2 md:w-[calc(50%-0.5rem)]">
-                    <Field
-                      label="Cidade de residência"
-                      labelAddon={(
-                        <DateFormatInfoButton ariaLabel="Formato aceito para cidade de residência">
-                          Use Cidade/UF. Para exterior, marque Exterior e use Cidade (País).
-                        </DateFormatInfoButton>
-                      )}
-                      error={errors.local_atual}
-                    >
-                      <Input
-                        value={String(form.local_atual ?? '')}
-                        onBlur={() => normalizeFieldOnBlur('local_atual')}
-                        onChange={(e) => updateTextField('local_atual', e.target.value)}
-                        placeholder={form.local_atual_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                        aria-invalid={Boolean(errors.local_atual)}
-                      />
-                    </Field>
-                    <CompactToggleField
-                      label="Exterior"
-                      checked={form.local_atual_exterior === true}
-                      onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-                    />
-                  </div>
-
                   <Field
                     label="Dia ou Ano de Falecimento"
                     labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para falecimento" />}
@@ -1708,15 +1710,7 @@ export function MeusDados() {
                     />
                   </Field>
                   <div className="min-w-0 space-y-3">
-                    <Field
-                      label="Local de falecimento"
-                      labelAddon={(
-                        <DateFormatInfoButton ariaLabel="Formato aceito para local de falecimento">
-                          Use Cidade/UF. Para exterior, marque Falecimento no exterior e use Cidade (País).
-                        </DateFormatInfoButton>
-                      )}
-                      error={errors.local_falecimento}
-                    >
+                    <Field label="Local de falecimento" error={errors.local_falecimento}>
                       <Input
                         value={String(form.local_falecimento ?? '')}
                         onBlur={() => normalizeFieldOnBlur('local_falecimento')}
@@ -1750,14 +1744,14 @@ export function MeusDados() {
                 />
               </Field>
               <div className="hidden md:block" />
-              <Field label="Endereço" className="md:col-span-2">
+              <Field label="Endereço">
                 <AddressAutocompleteInput
                   value={String(form.endereco ?? '')}
                   onChange={(nextValue) => updateTextField('endereco', nextValue)}
                   placeholder="Digite a rua e número, depois selecione"
                 />
               </Field>
-              <Field label="Complemento" className="md:col-span-2">
+              <Field label="Complemento">
                 <Input
                   value={String(form.complemento ?? '')}
                   onChange={(e) => updateTextField('complemento', e.target.value)}
@@ -2059,22 +2053,16 @@ function SectionTitle({
   className?: string;
 }) {
   return (
-    <h2 className={['mb-5 flex min-w-0 items-center gap-3 text-lg font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-        <Icon className="h-5 w-5" />
+    <h2 className={['mb-4 flex min-w-0 items-center gap-2 text-base font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 break-words">{children}</span>
     </h2>
   );
 }
 
-function DateFormatInfoButton({
-  ariaLabel,
-  children = 'Use o formato AAAA ou DD/MM/AAAA',
-}: {
-  ariaLabel: string;
-  children?: React.ReactNode;
-}) {
+function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
   return (
     <span className="group relative inline-flex shrink-0">
       <button
@@ -2084,8 +2072,8 @@ function DateFormatInfoButton({
       >
         <Info className="h-3.5 w-3.5" />
       </button>
-      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
-        {children}
+      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
+        Use o formato AAAA ou DD/MM/AAAA
       </span>
     </span>
   );
