@@ -115,7 +115,7 @@ export function PersonTimeline({
           <div className="relative space-y-4 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-gray-200 sm:before:left-5">
             {items.map((item) => {
               const dateLabel = getDateLabel(item);
-              const showTypeBadge = item.type !== 'marriage';
+              const badgeLabel = item.badgeLabel ?? TYPE_LABELS[item.type];
 
               return (
                 <article key={item.id} className="relative pl-11 sm:pl-14">
@@ -124,36 +124,31 @@ export function PersonTimeline({
                   </div>
 
                   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {showTypeBadge && (
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${TYPE_STYLES[item.type]}`}
-                            >
-                              {TYPE_LABELS[item.type]}
-                            </span>
-                          )}
-                          {isAdmin && item.source === 'relationship' && (
-                            <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-gray-200">
-                              Relacionamento
-                            </span>
-                          )}
-                        </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${TYPE_STYLES[item.type]}`}
+                      >
+                        {badgeLabel}
+                      </span>
 
-                        <h3 className="mt-2 text-base font-semibold text-gray-900">{item.title}</h3>
-                        {item.description && (
-                          <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description}</p>
-                        )}
-                      </div>
+                      {isAdmin && item.source === 'relationship' && (
+                        <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-gray-200">
+                          Relacionamento
+                        </span>
+                      )}
 
                       {dateLabel && (
-                        <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gray-600">
                           <CalendarDays className="h-4 w-4 text-gray-400" />
                           {dateLabel}
                         </span>
                       )}
                     </div>
+
+                    <h3 className="mt-3 text-base font-semibold leading-6 text-gray-900">{item.title}</h3>
+                    {item.description && (
+                      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description}</p>
+                    )}
                   </div>
                 </article>
               );

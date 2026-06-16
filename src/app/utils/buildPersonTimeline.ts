@@ -27,6 +27,7 @@ export interface PersonTimelineItem {
   type: PersonTimelineItemType;
   title: string;
   description?: string;
+  badgeLabel?: string;
   dateLabel?: string;
   dateValue?: string;
   year?: number;
@@ -170,6 +171,21 @@ export function parseTimelineDate(value: unknown): ParsedTimelineDate {
 
 export function getPersonDisplayName(pessoa?: Pessoa) {
   return pessoa?.nome_completo?.trim() || 'Pessoa sem nome';
+}
+
+function getPersonFirstName(pessoa?: Pessoa) {
+  const displayName = getPersonDisplayName(pessoa);
+  return displayName.trim().split(/\s+/)[0] || displayName;
+}
+
+function normalizeSentenceLocation(local?: string) {
+  const cleanLocal = local?.trim().replace(/[.]+$/, '');
+  return cleanLocal || undefined;
+}
+
+function createSentenceWithLocation(prefix: string, local?: string) {
+  const cleanLocal = normalizeSentenceLocation(local);
+  return cleanLocal ? `${prefix} ${cleanLocal}.` : undefined;
 }
 
 export function createTimelineDescription(parts: Array<string | null | undefined>) {
@@ -345,7 +361,24 @@ function getChildrenFromRelationships(relacionamentos: Relacionamento[], pessoaI
 function createBirthItem(pessoa: Pessoa) {
   const parsedDate = parseTimelineDate(pessoa.data_nascimento);
   if (parsedDate.precision === 'unknown') return undefined;
-  return withParsedDate({ id: `person:${pessoa.id}:birth`, type: 'birth', title: 'Nascimento', description: createTimelineDescription([pessoa.local_nascimento]), source: 'person', sourceId: pessoa.id, relatedPersonIds: [pessoa.id], metadata: { pessoa_id: pessoa.id, local: pessoa.local_nascimento, precision: parsedDate.precision } }, parsedDate);
+
+  const firstName = getPersonFirstName(pessoa);
+
+  return withParsedDate({
+    id: `person:${pessoa.id}:birth`,
+    type: 'birth',
+    badgeLabel: 'Origem',
+    title: `Nasce ${firstName}`,
+    description: createSentenceWithLocation('O início da trajetória em', pessoa.local_nascimento),
+    source: 'person',
+    sourceId: pessoa.id,
+    relatedPersonIds: [pessoa.id],
+    metadata: {
+      pessoa_id: pessoa.id,
+      local: pessoa.local_nascimento,
+      precision: parsedDate.precision,
+    },
+  }, parsedDate);
 }
 
 function createDeathItem(pessoa: Pessoa) {
@@ -359,28 +392,105 @@ function createDeathItem(pessoa: Pessoa) {
 
 function createRelationshipItems(relacionamento: Relacionamento, pessoa: Pessoa, pessoas: Pessoa[]) {
   if (relacionamento.tipo_relacionamento !== 'conjuge' || !isRelationshipForPerson(relacionamento, pessoa.id)) return [];
+
   const otherPerson = getOtherPersonFromRelationship(relacionamento, pessoa.id, pessoas);
   const otherPersonId = getRelationshipOtherPersonId(relacionamento, pessoa.id);
-  const otherName = getPersonDisplayName(otherPerson);
   const pairIds = getRelationshipPairIds(relacionamento);
   const items: PersonTimelineItem[] = [];
   const relationshipType: PersonTimelineItemType = relacionamento.subtipo_relacionamento === 'uniao' ? 'union' : 'marriage';
   const relationshipDate = parseTimelineDate(relacionamento.data_casamento);
+  const personFirstName = getPersonFirstName(pessoa);
+  const otherFirstName = getPersonFirstName(otherPerson);
+  const relationshipLocal = normalizeSentenceLocation(relacionamento.local_casamento);
 
-  items.push(withParsedDate({ id: `relationship:${pairIds[0]}:${pairIds[1]}:${relationshipType}:${relationshipDate.dateValue ?? 'unknown'}`, type: relationshipType, title: `${relationshipType === 'union' ? 'União' : 'Casamento'} com ${otherName}`, description: createTimelineDescription([relacionamento.local_casamento]), source: 'relationship', sourceId: relacionamento.id, relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id], metadata: { relationship_id: relacionamento.id, linked_to: 'relationship', local: relacionamento.local_casamento, precision: relationshipDate.precision } }, relationshipDate));
+  items.push(withParsedDate({
+    id: `relationship:${pairIds[0]}:${pairIds[1]}:${relationshipType}:${relationshipDate.dateValue ?? 'unknown'}`,
+    type: relationshipType,
+    badgeLabel: relationshipType === 'union' ? 'União' : 'Casamento',
+    title: relationshipType === 'union'
+      ? `Relacionamento com ${otherFirstName}`
+      : `${personFirstName} e ${otherFirstName} se unem em matrimônio.`,
+    description: relationshipType === 'union'
+      ? 'Uma nova etapa de afeto e convivência.'
+      : relationshipLocal
+        ? `A história do casal começa em ${relationshipLocal}.`
+        : undefined,
+    source: 'relationship',
+    sourceId: relacionamento.id,
+    relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id],
+    metadata: {
+      relationship_id: relacionamento.id,
+      linked_to: 'relationship',
+      local: relacionamento.local_casamento,
+      precision: relationshipDate.precision,
+    },
+  }, relationshipDate));
 
   if (shouldCreateRelationshipSeparation(relacionamento, pessoa, otherPerson)) {
+    const otherName = getPersonDisplayName(otherPerson);
     const separationDate = parseTimelineDate(relacionamento.data_separacao);
-    items.push(withParsedDate({ id: `relationship-separation:${pairIds[0]}:${pairIds[1]}:${separationDate.dateValue ?? 'unknown'}`, type: 'separation', title: `Separação de ${otherName}`, description: createTimelineDescription([relacionamento.local_separacao]), source: 'relationship', sourceId: relacionamento.id, relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id], metadata: { relationship_id: relacionamento.id, linked_to: 'relationship', local: relacionamento.local_separacao, precision: separationDate.precision } }, separationDate, separationDate.precision === 'unknown' ? 'Data desconhecida' : undefined));
+
+    items.push(withParsedDate({
+      id: `relationship-separation:${pairIds[0]}:${pairIds[1]}:${separationDate.dateValue ?? 'unknown'}`,
+      type: 'separation',
+      title: `Separação de ${otherName}`,
+      description: createTimelineDescription([relacionamento.local_separacao]),
+      source: 'relationship',
+      sourceId: relacionamento.id,
+      relatedPersonIds: otherPersonId ? [pessoa.id, otherPersonId] : [pessoa.id],
+      metadata: {
+        relationship_id: relacionamento.id,
+        linked_to: 'relationship',
+        local: relacionamento.local_separacao,
+        precision: separationDate.precision,
+      },
+    }, separationDate, separationDate.precision === 'unknown' ? 'Data desconhecida' : undefined));
   }
 
   return items;
 }
 
-function createChildBirthItem(child: Pessoa, pessoaId: string) {
+function getChildBirthBadgeLabel(birthOrder: number, totalChildren: number) {
+  if (birthOrder === 1) return 'Primogênito';
+  if (birthOrder === 2) return 'Segundo filho';
+  if (totalChildren >= 3 && birthOrder === totalChildren) return 'O caçula';
+  return `${birthOrder}º filho`;
+}
+
+function createChildBirthDescription(child: Pessoa, birthOrder: number, totalChildren: number) {
+  const local = normalizeSentenceLocation(child.local_nascimento);
+  if (!local) return undefined;
+
+  if (totalChildren >= 3 && birthOrder === totalChildren) {
+    return `Um novo integrante amplia a história da família em ${local}.`;
+  }
+
+  return `A família cresce em ${local}.`;
+}
+
+function createChildBirthItem(child: Pessoa, pessoaId: string, birthOrder: number, totalChildren: number) {
   const parsedDate = parseTimelineDate(child.data_nascimento);
   if (parsedDate.precision === 'unknown') return undefined;
-  return withParsedDate({ id: `person:${child.id}:child-birth`, type: 'child_birth', title: `Nascimento de ${getPersonDisplayName(child)}`, description: createTimelineDescription([child.local_nascimento]), source: 'person', sourceId: child.id, relatedPersonIds: [pessoaId, child.id], metadata: { pessoa_id: child.id, local: child.local_nascimento, precision: parsedDate.precision } }, parsedDate);
+
+  const childFirstName = getPersonFirstName(child);
+
+  return withParsedDate({
+    id: `person:${child.id}:child-birth`,
+    type: 'child_birth',
+    badgeLabel: getChildBirthBadgeLabel(birthOrder, totalChildren),
+    title: `Chegada de ${childFirstName}`,
+    description: createChildBirthDescription(child, birthOrder, totalChildren),
+    source: 'person',
+    sourceId: child.id,
+    relatedPersonIds: [pessoaId, child.id],
+    metadata: {
+      pessoa_id: child.id,
+      local: child.local_nascimento,
+      birth_order: birthOrder,
+      total_children: totalChildren,
+      precision: parsedDate.precision,
+    },
+  }, parsedDate);
 }
 
 function createHistoricalFileItem(arquivo: ArquivoHistorico, linkedTo: 'person' | 'relationship') {
@@ -412,11 +522,13 @@ export function buildPersonTimeline(input: BuildPersonTimelineInput): PersonTime
     items.push(...createRelationshipItems(relacionamento, pessoa, pessoas));
   }
 
-  const children = input.filhos ?? getChildrenFromRelationships(relacionamentos, pessoa.id, pessoas);
-  for (const child of children) {
-    const childBirthItem = createChildBirthItem(child, pessoa.id);
+  const children = [...(input.filhos ?? getChildrenFromRelationships(relacionamentos, pessoa.id, pessoas))]
+    .sort((a, b) => parseTimelineDate(a.data_nascimento).sortValue - parseTimelineDate(b.data_nascimento).sortValue);
+
+  children.forEach((child, index) => {
+    const childBirthItem = createChildBirthItem(child, pessoa.id, index + 1, children.length);
     if (childBirthItem) items.push(childBirthItem);
-  }
+  });
 
   for (const arquivo of arquivosHistoricosPessoa) items.push(createHistoricalFileItem(arquivo, 'person'));
   for (const arquivo of arquivosHistoricosRelacionamentos) items.push(createHistoricalFileItem(arquivo, 'relationship'));
