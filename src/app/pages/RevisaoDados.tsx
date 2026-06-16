@@ -445,7 +445,6 @@ export function RevisaoDados() {
                     {getPersonStatusLabel(pessoa)}
                   </span>
                 </div>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-700">{valueOrEmpty(pessoa.minibio)}</p>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                   {pessoa.profissao && <span>{pessoa.profissao}</span>}
                   {pessoa.local_atual && !pessoa.falecido && (
@@ -467,7 +466,10 @@ export function RevisaoDados() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className={[
+          'grid grid-cols-1 gap-6',
+          pessoa.falecido !== true ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : '',
+        ].filter(Boolean).join(' ')}>
           <div className="space-y-6">
             <SectionCard
               title="Informações pessoais"
@@ -492,14 +494,6 @@ export function RevisaoDados() {
                   <InlineField label="Local de nascimento">
                     <Input value={String(form.local_nascimento ?? '')} onChange={(event) => updateFormField('local_nascimento', event.target.value)} />
                   </InlineField>
-                  <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2">
-                    <Label>Local de nascimento no exterior</Label>
-                    <Switch checked={form.local_nascimento_exterior === true} onCheckedChange={(checked) => updateFormField('local_nascimento_exterior', checked)} />
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2">
-                    <Label>A pessoa é falecida?</Label>
-                    <Switch checked={form.falecido === true} onCheckedChange={(checked) => updateFormField('falecido', checked)} />
-                  </div>
                   {isDeceased ? (
                     <>
                       <InlineField label="Dia ou Ano de Falecimento">
@@ -508,20 +502,12 @@ export function RevisaoDados() {
                       <InlineField label="Local de falecimento">
                         <Input value={String(form.local_falecimento ?? '')} onChange={(event) => updateFormField('local_falecimento', event.target.value)} />
                       </InlineField>
-                      <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 md:col-span-2">
-                        <Label>Falecimento no exterior</Label>
-                        <Switch checked={form.local_falecimento_exterior === true} onCheckedChange={(checked) => updateFormField('local_falecimento_exterior', checked)} />
-                      </div>
                     </>
                   ) : (
                     <>
                       <InlineField label="Cidade de residência">
                         <Input value={String(form.local_atual ?? '')} onChange={(event) => updateFormField('local_atual', event.target.value)} />
                       </InlineField>
-                      <div className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2">
-                        <Label>Residência no exterior</Label>
-                        <Switch checked={form.local_atual_exterior === true} onCheckedChange={(checked) => updateFormField('local_atual_exterior', checked)} />
-                      </div>
                     </>
                   )}
                 </div>
@@ -531,18 +517,14 @@ export function RevisaoDados() {
                   <ReviewValue label="Profissão" value={valueOrEmpty(pessoa.profissao)} />
                   <ReviewValue label="Data de nascimento" value={valueOrEmpty(pessoa.data_nascimento)} />
                   <ReviewValue label="Local de nascimento" value={valueOrEmpty(pessoa.local_nascimento)} />
-                  <ReviewValue label="Nascimento no exterior" value={yesNo(pessoa.local_nascimento_exterior === true)} />
-                  <ReviewValue label="Pessoa falecida" value={yesNo(Boolean(pessoa.falecido))} />
                   {pessoa.falecido ? (
                     <>
                       <ReviewValue label="Data de falecimento" value={valueOrEmpty(pessoa.data_falecimento)} />
                       <ReviewValue label="Local de falecimento" value={valueOrEmpty(pessoa.local_falecimento)} />
-                      <ReviewValue label="Falecimento no exterior" value={yesNo(pessoa.local_falecimento_exterior === true)} />
                     </>
                   ) : (
                     <>
                       <ReviewValue label="Cidade de residência" value={valueOrEmpty(pessoa.local_atual)} />
-                      <ReviewValue label="Residência no exterior" value={yesNo(pessoa.local_atual_exterior === true)} />
                     </>
                   )}
                 </div>
@@ -620,6 +602,7 @@ export function RevisaoDados() {
             </SectionCard>
           </div>
 
+          {pessoa.falecido !== true && (
           <aside className="space-y-6">
             <SectionCard
               title="Contatos"
@@ -685,7 +668,6 @@ export function RevisaoDados() {
               )}
             </SectionCard>
 
-            {pessoa.falecido !== true && (
             <SectionCard
               title="Notificações e permissões"
               icon={Bell}
@@ -723,8 +705,8 @@ export function RevisaoDados() {
                 </div>
               )}
             </SectionCard>
-            )}
           </aside>
+          )}
         </div>
 
 

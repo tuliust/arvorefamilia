@@ -162,6 +162,8 @@ export interface ArquivoHistorico {
   descricao?: string;
   ano?: string;
   categoria_evento?: HistoricalFileEventCategory | null;
+  participante_ids?: string[];
+  participantes?: Array<Pick<Pessoa, 'id' | 'nome_completo'>>;
   ordem?: number;
 }
 

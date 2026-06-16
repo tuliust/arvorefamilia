@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { ArquivoHistorico, HistoricalFileEventCategory } from '../types';
+import { ArquivoHistorico, HistoricalFileEventCategory, Pessoa } from '../types';
 import {
   Baby,
   Briefcase,
@@ -38,6 +38,19 @@ const HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEvent
 ];
 
 type HistoricalFileCategoryOption = { value: HistoricalFileEventCategory; label: string };
+type HistoricalFileParticipant = Pick<Pessoa, 'id' | 'nome_completo'>;
+type DraftHistoricalFile = {
+  titulo: string;
+  descricao: string;
+  ano: string;
+  tipo: 'imagem' | 'pdf';
+  url: string;
+  storage_bucket: string;
+  storage_path: string;
+  mime_type: string;
+  categoria_evento: HistoricalFileEventCategory | '';
+  participante_ids: string[];
+};
 
 const INTERACTIVE_CATEGORY_OPTIONS: Array<
   HistoricalFileCategoryOption & { description: string; icon: React.ComponentType<{ className?: string }> }
@@ -104,6 +117,28 @@ function getHistoricalFileEventCategoryLabel(value: ArquivoHistorico['categoria_
   return HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.find((option) => option.value === value)?.label;
 }
 
+function createEmptyDraftHistoricalFile(): DraftHistoricalFile {
+  return {
+    titulo: '',
+    descricao: '',
+    ano: '',
+    tipo: 'imagem',
+    url: '',
+    storage_bucket: '',
+    storage_path: '',
+    mime_type: '',
+    categoria_evento: '',
+    participante_ids: [],
+  };
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 function ArquivoThumbnail({ arquivo }: { arquivo: Pick<ArquivoHistorico, 'tipo' | 'url' | 'titulo'> }) {
   return arquivo.tipo === 'imagem' ? (
     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
@@ -134,6 +169,8 @@ interface ArquivosHistoricosProps {
   showTitle?: boolean;
   eventCategoryOptions?: HistoricalFileCategoryOption[];
   variant?: 'default' | 'interactive';
+  participantOptions?: HistoricalFileParticipant[];
+  draftStorageKey?: string;
 }
 
 export function ArquivosHistoricos({
@@ -147,36 +184,67 @@ export function ArquivosHistoricos({
   showTitle = true,
   eventCategoryOptions = HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS,
   variant = 'default',
+  participantOptions = [],
+  draftStorageKey,
 }: ArquivosHistoricosProps) {
-  const [novoArquivo, setNovoArquivo] = useState({
-    titulo: '',
-    descricao: '',
-    ano: '',
-    tipo: 'imagem' as 'imagem' | 'pdf',
-    url: '',
-    storage_bucket: '',
-    storage_path: '',
-    mime_type: '',
-    categoria_evento: '' as HistoricalFileEventCategory | '',
-  });
+  const [novoArquivo, setNovoArquivo] = useState<DraftHistoricalFile>(() => createEmptyDraftHistoricalFile());
   const [isAddingFile, setIsAddingFile] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [previewFile, setPreviewFile] = useState<ArquivoHistorico | null>(null);
   const hasUploadedDraftFile = Boolean(novoArquivo.url);
   const [editingArquivoId, setEditingArquivoId] = useState<string | null>(null);
+  const [participantSearch, setParticipantSearch] = useState('');
+  const selectedDraftParticipants = useMemo(
+    () => participantOptions.filter((person) => novoArquivo.participante_ids.includes(person.id)),
+    [novoArquivo.participante_ids, participantOptions]
+  );
+
+  useEffect(() => {
+    if (!draftStorageKey) return;
+
+    try {
+      const rawDraft = window.localStorage.getItem(draftStorageKey);
+      if (!rawDraft) return;
+      const draft = JSON.parse(rawDraft) as Partial<DraftHistoricalFile>;
+      setNovoArquivo({ ...createEmptyDraftHistoricalFile(), ...draft });
+      setIsAddingFile(Boolean(draft.url || draft.titulo || draft.descricao || draft.ano || draft.categoria_evento || draft.participante_ids?.length));
+    } catch {
+      // Rascunho local é auxiliar; falha de leitura não deve bloquear a tela.
+    }
+  }, [draftStorageKey]);
+
+  useEffect(() => {
+    if (!draftStorageKey || readOnly) return;
+
+    try {
+      if (
+        !novoArquivo.url &&
+        !novoArquivo.titulo &&
+        !novoArquivo.descricao &&
+        !novoArquivo.ano &&
+        !novoArquivo.categoria_evento &&
+        novoArquivo.participante_ids.length === 0
+      ) {
+        window.localStorage.removeItem(draftStorageKey);
+        return;
+      }
+
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(novoArquivo));
+    } catch {
+      // Rascunho local é auxiliar; falha de storage não deve bloquear o upload.
+    }
+  }, [draftStorageKey, novoArquivo, readOnly]);
 
   const resetNovoArquivo = () => {
-    setNovoArquivo({
-      titulo: '',
-      descricao: '',
-      ano: '',
-      tipo: 'imagem',
-      url: '',
-      storage_bucket: '',
-      storage_path: '',
-      mime_type: '',
-      categoria_evento: '',
-    });
+    setNovoArquivo(createEmptyDraftHistoricalFile());
+    setParticipantSearch('');
+    if (draftStorageKey) {
+      try {
+        window.localStorage.removeItem(draftStorageKey);
+      } catch {
+        // noop
+      }
+    }
   };
 
   const handleToggleAddFile = () => {
@@ -233,6 +301,102 @@ export function ArquivosHistoricos({
     setIsAddingFile(true);
   };
 
+  const handleAddDraftParticipant = (personId: string) => {
+    setNovoArquivo((current) => current.participante_ids.includes(personId)
+      ? current
+      : { ...current, participante_ids: [...current.participante_ids, personId] });
+    setParticipantSearch('');
+  };
+
+  const handleRemoveDraftParticipant = (personId: string) => {
+    setNovoArquivo((current) => ({
+      ...current,
+      participante_ids: current.participante_ids.filter((id) => id !== personId),
+    }));
+  };
+
+  const getParticipantsFromIds = (ids: string[]) => {
+    const peopleById = new Map(participantOptions.map((person) => [person.id, person]));
+    return ids
+      .map((id) => peopleById.get(id))
+      .filter((person): person is HistoricalFileParticipant => Boolean(person));
+  };
+
+  const getArquivoParticipants = (arquivo: ArquivoHistorico) => {
+    const byIds = getParticipantsFromIds(arquivo.participante_ids ?? []);
+    return byIds.length > 0 ? byIds : arquivo.participantes ?? [];
+  };
+
+  const renderParticipantSelector = (
+    selectedParticipants: HistoricalFileParticipant[],
+    selectedIds: string[],
+    onAdd: (personId: string) => void,
+    onRemove: (personId: string) => void,
+    searchValue: string,
+    onSearchChange: (value: string) => void
+  ) => {
+    const selectedSet = new Set(selectedIds);
+    const query = normalizeSearchText(searchValue.trim());
+    const options = participantOptions
+      .filter((person) => !selectedSet.has(person.id))
+      .filter((person) => !query || normalizeSearchText(person.nome_completo).includes(query))
+      .slice(0, 8);
+
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Pessoas participantes
+        </label>
+        {selectedParticipants.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedParticipants.map((person) => (
+              <span key={person.id} className="inline-flex max-w-full items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800">
+                <span className="truncate">{person.nome_completo}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(person.id)}
+                  className="rounded-full p-0.5 text-blue-700 hover:bg-blue-100"
+                  aria-label={`Remover ${person.nome_completo}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="rounded-lg border border-gray-200 bg-white p-2">
+          <Input
+            type="search"
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Buscar pessoa pelo nome"
+            className="h-9"
+          />
+          {participantOptions.length === 0 ? (
+            <p className="px-1 py-2 text-xs text-gray-500">Nenhuma pessoa disponível para seleção.</p>
+          ) : (
+            <div className="mt-2 max-h-44 overflow-y-auto">
+              {options.length > 0 ? (
+                options.map((person) => (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => onAdd(person.id)}
+                    className="block w-full rounded-md px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    {person.nome_completo}
+                  </button>
+                ))
+              ) : (
+                <p className="px-1 py-2 text-xs text-gray-500">Nenhuma pessoa encontrada.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const handleAddArquivo = () => {
     if (!novoArquivo.titulo || !novoArquivo.url) {
       alert('Por favor, preencha o título e selecione um arquivo');
@@ -252,6 +416,8 @@ export function ArquivosHistoricos({
       descricao: novoArquivo.descricao || undefined,
       ano: novoArquivo.ano || undefined,
       categoria_evento: novoArquivo.categoria_evento || null,
+      participante_ids: novoArquivo.participante_ids,
+      participantes: selectedDraftParticipants,
       ordem: arquivos.length,
     };
 
@@ -447,6 +613,15 @@ export function ArquivosHistoricos({
                     />
                   </div>
 
+                  {renderParticipantSelector(
+                    selectedDraftParticipants,
+                    novoArquivo.participante_ids,
+                    handleAddDraftParticipant,
+                    handleRemoveDraftParticipant,
+                    participantSearch,
+                    setParticipantSearch
+                  )}
+
                   {variant === 'default' && (
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -533,6 +708,15 @@ export function ArquivosHistoricos({
                             <p className="mt-1 line-clamp-2 break-words text-xs text-gray-500">
                               {arquivo.descricao}
                             </p>
+                          )}
+                          {getArquivoParticipants(arquivo).length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {getArquivoParticipants(arquivo).map((person) => (
+                                <span key={person.id} className="max-w-full truncate rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                  {person.nome_completo}
+                                </span>
+                              ))}
+                            </div>
                           )}
                           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                             {readOnly ? (
@@ -628,6 +812,26 @@ export function ArquivosHistoricos({
                             className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                             placeholder="Descrição"
                           />
+                          {renderParticipantSelector(
+                            getArquivoParticipants(arquivo),
+                            arquivo.participante_ids ?? [],
+                            (personId) => {
+                              const nextIds = Array.from(new Set([...(arquivo.participante_ids ?? []), personId]));
+                              handleUpdateArquivo(arquivo.id, {
+                                participante_ids: nextIds,
+                                participantes: getParticipantsFromIds(nextIds),
+                              });
+                            },
+                            (personId) => {
+                              const nextIds = (arquivo.participante_ids ?? []).filter((id) => id !== personId);
+                              handleUpdateArquivo(arquivo.id, {
+                                participante_ids: nextIds,
+                                participantes: getParticipantsFromIds(nextIds),
+                              });
+                            },
+                            participantSearch,
+                            setParticipantSearch
+                          )}
                           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                             <Button
                               type="button"

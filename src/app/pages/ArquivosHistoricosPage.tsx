@@ -12,6 +12,7 @@ import { MemberOnboardingSteps } from '../components/member/MemberOnboardingStep
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
+import { obterTodasPessoas } from '../services/dataService';
 import {
   listarArquivosHistoricosPorPessoa,
   substituirArquivosHistoricosDaPessoa,
@@ -25,6 +26,10 @@ import { ArquivoHistorico, Pessoa } from '../types';
 
 function getArquivosHistoricosDraftKey(userId: string, pessoaId: string) {
   return `arquivos-historicos-draft:${userId}:${pessoaId}`;
+}
+
+function getArquivoHistoricoUploadDraftKey(userId: string, pessoaId: string) {
+  return `arquivos-historicos-upload-draft:${userId}:${pessoaId}`;
 }
 
 function readArquivosHistoricosDraft(key: string): ArquivoHistorico[] | null {
@@ -62,6 +67,7 @@ export function ArquivosHistoricosPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
+  const [availablePeople, setAvailablePeople] = useState<Pessoa[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -85,10 +91,16 @@ export function ArquivosHistoricosPage() {
       setLink(data);
 
       try {
-        const storedArchives = await listarArquivosHistoricosPorPessoa(data.pessoa.id);
+        const [storedArchives, people] = await Promise.all([
+          listarArquivosHistoricosPorPessoa(data.pessoa.id),
+          obterTodasPessoas(),
+        ]);
         const draftKey = getArquivosHistoricosDraftKey(user.id, data.pessoa.id);
         const draftArchives = readArquivosHistoricosDraft(draftKey);
-        if (mounted) setArchives(draftArchives ?? storedArchives);
+        if (mounted) {
+          setArchives(draftArchives ?? storedArchives);
+          setAvailablePeople(people);
+        }
       } catch (loadError) {
         if (mounted) {
           toast.error(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os arquivos históricos.');
@@ -123,6 +135,7 @@ export function ArquivosHistoricosPage() {
     try {
       const saved = await substituirArquivosHistoricosDaPessoa(pessoa.id, archives);
       clearArquivosHistoricosDraft(getArquivosHistoricosDraftKey(user!.id, pessoa.id));
+      clearArquivosHistoricosDraft(getArquivoHistoricoUploadDraftKey(user!.id, pessoa.id));
       setArchives(saved);
       toast.success('Arquivos históricos salvos.');
       return true;
@@ -186,6 +199,8 @@ export function ArquivosHistoricosPage() {
           onChange={setArchives}
           pessoaId={pessoa.id}
           variant="interactive"
+          participantOptions={availablePeople}
+          draftStorageKey={getArquivoHistoricoUploadDraftKey(user.id, pessoa.id)}
         />
 
         <div className="flex justify-end">

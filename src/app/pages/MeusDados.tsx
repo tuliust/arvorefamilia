@@ -1665,7 +1665,7 @@ export function MeusDados() {
                 />
               </Field>
 
-              <div className="grid min-w-0 grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
+              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
                 <Field
                   label="Local de nascimento"
                   labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para local de nascimento" />}
@@ -1683,7 +1683,7 @@ export function MeusDados() {
                   label="Estrangeiro"
                   checked={form.local_nascimento_exterior === true}
                   onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
-                  alignWithInput={true}
+                  className="sm:self-end"
                 />
               </div>
 
@@ -1710,7 +1710,7 @@ export function MeusDados() {
               </div>
 
               {form.falecido !== true && (
-                <div className="grid min-w-0 grid-cols-1 items-center gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
+                <div className="grid min-w-0 grid-cols-1 items-start gap-3 md:col-span-2 sm:grid-cols-[minmax(0,1fr)_128px] md:max-w-[calc(50%-0.5rem)]">
                   <Field
                     label="Cidade de residência"
                     labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para cidade de residência" />}
@@ -1728,7 +1728,7 @@ export function MeusDados() {
                     label="Exterior"
                     checked={form.local_atual_exterior === true}
                     onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
-                    alignWithInput={true}
+                    className="sm:self-end"
                   />
                 </div>
               )}
@@ -1748,7 +1748,7 @@ export function MeusDados() {
                       aria-invalid={Boolean(errors.data_falecimento)}
                     />
                   </Field>
-                  <div className="min-w-0 space-y-3">
+                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
                     <Field
                       label="Local de falecimento"
                       labelAddon={<LocationFormatInfoButton ariaLabel="Formato aceito para local de falecimento" />}
@@ -1762,14 +1762,12 @@ export function MeusDados() {
                         aria-invalid={Boolean(errors.local_falecimento)}
                       />
                     </Field>
-                    <div className="max-w-[260px]">
-                      <CompactToggleField
-                        label="Falecimento no exterior"
-                        checked={form.local_falecimento_exterior === true}
-                        onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
-                        alignWithInput={false}
-                      />
-                    </div>
+                    <CompactToggleField
+                      label="Falecimento no exterior"
+                      checked={form.local_falecimento_exterior === true}
+                      onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                      className="sm:self-end"
+                    />
                   </div>
                 </div>
               )}
@@ -2213,15 +2211,15 @@ function CompactToggleField({
   label,
   checked,
   onCheckedChange,
-  alignWithInput = true,
+  className = '',
 }: {
   label: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  alignWithInput?: boolean;
+  className?: string;
 }) {
   return (
-    <div className={`${alignWithInput ? 'mt-6 ' : ''}flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3`}>
+    <div className={['flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3', className].filter(Boolean).join(' ')}>
       <Label className="min-w-0 break-words text-xs">{label}</Label>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
