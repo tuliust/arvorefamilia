@@ -4,7 +4,7 @@
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de responsabilidades de componentes
-> Status: atualizado para onboarding condicional, busca automática de parentes, arquivos históricos com rascunho e revisão final editável.
+> Status: atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares modularizada, busca de pessoa existente, controle de perfil, arquivos históricos com rascunho e revisão final editável.
 
 ---
 
@@ -562,6 +562,10 @@ src/app/pages/MeusDados.tsx
 Responsabilidades específicas no onboarding:
 
 - editar dados pessoais, Mini Bio e Curiosidades;
+- abrir assistente de IA para gerar Mini Bio e Curiosidades;
+- controlar fluxo de 10 etapas do modal de IA;
+- aplicar modo padrão em primeira pessoa e modo nostálgico/memorial em terceira pessoa;
+- limitar `minibio` e `curiosidades` a 300 caracteres;
 - controlar estado vital da pessoa vinculada;
 - exibir **Cidade de residência** apenas para pessoa viva;
 - exibir **Dia ou Ano de Falecimento** e **Local de falecimento** apenas para pessoa falecida;
@@ -582,25 +586,48 @@ Arquivos principais:
 
 ```txt
 src/app/pages/MeusVinculos.tsx
+src/app/pages/meus-vinculos/RelationshipOverview.tsx
 src/app/pages/meus-vinculos/RelativeCard.tsx
+src/app/pages/meus-vinculos/RelationshipGroupPanel.tsx
+src/app/pages/meus-vinculos/ProfileControlRequestDialog.tsx
 src/app/pages/meus-vinculos/meusVinculosUtils.ts
+src/app/pages/meus-vinculos/types.ts
 ```
 
-Responsabilidades:
+Responsabilidade da página:
 
-- exibir familiares e vínculos existentes;
-- permitir alterar mãe/pai quando aplicável;
-- abrir modal de adicionar parente;
-- filtrar pessoas cadastradas enquanto o usuário digita;
-- manter botão **Criar nova pessoa**;
-- não exibir botão **Buscar**;
-- não exibir box cinza de “Nenhuma pessoa encontrada...”;
-- aplicar badges por gênero:
-  - `Vivo`;
-  - `Viva`;
-  - `Falecido`;
-  - `Falecida`;
-  - `Em análise`.
+- orquestrar a Etapa 2 do onboarding;
+- carregar pessoa vinculada, vínculos familiares e rascunhos locais;
+- manter handlers de adicionar, remover, desfazer remoção, buscar pessoa existente, criar pessoa nova, solicitar controle e finalizar revisão;
+- passar dados por props para componentes visuais;
+- preservar navegação do onboarding.
+
+Responsabilidades visuais e funcionais atuais:
+
+- exibir card superior `Familiares de [Primeiro Nome]`;
+- exibir cards-resumo de `Pais`, `Filhos`, `Cônjuges` e `Irmãos` como âncoras;
+- renderizar grupos de vínculos em largura total, sem box lateral de resumo;
+- exibir cards amplos e enxutos de familiares;
+- buscar pessoa existente antes de criar novo familiar;
+- manter criação manual quando a busca não retorna a pessoa correta;
+- prevenir duplicidade básica no mesmo grupo;
+- exibir estados `Pré-cadastrado`, `Ativo`, `Em análise`, `Remoção em análise` e `Controle em análise`;
+- usar remoção compacta por ícone no topo do card;
+- não exibir chips de nascimento/local nos cards de vínculo;
+- exibir `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível, sem inferir por nome;
+- pré-selecionar outro pai/mãe conhecido quando o dado existe nos relacionamentos;
+- manter botão final no rodapé da revisão.
+
+Componentes extraídos:
+
+| Componente/helper | Papel |
+|---|---|
+| `RelationshipOverview` | Card superior e cards-resumo com âncoras. |
+| `RelationshipGroupPanel` | Seção de grupo familiar, contador, estado vazio e botão de adicionar. |
+| `RelativeCard` | Card individual de familiar, badges, ações compactas e controles específicos. |
+| `ProfileControlRequestDialog` | Modal de solicitação de controle de perfil. |
+| `meusVinculosUtils` | Helpers puros de status, pluralização, labels e dados auxiliares. |
+| `types.ts` | Tipos compartilhados da feature. |
 
 ### `ArquivosHistoricosPage` e `ArquivosHistoricos`
 
@@ -688,7 +715,7 @@ Falecimento no exterior
 | Service | Papel |
 |---|---|
 | `dataService.ts` | CRUD e consultas principais de pessoas/relacionamentos/eventos. |
-| `memberProfileService.ts` | vínculo usuário-pessoa e área de membro. |
+| `memberProfileService.ts` | vínculo usuário-pessoa, área de membro, busca de pessoa para vínculo e consulta de perfis ativos/pré-cadastrados. |
 | `treeDataCache.ts` | cache/eventos globais da árvore. |
 | `relationshipCacheService.ts` | cache de parentesco. |
 | `favoritesService.ts` | favoritos. |

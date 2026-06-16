@@ -4,7 +4,7 @@
 > Local canônico: `docs/INVENTARIO_TECNICO.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: inventário técnico
-> Status: atualizado com as novas rotas, páginas e componente do onboarding de membro em 5 etapas.
+> Status: atualizado com Mini Bio/Curiosidades com IA, revisão de vínculos modularizada, busca de pessoa existente, controle de perfil e onboarding de membro em 5 etapas.
 
 ---
 
@@ -207,12 +207,31 @@ Reunião
 
 | Arquivo | Função | Categoria |
 |---|---|---|
-| `src/app/pages/MeusDados.tsx` | Etapa 1: dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. | Vigente crítico |
-| `src/app/pages/MeusVinculos.tsx` | Etapa 2: vínculos familiares e solicitações de relacionamento. | Vigente crítico |
+| `src/app/pages/MeusDados.tsx` | Etapa 1: dados pessoais, contato, endereço, redes sociais, Mini Bio, Curiosidades e assistente de IA. | Vigente crítico |
+| `src/app/pages/MeusVinculos.tsx` | Etapa 2: orquestra revisão de vínculos, busca de pessoa existente, criação manual, remoção, solicitação de controle e finalização. | Vigente crítico |
 | `src/app/pages/ArquivosHistoricosPage.tsx` | Etapa 3: arquivos históricos da pessoa vinculada. | Vigente crítico |
 | `src/app/pages/PreferenciasPage.tsx` | Etapa 4: preferências de notificação e permissões de exibição. | Vigente crítico |
 | `src/app/pages/RevisaoDados.tsx` | Etapa 5: síntese final e confirmação do primeiro acesso. | Vigente crítico |
 | `src/app/components/member/MemberOnboardingSteps.tsx` | Indicador visual/navegação entre as cinco etapas. | Vigente crítico |
+
+
+Arquivos da feature `/meus-vinculos`:
+
+| Arquivo | Função | Categoria |
+|---|---|---|
+| `src/app/pages/meus-vinculos/RelationshipOverview.tsx` | Card superior `Familiares de [Primeiro Nome]` e cards-resumo com âncoras. | Vigente crítico |
+| `src/app/pages/meus-vinculos/RelationshipGroupPanel.tsx` | Seções de Pais, Filhos, Cônjuges e Irmãos. | Vigente crítico |
+| `src/app/pages/meus-vinculos/RelativeCard.tsx` | Card individual de familiar, badges e ações compactas. | Vigente crítico |
+| `src/app/pages/meus-vinculos/ProfileControlRequestDialog.tsx` | Modal de solicitação de controle de perfil. | Vigente crítico |
+| `src/app/pages/meus-vinculos/meusVinculosUtils.ts` | Helpers puros de status, pluralização, labels e vínculo. | Vigente crítico |
+| `src/app/pages/meus-vinculos/types.ts` | Tipos compartilhados da feature. | Vigente crítico |
+
+Arquivos relacionados à IA de Mini Bio/Curiosidades:
+
+| Arquivo | Função | Categoria |
+|---|---|---|
+| `api/ai.ts` | Endpoint serverless usado para perguntas da Home e geração de textos de perfil. | Vigente crítico |
+| `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` | Contrato canônico da geração assistida em `/meus-dados`. | Vigente |
 
 Contratos:
 
@@ -229,7 +248,7 @@ A revisão final pode exibir resumo, não edição completa.
 | Arquivo | Categoria | Observação |
 |---|---|---|
 | `dataService.ts` | Vigente crítico | Pessoas, relacionamentos e eventos. |
-| `memberProfileService.ts` | Vigente crítico | Vínculos e perfis de membro. |
+| `memberProfileService.ts` | Vigente crítico | Vínculos, perfis de membro, busca de pessoa para vínculo e consulta de pessoas com usuário vinculado. |
 | `treeDataCache.ts` | Vigente | Cache/eventos da árvore. |
 | `relationshipCacheService.ts` | Vigente | Cache de parentesco. |
 | `favoritesService.ts` | Vigente | Favoritos. |

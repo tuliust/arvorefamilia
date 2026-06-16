@@ -1248,3 +1248,31 @@ A experiência deve ser:
 - segura;
 - sem salvamento automático;
 - integrada ao fluxo atual da página.
+
+
+---
+
+## 31. Sincronização documental
+
+Este documento é o contrato canônico da geração assistida de Mini Bio e Curiosidades em `/meus-dados`.
+
+Relações com outros documentos:
+
+| Documento | Relação | Regra de manutenção |
+|---|---|---|
+| `docs/funcionalidades/CURIOSIDADES_E_IA.md` | Modal de Curiosidades da Home e perguntas sobre a árvore carregada. | Deve apenas apontar para este arquivo quando citar geração de Mini Bio/Curiosidades. |
+| `docs/GUIA_COMPONENTES.md` | Responsabilidades de `MeusDados`. | Deve citar o assistente, mas não duplicar todas as etapas. |
+| `docs/GUIA_UX_LAYOUT.md` | Padrões visuais e responsivos. | Deve registrar cards compactos e modo memorial em alto nível. |
+| `docs/QA_MANUAL.md` | Roteiro de teste. | Deve conter checklist de modo padrão e modo memorial. |
+| `docs/REGRAS_DE_NAO_REGRESSAO.md` | Contratos que não podem voltar atrás. | Deve impedir regressão de primeira/terceira pessoa, limite de 300 caracteres e cards compactos. |
+
+Pontos que devem permanecer sincronizados com o código:
+
+- número de etapas do modal;
+- labels de tom;
+- comportamento do tom **Nostálgico**;
+- regras de primeira pessoa no modo padrão;
+- regras de terceira pessoa e passado no modo memorial;
+- limite de 300 caracteres por campo;
+- payload enviado para `/api/ai`;
+- tratamento de erro, loading e fechamento automático do modal.

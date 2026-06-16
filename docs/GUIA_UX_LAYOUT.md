@@ -4,7 +4,7 @@
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de experiência, layout e responsividade
-> Status: revisado para documentar comportamento visual vigente da árvore, onboarding condicional e revisão final editável.
+> Status: revisado para documentar comportamento visual vigente da árvore, Mini Bio/Curiosidades com IA, revisão de vínculos em largura total, onboarding condicional e revisão final editável.
 
 ---
 
@@ -458,25 +458,75 @@ Regras para pessoa falecida:
 - ocultar container `Contato, endereço e redes sociais`;
 - preparar defaults de notificações e permissões para pular a Etapa 4.
 
+Regras para Mini Bio e Curiosidades com IA:
+
+- o botão de IA fica na seção **Sobre Mim**;
+- o modal usa fluxo progressivo de 10 etapas;
+- etapa 1 de tom pode usar ícones nos cards;
+- etapas 2 a 8 usam cards compactos em até 3 colunas no desktop;
+- cards compactos não exibem ícones internos;
+- textos dos cards devem ficar centralizados e limitados visualmente a 2 linhas;
+- modo **Nostálgico** adapta títulos, labels e geração para memória de pessoa falecida;
+- campos gerados continuam editáveis e não são salvos automaticamente.
+
+
 ### Etapa 2 — Vínculos
 
-Modal de adicionar parente:
+A tela de vínculos deve funcionar como revisão guiada em largura total.
 
-- não exibe botão `Buscar`;
-- o campo de nome filtra pessoas cadastradas enquanto o usuário digita;
-- resultados aparecem em dropdown/lista;
-- mantém botão `Criar nova pessoa`;
-- não exibe box cinza `Nenhuma pessoa encontrada com esse nome`.
+Estrutura visual vigente:
+
+- sem botão `Voltar para meus dados` no topo;
+- sem painel lateral `Resumo da revisão`;
+- card superior simplificado com `Familiares de [Primeiro Nome]`;
+- sem rótulo `Pessoa em revisão`;
+- sem chips de nascimento/local no card superior;
+- cards-resumo de `Pais`, `Filhos`, `Cônjuges` e `Irmãos` com comportamento de âncora;
+- seções de vínculos em largura total;
+- botão principal no rodapé da revisão.
+
+Pluralização dos cards-resumo:
+
+```txt
+Nenhum vínculo
+1 vínculo
+2 vínculos
+```
+
+Cards de familiares:
+
+- exibem avatar/iniciais, nome, relação e badge de status;
+- não exibem chips de nascimento/local;
+- usam botão compacto de remoção por ícone no topo direito;
+- preservam ação de desfazer quando há `Remoção em análise`;
+- podem exibir controles específicos, como `Outro pai/mãe` nos filhos;
+- podem exibir ação `Solicitar controle do perfil` quando aplicável.
 
 Badges de status:
 
 | Caso | Badge |
 |---|---|
-| Homem vivo | `Vivo` |
-| Mulher viva | `Viva` |
-| Homem falecido | `Falecido` |
-| Mulher falecida | `Falecida` |
-| Vínculo local pendente | `Em análise` |
+| Pessoa cadastrada sem usuário vinculado | `Pré-cadastrado` |
+| Pessoa com usuário/auth user vinculado | `Ativo` |
+| Vínculo novo ou alterado | `Em análise` |
+| Remoção solicitada | `Remoção em análise` |
+| Solicitação de controle enviada | `Controle em análise` |
+
+Busca e criação de familiar:
+
+- antes de criar nova pessoa, o fluxo permite buscar pessoa existente;
+- resultados devem ajudar a diferenciar homônimos;
+- a própria pessoa em revisão não pode ser selecionada;
+- pessoa já vinculada no mesmo grupo não deve ser duplicada;
+- criação manual continua disponível quando a busca não encontra a pessoa correta;
+- vínculo selecionado ou criado entra no fluxo como alteração em análise.
+
+Filhos e outro pai/mãe:
+
+- usar `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível;
+- não inferir gênero pelo nome;
+- dropdown `Outro pai/mãe` deve tentar pré-selecionar outro responsável conhecido pelos relacionamentos existentes;
+- não usar hard-code de nomes específicos.
 
 ### Etapa 3 — Arquivos históricos
 

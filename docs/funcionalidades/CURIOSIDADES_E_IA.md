@@ -27,6 +27,7 @@ Não use este documento para detalhar:
 | views da árvore | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | componentes gerais | `docs/GUIA_COMPONENTES.md` |
 | UX e layout geral | `docs/GUIA_UX_LAYOUT.md` |
+| geração assistida de Mini Bio e Curiosidades em `/meus-dados` | `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
 | deploy de `/api/ai` | `docs/operacao/DEPLOYMENT.md` ou guia operacional vigente |
 | pendências futuras | `docs/PLANO_PROXIMOS_PASSOS.md` |
 | dados, RLS e migrations | `docs/operacao/MIGRATIONS_SUPABASE.md` |
@@ -274,38 +275,35 @@ Usuário pergunta
 
 ### 9.1 Geração de Mini Bio e Curiosidades
 
-`/meus-dados`, Etapa 1 do cadastro inicial do membro, reutiliza o mesmo endpoint serverless `POST /api/ai`, sem expor `OPENAI_API_KEY`.
+A geração assistida de **Mini Bio** e **Curiosidades** pertence à Etapa 1 do onboarding, na página `/meus-dados`, e não ao modal **Curiosidades** da Home.
 
-Payload específico:
+O documento canônico dessa funcionalidade é:
 
-```json
-{
-  "purpose": "profile_text",
-  "destination": "minibio",
-  "keywords": "palavras-chave informadas pelo usuário",
-  "context": {}
-}
+```txt
+docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md
 ```
 
-O destino aceita `minibio` ou `curiosidades`. A resposta é exibida como sugestão e só altera o formulário após a ação explícita de aplicar.
+Relação entre os dois escopos:
 
-Regras no fluxo de cadastro:
+| Escopo | Documento | Onde acontece |
+|---|---|---|
+| Curiosidades exploratórias, conexão familiar e perguntas sobre a árvore carregada | `CURIOSIDADES_E_IA.md` | Home autenticada / modal Curiosidades |
+| Geração de textos para campos editáveis `minibio` e `curiosidades` | `MINI_BIO_CURIOSIDADES_IA.md` | `/meus-dados`, seção **Sobre Mim** |
 
-- a geração assistida de Mini Bio e Curiosidades pertence à Etapa 1 `/meus-dados`;
-- `/revisao-dados` deve apenas resumir Mini Bio e Curiosidades já salvas, sem reabrir o fluxo completo de IA;
-- a IA nunca deve publicar automaticamente; o texto gerado continua dependente de ação explícita do usuário;
-- o endpoint não deve receber `OPENAI_API_KEY` no frontend.
+Pontos de integração:
 
-Regras gerais:
+- os dois fluxos podem usar o endpoint serverless `POST /api/ai`;
+- nenhum fluxo expõe `OPENAI_API_KEY` no frontend;
+- o modal da Home deve responder perguntas sobre a árvore carregada;
+- `/meus-dados` deve gerar textos curtos para preenchimento de formulário;
+- a geração de Mini Bio e Curiosidades não publica nem salva automaticamente;
+- o modo **Nostálgico/Memorial** da Mini Bio deve ser documentado apenas em `MINI_BIO_CURIOSIDADES_IA.md`.
 
-- pergunta vazia não deve ser enviada;
-- loading e erro devem ser claros;
-- falha da IA não deve quebrar o modal;
-- resposta deve ser curta, verificável e baseada no contexto;
-- quando houver resposta determinística local, preferir dado estruturado;
-- a IA deve evitar especulação e informar quando não houver dado suficiente.
+Anti-regressão documental:
 
----
+- não duplicar neste arquivo o fluxo completo de 10 etapas de `/meus-dados`;
+- não documentar aqui payloads antigos baseados em `destination: "minibio"` ou `destination: "curiosidades"` como contrato vigente;
+- se o contrato de `/api/ai` mudar, revisar este arquivo e `MINI_BIO_CURIOSIDADES_IA.md` no mesmo lote.
 
 ## 10. Contexto estruturado da IA
 
@@ -552,7 +550,7 @@ npm test
 
 ---
 
-## 16. Sincronização com a baseline atual da árvore
+## 18. Sincronização com a baseline atual da árvore
 
 Checklist de manutenção:
 
@@ -564,7 +562,7 @@ Checklist de manutenção:
 - [ ] Dados privados de contato continuam dependentes de privacidade e permissão.
 
 
-## 18. Anti-regressões
+## 19. Anti-regressões
 
 Não fazer:
 
@@ -584,7 +582,7 @@ Não fazer:
 
 ---
 
-## 19. Documentos relacionados
+## 20. Documentos relacionados
 
 ### Navegação para pessoas na árvore
 

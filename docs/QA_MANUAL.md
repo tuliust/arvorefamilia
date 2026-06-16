@@ -1,11 +1,10 @@
-
 # QA manual — Árvore Família
 
 > Última revisão: 2026-06-16
 > Local canônico: `docs/QA_MANUAL.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia central de QA manual
-> Status: complementado com checklist específico para onboarding de membro, pessoa falecida, arquivos históricos e revisão final.
+> Status: complementado com checklist específico para onboarding de membro, Mini Bio/Curiosidades com IA, vínculos familiares, pessoa falecida, arquivos históricos e revisão final.
 
 ---
 
@@ -685,19 +684,66 @@ Checklist visual:
 - [ ] info icons aparecem somente onde definidos.
 - [ ] troca entre pessoa viva/falecida atualiza campos sem manter campos incompatíveis visíveis.
 - [ ] validação não exige contato/redes para pessoa falecida.
+- [ ] botão de IA aparece na seção **Sobre Mim**.
+- [ ] gerar Mini Bio e Curiosidades em modo padrão.
+- [ ] confirmar que campos gerados têm até 300 caracteres.
+- [ ] confirmar que modo padrão gera texto em primeira pessoa.
+- [ ] selecionar tom **Nostálgico** e confirmar modo memorial.
+- [ ] confirmar que modo memorial gera em terceira pessoa e no passado.
+- [ ] etapas 2 a 8 do modal usam cards compactos sem ícones internos.
+- [ ] modal fecha após sucesso e mantém campos editáveis.
+- [ ] erro da IA não altera campos existentes.
 
 ### Etapa 2 — Vínculos
 
-Checklist:
+Checklist de layout:
 
-- [ ] botão **Buscar** não aparece no modal de adicionar parente.
-- [ ] campo de nome filtra pessoas cadastradas enquanto digita.
-- [ ] lista/dropdown atualiza conforme caracteres digitados.
-- [ ] botão **Criar nova pessoa** permanece disponível.
-- [ ] box cinza “Nenhuma pessoa encontrada com esse nome” não aparece.
-- [ ] label **Alterar a mãe** aparece no contexto correto.
-- [ ] badges exibem `Vivo`, `Viva`, `Falecido`, `Falecida` conforme gênero/estado.
-- [ ] vínculo pendente/local exibe badge **Em análise**.
+- [ ] botão **Voltar para meus dados** não aparece.
+- [ ] card superior exibe `Familiares de [Primeiro Nome]`.
+- [ ] rótulo **Pessoa em revisão** não aparece.
+- [ ] frase `Você está revisando os vínculos familiares de:` não aparece.
+- [ ] nascimento/local não aparecem no card superior.
+- [ ] painel lateral **Resumo da revisão** não aparece.
+- [ ] área principal ocupa a largura total disponível.
+- [ ] botão final fica no rodapé da revisão.
+
+Checklist de cards-resumo:
+
+- [ ] cards **Pais**, **Filhos**, **Cônjuges** e **Irmãos** funcionam como âncoras.
+- [ ] pluralização mostra `Nenhum vínculo`, `1 vínculo` e `N vínculos`.
+- [ ] rolagem por âncora respeita header/stepper e não corta título da seção.
+
+Checklist de familiares:
+
+- [ ] cards não exibem chips de nascimento/local.
+- [ ] badge `Pré-cadastrado` aparece para pessoa sem usuário vinculado.
+- [ ] badge `Ativo` aparece para pessoa com usuário/auth user vinculado.
+- [ ] vínculo novo ou alterado exibe `Em análise`.
+- [ ] remoção solicitada exibe `Remoção em análise` e mantém card visível.
+- [ ] solicitação de controle exibe `Controle em análise`.
+- [ ] remoção usa botão compacto apenas com ícone no topo do card.
+- [ ] ação de desfazer remoção funciona quando disponível.
+- [ ] `Solicitar controle do perfil` abre modal de justificativa.
+- [ ] justificativa vazia/curta não envia solicitação.
+- [ ] solicitação duplicada para o mesmo perfil não é criada.
+
+Checklist de busca e criação:
+
+- [ ] ao adicionar familiar, usuário consegue buscar pessoa já cadastrada.
+- [ ] resultados da busca são legíveis e ajudam a diferenciar homônimos.
+- [ ] a própria pessoa em revisão não pode ser selecionada.
+- [ ] pessoa já vinculada no mesmo grupo não pode ser duplicada.
+- [ ] usuário ainda consegue criar nova pessoa quando a busca não encontra a correta.
+- [ ] pessoa existente selecionada entra como vínculo `Em análise`.
+
+Checklist de filhos:
+
+- [ ] filho masculino com gênero disponível aparece como `Filho`.
+- [ ] filha feminina com gênero disponível aparece como `Filha`.
+- [ ] sem gênero disponível, fallback é `Filho(a)`.
+- [ ] gênero não é inferido pelo nome.
+- [ ] dropdown `Outro pai/mãe` pré-seleciona responsável conhecido quando existe nos relacionamentos.
+- [ ] não há hard-code de nomes específicos para outro pai/mãe.
 
 ### Etapa 3 — Arquivos históricos
 

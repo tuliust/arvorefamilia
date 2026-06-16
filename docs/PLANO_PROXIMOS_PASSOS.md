@@ -1,10 +1,9 @@
-
 # Plano de próximos passos — Árvore Família
 
 > Última revisão: 2026-06-16
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Tipo: backlog técnico/documental vivo
-> Status: atualizado para refletir onboarding condicional como comportamento consolidado e registrar apenas QA/automação/documentação ainda abertos.
+> Status: atualizado para refletir Mini Bio/Curiosidades com IA, revisão de vínculos familiares como comportamento consolidado e registrar apenas QA, persistência futura, automação e documentação ainda abertos.
 
 ---
 
@@ -58,6 +57,8 @@ Regras:
 | Calendário | Implementado com filtros mobile compactos e integração Google Agenda quando configurada. |
 | Fórum, notificações e favoritos | Implementados, sujeitos a QA funcional recorrente. |
 | Onboarding do membro | Implementado em cinco etapas, com fluxo condicional para pessoa falecida, revisão final editável e Etapa 4 pulada quando aplicável. |
+| Mini Bio e Curiosidades com IA | Implementado em `/meus-dados`; requer QA recorrente de modo padrão e memorial. |
+| Revisão de vínculos familiares | Implementada em `/meus-vinculos`; busca pessoa existente, cria familiar, controla estados de análise e solicitação de controle visual/local. |
 | QA manual | Centralizado em `docs/QA_MANUAL.md`. |
 
 ---
@@ -347,6 +348,40 @@ Regras:
 **Ação recomendada:** testar Chrome desktop, aba anônima e pelo menos um navegador mobile quando possível.
 **Status:** aberto.
 
+
+
+#### ID: ONB-005
+
+**Título:** Persistir solicitação de controle de perfil e criar análise administrativa.
+**Tipo:** evolução funcional | banco | admin
+**Prioridade:** alta
+**Contexto:** `/meus-vinculos` permite solicitar controle de perfil e exibir `Controle em análise`, mas a solicitação pode permanecer como estado local/draft visual até existir fluxo administrativo definitivo.
+**Evidência:** a experiência já possui botão, modal, justificativa e badge, mas a governança futura exige persistência, RLS/policies e tela ou fila de aprovação.
+**Arquivos relacionados:** `src/app/pages/MeusVinculos.tsx`, `src/app/pages/meus-vinculos/ProfileControlRequestDialog.tsx`, `src/app/services/memberProfileService.ts`, `docs/operacao/MIGRATIONS_SUPABASE.md`, `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`.
+**Ação recomendada:** desenhar tabela/solicitação persistente, definir regras de aprovação, atualizar admin, RLS e documentação operacional antes de ativar como fluxo definitivo.
+**Status:** backlog.
+
+#### ID: ONB-006
+
+**Título:** Validar visualmente a revisão de vínculos após remoção do painel lateral.
+**Tipo:** QA visual | QA funcional
+**Prioridade:** alta
+**Contexto:** `/meus-vinculos` foi simplificada para largura total, com cards-resumo como âncoras, botão final no rodapé, badges `Pré-cadastrado`/`Ativo` e remoção compacta por ícone.
+**Evidência:** validações automáticas passaram, mas a checagem visual em browser in-app foi limitada por sandbox Windows em execuções anteriores.
+**Arquivos relacionados:** `src/app/pages/MeusVinculos.tsx`, `src/app/pages/meus-vinculos/*`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar QA manual real em desktop e nos breakpoints 320px, 375px, 390px e 430px, incluindo busca, criação, remoção, desfazer, controle de perfil e pré-seleção de outro pai/mãe.
+**Status:** aberto.
+
+#### ID: ONB-007
+
+**Título:** Criar documento funcional dedicado para `/meus-vinculos`.
+**Tipo:** documentação
+**Prioridade:** média
+**Contexto:** a Etapa 2 ganhou busca de pessoa existente, estados de análise, solicitação de controle e componentes próprios; o comportamento merece documento canônico em `docs/funcionalidades/`.
+**Evidência:** regras hoje estão distribuídas entre guias gerais e QA.
+**Arquivos relacionados:** `docs/funcionalidades/MEUS_VINCULOS.md`, `docs/README.md`, `docs/GUIA_IMPLEMENTACOES.md`, `docs/GUIA_COMPONENTES.md`.
+**Ação recomendada:** manter `MEUS_VINCULOS.md` sincronizado sempre que a feature mudar.
+**Status:** aberto.
 
 ### Fórum
 

@@ -4,7 +4,7 @@
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de implementação vigente
-> Status: atualizado para o fluxo de membro com pessoa viva/falecida, upload com rascunho, busca automática de vínculos e revisão final editável.
+> Status: atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares em largura total, busca de pessoa existente, controle de perfil, upload com rascunho e revisão final editável.
 
 ---
 
@@ -46,6 +46,8 @@ docs/PLANO_PROXIMOS_PASSOS.md
 | Favoritos | Implementados para páginas e entidades suportadas. |
 | Calendário familiar | Implementado com filtros/categorias e integração Google Agenda quando configurada. |
 | Perfil e área de membro | Implementados, incluindo onboarding condicional para pessoa viva/falecida e revisão final editável. |
+| Mini Bio e Curiosidades com IA | Implementados em `/meus-dados`, com modo padrão e modo nostálgico/memorial. |
+| Revisão de vínculos familiares | Implementada em `/meus-vinculos`, com busca de pessoa existente, criação manual, estados de análise e solicitação de controle de perfil. |
 | Fórum | Implementado. |
 | Notificações | Implementadas; no fluxo de pessoa falecida são desativadas automaticamente e `/preferencias` é pulada. |
 | Admin | Implementado. |
@@ -148,11 +150,36 @@ Acesso direto a `/preferencias` para pessoa falecida deve redirecionar para `/re
 
 #### Responsabilidades consolidadas
 
-- `/meus-dados`: dados pessoais, estado vital, Mini Bio, Curiosidades e, quando aplicável, contato, endereço e redes sociais;
-- `/meus-vinculos`: vínculos familiares, modal de busca automática, criação de pessoa e badges por gênero/status;
+- `/meus-dados`: dados pessoais, estado vital, Mini Bio, Curiosidades, assistente de IA e, quando aplicável, contato, endereço e redes sociais;
+- `/meus-vinculos`: revisão guiada de vínculos familiares, busca de pessoa existente, criação manual, remoção/desfazer, solicitação de controle de perfil, badges por status e botão final no rodapé;
 - `/arquivos-historicos`: arquivos/documentos da pessoa vinculada, pré-preenchimento por categoria e rascunho local;
 - `/preferencias`: notificações e permissões de visualização apenas para pessoa viva;
 - `/revisao-dados`: revisão final em layout de perfil, edição inline e finalização.
+
+
+#### Regras implementadas em `/meus-dados` para Mini Bio e Curiosidades
+
+- botão de IA abre modal em 10 etapas;
+- campos `minibio` e `curiosidades` têm limite de 300 caracteres;
+- geração preenche os dois campos simultaneamente;
+- usuário pode editar os textos antes de salvar;
+- modo padrão gera textos em primeira pessoa;
+- tom **Nostálgico** ativa modo memorial, com terceira pessoa, passado e tom saudosista;
+- geração usa `POST /api/ai` e não salva automaticamente.
+
+#### Regras implementadas em `/meus-vinculos`
+
+- layout em largura total, sem painel lateral de resumo;
+- card superior usa `Familiares de [Primeiro Nome]`;
+- cards-resumo funcionam como âncoras para `Pais`, `Filhos`, `Cônjuges` e `Irmãos`;
+- pluralização usa `Nenhum vínculo`, `1 vínculo` e `N vínculos`;
+- vínculos confirmados exibem `Pré-cadastrado` ou `Ativo` conforme vínculo de usuário;
+- vínculos novos/alterados exibem `Em análise`;
+- remoções exibem `Remoção em análise` e permanecem visíveis para desfazer;
+- solicitações de controle exibem `Controle em análise`;
+- busca de pessoa existente ocorre antes da criação manual para reduzir duplicidade;
+- cards de filhos usam `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível;
+- dropdown `Outro pai/mãe` tenta pré-selecionar outro responsável conhecido.
 
 #### Regras implementadas para pessoa falecida
 

@@ -4,7 +4,7 @@
 > Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: regras técnicas e contratos de prevenção de regressão
-> Status: atualizado para incluir regras do onboarding condicional, pessoa falecida, revisão final e arquivos históricos.
+> Status: atualizado para incluir regras do onboarding condicional, Mini Bio/Curiosidades com IA, revisão de vínculos familiares, pessoa falecida, revisão final e arquivos históricos.
 
 ---
 
@@ -421,17 +421,41 @@ Regras:
 - `MemberOnboardingSteps` deve ocultar a Etapa 4;
 - box de notificações/permissões não deve aparecer na revisão final.
 
+### Etapa 1 — Meus dados e IA
+
+Regras:
+
+- campos `minibio` e `curiosidades` devem manter limite de 300 caracteres;
+- geração de IA não deve salvar automaticamente no banco;
+- modo padrão deve gerar textos em primeira pessoa;
+- tom **Nostálgico** deve ativar modo memorial em terceira pessoa e passado;
+- modo memorial não deve inventar datas, cidades, causa de morte ou fatos não informados;
+- etapas 2 a 8 do modal de IA devem manter cards compactos, centralizados, sem ícones internos e com até 2 linhas visuais;
+- botão final do modal deve ser `Gerar textos` na etapa de perguntas opcionais.
+
 ### Etapa 2 — Vínculos
 
 Regras:
 
-- modal de adicionar parente não deve reexibir botão `Buscar`;
-- busca deve filtrar pessoas cadastradas enquanto o usuário digita;
-- botão `Criar nova pessoa` deve permanecer;
-- box cinza `Nenhuma pessoa encontrada com esse nome` não deve reaparecer;
-- label `Outro pai/mãe` não deve voltar no contexto já renomeado para `Alterar a mãe`;
-- badges devem respeitar gênero e status: `Vivo`, `Viva`, `Falecido`, `Falecida`;
-- vínculos locais pendentes devem exibir `Em análise` quando aplicável.
+- tela deve permanecer em largura total, sem painel lateral `Resumo da revisão`;
+- botão `Voltar para meus dados` não deve reaparecer;
+- card superior deve usar `Familiares de [Primeiro Nome]`;
+- rótulo `Pessoa em revisão`, frase `Você está revisando...`, nascimento e local não devem reaparecer no card superior;
+- cards-resumo devem funcionar como âncoras para `Pais`, `Filhos`, `Cônjuges` e `Irmãos`;
+- pluralização deve ser `Nenhum vínculo`, `1 vínculo` ou `N vínculos`, sem `vínculo(s)`;
+- botão final deve permanecer no rodapé da revisão;
+- cards de vínculo não devem exibir chips de nascimento/local;
+- vínculo confirmado deve exibir `Pré-cadastrado` quando não houver usuário vinculado e `Ativo` quando houver auth user/vínculo;
+- vínculo novo ou alterado deve exibir `Em análise`;
+- remoção solicitada deve exibir `Remoção em análise` e manter o card visível;
+- solicitação de controle deve exibir `Controle em análise`;
+- botão de remoção deve permanecer compacto, apenas com ícone, no topo do card;
+- busca de pessoa existente deve ocorrer antes ou junto da criação manual para reduzir duplicidade;
+- criação manual deve continuar disponível quando a busca não encontra a pessoa correta;
+- a própria pessoa em revisão não pode ser selecionada como familiar dela mesma;
+- pessoa já vinculada no mesmo grupo não deve ser duplicada;
+- `Filho`, `Filha` ou `Filho(a)` devem depender do gênero disponível, sem inferência por nome;
+- dropdown `Outro pai/mãe` deve tentar pré-selecionar responsável conhecido sem hard-code de nomes específicos.
 
 ### Etapa 3 — Arquivos históricos
 

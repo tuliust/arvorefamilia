@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-16
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico atualizado para onboarding condicional, revisão final editável, arquivos históricos e QA específico.
+> Status: índice canônico atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares, onboarding condicional, revisão final editável, arquivos históricos e QA específico.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -34,6 +34,8 @@ A baseline funcional atual registra:
   4. `/preferencias`, apenas para pessoa viva;
   5. `/revisao-dados`;
 - pessoa falecida pula `/preferencias`, tem notificações desativadas e permissões de visualização ativadas por padrão;
+- `/meus-dados` possui assistente de IA para Mini Bio e Curiosidades, com modo padrão e modo nostálgico/memorial;
+- `/meus-vinculos` funciona como revisão guiada de vínculos familiares, com busca de pessoa existente, criação manual, estados de análise e solicitação de controle de perfil;
 - Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`;
 - Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`, somente para pessoa viva;
 - `/revisao-dados` é revisão final em layout de perfil, com edição inline e finalização;
@@ -97,8 +99,8 @@ supabase/migrations/ é a fonte da verdade do schema.
 |---|---|---|
 | `README.md` | Índice canônico da documentação. | Atualizado. |
 | `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Manter sincronizado. |
-| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Atualizado para o onboarding em 5 etapas. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para onboarding condicional e revisão final editável. |
+| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Atualizado para IA em `/meus-dados` e revisão de vínculos. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para IA em `/meus-dados`, vínculos familiares e onboarding condicional. |
 | `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado com componentes do onboarding, pessoa falecida e revisão inline. |
 | `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas, onboarding e microcopy. | Atualizado. |
 | `QA_MANUAL.md` | Guia central de QA manual, onboarding e pós-deploy. | Atualizado. |
@@ -146,7 +148,9 @@ docs/funcionalidades/
 | `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Atualizado para `/preferencias`. |
 | `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Preservar. |
 | `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
-| `CURIOSIDADES_E_IA.md` | Curiosidades, IA e geração de Mini Bio/Curiosidades em `/meus-dados`. | Atualizado. |
+| `CURIOSIDADES_E_IA.md` | Curiosidades, conexão familiar e perguntas à IA na Home. | Atualizado. |
+| `MINI_BIO_CURIOSIDADES_IA.md` | Geração assistida de Mini Bio e Curiosidades em `/meus-dados`. | Atualizado. |
+| `MEUS_VINCULOS.md` | Revisão guiada de vínculos familiares em `/meus-vinculos`. | Criar/manter como documento canônico da Etapa 2. |
 
 Documentos sobre antigas views da árvore devem permanecer apenas em `docs/historico/` ou marcados como legado.
 
