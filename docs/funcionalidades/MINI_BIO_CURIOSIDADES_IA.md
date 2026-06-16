@@ -1,9 +1,9 @@
 # Mini Bio e Curiosidades com IA
 
-> Última revisão: 2026-06-15
-> Local canônico: `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`
-> Tipo: documentação funcional e técnica da geração assistida de Mini Bio e Curiosidades em `/meus-dados`.
-> Status: funcionalidade implementada.
+> Última revisão: 2026-06-16  
+> Local canônico: `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`  
+> Tipo: documentação funcional e técnica da geração assistida de Mini Bio e Curiosidades em `/meus-dados`.  
+> Status: funcionalidade implementada e em refinamento contínuo de UX.
 
 ## 1. Função deste documento
 
@@ -13,7 +13,9 @@ Use este arquivo para manter:
 
 - escopo funcional da experiência;
 - fluxo do modal em etapas;
-- regras de geração textual;
+- regras de interface dos cards;
+- modo padrão em primeira pessoa;
+- modo nostálgico/memorial para pessoas falecidas;
 - contrato entre frontend e endpoint `/api/ai`;
 - limites de caracteres;
 - comportamento de edição e regeneração;
@@ -40,9 +42,9 @@ A funcionalidade permite que o usuário gere automaticamente textos curtos para 
 - **Mini Bio**;
 - **Curiosidades**.
 
-A geração é feita por meio de um assistente visual em etapas, acionado pelo botão de IA existente na seção **Mini Bio e Curiosidades** da página `/meus-dados`.
+A geração é feita por meio de um assistente visual em etapas, acionado pelo botão de IA existente na seção **Sobre Mim** da página `/meus-dados`.
 
-O objetivo é reduzir o bloqueio do usuário ao escrever sobre si mesmo, oferecendo escolhas guiadas por tom, características, vínculos familiares, trabalho, mudanças de cidade, momentos marcantes, hobbies, marcas pessoais e informações livres.
+O objetivo é reduzir o bloqueio do usuário ao escrever sobre sua própria história ou sobre a memória de uma pessoa falecida, oferecendo escolhas guiadas por tom, características, vínculos familiares, trabalho, lugares, momentos marcantes, hobbies, marcas pessoais e informações livres.
 
 Ao final do fluxo, a IA gera os dois textos ao mesmo tempo e os insere nos campos da página. O usuário ainda pode editar manualmente antes de salvar os dados pelo fluxo normal da página.
 
@@ -51,7 +53,6 @@ Fora do escopo:
 - publicar automaticamente os textos;
 - salvar automaticamente no banco após a geração;
 - gerar apenas um dos campos;
-- gerar texto em terceira pessoa;
 - permitir sugestão de familiares;
 - alterar dados da árvore familiar;
 - criar novas tabelas ou rotas;
@@ -65,6 +66,7 @@ Fora do escopo:
 |---|---|
 | Página de dados do membro e modal de IA | `src/app/pages/MeusDados.tsx` |
 | Endpoint serverless de IA | `api/ai.ts` |
+| Documentação funcional | `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
 | Tipos gerais de pessoas e formulários | `src/app/types/index.ts` |
 
 A implementação prioriza alterações em:
@@ -72,6 +74,7 @@ A implementação prioriza alterações em:
 ```txt
 src/app/pages/MeusDados.tsx
 api/ai.ts
+docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md
 ```
 
 ---
@@ -84,7 +87,7 @@ A funcionalidade fica disponível na página autenticada:
 /meus-dados
 ```
 
-Na seção **Mini Bio e Curiosidades**, o usuário encontra os campos editáveis e um botão de IA.
+Na seção **Sobre Mim**, o usuário encontra os campos editáveis e um botão de IA.
 
 O botão deve manter descrição acessível:
 
@@ -136,7 +139,8 @@ Regras:
 - o usuário pode editar os textos depois da geração;
 - a geração por IA não salva automaticamente no banco;
 - o salvamento continua dependendo do fluxo normal de `/meus-dados`;
-- ao regenerar, os novos textos substituem os valores atuais nos campos.
+- ao regenerar, os novos textos substituem os valores atuais nos campos;
+- os campos continuam editáveis mesmo depois da geração automática.
 
 ---
 
@@ -165,9 +169,9 @@ Configuração visual sugerida:
 A navegação deve incluir:
 
 - botão **Voltar**;
-- botão **Avançar**;
+- botão **Avançar** nas etapas intermediárias;
 - botão **Gerar textos** na última etapa;
-- indicador de progresso, como `Etapa 3 de 11`;
+- indicador de progresso, como `Etapa 3 de 10`;
 - loading durante a chamada de IA;
 - mensagem de erro quando necessário.
 
@@ -176,14 +180,15 @@ Regras:
 - na primeira etapa, **Voltar** pode ficar oculto ou desabilitado;
 - nas etapas intermediárias, exibir **Voltar** e **Avançar**;
 - na última etapa, substituir **Avançar** por **Gerar textos**;
+- não existe etapa final separada de revisão;
 - se a API falhar, o modal permanece aberto;
-- se a API responder com sucesso, o modal fecha automaticamente.
+- se a API responder com sucesso, o modal fecha automaticamente e os campos são preenchidos.
 
 ---
 
 ## 7. Etapas do fluxo
 
-O fluxo completo possui 11 etapas:
+O fluxo completo possui 10 etapas:
 
 ```txt
 1. Tom do texto
@@ -196,7 +201,6 @@ O fluxo completo possui 11 etapas:
 8. Marcas pessoais e curiosidades
 9. Outras características
 10. Perguntas opcionais
-11. Geração final
 ```
 
 O usuário não precisa selecionar itens em todas as etapas.
@@ -207,47 +211,62 @@ Para habilitar a geração, basta existir ao menos uma fonte de informação:
 - campo livre preenchido;
 - resposta opcional preenchida.
 
+Na etapa 10, o botão de ação principal deve ser **Gerar textos**.
+
 ---
 
 ## 8. Visual das opções
 
-As opções devem ser apresentadas como cards ou botões visuais, não apenas como lista simples de badges.
+As opções devem ser apresentadas como cards/botões selecionáveis.
 
-Cada opção pode conter:
+### 8.1 Tom do texto
 
-- ícone;
-- título curto;
-- descrição curta quando fizer sentido.
+A etapa **Tom do texto** usa cards visuais com ícone, título e descrição curta.
 
-Não adicionar biblioteca nova para isso. Usar preferencialmente ícones já disponíveis via `lucide-react`.
+Layout sugerido:
 
-Ícones úteis:
+```txt
+grid grid-cols-1 gap-3 sm:grid-cols-2
+```
 
-```ts
-Heart
-Users
-Briefcase
-MapPin
-Milestone
-Sparkles
-Music
-Home
-Plane
-BookOpen
-Star
-Smile
-Plus
-ChevronLeft
-ChevronRight
-Wand2
-Map
-Camera
-Coffee
-Gift
-Baby
-GraduationCap
-Utensils
-Pencil
+### 8.2 Etapas 2 a 8
+
+As etapas abaixo usam cards compactos:
+
+- Personalidade;
+- Família e vínculos;
+- Trabalho e trajetória;
+- Lugares e mudanças de cidade;
+- Momentos marcantes;
+- Hobbies e paixões;
+- Marcas pessoais e curiosidades.
+
+Regras visuais:
+
+- sem ícones dentro dos botões;
+- ícone preservado apenas no cabeçalho da etapa;
+- botões compactos;
+- textos centralizados;
+- textos com até 2 linhas visuais;
+- grade de até 3 colunas no desktop;
+- boa área de toque no mobile.
+
+Layout recomendado:
+
+```txt
+grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3
+```
+
+Classe-base sugerida para card compacto:
+
+```txt
+flex min-h-[56px] min-w-0 items-center justify-center rounded-xl border px-3 py-2.5 text-center text-sm font-medium leading-snug transition-colors
+```
+
+Limite visual de 2 linhas:
+
+```txt
+overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]
 ```
 
 Estilo sugerido para opção selecionada:
@@ -259,19 +278,7 @@ border-blue-300 bg-blue-50 text-blue-800
 Estilo sugerido para opção não selecionada:
 
 ```txt
-border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-blue-50/50
-```
-
-Layout responsivo sugerido:
-
-```txt
-grid grid-cols-1 gap-3 sm:grid-cols-2
-```
-
-ou, para opções menores:
-
-```txt
-flex flex-wrap gap-2
+border-gray-200 bg-white text-gray-800 hover:border-blue-200 hover:bg-blue-50/50
 ```
 
 ---
@@ -284,10 +291,10 @@ Título:
 Escolha o tom do texto
 ```
 
-Subtítulo:
+Subtítulo padrão:
 
 ```txt
-Como você quer que sua Mini Bio e suas Curiosidades soem?
+Como você quer que sua Mini Bio e suas Curiosidades soem? O tom Nostálgico cria uma homenagem em memória de quem já faleceu.
 ```
 
 Opções:
@@ -311,167 +318,258 @@ Valor padrão:
 'afetivo'
 ```
 
-A primeira pessoa é obrigatória e não deve ser uma opção configurável.
+A opção **Nostálgico** ativa o modo memorial, documentado na seção 19.
 
 ---
 
 ## 10. Etapa: Personalidade
 
-Título:
+Título no modo padrão:
 
 ```txt
-Como você se descreveria?
+Você se definiria como uma pessoa...
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Essa pessoa era lembrada como alguém...
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Escolha características que combinam com você.
 ```
 
-Opções:
+Subtítulo no modo memorial:
 
-- Calmo(a);
-- Comunicativo(a);
-- Reservado(a);
-- Criativo(a);
-- Curioso(a);
-- Bem-humorado(a);
+```txt
+Escolha características que marcaram seu jeito de ser.
+```
+
+Opções no modo padrão:
+
+- Calma;
+- Comunicativa;
+- Reservada;
+- Criativa;
+- Curiosa;
+- Bem-humorada;
 - Sensível;
-- Determinado(a);
+- Determinada;
 - Independente;
-- Organizado(a);
-- Espontâneo(a);
-- Teimoso(a);
-- Generoso(a);
-- Cuidadoso(a);
-- Sonhador(a);
-- Observador(a);
-- Acolhedor(a);
-- Corajoso(a).
+- Organizada;
+- Espontânea;
+- Teimosa;
+- Generosa;
+- Cuidadosa;
+- Sonhadora;
+- Observadora;
+- Acolhedora;
+- Corajosa.
+
+No modo memorial, os mesmos conceitos são exibidos no passado, por exemplo:
+
+- Era uma pessoa calma;
+- Era comunicativa;
+- Era criativa;
+- Era generosa.
 
 ---
 
 ## 11. Etapa: Família e vínculos
 
-Título:
+Título no modo padrão:
 
 ```txt
 Família e vínculos
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Família e vínculos que marcaram sua vida
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Selecione o que representa sua relação com a família e com as pessoas importantes da sua vida.
 ```
 
-Opções:
+Subtítulo no modo memorial:
+
+```txt
+Selecione lembranças ligadas à família e às pessoas importantes em sua trajetória.
+```
+
+Opções no modo padrão:
 
 - Família em primeiro lugar;
-- Gosta de reunir pessoas;
-- Mantém tradições familiares;
-- Valoriza histórias antigas;
-- Tem forte ligação com os pais;
-- Tem forte ligação com os avós;
-- É próximo(a) dos irmãos;
-- Ama ser pai/mãe;
-- Ama ser tio/tia;
-- Gosta de cuidar dos outros;
-- É referência na família;
-- Gosta de ouvir histórias da família;
-- Gosta de contar histórias;
-- Valoriza encontros de família;
-- Guarda fotos e lembranças;
-- Preserva memórias familiares.
+- Gosto de reunir pessoas;
+- Mantenho tradições familiares;
+- Valorizo histórias antigas;
+- Tenho forte ligação com meus pais;
+- Tenho forte ligação com meus avós;
+- Tenho proximidade com meus irmãos;
+- Amo ser mãe ou pai;
+- Amo ser tia ou tio;
+- Gosto de cuidar dos outros;
+- Sou referência na família;
+- Gosto de ouvir histórias da família;
+- Gosto de contar histórias;
+- Valorizo encontros de família;
+- Guardo fotos e lembranças;
+- Preservo memórias familiares.
+
+No modo memorial, os mesmos conceitos são exibidos no passado, por exemplo:
+
+- Gostava de reunir pessoas;
+- Mantinha tradições familiares;
+- Valorizava histórias antigas;
+- Era referência na família;
+- Guardava fotos e lembranças.
 
 ---
 
 ## 12. Etapa: Trabalho e trajetória
 
-Título:
+Título no modo padrão:
 
 ```txt
 Trabalho e trajetória
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Trabalho e trajetória de vida
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Conte um pouco sobre sua relação com o trabalho, profissão e conquistas.
 ```
 
-Opções:
+Subtítulo no modo memorial:
 
-- Dedicado(a) ao trabalho;
-- Empreendedor(a);
-- Criativo(a) na profissão;
-- Gosta de ensinar;
-- Gosta de aprender;
-- Tem espírito de liderança;
-- Mudou de carreira;
+```txt
+Selecione aspectos que fizeram parte de sua história profissional ou de suas conquistas.
+```
+
+Opções no modo padrão:
+
+- Me dedico ao trabalho;
+- Gosto de empreender;
+- Me destaco pela criatividade;
+- Gosto de ensinar;
+- Gosto de aprender;
+- Tenho espírito de liderança;
+- Mudei de carreira;
+- Trabalhei desde cedo;
+- Construí minha trajetória com esforço;
+- Tenho orgulho da minha profissão;
+- Sou reconhecida pelo que faço;
+- Trabalhei em diferentes áreas;
+- Valorizo independência financeira;
+- Gosto de resolver problemas;
+- Tenho habilidade manual;
+- Tenho facilidade com pessoas;
+- Tenho habilidade com comunicação;
+- Tenho facilidade com números;
+- Tenho habilidade artística.
+
+No modo memorial, os mesmos conceitos são exibidos no passado, por exemplo:
+
+- Dedicou-se ao trabalho;
+- Gostava de empreender;
+- Destacava-se pela criatividade;
 - Trabalhou desde cedo;
-- Construiu sua trajetória com esforço;
-- Tem orgulho da profissão;
-- É reconhecido(a) pelo que faz;
-- Trabalhou em diferentes áreas;
-- Valoriza independência financeira;
-- Gosta de resolver problemas;
-- Tem habilidade manual;
-- Tem habilidade com pessoas;
-- Tem habilidade com comunicação;
-- Tem habilidade com números;
-- Tem habilidade artística.
+- Construiu sua trajetória com esforço.
 
 ---
 
 ## 13. Etapa: Lugares e mudanças de cidade
 
-Título:
+Título no modo padrão:
 
 ```txt
 Lugares que fazem parte da sua história
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Lugares que fizeram parte da sua história
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Marque experiências ligadas a cidades, viagens e mudanças de vida.
 ```
 
-Opções:
+Subtítulo no modo memorial:
+
+```txt
+Marque cidades, viagens e mudanças que fizeram parte de sua trajetória.
+```
+
+Opções no modo padrão:
+
+- Nasci em uma cidade e vivi em outra;
+- Mudei de cidade;
+- Mudei de estado;
+- Morei fora do Brasil;
+- Tenho ligação forte com minha cidade natal;
+- Sinto saudade de um lugar;
+- Tenho uma cidade que marcou minha vida;
+- Gosto de viajar;
+- Vivi uma fase importante em outra cidade;
+- Comecei de novo em outro lugar;
+- Construí família longe da cidade natal;
+- Voltei para minha cidade de origem;
+- Tenho raízes no interior;
+- Tenho raízes no litoral;
+- Tenho raízes em outro país;
+- Valorizo minhas origens.
+
+No modo memorial, os mesmos conceitos são exibidos no passado, por exemplo:
 
 - Nasceu em uma cidade e viveu em outra;
 - Mudou de cidade;
-- Mudou de estado;
 - Morou fora do Brasil;
-- Tem ligação forte com a cidade natal;
-- Sente saudade de um lugar;
-- Tem uma cidade que marcou sua vida;
-- Gosta de viajar;
-- Viveu uma fase importante em outra cidade;
-- Começou de novo em outro lugar;
-- Construiu família longe da cidade natal;
-- Voltou para a cidade de origem;
-- Tem raízes no interior;
-- Tem raízes no litoral;
-- Tem raízes em outro país;
-- Valoriza suas origens.
+- Gostava de viajar;
+- Valorizava suas origens.
 
 ---
 
 ## 14. Etapa: Momentos marcantes
 
-Título:
+Título no modo padrão:
 
 ```txt
 Momentos marcantes
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Momentos que marcaram sua história
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Selecione acontecimentos que ajudaram a formar quem você é.
+```
+
+Subtítulo no modo memorial:
+
+```txt
+Selecione acontecimentos que fizeram parte de sua trajetória.
 ```
 
 Opções:
@@ -495,22 +593,42 @@ Opções:
 - Uma decisão que mudou a vida;
 - Um sonho realizado.
 
-Temas sensíveis, como perda e superação, devem ser tratados com sobriedade. A IA não deve dramatizar nem inferir detalhes que não foram informados.
+No modo memorial, os mesmos conceitos são enviados à IA no passado, por exemplo:
+
+- Viveu um casamento;
+- Conquistou a primeira casa;
+- Fez uma viagem marcante;
+- Aposentou-se;
+- Realizou um sonho.
+
+Temas sensíveis devem ser tratados com sobriedade.
 
 ---
 
 ## 15. Etapa: Hobbies e paixões
 
-Título:
+Título no modo padrão:
 
 ```txt
 Gostos, paixões e pequenos prazeres
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+Gostos, paixões e pequenos prazeres que marcaram sua vida
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Escolha interesses, hábitos e coisas que fazem parte do seu jeito de viver.
+```
+
+Subtítulo no modo memorial:
+
+```txt
+Escolha interesses e hábitos que faziam parte de seu jeito de viver.
 ```
 
 Opções:
@@ -540,83 +658,113 @@ Opções:
 - Cultura;
 - Estudos.
 
+No modo memorial, os mesmos conceitos são exibidos ou enviados no passado, por exemplo:
+
+- Gostava de cozinhar;
+- Gostava de viajar;
+- Gostava de música;
+- Gostava de receber pessoas em casa.
+
 ---
 
 ## 16. Etapa: Marcas pessoais e curiosidades
 
-Título:
+Título no modo padrão:
 
 ```txt
-Detalhes que tornam você único(a)
+O que faz você uma pessoa única?
 ```
 
-Subtítulo:
+Título no modo memorial:
+
+```txt
+O que fazia essa pessoa ser única?
+```
+
+Subtítulo no modo padrão:
 
 ```txt
 Pequenas manias, frases, gostos e costumes ajudam a deixar sua história mais viva.
 ```
 
-Opções:
+Subtítulo no modo memorial:
 
-- Tem um apelido;
-- Tem uma frase típica;
-- Conta histórias repetidas;
-- Tem uma receita famosa;
-- Sempre tira fotos;
-- Guarda objetos antigos;
-- Tem uma música marcante;
-- É conhecido(a) pelo humor;
-- É conhecido(a) pela teimosia;
-- É conhecido(a) pela generosidade;
-- Gosta de aconselhar pessoas;
-- Sempre organiza encontros;
-- Tem uma mania engraçada;
-- Tem um talento escondido;
-- É pontual;
-- Sempre se atrasa;
-- Ama datas comemorativas;
-- Tem um prato preferido;
-- Tem um lugar preferido;
-- Tem uma lembrança de infância marcante.
+```txt
+Escolha marcas pessoais, gostos e lembranças que ajudam a preservar sua memória.
+```
+
+Opções no modo padrão:
+
+- Tenho um apelido;
+- Tenho uma frase típica;
+- Costumo repetir histórias;
+- Tenho uma receita famosa;
+- Estou sempre tirando fotos;
+- Guardo objetos antigos;
+- Tenho uma música marcante;
+- Me conhecem pelo meu humor;
+- Me conhecem pela minha teimosia;
+- Me conhecem pela minha generosidade;
+- Gosto de aconselhar pessoas;
+- Costumo organizar encontros;
+- Tenho uma mania engraçada;
+- Tenho um talento escondido;
+- Costumo ser pontual;
+- Costumo me atrasar;
+- Amo datas comemorativas;
+- Tenho um prato preferido;
+- Tenho um lugar preferido;
+- Tenho uma lembrança de infância marcante.
+
+No modo memorial, os mesmos conceitos são exibidos ou enviados no passado, por exemplo:
+
+- Tinha um apelido;
+- Costumava repetir histórias;
+- Era lembrada pelo humor;
+- Costumava ser pontual;
+- Amava datas comemorativas.
 
 ---
 
 ## 17. Etapa: Outras características
 
-Título:
+Título no modo padrão:
 
 ```txt
 Outras características
 ```
 
-Subtítulo:
+Subtítulo no modo padrão:
 
 ```txt
 Quer acrescentar algo que não apareceu nas opções?
 ```
 
-A etapa contém um campo livre `Textarea`.
-
-Placeholder:
+Placeholder no modo padrão:
 
 ```txt
 Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades...
 ```
 
-O conteúdo é enviado para a IA como `customTraits`.
+Título no modo memorial:
 
-Pode incluir:
+```txt
+Outras lembranças sobre essa pessoa
+```
 
-- características;
-- lembranças;
-- hobbies;
-- frases;
-- manias;
-- fatos pessoais;
-- detalhes de família;
-- detalhes de trabalho;
-- mudanças de cidade;
-- momentos marcantes.
+Subtítulo no modo memorial:
+
+```txt
+Quer acrescentar algo que ajude a contar sua história?
+```
+
+Placeholder no modo memorial:
+
+```txt
+Ex: adorava cozinhar aos domingos, era conhecido pelo bom humor, morou em três cidades, gostava de reunir a família...
+```
+
+O conteúdo digitado é enviado para a API como `customTraits`.
 
 ---
 
@@ -628,168 +776,162 @@ Título:
 Perguntas opcionais
 ```
 
-Subtítulo:
+Subtítulo no modo padrão:
 
 ```txt
 As respostas ajudam a IA a deixar o texto menos genérico. Você pode deixar em branco.
 ```
 
-As perguntas são geradas localmente no frontend, sem chamar a IA apenas para isso.
+Subtítulo no modo memorial:
 
-Função sugerida:
+```txt
+As respostas ajudam a IA a criar uma homenagem mais fiel à memória da pessoa. Você pode deixar em branco.
+```
+
+As perguntas são geradas localmente no frontend, sem chamada de IA.
+
+Função responsável:
 
 ```ts
 function buildAiProfileQuestions(
   selectedBadges: AiBadge[],
-  customTraits: string
+  customTraits: string,
+  memorialMode: boolean,
 ): AiGeneratedQuestion[]
 ```
 
 A função deve retornar sempre 3 perguntas.
 
-Prioridade:
-
-1. se houver badge de família, perguntar sobre lembrança ou vínculo familiar;
-2. se houver badge de lugares/mudanças, perguntar sobre cidade, origem ou mudança marcante;
-3. se houver badge de trabalho, perguntar sobre trajetória profissional;
-4. se houver badge de hobbies/marcas, perguntar sobre curiosidade, mania, receita, apelido ou gosto;
-5. se houver badge de momentos, perguntar sobre fase importante ou aprendizado;
-6. usar fallback genérico quando faltar contexto.
+### Perguntas do modo padrão
 
 Exemplos:
 
-```txt
-Qual lembrança de família você guarda com mais carinho?
-Qual cidade, mudança ou lugar marcou mais sua vida?
-Existe alguma comida, frase, mania ou costume pelo qual as pessoas lembram de você?
-Que momento da sua trajetória ajudou a formar quem você é?
-O que você gostaria que sua família soubesse sobre sua história?
-```
+- Qual lembrança de família você guarda com mais carinho?
+- Qual cidade, mudança ou lugar marcou mais sua vida?
+- O que mais marcou sua trajetória profissional ou seu jeito de trabalhar?
+- Existe alguma comida, frase, mania ou costume pelo qual as pessoas lembram de você?
+- Que momento da sua trajetória ajudou a formar quem você é?
+- O que você gostaria que sua família soubesse sobre sua história?
 
-Cada pergunta deve ter um `Textarea` curto.
+### Perguntas do modo memorial
 
-As respostas são opcionais.
+Exemplos:
 
----
-
-## 19. Etapa: Geração final
-
-Título:
-
-```txt
-Tudo pronto para gerar seus textos
-```
-
-Subtítulo:
-
-```txt
-A IA vai criar uma Mini Bio e Curiosidades em primeira pessoa, com até 300 caracteres cada.
-```
-
-Exibir resumo:
-
-- tom escolhido;
-- quantidade de opções selecionadas;
-- se há características adicionais;
-- quantidade de perguntas respondidas.
-
-Botão principal:
-
-```txt
-Gerar textos
-```
-
-Ao clicar:
-
-1. validar se há ao menos uma fonte de informação;
-2. chamar `POST /api/ai`;
-3. receber `minibio` e `curiosidades`;
-4. limitar cada texto a 300 caracteres no frontend;
-5. inserir os textos nos campos;
-6. fechar o modal automaticamente.
-
-Se ocorrer erro:
-
-- manter o modal aberto;
-- exibir mensagem clara;
-- não alterar os campos.
+- Que lembrança de família essa pessoa deixou?
+- Qual cidade, mudança ou lugar marcou sua trajetória?
+- O que mais marcou sua vida profissional ou seu jeito de trabalhar?
+- Existe alguma comida, frase, mania ou costume pelo qual essa pessoa era lembrada?
+- Que momento importante ajudou a formar sua história?
+- O que você gostaria que a família lembrasse sobre essa pessoa?
 
 ---
 
-## 20. Estados principais no frontend
+## 19. Modo nostálgico para pessoas falecidas
 
-Tipos locais sugeridos:
+O tom **Nostálgico** ativa o modo memorial.
 
-```ts
-type AiTone =
-  | 'afetivo'
-  | 'simples'
-  | 'divertido'
-  | 'elegante'
-  | 'nostalgico'
-  | 'inspirador'
-  | 'familiar'
-  | 'emocional'
-  | 'leve'
-  | 'formal';
+Esse modo é pensado para perfis de pessoas já falecidas ou para textos de homenagem familiar.
 
-type AiBadgeCategory =
-  | 'personalidade'
-  | 'familia'
-  | 'trabalho'
-  | 'lugares'
-  | 'momentos'
-  | 'hobbies'
-  | 'marcas';
+### 19.1 Comportamento no frontend
 
-type AiBadge = {
-  id: string;
-  label: string;
-  category: AiBadgeCategory;
-  icon?: React.ComponentType<{ className?: string }>;
-};
-
-type AiGeneratedQuestion = {
-  id: string;
-  question: string;
-  answer: string;
-};
-```
-
-Estados principais:
+Quando `aiTone === 'nostalgico'`, o frontend deve derivar:
 
 ```ts
-const [aiDialogOpen, setAiDialogOpen] = useState(false);
-const [aiStep, setAiStep] = useState(0);
-const [aiTone, setAiTone] = useState<AiTone>('afetivo');
-const [aiSelectedBadges, setAiSelectedBadges] = useState<string[]>([]);
-const [aiCustomTraits, setAiCustomTraits] = useState('');
-const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<AiGeneratedQuestion[]>([]);
-const [aiLoading, setAiLoading] = useState(false);
-const [aiError, setAiError] = useState<string | null>(null);
+const aiIsMemorialMode = aiTone === 'nostalgico';
 ```
 
-Estados antigos substituídos ou removidos pelo novo fluxo:
+Esse boolean controla:
+
+- títulos das etapas;
+- subtítulos das etapas;
+- labels exibidos nos cards;
+- perguntas opcionais;
+- placeholder do campo livre;
+- payload enviado à API.
+
+O payload deve incluir:
 
 ```ts
-aiDestination
-aiKeywords
-aiSuggestion
+memorialMode: aiIsMemorialMode
 ```
 
-Como a IA gera os dois campos simultaneamente, não há seletor de destino.
+E o contexto deve incluir, quando disponível:
+
+```ts
+context: {
+  nome,
+  profissao,
+  local_nascimento,
+  local_atual,
+  data_nascimento,
+  data_falecimento,
+  falecido,
+  minibio_atual,
+  curiosidades_atuais,
+}
+```
+
+As badges enviadas à API devem usar o texto adaptado ao modo memorial. Exemplo:
+
+```txt
+Gosto de viajar -> Gostava de viajar
+Me dedico ao trabalho -> Dedicou-se ao trabalho
+Tenho um apelido -> Tinha um apelido
+```
+
+### 19.2 Comportamento na API
+
+No endpoint `api/ai.ts`, o modo memorial deve ser detectado por:
+
+```ts
+const isMemorialMode = memorialMode === true || tone === 'nostalgico';
+```
+
+Quando `isMemorialMode` for `false`, a API mantém a regra padrão:
+
+- texto em primeira pessoa;
+- tempo presente ou compatível com a experiência pessoal;
+- Mini Bio e Curiosidades com até 300 caracteres cada.
+
+Quando `isMemorialMode` for `true`, a API deve gerar:
+
+- texto em terceira pessoa;
+- verbos no passado;
+- tom saudosista, afetivo e respeitoso;
+- conteúdo adequado para pessoa falecida;
+- uso do nome da pessoa quando disponível.
+
+Exemplo de estrutura permitida:
+
+```txt
+Absalon nasceu em Recife e foi uma pessoa apaixonada por viagens, família e boas histórias. Adorava reunir pessoas, valorizava suas origens e deixou lembranças afetivas.
+```
+
+Regras obrigatórias:
+
+- não usar primeira pessoa no modo memorial;
+- não escrever como se a pessoa ainda estivesse viva;
+- não inventar datas, cidades, profissões, viagens ou fatos;
+- se não houver data de nascimento, não escrever `xxxx` nem inventar ano;
+- não mencionar morte diretamente se não for necessário;
+- evitar linguagem fúnebre pesada;
+- preferir memória afetiva e saudosista;
+- manter limite de 300 caracteres por campo.
 
 ---
 
-## 21. Payload para `/api/ai`
+## 20. Payload para `/api/ai`
 
-Payload enviado pelo frontend:
+O frontend envia payload estruturado:
 
 ```ts
 {
   purpose: 'profile_text',
   tone: aiTone,
-  selectedBadges: selectedBadgeLabels,
+  memorialMode: aiIsMemorialMode,
+  selectedBadges: aiSelectedBadgeItems.map((badge) =>
+    getAiBadgeDisplayLabel(badge, aiIsMemorialMode)
+  ),
   customTraits: aiCustomTraits.trim(),
   answers: answeredQuestions,
   context: {
@@ -798,51 +940,15 @@ Payload enviado pelo frontend:
     local_nascimento: String(form.local_nascimento ?? ''),
     local_atual: String(form.local_atual ?? ''),
     data_nascimento: String(form.data_nascimento ?? ''),
+    data_falecimento: String(form.data_falecimento ?? ''),
+    falecido: form.falecido === true,
     minibio_atual: String(form.minibio ?? ''),
     curiosidades_atuais: String(form.curiosidades ?? ''),
   },
 }
 ```
 
-`answeredQuestions` deve conter apenas respostas preenchidas:
-
-```ts
-const answeredQuestions = aiGeneratedQuestions
-  .filter((item) => item.answer.trim())
-  .map((item) => ({
-    question: item.question,
-    answer: item.answer.trim(),
-  }));
-```
-
----
-
-## 22. Contrato de resposta da API
-
-Para `purpose === 'profile_text'`, a API deve retornar:
-
-```json
-{
-  "minibio": "texto em primeira pessoa com até 300 caracteres",
-  "curiosidades": "texto em primeira pessoa com até 300 caracteres"
-}
-```
-
-Regras:
-
-- não retornar markdown;
-- não retornar texto solto;
-- não retornar apenas `answer` no novo fluxo;
-- validar que os dois campos são strings;
-- aplicar limite de 300 caracteres também no backend.
-
----
-
-## 23. Validação no endpoint
-
-O endpoint `api/ai.ts` deve validar se há informação suficiente.
-
-Validação esperada:
+Validação mínima:
 
 ```ts
 const hasBadges = Array.isArray(selectedBadges) && selectedBadges.length > 0;
@@ -858,149 +964,169 @@ if (!hasBadges && !hasCustomTraits && !hasAnswers) {
 
 ---
 
-## 24. Prompt interno da API
+## 21. Resposta esperada da API
 
-No bloco `purpose === 'profile_text'`, o prompt deve exigir:
+Para `purpose === 'profile_text'`, a API deve retornar JSON estruturado:
+
+```json
+{
+  "minibio": "texto com até 300 caracteres",
+  "curiosidades": "texto com até 300 caracteres"
+}
+```
+
+Não retornar markdown.
+
+Não retornar texto solto.
+
+Não retornar dentro de `answer` para este fluxo.
+
+O backend também deve aplicar limite de 300 caracteres por segurança:
+
+```ts
+return res.status(200).json({
+  minibio: limitText(parsed.minibio),
+  curiosidades: limitText(parsed.curiosidades),
+});
+```
+
+Se o parse falhar, retornar erro claro:
 
 ```txt
-Você deve gerar dois textos curtos para um perfil familiar.
-
-Retorne exclusivamente JSON válido, sem markdown, no formato:
-{
-  "minibio": "...",
-  "curiosidades": "..."
-}
-
-Regras:
-- Escreva sempre em primeira pessoa.
-- Não use terceira pessoa.
-- Cada campo deve ter no máximo 300 caracteres.
-- Não invente fatos.
-- Use apenas as informações fornecidas em contexto, badges, características adicionais e respostas.
-- Não mencione IA.
-- Não use linguagem exagerada.
-- Não exponha dados técnicos.
-- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.
-- Se houver temas sensíveis, trate com sobriedade.
-- A Mini Bio deve apresentar quem sou, minhas origens, valores, trajetória ou relação com a família.
-- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves sobre minha vida.
+Não foi possível interpretar os textos gerados.
 ```
-
-Após receber a resposta do modelo:
-
-- fazer `JSON.parse`;
-- validar `minibio` e `curiosidades`;
-- limitar cada campo a 300 caracteres;
-- retornar JSON estruturado.
 
 ---
 
-## 25. Helper de limite de texto
+## 22. Regras de geração textual
 
-Frontend e backend devem aplicar limite de segurança.
+### 22.1 Modo padrão
 
-Helper sugerido:
+Para todos os tons exceto `nostalgico`:
 
-```ts
-function limitText(value: string, maxLength = 300) {
-  return String(value ?? '').trim().slice(0, maxLength);
-}
+- gerar sempre em primeira pessoa;
+- não usar terceira pessoa;
+- manter até 300 caracteres por campo;
+- não mencionar IA;
+- não inventar fatos;
+- não inventar datas, cidades, profissões, conquistas, parentescos ou eventos;
+- usar apenas informações informadas no formulário, badges, respostas opcionais e campo livre;
+- manter tom humano, simples e familiar;
+- evitar linguagem exagerada;
+- evitar frases genéricas demais.
+
+Exemplo permitido:
+
+```txt
+Sou uma pessoa ligada à família, às minhas origens e às histórias que carrego comigo. Gosto de preservar memórias, valorizar os encontros e lembrar dos caminhos que fizeram parte da minha trajetória.
 ```
 
-Uso no frontend:
+Exemplo proibido no modo padrão:
 
-```ts
-const minibio = limitText(payload?.minibio ?? '');
-const curiosidades = limitText(payload?.curiosidades ?? '');
-
-updateTextField('minibio', minibio);
-updateTextField('curiosidades', curiosidades);
+```txt
+João é lembrado por sua família como uma pessoa generosa.
 ```
 
-Se algum campo voltar vazio ou inválido, exibir erro e não alterar os campos.
+### 22.2 Modo memorial
+
+Para `tone === 'nostalgico'` ou `memorialMode === true`:
+
+- gerar sempre em terceira pessoa;
+- usar verbos no passado;
+- manter até 300 caracteres por campo;
+- não mencionar IA;
+- não inventar fatos;
+- usar o nome da pessoa quando disponível;
+- não usar `eu`, `me`, `meu`, `minha`;
+- não escrever como se a pessoa ainda estivesse viva;
+- manter tom saudosista, afetivo e respeitoso;
+- não dramatizar perdas;
+- não inventar causa de morte ou circunstâncias sensíveis.
+
+Exemplo permitido:
+
+```txt
+Absalon foi uma pessoa ligada à família, às viagens e às boas histórias. Gostava de reunir pessoas, valorizava suas origens e deixou lembranças afetivas entre todos que conviveram com ele.
+```
+
+Exemplo proibido no modo memorial:
+
+```txt
+Sou uma pessoa que valoriza minha família e gosto de viajar.
+```
 
 ---
 
-## 26. Regras de segurança e privacidade
+## 23. Segurança e privacidade
 
-A funcionalidade deve preservar:
+Regras obrigatórias:
 
-- `OPENAI_API_KEY` apenas no backend;
-- nenhum secret no frontend;
-- nenhum salvamento automático após geração;
-- nenhuma criação de tabela;
-- nenhuma alteração de vínculo familiar;
-- nenhuma inferência de parentesco;
-- nenhuma exposição de IDs técnicos;
-- nenhuma invenção de informações pessoais;
-- nenhuma inferência de dados sensíveis;
-- nenhum treinamento de modelo com dados da família.
-
-Dados sensíveis não devem ser inferidos, incluindo:
-
-- saúde;
-- religião;
-- orientação sexual;
-- condição financeira;
-- conflitos familiares;
-- causa de morte;
-- traumas;
-- diagnósticos;
-- relações afetivas não informadas.
+- não expor `OPENAI_API_KEY`;
+- não enviar secrets ao frontend;
+- não salvar textos automaticamente;
+- não treinar modelo;
+- não expor IDs técnicos;
+- não inventar informações familiares;
+- não inferir dados sensíveis;
+- não alterar vínculos familiares;
+- não alterar dados fora dos campos `minibio` e `curiosidades`;
+- não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares ou causa de morte;
+- temas sensíveis devem ser tratados com sobriedade.
 
 ---
 
-## 27. Estados de erro e loading
+## 24. Comportamento de abertura e reabertura
 
-Durante a geração:
+Ao abrir o modal:
+
+- limpar `aiError`;
+- iniciar pela etapa `0` quando o botão de IA for acionado;
+- manter últimas escolhas da sessão se já existirem;
+- permitir alteração das escolhas;
+- não limpar obrigatoriamente tudo a cada abertura.
+
+Ao gerar novamente:
+
+- os novos textos substituem os valores atuais de `form.minibio` e `form.curiosidades`;
+- o usuário pode editar manualmente depois;
+- o salvamento continua dependendo do fluxo normal da página.
+
+---
+
+## 25. Estados de erro e loading
+
+Durante geração:
 
 - desabilitar botões principais;
-- exibir loading no botão:
+- mostrar loading no botão:
 
 ```txt
 Gerando...
 ```
 
-Erro padrão:
+Se falhar:
+
+- manter o modal aberto;
+- exibir `aiError`;
+- não alterar os campos.
+
+Mensagem padrão:
 
 ```txt
 Não foi possível gerar os textos agora. Tente novamente em instantes.
 ```
 
-Erro por falta de informação:
+Se faltar informação:
 
 ```txt
 Selecione ao menos uma opção ou responda uma pergunta para gerar o texto.
 ```
 
-Em erro:
-
-- manter modal aberto;
-- preservar escolhas do usuário;
-- não alterar Mini Bio nem Curiosidades.
-
 ---
 
-## 28. Reabertura e regeneração
+## 26. Responsividade
 
-Ao abrir o modal:
-
-- limpar `aiError`;
-- permitir alterar escolhas;
-- manter últimas escolhas da sessão se já existirem;
-- não limpar obrigatoriamente tudo a cada abertura.
-
-Ao gerar novamente:
-
-- novos textos substituem `form.minibio` e `form.curiosidades`;
-- usuário pode editar manualmente depois;
-- salvamento continua sendo responsabilidade do fluxo normal da página.
-
----
-
-## 29. Responsividade
-
-A experiência deve ser validada em:
+Conferir especialmente:
 
 - 320px;
 - 375px;
@@ -1012,108 +1138,113 @@ A experiência deve ser validada em:
 No mobile:
 
 - cards devem caber em uma coluna;
-- botões devem continuar tocáveis;
+- botões Voltar/Avançar/Gerar devem continuar tocáveis;
 - modal deve ter scroll interno;
 - textos não devem estourar largura;
 - ícones não devem esmagar labels;
-- footer do modal deve continuar utilizável.
+- os cards compactos das etapas 2 a 8 devem continuar legíveis.
 
 ---
 
-## 30. Anti-regressões
+## 27. Anti-regressões
 
 Não fazer:
 
-- criar nova rota;
+- criar página nova;
+- criar modal separado sem necessidade;
+- adicionar biblioteca nova;
 - criar novo endpoint;
-- criar nova tabela;
+- alterar banco de dados;
 - alterar autenticação;
 - alterar dados da árvore;
 - alterar componentes da Home;
-- alterar o modal de Curiosidades da Home;
-- adicionar biblioteca nova;
-- salvar textos automaticamente;
-- exigir botão “Aplicar texto”;
-- gerar apenas Mini Bio ou apenas Curiosidades;
-- permitir terceira pessoa;
-- manter seletor antigo `Mini Bio | Curiosidades` dentro do modal;
-- deixar texto passar de 300 caracteres;
-- publicar conteúdo automaticamente.
+- implementar familiares sugerindo melhorias;
+- implementar publicação;
+- gerar apenas um dos campos;
+- voltar a usar seletor `Mini Bio` ou `Curiosidades`, porque os dois textos são gerados juntos;
+- exigir botão **Aplicar texto**;
+- reintroduzir etapa 11 de geração final;
+- reintroduzir ícones dentro dos cards das etapas 2 a 8;
+- voltar a usar cards grandes nas etapas 6, 7 e 8.
 
 ---
 
-## 31. Validação técnica
+## 28. Validação técnica
 
-Após alterações, validar:
+Após implementar alterações relacionadas a esta funcionalidade, rodar:
 
 ```bash
 npm run build
 git diff --check
 ```
 
-Se a suíte estiver estável:
+Se existir suite relevante e estiver estável, rodar também:
 
 ```bash
 npm run test
 ```
 
-Validações registradas na implementação:
-
-- `npm run build` passou;
-- `npm test` passou com 3 arquivos e 36 testes;
-- `git diff --check` passou, com aviso normal de LF/CRLF no Windows;
-- `api/ai.ts` validado com transformação em memória via esbuild;
-- dev server respondeu 200 em `http://127.0.0.1:5173/`.
-
 ---
 
-## 32. Validação manual
+## 29. Validação manual
 
-Checklist:
+Testar modo padrão:
 
 1. abrir `/meus-dados`;
-2. localizar seção **Mini Bio e Curiosidades**;
-3. conferir limite de 300 caracteres nos dois campos;
-4. conferir contadores;
+2. localizar seção **Sobre Mim**;
+3. confirmar que Mini Bio e Curiosidades têm limite de 300 caracteres;
+4. confirmar contadores;
 5. clicar no botão de IA;
-6. confirmar abertura do modal;
-7. confirmar fluxo em etapas;
-8. avançar e voltar;
-9. escolher tom;
-10. selecionar cards em diferentes categorias;
-11. adicionar características livres;
-12. responder perguntas opcionais;
-13. chegar à etapa final;
-14. clicar em **Gerar textos**;
-15. confirmar loading;
-16. confirmar fechamento automático no sucesso;
-17. confirmar preenchimento dos dois campos;
-18. confirmar limite de 300 caracteres;
-19. editar manualmente os campos;
-20. reabrir modal;
-21. regenerar textos;
-22. confirmar substituição dos textos anteriores;
-23. confirmar que nada foi salvo no banco antes do salvamento normal;
-24. testar estado vazio;
-25. testar erro da API;
-26. testar mobile.
+6. selecionar um tom que não seja Nostálgico;
+7. avançar pelas etapas;
+8. confirmar cards compactos nas etapas 2 a 8;
+9. selecionar cards em diferentes categorias;
+10. responder uma ou mais perguntas opcionais;
+11. clicar em **Gerar textos** na etapa 10;
+12. confirmar que o modal fecha após sucesso;
+13. confirmar que Mini Bio e Curiosidades são preenchidas em primeira pessoa;
+14. confirmar que cada campo tem até 300 caracteres;
+15. editar manualmente os campos;
+16. reabrir o modal e regenerar.
+
+Testar modo memorial:
+
+1. abrir o assistente de IA;
+2. selecionar tom **Nostálgico**;
+3. avançar pelas etapas;
+4. confirmar que títulos e labels mudam para passado/memória;
+5. confirmar cards compactos nas etapas 2 a 8;
+6. confirmar que perguntas opcionais são adequadas para pessoa falecida;
+7. gerar textos;
+8. confirmar que Mini Bio e Curiosidades vêm em terceira pessoa e no passado;
+9. confirmar que cada campo tem até 300 caracteres;
+10. selecionar outro tom;
+11. confirmar que volta a gerar em primeira pessoa.
+
+Testar estados de erro:
+
+- tentar gerar sem badges, sem campo livre e sem respostas;
+- simular erro da API;
+- confirmar que os campos não são alterados em caso de erro.
 
 ---
 
-## 33. Resultado esperado
+## 30. Resultado esperado
 
-A área **Mini Bio e Curiosidades** de `/meus-dados` passa a oferecer uma experiência guiada de memória pessoal com IA.
+A área **Sobre Mim** de `/meus-dados` oferece uma experiência guiada de memória pessoal com IA.
 
-O usuário deixa de depender de um campo vazio para escrever sobre si. Ele escolhe tom, seleciona cards visuais com ícones, adiciona características livres, responde perguntas opcionais e recebe dois textos curtos, humanos, editáveis e em primeira pessoa.
+No modo padrão, o usuário não precisa escrever do zero. Ele escolhe tom, seleciona cards compactos, adiciona características livres, responde perguntas opcionais e recebe dois textos curtos, humanos e editáveis em primeira pessoa.
 
-A experiência final deve ser:
+No modo **Nostálgico**, o assistente se adapta para homenagens de pessoas falecidas, com títulos, cards, perguntas e geração textual no passado, em terceira pessoa e com tom saudosista.
+
+A experiência deve ser:
 
 - visual;
 - leve;
 - responsiva;
-- dividida em etapas;
-- sempre em primeira pessoa;
+- em etapas;
+- com cards compactos nas etapas 2 a 8;
 - limitada a 300 caracteres por campo;
-- integrada ao endpoint `/api/ai`;
+- segura;
 - sem salvamento automático;
-- segura contra invenção de dados pessoais.
+- integrada ao fluxo atual da página.
