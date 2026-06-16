@@ -78,6 +78,9 @@ export type PersonProfileResetResult = {
   updated_people: number;
   deleted_insights: number;
   deleted_favorites: number;
+  deleted_historical_files: number;
+  deleted_user_links: number;
+  deleted_auth_users: number;
   notification_preferences_reset: number;
 };
 
@@ -378,6 +381,9 @@ export async function resetarPerfilPessoa(id: string): Promise<PersonProfileRese
     updated_people: Number(data?.updated_people ?? 0),
     deleted_insights: Number(data?.deleted_insights ?? 0),
     deleted_favorites: Number(data?.deleted_favorites ?? 0),
+    deleted_historical_files: Number(data?.deleted_historical_files ?? 0),
+    deleted_user_links: Number(data?.deleted_user_links ?? 0),
+    deleted_auth_users: Number(data?.deleted_auth_users ?? 0),
     notification_preferences_reset: Number(data?.notification_preferences_reset ?? 0),
   };
 }

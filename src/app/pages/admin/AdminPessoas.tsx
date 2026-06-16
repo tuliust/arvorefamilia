@@ -211,7 +211,14 @@ export function AdminPessoas() {
       await loadPessoas();
       setResetId(null);
       toast.success(
-        `Perfil resetado. ${result.deleted_insights} conteúdo(s) gerado(s) e ${result.deleted_favorites} favorito(s) removido(s).`
+        [
+          'Perfil resetado.',
+          `${result.deleted_insights} conteúdo(s) gerado(s),`,
+          `${result.deleted_historical_files} arquivo(s) histórico(s),`,
+          `${result.deleted_user_links} vínculo(s) de usuário,`,
+          `${result.deleted_auth_users} auth user(s)`,
+          `e ${result.deleted_favorites} favorito(s) removido(s).`,
+        ].join(' ')
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao resetar perfil. Tente novamente.');
