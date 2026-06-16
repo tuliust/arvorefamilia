@@ -189,10 +189,6 @@ html[data-tree-color-palette="brown"] [data-tree-route-view="mapa-familiar-horiz
   color: inherit !important;
 }
 
-[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path {
-  stroke: var(--family-map-connector, #a5eef6) !important;
-}
-
 /* Mantém avatares e ícones internos estáveis no html2canvas. */
 [data-family-map-horizontal-root="true"] .family-map-avatar-icon,
 [data-family-map-horizontal-root="true"] .family-map-status-icon {
@@ -474,4 +470,39 @@ html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true
 
 [data-family-map-horizontal-root="true"] {
   --family-map-connector-highlight: #0f766e;
+}
+
+/* Destaque clic?vel dos conectores horizontais */
+[data-family-map-horizontal-root="true"] {
+  --family-map-connector-highlight: #0f766e;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path[data-family-map-connector-line="true"] {
+  fill: none !important;
+  stroke: var(--family-map-connector, #a5eef6) !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"][data-family-map-has-highlight="true"] path[data-family-map-connector-line="true"]:not([data-family-map-highlighted="true"]) {
+  opacity: 0.24 !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path[data-family-map-connector-line="true"][data-family-map-highlighted="true"] {
+  stroke: var(--family-map-connector-highlight, #0f766e) !important;
+  stroke-width: 3 !important;
+  opacity: 1 !important;
+}
+
+[data-family-map-horizontal-root="true"] [data-family-map-connectors="true"] path[data-family-map-hit-area="true"] {
+  fill: none !important;
+  stroke: transparent !important;
+  stroke-width: 10 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  opacity: 1 !important;
+  pointer-events: stroke !important;
 }

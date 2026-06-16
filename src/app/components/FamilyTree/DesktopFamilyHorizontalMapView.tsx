@@ -1146,14 +1146,13 @@ function DesktopFamilyHorizontalMapViewComponent({
         >
           <svg
             data-family-map-connectors="true"
+            data-family-map-has-highlight={highlightedConnectorFamilyKey ? 'true' : undefined}
             className="absolute inset-0 z-0 h-full w-full"
             viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
             aria-hidden="true"
           >
             <g
               fill="none"
-              stroke="var(--family-map-connector, #a5eef6)"
-              strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -1164,15 +1163,13 @@ function DesktopFamilyHorizontalMapViewComponent({
                 return (
                   <React.Fragment key={connector.id}>
                     <path
+                      data-family-map-connector-line="true"
+                      data-family-map-highlighted={isHighlighted ? 'true' : undefined}
                       d={connectorPath(connector.points)}
-                      stroke={isHighlighted ? 'var(--family-map-connector-highlight, #0f766e)' : undefined}
-                      strokeWidth={isHighlighted ? 4 : 2}
-                      opacity={highlightedConnectorFamilyKey && !isHighlighted ? 0.28 : 1}
                     />
                     <path
+                      data-family-map-hit-area="true"
                       d={connectorPath(connector.points)}
-                      stroke="transparent"
-                      strokeWidth={16}
                       pointerEvents="stroke"
                       className="cursor-pointer"
                       onClick={(event) => {
