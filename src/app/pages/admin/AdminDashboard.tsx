@@ -185,16 +185,16 @@ export function AdminDashboard() {
             className={dashboardCardButtonClass}
             aria-label="Abrir página de pessoas"
           >
-            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Membros</CardTitle>
+            <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Membros</span>
               <Users className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
-            </CardHeader>
-            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalPessoas}</div>
-              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
+            </span>
+            <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalPessoas}</span>
+              <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
                 {stats.totalHumanos} humanos, {stats.totalPets} pets
-              </p>
-            </CardContent>
+              </span>
+            </span>
           </button>
 
           <button
@@ -203,18 +203,18 @@ export function AdminDashboard() {
             className={dashboardCardButtonClass}
             aria-label="Abrir página de relacionamentos"
           >
-            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Relações</CardTitle>
+            <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Relações</span>
               <Link2 className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
-            </CardHeader>
-            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">
+            </span>
+            <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">
                 {stats.totalRelacionamentos}
-              </div>
-              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
+              </span>
+              <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">
                 {stats.totalCasamentos} casamentos
-              </p>
-            </CardContent>
+              </span>
+            </span>
           </button>
 
           <button
@@ -223,14 +223,14 @@ export function AdminDashboard() {
             className={dashboardCardButtonClass}
             aria-label="Abrir página de solicitações de vínculos"
           >
-            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Pendentes</CardTitle>
+            <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Pendentes</span>
               <GitPullRequest className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
-            </CardHeader>
-            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.pendingRelationshipRequests}</div>
-              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Vínculos aguardando revisão</p>
-            </CardContent>
+            </span>
+            <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.pendingRelationshipRequests}</span>
+              <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Vínculos aguardando revisão</span>
+            </span>
           </button>
 
           <Card className="min-w-0">
