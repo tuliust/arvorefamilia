@@ -1106,6 +1106,6 @@ docs/QA_MANUAL.md
 ## Fase 2 - Decisão sobre formulários administrativos
 
 - O formulário administrativo de pessoa usa componentes compartilhados para dados, datas, contato, bio, privacidade e arquivos.
-- No admin, os blocos de contato/endereço/redes sociais e privacidade permanecem disponíveis mesmo quando a pessoa está marcada como falecida.
-- Justificativa: o admin pode atuar como guardião de memória e precisar corrigir dados legados, redes, contatos históricos, permissões e registros associados sem perder capacidade administrativa.
+- No admin, quando a pessoa está marcada como falecida, os blocos de contato/endereço/redes sociais e privacidade não são exibidos no formulário.
+- Justificativa: perfis memoriais não devem expor nem estimular edição de canais pessoais de contato, endereço, WhatsApp, redes sociais ou preferências de privacidade voltadas a uso pessoal ativo.
 - Essa decisão não altera RLS, migrations, RPCs, buckets, policies nem rotas antigas removidas.
