@@ -427,7 +427,7 @@ export function RevisaoDados() {
 
       <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <Card className="border-gray-200 bg-white shadow-sm">
           <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-4">

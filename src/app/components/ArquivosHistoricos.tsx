@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -198,6 +198,8 @@ export function ArquivosHistoricos({
   const hasUploadedDraftFile = Boolean(novoArquivo.url);
   const [editingArquivoId, setEditingArquivoId] = useState<string | null>(null);
   const [participantSearch, setParticipantSearch] = useState('');
+  const uploadFormRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToUploadRef = useRef(false);
   const selectedDraftParticipants = useMemo(
     () => participantOptions.filter((person) => novoArquivo.participante_ids.includes(person.id)),
     [novoArquivo.participante_ids, participantOptions]
@@ -216,6 +218,21 @@ export function ArquivosHistoricos({
       // Rascunho local é auxiliar; falha de leitura não deve bloquear a tela.
     }
   }, [draftStorageKey]);
+
+
+  useEffect(() => {
+    if (!shouldScrollToUploadRef.current || !isAddingFile || !uploadFormRef.current) return;
+
+    shouldScrollToUploadRef.current = false;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.requestAnimationFrame(() => {
+      uploadFormRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+  }, [isAddingFile]);
 
   useEffect(() => {
     if (!draftStorageKey || readOnly) return;
@@ -296,6 +313,7 @@ export function ArquivosHistoricos({
   const handleInteractiveCategorySelect = (category: HistoricalFileEventCategory) => {
     const option = INTERACTIVE_CATEGORY_OPTIONS.find((item) => item.value === category);
 
+    shouldScrollToUploadRef.current = true;
     setNovoArquivo((current) => ({
       ...current,
       categoria_evento: category,
@@ -527,7 +545,7 @@ export function ArquivosHistoricos({
           )}
 
           {(isAddingFile || hasUploadedDraftFile) && !readOnly && (
-            <div className="space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
+            <div ref={uploadFormRef} className="scroll-mt-24 space-y-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
               {hasUploadedDraftFile && (
                 <div className="flex min-w-0 items-center gap-3 rounded-lg border border-green-100 bg-white p-3">
                   <ArquivoThumbnail arquivo={{ tipo: novoArquivo.tipo, url: novoArquivo.url, titulo: novoArquivo.titulo }} />

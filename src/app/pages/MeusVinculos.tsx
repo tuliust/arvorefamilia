@@ -1148,7 +1148,7 @@ export function MeusVinculos() {
 
       <MemberOnboardingSteps activeStep={2} hidePreferences={pessoa?.falecido === true} />
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6">
         {hasPendingRelationshipRequest && (
           <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.

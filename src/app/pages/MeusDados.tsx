@@ -1606,12 +1606,13 @@ export function MeusDados() {
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
           { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
         ]}
+        hideMobileHeaderActions
       />
 
       <MemberOnboardingSteps activeStep={1} hidePreferences={form.falecido === true} />
 
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)]">
-        <form onSubmit={handleConfirm} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)] lg:pb-6">
+        <form onSubmit={handleConfirm} className="order-2 min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 lg:order-1">
           {linkedPeople.length > 1 && (
             <section className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
               <Label htmlFor="linked-profile-selector">Perfil em edição</Label>
@@ -1776,7 +1777,7 @@ export function MeusDados() {
 
           {form.falecido !== true && (
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <SectionTitle icon={MapPin}>Contato, endereço e redes sociais</SectionTitle>
+            <SectionTitle icon={MapPin}>Contato, endereço e redes</SectionTitle>
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               <Field label="WhatsApp">
                 <Input
@@ -1815,13 +1816,13 @@ export function MeusDados() {
           )}
 
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <SectionTitle icon={Sparkles} className="mb-0">Sobre Mim</SectionTitle>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 shrink-0 px-3"
+                className="h-10 w-full shrink-0 justify-center gap-2 border-blue-200 bg-blue-50 px-3 font-semibold text-blue-700 hover:bg-blue-100 sm:w-auto"
                 onClick={() => {
                   setAiError(null);
                   setAiStep(0);
@@ -1831,7 +1832,7 @@ export function MeusDados() {
                 title="Receber ajuda da IA para escrever Mini Bio e Curiosidades"
               >
                 <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Ajuda da IA</span>
+                <span>Escreva com a IA</span>
               </Button>
             </div>
             <div className="grid grid-cols-1 gap-4">
@@ -1841,7 +1842,7 @@ export function MeusDados() {
                   onChange={(e) => updateTextField('minibio', e.target.value)}
                   placeholder="Escreva uma breve apresentação sobre você em até 300 caracteres."
                   maxLength={300}
-                  className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+                  className="min-h-[140px] border-gray-300 bg-white text-base focus-visible:ring-blue-600 md:min-h-24 md:text-sm"
                 />
                 <p className="text-right text-xs text-gray-500">{String(form.minibio ?? '').length}/300</p>
               </Field>
@@ -1851,7 +1852,7 @@ export function MeusDados() {
                   onChange={(e) => updateTextField('curiosidades', e.target.value)}
                   placeholder="Compartilhe fatos, gostos, lembranças ou detalhes curiosos sobre sua vida em até 300 caracteres."
                   maxLength={300}
-                  className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+                  className="min-h-[140px] border-gray-300 bg-white text-base focus-visible:ring-blue-600 md:min-h-24 md:text-sm"
                 />
                 <p className="text-right text-xs text-gray-500">{String(form.curiosidades ?? '').length}/300</p>
               </Field>
@@ -1871,7 +1872,7 @@ export function MeusDados() {
           </div>
         </form>
 
-        <aside className="h-fit min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+        <aside className="order-1 h-fit min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm lg:order-2">
           <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-3xl font-bold text-blue-700">
             {currentPhotoUrl ? (
               <img src={currentPhotoUrl} alt={previewName} className="h-full w-full object-cover" />
@@ -2112,16 +2113,57 @@ function InfoTooltipButton({
   ariaLabel: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLSpanElement | null>(null);
+  const tooltipId = React.useId();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && wrapperRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <span className="group relative inline-flex shrink-0">
+    <span ref={wrapperRef} className="group relative inline-flex shrink-0">
       <button
         type="button"
         aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-describedby={open ? tooltipId : undefined}
+        onClick={() => setOpen((current) => !current)}
+        onBlur={(event) => {
+          const nextTarget = event.relatedTarget;
+          if (!(nextTarget instanceof Node) || !wrapperRef.current?.contains(nextTarget)) {
+            setOpen(false);
+          }
+        }}
         className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
       >
         <Info className="h-3.5 w-3.5" />
       </button>
-      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-64 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
+      <span
+        id={tooltipId}
+        role="tooltip"
+        className={[
+          'pointer-events-none absolute right-0 top-full z-20 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block',
+          open ? 'block' : 'hidden',
+        ].join(' ')}
+      >
         {children}
       </span>
     </span>

@@ -26,21 +26,21 @@ export function MemberOnboardingSteps({ activeStep, hidePreferences = false }: M
 
   return (
     <nav className="border-t border-gray-100 bg-white" aria-label="Etapas do cadastro">
-      <div className="mx-auto max-w-6xl overflow-x-auto px-4 py-4">
-        <ol className="flex min-w-max items-start justify-center">
+      <div className="mx-auto max-w-6xl px-3 py-3 sm:px-4 sm:py-4">
+        <ol className="flex w-full min-w-0 items-start justify-between">
           {visibleSteps.map((step, index) => {
             const isActive = step.number === activeStep;
             const isPast = step.number < activeStep;
 
             return (
               <React.Fragment key={step.number}>
-                <li className="flex min-w-[84px] flex-col items-center gap-2 text-center">
+                <li className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center sm:gap-2">
                   <button
                     type="button"
                     onClick={() => navigate(step.path)}
                     aria-current={isActive ? 'step' : undefined}
                     className={[
-                      'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold transition',
+                      'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition sm:h-9 sm:w-9 sm:text-sm',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
                       isActive
                         ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
@@ -51,7 +51,7 @@ export function MemberOnboardingSteps({ activeStep, hidePreferences = false }: M
                   >
                     {step.number}
                   </button>
-                  <span className={isActive ? 'text-xs font-semibold text-blue-700' : 'text-xs font-medium text-gray-500'}>
+                  <span className={['max-w-[4.25rem] truncate text-[10px] leading-tight min-[390px]:max-w-[5rem] sm:max-w-none sm:text-xs', isActive ? 'font-semibold text-blue-700' : 'font-medium text-gray-500'].join(' ')}>
                     {step.label}
                   </span>
                 </li>
@@ -59,7 +59,7 @@ export function MemberOnboardingSteps({ activeStep, hidePreferences = false }: M
                   <li
                     aria-hidden="true"
                     className={[
-                      'mt-4 h-px w-8 shrink-0 sm:w-12',
+                      'mt-4 h-px w-2 shrink-0 min-[375px]:w-4 sm:w-12',
                       step.number < activeStep ? 'bg-blue-200' : 'bg-gray-200',
                     ].join(' ')}
                   />

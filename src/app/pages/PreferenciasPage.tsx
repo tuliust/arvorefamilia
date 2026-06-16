@@ -190,7 +190,7 @@ export function PreferenciasPage() {
 
       <MemberOnboardingSteps activeStep={4} />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <NotificationPreferencesPanel userId={user.id} />
 
         <Card>

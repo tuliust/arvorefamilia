@@ -49,6 +49,7 @@ interface MemberPageHeaderProps {
   customActions?: React.ReactNode;
   mobileCustomActions?: React.ReactNode;
   hideFavoriteButton?: boolean;
+  hideMobileHeaderActions?: boolean;
   className?: string;
 }
 
@@ -214,6 +215,7 @@ export function MemberPageHeader({
   customActions,
   mobileCustomActions,
   hideFavoriteButton = false,
+  hideMobileHeaderActions = false,
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
@@ -269,11 +271,11 @@ export function MemberPageHeader({
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
-            {!hideFavoriteButton && (
+            {!hideMobileHeaderActions && !hideFavoriteButton && (
               <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
             )}
             {mobileCustomActions}
-            <UserProfileMenu />
+            {!hideMobileHeaderActions && <UserProfileMenu />}
           </div>
 
           {(actions.length > 0 || customActions) && (

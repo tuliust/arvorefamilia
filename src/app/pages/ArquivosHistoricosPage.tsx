@@ -193,7 +193,7 @@ export function ArquivosHistoricosPage() {
 
       <MemberOnboardingSteps activeStep={3} hidePreferences={pessoa.falecido === true} />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <ArquivosHistoricos
           arquivos={archives}
           onChange={setArchives}
