@@ -1,7 +1,37 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
-import { Camera, ImagePlus, Info, Save, Sparkles, Trash2, UploadCloud, UserCircle2 } from 'lucide-react';
+import {
+  Baby,
+  BookOpen,
+  Briefcase,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Coffee,
+  Gift,
+  GraduationCap,
+  Heart,
+  Home,
+  ImagePlus,
+  Info,
+  Map,
+  MapPin,
+  Milestone,
+  Music,
+  Pencil,
+  Plane,
+  Save,
+  Smile,
+  Sparkles,
+  Star,
+  Trash2,
+  UploadCloud,
+  UserCircle2,
+  Users,
+  Utensils,
+  Wand2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
@@ -71,6 +101,360 @@ type MeusDadosDraft = {
   avatarCropSourceDataUrl?: string | null;
   photoMarkedForRemoval?: boolean;
 };
+
+type AiTone =
+  | 'afetivo'
+  | 'simples'
+  | 'divertido'
+  | 'elegante'
+  | 'nostalgico'
+  | 'inspirador'
+  | 'familiar'
+  | 'emocional'
+  | 'leve'
+  | 'formal';
+
+type AiBadgeCategory =
+  | 'personalidade'
+  | 'familia'
+  | 'trabalho'
+  | 'lugares'
+  | 'momentos'
+  | 'hobbies'
+  | 'marcas';
+
+type AiBadge = {
+  id: string;
+  label: string;
+  category: AiBadgeCategory;
+  icon?: React.ComponentType<{ className?: string }>;
+};
+
+type AiGeneratedQuestion = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+type AiBadgeGroup = {
+  id: AiBadgeCategory;
+  title: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badges: AiBadge[];
+};
+
+const AI_TONES: Array<{
+  id: AiTone;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'afetivo', label: 'Afetivo', description: 'Carinhoso, humano e próximo.', icon: Heart },
+  { id: 'simples', label: 'Simples e direto', description: 'Claro, breve e sem floreios.', icon: Pencil },
+  { id: 'divertido', label: 'Divertido', description: 'Leve, bem-humorado e natural.', icon: Smile },
+  { id: 'elegante', label: 'Elegante', description: 'Cuidado, discreto e polido.', icon: Star },
+  { id: 'nostalgico', label: 'Nostálgico', description: 'Com memória, origem e afeto.', icon: Camera },
+  { id: 'inspirador', label: 'Inspirador', description: 'Positivo, sem exagerar conquistas.', icon: Sparkles },
+  { id: 'familiar', label: 'Familiar', description: 'Voltado a vínculos e lembranças.', icon: Users },
+  { id: 'emocional', label: 'Emocional', description: 'Sensível e acolhedor.', icon: Gift },
+  { id: 'leve', label: 'Leve', description: 'Suave, simples e cotidiano.', icon: Coffee },
+  { id: 'formal', label: 'Formal', description: 'Mais sóbrio e objetivo.', icon: BookOpen },
+];
+
+const AI_STEPS = [
+  'Tom do texto',
+  'Personalidade',
+  'Família e vínculos',
+  'Trabalho e trajetória',
+  'Lugares e mudanças de cidade',
+  'Momentos marcantes',
+  'Hobbies e paixões',
+  'Marcas pessoais e curiosidades',
+  'Outras características',
+  'Perguntas opcionais',
+  'Geração final',
+];
+
+function makeBadges(
+  category: AiBadgeCategory,
+  labels: string[],
+  fallbackIcon: React.ComponentType<{ className?: string }>,
+  iconOverrides: Record<string, React.ComponentType<{ className?: string }>> = {},
+): AiBadge[] {
+  return labels.map((label) => ({
+    id: `${category}-${label
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')}`,
+    label,
+    category,
+    icon: iconOverrides[label] ?? fallbackIcon,
+  }));
+}
+
+const AI_BADGE_GROUPS: AiBadgeGroup[] = [
+  {
+    id: 'personalidade',
+    title: 'Como você se descreveria?',
+    subtitle: 'Escolha características que combinam com você.',
+    icon: Smile,
+    badges: makeBadges('personalidade', [
+      'Calmo(a)',
+      'Comunicativo(a)',
+      'Reservado(a)',
+      'Criativo(a)',
+      'Curioso(a)',
+      'Bem-humorado(a)',
+      'Sensível',
+      'Determinado(a)',
+      'Independente',
+      'Organizado(a)',
+      'Espontâneo(a)',
+      'Teimoso(a)',
+      'Generoso(a)',
+      'Cuidadoso(a)',
+      'Sonhador(a)',
+      'Observador(a)',
+      'Acolhedor(a)',
+      'Corajoso(a)',
+    ], Smile),
+  },
+  {
+    id: 'familia',
+    title: 'Família e vínculos',
+    subtitle: 'Selecione o que representa sua relação com a família e com as pessoas importantes da sua vida.',
+    icon: Users,
+    badges: makeBadges('familia', [
+      'Família em primeiro lugar',
+      'Gosta de reunir pessoas',
+      'Mantém tradições familiares',
+      'Valoriza histórias antigas',
+      'Tem forte ligação com os pais',
+      'Tem forte ligação com os avós',
+      'É próximo(a) dos irmãos',
+      'Ama ser pai/mãe',
+      'Ama ser tio/tia',
+      'Gosta de cuidar dos outros',
+      'É referência na família',
+      'Gosta de ouvir histórias da família',
+      'Gosta de contar histórias',
+      'Valoriza encontros de família',
+      'Guarda fotos e lembranças',
+      'Preserva memórias familiares',
+    ], Users, {
+      'Família em primeiro lugar': Heart,
+      'Guarda fotos e lembranças': Camera,
+      'Preserva memórias familiares': BookOpen,
+    }),
+  },
+  {
+    id: 'trabalho',
+    title: 'Trabalho e trajetória',
+    subtitle: 'Conte um pouco sobre sua relação com o trabalho, profissão e conquistas.',
+    icon: Briefcase,
+    badges: makeBadges('trabalho', [
+      'Dedicado(a) ao trabalho',
+      'Empreendedor(a)',
+      'Criativo(a) na profissão',
+      'Gosta de ensinar',
+      'Gosta de aprender',
+      'Tem espírito de liderança',
+      'Mudou de carreira',
+      'Trabalhou desde cedo',
+      'Construiu sua trajetória com esforço',
+      'Tem orgulho da profissão',
+      'É reconhecido(a) pelo que faz',
+      'Trabalhou em diferentes áreas',
+      'Valoriza independência financeira',
+      'Gosta de resolver problemas',
+      'Tem habilidade manual',
+      'Tem habilidade com pessoas',
+      'Tem habilidade com comunicação',
+      'Tem habilidade com números',
+      'Tem habilidade artística',
+    ], Briefcase, {
+      'Gosta de ensinar': GraduationCap,
+      'Gosta de aprender': BookOpen,
+    }),
+  },
+  {
+    id: 'lugares',
+    title: 'Lugares que fazem parte da sua história',
+    subtitle: 'Marque experiências ligadas a cidades, viagens e mudanças de vida.',
+    icon: MapPin,
+    badges: makeBadges('lugares', [
+      'Nasceu em uma cidade e viveu em outra',
+      'Mudou de cidade',
+      'Mudou de estado',
+      'Morou fora do Brasil',
+      'Tem ligação forte com a cidade natal',
+      'Sente saudade de um lugar',
+      'Tem uma cidade que marcou sua vida',
+      'Gosta de viajar',
+      'Viveu uma fase importante em outra cidade',
+      'Começou de novo em outro lugar',
+      'Construiu família longe da cidade natal',
+      'Voltou para a cidade de origem',
+      'Tem raízes no interior',
+      'Tem raízes no litoral',
+      'Tem raízes em outro país',
+      'Valoriza suas origens',
+    ], MapPin, {
+      'Gosta de viajar': Plane,
+      'Morou fora do Brasil': Map,
+      'Começou de novo em outro lugar': Home,
+    }),
+  },
+  {
+    id: 'momentos',
+    title: 'Momentos marcantes',
+    subtitle: 'Selecione acontecimentos que ajudaram a formar quem você é.',
+    icon: Milestone,
+    badges: makeBadges('momentos', [
+      'Casamento',
+      'Nascimento dos filhos',
+      'Mudança de cidade',
+      'Primeira casa',
+      'Primeiro emprego',
+      'Formatura',
+      'Viagem marcante',
+      'Recomeço importante',
+      'Perda de alguém querido',
+      'Superação de uma fase difícil',
+      'Conquista profissional',
+      'Criação de um negócio',
+      'Encontro com alguém especial',
+      'Fase de muito aprendizado',
+      'Mudança de carreira',
+      'Aposentadoria',
+      'Uma decisão que mudou a vida',
+      'Um sonho realizado',
+    ], Milestone, {
+      'Nascimento dos filhos': Baby,
+      'Primeira casa': Home,
+      'Formatura': GraduationCap,
+      'Viagem marcante': Plane,
+    }),
+  },
+  {
+    id: 'hobbies',
+    title: 'Gostos, paixões e pequenos prazeres',
+    subtitle: 'Escolha interesses, hábitos e coisas que fazem parte do seu jeito de viver.',
+    icon: Star,
+    badges: makeBadges('hobbies', [
+      'Cozinhar',
+      'Viajar',
+      'Música',
+      'Dançar',
+      'Ler',
+      'Filmes e séries',
+      'Futebol',
+      'Praia',
+      'Natureza',
+      'Animais',
+      'Fotografia',
+      'Jardinagem',
+      'Artesanato',
+      'Tecnologia',
+      'Festas de família',
+      'Comida caseira',
+      'Caminhadas',
+      'Conversar',
+      'Contar histórias',
+      'Receber pessoas em casa',
+      'Café',
+      'Religião ou espiritualidade',
+      'Cultura',
+      'Estudos',
+    ], Star, {
+      'Cozinhar': Utensils,
+      'Comida caseira': Utensils,
+      'Música': Music,
+      'Ler': BookOpen,
+      'Fotografia': Camera,
+      'Viajar': Plane,
+      'Café': Coffee,
+    }),
+  },
+  {
+    id: 'marcas',
+    title: 'Detalhes que tornam você único(a)',
+    subtitle: 'Pequenas manias, frases, gostos e costumes ajudam a deixar sua história mais viva.',
+    icon: Sparkles,
+    badges: makeBadges('marcas', [
+      'Tem um apelido',
+      'Tem uma frase típica',
+      'Conta histórias repetidas',
+      'Tem uma receita famosa',
+      'Sempre tira fotos',
+      'Guarda objetos antigos',
+      'Tem uma música marcante',
+      'É conhecido(a) pelo humor',
+      'É conhecido(a) pela teimosia',
+      'É conhecido(a) pela generosidade',
+      'Gosta de aconselhar pessoas',
+      'Sempre organiza encontros',
+      'Tem uma mania engraçada',
+      'Tem um talento escondido',
+      'É pontual',
+      'Sempre se atrasa',
+      'Ama datas comemorativas',
+      'Tem um prato preferido',
+      'Tem um lugar preferido',
+      'Tem uma lembrança de infância marcante',
+    ], Sparkles, {
+      'Tem uma receita famosa': Utensils,
+      'Sempre tira fotos': Camera,
+      'Tem uma música marcante': Music,
+      'Ama datas comemorativas': Gift,
+    }),
+  },
+];
+
+function limitText(value: string, maxLength = 300) {
+  return String(value ?? '').trim().slice(0, maxLength);
+}
+
+function buildAiProfileQuestions(
+  selectedBadges: AiBadge[],
+  customTraits: string,
+): AiGeneratedQuestion[] {
+  const categories = new Set(selectedBadges.map((badge) => badge.category));
+  const questions: AiGeneratedQuestion[] = [];
+  const addQuestion = (id: string, question: string) => {
+    if (questions.length < 3 && !questions.some((item) => item.id === id)) {
+      questions.push({ id, question, answer: '' });
+    }
+  };
+
+  if (categories.has('familia')) {
+    addQuestion('familia', 'Qual lembrança de família você guarda com mais carinho?');
+  }
+  if (categories.has('lugares')) {
+    addQuestion('lugares', 'Qual cidade, mudança ou lugar marcou mais sua vida?');
+  }
+  if (categories.has('trabalho')) {
+    addQuestion('trabalho', 'O que mais marcou sua trajetória profissional ou seu jeito de trabalhar?');
+  }
+  if (categories.has('hobbies') || categories.has('marcas')) {
+    addQuestion('curiosidades', 'Existe alguma comida, frase, mania ou costume pelo qual as pessoas lembram de você?');
+  }
+  if (categories.has('momentos')) {
+    addQuestion('momentos', 'Que momento da sua trajetória ajudou a formar quem você é?');
+  }
+  if (customTraits.trim()) {
+    addQuestion('detalhes', 'Qual detalhe pessoal você gostaria que aparecesse no texto?');
+  }
+
+  addQuestion('historia', 'O que você gostaria que sua família soubesse sobre sua história?');
+  addQuestion('jeito', 'Que característica sua costuma aparecer no convívio com as pessoas?');
+  addQuestion('memoria', 'Qual lembrança, hábito ou gosto ajuda a contar quem você é?');
+
+  return questions.slice(0, 3);
+}
 
 // Futuro banco: substituir campos rede_social/instagram_usuario por pessoa_social_profiles
 // (id, pessoa_id, rede, perfil, url, exibir_no_perfil, created_at, updated_at).
@@ -242,9 +626,11 @@ export function MeusDados() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
-  const [aiKeywords, setAiKeywords] = useState('');
-  const [aiDestination, setAiDestination] = useState<'minibio' | 'curiosidades'>('minibio');
-  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [aiStep, setAiStep] = useState(0);
+  const [aiTone, setAiTone] = useState<AiTone>('afetivo');
+  const [aiSelectedBadges, setAiSelectedBadges] = useState<string[]>([]);
+  const [aiCustomTraits, setAiCustomTraits] = useState('');
+  const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<AiGeneratedQuestion[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -383,6 +769,27 @@ export function MeusDados() {
 
   const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
   const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
+  const aiAllBadges = useMemo(() => AI_BADGE_GROUPS.flatMap((group) => group.badges), []);
+  const aiSelectedBadgeItems = useMemo(
+    () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
+    [aiAllBadges, aiSelectedBadges],
+  );
+  const aiAnsweredQuestions = useMemo(
+    () => aiGeneratedQuestions.filter((item) => item.answer.trim()),
+    [aiGeneratedQuestions],
+  );
+  const aiHasGenerationSource = aiSelectedBadgeItems.length > 0 || aiCustomTraits.trim().length > 0 || aiAnsweredQuestions.length > 0;
+  const aiProgressPercent = Math.round(((aiStep + 1) / AI_STEPS.length) * 100);
+
+  useEffect(() => {
+    setAiGeneratedQuestions((currentQuestions) => {
+      const nextQuestions = buildAiProfileQuestions(aiSelectedBadgeItems, aiCustomTraits);
+      return nextQuestions.map((question) => ({
+        ...question,
+        answer: currentQuestions.find((item) => item.id === question.id)?.answer ?? '',
+      }));
+    });
+  }, [aiSelectedBadgeItems, aiCustomTraits]);
 
   const markFormDirty = () => {
     isDirtyRef.current = true;
@@ -561,15 +968,33 @@ export function MeusDados() {
     }
   };
 
+  const toggleAiBadge = (badgeId: string) => {
+    setAiSelectedBadges((current) => (
+      current.includes(badgeId)
+        ? current.filter((item) => item !== badgeId)
+        : [...current, badgeId]
+    ));
+  };
+
   const handleGenerateAiText = async () => {
-    const keywords = aiKeywords.trim();
-    if (!keywords || aiLoading) return;
+    if (aiLoading) return;
+
+    if (!aiHasGenerationSource) {
+      setAiError('Selecione ao menos uma opção ou responda uma pergunta para gerar o texto.');
+      return;
+    }
 
     setAiLoading(true);
     setAiError(null);
-    setAiSuggestion('');
 
     try {
+      const answeredQuestions = aiGeneratedQuestions
+        .filter((item) => item.answer.trim())
+        .map((item) => ({
+          question: item.question,
+          answer: item.answer.trim(),
+        }));
+
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: {
@@ -578,41 +1003,42 @@ export function MeusDados() {
         },
         body: JSON.stringify({
           purpose: 'profile_text',
-          destination: aiDestination,
-          keywords,
+          tone: aiTone,
+          selectedBadges: aiSelectedBadgeItems.map((badge) => badge.label),
+          customTraits: aiCustomTraits.trim(),
+          answers: answeredQuestions,
           context: {
             nome: String(form.nome_completo ?? ''),
             profissao: String(form.profissao ?? ''),
             local_nascimento: String(form.local_nascimento ?? ''),
             local_atual: String(form.local_atual ?? ''),
+            data_nascimento: String(form.data_nascimento ?? ''),
+            minibio_atual: String(form.minibio ?? ''),
+            curiosidades_atuais: String(form.curiosidades ?? ''),
           },
         }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(payload?.error || 'Não foi possível gerar a sugestão agora.');
+        throw new Error(payload?.error || 'Não foi possível gerar os textos agora. Tente novamente em instantes.');
       }
 
-      const suggestion = payload?.answer;
-      if (!suggestion || typeof suggestion !== 'string') {
-        throw new Error('A IA não retornou uma sugestão válida.');
+      const minibio = limitText(payload?.minibio ?? '');
+      const curiosidades = limitText(payload?.curiosidades ?? '');
+      if (!minibio || !curiosidades) {
+        throw new Error('A IA não retornou textos válidos.');
       }
-      setAiSuggestion(suggestion.trim());
+
+      updateTextField('minibio', minibio);
+      updateTextField('curiosidades', curiosidades);
+      setAiDialogOpen(false);
+      setAiError(null);
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : 'Não foi possível gerar a sugestão agora.');
+      setAiError(error instanceof Error ? error.message : 'Não foi possível gerar os textos agora. Tente novamente em instantes.');
     } finally {
       setAiLoading(false);
     }
   };
-
-  const handleApplyAiText = () => {
-    if (!aiSuggestion) return;
-    updateTextField(aiDestination, aiSuggestion);
-    setAiDialogOpen(false);
-    setAiSuggestion('');
-    setAiError(null);
-  };
-
   const handleConfirm = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -698,6 +1124,188 @@ export function MeusDados() {
     isDirtyRef.current = false;
     toast.success('Dados pessoais salvos.');
     navigate('/meus-vinculos', { replace: true });
+  };
+
+  const renderAiBadgeGroup = (group: AiBadgeGroup) => {
+    const GroupIcon = group.icon;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+            <GroupIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="break-words text-lg font-semibold text-gray-900">{group.title}</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">{group.subtitle}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {group.badges.map((badge) => {
+            const selected = aiSelectedBadges.includes(badge.id);
+            const BadgeIcon = badge.icon ?? group.icon;
+
+            return (
+              <button
+                key={badge.id}
+                type="button"
+                onClick={() => toggleAiBadge(badge.id)}
+                className={[
+                  'flex min-w-0 items-start gap-3 rounded-lg border p-3 text-left text-sm transition-colors',
+                  selected
+                    ? 'border-blue-300 bg-blue-50 text-blue-800'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-blue-50/50',
+                ].join(' ')}
+                aria-pressed={selected}
+              >
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/80 text-blue-700">
+                  <BadgeIcon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 break-words font-medium leading-snug">{badge.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAiStep = () => {
+    if (aiStep === 0) {
+      return (
+        <div className="space-y-4">
+          <div>
+            <h3 className="break-words text-lg font-semibold text-gray-900">Escolha o tom do texto</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              Como você quer que sua Mini Bio e suas Curiosidades soem?
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {AI_TONES.map((tone) => {
+              const selected = aiTone === tone.id;
+              const ToneIcon = tone.icon;
+
+              return (
+                <button
+                  key={tone.id}
+                  type="button"
+                  onClick={() => setAiTone(tone.id)}
+                  className={[
+                    'flex min-w-0 items-start gap-3 rounded-lg border p-3 text-left transition-colors',
+                    selected
+                      ? 'border-blue-300 bg-blue-50 text-blue-800'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-blue-50/50',
+                  ].join(' ')}
+                  aria-pressed={selected}
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/80 text-blue-700">
+                    <ToneIcon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block break-words text-sm font-semibold leading-snug">{tone.label}</span>
+                    <span className="mt-1 block break-words text-xs leading-snug text-gray-500">{tone.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    if (aiStep >= 1 && aiStep <= 7) {
+      return renderAiBadgeGroup(AI_BADGE_GROUPS[aiStep - 1]);
+    }
+
+    if (aiStep === 8) {
+      return (
+        <div className="space-y-4">
+          <div>
+            <h3 className="break-words text-lg font-semibold text-gray-900">Outras características</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              Quer acrescentar algo que não apareceu nas opções?
+            </p>
+          </div>
+          <Textarea
+            value={aiCustomTraits}
+            onChange={(event) => setAiCustomTraits(event.target.value)}
+            placeholder="Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades..."
+            className="min-h-32 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+          />
+        </div>
+      );
+    }
+
+    if (aiStep === 9) {
+      return (
+        <div className="space-y-4">
+          <div>
+            <h3 className="break-words text-lg font-semibold text-gray-900">Perguntas opcionais</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              As respostas ajudam a IA a deixar o texto menos genérico. Você pode deixar em branco.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {aiGeneratedQuestions.map((item) => (
+              <div key={item.id} className="space-y-2 rounded-lg border border-gray-200 bg-white p-3">
+                <Label className="break-words text-sm text-gray-800">{item.question}</Label>
+                <Textarea
+                  value={item.answer}
+                  onChange={(event) => {
+                    const answer = event.target.value;
+                    setAiGeneratedQuestions((current) => current.map((question) => (
+                      question.id === item.id ? { ...question, answer } : question
+                    )));
+                  }}
+                  className="min-h-20 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const toneLabel = AI_TONES.find((tone) => tone.id === aiTone)?.label ?? 'Afetivo';
+
+    return (
+      <div className="space-y-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+            <Wand2 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="break-words text-lg font-semibold text-gray-900">Tudo pronto para gerar seus textos</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              A IA vai criar uma Mini Bio e Curiosidades em primeira pessoa, com até 300 caracteres cada.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Tom escolhido</p>
+            <p className="mt-1 break-words text-sm font-medium text-gray-900">{toneLabel}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Opções selecionadas</p>
+            <p className="mt-1 text-sm font-medium text-gray-900">{aiSelectedBadgeItems.length}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Características adicionais</p>
+            <p className="mt-1 text-sm font-medium text-gray-900">{aiCustomTraits.trim() ? 'Sim' : 'Não'}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Perguntas respondidas</p>
+            <p className="mt-1 text-sm font-medium text-gray-900">{aiAnsweredQuestions.length}</p>
+          </div>
+        </div>
+        {!aiHasGenerationSource && (
+          <p className="break-words rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Selecione ao menos uma opção, adicione uma característica ou responda uma pergunta para gerar os textos.
+          </p>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -928,39 +1536,43 @@ export function MeusDados() {
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0"
+                size="sm"
+                className="h-9 shrink-0 px-3"
                 onClick={() => {
                   setAiError(null);
-                  setAiSuggestion('');
+                  setAiStep(0);
                   setAiDialogOpen(true);
                 }}
-                aria-label="Gerar texto com IA"
-                title="Gerar texto com IA"
+                aria-label="Receber ajuda da IA para escrever Mini Bio e Curiosidades"
+                title="Receber ajuda da IA para escrever Mini Bio e Curiosidades"
               >
                 <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Ajuda da IA</span>
               </Button>
             </div>
             <div className="grid grid-cols-1 gap-4">
               <Field label="Mini Bio">
-              <Textarea
-                value={String(form.minibio ?? '')}
-                onChange={(e) => updateTextField('minibio', e.target.value)}
-                placeholder="Opcional: escreva uma breve apresentação sobre você. Conte quem você é, de onde vem, o que faz ou fez, sua trajetória, valores, conquistas e sua relação com a família."
-                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-              />
-            </Field>
+                <Textarea
+                  value={String(form.minibio ?? '')}
+                  onChange={(e) => updateTextField('minibio', e.target.value)}
+                  placeholder="Escreva uma breve apresentação sobre você em até 300 caracteres."
+                  maxLength={300}
+                  className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+                />
+                <p className="text-right text-xs text-gray-500">{String(form.minibio ?? '').length}/300</p>
+              </Field>
               <Field label="Curiosidades">
-              <Textarea
-                value={String(form.curiosidades ?? '')}
-                onChange={(e) => updateTextField('curiosidades', e.target.value)}
-                placeholder="Opcional: compartilhe fatos, histórias ou lembranças curiosas sobre sua vida. Pode incluir hobbies, costumes, viagens, talentos, apelidos, momentos marcantes ou detalhes que ajudem a família a conhecer melhor você."
-                className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-              />
+                <Textarea
+                  value={String(form.curiosidades ?? '')}
+                  onChange={(e) => updateTextField('curiosidades', e.target.value)}
+                  placeholder="Compartilhe fatos, gostos, lembranças ou detalhes curiosos sobre sua vida em até 300 caracteres."
+                  maxLength={300}
+                  className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
+                />
+                <p className="text-right text-xs text-gray-500">{String(form.curiosidades ?? '').length}/300</p>
               </Field>
             </div>
           </section>
-
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <Button type="submit" disabled={saving || !canEditSelectedProfile} className="w-full sm:w-auto sm:min-w-[220px]">
               {saving ? (
@@ -1007,62 +1619,82 @@ export function MeusDados() {
         </aside>
       </main>
 
-      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="bg-white">
+      <Dialog
+        open={aiDialogOpen}
+        onOpenChange={(open) => {
+          setAiDialogOpen(open);
+          if (open) setAiError(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto bg-white sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Gerar texto com IA</DialogTitle>
-            <DialogDescription>
-              Informe fatos e tópicos reais. A sugestão só será aplicada quando você confirmar.
+            <DialogTitle className="break-words">Ajuda para escrever sobre você</DialogTitle>
+            <DialogDescription className="break-words">
+              Selecione características, lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades sobre sua vida.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+
+          <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="ai-profile-destination">Destino</Label>
-              <select
-                id="ai-profile-destination"
-                value={aiDestination}
-                onChange={(event) => setAiDestination(event.target.value as 'minibio' | 'curiosidades')}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="minibio">Mini Bio</option>
-                <option value="curiosidades">Curiosidades</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ai-profile-keywords">Palavras-chave e tópicos</Label>
-              <Textarea
-                id="ai-profile-keywords"
-                value={aiKeywords}
-                onChange={(event) => setAiKeywords(event.target.value)}
-                placeholder="Ex: professora, nasceu na Bahia, gosta de música, viagens em família"
-                className="min-h-24"
-              />
-            </div>
-            {aiError && <p className="text-sm text-red-600">{aiError}</p>}
-            {aiSuggestion && (
-              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Sugestão</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-800">{aiSuggestion}</p>
+              <div className="flex items-center justify-between gap-3 text-xs font-medium text-gray-600">
+                <span>Etapa {aiStep + 1} de {AI_STEPS.length}</span>
+                <span className="break-words text-right">{AI_STEPS[aiStep]}</span>
               </div>
+              <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className="h-full rounded-full bg-blue-600 transition-all"
+                  style={{ width: `${aiProgressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {renderAiStep()}
+
+            {aiError && (
+              <p className="break-words rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {aiError}
+              </p>
             )}
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAiDialogOpen(false)}>
-              Cancelar
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAiStep((current) => Math.max(0, current - 1))}
+              disabled={aiStep === 0 || aiLoading}
+              className="w-full sm:w-auto"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Voltar
             </Button>
-            <Button type="button" onClick={handleGenerateAiText} disabled={aiLoading || !aiKeywords.trim()}>
-              <Sparkles className="h-4 w-4" />
-              {aiLoading ? 'Gerando...' : 'Gerar sugestão'}
-            </Button>
-            {aiSuggestion && (
-              <Button type="button" onClick={handleApplyAiText}>
-                Aplicar texto
+            {aiStep < AI_STEPS.length - 1 ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setAiError(null);
+                  setAiStep((current) => Math.min(AI_STEPS.length - 1, current + 1));
+                }}
+                disabled={aiLoading}
+                className="w-full sm:w-auto"
+              >
+                Avançar
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleGenerateAiText}
+                disabled={aiLoading || !aiHasGenerationSource}
+                className="w-full sm:w-auto"
+              >
+                <Wand2 className="h-4 w-4" />
+                {aiLoading ? 'Gerando...' : 'Gerar textos'}
               </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
         <DialogContent className="bg-white">
           <DialogHeader>

@@ -1,5 +1,9 @@
 import OpenAI from "openai";
 
+function limitText(value: unknown, maxLength = 300) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método não permitido" });
@@ -10,17 +14,48 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: "OPENAI_API_KEY não configurada." });
     }
 
-    const { message, context, purpose, destination, keywords } = req.body || {};
+    const {
+      message,
+      context,
+      purpose,
+      tone,
+      selectedBadges,
+      customTraits,
+      answers,
+    } = req.body || {};
 
     if (purpose === "profile_text") {
-      if (!keywords || typeof keywords !== "string") {
-        return res.status(400).json({ error: "Informe palavras-chave para gerar o texto." });
+      const hasBadges = Array.isArray(selectedBadges) && selectedBadges.length > 0;
+      const hasCustomTraits = typeof customTraits === "string" && customTraits.trim().length > 0;
+      const hasAnswers = Array.isArray(answers) && answers.some((item) => item?.answer?.trim());
+
+      if (!hasBadges && !hasCustomTraits && !hasAnswers) {
+        return res.status(400).json({
+          error: "Selecione ao menos uma opção ou responda uma pergunta para gerar o texto.",
+        });
       }
 
-      const target = destination === "curiosidades" ? "Curiosidades" : "Mini Bio";
-      const compactProfileContext = context
-        ? JSON.stringify(context).slice(0, 6000)
-        : "Sem contexto adicional.";
+      const profilePayload = {
+        tone: typeof tone === "string" ? tone.slice(0, 80) : "afetivo",
+        selectedBadges: Array.isArray(selectedBadges)
+          ? selectedBadges
+            .filter((item) => typeof item === "string")
+            .map((item) => item.slice(0, 120))
+            .slice(0, 80)
+          : [],
+        customTraits: typeof customTraits === "string" ? customTraits.trim().slice(0, 1600) : "",
+        answers: Array.isArray(answers)
+          ? answers
+            .filter((item) => item?.answer?.trim())
+            .map((item) => ({
+              question: String(item?.question ?? "").slice(0, 220),
+              answer: String(item?.answer ?? "").trim().slice(0, 800),
+            }))
+            .slice(0, 6)
+          : [],
+        context: context && typeof context === "object" ? context : {},
+      };
+      const compactProfileContext = JSON.stringify(profilePayload).slice(0, 9000);
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       const response = await client.responses.create({
         model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
@@ -28,26 +63,47 @@ export default async function handler(req: any, res: any) {
           {
             role: "system",
             content: [
-              `Escreva uma sugestão curta para o campo ${target} de um perfil familiar.`,
-              "Responda em português do Brasil, em um único texto pronto para uso.",
-              "Use somente os fatos e palavras-chave fornecidos.",
-              "Não invente datas, lugares, parentescos, conquistas ou características.",
-              target === "Mini Bio"
-                ? "Use tom acolhedor e objetivo, preferencialmente em terceira pessoa, com até 90 palavras."
-                : "Use tom leve e pessoal, com até 120 palavras.",
+              "Você deve gerar dois textos curtos para um perfil familiar.",
+              'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
+              "Regras:",
+              "- Escreva sempre em primeira pessoa.",
+              "- Não use terceira pessoa.",
+              "- Cada campo deve ter no máximo 300 caracteres.",
+              "- Não invente fatos.",
+              "- Use apenas as informações fornecidas em contexto, badges, características adicionais e respostas.",
+              "- Não mencione IA.",
+              "- Não use linguagem exagerada.",
+              "- Não exponha dados técnicos.",
+              "- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.",
+              "- Se houver temas sensíveis, trate com sobriedade.",
+              "- A Mini Bio deve apresentar quem sou, minhas origens, valores, trajetória ou relação com a família.",
+              "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves sobre minha vida.",
             ].join(" "),
           },
           {
             role: "user",
-            content: `Palavras-chave: ${keywords.trim().slice(0, 1200)}\nContexto do perfil: ${compactProfileContext}`,
+            content: `Dados fornecidos para geração:\n${compactProfileContext}`,
           },
         ],
-        max_output_tokens: 260,
+        max_output_tokens: 360,
       });
 
-      return res.status(200).json({ answer: response.output_text });
-    }
+      try {
+        const parsed = JSON.parse(response.output_text);
+        if (typeof parsed?.minibio !== "string" || typeof parsed?.curiosidades !== "string") {
+          throw new Error("Invalid profile_text response shape");
+        }
 
+        return res.status(200).json({
+          minibio: limitText(parsed.minibio),
+          curiosidades: limitText(parsed.curiosidades),
+        });
+      } catch {
+        return res.status(500).json({
+          error: "Não foi possível interpretar os textos gerados.",
+        });
+      }
+    }
     if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "Mensagem inválida." });
     }
