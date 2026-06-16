@@ -1,10 +1,10 @@
 # Guia de correção de erros — Árvore Família
 
-> Última revisão: 2026-06-14  
-> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Baseline revisada: `main` em `833108f`  
-> Status: troubleshooting alinhado às duas views oficiais e ao painel simplificado.
+> Última revisão: 2026-06-16
+> Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
+> Projeto: `tuliust/arvorefamilia`
+> Baseline revisada: `main` após os ajustes do onboarding condicional e revisão final.
+> Status: troubleshooting alinhado às duas views oficiais, ao onboarding condicional e à revisão final editável.
 
 ---
 
@@ -22,6 +22,7 @@ Use quando houver:
 - falha de favoritos/busca;
 - problema em guards;
 - problema mobile;
+- problema no onboarding do membro;
 - comportamento inesperado da árvore.
 
 ---
@@ -414,7 +415,91 @@ Se o build pedir um deles:
 
 ---
 
-## 14. Checklist final de correção
+## 14. Onboarding do membro com comportamento incorreto
+
+Arquivos prováveis:
+
+```txt
+src/app/components/member/MemberOnboardingSteps.tsx
+src/app/pages/MeusDados.tsx
+src/app/pages/MeusVinculos.tsx
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/pages/PreferenciasPage.tsx
+src/app/pages/RevisaoDados.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/components/notifications/NotificationPreferencesPanel.tsx
+src/app/pages/meus-vinculos/
+src/app/services/userEngagementService.ts
+```
+
+Sintomas e investigação:
+
+| Sintoma | Investigar |
+|---|---|
+| pessoa falecida ainda vê contato/endereço/redes | condição de `falecido` em `MeusDados.tsx`. |
+| pessoa viva não vê cidade de residência | renderização condicional de residência na Etapa 1. |
+| pessoa falecida entra em `/preferencias` | navegação de `ArquivosHistoricosPage`, redirecionamento em `PreferenciasPage` e `hidePreferences`. |
+| stepper mostra Preferências para falecido | prop `hidePreferences` em `MemberOnboardingSteps`. |
+| notificações ficam ativas para falecido | defaults em `userEngagementService`/payload salvo nas etapas. |
+| modal de vínculos mostra botão Buscar | regressão em `MeusVinculos.tsx`. |
+| modal mostra box cinza de nenhum resultado | renderização condicional da lista/dropdown. |
+| Etapa 3 perde arquivos ao trocar aba | rascunho local em `ArquivosHistoricos.tsx`. |
+| Revisão mostra mini bio ao lado do nome | bloco superior de `RevisaoDados.tsx`. |
+| Revisão mostra botão Voltar para preferências no rodapé | rodapé antigo de `RevisaoDados.tsx`. |
+| Revisão mostra notificações para falecido | condição do box lateral em `RevisaoDados.tsx`. |
+
+Correções esperadas:
+
+- pessoa viva segue `/meus-dados -> /meus-vinculos -> /arquivos-historicos -> /preferencias -> /revisao-dados`;
+- pessoa falecida segue `/meus-dados -> /meus-vinculos -> /arquivos-historicos -> /revisao-dados`;
+- badges usam `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise`;
+- botão final fica no topo da revisão;
+- botões secundários removidos não reaparecem.
+
+### 14.1 Tela antiga aparece apesar do Git estar atualizado
+
+Sintoma:
+
+```txt
+git status limpo
+build passa
+GitHub atualizado
+navegador ainda exibe UI antiga
+```
+
+Causa provável:
+
+- cache do Vite;
+- bundle antigo em `dist`;
+- aba do navegador com cache;
+- servidor local ainda rodando versão anterior;
+- deploy de produção ainda não finalizado.
+
+Correção local no PowerShell:
+
+```powershell
+# parar o servidor local com Ctrl+C
+Remove-Item -Recurse -Force node_modules/.vite -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
+npm run dev
+```
+
+Depois:
+
+```txt
+Ctrl + F5
+```
+
+ou abrir janela anônima.
+
+Critério de aceite:
+
+- `git rev-parse --short HEAD` corresponde ao commit esperado;
+- `Select-String` encontra o trecho novo no arquivo local;
+- a tela recarregada mostra o comportamento novo.
+
+
+## 15. Checklist final de correção
 
 Antes de commit:
 

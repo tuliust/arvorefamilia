@@ -1,9 +1,9 @@
 # Notificações
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-16
 > Local canônico: `docs/funcionalidades/NOTIFICACOES.md`
 > Tipo: documentação funcional, técnica e operacional do módulo de notificações.
-> Status: atualizado para refletir que notificações e permissões do cadastro inicial ficam na Etapa 4 `/preferencias`, sem edição duplicada em `/revisao-dados`.
+> Status: atualizado para documentar preferências no onboarding, comportamento automático para pessoa falecida e ocultação de notificações na revisão final quando aplicável.
 
 ---
 
@@ -48,7 +48,8 @@ Implementado no escopo MVP:
 - Edge Function `send-notification-email` com Resend;
 - notificações internas de fórum para menções, pessoas relacionadas, respostas e comentários;
 - deduplicação de destinatários em notificações de fórum.
-- preferências também disponíveis na Etapa 4 `/preferencias`; não são duplicadas em `/meus-dados` nem editadas em `/revisao-dados`.
+- preferências também disponíveis na Etapa 4 `/preferencias` para pessoa viva;
+- pessoa falecida pula `/preferencias`, tem notificações desativadas automaticamente e não exibe box de notificações/permissões em `/revisao-dados`.
 
 Futuro/pós-MVP:
 
@@ -174,14 +175,16 @@ Push e WhatsApp permanecem como not_configured/ignorado até haver provider real
 
 ## 6. Preferências
 
-A edição de preferências aparece em dois contextos:
+A edição de preferências aparece em dois contextos para pessoa viva:
 
 | Contexto | Rota | Uso |
 |---|---|---|
 | Página dedicada | `/ajustar-notificacoes` | Ajuste recorrente das preferências do usuário. |
 | Cadastro inicial | `/preferencias` | Etapa 4 do onboarding do membro, antes da revisão final. |
 
-`/revisao-dados` pode exibir apenas resumo/estado das preferências, sem duplicar edição completa.
+A rota `/revisao-dados` pode exibir resumo/estado das preferências para pessoa viva, mas não deve duplicar a edição completa.
+
+Para pessoa falecida, o fluxo do onboarding não deve exibir `/preferencias`. O sistema deve aplicar defaults automáticos e seguir diretamente da Etapa 3 para `/revisao-dados`.
 
 Preferências gerais:
 
@@ -204,6 +207,34 @@ receber_email_novas_mensagens_forum
 receber_email_novos_registros_historicos
 receber_email_evento_historico_familia
 ```
+
+### 6.1 Defaults para pessoa falecida no onboarding
+
+Quando a pessoa vinculada estiver marcada como falecida no cadastro inicial, as notificações e canais devem ser desativados automaticamente.
+
+Valores esperados:
+
+```txt
+receber_aniversarios = false
+receber_datas_memoria = false
+receber_eventos = false
+receber_avisos_gerais = false
+receber_email = false
+receber_push = false
+receber_whatsapp = false
+receber_email_novo_usuario = false
+receber_email_datas_especiais = false
+receber_email_novas_mensagens_forum = false
+receber_email_novos_registros_historicos = false
+receber_email_evento_historico_familia = false
+```
+
+Regras de UX e fluxo:
+
+- `/preferencias` não aparece como Etapa 4 para pessoa falecida.
+- se `/preferencias` for acessada diretamente nesse contexto, deve aplicar defaults e redirecionar para `/revisao-dados`.
+- `/revisao-dados` não deve exibir o box lateral `Notificações e permissões` para pessoa falecida.
+- a remoção do box geral `Receber notificações por email` na Etapa 4 não remove as preferências técnicas por canal; ela apenas elimina a duplicidade visual do toggle geral no onboarding.
 
 ### Fórum
 
@@ -650,6 +681,18 @@ limit 50;
 - confirmar link `/forum/topico/:id`;
 - testar resposta e comentário.
 
+### Onboarding do membro
+
+- abrir `/meus-dados` com pessoa viva;
+- confirmar que o fluxo passa por `/preferencias`;
+- alterar preferências em `/preferencias`;
+- confirmar persistência no painel e na revisão final;
+- abrir `/meus-dados` com pessoa falecida;
+- confirmar que `/preferencias` é pulada;
+- confirmar que notificações ficam desativadas;
+- confirmar que permissões de visualização ficam ativadas;
+- confirmar que `/revisao-dados` não exibe box de notificações/permissões para pessoa falecida.
+
 ### Técnico
 
 ```bash
@@ -750,6 +793,36 @@ Confirmar:
 
 ---
 
+### Etapa 4 aparece para pessoa falecida
+
+Investigar:
+
+- `pessoa.falecido` carregado em `/arquivos-historicos`;
+- navegação de `ArquivosHistoricosPage`;
+- redirecionamento defensivo em `/preferencias`;
+- prop `hidePreferences` em `MemberOnboardingSteps`.
+
+Correção esperada:
+
+- aplicar defaults de notificações/permissões;
+- navegar diretamente para `/revisao-dados`;
+- ocultar box de notificações/permissões na revisão.
+
+### Preferências de pessoa falecida continuam ativas
+
+Investigar:
+
+- `userEngagementService`;
+- normalização executada em `/meus-dados`;
+- salvamento automático em `/preferencias`;
+- payload persistido antes de ir para `/revisao-dados`.
+
+Correção esperada:
+
+- todos os canais de notificação ficam `false`;
+- permissões de visualização ficam `true`;
+- WhatsApp fica desativado.
+
 ## 17. Segurança e anti-regressões
 
 Não fazer:
@@ -773,7 +846,15 @@ Preservar:
 - labels amigáveis e acentuação em `/notificacoes`;
 - clique no card inteiro quando houver link.
 
-## 17. Anti-regressões de integração
+### Onboarding e pessoa falecida
+
+- `/preferencias` não deve ser etapa obrigatória para pessoa falecida.
+- `/revisao-dados` não deve exibir box de notificações/permissões para pessoa falecida.
+- defaults automáticos para pessoa falecida não devem ser removidos por alteração visual.
+- preferência de e-mail geral não deve reaparecer como box duplicado no onboarding.
+- falha de notificação não deve bloquear salvamento de dados pessoais, vínculos ou arquivos históricos.
+
+## 18. Anti-regressões de integração
 
 Checklist:
 

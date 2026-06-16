@@ -1,10 +1,10 @@
-﻿# Baseline do produto atual — Árvore Família
+# Baseline do produto atual — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-16
 > Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: baseline funcional
-> Status: revisado contra os arquivos enviados e contra a `main` atual; separa comportamento implementado de pendências registradas.
+> Status: revisado para incluir onboarding condicional, pessoa falecida, revisão final com edição inline e regras de badges.
 
 ---
 
@@ -149,14 +149,85 @@ Observação: rótulos de navegação podem usar texto mais curto, mas não deve
 | Exportação | Implementada nas duas views oficiais para Área, PNG, PDF e Imprimir. |
 | Paletas | `white`, `visual`, `orange`, `brown`; desktop é a referência visual. |
 | Calendário | Implementado em `/calendario-familiar`, com categorias e layout mobile específico. |
-| Perfil/pessoas | Implementado com `/pessoa/:id`, `/pessoas/:id` e área de membro. |
+| Perfil/pessoas | Implementado com `/pessoa/:id`, `/pessoas/:id`, área de membro e onboarding condicional em até 5 etapas. |
 | Fórum | Implementado em `/forum/*`. |
 | Favoritos | Implementados para páginas, pessoas e conteúdos suportados. |
-| Notificações | Implementadas em central e preferências. |
+| Notificações | Implementadas em central/preferências; desativadas automaticamente no fluxo de pessoa falecida. |
 | Admin | Implementado em `/admin/*`. |
 | Testes | Há Vitest e Playwright cobrindo parte da baseline estrutural. |
 
 ---
+
+
+### 5.1 Onboarding do membro — fluxo vigente
+
+O cadastro/revisão do membro está implementado como fluxo protegido em até cinco etapas:
+
+| Etapa | Rota | Página | Papel |
+|---|---|---|---|
+| 1 | `/meus-dados` | `MeusDados` | dados pessoais, estado vital, Mini Bio, curiosidades, contato, endereço e redes sociais quando aplicável |
+| 2 | `/meus-vinculos` | `MeusVinculos` | vínculos familiares, seleção/criação de parentes e status de análise |
+| 3 | `/arquivos-historicos` | `ArquivosHistoricosPage` + `ArquivosHistoricos` | documentos, fotografias e arquivos históricos da pessoa |
+| 4 | `/preferencias` | `PreferenciasPage` | notificações e permissões de visualização para pessoa viva |
+| 5 | `/revisao-dados` | `RevisaoDados` | revisão final em layout de perfil, edição inline e finalização |
+
+`MemberOnboardingSteps` é o indicador visual do fluxo. Ele deve suportar a ocultação da etapa de Preferências quando a pessoa vinculada for falecida.
+
+### 5.2 Regra funcional para pessoa viva e pessoa falecida
+
+O campo `falecido` define o comportamento do fluxo.
+
+Para pessoa viva:
+
+- Etapa 1 exibe **Cidade de residência**;
+- Etapa 1 exibe o container **Contato, endereço e redes sociais**;
+- Etapa 1 não exibe campos de falecimento;
+- Etapa 4 é exibida normalmente;
+- Etapa 5 pode exibir **Contatos** e **Notificações e permissões**.
+
+Para pessoa falecida:
+
+- Etapa 1 não exibe **Cidade de residência**;
+- Etapa 1 exibe **Dia ou Ano de Falecimento** e **Local de falecimento**;
+- Etapa 1 oculta o container **Contato, endereço e redes sociais**;
+- Etapa 3 pula `/preferencias` e segue para `/revisao-dados`;
+- acesso direto a `/preferencias` deve redirecionar para `/revisao-dados`;
+- todas as notificações ficam desativadas;
+- mensagens por WhatsApp ficam desativadas;
+- permissões de visualização ficam ativadas por padrão;
+- Etapa 5 não exibe o box **Notificações e permissões**.
+
+### 5.3 Revisão final e edição inline
+
+`/revisao-dados` deixou de ser uma tela apenas passiva. A revisão final vigente usa layout de perfil e permite edição inline em seções específicas.
+
+Seções vigentes:
+
+| Seção | Comportamento |
+|---|---|
+| Topo do perfil | avatar/iniciais, nome, badge de status, profissão/residência quando aplicável e ações principais |
+| Informações pessoais | exibe dados principais sem expor flags técnicas como `falecido` ou exterior |
+| Mini bio e curiosidades | exibe e permite edição inline de textos biográficos |
+| Familiares | lista vínculos com status por gênero e badge **Em análise** quando aplicável |
+| Arquivos históricos | lista documentos/imagens já cadastrados |
+| Contatos | exibido para pessoa viva |
+| Notificações e permissões | exibido para pessoa viva |
+
+O botão **Finalizar e acessar árvore** fica no topo, ao lado de **Editar perfil**. O rodapé antigo com **Voltar para preferências** não é UI vigente.
+
+### 5.4 Status e badges
+
+Badges de status devem respeitar gênero quando houver informação suficiente:
+
+| Condição | Badge |
+|---|---|
+| homem vivo | `Vivo` |
+| mulher viva | `Viva` |
+| homem falecido | `Falecido` |
+| mulher falecida | `Falecida` |
+| vínculo pendente/local sem aprovação | `Em análise` |
+
+Evitar `Falecido(a)` quando o gênero da pessoa for conhecido.
 
 ## 6. Painel, controles e navegação
 

@@ -1,11 +1,11 @@
 
 # QA manual — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-16
 > Local canônico: `docs/QA_MANUAL.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia central de QA manual
-> Status: criado para centralizar validações manuais e reduzir repetição em documentos funcionais, operacionais e de não regressão.
+> Status: complementado com checklist específico para onboarding de membro, pessoa falecida, arquivos históricos e revisão final.
 
 ---
 
@@ -628,6 +628,121 @@ Checklist:
 - [ ] ações destrutivas exigem confirmação.
 - [ ] RPCs admin falham de forma segura quando ausentes.
 - [ ] nenhuma tela admin depende apenas de botão escondido no frontend.
+
+---
+
+
+## 20.1 QA do onboarding do membro
+
+Rotas:
+
+```txt
+/meus-dados
+/meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
+```
+
+### Fluxo para pessoa viva
+
+Checklist:
+
+- [ ] `/meus-dados` exibe **Cidade de residência**.
+- [ ] `/meus-dados` exibe container **Contato, endereço e redes sociais**.
+- [ ] campos de falecimento não aparecem para pessoa viva.
+- [ ] `/meus-vinculos` aparece como Etapa 2.
+- [ ] `/arquivos-historicos` aparece como Etapa 3.
+- [ ] **Salvar e Continuar** em arquivos históricos navega para `/preferencias`.
+- [ ] `/preferencias` aparece como Etapa 4.
+- [ ] `/preferencias` exibe apenas **Continuar para a revisão** como ação principal.
+- [ ] `/revisao-dados` aparece como Etapa 5.
+- [ ] revisão final exibe boxes de Contatos e Notificações/permissões quando houver dados aplicáveis.
+
+### Fluxo para pessoa falecida
+
+Checklist:
+
+- [ ] `/meus-dados` não exibe **Cidade de residência**.
+- [ ] `/meus-dados` exibe **Dia ou Ano de Falecimento**.
+- [ ] `/meus-dados` exibe **Local de falecimento**.
+- [ ] `/meus-dados` oculta container **Contato, endereço e redes sociais**.
+- [ ] notificações são desativadas automaticamente.
+- [ ] mensagens/WhatsApp são desativados automaticamente.
+- [ ] permissões de visualização ficam ativadas por padrão.
+- [ ] stepper não exibe Preferências.
+- [ ] **Salvar e Continuar** em arquivos históricos navega direto para `/revisao-dados`.
+- [ ] acesso manual a `/preferencias` redireciona para `/revisao-dados`.
+- [ ] revisão final não exibe box **Notificações e permissões**.
+- [ ] revisão final não exibe box **Contatos** quando o produto assim exigir para falecidos.
+
+### Etapa 1 — Meus dados
+
+Checklist visual:
+
+- [ ] toggle **Estrangeiro** fica alinhado ao input **Local de nascimento**.
+- [ ] toggle **Exterior** fica alinhado ao input **Cidade de residência**.
+- [ ] info icons aparecem somente onde definidos.
+- [ ] troca entre pessoa viva/falecida atualiza campos sem manter campos incompatíveis visíveis.
+- [ ] validação não exige contato/redes para pessoa falecida.
+
+### Etapa 2 — Vínculos
+
+Checklist:
+
+- [ ] botão **Buscar** não aparece no modal de adicionar parente.
+- [ ] campo de nome filtra pessoas cadastradas enquanto digita.
+- [ ] lista/dropdown atualiza conforme caracteres digitados.
+- [ ] botão **Criar nova pessoa** permanece disponível.
+- [ ] box cinza “Nenhuma pessoa encontrada com esse nome” não aparece.
+- [ ] label **Alterar a mãe** aparece no contexto correto.
+- [ ] badges exibem `Vivo`, `Viva`, `Falecido`, `Falecida` conforme gênero/estado.
+- [ ] vínculo pendente/local exibe badge **Em análise**.
+
+### Etapa 3 — Arquivos históricos
+
+Checklist:
+
+- [ ] botão **Voltar para vínculos** não aparece.
+- [ ] botão **Salvar arquivos** não aparece.
+- [ ] botão principal exibe **Salvar e Continuar**.
+- [ ] clicar em **Certidão de Nascimento** preenche título/descrição da área de upload.
+- [ ] clicar em **Alistamento Militar** atualiza título/descrição para esse card.
+- [ ] arquivo adicionado aparece como thumbnail + título + dados resumidos.
+- [ ] campos editáveis não ficam abertos por padrão após adicionar arquivo.
+- [ ] botões **Editar** e **Remover** aparecem no item adicionado.
+- [ ] rascunho persiste ao minimizar, trocar de aba ou recarregar antes de salvar.
+- [ ] após salvar, rascunho local é limpo ou deixa de sobrescrever dados persistidos.
+
+### Etapa 4 — Preferências
+
+Checklist:
+
+- [ ] box **Receber notificações por email** não aparece.
+- [ ] botão **Salvar permissões** não aparece.
+- [ ] botão **Voltar para arquivos históricos** não aparece.
+- [ ] ação principal é **Continuar para a revisão**.
+- [ ] pessoa falecida não permanece nesta etapa.
+
+### Etapa 5 — Revisão final
+
+Checklist:
+
+- [ ] topo exibe avatar/iniciais, nome, badge de status e ações.
+- [ ] mini bio não aparece ao lado do nome no topo.
+- [ ] **Finalizar e acessar árvore** aparece no topo, ao lado de **Editar perfil**.
+- [ ] rodapé antigo com **Voltar para preferências** não aparece.
+- [ ] rodapé antigo com **Finalizar e acessar a árvore** não aparece.
+- [ ] boxes têm botões compactos com ícone de lápis quando editáveis.
+- [ ] edição inline salva dados pessoais.
+- [ ] edição inline salva Mini Bio/Curiosidades.
+- [ ] edição inline salva contatos/permissões quando aplicável.
+- [ ] box **Informações pessoais** não exibe **Pessoa falecida**.
+- [ ] box **Informações pessoais** não exibe **Nascimento no exterior**.
+- [ ] box **Informações pessoais** não exibe **Falecimento no exterior**.
+- [ ] badge superior usa **Falecido** para homem falecido e **Falecida** para mulher falecida.
+- [ ] área Familiares usa **Vivo/Viva/Falecido/Falecida** conforme dados.
+- [ ] card pendente, como Otávio no cenário de QA, exibe **Em análise**.
 
 ---
 

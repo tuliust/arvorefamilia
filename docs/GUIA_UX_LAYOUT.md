@@ -1,10 +1,10 @@
-﻿# Guia de UX e Layout — Árvore Família
+# Guia de UX e Layout — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-16
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de experiência, layout e responsividade
-> Status: revisado para documentar comportamento visual vigente e separar pendências técnicas de contrato de UX.
+> Status: revisado para documentar comportamento visual vigente da árvore, onboarding condicional e revisão final editável.
 
 ---
 
@@ -22,6 +22,8 @@ Use para revisar:
 - conectores;
 - paletas;
 - calendário;
+- onboarding do membro;
+- revisão final;
 - exportação;
 - QA visual.
 
@@ -422,7 +424,98 @@ Imprimir
 
 ---
 
-## 14. Debug temporário
+## 14. Onboarding do membro
+
+Rotas do fluxo:
+
+```txt
+/meus-dados
+/meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
+```
+
+### Etapa 1 — Meus dados
+
+Regras de layout:
+
+- os toggles `Estrangeiro` e `Exterior` devem ficar alinhados verticalmente ao campo correspondente;
+- `Local de nascimento` e seu toggle formam uma linha lógica no desktop;
+- `Cidade de residência` e seu toggle formam uma linha lógica no desktop;
+- em mobile, o layout pode empilhar campo e toggle, desde que a associação visual continue clara.
+
+Regras para pessoa viva:
+
+- exibir `Cidade de residência`;
+- exibir container `Contato, endereço e redes sociais`;
+- não exibir campos de falecimento.
+
+Regras para pessoa falecida:
+
+- exibir `Dia ou Ano de Falecimento` e `Local de falecimento`;
+- ocultar `Cidade de residência`;
+- ocultar container `Contato, endereço e redes sociais`;
+- preparar defaults de notificações e permissões para pular a Etapa 4.
+
+### Etapa 2 — Vínculos
+
+Modal de adicionar parente:
+
+- não exibe botão `Buscar`;
+- o campo de nome filtra pessoas cadastradas enquanto o usuário digita;
+- resultados aparecem em dropdown/lista;
+- mantém botão `Criar nova pessoa`;
+- não exibe box cinza `Nenhuma pessoa encontrada com esse nome`.
+
+Badges de status:
+
+| Caso | Badge |
+|---|---|
+| Homem vivo | `Vivo` |
+| Mulher viva | `Viva` |
+| Homem falecido | `Falecido` |
+| Mulher falecida | `Falecida` |
+| Vínculo local pendente | `Em análise` |
+
+### Etapa 3 — Arquivos históricos
+
+Regras de UX:
+
+- cards de categoria atualizam título e descrição da área de upload;
+- título e descrição são pré-preenchidos com título/subtítulo do card;
+- após adicionar arquivo, não exibir campos editáveis por padrão;
+- mostrar thumbnail, título, resumo e botões compactos `Editar`/`Remover`;
+- rascunho local deve preservar arquivos ao trocar aba, minimizar ou recarregar antes de salvar;
+- botão principal é `Salvar e Continuar`.
+
+### Etapa 4 — Preferências
+
+Regras de UX:
+
+- etapa exibida para pessoa viva;
+- etapa pulada para pessoa falecida;
+- não exibir botão `Salvar permissões`;
+- não exibir botão `Voltar para arquivos históricos`;
+- manter apenas `Continuar para a revisão`.
+
+### Etapa 5 — Revisão final
+
+A revisão deve funcionar como perfil de conferência, não como formulário longo.
+
+Regras:
+
+- topo com avatar/iniciais, nome, badge de status, profissão e residência quando aplicável;
+- não exibir mini bio ao lado do nome;
+- botão `Finalizar e acessar árvore` fica na área superior ao lado de `Editar perfil`;
+- não exibir rodapé com `Voltar para preferências`;
+- boxes devem ter botões compactos com ícone de lápis para edição inline quando aplicável;
+- familiares e arquivos podem usar lápis para voltar à etapa específica;
+- `Informações pessoais` não exibe `Pessoa falecida`, `Nascimento no exterior` nem `Falecimento no exterior`;
+- pessoa falecida não exibe box `Notificações e permissões`.
+
+
+## 15. Debug temporário
 
 `Visualizar como...` é ferramenta de QA/debug.
 
@@ -435,7 +528,7 @@ Regras:
 
 ---
 
-## 15. Breakpoints e QA visual
+## 16. Breakpoints e QA visual
 
 Testar, no mínimo:
 
@@ -465,7 +558,7 @@ Superfícies obrigatórias:
 
 ---
 
-## 16. Critério de aceitação
+## 17. Critério de aceitação
 
 Uma mudança de layout só deve ser aceita quando:
 
@@ -477,4 +570,5 @@ Uma mudança de layout só deve ser aceita quando:
 - preserva paletas em desktop e mobile;
 - passa em `npm run build`;
 - passa nos testes aplicáveis;
+- respeita o fluxo vivo/falecido do onboarding;
 - foi validada visualmente nos breakpoints relevantes.

@@ -1,9 +1,9 @@
 # Rotas e guards de acesso — Árvore Família
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-16
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Tipo: documentação arquitetural de rotas, guards e navegação.
-> Status: atualizado para o fluxo de cadastro do membro em 5 etapas, incluindo `/arquivos-historicos` e `/preferencias` protegidas por `MemberRoute`.
+> Status: atualizado para o fluxo de cadastro do membro com Etapa 4 condicional, tratamento de pessoa falecida e revisão final editável.
 
 ---
 
@@ -88,6 +88,12 @@ src/app/constants/favoritePages.ts
 src/app/services/globalSearchService.ts
 src/app/components/layout/UserProfileMenu.tsx
 src/app/components/layout/MemberPageHeader.tsx
+src/app/components/member/MemberOnboardingSteps.tsx
+src/app/pages/MeusDados.tsx
+src/app/pages/MeusVinculos.tsx
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/pages/PreferenciasPage.tsx
+src/app/pages/RevisaoDados.tsx
 src/app/contexts/AuthContext.tsx
 src/app/services/permissionService.ts
 ```
@@ -167,19 +173,66 @@ Cuidados:
 
 ### 5.2.1 Fluxo de cadastro do membro
 
-O cadastro/revisão inicial do membro usa cinco etapas protegidas por `MemberRoute`.
+O cadastro/revisão inicial do membro usa `MemberRoute` e é estruturado em cinco etapas funcionais. A Etapa 4 é condicional: ela existe no fluxo normal de pessoa viva, mas deve ser pulada para pessoa falecida.
 
 | Etapa | Rota | Responsabilidade |
 |---|---|---|
 | 1 | `/meus-dados` | Dados pessoais, nascimento/residência, profissão, falecimento quando aplicável, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
-| 2 | `/meus-vinculos` | Revisão e solicitação de vínculos familiares. |
+| 2 | `/meus-vinculos` | Revisão, busca e solicitação de vínculos familiares. |
 | 3 | `/arquivos-historicos` | Inclusão e organização de documentos, fotos e registros históricos da pessoa vinculada. |
-| 4 | `/preferencias` | Preferências de notificação e permissões de exibição de dados. |
-| 5 | `/revisao-dados` | Revisão final, síntese das etapas anteriores e conclusão do primeiro acesso. |
+| 4 | `/preferencias` | Preferências de notificação e permissões de exibição de dados; etapa exibida apenas para pessoa viva. |
+| 5 | `/revisao-dados` | Revisão final em formato de perfil, edição inline de blocos permitidos e conclusão do primeiro acesso. |
 
-O indicador visual `MemberOnboardingSteps` deve aparecer abaixo de `MemberPageHeader` nessas cinco páginas. Ele permite navegação direta entre etapas, destacando a etapa ativa.
+Fluxo esperado para pessoa viva:
+
+```txt
+/meus-dados
+-> /meus-vinculos
+-> /arquivos-historicos
+-> /preferencias
+-> /revisao-dados
+```
+
+Fluxo esperado para pessoa falecida:
+
+```txt
+/meus-dados
+-> /meus-vinculos
+-> /arquivos-historicos
+-> /revisao-dados
+```
+
+Regras específicas para pessoa falecida:
+
+- `/meus-dados` deve ocultar o container de contato, endereço e redes sociais.
+- `/meus-dados` deve manter campos de falecimento e ocultar cidade de residência.
+- notificações devem ser desativadas automaticamente.
+- permissões de visualização devem ser ativadas automaticamente.
+- mensagens por WhatsApp devem permanecer desativadas.
+- `/preferencias` não deve aparecer no fluxo normal.
+- acesso direto a `/preferencias` deve redirecionar para `/revisao-dados` depois de aplicar os defaults necessários.
+- `MemberOnboardingSteps` deve ocultar a Etapa 4 quando `hidePreferences` estiver ativo.
+- `/revisao-dados` não deve exibir o box de notificações/permissões para pessoa falecida.
+
+O indicador visual `MemberOnboardingSteps` deve aparecer abaixo de `MemberPageHeader` nas páginas do onboarding. Ele permite navegação direta entre etapas disponíveis e destaca a etapa ativa.
 
 A confirmação definitiva do primeiro acesso ocorre ao finalizar a Etapa 5.
+
+### 5.2.2 Revisão final e edição inline
+
+A rota `/revisao-dados` é a etapa final do onboarding, não uma rota administrativa.
+
+Responsabilidades da revisão final:
+
+- exibir síntese dos dados cadastrados;
+- mostrar card superior com avatar/iniciais, nome, badge de status, profissão e residência quando aplicável;
+- permitir edição inline de dados pessoais, Mini Bio/Curiosidades, contatos e permissões quando a pessoa for viva;
+- direcionar o lápis de familiares para `/meus-vinculos`;
+- direcionar o lápis de arquivos para `/arquivos-historicos`;
+- manter o botão `Finalizar e acessar árvore` na área superior;
+- não reexibir rodapé antigo com `Voltar para preferências`.
+
+Campos técnicos como `Nascimento no exterior`, `Falecimento no exterior` e `Pessoa falecida` não devem aparecer como linhas de revisão no box de Informações pessoais. O status deve aparecer como badge junto ao nome.
 
 ### 5.3 `ProtectedRoute`
 
@@ -403,6 +456,17 @@ QA de rotas:
 Para interpretar ocorrências dessas rotas em buscas, use também `docs/historico/ROTAS_REMOVIDAS.md`.
 
 ---
+
+### 13.1 QA específico do onboarding
+
+Ao alterar `routes.tsx`, guards ou navegação do onboarding, validar:
+
+- pessoa viva segue as cinco etapas, incluindo `/preferencias`;
+- pessoa falecida pula `/preferencias` e segue de `/arquivos-historicos` para `/revisao-dados`;
+- acesso direto a `/preferencias` por pessoa falecida redireciona para revisão;
+- `MemberOnboardingSteps` exibe cinco etapas para vivos e oculta Preferências para falecidos;
+- `/revisao-dados` finaliza o primeiro acesso sem depender de botão no rodapé;
+- rotas antigas da árvore continuam removidas.
 
 ## 14. Critérios para alterar este documento
 

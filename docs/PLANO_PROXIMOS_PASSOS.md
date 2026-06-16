@@ -1,10 +1,10 @@
 
 # Plano de próximos passos — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-16
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Tipo: backlog técnico/documental vivo
-> Status: reorganizado para manter apenas pendências, riscos, decisões futuras e QA aberto, com procedimentos de validação centralizados em `docs/QA_MANUAL.md`.
+> Status: atualizado para refletir onboarding condicional como comportamento consolidado e registrar apenas QA/automação/documentação ainda abertos.
 
 ---
 
@@ -57,6 +57,7 @@ Regras:
 | Exportação | Implementada para as views oficiais por Área, PNG, PDF e Impressão. |
 | Calendário | Implementado com filtros mobile compactos e integração Google Agenda quando configurada. |
 | Fórum, notificações e favoritos | Implementados, sujeitos a QA funcional recorrente. |
+| Onboarding do membro | Implementado em cinco etapas, com fluxo condicional para pessoa falecida, revisão final editável e Etapa 4 pulada quando aplicável. |
 | QA manual | Centralizado em `docs/QA_MANUAL.md`. |
 
 ---
@@ -299,6 +300,53 @@ Regras:
 **Status:** aberto.
 
 ---
+
+### Onboarding do membro
+
+#### ID: ONB-001
+
+**Título:** Validar manualmente o onboarding completo para pessoa viva e pessoa falecida.
+**Tipo:** QA funcional | QA visual
+**Prioridade:** alta
+**Contexto:** o fluxo agora diverge conforme `falecido`: pessoa viva passa por `/preferencias`; pessoa falecida pula essa etapa, desativa notificações e ativa permissões de visualização.
+**Evidência:** mudanças recentes envolveram `MeusDados`, `MeusVinculos`, `ArquivosHistoricosPage`, `PreferenciasPage`, `RevisaoDados` e `MemberOnboardingSteps`.
+**Arquivos relacionados:** `src/app/pages/MeusDados.tsx`, `src/app/pages/MeusVinculos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx`, `src/app/pages/PreferenciasPage.tsx`, `src/app/pages/RevisaoDados.tsx`, `src/app/components/member/MemberOnboardingSteps.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** executar o roteiro de onboarding em `docs/QA_MANUAL.md` nos breakpoints mobile e desktop.
+**Status:** aberto.
+
+#### ID: ONB-002
+
+**Título:** Criar cobertura automatizada mínima para o onboarding condicional.
+**Tipo:** teste futuro
+**Prioridade:** média
+**Contexto:** o comportamento depende de estado da pessoa, navegação entre rotas, defaults de preferências e exibição condicional de boxes.
+**Evidência:** regressões visuais e de navegação foram detectadas manualmente durante ajustes.
+**Arquivos relacionados:** `tests/e2e/*`, `src/app/pages/*`, `docs/REGRAS_DE_NAO_REGRESSAO.md`.
+**Ação recomendada:** criar smoke E2E para pessoa viva e pessoa falecida, cobrindo Etapas 1 a 5 e navegação direta para `/preferencias`.
+**Status:** backlog.
+
+#### ID: ONB-003
+
+**Título:** Criar documentação funcional dedicada para onboarding e arquivos históricos.
+**Tipo:** documentação
+**Prioridade:** média
+**Contexto:** o comportamento do onboarding ficou grande o suficiente para merecer documentos funcionais próprios, além dos guias gerais.
+**Evidência:** regras de pessoa viva/falecida, modal de vínculos, rascunho de arquivos e revisão inline estão hoje distribuídas entre vários guias.
+**Arquivos relacionados:** `docs/funcionalidades/ONBOARDING_MEMBRO.md`, `docs/funcionalidades/ARQUIVOS_HISTORICOS.md`, `docs/README.md`.
+**Ação recomendada:** criar os dois documentos em frente documental específica e apontar o índice para eles.
+**Status:** aberto.
+
+#### ID: ONB-004
+
+**Título:** Validar persistência temporária de arquivos históricos em navegadores reais.
+**Tipo:** QA funcional
+**Prioridade:** média
+**Contexto:** a Etapa 3 preserva rascunho local quando usuário troca aba, minimiza ou recarrega antes de salvar.
+**Evidência:** comportamento depende de armazenamento local e manipulação de arquivos no browser.
+**Arquivos relacionados:** `src/app/components/ArquivosHistoricos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx`, `docs/QA_MANUAL.md`.
+**Ação recomendada:** testar Chrome desktop, aba anônima e pelo menos um navegador mobile quando possível.
+**Status:** aberto.
+
 
 ### Fórum
 

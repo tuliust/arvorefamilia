@@ -1,15 +1,16 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-16
 > Local canônico: `docs/README.md`
 > Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico atualizado para registrar o fluxo de cadastro do membro em 5 etapas, as rotas `/arquivos-historicos` e `/preferencias`, e a separação entre edição, preferências e revisão final.
+> Status: índice canônico atualizado para onboarding condicional, revisão final editável, arquivos históricos e QA específico.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
 Use este arquivo como ponto de entrada. A documentação canônica deve registrar comportamento implementado, contratos vigentes ou pendências explicitamente classificadas.
 
 ---
+
 
 ## 1. Estado atual consolidado
 
@@ -26,16 +27,19 @@ A baseline funcional atual registra:
   - `/visao-completa`;
 - o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
 - `/minha-arvore/editar` continua vigente como rota protegida de edição completa do membro;
-- o cadastro inicial do membro usa cinco etapas protegidas por `MemberRoute`:
+- o cadastro inicial do membro usa fluxo protegido por `MemberRoute`:
   1. `/meus-dados`;
   2. `/meus-vinculos`;
   3. `/arquivos-historicos`;
-  4. `/preferencias`;
+  4. `/preferencias`, apenas para pessoa viva;
   5. `/revisao-dados`;
+- pessoa falecida pula `/preferencias`, tem notificações desativadas e permissões de visualização ativadas por padrão;
 - Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`;
-- Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`;
-- `/revisao-dados` é revisão final e finalização, sem edição completa de arquivos, notificações ou permissões;
-- `MemberOnboardingSteps` é o indicador visual reutilizável das cinco etapas;
+- Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`, somente para pessoa viva;
+- `/revisao-dados` é revisão final em layout de perfil, com edição inline e finalização;
+- `MemberOnboardingSteps` é o indicador visual reutilizável do fluxo e pode ocultar Preferências;
+- o modal de vínculos filtra pessoas automaticamente enquanto o usuário digita e não usa botão **Buscar**;
+- a revisão final usa badges por gênero/status: `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise`;
 - `TreeViewMode` possui apenas:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
@@ -94,10 +98,10 @@ supabase/migrations/ é a fonte da verdade do schema.
 | `README.md` | Índice canônico da documentação. | Atualizado. |
 | `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Manter sincronizado. |
 | `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Atualizado para o onboarding em 5 etapas. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para o onboarding em 5 etapas. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado com `MemberOnboardingSteps`. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas e microcopy. | Preservar. |
-| `QA_MANUAL.md` | Guia central de QA manual e pós-deploy. | Preservar. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para onboarding condicional e revisão final editável. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado com componentes do onboarding, pessoa falecida e revisão inline. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas, onboarding e microcopy. | Atualizado. |
+| `QA_MANUAL.md` | Guia central de QA manual, onboarding e pós-deploy. | Atualizado. |
 | `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Manter sincronizado. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Manter sincronizado. |
 | `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Preservar. |
@@ -259,20 +263,32 @@ Sempre que alterar `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/pr
 
 ```txt
 docs/README.md
+docs/BASELINE_PRODUTO_ATUAL.md
 docs/arquitetura/ROTAS_E_GUARDS.md
 docs/funcionalidades/MINHA_ARVORE_EDITAR.md
 docs/funcionalidades/NOTIFICACOES.md
 docs/funcionalidades/CURIOSIDADES_E_IA.md
 docs/INVENTARIO_TECNICO.md
-docs/GUIA_COMPONENTES.md
 docs/GUIA_IMPLEMENTACOES.md
+docs/GUIA_COMPONENTES.md
+docs/GUIA_UX_LAYOUT.md
+docs/QA_MANUAL.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/PLANO_PROXIMOS_PASSOS.md
 ```
 
-Critérios:
+Critérios mínimos:
 
-- rotas novas registradas como `MemberRoute`;
+- rotas novas ou alteradas registradas como `MemberRoute`;
 - etapa ativa coerente no `MemberOnboardingSteps`;
+- fluxo de pessoa viva e pessoa falecida descritos separadamente;
+- `/preferencias` descrita como etapa exclusiva de pessoa viva;
+- pessoa falecida documentada com notificações desativadas e permissões ativadas;
 - Arquivos Históricos documentados na Etapa 3;
+- rascunho local de arquivos históricos documentado quando mantido no código;
+- modal de vínculos documentado sem botão **Buscar** e com filtragem automática;
 - Notificações e Permissões documentadas na Etapa 4;
-- Revisão final documentada sem edição duplicada;
+- Revisão final documentada como tela editável inline, não apenas passiva;
+- badges `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise` documentadas;
+- QA manual atualizado para pessoa viva, pessoa falecida, rascunho local, revisão inline e navegação condicional;
 - comandos de validação executados ou limitação registrada.

@@ -1,10 +1,10 @@
 # Guia de implementações — Árvore Família
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-16
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de implementação vigente
-> Status: atualizado para registrar o fluxo de membro em 5 etapas e as novas rotas `/arquivos-historicos` e `/preferencias`.
+> Status: atualizado para o fluxo de membro com pessoa viva/falecida, upload com rascunho, busca automática de vínculos e revisão final editável.
 
 ---
 
@@ -45,9 +45,9 @@ docs/PLANO_PROXIMOS_PASSOS.md
 | Busca global | Implementada com páginas vigentes e aliases antigos apontando para rotas atuais. |
 | Favoritos | Implementados para páginas e entidades suportadas. |
 | Calendário familiar | Implementado com filtros/categorias e integração Google Agenda quando configurada. |
-| Perfil e área de membro | Implementados, incluindo onboarding em 5 etapas. |
+| Perfil e área de membro | Implementados, incluindo onboarding condicional para pessoa viva/falecida e revisão final editável. |
 | Fórum | Implementado. |
-| Notificações | Implementadas. |
+| Notificações | Implementadas; no fluxo de pessoa falecida são desativadas automaticamente e `/preferencias` é pulada. |
 | Admin | Implementado. |
 
 ---
@@ -118,9 +118,12 @@ Rotas removidas como views:
 /visao-completa
 ```
 
+
 ### 3.1 Fluxo de cadastro do membro
 
-Implementado como onboarding protegido por `MemberRoute`:
+Implementado como onboarding protegido por `MemberRoute`.
+
+#### Pessoa viva
 
 | Etapa | Rota | Página | Componente de etapa |
 |---|---|---|---|
@@ -130,13 +133,47 @@ Implementado como onboarding protegido por `MemberRoute`:
 | 4 | `/preferencias` | `PreferenciasPage` | `MemberOnboardingSteps activeStep={4}` |
 | 5 | `/revisao-dados` | `RevisaoDados` | `MemberOnboardingSteps activeStep={5}` |
 
-Responsabilidades consolidadas:
+#### Pessoa falecida
 
-- `/meus-dados`: dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades;
-- `/meus-vinculos`: vínculos familiares;
-- `/arquivos-historicos`: arquivos e documentos da pessoa vinculada;
-- `/preferencias`: notificações e permissões de exibição;
-- `/revisao-dados`: revisão final e acesso à árvore.
+Para pessoa falecida, a etapa de Preferências não faz parte do fluxo operacional.
+
+| Etapa visual | Rota | Página | Comportamento |
+|---|---|---|---|
+| 1 | `/meus-dados` | `MeusDados` | dados pessoais e falecimento, sem contato/redes |
+| 2 | `/meus-vinculos` | `MeusVinculos` | vínculos familiares |
+| 3 | `/arquivos-historicos` | `ArquivosHistoricosPage` | arquivos; ao continuar, navega direto para revisão |
+| 4 | `/revisao-dados` | `RevisaoDados` | revisão final sem notificações/permissões |
+
+Acesso direto a `/preferencias` para pessoa falecida deve redirecionar para `/revisao-dados`.
+
+#### Responsabilidades consolidadas
+
+- `/meus-dados`: dados pessoais, estado vital, Mini Bio, Curiosidades e, quando aplicável, contato, endereço e redes sociais;
+- `/meus-vinculos`: vínculos familiares, modal de busca automática, criação de pessoa e badges por gênero/status;
+- `/arquivos-historicos`: arquivos/documentos da pessoa vinculada, pré-preenchimento por categoria e rascunho local;
+- `/preferencias`: notificações e permissões de visualização apenas para pessoa viva;
+- `/revisao-dados`: revisão final em layout de perfil, edição inline e finalização.
+
+#### Regras implementadas para pessoa falecida
+
+- ocultar **Cidade de residência**;
+- exibir **Dia ou Ano de Falecimento** e **Local de falecimento**;
+- ocultar **Contato, endereço e redes sociais**;
+- desativar notificações;
+- desativar mensagens/WhatsApp;
+- ativar permissões de visualização;
+- ocultar Preferências no stepper;
+- ocultar boxes de contato/notificações/permissões na revisão final.
+
+#### Regras implementadas na revisão final
+
+- revisão estruturada em cards/boxes;
+- botões compactos de lápis para edição inline;
+- **Finalizar e acessar árvore** no topo, ao lado de **Editar perfil**;
+- mini bio removida do topo e mantida no box próprio;
+- rodapé antigo removido;
+- badges por gênero em pessoa principal e familiares;
+- badge **Em análise** para vínculo pendente/local.
 
 ---
 

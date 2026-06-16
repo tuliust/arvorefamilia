@@ -1,10 +1,10 @@
 # Regras de não regressão — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-16
 > Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: regras técnicas e contratos de prevenção de regressão
-> Status: reorganizado para manter regras essenciais e delegar checklists manuais detalhados para `docs/QA_MANUAL.md`.
+> Status: atualizado para incluir regras do onboarding condicional, pessoa falecida, revisão final e arquivos históricos.
 
 ---
 
@@ -84,6 +84,7 @@ rg "MobileTreeControlsPortal" docs src
 rg "Nascimento não informado|Falecimento não informado" docs src
 rg "FILTERABLE_SPOUSE_ANCHOR_GROUPS|ANCESTOR_SPOUSE_ANCHOR_GROUPS" docs src
 rg "data-tree-route-view|data-export-root|data-tree-export-ignore" docs src
+rg "Outro pai/mãe|Nenhuma pessoa encontrada|Falecido\\(a\\)|Voltar para preferências|Salvar arquivos|Salvar permissões" docs src tests
 ```
 
 Interpretação:
@@ -112,6 +113,9 @@ Interpretação:
 /privacidade
 /meus-dados
 /meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
 /vincular-perfil
 /pessoa/:id
 /pessoas/:id
@@ -143,6 +147,8 @@ Regras:
 - `/?pessoa=abc` preserva `?pessoa=abc`;
 - `/mapa-familiar` e `/mapa-familiar-horizontal` são protegidas por fluxo de acesso à árvore;
 - `/minha-arvore/editar` continua em `MemberRoute`;
+- `/arquivos-historicos`, `/preferencias` e `/revisao-dados` permanecem em `MemberRoute`;
+- pessoa falecida deve pular `/preferencias` no fluxo normal;
 - rotas antigas não renderizam views da árvore.
 
 ---
@@ -378,7 +384,89 @@ QA manual fica em `docs/QA_MANUAL.md`.
 
 ---
 
-## 15. Operação, banco e secrets
+## 15. Onboarding do membro
+
+Rotas do onboarding:
+
+```txt
+/meus-dados
+/meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
+```
+
+### Pessoa viva
+
+Regras:
+
+- deve passar pelas cinco etapas;
+- `/preferencias` permanece acessível como Etapa 4;
+- cidade de residência aparece na Etapa 1;
+- contato, endereço e redes sociais aparecem na Etapa 1;
+- box de notificações/permissões pode aparecer na revisão final.
+
+### Pessoa falecida
+
+Regras:
+
+- não deve passar por `/preferencias` no fluxo normal;
+- acesso direto a `/preferencias` deve redirecionar para `/revisao-dados`;
+- cidade de residência não deve aparecer;
+- campos de falecimento devem aparecer quando aplicáveis;
+- contato, endereço e redes sociais não devem aparecer na Etapa 1;
+- notificações devem ser desativadas automaticamente;
+- permissões de visualização devem ser ativadas automaticamente;
+- WhatsApp deve ficar desativado;
+- `MemberOnboardingSteps` deve ocultar a Etapa 4;
+- box de notificações/permissões não deve aparecer na revisão final.
+
+### Etapa 2 — Vínculos
+
+Regras:
+
+- modal de adicionar parente não deve reexibir botão `Buscar`;
+- busca deve filtrar pessoas cadastradas enquanto o usuário digita;
+- botão `Criar nova pessoa` deve permanecer;
+- box cinza `Nenhuma pessoa encontrada com esse nome` não deve reaparecer;
+- label `Outro pai/mãe` não deve voltar no contexto já renomeado para `Alterar a mãe`;
+- badges devem respeitar gênero e status: `Vivo`, `Viva`, `Falecido`, `Falecida`;
+- vínculos locais pendentes devem exibir `Em análise` quando aplicável.
+
+### Etapa 3 — Arquivos históricos
+
+Regras:
+
+- botões `Voltar para vínculos` e `Salvar arquivos` não devem reaparecer;
+- botão principal é `Salvar e Continuar`;
+- card de categoria deve preencher título e descrição da área de upload;
+- trocar categoria deve atualizar título e descrição;
+- arquivo adicionado deve aparecer como thumbnail/resumo com `Editar` e `Remover`;
+- rascunho local não deve sumir ao trocar aba, minimizar ou recarregar antes do salvamento.
+
+### Etapa 4 — Preferências
+
+Regras:
+
+- botão `Salvar permissões` não deve reaparecer;
+- botão `Voltar para arquivos históricos` não deve reaparecer;
+- manter apenas `Continuar para a revisão`;
+- o box geral `Receber notificações por email` não deve reaparecer no onboarding como duplicidade visual.
+
+### Etapa 5 — Revisão final
+
+Regras:
+
+- mini bio não deve aparecer ao lado do nome no topo;
+- botão `Finalizar e acessar árvore` deve permanecer no topo ao lado de `Editar perfil`;
+- rodapé antigo com `Voltar para preferências` não deve reaparecer;
+- box `Informações pessoais` não deve listar `Pessoa falecida`, `Nascimento no exterior` ou `Falecimento no exterior`;
+- boxes editáveis devem manter lápis compacto para edição inline quando aplicável;
+- familiares e arquivos devem direcionar para suas etapas específicas quando a edição completa for necessária;
+- badges de familiares devem respeitar `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise`.
+
+
+## 16. Operação, banco e secrets
 
 Regras:
 
@@ -392,7 +480,7 @@ Regras:
 
 ---
 
-## 16. Documentação
+## 17. Documentação
 
 Regras:
 
@@ -406,7 +494,7 @@ Regras:
 
 ---
 
-## 17. Fechamento de frente
+## 18. Fechamento de frente
 
 Antes de fechar qualquer frente:
 

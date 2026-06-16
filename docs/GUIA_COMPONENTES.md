@@ -1,10 +1,10 @@
 # Guia de componentes — Árvore Família
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-16
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de responsabilidades de componentes
-> Status: atualizado para documentar `MemberOnboardingSteps` e a divisão do cadastro do membro em 5 etapas.
+> Status: atualizado para onboarding condicional, busca automática de parentes, arquivos históricos com rascunho e revisão final editável.
 
 ---
 
@@ -504,6 +504,7 @@ Responsabilidades:
 
 ---
 
+
 ## 9.1 Onboarding do membro
 
 ### `MemberOnboardingSteps`
@@ -516,13 +517,14 @@ src/app/components/member/MemberOnboardingSteps.tsx
 
 Responsabilidades:
 
-- exibir as cinco etapas do cadastro/revisão do membro;
+- exibir o progresso do cadastro/revisão do membro;
 - destacar a etapa ativa via `activeStep`;
-- permitir clique nos círculos para navegar entre rotas;
+- permitir clique nos círculos para navegar entre rotas permitidas;
 - manter círculos conectados por linhas horizontais;
-- preservar layout responsivo com scroll horizontal quando necessário.
+- preservar layout responsivo com scroll horizontal quando necessário;
+- aceitar ocultação da etapa de Preferências quando a pessoa vinculada for falecida.
 
-Etapas oficiais:
+Etapas oficiais para pessoa viva:
 
 | Etapa | Label | Rota |
 |---|---|---|
@@ -532,23 +534,152 @@ Etapas oficiais:
 | 4 | Preferências | `/preferencias` |
 | 5 | Revisão | `/revisao-dados` |
 
+Etapas oficiais para pessoa falecida:
+
+| Etapa visual | Label | Rota |
+|---|---|---|
+| 1 | Meus dados | `/meus-dados` |
+| 2 | Vínculos | `/meus-vinculos` |
+| 3 | Arquivos | `/arquivos-historicos` |
+| 4 | Revisão | `/revisao-dados` |
+
 Cuidados:
 
 - o componente deve ficar abaixo de `MemberPageHeader` e antes do conteúdo principal;
-- não deve substituir os guards;
+- não deve substituir `MemberRoute`;
 - não deve presumir que todas as etapas estão completas;
 - deve usar navegação interna do app, não reload de página;
-- não deve introduzir dependência externa.
+- não deve exibir Preferências para pessoa falecida.
 
-### Páginas do fluxo
+### `MeusDados`
 
-| Página | Papel |
-|---|---|
-| `MeusDados` | Dados pessoais, contato, endereço, redes sociais, Mini Bio e Curiosidades. |
-| `MeusVinculos` | Vínculos familiares. |
-| `ArquivosHistoricosPage` | Reuso de `ArquivosHistoricos` para etapa 3. |
-| `PreferenciasPage` | Reuso de `NotificationPreferencesPanel` e permissões de exibição. |
-| `RevisaoDados` | Síntese final, sem edição completa de arquivos, notificações ou permissões. |
+Arquivo:
+
+```txt
+src/app/pages/MeusDados.tsx
+```
+
+Responsabilidades específicas no onboarding:
+
+- editar dados pessoais, Mini Bio e Curiosidades;
+- controlar estado vital da pessoa vinculada;
+- exibir **Cidade de residência** apenas para pessoa viva;
+- exibir **Dia ou Ano de Falecimento** e **Local de falecimento** apenas para pessoa falecida;
+- ocultar **Contato, endereço e redes sociais** quando a pessoa for falecida;
+- alinhar toggles de localidade/exterior junto aos campos de local correspondentes;
+- normalizar preferências e permissões quando `falecido === true`.
+
+Regras para pessoa falecida:
+
+- notificações desativadas;
+- WhatsApp/mensagens desativados;
+- permissões de visualização ativadas;
+- dados de contato e redes sociais não são solicitados no fluxo.
+
+### `MeusVinculos`
+
+Arquivos principais:
+
+```txt
+src/app/pages/MeusVinculos.tsx
+src/app/pages/meus-vinculos/RelativeCard.tsx
+src/app/pages/meus-vinculos/meusVinculosUtils.ts
+```
+
+Responsabilidades:
+
+- exibir familiares e vínculos existentes;
+- permitir alterar mãe/pai quando aplicável;
+- abrir modal de adicionar parente;
+- filtrar pessoas cadastradas enquanto o usuário digita;
+- manter botão **Criar nova pessoa**;
+- não exibir botão **Buscar**;
+- não exibir box cinza de “Nenhuma pessoa encontrada...”;
+- aplicar badges por gênero:
+  - `Vivo`;
+  - `Viva`;
+  - `Falecido`;
+  - `Falecida`;
+  - `Em análise`.
+
+### `ArquivosHistoricosPage` e `ArquivosHistoricos`
+
+Arquivos:
+
+```txt
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/components/ArquivosHistoricos.tsx
+```
+
+Responsabilidades:
+
+- representar a Etapa 3 do onboarding;
+- permitir upload de arquivos históricos por categoria;
+- ao clicar em um card de categoria, preencher título e descrição da área de upload com o título/subtítulo do card;
+- atualizar título e descrição se outro card for selecionado;
+- após adicionar arquivo, exibir modo resumido com thumbnail, título, metadados e botões **Editar**/**Remover**;
+- preservar rascunho local antes do salvamento definitivo;
+- usar **Salvar e Continuar** como ação principal;
+- pular `/preferencias` e navegar direto para `/revisao-dados` quando a pessoa for falecida.
+
+### `PreferenciasPage`
+
+Arquivo:
+
+```txt
+src/app/pages/PreferenciasPage.tsx
+```
+
+Responsabilidades:
+
+- representar a Etapa 4 apenas para pessoa viva;
+- exibir permissões e preferências de notificação aplicáveis;
+- manter somente a ação principal **Continuar para a revisão** no rodapé;
+- redirecionar para `/revisao-dados` se a pessoa vinculada for falecida.
+
+Não deve exibir:
+
+- botão **Salvar permissões**;
+- botão **Voltar para arquivos históricos**;
+- box geral **Receber notificações por email**.
+
+### `RevisaoDados`
+
+Arquivo:
+
+```txt
+src/app/pages/RevisaoDados.tsx
+```
+
+Responsabilidades:
+
+- representar a Etapa 5 do onboarding;
+- exibir revisão final em layout de perfil;
+- permitir edição inline com botões compactos de lápis;
+- mostrar ações principais no topo;
+- manter **Finalizar e acessar árvore** ao lado de **Editar perfil**;
+- não exibir mini bio no topo junto ao nome;
+- não exibir rodapé antigo com **Voltar para preferências**;
+- esconder **Notificações e permissões** quando a pessoa for falecida.
+
+Boxes vigentes:
+
+| Box | Pessoa viva | Pessoa falecida |
+|---|---:|---:|
+| Informações pessoais | sim | sim |
+| Mini bio e curiosidades | sim | sim |
+| Familiares | sim | sim |
+| Arquivos históricos | sim | sim |
+| Contatos | sim | não |
+| Notificações e permissões | sim | não |
+
+No box **Informações pessoais**, não exibir flags técnicas como:
+
+```txt
+Pessoa falecida
+Nascimento no exterior
+Falecimento no exterior
+```
 
 ---
 
