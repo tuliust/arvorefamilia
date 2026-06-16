@@ -796,6 +796,12 @@ export function MinhaArvore() {
     }));
   };
 
+  const handleSocialProfilesChange = (nextProfiles: SocialProfileForm[]) => {
+    markFormDirty();
+    setSocialProfiles(nextProfiles);
+    syncFirstSocialProfileToLegacyFields(nextProfiles);
+  };
+
   const updateSocialProfile = (profileId: string, field: 'rede' | 'perfil', value: string) => {
     markFormDirty();
     const nextProfiles = socialProfiles.map((profile) =>
@@ -1662,7 +1668,7 @@ export function MinhaArvore() {
                   />
                 </Field>
 
-                <Field label="Data de nascimento" error={errors.data_nascimento}>
+                <Field label="Dia ou Ano de Nascimento" error={errors.data_nascimento}>
                   <Input
                     value={String(form.data_nascimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('data_nascimento')}
@@ -1685,7 +1691,7 @@ export function MinhaArvore() {
                   />
                   <p className="text-xs text-gray-500">{form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
                   <ToggleField
-                    label="Nasci fora do Brasil"
+                    label="Estrangeiro"
                     checked={form.local_nascimento_exterior === true}
                     onCheckedChange={(checked) => updateField('local_nascimento_exterior', checked)}
                   />
@@ -1698,7 +1704,7 @@ export function MinhaArvore() {
                   </div>
                 )}
 
-                <Field label="Cidade de Residência" error={errors.local_atual}>
+                <Field label="Cidade de residência" error={errors.local_atual}>
                   <Input
                     value={String(form.local_atual ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_atual')}
@@ -1708,7 +1714,7 @@ export function MinhaArvore() {
                   />
                   <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
                   <ToggleField
-                    label="Moro no exterior"
+                    label="Exterior"
                     checked={form.local_atual_exterior === true}
                     onCheckedChange={(checked) => updateField('local_atual_exterior', checked)}
                   />
@@ -1734,7 +1740,7 @@ export function MinhaArvore() {
 
                 {form.falecido === true && (
                   <>
-                    <Field label="Data de falecimento">
+                    <Field label="Dia ou Ano de Falecimento">
                       <Input
                         value={String(form.data_falecimento ?? '')}
                         onBlur={() => normalizeFieldOnBlur('data_falecimento')}
@@ -1753,7 +1759,7 @@ export function MinhaArvore() {
                       />
                       <p className="text-xs text-gray-500">{form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
                       <ToggleField
-                        label="Falecimento fora do Brasil"
+                        label="Exterior"
                         checked={form.local_falecimento_exterior === true}
                         onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
                       />
@@ -1761,7 +1767,7 @@ export function MinhaArvore() {
                   </>
                 )}
 
-                <Field label="Telefone">
+                <Field label="WhatsApp">
                   <Input
                     value={String(form.telefone ?? '')}
                     onChange={(e) => updateTextField('telefone', e.target.value)}
@@ -1792,7 +1798,7 @@ export function MinhaArvore() {
                 <div className="space-y-2 md:col-span-2">
                   <SocialProfilesEditor
                     profiles={socialProfiles}
-                    onChange={setSocialProfiles}
+                    onChange={handleSocialProfilesChange}
                     errors={{ rede_social: errors.rede_social, instagram_usuario: errors.instagram_usuario }}
                   />
                 </div>
@@ -1807,7 +1813,7 @@ export function MinhaArvore() {
                     className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
                   />
                 </Field>
-                <Field label="Curiosidades de Vida">
+                <Field label="Curiosidades">
                   <Textarea
                     value={String(form.curiosidades ?? '')}
                     onChange={(e) => updateTextField('curiosidades', e.target.value)}
@@ -2190,7 +2196,7 @@ export function MinhaArvore() {
                     required
                   />
                 </Field>
-                <Field label="Data de nascimento">
+                <Field label="Dia ou Ano de Nascimento">
                   <Input
                     value={addRelativeForm.data_nascimento}
                     onBlur={() => updateAddRelativeForm('data_nascimento', normalizeBirthDate(addRelativeForm.data_nascimento))}

@@ -1,3 +1,4 @@
+import { Shield } from 'lucide-react';
 import { PersonFormSection } from './PersonFormSection';
 
 type PersonPrivacyFieldsValue = {
@@ -13,38 +14,60 @@ type PersonPrivacyFieldsProps = {
   value: PersonPrivacyFieldsValue;
   onChange: (field: keyof PersonPrivacyFieldsValue, value: boolean) => void;
   onSocialPrivacyChange: (checked: boolean) => void;
+  privacyContext?: 'member' | 'admin';
 };
 
-export function PersonPrivacyFields({ value, onChange, onSocialPrivacyChange }: PersonPrivacyFieldsProps) {
-  return (
-    <PersonFormSection title="Privacidade">
-      <p className="text-sm text-gray-600">
-        Defina quais dados pessoais podem aparecer para outros familiares. Essas opções podem ser ajustadas depois.
-      </p>
+export function PersonPrivacyFields({
+  value,
+  onChange,
+  onSocialPrivacyChange,
+  privacyContext = 'member',
+}: PersonPrivacyFieldsProps) {
+  const labels = privacyContext === 'admin'
+    ? {
+        birthDate: 'Exibir data de nascimento desta pessoa para familiares',
+        phone: 'Exibir telefone/WhatsApp desta pessoa para familiares',
+        address: 'Exibir endereço desta pessoa para familiares',
+        social: 'Exibir rede social desta pessoa para familiares',
+        whatsapp: 'Permitir mensagens por WhatsApp para esta pessoa',
+      }
+    : {
+        birthDate: 'Exibir minha data de nascimento para outros familiares',
+        phone: 'Exibir meu telefone/WhatsApp para outros familiares',
+        address: 'Exibir meu endereço para outros familiares',
+        social: 'Exibir minha rede social para outros familiares',
+        whatsapp: 'Permitir mensagens por WhatsApp',
+      };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  return (
+    <PersonFormSection
+      title="Privacidade"
+      description="Defina quais dados pessoais podem aparecer para outros familiares. Essas opções podem ser ajustadas depois."
+      icon={<Shield className="h-5 w-5" />}
+    >
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <PrivacyCheckbox
-          label="Exibir minha data de nascimento para outros familiares"
+          label={labels.birthDate}
           checked={value.permitir_exibir_data_nascimento !== false}
           onChange={(checked) => onChange('permitir_exibir_data_nascimento', checked)}
         />
         <PrivacyCheckbox
-          label="Exibir meu telefone para outros familiares"
+          label={labels.phone}
           checked={value.permitir_exibir_telefone !== false}
           onChange={(checked) => onChange('permitir_exibir_telefone', checked)}
         />
         <PrivacyCheckbox
-          label="Exibir meu endereço para outros familiares"
+          label={labels.address}
           checked={value.permitir_exibir_endereco !== false}
           onChange={(checked) => onChange('permitir_exibir_endereco', checked)}
         />
         <PrivacyCheckbox
-          label="Exibir minha rede social para outros familiares"
+          label={labels.social}
           checked={value.permitir_exibir_rede_social !== false && value.permitir_exibir_instagram !== false}
           onChange={onSocialPrivacyChange}
         />
         <PrivacyCheckbox
-          label="Permitir mensagens por WhatsApp"
+          label={labels.whatsapp}
           checked={value.permitir_mensagens_whatsapp !== false}
           onChange={(checked) => onChange('permitir_mensagens_whatsapp', checked)}
         />

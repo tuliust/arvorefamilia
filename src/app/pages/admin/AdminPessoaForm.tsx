@@ -1000,20 +1000,19 @@ export function AdminPessoaForm() {
             onChange={(field, value) => handleChange(field, value)}
           />
 
-          {!isFalecido && (
-            <PersonContactFields
-              value={formData}
-              socialProfiles={socialProfiles}
-              onChange={(field, value) => handleChange(field, value)}
-              onPhoneChange={handleTelefoneChange}
-              onSocialProfilesChange={handleSocialProfilesChange}
-            />
-          )}
+          <PersonContactFields
+            value={formData}
+            socialProfiles={socialProfiles}
+            onChange={(field, value) => handleChange(field, value)}
+            onPhoneChange={handleTelefoneChange}
+            onSocialProfilesChange={handleSocialProfilesChange}
+          />
 
           <PersonPrivacyFields
             value={formData}
             onChange={(field, value) => handleChange(field, value)}
             onSocialPrivacyChange={handleRedeSocialPrivacyChange}
+            privacyContext="admin"
           />
 
           <ArquivosHistoricos

@@ -1,4 +1,6 @@
+import { Phone } from 'lucide-react';
 import { Input } from '../ui/input';
+import { PERSON_FIELD_LABELS } from '../../utils/personFields';
 import { AddressAutocompleteInput } from './AddressAutocompleteInput';
 import { SocialProfileForm, SocialProfilesEditor } from './SocialProfilesEditor';
 import { PersonFormSection } from './PersonFormSection';
@@ -25,10 +27,16 @@ export function PersonContactFields({
   onSocialProfilesChange,
 }: PersonContactFieldsProps) {
   return (
-    <PersonFormSection title="Informações de Contato">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <PersonFormSection
+      title="Contato, endereço e redes sociais"
+      description="Dados de contato podem ser exibidos conforme as preferências de privacidade. Redes sociais incompletas são tratadas de forma segura no salvamento."
+      icon={<Phone className="h-5 w-5" />}
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            {PERSON_FIELD_LABELS.telefone}
+          </label>
           <Input
             type="tel"
             value={value.telefone}
@@ -45,7 +53,9 @@ export function PersonContactFields({
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700">
+          {PERSON_FIELD_LABELS.endereco}
+        </label>
         <AddressAutocompleteInput
           value={value.endereco}
           onChange={(nextValue) => onChange('endereco', nextValue)}
@@ -54,14 +64,16 @@ export function PersonContactFields({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Complemento</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700">
+          {PERSON_FIELD_LABELS.complemento}
+        </label>
         <Input
           type="text"
           value={value.complemento ?? ''}
           onChange={(event) => onChange('complemento', event.target.value)}
           placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="mt-1 text-xs text-gray-500">
           Use para apartamento, bloco, torre, casa ou referência interna.
         </p>
       </div>
