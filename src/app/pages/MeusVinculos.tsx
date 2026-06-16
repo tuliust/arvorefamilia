@@ -496,6 +496,52 @@ export function MeusVinculos() {
     setRelativeSearchError(null);
   };
 
+  useEffect(() => {
+    if (addRelativeMode !== 'search') return;
+
+    const searchTerm = relativeSearchTerm.trim();
+
+    if (searchTerm.length === 0) {
+      setRelativeSearchResults([]);
+      setRelativeSearchLoading(false);
+      setRelativeSearchError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRelativeSearchResults([]);
+    setRelativeSearchLoading(true);
+    setRelativeSearchError(null);
+
+    const timeoutId = window.setTimeout(() => {
+      searchPeopleForRelationship(searchTerm)
+        .then(({ data, error }) => {
+          if (cancelled) return;
+
+          if (error) {
+            setRelativeSearchResults([]);
+            setRelativeSearchError('Não foi possível buscar pessoas agora. Você ainda pode criar um novo cadastro.');
+            return;
+          }
+
+          setRelativeSearchResults(data);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setRelativeSearchResults([]);
+          setRelativeSearchError('Não foi possível buscar pessoas agora. Você ainda pode criar um novo cadastro.');
+        })
+        .finally(() => {
+          if (!cancelled) setRelativeSearchLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [addRelativeMode, relativeSearchTerm]);
+
   const addRelative = () => {
     if (!addDialog) return;
 
@@ -1419,7 +1465,7 @@ export function MeusVinculos() {
                 className="space-y-4"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  void runRelativeSearch();
+
                 }}
               >
                 <div className="space-y-2">
@@ -1443,11 +1489,7 @@ export function MeusVinculos() {
                     {relativeSearchError}
                   </p>
                 )}
-
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button type="submit" className="w-full sm:w-auto" disabled={relativeSearchLoading}>
-                    {relativeSearchLoading ? 'Buscando...' : 'Buscar'}
-                  </Button>
                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={startCreateNewRelative}>
                     Criar nova pessoa
                   </Button>
@@ -1460,14 +1502,14 @@ export function MeusVinculos() {
                 )}
 
                 {!relativeSearchLoading && relativeSearchResults.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
                     {relativeSearchResults.map((result) => {
                       const conflictMessage = getSearchConflictMessage(result);
                       const birthLabel = formatOptionalValue(result.data_nascimento);
                       const locationLabel = formatOptionalValue(result.local_nascimento || result.local_atual);
 
                       return (
-                        <article key={result.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                        <article key={result.id} className="rounded-lg border border-gray-100 bg-white p-3 transition hover:border-blue-300 hover:bg-blue-50/40">
                           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex min-w-0 gap-3">
                               <div className="flex h-12 w-12 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
@@ -1524,18 +1566,6 @@ export function MeusVinculos() {
                         </article>
                       );
                     })}
-                  </div>
-                )}
-
-                {!relativeSearchLoading && relativeSearchTerm.trim().length >= 2 && relativeSearchResults.length === 0 && !relativeSearchError && (
-                  <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
-                    <p className="font-semibold text-gray-900">Nenhuma pessoa encontrada com esse nome.</p>
-                    <p className="mx-auto mt-1 max-w-xl break-words text-sm text-gray-600">
-                      Você pode criar um novo cadastro para este familiar.
-                    </p>
-                    <Button type="button" variant="outline" className="mt-4 w-full sm:w-auto" onClick={startCreateNewRelative}>
-                      Criar nova pessoa
-                    </Button>
                   </div>
                 )}
               </form>
