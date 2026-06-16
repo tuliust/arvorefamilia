@@ -472,3 +472,6 @@ html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true
   --family-map-card-border-spouse: #accdd2;
 }
 
+[data-family-map-horizontal-root="true"] {
+  --family-map-connector-highlight: #0f766e;
+}

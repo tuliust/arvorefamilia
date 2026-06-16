@@ -61,6 +61,7 @@ type PersonLayout = {
 type Connector = {
   id: string;
   points: Point[];
+  familyKey?: string;
 };
 
 type CoupleConnectorCandidate = {
@@ -576,6 +577,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       connectors.push({
         id: `spouse-${key}`,
+        familyKey: key,
         points: [
           [spouseX, upperLayout.top + upperLayout.height],
           [spouseX, lowerLayout.top],
@@ -616,6 +618,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       connectors.push({
         id: `couple-out-${candidate.key}`,
+        familyKey: candidate.key,
         points: [
           [spouseX, candidate.coupleMidY],
           [trunkX, candidate.coupleMidY],
@@ -624,6 +627,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
 
       connectors.push({
         id: `couple-trunk-${candidate.key}`,
+        familyKey: candidate.key,
         points: [
           [trunkX, trunkTop],
           [trunkX, trunkBottom],
@@ -634,6 +638,7 @@ function buildConnectors(layouts: Map<string, PersonLayout>, maps: RelationshipM
         const childY = childLayout.top + childLayout.height / 2;
         connectors.push({
           id: `couple-child-${candidate.key}-${childLayout.person.id}`,
+          familyKey: candidate.key,
           points: [
             [trunkX, childY],
             [childLayout.left, childY],
@@ -671,6 +676,8 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [manualZoom, setManualZoom] = React.useState(1);
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
   const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
+
+  const [highlightedConnectorFamilyKey, setHighlightedConnectorFamilyKey] = React.useState<string | null>(null);
   const hideGenerationHeaders = useTreeHighlightGroupsActive();
   const canvasTop = hideGenerationHeaders ? 40 : CANVAS.top;
 
@@ -892,6 +899,13 @@ function DesktopFamilyHorizontalMapViewComponent({
     () => buildConnectors(layouts, maps, horizontalVisibility.connectorPairKeys),
     [horizontalVisibility.connectorPairKeys, layouts, maps],
   );
+
+  React.useEffect(() => {
+    setHighlightedConnectorFamilyKey((current) => (
+      current && connectors.some((connector) => connector.familyKey === current) ? current : null
+    ));
+  }, [connectors]);
+
   const effectiveScale = responsiveScale * manualZoom;
 
   React.useLayoutEffect(() => {
@@ -1132,7 +1146,7 @@ function DesktopFamilyHorizontalMapViewComponent({
         >
           <svg
             data-family-map-connectors="true"
-            className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+            className="absolute inset-0 z-0 h-full w-full"
             viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
             aria-hidden="true"
           >
@@ -1143,9 +1157,34 @@ function DesktopFamilyHorizontalMapViewComponent({
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              {connectors.map((connector) => (
-                <path key={connector.id} d={connectorPath(connector.points)} />
-              ))}
+              {connectors.map((connector) => {
+                const connectorFamilyKey = connector.familyKey ?? connector.id;
+                const isHighlighted = highlightedConnectorFamilyKey === connectorFamilyKey;
+
+                return (
+                  <React.Fragment key={connector.id}>
+                    <path
+                      d={connectorPath(connector.points)}
+                      stroke={isHighlighted ? 'var(--family-map-connector-highlight, #0f766e)' : undefined}
+                      strokeWidth={isHighlighted ? 4 : 2}
+                      opacity={highlightedConnectorFamilyKey && !isHighlighted ? 0.28 : 1}
+                    />
+                    <path
+                      d={connectorPath(connector.points)}
+                      stroke="transparent"
+                      strokeWidth={16}
+                      pointerEvents="stroke"
+                      className="cursor-pointer"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setHighlightedConnectorFamilyKey((current) => (
+                          current === connectorFamilyKey ? null : connectorFamilyKey
+                        ));
+                      }}
+                    />
+                  </React.Fragment>
+                );
+              })}
             </g>
           </svg>
 
