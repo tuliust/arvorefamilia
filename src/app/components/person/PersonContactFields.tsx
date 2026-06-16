@@ -29,7 +29,7 @@ export function PersonContactFields({
   return (
     <PersonFormSection
       title="Contato, endereço e redes sociais"
-      description="Dados de contato podem ser exibidos conforme as preferências de privacidade. Redes sociais incompletas são tratadas de forma segura no salvamento."
+      description="Dados de contato podem ser exibidos conforme as preferências de privacidade. Redes sociais incompletas são ignoradas com segurança no salvamento."
       icon={<Phone className="h-5 w-5" />}
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -45,38 +45,37 @@ export function PersonContactFields({
             maxLength={15}
           />
         </div>
+
+        <div className="hidden md:block" />
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            {PERSON_FIELD_LABELS.endereco}
+          </label>
+          <AddressAutocompleteInput
+            value={value.endereco}
+            onChange={(nextValue) => onChange('endereco', nextValue)}
+            placeholder="Rua, número, bairro, cidade"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            {PERSON_FIELD_LABELS.complemento}
+          </label>
+          <Input
+            type="text"
+            value={value.complemento ?? ''}
+            onChange={(event) => onChange('complemento', event.target.value)}
+            placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
+          />
+        </div>
       </div>
 
       <SocialProfilesEditor
         profiles={socialProfiles}
         onChange={onSocialProfilesChange}
       />
-
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          {PERSON_FIELD_LABELS.endereco}
-        </label>
-        <AddressAutocompleteInput
-          value={value.endereco}
-          onChange={(nextValue) => onChange('endereco', nextValue)}
-          placeholder="Rua, número, bairro, cidade"
-        />
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          {PERSON_FIELD_LABELS.complemento}
-        </label>
-        <Input
-          type="text"
-          value={value.complemento ?? ''}
-          onChange={(event) => onChange('complemento', event.target.value)}
-          placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          Use para apartamento, bloco, torre, casa ou referência interna.
-        </p>
-      </div>
     </PersonFormSection>
   );
 }

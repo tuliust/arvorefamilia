@@ -6,6 +6,7 @@ import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { PersonTimeline } from '../components/Timeline/PersonTimeline';
 import { PersonEventsEditor } from '../components/person/PersonEventsEditor';
+import { PersonBioFields } from '../components/person/PersonBioFields';
 import {
   Camera,
   Filter,
@@ -15,8 +16,10 @@ import {
   Link2,
   Plus,
   Save,
+  Sparkles,
   Trash2,
   UploadCloud,
+  Wand2,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
@@ -329,12 +332,28 @@ function matchesRelationshipPair(rel: Relacionamento, originId: string, destinat
   return rel.pessoa_origem_id === originId && rel.pessoa_destino_id === destinationId;
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: React.ReactNode; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      {typeof label === 'string' ? <Label>{label}</Label> : label}
       {children}
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function InlineInfoHint({ label, hint }: { label: string; hint: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <Label className="min-w-0 break-words">{label}</Label>
+      <button
+        type="button"
+        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-700 transition hover:bg-blue-100"
+        title={hint}
+        aria-label={hint}
+      >
+        <Info className="h-3 w-3" />
+      </button>
     </div>
   );
 }
@@ -396,6 +415,10 @@ export function MinhaArvore() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
   const [personEvents, setPersonEvents] = useState<PersonEvent[]>([]);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [pendingLeaveAction, setPendingLeaveAction] = useState<PendingLeaveAction | null>(null);
 
@@ -778,6 +801,65 @@ export function MinhaArvore() {
     }
 
     updateField(field, value);
+  };
+
+  const limitProfileText = (value: string) => value.trim().replace(/\s+/g, ' ').slice(0, 300);
+
+  const handleGenerateAiProfileTexts = async () => {
+    if (aiLoading) return;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          purpose: 'profile_text',
+          tone: form.falecido === true ? 'nostalgico' : 'familiar',
+          memorialMode: form.falecido === true,
+          selectedBadges: [],
+          customTraits: aiPrompt.trim(),
+          answers: [],
+          context: {
+            nome: String(form.nome_completo ?? ''),
+            profissao: String(form.profissao ?? ''),
+            local_nascimento: String(form.local_nascimento ?? ''),
+            local_atual: String(form.local_atual ?? ''),
+            data_nascimento: String(form.data_nascimento ?? ''),
+            data_falecimento: String(form.data_falecimento ?? ''),
+            falecido: form.falecido === true,
+            minibio_atual: String(form.minibio ?? ''),
+            curiosidades_atuais: String(form.curiosidades ?? ''),
+          },
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Não foi possível gerar os textos agora.');
+      }
+
+      const minibio = limitProfileText(payload?.minibio ?? '');
+      const curiosidades = limitProfileText(payload?.curiosidades ?? '');
+
+      if (!minibio && !curiosidades) {
+        throw new Error('A IA não retornou textos válidos.');
+      }
+
+      if (minibio) updateTextField('minibio', minibio);
+      if (curiosidades) updateTextField('curiosidades', curiosidades);
+      setAiDialogOpen(false);
+      setAiPrompt('');
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'Não foi possível gerar os textos agora.');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const syncFirstSocialProfileToLegacyFields = (profiles: SocialProfileForm[]) => {
@@ -1668,7 +1750,7 @@ export function MinhaArvore() {
                   />
                 </Field>
 
-                <Field label="Dia ou Ano de Nascimento" error={errors.data_nascimento}>
+                <Field label={<InlineInfoHint label="Dia ou Ano de Nascimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />} error={errors.data_nascimento}>
                   <Input
                     value={String(form.data_nascimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('data_nascimento')}
@@ -1681,7 +1763,7 @@ export function MinhaArvore() {
 
 
 
-                <Field label="Local de nascimento" error={errors.local_nascimento}>
+                <Field label={<InlineInfoHint label="Local de nascimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />} error={errors.local_nascimento}>
                   <Input
                     value={String(form.local_nascimento ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_nascimento')}
@@ -1689,7 +1771,6 @@ export function MinhaArvore() {
                     placeholder={form.local_nascimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
                     aria-invalid={Boolean(errors.local_nascimento)}
                   />
-                  <p className="text-xs text-gray-500">{form.local_nascimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
                   <ToggleField
                     label="Estrangeiro"
                     checked={form.local_nascimento_exterior === true}
@@ -1704,7 +1785,7 @@ export function MinhaArvore() {
                   </div>
                 )}
 
-                <Field label="Cidade de residência" error={errors.local_atual}>
+                <Field label={<InlineInfoHint label="Cidade de residência" hint="Use Cidade/UF para Brasil ou marque Exterior para usar Cidade (País)." />} error={errors.local_atual}>
                   <Input
                     value={String(form.local_atual ?? '')}
                     onBlur={() => normalizeFieldOnBlur('local_atual')}
@@ -1712,7 +1793,6 @@ export function MinhaArvore() {
                     placeholder="Cidade/UF"
                     aria-invalid={Boolean(errors.local_atual)}
                   />
-                  <p className="text-xs text-gray-500">{LOCATION_FORMAT_HELPER}</p>
                   <ToggleField
                     label="Exterior"
                     checked={form.local_atual_exterior === true}
@@ -1740,7 +1820,7 @@ export function MinhaArvore() {
 
                 {form.falecido === true && (
                   <>
-                    <Field label="Dia ou Ano de Falecimento">
+                    <Field label={<InlineInfoHint label="Dia ou Ano de Falecimento" hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}>
                       <Input
                         value={String(form.data_falecimento ?? '')}
                         onBlur={() => normalizeFieldOnBlur('data_falecimento')}
@@ -1749,7 +1829,7 @@ export function MinhaArvore() {
                       />
                     </Field>
 
-                    <Field label="Local de falecimento">
+                    <Field label={<InlineInfoHint label="Local de falecimento" hint="Use Cidade/UF para Brasil ou Cidade (País) para exterior." />}>
                       <Input
                         value={String(form.local_falecimento ?? '')}
                         onBlur={() => normalizeFieldOnBlur('local_falecimento')}
@@ -1757,7 +1837,6 @@ export function MinhaArvore() {
                         placeholder={form.local_falecimento_exterior === true ? 'Cidade (País)' : 'Cidade/UF'}
                         aria-invalid={Boolean(errors.local_falecimento)}
                       />
-                      <p className="text-xs text-gray-500">{form.local_falecimento_exterior === true ? INTERNATIONAL_LOCATION_FORMAT_HELPER : LOCATION_FORMAT_HELPER}</p>
                       <ToggleField
                         label="Exterior"
                         checked={form.local_falecimento_exterior === true}
@@ -1774,6 +1853,7 @@ export function MinhaArvore() {
                     placeholder="(XX) XXXXX-XXXX"
                   />
                 </Field>
+                <div className="hidden md:block" />
 
                 <Field label="Endereço">
                   <AddressAutocompleteInput
@@ -1790,9 +1870,7 @@ export function MinhaArvore() {
                     onChange={(e) => updateTextField('complemento', e.target.value)}
                     placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
                   />
-                  <p className="text-xs text-gray-500">
-                    Use para apartamento, bloco, torre, casa ou referência interna. O endereço principal continua vindo do Google Maps.
-                  </p>
+
                 </Field>
 
                 <div className="space-y-2 md:col-span-2">
@@ -1803,25 +1881,31 @@ export function MinhaArvore() {
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <Field label="Mini bio">
-                  <Textarea
-                    value={String(form.minibio ?? '')}
-                    onChange={(e) => updateTextField('minibio', e.target.value)}
-                    placeholder="Opcional: escreva uma breve apresentação sobre você. Conte quem você é, de onde vem, o que faz ou fez, sua trajetória, valores, conquistas e sua relação com a família."
-                    className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-                  />
-                </Field>
-                <Field label="Curiosidades">
-                  <Textarea
-                    value={String(form.curiosidades ?? '')}
-                    onChange={(e) => updateTextField('curiosidades', e.target.value)}
-                    placeholder="Opcional: compartilhe fatos, histórias ou lembranças curiosas sobre sua vida. Pode incluir hobbies, costumes, viagens, talentos, apelidos, momentos marcantes ou detalhes que ajudem a família a conhecer melhor você."
-                    className="min-h-24 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-                  />
-                </Field>
-              </div>
+              <PersonBioFields
+                value={{
+                  minibio: String(form.minibio ?? ''),
+                  curiosidades: String(form.curiosidades ?? ''),
+                }}
+                onChange={(field, value) => updateTextField(field, value)}
+                headerAction={(
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0 px-3"
+                    onClick={() => {
+                      setAiError(null);
+                      setAiPrompt('');
+                      setAiDialogOpen(true);
+                    }}
+                    aria-label="Receber ajuda da IA para escrever Mini bio e Curiosidades"
+                    title="Receber ajuda da IA para escrever Mini bio e Curiosidades"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span className="hidden sm:inline">Ajuda da IA</span>
+                  </Button>
+                )}
+              />
 
 
               </form>
@@ -1844,6 +1928,12 @@ export function MinhaArvore() {
                   setArchives(nextArchives);
                 }}
                 pessoaId={pessoaBase.id}
+                variant="interactive"
+                participantOptions={pessoasNoEscopo.map((person) => ({
+                  id: person.id,
+                  nome_completo: person.nome_completo,
+                }))}
+                draftStorageKey={`minha-arvore-arquivo-historico:${pessoaBase.id}`}
               />
             </section>
 

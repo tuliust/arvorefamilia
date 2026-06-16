@@ -1102,3 +1102,10 @@ docs/QA_MANUAL.md
 - Observações conjugais são informação restrita/admin.
 - Relacionamentos conjugais e parentais continuam explícitos.
 - `/minha-arvore/editar` continua vigente como edição do membro, sem reativar `/minha-arvore` como view.
+
+## Fase 2 - Decisão sobre formulários administrativos
+
+- O formulário administrativo de pessoa usa componentes compartilhados para dados, datas, contato, bio, privacidade e arquivos.
+- No admin, os blocos de contato/endereço/redes sociais e privacidade permanecem disponíveis mesmo quando a pessoa está marcada como falecida.
+- Justificativa: o admin pode atuar como guardião de memória e precisar corrigir dados legados, redes, contatos históricos, permissões e registros associados sem perder capacidade administrativa.
+- Essa decisão não altera RLS, migrations, RPCs, buckets, policies nem rotas antigas removidas.

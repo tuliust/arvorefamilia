@@ -629,3 +629,10 @@ Checklist:
 - [ ] Pets continuam separados semanticamente por `humano_ou_pet === 'Pet'`.
 - [ ] `Complemento` não é apagado ao selecionar novo endereço via Google Places.
 - [ ] Redes sociais múltiplas continuam persistidas em `pessoa_social_profiles`.
+
+## Fase 2 - Padronização incremental de formulários
+
+- `/minha-arvore/editar` mantém o caráter de edição completa, sem reutilizar `MemberOnboardingSteps` fora do onboarding.
+- Os campos de datas, locais, contato, endereço, redes sociais, Mini bio e Curiosidades passam a seguir os padrões compartilhados usados nas páginas recentes de membro.
+- O botão de IA em Mini bio/Curiosidades é uma ação auxiliar compacta; não transforma a página em revisão final nem substitui o fluxo de onboarding.
+- Arquivos Históricos usam o modo interativo com categorias que expandem a área de upload, preservando rascunho e salvamento existentes.

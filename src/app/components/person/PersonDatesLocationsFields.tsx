@@ -1,4 +1,4 @@
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Info } from 'lucide-react';
 import { Input } from '../ui/input';
 import {
   maskBirthDate,
@@ -52,15 +52,31 @@ function Field({
   label,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-w-0">
-      <label className="mb-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      {typeof label === 'string' ? (
+        <label className="mb-2 block text-sm font-medium text-gray-700">{label}</label>
+      ) : label}
       {children}
+    </div>
+  );
+}
+
+function LabelWithInfo({ label, hint }: { label: string; hint: string }) {
+  return (
+    <div className="mb-2 flex min-w-0 items-center gap-2">
+      <label className="min-w-0 break-words text-sm font-medium text-gray-700">{label}</label>
+      <button
+        type="button"
+        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-700 transition hover:bg-blue-100"
+        title={hint}
+        aria-label={hint}
+      >
+        <Info className="h-3 w-3" />
+      </button>
     </div>
   );
 }
@@ -75,7 +91,7 @@ export function PersonDatesLocationsFields({ value, isFalecido, onChange }: Pers
       icon={<CalendarDays className="h-5 w-5" />}
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field label={PERSON_FIELD_LABELS.data_nascimento}>
+        <Field label={<LabelWithInfo label={PERSON_FIELD_LABELS.data_nascimento} hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}>
           <Input
             type="text"
             value={value.data_nascimento}
@@ -85,7 +101,7 @@ export function PersonDatesLocationsFields({ value, isFalecido, onChange }: Pers
         </Field>
 
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
-          <Field label={PERSON_FIELD_LABELS.local_nascimento}>
+          <Field label={<LabelWithInfo label={PERSON_FIELD_LABELS.local_nascimento} hint="Use Cidade/UF para Brasil ou Cidade (País) quando o local for no exterior." />}>
             <Input
               type="text"
               value={value.local_nascimento}
@@ -115,7 +131,7 @@ export function PersonDatesLocationsFields({ value, isFalecido, onChange }: Pers
 
         {isDeceased ? (
           <>
-            <Field label={PERSON_FIELD_LABELS.data_falecimento}>
+            <Field label={<LabelWithInfo label={PERSON_FIELD_LABELS.data_falecimento} hint="Informe apenas o ano quando não souber a data completa, ou use DD/MM/AAAA quando souber." />}>
               <Input
                 type="text"
                 value={value.data_falecimento}
@@ -125,7 +141,7 @@ export function PersonDatesLocationsFields({ value, isFalecido, onChange }: Pers
             </Field>
 
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
-              <Field label={PERSON_FIELD_LABELS.local_falecimento}>
+              <Field label={<LabelWithInfo label={PERSON_FIELD_LABELS.local_falecimento} hint="Use Cidade/UF para Brasil ou Cidade (País) quando o local for no exterior." />}>
                 <Input
                   type="text"
                   value={value.local_falecimento}
@@ -146,7 +162,7 @@ export function PersonDatesLocationsFields({ value, isFalecido, onChange }: Pers
           </>
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 md:col-span-2">
-            <Field label={PERSON_FIELD_LABELS.local_atual}>
+            <Field label={<LabelWithInfo label={PERSON_FIELD_LABELS.local_atual} hint="Use Cidade/UF para Brasil ou marque Exterior para usar Cidade (País)." />}>
               <Input
                 type="text"
                 value={value.local_atual}
