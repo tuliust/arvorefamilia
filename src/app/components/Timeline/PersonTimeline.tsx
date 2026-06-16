@@ -78,8 +78,7 @@ function getTimelineIcon(type: PersonTimelineItemType) {
 }
 
 function getDateLabel(item: PersonTimelineItem) {
-  if (item.dateLabel) return item.dateLabel;
-  if (item.precision === 'unknown') return 'Data desconhecida';
+  if (item.dateLabel && item.precision !== 'unknown') return item.dateLabel;
   return undefined;
 }
 
@@ -130,12 +129,6 @@ export function PersonTimeline({
                       >
                         {badgeLabel}
                       </span>
-
-                      {isAdmin && item.source === 'relationship' && (
-                        <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-gray-200">
-                          Relacionamento
-                        </span>
-                      )}
 
                       {dateLabel && (
                         <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-gray-600">
