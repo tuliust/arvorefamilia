@@ -1,0 +1,180 @@
+import React from 'react';
+import { CalendarDays, MapPin, Trash2, Undo2 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { cn } from '../../lib/utils';
+import { Pessoa } from '../../types';
+import { getInitials } from '../../utils/personFields';
+import {
+  canRequestProfileControl,
+  getPersonSecondaryDetails,
+  getRelationshipCardClassName,
+  getRelationshipCardLabel,
+  getRelationshipStatusBadgeConfig,
+} from './meusVinculosUtils';
+import { RelationshipGroupKey, RelationshipReviewStatus } from './types';
+
+type RelativeCardProps = {
+  person: Pessoa;
+  relationshipGroup?: RelationshipGroupKey;
+  relationshipLabel?: string;
+  status: RelationshipReviewStatus;
+  avatarSrc?: string | null;
+  meta?: Array<{ label: string; value: string }>;
+  helperText?: string;
+  canRemove?: boolean;
+  canRequestControl?: boolean;
+  ownPersonId?: string;
+  isMother?: boolean;
+  onRemove?: () => void;
+  onUndoRemove?: () => void;
+  onCancelAddition?: () => void;
+  onRequestControl?: () => void;
+  children?: React.ReactNode;
+};
+
+function PersonAvatar({ person, avatarSrc }: { person: Pessoa; avatarSrc?: string | null }) {
+  const photo = String(avatarSrc || person.foto_principal_url || '').trim();
+
+  return (
+    <div className="flex h-12 w-12 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+      {photo ? (
+        <img src={photo} alt={person.nome_completo} className="h-full w-full object-cover" />
+      ) : (
+        <span className="inline-flex h-full w-full items-center justify-center text-sm font-semibold">
+          {getInitials(person.nome_completo)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function RelativeCard({
+  person,
+  relationshipGroup,
+  relationshipLabel,
+  status,
+  avatarSrc,
+  meta = [],
+  helperText,
+  canRemove = true,
+  canRequestControl = false,
+  ownPersonId,
+  isMother = false,
+  onRemove,
+  onUndoRemove,
+  onCancelAddition,
+  onRequestControl,
+  children,
+}: RelativeCardProps) {
+  const badge = getRelationshipStatusBadgeConfig(status);
+  const secondaryDetails = getPersonSecondaryDetails(person);
+  const relationLabel = relationshipLabel ?? (relationshipGroup ? getRelationshipCardLabel(relationshipGroup, isMother) : '');
+  const showRequestControl = canRequestControl && status !== 'control_pending' && canRequestProfileControl(person, ownPersonId, false, status);
+  const baseHelperText = helperText
+    ?? (status === 'control_pending'
+      ? 'Você solicitou permissão para administrar este perfil. A solicitação será avaliada antes de liberar edição.'
+      : status === 'removed_pending'
+        ? 'Você solicitou a remoção deste vínculo. A alteração será avaliada antes de sair da árvore.'
+        : (status === 'added_pending' || status === 'edited_pending')
+          ? 'Esta alteração será revisada antes de aparecer definitivamente na árvore.'
+          : undefined);
+
+  return (
+    <article className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassName(status))}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+        <PersonAvatar person={person} avatarSrc={avatarSrc} />
+
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h4 className="min-w-0 break-words text-base font-semibold leading-snug text-gray-950">
+                {person.nome_completo}
+              </h4>
+              {relationLabel && <p className="mt-1 text-sm font-medium text-gray-600">{relationLabel}</p>}
+            </div>
+            <span className={cn('inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold', badge.className)}>
+              {badge.label}
+            </span>
+          </div>
+
+          {secondaryDetails.length > 0 && (
+            <div className="flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+              {secondaryDetails.map((detail) => (
+                <span key={detail} className="inline-flex max-w-full items-center gap-1 rounded-md bg-white/70 px-2 py-1 ring-1 ring-gray-200">
+                  {detail.startsWith('Nascimento') ? <CalendarDays className="h-3.5 w-3.5 shrink-0" /> : <MapPin className="h-3.5 w-3.5 shrink-0" />}
+                  <span className="min-w-0 break-words">{detail}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {meta.length > 0 && (
+            <div className="flex min-w-0 flex-wrap gap-2 text-sm text-gray-600">
+              {meta.map((item) => (
+                <span key={`${item.label}-${item.value}`} className="inline-flex max-w-full items-center gap-2 rounded-md bg-white/70 px-2 py-1 ring-1 ring-gray-200">
+                  <span className="font-medium text-gray-500">{item.label}:</span>
+                  <span className="min-w-0 break-words text-gray-900">{item.value}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {children}
+
+          {baseHelperText && (
+            <p className={cn(
+              'rounded-lg px-3 py-2 text-sm',
+              status === 'control_pending'
+                ? 'border border-blue-200 bg-blue-100/70 text-blue-900'
+                : status === 'removed_pending'
+                  ? 'border border-red-200 bg-red-100/70 text-red-900'
+                  : 'border border-amber-200 bg-amber-100/60 text-amber-900'
+            )}>
+              {baseHelperText}
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {status === 'removed_pending' ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-red-200 text-red-700 hover:bg-red-50 sm:w-auto"
+                onClick={onUndoRemove}
+              >
+                <Undo2 className="h-4 w-4" />
+                Desfazer solicitação
+              </Button>
+            ) : (
+              canRemove && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-red-700 hover:bg-red-50 sm:w-auto"
+                  onClick={status === 'added_pending' ? onCancelAddition : onRemove}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {status === 'added_pending' ? 'Cancelar adição' : 'Solicitar remoção'}
+                </Button>
+              )
+            )}
+
+            {showRequestControl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 sm:w-auto"
+                onClick={onRequestControl}
+              >
+                Solicitar controle do perfil
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
