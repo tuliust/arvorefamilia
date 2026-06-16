@@ -502,8 +502,19 @@ export function VisualGroup({
               && previousItem.person.id === partnerId,
             );
 
+            const centerSingleCardInLastRow = columnCount === 2
+              && renderedItems.length % 2 === 1
+              && index === renderedItems.length - 1;
+            const personWrapperClassName = [
+              'relative min-w-0',
+              centerSingleCardInLastRow ? 'col-span-2 mx-auto' : '',
+            ].filter(Boolean).join(' ');
+            const personWrapperStyle = centerSingleCardInLastRow
+              ? { width: 'calc((100% - 0.5rem) / 2)' }
+              : undefined;
+
             return (
-              <div key={person.id} className="relative min-w-0">
+              <div key={person.id} className={personWrapperClassName} style={personWrapperStyle}>
                 {lateralConnector && (
                   <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-500" aria-hidden="true" />
                 )}

@@ -529,3 +529,16 @@ Antes de fechar qualquer frente:
 - [ ] nenhuma rota antiga voltou como view ativa;
 - [ ] nenhuma mudança visual criou migration;
 - [ ] nenhuma secret foi exposta.
+
+<!-- ajuste-irmaos-conjuges-mapa-familiar-2026-06 -->
+
+## Mapa familiar ? irm?os e c?njuges
+
+Na p?gina `/mapa-familiar`:
+
+- O grupo `Irm?os` exibe at? 4 cards antes de apresentar controle de expandir/recolher.
+- Em grade dupla, quando houver quantidade ?mpar de cards vis?veis, o ?ltimo card isolado fica centralizado na segunda linha.
+- C?njuges de irm?os s?o exibidos no grupo `Irm?os` quando o filtro `C?njuges` est? ativo e existe relacionamento expl?cito `tipo_relacionamento === 'conjuge'`.
+- Esse comportamento n?o cria nem infere dados; depende exclusivamente dos relacionamentos persistidos.
+- A regra acima se aplica ? p?gina `/mapa-familiar`. N?o assumir o mesmo comportamento para `/mapa-familiar-horizontal` sem valida??o espec?fica.
+

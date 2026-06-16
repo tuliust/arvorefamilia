@@ -226,7 +226,7 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalGrandparents: group('maternalGrandparents', 'Avós Maternos', 745, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
     maternalUncles: group('maternalUncles', 'Tios Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 300),
     maternalCousins: group('maternalCousins', 'Primos Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 250),
-    siblings: group('siblings', 'Irmãos', 340, 360, 'double', 2, 'horizontal', true, 'never', undefined, 260),
+    siblings: group('siblings', 'Irmãos', 340, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 260),
     nephews: group('nephews', 'Sobrinhos', 340, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
     spouse: group('spouse', 'Cônjuge', 720, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
     children: group('children', 'Filhos', 940, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
@@ -501,14 +501,16 @@ function composeGroup({
   if (includeSpouses) {
     people.forEach((person) => {
       if (seen.has(person.id) || !canRenderPerson(person)) return;
+      if (!addPerson(person)) return;
+
       const spouse = getVisibleSpouse(person);
-      if (!spouse) return;
-      addPerson(person);
-      if (addPerson(spouse)) {
+      if (spouse && addPerson(spouse)) {
         spousePersonIds.add(spouse.id);
         spousePartnerByPersonId.set(spouse.id, person.id);
       }
     });
+
+    return { people: result, spousePersonIds, spousePartnerByPersonId };
   }
 
   people.forEach((person) => addPerson(person));
@@ -1218,14 +1220,15 @@ function DesktopFamilyMapViewComponent({
       sourcePeople.paternalCousins,
       sourcePeople.maternalUncles,
       sourcePeople.maternalCousins,
-      nephews,
+      siblings,
+nephews,
       allChildren,
       grandchildren,
     ],
     spousesByPerson,
     isVisible,
     excludedSpouseIds,
-  ), [allChildren, excludedSpouseIds, grandchildren, isVisible, nephews, sourcePeople, spousesByPerson]);
+  ), [allChildren, excludedSpouseIds, grandchildren, isVisible, nephews, siblings, sourcePeople, spousesByPerson]);
 
   React.useEffect(() => {
     if (!onDirectRelationRenderedCounts) return;
