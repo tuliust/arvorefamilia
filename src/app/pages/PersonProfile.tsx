@@ -396,6 +396,13 @@ export function PersonProfile() {
               dataScopeNotice={relationshipFinderScopeNotice}
             />
           )}
+          afterGeneratedInsightsContent={(
+            <PersonRelationshipsView
+              relationships={relacionamentos}
+              loading={relationshipsLoading}
+              treeReturnPath={treeReturnPath}
+            />
+          )}
           sideContent={<PersonTimeline items={timelineItems} isAdmin={isAdmin} />}
           headerAction={(
             <div className="flex items-center gap-2">
@@ -425,12 +432,6 @@ export function PersonProfile() {
           )}
         />
 
-
-        <PersonRelationshipsView
-          relationships={relacionamentos}
-          loading={relationshipsLoading}
-          treeReturnPath={treeReturnPath}
-        />
 
 
         <PersonEventsList eventos={personEvents} />

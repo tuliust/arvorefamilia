@@ -39,10 +39,17 @@ type PersonDataViewProps = {
   pessoa: Pessoa;
   headerAction?: React.ReactNode;
   afterOverviewContent?: React.ReactNode;
+  afterGeneratedInsightsContent?: React.ReactNode;
   sideContent?: React.ReactNode;
 };
 
-export function PersonDataView({ pessoa, headerAction, afterOverviewContent, sideContent }: PersonDataViewProps) {
+export function PersonDataView({
+  pessoa,
+  headerAction,
+  afterOverviewContent,
+  afterGeneratedInsightsContent,
+  sideContent,
+}: PersonDataViewProps) {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [generatedInsights, setGeneratedInsights] = useState<PersonGeneratedInsight[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -273,6 +280,7 @@ export function PersonDataView({ pessoa, headerAction, afterOverviewContent, sid
           />
             </>
           )}
+          {afterGeneratedInsightsContent}
         </div>
 
         {sideContent && (
