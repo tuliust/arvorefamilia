@@ -767,7 +767,6 @@ export function MeusDados() {
   }, [form.local_atual, form.local_atual_exterior, form.local_nascimento, form.local_nascimento_exterior]);
 
   const currentPhotoUrl = photoMarkedForRemoval ? '' : photoPreviewUrl || String(form.foto_principal_url ?? '');
-  const shouldSuggestFullBirthDate = /^\d{4}$/.test(String(form.data_nascimento ?? '').trim());
   const aiAllBadges = useMemo(() => AI_BADGE_GROUPS.flatMap((group) => group.badges), []);
   const aiSelectedBadgeItems = useMemo(
     () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
@@ -1383,8 +1382,8 @@ export function MeusDados() {
           )}
 
           <section className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h2 className="mb-4 text-base font-semibold text-gray-900">Dados pessoais</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <SectionTitle icon={UserCircle2}>Dados pessoais</SectionTitle>
+            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               <Field label="Nome completo" error={errors.nome_completo}>
                 <Input
                   value={String(form.nome_completo ?? '')}
@@ -1395,22 +1394,11 @@ export function MeusDados() {
                 />
               </Field>
 
-              <div className="min-w-0 space-y-2">
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <Label htmlFor="data-nascimento">Dia ou Ano de Nascimento</Label>
-                  <span className="group relative inline-flex shrink-0">
-                    <button
-                      type="button"
-                      aria-label="Formato aceito para nascimento"
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
-                      Use o formato AAAA ou DD/MM/AAAA
-                    </span>
-                  </span>
-                </div>
+              <Field
+                label="Dia ou Ano de Nascimento"
+                labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para nascimento" />}
+                error={errors.data_nascimento}
+              >
                 <Input
                   id="data-nascimento"
                   value={String(form.data_nascimento ?? '')}
@@ -1419,12 +1407,9 @@ export function MeusDados() {
                   placeholder="AAAA ou DD/MM/AAAA"
                   aria-invalid={Boolean(errors.data_nascimento)}
                 />
-                {errors.data_nascimento && (
-                  <p className="break-words text-xs font-medium text-red-600">{errors.data_nascimento}</p>
-                )}
-              </div>
+              </Field>
 
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
+              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
                 <Field label="Local de nascimento" error={errors.local_nascimento}>
                   <Input
                     value={String(form.local_nascimento ?? '')}
@@ -1441,16 +1426,7 @@ export function MeusDados() {
                 />
               </div>
 
-              {shouldSuggestFullBirthDate && (
-                <div className="min-w-0 self-start">
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="break-words">Se souber, adicione também o dia e o mês de nascimento.</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
+              <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
                 <Field label="Cidade de residência" error={errors.local_atual}>
                   <Input
                     value={String(form.local_atual ?? '')}
@@ -1477,43 +1453,45 @@ export function MeusDados() {
               </Field>
 
               <div className="border-t border-gray-200 pt-4 md:col-span-2">
-                <div className="max-w-xs">
-                  <CompactToggleField
-                    label="Falecida"
-                    checked={form.falecido === true}
-                    onCheckedChange={(checked) => updateField('falecido', checked)}
-                    alignWithInput={false}
-                  />
-                </div>
+                <DeathStatusSelector
+                  checked={form.falecido === true}
+                  onChange={(checked) => updateField('falecido', checked)}
+                />
               </div>
 
               {form.falecido === true && (
-                <div className="grid grid-cols-1 gap-4 md:col-span-2 md:grid-cols-2">
-                  <Field label="Data de falecimento" error={errors.data_falecimento}>
+                <div className="grid grid-cols-1 items-start gap-4 md:col-span-2 md:grid-cols-2">
+                  <Field
+                    label="Dia ou Ano de Falecimento"
+                    labelAddon={<DateFormatInfoButton ariaLabel="Formato aceito para falecimento" />}
+                    error={errors.data_falecimento}
+                  >
                     <Input
                       value={String(form.data_falecimento ?? '')}
                       onBlur={() => normalizeFieldOnBlur('data_falecimento')}
                       onChange={(event) => updateTextField('data_falecimento', event.target.value)}
-                      placeholder="DD/MM/AAAA ou AAAA"
+                      placeholder="AAAA ou DD/MM/AAAA"
                       aria-invalid={Boolean(errors.data_falecimento)}
                     />
                   </Field>
-                  <Field label="Local de falecimento" error={errors.local_falecimento}>
-                    <Input
-                      value={String(form.local_falecimento ?? '')}
-                      onBlur={() => normalizeFieldOnBlur('local_falecimento')}
-                      onChange={(event) => updateTextField('local_falecimento', event.target.value)}
-                      placeholder={form.local_falecimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
-                      aria-invalid={Boolean(errors.local_falecimento)}
-                    />
-                  </Field>
-                  <div className="md:col-span-2 md:max-w-sm">
-                    <CompactToggleField
-                      label="Falecimento fora do Brasil"
-                      checked={form.local_falecimento_exterior === true}
-                      onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
-                      alignWithInput={false}
-                    />
+                  <div className="min-w-0 space-y-3">
+                    <Field label="Local de falecimento" error={errors.local_falecimento}>
+                      <Input
+                        value={String(form.local_falecimento ?? '')}
+                        onBlur={() => normalizeFieldOnBlur('local_falecimento')}
+                        onChange={(event) => updateTextField('local_falecimento', event.target.value)}
+                        placeholder={form.local_falecimento_exterior === true ? 'Ex: Dublin (Irlanda)' : 'Ex: Paulo Afonso/BA'}
+                        aria-invalid={Boolean(errors.local_falecimento)}
+                      />
+                    </Field>
+                    <div className="max-w-[260px]">
+                      <CompactToggleField
+                        label="Falecimento no exterior"
+                        checked={form.local_falecimento_exterior === true}
+                        onCheckedChange={(checked) => updateField('local_falecimento_exterior', checked)}
+                        alignWithInput={false}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1521,48 +1499,46 @@ export function MeusDados() {
           </section>
 
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h2 className="mb-4 text-base font-semibold text-gray-900">Contato, endereço e redes sociais</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="WhatsApp">
-              <Input
-                value={String(form.telefone ?? '')}
-                onChange={(e) => updateTextField('telefone', e.target.value)}
-                placeholder="(XX) XXXXX-XXXX"
-              />
-            </Field>
-            <Field label="Endereço">
-              <AddressAutocompleteInput
-                value={String(form.endereco ?? '')}
-                onChange={(nextValue) => updateTextField('endereco', nextValue)}
-                placeholder="Digite a rua e número, depois selecione"
-              />
-            </Field>
-            <Field label="Complemento">
-              <Input
-                value={String(form.complemento ?? '')}
-                onChange={(e) => updateTextField('complemento', e.target.value)}
-                placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
-              />
-              <p className="break-words text-xs text-gray-500">
-                Use para apartamento, bloco, torre, casa ou referência interna. O endereço principal continua vindo do Google Maps.
-              </p>
-            </Field>
-            <div className="min-w-0 space-y-2 md:col-span-2">
-              <SocialProfilesEditor
-                profiles={socialProfiles}
-                onChange={handleSocialProfilesChange}
-                errors={{
-                  rede_social: errors.rede_social,
-                  instagram_usuario: errors.instagram_usuario,
-                }}
-              />
-            </div>
+            <SectionTitle icon={MapPin}>Contato, endereço e redes sociais</SectionTitle>
+            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+              <Field label="WhatsApp">
+                <Input
+                  value={String(form.telefone ?? '')}
+                  onChange={(e) => updateTextField('telefone', e.target.value)}
+                  placeholder="(XX) XXXXX-XXXX"
+                />
+              </Field>
+              <div className="hidden md:block" />
+              <Field label="Endereço" className="md:col-span-2">
+                <AddressAutocompleteInput
+                  value={String(form.endereco ?? '')}
+                  onChange={(nextValue) => updateTextField('endereco', nextValue)}
+                  placeholder="Digite a rua e número, depois selecione"
+                />
+              </Field>
+              <Field label="Complemento" className="md:col-span-2">
+                <Input
+                  value={String(form.complemento ?? '')}
+                  onChange={(e) => updateTextField('complemento', e.target.value)}
+                  placeholder="Ex.: Apto 402, Bloco B, Torre Norte"
+                />
+              </Field>
+              <div className="min-w-0 space-y-2 md:col-span-2">
+                <SocialProfilesEditor
+                  profiles={socialProfiles}
+                  onChange={handleSocialProfilesChange}
+                  errors={{
+                    rede_social: errors.rede_social,
+                    instagram_usuario: errors.instagram_usuario,
+                  }}
+                />
+              </div>
             </div>
           </section>
 
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-gray-900">Mini Bio e Curiosidades</h2>
+              <SectionTitle icon={Sparkles} className="mb-0">Sobre Mim</SectionTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -1830,10 +1806,99 @@ export function MeusDados() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function SectionTitle({
+  icon: Icon,
+  children,
+  className = '',
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="min-w-0 space-y-2">
-      <Label>{label}</Label>
+    <h2 className={['mb-4 flex min-w-0 items-center gap-2 text-base font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 break-words">{children}</span>
+    </h2>
+  );
+}
+
+function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block">
+        Use o formato AAAA ou DD/MM/AAAA
+      </span>
+    </span>
+  );
+}
+
+function DeathStatusSelector({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="min-w-0 space-y-3">
+      <p className="break-words text-sm font-medium text-gray-900">A pessoa é falecida?</p>
+      <div className="inline-flex w-full max-w-xs rounded-lg border border-gray-200 bg-white p-1" role="group" aria-label="A pessoa é falecida?">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          aria-pressed={checked}
+          className={[
+            'flex-1 rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
+            checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
+          ].join(' ')}
+        >
+          Sim
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          aria-pressed={!checked}
+          className={[
+            'flex-1 rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
+            !checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
+          ].join(' ')}
+        >
+          Não
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  labelAddon,
+  error,
+  children,
+  className = '',
+}: {
+  label: string;
+  labelAddon?: React.ReactNode;
+  error?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={['min-w-0 space-y-2', className].filter(Boolean).join(' ')}>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <Label className="min-w-0 break-words">{label}</Label>
+        {labelAddon}
+      </div>
       {children}
       {error && <p className="break-words text-xs font-medium text-red-600">{error}</p>}
     </div>
@@ -1853,7 +1918,7 @@ function CompactToggleField({
 }) {
   return (
     <div className={`${alignWithInput ? 'mt-6 ' : ''}flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3`}>
-      <Label className="text-xs">{label}</Label>
+      <Label className="min-w-0 break-words text-xs">{label}</Label>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
     </div>
   );
