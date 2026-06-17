@@ -1,56 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Bell,
   CalendarDays,
-  CheckCircle2,
-  CircleUserRound,
   Download,
-  GitBranch,
-  LayoutDashboard,
+  Eye,
   MessageCircle,
   Network,
-  PanelLeftClose,
-  Search,
   SlidersHorizontal,
   Sparkles,
-  Star,
   UserRound,
-  Users,
   X,
-  ZoomIn,
 } from 'lucide-react';
 
-type TourPlacement =
-  | 'center'
-  | 'top-left'
-  | 'top-center'
-  | 'top-right'
-  | 'middle-left'
-  | 'middle-right'
-  | 'bottom-left'
-  | 'bottom-center'
-  | 'bottom-right';
-
-type ArrowPosition =
-  | 'top-left'
-  | 'top-center'
-  | 'top-right'
-  | 'right-center'
-  | 'bottom-left'
-  | 'bottom-center'
-  | 'bottom-right'
-  | 'left-center'
-  | 'none';
+type TutorialTarget = {
+  selectors?: string[];
+  textIncludes?: string[];
+  containerTextIncludes?: string[];
+  padding?: number;
+};
 
 type TutorialStep = {
-  title: string;
   eyebrow: string;
+  title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   bullets?: string[];
   tip?: string;
-  placement: TourPlacement;
-  arrow: ArrowPosition;
+  targets?: TutorialTarget[];
+  panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below';
 };
 
 type FirstLoginTutorialProps = {
@@ -59,214 +35,532 @@ type FirstLoginTutorialProps = {
   onFinish: () => void;
 };
 
+type SpotlightRect = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+  radius: number;
+};
+
+type PanelPosition = {
+  left: number;
+  top: number;
+  width: number;
+};
+
+type TourLayout = {
+  spotlight: SpotlightRect | null;
+  panel: PanelPosition;
+};
+
+const PANEL_MAX_WIDTH = 430;
+const PANEL_ESTIMATED_HEIGHT = 315;
+const VIEWPORT_MARGIN = 14;
+const SPOTLIGHT_RADIUS = 18;
+const PANEL_GAP = 18;
+
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
     eyebrow: 'Início',
     title: 'Bem-vindo ao Mapa Familiar',
     description:
-      'Este guia mostra os principais recursos da plataforma: árvore, busca, curiosidades, fórum, calendário, favoritos e perfil.',
+      'Esta é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.',
     icon: Network,
-    placement: 'center',
-    arrow: 'none',
-    tip: 'Ele aparece apenas no primeiro acesso, mas pode ser reaberto usando ?tutorial=1 na URL.',
-  },
-  {
-    eyebrow: 'Header',
-    title: 'Menu superior',
-    description:
-      'Use o topo da tela para alternar entre Árvore geral, Mapa Familiar, Calendário, Favoritos, Notificações e Perfil.',
-    icon: LayoutDashboard,
-    placement: 'top-right',
-    arrow: 'top-right',
+    panelPlacement: 'left',
+    targets: [
+      {
+        selectors: [
+          'button img',
+          'img[alt*="perfil"]',
+          'img[alt*="avatar"]',
+          'img[alt*="profile"]',
+        ],
+        padding: 10,
+      },
+      {
+        containerTextIncludes: ['Atualizar perfil', 'Painel Admin', 'Sair'],
+        padding: 12,
+      },
+    ],
     bullets: [
-      'Mapa Familiar abre a árvore principal.',
-      'Calendário reúne datas da família.',
-      'Avatar abre os atalhos da conta.',
+      'Preencha seu perfil no início.',
+      'Atualize seus dados sempre que desejar.',
+      'Use a plataforma como um acervo privado da história familiar.',
     ],
   },
   {
     eyebrow: 'Visualização',
-    title: 'Visualizar como outra pessoa',
+    title: 'Modos de exibição e controles da árvore',
     description:
-      'No seletor “Sua view padrão”, você pode escolher outro familiar e ver a árvore a partir da perspectiva dele.',
-    icon: Users,
-    placement: 'top-left',
-    arrow: 'top-left',
-    tip: 'Útil para entender conexões familiares por outro ponto de partida.',
-  },
-  {
-    eyebrow: 'Busca',
-    title: 'Busca geral',
-    description:
-      'Use a busca para encontrar pessoas, páginas, tópicos do fórum ou conteúdos salvos.',
-    icon: Search,
-    placement: 'top-right',
-    arrow: 'top-right',
+      'Você pode visualizar a árvore genealógica de duas formas: no modo vertical, em formato de pirâmide, ou no modo horizontal, organizado por colunas de gerações.',
+    icon: Eye,
+    panelPlacement: 'below',
+    targets: [
+      {
+        containerTextIncludes: [
+          'Zoom',
+          'Vertical',
+          'Horizontal',
+          'Cores',
+          'Exportar',
+          'Destacar',
+        ],
+        padding: 12,
+      },
+      {
+        selectors: [
+          'button[aria-label*="painel"]',
+          'button[aria-label*="Painel"]',
+          'button[aria-label*="Recolher"]',
+          'button[aria-label*="Colapsar"]',
+        ],
+        padding: 10,
+      },
+    ],
     bullets: [
-      'Na árvore, pode aparecer como ícone.',
-      'Em páginas internas, pode aparecer como campo de busca.',
+      'Troque as paletas de cores.',
+      'Alterne entre vertical e horizontal.',
+      'Controle o zoom pelos botões do painel, pelo mouse ou pelos atalhos do teclado.',
     ],
   },
   {
-    eyebrow: 'Painel',
-    title: 'Colapsar painel',
+    eyebrow: 'Grupos e filtros',
+    title: 'Controle quem aparece na árvore',
     description:
-      'O botão de recolher painel aumenta a área útil da tela e melhora a visualização dos cards da árvore.',
-    icon: PanelLeftClose,
-    placement: 'middle-left',
-    arrow: 'left-center',
-  },
-  {
-    eyebrow: 'Navegação da árvore',
-    title: 'Zoom e arraste',
-    description:
-      'Aproxime ou afaste a árvore pelos botões de zoom ou atalhos Ctrl + e Ctrl -. Também é possível arrastar a visualização.',
-    icon: ZoomIn,
-    placement: 'middle-right',
-    arrow: 'right-center',
-  },
-  {
-    eyebrow: 'Cards',
-    title: 'Cards de pessoas',
-    description:
-      'Clique em um card para visualizar dados, vínculos e informações da pessoa selecionada.',
-    icon: UserRound,
-    placement: 'middle-right',
-    arrow: 'right-center',
-  },
-  {
-    eyebrow: 'Grupos',
-    title: 'Grupos familiares',
-    description:
-      'Cards de tataravós, bisavós e outros grupos exibem contagem de parentes. Clique para ocultar ou exibir familiares.',
-    icon: GitBranch,
-    placement: 'middle-left',
-    arrow: 'left-center',
-  },
-  {
-    eyebrow: 'Filtros',
-    title: 'Vivos e falecidos',
-    description:
-      'Use os filtros Vivo e Falecido para exibir ou ocultar pessoas e simplificar a visualização da árvore.',
+      'No painel lateral, os cards de grupos mostram quantas pessoas estão cadastradas em cada categoria de parentesco.',
     icon: SlidersHorizontal,
-    placement: 'bottom-left',
-    arrow: 'bottom-left',
-  },
-  {
-    eyebrow: 'Exportação',
-    title: 'PDF, imagem e área de exportação',
-    description:
-      'Exporte a árvore em PDF ou imagem. A área de exportação permite selecionar exatamente qual parte será salva.',
-    icon: Download,
-    placement: 'bottom-right',
-    arrow: 'bottom-right',
-  },
-  {
-    eyebrow: 'Curiosidades',
-    title: 'Curiosidades da família',
-    description:
-      'Acesse estatísticas rápidas, perguntas sobre pessoas, IA e conexões familiares.',
-    icon: Sparkles,
-    placement: 'top-center',
-    arrow: 'top-center',
+    panelPlacement: 'right',
+    targets: [
+      {
+        containerTextIncludes: ['GRUPOS', 'FILTROS'],
+        padding: 12,
+      },
+    ],
     bullets: [
-      'Você Sabia? mostra dados rápidos.',
-      'Pergunte à IA permite consultar a árvore.',
-      'Conexão calcula parentesco entre pessoas.',
+      'Clique nos botões para ocultar ou exibir grupos de parentes.',
+      'Use os filtros para ver pessoas vivas ou falecidas.',
+      'Inclua ou oculte cônjuges conforme a visualização desejada.',
+    ],
+  },
+  {
+    eyebrow: 'Exportação e busca',
+    title: 'Salve e encontre informações',
+    description:
+      'Você pode salvar as telas como imagem ou PDF, além de imprimir a visualização.',
+    icon: Download,
+    panelPlacement: 'below',
+    targets: [
+      {
+        selectors: [
+          'input[placeholder*="Buscar"]',
+          'input[placeholder*="buscar"]',
+          'input[placeholder*="pessoa ou página"]',
+          'input[placeholder*="Pesquise"]',
+        ],
+        padding: 10,
+      },
+      {
+        containerTextIncludes: ['Área', 'Imagem', 'PDF', 'Imprimir'],
+        padding: 10,
+      },
+    ],
+    bullets: [
+      'Selecione áreas específicas da tela para exportar.',
+      'Use o campo de busca para encontrar pessoas, eventos e informações.',
+      'A busca ajuda a navegar rapidamente pelo acervo familiar.',
+    ],
+  },
+  {
+    eyebrow: 'Pessoas e relacionamentos',
+    title: 'Perfis, vínculos e memórias',
+    description:
+      'Visualize dados pessoais, histórias, curiosidades e a linha do tempo de memórias dos seus parentes.',
+    icon: UserRound,
+    panelPlacement: 'below',
+    targets: [
+      {
+        containerTextIncludes: ['Qual o seu parentesco com', 'Linha do tempo'],
+        padding: 14,
+      },
+    ],
+    bullets: [
+      'Descubra seu grau de parentesco e encontre novos familiares.',
+      'Acesse contatos, astrologia, fatos do dia do nascimento, lembranças, fotos e arquivos históricos.',
+      'Consulte datas de casamento, nascimento e óbito.',
+    ],
+  },
+  {
+    eyebrow: 'Curiosidades, IA e calendário',
+    title: 'Descobertas e datas importantes',
+    description:
+      'Acesse estatísticas rápidas, faça perguntas sobre pessoas e memórias com apoio da IA e acompanhe eventos da família pelo Calendário.',
+    icon: Sparkles,
+    panelPlacement: 'below',
+    targets: [
+      {
+        containerTextIncludes: ['Curiosidades', 'Você Sabia?', 'Pergunte à IA'],
+        padding: 12,
+      },
+    ],
+    bullets: [
+      'Veja aniversários, datas de memória e comemorações.',
+      'Integre o calendário ao Google Agenda.',
+      'Configure preferências de alertas e salve itens favoritos.',
     ],
   },
   {
     eyebrow: 'Fórum',
-    title: 'Fórum da Família',
+    title: 'Interação entre familiares',
     description:
-      'Espaço para dúvidas, memórias, documentos e eventos familiares.',
+      'Interaja com os demais usuários criando tópicos de debate e compartilhando histórias, lembranças, dúvidas, documentos e registros importantes da família.',
     icon: MessageCircle,
-    placement: 'top-right',
-    arrow: 'top-right',
-    bullets: [
-      'Use a busca para localizar tópicos.',
-      'Clique em Criar tópico para iniciar uma conversa.',
+    panelPlacement: 'auto',
+    targets: [
+      {
+        textIncludes: ['Fórum'],
+        padding: 10,
+      },
     ],
-  },
-  {
-    eyebrow: 'Calendário',
-    title: 'Datas importantes',
-    description:
-      'O calendário reúne aniversários, casamentos, falecimentos, eventos históricos e reuniões.',
-    icon: CalendarDays,
-    placement: 'middle-right',
-    arrow: 'right-center',
-    tip: 'Também é possível conectar ao Google Agenda.',
-  },
-  {
-    eyebrow: 'Favoritos',
-    title: 'Conteúdos salvos',
-    description:
-      'Use a estrela para salvar páginas, pessoas e tópicos do fórum para consultar depois.',
-    icon: Star,
-    placement: 'top-right',
-    arrow: 'top-right',
-  },
-  {
-    eyebrow: 'Notificações',
-    title: 'Avisos da família',
-    description:
-      'As notificações mostram novidades, interações, eventos e atualizações importantes.',
-    icon: Bell,
-    placement: 'top-right',
-    arrow: 'top-right',
-  },
-  {
-    eyebrow: 'Perfil',
-    title: 'Menu do avatar',
-    description:
-      'No avatar ficam os atalhos para Home, Atualizar perfil, Fórum, Calendário, Favoritos, Notificações, Painel Admin e Sair.',
-    icon: CircleUserRound,
-    placement: 'top-right',
-    arrow: 'top-right',
-  },
-  {
-    eyebrow: 'Final',
-    title: 'Pronto para explorar',
-    description:
-      'Agora você já conhece os principais controles da plataforma. Explore a árvore, clique nos cards e use os atalhos do topo.',
-    icon: CheckCircle2,
-    placement: 'center',
-    arrow: 'none',
+    bullets: [
+      'Crie tópicos para organizar conversas.',
+      'Compartilhe memórias e descobertas.',
+      'Use o fórum como espaço de colaboração familiar.',
+    ],
   },
 ];
 
-const placementClassName: Record<TourPlacement, string> = {
-  center: 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-  'top-left': 'left-4 top-24 sm:left-8 sm:top-24',
-  'top-center': 'left-1/2 top-24 -translate-x-1/2',
-  'top-right': 'right-4 top-24 sm:right-8 sm:top-24',
-  'middle-left': 'left-4 top-1/2 -translate-y-1/2 sm:left-8',
-  'middle-right': 'right-4 top-1/2 -translate-y-1/2 sm:right-8',
-  'bottom-left': 'bottom-8 left-4 sm:left-8',
-  'bottom-center': 'bottom-8 left-1/2 -translate-x-1/2',
-  'bottom-right': 'bottom-8 right-4 sm:right-8',
-};
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
-const arrowClassName: Record<ArrowPosition, string> = {
-  none: 'hidden',
-  'top-left':
-    'absolute -top-3 left-8 h-6 w-6 rotate-45 border-l border-t border-slate-200 bg-white',
-  'top-center':
-    'absolute -top-3 left-1/2 h-6 w-6 -translate-x-1/2 rotate-45 border-l border-t border-slate-200 bg-white',
-  'top-right':
-    'absolute -top-3 right-8 h-6 w-6 rotate-45 border-l border-t border-slate-200 bg-white',
-  'right-center':
-    'absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rotate-45 border-r border-t border-slate-200 bg-white',
-  'bottom-left':
-    'absolute -bottom-3 left-8 h-6 w-6 rotate-45 border-b border-r border-slate-200 bg-white',
-  'bottom-center':
-    'absolute -bottom-3 left-1/2 h-6 w-6 -translate-x-1/2 rotate-45 border-b border-r border-slate-200 bg-white',
-  'bottom-right':
-    'absolute -bottom-3 right-8 h-6 w-6 rotate-45 border-b border-r border-slate-200 bg-white',
-  'left-center':
-    'absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rotate-45 border-b border-l border-slate-200 bg-white',
-};
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .trim();
+}
+
+function isVisibleElement(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const style = window.getComputedStyle(element);
+
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
+    style.opacity !== '0'
+  );
+}
+
+function getElementSearchText(element: HTMLElement) {
+  const input = element instanceof HTMLInputElement ? element.placeholder : '';
+
+  return normalizeText(
+    [
+      element.textContent ?? '',
+      element.getAttribute('aria-label') ?? '',
+      element.getAttribute('title') ?? '',
+      input,
+    ].join(' ')
+  );
+}
+
+function queryVisibleElement(selectors: string[] = []) {
+  for (const selector of selectors) {
+    try {
+      const elements = Array.from(
+        document.querySelectorAll<HTMLElement>(selector)
+      );
+
+      const visibleElement = elements.find(isVisibleElement);
+
+      if (visibleElement) {
+        return visibleElement;
+      }
+    } catch {
+      // Ignora seletores não suportados.
+    }
+  }
+
+  return null;
+}
+
+function queryVisibleElementByText(textIncludes: string[] = []) {
+  if (textIncludes.length === 0) return null;
+
+  const normalizedTerms = textIncludes.map(normalizeText);
+
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'header, nav, aside, button, a, input, section, div, [role="button"], [aria-label], [title]'
+    )
+  );
+
+  return (
+    candidates.find((element) => {
+      if (!isVisibleElement(element)) return false;
+      const text = getElementSearchText(element);
+      return normalizedTerms.every((term) => text.includes(term));
+    }) ?? null
+  );
+}
+
+function queryVisibleContainerByText(textIncludes: string[] = []) {
+  if (textIncludes.length === 0) return null;
+
+  const normalizedTerms = textIncludes.map(normalizeText);
+
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLElement>('div, section, aside, nav, header, main')
+  )
+    .filter(isVisibleElement)
+    .filter((element) => {
+      const text = normalizeText(element.textContent ?? '');
+      return normalizedTerms.every((term) => text.includes(term));
+    })
+    .sort((a, b) => {
+      const rectA = a.getBoundingClientRect();
+      const rectB = b.getBoundingClientRect();
+      return rectA.width * rectA.height - rectB.width * rectB.height;
+    });
+
+  return candidates[0] ?? null;
+}
+
+function resolveSingleTarget(target: TutorialTarget) {
+  return (
+    queryVisibleElement(target.selectors) ??
+    queryVisibleContainerByText(target.containerTextIncludes) ??
+    queryVisibleElementByText(target.textIncludes)
+  );
+}
+
+function resolveTargetElements(targets: TutorialTarget[] = []) {
+  const elements: { element: HTMLElement; padding: number }[] = [];
+
+  for (const target of targets) {
+    const element = resolveSingleTarget(target);
+
+    if (element) {
+      elements.push({
+        element,
+        padding: target.padding ?? 10,
+      });
+    }
+  }
+
+  return elements;
+}
+
+function createSpotlightRect(
+  targetElements: { element: HTMLElement; padding: number }[]
+): SpotlightRect | null {
+  if (targetElements.length === 0) return null;
+
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+
+  for (const target of targetElements) {
+    const rect = target.element.getBoundingClientRect();
+    const padding = target.padding;
+
+    left = Math.min(left, rect.left - padding);
+    top = Math.min(top, rect.top - padding);
+    right = Math.max(right, rect.right + padding);
+    bottom = Math.max(bottom, rect.bottom + padding);
+  }
+
+  left = clamp(left, VIEWPORT_MARGIN, window.innerWidth - VIEWPORT_MARGIN);
+  top = clamp(top, VIEWPORT_MARGIN, window.innerHeight - VIEWPORT_MARGIN);
+  right = clamp(right, VIEWPORT_MARGIN, window.innerWidth - VIEWPORT_MARGIN);
+  bottom = clamp(bottom, VIEWPORT_MARGIN, window.innerHeight - VIEWPORT_MARGIN);
+
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: Math.max(right - left, 1),
+    height: Math.max(bottom - top, 1),
+    radius: SPOTLIGHT_RADIUS,
+  };
+}
+
+function createCenteredPanel(width: number): PanelPosition {
+  return {
+    left: clamp(
+      (window.innerWidth - width) / 2,
+      VIEWPORT_MARGIN,
+      window.innerWidth - width - VIEWPORT_MARGIN
+    ),
+    top: clamp(
+      (window.innerHeight - PANEL_ESTIMATED_HEIGHT) / 2,
+      VIEWPORT_MARGIN,
+      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+    ),
+    width,
+  };
+}
+
+function createPanelPosition(
+  spotlight: SpotlightRect | null,
+  placement: TutorialStep['panelPlacement']
+): PanelPosition {
+  const width = Math.min(PANEL_MAX_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+
+  if (!spotlight) {
+    return createCenteredPanel(width);
+  }
+
+  const tryBelow = () => ({
+    left: clamp(
+      spotlight.left + spotlight.width / 2 - width / 2,
+      VIEWPORT_MARGIN,
+      window.innerWidth - width - VIEWPORT_MARGIN
+    ),
+    top: spotlight.bottom + PANEL_GAP,
+    width,
+  });
+
+  const tryAbove = () => ({
+    left: clamp(
+      spotlight.left + spotlight.width / 2 - width / 2,
+      VIEWPORT_MARGIN,
+      window.innerWidth - width - VIEWPORT_MARGIN
+    ),
+    top: spotlight.top - PANEL_ESTIMATED_HEIGHT - PANEL_GAP,
+    width,
+  });
+
+  const tryRight = () => ({
+    left: spotlight.right + PANEL_GAP,
+    top: clamp(
+      spotlight.top,
+      VIEWPORT_MARGIN,
+      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+    ),
+    width,
+  });
+
+  const tryLeft = () => ({
+    left: spotlight.left - width - PANEL_GAP,
+    top: clamp(
+      spotlight.top,
+      VIEWPORT_MARGIN,
+      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+    ),
+    width,
+  });
+
+  const fits = (panel: PanelPosition) => {
+    return (
+      panel.left >= VIEWPORT_MARGIN &&
+      panel.top >= VIEWPORT_MARGIN &&
+      panel.left + panel.width <= window.innerWidth - VIEWPORT_MARGIN &&
+      panel.top + PANEL_ESTIMATED_HEIGHT <= window.innerHeight - VIEWPORT_MARGIN
+    );
+  };
+
+  const preferredOrder: Record<NonNullable<TutorialStep['panelPlacement']>, (() => PanelPosition)[]> = {
+    auto: [tryBelow, tryAbove, tryRight, tryLeft],
+    below: [tryBelow, tryAbove, tryRight, tryLeft],
+    above: [tryAbove, tryBelow, tryRight, tryLeft],
+    right: [tryRight, tryBelow, tryAbove, tryLeft],
+    left: [tryLeft, tryBelow, tryAbove, tryRight],
+  };
+
+  const order = preferredOrder[placement ?? 'auto'];
+
+  for (const build of order) {
+    const panel = build();
+    if (fits(panel)) return panel;
+  }
+
+  const fallback = tryBelow();
+
+  return {
+    left: clamp(
+      fallback.left,
+      VIEWPORT_MARGIN,
+      window.innerWidth - width - VIEWPORT_MARGIN
+    ),
+    top: clamp(
+      fallback.top,
+      VIEWPORT_MARGIN,
+      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+    ),
+    width,
+  };
+}
+
+function SpotlightOverlay({ spotlight }: { spotlight: SpotlightRect | null }) {
+  if (!spotlight) {
+    return (
+      <div
+        className="fixed inset-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
+        data-tree-export-ignore="true"
+      />
+    );
+  }
+
+  return (
+    <>
+      <div
+        className="fixed left-0 top-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
+        style={{ width: '100vw', height: spotlight.top }}
+        data-tree-export-ignore="true"
+      />
+      <div
+        className="fixed left-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
+        style={{
+          top: spotlight.top,
+          width: spotlight.left,
+          height: spotlight.height,
+        }}
+        data-tree-export-ignore="true"
+      />
+      <div
+        className="fixed z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
+        style={{
+          left: spotlight.right,
+          top: spotlight.top,
+          width: 'calc(100vw - ' + spotlight.right + 'px)',
+          height: spotlight.height,
+        }}
+        data-tree-export-ignore="true"
+      />
+      <div
+        className="fixed left-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
+        style={{
+          top: spotlight.bottom,
+          width: '100vw',
+          height: 'calc(100vh - ' + spotlight.bottom + 'px)',
+        }}
+        data-tree-export-ignore="true"
+      />
+      <div
+        className="pointer-events-none fixed z-[12002] border-2 border-blue-400"
+        style={{
+          left: spotlight.left,
+          top: spotlight.top,
+          width: spotlight.width,
+          height: spotlight.height,
+          borderRadius: spotlight.radius,
+          boxShadow:
+            '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
+        }}
+        data-tree-export-ignore="true"
+      />
+    </>
+  );
+}
 
 export function FirstLoginTutorial({
   open,
@@ -274,6 +568,14 @@ export function FirstLoginTutorial({
   onFinish,
 }: FirstLoginTutorialProps) {
   const [stepIndex, setStepIndex] = useState(0);
+  const [layout, setLayout] = useState<TourLayout>(() => ({
+    spotlight: null,
+    panel: {
+      left: VIEWPORT_MARGIN,
+      top: VIEWPORT_MARGIN,
+      width: PANEL_MAX_WIDTH,
+    },
+  }));
 
   const totalSteps = TUTORIAL_STEPS.length;
   const currentStep = TUTORIAL_STEPS[stepIndex];
@@ -283,6 +585,16 @@ export function FirstLoginTutorial({
   const progress = useMemo(() => {
     return Math.round(((stepIndex + 1) / totalSteps) * 100);
   }, [stepIndex, totalSteps]);
+
+  const updateLayout = useCallback(() => {
+    const targetElements = resolveTargetElements(currentStep.targets ?? []);
+    const spotlight = createSpotlightRect(targetElements);
+
+    setLayout({
+      spotlight,
+      panel: createPanelPosition(spotlight, currentStep.panelPlacement ?? 'auto'),
+    });
+  }, [currentStep]);
 
   useEffect(() => {
     if (!open) {
@@ -315,6 +627,31 @@ export function FirstLoginTutorial({
     };
   }, [open, onOpenChange, totalSteps]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    let frame = 0;
+
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateLayout);
+    };
+
+    scheduleUpdate();
+
+    window.addEventListener('resize', scheduleUpdate);
+    window.addEventListener('scroll', scheduleUpdate, true);
+
+    const intervalId = window.setInterval(updateLayout, 300);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearInterval(intervalId);
+      window.removeEventListener('resize', scheduleUpdate);
+      window.removeEventListener('scroll', scheduleUpdate, true);
+    };
+  }, [open, stepIndex, updateLayout]);
+
   if (!open) return null;
 
   const StepIcon = currentStep.icon;
@@ -334,21 +671,24 @@ export function FirstLoginTutorial({
 
   return (
     <div
-      className="fixed inset-0 z-[12000] bg-slate-950/80 backdrop-blur-[1px]"
+      className="fixed inset-0 z-[12000]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="first-login-tutorial-title"
       data-tree-export-ignore="true"
     >
-      <section
-        className={
-          'absolute z-[12001] w-[calc(100vw-2rem)] max-w-[420px] rounded-2xl border border-slate-200 bg-white shadow-2xl ' +
-          placementClassName[currentStep.placement]
-        }
-      >
-        <span className={arrowClassName[currentStep.arrow]} aria-hidden="true" />
+      <div className="pointer-events-auto fixed inset-0 z-[12000]" />
+      <SpotlightOverlay spotlight={layout.spotlight} />
 
-        <header className="relative z-10 flex items-start gap-3 border-b border-slate-100 px-4 py-4">
+      <section
+        className="fixed z-[12003] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl"
+        style={{
+          left: layout.panel.left,
+          top: layout.panel.top,
+          width: layout.panel.width,
+        }}
+      >
+        <header className="relative z-10 flex items-start gap-3 border-b border-slate-100 bg-white px-4 py-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700">
             <StepIcon className="h-5 w-5" />
           </div>
@@ -385,7 +725,7 @@ export function FirstLoginTutorial({
           />
         </div>
 
-        <main className="relative z-10 max-h-[48vh] overflow-y-auto px-4 py-4">
+        <main className="relative z-10 max-h-[44vh] overflow-y-auto bg-white px-4 py-4">
           <p className="text-sm leading-6 text-slate-700">
             {currentStep.description}
           </p>
