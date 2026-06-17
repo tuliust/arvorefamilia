@@ -244,7 +244,13 @@ function normalizeText(value: string) {
     .trim();
 }
 
+function isInsideFirstLoginTutorial(element: HTMLElement) {
+  return Boolean(element.closest('[data-first-login-tutorial="true"]'));
+}
+
 function isVisibleElement(element: HTMLElement) {
+  if (isInsideFirstLoginTutorial(element)) return false;
+
   const rect = element.getBoundingClientRect();
   const style = window.getComputedStyle(element);
 
@@ -642,11 +648,15 @@ export function FirstLoginTutorial({
     window.addEventListener('resize', scheduleUpdate);
     window.addEventListener('scroll', scheduleUpdate, true);
 
-    const intervalId = window.setInterval(updateLayout, 300);
+    const timeoutIds = [
+      window.setTimeout(scheduleUpdate, 80),
+      window.setTimeout(scheduleUpdate, 250),
+      window.setTimeout(scheduleUpdate, 600),
+    ];
 
     return () => {
       window.cancelAnimationFrame(frame);
-      window.clearInterval(intervalId);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
       window.removeEventListener('resize', scheduleUpdate);
       window.removeEventListener('scroll', scheduleUpdate, true);
     };
@@ -672,6 +682,7 @@ export function FirstLoginTutorial({
   return (
     <div
       className="fixed inset-0 z-[12000]"
+      data-first-login-tutorial="true"
       role="dialog"
       aria-modal="true"
       aria-labelledby="first-login-tutorial-title"
