@@ -93,6 +93,8 @@ import {
   HomeCuriositiesDialog,
   type CuriosidadesTab,
 } from './home/HomeCuriositiesDialog';
+import { FirstLoginTutorial } from './home/FirstLoginTutorial';
+import { HorizontalLineHighlightHint } from './home/HorizontalLineHighlightHint';
 import { HomeHeader } from './home/HomeHeader';
 import { HomeMobileNav } from './home/HomeMobileNav';
 import { HomeTreeSection } from './home/HomeTreeSection';
@@ -110,6 +112,11 @@ const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.
 const AI_ENDPOINT = '/api/ai';
 const MOBILE_DESKTOP_TIP_SESSION_KEY = 'arvore-mobile-desktop-tip-dismissed';
 const MOBILE_DESKTOP_TIP_PENDING_KEY = 'arvore-mobile-desktop-tip-pending';
+const FIRST_LOGIN_TUTORIAL_VERSION = 'v1';
+
+function getFirstLoginTutorialStorageKey(userId: string) {
+  return 'arvorefamilia:first-login-tutorial:' + FIRST_LOGIN_TUTORIAL_VERSION + ':' + userId;
+}
 
 type PersonStatusFilters = {
   vivos: boolean;
@@ -171,6 +178,7 @@ export function Home() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileTipOpen, setMobileTipOpen] = useState(false);
+  const [firstLoginTutorialOpen, setFirstLoginTutorialOpen] = useState(false);
 
   const [directRelativeFilterState, setDirectRelativeFilterState] = useState<{
     userId?: string;
@@ -204,6 +212,7 @@ export function Home() {
   const familyTreeRef = useRef<FamilyTreeActions | null>(null);
   const treeViewMode = getTreeViewModeFromPath(location.pathname);
   const treeDataLoadTokenRef = useRef(0);
+  const firstLoginTutorialForcedRef = useRef(false);
   const treeCacheKey = linkedPersonResolved
     ? `home:${user?.id ?? 'anon'}:${linkedPersonId ?? 'no-linked-person'}`
     : null;
@@ -1082,6 +1091,30 @@ export function Home() {
   const shouldShowDebugViewer = canRenderTree && (
     treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal'
   );
+  const hasBlockingTutorialDialog = aiDialogOpen || mobileTipOpen || Boolean(selectedMarriage) || Boolean(connectionTarget);
+
+  useEffect(() => {
+    if (!user?.id || !canRenderTree || hasBlockingTutorialDialog) return;
+
+    const forceTutorial = searchParams.get('tutorial') === '1';
+
+    if (forceTutorial) {
+      if (!firstLoginTutorialForcedRef.current) {
+        firstLoginTutorialForcedRef.current = true;
+        setFirstLoginTutorialOpen(true);
+      }
+      return;
+    }
+
+    try {
+      const storageKey = getFirstLoginTutorialStorageKey(user.id);
+      if (window.localStorage.getItem(storageKey) !== 'seen') {
+        setFirstLoginTutorialOpen(true);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar tutorial inicial:', error);
+    }
+  }, [canRenderTree, hasBlockingTutorialDialog, searchParams, user?.id]);
 
   const debugViewPersonOptions = useMemo(() => {
     return [...pessoas]
@@ -1129,6 +1162,18 @@ export function Home() {
     window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_SESSION_KEY, 'true');
     setMobileTipOpen(false);
   };
+
+  const finishFirstLoginTutorial = useCallback(() => {
+    if (user?.id) {
+      try {
+        window.localStorage.setItem(getFirstLoginTutorialStorageKey(user.id), 'seen');
+      } catch (error) {
+        console.error('Erro ao salvar tutorial inicial como visto:', error);
+      }
+    }
+
+    setFirstLoginTutorialOpen(false);
+  }, [user?.id]);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-gray-50">
@@ -1224,6 +1269,10 @@ export function Home() {
           onDirectRelationRenderedCounts={handleDirectRelationRenderedCounts}
         />
 
+        <HorizontalLineHighlightHint
+          visible={canRenderTree && treeViewMode === 'mapa-familiar-horizontal'}
+        />
+
       </main>
 
       {isMobile && (
@@ -1300,6 +1349,19 @@ export function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FirstLoginTutorial
+        open={firstLoginTutorialOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            finishFirstLoginTutorial();
+            return;
+          }
+
+          setFirstLoginTutorialOpen(true);
+        }}
+        onFinish={finishFirstLoginTutorial}
+      />
 
       <ViewMarriageModal
         open={!!selectedMarriage}
