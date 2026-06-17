@@ -110,15 +110,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
         ],
         padding: 12,
       },
-      {
-        selectors: [
-          'button[aria-label*="painel"]',
-          'button[aria-label*="Painel"]',
-          'button[aria-label*="Recolher"]',
-          'button[aria-label*="Colapsar"]',
-        ],
-        padding: 10,
-      },
     ],
     bullets: [
       'Troque as paletas de cores.',
@@ -182,8 +173,14 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'below',
     targets: [
       {
-        containerTextIncludes: ['Qual o seu parentesco com', 'Linha do tempo'],
-        padding: 14,
+        containerTextIncludes: [
+          'Vertical',
+          'Horizontal',
+          'Cores',
+          'Exportar',
+          'Destacar',
+        ],
+        padding: 12,
       },
     ],
     bullets: [
@@ -217,7 +214,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     description:
       'Interaja com os demais usuários criando tópicos de debate e compartilhando histórias, lembranças, dúvidas, documentos e registros importantes da família.',
     icon: MessageCircle,
-    panelPlacement: 'auto',
+    panelPlacement: 'below',
     targets: [
       {
         textIncludes: ['Fórum'],
