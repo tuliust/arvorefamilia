@@ -1,4 +1,15 @@
-import React, { useEffect, useState } from 'react';
+﻿const fs = require('fs');
+const path = require('path');
+
+const root = process.cwd();
+const stickyPath = path.join(root, 'src/app/pages/home/HorizontalLineHighlightHint.tsx');
+
+if (!fs.existsSync(stickyPath)) {
+  console.error('[ERRO] Arquivo não encontrado:', stickyPath);
+  process.exit(1);
+}
+
+const content = String.raw`import React, { useEffect, useState } from 'react';
 import { MousePointerClick, X } from 'lucide-react';
 
 type HorizontalLineHighlightHintProps = {
@@ -102,3 +113,14 @@ export function HorizontalLineHighlightHint({
     </aside>
   );
 }
+`;
+
+fs.writeFileSync(stickyPath, content, 'utf8');
+
+console.log('Dica compactada com seta aplicada em:');
+console.log('- src/app/pages/home/HorizontalLineHighlightHint.tsx');
+console.log('');
+console.log('Agora rode:');
+console.log('npm run build');
+console.log('git diff --check');
+console.log('git status --short');
