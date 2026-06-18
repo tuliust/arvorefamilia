@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, Star, UserRound } from 'lucide-react';
+import { CalendarDays, FileText, MessageCircle, Network, Search, Sparkles, Star, UserRound } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { HeaderNotificationsDropdown } from '../../components/layout/HeaderNotificationsDropdown';
 import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import { FAVORITE_PAGES } from '../../constants/favoritePages';
 import { useAuth } from '../../contexts/AuthContext';
@@ -314,9 +315,7 @@ export function HomeHeader({
             <MessageCircle className="h-4 w-4" />
             <span className={headerActionTextClassName}>Fórum</span>
           </Button>
-          <Button variant="outline" size="icon" className={`hidden md:inline-flex ${headerIconButtonClassName}`} title="Alertas" aria-label="Abrir alertas" data-tour-target="alerts" onClick={() => navigateFromHome('/notificacoes')}>
-            <Bell className="h-4 w-4" />
-          </Button>
+          <HeaderNotificationsDropdown buttonClassName={headerIconButtonClassName} />
         </div>
 
         <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 shrink-0 items-center justify-end gap-2 overflow-visible'].join(' ')}>
