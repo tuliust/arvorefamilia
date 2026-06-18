@@ -37,7 +37,7 @@ const FORUM_CATEGORY_GROUPS: ForumCategoryGroupDefinition[] = [
   },
   {
     key: 'memorias',
-    label: 'Memórias',
+    label: 'Histórias',
     description: 'Histórias, lembranças, relatos e registros afetivos da família.',
     icon: BookOpen,
     matches: ['memoria', 'historia'],
@@ -216,7 +216,10 @@ export function ForumHome() {
   }, [busca, categoriaId, gruposCategorias]);
 
   const renderCategorias = (variant: 'mobile' | 'desktop') => (
-    <div className={`min-w-0 ${variant === 'mobile' ? 'lg:hidden' : 'hidden space-y-3 lg:block'}`}>
+    <div
+      className={`min-w-0 ${variant === 'mobile' ? 'lg:hidden' : 'hidden space-y-3 lg:block'}`}
+      data-forum-mobile-categories={variant === 'mobile' ? 'true' : undefined}
+    >
       {variant === 'desktop' && (
         <h2 className="break-words text-lg font-semibold text-gray-900">Categorias</h2>
       )}
@@ -264,18 +267,16 @@ export function ForumHome() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
-        {renderCategorias('mobile')}
-
-        <section className="relative flex min-w-0 w-full max-w-3xl items-center gap-2" aria-label="Busca e filtros do fórum">
+      <main data-forum-page="true" className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
+        <section className="relative flex min-w-0 w-full max-w-none items-center gap-1.5 sm:gap-2 lg:max-w-3xl" aria-label="Busca e filtros do fórum">
           <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-400 sm:left-4 sm:h-5 sm:w-5" />
             <input
               type="search"
               value={busca}
               onChange={(event) => setBusca(event.target.value)}
               placeholder="Pesquise aqui..."
-              className="h-14 w-full rounded-2xl border border-gray-200 bg-white py-2 pl-12 pr-4 text-base text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:text-sm"
+              className="h-12 w-full rounded-2xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:h-14 sm:pl-12 sm:pr-4 sm:text-sm"
             />
           </div>
 
@@ -284,7 +285,7 @@ export function ForumHome() {
               type="button"
               onClick={() => setFilterMenuOpen((current) => !current)}
               className={[
-                'inline-flex h-14 w-14 items-center justify-center rounded-2xl border bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                'inline-flex h-12 w-12 items-center justify-center rounded-2xl border bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:h-14 sm:w-14',
                 categoriaId !== 'todas' ? 'border-blue-200 text-blue-700 ring-1 ring-blue-100' : 'border-gray-200',
               ].join(' ')}
               aria-expanded={filterMenuOpen}
@@ -326,7 +327,18 @@ export function ForumHome() {
               </div>
             )}
           </div>
+
+          <Link
+            to="/forum/novo"
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:h-14 sm:px-4 sm:text-sm"
+            aria-label="Criar novo tópico"
+          >
+            <Plus className="hidden h-4 w-4 shrink-0 sm:block" />
+            <span className="whitespace-nowrap">Criar novo</span>
+          </Link>
         </section>
+
+        {renderCategorias('mobile')}
 
         {erro && (
           <Card className="border-amber-200 bg-amber-50">
@@ -394,15 +406,6 @@ export function ForumHome() {
           </div>
         </section>
       </main>
-
-      <Link
-        to="/forum/novo"
-        className="fixed bottom-24 right-4 z-40 inline-flex h-12 max-w-[calc(100vw-2rem)] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-medium text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:bottom-6 md:right-6"
-        aria-label="Criar tópico"
-      >
-        <Plus className="h-5 w-5 shrink-0" />
-        <span className="truncate">Criar tópico</span>
-      </Link>
     </div>
   );
 }
