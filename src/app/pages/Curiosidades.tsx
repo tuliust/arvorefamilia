@@ -78,7 +78,7 @@ export function Curiosidades() {
         icon={Sparkles}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-8`}>
+      <main className={`${PAGE_CONTAINER_CLASS} space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <CuriosidadesHero />
         <div id="numeros-da-familia" className="scroll-mt-24">
           <CuriosidadesStats {...curiosityDataProps} />
@@ -92,8 +92,8 @@ export function Curiosidades() {
         <div id="graficos" className="scroll-mt-24">
           <CuriosidadesCharts {...curiosityDataProps} />
         </div>
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="space-y-4">
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
+          <div className="min-w-0 space-y-4">
             <div id="geracoes" className="scroll-mt-24">
               <CuriosidadesGenerations {...curiosityDataProps} />
             </div>
@@ -110,7 +110,7 @@ export function Curiosidades() {
               <CuriosidadesMemoryWall />
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div id="bodas" className="scroll-mt-24">
               <CuriosidadesCouples {...curiosityDataProps} />
             </div>
