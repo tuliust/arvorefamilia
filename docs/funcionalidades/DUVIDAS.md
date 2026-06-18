@@ -2,14 +2,14 @@
 
 > Última revisão: 2026-06-18  
 > Local canônico: `docs/funcionalidades/DUVIDAS.md`  
-> Tipo: documentação funcional e técnica da página pública `/duvidas`.  
-> Status: implementado para leitura pública de conteúdo via Supabase. Área administrativa de gerenciamento permanece pendência documentada.
+> Tipo: documentação funcional, editorial, técnica e operacional do módulo **Dúvidas / FAQ**.  
+> Status: página pública `/duvidas` implementada, conteúdo persistido no Supabase e área administrativa `/admin/duvidas` implementada.
 
 ---
 
 ## 1. Objetivo
 
-A página `/duvidas` centraliza perguntas e respostas sobre navegação, cadastro, árvore familiar, vínculos, arquivos históricos, privacidade, notificações e demais áreas do produto **Árvore Família**.
+O módulo **Dúvidas / FAQ** centraliza perguntas e respostas sobre navegação, cadastro, árvore familiar, vínculos, arquivos históricos, privacidade, notificações, calendário, fórum, favoritos, IA e demais áreas do produto **Árvore Família**.
 
 A funcionalidade existe para:
 
@@ -18,9 +18,9 @@ A funcionalidade existe para:
 - explicar nomes de páginas e conceitos do produto;
 - permitir busca por termos em perguntas, respostas, categorias, palavras-chave e página relacionada;
 - exibir categorias em layout responsivo;
-- carregar conteúdo publicado diretamente do Supabase, sem exigir novo deploy para alteração de conteúdo.
-
-A página é pública e não depende de autenticação.
+- carregar conteúdo publicado diretamente do Supabase;
+- permitir edição de categorias, perguntas e respostas pelo painel administrativo;
+- evitar novo deploy para ajustes editoriais simples.
 
 ---
 
@@ -29,10 +29,11 @@ A página é pública e não depende de autenticação.
 Implementado:
 
 - rota pública `/duvidas`;
-- carregamento lazy da página em `src/app/routes.tsx`;
+- rota administrativa protegida `/admin/duvidas`;
+- carregamento lazy das duas páginas em `src/app/routes.tsx`;
 - leitura das tabelas `qa_categories` e `qa_items` via `qaService`;
-- exibição apenas de categorias ativas;
-- exibição apenas de perguntas publicadas;
+- exibição pública apenas de categorias ativas;
+- exibição pública apenas de perguntas publicadas;
 - filtro local por categoria;
 - busca local normalizada, com suporte a termos com ou sem acento;
 - bloco de dúvidas frequentes com perguntas marcadas como destaque;
@@ -40,23 +41,33 @@ Implementado:
 - sidebar de categorias no desktop;
 - chips horizontais de categorias no mobile;
 - estados de carregamento, erro e resultado vazio;
-- entrada da página **Dúvidas** na busca global do produto.
+- entrada da página **Dúvidas** na busca global do produto;
+- listagem administrativa de categorias;
+- criação e edição de categorias;
+- ativação e desativação de categorias;
+- listagem administrativa de perguntas/respostas;
+- criação e edição de perguntas/respostas;
+- alteração de status editorial para `draft`, `published` e `archived`;
+- marcação de pergunta como destaque;
+- filtros administrativos por categoria, status e busca textual;
+- card **Dúvidas** no painel administrativo.
 
 Não implementado nesta frente:
 
-- CRUD administrativo para categorias;
-- CRUD administrativo para perguntas/respostas;
 - reordenação por drag and drop;
-- editor rich text;
+- editor rich text ou markdown controlado;
 - busca server-side por RPC;
-- auditoria administrativa de alterações;
-- analytics de dúvidas mais acessadas.
+- auditoria administrativa específica de alterações em QA;
+- analytics de dúvidas mais acessadas;
+- exclusão física de categorias ou perguntas pelo frontend.
 
 Esses itens devem permanecer em **Pendências futuras** até haver código correspondente.
 
 ---
 
 ## 3. Arquivos principais
+
+### 3.1 Página pública
 
 ```txt
 src/app/pages/Duvidas.tsx
@@ -68,6 +79,18 @@ src/app/pages/duvidas/QAAccordion.tsx
 src/app/pages/duvidas/QAEmptyState.tsx
 src/app/pages/duvidas/QAFeaturedQuestions.tsx
 src/app/pages/duvidas/QAResultCount.tsx
+```
+
+### 3.2 Área administrativa
+
+```txt
+src/app/pages/admin/AdminDuvidas.tsx
+src/app/pages/admin/AdminDashboard.tsx
+```
+
+### 3.3 Dados, tipos, rotas e busca global
+
+```txt
 src/app/services/qaService.ts
 src/app/types/qa.ts
 src/app/routes.tsx
@@ -75,7 +98,7 @@ src/app/services/globalSearchService.ts
 src/app/utils/searchText.ts
 ```
 
-Documentos relacionados:
+### 3.4 Documentos relacionados
 
 ```txt
 docs/README.md
@@ -92,24 +115,29 @@ docs/arquitetura/ROTAS_E_GUARDS.md
 
 ---
 
-## 4. Rota e proteção
+## 4. Rotas e proteção
 
 | Rota | Componente | Proteção | Função |
 |---|---|---|---|
-| `/duvidas` | `Duvidas.tsx` | Pública | Página de dúvidas e ajuda. |
+| `/duvidas` | `Duvidas.tsx` | Pública | Página pública de dúvidas e ajuda. |
+| `/admin/duvidas` | `AdminDuvidas.tsx` | `ProtectedRoute` | Gestão administrativa de categorias, perguntas e respostas. |
 
-Regras:
+Regras da rota pública:
 
 - não usar `MemberRoute`;
 - não usar `TreeAccessRoute`;
 - não usar `ProtectedRoute`;
 - permitir acesso antes do login;
 - manter carregamento lazy;
-- manter fallback de rota padrão definido em `routes.tsx`;
 - não expor dados familiares privados;
 - não buscar dados de pessoas, relacionamentos, arquivos, notificações ou perfis.
 
-A página possui link superior **Voltar para entrar**, apontando para `/entrar`.
+Regras da rota administrativa:
+
+- usar `ProtectedRoute`;
+- depender das políticas de RLS do Supabase para escrita;
+- não substituir segurança de banco por validação visual;
+- permitir apenas operação editorial do módulo QA.
 
 ---
 
@@ -124,17 +152,15 @@ public.qa_items
 
 ### 5.1 `qa_categories`
 
-Representa categorias exibidas na página.
-
-Campos esperados:
+Representa categorias exibidas na página pública e gerenciadas no admin.
 
 | Campo | Uso |
 |---|---|
 | `id` | Identificador da categoria. |
-| `title` | Título completo exibido no desktop e em cabeçalhos. |
+| `title` | Título completo exibido no desktop, cabeçalhos e admin. |
 | `short_title` | Título curto usado preferencialmente em chips mobile. |
-| `slug` | Identificador textual estável. |
-| `description` | Descrição opcional da categoria ativa. |
+| `slug` | Identificador textual estável e único. |
+| `description` | Descrição opcional da categoria. |
 | `order_index` | Ordem de exibição. |
 | `is_active` | Controla se a categoria aparece publicamente. |
 | `created_by` | Usuário criador, quando disponível. |
@@ -142,11 +168,15 @@ Campos esperados:
 | `created_at` | Data de criação. |
 | `updated_at` | Data de atualização. |
 
+Regra pública:
+
+```txt
+A página /duvidas só deve exibir qa_categories.is_active = true.
+```
+
 ### 5.2 `qa_items`
 
 Representa perguntas e respostas.
-
-Campos esperados:
 
 | Campo | Uso |
 |---|---|
@@ -154,7 +184,7 @@ Campos esperados:
 | `category_id` | Categoria vinculada. |
 | `question` | Pergunta exibida ao usuário. |
 | `answer` | Resposta exibida no accordion. |
-| `slug` | Identificador textual estável. |
+| `slug` | Identificador textual estável e único. |
 | `keywords` | Lista de termos pesquisáveis. |
 | `related_page_label` | Nome de página relacionada, quando houver. |
 | `related_page_path` | Caminho interno relacionado, quando houver. |
@@ -193,7 +223,13 @@ Arquivo:
 src/app/services/qaService.ts
 ```
 
-Função pública vigente:
+Responsabilidade geral:
+
+```txt
+Componentes não devem acessar Supabase diretamente quando houver função correspondente em qaService.ts.
+```
+
+### 6.1 Função pública
 
 ```txt
 listPublishedQaContent()
@@ -203,24 +239,45 @@ Responsabilidades:
 
 - consultar `qa_categories`;
 - filtrar categorias com `is_active = true`;
-- ordenar por `order_index` e `title`;
+- ordenar categorias por `order_index` e `title`;
 - consultar `qa_items`;
 - filtrar perguntas com `status = 'published'`;
-- ordenar por `order_index` e `question`;
+- ordenar perguntas por `order_index` e `question`;
 - mapear rows do Supabase para tipos TypeScript;
 - remover perguntas vinculadas a categorias inativas;
 - lançar erro controlado se categorias ou perguntas não puderem ser carregadas.
 
-Regra:
+### 6.2 Funções administrativas
+
+Funções vigentes:
 
 ```txt
-Componentes da página não devem acessar Supabase diretamente.
-Toda leitura do módulo QA deve passar por src/app/services/qaService.ts.
+adminListQaCategories()
+adminCreateQaCategory(payload)
+adminUpdateQaCategory(id, payload)
+adminToggleQaCategory(id, isActive)
+adminListQaItems()
+adminCreateQaItem(payload)
+adminUpdateQaItem(id, payload)
+adminSetQaItemStatus(id, status)
 ```
 
-### 6.1 Mapeamento defensivo
+Responsabilidades:
 
-O service usa mapeamento defensivo para campos opcionais e valores ausentes.
+- listar todas as categorias, ativas e inativas;
+- criar categoria;
+- atualizar categoria;
+- ativar ou desativar categoria;
+- listar todas as perguntas, independentemente do status;
+- criar pergunta;
+- atualizar pergunta;
+- publicar, arquivar ou mover pergunta para rascunho;
+- normalizar `keywords`;
+- normalizar `slug` recebido da UI;
+- atualizar `published_at` quando uma pergunta é publicada;
+- limpar `published_at` quando uma pergunta deixa de estar publicada.
+
+### 6.3 Mapeamento defensivo
 
 Regras vigentes:
 
@@ -248,6 +305,8 @@ QaItemStatus
 QaCategory
 QaItem
 QaPublishedContent
+QaCategoryInput
+QaItemInput
 ```
 
 Contrato:
@@ -255,11 +314,13 @@ Contrato:
 - `QaItemStatus` aceita `draft`, `published` e `archived`;
 - `QaCategory` representa uma categoria do Supabase;
 - `QaItem` representa uma pergunta/resposta do Supabase;
-- `QaPublishedContent` agrupa `{ categories, items }` retornados pelo service.
+- `QaPublishedContent` agrupa `{ categories, items }` retornados pelo service público;
+- `QaCategoryInput` representa payload de criação/edição de categoria;
+- `QaItemInput` representa payload de criação/edição de pergunta.
 
 ---
 
-## 8. Página pública
+## 8. Página pública `/duvidas`
 
 Arquivo:
 
@@ -293,7 +354,7 @@ Estados internos principais:
 
 ---
 
-## 9. Componentes da página
+## 9. Componentes da página pública
 
 ### 9.1 `QAHero`
 
@@ -450,9 +511,125 @@ Responsabilidades:
 
 ---
 
-## 10. Busca e filtragem
+## 10. Área administrativa `/admin/duvidas`
 
-A busca é local, executada no frontend após carregamento do conteúdo publicado.
+Arquivo:
+
+```txt
+src/app/pages/admin/AdminDuvidas.tsx
+```
+
+Responsabilidades:
+
+- carregar todas as categorias via `adminListQaCategories`;
+- carregar todas as perguntas via `adminListQaItems`;
+- exibir cards de resumo;
+- exibir formulário de categoria;
+- exibir lista de categorias;
+- exibir formulário de pergunta/resposta;
+- exibir lista filtrável de perguntas/respostas;
+- filtrar perguntas por categoria;
+- filtrar perguntas por status;
+- buscar por pergunta, resposta, slug, página relacionada, keywords e categoria;
+- criar e editar categorias;
+- ativar e desativar categorias;
+- criar e editar perguntas/respostas;
+- publicar, arquivar ou mover pergunta para rascunho;
+- marcar ou desmarcar pergunta como destaque;
+- controlar estado de carregamento, salvamento e erro.
+
+### 10.1 Cards de resumo
+
+Cards vigentes:
+
+```txt
+Categorias
+Ativas
+Publicadas
+Rascunhos
+Arquivadas
+```
+
+### 10.2 Formulário de categoria
+
+Campos:
+
+| Campo | Uso |
+|---|---|
+| `title` | Título completo. |
+| `short_title` | Título curto para chips. |
+| `slug` | Slug único. |
+| `description` | Descrição opcional. |
+| `order_index` | Ordem numérica. |
+| `is_active` | Controle de exibição pública. |
+
+Validações atuais no frontend:
+
+- título obrigatório;
+- `slug` gerado automaticamente a partir do título se estiver vazio.
+
+### 10.3 Formulário de pergunta/resposta
+
+Campos:
+
+| Campo | Uso |
+|---|---|
+| `category_id` | Categoria da pergunta. |
+| `question` | Pergunta. |
+| `answer` | Resposta. |
+| `slug` | Slug único. |
+| `keywords` | Palavras-chave separadas por vírgula na UI. |
+| `related_page_label` | Nome da página relacionada. |
+| `related_page_path` | Caminho interno relacionado. |
+| `is_featured` | Define destaque. |
+| `status` | `draft`, `published` ou `archived`. |
+| `order_index` | Ordem numérica. |
+
+Validações atuais no frontend:
+
+- categoria obrigatória;
+- pergunta obrigatória;
+- resposta obrigatória;
+- `slug` gerado automaticamente a partir da pergunta se estiver vazio;
+- `keywords` normalizadas a partir de lista separada por vírgulas.
+
+### 10.4 Filtros administrativos
+
+Filtros vigentes:
+
+- busca textual;
+- categoria;
+- status.
+
+Campos pesquisados:
+
+- pergunta;
+- resposta;
+- slug;
+- página relacionada;
+- caminho relacionado;
+- keywords;
+- título da categoria.
+
+### 10.5 Responsividade do admin
+
+No desktop:
+
+- layout em duas colunas;
+- categorias à esquerda;
+- perguntas e respostas à direita.
+
+No mobile:
+
+- tabs/botões para alternar entre **Perguntas** e **Categorias**;
+- cards empilhados;
+- sem tabela larga.
+
+---
+
+## 11. Busca e filtragem pública
+
+A busca pública é local, executada no frontend após carregamento do conteúdo publicado.
 
 Campos pesquisados:
 
@@ -490,9 +667,9 @@ duvida = dúvida
 
 ---
 
-## 11. Layout e responsividade
+## 12. Layout e responsividade da página pública
 
-### 11.1 Desktop
+### 12.1 Desktop
 
 No desktop, a página usa:
 
@@ -517,7 +694,7 @@ Grid desktop:
     Perguntas e respostas
 ```
 
-### 11.2 Mobile
+### 12.2 Mobile
 
 No mobile, a página usa:
 
@@ -537,9 +714,9 @@ Regras:
 
 ---
 
-## 12. Conteúdo e microcopy
+## 13. Conteúdo e microcopy
 
-As respostas devem usar nomes de páginas, não rotas técnicas, sempre que forem exibidas para usuário final.
+As respostas públicas devem usar nomes de páginas, não rotas técnicas, sempre que forem exibidas para usuário final.
 
 Exemplo recomendado:
 
@@ -563,14 +740,14 @@ Regras de conteúdo:
 
 - respostas devem ser objetivas;
 - não expor IDs técnicos;
-- não expor estrutura interna de banco;
+- não expor estrutura interna de banco ao usuário final;
 - não prometer funções não implementadas;
 - não mencionar rotas antigas como destino principal;
 - usar nomes oficiais das páginas vigentes.
 
 ---
 
-## 13. Integração com busca global
+## 14. Integração com busca global
 
 A página **Dúvidas** está registrada em:
 
@@ -614,15 +791,15 @@ A busca global deve levar para /duvidas, mas a busca detalhada de perguntas ocor
 
 ---
 
-## 14. Supabase, RLS e operação
+## 15. Supabase, RLS e operação
 
-A página pública depende das políticas de leitura configuradas no Supabase.
+O módulo depende das políticas de leitura e escrita configuradas no Supabase.
 
 Regras esperadas:
 
-- leitura pública de `qa_categories` deve retornar apenas categorias ativas;
-- leitura pública de `qa_items` deve retornar apenas perguntas publicadas;
-- escrita deve permanecer restrita a administradores ou processos autorizados;
+- leitura pública de `qa_categories` deve retornar apenas categorias ativas ou permitir que o frontend aplique esse filtro;
+- leitura pública de `qa_items` deve retornar apenas perguntas publicadas ou permitir que o frontend aplique esse filtro;
+- escrita deve permanecer restrita a administradores;
 - o frontend não deve confiar em filtros visuais para proteger conteúdo não publicado;
 - RLS deve ser a camada principal de proteção de conteúdo editorial não publicado.
 
@@ -633,50 +810,20 @@ qa_categories: is_active = true
 qa_items: status = 'published'
 ```
 
+Consultas administrativas atuais no frontend:
+
+```txt
+qa_categories: todas as categorias
+qa_items: todas as perguntas
+```
+
 Cuidados:
 
-- se RLS bloquear leitura anônima, `/duvidas` exibirá erro de carregamento;
-- se não houver seed inicial, a página carregará sem perguntas;
-- se perguntas publicadas estiverem vinculadas a categoria inativa, o service remove essas perguntas da exibição;
+- se RLS bloquear leitura pública, `/duvidas` exibirá erro de carregamento;
+- se RLS bloquear leitura/escrita admin, `/admin/duvidas` exibirá erro administrativo;
+- se não houver seed inicial, a página pública carregará sem perguntas;
+- se perguntas publicadas estiverem vinculadas a categoria inativa, o service remove essas perguntas da exibição pública;
 - se `keywords` vier nulo ou malformado, o service normaliza para array vazio.
-
----
-
-## 15. Área administrativa
-
-A área administrativa de gerenciamento de dúvidas **não está implementada** nesta versão.
-
-Escopo futuro recomendado:
-
-```txt
-/admin/duvidas
-```
-
-Funcionalidades futuras:
-
-- listar categorias;
-- criar categoria;
-- editar categoria;
-- ativar/desativar categoria;
-- ordenar categorias;
-- listar perguntas;
-- criar pergunta;
-- editar pergunta;
-- publicar pergunta;
-- arquivar pergunta;
-- marcar/desmarcar destaque;
-- filtrar por categoria;
-- filtrar por status;
-- buscar por pergunta, resposta e keywords;
-- registrar atividade administrativa.
-
-Enquanto a área admin não existir, o conteúdo deve ser gerenciado via Supabase, migrations, seeds ou scripts controlados.
-
-Regra:
-
-```txt
-Não documentar /admin/duvidas como rota vigente até o componente, rota e ProtectedRoute existirem no código.
-```
 
 ---
 
@@ -686,25 +833,30 @@ Não documentar /admin/duvidas como rota vigente até o componente, rota e Prote
 /duvidas deve continuar pública.
 /duvidas não deve exigir login.
 /duvidas não deve usar MemberRoute, TreeAccessRoute ou ProtectedRoute.
-A página deve carregar conteúdo do Supabase, não de lista hardcoded definitiva.
-A página deve exibir apenas categorias ativas.
-A página deve exibir apenas perguntas publicadas.
-Perguntas de categorias inativas não devem aparecer.
-Busca deve considerar pergunta, resposta, categoria, keywords e página relacionada.
-Busca deve funcionar com termos com e sem acento.
-Desktop deve manter sidebar de categorias.
-Mobile deve manter chips horizontais de categorias.
+/admin/duvidas deve continuar protegida por ProtectedRoute.
+/admin/duvidas não deve ser pública.
+A página pública deve carregar conteúdo do Supabase, não de lista hardcoded definitiva.
+A página pública deve exibir apenas categorias ativas.
+A página pública deve exibir apenas perguntas publicadas.
+Perguntas de categorias inativas não devem aparecer publicamente.
+Busca pública deve considerar pergunta, resposta, categoria, keywords e página relacionada.
+Busca pública deve funcionar com termos com e sem acento.
+Desktop deve manter sidebar de categorias na página pública.
+Mobile deve manter chips horizontais de categorias na página pública.
 Dúvidas frequentes devem depender de is_featured.
 Respostas públicas devem usar nomes de páginas, não rotas técnicas.
 Componentes não devem acessar Supabase diretamente.
-qaService.ts deve permanecer como camada de leitura do módulo.
+qaService.ts deve permanecer como camada de dados do módulo.
+Perguntas em draft não devem aparecer em /duvidas.
+Perguntas archived não devem aparecer em /duvidas.
+Arquivar deve retirar a pergunta da página pública sem exclusão física.
 ```
 
 ---
 
 ## 17. QA manual
 
-### 17.1 Carregamento
+### 17.1 Página pública — carregamento
 
 Validar:
 
@@ -714,7 +866,7 @@ Validar:
 - [ ] Erro amigável aparece se o carregamento falhar.
 - [ ] Página vazia não quebra quando não há perguntas publicadas.
 
-### 17.2 Categorias
+### 17.2 Página pública — categorias
 
 Validar:
 
@@ -726,7 +878,7 @@ Validar:
 - [ ] Chip **Todas** mostra perguntas de todas as categorias.
 - [ ] Contagem por categoria reflete apenas perguntas carregadas.
 
-### 17.3 Perguntas e respostas
+### 17.3 Página pública — perguntas e respostas
 
 Validar:
 
@@ -738,7 +890,7 @@ Validar:
 - [ ] Resposta preserva quebras de linha.
 - [ ] Página relacionada aparece quando `related_page_label` e `related_page_path` existem.
 
-### 17.4 Dúvidas frequentes
+### 17.4 Página pública — dúvidas frequentes
 
 Validar:
 
@@ -748,7 +900,7 @@ Validar:
 - [ ] Bloco não aparece quando há busca ativa.
 - [ ] Bloco não aparece quando categoria ativa não é **Todas**.
 
-### 17.5 Busca
+### 17.5 Página pública — busca
 
 Validar buscas por:
 
@@ -774,7 +926,7 @@ Critérios:
 - [ ] Busca por página relacionada funciona.
 - [ ] Busca sem resultado exibe estado vazio.
 
-### 17.6 Responsividade
+### 17.6 Página pública — responsividade
 
 Validar breakpoints:
 
@@ -807,11 +959,67 @@ Validar:
 - [ ] Busca global encontra **Dúvidas** por `ajuda`.
 - [ ] Resultado navega para `/duvidas`.
 
+### 17.8 Admin — acesso
+
+Validar:
+
+- [ ] Usuário não admin não acessa `/admin/duvidas`.
+- [ ] Usuário admin acessa `/admin/duvidas`.
+- [ ] Card **Dúvidas** aparece no painel administrativo.
+- [ ] Card navega para `/admin/duvidas`.
+
+### 17.9 Admin — categorias
+
+Validar:
+
+- [ ] Admin lista categorias.
+- [ ] Admin cria categoria.
+- [ ] Admin edita categoria.
+- [ ] Admin altera título curto.
+- [ ] Admin altera descrição.
+- [ ] Admin altera ordem.
+- [ ] Admin desativa categoria.
+- [ ] Categoria desativada deixa de aparecer em `/duvidas`.
+- [ ] Admin reativa categoria.
+- [ ] Categoria reativada volta a aparecer quando há perguntas publicadas.
+
+### 17.10 Admin — perguntas/respostas
+
+Validar:
+
+- [ ] Admin lista perguntas.
+- [ ] Admin cria pergunta em rascunho.
+- [ ] Pergunta em rascunho não aparece em `/duvidas`.
+- [ ] Admin publica pergunta.
+- [ ] Pergunta publicada aparece em `/duvidas`.
+- [ ] Admin edita pergunta publicada.
+- [ ] Alteração aparece em `/duvidas`.
+- [ ] Admin marca pergunta como destaque.
+- [ ] Pergunta destacada aparece em **Dúvidas frequentes** quando aplicável.
+- [ ] Admin remove destaque.
+- [ ] Pergunta deixa de aparecer no bloco de destaque quando aplicável.
+- [ ] Admin arquiva pergunta.
+- [ ] Pergunta arquivada deixa de aparecer em `/duvidas`.
+- [ ] Admin move pergunta arquivada para rascunho ou publicado.
+
+### 17.11 Admin — filtros
+
+Validar:
+
+- [ ] Filtro por categoria funciona.
+- [ ] Filtro por status funciona.
+- [ ] Busca por pergunta funciona.
+- [ ] Busca por resposta funciona.
+- [ ] Busca por slug funciona.
+- [ ] Busca por keyword funciona.
+- [ ] Busca por página relacionada funciona.
+- [ ] Estado vazio aparece quando não há resultado.
+
 ---
 
 ## 18. Troubleshooting
 
-### 18.1 Página exibe erro de carregamento
+### 18.1 Página pública exibe erro de carregamento
 
 Sintoma:
 
@@ -821,67 +1029,54 @@ A página abre, mas exibe mensagem de erro em vez das dúvidas.
 
 Causas prováveis:
 
-- tabelas `qa_categories` ou `qa_items` inexistentes no ambiente;
+- Supabase indisponível;
+- tabela `qa_categories` inexistente;
+- tabela `qa_items` inexistente;
 - RLS bloqueando leitura pública;
-- políticas de leitura não aplicadas;
-- variáveis de ambiente do Supabase incorretas;
-- schema cache desatualizado.
+- erro de schema/cache no Supabase;
+- variável de ambiente de Supabase incorreta.
 
 Verificar:
-
-```txt
-qa_categories existe?
-qa_items existe?
-RLS permite select público para categorias ativas?
-RLS permite select público para perguntas published?
-VITE_SUPABASE_URL está correto?
-VITE_SUPABASE_ANON_KEY está correto?
-```
-
-### 18.2 Página abre, mas não mostra perguntas
-
-Causas prováveis:
-
-- não há perguntas com `status = 'published'`;
-- categorias estão com `is_active = false`;
-- perguntas estão ligadas a categorias inativas;
-- `category_id` não corresponde a categoria existente;
-- seed inicial não foi executado.
-
-Verificar no Supabase:
 
 ```sql
-select id, title, is_active, order_index
-from public.qa_categories
-order by order_index, title;
-
-select id, category_id, question, status, is_featured, order_index
-from public.qa_items
-order by order_index, question;
+select * from public.qa_categories limit 1;
+select * from public.qa_items limit 1;
 ```
 
-### 18.3 Busca não encontra termos com acento
-
-Causa provável:
-
-- regressão em `includesNormalizedText` ou uso de comparação sem normalização.
-
-Verificar:
-
-```txt
-src/app/utils/searchText.ts
-src/app/pages/Duvidas.tsx
-```
-
-### 18.4 Dúvidas frequentes não aparecem
+### 18.2 Página pública não mostra perguntas
 
 Causas prováveis:
 
-- nenhum item publicado possui `is_featured = true`;
-- há busca ativa;
-- categoria ativa não é **Todas**.
+- perguntas estão com `status = 'draft'`;
+- perguntas estão com `status = 'archived'`;
+- categorias estão com `is_active = false`;
+- `category_id` aponta para categoria inexistente ou inativa;
+- RLS retorna lista vazia.
 
-Verificar:
+Consulta de diagnóstico:
+
+```sql
+select
+  c.title as categoria,
+  c.is_active,
+  i.question,
+  i.status,
+  i.is_featured
+from public.qa_items i
+left join public.qa_categories c on c.id = i.category_id
+order by c.order_index, i.order_index;
+```
+
+### 18.3 Dúvidas frequentes não aparecem
+
+Causas prováveis:
+
+- nenhuma pergunta publicada possui `is_featured = true`;
+- há termo de busca ativo;
+- categoria ativa não é **Todas**;
+- perguntas destacadas estão em categoria inativa.
+
+Consulta:
 
 ```sql
 select question, status, is_featured
@@ -889,68 +1084,81 @@ from public.qa_items
 where is_featured = true;
 ```
 
-### 18.5 Conteúdo antigo aparece após deploy
+### 18.4 Admin não consegue salvar
 
 Causas prováveis:
 
-- cache do navegador;
-- deploy ainda não atualizado;
-- bundle antigo;
-- cache do Vite em ambiente local.
+- usuário não é admin;
+- RLS bloqueando insert/update;
+- `slug` duplicado;
+- categoria obrigatória ausente;
+- pergunta ou resposta vazia;
+- erro de schema/cache no Supabase.
 
-Correção local:
+Verificar:
 
-```powershell
-Remove-Item -Recurse -Force node_modules/.vite -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
-npm run dev
+```sql
+select slug from public.qa_categories group by slug having count(*) > 1;
+select slug from public.qa_items group by slug having count(*) > 1;
 ```
 
-Depois usar `Ctrl + F5` ou aba anônima.
+### 18.5 Busca não encontra termo com acento
+
+Verificar:
+
+- se `includesNormalizedText` continua sendo usado na página pública;
+- se `normalizeText` do admin continua removendo acentos;
+- se a pergunta/resposta/keyword realmente contém o termo esperado;
+- se a pergunta está publicada e a categoria está ativa.
 
 ---
 
-## 19. Pendências futuras recomendadas
+## 19. Pendências futuras
 
-Registrar em `docs/PLANO_PROXIMOS_PASSOS.md` quando ainda não houver implementação:
+Pendências aceitas para evolução:
 
 ```txt
-QAFAQ-001 — criar área administrativa /admin/duvidas com CRUD de categorias e perguntas.
-QAFAQ-002 — adicionar logs administrativos para criação, edição, publicação e arquivamento.
-QAFAQ-003 — criar busca server-side por RPC quando volume de perguntas crescer.
-QAFAQ-004 — permitir reordenação visual de categorias e perguntas no admin.
-QAFAQ-005 — adicionar editor markdown sanitizado para respostas.
-QAFAQ-006 — adicionar slug/âncora compartilhável por pergunta.
-QAFAQ-007 — adicionar métricas de dúvidas mais acessadas e buscas sem resultado.
-QAFAQ-008 — criar testes automatizados mínimos para carregamento, busca e filtros.
-QAFAQ-009 — validar acessibilidade completa dos accordions e chips.
-QAFAQ-010 — documentar seed inicial em operação, caso o conteúdo seja versionado.
+QA-001 — adicionar reordenação por drag and drop no admin.
+QA-002 — adicionar editor markdown controlado para respostas.
+QA-003 — adicionar preview da pergunta antes de publicar.
+QA-004 — adicionar logs específicos de criação/edição/publicação/arquivamento.
+QA-005 — adicionar analytics de dúvidas mais acessadas.
+QA-006 — adicionar busca server-side por RPC se o volume crescer.
+QA-007 — adicionar testes automatizados mínimos para /duvidas e /admin/duvidas.
+QA-008 — revisar acessibilidade dos formulários administrativos.
+QA-009 — adicionar confirmação visual antes de arquivar pergunta publicada.
 ```
+
+Não tratar como pendência:
+
+```txt
+CRUD administrativo de categorias.
+CRUD administrativo de perguntas/respostas.
+Publicar pergunta pelo admin.
+Arquivar pergunta pelo admin.
+Ativar/desativar categoria pelo admin.
+Marcar/desmarcar destaque pelo admin.
+```
+
+Esses itens já fazem parte do escopo implementado.
 
 ---
 
-## 20. Critério de aceite para alterações futuras
+## 20. Critério de aceite
 
-Uma alteração no módulo de dúvidas só deve ser considerada pronta quando:
+O módulo deve ser considerado consistente quando:
 
+- `/duvidas` abre sem autenticação;
+- `/admin/duvidas` exige usuário admin;
+- categorias e perguntas vêm do Supabase;
+- página pública não depende de conteúdo hardcoded definitivo;
+- admin cria e edita categorias;
+- admin cria e edita perguntas/respostas;
+- perguntas `draft` e `archived` não aparecem publicamente;
+- perguntas `published` aparecem publicamente quando a categoria está ativa;
+- categorias inativas não aparecem publicamente;
+- busca pública ignora acentos;
+- busca admin filtra por texto, categoria e status;
 - `npm run build` passa;
 - `git diff --check` não retorna erro real;
-- `/duvidas` carrega sem login;
-- conteúdo vem do Supabase;
-- perguntas `draft` e `archived` não aparecem;
-- categorias inativas não aparecem;
-- busca funciona com e sem acento;
-- desktop mantém sidebar;
-- mobile mantém chips horizontais;
-- busca global encontra **Dúvidas**;
-- documentação canônica permanece atualizada.
-
-Para mudanças que alterem banco, RLS, policies, RPC ou seeds, revisar também:
-
-```txt
-docs/operacao/MIGRATIONS_SUPABASE.md
-docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
-docs/QA_MANUAL.md
-docs/REGRAS_DE_NAO_REGRESSAO.md
-docs/PLANO_PROXIMOS_PASSOS.md
-```
+- documentação está sincronizada com código e banco.
