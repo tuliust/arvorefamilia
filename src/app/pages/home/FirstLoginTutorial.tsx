@@ -26,6 +26,8 @@ type TutorialStep = {
   targets?: TutorialTarget[];
   panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below';
   panelReference?: 'all' | 'first' | 'last';
+  mergeSpotlights?: boolean;
+  panelGap?: number;
 };
 
 type FirstLoginTutorialProps = {
@@ -67,6 +69,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Aqui é o seu menu',
     icon: Network,
     panelPlacement: 'left',
+    mergeSpotlights: true,
     targets: [
       {
         selectors: ['[data-tour-target="alerts"]'],
@@ -136,6 +139,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Perfis, vínculos e memórias',
     icon: UserRound,
     panelPlacement: 'below',
+    panelGap: 40,
     targets: [
       {
         selectors: ['[data-family-map-central-card="true"]'],
@@ -154,6 +158,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Inteligência artificial, datas importantes e seus destaques',
     icon: Sparkles,
     panelPlacement: 'below',
+    mergeSpotlights: true,
     targets: [
       {
         selectors: ['[data-tour-target="curiosities"]'],
@@ -405,7 +410,8 @@ function createCenteredPanel(width: number): PanelPosition {
 
 function createPanelPosition(
   spotlight: SpotlightRect | null,
-  placement: TutorialStep['panelPlacement']
+  placement: TutorialStep['panelPlacement'],
+  gap = PANEL_GAP
 ): PanelPosition {
   const width = Math.min(PANEL_MAX_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
 
@@ -419,7 +425,7 @@ function createPanelPosition(
       VIEWPORT_MARGIN,
       window.innerWidth - width - VIEWPORT_MARGIN
     ),
-    top: spotlight.bottom + PANEL_GAP,
+    top: spotlight.bottom + gap,
     width,
   });
 
@@ -429,12 +435,12 @@ function createPanelPosition(
       VIEWPORT_MARGIN,
       window.innerWidth - width - VIEWPORT_MARGIN
     ),
-    top: spotlight.top - PANEL_ESTIMATED_HEIGHT - PANEL_GAP,
+    top: spotlight.top - PANEL_ESTIMATED_HEIGHT - gap,
     width,
   });
 
   const tryRight = () => ({
-    left: spotlight.right + PANEL_GAP,
+    left: spotlight.right + gap,
     top: clamp(
       spotlight.top,
       VIEWPORT_MARGIN,
@@ -444,7 +450,7 @@ function createPanelPosition(
   });
 
   const tryLeft = () => ({
-    left: spotlight.left - width - PANEL_GAP,
+    left: spotlight.left - width - gap,
     top: clamp(
       spotlight.top,
       VIEWPORT_MARGIN,
@@ -578,7 +584,11 @@ export function FirstLoginTutorial({
 
   const updateLayout = useCallback(() => {
     const targetElements = resolveTargetElements(currentStep.targets ?? []);
-    const spotlights = createSpotlightRects(targetElements);
+    const individualSpotlights = createSpotlightRects(targetElements);
+    const mergedSpotlight = createUnionSpotlightRect(individualSpotlights);
+    const spotlights = currentStep.mergeSpotlights && mergedSpotlight
+      ? [mergedSpotlight]
+      : individualSpotlights;
     const panelSpotlight = currentStep.panelReference === 'first'
       ? spotlights[0] ?? null
       : currentStep.panelReference === 'last'
@@ -587,7 +597,11 @@ export function FirstLoginTutorial({
 
     setLayout({
       spotlights,
-      panel: createPanelPosition(panelSpotlight, currentStep.panelPlacement ?? 'auto'),
+      panel: createPanelPosition(
+        panelSpotlight,
+        currentStep.panelPlacement ?? 'auto',
+        currentStep.panelGap ?? PANEL_GAP
+      ),
     });
   }, [currentStep]);
 
