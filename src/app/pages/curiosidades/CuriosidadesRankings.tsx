@@ -4,11 +4,15 @@ import {
   curiosityStatusClassName,
   getBirthCityRanking,
   getMostRepeatedFirstNames,
+  getPersonDisplayName,
   getProfessionRanking,
   getTopBirthMonth,
+  parseFamilyDate,
   type CuriosidadesDataProps,
   type TopCount,
 } from './curiosidadesUtils';
+
+const BIRTHDAY_MONTH_PEOPLE_LIMIT = 5;
 
 type RankingCard = {
   title: string;
@@ -16,6 +20,7 @@ type RankingCard = {
   description: string;
   items: TopCount[];
   icon: typeof Lightbulb;
+  people?: string[];
 };
 
 function formatRankingList(items: TopCount[]) {
@@ -31,6 +36,16 @@ export function CuriosidadesRankings({
   const professions = getProfessionRanking(pessoas, 5);
   const cities = getBirthCityRanking(pessoas, 5);
   const topBirthMonth = getTopBirthMonth(pessoas);
+  const topBirthMonthPeople = topBirthMonth
+    ? pessoas
+        .filter((pessoa) => {
+          const birthDate = parseFamilyDate(pessoa.data_nascimento);
+          return Boolean(birthDate && birthDate.getMonth() === topBirthMonth.monthIndex);
+        })
+        .map(getPersonDisplayName)
+        .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+        .slice(0, BIRTHDAY_MONTH_PEOPLE_LIMIT)
+    : [];
 
   const cards: RankingCard[] = [
     {
@@ -54,6 +69,7 @@ export function CuriosidadesRankings({
         : 'Complete datas de nascimento para gerar este indicador.',
       items: topBirthMonth ? [{ label: topBirthMonth.label, count: topBirthMonth.count }] : [],
       icon: CalendarDays,
+      people: topBirthMonthPeople,
     },
     {
       title: 'Profissão mais repetida',
@@ -119,6 +135,17 @@ export function CuriosidadesRankings({
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 {loading ? 'Aguarde enquanto os dados são organizados.' : card.description}
               </p>
+
+              {!loading && card.people && card.people.length > 0 && (
+                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                    Aniversariantes do mês
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-blue-950">
+                    {card.people.join(', ')}
+                  </p>
+                </div>
+              )}
 
               {!loading && ranking.length > 1 && (
                 <ol className="mt-4 space-y-2">
