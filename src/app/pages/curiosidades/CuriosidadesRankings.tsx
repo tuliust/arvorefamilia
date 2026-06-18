@@ -139,11 +139,16 @@ export function CuriosidadesRankings({
               {!loading && card.people && card.people.length > 0 && (
                 <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
-                    Aniversariantes do mês
+                    Cerca de {card.people.length} aniversariante{card.people.length === 1 ? '' : 's'} do mês
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-blue-950">
-                    {card.people.join(', ')}
-                  </p>
+                  <ul className="mt-2 space-y-1 text-sm leading-5 text-blue-950">
+                    {card.people.map((personName) => (
+                      <li key={personName} className="flex gap-2">
+                        <span aria-hidden="true">•</span>
+                        <span>{personName}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
