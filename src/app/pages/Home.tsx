@@ -56,7 +56,8 @@ import {
   type TreeViewMode,
   } from '../components/FamilyTree/treeViewMode';
 import { useAuth } from '../contexts/AuthContext';
-import { getMemberProfile,
+import { getLinkedPersonIds,
+  getMemberProfile,
   getPrimaryLinkedPerson,
   MemberProfile } from '../services/memberProfileService';
 import { isAdminUser } from '../services/permissionService';
@@ -84,6 +85,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
+import { DesktopTreeVisualizationPanel } from './home/DesktopTreeVisualizationPanel';
 import { buildAiTreeContext } from './home/homeAiContext';
 import {
   calculateCuriosities,
@@ -256,6 +258,7 @@ export function Home() {
   });
 
   const [renderedDirectRelationCounts, setRenderedDirectRelationCounts] = useState<DirectRelationCounts | null>(null);
+  const [registeredPeopleCount, setRegisteredPeopleCount] = useState(0);
 
   const [genealogyFilters] = useState<GenealogyFilters>(DEFAULT_GENEALOGY_FILTERS);
 
@@ -711,6 +714,43 @@ export function Home() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function loadRegisteredPeopleCount() {
+      const pessoaIds = pessoas.map((pessoa) => pessoa.id).filter(Boolean);
+
+      if (pessoaIds.length === 0) {
+        setRegisteredPeopleCount(0);
+        return;
+      }
+
+      try {
+        const result = await getLinkedPersonIds(pessoaIds);
+        if (cancelled) return;
+
+        if (result.error) {
+          console.warn('[Supabase] Erro ao contar pessoas cadastradas:', result.error);
+          setRegisteredPeopleCount(0);
+          return;
+        }
+
+        setRegisteredPeopleCount(result.data.size);
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[Supabase] Erro ao contar pessoas cadastradas:', error);
+          setRegisteredPeopleCount(0);
+        }
+      }
+    }
+
+    void loadRegisteredPeopleCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pessoas]);
+
+  useEffect(() => {
     setRenderedDirectRelationCounts(null);
   }, [centralReferencePersonId, treeViewMode]);
 
@@ -1140,6 +1180,32 @@ export function Home() {
     }, 80);
   }, []);
 
+  const handleDesktopViewAsPersonChange = useCallback((nextValue: string) => {
+    const nextPersonId = nextValue.trim();
+    const params = new URLSearchParams(location.search);
+
+    setDebugViewPersonId(undefined);
+    setRenderedDirectRelationCounts(null);
+
+    if (nextPersonId) {
+      params.set('pessoa', nextPersonId);
+      setTreeFocusPersonId(nextPersonId);
+      setSelectedPersonId(nextPersonId);
+    } else {
+      params.delete('pessoa');
+      setTreeFocusPersonId(undefined);
+      setSelectedPersonId(linkedPersonId || pessoas[0]?.id);
+    }
+
+    const query = params.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}`, { replace: false, flushSync: true });
+
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      setTreeLayoutRevision((revision) => revision + 1);
+    }, 80);
+  }, [linkedPersonId, location.pathname, location.search, navigate, pessoas]);
+
   useEffect(() => {
     if (!debugViewPersonId) return;
     if (pessoas.some((pessoa) => pessoa.id === debugViewPersonId)) return;
@@ -1202,13 +1268,27 @@ export function Home() {
           <aside
             className={[
               'flex h-full min-h-0 shrink-0 flex-col border-r border-gray-200 bg-white transition-[width] duration-200',
-              sidebarOpen ? 'w-80 p-[clamp(0.65rem,1.45vh,1rem)]' : 'w-14 p-2',
+              sidebarOpen ? 'w-[38rem] p-[clamp(0.65rem,1.45vh,1rem)]' : 'w-14 p-2',
             ].join(' ')}
           >
             {sidebarOpen && (
-              <div className="flex min-h-0 flex-1 flex-col gap-[clamp(0.45rem,1.05vh,0.75rem)]">
+              <div className="flex min-h-0 flex-1 flex-col">
                 <div className="relative min-w-0">
-                  <SidebarPanelTabs />
+                  <DesktopTreeVisualizationPanel
+                    showViewAsSelector={shouldShowDebugViewer}
+                    viewAsPersonValue={queryPersonId ?? ''}
+                    viewAsPersonOptions={debugViewPersonOptions}
+                    onViewAsPersonChange={handleDesktopViewAsPersonChange}
+                    totalPeople={stats.totalPessoas}
+                    aliveCount={stats.pessoasVivas}
+                    deceasedCount={stats.pessoasFalecidas}
+                    registeredCount={registeredPeopleCount}
+                    personFilters={personFilters}
+                    onTogglePersonFilter={togglePersonFilter}
+                    directRelativeFilters={directRelativeFilters}
+                    directRelationCounts={effectiveDirectRelationCounts}
+                    onToggleDirectRelative={toggleDirectRelativeFilter}
+                  />
                   <Button
                     variant="outline"
                     size="icon"
@@ -1220,9 +1300,6 @@ export function Home() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                </div>
-                <div className="min-h-0 flex-1 overflow-hidden">
-                  {sidebarFiltersContent}
                 </div>
               </div>
             )}

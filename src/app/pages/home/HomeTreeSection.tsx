@@ -18,9 +18,11 @@ import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { Pessoa, Relacionamento } from '../../types';
 import {
+  dispatchTreeAction,
   SIDEBAR_TREE_ACTION_EVENT,
   type SidebarTreeAction,
 } from './SidebarPanelTabs';
+import { Minus, Plus, Scan } from 'lucide-react';
 
 interface StateMessageProps {
   title: string;
@@ -216,6 +218,20 @@ export function HomeTreeSection({
             }
           `}
         </style>
+      )}
+
+      {!isMobile && canRenderTree && (
+        <div className="tree-canvas-zoom-controls" aria-label="Controles de zoom da árvore" data-tree-export-ignore="true">
+          <button type="button" onClick={() => dispatchTreeAction('zoom-in')} aria-label="Aumentar zoom" title="Aumentar zoom">
+            <Plus className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => dispatchTreeAction('zoom-out')} aria-label="Diminuir zoom" title="Diminuir zoom">
+            <Minus className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => dispatchTreeAction('restore-view')} aria-label="Restaurar visualização" title="Restaurar visualização">
+            <Scan className="h-4 w-4" />
+          </button>
+        </div>
       )}
 
       {isTreeResolving ? (

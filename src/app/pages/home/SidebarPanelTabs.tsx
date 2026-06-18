@@ -11,7 +11,6 @@ import {
   Plus,
   Printer,
   Scan,
-  Sparkles,
 } from 'lucide-react';
 
 import {
@@ -70,18 +69,7 @@ const viewOptions: Array<{
   },
 ];
 
-type HighlightKey = 'lines' | 'cards' | 'groups';
-type ControlFlyout = 'colors' | 'export' | 'highlight' | null;
-
-const highlightOptions: Array<{
-  key: HighlightKey;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}> = [
-  { key: 'lines', label: 'Linhas', icon: Minus },
-  { key: 'cards', label: 'Cards', icon: Layers },
-  { key: 'groups', label: 'Grupos', icon: PanelTop },
-];
+type ControlFlyout = 'colors' | 'export' | null;
 
 const exportOptions: Array<{
   action: SidebarTreeAction;
@@ -94,14 +82,14 @@ const exportOptions: Array<{
   { action: 'print', label: 'Imprimir', icon: Printer },
 ];
 
-function getStoredPalette(): TreeColorPalette {
+export function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';
 
   const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
   return isTreeColorPalette(stored) ? stored : 'white';
 }
 
-function applyTreePalette(value: TreeColorPalette) {
+export function applyTreePalette(value: TreeColorPalette) {
   if (typeof document === 'undefined') return;
 
   const palette = TREE_COLOR_PALETTES[value];
@@ -119,7 +107,7 @@ function getCurrentTreeViewMode(pathname: string): TreeViewMode {
   return 'mapa-familiar';
 }
 
-function dispatchTreeAction(action: SidebarTreeAction) {
+export function dispatchTreeAction(action: SidebarTreeAction) {
   window.dispatchEvent(new CustomEvent<SidebarTreeAction>(SIDEBAR_TREE_ACTION_EVENT, { detail: action }));
 }
 
@@ -163,11 +151,6 @@ export function SidebarPanelTabs({
   const [treeColorPalette, setTreeColorPalette] = React.useState<TreeColorPalette>(getStoredPalette);
   const [activeFlyout, setActiveFlyout] = React.useState<ControlFlyout>(null);
   const [fallbackViewAsPersonOptions, setFallbackViewAsPersonOptions] = React.useState<ViewAsPersonOption[]>([]);
-  const [activeHighlights, setActiveHighlights] = React.useState<Record<HighlightKey, boolean>>({
-    lines: false,
-    cards: false,
-    groups: false,
-  });
 
   const locationViewAsPersonId = React.useMemo(() => {
     return new URLSearchParams(location.search).get('pessoa')?.trim() || '';
@@ -208,15 +191,6 @@ export function SidebarPanelTabs({
   }, [showViewAsSelector, viewAsPersonOptions]);
 
   React.useEffect(() => {
-    if (typeof document === 'undefined') return;
-
-    const root = document.documentElement;
-    root.dataset.treeHighlightLines = activeHighlights.lines ? 'true' : 'false';
-    root.dataset.treeHighlightCards = activeHighlights.cards ? 'true' : 'false';
-    root.dataset.treeHighlightGroups = activeHighlights.groups ? 'true' : 'false';
-  }, [activeHighlights]);
-
-  React.useEffect(() => {
     setActiveFlyout(null);
   }, [location.pathname]);
 
@@ -248,13 +222,6 @@ export function SidebarPanelTabs({
 
   const handleRestoreView = React.useCallback(() => {
     dispatchTreeAction('restore-view');
-  }, []);
-
-  const toggleHighlight = React.useCallback((key: HighlightKey) => {
-    setActiveHighlights((current) => ({
-      ...current,
-      [key]: !current[key],
-    }));
   }, []);
 
   const toggleFlyout = React.useCallback((flyout: Exclude<ControlFlyout, null>) => {
@@ -321,14 +288,13 @@ export function SidebarPanelTabs({
           })}
         </div>
 
-        <div className="tree-primary-actions grid min-w-0 grid-cols-3 gap-1">
+        <div className="tree-primary-actions grid min-w-0 grid-cols-2 gap-1">
           <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => handleFlyoutToggle('colors')} />
           {mobileControls ? (
             <PrimaryControlButton icon={PanelTop} label="Grupos" active={mobileGroupsActive} onClick={handleMobileGroupsToggle} />
           ) : (
             <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => handleFlyoutToggle('export')} />
           )}
-          <PrimaryControlButton icon={Sparkles} label="Destacar" active={activeFlyout === 'highlight'} onClick={() => handleFlyoutToggle('highlight')} />
         </div>
 
         {activeFlyout === 'colors' && (
@@ -362,17 +328,6 @@ export function SidebarPanelTabs({
             {exportOptions.map((option) => (
               <CompactControlButton key={option.action} icon={option.icon} label={option.label} onClick={() => dispatchTreeAction(option.action)} />
             ))}
-          </div>
-        )}
-
-        {activeFlyout === 'highlight' && (
-          <div className="tree-control-flyout grid min-w-0 grid-cols-3 gap-1">
-            {highlightOptions.map((option) => {
-              const Icon = option.icon;
-              return (
-                <IconToggleButton key={option.key} icon={Icon} label={option.label} active={activeHighlights[option.key]} onClick={() => toggleHighlight(option.key)} />
-              );
-            })}
           </div>
         )}
 
@@ -461,33 +416,6 @@ function ViewModeCardButton({
       <span className="max-w-full text-[9px] font-semibold leading-tight text-slate-500">
         {subtitle}
       </span>
-    </button>
-  );
-}
-
-function IconToggleButton({
-  icon: Icon,
-  label,
-  active,
-  mobileOnly,
-  title,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  active: boolean;
-  mobileOnly?: boolean;
-  title?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" aria-pressed={active} onClick={onClick} title={title ?? label} className={[
-      'tree-icon-chip flex min-h-7 min-w-0 items-center justify-center gap-1 rounded-md border px-1.5 text-[10px] font-semibold leading-tight transition',
-      mobileOnly ? 'lg:hidden' : '',
-      active ? 'border-blue-300 bg-blue-50 text-blue-900 shadow-sm' : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50 hover:text-gray-900',
-    ].join(' ')}>
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="truncate">{label}</span>
     </button>
   );
 }
