@@ -23,10 +23,10 @@ export function CuriosidadesRouteSection({
         <div>
           <div className="flex items-center gap-3">
             <Route className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Rota da fam\u00edlia</h2>
+            <h2 className="text-xl font-bold text-gray-950">Rota da família</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            Uma rota pelas cidades onde familiares t\u00eam resid\u00eancia cadastrada.
+            Uma rota pelas cidades onde familiares têm residência cadastrada.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -36,7 +36,7 @@ export function CuriosidadesRouteSection({
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          N\u00e3o foi poss\u00edvel carregar as cidades da fam\u00edlia agora.
+          Não foi possível carregar as cidades da família agora.
         </div>
       )}
 
@@ -46,7 +46,7 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && summary.cities.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda n\u00e3o h\u00e1 cidades de resid\u00eancia suficientes para montar uma rota familiar.
+          Ainda não há cidades de residência suficientes para montar uma rota familiar.
         </div>
       )}
 
@@ -55,7 +55,7 @@ export function CuriosidadesRouteSection({
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <p className="text-sm font-semibold text-blue-900">
               {hasGeoRoute
-                ? `Dist\u00e2ncia aproximada: ${formatDistanceKm(summary.geoRoute.totalDistanceKm)}`
+                ? `Distância aproximada: ${formatDistanceKm(summary.geoRoute.totalDistanceKm)}`
                 : 'Uma viagem para passar pelos principais locais cadastrados passaria por:'}
             </p>
             <p className="mt-3 text-lg font-bold leading-7 text-gray-950">
@@ -63,8 +63,8 @@ export function CuriosidadesRouteSection({
             </p>
             <p className="mt-3 text-xs leading-5 text-blue-900">
               {hasGeoRoute
-                ? `C\u00e1lculo por Haversine usando ${summary.coordinateCities} cidades com coordenadas cadastradas.`
-                : 'Cadastre coordenadas nas cidades dos perfis para calcular dist\u00e2ncia em quil\u00f4metros. Por enquanto, a rota \u00e9 textual.'}
+                ? `Cálculo por Haversine usando ${summary.coordinateCities} cidades com coordenadas cadastradas.`
+                : 'Cadastre coordenadas nas cidades dos perfis para calcular distância em quilômetros. Por enquanto, a rota é textual.'}
             </p>
           </div>
 

@@ -44,7 +44,7 @@ export const curiosityStatusClassName = 'inline-flex w-fit items-center rounded-
 export const monthLabels = [
   'Janeiro',
   'Fevereiro',
-  'MarÃ§o',
+  'Março',
   'Abril',
   'Maio',
   'Junho',
@@ -268,7 +268,7 @@ export function buildTodayFamilyEvents(
         type: 'birthday',
         title: years > 0
           ? `Hoje faz ${years} ${years === 1 ? 'ano' : 'anos'} que ${name} nasceu.`
-          : `Hoje Ã© o dia do nascimento de ${name}.`,
+          : `Hoje é o dia do nascimento de ${name}.`,
         subtitle: formatFamilyDate(pessoa.data_nascimento),
         years,
         personIds: [pessoa.id],
@@ -281,8 +281,8 @@ export function buildTodayFamilyEvents(
         id: `death-${pessoa.id}`,
         type: 'death',
         title: years > 0
-          ? `Hoje faz ${years} ${years === 1 ? 'ano' : 'anos'} que preservamos a memÃ³ria de ${name}.`
-          : `Hoje marca a memÃ³ria de ${name}.`,
+          ? `Hoje faz ${years} ${years === 1 ? 'ano' : 'anos'} que preservamos a memória de ${name}.`
+          : `Hoje marca a memória de ${name}.`,
         subtitle: formatFamilyDate(pessoa.data_falecimento),
         years,
         personIds: [pessoa.id],
@@ -310,7 +310,7 @@ export function buildTodayFamilyEvents(
       type: 'wedding',
       title: years > 0
         ? `Hoje faz ${years} ${years === 1 ? 'ano' : 'anos'} que ${coupleName} se casaram.`
-        : `Hoje Ã© a data de casamento de ${coupleName}.`,
+        : `Hoje é a data de casamento de ${coupleName}.`,
       subtitle: formatFamilyDate(relacionamento.data_casamento),
       years,
       personIds: [pessoaA.id, pessoaB.id],
@@ -334,51 +334,51 @@ export const SOCIAL_GENERATIONS: SocialGenerationInfo[] = [
   {
     key: 'baby-boomer',
     label: 'Baby Boomer',
-    period: '1946â€“1964',
+    period: '1946–1964',
     startYear: 1946,
     endYear: 1964,
-    description: 'GeraÃ§Ã£o associada ao pÃ³s-guerra, Ã  expansÃ£o urbana, Ã  estabilidade institucional e Ã  valorizaÃ§Ã£o de carreira e famÃ­lia.',
+    description: 'Geração associada ao pós-guerra, à expansão urbana, à estabilidade institucional e à valorização de carreira e família.',
   },
   {
     key: 'geracao-x',
-    label: 'GeraÃ§Ã£o X',
-    period: '1965â€“1980',
+    label: 'Geração X',
+    period: '1965–1980',
     startYear: 1965,
     endYear: 1980,
-    description: 'Cresceu entre transformaÃ§Ãµes culturais, televisÃ£o forte, mudanÃ§as no mercado de trabalho e transiÃ§Ã£o para tecnologias digitais.',
+    description: 'Cresceu entre transformações culturais, televisão forte, mudanças no mercado de trabalho e transição para tecnologias digitais.',
   },
   {
     key: 'millennial',
     label: 'Millennial / Y',
-    period: '1981â€“1996',
+    period: '1981–1996',
     startYear: 1981,
     endYear: 1996,
-    description: 'Acompanhou a passagem do mundo analÃ³gico para o digital, a popularizaÃ§Ã£o da internet e novas formas de estudar, trabalhar e se comunicar.',
+    description: 'Acompanhou a passagem do mundo analógico para o digital, a popularização da internet e novas formas de estudar, trabalhar e se comunicar.',
   },
   {
     key: 'geracao-z',
-    label: 'GeraÃ§Ã£o Z',
-    period: '1997â€“2012',
+    label: 'Geração Z',
+    period: '1997–2012',
     startYear: 1997,
     endYear: 2012,
-    description: 'Nativa digital, cresceu com redes sociais, mobilidade, comunicaÃ§Ã£o instantÃ¢nea e maior exposiÃ§Ã£o a temas globais.',
+    description: 'Nativa digital, cresceu com redes sociais, mobilidade, comunicação instantânea e maior exposição a temas globais.',
   },
   {
     key: 'geracao-alpha',
-    label: 'GeraÃ§Ã£o Alpha',
-    period: '2013â€“2024',
+    label: 'Geração Alpha',
+    period: '2013–2024',
     startYear: 2013,
     endYear: 2024,
-    description: 'Primeira geraÃ§Ã£o formada integralmente em ambiente de smartphones, plataformas digitais, IA e aprendizagem altamente mediada por tecnologia.',
-    note: 'Algumas classificaÃ§Ãµes de marketing consideram 2010â€“2024.',
+    description: 'Primeira geração formada integralmente em ambiente de smartphones, plataformas digitais, IA e aprendizagem altamente mediada por tecnologia.',
+    note: 'Algumas classificações de marketing consideram 2010–2024.',
   },
   {
     key: 'geracao-beta',
-    label: 'GeraÃ§Ã£o Beta',
-    period: '2025â€“2039',
+    label: 'Geração Beta',
+    period: '2025–2039',
     startYear: 2025,
     endYear: 2039,
-    description: 'GeraÃ§Ã£o em formaÃ§Ã£o, associada a um cotidiano ainda mais integrado com IA, automaÃ§Ã£o, ambientes conectados e novas formas de educaÃ§Ã£o.',
+    description: 'Geração em formação, associada a um cotidiano ainda mais integrado com IA, automação, ambientes conectados e novas formas de educação.',
   },
 ];
 
@@ -423,11 +423,11 @@ export type WeddingMilestone = {
 };
 
 export const WEDDING_MILESTONES: WeddingMilestone[] = [
-  { label: 'Bodas de JequitibÃ¡', years: 100, description: 'um sÃ©culo de uniÃ£o registrado na histÃ³ria da famÃ­lia' },
-  { label: 'Bodas de Platina', years: 65, description: 'uma trajetÃ³ria rara e muito longeva' },
-  { label: 'Bodas de Diamante', years: 60, description: 'seis dÃ©cadas de vÃ­nculo familiar' },
-  { label: 'Bodas de Ouro', years: 50, description: 'meio sÃ©culo de casamento' },
-  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de uniÃ£o' },
+  { label: 'Bodas de Jequitibá', years: 100, description: 'um século de união registrado na história da família' },
+  { label: 'Bodas de Platina', years: 65, description: 'uma trajetória rara e muito longeva' },
+  { label: 'Bodas de Diamante', years: 60, description: 'seis décadas de vínculo familiar' },
+  { label: 'Bodas de Ouro', years: 50, description: 'meio século de casamento' },
+  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de união' },
   { label: 'Bodas de Papel', years: 1, description: 'o primeiro ano de casamento' },
 ];
 
@@ -528,7 +528,7 @@ export function buildCuriosityQuizQuestions(
   if (oldest) {
     questions.push({
       id: 'oldest-person',
-      prompt: 'Quem Ã© a pessoa mais antiga cadastrada na famÃ­lia?',
+      prompt: 'Quem é a pessoa mais antiga cadastrada na família?',
       answerId: oldest.pessoa.id,
       answerLabel: getPersonDisplayName(oldest.pessoa),
       explanation: `${getPersonDisplayName(oldest.pessoa)} aparece com ano de nascimento em ${oldest.year}.`,
@@ -540,7 +540,7 @@ export function buildCuriosityQuizQuestions(
   if (youngest && youngest.pessoa.id !== oldest?.pessoa.id) {
     questions.push({
       id: 'youngest-person',
-      prompt: 'Quem Ã© a pessoa mais jovem cadastrada na famÃ­lia?',
+      prompt: 'Quem é a pessoa mais jovem cadastrada na família?',
       answerId: youngest.pessoa.id,
       answerLabel: getPersonDisplayName(youngest.pessoa),
       explanation: `${getPersonDisplayName(youngest.pessoa)} aparece com ano de nascimento em ${youngest.year}.`,
@@ -557,7 +557,7 @@ export function buildCuriosityQuizQuestions(
         prompt: `Quem nasceu em ${topBirthCity.label}?`,
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
-        explanation: `${topBirthCity.label} aparece como uma das cidades de nascimento mais recorrentes da famÃ­lia.`,
+        explanation: `${topBirthCity.label} aparece como uma das cidades de nascimento mais recorrentes da família.`,
         options: buildQuizOptions(answer, people),
       });
     }
@@ -569,10 +569,10 @@ export function buildCuriosityQuizQuestions(
     if (answer) {
       questions.push({
         id: 'profession',
-        prompt: `Quem tem a profissÃ£o cadastrada como ${topProfession.label}?`,
+        prompt: `Quem tem a profissão cadastrada como ${topProfession.label}?`,
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
-        explanation: `${topProfession.label} aparece entre as profissÃµes mais repetidas da famÃ­lia.`,
+        explanation: `${topProfession.label} aparece entre as profissões mais repetidas da família.`,
         options: buildQuizOptions(answer, people),
       });
     }
@@ -584,7 +584,7 @@ export function buildCuriosityQuizQuestions(
     if (answer) {
       questions.push({
         id: 'more-children',
-        prompt: 'Quem aparece com mais filhos cadastrados na Ã¡rvore?',
+        prompt: 'Quem aparece com mais filhos cadastrados na árvore?',
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
         explanation: `${getPersonDisplayName(answer)} aparece com ${topParent.count} ${topParent.count === 1 ? 'filho cadastrado' : 'filhos cadastrados'}.`,
@@ -663,7 +663,7 @@ export function buildFamilyRouteSummary(pessoas: Pessoa[]): FamilyRouteSummary {
   const geoRoute = buildApproximateFamilyRoute(points);
   const routeLabel = geoRoute.hasEnoughCoordinates
     ? geoRoute.routeLabel
-    : cities.map((city) => city.label).join(' â†’ ');
+    : cities.map((city) => city.label).join(' → ');
   const totalPeopleWithCity = cities.reduce((total, city) => total + city.count, 0);
 
   return {
@@ -727,7 +727,7 @@ export function getPersonInterestProfile(pessoa: Pessoa): PersonInterestProfile 
   const currentCity = String(pessoa.local_atual ?? '').trim();
   const birthCity = String(pessoa.local_nascimento ?? '').trim();
 
-  if (profession) interests.push(`ProfissÃ£o: ${profession}`);
+  if (profession) interests.push(`Profissão: ${profession}`);
   if (currentCity) interests.push(`Mora em: ${currentCity}`);
   if (birthCity) interests.push(`Nasceu em: ${birthCity}`);
 
@@ -779,24 +779,24 @@ export function comparePeopleInterests(pessoaA: Pessoa | null, pessoaB: Pessoa |
 
 export type ZodiacSign = {
   name: string;
-  element: 'Fogo' | 'Terra' | 'Ar' | 'Ãgua';
+  element: 'Fogo' | 'Terra' | 'Ar' | 'Água';
   start: [number, number];
   end: [number, number];
 };
 
 export const ZODIAC_SIGNS: ZodiacSign[] = [
-  { name: 'Ãries', element: 'Fogo', start: [3, 21], end: [4, 19] },
+  { name: 'Áries', element: 'Fogo', start: [3, 21], end: [4, 19] },
   { name: 'Touro', element: 'Terra', start: [4, 20], end: [5, 20] },
-  { name: 'GÃªmeos', element: 'Ar', start: [5, 21], end: [6, 20] },
-  { name: 'CÃ¢ncer', element: 'Ãgua', start: [6, 21], end: [7, 22] },
-  { name: 'LeÃ£o', element: 'Fogo', start: [7, 23], end: [8, 22] },
+  { name: 'Gêmeos', element: 'Ar', start: [5, 21], end: [6, 20] },
+  { name: 'Câncer', element: 'Água', start: [6, 21], end: [7, 22] },
+  { name: 'Leão', element: 'Fogo', start: [7, 23], end: [8, 22] },
   { name: 'Virgem', element: 'Terra', start: [8, 23], end: [9, 22] },
   { name: 'Libra', element: 'Ar', start: [9, 23], end: [10, 22] },
-  { name: 'EscorpiÃ£o', element: 'Ãgua', start: [10, 23], end: [11, 21] },
-  { name: 'SagitÃ¡rio', element: 'Fogo', start: [11, 22], end: [12, 21] },
-  { name: 'CapricÃ³rnio', element: 'Terra', start: [12, 22], end: [1, 19] },
-  { name: 'AquÃ¡rio', element: 'Ar', start: [1, 20], end: [2, 18] },
-  { name: 'Peixes', element: 'Ãgua', start: [2, 19], end: [3, 20] },
+  { name: 'Escorpião', element: 'Água', start: [10, 23], end: [11, 21] },
+  { name: 'Sagitário', element: 'Fogo', start: [11, 22], end: [12, 21] },
+  { name: 'Capricórnio', element: 'Terra', start: [12, 22], end: [1, 19] },
+  { name: 'Aquário', element: 'Ar', start: [1, 20], end: [2, 18] },
+  { name: 'Peixes', element: 'Água', start: [2, 19], end: [3, 20] },
 ];
 
 function isDateWithinZodiacRange(month: number, day: number, sign: ZodiacSign) {
@@ -841,7 +841,7 @@ export function getZodiacCompatibility(signA: ZodiacSign | null, signB: ZodiacSi
     return {
       score: 88,
       label: 'Afinidade alta',
-      description: `Ambos sÃ£o de ${signA.name}. A leitura recreativa indica identificaÃ§Ã£o direta de ritmo, linguagem e temperamento.`,
+      description: `Ambos são de ${signA.name}. A leitura recreativa indica identificação direta de ritmo, linguagem e temperamento.`,
     };
   }
 
@@ -849,25 +849,25 @@ export function getZodiacCompatibility(signA: ZodiacSign | null, signB: ZodiacSi
     return {
       score: 82,
       label: 'Afinidade alta',
-      description: `Os dois signos pertencem ao elemento ${signA.element}, o que sugere compatibilidade natural na leitura astrolÃ³gica recreativa.`,
+      description: `Os dois signos pertencem ao elemento ${signA.element}, o que sugere compatibilidade natural na leitura astrológica recreativa.`,
     };
   }
 
-  const complementaryPairs = new Set(['Fogo-Ar', 'Ar-Fogo', 'Terra-Ãgua', 'Ãgua-Terra']);
+  const complementaryPairs = new Set(['Fogo-Ar', 'Ar-Fogo', 'Terra-Água', 'Água-Terra']);
   const pair = `${signA.element}-${signB.element}`;
 
   if (complementaryPairs.has(pair)) {
     return {
       score: 74,
-      label: 'Boa combinaÃ§Ã£o',
-      description: `${signA.element} e ${signB.element} costumam ser vistos como elementos complementares em leituras astrolÃ³gicas recreativas.`,
+      label: 'Boa combinação',
+      description: `${signA.element} e ${signB.element} costumam ser vistos como elementos complementares em leituras astrológicas recreativas.`,
     };
   }
 
   return {
     score: 58,
-    label: 'CombinaÃ§Ã£o de contraste',
-    description: `A combinaÃ§Ã£o entre ${signA.element} e ${signB.element} pode indicar diferenÃ§as de ritmo, mas tambÃ©m pontos de aprendizado.`,
+    label: 'Combinação de contraste',
+    description: `A combinação entre ${signA.element} e ${signB.element} pode indicar diferenças de ritmo, mas também pontos de aprendizado.`,
   };
 }
 
