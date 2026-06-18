@@ -34,16 +34,18 @@ function isMobileViewport() {
   }
 }
 
-function isHorizontalFamilyMapRoute() {
+function shouldEnableInitialSpouseFilter() {
   try {
-    return window.location.pathname === '/mapa-familiar-horizontal';
+    const isHorizontalFamilyMap = window.location.pathname === '/mapa-familiar-horizontal';
+    const isViewingAnotherPerson = new URLSearchParams(window.location.search).has('pessoa');
+    return isHorizontalFamilyMap || isViewingAnotherPerson;
   } catch {
     return false;
   }
 }
 
-function withHorizontalFamilyMapDefaults(filters: DirectRelativeFilters): DirectRelativeFilters {
-  if (!isHorizontalFamilyMapRoute()) return filters;
+function withInitialFamilyMapDefaults(filters: DirectRelativeFilters): DirectRelativeFilters {
+  if (!shouldEnableInitialSpouseFilter()) return filters;
 
   return {
     ...filters,
@@ -53,11 +55,11 @@ function withHorizontalFamilyMapDefaults(filters: DirectRelativeFilters): Direct
 
 export function readDirectRelativeFilters(userId?: string): DirectRelativeFilters {
   if (isMobileViewport()) return MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS;
-  if (!userId) return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
+  if (!userId) return withInitialFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
 
   try {
     const value = window.localStorage.getItem(`familyTree:directRelativeFilters:${userId}`);
-    if (!value) return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
+    if (!value) return withInitialFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
 
     const parsed = JSON.parse(value) as Partial<Record<DirectRelativeGroup, unknown>>;
     const storedFilters = (Object.keys(DEFAULT_DIRECT_RELATIVE_FILTERS) as DirectRelativeGroup[]).reduce(
@@ -68,9 +70,9 @@ export function readDirectRelativeFilters(userId?: string): DirectRelativeFilter
       {} as DirectRelativeFilters
     );
 
-    return withHorizontalFamilyMapDefaults(storedFilters);
+    return withInitialFamilyMapDefaults(storedFilters);
   } catch {
-    return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
+    return withInitialFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
   }
 }
 
