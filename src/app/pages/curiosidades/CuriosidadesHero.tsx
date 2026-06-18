@@ -19,7 +19,7 @@ const sectionLinks = [
 
 export function CuriosidadesHero() {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 md:p-8">
+    <section className="curiosidades-hero rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 md:p-8">
       <div className="min-w-0">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:text-sm">
           <Sparkles className="h-4 w-4" />
@@ -28,7 +28,7 @@ export function CuriosidadesHero() {
         <h2 className="text-2xl font-bold leading-tight text-gray-950 sm:text-3xl md:text-4xl">
           Uma área para reunir descobertas, memórias e conexões familiares.
         </h2>
-        <div className="mt-4 flex flex-wrap gap-2 sm:mt-5" aria-label="Atalhos para áreas de curiosidades">
+        <div className="curiosidades-section-links mt-4 flex flex-wrap gap-2 sm:mt-5" aria-label="Atalhos para áreas de curiosidades">
           {sectionLinks.map((link) => (
             <a
               key={link.href}
