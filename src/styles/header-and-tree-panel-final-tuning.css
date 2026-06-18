@@ -1,6 +1,7 @@
 /* Ajustes finais: painel desktop da árvore, botão Alertas e responsividade de Curiosidades. */
 
 @media (min-width: 768px) {
+  header a[href='/notificacoes'],
   header a[href='/notificacoes'][title='Alertas'] {
     width: 2.25rem !important;
     min-width: 2.25rem !important;
@@ -11,6 +12,7 @@
     gap: 0 !important;
   }
 
+  header a[href='/notificacoes'] > svg + span,
   header a[href='/notificacoes'][title='Alertas'] > svg + span {
     position: absolute !important;
     width: 1px !important;
@@ -88,5 +90,14 @@
 @media (max-width: 767px) {
   main a[href^='#'] {
     scroll-margin-top: 5rem;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .mobile-tree-panel-viewport-close {
+    touch-action: manipulation;
   }
 }
