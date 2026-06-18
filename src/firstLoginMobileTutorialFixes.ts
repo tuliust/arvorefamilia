@@ -212,3 +212,5 @@ function installFirstLoginMobileTutorialFixes() {
 if (typeof window !== 'undefined') {
   installFirstLoginMobileTutorialFixes();
 }
+
+export {};
