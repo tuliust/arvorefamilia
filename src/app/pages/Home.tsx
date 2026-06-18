@@ -874,6 +874,7 @@ export function Home() {
           ? 'true'
           : undefined
       }
+      data-tour-target="groups-filters"
     >
       <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
         {(!isMobile || mobileGroupsOpen) && (
@@ -1215,6 +1216,7 @@ export function Home() {
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
+                    data-tour-target="tree-controls-collapse"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>

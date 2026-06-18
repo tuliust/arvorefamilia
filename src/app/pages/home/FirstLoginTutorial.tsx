@@ -3,7 +3,6 @@ import {
   Eye,
   MessageCircle,
   Network,
-  Search,
   SlidersHorizontal,
   Sparkles,
   UserRound,
@@ -20,7 +19,7 @@ type TutorialTarget = {
 type TutorialStep = {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   icon: React.ComponentType<{ className?: string }>;
   bullets?: string[];
   tip?: string;
@@ -64,160 +63,119 @@ const PANEL_GAP = 18;
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    eyebrow: 'Início',
-    title: 'Bem-vindo ao Mapa Familiar',
-    description:
-      'Esta é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.',
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Aqui é o seu menu',
     icon: Network,
     panelPlacement: 'left',
     targets: [
       {
-        selectors: [
-          'button img',
-          'img[alt*="perfil"]',
-          'img[alt*="avatar"]',
-          'img[alt*="profile"]',
-        ],
+        selectors: ['[data-tour-target="alerts"]'],
         padding: 10,
       },
       {
-        containerTextIncludes: ['Atualizar perfil', 'Painel Admin', 'Sair'],
-        padding: 12,
+        selectors: ['[data-tour-target="search"]'],
+        padding: 10,
+      },
+      {
+        selectors: ['[data-tour-target="profile-menu"]'],
+        padding: 10,
       },
     ],
     bullets: [
-      'Preencha seu perfil no início.',
-      'Atualize seus dados sempre que desejar.',
-      'Use a plataforma como um acervo privado da história familiar.',
+      'Não perca datas importantes e avisos na área de Alertas e configure suas preferências de notificações.',
+      'Utilize o botão de busca para procurar por pessoas, páginas do site ou histórias.',
+      'No menu, tenha acesso rápido a todas as áreas do site.',
+      'Edite e complemente seus dados e altere a sua foto do perfil ou a sua senha de acesso.',
+      'Personalize o que pode ser visualizado por outras pessoas.',
+      'Saia da plataforma pelo logout.',
     ],
   },
   {
-    eyebrow: 'Visualização',
+    eyebrow: 'GUIA RÁPIDO',
     title: 'Modos de exibição e controles da árvore',
-    description:
-      'Você pode visualizar a árvore genealógica de duas formas: no modo vertical, em formato de pirâmide, ou no modo horizontal, organizado por colunas de gerações.',
     icon: Eye,
     panelPlacement: 'below',
     targets: [
       {
-        containerTextIncludes: [
-          'Zoom',
-          'Vertical',
-          'Horizontal',
-          'Cores',
-          'Exportar',
-          'Destacar',
-        ],
+        selectors: ['[data-tour-target="tree-controls"]'],
         padding: 12,
+      },
+      {
+        selectors: ['[data-tour-target="tree-controls-collapse"]'],
+        padding: 10,
       },
     ],
     bullets: [
-      'Troque as paletas de cores.',
-      'Alterne entre vertical e horizontal.',
-      'Controle o zoom pelos botões do painel, pelo mouse ou pelos atalhos do teclado.',
+      'Feche o painel no botão de seta para expandir a área de visualização.',
+      'Escolha o modo de visualização da árvore genealógica.',
+      'Mude a paleta de cores de exibição da sua tela de mapa familiar.',
+      'Configure o zoom e a exibição de linhas, bordas, cards e grupos.',
+      'Imprima ou salve em imagem ou PDF, destacando a área desejada da tela.',
     ],
   },
   {
-    eyebrow: 'Grupos e filtros',
+    eyebrow: 'GUIA RÁPIDO',
     title: 'Controle quem aparece na árvore',
-    description:
-      'No painel lateral, os cards de grupos mostram quantas pessoas estão cadastradas em cada categoria de parentesco.',
     icon: SlidersHorizontal,
     panelPlacement: 'right',
     targets: [
       {
-        containerTextIncludes: ['GRUPOS', 'FILTROS'],
+        selectors: ['[data-tour-target="groups-filters"]'],
         padding: 12,
       },
     ],
     bullets: [
-      'Clique nos botões para ocultar ou exibir grupos de parentes.',
-      'Use os filtros para ver pessoas vivas ou falecidas.',
-      'Inclua ou oculte cônjuges conforme a visualização desejada.',
+      'Clique nos botões coloridos para ocultar ou exibir grupos de parentes.',
+      'Use os filtros para visualizar na árvore apenas pessoas vivas ou falecidas.',
+      'Ative o botão de cônjuges para exibir os cards de pessoas que se juntaram à família.',
+      'O botão de Pet faz aparecer na árvore os animais de estimação cadastrados.',
     ],
   },
   {
-    eyebrow: 'Busca e favoritos',
-    title: 'Favorite e encontre informações',
-    description:
-      'A busca ajuda a navegar rapidamente pelo acervo familiar.',
-    icon: Search,
-    panelPlacement: 'below',
-    targets: [
-      {
-        selectors: [
-          '[data-tour-target="search"]',
-          'input[placeholder*="Buscar"]',
-          'input[placeholder*="buscar"]',
-          'input[placeholder*="pessoa ou página"]',
-          'input[placeholder*="Pesquise"]',
-        ],
-        padding: 10,
-      },
-      {
-        selectors: [
-          '[data-tour-target="favorite"]',
-          'button[aria-label*="favoritos"]',
-          'button[aria-label*="Favoritos"]',
-        ],
-        padding: 10,
-      },
-    ],
-    bullets: [
-      'Pesquise por pessoas, momentos e eventos.',
-      'Use o botão com estrela para salvar seus conteúdos favoritos.',
-    ],
-  },
-  {
-    eyebrow: 'Pessoas e relacionamentos',
+    eyebrow: 'GUIA RÁPIDO',
     title: 'Perfis, vínculos e memórias',
-    description:
-      'Visualize dados pessoais, histórias, curiosidades e a linha do tempo de memórias dos seus parentes.',
     icon: UserRound,
     panelPlacement: 'below',
-    panelReference: 'last',
     targets: [
-      {
-        selectors: ['[data-tour-target="curiosities"]'],
-        textIncludes: ['Curiosidades'],
-        padding: 10,
-      },
       {
         selectors: ['[data-family-map-central-card="true"]'],
         padding: 12,
       },
     ],
     bullets: [
-      'Descubra seu grau de parentesco e encontre novos familiares.',
-      'Acesse contatos, astrologia, fatos do dia do nascimento, lembranças, fotos e arquivos históricos.',
-      'Consulte datas de casamento, nascimento e óbito.',
+      'Clique nos cards para acessar informações pessoais, biografia e contatos de familiares.',
+      'Descubra seu grau de parentesco e a linha genealógica que conecta vocês.',
+      'Acesse arquivos históricos, certidões e uma linha do tempo de memórias.',
+      'Confira ainda o que diz a astrologia e os fatos do dia do nascimento desta pessoa.',
     ],
   },
   {
-    eyebrow: 'Calendário e Notificações',
-    title: 'Datas Importantes e Alertas',
-    description:
-      'Acesse estatísticas rápidas, faça perguntas sobre pessoas e memórias com apoio da IA e acompanhe eventos da família pelo Calendário.',
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Inteligência artificial, datas importantes e seus destaques',
     icon: Sparkles,
     panelPlacement: 'below',
     targets: [
       {
         selectors: ['[data-tour-target="curiosities"]'],
-        textIncludes: ['Curiosidades'],
+        padding: 10,
+      },
+      {
+        selectors: ['[data-tour-target="calendar"]'],
+        padding: 10,
+      },
+      {
+        selectors: ['[data-tour-target="favorites"]'],
         padding: 10,
       },
     ],
     bullets: [
-      'Veja aniversários, datas de memória e comemorações.',
-      'Integre o calendário ao Google Agenda.',
-      'Configure preferências de alertas e salve itens favoritos.',
+      'Em Curiosidades, surpreenda-se com fatos e números. Faça perguntas para a inteligência artificial para descobrir conexões e buscar dados sobre você e seus familiares.',
+      'Veja aniversários, datas de memória e comemorações no Calendário. Você pode integrar também ao Google Agenda.',
     ],
   },
   {
-    eyebrow: 'Fórum',
+    eyebrow: 'GUIA RÁPIDO',
     title: 'Interação entre familiares',
-    description:
-      'Interaja com os demais usuários criando tópicos de debate e compartilhando histórias, lembranças, dúvidas, documentos e registros importantes da família.',
     icon: MessageCircle,
     panelPlacement: 'below',
     targets: [
@@ -228,9 +186,9 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       },
     ],
     bullets: [
+      'Interaja com todos criando tópicos de debate e compartilhando histórias, lembranças e dúvidas.',
       'Crie tópicos para organizar conversas.',
-      'Compartilhe memórias e descobertas.',
-      'Use o fórum como espaço de colaboração familiar.',
+      'Responda mensagens e engaje com curtidas e outras reações.',
     ],
   },
 ];
@@ -745,9 +703,6 @@ export function FirstLoginTutorial({
             >
               {currentStep.title}
             </h2>
-            <p className="mt-1 text-xs font-semibold text-slate-500">
-              Etapa {stepIndex + 1} de {totalSteps}
-            </p>
           </div>
 
           <button
@@ -768,12 +723,14 @@ export function FirstLoginTutorial({
         </div>
 
         <main className="relative z-10 max-h-[44vh] overflow-y-auto bg-white px-4 py-4">
-          <p className="text-sm leading-6 text-slate-700">
-            {currentStep.description}
-          </p>
+          {currentStep.description && (
+            <p className="text-sm leading-6 text-slate-700">
+              {currentStep.description}
+            </p>
+          )}
 
           {currentStep.bullets && currentStep.bullets.length > 0 && (
-            <ul className="mt-3 space-y-2">
+            <ul className={['space-y-2', currentStep.description ? 'mt-3' : ''].join(' ')}>
               {currentStep.bullets.map((item) => (
                 <li key={item} className="flex gap-2 text-sm leading-5 text-slate-700">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
@@ -791,33 +748,24 @@ export function FirstLoginTutorial({
           )}
         </main>
 
-        <footer className="relative z-10 flex flex-col gap-2 border-t border-slate-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            className="rounded-xl px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Pular
-          </button>
-
-          <div className="flex gap-2">
+        <footer className="relative z-10 flex justify-end gap-2 border-t border-slate-100 bg-white px-4 py-3">
+          {!isFirstStep && (
             <button
               type="button"
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-none"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onClick={goBack}
-              disabled={isFirstStep}
             >
               Voltar
             </button>
+          )}
 
-            <button
-              type="button"
-              className="flex-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:flex-none"
-              onClick={goNext}
-            >
-              {isLastStep ? 'Começar' : 'Próximo'}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={goNext}
+          >
+            {isLastStep ? 'Começar' : 'Próximo'}
+          </button>
         </footer>
       </section>
     </div>

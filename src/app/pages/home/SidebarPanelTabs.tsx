@@ -260,7 +260,7 @@ export function SidebarPanelTabs({
   }, [mobileGroupsActive, onMobileGroupsOpenChange]);
 
   return (
-    <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]" data-tree-export-ignore="true">
+    <div className="tree-panel-control-stack flex w-full min-w-0 flex-col gap-[clamp(0.55rem,1.22vh,0.78rem)]" data-tour-target="tree-controls" data-tree-export-ignore="true">
       {!mobileControls && (
         <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5 pr-[clamp(40px,5vh,44px)]">
           <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />

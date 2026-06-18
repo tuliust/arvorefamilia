@@ -296,23 +296,23 @@ export function HomeHeader({
         </div>
 
         <div className={['min-w-0 shrink-0 flex-nowrap items-center justify-center gap-1.5 overflow-visible sm:gap-2', isSearchExpanded ? 'hidden lg:flex' : 'hidden md:flex'].join(' ')}>
-          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3" title="Curiosidades" aria-label="Abrir Curiosidades" onClick={onCuriosities}>
+          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 md:inline-flex lg:px-3" title="Curiosidades" aria-label="Abrir Curiosidades" data-tour-target="curiosities" onClick={onCuriosities}>
             <Sparkles className="h-4 w-4" />
             <span className={headerActionTextClassName}>Curiosidades</span>
           </Button>
-          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Calendário familiar" aria-label="Abrir Calendário familiar" onClick={() => navigateFromHome('/calendario-familiar')}>
+          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Calendário familiar" aria-label="Abrir Calendário familiar" data-tour-target="calendar" onClick={() => navigateFromHome('/calendario-familiar')}>
             <CalendarDays className="h-4 w-4" />
             <span className={headerActionTextClassName}>Calendário</span>
           </Button>
-          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Meus favoritos" aria-label="Abrir Favoritos" onClick={() => navigateFromHome('/meus-favoritos')}>
+          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Meus favoritos" aria-label="Abrir Favoritos" data-tour-target="favorites" onClick={() => navigateFromHome('/meus-favoritos')}>
             <Star className="h-4 w-4" />
             <span className={headerActionTextClassName}>Favoritos</span>
           </Button>
-          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Fórum de Discussões" aria-label="Abrir Fórum de Discussões" onClick={() => navigateFromHome('/forum')}>
+          <Button variant="outline" className="hidden h-9 shrink-0 gap-2 px-2 lg:inline-flex lg:px-3" title="Fórum de Discussões" aria-label="Abrir Fórum de Discussões" data-tour-target="forum" onClick={() => navigateFromHome('/forum')}>
             <MessageCircle className="h-4 w-4" />
             <span className={headerActionTextClassName}>Fórum</span>
           </Button>
-          <Button variant="outline" size="icon" className="hidden h-9 w-9 shrink-0 rounded-xl border-gray-200 shadow-sm md:inline-flex" title="Alertas" aria-label="Abrir alertas" onClick={() => navigateFromHome('/notificacoes')}>
+          <Button variant="outline" size="icon" className="hidden h-9 w-9 shrink-0 rounded-xl border-gray-200 shadow-sm md:inline-flex" title="Alertas" aria-label="Abrir alertas" data-tour-target="alerts" onClick={() => navigateFromHome('/notificacoes')}>
             <Bell className="h-4 w-4" />
           </Button>
         </div>
@@ -325,6 +325,7 @@ export function HomeHeader({
               className="relative z-[504] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
               title="Buscar por pessoa ou página"
               aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
+              data-tour-target="search"
               onClick={() => {
                 setSearchSuggestionsDismissed(false);
                 onSearchExpandedChange(true);
@@ -354,10 +355,10 @@ export function HomeHeader({
             </div>
           </div>
 
-          <div className="md:hidden">
+          <div className="md:hidden" data-tour-target="profile-menu">
             <UserProfileMenu />
           </div>
-          <div className="hidden min-w-0 items-center gap-2 md:flex">
+          <div className="hidden min-w-0 items-center gap-2 md:flex" data-tour-target="profile-menu">
             <UserProfileMenu />
           </div>
         </div>
