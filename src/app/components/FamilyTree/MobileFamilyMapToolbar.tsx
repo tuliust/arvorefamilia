@@ -35,13 +35,19 @@ export function MobileFamilyMapToolbar({
     <nav
       aria-label="Controles do mapa familiar"
       className={[
-        'border-b border-slate-200 bg-white/95 px-1 py-2 shadow-sm backdrop-blur md:hidden',
+        'border-b border-slate-200 bg-white/95 px-0 py-2 shadow-sm backdrop-blur transition-[padding-bottom] duration-200 md:hidden',
         className,
       ].filter(Boolean).join(' ')}
+      style={{
+        top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
+        paddingBottom: activeAction ? '7.25rem' : undefined,
+      }}
+      data-mobile-family-map-toolbar="true"
+      data-mobile-family-map-toolbar-active={activeAction ? 'true' : undefined}
       data-tree-export-ignore="true"
     >
-      <div className="mx-auto flex w-full max-w-md min-w-0 items-center justify-center gap-1 px-1">
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded-xl bg-slate-100 p-0.5">
+      <div className="mx-auto flex w-full max-w-md min-w-0 items-center justify-center gap-2 px-2">
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-1 rounded-full bg-slate-100 p-1">
           {TOOLBAR_ITEMS.map((item) => {
             const active = activeAction === item.action;
 
@@ -52,7 +58,7 @@ export function MobileFamilyMapToolbar({
                 onClick={() => onAction?.(item.action)}
                 aria-pressed={active || undefined}
                 className={[
-                  'min-w-0 flex-1 whitespace-nowrap rounded-lg px-1 py-2 text-[8.5px] font-extrabold leading-none tracking-[-0.035em] transition min-[360px]:px-1.5 min-[375px]:text-[9.5px]',
+                  'min-w-0 flex-1 whitespace-nowrap rounded-full px-1.5 py-2 text-[9px] font-extrabold leading-none tracking-[-0.035em] transition min-[360px]:text-[10px] min-[390px]:px-2',
                   active
                     ? 'bg-cyan-700 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-white active:bg-white',
@@ -75,9 +81,9 @@ export function MobileFamilyMapToolbar({
             onAction?.('mais' as MobileFamilyMapToolbarAction);
           }}
           aria-label="Abrir painel completo de visualização"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-95"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-semibold leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-95"
         >
-          <span className="-mt-0.5" aria-hidden="true">+</span>
+          <span className="-mt-1" aria-hidden="true">+</span>
         </button>
       </div>
     </nav>
