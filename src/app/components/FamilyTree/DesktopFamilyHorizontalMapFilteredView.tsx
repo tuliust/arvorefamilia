@@ -23,6 +23,10 @@ interface DesktopFamilyHorizontalMapFilteredViewProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
+function isNonEmptyString(value: string | null | undefined): value is string {
+  return Boolean(value);
+}
+
 function isParentChildRelationship(relationship: Relacionamento) {
   const type = relationship.tipo_relacionamento as string;
   return type === 'pai'
@@ -53,7 +57,7 @@ function getParentIdsForPerson(centralPersonId: string, relacionamentos: Relacio
       .map(getParentChildIds)
       .filter(({ childId }) => childId === centralPersonId)
       .map(({ parentId }) => parentId)
-      .filter(Boolean)
+      .filter(isNonEmptyString)
   );
 }
 
