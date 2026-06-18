@@ -33,12 +33,12 @@ export function MobileFamilyMapToolbar({
     <nav
       aria-label="Controles do mapa familiar"
       className={[
-        'border-b border-slate-200 bg-white/95 px-1.5 py-2 shadow-sm backdrop-blur md:hidden',
+        'border-b border-slate-200 bg-white/95 px-1 py-2 shadow-sm backdrop-blur md:hidden',
         className,
       ].filter(Boolean).join(' ')}
       data-tree-export-ignore="true"
     >
-      <div className="flex w-full min-w-0 items-center gap-0.5 rounded-xl bg-slate-100 p-0.5">
+      <div className="mx-auto flex w-fit max-w-full min-w-0 items-center justify-center gap-0.5 rounded-xl bg-slate-100 p-0.5">
         {TOOLBAR_ITEMS.map((item) => {
           const active = activeAction === item.action;
 
@@ -49,7 +49,7 @@ export function MobileFamilyMapToolbar({
               onClick={() => onAction?.(item.action)}
               aria-pressed={active || undefined}
               className={[
-                'min-w-0 flex-1 whitespace-nowrap rounded-lg px-1 py-2 text-[9px] font-extrabold leading-none tracking-[-0.025em] transition min-[375px]:px-1.5 min-[375px]:text-[10px]',
+                'min-w-0 shrink-0 whitespace-nowrap rounded-lg px-1.5 py-2 text-[9px] font-extrabold leading-none tracking-[-0.025em] transition min-[360px]:px-2 min-[375px]:text-[10px]',
                 active
                   ? 'bg-cyan-700 text-white shadow-sm'
                   : 'text-slate-600 hover:bg-white active:bg-white',
