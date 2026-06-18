@@ -1,4 +1,4 @@
-﻿import {
+import {
   DEFAULT_DIRECT_RELATIVE_FILTERS,
   DirectRelativeFilters,
   DirectRelativeGroup,
@@ -34,24 +34,43 @@ function isMobileViewport() {
   }
 }
 
+function isHorizontalFamilyMapRoute() {
+  try {
+    return window.location.pathname === '/mapa-familiar-horizontal';
+  } catch {
+    return false;
+  }
+}
+
+function withHorizontalFamilyMapDefaults(filters: DirectRelativeFilters): DirectRelativeFilters {
+  if (!isHorizontalFamilyMapRoute()) return filters;
+
+  return {
+    ...filters,
+    conjuge: true,
+  };
+}
+
 export function readDirectRelativeFilters(userId?: string): DirectRelativeFilters {
   if (isMobileViewport()) return MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS;
-  if (!userId) return DEFAULT_DIRECT_RELATIVE_FILTERS;
+  if (!userId) return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
 
   try {
     const value = window.localStorage.getItem(`familyTree:directRelativeFilters:${userId}`);
-    if (!value) return DEFAULT_DIRECT_RELATIVE_FILTERS;
+    if (!value) return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
 
     const parsed = JSON.parse(value) as Partial<Record<DirectRelativeGroup, unknown>>;
-    return (Object.keys(DEFAULT_DIRECT_RELATIVE_FILTERS) as DirectRelativeGroup[]).reduce(
+    const storedFilters = (Object.keys(DEFAULT_DIRECT_RELATIVE_FILTERS) as DirectRelativeGroup[]).reduce(
       (filters, key) => ({
         ...filters,
         [key]: typeof parsed[key] === 'boolean' ? parsed[key] : DEFAULT_DIRECT_RELATIVE_FILTERS[key],
       }),
       {} as DirectRelativeFilters
     );
+
+    return withHorizontalFamilyMapDefaults(storedFilters);
   } catch {
-    return DEFAULT_DIRECT_RELATIVE_FILTERS;
+    return withHorizontalFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
   }
 }
 
@@ -99,4 +118,3 @@ export function clearTreePreferences() {
 }
 
 export { STORAGE_KEYS as TREE_PREFERENCE_KEYS };
-
