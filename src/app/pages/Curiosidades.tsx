@@ -15,6 +15,7 @@ import { CuriosidadesMemoryWall } from './curiosidades/CuriosidadesMemoryWall';
 import { CuriosidadesQuizSection } from './curiosidades/CuriosidadesQuizSection';
 import { CuriosidadesRankings } from './curiosidades/CuriosidadesRankings';
 import { CuriosidadesRouteSection } from './curiosidades/CuriosidadesRouteSection';
+import { CuriosidadesSectionNav } from './curiosidades/CuriosidadesSectionNav';
 import { CuriosidadesStats } from './curiosidades/CuriosidadesStats';
 import { CuriosidadesToday } from './curiosidades/CuriosidadesToday';
 
@@ -86,20 +87,47 @@ export function Curiosidades() {
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-8`}>
         <CuriosidadesHero />
-        <CuriosidadesStats {...curiosityDataProps} />
-        <CuriosidadesToday {...curiosityDataProps} />
-        <CuriosidadesRankings {...curiosityDataProps} />
+        <CuriosidadesSectionNav />
+        <div id="numeros-da-familia" className="scroll-mt-24">
+          <CuriosidadesStats {...curiosityDataProps} />
+        </div>
+        <div id="hoje-na-familia" className="scroll-mt-24">
+          <CuriosidadesToday {...curiosityDataProps} />
+        </div>
+        <div id="voce-sabia" className="scroll-mt-24">
+          <CuriosidadesRankings {...curiosityDataProps} />
+        </div>
         <div className="grid gap-4 lg:grid-cols-2">
+          <div id="geracoes" className="scroll-mt-24">
           <CuriosidadesGenerations {...curiosityDataProps} />
+        </div>
+          <div id="bodas" className="scroll-mt-24">
           <CuriosidadesCouples {...curiosityDataProps} />
+        </div>
+          <div id="descobertas" className="scroll-mt-24">
           <CuriosidadesDiscoverySection {...curiosityDataProps} />
+        </div>
+          <div id="ia" className="scroll-mt-24">
           <CuriosidadesAiSection {...curiosityDataProps} />
+        </div>
+          <div id="conexoes" className="scroll-mt-24">
           <CuriosidadesConnectionSection {...curiosityDataProps} />
+        </div>
+          <div id="quiz" className="scroll-mt-24">
           <CuriosidadesQuizSection {...curiosityDataProps} />
+        </div>
+          <div id="rota" className="scroll-mt-24">
           <CuriosidadesRouteSection {...curiosityDataProps} />
+        </div>
+          <div id="interesses" className="scroll-mt-24">
           <CuriosidadesInterestsSection {...curiosityDataProps} />
+        </div>
+          <div id="mural" className="scroll-mt-24">
           <CuriosidadesMemoryWall />
+        </div>
+          <div id="astrologia" className="scroll-mt-24">
           <CuriosidadesAstrology {...curiosityDataProps} />
+        </div>
         </div>
       </main>
     </div>
