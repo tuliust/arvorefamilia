@@ -1,0 +1,62 @@
+/* Ajustes visuais globais de páginas internas */
+
+/* /notificacoes: remove o bloco de resumo "Recentes / n não lida". */
+section[aria-label="Resumo e ações de notificações"] {
+  display: none !important;
+}
+
+/* Header: quando a busca está expandida, ações com ícone viram icon-only. */
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(> svg),
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(> svg) {
+  width: 2.25rem !important;
+  min-width: 2.25rem !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label] > span.text-sm,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label] > span.text-sm,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label] > span.whitespace-nowrap,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label] > span.whitespace-nowrap,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label] > span[class*="not-sr-only"],
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label] > span[class*="not-sr-only"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* /calendario-familiar: troca emojis por ícones vetoriais nos cards laterais. */
+#aniversariantes h3 > span[aria-hidden="true"],
+#memoria h3 > span[aria-hidden="true"] {
+  font-size: 0 !important;
+}
+
+#aniversariantes h3 > span[aria-hidden="true"]::before,
+#memoria h3 > span[aria-hidden="true"]::before {
+  content: '';
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  background-color: currentColor;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+
+#aniversariantes h3 > span[aria-hidden="true"]::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8'/%3E%3Cpath d='M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1'/%3E%3Cpath d='M2 21h20'/%3E%3Cpath d='M7 8v3'/%3E%3Cpath d='M12 8v3'/%3E%3Cpath d='M17 8v3'/%3E%3Cpath d='M7 4h.01'/%3E%3Cpath d='M12 4h.01'/%3E%3Cpath d='M17 4h.01'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8'/%3E%3Cpath d='M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1'/%3E%3Cpath d='M2 21h20'/%3E%3Cpath d='M7 8v3'/%3E%3Cpath d='M12 8v3'/%3E%3Cpath d='M17 8v3'/%3E%3Cpath d='M7 4h.01'/%3E%3Cpath d='M12 4h.01'/%3E%3Cpath d='M17 4h.01'/%3E%3C/svg%3E");
+}
+
+#memoria h3 > span[aria-hidden="true"]::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3Cpath d='M12 7v5l4 2'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3Cpath d='M12 7v5l4 2'/%3E%3C/svg%3E");
+}
