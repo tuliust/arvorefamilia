@@ -3,16 +3,23 @@ import {
   Bell,
   CalendarDays,
   ChevronDown,
+  ChevronRight,
+  ClipboardList,
+  Cross,
+  Eye,
   FileDown,
   Heart,
+  HeartHandshake,
   Home,
   ImageDown,
   Layers,
   Map,
   MessageCircle,
+  Network,
   Printer,
   Scan,
   Star,
+  UserRound,
   UsersRound,
 } from 'lucide-react';
 import {
@@ -27,10 +34,12 @@ import {
   type TreeColorPalette,
 } from '../../components/FamilyTree/treeColorPalettes';
 import { useAuth } from '../../contexts/AuthContext';
-import { obterTodasPessoas } from '../../services/dataService';
+import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
 import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
-import type { Pessoa } from '../../types';
+import type { Pessoa, Relacionamento } from '../../types';
+import { isPersonDeceased } from '../../utils/personFields';
+import { isHumanFamilyMember } from '../../utils/personEntity';
 import { dispatchTreeAction, type SidebarTreeAction } from './SidebarPanelTabs';
 
 interface HomeMobileNavProps {
@@ -40,6 +49,18 @@ interface HomeMobileNavProps {
 }
 
 type ViewAsPersonOption = { id: string; label: string };
+type MobileFamilyGroupTab = 'nucleo' | 'ascendentes' | 'colaterais';
+type MobileFamilyGroupCountKey =
+  | 'pais'
+  | 'conjuges'
+  | 'irmaos'
+  | 'filhos'
+  | 'avos'
+  | 'bisavos'
+  | 'tataravos'
+  | 'tios'
+  | 'primos'
+  | 'sobrinhos';
 
 function getCurrentPathname() {
   if (typeof window === 'undefined') return '';
@@ -81,6 +102,141 @@ function formatFamilyViewLabel(value: string) {
   if (!clean) return 'Família principal';
   if (clean.toLocaleLowerCase('pt-BR').startsWith('família de ')) return clean;
   return `Família de ${clean}`;
+}
+
+function uniqueCount(values: Array<string | undefined | null>) {
+  return new Set(values.filter(Boolean) as string[]).size;
+}
+
+function getMobileFamilyGroupCounts(
+  centralPersonId: string | undefined,
+  relacionamentos: Relacionamento[]
+): Record<MobileFamilyGroupCountKey, number> {
+  const activeRelationships = relacionamentos.filter((relationship) => relationship.ativo !== false);
+
+  if (!centralPersonId) {
+    return {
+      pais: uniqueCount(
+        activeRelationships
+          .filter((relationship) => relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+          .map((relationship) => relationship.pessoa_origem_id)
+      ),
+      conjuges: uniqueCount(
+        activeRelationships
+          .filter((relationship) => relationship.tipo_relacionamento === 'conjuge')
+          .flatMap((relationship) => [relationship.pessoa_origem_id, relationship.pessoa_destino_id])
+      ),
+      irmaos: uniqueCount(
+        activeRelationships
+          .filter((relationship) => relationship.tipo_relacionamento === 'irmao')
+          .flatMap((relationship) => [relationship.pessoa_origem_id, relationship.pessoa_destino_id])
+      ),
+      filhos: uniqueCount(
+        activeRelationships
+          .filter((relationship) => relationship.tipo_relacionamento === 'filho')
+          .map((relationship) => relationship.pessoa_destino_id)
+      ),
+      avos: 0,
+      bisavos: 0,
+      tataravos: 0,
+      tios: 0,
+      primos: 0,
+      sobrinhos: 0,
+    };
+  }
+
+  const parentIds = new Set(
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.pessoa_destino_id === centralPersonId &&
+          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+      )
+      .map((relationship) => relationship.pessoa_origem_id)
+      .filter(Boolean)
+  );
+
+  const childIds = new Set(
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.pessoa_origem_id === centralPersonId &&
+          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae' || relationship.tipo_relacionamento === 'filho')
+      )
+      .map((relationship) => relationship.pessoa_destino_id)
+      .filter(Boolean)
+  );
+
+  const siblingIds = new Set(
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.tipo_relacionamento === 'irmao' &&
+          (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
+      )
+      .map((relationship) =>
+        relationship.pessoa_origem_id === centralPersonId
+          ? relationship.pessoa_destino_id
+          : relationship.pessoa_origem_id
+      )
+      .filter(Boolean)
+  );
+
+  const spouseIds = new Set(
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.tipo_relacionamento === 'conjuge' &&
+          (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
+      )
+      .map((relationship) =>
+        relationship.pessoa_origem_id === centralPersonId
+          ? relationship.pessoa_destino_id
+          : relationship.pessoa_origem_id
+      )
+      .filter(Boolean)
+  );
+
+  const grandparentIds = new Set<string>();
+  parentIds.forEach((parentId) => {
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.pessoa_destino_id === parentId &&
+          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+      )
+      .forEach((relationship) => grandparentIds.add(relationship.pessoa_origem_id));
+  });
+
+  const uncleAuntIds = new Set<string>();
+  parentIds.forEach((parentId) => {
+    activeRelationships
+      .filter(
+        (relationship) =>
+          relationship.tipo_relacionamento === 'irmao' &&
+          (relationship.pessoa_origem_id === parentId || relationship.pessoa_destino_id === parentId)
+      )
+      .forEach((relationship) => {
+        uncleAuntIds.add(
+          relationship.pessoa_origem_id === parentId
+            ? relationship.pessoa_destino_id
+            : relationship.pessoa_origem_id
+        );
+      });
+  });
+
+  return {
+    pais: parentIds.size,
+    conjuges: spouseIds.size,
+    irmaos: siblingIds.size,
+    filhos: childIds.size,
+    avos: grandparentIds.size,
+    bisavos: 0,
+    tataravos: 0,
+    tios: uncleAuntIds.size,
+    primos: 0,
+    sobrinhos: 0,
+  };
 }
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
@@ -142,6 +298,35 @@ const FILTER_OPTIONS: Array<{
   },
 ];
 
+const MOBILE_GROUP_TABS: Array<{ key: MobileFamilyGroupTab; label: string }> = [
+  { key: 'nucleo', label: 'Núcleo' },
+  { key: 'ascendentes', label: 'Ascendentes' },
+  { key: 'colaterais', label: 'Colaterais' },
+];
+
+const MOBILE_GROUP_ROWS: Record<MobileFamilyGroupTab, Array<{
+  key: MobileFamilyGroupCountKey;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}>> = {
+  nucleo: [
+    { key: 'pais', label: 'Pais', icon: UsersRound },
+    { key: 'conjuges', label: 'Cônjuges', icon: HeartHandshake },
+    { key: 'irmaos', label: 'Irmãos', icon: UsersRound },
+    { key: 'filhos', label: 'Filhos', icon: UserRound },
+  ],
+  ascendentes: [
+    { key: 'avos', label: 'Avós', icon: Network },
+    { key: 'bisavos', label: 'Bisavós', icon: Network },
+    { key: 'tataravos', label: 'Tataravós', icon: Network },
+  ],
+  colaterais: [
+    { key: 'tios', label: 'Tios', icon: UsersRound },
+    { key: 'primos', label: 'Primos', icon: UsersRound },
+    { key: 'sobrinhos', label: 'Sobrinhos', icon: UsersRound },
+  ],
+};
+
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';
 
@@ -175,6 +360,25 @@ function NotificationCountBadge({ count }: { count: number }) {
   );
 }
 
+function MobileSwitch({ active }: { active: boolean }) {
+  return (
+    <span
+      className={[
+        'relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition',
+        active ? 'bg-blue-600' : 'bg-slate-300',
+      ].join(' ')}
+      aria-hidden="true"
+    >
+      <span
+        className={[
+          'h-6 w-6 rounded-full bg-white shadow-sm transition-transform',
+          active ? 'translate-x-6' : 'translate-x-0',
+        ].join(' ')}
+      />
+    </span>
+  );
+}
+
 export function HomeMobileNav({
   legendOpen,
   onToggleLegend,
@@ -185,8 +389,12 @@ export function HomeMobileNav({
   const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
   const [viewAsPersonOptions, setViewAsPersonOptions] = useState<ViewAsPersonOption[]>([]);
+  const [mobilePeople, setMobilePeople] = useState<Pessoa[]>([]);
+  const [mobileRelationships, setMobileRelationships] = useState<Relacionamento[]>([]);
   const [defaultViewAsLabel, setDefaultViewAsLabel] = useState('Família principal');
   const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(true);
+  const [fullControlsOpen, setFullControlsOpen] = useState(false);
+  const [activeGroupTab, setActiveGroupTab] = useState<MobileFamilyGroupTab>('nucleo');
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -212,6 +420,24 @@ export function HomeMobileNav({
   }, [showExtendedSpouseFilters]);
 
   useEffect(() => {
+    if (!fullControlsOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFullControlsOpen(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [fullControlsOpen]);
+
+  useEffect(() => {
     void refreshUnreadNotificationsCount();
 
     window.addEventListener('arvorefamilia:notifications-updated', refreshUnreadNotificationsCount);
@@ -234,6 +460,7 @@ export function HomeMobileNav({
   useEffect(() => {
     if (!isDirectFamilyMap) {
       setActiveToolbarAction(null);
+      setFullControlsOpen(false);
     }
   }, [isDirectFamilyMap, pathname]);
 
@@ -280,13 +507,27 @@ export function HomeMobileNav({
 
     async function loadViewAsOptions() {
       try {
-        const pessoas = await obterTodasPessoas();
+        const [pessoasResult, relacionamentosResult] = await Promise.allSettled([
+          obterTodasPessoas(),
+          obterTodosRelacionamentos(),
+        ]);
         if (cancelled) return;
 
-        setViewAsPersonOptions(Array.isArray(pessoas) ? buildViewAsPersonOptions(pessoas) : []);
+        const pessoas = pessoasResult.status === 'fulfilled' && Array.isArray(pessoasResult.value)
+          ? pessoasResult.value
+          : [];
+        const relacionamentos = relacionamentosResult.status === 'fulfilled' && Array.isArray(relacionamentosResult.value)
+          ? relacionamentosResult.value
+          : [];
+
+        setMobilePeople(pessoas);
+        setMobileRelationships(relacionamentos);
+        setViewAsPersonOptions(buildViewAsPersonOptions(pessoas));
       } catch (error) {
         if (!cancelled) {
           console.error('Erro ao carregar pessoas para Visualização mobile:', error);
+          setMobilePeople([]);
+          setMobileRelationships([]);
           setViewAsPersonOptions([]);
         }
       }
@@ -313,8 +554,27 @@ export function HomeMobileNav({
     }
   }, [activeToolbarAction, legendOpen]);
 
+  const mobileStats = useMemo(() => {
+    const humanPeople = mobilePeople.filter(isHumanFamilyMember);
+    const deceasedPeople = humanPeople.filter(isPersonDeceased);
+    const alivePeople = humanPeople.filter((pessoa) => !isPersonDeceased(pessoa));
+
+    return {
+      totalPeople: humanPeople.length || mobilePeople.length,
+      alivePeople: alivePeople.length,
+      deceasedPeople: deceasedPeople.length,
+      registeredPeople: viewAsPersonOptions.length || humanPeople.length || mobilePeople.length,
+    };
+  }, [mobilePeople, viewAsPersonOptions.length]);
+
+  const mobileGroupCounts = useMemo(
+    () => getMobileFamilyGroupCounts(currentViewAsPersonValue || mobilePeople[0]?.id, mobileRelationships),
+    [currentViewAsPersonValue, mobilePeople, mobileRelationships]
+  );
+
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
     if (action === 'visualizacao' || action === 'formato' || action === 'cor' || action === 'grupos' || action === 'exportar') {
+      setFullControlsOpen(false);
       setActiveToolbarAction((current) => (current === action ? null : action));
 
       if (legendOpen) onToggleLegend();
@@ -324,6 +584,12 @@ export function HomeMobileNav({
     setActiveToolbarAction(action);
 
     if (!legendOpen) onToggleLegend();
+  }, [legendOpen, onToggleLegend]);
+
+  const openFullControlsPanel = useCallback(() => {
+    setActiveToolbarAction(null);
+    if (legendOpen) onToggleLegend();
+    setFullControlsOpen(true);
   }, [legendOpen, onToggleLegend]);
 
   const handleViewAsPersonChange = useCallback((nextValue: string) => {
@@ -355,6 +621,11 @@ export function HomeMobileNav({
     dispatchTreeAction(action);
   }, []);
 
+  const handleFullPanelExportClick = useCallback((action: SidebarTreeAction) => {
+    setFullControlsOpen(false);
+    dispatchTreeAction(action);
+  }, []);
+
   const handleFilterOptionClick = useCallback((nextValue: boolean) => {
     setShowExtendedSpouseFilters(nextValue);
     setActiveToolbarAction(null);
@@ -379,6 +650,7 @@ export function HomeMobileNav({
             activeAction={activeToolbarAction}
             className={`fixed inset-x-0 ${mobileTreeToolbarTopClass} z-[10000]`}
             onAction={openMobileControlsPanel}
+            onAddClick={openFullControlsPanel}
           />
 
           {activeToolbarAction === 'visualizacao' && (
@@ -559,6 +831,200 @@ export function HomeMobileNav({
               </div>
             </div>
           )}
+
+          {fullControlsOpen && (
+            <div
+              className="fixed inset-0 z-[12000] md:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Painel de visualização"
+              data-tree-export-ignore="true"
+            >
+              <button
+                type="button"
+                className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]"
+                onClick={() => setFullControlsOpen(false)}
+                aria-label="Fechar painel de visualização"
+              />
+
+              <section className="absolute left-1/2 top-1/2 flex max-h-[calc(100dvh-1.25rem)] w-[min(calc(100vw-1.25rem),28rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.22)]">
+                <div className="mx-auto mt-3 h-1.5 w-16 shrink-0 rounded-full bg-slate-300" aria-hidden="true" />
+
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-4 [-webkit-overflow-scrolling:touch]">
+                  <header className="mb-4 flex items-center gap-3">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-white text-blue-600 shadow-sm" aria-hidden="true">
+                      <Eye className="h-8 w-8" />
+                    </span>
+                    <h2 className="min-w-0 flex-1 text-[2rem] font-black leading-none tracking-[-0.045em] text-blue-950">
+                      Visualização
+                    </h2>
+                    <button
+                      type="button"
+                      className="flex shrink-0 items-center gap-1.5 rounded-xl px-1.5 py-2 text-base font-bold text-blue-600 transition hover:bg-blue-50 active:scale-95"
+                      onClick={() => handleFullPanelExportClick('save-image')}
+                    >
+                      <Printer className="h-7 w-7" />
+                      <span>Salvar</span>
+                    </button>
+                  </header>
+
+                  <label className="relative mb-5 block">
+                    <span className="sr-only">Selecionar visualizador</span>
+                    <select
+                      value={currentViewAsPersonValue}
+                      onChange={(event) => handleViewAsPersonChange(event.target.value)}
+                      className="h-14 w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-11 text-base font-semibold text-blue-950 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      aria-label="Selecionar visualizador da árvore"
+                    >
+                      <option value="">{defaultViewAsLabel}</option>
+                      {currentViewAsPersonValue && !selectedViewAsPersonOption && (
+                        <option value={currentViewAsPersonValue}>Visualizador selecionado</option>
+                      )}
+                      {viewAsPersonOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {formatFamilyViewLabel(option.label)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-950" />
+                  </label>
+
+                  <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {TREE_VIEW_OPTIONS.map((option) => {
+                      const Icon = option.icon;
+                      const active = pathname === option.path;
+
+                      return (
+                        <button
+                          key={option.path}
+                          type="button"
+                          aria-label={option.ariaLabel}
+                          aria-pressed={active}
+                          onClick={() => handleViewOptionClick(option.path)}
+                          className={[
+                            'flex min-h-16 min-w-0 items-center justify-center gap-2 px-2 text-center text-sm font-extrabold transition',
+                            active
+                              ? 'rounded-2xl border border-blue-600 bg-blue-50 text-blue-600 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]'
+                              : 'text-slate-500',
+                          ].join(' ')}
+                        >
+                          <Icon className="h-6 w-6 shrink-0" />
+                          <span className="min-w-0 leading-tight">{option.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mb-5 text-base font-medium leading-tight text-slate-500">
+                    {TREE_VIEW_OPTIONS.find((option) => option.path === pathname)?.subtitle || 'Visualização da árvore familiar'}
+                  </p>
+
+                  <div className="mb-6 grid h-16 grid-cols-4 items-center rounded-2xl border border-slate-200 bg-white px-4">
+                    {paletteOptions.map((paletteKey) => {
+                      const palette = TREE_COLOR_PALETTES[paletteKey];
+                      const active = paletteKey === treeColorPalette;
+
+                      return (
+                        <button
+                          key={paletteKey}
+                          type="button"
+                          aria-label={palette.ariaLabel}
+                          aria-pressed={active}
+                          title={palette.label}
+                          onClick={() => setTreeColorPalette(paletteKey)}
+                          className="flex h-full items-center justify-center rounded-xl transition active:scale-95"
+                        >
+                          <span
+                            className={[
+                              'h-8 w-8 rounded-full border-2 transition',
+                              active ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-white' : '',
+                            ].join(' ')}
+                            style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <h3 className="mb-3 text-2xl font-black tracking-[-0.035em] text-blue-950">Resumo</h3>
+                  <div className="mb-6 grid grid-cols-2 gap-3">
+                    <SummaryTile tone="blue" icon={UsersRound} value={mobileStats.totalPeople} label="Pessoas" />
+                    <SummaryTile tone="green" icon={UserRound} value={mobileStats.alivePeople} label="Vivos" />
+                    <SummaryTile tone="purple" icon={Cross} value={mobileStats.deceasedPeople} label="Falecidos" />
+                    <SummaryTile tone="orange" icon={ClipboardList} value={mobileStats.registeredPeople} label="Cadastrados" />
+                  </div>
+
+                  <h3 className="mb-3 text-2xl font-black tracking-[-0.035em] text-blue-950">Grupos familiares</h3>
+                  <div className="mb-3 grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {MOBILE_GROUP_TABS.map((tab) => {
+                      const active = activeGroupTab === tab.key;
+
+                      return (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setActiveGroupTab(tab.key)}
+                          className={[
+                            'h-11 border-r border-slate-200 px-1 text-sm font-bold last:border-r-0',
+                            active
+                              ? 'rounded-2xl border border-blue-600 bg-blue-50 text-blue-600 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]'
+                              : 'text-slate-500',
+                          ].join(' ')}
+                        >
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {MOBILE_GROUP_ROWS[activeGroupTab].map((row) => {
+                      const Icon = row.icon;
+
+                      return (
+                        <button
+                          key={row.key}
+                          type="button"
+                          className="grid h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] items-center gap-2 border-b border-slate-200 px-3 text-left last:border-b-0 active:bg-blue-50"
+                        >
+                          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-blue-950" aria-hidden="true">
+                            <Icon className="h-6 w-6" />
+                          </span>
+                          <span className="truncate text-lg font-semibold text-blue-950">{row.label}</span>
+                          <strong className="text-lg font-black text-blue-950">{mobileGroupCounts[row.key]}</strong>
+                          <ChevronRight className="h-5 w-5 text-slate-400" />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    <button
+                      type="button"
+                      aria-pressed={showExtendedSpouseFilters}
+                      onClick={() => setShowExtendedSpouseFilters(true)}
+                      className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 border-b border-slate-200 px-4 text-left active:bg-blue-50"
+                    >
+                      <HeartHandshake className="h-8 w-8 text-blue-600" />
+                      <span className="text-base font-semibold leading-tight text-blue-950">Exibir cônjuges de tios, primos etc</span>
+                      <MobileSwitch active={showExtendedSpouseFilters} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={!showExtendedSpouseFilters}
+                      onClick={() => setShowExtendedSpouseFilters(false)}
+                      className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 px-4 text-left active:bg-blue-50"
+                    >
+                      <UsersRound className="h-8 w-8 text-blue-600" />
+                      <span className="text-base font-semibold leading-tight text-blue-950">Apenas meus familiares</span>
+                      <MobileSwitch active={!showExtendedSpouseFilters} />
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
         </>
       )}
 
@@ -620,5 +1086,34 @@ export function HomeMobileNav({
         </div>
       </nav>
     </>
+  );
+}
+
+function SummaryTile({
+  tone,
+  icon: Icon,
+  value,
+  label,
+}: {
+  tone: 'blue' | 'green' | 'purple' | 'orange';
+  icon: React.ComponentType<{ className?: string }>;
+  value: number;
+  label: string;
+}) {
+  const toneClassName = {
+    blue: 'border-blue-200 bg-blue-50 text-blue-600',
+    green: 'border-green-200 bg-green-50 text-green-600',
+    purple: 'border-violet-200 bg-violet-50 text-violet-600',
+    orange: 'border-orange-200 bg-orange-50 text-orange-600',
+  }[tone];
+
+  return (
+    <div className={['flex min-h-24 items-center gap-3 rounded-2xl border px-4 py-3', toneClassName].join(' ')}>
+      <Icon className="h-10 w-10 shrink-0" />
+      <div className="min-w-0">
+        <strong className="block text-4xl font-black leading-none tracking-[-0.04em]">{value}</strong>
+        <span className="block truncate text-base font-semibold text-blue-950">{label}</span>
+      </div>
+    </div>
   );
 }
