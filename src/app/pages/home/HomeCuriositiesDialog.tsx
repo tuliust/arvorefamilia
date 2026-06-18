@@ -8,22 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
 import type { PersonGeneratedInsight } from '../../services/personInsightsService';
 import type { Pessoa } from '../../types';
 import type { RelationshipDegreeResult } from '../../utils/relationshipDegree';
 import { AiQuestionPanel } from './AiQuestionPanel';
 import { ConnectionDiscoveryPanel } from './ConnectionDiscoveryPanel';
-import { ContactInfo } from './ContactInfo';
-import { DiscoverResultCard } from './DiscoverResultCard';
+import { DiscoverMoreFlow } from './DiscoverMoreFlow';
 import {
-  CURIOSITY_TOPIC_OPTIONS,
   type CityCuriosity,
   type CuriosityTopic,
   calculateCuriosities,
@@ -209,202 +200,25 @@ export function HomeCuriositiesDialog({
 
               {activeCuriosityTab === 'descubra' && (
                 <section className="space-y-4">
-                  {!discoverSubmitted ? (
-                    <>
-                      <CuriositySectionHeader icon={Search} title="Descubra mais sobre..." />
-                      <Select
-                        value={selectedCuriosityPersonId}
-                        onValueChange={(value) => {
-                          onSelectedCuriosityPersonIdChange(value);
-                          onDiscoverSubmittedChange(false);
-                          setDiscoverResultsEmpty();
-                        }}
-                      >
-                        <SelectTrigger className="h-12 rounded-lg border border-slate-500 bg-slate-100 px-4 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                          <SelectValue placeholder="Selecione uma pessoa" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pessoas.map((pessoa) => (
-                            <SelectItem key={pessoa.id} value={pessoa.id}>
-                              {pessoa.nome_completo}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {CURIOSITY_TOPIC_OPTIONS.map((topic) => {
-                          const checked = selectedCuriosityTopics.includes(topic);
-
-                          return (
-                            <label
-                              key={topic}
-                              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                                checked
-                                  ? 'border-blue-200 bg-blue-50 text-blue-900'
-                                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleCuriosityTopic(topic)}
-                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span>{topic}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={discoverSubmitted ? handleBackToDiscoverForm : handleAdvanceCuriosityPrompt}
-                          disabled={!discoverSubmitted && (!selectedCuriosityPerson || selectedCuriosityTopics.length === 0 || discoverLoading)}
-                          className="w-full bg-white sm:w-auto"
-                        >
-                          {discoverLoading ? 'Carregando...' : discoverSubmitted ? 'Voltar' : 'Avançar'}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900">
-                            {selectedCuriosityPerson?.nome_completo || 'Pessoa selecionada'}
-                          </h3>
-                          <p className="text-sm text-slate-500">
-                            Informações selecionadas sobre esta pessoa.
-                          </p>
-                        </div>
-                      </div>
-
-                      {discoverLoading && (
-                        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                          Carregando informações selecionadas...
-                        </p>
-                      )}
-
-                      {discoverError && (
-                        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                          {discoverError}
-                        </p>
-                      )}
-
-                      {!discoverLoading && selectedCuriosityPerson && (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          {selectedCuriosityTopics.includes('Dados e Contato') && (
-                            <DiscoverResultCard title="Dados e Contato">
-                              <ContactInfo pessoa={selectedCuriosityPerson} />
-                            </DiscoverResultCard>
-                          )}
-
-                          {selectedCuriosityTopics.includes('Biografia') && (
-                            <DiscoverResultCard title="Biografia">
-                              <div className="space-y-2">
-                                {selectedCuriosityPerson.minibio ? (
-                                  <p>{selectedCuriosityPerson.minibio}</p>
-                                ) : (
-                                  <p>Esta pessoa ainda não possui biografia cadastrada.</p>
-                                )}
-                              </div>
-                            </DiscoverResultCard>
-                          )}
-
-                          {selectedCuriosityTopics.includes('Curiosidades') && (
-                            <DiscoverResultCard title="Curiosidades">
-                              <div className="space-y-2">
-                                {selectedCuriosityPerson.curiosidades && (
-                                  <p>{selectedCuriosityPerson.curiosidades}</p>
-                                )}
-                                {!selectedCuriosityPerson.curiosidades && (
-                                  <p>Esta pessoa ainda não possui curiosidades cadastradas.</p>
-                                )}
-                              </div>
-                            </DiscoverResultCard>
-                          )}
-
-                          {selectedCuriosityTopics.includes('Fatos Históricos do Dia de Nascimento') && (
-                            <DiscoverResultCard title="Fatos Históricos do Dia do Nascimento">
-                              {discoverHistoricalInsight?.conteudo ? (
-                                <div className="space-y-2">
-                                  <p className="font-semibold text-slate-900">{discoverHistoricalInsight.conteudo.title}</p>
-                                  {discoverHistoricalInsight.conteudo.main_event && <p>{discoverHistoricalInsight.conteudo.main_event}</p>}
-                                  <p className="font-semibold text-slate-800">
-                                    {discoverHistoricalInsight.conteudo.period_title || 'O que estava acontecendo na época'}
-                                  </p>
-                                  {Array.isArray(discoverHistoricalInsight.conteudo.brazil?.body) && (
-                                    <div>
-                                      <p className="font-medium text-slate-800">{discoverHistoricalInsight.conteudo.brazil?.title || 'Brasil'}</p>
-                                      {discoverHistoricalInsight.conteudo.brazil.body.map((item: string, index: number) => (
-                                        <p key={`brazil-${index}`}>{item}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {Array.isArray(discoverHistoricalInsight.conteudo.world?.body) && (
-                                    <div>
-                                      <p className="font-medium text-slate-800">{discoverHistoricalInsight.conteudo.world?.title || 'Mundo'}</p>
-                                      {discoverHistoricalInsight.conteudo.world.body.map((item: string, index: number) => (
-                                        <p key={`world-${index}`}>{item}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <p>Os acontecimentos históricos ainda não foram gerados para esta pessoa.</p>
-                              )}
-                            </DiscoverResultCard>
-                          )}
-
-                          {selectedCuriosityTopics.includes('O que diz a Astrologia') && (
-                            <DiscoverResultCard title="O que diz a astrologia">
-                              {selectedCuriosityPerson.permitir_exibir_data_nascimento === false ? (
-                                <p>Esta informação está oculta pelas preferências de privacidade.</p>
-                              ) : discoverAstrologyInsight?.conteudo?.body ? (
-                                <p>{discoverAstrologyInsight.conteudo.body}</p>
-                              ) : (
-                                <p>O texto de astrologia ainda não foi gerado para esta pessoa.</p>
-                              )}
-                            </DiscoverResultCard>
-                          )}
-
-                          {selectedCuriosityTopics.includes('Árvore Genealógica') && (
-                            <DiscoverResultCard title="Árvore Genealógica">
-                              <div className="space-y-3">
-                                <p>
-                                  Abrir a árvore genealógica de {selectedCuriosityPerson.nome_completo} como pessoa central.
-                                </p>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full bg-white sm:w-auto"
-                                  onClick={() => {
-                                    handleOpenPersonTree(selectedCuriosityPerson.id);
-                                  }}
-                                >
-                                  Abrir árvore
-                                </Button>
-                              </div>
-                            </DiscoverResultCard>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleBackToDiscoverForm}
-                          className="w-full bg-white sm:w-auto"
-                        >
-                          Voltar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {!discoverSubmitted && <CuriositySectionHeader icon={Search} title="Descubra mais sobre..." />}
+                  <DiscoverMoreFlow
+                    pessoas={pessoas}
+                    selectedPersonId={selectedCuriosityPersonId}
+                    onSelectedPersonIdChange={onSelectedCuriosityPersonIdChange}
+                    selectedPerson={selectedCuriosityPerson}
+                    selectedTopics={selectedCuriosityTopics}
+                    onToggleTopic={toggleCuriosityTopic}
+                    submitted={discoverSubmitted}
+                    loading={discoverLoading}
+                    error={discoverError}
+                    astrologyInsight={discoverAstrologyInsight}
+                    historicalInsight={discoverHistoricalInsight}
+                    onResetResults={setDiscoverResultsEmpty}
+                    onSubmittedChange={onDiscoverSubmittedChange}
+                    onBack={handleBackToDiscoverForm}
+                    onGenerate={handleAdvanceCuriosityPrompt}
+                    onOpenTree={handleOpenPersonTree}
+                  />
                 </section>
               )}
 
