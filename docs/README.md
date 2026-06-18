@@ -1,16 +1,15 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-16
-> Local canônico: `docs/README.md`
-> Projeto: `tuliust/arvorefamilia`
-> Status: índice canônico atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares, onboarding condicional, revisão final editável, arquivos históricos e QA específico.
+> Última revisão: 2026-06-18  
+> Local canônico: `docs/README.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Status: índice canônico atualizado para onboarding condicional, árvore familiar, arquivos históricos, notificações, IA, Dúvidas/FAQ público e gestão administrativa de dúvidas.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
 Use este arquivo como ponto de entrada. A documentação canônica deve registrar comportamento implementado, contratos vigentes ou pendências explicitamente classificadas.
 
 ---
-
 
 ## 1. Estado atual consolidado
 
@@ -57,6 +56,8 @@ A baseline funcional atual registra:
 - a vertical suporta núcleos conjugais adicionais quando há dados reais;
 - cônjuges de `pais`/Geração 4 na horizontal continuam pendência documentada, não implementação consolidada;
 - `/calendario-familiar` possui filtros mobile compactos por categoria;
+- `/duvidas` é página pública de FAQ/Ajuda, com conteúdo persistido no Supabase;
+- `/admin/duvidas` é área protegida de gestão administrativa de categorias, perguntas e respostas do FAQ;
 - `supabase/migrations/` é a fonte da verdade do schema;
 - SQLs soltos ou antigos ficam classificados em `docs/historico/SQLS_LEGADOS.md` quando não forem migrations oficiais;
 - ReactFlow/Dagre permanecem como legado ativo/dependência técnica e não devem ser removidos sem frente própria.
@@ -99,11 +100,11 @@ supabase/migrations/ é a fonte da verdade do schema.
 |---|---|---|
 | `README.md` | Índice canônico da documentação. | Atualizado. |
 | `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Manter sincronizado. |
-| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Atualizado para IA em `/meus-dados` e revisão de vínculos. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Atualizado para IA em `/meus-dados`, vínculos familiares e onboarding condicional. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Atualizado com componentes do onboarding, pessoa falecida e revisão inline. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas, onboarding e microcopy. | Atualizado. |
-| `QA_MANUAL.md` | Guia central de QA manual, onboarding e pós-deploy. | Atualizado. |
+| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Manter sincronizado. |
+| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Manter sincronizado. |
+| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Manter sincronizado. |
+| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas, onboarding e microcopy. | Manter sincronizado. |
+| `QA_MANUAL.md` | Guia central de QA manual, onboarding e pós-deploy. | Manter sincronizado. |
 | `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Manter sincronizado. |
 | `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Manter sincronizado. |
 | `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Preservar. |
@@ -150,7 +151,8 @@ docs/funcionalidades/
 | `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
 | `CURIOSIDADES_E_IA.md` | Curiosidades, conexão familiar e perguntas à IA na Home. | Atualizado. |
 | `MINI_BIO_CURIOSIDADES_IA.md` | Geração assistida de Mini Bio e Curiosidades em `/meus-dados`. | Atualizado. |
-| `MEUS_VINCULOS.md` | Revisão guiada de vínculos familiares em `/meus-vinculos`. | Criar/manter como documento canônico da Etapa 2. |
+| `MEUS_VINCULOS.md` | Revisão guiada de vínculos familiares em `/meus-vinculos`. | Manter como documento canônico da Etapa 2. |
+| `DUVIDAS.md` | Página pública `/duvidas`, conteúdo QA no Supabase e gestão administrativa em `/admin/duvidas`. | Atualizado. |
 
 Documentos sobre antigas views da árvore devem permanecer apenas em `docs/historico/` ou marcados como legado.
 
@@ -297,26 +299,27 @@ Critérios mínimos:
 - QA manual atualizado para pessoa viva, pessoa falecida, rascunho local, revisão inline e navegação condicional;
 - comandos de validação executados ou limitação registrada.
 
-<!-- DOCS-CONSOLIDACAO-2026-06-18 -->
-## ConsolidaÃ§Ã£o documental de ajustes recentes
+---
 
-Esta documentaÃ§Ã£o passou a usar uma regra explÃ­cita de separaÃ§Ã£o entre:
+## 11. Consolidação documental de ajustes recentes
 
-| Tipo de informaÃ§Ã£o | Destino documental |
+Esta documentação usa uma regra explícita de separação entre:
+
+| Tipo de informação | Destino documental |
 |---|---|
 | Estado implementado e confirmado na `main` | `BASELINE_PRODUTO_ATUAL.md` e documento funcional correspondente |
-| PadrÃ£o tÃ©cnico ou componente reutilizÃ¡vel | `GUIA_COMPONENTES.md` |
-| PadrÃ£o visual, responsivo ou mobile | `GUIA_UX_LAYOUT.md` |
-| Roteiro de validaÃ§Ã£o | `QA_MANUAL.md` |
-| Regra que nÃ£o pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Padrão técnico ou componente reutilizável | `GUIA_COMPONENTES.md` |
+| Padrão visual, responsivo ou mobile | `GUIA_UX_LAYOUT.md` |
+| Roteiro de validação | `QA_MANUAL.md` |
+| Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Rota, guard ou redirecionamento | `arquitetura/ROTAS_E_GUARDS.md` |
-| PendÃªncia, script gerado sem confirmaÃ§Ã£o ou decisÃ£o bloqueada | `PLANO_PROXIMOS_PASSOS.md` |
-| Tentativa substituÃ­da, script falho ou material de auditoria | `historico/` |
+| Pendência, script gerado sem confirmação ou decisão bloqueada | `PLANO_PROXIMOS_PASSOS.md` |
+| Tentativa substituída, script falho ou material de auditoria | `historico/` |
 
 Regra de prioridade para resolver conflitos:
 
 ```txt
-CÃ³digo atual da main > commits confirmados > docs canÃ´nicos existentes > levantamento recente > scripts planejados.
+Código atual da main > commits confirmados > docs canônicos existentes > levantamento recente > scripts planejados.
 ```
 
-Scripts nÃ£o confirmados, prints sem commit verificÃ¡vel e propostas que envolvam Supabase/RLS/RPC/migration nÃ£o devem ser registrados como baseline.
+Scripts não confirmados, prints sem commit verificável e propostas que envolvam Supabase/RLS/RPC/migration não devem ser registrados como baseline.
