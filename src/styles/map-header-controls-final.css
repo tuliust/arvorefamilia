@@ -34,13 +34,13 @@ header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])
 
 /* Painel lateral: botão de recolher alinhado ao centro da linha do título e dentro do card. */
 @media (min-width: 768px) {
-  .tree-sidebar-desktop-panel-wrap > .relative > button[data-tour-target='tree-controls-collapse'] {
+  main aside .tree-sidebar-desktop-panel-wrap button[data-tour-target='tree-controls-collapse'] {
     top: calc(
       clamp(0.45rem, 0.9vh, 0.8rem) +
       clamp(0.75rem, 1.35vh, 1.35rem) +
-      clamp(1.18rem, 2.25vh, 1.45rem)
+      clamp(2.7rem, 4.7vh, 4rem) / 2
     ) !important;
-    right: calc(clamp(0.45rem, 0.9vh, 0.8rem) + clamp(0.75rem, 1.35vh, 1.35rem)) !important;
+    right: clamp(1.1rem, 1.7vw, 1.55rem) !important;
     transform: translateY(-50%) !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -54,7 +54,7 @@ header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
   }
 
-  .tree-sidebar-desktop-panel-wrap > .relative > button[data-tour-target='tree-controls-collapse'] svg {
+  main aside .tree-sidebar-desktop-panel-wrap button[data-tour-target='tree-controls-collapse'] svg {
     width: clamp(0.86rem, 1.7vh, 1rem) !important;
     height: clamp(0.86rem, 1.7vh, 1rem) !important;
   }
@@ -83,4 +83,10 @@ header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])
     height: 0.72rem !important;
     stroke-width: 2.4 !important;
   }
+}
+
+/* Mapa Genealógico: cônjuges mantêm cor própria mesmo quando a geração define outra cor. */
+[data-family-map-horizontal-root="true"] button[data-family-map-spouse-tone="true"] {
+  --family-map-card-bg: var(--tree-palette-card-conjuge, var(--tree-palette-card-sobrinhos, #b8cec2));
+  --family-map-card-border: var(--tree-palette-border-conjuge, var(--tree-palette-border-sobrinhos, #b8cec2));
 }
