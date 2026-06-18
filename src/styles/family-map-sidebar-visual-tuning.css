@@ -2,7 +2,8 @@
 
 @media (min-width: 768px) {
   .desktop-tree-visualization-panel {
-    gap: clamp(0.52rem, 1.12vh, 0.78rem) !important;
+    --desktop-tree-panel-gap: clamp(0.72rem, 1.55vh, 1.08rem);
+    gap: var(--desktop-tree-panel-gap) !important;
   }
 
   .desktop-tree-panel-header {
@@ -12,6 +13,13 @@
 
   .desktop-tree-view-select {
     order: 2 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    padding-right: clamp(2.35rem, 5vh, 2.85rem) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230f2348' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right clamp(0.72rem, 1.55vh, 0.95rem) center !important;
+    background-size: clamp(0.86rem, 1.8vh, 1rem) !important;
   }
 
   .desktop-tree-view-select:has(option[value='']:checked) {
@@ -30,11 +38,11 @@
     content: 'Família de Tulius';
     position: absolute;
     left: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 0.78rem);
-    right: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 2rem);
+    right: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 2.75rem);
     top: calc(
       clamp(0.46rem, 1.02vh, 0.68rem) +
       clamp(2rem, 4.15vh, 2.45rem) +
-      clamp(0.52rem, 1.12vh, 0.78rem) +
+      var(--desktop-tree-panel-gap) +
       0.55rem
     );
     z-index: 2;
@@ -95,8 +103,8 @@
   .desktop-tree-final-filters {
     order: 8 !important;
     flex: 0 0 auto !important;
-    gap: clamp(0.34rem, 0.78vh, 0.5rem) !important;
-    margin-top: clamp(0.04rem, 0.22vh, 0.14rem) !important;
+    gap: clamp(0.38rem, 0.88vh, 0.56rem) !important;
+    margin-top: clamp(0.08rem, 0.34vh, 0.22rem) !important;
   }
 
   .desktop-tree-final-filter-button {
@@ -117,7 +125,7 @@
 
   .desktop-tree-groups-divider {
     order: 9 !important;
-    margin-block: clamp(0.04rem, 0.22vh, 0.16rem) !important;
+    margin-block: clamp(0.12rem, 0.36vh, 0.24rem) !important;
   }
 
   .desktop-tree-family-groups {
@@ -151,6 +159,7 @@
     min-height: 0 !important;
     justify-content: flex-start !important;
     gap: clamp(0.2rem, 0.44vh, 0.3rem) !important;
+    margin-top: clamp(0.08rem, 0.34vh, 0.22rem) !important;
     padding: clamp(0.28rem, 0.58vh, 0.38rem) !important;
   }
 
@@ -188,11 +197,12 @@
 
 @media (max-height: 720px) and (min-width: 768px) {
   .desktop-tree-visualization-panel {
-    gap: 0.4rem !important;
+    --desktop-tree-panel-gap: 0.54rem;
+    gap: var(--desktop-tree-panel-gap) !important;
   }
 
   .desktop-tree-visualization-panel:has(.desktop-tree-view-select option[value='']:checked)::before {
-    top: calc(0.38rem + 1.9rem + 0.4rem + 0.5rem);
+    top: calc(0.38rem + 1.9rem + var(--desktop-tree-panel-gap) + 0.5rem);
     font-size: 0.72rem;
   }
 
@@ -216,4 +226,240 @@
   .desktop-tree-export-action-button {
     min-height: 1.36rem !important;
   }
+}
+
+/* Ajustes 2026-06-18: variação visual para cônjuges em todas as paletas. */
+[data-family-map-export-root='true'] button[data-family-map-color-key][data-family-map-spouse-tone='true'],
+[data-family-map-horizontal-root='true'] button[data-family-map-color-key][data-family-map-spouse-tone='true'],
+[data-mobile-family-horizontal-root='true'] button[data-family-map-color-key][data-family-map-spouse-tone='true'] {
+  background: var(--family-map-card-bg-spouse, var(--family-map-card-bg)) !important;
+  border-color: var(--family-map-card-border-spouse, var(--family-map-card-border)) !important;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='tataravos'] {
+  --family-map-card-bg-spouse: #c3bbdf;
+  --family-map-card-border-spouse: #aea3d1;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='bisavos'] {
+  --family-map-card-bg-spouse: #dda8ce;
+  --family-map-card-border-spouse: #ca8ab7;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='avos'] {
+  --family-map-card-bg-spouse: #efb0a9;
+  --family-map-card-border-spouse: #dd9188;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='tios'] {
+  --family-map-card-bg-spouse: #f0bea2;
+  --family-map-card-border-spouse: #df9e77;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='primos'] {
+  --family-map-card-bg-spouse: #edc596;
+  --family-map-card-border-spouse: #d9a96e;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='pais'] {
+  --family-map-card-bg-spouse: #eacf8f;
+  --family-map-card-border-spouse: #d5b360;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='central'] {
+  --family-map-card-bg-spouse: #d7e0e0;
+  --family-map-card-border-spouse: #becbcc;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='irmaos'] {
+  --family-map-card-bg-spouse: #b6d382;
+  --family-map-card-border-spouse: #9dbc60;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='sobrinhos'],
+html[data-tree-color-palette='white'] [data-family-map-color-key='conjuge'] {
+  --family-map-card-bg-spouse: #c7dbd1;
+  --family-map-card-border-spouse: #a7c3b4;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='filhos'],
+html[data-tree-color-palette='white'] [data-family-map-color-key='netos'] {
+  --family-map-card-bg-spouse: #c9e1e4;
+  --family-map-card-border-spouse: #a8cbd0;
+}
+
+html[data-tree-color-palette='white'] [data-family-map-color-key='pets'] {
+  --family-map-card-bg-spouse: #f8d1bb;
+  --family-map-card-border-spouse: #e7ad8f;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='tataravos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #d2cbe7 0%, #bdb2db 100%);
+  --family-map-card-border-spouse: #b5aad5;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='bisavos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #e8bbd8 0%, #d99fca 100%);
+  --family-map-card-border-spouse: #cf91bd;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='avos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f4c5bf 0%, #eda9a2 100%);
+  --family-map-card-border-spouse: #df978f;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='tios'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f6ccb2 0%, #edb799 100%);
+  --family-map-card-border-spouse: #df9e77;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='primos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f1d2a7 0%, #ecc091 100%);
+  --family-map-card-border-spouse: #d9a96e;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='pais'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #efd99f 0%, #e8ca85 100%);
+  --family-map-card-border-spouse: #d9b765;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='central'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f9f4e8 0%, #d2e0dd 100%);
+  --family-map-card-border-spouse: #cbd5d0;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='irmaos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #c2df91 0%, #b1cf78 100%);
+  --family-map-card-border-spouse: #9fc166;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='sobrinhos'],
+html[data-tree-color-palette='orange'] [data-family-map-color-key='conjuge'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #d0e2da 0%, #bfd5ca 100%);
+  --family-map-card-border-spouse: #aac7ba;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='filhos'],
+html[data-tree-color-palette='orange'] [data-family-map-color-key='netos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #d4e9eb 0%, #c5dde1 100%);
+  --family-map-card-border-spouse: #accdd2;
+}
+
+html[data-tree-color-palette='orange'] [data-family-map-color-key='pets'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f9dcc9 0%, #f5c7ae 100%);
+  --family-map-card-border-spouse: #e7ad8f;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='tataravos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #fbf8f1 0%, #d7c2a5 100%);
+  --family-map-card-border-spouse: #c4b399;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='bisavos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #fffaf1 0%, #dbc3a5 100%);
+  --family-map-card-border-spouse: #c4b399;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='avos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f0e2cf 0%, #ccaa82 100%);
+  --family-map-card-border-spouse: #a9825a;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='tios'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #edddc5 0%, #d09b79 100%);
+  --family-map-card-border-spouse: #a85f45;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='primos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #fbf5ea 0%, #e0b790 100%);
+  --family-map-card-border-spouse: #a85f45;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='pais'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #e8d8c0 0%, #b97052 100%);
+  --family-map-card-border-spouse: #8b5e34;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='central'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #b66f55 0%, #72805f 100%);
+  --family-map-card-border-spouse: #5b4636;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='irmaos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #e0cdb2 0%, #748060 100%);
+  --family-map-card-border-spouse: #66745b;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='sobrinhos'],
+html[data-tree-color-palette='brown'] [data-family-map-color-key='conjuge'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #eadcc5 0%, #a5aa8d 100%);
+  --family-map-card-border-spouse: #66745b;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='filhos'],
+html[data-tree-color-palette='brown'] [data-family-map-color-key='netos'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #fbf7ed 0%, #c5c5a4 100%);
+  --family-map-card-border-spouse: #66745b;
+}
+
+html[data-tree-color-palette='brown'] [data-family-map-color-key='pets'] {
+  --family-map-card-bg-spouse: linear-gradient(135deg, #f0e0ce 0%, #b97052 100%);
+  --family-map-card-border-spouse: #8b5e34;
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='tataravos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #99f6e4 0%, #14b8a6 100%);
+  --family-map-card-border-spouse: rgba(153, 246, 228, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='bisavos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #5eead4 0%, #0d9488 100%);
+  --family-map-card-border-spouse: rgba(94, 234, 212, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='avos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #67e8f9 0%, #0891b2 100%);
+  --family-map-card-border-spouse: rgba(103, 232, 249, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='tios'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #a5f3fc 0%, #0891b2 100%);
+  --family-map-card-border-spouse: rgba(165, 243, 252, 0.88);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='primos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #cffafe 0%, #06b6d4 100%);
+  --family-map-card-border-spouse: rgba(207, 250, 254, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='pais'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #5eead4 0%, #0f766e 100%);
+  --family-map-card-border-spouse: rgba(94, 234, 212, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='central'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #38bdf8 0%, #2563eb 100%);
+  --family-map-card-border-spouse: rgba(125, 211, 252, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='irmaos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #99f6e4 0%, #0d9488 100%);
+  --family-map-card-border-spouse: rgba(153, 246, 228, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='sobrinhos'],
+html[data-tree-color-palette='visual'] [data-family-map-color-key='conjuge'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #ccfbf1 0%, #0f766e 100%);
+  --family-map-card-border-spouse: rgba(204, 251, 241, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='filhos'],
+html[data-tree-color-palette='visual'] [data-family-map-color-key='netos'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #bae6fd 0%, #0284c7 100%);
+  --family-map-card-border-spouse: rgba(186, 230, 253, 0.9);
+}
+
+html[data-tree-color-palette='visual'] [data-family-map-color-key='pets'] {
+  --family-map-card-bg-spouse: linear-gradient(180deg, #a7f3d0 0%, #059669 100%);
+  --family-map-card-border-spouse: rgba(167, 243, 208, 0.9);
 }
