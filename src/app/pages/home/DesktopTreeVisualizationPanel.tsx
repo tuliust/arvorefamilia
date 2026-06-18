@@ -270,28 +270,6 @@ export function DesktopTreeVisualizationPanel({
           </select>
         )}
 
-        <div className="desktop-tree-palette-row" aria-label="Tema da árvore">
-          {paletteOptions.map((paletteKey) => {
-            const palette = TREE_COLOR_PALETTES[paletteKey];
-            const active = treeColorPalette === paletteKey;
-
-            return (
-              <button
-                key={paletteKey}
-                type="button"
-                className="desktop-tree-palette-button"
-                data-active={active ? 'true' : 'false'}
-                aria-label={palette.ariaLabel}
-                aria-pressed={active}
-                title={palette.label}
-                onClick={() => setTreeColorPalette(paletteKey)}
-              >
-                <span style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
-              </button>
-            );
-          })}
-        </div>
-
         <div className="desktop-tree-view-mode-grid">
           {viewOptions.map((option) => {
             const Icon = option.icon;
@@ -309,6 +287,28 @@ export function DesktopTreeVisualizationPanel({
                 <Icon />
                 <span className="desktop-tree-view-mode-title">{option.label}</span>
                 <span className="desktop-tree-view-mode-subtitle">{option.subtitle}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="desktop-tree-palette-row" aria-label="Tema da árvore">
+          {paletteOptions.map((paletteKey) => {
+            const palette = TREE_COLOR_PALETTES[paletteKey];
+            const active = treeColorPalette === paletteKey;
+
+            return (
+              <button
+                key={paletteKey}
+                type="button"
+                className="desktop-tree-palette-button"
+                data-active={active ? 'true' : 'false'}
+                aria-label={palette.ariaLabel}
+                aria-pressed={active}
+                title={palette.label}
+                onClick={() => setTreeColorPalette(paletteKey)}
+              >
+                <span style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
               </button>
             );
           })}
@@ -339,7 +339,9 @@ export function DesktopTreeVisualizationPanel({
           <SummaryCard tone="orange" icon={ClipboardList} label="Cadastrados" value={registeredCount} />
         </div>
 
-        <div className="desktop-tree-panel-divider desktop-tree-groups-divider" />
+        <div className="desktop-tree-panel-divider" />
+
+        <h3 className="desktop-tree-section-title">Grupos familiares</h3>
 
         <div className="desktop-tree-family-groups">
           {groupSections.map((section) => (
