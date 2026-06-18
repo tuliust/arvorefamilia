@@ -12,6 +12,9 @@
 
   .desktop-tree-view-select {
     order: 2 !important;
+  }
+
+  .desktop-tree-view-select:has(option[value='']:checked) {
     color: transparent !important;
   }
 
@@ -20,6 +23,10 @@
   }
 
   .desktop-tree-visualization-panel::before {
+    content: none;
+  }
+
+  .desktop-tree-visualization-panel:has(.desktop-tree-view-select option[value='']:checked)::before {
     content: 'Família de Tulius';
     position: absolute;
     left: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 0.78rem);
@@ -184,7 +191,7 @@
     gap: 0.4rem !important;
   }
 
-  .desktop-tree-visualization-panel::before {
+  .desktop-tree-visualization-panel:has(.desktop-tree-view-select option[value='']:checked)::before {
     top: calc(0.38rem + 1.9rem + 0.4rem + 0.5rem);
     font-size: 0.72rem;
   }
