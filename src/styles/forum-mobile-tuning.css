@@ -1,0 +1,34 @@
+@media (max-width: 1023px) {
+  main.space-y-6.py-6 {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  main.space-y-6.py-6 > section[aria-label="Busca e filtros do fórum"] {
+    order: 1;
+  }
+
+  main.space-y-6.py-6 > div.lg\:hidden:first-child {
+    order: 2;
+  }
+
+  main.space-y-6.py-6 > .border-amber-200 {
+    order: 3;
+  }
+
+  main.space-y-6.py-6 > section.grid {
+    order: 4;
+  }
+
+  main.space-y-6.py-6 > div.lg\:hidden:first-child button:nth-child(2) span {
+    font-size: 0;
+    line-height: 0;
+  }
+
+  main.space-y-6.py-6 > div.lg\:hidden:first-child button:nth-child(2) span::after {
+    content: 'Histórias';
+    font-size: 0.65625rem;
+    line-height: 1.15;
+  }
+}
