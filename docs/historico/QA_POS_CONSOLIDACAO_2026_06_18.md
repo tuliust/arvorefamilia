@@ -2,14 +2,6 @@
 
 Este documento registra a validação manual posterior à consolidação documental dos ajustes recentes do sistema.
 
-Commit base recomendado:
-
-```txt
- ae1a2e1 docs: consolida ajustes recentes do sistema
-```
-
----
-
 ## 1. Ambiente de teste
 
 | Item | Valor |
@@ -30,11 +22,7 @@ Commit base recomendado:
 - [ ] 430px
 - [ ] Desktop
 
----
-
 ## 2. Comandos iniciais
-
-Antes de iniciar o QA:
 
 ```powershell
 git status --short
@@ -55,8 +43,6 @@ Resultado esperado:
 A preencher
 ```
 
----
-
 ## 3. Onboarding do membro — pessoa viva
 
 Rotas:
@@ -69,7 +55,7 @@ Rotas:
 /revisao-dados
 ```
 
-### Checklist
+Checklist:
 
 - [ ] As 5 etapas aparecem no stepper.
 - [ ] `/meus-dados` exibe cidade de residência.
@@ -86,27 +72,11 @@ Rotas:
 - [ ] `/revisao-dados` exibe contatos e notificações.
 - [ ] Botão final não é coberto pelo menu inferior no mobile.
 
-### Resultado
-
 Status:
 
 ```txt
 A preencher: aprovado / ajuste necessário / bloqueado
 ```
-
-Observações:
-
-```txt
-A preencher
-```
-
-Prints/evidências:
-
-```txt
-A preencher
-```
-
----
 
 ## 4. Onboarding do membro — pessoa falecida
 
@@ -119,7 +89,7 @@ Rotas:
 /revisao-dados
 ```
 
-### Checklist
+Checklist:
 
 - [ ] `/meus-dados` exibe campos de falecimento.
 - [ ] Cidade de residência é ocultada no fluxo do membro.
@@ -133,31 +103,15 @@ Rotas:
 - [ ] Revisão final não mostra notificações/permissões.
 - [ ] Badge respeita `Falecido` ou `Falecida` quando houver gênero suficiente.
 
-### Resultado
-
 Status:
 
 ```txt
 A preencher: aprovado / ajuste necessário / bloqueado
 ```
 
-Observações:
-
-```txt
-A preencher
-```
-
-Prints/evidências:
-
-```txt
-A preencher
-```
-
----
-
 ## 5. `/minha-arvore/editar`
 
-### Checklist
+Checklist:
 
 - [ ] A rota não se comporta como onboarding.
 - [ ] `MemberOnboardingSteps` não aparece.
@@ -168,21 +122,11 @@ A preencher
 - [ ] Alterações não salvas são protegidas, quando aplicável.
 - [ ] Mobile não apresenta sobreposição de botões com bottom nav.
 
-### Resultado
-
 Status:
 
 ```txt
 A preencher: aprovado / ajuste necessário / bloqueado
 ```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 6. Admin — pessoas e dashboard
 
@@ -195,43 +139,23 @@ Rotas:
 /admin/pessoas/nova
 ```
 
-### Checklist — dashboard
+Checklist:
 
 - [ ] Card `Membros` navega para `/admin/pessoas`.
 - [ ] Card `Relações` navega para `/admin/relacionamentos`.
 - [ ] Card `Pendentes` navega para `/admin/solicitacoes-vinculos`.
 - [ ] Card `Memória` permanece informativo se não houver rota definida.
-
-### Checklist — formulário admin
-
 - [ ] Criar pessoa funciona.
 - [ ] Editar pessoa funciona.
 - [ ] Labels estão consistentes.
 - [ ] Contexto de privacidade admin usa texto neutro.
 - [ ] Comportamento de pessoa falecida no admin foi verificado no código e visualmente.
-- [ ] A decisão final sobre contato/privacidade de pessoa falecida foi anotada abaixo.
 
-### Decisão verificada — pessoa falecida no admin
+Decisão verificada — pessoa falecida no admin:
 
 ```txt
 A preencher: contato/privacidade aparecem ou são ocultados? Registrar comportamento real da main.
 ```
-
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / bloqueado
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 7. Mapas familiares
 
@@ -242,18 +166,18 @@ Rotas:
 /mapa-familiar-horizontal
 ```
 
-### Checklist geral
+Checklist geral:
 
 - [ ] View carrega com dados reais.
 - [ ] Não há erro no console.
 - [ ] Troca de pessoa principal funciona.
-- [ ] Dropdown `Visualizar como` aparece no header.
+- [ ] Dropdown `Visualizar como` aparece no local vigente.
 - [ ] Dropdown não aparece como seletor flutuante/debug.
 - [ ] Nomes no seletor aparecem encurtados e ordenados.
 - [ ] Filtros não quebram a renderização.
 - [ ] Mobile mantém controles acessíveis.
 
-### Checklist — horizontal
+Checklist horizontal:
 
 - [ ] Cônjuges são contados corretamente no card de filtro.
 - [ ] Cônjuges de tios/primos/filhos/sobrinhos/netos entram na contagem quando aplicável.
@@ -261,33 +185,17 @@ Rotas:
 - [ ] Cônjuges de tataravós/bisavós/avós não entram indevidamente.
 - [ ] Geração 4/pais/cônjuges foi validada quando houver dados reais.
 
-### Checklist — vertical
+Checklist vertical:
 
 - [ ] Grupos existentes sobem quando a árvore é esparsa.
 - [ ] Não há grande vazio no topo quando há poucos parentes.
 - [ ] Conectores continuam legíveis.
-
-### Resultado
 
 Status:
 
 ```txt
 A preencher: aprovado / ajuste necessário / bloqueado
 ```
-
-Observações:
-
-```txt
-A preencher
-```
-
-Prints/evidências:
-
-```txt
-A preencher
-```
-
----
 
 ## 8. Mobile da árvore
 
@@ -298,7 +206,7 @@ Rotas:
 /mapa-familiar-horizontal
 ```
 
-### Checklist
+Checklist:
 
 - [ ] Modal/controles mobile abrem e fecham corretamente.
 - [ ] Botões de geração funcionam.
@@ -307,22 +215,6 @@ Rotas:
 - [ ] Popovers não extrapolam a tela.
 - [ ] Painel e popovers não duplicam a mesma função indevidamente.
 - [ ] Exportação aparece apenas onde fizer sentido no mobile.
-
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / bloqueado
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 9. Exportação da árvore
 
@@ -333,7 +225,7 @@ Rotas:
 /mapa-familiar-horizontal
 ```
 
-### Checklist
+Checklist:
 
 - [ ] Botão `Salvar e Imprimir` aparece no local correto.
 - [ ] Opção `Área` funciona.
@@ -343,22 +235,6 @@ Rotas:
 - [ ] Exportação não corta conteúdo essencial.
 - [ ] Exportação respeita view/filtros atuais, quando aplicável.
 
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / bloqueado
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
-
 ## 10. Calendário familiar
 
 Rota:
@@ -367,7 +243,7 @@ Rota:
 /calendario-familiar
 ```
 
-### Checklist
+Checklist:
 
 - [ ] Calendário carrega no desktop.
 - [ ] Calendário carrega no mobile.
@@ -375,22 +251,6 @@ Rota:
 - [ ] Eventos permanecem legíveis.
 - [ ] Chips/cards não extrapolam containers.
 - [ ] Menu inferior não cobre ações.
-
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / bloqueado
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 11. Favoritos
 
@@ -400,7 +260,7 @@ Rota:
 /meus-favoritos
 ```
 
-### Checklist
+Checklist:
 
 - [ ] Busca funciona.
 - [ ] Botão `Filtros` aparece se a frente estiver implementada.
@@ -408,22 +268,6 @@ Rota:
 - [ ] Estrela ativa substitui lixeira se implementado.
 - [ ] Remoção com delay visual funciona se implementado.
 - [ ] Caso não esteja implementado, registrar como pendência real.
-
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / pendência confirmada
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 12. Notificações
 
@@ -433,7 +277,7 @@ Rota:
 /notificacoes
 ```
 
-### Checklist
+Checklist:
 
 - [ ] Contador de não lidas aparece no header/menu se implementado.
 - [ ] Texto usa `Todas lidas` quando total for zero.
@@ -446,22 +290,6 @@ Rota:
 - [ ] Remover notificação atualiza contador.
 - [ ] Caso não esteja implementado, registrar como pendência real.
 
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / pendência confirmada
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
-
 ## 13. Perfil de pessoa e timeline
 
 Rota:
@@ -470,7 +298,7 @@ Rota:
 /pessoa/:id
 ```
 
-### Checklist — perfil
+Checklist:
 
 - [ ] Perfil carrega.
 - [ ] Box `Informações do perfil` está no estado esperado.
@@ -479,38 +307,16 @@ Rota:
 - [ ] Discussões ocupam largura correta.
 - [ ] Layout desktop mantém duas colunas se implementado.
 - [ ] Layout mobile não quebra.
-
-### Checklist — timeline
-
-- [ ] Cards usam textos narrativos se implementado.
+- [ ] Cards da timeline usam textos narrativos se implementado.
 - [ ] Badge única se implementado.
 - [ ] `Data desconhecida` não aparece se a remoção estiver implementada.
-- [ ] Eventos de nascimento, casamento, filhos e relacionamentos fazem sentido.
-- [ ] Caso não esteja implementado, registrar como pendência real.
-
-### Resultado
-
-Status:
-
-```txt
-A preencher: aprovado / ajuste necessário / pendência confirmada
-```
-
-Observações:
-
-```txt
-A preencher
-```
-
----
 
 ## 14. Bugs encontrados
 
 | ID | Rota | Severidade | Descrição | Evidência | Próxima ação |
 |---|---|---|---|---|---|
 | QA-001 | A preencher | Alta/Média/Baixa | A preencher | A preencher | A preencher |
-
----
+| DOC-QA-001 | `docs/historico/QA_POS_CONSOLIDACAO_2026_06_18.md` | Baixa | A seção da segunda rodada estava com acentuação corrompida. | Revisão do arquivo principal de QA. | Corrigido neste commit. |
 
 ## 15. Pendências confirmadas após QA
 
@@ -518,15 +324,11 @@ A preencher
 |---|---|---|---|
 | PEND-001 | A preencher | Confirmada / descartada / precisa investigar | A preencher |
 
----
-
 ## 16. Decisões tomadas durante o QA
 
 | Tema | Decisão | Impacto documental/código |
 |---|---|---|
 | A preencher | A preencher | A preencher |
-
----
 
 ## 17. Resultado final do QA
 
@@ -548,51 +350,53 @@ Próxima frente recomendada:
 A preencher
 ```
 
+---
+
 <!-- RODADA2-QA-POS-CONSOLIDACAO-2026-06-18 -->
-## Segunda rodada de QA â€” complementos
+## Segunda rodada de QA — complementos
 
 ### Mapas familiares mobile
 
-| Item | Status | ObservaÃ§Ãµes |
+| Item | Status | Observações |
 |---|---|---|
 | Toolbar cabe em 320px | Pendente |  |
-| VisualizaÃ§Ã£o abre popover correto | Pendente |  |
+| Visualização abre popover correto | Pendente |  |
 | Formato abre cards corretos | Pendente |  |
 | Cor abre paletas | Pendente |  |
-| Filtros abre opÃ§Ãµes corretas | Pendente |  |
-| Exportar mostra Ãrea/Imagem/PDF/Imprimir | Pendente |  |
-| BotÃ£o `+` abre painel completo | Pendente |  |
-| Desktop/tablet sem regressÃ£o | Pendente |  |
+| Filtros abre opções corretas | Pendente |  |
+| Exportar mostra Área/Imagem/PDF/Imprimir | Pendente |  |
+| Botão `+` abre painel completo | Pendente |  |
+| Desktop/tablet sem regressão | Pendente |  |
 
 ### Painel lateral desktop
 
-| Item | Status | ObservaÃ§Ãµes |
+| Item | Status | Observações |
 |---|---|---|
 | Largura compacta correta | Pendente |  |
 | Visualizar como no painel | Pendente |  |
 | Header sem controles duplicados | Pendente |  |
 | Tour inicial aponta para elementos reais | Pendente |  |
-| ExportaÃ§Ã£o no local esperado | Pendente |  |
+| Exportação no local esperado | Pendente |  |
 
 ### Curiosidades
 
-| Item | Status | ObservaÃ§Ãµes |
+| Item | Status | Observações |
 |---|---|---|
-| GrÃ¡ficos reais | Pendente |  |
+| Gráficos reais | Pendente |  |
 | Mural persistente lista posts | Pendente |  |
-| Criar lembranÃ§a autenticada | Pendente |  |
+| Criar lembrança autenticada | Pendente |  |
 | Favoritar descoberta | Pendente |  |
 | Compartilhar descoberta | Pendente |  |
 | Rota com coordenadas | Pendente |  |
 | Fallback sem coordenadas | Pendente |  |
 
-### Favoritos, NotificaÃ§Ãµes e CalendÃ¡rio
+### Favoritos, Notificações e Calendário
 
-| Rota | Item | Status | ObservaÃ§Ãµes |
+| Rota | Item | Status | Observações |
 |---|---|---|---|
 | `/meus-favoritos` | Busca/filtro compacto | Pendente |  |
-| `/meus-favoritos` | RemoÃ§Ã£o por estrela | Pendente |  |
+| `/meus-favoritos` | Remoção por estrela | Pendente |  |
 | `/notificacoes` | Card branco simplificado | Pendente |  |
-| `/notificacoes` | AÃ§Ãµes no topo direito | Pendente |  |
+| `/notificacoes` | Ações no topo direito | Pendente |  |
 | `/calendario-familiar` | Filtros em cards horizontais | Pendente |  |
 | `/calendario-familiar` | Nomes longos sem corte | Pendente |  |
