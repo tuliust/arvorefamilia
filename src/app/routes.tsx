@@ -230,7 +230,7 @@ export const router = createBrowserRouter([
   { path: '/admin/pessoas/:id', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
   { path: '/admin/relacionamentos', element: lazyRoute(<ProtectedRoute><AdminRelacionamentos /></ProtectedRoute>) },
   { path: '/admin/relacionamentos/novo', element: lazyRoute(<ProtectedRoute><AdminRelacionamentoForm /></ProtectedRoute>) },
-  { path: '/admin/importacao', element: lazyRoute(<AdminImportacao /></ProtectedRoute>) },
+  { path: '/admin/importacao', element: lazyRoute(<ProtectedRoute><AdminImportacao /></ProtectedRoute>) },
   { path: adminMigrationPath, element: lazyRoute(<ProtectedRoute><AdminMigrationTool /></ProtectedRoute>) },
   { path: '/admin/diagnostico', element: lazyRoute(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>) },
   { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
