@@ -1,0 +1,86 @@
+/* Ajustes finais do header e dos controles das páginas de mapa familiar. */
+
+/* Header: mantém os ícones centralizados quando a busca expandida força ações icon-only. */
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(svg),
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(svg) {
+  display: inline-flex !important;
+  width: 2.25rem !important;
+  min-width: 2.25rem !important;
+  padding-inline: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  text-align: center !important;
+}
+
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(svg) svg:first-of-type,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(svg) svg:first-of-type {
+  display: block !important;
+  margin-inline: auto !important;
+  flex: 0 0 auto !important;
+}
+
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(svg) > span:not([aria-label]),
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(svg) > span:not([aria-label]) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Painel lateral: botão de recolher alinhado ao centro da linha do título e dentro do card. */
+@media (min-width: 768px) {
+  .tree-sidebar-desktop-panel-wrap > .relative > button[data-tour-target='tree-controls-collapse'] {
+    top: calc(
+      clamp(0.45rem, 0.9vh, 0.8rem) +
+      clamp(0.75rem, 1.35vh, 1.35rem) +
+      clamp(1.18rem, 2.25vh, 1.45rem)
+    ) !important;
+    right: calc(clamp(0.45rem, 0.9vh, 0.8rem) + clamp(0.75rem, 1.35vh, 1.35rem)) !important;
+    transform: translateY(-50%) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: clamp(1.9rem, 3.4vh, 2.18rem) !important;
+    height: clamp(1.9rem, 3.4vh, 2.18rem) !important;
+    padding: 0 !important;
+    border-radius: 0.72rem !important;
+    border-color: #cbd7ea !important;
+    background: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .tree-sidebar-desktop-panel-wrap > .relative > button[data-tour-target='tree-controls-collapse'] svg {
+    width: clamp(0.86rem, 1.7vh, 1rem) !important;
+    height: clamp(0.86rem, 1.7vh, 1rem) !important;
+  }
+
+  /* Controles de zoom: reduz o conjunto e os ícones. */
+  .tree-canvas-zoom-controls {
+    top: 0.75rem !important;
+    left: 0.75rem !important;
+    gap: 0.18rem !important;
+    padding: 0.18rem !important;
+    border-radius: 0.62rem !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10) !important;
+  }
+
+  .tree-canvas-zoom-controls button {
+    width: 1.55rem !important;
+    height: 1.55rem !important;
+    min-width: 1.55rem !important;
+    min-height: 1.55rem !important;
+    border-radius: 0.46rem !important;
+    padding: 0 !important;
+  }
+
+  .tree-canvas-zoom-controls button svg {
+    width: 0.72rem !important;
+    height: 0.72rem !important;
+    stroke-width: 2.4 !important;
+  }
+}
