@@ -5,9 +5,10 @@ import { FavoriteButton } from './FavoriteButton';
 type PageFavoriteButtonProps = {
   path: string;
   className?: string;
+  'data-tour-target'?: string;
 };
 
-export function PageFavoriteButton({ path, className = '' }: PageFavoriteButtonProps) {
+export function PageFavoriteButton({ path, className = '', 'data-tour-target': dataTourTarget }: PageFavoriteButtonProps) {
   const page = getFavoritePageByPath(path);
 
   if (!page) return null;
@@ -23,6 +24,7 @@ export function PageFavoriteButton({ path, className = '' }: PageFavoriteButtonP
       variant="icon"
       size="sm"
       className={className}
+      dataTourTarget={dataTourTarget}
     />
   );
 }

@@ -14,6 +14,7 @@ type FavoriteButtonProps = {
   variant?: 'icon' | 'button';
   className?: string;
   onChange?: (active: boolean) => void;
+  dataTourTarget?: string;
 };
 
 export function FavoriteButton({
@@ -27,6 +28,7 @@ export function FavoriteButton({
   variant = 'button',
   className = '',
   onChange,
+  dataTourTarget,
 }: FavoriteButtonProps) {
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,6 +79,7 @@ export function FavoriteButton({
     return (
       <button
         type="button"
+        data-tour-target={dataTourTarget}
         onClick={handleClick}
         disabled={loading}
         aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
@@ -96,6 +99,7 @@ export function FavoriteButton({
   return (
     <button
       type="button"
+      data-tour-target={dataTourTarget}
       onClick={handleClick}
       disabled={loading}
       aria-label={active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}

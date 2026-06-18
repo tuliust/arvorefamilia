@@ -370,6 +370,18 @@ function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): 
 
 function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns: GroupColumns, layout: FamilyMapLayout) {
   if (peopleCount === 1 && config.singleWidth) return Math.min(config.width, config.singleWidth);
+  if (ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) && peopleCount === 2) {
+    const originalColumnCount = getColumnCount(config.columns);
+    const compactColumnCount = 2;
+    const originalGridWidth = config.width
+      - GROUP_HORIZONTAL_PADDING
+      - Math.max(0, originalColumnCount - 1) * layout.metrics.gridGap;
+    const cardWidth = originalGridWidth / originalColumnCount;
+
+    return GROUP_HORIZONTAL_PADDING
+      + compactColumnCount * cardWidth
+      + Math.max(0, compactColumnCount - 1) * layout.metrics.gridGap;
+  }
   if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
 
   const originalColumnCount = getColumnCount(config.columns);
@@ -716,7 +728,11 @@ function DirectPersonCard({
   onPersonClick: (pessoa: Pessoa) => void;
 }) {
   return (
-    <div className="absolute z-20" style={{ left: layout.left, top: layout.top, width: layout.width }}>
+    <div
+      className="absolute z-20"
+      data-family-map-central-card={central ? 'true' : undefined}
+      style={{ left: layout.left, top: layout.top, width: layout.width }}
+    >
       {person ? (
         <VisualPersonCard
           person={person}
@@ -1132,6 +1148,12 @@ function DesktopFamilyMapViewComponent({
   if (mother && central) addConnector(branchConnector(layoutsById, 'mother-central', 'mother', 'central', centralJunctionY));
   if (paternalUnclesLayout && paternalCousinsLayout) addConnector(verticalConnector(layoutsById, 'paternal-uncles-cousins', 'paternalUncles', 'paternalCousins'));
   if (maternalUnclesLayout && maternalCousinsLayout) addConnector(verticalConnector(layoutsById, 'maternal-uncles-cousins', 'maternalUncles', 'maternalCousins'));
+  if (!directRelativeFilters.tios && paternalCousinsLayout && central) {
+    addConnector(branchConnector(layoutsById, 'central-paternal-cousins-without-uncles', 'central', 'paternalCousins', descendantJunctionY));
+  }
+  if (!directRelativeFilters.tios && maternalCousinsLayout && central) {
+    addConnector(branchConnector(layoutsById, 'central-maternal-cousins-without-uncles', 'central', 'maternalCousins', descendantJunctionY));
+  }
 
   const lowerRootIds = [
     siblingsLayout && 'siblings',
@@ -1147,6 +1169,9 @@ function DesktopFamilyMapViewComponent({
     });
   }
   if (siblingsLayout && nephewsLayout) addConnector(verticalConnector(layoutsById, 'siblings-nephews', 'siblings', 'nephews'));
+  if (!directRelativeFilters.irmaos && nephewsLayout && central) {
+    addConnector(branchConnector(layoutsById, 'central-nephews-without-siblings', 'central', 'nephews', descendantJunctionY));
+  }
   if (spouseLayout) {
     const spouseBranchY = spouseLayout.top + spouseLayout.height + familyMapLayout.metrics.groupGap / 2;
     if (childrenLayout) addConnector(branchConnector(layoutsById, 'spouse-children', 'spouse', 'children', spouseBranchY));

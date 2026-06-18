@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  CalendarDays,
-  Download,
   Eye,
   MessageCircle,
   Network,
+  Search,
   SlidersHorizontal,
   Sparkles,
   UserRound,
@@ -27,6 +26,7 @@ type TutorialStep = {
   tip?: string;
   targets?: TutorialTarget[];
   panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below';
+  panelReference?: 'all' | 'first' | 'last';
 };
 
 type FirstLoginTutorialProps = {
@@ -52,7 +52,7 @@ type PanelPosition = {
 };
 
 type TourLayout = {
-  spotlight: SpotlightRect | null;
+  spotlights: SpotlightRect[];
   panel: PanelPosition;
 };
 
@@ -137,15 +137,16 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     ],
   },
   {
-    eyebrow: 'Exportação e busca',
-    title: 'Salve e encontre informações',
+    eyebrow: 'Busca e favoritos',
+    title: 'Favorite e encontre informações',
     description:
-      'Você pode salvar as telas como imagem ou PDF, além de imprimir a visualização.',
-    icon: Download,
+      'A busca ajuda a navegar rapidamente pelo acervo familiar.',
+    icon: Search,
     panelPlacement: 'below',
     targets: [
       {
         selectors: [
+          '[data-tour-target="search"]',
           'input[placeholder*="Buscar"]',
           'input[placeholder*="buscar"]',
           'input[placeholder*="pessoa ou página"]',
@@ -154,14 +155,17 @@ const TUTORIAL_STEPS: TutorialStep[] = [
         padding: 10,
       },
       {
-        containerTextIncludes: ['Área', 'Imagem', 'PDF', 'Imprimir'],
+        selectors: [
+          '[data-tour-target="favorite"]',
+          'button[aria-label*="favoritos"]',
+          'button[aria-label*="Favoritos"]',
+        ],
         padding: 10,
       },
     ],
     bullets: [
-      'Selecione áreas específicas da tela para exportar.',
-      'Use o campo de busca para encontrar pessoas, eventos e informações.',
-      'A busca ajuda a navegar rapidamente pelo acervo familiar.',
+      'Pesquise por pessoas, momentos e eventos.',
+      'Use o botão com estrela para salvar seus conteúdos favoritos.',
     ],
   },
   {
@@ -171,15 +175,15 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       'Visualize dados pessoais, histórias, curiosidades e a linha do tempo de memórias dos seus parentes.',
     icon: UserRound,
     panelPlacement: 'below',
+    panelReference: 'last',
     targets: [
       {
-        containerTextIncludes: [
-          'Vertical',
-          'Horizontal',
-          'Cores',
-          'Exportar',
-          'Destacar',
-        ],
+        selectors: ['[data-tour-target="curiosities"]'],
+        textIncludes: ['Curiosidades'],
+        padding: 10,
+      },
+      {
+        selectors: ['[data-family-map-central-card="true"]'],
         padding: 12,
       },
     ],
@@ -190,16 +194,17 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     ],
   },
   {
-    eyebrow: 'Curiosidades, IA e calendário',
-    title: 'Descobertas e datas importantes',
+    eyebrow: 'Calendário e Notificações',
+    title: 'Datas Importantes e Alertas',
     description:
       'Acesse estatísticas rápidas, faça perguntas sobre pessoas e memórias com apoio da IA e acompanhe eventos da família pelo Calendário.',
     icon: Sparkles,
     panelPlacement: 'below',
     targets: [
       {
-        containerTextIncludes: ['Curiosidades', 'Você Sabia?', 'Pergunte à IA'],
-        padding: 12,
+        selectors: ['[data-tour-target="curiosities"]'],
+        textIncludes: ['Curiosidades'],
+        padding: 10,
       },
     ],
     bullets: [
@@ -217,6 +222,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'below',
     targets: [
       {
+        selectors: ['[data-tour-target="forum"]'],
         textIncludes: ['Fórum'],
         padding: 10,
       },
@@ -396,6 +402,33 @@ function createSpotlightRect(
   };
 }
 
+function createSpotlightRects(
+  targetElements: { element: HTMLElement; padding: number }[]
+): SpotlightRect[] {
+  return targetElements
+    .map((target) => createSpotlightRect([target]))
+    .filter((rect): rect is SpotlightRect => Boolean(rect));
+}
+
+function createUnionSpotlightRect(spotlights: SpotlightRect[]) {
+  if (spotlights.length === 0) return null;
+
+  const left = Math.min(...spotlights.map((spotlight) => spotlight.left));
+  const top = Math.min(...spotlights.map((spotlight) => spotlight.top));
+  const right = Math.max(...spotlights.map((spotlight) => spotlight.right));
+  const bottom = Math.max(...spotlights.map((spotlight) => spotlight.bottom));
+
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: Math.max(right - left, 1),
+    height: Math.max(bottom - top, 1),
+    radius: SPOTLIGHT_RADIUS,
+  } satisfies SpotlightRect;
+}
+
 function createCenteredPanel(width: number): PanelPosition {
   return {
     left: clamp(
@@ -503,8 +536,10 @@ function createPanelPosition(
   };
 }
 
-function SpotlightOverlay({ spotlight }: { spotlight: SpotlightRect | null }) {
-  if (!spotlight) {
+function SpotlightOverlay({ spotlights }: { spotlights: SpotlightRect[] }) {
+  const maskId = React.useId().replace(/[^a-zA-Z0-9_-]/g, '');
+
+  if (spotlights.length === 0) {
     return (
       <div
         className="fixed inset-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
@@ -515,52 +550,46 @@ function SpotlightOverlay({ spotlight }: { spotlight: SpotlightRect | null }) {
 
   return (
     <>
-      <div
-        className="fixed left-0 top-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
-        style={{ width: '100vw', height: spotlight.top }}
+      <svg
+        className="pointer-events-none fixed inset-0 z-[12001] h-screen w-screen"
         data-tree-export-ignore="true"
-      />
-      <div
-        className="fixed left-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
-        style={{
-          top: spotlight.top,
-          width: spotlight.left,
-          height: spotlight.height,
-        }}
-        data-tree-export-ignore="true"
-      />
-      <div
-        className="fixed z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
-        style={{
-          left: spotlight.right,
-          top: spotlight.top,
-          width: 'calc(100vw - ' + spotlight.right + 'px)',
-          height: spotlight.height,
-        }}
-        data-tree-export-ignore="true"
-      />
-      <div
-        className="fixed left-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
-        style={{
-          top: spotlight.bottom,
-          width: '100vw',
-          height: 'calc(100vh - ' + spotlight.bottom + 'px)',
-        }}
-        data-tree-export-ignore="true"
-      />
-      <div
-        className="pointer-events-none fixed z-[12002] border-2 border-blue-400"
-        style={{
-          left: spotlight.left,
-          top: spotlight.top,
-          width: spotlight.width,
-          height: spotlight.height,
-          borderRadius: spotlight.radius,
-          boxShadow:
-            '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
-        }}
-        data-tree-export-ignore="true"
-      />
+        aria-hidden="true"
+      >
+        <defs>
+          <mask id={maskId}>
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            {spotlights.map((spotlight, index) => (
+              <rect
+                key={`${spotlight.left}-${spotlight.top}-${index}`}
+                x={spotlight.left}
+                y={spotlight.top}
+                width={spotlight.width}
+                height={spotlight.height}
+                rx={spotlight.radius}
+                ry={spotlight.radius}
+                fill="black"
+              />
+            ))}
+          </mask>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(2,6,23,0.85)" mask={`url(#${maskId})`} />
+      </svg>
+      {spotlights.map((spotlight, index) => (
+        <div
+          key={`${spotlight.left}-${spotlight.top}-${index}`}
+          className="pointer-events-none fixed z-[12002] border-2 border-blue-400"
+          style={{
+            left: spotlight.left,
+            top: spotlight.top,
+            width: spotlight.width,
+            height: spotlight.height,
+            borderRadius: spotlight.radius,
+            boxShadow:
+              '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
+          }}
+          data-tree-export-ignore="true"
+        />
+      ))}
     </>
   );
 }
@@ -572,7 +601,7 @@ export function FirstLoginTutorial({
 }: FirstLoginTutorialProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [layout, setLayout] = useState<TourLayout>(() => ({
-    spotlight: null,
+    spotlights: [],
     panel: {
       left: VIEWPORT_MARGIN,
       top: VIEWPORT_MARGIN,
@@ -591,11 +620,16 @@ export function FirstLoginTutorial({
 
   const updateLayout = useCallback(() => {
     const targetElements = resolveTargetElements(currentStep.targets ?? []);
-    const spotlight = createSpotlightRect(targetElements);
+    const spotlights = createSpotlightRects(targetElements);
+    const panelSpotlight = currentStep.panelReference === 'first'
+      ? spotlights[0] ?? null
+      : currentStep.panelReference === 'last'
+        ? spotlights[spotlights.length - 1] ?? null
+        : createUnionSpotlightRect(spotlights);
 
     setLayout({
-      spotlight,
-      panel: createPanelPosition(spotlight, currentStep.panelPlacement ?? 'auto'),
+      spotlights,
+      panel: createPanelPosition(panelSpotlight, currentStep.panelPlacement ?? 'auto'),
     });
   }, [currentStep]);
 
@@ -686,7 +720,7 @@ export function FirstLoginTutorial({
       data-tree-export-ignore="true"
     >
       <div className="pointer-events-auto fixed inset-0 z-[12000]" />
-      <SpotlightOverlay spotlight={layout.spotlight} />
+      <SpotlightOverlay spotlights={layout.spotlights} />
 
       <section
         className="fixed z-[12003] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl"

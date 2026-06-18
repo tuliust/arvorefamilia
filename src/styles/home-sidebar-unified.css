@@ -37,6 +37,7 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 .tree-primary-actions,
 .tree-control-flyout,
 .tree-control-section,
+.tree-view-card-button,
 .tree-icon-chip,
 .tree-top-icon-button,
 .tree-primary-control-button,
@@ -90,6 +91,7 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 }
 
 .tree-icon-chip,
+.tree-view-card-button,
 .tree-top-icon-button,
 .tree-primary-control-button,
 .tree-palette-dot-button,
@@ -110,10 +112,21 @@ html.mobile-user-menu-open .fixed.left-4.right-4.top-20 .space-y-1 > .mb-3.round
 }
 
 .family-filter-chip svg,
+.tree-view-card-button svg,
 .tree-icon-chip svg,
 .tree-top-icon-button svg,
 .tree-primary-control-button svg {
   opacity: 0.78;
+}
+
+.tree-view-card-button {
+  contain: layout paint;
+}
+
+@media (max-width: 340px) {
+  .tree-view-toggle {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 html[data-tree-highlight-lines='true'] [data-family-map-connectors='true'],
