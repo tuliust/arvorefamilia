@@ -288,13 +288,12 @@ export function SidebarPanelTabs({
           })}
         </div>
 
-        <div className="tree-primary-actions grid min-w-0 grid-cols-2 gap-1">
-          <PrimaryControlButton icon={Brush} label="Cores" active={activeFlyout === 'colors'} onClick={() => handleFlyoutToggle('colors')} />
-          {mobileControls ? (
+        <div className={["tree-primary-actions grid min-w-0 gap-1", mobileControls ? 'grid-cols-3' : 'grid-cols-2'].join(' ')}>
+          <PrimaryControlButton icon={Brush} label={mobileControls ? 'Cor' : 'Cores'} active={activeFlyout === 'colors'} onClick={() => handleFlyoutToggle('colors')} />
+          {mobileControls && (
             <PrimaryControlButton icon={PanelTop} label="Grupos" active={mobileGroupsActive} onClick={handleMobileGroupsToggle} />
-          ) : (
-            <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => handleFlyoutToggle('export')} />
           )}
+          <PrimaryControlButton icon={Printer} label="Exportar" active={activeFlyout === 'export'} onClick={() => handleFlyoutToggle('export')} />
         </div>
 
         {activeFlyout === 'colors' && (
