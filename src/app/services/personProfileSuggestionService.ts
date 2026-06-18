@@ -17,6 +17,38 @@ export type PersonProfileSuggestion = {
   updated_at?: string;
 };
 
+const PERSON_PROFILE_SUGGESTIONS_TABLE = 'person_profile_suggestions';
+
+function isMissingPersonProfileSuggestionsTableError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const record = error as { code?: unknown; message?: unknown; details?: unknown };
+  const code = String(record.code || '');
+  const text = [record.message, record.details]
+    .filter(Boolean)
+    .map((value) => String(value))
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    (text.includes(PERSON_PROFILE_SUGGESTIONS_TABLE) &&
+      (text.includes('schema cache') || text.includes('could not find') || text.includes('does not exist')))
+  );
+}
+
+function getMissingPersonProfileSuggestionsTableMessage() {
+  return 'A tabela person_profile_suggestions ainda não está disponível no Supabase. Aplique a migration 20260608143000_create_person_profile_suggestions.sql e recarregue o schema cache.';
+}
+
+function handleMissingPersonProfileSuggestionsTable(error: unknown) {
+  if (!isMissingPersonProfileSuggestionsTableError(error)) return false;
+
+  console.warn('[Supabase] person_profile_suggestions ausente ou fora do schema cache.', error);
+  return true;
+}
+
 function toPersonProfileSuggestion(row: Record<string, unknown>): PersonProfileSuggestion {
   return {
     id: String(row.id),
@@ -52,7 +84,7 @@ export async function createPersonProfileSuggestion(params: {
   const requesterLink = await getPrimaryLinkedPerson(authData.user.id);
 
   const { data, error } = await supabase
-    .from('person_profile_suggestions')
+    .from(PERSON_PROFILE_SUGGESTIONS_TABLE)
     .insert({
       requester_user_id: authData.user.id,
       requester_pessoa_id: requesterLink.data?.pessoa_id ?? null,
@@ -64,6 +96,10 @@ export async function createPersonProfileSuggestion(params: {
     .single();
 
   if (error) {
+    if (isMissingPersonProfileSuggestionsTableError(error)) {
+      throw new Error(getMissingPersonProfileSuggestionsTableMessage());
+    }
+
     throw new Error(error.message);
   }
 
@@ -72,12 +108,16 @@ export async function createPersonProfileSuggestion(params: {
 
 export async function listPendingPersonProfileSuggestions() {
   const { data, error } = await supabase
-    .from('person_profile_suggestions')
+    .from(PERSON_PROFILE_SUGGESTIONS_TABLE)
     .select('*')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) {
+    if (handleMissingPersonProfileSuggestionsTable(error)) {
+      return [];
+    }
+
     throw new Error(error.message);
   }
 
@@ -96,7 +136,7 @@ export async function reviewPersonProfileSuggestion(params: {
   }
 
   const { data, error } = await supabase
-    .from('person_profile_suggestions')
+    .from(PERSON_PROFILE_SUGGESTIONS_TABLE)
     .update({
       status: params.status,
       admin_note: params.adminNote ?? null,
@@ -108,6 +148,10 @@ export async function reviewPersonProfileSuggestion(params: {
     .single();
 
   if (error) {
+    if (isMissingPersonProfileSuggestionsTableError(error)) {
+      throw new Error(getMissingPersonProfileSuggestionsTableMessage());
+    }
+
     throw new Error(error.message);
   }
 
