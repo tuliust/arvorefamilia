@@ -56,8 +56,8 @@
   div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
     content: "X" !important;
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 1rem);
-    right: 1rem;
+    top: max(calc(env(safe-area-inset-top, 0px) + 1.65rem), calc(50dvh - 18rem));
+    right: max(1.85rem, calc((100vw - min(calc(100vw - 1.5rem), 25rem)) / 2 + 1.05rem));
     z-index: 3;
     display: flex;
     width: 2.35rem;
@@ -103,6 +103,10 @@
       left: 50dvw !important;
       width: min(calc(100dvw - 1.5rem), 25rem) !important;
       max-width: calc(100dvw - 1.5rem) !important;
+    }
+
+    div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
+      right: max(1.85rem, calc((100dvw - min(calc(100dvw - 1.5rem), 25rem)) / 2 + 1.05rem));
     }
   }
 
@@ -169,5 +173,53 @@
     font-size: 0.72rem !important;
     line-height: 1 !important;
     font-weight: 700 !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) {
+    margin-top: 0.95rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 1.18rem !important;
+    line-height: 1.1 !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div {
+    margin-bottom: 0.85rem !important;
+    border-radius: 1.05rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div button {
+    height: 2.35rem !important;
+    font-size: 0.78rem !important;
+    line-height: 1 !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div {
+    margin-bottom: 1.15rem !important;
+    border-radius: 1.05rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button {
+    height: 3.05rem !important;
+    min-height: 3.05rem !important;
+    grid-template-columns: 2.45rem minmax(0, 1fr) auto 1rem !important;
+    gap: 0.45rem !important;
+    padding: 0.38rem 0.68rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button > span:first-child {
+    height: 2rem !important;
+    width: 2rem !important;
+    border-radius: 0.72rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button > span:first-child svg {
+    height: 1.2rem !important;
+    width: 1.2rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button > span:nth-child(2),
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button strong {
+    font-size: 0.94rem !important;
+    line-height: 1.05 !important;
   }
 }
