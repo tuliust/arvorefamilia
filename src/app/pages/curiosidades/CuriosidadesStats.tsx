@@ -1,6 +1,5 @@
 ﻿import { CalendarDays, Flower2, HeartPulse, Network, PawPrint, Users } from 'lucide-react';
 import {
-  curiositySectionCardClassName,
   isDeceased,
   isLivingPerson,
   isPet,
@@ -25,30 +24,45 @@ export function CuriosidadesStats({
       value: totalHumans,
       description: 'Familiares humanos registrados na árvore.',
       icon: Users,
+      cardClassName: 'border-blue-100 bg-blue-50',
+      iconClassName: 'bg-white text-blue-700',
+      valueClassName: 'text-blue-900',
     },
     {
       label: 'Pessoas vivas',
       value: totalLiving,
       description: 'Perfis sem registro de falecimento.',
       icon: HeartPulse,
+      cardClassName: 'border-emerald-100 bg-emerald-50',
+      iconClassName: 'bg-white text-emerald-700',
+      valueClassName: 'text-emerald-900',
     },
     {
       label: 'Memórias preservadas',
       value: totalDeceased,
       description: 'Familiares falecidos mantidos no acervo.',
       icon: Flower2,
+      cardClassName: 'border-violet-100 bg-violet-50',
+      iconClassName: 'bg-white text-violet-700',
+      valueClassName: 'text-violet-900',
     },
     {
       label: 'Pets',
       value: totalPets,
       description: 'Animais de estimação cadastrados.',
       icon: PawPrint,
+      cardClassName: 'border-orange-100 bg-orange-50',
+      iconClassName: 'bg-white text-orange-700',
+      valueClassName: 'text-orange-900',
     },
     {
       label: 'Datas de casamento',
       value: totalWeddings,
       description: 'Vínculos com data de união registrada.',
       icon: CalendarDays,
+      cardClassName: 'border-rose-100 bg-rose-50',
+      iconClassName: 'bg-white text-rose-700',
+      valueClassName: 'text-rose-900',
     },
   ];
 
@@ -58,15 +72,18 @@ export function CuriosidadesStats({
         const Icon = stat.icon;
 
         return (
-          <article key={stat.label} className={curiositySectionCardClassName}>
+          <article
+            key={stat.label}
+            className={`rounded-2xl border p-5 shadow-sm ${stat.cardClassName}`}
+          >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                <p className="mt-3 text-4xl font-bold text-gray-950">
+                <p className="text-sm font-semibold text-gray-700">{stat.label}</p>
+                <p className={`mt-3 text-4xl font-bold ${stat.valueClassName}`}>
                   {loading ? '--' : stat.value}
                 </p>
               </div>
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-sm ${stat.iconClassName}`}>
                 <Icon className="h-5 w-5" />
               </span>
             </div>
