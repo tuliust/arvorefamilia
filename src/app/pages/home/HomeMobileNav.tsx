@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronDown,
   FileDown,
+  Heart,
   Home,
   ImageDown,
   Layers,
@@ -12,6 +13,7 @@ import {
   Printer,
   Scan,
   Star,
+  UsersRound,
 } from 'lucide-react';
 import {
   MobileFamilyMapToolbar,
@@ -120,6 +122,26 @@ const EXPORT_OPTIONS: Array<{
   { action: 'print', label: 'Imprimir', ariaLabel: 'Imprimir árvore', icon: Printer },
 ];
 
+const FILTER_OPTIONS: Array<{
+  value: boolean;
+  label: string;
+  ariaLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    value: true,
+    label: 'Exibir cônjuges de tios, primos etc',
+    ariaLabel: 'Exibir cônjuges de tios, primos e outros parentes',
+    icon: Heart,
+  },
+  {
+    value: false,
+    label: 'Apenas meus familiares',
+    ariaLabel: 'Exibir apenas meus familiares',
+    icon: UsersRound,
+  },
+];
+
 function getStoredPalette(): TreeColorPalette {
   if (typeof window === 'undefined') return 'white';
 
@@ -164,6 +186,7 @@ export function HomeMobileNav({
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
   const [viewAsPersonOptions, setViewAsPersonOptions] = useState<ViewAsPersonOption[]>([]);
   const [defaultViewAsLabel, setDefaultViewAsLabel] = useState('Família principal');
+  const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(true);
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -183,6 +206,10 @@ export function HomeMobileNav({
     applyTreePalette(treeColorPalette);
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
+
+  useEffect(() => {
+    document.documentElement.dataset.mobileFamilySpouseScope = showExtendedSpouseFilters ? 'extended' : 'direct';
+  }, [showExtendedSpouseFilters]);
 
   useEffect(() => {
     void refreshUnreadNotificationsCount();
@@ -279,6 +306,7 @@ export function HomeMobileNav({
       activeToolbarAction !== 'visualizacao' &&
       activeToolbarAction !== 'formato' &&
       activeToolbarAction !== 'cor' &&
+      activeToolbarAction !== 'grupos' &&
       activeToolbarAction !== 'exportar'
     ) {
       setActiveToolbarAction(null);
@@ -286,7 +314,7 @@ export function HomeMobileNav({
   }, [activeToolbarAction, legendOpen]);
 
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
-    if (action === 'visualizacao' || action === 'formato' || action === 'cor' || action === 'exportar') {
+    if (action === 'visualizacao' || action === 'formato' || action === 'cor' || action === 'grupos' || action === 'exportar') {
       setActiveToolbarAction((current) => (current === action ? null : action));
 
       if (legendOpen) onToggleLegend();
@@ -325,6 +353,11 @@ export function HomeMobileNav({
   const handleExportOptionClick = useCallback((action: SidebarTreeAction) => {
     setActiveToolbarAction(null);
     dispatchTreeAction(action);
+  }, []);
+
+  const handleFilterOptionClick = useCallback((nextValue: boolean) => {
+    setShowExtendedSpouseFilters(nextValue);
+    setActiveToolbarAction(null);
   }, []);
 
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
@@ -446,6 +479,45 @@ export function HomeMobileNav({
                         ].join(' ')}
                         style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }}
                       />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeToolbarAction === 'grupos' && (
+            <div
+              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              data-tree-export-ignore="true"
+            >
+              <div
+                className="mx-auto grid max-w-md grid-cols-2 gap-1.5"
+                role="dialog"
+                aria-label="Filtros do mapa familiar"
+              >
+                {FILTER_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const active = showExtendedSpouseFilters === option.value;
+
+                  return (
+                    <button
+                      key={String(option.value)}
+                      type="button"
+                      aria-label={option.ariaLabel}
+                      aria-pressed={active}
+                      onClick={() => handleFilterOptionClick(option.value)}
+                      className={[
+                        'flex min-h-[42px] min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-white px-1.5 py-1.5 text-center shadow-sm transition active:scale-[0.99]',
+                        active
+                          ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-500'
+                          : 'border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50/70 hover:text-blue-950',
+                      ].join(' ')}
+                    >
+                      <Icon className={['h-4 w-4 shrink-0', active ? 'text-blue-700' : 'text-slate-400'].join(' ')} />
+                      <span className="min-w-0 text-[9px] font-extrabold leading-[1.05] tracking-[-0.02em]">
+                        {option.label}
+                      </span>
                     </button>
                   );
                 })}
