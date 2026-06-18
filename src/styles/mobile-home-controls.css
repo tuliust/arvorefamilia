@@ -15,49 +15,51 @@
     max-width: calc(100vw - 1.5rem) !important;
   }
 
+  html.mobile-user-menu-open header {
+    z-index: 15000 !important;
+  }
+
+  html.mobile-user-menu-open nav[data-mobile-family-map-toolbar="true"] {
+    z-index: 40 !important;
+  }
+
   div[role="dialog"][aria-label="Painel de visualização"] {
     background: rgba(15, 23, 42, 0.18);
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"] {
-    inset: auto !important;
-    top: calc(env(safe-area-inset-top, 0px) + 1.1rem) !important;
-    right: 1.1rem !important;
-    z-index: 3 !important;
-    display: flex !important;
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 1px solid rgb(226, 232, 240) !important;
-    border-radius: 9999px !important;
-    background: rgb(255, 255, 255) !important;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18) !important;
-    color: rgb(15, 23, 42) !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: rgba(15, 23, 42, 0.20) !important;
+    box-shadow: none !important;
+    color: transparent !important;
     font-size: 0 !important;
-    backdrop-filter: none !important;
+    backdrop-filter: blur(1px) !important;
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
-    content: "×";
-    font-size: 1.45rem;
-    line-height: 1;
-    font-weight: 700;
+    content: none !important;
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] > section {
-    left: 0.75rem !important;
-    right: 0.75rem !important;
-    top: calc(env(safe-area-inset-top, 0px) + 0.75rem) !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem) !important;
-    width: auto !important;
-    max-height: none !important;
-    transform: none !important;
+    left: 50% !important;
+    right: auto !important;
+    top: 50% !important;
+    bottom: auto !important;
+    z-index: 1 !important;
+    width: min(calc(100vw - 1.5rem), 25rem) !important;
+    max-height: min(82dvh, 42rem) !important;
+    transform: translate(-50%, -50%) !important;
     border-radius: 1.5rem !important;
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] section header {
-    padding-right: 2.5rem;
+    padding-right: 0;
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] section header > span {
