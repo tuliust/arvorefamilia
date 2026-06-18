@@ -42,128 +42,14 @@ const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
 const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
+const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidas').then((module) => ({ default: module.AdminDuvidas })));
 
-const ROUTE_CHUNK_RELOAD_KEY = 'arvorefamilia:route-chunk-reload-at';
-const ROUTE_CHUNK_RELOAD_COOLDOWN_MS = 10000;
-
-type WindowWithChunkHandler = Window & {
-  __arvorefamiliaChunkReloadHandlerInstalled?: boolean;
-};
-
-function RouteFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50" data-testid="route-loading">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
-        <p className="text-gray-600">Carregando...</p>
-      </div>
-    </div>
-  );
+function Loading() {
+  return <div className="min-h-screen flex items-center justify-center bg-gray-50">Carregando...</div>;
 }
 
-function reloadForFreshAssets() {
-  try {
-    const lastReloadAt = Number(sessionStorage.getItem(ROUTE_CHUNK_RELOAD_KEY) ?? 0);
-    if (Date.now() - lastReloadAt < ROUTE_CHUNK_RELOAD_COOLDOWN_MS) return false;
-    sessionStorage.setItem(ROUTE_CHUNK_RELOAD_KEY, String(Date.now()));
-  } catch {
-    // Se o storage estiver indisponível, ainda tenta recuperar a versão nova do app.
-  }
-
-  window.location.reload();
-  return true;
-}
-
-function RouteErrorFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">Não foi possível carregar esta página</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          A versão do site aberta no navegador pode estar desatualizada. Atualize a página para carregar os arquivos mais recentes.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            try {
-              sessionStorage.removeItem(ROUTE_CHUNK_RELOAD_KEY);
-            } catch {
-              // Ignora falhas de storage no clique manual de recuperação.
-            }
-            window.location.reload();
-          }}
-          className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-        >
-          Atualizar página
-        </button>
-      </div>
-    </div>
-  );
-}
-
-type RouteErrorBoundaryState = {
-  hasError: boolean;
-};
-
-function isDynamicImportError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Expected a JavaScript-or-Wasm module script|MIME type/i.test(message);
-}
-
-function isAssetScriptLoadError(event: ErrorEvent | Event) {
-  if (!(event instanceof Event)) return false;
-  const target = event.target;
-  if (!(target instanceof HTMLScriptElement)) return false;
-  return /\/assets\/.+\.js(\?.*)?$/.test(target.src);
-}
-
-function installChunkLoadErrorReloadHandler() {
-  if (typeof window === 'undefined') return;
-
-  const win = window as WindowWithChunkHandler;
-  if (win.__arvorefamiliaChunkReloadHandlerInstalled) return;
-  win.__arvorefamiliaChunkReloadHandlerInstalled = true;
-
-  window.addEventListener(
-    'error',
-    (event) => {
-      if (isDynamicImportError((event as ErrorEvent).error ?? (event as ErrorEvent).message) || isAssetScriptLoadError(event)) {
-        reloadForFreshAssets();
-      }
-    },
-    true,
-  );
-
-  window.addEventListener('unhandledrejection', (event) => {
-    if (isDynamicImportError(event.reason)) reloadForFreshAssets();
-  });
-}
-
-installChunkLoadErrorReloadHandler();
-
-class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteErrorBoundaryState> {
-  state: RouteErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError(): RouteErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    if (isDynamicImportError(error)) reloadForFreshAssets();
-  }
-
-  render() {
-    if (this.state.hasError) return <RouteErrorFallback />;
-    return this.props.children;
-  }
-}
-
-function lazyRoute(element: React.ReactNode) {
-  return (
-    <RouteErrorBoundary>
-      <Suspense fallback={<RouteFallback />}>{element}</Suspense>
-    </RouteErrorBoundary>
-  );
+function route(element: React.ReactNode) {
+  return <Suspense fallback={<Loading />}>{element}</Suspense>;
 }
 
 function RedirectToMapaFamiliar() {
@@ -174,77 +60,55 @@ function RedirectToMapaFamiliar() {
 function TreeHomeShell() {
   const location = useLocation();
   const treeViewMode = getTreeViewModeFromPath(location.pathname);
-
-  return (
-    <div
-      className="contents"
-      data-tree-route-view={treeViewMode === 'mapa-familiar-horizontal' ? 'mapa-familiar-horizontal' : undefined}
-    >
-      <Home />
-    </div>
-  );
+  return <div className="contents" data-tree-route-view={treeViewMode === 'mapa-familiar-horizontal' ? 'mapa-familiar-horizontal' : undefined}><Home /></div>;
 }
 
 const adminMigrationPath = '/admin/migrar-dados';
-const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
+const treeHomeRouteElement = route(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
 
 export const router = createBrowserRouter([
-  { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
-  {
-    element: treeHomeRouteElement,
-    children: [
-      { path: 'mapa-familiar' },
-      { path: 'mapa-familiar-horizontal' },
-    ],
-  },
-  { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
-  { path: '/entrar', element: lazyRoute(<Entrar />) },
-  { path: '/termos', element: lazyRoute(<Termos />) },
-  { path: '/privacidade', element: lazyRoute(<Privacidade />) },
-  { path: '/duvidas', element: lazyRoute(<Duvidas />) },
-  { path: '/minha-arvore/editar', element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>) },
-  { path: '/meus-dados', element: lazyRoute(<MemberRoute><MeusDados /></MemberRoute>) },
-  { path: '/meus-vinculos', element: lazyRoute(<MemberRoute><MeusVinculos /></MemberRoute>) },
-  { path: '/arquivos-historicos', element: lazyRoute(<MemberRoute><ArquivosHistoricosPage /></MemberRoute>) },
-  { path: '/preferencias', element: lazyRoute(<MemberRoute><PreferenciasPage /></MemberRoute>) },
-  { path: '/revisao-dados', element: lazyRoute(<MemberRoute><RevisaoDados /></MemberRoute>) },
-  { path: '/vincular-perfil', element: lazyRoute(<MemberRoute><VincularPerfil /></MemberRoute>) },
-  { path: '/pessoa/:id', element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>) },
-  { path: '/pessoas/:id', element: lazyRoute(<MemberRoute><PersonProfile /></MemberRoute>) },
-  { path: '/calendario-familiar', element: lazyRoute(<MemberRoute><CalendarioFamiliar /></MemberRoute>) },
-  { path: '/curiosidades', element: lazyRoute(<MemberRoute><Curiosidades /></MemberRoute>) },
-  { path: '/meus-favoritos', element: lazyRoute(<MemberRoute><MeusFavoritos /></MemberRoute>) },
-  { path: '/notificacoes', element: lazyRoute(<MemberRoute><Notificacoes /></MemberRoute>) },
-  { path: '/ajustar-notificacoes', element: lazyRoute(<MemberRoute><AjustarNotificacoes /></MemberRoute>) },
-  { path: '/forum', element: lazyRoute(<MemberRoute><ForumHome /></MemberRoute>) },
-  { path: '/forum/novo', element: lazyRoute(<MemberRoute><ForumNovoTopico /></MemberRoute>) },
-  { path: '/forum/topico/:id', element: lazyRoute(<MemberRoute><ForumTopico /></MemberRoute>) },
-  { path: '/forum/topico/:id/editar', element: lazyRoute(<MemberRoute><ForumEditarTopico /></MemberRoute>) },
-  { path: '/admin', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
-  { path: '/admin/login', element: lazyRoute(<AdminLogin />) },
-  { path: '/admin/dashboard', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
-  { path: '/admin/home', element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>) },
-  { path: '/admin/pessoas', element: lazyRoute(<ProtectedRoute><AdminPessoas /></ProtectedRoute>) },
-  { path: '/admin/pessoas/nova', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
-  { path: '/admin/pessoas/:id/editar', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
-  { path: '/admin/pessoas/:id', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
-  { path: '/admin/relacionamentos', element: lazyRoute(<ProtectedRoute><AdminRelacionamentos /></ProtectedRoute>) },
-  { path: '/admin/relacionamentos/novo', element: lazyRoute(<ProtectedRoute><AdminRelacionamentoForm /></ProtectedRoute>) },
-  { path: '/admin/importacao', element: lazyRoute(<ProtectedRoute><AdminImportacao /></ProtectedRoute>) },
-  { path: adminMigrationPath, element: lazyRoute(<ProtectedRoute><AdminMigrationTool /></ProtectedRoute>) },
-  { path: '/admin/diagnostico', element: lazyRoute(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>) },
-  { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
-  { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
-  { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
-  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
-  {
-    path: '*',
-    element: <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">404</h1>
-        <p className="text-gray-600 mb-4">Página não encontrada</p>
-        <a href="/" className="text-blue-600 hover:underline">Voltar para home</a>
-      </div>
-    </div>,
-  },
+  { path: '/', element: route(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
+  { element: treeHomeRouteElement, children: [{ path: 'mapa-familiar' }, { path: 'mapa-familiar-horizontal' }] },
+  { path: '/busca', element: route(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
+  { path: '/entrar', element: route(<Entrar />) },
+  { path: '/termos', element: route(<Termos />) },
+  { path: '/privacidade', element: route(<Privacidade />) },
+  { path: '/duvidas', element: route(<Duvidas />) },
+  { path: '/minha-arvore/editar', element: route(<MemberRoute><MinhaArvore /></MemberRoute>) },
+  { path: '/meus-dados', element: route(<MemberRoute><MeusDados /></MemberRoute>) },
+  { path: '/meus-vinculos', element: route(<MemberRoute><MeusVinculos /></MemberRoute>) },
+  { path: '/arquivos-historicos', element: route(<MemberRoute><ArquivosHistoricosPage /></MemberRoute>) },
+  { path: '/preferencias', element: route(<MemberRoute><PreferenciasPage /></MemberRoute>) },
+  { path: '/revisao-dados', element: route(<MemberRoute><RevisaoDados /></MemberRoute>) },
+  { path: '/vincular-perfil', element: route(<MemberRoute><VincularPerfil /></MemberRoute>) },
+  { path: '/pessoa/:id', element: route(<MemberRoute><PersonProfile /></MemberRoute>) },
+  { path: '/pessoas/:id', element: route(<MemberRoute><PersonProfile /></MemberRoute>) },
+  { path: '/calendario-familiar', element: route(<MemberRoute><CalendarioFamiliar /></MemberRoute>) },
+  { path: '/curiosidades', element: route(<MemberRoute><Curiosidades /></MemberRoute>) },
+  { path: '/meus-favoritos', element: route(<MemberRoute><MeusFavoritos /></MemberRoute>) },
+  { path: '/notificacoes', element: route(<MemberRoute><Notificacoes /></MemberRoute>) },
+  { path: '/ajustar-notificacoes', element: route(<MemberRoute><AjustarNotificacoes /></MemberRoute>) },
+  { path: '/forum', element: route(<MemberRoute><ForumHome /></MemberRoute>) },
+  { path: '/forum/novo', element: route(<MemberRoute><ForumNovoTopico /></MemberRoute>) },
+  { path: '/forum/topico/:id', element: route(<MemberRoute><ForumTopico /></MemberRoute>) },
+  { path: '/forum/topico/:id/editar', element: route(<MemberRoute><ForumEditarTopico /></MemberRoute>) },
+  { path: '/admin', element: route(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
+  { path: '/admin/login', element: route(<AdminLogin />) },
+  { path: '/admin/dashboard', element: route(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
+  { path: '/admin/home', element: route(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>) },
+  { path: '/admin/pessoas', element: route(<ProtectedRoute><AdminPessoas /></ProtectedRoute>) },
+  { path: '/admin/pessoas/nova', element: route(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/pessoas/:id/editar', element: route(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/pessoas/:id', element: route(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
+  { path: '/admin/relacionamentos', element: route(<ProtectedRoute><AdminRelacionamentos /></ProtectedRoute>) },
+  { path: '/admin/relacionamentos/novo', element: route(<ProtectedRoute><AdminRelacionamentoForm /></ProtectedRoute>) },
+  { path: '/admin/importacao', element: route(<ProtectedRoute><AdminImportacao /></ProtectedRoute>) },
+  { path: adminMigrationPath, element: route(<ProtectedRoute><AdminMigrationTool /></ProtectedRoute>) },
+  { path: '/admin/diagnostico', element: route(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>) },
+  { path: '/admin/integridade', element: route(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
+  { path: '/admin/atividades', element: route(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
+  { path: '/admin/notificacoes', element: route(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
+  { path: '/admin/duvidas', element: route(<ProtectedRoute><AdminDuvidas /></ProtectedRoute>) },
+  { path: '/admin/solicitacoes-vinculos', element: route(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
+  { path: '*', element: <div className="min-h-screen flex items-center justify-center bg-gray-50">Página não encontrada</div> },
 ]);
