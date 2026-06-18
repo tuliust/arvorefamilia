@@ -47,7 +47,10 @@ export function MobileFamilyMapToolbar({
       data-tree-export-ignore="true"
     >
       <div className="mx-auto flex w-full max-w-md min-w-0 items-center justify-center gap-2 px-2">
-        <div className="flex min-w-0 flex-1 items-center justify-between gap-1 rounded-full bg-slate-100 p-1">
+        <div
+          className="flex min-w-0 flex-1 items-center justify-between gap-1 rounded-full bg-slate-100 p-1"
+          data-tour-target="mobile-tree-action-bar"
+        >
           {TOOLBAR_ITEMS.map((item) => {
             const active = activeAction === item.action;
 
