@@ -1,0 +1,123 @@
+@media (max-width: 767px) {
+  nav[data-mobile-family-map-toolbar="true"] {
+    top: calc(env(safe-area-inset-top, 0px) + 4.5rem) !important;
+  }
+
+  nav[data-mobile-family-map-toolbar="true"] > div {
+    max-width: none !important;
+  }
+
+  nav[data-mobile-family-map-toolbar="true"] + div[data-tree-export-ignore="true"] {
+    top: calc(env(safe-area-inset-top, 0px) + 8rem) !important;
+  }
+
+  nav[data-mobile-family-map-toolbar="true"] + div[data-tree-export-ignore="true"] > * {
+    max-width: calc(100vw - 1.5rem) !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] {
+    background: rgba(15, 23, 42, 0.18);
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"] {
+    inset: auto !important;
+    top: calc(env(safe-area-inset-top, 0px) + 1.1rem) !important;
+    right: 1.1rem !important;
+    z-index: 3 !important;
+    display: flex !important;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid rgb(226, 232, 240) !important;
+    border-radius: 9999px !important;
+    background: rgb(255, 255, 255) !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18) !important;
+    color: rgb(15, 23, 42) !important;
+    font-size: 0 !important;
+    backdrop-filter: none !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
+    content: "×";
+    font-size: 1.45rem;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > section {
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    top: calc(env(safe-area-inset-top, 0px) + 0.75rem) !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem) !important;
+    width: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    border-radius: 1.5rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] section header {
+    padding-right: 2.5rem;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] section header > span {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border-radius: 1rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] section header > span svg {
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] section header h2 {
+    font-size: 1.45rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] section header button {
+    display: none !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type {
+    margin-bottom: 0.5rem !important;
+    font-size: 1.15rem !important;
+    line-height: 1.1 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type + div {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.45rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type + div > div {
+    min-height: 4.4rem !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 0.18rem !important;
+    padding: 0.45rem 0.3rem !important;
+    border-radius: 1rem !important;
+    text-align: center !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type + div > div svg {
+    width: 1.35rem !important;
+    height: 1.35rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type + div > div strong {
+    font-size: 1.55rem !important;
+    line-height: 0.95 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:first-of-type + div > div span {
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+  }
+}
