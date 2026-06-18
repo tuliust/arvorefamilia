@@ -125,6 +125,7 @@ function getCurrentHeaderSection(pathname: string) {
   if (pathname === '/meus-favoritos') return 'favorites';
   if (pathname === '/notificacoes' || pathname.startsWith('/ajustar-notificacoes')) return 'notifications';
   if (pathname === '/calendario-familiar') return 'calendar';
+  if (pathname === '/curiosidades') return 'curiosities';
   if (pathname === '/forum' || pathname.startsWith('/forum/')) return 'forum';
   if (pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/') return 'tree';
   return 'other';
@@ -361,9 +362,11 @@ export function MemberPageHeader({
             Árvore Familiar
           </StandardToolbarLink>
         )}
-        <StandardToolbarLink to="/mapa-familiar?curiosidades=1" title="Curiosidades" ariaLabel="Abrir Curiosidades" icon={Sparkles} visibleFrom="md" tourTarget="curiosities">
-          Curiosidades
-        </StandardToolbarLink>
+        {currentHeaderSection !== 'curiosities' && (
+          <StandardToolbarLink to="/mapa-familiar?curiosidades=1" title="Curiosidades" ariaLabel="Abrir Curiosidades" icon={Sparkles} visibleFrom="md" tourTarget="curiosities">
+            Curiosidades
+          </StandardToolbarLink>
+        )}
         {currentHeaderSection !== 'calendar' && (
           <StandardToolbarLink to="/calendario-familiar" title="Calendário familiar" ariaLabel="Abrir Calendário familiar" icon={CalendarDays} tourTarget="calendar">
             Calendário
