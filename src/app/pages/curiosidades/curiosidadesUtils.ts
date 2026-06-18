@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Pessoa, Relacionamento } from '../../types';
+import { countChildrenByPerson } from '../../utils/familyCuriosities';
 
 export type CuriosidadesStatus = 'Em breve' | 'Aguardando dados familiares';
 
@@ -499,32 +500,7 @@ function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[]) {
     }));
 }
 
-export function countChildrenByPerson(relacionamentos: Relacionamento[]) {
-  const childrenByParent = new Map<string, Set<string>>();
-
-  const addChild = (parentId: string, childId: string) => {
-    if (!parentId || !childId || parentId === childId) return;
-
-    const current = childrenByParent.get(parentId) ?? new Set<string>();
-    current.add(childId);
-    childrenByParent.set(parentId, current);
-  };
-
-  relacionamentos.forEach((relacionamento) => {
-    if (relacionamento.tipo_relacionamento === 'filho') {
-      addChild(relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id);
-      return;
-    }
-
-    if (relacionamento.tipo_relacionamento === 'pai' || relacionamento.tipo_relacionamento === 'mae') {
-      addChild(relacionamento.pessoa_destino_id, relacionamento.pessoa_origem_id);
-    }
-  });
-
-  return Array.from(childrenByParent.entries())
-    .map(([personId, children]) => ({ personId, count: children.size }))
-    .sort((a, b) => b.count - a.count);
-}
+export { countChildrenByPerson };
 
 export function buildCuriosityQuizQuestions(
   pessoas: Pessoa[],
