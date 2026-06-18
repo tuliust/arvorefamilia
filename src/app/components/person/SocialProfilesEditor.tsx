@@ -80,7 +80,7 @@ export function SocialProfilesEditor({
                 ))}
               </select>
 
-              <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:flex sm:flex-row">
                 <div className="flex min-w-0 flex-1">
                   {profile.rede && (
                     <span className="inline-flex h-10 max-w-[48%] shrink-0 items-center truncate rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600 sm:max-w-none">
@@ -97,7 +97,7 @@ export function SocialProfilesEditor({
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
                   <Button
                     type="button"
                     variant="outline"
