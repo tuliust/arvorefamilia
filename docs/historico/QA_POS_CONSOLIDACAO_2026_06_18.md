@@ -547,3 +547,52 @@ Próxima frente recomendada:
 ```txt
 A preencher
 ```
+
+<!-- RODADA2-QA-POS-CONSOLIDACAO-2026-06-18 -->
+## Segunda rodada de QA â€” complementos
+
+### Mapas familiares mobile
+
+| Item | Status | ObservaÃ§Ãµes |
+|---|---|---|
+| Toolbar cabe em 320px | Pendente |  |
+| VisualizaÃ§Ã£o abre popover correto | Pendente |  |
+| Formato abre cards corretos | Pendente |  |
+| Cor abre paletas | Pendente |  |
+| Filtros abre opÃ§Ãµes corretas | Pendente |  |
+| Exportar mostra Ãrea/Imagem/PDF/Imprimir | Pendente |  |
+| BotÃ£o `+` abre painel completo | Pendente |  |
+| Desktop/tablet sem regressÃ£o | Pendente |  |
+
+### Painel lateral desktop
+
+| Item | Status | ObservaÃ§Ãµes |
+|---|---|---|
+| Largura compacta correta | Pendente |  |
+| Visualizar como no painel | Pendente |  |
+| Header sem controles duplicados | Pendente |  |
+| Tour inicial aponta para elementos reais | Pendente |  |
+| ExportaÃ§Ã£o no local esperado | Pendente |  |
+
+### Curiosidades
+
+| Item | Status | ObservaÃ§Ãµes |
+|---|---|---|
+| GrÃ¡ficos reais | Pendente |  |
+| Mural persistente lista posts | Pendente |  |
+| Criar lembranÃ§a autenticada | Pendente |  |
+| Favoritar descoberta | Pendente |  |
+| Compartilhar descoberta | Pendente |  |
+| Rota com coordenadas | Pendente |  |
+| Fallback sem coordenadas | Pendente |  |
+
+### Favoritos, NotificaÃ§Ãµes e CalendÃ¡rio
+
+| Rota | Item | Status | ObservaÃ§Ãµes |
+|---|---|---|---|
+| `/meus-favoritos` | Busca/filtro compacto | Pendente |  |
+| `/meus-favoritos` | RemoÃ§Ã£o por estrela | Pendente |  |
+| `/notificacoes` | Card branco simplificado | Pendente |  |
+| `/notificacoes` | AÃ§Ãµes no topo direito | Pendente |  |
+| `/calendario-familiar` | Filtros em cards horizontais | Pendente |  |
+| `/calendario-familiar` | Nomes longos sem corte | Pendente |  |

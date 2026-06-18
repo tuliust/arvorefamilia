@@ -958,3 +958,91 @@ Checklist:
 - `/notificacoes`
 - `/calendario-familiar`
 - `/pessoa/:id`
+
+<!-- RODADA2-QA-2026-06-18 -->
+## QA complementar â€” segunda rodada
+
+### Mapas familiares mobile
+
+Rotas:
+
+- `/mapa-familiar`
+- `/mapa-familiar-horizontal`
+
+Breakpoints:
+
+- 320px
+- 375px
+- 390px
+- 430px
+
+Checklist:
+
+- os botÃµes VisualizaÃ§Ã£o, Formato, Cor, Filtros e Exportar aparecem sem quebrar layout;
+- botÃ£o circular `+` fica alinhado Ã  direita;
+- cada botÃ£o abre o popover correto;
+- popovers fecham corretamente;
+- popovers nÃ£o extrapolam a largura da tela;
+- botÃ£o `+` abre painel mobile completo;
+- painel mobile mostra visualizador, formato, paleta, resumo, grupos e switches;
+- desktop/tablet nÃ£o foram impactados.
+
+### Painel lateral desktop
+
+Checklist:
+
+- painel mantÃ©m largura compacta;
+- seletor â€œVisualizar comoâ€ aparece no local vigente;
+- cards de formato/visualizaÃ§Ã£o continuam legÃ­veis;
+- exportaÃ§Ã£o aparece no local previsto;
+- botÃ£o de fechar busca/header funciona sem quebrar navegaÃ§Ã£o.
+
+### Curiosidades
+
+Checklist:
+
+- grÃ¡ficos carregam dados reais ou estado vazio coerente;
+- mural de lembranÃ§as lista posts persistidos;
+- criaÃ§Ã£o de lembranÃ§a exige autor e corpo vÃ¡lidos;
+- favoritar descoberta cria favorito do tipo `curiosity_discovery`;
+- compartilhar usa `navigator.share` quando disponÃ­vel e fallback de copiar no desktop;
+- rota familiar mostra distÃ¢ncia quando hÃ¡ coordenadas;
+- rota familiar cai para fallback textual quando faltam coordenadas.
+
+### Favoritos
+
+Checklist:
+
+- busca fica fora do container antigo;
+- botÃ£o de filtro apenas com Ã­cone mantÃ©m acessibilidade;
+- menu de filtros abre e indica filtro ativo;
+- estrela remove favorito com atraso visual;
+- descobertas aparecem com label/filtro correto, se houver dados.
+
+### NotificaÃ§Ãµes
+
+Checklist:
+
+- cards nÃ£o usam box azul interno;
+- badge NOVA/Lida aparece na linha superior;
+- aÃ§Ãµes ficam no canto direito;
+- data/hora aparece no corpo do card;
+- mensagens com acentos aparecem corretamente.
+
+### CalendÃ¡rio familiar
+
+Checklist:
+
+- filtros mobile aparecem como cards horizontais;
+- Ã­cones aparecem nos tÃ­tulos;
+- nomes longos quebram corretamente;
+- memÃ³ria/falecimento tem card legÃ­vel;
+- desktop permanece sem regressÃ£o.
+
+### OperaÃ§Ã£o Supabase â€” Curiosidades
+
+Checklist:
+
+- migrations de mural e favoritos de descoberta existem no repositÃ³rio;
+- policies/RLS foram aplicadas no ambiente correto;
+- QA autenticado cobre leitura, criaÃ§Ã£o e, quando aplicÃ¡vel, atualizaÃ§Ã£o/exclusÃ£o.

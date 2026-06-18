@@ -666,3 +666,59 @@ BotÃµes de informaÃ§Ã£o devem funcionar por toque, nÃ£o apenas por hover
 ### ConteÃºdo em cards
 
 Cards em mobile devem reduzir padding e espaÃ§amento sem remover informaÃ§Ã£o essencial. Blocos longos devem priorizar hierarquia, agrupamento por categoria e CTAs persistentes apenas quando necessÃ¡rios.
+
+<!-- RODADA2-UX-2026-06-18 -->
+## UX complementar â€” painel, mapas e pÃ¡ginas mobile
+
+### Painel lateral da Ã¡rvore
+
+- O painel lateral Ã© o centro de controle da visualizaÃ§Ã£o da Ã¡rvore.
+- Deve manter largura compacta e previsÃ­vel.
+- Deve evitar voltar a ocupar largura excessiva em desktop.
+- Deve conter aÃ§Ãµes de visualizaÃ§Ã£o de forma agrupada e legÃ­vel.
+- O seletor â€œVisualizar comoâ€ pertence ao painel/Ã¡rea de visualizaÃ§Ã£o quando essa for a decisÃ£o vigente.
+
+### Toolbar mobile dos mapas
+
+A toolbar mobile deve expor aÃ§Ãµes diretas:
+
+| AÃ§Ã£o | Comportamento |
+|---|---|
+| VisualizaÃ§Ã£o | Abre box/dropdown de visualizador |
+| Formato | Abre cards `Linha Geracional` e `Ãrvore Familiar` |
+| Cor | Abre seletor compacto de paletas |
+| Filtros | Abre chips/opÃ§Ãµes de filtro |
+| Exportar | Abre aÃ§Ãµes `Ãrea`, `Imagem`, `PDF`, `Imprimir` |
+| `+` | Abre painel mobile completo de controles |
+
+Regras visuais:
+
+- os botÃµes devem caber em 320px, 375px, 390px e 430px;
+- popovers nÃ£o devem extrapolar a largura da tela;
+- espaÃ§amento entre botÃµes deve ser uniforme;
+- botÃ£o `+` deve ficar alinhado Ã  direita;
+- desktop/tablet nÃ£o devem sofrer regressÃ£o.
+
+### Favoritos mobile
+
+- Busca e filtro devem ficar lado a lado quando possÃ­vel.
+- BotÃ£o de filtro pode ser apenas Ã­cone, com `aria-label` e `title`.
+- Remover favorito deve usar estrela ativa/inativa, nÃ£o lixeira, quando a metÃ¡fora for desfavoritar.
+
+### NotificaÃ§Ãµes mobile
+
+- Evitar card dentro de card.
+- Um card branco por notificaÃ§Ã£o Ã© o padrÃ£o preferencial.
+- Estado nÃ£o lido deve ser indicado por badge/borda, nÃ£o por excesso de fundos coloridos.
+- AÃ§Ãµes devem ficar visÃ­veis no topo direito do card.
+
+### CalendÃ¡rio mobile
+
+- Filtros podem virar cards horizontais com Ã­cones.
+- Nomes longos devem quebrar sem truncamento agressivo.
+- Cards de memÃ³ria/falecimento devem diferenciar visualmente o contexto sem sobrecarregar a tela.
+
+### Dicas automÃ¡ticas
+
+- Modais informativos automÃ¡ticos no mobile nÃ£o devem bloquear o acesso inicial.
+- Se houver orientaÃ§Ã£o, preferir tour contextual ou dica dispensÃ¡vel.

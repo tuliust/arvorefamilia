@@ -615,3 +615,96 @@ Registrar nesta funcionalidade, somente quando houver commit verificÃ¡vel:
 - testes de utilitÃ¡rios relacionados.
 
 PendÃªncias e ideias sem commit devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
+
+<!-- RODADA2-CURIOSIDADES-2026-06-18 -->
+## Curiosidades, mural, descobertas e rota familiar
+
+### Escopo consolidado
+
+A frente de Curiosidades evoluiu para incluir:
+
+- testes de utilitÃ¡rios;
+- typecheck TypeScript;
+- utilitÃ¡rio de distÃ¢ncia geogrÃ¡fica;
+- grÃ¡ficos reais;
+- extraÃ§Ã£o de utilitÃ¡rios compartilhados;
+- fluxo â€œDescubra mais sobreâ€;
+- mural persistente de lembranÃ§as;
+- favoritos e compartilhamento de descobertas;
+- rota familiar com distÃ¢ncia real;
+- correÃ§Ãµes de texto/encoding.
+
+### Commits citados no levantamento
+
+```txt
+6a062b8 Adiciona testes para utilitarios de curiosidades
+a443a02 Adiciona typecheck TypeScript
+b2fbc72 Adiciona utilitario de distancia geografica
+a9ceba6 Adiciona graficos reais em curiosidades
+83b8b44 Corrige typecheck TypeScript
+88b3915 Extrai utilitarios compartilhados de curiosidades
+9e39755 Extrai fluxo de descoberta de curiosidades
+eb1196c Persiste mural de lembrancas
+78051c9 Adiciona favoritos e compartilhamento em descobertas
+cb72c25 Integra distancia real na rota familiar
+450c06a Corrige textos de curiosidades
+```
+
+### Mural persistente
+
+Tabela registrada:
+
+```txt
+public.family_memory_wall_posts
+```
+
+Campos principais:
+
+```txt
+id
+user_id
+author_name
+body
+visibility
+status
+created_at
+updated_at
+```
+
+Regras:
+
+- `body` obrigatÃ³rio, entre 1 e 1200 caracteres;
+- `author_name` obrigatÃ³rio, entre 1 e 120 caracteres;
+- `visibility`: `family`, `close_relatives`, `private`;
+- `status`: `published`, `hidden`.
+
+### Descobertas
+
+Descobertas do fluxo â€œDescubra mais sobreâ€ podem ser:
+
+- favoritedas como `curiosity_discovery`;
+- compartilhadas via `navigator.share`;
+- copiadas para a Ã¡rea de transferÃªncia como fallback desktop.
+
+### Rota familiar com distÃ¢ncia real
+
+A rota familiar:
+
+- usa cidades de residÃªncia atual;
+- calcula distÃ¢ncia aproximada quando hÃ¡ coordenadas suficientes;
+- usa fallback textual quando faltam coordenadas;
+- mostra rota, trechos, distÃ¢ncia aproximada e aviso de limitaÃ§Ã£o.
+
+DecisÃ£o funcional:
+
+```txt
+Coordenadas devem estar associadas Ã  cidade de residÃªncia atual cadastrada/selecionada, nÃ£o soltas em cada pessoa.
+```
+
+### PendÃªncias
+
+- garantir origem Ãºnica das coordenadas;
+- normalizar/backfill de cidades jÃ¡ cadastradas;
+- preservar coordenadas no cadastro de cidade;
+- validar famÃ­lias com e sem coordenadas;
+- evoluir compartilhamento para fÃ³rum se essa for a decisÃ£o de produto.

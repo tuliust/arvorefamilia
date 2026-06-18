@@ -523,3 +523,53 @@ git log --oneline -- src/app/pages/PersonProfile.tsx
 git log --oneline -- src/app/pages/MinhaArvore.tsx
 git log --oneline -- src/app/pages/admin/AdminPessoaForm.tsx
 ```
+
+<!-- RODADA2-PENDENCIAS-2026-06-18 -->
+## PendÃªncias remanescentes â€” segunda rodada
+
+### Coordenadas e rota familiar
+
+A frente de Curiosidades implementou cÃ¡lculo de rota com coordenadas quando disponÃ­veis, mas ainda exige consolidaÃ§Ã£o da fonte canÃ´nica de coordenadas.
+
+PendÃªncias:
+
+- definir se latitude/longitude vÃªm de autocomplete, tabela de cidades, backfill ou geocoding;
+- normalizar cidades jÃ¡ cadastradas;
+- tratar variaÃ§Ãµes de grafia;
+- resolver cidades homÃ´nimas por UF/paÃ­s;
+- garantir preservaÃ§Ã£o de coordenadas ao salvar cidade de residÃªncia;
+- validar massa real com:
+  - nenhuma coordenada;
+  - uma cidade coordenada;
+  - duas ou mais cidades coordenadas;
+  - cidade brasileira;
+  - cidade no exterior.
+
+### Curiosidades
+
+- Evoluir compartilhamento de descobertas para o fÃ³rum, se essa for a decisÃ£o de produto.
+- Encerrar/atualizar issue tÃ©cnica da rodada, se existir.
+- Manter testes de utilitÃ¡rios atualizados quando novos cÃ¡lculos forem adicionados.
+
+### Mapas e painel
+
+- Executar QA visual mobile em 320px, 375px, 390px e 430px.
+- Confirmar que popovers da toolbar nÃ£o extrapolam a largura.
+- Confirmar que desktop/tablet nÃ£o foram afetados pelos PRs mobile.
+- Validar exportaÃ§Ã£o por Ãrea, Imagem, PDF e Imprimir.
+- Confirmar comportamento do botÃ£o `+` e do painel mobile completo.
+
+### Painel/header
+
+- Confirmar se o painel lateral compacto atende visualmente ao alvo final.
+- Confirmar se exportaÃ§Ã£o ficou no local final previsto.
+- Registrar qualquer divergÃªncia visual em `QA_POS_CONSOLIDACAO_2026_06_18.md`.
+
+### NotificaÃ§Ãµes
+
+- Se o contador de nÃ£o lidas no header ainda nÃ£o estiver implementado, manter como pendÃªncia separada.
+- NÃ£o confundir a simplificaÃ§Ã£o visual dos cards com implementaÃ§Ã£o de contador global.
+
+### Admin e pessoa falecida
+
+- A decisÃ£o sobre ocultar ou manter contato/privacidade de pessoa falecida no admin ainda deve refletir o cÃ³digo atual antes de virar regra definitiva.

@@ -323,3 +323,73 @@ NÃ£o registrar nem aplicar como implementado sem:
 - rollback documentado.
 
 Enquanto nÃ£o houver essa confirmaÃ§Ã£o, a frente permanece bloqueada em `PLANO_PROXIMOS_PASSOS.md`.
+
+<!-- RODADA2-SUPABASE-CURIOSIDADES-2026-06-18 -->
+## Migrations Supabase â€” Curiosidades
+
+O levantamento registra duas migrations aplicadas na frente de Curiosidades:
+
+```txt
+supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
+supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
+```
+
+### `family_memory_wall_posts`
+
+Objetivo:
+
+- persistir mural de lembranÃ§as.
+
+Tabela:
+
+```txt
+public.family_memory_wall_posts
+```
+
+Campos principais:
+
+```txt
+id
+user_id
+author_name
+body
+visibility
+status
+created_at
+updated_at
+```
+
+RLS/policies registradas:
+
+- leitura por usuÃ¡rios autenticados;
+- inserÃ§Ã£o pelo prÃ³prio usuÃ¡rio;
+- atualizaÃ§Ã£o pelo autor ou admin;
+- exclusÃ£o pelo autor ou admin.
+
+### Favoritos de descobertas
+
+Objetivo:
+
+- permitir salvar descobertas de Curiosidades em favoritos.
+
+Tipo de favorito:
+
+```txt
+curiosity_discovery
+```
+
+### Status informado no levantamento
+
+```txt
+Migrations aplicadas.
+QA real autenticado OK.
+```
+
+### PendÃªncia operacional
+
+Confirmar fonte canÃ´nica de coordenadas de cidades para a rota familiar:
+
+- autocomplete;
+- tabela de cidades;
+- backfill;
+- geocoding posterior.

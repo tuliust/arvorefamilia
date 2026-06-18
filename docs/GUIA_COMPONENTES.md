@@ -825,3 +825,40 @@ QA manual mínimo:
 - Componentes compartilhados podem alinhar labels, grids, Ã­cones e microcopy.
 - Regras especÃ­ficas de onboarding nÃ£o devem vazar automaticamente para admin.
 - Um componente pode aceitar contexto (`member`, `admin`, `review`, `interactive`) quando a mesma UI precisa preservar comportamentos distintos.
+
+<!-- RODADA2-COMPONENTES-2026-06-18 -->
+## Componentes complementares â€” mapas, painel e Curiosidades
+
+### Ãrvore, painel e navegaÃ§Ã£o
+
+- `DesktopTreeVisualizationPanel`: painel desktop de visualizaÃ§Ã£o, formato, resumo, grupos e aÃ§Ãµes auxiliares.
+- `SidebarPanelTabs`: abas/organizaÃ§Ã£o do painel lateral e, quando aplicÃ¡vel, seletor de pessoa visualizada.
+- `HomeHeader`: header com aÃ§Ãµes principais, sem acumular controles que pertencem ao painel lateral.
+- `HomeMobileNav`: concentra navegaÃ§Ã£o/controles mobile e popovers dos mapas.
+- `FirstLoginTutorial`: tour inicial e holofote para orientar uso da Ã¡rvore.
+
+### Mapas familiares
+
+- `MobileFamilyMapToolbar`: toolbar mobile com aÃ§Ãµes de VisualizaÃ§Ã£o, Formato, Cor, Filtros, Exportar e botÃ£o `+`.
+- Popovers mobile devem ser independentes por aÃ§Ã£o.
+- Painel mobile completo deve ser aberto pelo botÃ£o `+`, nÃ£o por todos os botÃµes.
+
+### Favoritos
+
+- `FavoriteButton`: aÃ§Ã£o de favoritar/desfavoritar entidades.
+- `PageFavoriteButton`: favorito de pÃ¡gina/contexto.
+- Descobertas de Curiosidades podem usar `entityType="curiosity_discovery"`.
+
+### Curiosidades
+
+- `DiscoverMoreFlow`: fluxo â€œDescubra mais sobreâ€.
+- `DiscoverResultCard`: card de resultado com slot `actions?: React.ReactNode`.
+- `CuriosidadesMemoryWall`: mural persistente de lembranÃ§as.
+- `CuriosidadesRouteSection`: rota familiar e distÃ¢ncia real.
+- `geoDistance`: utilitÃ¡rio compartilhado para cÃ¡lculo aproximado de distÃ¢ncia.
+
+### Regras de componente
+
+- Componentes visuais nÃ£o devem embutir decisÃµes de schema.
+- Componentes de mapas precisam preservar separaÃ§Ã£o entre desktop, mobile e tablet.
+- Slots de aÃ§Ã£o sÃ£o preferÃ­veis a duplicar cards quando um bloco precisa receber favoritar/compartilhar.

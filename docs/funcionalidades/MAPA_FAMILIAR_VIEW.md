@@ -496,3 +496,68 @@ Quando confirmados, documentar separando:
 - regras de contagem;
 - regras de renderizaÃ§Ã£o;
 - regras de filtros.
+
+<!-- RODADA2-MAPA-FAMILIAR-2026-06-18 -->
+## Mapas familiares â€” toolbar mobile e controles
+
+### Rotas
+
+- `/mapa-familiar`
+- `/mapa-familiar-horizontal`
+
+### Toolbar mobile
+
+A experiÃªncia mobile dos mapas familiares foi consolidada em toolbar com aÃ§Ãµes separadas:
+
+| AÃ§Ã£o | FunÃ§Ã£o |
+|---|---|
+| VisualizaÃ§Ã£o | Selecionar pessoa/visualizador |
+| Formato | Alternar entre `Linha Geracional` e `Ãrvore Familiar` |
+| Cor | Escolher paleta visual |
+| Filtros | Controlar grupos/escopo de parentes exibidos |
+| Exportar | Acessar aÃ§Ãµes Ãrea, Imagem, PDF e Imprimir |
+| `+` | Abrir painel mobile completo de controles |
+
+### Painel mobile completo
+
+O botÃ£o `+` abre um painel mobile com:
+
+- alÃ§a superior;
+- cabeÃ§alho;
+- tÃ­tulo VisualizaÃ§Ã£o;
+- aÃ§Ã£o Salvar;
+- dropdown de visualizador;
+- seleÃ§Ã£o de formato;
+- paleta de cores;
+- resumo;
+- cards Pessoas, Vivos, Falecidos e Cadastrados;
+- grupos familiares;
+- abas NÃºcleo, Ascendentes e Colaterais;
+- filtros finais com switches.
+
+### PRs confirmados no levantamento
+
+| PR | TÃ­tulo | Merge commit |
+|---|---|---|
+| `#13` | Padroniza toolbar mobile dos mapas familiares | `484c9c7` |
+| `#14` | Ajusta toolbar mobile e opÃ§Ãµes de visualizaÃ§Ã£o | `513ae7d` |
+| `#15` | Adiciona popover mobile de cores | `244eaae` |
+| `#16` | Ajusta visualizaÃ§Ã£o e formato no toolbar mobile | `f574d8b` |
+| `#17` | Ajusta toolbar e exportaÃ§Ã£o mobile | `c391b37` |
+| `#18` | Adiciona filtros e painel extra mobile | `8cb1b0f` |
+| `#19` | Refina painel mobile de controles | `d92f916` |
+
+### Arquivos principais
+
+```txt
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+```
+
+### QA obrigatÃ³rio
+
+- validar 320px, 375px, 390px e 430px;
+- testar cada popover;
+- testar painel completo pelo botÃ£o `+`;
+- confirmar que desktop/tablet nÃ£o tiveram regressÃ£o.

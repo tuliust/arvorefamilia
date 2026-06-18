@@ -443,3 +443,44 @@ Antes de registrar como implementado, verificar se o cÃ³digo atual confirma:
 - limitaÃ§Ãµes conhecidas de exportaÃ§Ã£o.
 
 Itens ainda apenas planejados devem permanecer em `PLANO_PROXIMOS_PASSOS.md`.
+
+<!-- RODADA2-EXPORTACAO-2026-06-18 -->
+## ExportaÃ§Ã£o â€” painel e mobile
+
+### AÃ§Ãµes esperadas
+
+A exportaÃ§Ã£o deve oferecer:
+
+```txt
+Ãrea
+Imagem
+PDF
+Imprimir
+```
+
+### Mobile
+
+No mobile, a aÃ§Ã£o **Exportar** abre um popover prÃ³prio com:
+
+- tÃ­tulo Exportar;
+- grid com dois botÃµes por linha;
+- botÃµes compactos;
+- Ã­cones pequenos;
+- bordas suaves;
+- consistÃªncia visual com os demais popovers.
+
+### Painel
+
+Quando a exportaÃ§Ã£o estiver no painel lateral, ela deve:
+
+- ficar em local previsÃ­vel;
+- nÃ£o competir com visualizaÃ§Ã£o/formato/filtros;
+- preservar acesso rÃ¡pido em desktop;
+- nÃ£o quebrar o painel compacto.
+
+### QA
+
+- testar exportaÃ§Ã£o em `/mapa-familiar`;
+- testar exportaÃ§Ã£o em `/mapa-familiar-horizontal`;
+- testar em desktop e mobile;
+- validar Ãrea, Imagem, PDF e Imprimir separadamente.

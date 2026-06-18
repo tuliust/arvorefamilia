@@ -469,3 +469,66 @@ Antes de registrar como contrato vigente, confirmar no cÃ³digo/Git:
 - separaÃ§Ã£o entre painel fixo e popovers contextuais.
 
 Registrar tentativas antigas ou scripts substituÃ­dos apenas em `docs/historico/`.
+
+<!-- RODADA2-PAINEL-ARVORE-2026-06-18 -->
+## Painel lateral, header, conectores e tour
+
+### Painel lateral
+
+O painel lateral da Ã¡rvore concentra:
+
+- seletor â€œVisualizar comoâ€;
+- modos de visualizaÃ§Ã£o;
+- formato;
+- resumo;
+- grupos familiares;
+- aÃ§Ãµes de navegaÃ§Ã£o e suporte.
+
+Commits citados no levantamento:
+
+| Commit | FunÃ§Ã£o |
+|---|---|
+| `4a535a3` | Move visualizar como para painel lateral |
+| `cea87e9` | Destaca modos de visualizaÃ§Ã£o no painel lateral |
+| `895790c` | Ajusta header e move visualizar como para painel lateral |
+| `5e7491c` | Ajusta painel lateral desktop da Ã¡rvore familiar |
+| `2e6fc66` | Ajusta painel para largura mÃ¡xima de 350px |
+| `8212bb0` | Ajusta painel de visualizaÃ§Ã£o para largura compacta |
+
+### Header
+
+O header foi refinado para:
+
+- nÃ£o concentrar controles que pertencem ao painel;
+- manter aÃ§Ãµes principais organizadas;
+- preservar Favoritos/Alertas quando aplicÃ¡vel;
+- permitir fechar busca pelo botÃ£o do header.
+
+### Tour inicial e holofote
+
+O tour inicial deve:
+
+- apontar para elementos reais;
+- evitar destacar controles removidos;
+- explicar painel, favoritos, alvos e controles de Ã¡rvore;
+- nÃ£o bloquear a experiÃªncia em mobile.
+
+Commit de referÃªncia citado:
+
+```txt
+c37d91c Ajusta tour inicial e controles da Ã¡rvore
+```
+
+### Conectores e destaque de linhas
+
+O levantamento registra ajuste de dica/destaque de linhas no mapa horizontal, incluindo:
+
+```txt
+b7710a9 feat: adiciona dica de destaque de linhas no mapa horizontal
+```
+
+Regras:
+
+- conectores devem permanecer visualmente legÃ­veis;
+- destaque de linhas deve auxiliar leitura sem competir com os cards;
+- qualquer dica/sticker deve ser contextual e nÃ£o permanente quando atrapalhar navegaÃ§Ã£o.

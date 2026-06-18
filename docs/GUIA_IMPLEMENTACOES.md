@@ -687,3 +687,78 @@ Resumo:
 ### NÃ£o confirmadas
 
 Frentes sem commit/merge/push confirmado devem permanecer em `PLANO_PROXIMOS_PASSOS.md`, nÃ£o no baseline.
+
+<!-- RODADA2-IMPLEMENTACOES-2026-06-18 -->
+## ImplementaÃ§Ãµes complementares â€” segunda rodada
+
+### Frente: Ã¡rvore, painel e header
+
+Arquivos/Ã¡reas citados no levantamento:
+
+- src/app/pages/Home.tsx
+- src/app/pages/home/HomeHeader.tsx
+- src/app/pages/home/SidebarPanelTabs.tsx
+- src/app/pages/home/DesktopTreeVisualizationPanel.tsx
+- src/app/pages/home/FirstLoginTutorial.tsx
+- src/styles/home-sidebar-unified.css
+
+Contratos de implementaÃ§Ã£o:
+
+- Header nÃ£o deve concentrar todos os controles da Ã¡rvore.
+- O painel lateral Ã© o local preferencial para visualizaÃ§Ã£o, formato, grupos, estatÃ­sticas e seletor **Visualizar como**.
+- Tour inicial/holofote devem apontar para elementos reais e nÃ£o para controles antigos.
+- Scripts temporÃ¡rios nÃ£o devem ser versionados, salvo quando explicitamente necessÃ¡rio.
+
+### Frente: mobile e pÃ¡ginas internas
+
+Ãreas impactadas:
+
+- /minha-arvore/editar
+- /calendario-familiar
+- /admin
+- /meus-favoritos
+- /notificacoes
+- /mapa-familiar
+
+Contratos:
+
+- Melhorias mobile nÃ£o devem alterar regras de negÃ³cio.
+- Busca/filtros devem ser compactos quando a tela for estreita.
+- NotificaÃ§Ãµes devem priorizar um card limpo por item.
+- Favoritar/desfavoritar deve usar metÃ¡fora consistente de estrela.
+- Dicas ou modais automÃ¡ticos no mobile nÃ£o devem bloquear acesso ao sistema.
+
+### Frente: Curiosidades
+
+Arquivos/Ã¡reas citados:
+
+- src/app/pages/curiosidades/*
+- src/app/utils/geoDistance.ts
+- src/app/services/memoryWallService.ts
+- src/app/pages/home/DiscoverMoreFlow.tsx
+- src/app/pages/home/DiscoverResultCard.tsx
+- src/app/pages/MeusFavoritos.tsx
+- supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
+- supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
+
+Contratos:
+
+- CÃ¡lculos geogrÃ¡ficos devem usar utilitÃ¡rio compartilhado.
+- Mural de lembranÃ§as Ã© persistente.
+- Descobertas podem ser favoritedas e compartilhadas.
+- A rota familiar usa coordenadas de cidades de residÃªncia atual quando disponÃ­veis.
+- Quando coordenadas forem insuficientes, a UI deve cair para fallback textual, nÃ£o quebrar.
+
+### Frente: toolbar mobile dos mapas
+
+Arquivos citados:
+
+- src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+- src/app/pages/home/HomeMobileNav.tsx
+- src/app/pages/home/SidebarPanelTabs.tsx
+
+Contratos:
+
+- AÃ§Ãµes rÃ¡pidas ficam em popovers dedicados.
+- O botÃ£o + abre painel mobile completo.
+- Desktop/tablet nÃ£o devem ser afetados por refinamentos exclusivos de mobile.

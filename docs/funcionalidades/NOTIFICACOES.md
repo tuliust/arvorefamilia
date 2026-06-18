@@ -885,3 +885,37 @@ git log --oneline -- src/app/pages/Notificacoes.tsx
 git log --oneline -- src/app/components/layout/MemberPageHeader.tsx
 git log --oneline -- src/app/services/userEngagementService.ts
 ```
+
+<!-- RODADA2-NOTIFICACOES-2026-06-18 -->
+## NotificaÃ§Ãµes â€” simplificaÃ§Ã£o visual mobile
+
+### Card de notificaÃ§Ã£o
+
+A estrutura visual mobile passa a priorizar:
+
+- um card branco por notificaÃ§Ã£o;
+- sem box azul interno;
+- badge **NOVA** ou **Lida** na linha superior;
+- aÃ§Ãµes no canto direito;
+- tÃ­tulo, mensagem e data abaixo.
+
+Commit citado:
+
+```txt
+913c106 Simplifica cards mobile de notificaÃ§Ãµes
+```
+
+### NormalizaÃ§Ã£o textual
+
+Foram preservadas normalizaÃ§Ãµes para textos recorrentes, como:
+
+```txt
+Data de memÃ³ria
+Hoje Ã© uma data de memÃ³ria
+AniversÃ¡rio na famÃ­lia
+Hoje Ã© aniversÃ¡rio
+```
+
+### ObservaÃ§Ã£o
+
+Esta frente documenta a simplificaÃ§Ã£o visual dos cards. Ela nÃ£o substitui a pendÃªncia separada de contador global de nÃ£o lidas no header, se essa funcionalidade ainda nÃ£o estiver confirmada no cÃ³digo.

@@ -561,3 +561,90 @@ NÃ£o fazem parte deste baseline atÃ© confirmaÃ§Ã£o no Git:
 - ajustes sugeridos apenas por print;
 - reset ampliado de perfil com RPC/migration;
 - mudanÃ§as em favoritos, timeline, notificaÃ§Ãµes e perfil de pessoa sem commit verificÃ¡vel.
+
+<!-- RODADA2-BASELINE-2026-06-18 -->
+## Baseline complementar â€” mapas, painel, mobile e Curiosidades
+
+Esta segunda rodada consolida complementos posteriores do levantamento. Diferente da primeira rodada, aqui entram frentes ligadas a Ã¡rvore/mapas, painel lateral, toolbar mobile, Curiosidades, Favoritos, NotificaÃ§Ãµes e CalendÃ¡rio.
+
+### Painel/header/tour da Ã¡rvore
+
+| ReferÃªncia | Frente | Status Git local |
+|---|---|---|
+| $(System.Collections.Hashtable.Sha) | dica/destaque de linhas no mapa horizontal | Encontrado |
+| $(System.Collections.Hashtable.Sha) | tour inicial, favoritos, alvos e controles da Ã¡rvore | Encontrado |
+| $(System.Collections.Hashtable.Sha) | dropdown Visualizar como no painel lateral | Encontrado |
+| $(System.Collections.Hashtable.Sha) | header e painel lateral | Encontrado |
+| $(System.Collections.Hashtable.Sha) | painel de visualizaÃ§Ã£o compacto | Encontrado |
+
+Estado consolidado:
+
+- O seletor **Visualizar como** migrou do header para o painel lateral/Ã¡rea de visualizaÃ§Ã£o.
+- A Ã¡rvore passou a ter painel lateral com modos de visualizaÃ§Ã£o, controles, favoritos/alertas e aÃ§Ãµes principais.
+- O tour inicial e o holofote foram ajustados para apontar corretamente para Ã¡reas da Ã¡rvore e controles.
+- O painel de visualizaÃ§Ã£o recebeu refinamentos de largura e comportamento compacto.
+
+### Ajustes mobile realizados via conector/GitHub
+
+| ReferÃªncia | Frente | Status Git local |
+|---|---|---|
+| $(System.Collections.Hashtable.Sha) | placeholder de profissÃ£o no cadastro mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | redes sociais no mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | acabamento mobile da ediÃ§Ã£o da Ã¡rvore | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correÃ§Ãµes mobile da ediÃ§Ã£o de perfil | Encontrado |
+| $(System.Collections.Hashtable.Sha) | calendÃ¡rio familiar mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | dashboard admin mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | favoritos mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | notificaÃ§Ãµes mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | desativa dica mobile de desktop | Encontrado |
+
+Estado consolidado:
+
+- /minha-arvore/editar recebeu ajustes mobile de placeholder, redes sociais, cabeÃ§alhos, arquivos histÃ³ricos, eventos e alertas.
+- /calendario-familiar recebeu filtros mobile em cards horizontais, Ã­cones e melhor tratamento de nomes longos.
+- /admin teve painel mobile refinado para cadastros.
+- /meus-favoritos recebeu busca e filtros compactos, alÃ©m de remoÃ§Ã£o por estrela ativa.
+- /notificacoes teve cards simplificados.
+- O modal **Fica a dica** deixou de abrir automaticamente em mobile.
+
+### Curiosidades, mural e rota familiar
+
+| ReferÃªncia | Frente | Status Git local |
+|---|---|---|
+| $(System.Collections.Hashtable.Sha) | testes para utilitÃ¡rios de curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | typecheck TypeScript | Encontrado |
+| $(System.Collections.Hashtable.Sha) | utilitÃ¡rio de distÃ¢ncia geogrÃ¡fica | Encontrado |
+| $(System.Collections.Hashtable.Sha) | grÃ¡ficos reais em curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correÃ§Ã£o de typecheck TypeScript | Encontrado |
+| $(System.Collections.Hashtable.Sha) | utilitÃ¡rios compartilhados de curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | fluxo Descubra mais sobre | Encontrado |
+| $(System.Collections.Hashtable.Sha) | mural persistente de lembranÃ§as | Encontrado |
+| $(System.Collections.Hashtable.Sha) | favoritos e compartilhamento em descobertas | Encontrado |
+| $(System.Collections.Hashtable.Sha) | distÃ¢ncia real na rota familiar | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correÃ§Ã£o de textos de curiosidades | Encontrado |
+
+Estado consolidado:
+
+- Curiosidades passou a ter utilitÃ¡rios testados, typecheck dedicado e grÃ¡ficos reais.
+- A frente adicionou cÃ¡lculo de distÃ¢ncia geogrÃ¡fica, rota familiar com distÃ¢ncia real quando hÃ¡ coordenadas, mural persistente de lembranÃ§as, favoritos e compartilhamento de descobertas.
+- O levantamento registra migrations aplicadas e QA real autenticado OK para a frente de Curiosidades.
+- Persistem pendÃªncias sobre origem Ãºnica e backfill de coordenadas de cidades.
+
+### Toolbar mobile dos mapas familiares
+
+| ReferÃªncia | Frente | Status Git local |
+|---|---|---|
+| $(System.Collections.Hashtable.Sha) | PR #13 toolbar mobile dos mapas familiares | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #14 opÃ§Ãµes de visualizaÃ§Ã£o | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #15 popover mobile de cores | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #16 visualizaÃ§Ã£o e formato | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #17 exportaÃ§Ã£o mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #18 filtros e painel extra mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #19 painel mobile de controles | Encontrado |
+
+Estado consolidado:
+
+- A toolbar mobile dos mapas familiares foi padronizada.
+- AÃ§Ãµes foram separadas em **VisualizaÃ§Ã£o**, **Formato**, **Cor**, **Filtros**, **Exportar** e botÃ£o circular +.
+- O botÃ£o + abre painel mobile completo de controles, inspirado no painel desktop.
+- As alteraÃ§Ãµes foram registradas no levantamento como PRs #13 a #19, mergeados em main.

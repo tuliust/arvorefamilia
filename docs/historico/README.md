@@ -476,3 +476,28 @@ O arquivo `levantamento_ajustes_onboarding_membro(1).md` foi usado como fonte de
 - itens que exigem confirmaÃ§Ã£o no Git.
 
 Este diretÃ³rio deve receber apenas material histÃ³rico, substituÃ­do ou de rastreabilidade. Contratos vigentes devem permanecer nos documentos funcionais, guias, baseline, QA e regras de nÃ£o regressÃ£o.
+
+<!-- RODADA2-HISTORICO-2026-06-18 -->
+## Segunda rodada de consolidaÃ§Ã£o â€” complementos posteriores
+
+A segunda rodada documental tratou complementos do levantamento que nÃ£o foram transcritos integralmente na primeira consolidaÃ§Ã£o:
+
+- mapas familiares;
+- painel lateral;
+- tour inicial;
+- toolbar mobile;
+- exportaÃ§Ã£o;
+- Curiosidades;
+- mural de lembranÃ§as;
+- favoritos de descobertas;
+- notificaÃ§Ãµes;
+- calendÃ¡rio;
+- operaÃ§Ãµes Supabase relacionadas a Curiosidades.
+
+A documentaÃ§Ã£o continuou usando a mesma regra:
+
+```txt
+Estado implementado confirmado vai para docs funcionais/baseline.
+PendÃªncia ou item sem confirmaÃ§Ã£o vai para PLANO_PROXIMOS_PASSOS.md.
+Tentativa, script temporÃ¡rio e histÃ³rico ficam em docs/historico/.
+```

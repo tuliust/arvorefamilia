@@ -488,3 +488,40 @@ Quando houver refinamentos mobile em `/calendario-familiar`, documentar sempre:
 - se botÃµes e menus nÃ£o cobrem conteÃºdo;
 - se eventos permanecem legÃ­veis em cards/chips compactos;
 - diferenÃ§as entre mobile, tablet e desktop.
+
+<!-- RODADA2-CALENDARIO-2026-06-18 -->
+## CalendÃ¡rio familiar â€” refinamentos mobile
+
+### Filtros mobile
+
+Os filtros de categoria no mobile passam a ser cards horizontais com:
+
+- Ã­cone grande;
+- faixa superior visual;
+- bolinha indicadora;
+- borda colorida;
+- sombra leve;
+- estado ativo/inativo;
+- rolagem horizontal.
+
+Categorias documentadas:
+
+| Categoria interna | Label mobile | Ãcone |
+|---|---|---|
+| `aniversarios` | AniversÃ¡rio | ðŸŽ‚ |
+| `casamento` | Casamento | ðŸ’ |
+| `falecimento` | Falecimento | ðŸª· |
+| `eventos_historicos` | Outros | ðŸ“¦ |
+| `confraternizacoes` | ReuniÃ£o | âš™ï¸ |
+
+### Cards e tÃ­tulos
+
+- TÃ­tulos como **Aniversariantes** e **MemÃ³ria** usam Ã­cones.
+- Nomes longos devem quebrar sem truncamento agressivo.
+- Cards de memÃ³ria/falecimento devem ser claros no mobile.
+
+Commit citado:
+
+```txt
+42e7767 Refina calendÃ¡rio familiar no mobile
+```

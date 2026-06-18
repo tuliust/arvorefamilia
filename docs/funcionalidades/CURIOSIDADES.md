@@ -213,3 +213,22 @@ npm test
 - Melhorar normalizacao de profissoes, cidades e interesses.
 - Adicionar graficos reais para meses, geracoes e idade media ao casar.
 - Adicionar testes unitarios para curiosidadesUtils.ts.
+
+<!-- RODADA2-CURIOSIDADES-2026-06-18 -->
+## ConsolidaÃ§Ã£o â€” Curiosidades, mural, descobertas e rota familiar
+
+A frente recente de Curiosidades passou a incluir grÃ¡ficos reais, utilitÃ¡rios compartilhados, fluxo â€œDescubra mais sobreâ€, mural persistente de lembranÃ§as, favoritos/compartilhamento de descobertas e rota familiar com distÃ¢ncia real quando hÃ¡ coordenadas disponÃ­veis.
+
+Migrations citadas:
+
+```txt
+supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
+supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
+```
+
+PendÃªncias principais:
+
+- origem Ãºnica das coordenadas das cidades;
+- backfill de cidades jÃ¡ cadastradas;
+- QA com massa real contendo coordenadas;
+- evoluÃ§Ã£o opcional do compartilhamento para o fÃ³rum.

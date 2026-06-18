@@ -513,3 +513,53 @@ Comando sugerido:
 ```powershell
 git log --oneline -- src/app/pages/MeusFavoritos.tsx
 ```
+
+<!-- RODADA2-FAVORITOS-2026-06-18 -->
+## Favoritos â€” mobile e descobertas
+
+### Mobile
+
+A pÃ¡gina `/meus-favoritos` passou a seguir o padrÃ£o:
+
+- busca fora do container antigo;
+- busca e filtro lado a lado;
+- botÃ£o de filtro apenas com Ã­cone;
+- menu de filtros preservado;
+- estado ativo com check;
+- remoÃ§Ã£o por estrela ativa;
+- atraso visual de aproximadamente 0,5s antes de remover o card.
+
+Commit citado:
+
+```txt
+3549445 Ajusta busca e filtros de favoritos no mobile
+```
+
+### Descobertas de Curiosidades
+
+Novo tipo de favorito citado:
+
+```txt
+curiosity_discovery
+```
+
+Comportamento:
+
+- label **Descoberta**;
+- filtro **Descobertas**;
+- favorito criado a partir de pessoa + tÃ³pico;
+- `href="/curiosidades#descobertas"`;
+- metadata com `person_id`, `topic` e `source`.
+
+Commit citado:
+
+```txt
+78051c9 Adiciona favoritos e compartilhamento em descobertas
+```
+
+### QA
+
+- favoritar/desfavoritar pessoa/pÃ¡gina continua funcionando;
+- filtro Descobertas aparece quando houver dados;
+- estrela ativa remove favorito sem parecer aÃ§Ã£o destrutiva;
+- cards nÃ£o somem antes do feedback visual.
