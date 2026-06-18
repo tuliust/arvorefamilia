@@ -1,0 +1,212 @@
+/* Ajustes 2026-06-18: refinamento do painel lateral em /mapa-familiar e /mapa-familiar-horizontal. */
+
+@media (min-width: 768px) {
+  .desktop-tree-visualization-panel {
+    gap: clamp(0.52rem, 1.12vh, 0.78rem) !important;
+  }
+
+  .desktop-tree-panel-header {
+    order: 1 !important;
+    padding-right: clamp(2.25rem, 4.9vh, 2.65rem) !important;
+  }
+
+  .desktop-tree-view-select {
+    order: 2 !important;
+    color: transparent !important;
+  }
+
+  .desktop-tree-view-select option {
+    color: #0f2348 !important;
+  }
+
+  .desktop-tree-visualization-panel::before {
+    content: 'Família de Tulius';
+    position: absolute;
+    left: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 0.78rem);
+    right: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 2rem);
+    top: calc(
+      clamp(0.46rem, 1.02vh, 0.68rem) +
+      clamp(2rem, 4.15vh, 2.45rem) +
+      clamp(0.52rem, 1.12vh, 0.78rem) +
+      0.55rem
+    );
+    z-index: 2;
+    overflow: hidden;
+    color: #0f2348;
+    font-size: clamp(0.78rem, 1.62vh, 0.94rem);
+    font-weight: 650;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .desktop-tree-palette-row {
+    order: 3 !important;
+  }
+
+  .desktop-tree-view-mode-grid {
+    order: 4 !important;
+  }
+
+  .desktop-tree-view-mode-card:nth-child(2) > svg {
+    display: none !important;
+  }
+
+  .desktop-tree-view-mode-card:nth-child(2)::before {
+    content: '';
+    width: clamp(1.22rem, 2.65vh, 1.62rem);
+    height: clamp(1.22rem, 2.65vh, 1.62rem);
+    border: 2px solid currentColor;
+    border-radius: 0.22rem;
+    background:
+      linear-gradient(currentColor 0 0) 50% 33% / 2px 45% no-repeat,
+      linear-gradient(currentColor 0 0) 33% 50% / 45% 2px no-repeat,
+      linear-gradient(currentColor 0 0) 67% 50% / 45% 2px no-repeat;
+  }
+
+  .desktop-tree-panel-divider:not(.desktop-tree-groups-divider) {
+    order: 5 !important;
+  }
+
+  .desktop-tree-section-title {
+    order: 6 !important;
+  }
+
+  .desktop-tree-section-title,
+  .desktop-tree-export-title {
+    font-size: clamp(0.76rem, 1.5vh, 0.9rem) !important;
+    font-weight: 720 !important;
+    letter-spacing: -0.005em !important;
+    line-height: 1.05 !important;
+  }
+
+  .desktop-tree-summary-grid {
+    order: 7 !important;
+  }
+
+  .desktop-tree-final-filters {
+    order: 8 !important;
+    flex: 0 0 auto !important;
+    gap: clamp(0.34rem, 0.78vh, 0.5rem) !important;
+    margin-top: clamp(0.04rem, 0.22vh, 0.14rem) !important;
+  }
+
+  .desktop-tree-final-filter-button {
+    min-height: clamp(2.3rem, 4.85vh, 2.95rem) !important;
+    border-radius: 0.7rem !important;
+    padding: 0.36rem 0.4rem !important;
+  }
+
+  .desktop-tree-final-filter-button > svg {
+    width: clamp(1.2rem, 2.5vh, 1.48rem) !important;
+    height: clamp(1.2rem, 2.5vh, 1.48rem) !important;
+  }
+
+  .desktop-tree-final-filter-button span {
+    font-size: clamp(0.62rem, 1.28vh, 0.76rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-tree-groups-divider {
+    order: 9 !important;
+    margin-block: clamp(0.04rem, 0.22vh, 0.16rem) !important;
+  }
+
+  .desktop-tree-family-groups {
+    order: 10 !important;
+    min-height: clamp(7.9rem, 20vh, 12.8rem) !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row-list {
+    grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row:nth-child(4) {
+    order: 2 !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row:nth-child(2) {
+    order: 3 !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row:nth-child(3) {
+    order: 4 !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: clamp(1.18rem, 2.45vh, 1.42rem) !important;
+  }
+
+  .desktop-tree-export-panel {
+    order: 11 !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+    gap: clamp(0.2rem, 0.44vh, 0.3rem) !important;
+    padding: clamp(0.28rem, 0.58vh, 0.38rem) !important;
+  }
+
+  .desktop-tree-export-actions {
+    gap: clamp(0.22rem, 0.48vh, 0.32rem) !important;
+  }
+
+  .desktop-tree-export-action-button {
+    min-height: clamp(1.48rem, 3.08vh, 1.86rem) !important;
+    border-radius: 0.52rem !important;
+    padding: 0.18rem 0.24rem !important;
+  }
+
+  .desktop-tree-export-action-button svg {
+    width: clamp(0.78rem, 1.62vh, 0.96rem) !important;
+    height: clamp(0.78rem, 1.62vh, 0.96rem) !important;
+  }
+
+  .desktop-tree-export-action-button span {
+    font-size: clamp(0.56rem, 1.16vh, 0.68rem) !important;
+    font-weight: 800 !important;
+  }
+
+  .tree-sidebar-desktop-panel-wrap .relative > button[data-tour-target='tree-controls-collapse'] {
+    top: calc(clamp(0.34rem, 0.78vh, 0.54rem) + clamp(0.46rem, 1.02vh, 0.68rem) + 0.12rem) !important;
+    right: calc(clamp(0.34rem, 0.78vh, 0.54rem) + clamp(0.46rem, 1.02vh, 0.68rem) + 0.12rem) !important;
+    width: clamp(1.9rem, 3.8vh, 2.22rem) !important;
+    height: clamp(1.9rem, 3.8vh, 2.22rem) !important;
+    border-radius: 0.62rem !important;
+    border-color: #cbd7ea !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-visualization-panel {
+    gap: 0.4rem !important;
+  }
+
+  .desktop-tree-visualization-panel::before {
+    top: calc(0.38rem + 1.9rem + 0.4rem + 0.5rem);
+    font-size: 0.72rem;
+  }
+
+  .desktop-tree-final-filter-button {
+    min-height: 2.08rem !important;
+    padding: 0.26rem 0.3rem !important;
+  }
+
+  .desktop-tree-family-groups {
+    min-height: 7rem !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: 1.02rem !important;
+  }
+
+  .desktop-tree-export-panel {
+    padding: 0.22rem !important;
+  }
+
+  .desktop-tree-export-action-button {
+    min-height: 1.36rem !important;
+  }
+}
