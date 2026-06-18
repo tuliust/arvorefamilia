@@ -1,0 +1,174 @@
+@media (max-width: 767px) {
+  .curiosidades-page {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .curiosidades-page main {
+    width: 100%;
+    max-width: 100vw;
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  .curiosidades-page section,
+  .curiosidades-page article,
+  .curiosidades-page div,
+  .curiosidades-page form {
+    min-width: 0;
+  }
+
+  .curiosidades-page article,
+  .curiosidades-page section.rounded-2xl {
+    max-width: 100%;
+  }
+
+  .curiosidades-hero {
+    padding: 1rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .curiosidades-hero h2 {
+    font-size: clamp(1.32rem, 7vw, 1.7rem) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.035em;
+  }
+
+  .curiosidades-section-links {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+    margin-left: -0.1rem;
+    margin-right: -0.1rem;
+    overflow-x: auto;
+    padding: 0.1rem 0.1rem 0.35rem;
+    scroll-padding-left: 0.1rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .curiosidades-section-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .curiosidades-section-links > a {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  .curiosidades-page [id] {
+    scroll-margin-top: 6.25rem;
+  }
+
+  .curiosidades-page h2 {
+    font-size: 1.12rem !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.02em;
+  }
+
+  .curiosidades-page h3 {
+    line-height: 1.2 !important;
+  }
+
+  .curiosidades-page p,
+  .curiosidades-page li,
+  .curiosidades-page label,
+  .curiosidades-page input,
+  .curiosidades-page select,
+  .curiosidades-page textarea,
+  .curiosidades-page button {
+    max-width: 100%;
+  }
+
+  .curiosidades-page input,
+  .curiosidades-page select,
+  .curiosidades-page textarea {
+    font-size: 16px !important;
+  }
+
+  .curiosidades-page .grid {
+    max-width: 100%;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.65rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article {
+    padding: 0.82rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article > div {
+    align-items: center !important;
+    gap: 0.55rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article p:first-child {
+    font-size: 0.72rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article p:nth-child(2) {
+    margin-top: 0.35rem !important;
+    font-size: 1.65rem !important;
+    line-height: 0.95 !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article span.inline-flex {
+    height: 2rem !important;
+    width: 2rem !important;
+    border-radius: 0.85rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article span.inline-flex svg {
+    height: 1rem !important;
+    width: 1rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia section[aria-label='Big numbers'] > article > p:last-child {
+    margin-top: 0.55rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .curiosidades-page #voce-sabia .grid,
+  .curiosidades-page #graficos .grid,
+  .curiosidades-page #geracoes .grid,
+  .curiosidades-page #bodas .grid,
+  .curiosidades-page #descobertas .grid,
+  .curiosidades-page #quiz .grid,
+  .curiosidades-page #interesses .grid,
+  .curiosidades-page #astrologia .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .curiosidades-page #graficos article,
+  .curiosidades-page #voce-sabia article,
+  .curiosidades-page #geracoes article,
+  .curiosidades-page #bodas article,
+  .curiosidades-page #descobertas article,
+  .curiosidades-page #ia section,
+  .curiosidades-page #conexoes section,
+  .curiosidades-page #quiz section,
+  .curiosidades-page #rota section,
+  .curiosidades-page #interesses section,
+  .curiosidades-page #mural section,
+  .curiosidades-page #astrologia section {
+    padding: 1rem !important;
+    border-radius: 1.15rem !important;
+  }
+
+  .curiosidades-page [class*='overflow-x-auto'],
+  .curiosidades-page [class*='overflow-auto'] {
+    max-width: calc(100vw - 1.75rem) !important;
+  }
+
+  .curiosidades-page table {
+    width: 100%;
+    min-width: 32rem;
+  }
+}
