@@ -1,42 +1,84 @@
 @media (max-width: 767px) {
   section[aria-label="Filtros do calendário"] {
-    padding: 0.36rem 0.42rem !important;
+    padding: 0.34rem 0.38rem !important;
     border-radius: 0.92rem !important;
   }
 
   section[aria-label="Filtros do calendário"] > div {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 0.18rem !important;
+    gap: 0.12rem !important;
+    overflow: visible !important;
     font-size: clamp(0.6rem, 2.72vw, 0.86rem) !important;
     line-height: 0.92 !important;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] {
+    min-width: 0 !important;
+    width: 100% !important;
     min-height: 2.46rem;
     display: inline-flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    padding: 0.16rem 0.08rem !important;
-    border-radius: 0.62rem !important;
+    padding: 0.14rem 0.04rem !important;
+    border-width: 0.5px !important;
+    border-radius: 0.58rem !important;
     line-height: 0.92 !important;
+    box-shadow: none !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(1) {
+    --calendar-mobile-category-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h16v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z'/%3E%3Cpath d='M8 10V7'/%3E%3Cpath d='M12 10V7'/%3E%3Cpath d='M16 10V7'/%3E%3Cpath d='M8 7h.01'/%3E%3Cpath d='M12 7h.01'/%3E%3Cpath d='M16 7h.01'/%3E%3Cpath d='M4 14h16'/%3E%3C/svg%3E");
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(2) {
+    --calendar-mobile-category-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h12l-3 5H9Z'/%3E%3Cpath d='m9 8 3 13 3-13'/%3E%3Cpath d='M6 3 2 8l10 13L22 8l-4-5'/%3E%3C/svg%3E");
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(3) {
+    --calendar-mobile-category-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-6-4.35-6-9a6 6 0 0 1 12 0c0 4.65-6 9-6 9Z'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E");
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(4) {
+    --calendar-mobile-category-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/%3E%3Cpath d='M3.3 7 12 12l8.7-5'/%3E%3Cpath d='M12 22V12'/%3E%3C/svg%3E");
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed]:nth-child(5) {
     grid-column: auto;
     justify-self: stretch;
-    width: auto;
+    width: 100% !important;
+    --calendar-mobile-category-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E");
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:first-child {
     display: block !important;
-    width: 0.36rem !important;
-    height: 0.36rem !important;
-    min-width: 0.36rem !important;
-    margin: 0 0 0.18rem !important;
+    width: 0.34rem !important;
+    height: 0.34rem !important;
+    min-width: 0.34rem !important;
+    margin: 0 0 0.12rem !important;
     border-radius: 9999px !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] > span:nth-child(2) {
+    width: 100% !important;
+    height: 1.72rem !important;
+    min-height: 1.72rem !important;
+    align-items: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    font-size: 0 !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] > span:nth-child(2)::before {
+    content: "";
+    width: 1.42rem;
+    height: 1.42rem;
+    background-color: currentColor;
+    -webkit-mask: var(--calendar-mobile-category-icon) center / contain no-repeat;
+    mask: var(--calendar-mobile-category-icon) center / contain no-repeat;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:last-child {
@@ -55,25 +97,35 @@
 
 @media (max-width: 359px) {
   section[aria-label="Filtros do calendário"] {
-    padding: 0.3rem 0.34rem !important;
+    padding: 0.28rem 0.3rem !important;
   }
 
   section[aria-label="Filtros do calendário"] > div {
-    gap: 0.12rem !important;
+    gap: 0.08rem !important;
     font-size: clamp(0.5rem, 2.55vw, 0.68rem) !important;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] {
     min-height: 2.18rem;
-    padding: 0.12rem 0.04rem !important;
-    border-radius: 0.5rem !important;
+    padding: 0.1rem 0.03rem !important;
+    border-radius: 0.48rem !important;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:first-child {
     width: 0.28rem !important;
     height: 0.28rem !important;
     min-width: 0.28rem !important;
-    margin-bottom: 0.12rem !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] > span:nth-child(2) {
+    height: 1.42rem !important;
+    min-height: 1.42rem !important;
+  }
+
+  section[aria-label="Filtros do calendário"] button[aria-pressed] > span:nth-child(2)::before {
+    width: 1.18rem;
+    height: 1.18rem;
   }
 
   section[aria-label="Filtros do calendário"] button[aria-pressed] > span:last-child {
