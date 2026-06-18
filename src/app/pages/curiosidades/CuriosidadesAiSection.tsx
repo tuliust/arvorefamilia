@@ -6,7 +6,6 @@ import { buildAiTreeContext } from '../home/homeAiContext';
 import { calculateCuriosities, type CuriosityTopic } from '../home/homeCuriositiesUtils';
 import type { DirectRelativeGroup } from '../../components/FamilyTree/types';
 import {
-  curiositySectionCardClassName,
   isDeceased,
   isPet,
   type CuriosidadesDataProps,
@@ -126,13 +125,15 @@ export function CuriosidadesAiSection({
   };
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm shadow-blue-100/70">
       <div className="flex items-center gap-3">
-        <Bot className="h-5 w-5 text-blue-700" />
-        <h2 className="text-xl font-bold text-gray-950">Pergunte à IA</h2>
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+          <Bot className="h-5 w-5" />
+        </span>
+        <h2 className="text-xl font-bold text-blue-950">Pergunte à IA</h2>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-gray-600">
+      <p className="mt-3 text-sm leading-6 text-blue-900/80">
         Faça perguntas em linguagem natural sobre pessoas, relações, cidades, datas e padrões da árvore familiar.
       </p>
 
@@ -143,18 +144,18 @@ export function CuriosidadesAiSection({
       )}
 
       {!error && loading && (
-        <div className="mt-5 h-64 animate-pulse rounded-xl bg-gray-100" />
+        <div className="mt-5 h-64 animate-pulse rounded-xl bg-white/70" />
       )}
 
       {!error && !loading && pessoas.length === 0 && (
-        <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
+        <div className="mt-5 rounded-xl border border-dashed border-blue-200 bg-white/80 px-4 py-5 text-sm text-blue-900">
           Cadastre pessoas na árvore para habilitar perguntas à IA.
         </div>
       )}
 
       {!error && !loading && pessoas.length > 0 && (
         <div className="mt-5 min-w-0 space-y-4 overflow-hidden break-words">
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <div className="rounded-xl border border-blue-200 bg-white p-4">
             <div className="flex items-start gap-3">
               <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
               <div>
@@ -169,7 +170,7 @@ export function CuriosidadesAiSection({
                         setAiAnswer('');
                         setAiError(null);
                       }}
-                      className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
+                      className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
                     >
                       {example}
                     </button>
