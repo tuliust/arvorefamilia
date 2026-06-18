@@ -529,3 +529,35 @@ Na rota `/mapa-familiar-horizontal`:
 - Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
 - A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
 
+<!-- BASELINE-CONSOLIDADO-2026-06-18 -->
+## Baseline consolidado â€” ajustes recentes confirmados
+
+Esta seÃ§Ã£o registra somente frentes citadas no levantamento que tiveram confirmaÃ§Ã£o de commit, merge ou push na `main`.
+
+| Frente | Status | ReferÃªncia |
+|---|---|---|
+| Ajustes finais do onboarding do membro | Confirmado | `5ef555c` |
+| PadronizaÃ§Ã£o de formulÃ¡rios de ediÃ§Ã£o/criaÃ§Ã£o de pessoas | Confirmado | `1b64790` |
+| Cards do Admin Dashboard como botÃµes | Confirmado | `b84d101` |
+| Dropdown â€œVisualizar comoâ€ no header | Confirmado por merge | `4fecf05` |
+| Ajustes mobile do onboarding e menus inferiores | Confirmado | `2627820` |
+
+### Estado funcional confirmado
+
+- O onboarding do membro estÃ¡ organizado em etapas para dados pessoais, vÃ­nculos, arquivos histÃ³ricos, preferÃªncias e revisÃ£o.
+- Pessoa falecida tem fluxo condicional: nÃ£o passa pela etapa de preferÃªncias, tem notificaÃ§Ãµes/mensagens desativadas e revisÃ£o sem contatos ativos.
+- A revisÃ£o final usa estrutura de perfil, cards e ediÃ§Ã£o inline para blocos editÃ¡veis.
+- Arquivos histÃ³ricos suportam categoria, metadados, rascunho local e participantes em camada visual/metadados locais, sem assumir persistÃªncia definitiva se o schema nÃ£o existir.
+- FormulÃ¡rios de pessoa reaproveitam seletivamente padrÃµes do onboarding sem transformar `/minha-arvore/editar` ou admin em onboarding.
+- O dropdown â€œVisualizar comoâ€ pertence ao header das views de Ã¡rvore, nÃ£o a um seletor flutuante/debug.
+- A frente mobile corrigiu auto-zoom de inputs, steps do onboarding, tooltips por toque, header mobile e espaÃ§amentos de menus inferiores.
+
+### Fora do baseline
+
+NÃ£o fazem parte deste baseline atÃ© confirmaÃ§Ã£o no Git:
+
+- scripts apenas gerados;
+- tentativas de patch com erro;
+- ajustes sugeridos apenas por print;
+- reset ampliado de perfil com RPC/migration;
+- mudanÃ§as em favoritos, timeline, notificaÃ§Ãµes e perfil de pessoa sem commit verificÃ¡vel.

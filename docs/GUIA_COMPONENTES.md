@@ -795,3 +795,33 @@ QA manual mínimo:
 /calendario-familiar
 320 / 375 / 390 / 430 / 768 / 1366 / 1440 / 1536 / 1920px
 ```
+
+<!-- COMPONENTES-CONSOLIDADOS-2026-06-18 -->
+## Componentes impactados pela consolidaÃ§Ã£o recente
+
+### Onboarding e navegaÃ§Ã£o de membro
+
+- `MemberOnboardingSteps`: usado apenas no onboarding do membro. NÃ£o deve ser reutilizado em `/minha-arvore/editar` ou admin.
+- `MemberPageHeader`: pode ocultar aÃ§Ãµes no header mobile quando a rota exigir foco no fluxo, como em `/meus-dados`.
+- `HomeHeader`: hospeda o seletor â€œVisualizar comoâ€ quando aplicÃ¡vel.
+- `HomeMobileNav`: concentra navegaÃ§Ã£o inferior e badges mÃ³veis, sem cobrir aÃ§Ãµes principais da tela.
+
+### FormulÃ¡rios de pessoa
+
+- `PersonFormSection`: seÃ§Ã£o reutilizÃ¡vel com suporte a tÃ­tulo, descriÃ§Ã£o, Ã­cone e aÃ§Ã£o de header.
+- `PersonDatesLocationsFields`: datas, locais e toggles compactos de nascimento/residÃªncia/falecimento.
+- `PersonContactFields`: WhatsApp, endereÃ§o, complemento e redes sociais.
+- `PersonBioFields`: mini bio e curiosidades.
+- `PersonPrivacyFields`: permissÃµes/preferÃªncias com contexto `member` ou `admin`.
+- `AddressAutocompleteInput`: autocomplete/endereÃ§o.
+- `SocialProfilesEditor`: redes sociais com tratamento seguro de linhas incompletas.
+
+### Arquivos histÃ³ricos
+
+- `ArquivosHistoricos`: upload, categoria, metadados, rascunho local e participantes quando disponÃ­veis em camada visual/metadados.
+
+### Regras de componente
+
+- Componentes compartilhados podem alinhar labels, grids, Ã­cones e microcopy.
+- Regras especÃ­ficas de onboarding nÃ£o devem vazar automaticamente para admin.
+- Um componente pode aceitar contexto (`member`, `admin`, `review`, `interactive`) quando a mesma UI precisa preservar comportamentos distintos.

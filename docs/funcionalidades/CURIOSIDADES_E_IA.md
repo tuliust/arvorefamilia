@@ -599,3 +599,19 @@ docs/funcionalidades/MINHA_ARVORE_VIEW.md
 docs/funcionalidades/GENEALOGIA_VIEW.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 ```
+
+<!-- CURIOSIDADES-IA-CONSOLIDACAO-2026-06-18 -->
+## Pontos recentes a documentar quando confirmados
+
+Registrar nesta funcionalidade, somente quando houver commit verificÃ¡vel:
+
+- grÃ¡ficos reais;
+- cÃ¡lculo de distÃ¢ncia geogrÃ¡fica;
+- mural persistente de lembranÃ§as;
+- favoritar descoberta;
+- compartilhar descoberta;
+- rota familiar com distÃ¢ncia real;
+- fluxo â€œDescubra mais sobreâ€;
+- testes de utilitÃ¡rios relacionados.
+
+PendÃªncias e ideias sem commit devem ficar em `PLANO_PROXIMOS_PASSOS.md`.

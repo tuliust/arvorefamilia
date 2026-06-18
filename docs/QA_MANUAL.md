@@ -876,3 +876,85 @@ Na rota `/mapa-familiar-horizontal`:
 - Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
 - A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
 
+<!-- QA-CONSOLIDADO-2026-06-18 -->
+## QA consolidado para ajustes recentes
+
+### Breakpoints obrigatÃ³rios
+
+Validar rotas principais em:
+
+- 320px
+- 375px
+- 390px
+- 430px
+- desktop
+
+### Onboarding â€” pessoa viva
+
+Rotas:
+
+- `/meus-dados`
+- `/meus-vinculos`
+- `/arquivos-historicos`
+- `/preferencias`
+- `/revisao-dados`
+
+Checklist:
+
+- as 5 etapas aparecem;
+- cidade de residÃªncia aparece;
+- contato/endereÃ§o/redes aparecem;
+- preferÃªncias aparecem;
+- revisÃ£o final exibe contatos e notificaÃ§Ãµes;
+- tooltips funcionam por toque no mobile;
+- inputs nÃ£o disparam auto-zoom;
+- botÃµes nÃ£o ficam cobertos pelo menu inferior.
+
+### Onboarding â€” pessoa falecida
+
+Checklist:
+
+- cidade de residÃªncia Ã© ocultada no onboarding;
+- campos de falecimento aparecem;
+- contato/endereÃ§o/redes sÃ£o ocultados no fluxo do membro;
+- `/preferencias` nÃ£o aparece no stepper;
+- acesso direto a `/preferencias` redireciona para revisÃ£o;
+- revisÃ£o final nÃ£o mostra contatos/notificaÃ§Ãµes;
+- badge respeita gÃªnero quando houver dado suficiente.
+
+### Arquivos histÃ³ricos
+
+Checklist:
+
+- categoria preenche tÃ­tulo e descriÃ§Ã£o;
+- trocar categoria atualiza o preenchimento;
+- rascunho local preserva dados antes de salvar;
+- arquivo adicionado vira card com thumbnail/resumo;
+- participantes podem ser selecionados/removidos visualmente;
+- ausÃªncia de schema para participantes nÃ£o quebra o fluxo.
+
+### FormulÃ¡rios de pessoa
+
+Rotas:
+
+- `/minha-arvore/editar`
+- `/admin/pessoas/:id/editar`
+- `/admin/pessoas/nova`
+
+Checklist:
+
+- labels alinhados ao onboarding;
+- formulÃ¡rio nÃ£o vira onboarding;
+- `MemberOnboardingSteps` nÃ£o aparece fora do fluxo;
+- campos de admin preservam comportamento administrativo vigente;
+- redes sociais incompletas nÃ£o bloqueiam salvamento indevidamente.
+
+### Rotas adicionais a verificar quando houver commit confirmado
+
+- `/admin`
+- `/mapa-familiar`
+- `/mapa-familiar-horizontal`
+- `/meus-favoritos`
+- `/notificacoes`
+- `/calendario-familiar`
+- `/pessoa/:id`

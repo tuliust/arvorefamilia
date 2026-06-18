@@ -877,3 +877,56 @@ Uma mudança no onboarding só deve ser considerada pronta quando:
 - documentação sincronizada foi atualizada;
 - não há retorno de botões, labels ou boxes removidos;
 - regras de não regressão foram preservadas.
+
+<!-- ONBOARDING-CONSOLIDADO-2026-06-18 -->
+## ConsolidaÃ§Ã£o recente do onboarding do membro
+
+### Fluxo
+
+| Etapa | Rota | FunÃ§Ã£o |
+|---|---|---|
+| 1 | `/meus-dados` | Dados pessoais, nascimento, residÃªncia/falecimento, contato, redes sociais, mini bio e curiosidades |
+| 2 | `/meus-vinculos` | VÃ­nculos familiares |
+| 3 | `/arquivos-historicos` | Documentos, fotos e memÃ³rias |
+| 4 | `/preferencias` | NotificaÃ§Ãµes e permissÃµes, apenas para pessoa viva |
+| 5 | `/revisao-dados` | RevisÃ£o final, ediÃ§Ã£o e finalizaÃ§Ã£o |
+
+### Pessoa viva
+
+- Exibe cidade de residÃªncia.
+- Exibe contato, endereÃ§o e redes sociais.
+- Passa por preferÃªncias.
+- Revisa contatos e notificaÃ§Ãµes antes de finalizar.
+
+### Pessoa falecida
+
+- Exibe dados de falecimento.
+- Oculta cidade de residÃªncia no fluxo do membro.
+- Oculta contato/endereÃ§o/redes sociais no fluxo do membro.
+- Pula `/preferencias`.
+- Tem notificaÃ§Ãµes e mensagens por WhatsApp desativadas automaticamente.
+- RevisÃ£o final oculta contatos e permissÃµes/notificaÃ§Ãµes.
+- Badge deve respeitar gÃªnero quando houver dado suficiente.
+
+### Arquivos histÃ³ricos
+
+- Cards de categoria podem prÃ©-preencher tÃ­tulo e descriÃ§Ã£o.
+- Upload deve preservar rascunho local enquanto o item nÃ£o for salvo.
+- Participantes podem ser selecionados visualmente.
+- `participante_ids` e participantes locais nÃ£o devem pressupor schema definitivo se o banco ainda nÃ£o tiver coluna compatÃ­vel.
+
+### RevisÃ£o final
+
+- Estrutura em card de perfil.
+- Boxes por tema.
+- EdiÃ§Ã£o inline para blocos editÃ¡veis.
+- Familiares e arquivos direcionam para etapa especÃ­fica.
+- Mini bio pertence ao box prÃ³prio, nÃ£o ao header.
+- BotÃ£o principal de finalizaÃ§Ã£o fica no topo.
+
+### Mobile
+
+- Inputs nÃ£o devem provocar auto-zoom.
+- Etapas devem caber na largura.
+- Tooltips de data/local devem abrir por toque.
+- Header mobile pode ocultar aÃ§Ãµes laterais para reduzir distraÃ§Ã£o.

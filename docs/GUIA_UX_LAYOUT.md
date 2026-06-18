@@ -622,3 +622,47 @@ Uma mudança de layout só deve ser aceita quando:
 - passa nos testes aplicáveis;
 - respeita o fluxo vivo/falecido do onboarding;
 - foi validada visualmente nos breakpoints relevantes.
+
+<!-- UX-MOBILE-CONSOLIDADO-2026-06-18 -->
+## PadrÃµes UX/mobile consolidados
+
+### Inputs mobile
+
+Inputs e textareas devem preservar fonte de pelo menos 16px no mobile para evitar auto-zoom do navegador ao focar campos. O padrÃ£o usado Ã© equivalente a:
+
+```txt
+text-base md:text-sm
+```
+
+NÃ£o usar `user-scalable=no`, `maximum-scale=1` ou bloqueios de acessibilidade.
+
+### Steps do onboarding
+
+Em telas pequenas, os nÃºmeros das etapas devem permanecer visÃ­veis sem scroll horizontal. Labels podem ser compactados/truncados, mas a sequÃªncia visual das etapas deve continuar compreensÃ­vel.
+
+Breakpoints mÃ­nimos de QA visual:
+
+- 320px
+- 375px
+- 390px
+- 430px
+
+### Tooltips mobile
+
+BotÃµes de informaÃ§Ã£o devem funcionar por toque, nÃ£o apenas por hover. O comportamento esperado inclui:
+
+- abrir/fechar por toque;
+- fechar por Escape;
+- fechar por clique fora;
+- `aria-expanded`;
+- `role="tooltip"` quando aplicÃ¡vel.
+
+### Header e bottom nav
+
+- Em rotas de fluxo, o header mobile pode ocultar aÃ§Ãµes laterais quando elas competem com a tarefa principal.
+- Menus inferiores nÃ£o devem cobrir botÃµes primÃ¡rios, CTAs finais ou aÃ§Ãµes de salvar/continuar.
+- Badges mÃ³veis devem ser discretos e nÃ£o deslocar o layout.
+
+### ConteÃºdo em cards
+
+Cards em mobile devem reduzir padding e espaÃ§amento sem remover informaÃ§Ã£o essencial. Blocos longos devem priorizar hierarquia, agrupamento por categoria e CTAs persistentes apenas quando necessÃ¡rios.

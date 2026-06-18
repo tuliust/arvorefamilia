@@ -542,3 +542,32 @@ Na p?gina `/mapa-familiar`:
 - Esse comportamento n?o cria nem infere dados; depende exclusivamente dos relacionamentos persistidos.
 - A regra acima se aplica ? p?gina `/mapa-familiar`. N?o assumir o mesmo comportamento para `/mapa-familiar-horizontal` sem valida??o espec?fica.
 
+<!-- NAO-REGRESSAO-CONSOLIDADA-2026-06-18 -->
+## Regras de nÃ£o regressÃ£o â€” consolidaÃ§Ã£o recente
+
+### Onboarding
+
+- Pessoa falecida nÃ£o deve passar por `/preferencias`.
+- Pessoa falecida nÃ£o deve manter notificaÃ§Ãµes, WhatsApp ou mensagens ativas no fluxo do membro.
+- RevisÃ£o final de pessoa falecida nÃ£o deve exibir contatos ou notificaÃ§Ãµes.
+- Redes sociais incompletas nÃ£o devem bloquear salvamento nem contaminar payload legado.
+- Campos ocultos por regra condicional nÃ£o devem ser validados como obrigatÃ³rios.
+- `MemberOnboardingSteps` nÃ£o deve ser reutilizado fora do onboarding.
+
+### FormulÃ¡rios fora do onboarding
+
+- `/minha-arvore/editar` nÃ£o deve ser transformado em onboarding.
+- Admin e Ã¡rea do membro podem compartilhar componentes, mas nÃ£o necessariamente a mesma regra de negÃ³cio.
+- DecisÃ£o sobre contato/privacidade de pessoa falecida no admin deve refletir o cÃ³digo atual antes de virar contrato documental.
+
+### Mobile
+
+- Inputs mobile nÃ£o devem voltar a disparar auto-zoom.
+- Etapas do onboarding nÃ£o devem exigir scroll horizontal para exibir os nÃºmeros.
+- Tooltips informativos devem funcionar por toque.
+- Bottom nav nÃ£o deve cobrir aÃ§Ãµes crÃ­ticas.
+
+### OperaÃ§Ã£o
+
+- Scripts que criem migration, RPC, RLS, Edge Function, bucket ou policy nÃ£o devem ser aplicados sem revisÃ£o operacional explÃ­cita.
+- PendÃªncias sem commit confirmado nÃ£o devem entrar no baseline.

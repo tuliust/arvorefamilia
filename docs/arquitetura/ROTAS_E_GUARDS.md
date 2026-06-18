@@ -481,3 +481,40 @@ Atualize este arquivo quando houver:
 - remoção ou reativação formal de rota.
 
 Não atualize este arquivo para mudanças puramente visuais em cards, CSS, paletas ou exportação, exceto se a mudança afetar navegação.
+
+<!-- ROTAS-CONSOLIDADAS-2026-06-18 -->
+## Rotas envolvidas na consolidaÃ§Ã£o recente
+
+### Onboarding do membro
+
+| Rota | Papel |
+|---|---|
+| `/meus-dados` | Dados pessoais, nascimento, residÃªncia/falecimento, contato, redes, mini bio e curiosidades |
+| `/meus-vinculos` | VÃ­nculos familiares |
+| `/arquivos-historicos` | Documentos, fotos, memÃ³rias e participantes em camada visual/metadados |
+| `/preferencias` | PreferÃªncias e permissÃµes, apenas para pessoa viva |
+| `/revisao-dados` | RevisÃ£o final e finalizaÃ§Ã£o |
+
+Regra: pessoa falecida nÃ£o deve passar por `/preferencias`; o fluxo segue de arquivos histÃ³ricos para revisÃ£o.
+
+### EdiÃ§Ã£o e administraÃ§Ã£o de pessoas
+
+| Rota | Papel |
+|---|---|
+| `/minha-arvore/editar` | EdiÃ§Ã£o da prÃ³pria Ã¡rvore/perfil, sem virar onboarding |
+| `/admin/pessoas/:id/editar` | EdiÃ§Ã£o administrativa de pessoa |
+| `/admin/pessoas/nova` | CriaÃ§Ã£o administrativa de pessoa |
+| `/admin/pessoas/:id` | Forma administrativa associada ao registro |
+
+### Ãrvore e navegaÃ§Ã£o
+
+| Rota | Papel |
+|---|---|
+| `/mapa-familiar` | View de mapa familiar |
+| `/mapa-familiar-horizontal` | View horizontal do mapa familiar |
+| `/notificacoes` | Central de notificaÃ§Ãµes |
+| `/meus-favoritos` | Favoritos |
+| `/calendario-familiar` | CalendÃ¡rio familiar |
+| `/pessoa/:id` | Perfil pÃºblico/interno da pessoa |
+
+Rotas antigas removidas ou apenas planejadas nÃ£o devem voltar ao roteamento ativo por documentaÃ§Ã£o.

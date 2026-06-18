@@ -430,3 +430,16 @@ Pendências relacionadas continuam em:
 ```txt
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
+
+<!-- EXPORTACAO-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar em exportaÃ§Ã£o da Ã¡rvore
+
+Antes de registrar como implementado, verificar se o cÃ³digo atual confirma:
+
+- botÃ£o â€œSalvar e Imprimirâ€;
+- opÃ§Ãµes Ãrea, Imagem, PDF e Imprimir;
+- local correto dos botÃµes no painel;
+- comportamento mobile;
+- limitaÃ§Ãµes conhecidas de exportaÃ§Ã£o.
+
+Itens ainda apenas planejados devem permanecer em `PLANO_PROXIMOS_PASSOS.md`.

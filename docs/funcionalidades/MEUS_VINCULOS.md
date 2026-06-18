@@ -402,3 +402,29 @@ O texto varia conforme existam:
 - validar pré-seleção de outro pai/mãe conhecido;
 - confirmar e continuar;
 - testar mobile em 320px, 375px, 390px e 430px.
+
+<!-- VINCULOS-CONSOLIDADOS-2026-06-18 -->
+## ConsolidaÃ§Ã£o recente de vÃ­nculos
+
+### Modal de adicionar parente
+
+- A busca deve acontecer enquanto o usuÃ¡rio digita.
+- O botÃ£o manual â€œBuscarâ€ nÃ£o deve ser necessÃ¡rio.
+- A criaÃ§Ã£o de nova pessoa deve continuar disponÃ­vel.
+- Mensagens vazias redundantes, como caixa cinza de â€œNenhuma pessoa encontradaâ€, devem ser evitadas quando nÃ£o agregarem aÃ§Ã£o.
+
+### Badges por gÃªnero/status
+
+| CondiÃ§Ã£o | Badge |
+|---|---|
+| Homem vivo | Vivo |
+| Mulher viva | Viva |
+| Homem falecido | Falecido |
+| Mulher falecida | Falecida |
+| Registro pendente/local | Em anÃ¡lise |
+
+Evitar `Falecido(a)` quando houver informaÃ§Ã£o suficiente para uma forma especÃ­fica.
+
+### Microcopy
+
+Quando o contexto for alteraÃ§Ã£o de mÃ£e, usar microcopy direta, como â€œAlterar a mÃ£eâ€, em vez de rÃ³tulos genÃ©ricos.

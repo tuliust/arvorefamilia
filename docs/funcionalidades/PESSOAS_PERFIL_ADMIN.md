@@ -1109,3 +1109,47 @@ docs/QA_MANUAL.md
 - No admin, quando a pessoa está marcada como falecida, os blocos de contato/endereço/redes sociais e privacidade não são exibidos no formulário.
 - Justificativa: perfis memoriais não devem expor nem estimular edição de canais pessoais de contato, endereço, WhatsApp, redes sociais ou preferências de privacidade voltadas a uso pessoal ativo.
 - Essa decisão não altera RLS, migrations, RPCs, buckets, policies nem rotas antigas removidas.
+
+<!-- ADMIN-PESSOAS-CONSOLIDADO-2026-06-18 -->
+## ConsolidaÃ§Ã£o recente de pessoas/admin
+
+### Admin Dashboard
+
+Cards confirmados como botÃµes:
+
+| Card | Destino |
+|---|---|
+| Membros | `/admin/pessoas` |
+| RelaÃ§Ãµes | `/admin/relacionamentos` |
+| Pendentes | `/admin/solicitacoes-vinculos` |
+
+O card MemÃ³ria permanece informativo enquanto nÃ£o houver rota definida.
+
+### FormulÃ¡rios administrativos
+
+Rotas:
+
+- `/admin/pessoas/:id/editar`
+- `/admin/pessoas/nova`
+- `/admin/pessoas/:id`
+
+Os formulÃ¡rios administrativos podem compartilhar componentes com o onboarding, mas preservam contexto administrativo prÃ³prio.
+
+### Pessoa falecida no admin
+
+O levantamento contÃ©m decisÃµes conflitantes:
+
+1. manter contato/endereÃ§o/redes sociais editÃ¡veis no admin por valor histÃ³rico/administrativo;
+2. ocultar contato e privacidade para pessoa falecida tambÃ©m no admin.
+
+Antes de registrar uma dessas decisÃµes como regra definitiva, verificar o cÃ³digo atual em:
+
+```txt
+src/app/pages/admin/AdminPessoaForm.tsx
+```
+
+AtÃ© essa verificaÃ§Ã£o, a decisÃ£o deve ficar como pendÃªncia em `PLANO_PROXIMOS_PASSOS.md`, nÃ£o como regra de baseline.
+
+### Reset ampliado de perfil
+
+Qualquer ampliaÃ§Ã£o que envolva `auth.users`, RPC, migration, RLS ou remoÃ§Ã£o de arquivos histÃ³ricos exige revisÃ£o operacional e nÃ£o deve ser documentada como implementada sem migration/commit confirmado.

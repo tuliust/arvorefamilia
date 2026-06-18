@@ -296,3 +296,27 @@ Critérios mínimos:
 - badges `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise` documentadas;
 - QA manual atualizado para pessoa viva, pessoa falecida, rascunho local, revisão inline e navegação condicional;
 - comandos de validação executados ou limitação registrada.
+
+<!-- DOCS-CONSOLIDACAO-2026-06-18 -->
+## ConsolidaÃ§Ã£o documental de ajustes recentes
+
+Esta documentaÃ§Ã£o passou a usar uma regra explÃ­cita de separaÃ§Ã£o entre:
+
+| Tipo de informaÃ§Ã£o | Destino documental |
+|---|---|
+| Estado implementado e confirmado na `main` | `BASELINE_PRODUTO_ATUAL.md` e documento funcional correspondente |
+| PadrÃ£o tÃ©cnico ou componente reutilizÃ¡vel | `GUIA_COMPONENTES.md` |
+| PadrÃ£o visual, responsivo ou mobile | `GUIA_UX_LAYOUT.md` |
+| Roteiro de validaÃ§Ã£o | `QA_MANUAL.md` |
+| Regra que nÃ£o pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Rota, guard ou redirecionamento | `arquitetura/ROTAS_E_GUARDS.md` |
+| PendÃªncia, script gerado sem confirmaÃ§Ã£o ou decisÃ£o bloqueada | `PLANO_PROXIMOS_PASSOS.md` |
+| Tentativa substituÃ­da, script falho ou material de auditoria | `historico/` |
+
+Regra de prioridade para resolver conflitos:
+
+```txt
+CÃ³digo atual da main > commits confirmados > docs canÃ´nicos existentes > levantamento recente > scripts planejados.
+```
+
+Scripts nÃ£o confirmados, prints sem commit verificÃ¡vel e propostas que envolvam Supabase/RLS/RPC/migration nÃ£o devem ser registrados como baseline.

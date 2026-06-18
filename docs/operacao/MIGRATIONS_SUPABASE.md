@@ -308,3 +308,18 @@ docs/operacao/STORAGE_MAINTENANCE.md
 docs/operacao/OAUTH_GOOGLE.md
 docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
 ```
+
+<!-- MIGRATIONS-ALERTA-2026-06-18 -->
+## Alerta operacional â€” scripts citados no levantamento
+
+O levantamento cita proposta de reset ampliado de perfil com possÃ­vel alteraÃ§Ã£o de RPC/migration e limpeza de `auth.users`.
+
+NÃ£o registrar nem aplicar como implementado sem:
+
+- arquivo real em `supabase/migrations/`;
+- revisÃ£o de RLS/RPC;
+- validaÃ§Ã£o em ambiente seguro;
+- confirmaÃ§Ã£o de commit;
+- rollback documentado.
+
+Enquanto nÃ£o houver essa confirmaÃ§Ã£o, a frente permanece bloqueada em `PLANO_PROXIMOS_PASSOS.md`.

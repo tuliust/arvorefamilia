@@ -454,3 +454,18 @@ Pendências continuam em:
 ```txt
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
+
+<!-- ARVORE-PAINEL-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar em Ã¡rvore, legendas, conectores e painel
+
+Antes de registrar como contrato vigente, confirmar no cÃ³digo/Git:
+
+- conectores e espessura de linhas;
+- destaque visual de relaÃ§Ãµes;
+- painel desktop de visualizaÃ§Ã£o;
+- popovers mÃ³veis;
+- filtros por grupo;
+- paletas/cores por geraÃ§Ã£o;
+- separaÃ§Ã£o entre painel fixo e popovers contextuais.
+
+Registrar tentativas antigas ou scripts substituÃ­dos apenas em `docs/historico/`.

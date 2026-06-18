@@ -478,3 +478,48 @@ Procedimentos de QA manual ficam em:
 ```txt
 docs/QA_MANUAL.md
 ```
+
+<!-- PENDENCIAS-LEVANTAMENTO-2026-06-18 -->
+## PendÃªncias e verificaÃ§Ãµes herdadas do levantamento recente
+
+Estas frentes aparecem no levantamento como scripts gerados, execuÃ§Ã£o nÃ£o confirmada, tentativa falha, visual sugerido por print ou decisÃ£o pendente. Elas nÃ£o devem ser registradas como baseline atÃ© verificaÃ§Ã£o no cÃ³digo/Git.
+
+### Verificar antes de documentar como implementado
+
+- Contagem de cÃ´njuges no `/mapa-familiar-horizontal`.
+- ReorganizaÃ§Ã£o de `/pessoa/:id` com timeline lateral.
+- Relacionamentos abaixo de acontecimentos histÃ³ricos.
+- Textos narrativos da timeline.
+- RemoÃ§Ã£o de badge secundÃ¡ria e â€œData desconhecidaâ€ da timeline.
+- Subida de grupos no mapa familiar vertical quando a Ã¡rvore for esparsa.
+- `/meus-favoritos` com botÃ£o Filtros.
+- `/meus-favoritos` com estrela ativa para remover favorito.
+- Header e `/notificacoes` com contador de nÃ£o lidas, textos e datas.
+- OcultaÃ§Ã£o de contato/privacidade de falecidos no admin.
+- Fase 2 de `/minha-arvore/editar`.
+- EdiÃ§Ã£o de casamento/cÃ´njuge sob demanda.
+- SeparaÃ§Ã£o de containers em `/minha-arvore/editar`.
+- PainÃ©is, popovers, toolbar mobile e exportaÃ§Ã£o da Ã¡rvore quando nÃ£o houver commit confirmado.
+
+### Bloqueado para revisÃ£o operacional
+
+- Reset ampliado de perfil admin removendo mini bio, curiosidades, arquivos histÃ³ricos e usuÃ¡rio em `auth.users`.
+
+Motivo:
+
+- envolve Supabase;
+- envolve RPC/migration;
+- pode afetar dados sensÃ­veis e autenticaÃ§Ã£o;
+- nÃ£o deve ser aplicado por script documental;
+- sÃ³ deve entrar em `docs/operacao/MIGRATIONS_SUPABASE.md` se houver migration real confirmada.
+
+### Comandos recomendados para verificaÃ§Ã£o
+
+```powershell
+git log --oneline -- src/app/pages/MeusFavoritos.tsx
+git log --oneline -- src/app/pages/Notificacoes.tsx
+git log --oneline -- src/app/components/Timeline/PersonTimeline.tsx
+git log --oneline -- src/app/pages/PersonProfile.tsx
+git log --oneline -- src/app/pages/MinhaArvore.tsx
+git log --oneline -- src/app/pages/admin/AdminPessoaForm.tsx
+```

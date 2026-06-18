@@ -499,3 +499,21 @@ Não reintroduzir:
 - metadata sensível na UI;
 - quebra quando dados opcionais faltam;
 - badge/label técnica confusa para evento público.
+
+<!-- TIMELINE-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar na timeline
+
+Antes de registrar como implementado, confirmar no cÃ³digo/Git:
+
+- textos narrativos/editoriais dos cards;
+- suporte a `badgeLabel`;
+- remoÃ§Ã£o de badge secundÃ¡ria;
+- remoÃ§Ã£o de â€œData desconhecidaâ€ quando a precisÃ£o for desconhecida;
+- layout interno do card com melhor uso de espaÃ§o.
+
+Comandos sugeridos:
+
+```powershell
+git log --oneline -- src/app/utils/buildPersonTimeline.ts
+git log --oneline -- src/app/components/Timeline/PersonTimeline.tsx
+```

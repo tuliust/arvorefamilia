@@ -636,3 +636,28 @@ Checklist:
 - Os campos de datas, locais, contato, endereço, redes sociais, Mini bio e Curiosidades passam a seguir os padrões compartilhados usados nas páginas recentes de membro.
 - O botão de IA em Mini bio/Curiosidades é uma ação auxiliar compacta; não transforma a página em revisão final nem substitui o fluxo de onboarding.
 - Arquivos Históricos usam o modo interativo com categorias que expandem a área de upload, preservando rascunho e salvamento existentes.
+
+<!-- MINHA-ARVORE-EDITAR-CONSOLIDADA-2026-06-18 -->
+## ConsolidaÃ§Ã£o recente de `/minha-arvore/editar`
+
+### Escopo
+
+A rota pode reaproveitar componentes e padrÃµes visuais do onboarding, mas nÃ£o deve se comportar como onboarding.
+
+### Regras
+
+- NÃ£o usar `MemberOnboardingSteps`.
+- Preservar ediÃ§Ã£o completa da prÃ³pria Ã¡rvore/perfil.
+- Preservar vÃ­nculos, arquivos, eventos e demais blocos prÃ³prios da rota.
+- Manter proteÃ§Ã£o contra saÃ­da sem salvar quando jÃ¡ existir.
+- Usar labels e microcopy alinhados ao restante do sistema.
+- Reaproveitar componentes compartilhados de `src/app/components/person/` quando isso nÃ£o remover capacidade funcional.
+
+### Itens que exigem confirmaÃ§Ã£o antes de virar contrato
+
+- EdiÃ§Ã£o de casamento/cÃ´njuge apenas sob demanda.
+- SeparaÃ§Ã£o de campos em containers por categoria.
+- InclusÃ£o de ajuda de IA em mini bio/curiosidades nesta rota.
+- Ajustes visuais amplos de Fase 2.
+
+Enquanto nÃ£o houver commit verificÃ¡vel, esses itens devem permanecer em `PLANO_PROXIMOS_PASSOS.md`.

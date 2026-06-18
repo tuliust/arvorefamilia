@@ -1276,3 +1276,16 @@ Pontos que devem permanecer sincronizados com o código:
 - limite de 300 caracteres por campo;
 - payload enviado para `/api/ai`;
 - tratamento de erro, loading e fechamento automático do modal.
+
+<!-- MINI-BIO-IA-CONSOLIDACAO-2026-06-18 -->
+## ConsolidaÃ§Ã£o de Mini Bio, Curiosidades e IA
+
+A ajuda de IA para Mini Bio e Curiosidades deve ser documentada separando:
+
+- comportamento no onboarding;
+- comportamento em `/minha-arvore/editar`, se existir;
+- modo memorial/nostÃ¡lgico para pessoa falecida, se confirmado;
+- microcopy do botÃ£o â€œAjuda da IAâ€;
+- limites de ediÃ§Ã£o humana antes/depois da sugestÃ£o.
+
+Quando um uso fora do onboarding nÃ£o estiver confirmado por commit, manter em `PLANO_PROXIMOS_PASSOS.md`.

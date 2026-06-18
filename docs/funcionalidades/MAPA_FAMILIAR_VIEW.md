@@ -478,3 +478,21 @@ Na rota `/mapa-familiar-horizontal`:
 - Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
 - A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
 
+<!-- MAPA-FAMILIAR-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar nos mapas familiares
+
+NÃ£o registrar os itens abaixo como implementados sem confirmaÃ§Ã£o no Git:
+
+- contagem de cÃ´njuges no mapa horizontal;
+- subida de grupos no mapa vertical quando houver poucos parentes;
+- toolbar mobile com controles de visualizaÃ§Ã£o/formato/cor/filtros/exportaÃ§Ã£o;
+- comportamento de popovers e painÃ©is em mobile/desktop;
+- regra final de grupos, cÃ´njuges, filhos, sobrinhos e netos por filtro.
+
+Quando confirmados, documentar separando:
+
+- comportamento desktop;
+- comportamento mobile;
+- regras de contagem;
+- regras de renderizaÃ§Ã£o;
+- regras de filtros.

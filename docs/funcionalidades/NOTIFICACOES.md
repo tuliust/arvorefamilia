@@ -864,3 +864,24 @@ Checklist:
 - [ ] Não usar `/minha-arvore`, `/genealogia` ou `/visao-completa` como destino ativo.
 - [ ] `/calendario-familiar`, `/forum/topico/:id`, `/pessoa/:id` e `/admin/*` continuam sendo destinos válidos conforme permissão.
 - [ ] Preferências de e-mail continuam separadas das preferências internas.
+
+<!-- NOTIFICACOES-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar em notificaÃ§Ãµes
+
+O levantamento cita scripts com falhas e correÃ§Ã£o posterior. Antes de documentar como implementado, confirmar no cÃ³digo/Git:
+
+- contador de notificaÃ§Ãµes nÃ£o lidas no header;
+- badge no menu/header;
+- textos â€œTodas lidasâ€, â€œ1 nÃ£o lidaâ€ e â€œN nÃ£o lidasâ€;
+- remoÃ§Ã£o de badges redundantes nos cards;
+- data/hora no lugar do botÃ£o â€œAbrir conteÃºdoâ€;
+- evento `arvorefamilia:notifications-updated`;
+- funÃ§Ã£o de contagem no service.
+
+Comandos sugeridos:
+
+```powershell
+git log --oneline -- src/app/pages/Notificacoes.tsx
+git log --oneline -- src/app/components/layout/MemberPageHeader.tsx
+git log --oneline -- src/app/services/userEngagementService.ts
+```

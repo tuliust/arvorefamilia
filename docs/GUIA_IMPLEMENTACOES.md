@@ -606,3 +606,84 @@ Se a documentação alterar contratos de rotas, árvore, guards ou navegação, 
 npm test
 npm run test:e2e
 ```
+
+<!-- IMPLEMENTACOES-CONSOLIDADAS-2026-06-18 -->
+## Frentes recentes documentadas por status
+
+### Confirmadas na `main`
+
+#### Onboarding do membro
+
+ReferÃªncia: `5ef555c`
+
+Rotas principais:
+
+- `/meus-dados`
+- `/meus-vinculos`
+- `/arquivos-historicos`
+- `/preferencias`
+- `/revisao-dados`
+
+Resumo:
+
+- regras condicionais para pessoa viva/falecida;
+- revisÃ£o final em formato de perfil;
+- ediÃ§Ã£o inline;
+- rascunho local de arquivos histÃ³ricos;
+- suporte visual/metadados locais para participantes em arquivos histÃ³ricos;
+- limpeza de campos incompatÃ­veis no payload.
+
+#### PadronizaÃ§Ã£o de formulÃ¡rios de pessoas
+
+ReferÃªncia: `1b64790`
+
+Rotas principais:
+
+- `/minha-arvore/editar`
+- `/admin/pessoas/:id/editar`
+- `/admin/pessoas/nova`
+- `/admin/pessoas/:id`
+
+Resumo:
+
+- componentes compartilhados em `src/app/components/person/`;
+- labels alinhados ao onboarding;
+- seÃ§Ãµes com Ã­cone e descriÃ§Ã£o;
+- contexto de privacidade para membro/admin;
+- reaproveitamento seletivo sem copiar o onboarding.
+
+#### Admin Dashboard
+
+ReferÃªncia: `b84d101`
+
+Resumo:
+
+- cards Membros, RelaÃ§Ãµes e Pendentes funcionam como botÃµes de navegaÃ§Ã£o;
+- card MemÃ³ria permanece informativo enquanto nÃ£o houver rota definida.
+
+#### Dropdown â€œVisualizar comoâ€
+
+ReferÃªncia: `4fecf05`
+
+Resumo:
+
+- seletor movido para o header;
+- opÃ§Ãµes ordenadas;
+- nomes encurtados para primeiro e segundo nome;
+- remoÃ§Ã£o do seletor flutuante/debug.
+
+#### Ajustes mobile do onboarding
+
+ReferÃªncia: `2627820`
+
+Resumo:
+
+- inputs mobile com fonte mÃ­nima de 16px para evitar auto-zoom;
+- etapas do onboarding sem scroll horizontal;
+- tooltips funcionais por toque;
+- header mobile de `/meus-dados` sem aÃ§Ãµes laterais;
+- refinamentos de espaÃ§amento e botÃµes no fluxo mobile.
+
+### NÃ£o confirmadas
+
+Frentes sem commit/merge/push confirmado devem permanecer em `PLANO_PROXIMOS_PASSOS.md`, nÃ£o no baseline.

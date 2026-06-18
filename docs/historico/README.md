@@ -462,3 +462,17 @@ Critério:
 - docs canônicos não devem apresentar rotas removidas como views ativas;
 - docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente;
 - docs operacionais devem apontar `supabase/migrations/` como fonte da verdade do schema.
+
+<!-- HISTORICO-LEVANTAMENTO-2026-06-18 -->
+## Levantamento de ajustes nÃ£o documentados â€” 2026-06-18
+
+O arquivo `levantamento_ajustes_onboarding_membro(1).md` foi usado como fonte de auditoria para separar:
+
+- implementaÃ§Ãµes confirmadas;
+- pendÃªncias;
+- scripts planejados;
+- tentativas falhas;
+- decisÃµes conflitantes;
+- itens que exigem confirmaÃ§Ã£o no Git.
+
+Este diretÃ³rio deve receber apenas material histÃ³rico, substituÃ­do ou de rastreabilidade. Contratos vigentes devem permanecer nos documentos funcionais, guias, baseline, QA e regras de nÃ£o regressÃ£o.

@@ -494,3 +494,22 @@ Checklist:
 - [ ] `/minha-arvore/editar` não é tratada como substituta da antiga `/minha-arvore`.
 - [ ] Favoritos de pessoa continuam apontando para `/pessoa/:id`, não para uma view da árvore.
 - [ ] Registros legados não são usados como justificativa para recriar rotas removidas.
+
+<!-- FAVORITOS-PENDENCIAS-2026-06-18 -->
+## Pontos recentes a confirmar em favoritos
+
+O levantamento cita ajustes em `/meus-favoritos`, mas parte deles aparece como script gerado ou visual sugerido por print.
+
+Confirmar no Git antes de documentar como implementado:
+
+- busca compacta;
+- botÃ£o â€œFiltrosâ€ ao lado da busca;
+- categorias em menu suspenso;
+- estrela ativa substituindo lixeira;
+- delay de 0,5s antes de remover favorito.
+
+Comando sugerido:
+
+```powershell
+git log --oneline -- src/app/pages/MeusFavoritos.tsx
+```

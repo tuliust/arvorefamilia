@@ -477,3 +477,14 @@ Não reintroduzir:
 - nome público diferente de **Família Souza Barros** na home OAuth;
 - bolinha mobile abrindo modal como padrão;
 - mojibake em labels do calendário.
+
+<!-- CALENDARIO-CONSOLIDACAO-2026-06-18 -->
+## Pontos de QA mobile do calendÃ¡rio familiar
+
+Quando houver refinamentos mobile em `/calendario-familiar`, documentar sempre:
+
+- comportamento em 320px, 375px, 390px e 430px;
+- visibilidade de filtros;
+- se botÃµes e menus nÃ£o cobrem conteÃºdo;
+- se eventos permanecem legÃ­veis em cards/chips compactos;
+- diferenÃ§as entre mobile, tablet e desktop.
