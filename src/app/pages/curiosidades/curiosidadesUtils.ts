@@ -1,6 +1,11 @@
 import React from 'react';
 import type { Pessoa, Relacionamento } from '../../types';
 import { countChildrenByPerson } from '../../utils/familyCuriosities';
+import {
+  buildApproximateFamilyRoute,
+  type GeoPoint,
+  type GeoRouteSummary,
+} from '../../utils/geoDistance';
 
 export type CuriosidadesStatus = 'Em breve' | 'Aguardando dados familiares';
 
@@ -595,17 +600,79 @@ export type FamilyRouteSummary = {
   cities: TopCount[];
   routeLabel: string;
   totalPeopleWithCity: number;
+  geoRoute: GeoRouteSummary;
+  coordinateCities: number;
+  missingCoordinateCities: number;
 };
+
+function getFlexibleNumberField(record: Record<string, unknown>, fieldNames: string[]) {
+  for (const fieldName of fieldNames) {
+    const value = record[fieldName];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+
+    const parsed = Number(String(value ?? '').replace(',', '.'));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return null;
+}
+
+function getCurrentLocationPoint(city: TopCount, pessoas: Pessoa[]): GeoPoint | null {
+  const matchingPeople = pessoas.filter((pessoa) =>
+    normalizeCuriosityText(pessoa.local_atual) === normalizeCuriosityText(city.label)
+  );
+  const coordinates = matchingPeople
+    .map((pessoa) => {
+      const record = pessoa as unknown as Record<string, unknown>;
+      const latitude = getFlexibleNumberField(record, [
+        'local_atual_latitude',
+        'local_atual_lat',
+        'current_location_latitude',
+        'current_location_lat',
+        'latitude',
+        'lat',
+      ]);
+      const longitude = getFlexibleNumberField(record, [
+        'local_atual_longitude',
+        'local_atual_lng',
+        'current_location_longitude',
+        'current_location_lng',
+        'longitude',
+        'lng',
+      ]);
+
+      return latitude !== null && longitude !== null ? { latitude, longitude } : null;
+    })
+    .filter((coordinate): coordinate is { latitude: number; longitude: number } => Boolean(coordinate));
+
+  if (coordinates.length === 0) return null;
+
+  return {
+    label: city.label,
+    count: city.count,
+    latitude: coordinates.reduce((total, coordinate) => total + coordinate.latitude, 0) / coordinates.length,
+    longitude: coordinates.reduce((total, coordinate) => total + coordinate.longitude, 0) / coordinates.length,
+  };
+}
 
 export function buildFamilyRouteSummary(pessoas: Pessoa[]): FamilyRouteSummary {
   const cities = getCurrentCityRanking(pessoas, 12);
-  const routeLabel = cities.map((city) => city.label).join(' â†’ ');
+  const points = cities
+    .map((city) => getCurrentLocationPoint(city, pessoas))
+    .filter((point): point is GeoPoint => Boolean(point));
+  const geoRoute = buildApproximateFamilyRoute(points);
+  const routeLabel = geoRoute.hasEnoughCoordinates
+    ? geoRoute.routeLabel
+    : cities.map((city) => city.label).join(' â†’ ');
   const totalPeopleWithCity = cities.reduce((total, city) => total + city.count, 0);
 
   return {
     cities,
     routeLabel,
     totalPeopleWithCity,
+    geoRoute,
+    coordinateCities: points.length,
+    missingCoordinateCities: Math.max(0, cities.length - points.length),
   };
 }
 

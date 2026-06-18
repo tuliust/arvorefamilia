@@ -1,4 +1,6 @@
-﻿import { MapPinned, Route } from 'lucide-react';
+import { MapPinned, Route } from 'lucide-react';
+
+import { formatDistanceKm } from '../../utils/geoDistance';
 import {
   buildFamilyRouteSummary,
   curiositySectionCardClassName,
@@ -12,6 +14,8 @@ export function CuriosidadesRouteSection({
   error,
 }: CuriosidadesDataProps) {
   const summary = buildFamilyRouteSummary(pessoas);
+  const hasGeoRoute = summary.geoRoute.hasEnoughCoordinates;
+  const routeItems = hasGeoRoute ? summary.geoRoute.stops : summary.cities.slice(0, 6);
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -19,10 +23,10 @@ export function CuriosidadesRouteSection({
         <div>
           <div className="flex items-center gap-3">
             <Route className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Rota da família</h2>
+            <h2 className="text-xl font-bold text-gray-950">Rota da fam\u00edlia</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            Uma rota textual pelas cidades onde familiares têm residência cadastrada.
+            Uma rota pelas cidades onde familiares t\u00eam resid\u00eancia cadastrada.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -32,7 +36,7 @@ export function CuriosidadesRouteSection({
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Não foi possível carregar as cidades da família agora.
+          N\u00e3o foi poss\u00edvel carregar as cidades da fam\u00edlia agora.
         </div>
       )}
 
@@ -42,7 +46,7 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && summary.cities.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda não há cidades de residência suficientes para montar uma rota familiar.
+          Ainda n\u00e3o h\u00e1 cidades de resid\u00eancia suficientes para montar uma rota familiar.
         </div>
       )}
 
@@ -50,18 +54,22 @@ export function CuriosidadesRouteSection({
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <p className="text-sm font-semibold text-blue-900">
-              Uma viagem para passar pelos principais locais cadastrados passaria por:
+              {hasGeoRoute
+                ? `Dist\u00e2ncia aproximada: ${formatDistanceKm(summary.geoRoute.totalDistanceKm)}`
+                : 'Uma viagem para passar pelos principais locais cadastrados passaria por:'}
             </p>
             <p className="mt-3 text-lg font-bold leading-7 text-gray-950">
               {summary.routeLabel}
             </p>
             <p className="mt-3 text-xs leading-5 text-blue-900">
-              A distância em quilômetros ainda depende de coordenadas ou integração de mapas. Por enquanto, a rota é textual e baseada nas cidades cadastradas nos perfis.
+              {hasGeoRoute
+                ? `C\u00e1lculo por Haversine usando ${summary.coordinateCities} cidades com coordenadas cadastradas.`
+                : 'Cadastre coordenadas nas cidades dos perfis para calcular dist\u00e2ncia em quil\u00f4metros. Por enquanto, a rota \u00e9 textual.'}
             </p>
           </div>
 
           <div className="grid gap-2">
-            {summary.cities.slice(0, 6).map((city, index) => (
+            {routeItems.map((city, index) => (
               <div key={city.label} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-700 shadow-sm">
@@ -73,7 +81,9 @@ export function CuriosidadesRouteSection({
                 </div>
                 <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-gray-600">
                   <MapPinned className="h-3.5 w-3.5" />
-                  {city.count}
+                  {'distanceFromPreviousKm' in city && city.distanceFromPreviousKm > 0
+                    ? formatDistanceKm(city.distanceFromPreviousKm)
+                    : city.count}
                 </span>
               </div>
             ))}
