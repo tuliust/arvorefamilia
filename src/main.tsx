@@ -17,6 +17,10 @@ const UNKNOWN_BIRTH_TEXT = "Nascimento não informado";
 const UNKNOWN_DEATH_TEXT = "Falecimento não informado";
 const MOBILE_DESKTOP_TIP_SESSION_KEY = "arvore-mobile-desktop-tip-dismissed";
 const MOBILE_DESKTOP_TIP_PENDING_KEY = "arvore-mobile-desktop-tip-pending";
+const FIRST_LOGIN_TUTORIAL_SELECTOR = '[data-first-login-tutorial="true"]';
+const FIRST_LOGIN_TUTORIAL_TITLE_SELECTOR = '#first-login-tutorial-title';
+const DESKTOP_TREE_PANEL_SELECTOR = '.desktop-tree-visualization-panel';
+const TREE_CONTROLS_COLLAPSE_SELECTOR = '[data-tour-target="tree-controls-collapse"]';
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Importing a module script failed/i,
@@ -196,9 +200,118 @@ function installMobileFamilyTreeVitalLineCleanup() {
   window.addEventListener("resize", scheduleSync);
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getFirstLoginTutorialPanel(root: HTMLElement) {
+  return Array.from(root.children).find(
+    (child): child is HTMLElement => child instanceof HTMLElement && child.tagName === "SECTION",
+  );
+}
+
+function getFirstLoginTutorialTitle(root: HTMLElement) {
+  return root.querySelector(FIRST_LOGIN_TUTORIAL_TITLE_SELECTOR)?.textContent?.trim() ?? "";
+}
+
+function clickFirstLoginTutorialNext(root: HTMLElement) {
+  const nextButton = Array.from(root.querySelectorAll<HTMLButtonElement>("button")).find((button) =>
+    button.textContent?.trim() === "Próximo",
+  );
+
+  nextButton?.click();
+}
+
+function tuneFirstLoginTutorialDom() {
+  const treePanel = document.querySelector<HTMLElement>(DESKTOP_TREE_PANEL_SELECTOR);
+  if (treePanel) {
+    treePanel.setAttribute("data-tour-target", "tree-controls");
+  }
+
+  document.querySelectorAll<HTMLElement>(TREE_CONTROLS_COLLAPSE_SELECTOR).forEach((element) => {
+    element.removeAttribute("data-tour-target");
+  });
+
+  const root = document.querySelector<HTMLElement>(FIRST_LOGIN_TUTORIAL_SELECTOR);
+  if (!root) return;
+
+  const title = getFirstLoginTutorialTitle(root);
+  const tutorialPanel = getFirstLoginTutorialPanel(root);
+  if (!tutorialPanel) return;
+
+  if (title === "Controle quem aparece na árvore") {
+    clickFirstLoginTutorialNext(root);
+    return;
+  }
+
+  const viewportMargin = 14;
+  const estimatedPanelHeight = 315;
+  const width = Math.min(430, window.innerWidth - viewportMargin * 2);
+
+  if (title === "Modos de exibição e controles da árvore" && treePanel) {
+    const targetRect = treePanel.getBoundingClientRect();
+    const preferredLeft = targetRect.right + 18;
+    const fitsRight = preferredLeft + width <= window.innerWidth - viewportMargin;
+    const left = fitsRight
+      ? preferredLeft
+      : clampNumber(targetRect.left, viewportMargin, window.innerWidth - width - viewportMargin);
+    const top = clampNumber(
+      targetRect.top,
+      viewportMargin,
+      window.innerHeight - estimatedPanelHeight - viewportMargin,
+    );
+
+    tutorialPanel.style.left = `${left}px`;
+    tutorialPanel.style.top = `${top}px`;
+    tutorialPanel.style.width = `${width}px`;
+    return;
+  }
+
+  if (title === "Perfis, vínculos e memórias") {
+    const personCard = document.querySelector<HTMLElement>('[data-family-map-central-card="true"]');
+    const targetRect = personCard?.getBoundingClientRect();
+    const desiredTop = targetRect
+      ? targetRect.top - estimatedPanelHeight - 24
+      : tutorialPanel.getBoundingClientRect().top - 120;
+
+    tutorialPanel.style.top = `${clampNumber(
+      desiredTop,
+      viewportMargin,
+      window.innerHeight - estimatedPanelHeight - viewportMargin,
+    )}px`;
+  }
+}
+
+function installFirstLoginTutorialTuning() {
+  let scheduled = false;
+
+  const schedule = () => {
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(() => {
+      scheduled = false;
+      tuneFirstLoginTutorialDom();
+    });
+  };
+
+  schedule();
+
+  const observer = new MutationObserver(schedule);
+  observer.observe(document.body, {
+    childList: true,
+    characterData: true,
+    attributes: true,
+    subtree: true,
+  });
+
+  window.addEventListener("resize", schedule);
+  window.addEventListener("scroll", schedule, true);
+}
+
 disableMobileDesktopTip();
 installTreeOnlyZoomShortcuts();
 installMobileFamilyTreeVitalLineCleanup();
+installFirstLoginTutorialTuning();
 
 window.addEventListener("error", (event) => {
   recoverFromDynamicImportError(event.error || event.message);
