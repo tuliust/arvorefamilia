@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { HelpCircle, Loader2 } from 'lucide-react';
+import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { listPublishedQaContent } from '../services/qaService';
 import type { QaCategory, QaItem } from '../types/qa';
 import { includesNormalizedText } from '../utils/searchText';
@@ -88,16 +88,14 @@ export function Duvidas() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
-          <Link to="/entrar" className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-700">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para entrar
-          </Link>
-        </div>
-      </header>
+      <MemberPageHeader
+        title="Dúvidas"
+        subtitle="Consulte perguntas frequentes e orientações para usar a plataforma."
+        icon={HelpCircle}
+        hideFavoriteButton
+      />
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8 lg:py-10">
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 pb-40 sm:py-8 lg:py-10 md:pb-6`}>
         <QAHero searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
         <div className="mt-6 lg:mt-8">
