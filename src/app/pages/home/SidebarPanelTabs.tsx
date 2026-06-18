@@ -50,12 +50,24 @@ const paletteLabels: Record<TreeColorPalette, string> = {
 const viewOptions: Array<{
   key: TreeViewMode;
   label: string;
-  shortLabel: string;
-  mobileOnly?: boolean;
+  subtitle: string;
+  ariaLabel: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { key: 'mapa-familiar', label: 'Mapa Familiar', shortLabel: 'Vertical', icon: Map },
-  { key: 'mapa-familiar-horizontal', label: 'Mapa Familiar Horizontal', shortLabel: 'Horizontal', icon: Layers },
+  {
+    key: 'mapa-familiar',
+    label: 'Linha Geracional',
+    subtitle: 'visualização cronológica por gerações',
+    ariaLabel: 'Alternar para Linha Geracional',
+    icon: Map,
+  },
+  {
+    key: 'mapa-familiar-horizontal',
+    label: 'Árvore Familiar',
+    subtitle: 'visão de parentesco',
+    ariaLabel: 'Alternar para Árvore Familiar',
+    icon: Layers,
+  },
 ];
 
 type HighlightKey = 'lines' | 'cards' | 'groups';
@@ -269,7 +281,7 @@ export function SidebarPanelTabs({
         </div>
       )}
 
-      <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
+      <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.42rem,0.95vh,0.62rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
         {shouldRenderViewAsSelector && (
           <label className="flex min-w-0 flex-col gap-1 rounded-lg border border-amber-100 bg-amber-50/60 px-2 py-1.5 shadow-sm" data-tree-export-ignore="true">
             <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-800">Visualizar como</span>
@@ -292,17 +304,17 @@ export function SidebarPanelTabs({
           </label>
         )}
 
-        <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
+        <div className="tree-view-toggle grid min-w-0 grid-cols-1 gap-2 rounded-xl bg-slate-50 p-1.5 sm:grid-cols-2">
           {viewOptions.map((option) => {
             const Icon = option.icon;
             return (
-              <IconToggleButton
+              <ViewModeCardButton
                 key={option.key}
                 icon={Icon}
-                label={option.shortLabel}
+                label={option.label}
+                subtitle={option.subtitle}
                 active={currentViewMode === option.key}
-                mobileOnly={option.mobileOnly}
-                title={option.label}
+                ariaLabel={option.ariaLabel}
                 onClick={() => handleViewChange(option.key)}
               />
             );
@@ -410,6 +422,45 @@ function PrimaryControlButton({
     ].join(' ')}>
       <Icon className="h-4 w-4 shrink-0" />
       <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function ViewModeCardButton({
+  icon: Icon,
+  label,
+  subtitle,
+  active,
+  ariaLabel,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  subtitle: string;
+  active: boolean;
+  ariaLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className={[
+        'tree-view-mode-card flex min-h-[88px] min-w-0 flex-col items-center justify-start gap-1.5 rounded-xl border px-2.5 py-3 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+        active
+          ? 'border-blue-400 bg-blue-50 text-blue-950 shadow-sm ring-1 ring-blue-200'
+          : 'border-gray-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50/70 hover:text-blue-950',
+      ].join(' ')}
+    >
+      <Icon className={['h-5 w-5 shrink-0', active ? 'text-blue-700' : 'text-slate-500'].join(' ')} />
+      <span className="max-w-full text-[11px] font-extrabold leading-tight text-current">
+        {label}
+      </span>
+      <span className="max-w-full text-[9px] font-semibold leading-tight text-slate-500">
+        {subtitle}
+      </span>
     </button>
   );
 }
