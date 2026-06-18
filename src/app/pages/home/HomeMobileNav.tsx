@@ -3,10 +3,14 @@ import {
   Bell,
   CalendarDays,
   ChevronDown,
+  FileDown,
   Home,
+  ImageDown,
   Layers,
   Map,
   MessageCircle,
+  Printer,
+  Scan,
   Star,
 } from 'lucide-react';
 import {
@@ -25,6 +29,7 @@ import { obterTodasPessoas } from '../../services/dataService';
 import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import type { Pessoa } from '../../types';
+import { dispatchTreeAction, type SidebarTreeAction } from './SidebarPanelTabs';
 
 interface HomeMobileNavProps {
   legendOpen: boolean;
@@ -101,6 +106,18 @@ const TREE_VIEW_OPTIONS: Array<{
     ariaLabel: 'Alternar para Árvore Familiar',
     icon: Layers,
   },
+];
+
+const EXPORT_OPTIONS: Array<{
+  action: SidebarTreeAction;
+  label: string;
+  ariaLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { action: 'select-area', label: 'Área', ariaLabel: 'Selecionar área para exportação', icon: Scan },
+  { action: 'save-image', label: 'Imagem', ariaLabel: 'Exportar como imagem', icon: ImageDown },
+  { action: 'save-pdf', label: 'PDF', ariaLabel: 'Exportar como PDF', icon: FileDown },
+  { action: 'print', label: 'Imprimir', ariaLabel: 'Imprimir árvore', icon: Printer },
 ];
 
 function getStoredPalette(): TreeColorPalette {
@@ -261,14 +278,15 @@ export function HomeMobileNav({
       activeToolbarAction &&
       activeToolbarAction !== 'visualizacao' &&
       activeToolbarAction !== 'formato' &&
-      activeToolbarAction !== 'cor'
+      activeToolbarAction !== 'cor' &&
+      activeToolbarAction !== 'exportar'
     ) {
       setActiveToolbarAction(null);
     }
   }, [activeToolbarAction, legendOpen]);
 
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
-    if (action === 'visualizacao' || action === 'formato' || action === 'cor') {
+    if (action === 'visualizacao' || action === 'formato' || action === 'cor' || action === 'exportar') {
       setActiveToolbarAction((current) => (current === action ? null : action));
 
       if (legendOpen) onToggleLegend();
@@ -303,6 +321,11 @@ export function HomeMobileNav({
     const query = typeof window === 'undefined' ? '' : window.location.search;
     navigateFromHome(`${path}${query}`);
   }, [navigateFromHome, pathname]);
+
+  const handleExportOptionClick = useCallback((action: SidebarTreeAction) => {
+    setActiveToolbarAction(null);
+    dispatchTreeAction(action);
+  }, []);
 
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
@@ -426,6 +449,41 @@ export function HomeMobileNav({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {activeToolbarAction === 'exportar' && (
+            <div
+              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              data-tree-export-ignore="true"
+            >
+              <div
+                className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-sm backdrop-blur"
+                role="dialog"
+                aria-label="Exportar mapa familiar"
+              >
+                <div className="px-1 pb-1 text-[11px] font-extrabold leading-tight text-blue-950">
+                  Exportar
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  {EXPORT_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+
+                    return (
+                      <button
+                        key={option.action}
+                        type="button"
+                        aria-label={option.ariaLabel}
+                        onClick={() => handleExportOptionClick(option.action)}
+                        className="flex h-7 min-w-0 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-extrabold leading-none text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 active:scale-[0.99]"
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
