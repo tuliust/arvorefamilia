@@ -46,15 +46,15 @@ const viewOptions: Array<{
 }> = [
   {
     key: 'mapa-familiar',
-    label: 'Linha Geracional',
-    subtitle: 'Visualização cronológica por gerações',
-    icon: Network,
-  },
-  {
-    key: 'mapa-familiar-horizontal',
     label: 'Árvore Familiar',
     subtitle: 'Visão de parentes por grupos',
     icon: Tally3,
+  },
+  {
+    key: 'mapa-familiar-horizontal',
+    label: 'Linha Geracional',
+    subtitle: 'Visualização cronológica por gerações',
+    icon: Network,
   },
 ];
 
@@ -155,7 +155,6 @@ export function DesktopTreeVisualizationPanel({
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
 
-
   const handleViewChange = React.useCallback((viewMode: TreeViewMode) => {
     const nextPath = getPathForTreeViewMode(viewMode);
     if (location.pathname === nextPath) return;
@@ -165,6 +164,14 @@ export function DesktopTreeVisualizationPanel({
   const handleExportAction = React.useCallback((action: SidebarTreeAction) => {
     dispatchTreeAction(action);
   }, []);
+
+  const handleViewAsChange = React.useCallback((nextValue: string) => {
+    if (nextValue.trim() && !directRelativeFilters.conjuge) {
+      onToggleDirectRelative('conjuge');
+    }
+
+    onViewAsPersonChange(nextValue);
+  }, [directRelativeFilters.conjuge, onToggleDirectRelative, onViewAsPersonChange]);
 
   const handleGroupToggle = React.useCallback((keys: DirectRelativeGroup[]) => {
     const allActive = getGroupActive(directRelativeFilters, keys);
@@ -193,7 +200,7 @@ export function DesktopTreeVisualizationPanel({
         {showViewAsSelector && (
           <select
             value={viewAsPersonValue}
-            onChange={(event) => onViewAsPersonChange(event.target.value)}
+            onChange={(event) => handleViewAsChange(event.target.value)}
             className="desktop-tree-view-select"
             aria-label="Visualizar árvore como outra pessoa"
           >
