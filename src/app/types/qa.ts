@@ -37,3 +37,25 @@ export type QaPublishedContent = {
   categories: QaCategory[];
   items: QaItem[];
 };
+
+export type QaCategoryInput = {
+  title: string;
+  short_title?: string | null;
+  slug: string;
+  description?: string | null;
+  order_index?: number;
+  is_active?: boolean;
+};
+
+export type QaItemInput = {
+  category_id: string;
+  question: string;
+  answer: string;
+  slug: string;
+  keywords?: string[];
+  related_page_label?: string | null;
+  related_page_path?: string | null;
+  is_featured?: boolean;
+  status?: QaItemStatus;
+  order_index?: number;
+};
