@@ -5,6 +5,10 @@
     gap: 1.5rem;
   }
 
+  main.space-y-6.py-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0 !important;
+  }
+
   main.space-y-6.py-6 > section[aria-label="Busca e filtros do fórum"] {
     order: 1;
   }
