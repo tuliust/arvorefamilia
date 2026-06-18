@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Bell,
   CalendarDays,
-  ChevronDown,
   Home,
   MessageCircle,
-  SlidersHorizontal,
   Star,
 } from 'lucide-react';
+import {
+  MobileFamilyMapToolbar,
+  type MobileFamilyMapToolbarAction,
+} from '../../components/FamilyTree/MobileFamilyMapToolbar';
 import { useAuth } from '../../contexts/AuthContext';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 
@@ -22,7 +24,7 @@ function getCurrentPathname() {
   return window.location.pathname;
 }
 
-const mobileTreeControlsTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
+const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
 
 function NotificationCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -71,6 +73,10 @@ export function HomeMobileNav({
     };
   }, [refreshUnreadNotificationsCount]);
 
+  const openMobileControlsPanel = useCallback((_action: MobileFamilyMapToolbarAction) => {
+    if (!legendOpen) onToggleLegend();
+  }, [legendOpen, onToggleLegend]);
+
   const pathname = getCurrentPathname();
   const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
@@ -79,16 +85,20 @@ export function HomeMobileNav({
   return (
     <>
       {isDirectFamilyMap && (
-        <button
-          type="button"
-          className={`fixed right-[0.85rem] ${mobileTreeControlsTopClass} z-[10000] flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.18)] backdrop-blur transition active:scale-95 md:hidden`}
-          onClick={onToggleLegend}
-          aria-label={legendOpen ? 'Fechar painel da árvore' : 'Abrir painel da árvore'}
-          aria-expanded={legendOpen}
-          data-tree-export-ignore="true"
-        >
-          {legendOpen ? <ChevronDown className="h-5 w-5" /> : <SlidersHorizontal className="h-4.5 w-4.5" />}
-        </button>
+        <>
+          <style>
+            {`
+              [data-mobile-family-tree-root="true"] > nav[aria-label="Visualizações da árvore"],
+              [data-family-map-horizontal-mobile-root="true"] > nav[aria-label="Gerações do Mapa Genealógico"] {
+                display: none !important;
+              }
+            `}
+          </style>
+          <MobileFamilyMapToolbar
+            className={`fixed inset-x-0 ${mobileTreeToolbarTopClass} z-[10000]`}
+            onAction={openMobileControlsPanel}
+          />
+        </>
       )}
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur" data-tree-export-ignore="true">
