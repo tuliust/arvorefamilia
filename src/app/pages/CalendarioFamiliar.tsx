@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../components/AppLink';
 import { useSearchParams } from 'react-router';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
@@ -78,12 +78,12 @@ const CALENDAR_CATEGORY_COLORS = {
 
 const CALENDAR_CATEGORY_KEYS = Object.keys(CALENDAR_CATEGORY_COLORS) as CalendarEventCategory[];
 
-const MOBILE_CALENDAR_LEGEND_ITEMS: Array<{ category: CalendarEventCategory; label: string }> = [
-  { category: 'aniversarios', label: 'Aniversário' },
-  { category: 'casamento', label: 'Casamento' },
-  { category: 'falecimento', label: 'Falecimento' },
-  { category: 'eventos_historicos', label: 'Outros' },
-  { category: 'confraternizacoes', label: 'Reunião' },
+const MOBILE_CALENDAR_LEGEND_ITEMS: Array<{ category: CalendarEventCategory; label: string; icon: string }> = [
+  { category: 'aniversarios', label: 'Aniversário', icon: '🎂' },
+  { category: 'casamento', label: 'Casamento', icon: '💍' },
+  { category: 'falecimento', label: 'Falecimento', icon: '🪷' },
+  { category: 'eventos_historicos', label: 'Outros', icon: '📦' },
+  { category: 'confraternizacoes', label: 'Reunião', icon: '⚙️' },
 ];
 
 const DEFAULT_ACTIVE_CATEGORIES: Record<CalendarEventCategory, boolean> = {
@@ -171,8 +171,12 @@ function formatCalendarEventDescription(evento: EventoCalendarioFamiliar) {
 }
 
 function formatDeathSidebarTitle(evento: EventoCalendarioFamiliar) {
+  return `Falecimento de ${evento.nome}`;
+}
+
+function formatDeathSidebarBadge(evento: EventoCalendarioFamiliar) {
   const anos = getDeathAnniversaryYears(evento);
-  return anos ? `${anos} anos da morte de ${evento.nome}` : `Morte de ${evento.nome}`;
+  return anos ? `Há ${anos} anos` : CALENDAR_CATEGORY_COLORS.falecimento.label;
 }
 
 export function CalendarioFamiliar() {
@@ -416,8 +420,8 @@ export function CalendarioFamiliar() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white px-2 py-2.5 shadow-sm md:hidden" aria-label="Filtros do calendário">
-          <div className="grid grid-cols-3 gap-1 text-[10px] font-bold text-gray-700 min-[360px]:text-[11px] min-[390px]:text-xs min-[430px]:text-[13px]">
+        <section className="rounded-2xl border border-gray-200 bg-white px-3 py-3 shadow-sm md:hidden" aria-label="Filtros do calendário">
+          <div className="flex snap-x gap-2 overflow-x-auto pb-1">
             {MOBILE_CALENDAR_LEGEND_ITEMS.map((item) => {
               const colors = CALENDAR_CATEGORY_COLORS[item.category];
               const active = activeCategories[item.category];
@@ -428,16 +432,30 @@ export function CalendarioFamiliar() {
                   type="button"
                   onClick={() => toggleCategory(item.category)}
                   aria-pressed={active}
-                  className="flex min-w-0 items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-2 text-center leading-none transition min-[390px]:gap-1 min-[390px]:px-1"
+                  className="relative flex min-w-[86px] snap-start flex-col items-center overflow-hidden rounded-xl border text-center text-[11px] font-extrabold leading-tight shadow-sm transition active:scale-[0.98] min-[390px]:min-w-[92px]"
                   style={{
                     borderColor: active ? colors.border : '#E5E7EB',
                     backgroundColor: active ? colors.background : '#FFFFFF',
                     color: active ? colors.text : '#6B7280',
-                    opacity: active ? 1 : 0.62,
+                    opacity: active ? 1 : 0.66,
+                    boxShadow: active ? '0 8px 16px rgba(15, 23, 42, 0.12)' : '0 2px 6px rgba(15, 23, 42, 0.06)',
                   }}
                 >
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full min-[390px]:h-3 min-[390px]:w-3" style={{ backgroundColor: colors.dot }} />
-                  <span className="min-w-0 max-w-full truncate whitespace-nowrap">{item.label}</span>
+                  <span
+                    className="absolute left-1/2 top-1.5 h-2.5 w-2.5 -translate-x-1/2 rounded-full ring-2 ring-white"
+                    style={{ backgroundColor: colors.dot }}
+                  />
+                  <span
+                    className="flex h-12 w-full items-end justify-center border-b px-2 pb-1.5 pt-3 text-2xl"
+                    style={{
+                      borderColor: colors.border,
+                      background: `linear-gradient(180deg, ${colors.border} 0%, ${colors.background} 62%, #FFFFFF 100%)`,
+                    }}
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="flex min-h-8 items-center px-1.5 py-1.5">{item.label}</span>
                 </button>
               );
             })}
@@ -687,7 +705,10 @@ export function CalendarioFamiliar() {
             </div>
 
             <div id="aniversariantes" className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-lg font-bold text-gray-900">Aniversariantes</h3>
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-lg text-blue-700" aria-hidden="true">🎂</span>
+                Aniversariantes
+              </h3>
               <div className="space-y-3">
                 {aniversariantesMes.length === 0 ? (
                   <p className="text-sm text-gray-500">Nenhum aniversário neste mês com os filtros atuais.</p>
@@ -696,13 +717,13 @@ export function CalendarioFamiliar() {
                     <Link
                       key={evento.id}
                       to={`/pessoa/${evento.pessoaId}`}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{evento.nome}</p>
-                        <p className="text-xs text-gray-500">Dia {evento.dia}</p>
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-semibold leading-snug text-gray-900">{evento.nome}</p>
+                        <p className="mt-1 text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
-                      <span className="text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.aniversarios.text }}>
+                      <span className="max-w-[90px] shrink-0 text-right text-xs font-medium leading-tight" style={{ color: CALENDAR_CATEGORY_COLORS.aniversarios.text }}>
                         {formatCalendarEventDescription(evento)}
                       </span>
                     </Link>
@@ -712,21 +733,24 @@ export function CalendarioFamiliar() {
             </div>
 
             {falecimentosMes.length > 0 && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-4 text-lg font-bold text-gray-900">Memória</h3>
+              <div id="memoria" className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-lg text-purple-700" aria-hidden="true">🪷</span>
+                  Memória
+                </h3>
                 <div className="space-y-3">
                   {falecimentosMes.map((evento) => (
                     <Link
                       key={evento.id}
                       to={evento.link || `/pessoa/${evento.pessoaId}`}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-xl border border-gray-200 px-3 py-3 hover:bg-gray-50"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 break-words">{formatDeathSidebarTitle(evento)}</p>
-                        <p className="text-xs text-gray-500">Dia {evento.dia}</p>
+                        <p className="break-words text-sm font-semibold leading-snug text-gray-900">{formatDeathSidebarTitle(evento)}</p>
+                        <p className="mt-1 text-xs text-gray-500">Dia {evento.dia}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-medium" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
-                        {CALENDAR_CATEGORY_COLORS.falecimento.label}
+                      <span className="max-w-[90px] shrink-0 text-right text-xs font-medium leading-tight" style={{ color: CALENDAR_CATEGORY_COLORS.falecimento.text }}>
+                        {formatDeathSidebarBadge(evento)}
                       </span>
                     </Link>
                   ))}
