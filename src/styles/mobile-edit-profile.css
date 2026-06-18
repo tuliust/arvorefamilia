@@ -1,46 +1,8 @@
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 {
-  font-size: 0 !important;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2::after {
-  content: 'Arquivos Históricos';
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 + p {
-  font-size: 0 !important;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2 + p::after {
-  content: 'Adicione, revise ou remova arquivos históricos associados ao seu perfil familiar.';
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section > .min-w-0 > div:first-child {
-  display: none !important;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section .space-y-3 > div:first-child > h3 {
-  font-size: 0 !important;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section .space-y-3 > div:first-child > h3::after {
-  content: 'Que tipo de documentação deseja adicionar?';
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .mb-4 {
-  display: none !important;
-}
-
-main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .space-y-4 > p {
-  display: none !important;
-}
-
 @media (max-width: 767px) {
+  main:has(#minha-arvore-edit-form) {
+    padding-bottom: 8.5rem !important;
+  }
+
   main:has(#minha-arvore-edit-form) section:first-of-type > div:first-child {
     padding: 1rem !important;
   }
@@ -138,11 +100,15 @@ main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section
   }
 
   #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child h2 {
+    color: transparent !important;
     font-size: 0 !important;
+    line-height: 0 !important;
   }
 
   #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child h2::after {
     content: 'Contato e redes sociais';
+    display: block;
+    color: rgb(17, 24, 39);
     font-size: 1.45rem !important;
     line-height: 1.15 !important;
   }
@@ -229,27 +195,33 @@ main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section
     content: 'Escreva com IA';
   }
 
-  main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section > div:first-child {
-    align-items: center !important;
+  #minha-arvore-edit-form + section > div:first-child {
+    display: none !important;
   }
 
-  main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section h2::before,
-  main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section h2::before,
-  main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section + section h2::before {
-    content: '';
-    display: inline-flex;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-right: 0.75rem;
-    border-radius: 0.9rem;
-    background: rgb(239, 246, 255);
-    vertical-align: middle;
+  #minha-arvore-edit-form + section .space-y-3 > div:first-child > h3 {
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
   }
 
-  main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 {
+  #minha-arvore-edit-form + section .space-y-3 > div:first-child > h3::after {
+    content: 'Que tipo de documentação deseja adicionar?';
+    display: block;
+    color: rgb(17, 24, 39);
+    font-size: 1.05rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #minha-arvore-edit-form + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 {
     border: 0 !important;
     background: transparent !important;
     padding: 0 !important;
+  }
+
+  #minha-arvore-edit-form + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .mb-4,
+  #minha-arvore-edit-form + section + section .space-y-5 > .rounded-2xl.border.border-gray-200.bg-gray-50.p-4 > .space-y-4 > p {
+    display: none !important;
   }
 
   nav.fixed.inset-x-0.bottom-0.z-50 .relative > span[class*='bg-red-600'],
