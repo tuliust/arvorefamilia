@@ -118,6 +118,7 @@ const directRelationStyles: Record<NonNullable<PersonNodeData['directRelation']>
   cousin: relationCardStyle('primos'),
   nephewNiece: relationCardStyle('sobrinhos'),
   grandchild: relationCardStyle('netos'),
+  pet: DIRECT_FAMILY_PET_STYLE,
 };
 
 function ActionButton({

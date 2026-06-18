@@ -88,6 +88,7 @@ import { DirectRelationKpiGrid } from './home/DirectRelationKpiGrid';
 import { DesktopTreeVisualizationPanel } from './home/DesktopTreeVisualizationPanel';
 import { buildAiTreeContext } from './home/homeAiContext';
 import {
+  CURIOSITY_TOPIC_OPTIONS,
   calculateCuriosities,
   type CuriosityTopic,
 } from './home/homeCuriositiesUtils';
@@ -983,7 +984,7 @@ export function Home() {
 
     try {
       const insightsResult = selectedCuriosityTopics.some((topic) =>
-        topic === 'Fatos HistÃ³ricos do Dia de Nascimento' || topic === 'O que diz a Astrologia'
+        topic === CURIOSITY_TOPIC_OPTIONS[3] || topic === 'O que diz a Astrologia'
       )
         ? await obterInsightsGeradosPessoa(selectedCuriosityPerson.id)
         : [];

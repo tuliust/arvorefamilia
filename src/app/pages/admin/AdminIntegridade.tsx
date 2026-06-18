@@ -141,7 +141,7 @@ function countSeverity(issues: IntegrityIssue[], severity: Severity) {
   return issues.filter((issue) => issue.severity === severity).length;
 }
 
-function buildPersonIssues(pessoas: Pessoa[]) {
+function buildPersonIssues(pessoas: Pessoa[]): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
 
   pessoas.forEach((pessoa) => {
@@ -239,7 +239,7 @@ function buildPersonIssues(pessoas: Pessoa[]) {
   return issues;
 }
 
-function buildRelationshipIssues(pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
+function buildRelationshipIssues(pessoas: Pessoa[], relacionamentos: Relacionamento[]): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const conjugalPairs = new Map<string, Relacionamento[]>();
@@ -359,7 +359,7 @@ function buildRelationshipIssues(pessoas: Pessoa[], relacionamentos: Relacioname
   return issues;
 }
 
-function buildFileIssues(arquivos: ArquivoHistorico[], pessoas: Pessoa[], relacionamentos: Relacionamento[]) {
+function buildFileIssues(arquivos: ArquivoHistorico[], pessoas: Pessoa[], relacionamentos: Relacionamento[]): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
   const relacionamentosById = new Set(relacionamentos.map((rel) => rel.id));
@@ -437,7 +437,7 @@ function buildFileIssues(arquivos: ArquivoHistorico[], pessoas: Pessoa[], relaci
   return issues;
 }
 
-function buildUserLinkIssues(pessoas: Pessoa[], links: UserPersonLinkRow[], profiles: ProfileRow[], available: boolean) {
+function buildUserLinkIssues(pessoas: Pessoa[], links: UserPersonLinkRow[], profiles: ProfileRow[], available: boolean): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const pessoasById = new Set(pessoas.map((pessoa) => pessoa.id));
   const linkedPessoaIds = new Set(links.map((link) => link.pessoa_id));
@@ -503,7 +503,7 @@ function buildUserLinkIssues(pessoas: Pessoa[], links: UserPersonLinkRow[], prof
   return issues;
 }
 
-function buildActivityIssues(activityLogs: ActivityLog[]) {
+function buildActivityIssues(activityLogs: ActivityLog[]): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   const knownActions = new Set(Object.keys(ACTIVITY_ACTION_LABELS));
   const knownEntityTypes = new Set(Object.keys(ACTIVITY_ENTITY_LABELS));
@@ -569,7 +569,7 @@ function buildActivityIssues(activityLogs: ActivityLog[]) {
   return issues;
 }
 
-function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pessoa[], available: boolean) {
+function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pessoa[], available: boolean): IntegrityIssue[] {
   if (!available) {
     return [{
       id: 'requests-unavailable',

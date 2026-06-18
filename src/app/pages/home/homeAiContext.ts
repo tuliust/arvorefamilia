@@ -417,7 +417,7 @@ function buildOldestPeopleAnswer(pessoas: Pessoa[]) {
   const people = pessoas
     .filter((pessoa) => isHumanFamilyMember(pessoa))
     .map((pessoa) => ({ pessoa, birthYear: extractYear(pessoa.data_nascimento), deathYear: extractYear(pessoa.data_falecimento) }))
-    .filter((item): item is { pessoa: Pessoa; birthYear: number; deathYear?: number } => Boolean(item.birthYear))
+    .filter((item): item is { pessoa: Pessoa; birthYear: number; deathYear: number | undefined } => Boolean(item.birthYear))
     .sort((left, right) => left.birthYear - right.birthYear || left.pessoa.nome_completo.localeCompare(right.pessoa.nome_completo, 'pt-BR'))
     .slice(0, 10);
 

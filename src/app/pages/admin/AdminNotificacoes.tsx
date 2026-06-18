@@ -283,7 +283,7 @@ export function AdminNotificacoes() {
               Função esperada: {emailConfig.functionName}. Secrets não são verificáveis pelo frontend; valide com teste controlado.
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-              <Button variant="secondary" className="w-full sm:w-auto" onClick={handleSendEmailTest} disabled={sendingEmailTest || loading}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleSendEmailTest} disabled={sendingEmailTest || loading}>
                 <Mail className="mr-2 h-4 w-4 shrink-0" />
                 Enviar e-mail de teste para mim
               </Button>

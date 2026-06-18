@@ -268,7 +268,7 @@ export async function listarPessoasDoTopico(topicoId: string): Promise<Pessoa[]>
 
   return (data || [])
     .map((row) => row.pessoas)
-    .filter(Boolean) as Pessoa[];
+    .filter(Boolean) as unknown as Pessoa[];
 }
 
 export async function atualizarTopicoForum(

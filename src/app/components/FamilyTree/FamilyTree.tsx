@@ -367,9 +367,11 @@ function inferGenealogyManualGenerations(
     const destinoId = relacionamento.pessoa_destino_id;
     if (!origemId || !destinoId) return;
 
+    const relationshipType = relacionamento.tipo_relacionamento as string;
+
     if (
-      relacionamento.tipo_relacionamento === 'filiacao_sangue' ||
-      relacionamento.tipo_relacionamento === 'filiacao_adotiva'
+      relationshipType === 'filiacao_sangue' ||
+      relationshipType === 'filiacao_adotiva'
     ) {
       addToMap(parentsByChild, destinoId, origemId);
       addToMap(childrenByParent, origemId, destinoId);
@@ -1956,4 +1958,3 @@ function FamilyTreeComponent({
 }
 
 export const FamilyTree = React.forwardRef<FamilyTreeActions, FamilyTreeProps>(FamilyTreeComponent);
-

@@ -48,3 +48,5 @@ export type RelationshipOverviewGroup = {
 export type RelativeCardMeta = Array<{ label: string; value: string }>;
 
 export type RelativeCardPerson = Pessoa;
+
+export type RemovedRelationshipIds = Record<RelationshipGroupKey, string[]>;

@@ -13,7 +13,7 @@ export const HOME_BACKGROUND_COLORS = [
   { label: 'Preto', value: '#000000' },
 ] as const;
 
-const ALLOWED_BACKGROUND_COLORS = new Set(HOME_BACKGROUND_COLORS.map((color) => color.value));
+const ALLOWED_BACKGROUND_COLORS = new Set<string>(HOME_BACKGROUND_COLORS.map((color) => color.value));
 
 export type SiteVisualSettings = {
   home_logo_media_url: string | null;

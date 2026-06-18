@@ -128,11 +128,12 @@ const MOBILE_HORIZONTAL_CANVAS = {
 };
 
 function isParentChildRelationship(relationship: Relacionamento) {
-  return relationship.tipo_relacionamento === 'pai'
-    || relationship.tipo_relacionamento === 'mae'
-    || relationship.tipo_relacionamento === 'filho'
-    || relationship.tipo_relacionamento === 'filiacao_sangue'
-    || relationship.tipo_relacionamento === 'filiacao_adotiva';
+  const type = relationship.tipo_relacionamento as string;
+  return type === 'pai'
+    || type === 'mae'
+    || type === 'filho'
+    || type === 'filiacao_sangue'
+    || type === 'filiacao_adotiva';
 }
 
 function getParentChildIds(relationship: Relacionamento) {
@@ -228,7 +229,7 @@ function inferHorizontalGenerations(
   return generationByPersonId;
 }
 
-function getFallbackSortableBirthValue(value?: string | null) {
+function getFallbackSortableBirthValue(value?: string | number | null) {
   if (!value) return Number.POSITIVE_INFINITY;
   const year = String(value).match(/\d{4}/)?.[0];
   return year ? Number(year) : Number.POSITIVE_INFINITY;

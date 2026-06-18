@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
-import App from "./app/App.tsx";
-import { MobileTreeControlsPortal } from "./app/components/FamilyTree/MobileTreeControlsPortal.tsx";
+import App from "./app/App";
+import { MobileTreeControlsPortal } from "./app/components/FamilyTree/MobileTreeControlsPortal";
 import "./styles/index.css";
 import "./styles/mobile-tree-controls.css";
 import "./styles/mobile-tree-lines.css";

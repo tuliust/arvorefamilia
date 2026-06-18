@@ -66,7 +66,7 @@ export function extrairAno(valor?: string | number): number | undefined {
   return Number.isNaN(ano) ? undefined : ano;
 }
 
-export function parseFlexibleFamilyDate(valor?: string | number): Date | undefined {
+export function parseFlexibleFamilyDate(valor?: string | number | Date): Date | undefined {
   if (valor === undefined || valor === null || valor === '') return undefined;
 
   if (valor instanceof Date && isValidDate(valor)) {

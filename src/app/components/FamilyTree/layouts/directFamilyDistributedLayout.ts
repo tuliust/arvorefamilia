@@ -1463,7 +1463,6 @@ function addDirectStructuralEdge(
     target,
     targetHandle: options.targetHandle || 'left',
     type: 'childEdge',
-    selectable: false,
     style: options.style || getDirectLineStyle(lineGroup, options.visualLineFilters),
     data: {
       kind,
@@ -1794,7 +1793,6 @@ function addAncestorSpouseEdge(
     target: rightId,
     targetHandle: 'spouse-left',
     type: 'spouseEdge',
-    selectable: false,
     // Ancestor spouse lines keep the thinner spouse baseline, but still use the shared highlight style.
     style: options.visualLineFilters?.spouseHighlight
       ? getDirectLineStyle('spouse', options.visualLineFilters)

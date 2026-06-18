@@ -40,6 +40,7 @@ import { Switch } from '../components/ui/switch';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
+import type { GoogleAddressComponent, GooglePlaceResult } from '../lib/googleMapsLoader';
 import {
   adicionarPessoa,
   adicionarRelacionamentoComInverso,
@@ -1626,6 +1627,7 @@ export function MinhaArvore() {
     if (!(target instanceof HTMLElement)) return;
 
     const anchor = target.closest('a[href]');
+    if (!(anchor instanceof HTMLAnchorElement)) return;
     if (!anchor) return;
 
     const href = anchor.getAttribute('href');

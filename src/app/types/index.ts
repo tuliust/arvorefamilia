@@ -33,6 +33,7 @@ export type TipoEventoFamiliar =
   | 'aniversario'
   | 'casamento'
   | 'falecimento'
+  | 'evento'
   | 'evento_historico'
   | 'confraternizacao'
   | 'memoria'
@@ -236,6 +237,7 @@ export interface Pessoa {
   permitir_exibir_endereco?: boolean;
   permitir_exibir_rede_social?: boolean;
   permitir_exibir_telefone?: boolean;
+  receber_avisos_gerais?: boolean;
   geracao_sociologica?: GeracaoSociologica;
   manual_generation?: number | null;
   arquivos_historicos?: ArquivoHistorico[];

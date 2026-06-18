@@ -21,9 +21,5 @@ export type {
 export {
   DEFAULT_EDGE_FILTERS,
   TREE_CONSTANTS,
-  getBirthYear,
   getSortableBirthValue,
-  getStablePersonComparator,
-  isLeftSidePerson,
-  isRightSidePerson,
 } from './types';

@@ -557,7 +557,7 @@ export async function obterRelacionamentosDaPessoa(pessoaId: string) {
   }
 }
 
-export async function adicionarRelacionamento(relacionamento: Omit<Relacionamento, 'id'>): Promise<Relacionamento | undefined> {
+export async function adicionarRelacionamento(relacionamento: RelacionamentoPayload): Promise<Relacionamento | undefined> {
   const payload = pickDefined(relacionamento, RELACIONAMENTO_COLUMNS);
   const { data, error } = await supabase
     .from('relacionamentos')

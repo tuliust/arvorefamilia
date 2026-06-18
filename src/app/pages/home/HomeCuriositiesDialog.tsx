@@ -89,8 +89,10 @@ interface HomeCuriositiesDialogProps {
   connectionLoading: boolean;
   connectionError: string | null;
   connectionResult: RelationshipDegreeResult | null;
+  connectionIncludeInactiveSpouses?: boolean;
   onConnectionPersonOneIdChange: (value: string) => void;
   onConnectionPersonTwoIdChange: (value: string) => void;
+  onConnectionIncludeInactiveSpousesChange?: (value: boolean) => void;
   clearConnectionResult: () => void;
   clearConnectionError: () => void;
   handleDiscoverConnection: () => void;

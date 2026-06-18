@@ -77,13 +77,6 @@ export function Curiosidades() {
         title="Curiosidades"
         subtitle="Descobertas, histÃ³rias e conexÃµes da famÃ­lia"
         icon={Sparkles}
-        actions={[
-          { label: 'Ãrvore Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.ArrowLeft, responsiveLabel: 'always' },
-          { label: 'CalendÃ¡rio', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
-          { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
-          { label: 'FÃ³rum', to: '/forum', icon: HEADER_ACTION_ICONS.MessageCircle },
-          { label: 'Alertas', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell, responsiveLabel: 'never' },
-        ]}
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-8`}>

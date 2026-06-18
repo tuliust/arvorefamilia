@@ -697,7 +697,6 @@ function addSpouseEdge(addEdge: (edge: Edge) => void, leftId: string | undefined
     target: rightId,
     targetHandle: 'spouse-left',
     type: 'spouseEdge',
-    selectable: false,
     style: {
       stroke: DIRECT_FAMILY_TOKENS.EDGE_STROKE,
       strokeWidth: DIRECT_FAMILY_TOKENS.SPOUSE_EDGE_STROKE_WIDTH,
@@ -775,7 +774,6 @@ function addDirectStructuralEdge(
     target,
     targetHandle: options.targetHandle || 'left',
     type: 'childEdge',
-    selectable: false,
     style: DIRECT_STRUCTURAL_EDGE_STYLE,
     data: {
       kind,
