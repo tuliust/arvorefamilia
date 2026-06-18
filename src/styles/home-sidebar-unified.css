@@ -2154,3 +2154,501 @@ body.tree-mobile-controls-open {
     border-color: var(--family-map-connector, #0e7490) !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Revisão 2026-06-18: painel desktop de visualização com largura máxima 350px
+   --------------------------------------------------------------------------
+   Objetivo:
+   - Voltar o painel desktop para uma sidebar vertical compacta.
+   - Limitar o container principal a 350px, com largura fluida e mínimo de 320px.
+   - Evitar qualquer overflow horizontal interno.
+   - Compactar header, dropdown, paleta, cards, resumo, grupos e botões finais.
+*/
+
+.tree-sidebar-desktop-panel-wrap,
+.tree-sidebar-desktop-panel-wrap * {
+  box-sizing: border-box;
+}
+
+.tree-sidebar-desktop-panel-wrap {
+  align-items: center;
+  overflow: hidden !important;
+}
+
+.desktop-tree-visualization-panel-shell,
+.desktop-tree-visualization-panel-shell * {
+  box-sizing: border-box;
+}
+
+.desktop-tree-visualization-panel-shell {
+  width: 100% !important;
+  min-width: 320px !important;
+  max-width: 350px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  border-radius: 1rem !important;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.96), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%) !important;
+  padding: clamp(0.28rem, 0.7vh, 0.48rem) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.11) !important;
+}
+
+.desktop-tree-visualization-panel {
+  display: flex !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  flex-direction: column !important;
+  gap: clamp(0.3rem, 0.72vh, 0.48rem) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(203, 213, 225, 0.78) !important;
+  border-radius: 0.88rem !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  padding: clamp(0.4rem, 0.9vh, 0.58rem) !important;
+  color: #0f2348 !important;
+}
+
+.desktop-tree-panel-header {
+  display: flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.35rem !important;
+  padding-right: 0 !important;
+}
+
+.desktop-tree-panel-title-group {
+  display: flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 0.42rem !important;
+}
+
+.desktop-tree-panel-eye {
+  height: clamp(2rem, 4vh, 2.35rem) !important;
+  width: clamp(2rem, 4vh, 2.35rem) !important;
+  border-radius: 0.62rem !important;
+}
+
+.desktop-tree-panel-eye svg {
+  width: clamp(1.12rem, 2.3vh, 1.35rem) !important;
+  height: clamp(1.12rem, 2.3vh, 1.35rem) !important;
+}
+
+.desktop-tree-panel-title {
+  overflow: hidden !important;
+  margin: 0 !important;
+  color: #0b2045 !important;
+  font-size: clamp(1.35rem, 3.15vh, 1.8rem) !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.025em !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.desktop-tree-export-root {
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+.desktop-tree-save-print-button {
+  min-height: clamp(1.75rem, 3.4vh, 2rem) !important;
+  max-width: 6.1rem !important;
+  gap: 0.22rem !important;
+  border-radius: 0.55rem !important;
+  padding: 0.18rem 0.28rem !important;
+  font-size: clamp(0.62rem, 1.25vh, 0.72rem) !important;
+  font-weight: 850 !important;
+  line-height: 1.02 !important;
+}
+
+.desktop-tree-save-print-button svg {
+  width: clamp(0.95rem, 1.8vh, 1.12rem) !important;
+  height: clamp(0.95rem, 1.8vh, 1.12rem) !important;
+}
+
+.desktop-tree-save-print-button span {
+  max-width: 4.6rem !important;
+  white-space: normal !important;
+}
+
+.desktop-tree-export-popover {
+  right: 0 !important;
+  width: min(13rem, calc(100vw - 2rem)) !important;
+}
+
+.desktop-tree-export-option svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.desktop-tree-view-select {
+  width: 100% !important;
+  min-height: clamp(2.1rem, 4.3vh, 2.45rem) !important;
+  max-width: 100% !important;
+  border-radius: 0.68rem !important;
+  padding: 0 1.85rem 0 0.68rem !important;
+  font-size: clamp(0.76rem, 1.55vh, 0.9rem) !important;
+  font-weight: 650 !important;
+}
+
+.desktop-tree-palette-row {
+  display: grid !important;
+  width: 100% !important;
+  min-height: clamp(2rem, 4vh, 2.35rem) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.28rem !important;
+  border-radius: 0.68rem !important;
+  padding: 0.22rem 0.36rem !important;
+}
+
+.desktop-tree-palette-button {
+  min-height: clamp(1.55rem, 3.1vh, 1.85rem) !important;
+  border-radius: 0.5rem !important;
+}
+
+.desktop-tree-palette-button span {
+  height: clamp(1rem, 2.05vh, 1.22rem) !important;
+  width: clamp(1rem, 2.05vh, 1.22rem) !important;
+}
+
+.desktop-tree-view-mode-grid {
+  display: grid !important;
+  width: 100% !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.42rem !important;
+}
+
+.desktop-tree-view-mode-card {
+  min-height: clamp(4.1rem, 8.5vh, 5rem) !important;
+  max-width: 100% !important;
+  gap: 0.16rem !important;
+  border-radius: 0.72rem !important;
+  padding: 0.42rem 0.32rem !important;
+}
+
+.desktop-tree-view-mode-card > svg {
+  width: clamp(1.12rem, 2.35vh, 1.42rem) !important;
+  height: clamp(1.12rem, 2.35vh, 1.42rem) !important;
+}
+
+.desktop-tree-view-mode-title {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: clamp(0.76rem, 1.55vh, 0.92rem) !important;
+  line-height: 1.08 !important;
+  text-overflow: ellipsis !important;
+}
+
+.desktop-tree-view-mode-subtitle {
+  max-width: 7.3rem !important;
+  font-size: clamp(0.6rem, 1.22vh, 0.72rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.12 !important;
+}
+
+.desktop-tree-panel-divider {
+  flex: 0 0 auto !important;
+  height: 1px !important;
+}
+
+.desktop-tree-section-title {
+  margin: 0 !important;
+  font-size: clamp(0.82rem, 1.72vh, 1rem) !important;
+  line-height: 1.02 !important;
+}
+
+.desktop-tree-summary-grid {
+  display: grid !important;
+  width: 100% !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.42rem !important;
+}
+
+.desktop-tree-summary-card {
+  display: grid !important;
+  min-height: clamp(2.58rem, 5.2vh, 3.1rem) !important;
+  max-width: 100% !important;
+  grid-template-columns: clamp(1.45rem, 3vh, 1.75rem) minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas:
+    "icon value"
+    "icon label" !important;
+  align-items: center !important;
+  justify-items: start !important;
+  column-gap: 0.36rem !important;
+  row-gap: 0.02rem !important;
+  border-radius: 0.66rem !important;
+  padding: 0.32rem 0.4rem !important;
+  text-align: left !important;
+}
+
+.desktop-tree-summary-card > svg {
+  grid-area: icon !important;
+  width: clamp(1.15rem, 2.35vh, 1.4rem) !important;
+  height: clamp(1.15rem, 2.35vh, 1.4rem) !important;
+  justify-self: center !important;
+}
+
+.desktop-tree-summary-card strong {
+  grid-area: value !important;
+  min-width: 0 !important;
+  font-size: clamp(1.05rem, 2.35vh, 1.38rem) !important;
+  line-height: 0.98 !important;
+}
+
+.desktop-tree-summary-card span {
+  grid-area: label !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  font-size: clamp(0.58rem, 1.2vh, 0.72rem) !important;
+  font-weight: 750 !important;
+  line-height: 1.04 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.desktop-tree-family-groups {
+  display: grid !important;
+  width: 100% !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: clamp(0.28rem, 0.65vh, 0.42rem) !important;
+}
+
+.desktop-tree-family-group-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border-radius: 0.66rem !important;
+  padding: clamp(0.32rem, 0.7vh, 0.42rem) !important;
+}
+
+.desktop-tree-family-group-card h4 {
+  margin: 0 0 clamp(0.16rem, 0.38vh, 0.24rem) !important;
+  text-align: left !important;
+  font-size: clamp(0.72rem, 1.42vh, 0.84rem) !important;
+  line-height: 1.05 !important;
+}
+
+.desktop-tree-family-group-row-list {
+  display: grid !important;
+  gap: clamp(0.08rem, 0.22vh, 0.16rem) !important;
+}
+
+.desktop-tree-family-group-row {
+  min-height: clamp(1.55rem, 3.3vh, 1.92rem) !important;
+  max-width: 100% !important;
+  grid-template-columns: clamp(1.28rem, 2.65vh, 1.55rem) minmax(0, 1fr) auto !important;
+  gap: 0.32rem !important;
+  border-radius: 0.45rem !important;
+  padding: 0.08rem 0.14rem !important;
+}
+
+.desktop-tree-family-group-icon {
+  height: clamp(1.18rem, 2.45vh, 1.42rem) !important;
+  width: clamp(1.18rem, 2.45vh, 1.42rem) !important;
+  border-radius: 0.4rem !important;
+  background: #eef2f7 !important;
+  color: #64748b !important;
+}
+
+.desktop-tree-family-group-icon svg {
+  width: clamp(0.72rem, 1.5vh, 0.88rem) !important;
+  height: clamp(0.72rem, 1.5vh, 0.88rem) !important;
+}
+
+.desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #0f2348 !important;
+  font-size: clamp(0.68rem, 1.36vh, 0.82rem) !important;
+  font-weight: 650 !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.desktop-tree-family-group-row strong {
+  flex: 0 0 auto !important;
+  font-size: clamp(0.68rem, 1.36vh, 0.82rem) !important;
+  font-weight: 850 !important;
+}
+
+.desktop-tree-final-filters {
+  display: grid !important;
+  width: 100% !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.42rem !important;
+}
+
+.desktop-tree-final-filter-button {
+  min-height: clamp(2.35rem, 5vh, 2.9rem) !important;
+  max-width: 100% !important;
+  grid-template-columns: clamp(1.55rem, 3.1vh, 1.85rem) minmax(0, 1fr) !important;
+  gap: 0.34rem !important;
+  border-radius: 0.66rem !important;
+  padding: 0.34rem 0.42rem !important;
+}
+
+.desktop-tree-final-filter-button > svg {
+  width: clamp(1.28rem, 2.65vh, 1.55rem) !important;
+  height: clamp(1.28rem, 2.65vh, 1.55rem) !important;
+  justify-self: center !important;
+}
+
+.desktop-tree-final-filter-button span {
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+  color: #0f2348 !important;
+  font-size: clamp(0.66rem, 1.32vh, 0.78rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.08 !important;
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-visualization-panel-shell {
+    padding: 0.24rem !important;
+  }
+
+  .desktop-tree-visualization-panel {
+    gap: 0.26rem !important;
+    padding: 0.34rem !important;
+  }
+
+  .desktop-tree-panel-eye {
+    height: 1.86rem !important;
+    width: 1.86rem !important;
+  }
+
+  .desktop-tree-panel-eye svg {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+  }
+
+  .desktop-tree-panel-title {
+    font-size: 1.22rem !important;
+  }
+
+  .desktop-tree-save-print-button {
+    min-height: 1.62rem !important;
+    max-width: 5.65rem !important;
+    font-size: 0.58rem !important;
+  }
+
+  .desktop-tree-save-print-button svg {
+    width: 0.86rem !important;
+    height: 0.86rem !important;
+  }
+
+  .desktop-tree-view-select {
+    min-height: 1.88rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .desktop-tree-palette-row {
+    min-height: 1.78rem !important;
+    padding-block: 0.16rem !important;
+  }
+
+  .desktop-tree-palette-button {
+    min-height: 1.35rem !important;
+  }
+
+  .desktop-tree-palette-button span {
+    width: 0.92rem !important;
+    height: 0.92rem !important;
+  }
+
+  .desktop-tree-view-mode-card {
+    min-height: 3.45rem !important;
+    padding: 0.28rem 0.22rem !important;
+  }
+
+  .desktop-tree-view-mode-card > svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  .desktop-tree-view-mode-title {
+    font-size: 0.66rem !important;
+  }
+
+  .desktop-tree-view-mode-subtitle {
+    font-size: 0.53rem !important;
+    line-height: 1.04 !important;
+  }
+
+  .desktop-tree-section-title {
+    font-size: 0.76rem !important;
+  }
+
+  .desktop-tree-summary-card {
+    min-height: 2.18rem !important;
+    grid-template-columns: 1.25rem minmax(0, 1fr) !important;
+    padding: 0.22rem 0.3rem !important;
+  }
+
+  .desktop-tree-summary-card > svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  .desktop-tree-summary-card strong {
+    font-size: 0.98rem !important;
+  }
+
+  .desktop-tree-summary-card span {
+    font-size: 0.54rem !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: 0.25rem !important;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: 0.1rem !important;
+    font-size: 0.66rem !important;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: 1.34rem !important;
+    grid-template-columns: 1.1rem minmax(0, 1fr) auto !important;
+    gap: 0.24rem !important;
+  }
+
+  .desktop-tree-family-group-icon {
+    height: 1rem !important;
+    width: 1rem !important;
+  }
+
+  .desktop-tree-family-group-icon svg {
+    width: 0.62rem !important;
+    height: 0.62rem !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon),
+  .desktop-tree-family-group-row strong {
+    font-size: 0.62rem !important;
+  }
+
+  .desktop-tree-final-filter-button {
+    min-height: 2.05rem !important;
+    grid-template-columns: 1.25rem minmax(0, 1fr) !important;
+    gap: 0.25rem !important;
+    padding: 0.25rem 0.3rem !important;
+  }
+
+  .desktop-tree-final-filter-button > svg {
+    width: 1.05rem !important;
+    height: 1.05rem !important;
+  }
+
+  .desktop-tree-final-filter-button span {
+    font-size: 0.58rem !important;
+  }
+}

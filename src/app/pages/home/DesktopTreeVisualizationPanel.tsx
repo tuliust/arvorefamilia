@@ -5,6 +5,7 @@ import {
   Cross,
   Eye,
   FileDown,
+  HeartHandshake,
   ImageDown,
   Network,
   Printer,
@@ -79,7 +80,7 @@ const groupSections: Array<{
     title: 'Núcleo',
     rows: [
       { keys: ['pais'], label: 'Pais', icon: UsersRound },
-      { keys: ['conjuge'], label: 'Cônjuges', icon: UsersRound },
+      { keys: ['conjuge'], label: 'Cônjuges', icon: HeartHandshake },
       { keys: ['irmaos'], label: 'Irmãos', icon: UsersRound },
     ],
   },
@@ -269,6 +270,28 @@ export function DesktopTreeVisualizationPanel({
           </select>
         )}
 
+        <div className="desktop-tree-palette-row" aria-label="Tema da árvore">
+          {paletteOptions.map((paletteKey) => {
+            const palette = TREE_COLOR_PALETTES[paletteKey];
+            const active = treeColorPalette === paletteKey;
+
+            return (
+              <button
+                key={paletteKey}
+                type="button"
+                className="desktop-tree-palette-button"
+                data-active={active ? 'true' : 'false'}
+                aria-label={palette.ariaLabel}
+                aria-pressed={active}
+                title={palette.label}
+                onClick={() => setTreeColorPalette(paletteKey)}
+              >
+                <span style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
+              </button>
+            );
+          })}
+        </div>
+
         <div className="desktop-tree-view-mode-grid">
           {viewOptions.map((option) => {
             const Icon = option.icon;
@@ -291,27 +314,7 @@ export function DesktopTreeVisualizationPanel({
           })}
         </div>
 
-        <div className="desktop-tree-palette-row" aria-label="Tema da árvore">
-          {paletteOptions.map((paletteKey) => {
-            const palette = TREE_COLOR_PALETTES[paletteKey];
-            const active = treeColorPalette === paletteKey;
 
-            return (
-              <button
-                key={paletteKey}
-                type="button"
-                className="desktop-tree-palette-button"
-                data-active={active ? 'true' : 'false'}
-                aria-label={palette.ariaLabel}
-                aria-pressed={active}
-                title={palette.label}
-                onClick={() => setTreeColorPalette(paletteKey)}
-              >
-                <span style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
-              </button>
-            );
-          })}
-        </div>
 
         <div className="desktop-tree-panel-divider" />
 
@@ -383,7 +386,7 @@ export function DesktopTreeVisualizationPanel({
             data-active={directRelativeFilters.conjuge ? 'true' : 'false'}
             onClick={() => onToggleDirectRelative('conjuge')}
           >
-            <Network />
+            <HeartHandshake />
             <span>Exibir cônjuges de tios, primos etc</span>
           </button>
 

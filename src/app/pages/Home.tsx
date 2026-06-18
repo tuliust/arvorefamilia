@@ -1269,7 +1269,7 @@ export function Home() {
             className={[
               'flex h-full min-h-0 shrink-0 flex-col border-r border-gray-200 bg-white transition-[width] duration-200',
               sidebarOpen
-                ? 'w-[clamp(38rem,42vw,44rem)] p-[clamp(0.5rem,1vh,0.75rem)]'
+                ? 'w-[clamp(336px,24vw,366px)] p-2'
                 : 'w-14 p-2',
             ].join(' ')}
           >
