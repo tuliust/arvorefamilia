@@ -66,7 +66,14 @@ export function MobileFamilyMapToolbar({
 
         <button
           type="button"
-          onClick={onAddClick}
+          onClick={() => {
+            if (onAddClick) {
+              onAddClick();
+              return;
+            }
+
+            onAction?.('mais' as MobileFamilyMapToolbarAction);
+          }}
           aria-label="Abrir painel completo de visualização"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-95"
         >
