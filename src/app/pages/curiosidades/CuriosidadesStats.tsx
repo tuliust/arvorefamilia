@@ -1,4 +1,4 @@
-﻿import { CalendarDays, Flower2, HeartPulse, Network, PawPrint, Users } from 'lucide-react';
+﻿import { CalendarDays, Flower2, HeartPulse, PawPrint, Users } from 'lucide-react';
 import {
   isDeceased,
   isLivingPerson,
