@@ -1,0 +1,221 @@
+/* Urgent mobile-only corrections for /mapa-familiar vertical map. */
+@media (max-width: 767px) {
+  [data-mobile-family-tree-root="true"] {
+    --mobile-family-map-line: var(--family-map-connector, var(--tree-palette-edge-child, #cbd5e1));
+    --mobile-family-map-group-bg: var(--tree-palette-group-bg, var(--family-map-group-bg, #ffffff));
+    --mobile-family-map-group-border-width: var(--tree-palette-group-border-width, 2px);
+  }
+
+  [data-mobile-family-tree-root="true"] .bg-cyan-600 {
+    background-color: var(--mobile-family-map-line) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] .border-cyan-600 {
+    border-color: var(--mobile-family-map-line) !important;
+  }
+
+  /* Group chrome: inherit the same relation colors used by desktop cards/groups. */
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key]) {
+    border-width: var(--mobile-family-map-group-border-width) !important;
+    background: var(--mobile-family-map-group-bg) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="tataravos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="tataravos"]) {
+    border-color: var(--tree-palette-border-tataravos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="bisavos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="bisavos"]) {
+    border-color: var(--tree-palette-border-bisavos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="avos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="avos"]) {
+    border-color: var(--tree-palette-border-avos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="tios"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="tios"]) {
+    border-color: var(--tree-palette-border-tios, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="primos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="primos"]) {
+    border-color: var(--tree-palette-border-primos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="pais"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="pais"]) {
+    border-color: var(--tree-palette-border-pais, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="central"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="central"]) {
+    border-color: var(--tree-palette-border-central, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="conjuge"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="conjuge"]) {
+    border-color: var(--tree-palette-border-pais, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="irmaos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="irmaos"]) {
+    border-color: var(--tree-palette-border-irmaos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="sobrinhos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="sobrinhos"]) {
+    border-color: var(--tree-palette-border-sobrinhos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="filhos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="filhos"]) {
+    border-color: var(--tree-palette-border-netos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="netos"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="netos"]) {
+    border-color: var(--tree-palette-border-netos, var(--family-map-card-border, #cbd5e1)) !important;
+  }
+
+  [data-mobile-family-tree-root="true"] section:has(button[data-family-map-color-key="pets"]) > div:has(> h2),
+  [data-mobile-family-tree-root="true"] section:has(> h3 + div button[data-family-map-color-key="pets"]) {
+    border-color: var(--tree-palette-border-pets, var(--family-map-card-border-pet, #f4c7ab)) !important;
+  }
+
+  /* Keep uncle groups on a single screen, but avoid an oversized empty box when few people exist. */
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.relative.z-10 {
+    align-items: center !important;
+    padding-top: 4.75rem !important;
+    padding-bottom: 7rem !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section {
+    height: auto !important;
+    min-height: min(58dvh, 30rem) !important;
+    padding-top: 3.75rem !important;
+    padding-bottom: 3.75rem !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section > div:has(> h2) {
+    height: auto !important;
+    min-height: min(42dvh, 22rem) !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section > div:has(> h2) > div {
+    align-content: center !important;
+    row-gap: clamp(1.6rem, 5.5dvh, 3.25rem) !important;
+  }
+
+  /* Reconnect the central person card to siblings/spouses groups. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 {
+    position: relative !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before {
+    content: "";
+    position: absolute;
+    left: calc(25% - 1px);
+    right: calc(25% - 1px);
+    top: -1.9rem;
+    z-index: 0;
+    height: 1px;
+    background: var(--mobile-family-map-line);
+    pointer-events: none;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div {
+    position: relative !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -1.9rem;
+    z-index: 0;
+    width: 1px;
+    height: 1.9rem;
+    transform: translateX(-50%);
+    background: var(--mobile-family-map-line);
+    pointer-events: none;
+  }
+
+  /* Strengthen the parent-to-ancestor bridge during vertical swipe/scroll. */
+  [data-mobile-family-tree-screen="core"] [data-mobile-tree-scroll] > div > div:first-child > div[class*="bottom-full"] {
+    height: 5.25rem !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div {
+    padding-bottom: 9rem !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div::before,
+  [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div::after {
+    content: "";
+    position: absolute;
+    bottom: -5.25rem;
+    z-index: 0;
+    width: 1px;
+    height: 5.25rem;
+    background: var(--mobile-family-map-line);
+    pointer-events: none;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div::before {
+    left: 25%;
+    transform: translateX(-50%);
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div::after {
+    right: 25%;
+    transform: translateX(50%);
+  }
+
+  /* The + modal must be centered in the visual viewport, regardless of tree overflow. */
+  div[role="dialog"][aria-label="Painel de visualização"] {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem) !important;
+    transform: none !important;
+    background: rgba(15, 23, 42, 0.20) !important;
+    isolation: isolate !important;
+    overscroll-behavior: none !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] > section {
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    z-index: 1 !important;
+    width: min(100%, 25rem) !important;
+    max-width: min(100%, 25rem) !important;
+    max-height: min(82dvh, 42rem) !important;
+    margin: auto !important;
+    transform: none !important;
+    border-radius: 1.5rem !important;
+  }
+}
