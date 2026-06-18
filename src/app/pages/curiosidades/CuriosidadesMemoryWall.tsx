@@ -10,13 +10,13 @@ import {
 import { curiositySectionCardClassName } from './curiosidadesUtils';
 
 const VISIBILITY_OPTIONS: Array<{ value: MemoryWallVisibility; label: string }> = [
-  { value: 'family', label: 'Todos da fam\u00edlia' },
-  { value: 'close_relatives', label: 'Parentes pr\u00f3ximos' },
+  { value: 'family', label: 'Todos da família' },
+  { value: 'close_relatives', label: 'Parentes próximos' },
   { value: 'private', label: 'Privado' },
 ];
 
 function getVisibilityLabel(value: MemoryWallVisibility) {
-  return VISIBILITY_OPTIONS.find((option) => option.value === value)?.label ?? 'Todos da fam\u00edlia';
+  return VISIBILITY_OPTIONS.find((option) => option.value === value)?.label ?? 'Todos da família';
 }
 
 function formatMemoryDate(value: string) {
@@ -50,7 +50,7 @@ export function CuriosidadesMemoryWall() {
         if (!cancelled) setItems(posts);
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'N\u00e3o foi poss\u00edvel carregar o mural.');
+          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar o mural.');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -81,7 +81,7 @@ export function CuriosidadesMemoryWall() {
       setItems((current) => [post, ...current]);
       setMemory('');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'N\u00e3o foi poss\u00edvel publicar a lembran\u00e7a.');
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível publicar a lembrança.');
     } finally {
       setSubmitting(false);
     }
@@ -91,11 +91,11 @@ export function CuriosidadesMemoryWall() {
     <section className={curiositySectionCardClassName}>
       <div className="flex items-center gap-3">
         <MessageSquareHeart className="h-5 w-5 text-blue-700" />
-        <h2 className="text-xl font-bold text-gray-950">Mural da fam\u00edlia</h2>
+        <h2 className="text-xl font-bold text-gray-950">Mural da família</h2>
       </div>
 
       <p className="mt-3 text-sm leading-6 text-gray-600">
-        Responda: qual sua lembran\u00e7a favorita da fam\u00edlia?
+        Responda: qual é a sua lembrança favorita da família?
       </p>
 
       <div className="mt-5 space-y-3">
@@ -109,7 +109,7 @@ export function CuriosidadesMemoryWall() {
         <textarea
           value={memory}
           onChange={(event) => setMemory(event.target.value)}
-          placeholder="Escreva uma lembran\u00e7a da fam\u00edlia..."
+          placeholder="Escreva uma lembrança da família..."
           rows={4}
           className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
@@ -134,7 +134,7 @@ export function CuriosidadesMemoryWall() {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
-            {submitting ? 'Publicando...' : 'Publicar lembran\u00e7a'}
+            {submitting ? 'Publicando...' : 'Publicar lembrança'}
           </button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function CuriosidadesMemoryWall() {
 
         {!loading && items.length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-            Nenhuma lembran\u00e7a publicada ainda.
+            Nenhuma lembrança publicada ainda.
           </div>
         )}
 
@@ -165,7 +165,7 @@ export function CuriosidadesMemoryWall() {
               <span>· {getVisibilityLabel(item.visibility)}</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-gray-600">
                 <Heart className="h-3.5 w-3.5" />
-                lembran\u00e7a
+                lembrança
               </span>
             </div>
           </article>
