@@ -190,6 +190,32 @@ main:has(#minha-arvore-edit-form) section:has(#minha-arvore-edit-form) + section
     font-weight: 600 !important;
   }
 
+  #minha-arvore-edit-form > .min-w-0 > div:first-child > div:first-child {
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+  }
+
+  #minha-arvore-edit-form > .min-w-0 > div:first-child > div:first-child > div:first-child {
+    align-items: center !important;
+  }
+
+  #minha-arvore-edit-form > .min-w-0 > div:first-child > div:first-child > div:first-child > span {
+    height: 2.75rem !important;
+    width: 2.75rem !important;
+    border-radius: 0.9rem !important;
+    background: rgb(239, 246, 255) !important;
+    color: rgb(29, 78, 216) !important;
+  }
+
+  #minha-arvore-edit-form > .min-w-0 > div:first-child h3 {
+    font-size: 1.45rem !important;
+    line-height: 1.15 !important;
+  }
+
+  #minha-arvore-edit-form > .min-w-0 > div:first-child > div:first-child > div:last-child {
+    width: 100% !important;
+  }
+
   #minha-arvore-edit-form button[aria-label*='IA'] {
     width: 100% !important;
     justify-content: center !important;
