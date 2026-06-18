@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import type { QaCategory, QaItem, QaPublishedContent } from '../types/qa';
+import type { QaCategory, QaCategoryInput, QaItem, QaItemInput, QaItemStatus, QaPublishedContent } from '../types/qa';
 
 function mapCategory(row: Record<string, unknown>): QaCategory {
   return {
@@ -40,6 +40,41 @@ function mapItem(row: Record<string, unknown>): QaItem {
   };
 }
 
+function cleanKeywords(keywords?: string[]) {
+  return Array.from(new Set((keywords ?? []).map((keyword) => keyword.trim()).filter(Boolean)));
+}
+
+function normalizeCategoryInput(payload: QaCategoryInput) {
+  return {
+    title: payload.title.trim(),
+    short_title: payload.short_title?.trim() || null,
+    slug: payload.slug.trim(),
+    description: payload.description?.trim() || null,
+    order_index: Number(payload.order_index ?? 0),
+    is_active: payload.is_active !== false,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function normalizeItemInput(payload: QaItemInput) {
+  const status: QaItemStatus = payload.status ?? 'draft';
+
+  return {
+    category_id: payload.category_id,
+    question: payload.question.trim(),
+    answer: payload.answer.trim(),
+    slug: payload.slug.trim(),
+    keywords: cleanKeywords(payload.keywords),
+    related_page_label: payload.related_page_label?.trim() || null,
+    related_page_path: payload.related_page_path?.trim() || null,
+    is_featured: payload.is_featured === true,
+    status,
+    order_index: Number(payload.order_index ?? 0),
+    published_at: status === 'published' ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export async function listPublishedQaContent(): Promise<QaPublishedContent> {
   const categoriesResponse = await supabase
     .from('qa_categories')
@@ -70,4 +105,112 @@ export async function listPublishedQaContent(): Promise<QaPublishedContent> {
     .filter((item) => item.status === 'published' && activeCategoryIds.has(item.category_id));
 
   return { categories, items };
+}
+
+export async function adminListQaCategories(): Promise<QaCategory[]> {
+  const response = await supabase
+    .from('qa_categories')
+    .select('*')
+    .order('order_index', { ascending: true })
+    .order('title', { ascending: true });
+
+  if (response.error) throw new Error('Não foi possível carregar as categorias.');
+  return (response.data ?? []).map((row) => mapCategory(row as Record<string, unknown>));
+}
+
+export async function adminCreateQaCategory(payload: QaCategoryInput): Promise<QaCategory> {
+  const response = await supabase
+    .from('qa_categories')
+    .insert({
+      ...normalizeCategoryInput(payload),
+      created_at: new Date().toISOString(),
+    })
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível criar a categoria.');
+  return mapCategory(response.data as Record<string, unknown>);
+}
+
+export async function adminUpdateQaCategory(id: string, payload: QaCategoryInput): Promise<QaCategory> {
+  const response = await supabase
+    .from('qa_categories')
+    .update(normalizeCategoryInput(payload))
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível atualizar a categoria.');
+  return mapCategory(response.data as Record<string, unknown>);
+}
+
+export async function adminToggleQaCategory(id: string, isActive: boolean): Promise<QaCategory> {
+  const response = await supabase
+    .from('qa_categories')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível atualizar o status da categoria.');
+  return mapCategory(response.data as Record<string, unknown>);
+}
+
+export async function adminListQaItems(): Promise<QaItem[]> {
+  const response = await supabase
+    .from('qa_items')
+    .select('*')
+    .order('order_index', { ascending: true })
+    .order('question', { ascending: true });
+
+  if (response.error) throw new Error('Não foi possível carregar as dúvidas.');
+  return (response.data ?? []).map((row) => mapItem(row as Record<string, unknown>));
+}
+
+export async function adminCreateQaItem(payload: QaItemInput): Promise<QaItem> {
+  const response = await supabase
+    .from('qa_items')
+    .insert({
+      ...normalizeItemInput(payload),
+      created_at: new Date().toISOString(),
+    })
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível criar a dúvida.');
+  return mapItem(response.data as Record<string, unknown>);
+}
+
+export async function adminUpdateQaItem(id: string, payload: QaItemInput): Promise<QaItem> {
+  const currentStatus = payload.status ?? 'draft';
+  const normalized = normalizeItemInput(payload);
+
+  const response = await supabase
+    .from('qa_items')
+    .update({
+      ...normalized,
+      published_at: currentStatus === 'published' ? normalized.published_at : null,
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível atualizar a dúvida.');
+  return mapItem(response.data as Record<string, unknown>);
+}
+
+export async function adminSetQaItemStatus(id: string, status: QaItemStatus): Promise<QaItem> {
+  const response = await supabase
+    .from('qa_items')
+    .update({
+      status,
+      published_at: status === 'published' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (response.error) throw new Error(response.error.message || 'Não foi possível alterar o status da dúvida.');
+  return mapItem(response.data as Record<string, unknown>);
 }
