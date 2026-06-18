@@ -3,7 +3,10 @@ const FIRST_LOGIN_TUTORIAL_SELECTOR = '[data-first-login-tutorial="true"]';
 const FIRST_LOGIN_TUTORIAL_TITLE_SELECTOR = '#first-login-tutorial-title';
 const FIRST_LOGIN_TUTORIAL_PANEL_SELECTOR = `${FIRST_LOGIN_TUTORIAL_SELECTOR} > section`;
 const MOBILE_MAIN_CARD_SELECTOR = '[data-mobile-family-tree-root="true"] [data-family-map-mobile-card="true"][data-family-map-color-key="central"]';
-const MOBILE_BOTTOM_NAV_ITEM_SELECTOR = 'nav[data-tree-export-ignore="true"] button, nav[data-tree-export-ignore="true"] a';
+const MOBILE_BOTTOM_NAV_SELECTOR = 'nav[data-tree-export-ignore="true"]';
+const MOBILE_BOTTOM_NAV_GRID_SELECTOR = `${MOBILE_BOTTOM_NAV_SELECTOR} > div`;
+const MOBILE_BOTTOM_NAV_ITEM_SELECTOR = `${MOBILE_BOTTOM_NAV_SELECTOR} button, ${MOBILE_BOTTOM_NAV_SELECTOR} a`;
+const RUNTIME_CURIOSITIES_BUTTON_SELECTOR = '[data-first-login-mobile-curiosities-button="true"]';
 
 function isMobileViewport() {
   return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
@@ -88,16 +91,74 @@ function syncMainMobilePersonCardTarget() {
   return changed;
 }
 
-function syncForumBottomNavTarget() {
-  const candidates = Array.from(document.querySelectorAll<HTMLElement>(MOBILE_BOTTOM_NAV_ITEM_SELECTOR))
+function findBottomNavItemByText(label: string) {
+  const normalizedLabel = normalizeText(label);
+
+  return Array.from(document.querySelectorAll<HTMLElement>(MOBILE_BOTTOM_NAV_ITEM_SELECTOR))
     .filter(isVisibleElement)
-    .filter((element) => {
+    .find((element) => {
       const text = normalizeText(element.textContent ?? '');
       const ariaLabel = normalizeText(element.getAttribute('aria-label') ?? '');
-      return text === 'forum' || ariaLabel.includes('forum');
-    });
+      return text === normalizedLabel || ariaLabel.includes(normalizedLabel);
+    }) ?? null;
+}
 
-  const target = candidates[0] ?? null;
+function createCuriositiesButton(referenceButton: HTMLElement | null) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = referenceButton?.className || 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition active:bg-gray-100';
+  button.setAttribute('aria-label', 'Abrir curiosidades');
+  button.setAttribute('data-tour-target', 'curiosities');
+  button.setAttribute('data-first-login-mobile-curiosities-button', 'true');
+  button.innerHTML = `
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8L12 3z"></path>
+      <path d="M5 3v4"></path>
+      <path d="M3 5h4"></path>
+      <path d="M19 17v4"></path>
+      <path d="M17 19h4"></path>
+    </svg>
+    <span>Curiosidades</span>
+  `;
+  button.addEventListener('click', () => {
+    window.location.assign('/curiosidades');
+  });
+
+  return button;
+}
+
+function ensureCuriositiesBottomNavButton() {
+  const grid = document.querySelector<HTMLElement>(MOBILE_BOTTOM_NAV_GRID_SELECTOR);
+  if (!grid || !isVisibleElement(grid)) return false;
+
+  grid.style.gridTemplateColumns = 'repeat(6, minmax(0, 1fr))';
+  grid.style.maxWidth = 'min(100%, 28rem)';
+  grid.style.gap = '0.18rem';
+
+  const existing = document.querySelector<HTMLElement>(RUNTIME_CURIOSITIES_BUTTON_SELECTOR);
+  const forumButton = findBottomNavItemByText('Fórum');
+  const referenceButton = forumButton || findBottomNavItemByText('Calendário');
+
+  if (existing) {
+    if (existing.getAttribute('data-tour-target') !== 'curiosities') {
+      existing.setAttribute('data-tour-target', 'curiosities');
+      return true;
+    }
+    return false;
+  }
+
+  const button = createCuriositiesButton(referenceButton);
+  if (forumButton?.parentElement === grid) {
+    grid.insertBefore(button, forumButton);
+  } else {
+    grid.appendChild(button);
+  }
+
+  return true;
+}
+
+function syncForumBottomNavTarget() {
+  const target = findBottomNavItemByText('Fórum');
   let changed = false;
 
   document.querySelectorAll<HTMLElement>('[data-first-login-mobile-forum-target="true"]').forEach((element) => {
@@ -162,7 +223,10 @@ function requestTutorialLayoutRefresh() {
 function syncFirstLoginMobileTutorial() {
   if (!isMobileViewport()) return;
 
-  const changedTargets = syncMainMobilePersonCardTarget() || syncForumBottomNavTarget();
+  const changedTargets =
+    syncMainMobilePersonCardTarget() ||
+    ensureCuriositiesBottomNavButton() ||
+    syncForumBottomNavTarget();
   const title = getTutorialTitle();
   const normalizedTitle = normalizeText(title);
 
@@ -176,7 +240,7 @@ function syncFirstLoginMobileTutorial() {
     }
   }
 
-  if (normalizedTitle.includes('forum da familia')) {
+  if (normalizedTitle.includes('curiosidades') || normalizedTitle.includes('forum da familia')) {
     centerTutorialPanel();
   }
 }
