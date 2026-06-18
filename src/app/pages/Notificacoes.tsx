@@ -186,7 +186,7 @@ export function Notificacoes() {
         ]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6`}>
+      <main className={`${PAGE_CONTAINER_CLASS} py-6 pb-40 md:pb-6`}>
         <Card className="min-w-0 rounded-lg border-gray-200 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -219,7 +219,7 @@ export function Notificacoes() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {error && (
               <div className="mb-4 break-words rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 {error}
@@ -260,36 +260,22 @@ export function Notificacoes() {
                           : undefined
                       }
                       className={[
-                        'rounded-2xl border p-4 shadow-sm transition hover:shadow-md sm:p-5',
+                        'rounded-2xl border bg-white p-4 shadow-sm transition hover:shadow-md sm:p-5',
                         hasLink ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2' : '',
-                        item.lida ? 'border-gray-200 bg-white' : 'border-blue-200 bg-blue-50/60',
+                        item.lida ? 'border-gray-200' : 'border-blue-200',
                       ].join(' ')}
                     >
-                      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0 flex-1 space-y-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={[
-                                'rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                                item.lida ? 'bg-gray-100 text-gray-500' : 'bg-blue-600 text-white',
-                              ].join(' ')}
-                            >
-                              {item.lida ? 'Lida' : 'Nova'}
-                            </span>
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <span
+                          className={[
+                            'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide',
+                            item.lida ? 'bg-gray-100 text-gray-500' : 'bg-blue-600 text-white',
+                          ].join(' ')}
+                        >
+                          {item.lida ? 'Lida' : 'Nova'}
+                        </span>
 
-                          </div>
-
-                          <div className="space-y-2">
-                            <h2 className="break-words text-base font-bold leading-snug text-gray-900">{titulo}</h2>
-                            <p className="break-words text-sm leading-relaxed text-gray-600">{mensagem}</p>
-                          </div>
-
-                          <p className="break-words text-sm font-medium text-gray-500">
-                            {formatarDataNotificacao(item.created_at)}
-                          </p>
-                        </div>
-
-                        <div className="flex shrink-0 flex-row gap-2 border-t border-gray-100 pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+                        <div className="flex shrink-0 flex-row gap-2">
                           {!item.lida && (
                             <button
                               type="button"
@@ -297,12 +283,11 @@ export function Notificacoes() {
                                 event.stopPropagation();
                                 marcarComoLida(item.id);
                               }}
-                              className="inline-flex h-10 min-w-10 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-3 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 transition hover:bg-blue-50"
                               aria-label="Marcar como lida"
                               title="Marcar como lida"
                             >
                               <CheckCheck className="h-4 w-4 shrink-0" />
-                              <span className="hidden sm:inline">Lida</span>
                             </button>
                           )}
                           <button
@@ -311,15 +296,23 @@ export function Notificacoes() {
                               event.stopPropagation();
                               remover(item.id);
                             }}
-                            className="inline-flex h-10 min-w-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
                             aria-label="Remover notificação"
                             title="Remover notificação"
                           >
                             <Trash2 className="h-4 w-4 shrink-0" />
-                            <span className="hidden sm:inline">Remover</span>
                           </button>
                         </div>
                       </div>
+
+                      <div className="mt-4 space-y-2">
+                        <h2 className="break-words text-base font-bold leading-snug text-gray-900">{titulo}</h2>
+                        <p className="break-words text-sm leading-relaxed text-gray-600">{mensagem}</p>
+                      </div>
+
+                      <p className="mt-4 break-words text-sm font-medium text-gray-500">
+                        {formatarDataNotificacao(item.created_at)}
+                      </p>
                     </article>
                   );
                 })}
