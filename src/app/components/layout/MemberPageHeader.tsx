@@ -3,18 +3,11 @@ import { useLocation, useNavigate } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  contarNotificacoesNaoLidasSupabase,
-  listarNotificacoesSupabase,
-  marcarNotificacaoSupabaseComoLida,
-  removerNotificacaoSupabase,
-} from '../../services/userEngagementService';
-import { NotificacaoUsuario } from '../../types';
+import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import {
   ArrowLeft,
   Bell,
   CalendarDays,
-  Check,
   Home,
   LogOut,
   MessageCircle,
@@ -24,7 +17,8 @@ import {
   Settings,
   Sparkles,
   Star,
-  Trash2,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 
 export type HeaderAction = {
@@ -33,18 +27,6 @@ export type HeaderAction = {
   onClick?: () => void;
   icon?: React.ComponentType<{ className?: string }>;
   variant?: 'default' | 'primary' | 'danger' | 'ghost';
-  /**
-   * Controla quando o texto do botão aparece em ações com ícone.
-   *
-   * - always: texto sempre visível.
-   * - lg: texto visível a partir de lg.
-   * - xl: texto visível a partir de xl.
-   * - never: sempre icon-only visualmente, mantendo label para leitores de tela.
-   *
-   * Padrão:
-   * - primary: lg.
-   * - demais variantes: xl.
-   */
   responsiveLabel?: 'always' | 'lg' | 'xl' | 'never';
   disabled?: boolean;
   badgeCount?: number;
@@ -60,12 +42,6 @@ interface MemberPageHeaderProps {
   hideFavoriteButton?: boolean;
   hideMobileHeaderActions?: boolean;
   className?: string;
-}
-
-interface HeaderNotificationsMenuProps {
-  userId?: string;
-  unreadNotificationsCount: number;
-  onNotificationsUpdated: () => void | Promise<void>;
 }
 
 export const PAGE_CONTAINER_CLASS = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
@@ -98,6 +74,7 @@ const STANDARD_MEMBER_NAV_PATHS = new Set([
   '/notificacoes',
   '/ajustar-notificacoes',
   '/forum',
+  '/curiosidades',
 ]);
 
 function getActionClass(variant: HeaderAction['variant']) {
@@ -126,10 +103,6 @@ function getLabelClassName(mode: HeaderAction['responsiveLabel']) {
   return 'sr-only xl:not-sr-only xl:whitespace-nowrap';
 }
 
-function isNotificationsAction(action: Pick<HeaderAction, 'to' | 'label'>) {
-  return action.to === '/notificacoes' || action.label.toLocaleLowerCase('pt-BR').includes('notifica');
-}
-
 function isStandardNavigationAction(action: HeaderAction) {
   if (!action.to) return false;
   return STANDARD_MEMBER_NAV_PATHS.has(action.to) || action.to.startsWith('/forum');
@@ -143,68 +116,6 @@ function getCurrentHeaderSection(pathname: string) {
   if (pathname === '/forum' || pathname.startsWith('/forum/')) return 'forum';
   if (pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/') return 'tree';
   return 'other';
-}
-
-function formatarHora(data: Date) {
-  return data.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function isSameCalendarDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
-function formatarDataNotificacao(valor?: string) {
-  if (!valor) return '';
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return valor;
-
-  const agora = new Date();
-  const diffMs = Math.max(0, agora.getTime() - data.getTime());
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-
-  if (diffSeconds < 30) return 'Agora';
-  if (diffMinutes < 2) return 'Agora há pouco';
-  if (diffMinutes < 60) return `Há ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
-
-  if (isSameCalendarDay(data, agora)) {
-    return `Hoje, às ${formatarHora(data)}`;
-  }
-
-  if (diffHours < 24) {
-    return `Há ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
-  }
-
-  const ontem = new Date(agora);
-  ontem.setDate(agora.getDate() - 1);
-
-  if (isSameCalendarDay(data, ontem)) {
-    return `Ontem, às ${formatarHora(data)}`;
-  }
-
-  const dataCurta = data.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-  });
-
-  return `Dia ${dataCurta}, às ${formatarHora(data)}`;
-}
-
-function normalizeNotificationText(value?: string | null) {
-  return String(value ?? '')
-    .replace(/\bData de memoria\b/g, 'Data de memória')
-    .replace(/\bHoje e uma data de memoria\b/g, 'Hoje é uma data de memória')
-    .replace(/\bAniversario na familia\b/g, 'Aniversário na família')
-    .replace(/\bHoje e aniversario\b/g, 'Hoje é aniversário');
 }
 
 function NotificationCountBadge({ count }: { count?: number }) {
@@ -261,259 +172,6 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
   );
 }
 
-function HeaderNotificationsMenu({
-  userId,
-  unreadNotificationsCount,
-  onNotificationsUpdated,
-}: HeaderNotificationsMenuProps) {
-  const navigate = useNavigate();
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [notificacoes, setNotificacoes] = useState<NotificacaoUsuario[]>([]);
-
-  const carregarUltimas = useCallback(async () => {
-    if (!userId) {
-      setNotificacoes([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const lista = await listarNotificacoesSupabase(userId);
-      setNotificacoes(lista.slice(0, 5));
-    } catch (error) {
-      console.error('[Supabase] Erro ao carregar últimas notificações:', error);
-      setNotificacoes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (!open) return;
-    void carregarUltimas();
-  }, [carregarUltimas, open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  const notificarAtualizacao = useCallback(() => {
-    window.dispatchEvent(new Event('arvorefamilia:notifications-updated'));
-    void onNotificationsUpdated();
-  }, [onNotificationsUpdated]);
-
-  const navegarPara = useCallback(
-    (to: string) => {
-      setOpen(false);
-      navigate(to);
-    },
-    [navigate]
-  );
-
-  const marcarComoLida = useCallback(
-    async (notificacaoId: string) => {
-      if (!userId) return;
-
-      setNotificacoes((current) =>
-        current.map((notificacao) =>
-          notificacao.id === notificacaoId ? { ...notificacao, lida: true } : notificacao
-        )
-      );
-      await marcarNotificacaoSupabaseComoLida(notificacaoId, userId);
-      notificarAtualizacao();
-    },
-    [notificarAtualizacao, userId]
-  );
-
-  const remover = useCallback(
-    async (notificacaoId: string) => {
-      if (!userId) return;
-
-      setNotificacoes((current) => current.filter((notificacao) => notificacao.id !== notificacaoId));
-      await removerNotificacaoSupabase(notificacaoId, userId);
-      notificarAtualizacao();
-    },
-    [notificarAtualizacao, userId]
-  );
-
-  return (
-    <div ref={rootRef} className="relative hidden md:inline-flex">
-      <button
-        type="button"
-        className={`relative flex ${memberIconButtonClassName}`}
-        title="Alertas"
-        aria-label="Abrir menu de alertas"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        data-tour-target="alerts"
-        onClick={() => setOpen((current) => !current)}
-      >
-        <Bell className="h-4 w-4" />
-        <NotificationCountBadge count={unreadNotificationsCount} />
-      </button>
-
-      {open && (
-        <div
-          className="absolute right-0 top-full z-[650] mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5 sm:w-96"
-          role="menu"
-          aria-label="Últimas notificações"
-        >
-          <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900">Últimas notificações</p>
-              <p className="mt-0.5 text-xs text-gray-500">
-                {unreadNotificationsCount > 0
-                  ? `${unreadNotificationsCount} não lida${unreadNotificationsCount === 1 ? '' : 's'}`
-                  : 'Todas lidas'}
-              </p>
-            </div>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-              <Bell className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="max-h-80 overflow-y-auto p-2">
-            {!userId ? (
-              <div className="rounded-xl bg-gray-50 px-4 py-5 text-center text-sm text-gray-500">
-                Faça login para ver suas notificações.
-              </div>
-            ) : loading ? (
-              <div className="rounded-xl bg-gray-50 px-4 py-5 text-center text-sm text-gray-500">
-                Carregando notificações...
-              </div>
-            ) : notificacoes.length === 0 ? (
-              <div className="rounded-xl bg-gray-50 px-4 py-5 text-center text-sm text-gray-500">
-                Nenhuma notificação recente.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {notificacoes.map((item) => {
-                  const titulo = normalizeNotificationText(item.titulo);
-                  const mensagem = normalizeNotificationText(item.mensagem);
-                  const hasLink = Boolean(item.link);
-
-                  return (
-                    <article
-                      key={item.id}
-                      role={hasLink ? 'button' : undefined}
-                      tabIndex={hasLink ? 0 : undefined}
-                      aria-label={hasLink ? `Abrir notificação: ${titulo}` : undefined}
-                      onClick={hasLink ? () => navegarPara(item.link as string) : undefined}
-                      onKeyDown={
-                        hasLink
-                          ? (event: React.KeyboardEvent<HTMLElement>) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault();
-                                navegarPara(item.link as string);
-                              }
-                            }
-                          : undefined
-                      }
-                      className={[
-                        'rounded-xl border p-3 transition',
-                        item.lida ? 'border-gray-100 bg-white' : 'border-blue-100 bg-blue-50/60',
-                        hasLink ? 'cursor-pointer hover:border-blue-200 hover:bg-blue-50' : '',
-                      ].join(' ')}
-                    >
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span
-                              className={[
-                                'h-2 w-2 shrink-0 rounded-full',
-                                item.lida ? 'bg-gray-300' : 'bg-blue-600',
-                              ].join(' ')}
-                              aria-hidden="true"
-                            />
-                            <h3 className="truncate text-sm font-bold text-gray-900">{titulo}</h3>
-                          </div>
-                          <p className="mt-1 line-clamp-2 break-words text-xs leading-relaxed text-gray-600">
-                            {mensagem}
-                          </p>
-                          <p className="mt-2 text-[11px] font-medium text-gray-400">
-                            {formatarDataNotificacao(item.created_at)}
-                          </p>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-1">
-                          {!item.lida && (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void marcarComoLida(item.id);
-                              }}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-700 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                              title="Marcar como lida"
-                              aria-label="Marcar como lida"
-                            >
-                              <Check className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void remover(item.id);
-                            }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                            title="Excluir notificação"
-                            aria-label="Excluir notificação"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 sm:grid-cols-2">
-            <Link
-              to="/notificacoes"
-              onClick={() => setOpen(false)}
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            >
-              Ver todas as notificações
-            </Link>
-            <Link
-              to="/ajustar-notificacoes"
-              onClick={() => setOpen(false)}
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            >
-              Personalizar preferências
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function StandardToolbarLink({
   to,
   title,
@@ -522,6 +180,7 @@ function StandardToolbarLink({
   children,
   visibleFrom = 'lg',
   tourTarget,
+  badgeCount,
 }: {
   to: string;
   title: string;
@@ -530,17 +189,19 @@ function StandardToolbarLink({
   children: React.ReactNode;
   visibleFrom?: 'md' | 'lg';
   tourTarget?: string;
+  badgeCount?: number;
 }) {
   return (
     <Link
       to={to}
-      className={`${memberToolbarButtonClassName} ${visibleFrom}:inline-flex`}
+      className={`relative ${memberToolbarButtonClassName} ${visibleFrom}:inline-flex`}
       title={title}
       aria-label={ariaLabel}
       data-tour-target={tourTarget}
     >
       <Icon className="h-4 w-4" />
       <span className={memberHeaderActionTextClassName}>{children}</span>
+      <NotificationCountBadge count={badgeCount} />
     </Link>
   );
 }
@@ -599,6 +260,12 @@ export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
   { label: 'Alertas', to: '/notificacoes', icon: Bell, responsiveLabel: 'never' },
 ];
 
+const ADMIN_HEADER_ACTIONS: HeaderAction[] = [
+  { label: 'Principal', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
+  { label: 'Membros', to: '/admin/pessoas', icon: Users, responsiveLabel: 'always' },
+  { label: 'Solicitações', to: '/admin/solicitacoes-vinculos', icon: UserPlus, responsiveLabel: 'always' },
+];
+
 export function MemberPageHeader({
   title,
   subtitle,
@@ -628,8 +295,13 @@ export function MemberPageHeader({
       return;
     }
 
-    const count = await contarNotificacoesNaoLidasSupabase(user.id);
-    setUnreadNotificationsCount(count);
+    try {
+      const count = await contarNotificacoesNaoLidasSupabase(user.id);
+      setUnreadNotificationsCount(count);
+    } catch (error) {
+      console.error('[Supabase] Erro ao contar notificações não lidas:', error);
+      setUnreadNotificationsCount(0);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -670,26 +342,13 @@ export function MemberPageHeader({
     navigate('/busca?q=' + encodeURIComponent(trimmed));
   }, [navigate, searchTerm]);
 
-  const adminActionsWithNotificationBadge = actions.map((action) =>
-    isNotificationsAction(action)
-      ? { ...action, badgeCount: unreadNotificationsCount }
-      : action
-  );
   const extraActions = actions
     .filter((action) => !isStandardNavigationAction(action))
     .map((action) =>
-      isNotificationsAction(action)
+      action.to === '/notificacoes'
         ? { ...action, badgeCount: unreadNotificationsCount }
         : action
     );
-
-  const notificationsMenu = (
-    <HeaderNotificationsMenu
-      userId={user?.id}
-      unreadNotificationsCount={unreadNotificationsCount}
-      onNotificationsUpdated={refreshUnreadNotificationsCount}
-    />
-  );
 
   const standardHeaderActions = (
     <>
@@ -719,7 +378,11 @@ export function MemberPageHeader({
             Fórum
           </StandardToolbarLink>
         )}
-        {currentHeaderSection !== 'notifications' && notificationsMenu}
+        {currentHeaderSection !== 'notifications' && (
+          <StandardToolbarLink to="/notificacoes" title="Alertas" ariaLabel="Abrir alertas" icon={Bell} tourTarget="alerts" badgeCount={unreadNotificationsCount}>
+            Alertas
+          </StandardToolbarLink>
+        )}
       </div>
 
       <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 shrink-0 items-center justify-end gap-2 overflow-visible'].join(' ')}>
@@ -781,38 +444,17 @@ export function MemberPageHeader({
           </div>
 
           {isAdminSection ? (
-            (actions.length > 0 || customActions) && (
-              <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
-                {adminActionsWithNotificationBadge.map((action) => (
-                  isNotificationsAction(action) ? (
-                    <HeaderNotificationsMenu
-                      key={`${action.label}-${action.to ?? 'button'}`}
-                      userId={user?.id}
-                      unreadNotificationsCount={unreadNotificationsCount}
-                      onNotificationsUpdated={refreshUnreadNotificationsCount}
-                    />
-                  ) : (
-                    <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
-                  )
-                ))}
-                {customActions}
-                <UserProfileMenu />
-              </div>
-            )
+            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
+              {ADMIN_HEADER_ACTIONS.map((action) => (
+                <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
+              ))}
+              <UserProfileMenu />
+            </div>
           ) : (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-2 overflow-visible md:flex">
               {standardHeaderActions}
               {extraActions.map((action) => (
-                isNotificationsAction(action) ? (
-                  <HeaderNotificationsMenu
-                    key={`${action.label}-${action.to ?? 'button'}`}
-                    userId={user?.id}
-                    unreadNotificationsCount={unreadNotificationsCount}
-                    onNotificationsUpdated={refreshUnreadNotificationsCount}
-                  />
-                ) : (
-                  <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
-                )
+                <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
               {customActions}
               <UserProfileMenu />
@@ -824,6 +466,7 @@ export function MemberPageHeader({
     </>
   );
 }
+
 export const HEADER_ACTION_ICONS = {
   ArrowLeft,
   Bell,
