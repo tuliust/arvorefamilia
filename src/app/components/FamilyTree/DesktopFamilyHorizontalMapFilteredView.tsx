@@ -23,6 +23,58 @@ interface DesktopFamilyHorizontalMapFilteredViewProps {
   onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
+function isParentChildRelationship(relationship: Relacionamento) {
+  const type = relationship.tipo_relacionamento as string;
+  return type === 'pai'
+    || type === 'mae'
+    || type === 'filho'
+    || type === 'filiacao_sangue'
+    || type === 'filiacao_adotiva';
+}
+
+function getParentChildIds(relationship: Relacionamento) {
+  if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
+    return {
+      parentId: relationship.pessoa_destino_id,
+      childId: relationship.pessoa_origem_id,
+    };
+  }
+
+  return {
+    parentId: relationship.pessoa_origem_id,
+    childId: relationship.pessoa_destino_id,
+  };
+}
+
+function getParentIdsForPerson(centralPersonId: string, relacionamentos: Relacionamento[]) {
+  return new Set(
+    relacionamentos
+      .filter(isParentChildRelationship)
+      .map(getParentChildIds)
+      .filter(({ childId }) => childId === centralPersonId)
+      .map(({ parentId }) => parentId)
+      .filter(Boolean)
+  );
+}
+
+function applyHorizontalDirectFilterExceptions(
+  directScopeIds: Set<string>,
+  directRelativeFilters: DirectRelativeFilters,
+  centralPersonId: string,
+  relacionamentos: Relacionamento[]
+) {
+  const nextScopeIds = new Set(directScopeIds);
+
+  if (!directRelativeFilters.pais) {
+    getParentIdsForPerson(centralPersonId, relacionamentos).forEach((parentId) => {
+      nextScopeIds.delete(parentId);
+    });
+  }
+
+  nextScopeIds.add(centralPersonId);
+  return nextScopeIds;
+}
+
 function intersectVisiblePersonIds(
   directScopeIds: Set<string>,
   visiblePersonIds: Set<string> | undefined,
@@ -67,9 +119,15 @@ function DesktopFamilyHorizontalMapFilteredViewComponent({
         conjuge: true,
       },
     });
+    const adjustedDirectScopeIds = applyHorizontalDirectFilterExceptions(
+      directScopeIds,
+      directRelativeFilters,
+      centralPersonId,
+      relacionamentos
+    );
 
-    if (directScopeIds.size === 0) return visiblePersonIds;
-    return intersectVisiblePersonIds(directScopeIds, visiblePersonIds, centralPersonId);
+    if (adjustedDirectScopeIds.size === 0) return visiblePersonIds;
+    return intersectVisiblePersonIds(adjustedDirectScopeIds, visiblePersonIds, centralPersonId);
   }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
 
   return (
