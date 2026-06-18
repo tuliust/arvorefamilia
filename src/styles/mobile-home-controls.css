@@ -43,7 +43,23 @@
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"]::before {
-    content: none !important;
+    content: "X" !important;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 1rem);
+    right: 1rem;
+    display: flex;
+    width: 2.35rem;
+    height: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(226, 232, 240);
+    border-radius: 9999px;
+    background: rgb(255, 255, 255);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    color: rgb(15, 23, 42);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1;
   }
 
   div[role="dialog"][aria-label="Painel de visualização"] > section {
