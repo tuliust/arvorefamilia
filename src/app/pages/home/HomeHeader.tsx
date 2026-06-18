@@ -322,7 +322,7 @@ export function HomeHeader({
             <Button
               variant="outline"
               size="icon"
-              className="relative z-[504] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-white"
+              className="relative z-[504] flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm"
               title="Buscar por pessoa ou página"
               aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
               data-tour-target="search"
