@@ -8,10 +8,21 @@ section[aria-label="Resumo e ações de notificações"] {
 /* Header: quando a busca está expandida, ações com ícone viram icon-only. */
 header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(> svg),
 header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(> svg) {
+  display: inline-flex !important;
   width: 2.25rem !important;
   min-width: 2.25rem !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label]:has(> svg) > svg,
+header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) button[title][aria-label]:has(> svg) > svg {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  flex-shrink: 0 !important;
 }
 
 header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])) a[title][aria-label] > span.text-sm,
@@ -28,6 +39,12 @@ header:has(input[placeholder="Buscar pessoa ou página..."]:not([tabindex="-1"])
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
+}
+
+/* /mapa-familiar-horizontal: remove a dica fixa sobre destaque de linhas. */
+svg:has(#horizontal-line-hint-arrow),
+aside[aria-label="Dica sobre destaque de linhas"] {
+  display: none !important;
 }
 
 /* /calendario-familiar: troca emojis por ícones vetoriais nos cards laterais. */
