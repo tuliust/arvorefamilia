@@ -631,3 +631,206 @@ export function buildFamilyRouteSummary(pessoas: Pessoa[]): FamilyRouteSummary {
     totalPeopleWithCity,
   };
 }
+
+export type PersonInterestProfile = {
+  pessoa: Pessoa;
+  interests: string[];
+};
+
+export function getFlexiblePersonField(pessoa: Pessoa, fieldNames: string[]) {
+  const record = pessoa as unknown as Record<string, unknown>;
+
+  for (const fieldName of fieldNames) {
+    const value = record[fieldName];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return value;
+    }
+  }
+
+  return '';
+}
+
+export function splitFlexibleList(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  return String(value ?? '')
+    .split(/[,;|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function getPersonInterestProfile(pessoa: Pessoa): PersonInterestProfile {
+  const possibleFields = [
+    'interesses',
+    'hobbies',
+    'preferencias',
+    'time',
+    'time_coracao',
+    'torcida',
+    'comida_favorita',
+    'musica_favorita',
+    'filme_favorito',
+  ];
+
+  const interests = possibleFields.flatMap((fieldName) => {
+    const value = getFlexiblePersonField(pessoa, [fieldName]);
+    return splitFlexibleList(value);
+  });
+
+  const profession = String(pessoa.profissao ?? '').trim();
+  const currentCity = String(pessoa.local_atual ?? '').trim();
+  const birthCity = String(pessoa.local_nascimento ?? '').trim();
+
+  if (profession) interests.push(`Profissão: ${profession}`);
+  if (currentCity) interests.push(`Mora em: ${currentCity}`);
+  if (birthCity) interests.push(`Nasceu em: ${birthCity}`);
+
+  const unique = new Map<string, string>();
+
+  interests.forEach((interest) => {
+    const key = normalizeCuriosityText(interest);
+    if (key && !unique.has(key)) {
+      unique.set(key, interest);
+    }
+  });
+
+  return {
+    pessoa,
+    interests: Array.from(unique.values()),
+  };
+}
+
+export function comparePeopleInterests(pessoaA: Pessoa | null, pessoaB: Pessoa | null) {
+  if (!pessoaA || !pessoaB) {
+    return {
+      common: [] as string[],
+      onlyA: [] as string[],
+      onlyB: [] as string[],
+      score: 0,
+    };
+  }
+
+  const profileA = getPersonInterestProfile(pessoaA);
+  const profileB = getPersonInterestProfile(pessoaB);
+
+  const normalizedA = new Map(profileA.interests.map((interest) => [normalizeCuriosityText(interest), interest]));
+  const normalizedB = new Map(profileB.interests.map((interest) => [normalizeCuriosityText(interest), interest]));
+
+  const common = profileA.interests.filter((interest) => normalizedB.has(normalizeCuriosityText(interest)));
+  const onlyA = profileA.interests.filter((interest) => !normalizedB.has(normalizeCuriosityText(interest)));
+  const onlyB = profileB.interests.filter((interest) => !normalizedA.has(normalizeCuriosityText(interest)));
+
+  const totalUnique = new Set([...normalizedA.keys(), ...normalizedB.keys()]).size;
+  const score = totalUnique > 0 ? Math.round((common.length / totalUnique) * 100) : 0;
+
+  return {
+    common,
+    onlyA,
+    onlyB,
+    score,
+  };
+}
+
+export type ZodiacSign = {
+  name: string;
+  element: 'Fogo' | 'Terra' | 'Ar' | 'Água';
+  start: [number, number];
+  end: [number, number];
+};
+
+export const ZODIAC_SIGNS: ZodiacSign[] = [
+  { name: 'Áries', element: 'Fogo', start: [3, 21], end: [4, 19] },
+  { name: 'Touro', element: 'Terra', start: [4, 20], end: [5, 20] },
+  { name: 'Gêmeos', element: 'Ar', start: [5, 21], end: [6, 20] },
+  { name: 'Câncer', element: 'Água', start: [6, 21], end: [7, 22] },
+  { name: 'Leão', element: 'Fogo', start: [7, 23], end: [8, 22] },
+  { name: 'Virgem', element: 'Terra', start: [8, 23], end: [9, 22] },
+  { name: 'Libra', element: 'Ar', start: [9, 23], end: [10, 22] },
+  { name: 'Escorpião', element: 'Água', start: [10, 23], end: [11, 21] },
+  { name: 'Sagitário', element: 'Fogo', start: [11, 22], end: [12, 21] },
+  { name: 'Capricórnio', element: 'Terra', start: [12, 22], end: [1, 19] },
+  { name: 'Aquário', element: 'Ar', start: [1, 20], end: [2, 18] },
+  { name: 'Peixes', element: 'Água', start: [2, 19], end: [3, 20] },
+];
+
+function isDateWithinZodiacRange(month: number, day: number, sign: ZodiacSign) {
+  const [startMonth, startDay] = sign.start;
+  const [endMonth, endDay] = sign.end;
+
+  if (startMonth <= endMonth) {
+    return (
+      (month > startMonth || (month === startMonth && day >= startDay)) &&
+      (month < endMonth || (month === endMonth && day <= endDay))
+    );
+  }
+
+  return (
+    month > startMonth ||
+    (month === startMonth && day >= startDay) ||
+    month < endMonth ||
+    (month === endMonth && day <= endDay)
+  );
+}
+
+export function getZodiacSignFromDate(value: unknown) {
+  const date = parseFamilyDate(value);
+  if (!date) return null;
+
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return ZODIAC_SIGNS.find((sign) => isDateWithinZodiacRange(month, day, sign)) ?? null;
+}
+
+export function getZodiacCompatibility(signA: ZodiacSign | null, signB: ZodiacSign | null) {
+  if (!signA || !signB) {
+    return {
+      score: 0,
+      label: 'Dados insuficientes',
+      description: 'Cadastre datas de nascimento para calcular os signos.',
+    };
+  }
+
+  if (signA.name === signB.name) {
+    return {
+      score: 88,
+      label: 'Afinidade alta',
+      description: `Ambos são de ${signA.name}. A leitura recreativa indica identificação direta de ritmo, linguagem e temperamento.`,
+    };
+  }
+
+  if (signA.element === signB.element) {
+    return {
+      score: 82,
+      label: 'Afinidade alta',
+      description: `Os dois signos pertencem ao elemento ${signA.element}, o que sugere compatibilidade natural na leitura astrológica recreativa.`,
+    };
+  }
+
+  const complementaryPairs = new Set(['Fogo-Ar', 'Ar-Fogo', 'Terra-Água', 'Água-Terra']);
+  const pair = `${signA.element}-${signB.element}`;
+
+  if (complementaryPairs.has(pair)) {
+    return {
+      score: 74,
+      label: 'Boa combinação',
+      description: `${signA.element} e ${signB.element} costumam ser vistos como elementos complementares em leituras astrológicas recreativas.`,
+    };
+  }
+
+  return {
+    score: 58,
+    label: 'Combinação de contraste',
+    description: `A combinação entre ${signA.element} e ${signB.element} pode indicar diferenças de ritmo, mas também pontos de aprendizado.`,
+  };
+}
+
+export function getZodiacRanking(pessoas: Pessoa[]) {
+  return getTopCounts(
+    pessoas.filter((pessoa) => !isPet(pessoa)),
+    (pessoa) => getZodiacSignFromDate(pessoa.data_nascimento)?.name ?? '',
+    12
+  );
+}

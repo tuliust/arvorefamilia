@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
@@ -45,7 +45,7 @@ export function Curiosidades() {
         if (cancelled) return;
 
         console.error('Erro ao carregar dados de curiosidades:', loadError);
-        setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os dados familiares.');
+        setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar os dados familiares.');
         setPessoas([]);
         setRelacionamentos([]);
       } finally {
@@ -73,13 +73,13 @@ export function Curiosidades() {
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
-        subtitle="Descobertas, histórias e conexões da família"
+        subtitle="Descobertas, histÃ³rias e conexÃµes da famÃ­lia"
         icon={Sparkles}
         actions={[
-          { label: 'Árvore Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.ArrowLeft, responsiveLabel: 'always' },
-          { label: 'Calendário', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
+          { label: 'Ãrvore Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.ArrowLeft, responsiveLabel: 'always' },
+          { label: 'CalendÃ¡rio', to: '/calendario-familiar', icon: HEADER_ACTION_ICONS.CalendarDays },
           { label: 'Favoritos', to: '/meus-favoritos', icon: HEADER_ACTION_ICONS.Star },
-          { label: 'Fórum', to: '/forum', icon: HEADER_ACTION_ICONS.MessageCircle },
+          { label: 'FÃ³rum', to: '/forum', icon: HEADER_ACTION_ICONS.MessageCircle },
           { label: 'Alertas', to: '/notificacoes', icon: HEADER_ACTION_ICONS.Bell, responsiveLabel: 'never' },
         ]}
       />
@@ -97,11 +97,12 @@ export function Curiosidades() {
           <CuriosidadesConnectionSection />
           <CuriosidadesQuizSection {...curiosityDataProps} />
           <CuriosidadesRouteSection {...curiosityDataProps} />
-          <CuriosidadesInterestsSection />
+          <CuriosidadesInterestsSection {...curiosityDataProps} />
           <CuriosidadesMemoryWall />
-          <CuriosidadesAstrology />
+          <CuriosidadesAstrology {...curiosityDataProps} />
         </div>
       </main>
     </div>
   );
 }
+
