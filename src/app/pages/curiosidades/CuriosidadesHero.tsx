@@ -19,21 +19,21 @@ const sectionLinks = [
 
 export function CuriosidadesHero() {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 md:p-8">
       <div className="min-w-0">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:text-sm">
           <Sparkles className="h-4 w-4" />
           Curiosidades da família
         </div>
-        <h2 className="text-3xl font-bold leading-tight text-gray-950 md:text-4xl">
+        <h2 className="text-2xl font-bold leading-tight text-gray-950 sm:text-3xl md:text-4xl">
           Uma área para reunir descobertas, memórias e conexões familiares.
         </h2>
-        <div className="mt-5 flex flex-wrap gap-2" aria-label="Atalhos para áreas de curiosidades">
+        <div className="mt-4 flex flex-wrap gap-2 sm:mt-5" aria-label="Atalhos para áreas de curiosidades">
           {sectionLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800"
+              className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-[11px] font-semibold text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 sm:text-xs"
             >
               {link.label}
             </a>
