@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bell,
   CalendarDays,
+  ChevronDown,
   Home,
   Layers,
   Map,
@@ -20,7 +21,10 @@ import {
   type TreeColorPalette,
 } from '../../components/FamilyTree/treeColorPalettes';
 import { useAuth } from '../../contexts/AuthContext';
+import { obterTodasPessoas } from '../../services/dataService';
+import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
+import type { Pessoa } from '../../types';
 
 interface HomeMobileNavProps {
   legendOpen: boolean;
@@ -28,9 +32,48 @@ interface HomeMobileNavProps {
   navigateFromHome: (path: string) => void;
 }
 
+type ViewAsPersonOption = { id: string; label: string };
+
 function getCurrentPathname() {
   if (typeof window === 'undefined') return '';
   return window.location.pathname;
+}
+
+function getCurrentSearchParams() {
+  if (typeof window === 'undefined') return new URLSearchParams();
+  return new URLSearchParams(window.location.search);
+}
+
+function getFirstName(value?: string | null) {
+  const source = String(value ?? '').trim();
+  if (!source) return '';
+
+  const beforeEmail = source.includes('@') ? source.split('@')[0] : source;
+  return beforeEmail.split(/\s+/)[0] || '';
+}
+
+function getShortPersonName(pessoa: Pessoa) {
+  const source = String(pessoa.nome_completo || pessoa.id || '').trim();
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  return parts.slice(0, 2).join(' ') || pessoa.id;
+}
+
+function buildViewAsPersonOptions(pessoas: Pessoa[]): ViewAsPersonOption[] {
+  return [...pessoas]
+    .filter((pessoa) => Boolean(pessoa.id))
+    .map((pessoa) => ({
+      id: pessoa.id,
+      label: getShortPersonName(pessoa),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function formatFamilyViewLabel(value: string) {
+  const clean = value.trim();
+  if (!clean) return 'Família principal';
+  if (clean.toLocaleLowerCase('pt-BR').startsWith('família de ')) return clean;
+  return `Família de ${clean}`;
 }
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
@@ -102,6 +145,8 @@ export function HomeMobileNav({
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
+  const [viewAsPersonOptions, setViewAsPersonOptions] = useState<ViewAsPersonOption[]>([]);
+  const [defaultViewAsLabel, setDefaultViewAsLabel] = useState('Família principal');
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -135,7 +180,12 @@ export function HomeMobileNav({
   }, [refreshUnreadNotificationsCount]);
 
   const pathname = getCurrentPathname();
+  const currentViewAsPersonValue = getCurrentSearchParams().get('pessoa')?.trim() || '';
   const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+  const selectedViewAsPersonOption = useMemo(
+    () => viewAsPersonOptions.find((option) => option.id === currentViewAsPersonValue),
+    [currentViewAsPersonValue, viewAsPersonOptions]
+  );
 
   useEffect(() => {
     if (!isDirectFamilyMap) {
@@ -144,10 +194,73 @@ export function HomeMobileNav({
   }, [isDirectFamilyMap, pathname]);
 
   useEffect(() => {
+    const metadataName = String(
+      user?.user_metadata?.nome_exibicao ||
+      user?.user_metadata?.name ||
+      user?.user_metadata?.full_name ||
+      user?.email ||
+      ''
+    );
+    const fallbackLabel = formatFamilyViewLabel(getFirstName(metadataName));
+    setDefaultViewAsLabel(fallbackLabel);
+
+    if (!user?.id) return;
+
+    let cancelled = false;
+
+    async function loadDefaultViewerLabel() {
+      try {
+        const linkedPersonResult = await getPrimaryLinkedPersonWithPessoa(user.id);
+        if (cancelled) return;
+
+        const linkedPersonName = linkedPersonResult.data?.pessoa?.nome_completo;
+        setDefaultViewAsLabel(formatFamilyViewLabel(getFirstName(linkedPersonName) || getFirstName(metadataName)));
+      } catch {
+        if (!cancelled) {
+          setDefaultViewAsLabel(fallbackLabel);
+        }
+      }
+    }
+
+    void loadDefaultViewerLabel();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isDirectFamilyMap) return;
+
+    let cancelled = false;
+
+    async function loadViewAsOptions() {
+      try {
+        const pessoas = await obterTodasPessoas();
+        if (cancelled) return;
+
+        setViewAsPersonOptions(Array.isArray(pessoas) ? buildViewAsPersonOptions(pessoas) : []);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Erro ao carregar pessoas para Visualização mobile:', error);
+          setViewAsPersonOptions([]);
+        }
+      }
+    }
+
+    void loadViewAsOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isDirectFamilyMap]);
+
+  useEffect(() => {
     if (
       !legendOpen &&
       activeToolbarAction &&
       activeToolbarAction !== 'visualizacao' &&
+      activeToolbarAction !== 'formato' &&
       activeToolbarAction !== 'cor'
     ) {
       setActiveToolbarAction(null);
@@ -155,7 +268,7 @@ export function HomeMobileNav({
   }, [activeToolbarAction, legendOpen]);
 
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
-    if (action === 'visualizacao' || action === 'cor') {
+    if (action === 'visualizacao' || action === 'formato' || action === 'cor') {
       setActiveToolbarAction((current) => (current === action ? null : action));
 
       if (legendOpen) onToggleLegend();
@@ -166,6 +279,21 @@ export function HomeMobileNav({
 
     if (!legendOpen) onToggleLegend();
   }, [legendOpen, onToggleLegend]);
+
+  const handleViewAsPersonChange = useCallback((nextValue: string) => {
+    const params = getCurrentSearchParams();
+
+    if (nextValue) {
+      params.set('pessoa', nextValue);
+    } else {
+      params.delete('pessoa');
+    }
+
+    setActiveToolbarAction(null);
+
+    const query = params.toString();
+    navigateFromHome(`${pathname}${query ? `?${query}` : ''}`);
+  }, [navigateFromHome, pathname]);
 
   const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/mapa-familiar-horizontal') => {
     setActiveToolbarAction(null);
@@ -198,6 +326,36 @@ export function HomeMobileNav({
           />
 
           {activeToolbarAction === 'visualizacao' && (
+            <div
+              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              data-tree-export-ignore="true"
+            >
+              <label className="mx-auto block max-w-md">
+                <span className="sr-only">Selecionar visualizador</span>
+                <span className="relative block">
+                  <select
+                    value={currentViewAsPersonValue}
+                    onChange={(event) => handleViewAsPersonChange(event.target.value)}
+                    className="h-9 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-[11px] font-extrabold text-blue-950 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    aria-label="Selecionar visualizador da árvore"
+                  >
+                    <option value="">{defaultViewAsLabel}</option>
+                    {currentViewAsPersonValue && !selectedViewAsPersonOption && (
+                      <option value={currentViewAsPersonValue}>Visualizador selecionado</option>
+                    )}
+                    {viewAsPersonOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {formatFamilyViewLabel(option.label)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-700" />
+                </span>
+              </label>
+            </div>
+          )}
+
+          {activeToolbarAction === 'formato' && (
             <div
               className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
               data-tree-export-ignore="true"
