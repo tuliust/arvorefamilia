@@ -19,6 +19,7 @@ const FAVORITE_TYPE_LABELS: Record<FavoriteEntityType, string> = {
   person_event: 'Evento pessoal',
   page: 'Página',
   timeline_item: 'Timeline',
+  curiosity_discovery: 'Descoberta',
   story: 'História',
 };
 
@@ -31,6 +32,7 @@ const FAVORITE_BADGE_CLASSES: Record<FavoriteEntityType, string> = {
   person_event: 'bg-teal-50 text-teal-700 ring-teal-100',
   page: 'bg-sky-50 text-sky-700 ring-sky-100',
   timeline_item: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+  curiosity_discovery: 'bg-blue-50 text-blue-700 ring-blue-100',
   story: 'bg-rose-50 text-rose-700 ring-rose-100',
 };
 
@@ -40,6 +42,7 @@ const FILTERS: Array<{ value: 'all' | FavoriteEntityType; label: string }> = [
   { value: 'historical_file', label: 'Arquivos históricos' },
   { value: 'forum_topic', label: 'Fórum' },
   { value: 'person_event', label: 'Eventos pessoais' },
+  { value: 'curiosity_discovery', label: 'Descobertas' },
   { value: 'page', label: 'Páginas' },
 ];
 

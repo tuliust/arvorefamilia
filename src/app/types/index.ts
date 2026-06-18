@@ -67,6 +67,7 @@ export type FavoriteEntityType =
   | 'person_event'
   | 'page'
   | 'timeline_item'
+  | 'curiosity_discovery'
   | 'story';
 
 export type TipoCanalNotificacao = 'interna' | 'email' | 'push' | 'whatsapp';

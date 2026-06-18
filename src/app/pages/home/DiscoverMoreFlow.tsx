@@ -1,4 +1,6 @@
+import { useState, type ReactNode } from 'react';
 import type React from 'react';
+import { Share2 } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import {
@@ -8,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
+import { FavoriteButton } from '../../components/favorites/FavoriteButton';
 import type { PersonGeneratedInsight } from '../../services/personInsightsService';
 import type { Pessoa } from '../../types';
 import { ContactInfo } from './ContactInfo';
@@ -48,6 +51,82 @@ function getPersonDisplayName(pessoa?: Pessoa | null) {
   return String(pessoa?.nome_completo || 'Pessoa sem nome').trim();
 }
 
+function normalizeDiscoveryId(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function getDiscoveryEntityId(personId: string, topic: CuriosityTopic) {
+  return `person-${personId}-${normalizeDiscoveryId(topic)}`;
+}
+
+type DiscoveryCardActionsProps = {
+  person: Pessoa;
+  topic: CuriosityTopic;
+  title: string;
+};
+
+function DiscoveryCardActions({ person, topic, title }: DiscoveryCardActionsProps) {
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle');
+  const personName = getPersonDisplayName(person);
+  const shareText = `Descoberta sobre ${personName}: ${title}`;
+  const href = '/curiosidades#descobertas';
+
+  const handleShare = async () => {
+    const url = new URL(href, window.location.origin).toString();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title,
+          text: shareText,
+          url,
+        });
+        return;
+      }
+
+      await navigator.clipboard?.writeText(`${shareText}\n${url}`);
+      setShareStatus('copied');
+      window.setTimeout(() => setShareStatus('idle'), 1800);
+    } catch (error) {
+      console.error('[DiscoverMoreFlow] Erro ao compartilhar descoberta:', error);
+    }
+  };
+
+  return (
+    <>
+      <FavoriteButton
+        entityType="curiosity_discovery"
+        entityId={getDiscoveryEntityId(person.id, topic)}
+        label={`${title} - ${personName}`}
+        description={`Descoberta de curiosidades sobre ${personName}.`}
+        href={href}
+        metadata={{
+          person_id: person.id,
+          topic,
+          source: 'curiosidades_discovery',
+        }}
+        variant="icon"
+        size="sm"
+        className="h-8 w-8"
+      />
+      <button
+        type="button"
+        onClick={handleShare}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition hover:bg-blue-50 hover:text-blue-700"
+        aria-label={shareStatus === 'copied' ? 'Link copiado' : 'Compartilhar descoberta'}
+        title={shareStatus === 'copied' ? 'Link copiado' : 'Compartilhar'}
+      >
+        <Share2 className="h-4 w-4" />
+      </button>
+    </>
+  );
+}
+
 export function DiscoverMoreFlow({
   pessoas,
   selectedPersonId,
@@ -70,6 +149,12 @@ export function DiscoverMoreFlow({
   submittedHeaderClassName,
   submittedIcon,
 }: DiscoverMoreFlowProps) {
+  const getCardActions = (topic: CuriosityTopic, title: string): ReactNode => (
+    selectedPerson ? (
+      <DiscoveryCardActions person={selectedPerson} topic={topic} title={title} />
+    ) : null
+  );
+
   const handlePersonChange = (value: string) => {
     onSelectedPersonIdChange(value);
     onSubmittedChange(false);
@@ -179,13 +264,13 @@ export function DiscoverMoreFlow({
       {!loading && selectedPerson && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {selectedTopics.includes('Dados e Contato') && (
-            <DiscoverResultCard title="Dados e Contato">
+            <DiscoverResultCard title="Dados e Contato" actions={getCardActions('Dados e Contato', 'Dados e Contato')}>
               <ContactInfo pessoa={selectedPerson} />
             </DiscoverResultCard>
           )}
 
           {selectedTopics.includes('Biografia') && (
-            <DiscoverResultCard title="Biografia">
+            <DiscoverResultCard title="Biografia" actions={getCardActions('Biografia', 'Biografia')}>
               {selectedPerson.minibio ? (
                 <p>{selectedPerson.minibio}</p>
               ) : (
@@ -195,7 +280,7 @@ export function DiscoverMoreFlow({
           )}
 
           {selectedTopics.includes('Curiosidades') && (
-            <DiscoverResultCard title="Curiosidades">
+            <DiscoverResultCard title="Curiosidades" actions={getCardActions('Curiosidades', 'Curiosidades')}>
               {selectedPerson.curiosidades ? (
                 <p>{selectedPerson.curiosidades}</p>
               ) : (
@@ -205,7 +290,7 @@ export function DiscoverMoreFlow({
           )}
 
           {selectedTopics.includes(HISTORICAL_TOPIC) && (
-            <DiscoverResultCard title="Fatos Hist\u00f3ricos do Dia do Nascimento">
+            <DiscoverResultCard title="Fatos Hist\u00f3ricos do Dia do Nascimento" actions={getCardActions(HISTORICAL_TOPIC, 'Fatos Hist\u00f3ricos do Dia do Nascimento')}>
               {historicalInsight?.conteudo ? (
                 <div className="space-y-2">
                   <p className="font-semibold text-slate-900">{historicalInsight.conteudo.title}</p>
@@ -237,7 +322,7 @@ export function DiscoverMoreFlow({
           )}
 
           {selectedTopics.includes(ASTROLOGY_TOPIC) && (
-            <DiscoverResultCard title="O que diz a astrologia">
+            <DiscoverResultCard title="O que diz a astrologia" actions={getCardActions(ASTROLOGY_TOPIC, 'O que diz a astrologia')}>
               {selectedPerson.permitir_exibir_data_nascimento === false ? (
                 <p>Esta informa\u00e7\u00e3o est\u00e1 oculta pelas prefer\u00eancias de privacidade.</p>
               ) : astrologyInsight?.conteudo?.body ? (
@@ -249,7 +334,7 @@ export function DiscoverMoreFlow({
           )}
 
           {selectedTopics.includes(TREE_TOPIC) && (
-            <DiscoverResultCard title="\u00c1rvore Geneal\u00f3gica">
+            <DiscoverResultCard title="\u00c1rvore Geneal\u00f3gica" actions={getCardActions(TREE_TOPIC, '\u00c1rvore Geneal\u00f3gica')}>
               <div className="space-y-3">
                 <p>Abrir a \u00e1rvore geneal\u00f3gica de {getPersonDisplayName(selectedPerson)} como pessoa central.</p>
                 <Button

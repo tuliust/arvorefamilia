@@ -110,6 +110,8 @@ Reaproveita o fluxo do modal para selecionar uma pessoa e topicos:
 - O que diz a Astrologia
 - Arvore Genealogica
 
+Cada card de descoberta permite favoritar a descoberta e compartilhar um link para a secao.
+
 ### Pergunte a IA
 
 Reaproveita AiQuestionPanel e monta contexto familiar estruturado com buildAiTreeContext.
@@ -186,6 +188,7 @@ Validar:
 - Geracoes exibem pessoas com avatar ou foto quando disponivel.
 - Bodas exibem casais ou estado vazio.
 - Descoberta por pessoa permite selecionar topicos e voltar.
+- Descobertas permitem favoritar e compartilhar.
 - IA aceita pergunta, exibe loading, resposta ou erro.
 - Conexoes impedem selecao da mesma pessoa.
 - Quiz permite responder e avancar.
@@ -205,8 +208,7 @@ npm test
 
 ## Proximos incrementos
 
-- Adicionar compartilhamento de descoberta no forum.
-- Adicionar favoritar descoberta.
+- Evoluir compartilhamento de descoberta para criar topico no forum.
 - Calcular distancia real da rota com coordenadas.
 - Melhorar normalizacao de profissoes, cidades e interesses.
 - Adicionar graficos reais para meses, geracoes e idade media ao casar.
