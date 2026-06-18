@@ -235,31 +235,40 @@ html[data-tree-highlight-groups='true']
   }
 }
 
+.tree-sidebar-desktop-panel-wrap {
+  overflow: hidden !important;
+}
+
 .desktop-tree-visualization-panel-shell {
   width: 100%;
+  height: 100%;
   min-width: 0;
   max-height: 100%;
-  border-radius: 1.15rem;
+  border-radius: clamp(1.1rem, 2vw, 1.75rem);
   background:
-    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.96), transparent 34%),
+    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.98), transparent 35%),
     linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
-  padding: 0.4rem;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+  padding: clamp(0.45rem, 0.9vh, 0.8rem);
+  box-shadow: 0 20px 52px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
 }
 
 .desktop-tree-visualization-panel {
   position: relative;
   display: flex;
   width: 100%;
+  height: 100%;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
-  gap: 0.55rem;
-  border: 1px solid rgba(203, 213, 225, 0.78);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.97);
-  padding: 0.55rem;
+  gap: clamp(0.45rem, 0.9vh, 0.75rem);
+  overflow: hidden;
+  border: 1px solid rgba(203, 213, 225, 0.84);
+  border-radius: clamp(0.95rem, 1.8vw, 1.45rem);
+  background: rgba(255, 255, 255, 0.98);
+  padding: clamp(0.75rem, 1.35vh, 1.35rem);
   color: #0f2348;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
 .desktop-tree-panel-header {
@@ -267,41 +276,42 @@ html[data-tree-highlight-groups='true']
   min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 0.45rem;
-  padding-right: 1.85rem;
+  gap: clamp(0.6rem, 1vw, 1rem);
+  padding-right: clamp(2rem, 2.5vw, 2.7rem);
 }
 
 .desktop-tree-panel-title-group {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 0.45rem;
+  gap: clamp(0.75rem, 1.15vw, 1.1rem);
 }
 
 .desktop-tree-panel-eye {
   display: inline-flex;
-  height: 2.25rem;
-  width: 2.25rem;
+  height: clamp(2.7rem, 4.7vh, 4rem);
+  width: clamp(2.7rem, 4.7vh, 4rem);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   border: 1px solid #cbd7ea;
-  border-radius: 0.65rem;
+  border-radius: clamp(0.65rem, 1.15vw, 1rem);
   color: #2563eb;
   background: #ffffff;
 }
 
 .desktop-tree-panel-eye svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: clamp(1.65rem, 2.65vh, 2.45rem);
+  height: clamp(1.65rem, 2.65vh, 2.45rem);
 }
 
 .desktop-tree-panel-title {
   margin: 0;
-  font-size: 1.3rem;
+  min-width: 0;
+  font-size: clamp(1.9rem, 3.6vh, 3.35rem);
   font-weight: 850;
   line-height: 1;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.035em;
   color: #0b2045;
 }
 
@@ -312,32 +322,32 @@ html[data-tree-highlight-groups='true']
 
 .desktop-tree-save-print-button {
   display: inline-flex;
-  min-height: 2rem;
-  max-width: 5.85rem;
+  min-height: clamp(2.35rem, 3.4vh, 3rem);
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: clamp(0.35rem, 0.7vw, 0.6rem);
   border: 0;
-  border-radius: 0.62rem;
+  border-radius: 0.75rem;
   background: transparent;
-  padding: 0.25rem 0.25rem;
+  padding: 0.35rem 0.45rem;
   color: #2563eb;
-  font-size: 0.7rem;
+  font-size: clamp(0.9rem, 1.75vh, 1.35rem);
   font-weight: 850;
   line-height: 1.05;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .desktop-tree-save-print-button svg {
-  width: 1rem;
-  height: 1rem;
+  width: clamp(1.25rem, 2.1vh, 1.85rem);
+  height: clamp(1.25rem, 2.1vh, 1.85rem);
   flex: 0 0 auto;
 }
 
 .desktop-tree-save-print-button span {
   display: inline-block;
-  max-width: 4rem;
-  white-space: normal;
+  max-width: none;
+  white-space: nowrap;
 }
 
 .desktop-tree-save-print-button:hover {
@@ -376,6 +386,11 @@ html[data-tree-highlight-groups='true']
   cursor: pointer;
 }
 
+.desktop-tree-export-option svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
 .desktop-tree-export-option:hover {
   border-color: #93c5fd;
   background: #eff6ff;
@@ -383,15 +398,15 @@ html[data-tree-highlight-groups='true']
 }
 
 .desktop-tree-view-select {
-  min-height: 2.45rem;
+  min-height: clamp(2.55rem, 4.8vh, 4.15rem);
   width: 100%;
   border: 1px solid #cfd9e8;
-  border-radius: 0.72rem;
+  border-radius: clamp(0.7rem, 1.1vw, 1rem);
   background: #ffffff;
-  padding: 0 2rem 0 0.75rem;
+  padding: 0 clamp(2rem, 3vw, 3rem) 0 clamp(0.85rem, 1.5vw, 1.5rem);
   color: #0f2348;
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: clamp(0.92rem, 1.95vh, 1.55rem);
+  font-weight: 500;
   outline: none;
 }
 
@@ -411,79 +426,80 @@ html[data-tree-highlight-groups='true']
 .desktop-tree-view-mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: clamp(0.55rem, 1vw, 1.25rem);
 }
 
 .desktop-tree-view-mode-card {
   display: flex;
-  min-height: 5.8rem;
+  min-height: clamp(5.1rem, 11.5vh, 8.8rem);
   min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.28rem;
+  gap: clamp(0.22rem, 0.55vh, 0.5rem);
   border: 1px solid #d7e1ef;
-  border-radius: 0.78rem;
+  border-radius: clamp(0.8rem, 1.2vw, 1.2rem);
   background: #ffffff;
-  padding: 0.55rem 0.35rem;
+  padding: clamp(0.55rem, 1.2vh, 1.05rem);
   text-align: center;
   color: #0f2348;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
   cursor: pointer;
 }
 
 .desktop-tree-view-mode-card > svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: clamp(1.35rem, 3vh, 2.35rem);
+  height: clamp(1.35rem, 3vh, 2.35rem);
 }
 
 .desktop-tree-view-mode-card[data-active='true'] {
   border-color: #2563eb;
   background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
   color: #1d4ed8;
-  box-shadow: 0 0 0 1px #2563eb, 0 8px 18px rgba(37, 99, 235, 0.10);
+  box-shadow: 0 0 0 1px #2563eb, 0 10px 22px rgba(37, 99, 235, 0.10);
 }
 
 .desktop-tree-view-mode-title {
-  font-size: 0.82rem;
+  font-size: clamp(0.9rem, 2vh, 1.45rem);
   font-weight: 850;
   line-height: 1.08;
 }
 
 .desktop-tree-view-mode-subtitle {
-  max-width: 7.2rem;
+  max-width: 11rem;
   color: #19335d;
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1.16;
+  font-size: clamp(0.72rem, 1.55vh, 1.16rem);
+  font-weight: 500;
+  line-height: 1.18;
 }
 
 .desktop-tree-palette-row {
   display: grid;
+  min-height: clamp(2.4rem, 5vh, 4rem);
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
-  gap: 0.35rem;
+  gap: clamp(0.5rem, 1vw, 1rem);
   border: 1px solid #dbe5f2;
-  border-radius: 0.75rem;
+  border-radius: clamp(0.75rem, 1.1vw, 1.1rem);
   background: #ffffff;
-  padding: 0.38rem 0.5rem;
+  padding: 0.35rem clamp(0.55rem, 1vw, 1rem);
 }
 
 .desktop-tree-palette-button {
   display: flex;
-  min-height: 2rem;
+  min-height: clamp(1.85rem, 3.4vh, 2.9rem);
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 0.55rem;
+  border-radius: 0.75rem;
   background: transparent;
   cursor: pointer;
 }
 
 .desktop-tree-palette-button span {
   display: block;
-  height: 1.18rem;
-  width: 1.18rem;
+  height: clamp(1.3rem, 2.7vh, 2.1rem);
+  width: clamp(1.3rem, 2.7vh, 2.1rem);
   border: 2px solid;
   border-radius: 9999px;
 }
@@ -494,48 +510,43 @@ html[data-tree-highlight-groups='true']
 
 .desktop-tree-panel-divider {
   height: 1px;
+  flex: 0 0 auto;
   background: #dbe5f2;
 }
 
 .desktop-tree-section-title {
   margin: 0;
   color: #0f2348;
-  font-size: 0.98rem;
+  font-size: clamp(1rem, 2.2vh, 1.55rem);
   font-weight: 850;
   line-height: 1.05;
 }
 
 .desktop-tree-summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1vw, 1.25rem);
 }
 
 .desktop-tree-summary-card {
-  display: grid;
-  min-height: 3.65rem;
+  display: flex;
+  min-height: clamp(4.25rem, 9.2vh, 7.45rem);
   min-width: 0;
-  grid-template-columns: 1.65rem minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "icon value"
-    "icon label";
+  flex-direction: column;
   align-items: center;
-  column-gap: 0.45rem;
-  row-gap: 0.08rem;
+  justify-content: center;
+  gap: clamp(0.18rem, 0.5vh, 0.45rem);
   border: 1px solid;
-  border-radius: 0.72rem;
+  border-radius: clamp(0.8rem, 1.1vw, 1.15rem);
   background: #ffffff;
-  padding: 0.45rem 0.55rem;
-  text-align: left;
+  padding: clamp(0.45rem, 0.9vh, 0.8rem);
+  text-align: center;
   line-height: 1;
 }
 
 .desktop-tree-summary-card > svg {
-  grid-area: icon;
-  width: 1.35rem;
-  height: 1.35rem;
-  justify-self: center;
+  width: clamp(1.3rem, 2.75vh, 2.15rem);
+  height: clamp(1.3rem, 2.75vh, 2.15rem);
 }
 
 button.desktop-tree-summary-card {
@@ -572,55 +583,58 @@ button.desktop-tree-summary-card {
 }
 
 .desktop-tree-summary-card strong {
-  grid-area: value;
   min-width: 0;
-  font-size: 1.28rem;
+  font-size: clamp(1.35rem, 3.4vh, 2.45rem);
   font-weight: 850;
 }
 
 .desktop-tree-summary-card span {
-  grid-area: label;
   min-width: 0;
   color: #0f2348;
-  font-size: 0.72rem;
-  font-weight: 750;
+  font-size: clamp(0.75rem, 1.65vh, 1.2rem);
+  font-weight: 500;
   line-height: 1.05;
 }
 
 .desktop-tree-family-groups {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.45rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1vw, 1.25rem);
 }
 
 .desktop-tree-family-group-card {
   min-width: 0;
   border: 1px solid #d7e1ef;
-  border-radius: 0.75rem;
+  border-radius: clamp(0.8rem, 1.1vw, 1.15rem);
   background: #ffffff;
-  padding: 0.45rem 0.45rem;
+  padding: clamp(0.55rem, 1vh, 0.9rem);
 }
 
 .desktop-tree-family-group-card h4 {
-  margin: 0 0 0.32rem;
-  text-align: left;
+  margin: 0 0 clamp(0.35rem, 0.8vh, 0.7rem);
+  text-align: center;
   color: #0f2348;
-  font-size: 0.78rem;
+  font-size: clamp(0.82rem, 1.75vh, 1.25rem);
   font-weight: 850;
   line-height: 1.1;
+}
+
+.desktop-tree-family-group-row-list {
+  display: grid;
+  gap: clamp(0.32rem, 0.75vh, 0.7rem);
 }
 
 .desktop-tree-family-group-row {
   display: grid;
   width: 100%;
-  min-height: 2.1rem;
-  grid-template-columns: 1.65rem minmax(0, 1fr) auto;
+  min-height: clamp(2.15rem, 4.5vh, 3.25rem);
+  grid-template-columns: clamp(1.6rem, 3.3vh, 2.45rem) minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.38rem;
+  gap: clamp(0.35rem, 0.8vw, 0.75rem);
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
   background: transparent;
-  padding: 0.16rem 0.2rem;
+  padding: 0.18rem 0.25rem;
   color: #0f2348;
   text-align: left;
   cursor: pointer;
@@ -637,58 +651,59 @@ button.desktop-tree-summary-card {
 
 .desktop-tree-family-group-icon {
   display: flex;
-  height: 1.55rem;
-  width: 1.55rem;
+  height: clamp(1.55rem, 3.2vh, 2.4rem);
+  width: clamp(1.55rem, 3.2vh, 2.4rem);
   align-items: center;
   justify-content: center;
-  border-radius: 0.42rem;
+  border-radius: 0.55rem;
   background: #eef2f7;
   color: #0f2348;
 }
 
 .desktop-tree-family-group-icon svg {
-  width: 0.88rem;
-  height: 0.88rem;
+  width: clamp(0.9rem, 1.9vh, 1.35rem);
+  height: clamp(0.9rem, 1.9vh, 1.35rem);
 }
 
 .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 0.76rem;
-  font-weight: 650;
+  font-size: clamp(0.78rem, 1.65vh, 1.16rem);
+  font-weight: 500;
   line-height: 1.08;
 }
 
 .desktop-tree-family-group-row strong {
-  font-size: 0.8rem;
+  font-size: clamp(0.82rem, 1.7vh, 1.2rem);
   font-weight: 850;
 }
 
 .desktop-tree-final-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1vw, 1.25rem);
 }
 
 .desktop-tree-final-filter-button {
   display: grid;
-  min-height: 2.95rem;
+  min-height: clamp(2.75rem, 6vh, 4.65rem);
   min-width: 0;
-  grid-template-columns: 2rem minmax(0, 1fr);
+  grid-template-columns: clamp(2.3rem, 4.6vh, 3.55rem) minmax(0, 1fr);
   align-items: center;
-  gap: 0.48rem;
+  gap: clamp(0.45rem, 0.9vw, 0.85rem);
   border: 1px solid #bfdbfe;
-  border-radius: 0.72rem;
+  border-radius: clamp(0.8rem, 1.1vw, 1.15rem);
   background: #eff6ff;
-  padding: 0.45rem 0.55rem;
+  padding: clamp(0.45rem, 0.9vh, 0.8rem) clamp(0.65rem, 1.15vw, 1.1rem);
   color: #1d4ed8;
   text-align: left;
   cursor: pointer;
 }
 
 .desktop-tree-final-filter-button > svg {
-  width: 1.45rem;
-  height: 1.45rem;
+  width: clamp(1.7rem, 3.6vh, 2.75rem);
+  height: clamp(1.7rem, 3.6vh, 2.75rem);
+  justify-self: center;
 }
 
 .desktop-tree-final-filter-button[data-active='false'] {
@@ -698,15 +713,15 @@ button.desktop-tree-summary-card {
 
 .desktop-tree-final-filter-button span {
   color: #0f2348;
-  font-size: 0.78rem;
-  font-weight: 850;
+  font-size: clamp(0.86rem, 1.95vh, 1.35rem);
+  font-weight: 800;
   line-height: 1.15;
 }
 
 .desktop-tree-final-filter-button:disabled {
   cursor: not-allowed;
-  opacity: 0.58;
-  filter: grayscale(0.4);
+  opacity: 0.72;
+  filter: grayscale(0.25);
 }
 
 .tree-canvas-zoom-controls {
@@ -741,6 +756,178 @@ button.desktop-tree-summary-card {
   border-color: #93c5fd;
   background: #eff6ff;
   color: #1d4ed8;
+}
+
+@media (max-height: 760px) and (min-width: 768px) {
+  .desktop-tree-visualization-panel-shell {
+    padding: 0.38rem;
+    border-radius: 1rem;
+  }
+
+  .desktop-tree-visualization-panel {
+    gap: 0.38rem;
+    padding: 0.58rem;
+    border-radius: 0.9rem;
+  }
+
+  .desktop-tree-panel-header {
+    padding-right: 2.15rem;
+  }
+
+  .desktop-tree-panel-eye {
+    height: 2.35rem;
+    width: 2.35rem;
+    border-radius: 0.62rem;
+  }
+
+  .desktop-tree-panel-eye svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .desktop-tree-panel-title {
+    font-size: 1.85rem;
+  }
+
+  .desktop-tree-save-print-button {
+    min-height: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .desktop-tree-save-print-button svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .desktop-tree-view-select {
+    min-height: 2.25rem;
+    border-radius: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .desktop-tree-view-mode-grid,
+  .desktop-tree-summary-grid,
+  .desktop-tree-family-groups,
+  .desktop-tree-final-filters {
+    gap: 0.45rem;
+  }
+
+  .desktop-tree-view-mode-card {
+    min-height: 4.65rem;
+    padding: 0.4rem;
+    gap: 0.12rem;
+    border-radius: 0.7rem;
+  }
+
+  .desktop-tree-view-mode-card > svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .desktop-tree-view-mode-title {
+    font-size: 0.9rem;
+  }
+
+  .desktop-tree-view-mode-subtitle {
+    font-size: 0.72rem;
+    line-height: 1.08;
+  }
+
+  .desktop-tree-palette-row {
+    min-height: 2.2rem;
+    padding: 0.22rem 0.5rem;
+    border-radius: 0.65rem;
+  }
+
+  .desktop-tree-palette-button {
+    min-height: 1.7rem;
+  }
+
+  .desktop-tree-palette-button span {
+    height: 1.18rem;
+    width: 1.18rem;
+  }
+
+  .desktop-tree-section-title {
+    font-size: 1rem;
+  }
+
+  .desktop-tree-summary-card {
+    min-height: 3.75rem;
+    gap: 0.1rem;
+    padding: 0.38rem;
+    border-radius: 0.65rem;
+  }
+
+  .desktop-tree-summary-card > svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .desktop-tree-summary-card strong {
+    font-size: 1.45rem;
+  }
+
+  .desktop-tree-summary-card span {
+    font-size: 0.72rem;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: 0.42rem;
+    border-radius: 0.65rem;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: 0.28rem;
+    font-size: 0.86rem;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: 0.18rem;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: 1.85rem;
+    grid-template-columns: 1.55rem minmax(0, 1fr) auto;
+    gap: 0.34rem;
+  }
+
+  .desktop-tree-family-group-icon {
+    height: 1.42rem;
+    width: 1.42rem;
+    border-radius: 0.4rem;
+  }
+
+  .desktop-tree-family-group-icon svg {
+    width: 0.82rem;
+    height: 0.82rem;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: 0.76rem;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: 0.78rem;
+  }
+
+  .desktop-tree-final-filter-button {
+    min-height: 2.55rem;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.65rem;
+  }
+
+  .desktop-tree-final-filter-button > svg {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .desktop-tree-final-filter-button span {
+    font-size: 0.84rem;
+    line-height: 1.12;
+  }
 }
 
 

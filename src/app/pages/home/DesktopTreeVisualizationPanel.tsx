@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
-  Baby,
   ClipboardList,
   Cross,
   Eye,
@@ -80,8 +79,8 @@ const groupSections: Array<{
     title: 'Núcleo',
     rows: [
       { keys: ['pais'], label: 'Pais', icon: UsersRound },
+      { keys: ['conjuge'], label: 'Cônjuges', icon: UsersRound },
       { keys: ['irmaos'], label: 'Irmãos', icon: UsersRound },
-      { keys: ['filhos', 'netos'], label: 'Filhos e Netos', icon: Baby },
     ],
   },
   {
@@ -165,12 +164,14 @@ export function DesktopTreeVisualizationPanel({
         setExportOpen(false);
       }
     };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setExportOpen(false);
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
@@ -190,6 +191,7 @@ export function DesktopTreeVisualizationPanel({
 
   const handleGroupToggle = React.useCallback((keys: DirectRelativeGroup[]) => {
     const allActive = getGroupActive(directRelativeFilters, keys);
+
     keys
       .filter((key) => directRelativeFilters[key] === allActive)
       .forEach((key) => onToggleDirectRelative(key));
@@ -197,11 +199,15 @@ export function DesktopTreeVisualizationPanel({
 
   return (
     <div className="desktop-tree-visualization-panel-shell" data-tree-export-ignore="true">
-      <section className="desktop-tree-visualization-panel" aria-label="Visualização da árvore" data-tree-export-ignore="true">
+      <section
+        className="desktop-tree-visualization-panel"
+        aria-label="Visualização da árvore"
+        data-tree-export-ignore="true"
+      >
         <div className="desktop-tree-panel-header">
           <div className="desktop-tree-panel-title-group">
             <span className="desktop-tree-panel-eye" aria-hidden="true">
-              <Eye className="h-7 w-7" />
+              <Eye />
             </span>
             <h2 className="desktop-tree-panel-title">Visualização</h2>
           </div>
@@ -214,7 +220,7 @@ export function DesktopTreeVisualizationPanel({
               aria-expanded={exportOpen}
               aria-controls={exportPopoverId}
             >
-              <Printer className="h-5 w-5" />
+              <Printer />
               <span>Salvar e Imprimir</span>
             </button>
 
@@ -228,6 +234,7 @@ export function DesktopTreeVisualizationPanel({
               >
                 {exportOptions.map((option) => {
                   const Icon = option.icon;
+
                   return (
                     <button
                       key={option.action}
@@ -236,7 +243,7 @@ export function DesktopTreeVisualizationPanel({
                       className="desktop-tree-export-option"
                       onClick={() => handleExportAction(option.action)}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon />
                       <span>{option.label}</span>
                     </button>
                   );
@@ -266,6 +273,7 @@ export function DesktopTreeVisualizationPanel({
           {viewOptions.map((option) => {
             const Icon = option.icon;
             const active = currentViewMode === option.key;
+
             return (
               <button
                 key={option.key}
@@ -275,7 +283,7 @@ export function DesktopTreeVisualizationPanel({
                 aria-pressed={active}
                 onClick={() => handleViewChange(option.key)}
               >
-                <Icon className="h-8 w-8" />
+                <Icon />
                 <span className="desktop-tree-view-mode-title">{option.label}</span>
                 <span className="desktop-tree-view-mode-subtitle">{option.subtitle}</span>
               </button>
@@ -308,42 +316,61 @@ export function DesktopTreeVisualizationPanel({
         <div className="desktop-tree-panel-divider" />
 
         <h3 className="desktop-tree-section-title">Resumo</h3>
+
         <div className="desktop-tree-summary-grid">
           <SummaryCard tone="blue" icon={UsersRound} label="Pessoas" value={totalPeople} />
-          <SummaryCard tone="green" icon={UserRound} label="Vivos" value={aliveCount} active={personFilters.vivos} onToggle={() => onTogglePersonFilter('vivos')} />
-          <SummaryCard tone="purple" icon={Cross} label="Falecidos" value={deceasedCount} active={personFilters.falecidos} onToggle={() => onTogglePersonFilter('falecidos')} />
+          <SummaryCard
+            tone="green"
+            icon={UserRound}
+            label="Vivos"
+            value={aliveCount}
+            active={personFilters.vivos}
+            onToggle={() => onTogglePersonFilter('vivos')}
+          />
+          <SummaryCard
+            tone="purple"
+            icon={Cross}
+            label="Falecidos"
+            value={deceasedCount}
+            active={personFilters.falecidos}
+            onToggle={() => onTogglePersonFilter('falecidos')}
+          />
           <SummaryCard tone="orange" icon={ClipboardList} label="Cadastrados" value={registeredCount} />
         </div>
 
         <div className="desktop-tree-panel-divider" />
 
         <h3 className="desktop-tree-section-title">Grupos familiares</h3>
+
         <div className="desktop-tree-family-groups">
           {groupSections.map((section) => (
             <section key={section.title} className="desktop-tree-family-group-card" aria-label={section.title}>
               <h4>{section.title}</h4>
-              {section.rows.map((row) => {
-                const Icon = row.icon;
-                const active = getGroupActive(directRelativeFilters, row.keys);
 
-                return (
-                  <button
-                    key={row.label}
-                    type="button"
-                    className="desktop-tree-family-group-row"
-                    data-active={active ? 'true' : 'false'}
-                    aria-pressed={active}
-                    onClick={() => handleGroupToggle(row.keys)}
-                    title={active ? `Ocultar ${row.label}` : `Mostrar ${row.label}`}
-                  >
-                    <span className="desktop-tree-family-group-icon">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span>{row.label}</span>
-                    <strong>{getGroupCount(directRelationCounts, row.keys)}</strong>
-                  </button>
-                );
-              })}
+              <div className="desktop-tree-family-group-row-list">
+                {section.rows.map((row) => {
+                  const Icon = row.icon;
+                  const active = getGroupActive(directRelativeFilters, row.keys);
+
+                  return (
+                    <button
+                      key={row.label}
+                      type="button"
+                      className="desktop-tree-family-group-row"
+                      data-active={active ? 'true' : 'false'}
+                      aria-pressed={active}
+                      onClick={() => handleGroupToggle(row.keys)}
+                      title={active ? `Ocultar ${row.label}` : `Mostrar ${row.label}`}
+                    >
+                      <span className="desktop-tree-family-group-icon">
+                        <Icon />
+                      </span>
+                      <span>{row.label}</span>
+                      <strong>{getGroupCount(directRelationCounts, row.keys)}</strong>
+                    </button>
+                  );
+                })}
+              </div>
             </section>
           ))}
         </div>
@@ -356,9 +383,10 @@ export function DesktopTreeVisualizationPanel({
             data-active={directRelativeFilters.conjuge ? 'true' : 'false'}
             onClick={() => onToggleDirectRelative('conjuge')}
           >
-            <Network className="h-8 w-8" />
+            <Network />
             <span>Exibir cônjuges de tios, primos etc</span>
           </button>
+
           <button
             type="button"
             className="desktop-tree-final-filter-button"
@@ -366,7 +394,7 @@ export function DesktopTreeVisualizationPanel({
             aria-label="Apenas meus familiares. Funcionalidade será definida posteriormente."
             title="Funcionalidade será definida posteriormente."
           >
-            <UsersRound className="h-8 w-8" />
+            <UsersRound />
             <span>Apenas meus familiares</span>
           </button>
         </div>
@@ -392,7 +420,7 @@ function SummaryCard({
 }) {
   const content = (
     <>
-      <Icon className="h-7 w-7" />
+      <Icon />
       <strong>{value}</strong>
       <span>{label}</span>
     </>
