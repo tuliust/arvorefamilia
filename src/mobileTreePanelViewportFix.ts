@@ -20,6 +20,46 @@ function getVisualViewportRect() {
   };
 }
 
+function getVisibleViewportCenter() {
+  const viewport = getVisualViewportRect();
+
+  return {
+    x: viewport.left + viewport.width / 2,
+    y: viewport.top + viewport.height / 2,
+  };
+}
+
+function getCurrentNumericStyle(element: HTMLElement, property: 'left' | 'top') {
+  const value = Number.parseFloat(element.style[property] || '0');
+  return Number.isFinite(value) ? value : 0;
+}
+
+function offsetElementStyle(element: HTMLElement, deltaX: number, deltaY: number) {
+  if (Math.abs(deltaX) >= 0.5) {
+    element.style.left = `${getCurrentNumericStyle(element, 'left') + deltaX}px`;
+  }
+
+  if (Math.abs(deltaY) >= 0.5) {
+    element.style.top = `${getCurrentNumericStyle(element, 'top') + deltaY}px`;
+  }
+}
+
+function pinElementToVisibleViewport(element: HTMLElement, targetLeft: number, targetTop: number) {
+  const rect = element.getBoundingClientRect();
+  offsetElementStyle(element, targetLeft - rect.left, targetTop - rect.top);
+}
+
+function centerElementInVisibleViewport(element: HTMLElement) {
+  const { x, y } = getVisibleViewportCenter();
+  const rect = element.getBoundingClientRect();
+
+  offsetElementStyle(
+    element,
+    x - (rect.left + rect.width / 2),
+    y - (rect.top + rect.height / 2)
+  );
+}
+
 function getOrCreateCloseButton(dialog: HTMLElement, overlayClose: HTMLButtonElement | null) {
   let closeButton = dialog.querySelector<HTMLButtonElement>(`.${GENERATED_CLOSE_CLASS}`);
 
@@ -53,6 +93,7 @@ function centerMobileTreePanel() {
   const viewport = getVisualViewportRect();
   const safePadding = 12;
   const panelWidth = Math.min(viewport.width - safePadding * 2, 400);
+  const panelMaxHeight = Math.max(320, viewport.height - safePadding * 2);
 
   Object.assign(dialog.style, {
     position: 'fixed',
@@ -72,6 +113,11 @@ function centerMobileTreePanel() {
     transform: 'none',
   });
 
+  // Em iOS/Safari, o mapa cria overflow horizontal. Quando o usuário arrasta a árvore,
+  // elementos `fixed` dentro de ancestrais transformados podem ficar presos ao canvas em
+  // vez da viewport visível. A correção abaixo mede o retângulo real e compensa o desvio.
+  pinElementToVisibleViewport(dialog, viewport.left, viewport.top);
+
   Object.assign(section.style, {
     position: 'fixed',
     left: `${viewport.left + viewport.width / 2}px`,
@@ -80,10 +126,13 @@ function centerMobileTreePanel() {
     bottom: 'auto',
     width: `${panelWidth}px`,
     maxWidth: `${panelWidth}px`,
-    maxHeight: `${Math.max(320, viewport.height - safePadding * 2)}px`,
+    maxHeight: `${panelMaxHeight}px`,
     margin: '0',
     transform: 'translate3d(-50%, -50%, 0)',
   });
+
+  centerElementInVisibleViewport(section);
+  centerElementInVisibleViewport(section);
 
   if (overlayClose) {
     Object.assign(overlayClose.style, {
@@ -95,6 +144,8 @@ function centerMobileTreePanel() {
       width: `${viewport.width}px`,
       height: `${viewport.height}px`,
     });
+
+    pinElementToVisibleViewport(overlayClose, viewport.left, viewport.top);
   }
 
   const closeButton = getOrCreateCloseButton(dialog, overlayClose);
