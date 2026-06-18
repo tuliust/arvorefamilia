@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
@@ -91,12 +91,12 @@ export function Curiosidades() {
         <CuriosidadesRankings {...curiosityDataProps} />
         <div className="grid gap-4 lg:grid-cols-2">
           <CuriosidadesGenerations {...curiosityDataProps} />
-          <CuriosidadesCouples />
+          <CuriosidadesCouples {...curiosityDataProps} />
           <CuriosidadesDiscoverySection />
           <CuriosidadesAiSection />
           <CuriosidadesConnectionSection />
-          <CuriosidadesQuizSection />
-          <CuriosidadesRouteSection />
+          <CuriosidadesQuizSection {...curiosityDataProps} />
+          <CuriosidadesRouteSection {...curiosityDataProps} />
           <CuriosidadesInterestsSection />
           <CuriosidadesMemoryWall />
           <CuriosidadesAstrology />
