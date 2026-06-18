@@ -95,7 +95,7 @@ export function CuriosidadesMemoryWall() {
       </div>
 
       <p className="mt-3 text-sm leading-6 text-gray-600">
-        Responda: qual é a sua lembrança favorita da família?
+        Responda: qual sua lembrança favorita da família?
       </p>
 
       <div className="mt-5 space-y-3">
@@ -158,7 +158,7 @@ export function CuriosidadesMemoryWall() {
 
         {!loading && items.map((item) => (
           <article key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <p className="break-words text-sm leading-6 text-gray-800">"{item.body}"</p>
+            <p className="break-words text-sm leading-6 text-gray-800">&quot;{item.body}&quot;</p>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <span className="font-bold text-gray-700">- {item.author_name}</span>
               <span>· {formatMemoryDate(item.created_at)}</span>
