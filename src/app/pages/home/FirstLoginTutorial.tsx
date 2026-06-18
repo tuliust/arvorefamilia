@@ -24,7 +24,7 @@ type TutorialStep = {
   bullets?: string[];
   tip?: string;
   targets?: TutorialTarget[];
-  panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below';
+  panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below' | 'center';
   panelReference?: 'all' | 'first' | 'last';
   mergeSpotlights?: boolean;
   panelGap?: number;
@@ -60,7 +60,7 @@ type TourLayout = {
 const PANEL_MAX_WIDTH = 430;
 const MOBILE_PANEL_MAX_WIDTH = 330;
 const PANEL_ESTIMATED_HEIGHT = 315;
-const MOBILE_PANEL_ESTIMATED_HEIGHT = 228;
+const MOBILE_PANEL_ESTIMATED_HEIGHT = 196;
 const VIEWPORT_MARGIN = 14;
 const SPOTLIGHT_RADIUS = 18;
 const PANEL_GAP = 18;
@@ -74,18 +74,9 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'left',
     mergeSpotlights: true,
     targets: [
-      {
-        selectors: ['[data-tour-target="alerts"]'],
-        padding: 10,
-      },
-      {
-        selectors: ['[data-tour-target="search"]'],
-        padding: 10,
-      },
-      {
-        selectors: ['[data-tour-target="profile-menu"]'],
-        padding: 10,
-      },
+      { selectors: ['[data-tour-target="alerts"]'], padding: 10 },
+      { selectors: ['[data-tour-target="search"]'], padding: 10 },
+      { selectors: ['[data-tour-target="profile-menu"]'], padding: 10 },
     ],
     bullets: [
       'Não perca datas importantes e avisos na área de Alertas e configure suas preferências de notificações.',
@@ -102,14 +93,8 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     icon: Eye,
     panelPlacement: 'below',
     targets: [
-      {
-        selectors: ['[data-tour-target="tree-controls"]'],
-        padding: 12,
-      },
-      {
-        selectors: ['[data-tour-target="tree-controls-collapse"]'],
-        padding: 10,
-      },
+      { selectors: ['[data-tour-target="tree-controls"]'], padding: 12 },
+      { selectors: ['[data-tour-target="tree-controls-collapse"]'], padding: 10 },
     ],
     bullets: [
       'Feche o painel no botão de seta para expandir a área de visualização.',
@@ -124,12 +109,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Controle quem aparece na árvore',
     icon: SlidersHorizontal,
     panelPlacement: 'right',
-    targets: [
-      {
-        selectors: ['[data-tour-target="groups-filters"]'],
-        padding: 12,
-      },
-    ],
+    targets: [{ selectors: ['[data-tour-target="groups-filters"]'], padding: 12 }],
     bullets: [
       'Clique nos botões coloridos para ocultar ou exibir grupos de parentes.',
       'Use os filtros para visualizar na árvore apenas pessoas vivas ou falecidas.',
@@ -143,12 +123,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     icon: UserRound,
     panelPlacement: 'below',
     panelGap: 40,
-    targets: [
-      {
-        selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'],
-        padding: 12,
-      },
-    ],
+    targets: [{ selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'], padding: 12 }],
     bullets: [
       'Clique nos cards para acessar informações pessoais, biografia e contatos de familiares.',
       'Descubra seu grau de parentesco e a linha genealógica que conecta vocês.',
@@ -163,18 +138,9 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'below',
     mergeSpotlights: true,
     targets: [
-      {
-        selectors: ['[data-tour-target="curiosities"]'],
-        padding: 10,
-      },
-      {
-        selectors: ['[data-tour-target="calendar"]'],
-        padding: 10,
-      },
-      {
-        selectors: ['[data-tour-target="favorites"]'],
-        padding: 10,
-      },
+      { selectors: ['[data-tour-target="curiosities"]'], padding: 10 },
+      { selectors: ['[data-tour-target="calendar"]'], padding: 10 },
+      { selectors: ['[data-tour-target="favorites"]'], padding: 10 },
     ],
     bullets: [
       'Em Curiosidades, surpreenda-se com fatos e números. Faça perguntas para a inteligência artificial para descobrir conexões e buscar dados sobre você e seus familiares.',
@@ -186,13 +152,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Interação entre familiares',
     icon: MessageCircle,
     panelPlacement: 'below',
-    targets: [
-      {
-        selectors: ['[data-tour-target="forum"]'],
-        textIncludes: ['Fórum'],
-        padding: 10,
-      },
-    ],
+    targets: [{ selectors: ['[data-tour-target="forum"]'], textIncludes: ['Fórum'], padding: 10 }],
     bullets: [
       'Interaja com todos criando tópicos de debate e compartilhando histórias, lembranças e dúvidas.',
       'Crie tópicos para organizar conversas.',
@@ -209,35 +169,20 @@ const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'below',
     mergeSpotlights: true,
     targets: [
-      {
-        selectors: ['[data-tour-target="search"]'],
-        padding: 8,
-      },
-      {
-        selectors: ['[data-tour-target="profile-menu"]'],
-        padding: 8,
-      },
+      { selectors: ['[data-tour-target="search"]'], padding: 8 },
+      { selectors: ['[data-tour-target="profile-menu"]'], padding: 8 },
     ],
-    bullets: [
-      'Use a busca para encontrar pessoas e páginas.',
-      'No avatar, acesse perfil, preferências e saída.',
-    ],
+    description:
+      'Use a busca para encontrar pessoas e páginas. Edite seus dados, altere a sua foto do perfil e ajuste suas preferências.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
     title: 'Controles da árvore',
     icon: Eye,
     panelPlacement: 'below',
-    targets: [
-      {
-        selectors: ['[data-tour-target="mobile-tree-action-bar"]', '[data-mobile-family-map-toolbar="true"]'],
-        padding: 8,
-      },
-    ],
-    bullets: [
-      'Use Visualização, Formato, Cor, Filtros e Exportar.',
-      'O botão + abre o painel completo de ajustes.',
-    ],
+    targets: [{ selectors: ['[data-tour-target="mobile-tree-action-bar"]', '[data-mobile-family-map-toolbar="true"]'], padding: 8 }],
+    description:
+      'Escolha o modo de visualização e as cores da sua árvore. Imprima ou salve em imagem ou PDF.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
@@ -247,31 +192,33 @@ const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
     panelGap: 14,
     targets: [
       {
-        selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'],
+        selectors: [
+          '[data-family-map-central-card="true"]',
+          '[data-family-map-mobile-main-card="true"]',
+          '[data-family-map-mobile-card="true"][data-family-map-color-key="central"]',
+        ],
         padding: 10,
       },
     ],
-    bullets: [
-      'Toque em um card para abrir perfil, vínculos e memórias.',
-      'Use a árvore para navegar pelos parentes.',
-    ],
+    description: 'Toque um card para descobrir mais sobre pessoas, suas conexões e histórias.',
+  },
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Curiosidades',
+    icon: Sparkles,
+    panelPlacement: 'above',
+    targets: [{ selectors: ['[data-tour-target="curiosities"]'], textIncludes: ['Curiosidades'], padding: 8 }],
+    description:
+      'Surpreenda-se com conexões e histórias. Faça perguntas para a inteligência artificial. Veja datas e vincule ao Google Agenda.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
     title: 'Fórum da família',
     icon: MessageCircle,
     panelPlacement: 'above',
-    targets: [
-      {
-        selectors: ['[data-tour-target="forum"]'],
-        textIncludes: ['Fórum'],
-        padding: 8,
-      },
-    ],
-    bullets: [
-      'Entre no Fórum para criar tópicos, dúvidas e memórias.',
-      'Converse com os familiares pelo menu inferior.',
-    ],
+    targets: [{ selectors: ['[data-tour-target="forum"]'], textIncludes: ['Fórum'], padding: 8 }],
+    description:
+      'Crie tópicos, comente e reaja a publicações sobre lembranças, histórias ou dúvidas relacionadas a sua família.',
   },
 ];
 
@@ -322,15 +269,9 @@ function getElementSearchText(element: HTMLElement) {
 function queryVisibleElement(selectors: string[] = []) {
   for (const selector of selectors) {
     try {
-      const elements = Array.from(
-        document.querySelectorAll<HTMLElement>(selector)
-      );
-
+      const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
       const visibleElement = elements.find(isVisibleElement);
-
-      if (visibleElement) {
-        return visibleElement;
-      }
+      if (visibleElement) return visibleElement;
     } catch {
       // Ignora seletores não suportados.
     }
@@ -343,7 +284,6 @@ function queryVisibleElementByText(textIncludes: string[] = []) {
   if (textIncludes.length === 0) return null;
 
   const normalizedTerms = textIncludes.map(normalizeText);
-
   const candidates = Array.from(
     document.querySelectorAll<HTMLElement>(
       'header, nav, aside, button, a, input, section, div, [role="button"], [aria-label], [title]'
@@ -363,10 +303,7 @@ function queryVisibleContainerByText(textIncludes: string[] = []) {
   if (textIncludes.length === 0) return null;
 
   const normalizedTerms = textIncludes.map(normalizeText);
-
-  const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>('div, section, aside, nav, header, main')
-  )
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>('div, section, aside, nav, header, main'))
     .filter(isVisibleElement)
     .filter((element) => {
       const text = normalizeText(element.textContent ?? '');
@@ -394,21 +331,18 @@ function resolveTargetElements(targets: TutorialTarget[] = []) {
 
   for (const target of targets) {
     const element = resolveSingleTarget(target);
+    if (!element) continue;
 
-    if (element) {
-      elements.push({
-        element,
-        padding: target.padding ?? 10,
-      });
-    }
+    elements.push({
+      element,
+      padding: target.padding ?? 10,
+    });
   }
 
   return elements;
 }
 
-function createSpotlightRect(
-  targetElements: { element: HTMLElement; padding: number }[]
-): SpotlightRect | null {
+function createSpotlightRect(targetElements: { element: HTMLElement; padding: number }[]): SpotlightRect | null {
   if (targetElements.length === 0) return null;
 
   let left = Number.POSITIVE_INFINITY;
@@ -442,12 +376,8 @@ function createSpotlightRect(
   };
 }
 
-function createSpotlightRects(
-  targetElements: { element: HTMLElement; padding: number }[]
-): SpotlightRect[] {
-  return targetElements
-    .map((target) => createSpotlightRect([target]))
-    .filter((rect): rect is SpotlightRect => Boolean(rect));
+function createSpotlightRects(targetElements: { element: HTMLElement; padding: number }[]): SpotlightRect[] {
+  return targetElements.map((target) => createSpotlightRect([target])).filter((rect): rect is SpotlightRect => Boolean(rect));
 }
 
 function createUnionSpotlightRect(spotlights: SpotlightRect[]) {
@@ -471,16 +401,8 @@ function createUnionSpotlightRect(spotlights: SpotlightRect[]) {
 
 function createCenteredPanel(width: number, estimatedHeight: number): PanelPosition {
   return {
-    left: clamp(
-      (window.innerWidth - width) / 2,
-      VIEWPORT_MARGIN,
-      window.innerWidth - width - VIEWPORT_MARGIN
-    ),
-    top: clamp(
-      (window.innerHeight - estimatedHeight) / 2,
-      VIEWPORT_MARGIN,
-      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
-    ),
+    left: clamp((window.innerWidth - width) / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
+    top: clamp((window.innerHeight - estimatedHeight) / 2, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
     width,
   };
 }
@@ -495,58 +417,40 @@ function createPanelPosition(
   const estimatedHeight = compact ? MOBILE_PANEL_ESTIMATED_HEIGHT : PANEL_ESTIMATED_HEIGHT;
   const width = Math.min(maxWidth, window.innerWidth - VIEWPORT_MARGIN * 2);
 
-  if (!spotlight) {
+  if (!spotlight || placement === 'center') {
     return createCenteredPanel(width, estimatedHeight);
   }
 
   const tryBelow = () => ({
-    left: clamp(
-      spotlight.left + spotlight.width / 2 - width / 2,
-      VIEWPORT_MARGIN,
-      window.innerWidth - width - VIEWPORT_MARGIN
-    ),
+    left: clamp(spotlight.left + spotlight.width / 2 - width / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
     top: spotlight.bottom + gap,
     width,
   });
 
   const tryAbove = () => ({
-    left: clamp(
-      spotlight.left + spotlight.width / 2 - width / 2,
-      VIEWPORT_MARGIN,
-      window.innerWidth - width - VIEWPORT_MARGIN
-    ),
+    left: clamp(spotlight.left + spotlight.width / 2 - width / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
     top: spotlight.top - estimatedHeight - gap,
     width,
   });
 
   const tryRight = () => ({
     left: spotlight.right + gap,
-    top: clamp(
-      spotlight.top,
-      VIEWPORT_MARGIN,
-      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
-    ),
+    top: clamp(spotlight.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
     width,
   });
 
   const tryLeft = () => ({
     left: spotlight.left - width - gap,
-    top: clamp(
-      spotlight.top,
-      VIEWPORT_MARGIN,
-      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
-    ),
+    top: clamp(spotlight.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
     width,
   });
 
-  const fits = (panel: PanelPosition) => {
-    return (
-      panel.left >= VIEWPORT_MARGIN &&
-      panel.top >= VIEWPORT_MARGIN &&
-      panel.left + panel.width <= window.innerWidth - VIEWPORT_MARGIN &&
-      panel.top + estimatedHeight <= window.innerHeight - VIEWPORT_MARGIN
-    );
-  };
+  const fits = (panel: PanelPosition) => (
+    panel.left >= VIEWPORT_MARGIN &&
+    panel.top >= VIEWPORT_MARGIN &&
+    panel.left + panel.width <= window.innerWidth - VIEWPORT_MARGIN &&
+    panel.top + estimatedHeight <= window.innerHeight - VIEWPORT_MARGIN
+  );
 
   const preferredOrder: Record<NonNullable<TutorialStep['panelPlacement']>, (() => PanelPosition)[]> = {
     auto: [tryBelow, tryAbove, tryRight, tryLeft],
@@ -554,11 +458,10 @@ function createPanelPosition(
     above: [tryAbove, tryBelow, tryRight, tryLeft],
     right: [tryRight, tryBelow, tryAbove, tryLeft],
     left: [tryLeft, tryBelow, tryAbove, tryRight],
+    center: [() => createCenteredPanel(width, estimatedHeight)],
   };
 
-  const order = preferredOrder[placement ?? 'auto'];
-
-  for (const build of order) {
+  for (const build of preferredOrder[placement ?? 'auto']) {
     const panel = build();
     if (fits(panel)) return panel;
   }
@@ -566,16 +469,8 @@ function createPanelPosition(
   const fallback = tryBelow();
 
   return {
-    left: clamp(
-      fallback.left,
-      VIEWPORT_MARGIN,
-      window.innerWidth - width - VIEWPORT_MARGIN
-    ),
-    top: clamp(
-      fallback.top,
-      VIEWPORT_MARGIN,
-      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
-    ),
+    left: clamp(fallback.left, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
+    top: clamp(fallback.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
     width,
   };
 }
@@ -584,21 +479,12 @@ function SpotlightOverlay({ spotlights }: { spotlights: SpotlightRect[] }) {
   const maskId = React.useId().replace(/[^a-zA-Z0-9_-]/g, '');
 
   if (spotlights.length === 0) {
-    return (
-      <div
-        className="fixed inset-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]"
-        data-tree-export-ignore="true"
-      />
-    );
+    return <div className="fixed inset-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]" data-tree-export-ignore="true" />;
   }
 
   return (
     <>
-      <svg
-        className="pointer-events-none fixed inset-0 z-[12001] h-screen w-screen"
-        data-tree-export-ignore="true"
-        aria-hidden="true"
-      >
+      <svg className="pointer-events-none fixed inset-0 z-[12001] h-screen w-screen" data-tree-export-ignore="true" aria-hidden="true">
         <defs>
           <mask id={maskId}>
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
@@ -628,8 +514,7 @@ function SpotlightOverlay({ spotlights }: { spotlights: SpotlightRect[] }) {
             width: spotlight.width,
             height: spotlight.height,
             borderRadius: spotlight.radius,
-            boxShadow:
-              '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
+            boxShadow: '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
           }}
           data-tree-export-ignore="true"
         />
@@ -665,9 +550,7 @@ export function FirstLoginTutorial({
   const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex === totalSteps - 1;
 
-  const progress = useMemo(() => {
-    return Math.round(((stepIndex + 1) / totalSteps) * 100);
-  }, [stepIndex, totalSteps]);
+  const progress = useMemo(() => Math.round(((stepIndex + 1) / totalSteps) * 100), [stepIndex, totalSteps]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
@@ -689,9 +572,7 @@ export function FirstLoginTutorial({
     const targetElements = resolveTargetElements(currentStep.targets ?? []);
     const individualSpotlights = createSpotlightRects(targetElements);
     const mergedSpotlight = createUnionSpotlightRect(individualSpotlights);
-    const spotlights = currentStep.mergeSpotlights && mergedSpotlight
-      ? [mergedSpotlight]
-      : individualSpotlights;
+    const spotlights = currentStep.mergeSpotlights && mergedSpotlight ? [mergedSpotlight] : individualSpotlights;
     const panelSpotlight = currentStep.panelReference === 'first'
       ? spotlights[0] ?? null
       : currentStep.panelReference === 'last'
@@ -719,17 +600,9 @@ export function FirstLoginTutorial({
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onOpenChange(false);
-      }
-
-      if (event.key === 'ArrowRight') {
-        setStepIndex((current) => Math.min(current + 1, totalSteps - 1));
-      }
-
-      if (event.key === 'ArrowLeft') {
-        setStepIndex((current) => Math.max(current - 1, 0));
-      }
+      if (event.key === 'Escape') onOpenChange(false);
+      if (event.key === 'ArrowRight') setStepIndex((current) => Math.min(current + 1, totalSteps - 1));
+      if (event.key === 'ArrowLeft') setStepIndex((current) => Math.max(current - 1, 0));
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -744,14 +617,12 @@ export function FirstLoginTutorial({
     if (!open) return;
 
     let frame = 0;
-
     const scheduleUpdate = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(updateLayout);
     };
 
     scheduleUpdate();
-
     window.addEventListener('resize', scheduleUpdate);
     window.addEventListener('scroll', scheduleUpdate, true);
 
@@ -773,16 +644,12 @@ export function FirstLoginTutorial({
 
   const StepIcon = currentStep.icon;
 
-  const goBack = () => {
-    setStepIndex((current) => Math.max(current - 1, 0));
-  };
-
+  const goBack = () => setStepIndex((current) => Math.max(current - 1, 0));
   const goNext = () => {
     if (isLastStep) {
       onFinish();
       return;
     }
-
     setStepIndex((current) => Math.min(current + 1, totalSteps - 1));
   };
 
@@ -790,6 +657,7 @@ export function FirstLoginTutorial({
     <div
       className="fixed inset-0 z-[12000]"
       data-first-login-tutorial="true"
+      data-first-login-tutorial-step={currentStep.title}
       role="dialog"
       aria-modal="true"
       aria-labelledby="first-login-tutorial-title"
