@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppLink as Link } from '../../components/AppLink';
 import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
-import { BookOpen, CalendarDays, FileText, HelpCircle, MessageCircle, Plus, Search, X } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { BookOpen, CalendarDays, Check, FileText, Filter, HelpCircle, MessageCircle, Plus, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import {
   listarCategoriasForum,
   listarTopicosForum,
@@ -139,6 +137,7 @@ export function ForumHome() {
   const [topicos, setTopicos] = useState<ForumTopico[]>([]);
   const [busca, setBusca] = useState('');
   const [categoriaId, setCategoriaId] = useState<ForumCategoryFilterValue>('todas');
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -178,11 +177,6 @@ export function ForumHome() {
   const activeCategoryLabel = categoriaId === 'todas'
     ? 'Todas'
     : gruposCategorias.find((grupo) => grupo.key === categoriaId)?.label ?? 'Todas';
-
-  const limparFiltros = () => {
-    setBusca('');
-    setCategoriaId('todas');
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -252,6 +246,11 @@ export function ForumHome() {
     </div>
   );
 
+  const filterOptions: Array<{ value: ForumCategoryFilterValue; label: string }> = [
+    { value: 'todas', label: 'Todas' },
+    ...gruposCategorias.map((grupo) => ({ value: grupo.key, label: grupo.label })),
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
@@ -268,51 +267,66 @@ export function ForumHome() {
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
         {renderCategorias('mobile')}
 
-        <Card className="min-w-0">
-          <CardContent className="grid grid-cols-[minmax(0,1fr)_40px] gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px_40px]">
-            <label className="relative col-span-2 block min-w-0 md:col-span-1">
-              <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                value={busca}
-                onChange={(event) => setBusca(event.target.value)}
-                placeholder="Pesquise aqui..."
-                className="pl-9"
-              />
-            </label>
+        <section className="relative flex min-w-0 w-full max-w-3xl items-center gap-2" aria-label="Busca e filtros do fórum">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              placeholder="Pesquise aqui..."
+              className="h-14 w-full rounded-2xl border border-gray-200 bg-white py-2 pl-12 pr-4 text-base text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:text-sm"
+            />
+          </div>
 
-            <label className="relative block min-w-0">
-              <select
-                value={categoriaId}
-                onChange={(event) => setCategoriaId(event.target.value as ForumCategoryFilterValue)}
-                className="h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-center text-sm text-transparent md:px-3 md:text-left md:text-gray-900"
-                aria-label="Filtrar por categoria"
-                title="Categorias"
-              >
-                <option value="todas">Todas</option>
-                {gruposCategorias.map((grupo) => (
-                  <option key={grupo.key} value={grupo.key}>
-                    {grupo.label}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center px-2 text-sm font-medium text-gray-900 md:hidden">
-                {activeCategoryLabel}
-              </span>
-            </label>
-
-            <Button
+          <div className="relative shrink-0">
+            <button
               type="button"
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 shrink-0"
-              onClick={limparFiltros}
-              aria-label="Limpar filtros"
-              title="Limpar filtros"
+              onClick={() => setFilterMenuOpen((current) => !current)}
+              className={[
+                'inline-flex h-14 w-14 items-center justify-center rounded-2xl border bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                categoriaId !== 'todas' ? 'border-blue-200 text-blue-700 ring-1 ring-blue-100' : 'border-gray-200',
+              ].join(' ')}
+              aria-expanded={filterMenuOpen}
+              aria-haspopup="menu"
+              aria-label={`Filtrar tópicos. Filtro atual: ${activeCategoryLabel}`}
+              title="Filtrar tópicos"
             >
-              <X className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+              <Filter className="h-5 w-5" />
+            </button>
+
+            {filterMenuOpen && (
+              <div
+                className="absolute right-0 z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-200 bg-white p-2 shadow-lg"
+                role="menu"
+              >
+                {filterOptions.map((option) => {
+                  const isActive = categoriaId === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setCategoriaId(option.value);
+                        setFilterMenuOpen(false);
+                      }}
+                      className={[
+                        'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition',
+                        isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50',
+                      ].join(' ')}
+                      role="menuitemradio"
+                      aria-checked={isActive}
+                    >
+                      <span>{option.label}</span>
+                      {isActive && <Check className="h-4 w-4" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
 
         {erro && (
           <Card className="border-amber-200 bg-amber-50">
