@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
-import { PageFavoriteButton } from '../favorites/PageFavoriteButton';
 import { useAuth } from '../../contexts/AuthContext';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import {
@@ -14,7 +13,9 @@ import {
   MessageCircle,
   Network,
   Plus,
+  Search,
   Settings,
+  Sparkles,
   Star,
 } from 'lucide-react';
 
@@ -70,6 +71,21 @@ const dangerActionClass =
 const ghostActionClass =
   `${baseActionClass} border border-transparent bg-white text-gray-700 hover:bg-gray-50`;
 
+const memberToolbarButtonClassName = 'hidden h-9 shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+const memberIconButtonClassName = 'h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-slate-800 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+const memberHeaderActionTextClassName = 'text-sm font-semibold leading-none';
+
+const STANDARD_MEMBER_NAV_PATHS = new Set([
+  '/',
+  '/mapa-familiar',
+  '/mapa-familiar-horizontal',
+  '/calendario-familiar',
+  '/meus-favoritos',
+  '/notificacoes',
+  '/ajustar-notificacoes',
+  '/forum',
+]);
+
 function getActionClass(variant: HeaderAction['variant']) {
   if (variant === 'primary') return primaryActionClass;
   if (variant === 'danger') return dangerActionClass;
@@ -98,6 +114,20 @@ function getLabelClassName(mode: HeaderAction['responsiveLabel']) {
 
 function isNotificationsAction(action: Pick<HeaderAction, 'to' | 'label'>) {
   return action.to === '/notificacoes' || action.label.toLocaleLowerCase('pt-BR').includes('notifica');
+}
+
+function isStandardNavigationAction(action: HeaderAction) {
+  if (!action.to) return false;
+  return STANDARD_MEMBER_NAV_PATHS.has(action.to) || action.to.startsWith('/forum');
+}
+
+function getCurrentHeaderSection(pathname: string) {
+  if (pathname === '/meus-favoritos') return 'favorites';
+  if (pathname === '/notificacoes' || pathname.startsWith('/ajustar-notificacoes')) return 'notifications';
+  if (pathname === '/calendario-familiar') return 'calendar';
+  if (pathname === '/forum' || pathname.startsWith('/forum/')) return 'forum';
+  if (pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/') return 'tree';
+  return 'other';
 }
 
 function NotificationCountBadge({ count }: { count?: number }) {
@@ -154,6 +184,37 @@ function HeaderActionButton({ action }: { action: HeaderAction }) {
   );
 }
 
+function StandardToolbarLink({
+  to,
+  title,
+  ariaLabel,
+  icon: Icon,
+  children,
+  visibleFrom = 'lg',
+  tourTarget,
+}: {
+  to: string;
+  title: string;
+  ariaLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  visibleFrom?: 'md' | 'lg';
+  tourTarget?: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`${memberToolbarButtonClassName} ${visibleFrom}:inline-flex`}
+      title={title}
+      aria-label={ariaLabel}
+      data-tour-target={tourTarget}
+    >
+      <Icon className="h-4 w-4" />
+      <span className={memberHeaderActionTextClassName}>{children}</span>
+    </Link>
+  );
+}
+
 const MOBILE_BOTTOM_NAV_ITEMS = [
   { label: 'Home', to: '/mapa-familiar', icon: Home },
   { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
@@ -201,10 +262,11 @@ function MemberMobileBottomNav({ unreadNotificationsCount }: { unreadNotificatio
 }
 
 export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
-  { label: 'Árvore geral', to: '/', icon: Home, responsiveLabel: 'lg' },
-  { label: 'Mapa Familiar', to: '/mapa-familiar', icon: Network, responsiveLabel: 'lg' },
-  { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'xl' },
-  { label: 'Notificações', to: '/notificacoes', icon: Bell, responsiveLabel: 'xl' },
+  { label: 'Árvore Familiar', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
+  { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays, responsiveLabel: 'always' },
+  { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'always' },
+  { label: 'Fórum', to: '/forum', icon: MessageCircle, responsiveLabel: 'always' },
+  { label: 'Alertas', to: '/notificacoes', icon: Bell, responsiveLabel: 'never' },
 ];
 
 export function MemberPageHeader({
@@ -214,13 +276,21 @@ export function MemberPageHeader({
   actions = [],
   customActions,
   mobileCustomActions,
-  hideFavoriteButton = false,
+  hideFavoriteButton,
   hideMobileHeaderActions = false,
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const searchRootRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const currentHeaderSection = getCurrentHeaderSection(location.pathname);
+  const isAdminSection = location.pathname.startsWith('/admin');
+  void hideFavoriteButton;
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -244,10 +314,116 @@ export function MemberPageHeader({
     };
   }, [refreshUnreadNotificationsCount]);
 
-  const actionsWithNotificationBadge = actions.map((action) =>
+  useEffect(() => {
+    if (!searchExpanded) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSearchExpanded(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    window.requestAnimationFrame(() => searchInputRef.current?.focus());
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [searchExpanded]);
+
+  const submitSearch = useCallback(() => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      setSearchExpanded(false);
+      return;
+    }
+
+    setSearchExpanded(false);
+    navigate('/busca?q=' + encodeURIComponent(trimmed));
+  }, [navigate, searchTerm]);
+
+  const adminActionsWithNotificationBadge = actions.map((action) =>
     isNotificationsAction(action)
       ? { ...action, badgeCount: unreadNotificationsCount }
       : action
+  );
+  const extraActions = actions
+    .filter((action) => !isStandardNavigationAction(action))
+    .map((action) =>
+      isNotificationsAction(action)
+        ? { ...action, badgeCount: unreadNotificationsCount }
+        : action
+    );
+
+  const standardHeaderActions = (
+    <>
+      <div className={['min-w-0 shrink-0 flex-nowrap items-center justify-center gap-2 overflow-visible', searchExpanded ? 'hidden lg:flex' : 'hidden md:flex'].join(' ')}>
+        {currentHeaderSection !== 'tree' && (
+          <StandardToolbarLink to="/mapa-familiar" title="Voltar para Árvore Familiar" ariaLabel="Voltar para Árvore Familiar" icon={ArrowLeft} visibleFrom="md">
+            Árvore Familiar
+          </StandardToolbarLink>
+        )}
+        <StandardToolbarLink to="/mapa-familiar?curiosidades=1" title="Curiosidades" ariaLabel="Abrir Curiosidades" icon={Sparkles} visibleFrom="md" tourTarget="curiosities">
+          Curiosidades
+        </StandardToolbarLink>
+        {currentHeaderSection !== 'calendar' && (
+          <StandardToolbarLink to="/calendario-familiar" title="Calendário familiar" ariaLabel="Abrir Calendário familiar" icon={CalendarDays} tourTarget="calendar">
+            Calendário
+          </StandardToolbarLink>
+        )}
+        {currentHeaderSection !== 'favorites' && (
+          <StandardToolbarLink to="/meus-favoritos" title="Meus favoritos" ariaLabel="Abrir Favoritos" icon={Star} tourTarget="favorites">
+            Favoritos
+          </StandardToolbarLink>
+        )}
+        {currentHeaderSection !== 'forum' && (
+          <StandardToolbarLink to="/forum" title="Fórum de Discussões" ariaLabel="Abrir Fórum de Discussões" icon={MessageCircle} tourTarget="forum">
+            Fórum
+          </StandardToolbarLink>
+        )}
+        {currentHeaderSection !== 'notifications' && (
+          <Link
+            to="/notificacoes"
+            className={`relative hidden md:inline-flex ${memberIconButtonClassName}`}
+            title="Alertas"
+            aria-label="Abrir alertas"
+            data-tour-target="alerts"
+          >
+            <Bell className="h-4 w-4" />
+            <NotificationCountBadge count={unreadNotificationsCount} />
+          </Link>
+        )}
+      </div>
+
+      <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 shrink-0 items-center justify-end gap-2 overflow-visible'].join(' ')}>
+        <div ref={searchRootRef} className="relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
+          <button
+            type="button"
+            className={`relative z-[504] flex ${memberIconButtonClassName}`}
+            title="Buscar por pessoa ou página"
+            aria-label={searchExpanded ? 'Fechar busca' : 'Abrir busca'}
+            data-tour-target="search"
+            onClick={() => setSearchExpanded((current) => !current)}
+          >
+            <Search className="pointer-events-none h-4 w-4" />
+          </button>
+
+          <div className={['relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'pointer-events-auto w-[min(50vw,380px)] opacity-100' : 'pointer-events-none w-0 opacity-0'].join(' ')}>
+            <div className="pr-2">
+              <form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar pessoa ou página..."
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  tabIndex={searchExpanded ? 0 : -1}
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 
   return (
@@ -271,21 +447,26 @@ export function MemberPageHeader({
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
-            {!hideMobileHeaderActions && !hideFavoriteButton && (
-              <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
-            )}
             {mobileCustomActions}
             {!hideMobileHeaderActions && <UserProfileMenu />}
           </div>
 
-          {(actions.length > 0 || customActions) && (
-            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
-              {actionsWithNotificationBadge.map((action) => (
+          {isAdminSection ? (
+            (actions.length > 0 || customActions) && (
+              <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
+                {adminActionsWithNotificationBadge.map((action) => (
+                  <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
+                ))}
+                {customActions}
+                <UserProfileMenu />
+              </div>
+            )
+          ) : (
+            <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-2 overflow-visible md:flex">
+              {standardHeaderActions}
+              {extraActions.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
-              {!hideFavoriteButton && (
-                <PageFavoriteButton path={location.pathname} className="h-10 w-10 rounded-xl border-gray-200 shadow-sm" />
-              )}
               {customActions}
               <UserProfileMenu />
             </div>
@@ -305,6 +486,8 @@ export const HEADER_ACTION_ICONS = {
   MessageCircle,
   Network,
   Plus,
+  Search,
   Settings,
+  Sparkles,
   Star,
 };
