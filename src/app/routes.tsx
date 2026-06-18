@@ -42,6 +42,7 @@ const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
 const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
+const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidas').then((module) => ({ default: module.AdminDuvidas })));
 
 const ROUTE_CHUNK_RELOAD_KEY = 'arvorefamilia:route-chunk-reload-at';
 const ROUTE_CHUNK_RELOAD_COOLDOWN_MS = 10000;
@@ -236,6 +237,7 @@ export const router = createBrowserRouter([
   { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
   { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
   { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
+  { path: '/admin/duvidas', element: lazyRoute(<ProtectedRoute><AdminDuvidas /></ProtectedRoute>) },
   { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
   {
     path: '*',
