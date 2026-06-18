@@ -324,9 +324,15 @@ export function HomeHeader({
               size="icon"
               className="relative z-[504] flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm"
               title="Buscar por pessoa ou página"
-              aria-label={searchExpanded ? 'Busca expandida' : 'Abrir busca'}
+              aria-label={searchExpanded ? 'Fechar busca' : 'Abrir busca'}
               data-tour-target="search"
               onClick={() => {
+                if (searchExpanded) {
+                  setSearchSuggestionsDismissed(true);
+                  onSearchExpandedChange(false);
+                  return;
+                }
+
                 setSearchSuggestionsDismissed(false);
                 onSearchExpandedChange(true);
               }}
