@@ -14,7 +14,7 @@ const TOOLBAR_ITEMS: Array<{
   { action: 'visualizacao', label: 'Visualização' },
   { action: 'formato', label: 'Formato' },
   { action: 'cor', label: 'Cor' },
-  { action: 'grupos', label: 'Grupos' },
+  { action: 'grupos', label: 'Filtros' },
   { action: 'exportar', label: 'Exportar' },
 ];
 
