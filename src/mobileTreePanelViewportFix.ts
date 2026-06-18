@@ -140,8 +140,6 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'style', 'aria-label'],
   });
 
   window.addEventListener('resize', scheduleCentering, { passive: true });
