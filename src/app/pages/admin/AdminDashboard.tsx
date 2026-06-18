@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Bell,
   Palette,
+  HelpCircle,
 } from 'lucide-react';
 
 type Pessoa = {
@@ -127,6 +128,13 @@ export function AdminDashboard() {
       icon: GitPullRequest,
       onClick: () => navigate('/admin/solicitacoes-vinculos'),
       color: 'bg-amber-600',
+    },
+    {
+      title: 'Dúvidas',
+      description: 'Gerenciar perguntas, respostas e categorias',
+      icon: HelpCircle,
+      onClick: () => navigate('/admin/duvidas'),
+      color: 'bg-indigo-600',
     },
     {
       title: 'Histórico',
