@@ -6,12 +6,15 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
+import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
 import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
 import { adminListProfilesForLinking } from '../../services/memberProfileService';
+import { ActivityLog } from '../../types';
 
 type Pessoa = {
   id: string;
   nome_completo: string;
+  local_nascimento?: string | null;
   humano_ou_pet?: 'Humano' | 'Pet' | string;
   telefone?: string | null;
 };
@@ -57,6 +60,7 @@ export function AdminDashboard() {
   const { signOut } = useAuth();
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
+  const [atividadesRecentes, setAtividadesRecentes] = useState<ActivityLog[]>([]);
   const [pendingRelationshipRequests, setPendingRelationshipRequests] = useState(0);
   const [totalCadastros, setTotalCadastros] = useState(0);
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
@@ -68,20 +72,23 @@ export function AdminDashboard() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [pessoasData, relacionamentosData, pendingRequestsData, profilesData] = await Promise.all([
+        const [pessoasData, relacionamentosData, atividadesData, pendingRequestsData, profilesData] = await Promise.all([
           obterTodasPessoas(),
           obterTodosRelacionamentos(),
+          listRecentActivityLogs(5),
           listPendingRelationshipChangeRequests({ limit: 1000 }),
           adminListProfilesForLinking(),
         ]);
         setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
+        setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData : []);
         setPendingRelationshipRequests(Array.isArray(pendingRequestsData) ? pendingRequestsData.length : 0);
         setTotalCadastros(profilesData.error ? 0 : profilesData.data.length);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
         setPessoas([]);
         setRelacionamentos([]);
+        setAtividadesRecentes([]);
         setPendingRelationshipRequests(0);
         setTotalCadastros(0);
       } finally {
@@ -127,6 +134,16 @@ export function AdminDashboard() {
     { title: 'Aparência da home', description: 'Logo, fundo e cores', icon: Palette, onClick: () => navigate('/admin/home'), color: 'bg-teal-700' },
     { title: 'Integridade dos dados', description: 'Diagnóstico da base', icon: ShieldCheck, onClick: () => navigate('/admin/integridade'), color: 'bg-cyan-700' },
   ];
+
+  const novosCadastros = pessoas.slice(0, 5);
+
+  const formatActivityDate = (value?: string) => {
+    if (!value) return 'Data não informada';
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -280,6 +297,68 @@ export function AdminDashboard() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+          <Card className="h-fit min-w-0 self-start">
+            <CardHeader>
+              <CardTitle className="break-words">Novos Cadastros</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-gray-500">Carregando...</p>
+              ) : novosCadastros.length === 0 ? (
+                <p className="text-sm text-gray-500">Nenhum cadastro encontrado.</p>
+              ) : (
+                <div className="space-y-3">
+                  {novosCadastros.map((pessoa) => (
+                    <button
+                      key={pessoa.id}
+                      type="button"
+                      className="block w-full min-w-0 rounded-lg p-3 text-left transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      onClick={() => navigate(`/pessoa/${pessoa.id}`)}
+                      aria-label={`Ver dados de ${pessoa.nome_completo}`}
+                    >
+                      <p className="break-words text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
+                      <p className="mt-1 break-words text-xs text-gray-500">{pessoa.local_nascimento || 'Local não informado'}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="min-w-0">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="break-words">Histórico de Atividades</CardTitle>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate('/admin/atividades')}>
+                Ver histórico completo
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-gray-500">Carregando...</p>
+              ) : atividadesRecentes.length === 0 ? (
+                <p className="text-sm text-gray-500">Nenhuma atividade registrada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {atividadesRecentes.map((atividade) => (
+                    <div key={atividade.id} className="rounded-lg border border-gray-100 p-3">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="break-words text-sm font-medium text-gray-900">{getActivityActionLabel(atividade.action)}</p>
+                          <p className="break-words text-xs text-gray-500">
+                            {atividade.actor_display_name || 'Ator não identificado'} · {formatActivityDate(atividade.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-2 break-words text-xs text-gray-600">{getActivitySummary(atividade)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
