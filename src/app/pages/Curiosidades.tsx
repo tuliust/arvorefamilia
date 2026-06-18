@@ -71,14 +71,14 @@ export function Curiosidades() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
+    <div className="curiosidades-page min-h-screen overflow-x-hidden bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
         subtitle="Descobertas, histórias e conexões da família"
         icon={Sparkles}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
+      <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <CuriosidadesHero />
         <div id="numeros-da-familia" className="scroll-mt-24">
           <CuriosidadesStats {...curiosityDataProps} />
