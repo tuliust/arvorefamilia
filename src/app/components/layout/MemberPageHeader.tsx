@@ -26,14 +26,14 @@ export type HeaderAction = {
   icon?: React.ComponentType<{ className?: string }>;
   variant?: 'default' | 'primary' | 'danger' | 'ghost';
   /**
-   * Controla quando o texto do botão aparece em ações com ícone.
+   * Controla quando o texto do botÃ£o aparece em aÃ§Ãµes com Ã­cone.
    *
-   * - always: texto sempre visível.
-   * - lg: texto visível a partir de lg.
-   * - xl: texto visível a partir de xl.
+   * - always: texto sempre visÃ­vel.
+   * - lg: texto visÃ­vel a partir de lg.
+   * - xl: texto visÃ­vel a partir de xl.
    * - never: sempre icon-only visualmente, mantendo label para leitores de tela.
    *
-   * Padrão:
+   * PadrÃ£o:
    * - primary: lg.
    * - demais variantes: xl.
    */
@@ -137,7 +137,7 @@ function NotificationCountBadge({ count }: { count?: number }) {
   return (
     <span
       className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-5 text-white ring-2 ring-white"
-      aria-label={String(count) + ' notificação' + (count === 1 ? '' : 'es') + ' não lida' + (count === 1 ? '' : 's')}
+      aria-label={String(count) + ' notificaÃ§Ã£o' + (count === 1 ? '' : 'es') + ' nÃ£o lida' + (count === 1 ? '' : 's')}
     >
       {count > 99 ? '99+' : count}
     </span>
@@ -218,8 +218,8 @@ function StandardToolbarLink({
 
 const MOBILE_BOTTOM_NAV_ITEMS = [
   { label: 'Home', to: '/mapa-familiar', icon: Home },
-  { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays },
-  { label: 'Fórum', to: '/forum', icon: MessageCircle },
+  { label: 'CalendÃ¡rio', to: '/calendario-familiar', icon: CalendarDays },
+  { label: 'FÃ³rum', to: '/forum', icon: MessageCircle },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star },
   { label: 'Alertas', to: '/notificacoes', icon: Bell },
 ];
@@ -263,10 +263,10 @@ function MemberMobileBottomNav({ unreadNotificationsCount }: { unreadNotificatio
 }
 
 export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
-  { label: 'Árvore Familiar', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
-  { label: 'Calendário', to: '/calendario-familiar', icon: CalendarDays, responsiveLabel: 'always' },
+  { label: 'Ãrvore Familiar', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
+  { label: 'CalendÃ¡rio', to: '/calendario-familiar', icon: CalendarDays, responsiveLabel: 'always' },
   { label: 'Favoritos', to: '/meus-favoritos', icon: Star, responsiveLabel: 'always' },
-  { label: 'Fórum', to: '/forum', icon: MessageCircle, responsiveLabel: 'always' },
+  { label: 'FÃ³rum', to: '/forum', icon: MessageCircle, responsiveLabel: 'always' },
   { label: 'Alertas', to: '/notificacoes', icon: Bell, responsiveLabel: 'never' },
 ];
 
@@ -358,18 +358,18 @@ export function MemberPageHeader({
     <>
       <div className={['min-w-0 shrink-0 flex-nowrap items-center justify-center gap-2 overflow-visible', searchExpanded ? 'hidden lg:flex' : 'hidden md:flex'].join(' ')}>
         {currentHeaderSection !== 'tree' && (
-          <StandardToolbarLink to="/mapa-familiar" title="Voltar para Árvore Familiar" ariaLabel="Voltar para Árvore Familiar" icon={ArrowLeft} visibleFrom="md">
-            Árvore Familiar
+          <StandardToolbarLink to="/mapa-familiar" title="Voltar para Ãrvore Familiar" ariaLabel="Voltar para Ãrvore Familiar" icon={ArrowLeft} visibleFrom="md">
+            Ãrvore Familiar
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'curiosities' && (
-          <StandardToolbarLink to="/mapa-familiar?curiosidades=1" title="Curiosidades" ariaLabel="Abrir Curiosidades" icon={Sparkles} visibleFrom="md" tourTarget="curiosities">
+          <StandardToolbarLink to="/curiosidades" title="Curiosidades" ariaLabel="Abrir Curiosidades" icon={Sparkles} visibleFrom="md" tourTarget="curiosities">
             Curiosidades
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'calendar' && (
-          <StandardToolbarLink to="/calendario-familiar" title="Calendário familiar" ariaLabel="Abrir Calendário familiar" icon={CalendarDays} tourTarget="calendar">
-            Calendário
+          <StandardToolbarLink to="/calendario-familiar" title="CalendÃ¡rio familiar" ariaLabel="Abrir CalendÃ¡rio familiar" icon={CalendarDays} tourTarget="calendar">
+            CalendÃ¡rio
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'favorites' && (
@@ -378,8 +378,8 @@ export function MemberPageHeader({
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'forum' && (
-          <StandardToolbarLink to="/forum" title="Fórum de Discussões" ariaLabel="Abrir Fórum de Discussões" icon={MessageCircle} tourTarget="forum">
-            Fórum
+          <StandardToolbarLink to="/forum" title="FÃ³rum de DiscussÃµes" ariaLabel="Abrir FÃ³rum de DiscussÃµes" icon={MessageCircle} tourTarget="forum">
+            FÃ³rum
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'notifications' && (
@@ -401,7 +401,7 @@ export function MemberPageHeader({
           <button
             type="button"
             className={`relative z-[504] flex ${memberIconButtonClassName}`}
-            title="Buscar por pessoa ou página"
+            title="Buscar por pessoa ou pÃ¡gina"
             aria-label={searchExpanded ? 'Fechar busca' : 'Abrir busca'}
             data-tour-target="search"
             onClick={() => setSearchExpanded((current) => !current)}
@@ -415,7 +415,7 @@ export function MemberPageHeader({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Buscar pessoa ou página..."
+                  placeholder="Buscar pessoa ou pÃ¡gina..."
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"

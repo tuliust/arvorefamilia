@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BrainCircuit, CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
 import {
   buildCuriosityQuizQuestions,
@@ -23,6 +23,18 @@ export function CuriosidadesQuizSection({
   const currentQuestion = questions[questionIndex] ?? null;
   const answeredCorrectly = Boolean(currentQuestion && selectedOptionId === currentQuestion.answerId);
   const hasAnswered = Boolean(selectedOptionId);
+
+  useEffect(() => {
+    if (questionIndex >= questions.length && questions.length > 0) {
+      setQuestionIndex(questions.length - 1);
+      setSelectedOptionId(null);
+    }
+
+    if (questions.length === 0 && questionIndex !== 0) {
+      setQuestionIndex(0);
+      setSelectedOptionId(null);
+    }
+  }, [questionIndex, questions.length]);
 
   const goNext = () => {
     setSelectedOptionId(null);

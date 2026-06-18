@@ -104,10 +104,10 @@ import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
 import { SidebarPanelTabs } from './home/SidebarPanelTabs';
 
 const AI_QUESTION_EXAMPLES = [
-  'Quem são meus bisavós paternos?',
-  'Quantas pessoas da família nasceram em Recife?',
+  'Quem sÃ£o meus bisavÃ³s paternos?',
+  'Quantas pessoas da famÃ­lia nasceram em Recife?',
   'Quais parentes moram em Porto Alegre?',
-  'Monte um resumo da linha genealógica de uma pessoa.',
+  'Monte um resumo da linha genealÃ³gica de uma pessoa.',
 ];
 const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.join('\n')}`;
 
@@ -382,7 +382,7 @@ export function Home() {
       }
 
       if (pessoasData.length === 0) {
-        setLoadError('Tabela sem dados: pessoas não retornou registros.');
+        setLoadError('Tabela sem dados: pessoas nÃ£o retornou registros.');
         return;
       }
 
@@ -398,12 +398,12 @@ export function Home() {
       setRelacionamentos(nextRelacionamentos);
 
       if (relacionamentosData.length === 0) {
-        console.warn('[Supabase] Tabela sem dados: relacionamentos não retornou registros.');
+        console.warn('[Supabase] Tabela sem dados: relacionamentos nÃ£o retornou registros.');
       }
     } catch (error) {
       if (treeDataLoadTokenRef.current !== loadToken) return;
       const message = error instanceof Error ? error.message : 'Erro desconhecido ao carregar dados.';
-      console.error('Erro ao carregar dados da árvore:', error);
+      console.error('Erro ao carregar dados da Ã¡rvore:', error);
       setLoadError(message);
       setPessoas([]);
       setRelacionamentos([]);
@@ -457,7 +457,7 @@ export function Home() {
         }
       } catch (error) {
         if (cancelled) return;
-        console.error('Erro ao carregar vínculo do membro:', error);
+        console.error('Erro ao carregar vÃ­nculo do membro:', error);
         setLinkedPersonId(undefined);
       } finally {
         if (!cancelled) {
@@ -518,11 +518,11 @@ export function Home() {
       try {
         const { data, error } = await getMemberProfile(user.id);
         if (error) {
-          console.error('Erro ao carregar perfil do usuário:', error);
+          console.error('Erro ao carregar perfil do usuÃ¡rio:', error);
         }
         setProfile(data);
       } catch (error) {
-        console.error('Erro ao carregar perfil do usuário:', error);
+        console.error('Erro ao carregar perfil do usuÃ¡rio:', error);
         setProfile(null);
       }
     };
@@ -544,13 +544,13 @@ export function Home() {
       try {
         const { isAdmin: nextIsAdmin, error } = await isAdminUser(user);
         if (error) {
-          console.error('Erro ao verificar permissão administrativa:', error);
+          console.error('Erro ao verificar permissÃ£o administrativa:', error);
         }
         if (!cancelled) {
           setIsAdmin(nextIsAdmin);
         }
       } catch (error) {
-        console.error('Erro ao verificar permissão administrativa:', error);
+        console.error('Erro ao verificar permissÃ£o administrativa:', error);
         if (!cancelled) {
           setIsAdmin(false);
         }
@@ -677,7 +677,7 @@ export function Home() {
   }, []);
 
   const handleAddConnectionSubmit = useCallback((payload: AddConnectionPayload) => {
-    console.info('Salvar conexão:', payload);
+    console.info('Salvar conexÃ£o:', payload);
     setConnectionTarget(null);
   }, []);
 
@@ -983,13 +983,13 @@ export function Home() {
 
     try {
       const insightsResult = selectedCuriosityTopics.some((topic) =>
-        topic === 'Fatos Históricos do Dia de Nascimento' || topic === 'O que diz a Astrologia'
+        topic === 'Fatos HistÃ³ricos do Dia de Nascimento' || topic === 'O que diz a Astrologia'
       )
         ? await obterInsightsGeradosPessoa(selectedCuriosityPerson.id)
         : [];
       setDiscoverInsights(insightsResult);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível carregar as informações selecionadas.';
+      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel carregar as informaÃ§Ãµes selecionadas.';
       setDiscoverError(message);
     } finally {
       setDiscoverLoading(false);
@@ -1003,10 +1003,10 @@ export function Home() {
     const curiosityInstruction = selectedCuriosityPerson && selectedCuriosityTopics.length > 0
       ? [
           `Pessoa selecionada: ${selectedCuriosityPerson.nome_completo}.`,
-          `Tópicos desejados: ${selectedCuriosityTopics.join(', ')}.`,
+          `TÃ³picos desejados: ${selectedCuriosityTopics.join(', ')}.`,
         ].join('\n')
       : '';
-    const question = manualQuestion || 'Fale sobre a pessoa selecionada considerando os tópicos marcados.';
+    const question = manualQuestion || 'Fale sobre a pessoa selecionada considerando os tÃ³picos marcados.';
     const message = [question, curiosityInstruction].filter(Boolean).join('\n\n');
 
     setAiLoading(true);
@@ -1038,18 +1038,18 @@ export function Home() {
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error || payload?.message || 'Não foi possível gerar a resposta agora.');
+        throw new Error(payload?.error || payload?.message || 'NÃ£o foi possÃ­vel gerar a resposta agora.');
       }
 
       const answer = payload?.answer || payload?.data?.answer || payload?.response;
 
       if (!answer || typeof answer !== 'string') {
-        throw new Error('A IA não retornou uma resposta válida.');
+        throw new Error('A IA nÃ£o retornou uma resposta vÃ¡lida.');
       }
 
-      setAiAnswer(answer || 'Não encontrei uma resposta para essa pergunta.');
+      setAiAnswer(answer || 'NÃ£o encontrei uma resposta para essa pergunta.');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível gerar a resposta agora.';
+      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel gerar a resposta agora.';
       setAiError(message);
       toast.error(message);
     } finally {
@@ -1099,7 +1099,7 @@ export function Home() {
       });
       setConnectionResult(resultado);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível descobrir a conexão agora.';
+      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel descobrir a conexÃ£o agora.';
       setConnectionError(message);
     } finally {
       setConnectionLoading(false);
@@ -1115,10 +1115,10 @@ export function Home() {
 
   const curiosityTabs = useMemo(
     () => [
-      { id: 'voce-sabia' as const, label: 'Você Sabia?', icon: Lightbulb },
+      { id: 'voce-sabia' as const, label: 'VocÃª Sabia?', icon: Lightbulb },
       { id: 'descubra' as const, label: 'Descubra mais sobre...', icon: Search },
-      { id: 'pergunte-ia' as const, label: 'Pergunte à IA', icon: Bot },
-      { id: 'conexao' as const, label: 'Qual a minha conexão com alguém?', icon: Network },
+      { id: 'pergunte-ia' as const, label: 'Pergunte Ã  IA', icon: Bot },
+      { id: 'conexao' as const, label: 'Qual a minha conexÃ£o com alguÃ©m?', icon: Network },
     ],
     []
   );
@@ -1255,7 +1255,7 @@ export function Home() {
         pessoasFiltradas={pessoasFiltradas}
         handleSearchSelect={handleSearchSelect}
         headerActionTextClassName={headerActionTextClassName}
-        onCuriosities={() => setAiDialogOpen(true)}
+        onCuriosities={() => navigateFromHome('/curiosidades')}
         navigateFromHome={navigateFromHome}
         showViewAsSelector={shouldShowDebugViewer}
         viewAsPersonValue={debugViewPersonId ?? ''}
@@ -1420,7 +1420,7 @@ export function Home() {
           <DialogHeader>
             <DialogTitle>Fica a dica</DialogTitle>
             <DialogDescription>
-              Este site é melhor acessado pelo computador, notebook ou tablet.
+              Este site Ã© melhor acessado pelo computador, notebook ou tablet.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
