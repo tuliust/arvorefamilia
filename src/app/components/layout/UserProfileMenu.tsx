@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Network,
   Pencil,
+  Sparkles,
   Star,
   UserCircle2,
   X,
@@ -368,6 +369,10 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                 <button type="button" className={itemClassName} onClick={() => goTo('/calendario-familiar')}>
                   <CalendarDays className="h-5 w-5 text-blue-700" />
                   Calendário
+                </button>
+                <button type="button" className="hidden w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800 md:flex" onClick={() => goTo('/curiosidades')}>
+                  <Sparkles className="h-5 w-5 text-blue-700" />
+                  Curiosidades
                 </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/meus-favoritos')}>
                   <Star className="h-5 w-5 text-blue-700" />
