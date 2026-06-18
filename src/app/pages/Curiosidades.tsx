@@ -5,6 +5,7 @@ import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataSe
 import type { Pessoa, Relacionamento } from '../types';
 import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
 import { CuriosidadesAstrology } from './curiosidades/CuriosidadesAstrology';
+import { CuriosidadesCharts } from './curiosidades/CuriosidadesCharts';
 import { CuriosidadesConnectionSection } from './curiosidades/CuriosidadesConnectionSection';
 import { CuriosidadesCouples } from './curiosidades/CuriosidadesCouples';
 import { CuriosidadesDiscoverySection } from './curiosidades/CuriosidadesDiscoverySection';
@@ -96,6 +97,9 @@ export function Curiosidades() {
         </div>
         <div id="voce-sabia" className="scroll-mt-24">
           <CuriosidadesRankings {...curiosityDataProps} />
+        </div>
+        <div id="graficos" className="scroll-mt-24">
+          <CuriosidadesCharts {...curiosityDataProps} />
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <div id="geracoes" className="scroll-mt-24">

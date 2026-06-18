@@ -1,9 +1,10 @@
-﻿import { Anchor } from 'lucide-react';
+import { Anchor } from 'lucide-react';
 
 const sectionLinks = [
   { href: '#numeros-da-familia', label: 'Números' },
   { href: '#hoje-na-familia', label: 'Hoje' },
   { href: '#voce-sabia', label: 'Você Sabia?' },
+  { href: '#graficos', label: 'Gráficos' },
   { href: '#geracoes', label: 'Gerações' },
   { href: '#bodas', label: 'Bodas' },
   { href: '#descobertas', label: 'Descobertas' },
