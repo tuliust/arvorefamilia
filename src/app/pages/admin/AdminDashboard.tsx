@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, Users } from 'lucide-react';
+import { Bell, Clock, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, Users } from 'lucide-react';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -122,6 +122,7 @@ export function AdminDashboard() {
     { title: 'Relacionamentos', description: 'Gerenciar vínculos', icon: Link2, onClick: () => navigate('/admin/relacionamentos'), color: 'bg-purple-500' },
     { title: 'Solicitações de vínculos', description: `${stats.pendingRelationshipRequests} pendente(s)`, icon: GitPullRequest, onClick: () => navigate('/admin/solicitacoes-vinculos'), color: 'bg-amber-600' },
     { title: 'Dúvidas', description: 'Gerenciar perguntas, respostas e categorias', icon: HelpCircle, onClick: () => navigate('/admin/duvidas'), color: 'bg-indigo-600' },
+    { title: 'Histórico', description: 'Ver atividades recentes', icon: Clock, onClick: () => navigate('/admin/atividades'), color: 'bg-slate-800' },
     { title: 'Notificações', description: 'Diagnóstico e envios', icon: Bell, onClick: () => navigate('/admin/notificacoes'), color: 'bg-blue-700' },
     { title: 'Aparência da home', description: 'Logo, fundo e cores', icon: Palette, onClick: () => navigate('/admin/home'), color: 'bg-teal-700' },
     { title: 'Integridade dos dados', description: 'Diagnóstico da base', icon: ShieldCheck, onClick: () => navigate('/admin/integridade'), color: 'bg-cyan-700' },
