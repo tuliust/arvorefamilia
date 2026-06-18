@@ -125,15 +125,15 @@ export function CuriosidadesAiSection({
   };
 
   return (
-    <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm shadow-blue-100/70">
+    <section className="rounded-2xl border border-blue-300 bg-gradient-to-br from-blue-50 via-white to-indigo-100 p-5 shadow-md shadow-blue-200/70 ring-1 ring-blue-100">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-200">
           <Bot className="h-5 w-5" />
         </span>
         <h2 className="text-xl font-bold text-blue-950">Pergunte à IA</h2>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-blue-900/80">
+      <p className="mt-3 text-sm leading-6 text-blue-950/80">
         Faça perguntas em linguagem natural sobre pessoas, relações, cidades, datas e padrões da árvore familiar.
       </p>
 
