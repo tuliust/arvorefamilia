@@ -12,6 +12,13 @@ import {
   MobileFamilyMapToolbar,
   type MobileFamilyMapToolbarAction,
 } from '../../components/FamilyTree/MobileFamilyMapToolbar';
+import {
+  TREE_COLOR_PALETTE_CSS_VARIABLES,
+  TREE_COLOR_PALETTE_STORAGE_KEY,
+  TREE_COLOR_PALETTES,
+  isTreeColorPalette,
+  type TreeColorPalette,
+} from '../../components/FamilyTree/treeColorPalettes';
 import { useAuth } from '../../contexts/AuthContext';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 
@@ -28,6 +35,7 @@ function getCurrentPathname() {
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
 const mobileTreeViewPopoverTopClass = 'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]';
+const paletteOptions: TreeColorPalette[] = ['white', 'visual', 'orange', 'brown'];
 
 const TREE_VIEW_OPTIONS: Array<{
   path: '/mapa-familiar' | '/mapa-familiar-horizontal';
@@ -52,6 +60,26 @@ const TREE_VIEW_OPTIONS: Array<{
   },
 ];
 
+function getStoredPalette(): TreeColorPalette {
+  if (typeof window === 'undefined') return 'white';
+
+  const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
+  return isTreeColorPalette(stored) ? stored : 'white';
+}
+
+function applyTreePalette(value: TreeColorPalette) {
+  if (typeof document === 'undefined') return;
+
+  const palette = TREE_COLOR_PALETTES[value];
+  const root = document.documentElement;
+
+  root.dataset.treeColorPalette = value;
+
+  TREE_COLOR_PALETTE_CSS_VARIABLES.forEach((variableName) => {
+    root.style.setProperty(variableName, palette.cssVariables[variableName]);
+  });
+}
+
 function NotificationCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
 
@@ -73,6 +101,7 @@ export function HomeMobileNav({
   const { user } = useAuth();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
+  const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -87,6 +116,11 @@ export function HomeMobileNav({
       setUnreadNotificationsCount(0);
     }
   }, [user]);
+
+  useEffect(() => {
+    applyTreePalette(treeColorPalette);
+    window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
+  }, [treeColorPalette]);
 
   useEffect(() => {
     void refreshUnreadNotificationsCount();
@@ -110,14 +144,19 @@ export function HomeMobileNav({
   }, [isDirectFamilyMap, pathname]);
 
   useEffect(() => {
-    if (!legendOpen && activeToolbarAction && activeToolbarAction !== 'visualizacao') {
+    if (
+      !legendOpen &&
+      activeToolbarAction &&
+      activeToolbarAction !== 'visualizacao' &&
+      activeToolbarAction !== 'cor'
+    ) {
       setActiveToolbarAction(null);
     }
   }, [activeToolbarAction, legendOpen]);
 
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
-    if (action === 'visualizacao') {
-      setActiveToolbarAction((current) => (current === 'visualizacao' ? null : 'visualizacao'));
+    if (action === 'visualizacao' || action === 'cor') {
+      setActiveToolbarAction((current) => (current === action ? null : action));
 
       if (legendOpen) onToggleLegend();
       return;
@@ -189,6 +228,43 @@ export function HomeMobileNav({
                       <span className="max-w-full text-[9px] font-semibold leading-tight text-slate-700">
                         {option.subtitle}
                       </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeToolbarAction === 'cor' && (
+            <div
+              className={`fixed inset-x-3 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              data-tree-export-ignore="true"
+            >
+              <div
+                className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm backdrop-blur"
+                aria-label="Paletas de cores da árvore"
+              >
+                {paletteOptions.map((paletteKey) => {
+                  const palette = TREE_COLOR_PALETTES[paletteKey];
+                  const active = paletteKey === treeColorPalette;
+
+                  return (
+                    <button
+                      key={paletteKey}
+                      type="button"
+                      aria-label={palette.ariaLabel}
+                      aria-pressed={active}
+                      title={palette.label}
+                      onClick={() => setTreeColorPalette(paletteKey)}
+                      className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-lg transition active:scale-95"
+                    >
+                      <span
+                        className={[
+                          'h-4 w-4 shrink-0 rounded-full border transition',
+                          active ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-white' : '',
+                        ].join(' ')}
+                        style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }}
+                      />
                     </button>
                   );
                 })}
