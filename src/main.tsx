@@ -15,6 +15,8 @@ const MOBILE_FAMILY_TREE_ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]'
 const MOBILE_FAMILY_TREE_CARD_SELECTOR = `${MOBILE_FAMILY_TREE_ROOT_SELECTOR} [data-family-map-mobile-card="true"]`;
 const UNKNOWN_BIRTH_TEXT = "Nascimento não informado";
 const UNKNOWN_DEATH_TEXT = "Falecimento não informado";
+const MOBILE_DESKTOP_TIP_SESSION_KEY = "arvore-mobile-desktop-tip-dismissed";
+const MOBILE_DESKTOP_TIP_PENDING_KEY = "arvore-mobile-desktop-tip-pending";
 const DYNAMIC_IMPORT_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Importing a module script failed/i,
@@ -94,6 +96,15 @@ function isEditableShortcutTarget(target: EventTarget | null) {
 
 function dispatchTreeZoomAction(action: "zoom-in" | "zoom-out") {
   window.dispatchEvent(new CustomEvent(TREE_ACTION_EVENT, { detail: action }));
+}
+
+function disableMobileDesktopTip() {
+  try {
+    window.sessionStorage.removeItem(MOBILE_DESKTOP_TIP_PENDING_KEY);
+    window.sessionStorage.setItem(MOBILE_DESKTOP_TIP_SESSION_KEY, "true");
+  } catch {
+    // A dica mobile é apenas informativa; falha de storage não deve bloquear o app.
+  }
 }
 
 function installTreeOnlyZoomShortcuts() {
@@ -185,6 +196,7 @@ function installMobileFamilyTreeVitalLineCleanup() {
   window.addEventListener("resize", scheduleSync);
 }
 
+disableMobileDesktopTip();
 installTreeOnlyZoomShortcuts();
 installMobileFamilyTreeVitalLineCleanup();
 
