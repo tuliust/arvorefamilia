@@ -22,6 +22,8 @@ import {
   type TreeColorPalette,
 } from '../../components/FamilyTree/treeColorPalettes';
 import { getPathForTreeViewMode, type TreeViewMode } from '../../components/FamilyTree/treeViewMode';
+import { obterTodasPessoas } from '../../services/dataService';
+import type { Pessoa } from '../../types';
 
 export type SidebarTreeAction =
   | 'zoom-in'
@@ -33,6 +35,8 @@ export type SidebarTreeAction =
   | 'print';
 
 export const SIDEBAR_TREE_ACTION_EVENT = 'arvore-family-tree-action';
+
+type ViewAsPersonOption = { id: string; label: string };
 
 const paletteOptions: TreeColorPalette[] = ['white', 'visual', 'orange', 'brown'];
 
@@ -107,30 +111,89 @@ function dispatchTreeAction(action: SidebarTreeAction) {
   window.dispatchEvent(new CustomEvent<SidebarTreeAction>(SIDEBAR_TREE_ACTION_EVENT, { detail: action }));
 }
 
+function getShortPersonName(pessoa: Pessoa) {
+  const source = String(pessoa.nome_completo || pessoa.id || '').trim();
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  return parts.slice(0, 2).join(' ') || pessoa.id;
+}
+
+function buildViewAsPersonOptions(pessoas: Pessoa[]): ViewAsPersonOption[] {
+  return [...pessoas]
+    .filter((pessoa) => Boolean(pessoa.id))
+    .map((pessoa) => ({
+      id: pessoa.id,
+      label: getShortPersonName(pessoa),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
 export function SidebarPanelTabs({
   mobileControls = false,
   mobileGroupsActive = false,
   onMobileGroupsOpenChange,
+  showViewAsSelector,
+  viewAsPersonValue,
+  viewAsPersonOptions,
+  onViewAsPersonChange,
 }: {
   mobileControls?: boolean;
   mobileGroupsActive?: boolean;
   onMobileGroupsOpenChange?: (open: boolean) => void;
+  showViewAsSelector?: boolean;
+  viewAsPersonValue?: string;
+  viewAsPersonOptions?: ViewAsPersonOption[];
+  onViewAsPersonChange?: (value: string) => void;
 } = {}) {
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
   const [treeColorPalette, setTreeColorPalette] = React.useState<TreeColorPalette>(getStoredPalette);
   const [activeFlyout, setActiveFlyout] = React.useState<ControlFlyout>(null);
+  const [fallbackViewAsPersonOptions, setFallbackViewAsPersonOptions] = React.useState<ViewAsPersonOption[]>([]);
   const [activeHighlights, setActiveHighlights] = React.useState<Record<HighlightKey, boolean>>({
     lines: false,
     cards: false,
     groups: false,
   });
 
+  const locationViewAsPersonId = React.useMemo(() => {
+    return new URLSearchParams(location.search).get('pessoa')?.trim() || '';
+  }, [location.search]);
+  const effectiveViewAsPersonOptions = viewAsPersonOptions ?? fallbackViewAsPersonOptions;
+  const effectiveViewAsPersonValue = viewAsPersonValue ?? locationViewAsPersonId;
+  const shouldRenderViewAsSelector = showViewAsSelector ?? true;
+
   React.useEffect(() => {
     applyTreePalette(treeColorPalette);
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
+
+  React.useEffect(() => {
+    if (viewAsPersonOptions || showViewAsSelector === false) return;
+
+    let cancelled = false;
+
+    async function loadViewAsPeople() {
+      try {
+        const pessoas = await obterTodasPessoas();
+        if (cancelled) return;
+
+        setFallbackViewAsPersonOptions(Array.isArray(pessoas) ? buildViewAsPersonOptions(pessoas) : []);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Erro ao carregar pessoas para Visualizar como:', error);
+          setFallbackViewAsPersonOptions([]);
+        }
+      }
+    }
+
+    void loadViewAsPeople();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showViewAsSelector, viewAsPersonOptions]);
 
   React.useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -144,6 +207,26 @@ export function SidebarPanelTabs({
   React.useEffect(() => {
     setActiveFlyout(null);
   }, [location.pathname]);
+
+  const handleViewAsPersonChange = React.useCallback((nextValue: string) => {
+    if (nextValue === '__view_as_label__') return;
+
+    if (onViewAsPersonChange) {
+      onViewAsPersonChange(nextValue);
+      return;
+    }
+
+    const params = new URLSearchParams(location.search);
+
+    if (nextValue) {
+      params.set('pessoa', nextValue);
+    } else {
+      params.delete('pessoa');
+    }
+
+    const query = params.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}`, { replace: false });
+  }, [location.pathname, location.search, navigate, onViewAsPersonChange]);
 
   const handleViewChange = React.useCallback((viewMode: TreeViewMode) => {
     const nextPath = getPathForTreeViewMode(viewMode);
@@ -187,6 +270,28 @@ export function SidebarPanelTabs({
       )}
 
       <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.3rem,0.7vh,0.44rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
+        {shouldRenderViewAsSelector && (
+          <label className="flex min-w-0 flex-col gap-1 rounded-lg border border-amber-100 bg-amber-50/60 px-2 py-1.5 shadow-sm" data-tree-export-ignore="true">
+            <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-800">Visualizar como</span>
+            <select
+              value={effectiveViewAsPersonValue}
+              onChange={(event) => handleViewAsPersonChange(event.target.value)}
+              className="h-8 w-full rounded-md border border-amber-100 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-200"
+              aria-label="Visualizar árvore como outra pessoa"
+            >
+              <option value="__view_as_label__" disabled>
+                Visualizar como...
+              </option>
+              <option value="">Sua view padrão</option>
+              {effectiveViewAsPersonOptions.map((pessoa) => (
+                <option key={pessoa.id} value={pessoa.id}>
+                  {pessoa.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <div className="tree-view-toggle grid min-w-0 grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1">
           {viewOptions.map((option) => {
             const Icon = option.icon;
