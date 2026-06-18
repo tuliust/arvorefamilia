@@ -146,12 +146,13 @@ Compara duas pessoas por campos disponiveis:
 
 ### Mural da familia
 
-Mural local para responder: Qual sua lembranca favorita da familia?
+Mural persistente para responder: Qual sua lembranca favorita da familia?
 
-Limitacao atual:
+Implementacao atual:
 
-- as respostas ficam apenas na sessao local
-- ainda nao ha persistencia em banco
+- salva publicacoes em family_memory_wall_posts
+- exige usuario autenticado pelas policies de RLS
+- permite visibilidade por familia, parentes proximos ou privado
 - pode evoluir para integracao com forum ou acervo de memorias
 
 ### Astrologia da familia
@@ -165,7 +166,6 @@ Regra de conteudo:
 
 ## Limitacoes conhecidas
 
-- Mural ainda nao persiste dados.
 - Rota da familia ainda nao calcula quilometros.
 - Comparacao de interesses depende de campos existentes e bem preenchidos.
 - Astrologia depende de data de nascimento completa.
@@ -191,7 +191,7 @@ Validar:
 - Quiz permite responder e avancar.
 - Rota textual exibe cidades sem inventar distancia.
 - Comparacao de interesses nao quebra com campos ausentes.
-- Mural informa que e local.
+- Mural carrega publicacoes persistidas e permite publicar nova lembranca.
 - Astrologia informa que e recreativa.
 - Layout mobile nao causa overflow horizontal relevante.
 
@@ -205,7 +205,6 @@ npm test
 
 ## Proximos incrementos
 
-- Persistir mural em banco.
 - Adicionar compartilhamento de descoberta no forum.
 - Adicionar favoritar descoberta.
 - Calcular distancia real da rota com coordenadas.
