@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
+  Baby,
   ClipboardList,
   Cross,
   Eye,
@@ -80,7 +81,8 @@ const groupSections: Array<{
     title: 'Núcleo',
     rows: [
       { keys: ['pais'], label: 'Pais', icon: UsersRound },
-      { keys: ['conjuge'], label: 'Cônjuges', icon: HeartHandshake },
+      { keys: ['filhos'], label: 'Filhos', icon: Baby },
+      { keys: ['netos'], label: 'Netos', icon: Baby },
       { keys: ['irmaos'], label: 'Irmãos', icon: UsersRound },
     ],
   },
@@ -148,36 +150,11 @@ export function DesktopTreeVisualizationPanel({
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
   const [treeColorPalette, setTreeColorPalette] = React.useState<TreeColorPalette>(getStoredPalette);
-  const [exportOpen, setExportOpen] = React.useState(false);
-  const exportPopoverId = React.useId();
-  const exportRootRef = React.useRef<HTMLDivElement | null>(null);
-
   React.useEffect(() => {
     applyTreePalette(treeColorPalette);
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
 
-  React.useEffect(() => {
-    if (!exportOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!exportRootRef.current?.contains(event.target as Node)) {
-        setExportOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setExportOpen(false);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [exportOpen]);
 
   const handleViewChange = React.useCallback((viewMode: TreeViewMode) => {
     const nextPath = getPathForTreeViewMode(viewMode);
@@ -187,7 +164,6 @@ export function DesktopTreeVisualizationPanel({
 
   const handleExportAction = React.useCallback((action: SidebarTreeAction) => {
     dispatchTreeAction(action);
-    setExportOpen(false);
   }, []);
 
   const handleGroupToggle = React.useCallback((keys: DirectRelativeGroup[]) => {
@@ -212,46 +188,6 @@ export function DesktopTreeVisualizationPanel({
             </span>
             <h2 className="desktop-tree-panel-title">Visualização</h2>
           </div>
-
-          <div className="desktop-tree-export-root" ref={exportRootRef} data-tree-export-ignore="true">
-            <button
-              type="button"
-              className="desktop-tree-save-print-button"
-              onClick={() => setExportOpen((open) => !open)}
-              aria-expanded={exportOpen}
-              aria-controls={exportPopoverId}
-            >
-              <Printer />
-              <span>Salvar e Imprimir</span>
-            </button>
-
-            {exportOpen && (
-              <div
-                id={exportPopoverId}
-                className="desktop-tree-export-popover"
-                role="menu"
-                aria-label="Opções de salvar e imprimir"
-                data-tree-export-ignore="true"
-              >
-                {exportOptions.map((option) => {
-                  const Icon = option.icon;
-
-                  return (
-                    <button
-                      key={option.action}
-                      type="button"
-                      role="menuitem"
-                      className="desktop-tree-export-option"
-                      onClick={() => handleExportAction(option.action)}
-                    >
-                      <Icon />
-                      <span>{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
 
         {showViewAsSelector && (
@@ -270,28 +206,6 @@ export function DesktopTreeVisualizationPanel({
           </select>
         )}
 
-        <div className="desktop-tree-view-mode-grid">
-          {viewOptions.map((option) => {
-            const Icon = option.icon;
-            const active = currentViewMode === option.key;
-
-            return (
-              <button
-                key={option.key}
-                type="button"
-                className="desktop-tree-view-mode-card"
-                data-active={active ? 'true' : 'false'}
-                aria-pressed={active}
-                onClick={() => handleViewChange(option.key)}
-              >
-                <Icon />
-                <span className="desktop-tree-view-mode-title">{option.label}</span>
-                <span className="desktop-tree-view-mode-subtitle">{option.subtitle}</span>
-              </button>
-            );
-          })}
-        </div>
-
         <div className="desktop-tree-palette-row" aria-label="Tema da árvore">
           {paletteOptions.map((paletteKey) => {
             const palette = TREE_COLOR_PALETTES[paletteKey];
@@ -309,6 +223,28 @@ export function DesktopTreeVisualizationPanel({
                 onClick={() => setTreeColorPalette(paletteKey)}
               >
                 <span style={{ backgroundColor: palette.swatch, borderColor: palette.swatchBorder }} />
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="desktop-tree-view-mode-grid">
+          {viewOptions.map((option) => {
+            const Icon = option.icon;
+            const active = currentViewMode === option.key;
+
+            return (
+              <button
+                key={option.key}
+                type="button"
+                className="desktop-tree-view-mode-card"
+                data-active={active ? 'true' : 'false'}
+                aria-pressed={active}
+                onClick={() => handleViewChange(option.key)}
+              >
+                <Icon />
+                <span className="desktop-tree-view-mode-title">{option.label}</span>
+                <span className="desktop-tree-view-mode-subtitle">{option.subtitle}</span>
               </button>
             );
           })}
@@ -339,9 +275,7 @@ export function DesktopTreeVisualizationPanel({
           <SummaryCard tone="orange" icon={ClipboardList} label="Cadastrados" value={registeredCount} />
         </div>
 
-        <div className="desktop-tree-panel-divider" />
-
-        <h3 className="desktop-tree-section-title">Grupos familiares</h3>
+        <div className="desktop-tree-panel-divider desktop-tree-groups-divider" />
 
         <div className="desktop-tree-family-groups">
           {groupSections.map((section) => (
@@ -375,6 +309,27 @@ export function DesktopTreeVisualizationPanel({
             </section>
           ))}
         </div>
+
+        <section className="desktop-tree-export-panel" aria-label="Exportar árvore" data-tree-export-ignore="true">
+          <h3 className="desktop-tree-export-title">Exportar</h3>
+          <div className="desktop-tree-export-actions">
+            {exportOptions.map((option) => {
+              const Icon = option.icon;
+
+              return (
+                <button
+                  key={option.action}
+                  type="button"
+                  className="desktop-tree-export-action-button"
+                  onClick={() => handleExportAction(option.action)}
+                >
+                  <Icon />
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <div className="desktop-tree-final-filters">
           <button
