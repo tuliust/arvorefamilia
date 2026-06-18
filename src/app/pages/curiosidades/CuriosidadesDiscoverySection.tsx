@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -44,8 +44,25 @@ export function CuriosidadesDiscoverySection({
   const historicalInsight = getInsightByType(insights, 'historical_events');
 
   useEffect(() => {
-    if (!selectedPersonId && selectablePeople[0]?.id) {
+    if (selectablePeople.length === 0) {
+      if (selectedPersonId) {
+        setSelectedPersonId('');
+        setSelectedTopics([]);
+        setSubmitted(false);
+        setDiscoverError(null);
+        setInsights([]);
+      }
+      return;
+    }
+
+    const selectedPersonStillExists = selectablePeople.some((pessoa) => pessoa.id === selectedPersonId);
+
+    if (!selectedPersonId || !selectedPersonStillExists) {
       setSelectedPersonId(selectablePeople[0].id);
+      setSelectedTopics([]);
+      setSubmitted(false);
+      setDiscoverError(null);
+      setInsights([]);
     }
   }, [selectablePeople, selectedPersonId]);
 

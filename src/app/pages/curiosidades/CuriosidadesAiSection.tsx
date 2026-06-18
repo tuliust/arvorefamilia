@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Bot, Lightbulb } from 'lucide-react';
 
 import { AiQuestionPanel } from '../home/AiQuestionPanel';
@@ -153,7 +153,7 @@ export function CuriosidadesAiSection({
       )}
 
       {!error && !loading && pessoas.length > 0 && (
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 min-w-0 space-y-4 overflow-hidden break-words">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <div className="flex items-start gap-3">
               <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />

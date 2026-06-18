@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
+import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
 import type { Pessoa, Relacionamento } from '../types';
 import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
@@ -133,4 +133,3 @@ export function Curiosidades() {
     </div>
   );
 }
-

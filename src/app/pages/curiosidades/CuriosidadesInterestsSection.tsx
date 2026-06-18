@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GitCompareArrows, Sparkles } from 'lucide-react';
 import {
   comparePeopleInterests,
@@ -22,6 +22,31 @@ export function CuriosidadesInterestsSection({
 
   const [firstPersonId, setFirstPersonId] = useState('');
   const [secondPersonId, setSecondPersonId] = useState('');
+
+  useEffect(() => {
+    if (selectablePeople.length < 2) {
+      if (firstPersonId || secondPersonId) {
+        setFirstPersonId('');
+        setSecondPersonId('');
+      }
+      return;
+    }
+
+    const firstStillExists = selectablePeople.some((pessoa) => pessoa.id === firstPersonId);
+    const nextFirstPersonId = firstStillExists ? firstPersonId : selectablePeople[0].id;
+
+    const secondCandidates = selectablePeople.filter((pessoa) => pessoa.id !== nextFirstPersonId);
+    const secondStillExists = secondCandidates.some((pessoa) => pessoa.id === secondPersonId);
+    const nextSecondPersonId = secondStillExists ? secondPersonId : secondCandidates[0]?.id ?? '';
+
+    if (nextFirstPersonId !== firstPersonId) {
+      setFirstPersonId(nextFirstPersonId);
+    }
+
+    if (nextSecondPersonId !== secondPersonId) {
+      setSecondPersonId(nextSecondPersonId);
+    }
+  }, [firstPersonId, secondPersonId, selectablePeople]);
 
   const firstPerson = selectablePeople.find((pessoa) => pessoa.id === firstPersonId) ?? selectablePeople[0] ?? null;
   const secondPerson = selectablePeople.find((pessoa) => pessoa.id === secondPersonId) ?? selectablePeople.find((pessoa) => pessoa.id !== firstPerson?.id) ?? null;

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Network } from 'lucide-react';
 
 import { ConnectionDiscoveryPanel } from '../home/ConnectionDiscoveryPanel';
@@ -30,17 +30,32 @@ export function CuriosidadesConnectionSection({
   const [connectionResult, setConnectionResult] = useState<RelationshipDegreeResult | null>(null);
 
   useEffect(() => {
-    if (!personOneId && selectablePeople[0]?.id) {
-      setPersonOneId(selectablePeople[0].id);
+    if (selectablePeople.length < 2) {
+      if (personOneId || personTwoId || connectionResult || connectionError) {
+        setPersonOneId('');
+        setPersonTwoId('');
+        setConnectionResult(null);
+        setConnectionError(null);
+        setConnectionLoading(false);
+      }
+      return;
     }
 
-    if (!personTwoId) {
-      const nextSecondPerson = selectablePeople.find((pessoa) => pessoa.id !== selectablePeople[0]?.id);
-      if (nextSecondPerson?.id) {
-        setPersonTwoId(nextSecondPerson.id);
-      }
+    const firstStillExists = selectablePeople.some((pessoa) => pessoa.id === personOneId);
+    const nextPersonOneId = firstStillExists ? personOneId : selectablePeople[0].id;
+
+    const secondCandidates = selectablePeople.filter((pessoa) => pessoa.id !== nextPersonOneId);
+    const secondStillExists = secondCandidates.some((pessoa) => pessoa.id === personTwoId);
+    const nextPersonTwoId = secondStillExists ? personTwoId : secondCandidates[0]?.id ?? '';
+
+    if (nextPersonOneId !== personOneId || nextPersonTwoId !== personTwoId) {
+      setPersonOneId(nextPersonOneId);
+      setPersonTwoId(nextPersonTwoId);
+      setConnectionResult(null);
+      setConnectionError(null);
+      setConnectionLoading(false);
     }
-  }, [personOneId, personTwoId, selectablePeople]);
+  }, [connectionError, connectionResult, personOneId, personTwoId, selectablePeople]);
 
   const clearConnectionState = () => {
     setConnectionResult(null);
@@ -105,7 +120,7 @@ export function CuriosidadesConnectionSection({
       )}
 
       {!error && !loading && selectablePeople.length >= 2 && (
-        <div className="mt-5">
+        <div className="mt-5 min-w-0 overflow-hidden break-words">
           <ConnectionDiscoveryPanel
             pessoas={selectablePeople}
             connectionPersonOneId={personOneId}
