@@ -92,9 +92,9 @@ export function Curiosidades() {
         <div className="grid gap-4 lg:grid-cols-2">
           <CuriosidadesGenerations {...curiosityDataProps} />
           <CuriosidadesCouples {...curiosityDataProps} />
-          <CuriosidadesDiscoverySection />
-          <CuriosidadesAiSection />
-          <CuriosidadesConnectionSection />
+          <CuriosidadesDiscoverySection {...curiosityDataProps} />
+          <CuriosidadesAiSection {...curiosityDataProps} />
+          <CuriosidadesConnectionSection {...curiosityDataProps} />
           <CuriosidadesQuizSection {...curiosityDataProps} />
           <CuriosidadesRouteSection {...curiosityDataProps} />
           <CuriosidadesInterestsSection {...curiosityDataProps} />
