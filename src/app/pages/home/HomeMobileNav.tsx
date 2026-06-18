@@ -3,6 +3,8 @@ import {
   Bell,
   CalendarDays,
   Home,
+  Layers,
+  Map,
   MessageCircle,
   Star,
 } from 'lucide-react';
@@ -25,6 +27,30 @@ function getCurrentPathname() {
 }
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
+const mobileTreeViewPopoverTopClass = 'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]';
+
+const TREE_VIEW_OPTIONS: Array<{
+  path: '/mapa-familiar' | '/mapa-familiar-horizontal';
+  label: string;
+  subtitle: string;
+  ariaLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    path: '/mapa-familiar',
+    label: 'Linha Geracional',
+    subtitle: 'Visualização cronológica por gerações',
+    ariaLabel: 'Alternar para Linha Geracional',
+    icon: Map,
+  },
+  {
+    path: '/mapa-familiar-horizontal',
+    label: 'Árvore Familiar',
+    subtitle: 'Visão de parentesco por grupos',
+    ariaLabel: 'Alternar para Árvore Familiar',
+    icon: Layers,
+  },
+];
 
 function NotificationCountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -46,6 +72,7 @@ export function HomeMobileNav({
 }: HomeMobileNavProps) {
   const { user } = useAuth();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -73,12 +100,43 @@ export function HomeMobileNav({
     };
   }, [refreshUnreadNotificationsCount]);
 
-  const openMobileControlsPanel = useCallback((_action: MobileFamilyMapToolbarAction) => {
+  const pathname = getCurrentPathname();
+  const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+
+  useEffect(() => {
+    if (!isDirectFamilyMap) {
+      setActiveToolbarAction(null);
+    }
+  }, [isDirectFamilyMap, pathname]);
+
+  useEffect(() => {
+    if (!legendOpen && activeToolbarAction && activeToolbarAction !== 'visualizacao') {
+      setActiveToolbarAction(null);
+    }
+  }, [activeToolbarAction, legendOpen]);
+
+  const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
+    if (action === 'visualizacao') {
+      setActiveToolbarAction((current) => (current === 'visualizacao' ? null : 'visualizacao'));
+
+      if (legendOpen) onToggleLegend();
+      return;
+    }
+
+    setActiveToolbarAction(action);
+
     if (!legendOpen) onToggleLegend();
   }, [legendOpen, onToggleLegend]);
 
-  const pathname = getCurrentPathname();
-  const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+  const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/mapa-familiar-horizontal') => {
+    setActiveToolbarAction(null);
+
+    if (pathname === path) return;
+
+    const query = typeof window === 'undefined' ? '' : window.location.search;
+    navigateFromHome(`${path}${query}`);
+  }, [navigateFromHome, pathname]);
+
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
 
@@ -95,9 +153,48 @@ export function HomeMobileNav({
             `}
           </style>
           <MobileFamilyMapToolbar
+            activeAction={activeToolbarAction}
             className={`fixed inset-x-0 ${mobileTreeToolbarTopClass} z-[10000]`}
             onAction={openMobileControlsPanel}
           />
+
+          {activeToolbarAction === 'visualizacao' && (
+            <div
+              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              data-tree-export-ignore="true"
+            >
+              <div className="mx-auto grid max-w-md grid-cols-2 gap-1.5">
+                {TREE_VIEW_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const active = pathname === option.path;
+
+                  return (
+                    <button
+                      key={option.path}
+                      type="button"
+                      aria-pressed={active}
+                      aria-label={option.ariaLabel}
+                      onClick={() => handleViewOptionClick(option.path)}
+                      className={[
+                        'flex min-h-[72px] min-w-0 flex-col items-center justify-start gap-1 rounded-xl border bg-white px-2 py-2 text-center shadow-sm transition active:scale-[0.99]',
+                        active
+                          ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-500'
+                          : 'border-slate-200 text-slate-900 hover:border-blue-200 hover:bg-blue-50/70',
+                      ].join(' ')}
+                    >
+                      <Icon className={['h-4 w-4 shrink-0', active ? 'text-blue-700' : 'text-slate-700'].join(' ')} />
+                      <span className="max-w-full text-[11px] font-extrabold leading-tight text-current">
+                        {option.label}
+                      </span>
+                      <span className="max-w-full text-[9px] font-semibold leading-tight text-slate-700">
+                        {option.subtitle}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       )}
 
