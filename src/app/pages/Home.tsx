@@ -1268,11 +1268,11 @@ export function Home() {
           <aside
             className={[
               'flex h-full min-h-0 shrink-0 flex-col border-r border-gray-200 bg-white transition-[width] duration-200',
-              sidebarOpen ? 'w-[38rem] p-[clamp(0.65rem,1.45vh,1rem)]' : 'w-14 p-2',
+              sidebarOpen ? 'w-[clamp(18.5rem,22vw,20rem)] p-2' : 'w-14 p-2',
             ].join(' ')}
           >
             {sidebarOpen && (
-              <div className="flex min-h-0 flex-1 flex-col">
+              <div className="tree-sidebar-filter-scroll flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
                 <div className="relative min-w-0">
                   <DesktopTreeVisualizationPanel
                     showViewAsSelector={shouldShowDebugViewer}
@@ -1292,7 +1292,7 @@ export function Home() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute right-0 top-0 z-10 h-[clamp(32px,4.5vh,36px)] w-[clamp(32px,4.5vh,36px)] shrink-0 bg-white shadow-sm"
+                    className="absolute right-1 top-1 z-10 h-7 w-7 shrink-0 bg-white shadow-sm"
                     onClick={() => setSidebarOpen(false)}
                     title="Recolher painel lateral"
                     aria-label="Recolher painel lateral"
