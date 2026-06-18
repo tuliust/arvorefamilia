@@ -1,0 +1,92 @@
+/* Ajustes finais: painel desktop da árvore, botão Alertas e responsividade de Curiosidades. */
+
+@media (min-width: 768px) {
+  header a[href='/notificacoes'][title='Alertas'] {
+    width: 2.25rem !important;
+    min-width: 2.25rem !important;
+    max-width: 2.25rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  header a[href='/notificacoes'][title='Alertas'] > svg + span {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-tree-visualization-panel {
+    gap: clamp(0.72rem, 1.6vh, 1.18rem) !important;
+  }
+
+  .desktop-tree-family-groups {
+    min-height: clamp(6.85rem, 17.2vh, 10.6rem) !important;
+    gap: clamp(0.68rem, 1.18vw, 1.38rem) !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: clamp(0.42rem, 0.82vh, 0.68rem) !important;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: clamp(0.22rem, 0.52vh, 0.42rem) !important;
+    font-size: clamp(0.76rem, 1.58vh, 1.05rem) !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: clamp(0.2rem, 0.48vh, 0.42rem) !important;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: clamp(1.28rem, 2.72vh, 1.92rem) !important;
+    gap: clamp(0.28rem, 0.58vw, 0.58rem) !important;
+    padding: 0.1rem 0.18rem !important;
+  }
+
+  .desktop-tree-family-group-icon {
+    width: clamp(1.22rem, 2.52vh, 1.82rem) !important;
+    height: clamp(1.22rem, 2.52vh, 1.82rem) !important;
+    border-radius: 0.46rem !important;
+  }
+
+  .desktop-tree-family-group-icon svg {
+    width: clamp(0.72rem, 1.48vh, 1.02rem) !important;
+    height: clamp(0.72rem, 1.48vh, 1.02rem) !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: clamp(0.68rem, 1.42vh, 0.96rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: clamp(0.7rem, 1.45vh, 1rem) !important;
+  }
+
+  .desktop-tree-groups-divider,
+  .desktop-tree-family-groups,
+  .desktop-tree-export-panel,
+  .desktop-tree-final-filters {
+    margin-top: clamp(0.16rem, 0.52vh, 0.36rem) !important;
+  }
+
+  .tree-sidebar-desktop-panel-wrap .relative > button[data-tour-target='tree-controls-collapse'] {
+    top: clamp(0.92rem, 2.24vh, 1.34rem) !important;
+    right: clamp(0.92rem, 2.24vh, 1.34rem) !important;
+    width: clamp(1.85rem, 3.55vh, 2.12rem) !important;
+    height: clamp(1.85rem, 3.55vh, 2.12rem) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  main a[href^='#'] {
+    scroll-margin-top: 5rem;
+  }
+}
