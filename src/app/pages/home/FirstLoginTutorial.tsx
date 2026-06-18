@@ -58,10 +58,13 @@ type TourLayout = {
 };
 
 const PANEL_MAX_WIDTH = 430;
+const MOBILE_PANEL_MAX_WIDTH = 330;
 const PANEL_ESTIMATED_HEIGHT = 315;
+const MOBILE_PANEL_ESTIMATED_HEIGHT = 228;
 const VIEWPORT_MARGIN = 14;
 const SPOTLIGHT_RADIUS = 18;
 const PANEL_GAP = 18;
+const MOBILE_BREAKPOINT_QUERY = '(max-width: 767px)';
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
@@ -142,7 +145,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelGap: 40,
     targets: [
       {
-        selectors: ['[data-family-map-central-card="true"]'],
+        selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'],
         padding: 12,
       },
     ],
@@ -198,6 +201,80 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
 ];
 
+const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Busca e perfil',
+    icon: UserRound,
+    panelPlacement: 'below',
+    mergeSpotlights: true,
+    targets: [
+      {
+        selectors: ['[data-tour-target="search"]'],
+        padding: 8,
+      },
+      {
+        selectors: ['[data-tour-target="profile-menu"]'],
+        padding: 8,
+      },
+    ],
+    bullets: [
+      'Use a busca para encontrar pessoas e páginas.',
+      'No avatar, acesse perfil, preferências e saída.',
+    ],
+  },
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Controles da árvore',
+    icon: Eye,
+    panelPlacement: 'below',
+    targets: [
+      {
+        selectors: ['[data-tour-target="mobile-tree-action-bar"]', '[data-mobile-family-map-toolbar="true"]'],
+        padding: 8,
+      },
+    ],
+    bullets: [
+      'Use Visualização, Formato, Cor, Filtros e Exportar.',
+      'O botão + abre o painel completo de ajustes.',
+    ],
+  },
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Cards de pessoas',
+    icon: UserRound,
+    panelPlacement: 'below',
+    panelGap: 14,
+    targets: [
+      {
+        selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'],
+        padding: 10,
+      },
+    ],
+    bullets: [
+      'Toque em um card para abrir perfil, vínculos e memórias.',
+      'Use a árvore para navegar pelos parentes.',
+    ],
+  },
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Fórum da família',
+    icon: MessageCircle,
+    panelPlacement: 'above',
+    targets: [
+      {
+        selectors: ['[data-tour-target="forum"]'],
+        textIncludes: ['Fórum'],
+        padding: 8,
+      },
+    ],
+    bullets: [
+      'Entre no Fórum para criar tópicos, dúvidas e memórias.',
+      'Converse com os familiares pelo menu inferior.',
+    ],
+  },
+];
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -206,7 +283,7 @@ function normalizeText(value: string) {
   return value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim();
 }
 
@@ -392,7 +469,7 @@ function createUnionSpotlightRect(spotlights: SpotlightRect[]) {
   } satisfies SpotlightRect;
 }
 
-function createCenteredPanel(width: number): PanelPosition {
+function createCenteredPanel(width: number, estimatedHeight: number): PanelPosition {
   return {
     left: clamp(
       (window.innerWidth - width) / 2,
@@ -400,9 +477,9 @@ function createCenteredPanel(width: number): PanelPosition {
       window.innerWidth - width - VIEWPORT_MARGIN
     ),
     top: clamp(
-      (window.innerHeight - PANEL_ESTIMATED_HEIGHT) / 2,
+      (window.innerHeight - estimatedHeight) / 2,
       VIEWPORT_MARGIN,
-      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
     ),
     width,
   };
@@ -411,12 +488,15 @@ function createCenteredPanel(width: number): PanelPosition {
 function createPanelPosition(
   spotlight: SpotlightRect | null,
   placement: TutorialStep['panelPlacement'],
-  gap = PANEL_GAP
+  gap = PANEL_GAP,
+  compact = false
 ): PanelPosition {
-  const width = Math.min(PANEL_MAX_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+  const maxWidth = compact ? MOBILE_PANEL_MAX_WIDTH : PANEL_MAX_WIDTH;
+  const estimatedHeight = compact ? MOBILE_PANEL_ESTIMATED_HEIGHT : PANEL_ESTIMATED_HEIGHT;
+  const width = Math.min(maxWidth, window.innerWidth - VIEWPORT_MARGIN * 2);
 
   if (!spotlight) {
-    return createCenteredPanel(width);
+    return createCenteredPanel(width, estimatedHeight);
   }
 
   const tryBelow = () => ({
@@ -435,7 +515,7 @@ function createPanelPosition(
       VIEWPORT_MARGIN,
       window.innerWidth - width - VIEWPORT_MARGIN
     ),
-    top: spotlight.top - PANEL_ESTIMATED_HEIGHT - gap,
+    top: spotlight.top - estimatedHeight - gap,
     width,
   });
 
@@ -444,7 +524,7 @@ function createPanelPosition(
     top: clamp(
       spotlight.top,
       VIEWPORT_MARGIN,
-      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
     ),
     width,
   });
@@ -454,7 +534,7 @@ function createPanelPosition(
     top: clamp(
       spotlight.top,
       VIEWPORT_MARGIN,
-      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
     ),
     width,
   });
@@ -464,7 +544,7 @@ function createPanelPosition(
       panel.left >= VIEWPORT_MARGIN &&
       panel.top >= VIEWPORT_MARGIN &&
       panel.left + panel.width <= window.innerWidth - VIEWPORT_MARGIN &&
-      panel.top + PANEL_ESTIMATED_HEIGHT <= window.innerHeight - VIEWPORT_MARGIN
+      panel.top + estimatedHeight <= window.innerHeight - VIEWPORT_MARGIN
     );
   };
 
@@ -494,7 +574,7 @@ function createPanelPosition(
     top: clamp(
       fallback.top,
       VIEWPORT_MARGIN,
-      window.innerHeight - PANEL_ESTIMATED_HEIGHT - VIEWPORT_MARGIN
+      window.innerHeight - estimatedHeight - VIEWPORT_MARGIN
     ),
     width,
   };
@@ -558,12 +638,18 @@ function SpotlightOverlay({ spotlights }: { spotlights: SpotlightRect[] }) {
   );
 }
 
+function getInitialMobileViewport() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
+}
+
 export function FirstLoginTutorial({
   open,
   onOpenChange,
   onFinish,
 }: FirstLoginTutorialProps) {
   const [stepIndex, setStepIndex] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(getInitialMobileViewport);
   const [layout, setLayout] = useState<TourLayout>(() => ({
     spotlights: [],
     panel: {
@@ -573,14 +659,31 @@ export function FirstLoginTutorial({
     },
   }));
 
-  const totalSteps = TUTORIAL_STEPS.length;
-  const currentStep = TUTORIAL_STEPS[stepIndex];
+  const tutorialSteps = isMobileViewport ? MOBILE_TUTORIAL_STEPS : TUTORIAL_STEPS;
+  const totalSteps = tutorialSteps.length;
+  const currentStep = tutorialSteps[Math.min(stepIndex, totalSteps - 1)];
   const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex === totalSteps - 1;
 
   const progress = useMemo(() => {
     return Math.round(((stepIndex + 1) / totalSteps) * 100);
   }, [stepIndex, totalSteps]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
+
+    syncViewport();
+    mediaQuery.addEventListener('change', syncViewport);
+
+    return () => {
+      mediaQuery.removeEventListener('change', syncViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    setStepIndex((current) => Math.min(current, totalSteps - 1));
+  }, [totalSteps]);
 
   const updateLayout = useCallback(() => {
     const targetElements = resolveTargetElements(currentStep.targets ?? []);
@@ -600,10 +703,11 @@ export function FirstLoginTutorial({
       panel: createPanelPosition(
         panelSpotlight,
         currentStep.panelPlacement ?? 'auto',
-        currentStep.panelGap ?? PANEL_GAP
+        currentStep.panelGap ?? PANEL_GAP,
+        isMobileViewport
       ),
     });
-  }, [currentStep]);
+  }, [currentStep, isMobileViewport]);
 
   useEffect(() => {
     if (!open) {
@@ -695,25 +799,40 @@ export function FirstLoginTutorial({
       <SpotlightOverlay spotlights={layout.spotlights} />
 
       <section
-        className="fixed z-[12003] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl"
+        className={[
+          'fixed z-[12003] overflow-hidden border border-slate-200 bg-white text-slate-950 shadow-2xl',
+          isMobileViewport ? 'rounded-xl' : 'rounded-2xl',
+        ].join(' ')}
         style={{
           left: layout.panel.left,
           top: layout.panel.top,
           width: layout.panel.width,
         }}
       >
-        <header className="relative z-10 flex items-start gap-3 border-b border-slate-100 bg-white px-4 py-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700">
-            <StepIcon className="h-5 w-5" />
+        <header className={[
+          'relative z-10 flex items-start border-b border-slate-100 bg-white',
+          isMobileViewport ? 'gap-2 px-3 py-3' : 'gap-3 px-4 py-4',
+        ].join(' ')}>
+          <div className={[
+            'flex shrink-0 items-center justify-center border border-blue-100 bg-blue-50 text-blue-700',
+            isMobileViewport ? 'h-9 w-9 rounded-lg' : 'h-11 w-11 rounded-xl',
+          ].join(' ')}>
+            <StepIcon className={isMobileViewport ? 'h-4 w-4' : 'h-5 w-5'} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-blue-700">
+            <p className={[
+              'font-extrabold uppercase text-blue-700',
+              isMobileViewport ? 'text-[9px] tracking-[0.14em]' : 'text-[11px] tracking-[0.16em]',
+            ].join(' ')}>
               {currentStep.eyebrow}
             </p>
             <h2
               id="first-login-tutorial-title"
-              className="mt-0.5 text-lg font-extrabold leading-tight text-slate-950"
+              className={[
+                'mt-0.5 font-extrabold leading-tight text-slate-950',
+                isMobileViewport ? 'text-base' : 'text-lg',
+              ].join(' ')}
             >
               {currentStep.title}
             </h2>
@@ -721,11 +840,14 @@ export function FirstLoginTutorial({
 
           <button
             type="button"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={[
+              'flex shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
+              isMobileViewport ? 'h-8 w-8 rounded-lg' : 'h-9 w-9 rounded-xl',
+            ].join(' ')}
             onClick={() => onOpenChange(false)}
             aria-label="Fechar tutorial"
           >
-            <X className="h-4 w-4" />
+            <X className={isMobileViewport ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
           </button>
         </header>
 
@@ -736,17 +858,29 @@ export function FirstLoginTutorial({
           />
         </div>
 
-        <main className="relative z-10 max-h-[44vh] overflow-y-auto bg-white px-4 py-4">
+        <main className={[
+          'relative z-10 overflow-y-auto bg-white',
+          isMobileViewport ? 'max-h-[30vh] px-3 py-3' : 'max-h-[44vh] px-4 py-4',
+        ].join(' ')}>
           {currentStep.description && (
-            <p className="text-sm leading-6 text-slate-700">
+            <p className={isMobileViewport ? 'text-xs leading-5 text-slate-700' : 'text-sm leading-6 text-slate-700'}>
               {currentStep.description}
             </p>
           )}
 
           {currentStep.bullets && currentStep.bullets.length > 0 && (
-            <ul className={['space-y-2', currentStep.description ? 'mt-3' : ''].join(' ')}>
+            <ul className={[
+              isMobileViewport ? 'space-y-1.5' : 'space-y-2',
+              currentStep.description ? 'mt-3' : '',
+            ].join(' ')}>
               {currentStep.bullets.map((item) => (
-                <li key={item} className="flex gap-2 text-sm leading-5 text-slate-700">
+                <li
+                  key={item}
+                  className={[
+                    'flex gap-2 text-slate-700',
+                    isMobileViewport ? 'text-xs leading-5' : 'text-sm leading-5',
+                  ].join(' ')}
+                >
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
                   <span>{item}</span>
                 </li>
@@ -755,18 +889,27 @@ export function FirstLoginTutorial({
           )}
 
           {currentStep.tip && (
-            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-950">
+            <div className={[
+              'rounded-xl border border-blue-100 bg-blue-50 text-blue-950',
+              isMobileViewport ? 'mt-3 px-3 py-2 text-[11px] leading-4' : 'mt-4 px-3 py-2 text-xs leading-5',
+            ].join(' ')}>
               <strong className="font-extrabold">Dica: </strong>
               {currentStep.tip}
             </div>
           )}
         </main>
 
-        <footer className="relative z-10 flex justify-end gap-2 border-t border-slate-100 bg-white px-4 py-3">
+        <footer className={[
+          'relative z-10 flex justify-end gap-2 border-t border-slate-100 bg-white',
+          isMobileViewport ? 'px-3 py-2.5' : 'px-4 py-3',
+        ].join(' ')}>
           {!isFirstStep && (
             <button
               type="button"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={[
+                'rounded-xl border border-slate-200 bg-white font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                isMobileViewport ? 'px-3 py-2 text-[11px]' : 'px-4 py-2 text-xs',
+              ].join(' ')}
               onClick={goBack}
             >
               Voltar
@@ -775,7 +918,10 @@ export function FirstLoginTutorial({
 
           <button
             type="button"
-            className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className={[
+              'rounded-xl bg-blue-600 font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+              isMobileViewport ? 'px-3 py-2 text-[11px]' : 'px-4 py-2 text-xs',
+            ].join(' ')}
             onClick={goNext}
           >
             {isLastStep ? 'Começar' : 'Próximo'}
