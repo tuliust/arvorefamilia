@@ -67,27 +67,27 @@ export function CuriosidadesStats({
   ];
 
   return (
-    <section aria-label="Big numbers" className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+    <section aria-label="Big numbers" className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
 
         return (
           <article
             key={stat.label}
-            className={`rounded-2xl border p-5 shadow-sm ${stat.cardClassName}`}
+            className={`min-w-0 rounded-2xl border p-4 shadow-sm sm:p-5 ${stat.cardClassName}`}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-700">{stat.label}</p>
-                <p className={`mt-3 text-4xl font-bold ${stat.valueClassName}`}>
+            <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                <p className="break-words text-xs font-semibold leading-4 text-gray-700 sm:text-sm">{stat.label}</p>
+                <p className={`mt-2 text-3xl font-bold sm:mt-3 sm:text-4xl ${stat.valueClassName}`}>
                   {loading ? '--' : stat.value}
                 </p>
               </div>
-              <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-sm ${stat.iconClassName}`}>
-                <Icon className="h-5 w-5" />
+              <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-11 sm:w-11 ${stat.iconClassName}`}>
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
             </div>
-            <p className="mt-4 text-sm text-gray-600">
+            <p className="mt-3 text-xs leading-5 text-gray-600 sm:mt-4 sm:text-sm">
               {error ? 'Dados temporariamente indisponíveis.' : stat.description}
             </p>
           </article>
@@ -95,13 +95,13 @@ export function CuriosidadesStats({
       })}
 
       {error && (
-        <article className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 md:col-span-2 xl:col-span-5">
+        <article className="col-span-2 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 xl:col-span-5">
           Não foi possível carregar todos os números da família agora. Tente novamente em instantes.
         </article>
       )}
 
       {!loading && !error && pessoas.length === 0 && (
-        <article className="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 md:col-span-2 xl:col-span-5">
+        <article className="col-span-2 rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 xl:col-span-5">
           Ainda não há pessoas cadastradas para gerar os indicadores da página.
         </article>
       )}
