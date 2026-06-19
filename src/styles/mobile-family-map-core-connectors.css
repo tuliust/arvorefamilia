@@ -1,9 +1,17 @@
-/* Mobile /mapa-familiar: reinforce lower core connectors so they match the parent connector color. */
+/* Mobile /mapa-familiar: keep core connectors aligned and using the same visual token as the parent/child branch. */
 @media (max-width: 767px) {
   [data-mobile-family-tree-screen="core"] {
     --mobile-family-map-core-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
+    --mobile-family-map-core-panel-bg: #ffffff;
   }
 
+  @supports (background: color-mix(in srgb, white 90%, transparent)) {
+    [data-mobile-family-tree-screen="core"] {
+      --mobile-family-map-core-panel-bg: color-mix(in srgb, var(--tree-palette-canvas-bg, #ffffff) 18%, #ffffff 82%);
+    }
+  }
+
+  /* Native connector pieces in the core screen. */
   [data-mobile-family-tree-screen="core"] .bg-cyan-600,
   [data-mobile-family-tree-screen="core"] .h-px,
   [data-mobile-family-tree-screen="core"] .w-px {
@@ -18,6 +26,11 @@
 
   [data-mobile-family-tree-screen="core"] .w-px {
     width: 2px !important;
+  }
+
+  /* Make group boxes opaque enough to prevent connector lines from crossing over card content. */
+  [data-mobile-family-tree-screen="core"] section > div:has(> h2) {
+    background: var(--mobile-family-map-core-panel-bg) !important;
   }
 
   /* Connector spacer immediately below the main person card. */
@@ -42,49 +55,30 @@
     height: auto !important;
   }
 
-  /* Branches from the main-card connector into the Irmãos and Cônjuge group boxes. */
+  /* The native connector block already creates the fork from the main card. Avoid duplicate pseudo lines. */
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 {
     isolation: isolate;
     position: relative !important;
   }
 
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before {
-    content: "";
-    position: absolute;
-    left: calc(25% - 1px);
-    right: calc(25% - 1px);
-    top: -2.9rem;
-    z-index: 4;
-    height: 2px;
-    background: var(--mobile-family-map-core-line) !important;
-    pointer-events: none;
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before,
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before {
+    display: none !important;
   }
 
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div {
+    isolation: isolate;
     position: relative !important;
   }
 
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -2.9rem;
-    z-index: 4;
-    width: 2px;
-    height: 2.9rem;
-    transform: translateX(-50%);
-    background: var(--mobile-family-map-core-line) !important;
-    pointer-events: none;
-  }
-
-  /* Keep the column line visible between stacked groups, especially Cônjuge -> Pets. */
+  /* Keep a single column connector behind each stack, visible only in the spaces between group boxes. */
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::after {
     content: "";
     position: absolute;
     left: 50%;
     top: 0;
     bottom: 0;
-    z-index: -1;
+    z-index: 0;
     width: 2px;
     transform: translateX(-50%);
     background: var(--mobile-family-map-core-line) !important;
@@ -95,5 +89,11 @@
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > div {
     position: relative;
     z-index: 1;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section > div:has(> h2),
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > div section > div:has(> h2) {
+    position: relative;
+    z-index: 2;
   }
 }
