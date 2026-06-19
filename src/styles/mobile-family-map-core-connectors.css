@@ -1,8 +1,14 @@
 /* Mobile /mapa-familiar: keep core connectors outside group boxes and aligned with the parent/child branch. */
 @media (max-width: 767px) {
+  [data-mobile-family-tree-root="true"] {
+    --mobile-family-map-connector-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
+    --mobile-family-map-connector-size: 2px;
+    --mobile-family-map-opaque-group-bg: #ffffff;
+  }
+
   [data-mobile-family-tree-screen="core"] {
-    --mobile-family-map-core-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
-    --mobile-family-map-core-panel-bg: #ffffff;
+    --mobile-family-map-core-line: var(--mobile-family-map-connector-line);
+    --mobile-family-map-core-panel-bg: var(--mobile-family-map-opaque-group-bg);
     --mobile-family-map-core-gap: 1.25rem;
   }
 
@@ -16,11 +22,11 @@
   }
 
   [data-mobile-family-tree-screen="core"] .h-px {
-    height: 2px !important;
+    height: var(--mobile-family-map-connector-size) !important;
   }
 
   [data-mobile-family-tree-screen="core"] .w-px {
-    width: 2px !important;
+    width: var(--mobile-family-map-connector-size) !important;
   }
 
   /* Group boxes must be opaque. Lines should stop at the border, not appear over cards. */
@@ -43,7 +49,7 @@
 
   [data-mobile-family-tree-screen="core"] [data-mobile-tree-scroll] > div > div.relative.mx-auto.h-9.w-full > div:nth-child(2) {
     top: 1.45rem !important;
-    height: 2px !important;
+    height: var(--mobile-family-map-connector-size) !important;
   }
 
   [data-mobile-family-tree-screen="core"] [data-mobile-tree-scroll] > div > div.relative.mx-auto.h-9.w-full > div:nth-child(3),
@@ -100,7 +106,7 @@
     left: 50%;
     top: 0;
     z-index: 0;
-    width: 2px;
+    width: var(--mobile-family-map-connector-size);
     height: var(--mobile-family-map-core-gap);
     transform: translateX(-50%);
     background: var(--mobile-family-map-core-line) !important;
@@ -114,7 +120,7 @@
     left: 50%;
     top: 0;
     z-index: 0;
-    width: 2px;
+    width: var(--mobile-family-map-connector-size);
     height: calc(var(--mobile-family-map-core-gap) / 2);
     transform: translateX(-50%);
     background: var(--mobile-family-map-core-line) !important;
@@ -128,7 +134,7 @@
     right: calc(25% - 1px);
     top: calc(var(--mobile-family-map-core-gap) / 2);
     z-index: 0;
-    height: 2px;
+    height: var(--mobile-family-map-connector-size);
     background: var(--mobile-family-map-core-line) !important;
     pointer-events: none;
   }
@@ -149,7 +155,7 @@
     left: 50%;
     top: calc(var(--mobile-family-map-core-gap) / -2);
     z-index: 0;
-    width: 2px;
+    width: var(--mobile-family-map-connector-size);
     height: calc(var(--mobile-family-map-core-gap) / 2);
     transform: translateX(-50%);
     background: var(--mobile-family-map-core-line) !important;
@@ -178,66 +184,99 @@
     z-index: 2;
   }
 
-  /* Ancestor overview: lines must stay behind opaque group cards and use the same thickness/token. */
-  [data-mobile-family-tree-screen="ancestors"] {
-    --mobile-family-map-ancestor-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
-    --mobile-family-map-ancestor-panel-bg: #ffffff;
-    --mobile-family-map-ancestor-line-size: 2px;
+  /* Ancestrais, tios e primos: linhas padronizadas e mascaradas dentro dos grupos. */
+  [data-mobile-family-tree-screen="ancestors"],
+  [data-mobile-family-tree-screen$="-uncles"],
+  [data-mobile-family-tree-screen$="-cousins"] {
+    --mobile-family-map-branch-line: var(--mobile-family-map-connector-line);
+    --mobile-family-map-branch-panel-bg: var(--mobile-family-map-opaque-group-bg);
+    --mobile-family-map-branch-line-size: var(--mobile-family-map-connector-size);
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .bg-cyan-600 {
-    background: var(--mobile-family-map-ancestor-line) !important;
-    background-color: var(--mobile-family-map-ancestor-line) !important;
+  [data-mobile-family-tree-screen="ancestors"] .bg-cyan-600,
+  [data-mobile-family-tree-screen$="-uncles"] .bg-cyan-600,
+  [data-mobile-family-tree-screen$="-cousins"] .bg-cyan-600 {
+    background: var(--mobile-family-map-branch-line) !important;
+    background-color: var(--mobile-family-map-branch-line) !important;
     opacity: 1 !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .w-px {
-    width: var(--mobile-family-map-ancestor-line-size) !important;
+  [data-mobile-family-tree-screen="ancestors"] .w-px,
+  [data-mobile-family-tree-screen$="-uncles"] .w-px,
+  [data-mobile-family-tree-screen$="-cousins"] .w-px {
+    width: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .h-px {
-    height: var(--mobile-family-map-ancestor-line-size) !important;
+  [data-mobile-family-tree-screen="ancestors"] .h-px,
+  [data-mobile-family-tree-screen$="-uncles"] .h-px,
+  [data-mobile-family-tree-screen$="-cousins"] .h-px {
+    height: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .border-cyan-600 {
-    border-color: var(--mobile-family-map-ancestor-line) !important;
+  [data-mobile-family-tree-screen="ancestors"] .border-cyan-600,
+  [data-mobile-family-tree-screen$="-uncles"] .border-cyan-600,
+  [data-mobile-family-tree-screen$="-cousins"] .border-cyan-600 {
+    border-color: var(--mobile-family-map-branch-line) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .border-l {
-    border-left-width: var(--mobile-family-map-ancestor-line-size) !important;
+  [data-mobile-family-tree-screen="ancestors"] .border-l,
+  [data-mobile-family-tree-screen$="-uncles"] .border-l,
+  [data-mobile-family-tree-screen$="-cousins"] .border-l {
+    border-left-width: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .border-r {
-    border-right-width: var(--mobile-family-map-ancestor-line-size) !important;
+  [data-mobile-family-tree-screen="ancestors"] .border-r,
+  [data-mobile-family-tree-screen$="-uncles"] .border-r,
+  [data-mobile-family-tree-screen$="-cousins"] .border-r {
+    border-right-width: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] .border-t {
-    border-top-width: var(--mobile-family-map-ancestor-line-size) !important;
+  [data-mobile-family-tree-screen="ancestors"] .border-t,
+  [data-mobile-family-tree-screen$="-uncles"] .border-t,
+  [data-mobile-family-tree-screen$="-cousins"] .border-t {
+    border-top-width: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) {
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]),
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2),
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) {
     position: relative !important;
-    z-index: 5 !important;
+    z-index: 20 !important;
     isolation: isolate !important;
     overflow: hidden !important;
-    background: var(--mobile-family-map-ancestor-panel-bg) !important;
-    background-color: var(--mobile-family-map-ancestor-panel-bg) !important;
+    background: var(--mobile-family-map-branch-panel-bg) !important;
+    background-color: var(--mobile-family-map-branch-panel-bg) !important;
     opacity: 1 !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > h3,
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > div {
-    position: relative !important;
-    z-index: 2 !important;
-  }
-
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key])::before {
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key])::before,
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2)::before,
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2)::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 0;
     border-radius: inherit;
-    background: var(--mobile-family-map-ancestor-panel-bg) !important;
+    background: var(--mobile-family-map-branch-panel-bg) !important;
     pointer-events: none;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) > div,
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) > div {
+    position: relative !important;
+    z-index: 2 !important;
+    background: var(--mobile-family-map-branch-panel-bg) !important;
+    background-color: var(--mobile-family-map-branch-panel-bg) !important;
+    opacity: 1 !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > h3,
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > div,
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) h2,
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) button[data-family-map-mobile-card="true"],
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) h2,
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) button[data-family-map-mobile-card="true"] {
+    position: relative !important;
+    z-index: 3 !important;
   }
 }
