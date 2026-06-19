@@ -52,6 +52,16 @@
     height: auto !important;
   }
 
+  /* The first groups must touch the fork exactly at their top border. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section:first-of-type {
+    padding-top: 0 !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section:first-of-type > div.absolute:first-child {
+    content: none !important;
+    display: none !important;
+  }
+
   /* Do not draw full-height column lines behind groups; those were visible inside cards. */
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3,
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div {
