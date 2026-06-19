@@ -10,6 +10,7 @@ const STYLE_ID = 'mobile-family-tree-grandparent-screens-style';
 const SWIPE_THRESHOLD = 56;
 
 type MobileAncestorScreen = typeof GRANDPARENTS_SCREEN | typeof PATERNAL_DEEP_SCREEN | typeof MATERNAL_DEEP_SCREEN;
+type AncestorSide = 'paternal' | 'maternal';
 
 type GestureStart = {
   x: number;
@@ -80,14 +81,20 @@ function getAncestorGroupSections(root = getRoot()) {
     .filter((section) => section.querySelector('[data-family-map-mobile-card="true"]'));
 }
 
-function getDeepGroups(side: 'paternal' | 'maternal', root = getRoot()) {
+function getDeepGroups(side: AncestorSide, root = getRoot()) {
   return getAncestorGroupSections(root).filter((section) => (
     side === 'paternal' ? isPaternalDeepGroup(section) : isMaternalDeepGroup(section)
   ));
 }
 
-function hasDeepGroups(side: 'paternal' | 'maternal', root = getRoot()) {
+function hasDeepGroups(side: AncestorSide, root = getRoot()) {
   return getDeepGroups(side, root).length > 0;
+}
+
+function getGroupsSignature(groups: HTMLElement[]) {
+  return groups
+    .map((group) => `${group.querySelector('h2, h3')?.textContent ?? ''}:${group.querySelectorAll('[data-family-map-mobile-card="true"]').length}:${group.textContent ?? ''}`)
+    .join('|');
 }
 
 function ensureStyles() {
@@ -157,8 +164,7 @@ function relayCloneClicks(clone: HTMLElement, original: HTMLElement) {
   });
 }
 
-function buildDeepScreenContent(side: 'paternal' | 'maternal', screen: HTMLElement, root: HTMLElement) {
-  const groups = getDeepGroups(side, root);
+function buildDeepScreenContent(groups: HTMLElement[], screen: HTMLElement) {
   screen.innerHTML = '';
 
   const scroll = document.createElement('div');
@@ -180,14 +186,15 @@ function buildDeepScreenContent(side: 'paternal' | 'maternal', screen: HTMLEleme
   screen.appendChild(scroll);
 }
 
-function ensureDeepScreen(side: 'paternal' | 'maternal', root: HTMLElement) {
+function ensureDeepScreen(side: AncestorSide, root: HTMLElement) {
   const stage = getStage(root);
   if (!stage) return;
 
   const screenName = side === 'paternal' ? PATERNAL_DEEP_SCREEN : MATERNAL_DEEP_SCREEN;
   let screen = stage.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`);
+  const groups = getDeepGroups(side, root);
 
-  if (!hasDeepGroups(side, root)) {
+  if (groups.length === 0) {
     screen?.remove();
     return;
   }
@@ -204,7 +211,11 @@ function ensureDeepScreen(side: 'paternal' | 'maternal', root: HTMLElement) {
     stage.appendChild(screen);
   }
 
-  buildDeepScreenContent(side, screen, root);
+  const signature = getGroupsSignature(groups);
+  if (screen.dataset.mobileAncestorSignature === signature) return;
+
+  screen.dataset.mobileAncestorSignature = signature;
+  buildDeepScreenContent(groups, screen);
 }
 
 function filterGrandparentScreen(root: HTMLElement) {
@@ -213,7 +224,9 @@ function filterGrandparentScreen(root: HTMLElement) {
       section.removeAttribute('data-mobile-family-tree-grandparent-hidden');
       section.style.removeProperty('display');
     } else if (isPaternalDeepGroup(section) || isMaternalDeepGroup(section)) {
-      section.setAttribute('data-mobile-family-tree-grandparent-hidden', 'true');
+      if (section.getAttribute('data-mobile-family-tree-grandparent-hidden') !== 'true') {
+        section.setAttribute('data-mobile-family-tree-grandparent-hidden', 'true');
+      }
     }
   });
 }
@@ -255,9 +268,9 @@ function inferAncestorScreenFromTransform(root: HTMLElement): MobileAncestorScre
   const rowLooksTop = transform.includes('calc(0%') || transform.includes('calc(-0%');
   if (!rowLooksTop) return null;
 
-  if (transform.includes('calc(0%')) return PATERNAL_DEEP_SCREEN;
   if (transform.includes('calc(-66.666')) return MATERNAL_DEEP_SCREEN;
   if (transform.includes('calc(-33.333')) return GRANDPARENTS_SCREEN;
+  if (transform.includes('calc(0%')) return PATERNAL_DEEP_SCREEN;
 
   return null;
 }
@@ -352,13 +365,18 @@ function handleTouchEnd(event: TouchEvent) {
   applyAncestorScreen(destination);
 }
 
+function setText(selectorRoot: HTMLElement, selector: string, value: string) {
+  const element = selectorRoot.querySelector<HTMLElement>(selector);
+  if (element && element.textContent !== value) element.textContent = value;
+}
+
 function relabelGrandparentsOverviewTile(map: HTMLElement) {
   const tile = map.querySelector<HTMLElement>('[data-screen="ancestors"]');
   if (!tile) return;
 
-  tile.querySelector<HTMLElement>('.mobile-family-overview-tile-title')!.textContent = 'Avós';
-  tile.querySelector<HTMLElement>('.mobile-family-overview-tile-subtitle')!.textContent = 'Avós paternos e maternos';
-  tile.querySelector<HTMLElement>('.mobile-family-overview-tile-summary')!.textContent = 'Tela acima do núcleo central';
+  setText(tile, '.mobile-family-overview-tile-title', 'Avós');
+  setText(tile, '.mobile-family-overview-tile-subtitle', 'Avós paternos e maternos');
+  setText(tile, '.mobile-family-overview-tile-summary', 'Tela acima do núcleo central');
 }
 
 function buildOverviewTile(screenName: MobileAncestorScreen, title: string, subtitle: string, count: number, currentScreen: string | null) {
@@ -400,10 +418,17 @@ function patchOverview() {
   const map = overlay?.querySelector<HTMLElement>('.mobile-family-overview-map');
   if (!root || !map) return;
 
+  const currentScreen = root.getAttribute('data-mobile-family-tree-active-screen');
+  const paternalCount = getDeepGroups('paternal', root).reduce((sum, group) => sum + group.querySelectorAll('[data-family-map-mobile-card="true"]').length, 0);
+  const maternalCount = getDeepGroups('maternal', root).reduce((sum, group) => sum + group.querySelectorAll('[data-family-map-mobile-card="true"]').length, 0);
+  const signature = `${currentScreen ?? ''}:${paternalCount}:${maternalCount}`;
+
   relabelGrandparentsOverviewTile(map);
+  if (map.dataset.mobileGrandparentOverviewSignature === signature) return;
+  map.dataset.mobileGrandparentOverviewSignature = signature;
+
   map.querySelectorAll<HTMLElement>('[data-screen="paternal-ancestors"], [data-screen="maternal-ancestors"]').forEach((tile) => tile.remove());
 
-  const currentScreen = root.getAttribute('data-mobile-family-tree-active-screen');
   if (currentScreen === PATERNAL_DEEP_SCREEN || currentScreen === MATERNAL_DEEP_SCREEN) {
     map.querySelectorAll<HTMLElement>('.mobile-family-overview-tile[data-current="true"]').forEach((tile) => {
       tile.removeAttribute('data-current');
@@ -416,14 +441,14 @@ function patchOverview() {
     PATERNAL_DEEP_SCREEN,
     'Bisavós paternos',
     'Bisavós e tataravós paternos',
-    getDeepGroups('paternal', root).reduce((sum, group) => sum + group.querySelectorAll('[data-family-map-mobile-card="true"]').length, 0),
+    paternalCount,
     currentScreen,
   );
   const maternalTile = buildOverviewTile(
     MATERNAL_DEEP_SCREEN,
     'Bisavós maternos',
     'Bisavós e tataravós maternos',
-    getDeepGroups('maternal', root).reduce((sum, group) => sum + group.querySelectorAll('[data-family-map-mobile-card="true"]').length, 0),
+    maternalCount,
     currentScreen,
   );
 
