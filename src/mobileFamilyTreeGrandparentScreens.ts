@@ -11,6 +11,7 @@ const SWIPE_THRESHOLD = 56;
 
 type MobileAncestorScreen = typeof GRANDPARENTS_SCREEN | typeof PATERNAL_DEEP_SCREEN | typeof MATERNAL_DEEP_SCREEN;
 type AncestorSide = 'paternal' | 'maternal';
+type GestureDestination = MobileAncestorScreen | 'core' | 'blocked' | null;
 
 type GestureStart = {
   x: number;
@@ -111,6 +112,47 @@ function ensureStyles() {
 
       [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div {
         padding-top: 18vh !important;
+      }
+
+      [data-mobile-family-tree-screen="ancestors"] .bg-cyan-600 {
+        display: none !important;
+      }
+
+      [data-mobile-family-tree-grandparent-side] {
+        overflow: visible !important;
+      }
+
+      [data-mobile-family-tree-grandparent-side]::before,
+      [data-mobile-family-tree-grandparent-side]::after {
+        content: '';
+        position: absolute;
+        z-index: 0;
+        pointer-events: none;
+        background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
+      }
+
+      [data-mobile-family-tree-grandparent-side="paternal"]::before {
+        top: 50%;
+        right: 100%;
+        height: var(--tree-palette-line-width, 3px);
+        width: 50vw;
+        transform: translateY(-50%);
+      }
+
+      [data-mobile-family-tree-grandparent-side="maternal"]::before {
+        top: 50%;
+        left: 100%;
+        height: var(--tree-palette-line-width, 3px);
+        width: 50vw;
+        transform: translateY(-50%);
+      }
+
+      [data-mobile-family-tree-grandparent-side]::after {
+        top: 100%;
+        left: 50%;
+        width: var(--tree-palette-line-width, 3px);
+        height: 120vh;
+        transform: translateX(-50%);
       }
 
       .mobile-family-deep-ancestor-screen {
@@ -261,13 +303,22 @@ function ensureDeepScreen(side: AncestorSide, root: HTMLElement) {
 
 function filterGrandparentScreen(root: HTMLElement) {
   getAncestorGroupSections(root).forEach((section) => {
+    const title = getGroupTitle(section);
+
     if (isGrandparentGroup(section)) {
       section.removeAttribute('data-mobile-family-tree-grandparent-hidden');
       section.style.removeProperty('display');
+
+      if (title.includes('paternos')) section.setAttribute('data-mobile-family-tree-grandparent-side', 'paternal');
+      else if (title.includes('maternos')) section.setAttribute('data-mobile-family-tree-grandparent-side', 'maternal');
+      else section.removeAttribute('data-mobile-family-tree-grandparent-side');
     } else if (isPaternalDeepGroup(section) || isMaternalDeepGroup(section)) {
+      section.removeAttribute('data-mobile-family-tree-grandparent-side');
       if (section.getAttribute('data-mobile-family-tree-grandparent-hidden') !== 'true') {
         section.setAttribute('data-mobile-family-tree-grandparent-hidden', 'true');
       }
+    } else {
+      section.removeAttribute('data-mobile-family-tree-grandparent-side');
     }
   });
 }
@@ -276,6 +327,24 @@ function transformForScreen(screen: MobileAncestorScreen) {
   if (screen === PATERNAL_DEEP_SCREEN) return 'translate3d(calc(0% + 0px), calc(0% + 0px), 0)';
   if (screen === MATERNAL_DEEP_SCREEN) return 'translate3d(calc(-66.6666666667% + 0px), calc(0% + 0px), 0)';
   return 'translate3d(calc(-33.3333333333% + 0px), calc(0% + 0px), 0)';
+}
+
+function applyCoreScreen(animate = true) {
+  const root = getRoot();
+  const stage = getStage(root);
+  if (!root || !stage) return;
+
+  stage.style.setProperty('transform', 'translate3d(calc(-33.3333333333% + 0px), calc(-33.3333333333% + 0px), 0)', 'important');
+  if (animate) stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  else stage.style.removeProperty('transition');
+
+  root.setAttribute('data-mobile-family-tree-active-screen', 'core');
+
+  if (animate) {
+    window.setTimeout(() => {
+      getStage()?.style.removeProperty('transition');
+    }, 340);
+  }
 }
 
 function applyAncestorScreen(screen: MobileAncestorScreen, animate = true) {
@@ -348,7 +417,7 @@ function handleTouchStart(event: TouchEvent) {
   };
 }
 
-function destinationForGesture(screen: MobileAncestorScreen | null, deltaX: number, deltaY: number) {
+function destinationForGesture(screen: MobileAncestorScreen | null, deltaX: number, deltaY: number): GestureDestination {
   if (!screen) return null;
 
   const absX = Math.abs(deltaX);
@@ -360,8 +429,8 @@ function destinationForGesture(screen: MobileAncestorScreen | null, deltaX: numb
     if (screen === MATERNAL_DEEP_SCREEN && deltaX > 0) return GRANDPARENTS_SCREEN;
   }
 
-  if (absY >= 10 && absY > absX * 1.2) {
-    if (screen === GRANDPARENTS_SCREEN && deltaY < 0) return 'blocked';
+  if (absY >= SWIPE_THRESHOLD && absY > absX * 1.2) {
+    if (screen === GRANDPARENTS_SCREEN && deltaY < 0) return 'core';
     if (screen === PATERNAL_DEEP_SCREEN || screen === MATERNAL_DEEP_SCREEN) return 'blocked';
   }
 
@@ -404,6 +473,11 @@ function handleTouchEnd(event: TouchEvent) {
   event.stopImmediatePropagation();
 
   if (destination === 'blocked') return;
+  if (destination === 'core') {
+    applyCoreScreen();
+    return;
+  }
+
   applyAncestorScreen(destination);
 }
 
