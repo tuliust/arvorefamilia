@@ -3,6 +3,7 @@ const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const SCREEN_SELECTOR = '[data-mobile-family-tree-screen]';
+const INTERACTIVE_CONTROL_SELECTOR = 'header, [data-mobile-family-map-toolbar], [data-tree-export-ignore="true"]';
 const SWIPE_PREVIEW_THRESHOLD = 10;
 const SWIPE_NAVIGATION_THRESHOLD = 56;
 
@@ -75,6 +76,10 @@ function getRoot() {
 
 function getStage(root = getRoot()) {
   return root?.querySelector<HTMLElement>(STAGE_SELECTOR) ?? null;
+}
+
+function isInteractiveControlTarget(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest(INTERACTIVE_CONTROL_SELECTOR));
 }
 
 function getScreenElement(root: HTMLElement, screenName: MobileTreeScreen) {
@@ -234,7 +239,11 @@ function blockEvent(event: TouchEvent) {
 }
 
 function handleTouchStart(event: TouchEvent) {
-  if (!isEnabled()) return;
+  if (!isEnabled() || isInteractiveControlTarget(event.target)) {
+    gestureStart = null;
+    return;
+  }
+
   const root = getRoot();
   const target = event.target instanceof Element ? event.target : null;
   const touch = event.touches[0];
@@ -248,7 +257,7 @@ function handleTouchStart(event: TouchEvent) {
 }
 
 function handleTouchMove(event: TouchEvent) {
-  if (!gestureStart || !isEnabled()) return;
+  if (!gestureStart || !isEnabled() || isInteractiveControlTarget(event.target)) return;
   const touch = event.touches[0];
   if (!touch || !gestureStart.screen) return;
 
@@ -263,7 +272,7 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleTouchEnd(event: TouchEvent) {
-  if (!gestureStart || !isEnabled()) {
+  if (!gestureStart || !isEnabled() || isInteractiveControlTarget(event.target)) {
     gestureStart = null;
     return;
   }
