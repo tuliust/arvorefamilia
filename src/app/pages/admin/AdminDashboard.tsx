@@ -52,7 +52,7 @@ function firstName(fullName?: string | null) {
 function buildInviteMessage(pessoa?: Pessoa | null) {
   const nome = firstName(pessoa?.nome_completo);
   const codigo = pessoa?.id ?? '[inserir ID do usuário selecionado]';
-  return `Oi, ${nome}. Tudo bem? Você recebeu um convite especial para estrear a plataforma *Genealogia da Família Souza Baros*, que organiza a árvore genealógica, perfis, documentos, memórias e datas importantes da família. Acesse familiasouzabarros.com.br e insira seu código para criar o acesso: ${codigo}. Faça seu cadastro e navegue para conhecer a estrutura e funcionalidades. No computador, a experiência é bem melhor. Como estamos iniciando, contamos com suas sugestões para aperfeiçoar o sistema e corrigir erros. Obrigado!`;
+  return `Oi, ${nome}. Tudo bem? Você recebeu um convite especial para estrear a plataforma *Genealogia da Família Souza Barros*, que organiza a árvore genealógica, perfis, documentos, memórias e datas importantes da família.\n\nAcesse *familiasouzabarros.com.br* e insira seu código para criar o acesso:\n\n*${codigo}*\n\nComo estamos iniciando, contamos com suas sugestões para aperfeiçoar o sistema e corrigir erros. Obrigado!`;
 }
 
 export function AdminDashboard() {
