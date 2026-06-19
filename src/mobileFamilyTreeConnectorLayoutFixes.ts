@@ -18,8 +18,7 @@ function shouldApply() {
 }
 
 function ensureStyles() {
-  const existing = document.getElementById(STYLE_ID);
-  existing?.remove();
+  if (document.getElementById(STYLE_ID)) return;
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
@@ -156,12 +155,6 @@ function handleViewportChange() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
 
-  const observer = new MutationObserver(() => {
-    if (!shouldApply()) return;
-    window.requestAnimationFrame(ensureStyles);
-  });
-
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
   window.addEventListener('resize', handleViewportChange, { passive: true });
   window.addEventListener('orientationchange', handleViewportChange, { passive: true });
   window.addEventListener('focus', handleViewportChange, { passive: true });
