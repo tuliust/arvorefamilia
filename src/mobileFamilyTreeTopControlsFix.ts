@@ -74,13 +74,16 @@ function ensureStyles() {
 }
 
 function getEventPoint(event: Event) {
-  if (event instanceof TouchEvent) {
+  if (typeof TouchEvent !== 'undefined' && event instanceof TouchEvent) {
     const touch = event.changedTouches[0] || event.touches[0];
     if (!touch) return null;
     return { x: touch.clientX, y: touch.clientY };
   }
 
-  if (event instanceof PointerEvent || event instanceof MouseEvent) {
+  if (
+    (typeof PointerEvent !== 'undefined' && event instanceof PointerEvent)
+    || event instanceof MouseEvent
+  ) {
     return { x: event.clientX, y: event.clientY };
   }
 
