@@ -63,9 +63,9 @@
     display: none !important;
   }
 
-  /* Keep later stacked groups connected, e.g. Irmãos -> Sobrinhos. */
+  /* Keep later stacked groups connected, e.g. Irmãos -> Sobrinhos, with no blank margin between line segments. */
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section + section {
-    margin-top: var(--mobile-family-map-core-gap) !important;
+    margin-top: 0 !important;
     padding-top: var(--mobile-family-map-core-gap) !important;
   }
 
@@ -80,7 +80,7 @@
   /* Cônjuge -> Pets/Filhos area. If only one group exists, it occupies the full right column. */
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2 {
     position: relative !important;
-    margin-top: var(--mobile-family-map-core-gap) !important;
+    margin-top: 0 !important;
     padding-top: var(--mobile-family-map-core-gap) !important;
     isolation: isolate !important;
   }
