@@ -21,19 +21,37 @@ function findRoot(target: EventTarget | null) {
   return target.closest<HTMLElement>(ROOT_SELECTOR);
 }
 
+function findMobileTreeScrollArea(target: EventTarget | null) {
+  if (!(target instanceof Element)) return null;
+  return target.closest<HTMLElement>(SCROLL_AREA_SELECTOR);
+}
+
 function shouldLockMobileTree(target: EventTarget | null) {
   return isMobileViewport() && isFamilyMapPath() && Boolean(findRoot(target));
 }
 
+function canScrollVertically(scrollElement: HTMLElement, deltaY: number) {
+  const canScrollDown = scrollElement.scrollTop + scrollElement.clientHeight < scrollElement.scrollHeight - 1;
+  const canScrollUp = scrollElement.scrollTop > 1;
+
+  // deltaY < 0: dedo sobe, conteúdo desce. deltaY > 0: dedo desce, conteúdo sobe.
+  if (deltaY < 0) return canScrollDown;
+  if (deltaY > 0) return canScrollUp;
+  return false;
+}
+
 function ensureStaticScreenStyles() {
-  if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
+  if (typeof document === 'undefined') return;
+
+  const existingStyle = document.getElementById(STYLE_ID);
+  existingStyle?.remove();
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
     @media (max-width: 767px) {
       ${ROOT_SELECTOR} {
-        touch-action: none !important;
+        touch-action: pan-y pinch-zoom !important;
         overscroll-behavior: none !important;
       }
 
@@ -42,9 +60,12 @@ function ensureStaticScreenStyles() {
       }
 
       ${ROOT_SELECTOR} ${SCROLL_AREA_SELECTOR} {
-        overflow: hidden !important;
-        overscroll-behavior: none !important;
-        -webkit-overflow-scrolling: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-y: contain !important;
+        overscroll-behavior-x: none !important;
+        touch-action: pan-y !important;
+        -webkit-overflow-scrolling: touch !important;
       }
     }
   `;
@@ -89,6 +110,14 @@ function handleTouchMove(event: TouchEvent) {
   const absoluteY = Math.abs(deltaY);
 
   if (absoluteX < 6 && absoluteY < 6) return;
+
+  const scrollElement = findMobileTreeScrollArea(event.target);
+  const isVerticalGesture = absoluteY > absoluteX * 1.15;
+
+  if (scrollElement && isVerticalGesture && canScrollVertically(scrollElement, deltaY)) {
+    resetStageDragPreview();
+    return;
+  }
 
   event.preventDefault();
   event.stopPropagation();
