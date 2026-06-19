@@ -109,11 +109,15 @@ function ensureStyles() {
         display: none !important;
       }
 
+      [data-mobile-family-tree-screen="ancestors"] [data-mobile-tree-scroll] > div {
+        padding-top: 18vh !important;
+      }
+
       .mobile-family-deep-ancestor-screen {
         position: relative;
         height: 100%;
         width: 100%;
-        overflow: hidden;
+        overflow: visible;
       }
 
       .mobile-family-deep-ancestor-screen__scroll {
@@ -130,7 +134,8 @@ function ensureStyles() {
         z-index: 10;
         display: grid;
         min-height: 100%;
-        width: min(100%, 390px);
+        width: min(60%, 234px);
+        max-width: 234px;
         margin: 0 auto;
         grid-template-columns: 1fr;
         align-content: center;
@@ -139,12 +144,45 @@ function ensureStyles() {
 
       .mobile-family-deep-ancestor-screen__inner > section {
         width: 100%;
+        border-color: var(--tree-palette-border-avos, #E8A29B) !important;
+      }
+
+      .mobile-family-deep-ancestor-screen__inner [data-family-map-mobile-card="true"] {
+        border-color: var(--tree-palette-border-avos, #E8A29B) !important;
+      }
+
+      .mobile-family-deep-ancestor-screen__inner::before,
+      .mobile-family-deep-ancestor-screen__inner::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        z-index: 0;
+        height: var(--tree-palette-line-width, 3px);
+        width: 40vw;
+        background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+
+      .mobile-family-deep-ancestor-screen__inner::before,
+      .mobile-family-deep-ancestor-screen__inner::after {
+        display: none;
+      }
+
+      .mobile-family-deep-ancestor-screen--paternal .mobile-family-deep-ancestor-screen__inner::after {
+        display: block;
+        left: 100%;
+      }
+
+      .mobile-family-deep-ancestor-screen--maternal .mobile-family-deep-ancestor-screen__inner::before {
+        display: block;
+        right: 100%;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="paternal-ancestors"],
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="maternal-ancestors"] {
-        border-color: color-mix(in srgb, var(--tree-palette-border-bisavos, #d8b4fe) 76%, #fff);
-        background: color-mix(in srgb, var(--tree-palette-bg-bisavos, #faf5ff) 34%, #fff);
+        border-color: color-mix(in srgb, var(--tree-palette-border-avos, #E8A29B) 76%, #fff);
+        background: color-mix(in srgb, var(--tree-palette-card-avos, #E8A29B) 24%, #fff);
       }
     }
   `;
@@ -210,6 +248,9 @@ function ensureDeepScreen(side: AncestorSide, root: HTMLElement) {
     screen.style.overflow = 'visible';
     stage.appendChild(screen);
   }
+
+  screen.classList.toggle('mobile-family-deep-ancestor-screen--paternal', side === 'paternal');
+  screen.classList.toggle('mobile-family-deep-ancestor-screen--maternal', side === 'maternal');
 
   const signature = getGroupsSignature(groups);
   if (screen.dataset.mobileAncestorSignature === signature) return;
