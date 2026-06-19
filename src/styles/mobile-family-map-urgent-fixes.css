@@ -1,7 +1,7 @@
 /* Urgent mobile-only corrections for /mapa-familiar vertical map. */
 @media (max-width: 767px) {
   [data-mobile-family-tree-root="true"] {
-    --mobile-family-map-line: var(--family-map-connector, var(--tree-palette-edge-child, #cbd5e1));
+    --mobile-family-map-line: var(--tree-palette-edge-child, var(--family-map-connector, #ca8a04));
     --mobile-family-map-group-bg: var(--tree-palette-group-bg, var(--family-map-group-bg, #ffffff));
     --mobile-family-map-group-border-width: var(--tree-palette-group-border-width, 2px);
   }
@@ -12,6 +12,13 @@
 
   [data-mobile-family-tree-root="true"] .border-cyan-600 {
     border-color: var(--mobile-family-map-line) !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .bg-cyan-600,
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before,
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before {
+    background: var(--mobile-family-map-line) !important;
+    background-color: var(--mobile-family-map-line) !important;
   }
 
   /* Group chrome: inherit the same relation colors used by desktop cards/groups. */
