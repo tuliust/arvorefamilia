@@ -1,17 +1,11 @@
-/* Mobile /mapa-familiar: keep core connectors aligned and using the same visual token as the parent/child branch. */
+/* Mobile /mapa-familiar: keep core connectors outside group boxes and aligned with the parent/child branch. */
 @media (max-width: 767px) {
   [data-mobile-family-tree-screen="core"] {
     --mobile-family-map-core-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
     --mobile-family-map-core-panel-bg: #ffffff;
   }
 
-  @supports (background: color-mix(in srgb, white 90%, transparent)) {
-    [data-mobile-family-tree-screen="core"] {
-      --mobile-family-map-core-panel-bg: color-mix(in srgb, var(--tree-palette-canvas-bg, #ffffff) 18%, #ffffff 82%);
-    }
-  }
-
-  /* Native connector pieces in the core screen. */
+  /* Native connector pieces in the core screen. Keep one color only. */
   [data-mobile-family-tree-screen="core"] .bg-cyan-600,
   [data-mobile-family-tree-screen="core"] .h-px,
   [data-mobile-family-tree-screen="core"] .w-px {
@@ -28,9 +22,12 @@
     width: 2px !important;
   }
 
-  /* Make group boxes opaque enough to prevent connector lines from crossing over card content. */
+  /* Group boxes must be opaque. Lines should stop at the border, not appear over cards. */
   [data-mobile-family-tree-screen="core"] section > div:has(> h2) {
     background: var(--mobile-family-map-core-panel-bg) !important;
+    background-color: var(--mobile-family-map-core-panel-bg) !important;
+    opacity: 1 !important;
+    isolation: isolate !important;
   }
 
   /* Connector spacer immediately below the main person card. */
@@ -55,42 +52,22 @@
     height: auto !important;
   }
 
-  /* The native connector block already creates the fork from the main card. Avoid duplicate pseudo lines. */
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 {
-    isolation: isolate;
-    position: relative !important;
-  }
-
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before,
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before {
-    display: none !important;
-  }
-
+  /* Do not draw full-height column lines behind groups; those were visible inside cards. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3,
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div {
     isolation: isolate;
     position: relative !important;
   }
 
-  /* Keep a single column connector behind each stack, visible only in the spaces between group boxes. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3::before,
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::before,
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    z-index: 0;
-    width: 2px;
-    transform: translateX(-50%);
-    background: var(--mobile-family-map-core-line) !important;
-    pointer-events: none;
+    content: none !important;
+    display: none !important;
   }
 
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section,
-  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > div {
-    position: relative;
-    z-index: 1;
-  }
-
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > div,
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section > div:has(> h2),
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > div section > div:has(> h2) {
     position: relative;
