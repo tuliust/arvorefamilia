@@ -11,7 +11,6 @@ const TOOLBAR_ITEMS: Array<{
   action: MobileFamilyMapToolbarAction;
   label: string;
 }> = [
-  { action: 'visualizacao', label: 'Visualização' },
   { action: 'formato', label: 'Formato' },
   { action: 'cor', label: 'Cor' },
   { action: 'grupos', label: 'Filtros' },
@@ -48,7 +47,7 @@ export function MobileFamilyMapToolbar({
     >
       <div className="mx-auto flex w-full max-w-md min-w-0 items-center justify-center gap-2.5 px-2">
         <div
-          className="grid min-w-0 flex-1 grid-cols-5 items-center gap-1.5 rounded-full bg-slate-100 p-1"
+          className="grid min-w-0 flex-1 grid-cols-4 items-center gap-1.5 rounded-full bg-slate-100 p-1"
           data-tour-target="mobile-tree-action-bar"
         >
           {TOOLBAR_ITEMS.map((item) => {
@@ -61,7 +60,7 @@ export function MobileFamilyMapToolbar({
                 onClick={() => onAction?.(item.action)}
                 aria-pressed={active || undefined}
                 className={[
-                  'min-w-0 whitespace-nowrap rounded-full px-1 py-2 text-center text-[8.5px] font-extrabold leading-none tracking-[-0.025em] transition min-[360px]:text-[9.5px] min-[390px]:px-1.5',
+                  'min-w-0 whitespace-nowrap rounded-full px-1 py-2 text-center text-[9px] font-extrabold leading-none tracking-[-0.025em] transition min-[360px]:text-[10px] min-[390px]:px-2',
                   active
                     ? 'bg-cyan-700 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-white active:bg-white',
