@@ -43,7 +43,7 @@ function clearStaleCoreAttribute() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof Element !== 'undefined') {
   const nativeSetAttribute = Element.prototype.setAttribute;
 
-  Element.prototype.setAttribute = function guardedSetAttribute(name: string, value: string) {
+  Element.prototype.setAttribute = function guardedSetAttribute(this: Element, name: string, value: string) {
     const nextValue = String(value);
     if (TRACKED_ATTRIBUTES.has(name) && this.getAttribute(name) === nextValue) return;
     nativeSetAttribute.call(this, name, nextValue);
