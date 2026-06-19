@@ -319,8 +319,9 @@ function destinationForGesture(screen: MobileAncestorScreen | null, deltaX: numb
     if (screen === MATERNAL_DEEP_SCREEN && deltaX > 0) return GRANDPARENTS_SCREEN;
   }
 
-  if ((screen === PATERNAL_DEEP_SCREEN || screen === MATERNAL_DEEP_SCREEN) && absY >= 10 && absY > absX * 1.2) {
-    return 'blocked';
+  if (absY >= 10 && absY > absX * 1.2) {
+    if (screen === GRANDPARENTS_SCREEN && deltaY < 0) return 'blocked';
+    if (screen === PATERNAL_DEEP_SCREEN || screen === MATERNAL_DEEP_SCREEN) return 'blocked';
   }
 
   return null;
