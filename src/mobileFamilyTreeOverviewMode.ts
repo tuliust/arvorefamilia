@@ -18,42 +18,49 @@ type ScreenName =
 const SCREEN_CONFIG: Record<ScreenName, {
   title: string;
   subtitle: string;
+  summary: string;
   row: number;
   column: number;
 }> = {
   ancestors: {
     title: 'Ancestrais',
     subtitle: 'Avós, bisavós e tataravós',
+    summary: 'Linha acima da pessoa principal',
     row: 1,
     column: 2,
   },
   'paternal-uncles': {
     title: 'Tios paternos',
     subtitle: 'Ramo do pai',
+    summary: 'Área lateral esquerda',
     row: 2,
     column: 1,
   },
   core: {
     title: 'Núcleo central',
     subtitle: 'Pais, pessoa principal e descendentes',
+    summary: 'Tela inicial da árvore',
     row: 2,
     column: 2,
   },
   'maternal-uncles': {
     title: 'Tios maternos',
     subtitle: 'Ramo da mãe',
+    summary: 'Área lateral direita',
     row: 2,
     column: 3,
   },
   'paternal-cousins': {
     title: 'Primos paternos',
     subtitle: 'Descendentes dos tios paternos',
+    summary: 'Abaixo dos tios paternos',
     row: 3,
     column: 1,
   },
   'maternal-cousins': {
     title: 'Primos maternos',
     subtitle: 'Descendentes dos tios maternos',
+    summary: 'Abaixo dos tios maternos',
     row: 3,
     column: 3,
   },
@@ -76,6 +83,10 @@ function isMobileViewport() {
 
 function isFamilyMapPath() {
   return typeof window !== 'undefined' && window.location.pathname === FAMILY_MAP_PATH;
+}
+
+function isScreenName(value: string | null | undefined): value is ScreenName {
+  return Boolean(value && value in SCREEN_CONFIG);
 }
 
 function normalizeText(value: string) {
@@ -138,6 +149,36 @@ function getScreenCount(root: HTMLElement, screenName: ScreenName) {
   return cardCount;
 }
 
+function getVisibleScreen(root: HTMLElement): ScreenName {
+  const explicitScreen = root.getAttribute('data-mobile-family-tree-active-screen');
+  if (isScreenName(explicitScreen) && hasScreenContent(root, explicitScreen)) {
+    return explicitScreen;
+  }
+
+  const rootRect = root.getBoundingClientRect();
+  const centerX = rootRect.left + rootRect.width / 2;
+  const centerY = rootRect.top + rootRect.height / 2;
+  let nearest: { screenName: ScreenName; distance: number } | null = null;
+
+  SCREEN_ORDER.forEach((screenName) => {
+    const screenElement = getScreenElement(root, screenName);
+    if (!screenElement || !hasScreenContent(root, screenName)) return;
+
+    const rect = screenElement.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const screenCenterX = rect.left + rect.width / 2;
+    const screenCenterY = rect.top + rect.height / 2;
+    const distance = Math.hypot(screenCenterX - centerX, screenCenterY - centerY);
+
+    if (!nearest || distance < nearest.distance) {
+      nearest = { screenName, distance };
+    }
+  });
+
+  return nearest?.screenName ?? 'core';
+}
+
 function escapeHtml(value: string) {
   const div = document.createElement('div');
   div.textContent = value;
@@ -158,7 +199,7 @@ function clickBaseTab(root: HTMLElement, screenName: ScreenName) {
   button?.click();
 }
 
-function applyScreenTransform(root: HTMLElement, screenName: ScreenName) {
+function applyScreenTransform(root: HTMLElement, screenName: ScreenName, animate = true) {
   const stage = getStageElement(root);
   const config = SCREEN_CONFIG[screenName];
   if (!stage || !config) return;
@@ -168,7 +209,7 @@ function applyScreenTransform(root: HTMLElement, screenName: ScreenName) {
   const transform = `translate3d(calc(${-column * (100 / 3)}% + 0px), calc(${-row * (100 / 3)}% + 0px), 0)`;
 
   stage.style.setProperty('transform', transform, 'important');
-  stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  if (animate) stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
   root.setAttribute('data-mobile-family-tree-active-screen', screenName);
 
   const screenElement = getScreenElement(root, screenName);
@@ -176,9 +217,11 @@ function applyScreenTransform(root: HTMLElement, screenName: ScreenName) {
     scrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   });
 
-  window.setTimeout(() => {
-    stage.style.removeProperty('transition');
-  }, 340);
+  if (animate) {
+    window.setTimeout(() => {
+      stage.style.removeProperty('transition');
+    }, 340);
+  }
 }
 
 function navigateToScreen(screenName: ScreenName) {
@@ -205,8 +248,8 @@ function navigateToScreen(screenName: ScreenName) {
   window.setTimeout(() => {
     const currentRoot = getRoot();
     if (!currentRoot) return;
-    applyScreenTransform(currentRoot, screenName);
-  }, 320);
+    applyScreenTransform(currentRoot, screenName, false);
+  }, 340);
 }
 
 function ensureStyles() {
@@ -379,6 +422,31 @@ function ensureStyles() {
         line-height: 1;
       }
 
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-current="true"] {
+        border-color: rgb(37, 99, 235) !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 12px 26px rgba(37, 99, 235, 0.16) !important;
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile-current {
+        position: absolute;
+        top: 0.42rem;
+        right: 0.42rem;
+        border-radius: 999px;
+        background: rgb(37, 99, 235);
+        color: #fff;
+        padding: 0.16rem 0.36rem;
+        font-size: 0.5rem;
+        font-weight: 950;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-current="true"]::after {
+        content: "Você está aqui";
+        color: rgb(37, 99, 235);
+      }
+
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="core"] {
         border-color: color-mix(in srgb, var(--tree-palette-border-central, #bae6fd) 74%, #fff);
         background: color-mix(in srgb, var(--tree-palette-bg-central, #ecfeff) 32%, #fff);
@@ -415,6 +483,13 @@ function ensureStyles() {
         line-height: 1.1;
       }
 
+      #${OVERVIEW_ID} .mobile-family-overview-tile-summary {
+        color: rgb(100, 116, 139);
+        font-size: 0.56rem;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
       #${OVERVIEW_ID} .mobile-family-overview-tile-count {
         display: inline-flex;
         width: fit-content;
@@ -447,21 +522,26 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
-function buildTile(root: HTMLElement, screenName: ScreenName) {
+function buildTile(root: HTMLElement, screenName: ScreenName, currentScreen: ScreenName) {
   const config = SCREEN_CONFIG[screenName];
   const count = getScreenCount(root, screenName);
   const tile = document.createElement('button');
+  const current = screenName === currentScreen;
 
   tile.type = 'button';
   tile.className = 'mobile-family-overview-tile';
   tile.dataset.screen = screenName;
+  if (current) tile.dataset.current = 'true';
   tile.style.gridColumn = String(config.column);
   tile.style.gridRow = String(config.row);
-  tile.setAttribute('aria-label', `Abrir ${config.title}`);
+  tile.setAttribute('aria-label', `${current ? 'Tela atual: ' : 'Abrir '}${config.title}`);
+  if (current) tile.setAttribute('aria-current', 'location');
 
   tile.innerHTML = `
+    ${current ? '<span class="mobile-family-overview-tile-current">Atual</span>' : ''}
     <span class="mobile-family-overview-tile-title">${escapeHtml(config.title)}</span>
     <span class="mobile-family-overview-tile-subtitle">${escapeHtml(config.subtitle)}</span>
+    <span class="mobile-family-overview-tile-summary">${escapeHtml(config.summary)}</span>
     <span class="mobile-family-overview-tile-count">${count} card${count === 1 ? '' : 's'}</span>
   `;
 
@@ -488,6 +568,7 @@ function openOverview() {
   closeOverview(false);
   ensureStyles();
 
+  const currentScreen = getVisibleScreen(root);
   const overlay = document.createElement('div');
   overlay.id = OVERVIEW_ID;
   overlay.setAttribute('role', 'dialog');
@@ -500,7 +581,7 @@ function openOverview() {
       <span class="mobile-family-overview-icon" aria-hidden="true">−</span>
       <div class="mobile-family-overview-title-wrap">
         <h2 class="mobile-family-overview-title">Visão geral</h2>
-        <p class="mobile-family-overview-subtitle">Toque em um grupo para abrir essa área da árvore.</p>
+        <p class="mobile-family-overview-subtitle">Bloco marcado como Atual indica sua posição. Toque em outro grupo para abrir.</p>
       </div>
       <button type="button" class="mobile-family-overview-close" aria-label="Fechar visão geral">×</button>
     </header>
@@ -517,7 +598,7 @@ function openOverview() {
         });
 
         if (screenName && hasScreenContent(root, screenName)) {
-          map.appendChild(buildTile(root, screenName));
+          map.appendChild(buildTile(root, screenName, currentScreen));
         } else {
           map.appendChild(buildEmptyCell(row, column));
         }
