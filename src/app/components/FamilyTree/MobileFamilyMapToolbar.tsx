@@ -5,7 +5,8 @@ export type MobileFamilyMapToolbarAction =
   | 'formato'
   | 'cor'
   | 'grupos'
-  | 'exportar';
+  | 'exportar'
+  | 'zoom';
 
 const TOOLBAR_ITEMS: Array<{
   action: MobileFamilyMapToolbarAction;
@@ -14,7 +15,7 @@ const TOOLBAR_ITEMS: Array<{
   { action: 'formato', label: 'Formato' },
   { action: 'cor', label: 'Cor' },
   { action: 'grupos', label: 'Filtros' },
-  { action: 'exportar', label: 'Exportar' },
+  { action: 'zoom', label: 'Zoom' },
 ];
 
 interface MobileFamilyMapToolbarProps {
@@ -59,6 +60,7 @@ export function MobileFamilyMapToolbar({
                 type="button"
                 onClick={() => onAction?.(item.action)}
                 aria-pressed={active || undefined}
+                data-mobile-family-map-toolbar-action={item.action}
                 className={[
                   'min-w-0 whitespace-nowrap rounded-full px-1 py-2 text-center text-[9px] font-extrabold leading-none tracking-[-0.025em] transition min-[360px]:text-[10px] min-[390px]:px-2',
                   active
