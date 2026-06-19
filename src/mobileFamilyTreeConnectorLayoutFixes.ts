@@ -5,7 +5,6 @@ const STYLE_ID = 'mobile-family-tree-connector-layout-fixes-style';
 const RUNTIME_CONNECTOR_CLASS = 'mobile-family-tree-runtime-ancestor-connector';
 
 let renderScheduled = false;
-let observer: MutationObserver | null = null;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -249,11 +248,11 @@ function handleViewportChange() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
 
-  observer = new MutationObserver(() => {
+  const documentObserver = new MutationObserver(() => {
     if (!shouldApply()) return;
     scheduleRenderAncestorConnectors();
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  documentObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 
   window.addEventListener('resize', handleViewportChange, { passive: true });
   window.addEventListener('orientationchange', handleViewportChange, { passive: true });
