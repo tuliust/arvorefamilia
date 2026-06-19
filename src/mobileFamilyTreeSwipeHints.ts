@@ -13,6 +13,7 @@ type MobileTreeScreen =
   | 'core'
   | 'maternal-uncles'
   | 'paternal-cousins'
+  | 'descendants'
   | 'maternal-cousins';
 
 type SwipeDirection = 'up' | 'down' | 'left' | 'right';
@@ -20,7 +21,8 @@ type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 const DIRECTIONS: SwipeDirection[] = ['up', 'down', 'left', 'right'];
 
 const DESTINATIONS: Record<MobileTreeScreen, Partial<Record<SwipeDirection, MobileTreeScreen>>> = {
-  core: { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' },
+  core: { up: 'ancestors', down: 'descendants', left: 'paternal-uncles', right: 'maternal-uncles' },
+  descendants: { up: 'core' },
   'paternal-uncles': { up: 'ancestors', down: 'paternal-cousins', right: 'core' },
   'maternal-uncles': { up: 'ancestors', down: 'maternal-cousins', left: 'core' },
   'paternal-cousins': { up: 'paternal-uncles' },
@@ -50,7 +52,7 @@ function isFamilyMapPath() {
   return typeof window !== 'undefined' && window.location.pathname === '/mapa-familiar';
 }
 
-function isMobileTreeScreen(value: string | undefined): value is MobileTreeScreen {
+function isMobileTreeScreen(value: string | undefined | null): value is MobileTreeScreen {
   return Boolean(value && value in DESTINATIONS);
 }
 
@@ -180,7 +182,16 @@ function hideHints(root = getRoot()) {
   root?.querySelector<HTMLElement>(`.${HINTS_CLASS}`)?.classList.remove(VISIBLE_CLASS);
 }
 
+function hasDescendantContent(root: HTMLElement) {
+  return Boolean(root.querySelector(
+    '[data-mobile-family-tree-screen="core"] [data-family-map-color-key="irmaos"], [data-mobile-family-tree-screen="core"] [data-family-map-color-key="sobrinhos"], [data-mobile-family-tree-screen="core"] [data-family-map-color-key="conjuge"], [data-mobile-family-tree-screen="core"] [data-family-map-color-key="pets"], [data-mobile-family-tree-screen="core"] [data-family-map-color-key="filhos"], [data-mobile-family-tree-screen="core"] [data-family-map-color-key="netos"]'
+  ));
+}
+
 function getVisibleScreen(root: HTMLElement): MobileTreeScreen | null {
+  const explicitScreen = root.getAttribute('data-mobile-family-tree-active-screen');
+  if (isMobileTreeScreen(explicitScreen)) return explicitScreen;
+
   const rootRect = root.getBoundingClientRect();
   const centerX = rootRect.left + rootRect.width / 2;
   const centerY = rootRect.top + rootRect.height / 2;
@@ -207,6 +218,7 @@ function getVisibleScreen(root: HTMLElement): MobileTreeScreen | null {
 
 function screenHasContent(root: HTMLElement, screenName: MobileTreeScreen) {
   if (screenName === 'core') return true;
+  if (screenName === 'descendants') return hasDescendantContent(root);
 
   const screenElement = root.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`);
   if (!screenElement) return false;
