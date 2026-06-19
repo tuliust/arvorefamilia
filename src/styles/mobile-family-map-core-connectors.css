@@ -3,6 +3,7 @@
   [data-mobile-family-tree-screen="core"] {
     --mobile-family-map-core-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
     --mobile-family-map-core-panel-bg: #ffffff;
+    --mobile-family-map-core-gap: 1.25rem;
   }
 
   /* Native connector pieces in the core screen. Keep one color only. */
@@ -60,6 +61,99 @@
   [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section:first-of-type > div.absolute:first-child {
     content: none !important;
     display: none !important;
+  }
+
+  /* Keep later stacked groups connected, e.g. Irmãos -> Sobrinhos. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section + section {
+    margin-top: var(--mobile-family-map-core-gap) !important;
+    padding-top: var(--mobile-family-map-core-gap) !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > section + section > div.absolute:first-child {
+    display: block !important;
+    height: var(--mobile-family-map-core-gap) !important;
+    top: 0 !important;
+    background: var(--mobile-family-map-core-line) !important;
+    background-color: var(--mobile-family-map-core-line) !important;
+  }
+
+  /* Cônjuge -> Pets/Filhos area. If only one group exists, it occupies the full right column. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2 {
+    position: relative !important;
+    margin-top: var(--mobile-family-map-core-gap) !important;
+    padding-top: var(--mobile-family-map-core-gap) !important;
+    isolation: isolate !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2:has(> section:only-child) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2 > section:first-child:nth-last-child(1) {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Single destination: one direct vertical line. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2:has(> section:only-child)::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    z-index: 0;
+    width: 2px;
+    height: var(--mobile-family-map-core-gap);
+    transform: translateX(-50%);
+    background: var(--mobile-family-map-core-line) !important;
+    pointer-events: none;
+  }
+
+  /* Two destinations: vertical line, horizontal branch and two drops to the group tops. */
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2:has(> section:nth-child(2))::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    z-index: 0;
+    width: 2px;
+    height: calc(var(--mobile-family-map-core-gap) / 2);
+    transform: translateX(-50%);
+    background: var(--mobile-family-map-core-line) !important;
+    pointer-events: none;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2:has(> section:nth-child(2))::after {
+    content: "";
+    position: absolute;
+    left: calc(25% - 1px);
+    right: calc(25% - 1px);
+    top: calc(var(--mobile-family-map-core-gap) / 2);
+    z-index: 0;
+    height: 2px;
+    background: var(--mobile-family-map-core-line) !important;
+    pointer-events: none;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2 > section {
+    padding-top: 0 !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2 > section > div.absolute:first-child {
+    display: none !important;
+  }
+
+  [data-mobile-family-tree-screen="core"] .grid.grid-cols-2.items-start.gap-3 > div > .grid.grid-cols-2.items-start.gap-2:has(> section:nth-child(2)) > section::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: calc(var(--mobile-family-map-core-gap) / -2);
+    z-index: 0;
+    width: 2px;
+    height: calc(var(--mobile-family-map-core-gap) / 2);
+    transform: translateX(-50%);
+    background: var(--mobile-family-map-core-line) !important;
+    pointer-events: none;
   }
 
   /* Do not draw full-height column lines behind groups; those were visible inside cards. */
