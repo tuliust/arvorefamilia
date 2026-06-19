@@ -8,7 +8,9 @@ const HINT_DELAY_MS = 1000;
 const HINT_DURATION_MS = 2000;
 
 type MobileTreeScreen =
+  | 'paternal-ancestors'
   | 'ancestors'
+  | 'maternal-ancestors'
   | 'paternal-uncles'
   | 'core'
   | 'maternal-uncles'
@@ -21,13 +23,15 @@ type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 const DIRECTIONS: SwipeDirection[] = ['up', 'down', 'left', 'right'];
 
 const DESTINATIONS: Record<MobileTreeScreen, Partial<Record<SwipeDirection, MobileTreeScreen>>> = {
+  'paternal-ancestors': { right: 'ancestors' },
+  ancestors: { down: 'core', left: 'paternal-ancestors', right: 'maternal-ancestors' },
+  'maternal-ancestors': { left: 'ancestors' },
   core: { up: 'ancestors', down: 'descendants', left: 'paternal-uncles', right: 'maternal-uncles' },
   descendants: { up: 'core' },
-  'paternal-uncles': { up: 'ancestors', down: 'paternal-cousins', right: 'core' },
-  'maternal-uncles': { up: 'ancestors', down: 'maternal-cousins', left: 'core' },
+  'paternal-uncles': { down: 'paternal-cousins', right: 'core' },
+  'maternal-uncles': { down: 'maternal-cousins', left: 'core' },
   'paternal-cousins': { up: 'paternal-uncles' },
   'maternal-cousins': { up: 'maternal-uncles' },
-  ancestors: { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' },
 };
 
 const ARROW_CONTENT: Record<SwipeDirection, string> = {
@@ -154,8 +158,8 @@ function ensureStyles() {
       }
 
       @keyframes mobile-family-tree-hint-right {
-        0%, 100% { transform: translate(0, -50%); opacity: 0.62; }
-        50% { transform: translate(0.45rem, -50%); opacity: 1; }
+        0%, 100% { transform: translate(0.45rem, -50%); opacity: 1; }
+        50% { transform: translate(0, -50%); opacity: 0.62; }
       }
     }
   `;
