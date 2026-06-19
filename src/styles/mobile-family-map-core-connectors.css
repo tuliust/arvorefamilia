@@ -237,9 +237,7 @@
     border-top-width: var(--mobile-family-map-branch-line-size) !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]),
-  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2),
-  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) {
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) {
     position: relative !important;
     z-index: 20 !important;
     isolation: isolate !important;
@@ -249,9 +247,7 @@
     opacity: 1 !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key])::before,
-  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2)::before,
-  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2)::before {
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key])::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -261,17 +257,52 @@
     pointer-events: none;
   }
 
-  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) > div,
-  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) > div {
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > h3,
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > div {
     position: relative !important;
-    z-index: 2 !important;
+    z-index: 3 !important;
+  }
+
+  /* In uncle/cousin screens the section includes connector padding. Keep it transparent so lines touch the card border. */
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2),
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) {
+    position: relative !important;
+    z-index: 10 !important;
+    isolation: isolate !important;
+    overflow: visible !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    opacity: 1 !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2)::before,
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2)::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) > div:has(> h2),
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) > div:has(> h2) {
+    position: relative !important;
+    z-index: 30 !important;
+    isolation: isolate !important;
+    overflow: hidden !important;
     background: var(--mobile-family-map-branch-panel-bg) !important;
     background-color: var(--mobile-family-map-branch-panel-bg) !important;
     opacity: 1 !important;
   }
 
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > h3,
-  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > div,
+  [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) > div:has(> h2)::before,
+  [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) > div:has(> h2)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: var(--mobile-family-map-branch-panel-bg) !important;
+    pointer-events: none;
+  }
+
   [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) h2,
   [data-mobile-family-tree-screen$="-uncles"] section:has(> div > h2) button[data-family-map-mobile-card="true"],
   [data-mobile-family-tree-screen$="-cousins"] section:has(> div > h2) h2,
