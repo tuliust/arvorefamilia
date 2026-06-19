@@ -177,4 +177,67 @@
     position: relative;
     z-index: 2;
   }
+
+  /* Ancestor overview: lines must stay behind opaque group cards and use the same thickness/token. */
+  [data-mobile-family-tree-screen="ancestors"] {
+    --mobile-family-map-ancestor-line: var(--tree-palette-edge-child, var(--mobile-family-map-line, #ca8a04));
+    --mobile-family-map-ancestor-panel-bg: #ffffff;
+    --mobile-family-map-ancestor-line-size: 2px;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .bg-cyan-600 {
+    background: var(--mobile-family-map-ancestor-line) !important;
+    background-color: var(--mobile-family-map-ancestor-line) !important;
+    opacity: 1 !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .w-px {
+    width: var(--mobile-family-map-ancestor-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .h-px {
+    height: var(--mobile-family-map-ancestor-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .border-cyan-600 {
+    border-color: var(--mobile-family-map-ancestor-line) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .border-l {
+    border-left-width: var(--mobile-family-map-ancestor-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .border-r {
+    border-right-width: var(--mobile-family-map-ancestor-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] .border-t {
+    border-top-width: var(--mobile-family-map-ancestor-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) {
+    position: relative !important;
+    z-index: 5 !important;
+    isolation: isolate !important;
+    overflow: hidden !important;
+    background: var(--mobile-family-map-ancestor-panel-bg) !important;
+    background-color: var(--mobile-family-map-ancestor-panel-bg) !important;
+    opacity: 1 !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > h3,
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key]) > div {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  [data-mobile-family-tree-screen="ancestors"] section:has(> h3 + div button[data-family-map-color-key])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: var(--mobile-family-map-ancestor-panel-bg) !important;
+    pointer-events: none;
+  }
 }
