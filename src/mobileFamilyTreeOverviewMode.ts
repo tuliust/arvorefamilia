@@ -1,6 +1,7 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
+const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const STYLE_ID = 'mobile-family-tree-overview-mode-style';
 const TOOLBAR_ZOOM_SELECTOR = '[data-mobile-family-map-toolbar-action="zoom"]';
@@ -117,6 +118,10 @@ function getScreenElement(root: HTMLElement, screenName: ScreenName) {
   return root.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`);
 }
 
+function getStageElement(root: HTMLElement) {
+  return root.querySelector<HTMLElement>(STAGE_SELECTOR);
+}
+
 function countCards(screenElement: HTMLElement | null) {
   if (!screenElement) return 0;
   return screenElement.querySelectorAll('[data-family-map-mobile-card="true"]').length;
@@ -137,6 +142,71 @@ function escapeHtml(value: string) {
   const div = document.createElement('div');
   div.textContent = value;
   return div.innerHTML;
+}
+
+function getFallbackTabLabel(screenName: ScreenName) {
+  if (screenName.startsWith('paternal')) return 'Paterno';
+  if (screenName.startsWith('maternal')) return 'Materno';
+  return 'Central';
+}
+
+function clickBaseTab(root: HTMLElement, screenName: ScreenName) {
+  const label = normalizeText(getFallbackTabLabel(screenName));
+  const button = Array.from(root.querySelectorAll<HTMLButtonElement>('nav[aria-label="Visualizações da árvore"] button'))
+    .find((candidate) => normalizeText(candidate.textContent ?? '').includes(label));
+
+  button?.click();
+}
+
+function applyScreenTransform(root: HTMLElement, screenName: ScreenName) {
+  const stage = getStageElement(root);
+  const config = SCREEN_CONFIG[screenName];
+  if (!stage || !config) return;
+
+  const column = config.column - 1;
+  const row = config.row - 1;
+  const transform = `translate3d(calc(${-column * (100 / 3)}% + 0px), calc(${-row * (100 / 3)}% + 0px), 0)`;
+
+  stage.style.setProperty('transform', transform, 'important');
+  stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  root.setAttribute('data-mobile-family-tree-active-screen', screenName);
+
+  const screenElement = getScreenElement(root, screenName);
+  screenElement?.querySelectorAll<HTMLElement>('[data-mobile-tree-scroll]').forEach((scrollArea) => {
+    scrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  });
+
+  window.setTimeout(() => {
+    stage.style.removeProperty('transition');
+  }, 340);
+}
+
+function navigateToScreen(screenName: ScreenName) {
+  if (!isMobileViewport() || !isFamilyMapPath()) return;
+
+  const root = getRoot();
+  if (!root || !hasScreenContent(root, screenName)) return;
+
+  closeOverview();
+  clickBaseTab(root, screenName);
+
+  window.requestAnimationFrame(() => {
+    const currentRoot = getRoot();
+    if (!currentRoot) return;
+    applyScreenTransform(currentRoot, screenName);
+  });
+
+  window.setTimeout(() => {
+    const currentRoot = getRoot();
+    if (!currentRoot) return;
+    applyScreenTransform(currentRoot, screenName);
+  }, 90);
+
+  window.setTimeout(() => {
+    const currentRoot = getRoot();
+    if (!currentRoot) return;
+    applyScreenTransform(currentRoot, screenName);
+  }, 320);
 }
 
 function ensureStyles() {
@@ -273,6 +343,7 @@ function ensureStyles() {
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile {
+        appearance: none;
         position: relative;
         z-index: 1;
         display: flex;
@@ -286,8 +357,26 @@ function ensureStyles() {
         background: rgba(255, 255, 255, 0.94);
         padding: 0.55rem;
         color: rgb(15, 23, 42);
+        font: inherit;
         text-align: left;
         box-shadow: 0 9px 22px rgba(15, 23, 42, 0.1);
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile:active {
+        transform: scale(0.97);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, 0.14);
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile::after {
+        content: "Toque para abrir";
+        color: rgb(37, 99, 235);
+        font-size: 0.56rem;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+        line-height: 1;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="core"] {
@@ -361,18 +450,24 @@ function ensureStyles() {
 function buildTile(root: HTMLElement, screenName: ScreenName) {
   const config = SCREEN_CONFIG[screenName];
   const count = getScreenCount(root, screenName);
-  const tile = document.createElement('div');
+  const tile = document.createElement('button');
 
+  tile.type = 'button';
   tile.className = 'mobile-family-overview-tile';
   tile.dataset.screen = screenName;
   tile.style.gridColumn = String(config.column);
   tile.style.gridRow = String(config.row);
+  tile.setAttribute('aria-label', `Abrir ${config.title}`);
 
   tile.innerHTML = `
     <span class="mobile-family-overview-tile-title">${escapeHtml(config.title)}</span>
     <span class="mobile-family-overview-tile-subtitle">${escapeHtml(config.subtitle)}</span>
     <span class="mobile-family-overview-tile-count">${count} card${count === 1 ? '' : 's'}</span>
   `;
+
+  tile.addEventListener('click', () => {
+    navigateToScreen(screenName);
+  });
 
   return tile;
 }
@@ -405,7 +500,7 @@ function openOverview() {
       <span class="mobile-family-overview-icon" aria-hidden="true">−</span>
       <div class="mobile-family-overview-title-wrap">
         <h2 class="mobile-family-overview-title">Visão geral</h2>
-        <p class="mobile-family-overview-subtitle">Mapa reduzido dos grupos disponíveis na árvore.</p>
+        <p class="mobile-family-overview-subtitle">Toque em um grupo para abrir essa área da árvore.</p>
       </div>
       <button type="button" class="mobile-family-overview-close" aria-label="Fechar visão geral">×</button>
     </header>
