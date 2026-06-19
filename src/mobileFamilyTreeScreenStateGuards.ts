@@ -6,6 +6,8 @@ const TRACKED_ATTRIBUTES = new Set([
   'data-mobile-family-tree-descendants-ready',
 ]);
 
+const TOP_SCREENS = new Set(['ancestors', 'paternal-ancestors', 'maternal-ancestors']);
+
 function isMobileViewport() {
   return typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
@@ -24,18 +26,32 @@ function getStage(root = getRoot()) {
   return root?.querySelector<HTMLElement>(STAGE_SELECTOR) ?? null;
 }
 
-function isCoreTransform(transform: string) {
-  return transform.includes('-33.3333333333%') && !transform.includes('-66.6666666667%');
+function transformHasRow(transform: string, row: 0 | 1 | 2) {
+  if (row === 0) return transform.includes('calc(0%') || transform.includes('calc(-0%');
+  if (row === 1) return transform.includes('calc(-33.3333333333%') || transform.includes('calc(-33.333333333333336%');
+  return transform.includes('calc(-66.6666666667%') || transform.includes('calc(-66.66666666666667%');
 }
 
-function clearStaleCoreAttribute() {
+function transformHasColumn(transform: string, column: 1) {
+  if (column === 1) return transform.includes('translate3d(calc(-33.3333333333%') || transform.includes('translate3d(calc(-33.333333333333336%');
+  return false;
+}
+
+function clearStaleScreenAttribute() {
   if (!isMobileViewport() || !isFamilyMapPath()) return;
   const root = getRoot();
   const stage = getStage(root);
   if (!root || !stage) return;
 
-  if (root.getAttribute('data-mobile-family-tree-active-screen') !== 'core') return;
-  if (!isCoreTransform(stage.style.transform || '')) {
+  const screen = root.getAttribute('data-mobile-family-tree-active-screen');
+  if (!screen) return;
+
+  const transform = stage.style.transform || '';
+  const isTopScreenCurrent = TOP_SCREENS.has(screen) && transformHasRow(transform, 0);
+  const isCoreCurrent = screen === 'core' && transformHasColumn(transform, 1) && transformHasRow(transform, 1);
+  const isDescendantsCurrent = screen === 'descendants' && transformHasColumn(transform, 1) && transformHasRow(transform, 2);
+
+  if (!isTopScreenCurrent && !isCoreCurrent && !isDescendantsCurrent) {
     root.removeAttribute('data-mobile-family-tree-active-screen');
   }
 }
@@ -50,15 +66,15 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof E
   };
 
   document.addEventListener('click', () => {
-    window.setTimeout(clearStaleCoreAttribute, 120);
+    window.setTimeout(clearStaleScreenAttribute, 120);
   }, { capture: true });
 
   document.addEventListener('touchend', () => {
-    window.setTimeout(clearStaleCoreAttribute, 360);
+    window.setTimeout(clearStaleScreenAttribute, 360);
   }, { capture: true, passive: true });
 
   const observer = new MutationObserver(() => {
-    window.requestAnimationFrame(clearStaleCoreAttribute);
+    window.requestAnimationFrame(clearStaleScreenAttribute);
   });
 
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
