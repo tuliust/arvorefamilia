@@ -49,10 +49,6 @@ function getMobileBottomNavs() {
   });
 }
 
-function getPrimaryMobileBottomNav() {
-  return getMobileBottomNavs()[0] ?? null;
-}
-
 function findBottomNavItem(bottomNav: HTMLElement, label: string) {
   const normalizedLabel = normalizeText(label);
   return Array.from(bottomNav.querySelectorAll<HTMLElement>('button, a')).find((element) => {
@@ -100,6 +96,21 @@ function forceBottomNavShape(bottomNav: HTMLElement) {
   grid.style.gap = '';
 }
 
+function syncCuriositiesActiveState(button: HTMLElement) {
+  const active = window.location.pathname === CURIOSITIES_ROUTE || window.location.pathname.startsWith(`${CURIOSITIES_ROUTE}/`);
+
+  button.classList.remove('bg-blue-50', 'text-blue-700', 'ring-1', 'ring-blue-100');
+  button.classList.remove('text-gray-700');
+
+  if (active) {
+    button.classList.add('bg-blue-50', 'text-blue-700', 'ring-1', 'ring-blue-100');
+    button.setAttribute('aria-current', 'page');
+  } else {
+    button.classList.add('text-gray-700');
+    button.removeAttribute('aria-current');
+  }
+}
+
 function setCuriositiesItem(button: HTMLElement) {
   button.setAttribute('aria-label', 'Abrir curiosidades');
   button.setAttribute('title', 'Curiosidades');
@@ -129,6 +140,7 @@ function setCuriositiesItem(button: HTMLElement) {
     if (firstSvg) firstSvg.outerHTML = buildSparklesIcon();
   }
 
+  syncCuriositiesActiveState(button);
   installCuriositiesClick(button);
 }
 
