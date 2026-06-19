@@ -8,72 +8,95 @@ const TOOLBAR_ZOOM_SELECTOR = '[data-mobile-family-map-toolbar-action="zoom"]';
 const ACTIVE_TRIGGER_ATTR = 'data-mobile-family-map-overview-active';
 
 type ScreenName =
+  | 'paternal-ancestors'
   | 'ancestors'
+  | 'maternal-ancestors'
   | 'paternal-uncles'
   | 'core'
   | 'maternal-uncles'
   | 'paternal-cousins'
+  | 'descendants'
   | 'maternal-cousins';
 
 const SCREEN_CONFIG: Record<ScreenName, {
   title: string;
   subtitle: string;
-  summary: string;
   row: number;
   column: number;
 }> = {
+  'paternal-ancestors': {
+    title: 'Bisavós paternos',
+    subtitle: 'Bisavós e tataravós paternos',
+    row: 1,
+    column: 1,
+  },
   ancestors: {
-    title: 'Ancestrais',
-    subtitle: 'Avós, bisavós e tataravós',
-    summary: 'Linha acima da pessoa principal',
+    title: 'Avós',
+    subtitle: 'Avós paternos e maternos',
     row: 1,
     column: 2,
+  },
+  'maternal-ancestors': {
+    title: 'Bisavós maternos',
+    subtitle: 'Bisavós e tataravós maternos',
+    row: 1,
+    column: 3,
   },
   'paternal-uncles': {
     title: 'Tios paternos',
     subtitle: 'Ramo do pai',
-    summary: 'Área lateral esquerda',
     row: 2,
     column: 1,
   },
   core: {
     title: 'Núcleo central',
     subtitle: 'Pais, pessoa principal e descendentes',
-    summary: 'Tela inicial da árvore',
     row: 2,
     column: 2,
   },
   'maternal-uncles': {
     title: 'Tios maternos',
     subtitle: 'Ramo da mãe',
-    summary: 'Área lateral direita',
     row: 2,
     column: 3,
   },
   'paternal-cousins': {
     title: 'Primos paternos',
     subtitle: 'Descendentes dos tios paternos',
-    summary: 'Abaixo dos tios paternos',
     row: 3,
     column: 1,
+  },
+  descendants: {
+    title: 'Descendentes',
+    subtitle: 'Irmãos, cônjuge, pets, filhos e netos',
+    row: 3,
+    column: 2,
   },
   'maternal-cousins': {
     title: 'Primos maternos',
     subtitle: 'Descendentes dos tios maternos',
-    summary: 'Abaixo dos tios maternos',
     row: 3,
     column: 3,
   },
 };
 
 const SCREEN_ORDER: ScreenName[] = [
+  'paternal-ancestors',
   'ancestors',
+  'maternal-ancestors',
   'paternal-uncles',
   'core',
   'maternal-uncles',
   'paternal-cousins',
+  'descendants',
   'maternal-cousins',
 ];
+
+const DYNAMIC_SCREEN_NAMES = new Set<ScreenName>([
+  'paternal-ancestors',
+  'maternal-ancestors',
+  'descendants',
+]);
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -192,6 +215,8 @@ function getFallbackTabLabel(screenName: ScreenName) {
 }
 
 function clickBaseTab(root: HTMLElement, screenName: ScreenName) {
+  if (DYNAMIC_SCREEN_NAMES.has(screenName)) return;
+
   const label = normalizeText(getFallbackTabLabel(screenName));
   const button = Array.from(root.querySelectorAll<HTMLButtonElement>('nav[aria-label="Visualizações da árvore"] button'))
     .find((candidate) => normalizeText(candidate.textContent ?? '').includes(label));
@@ -253,7 +278,8 @@ function navigateToScreen(screenName: ScreenName) {
 }
 
 function ensureStyles() {
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  existing?.remove();
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
@@ -340,6 +366,7 @@ function ensureStyles() {
         font-size: 1.2rem;
         font-weight: 900;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        touch-action: manipulation;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-map {
@@ -394,7 +421,7 @@ function ensureStyles() {
         min-height: 0;
         flex-direction: column;
         justify-content: center;
-        gap: 0.28rem;
+        gap: 0.3rem;
         border: 1px solid rgb(203, 213, 225);
         border-radius: 1rem;
         background: rgba(255, 255, 255, 0.94);
@@ -414,12 +441,8 @@ function ensureStyles() {
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile::after {
-        content: "Toque para abrir";
-        color: rgb(37, 99, 235);
-        font-size: 0.56rem;
-        font-weight: 900;
-        letter-spacing: 0.01em;
-        line-height: 1;
+        display: none !important;
+        content: none !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-current="true"] {
@@ -442,11 +465,6 @@ function ensureStyles() {
         text-transform: uppercase;
       }
 
-      #${OVERVIEW_ID} .mobile-family-overview-tile[data-current="true"]::after {
-        content: "Você está aqui";
-        color: rgb(37, 99, 235);
-      }
-
       #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="core"] {
         border-color: color-mix(in srgb, var(--tree-palette-border-central, #bae6fd) 74%, #fff);
         background: color-mix(in srgb, var(--tree-palette-bg-central, #ecfeff) 32%, #fff);
@@ -462,9 +480,15 @@ function ensureStyles() {
         background: color-mix(in srgb, var(--tree-palette-bg-primos, #fff7ed) 32%, #fff);
       }
 
-      #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="ancestors"] {
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="ancestors"],
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen$="ancestors"] {
         border-color: color-mix(in srgb, var(--tree-palette-border-avos, #fecaca) 74%, #fff);
         background: color-mix(in srgb, var(--tree-palette-bg-avos, #fef2f2) 30%, #fff);
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="descendants"] {
+        border-color: color-mix(in srgb, var(--tree-palette-border-filhos, #bbf7d0) 74%, #fff);
+        background: color-mix(in srgb, var(--tree-palette-bg-filhos, #f0fdf4) 34%, #fff);
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-title {
@@ -484,10 +508,7 @@ function ensureStyles() {
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-summary {
-        color: rgb(100, 116, 139);
-        font-size: 0.56rem;
-        font-weight: 800;
-        line-height: 1.1;
+        display: none !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-count {
@@ -522,6 +543,24 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
+function getPeopleLabel(count: number) {
+  return `${count} pessoa${count === 1 ? '' : 's'}`;
+}
+
+function sanitizeOverviewText(overlay = getOverviewElement()) {
+  if (!overlay) return;
+
+  overlay.querySelectorAll<HTMLElement>('.mobile-family-overview-tile-summary').forEach((summary) => {
+    summary.remove();
+  });
+
+  overlay.querySelectorAll<HTMLElement>('.mobile-family-overview-tile-count').forEach((countElement) => {
+    const match = (countElement.textContent ?? '').match(/\d+/);
+    if (!match) return;
+    countElement.textContent = getPeopleLabel(Number(match[0]));
+  });
+}
+
 function buildTile(root: HTMLElement, screenName: ScreenName, currentScreen: ScreenName) {
   const config = SCREEN_CONFIG[screenName];
   const count = getScreenCount(root, screenName);
@@ -541,8 +580,7 @@ function buildTile(root: HTMLElement, screenName: ScreenName, currentScreen: Scr
     ${current ? '<span class="mobile-family-overview-tile-current">Atual</span>' : ''}
     <span class="mobile-family-overview-tile-title">${escapeHtml(config.title)}</span>
     <span class="mobile-family-overview-tile-subtitle">${escapeHtml(config.subtitle)}</span>
-    <span class="mobile-family-overview-tile-summary">${escapeHtml(config.summary)}</span>
-    <span class="mobile-family-overview-tile-count">${count} card${count === 1 ? '' : 's'}</span>
+    <span class="mobile-family-overview-tile-count">${getPeopleLabel(count)}</span>
   `;
 
   tile.addEventListener('click', () => {
@@ -558,6 +596,12 @@ function buildEmptyCell(row: number, column: number) {
   cell.style.gridColumn = String(column);
   cell.style.gridRow = String(row);
   return cell;
+}
+
+function observeOverviewMutations(overlay: HTMLElement) {
+  const observer = new MutationObserver(() => sanitizeOverviewText(overlay));
+  observer.observe(overlay, { childList: true, subtree: true, characterData: true });
+  overlay.dataset.mobileOverviewSanitizer = 'true';
 }
 
 function openOverview() {
@@ -606,11 +650,16 @@ function openOverview() {
     }
   }
 
-  overlay.querySelector<HTMLButtonElement>('.mobile-family-overview-close')?.addEventListener('click', () => {
+  overlay.querySelector<HTMLButtonElement>('.mobile-family-overview-close')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     closeOverview();
   });
 
   document.body.appendChild(overlay);
+  observeOverviewMutations(overlay);
+  sanitizeOverviewText(overlay);
+  [40, 160, 360].forEach((delay) => window.setTimeout(() => sanitizeOverviewText(overlay), delay));
   document.body.style.setProperty('overflow', 'hidden');
   setToolbarActive(true);
 }
@@ -640,6 +689,32 @@ function handleToolbarClick(event: MouseEvent) {
   toggleOverview();
 }
 
+function handleOverviewClick(event: MouseEvent) {
+  const overlay = getOverviewElement();
+  if (!overlay) return;
+
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target || !overlay.contains(target)) return;
+
+  const closeButton = target.closest<HTMLButtonElement>('.mobile-family-overview-close');
+  if (closeButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    closeOverview();
+    return;
+  }
+
+  const tile = target.closest<HTMLElement>('.mobile-family-overview-tile[data-screen]');
+  const screenName = tile?.dataset.screen;
+  if (!isScreenName(screenName)) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  navigateToScreen(screenName);
+}
+
 function handleRouteOrViewportChange() {
   if (!isMobileViewport() || !isFamilyMapPath()) {
     closeOverview();
@@ -651,6 +726,7 @@ function handleRouteOrViewportChange() {
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
+  document.addEventListener('click', handleOverviewClick, { capture: true });
   document.addEventListener('click', handleToolbarClick, { capture: true });
   window.addEventListener('resize', handleRouteOrViewportChange, { passive: true });
   window.addEventListener('orientationchange', handleRouteOrViewportChange, { passive: true });
