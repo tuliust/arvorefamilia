@@ -29,18 +29,28 @@ function getVisibleViewportCenter() {
   };
 }
 
+function setImportantStyle(element: HTMLElement, property: string, value: string) {
+  element.style.setProperty(property, value, 'important');
+}
+
+function setImportantStyles(element: HTMLElement, styles: Record<string, string>) {
+  Object.entries(styles).forEach(([property, value]) => {
+    setImportantStyle(element, property, value);
+  });
+}
+
 function getCurrentNumericStyle(element: HTMLElement, property: 'left' | 'top') {
-  const value = Number.parseFloat(element.style[property] || '0');
+  const value = Number.parseFloat(element.style.getPropertyValue(property) || '0');
   return Number.isFinite(value) ? value : 0;
 }
 
 function offsetElementStyle(element: HTMLElement, deltaX: number, deltaY: number) {
   if (Math.abs(deltaX) >= 0.5) {
-    element.style.left = `${getCurrentNumericStyle(element, 'left') + deltaX}px`;
+    setImportantStyle(element, 'left', `${getCurrentNumericStyle(element, 'left') + deltaX}px`);
   }
 
   if (Math.abs(deltaY) >= 0.5) {
-    element.style.top = `${getCurrentNumericStyle(element, 'top') + deltaY}px`;
+    setImportantStyle(element, 'top', `${getCurrentNumericStyle(element, 'top') + deltaY}px`);
   }
 }
 
@@ -95,7 +105,10 @@ function centerMobileTreePanel() {
   const panelWidth = Math.min(viewport.width - safePadding * 2, 400);
   const panelMaxHeight = Math.max(320, viewport.height - safePadding * 2);
 
-  Object.assign(dialog.style, {
+  // CSS mobile antigo usa !important para o modal. Por isso este patch também aplica
+  // estilos inline com prioridade important, evitando que o painel continue preso ao
+  // canvas transformado da árvore no iOS/Safari.
+  setImportantStyles(dialog, {
     position: 'fixed',
     left: `${viewport.left}px`,
     top: `${viewport.top}px`,
@@ -103,39 +116,42 @@ function centerMobileTreePanel() {
     bottom: 'auto',
     width: `${viewport.width}px`,
     height: `${viewport.height}px`,
-    minWidth: `${viewport.width}px`,
-    maxWidth: `${viewport.width}px`,
-    minHeight: `${viewport.height}px`,
-    maxHeight: `${viewport.height}px`,
+    'min-width': `${viewport.width}px`,
+    'max-width': `${viewport.width}px`,
+    'min-height': `${viewport.height}px`,
+    'max-height': `${viewport.height}px`,
     display: 'grid',
-    placeItems: 'center',
+    'place-items': 'center',
     overflow: 'hidden',
     transform: 'none',
+    'z-index': '12000',
   });
 
-  // Em iOS/Safari, o mapa cria overflow horizontal. Quando o usuário arrasta a árvore,
-  // elementos `fixed` dentro de ancestrais transformados podem ficar presos ao canvas em
-  // vez da viewport visível. A correção abaixo mede o retângulo real e compensa o desvio.
+  // Em iOS/Safari, `position: fixed` dentro de elementos transformados pode ser medido
+  // relativo ao canvas da árvore. Compensamos pelo retângulo real renderizado.
+  pinElementToVisibleViewport(dialog, viewport.left, viewport.top);
   pinElementToVisibleViewport(dialog, viewport.left, viewport.top);
 
-  Object.assign(section.style, {
+  setImportantStyles(section, {
     position: 'fixed',
     left: `${viewport.left + viewport.width / 2}px`,
     top: `${viewport.top + viewport.height / 2}px`,
     right: 'auto',
     bottom: 'auto',
     width: `${panelWidth}px`,
-    maxWidth: `${panelWidth}px`,
-    maxHeight: `${panelMaxHeight}px`,
+    'max-width': `${panelWidth}px`,
+    'max-height': `${panelMaxHeight}px`,
     margin: '0',
     transform: 'translate3d(-50%, -50%, 0)',
+    'z-index': '12002',
   });
 
   centerElementInVisibleViewport(section);
   centerElementInVisibleViewport(section);
+  centerElementInVisibleViewport(section);
 
   if (overlayClose) {
-    Object.assign(overlayClose.style, {
+    setImportantStyles(overlayClose, {
       position: 'fixed',
       left: `${viewport.left}px`,
       top: `${viewport.top}px`,
@@ -143,8 +159,10 @@ function centerMobileTreePanel() {
       bottom: 'auto',
       width: `${viewport.width}px`,
       height: `${viewport.height}px`,
+      'z-index': '12001',
     });
 
+    pinElementToVisibleViewport(overlayClose, viewport.left, viewport.top);
     pinElementToVisibleViewport(overlayClose, viewport.left, viewport.top);
   }
 
@@ -157,24 +175,24 @@ function centerMobileTreePanel() {
     sectionRect.right - closeSize - 18
   );
 
-  Object.assign(closeButton.style, {
+  setImportantStyles(closeButton, {
     position: 'fixed',
     left: `${Math.max(viewport.left + 18, closeLeft)}px`,
     top: `${closeTop}px`,
-    zIndex: '12005',
+    'z-index': '12005',
     display: 'flex',
     width: `${closeSize}px`,
     height: `${closeSize}px`,
-    alignItems: 'center',
-    justifyContent: 'center',
+    'align-items': 'center',
+    'justify-content': 'center',
     border: '1px solid rgb(226, 232, 240)',
-    borderRadius: '9999px',
+    'border-radius': '9999px',
     background: 'rgb(255, 255, 255)',
-    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.18)',
+    'box-shadow': '0 10px 24px rgba(15, 23, 42, 0.18)',
     color: 'rgb(15, 23, 42)',
-    fontSize: '1.1rem',
-    fontWeight: '800',
-    lineHeight: '1',
+    'font-size': '1.1rem',
+    'font-weight': '800',
+    'line-height': '1',
   });
 }
 
