@@ -4,9 +4,7 @@ const FIRST_LOGIN_TUTORIAL_TITLE_SELECTOR = '#first-login-tutorial-title';
 const FIRST_LOGIN_TUTORIAL_PANEL_SELECTOR = `${FIRST_LOGIN_TUTORIAL_SELECTOR} > section`;
 const MOBILE_MAIN_CARD_SELECTOR = '[data-mobile-family-tree-root="true"] [data-family-map-mobile-card="true"][data-family-map-color-key="central"]';
 const MOBILE_BOTTOM_NAV_SELECTOR = 'nav[data-tree-export-ignore="true"]';
-const MOBILE_BOTTOM_NAV_GRID_SELECTOR = `${MOBILE_BOTTOM_NAV_SELECTOR} > div`;
-const MOBILE_BOTTOM_NAV_ITEM_SELECTOR = `${MOBILE_BOTTOM_NAV_SELECTOR} button, ${MOBILE_BOTTOM_NAV_SELECTOR} a`;
-const RUNTIME_CURIOSITIES_BUTTON_SELECTOR = '[data-first-login-mobile-curiosities-button="true"]';
+const MOBILE_BOTTOM_NAV_ITEM_SELECTOR = 'button, a';
 
 function isMobileViewport() {
   return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
@@ -91,10 +89,31 @@ function syncMainMobilePersonCardTarget() {
   return changed;
 }
 
+function getMobileBottomNav() {
+  const navs = Array.from(document.querySelectorAll<HTMLElement>(MOBILE_BOTTOM_NAV_SELECTOR))
+    .filter(isVisibleElement);
+
+  return navs.find((nav) => {
+    const text = normalizeText(nav.textContent ?? '');
+    const rect = nav.getBoundingClientRect();
+    return (
+      rect.top > window.innerHeight * 0.55 &&
+      text.includes('home') &&
+      text.includes('calendario') &&
+      text.includes('forum') &&
+      text.includes('favoritos') &&
+      (text.includes('curiosidades') || text.includes('alertas'))
+    );
+  }) ?? null;
+}
+
 function findBottomNavItemByText(label: string) {
+  const bottomNav = getMobileBottomNav();
+  if (!bottomNav) return null;
+
   const normalizedLabel = normalizeText(label);
 
-  return Array.from(document.querySelectorAll<HTMLElement>(MOBILE_BOTTOM_NAV_ITEM_SELECTOR))
+  return Array.from(bottomNav.querySelectorAll<HTMLElement>(MOBILE_BOTTOM_NAV_ITEM_SELECTOR))
     .filter(isVisibleElement)
     .find((element) => {
       const text = normalizeText(element.textContent ?? '');
@@ -103,58 +122,31 @@ function findBottomNavItemByText(label: string) {
     }) ?? null;
 }
 
-function createCuriositiesButton(referenceButton: HTMLElement | null) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = referenceButton?.className || 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition active:bg-gray-100';
-  button.setAttribute('aria-label', 'Abrir curiosidades');
-  button.setAttribute('data-tour-target', 'curiosities');
-  button.setAttribute('data-first-login-mobile-curiosities-button', 'true');
-  button.innerHTML = `
-    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8L12 3z"></path>
-      <path d="M5 3v4"></path>
-      <path d="M3 5h4"></path>
-      <path d="M19 17v4"></path>
-      <path d="M17 19h4"></path>
-    </svg>
-    <span>Curiosidades</span>
-  `;
-  button.addEventListener('click', () => {
-    window.location.assign('/curiosidades');
+function syncCuriositiesBottomNavTarget() {
+  const target = findBottomNavItemByText('Curiosidades');
+  let changed = false;
+
+  document.querySelectorAll<HTMLElement>('[data-first-login-mobile-curiosities-target="true"]').forEach((element) => {
+    if (element === target) return;
+    element.removeAttribute('data-first-login-mobile-curiosities-target');
+    if (element.getAttribute('data-tour-target') === 'curiosities') {
+      element.removeAttribute('data-tour-target');
+    }
+    changed = true;
   });
 
-  return button;
-}
-
-function ensureCuriositiesBottomNavButton() {
-  const grid = document.querySelector<HTMLElement>(MOBILE_BOTTOM_NAV_GRID_SELECTOR);
-  if (!grid || !isVisibleElement(grid)) return false;
-
-  grid.style.gridTemplateColumns = 'repeat(6, minmax(0, 1fr))';
-  grid.style.maxWidth = 'min(100%, 28rem)';
-  grid.style.gap = '0.18rem';
-
-  const existing = document.querySelector<HTMLElement>(RUNTIME_CURIOSITIES_BUTTON_SELECTOR);
-  const forumButton = findBottomNavItemByText('Fórum');
-  const referenceButton = forumButton || findBottomNavItemByText('Calendário');
-
-  if (existing) {
-    if (existing.getAttribute('data-tour-target') !== 'curiosities') {
-      existing.setAttribute('data-tour-target', 'curiosities');
-      return true;
+  if (target) {
+    if (target.getAttribute('data-tour-target') !== 'curiosities') {
+      target.setAttribute('data-tour-target', 'curiosities');
+      changed = true;
     }
-    return false;
+    if (target.getAttribute('data-first-login-mobile-curiosities-target') !== 'true') {
+      target.setAttribute('data-first-login-mobile-curiosities-target', 'true');
+      changed = true;
+    }
   }
 
-  const button = createCuriositiesButton(referenceButton);
-  if (forumButton?.parentElement === grid) {
-    grid.insertBefore(button, forumButton);
-  } else {
-    grid.appendChild(button);
-  }
-
-  return true;
+  return changed;
 }
 
 function syncForumBottomNavTarget() {
@@ -225,7 +217,7 @@ function syncFirstLoginMobileTutorial() {
 
   const changedTargets =
     syncMainMobilePersonCardTarget() ||
-    ensureCuriositiesBottomNavButton() ||
+    syncCuriositiesBottomNavTarget() ||
     syncForumBottomNavTarget();
   const title = getTutorialTitle();
   const normalizedTitle = normalizeText(title);
