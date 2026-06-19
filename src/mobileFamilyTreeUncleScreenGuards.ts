@@ -4,9 +4,11 @@ const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const STYLE_ID = 'mobile-family-tree-uncle-screen-guards-style';
 const SWIPE_THRESHOLD = 10;
+const NAVIGATION_THRESHOLD = 56;
 
 type UncleScreen = 'paternal-uncles' | 'maternal-uncles';
 type GestureDirection = 'up' | 'down' | 'left' | 'right';
+type DestinationScreen = 'core' | 'paternal-cousins' | 'maternal-cousins';
 
 type GestureStart = {
   x: number;
@@ -60,15 +62,15 @@ function getActiveUncleScreen(root = getRoot()): UncleScreen | null {
   return null;
 }
 
-function getGestureDirection(deltaX: number, deltaY: number): GestureDirection | null {
+function getGestureDirection(deltaX: number, deltaY: number, threshold = SWIPE_THRESHOLD): GestureDirection | null {
   const absX = Math.abs(deltaX);
   const absY = Math.abs(deltaY);
 
-  if (absX >= SWIPE_THRESHOLD && absX > absY * 1.2) {
+  if (absX >= threshold && absX > absY * 1.2) {
     return deltaX < 0 ? 'right' : 'left';
   }
 
-  if (absY >= SWIPE_THRESHOLD && absY > absX * 1.2) {
+  if (absY >= threshold && absY > absX * 1.2) {
     return deltaY < 0 ? 'down' : 'up';
   }
 
@@ -83,6 +85,46 @@ function isBlockedDirection(screen: UncleScreen | null, direction: GestureDirect
   }
 
   return direction === 'up' || direction === 'right';
+}
+
+function getAllowedDestination(screen: UncleScreen | null, direction: GestureDirection | null): DestinationScreen | null {
+  if (!screen || !direction) return null;
+
+  if (screen === 'paternal-uncles') {
+    if (direction === 'right') return 'core';
+    if (direction === 'down') return 'paternal-cousins';
+    return null;
+  }
+
+  if (direction === 'left') return 'core';
+  if (direction === 'down') return 'maternal-cousins';
+  return null;
+}
+
+function getTransformForDestination(destination: DestinationScreen) {
+  if (destination === 'core') {
+    return 'translate3d(calc(-33.3333333333% + 0px), calc(-33.3333333333% + 0px), 0)';
+  }
+
+  if (destination === 'paternal-cousins') {
+    return 'translate3d(calc(0% + 0px), calc(-66.6666666667% + 0px), 0)';
+  }
+
+  return 'translate3d(calc(-66.6666666667% + 0px), calc(-66.6666666667% + 0px), 0)';
+}
+
+function applyDestination(destination: DestinationScreen) {
+  const root = getRoot();
+  const stage = getStage(root);
+  if (!root || !stage) return;
+
+  stage.style.setProperty('transform', getTransformForDestination(destination), 'important');
+  stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  root.setAttribute('data-mobile-family-tree-active-screen', destination);
+
+  window.setTimeout(() => {
+    getStage()?.style.removeProperty('transition');
+  }, 340);
 }
 
 function blockEvent(event: TouchEvent) {
@@ -151,10 +193,20 @@ function handleTouchEnd(event: TouchEvent) {
   gestureStart = null;
   if (!touch) return;
 
-  const direction = getGestureDirection(touch.clientX - start.x, touch.clientY - start.y);
-  if (!isBlockedDirection(start.screen, direction)) return;
+  const deltaX = touch.clientX - start.x;
+  const deltaY = touch.clientY - start.y;
+  const direction = getGestureDirection(deltaX, deltaY, NAVIGATION_THRESHOLD);
+
+  if (isBlockedDirection(start.screen, direction)) {
+    blockEvent(event);
+    return;
+  }
+
+  const destination = getAllowedDestination(start.screen, direction);
+  if (!destination) return;
 
   blockEvent(event);
+  applyDestination(destination);
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
