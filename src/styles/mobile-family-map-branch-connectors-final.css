@@ -7,31 +7,41 @@
   }
 
   /*
-    VerticalRelativeScreen already renders a central vertical .w-px line.
-    The optional connectHorizontal block also added border-l/border-r at the same center point,
-    creating the apparent double line above Tios Paternos/Maternos. Keep only the horizontal
-    bridge from that block and let the central .w-px render the vertical connector.
+    VerticalRelativeScreen renders connector elements inside the screen wrapper:
+    screen -> wrapper -> connector. Target that nesting explicitly so previous
+    border-left/border-right rules do not create a thicker/double segment above
+    Tios Paternos/Maternos.
   */
-  [data-mobile-family-tree-screen$="-uncles"] > div[class*="border-t"][class*="border-l"],
-  [data-mobile-family-tree-screen$="-uncles"] > div[class*="border-t"][class*="border-r"],
-  [data-mobile-family-tree-screen$="-cousins"] > div[class*="border-t"][class*="border-l"],
-  [data-mobile-family-tree-screen$="-cousins"] > div[class*="border-t"][class*="border-r"] {
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute.bg-cyan-600,
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute.bg-cyan-600 {
+    background: var(--mobile-family-map-final-line) !important;
+    background-color: var(--mobile-family-map-final-line) !important;
+    opacity: 1 !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute.left-1\/2.bg-cyan-600,
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute.left-1\/2.bg-cyan-600 {
+    width: var(--mobile-family-map-final-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute.h-px.bg-cyan-600,
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute.h-px.bg-cyan-600 {
+    height: var(--mobile-family-map-final-line-size) !important;
+  }
+
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute[class*="border-t"],
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute[class*="border-t"] {
     border-left-width: 0 !important;
     border-right-width: 0 !important;
     border-top-width: var(--mobile-family-map-final-line-size) !important;
     border-top-color: var(--mobile-family-map-final-line) !important;
   }
 
-  [data-mobile-family-tree-screen$="-uncles"] > div.pointer-events-none.absolute.left-1\/2,
-  [data-mobile-family-tree-screen$="-cousins"] > div.pointer-events-none.absolute.left-1\/2 {
-    width: var(--mobile-family-map-final-line-size) !important;
-    background: var(--mobile-family-map-final-line) !important;
-    background-color: var(--mobile-family-map-final-line) !important;
-    opacity: 1 !important;
-  }
-
-  [data-mobile-family-tree-screen$="-uncles"] > div[class*="border-t"],
-  [data-mobile-family-tree-screen$="-cousins"] > div[class*="border-t"] {
-    border-top-color: var(--mobile-family-map-final-line) !important;
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute[class*="border-l"],
+  [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute[class*="border-r"],
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute[class*="border-l"],
+  [data-mobile-family-tree-screen$="-cousins"] > div > div.pointer-events-none.absolute[class*="border-r"] {
+    border-left-width: 0 !important;
+    border-right-width: 0 !important;
   }
 }
