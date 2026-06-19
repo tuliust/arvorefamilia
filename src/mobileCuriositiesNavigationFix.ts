@@ -1,5 +1,5 @@
 const MOBILE_QUERY = '(max-width: 767px)';
-const EXPORT_IGNORE_NAV_SELECTOR = 'nav[data-tree-export-ignore="true"]';
+const BOTTOM_NAV_SELECTOR = 'nav';
 const USER_MENU_SELECTOR = 'div[role="menu"], div.fixed.left-4.right-4.top-20, div[class*="fixed"][class*="top-20"][class*="rounded-3xl"]';
 const CURIOSITIES_ROUTE = '/curiosidades';
 
@@ -28,29 +28,32 @@ function isVisibleElement(element: HTMLElement) {
   );
 }
 
-function getMobileBottomNav() {
-  const navs = Array.from(document.querySelectorAll<HTMLElement>(EXPORT_IGNORE_NAV_SELECTOR))
+function getMobileBottomNavs() {
+  const navs = Array.from(document.querySelectorAll<HTMLElement>(BOTTOM_NAV_SELECTOR))
     .filter(isVisibleElement);
 
-  return navs.find((nav) => {
+  return navs.filter((nav) => {
     const text = normalizeText(nav.textContent ?? '');
     const rect = nav.getBoundingClientRect();
+    const style = window.getComputedStyle(nav);
 
     return (
-      rect.top > window.innerHeight * 0.55 &&
+      rect.top > window.innerHeight * 0.5 &&
+      (style.position === 'fixed' || nav.dataset.treeExportIgnore === 'true') &&
       text.includes('home') &&
       text.includes('calendario') &&
       text.includes('forum') &&
       text.includes('favoritos') &&
       (text.includes('alertas') || text.includes('curiosidades'))
     );
-  }) ?? null;
+  });
 }
 
-function findBottomNavItem(label: string) {
-  const bottomNav = getMobileBottomNav();
-  if (!bottomNav) return null;
+function getPrimaryMobileBottomNav() {
+  return getMobileBottomNavs()[0] ?? null;
+}
 
+function findBottomNavItem(bottomNav: HTMLElement, label: string) {
   const normalizedLabel = normalizeText(label);
   return Array.from(bottomNav.querySelectorAll<HTMLElement>('button, a')).find((element) => {
     const text = normalizeText(element.textContent ?? '');
@@ -88,27 +91,31 @@ function installCuriositiesClick(button: HTMLElement) {
   button.dataset.mobileCuriositiesClickInstalled = 'true';
 }
 
-function swapBottomAlertsForCuriosities() {
-  const bottomNav = getMobileBottomNav();
-  if (!bottomNav) return false;
-
+function forceBottomNavShape(bottomNav: HTMLElement) {
   const grid = bottomNav.firstElementChild instanceof HTMLElement ? bottomNav.firstElementChild : null;
-  if (grid) {
-    grid.style.gridTemplateColumns = 'repeat(5, minmax(0, 1fr))';
-    grid.style.maxWidth = '28rem';
-    grid.style.gap = '';
-  }
+  if (!grid) return;
 
-  const button = findBottomNavItem('Curiosidades') ?? findBottomNavItem('Alertas');
-  if (!button) return false;
+  grid.style.gridTemplateColumns = 'repeat(5, minmax(0, 1fr))';
+  grid.style.maxWidth = '28rem';
+  grid.style.gap = '';
+}
 
+function setCuriositiesItem(button: HTMLElement) {
   button.setAttribute('aria-label', 'Abrir curiosidades');
   button.setAttribute('title', 'Curiosidades');
   button.setAttribute('data-tour-target', 'curiosities');
   button.setAttribute('data-mobile-curiosities-nav', 'true');
 
+  if (button instanceof HTMLAnchorElement && button.getAttribute('href') !== CURIOSITIES_ROUTE) {
+    button.setAttribute('href', CURIOSITIES_ROUTE);
+  }
+
   const spans = Array.from(button.querySelectorAll<HTMLElement>('span'));
-  const labelSpan = spans.reverse().find((span) => normalizeText(span.textContent ?? '').includes('alertas') || normalizeText(span.textContent ?? '').includes('curiosidades'));
+  const labelSpan = spans.reverse().find((span) => {
+    const text = normalizeText(span.textContent ?? '');
+    return text.includes('alertas') || text.includes('curiosidades');
+  });
+
   if (labelSpan && labelSpan.textContent !== 'Curiosidades') {
     labelSpan.textContent = 'Curiosidades';
   }
@@ -123,25 +130,42 @@ function swapBottomAlertsForCuriosities() {
   }
 
   installCuriositiesClick(button);
+}
+
+function standardizeBottomNav(bottomNav: HTMLElement) {
+  forceBottomNavShape(bottomNav);
+
+  const curiosityItem = findBottomNavItem(bottomNav, 'Curiosidades') ?? findBottomNavItem(bottomNav, 'Alertas');
+  if (!curiosityItem) return false;
+
+  setCuriositiesItem(curiosityItem);
   return true;
 }
 
+function standardizeAllBottomNavs() {
+  let changed = false;
+  getMobileBottomNavs().forEach((nav) => {
+    if (standardizeBottomNav(nav)) changed = true;
+  });
+  return changed;
+}
+
 function removeRuntimeCuriositiesHeaderButton() {
-  const bottomNav = getMobileBottomNav();
+  const bottomNavs = getMobileBottomNavs();
   let changed = false;
 
   document.querySelectorAll<HTMLElement>('[data-first-login-mobile-curiosities-button="true"]').forEach((button) => {
-    if (bottomNav?.contains(button)) return;
+    if (bottomNavs.some((nav) => nav.contains(button))) return;
     button.remove();
     changed = true;
   });
 
   document.querySelectorAll<HTMLElement>('[data-tour-target="curiosities"]').forEach((element) => {
-    if (bottomNav?.contains(element)) return;
+    if (bottomNavs.some((nav) => nav.contains(element))) return;
     if (element.closest('[data-first-login-tutorial="true"]')) return;
     if (normalizeText(element.textContent ?? '').includes('curiosidades')) {
       const nav = element.closest('nav[data-tree-export-ignore="true"]');
-      if (nav && nav !== bottomNav) {
+      if (nav && !bottomNavs.includes(nav as HTMLElement)) {
         element.remove();
         changed = true;
       }
@@ -181,7 +205,7 @@ function applyMobileCuriositiesNavigation() {
   if (!isMobileViewport()) return;
 
   removeRuntimeCuriositiesHeaderButton();
-  swapBottomAlertsForCuriosities();
+  standardizeAllBottomNavs();
   exposeCuriositiesInUserMenu();
 }
 
