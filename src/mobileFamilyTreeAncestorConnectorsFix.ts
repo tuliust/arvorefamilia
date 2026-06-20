@@ -2,11 +2,10 @@ const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const ANCESTORS_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="ancestors"]';
-const SIDE_GROUP_SELECTOR = '[data-mobile-family-tree-grandparent-side]';
 const MOBILE_CARD_SELECTOR = '[data-family-map-mobile-card="true"]';
+const SIDE_GROUP_SELECTOR = '[data-mobile-family-tree-grandparent-side]';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-ancestor-connectors';
 const STYLE_ID = 'mobile-family-tree-ancestor-connectors-style';
-const CONNECTOR_ELBOW_OFFSET = 44;
 
 type AncestorSide = 'paternal' | 'maternal';
 
@@ -76,12 +75,18 @@ function removeConnectorLayers() {
 }
 
 function ensureStyles() {
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  existing?.remove();
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
     @media (max-width: 767px) {
+      ${ROOT_SELECTOR} {
+        --mobile-family-tree-connector-color: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
+        --mobile-family-tree-connector-width: var(--tree-palette-line-width, 3px);
+      }
+
       ${ANCESTORS_SCREEN_SELECTOR} {
         position: relative !important;
         overflow: visible !important;
@@ -91,7 +96,7 @@ function ensureStyles() {
       ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
         position: absolute;
         inset: 0;
-        z-index: 2;
+        z-index: 1;
         overflow: visible;
         pointer-events: none;
       }
@@ -102,13 +107,18 @@ function ensureStyles() {
         overflow: visible !important;
       }
 
+      ${ANCESTORS_SCREEN_SELECTOR} ${SIDE_GROUP_SELECTOR}::before,
+      ${ANCESTORS_SCREEN_SELECTOR} ${SIDE_GROUP_SELECTOR}::after {
+        content: none !important;
+        display: none !important;
+      }
+
       .mobile-family-tree-ancestor-connector-line {
         position: absolute;
         display: block;
-        border-radius: 999px;
-        background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
-        box-shadow: 0 0 0 0.5px rgba(42, 52, 39, 0.08);
-        opacity: 0.98;
+        border-radius: 0;
+        background: var(--mobile-family-tree-connector-color);
+        opacity: 1;
         pointer-events: none;
       }
     }
@@ -128,11 +138,12 @@ function getConnectorLayer(screen: HTMLElement) {
   return layer;
 }
 
-function getLineWidth() {
-  const rootStyles = getComputedStyle(document.documentElement);
-  const customWidth = rootStyles.getPropertyValue('--tree-palette-line-width').trim();
+function getLineWidth(root: HTMLElement) {
+  const rootStyles = getComputedStyle(root);
+  const customWidth = rootStyles.getPropertyValue('--mobile-family-tree-connector-width').trim()
+    || rootStyles.getPropertyValue('--tree-palette-line-width').trim();
   const parsed = Number.parseFloat(customWidth);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 4;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
 }
 
 function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
@@ -176,7 +187,7 @@ function renderConnectors() {
   const layer = getConnectorLayer(screen);
   layer.replaceChildren();
 
-  const lineWidth = getLineWidth();
+  const lineWidth = getLineWidth(root);
   const halfLine = lineWidth / 2;
 
   groups.forEach((group) => {
@@ -186,55 +197,14 @@ function renderConnectors() {
     const groupRect = group.getBoundingClientRect();
     if (groupRect.width <= 0 || groupRect.height <= 0) return;
 
-    const groupLeft = groupRect.left - screenRect.left;
-    const groupRight = groupRect.right - screenRect.left;
-    const groupCenterX = groupLeft + groupRect.width / 2;
-    const groupCenterY = groupRect.top - screenRect.top + groupRect.height / 2;
+    const groupCenterX = groupRect.left - screenRect.left + groupRect.width / 2;
     const groupBottom = groupRect.bottom - screenRect.top;
-    const targetX = screenRect.width * (side === 'paternal' ? 0.25 : 0.75);
-    const elbowY = Math.min(screenRect.height - lineWidth, groupBottom + CONNECTOR_ELBOW_OFFSET);
-    const horizontalLeft = Math.min(groupCenterX, targetX);
-    const horizontalWidth = Math.abs(targetX - groupCenterX);
-
-    if (side === 'paternal') {
-      createLine(layer, {
-        left: '0px',
-        top: `${groupCenterY - halfLine}px`,
-        width: `${Math.max(0, groupLeft)}px`,
-        height: `${lineWidth}px`,
-      });
-    }
-
-    if (side === 'maternal') {
-      createLine(layer, {
-        left: `${groupRight}px`,
-        top: `${groupCenterY - halfLine}px`,
-        width: `${Math.max(0, screenRect.width - groupRight)}px`,
-        height: `${lineWidth}px`,
-      });
-    }
 
     createLine(layer, {
       left: `${groupCenterX - halfLine}px`,
       top: `${groupBottom}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(0, elbowY - groupBottom)}px`,
-    });
-
-    if (horizontalWidth > lineWidth) {
-      createLine(layer, {
-        left: `${horizontalLeft}px`,
-        top: `${elbowY - halfLine}px`,
-        width: `${horizontalWidth}px`,
-        height: `${lineWidth}px`,
-      });
-    }
-
-    createLine(layer, {
-      left: `${targetX - halfLine}px`,
-      top: `${elbowY}px`,
-      width: `${lineWidth}px`,
-      height: `${Math.max(72, screenRect.height - elbowY)}px`,
+      height: `${Math.max(0, screenRect.height - groupBottom)}px`,
     });
   });
 }
