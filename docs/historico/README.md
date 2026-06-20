@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-20
 > Local recomendado: `docs/historico/README.md`
 > Tipo: índice e consolidação histórica.
-> Status: atualizado após a definição da baseline atual, com índice explícito para rotas removidas, SQLs legados e duas views oficiais: `/mapa-familiar` e `/mapa-familiar-horizontal`.
+> Status: atualizado com índice explícito para rotas removidas, SQLs legados, duas views oficiais e rodada de rollback/ajustes mobile pós-restauração.
 
 ---
 
@@ -216,7 +216,31 @@ docs/PLANO_PROXIMOS_PASSOS.md
 
 ---
 
-## 6. Histórico de exportação
+## 6. Histórico de rollback e ajustes mobile em 2026-06-20
+
+Documento principal:
+
+```txt
+docs/historico/ROLLBACK_E_AJUSTES_POS_RESTAURACAO_2026_06_20.md
+```
+
+Uso:
+
+- rastrear a refatoração ampla da árvore mobile que foi tentada e depois abandonada como contrato vigente;
+- diferenciar `rollback/mobile-9-telas-d7385dc-v2` da base estável real;
+- registrar a restauração da `main` a partir de `52ee451`;
+- documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`;
+- preservar cautela sobre branches, deployments e previews antigos no Vercel.
+
+Regra:
+
+```txt
+Esse histórico não substitui MAPA_FAMILIAR_MOBILE.md, QA_MAPAS_MOBILE_POS_DEPLOY.md ou o código atual da main.
+```
+
+---
+
+## 7. Histórico de exportação
 
 A frente de exportação consolidou:
 
@@ -234,270 +258,4 @@ Documento atual:
 
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
-```
-
----
-
-## 7. Histórico de painel
-
-O painel antigo usava a barra:
-
-```txt
-Filtros | Legendas | Ações
-```
-
-Esse padrão não é UI vigente.
-
-Estado atual:
-
-- desktop tem painel completo;
-- mobile tem modal específico de controles;
-- a barra `Filtros | Legendas | Ações` não deve voltar;
-- `SidebarPanelTabs.tsx` mantém nome histórico, mas não deve ser entendido como contrato de abas;
-- cards do painel desktop devem seguir o visual/gradiente da paleta ativa.
-
-Contrato atual resumido:
-
-| Ambiente | Controles |
-|---|---|
-| Desktop | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar, Grupos/Filtros |
-| Mobile | Vertical, Horizontal, Cores, Grupos, Destacar, Filtros |
-| Mobile não deve ter | Zoom, Restaurar, Exportar |
-
-Documento atual:
-
-```txt
-docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
-```
-
----
-
-## 8. Histórico de Mapa Familiar
-
-### 8.1 Vertical
-
-`/mapa-familiar` consolidou-se como view principal/default.
-
-Características atuais:
-
-- desktop/tablet usa `DesktopFamilyMapView`;
-- mobile usa `MobileFamilyTreeView`;
-- título atual: `Árvore Familiar de {primeiroNome}`;
-- exportação HTML/CSS/SVG;
-- conectores SVG no desktop;
-- conectores HTML/CSS no mobile;
-- filtros de grupos/status;
-- regras de cônjuges;
-- suporte a núcleos conjugais adicionais;
-- paletas;
-- bordas mobile alinhadas ao desktop;
-- cards mobile sem `Nascimento não informado`;
-- destaques.
-
-### 8.2 Horizontal
-
-`/mapa-familiar-horizontal` consolidou-se como alternativa horizontal/genealógica.
-
-Características atuais:
-
-- desktop/tablet usa `DesktopFamilyHorizontalMapView`;
-- mobile usa `MobileFamilyHorizontalMapView`;
-- título atual: `Mapa Genealógico de {primeiroNome}`;
-- uma geração por tela no mobile;
-- botões `Ger 1`, `Ger 2`, `Ger 3` etc.;
-- swipe lateral;
-- scroll vertical até cards e conectores visíveis;
-- exportação HTML/CSS/SVG;
-- cônjuges de pais/Geração 4 na horizontal permanecem pendência `TREE-003` até código incluir esse grupo;
-- desktop é referência de hierarquia, conectores e paletas.
-
-Documento atual:
-
-```txt
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
-```
-
----
-
-## 9. Histórico do calendário mobile
-
-O calendário familiar consolidou filtros compactos mobile.
-
-Estado atual:
-
-- cinco categorias em uma única linha;
-- bolinha colorida acima do título;
-- título em uma linha;
-- sem overflow horizontal;
-- card grande de categorias oculto no mobile quando duplicar os filtros compactos.
-
-Documento atual:
-
-```txt
-docs/funcionalidades/CALENDARIO_FAMILIAR.md
-```
-
----
-
-## 10. SQLs legados e docs antigos de banco
-
-O documento preventivo principal para SQL solto, dump, diagnóstico antigo ou documento de banco fora de migrations é:
-
-```txt
-docs/historico/SQLS_LEGADOS.md
-```
-
-Status atual:
-
-- `supabase/migrations/` é a fonte da verdade do schema;
-- SQLs soltos podem existir como histórico, diagnóstico ou operação pontual;
-- SQL solto não deve ser usado para montar ambiente novo;
-- dump com dados reais não deve ser versionado.
-
-Arquivos classificados como legado/preventivo quando existirem no repositório:
-
-```txt
-supabase/forum-schema.sql
-supabase/google-calendar-schema.sql
-database-schema.sql
-supabase_schema.sql
-supabase_data.sql
-diagnostico-*.sql
-verificar-*.sql
-```
-
-Documento operacional atual:
-
-```txt
-docs/operacao/MIGRATIONS_SUPABASE.md
-```
-
----
-
-## 11. Debug temporário documentado
-
-A frente atual prevê ou documenta o debug temporário:
-
-```txt
-Visualizar como...
-```
-
-Finalidade:
-
-- renderizar `/mapa-familiar` e `/mapa-familiar-horizontal` a partir da visualização de outra pessoa da tabela `pessoas`;
-- testar árvore, conectores, paletas e filtros com diferentes pessoas centrais;
-- não criar rota nova;
-- não substituir autenticação, vínculo real ou permissão;
-- ser removido, protegido por flag/admin ou mantido apenas em ambiente controlado conforme decisão futura.
-
-O controle desse item deve ficar em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
----
-
-## 12. Itens históricos que não devem voltar
-
-Não restaurar como produto ativo:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-/mapa-horizontal
-/visao-completa-teste
-```
-
-Referência preventiva:
-
-```txt
-docs/historico/ROTAS_REMOVIDAS.md
-```
-
-Não restaurar:
-
-- `/` redirecionando para `/minha-arvore`;
-- favoritos para rotas removidas;
-- busca global para rotas removidas;
-- botão Horizontal apontando para `/visao-completa`;
-- horizontal mobile com barra `Paterno | Central | Materno`;
-- tabs antigas `Filtros | Legendas | Ações`;
-- docs canônicos tratando rotas antigas como ativas;
-- paletas mobile próprias que divergem do desktop;
-- avatares por gênero como regra visual obrigatória;
-- SQL legado como fonte principal de schema.
-
----
-
-## 13. Regra de manutenção histórica
-
-Ao concluir uma frente nova:
-
-1. atualizar documento canônico;
-2. atualizar baseline se o comportamento estrutural mudar;
-3. mover pendências reais para `PLANO_PROXIMOS_PASSOS.md`;
-4. registrar resumo aqui apenas se houver valor histórico;
-5. não recriar documentação histórica como fonte de implementação;
-6. não tratar SQL histórico como migration oficial.
-
----
-
-## 14. Validação documental
-
-Antes de fechar commit de documentação:
-
-```bash
-rg "/minha-arvore|/genealogia|/visao-completa" README.md docs
-rg "database-schema\.sql|supabase_schema\.sql|supabase_data\.sql|forum-schema\.sql|google-calendar-schema\.sql" README.md docs supabase scripts src
-```
-
-Critério:
-
-- ocorrências em `docs/historico/` são permitidas se marcadas como legado;
-- ocorrências em `docs/historico/ROTAS_REMOVIDAS.md` são esperadas e preventivas;
-- ocorrências em `docs/historico/SQLS_LEGADOS.md` são esperadas e preventivas;
-- `/minha-arvore/editar` é permitido como rota vigente;
-- docs canônicos não devem apresentar rotas removidas como views ativas;
-- docs canônicos não devem afirmar que a barra `Filtros | Legendas | Ações` é UI vigente;
-- docs operacionais devem apontar `supabase/migrations/` como fonte da verdade do schema.
-
-<!-- HISTORICO-LEVANTAMENTO-2026-06-18 -->
-## Levantamento de ajustes nÃ£o documentados â€” 2026-06-18
-
-O arquivo `levantamento_ajustes_onboarding_membro(1).md` foi usado como fonte de auditoria para separar:
-
-- implementaÃ§Ãµes confirmadas;
-- pendÃªncias;
-- scripts planejados;
-- tentativas falhas;
-- decisÃµes conflitantes;
-- itens que exigem confirmaÃ§Ã£o no Git.
-
-Este diretÃ³rio deve receber apenas material histÃ³rico, substituÃ­do ou de rastreabilidade. Contratos vigentes devem permanecer nos documentos funcionais, guias, baseline, QA e regras de nÃ£o regressÃ£o.
-
-<!-- RODADA2-HISTORICO-2026-06-18 -->
-## Segunda rodada de consolidaÃ§Ã£o â€” complementos posteriores
-
-A segunda rodada documental tratou complementos do levantamento que nÃ£o foram transcritos integralmente na primeira consolidaÃ§Ã£o:
-
-- mapas familiares;
-- painel lateral;
-- tour inicial;
-- toolbar mobile;
-- exportaÃ§Ã£o;
-- Curiosidades;
-- mural de lembranÃ§as;
-- favoritos de descobertas;
-- notificaÃ§Ãµes;
-- calendÃ¡rio;
-- operaÃ§Ãµes Supabase relacionadas a Curiosidades.
-
-A documentaÃ§Ã£o continuou usando a mesma regra:
-
-```txt
-Estado implementado confirmado vai para docs funcionais/baseline.
-PendÃªncia ou item sem confirmaÃ§Ã£o vai para PLANO_PROXIMOS_PASSOS.md.
-Tentativa, script temporÃ¡rio e histÃ³rico ficam em docs/historico/.
 ```
