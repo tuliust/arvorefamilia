@@ -1,7 +1,8 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
-const DESCENDANTS_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="descendants"], .mobile-family-descendant-screen';
+const DESCENDANTS_SCREEN_SELECTOR = '.mobile-family-descendant-screen, [data-mobile-family-tree-screen="descendants"]';
+const DESCENDANTS_GRID_SELECTOR = '.mobile-family-descendant-screen__grid';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-descendant-connectors';
 const STYLE_ID = 'mobile-family-tree-descendant-connectors-style';
 
@@ -34,14 +35,19 @@ function normalize(value: string) {
     .trim();
 }
 
+function getSearchScope(screen: HTMLElement) {
+  return screen.querySelector<HTMLElement>(DESCENDANTS_GRID_SELECTOR) ?? screen;
+}
+
 function getGroupTitle(section: HTMLElement) {
   return normalize(section.querySelector('h2, h3')?.textContent ?? '');
 }
 
 function findGroup(screen: HTMLElement, titlePart: string) {
   const normalizedTitlePart = normalize(titlePart);
+  const scope = getSearchScope(screen);
 
-  return Array.from(screen.querySelectorAll<HTMLElement>('section'))
+  return Array.from(scope.querySelectorAll<HTMLElement>('section'))
     .find((section) => (
       section.querySelector('[data-family-map-mobile-card="true"]')
       && getGroupTitle(section).includes(normalizedTitlePart)
@@ -69,7 +75,8 @@ function ensureStyles() {
         padding-top: 0 !important;
       }
 
-      .mobile-family-descendant-screen__connector {
+      .mobile-family-descendant-screen__connector,
+      .mobile-family-descendant-screen__connector * {
         display: none !important;
       }
 
@@ -116,7 +123,7 @@ function getLineWidth() {
   const rootStyles = getComputedStyle(document.documentElement);
   const customWidth = rootStyles.getPropertyValue('--tree-palette-line-width').trim();
   const parsed = Number.parseFloat(customWidth);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 4;
 }
 
 function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
@@ -183,23 +190,19 @@ function renderConnectors() {
       height: `${lineWidth}px`,
     });
 
-    if (siblingsRect.top > branchY) {
-      createLine(layer, {
-        left: `${siblingsRect.centerX - halfLine}px`,
-        top: `${branchY}px`,
-        width: `${lineWidth}px`,
-        height: `${siblingsRect.top - branchY}px`,
-      });
-    }
+    createLine(layer, {
+      left: `${siblingsRect.centerX - halfLine}px`,
+      top: `${branchY}px`,
+      width: `${lineWidth}px`,
+      height: `${Math.max(0, siblingsRect.top - branchY)}px`,
+    });
 
-    if (spousesRect.top > branchY) {
-      createLine(layer, {
-        left: `${spousesRect.centerX - halfLine}px`,
-        top: `${branchY}px`,
-        width: `${lineWidth}px`,
-        height: `${spousesRect.top - branchY}px`,
-      });
-    }
+    createLine(layer, {
+      left: `${spousesRect.centerX - halfLine}px`,
+      top: `${branchY}px`,
+      width: `${lineWidth}px`,
+      height: `${Math.max(0, spousesRect.top - branchY)}px`,
+    });
   }
 
   if (siblings && nephews) {
