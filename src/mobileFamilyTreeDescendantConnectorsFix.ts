@@ -102,7 +102,9 @@ function ensureStyles() {
       }
 
       .mobile-family-descendant-screen__connector,
-      .mobile-family-descendant-screen__connector * {
+      .mobile-family-descendant-screen__connector *,
+      .mobile-family-descendant-screen section > div[class*="absolute"][class*="bg-cyan-600"],
+      [data-mobile-family-tree-screen="descendants"] section > div[class*="absolute"][class*="bg-cyan-600"] {
         display: none !important;
       }
 
