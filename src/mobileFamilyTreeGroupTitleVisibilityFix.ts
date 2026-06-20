@@ -52,9 +52,9 @@ function ensureStyles() {
         opacity: 1 !important;
         position: relative !important;
         z-index: 30 !important;
-        min-height: 1.1em !important;
+        min-height: 1.05em !important;
         margin-block-start: 0 !important;
-        margin-block-end: 0.75rem !important;
+        margin-block-end: 0.625rem !important;
         overflow: visible !important;
         color: #0f172a !important;
         -webkit-text-fill-color: #0f172a !important;
@@ -62,10 +62,10 @@ function ensureStyles() {
         text-shadow: none !important;
         filter: none !important;
         mix-blend-mode: normal !important;
-        font-size: 0.9375rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.75rem !important;
+        line-height: 1.15 !important;
         font-weight: 800 !important;
-        letter-spacing: 0.08em !important;
+        letter-spacing: 0.07em !important;
         text-transform: uppercase !important;
         white-space: nowrap !important;
       }
@@ -95,6 +95,8 @@ function normalizeKnownGroupTitles() {
     heading.style.setProperty('-webkit-text-fill-color', '#0f172a', 'important');
     heading.style.setProperty('text-shadow', 'none', 'important');
     heading.style.setProperty('mix-blend-mode', 'normal', 'important');
+    heading.style.setProperty('font-size', '0.75rem', 'important');
+    heading.style.setProperty('line-height', '1.15', 'important');
   });
 }
 
