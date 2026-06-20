@@ -183,11 +183,11 @@ function getGestureDirection(deltaX: number, deltaY: number, threshold: number):
   const absoluteY = Math.abs(deltaY);
 
   if (absoluteX >= threshold && absoluteX > absoluteY * 1.2) {
-    return deltaX < 0 ? 'right' : 'left';
+    return deltaX < 0 ? 'left' : 'right';
   }
 
   if (absoluteY >= threshold && absoluteY > absoluteX * 1.2) {
-    return deltaY < 0 ? 'down' : 'up';
+    return deltaY < 0 ? 'up' : 'down';
   }
 
   return null;
