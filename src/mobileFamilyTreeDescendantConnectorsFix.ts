@@ -109,13 +109,14 @@ function ensureStyles() {
       [${CONNECTOR_LAYER_ATTR}="true"] {
         position: absolute;
         inset: 0;
-        z-index: 1;
+        z-index: 8;
         overflow: visible;
         pointer-events: none;
       }
 
       .mobile-family-descendant-connector-line {
         position: absolute;
+        z-index: 8;
         display: block;
         border-radius: 0;
         background: var(--mobile-family-tree-connector-color);
@@ -201,6 +202,7 @@ function renderConnectors() {
 
   const lineWidth = getLineWidth(root);
   const halfLine = lineWidth / 2;
+  const overlap = Math.max(2, lineWidth);
 
   if (siblings && spouses) {
     const siblingsBoxRect = getRelativeRect(getVisibleGroupBox(siblings), hostRect);
@@ -215,7 +217,7 @@ function renderConnectors() {
       left: `${trunkX - halfLine}px`,
       top: '0px',
       width: `${lineWidth}px`,
-      height: `${Math.max(0, branchY)}px`,
+      height: `${Math.max(0, branchY + halfLine)}px`,
     });
 
     createLine(layer, {
@@ -229,22 +231,22 @@ function renderConnectors() {
       left: `${siblingsBoxRect.centerX - halfLine}px`,
       top: `${branchY}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(0, siblingsBoxRect.top - branchY)}px`,
+      height: `${Math.max(0, siblingsBoxRect.top - branchY + overlap)}px`,
     });
 
     createLine(layer, {
       left: `${spousesBoxRect.centerX - halfLine}px`,
       top: `${branchY}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(0, spousesBoxRect.top - branchY)}px`,
+      height: `${Math.max(0, spousesBoxRect.top - branchY + overlap)}px`,
     });
   }
 
   if (siblings && nephews) {
     const siblingsBoxRect = getRelativeRect(getVisibleGroupBox(siblings), hostRect);
     const nephewsBoxRect = getRelativeRect(getVisibleGroupBox(nephews), hostRect);
-    const startY = siblingsBoxRect.bottom;
-    const endY = nephewsBoxRect.top;
+    const startY = siblingsBoxRect.bottom - overlap;
+    const endY = nephewsBoxRect.top + overlap;
 
     createLine(layer, {
       left: `${siblingsBoxRect.centerX - halfLine}px`,
