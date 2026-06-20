@@ -5,8 +5,11 @@ const MOBILE_CARD_SELECTOR = '[data-family-map-mobile-card="true"]';
 const SCROLL_SELECTOR = [
   '.mobile-family-descendant-screen__scroll',
   '[data-mobile-family-tree-uncle-scroll="true"]',
+  '[data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll]',
   '[data-mobile-family-tree-screen="paternal-uncles"] > div',
   '[data-mobile-family-tree-screen="maternal-uncles"] > div',
+  '[data-mobile-family-tree-screen="paternal-cousins"] > div',
+  '[data-mobile-family-tree-screen="maternal-cousins"] > div',
 ].join(',');
 
 let touchStart: { x: number; y: number; scrollArea: HTMLElement | null } | null = null;
@@ -25,6 +28,10 @@ function getScrollArea(target: EventTarget | null) {
 
 function maxScrollTop(scrollArea: HTMLElement) {
   return Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
+}
+
+function hasVerticalOverflow(scrollArea: HTMLElement) {
+  return maxScrollTop(scrollArea) > 1;
 }
 
 function canScrollVertically(scrollArea: HTMLElement, deltaY: number) {
@@ -56,10 +63,9 @@ function ensureStyles() {
   style.id = STYLE_ID;
   style.textContent = `
     @media (max-width: 767px) {
-      .mobile-family-descendant-screen {
-        overflow: hidden !important;
-      }
-
+      [data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll],
+      [data-mobile-family-tree-screen="paternal-cousins"] > div,
+      [data-mobile-family-tree-screen="maternal-cousins"] > div,
       .mobile-family-descendant-screen__scroll {
         display: block !important;
         height: 100% !important;
@@ -71,19 +77,51 @@ function ensureStyles() {
         touch-action: pan-y !important;
       }
 
+      [data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll] > div,
+      [data-mobile-family-tree-screen="paternal-cousins"] > div > div[class*="z-10"],
+      [data-mobile-family-tree-screen="maternal-cousins"] > div > div[class*="z-10"],
+      .mobile-family-descendant-screen__inner {
+        box-sizing: border-box !important;
+        width: min(calc(100vw - 2rem), 430px) !important;
+        max-width: min(calc(100vw - 2rem), 430px) !important;
+        margin-inline: auto !important;
+      }
+
+      [data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll] > div {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      [data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll] > div > div,
+      [data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll] section,
+      [data-mobile-family-tree-screen="paternal-cousins"] section,
+      [data-mobile-family-tree-screen="maternal-cousins"] section,
+      .mobile-family-descendant-screen__grid {
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      .mobile-family-descendant-screen {
+        overflow: hidden !important;
+      }
+
       .mobile-family-descendant-screen__inner {
         min-height: 100% !important;
         overflow: visible !important;
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"],
-      [data-mobile-family-tree-screen="maternal-uncles"] {
+      [data-mobile-family-tree-screen="maternal-uncles"],
+      [data-mobile-family-tree-screen="paternal-cousins"],
+      [data-mobile-family-tree-screen="maternal-cousins"] {
         position: relative !important;
         overflow: hidden !important;
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"] > div,
-      [data-mobile-family-tree-screen="maternal-uncles"] > div {
+      [data-mobile-family-tree-screen="maternal-uncles"] > div,
+      [data-mobile-family-tree-screen="paternal-cousins"] > div,
+      [data-mobile-family-tree-screen="maternal-cousins"] > div {
         display: block !important;
         height: 100% !important;
         max-height: 100% !important;
@@ -111,8 +149,21 @@ function ensureStyles() {
         visibility: visible !important;
       }
 
+      [data-mobile-family-tree-screen="paternal-cousins"] > div > div[class*="z-10"],
+      [data-mobile-family-tree-screen="maternal-cousins"] > div > div[class*="z-10"] {
+        display: flex !important;
+        min-height: 100% !important;
+        height: auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+
       [data-mobile-family-tree-screen="paternal-uncles"] section,
-      [data-mobile-family-tree-screen="maternal-uncles"] section {
+      [data-mobile-family-tree-screen="maternal-uncles"] section,
+      [data-mobile-family-tree-screen="paternal-cousins"] section,
+      [data-mobile-family-tree-screen="maternal-cousins"] section {
         display: block !important;
         width: 100% !important;
         height: auto !important;
@@ -124,7 +175,9 @@ function ensureStyles() {
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"] section > div,
-      [data-mobile-family-tree-screen="maternal-uncles"] section > div {
+      [data-mobile-family-tree-screen="maternal-uncles"] section > div,
+      [data-mobile-family-tree-screen="paternal-cousins"] section > div,
+      [data-mobile-family-tree-screen="maternal-cousins"] section > div {
         display: block !important;
         width: 100% !important;
         height: auto !important;
@@ -136,7 +189,9 @@ function ensureStyles() {
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"] section h2,
-      [data-mobile-family-tree-screen="maternal-uncles"] section h2 {
+      [data-mobile-family-tree-screen="maternal-uncles"] section h2,
+      [data-mobile-family-tree-screen="paternal-cousins"] section h2,
+      [data-mobile-family-tree-screen="maternal-cousins"] section h2 {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -148,7 +203,11 @@ function ensureStyles() {
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"] ${MOBILE_CARD_SELECTOR},
-      [data-mobile-family-tree-screen="maternal-uncles"] ${MOBILE_CARD_SELECTOR} {
+      [data-mobile-family-tree-screen="maternal-uncles"] ${MOBILE_CARD_SELECTOR},
+      [data-mobile-family-tree-screen="paternal-cousins"] ${MOBILE_CARD_SELECTOR},
+      [data-mobile-family-tree-screen="maternal-cousins"] ${MOBILE_CARD_SELECTOR},
+      [data-mobile-family-tree-screen="core"] ${MOBILE_CARD_SELECTOR},
+      .mobile-family-descendant-screen ${MOBILE_CARD_SELECTOR} {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -164,10 +223,20 @@ function ensureStyles() {
 
 function markScrollAreas() {
   document
-    .querySelectorAll<HTMLElement>('[data-mobile-family-tree-screen="paternal-uncles"] > div, [data-mobile-family-tree-screen="maternal-uncles"] > div')
+    .querySelectorAll<HTMLElement>([
+      '[data-mobile-family-tree-screen="core"] > [data-mobile-tree-scroll]',
+      '[data-mobile-family-tree-screen="paternal-uncles"] > div',
+      '[data-mobile-family-tree-screen="maternal-uncles"] > div',
+      '[data-mobile-family-tree-screen="paternal-cousins"] > div',
+      '[data-mobile-family-tree-screen="maternal-cousins"] > div',
+    ].join(','))
     .forEach((scrollArea) => {
       scrollArea.setAttribute('data-mobile-tree-scroll', 'true');
-      scrollArea.setAttribute('data-mobile-family-tree-uncle-scroll', 'true');
+
+      const screen = scrollArea.closest<HTMLElement>('[data-mobile-family-tree-screen]');
+      const screenName = screen?.getAttribute('data-mobile-family-tree-screen') ?? '';
+      if (screenName.includes('uncles')) scrollArea.setAttribute('data-mobile-family-tree-uncle-scroll', 'true');
+      if (screenName.includes('cousins')) scrollArea.setAttribute('data-mobile-family-tree-cousins-scroll', 'true');
     });
 }
 
@@ -202,7 +271,7 @@ function handleTouchMove(event: TouchEvent) {
   const absX = Math.abs(touch.clientX - touchStart.x);
   if (absY <= absX * 1.2 || absY < 6) return;
 
-  if (canScrollVertically(scrollArea, deltaY)) {
+  if (hasVerticalOverflow(scrollArea) || canScrollVertically(scrollArea, deltaY)) {
     keepNativeScroll(event);
     return;
   }
@@ -223,7 +292,11 @@ function handleTouchEnd(event: TouchEvent) {
   if (!touch || !start.scrollArea) return;
 
   const deltaY = touch.clientY - start.y;
-  if (canScrollVertically(start.scrollArea, deltaY) || (isDescendantScroll(start.scrollArea) && deltaY < 0)) {
+  const absY = Math.abs(deltaY);
+  const absX = Math.abs(touch.clientX - start.x);
+  if (absY <= absX * 1.2 || absY < 6) return;
+
+  if (hasVerticalOverflow(start.scrollArea) || canScrollVertically(start.scrollArea, deltaY) || (isDescendantScroll(start.scrollArea) && deltaY < 0)) {
     keepNativeScroll(event);
   }
 }
