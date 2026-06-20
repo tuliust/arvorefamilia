@@ -5,6 +5,7 @@ const ANCESTORS_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="ancestors"]'
 const SIDE_GROUP_SELECTOR = '[data-mobile-family-tree-grandparent-side]';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-ancestor-connectors';
 const STYLE_ID = 'mobile-family-tree-ancestor-connectors-style';
+const ACTIVE_SCREEN_ATTR = 'data-mobile-family-tree-active-screen';
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -27,6 +28,27 @@ function getAncestorsScreen(root = getRoot()) {
   return root?.querySelector<HTMLElement>(ANCESTORS_SCREEN_SELECTOR) ?? null;
 }
 
+function normalize(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function isGrandparentGroup(group: HTMLElement) {
+  const title = normalize(group.querySelector('h2, h3')?.textContent ?? '');
+  return title.includes('avos') && !title.includes('bisavos') && !title.includes('tataravos');
+}
+
+function isAncestorsScreenActive(root: HTMLElement) {
+  return root.getAttribute(ACTIVE_SCREEN_ATTR) === 'ancestors';
+}
+
+function removeConnectorLayers() {
+  document.querySelectorAll<HTMLElement>(`[${CONNECTOR_LAYER_ATTR}="true"]`).forEach((layer) => layer.remove());
+}
+
 function ensureStyles() {
   if (document.getElementById(STYLE_ID)) return;
 
@@ -37,6 +59,10 @@ function ensureStyles() {
       ${ANCESTORS_SCREEN_SELECTOR} {
         overflow: visible !important;
         isolation: isolate;
+      }
+
+      ${ROOT_SELECTOR}:not([${ACTIVE_SCREEN_ATTR}="ancestors"]) ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
+        display: none !important;
       }
 
       ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
@@ -57,7 +83,7 @@ function ensureStyles() {
         position: absolute;
         display: block;
         border-radius: 999px;
-        background: var(--tree-palette-edge-child, var(--tree-palette-line, #1f6f82));
+        background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
         opacity: 0.96;
         pointer-events: none;
       }
@@ -101,10 +127,16 @@ function renderConnectors() {
 
   ensureStyles();
 
+  if (!isAncestorsScreenActive(root)) {
+    removeConnectorLayers();
+    return;
+  }
+
   const screenRect = screen.getBoundingClientRect();
   if (screenRect.width <= 0 || screenRect.height <= 0) return;
 
-  const groups = Array.from(screen.querySelectorAll<HTMLElement>(SIDE_GROUP_SELECTOR));
+  const groups = Array.from(screen.querySelectorAll<HTMLElement>(SIDE_GROUP_SELECTOR))
+    .filter(isGrandparentGroup);
   const layer = getConnectorLayer(screen);
   layer.replaceChildren();
 
@@ -176,7 +208,7 @@ function observeTree() {
 
 function handleRouteOrViewportChange() {
   if (!isMobileViewport() || !isFamilyMapPath()) {
-    document.querySelectorAll<HTMLElement>(`[${CONNECTOR_LAYER_ATTR}="true"]`).forEach((layer) => layer.remove());
+    removeConnectorLayers();
     return;
   }
 
