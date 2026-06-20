@@ -35,12 +35,11 @@ export function MobileFamilyMapToolbar({
     <nav
       aria-label="Controles do mapa familiar"
       className={[
-        'border-b border-slate-200 bg-white/95 px-0 py-2 shadow-sm backdrop-blur transition-[padding-bottom] duration-200 md:hidden',
+        'border-b border-slate-200 bg-white/95 px-0 py-2 shadow-sm backdrop-blur md:hidden',
         className,
       ].filter(Boolean).join(' ')}
       style={{
         top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
-        paddingBottom: activeAction ? '7.25rem' : undefined,
         pointerEvents: 'auto',
       }}
       data-mobile-family-map-toolbar="true"
@@ -54,12 +53,25 @@ export function MobileFamilyMapToolbar({
         >
           {TOOLBAR_ITEMS.map((item) => {
             const active = activeAction === item.action;
+            const handleClick = () => {
+              if (item.action === 'zoom') {
+                if (onAddClick) {
+                  onAddClick();
+                  return;
+                }
+
+                onAction?.('visualizacao');
+                return;
+              }
+
+              onAction?.(item.action);
+            };
 
             return (
               <button
                 key={item.action}
                 type="button"
-                onClick={() => onAction?.(item.action)}
+                onClick={handleClick}
                 aria-pressed={active || undefined}
                 data-mobile-family-map-toolbar-action={item.action}
                 className={[
