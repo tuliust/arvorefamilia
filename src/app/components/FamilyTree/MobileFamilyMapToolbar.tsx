@@ -100,7 +100,7 @@ export function MobileFamilyMapToolbar({
                 type="button"
                 onPointerUp={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
                 onTouchEnd={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
-                onClick={isZoom ? () => onAction?.(item.action) : (event) => handleActionActivation(item.action, event)}
+                onClick={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
                 aria-pressed={active || undefined}
                 data-mobile-family-map-toolbar-action={item.action}
                 className={[
