@@ -1,6 +1,10 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const CORE_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="core"]';
+const UNCLE_SCREEN_SELECTORS = [
+  '[data-mobile-family-tree-screen="paternal-uncles"]',
+  '[data-mobile-family-tree-screen="maternal-uncles"]',
+];
 const STYLE_ID = 'mobile-family-map-core-connector-fix-style';
 let scheduled = false;
 
@@ -16,7 +20,8 @@ function ensureStyles() {
 
   const css = `
     @media (max-width: 767px) {
-      [data-mobile-core-center-descendant-line="hidden"] {
+      [data-mobile-core-center-descendant-line="hidden"],
+      [data-mobile-uncle-main-vertical-connector="hidden"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -35,9 +40,6 @@ function ensureStyles() {
 }
 
 function markCoreCenterDescendantLine() {
-  if (!isEnabled()) return;
-  ensureStyles();
-
   const coreScreen = document.querySelector<HTMLElement>(CORE_SCREEN_SELECTOR);
   if (!coreScreen) return;
 
@@ -60,27 +62,56 @@ function markCoreCenterDescendantLine() {
   });
 }
 
+function markUncleVerticalConnectors() {
+  UNCLE_SCREEN_SELECTORS.forEach((selector) => {
+    const screen = document.querySelector<HTMLElement>(selector);
+    const screenBody = screen?.querySelector<HTMLElement>(':scope > div');
+    if (!screenBody) return;
+
+    Array.from(screenBody.children).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+
+      const isMainVerticalConnector = child.classList.contains('left-1/2')
+        && child.classList.contains('w-px')
+        && child.classList.contains('bg-cyan-600')
+        && child.classList.contains('absolute');
+
+      if (isMainVerticalConnector) {
+        child.setAttribute('data-mobile-uncle-main-vertical-connector', 'hidden');
+        child.setAttribute('aria-hidden', 'true');
+      }
+    });
+  });
+}
+
+function applyConnectorFixes() {
+  if (!isEnabled()) return;
+  ensureStyles();
+  markCoreCenterDescendantLine();
+  markUncleVerticalConnectors();
+}
+
 function scheduleMark() {
   if (scheduled) return;
   scheduled = true;
 
   window.requestAnimationFrame(() => {
     scheduled = false;
-    markCoreCenterDescendantLine();
+    applyConnectorFixes();
   });
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-  markCoreCenterDescendantLine();
-  [80, 240, 520, 1000].forEach((delay) => window.setTimeout(markCoreCenterDescendantLine, delay));
+  applyConnectorFixes();
+  [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyConnectorFixes, delay));
 
   const observer = new MutationObserver(scheduleMark);
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 
-  window.addEventListener('resize', markCoreCenterDescendantLine, { passive: true });
-  window.addEventListener('orientationchange', markCoreCenterDescendantLine, { passive: true });
-  window.addEventListener('popstate', markCoreCenterDescendantLine, { passive: true });
-  document.addEventListener('visibilitychange', markCoreCenterDescendantLine, { passive: true });
+  window.addEventListener('resize', applyConnectorFixes, { passive: true });
+  window.addEventListener('orientationchange', applyConnectorFixes, { passive: true });
+  window.addEventListener('popstate', applyConnectorFixes, { passive: true });
+  document.addEventListener('visibilitychange', applyConnectorFixes, { passive: true });
 }
 
 export {};
