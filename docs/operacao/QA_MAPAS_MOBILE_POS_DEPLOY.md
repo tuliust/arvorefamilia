@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20  
 > Local: `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md`  
 > Escopo: validação operacional pós-deploy das rotas `/mapa-familiar` e `/mapa-familiar-horizontal` em mobile.  
-> Status: checklist operacional. A navegação da grade 3x3 deve ser tratada como área sensível até estabilização completa em Safari/iOS.
+> Status: checklist operacional atualizado para a camada consolidada, guard direcional e cleanup de conector central.
 
 ---
 
@@ -14,7 +14,10 @@ Use este checklist depois de mudanças em:
 - `MobileFamilyTreeView`;
 - `MobileFamilyHorizontalMapView`;
 - toolbar mobile dos mapas;
-- scripts `mobileFamilyTree*`;
+- `mobileFamilyMapStableMobileFix.ts`;
+- `mobileFamilyMapDirectionalNavigationFix.ts`;
+- `mobileFamilyMapCoreConnectorFix.ts`;
+- scripts `mobileFamilyTree*` ainda carregados;
 - conectores;
 - paletas;
 - scroll interno;
@@ -26,7 +29,7 @@ Use este checklist depois de mudanças em:
 
 ## 2. Preparação
 
-Antes de validar em produção:
+Antes de validar em produção, executar localmente quando houver runtime disponível:
 
 ```bash
 git diff --check
@@ -71,7 +74,19 @@ Chrome Android, se disponível
 
 ---
 
-## 4. `/mapa-familiar` — carregamento
+## 4. Conferência de deploy
+
+Antes do QA visual:
+
+- [ ] GitHub mostra check verde no commit final.
+- [ ] Vercel mostra deployment `Ready` em Production.
+- [ ] O commit ativo em produção é o mais recente da sequência validada.
+- [ ] Safari foi recarregado após o deployment.
+- [ ] Se o comportamento parecer antigo, limpar cache/abrir aba privada.
+
+---
+
+## 5. `/mapa-familiar` — carregamento
 
 Checklist:
 
@@ -87,7 +102,7 @@ Checklist:
 
 ---
 
-## 5. `/mapa-familiar` — grade 3x3
+## 6. `/mapa-familiar` — grade 3x3
 
 Validar as 9 telas:
 
@@ -96,8 +111,8 @@ Validar as 9 telas:
 | `paternal-ancestors` | bisavós/tataravós paternos visíveis quando houver dados |
 | `ancestors` | apenas avós paternos e maternos visíveis |
 | `maternal-ancestors` | bisavós/tataravós maternos visíveis quando houver dados |
-| `paternal-uncles` | título, grupo e cards de tios paternos visíveis quando houver dados |
-| `core` | pai, mãe e pessoa central visíveis |
+| `paternal-uncles` | título, grupo e cards de tios paternos visíveis quando houver dados; estado vazio controlado quando não houver |
+| `core` | pai, mãe, pessoa central e grupos abaixo visíveis |
 | `maternal-uncles` | título, grupo e cards de tios maternos visíveis |
 | `paternal-cousins` | primos paternos quando houver dados |
 | `descendants` | irmãos, cônjuge, sobrinhos, pets, filhos e netos conforme dados |
@@ -105,7 +120,7 @@ Validar as 9 telas:
 
 ---
 
-## 6. `/mapa-familiar` — matriz de navegação
+## 7. `/mapa-familiar` — matriz de navegação
 
 Regra de registro de bug: informar sempre tela atual, movimento físico do dedo, direção funcional esperada, destino esperado e destino real.
 
@@ -117,10 +132,10 @@ Matriz a validar:
 | `ancestors` | esquerda → `paternal-ancestors`; direita → `maternal-ancestors`; baixo → `core` | cima |
 | `maternal-ancestors` | esquerda → `ancestors` | cima, baixo, direita |
 | `paternal-uncles` | direita → `core`; baixo → `paternal-cousins` | cima, esquerda |
-| `core` | cima → `ancestors`; esquerda → `paternal-uncles`; direita → `maternal-uncles`; baixo → `descendants` | nenhuma, se houver conteúdo de destino |
+| `core` | cima → `ancestors`; baixo → `descendants`; esquerda → `paternal-uncles`; direita → `maternal-uncles` | nenhuma, se houver conteúdo de destino |
 | `maternal-uncles` | esquerda → `core`; baixo → `maternal-cousins` | cima, direita |
 | `paternal-cousins` | cima → `paternal-uncles` | baixo, esquerda, direita |
-| `descendants` | cima → `core`, apenas quando scroll interno estiver no topo | baixo, esquerda, direita |
+| `descendants` | cima → `core`, respeitando scroll interno | baixo, esquerda, direita |
 | `maternal-cousins` | cima → `maternal-uncles` | baixo, esquerda, direita |
 
 Checklist:
@@ -128,12 +143,26 @@ Checklist:
 - [ ] nenhum gesto bloqueado muda de tela;
 - [ ] nenhum gesto permitido fica sem resposta quando há conteúdo no destino;
 - [ ] gestos em telas com scroll interno priorizam rolagem antes de navegação;
-- [ ] as setas de orientação aparecem apenas nas direções permitidas;
+- [ ] as setas/hints não induzem direção proibida;
 - [ ] o overview/Zoom leva para a mesma tela que o gesto levaria.
 
 ---
 
-## 7. `/mapa-familiar` — `ancestors` e ancestrais profundos
+## 8. `/mapa-familiar` — `core` e conector abaixo da pessoa principal
+
+Checklist:
+
+- [ ] pai, mãe e pessoa central aparecem;
+- [ ] conectores superiores entre pai/mãe e pessoa central permanecem;
+- [ ] linha horizontal que ramifica para `Irmãos` e `Cônjuge` permanece;
+- [ ] linha vertical central abaixo da pessoa principal, entre `Irmãos` e `Cônjuge`, não aparece;
+- [ ] conectores laterais para `Irmãos` e `Cônjuge` não são removidos;
+- [ ] scroll da tela `core` ainda funciona;
+- [ ] bottom nav não cobre permanentemente os grupos inferiores.
+
+---
+
+## 9. `/mapa-familiar` — `ancestors` e ancestrais profundos
 
 Checklist:
 
@@ -148,33 +177,35 @@ Checklist:
 
 ---
 
-## 8. `/mapa-familiar` — `descendants`
+## 10. `/mapa-familiar` — `descendants`
 
 Checklist:
 
 - [ ] tela aparece ao navegar para baixo a partir de `core`;
 - [ ] há scroll interno quando conteúdo ultrapassa a altura útil;
 - [ ] o último grupo é alcançável sem ficar escondido pelo bottom nav;
-- [ ] swipe para cima/baixo não bloqueia a rolagem interna enquanto há conteúdo para rolar;
-- [ ] volta para `core` somente quando a rolagem interna estiver no topo;
+- [ ] swipe vertical não bloqueia a rolagem interna enquanto há conteúdo para rolar;
+- [ ] volta para `core` somente quando a navegação funcional para cima for válida;
 - [ ] linha entra na tela e ramifica para `Irmãos` e `Cônjuge`;
 - [ ] `Irmãos` conecta a `Sobrinhos` quando houver sobrinhos;
 - [ ] `Cônjuge` conecta a `Pets` e `Filhos` quando houver ambos;
 - [ ] se só houver `Pets`, o grupo ocupa sozinho a área abaixo de `Cônjuge`;
 - [ ] se só houver `Filhos`, o grupo ocupa sozinho a área abaixo de `Cônjuge`;
+- [ ] não há tremor subindo/descendo rapidamente;
 - [ ] não aparecem linhas antigas transparentes ou duplicadas.
 
 ---
 
-## 9. `/mapa-familiar` — tios
+## 11. `/mapa-familiar` — tios
 
 ### `paternal-uncles`
 
 Checklist:
 
 - [ ] título `Tios Paternos` aparece;
-- [ ] grupo aparece centralizado;
-- [ ] cards aparecem e são legíveis;
+- [ ] grupo aparece em posição alta/compacta;
+- [ ] cards aparecem e são legíveis quando houver dados;
+- [ ] estado vazio controlado aparece quando não houver dado real;
 - [ ] não há linha vertical acima do grupo;
 - [ ] se houver mais cards do que a área útil, a tela permite rolagem interna;
 - [ ] swipe para direita leva para `core`;
@@ -188,7 +219,7 @@ Checklist:
 Checklist:
 
 - [ ] título `Tios Maternos` aparece;
-- [ ] grupo aparece centralizado;
+- [ ] grupo aparece em posição alta/compacta;
 - [ ] grupo não fica grande demais;
 - [ ] cards são legíveis;
 - [ ] não há linha vertical acima do grupo;
@@ -200,7 +231,22 @@ Checklist:
 
 ---
 
-## 10. Títulos de grupos
+## 12. `/mapa-familiar` — primos
+
+Checklist:
+
+- [ ] `paternal-cousins` mostra cards quando houver dados;
+- [ ] `maternal-cousins` mostra cards quando houver dados;
+- [ ] linha vertical conecta ao topo do grupo;
+- [ ] grupo não fica excessivamente baixo;
+- [ ] há scroll interno se houver muitos cards;
+- [ ] `paternal-cousins` só navega para cima;
+- [ ] `maternal-cousins` só navega para cima;
+- [ ] direções baixo, esquerda e direita são bloqueadas.
+
+---
+
+## 13. Títulos de grupos
 
 Validar que os títulos abaixo aparecem escuros, legíveis e com fonte compacta:
 
@@ -213,9 +259,12 @@ Tios Paternos
 Tios Maternos
 Irmãos
 Sobrinhos
+Cônjuge
 Pets
 Filhos
 Netos
+Primos Paternos
+Primos Maternos
 ```
 
 Checklist:
@@ -227,11 +276,11 @@ Checklist:
 
 ---
 
-## 11. Zoom/overview em `/mapa-familiar`
+## 14. Zoom/overview em `/mapa-familiar`
 
 Checklist:
 
-- [ ] botão `Zoom` abre overview com 9 cards;
+- [ ] botão `Zoom` abre overview;
 - [ ] botão de fechar fecha o overview;
 - [ ] tocar em cada card fecha o overview;
 - [ ] cada card navega para a tela correta da grade 3x3;
@@ -242,7 +291,7 @@ Checklist:
 
 ---
 
-## 12. `/mapa-familiar-horizontal`
+## 15. `/mapa-familiar-horizontal`
 
 Checklist:
 
@@ -251,13 +300,26 @@ Checklist:
 - [ ] botões `Ger X` funcionam;
 - [ ] swipe lateral troca geração;
 - [ ] scroll vertical da geração ativa funciona;
-- [ ] botão `Zoom` abre overview com 9 cards;
+- [ ] botão `Zoom` abre overview;
 - [ ] card do overview direciona para a geração correspondente;
+- [ ] abrir/fechar Zoom não trava navegação horizontal;
 - [ ] botão `+` abre painel completo com overlay escuro e painel branco/opaco.
 
 ---
 
-## 13. Painel do botão `+`
+## 16. Painéis superiores e botão `+`
+
+### `Formato`, `Cor`, `Filtros`
+
+Checklist:
+
+- [ ] `Formato` abre painel sem altura excessiva;
+- [ ] `Cor` abre painel sem grande espaço branco abaixo das opções;
+- [ ] `Filtros` abre painel sem grande espaço branco abaixo das opções;
+- [ ] alternar entre painéis não desloca permanentemente a tela ativa;
+- [ ] fechar painel não trava scroll/swipe.
+
+### Botão `+`
 
 Checklist:
 
@@ -272,47 +334,49 @@ Checklist:
 
 ---
 
-## 14. Critérios de aprovação
+## 17. Critérios de aprovação
 
 A frente mobile só deve ser considerada validada quando:
 
 - [ ] `/mapa-familiar` e `/mapa-familiar-horizontal` carregarem em Safari/iOS;
-- [ ] overview abrir nas duas rotas;
+- [ ] Zoom abrir nas duas rotas;
 - [ ] cards do overview navegarem corretamente;
 - [ ] as 9 telas da grade forem acessíveis de acordo com a matriz;
 - [ ] gestos bloqueados não navegarem;
-- [ ] `descendants` rolar internamente;
+- [ ] `descendants` rolar internamente e não tremer;
 - [ ] tios exibirem cards quando houver dados e respeitarem a matriz de gestos;
+- [ ] linha vertical central abaixo da pessoa principal estiver removida;
+- [ ] painéis `Cor` e `Filtros` estiverem compactos;
 - [ ] painel `+` não tiver fundo transparente;
 - [ ] não houver travamento perceptível após abrir a página.
 
 ---
 
-## 15. Pendências a registrar se falharem
+## 18. Pendências a registrar se falharem
 
-| Sintoma | Registrar em |
+| Sintoma | Registrar como |
 |---|---|
-| `descendants` não rola | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-001` |
-| tios não exibem cards ou não rolam | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-002` |
-| gestos mudam para tela incorreta | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-003` |
-| scripts mobile causam lentidão | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-003` ou subitem técnico |
-| overview horizontal não navega corretamente | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-004` |
-| painel `+` aparece transparente | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-005` |
-| conectores reaparecem duplicados após ajuste de navegação | `docs/PLANO_PROXIMOS_PASSOS.md` como `MOB-006` |
+| `descendants` não rola ou treme | `MAP-MOB-001` |
+| tios não exibem cards ou não rolam | `MAP-MOB-002` |
+| gestos mudam para tela incorreta | `MAP-MOB-003` |
+| scripts mobile causam lentidão | `MAP-MOB-007` |
+| overview horizontal não navega corretamente | `MAP-MOB-004` |
+| painel `+` aparece transparente | `MAP-MOB-005` |
+| conectores reaparecem duplicados após ajuste de navegação | `MAP-MOB-006` |
+| linha central abaixo da pessoa principal reaparece | `MAP-MOB-006` |
 
 ---
 
-## 16. Nota de contenção de regressão
+## 19. Regra operacional
 
 Se a navegação da grade 3x3 voltar a falhar, não adicionar outro script de captura global de touch antes de auditar estes arquivos:
 
 ```txt
-src/mobileFamilyTreeNavigationRules.ts
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapDirectionalNavigationFix.ts
+src/mobileFamilyMapCoreConnectorFix.ts
 src/mobileFamilyTreeGrandparentScreens.ts
-src/mobileFamilyTreeDescendantScreen.ts
-src/mobileFamilyTreeUncleScreenGuards.ts
 src/mobileFamilyTreeSwipeHints.ts
-src/mobileFamilyTreeZoomOverviewFix.ts
 ```
 
-A correção preferencial é centralizar destino, bloqueio e disponibilidade de tela em uma única camada.
+A correção preferencial é centralizar destino, bloqueio e disponibilidade de tela em uma única camada ou migrar o comportamento para React/hooks.
