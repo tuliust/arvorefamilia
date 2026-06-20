@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação funcional/técnica das duas views oficiais da árvore  
-> Status: revisado após ajustes mobile de grade 3x3, tela de descendentes, tios, overview/zoom e painel `+`.
+> Status: revisado contra o código atual. Implementações mobile sensíveis devem ser tratadas como compostas por React + scripts auxiliares e validadas em QA real.
 
 ---
 
@@ -33,6 +33,7 @@ Documentação complementar específica do mobile:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md
 ```
 
 ---
@@ -104,7 +105,7 @@ Regras:
 
 | Rota | Desktop/tablet | Mobile |
 |---|---|---|
-| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
+| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` + scripts auxiliares `mobileFamilyTree*` |
 | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
 
 Arquivos principais:
@@ -174,39 +175,41 @@ Regras:
 
 ### 6.2 Mobile
 
-Componente:
+Componente base:
 
 ```txt
 MobileFamilyTreeView
 ```
 
-Contrato mobile atual:
+Contrato mobile observado no código atual:
 
-- `/mapa-familiar` mobile usa grade 3x3;
+- o componente React nativo declara seis telas: `ancestors`, `paternal-uncles`, `core`, `maternal-uncles`, `paternal-cousins` e `maternal-cousins`;
+- três telas adicionais da grade 3x3 são criadas por scripts auxiliares quando há dados/condição: `paternal-ancestors`, `maternal-ancestors` e `descendants`;
 - a tela central é `core`;
 - navegação por swipe/overview deve posicionar o stage na célula correta;
 - grupos e cards seguem a paleta ativa;
 - conectores HTML/CSS devem respeitar a hierarquia visual;
 - telas com conteúdo maior que a altura útil devem ter rolagem interna.
 
-Grade oficial:
+Grade funcional pretendida:
 
-| Posição | Tela técnica | Conteúdo |
-|---|---|---|
-| Superior esquerda | `paternal-ancestors` | bisavós/tataravós paternos |
-| Superior centro | `ancestors` | avós paternos e maternos |
-| Superior direita | `maternal-ancestors` | bisavós/tataravós maternos |
-| Meio esquerda | `paternal-uncles` | tios paternos |
-| Meio centro | `core` | pai, mãe e pessoa central |
-| Meio direita | `maternal-uncles` | tios maternos |
-| Inferior esquerda | `paternal-cousins` | primos paternos |
-| Inferior centro | `descendants` | irmãos, cônjuge, sobrinhos, pets, filhos e netos |
-| Inferior direita | `maternal-cousins` | primos maternos |
+| Posição | Tela técnica | Origem atual | Conteúdo |
+|---|---|---|---|
+| Superior esquerda | `paternal-ancestors` | script auxiliar | bisavós/tataravós paternos |
+| Superior centro | `ancestors` | React | avós paternos e maternos |
+| Superior direita | `maternal-ancestors` | script auxiliar | bisavós/tataravós maternos |
+| Meio esquerda | `paternal-uncles` | React | tios paternos |
+| Meio centro | `core` | React | pai, mãe e pessoa central |
+| Meio direita | `maternal-uncles` | React | tios maternos |
+| Inferior esquerda | `paternal-cousins` | React | primos paternos |
+| Inferior centro | `descendants` | script auxiliar | irmãos, cônjuge, sobrinhos, pets, filhos e netos |
+| Inferior direita | `maternal-cousins` | React | primos maternos |
 
 Detalhes completos ficam em:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md
 ```
 
 ---
@@ -302,11 +305,12 @@ Não dependem do filtro `Cônjuges`:
 - cônjuges de bisavós;
 - cônjuges de tataravós.
 
-### 9.2 Filtráveis implementados no código atual
+### 9.2 Filtráveis observados no código horizontal atual
 
 Dependem do filtro `Cônjuges`:
 
 ```txt
+irmaos
 tios
 primos
 sobrinhos
@@ -314,16 +318,16 @@ filhos
 netos
 ```
 
-Essa regra vale para a horizontal desktop e mobile conforme o conjunto filtrável atualmente declarado nos componentes.
+Essa regra deve ser revalidada quando houver alteração em `FILTERABLE_SPOUSE_ANCHOR_GROUPS` nos componentes horizontais.
 
 ### 9.3 Pendência conhecida: `pais`/Geração 4
 
-A documentação anterior desejava que cônjuges de pessoas classificadas como `pais`/Geração 4 também aparecessem na horizontal quando `Cônjuges` estivesse ativo. No código atual auditado, `pais` não está consolidado como grupo filtrável.
+No código atual auditado, `pais` não aparece no conjunto filtrável da horizontal.
 
 Portanto:
 
 - não tratar cônjuges de `pais`/Geração 4 na horizontal como implementados sem nova verificação;
-- manter a pendência em `docs/PLANO_PROXIMOS_PASSOS.md`;
+- manter a pendência em documentação de próximos passos;
 - corrigir apenas em frente de código autorizada;
 - após correção, atualizar este documento, `REGRAS_DE_NAO_REGRESSAO.md` e `QA_MANUAL.md`.
 
@@ -409,19 +413,26 @@ O botão `Zoom` da toolbar mobile deve abrir um overview com 9 cards.
 
 Em `/mapa-familiar`:
 
-- cada card leva à tela correspondente da grade 3x3;
+- cada card deve levar à tela correspondente da grade;
 - o stage é posicionado por `transform`;
 - a tela ativa é registrada em `data-mobile-family-tree-active-screen`.
 
 Em `/mapa-familiar-horizontal`:
 
 - o overview também deve abrir;
-- cada card direciona para a geração horizontal correspondente.
+- cada card tenta direcionar para a geração horizontal correspondente;
+- se a geração de destino não estiver ativa/visível, o botão `Ger N` pode não existir e a navegação deve ser validada em QA.
 
-Arquivo principal:
+Arquivo ativo principal:
 
 ```txt
 src/mobileFamilyTreeZoomOverviewFix.ts
+```
+
+Arquivo existente mas não carregado no `index.html` atual:
+
+```txt
+src/mobileFamilyMapOverviewNavigationBridge.ts
 ```
 
 ---
@@ -430,18 +441,13 @@ src/mobileFamilyTreeZoomOverviewFix.ts
 
 O botão `+` abre o painel mobile completo de visualização.
 
-Contrato:
+Contrato observado no código atual:
 
-- overlay escurecido;
-- painel principal branco/opaco;
-- rolagem interna própria;
-- painel excluído da exportação.
-
-Arquivo relacionado:
-
-```txt
-src/mobileFamilyMapFullPanelStyleFix.ts
-```
+- o ajuste de fundo/opacidade está em `src/mobileFamilyMapFullPanelStyleFix.ts`;
+- esse ajuste é importado em `src/main.tsx`;
+- overlay deve ficar escurecido;
+- painel principal deve ficar branco/opaco;
+- painel deve permanecer excluído da exportação.
 
 ---
 
@@ -477,9 +483,11 @@ Este documento descreve contratos funcionais. Para execução de QA, usar:
 ```txt
 docs/QA_MANUAL.md
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md
+docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
 ```
 
-Pendências relacionadas:
+Pendências relacionadas aos mapas mobile usam prefixo `MAP-MOB` para não conflitar com IDs `MOB-*` já existentes em `docs/PLANO_PROXIMOS_PASSOS.md`.
 
 | ID | Tema |
 |---|---|
@@ -487,14 +495,9 @@ Pendências relacionadas:
 | `TREE-002` | validar visualmente `/mapa-familiar-horizontal` com dados reais |
 | `TREE-003` | verificar/corrigir cônjuges de `pais`/Geração 4 na horizontal |
 | `TREE-004` | remover dependência de limpeza DOM para datas desconhecidas no mobile |
-| `MOB-001` | confirmar rolagem interna de `descendants` em iPhone/Safari |
-| `MOB-002` | confirmar exibição estável dos cards em `paternal-uncles` |
-| `MOB-003` | avaliar consolidação de scripts auxiliares mobile no React |
-| `MOB-004` | confirmar mapeamento do overview da horizontal por geração |
-| `MOB-005` | confirmar overlay opaco do painel `+` em iPhone/Safari |
-
-Fonte das pendências:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
+| `MAP-MOB-001` | confirmar rolagem interna de `descendants` em iPhone/Safari |
+| `MAP-MOB-002` | confirmar exibição estável dos cards em `paternal-uncles` |
+| `MAP-MOB-003` | avaliar consolidação de scripts auxiliares mobile no React |
+| `MAP-MOB-004` | confirmar mapeamento do overview da horizontal por geração ativa/visível |
+| `MAP-MOB-005` | confirmar overlay opaco do painel `+` em iPhone/Safari |
+| `MAP-MOB-006` | decidir destino de `mobileFamilyMapOverviewNavigationBridge.ts`, hoje existente mas não carregado |
