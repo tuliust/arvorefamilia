@@ -1,10 +1,9 @@
-
 # Mapa Familiar — views Vertical e Horizontal
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`
-> Tipo: documentação funcional/técnica das duas views oficiais da árvore
-> Status: organizado para descrever contratos funcionais e apontar QA manual para `docs/QA_MANUAL.md`.
+> Última revisão: 2026-06-20  
+> Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
+> Tipo: documentação funcional/técnica das duas views oficiais da árvore  
+> Status: revisado após ajustes mobile de grade 3x3, tela de descendentes, tios, overview/zoom e painel `+`.
 
 ---
 
@@ -21,24 +20,20 @@ Ele cobre:
 
 - rotas e títulos;
 - renderização desktop/mobile;
-- filtros;
+- filtros e grupos;
 - cônjuges;
 - pets;
 - paletas;
 - conectores;
 - exportação;
-- regras de mobile;
-- pendências conhecidas.
+- regras mobile;
+- QA e pendências conhecidas.
 
-Não cobre em detalhe:
+Documentação complementar específica do mobile:
 
-| Tema | Documento |
-|---|---|
-| Exportação | `docs/funcionalidades/EXPORTACAO_ARVORE.md` |
-| Painel, filtros e destaques | `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Rotas e guards | `docs/arquitetura/ROTAS_E_GUARDS.md` |
-| QA manual | `docs/QA_MANUAL.md` |
-| Pendências abertas | `docs/PLANO_PROXIMOS_PASSOS.md` |
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+```
 
 ---
 
@@ -122,6 +117,7 @@ src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
 src/app/components/FamilyTree/treeColorPalettes.ts
 src/styles/family-map-qa.css
 src/styles/family-map-horizontal.css
@@ -147,7 +143,7 @@ Observações:
 
 ## 6. Árvore Familiar Vertical — `/mapa-familiar`
 
-### Desktop/tablet
+### 6.1 Desktop/tablet
 
 Componente:
 
@@ -176,7 +172,7 @@ Regras:
 - conectores dependem de relacionamentos explícitos;
 - alterações de layout exigem QA visual com dados reais.
 
-### Mobile
+### 6.2 Mobile
 
 Componente:
 
@@ -184,27 +180,40 @@ Componente:
 MobileFamilyTreeView
 ```
 
-Contrato mobile:
+Contrato mobile atual:
+
+- `/mapa-familiar` mobile usa grade 3x3;
+- a tela central é `core`;
+- navegação por swipe/overview deve posicionar o stage na célula correta;
+- grupos e cards seguem a paleta ativa;
+- conectores HTML/CSS devem respeitar a hierarquia visual;
+- telas com conteúdo maior que a altura útil devem ter rolagem interna.
+
+Grade oficial:
+
+| Posição | Tela técnica | Conteúdo |
+|---|---|---|
+| Superior esquerda | `paternal-ancestors` | bisavós/tataravós paternos |
+| Superior centro | `ancestors` | avós paternos e maternos |
+| Superior direita | `maternal-ancestors` | bisavós/tataravós maternos |
+| Meio esquerda | `paternal-uncles` | tios paternos |
+| Meio centro | `core` | pai, mãe e pessoa central |
+| Meio direita | `maternal-uncles` | tios maternos |
+| Inferior esquerda | `paternal-cousins` | primos paternos |
+| Inferior centro | `descendants` | irmãos, cônjuge, sobrinhos, pets, filhos e netos |
+| Inferior direita | `maternal-cousins` | primos maternos |
+
+Detalhes completos ficam em:
 
 ```txt
-Paterno
-Central
-Materno
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
 ```
-
-Regras:
-
-- não usar navegação `Ger X` da horizontal;
-- preservar paleta ativa;
-- bordas e fundos de grupos seguem tokens da paleta;
-- conectores HTML/CSS devem seguir a hierarquia visual do desktop;
-- controles de árvore ficam no modal mobile, não dentro do card.
 
 ---
 
 ## 7. Mapa Genealógico Horizontal — `/mapa-familiar-horizontal`
 
-### Desktop/tablet
+### 7.1 Desktop/tablet
 
 Componente:
 
@@ -223,7 +232,7 @@ Responsabilidades:
 - compactar visual por geração;
 - exportar com título `Mapa Genealógico`.
 
-### Mobile
+### 7.2 Mobile
 
 Componente:
 
@@ -309,12 +318,12 @@ Essa regra vale para a horizontal desktop e mobile conforme o conjunto filtráve
 
 ### 9.3 Pendência conhecida: `pais`/Geração 4
 
-A documentação de produto desejava que cônjuges de pessoas classificadas como `pais`/Geração 4 também aparecessem na horizontal quando `Cônjuges` estivesse ativo. No código atual auditado, `pais` **não** está no conjunto de grupos filtráveis.
+A documentação anterior desejava que cônjuges de pessoas classificadas como `pais`/Geração 4 também aparecessem na horizontal quando `Cônjuges` estivesse ativo. No código atual auditado, `pais` não está consolidado como grupo filtrável.
 
 Portanto:
 
-- não tratar cônjuges de `pais`/Geração 4 na horizontal como implementados;
-- manter o comportamento como pendência `TREE-003` em `docs/PLANO_PROXIMOS_PASSOS.md`;
+- não tratar cônjuges de `pais`/Geração 4 na horizontal como implementados sem nova verificação;
+- manter a pendência em `docs/PLANO_PROXIMOS_PASSOS.md`;
 - corrigir apenas em frente de código autorizada;
 - após correção, atualizar este documento, `REGRAS_DE_NAO_REGRESSAO.md` e `QA_MANUAL.md`.
 
@@ -372,16 +381,6 @@ Contrato:
 - a paleta Visual/Azul pode usar gradientes teal/ciano/azul;
 - paletas Branca, Laranja e Marrom não podem cair em fallback azul/teal.
 
-Arquivos críticos:
-
-```txt
-src/app/components/FamilyTree/treeColorPalettes.ts
-src/styles/family-map-qa.css
-src/styles/family-map-horizontal.css
-src/styles/family-map-mobile-palettes.css
-src/styles/tree-panel-palette-cards.css
-```
-
 ---
 
 ## 13. Cards mobile de pessoas
@@ -400,11 +399,53 @@ Regras:
 - não exibir linha de falecimento sem dado real;
 - não exibir visualmente `Nascimento não informado`;
 - não exibir visualmente `Falecimento não informado`;
-- manter dívida `TREE-004` aberta até remover o fallback direto do componente React.
+- manter dívida técnica aberta até remover o fallback direto do componente React.
 
 ---
 
-## 14. Exportação
+## 14. Zoom/overview mobile
+
+O botão `Zoom` da toolbar mobile deve abrir um overview com 9 cards.
+
+Em `/mapa-familiar`:
+
+- cada card leva à tela correspondente da grade 3x3;
+- o stage é posicionado por `transform`;
+- a tela ativa é registrada em `data-mobile-family-tree-active-screen`.
+
+Em `/mapa-familiar-horizontal`:
+
+- o overview também deve abrir;
+- cada card direciona para a geração horizontal correspondente.
+
+Arquivo principal:
+
+```txt
+src/mobileFamilyTreeZoomOverviewFix.ts
+```
+
+---
+
+## 15. Botão `+` mobile
+
+O botão `+` abre o painel mobile completo de visualização.
+
+Contrato:
+
+- overlay escurecido;
+- painel principal branco/opaco;
+- rolagem interna própria;
+- painel excluído da exportação.
+
+Arquivo relacionado:
+
+```txt
+src/mobileFamilyMapFullPanelStyleFix.ts
+```
+
+---
+
+## 16. Exportação
 
 A exportação é suportada nas duas views oficiais.
 
@@ -429,12 +470,13 @@ docs/QA_MANUAL.md
 
 ---
 
-## 15. QA e pendências
+## 17. QA e pendências
 
 Este documento descreve contratos funcionais. Para execução de QA, usar:
 
 ```txt
 docs/QA_MANUAL.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
 ```
 
 Pendências relacionadas:
@@ -445,119 +487,14 @@ Pendências relacionadas:
 | `TREE-002` | validar visualmente `/mapa-familiar-horizontal` com dados reais |
 | `TREE-003` | verificar/corrigir cônjuges de `pais`/Geração 4 na horizontal |
 | `TREE-004` | remover dependência de limpeza DOM para datas desconhecidas no mobile |
-| `TREE-005` | decidir destino do dropdown `Visualizar como...` |
+| `MOB-001` | confirmar rolagem interna de `descendants` em iPhone/Safari |
+| `MOB-002` | confirmar exibição estável dos cards em `paternal-uncles` |
+| `MOB-003` | avaliar consolidação de scripts auxiliares mobile no React |
+| `MOB-004` | confirmar mapeamento do overview da horizontal por geração |
+| `MOB-005` | confirmar overlay opaco do painel `+` em iPhone/Safari |
 
 Fonte das pendências:
 
 ```txt
 docs/PLANO_PROXIMOS_PASSOS.md
 ```
-
-<!-- ajuste-irmaos-conjuges-mapa-familiar-2026-06 -->
-
-## Mapa familiar ? irm?os e c?njuges
-
-Na p?gina `/mapa-familiar`:
-
-- O grupo `Irm?os` exibe at? 4 cards antes de apresentar controle de expandir/recolher.
-- Em grade dupla, quando houver quantidade ?mpar de cards vis?veis, o ?ltimo card isolado fica centralizado na segunda linha.
-- C?njuges de irm?os s?o exibidos no grupo `Irm?os` quando o filtro `C?njuges` est? ativo e existe relacionamento expl?cito `tipo_relacionamento === 'conjuge'`.
-- Esse comportamento n?o cria nem infere dados; depende exclusivamente dos relacionamentos persistidos.
-- A regra acima se aplica ? p?gina `/mapa-familiar`. N?o assumir o mesmo comportamento para `/mapa-familiar-horizontal` sem valida??o espec?fica.
-<!-- ajuste-mapa-horizontal-conjuges-filhos-2026-06 -->
-
-## Mapa familiar horizontal ? c?njuges e filhos de casais vis?veis
-
-Na rota `/mapa-familiar-horizontal`:
-
-- O filtro `C?njuges` tamb?m considera c?njuges de pessoas do grupo `Irm?os`/n?cleo.
-- C?njuges exibidos no mesmo grupo geracional devem ficar adjacentes e conectados verticalmente.
-- Layana deve aparecer abaixo de Tassius Marcius quando `C?njuges` estiver ativo.
-- Suze Souza, segundo relacionamento de M?rcio Ailton, deve aparecer apenas quando `C?njuges` estiver ativo e posicionada acima de M?rcio Ailton.
-- Quando ambos os pais de um casal vis?vel estiverem exibidos, filhos comuns da 6? gera??o devem aparecer na coluna da direita e receber conex?o a partir da uni?o do casal.
-- Casos cobertos: Heitor, filho de Tassius e Layana; In?cio Leal, filho de Camilla e Gilvan; Lorendo, filho de M?rcio Ailton e Suze Souza.
-- A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
-
-<!-- MAPA-FAMILIAR-PENDENCIAS-2026-06-18 -->
-## Pontos recentes a confirmar nos mapas familiares
-
-NÃ£o registrar os itens abaixo como implementados sem confirmaÃ§Ã£o no Git:
-
-- contagem de cÃ´njuges no mapa horizontal;
-- subida de grupos no mapa vertical quando houver poucos parentes;
-- toolbar mobile com controles de visualizaÃ§Ã£o/formato/cor/filtros/exportaÃ§Ã£o;
-- comportamento de popovers e painÃ©is em mobile/desktop;
-- regra final de grupos, cÃ´njuges, filhos, sobrinhos e netos por filtro.
-
-Quando confirmados, documentar separando:
-
-- comportamento desktop;
-- comportamento mobile;
-- regras de contagem;
-- regras de renderizaÃ§Ã£o;
-- regras de filtros.
-
-<!-- RODADA2-MAPA-FAMILIAR-2026-06-18 -->
-## Mapas familiares â€” toolbar mobile e controles
-
-### Rotas
-
-- `/mapa-familiar`
-- `/mapa-familiar-horizontal`
-
-### Toolbar mobile
-
-A experiÃªncia mobile dos mapas familiares foi consolidada em toolbar com aÃ§Ãµes separadas:
-
-| AÃ§Ã£o | FunÃ§Ã£o |
-|---|---|
-| VisualizaÃ§Ã£o | Selecionar pessoa/visualizador |
-| Formato | Alternar entre `Linha Geracional` e `Ãrvore Familiar` |
-| Cor | Escolher paleta visual |
-| Filtros | Controlar grupos/escopo de parentes exibidos |
-| Exportar | Acessar aÃ§Ãµes Ãrea, Imagem, PDF e Imprimir |
-| `+` | Abrir painel mobile completo de controles |
-
-### Painel mobile completo
-
-O botÃ£o `+` abre um painel mobile com:
-
-- alÃ§a superior;
-- cabeÃ§alho;
-- tÃ­tulo VisualizaÃ§Ã£o;
-- aÃ§Ã£o Salvar;
-- dropdown de visualizador;
-- seleÃ§Ã£o de formato;
-- paleta de cores;
-- resumo;
-- cards Pessoas, Vivos, Falecidos e Cadastrados;
-- grupos familiares;
-- abas NÃºcleo, Ascendentes e Colaterais;
-- filtros finais com switches.
-
-### PRs confirmados no levantamento
-
-| PR | TÃ­tulo | Merge commit |
-|---|---|---|
-| `#13` | Padroniza toolbar mobile dos mapas familiares | `484c9c7` |
-| `#14` | Ajusta toolbar mobile e opÃ§Ãµes de visualizaÃ§Ã£o | `513ae7d` |
-| `#15` | Adiciona popover mobile de cores | `244eaae` |
-| `#16` | Ajusta visualizaÃ§Ã£o e formato no toolbar mobile | `f574d8b` |
-| `#17` | Ajusta toolbar e exportaÃ§Ã£o mobile | `c391b37` |
-| `#18` | Adiciona filtros e painel extra mobile | `8cb1b0f` |
-| `#19` | Refina painel mobile de controles | `d92f916` |
-
-### Arquivos principais
-
-```txt
-src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
-src/app/pages/home/HomeMobileNav.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
-```
-
-### QA obrigatÃ³rio
-
-- validar 320px, 375px, 390px e 430px;
-- testar cada popover;
-- testar painel completo pelo botÃ£o `+`;
-- confirmar que desktop/tablet nÃ£o tiveram regressÃ£o.
