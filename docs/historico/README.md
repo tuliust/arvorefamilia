@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20  
 > Local recomendado: `docs/historico/README.md`  
 > Tipo: índice e consolidação histórica.  
-> Status: atualizado com índice explícito para rotas removidas, SQLs legados, rollback/restauração, baseline mobile, ajustes consolidados e documentação complementar.
+> Status: atualizado com a baseline padrão dos mapas familiares mobile.
 
 ---
 
@@ -93,15 +93,13 @@ Títulos vigentes das views oficiais:
 
 ## 3. Documentos históricos de views antigas
 
-O documento preventivo principal para rotas antigas é:
+Documento preventivo principal:
 
 ```txt
 docs/historico/ROTAS_REMOVIDAS.md
 ```
 
-Ele deve ser usado antes de interpretar ocorrências de `/minha-arvore`, `/genealogia` ou `/visao-completa` em buscas de código ou documentação.
-
-Os documentos abaixo foram arquivados como legado e não devem permanecer em `docs/funcionalidades/` como guias canônicos:
+Documentos arquivados como legado:
 
 | Documento histórico | Origem | Motivo |
 |---|---|---|
@@ -109,16 +107,6 @@ Os documentos abaixo foram arquivados como legado e não devem permanecer em `do
 | `docs/historico/MINHA_ARVORE_VIEW.md` | `docs/funcionalidades/MINHA_ARVORE_VIEW.md` | `/minha-arvore` não é view ativa |
 | `docs/historico/GENEALOGIA_VIEW.md` | `docs/funcionalidades/GENEALOGIA_VIEW.md` | `/genealogia` e `/visao-completa` não são views ativas |
 | `docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md` | `docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md` | regras vigentes foram extraídas para docs atuais |
-
-Após mover esses arquivos para histórico, recomenda-se remover as versões antigas de:
-
-```txt
-docs/funcionalidades/MINHA_ARVORE_VIEW.md
-docs/funcionalidades/GENEALOGIA_VIEW.md
-docs/funcionalidades/MINHA_ARVORE_FILTROS_E_PETS.md
-```
-
-ou substituí-las por stubs mínimos apontando para `docs/historico/`, conforme a política do projeto.
 
 ---
 
@@ -135,7 +123,7 @@ Status atual:
 - mobile segmentado permanece útil em `/mapa-familiar` mobile;
 - `/minha-arvore/editar` continua vigente como edição.
 
-Documento histórico:
+Documentos históricos:
 
 ```txt
 docs/historico/MINHA_ARVORE_VIEW.md
@@ -149,11 +137,11 @@ A antiga `/genealogia` organizava pessoas por gerações em ReactFlow.
 Status atual:
 
 - rota removida;
-- linguagem genealógica permanece apenas como conceito visual da horizontal atual;
+- linguagem genealógica permanece como conceito visual da horizontal atual;
 - horizontal atual é `/mapa-familiar-horizontal`;
 - título atual: `Mapa Genealógico de {primeiroNome}`.
 
-Documento histórico:
+Documentos históricos:
 
 ```txt
 docs/historico/GENEALOGIA_VIEW.md
@@ -170,18 +158,9 @@ Status atual:
 - não deve ser usada como fallback da horizontal;
 - código ReactFlow remanescente deve ser tratado como legado técnico.
 
-Documento histórico relacionado:
-
-```txt
-docs/historico/GENEALOGIA_VIEW.md
-docs/historico/ROTAS_REMOVIDAS.md
-```
-
 ---
 
 ## 5. Histórico de filtros, pets e avatares
-
-A documentação antiga de filtros e pets continha regras ainda úteis, mas misturadas à view removida `/minha-arvore`.
 
 Regras preservadas nos docs atuais:
 
@@ -221,23 +200,18 @@ docs/PLANO_PROXIMOS_PASSOS.md
 
 ### 6.1 Rollback/restauração
 
-Documento principal:
-
 ```txt
 docs/historico/ROLLBACK_E_AJUSTES_POS_RESTAURACAO_2026_06_20.md
 ```
 
 Uso:
 
-- rastrear a refatoração ampla da árvore mobile que foi tentada e depois abandonada como contrato vigente;
+- rastrear a refatoração ampla da árvore mobile que foi tentada e abandonada como contrato vigente;
 - diferenciar `rollback/mobile-9-telas-d7385dc-v2` da base estável real;
 - registrar a restauração da `main` a partir de `52ee451`;
-- documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`;
-- preservar cautela sobre branches, deployments e previews antigos no Vercel.
+- documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`.
 
 ### 6.2 Complemento de navegação mobile
-
-Documento:
 
 ```txt
 docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_COMPLEMENTO.md
@@ -245,14 +219,11 @@ docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_COMPLEMENTO.md
 
 Uso:
 
-- registrar a matriz 3x3 desejada após os ajustes de avós, tios, primos e descendentes;
+- registrar a matriz 3x3 desejada após ajustes de avós, tios, primos e descendentes;
 - separar contrato desejado de regressões observadas;
-- documentar que a navegação estava sensível por sobreposição de scripts de gesture;
-- apoiar futura consolidação.
+- documentar a sensibilidade da navegação por sobreposição de scripts de gesture.
 
 ### 6.3 Baseline antes da correção consolidada
-
-Documento:
 
 ```txt
 docs/historico/BASELINE_MAPA_FAMILIAR_MOBILE_2026_06_20_1631.md
@@ -266,8 +237,6 @@ Uso:
 
 ### 6.4 Ajuste consolidado vigente
 
-Documento:
-
 ```txt
 docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_STABLE_FIX.md
 ```
@@ -279,9 +248,27 @@ Uso:
 - registrar a redução de scripts concorrentes em `index.html`;
 - registrar checklist de QA pós-deploy.
 
-### 6.5 Regras após novos ajustes do chat
+### 6.5 Baseline padrão final dos mapas mobile
 
-Documentos canônicos atualizados:
+```txt
+docs/historico/BASELINE_MAPAS_FAMILIARES_MOBILE_PADRAO_2026_06_20.md
+```
+
+Branch:
+
+```txt
+baseline/mapas-mobile-padrao-2026-06-20
+```
+
+Uso:
+
+- congelar a estrutura atual de `/mapa-familiar` e `/mapa-familiar-horizontal` como padrão de referência;
+- registrar `core` sem descendentes visuais e `descendants` como tela dos grupos descendentes;
+- registrar Zoom horizontal por gerações;
+- registrar matriz de swipe e conectores atuais;
+- servir como base de comparação para regressões.
+
+### 6.6 Documentos canônicos atualizados
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
