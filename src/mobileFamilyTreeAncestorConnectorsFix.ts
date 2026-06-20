@@ -197,8 +197,29 @@ function renderConnectors() {
     const groupRect = group.getBoundingClientRect();
     if (groupRect.width <= 0 || groupRect.height <= 0) return;
 
-    const groupCenterX = groupRect.left - screenRect.left + groupRect.width / 2;
+    const groupLeft = groupRect.left - screenRect.left;
+    const groupRight = groupRect.right - screenRect.left;
+    const groupCenterX = groupLeft + groupRect.width / 2;
+    const groupCenterY = groupRect.top - screenRect.top + groupRect.height / 2;
     const groupBottom = groupRect.bottom - screenRect.top;
+
+    if (side === 'paternal') {
+      createLine(layer, {
+        left: '0px',
+        top: `${groupCenterY - halfLine}px`,
+        width: `${Math.max(0, groupLeft)}px`,
+        height: `${lineWidth}px`,
+      });
+    }
+
+    if (side === 'maternal') {
+      createLine(layer, {
+        left: `${groupRight}px`,
+        top: `${groupCenterY - halfLine}px`,
+        width: `${Math.max(0, screenRect.width - groupRight)}px`,
+        height: `${lineWidth}px`,
+      });
+    }
 
     createLine(layer, {
       left: `${groupCenterX - halfLine}px`,
