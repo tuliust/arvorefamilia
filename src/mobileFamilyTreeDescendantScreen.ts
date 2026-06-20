@@ -97,6 +97,32 @@ function getTransformForScreen(screen: TreeScreen) {
   return `translate3d(calc(-33.3333333333% + 0px), calc(${-row * (100 / 3)}% + 0px), 0)`;
 }
 
+function getTreeScrollArea(target: EventTarget | null) {
+  if (!(target instanceof Element)) return null;
+  return target.closest<HTMLElement>('[data-mobile-tree-scroll]');
+}
+
+function scrollAreaMaxTop(scrollArea: HTMLElement | null) {
+  if (!scrollArea) return 0;
+  return Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
+}
+
+function scrollAreaHasOverflow(scrollArea: HTMLElement | null) {
+  return scrollAreaMaxTop(scrollArea) > 1;
+}
+
+function scrollAreaCanMove(scrollArea: HTMLElement | null, deltaY: number) {
+  const maxTop = scrollAreaMaxTop(scrollArea);
+  if (!scrollArea || maxTop <= 1) return false;
+
+  // deltaY < 0: dedo sobe, conteúdo rola para baixo.
+  if (deltaY < 0) return scrollArea.scrollTop < maxTop - 1;
+  // deltaY > 0: dedo desce, conteúdo rola para cima.
+  if (deltaY > 0) return scrollArea.scrollTop > 1;
+
+  return false;
+}
+
 function getDescendantScrollArea(target: EventTarget | null) {
   if (target instanceof Element) {
     return target.closest<HTMLElement>('.mobile-family-descendant-screen__scroll');
@@ -106,18 +132,11 @@ function getDescendantScrollArea(target: EventTarget | null) {
 }
 
 function descendantScrollCanMove(target: EventTarget | null, deltaY: number) {
-  const scrollArea = getDescendantScrollArea(target);
-  if (!scrollArea) return false;
+  return scrollAreaCanMove(getDescendantScrollArea(target), deltaY);
+}
 
-  const maxScrollTop = scrollArea.scrollHeight - scrollArea.clientHeight;
-  if (maxScrollTop <= 1) return false;
-
-  // deltaY < 0: dedo sobe, conteúdo deve rolar para baixo.
-  if (deltaY < 0) return scrollArea.scrollTop < maxScrollTop - 1;
-  // deltaY > 0: dedo desce, conteúdo deve rolar para cima.
-  if (deltaY > 0) return scrollArea.scrollTop > 1;
-
-  return false;
+function descendantScrollHasOverflow(target: EventTarget | null) {
+  return scrollAreaHasOverflow(getDescendantScrollArea(target));
 }
 
 function descendantScrollIsAtTop(target: EventTarget | null) {
@@ -279,24 +298,28 @@ function ensureStyles() {
         position: relative;
         height: 100%;
         width: 100%;
-        overflow: visible;
+        overflow: hidden !important;
       }
 
       .mobile-family-descendant-screen__scroll {
         height: 100%;
         overflow-y: auto;
-        overflow-x: visible;
+        overflow-x: hidden;
         overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
         padding: 1.25rem 1rem calc(env(safe-area-inset-bottom, 0px) + 8rem);
       }
 
       .mobile-family-descendant-screen__inner {
         position: relative;
         z-index: 10;
-        width: min(100%, 430px);
+        display: flex;
         min-height: 100%;
+        width: min(100%, 430px);
         margin: 0 auto;
+        align-items: center;
+        justify-content: center;
       }
 
       .mobile-family-descendant-screen__connector {
@@ -306,6 +329,7 @@ function ensureStyles() {
 
       .mobile-family-descendant-screen__grid {
         display: grid !important;
+        width: 100% !important;
         align-items: start !important;
       }
 
@@ -350,11 +374,16 @@ function shouldHandleVerticalGesture(deltaX: number, deltaY: number, screen: Tre
   const absoluteY = Math.abs(deltaY);
   if (absoluteY <= absoluteX * 1.2 || absoluteY < 10) return false;
 
+  const scrollArea = getTreeScrollArea(target);
+
+  // A rolagem de conteúdo tem prioridade sobre troca vertical de tela para evitar tremor no iOS.
+  if (scrollAreaHasOverflow(scrollArea)) return false;
+
   // deltaY < 0 = dedo sobe, viewport vai para a tela abaixo.
   if (screen === CORE_SCREEN) return deltaY < 0 && hasDescendantContent();
 
   if (screen === DESCENDANTS_SCREEN) {
-    if (descendantScrollCanMove(target, deltaY)) return false;
+    if (descendantScrollCanMove(target, deltaY) || descendantScrollHasOverflow(target)) return false;
     return deltaY > 0 && descendantScrollIsAtTop(target);
   }
 
@@ -395,6 +424,9 @@ function handleTouchEnd(event: TouchEvent) {
 
   if (!vertical) return;
 
+  const scrollArea = getTreeScrollArea(event.target);
+  if (scrollAreaHasOverflow(scrollArea)) return;
+
   if (start.screen === CORE_SCREEN && deltaY < 0 && hasDescendantContent()) {
     event.preventDefault();
     event.stopPropagation();
@@ -403,7 +435,7 @@ function handleTouchEnd(event: TouchEvent) {
     return;
   }
 
-  if (start.screen === DESCENDANTS_SCREEN && deltaY > 0 && descendantScrollIsAtTop(event.target)) {
+  if (start.screen === DESCENDANTS_SCREEN && deltaY > 0 && descendantScrollIsAtTop(event.target) && !descendantScrollHasOverflow(event.target)) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
