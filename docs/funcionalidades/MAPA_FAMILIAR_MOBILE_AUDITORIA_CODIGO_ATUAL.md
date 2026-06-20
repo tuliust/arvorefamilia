@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20  
 > Local: `docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md`  
 > Escopo: conferência do código atual antes de tratar implementações mobile como consolidadas.  
-> Status: documento de verificação. Não substitui QA visual em Safari/iOS.
+> Status: atualizado após `mobileFamilyMapStableMobileFix.ts`, `mobileFamilyMapDirectionalNavigationFix.ts` e `mobileFamilyMapCoreConnectorFix.ts`.
 
 ---
 
@@ -16,7 +16,9 @@ Registrar o que o código atual indica sobre as rotas mobile:
 /mapa-familiar-horizontal
 ```
 
-Este documento existe porque parte das implementações mobile foi iterada em scripts auxiliares, e algumas frentes podem ter sido revertidas, substituídas ou regredido. Portanto, a documentação funcional deve separar:
+Este documento existe porque parte das implementações mobile foi iterada em scripts auxiliares. Algumas frentes foram substituídas, removidas do carregamento ou preservadas apenas como histórico técnico.
+
+A documentação funcional deve separar:
 
 - comportamento observado no código;
 - comportamento esperado de produto;
@@ -30,35 +32,50 @@ O `index.html` carrega, para o mapa mobile, os seguintes scripts auxiliares rele
 
 ```txt
 src/mobileFamilyTreeMutationPerformanceGuard.ts
-src/mobileFamilyTreeNavigationRules.ts
+src/main.tsx
+src/firstLoginMobileTutorialFixes.ts
+src/mobileCuriositiesNavigationFix.ts
+src/mobileTreePanelViewportFix.ts
 src/staticMobileFamilyTreeScreens.ts
 src/mobileFamilyTreeScreenStateGuards.ts
 src/mobileFamilyTreeGrandparentScreens.ts
-src/mobileFamilyTreeUncleScreenGuards.ts
-src/mobileFamilyTreeUncleSizingFix.ts
-src/mobileFamilyTreeDescendantScreen.ts
 src/mobileFamilyTreeSwipeHints.ts
-src/mobileFamilyTreeZoomOverviewFix.ts
-src/mobileFamilyTreeOverviewMode.ts
-src/mobileFamilyTreeOverviewFixes.ts
 src/mobileFamilyTreeAncestorConnectorsFix.ts
 src/mobileFamilyTreeDescendantConnectorsFix.ts
 src/mobileFamilyTreeCoreDescendantConnector.ts
 src/mobileFamilyTreeGroupTitleVisibilityFix.ts
-src/mobileFamilyTreeScrollAndVisibilityFix.ts
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapDirectionalNavigationFix.ts
+src/mobileFamilyMapCoreConnectorFix.ts
 ```
 
-O arquivo abaixo existe no repositório, mas **não está carregado no `index.html` atual**:
-
-```txt
-src/mobileFamilyMapOverviewNavigationBridge.ts
-```
-
-Consequência documental: não tratar `mobileFamilyMapOverviewNavigationBridge.ts` como implementação ativa, salvo se ele voltar a ser importado/carregado.
+Consequência documental: comportamento vigente deve ser auditado nesses arquivos, não nos patches antigos removidos do `index.html`.
 
 ---
 
-## 3. Import global pelo `main.tsx`
+## 3. Arquivos substituídos ou legados
+
+Os arquivos abaixo existem ou já foram usados, mas não são fonte de verdade se não estiverem carregados:
+
+```txt
+src/mobileFamilyTreeViewportContentFix.ts
+src/mobileFamilyTreeNavigationRules.ts
+src/mobileFamilyTreeUncleScreenGuards.ts
+src/mobileFamilyTreeUncleSizingFix.ts
+src/mobileFamilyTreeDescendantScreen.ts
+src/mobileFamilyTreeZoomOverviewFix.ts
+src/mobileFamilyTreeOverviewMode.ts
+src/mobileFamilyTreeOverviewFixes.ts
+src/mobileFamilyTreeScrollAndVisibilityFix.ts
+src/mobileFamilyMapMicroLayoutFix.ts
+src/mobileFamilyMapOverviewNavigationBridge.ts
+```
+
+Regra: ao encontrar comportamento documentado nesses arquivos, verificar se ainda está carregado antes de tratá-lo como vigente.
+
+---
+
+## 4. Import global pelo `main.tsx`
 
 O ajuste de fundo do painel mobile completo é importado por:
 
@@ -72,15 +89,16 @@ Arquivo importado:
 src/mobileFamilyMapFullPanelStyleFix.ts
 ```
 
-Contrato atual observado:
+Contrato observado:
 
 - overlay do `Painel de visualização` recebe fundo escuro;
 - botão/área de fechamento recebe o mesmo fundo;
-- `section` principal do painel recebe `background: #ffffff` e `opacity: 1`.
+- `section` principal do painel recebe `background: #ffffff` e `opacity: 1`;
+- o painel mantém rolagem interna.
 
 ---
 
-## 4. `/mapa-familiar` — estrutura nativa e telas dinâmicas
+## 5. `/mapa-familiar` — estrutura React e complementos DOM
 
 No componente React `MobileFamilyTreeView`, o tipo nativo `MobileTreeScreen` contém seis telas:
 
@@ -104,71 +122,126 @@ A grade nativa posiciona essas telas em:
 | `paternal-cousins` | coluna 1, linha 3 |
 | `maternal-cousins` | coluna 3, linha 3 |
 
-As outras três telas da grade 3x3 são adicionadas por scripts auxiliares quando há dados/condição:
+As outras três telas da grade 3x3 são completadas por scripts auxiliares:
 
-| Tela | Origem atual |
+| Tela | Origem vigente |
 |---|---|
-| `paternal-ancestors` | `mobileFamilyTreeGrandparentScreens.ts` |
-| `maternal-ancestors` | `mobileFamilyTreeGrandparentScreens.ts` |
-| `descendants` | `mobileFamilyTreeDescendantScreen.ts` |
+| `paternal-ancestors` | `mobileFamilyTreeGrandparentScreens.ts` + contrato do guard direcional |
+| `maternal-ancestors` | `mobileFamilyTreeGrandparentScreens.ts` + contrato do guard direcional |
+| `descendants` | `mobileFamilyMapStableMobileFix.ts` |
 
-Consequência documental: a grade 3x3 é um comportamento composto por React + scripts auxiliares, não uma estrutura puramente nativa do componente React.
-
----
-
-## 5. `/mapa-familiar` — tela `descendants`
-
-O script `mobileFamilyTreeDescendantScreen.ts`:
-
-- procura a grade de descendentes dentro da tela `core`;
-- clona o conteúdo para uma tela dinâmica `descendants`;
-- cria `.mobile-family-descendant-screen__scroll` com `data-mobile-tree-scroll="true"`;
-- posiciona a tela em coluna 2, linha 3;
-- só mantém a tela quando existe conteúdo descendente;
-- controla o gesto vertical entre `core` e `descendants` respeitando a rolagem interna.
-
-Ponto de atenção:
-
-- o scroll interno existe no código, mas continua exigindo QA em Safari/iOS real porque compete com swipe global e outros listeners de touch.
+Consequência documental: a grade 3x3 é comportamento composto por React + scripts auxiliares, não uma estrutura puramente nativa do componente React.
 
 ---
 
-## 6. `/mapa-familiar` — telas de tios
+## 6. `/mapa-familiar` — tela `descendants`
 
-O script `mobileFamilyTreeUncleSizingFix.ts` atua somente em:
+A estabilização vigente da tela `descendants` está em:
 
 ```txt
-paternal-uncles
-maternal-uncles
+src/mobileFamilyMapStableMobileFix.ts
 ```
 
 Comportamento observado no código:
 
-- força scroll vertical interno no primeiro `div` da tela;
-- centraliza o wrapper de conteúdo;
-- limita largura do grupo a `min(calc(100vw - 2rem), 354px)`;
-- marca `data-mobile-family-tree-uncle-scroll="true"`;
-- marca `data-family-map-card-count` quando há cards;
-- normaliza títulos para `Tios Paternos` e `Tios Maternos`;
-- reduz os cards de tios para 78px de altura no CSS aplicado por script.
+- procura a grade de descendentes dentro da tela `core`;
+- clona o conteúdo relevante para uma tela `descendants`;
+- cria `.mobile-family-descendant-screen__scroll` com `data-mobile-tree-scroll="true"`;
+- posiciona a tela em coluna 2, linha 3;
+- só mantém a tela quando existe conteúdo descendente;
+- preserva scroll nativo quando ainda há conteúdo para rolar;
+- reduz disputa de transform/scroll com listeners antigos removidos do carregamento.
 
 Ponto de atenção:
 
-- se `paternal-uncles` não exibir cards, a causa pode estar no modelo de dados, no filtro visual, no stage/transform, no scroll interno ou em regressão de CSS. Não declarar corrigido sem QA visual.
+- ainda exige QA em Safari/iOS real, porque a tela é dinâmica e depende de DOM clonado.
 
 ---
 
-## 7. `/mapa-familiar` — títulos de grupos
+## 7. `/mapa-familiar` — navegação direcional
 
-O script `mobileFamilyTreeGroupTitleVisibilityFix.ts` atua sobre títulos de seções nas telas:
+Arquivo vigente:
 
 ```txt
-paternal-uncles
-maternal-uncles
-core
-descendants
-paternal-cousins
-maternal-cousins
+src/mobileFamilyMapDirectionalNavigationFix.ts
+```
+
+Matriz vigente no código:
+
+| Tela | Destinos permitidos |
+|---|---|
+| `paternal-ancestors` | direita → `ancestors` |
+| `ancestors` | esquerda → `paternal-ancestors`; direita → `maternal-ancestors`; baixo → `core` |
+| `maternal-ancestors` | esquerda → `ancestors` |
+| `core` | cima → `ancestors`; baixo → `descendants`; esquerda → `paternal-uncles`; direita → `maternal-uncles` |
+| `paternal-uncles` | direita → `core`; baixo → `paternal-cousins` |
+| `maternal-uncles` | esquerda → `core`; baixo → `maternal-cousins` |
+| `paternal-cousins` | cima → `paternal-uncles` |
+| `descendants` | cima → `core` |
+| `maternal-cousins` | cima → `maternal-uncles` |
+
+Comportamento observado:
+
+- captura direções permitidas e bloqueadas;
+- bloqueia fallback de outra camada;
+- respeita scroll vertical interno antes de navegar;
+- aplica `transform` no stage com base em `SCREEN_POSITIONS`;
+- usa `data-mobile-family-tree-active-screen` quando disponível e fallback por transform/geometria.
+
+---
+
+## 8. `/mapa-familiar` — telas de tios
+
+Arquivos vigentes:
+
+```txt
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapDirectionalNavigationFix.ts
+```
+
+Comportamento observado:
+
+- o modelo infere tios por irmãos do pai/mãe;
+- o modelo também aceita relações diretas de `tio/tia`, `uncle/aunt`, `sobrinho/sobrinha`, `nephew/niece`;
+- o script consolidado reduz altura artificial e posiciona grupos de tios mais acima;
+- o guard direcional permite apenas direita/baixo em `paternal-uncles` e esquerda/baixo em `maternal-uncles`.
+
+Ponto de atenção:
+
+- se `paternal-uncles` não exibir cards, verificar dados reais, filtros, vínculo direto, inferência por irmãos do pai e visibilidade antes de tratar como bug de CSS.
+
+---
+
+## 9. `/mapa-familiar` — conector central abaixo da pessoa principal
+
+Arquivo vigente:
+
+```txt
+src/mobileFamilyMapCoreConnectorFix.ts
+```
+
+Comportamento observado:
+
+- atua somente em `/mapa-familiar` mobile;
+- procura blocos `div.relative.mx-auto.h-9.w-full` dentro da tela `core`;
+- identifica a primeira linha vertical central por classes `left-1/2`, `top-0`, `h-5`, `w-px`, `bg-cyan-600`;
+- marca o elemento com `data-mobile-core-center-descendant-line="hidden"`;
+- injeta CSS para ocultar apenas essa linha.
+
+Contrato de QA:
+
+- a linha vertical central abaixo da pessoa principal deve sumir;
+- a linha horizontal e os conectores laterais para `Irmãos` e `Cônjuge` devem permanecer.
+
+---
+
+## 10. `/mapa-familiar` — títulos de grupos
+
+Arquivo ativo:
+
+```txt
+src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 ```
 
 Títulos monitorados:
@@ -178,20 +251,23 @@ Tios Paternos
 Tios Maternos
 Irmãos
 Sobrinhos
+Cônjuge
 Pets
 Filhos
 Netos
+Primos Paternos
+Primos Maternos
 ```
 
-Comportamento observado:
+Comportamento esperado:
 
-- força `display`, `visibility`, `opacity`, cor e `-webkit-text-fill-color`;
-- reduz fonte para `0.75rem`;
-- marca contagem de cards com `data-family-map-card-count`.
+- força `display`, `visibility`, `opacity`, cor e `-webkit-text-fill-color` quando necessário;
+- evita título branco em fundo branco;
+- preserva fonte compacta.
 
 ---
 
-## 8. `/mapa-familiar-horizontal` — estado atual
+## 11. `/mapa-familiar-horizontal` — estado atual
 
 O componente `MobileFamilyHorizontalMapView`:
 
@@ -219,12 +295,12 @@ Ponto de atenção:
 
 ---
 
-## 9. Zoom/overview mobile
+## 12. Zoom/overview mobile
 
-O arquivo ativo para overview/Zoom é:
+Arquivo vigente:
 
 ```txt
-src/mobileFamilyTreeZoomOverviewFix.ts
+src/mobileFamilyMapStableMobileFix.ts
 ```
 
 Comportamento observado:
@@ -232,7 +308,7 @@ Comportamento observado:
 - suporta `/mapa-familiar` e `/mapa-familiar-horizontal`;
 - intercepta o botão `data-mobile-family-map-toolbar-action="zoom"`;
 - cria o overlay `mobile-family-tree-overview-mode`;
-- monta cards por `SCREEN_CONFIG`;
+- monta cards por `SCREEN_POSITIONS`;
 - em `/mapa-familiar`, aplica `transform` no stage para navegar até a tela da grade;
 - em `/mapa-familiar-horizontal`, tenta clicar no botão `Ger N` correspondente.
 
@@ -242,22 +318,23 @@ Ponto de atenção:
 
 ---
 
-## 10. Pendências documentais/QA sem conflito de IDs
+## 13. Pendências documentais/QA sem conflito de IDs
 
-Para não conflitar com IDs `MOB-001` e `MOB-002` já existentes em `docs/PLANO_PROXIMOS_PASSOS.md`, usar o prefixo `MAP-MOB` para pendências específicas dos mapas mobile:
+Para não conflitar com IDs `MOB-001` e `MOB-002` já existentes em backlog geral, usar o prefixo `MAP-MOB` para pendências específicas dos mapas mobile quando a frente não estiver registrada em `PLANO_PROXIMOS_PASSOS.md`.
 
 | ID | Tema |
 |---|---|
 | `MAP-MOB-001` | Confirmar rolagem interna de `descendants` em iPhone/Safari real. |
 | `MAP-MOB-002` | Confirmar exibição de cards em `paternal-uncles` com dados reais do ramo paterno. |
-| `MAP-MOB-003` | Avaliar consolidação dos scripts auxiliares mobile dentro de React/hooks. |
+| `MAP-MOB-003` | Confirmar bloqueio de direções proibidas nas 9 telas. |
 | `MAP-MOB-004` | Confirmar comportamento do overview da horizontal quando a geração de destino não está ativa/visível. |
 | `MAP-MOB-005` | Confirmar overlay opaco do painel `+` em Safari/iOS após cache limpo. |
-| `MAP-MOB-006` | Verificar se `mobileFamilyMapOverviewNavigationBridge.ts` deve ser removido, carregado ou mantido como legado inativo. |
+| `MAP-MOB-006` | Confirmar que a linha vertical central abaixo da pessoa principal foi removida sem remover conectores laterais. |
+| `MAP-MOB-007` | Avaliar consolidação futura dos scripts auxiliares mobile dentro de React/hooks. |
 
 ---
 
-## 11. Regra para documentação futura
+## 14. Regra para documentação futura
 
 Não registrar como comportamento consolidado sem checar o código atual e, quando aplicável, validar visualmente:
 
@@ -268,4 +345,5 @@ Não registrar como comportamento consolidado sem checar o código atual e, quan
 - painel `+`;
 - exibição de `paternal-uncles`;
 - conectores clonados/dinâmicos;
+- remoção da linha central abaixo da pessoa principal;
 - Safari/iOS.
