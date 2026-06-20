@@ -4,6 +4,7 @@ const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const DESCENDANTS_SCREEN_SELECTOR = '.mobile-family-descendant-screen, [data-mobile-family-tree-screen="descendants"]';
 const DESCENDANTS_INNER_SELECTOR = '.mobile-family-descendant-screen__inner';
 const DESCENDANTS_GRID_SELECTOR = '.mobile-family-descendant-screen__grid';
+const MOBILE_CARD_SELECTOR = '[data-family-map-mobile-card="true"]';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-descendant-connectors';
 const STYLE_ID = 'mobile-family-tree-descendant-connectors-style';
 const DESCENDANT_BRANCH_GAP = 56;
@@ -56,9 +57,18 @@ function findGroup(screen: HTMLElement, titlePart: string) {
 
   return Array.from(scope.querySelectorAll<HTMLElement>('section'))
     .find((section) => (
-      section.querySelector('[data-family-map-mobile-card="true"]')
+      section.querySelector(MOBILE_CARD_SELECTOR)
       && getGroupTitle(section).includes(normalizedTitlePart)
     )) ?? null;
+}
+
+function getVisibleGroupBox(section: HTMLElement) {
+  return Array.from(section.children)
+    .find((child): child is HTMLElement => (
+      child instanceof HTMLElement
+      && child.querySelector('h2, h3') !== null
+      && child.querySelector(MOBILE_CARD_SELECTOR) !== null
+    )) ?? section;
 }
 
 function ensureStyles() {
@@ -193,13 +203,13 @@ function renderConnectors() {
   const halfLine = lineWidth / 2;
 
   if (siblings && spouses) {
-    const siblingsRect = getRelativeRect(siblings, hostRect);
-    const spousesRect = getRelativeRect(spouses, hostRect);
-    const groupTop = Math.min(siblingsRect.top, spousesRect.top);
+    const siblingsBoxRect = getRelativeRect(getVisibleGroupBox(siblings), hostRect);
+    const spousesBoxRect = getRelativeRect(getVisibleGroupBox(spouses), hostRect);
+    const groupTop = Math.min(siblingsBoxRect.top, spousesBoxRect.top);
     const branchY = getBranchY(groupTop, lineWidth);
-    const trunkX = (siblingsRect.centerX + spousesRect.centerX) / 2;
-    const branchLeft = Math.min(siblingsRect.centerX, spousesRect.centerX);
-    const branchRight = Math.max(siblingsRect.centerX, spousesRect.centerX);
+    const trunkX = (siblingsBoxRect.centerX + spousesBoxRect.centerX) / 2;
+    const branchLeft = Math.min(siblingsBoxRect.centerX, spousesBoxRect.centerX);
+    const branchRight = Math.max(siblingsBoxRect.centerX, spousesBoxRect.centerX);
 
     createLine(layer, {
       left: `${trunkX - halfLine}px`,
@@ -216,28 +226,28 @@ function renderConnectors() {
     });
 
     createLine(layer, {
-      left: `${siblingsRect.centerX - halfLine}px`,
+      left: `${siblingsBoxRect.centerX - halfLine}px`,
       top: `${branchY}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(0, siblingsRect.top - branchY)}px`,
+      height: `${Math.max(0, siblingsBoxRect.top - branchY)}px`,
     });
 
     createLine(layer, {
-      left: `${spousesRect.centerX - halfLine}px`,
+      left: `${spousesBoxRect.centerX - halfLine}px`,
       top: `${branchY}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(0, spousesRect.top - branchY)}px`,
+      height: `${Math.max(0, spousesBoxRect.top - branchY)}px`,
     });
   }
 
   if (siblings && nephews) {
-    const siblingsRect = getRelativeRect(siblings, hostRect);
-    const nephewsRect = getRelativeRect(nephews, hostRect);
-    const startY = siblingsRect.bottom;
-    const endY = nephewsRect.top;
+    const siblingsBoxRect = getRelativeRect(getVisibleGroupBox(siblings), hostRect);
+    const nephewsBoxRect = getRelativeRect(getVisibleGroupBox(nephews), hostRect);
+    const startY = siblingsBoxRect.bottom;
+    const endY = nephewsBoxRect.top;
 
     createLine(layer, {
-      left: `${siblingsRect.centerX - halfLine}px`,
+      left: `${siblingsBoxRect.centerX - halfLine}px`,
       top: `${startY}px`,
       width: `${lineWidth}px`,
       height: `${Math.max(0, endY - startY)}px`,
