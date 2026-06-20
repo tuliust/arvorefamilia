@@ -21,7 +21,9 @@ function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
       [data-mobile-core-center-descendant-line="hidden"],
-      [data-mobile-uncle-main-vertical-connector="hidden"] {
+      [data-mobile-uncle-main-vertical-connector="hidden"],
+      ${CORE_SCREEN_SELECTOR} [data-mobile-family-tree-descendant-source="true"],
+      ${CORE_SCREEN_SELECTOR} [data-mobile-family-tree-descendant-connector="true"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
