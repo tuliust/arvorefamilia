@@ -97,6 +97,34 @@ function getTransformForScreen(screen: TreeScreen) {
   return `translate3d(calc(-33.3333333333% + 0px), calc(${-row * (100 / 3)}% + 0px), 0)`;
 }
 
+function getDescendantScrollArea(target: EventTarget | null) {
+  if (target instanceof Element) {
+    return target.closest<HTMLElement>('.mobile-family-descendant-screen__scroll');
+  }
+
+  return getRoot()?.querySelector<HTMLElement>('.mobile-family-descendant-screen__scroll') ?? null;
+}
+
+function descendantScrollCanMove(target: EventTarget | null, deltaY: number) {
+  const scrollArea = getDescendantScrollArea(target);
+  if (!scrollArea) return false;
+
+  const maxScrollTop = scrollArea.scrollHeight - scrollArea.clientHeight;
+  if (maxScrollTop <= 1) return false;
+
+  // deltaY < 0: dedo sobe, conteúdo deve rolar para baixo.
+  if (deltaY < 0) return scrollArea.scrollTop < maxScrollTop - 1;
+  // deltaY > 0: dedo desce, conteúdo deve rolar para cima.
+  if (deltaY > 0) return scrollArea.scrollTop > 1;
+
+  return false;
+}
+
+function descendantScrollIsAtTop(target: EventTarget | null) {
+  const scrollArea = getDescendantScrollArea(target);
+  return !scrollArea || scrollArea.scrollTop <= 1;
+}
+
 function relayCloneClicks(clone: HTMLElement, original: HTMLElement) {
   const originalButtons = Array.from(original.querySelectorAll<HTMLButtonElement>('button'));
   const cloneButtons = Array.from(clone.querySelectorAll<HTMLButtonElement>('button'));
@@ -317,14 +345,19 @@ function handleTouchStart(event: TouchEvent) {
   };
 }
 
-function shouldHandleVerticalGesture(deltaX: number, deltaY: number, screen: TreeScreen) {
+function shouldHandleVerticalGesture(deltaX: number, deltaY: number, screen: TreeScreen, target: EventTarget | null) {
   const absoluteX = Math.abs(deltaX);
   const absoluteY = Math.abs(deltaY);
   if (absoluteY <= absoluteX * 1.2 || absoluteY < 10) return false;
 
   // deltaY < 0 = dedo sobe, viewport vai para a tela abaixo.
   if (screen === CORE_SCREEN) return deltaY < 0 && hasDescendantContent();
-  if (screen === DESCENDANTS_SCREEN) return true;
+
+  if (screen === DESCENDANTS_SCREEN) {
+    if (descendantScrollCanMove(target, deltaY)) return false;
+    return deltaY > 0 && descendantScrollIsAtTop(target);
+  }
+
   return false;
 }
 
@@ -336,7 +369,7 @@ function handleTouchMove(event: TouchEvent) {
   const deltaX = touch.clientX - gestureStart.x;
   const deltaY = touch.clientY - gestureStart.y;
 
-  if (!shouldHandleVerticalGesture(deltaX, deltaY, gestureStart.screen)) return;
+  if (!shouldHandleVerticalGesture(deltaX, deltaY, gestureStart.screen, event.target)) return;
 
   event.preventDefault();
   event.stopPropagation();
@@ -370,12 +403,11 @@ function handleTouchEnd(event: TouchEvent) {
     return;
   }
 
-  if (start.screen === DESCENDANTS_SCREEN) {
+  if (start.screen === DESCENDANTS_SCREEN && deltaY > 0 && descendantScrollIsAtTop(event.target)) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-
-    if (deltaY > 0) applyScreen(CORE_SCREEN);
+    applyScreen(CORE_SCREEN);
   }
 }
 
