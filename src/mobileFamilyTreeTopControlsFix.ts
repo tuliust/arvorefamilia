@@ -95,15 +95,18 @@ function findHitTarget(point: { x: number; y: number }) {
   const directButton = directTarget instanceof Element
     ? directTarget.closest<HTMLElement>(HIT_TARGET_SELECTOR)
     : null;
-  if (directButton) return directButton;
 
-  return Array.from(document.querySelectorAll<HTMLElement>(HIT_TARGET_SELECTOR)).find((candidate) => {
+  if (directButton) return { element: directButton, direct: true };
+
+  const fallbackButton = Array.from(document.querySelectorAll<HTMLElement>(HIT_TARGET_SELECTOR)).find((candidate) => {
     const rect = candidate.getBoundingClientRect();
     return point.x >= rect.left
       && point.x <= rect.right
       && point.y >= rect.top
       && point.y <= rect.bottom;
   }) ?? null;
+
+  return fallbackButton ? { element: fallbackButton, direct: false } : null;
 }
 
 function triggerElement(element: HTMLElement) {
@@ -121,21 +124,25 @@ function handleTopControlActivation(event: Event) {
   const target = findHitTarget(point);
   if (!target) return;
 
+  // Quando o toque já caiu diretamente no botão, não bloqueia o evento nativo.
+  // O bloqueio anterior era agressivo demais e podia impedir os handlers React da toolbar.
+  if (target.direct) return;
+
   const now = Date.now();
-  if (target === lastActivatedElement && now - lastActivationAt < ACTIVATION_DEBOUNCE_MS) {
+  if (target.element === lastActivatedElement && now - lastActivationAt < ACTIVATION_DEBOUNCE_MS) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
     return;
   }
 
-  lastActivatedElement = target;
+  lastActivatedElement = target.element;
   lastActivationAt = now;
 
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
-  triggerElement(target);
+  triggerElement(target.element);
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
