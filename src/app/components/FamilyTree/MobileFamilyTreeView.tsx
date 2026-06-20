@@ -1,133 +1,60 @@
 import React from 'react';
-import { Cross, Star, UserRound } from 'lucide-react';
 
+import type { FamilyTreeActions } from './actions';
+import { getPersonBirthYear, getPersonDeathYear } from '../../utils/personFields';
+import type { EdgeFilters, GenealogyFilters, MarriageNodeDetails, VisualLineFilters } from './types';
+import type { DirectRelativeFilters } from './types';
 import type { Pessoa, Relacionamento } from '../../types';
-import type { FamilyTreeActions } from './FamilyTree';
-import {
-  FAMILY_MAP_AVATAR_SIZES,
-  getVisualPersonCardData,
-  VisualPersonAvatar as PersonAvatar,
-} from './FamilyTreeVisualCards';
 import {
   buildMobileFamilyTreeModel,
+  type AncestorSubgroup,
   type MobileFamilyBranch,
+  type MobileFamilyTreeModel,
 } from './mobileFamilyTreeModel';
-import type {
-  DirectRelativeFilters,
-  DirectRelativeGroup,
-  EdgeFilters,
-  GenealogyFilters,
-  MarriageNodeDetails,
-  VisualLineFilters,
-} from './types';
+import { getInitials } from './personDisplay';
 
-type MobileTreeTab = 'core' | 'paternal' | 'maternal';
-
-type MobileTreeScreen =
-  | 'ancestors'
-  | 'paternal-uncles'
-  | 'core'
-  | 'maternal-uncles'
-  | 'paternal-cousins'
-  | 'maternal-cousins';
-
-type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
-
-type MobileFamilyMapColorKey =
-  | 'tataravos'
-  | 'bisavos'
-  | 'avos'
-  | 'pais'
-  | 'tios'
-  | 'primos'
-  | 'central'
-  | 'conjuge'
-  | 'irmaos'
-  | 'sobrinhos'
-  | 'filhos'
-  | 'netos'
-  | 'pets';
-
-function normalizeMobileColorKeyText(value?: string) {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
-
-function getMobileFamilyMapColorKeyFromTitle(
-  title?: string,
-  fallback: MobileFamilyMapColorKey = 'central',
-): MobileFamilyMapColorKey {
-  const normalized = normalizeMobileColorKeyText(title);
-
-  if (normalized.includes('tataravos')) return 'tataravos';
-  if (normalized.includes('bisavos')) return 'bisavos';
-  if (normalized.includes('avos')) return 'avos';
-  if (normalized.includes('pai') || normalized.includes('mae')) return 'pais';
-  if (normalized.includes('tios')) return 'tios';
-  if (normalized.includes('primos')) return 'primos';
-  if (normalized.includes('central')) return 'central';
-  if (normalized.includes('conjuge')) return 'conjuge';
-  if (normalized.includes('irmaos')) return 'irmaos';
-  if (normalized.includes('sobrinhos')) return 'sobrinhos';
-  if (normalized.includes('filhos')) return 'filhos';
-  if (normalized.includes('netos')) return 'netos';
-  if (normalized.includes('pets')) return 'pets';
-
-  return fallback;
-}
-
-function getMobileFamilyMapColorKeyForGroup(
-  title: string,
-  cardVariant: CardVariant,
-): MobileFamilyMapColorKey {
-  if (cardVariant === 'sibling') return 'irmaos';
-  if (cardVariant === 'pet') return 'pets';
-
-  return getMobileFamilyMapColorKeyFromTitle(title, cardVariant === 'mini' ? 'tios' : 'central');
-}
-
-type GroupColumns = 'single' | 'double' | 'triple';
-
-type RelativeScreenKind = 'default' | 'uncles' | 'cousins';
-
+type MobileTreeScreen = 'ancestors' | 'paternal-uncles' | 'core' | 'maternal-uncles' | 'paternal-cousins' | 'maternal-cousins';
 type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 
-type AncestorSubgroup = {
-  id: string;
-  title: string;
-  people: Pessoa[];
-};
+type MobileTreeTab = 'paternal' | 'central' | 'maternal';
 
 interface MobileFamilyTreeViewProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
-  centralPersonId: string;
+  centralPersonId?: string;
   visiblePersonIds?: Set<string>;
-  familyTreeRef: React.Ref<FamilyTreeActions>;
+  familyTreeRef?: React.RefObject<FamilyTreeActions | null>;
   onPersonClick: (pessoa: Pessoa) => void;
-  onPersonView: (pessoa: Pessoa) => void;
-  onPersonEdit: (pessoa: Pessoa) => void;
-  onPersonAddConnection: (pessoa: Pessoa) => void;
-  onPersonRemove: (pessoa: Pessoa) => void;
-  onMarriageClick: (details: MarriageNodeDetails) => void;
+  onPersonView?: (pessoa: Pessoa) => void;
+  onPersonEdit?: (pessoa: Pessoa) => void;
+  onPersonAddConnection?: (pessoa: Pessoa) => void;
+  onPersonRemove?: (pessoa: Pessoa) => void;
+  onMarriageClick?: (details: MarriageNodeDetails) => void;
   selectedPersonId?: string;
-  edgeFilters: EdgeFilters;
-  directRelativeFilters: DirectRelativeFilters;
-  genealogyFilters: GenealogyFilters;
-  visualLineFilters: VisualLineFilters;
-  layoutRevision: number;
-  onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
+  edgeFilters?: EdgeFilters;
+  directRelativeFilters?: DirectRelativeFilters;
+  genealogyFilters?: GenealogyFilters;
+  visualLineFilters?: VisualLineFilters;
+  layoutRevision?: number;
+  onDirectRelationRenderedCounts?: (counts: Record<string, number>) => void;
 }
+
+const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
+  ancestors: { column: 1, row: 0 },
+  'paternal-uncles': { column: 0, row: 1 },
+  core: { column: 1, row: 1 },
+  'maternal-uncles': { column: 2, row: 1 },
+  'paternal-cousins': { column: 0, row: 2 },
+  'maternal-cousins': { column: 2, row: 2 },
+};
 
 const TABS: Array<{ id: MobileTreeTab; label: string }> = [
   { id: 'paternal', label: 'Paterno' },
-  { id: 'core', label: 'Central' },
+  { id: 'central', label: 'Central' },
   { id: 'maternal', label: 'Materno' },
 ];
 
-const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
+const EMPTY_COUNTS: Record<string, number> = {
   pais: 0,
   avos: 0,
   bisavos: 0,
@@ -142,19 +69,41 @@ const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pets: 0,
 };
 
-const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
-  ancestors: { column: 1, row: 0 },
-  'paternal-uncles': { column: 0, row: 1 },
-  core: { column: 1, row: 1 },
-  'maternal-uncles': { column: 2, row: 1 },
-  'paternal-cousins': { column: 0, row: 2 },
-  'maternal-cousins': { column: 2, row: 2 },
-};
-
 function getTabForScreen(screen: MobileTreeScreen): MobileTreeTab {
-  if (screen.startsWith('paternal')) return 'paternal';
-  if (screen.startsWith('maternal')) return 'maternal';
-  return 'core';
+  if (screen === 'paternal-uncles' || screen === 'paternal-cousins') return 'paternal';
+  if (screen === 'maternal-uncles' || screen === 'maternal-cousins') return 'maternal';
+  return 'central';
+}
+
+function getDisplayName(person?: Pessoa) {
+  const name = person?.nome_completo?.trim();
+  if (!name) return '';
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return name;
+  return `${parts[0]} ${parts[1]}`;
+}
+
+function getYearLine(person?: Pessoa) {
+  if (!person) return '';
+  const birth = getPersonBirthYear(person);
+  const death = getPersonDeathYear(person);
+  if (birth && death) return `${birth} — ${death}`;
+  if (birth) return String(birth);
+  if (death) return `† ${death}`;
+  return '';
+}
+
+function isPet(person?: Pessoa) {
+  const type = String(person?.tipo_entidade || '').toLowerCase();
+  return type === 'pet' || type === 'animal';
+}
+
+function getGenderIcon(person?: Pessoa) {
+  if (isPet(person)) return '🐾';
+  const gender = String(person?.genero || person?.sexo || '').toLowerCase();
+  if (gender.startsWith('f')) return '♀';
+  if (gender.startsWith('m')) return '♂';
+  return '○';
 }
 
 function getDestinationForScreen(
@@ -192,401 +141,144 @@ function VitalLines({
   compact?: boolean;
   prominent?: boolean;
 }) {
-  const alignment = align === 'left' ? 'justify-start text-left' : 'justify-center text-center';
-  const textSize = prominent ? 'text-[12px]' : compact ? 'text-[9px]' : 'text-[11px]';
-  const gap = compact ? 'gap-0.5' : 'gap-1';
-  const iconSize = prominent ? 'h-3.5 w-3.5' : compact ? 'h-2.5 w-2.5' : 'h-3 w-3';
+  const textClass = prominent ? 'text-white' : 'text-slate-700';
+  const iconClass = prominent ? 'text-white' : 'text-slate-700';
+  const alignClass = align === 'left' ? 'items-start' : 'items-center';
+  const sizeClass = compact ? 'text-[11px]' : prominent ? 'text-base' : 'text-sm';
 
   return (
-    <>
-      <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-        <Star className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`} aria-hidden="true" />
-        <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
-      </span>
-      {showDeathLine && (
-        <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
-          <Cross className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`} aria-hidden="true" />
-          <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
+    <div className={`mt-1 flex flex-col ${alignClass} gap-0.5 ${sizeClass} font-bold leading-tight ${textClass}`}>
+      {birthLine && (
+        <span className="inline-flex items-center gap-1">
+          <span className={`${iconClass}`} aria-hidden="true">★</span>
+          <span>{birthLine}</span>
         </span>
       )}
-    </>
+      {showDeathLine && deathLine && (
+        <span className="inline-flex items-center gap-1">
+          <span className={`${iconClass}`} aria-hidden="true">✚</span>
+          <span>{deathLine}</span>
+        </span>
+      )}
+    </div>
   );
-}
-
-function getPersonCardData(person: Pessoa) {
-  const {
-    pet,
-    displayName,
-    birthYearLine,
-    deathYearLine,
-    showDeathLine,
-  } = getVisualPersonCardData(person);
-
-  return {
-    pet,
-    displayName,
-    birthLine: birthYearLine,
-    deathLine: deathYearLine,
-    showDeathLine,
-  };
 }
 
 function PersonCard({
   person,
   label,
-  central = false,
-  colorKey,
   onClick,
+  compact = false,
+  horizontal = false,
 }: {
   person: Pessoa;
   label?: string;
-  central?: boolean;
-  colorKey?: MobileFamilyMapColorKey;
   onClick: (person: Pessoa) => void;
+  compact?: boolean;
+  horizontal?: boolean;
 }) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-  const effectiveColorKey = colorKey ?? (central ? 'central' : getMobileFamilyMapColorKeyFromTitle(label, 'pais'));
+  const name = getDisplayName(person);
+  const birthLine = getPersonBirthYear(person) ? String(getPersonBirthYear(person)) : '';
+  const deathLine = getPersonDeathYear(person) ? String(getPersonDeathYear(person)) : '';
+  const photoUrl = person.foto_url?.trim();
+
+  if (horizontal) {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(person)}
+        data-family-map-color-key={isPet(person) ? 'pets' : undefined}
+        data-family-map-mobile-card="true"
+        className="group relative flex min-h-[82px] w-full items-center gap-3 rounded-2xl border border-cyan-900/30 bg-gradient-to-br from-cyan-700 to-cyan-900 px-3 py-3 text-left text-white shadow-sm transition active:scale-[0.99]"
+      >
+        {label && (
+          <span className="absolute -top-3 left-4 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white shadow-sm">
+            {label}
+          </span>
+        )}
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/90 bg-white/10 text-2xl font-black">
+          {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : getGenderIcon(person)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="break-words text-[13px] font-black uppercase leading-[1.05] tracking-[0.02em] text-white">
+            {name}
+          </div>
+          <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={Boolean(deathLine)} align="left" compact prominent />
+        </div>
+      </button>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={() => onClick(person)}
+      data-family-map-color-key={isPet(person) ? 'pets' : undefined}
       data-family-map-mobile-card="true"
-      data-family-map-color-key={effectiveColorKey}
       className={[
-        'relative flex h-[164px] w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
-        central
-          ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 text-white'
-          : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 text-white',
+        'group relative flex flex-col items-center justify-center overflow-visible rounded-3xl border border-cyan-900/30 bg-gradient-to-br from-cyan-700 to-cyan-950 text-center text-white shadow-sm transition active:scale-[0.99]',
+        compact ? 'min-h-[132px] px-3 py-4' : 'min-h-[170px] px-4 py-5',
       ].join(' ')}
     >
       {label && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow">
+        <span className="absolute -top-4 rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white shadow-sm">
           {label}
         </span>
       )}
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.avatar : FAMILY_MAP_AVATAR_SIZES.mobileDefault.avatar}
-        iconClassName={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.icon : FAMILY_MAP_AVATAR_SIZES.mobileDefault.icon}
-      />
-      <span className="mt-1.5 w-full truncate whitespace-nowrap py-px text-[12px] font-extrabold uppercase leading-[1.2]">
-        {displayName}
-      </span>
-      <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={showDeathLine} />
-    </button>
-  );
-}
-
-function MainPersonCard({
-  person,
-  onClick,
-}: {
-  person: Pessoa;
-  onClick: (person: Pessoa) => void;
-}) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(person)}
-      data-family-map-mobile-card="true"
-      data-family-map-color-key="central"
-      className="relative flex h-[194px] w-full min-w-0 flex-col items-center justify-center rounded-[1.55rem] border border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 px-3.5 pb-4 pt-4 text-center text-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition active:scale-[0.98]"
-    >
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={FAMILY_MAP_AVATAR_SIZES.mobileCentral.avatar}
-        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileCentral.icon}
-      />
-      <span className="mt-3 w-full truncate whitespace-nowrap py-px text-[15px] font-extrabold uppercase leading-[1.2]">
-        {displayName}
-      </span>
-      <VitalLines
-        birthLine={birthLine}
-        deathLine={deathLine}
-        showDeathLine={showDeathLine}
-        prominent
-      />
-    </button>
-  );
-}
-
-function SiblingPersonCard({
-  person,
-  onClick,
-}: {
-  person: Pessoa;
-  onClick: (person: Pessoa) => void;
-}) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(person)}
-      data-family-map-mobile-card="true"
-      data-family-map-color-key="irmaos"
-      className="flex h-[82px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
-    >
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={FAMILY_MAP_AVATAR_SIZES.mobileSibling.avatar}
-        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileSibling.icon}
-      />
-      <span className="flex min-w-0 flex-1 flex-col justify-center">
-        <span
-          className="w-full overflow-hidden text-[11px] font-extrabold uppercase leading-[1.05]"
-          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-        >
-          {displayName}
-        </span>
-        <VitalLines
-          birthLine={birthLine}
-          deathLine={deathLine}
-          showDeathLine={showDeathLine}
-          align="left"
-          compact
-        />
-      </span>
-    </button>
-  );
-}
-
-function AncestorPersonCard({
-  person,
-  colorKey = 'avos',
-  onClick,
-}: {
-  person: Pessoa;
-  colorKey?: MobileFamilyMapColorKey;
-  onClick: (person: Pessoa) => void;
-}) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(person)}
-      data-family-map-mobile-card="true"
-      data-family-map-color-key={colorKey}
-      className="flex h-[60px] w-full min-w-0 items-center gap-1.5 rounded-[0.85rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-1.5 text-left text-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] transition active:scale-[0.98]"
-    >
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.avatar}
-        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.icon}
-      />
-      <span className="flex min-w-0 flex-1 flex-col justify-center">
-        <span
-          className="w-full overflow-hidden text-[8.5px] font-extrabold uppercase leading-[1.05]"
-          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-        >
-          {displayName}
-        </span>
-        <VitalLines
-          birthLine={birthLine}
-          deathLine={deathLine}
-          showDeathLine={showDeathLine}
-          align="left"
-          compact
-        />
-      </span>
-    </button>
-  );
-}
-
-function MiniPersonCard({
-  person,
-  colorKey = 'tios',
-  onClick,
-}: {
-  person: Pessoa;
-  colorKey?: MobileFamilyMapColorKey;
-  onClick: (person: Pessoa) => void;
-}) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(person)}
-      data-family-map-mobile-card="true"
-      data-family-map-color-key={colorKey}
-      className="flex h-[104px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
-    >
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={FAMILY_MAP_AVATAR_SIZES.mobileMini.avatar}
-        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileMini.icon}
-      />
-      <span
-        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
-        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-      >
-        {displayName}
-      </span>
-      <VitalLines
-        birthLine={birthLine}
-        deathLine={deathLine}
-        showDeathLine={showDeathLine}
-        compact
-      />
-    </button>
-  );
-}
-
-function PetPersonCard({
-  person,
-  onClick,
-}: {
-  person: Pessoa;
-  onClick: (person: Pessoa) => void;
-}) {
-  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(person)}
-      data-family-map-mobile-card="true"
-      data-family-map-color-key="pets"
-      className="flex h-[128px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
-    >
-      <PersonAvatar
-        person={person}
-        pet={pet}
-        className={FAMILY_MAP_AVATAR_SIZES.mobilePet.avatar}
-        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobilePet.icon}
-      />
-      <span
-        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
-        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-      >
-        {displayName}
-      </span>
-      <VitalLines
-        birthLine={birthLine}
-        deathLine={deathLine}
-        showDeathLine={showDeathLine}
-        compact
-      />
+      <div className={['flex items-center justify-center overflow-hidden rounded-full border-4 border-white/90 bg-white/10 font-black', compact ? 'h-16 w-16 text-2xl' : 'h-20 w-20 text-3xl'].join(' ')}>
+        {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : getGenderIcon(person)}
+      </div>
+      <div className="mt-3 max-w-full break-words text-[15px] font-black uppercase leading-tight tracking-[0.02em] text-white">
+        {name}
+      </div>
+      <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={Boolean(deathLine)} prominent />
     </button>
   );
 }
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white px-3 text-center text-sm font-semibold text-slate-500">
-      <UserRound className="mb-2 h-8 w-8 text-slate-300" />
-      {label}
+    <div className="relative flex min-h-[150px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center text-slate-400">
+      <span className="absolute -top-3 rounded-full bg-slate-200 px-4 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </span>
+      <span className="text-3xl" aria-hidden="true">○</span>
+      <span className="mt-2 text-xs font-bold">Não informado</span>
     </div>
   );
 }
 
-function getGridColumnsClass(columns: GroupColumns) {
-  if (columns === 'single') return 'grid-cols-1';
-  if (columns === 'triple') return 'grid-cols-2 min-[360px]:grid-cols-3';
-  return 'grid-cols-2';
-}
-
-function FamilyGroup({
-  id,
-  title,
-  people,
-  expanded,
-  onToggle,
-  onPersonClick,
-  columns = 'double',
-  cardVariant = 'default',
-  maxCollapsedItems = 4,
-  topConnector = true,
-  bottomConnector = false,
-  stretch = false,
-  screenKind = 'default',
-  showAll = false,
-}: {
-  id: string;
-  title: string;
-  people: Pessoa[];
-  expanded: boolean;
-  onToggle: (id: string) => void;
-  onPersonClick: (person: Pessoa) => void;
-  columns?: GroupColumns;
-  cardVariant?: CardVariant;
-  maxCollapsedItems?: number;
-  topConnector?: boolean;
-  bottomConnector?: boolean;
-  stretch?: boolean;
-  screenKind?: RelativeScreenKind;
-  showAll?: boolean;
-}) {
-  if (people.length === 0) return null;
-  const visiblePeople = showAll || expanded || people.length <= maxCollapsedItems
-    ? people
-    : people.slice(0, maxCollapsedItems);
-  const usePetCards = cardVariant === 'pet';
-  const stretchedGroup = stretch && screenKind !== 'default';
-  const groupColorKey = getMobileFamilyMapColorKeyForGroup(title, cardVariant);
+function MainPersonCard({ person, onClick }: { person: Pessoa; onClick: (person: Pessoa) => void }) {
+  const name = getDisplayName(person);
+  const year = getYearLine(person);
+  const photoUrl = person.foto_url?.trim();
 
   return (
-    <section className={[
-      'relative',
-      stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
-      topConnector ? 'pt-9' : 'pt-0',
-      bottomConnector ? 'pb-9' : 'pb-0',
-    ].join(' ')}>
-      {topConnector && (
-        <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
-      )}
-      <div className={[
-        usePetCards
-          ? 'relative z-10 overflow-hidden rounded-[1.15rem] border border-cyan-200 bg-white p-2 shadow-sm'
-          : 'relative z-10 overflow-hidden rounded-[1.4rem] border border-cyan-200 bg-white p-3 shadow-sm',
-        stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
-      ].join(' ')}
-      >
-        <h2 className={usePetCards
-          ? 'mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-800'
-          : 'mb-3 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800'}
-        >
-          {title}
-        </h2>
-        <div
-          className={[
-            usePetCards ? 'grid min-w-0 grid-cols-1 gap-2' : ['grid min-w-0 gap-2.5', getGridColumnsClass(columns)].join(' '),
-            stretchedGroup ? 'flex-1 content-around items-center overflow-hidden' : '',
-            screenKind === 'uncles' ? 'auto-rows-min' : '',
-            screenKind === 'cousins' ? 'auto-rows-min gap-2' : '',
-          ].join(' ')}
-        >
-          {visiblePeople.map((person) => {
-            if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
-            if (cardVariant === 'pet') return <PetPersonCard key={person.id} person={person} onClick={onPersonClick} />;
-            if (cardVariant === 'mini') return <MiniPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
-            return <PersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
-          })}
-        </div>
-        {!showAll && people.length > maxCollapsedItems && (
-          <button
-            type="button"
-            onClick={() => onToggle(id)}
-            className="mt-3 w-full rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-800"
-          >
-            {expanded ? 'Mostrar menos' : `Ver todos (${people.length})`}
-          </button>
-        )}
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      className="flex min-h-[190px] w-full flex-col items-center justify-center rounded-[2rem] border border-cyan-900/30 bg-gradient-to-br from-cyan-800 to-slate-950 px-5 py-6 text-center text-white shadow-md transition active:scale-[0.99]"
+    >
+      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white/90 bg-white/10 text-4xl font-black">
+        {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(name)}
       </div>
-      {bottomConnector && (
-        <div className="absolute bottom-0 left-1/2 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+      <div className="mt-4 break-words text-xl font-black uppercase leading-tight tracking-[0.02em] text-white">{name}</div>
+      {year && (
+        <div className="mt-2 flex items-center gap-1.5 text-lg font-bold text-white">
+          <span aria-hidden="true">★</span>
+          <span>{year}</span>
+        </div>
       )}
-    </section>
+    </button>
+  );
+}
+
+function MiniSectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mb-3 text-center text-[15px] font-black uppercase tracking-[0.16em] text-slate-950">
+      {children}
+    </h2>
   );
 }
 
@@ -597,8 +289,8 @@ function VerticalRelativeScreen({
   expanded,
   onToggle,
   onPersonClick,
-  columns,
-  maxCollapsedItems,
+  columns = 'single',
+  maxCollapsedItems = 4,
   connectHorizontal,
   connectAncestors = false,
   bottomConnector = true,
@@ -609,86 +301,93 @@ function VerticalRelativeScreen({
   expanded: boolean;
   onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
-  columns: GroupColumns;
-  maxCollapsedItems: number;
+  columns?: 'single' | 'double' | 'triple';
+  maxCollapsedItems?: number;
   connectHorizontal?: 'left' | 'right';
   connectAncestors?: boolean;
   bottomConnector?: boolean;
 }) {
-  const screenKind: RelativeScreenKind = columns === 'double' ? 'uncles' : 'cousins';
-  const isCousinsScreen = screenKind === 'cousins';
+  const visiblePeople = expanded ? people : people.slice(0, maxCollapsedItems);
+  const hiddenCount = Math.max(0, people.length - visiblePeople.length);
+  const gridClass = columns === 'triple'
+    ? 'grid-cols-2 min-[430px]:grid-cols-3'
+    : columns === 'double'
+      ? 'grid-cols-2'
+      : 'grid-cols-1';
 
   return (
-    <div className={[
-      'relative h-full w-full shrink-0 snap-center px-4',
-      isCousinsScreen ? 'overflow-y-auto overflow-x-hidden overscroll-y-auto' : 'overflow-visible',
-    ].join(' ')}
-    data-mobile-tree-scroll={isCousinsScreen ? true : undefined}
-    >
-      {connectHorizontal && people.length > 0 && (
-        <div className={[
-          'pointer-events-none absolute top-[122px] z-0 h-px bg-cyan-600',
-          connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
-        ].join(' ')} />
+    <div className="relative h-full w-full overflow-hidden">
+      {connectAncestors && (
+        <div className="pointer-events-none absolute left-1/2 top-0 h-10 w-px -translate-x-1/2 bg-cyan-600" />
       )}
-      {people.length > 0 && (
-        <div className={[
-          'pointer-events-none absolute left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600',
-          bottomConnector ? 'inset-y-0' : 'top-0 h-10',
-        ].join(' ')} />
+      {connectHorizontal && (
+        <div
+          className={[
+            'pointer-events-none absolute top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600',
+            connectHorizontal === 'left' ? 'right-1/2' : 'left-1/2',
+          ].join(' ')}
+        />
       )}
-      {connectHorizontal && connectAncestors && people.length > 0 && (
-        <div className={[
-          'pointer-events-none absolute top-0 z-0 h-10 border-t border-cyan-600',
-          connectHorizontal === 'left'
-            ? 'left-1/2 right-0 border-l'
-            : 'left-0 right-1/2 border-r',
-        ].join(' ')} />
+      {bottomConnector && people.length > 0 && (
+        <div className="pointer-events-none absolute bottom-0 left-1/2 h-10 w-px -translate-x-1/2 bg-cyan-600" />
       )}
-      <div className={[
-        'relative z-10 mx-auto flex w-full max-w-[380px] items-stretch pb-28 pt-10',
-        isCousinsScreen ? 'min-h-full' : 'h-full',
-      ].join(' ')}>
-        <div className="w-full min-w-0">
-          <FamilyGroup
-            id={groupId}
-            title={title}
-            people={people}
-            expanded={expanded}
-            onToggle={onToggle}
-            onPersonClick={onPersonClick}
-            columns={columns}
-            cardVariant={columns === 'double' ? 'sibling' : 'mini'}
-            maxCollapsedItems={maxCollapsedItems}
-            topConnector={false}
-            bottomConnector={false}
-            stretch={!isCousinsScreen}
-            screenKind={screenKind}
-            showAll={isCousinsScreen}
-          />
-        </div>
+
+      <div data-mobile-tree-scroll className="relative z-10 h-full overflow-y-auto overflow-x-visible overscroll-y-contain px-4 pb-28 pt-14">
+        <section className="mx-auto max-w-[430px] rounded-[1.75rem] border border-cyan-900/20 bg-white/92 p-4 shadow-md backdrop-blur-sm">
+          <MiniSectionTitle>{title}</MiniSectionTitle>
+          {people.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white/75 px-4 py-8 text-center text-sm font-semibold text-slate-500">
+              Nenhum familiar encontrado neste grupo.
+            </div>
+          ) : (
+            <>
+              <div className={`grid ${gridClass} gap-3`}>
+                {visiblePeople.map((person) => (
+                  <PersonCard
+                    key={person.id}
+                    person={person}
+                    onClick={onPersonClick}
+                    horizontal={columns !== 'single'}
+                    compact={columns !== 'single'}
+                  />
+                ))}
+              </div>
+
+              {hiddenCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onToggle(groupId)}
+                  className="mt-3 w-full rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-900"
+                >
+                  Ver mais {hiddenCount} familiar{hiddenCount === 1 ? '' : 'es'}
+                </button>
+              )}
+              {expanded && people.length > maxCollapsedItems && (
+                <button
+                  type="button"
+                  onClick={() => onToggle(groupId)}
+                  className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600"
+                >
+                  Mostrar menos
+                </button>
+              )}
+            </>
+          )}
+        </section>
       </div>
     </div>
   );
 }
 
-function AncestorGroupCard({
-  group,
-  onPersonClick,
-}: {
-  group: AncestorSubgroup;
-  onPersonClick: (person: Pessoa) => void;
-}) {
-  const groupColorKey = getMobileFamilyMapColorKeyFromTitle(group.title, 'avos');
+function AncestorGroup({ group, onPersonClick }: { group: AncestorSubgroup; onPersonClick: (person: Pessoa) => void }) {
+  if (group.people.length === 0) return null;
 
   return (
-    <section className="relative z-10 flex min-h-[5.5rem] min-w-0 flex-col overflow-hidden rounded-[1rem] border border-cyan-200 bg-white p-2 shadow-sm">
-      <h3 className="mb-1.5 truncate text-center text-[9px] font-extrabold uppercase tracking-[0.04em] text-slate-800 min-[375px]:text-[10px]">
-        {group.title}
-      </h3>
-      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-1 content-center gap-1.5">
+    <section className="rounded-[1.5rem] border border-cyan-900/20 bg-white/92 p-3 shadow-sm backdrop-blur-sm">
+      <MiniSectionTitle>{group.title}</MiniSectionTitle>
+      <div className="grid gap-2">
         {group.people.map((person) => (
-          <AncestorPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />
+          <PersonCard key={person.id} person={person} onClick={onPersonClick} horizontal compact />
         ))}
       </div>
     </section>
@@ -704,79 +403,28 @@ function AncestorsOverviewScreen({
   maternalGroups: AncestorSubgroup[];
   onPersonClick: (person: Pessoa) => void;
 }) {
-  const generations = paternalGroups
-    .map((paternalGroup, index) => ({
-      paternal: paternalGroup,
-      maternal: maternalGroups[index],
-    }))
-    .filter(({ paternal, maternal }) => (
-      paternal.people.length > 0 || maternal.people.length > 0
-    ));
-  const hasAncestors = generations.length > 0;
-  const hasPaternalAncestors = paternalGroups.some((group) => group.people.length > 0);
-  const hasMaternalAncestors = maternalGroups.some((group) => group.people.length > 0);
+  const hasAny = paternalGroups.some((group) => group.people.length > 0)
+    || maternalGroups.some((group) => group.people.length > 0);
 
   return (
-    <div className="relative h-full w-full shrink-0 overflow-hidden">
-      <h2 className="sr-only">Ancestrais paternos e maternos</h2>
-      {!hasAncestors ? (
-        <div
-          data-mobile-tree-scroll
-          className="h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
-        >
-          <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[380px] items-center pb-28 pt-10">
-            <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
-              Nenhum ancestral cadastrado.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {hasPaternalAncestors && (
-            <>
-              <div className="pointer-events-none absolute bottom-0 left-[calc(50%-97.5px)] z-0 h-10 w-px -translate-x-1/2 bg-cyan-600" />
-              <div className="pointer-events-none absolute bottom-0 left-0 right-[calc(50%+97.5px)] z-0 h-px bg-cyan-600" />
-            </>
-          )}
-          {hasMaternalAncestors && (
-            <>
-              <div className="pointer-events-none absolute bottom-0 right-[calc(50%-97.5px)] z-0 h-10 w-px translate-x-1/2 bg-cyan-600" />
-              <div className="pointer-events-none absolute bottom-0 left-[calc(50%+97.5px)] right-0 z-0 h-px bg-cyan-600" />
-            </>
-          )}
-          <div
-            data-mobile-tree-scroll
-            className="relative z-10 h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
-          >
-            <div className="relative mx-auto min-h-full w-full max-w-[390px] pb-28 pt-6">
-              {hasPaternalAncestors && (
-                <div className="pointer-events-none absolute bottom-0 left-1/4 top-6 z-0 w-px -translate-x-1/2 bg-cyan-600" />
-              )}
-              {hasMaternalAncestors && (
-                <div className="pointer-events-none absolute bottom-0 right-1/4 top-6 z-0 w-px translate-x-1/2 bg-cyan-600" />
-              )}
-              <div className="relative z-10 grid min-w-0 grid-cols-2 items-start gap-2">
-                {generations.flatMap(({ paternal, maternal }) => [
-                  paternal.people.length > 0 ? (
-                    <AncestorGroupCard
-                      key={paternal.id}
-                      group={paternal}
-                      onPersonClick={onPersonClick}
-                    />
-                  ) : <div key={paternal.id} />,
-                  maternal.people.length > 0 ? (
-                    <AncestorGroupCard
-                      key={maternal.id}
-                      group={maternal}
-                      onPersonClick={onPersonClick}
-                    />
-                  ) : <div key={maternal.id} />,
-                ])}
-              </div>
+    <div className="relative h-full w-full overflow-hidden">
+      <div className="pointer-events-none absolute bottom-0 left-1/2 h-12 w-px -translate-x-1/2 bg-cyan-600" />
+      <div data-mobile-tree-scroll className="h-full overflow-y-auto overflow-x-visible px-4 pb-28 pt-16">
+        {hasAny ? (
+          <div className="mx-auto grid w-full max-w-[430px] grid-cols-2 gap-3">
+            <div className="space-y-3">
+              {paternalGroups.map((group) => <AncestorGroup key={group.id} group={group} onPersonClick={onPersonClick} />)}
+            </div>
+            <div className="space-y-3">
+              {maternalGroups.map((group) => <AncestorGroup key={group.id} group={group} onPersonClick={onPersonClick} />)}
             </div>
           </div>
-        </>
-      )}
+        ) : (
+          <div className="mx-auto max-w-sm rounded-3xl border border-dashed border-slate-300 bg-white/75 px-5 py-10 text-center text-sm font-semibold text-slate-500">
+            Nenhum ancestral encontrado para esta pessoa.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -846,6 +494,12 @@ export function MobileFamilyTreeView({
     setIsDraggingScreen(false);
   }, [centralPersonId, layoutRevision]);
 
+  React.useEffect(() => {
+    const root = document.querySelector<HTMLElement>('[data-mobile-family-tree-root="true"]');
+    if (!root) return;
+    root.setAttribute('data-mobile-family-tree-active-screen', activeScreen);
+  }, [activeScreen]);
+
   const navigateByDirection = React.useCallback((direction: SwipeDirection) => {
     setActiveScreen((current) => getDestinationForScreen(current, direction));
   }, []);
@@ -880,10 +534,10 @@ export function MobileFamilyTreeView({
     let axis: 'x' | 'y' | null = null;
 
     if (absoluteX >= previewThreshold && absoluteX > absoluteY * 1.2) {
-      direction = deltaX < 0 ? 'right' : 'left';
+      direction = deltaX < 0 ? 'left' : 'right';
       axis = 'x';
     } else if (absoluteY >= previewThreshold && absoluteY > absoluteX * 1.2) {
-      direction = deltaY < 0 ? 'down' : 'up';
+      direction = deltaY < 0 ? 'up' : 'down';
       axis = 'y';
 
       if (
@@ -935,12 +589,12 @@ export function MobileFamilyTreeView({
     const threshold = 56;
 
     if (absoluteX >= threshold && absoluteX > absoluteY * 1.2) {
-      navigateByDirection(deltaX < 0 ? 'right' : 'left');
+      navigateByDirection(deltaX < 0 ? 'left' : 'right');
       return;
     }
     if (absoluteY < threshold || absoluteY <= absoluteX * 1.2) return;
 
-    const direction: SwipeDirection = deltaY < 0 ? 'down' : 'up';
+    const direction: SwipeDirection = deltaY < 0 ? 'up' : 'down';
     if (
       (direction === 'up' && !start.atScrollTop)
       || (direction === 'down' && !start.atScrollBottom)
@@ -1126,77 +780,30 @@ export function MobileFamilyTreeView({
                   </div>
                 )}
 
-                <div className="relative mx-auto h-9 w-full">
-                  <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
-                  <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
-                  <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
-                  <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
+                <div className="relative mx-auto mt-6 h-9 w-full max-w-[330px]">
+                  <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute left-3 right-3 top-6 h-px bg-cyan-600" />
                 </div>
 
                 <div className="grid grid-cols-2 items-start gap-3">
-                  <div className="min-w-0">
-                  <FamilyGroup
-                    id="core-siblings"
-                    title="Irmãos"
-                    people={visibleSiblings}
-                    expanded={expandedGroups.has('core-siblings')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                    cardVariant="sibling"
-                  />
-                  <FamilyGroup
-                    id="core-nephews"
-                    title="Sobrinhos"
-                    people={visibleNephews}
-                    expanded={expandedGroups.has('core-nephews')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                  />
-                </div>
-
-                  <div className="min-w-0">
-                  <FamilyGroup
-                    id="core-spouses"
-                    title="Cônjuge"
-                    people={visibleSpouses}
-                    expanded={expandedGroups.has('core-spouses')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                  />
-                  <div className="grid grid-cols-2 items-start gap-2">
-                    <FamilyGroup
-                      id="core-pets"
-                      title="Pets"
-                      people={visiblePets}
-                      expanded={expandedGroups.has('core-pets')}
-                      onToggle={toggleGroup}
-                      onPersonClick={onPersonClick}
-                      columns="single"
-                      cardVariant="pet"
-                    />
-                    <FamilyGroup
-                      id="core-children"
-                      title="Filhos"
-                      people={visibleChildren}
-                      expanded={expandedGroups.has('core-children')}
-                      onToggle={toggleGroup}
-                      onPersonClick={onPersonClick}
-                      columns="single"
-                    />
-                  </div>
-                  <FamilyGroup
-                    id="core-grandchildren"
-                    title="Netos"
-                    people={visibleGrandchildren}
-                    expanded={expandedGroups.has('core-grandchildren')}
-                    onToggle={toggleGroup}
-                    onPersonClick={onPersonClick}
-                    columns="single"
-                  />
-                  </div>
+                  {visibleSiblings.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Irmão" onClick={onPersonClick} horizontal compact />
+                  ))}
+                  {visibleNephews.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Sobrinho" onClick={onPersonClick} horizontal compact />
+                  ))}
+                  {visibleSpouses.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Cônjuge" onClick={onPersonClick} horizontal compact />
+                  ))}
+                  {visiblePets.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Pet" onClick={onPersonClick} horizontal compact />
+                  ))}
+                  {visibleChildren.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Filho" onClick={onPersonClick} horizontal compact />
+                  ))}
+                  {visibleGrandchildren.map((person) => (
+                    <PersonCard key={person.id} person={person} label="Neto" onClick={onPersonClick} horizontal compact />
+                  ))}
                 </div>
               </div>
             </div>
@@ -1249,4 +856,3 @@ export function MobileFamilyTreeView({
     </div>
   );
 }
-
