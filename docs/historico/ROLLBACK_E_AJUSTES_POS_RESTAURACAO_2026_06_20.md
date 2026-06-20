@@ -135,13 +135,14 @@ src/mobileFamilyTreeAncestorConnectorsFix.ts
 
 Responsabilidades atuais:
 
-- desenhar conectores apenas quando a tela de Avós estiver visivelmente centralizada;
+- desenhar conectores quando a tela de Avós está visível na área da árvore;
 - localizar a tela `[data-mobile-family-tree-screen="ancestors"]`;
-- considerar apenas grupos cujo título normalizado contenha `avos`;
+- considerar apenas grupos com card mobile cujo título normalizado contenha `avos`;
 - ignorar grupos com `bisavos` ou `tataravos`;
+- inferir lado paterno/materno por atributo `data-mobile-family-tree-grandparent-side` ou pelo título do grupo;
 - desenhar linhas horizontais laterais para ancestrais paternos/maternos;
 - desenhar linhas verticais abaixo de `Avós paternos` e `Avós maternos`;
-- remover camadas de conectores quando a tela de Avós não estiver ativa/visível.
+- remover camadas de conectores quando a tela de Avós não estiver visível.
 
 Pendência visual aberta: confirmar em iPhone/Safari se as linhas verticais abaixo dos grupos de avós aparecem corretamente e não vazam para as telas de bisavós.
 
