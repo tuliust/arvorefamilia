@@ -42,6 +42,7 @@ function ensureStyles() {
         z-index: 10600 !important;
         pointer-events: auto !important;
         isolation: isolate !important;
+        padding-bottom: 0.5rem !important;
       }
 
       [data-mobile-family-map-toolbar="true"] *,
@@ -55,6 +56,19 @@ function ensureStyles() {
       header a {
         position: relative !important;
         z-index: 2 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+      }
+
+      [data-mobile-family-map-toolbar="true"] ~ [data-tree-export-ignore="true"].fixed {
+        z-index: 12060 !important;
+        top: calc(env(safe-area-inset-top, 0px) + 8.65rem) !important;
+        pointer-events: auto !important;
+      }
+
+      [data-mobile-family-map-toolbar="true"] ~ [data-tree-export-ignore="true"].fixed *,
+      [data-mobile-family-map-toolbar="true"] ~ [data-tree-export-ignore="true"].fixed button,
+      [data-mobile-family-map-toolbar="true"] ~ [data-tree-export-ignore="true"].fixed select {
         pointer-events: auto !important;
         touch-action: manipulation !important;
       }
@@ -124,8 +138,6 @@ function handleTopControlActivation(event: Event) {
   const target = findHitTarget(point);
   if (!target) return;
 
-  // Quando o toque já caiu diretamente no botão, não bloqueia o evento nativo.
-  // O bloqueio anterior era agressivo demais e podia impedir os handlers React da toolbar.
   if (target.direct) return;
 
   const now = Date.now();
