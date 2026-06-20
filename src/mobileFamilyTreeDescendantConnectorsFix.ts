@@ -5,6 +5,7 @@ const DESCENDANTS_SCREEN_SELECTOR = '.mobile-family-descendant-screen, [data-mob
 const DESCENDANTS_GRID_SELECTOR = '.mobile-family-descendant-screen__grid';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-descendant-connectors';
 const STYLE_ID = 'mobile-family-tree-descendant-connectors-style';
+const DESCENDANT_BRANCH_GAP = 56;
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -55,12 +56,18 @@ function findGroup(screen: HTMLElement, titlePart: string) {
 }
 
 function ensureStyles() {
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  existing?.remove();
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
     @media (max-width: 767px) {
+      ${ROOT_SELECTOR} {
+        --mobile-family-tree-connector-color: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
+        --mobile-family-tree-connector-width: var(--tree-palette-line-width, 3px);
+      }
+
       .mobile-family-descendant-screen,
       [data-mobile-family-tree-screen="descendants"] {
         overflow: visible !important;
@@ -91,9 +98,9 @@ function ensureStyles() {
       .mobile-family-descendant-connector-line {
         position: absolute;
         display: block;
-        border-radius: 999px;
-        background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
-        opacity: 0.96;
+        border-radius: 0;
+        background: var(--mobile-family-tree-connector-color);
+        opacity: 1;
         pointer-events: none;
       }
 
@@ -119,11 +126,12 @@ function getConnectorLayer(screen: HTMLElement) {
   return layer;
 }
 
-function getLineWidth() {
-  const rootStyles = getComputedStyle(document.documentElement);
-  const customWidth = rootStyles.getPropertyValue('--tree-palette-line-width').trim();
+function getLineWidth(root: HTMLElement) {
+  const rootStyles = getComputedStyle(root);
+  const customWidth = rootStyles.getPropertyValue('--mobile-family-tree-connector-width').trim()
+    || rootStyles.getPropertyValue('--tree-palette-line-width').trim();
   const parsed = Number.parseFloat(customWidth);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 4;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
 }
 
 function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
@@ -165,13 +173,14 @@ function renderConnectors() {
   const layer = getConnectorLayer(screen);
   layer.replaceChildren();
 
-  const lineWidth = getLineWidth();
+  const lineWidth = getLineWidth(root);
   const halfLine = lineWidth / 2;
 
   if (siblings && spouses) {
     const siblingsRect = getRelativeRect(siblings, screenRect);
     const spousesRect = getRelativeRect(spouses, screenRect);
-    const branchY = Math.min(siblingsRect.top, spousesRect.top);
+    const groupTop = Math.min(siblingsRect.top, spousesRect.top);
+    const branchY = Math.max(lineWidth, groupTop - DESCENDANT_BRANCH_GAP);
     const trunkX = (siblingsRect.centerX + spousesRect.centerX) / 2;
     const branchLeft = Math.min(siblingsRect.centerX, spousesRect.centerX);
     const branchRight = Math.max(siblingsRect.centerX, spousesRect.centerX);
@@ -262,6 +271,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('popstate', handleRouteOrViewportChange, { passive: true });
   document.addEventListener('visibilitychange', handleRouteOrViewportChange, { passive: true });
   document.addEventListener('click', () => window.setTimeout(scheduleRender, 80), { capture: true, passive: true });
+  document.addEventListener('scroll', () => scheduleRender(), { capture: true, passive: true });
   document.addEventListener('touchend', () => window.setTimeout(scheduleRender, 80), { capture: true, passive: true });
   window.setTimeout(handleRouteOrViewportChange, 240);
   window.setTimeout(handleRouteOrViewportChange, 700);
