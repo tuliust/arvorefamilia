@@ -14,6 +14,7 @@ type GestureStart = {
   x: number;
   y: number;
   screen: UncleScreen | null;
+  target: EventTarget | null;
 };
 
 let gestureStart: GestureStart | null = null;
@@ -75,6 +76,31 @@ function getGestureDirection(deltaX: number, deltaY: number, threshold = SWIPE_T
   }
 
   return null;
+}
+
+function getUncleScrollArea(target: EventTarget | null, screen: UncleScreen | null) {
+  if (target instanceof Element) {
+    const targetScroll = target.closest<HTMLElement>('[data-mobile-family-tree-uncle-scroll="true"], [data-mobile-tree-scroll]');
+    if (targetScroll) return targetScroll;
+  }
+
+  if (!screen) return null;
+  return getRoot()?.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screen}"] > [data-mobile-family-tree-uncle-scroll="true"], [data-mobile-family-tree-screen="${screen}"] > [data-mobile-tree-scroll]`) ?? null;
+}
+
+function uncleScrollCanMove(target: EventTarget | null, screen: UncleScreen | null, deltaY: number) {
+  const scrollArea = getUncleScrollArea(target, screen);
+  if (!scrollArea) return false;
+
+  const maxScrollTop = scrollArea.scrollHeight - scrollArea.clientHeight;
+  if (maxScrollTop <= 1) return false;
+
+  // deltaY < 0: dedo sobe, conteúdo rola para baixo.
+  if (deltaY < 0) return scrollArea.scrollTop < maxScrollTop - 1;
+  // deltaY > 0: dedo desce, conteúdo rola para cima.
+  if (deltaY > 0) return scrollArea.scrollTop > 1;
+
+  return false;
 }
 
 function isBlockedDirection(screen: UncleScreen | null, direction: GestureDirection | null) {
@@ -168,6 +194,7 @@ function handleTouchStart(event: TouchEvent) {
     x: touch.clientX,
     y: touch.clientY,
     screen: getActiveUncleScreen(),
+    target: event.target,
   };
 }
 
@@ -176,7 +203,10 @@ function handleTouchMove(event: TouchEvent) {
   const touch = event.touches[0];
   if (!touch) return;
 
-  const direction = getGestureDirection(touch.clientX - gestureStart.x, touch.clientY - gestureStart.y);
+  const deltaY = touch.clientY - gestureStart.y;
+  if (uncleScrollCanMove(event.target, gestureStart.screen, deltaY)) return;
+
+  const direction = getGestureDirection(touch.clientX - gestureStart.x, deltaY);
   if (!isBlockedDirection(gestureStart.screen, direction)) return;
 
   blockEvent(event);
@@ -196,6 +226,8 @@ function handleTouchEnd(event: TouchEvent) {
   const deltaX = touch.clientX - start.x;
   const deltaY = touch.clientY - start.y;
   const direction = getGestureDirection(deltaX, deltaY, NAVIGATION_THRESHOLD);
+
+  if (uncleScrollCanMove(start.target, start.screen, deltaY)) return;
 
   if (isBlockedDirection(start.screen, direction)) {
     blockEvent(event);
