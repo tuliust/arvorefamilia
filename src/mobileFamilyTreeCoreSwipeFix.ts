@@ -2,7 +2,7 @@ const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
-const INTERACTIVE_SELECTOR = 'header, [data-mobile-family-map-toolbar], [data-tree-export-ignore="true"], button, a, select, input, textarea';
+const INTERACTIVE_SELECTOR = 'header, [data-mobile-family-map-toolbar], [data-tree-export-ignore="true"], a, select, input, textarea';
 const SWIPE_THRESHOLD = 44;
 
 type ScreenName = 'paternal-uncles' | 'core' | 'maternal-uncles';
