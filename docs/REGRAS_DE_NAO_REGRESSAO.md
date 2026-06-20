@@ -1,10 +1,10 @@
 # Regras de não regressão — Árvore Família
 
-> Última revisão: 2026-06-16
-> Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`
-> Projeto: `tuliust/arvorefamilia`
-> Tipo: regras técnicas e contratos de prevenção de regressão
-> Status: atualizado para incluir regras do onboarding condicional, Mini Bio/Curiosidades com IA, revisão de vínculos familiares, pessoa falecida, revisão final e arquivos históricos.
+> Última revisão: 2026-06-20  
+> Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
+> Projeto: `tuliust/arvorefamilia`  
+> Tipo: regras técnicas e contratos de prevenção de regressão  
+> Status: revisado para incluir contratos dos mapas familiares mobile, overview/zoom, scroll interno, títulos de grupos e painel `+`.
 
 ---
 
@@ -17,8 +17,9 @@ Use antes de alterar:
 - rotas;
 - `TreeViewMode`;
 - árvore;
+- mapas familiares mobile;
 - painel desktop;
-- modal mobile;
+- toolbar e painel mobile;
 - paletas/CSS;
 - exportação;
 - favoritos/busca;
@@ -30,6 +31,7 @@ Para execução manual de QA, use:
 
 ```txt
 docs/QA_MANUAL.md
+docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
 ```
 
 ---
@@ -68,8 +70,6 @@ npm run build
 npm run test:e2e
 ```
 
-QA manual aplicável fica centralizado em `docs/QA_MANUAL.md`.
-
 ---
 
 ## 3. Buscas obrigatórias
@@ -80,11 +80,11 @@ Antes de fechar limpeza ou refatoração da árvore:
 rg "/minha-arvore|/genealogia|/visao-completa" docs src tests
 rg "TreeViewMode|treeViewMode" docs src tests
 rg "Filtros \| Legendas \| Ações" docs src
-rg "MobileTreeControlsPortal" docs src
+rg "MobileFamilyTreeView|MobileFamilyHorizontalMapView" docs src
+rg "mobileFamilyTree|mobileFamilyMap" docs src
 rg "Nascimento não informado|Falecimento não informado" docs src
 rg "FILTERABLE_SPOUSE_ANCHOR_GROUPS|ANCESTOR_SPOUSE_ANCHOR_GROUPS" docs src
 rg "data-tree-route-view|data-export-root|data-tree-export-ignore" docs src
-rg "Outro pai/mãe|Nenhuma pessoa encontrada|Falecido\\(a\\)|Voltar para preferências|Salvar arquivos|Salvar permissões" docs src tests
 ```
 
 Interpretação:
@@ -93,8 +93,7 @@ Interpretação:
 - `genealogia` pode existir como conceito textual, não como rota ativa;
 - aliases antigos podem existir se apontarem para rotas atuais;
 - `Nascimento não informado` pode existir como dívida técnica transitória, mas não deve aparecer no resultado visual mobile;
-- documentos históricos podem conter legado se estiverem claramente marcados;
-- `docs/historico/ROTAS_REMOVIDAS.md` é a referência preventiva para interpretar essas ocorrências.
+- documentos históricos podem conter legado se estiverem claramente marcados.
 
 ---
 
@@ -135,19 +134,12 @@ Interpretação:
 /visao-completa
 ```
 
-Histórico preventivo:
-
-```txt
-docs/historico/ROTAS_REMOVIDAS.md
-```
-
 Regras:
 
 - `/` redireciona para `/mapa-familiar` ou login conforme guard;
 - `/?pessoa=abc` preserva `?pessoa=abc`;
 - `/mapa-familiar` e `/mapa-familiar-horizontal` são protegidas por fluxo de acesso à árvore;
 - `/minha-arvore/editar` continua em `MemberRoute`;
-- `/arquivos-historicos`, `/preferencias` e `/revisao-dados` permanecem em `MemberRoute`;
 - pessoa falecida deve pular `/preferencias` no fluxo normal;
 - rotas antigas não renderizam views da árvore.
 
@@ -186,13 +178,120 @@ Regras:
 - horizontal mobile usa botões `Ger X`;
 - horizontal mobile não usa Paterno/Central/Materno;
 - horizontal mobile não usa scroll horizontal manual como navegação principal;
+- vertical mobile usa grade 3x3;
 - `?pessoa=...` continua preservado.
-
-QA manual detalhado: `docs/QA_MANUAL.md`.
 
 ---
 
-## 7. Painel desktop
+## 7. `/mapa-familiar` mobile — grade 3x3
+
+As 9 telas abaixo não devem ser removidas sem decisão explícita:
+
+```txt
+paternal-ancestors
+ancestors
+maternal-ancestors
+paternal-uncles
+core
+maternal-uncles
+paternal-cousins
+descendants
+maternal-cousins
+```
+
+Regras:
+
+- `core` permanece como centro da grade;
+- `descendants` permanece abaixo de `core`;
+- `paternal-uncles` e `maternal-uncles` permanecem na linha central lateral;
+- navegação por overview/zoom deve posicionar o stage na tela selecionada;
+- telas com conteúdo maior que a altura útil devem permitir rolagem interna;
+- safe area e bottom nav não podem impedir acesso ao último card.
+
+Detalhes: `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md`.
+
+---
+
+## 8. Tela `descendants`
+
+Regras:
+
+- deve permitir scroll interno quando o conteúdo exceder a altura útil;
+- deve conter grupos reais, sem criar dados fictícios;
+- linha superior deve ramificar para `Irmãos` e `Cônjuge` quando ambos existirem;
+- `Irmãos` deve conectar a `Sobrinhos` quando houver sobrinhos;
+- `Cônjuge` deve conectar a `Pets` e/ou `Filhos` conforme dados;
+- se só houver `Pets`, o grupo pode ocupar sozinho a área abaixo de `Cônjuge`;
+- se só houver `Filhos`, o grupo pode ocupar sozinho a área abaixo de `Cônjuge`;
+- conectores antigos clonados não devem aparecer como linhas transparentes ou duplicadas.
+
+---
+
+## 9. Telas de tios
+
+Regras para `paternal-uncles` e `maternal-uncles`:
+
+- título escuro e visível;
+- cards visíveis quando houver dados;
+- grupo centralizado;
+- largura adaptada ao número de cards;
+- rolagem interna quando o conteúdo exceder a altura útil;
+- swipe vertical não pode capturar a navegação antes de o scroll interno chegar ao limite;
+- ajustes visuais não podem ocultar cards nem alterar dados.
+
+---
+
+## 10. Títulos dos grupos
+
+Títulos monitorados:
+
+```txt
+Tios Paternos
+Tios Maternos
+Irmãos
+Sobrinhos
+Pets
+Filhos
+Netos
+```
+
+Regras:
+
+- não podem ficar brancos sobre fundo branco;
+- não podem ficar transparentes;
+- devem ter fonte compacta no mobile;
+- devem preservar `-webkit-text-fill-color` quando necessário para Safari/iOS;
+- não podem ser cobertos por conectores.
+
+---
+
+## 11. Zoom/overview mobile
+
+Regras:
+
+- botão `Zoom` deve abrir overview com 9 cards em `/mapa-familiar`;
+- botão `Zoom` deve abrir overview com 9 cards em `/mapa-familiar-horizontal`;
+- cada card do overview deve responder a toque/click;
+- em `/mapa-familiar`, o card leva à tela correspondente da grade;
+- em `/mapa-familiar-horizontal`, o card leva à geração correspondente;
+- overview deve fechar ao escolher destino;
+- overview não entra na exportação.
+
+---
+
+## 12. Painel mobile do botão `+`
+
+Regras:
+
+- overlay deve escurecer o fundo;
+- painel principal deve ser branco/opaco;
+- conteúdo interno deve ter rolagem própria;
+- body deve destravar ao fechar;
+- painel não entra na exportação.
+
+---
+
+## 13. Painel desktop
 
 Deve funcionar:
 
@@ -218,52 +317,9 @@ aba Legendas persistente
 aba Ações persistente
 ```
 
-Regras:
-
-- filtros permanecem acessíveis sem aba;
-- exportação, paletas e destaques continuam funcionais;
-- painel não aparece na exportação;
-- cards do painel seguem paleta ativa;
-- `Área` funciona como toggle.
-
 ---
 
-## 8. Modal mobile de controles
-
-Deve conter:
-
-```txt
-Vertical
-Horizontal
-Cores
-Grupos
-Destacar
-Filtros de status
-```
-
-Não deve conter:
-
-```txt
-Zoom +
-Zoom -
-Restaurar visualização
-Exportar
-```
-
-Regras:
-
-- título é `Controles`;
-- não há subtítulo;
-- botão de fechar é `X`;
-- overlay fecha;
-- body destrava ao fechar;
-- grupos aparecem apenas após clicar em `Grupos`;
-- filtros permanecem visíveis;
-- modal não entra na exportação.
-
----
-
-## 9. Paletas
+## 14. Paletas
 
 Paletas vigentes:
 
@@ -282,11 +338,9 @@ Regras:
 - paletas não azuis não caem em fallback azul/teal;
 - não há seletor global `svg path` afetando ícones fora da árvore.
 
-QA manual por paleta: `docs/QA_MANUAL.md`.
-
 ---
 
-## 10. Cards e avatares
+## 15. Cards e avatares
 
 Contrato:
 
@@ -303,55 +357,27 @@ Regras:
 - exportação preserva ícones;
 - nascimento aparece apenas quando há ano/data real;
 - falecimento aparece apenas quando há ano/data real;
-- `Nascimento não informado` e `Falecimento não informado` não devem aparecer no resultado visual mobile;
-- dívida `TREE-004` permanece aberta até correção estrutural no componente.
+- `Nascimento não informado` e `Falecimento não informado` não devem aparecer no resultado visual mobile.
 
 ---
 
-## 11. Cônjuges
-
-### Implementado/esperado
-
-- cônjuge da pessoa central;
-- múltiplos núcleos conjugais da pessoa central quando há dados;
-- cônjuges de `avos`, `bisavos` e `tataravos` como ancestrais sempre visíveis;
-- cônjuges filtráveis atualmente suportados por código: `tios`, `primos`, `sobrinhos`, `filhos`, `netos`.
-
-### Pendência conhecida
-
-```txt
-TREE-003 — cônjuges de pais/Geração 4 na horizontal
-```
+## 16. Cônjuges e conectores
 
 Regras:
 
-- não declarar `pais`/Geração 4 como implementado até código incluir esse grupo;
-- se corrigir, atualizar docs e testes/QA no mesmo commit;
-- nunca inferir conector conjugal por proximidade visual;
-- não criar dado fictício para resolver layout.
-
----
-
-## 12. Conectores
-
-Regras:
-
+- cônjuge da pessoa central aparece quando há relação explícita;
+- cônjuges de `avos`, `bisavos` e `tataravos` podem ser sempre visíveis como ancestrais;
+- cônjuges filtráveis: `tios`, `primos`, `sobrinhos`, `filhos`, `netos`;
+- `pais`/Geração 4 na horizontal não deve ser declarado implementado sem nova verificação;
 - conectores representam relações explícitas;
 - conectores seguem paleta ativa;
 - conectores aparecem na exportação;
 - conectores não afetam ícones SVG internos;
-- ajuste de conector não usa seletor global.
-
-Por view:
-
-- vertical desktop: âncoras e grupos corretos;
-- vertical mobile: alinhamento Pai/Mãe/ancestrais coerente;
-- horizontal desktop: casal → filhos por geração;
-- horizontal mobile: conectores da geração ativa visíveis até fim do scroll.
+- ajuste de conector não usa seletor global amplo.
 
 ---
 
-## 13. Calendário familiar
+## 17. Calendário familiar
 
 Regras mobile:
 
@@ -360,14 +386,11 @@ Regras mobile:
 - título em uma linha;
 - sem overflow horizontal indevido;
 - categorias continuam filtrando eventos;
-- Google Agenda não quebra quando OAuth não está configurado;
-- limites de test users/OAuth ficam documentados em operação.
-
-QA manual: `docs/QA_MANUAL.md`.
+- Google Agenda não quebra quando OAuth não está configurado.
 
 ---
 
-## 14. Exportação
+## 18. Exportação
 
 Regras:
 
@@ -376,15 +399,11 @@ Regras:
 - loading aparece durante ação real;
 - erro de tamanho grande é claro;
 - header, painel, bottom nav, modal, overlay, loading e debug não entram na captura;
-- paleta, conectores, cards e avatares são preservados;
-- modal mobile não expõe Exportar.
-
-Detalhes técnicos ficam em `docs/funcionalidades/EXPORTACAO_ARVORE.md`.
-QA manual fica em `docs/QA_MANUAL.md`.
+- paleta, conectores, cards e avatares são preservados.
 
 ---
 
-## 15. Onboarding do membro
+## 19. Onboarding do membro
 
 Rotas do onboarding:
 
@@ -396,101 +415,19 @@ Rotas do onboarding:
 /revisao-dados
 ```
 
-### Pessoa viva
+Regras resumidas:
 
-Regras:
+- pessoa viva passa pelas cinco etapas;
+- pessoa falecida não passa por `/preferencias` no fluxo normal;
+- pessoa falecida não mantém notificações, WhatsApp ou mensagens ativas no fluxo do membro;
+- `MemberOnboardingSteps` deve ocultar a Etapa 4 para pessoa falecida;
+- Mini Bio e Curiosidades por IA não salvam automaticamente no banco;
+- vínculos em análise preservam status visual local;
+- revisão final mantém edição inline e badges por gênero/status.
 
-- deve passar pelas cinco etapas;
-- `/preferencias` permanece acessível como Etapa 4;
-- cidade de residência aparece na Etapa 1;
-- contato, endereço e redes sociais aparecem na Etapa 1;
-- box de notificações/permissões pode aparecer na revisão final.
+---
 
-### Pessoa falecida
-
-Regras:
-
-- não deve passar por `/preferencias` no fluxo normal;
-- acesso direto a `/preferencias` deve redirecionar para `/revisao-dados`;
-- cidade de residência não deve aparecer;
-- campos de falecimento devem aparecer quando aplicáveis;
-- contato, endereço e redes sociais não devem aparecer na Etapa 1;
-- notificações devem ser desativadas automaticamente;
-- permissões de visualização devem ser ativadas automaticamente;
-- WhatsApp deve ficar desativado;
-- `MemberOnboardingSteps` deve ocultar a Etapa 4;
-- box de notificações/permissões não deve aparecer na revisão final.
-
-### Etapa 1 — Meus dados e IA
-
-Regras:
-
-- campos `minibio` e `curiosidades` devem manter limite de 300 caracteres;
-- geração de IA não deve salvar automaticamente no banco;
-- modo padrão deve gerar textos em primeira pessoa;
-- tom **Nostálgico** deve ativar modo memorial em terceira pessoa e passado;
-- modo memorial não deve inventar datas, cidades, causa de morte ou fatos não informados;
-- etapas 2 a 8 do modal de IA devem manter cards compactos, centralizados, sem ícones internos e com até 2 linhas visuais;
-- botão final do modal deve ser `Gerar textos` na etapa de perguntas opcionais.
-
-### Etapa 2 — Vínculos
-
-Regras:
-
-- tela deve permanecer em largura total, sem painel lateral `Resumo da revisão`;
-- botão `Voltar para meus dados` não deve reaparecer;
-- card superior deve usar `Familiares de [Primeiro Nome]`;
-- rótulo `Pessoa em revisão`, frase `Você está revisando...`, nascimento e local não devem reaparecer no card superior;
-- cards-resumo devem funcionar como âncoras para `Pais`, `Filhos`, `Cônjuges` e `Irmãos`;
-- pluralização deve ser `Nenhum vínculo`, `1 vínculo` ou `N vínculos`, sem `vínculo(s)`;
-- botão final deve permanecer no rodapé da revisão;
-- cards de vínculo não devem exibir chips de nascimento/local;
-- vínculo confirmado deve exibir `Pré-cadastrado` quando não houver usuário vinculado e `Ativo` quando houver auth user/vínculo;
-- vínculo novo ou alterado deve exibir `Em análise`;
-- remoção solicitada deve exibir `Remoção em análise` e manter o card visível;
-- solicitação de controle deve exibir `Controle em análise`;
-- botão de remoção deve permanecer compacto, apenas com ícone, no topo do card;
-- busca de pessoa existente deve ocorrer antes ou junto da criação manual para reduzir duplicidade;
-- criação manual deve continuar disponível quando a busca não encontra a pessoa correta;
-- a própria pessoa em revisão não pode ser selecionada como familiar dela mesma;
-- pessoa já vinculada no mesmo grupo não deve ser duplicada;
-- `Filho`, `Filha` ou `Filho(a)` devem depender do gênero disponível, sem inferência por nome;
-- dropdown `Outro pai/mãe` deve tentar pré-selecionar responsável conhecido sem hard-code de nomes específicos.
-
-### Etapa 3 — Arquivos históricos
-
-Regras:
-
-- botões `Voltar para vínculos` e `Salvar arquivos` não devem reaparecer;
-- botão principal é `Salvar e Continuar`;
-- card de categoria deve preencher título e descrição da área de upload;
-- trocar categoria deve atualizar título e descrição;
-- arquivo adicionado deve aparecer como thumbnail/resumo com `Editar` e `Remover`;
-- rascunho local não deve sumir ao trocar aba, minimizar ou recarregar antes do salvamento.
-
-### Etapa 4 — Preferências
-
-Regras:
-
-- botão `Salvar permissões` não deve reaparecer;
-- botão `Voltar para arquivos históricos` não deve reaparecer;
-- manter apenas `Continuar para a revisão`;
-- o box geral `Receber notificações por email` não deve reaparecer no onboarding como duplicidade visual.
-
-### Etapa 5 — Revisão final
-
-Regras:
-
-- mini bio não deve aparecer ao lado do nome no topo;
-- botão `Finalizar e acessar árvore` deve permanecer no topo ao lado de `Editar perfil`;
-- rodapé antigo com `Voltar para preferências` não deve reaparecer;
-- box `Informações pessoais` não deve listar `Pessoa falecida`, `Nascimento no exterior` ou `Falecimento no exterior`;
-- boxes editáveis devem manter lápis compacto para edição inline quando aplicável;
-- familiares e arquivos devem direcionar para suas etapas específicas quando a edição completa for necessária;
-- badges de familiares devem respeitar `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise`.
-
-
-## 16. Operação, banco e secrets
+## 20. Operação, banco e secrets
 
 Regras:
 
@@ -504,70 +441,28 @@ Regras:
 
 ---
 
-## 17. Documentação
+## 21. Documentação
 
 Regras:
 
 - `QA_MANUAL.md` centraliza checklists manuais;
+- `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` centraliza QA operacional específico dos mapas mobile;
 - `PLANO_PROXIMOS_PASSOS.md` centraliza pendências;
 - documentos funcionais não devem duplicar QA extenso;
 - documentos históricos não reabrem rotas removidas;
-- `docs/historico/ROTAS_REMOVIDAS.md` centraliza o histórico e as anti-regressões específicas de `/minha-arvore`, `/genealogia` e `/visao-completa`;
 - divergência entre histórico e guia canônico é resolvida em favor do guia canônico;
 - divergência entre documentação e código exige auditoria do código.
 
 ---
 
-## 18. Fechamento de frente
+## 22. Fechamento de frente
 
 Antes de fechar qualquer frente:
 
 - [ ] comandos mínimos aplicáveis passaram;
 - [ ] QA manual aplicável foi executado ou justificado;
 - [ ] documentação afetada foi atualizada;
-- [ ] pendências novas foram registradas em `PLANO_PROXIMOS_PASSOS.md`;
+- [ ] pendências novas foram registradas em `PLANO_PROXIMOS_PASSOS.md` ou documento complementar aprovado;
 - [ ] nenhuma rota antiga voltou como view ativa;
 - [ ] nenhuma mudança visual criou migration;
 - [ ] nenhuma secret foi exposta.
-
-<!-- ajuste-irmaos-conjuges-mapa-familiar-2026-06 -->
-
-## Mapa familiar ? irm?os e c?njuges
-
-Na p?gina `/mapa-familiar`:
-
-- O grupo `Irm?os` exibe at? 4 cards antes de apresentar controle de expandir/recolher.
-- Em grade dupla, quando houver quantidade ?mpar de cards vis?veis, o ?ltimo card isolado fica centralizado na segunda linha.
-- C?njuges de irm?os s?o exibidos no grupo `Irm?os` quando o filtro `C?njuges` est? ativo e existe relacionamento expl?cito `tipo_relacionamento === 'conjuge'`.
-- Esse comportamento n?o cria nem infere dados; depende exclusivamente dos relacionamentos persistidos.
-- A regra acima se aplica ? p?gina `/mapa-familiar`. N?o assumir o mesmo comportamento para `/mapa-familiar-horizontal` sem valida??o espec?fica.
-
-<!-- NAO-REGRESSAO-CONSOLIDADA-2026-06-18 -->
-## Regras de nÃ£o regressÃ£o â€” consolidaÃ§Ã£o recente
-
-### Onboarding
-
-- Pessoa falecida nÃ£o deve passar por `/preferencias`.
-- Pessoa falecida nÃ£o deve manter notificaÃ§Ãµes, WhatsApp ou mensagens ativas no fluxo do membro.
-- RevisÃ£o final de pessoa falecida nÃ£o deve exibir contatos ou notificaÃ§Ãµes.
-- Redes sociais incompletas nÃ£o devem bloquear salvamento nem contaminar payload legado.
-- Campos ocultos por regra condicional nÃ£o devem ser validados como obrigatÃ³rios.
-- `MemberOnboardingSteps` nÃ£o deve ser reutilizado fora do onboarding.
-
-### FormulÃ¡rios fora do onboarding
-
-- `/minha-arvore/editar` nÃ£o deve ser transformado em onboarding.
-- Admin e Ã¡rea do membro podem compartilhar componentes, mas nÃ£o necessariamente a mesma regra de negÃ³cio.
-- DecisÃ£o sobre contato/privacidade de pessoa falecida no admin deve refletir o cÃ³digo atual antes de virar contrato documental.
-
-### Mobile
-
-- Inputs mobile nÃ£o devem voltar a disparar auto-zoom.
-- Etapas do onboarding nÃ£o devem exigir scroll horizontal para exibir os nÃºmeros.
-- Tooltips informativos devem funcionar por toque.
-- Bottom nav nÃ£o deve cobrir aÃ§Ãµes crÃ­ticas.
-
-### OperaÃ§Ã£o
-
-- Scripts que criem migration, RPC, RLS, Edge Function, bucket ou policy nÃ£o devem ser aplicados sem revisÃ£o operacional explÃ­cita.
-- PendÃªncias sem commit confirmado nÃ£o devem entrar no baseline.
