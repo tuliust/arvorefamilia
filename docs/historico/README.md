@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20
 > Local recomendado: `docs/historico/README.md`
 > Tipo: índice e consolidação histórica.
-> Status: atualizado com índice explícito para rotas removidas, SQLs legados, duas views oficiais e rodada de rollback/ajustes mobile pós-restauração.
+> Status: atualizado com índice explícito para rotas removidas, SQLs legados, duas views oficiais, rodada de rollback/ajustes mobile pós-restauração e complemento de navegação mobile.
 
 ---
 
@@ -207,6 +207,7 @@ Documentos atuais:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
@@ -232,10 +233,23 @@ Uso:
 - documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`;
 - preservar cautela sobre branches, deployments e previews antigos no Vercel.
 
+Complemento específico de navegação mobile:
+
+```txt
+docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_COMPLEMENTO.md
+```
+
+Uso:
+
+- registrar a matriz 3x3 desejada após os ajustes de avós, tios, primos e descendentes;
+- separar contrato desejado de regressões observadas;
+- documentar que a navegação está sensível por sobreposição de scripts de gesture;
+- apoiar futura consolidação em `mobileFamilyTreeNavigationRules.ts`.
+
 Regra:
 
 ```txt
-Esse histórico não substitui MAPA_FAMILIAR_MOBILE.md, QA_MAPAS_MOBILE_POS_DEPLOY.md ou o código atual da main.
+Esse histórico não substitui MAPA_FAMILIAR_MOBILE.md, MAPA_FAMILIAR_MOBILE_ARQUITETURA.md, QA_MAPAS_MOBILE_POS_DEPLOY.md ou o código atual da main.
 ```
 
 ---
