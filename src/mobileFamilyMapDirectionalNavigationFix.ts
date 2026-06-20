@@ -134,10 +134,13 @@ function getScreenFromGeometry(root: HTMLElement): ScreenName | null {
 function getCurrentScreen(root = getRoot()): ScreenName | null {
   if (!root) return null;
 
-  const explicit = root.getAttribute('data-mobile-family-tree-active-screen');
-  if (isScreenName(explicit)) return explicit;
-
-  return parseTranslatePercent(getStage(root)?.style.transform ?? '') ?? getScreenFromGeometry(root);
+  // Geometry is the most reliable source after DOM-based transforms because the React
+  // active screen can remain stale when navigation is handled by mobile fix scripts.
+  return getScreenFromGeometry(root)
+    ?? parseTranslatePercent(getStage(root)?.style.transform ?? '')
+    ?? (isScreenName(root.getAttribute('data-mobile-family-tree-active-screen'))
+      ? root.getAttribute('data-mobile-family-tree-active-screen') as ScreenName
+      : null);
 }
 
 function descendantCardSelector() {
@@ -163,15 +166,17 @@ function screenHasContent(screenName: ScreenName, root = getRoot()) {
 function applyScreen(screenName: ScreenName) {
   const root = getRoot();
   const stage = getStage(root);
-  if (!root || !stage || !screenHasContent(screenName, root)) return;
+  if (!root || !stage) return;
 
   stage.style.setProperty('transform', getTransformForScreen(screenName), 'important');
   stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
   root.setAttribute('data-mobile-family-tree-active-screen', screenName);
 
-  getScreenElement(screenName, root)
-    ?.querySelectorAll<HTMLElement>('[data-mobile-tree-scroll], .mobile-family-descendant-screen__scroll')
-    .forEach((scrollArea) => scrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
+  if (screenHasContent(screenName, root)) {
+    getScreenElement(screenName, root)
+      ?.querySelectorAll<HTMLElement>('[data-mobile-tree-scroll], .mobile-family-descendant-screen__scroll')
+      .forEach((scrollArea) => scrollArea.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
+  }
 
   window.setTimeout(() => getStage()?.style.removeProperty('transition'), 340);
 }
@@ -223,11 +228,9 @@ function getGestureDirection(deltaX: number, deltaY: number, threshold: number):
   return null;
 }
 
-function getDestination(screenName: ScreenName | null, direction: SwipeDirection, root = getRoot()) {
-  if (!screenName || !root) return null;
-  const destination = DESTINATIONS[screenName][direction];
-  if (!destination || !screenHasContent(destination, root)) return null;
-  return destination;
+function getDestination(screenName: ScreenName | null, direction: SwipeDirection) {
+  if (!screenName) return null;
+  return DESTINATIONS[screenName][direction] ?? null;
 }
 
 function consumeGesture(event: TouchEvent) {
@@ -266,13 +269,19 @@ function handleTouchMove(event: TouchEvent) {
   if (!direction) return;
 
   const scrollArea = getScrollArea(event.target) ?? gestureStart.scrollArea;
+  const destination = getDestination(gestureStart.screen, direction);
+
   if ((direction === 'up' || direction === 'down') && canScrollVertically(scrollArea, deltaY)) {
+    // Scroll interno ainda tem prioridade. A navegação só assume nos limites.
     keepNativeScroll(event);
     return;
   }
 
-  // Captura tanto direções permitidas quanto bloqueadas para impedir fallback do React/script antigo.
+  // Captura direções permitidas e bloqueadas para impedir fallback do React/script antigo.
   consumeGesture(event);
+
+  // Se não há destino, a direção está bloqueada. Nenhuma prévia visual deve ocorrer.
+  if (!destination) return;
 }
 
 function handleTouchEnd(event: TouchEvent) {
