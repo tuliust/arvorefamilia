@@ -18,8 +18,6 @@ const TOOLBAR_ITEMS: Array<{
   { action: 'zoom', label: 'Zoom' },
 ];
 
-const ACTIVATION_DEBOUNCE_MS = 260;
-
 interface MobileFamilyMapToolbarProps {
   activeAction?: MobileFamilyMapToolbarAction | null;
   className?: string;
@@ -33,43 +31,6 @@ export function MobileFamilyMapToolbar({
   onAction,
   onAddClick,
 }: MobileFamilyMapToolbarProps) {
-  const lastActivationRef = React.useRef<{ key: string; at: number } | null>(null);
-
-  const activateOnce = React.useCallback((key: string, callback: () => void) => {
-    const now = Date.now();
-    const last = lastActivationRef.current;
-
-    if (last?.key === key && now - last.at < ACTIVATION_DEBOUNCE_MS) return;
-
-    lastActivationRef.current = { key, at: now };
-    callback();
-  }, []);
-
-  const handleActionActivation = React.useCallback((
-    action: MobileFamilyMapToolbarAction,
-    event: React.SyntheticEvent<HTMLButtonElement>,
-  ) => {
-    if (action === 'zoom') return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    activateOnce(`action:${action}`, () => onAction?.(action));
-  }, [activateOnce, onAction]);
-
-  const handleAddActivation = React.useCallback((event: React.SyntheticEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    activateOnce('add', () => {
-      if (onAddClick) {
-        onAddClick();
-        return;
-      }
-
-      onAction?.('visualizacao');
-    });
-  }, [activateOnce, onAction, onAddClick]);
-
   return (
     <nav
       aria-label="Controles do mapa familiar"
@@ -80,6 +41,7 @@ export function MobileFamilyMapToolbar({
       style={{
         top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
         paddingBottom: activeAction ? '7.25rem' : undefined,
+        pointerEvents: 'auto',
       }}
       data-mobile-family-map-toolbar="true"
       data-mobile-family-map-toolbar-active={activeAction ? 'true' : undefined}
@@ -92,15 +54,12 @@ export function MobileFamilyMapToolbar({
         >
           {TOOLBAR_ITEMS.map((item) => {
             const active = activeAction === item.action;
-            const isZoom = item.action === 'zoom';
 
             return (
               <button
                 key={item.action}
                 type="button"
-                onPointerUp={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
-                onTouchEnd={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
-                onClick={isZoom ? undefined : (event) => handleActionActivation(item.action, event)}
+                onClick={() => onAction?.(item.action)}
                 aria-pressed={active || undefined}
                 data-mobile-family-map-toolbar-action={item.action}
                 className={[
@@ -118,9 +77,14 @@ export function MobileFamilyMapToolbar({
 
         <button
           type="button"
-          onPointerUp={handleAddActivation}
-          onTouchEnd={handleAddActivation}
-          onClick={handleAddActivation}
+          onClick={() => {
+            if (onAddClick) {
+              onAddClick();
+              return;
+            }
+
+            onAction?.('visualizacao');
+          }}
           aria-label="Abrir painel completo de visualização"
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-semibold leading-none text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-95"
         >
