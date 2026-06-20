@@ -93,10 +93,6 @@ function maxScrollTop(scrollArea: HTMLElement | null) {
   return Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
 }
 
-function hasScrollableOverflow(scrollArea: HTMLElement | null) {
-  return maxScrollTop(scrollArea) > 1;
-}
-
 function canScrollVertically(scrollArea: HTMLElement | null, deltaY: number) {
   const maxTop = maxScrollTop(scrollArea);
   if (!scrollArea || maxTop <= 1) return false;
@@ -569,11 +565,6 @@ function handleTouchEnd(event: TouchEvent) {
 
   if (start.screen === 'core' && deltaY < 0 && isAtBottom(scrollArea) && screenHasContent('descendants')) {
     takeOverGesture(event, 'descendants');
-    return;
-  }
-
-  if (hasScrollableOverflow(scrollArea)) {
-    stopBeforeGlobalSwipe(event);
   }
 }
 
