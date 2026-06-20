@@ -2,7 +2,6 @@ const MOBILE_QUERY = '(max-width: 767px)';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const SCROLL_AREA_SELECTOR = '[data-mobile-tree-scroll]';
-const INTERACTIVE_CONTROL_SELECTOR = 'header, [data-mobile-family-map-toolbar], [data-tree-export-ignore="true"]';
 const STYLE_ID = 'static-mobile-family-tree-screens-style';
 
 let gestureStart: { x: number; y: number } | null = null;
@@ -17,17 +16,13 @@ function isFamilyMapPath() {
   return typeof window !== 'undefined' && window.location.pathname === '/mapa-familiar';
 }
 
-function isInteractiveControlTarget(target: EventTarget | null) {
-  return target instanceof Element && Boolean(target.closest(INTERACTIVE_CONTROL_SELECTOR));
-}
-
 function findRoot(target: EventTarget | null) {
-  if (!(target instanceof Element) || isInteractiveControlTarget(target)) return null;
+  if (!(target instanceof Element)) return null;
   return target.closest<HTMLElement>(ROOT_SELECTOR);
 }
 
 function findMobileTreeScrollArea(target: EventTarget | null) {
-  if (!(target instanceof Element) || isInteractiveControlTarget(target)) return null;
+  if (!(target instanceof Element)) return null;
   return target.closest<HTMLElement>(SCROLL_AREA_SELECTOR);
 }
 

@@ -450,33 +450,3 @@ export function validateEditablePersonForm(form: EditableOwnPersonPayload): Pers
 export function getPersonZodiacSign(pessoa?: Pessoa | null) {
   return getZodiacSignFromBirthDate(pessoa?.data_nascimento);
 }
-
-function extractYear(value: unknown) {
-  if (value === null || value === undefined || value === '') return undefined;
-
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    const year = value > 9999 ? new Date(value).getFullYear() : value;
-    return Number.isFinite(year) ? year : undefined;
-  }
-
-  const text = String(value).trim();
-  if (!text) return undefined;
-
-  const directYear = text.match(/\b(\d{4})\b/)?.[1];
-  if (directYear) return Number(directYear);
-
-  const parsed = Date.parse(text);
-  if (!Number.isNaN(parsed)) return new Date(parsed).getFullYear();
-
-  return undefined;
-}
-
-export function getPersonBirthYear(person?: Pessoa | null) {
-  if (!person) return undefined;
-  return extractYear(person.data_nascimento);
-}
-
-export function getPersonDeathYear(person?: Pessoa | null) {
-  if (!person) return undefined;
-  return extractYear(person.data_falecimento);
-}
