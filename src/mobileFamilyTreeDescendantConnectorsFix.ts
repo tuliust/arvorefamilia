@@ -2,10 +2,12 @@ const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const DESCENDANTS_SCREEN_SELECTOR = '.mobile-family-descendant-screen, [data-mobile-family-tree-screen="descendants"]';
+const DESCENDANTS_INNER_SELECTOR = '.mobile-family-descendant-screen__inner';
 const DESCENDANTS_GRID_SELECTOR = '.mobile-family-descendant-screen__grid';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-descendant-connectors';
 const STYLE_ID = 'mobile-family-tree-descendant-connectors-style';
 const DESCENDANT_BRANCH_GAP = 56;
+const DESCENDANT_BRANCH_MIN_Y = 72;
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -26,6 +28,10 @@ function getRoot() {
 
 function getDescendantsScreen(root = getRoot()) {
   return root?.querySelector<HTMLElement>(DESCENDANTS_SCREEN_SELECTOR) ?? null;
+}
+
+function getConnectorHost(screen: HTMLElement) {
+  return screen.querySelector<HTMLElement>(DESCENDANTS_INNER_SELECTOR) ?? screen;
 }
 
 function normalize(value: string) {
@@ -76,10 +82,13 @@ function ensureStyles() {
 
       .mobile-family-descendant-screen__scroll {
         padding-top: 0 !important;
+        overflow-x: visible !important;
       }
 
       .mobile-family-descendant-screen__inner {
+        position: relative !important;
         padding-top: 0 !important;
+        overflow: visible !important;
       }
 
       .mobile-family-descendant-screen__connector,
@@ -114,13 +123,13 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
-function getConnectorLayer(screen: HTMLElement) {
-  let layer = screen.querySelector<HTMLElement>(`[${CONNECTOR_LAYER_ATTR}="true"]`);
+function getConnectorLayer(host: HTMLElement) {
+  let layer = host.querySelector<HTMLElement>(`:scope > [${CONNECTOR_LAYER_ATTR}="true"]`);
 
   if (!layer) {
     layer = document.createElement('div');
     layer.setAttribute(CONNECTOR_LAYER_ATTR, 'true');
-    screen.prepend(layer);
+    host.prepend(layer);
   }
 
   return layer;
@@ -141,18 +150,24 @@ function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
   layer.appendChild(line);
 }
 
-function getRelativeRect(element: HTMLElement, screenRect: DOMRect) {
+function getRelativeRect(element: HTMLElement, hostRect: DOMRect) {
   const rect = element.getBoundingClientRect();
 
   return {
-    left: rect.left - screenRect.left,
-    right: rect.right - screenRect.left,
-    top: rect.top - screenRect.top,
-    bottom: rect.bottom - screenRect.top,
+    left: rect.left - hostRect.left,
+    right: rect.right - hostRect.left,
+    top: rect.top - hostRect.top,
+    bottom: rect.bottom - hostRect.top,
     width: rect.width,
     height: rect.height,
-    centerX: rect.left - screenRect.left + rect.width / 2,
+    centerX: rect.left - hostRect.left + rect.width / 2,
   };
+}
+
+function getBranchY(groupTop: number, lineWidth: number) {
+  const preferredY = groupTop - DESCENDANT_BRANCH_GAP;
+  const visibleY = Math.max(DESCENDANT_BRANCH_MIN_Y, preferredY);
+  return Math.max(lineWidth, Math.min(visibleY, groupTop - lineWidth));
 }
 
 function renderConnectors() {
@@ -164,23 +179,24 @@ function renderConnectors() {
 
   ensureStyles();
 
-  const screenRect = screen.getBoundingClientRect();
-  if (screenRect.width <= 0 || screenRect.height <= 0) return;
+  const host = getConnectorHost(screen);
+  const hostRect = host.getBoundingClientRect();
+  if (hostRect.width <= 0 || hostRect.height <= 0) return;
 
   const siblings = findGroup(screen, 'irmãos');
   const spouses = findGroup(screen, 'cônjuge');
   const nephews = findGroup(screen, 'sobrinhos');
-  const layer = getConnectorLayer(screen);
+  const layer = getConnectorLayer(host);
   layer.replaceChildren();
 
   const lineWidth = getLineWidth(root);
   const halfLine = lineWidth / 2;
 
   if (siblings && spouses) {
-    const siblingsRect = getRelativeRect(siblings, screenRect);
-    const spousesRect = getRelativeRect(spouses, screenRect);
+    const siblingsRect = getRelativeRect(siblings, hostRect);
+    const spousesRect = getRelativeRect(spouses, hostRect);
     const groupTop = Math.min(siblingsRect.top, spousesRect.top);
-    const branchY = Math.max(lineWidth, groupTop - DESCENDANT_BRANCH_GAP);
+    const branchY = getBranchY(groupTop, lineWidth);
     const trunkX = (siblingsRect.centerX + spousesRect.centerX) / 2;
     const branchLeft = Math.min(siblingsRect.centerX, spousesRect.centerX);
     const branchRight = Math.max(siblingsRect.centerX, spousesRect.centerX);
@@ -215,8 +231,8 @@ function renderConnectors() {
   }
 
   if (siblings && nephews) {
-    const siblingsRect = getRelativeRect(siblings, screenRect);
-    const nephewsRect = getRelativeRect(nephews, screenRect);
+    const siblingsRect = getRelativeRect(siblings, hostRect);
+    const nephewsRect = getRelativeRect(nephews, hostRect);
     const startY = siblingsRect.bottom;
     const endY = nephewsRect.top;
 
