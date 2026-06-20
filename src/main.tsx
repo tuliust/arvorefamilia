@@ -6,6 +6,7 @@ import "./styles/mobile-tree-controls.css";
 import "./styles/mobile-tree-lines.css";
 import "./styles/mobile-edit-profile.css";
 import "./styles/mobile-member-pages.css";
+import "./mobileFamilyMapFullPanelStyleFix";
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
 const CSS_RELOAD_KEY = "arvorefamilia:css-reload";
@@ -76,7 +77,6 @@ function isUtilityCssAvailable() {
 
   const cssAvailable = window.getComputedStyle(probe).display === "none";
   probe.remove();
-
   return cssAvailable;
 }
 
