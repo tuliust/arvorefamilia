@@ -25,32 +25,38 @@ function ensureStyles() {
   style.textContent = `
     @media (max-width: 767px) {
       ${UNCLE_SCREEN_SELECTOR} {
-        overflow: visible !important;
+        position: relative !important;
+        overflow: hidden !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div {
         box-sizing: border-box !important;
+        position: absolute !important;
+        inset: 0 !important;
         display: flex !important;
         height: 100% !important;
         width: 100% !important;
         align-items: center !important;
         justify-content: center !important;
-        overflow: visible !important;
-        padding-inline: 0.75rem !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-y: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 1rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 7.25rem) !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div > div[class*="z-10"] {
         box-sizing: border-box !important;
         display: flex !important;
-        width: min(calc(100vw - 1.5rem), 390px) !important;
-        max-width: min(calc(100vw - 1.5rem), 390px) !important;
+        width: min(calc(100vw - 2rem), 354px) !important;
+        max-width: min(calc(100vw - 2rem), 354px) !important;
         height: auto !important;
         min-height: 0 !important;
-        max-height: calc(100% - 2.5rem) !important;
+        max-height: none !important;
         align-items: center !important;
         justify-content: center !important;
-        margin-inline: auto !important;
-        padding: 1.25rem 0 calc(env(safe-area-inset-bottom, 0px) + 7.25rem) !important;
+        margin: auto !important;
+        padding: 0 !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div > div[class*="z-10"] > div {
@@ -75,7 +81,7 @@ function ensureStyles() {
         min-height: 0 !important;
         max-height: none !important;
         overflow: visible !important;
-        border-radius: 1.4rem !important;
+        border-radius: 1.35rem !important;
         border-width: 1px !important;
         padding: 0.75rem !important;
       }
@@ -87,7 +93,9 @@ function ensureStyles() {
         margin: 0 0 0.75rem !important;
         overflow: visible !important;
         color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
         text-align: center !important;
+        text-shadow: none !important;
         font-size: 0.875rem !important;
         line-height: 1.2 !important;
         font-weight: 800 !important;
@@ -101,31 +109,31 @@ function ensureStyles() {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         align-items: stretch !important;
         align-content: start !important;
-        gap: 0.75rem !important;
+        gap: 0.625rem !important;
         min-height: 0 !important;
         overflow: visible !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] {
         display: flex !important;
-        height: 94px !important;
-        min-height: 94px !important;
+        height: 78px !important;
+        min-height: 78px !important;
         width: 100% !important;
         min-width: 0 !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        border-radius: 1.15rem !important;
-        padding: 0.625rem 0.6875rem !important;
-        gap: 0.625rem !important;
+        border-radius: 1.05rem !important;
+        padding: 0.5rem 0.55rem !important;
+        gap: 0.5rem !important;
         text-align: left !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] [data-family-map-avatar="true"] {
-        width: 52px !important;
-        height: 52px !important;
-        min-width: 52px !important;
-        min-height: 52px !important;
-        flex: 0 0 52px !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        flex: 0 0 44px !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] > span:last-child {
@@ -142,23 +150,23 @@ function ensureStyles() {
         width: 100% !important;
         overflow: hidden !important;
         color: currentColor !important;
-        font-size: 0.8125rem !important;
+        font-size: 0.6875rem !important;
         line-height: 1.05 !important;
         font-weight: 800 !important;
-        letter-spacing: 0.015em !important;
+        letter-spacing: 0.01em !important;
         text-transform: uppercase !important;
         -webkit-box-orient: vertical !important;
         -webkit-line-clamp: 2 !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] .family-map-status-icon {
-        width: 0.75rem !important;
-        height: 0.75rem !important;
+        width: 0.6875rem !important;
+        height: 0.6875rem !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] > span:last-child > span:not(:first-child) {
         justify-content: flex-start !important;
-        font-size: 0.75rem !important;
+        font-size: 0.6875rem !important;
         line-height: 1.1 !important;
       }
     }
