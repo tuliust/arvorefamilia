@@ -307,20 +307,11 @@ function handleOverviewTileActivation(event: Event) {
   navigateToScreen(screenName);
 }
 
-function handleZoomPress(event: Event) {
-  if (!isSupportedRoute()) return;
-  if (!getZoomButtonFromEvent(event)) return;
-  consumeEvent(event);
-  if (Date.now() - lastActivation < 450) return;
-  lastActivation = Date.now();
-  toggleOverview();
-}
-
 function handleZoomClick(event: MouseEvent) {
   if (!isSupportedRoute()) return;
   if (!getZoomButtonFromEvent(event)) return;
   consumeEvent(event);
-  if (Date.now() - lastActivation < 700) return;
+  if (Date.now() - lastActivation < 350) return;
   lastActivation = Date.now();
   toggleOverview();
 }
@@ -333,8 +324,6 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('pointerup', handleOverviewTileActivation, { capture: true });
   window.addEventListener('touchend', handleOverviewTileActivation, { capture: true, passive: false });
   window.addEventListener('click', handleOverviewTileActivation, { capture: true });
-  window.addEventListener('pointerdown', handleZoomPress, { capture: true });
-  window.addEventListener('touchstart', handleZoomPress, { capture: true, passive: false });
   window.addEventListener('click', handleZoomClick, { capture: true });
   window.addEventListener('resize', handleRouteOrViewportChange, { passive: true });
   window.addEventListener('orientationchange', handleRouteOrViewportChange, { passive: true });
