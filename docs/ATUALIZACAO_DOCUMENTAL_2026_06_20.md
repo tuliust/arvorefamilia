@@ -28,7 +28,8 @@ Temas cobertos:
 - Zoom/overview com 9 cards;
 - painel `+`;
 - performance de observers;
-- QA pós-deploy.
+- QA pós-deploy;
+- rollback da refatoração ampla e restauração da `main` a partir da versão estável `52ee451`.
 
 ---
 
@@ -40,6 +41,7 @@ Temas cobertos:
 | `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` | checklist operacional pós-deploy para mapas mobile |
 | `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | arquitetura técnica dos mapas mobile e scripts auxiliares |
 | `docs/historico/RODADA_MAPA_FAMILIAR_MOBILE_2026_06_20.md` | histórico da rodada de implementação e ajustes |
+| `docs/historico/ROLLBACK_E_AJUSTES_POS_RESTAURACAO_2026_06_20.md` | histórico específico do rollback, restauração da `main`, branch estável e ajustes pós-restauração |
 
 ---
 
@@ -48,6 +50,9 @@ Temas cobertos:
 | Documento | Revisão realizada |
 |---|---|
 | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | reescrito e limpo para refletir as duas views oficiais, grade 3x3, overview/zoom e painel `+` |
+| `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md` | revisado contra o código atual da `main`, com aviso sobre refatorações revertidas e QA aberto de conectores |
+| `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | revisado para refletir scripts auxiliares carregados em `index.html` e risco de lógica DOM fora do React |
+| `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` | revisado com checklists específicos para grade 3x3, descendants, tios, overview, painel `+` e conferência de deployment correto |
 | `docs/REGRAS_DE_NAO_REGRESSAO.md` | revisado para incluir regras de scroll, tios, descendentes, overview, painel `+` e paletas |
 | `docs/QA_MANUAL.md` | revisado com checklists específicos para grade 3x3, descendants, tios, overview e painel `+` |
 
@@ -64,6 +69,7 @@ Temas cobertos:
 | QA pós-deploy mobile | `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` |
 | regras de não regressão | `docs/REGRAS_DE_NAO_REGRESSAO.md` |
 | histórico da rodada | `docs/historico/RODADA_MAPA_FAMILIAR_MOBILE_2026_06_20.md` |
+| rollback e ajustes pós-restauração | `docs/historico/ROLLBACK_E_AJUSTES_POS_RESTAURACAO_2026_06_20.md` |
 
 ---
 
@@ -76,6 +82,9 @@ Temas cobertos:
 | `MOB-003` | avaliar consolidação dos scripts auxiliares mobile em React/hooks |
 | `MOB-004` | confirmar mapeamento do overview horizontal por geração |
 | `MOB-005` | confirmar overlay opaco do painel `+` em Safari/iOS |
+| `MOB-006` | confirmar conectores verticais abaixo de `Avós paternos` e `Avós maternos` após ajuste vigente |
+| `MOB-007` | confirmar conectores internos da tela `descendants`, especialmente espessura e encaixe no topo dos grupos |
+| `MOB-ZOOM` | confirmar que o Zoom abre, fecha, navega por grupo e não trava swipe/bottom nav |
 
 ---
 
@@ -87,4 +96,5 @@ Em caso de divergência:
 2. `MAPA_FAMILIAR_VIEW.md` prevalece como contrato geral das views;
 3. `MAPA_FAMILIAR_MOBILE.md` prevalece sobre detalhes mobile;
 4. `QA_MANUAL.md` e `QA_MAPAS_MOBILE_POS_DEPLOY.md` prevalecem para validação;
-5. documentos em `docs/historico/` preservam contexto, não contrato vigente.
+5. documentos em `docs/historico/` preservam contexto, não contrato vigente;
+6. branches/commits de refatoração revertida não devem ser usados como base sem nova validação visual e build.
