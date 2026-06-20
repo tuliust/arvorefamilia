@@ -17,7 +17,8 @@ function isMobileFamilyMap() {
 }
 
 function ensureStyles() {
-  if (document.getElementById(STYLE_ID)) return;
+  const existing = document.getElementById(STYLE_ID);
+  existing?.remove();
 
   const style = document.createElement('style');
   style.id = STYLE_ID;
@@ -28,24 +29,28 @@ function ensureStyles() {
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div {
+        box-sizing: border-box !important;
+        display: flex !important;
         height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: visible !important;
-        overscroll-behavior-y: contain !important;
-        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
         padding-inline: 0.75rem !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div > div[class*="z-10"] {
-        align-items: flex-start !important;
-        justify-content: center !important;
-        width: min(calc(100vw - 1.5rem), 430px) !important;
-        max-width: min(calc(100vw - 1.5rem), 430px) !important;
-        min-height: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        width: min(calc(100vw - 1.5rem), 390px) !important;
+        max-width: min(calc(100vw - 1.5rem), 390px) !important;
         height: auto !important;
+        min-height: 0 !important;
+        max-height: calc(100% - 2.5rem) !important;
+        align-items: center !important;
+        justify-content: center !important;
         margin-inline: auto !important;
-        padding-top: 2.25rem !important;
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8rem) !important;
+        padding: 1.25rem 0 calc(env(safe-area-inset-bottom, 0px) + 7.25rem) !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} > div > div[class*="z-10"] > div {
@@ -63,35 +68,37 @@ function ensureStyles() {
       }
 
       ${UNCLE_SCREEN_SELECTOR} section > div {
+        box-sizing: border-box !important;
         display: block !important;
         width: 100% !important;
         height: auto !important;
         min-height: 0 !important;
+        max-height: none !important;
         overflow: visible !important;
         border-radius: 1.4rem !important;
         border-width: 1px !important;
-        padding: 0.875rem !important;
+        padding: 0.75rem !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} section h2 {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        margin: 0 0 0.875rem !important;
+        margin: 0 0 0.75rem !important;
         overflow: visible !important;
         color: #0f172a !important;
         text-align: center !important;
-        font-size: 0.9375rem !important;
+        font-size: 0.875rem !important;
         line-height: 1.2 !important;
         font-weight: 800 !important;
-        letter-spacing: 0.09em !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
         white-space: nowrap !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} section h2 + div {
         display: grid !important;
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         align-items: stretch !important;
         align-content: start !important;
         gap: 0.75rem !important;
@@ -101,24 +108,24 @@ function ensureStyles() {
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] {
         display: flex !important;
-        height: 104px !important;
-        min-height: 104px !important;
+        height: 94px !important;
+        min-height: 94px !important;
         width: 100% !important;
         min-width: 0 !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        border-radius: 1.2rem !important;
-        padding: 0.75rem 0.875rem !important;
-        gap: 0.875rem !important;
+        border-radius: 1.15rem !important;
+        padding: 0.625rem 0.6875rem !important;
+        gap: 0.625rem !important;
         text-align: left !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] [data-family-map-avatar="true"] {
-        width: 58px !important;
-        height: 58px !important;
-        min-width: 58px !important;
-        min-height: 58px !important;
-        flex: 0 0 58px !important;
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+        min-height: 52px !important;
+        flex: 0 0 52px !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] > span:last-child {
@@ -127,7 +134,7 @@ function ensureStyles() {
         flex: 1 1 auto !important;
         flex-direction: column !important;
         justify-content: center !important;
-        overflow: visible !important;
+        overflow: hidden !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] > span:last-child > span:first-child {
@@ -135,23 +142,23 @@ function ensureStyles() {
         width: 100% !important;
         overflow: hidden !important;
         color: currentColor !important;
-        font-size: 0.9375rem !important;
+        font-size: 0.8125rem !important;
         line-height: 1.05 !important;
         font-weight: 800 !important;
-        letter-spacing: 0.02em !important;
+        letter-spacing: 0.015em !important;
         text-transform: uppercase !important;
         -webkit-box-orient: vertical !important;
         -webkit-line-clamp: 2 !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] .family-map-status-icon {
-        width: 0.875rem !important;
-        height: 0.875rem !important;
+        width: 0.75rem !important;
+        height: 0.75rem !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] > span:last-child > span:not(:first-child) {
         justify-content: flex-start !important;
-        font-size: 0.875rem !important;
+        font-size: 0.75rem !important;
         line-height: 1.1 !important;
       }
     }
