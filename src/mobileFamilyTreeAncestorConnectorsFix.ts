@@ -5,7 +5,6 @@ const ANCESTORS_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="ancestors"]'
 const SIDE_GROUP_SELECTOR = '[data-mobile-family-tree-grandparent-side]';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-ancestor-connectors';
 const STYLE_ID = 'mobile-family-tree-ancestor-connectors-style';
-const ACTIVE_SCREEN_ATTR = 'data-mobile-family-tree-active-screen';
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -41,8 +40,18 @@ function isGrandparentGroup(group: HTMLElement) {
   return title.includes('avos') && !title.includes('bisavos') && !title.includes('tataravos');
 }
 
-function isAncestorsScreenActive(root: HTMLElement) {
-  return root.getAttribute(ACTIVE_SCREEN_ATTR) === 'ancestors';
+function isAncestorsScreenVisiblyCentered(root: HTMLElement, screen: HTMLElement) {
+  const rootRect = root.getBoundingClientRect();
+  const screenRect = screen.getBoundingClientRect();
+  const centerX = rootRect.left + rootRect.width / 2;
+  const centerY = rootRect.top + rootRect.height / 2;
+
+  return (
+    centerX >= screenRect.left
+    && centerX <= screenRect.right
+    && centerY >= screenRect.top
+    && centerY <= screenRect.bottom
+  );
 }
 
 function removeConnectorLayers() {
@@ -57,12 +66,9 @@ function ensureStyles() {
   style.textContent = `
     @media (max-width: 767px) {
       ${ANCESTORS_SCREEN_SELECTOR} {
+        position: relative !important;
         overflow: visible !important;
         isolation: isolate;
-      }
-
-      ${ROOT_SELECTOR}:not([${ACTIVE_SCREEN_ATTR}="ancestors"]) ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
-        display: none !important;
       }
 
       ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
@@ -108,7 +114,7 @@ function getLineWidth() {
   const rootStyles = getComputedStyle(document.documentElement);
   const customWidth = rootStyles.getPropertyValue('--tree-palette-line-width').trim();
   const parsed = Number.parseFloat(customWidth);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 4;
 }
 
 function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
@@ -127,7 +133,7 @@ function renderConnectors() {
 
   ensureStyles();
 
-  if (!isAncestorsScreenActive(root)) {
+  if (!isAncestorsScreenVisiblyCentered(root, screen)) {
     removeConnectorLayers();
     return;
   }
