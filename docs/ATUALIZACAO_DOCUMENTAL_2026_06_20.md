@@ -29,7 +29,8 @@ Temas cobertos:
 - painel `+`;
 - performance de observers;
 - QA pós-deploy;
-- rollback da refatoração ampla e restauração da `main` a partir da versão estável `52ee451`.
+- rollback da refatoração ampla e restauração da `main` a partir da versão estável `52ee451`;
+- auditoria do código atual para separar implementação ativa, arquivo existente não carregado e comportamento ainda dependente de QA visual.
 
 ---
 
@@ -38,6 +39,7 @@ Temas cobertos:
 | Documento | Papel |
 |---|---|
 | `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md` | contrato funcional detalhado dos mapas familiares mobile |
+| `docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md` | auditoria do código atual, scripts carregados, scripts não carregados, riscos e pendências sem conflito de IDs |
 | `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` | checklist operacional pós-deploy para mapas mobile |
 | `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | arquitetura técnica dos mapas mobile e scripts auxiliares |
 | `docs/historico/RODADA_MAPA_FAMILIAR_MOBILE_2026_06_20.md` | histórico da rodada de implementação e ajustes |
@@ -49,9 +51,9 @@ Temas cobertos:
 
 | Documento | Revisão realizada |
 |---|---|
-| `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | reescrito e limpo para refletir as duas views oficiais, grade 3x3, overview/zoom e painel `+` |
+| `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | revisado contra o código atual para diferenciar componente React, scripts auxiliares, overview ativo e arquivo existente não carregado |
 | `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md` | revisado contra o código atual da `main`, com aviso sobre refatorações revertidas e QA aberto de conectores |
-| `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | revisado para refletir scripts auxiliares carregados em `index.html` e risco de lógica DOM fora do React |
+| `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | revisado para refletir scripts auxiliares carregados em `index.html`, ajuste importado em `main.tsx` e risco de lógica DOM fora do React |
 | `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` | revisado com checklists específicos para grade 3x3, descendants, tios, overview, painel `+` e conferência de deployment correto |
 | `docs/REGRAS_DE_NAO_REGRESSAO.md` | revisado para incluir regras de scroll, tios, descendentes, overview, painel `+` e paletas |
 | `docs/QA_MANUAL.md` | revisado com checklists específicos para grade 3x3, descendants, tios, overview e painel `+` |
@@ -64,6 +66,7 @@ Temas cobertos:
 |---|---|
 | contrato geral das duas views | `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | contrato mobile detalhado | `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md` |
+| auditoria do código atual mobile | `docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md` |
 | arquitetura técnica mobile | `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` |
 | QA manual geral | `docs/QA_MANUAL.md` |
 | QA pós-deploy mobile | `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` |
@@ -75,6 +78,8 @@ Temas cobertos:
 
 ## 5. Pendências citadas na documentação
 
+IDs `MOB-*` já existem no backlog geral. Para novas pendências específicas dos mapas mobile, preferir `MAP-MOB-*` quando a frente ainda não estiver registrada no `PLANO_PROXIMOS_PASSOS.md`.
+
 | ID | Tema |
 |---|---|
 | `MOB-001` | confirmar rolagem interna de `descendants` em iPhone/Safari |
@@ -85,6 +90,7 @@ Temas cobertos:
 | `MOB-006` | confirmar conectores verticais abaixo de `Avós paternos` e `Avós maternos` após ajuste vigente |
 | `MOB-007` | confirmar conectores internos da tela `descendants`, especialmente espessura e encaixe no topo dos grupos |
 | `MOB-ZOOM` | confirmar que o Zoom abre, fecha, navega por grupo e não trava swipe/bottom nav |
+| `MAP-MOB-006` | decidir se `mobileFamilyMapOverviewNavigationBridge.ts`, existente mas não carregado no `index.html`, deve ser removido, carregado ou mantido como legado inativo |
 
 ---
 
@@ -95,6 +101,7 @@ Em caso de divergência:
 1. código atual da `main` prevalece sobre histórico;
 2. `MAPA_FAMILIAR_VIEW.md` prevalece como contrato geral das views;
 3. `MAPA_FAMILIAR_MOBILE.md` prevalece sobre detalhes mobile;
-4. `QA_MANUAL.md` e `QA_MAPAS_MOBILE_POS_DEPLOY.md` prevalecem para validação;
-5. documentos em `docs/historico/` preservam contexto, não contrato vigente;
-6. branches/commits de refatoração revertida não devem ser usados como base sem nova validação visual e build.
+4. `MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md` prevalece para dizer o que está carregado/importado hoje;
+5. `QA_MANUAL.md` e `QA_MAPAS_MOBILE_POS_DEPLOY.md` prevalecem para validação;
+6. documentos em `docs/historico/` preservam contexto, não contrato vigente;
+7. branches/commits de refatoração revertida não devem ser usados como base sem nova validação visual e build.
