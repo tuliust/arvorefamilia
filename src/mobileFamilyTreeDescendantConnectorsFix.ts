@@ -9,6 +9,7 @@ const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-descendant-connectors';
 const STYLE_ID = 'mobile-family-tree-descendant-connectors-style';
 const DESCENDANT_BRANCH_GAP = 56;
 const DESCENDANT_BRANCH_MIN_Y = 72;
+const SPOUSE_BRANCH_GAP = 32;
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -92,7 +93,8 @@ function ensureStyles() {
 
       .mobile-family-descendant-screen__scroll {
         padding-top: 0 !important;
-        overflow-x: visible !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
       }
 
       .mobile-family-descendant-screen__inner {
@@ -106,6 +108,14 @@ function ensureStyles() {
       .mobile-family-descendant-screen section > div[class*="absolute"][class*="bg-cyan-600"],
       [data-mobile-family-tree-screen="descendants"] section > div[class*="absolute"][class*="bg-cyan-600"] {
         display: none !important;
+      }
+
+      [data-mobile-family-tree-spouse-branch-count="1"] {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      [data-mobile-family-tree-spouse-branch-count="2"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
 
       [${CONNECTOR_LAYER_ATTR}="true"] {
@@ -183,6 +193,73 @@ function getBranchY(groupTop: number, lineWidth: number) {
   return Math.max(lineWidth, Math.min(visibleY, groupTop - lineWidth));
 }
 
+function prepareSpouseBranchLayout(pets: HTMLElement | null, children: HTMLElement | null) {
+  const branchGroups = [pets, children].filter((group): group is HTMLElement => Boolean(group));
+  const branchParent = branchGroups[0]?.parentElement;
+  if (!branchParent) return;
+
+  branchParent.setAttribute('data-mobile-family-tree-spouse-branch-count', String(branchGroups.length));
+  branchGroups.forEach((group) => group.removeAttribute('data-mobile-family-tree-single-spouse-branch'));
+
+  if (branchGroups.length === 1) {
+    branchGroups[0].setAttribute('data-mobile-family-tree-single-spouse-branch', 'true');
+  }
+}
+
+function renderConnectorToChildGroups(
+  layer: HTMLElement,
+  parentRect: ReturnType<typeof getRelativeRect>,
+  childRects: Array<ReturnType<typeof getRelativeRect>>,
+  lineWidth: number,
+) {
+  if (childRects.length === 0) return;
+
+  const halfLine = lineWidth / 2;
+  const overlap = Math.max(2, lineWidth);
+
+  if (childRects.length === 1) {
+    const childRect = childRects[0];
+    const startY = parentRect.bottom - overlap;
+    const endY = childRect.top + overlap;
+
+    createLine(layer, {
+      left: `${parentRect.centerX - halfLine}px`,
+      top: `${startY}px`,
+      width: `${lineWidth}px`,
+      height: `${Math.max(0, endY - startY)}px`,
+    });
+    return;
+  }
+
+  const groupTop = Math.min(...childRects.map((rect) => rect.top));
+  const branchY = Math.max(parentRect.bottom + lineWidth, Math.min(groupTop - lineWidth, groupTop - SPOUSE_BRANCH_GAP));
+  const branchLeft = Math.min(...childRects.map((rect) => rect.centerX));
+  const branchRight = Math.max(...childRects.map((rect) => rect.centerX));
+
+  createLine(layer, {
+    left: `${parentRect.centerX - halfLine}px`,
+    top: `${parentRect.bottom - overlap}px`,
+    width: `${lineWidth}px`,
+    height: `${Math.max(0, branchY - parentRect.bottom + overlap + halfLine)}px`,
+  });
+
+  createLine(layer, {
+    left: `${branchLeft}px`,
+    top: `${branchY - halfLine}px`,
+    width: `${Math.max(0, branchRight - branchLeft)}px`,
+    height: `${lineWidth}px`,
+  });
+
+  childRects.forEach((childRect) => {
+    createLine(layer, {
+      left: `${childRect.centerX - halfLine}px`,
+      top: `${branchY}px`,
+      width: `${lineWidth}px`,
+      height: `${Math.max(0, childRect.top - branchY + overlap)}px`,
+    });
+  });
+}
+
 function renderConnectors() {
   if (!isMobileViewport() || !isFamilyMapPath()) return;
 
@@ -199,6 +276,10 @@ function renderConnectors() {
   const siblings = findGroup(screen, 'irmãos');
   const spouses = findGroup(screen, 'cônjuge');
   const nephews = findGroup(screen, 'sobrinhos');
+  const pets = findGroup(screen, 'pets');
+  const children = findGroup(screen, 'filhos');
+  prepareSpouseBranchLayout(pets, children);
+
   const layer = getConnectorLayer(host);
   layer.replaceChildren();
 
@@ -256,6 +337,15 @@ function renderConnectors() {
       width: `${lineWidth}px`,
       height: `${Math.max(0, endY - startY)}px`,
     });
+  }
+
+  if (spouses && (pets || children)) {
+    const spousesBoxRect = getRelativeRect(getVisibleGroupBox(spouses), hostRect);
+    const branchRects = [pets, children]
+      .filter((group): group is HTMLElement => Boolean(group))
+      .map((group) => getRelativeRect(getVisibleGroupBox(group), hostRect));
+
+    renderConnectorToChildGroups(layer, spousesBoxRect, branchRects, lineWidth);
   }
 }
 
