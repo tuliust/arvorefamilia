@@ -114,6 +114,26 @@ function sortIds(ids: string[], peopleById: Map<string, Pessoa>) {
     });
 }
 
+function normalizeText(value?: string | null) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function isLikelyParentKind(person: Pessoa | undefined, kind: 'pai' | 'mae') {
+  if (!person) return false;
+
+  const gender = normalizeText(person.genero);
+  if (kind === 'pai' && (gender === 'homem' || gender === 'masculino' || gender === 'male')) return true;
+  if (kind === 'mae' && (gender === 'mulher' || gender === 'feminino' || gender === 'female')) return true;
+
+  const name = normalizeText(person.nome_completo);
+  if (kind === 'pai') return name.includes('pai') || name.includes('paterno');
+  return name.includes('mae') || name.includes('materna');
+}
+
 function findParents(personId: string | undefined, index: RelationshipIndex, peopleById: Map<string, Pessoa>) {
   if (!personId) return [];
   return sortIds((index.parentsByChild.get(personId) ?? []).map((link) => link.parentId), peopleById);
@@ -125,9 +145,19 @@ function findParentByKind(
   index: RelationshipIndex,
   peopleById: Map<string, Pessoa>,
 ) {
-  const explicit = (index.parentsByChild.get(personId) ?? []).find((link) => link.kind === kind)?.parentId;
+  const links = index.parentsByChild.get(personId) ?? [];
+  const explicit = links.find((link) => link.kind === kind)?.parentId;
   if (explicit) return explicit;
+
   const parents = findParents(personId, index, peopleById);
+  const inferred = parents.find((parentId) => isLikelyParentKind(peopleById.get(parentId), kind));
+  if (inferred) return inferred;
+
+  const opposite = kind === 'pai' ? 'mae' : 'pai';
+  const oppositeInferred = parents.find((parentId) => isLikelyParentKind(peopleById.get(parentId), opposite));
+  const remaining = parents.find((parentId) => parentId !== oppositeInferred);
+  if (remaining) return remaining;
+
   return parents[kind === 'pai' ? 0 : 1];
 }
 
