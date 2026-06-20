@@ -40,6 +40,7 @@ function ensureStyles() {
         overflow-x: hidden !important;
         overscroll-behavior-y: contain !important;
         -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
         padding: 1rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 7.25rem) !important;
       }
 
@@ -184,6 +185,20 @@ function ensureStyles() {
         font-size: 0.6875rem !important;
         line-height: 1.1 !important;
       }
+
+      .mobile-family-uncle-empty-state {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 1.25rem !important;
+        background: rgba(255,255,255,0.92) !important;
+        padding: 1rem !important;
+        color: #64748b !important;
+        font-size: 0.8125rem !important;
+        font-weight: 700 !important;
+        line-height: 1.35 !important;
+        text-align: center !important;
+      }
     }
   `;
 
@@ -199,6 +214,26 @@ function normalizeTitle(screenName: string, screen: HTMLElement) {
 
   if (heading.textContent?.trim() !== title) heading.textContent = title;
   heading.setAttribute('aria-label', title);
+}
+
+function ensureEmptyState(screenName: string, screen: HTMLElement) {
+  const title = UNCLE_TITLES[screenName];
+  if (!title) return;
+
+  const hasCards = Boolean(screen.querySelector('[data-family-map-mobile-card="true"]'));
+  const existing = screen.querySelector<HTMLElement>('.mobile-family-uncle-empty-state');
+  if (hasCards) {
+    existing?.remove();
+    return;
+  }
+
+  const contentWrapper = screen.querySelector<HTMLElement>(':scope > div > div[class*="z-10"] > div');
+  if (!contentWrapper || existing) return;
+
+  const emptyState = document.createElement('div');
+  emptyState.className = 'mobile-family-uncle-empty-state';
+  emptyState.textContent = `Nenhum registro visível em ${title}.`;
+  contentWrapper.appendChild(emptyState);
 }
 
 function markUncleScreen(screen: HTMLElement) {
@@ -221,6 +256,7 @@ function applyUncleSizing() {
     const screenName = screen.getAttribute('data-mobile-family-tree-screen') ?? '';
     normalizeTitle(screenName, screen);
     markUncleScreen(screen);
+    ensureEmptyState(screenName, screen);
   });
 }
 
