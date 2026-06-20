@@ -1,87 +1,133 @@
 import React from 'react';
+import { Cross, Star, UserRound } from 'lucide-react';
 
-import type { FamilyTreeActions } from './actions';
-import { getPersonBirthYear, getPersonDeathYear } from '../../utils/personFields';
-import type { DirectRelativeFilters, EdgeFilters, GenealogyFilters, MarriageNodeDetails, VisualLineFilters } from './types';
 import type { Pessoa, Relacionamento } from '../../types';
-import { buildMobileFamilyTreeModel } from './mobileFamilyTreeModel';
-import { getInitials } from './personDisplay';
+import type { FamilyTreeActions } from './FamilyTree';
+import {
+  FAMILY_MAP_AVATAR_SIZES,
+  getVisualPersonCardData,
+  VisualPersonAvatar as PersonAvatar,
+} from './FamilyTreeVisualCards';
+import {
+  buildMobileFamilyTreeModel,
+  type MobileFamilyBranch,
+} from './mobileFamilyTreeModel';
+import type {
+  DirectRelativeFilters,
+  DirectRelativeGroup,
+  EdgeFilters,
+  GenealogyFilters,
+  MarriageNodeDetails,
+  VisualLineFilters,
+} from './types';
+
+type MobileTreeTab = 'core' | 'paternal' | 'maternal';
 
 type MobileTreeScreen =
-  | 'paternal-ancestors'
   | 'ancestors'
-  | 'maternal-ancestors'
   | 'paternal-uncles'
   | 'core'
   | 'maternal-uncles'
   | 'paternal-cousins'
-  | 'descendants'
   | 'maternal-cousins';
 
-type SwipeDirection = 'up' | 'down' | 'left' | 'right';
-type MobileTreeTab = 'paternal' | 'central' | 'maternal';
+type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
 
-type TouchStartState = {
-  x: number;
-  y: number;
-  screen: MobileTreeScreen;
-  scrollElement: HTMLElement | null;
-  atScrollTop: boolean;
-  atScrollBottom: boolean;
+type MobileFamilyMapColorKey =
+  | 'tataravos'
+  | 'bisavos'
+  | 'avos'
+  | 'pais'
+  | 'tios'
+  | 'primos'
+  | 'central'
+  | 'conjuge'
+  | 'irmaos'
+  | 'sobrinhos'
+  | 'filhos'
+  | 'netos'
+  | 'pets';
+
+function normalizeMobileColorKeyText(value?: string) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function getMobileFamilyMapColorKeyFromTitle(
+  title?: string,
+  fallback: MobileFamilyMapColorKey = 'central',
+): MobileFamilyMapColorKey {
+  const normalized = normalizeMobileColorKeyText(title);
+
+  if (normalized.includes('tataravos')) return 'tataravos';
+  if (normalized.includes('bisavos')) return 'bisavos';
+  if (normalized.includes('avos')) return 'avos';
+  if (normalized.includes('pai') || normalized.includes('mae')) return 'pais';
+  if (normalized.includes('tios')) return 'tios';
+  if (normalized.includes('primos')) return 'primos';
+  if (normalized.includes('central')) return 'central';
+  if (normalized.includes('conjuge')) return 'conjuge';
+  if (normalized.includes('irmaos')) return 'irmaos';
+  if (normalized.includes('sobrinhos')) return 'sobrinhos';
+  if (normalized.includes('filhos')) return 'filhos';
+  if (normalized.includes('netos')) return 'netos';
+  if (normalized.includes('pets')) return 'pets';
+
+  return fallback;
+}
+
+function getMobileFamilyMapColorKeyForGroup(
+  title: string,
+  cardVariant: CardVariant,
+): MobileFamilyMapColorKey {
+  if (cardVariant === 'sibling') return 'irmaos';
+  if (cardVariant === 'pet') return 'pets';
+
+  return getMobileFamilyMapColorKeyFromTitle(title, cardVariant === 'mini' ? 'tios' : 'central');
+}
+
+type GroupColumns = 'single' | 'double' | 'triple';
+
+type RelativeScreenKind = 'default' | 'uncles' | 'cousins';
+
+type SwipeDirection = 'up' | 'down' | 'left' | 'right';
+
+type AncestorSubgroup = {
+  id: string;
+  title: string;
+  people: Pessoa[];
 };
 
 interface MobileFamilyTreeViewProps {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
-  centralPersonId?: string;
+  centralPersonId: string;
   visiblePersonIds?: Set<string>;
-  familyTreeRef?: React.RefObject<FamilyTreeActions | null>;
+  familyTreeRef: React.Ref<FamilyTreeActions>;
   onPersonClick: (pessoa: Pessoa) => void;
-  onPersonView?: (pessoa: Pessoa) => void;
-  onPersonEdit?: (pessoa: Pessoa) => void;
-  onPersonAddConnection?: (pessoa: Pessoa) => void;
-  onPersonRemove?: (pessoa: Pessoa) => void;
-  onMarriageClick?: (details: MarriageNodeDetails) => void;
+  onPersonView: (pessoa: Pessoa) => void;
+  onPersonEdit: (pessoa: Pessoa) => void;
+  onPersonAddConnection: (pessoa: Pessoa) => void;
+  onPersonRemove: (pessoa: Pessoa) => void;
+  onMarriageClick: (details: MarriageNodeDetails) => void;
   selectedPersonId?: string;
-  edgeFilters?: EdgeFilters;
-  directRelativeFilters?: DirectRelativeFilters;
-  genealogyFilters?: GenealogyFilters;
-  visualLineFilters?: VisualLineFilters;
-  layoutRevision?: number;
-  onDirectRelationRenderedCounts?: (counts: Record<string, number>) => void;
+  edgeFilters: EdgeFilters;
+  directRelativeFilters: DirectRelativeFilters;
+  genealogyFilters: GenealogyFilters;
+  visualLineFilters: VisualLineFilters;
+  layoutRevision: number;
+  onDirectRelationRenderedCounts?: (counts: Record<DirectRelativeGroup, number>) => void;
 }
 
-const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
-  'paternal-ancestors': { column: 0, row: 0 },
-  ancestors: { column: 1, row: 0 },
-  'maternal-ancestors': { column: 2, row: 0 },
-  'paternal-uncles': { column: 0, row: 1 },
-  core: { column: 1, row: 1 },
-  'maternal-uncles': { column: 2, row: 1 },
-  'paternal-cousins': { column: 0, row: 2 },
-  descendants: { column: 1, row: 2 },
-  'maternal-cousins': { column: 2, row: 2 },
-};
-
-const DESTINATIONS: Record<MobileTreeScreen, Partial<Record<SwipeDirection, MobileTreeScreen>>> = {
-  'paternal-ancestors': { right: 'ancestors' },
-  ancestors: { left: 'paternal-ancestors', right: 'maternal-ancestors', down: 'core' },
-  'maternal-ancestors': { left: 'ancestors' },
-  'paternal-uncles': { down: 'paternal-cousins', right: 'core' },
-  core: { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles', down: 'descendants' },
-  'maternal-uncles': { down: 'maternal-cousins', left: 'core' },
-  'paternal-cousins': { up: 'paternal-uncles' },
-  descendants: { up: 'core' },
-  'maternal-cousins': { up: 'maternal-uncles' },
-};
-
-const TABS: Array<{ id: MobileTreeTab; label: string; screen: MobileTreeScreen }> = [
-  { id: 'paternal', label: 'Paterno', screen: 'paternal-uncles' },
-  { id: 'central', label: 'Central', screen: 'core' },
-  { id: 'maternal', label: 'Materno', screen: 'maternal-uncles' },
+const TABS: Array<{ id: MobileTreeTab; label: string }> = [
+  { id: 'paternal', label: 'Paterno' },
+  { id: 'core', label: 'Central' },
+  { id: 'maternal', label: 'Materno' },
 ];
 
-const EMPTY_COUNTS: Record<string, number> = {
+const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
   avos: 0,
   bisavos: 0,
@@ -96,314 +142,642 @@ const EMPTY_COUNTS: Record<string, number> = {
   pets: 0,
 };
 
+const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
+  ancestors: { column: 1, row: 0 },
+  'paternal-uncles': { column: 0, row: 1 },
+  core: { column: 1, row: 1 },
+  'maternal-uncles': { column: 2, row: 1 },
+  'paternal-cousins': { column: 0, row: 2 },
+  'maternal-cousins': { column: 2, row: 2 },
+};
+
 function getTabForScreen(screen: MobileTreeScreen): MobileTreeTab {
   if (screen.startsWith('paternal')) return 'paternal';
   if (screen.startsWith('maternal')) return 'maternal';
-  return 'central';
+  return 'core';
 }
 
-function getDisplayName(person?: Pessoa) {
-  const name = person?.nome_completo?.trim();
-  if (!name) return '';
-  const parts = name.split(/\s+/).filter(Boolean);
-  return parts.length <= 2 ? name : `${parts[0]} ${parts[1]}`;
+function getDestinationForScreen(
+  screen: MobileTreeScreen,
+  direction: SwipeDirection,
+): MobileTreeScreen {
+  const destinations: Partial<Record<SwipeDirection, MobileTreeScreen>> =
+    screen === 'core'
+      ? { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' }
+      : screen === 'paternal-uncles'
+        ? { up: 'ancestors', down: 'paternal-cousins', right: 'core' }
+        : screen === 'maternal-uncles'
+          ? { up: 'ancestors', down: 'maternal-cousins', left: 'core' }
+          : screen === 'paternal-cousins'
+            ? { up: 'paternal-uncles' }
+            : screen === 'maternal-cousins'
+              ? { up: 'maternal-uncles' }
+              : { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' };
+
+  return destinations[direction] ?? screen;
 }
 
-function getYearLine(person?: Pessoa) {
-  if (!person) return '';
-  const birth = getPersonBirthYear(person);
-  const death = getPersonDeathYear(person);
-  if (birth && death) return `${birth} — ${death}`;
-  if (birth) return String(birth);
-  if (death) return `† ${death}`;
-  return '';
+function VitalLines({
+  birthLine,
+  deathLine,
+  showDeathLine,
+  align = 'center',
+  compact = false,
+  prominent = false,
+}: {
+  birthLine: string;
+  deathLine: string;
+  showDeathLine: boolean;
+  align?: 'center' | 'left';
+  compact?: boolean;
+  prominent?: boolean;
+}) {
+  const alignment = align === 'left' ? 'justify-start text-left' : 'justify-center text-center';
+  const textSize = prominent ? 'text-[12px]' : compact ? 'text-[9px]' : 'text-[11px]';
+  const gap = compact ? 'gap-0.5' : 'gap-1';
+  const iconSize = prominent ? 'h-3.5 w-3.5' : compact ? 'h-2.5 w-2.5' : 'h-3 w-3';
+
+  return (
+    <>
+      <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+        <Star className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`} aria-hidden="true" />
+        <span className="truncate">{birthLine || 'Nascimento não informado'}</span>
+      </span>
+      {showDeathLine && (
+        <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+          <Cross className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`} aria-hidden="true" />
+          <span className="truncate">{deathLine || 'Falecimento não informado'}</span>
+        </span>
+      )}
+    </>
+  );
 }
 
-function isPet(person?: Pessoa) {
-  const type = String(person?.tipo_entidade || '').toLowerCase();
-  return type === 'pet' || type === 'animal';
-}
+function getPersonCardData(person: Pessoa) {
+  const {
+    pet,
+    displayName,
+    birthYearLine,
+    deathYearLine,
+    showDeathLine,
+  } = getVisualPersonCardData(person);
 
-function getGenderIcon(person?: Pessoa) {
-  if (isPet(person)) return '🐾';
-  const gender = String(person?.genero || person?.sexo || '').toLowerCase();
-  if (gender.startsWith('f')) return '♀';
-  if (gender.startsWith('m')) return '♂';
-  return '○';
-}
-
-function getDestinationForScreen(screen: MobileTreeScreen, direction: SwipeDirection) {
-  return DESTINATIONS[screen][direction] ?? screen;
-}
-
-function getGestureDirection(deltaX: number, deltaY: number, threshold: number): SwipeDirection | null {
-  const absoluteX = Math.abs(deltaX);
-  const absoluteY = Math.abs(deltaY);
-
-  if (absoluteX >= threshold && absoluteX > absoluteY * 1.15) return deltaX < 0 ? 'left' : 'right';
-  if (absoluteY >= threshold && absoluteY > absoluteX * 1.15) return deltaY < 0 ? 'up' : 'down';
-  return null;
-}
-
-function canScrollVertically(start: TouchStartState, direction: SwipeDirection) {
-  if (!start.scrollElement) return false;
-  if (direction === 'up') return !start.atScrollBottom;
-  if (direction === 'down') return !start.atScrollTop;
-  return false;
+  return {
+    pet,
+    displayName,
+    birthLine: birthYearLine,
+    deathLine: deathYearLine,
+    showDeathLine,
+  };
 }
 
 function PersonCard({
   person,
   label,
+  central = false,
+  colorKey,
   onClick,
-  compact = false,
-  horizontal = false,
-  prominent = false,
 }: {
   person: Pessoa;
   label?: string;
+  central?: boolean;
+  colorKey?: MobileFamilyMapColorKey;
   onClick: (person: Pessoa) => void;
-  compact?: boolean;
-  horizontal?: boolean;
-  prominent?: boolean;
 }) {
-  const name = getDisplayName(person);
-  const year = getYearLine(person);
-  const photoUrl = person.foto_url?.trim();
-
-  if (horizontal) {
-    return (
-      <button
-        type="button"
-        onClick={() => onClick(person)}
-        data-family-map-mobile-card="true"
-        data-family-map-color-key={isPet(person) ? 'pets' : undefined}
-        className="relative flex min-h-[82px] w-full items-center gap-3 rounded-2xl border border-cyan-900/25 bg-gradient-to-br from-cyan-700 to-cyan-950 px-3 py-3 text-left text-white shadow-sm active:scale-[0.99]"
-      >
-        {label && (
-          <span className="absolute -top-3 left-4 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white">
-            {label}
-          </span>
-        )}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/90 bg-white/10 text-2xl font-black">
-          {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : getGenderIcon(person)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="break-words text-[13px] font-black uppercase leading-[1.05] tracking-[0.02em] text-white">{name}</div>
-          {year && <div className="mt-1 text-xs font-bold text-white/90">{year}</div>}
-        </div>
-      </button>
-    );
-  }
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+  const effectiveColorKey = colorKey ?? (central ? 'central' : getMobileFamilyMapColorKeyFromTitle(label, 'pais'));
 
   return (
     <button
       type="button"
       onClick={() => onClick(person)}
       data-family-map-mobile-card="true"
-      data-family-map-color-key={isPet(person) ? 'pets' : undefined}
+      data-family-map-color-key={effectiveColorKey}
       className={[
-        'relative flex w-full flex-col items-center justify-center overflow-visible rounded-3xl border border-cyan-900/25 text-center text-white shadow-sm active:scale-[0.99]',
-        prominent ? 'min-h-[190px] bg-gradient-to-br from-cyan-800 to-slate-950 px-5 py-6' : 'bg-gradient-to-br from-cyan-700 to-cyan-950',
-        compact ? 'min-h-[126px] px-3 py-4' : 'min-h-[160px] px-4 py-5',
+        'relative flex h-[164px] w-full min-w-0 flex-col items-center justify-center rounded-[1.35rem] border px-2.5 pb-2.5 pt-2.5 text-center shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]',
+        central
+          ? 'border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 text-white'
+          : 'border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 text-white',
       ].join(' ')}
     >
       {label && (
-        <span className="absolute -top-4 rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-white">
+        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow">
           {label}
         </span>
       )}
-      <div className={['flex items-center justify-center overflow-hidden rounded-full border-4 border-white/90 bg-white/10 font-black', prominent ? 'h-24 w-24 text-4xl' : compact ? 'h-16 w-16 text-2xl' : 'h-20 w-20 text-3xl'].join(' ')}>
-        {photoUrl ? <img src={photoUrl} alt="" className="h-full w-full object-cover" /> : prominent ? getInitials(name) : getGenderIcon(person)}
-      </div>
-      <div className={['mt-3 max-w-full break-words font-black uppercase leading-tight tracking-[0.02em] text-white', prominent ? 'text-xl' : 'text-[15px]'].join(' ')}>{name}</div>
-      {year && <div className={['mt-2 font-bold text-white/90', prominent ? 'text-lg' : 'text-sm'].join(' ')}>{year}</div>}
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.avatar : FAMILY_MAP_AVATAR_SIZES.mobileDefault.avatar}
+        iconClassName={central ? FAMILY_MAP_AVATAR_SIZES.mobileCentralCompact.icon : FAMILY_MAP_AVATAR_SIZES.mobileDefault.icon}
+      />
+      <span className="mt-1.5 w-full truncate whitespace-nowrap py-px text-[12px] font-extrabold uppercase leading-[1.2]">
+        {displayName}
+      </span>
+      <VitalLines birthLine={birthLine} deathLine={deathLine} showDeathLine={showDeathLine} />
+    </button>
+  );
+}
+
+function MainPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="central"
+      className="relative flex h-[194px] w-full min-w-0 flex-col items-center justify-center rounded-[1.55rem] border border-cyan-300 bg-gradient-to-b from-cyan-500 to-blue-700 px-3.5 pb-4 pt-4 text-center text-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={FAMILY_MAP_AVATAR_SIZES.mobileCentral.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileCentral.icon}
+      />
+      <span className="mt-3 w-full truncate whitespace-nowrap py-px text-[15px] font-extrabold uppercase leading-[1.2]">
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        prominent
+      />
+    </button>
+  );
+}
+
+function SiblingPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="irmaos"
+      className="flex h-[82px] w-full min-w-0 items-center gap-2 rounded-[1.1rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2.5 py-2 text-left text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={FAMILY_MAP_AVATAR_SIZES.mobileSibling.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileSibling.icon}
+      />
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span
+          className="w-full overflow-hidden text-[11px] font-extrabold uppercase leading-[1.05]"
+          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+        >
+          {displayName}
+        </span>
+        <VitalLines
+          birthLine={birthLine}
+          deathLine={deathLine}
+          showDeathLine={showDeathLine}
+          align="left"
+          compact
+        />
+      </span>
+    </button>
+  );
+}
+
+function AncestorPersonCard({
+  person,
+  colorKey = 'avos',
+  onClick,
+}: {
+  person: Pessoa;
+  colorKey?: MobileFamilyMapColorKey;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key={colorKey}
+      className="flex h-[60px] w-full min-w-0 items-center gap-1.5 rounded-[0.85rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-2 py-1.5 text-left text-white shadow-[0_6px_18px_rgba(15,23,42,0.08)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileAncestor.icon}
+      />
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span
+          className="w-full overflow-hidden text-[8.5px] font-extrabold uppercase leading-[1.05]"
+          style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+        >
+          {displayName}
+        </span>
+        <VitalLines
+          birthLine={birthLine}
+          deathLine={deathLine}
+          showDeathLine={showDeathLine}
+          align="left"
+          compact
+        />
+      </span>
+    </button>
+  );
+}
+
+function MiniPersonCard({
+  person,
+  colorKey = 'tios',
+  onClick,
+}: {
+  person: Pessoa;
+  colorKey?: MobileFamilyMapColorKey;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key={colorKey}
+      className="flex h-[104px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={FAMILY_MAP_AVATAR_SIZES.mobileMini.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobileMini.icon}
+      />
+      <span
+        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
+        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+      >
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        compact
+      />
+    </button>
+  );
+}
+
+function PetPersonCard({
+  person,
+  onClick,
+}: {
+  person: Pessoa;
+  onClick: (person: Pessoa) => void;
+}) {
+  const { pet, displayName, birthLine, deathLine, showDeathLine } = getPersonCardData(person);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      data-family-map-mobile-card="true"
+      data-family-map-color-key="pets"
+      className="flex h-[128px] w-full min-w-0 flex-col items-center justify-center rounded-[0.95rem] border border-cyan-200 bg-gradient-to-b from-teal-500 to-cyan-700 px-1.5 py-2 text-center text-white shadow-[0_8px_24px_rgba(15,23,42,0.10)] transition active:scale-[0.98]"
+    >
+      <PersonAvatar
+        person={person}
+        pet={pet}
+        className={FAMILY_MAP_AVATAR_SIZES.mobilePet.avatar}
+        iconClassName={FAMILY_MAP_AVATAR_SIZES.mobilePet.icon}
+      />
+      <span
+        className="mt-1 w-full overflow-hidden text-[9px] font-extrabold uppercase leading-[1.05]"
+        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
+      >
+        {displayName}
+      </span>
+      <VitalLines
+        birthLine={birthLine}
+        deathLine={deathLine}
+        showDeathLine={showDeathLine}
+        compact
+      />
     </button>
   );
 }
 
 function EmptyCard({ label }: { label: string }) {
   return (
-    <div className="relative flex min-h-[150px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/80 px-4 py-5 text-center text-slate-400">
-      <span className="absolute -top-3 rounded-full bg-slate-200 px-4 py-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-500">{label}</span>
-      <span className="text-3xl" aria-hidden="true">○</span>
-      <span className="mt-2 text-xs font-bold">Não informado</span>
+    <div className="flex h-[164px] min-w-0 flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-slate-300 bg-white px-3 text-center text-sm font-semibold text-slate-500">
+      <UserRound className="mb-2 h-8 w-8 text-slate-300" />
+      {label}
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-3 text-center text-[15px] font-black uppercase tracking-[0.16em] text-slate-950">
-      {children}
-    </h2>
-  );
+function getGridColumnsClass(columns: GroupColumns) {
+  if (columns === 'single') return 'grid-cols-1';
+  if (columns === 'triple') return 'grid-cols-2 min-[360px]:grid-cols-3';
+  return 'grid-cols-2';
 }
 
-function PeopleSection({
+function FamilyGroup({
+  id,
   title,
   people,
-  emptyMessage = 'Nenhum familiar encontrado neste grupo.',
-  columns = 'single',
+  expanded,
+  onToggle,
   onPersonClick,
+  columns = 'double',
+  cardVariant = 'default',
+  maxCollapsedItems = 4,
+  topConnector = true,
+  bottomConnector = false,
+  stretch = false,
+  screenKind = 'default',
+  showAll = false,
 }: {
+  id: string;
   title: string;
   people: Pessoa[];
-  emptyMessage?: string;
-  columns?: 'single' | 'double' | 'triple';
+  expanded: boolean;
+  onToggle: (id: string) => void;
   onPersonClick: (person: Pessoa) => void;
+  columns?: GroupColumns;
+  cardVariant?: CardVariant;
+  maxCollapsedItems?: number;
+  topConnector?: boolean;
+  bottomConnector?: boolean;
+  stretch?: boolean;
+  screenKind?: RelativeScreenKind;
+  showAll?: boolean;
 }) {
-  const gridClass = columns === 'triple'
-    ? 'grid-cols-2 min-[430px]:grid-cols-3'
-    : columns === 'double'
-      ? 'grid-cols-2'
-      : 'grid-cols-1';
+  if (people.length === 0) return null;
+  const visiblePeople = showAll || expanded || people.length <= maxCollapsedItems
+    ? people
+    : people.slice(0, maxCollapsedItems);
+  const usePetCards = cardVariant === 'pet';
+  const stretchedGroup = stretch && screenKind !== 'default';
+  const groupColorKey = getMobileFamilyMapColorKeyForGroup(title, cardVariant);
 
   return (
-    <section className="relative mx-auto w-full max-w-[430px] rounded-[1.75rem] border border-cyan-900/20 bg-white/92 p-4 shadow-md backdrop-blur-sm">
-      <SectionTitle>{title}</SectionTitle>
-      {people.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white/75 px-4 py-8 text-center text-sm font-semibold text-slate-500">
-          {emptyMessage}
+    <section className={[
+      'relative',
+      stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
+      topConnector ? 'pt-9' : 'pt-0',
+      bottomConnector ? 'pb-9' : 'pb-0',
+    ].join(' ')}>
+      {topConnector && (
+        <div className="absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-cyan-600" />
+      )}
+      <div className={[
+        usePetCards
+          ? 'relative z-10 overflow-hidden rounded-[1.15rem] border border-cyan-200 bg-white p-2 shadow-sm'
+          : 'relative z-10 overflow-hidden rounded-[1.4rem] border border-cyan-200 bg-white p-3 shadow-sm',
+        stretchedGroup ? 'flex h-full min-h-0 flex-col' : '',
+      ].join(' ')}
+      >
+        <h2 className={usePetCards
+          ? 'mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-800'
+          : 'mb-3 text-center text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800'}
+        >
+          {title}
+        </h2>
+        <div
+          className={[
+            usePetCards ? 'grid min-w-0 grid-cols-1 gap-2' : ['grid min-w-0 gap-2.5', getGridColumnsClass(columns)].join(' '),
+            stretchedGroup ? 'flex-1 content-around items-center overflow-hidden' : '',
+            screenKind === 'uncles' ? 'auto-rows-min' : '',
+            screenKind === 'cousins' ? 'auto-rows-min gap-2' : '',
+          ].join(' ')}
+        >
+          {visiblePeople.map((person) => {
+            if (cardVariant === 'sibling') return <SiblingPersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            if (cardVariant === 'pet') return <PetPersonCard key={person.id} person={person} onClick={onPersonClick} />;
+            if (cardVariant === 'mini') return <MiniPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
+            return <PersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />;
+          })}
         </div>
-      ) : (
-        <div className={`grid ${gridClass} gap-3`}>
-          {people.map((person) => (
-            <PersonCard
-              key={person.id}
-              person={person}
-              onClick={onPersonClick}
-              horizontal={columns !== 'single'}
-              compact={columns !== 'single'}
-            />
-          ))}
-        </div>
+        {!showAll && people.length > maxCollapsedItems && (
+          <button
+            type="button"
+            onClick={() => onToggle(id)}
+            className="mt-3 w-full rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-800"
+          >
+            {expanded ? 'Mostrar menos' : `Ver todos (${people.length})`}
+          </button>
+        )}
+      </div>
+      {bottomConnector && (
+        <div className="absolute bottom-0 left-1/2 h-9 w-px -translate-x-1/2 bg-cyan-600" />
       )}
     </section>
   );
 }
 
-function ScreenShell({ children }: { children: React.ReactNode }) {
+function VerticalRelativeScreen({
+  title,
+  people,
+  groupId,
+  expanded,
+  onToggle,
+  onPersonClick,
+  columns,
+  maxCollapsedItems,
+  connectHorizontal,
+  connectAncestors = false,
+  bottomConnector = true,
+}: {
+  title: string;
+  people: Pessoa[];
+  groupId: string;
+  expanded: boolean;
+  onToggle: (id: string) => void;
+  onPersonClick: (person: Pessoa) => void;
+  columns: GroupColumns;
+  maxCollapsedItems: number;
+  connectHorizontal?: 'left' | 'right';
+  connectAncestors?: boolean;
+  bottomConnector?: boolean;
+}) {
+  const screenKind: RelativeScreenKind = columns === 'double' ? 'uncles' : 'cousins';
+  const isCousinsScreen = screenKind === 'cousins';
+
   return (
-    <div className="h-full w-full overflow-hidden">
-      <div data-mobile-tree-scroll className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-32 pt-16">
-        {children}
+    <div className={[
+      'relative h-full w-full shrink-0 snap-center px-4',
+      isCousinsScreen ? 'overflow-y-auto overflow-x-hidden overscroll-y-auto' : 'overflow-visible',
+    ].join(' ')}
+    data-mobile-tree-scroll={isCousinsScreen ? true : undefined}
+    >
+      {connectHorizontal && people.length > 0 && (
+        <div className={[
+          'pointer-events-none absolute top-[122px] z-0 h-px bg-cyan-600',
+          connectHorizontal === 'left' ? 'left-1/2 right-0' : 'left-0 right-1/2',
+        ].join(' ')} />
+      )}
+      {people.length > 0 && (
+        <div className={[
+          'pointer-events-none absolute left-1/2 z-0 w-px -translate-x-1/2 bg-cyan-600',
+          bottomConnector ? 'inset-y-0' : 'top-0 h-10',
+        ].join(' ')} />
+      )}
+      {connectHorizontal && connectAncestors && people.length > 0 && (
+        <div className={[
+          'pointer-events-none absolute top-0 z-0 h-10 border-t border-cyan-600',
+          connectHorizontal === 'left'
+            ? 'left-1/2 right-0 border-l'
+            : 'left-0 right-1/2 border-r',
+        ].join(' ')} />
+      )}
+      <div className={[
+        'relative z-10 mx-auto flex w-full max-w-[380px] items-stretch pb-28 pt-10',
+        isCousinsScreen ? 'min-h-full' : 'h-full',
+      ].join(' ')}>
+        <div className="w-full min-w-0">
+          <FamilyGroup
+            id={groupId}
+            title={title}
+            people={people}
+            expanded={expanded}
+            onToggle={onToggle}
+            onPersonClick={onPersonClick}
+            columns={columns}
+            cardVariant={columns === 'double' ? 'sibling' : 'mini'}
+            maxCollapsedItems={maxCollapsedItems}
+            topConnector={false}
+            bottomConnector={false}
+            stretch={!isCousinsScreen}
+            screenKind={screenKind}
+            showAll={isCousinsScreen}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-function AncestorDeepScreen({
-  title,
-  greatGrandparents,
-  greatGreatGrandparents,
+function AncestorGroupCard({
+  group,
   onPersonClick,
 }: {
-  title: string;
-  greatGrandparents: Pessoa[];
-  greatGreatGrandparents: Pessoa[];
+  group: AncestorSubgroup;
   onPersonClick: (person: Pessoa) => void;
 }) {
+  const groupColorKey = getMobileFamilyMapColorKeyFromTitle(group.title, 'avos');
+
   return (
-    <ScreenShell>
-      <div className="space-y-4">
-        <PeopleSection title={`Bisavós ${title}`} people={greatGrandparents} columns="double" onPersonClick={onPersonClick} />
-        <PeopleSection title={`Tataravós ${title}`} people={greatGreatGrandparents} columns="double" onPersonClick={onPersonClick} />
+    <section className="relative z-10 flex min-h-[5.5rem] min-w-0 flex-col overflow-hidden rounded-[1rem] border border-cyan-200 bg-white p-2 shadow-sm">
+      <h3 className="mb-1.5 truncate text-center text-[9px] font-extrabold uppercase tracking-[0.04em] text-slate-800 min-[375px]:text-[10px]">
+        {group.title}
+      </h3>
+      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-1 content-center gap-1.5">
+        {group.people.map((person) => (
+          <AncestorPersonCard key={person.id} person={person} colorKey={groupColorKey} onClick={onPersonClick} />
+        ))}
       </div>
-    </ScreenShell>
+    </section>
   );
 }
 
-function AncestorsScreen({
-  paternalGrandparents,
-  maternalGrandparents,
+function AncestorsOverviewScreen({
+  paternalGroups,
+  maternalGroups,
   onPersonClick,
 }: {
-  paternalGrandparents: Pessoa[];
-  maternalGrandparents: Pessoa[];
+  paternalGroups: AncestorSubgroup[];
+  maternalGroups: AncestorSubgroup[];
   onPersonClick: (person: Pessoa) => void;
 }) {
-  return (
-    <ScreenShell>
-      <div className="mx-auto grid w-full max-w-[430px] grid-cols-2 gap-3">
-        <PeopleSection title="Avós paternos" people={paternalGrandparents} columns="single" onPersonClick={onPersonClick} />
-        <PeopleSection title="Avós maternos" people={maternalGrandparents} columns="single" onPersonClick={onPersonClick} />
-      </div>
-    </ScreenShell>
-  );
-}
+  const generations = paternalGroups
+    .map((paternalGroup, index) => ({
+      paternal: paternalGroup,
+      maternal: maternalGroups[index],
+    }))
+    .filter(({ paternal, maternal }) => (
+      paternal.people.length > 0 || maternal.people.length > 0
+    ));
+  const hasAncestors = generations.length > 0;
+  const hasPaternalAncestors = paternalGroups.some((group) => group.people.length > 0);
+  const hasMaternalAncestors = maternalGroups.some((group) => group.people.length > 0);
 
-function CoreScreen({
-  father,
-  mother,
-  central,
-  onPersonClick,
-}: {
-  father?: Pessoa;
-  mother?: Pessoa;
-  central?: Pessoa;
-  onPersonClick: (person: Pessoa) => void;
-}) {
   return (
-    <ScreenShell>
-      <div className="mx-auto w-full max-w-[430px] px-0 pb-10 pt-2">
-        <div className="relative mx-auto w-full max-w-[390px]">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="relative">
-              {father ? <PersonCard person={father} label="Pai" onClick={onPersonClick} /> : <EmptyCard label="Pai" />}
-              <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-700" />
-            </div>
-            <div className="relative">
-              {mother ? <PersonCard person={mother} label="Mãe" onClick={onPersonClick} /> : <EmptyCard label="Mãe" />}
-              <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-700" />
-            </div>
-          </div>
-
-          <div className="pointer-events-none relative h-12">
-            <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-7 h-[3px] bg-cyan-700" />
-            <div className="absolute left-1/2 top-7 h-5 w-[3px] -translate-x-1/2 bg-cyan-700" />
+    <div className="relative h-full w-full shrink-0 overflow-hidden">
+      <h2 className="sr-only">Ancestrais paternos e maternos</h2>
+      {!hasAncestors ? (
+        <div
+          data-mobile-tree-scroll
+          className="h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
+        >
+          <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[380px] items-center pb-28 pt-10">
+            <p className="w-full rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
+              Nenhum ancestral cadastrado.
+            </p>
           </div>
         </div>
-
-        {central && (
-          <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
-            <PersonCard person={central} onClick={onPersonClick} prominent />
+      ) : (
+        <>
+          {hasPaternalAncestors && (
+            <>
+              <div className="pointer-events-none absolute bottom-0 left-[calc(50%-97.5px)] z-0 h-10 w-px -translate-x-1/2 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 left-0 right-[calc(50%+97.5px)] z-0 h-px bg-cyan-600" />
+            </>
+          )}
+          {hasMaternalAncestors && (
+            <>
+              <div className="pointer-events-none absolute bottom-0 right-[calc(50%-97.5px)] z-0 h-10 w-px translate-x-1/2 bg-cyan-600" />
+              <div className="pointer-events-none absolute bottom-0 left-[calc(50%+97.5px)] right-0 z-0 h-px bg-cyan-600" />
+            </>
+          )}
+          <div
+            data-mobile-tree-scroll
+            className="relative z-10 h-full overflow-y-auto overflow-x-visible px-4 overscroll-y-contain"
+          >
+            <div className="relative mx-auto min-h-full w-full max-w-[390px] pb-28 pt-6">
+              {hasPaternalAncestors && (
+                <div className="pointer-events-none absolute bottom-0 left-1/4 top-6 z-0 w-px -translate-x-1/2 bg-cyan-600" />
+              )}
+              {hasMaternalAncestors && (
+                <div className="pointer-events-none absolute bottom-0 right-1/4 top-6 z-0 w-px translate-x-1/2 bg-cyan-600" />
+              )}
+              <div className="relative z-10 grid min-w-0 grid-cols-2 items-start gap-2">
+                {generations.flatMap(({ paternal, maternal }) => [
+                  paternal.people.length > 0 ? (
+                    <AncestorGroupCard
+                      key={paternal.id}
+                      group={paternal}
+                      onPersonClick={onPersonClick}
+                    />
+                  ) : <div key={paternal.id} />,
+                  maternal.people.length > 0 ? (
+                    <AncestorGroupCard
+                      key={maternal.id}
+                      group={maternal}
+                      onPersonClick={onPersonClick}
+                    />
+                  ) : <div key={maternal.id} />,
+                ])}
+              </div>
+            </div>
           </div>
-        )}
-
-        <div className="mt-6 rounded-2xl border border-cyan-100 bg-white/80 px-4 py-3 text-center text-xs font-bold text-slate-600 shadow-sm">
-          Deslize para cima, esquerda, direita ou baixo para navegar pelos grupos da família.
-        </div>
-      </div>
-    </ScreenShell>
-  );
-}
-
-function DescendantsScreen({
-  spouses,
-  siblings,
-  nephews,
-  children,
-  pets,
-  grandchildren,
-  onPersonClick,
-}: {
-  spouses: Pessoa[];
-  siblings: Pessoa[];
-  nephews: Pessoa[];
-  children: Pessoa[];
-  pets: Pessoa[];
-  grandchildren: Pessoa[];
-  onPersonClick: (person: Pessoa) => void;
-}) {
-  return (
-    <ScreenShell>
-      <div className="space-y-4">
-        <PeopleSection title="Cônjuges" people={spouses} columns="double" onPersonClick={onPersonClick} />
-        <PeopleSection title="Irmãos e sobrinhos" people={[...siblings, ...nephews]} columns="double" onPersonClick={onPersonClick} />
-        <PeopleSection title="Filhos, pets e netos" people={[...children, ...pets, ...grandchildren]} columns="double" onPersonClick={onPersonClick} />
-      </div>
-    </ScreenShell>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -419,21 +793,37 @@ export function MobileFamilyTreeView({
   const [activeScreen, setActiveScreen] = React.useState<MobileTreeScreen>('core');
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
   const [isDraggingScreen, setIsDraggingScreen] = React.useState(false);
-  const touchStartRef = React.useRef<TouchStartState | null>(null);
-
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(() => new Set());
+  const touchStartRef = React.useRef<{
+    x: number;
+    y: number;
+    atScrollTop: boolean;
+    atScrollBottom: boolean;
+  } | null>(null);
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
   );
-
   const isVisible = React.useCallback(
-    (person: Pessoa | undefined): person is Pessoa => Boolean(person && (!visiblePersonIds || visiblePersonIds.has(person.id))),
+    (person: Pessoa | undefined): person is Pessoa => Boolean(
+      person && (!visiblePersonIds || visiblePersonIds.has(person.id)),
+    ),
     [visiblePersonIds],
   );
+  const filterVisible = React.useCallback(
+    (people: Pessoa[]) => people.filter(isVisible),
+    [isVisible],
+  );
+  const toggleGroup = React.useCallback((id: string) => {
+    setExpandedGroups((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
-  const filterVisible = React.useCallback((people: Pessoa[]) => people.filter(isVisible), [isVisible]);
-
-  const visiblePaternal = React.useMemo(() => ({
+  const visiblePaternal = React.useMemo<MobileFamilyBranch>(() => ({
     parent: filterVisible(model.paternal.parent),
     grandparents: filterVisible(model.paternal.grandparents),
     greatGrandparents: filterVisible(model.paternal.greatGrandparents),
@@ -441,8 +831,7 @@ export function MobileFamilyTreeView({
     uncles: filterVisible(model.paternal.uncles),
     cousins: filterVisible(model.paternal.cousins),
   }), [filterVisible, model.paternal]);
-
-  const visibleMaternal = React.useMemo(() => ({
+  const visibleMaternal = React.useMemo<MobileFamilyBranch>(() => ({
     parent: filterVisible(model.maternal.parent),
     grandparents: filterVisible(model.maternal.grandparents),
     greatGrandparents: filterVisible(model.maternal.greatGrandparents),
@@ -451,19 +840,120 @@ export function MobileFamilyTreeView({
     cousins: filterVisible(model.maternal.cousins),
   }), [filterVisible, model.maternal]);
 
-  const visibleSpouses = React.useMemo(() => filterVisible(model.spouses), [filterVisible, model.spouses]);
-  const visibleSiblings = React.useMemo(() => filterVisible(model.siblings), [filterVisible, model.siblings]);
-  const visibleNephews = React.useMemo(() => filterVisible(model.nephews), [filterVisible, model.nephews]);
-  const visibleChildren = React.useMemo(() => filterVisible(model.children), [filterVisible, model.children]);
-  const visiblePets = React.useMemo(() => filterVisible(model.pets), [filterVisible, model.pets]);
-  const visibleGrandchildren = React.useMemo(() => filterVisible(model.grandchildren), [filterVisible, model.grandchildren]);
-
   React.useEffect(() => {
     setActiveScreen('core');
     setDragOffset({ x: 0, y: 0 });
     setIsDraggingScreen(false);
   }, [centralPersonId, layoutRevision]);
 
+  const navigateByDirection = React.useCallback((direction: SwipeDirection) => {
+    setActiveScreen((current) => getDestinationForScreen(current, direction));
+  }, []);
+
+  const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    setDragOffset({ x: 0, y: 0 });
+    setIsDraggingScreen(false);
+    const touch = event.touches[0];
+    const target = event.target as HTMLElement;
+    const scrollElement = target.closest<HTMLElement>('[data-mobile-tree-scroll]');
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      atScrollTop: !scrollElement || scrollElement.scrollTop <= 1,
+      atScrollBottom: !scrollElement || scrollElement.scrollTop + scrollElement.clientHeight
+        >= scrollElement.scrollHeight - 1,
+    };
+  }, []);
+
+  const handleTouchMove = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.touches[0];
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absoluteX = Math.abs(deltaX);
+    const absoluteY = Math.abs(deltaY);
+    const previewThreshold = 10;
+
+    let direction: SwipeDirection | null = null;
+    let axis: 'x' | 'y' | null = null;
+
+    if (absoluteX >= previewThreshold && absoluteX > absoluteY * 1.2) {
+      direction = deltaX < 0 ? 'right' : 'left';
+      axis = 'x';
+    } else if (absoluteY >= previewThreshold && absoluteY > absoluteX * 1.2) {
+      direction = deltaY < 0 ? 'down' : 'up';
+      axis = 'y';
+
+      if (
+        (direction === 'up' && !start.atScrollTop)
+        || (direction === 'down' && !start.atScrollBottom)
+      ) {
+        setDragOffset({ x: 0, y: 0 });
+        setIsDraggingScreen(false);
+        return;
+      }
+    }
+
+    if (!direction || !axis) {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDraggingScreen(false);
+      return;
+    }
+
+    const destination = getDestinationForScreen(activeScreen, direction);
+    if (destination === activeScreen) {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDraggingScreen(false);
+      return;
+    }
+
+    const maxX = event.currentTarget.clientWidth * 0.42;
+    const maxY = event.currentTarget.clientHeight * 0.42;
+    const clamp = (value: number, max: number) => Math.max(-max, Math.min(max, value));
+
+    setDragOffset({
+      x: axis === 'x' ? clamp(deltaX, maxX) : 0,
+      y: axis === 'y' ? clamp(deltaY, maxY) : 0,
+    });
+    setIsDraggingScreen(true);
+  }, [activeScreen]);
+
+  const handleTouchEnd = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = null;
+    setDragOffset({ x: 0, y: 0 });
+    setIsDraggingScreen(false);
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absoluteX = Math.abs(deltaX);
+    const absoluteY = Math.abs(deltaY);
+    const threshold = 56;
+
+    if (absoluteX >= threshold && absoluteX > absoluteY * 1.2) {
+      navigateByDirection(deltaX < 0 ? 'right' : 'left');
+      return;
+    }
+    if (absoluteY < threshold || absoluteY <= absoluteX * 1.2) return;
+
+    const direction: SwipeDirection = deltaY < 0 ? 'down' : 'up';
+    if (
+      (direction === 'up' && !start.atScrollTop)
+      || (direction === 'down' && !start.atScrollBottom)
+    ) return;
+    navigateByDirection(direction);
+  }, [navigateByDirection]);
+
+  const visibleSpouses = filterVisible(model.spouses);
+  const visibleSiblings = filterVisible(model.siblings);
+  const visibleNephews = filterVisible(model.nephews);
+  const visibleChildren = filterVisible(model.children);
+  const visiblePets = filterVisible(model.pets);
+  const visibleGrandchildren = filterVisible(model.grandchildren);
   React.useEffect(() => {
     if (!onDirectRelationRenderedCounts) return;
 
@@ -505,103 +995,47 @@ export function MobileFamilyTreeView({
     visibleSpouses.length,
   ]);
 
+  const paternalAncestorGroups: AncestorSubgroup[] = [
+    { id: 'paternal-great-great-grandparents', title: 'Tataravós paternos', people: visiblePaternal.greatGreatGrandparents },
+    { id: 'paternal-great-grandparents', title: 'Bisavós paternos', people: visiblePaternal.greatGrandparents },
+    { id: 'paternal-grandparents', title: 'Avós paternos', people: visiblePaternal.grandparents },
+  ];
+  const maternalAncestorGroups: AncestorSubgroup[] = [
+    { id: 'maternal-great-great-grandparents', title: 'Tataravós maternos', people: visibleMaternal.greatGreatGrandparents },
+    { id: 'maternal-great-grandparents', title: 'Bisavós maternos', people: visibleMaternal.greatGrandparents },
+    { id: 'maternal-grandparents', title: 'Avós maternos', people: visibleMaternal.grandparents },
+  ];
+  const hasPaternalAncestors = paternalAncestorGroups.some((group) => group.people.length > 0);
+  const hasMaternalAncestors = maternalAncestorGroups.some((group) => group.people.length > 0);
   const activeTab = getTabForScreen(activeScreen);
   const activePosition = SCREEN_POSITIONS[activeScreen];
 
-  const navigateToScreen = React.useCallback((screen: MobileTreeScreen) => {
-    setActiveScreen(screen);
-    setDragOffset({ x: 0, y: 0 });
-    setIsDraggingScreen(false);
-  }, []);
-
-  const navigateByDirection = React.useCallback((direction: SwipeDirection) => {
-    setActiveScreen((current) => getDestinationForScreen(current, direction));
-  }, []);
-
-  const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-
-    const target = event.target instanceof HTMLElement ? event.target : null;
-    const scrollElement = target?.closest<HTMLElement>('[data-mobile-tree-scroll]') ?? null;
-
-    touchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      screen: activeScreen,
-      scrollElement,
-      atScrollTop: !scrollElement || scrollElement.scrollTop <= 1,
-      atScrollBottom: !scrollElement || scrollElement.scrollTop + scrollElement.clientHeight >= scrollElement.scrollHeight - 1,
-    };
-    setDragOffset({ x: 0, y: 0 });
-    setIsDraggingScreen(false);
-  }, [activeScreen]);
-
-  const handleTouchMove = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    const touch = event.touches[0];
-    if (!start || !touch) return;
-
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    const direction = getGestureDirection(deltaX, deltaY, 10);
-    if (!direction) return;
-
-    const destination = getDestinationForScreen(start.screen, direction);
-    if (destination === start.screen) return;
-
-    if ((direction === 'up' || direction === 'down') && canScrollVertically(start, direction)) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const maxX = event.currentTarget.clientWidth * 0.34;
-    const maxY = event.currentTarget.clientHeight * 0.34;
-    const clamp = (value: number, max: number) => Math.max(-max, Math.min(max, value));
-
-    setDragOffset({
-      x: direction === 'left' || direction === 'right' ? clamp(deltaX, maxX) : 0,
-      y: direction === 'up' || direction === 'down' ? clamp(deltaY, maxY) : 0,
-    });
-    setIsDraggingScreen(true);
-  }, []);
-
-  const handleTouchEnd = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    const touch = event.changedTouches[0];
-    touchStartRef.current = null;
-    setDragOffset({ x: 0, y: 0 });
-    setIsDraggingScreen(false);
-    if (!start || !touch) return;
-
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    const direction = getGestureDirection(deltaX, deltaY, 54);
-    if (!direction) return;
-
-    const destination = getDestinationForScreen(start.screen, direction);
-    if (destination === start.screen) return;
-
-    if ((direction === 'up' || direction === 'down') && canScrollVertically(start, direction)) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    navigateByDirection(direction);
-  }, [navigateByDirection]);
-
   return (
     <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]" data-mobile-family-tree-root="true">
-      <nav aria-label="Visualizações da árvore" className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur">
+      <nav
+        aria-label="Visualizações da árvore"
+        className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur"
+      >
         <div className="grid w-full max-w-[330px] grid-cols-3 gap-0.5 rounded-xl bg-slate-100 p-1">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => navigateToScreen(tab.screen)}
+              onClick={() => {
+                setActiveScreen(
+                  tab.id === 'paternal'
+                    ? 'paternal-uncles'
+                    : tab.id === 'maternal'
+                      ? 'maternal-uncles'
+                      : 'core',
+                );
+              }}
               aria-current={activeTab === tab.id ? 'page' : undefined}
               className={[
                 'min-w-0 rounded-lg px-0.5 py-2 text-[10px] font-bold transition min-[375px]:text-[11px]',
-                activeTab === tab.id ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-600 hover:bg-white',
+                activeTab === tab.id
+                  ? 'bg-cyan-700 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-white',
               ].join(' ')}
             >
               {tab.label}
@@ -615,7 +1049,6 @@ export function MobileFamilyTreeView({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ touchAction: 'pan-y' }}
       >
         <div
           data-mobile-family-tree-stage="true"
@@ -627,73 +1060,193 @@ export function MobileFamilyTreeView({
             transform: `translate3d(calc(${-activePosition.column * (100 / 3)}% + ${dragOffset.x}px), calc(${-activePosition.row * (100 / 3)}% + ${dragOffset.y}px), 0)`,
           }}
         >
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="paternal-ancestors">
-            <AncestorDeepScreen
-              title="paternos"
-              greatGrandparents={visiblePaternal.greatGrandparents}
-              greatGreatGrandparents={visiblePaternal.greatGreatGrandparents}
+          <div className="col-start-2 row-start-1 h-full w-full overflow-visible" data-mobile-family-tree-screen="ancestors">
+            <AncestorsOverviewScreen
+              paternalGroups={paternalAncestorGroups}
+              maternalGroups={maternalAncestorGroups}
               onPersonClick={onPersonClick}
             />
           </div>
 
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="ancestors">
-            <AncestorsScreen
-              paternalGrandparents={visiblePaternal.grandparents}
-              maternalGrandparents={visibleMaternal.grandparents}
+          <div className="col-start-1 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="paternal-uncles">
+            <VerticalRelativeScreen
+              title="Tios Paternos"
+              people={visiblePaternal.uncles}
+              groupId="core-parent-branch-left-uncles"
+              expanded={expandedGroups.has('core-parent-branch-left-uncles')}
+              onToggle={toggleGroup}
               onPersonClick={onPersonClick}
+              columns="double"
+              maxCollapsedItems={6}
+              connectHorizontal="left"
+              connectAncestors={hasPaternalAncestors}
             />
           </div>
 
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="maternal-ancestors">
-            <AncestorDeepScreen
-              title="maternos"
-              greatGrandparents={visibleMaternal.greatGrandparents}
-              greatGreatGrandparents={visibleMaternal.greatGreatGrandparents}
+          <div className="relative col-start-2 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="core">
+            <div
+              data-mobile-tree-scroll
+              className="h-full overflow-y-auto overflow-x-visible overscroll-y-contain"
+            >
+              <div className="mx-auto w-full max-w-[430px] px-4 pb-28 pt-10">
+                <div className="relative mx-auto w-full max-w-[390px]">
+                  {hasPaternalAncestors && (
+                    <div className="pointer-events-none absolute bottom-full left-1/4 h-10 w-px -translate-x-1/2 bg-cyan-600" />
+                  )}
+                  {hasMaternalAncestors && (
+                    <div className="pointer-events-none absolute bottom-full right-1/4 h-10 w-px translate-x-1/2 bg-cyan-600" />
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative z-10">
+                      <div className="pointer-events-none absolute right-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
+                      {isVisible(model.father)
+                        ? <PersonCard person={model.father} label="Pai" onClick={onPersonClick} />
+                        : <EmptyCard label="Pai" />}
+                      <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="pointer-events-none absolute left-full top-1/2 z-0 h-px w-screen -translate-y-1/2 bg-cyan-600" />
+                      {isVisible(model.mother)
+                        ? <PersonCard person={model.mother} label="Mãe" onClick={onPersonClick} />
+                        : <EmptyCard label="Mãe" />}
+                      <div className="pointer-events-none absolute left-1/2 top-full h-7 w-px -translate-x-1/2 bg-cyan-600" />
+                    </div>
+                  </div>
+
+                  <div className="pointer-events-none relative h-12">
+                    <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-7 h-px bg-cyan-600" />
+                    <div className="absolute left-1/2 top-7 h-5 w-px -translate-x-1/2 bg-cyan-600" />
+                  </div>
+                </div>
+
+                {isVisible(model.central) && (
+                  <div className="relative mx-auto mt-0 w-[min(230px,calc(100vw-6rem))]">
+                    <MainPersonCard person={model.central} onClick={onPersonClick} />
+                  </div>
+                )}
+
+                <div className="relative mx-auto h-9 w-full">
+                  <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
+                  <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                  <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
+                </div>
+
+                <div className="grid grid-cols-2 items-start gap-3">
+                  <div className="min-w-0">
+                  <FamilyGroup
+                    id="core-siblings"
+                    title="Irmãos"
+                    people={visibleSiblings}
+                    expanded={expandedGroups.has('core-siblings')}
+                    onToggle={toggleGroup}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                    cardVariant="sibling"
+                  />
+                  <FamilyGroup
+                    id="core-nephews"
+                    title="Sobrinhos"
+                    people={visibleNephews}
+                    expanded={expandedGroups.has('core-nephews')}
+                    onToggle={toggleGroup}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                </div>
+
+                  <div className="min-w-0">
+                  <FamilyGroup
+                    id="core-spouses"
+                    title="Cônjuge"
+                    people={visibleSpouses}
+                    expanded={expandedGroups.has('core-spouses')}
+                    onToggle={toggleGroup}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                  <div className="grid grid-cols-2 items-start gap-2">
+                    <FamilyGroup
+                      id="core-pets"
+                      title="Pets"
+                      people={visiblePets}
+                      expanded={expandedGroups.has('core-pets')}
+                      onToggle={toggleGroup}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                      cardVariant="pet"
+                    />
+                    <FamilyGroup
+                      id="core-children"
+                      title="Filhos"
+                      people={visibleChildren}
+                      expanded={expandedGroups.has('core-children')}
+                      onToggle={toggleGroup}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                    />
+                  </div>
+                  <FamilyGroup
+                    id="core-grandchildren"
+                    title="Netos"
+                    people={visibleGrandchildren}
+                    expanded={expandedGroups.has('core-grandchildren')}
+                    onToggle={toggleGroup}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-start-3 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="maternal-uncles">
+            <VerticalRelativeScreen
+              title="Tios Maternos"
+              people={visibleMaternal.uncles}
+              groupId="core-parent-branch-right-uncles"
+              expanded={expandedGroups.has('core-parent-branch-right-uncles')}
+              onToggle={toggleGroup}
               onPersonClick={onPersonClick}
+              columns="double"
+              maxCollapsedItems={6}
+              connectHorizontal="right"
+              connectAncestors={hasMaternalAncestors}
             />
           </div>
 
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="paternal-uncles">
-            <ScreenShell>
-              <PeopleSection title="Tios paternos" people={visiblePaternal.uncles} columns="double" onPersonClick={onPersonClick} />
-            </ScreenShell>
-          </div>
-
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="core">
-            <CoreScreen father={isVisible(model.father) ? model.father : undefined} mother={isVisible(model.mother) ? model.mother : undefined} central={isVisible(model.central) ? model.central : undefined} onPersonClick={onPersonClick} />
-          </div>
-
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="maternal-uncles">
-            <ScreenShell>
-              <PeopleSection title="Tios maternos" people={visibleMaternal.uncles} columns="double" onPersonClick={onPersonClick} />
-            </ScreenShell>
-          </div>
-
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="paternal-cousins">
-            <ScreenShell>
-              <PeopleSection title="Primos paternos" people={visiblePaternal.cousins} columns="triple" onPersonClick={onPersonClick} />
-            </ScreenShell>
-          </div>
-
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="descendants">
-            <DescendantsScreen
-              spouses={visibleSpouses}
-              siblings={visibleSiblings}
-              nephews={visibleNephews}
-              children={visibleChildren}
-              pets={visiblePets}
-              grandchildren={visibleGrandchildren}
+          <div className="col-start-1 row-start-3 h-full w-full overflow-visible" data-mobile-family-tree-screen="paternal-cousins">
+            <VerticalRelativeScreen
+              title="Primos Paternos"
+              people={visiblePaternal.cousins}
+              groupId="core-parent-branch-left-cousins"
+              expanded
+              onToggle={toggleGroup}
               onPersonClick={onPersonClick}
+              columns="triple"
+              maxCollapsedItems={visiblePaternal.cousins.length}
+              bottomConnector={false}
             />
           </div>
 
-          <div className="h-full w-full overflow-hidden" data-mobile-family-tree-screen="maternal-cousins">
-            <ScreenShell>
-              <PeopleSection title="Primos maternos" people={visibleMaternal.cousins} columns="triple" onPersonClick={onPersonClick} />
-            </ScreenShell>
+          <div className="col-start-3 row-start-3 h-full w-full overflow-visible" data-mobile-family-tree-screen="maternal-cousins">
+            <VerticalRelativeScreen
+              title="Primos Maternos"
+              people={visibleMaternal.cousins}
+              groupId="core-parent-branch-right-cousins"
+              expanded
+              onToggle={toggleGroup}
+              onPersonClick={onPersonClick}
+              columns="triple"
+              maxCollapsedItems={visibleMaternal.cousins.length}
+              bottomConnector={false}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 }
+

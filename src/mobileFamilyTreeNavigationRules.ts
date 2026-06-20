@@ -3,7 +3,6 @@ const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const SCREEN_SELECTOR = '[data-mobile-family-tree-screen]';
-const INTERACTIVE_CONTROL_SELECTOR = 'header, [data-mobile-family-map-toolbar], [data-tree-export-ignore="true"]';
 const SWIPE_PREVIEW_THRESHOLD = 10;
 const SWIPE_NAVIGATION_THRESHOLD = 56;
 
@@ -78,10 +77,6 @@ function getStage(root = getRoot()) {
   return root?.querySelector<HTMLElement>(STAGE_SELECTOR) ?? null;
 }
 
-function isInteractiveControlTarget(target: EventTarget | null) {
-  return target instanceof Element && Boolean(target.closest(INTERACTIVE_CONTROL_SELECTOR));
-}
-
 function getScreenElement(root: HTMLElement, screenName: MobileTreeScreen) {
   return root.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`);
 }
@@ -100,17 +95,16 @@ function getDescendantSourceSelector() {
 function screenHasContent(root: HTMLElement, screenName: MobileTreeScreen) {
   if (screenName === 'core') return true;
 
-  const screenElement = getScreenElement(root, screenName);
   if (screenName === 'descendants') {
     return Boolean(
-      screenElement?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
+      getScreenElement(root, screenName)?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
       || getScreenElement(root, 'core')?.querySelector(getDescendantSourceSelector())
     );
   }
 
-  // Para navegação espacial, basta a tela existir. Algumas telas são montadas
-  // dinamicamente e podem não ter data-family-map-mobile-card no primeiro frame.
-  return Boolean(screenElement);
+  return Boolean(
+    getScreenElement(root, screenName)?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
+  );
 }
 
 function parseTranslatePercent(value: string) {
@@ -184,11 +178,11 @@ function getGestureDirection(deltaX: number, deltaY: number, threshold: number):
   const absoluteY = Math.abs(deltaY);
 
   if (absoluteX >= threshold && absoluteX > absoluteY * 1.2) {
-    return deltaX < 0 ? 'left' : 'right';
+    return deltaX < 0 ? 'right' : 'left';
   }
 
   if (absoluteY >= threshold && absoluteY > absoluteX * 1.2) {
-    return deltaY < 0 ? 'up' : 'down';
+    return deltaY < 0 ? 'down' : 'up';
   }
 
   return null;
@@ -240,11 +234,7 @@ function blockEvent(event: TouchEvent) {
 }
 
 function handleTouchStart(event: TouchEvent) {
-  if (!isEnabled() || isInteractiveControlTarget(event.target)) {
-    gestureStart = null;
-    return;
-  }
-
+  if (!isEnabled()) return;
   const root = getRoot();
   const target = event.target instanceof Element ? event.target : null;
   const touch = event.touches[0];
@@ -258,7 +248,7 @@ function handleTouchStart(event: TouchEvent) {
 }
 
 function handleTouchMove(event: TouchEvent) {
-  if (!gestureStart || !isEnabled() || isInteractiveControlTarget(event.target)) return;
+  if (!gestureStart || !isEnabled()) return;
   const touch = event.touches[0];
   if (!touch || !gestureStart.screen) return;
 
@@ -273,7 +263,7 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleTouchEnd(event: TouchEvent) {
-  if (!gestureStart || !isEnabled() || isInteractiveControlTarget(event.target)) {
+  if (!gestureStart || !isEnabled()) {
     gestureStart = null;
     return;
   }
