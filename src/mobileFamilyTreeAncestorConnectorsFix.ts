@@ -3,8 +3,12 @@ const FAMILY_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const ANCESTORS_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="ancestors"]';
 const SIDE_GROUP_SELECTOR = '[data-mobile-family-tree-grandparent-side]';
+const MOBILE_CARD_SELECTOR = '[data-family-map-mobile-card="true"]';
 const CONNECTOR_LAYER_ATTR = 'data-mobile-family-tree-ancestor-connectors';
 const STYLE_ID = 'mobile-family-tree-ancestor-connectors-style';
+const CONNECTOR_ELBOW_OFFSET = 44;
+
+type AncestorSide = 'paternal' | 'maternal';
 
 let scheduledFrame = 0;
 let observer: MutationObserver | null = null;
@@ -35,22 +39,35 @@ function normalize(value: string) {
     .trim();
 }
 
+function getGroupTitle(group: HTMLElement) {
+  return normalize(group.querySelector('h2, h3')?.textContent ?? '');
+}
+
 function isGrandparentGroup(group: HTMLElement) {
-  const title = normalize(group.querySelector('h2, h3')?.textContent ?? '');
+  const title = getGroupTitle(group);
   return title.includes('avos') && !title.includes('bisavos') && !title.includes('tataravos');
 }
 
-function isAncestorsScreenVisiblyCentered(root: HTMLElement, screen: HTMLElement) {
+function getAncestorGroupSide(group: HTMLElement): AncestorSide | null {
+  const explicitSide = group.getAttribute('data-mobile-family-tree-grandparent-side');
+  if (explicitSide === 'paternal' || explicitSide === 'maternal') return explicitSide;
+
+  const title = getGroupTitle(group);
+  if (title.includes('paternos')) return 'paternal';
+  if (title.includes('maternos')) return 'maternal';
+
+  return null;
+}
+
+function isAncestorsScreenVisible(root: HTMLElement, screen: HTMLElement) {
   const rootRect = root.getBoundingClientRect();
   const screenRect = screen.getBoundingClientRect();
-  const centerX = rootRect.left + rootRect.width / 2;
-  const centerY = rootRect.top + rootRect.height / 2;
 
   return (
-    centerX >= screenRect.left
-    && centerX <= screenRect.right
-    && centerY >= screenRect.top
-    && centerY <= screenRect.bottom
+    screenRect.bottom > rootRect.top
+    && screenRect.top < rootRect.bottom
+    && screenRect.right > rootRect.left
+    && screenRect.left < rootRect.right
   );
 }
 
@@ -74,7 +91,7 @@ function ensureStyles() {
       ${ANCESTORS_SCREEN_SELECTOR} [${CONNECTOR_LAYER_ATTR}="true"] {
         position: absolute;
         inset: 0;
-        z-index: 1;
+        z-index: 2;
         overflow: visible;
         pointer-events: none;
       }
@@ -90,7 +107,8 @@ function ensureStyles() {
         display: block;
         border-radius: 999px;
         background: var(--tree-palette-edge-child, var(--tree-palette-line, #6B7A5E));
-        opacity: 0.96;
+        box-shadow: 0 0 0 0.5px rgba(42, 52, 39, 0.08);
+        opacity: 0.98;
         pointer-events: none;
       }
     }
@@ -124,6 +142,19 @@ function createLine(layer: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
   layer.appendChild(line);
 }
 
+function getGrandparentGroups(screen: HTMLElement) {
+  const groups = Array.from(screen.querySelectorAll<HTMLElement>('section'))
+    .filter((group) => group.querySelector(MOBILE_CARD_SELECTOR))
+    .filter(isGrandparentGroup);
+
+  groups.forEach((group) => {
+    const side = getAncestorGroupSide(group);
+    if (side) group.setAttribute('data-mobile-family-tree-grandparent-side', side);
+  });
+
+  return groups;
+}
+
 function renderConnectors() {
   if (!isMobileViewport() || !isFamilyMapPath()) return;
 
@@ -133,7 +164,7 @@ function renderConnectors() {
 
   ensureStyles();
 
-  if (!isAncestorsScreenVisiblyCentered(root, screen)) {
+  if (!isAncestorsScreenVisible(root, screen)) {
     removeConnectorLayers();
     return;
   }
@@ -141,8 +172,7 @@ function renderConnectors() {
   const screenRect = screen.getBoundingClientRect();
   if (screenRect.width <= 0 || screenRect.height <= 0) return;
 
-  const groups = Array.from(screen.querySelectorAll<HTMLElement>(SIDE_GROUP_SELECTOR))
-    .filter(isGrandparentGroup);
+  const groups = getGrandparentGroups(screen);
   const layer = getConnectorLayer(screen);
   layer.replaceChildren();
 
@@ -150,8 +180,8 @@ function renderConnectors() {
   const halfLine = lineWidth / 2;
 
   groups.forEach((group) => {
-    const side = group.getAttribute('data-mobile-family-tree-grandparent-side');
-    if (side !== 'paternal' && side !== 'maternal') return;
+    const side = getAncestorGroupSide(group);
+    if (!side) return;
 
     const groupRect = group.getBoundingClientRect();
     if (groupRect.width <= 0 || groupRect.height <= 0) return;
@@ -161,6 +191,10 @@ function renderConnectors() {
     const groupCenterX = groupLeft + groupRect.width / 2;
     const groupCenterY = groupRect.top - screenRect.top + groupRect.height / 2;
     const groupBottom = groupRect.bottom - screenRect.top;
+    const targetX = screenRect.width * (side === 'paternal' ? 0.25 : 0.75);
+    const elbowY = Math.min(screenRect.height - lineWidth, groupBottom + CONNECTOR_ELBOW_OFFSET);
+    const horizontalLeft = Math.min(groupCenterX, targetX);
+    const horizontalWidth = Math.abs(targetX - groupCenterX);
 
     if (side === 'paternal') {
       createLine(layer, {
@@ -184,7 +218,23 @@ function renderConnectors() {
       left: `${groupCenterX - halfLine}px`,
       top: `${groupBottom}px`,
       width: `${lineWidth}px`,
-      height: `${Math.max(72, screenRect.height - groupBottom)}px`,
+      height: `${Math.max(0, elbowY - groupBottom)}px`,
+    });
+
+    if (horizontalWidth > lineWidth) {
+      createLine(layer, {
+        left: `${horizontalLeft}px`,
+        top: `${elbowY - halfLine}px`,
+        width: `${horizontalWidth}px`,
+        height: `${lineWidth}px`,
+      });
+    }
+
+    createLine(layer, {
+      left: `${targetX - halfLine}px`,
+      top: `${elbowY}px`,
+      width: `${lineWidth}px`,
+      height: `${Math.max(72, screenRect.height - elbowY)}px`,
     });
   });
 }
@@ -231,6 +281,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('popstate', handleRouteOrViewportChange, { passive: true });
   document.addEventListener('visibilitychange', handleRouteOrViewportChange, { passive: true });
   document.addEventListener('click', () => window.setTimeout(scheduleRender, 80), { capture: true, passive: true });
+  document.addEventListener('scroll', () => scheduleRender(), { capture: true, passive: true });
   document.addEventListener('touchend', () => window.setTimeout(scheduleRender, 80), { capture: true, passive: true });
   window.setTimeout(handleRouteOrViewportChange, 240);
   window.setTimeout(handleRouteOrViewportChange, 700);
