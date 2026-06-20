@@ -1,6 +1,7 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const FAMILY_MAP_PATH = '/mapa-familiar';
 const STYLE_ID = 'mobile-family-tree-group-title-visibility-fix-style';
+const MOBILE_CARD_SELECTOR = '[data-family-map-mobile-card="true"]';
 
 const GROUP_TITLE_SELECTORS = [
   '[data-mobile-family-tree-screen="paternal-uncles"] section h2',
@@ -10,6 +11,16 @@ const GROUP_TITLE_SELECTORS = [
   '.mobile-family-descendant-screen section h2',
   '[data-mobile-family-tree-screen="paternal-cousins"] section h2',
   '[data-mobile-family-tree-screen="maternal-cousins"] section h2',
+].join(',');
+
+const GROUP_SECTION_SELECTORS = [
+  '[data-mobile-family-tree-screen="paternal-uncles"] section',
+  '[data-mobile-family-tree-screen="maternal-uncles"] section',
+  '[data-mobile-family-tree-screen="core"] section',
+  '[data-mobile-family-tree-screen="descendants"] section',
+  '.mobile-family-descendant-screen section',
+  '[data-mobile-family-tree-screen="paternal-cousins"] section',
+  '[data-mobile-family-tree-screen="maternal-cousins"] section',
 ].join(',');
 
 const GROUP_TITLE_TEXTS = new Set([
@@ -77,6 +88,30 @@ function ensureStyles() {
       [data-mobile-family-tree-screen="maternal-uncles"] section > div {
         color: inherit !important;
       }
+
+      ${GROUP_SECTION_SELECTORS} {
+        margin-inline: auto !important;
+      }
+
+      ${GROUP_SECTION_SELECTORS}[data-family-map-card-count="1"]:not([data-mobile-family-tree-single-spouse-branch="true"]) {
+        width: min(100%, 180px) !important;
+      }
+
+      ${GROUP_SECTION_SELECTORS}[data-family-map-card-count="2"] {
+        width: min(100%, 354px) !important;
+      }
+
+      ${GROUP_SECTION_SELECTORS}[data-family-map-card-count="3"] {
+        width: min(100%, 354px) !important;
+      }
+
+      ${GROUP_SECTION_SELECTORS}[data-family-map-card-count="1"] h2 + div {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      ${GROUP_SECTION_SELECTORS}[data-mobile-family-tree-single-spouse-branch="true"] {
+        width: 100% !important;
+      }
     }
   `;
 
@@ -100,10 +135,19 @@ function normalizeKnownGroupTitles() {
   });
 }
 
+function markGroupCardCounts() {
+  document.querySelectorAll<HTMLElement>(GROUP_SECTION_SELECTORS).forEach((section) => {
+    const cardCount = section.querySelectorAll(MOBILE_CARD_SELECTOR).length;
+    if (cardCount > 0) section.setAttribute('data-family-map-card-count', String(cardCount));
+    else section.removeAttribute('data-family-map-card-count');
+  });
+}
+
 function applyGroupTitleVisibility() {
   if (!isMobileFamilyMap()) return;
 
   ensureStyles();
+  markGroupCardCounts();
   normalizeKnownGroupTitles();
 }
 
