@@ -615,7 +615,7 @@ export function MobileFamilyTreeView({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ touchAction: 'none' }}
+        style={{ touchAction: 'pan-y' }}
       >
         <div
           data-mobile-family-tree-stage="true"
