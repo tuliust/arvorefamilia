@@ -3,7 +3,7 @@
 > Última revisão: 2026-06-20  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md`  
 > Escopo: comportamento mobile das rotas `/mapa-familiar` e `/mapa-familiar-horizontal`  
-> Status: revisado contra o código atual da `main` após rollback da refatoração ampla e aplicação de ajustes pontuais em Zoom, overview e conectores.
+> Status: contrato funcional e técnico complementar. A navegação mobile da grade 3x3 está em validação, com risco conhecido de regressão por sobreposição de scripts auxiliares.
 
 ---
 
@@ -20,8 +20,7 @@ Use este arquivo para validar e alterar:
 
 - grade 3x3 da Árvore Familiar mobile;
 - tela `descendants`;
-- telas de tios paternos e maternos;
-- telas de avós, bisavós e tataravós;
+- telas de avós, ancestrais profundos, tios e primos;
 - títulos de grupos;
 - largura dos grupos por número de cards;
 - conectores mobile;
@@ -29,13 +28,55 @@ Use este arquivo para validar e alterar:
 - painel aberto pelo botão `+`;
 - rolagem interna em telas com conteúdo maior que a altura útil.
 
-> Regra de leitura: este documento descreve o código atual. Tentativas de refatoração ampla e branches de rollback devem ser tratadas como histórico, não como contrato vigente.
+Regra documental: quando houver divergência entre contrato desejado e comportamento observado, registrar como pendência. Não documentar regressão como comportamento consolidado.
 
 ---
 
-## 2. Grade 3x3 da rota `/mapa-familiar`
+## 2. Estado atual auditado no código
 
-No mobile, `/mapa-familiar` opera como uma grade de 9 telas.
+O `index.html` carrega o app principal e vários módulos auxiliares mobile. A ordem atual inclui, entre outros:
+
+```txt
+src/mobileFamilyTreeMutationPerformanceGuard.ts
+src/main.tsx
+src/mobileFamilyTreeNavigationRules.ts
+src/staticMobileFamilyTreeScreens.ts
+src/mobileFamilyTreeScreenStateGuards.ts
+src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeUncleScreenGuards.ts
+src/mobileFamilyTreeUncleSizingFix.ts
+src/mobileFamilyTreeDescendantScreen.ts
+src/mobileFamilyTreeSwipeHints.ts
+src/mobileFamilyTreeZoomOverviewFix.ts
+src/mobileFamilyTreeOverviewMode.ts
+src/mobileFamilyTreeOverviewFixes.ts
+src/mobileFamilyTreeAncestorConnectorsFix.ts
+src/mobileFamilyTreeDescendantConnectorsFix.ts
+src/mobileFamilyTreeCoreDescendantConnector.ts
+src/mobileFamilyTreeGroupTitleVisibilityFix.ts
+src/mobileFamilyTreeScrollAndVisibilityFix.ts
+```
+
+O arquivo que melhor representa a matriz-alvo atual é:
+
+```txt
+src/mobileFamilyTreeNavigationRules.ts
+```
+
+Ele define:
+
+- as 9 telas da grade;
+- a posição técnica de cada tela;
+- as direções de navegação esperadas;
+- o `transform` aplicado no stage.
+
+Atenção: ainda existem listeners de gesto em scripts específicos (`GrandparentScreens`, `DescendantScreen` e `UncleScreenGuards`). Esses scripts podem competir com `mobileFamilyTreeNavigationRules.ts`. Qualquer correção nova de navegação deve preferir consolidar a regra em uma única camada, em vez de adicionar novo patch concorrente.
+
+---
+
+## 3. Grade 3x3 da rota `/mapa-familiar`
+
+No mobile, `/mapa-familiar` deve operar como uma grade de 9 telas.
 
 | Posição | Tela técnica | Nome funcional | Conteúdo esperado |
 |---|---|---|---|
@@ -49,107 +90,121 @@ No mobile, `/mapa-familiar` opera como uma grade de 9 telas.
 | Inferior centro | `descendants` | Descendentes e vínculos | irmãos, cônjuge, sobrinhos, pets, filhos e netos |
 | Inferior direita | `maternal-cousins` | Primos maternos | descendentes dos tios maternos |
 
-Arquivos relacionados no código atual:
+Arquivos relacionados:
 
 ```txt
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/mobileFamilyTreeNavigationRules.ts
-src/staticMobileFamilyTreeScreens.ts
-src/mobileFamilyTreeScreenStateGuards.ts
 src/mobileFamilyTreeGrandparentScreens.ts
-src/mobileFamilyTreeUncleScreenGuards.ts
-src/mobileFamilyTreeUncleSizingFix.ts
 src/mobileFamilyTreeDescendantScreen.ts
-src/mobileFamilyTreeScrollAndVisibilityFix.ts
+src/mobileFamilyTreeScreenStateGuards.ts
+src/mobileFamilyTreeUncleScreenGuards.ts
 ```
 
 ---
 
-## 3. Navegação por swipe
+## 4. Contrato de navegação da grade 3x3
 
-Contrato vigente de navegação na grade 3x3:
+### 4.1 Direções funcionais
 
-| Tela atual | Direções permitidas |
-|---|---|
-| `paternal-ancestors` | direita → `ancestors` |
-| `ancestors` | esquerda → `paternal-ancestors`; direita → `maternal-ancestors`; baixo → `core` |
-| `maternal-ancestors` | esquerda → `ancestors` |
-| `core` | cima → `ancestors`; esquerda → `paternal-uncles`; direita → `maternal-uncles`; baixo → `descendants` |
-| `descendants` | cima → `core` |
-| `paternal-uncles` | direita → `core`; baixo → `paternal-cousins` |
-| `maternal-uncles` | esquerda → `core`; baixo → `maternal-cousins` |
-| `paternal-cousins` | cima → `paternal-uncles` |
-| `maternal-cousins` | cima → `maternal-uncles` |
+As direções abaixo descrevem a tela de destino esperada, não necessariamente o sentido físico do dedo no código.
 
-Regras:
+| Tela atual | Direções permitidas | Direções bloqueadas |
+|---|---|---|
+| `paternal-ancestors` | direita → `ancestors` | cima, baixo, esquerda |
+| `ancestors` | esquerda → `paternal-ancestors`; direita → `maternal-ancestors`; baixo → `core` | cima |
+| `maternal-ancestors` | esquerda → `ancestors` | cima, baixo, direita |
+| `paternal-uncles` | direita → `core`; baixo → `paternal-cousins` | cima, esquerda |
+| `core` | cima → `ancestors`; esquerda → `paternal-uncles`; direita → `maternal-uncles`; baixo → `descendants` | nenhuma, desde que exista conteúdo de destino |
+| `maternal-uncles` | esquerda → `core`; baixo → `maternal-cousins` | cima, direita |
+| `paternal-cousins` | cima → `paternal-uncles` | baixo, esquerda, direita |
+| `descendants` | cima → `core` | baixo, esquerda, direita |
+| `maternal-cousins` | cima → `maternal-uncles` | baixo, esquerda, direita |
 
-- direções não listadas devem ser bloqueadas;
-- swipe não pode impedir scroll interno quando a tela possui área rolável;
-- mudanças em direção física do gesto devem ser testadas em iPhone/Safari;
-- overview e swipe devem convergir para o mesmo estado visual do stage.
+### 4.2 Semântica de gesto no código
 
-Arquivo principal:
+Nos listeners atuais, a direção é calculada por delta do toque:
+
+```txt
+deltaX < 0 => direção funcional right
+deltaX > 0 => direção funcional left
+deltaY < 0 => direção funcional down
+deltaY > 0 => direção funcional up
+```
+
+Essa diferença causa confusão recorrente em QA. Ao documentar bug, registrar sempre:
+
+```txt
+1. tela atual;
+2. movimento físico do dedo;
+3. direção funcional esperada;
+4. tela de destino esperada;
+5. tela real após o gesto.
+```
+
+### 4.3 Regra de implementação
+
+`mobileFamilyTreeNavigationRules.ts` deve ser tratado como o contrato técnico preferencial. Scripts específicos podem ajustar visual, sizing, scroll ou conectores, mas não devem redefinir navegação se a regra puder ficar no coordenador principal.
+
+Pendência atual: remover duplicidade de captura de gestos entre:
 
 ```txt
 src/mobileFamilyTreeNavigationRules.ts
+src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeDescendantScreen.ts
+src/mobileFamilyTreeUncleScreenGuards.ts
 ```
 
 ---
 
-## 4. Tela `ancestors` — Avós e conectores
+## 5. Tela `ancestors`
 
-A tela `ancestors` contém dois grupos principais:
+Conteúdo esperado:
 
 ```txt
-Avós paternos
-Avós maternos
+Avós Paternos
+Avós Maternos
 ```
 
 Contrato visual:
 
-- o grupo `Avós paternos` deve ter linha horizontal saindo para a esquerda, em direção à tela `paternal-ancestors`;
-- o grupo `Avós maternos` deve ter linha horizontal saindo para a direita, em direção à tela `maternal-ancestors`;
-- abaixo do grupo `Avós paternos` deve haver linha vertical descendo em direção ao card do pai na tela `core`;
-- abaixo do grupo `Avós maternos` deve haver linha vertical descendo em direção ao card da mãe na tela `core`;
-- essas linhas verticais não devem aparecer nas telas de bisavós/tataravós.
+- grupos não devem ficar colados no topo do viewport;
+- não deve haver linha vertical acima dos grupos de avós;
+- `Avós Paternos` deve ter linha horizontal lateral para a esquerda, apontando para `paternal-ancestors`;
+- `Avós Maternos` deve ter linha horizontal lateral para a direita, apontando para `maternal-ancestors`;
+- linhas verticais abaixo dos grupos podem existir para indicar conexão com a tela `core`.
 
-Implementação atual:
-
-```txt
-src/mobileFamilyTreeAncestorConnectorsFix.ts
-```
-
-Esse script:
-
-- roda apenas em mobile e apenas na rota `/mapa-familiar`;
-- procura a tela `[data-mobile-family-tree-screen="ancestors"]`;
-- considera apenas seções com cards mobile e título normalizado contendo `avos`, mas não `bisavos` nem `tataravos`;
-- desenha conectores em uma camada própria com `data-mobile-family-tree-ancestor-connectors="true"`;
-- usa variáveis de paleta para cor e espessura dos conectores.
-
-Pendência de QA aberta: confirmar visualmente em Safari/iOS se as duas linhas verticais abaixo dos grupos de avós estão visíveis depois do deploy atual.
-
----
-
-## 5. Telas `paternal-ancestors` e `maternal-ancestors`
-
-Essas telas exibem ancestrais profundos do ramo paterno e materno, principalmente bisavós e tataravós.
-
-Contrato:
-
-- linhas horizontais podem apontar em direção à tela central de avós;
-- linhas verticais de descida para pai/mãe não devem aparecer aqui;
-- não usar o ajuste de avós para desenhar conectores abaixo de bisavós ou tataravós.
-
-Arquivo relacionado:
+Arquivos relacionados:
 
 ```txt
 src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeAncestorConnectorsFix.ts
 ```
 
 ---
 
-## 6. Tela `descendants`
+## 6. Telas de ancestrais profundos
+
+Telas:
+
+```txt
+paternal-ancestors
+maternal-ancestors
+```
+
+Contrato:
+
+- `paternal-ancestors` exibe bisavós/tataravós paternos;
+- `maternal-ancestors` exibe bisavós/tataravós maternos;
+- grupos e cards devem ser mais estreitos que os grupos de avós;
+- bordas e cards devem seguir a mesma família visual dos avós;
+- `paternal-ancestors` deve ter linha horizontal para a direita;
+- `maternal-ancestors` deve ter linha horizontal para a esquerda;
+- não deve haver navegação vertical nessas telas.
+
+---
+
+## 7. Tela `descendants`
 
 A tela `descendants` é uma tela mobile adicional posicionada abaixo da tela `core`.
 
@@ -164,7 +219,7 @@ Filhos
 Netos
 ```
 
-### 6.1 Rolagem interna
+### 7.1 Rolagem interna
 
 Contrato esperado:
 
@@ -180,37 +235,28 @@ src/mobileFamilyTreeDescendantScreen.ts
 src/mobileFamilyTreeScrollAndVisibilityFix.ts
 ```
 
-### 6.2 Conectores internos
+### 7.2 Conectores internos
 
 Contrato esperado:
 
-- uma linha superior entra na tela `descendants` e se ramifica para `Irmãos` e `Cônjuge` quando ambos existem;
-- de `Irmãos`, a linha desce para `Sobrinhos` quando houver sobrinhos;
+- uma linha superior entra na tela `descendants` e se ramifica para `Irmãos` e `Cônjuge`;
+- de `Irmãos`, a linha desce para `Sobrinhos`;
 - de `Cônjuge`, a linha desce e pode se ramificar para `Pets` e `Filhos`;
 - se houver `Pets` e `Filhos`, os dois grupos ficam lado a lado;
 - se houver apenas `Pets`, `Pets` ocupa sozinho a área abaixo de `Cônjuge`;
 - se houver apenas `Filhos`, `Filhos` ocupa sozinho a área abaixo de `Cônjuge`;
 - conectores antigos clonados do layout original não devem aparecer como linhas transparentes ou duplicadas.
 
-Arquivo relacionado:
+Arquivos relacionados:
 
 ```txt
 src/mobileFamilyTreeDescendantConnectorsFix.ts
+src/mobileFamilyTreeCoreDescendantConnector.ts
 ```
-
-Implementação atual:
-
-- cria camada própria com `data-mobile-family-tree-descendant-connectors="true"`;
-- usa `.mobile-family-descendant-screen__inner` como host preferencial da camada de conectores;
-- oculta conectores antigos clonados por CSS escopado;
-- usa os grupos encontrados dentro da tela `descendants`, não elementos de origem da tela `core`;
-- recalcula em resize, orientationchange, scroll, click, touchend e mutações no root.
-
-Pendência de QA aberta: confirmar visualmente se as linhas têm a mesma espessura das demais e encostam corretamente no topo dos grupos `Irmãos` e `Cônjuge` em Safari/iOS.
 
 ---
 
-## 7. Telas de tios
+## 8. Telas de tios
 
 Telas envolvidas:
 
@@ -219,48 +265,65 @@ paternal-uncles
 maternal-uncles
 ```
 
-### 7.1 Contrato visual
+### 8.1 Contrato visual
 
 - o grupo deve ficar centralizado na tela;
 - o grupo deve ajustar largura conforme quantidade de cards;
 - os cards devem permanecer legíveis em 320px, 375px, 390px e 430px;
 - títulos `Tios Paternos` e `Tios Maternos` devem aparecer em cor escura;
+- não deve haver linha vertical acima dos grupos de tios;
+- deve haver apenas conector inferior quando houver tela de primos correspondente;
 - cards não podem ficar cortados, com conteúdo invisível ou fora da área rolável;
 - a tela deve permitir rolagem interna quando houver mais conteúdo que altura disponível.
 
-### 7.2 Problema recorrente documentado
+### 8.2 Contrato de navegação
 
-`paternal-uncles` teve relatos de cards não visíveis. Possíveis causas a verificar em QA:
+| Tela | Permitido | Bloqueado |
+|---|---|---|
+| `paternal-uncles` | direita → `core`; baixo → `paternal-cousins` | cima; esquerda |
+| `maternal-uncles` | esquerda → `core`; baixo → `maternal-cousins` | cima; direita |
 
-- ramo paterno sem dados suficientes após inferência de pai;
-- `transform` do stage levando a tela para fora do viewport;
-- conflito entre `overflow`, altura da tela e safe area;
-- filtro de relações não retornando irmãos do pai;
-- listener de swipe capturando gesto antes do scroll interno.
+Arquivo relacionado:
+
+```txt
+src/mobileFamilyTreeUncleScreenGuards.ts
+```
+
+### 8.3 Problema recorrente documentado
+
+As telas de tios tiveram relatos de navegação errada e gestos não respeitados. Possíveis causas a verificar em QA:
+
+- conflito entre `mobileFamilyTreeNavigationRules.ts` e `mobileFamilyTreeUncleScreenGuards.ts`;
+- listener global bloqueando gesto antes do scroll interno;
+- `data-mobile-family-tree-active-screen` divergente do `transform` real do stage;
+- tela de primos não considerada como conteúdo disponível por `screenHasContent`;
+- overflow/safe area impedindo gesto dentro da área útil.
 
 Arquivos relacionados:
 
 ```txt
-src/mobileFamilyTreeUncleSizingFix.ts
+src/mobileFamilyTreeNavigationRules.ts
 src/mobileFamilyTreeUncleScreenGuards.ts
+src/mobileFamilyTreeUncleSizingFix.ts
 src/mobileFamilyTreeScrollAndVisibilityFix.ts
 src/app/components/FamilyTree/mobileFamilyTreeModel.ts
 ```
 
 ---
 
-## 8. Títulos dos grupos
+## 9. Títulos dos grupos
 
 Títulos monitorados:
 
 ```txt
-Avós paternos
-Avós maternos
+Avós Paternos
+Avós Maternos
+Bisavós Paternos
+Bisavós Maternos
 Tios Paternos
 Tios Maternos
 Irmãos
 Sobrinhos
-Cônjuge
 Pets
 Filhos
 Netos
@@ -274,8 +337,7 @@ Contrato:
 - cor escura compatível com o fundo do grupo;
 - `-webkit-text-fill-color` definido para evitar texto branco em Safari/iOS;
 - fonte compacta no mobile;
-- não depender da cor herdada do card;
-- conectores não devem cobrir o título.
+- não depender da cor herdada do card.
 
 Arquivo relacionado:
 
@@ -285,7 +347,7 @@ src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 
 ---
 
-## 9. Largura dos grupos por quantidade de cards
+## 10. Largura dos grupos por quantidade de cards
 
 Os grupos podem receber o atributo:
 
@@ -306,9 +368,9 @@ Regra: a largura visual nunca deve criar dados, ocultar cards ou alterar relacio
 
 ---
 
-## 10. Zoom/overview com 9 cards
+## 11. Zoom/overview com 9 cards
 
-### 10.1 `/mapa-familiar`
+### 11.1 `/mapa-familiar`
 
 O botão `Zoom` da toolbar mobile deve abrir uma visão geral com os 9 cards da grade 3x3.
 
@@ -319,21 +381,16 @@ Ao tocar em um card:
 - o estado `data-mobile-family-tree-active-screen` é atualizado;
 - scroll interno da tela de destino é resetado para o topo.
 
-Arquivo principal:
+Arquivos principais:
 
 ```txt
 src/mobileFamilyTreeZoomOverviewFix.ts
+src/mobileFamilyTreeOverviewMode.ts
+src/mobileFamilyTreeOverviewFixes.ts
+src/mobileFamilyMapOverviewNavigationBridge.ts
 ```
 
-Regras de implementação vigentes:
-
-- o script deve carregar antes de `src/mobileFamilyTreeOverviewMode.ts` para interceptar o botão `Zoom` sem deixar estado preso;
-- o overview exibe contagem como `pessoa`/`pessoas`, não como `card`/`cards`;
-- não deve exibir `Toque para abrir`;
-- não deve reintroduzir textos auxiliares como `ancestrais profundos`, `tela inicial da árvore`, `área lateral esquerda`, `área lateral direita`, `abaixo dos tios paternos` ou `abaixo dos tios maternos`;
-- ao fechar pelo `X`, o body deve destravar e o botão Zoom não deve permanecer ativo.
-
-### 10.2 `/mapa-familiar-horizontal`
+### 11.2 `/mapa-familiar-horizontal`
 
 Na rota horizontal mobile, o mesmo botão `Zoom` deve abrir o overview com 9 cards.
 
@@ -341,7 +398,7 @@ Como a horizontal trabalha por gerações, os cards direcionam para a geração 
 
 | Card no overview | Destino horizontal |
 |---|---|
-| bisavós/tataravós paternos ou maternos | geração 1 |
+| ancestrais profundos | geração 1 |
 | avós | geração 3 |
 | tios/pais | geração 4 |
 | núcleo/primos | geração 5 |
@@ -355,7 +412,7 @@ src/mobileFamilyTreeZoomOverviewFix.ts
 
 ---
 
-## 11. Painel do botão `+`
+## 12. Painel do botão `+`
 
 O botão `+` abre o painel mobile completo de visualização.
 
@@ -381,45 +438,6 @@ src/main.tsx
 
 ---
 
-## 12. Scripts auxiliares carregados em `index.html`
-
-A versão atual mantém scripts auxiliares mobile carregados em `index.html`.
-
-Ordem relevante do código atual:
-
-```txt
-src/mobileFamilyTreeMutationPerformanceGuard.ts
-src/main.tsx
-src/firstLoginMobileTutorialFixes.ts
-src/mobileCuriositiesNavigationFix.ts
-src/mobileTreePanelViewportFix.ts
-src/mobileFamilyTreeNavigationRules.ts
-src/staticMobileFamilyTreeScreens.ts
-src/mobileFamilyTreeScreenStateGuards.ts
-src/mobileFamilyTreeGrandparentScreens.ts
-src/mobileFamilyTreeUncleScreenGuards.ts
-src/mobileFamilyTreeUncleSizingFix.ts
-src/mobileFamilyTreeDescendantScreen.ts
-src/mobileFamilyTreeSwipeHints.ts
-src/mobileFamilyTreeZoomOverviewFix.ts
-src/mobileFamilyTreeOverviewMode.ts
-src/mobileFamilyTreeOverviewFixes.ts
-src/mobileFamilyTreeAncestorConnectorsFix.ts
-src/mobileFamilyTreeDescendantConnectorsFix.ts
-src/mobileFamilyTreeCoreDescendantConnector.ts
-src/mobileFamilyTreeGroupTitleVisibilityFix.ts
-src/mobileFamilyTreeScrollAndVisibilityFix.ts
-```
-
-Regras:
-
-- não remover script mobile sem testar a grade 3x3 completa;
-- não alterar a ordem de `mobileFamilyTreeZoomOverviewFix.ts` sem revalidar o botão `Zoom`;
-- `mobileFamilyTreeAncestorConnectorsFix.ts` e `mobileFamilyTreeDescendantConnectorsFix.ts` são ajustes pontuais de conectores e devem ser tratados como risco visual em QA;
-- refatorações futuras devem preferir consolidar esses comportamentos no React, mas só depois de preservar a versão visual atual.
-
----
-
 ## 13. Performance e observers
 
 Os scripts mobile usam `MutationObserver`, `requestAnimationFrame`, listeners de touch e ajustes de DOM. Para evitar loops ou travamentos:
@@ -428,7 +446,7 @@ Os scripts mobile usam `MutationObserver`, `requestAnimationFrame`, listeners de
 - redesenho de conectores deve ser agendado por frame, não executado em cascata;
 - scripts carregados no final devem ser usados com parcimônia;
 - mudanças novas devem preferir consolidar lógica no componente React quando possível;
-- todo ajuste em conectores deve ser validado em viewport real, porque medidas via `getBoundingClientRect()` podem variar com scroll interno e transform do stage.
+- qualquer nova camada de touch/swipe deve declarar quais telas controla e quais telas não controla.
 
 Arquivo relacionado:
 
@@ -454,15 +472,16 @@ Checklist mínimo:
 - [ ] `/mapa-familiar` carrega sem travar.
 - [ ] botão `Zoom` abre overview com 9 cards.
 - [ ] cada card do overview navega para a tela correta.
-- [ ] `ancestors` exibe avós paternos e maternos.
-- [ ] `ancestors` exibe conectores horizontais laterais.
-- [ ] `ancestors` exibe conectores verticais abaixo dos dois grupos de avós.
-- [ ] `paternal-ancestors` e `maternal-ancestors` não exibem linhas verticais indevidas abaixo de bisavós/tataravós.
-- [ ] `paternal-uncles` exibe título, grupo e cards quando houver dados.
-- [ ] `maternal-uncles` exibe grupo centralizado e sem excesso de tamanho.
+- [ ] `ancestors` mostra apenas avós e não mostra bisavós/tataravós.
+- [ ] `ancestors` volta para `core` pela navegação vertical esperada.
+- [ ] `paternal-ancestors` volta apenas para `ancestors`.
+- [ ] `maternal-ancestors` volta apenas para `ancestors`.
+- [ ] `paternal-uncles` permite apenas direita e baixo.
+- [ ] `maternal-uncles` permite apenas esquerda e baixo.
+- [ ] `paternal-cousins` volta apenas para `paternal-uncles`.
+- [ ] `maternal-cousins` volta apenas para `maternal-uncles`.
 - [ ] `descendants` permite rolagem interna quando o conteúdo excede a altura útil.
 - [ ] conectores de `descendants` não duplicam linhas antigas.
-- [ ] conectores de `descendants` têm a mesma espessura visual das demais linhas.
 - [ ] títulos de grupos estão escuros e legíveis.
 - [ ] botão `+` abre painel com overlay escuro e painel branco/opaco.
 - [ ] `/mapa-familiar-horizontal` abre overview pelo Zoom.
@@ -479,12 +498,11 @@ Manter como pontos de validação aberta até confirmação visual estável:
 | ID | Pendência |
 |---|---|
 | `MOB-001` | Confirmar rolagem interna de `descendants` em iPhone/Safari real. |
-| `MOB-002` | Confirmar exibição de cards em `paternal-uncles` com dados reais do ramo paterno. |
-| `MOB-003` | Avaliar consolidação dos scripts auxiliares mobile dentro dos componentes React. |
+| `MOB-002` | Confirmar exibição de cards em `paternal-uncles` e `maternal-uncles` com dados reais. |
+| `MOB-003` | Consolidar navegação da grade 3x3 em uma única camada, reduzindo conflitos entre scripts de gesture. |
 | `MOB-004` | Confirmar mapeamento do overview da rota horizontal por geração com expectativa de produto. |
 | `MOB-005` | Verificar se o painel `+` mantém overlay opaco em Safari/iOS após cache limpo. |
-| `MOB-006` | Confirmar conectores verticais abaixo de `Avós paternos` e `Avós maternos` após o ajuste vigente. |
-| `MOB-007` | Confirmar conectores da tela `descendants` após ajustes de espessura, topo e rolagem interna. |
+| `MOB-006` | Revalidar conectores de avós, tios e descendentes após qualquer mudança no sistema de navegação. |
 
 ---
 
@@ -494,17 +512,21 @@ Manter como pontos de validação aberta até confirmação visual estável:
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
 src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/mobileFamilyTreeNavigationRules.ts
+src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeDescendantScreen.ts
+src/mobileFamilyTreeUncleScreenGuards.ts
+src/mobileFamilyTreeUncleSizingFix.ts
+src/mobileFamilyTreeSwipeHints.ts
+src/mobileFamilyTreeZoomOverviewFix.ts
+src/mobileFamilyTreeOverviewMode.ts
+src/mobileFamilyTreeOverviewFixes.ts
+src/mobileFamilyMapOverviewNavigationBridge.ts
 src/mobileFamilyTreeAncestorConnectorsFix.ts
 src/mobileFamilyTreeCoreDescendantConnector.ts
 src/mobileFamilyTreeDescendantConnectorsFix.ts
-src/mobileFamilyTreeDescendantScreen.ts
 src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 src/mobileFamilyTreeMutationPerformanceGuard.ts
-src/mobileFamilyTreeNavigationRules.ts
-src/mobileFamilyTreeScreenStateGuards.ts
 src/mobileFamilyTreeScrollAndVisibilityFix.ts
-src/mobileFamilyTreeUncleScreenGuards.ts
-src/mobileFamilyTreeUncleSizingFix.ts
-src/mobileFamilyTreeZoomOverviewFix.ts
 src/mobileFamilyMapFullPanelStyleFix.ts
 ```
