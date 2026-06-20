@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-20
-> Local recomendado: `docs/historico/README.md`
-> Tipo: índice e consolidação histórica.
-> Status: atualizado com índice explícito para rotas removidas, SQLs legados, duas views oficiais, rodada de rollback/ajustes mobile pós-restauração e complemento de navegação mobile.
+> Última revisão: 2026-06-20  
+> Local recomendado: `docs/historico/README.md`  
+> Tipo: índice e consolidação histórica.  
+> Status: atualizado com índice explícito para rotas removidas, SQLs legados, rollback/restauração, baseline mobile, ajustes consolidados e documentação complementar.
 
 ---
 
@@ -219,6 +219,8 @@ docs/PLANO_PROXIMOS_PASSOS.md
 
 ## 6. Histórico de rollback e ajustes mobile em 2026-06-20
 
+### 6.1 Rollback/restauração
+
 Documento principal:
 
 ```txt
@@ -233,7 +235,9 @@ Uso:
 - documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`;
 - preservar cautela sobre branches, deployments e previews antigos no Vercel.
 
-Complemento específico de navegação mobile:
+### 6.2 Complemento de navegação mobile
+
+Documento:
 
 ```txt
 docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_COMPLEMENTO.md
@@ -243,14 +247,51 @@ Uso:
 
 - registrar a matriz 3x3 desejada após os ajustes de avós, tios, primos e descendentes;
 - separar contrato desejado de regressões observadas;
-- documentar que a navegação está sensível por sobreposição de scripts de gesture;
-- apoiar futura consolidação em `mobileFamilyTreeNavigationRules.ts`.
+- documentar que a navegação estava sensível por sobreposição de scripts de gesture;
+- apoiar futura consolidação.
 
-Regra:
+### 6.3 Baseline antes da correção consolidada
+
+Documento:
 
 ```txt
-Esse histórico não substitui MAPA_FAMILIAR_MOBILE.md, MAPA_FAMILIAR_MOBILE_ARQUITETURA.md, QA_MAPAS_MOBILE_POS_DEPLOY.md ou o código atual da main.
+docs/historico/BASELINE_MAPA_FAMILIAR_MOBILE_2026_06_20_1631.md
 ```
+
+Uso:
+
+- preservar o estado imediatamente anterior aos ajustes consolidados;
+- registrar o commit de referência `a44fc4b2b63eaf5bc15fff956b1eca44ea88c8ad`;
+- permitir comparação visual ou rollback controlado.
+
+### 6.4 Ajuste consolidado vigente
+
+Documento:
+
+```txt
+docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_STABLE_FIX.md
+```
+
+Uso:
+
+- registrar a inclusão de vínculos diretos de tios/tias no modelo mobile;
+- registrar `mobileFamilyMapStableMobileFix.ts`;
+- registrar a redução de scripts concorrentes em `index.html`;
+- registrar checklist de QA pós-deploy.
+
+### 6.5 Regras após novos ajustes do chat
+
+Documentos canônicos atualizados:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md
+docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md
+docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
+docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md
+```
+
+Esses documentos prevalecem sobre histórico em caso de divergência.
 
 ---
 
