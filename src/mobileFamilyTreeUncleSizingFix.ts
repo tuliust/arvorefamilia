@@ -33,11 +33,9 @@ function ensureStyles() {
         box-sizing: border-box !important;
         position: absolute !important;
         inset: 0 !important;
-        display: flex !important;
+        display: block !important;
         height: 100% !important;
         width: 100% !important;
-        align-items: center !important;
-        justify-content: center !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         overscroll-behavior-y: contain !important;
@@ -51,11 +49,11 @@ function ensureStyles() {
         width: min(calc(100vw - 2rem), 354px) !important;
         max-width: min(calc(100vw - 2rem), 354px) !important;
         height: auto !important;
-        min-height: 0 !important;
+        min-height: 100% !important;
         max-height: none !important;
         align-items: center !important;
         justify-content: center !important;
-        margin: auto !important;
+        margin: 0 auto !important;
         padding: 0 !important;
       }
 
@@ -69,8 +67,21 @@ function ensureStyles() {
         width: 100% !important;
         height: auto !important;
         min-height: 0 !important;
+        margin-inline: auto !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
+      }
+
+      ${UNCLE_SCREEN_SELECTOR} section[data-family-map-card-count="1"] {
+        width: min(100%, 178px) !important;
+      }
+
+      ${UNCLE_SCREEN_SELECTOR} section[data-family-map-card-count="2"] {
+        width: min(100%, 354px) !important;
+      }
+
+      ${UNCLE_SCREEN_SELECTOR} section[data-family-map-card-count="3"] {
+        width: min(100%, 354px) !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} section > div {
@@ -90,16 +101,16 @@ function ensureStyles() {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        margin: 0 0 0.75rem !important;
+        margin: 0 0 0.625rem !important;
         overflow: visible !important;
         color: #0f172a !important;
         -webkit-text-fill-color: #0f172a !important;
         text-align: center !important;
         text-shadow: none !important;
-        font-size: 0.875rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.75rem !important;
+        line-height: 1.15 !important;
         font-weight: 800 !important;
-        letter-spacing: 0.08em !important;
+        letter-spacing: 0.07em !important;
         text-transform: uppercase !important;
         white-space: nowrap !important;
       }
@@ -112,6 +123,10 @@ function ensureStyles() {
         gap: 0.625rem !important;
         min-height: 0 !important;
         overflow: visible !important;
+      }
+
+      ${UNCLE_SCREEN_SELECTOR} section[data-family-map-card-count="1"] h2 + div {
+        grid-template-columns: minmax(0, 1fr) !important;
       }
 
       ${UNCLE_SCREEN_SELECTOR} [data-family-map-mobile-card="true"] {
@@ -186,6 +201,17 @@ function normalizeTitle(screenName: string, screen: HTMLElement) {
   heading.setAttribute('aria-label', title);
 }
 
+function markUncleScreen(screen: HTMLElement) {
+  const scrollArea = screen.querySelector<HTMLElement>(':scope > div');
+  scrollArea?.setAttribute('data-mobile-tree-scroll', 'true');
+  scrollArea?.setAttribute('data-mobile-family-tree-uncle-scroll', 'true');
+
+  screen.querySelectorAll<HTMLElement>('section').forEach((section) => {
+    const cardCount = section.querySelectorAll('[data-family-map-mobile-card="true"]').length;
+    if (cardCount > 0) section.setAttribute('data-family-map-card-count', String(cardCount));
+  });
+}
+
 function applyUncleSizing() {
   if (!isMobileFamilyMap()) return;
 
@@ -194,6 +220,7 @@ function applyUncleSizing() {
   document.querySelectorAll<HTMLElement>(UNCLE_SCREEN_SELECTOR).forEach((screen) => {
     const screenName = screen.getAttribute('data-mobile-family-tree-screen') ?? '';
     normalizeTitle(screenName, screen);
+    markUncleScreen(screen);
   });
 }
 
