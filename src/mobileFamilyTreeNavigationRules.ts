@@ -100,16 +100,17 @@ function getDescendantSourceSelector() {
 function screenHasContent(root: HTMLElement, screenName: MobileTreeScreen) {
   if (screenName === 'core') return true;
 
+  const screenElement = getScreenElement(root, screenName);
   if (screenName === 'descendants') {
     return Boolean(
-      getScreenElement(root, screenName)?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
+      screenElement?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
       || getScreenElement(root, 'core')?.querySelector(getDescendantSourceSelector())
     );
   }
 
-  return Boolean(
-    getScreenElement(root, screenName)?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]')
-  );
+  // Para navegação espacial, basta a tela existir. Algumas telas são montadas
+  // dinamicamente e podem não ter data-family-map-mobile-card no primeiro frame.
+  return Boolean(screenElement);
 }
 
 function parseTranslatePercent(value: string) {
