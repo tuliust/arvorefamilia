@@ -49,8 +49,10 @@ function ensureStyles() {
     @media (max-width: 767px) {
       [data-mobile-core-center-descendant-line="hidden"],
       [data-mobile-uncle-main-vertical-connector="hidden"],
+      [data-mobile-uncle-native-connector="hidden"],
       ${CORE_SCREEN_SELECTOR} [data-mobile-family-tree-descendant-source="true"],
-      ${CORE_SCREEN_SELECTOR} [data-mobile-family-tree-descendant-connector="true"] {
+      ${CORE_SCREEN_SELECTOR} [data-mobile-family-tree-descendant-connector="true"],
+      ${CORE_SCREEN_SELECTOR} [data-mobile-tree-scroll] > div > div.grid.grid-cols-2.items-start.gap-3 {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -101,6 +103,7 @@ function getStandardConnectorBackground(screen: HTMLElement) {
     .find((element) => (
       element.getAttribute('data-mobile-maternal-uncle-down-connector') !== 'true'
       && !element.hasAttribute('data-mobile-uncle-branch-connector')
+      && element.getAttribute('data-mobile-uncle-native-connector') !== 'hidden'
     ));
   const color = standardConnector ? window.getComputedStyle(standardConnector).backgroundColor : '';
   return color && color !== 'rgba(0, 0, 0, 0)' ? color : '';
@@ -142,9 +145,23 @@ function markUncleVerticalConnectors() {
         && child.classList.contains('w-px')
         && child.classList.contains('bg-cyan-600')
         && child.classList.contains('absolute');
+      const isNativeBranchConnector = child.classList.contains('pointer-events-none')
+        && child.classList.contains('absolute')
+        && (
+          child.classList.contains('bg-cyan-600')
+          || child.classList.contains('border-cyan-600')
+          || child.classList.contains('border-t')
+          || child.classList.contains('border-l')
+          || child.classList.contains('border-r')
+        );
 
       if (isMainVerticalConnector) {
         setAttributeIfNeeded(child, 'data-mobile-uncle-main-vertical-connector', 'hidden');
+        setAttributeIfNeeded(child, 'aria-hidden', 'true');
+      }
+
+      if (isNativeBranchConnector) {
+        setAttributeIfNeeded(child, 'data-mobile-uncle-native-connector', 'hidden');
         setAttributeIfNeeded(child, 'aria-hidden', 'true');
       }
     });
