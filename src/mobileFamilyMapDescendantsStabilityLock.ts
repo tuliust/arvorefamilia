@@ -4,6 +4,7 @@ const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const DESCENDANTS_SELECTOR = '[data-mobile-family-tree-screen="descendants"]';
 const SCROLL_SELECTOR = '.mobile-family-descendant-screen__scroll, [data-stable-mobile-scroll="descendants"], [data-mobile-family-tree-screen="descendants"] [data-mobile-tree-scroll]';
+const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const STYLE_ID = 'mobile-family-map-descendants-stability-lock-style';
 const LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
 const DESCENDANTS_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-66.66666666666667% + 0px), 0)';
@@ -38,6 +39,10 @@ function getStage(root = getRoot()) {
 
 function getDescendantsScreen(root = getRoot()) {
   return root?.querySelector<HTMLElement>(DESCENDANTS_SELECTOR) ?? null;
+}
+
+function isOverviewOpen() {
+  return Boolean(document.getElementById(OVERVIEW_ID));
 }
 
 function isDescendantTarget(target: EventTarget | null) {
@@ -127,8 +132,17 @@ function ensureStyles() {
   if (document.head.lastElementChild !== style) document.head.appendChild(style);
 }
 
+function pauseLockForOverview() {
+  const root = getRoot();
+  const stage = getStage(root);
+  if (!root || !stage || !isOverviewOpen()) return;
+
+  removeAttributeIfPresent(root, LOCK_ATTR);
+  setImportantStyleIfNeeded(stage, 'transition', 'none');
+}
+
 function lockDescendants() {
-  if (!isEnabled() || Date.now() < unlockUntil) return;
+  if (!isEnabled() || Date.now() < unlockUntil || isOverviewOpen()) return;
   const root = getRoot();
   const stage = getStage(root);
   const descendants = getDescendantsScreen(root);
@@ -154,7 +168,7 @@ function unlockToCore() {
 }
 
 function shouldLockFromCurrentState() {
-  if (!isEnabled() || Date.now() < unlockUntil) return false;
+  if (!isEnabled() || Date.now() < unlockUntil || isOverviewOpen()) return false;
   const root = getRoot();
   const stage = getStage(root);
   if (!root || !stage || !getDescendantsScreen(root)) return false;
@@ -166,6 +180,10 @@ function shouldLockFromCurrentState() {
 
 function applyLockIfNeeded() {
   ensureStyles();
+  if (isOverviewOpen()) {
+    pauseLockForOverview();
+    return;
+  }
   if (shouldLockFromCurrentState()) lockDescendants();
 }
 
@@ -182,6 +200,12 @@ function handleTouchStart(event: TouchEvent) {
   if (!isEnabled()) return;
   const touch = event.touches[0];
   if (!touch) return;
+
+  if (isOverviewOpen()) {
+    pauseLockForOverview();
+    touchStart = null;
+    return;
+  }
 
   const inDescendants = isDescendantTarget(event.target);
   touchStart = {
@@ -201,6 +225,11 @@ function handleTouchStart(event: TouchEvent) {
 function handleTouchMove(event: TouchEvent) {
   const start = touchStart;
   if (!start?.inDescendants || !isEnabled()) return;
+
+  if (isOverviewOpen()) {
+    pauseLockForOverview();
+    return;
+  }
 
   const touch = event.touches[0];
   if (!touch) return;
@@ -234,6 +263,11 @@ function handleTouchEnd(event: TouchEvent) {
   touchStart = null;
   if (!start?.inDescendants || !isEnabled()) return;
 
+  if (isOverviewOpen()) {
+    pauseLockForOverview();
+    return;
+  }
+
   const touch = event.changedTouches[0];
   if (!touch) {
     lockDescendants();
@@ -266,7 +300,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
   window.addEventListener('touchcancel', () => {
     touchStart = null;
-    lockDescendants();
+    if (isOverviewOpen()) pauseLockForOverview();
+    else lockDescendants();
   }, { capture: true, passive: true });
 
   const observer = new MutationObserver(scheduleApplyLock);
