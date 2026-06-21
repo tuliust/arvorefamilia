@@ -16,7 +16,7 @@ type UncleBranchConnectorKind = 'down' | 'horizontal';
 type UncleBranchConfig = {
   screenName: UncleBranchScreen;
   selector: string;
-  horizontalDirection?: 'right';
+  horizontalDirection?: 'left' | 'right';
 };
 
 const UNCLE_BRANCH_CONFIGS: UncleBranchConfig[] = [
@@ -28,6 +28,7 @@ const UNCLE_BRANCH_CONFIGS: UncleBranchConfig[] = [
   {
     screenName: 'maternal-uncles',
     selector: MATERNAL_UNCLES_SCREEN_SELECTOR,
+    horizontalDirection: 'left',
   },
 ];
 
@@ -242,15 +243,18 @@ function ensureUncleBranchConnectors() {
     downConnector.style.setProperty('top', `${Math.max(0, sectionRect.bottom - screenRect.top)}px`, 'important');
     applyConnectorBackground(downConnector, screen);
 
+    const horizontalConnector = ensureUncleConnector(screen, config.screenName, 'horizontal');
+    horizontalConnector.style.setProperty('top', `${Math.max(0, sectionRect.top + (sectionRect.height / 2) - screenRect.top)}px`, 'important');
+
     if (config.horizontalDirection === 'right') {
-      const horizontalConnector = ensureUncleConnector(screen, config.screenName, 'horizontal');
-      horizontalConnector.style.setProperty('top', `${Math.max(0, sectionRect.top + (sectionRect.height / 2) - screenRect.top)}px`, 'important');
       horizontalConnector.style.setProperty('left', `${Math.max(0, sectionRect.right - screenRect.left)}px`, 'important');
       horizontalConnector.style.setProperty('right', '0px', 'important');
-      applyConnectorBackground(horizontalConnector, screen);
     } else {
-      removeUncleConnector(screen, config.screenName, 'horizontal');
+      horizontalConnector.style.setProperty('left', '0px', 'important');
+      horizontalConnector.style.setProperty('right', `${Math.max(0, screenRect.right - sectionRect.left)}px`, 'important');
     }
+
+    applyConnectorBackground(horizontalConnector, screen);
   });
 }
 
