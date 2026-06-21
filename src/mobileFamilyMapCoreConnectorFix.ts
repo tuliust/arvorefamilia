@@ -1,13 +1,35 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const CORE_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="core"]';
+const PATERNAL_UNCLES_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="paternal-uncles"]';
 const MATERNAL_UNCLES_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="maternal-uncles"]';
 const UNCLE_SCREEN_SELECTORS = [
-  '[data-mobile-family-tree-screen="paternal-uncles"]',
+  PATERNAL_UNCLES_SCREEN_SELECTOR,
   MATERNAL_UNCLES_SCREEN_SELECTOR,
 ];
 const STYLE_ID = 'mobile-family-map-core-connector-fix-style';
 let scheduled = false;
+
+type UncleBranchScreen = 'paternal-uncles' | 'maternal-uncles';
+type UncleBranchConnectorKind = 'down' | 'horizontal';
+
+type UncleBranchConfig = {
+  screenName: UncleBranchScreen;
+  selector: string;
+  horizontalDirection?: 'right';
+};
+
+const UNCLE_BRANCH_CONFIGS: UncleBranchConfig[] = [
+  {
+    screenName: 'paternal-uncles',
+    selector: PATERNAL_UNCLES_SCREEN_SELECTOR,
+    horizontalDirection: 'right',
+  },
+  {
+    screenName: 'maternal-uncles',
+    selector: MATERNAL_UNCLES_SCREEN_SELECTOR,
+  },
+];
 
 function isEnabled() {
   return typeof window !== 'undefined'
@@ -35,17 +57,31 @@ function ensureStyles() {
       }
 
       [data-mobile-maternal-uncle-down-connector="true"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+
+      [data-mobile-uncle-branch-connector] {
         display: block !important;
         position: absolute !important;
-        left: 50% !important;
         z-index: 0 !important;
-        width: 1px !important;
-        height: 2.25rem !important;
         margin: 0 !important;
-        transform: translateX(-50%) !important;
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: none !important;
+      }
+
+      [data-mobile-uncle-branch-connector="down"] {
+        left: 50% !important;
+        width: 2px !important;
+        height: 2.25rem !important;
+        transform: translateX(-50%) !important;
+      }
+
+      [data-mobile-uncle-branch-connector="horizontal"] {
+        height: 2px !important;
+        min-height: 2px !important;
       }
     }
   `;
@@ -62,7 +98,10 @@ function ensureStyles() {
 
 function getStandardConnectorBackground(screen: HTMLElement) {
   const standardConnector = Array.from(screen.querySelectorAll<HTMLElement>('.bg-cyan-600'))
-    .find((element) => element.getAttribute('data-mobile-maternal-uncle-down-connector') !== 'true');
+    .find((element) => (
+      element.getAttribute('data-mobile-maternal-uncle-down-connector') !== 'true'
+      && !element.hasAttribute('data-mobile-uncle-branch-connector')
+    ));
   const color = standardConnector ? window.getComputedStyle(standardConnector).backgroundColor : '';
   return color && color !== 'rgba(0, 0, 0, 0)' ? color : '';
 }
@@ -112,35 +151,90 @@ function markUncleVerticalConnectors() {
   });
 }
 
-function ensureMaternalUncleDownConnector() {
-  const screen = document.querySelector<HTMLElement>(MATERNAL_UNCLES_SCREEN_SELECTOR);
-  const contentWrapper = screen?.querySelector<HTMLElement>(':scope > div > div[class*="z-10"] > div');
-  if (!screen || !contentWrapper) return;
+function getUncleBranchGeometry(screen: HTMLElement) {
+  const contentWrapper = screen.querySelector<HTMLElement>(':scope > div > div[class*="z-10"] > div');
+  const section = contentWrapper?.querySelector<HTMLElement>('section') ?? null;
+  const hasCards = Boolean(contentWrapper?.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]'));
 
-  const section = contentWrapper.querySelector<HTMLElement>('section');
-  const hasCards = Boolean(contentWrapper.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]'));
-  let connector = screen.querySelector<HTMLElement>(':scope > [data-mobile-maternal-uncle-down-connector="true"]');
+  return { section, hasCards };
+}
 
-  if (!section || !hasCards) {
-    connector?.remove();
-    return;
-  }
+function getUncleConnector(
+  screen: HTMLElement,
+  screenName: UncleBranchScreen,
+  kind: UncleBranchConnectorKind,
+) {
+  return screen.querySelector<HTMLElement>(
+    `:scope > [data-mobile-uncle-branch-connector="${kind}"][data-mobile-uncle-branch-screen="${screenName}"]`,
+  );
+}
 
+function ensureUncleConnector(
+  screen: HTMLElement,
+  screenName: UncleBranchScreen,
+  kind: UncleBranchConnectorKind,
+) {
+  let connector = getUncleConnector(screen, screenName, kind);
   if (!connector) {
     connector = document.createElement('div');
     connector.className = 'bg-cyan-600';
-    connector.setAttribute('data-mobile-maternal-uncle-down-connector', 'true');
+    connector.setAttribute('data-mobile-uncle-branch-connector', kind);
+    connector.setAttribute('data-mobile-uncle-branch-screen', screenName);
     connector.setAttribute('aria-hidden', 'true');
     screen.appendChild(connector);
   }
 
-  const screenRect = screen.getBoundingClientRect();
-  const sectionRect = section.getBoundingClientRect();
-  const top = Math.max(0, sectionRect.bottom - screenRect.top);
-  connector.style.setProperty('top', `${top}px`, 'important');
+  return connector;
+}
 
+function removeUncleConnector(
+  screen: HTMLElement,
+  screenName: UncleBranchScreen,
+  kind: UncleBranchConnectorKind,
+) {
+  getUncleConnector(screen, screenName, kind)?.remove();
+}
+
+function clearLegacyMaternalDownConnector(screen: HTMLElement) {
+  screen.querySelector<HTMLElement>(':scope > [data-mobile-maternal-uncle-down-connector="true"]')?.remove();
+}
+
+function applyConnectorBackground(connector: HTMLElement, screen: HTMLElement) {
   const standardBackground = getStandardConnectorBackground(screen);
   if (standardBackground) connector.style.setProperty('background', standardBackground, 'important');
+}
+
+function ensureUncleBranchConnectors() {
+  UNCLE_BRANCH_CONFIGS.forEach((config) => {
+    const screen = document.querySelector<HTMLElement>(config.selector);
+    if (!screen) return;
+
+    clearLegacyMaternalDownConnector(screen);
+
+    const { section, hasCards } = getUncleBranchGeometry(screen);
+    if (!section || !hasCards) {
+      removeUncleConnector(screen, config.screenName, 'down');
+      removeUncleConnector(screen, config.screenName, 'horizontal');
+      return;
+    }
+
+    const screenRect = screen.getBoundingClientRect();
+    const sectionRect = section.getBoundingClientRect();
+
+    const downConnector = ensureUncleConnector(screen, config.screenName, 'down');
+    downConnector.style.setProperty('top', `${Math.max(0, sectionRect.bottom - screenRect.top)}px`, 'important');
+    applyConnectorBackground(downConnector, screen);
+
+    if (config.horizontalDirection === 'right') {
+      const horizontalConnector = ensureUncleConnector(screen, config.screenName, 'horizontal');
+      horizontalConnector.style.setProperty('top', `${Math.max(0, sectionRect.top + (sectionRect.height / 2) - screenRect.top)}px`, 'important');
+      horizontalConnector.style.setProperty('left', `${Math.max(0, sectionRect.right - screenRect.left)}px`, 'important');
+      horizontalConnector.style.setProperty('right', '0px', 'important');
+      applyConnectorBackground(horizontalConnector, screen);
+    } else {
+      removeUncleConnector(screen, config.screenName, 'horizontal');
+    }
+  });
 }
 
 function applyConnectorFixes() {
@@ -148,7 +242,7 @@ function applyConnectorFixes() {
   ensureStyles();
   markCoreCenterDescendantLine();
   markUncleVerticalConnectors();
-  ensureMaternalUncleDownConnector();
+  ensureUncleBranchConnectors();
 }
 
 function scheduleMark() {
