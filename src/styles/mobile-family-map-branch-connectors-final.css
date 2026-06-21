@@ -171,8 +171,10 @@
   }
 
   [data-mobile-family-tree-root="true"] [data-mobile-uncle-branch-connector="down"] {
+    bottom: 0 !important;
     width: var(--mobile-family-map-final-line-size) !important;
-    height: 2.15rem !important;
+    height: auto !important;
+    min-height: 2.15rem !important;
   }
 
   [data-mobile-family-tree-root="true"] [data-mobile-uncle-branch-connector="horizontal"] {
@@ -188,7 +190,8 @@
     top: 100% !important;
     z-index: 0 !important;
     width: var(--mobile-family-map-final-line-size) !important;
-    height: 2.15rem !important;
+    height: 100dvh !important;
+    min-height: 28rem !important;
     transform: translateX(-50%) !important;
     background: var(--mobile-family-map-final-line) !important;
     background-color: var(--mobile-family-map-final-line) !important;
