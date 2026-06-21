@@ -50,11 +50,18 @@ function getStage() {
   return getRoot()?.querySelector<HTMLElement>(STAGE_SELECTOR) ?? null;
 }
 
-function getScreenFromTarget(target: EventTarget | null): UncleScreen | null {
-  if (!(target instanceof Element)) return null;
-  const screen = target.closest<HTMLElement>('[data-mobile-family-tree-screen]');
+function getScreenFromElement(element: Element | null): UncleScreen | null {
+  const screen = element?.closest<HTMLElement>('[data-mobile-family-tree-screen]');
   const screenName = screen?.getAttribute('data-mobile-family-tree-screen');
   return isUncleScreen(screenName) ? screenName : null;
+}
+
+function getScreenFromTarget(target: EventTarget | null): UncleScreen | null {
+  return target instanceof Element ? getScreenFromElement(target) : null;
+}
+
+function getScreenFromPoint(x: number, y: number): UncleScreen | null {
+  return getScreenFromElement(document.elementFromPoint(x, y));
 }
 
 function parseTranslatePercent(value: string) {
@@ -93,8 +100,8 @@ function getTransformForScreen(screenName: TargetScreen) {
   return `translate3d(calc(${-column * (100 / 3)}% + 0px), calc(${-row * (100 / 3)}% + 0px), 0)`;
 }
 
-function consume(event: TouchEvent) {
-  event.preventDefault();
+function blockEvent(event: TouchEvent, prevent = true) {
+  if (prevent) event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
 }
@@ -147,11 +154,18 @@ function handleTouchStart(event: TouchEvent) {
   const touch = event.touches[0];
   if (!touch) return;
 
+  const screen = getScreenFromTarget(event.target)
+    ?? getScreenFromPoint(touch.clientX, touch.clientY)
+    ?? getActiveUncleScreen();
+
   gestureStart = {
     x: touch.clientX,
     y: touch.clientY,
-    screen: getScreenFromTarget(event.target) ?? getActiveUncleScreen(),
+    screen,
   };
+
+  // Garante que handlers document/root do React não inicializem uma navegação concorrente.
+  if (screen) blockEvent(event, false);
 }
 
 function handleTouchMove(event: TouchEvent) {
@@ -164,8 +178,8 @@ function handleTouchMove(event: TouchEvent) {
   const direction = getPhysicalDirection(deltaX, deltaY, PREVIEW_THRESHOLD);
   if (!direction) return;
 
-  // Captura tanto direções permitidas quanto bloqueadas para impedir fallback do React e de outros guards.
-  consume(event);
+  // Captura tanto direções permitidas quanto bloqueadas antes dos handlers document/root.
+  blockEvent(event);
 }
 
 function handleTouchEnd(event: TouchEvent) {
@@ -184,7 +198,7 @@ function handleTouchEnd(event: TouchEvent) {
   const direction = getPhysicalDirection(deltaX, deltaY, NAVIGATION_THRESHOLD);
   if (!direction) return;
 
-  consume(event);
+  blockEvent(event);
   const destination = getDestination(start.screen, direction);
   if (!destination) return;
 
@@ -192,10 +206,11 @@ function handleTouchEnd(event: TouchEvent) {
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-  document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
-  document.addEventListener('touchmove', handleTouchMove, { capture: true, passive: false });
-  document.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
-  document.addEventListener('touchcancel', () => { gestureStart = null; }, { capture: true, passive: true });
+  // Window capture roda antes dos listeners em document/root, mesmo quando estes foram registrados antes.
+  window.addEventListener('touchstart', handleTouchStart, { capture: true, passive: false });
+  window.addEventListener('touchmove', handleTouchMove, { capture: true, passive: false });
+  window.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
+  window.addEventListener('touchcancel', () => { gestureStart = null; }, { capture: true, passive: true });
 }
 
 export {};
