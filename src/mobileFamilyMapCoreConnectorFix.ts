@@ -77,8 +77,10 @@ function ensureStyles() {
 
       [data-mobile-uncle-branch-connector="down"] {
         left: 50% !important;
+        bottom: 0 !important;
         width: 2px !important;
-        height: 2.25rem !important;
+        height: auto !important;
+        min-height: 2.25rem !important;
         transform: translateX(-50%) !important;
       }
 
@@ -241,6 +243,8 @@ function ensureUncleBranchConnectors() {
 
     const downConnector = ensureUncleConnector(screen, config.screenName, 'down');
     downConnector.style.setProperty('top', `${Math.max(0, sectionRect.bottom - screenRect.top)}px`, 'important');
+    downConnector.style.setProperty('bottom', '0px', 'important');
+    downConnector.style.setProperty('height', 'auto', 'important');
     applyConnectorBackground(downConnector, screen);
 
     const horizontalConnector = ensureUncleConnector(screen, config.screenName, 'horizontal');
