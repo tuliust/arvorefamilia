@@ -41,6 +41,15 @@ export interface MobileFamilyTreeModel {
   maternal: MobileFamilyBranch;
 }
 
+export type MobileFamilyExtendedSpousePerson = Pessoa & {
+  __mobileFamilyExtendedSpouse?: true;
+  __mobileFamilySpouseAnchorId?: string;
+};
+
+export function isMobileFamilyExtendedSpouse(person: Pessoa | undefined): person is MobileFamilyExtendedSpousePerson {
+  return Boolean((person as MobileFamilyExtendedSpousePerson | undefined)?.__mobileFamilyExtendedSpouse);
+}
+
 function addToSetMap(map: Map<string, Set<string>>, key: string | undefined | null, value: string | undefined | null) {
   if (!key || !value || key === value) return;
   const values = map.get(key) ?? new Set<string>();
@@ -239,6 +248,38 @@ function toPeople(ids: string[], peopleById: Map<string, Pessoa>) {
   return ids.map((id) => peopleById.get(id)).filter((person): person is Pessoa => Boolean(person));
 }
 
+function cloneExtendedSpouse(person: Pessoa, anchorId: string): MobileFamilyExtendedSpousePerson {
+  return {
+    ...person,
+    __mobileFamilyExtendedSpouse: true,
+    __mobileFamilySpouseAnchorId: anchorId,
+  };
+}
+
+function toPeopleWithExtendedSpouses(ids: string[], index: RelationshipIndex, peopleById: Map<string, Pessoa>) {
+  const baseIds = new Set(ids);
+  const addedIds = new Set<string>();
+  const people: Pessoa[] = [];
+
+  ids.forEach((anchorId) => {
+    const anchor = peopleById.get(anchorId);
+    if (!anchor) return;
+
+    people.push(anchor);
+
+    Array.from(index.spousesByPerson.get(anchorId) ?? []).forEach((spouseId) => {
+      if (baseIds.has(spouseId) || addedIds.has(spouseId)) return;
+      const spouse = peopleById.get(spouseId);
+      if (!spouse) return;
+
+      people.push(cloneExtendedSpouse(spouse, anchorId));
+      addedIds.add(spouseId);
+    });
+  });
+
+  return people;
+}
+
 function buildBranch(
   parentId: string | undefined,
   otherParentId: string | undefined,
@@ -270,8 +311,8 @@ function buildBranch(
     grandparents: toPeople(grandparents, peopleById),
     greatGrandparents: toPeople(greatGrandparents, peopleById),
     greatGreatGrandparents: toPeople(greatGreatGrandparents, peopleById),
-    uncles: toPeople(uncles, peopleById),
-    cousins: toPeople(cousins, peopleById),
+    uncles: toPeopleWithExtendedSpouses(uncles, index, peopleById),
+    cousins: toPeopleWithExtendedSpouses(cousins, index, peopleById),
   };
 }
 
