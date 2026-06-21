@@ -16,6 +16,10 @@ function isEnabled() {
     && window.location.pathname.replace(/\/$/, '') === DIRECT_MAP_PATH;
 }
 
+function setAttributeIfNeeded(element: HTMLElement, name: string, value: string) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
+
 function ensureStyles() {
   if (typeof document === 'undefined') return;
 
@@ -70,8 +74,8 @@ function markCoreCenterDescendantLine() {
       && firstChild.classList.contains('bg-cyan-600');
 
     if (isCenterLine) {
-      firstChild.setAttribute('data-mobile-core-center-descendant-line', 'hidden');
-      firstChild.setAttribute('aria-hidden', 'true');
+      setAttributeIfNeeded(firstChild, 'data-mobile-core-center-descendant-line', 'hidden');
+      setAttributeIfNeeded(firstChild, 'aria-hidden', 'true');
     }
   });
 }
@@ -91,8 +95,8 @@ function markUncleVerticalConnectors() {
         && child.classList.contains('absolute');
 
       if (isMainVerticalConnector) {
-        child.setAttribute('data-mobile-uncle-main-vertical-connector', 'hidden');
-        child.setAttribute('aria-hidden', 'true');
+        setAttributeIfNeeded(child, 'data-mobile-uncle-main-vertical-connector', 'hidden');
+        setAttributeIfNeeded(child, 'aria-hidden', 'true');
       }
     });
   });
@@ -147,7 +151,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyConnectorFixes, delay));
 
   const observer = new MutationObserver(scheduleMark);
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 
   window.addEventListener('resize', applyConnectorFixes, { passive: true });
   window.addEventListener('orientationchange', applyConnectorFixes, { passive: true });
