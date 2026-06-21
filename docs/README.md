@@ -1,9 +1,9 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-18  
+> Última revisão: 2026-06-21  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico atualizado para onboarding condicional, árvore familiar, arquivos históricos, notificações, IA, Dúvidas/FAQ público e gestão administrativa de dúvidas.
+> Status: índice canônico atualizado para mapas familiares mobile, Zoom, filtros de cônjuges e mapa completo em tela única.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -46,15 +46,20 @@ A baseline funcional atual registra:
   - `mapa-familiar-horizontal`;
 - `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
 - `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
+- `/mapa-familiar` mobile usa grade 3x3 com telas de ancestrais, tios, núcleo, primos e descendentes;
+- o Zoom mobile de `/mapa-familiar` possui overview 3x3 e botão **Exibir mapa completo**;
+- o mapa completo mobile abre mosaico único com conectores, pinça, arraste e reenquadramento;
+- filtros mobile separam **Exibir cônjuges de tios, primos etc** de **Apenas meus familiares**;
+- cônjuges estendidos em grupos mobile suportados podem ser exibidos/ocultados por toggle e usam cor tonal diferente;
+- tios paternos/maternos mobile possuem conectores laterais para pai/mãe e conectores verticais para primos;
 - o painel desktop não possui mais a barra `Filtros | Legendas | Ações`;
-- o modal mobile é reduzido e não exibe Zoom, Restaurar visualização ou Exportar;
+- o modal mobile é reduzido e não exibe Restaurar visualização ou Exportar;
 - a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
 - exportação cobre Área, Imagem/PNG, PDF e Imprimir nas views oficiais;
 - a referência visual de paletas é o desktop, com adaptação mobile por tokens/overrides escopados;
 - as paletas oficiais são `white`, `visual`, `orange` e `brown`;
 - cards mobile não devem exibir visualmente `Nascimento não informado` ou `Falecimento não informado`;
 - a vertical suporta núcleos conjugais adicionais quando há dados reais;
-- cônjuges de `pais`/Geração 4 na horizontal continuam pendência documentada, não implementação consolidada;
 - `/calendario-familiar` possui filtros mobile compactos por categoria;
 - `/duvidas` é página pública de FAQ/Ajuda, com conteúdo persistido no Supabase;
 - `/admin/duvidas` é área protegida de gestão administrativa de categorias, perguntas e respostas do FAQ;
@@ -73,19 +78,22 @@ A baseline funcional atual registra:
 | Ver o que está implementado por frente | `GUIA_IMPLEMENTACOES.md` |
 | Entender responsabilidades de componentes | `GUIA_COMPONENTES.md` |
 | Revisar UX, layout, responsividade e paletas | `GUIA_UX_LAYOUT.md` |
+| Entender arquitetura dos mapas familiares mobile | `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` |
 | Validar manualmente rotas, árvore, mobile, exportação e deploy | `QA_MANUAL.md` |
+| Validar a rodada mobile de 2026-06-21 | `docs/operacao/QA_MAPAS_MOBILE_2026_06_21.md` |
 | Conferir regras que não podem regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Ver pendências, riscos e decisões futuras | `PLANO_PROXIMOS_PASSOS.md` |
 | Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
 | Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
 | Entender rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
 | Classificar SQL solto ou documento antigo de banco | `docs/historico/SQLS_LEGADOS.md` |
+| Resgatar a rodada mobile de 2026-06-21 | `docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md` |
 
 Regra:
 
 ```txt
 Contrato vigente fica nos guias canônicos.
-QA manual fica em QA_MANUAL.md.
+QA manual fica em QA_MANUAL.md ou docs/operacao/.
 Pendência fica em PLANO_PROXIMOS_PASSOS.md.
 Operação fica em docs/operacao/.
 Histórico fica em docs/historico/.
@@ -110,6 +118,7 @@ supabase/migrations/ é a fonte da verdade do schema.
 | `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Preservar. |
 | `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
 | `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
+| `ATUALIZACAO_DOCUMENTAL_2026_06_21.md` | Manifesto da consolidação documental da rodada mobile. | Histórico/apoio. |
 
 ---
 
@@ -126,6 +135,7 @@ docs/arquitetura/
 | `ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
 | `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, onboarding em 5 etapas, rotas administrativas, guards, redirecionamentos e navegação. |
 | `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações, relacionamentos e objetos legados. |
+| `MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | Arquitetura técnica dos mapas familiares mobile, scripts auxiliares, Zoom, filtros de cônjuges e mapa completo. |
 
 ---
 
@@ -174,6 +184,7 @@ docs/operacao/
 | `MIGRATIONS_SUPABASE.md` | Fluxo seguro de migrations, schema, RLS, RPCs e schema cache. |
 | `OAUTH_GOOGLE.md` | Operação Google OAuth/Agenda, consent screen, test users, redirects e secrets. |
 | `STORAGE_MAINTENANCE.md` | Buckets, objetos órfãos, base64 legado e scripts administrativos. |
+| `QA_MAPAS_MOBILE_2026_06_21.md` | Checklist pós-deploy específico da rodada mobile de Zoom, tios, cônjuges e mapa completo. |
 
 Regra operacional:
 
@@ -204,6 +215,7 @@ Uso:
 | `README.md` | Índice histórico consolidado da pasta. |
 | `ROTAS_REMOVIDAS.md` | Histórico preventivo de `/minha-arvore`, `/genealogia` e `/visao-completa`. |
 | `SQLS_LEGADOS.md` | Inventário preventivo de SQLs soltos, dumps, diagnósticos e documentos antigos de banco. |
+| `AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md` | Histórico da rodada mobile de tios, Zoom, cônjuges e mapa completo. |
 
 Regras:
 
@@ -221,15 +233,16 @@ Regras:
 | Tipo de informação | Onde registrar |
 |---|---|
 | Estado implementado | `BASELINE_PRODUTO_ATUAL.md` ou documento funcional específico |
-| Responsabilidade técnica | `INVENTARIO_TECNICO.md` ou `GUIA_COMPONENTES.md` |
+| Responsabilidade técnica | `INVENTARIO_TECNICO.md`, `GUIA_COMPONENTES.md` ou `docs/arquitetura/` |
 | UX/layout | `GUIA_UX_LAYOUT.md` |
-| QA manual | `QA_MANUAL.md` |
+| QA manual | `QA_MANUAL.md` ou `docs/operacao/*` |
 | Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Pendência ou risco | `PLANO_PROXIMOS_PASSOS.md` |
 | Deploy/operação | `docs/operacao/*` |
 | Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` e `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
 | SQL legado, dump ou diagnóstico antigo | `docs/historico/SQLS_LEGADOS.md` |
 | História/legado | `docs/historico/*` |
+| Rodada ampla de ajustes mobile | manifesto em `docs/ATUALIZACAO_DOCUMENTAL_YYYY_MM_DD.md` + histórico em `docs/historico/` |
 
 ---
 
@@ -310,7 +323,7 @@ Esta documentação usa uma regra explícita de separação entre:
 | Estado implementado e confirmado na `main` | `BASELINE_PRODUTO_ATUAL.md` e documento funcional correspondente |
 | Padrão técnico ou componente reutilizável | `GUIA_COMPONENTES.md` |
 | Padrão visual, responsivo ou mobile | `GUIA_UX_LAYOUT.md` |
-| Roteiro de validação | `QA_MANUAL.md` |
+| Roteiro de validação | `QA_MANUAL.md` ou `docs/operacao/*` |
 | Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Rota, guard ou redirecionamento | `arquitetura/ROTAS_E_GUARDS.md` |
 | Pendência, script gerado sem confirmação ou decisão bloqueada | `PLANO_PROXIMOS_PASSOS.md` |
