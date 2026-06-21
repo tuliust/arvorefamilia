@@ -3,15 +3,16 @@ const DIRECT_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
 const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const DESCENDANTS_SELECTOR = '[data-mobile-family-tree-screen="descendants"]';
-const SCROLL_SELECTOR = '.mobile-family-descendant-screen__scroll, [data-stable-mobile-scroll="descendants"]';
+const SCROLL_SELECTOR = '.mobile-family-descendant-screen__scroll, [data-stable-mobile-scroll="descendants"], [data-mobile-family-tree-screen="descendants"] [data-mobile-tree-scroll]';
 const STYLE_ID = 'mobile-family-map-descendants-stability-lock-style';
 const LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
 const DESCENDANTS_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-66.66666666666667% + 0px), 0)';
 const CORE_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-33.333333333333336% + 0px), 0)';
 const NAVIGATION_THRESHOLD = 56;
+const PREVIEW_THRESHOLD = 10;
 
 let scheduled = false;
-let touchStart: { x: number; y: number; inDescendants: boolean; scrollTop: number } | null = null;
+let touchStart: { x: number; y: number; inDescendants: boolean; scrollArea: HTMLElement | null } | null = null;
 let unlockUntil = 0;
 
 function isMobileViewport() {
@@ -48,6 +49,27 @@ function getScrollArea(target: EventTarget | null) {
   return target.closest<HTMLElement>(SCROLL_SELECTOR);
 }
 
+function maxScrollTop(scrollArea: HTMLElement | null) {
+  if (!scrollArea) return 0;
+  return Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
+}
+
+function isAtTop(scrollArea: HTMLElement | null) {
+  return !scrollArea || scrollArea.scrollTop <= 1;
+}
+
+function canScrollVertically(scrollArea: HTMLElement | null, deltaY: number) {
+  const maxTop = maxScrollTop(scrollArea);
+  if (!scrollArea || maxTop <= 1) return false;
+
+  // deltaY < 0: dedo sobe; o conteúdo ainda pode rolar para baixo.
+  if (deltaY < 0) return scrollArea.scrollTop < maxTop - 1;
+  // deltaY > 0: dedo desce; o conteúdo ainda pode rolar para cima.
+  if (deltaY > 0) return scrollArea.scrollTop > 1;
+
+  return false;
+}
+
 function isDescendantsTransform(value: string) {
   return value.includes('-33.333333333333336%') && value.includes('-66.66666666666667%');
 }
@@ -58,6 +80,12 @@ function setAttributeIfNeeded(element: HTMLElement, name: string, value: string)
 
 function removeAttributeIfPresent(element: HTMLElement, name: string) {
   if (element.hasAttribute(name)) element.removeAttribute(name);
+}
+
+function stopCompetingHandlers(event: TouchEvent, prevent = true) {
+  if (prevent) event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
 }
 
 function ensureStyles() {
@@ -107,12 +135,17 @@ function lockDescendants() {
   stage.style.setProperty('transition', 'none', 'important');
 }
 
+function lockDescendantsTwice() {
+  lockDescendants();
+  window.requestAnimationFrame(lockDescendants);
+}
+
 function unlockToCore() {
   const root = getRoot();
   const stage = getStage(root);
   if (!root || !stage) return;
 
-  unlockUntil = Date.now() + 700;
+  unlockUntil = Date.now() + 900;
   removeAttributeIfPresent(root, LOCK_ATTR);
   setAttributeIfNeeded(root, 'data-mobile-family-tree-active-screen', 'core');
   stage.style.setProperty('transform', CORE_TRANSFORM, 'important');
@@ -150,15 +183,46 @@ function handleTouchStart(event: TouchEvent) {
   const touch = event.touches[0];
   if (!touch) return;
 
-  const scrollArea = getScrollArea(event.target);
+  const inDescendants = isDescendantTarget(event.target);
   touchStart = {
     x: touch.clientX,
     y: touch.clientY,
-    inDescendants: isDescendantTarget(event.target),
-    scrollTop: scrollArea?.scrollTop ?? 0,
+    inDescendants,
+    scrollArea: getScrollArea(event.target),
   };
 
-  if (touchStart.inDescendants) lockDescendants();
+  if (inDescendants) {
+    lockDescendants();
+    // Bloqueia handlers concorrentes de navegação, mas preserva o scroll nativo do conteúdo.
+    stopCompetingHandlers(event, false);
+  }
+}
+
+function handleTouchMove(event: TouchEvent) {
+  const start = touchStart;
+  if (!start?.inDescendants || !isEnabled()) return;
+
+  const touch = event.touches[0];
+  if (!touch) return;
+
+  const deltaX = touch.clientX - start.x;
+  const deltaY = touch.clientY - start.y;
+  const absoluteX = Math.abs(deltaX);
+  const absoluteY = Math.abs(deltaY);
+  const scrollArea = getScrollArea(event.target) ?? start.scrollArea;
+
+  if (absoluteY >= PREVIEW_THRESHOLD && absoluteY > absoluteX * 1.2 && canScrollVertically(scrollArea, deltaY)) {
+    // Mantém apenas o scroll interno; impede que scripts de navegação disputem transform do stage.
+    lockDescendantsTwice();
+    stopCompetingHandlers(event, false);
+    return;
+  }
+
+  if (absoluteX >= PREVIEW_THRESHOLD || absoluteY >= PREVIEW_THRESHOLD) {
+    // Nos limites do scroll, não deixa o stage acompanhar o gesto. Isso elimina o tremor.
+    lockDescendantsTwice();
+    stopCompetingHandlers(event);
+  }
 }
 
 function handleTouchEnd(event: TouchEvent) {
@@ -176,13 +240,15 @@ function handleTouchEnd(event: TouchEvent) {
   const deltaY = touch.clientY - start.y;
   const absoluteX = Math.abs(deltaX);
   const absoluteY = Math.abs(deltaY);
+  const scrollArea = getScrollArea(event.target) ?? start.scrollArea;
 
-  // Dedo para baixo, partindo do topo: volta para core. Qualquer outro gesto mantém a tela travada em descendants.
-  if (deltaY > 0 && absoluteY >= NAVIGATION_THRESHOLD && absoluteY > absoluteX * 1.2 && start.scrollTop <= 1) {
+  if (deltaY > 0 && absoluteY >= NAVIGATION_THRESHOLD && absoluteY > absoluteX * 1.2 && isAtTop(scrollArea)) {
+    stopCompetingHandlers(event);
     unlockToCore();
     return;
   }
 
+  if (absoluteX >= PREVIEW_THRESHOLD || absoluteY >= PREVIEW_THRESHOLD) stopCompetingHandlers(event);
   lockDescendants();
 }
 
@@ -191,9 +257,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   applyLockIfNeeded();
   [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyLockIfNeeded, delay));
 
-  document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
-  document.addEventListener('touchend', handleTouchEnd, { capture: true, passive: true });
-  document.addEventListener('touchcancel', () => {
+  window.addEventListener('touchstart', handleTouchStart, { capture: true, passive: false });
+  window.addEventListener('touchmove', handleTouchMove, { capture: true, passive: false });
+  window.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
+  window.addEventListener('touchcancel', () => {
     touchStart = null;
     lockDescendants();
   }, { capture: true, passive: true });
