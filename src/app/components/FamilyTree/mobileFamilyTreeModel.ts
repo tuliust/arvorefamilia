@@ -347,6 +347,10 @@ export function buildMobileFamilyTreeModel(
   const humanChildIds = toPeople(childIds, peopleById)
     .filter(isHumanFamilyMember)
     .map((person) => person.id);
+  const nephewIds = sortIds(
+    siblingIds.flatMap((personId) => findChildren(personId, index, peopleById)),
+    peopleById,
+  );
   const grandchildIds = sortIds(
     humanChildIds.flatMap((personId) => findChildren(personId, index, peopleById)),
     peopleById,
@@ -374,13 +378,10 @@ export function buildMobileFamilyTreeModel(
     mother: motherId ? peopleById.get(motherId) : undefined,
     spouses: toPeople(sortIds(Array.from(index.spousesByPerson.get(central.id) ?? []), peopleById), peopleById),
     siblings: toPeople(siblingIds, peopleById),
-    nephews: toPeople(
-      sortIds(siblingIds.flatMap((personId) => findChildren(personId, index, peopleById)), peopleById),
-      peopleById,
-    ),
-    children: toPeople(humanChildIds, peopleById),
+    nephews: toPeopleWithExtendedSpouses(nephewIds, index, peopleById).filter(isHumanFamilyMember),
+    children: toPeopleWithExtendedSpouses(humanChildIds, index, peopleById).filter(isHumanFamilyMember),
     pets: toPeople(childIds, peopleById).filter(isPetFamilyMember),
-    grandchildren: toPeople(grandchildIds, peopleById).filter(isHumanFamilyMember),
+    grandchildren: toPeopleWithExtendedSpouses(grandchildIds, index, peopleById).filter(isHumanFamilyMember),
     paternal: buildBranch(
       fatherId,
       motherId,
