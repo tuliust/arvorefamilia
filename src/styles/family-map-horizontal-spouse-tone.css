@@ -1,36 +1,57 @@
 /* Cônjuges no Mapa Genealógico mantêm a cor da geração, mas com variação tonal leve. */
 [data-family-map-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
-[data-mobile-family-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
+[data-mobile-family-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+[data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+[data-mobile-family-tree-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
   background: var(--family-map-card-bg-spouse, var(--family-map-card-bg)) !important;
   border-color: var(--family-map-card-border-spouse, var(--family-map-card-border)) !important;
 }
 
+html[data-mobile-family-spouse-scope="direct"] [data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+html[data-mobile-family-spouse-scope="direct"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+html[data-mobile-family-spouse-scope="direct"] [data-mobile-family-tree-root="true"] button[data-family-map-extended-spouse-card="true"] {
+  display: none !important;
+}
+
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="tataravos"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="tataravos"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="tataravos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="tataravos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="tataravos"] {
   --family-map-card-bg-spouse: #c1b8dd;
   --family-map-card-border-spouse: #b5aad5;
 }
 
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="bisavos"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="bisavos"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="bisavos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="bisavos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="bisavos"] {
   --family-map-card-bg-spouse: #dda8ce;
   --family-map-card-border-spouse: #cf91bd;
 }
 
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="avos"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="avos"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="avos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="avos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="avos"] {
   --family-map-card-bg-spouse: #edafa8;
   --family-map-card-border-spouse: #df978f;
 }
 
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="pais"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="pais"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="pais"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="pais"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="pais"] {
   --family-map-card-bg-spouse: #e9cd8c;
   --family-map-card-border-spouse: #d9b765;
 }
 
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="irmaos"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="irmaos"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="irmaos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="irmaos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="irmaos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="tios"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="primos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="sobrinhos"] {
   --family-map-card-bg-spouse: #b5d280;
   --family-map-card-border-spouse: #9fc166;
 }
@@ -38,13 +59,19 @@
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="filhos"],
 [data-family-map-horizontal-root="true"] [data-family-map-color-key="netos"],
 [data-mobile-family-horizontal-root="true"] [data-family-map-color-key="filhos"],
-[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="netos"] {
+[data-mobile-family-horizontal-root="true"] [data-family-map-color-key="netos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="filhos"],
+[data-family-map-horizontal-mobile-root="true"] [data-family-map-color-key="netos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="filhos"],
+[data-mobile-family-tree-root="true"] [data-family-map-color-key="netos"] {
   --family-map-card-bg-spouse: #c9e1e4;
   --family-map-card-border-spouse: #accdd2;
 }
 
 html[data-tree-color-palette="visual"] [data-family-map-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
-html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
+html[data-tree-color-palette="visual"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+html[data-tree-color-palette="visual"] [data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"],
+html[data-tree-color-palette="visual"] [data-mobile-family-tree-root="true"] button[data-family-map-color-key][data-family-map-spouse-tone="true"] {
   --family-map-card-bg-spouse: linear-gradient(180deg, #6ee7b7 0%, #14b8a6 52%, #047857 100%);
   --family-map-card-border-spouse: rgb(167 243 208 / 0.86);
 }
