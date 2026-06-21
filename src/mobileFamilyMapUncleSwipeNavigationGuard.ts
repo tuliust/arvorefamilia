@@ -5,8 +5,8 @@ const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const NAVIGATION_THRESHOLD = 56;
 const PREVIEW_THRESHOLD = 8;
 
-type UncleScreen = 'paternal-uncles' | 'maternal-uncles';
-type TargetScreen = 'core' | 'paternal-cousins' | 'maternal-cousins';
+type UncleScreen = 'paternal-uncles' | 'maternal-uncles' | 'paternal-cousins';
+type TargetScreen = 'core' | 'paternal-uncles' | 'paternal-cousins' | 'maternal-cousins';
 type PhysicalSwipeDirection = 'left' | 'right' | 'up' | 'down';
 
 type GestureStart = {
@@ -15,7 +15,7 @@ type GestureStart = {
   screen: UncleScreen | null;
 };
 
-const SCREEN_POSITIONS: Record<TargetScreen | UncleScreen, { column: number; row: number }> = {
+const SCREEN_POSITIONS: Record<TargetScreen | 'maternal-uncles', { column: number; row: number }> = {
   'paternal-uncles': { column: 0, row: 1 },
   'maternal-uncles': { column: 2, row: 1 },
   core: { column: 1, row: 1 },
@@ -39,7 +39,7 @@ function isEnabled() {
 }
 
 function isUncleScreen(value: string | null | undefined): value is UncleScreen {
-  return value === 'paternal-uncles' || value === 'maternal-uncles';
+  return value === 'paternal-uncles' || value === 'maternal-uncles' || value === 'paternal-cousins';
 }
 
 function getRoot() {
@@ -85,6 +85,7 @@ function parseTranslatePercent(value: string) {
 
   if (column === 0 && row === 1) return 'paternal-uncles';
   if (column === 2 && row === 1) return 'maternal-uncles';
+  if (column === 0 && row === 2) return 'paternal-cousins';
   return null;
 }
 
@@ -122,6 +123,13 @@ function getDestination(screen: UncleScreen, direction: PhysicalSwipeDirection):
     if (direction === 'right') return null;
     if (direction === 'up') return 'paternal-cousins';
     if (direction === 'down') return null;
+  }
+
+  if (screen === 'paternal-cousins') {
+    if (direction === 'left') return null;
+    if (direction === 'right') return null;
+    if (direction === 'up') return null;
+    if (direction === 'down') return 'paternal-uncles';
   }
 
   if (screen === 'maternal-uncles') {
