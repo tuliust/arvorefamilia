@@ -131,6 +131,14 @@ function getScreenFromGeometry(root: HTMLElement): ScreenName | null {
   return nearest?.screenName ?? null;
 }
 
+function getScreenFromTarget(target: EventTarget | null): ScreenName | null {
+  if (!(target instanceof Element)) return null;
+
+  const screenElement = target.closest<HTMLElement>('[data-mobile-family-tree-screen]');
+  const screenName = screenElement?.getAttribute('data-mobile-family-tree-screen');
+  return isScreenName(screenName) ? screenName : null;
+}
+
 function getCurrentScreen(root = getRoot()): ScreenName | null {
   if (!root) return null;
 
@@ -253,7 +261,7 @@ function handleTouchStart(event: TouchEvent) {
   gestureStart = {
     x: touch.clientX,
     y: touch.clientY,
-    screen: getCurrentScreen(),
+    screen: getScreenFromTarget(event.target) ?? getCurrentScreen(),
     scrollArea: getScrollArea(event.target),
   };
 }
