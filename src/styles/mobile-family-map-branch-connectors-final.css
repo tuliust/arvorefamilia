@@ -46,14 +46,27 @@
     border-right-width: 0 !important;
   }
 
+  [data-mobile-family-tree-root="true"] [data-mobile-family-tree-screen$="-uncles"] > div > div.pointer-events-none.absolute:not([data-mobile-uncle-branch-connector]),
+  [data-mobile-family-tree-root="true"] [data-mobile-uncle-native-connector="hidden"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
   /*
-    Tios Paternos/Maternos: override the older urgent rule that centered the
-    group vertically and imposed large min-heights. The uncle screens must sit
-    higher, stay proportional to the real card count and leave no colored block
-    below the maternal group.
+    Tios Paternos/Maternos: keep the group centered in the visible screen,
+    proportional to the card count, and use only the controlled branch
+    connectors drawn by mobileFamilyMapCoreConnectorFix.ts.
   */
   [data-mobile-family-tree-root="true"] [data-mobile-family-tree-screen$="-uncles"] > div {
-    padding: clamp(0.35rem, 1.15dvh, 0.75rem) 0.75rem calc(env(safe-area-inset-bottom, 0px) + 6.75rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100% !important;
+    padding: 0.75rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 6.75rem) !important;
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   [data-mobile-family-tree-root="true"] [data-mobile-family-tree-screen$="-uncles"] > div > div.relative.z-10,
@@ -63,10 +76,12 @@
     max-width: var(--mobile-family-map-uncle-panel-width) !important;
     min-height: 0 !important;
     height: auto !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
+    align-items: center !important;
+    justify-content: center !important;
     margin: 0 auto !important;
     padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   [data-mobile-family-tree-root="true"] [data-mobile-family-tree-screen$="-uncles"] section {
@@ -77,6 +92,8 @@
     margin: 0 auto !important;
     padding: 0 !important;
     overflow: visible !important;
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   [data-mobile-family-tree-root="true"] [data-mobile-family-tree-screen$="-uncles"] section > div:has(> h2) {
