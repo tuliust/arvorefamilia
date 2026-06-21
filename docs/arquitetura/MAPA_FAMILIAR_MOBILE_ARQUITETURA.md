@@ -1,9 +1,9 @@
 # Arquitetura — mapas familiares mobile
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-21  
 > Local: `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md`  
 > Escopo: arquitetura técnica dos mapas mobile em `/mapa-familiar` e `/mapa-familiar-horizontal`.  
-> Status: atualizado após baseline padrão `baseline/mapas-mobile-padrao-2026-06-20`.
+> Status: atualizado após a rodada de ajustes de tios, cônjuges, Zoom e mapa completo mobile.
 
 ---
 
@@ -13,18 +13,18 @@ As rotas oficiais da árvore possuem renderizações mobile específicas:
 
 | Rota | Componente mobile | Modelo de navegação | Zoom |
 |---|---|---|---|
-| `/mapa-familiar` | `MobileFamilyTreeView` + camada DOM consolidada | grade 3x3 por ramo familiar | overview 3x3 |
-| `/mapa-familiar-horizontal` | `MobileFamilyHorizontalMapView` + script específico de overview | uma geração por tela, botões `Ger X` e swipe lateral | overview por gerações |
+| `/mapa-familiar` | `MobileFamilyTreeView` + camadas auxiliares DOM/CSS | grade 3x3 por ramo familiar | overview 3x3 + mapa completo em mosaico único |
+| `/mapa-familiar-horizontal` | `MobileFamilyHorizontalMapView` + scripts de apoio | uma geração por tela, botões `Ger X` e swipe lateral | overview por gerações |
 
-A arquitetura atual combina componentes React com scripts auxiliares carregados no `index.html` e um ajuste importado via `main.tsx`.
+A arquitetura atual combina componentes React com scripts auxiliares carregados no `index.html`. Os scripts foram usados para estabilizar comportamento mobile sem refatorar imediatamente a árvore inteira.
 
-Documento de baseline:
+Documento histórico da rodada mais recente:
 
 ```txt
-docs/historico/BASELINE_MAPAS_FAMILIARES_MOBILE_PADRAO_2026_06_20.md
+docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md
 ```
 
-Branch preservada:
+Branch baseline anterior preservada:
 
 ```txt
 baseline/mapas-mobile-padrao-2026-06-20
@@ -42,14 +42,13 @@ src/app/components/FamilyTree/MobileFamilyTreeView.tsx
 
 Responsabilidades:
 
-- renderizar estrutura principal mobile;
-- montar tela `core`;
-- renderizar telas nativas `ancestors`, `paternal-uncles`, `core`, `maternal-uncles`, `paternal-cousins` e `maternal-cousins`;
-- renderizar grupos que são usados como fonte técnica para a tela `descendants`;
+- renderizar a estrutura principal mobile;
+- montar a tela `core`;
+- renderizar telas nativas e fontes técnicas usadas por scripts auxiliares;
 - aplicar cards mobile;
-- expor atributos usados por scripts auxiliares.
+- expor atributos usados por camadas de correção.
 
-Regra de baseline: apesar de parte dos grupos descendentes existir tecnicamente no DOM do `core`, eles não devem aparecer visualmente no `core`. A visualização desses grupos pertence à tela `descendants`.
+Regra de baseline: grupos descendentes podem existir tecnicamente no DOM do `core`, mas não devem aparecer visualmente no `core`. A visualização desses grupos pertence à tela `descendants`.
 
 ### 2.2 Modelo de dados
 
@@ -63,15 +62,24 @@ Responsabilidades:
 - identificar pai e mãe;
 - montar ramos paterno e materno;
 - calcular irmãos, sobrinhos, filhos, netos, pets e cônjuges;
-- inferir pai/mãe quando relacionamento explícito não for suficiente;
+- inferir pai/mãe quando o relacionamento explícito não for suficiente;
 - inferir tios por irmãos do pai/mãe;
-- considerar vínculos diretos de `tio/tia`, `uncle/aunt` e relações inversas de `sobrinho/sobrinha`, quando existentes.
+- considerar vínculos diretos de `tio/tia`, `uncle/aunt` e relações inversas de `sobrinho/sobrinha`, quando existentes;
+- intercalar cônjuges estendidos após o parente âncora nos grupos mobile suportados.
+
+Tipos e flags relevantes:
+
+```txt
+MobileFamilyExtendedSpousePerson
+__mobileFamilyExtendedSpouse
+__mobileFamilySpouseAnchorId
+```
 
 Regra: inferência de visualização não cria nem persiste dados.
 
 ---
 
-## 3. Grade 3x3
+## 3. Grade 3x3 de `/mapa-familiar`
 
 A grade mobile usa atributos de tela:
 
@@ -95,11 +103,15 @@ maternal-cousins
 
 Estado técnico atual:
 
-- seis telas são nativas do componente React;
-- `paternal-ancestors` e `maternal-ancestors` dependem de camada auxiliar para completar a grade superior;
-- `descendants` é estabilizada pela camada consolidada `mobileFamilyMapStableMobileFix.ts`;
-- a fonte visual duplicada dos descendentes no `core` é ocultada por `mobileFamilyMapCoreConnectorFix.ts`;
-- a navegação direcional final é reforçada por `mobileFamilyMapDirectionalNavigationFix.ts`.
+- `core` é a tela central;
+- `paternal-uncles` fica à esquerda de `core`;
+- `maternal-uncles` fica à direita de `core`;
+- `descendants` fica abaixo de `core`;
+- `paternal-cousins` fica abaixo de `paternal-uncles`;
+- `maternal-cousins` fica abaixo de `maternal-uncles`;
+- `paternal-ancestors` e `maternal-ancestors` completam a faixa superior lateral;
+- a navegação direcional é reforçada por `mobileFamilyMapDirectionalNavigationFix.ts`;
+- a estabilidade de `descendants` é reforçada por `mobileFamilyMapDescendantsStabilityLock.ts`.
 
 O stage é identificado por:
 
@@ -121,19 +133,27 @@ O carregamento vigente relevante para os mapas mobile é:
 
 | Arquivo | Papel |
 |---|---|
-| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz loops de `MutationObserver` causados por conectores e estilos |
-| `staticMobileFamilyTreeScreens.ts` | suporte a telas estáticas/estrutura mobile |
-| `mobileFamilyTreeScreenStateGuards.ts` | guards de estado de tela/stage |
-| `mobileFamilyTreeGrandparentScreens.ts` | cria/apoia telas laterais superiores de ancestrais profundos |
-| `mobileFamilyTreeSwipeHints.ts` | hints/apoio visual de swipe |
-| `mobileFamilyTreeAncestorConnectorsFix.ts` | corrige conectores de avós e ancestrais |
-| `mobileFamilyTreeDescendantConnectorsFix.ts` | desenha/ajusta conectores internos de descendentes |
-| `mobileFamilyTreeCoreDescendantConnector.ts` | desenha/apoia conectores do núcleo para descendentes |
-| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | força títulos visíveis e compactos |
-| `mobileFamilyHorizontalZoomOverview.ts` | Zoom específico da horizontal, com cards por geração |
-| `mobileFamilyMapStableMobileFix.ts` | camada consolidada de estabilidade, descendentes, tios, primos, painéis e Zoom 3x3 |
-| `mobileFamilyMapDirectionalNavigationFix.ts` | contrato direcional da navegação 3x3 |
-| `mobileFamilyMapCoreConnectorFix.ts` | cleanup de conectores e ocultação de descendentes duplicados no `core` |
+| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz loops de `MutationObserver` causados por conectores e estilos. |
+| `staticMobileFamilyTreeScreens.ts` | suporte a telas estáticas/estrutura mobile. |
+| `mobileFamilyTreeScreenStateGuards.ts` | guards de estado de tela/stage. |
+| `mobileFamilyTreeGrandparentScreens.ts` | cria/apoia telas laterais superiores de ancestrais profundos. |
+| `mobileFamilyTreeSwipeHints.ts` | hints/apoio visual de swipe. |
+| `mobileFamilyTreeAncestorConnectorsFix.ts` | corrige conectores de avós e ancestrais. |
+| `mobileFamilyTreeDescendantConnectorsFix.ts` | desenha/ajusta conectores internos de descendentes. |
+| `mobileFamilyTreeCoreDescendantConnector.ts` | desenha/apoia conectores do núcleo para descendentes. |
+| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | força títulos visíveis e compactos. |
+| `mobileFamilyHorizontalZoomOverview.ts` | Zoom específico da horizontal, com cards por geração. |
+| `mobileFamilyMapUncleSwipeNavigationGuard.ts` | protege gestos nas telas de tios. |
+| `mobileFamilyMapStableMobileFix.ts` | camada consolidada de estabilidade, descendentes, painéis e overview 3x3. |
+| `mobileFamilyMapDirectionalNavigationFix.ts` | contrato direcional da navegação 3x3. |
+| `mobileFamilyMapCoreConnectorFix.ts` | cleanup de conectores, ocultação de duplicações no `core` e conectores controlados de tios. |
+| `mobileVisualizationPanelFamilyStatsFix.ts` | ajustes do painel/estatísticas mobile. |
+| `mobileFamilyMapZoomOverviewVisualFix.ts` | ajustes visuais e funcionais do Zoom 3x3. |
+| `mobileFamilyMapDescendantsStabilityLock.ts` | lock de estabilidade da tela `descendants`, pausado durante Zoom. |
+| `mobileFamilyMapExtendedSpouseCards.ts` | marcação e expansão visual de cônjuges estendidos. |
+| `mobileFamilyMapFilterButtonsBehaviorFix.ts` | comportamento separado dos filtros mobile de cônjuges. |
+| `mobileFamilyMapFullOverview.ts` | botão **Exibir mapa completo**, overlay com pinça/arraste e mosaico único. |
+| `mobileFamilyMapFullOverviewMosaicFix.ts` | refinamento do mosaico completo, filhos/netos e conectores extras. |
 
 ### Arquivos legados ou substituídos
 
@@ -153,7 +173,7 @@ src/mobileFamilyMapMicroLayoutFix.ts
 src/mobileFamilyMapOverviewNavigationBridge.ts
 ```
 
-Regra: não restaurar arquivo legado sem atualizar este documento, `MAPA_FAMILIAR_MOBILE.md` e o QA pós-deploy.
+Regra: não restaurar arquivo legado sem atualizar esta documentação, o QA pós-deploy e os documentos canônicos afetados.
 
 ---
 
@@ -170,8 +190,6 @@ Responsabilidades atuais:
 - criar/estabilizar a tela `descendants`;
 - preservar scroll nativo em áreas internas roláveis;
 - evitar tremor por disputa de stage/transform;
-- compactar altura visual de tios;
-- marcar conectores principais dos grupos de primos;
 - reduzir altura dos painéis `Formato`, `Cor` e `Filtros`;
 - controlar o overview/Zoom 3x3 de `/mapa-familiar`;
 - proteger contra excesso de espaço branco em painéis superiores.
@@ -206,31 +224,166 @@ O guard captura direções bloqueadas para impedir fallback do React ou de scrip
 
 ---
 
-## 7. Cleanup de conectores e duplicação no `core`
+## 7. Tios, conectores e cleanup de duplicações
 
-Arquivo:
+Arquivos:
 
 ```txt
 src/mobileFamilyMapCoreConnectorFix.ts
+src/styles/mobile-family-map-branch-connectors-final.css
 ```
 
 Responsabilidades:
 
 - localizar e ocultar a linha vertical central abaixo do card da pessoa principal em `core`;
-- ocultar linhas verticais acima dos grupos de tios;
+- ocultar conectores nativos antigos nas telas de tios;
 - ocultar no `core` os elementos marcados como fonte visual dos descendentes;
-- preservar a existência técnica dessa fonte para que a tela `descendants` continue sendo montada.
+- preservar a existência técnica dessa fonte para que a tela `descendants` continue sendo montada;
+- centralizar e compactar grupos de tios;
+- desenhar conectores controlados de tios.
 
-Seletores de ocultação da fonte duplicada:
+Contrato visual vigente:
+
+| Tela | Conectores |
+|---|---|
+| `paternal-uncles` | linha horizontal da direita do grupo até o lado de `core`/pai; linha vertical inferior até o final da tela em direção a `paternal-cousins`. |
+| `maternal-uncles` | linha horizontal da esquerda do grupo até o lado de `core`/mãe; linha vertical inferior até o final da tela em direção a `maternal-cousins`. |
+
+Seletores importantes:
 
 ```txt
 [data-mobile-family-tree-descendant-source="true"]
 [data-mobile-family-tree-descendant-connector="true"]
+[data-mobile-uncle-branch-connector="down"]
+[data-mobile-uncle-branch-connector="horizontal"]
 ```
 
 ---
 
-## 8. `/mapa-familiar-horizontal` mobile
+## 8. Cônjuges estendidos e filtros mobile
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/mobileFamilyTreeModel.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/styles/family-map-horizontal-spouse-tone.css
+```
+
+### 8.1 Escopo funcional
+
+O botão **Exibir cônjuges de tios, primos etc** funciona como toggle de exibição para cônjuges nos grupos:
+
+```txt
+tios
+primos
+sobrinhos
+filhos
+netos
+irmãos, quando aplicável ao grupo renderizado
+```
+
+O botão **Apenas meus familiares** permanece sempre ativo visualmente e, por enquanto, não executa ação de filtro.
+
+### 8.2 Estado técnico
+
+O estado é exposto no HTML:
+
+```txt
+html[data-mobile-family-spouse-scope="extended"]
+html[data-mobile-family-spouse-scope="direct"]
+```
+
+O estado também é persistido em:
+
+```txt
+localStorage['arvorefamilia:mobile-family-map:show-extended-spouses']
+```
+
+Cards de cônjuges recebem:
+
+```txt
+data-family-map-extended-spouse-card="true"
+data-family-map-spouse-tone="true"
+data-family-map-spouse-anchor-id="..."
+```
+
+### 8.3 Cor dos cônjuges
+
+Cards de cônjuges devem usar tom diferente, mas próximo ao tom do grupo/geração. A regra visual é centralizada em:
+
+```txt
+src/styles/family-map-horizontal-spouse-tone.css
+```
+
+---
+
+## 9. Zoom 3x3 de `/mapa-familiar`
+
+Arquivos ativos:
+
+```txt
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+```
+
+Responsabilidades:
+
+- interceptar botão `Zoom` na rota `/mapa-familiar` mobile;
+- abrir overlay com cards da grade 3x3;
+- navegar para tela correspondente;
+- fechar overlay após escolha;
+- marcar card ativo;
+- compactar títulos, espaçamentos e badges;
+- remover subtítulos como **Ancestrais profundos**;
+- inserir ícone central nos cards;
+- manter `DESCENDENTES` em uma linha quando possível;
+- impedir tremor quando o Zoom é aberto a partir de `descendants`.
+
+O overview usa:
+
+```txt
+id="mobile-family-tree-overview-mode"
+```
+
+---
+
+## 10. Mapa completo em tela única
+
+Arquivos:
+
+```txt
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Entrada:
+
+```txt
+/mapa-familiar → Zoom → Exibir mapa completo
+```
+
+Contrato atual:
+
+- botão **Exibir mapa completo** abaixo dos 9 cards do Zoom;
+- overlay dedicado com `id="mobile-family-map-full-overview"`;
+- tela única em canvas/mosaico, não grade de 9 cards independentes;
+- grupos posicionados por coordenadas absolutas;
+- conectores SVG entre blocos;
+- suporte a pinça para ampliar/reduzir;
+- suporte a arraste;
+- botão **Reenquadrar**;
+- botão de fechar;
+- filhos e netos incluídos como grupos do mosaico;
+- uso de clones do DOM existente como fonte visual.
+
+Limitação técnica: o mosaico depende da existência dos grupos renderizados no DOM. Se o componente React mudar títulos, seções ou atributos, os seletores de `mobileFamilyMapFullOverview*.ts` devem ser revisados.
+
+---
+
+## 11. `/mapa-familiar-horizontal` mobile
 
 Componente:
 
@@ -261,9 +414,16 @@ data-mobile-horizontal-generation="N"
 data-mobile-horizontal-card="true"
 ```
 
+A exibição/ocultação tonal de cônjuges mobile também respeita:
+
+```txt
+data-family-map-spouse-tone="true"
+html[data-mobile-family-spouse-scope="extended|direct"]
+```
+
 ---
 
-## 9. Zoom horizontal por gerações
+## 12. Zoom horizontal por gerações
 
 Arquivo:
 
@@ -275,7 +435,7 @@ Responsabilidades:
 
 - interceptar o botão `Zoom` apenas em `/mapa-familiar-horizontal` mobile;
 - abrir overlay próprio com gerações disponíveis;
-- listar `Geração 1` a `Geração 6` quando houver botões/cartões correspondentes;
+- listar gerações quando houver botões/cartões correspondentes;
 - mostrar nome funcional e contagem de pessoas;
 - navegar acionando o botão `Ger N` correspondente;
 - fechar sem travar scroll, swipe ou bottom nav.
@@ -299,54 +459,7 @@ Labels:
 
 ---
 
-## 10. Zoom 3x3 de `/mapa-familiar`
-
-Arquivo ativo principal:
-
-```txt
-src/mobileFamilyMapStableMobileFix.ts
-```
-
-Responsabilidades:
-
-- interceptar botão `Zoom` na rota `/mapa-familiar` mobile;
-- abrir overlay com cards da grade 3x3;
-- navegar para tela correspondente;
-- fechar overlay após escolha;
-- marcar botão ativo com `data-mobile-family-map-overview-active`.
-
-O overview usa:
-
-```txt
-id="mobile-family-tree-overview-mode"
-```
-
----
-
-## 11. Painel do botão `+`
-
-Arquivo de estilo/comportamento complementar:
-
-```txt
-src/mobileFamilyMapFullPanelStyleFix.ts
-```
-
-Carregamento atual:
-
-```txt
-src/main.tsx
-```
-
-Contrato observado:
-
-- overlay mais opaco;
-- painel branco;
-- sem efeito de transparência que atrapalhe leitura;
-- preserva rolagem interna do painel.
-
----
-
-## 12. Performance e risco técnico
+## 13. Performance e risco técnico
 
 Riscos atuais:
 
@@ -355,7 +468,8 @@ Riscos atuais:
 - swipe global capturando scroll interno;
 - Safari/iOS tratando `touch-action` e overflow de forma diferente do Chrome;
 - scripts de correção acumulando complexidade fora do React;
-- arquivos existentes mas não carregados serem confundidos com implementação ativa.
+- arquivos existentes mas não carregados serem confundidos com implementação ativa;
+- mosaico completo depender de clones do DOM em vez de dados estruturados próprios.
 
 Mitigações atuais:
 
@@ -365,17 +479,18 @@ Mitigações atuais:
 - Zoom horizontal separado do Zoom 3x3;
 - guard direcional separado e carregado após a camada consolidada;
 - cleanup final de conectores e duplicações;
-- documentação de QA específica.
+- documentação de QA específica;
+- histórico da rodada de scripts em `docs/historico/`.
 
 Recomendação futura:
 
 ```txt
-Consolidar progressivamente os scripts auxiliares dentro dos componentes React ou hooks próprios, sem perder o contrato de 9 telas e o Zoom horizontal por gerações.
+Consolidar progressivamente os scripts auxiliares dentro dos componentes React ou hooks próprios, sem perder o contrato de 9 telas, filtros mobile de cônjuges e mapa completo em tela única.
 ```
 
 ---
 
-## 13. Ordem conceitual de carregamento
+## 14. Ordem conceitual de carregamento
 
 A ordem atual precisa respeitar:
 
@@ -387,13 +502,18 @@ A ordem atual precisa respeitar:
 6. Zoom horizontal específico;
 7. camada consolidada de estabilidade;
 8. guard direcional;
-9. cleanup final de conector central, tios e descendentes duplicados no `core`.
+9. cleanup final de conector central, tios e descendentes duplicados no `core`;
+10. ajustes visuais do Zoom 3x3;
+11. lock de estabilidade de `descendants`;
+12. marcação de cônjuges estendidos;
+13. comportamento separado dos filtros mobile;
+14. mapa completo e refinamento do mosaico.
 
 Regra: novo script mobile deve ser justificado e documentado. Preferir ajuste estrutural em React quando o comportamento já estiver estabilizado.
 
 ---
 
-## 14. Documentos relacionados
+## 15. Documentos relacionados
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
@@ -404,6 +524,7 @@ docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md
 docs/historico/BASELINE_MAPAS_FAMILIARES_MOBILE_PADRAO_2026_06_20.md
 docs/historico/BASELINE_MAPA_FAMILIAR_MOBILE_2026_06_20_1631.md
 docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_STABLE_FIX.md
+docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
 docs/QA_MANUAL.md
 ```
