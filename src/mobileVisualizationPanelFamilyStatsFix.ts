@@ -60,6 +60,7 @@ let primaryLinkedPessoaId: string | undefined;
 let registeredPeopleCount = 0;
 let dataPromise: Promise<void> | null = null;
 let scheduled = false;
+let applyingDomPatch = false;
 let expandedGroupKey: GroupKey | null = null;
 
 function isMobileViewport() {
@@ -299,40 +300,51 @@ function applyPanelStatsNow() {
   const panel = document.querySelector<HTMLElement>(PANEL_SELECTOR);
   if (!panel) return;
 
-  const centralPersonId = getSelectedPersonId(panel);
-  const groupDetails = getGroupDetails(centralPersonId);
+  applyingDomPatch = true;
 
-  const registeredValue = findSummaryValue(panel, 'Cadastrados');
-  if (registeredValue) registeredValue.textContent = String(registeredPeopleCount);
+  try {
+    const centralPersonId = getSelectedPersonId(panel);
+    const groupDetails = getGroupDetails(centralPersonId);
 
-  removeExistingGroupLists(panel);
+    const registeredValue = findSummaryValue(panel, 'Cadastrados');
+    if (registeredValue) registeredValue.textContent = String(registeredPeopleCount);
 
-  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
-    const key = getRowKey(button);
-    if (!key) return;
+    removeExistingGroupLists(panel);
 
-    const detail = groupDetails[key];
-    const countElement = button.querySelector<HTMLElement>('strong');
-    if (countElement) countElement.textContent = String(detail.count);
+    Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
+      const key = getRowKey(button);
+      if (!key) return;
 
-    button.setAttribute('data-mobile-visualization-family-row', 'true');
-    button.setAttribute('data-mobile-visualization-family-row-key', key);
-    button.setAttribute('aria-expanded', expandedGroupKey === key ? 'true' : 'false');
+      const detail = groupDetails[key];
+      const countElement = button.querySelector<HTMLElement>('strong');
+      if (countElement) countElement.textContent = String(detail.count);
 
-    if (button.dataset.mobileVisualizationFamilyBound !== 'true') {
-      button.dataset.mobileVisualizationFamilyBound = 'true';
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        expandedGroupKey = expandedGroupKey === key ? null : key;
-        scheduleApplyPanelStats();
-      });
-    }
+      button.setAttribute('data-mobile-visualization-family-row', 'true');
+      button.setAttribute('data-mobile-visualization-family-row-key', key);
+      button.setAttribute('aria-expanded', expandedGroupKey === key ? 'true' : 'false');
 
-    if (expandedGroupKey === key) {
-      button.insertAdjacentElement('afterend', buildNamesList(key, detail));
-    }
-  });
+      if (button.dataset.mobileVisualizationFamilyBound !== 'true') {
+        button.dataset.mobileVisualizationFamilyBound = 'true';
+        button.addEventListener('click', (event) => {
+          const currentKey = button.getAttribute('data-mobile-visualization-family-row-key') as GroupKey | null;
+          if (!currentKey) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+          expandedGroupKey = expandedGroupKey === currentKey ? null : currentKey;
+          scheduleApplyPanelStats();
+        });
+      }
+
+      if (expandedGroupKey === key) {
+        button.insertAdjacentElement('afterend', buildNamesList(key, detail));
+      }
+    });
+  } finally {
+    window.setTimeout(() => {
+      applyingDomPatch = false;
+    }, 0);
+  }
 }
 
 function scheduleApplyPanelStats() {
@@ -360,7 +372,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   scheduleApplyPanelStats();
   APPLY_DELAY_MS.forEach((delay) => window.setTimeout(scheduleApplyPanelStats, delay));
 
-  const observer = new MutationObserver(scheduleApplyPanelStats);
+  const observer = new MutationObserver(() => {
+    if (applyingDomPatch) return;
+    scheduleApplyPanelStats();
+  });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   document.addEventListener('click', resetExpandedGroupOnTabChange, { capture: true });
