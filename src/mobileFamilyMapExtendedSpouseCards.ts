@@ -61,10 +61,13 @@ function buildDisplayNameMap(pessoas: Pessoa[]) {
 
   pessoas.forEach((person) => {
     const displayName = normalizeText(getVisualPersonCardData(person).displayName || person.nome_completo || person.id);
-    if (!displayName) return;
-    const ids = map.get(displayName) ?? [];
-    ids.push(person.id);
-    map.set(displayName, ids);
+    const fullName = normalizeText(person.nome_completo || person.id);
+
+    [displayName, fullName].filter(Boolean).forEach((name) => {
+      const ids = map.get(name) ?? [];
+      if (!ids.includes(person.id)) ids.push(person.id);
+      map.set(name, ids);
+    });
   });
 
   return map;
@@ -85,7 +88,7 @@ function resolveCardPersonIds(button: HTMLElement, displayNameMap: Map<string, s
   if (!text) return [];
 
   return Array.from(displayNameMap.entries())
-    .filter(([displayName]) => text.includes(displayName))
+    .filter(([displayName]) => text.includes(displayName) || displayName.includes(text))
     .sort((a, b) => b[0].length - a[0].length)
     .flatMap(([, ids]) => ids)
     .filter(Boolean);
@@ -110,12 +113,34 @@ function clearSpouseMarks(root: HTMLElement) {
   });
 }
 
+function expandExtendedGroups(root: HTMLElement) {
+  let expandedAnyGroup = false;
+
+  root.querySelectorAll<HTMLElement>('section').forEach((section) => {
+    if (!isExtendedGroup(section)) return;
+
+    const expandButton = Array.from(section.querySelectorAll<HTMLButtonElement>('button')).find((button) => {
+      const label = normalizeText(button.textContent ?? '');
+      return label.startsWith('ver todos');
+    });
+
+    if (!expandButton) return;
+
+    expandButton.click();
+    expandedAnyGroup = true;
+  });
+
+  if (expandedAnyGroup) window.setTimeout(markExtendedSpouseCards, 80);
+}
+
 function markExtendedSpouseCards() {
   if (!isEnabled()) return;
   ensureStyles();
 
   const root = document.querySelector<HTMLElement>(ROOT_SELECTOR);
   if (!root || people.length === 0 || relationships.length === 0) return;
+
+  expandExtendedGroups(root);
 
   const spouseMap = buildSpouseMap(relationships);
   const displayNameMap = buildDisplayNameMap(people);
@@ -175,9 +200,17 @@ function ensureStyles() {
         display: none !important;
       }
 
-      ${ROOT_SELECTOR} [${EXTENDED_CARD_ATTR}="true"] {
-        background: var(--family-map-card-bg-spouse, linear-gradient(180deg, #c7dc98 0%, #a9c875 52%, #7da357 100%)) !important;
-        border-color: var(--family-map-card-border-spouse, #9fbd6a) !important;
+      ${ROOT_SELECTOR} [${EXTENDED_CARD_ATTR}="true"],
+      ${ROOT_SELECTOR} [${SPOUSE_TONE_ATTR}="true"] {
+        background: var(--family-map-card-bg-spouse, linear-gradient(180deg, #d8edaa 0%, #b9d87d 52%, #86ad5d 100%)) !important;
+        background-color: #b9d87d !important;
+        border-color: var(--family-map-card-border-spouse, #8fb164) !important;
+        box-shadow: 0 8px 22px rgba(71, 85, 105, 0.14) !important;
+      }
+
+      ${ROOT_SELECTOR} [${EXTENDED_CARD_ATTR}="true"] [data-family-map-avatar="true"],
+      ${ROOT_SELECTOR} [${SPOUSE_TONE_ATTR}="true"] [data-family-map-avatar="true"] {
+        background: rgba(255, 255, 255, 0.28) !important;
       }
     }
   `;
@@ -195,7 +228,7 @@ function ensureStyles() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
   void loadDataOnce();
-  [120, 320, 720, 1400].forEach((delay) => window.setTimeout(markExtendedSpouseCards, delay));
+  [120, 320, 720, 1400, 2200].forEach((delay) => window.setTimeout(markExtendedSpouseCards, delay));
 
   const observer = new MutationObserver(scheduleMark);
   observer.observe(document.documentElement, {
