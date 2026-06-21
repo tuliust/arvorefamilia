@@ -9,7 +9,7 @@ const LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
 const DESCENDANTS_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-66.66666666666667% + 0px), 0)';
 const CORE_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-33.333333333333336% + 0px), 0)';
 const NAVIGATION_THRESHOLD = 56;
-const PREVIEW_THRESHOLD = 10;
+const MOVEMENT_THRESHOLD = 1;
 
 let scheduled = false;
 let touchStart: { x: number; y: number; inDescendants: boolean; scrollArea: HTMLElement | null } | null = null;
@@ -82,6 +82,11 @@ function removeAttributeIfPresent(element: HTMLElement, name: string) {
   if (element.hasAttribute(name)) element.removeAttribute(name);
 }
 
+function setImportantStyleIfNeeded(element: HTMLElement, property: string, value: string) {
+  if (element.style.getPropertyValue(property) === value && element.style.getPropertyPriority(property) === 'important') return;
+  element.style.setProperty(property, value, 'important');
+}
+
 function stopCompetingHandlers(event: TouchEvent, prevent = true) {
   if (prevent) event.preventDefault();
   event.stopPropagation();
@@ -94,7 +99,7 @@ function ensureStyles() {
       ${ROOT_SELECTOR}[${LOCK_ATTR}="true"] ${STAGE_SELECTOR} {
         transform: ${DESCENDANTS_TRANSFORM} !important;
         transition: none !important;
-        will-change: transform !important;
+        will-change: auto !important;
       }
 
       ${ROOT_SELECTOR}[${LOCK_ATTR}="true"] ${DESCENDANTS_SELECTOR} {
@@ -105,8 +110,8 @@ function ensureStyles() {
       }
 
       ${ROOT_SELECTOR}[${LOCK_ATTR}="true"] ${SCROLL_SELECTOR} {
-        overscroll-behavior: contain !important;
-        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: auto !important;
         touch-action: pan-y !important;
       }
     }
@@ -131,13 +136,8 @@ function lockDescendants() {
 
   setAttributeIfNeeded(root, LOCK_ATTR, 'true');
   setAttributeIfNeeded(root, 'data-mobile-family-tree-active-screen', 'descendants');
-  stage.style.setProperty('transform', DESCENDANTS_TRANSFORM, 'important');
-  stage.style.setProperty('transition', 'none', 'important');
-}
-
-function lockDescendantsTwice() {
-  lockDescendants();
-  window.requestAnimationFrame(lockDescendants);
+  setImportantStyleIfNeeded(stage, 'transform', DESCENDANTS_TRANSFORM);
+  setImportantStyleIfNeeded(stage, 'transition', 'none');
 }
 
 function unlockToCore() {
@@ -148,8 +148,8 @@ function unlockToCore() {
   unlockUntil = Date.now() + 900;
   removeAttributeIfPresent(root, LOCK_ATTR);
   setAttributeIfNeeded(root, 'data-mobile-family-tree-active-screen', 'core');
-  stage.style.setProperty('transform', CORE_TRANSFORM, 'important');
-  stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  setImportantStyleIfNeeded(stage, 'transform', CORE_TRANSFORM);
+  setImportantStyleIfNeeded(stage, 'transition', 'transform 300ms ease-out');
   window.setTimeout(() => getStage()?.style.removeProperty('transition'), 340);
 }
 
@@ -170,7 +170,7 @@ function applyLockIfNeeded() {
 }
 
 function scheduleApplyLock() {
-  if (scheduled) return;
+  if (scheduled || touchStart?.inDescendants) return;
   scheduled = true;
   window.requestAnimationFrame(() => {
     scheduled = false;
@@ -210,19 +210,23 @@ function handleTouchMove(event: TouchEvent) {
   const absoluteX = Math.abs(deltaX);
   const absoluteY = Math.abs(deltaY);
   const scrollArea = getScrollArea(event.target) ?? start.scrollArea;
+  const isVertical = absoluteY >= MOVEMENT_THRESHOLD && absoluteY > absoluteX * 1.2;
+  const isHorizontal = absoluteX >= MOVEMENT_THRESHOLD && absoluteX > absoluteY * 1.2;
 
-  if (absoluteY >= PREVIEW_THRESHOLD && absoluteY > absoluteX * 1.2 && canScrollVertically(scrollArea, deltaY)) {
-    // Mantém apenas o scroll interno; impede que scripts de navegação disputem transform do stage.
-    lockDescendantsTwice();
+  if (!isVertical && !isHorizontal) {
     stopCompetingHandlers(event, false);
     return;
   }
 
-  if (absoluteX >= PREVIEW_THRESHOLD || absoluteY >= PREVIEW_THRESHOLD) {
-    // Nos limites do scroll, não deixa o stage acompanhar o gesto. Isso elimina o tremor.
-    lockDescendantsTwice();
-    stopCompetingHandlers(event);
+  if (isVertical && canScrollVertically(scrollArea, deltaY)) {
+    // Deixa somente o scroll interno acontecer. Não reaplica transform a cada frame para evitar microtremor.
+    stopCompetingHandlers(event, false);
+    return;
   }
+
+  // No topo/fundo da rolagem ou em gestos horizontais, elimina bounce e deslocamento do stage.
+  lockDescendants();
+  stopCompetingHandlers(event);
 }
 
 function handleTouchEnd(event: TouchEvent) {
@@ -248,7 +252,7 @@ function handleTouchEnd(event: TouchEvent) {
     return;
   }
 
-  if (absoluteX >= PREVIEW_THRESHOLD || absoluteY >= PREVIEW_THRESHOLD) stopCompetingHandlers(event);
+  if (absoluteX >= MOVEMENT_THRESHOLD || absoluteY >= MOVEMENT_THRESHOLD) stopCompetingHandlers(event);
   lockDescendants();
 }
 
