@@ -36,10 +36,13 @@ function ensureStyles() {
 
       [data-mobile-maternal-uncle-down-connector="true"] {
         display: block !important;
+        position: absolute !important;
+        left: 50% !important;
+        z-index: 0 !important;
         width: 1px !important;
-        height: clamp(4rem, 18vh, 9rem) !important;
-        margin: 0 auto !important;
-        background: rgb(8, 145, 178) !important;
+        height: 2.25rem !important;
+        margin: 0 !important;
+        transform: translateX(-50%) !important;
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: none !important;
@@ -55,6 +58,13 @@ function ensureStyles() {
 
   if (style.textContent !== css) style.textContent = css;
   if (document.head.lastElementChild !== style) document.head.appendChild(style);
+}
+
+function getStandardConnectorBackground(screen: HTMLElement) {
+  const standardConnector = Array.from(screen.querySelectorAll<HTMLElement>('.bg-cyan-600'))
+    .find((element) => element.getAttribute('data-mobile-maternal-uncle-down-connector') !== 'true');
+  const color = standardConnector ? window.getComputedStyle(standardConnector).backgroundColor : '';
+  return color && color !== 'rgba(0, 0, 0, 0)' ? color : '';
 }
 
 function markCoreCenterDescendantLine() {
@@ -105,27 +115,32 @@ function markUncleVerticalConnectors() {
 function ensureMaternalUncleDownConnector() {
   const screen = document.querySelector<HTMLElement>(MATERNAL_UNCLES_SCREEN_SELECTOR);
   const contentWrapper = screen?.querySelector<HTMLElement>(':scope > div > div[class*="z-10"] > div');
-  if (!contentWrapper) return;
+  if (!screen || !contentWrapper) return;
 
-  const hasGroup = Boolean(contentWrapper.querySelector('section'));
+  const section = contentWrapper.querySelector<HTMLElement>('section');
   const hasCards = Boolean(contentWrapper.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]'));
-  let connector = contentWrapper.querySelector<HTMLElement>('[data-mobile-maternal-uncle-down-connector="true"]');
+  let connector = screen.querySelector<HTMLElement>(':scope > [data-mobile-maternal-uncle-down-connector="true"]');
 
-  if (!hasGroup || !hasCards) {
+  if (!section || !hasCards) {
     connector?.remove();
     return;
   }
 
   if (!connector) {
     connector = document.createElement('div');
+    connector.className = 'bg-cyan-600';
     connector.setAttribute('data-mobile-maternal-uncle-down-connector', 'true');
     connector.setAttribute('aria-hidden', 'true');
+    screen.appendChild(connector);
   }
 
-  const section = contentWrapper.querySelector('section');
-  if (section?.nextElementSibling !== connector) {
-    section?.insertAdjacentElement('afterend', connector);
-  }
+  const screenRect = screen.getBoundingClientRect();
+  const sectionRect = section.getBoundingClientRect();
+  const top = Math.max(0, sectionRect.bottom - screenRect.top);
+  connector.style.setProperty('top', `${top}px`, 'important');
+
+  const standardBackground = getStandardConnectorBackground(screen);
+  if (standardBackground) connector.style.setProperty('background', standardBackground, 'important');
 }
 
 function applyConnectorFixes() {
