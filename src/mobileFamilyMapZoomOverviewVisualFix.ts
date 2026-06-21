@@ -1,6 +1,9 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
+const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
+const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
+const DESCENDANTS_LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
 const STYLE_ID = 'mobile-family-map-zoom-overview-visual-fix-style';
 let scheduled = false;
 
@@ -52,18 +55,31 @@ function normalizeText(value: string) {
     .trim();
 }
 
+function unlockDescendantLockForOverviewNavigation() {
+  const root = document.querySelector<HTMLElement>(ROOT_SELECTOR);
+  const stage = root?.querySelector<HTMLElement>(STAGE_SELECTOR);
+  root?.removeAttribute(DESCENDANTS_LOCK_ATTR);
+  stage?.style.setProperty('transition', 'none', 'important');
+}
+
 function ensureStyles() {
   if (typeof document === 'undefined') return;
 
   const css = `
     @media (max-width: 767px) {
+      #${OVERVIEW_ID} .mobile-family-overview-map {
+        column-gap: 0.3rem !important;
+        row-gap: 0.45rem !important;
+        padding: 0.55rem !important;
+      }
+
       #${OVERVIEW_ID} .mobile-family-overview-tile {
         justify-content: space-between !important;
         align-items: flex-start !important;
-        gap: 0.35rem !important;
+        gap: 0.28rem !important;
         border: 1px solid rgb(203, 213, 225) !important;
         box-shadow: 0 9px 22px rgba(15, 23, 42, 0.08) !important;
-        padding: 0.5rem 0.48rem !important;
+        padding: 0.46rem 0.36rem !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile[aria-current="location"],
@@ -77,13 +93,19 @@ function ensureStyles() {
         width: 100% !important;
         max-width: 100% !important;
         color: rgb(15, 23, 42) !important;
-        font-size: clamp(0.55rem, 2.65vw, 0.67rem) !important;
+        font-size: clamp(0.48rem, 2.25vw, 0.58rem) !important;
         font-weight: 950 !important;
-        letter-spacing: 0.08em !important;
+        letter-spacing: 0.035em !important;
         line-height: 0.98 !important;
         text-transform: uppercase !important;
-        overflow-wrap: anywhere !important;
-        word-break: normal !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile[data-screen="descendants"] .mobile-family-overview-tile-title {
+        font-size: clamp(0.45rem, 2.05vw, 0.52rem) !important;
+        letter-spacing: 0.01em !important;
+        white-space: nowrap !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-subtitle,
@@ -98,7 +120,7 @@ function ensureStyles() {
         display: flex !important;
         width: 100% !important;
         flex: 1 1 auto !important;
-        min-height: 1.85rem !important;
+        min-height: 1.65rem !important;
         align-items: center !important;
         justify-content: center !important;
         color: rgb(37, 99, 235) !important;
@@ -107,8 +129,8 @@ function ensureStyles() {
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-icon svg {
         display: block !important;
-        width: clamp(1.55rem, 7.6vw, 2.25rem) !important;
-        height: clamp(1.55rem, 7.6vw, 2.25rem) !important;
+        width: clamp(1.35rem, 6.8vw, 2rem) !important;
+        height: clamp(1.35rem, 6.8vw, 2rem) !important;
         fill: none !important;
         stroke: currentColor !important;
         stroke-width: 1.85 !important;
@@ -126,8 +148,8 @@ function ensureStyles() {
         background: rgb(239, 246, 255) !important;
         color: rgb(30, 64, 175) !important;
         border: 1px solid rgb(191, 219, 254) !important;
-        padding: 0.18rem 0.42rem !important;
-        font-size: 0.62rem !important;
+        padding: 0.18rem 0.38rem !important;
+        font-size: 0.6rem !important;
         font-weight: 850 !important;
         line-height: 1.05 !important;
         white-space: nowrap !important;
@@ -202,12 +224,23 @@ function ensureTileIcon(tile: HTMLElement) {
   else tile.appendChild(icon);
 }
 
+function bindTileUnlock(tile: HTMLElement) {
+  if (tile.dataset.mobileFamilyOverviewUnlockBound === 'true') return;
+  tile.dataset.mobileFamilyOverviewUnlockBound = 'true';
+
+  ['touchstart', 'pointerdown', 'mousedown'].forEach((eventName) => {
+    tile.addEventListener(eventName, unlockDescendantLockForOverviewNavigation, { passive: true });
+  });
+}
+
 function patchOverview() {
   if (!isEnabled()) return;
   ensureStyles();
 
   const overlay = document.getElementById(OVERVIEW_ID);
   if (!overlay) return;
+
+  unlockDescendantLockForOverviewNavigation();
 
   overlay.querySelectorAll<HTMLElement>('.mobile-family-overview-tile[data-screen]').forEach((tile) => {
     const screenName = tile.dataset.screen;
@@ -220,6 +253,7 @@ function patchOverview() {
     subtitle?.remove();
     removeSubtitleTextNodes(tile);
     ensureTileIcon(tile);
+    bindTileUnlock(tile);
 
     if (count) {
       count.setAttribute('data-mobile-family-overview-count-badge', 'true');
