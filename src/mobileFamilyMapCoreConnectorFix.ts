@@ -1,9 +1,10 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const CORE_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="core"]';
+const MATERNAL_UNCLES_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="maternal-uncles"]';
 const UNCLE_SCREEN_SELECTORS = [
   '[data-mobile-family-tree-screen="paternal-uncles"]',
-  '[data-mobile-family-tree-screen="maternal-uncles"]',
+  MATERNAL_UNCLES_SCREEN_SELECTOR,
 ];
 const STYLE_ID = 'mobile-family-map-core-connector-fix-style';
 let scheduled = false;
@@ -27,6 +28,17 @@ function ensureStyles() {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+      }
+
+      [data-mobile-maternal-uncle-down-connector="true"] {
+        display: block !important;
+        width: 1px !important;
+        height: clamp(4rem, 18vh, 9rem) !important;
+        margin: 0 auto !important;
+        background: rgb(8, 145, 178) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: none !important;
       }
     }
   `;
@@ -86,11 +98,38 @@ function markUncleVerticalConnectors() {
   });
 }
 
+function ensureMaternalUncleDownConnector() {
+  const screen = document.querySelector<HTMLElement>(MATERNAL_UNCLES_SCREEN_SELECTOR);
+  const contentWrapper = screen?.querySelector<HTMLElement>(':scope > div > div[class*="z-10"] > div');
+  if (!contentWrapper) return;
+
+  const hasGroup = Boolean(contentWrapper.querySelector('section'));
+  const hasCards = Boolean(contentWrapper.querySelector('[data-family-map-mobile-card="true"], button[data-family-map-color-key]'));
+  let connector = contentWrapper.querySelector<HTMLElement>('[data-mobile-maternal-uncle-down-connector="true"]');
+
+  if (!hasGroup || !hasCards) {
+    connector?.remove();
+    return;
+  }
+
+  if (!connector) {
+    connector = document.createElement('div');
+    connector.setAttribute('data-mobile-maternal-uncle-down-connector', 'true');
+    connector.setAttribute('aria-hidden', 'true');
+  }
+
+  const section = contentWrapper.querySelector('section');
+  if (section?.nextElementSibling !== connector) {
+    section?.insertAdjacentElement('afterend', connector);
+  }
+}
+
 function applyConnectorFixes() {
   if (!isEnabled()) return;
   ensureStyles();
   markCoreCenterDescendantLine();
   markUncleVerticalConnectors();
+  ensureMaternalUncleDownConnector();
 }
 
 function scheduleMark() {
