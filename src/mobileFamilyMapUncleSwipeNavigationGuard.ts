@@ -135,7 +135,8 @@ function getDestination(screen: UncleScreen, direction: PhysicalSwipeDirection):
   if (screen === 'maternal-uncles') {
     if (direction === 'right') return null;
     if (direction === 'left') return 'core';
-    if (direction === 'down' || direction === 'up') return 'maternal-cousins';
+    if (direction === 'up') return 'maternal-cousins';
+    if (direction === 'down') return null;
   }
 
   return null;
