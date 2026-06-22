@@ -1,9 +1,9 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
-> Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.
-> Status: revisado para separar migrations oficiais, SQLs soltos, stubs preventivos, diagnósticos e operações pontuais.
+> Última revisão: 2026-06-22  
+> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`  
+> Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.  
+> Status: revisado para reforçar que `supabase/migrations/` é a fonte da verdade e que mudanças opcionais, como fatos históricos sem arquivo, só são vigentes quando a migration existir e for aplicada.
 
 ---
 
@@ -77,7 +77,8 @@ Criar migration para:
 - policy/RLS;
 - bucket/policy quando versionado via SQL;
 - seed controlado necessário;
-- ajuste de permissões/grants.
+- ajuste de permissões/grants;
+- tornar coluna obrigatória/opcional quando o frontend depender disso.
 
 Não criar migration para:
 
@@ -90,7 +91,8 @@ Não criar migration para:
 - modal;
 - exportação client-side;
 - documentação;
-- microcopy estática sem banco.
+- microcopy estática sem banco;
+- separação meramente visual de pets quando o schema já possui `humano_ou_pet`.
 
 ---
 
@@ -299,7 +301,86 @@ Regras mínimas:
 
 ---
 
-## 12. Documentos relacionados
+## 12. Fatos históricos sem arquivo — regra operacional
+
+A frente **Fatos e Arquivos Históricos** só deve ser considerada implementada quando as duas condições forem verdadeiras:
+
+1. o frontend permitir fato/memória sem arquivo obrigatório;
+2. a migration oficial em `supabase/migrations/` permitir `NULL` nos campos de arquivo necessários.
+
+Enquanto isso não ocorrer, o comportamento vigente continua sendo o observado no código atual:
+
+```txt
+ArquivosHistoricosPage title = "Arquivos históricos"
+Arquivo/upload obrigatório na UI
+ArquivoHistorico.url obrigatório no tipo
+```
+
+Se a frente for aplicada, a migration mínima esperada deve tornar opcionais, conforme schema real:
+
+```sql
+alter table public.arquivos_historicos
+  alter column url drop not null,
+  alter column storage_bucket drop not null,
+  alter column storage_path drop not null,
+  alter column mime_type drop not null;
+```
+
+Regras:
+
+- adaptar ao schema real antes de aplicar;
+- não assumir que todas as colunas são `not null`;
+- não aplicar sem `supabase migration list`;
+- não commitar documentação dizendo “aplicado” antes do arquivo existir em `supabase/migrations/` e ser enviado ao Supabase;
+- se o serviço possui fallback para ausência de `participante_ids`, não transformar `participante_ids` em obrigatório sem migration e backfill.
+
+---
+
+## 13. `participante_ids` em arquivos históricos
+
+O serviço atual possui compatibilidade defensiva para ausência da coluna `participante_ids`.
+
+Regra documental:
+
+```txt
+participante_ids não deve ser tratado como obrigatório enquanto houver fallback de schema cache/coluna ausente.
+```
+
+Para torná-lo obrigatório:
+
+1. criar migration adicionando coluna, se ainda não existir;
+2. fazer backfill controlado;
+3. ajustar RLS/policies se necessário;
+4. remover fallback no service;
+5. atualizar documentação funcional e operacional;
+6. rodar build/testes;
+7. aplicar no Supabase correto.
+
+---
+
+## 14. Pets e relacionamentos
+
+A separação visual de Pets em `/meus-vinculos` não exige migration enquanto o schema já possui:
+
+```txt
+pessoas.humano_ou_pet
+```
+
+Não criar tipo de relacionamento `tutor` sem frente própria.
+
+Se futuramente houver tipo `tutor`:
+
+- criar migration de enum/check constraint/tipo relacionado, conforme schema real;
+- atualizar `TipoRelacionamento`;
+- atualizar `dataService`;
+- atualizar `relationshipChangeRequestService`;
+- migrar dados existentes com compatibilidade;
+- atualizar docs e QA;
+- validar mapas, perfis e revisão.
+
+---
+
+## 15. Documentos relacionados
 
 ```txt
 docs/historico/SQLS_LEGADOS.md
@@ -307,88 +388,41 @@ docs/operacao/DEPLOYMENT.md
 docs/operacao/STORAGE_MAINTENANCE.md
 docs/operacao/OAUTH_GOOGLE.md
 docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
+docs/funcionalidades/MEUS_VINCULOS.md
 ```
 
-<!-- MIGRATIONS-ALERTA-2026-06-18 -->
-## Alerta operacional â€” scripts citados no levantamento
+---
 
-O levantamento cita proposta de reset ampliado de perfil com possÃ­vel alteraÃ§Ã£o de RPC/migration e limpeza de `auth.users`.
+## 16. Alertas operacionais preservados
 
-NÃ£o registrar nem aplicar como implementado sem:
+### Reset ampliado de perfil
+
+O levantamento cita proposta de reset ampliado de perfil com possível alteração de RPC/migration e limpeza de `auth.users`.
+
+Não registrar nem aplicar como implementado sem:
 
 - arquivo real em `supabase/migrations/`;
-- revisÃ£o de RLS/RPC;
-- validaÃ§Ã£o em ambiente seguro;
-- confirmaÃ§Ã£o de commit;
+- revisão de RLS/RPC;
+- validação em ambiente seguro;
+- confirmação de commit;
 - rollback documentado.
 
-Enquanto nÃ£o houver essa confirmaÃ§Ã£o, a frente permanece bloqueada em `PLANO_PROXIMOS_PASSOS.md`.
+Enquanto não houver essa confirmação, a frente permanece bloqueada em `PLANO_PROXIMOS_PASSOS.md`.
 
-<!-- RODADA2-SUPABASE-CURIOSIDADES-2026-06-18 -->
-## Migrations Supabase â€” Curiosidades
+### Curiosidades
 
-O levantamento registra duas migrations aplicadas na frente de Curiosidades:
+O levantamento registrou duas migrations aplicadas na frente de Curiosidades:
 
 ```txt
 supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
 supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
 ```
 
-### `family_memory_wall_posts`
+Se esses arquivos não existirem no repositório atual ou não constarem em `supabase migration list`, tratar como divergência documental e corrigir antes de novas alterações de banco.
 
-Objetivo:
+Pendência operacional relacionada:
 
-- persistir mural de lembranÃ§as.
-
-Tabela:
-
-```txt
-public.family_memory_wall_posts
-```
-
-Campos principais:
-
-```txt
-id
-user_id
-author_name
-body
-visibility
-status
-created_at
-updated_at
-```
-
-RLS/policies registradas:
-
-- leitura por usuÃ¡rios autenticados;
-- inserÃ§Ã£o pelo prÃ³prio usuÃ¡rio;
-- atualizaÃ§Ã£o pelo autor ou admin;
-- exclusÃ£o pelo autor ou admin.
-
-### Favoritos de descobertas
-
-Objetivo:
-
-- permitir salvar descobertas de Curiosidades em favoritos.
-
-Tipo de favorito:
-
-```txt
-curiosity_discovery
-```
-
-### Status informado no levantamento
-
-```txt
-Migrations aplicadas.
-QA real autenticado OK.
-```
-
-### PendÃªncia operacional
-
-Confirmar fonte canÃ´nica de coordenadas de cidades para a rota familiar:
-
+- confirmar fonte canônica de coordenadas de cidades para rota familiar;
 - autocomplete;
 - tabela de cidades;
 - backfill;
