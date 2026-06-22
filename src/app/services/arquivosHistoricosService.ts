@@ -56,6 +56,14 @@ function normalizeParticipants(value: unknown): HistoricalFileParticipant[] {
     .filter((participant) => participant.id && participant.nome_completo);
 }
 
+function arquivoHasFile(arquivo: Pick<ArquivoHistorico, 'url'>) {
+  return Boolean(String(arquivo.url ?? '').trim());
+}
+
+function getArquivoRecordKind(arquivo: Pick<ArquivoHistorico, 'url'>) {
+  return arquivoHasFile(arquivo) ? 'file' : 'fact';
+}
+
 function toArquivoHistorico(row: any): ArquivoHistorico {
   return {
     id: row.id,
@@ -296,6 +304,7 @@ async function salvarArquivosHistoricosPorOwner(
         metadata: {
           ...ownerMetadata,
           file_type: arquivo.tipo,
+          record_kind: getArquivoRecordKind(arquivo),
         },
       });
     }
@@ -328,7 +337,8 @@ async function salvarArquivosHistoricosPorOwner(
         metadata: {
           ...ownerMetadata,
           file_type: arquivo.tipo,
-          has_file: Boolean(arquivo.url),
+          record_kind: getArquivoRecordKind(arquivo),
+          has_file: arquivoHasFile(arquivo),
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
           categoria_evento: payload.categoria_evento,
@@ -350,7 +360,8 @@ async function salvarArquivosHistoricosPorOwner(
         metadata: {
           ...ownerMetadata,
           file_type: arquivo.tipo,
-          has_file: Boolean(arquivo.url),
+          record_kind: getArquivoRecordKind(arquivo),
+          has_file: arquivoHasFile(arquivo),
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
           categoria_evento: payload.categoria_evento,

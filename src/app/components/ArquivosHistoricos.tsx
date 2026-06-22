@@ -113,19 +113,31 @@ function hasArquivoFile(arquivo: Pick<ArquivoHistorico, 'url'>) {
 
 function getHistoricalFileName(arquivo: ArquivoHistorico) {
   const baseName = sanitizeFileName(arquivo.titulo || 'arquivo-historico') || 'arquivo-historico';
-  const extension = getExtensionFromUrl(arquivo.url) ?? (arquivo.tipo === 'pdf' ? 'pdf' : 'jpg');
+  const extension = getExtensionFromUrl(String(arquivo.url ?? '')) ?? (arquivo.tipo === 'pdf' ? 'pdf' : 'jpg');
 
   return baseName.endsWith(`.${extension}`) ? baseName : `${baseName}.${extension}`;
 }
 
 function openArquivoInNewTab(arquivo: ArquivoHistorico) {
   if (!hasArquivoFile(arquivo)) return;
-  window.open(arquivo.url, '_blank', 'noopener,noreferrer');
+  window.open(String(arquivo.url ?? ''), '_blank', 'noopener,noreferrer');
 }
 
 function getHistoricalFileEventCategoryLabel(value: ArquivoHistorico['categoria_evento']) {
   return HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.find((option) => option.value === value)?.label;
 }
+function getHistoricalRecordKindLabel(arquivo: ArquivoHistorico) {
+  if (!hasArquivoFile(arquivo)) return 'Fato sem arquivo';
+  if (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf') return 'Arquivo PDF';
+  return 'Imagem histórica';
+}
+
+function getHistoricalRecordKindClassName(arquivo: ArquivoHistorico) {
+  if (!hasArquivoFile(arquivo)) return 'border-blue-100 bg-blue-50 text-blue-700';
+  if (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf') return 'border-red-100 bg-red-50 text-red-700';
+  return 'border-emerald-100 bg-emerald-50 text-emerald-700';
+}
+
 
 function createEmptyDraftHistoricalFile(): DraftHistoricalFile {
   return {
@@ -493,7 +505,7 @@ export function ArquivosHistoricos({
   const handleDownloadArquivo = (arquivo: ArquivoHistorico) => {
     if (!hasArquivoFile(arquivo)) return;
     const link = document.createElement('a');
-    link.href = arquivo.url;
+    link.href = String(arquivo.url ?? '');
     link.download = getHistoricalFileName(arquivo);
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -516,8 +528,8 @@ export function ArquivosHistoricos({
                   size="sm"
                   className={readOnly || addButtonVariant === 'icon' ? 'h-9 w-9 shrink-0 rounded-full p-0' : 'w-full sm:w-auto'}
                   onClick={handleToggleAddFile}
-                  aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
-                  title={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
+                  aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir fato ou arquivo histórico' : undefined}
+                  title={readOnly || addButtonVariant === 'icon' ? 'Inserir fato ou arquivo histórico' : undefined}
                 >
                   {readOnly || addButtonVariant === 'icon' ? (
                     <Plus className="h-4 w-4" />
@@ -741,9 +753,14 @@ export function ArquivosHistoricos({
                     <div className="min-w-0 flex-1">
                       {readOnly || editingArquivoId !== arquivo.id ? (
                         <>
-                          <h4 className="break-words text-sm font-medium text-gray-900">
-                            {arquivo.titulo}
-                          </h4>
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <h4 className="min-w-0 break-words text-sm font-medium text-gray-900">
+                              {arquivo.titulo}
+                            </h4>
+                            <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getHistoricalRecordKindClassName(arquivo)}`}>
+                              {getHistoricalRecordKindLabel(arquivo)}
+                            </span>
+                          </div>
                           {arquivo.ano && (
                             <p className="mt-1 break-words text-xs text-gray-500">{arquivo.ano}</p>
                           )}
@@ -805,7 +822,7 @@ export function ArquivosHistoricos({
                                 ) : (
                                   <span className="inline-flex items-center gap-1 text-xs text-gray-500">
                                     <ScrollText className="h-3 w-3" />
-                                    Registro sem arquivo anexado
+                                    Fato ou memória sem arquivo anexado
                                   </span>
                                 )}
                               </>

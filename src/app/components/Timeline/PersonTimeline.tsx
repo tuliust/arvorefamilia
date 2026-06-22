@@ -50,10 +50,19 @@ const TYPE_STYLES: Record<PersonTimelineItemType, string> = {
   other: 'bg-gray-50 text-gray-700 ring-gray-200',
 };
 
-function getTimelineIcon(type: PersonTimelineItemType) {
+function historicalTimelineItemHasFile(item: PersonTimelineItem) {
+  if (item.type !== 'historical_file') return undefined;
+  return item.metadata?.has_file === true;
+}
+
+function getTimelineIcon(item: PersonTimelineItem) {
   const className = 'h-4 w-4';
 
-  switch (type) {
+  if (item.type === 'historical_file' && historicalTimelineItemHasFile(item) === false) {
+    return <BookOpen className={className} />;
+  }
+
+  switch (item.type) {
     case 'birth':
     case 'child_birth':
       return <Baby className={className} />;
@@ -75,6 +84,14 @@ function getTimelineIcon(type: PersonTimelineItemType) {
     default:
       return <Circle className={className} />;
   }
+}
+
+function getTimelineStyle(item: PersonTimelineItem) {
+  if (item.type === 'historical_file' && historicalTimelineItemHasFile(item) === false) {
+    return TYPE_STYLES.memory;
+  }
+
+  return TYPE_STYLES[item.type];
 }
 
 function getDateLabel(item: PersonTimelineItem) {
@@ -119,13 +136,13 @@ export function PersonTimeline({
               return (
                 <article key={item.id} className="relative pl-11 sm:pl-14">
                   <div className="absolute left-0 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm sm:h-10 sm:w-10">
-                    {getTimelineIcon(item.type)}
+                    {getTimelineIcon(item)}
                   </div>
 
                   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${TYPE_STYLES[item.type]}`}
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${getTimelineStyle(item)}`}
                       >
                         {badgeLabel}
                       </span>

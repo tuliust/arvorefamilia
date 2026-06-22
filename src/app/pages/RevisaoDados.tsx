@@ -5,11 +5,11 @@ import {
   ClipboardCheck,
   FileText,
   Heart,
-  Image as ImageIcon,
   MapPin,
   Pencil,
   Phone,
   Save,
+  ScrollText,
   UserCircle2,
   Users,
   X,
@@ -137,6 +137,12 @@ function archiveHasFile(archive: ArquivoHistorico) {
 function isImageArchive(archive: ArquivoHistorico) {
   return archiveHasFile(archive) && (archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/'));
 }
+function getArchiveRecordLabel(archive: ArquivoHistorico) {
+  if (!archiveHasFile(archive)) return 'Fato sem arquivo';
+  if (archive.tipo === 'pdf' || archive.mime_type === 'application/pdf') return 'PDF';
+  return 'Imagem';
+}
+
 
 type GenderHint = 'homem' | 'mulher' | null | undefined;
 
@@ -611,13 +617,18 @@ export function RevisaoDados() {
                         {isImageArchive(archive) ? (
                           <img src={archive.url} alt={archive.titulo} className="h-full w-full object-cover" />
                         ) : archiveHasFile(archive) ? (
-                          <ImageIcon className="h-5 w-5" />
-                        ) : (
                           <FileText className="h-5 w-5" />
+                        ) : (
+                          <ScrollText className="h-5 w-5" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{archive.titulo}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{archive.titulo}</p>
+                          <span className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-600">
+                            {getArchiveRecordLabel(archive)}
+                          </span>
+                        </div>
                         <p className="mt-1 line-clamp-2 text-xs text-gray-600">{archive.descricao || 'Sem descrição.'}</p>
                         {archive.ano && <p className="mt-1 text-xs text-gray-500">Ano: {archive.ano}</p>}
                       </div>
